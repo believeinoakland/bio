@@ -15,9 +15,10 @@
    is the fact `producingGroup` (promotion R40), registered as instance-setup does. Every test drives `docket` at its
    interface. */
 import { DatabaseSync } from "node:sqlite";
+import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
-import { membershipOf } from "../../../src/membership/index.mjs";
+import { membershipOf, PROJECT_AUTHORITY_CHECKS } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
@@ -57,6 +58,17 @@ export function storage() {
 }
 
 export const V = (id) => `member:${id}`;
+/** K4557, K231: the one refusal for a member not yet joined (invited, or no part in the project), `membership`'s own row,
+ *  answered by every docket act that needs a joined member; `act` is the op's door name. */
+export const NOT_JOINED = "PROJECT_ACT_NOT_A_PARTICIPANT";
+export function notJoinedOk(r, act) {
+  assert.equal(r.ok, false, JSON.stringify(r).slice(0, 200));
+  assert.equal(r.reason, NOT_JOINED);
+  assert.equal(r.code, NOT_JOINED);
+  assert.equal(r.check, PROJECT_AUTHORITY_CHECKS[NOT_JOINED].check);
+  assert.equal(r.translation, PROJECT_AUTHORITY_CHECKS[NOT_JOINED].translation);
+  assert.equal(r.act, act);
+}
 export const MACHINE = "class:ai";
 export const SLUG = "test-group";
 export const DAY = 86400000, HOUR = 3600000;

@@ -15,7 +15,7 @@
  * two to four capitalised words that is not a person's name ("Grey Gardner" is a name; "Harbor Point" is
  * not, and both look alike) is. So nothing in this module asserts that a span IS a person: a span is
  * "name-shaped", and every reading built on one says so (R10). */
-import { vocabPatterns, vocabulary, vocabRegex, IN_PROSE, flatten } from "../docprofile/registry.mjs";
+import { vocabPatterns, vocabulary, vocabRegex, IN_PROSE } from "../docprofile/registry.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* A word that, opening or ending a span, makes it a phrase rather than a name: function words, the
@@ -56,33 +56,86 @@ const NAME_WHOLE = new RegExp(`^(?:${NAME_SRC})$`, "u");
 const NAME_ALL = new RegExp(`(?<![\\p{L}\\p{N}])${NAME_SRC}(?![\\p{L}\\p{N}])`, "gu");
 
 const words = (s) => String(s).replace(/["“”]/g, "").split(/\s+/).filter(Boolean);
-const phraseWord = (w) => NOT_NAME_WORDS.has(w.replace(/["“”.,]+/g, "").toLowerCase());
+/* Is this UTF-16 code unit white space as `\s` reads it? */
+const isSpaceCode = (c) => c === 32 || (c >= 9 && c <= 13) || c === 160 || c === 5760 || (c >= 8192 && c <= 8202) ||
+  c === 8232 || c === 8233 || c === 8239 || c === 8287 || c === 12288 || c === 65279;
+/* How many words `words` gives, counted in place: no copy of the string, no array. It stops past `cap` (default: all). */
+function countWords(s, cap = Infinity) {
+  let n = 0, inWord = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c === 34 || c === 8220 || c === 8221) continue;
+    if (isSpaceCode(c)) inWord = false;
+    else if (!inWord) { inWord = true; if (++n > cap) return n; }
+  }
+  return n;
+}
+/* Is this word one that ends a name? Answered once per distinct word (a text repeats its words): the cache is cleared
+   when it passes PHRASE_CACHE entries, so a text of any size holds a bounded number. */
+const PHRASE_CACHE = 4096;
+const phraseCache = new Map();
+function phraseWord(w) {
+  let v = phraseCache.get(w);
+  if (v === undefined) {
+    v = NOT_NAME_WORDS.has(w.replace(/["“”.,]+/g, "").toLowerCase());
+    if (phraseCache.size >= PHRASE_CACHE) phraseCache.clear();
+    phraseCache.set(w, v);
+  }
+  return v;
+}
 /* A name ends where a phrase word begins: a matched run is cut at its first phrase word, and what is
    left is a name only while it keeps two name words ("Langston Buddenhagen District 1" reads the name
    "Langston Buddenhagen"). A span is never shortened from its front: that would choose a name inside a
    phrase, the guess R2 forbids. */
 function cut(run) {
-  const toks = run.split(/(\s+)/);
-  let out = "", n = 0;
-  for (let i = 0; i < toks.length; i += 2) {
-    const w = toks[i];
+  let end = 0, n = 0, at = 0;
+  while (at < run.length) {
+    let to = at;
+    while (to < run.length && !isSpaceCode(run.charCodeAt(to))) to++;
+    const w = run.slice(at, to);
     if (phraseWord(w)) break;
-    out += (i ? toks[i - 1] : "") + w;
+    end = to;
     if (!/^["“]/.test(w) && !/^(?:Jr\.?|Sr\.?|II|III|IV),?$/.test(w) && !/^\p{Ll}/u.test(w)) n++;
+    at = to;
+    while (at < run.length && isSpaceCode(run.charCodeAt(at))) at++;
   }
-  out = out.replace(/,\s*$/, "").trim();
+  /* The words kept, with the white space between them as the run has it. */
+  const out = run.slice(0, end).replace(/,\s*$/, "").trim();
   return n >= 2 && !/^\p{Ll}/u.test(out) && !/\s\p{Ll}+$/u.test(out) ? out : null;
+}
+
+/* The first word of a string (to its first white space). */
+function firstWord(s) {
+  let to = 0;
+  while (to < s.length && !isSpaceCode(s.charCodeAt(to))) to++;
+  return s.slice(0, to);
 }
 
 /** The name-shaped spans in a string, in order, each `{text, index}`. */
 export function nameSpans(s) {
   const out = [];
-  for (const m of String(s).matchAll(NAME_ALL)) {
-    if (phraseWord(m[0].split(/\s+/)[0])) continue;
-    const t = cut(m[0]);
-    if (t) out.push({ text: t, index: m.index });
+  const str = String(s);
+  /* `exec` on the shared recogniser, as `matchAll` does on a clone of it: no regex is made per line. */
+  NAME_ALL.lastIndex = 0;
+  let m;
+  while ((m = NAME_ALL.exec(str)) !== null) {
+    if (!phraseWord(firstWord(m[0]))) {
+      const t = cut(m[0]);
+      if (t) out.push({ text: t, index: m.index });
+    }
   }
+  NAME_ALL.lastIndex = 0;
   return out;
+}
+
+/** Does the string hold a name-shaped span? The same answer as `nameSpans(s).length > 0`, found without building them. */
+export function hasNameSpan(s) {
+  const str = String(s);
+  NAME_ALL.lastIndex = 0;
+  let m, found = false;
+  while (!found && (m = NAME_ALL.exec(str)) !== null) found = !phraseWord(firstWord(m[0])) && cut(m[0]) !== null;
+  NAME_ALL.lastIndex = 0;
+  return found;
 }
 
 /** Is the whole string (trimmed, a trailing comma or full stop aside) exactly one name-shaped span? */
@@ -96,7 +149,7 @@ export function isName(s) {
 export function leadingName(s) {
   const t = String(s).trim();
   const m = NAME_AT.exec(t);
-  return m && !phraseWord(m[0].split(/\s+/)[0]) ? cut(m[0]) : null;
+  return m && !phraseWord(firstWord(m[0])) ? cut(m[0]) : null;
 }
 
 /* ---- contact points (R4): found so they can be LEFT UNREAD, never kept ---- */
@@ -110,13 +163,39 @@ export const STREET = /\b\d{1,6}\s+(?:[NSEW]\.?\s+)?(?:[A-Z0-9][\w'.-]*\s+){0,4}
  *  of text between the removed points (a removed point is a boundary no name runs across), and how many
  *  were removed. */
 export function withoutContacts(line) {
-  let n = 0;
-  const MARK = "\u0000";
-  const cut = (re) => (s) => s.replace(re, () => { n++; return MARK; });
-  const marked = [cut(EMAIL), cut(STREET), cut(PHONE), cut(EXTENSION)].reduce((s, f) => f(s), String(line));
-  const tidy = (s) => s.replace(/\s+/g, " ").replace(/\s+([,;:])/g, "$1").replace(/^[\s,;:|-]+|[\s,;|-]+$/g, "").trim();
-  return { text: tidy(marked.split(MARK).join(" ")), parts: marked.split(MARK).map(tidy).filter(Boolean), removed: n };
+  const raw = String(line);
+  /* A line with no "@", no digit and no NUL holds none of the four contact points (each needs one of them), so
+     it is only tidied: the common line of running text costs no regex pass and no copy. */
+  if (!CONTACT_POSSIBLE.test(raw)) {
+    const text = tidy(raw);
+    return { text, parts: text ? [text] : [], removed: 0 };
+  }
+  cuts = 0;
+  let marked = raw;
+  if (raw.includes("@")) marked = cutAll(EMAIL, marked);
+  marked = cutAll(STREET, marked);
+  marked = cutAll(PHONE, marked);
+  marked = cutAll(EXTENSION, marked);
+  if (!cuts && !raw.includes(MARK)) { const text = tidy(raw); return { text, parts: text ? [text] : [], removed: 0 }; }
+  return { text: tidy(marked.split(MARK).join(" ")), parts: marked.split(MARK).map(tidy).filter(Boolean), removed: cuts };
 }
+const MARK = "\u0000";
+let cuts = 0;
+const markCut = () => { cuts++; return MARK; };
+/* Every match of a contact recogniser replaced by the cut mark; a string it does not match is returned as it is. */
+function cutAll(re, s) {
+  re.lastIndex = 0;
+  if (!re.test(s)) return s;
+  re.lastIndex = 0;
+  return s.replace(re, markCut);
+}
+/* A character any contact point needs: an "@" (e-mail), a digit (phone, extension, street), or the NUL that marks a cut. */
+const CONTACT_POSSIBLE = /[@\d\u0000]/;
+/* A string's words closed up, a space dropped before , ; :, and the edges stripped. A string with nothing to change is returned as it is. */
+const TIDY_NEEDED = /[^\S ]|  | [,;:]|^[\s,;:|-]|[\s,;|-]$/;
+const tidy = (s) => TIDY_NEEDED.test(s)
+  ? s.replace(/\s+/g, " ").replace(/\s+([,;:])/g, "$1").replace(/^[\s,;:|-]+|[\s,;|-]+$/g, "").trim()
+  : s;
 
 /* ---- the view's staff titles ---- */
 
@@ -129,10 +208,18 @@ export function titlePatterns(ctx) {
  *  longer, kept), each `{text, index}`. */
 export function titleSpans(patterns, s) {
   const hits = [];
+  const str = String(s);
   for (const re of patterns) {
+    /* `exec` on the recogniser itself, as `matchAll` does on a clone of it: no regex is made per line. */
     re.lastIndex = 0;
-    for (const m of String(s).matchAll(re)) if (m[0].trim()) hits.push({ text: m[0], index: m.index });
+    let m;
+    while ((m = re.exec(str)) !== null) {
+      if (m[0].trim()) hits.push({ text: m[0], index: m.index });
+      if (m[0] === "") re.lastIndex += re.unicode && str.codePointAt(re.lastIndex) > 0xffff ? 2 : 1;
+    }
+    re.lastIndex = 0;
   }
+  if (hits.length < 2) return hits;
   hits.sort((a, b) => a.index - b.index || b.text.length - a.text.length);
   const out = [];
   let end = -1;
@@ -167,30 +254,42 @@ export function rosterWordPatterns(ctx) {
    shorter than the sentence that mentions a roster in prose. */
 export const TITLE_WORDS = 8;
 
-/** The non-empty lines of a text, each `{text, offset}` (offset of its first character in the text). */
-export function linesOf(text) {
+/* White space a line's words are not already closed up over: a run of two or a character other than a space. */
+const ODD_SPACE = /[^\S ]|  /;
+
+/* A string made of one piece. A global replace leaves a chain of pieces behind (on node 26, ten times the
+   memory of the flat string it spells), and a line kept in a reading is kept for its whole life. */
+const flat = (s) => { if (s.length) s.charCodeAt(0); return s; };
+
+/** Calls `visit({text, offset})` for each non-empty line of a text, in order, one line at a time: nothing of the
+ *  lines is kept here, so a reader that counts and discards holds one line, however long the text (R1, R3). */
+export function eachLine(text, visit) {
   const raw = String(text || "");
-  const out = [];
   let at = 0;
-  for (const part of raw.split("\n")) {
-    const t = part.replace(/\r$/, "");
-    const lead = t.length - t.trimStart().length;
-    if (t.trim()) out.push({ text: t.trim().replace(/\s+/g, " "), offset: at + lead });
-    at += part.length + 1;
+  while (at <= raw.length) {
+    let end = raw.indexOf("\n", at);
+    if (end < 0) end = raw.length;
+    let part = raw.slice(at, end);
+    if (part.endsWith("\r")) part = part.slice(0, -1);
+    const t = part.trim();
+    if (t) visit({ text: flat(ODD_SPACE.test(t) ? t.replace(/\s+/g, " ") : t), offset: at + part.length - part.trimStart().length });
+    at = end + 1;
   }
-  return out;
+}
+
+/** The self-naming line `x` is, with the kinds it names, or null: a short line a `roster_words` pattern matches. */
+export function selfNamingLine(x, patterns) {
+  if (countWords(x.text, TITLE_WORDS) > TITLE_WORDS) return null;
+  const kinds = new Set();
+  for (const p of patterns) { p.re.lastIndex = 0; if (p.re.test(x.text)) for (const k of p.kinds) kinds.add(k); }
+  return kinds.size ? { ...x, kinds: [...kinds] } : null;
 }
 
 /** The lines that name the document as a roster or chart: short lines a `roster_words` pattern matches. */
 export function selfNamingLines(lines, patterns) {
   const out = [];
   if (!patterns.length) return out;
-  for (const x of lines) {
-    if (words(x.text).length > TITLE_WORDS) continue;
-    const kinds = new Set();
-    for (const p of patterns) { p.re.lastIndex = 0; if (p.re.test(x.text)) for (const k of p.kinds) kinds.add(k); }
-    if (kinds.size) out.push({ ...x, kinds: [...kinds] });
-  }
+  for (const x of lines) { const s = selfNamingLine(x, patterns); if (s) out.push(s); }
   return out;
 }
 
@@ -210,9 +309,15 @@ const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "
 export const DATE_IN_ROWS = new RegExp(`\\b${MONTH}\\.?\\s+\\d{1,2}\\b|\\b\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}\\b`, "gi");
 const FULL_DATE = new RegExp(`\\b(${MONTH})\\.?\\s+(\\d{1,2}),?\\s+(\\d{4})\\b|\\b(\\d{1,2})[/.-](\\d{1,2})[/.-](\\d{2,4})\\b|\\b(${MONTH})\\.?,?\\s+(\\d{4})\\b`, "i");
 
-/** How many dates the document's rows carry (over flattened text, as staff_directory counts them). */
+/** How many dates the document's rows carry, as staff_directory counts them over the flattened text: the date
+ *  patterns take any run of white space where the flatten leaves one space, so the text is counted as it is,
+ *  not copied (R1). */
 export function datesIn(text) {
-  return (flatten(text).match(DATE_IN_ROWS) || []).length;
+  const re = new RegExp(DATE_IN_ROWS.source, DATE_IN_ROWS.flags);
+  const raw = String(text || "");
+  let n = 0;
+  while (re.exec(raw)) n++;
+  return n;
 }
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -240,12 +345,39 @@ export function statedDate(lines) {
   return null;
 }
 
+/* Does str[a, b) hold a letter? Looked for in place: no slice is made. */
+function hasLetter(str, a, b) {
+  for (let i = a; i < b; i++) {
+    let c = str.charCodeAt(i);
+    if (c < 128) { if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122)) return true; continue; }
+    if (c >= 0xd800 && c <= 0xdbff && i + 1 < b) { c = str.codePointAt(i); i++; }
+    if (LETTER_IN.test(String.fromCodePoint(c))) return true;
+  }
+  return false;
+}
+/* A word's letters alone, lowercased. */
+const lettersOf = (str, a, b) => str.slice(a, b).replace(/[^\p{L}]/gu, "").toLowerCase();
+
 /** Is a short line a unit's label: its last word, or its first before "of", a kind of unit? */
 export function isUnitLine(s) {
-  const w = words(s).map((x) => x.replace(/[^\p{L}]/gu, "").toLowerCase()).filter(Boolean);
-  if (!w.length || w.length > TITLE_WORDS) return false;
-  if (UNIT_WORDS.has(w[w.length - 1])) return true;
-  return w.length >= 3 && UNIT_WORDS.has(w[0]) && w[1] === "of";
+  const str = String(s);
+  /* The words that hold a letter: counted in place, the first two and the last stripped to their letters. */
+  let n = 0, first = "", second = "", lastA = 0, lastB = 0;
+  let i = 0;
+  while (i < str.length) {
+    while (i < str.length && isSpaceCode(str.charCodeAt(i))) i++;
+    const a = i;
+    while (i < str.length && !isSpaceCode(str.charCodeAt(i))) i++;
+    if (i === a) break;
+    if (!hasLetter(str, a, i)) continue;
+    if (++n > TITLE_WORDS) return false;
+    if (n === 1) first = lettersOf(str, a, i); else if (n === 2) second = lettersOf(str, a, i);
+    lastA = a; lastB = i;
+  }
+  if (!n) return false;
+  if (UNIT_WORDS.has(lettersOf(str, lastA, lastB))) return true;
+  return n >= 3 && UNIT_WORDS.has(first) && second === "of";
 }
+const LETTER_IN = /\p{L}/u;
 
-export const wordCount = (s) => words(s).length;
+export const wordCount = (s) => countWords(String(s));

@@ -70,11 +70,11 @@ test("R55 (case-disclosures R7): material_attestations: states, per material, th
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const reg = w.row(`SELECT bundle_id, registered FROM register WHERE capture_sha=?`, a);
   assert.deepEqual(materialsOf(w.fm(docOf(w, r))).attestations, [
-    { ref: DOC, by_kind: "member", by: "alice", level: "name", at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null },
+    { ref: DOC, by_kind: "member", by: "alice", level: "name", at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null, sha: null },
     { ref: DOC, by_kind: "co_attestation", by: "https://archive.example/web/x", level: null, at: null, signature: null,
-      recorded_in: null },
-    { ref: DOC, by_kind: "project", by: P, level: null, at: reg.registered, signature: null, recorded_in: reg.bundle_id },
-    { ref: DOC, by_kind: "group", by: "test-group", level: null, at: w.clock.now, signature: "case", recorded_in: null }]);
+      recorded_in: null, sha: null },
+    { ref: DOC, by_kind: "project", by: P, level: null, at: reg.registered, signature: null, recorded_in: reg.bundle_id, sha: null },
+    { ref: DOC, by_kind: "group", by: "test-group", level: null, at: w.clock.now, signature: "case", recorded_in: null, sha: null }]);
   assert.equal(w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).length, tables, "no new table");
   assert.ok(bodyOf(docOf(w, r)).includes("test-group vouches for it by signing this case"));
 });
@@ -94,7 +94,7 @@ test("R55 (case-disclosures R4, R8, R9, R10): a load-bearing document from a kno
   const m = materialsOf(fm);
   assert.deepEqual([m.materials[0].included, m.materials[0].origin], [true, null], "travels whole; no knock address");
   assert.deepEqual(m.attestations.filter((x) => x.by_kind === "member"),
-    [{ ref: DOC, by_kind: "member", by: null, level: null, at: "2026-09-27T12:00:00Z", signature: null, recorded_in: null }]);
+    [{ ref: DOC, by_kind: "member", by: null, level: null, at: "2026-09-27T12:00:00Z", signature: null, recorded_in: null, sha: null }]);
   const row = blocks.captures.find((c) => c.capture === k);
   assert.deepEqual(row.accounts, [{ by: null, at: "2026-09-27T12:00:00Z", text: "Handed to me at the door.", signature: null }],
     "the account's text travels; the member's handle and signature do not");
@@ -123,7 +123,7 @@ test("R55 (case-disclosures R11): a named member's capture, a load-bearing self-
   const row = caseDocumentBlocks(text).captures.find((c) => c.capture === b);
   assert.deepEqual([row.self_attested_only, row.accounts[0].by, row.accounts[0].signature], [true, "alice", "SIG-of-alice-7f3"]);
   assert.deepEqual(materialsOf(w.fm(text)).attestations.find((x) => x.by_kind === "member"),
-    { ref: DOC, by_kind: "member", by: "alice", level: "name", at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null });
+    { ref: DOC, by_kind: "member", by: "alice", level: "name", at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null, sha: null });
   void DOC3;
 });
 

@@ -7,6 +7,7 @@
 
 export const SCREEN_KEYS = Object.freeze({
   "case-editor": Object.freeze([
+    "screen.ceremony.published.edition", "screen.ceremony.publicpage", "screen.ceremony.prepared",
     "question.concluded.falsifier", "member.founder.unnamed", "shell.card.member",
     "refusal.NOT_THE_PROJECT_OWNER", "refusal.PROJECT_ACT_NOT_THE_OWNER", "refusal.reference",
     "screen.case-editor.details.name.area", "screen.case-editor.details.name.contact", "screen.case-editor.details.name.related", "screen.case-editor.details.name.relationships", "screen.case-editor.details.stated", "screen.case-editor.details.rel.builds_on", "screen.case-editor.details.rel.responds_to", "screen.case-editor.details.rel.disagrees_with", "screen.case-editor.details.takeout", "screen.case-editor.role.relied", "screen.case-editor.role.supporting", "screen.case-editor.finding.role", "case-inputs.details.not_stated",
@@ -48,9 +49,10 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.home", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
     "act.owed_casedetails.label.case-editor", "act.owed_casedetailsset.label.case-editor", "screen.panel.limit.remove", "screen.person.fact.notstated", "screen.case-editor.details.first", "screen.case-editor.details.rel.same", "screen.case-editor.details.rel.other", "screen.case-editor.details.intro1", "screen.case-editor.details.intro2", "screen.case-editor.details.outward1", "screen.case-editor.details.outward2", "screen.case-editor.details.area.bodyhint", "screen.case-editor.details.area.addbody", "screen.case-editor.details.area.words", "screen.case-editor.details.list.add", "screen.case-editor.details.contact.legend", "screen.case-editor.details.contact.doorbell", "screen.case-editor.details.contact.words", "screen.case-editor.details.contact.help", "screen.case-editor.details.contact.nomember1", "screen.case-editor.details.contact.nomember2", "screen.case-editor.details.rel.link", "screen.case-editor.details.rel.linkhelp", "screen.case-editor.details.rel.choose", "screen.case-editor.details.rel.words", "screen.case-editor.details.ties.legend", "screen.case-editor.details.ties.intro", "screen.case-editor.details.ties.public", "screen.case-editor.details.ties.none", "screen.case-editor.details.ties.some", "screen.case-editor.details.ties.with", "screen.case-editor.details.ties.how", "screen.case-editor.details.ties.stake", "screen.case-editor.details.refused.summary", "screen.case-editor.details.refused.owner1", "screen.case-editor.details.refused.body", "screen.case-editor.details.refused.body2", "screen.case-editor.details.refused.malformed1", "screen.case-editor.details.refused.malformed2", "screen.case-editor.details.refused.nocase1", "screen.case-editor.details.refused.nocase2",
     "act.owed_casedetails.does", "act.owed_casedetailsset.does",
-    "act.casedrafts.label.case-editor", "act.casedrafts.does", "screen.case-editor.drafts.help", "screen.case-editor.drafts.choose", "screen.case-editor.drafts.newest", "screen.case-editor.drafts.item", "screen.case-editor.links.live",
+    "act.casedrafts.label.case-editor", "act.casedrafts.does", "screen.case-editor.drafts.help", "screen.case-editor.drafts.choose", "screen.case-editor.drafts.newest", "screen.case-editor.drafts.item", "screen.case-editor.links.live", "review.index.not_concluded_yet",
   ]),
   "review-copy": Object.freeze([
+    "screen.ceremony.published.edition", "screen.ceremony.publicpage", "screen.ceremony.prepared",
     "member.founder.unnamed", "shell.card.member",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.review-copy.name", "screen.review-copy.purpose",
     "act.reviewgrant.label.review-copy", "act.reviewgrant.does", "act.reviewrevoke.label.review-copy",
@@ -112,7 +114,8 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.ceremony.nothing", "crumb.project.unjoined", "refusal.NO_REVIEW_COPY", "review.body.nocase", "case.links.editor", "shell.card.case-editor", "ceremony.gate.heading", "ceremony.gate.notargets",
     "ceremony.gate.other", "screen.ceremony.gate.addfinding", "refusal.PUBLISH_NO_FINDING", "act.publish.here.ceremony", "signing.ceremony.declined", "signing.ceremony.signedat", "signing.ceremony.signednow", "signing.ceremony.nokey",
     "signing.ceremony.keepkey", "screen.ceremony.signs.linesabout", "screen.published.rests.on.the.council.minutes", "screen.published.rests.on.the.council.minutes.one", "signing.ceremony.notowner", "signing.ceremony.phone", "time.clock", "time.am", "time.pm", "shell.unavailable.home",
-    "screen.ceremony.openrequests.heading", "screen.ceremony.openrequests.says", "screen.ceremony.minutes.heading",
+    "refusal.NO_CASE_DOCUMENT", "screen.ceremony.conf.row.done", "screen.ceremony.conf.row.missing.co_archive", "screen.ceremony.conf.row.missing.timestamp", "screen.ceremony.registering", "shell.keyfile.none",
+    "screen.ceremony.openrequests.heading","screen.ceremony.openrequests.says", "screen.ceremony.minutes.heading",
     "screen.ceremony.minutes.says", "signing.openrequest.line", "signing.openrequest.noreply", "signing.openrequest.notlaidout",
     "signing.openrequest.nowindow.line", "signing.openrequest.nowindow.noreply", "signing.openrequest.nowindow.notlaidout",
     "signing.openrequest.unread", "signing.openrequest.noquote", "signing.minutes.line", "signing.minutes.left", "signing.minutes.right",
@@ -135,8 +138,8 @@ export const SCREEN_KEYS = Object.freeze({
     "act.casedrafts.label.ceremony", "act.casedrafts.does", "screen.ceremony.drafts.help", "screen.ceremony.drafts.choose", "screen.ceremony.drafts.newest", "screen.ceremony.drafts.item", "screen.ceremony.links.live", "case.draft.untitled", "screen.ceremony.signs.count.findings", "screen.ceremony.published.edition",
   ]),
   published: Object.freeze([
-    "screen.document.passage.where",
-    "refusal.NO_SUCH_CASE",
+    "screen.document.passage.where", "screen.question.leg.paragraph",
+    "refusal.NO_SUCH_CASE", "refusal.NO_PUBLISHED_EDITION",
     "screen.case-editor.details.name.area", "screen.case-editor.details.name.contact", "screen.case-editor.details.name.related", "screen.case-editor.details.name.relationships",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.published.name", "screen.published.purpose",
     "act.verify.label.published", "act.verify.does", "act.publishedcase.label.published", "act.publishedcase.does",
@@ -195,7 +198,7 @@ export const SCREEN_KEYS = Object.freeze({
   ]),
   docket: Object.freeze([
     "refusal.NO_SUCH_CASE", "refusal.REVIEW_NO_SUCH_CASE", "screen.action.pressure.note",
-    "screen.docket.edition.label", "screen.docket.edition.help", "screen.docket.edition.option", "screen.docket.capture.label", "screen.docket.capture.help", "screen.docket.capture.option", "screen.docket.capture.add",
+    "screen.docket.edition.label", "screen.docket.edition.help", "screen.docket.edition.option", "screen.docket.capture.label", "screen.docket.capture.help", "screen.docket.capture.option", "screen.docket.capture.add", "screen.people.more",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.docket.name", "screen.docket.purpose",
     "act.docketfile.label.docket", "act.docketfile.does", "act.writinghelp.label.docket", "act.writinghelp.does", "screen.start-send.draft.machine", "act.docketpost.label.docket", "act.docketpost.does",
     "screen.docket.drafted", "screen.docket.entries", "screen.docket.file", "screen.docket.file.needed",
@@ -249,6 +252,6 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.review-outside.comments.go", "screen.review-outside.draft", "screen.review-outside.heading",
     "screen.review-outside.nolink", "review.body.nocase", "screen.review-outside.sent", "screen.review-outside.until",
     "screen.review-outside.until.zone", "time.clock", "time.am", "time.pm", "screen.review-outside.untilstopped", "review.statement.title", "review.statement.help", "review.statement.note",
-    "review.statement.note.help", "review.statement.ack", "refusal.STATEMENT_ACK_NO_REASON", "refusal.NO_REVIEW_COPY",
+    "review.statement.note.help", "review.statement.ack", "refusal.STATEMENT_ACK_NO_REASON", "refusal.NO_REVIEW_COPY", "review.index.not_concluded_yet",
   ]),
 });

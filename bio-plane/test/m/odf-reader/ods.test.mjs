@@ -132,7 +132,7 @@ test("R18 text() sheets: capacity null, used extent from the cells (padding neve
     row(empty(1024), 'table:number-rows-repeated="1048000"'),
   ].join("")) + table("Blank", row(empty(50), 'table:number-rows-repeated="99"')) + table("Hidden", row(cell("h")), 'table:display="false"');
   const t = await T(body);
-  assert.deepEqual(t.sheets.map(({ text, cells, ...s }) => s), [   // cells: R46 (cells.test.mjs)
+  assert.deepEqual(t.sheets.map(({ text, cells, lineRows, ...s }) => s), [   // cells: R46 (cells.test.mjs); lineRows: R19 (below)
     { sheet: 0, name: "Used", hidden: false, rows: null, cols: null, usedRows: 7, usedCols: 5, range: usedSheetRange("Used", 7, 5), undetermined: [] },
     { sheet: 1, name: "Blank", hidden: false, rows: null, cols: null, usedRows: 0, usedCols: 0, range: null, undetermined: [] },
     { sheet: 2, name: "Hidden", hidden: "hidden", rows: null, cols: null, usedRows: 1, usedCols: 1, range: usedSheetRange("Hidden", 1, 1), undetermined: [] },
@@ -157,6 +157,29 @@ test("R19 a sheet's text is its non-empty rows of displayed values, tab-joined; 
   assert.ok(!t.document.includes("of:"));
 });
 
+test("R19 lineRows: every sheet carries one 1-based sheet row per line of its text, through empty rows, repeated rows and a cell holding several lines", async () => {
+  const body = table("Rows", [
+    row(cell("head") + cell("h2")),                           // row 1
+    row(empty(3)),                                            // row 2, empty: no line
+    row(empty(1024), 'table:number-rows-repeated="5"'),       // rows 3-7, empty and repeated: no line
+    row(cell("r8")),                                          // row 8
+    row(cell("rep"), 'table:number-rows-repeated="3"'),       // rows 9-11, one line each
+    row(`<table:table-cell office:value-type="string"><text:p>m1</text:p><text:p>m2</text:p></table:table-cell>`),   // row 12, two lines
+    row(empty(2) + cell("late")),                             // row 13
+    row(empty(1024), 'table:number-rows-repeated="1048000"'),
+  ].join("")) + table("Blank", row(empty(4), 'table:number-rows-repeated="9"'))
+    + table("Hid", row(empty(1)) + row(cell("secret")), 'table:display="false"');
+  const t = await T(body);
+  const [rows, blank, hid] = t.sheets;
+  assert.deepEqual(rows.text.split("\n"), ["head\th2", "r8", "rep", "rep", "rep", "m1", "m2", "late"]);
+  assert.deepEqual(rows.lineRows, [1, 8, 9, 10, 11, 12, 12, 13]);
+  assert.equal(rows.lineRows.length, rows.text.split("\n").length);
+  assert.equal(blank.text, "");
+  assert.deepEqual(blank.lineRows, []);
+  assert.deepEqual(hid.text, "secret");
+  assert.deepEqual(hid.lineRows, [2]);
+});
+
 /* ------------------------------------------------------------------ R20 */
 
 test("R20 text() over the guard carries the guard marker verbatim; with no readable body, one marker naming why with sheet and cell null", async () => {
@@ -164,7 +187,7 @@ test("R20 text() over the guard carries the guard marker verbatim; with no reada
   assert.equal(over.ok, true);
   assert.equal(over.document, null);
   assert.deepEqual(over.sheets, []);
-  assert.deepEqual(over.undetermined, [sizeGuard(OVER_BOUND)]);
+  assert.deepEqual(over.undetermined, [{ ...sizeGuard(OVER_BOUND), final: true }]);
   assert.deepEqual(over.counts, { chars: 0, cells: 0, formulas: 0, undetermined: 1 });
   for (const [bytes, reason] of [
     [buildZip(withCd(members("ods"), "content.xml", { crc: 9 })), "crc_mismatch"],

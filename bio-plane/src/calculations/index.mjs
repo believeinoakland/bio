@@ -66,6 +66,9 @@ export const INGEST_METHOD = "table_binding";
  *  reads no application), and the engines whose agreement is recorded as measured: none yet. */
 export const FILE_ENGINE = word("calculations.file_spreadsheet_program");
 export const MEASURED_ENGINES = Object.freeze([]);
+/** R9: the mark of an input whose cells could not be read to say whether an engine computed them (a failed or truncated
+ *  `content.cellsAt`): an explicit undetermined engine, never null. */
+const UNDETERMINED_ENGINE = Object.freeze({ name: "undetermined", version: null });
 /** R9: the derivation step a third-party engine's value takes (K1447 (ii); strength R36). */
 export const ENGINE_STEP = "third-party engine";
 /** R32: the most uses one frozen table holds (R1's cell bound over its sixteen columns). */
@@ -94,6 +97,16 @@ const CALC_RE = idPattern("CALC");
 const MONEY_RE = idPattern("MNY");
 const READ_LIMIT_MAX = 1000;
 const TABLE_CACHE_CHARS = 24 * 1024 * 1024;   /* the held tables' text kept at hand, at most (R1: one 20 MiB table fits) */
+/** R14 (G45): a value of an ingest's record (`rows`, `written`, `not_written`) stays in `calc_ingests` while its UTF-8 length is at most
+ *  this; above it the column holds the marker `{parts, bytes, count}` and the text is in `calc_ingest_parts`, in chunks of at most
+ *  `INGEST_CHUNK` characters (768 KiB of UTF-8), so no bound value passes the platform's single-value limit. */
+export const INGEST_INLINE_MAX = 524288;
+export const INGEST_CHUNK = 256 * 1024;
+/** R14: the most characters of an ingest's stated reason (a protective bound; the statement's sum stays under the platform's). */
+export const INGEST_REASON_MAX = 2000;
+/** R14 (G45): the most rows one act reads, set by measure (the largest count whose act survives the object's memory at the real shape:
+ *  100,000 rows survive, 150,000 do not; a protective bound, K1881). Above it the act is refused INGEST_TOO_LARGE before any fact is written. */
+export const INGEST_ROWS_MAX = 100000;
 const TEXT_CHUNK = 512 * 1024;   /* characters per row of calc_table_bytes, under a Durable Object row's 2 MB */
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -101,6 +114,25 @@ const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const json = (v) => (v === undefined ? null : JSON.stringify(v));
 const parse = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const sha = (v) => sha256HexSync(canonicalJson(v));
+/* G45: chunks of at most `size` characters that never split a surrogate pair (a lone surrogate bound as text is stored as U+FFFD) */
+function chunksOf(text, size = INGEST_CHUNK) {
+  const out = [];
+  for (let i = 0; i < text.length;) {
+    let end = Math.min(i + size, text.length);
+    if (end < text.length) { const c = text.charCodeAt(end); if (c >= 0xdc00 && c <= 0xdfff) end--; }
+    out.push(text.slice(i, end));
+    i = end;
+  }
+  return out;
+}
+/* G45: what one value of an ingest's record binds: its JSON in the column while at most INGEST_INLINE_MAX bytes (as before), else a marker and chunks */
+function ingestStored(kind, value) {
+  const text = JSON.stringify(value);
+  const bytes = new TextEncoder().encode(text).byteLength;
+  if (bytes <= INGEST_INLINE_MAX) return { kind, column: text, chunks: [] };
+  const chunks = chunksOf(text);
+  return { kind, column: JSON.stringify({ parts: chunks.length, bytes, count: Array.isArray(value) ? value.length : 1 }), chunks };
+}
 const no = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
 const weaker = (a, b) => (GRADES.indexOf(a) >= GRADES.indexOf(b) ? a : b);
 const isGrade = (g) => GRADES.includes(g);
@@ -264,6 +296,7 @@ export class Calculations {
   #inputListeners = [];     // R11: {module, fn}
   #patternListeners = [];   // R23: {module, fn}
   #tableCache = new Map();  // sha → held table (`textTable`), the last few read, within TABLE_CACHE_CHARS
+  #engines = new Map();     // content id → the engine mark `#engineFor` last made (R9); the synchronous reads (R19, R30) read it
 
   constructor({ storage, record, membership, content, provenance, combine = combineProfiles, now = null,
                 clock = null, host = null, registry = defaultRegistry, ...upstream } = {}) {
@@ -324,18 +357,71 @@ export class Calculations {
 
   /* R9 (N676, K1799): the third-party engine that computed a content row's value: a sheet range or cell any of whose
      cells is a formula, its value the file's cached result (content R52). `{name, version}` or null. */
+  async #engineFor(row) {
+    if (!row || (row.extent_kind !== "sheet-range" && row.extent_kind !== "sheet-cell")) return null;
+    let engine;
+    try {
+      const got = await this.content.cellsAt(row.content_id);
+      if (got && (got.cells_truncated === true || got.reason === "cells_truncated")) engine = UNDETERMINED_ENGINE;
+      else {
+        const cells = got && Array.isArray(got.cells) ? got.cells : [];
+        engine = cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "") ? { name: FILE_ENGINE, version: null } : null;
+      }
+    } catch { engine = UNDETERMINED_ENGINE; }
+    this.#engines.set(row.content_id, engine);
+    return engine;
+  }
+
+  /* The same mark for the synchronous reads (R19, R30), which cannot wait on `content.cellsAt`: what the last
+     asynchronous entry that graded this row made; a sheet row not yet made is undetermined, never null. */
   #engineOf(row) {
     if (!row || (row.extent_kind !== "sheet-range" && row.extent_kind !== "sheet-cell")) return null;
-    let got = null;
-    try { got = this.content.cellsAt(row.content_id); } catch { got = null; }
-    const cells = got && Array.isArray(got.cells) ? got.cells : [];
-    return cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "") ? { name: FILE_ENGINE, version: null } : null;
+    return this.#engines.has(row.content_id) ? this.#engines.get(row.content_id) : UNDETERMINED_ENGINE;
+  }
+
+  /* R9: a figure input's mark as the create stored it (the synchronous reads, R19 and R30, read it; an object restart
+     loses nothing): the explicit undetermined engine for a row stored before, until a read makes it. */
+  #figureEngine(calcId, inp) {
+    const r = this.#one(`SELECT engine_json FROM calc_inputs WHERE calc_id=? AND input_name=? AND ref=?`, calcId, inp.name, inp.figure);
+    if (!r || r.engine_json == null) return UNDETERMINED_ENGINE;
+    const m = parse(r.engine_json);
+    return m && m.name === UNDETERMINED_ENGINE.name ? UNDETERMINED_ENGINE : m && typeof m.name === "string" ? { name: m.name, version: m.version ?? null } : null;
+  }
+
+  /* Make the marks of a calculation's inputs (a figure's row; a table whose source records none) before a grade is read. */
+  async #warmEngines(c) {
+    for (const inp of parse(c.inputs_json) || []) {
+      if (!plain(inp)) continue;
+      if (inp.figure !== undefined) {
+        const row = this.content.contentRow(inp.figure);
+        const mark = await this.#engineFor(row);
+        /* R-OLD: a row stored before holds no mark, or an undetermined one a failed cellsAt made: written now */
+        const have = this.#one(`SELECT engine_json FROM calc_inputs WHERE calc_id=? AND input_name=? AND ref=?`, c.calc_id, inp.name, inp.figure);
+        const stored = have && have.engine_json != null ? parse(have.engine_json) : undefined;
+        const mine = row ? json(mark ?? null) : null;
+        if (have && mine !== null && (stored === undefined || (stored && stored.name === UNDETERMINED_ENGINE.name && mark !== UNDETERMINED_ENGINE)))
+          this.sql.exec(`UPDATE calc_inputs SET engine_json=? WHERE calc_id=? AND input_name=? AND ref=?`, mine, c.calc_id, inp.name, inp.figure);
+      }
+      else if (inp.table !== undefined) await this.#warmTable(this.#one(`SELECT sha, source_json FROM calc_tables WHERE sha=?`, inp.table));
+      else if (inp.calculation !== undefined) {
+        const o = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, inp.calculation);
+        if (o) await this.#warmEngines(o);
+      }
+    }
+  }
+
+  async #warmTable(r) {
+    const src = r ? parse(r.source_json) || {} : {};
+    if (src.kind !== "uses" && src.engine === undefined && src.content_id) await this.#engineFor(this.content.contentRow(src.content_id));
   }
 
   /* R9: a grade with its engine marks: a value a third-party engine computed is undetermined until that engine's
      agreement is recorded as measured, the derivation step "third-party engine"; every other input `engine: null`. */
   #withEngine(g, engine) {
     if (!engine) return { ...g, engine: null, engine_measured: null };
+    if (engine === UNDETERMINED_ENGINE)
+      return { grade: null, why: localize("calculations.index.its_cells_could_not_be", "its cells could not be read to say whether a third-party engine computed them, so its grade is undetermined"),
+        engine: UNDETERMINED_ENGINE.name, engine_measured: false, derivation_step: ENGINE_STEP };
     const name = engine.version ? `${engine.name} ${engine.version}` : engine.name;
     const measured = MEASURED_ENGINES.includes(name);
     if (measured) return { ...g, engine: name, engine_measured: true, derivation_step: ENGINE_STEP };
@@ -377,7 +463,9 @@ export class Calculations {
   /* R1: the source's rows: a sheet range's typed cells, a passage's text read as CSV, or a whole document's bytes. */
   async #sourceRows(row) {
     if (row.extent_kind === "sheet-range" || row.extent_kind === "sheet-cell") {
-      const got = this.content.cellsAt(row.content_id);
+      let got = null;
+      try { got = await this.content.cellsAt(row.content_id); } catch { got = null; }
+      if (got && (got.cells_truncated === true || got.reason === "cells_truncated")) return { fault: word("calculations.range_cells_held", { got: "cells_truncated" }) };
       if (!got || !Array.isArray(got.cells)) return { fault: word("calculations.range_cells_held", { got: String(got && got.reason ? got.reason : "unread") }) };
       const byRow = new Map();
       for (const c of got.cells) {
@@ -541,6 +629,7 @@ export class Calculations {
     const crow = src ? this.content.contentRow(src.content_id) : null;
     let cg = null;
     try { cg = crow ? this.provenance.captureGrade(crow.capture_sha) : null; } catch { cg = null; }
+    await this.#warmTable(r);
     const g = this.#tableGrade(r);
     return { ok: true, found: true, ...this.#tableAnswer(r),
       table: { sha: r.sha, fields: parse(r.schema_json).fields, rows,
@@ -666,6 +755,7 @@ export class Calculations {
         if (!r || !this.#seesTable(r, viewer)) { missing(inp.name, String(ref)); break; }
         const t = await this.#heldTable(r.sha);
         if (!t) { missing(inp.name, r.sha); break; }
+        await this.#warmTable(r);
         const g = this.#tableGrade(r);
         /* R1, R4: bound as calc-grammar's streamed table (its R22), its bytes the table's own canonical CSV */
         bound[inp.name] = t.streamed(); hashes[inp.name] = r.sha; refs.push({ name: inp.name, kind, ref: r.sha });
@@ -685,13 +775,14 @@ export class Calculations {
         const row = typeof ref === "string" ? this.content.contentRow(ref) : null;
         if (!row || !this.#sees(row.bundle_id, viewer)) { missing(inp.name, String(ref)); break; }
         let text = null;
-        if (row.extent_kind === "sheet-cell") { const c = this.content.cellsAt(ref); text = c && Array.isArray(c.cells) && c.cells.length === 1 ? String(c.cells[0].value ?? "") : null; }
+        if (row.extent_kind === "sheet-cell") { let c = null; try { c = await this.content.cellsAt(ref); } catch { c = null; } text = c && !c.cells_truncated && Array.isArray(c.cells) && c.cells.length === 1 ? String(c.cells[0].value ?? "") : null; }
         else { try { text = this.content.passageText(ref); } catch { text = null; } }
+        const mark = await this.#engineFor(row);
         const f = typeof text === "string" ? parseFigure(text) : { refused: "FIGURE_INVALID", why: word("calculations.why.passage_text_held") };
         if (f.refused) { refused = no("FIGURE_NOT_READ", `the input "${inp.name}" cites a passage that does not read as one figure: ${f.why}. Nothing was written.`, { input: inp.name, ref }); break; }
         const fig = { ...f }; delete fig.as_read;
         const g = this.#contentGrade(row);
-        bound[inp.name] = fig; held(inp.name, { content: ref, figure: fig }); refs.push({ name: inp.name, kind, ref });
+        bound[inp.name] = fig; held(inp.name, { content: ref, figure: fig }); refs.push({ name: inp.name, kind, ref, engine: mark });
         described.push({ name: inp.name, kind, ref, as_read: f.as_read, grade: g.grade, why: g.why });
       } else if (kind === "value") {
         const f = typeof ref === "string" ? parseFigure(ref) : { refused: "FIGURE_INVALID", why: word("calculations.why.typed_figure_text") };
@@ -710,6 +801,7 @@ export class Calculations {
         else if (plain(v) && plain(v.value) && v.numerator !== undefined) b = v.value;
         else if (plain(v) && (typeof v.value === "string" || typeof v.low === "string" || v.undetermined)) b = v;
         if (!b) { refused = no("FIGURE_NOT_READ", `the calculation "${ref}" answers no figure or table an input can take. Nothing was written.`, { input: inp.name, ref }); break; }
+        await this.#warmEngines(c);
         const axis = this.#gradeFacts(c);
         /* its bytes: the canonical JSON its result key is the SHA-256 of (calc-grammar R15), from its own inputs' hashes */
         const pre = parse(c.input_shas_json);
@@ -1175,8 +1267,8 @@ export class Calculations {
         c.threshold ? json(c.threshold) : null, METHOD, str(methodNote) || null, evidences ? json(evidences) : null,
         c.result_key, json(c.results), at, by, at, json(c.hashes));
       for (const ref of c.refs)
-        this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref) VALUES (?,?,?,?,?)`,
-          calcId, project ? str(project) : null, ref.name, ref.kind, ref.ref);
+        this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref, engine_json) VALUES (?,?,?,?,?,?)`,
+          calcId, project ? str(project) : null, ref.name, ref.kind, ref.ref, ref.kind === "figure" ? json(ref.engine ?? null) : null);
       if (c.threshold && c.threshold.content)
         this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref) VALUES (?,?,?,?,?)`,
           calcId, project ? str(project) : null, "threshold", "figure", c.threshold.content);
@@ -1336,7 +1428,7 @@ export class Calculations {
       }
       if (inp.figure !== undefined) {
         const row = this.content.contentRow(inp.figure);
-        const g = row ? this.#withEngine(this.#contentGrade(row), this.#engineOf(row)) : { grade: null, why: word("calculations.why.cited_passage_held"), engine: null, engine_measured: null };
+        const g = row ? this.#withEngine(this.#contentGrade(row), this.#figureEngine(c.calc_id, inp)) : { grade: null, why: word("calculations.why.cited_passage_held"), engine: null, engine_measured: null };
         per.push({ name: inp.name, kind: "figure", ref: inp.figure, ...g }); continue;
       }
       if (inp.money !== undefined) {
@@ -1385,6 +1477,7 @@ export class Calculations {
     if (!str(calcId)) return no("NO_CALC", "a calculation is read by its id.");
     const c = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str(calcId));
     if (!c || !this.#visible(c, viewer)) return { ok: true, found: false, calc_id: str(calcId) };
+    await this.#warmEngines(c);
     const results = parse(c.results_json);
     /* R9: each input's SHA-256 of its canonical bytes as the calculation was computed over them (a table's is its sha;
        a calculation created before T34 recorded no other, so it answers null) */
@@ -1559,6 +1652,8 @@ export class Calculations {
    *  through an identifier. `rows` lists row numbers (0-based); every row only with `rows: "all"` and a reason. */
   async ingestMoney({ binding = null, rows = null, reason = null, by = null } = {}) {
     if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", localize("calculations.index.money_facts_are_read_from", "money facts are read from a table only at a member's request (K1468). Nothing was written."));
+    if (typeof reason === "string" && [...reason].length > INGEST_REASON_MAX)
+      return no("BAD_REASON", localize("calculations.index.a_reason_is_at_most", "a reason is at most {max} characters; shorten it. Nothing was written.", { max: String(INGEST_REASON_MAX) }), { max: INGEST_REASON_MAX });
     const b = typeof binding === "string" ? this.#one(`SELECT * FROM calc_bindings WHERE binding_key=?`, binding) : null;
     if (!b || !this.#sees(b.bundle_id, by)) return no("NO_SUCH_BINDING", "no adopted binding answers to that key here, or it is not one you may see. Nothing was written.");
     const t = await this.#heldTable(b.table_sha);
@@ -1569,6 +1664,8 @@ export class Calculations {
       picked = Array.from({ length: t.size }, (_, i) => i);
     } else if (Array.isArray(rows) && rows.length && rows.every((n) => Number.isSafeInteger(n) && n >= 0)) picked = [...new Set(rows)].sort((x, y) => x - y);
     else return no("NO_ROWS", "name the rows to read into money facts, by number, or every row with rows: \"all\" and a reason. Nothing was written.");
+    if (picked.length > INGEST_ROWS_MAX)
+      return no("INGEST_TOO_LARGE", localize("calculations.index.one_act_reads_at_most", "one act reads at most {bound_rows} rows and this asks for {rows}; list the rows in windows of at most {bound_rows} (rows: [..]). Nothing was written.", { rows: String(picked.length), bound_rows: String(INGEST_ROWS_MAX) }), { rows: picked.length, bound_rows: INGEST_ROWS_MAX });
     const money = this.dep("money");
     if (!money || typeof money.recordFact !== "function") return no("MONEY_NOT_REACHABLE", "the money module is not reachable here. Nothing was written.");
     const roles = parse(b.roles_json);
@@ -1616,13 +1713,35 @@ export class Calculations {
     }
     const at = this.now();
     const key = sha({ binding: b.binding_key, rows: picked, by, at });
+    /* G45: each of the three values is stored whole in the row while it is at most INGEST_INLINE_MAX bytes, else in pieces,
+       the row and its pieces in the one transaction */
+    const values = [["rows", rows === "all" ? "all" : picked], ["written", written], ["not_written", notWritten]]
+      .map(([kind, v]) => ingestStored(kind, v));
     this.record.transact(() => {
       this.sql.exec(`INSERT OR IGNORE INTO calc_ingests (ingest_key, binding_key, bundle_id, rows_json, reason, written_json, not_written_json, asked_by, at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`, key, b.binding_key, b.bundle_id ?? null, json(rows === "all" ? "all" : picked),
-        str(reason) || null, json(written), json(notWritten), by, at);
+                     VALUES (?,?,?,?,?,?,?,?,?)`, key, b.binding_key, b.bundle_id ?? null, values[0].column,
+        str(reason) || null, values[1].column, values[2].column, by, at);
+      for (const v of values)
+        v.chunks.forEach((chunk, seq) => this.sql.exec(`INSERT OR IGNORE INTO calc_ingest_parts (ingest_key, kind, seq, bundle_id, chunk) VALUES (?,?,?,?,?)`,
+          key, v.kind, seq, b.bundle_id ?? null, chunk));
       return { ok: true };
     });
     return { ok: true, ingest: key, binding: b.binding_key, written, not_written: notWritten, by: INGEST_STAMP, asked_by: by };
+  }
+
+  /** R14 (G45): `ingestOf(key)`, synchronously: an ingest as it was recorded, `{ingest, binding, bundle_id, rows, reason, written,
+   *  not_written, asked_by, at}`, each value joined from its pieces exactly as `json` made it; null when none is held. Cut nowhere. */
+  ingestOf(key) {
+    const r = typeof key === "string" ? this.#one(`SELECT * FROM calc_ingests WHERE ingest_key=?`, key) : null;
+    if (!r) return null;
+    const value = (kind, column) => {
+      const v = parse(column);
+      if (!plain(v) || typeof v.parts !== "number") return v;
+      const text = this.#rows(`SELECT chunk FROM calc_ingest_parts WHERE ingest_key=? AND kind=? ORDER BY seq`, key, kind).map((c) => c.chunk).join("");
+      return parse(text);
+    };
+    return { ingest: r.ingest_key, binding: r.binding_key, bundle_id: r.bundle_id ?? null, rows: value("rows", r.rows_json), reason: r.reason ?? null,
+      written: value("written", r.written_json), not_written: value("not_written", r.not_written_json), asked_by: r.asked_by, at: r.at };
   }
 
   /* ===================================================================== *

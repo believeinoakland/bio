@@ -104,7 +104,7 @@ export const screen = (id) => SCREENS.find((s) => s.id === id);
  *  `interfacewords` (the member's shown words). */
 export async function open(id, { me, table, subject = null, reachable = false, words = null, screens = SCREENS } = {}) {
   const plane = {};
-  for (const [op, a] of Object.entries(table)) plane[op] = (req) => { const q = { ...req.query }; delete q.op; return toResponse(typeof a === "function" ? a(q, req.body) : a); };
+  for (const [op, a] of Object.entries(table)) plane[op] = async (req) => { const q = { ...req.query }; delete q.op; return toResponse(typeof a === "function" ? await a(q, req.body) : a); };
   if (reachable) {
     if (!table.assistantstate) plane.assistantstate = ok({ ok: true, on: true });
     if (!table.groupkeystate) plane.groupkeystate = ok({ ok: true, on: true });

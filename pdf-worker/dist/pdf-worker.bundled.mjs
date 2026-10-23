@@ -39709,11 +39709,75 @@ var linkWrapper = {
 };
 
 // ../bio-plane/src/pdfstructure.mjs
+var ASCII_FILTERS = /* @__PURE__ */ new Set(["ASCII85Decode", "A85", "ASCIIHexDecode", "AHx"]);
+function ascii85Decode(src) {
+  let i2 = 0;
+  while (i2 < src.length && isWhitespace2(src[i2])) i2++;
+  if (src[i2] === 60 && src[i2 + 1] === 126) i2 += 2;
+  let zs2 = 0;
+  for (let k2 = src.indexOf(122); k2 !== -1; k2 = src.indexOf(122, k2 + 1)) zs2++;
+  const out = new Uint8Array(Math.ceil(src.length * 4 / 5) + 3 * zs2 + 4);
+  let o2 = 0, n2 = 0, acc = 0;
+  for (; i2 < src.length; i2++) {
+    const c2 = src[i2];
+    if (isWhitespace2(c2)) continue;
+    if (c2 === 126) break;
+    if (c2 === 122 && n2 === 0) {
+      o2 += 4;
+      continue;
+    }
+    if (c2 < 33 || c2 > 117) return null;
+    acc = acc * 85 + (c2 - 33);
+    if (++n2 === 5) {
+      if (acc > 4294967295) return null;
+      out[o2++] = acc >>> 24;
+      out[o2++] = acc >>> 16 & 255;
+      out[o2++] = acc >>> 8 & 255;
+      out[o2++] = acc & 255;
+      n2 = 0;
+      acc = 0;
+    }
+  }
+  if (n2 === 1) return null;
+  if (n2 > 1) {
+    for (let k2 = n2; k2 < 5; k2++) acc = acc * 85 + 84;
+    if (acc > 4294967295) return null;
+    const four = [acc >>> 24, acc >>> 16 & 255, acc >>> 8 & 255, acc & 255];
+    for (let k2 = 0; k2 < n2 - 1; k2++) out[o2++] = four[k2];
+  }
+  return out.slice(0, o2);
+}
+function asciiHexDecode(src) {
+  const out = new Uint8Array((src.length >> 1) + 1);
+  let o2 = 0, hi2 = -1;
+  for (let i2 = 0; i2 < src.length; i2++) {
+    const c2 = src[i2];
+    if (isWhitespace2(c2)) continue;
+    if (c2 === 62) break;
+    const d2 = c2 >= 48 && c2 <= 57 ? c2 - 48 : c2 >= 65 && c2 <= 70 ? c2 - 55 : c2 >= 97 && c2 <= 102 ? c2 - 87 : -1;
+    if (d2 < 0) return null;
+    if (hi2 < 0) hi2 = d2;
+    else {
+      out[o2++] = hi2 << 4 | d2;
+      hi2 = -1;
+    }
+  }
+  if (hi2 >= 0) out[o2++] = hi2 << 4;
+  return out.slice(0, o2);
+}
+function undoAscii(names, raw) {
+  let data = raw, i2 = 0;
+  for (; i2 < names.length && ASCII_FILTERS.has(names[i2]); i2++) {
+    data = names[i2] === "ASCIIHexDecode" || names[i2] === "AHx" ? asciiHexDecode(data) : ascii85Decode(data);
+    if (!data) return null;
+  }
+  return { data, rest: names.slice(i2) };
+}
 var PDF_LINK_TYPES = [...LINK_TYPES, "undetermined"];
 function binaryString(u8) {
   if (!(u8 instanceof Uint8Array)) return "";
   let out = "";
-  for (let i2 = 0; i2 < u8.length; i2 += 8192) out += String.fromCharCode.apply(null, u8.subarray(i2, i2 + 8192));
+  for (let i2 = 0; i2 < u8.length; i2 += 16384) out += String.fromCharCode.apply(null, u8.subarray(i2, i2 + 16384));
   return out;
 }
 function isWhitespace2(c2) {
@@ -39776,9 +39840,14 @@ async function inflateWithTrailing(u8) {
 }
 function adler32(u8) {
   let a2 = 1, b2 = 0;
-  for (let i2 = 0; i2 < u8.length; i2++) {
-    a2 = (a2 + u8[i2]) % 65521;
-    b2 = (b2 + a2) % 65521;
+  for (let i2 = 0; i2 < u8.length; ) {
+    const end = Math.min(u8.length, i2 + 5552);
+    for (; i2 < end; i2++) {
+      a2 += u8[i2];
+      b2 += a2;
+    }
+    a2 %= 65521;
+    b2 %= 65521;
   }
   return (b2 << 16 | a2) >>> 0;
 }
@@ -39857,6 +39926,15 @@ function skipWs(s2, pos) {
   }
   return pos;
 }
+var NAME_VALUES = /* @__PURE__ */ new Map();
+var NAME_VALUES_MAX = 4096;
+function nameValue(v2) {
+  let n2 = NAME_VALUES.get(v2);
+  if (n2) return n2;
+  n2 = Object.freeze({ t: "name", v: v2 });
+  if (NAME_VALUES.size < NAME_VALUES_MAX && v2.length <= 64) NAME_VALUES.set(v2, n2);
+  return n2;
+}
 function parseName(s2, pos) {
   pos++;
   let out = "";
@@ -39874,7 +39952,7 @@ function parseName(s2, pos) {
     out += s2[pos];
     pos++;
   }
-  return { value: { t: "name", v: out }, pos };
+  return { value: nameValue(out), pos };
 }
 function parseNumber(s2, pos) {
   const start = pos;
@@ -39928,11 +40006,14 @@ function parseArray(buf, s2, pos) {
     items.push(r2.value);
     pos = r2.pos;
   }
-  return { value: { t: "arr", items }, pos };
+  return { value: { t: "arr", items: items.length < 16 ? items.slice() : items }, pos };
 }
+function Dict2() {
+}
+Dict2.prototype = /* @__PURE__ */ Object.create(null);
 function parseDict(buf, s2, pos) {
   pos += 2;
-  const map = /* @__PURE__ */ Object.create(null);
+  const map = new Dict2();
   while (true) {
     pos = skipWs(s2, pos);
     if (pos >= s2.length) break;
@@ -39956,22 +40037,223 @@ function parseDict(buf, s2, pos) {
     let p2 = after + 6;
     if (s2.charCodeAt(p2) === 13) p2++;
     if (s2.charCodeAt(p2) === 10) p2++;
-    return { value: { t: "stream", dict: map, start: p2 }, pos: p2, streamPending: true };
+    return { value: { t: "stream", dict: map, start: p2 + (typeof buf === "number" ? buf : 0) }, pos: p2, streamPending: true };
   }
   return { value: { t: "dict", map }, pos };
+}
+var OBJ_CACHE_COST = 12e5;
+var INNER_CACHE_BYTES = 16 * 1024 * 1024;
+var INNER_DECODE_MAX = 128 * 1024 * 1024;
+var INNER_CHECK_BYTES = 2 * 1024 * 1024;
+var LARGE_RAW_BYTES = 128 * 1024;
+var isJsSpaceByte = (c2) => c2 >= 9 && c2 <= 13 || c2 === 32 || c2 === 160;
+var isWordByte = (c2) => c2 >= 48 && c2 <= 57 || c2 >= 65 && c2 <= 90 || c2 >= 97 && c2 <= 122 || c2 === 95;
+function parseWindow(bytes, pos, first = 512) {
+  if (!Number.isFinite(pos) || pos < 0 || pos >= bytes.length) return null;
+  pos = Math.trunc(pos);
+  for (let size = Math.max(32, first); ; size *= 8) {
+    const hi2 = Math.min(bytes.length, pos + size);
+    const s2 = binaryString(bytes.subarray(pos, hi2));
+    const r2 = parseValueSafe(s2, 0, pos);
+    const more = hi2 < bytes.length;
+    if (!r2) {
+      if (more && skipWs(s2, 0) + 16 > s2.length) continue;
+      return null;
+    }
+    if (more && skipWs(s2, r2.pos) + 16 > s2.length) continue;
+    return { value: r2.value, len: r2.pos };
+  }
+}
+var ObjectTable = class _ObjectTable {
+  constructor(doc) {
+    this.doc = doc;
+    this.hot = /* @__PURE__ */ new Map();
+    this.pins = /* @__PURE__ */ new Map();
+    this.cost = 0;
+    this.n = 0;
+    this.num = new Float64Array(256);
+    this.p = new Uint32Array(256);
+    this.w = new Int32Array(256);
+    this.stm = new Float64Array(256);
+    this.g = new Float64Array(256);
+    this.fl = new Uint8Array(256);
+    this.ty = new Uint16Array(256);
+    this.types = [null];
+    this.typeIx = /* @__PURE__ */ new Map();
+    this.slots = new Int32Array(512);
+  }
+  get size() {
+    return this.n;
+  }
+  static hash(n2) {
+    return Math.imul(n2 % 4294967296 | 0, 2654435761) >>> 0;
+  }
+  row(n2) {
+    const mask = this.slots.length - 1;
+    for (let i2 = _ObjectTable.hash(n2) & mask, s2; s2 = this.slots[i2]; i2 = i2 + 1 & mask) if (this.num[s2 - 1] === n2) return s2 - 1;
+    return -1;
+  }
+  has(n2) {
+    return this.row(n2) >= 0;
+  }
+  *keys() {
+    for (let i2 = 0; i2 < this.n; i2++) yield this.num[i2];
+  }
+  gen(n2) {
+    const r2 = this.row(n2);
+    return r2 < 0 ? void 0 : this.g[r2];
+  }
+  grow() {
+    const cap = this.num.length * 2;
+    for (const k2 of ["num", "p", "w", "stm", "g", "fl", "ty"]) {
+      const a2 = new this[k2].constructor(cap);
+      a2.set(this[k2]);
+      this[k2] = a2;
+    }
+  }
+  rehash() {
+    this.slots = new Int32Array(this.slots.length * 2);
+    const mask = this.slots.length - 1;
+    for (let r2 = 0; r2 < this.n; r2++) {
+      let i2 = _ObjectTable.hash(this.num[r2]) & mask;
+      while (this.slots[i2]) i2 = i2 + 1 & mask;
+      this.slots[i2] = r2 + 1;
+    }
+  }
+  /** A definition of `n` whose value, parsed at `p` of the file (`stm` -1) or of object stream `stm`, is `v`: the later
+   *  one replaces an earlier one's, keeping the number's place in the order. */
+  put(n2, p2, w2, stm, g2, v2) {
+    let r2 = this.row(n2);
+    if (r2 < 0) {
+      if (this.n === this.num.length) this.grow();
+      if ((this.n + 1) * 2 > this.slots.length) this.rehash();
+      r2 = this.n++;
+      this.num[r2] = n2;
+      const mask = this.slots.length - 1;
+      let i2 = _ObjectTable.hash(n2) & mask;
+      while (this.slots[i2]) i2 = i2 + 1 & mask;
+      this.slots[i2] = r2 + 1;
+    }
+    this.p[r2] = p2;
+    this.w[r2] = w2;
+    this.stm[r2] = stm;
+    this.g[r2] = g2;
+    const map = v2 && v2.t === "dict" ? v2.map : v2 && v2.t === "stream" ? v2.dict : null;
+    const ty = map && map.Type && map.Type.t === "name" ? map.Type.v : null;
+    let t2 = 0;
+    if (ty !== null) {
+      t2 = this.typeIx.get(ty);
+      if (t2 === void 0) {
+        t2 = this.types.length;
+        if (t2 > 65535) t2 = 0;
+        else {
+          this.types.push(ty);
+          this.typeIx.set(ty, t2);
+        }
+      }
+    }
+    this.ty[r2] = t2;
+    const sd = map && map.Filter && map.Filter.t === "name" && map.Filter.v === "Standard" && map.R != null;
+    this.fl[r2] = (v2 && v2.t === "dict" ? 1 : v2 && v2.t === "stream" ? 2 : 0) | (sd ? 4 : 0);
+    this.pins.delete(n2);
+    const h2 = this.hot.get(n2);
+    if (h2) {
+      this.cost -= h2.c;
+      this.hot.delete(n2);
+    }
+  }
+  /** The parsed value of object `n`, or undefined; parsed objects are reused while they are recent. */
+  get(n2) {
+    const r2 = this.row(n2);
+    if (r2 < 0) return void 0;
+    if (this.pins.has(n2)) return this.pins.get(n2);
+    const h2 = this.hot.get(n2);
+    if (h2) {
+      this.hot.delete(n2);
+      this.hot.set(n2, h2);
+      return h2.v;
+    }
+    const got = this.parse(r2);
+    if (!got) return void 0;
+    const c2 = 1 + got.len * 3;
+    this.hot.set(n2, { v: got.value, c: c2 });
+    this.cost += c2;
+    for (const [k2, old] of this.hot) {
+      if (this.cost <= OBJ_CACHE_COST || this.hot.size <= 1) break;
+      this.hot.delete(k2);
+      this.cost -= old.c;
+    }
+    return got.value;
+  }
+  /** The parsed value of `n` without keeping it. */
+  peek(n2) {
+    const r2 = this.row(n2);
+    if (r2 < 0) return void 0;
+    if (this.pins.has(n2)) return this.pins.get(n2);
+    const h2 = this.hot.get(n2);
+    if (h2) return h2.v;
+    const got = this.parse(r2);
+    return got ? got.value : void 0;
+  }
+  /** Keep object `n`'s parsed value for good: a caller that compares the identity of what it resolved asks for this. */
+  pin(n2) {
+    const v2 = this.get(n2);
+    if (v2 === void 0) return;
+    const h2 = this.hot.get(n2);
+    if (h2) {
+      this.cost -= h2.c;
+      this.hot.delete(n2);
+    }
+    this.pins.set(n2, v2);
+  }
+  parse(r2) {
+    const stm = this.stm[r2];
+    const src = stm < 0 ? this.doc._b : this.doc._innerBytes(stm);
+    return src ? parseWindow(src, this.p[r2], this.w[r2]) : null;
+  }
+  /** Object numbers, in order, whose winning definition is of kind `kind` (1 dictionary, 2 stream, 3 either) and, when
+   *  given, has the `/Type` name `type`. */
+  nums(kind, type) {
+    const out = [];
+    const t2 = type === void 0 ? -1 : this.typeIx.get(type);
+    if (t2 === void 0) return out;
+    for (let r2 = 0; r2 < this.n; r2++) {
+      const k2 = this.fl[r2] & 3;
+      if (!(kind === 3 ? k2 > 0 : k2 === kind) || t2 >= 0 && this.ty[r2] !== t2) continue;
+      out.push(this.num[r2]);
+    }
+    return out;
+  }
+  /** Object numbers that could be the Standard security handler. */
+  standard() {
+    const out = [];
+    for (let r2 = 0; r2 < this.n; r2++) if (this.fl[r2] & 4) out.push(this.num[r2]);
+    return out;
+  }
+};
+function fingerprint(a2) {
+  let h1 = 2166136261, h2 = 16777619;
+  for (let i2 = 0; i2 < a2.length; i2++) {
+    h1 = Math.imul(h1 ^ a2[i2], 16777619);
+    h2 = Math.imul(h2 ^ a2[i2], 2246822507) + 2654435769 | 0;
+  }
+  return `${a2.length}:${(h1 >>> 0).toString(16)}:${(h2 >>> 0).toString(16)}`;
 }
 var PdfDoc = class {
   constructor(bytes) {
     this.bytes = bytes;
-    this.s = binaryString(bytes);
-    this._objs = /* @__PURE__ */ new Map();
-    this._gens = /* @__PURE__ */ new Map();
+    this._b = bytes instanceof Uint8Array ? bytes : new Uint8Array(0);
+    this._objs = new ObjectTable(this);
+    this._inners = /* @__PURE__ */ new Map();
+    this._innerBytesHeld = 0;
+    this._sticky = /* @__PURE__ */ new Map();
+    this._innerLen = /* @__PURE__ */ new Map();
     this.pageIndexByObj = /* @__PURE__ */ new Map();
     this._pageOrder = [];
     this.pageCount = 0;
     this.root = null;
     this.notes = [];
-    this._trailingNoted = /* @__PURE__ */ new WeakSet();
+    this._trailingNoted = /* @__PURE__ */ new Set();
   }
   /** The resolved dict of the page at 0-based `pageIdx` in page order, or null
    *  (R31). */
@@ -39983,19 +40265,30 @@ var PdfDoc = class {
     this.notes.push(msg);
   }
   /** Scan every top-level `N G obj` in the file. Later definitions win, which
-   *  matches incremental-update semantics without parsing any xref. */
+   *  matches incremental-update semantics without parsing any xref. The first
+   *  reader scanned the file as a string with `/(\d+)\s+(\d+)\s+obj\b/g`; this
+   *  finds the same matches in the same order from the bytes (`\s` as
+   *  JavaScript means it: the PDF whitespace bytes, and 0x0B and 0xA0). */
   scanTopLevel() {
-    const s2 = this.s;
-    const re2 = /(\d+)\s+(\d+)\s+obj\b/g;
-    let m2;
-    while (m2 = re2.exec(s2)) {
-      const num = parseInt(m2[1], 10);
-      const bodyStart = m2.index + m2[0].length;
-      const r2 = parseValueSafe(s2, bodyStart);
-      if (r2) {
-        this._objs.set(num, r2.value);
-        this._gens.set(num, parseInt(m2[2], 10));
-      }
+    const b2 = this._b;
+    for (let j2 = b2.indexOf(106); j2 !== -1; j2 = b2.indexOf(106, j2 + 1)) {
+      if (j2 < 2 || b2[j2 - 1] !== 98 || b2[j2 - 2] !== 111 || isWordByte(b2[j2 + 1])) continue;
+      let p2 = j2 - 3;
+      if (!(p2 >= 0 && isJsSpaceByte(b2[p2]))) continue;
+      while (p2 >= 0 && isJsSpaceByte(b2[p2])) p2--;
+      const genEnd = p2 + 1;
+      while (p2 >= 0 && b2[p2] >= 48 && b2[p2] <= 57) p2--;
+      const genStart = p2 + 1;
+      if (genStart === genEnd || !(p2 >= 0 && isJsSpaceByte(b2[p2]))) continue;
+      while (p2 >= 0 && isJsSpaceByte(b2[p2])) p2--;
+      const numEnd = p2 + 1;
+      while (p2 >= 0 && b2[p2] >= 48 && b2[p2] <= 57) p2--;
+      const numStart = p2 + 1;
+      if (numStart === numEnd) continue;
+      const num = parseInt(binaryString(b2.subarray(numStart, numEnd)), 10);
+      const bodyStart = j2 + 1;
+      const r2 = parseWindow(b2, bodyStart);
+      if (r2) this._objs.put(num, bodyStart, r2.len + 64, -1, parseInt(binaryString(b2.subarray(genStart, genEnd)), 10), r2.value);
     }
   }
   resolve(v2, seen = 0) {
@@ -40025,7 +40318,7 @@ var PdfDoc = class {
     const len = this.resolve(streamObj.dict.Length);
     if (typeof len === "number" && len >= 0 && start + len <= this.bytes.length) {
       end = start + len;
-      const tail = this.s.indexOf("endstream", end - 2);
+      const tail = firstAscii(this.bytes, "endstream", Math.max(0, end - 2));
       if (tail === -1 || tail > end + 4) end = this._scanEndstream(start);
     } else {
       end = this._scanEndstream(start);
@@ -40034,11 +40327,11 @@ var PdfDoc = class {
     return this.bytes.subarray(start, end);
   }
   _scanEndstream(start) {
-    const idx = this.s.indexOf("endstream", start);
+    const idx = firstAscii(this.bytes, "endstream", start);
     if (idx === -1) return null;
     let e2 = idx;
-    if (this.s.charCodeAt(e2 - 1) === 10) e2--;
-    if (this.s.charCodeAt(e2 - 1) === 13) e2--;
+    if (this.bytes[e2 - 1] === 10) e2--;
+    if (this.bytes[e2 - 1] === 13) e2--;
     return e2;
   }
   /** Decompress a stream's bytes if its filter chain is (Flate). Answers a
@@ -40054,19 +40347,30 @@ var PdfDoc = class {
     }
   }
   async _streamDecoded(streamObj) {
-    const raw = this.streamRawBytes(streamObj);
+    let raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
     const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f2) => f2 && f2.t === "name" ? f2.v : null) : [null];
     if (names.length === 0) return raw;
-    if (!names.every((n2) => n2 === "FlateDecode" || n2 === "Fl")) return null;
+    const un2 = undoAscii(names, raw);
+    if (!un2 || !un2.rest.every((n2) => n2 === "FlateDecode" || n2 === "Fl")) return null;
+    raw = un2.data;
+    if (!un2.rest.length) return this._unpredicted(streamObj, raw);
+    if (raw.length >= LARGE_RAW_BYTES) {
+      const exact = inflateChecked(raw, INNER_DECODE_MAX);
+      if (exact) return this._unpredicted(streamObj, exact);
+    }
     const inflated = await inflate(raw);
     if (!inflated) return null;
     let data = inflated.data;
-    if (inflated.trailing > 0 && !this._trailingNoted.has(streamObj)) {
-      this._trailingNoted.add(streamObj);
+    if (inflated.trailing > 0 && !this._trailingNoted.has(streamObj.start)) {
+      this._trailingNoted.add(streamObj.start);
       this.note(`flate_trailing_bytes:${inflated.trailing}`);
     }
+    return this._unpredicted(streamObj, data);
+  }
+  /** Optional PNG predictor via /DecodeParms. */
+  _unpredicted(streamObj, data) {
     let parms = this.resolve(streamObj.dict.DecodeParms) || this.resolve(streamObj.dict.DP);
     if (parms && parms.t === "arr") parms = this.resolve(parms.items[parms.items.length - 1]);
     if (parms && parms.t === "dict") {
@@ -40083,37 +40387,111 @@ var PdfDoc = class {
     }
     return data;
   }
-  /** Parse every /ObjStm and fold its contained objects into the map, so an
+  /** `streamDecoded`, for a Flate or unfiltered stream the platform decodes without recovery, in one step and without
+   *  notes: what R41's second reading of an object stream uses. Null for any other, which `loadObjectStreams` then keeps
+   *  as first decoded. */
+  _decodedSync(streamObj, expect) {
+    try {
+      const raw = this.streamRawBytes(streamObj);
+      if (!raw) return null;
+      const filter = this.resolve(streamObj.dict.Filter);
+      const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f2) => f2 && f2.t === "name" ? f2.v : null) : [null];
+      if (names.length === 0) return raw;
+      const un2 = undoAscii(names, raw);
+      if (!un2 || !un2.rest.every((n2) => n2 === "FlateDecode" || n2 === "Fl")) return null;
+      if (!un2.rest.length) return this._unpredicted(streamObj, un2.data);
+      const data = inflateChecked(un2.data, INNER_DECODE_MAX, expect);
+      return data ? this._unpredicted(streamObj, data) : null;
+    } catch {
+      return null;
+    }
+  }
+  /** Object stream `stm`'s decoded bytes, read again when it is not one of the few held; null when it cannot be. */
+  _innerBytes(stm) {
+    const held = this._inners.get(stm);
+    if (held) {
+      this._inners.delete(stm);
+      this._inners.set(stm, held);
+      return held;
+    }
+    let data = this._sticky.get(stm);
+    if (!data) {
+      const st2 = this._objs.get(stm);
+      data = st2 && st2.t === "stream" ? this._decodedSync(st2, this._innerLen.get(stm)) : null;
+    }
+    if (!data) return null;
+    for (const [k2, old] of this._inners) {
+      if (this._innerBytesHeld + data.length <= INNER_CACHE_BYTES || !this._inners.size) break;
+      this._inners.delete(k2);
+      this._innerBytesHeld -= old.length;
+    }
+    this._inners.set(stm, data);
+    this._innerBytesHeld += data.length;
+    return data;
+  }
+  /** Parse every /ObjStm and fold its contained objects into the table, so an
    *  xref-stream PDF that keeps its page/annot dicts compressed is not empty.
    *  Objects already defined at top level are NOT overwritten (top-level and
    *  compressed definitions of one number should not coexist; if they do, the
-   *  uncompressed one is the safer read). */
+   *  uncompressed one is the safer read). Each is parsed once here, to know it
+   *  parses and what it is, and read again from the decoded stream when asked for (R41). */
   async loadObjectStreams() {
-    const streams = [];
-    for (const v2 of this._objs.values()) {
-      if (v2 && v2.t === "stream") {
-        const type = v2.dict.Type;
-        if (type && type.t === "name" && type.v === "ObjStm") streams.push(v2);
+    const streams = this._objs.nums(2, "ObjStm");
+    for (const stm of streams) {
+      const st2 = this._objs.get(stm);
+      if (!st2 || st2.t !== "stream") continue;
+      let proof = null;
+      {
+        let data = this._decodedSync(st2);
+        const checked = data !== null;
+        if (!checked) data = await this.streamDecoded(st2);
+        if (!data) {
+          this.note("objstm_undecodable");
+          continue;
+        }
+        const n2 = numberVal(this.resolve(st2.dict.N));
+        const first = numberVal(this.resolve(st2.dict.First));
+        if (n2 == null || first == null) continue;
+        const header = binaryString(data.subarray(0, first)).trim().split(/\s+/).map(Number);
+        const offs = [];
+        for (let i2 = 0; i2 < n2; i2++) if (Number.isFinite(header[i2 * 2 + 1])) offs.push(first + header[i2 * 2 + 1]);
+        offs.sort((a2, b2) => a2 - b2);
+        const nextAbove = (at2) => {
+          let lo2 = 0, hi2 = offs.length;
+          while (lo2 < hi2) {
+            const m2 = lo2 + hi2 >> 1;
+            if (offs[m2] <= at2) lo2 = m2 + 1;
+            else hi2 = m2;
+          }
+          return lo2 < offs.length ? offs[lo2] : data.length;
+        };
+        let added = 0;
+        for (let i2 = 0; i2 < n2; i2++) {
+          const objNum = header[i2 * 2];
+          const off = header[i2 * 2 + 1];
+          if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
+          if (this._objs.has(objNum)) continue;
+          const at2 = first + off;
+          const r2 = parseWindow(data, at2, nextAbove(at2) - at2 + 16);
+          if (r2) {
+            this._objs.put(objNum, Math.trunc(at2), r2.len + 64, stm, 0, r2.value);
+            added++;
+          }
+        }
+        if (added) {
+          this._innerLen.set(stm, data.length);
+          if (!checked) {
+            if (data.length <= INNER_CHECK_BYTES) proof = { len: data.length, fp: fingerprint(data) };
+            else this._sticky.set(stm, data);
+          }
+        }
       }
-    }
-    for (const st2 of streams) {
-      const data = await this.streamDecoded(st2);
-      if (!data) {
-        this.note("objstm_undecodable");
-        continue;
-      }
-      const inner = binaryString(data);
-      const n2 = numberVal(this.resolve(st2.dict.N));
-      const first = numberVal(this.resolve(st2.dict.First));
-      if (n2 == null || first == null) continue;
-      const header = inner.slice(0, first).trim().split(/\s+/).map(Number);
-      for (let i2 = 0; i2 < n2; i2++) {
-        const objNum = header[i2 * 2];
-        const off = header[i2 * 2 + 1];
-        if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
-        if (this._objs.has(objNum)) continue;
-        const r2 = parseValueSafe(inner, first + off);
-        if (r2) this._objs.set(objNum, r2.value);
+      if (proof) {
+        const again = this._decodedSync(st2, proof.len);
+        if (!again || again.length !== proof.len || fingerprint(again) !== proof.fp) {
+          const first = await this.streamDecoded(st2);
+          if (first) this._sticky.set(stm, first);
+        }
       }
     }
   }
@@ -40121,12 +40499,10 @@ var PdfDoc = class {
    *  object-number order if the tree cannot be walked (leniency). */
   buildPageIndex() {
     let root = null;
-    for (const v2 of this._objs.values()) {
-      const map = v2 && v2.t === "dict" ? v2.map : null;
-      if (map && map.Type && map.Type.t === "name" && map.Type.v === "Catalog") {
-        root = map;
-        break;
-      }
+    const cat = this._objs.nums(1, "Catalog")[0];
+    if (cat !== void 0) {
+      this._objs.pin(cat);
+      root = this._objs.get(cat).map;
     }
     this.root = root;
     const walkRef = (num, seen) => {
@@ -40151,11 +40527,7 @@ var PdfDoc = class {
       walkRef(root.Pages.n, /* @__PURE__ */ new Set([root.Pages.n]));
     }
     if (this.pageIndexByObj.size === 0) {
-      const pages = [];
-      for (const [num, v2] of this._objs) {
-        const map = v2 && (v2.t === "dict" ? v2.map : v2.t === "stream" ? v2.dict : null);
-        if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num);
-      }
+      const pages = this._objs.nums(3, "Page");
       pages.sort((a2, b2) => a2 - b2);
       pages.forEach((num, i2) => this.pageIndexByObj.set(num, i2));
       this.pageCount = pages.length;
@@ -40184,13 +40556,10 @@ var PdfDoc = class {
   isEncrypted() {
     if (this._encrypted !== void 0) return this._encrypted;
     let enc = false;
-    for (const v2 of this._objs.values()) {
+    for (const num of this._objs.standard()) {
+      const v2 = this._objs.peek(num);
       const map = v2 && (v2.t === "dict" ? v2.map : v2.t === "stream" ? v2.dict : null);
-      if (!map) continue;
-      const filter = map.Filter;
-      const isStandard = filter && filter.t === "name" && filter.v === "Standard";
-      const hasRevision = map.R != null && typeof this.resolve(map.R) === "number";
-      if (isStandard && hasRevision) {
+      if (map && typeof this.resolve(map.R) === "number") {
         enc = true;
         break;
       }
@@ -40226,17 +40595,17 @@ var PdfDoc = class {
    *  from this one list, so the two cannot disagree about which is the last. */
   _trailers() {
     const cands = [];
-    const re2 = /\btrailer\b/g;
-    let m2;
-    while (m2 = re2.exec(this.s)) {
-      const r2 = parseValueSafe(this.s, m2.index + 7);
-      if (r2 && r2.value && r2.value.t === "dict") cands.push([m2.index, r2.value.map]);
+    const b2 = this._b;
+    for (let t2 = firstAscii(b2, "trailer", 0); t2 !== -1; t2 = firstAscii(b2, "trailer", t2 + 1)) {
+      if (isWordByte(b2[t2 - 1]) || isWordByte(b2[t2 + 7])) continue;
+      const r2 = parseWindow(b2, t2 + 7);
+      if (r2 && r2.value && r2.value.t === "dict") cands.push([t2, r2.value.map]);
     }
-    for (const v2 of this._objs.values()) {
-      const type = v2 && v2.t === "stream" ? v2.dict.Type : null;
-      if (type && type.t === "name" && type.v === "XRef") cands.push([v2.start, v2.dict]);
+    for (const num of this._objs.nums(2, "XRef")) {
+      const v2 = this._objs.peek(num);
+      if (v2 && v2.t === "stream") cands.push([v2.start, v2.dict]);
     }
-    return cands.sort((a2, b2) => a2[0] - b2[0]).map((c2) => c2[1]);
+    return cands.sort((a2, b3) => a2[0] - b3[0]).map((c2) => c2[1]);
   }
   /** R37: the latest revision as a rewrite reads it — the last trailer, every
    *  indirect object reachable from it by any chain of references (each once,
@@ -40247,11 +40616,13 @@ var PdfDoc = class {
    *  never throws. The walk is iterative, so a deep or cyclic file cannot
    *  exhaust the stack. */
   objects() {
+    ARENA = { buf: new ArrayBuffer(32768), off: 0 };
     try {
       const trailers = this._trailers();
       if (!trailers.length) return null;
       const trailer = trailers[trailers.length - 1];
-      const found = /* @__PURE__ */ new Map(), missing = /* @__PURE__ */ new Map(), queue = [];
+      const found = [], missing = /* @__PURE__ */ new Map(), queue = [];
+      const done = new Uint8Array(this._objs.size);
       const refsIn = (v2) => {
         for (const stack = [v2]; stack.length; ) {
           const x2 = stack.pop();
@@ -40264,25 +40635,33 @@ var PdfDoc = class {
       refsIn({ t: "dict", map: trailer });
       for (let i2 = 0; i2 < queue.length; i2++) {
         const { n: n2, g: g2 } = queue[i2];
-        if (found.has(n2) || missing.has(n2)) continue;
+        const row = this._objs.row(n2);
+        if (row >= 0 ? done[row] : missing.has(n2)) continue;
         const value = this.resolve({ t: "ref", n: n2, g: g2 });
-        if (value === null) missing.set(n2, { num: n2, gen: g2 });
-        else found.set(n2, { num: n2, gen: this._gens.get(n2) ?? 0, value });
+        if (value === null) {
+          missing.set(n2, { num: n2, gen: g2 });
+          if (row >= 0) done[row] = 1;
+        } else {
+          done[row] = 1;
+          found.push({ num: n2, gen: this._objs.gen(n2) ?? 0, value });
+        }
         refsIn(this._objs.get(n2));
       }
-      const asc = (m2) => [...m2.values()].sort((a2, b2) => a2.num - b2.num);
-      return { trailer, objects: asc(found), unresolved: asc(missing) };
+      queue.length = 0;
+      return { trailer, objects: found.sort((a2, b2) => a2.num - b2.num), unresolved: [...missing.values()].sort((a2, b2) => a2.num - b2.num) };
     } catch {
       return null;
+    } finally {
+      ARENA = null;
     }
   }
 };
 function numberVal(v2) {
   return typeof v2 === "number" ? v2 : null;
 }
-function parseValueSafe(s2, pos) {
+function parseValueSafe(s2, pos, base = 0) {
   try {
-    return parseValue(null, s2, pos);
+    return parseValue(base, s2, pos);
   } catch {
     return null;
   }
@@ -40576,11 +40955,29 @@ function textShowBytes(toks) {
   }
   return n2;
 }
+var ARENA = null;
+function newBytes(n2) {
+  if (!ARENA || n2 > 512) return new Uint8Array(n2);
+  if (ARENA.off + n2 > ARENA.buf.byteLength) ARENA = { buf: new ArrayBuffer(32768), off: 0 };
+  const u2 = new Uint8Array(ARENA.buf, ARENA.off, n2);
+  ARENA.off += n2;
+  return u2;
+}
 function readLiteralBytes(s2, pos) {
   pos++;
+  let q2 = pos;
+  while (q2 < s2.length) {
+    const c2 = s2.charCodeAt(q2);
+    if (c2 === 41 || c2 === 40 || c2 === 92 || c2 === 13) break;
+    q2++;
+  }
+  if (q2 < s2.length && s2.charCodeAt(q2) === 41) {
+    const out2 = newBytes(q2 - pos);
+    for (let i2 = 0; i2 < out2.length; i2++) out2[i2] = s2.charCodeAt(pos + i2);
+    return { bytes: out2, pos: q2 + 1 };
+  }
   const bytes = [];
   let depth = 1;
-  const simple = { 110: 10, 114: 13, 116: 9, 98: 8, 102: 12, 40: 40, 41: 41, 92: 92 };
   while (pos < s2.length) {
     const c2 = s2.charCodeAt(pos);
     if (c2 === 92) {
@@ -40589,32 +40986,70 @@ function readLiteralBytes(s2, pos) {
         break;
       }
       const nc2 = s2.charCodeAt(pos + 1);
-      if (nc2 in simple) {
-        bytes.push(simple[nc2]);
-        pos += 2;
-        continue;
-      }
       if (nc2 >= 48 && nc2 <= 55) {
-        let oct = "", p2 = pos + 1;
-        while (p2 < s2.length && oct.length < 3 && s2.charCodeAt(p2) >= 48 && s2.charCodeAt(p2) <= 55) {
-          oct += s2[p2];
-          p2++;
+        let v2 = nc2 - 48, p2 = pos + 2;
+        for (let n2 = 1; n2 < 3 && p2 < s2.length; n2++, p2++) {
+          const d2 = s2.charCodeAt(p2);
+          if (d2 < 48 || d2 > 55) break;
+          v2 = v2 * 8 + d2 - 48;
         }
-        bytes.push(parseInt(oct, 8) & 255);
+        bytes.push(v2 & 255);
         pos = p2;
         continue;
       }
-      if (nc2 === 10) {
-        pos += 2;
-        continue;
+      switch (nc2) {
+        case 110:
+          bytes.push(10);
+          pos += 2;
+          continue;
+        // n
+        case 114:
+          bytes.push(13);
+          pos += 2;
+          continue;
+        // r
+        case 116:
+          bytes.push(9);
+          pos += 2;
+          continue;
+        // t
+        case 98:
+          bytes.push(8);
+          pos += 2;
+          continue;
+        // b
+        case 102:
+          bytes.push(12);
+          pos += 2;
+          continue;
+        // f
+        case 40:
+          bytes.push(40);
+          pos += 2;
+          continue;
+        // (
+        case 41:
+          bytes.push(41);
+          pos += 2;
+          continue;
+        // )
+        case 92:
+          bytes.push(92);
+          pos += 2;
+          continue;
+        // \
+        case 10:
+          pos += 2;
+          continue;
+        // line continuation
+        case 13:
+          pos += s2.charCodeAt(pos + 2) === 10 ? 3 : 2;
+          continue;
+        default:
+          bytes.push(nc2);
+          pos += 2;
+          continue;
       }
-      if (nc2 === 13) {
-        pos += s2.charCodeAt(pos + 2) === 10 ? 3 : 2;
-        continue;
-      }
-      bytes.push(nc2);
-      pos += 2;
-      continue;
     }
     if (c2 === 13) {
       bytes.push(10);
@@ -40640,7 +41075,9 @@ function readLiteralBytes(s2, pos) {
     bytes.push(c2);
     pos++;
   }
-  return { bytes: Uint8Array.from(bytes), pos };
+  const out = newBytes(bytes.length);
+  out.set(bytes);
+  return { bytes: out, pos };
 }
 function readHexBytes(s2, pos) {
   pos++;
@@ -40652,7 +41089,7 @@ function readHexBytes(s2, pos) {
   }
   pos++;
   if (hex.length % 2) hex += "0";
-  const bytes = new Uint8Array(hex.length / 2);
+  const bytes = newBytes(hex.length / 2);
   for (let i2 = 0; i2 < hex.length; i2 += 2) bytes[i2 / 2] = parseInt(hex.substr(i2, 2), 16);
   return { bytes, pos };
 }
@@ -40924,6 +41361,36 @@ var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
 var BASELINE_EPS = 1e-6;
 var WORD_GAP_EM = 0.25;
 var TJ_WORD_GAP_EM = 0.1;
+var FontCache = class {
+  constructor(max = 25e3) {
+    this.max = max;
+    this.map = /* @__PURE__ */ new Map();
+    this.cost = 0;
+  }
+  has(k2) {
+    return this.map.has(k2);
+  }
+  get(k2) {
+    const e2 = this.map.get(k2);
+    if (!e2) return void 0;
+    this.map.delete(k2);
+    this.map.set(k2, e2);
+    return e2.f;
+  }
+  set(k2, f2) {
+    const old = this.map.get(k2);
+    if (old) this.cost -= old.c;
+    const c2 = 64 + (f2 && f2.toUni ? f2.toUni.size : 0);
+    this.map.delete(k2);
+    this.map.set(k2, { f: f2, c: c2 });
+    this.cost += c2;
+    for (const [key, e2] of this.map) {
+      if (this.cost <= this.max || this.map.size <= 1) break;
+      this.map.delete(key);
+      this.cost -= e2.c;
+    }
+  }
+};
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
@@ -40934,6 +41401,20 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const undecodedCenters = [];
   let unpositioned = 0;
   const undetermined = content.unread.map((reason) => ({ page: pageIdx, reason, font: null, codes: "", count: 0 }));
+  const markers = /* @__PURE__ */ new Map();
+  const mark = (reason, font, codes, count) => {
+    let byReason = markers.get(font);
+    if (!byReason) markers.set(font, byReason = /* @__PURE__ */ new Map());
+    let byCodes = byReason.get(reason);
+    if (!byCodes) byReason.set(reason, byCodes = /* @__PURE__ */ new Map());
+    const key = count === 1 ? codes : `${codes}\0${count}`;
+    let m2 = byCodes.get(key);
+    if (!m2) {
+      m2 = Object.freeze({ page: pageIdx, reason, font, codes, count });
+      byCodes.set(key, m2);
+    }
+    undetermined.push(m2);
+  };
   let curFont = null;
   let curFontName = null;
   const stack = [];
@@ -40955,13 +41436,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       penKnown = false;
       inkValid = false;
       unpositioned += bytes.length;
-      undetermined.push({
-        page: pageIdx,
-        reason: curFontName ? "font_not_in_resources" : "no_current_font",
-        font: curFontName ?? null,
-        codes: bytesToHex(bytes),
-        count: bytes.length
-      });
+      mark(curFontName ? "font_not_in_resources" : "no_current_font", curFontName ?? null, bytesToHex(bytes), bytes.length);
       return;
     }
     if (!curFont.toUni) {
@@ -40972,13 +41447,12 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         else unpositioned += Math.ceil(bytes.length / (curFont.width || 1));
       }
       endRun();
-      undetermined.push({
-        page: pageIdx,
-        reason: curFont.isType0 ? "cid_font_no_tounicode" : "no_tounicode",
-        font: curFont.baseFont ?? curFontName ?? null,
-        codes: bytesToHex(bytes),
-        count: Math.ceil(bytes.length / (curFont.width || 1))
-      });
+      mark(
+        curFont.isType0 ? "cid_font_no_tounicode" : "no_tounicode",
+        curFont.baseFont ?? curFontName ?? null,
+        bytesToHex(bytes),
+        Math.ceil(bytes.length / (curFont.width || 1))
+      );
       return;
     }
     const { codes, leftover } = bytesToCodes(bytes, curFont.width);
@@ -40990,13 +41464,12 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       const u2 = curFont.toUni.get(code);
       if (u2 == null) {
         if (box) undecodedCenters.push(box.c);
-        undetermined.push({
-          page: pageIdx,
-          reason: "unmapped_code",
-          font: curFont.baseFont ?? curFontName ?? null,
-          codes: code.toString(16).padStart((curFont.width || 1) * 2, "0"),
-          count: 1
-        });
+        mark(
+          "unmapped_code",
+          curFont.baseFont ?? curFontName ?? null,
+          code.toString(16).padStart((curFont.width || 1) * 2, "0"),
+          1
+        );
       } else {
         if (softAt === pieces.length && /^\s/.test(u2)) {
           pieces.pop();
@@ -41011,13 +41484,12 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     if (leftover) {
       penKnown = false;
       inkValid = false;
-      undetermined.push({
-        page: pageIdx,
-        reason: "code_width_misaligned",
-        font: curFont.baseFont ?? curFontName ?? null,
-        codes: bytesToHex(bytes.slice(bytes.length - leftover)),
-        count: leftover
-      });
+      mark(
+        "code_width_misaligned",
+        curFont.baseFont ?? curFontName ?? null,
+        bytesToHex(bytes.slice(bytes.length - leftover)),
+        leftover
+      );
     }
   };
   const lastOfType = (type) => {
@@ -41419,7 +41891,8 @@ function anchorOf(placed, source) {
     tier: 1
   };
 }
-async function extractText2(doc, placedByPage = /* @__PURE__ */ new Map(), linkPages = /* @__PURE__ */ new Set()) {
+async function extractText2(doc, onPlaced = () => {
+}, linkPages = /* @__PURE__ */ new Set()) {
   const producer = readProducer(doc);
   if (doc.isEncrypted()) {
     doc.note("encrypted");
@@ -41432,7 +41905,7 @@ async function extractText2(doc, placedByPage = /* @__PURE__ */ new Map(), linkP
       producer
     };
   }
-  const fontCache = /* @__PURE__ */ new Map();
+  const fontCache = new FontCache();
   const pages = [];
   const allUndetermined = [];
   for (let idx = 0; idx < doc.pageCount; idx++) {
@@ -41451,10 +41924,11 @@ async function extractText2(doc, placedByPage = /* @__PURE__ */ new Map(), linkP
       res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
     }
     pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
-    if (res.placed && linkPages.has(idx)) placedByPage.set(idx, res.placed);
+    if (res.placed && linkPages.has(idx)) onPlaced(idx, res.placed);
     for (const u2 of res.undetermined) allUndetermined.push(u2);
   }
-  const document2 = pages.map((p2) => p2.text).filter((t2) => t2.length).join("\n");
+  let document2 = "";
+  for (const p2 of pages) if (p2.text.length) document2 = document2.length ? document2 + "\n" + p2.text : p2.text;
   return {
     document: document2,
     pages,
@@ -41782,7 +42256,7 @@ function extractActive(doc) {
     const page = pageOf.has(num) ? pageOf.get(num) : null;
     walkActive(
       doc,
-      doc._objs.get(num),
+      doc._objs.peek(num),
       efNodes,
       0,
       (kind, key, detail) => items.push({ kind, where: { object: num, page, key }, detail })
@@ -41795,9 +42269,17 @@ function extractActive(doc) {
 }
 function embeddedTreeNodes(doc) {
   const nodes = /* @__PURE__ */ new Set();
-  const names = doc.root ? doc.dictOf(doc.root.Names) : null;
+  const pinned = (v2) => {
+    for (let hops = 0; v2 && v2.t === "ref" && hops < 64; hops++) {
+      doc._objs.pin(v2.n);
+      v2 = doc._objs.get(v2.n);
+    }
+    return v2 && v2.t !== "ref" ? v2 : null;
+  };
+  const namesNode = doc.root ? pinned(doc.root.Names) : null;
+  const names = namesNode ? namesNode.t === "dict" ? namesNode.map : namesNode.t === "stream" ? namesNode.dict : null : null;
   const visit = (v2, depth) => {
-    const node = doc.resolve(v2);
+    const node = pinned(v2);
     if (!node || node.t !== "dict" || depth > 64 || nodes.has(node.map)) return;
     nodes.add(node.map);
     const kids = doc.resolve(node.map.Kids);
@@ -41986,6 +42468,273 @@ function extractMetadata(doc) {
     return null;
   }
 }
+var LEN_BASE = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258];
+var LEN_EXTRA = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+var DIST_BASE = [
+  1,
+  2,
+  3,
+  4,
+  5,
+  7,
+  9,
+  13,
+  17,
+  25,
+  33,
+  49,
+  65,
+  97,
+  129,
+  193,
+  257,
+  385,
+  513,
+  769,
+  1025,
+  1537,
+  2049,
+  3073,
+  4097,
+  6145,
+  8193,
+  12289,
+  16385,
+  24577
+];
+var DIST_EXTRA = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+var CODE_LENGTH_ORDER = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+function huffman(lengths) {
+  const count = new Int32Array(16);
+  for (const l2 of lengths) count[l2]++;
+  let left = 1;
+  for (let len = 1; len <= 15; len++) {
+    left = left * 2 - count[len];
+    if (left < 0) return null;
+  }
+  const offs = new Int32Array(16);
+  for (let len = 1; len < 15; len++) offs[len + 1] = offs[len] + count[len];
+  const symbol = new Int32Array(lengths.length);
+  lengths.forEach((l2, s2) => {
+    if (l2) symbol[offs[l2]++] = s2;
+  });
+  return { count, symbol };
+}
+var FIXED_TABLES = null;
+function fixedTables() {
+  if (!FIXED_TABLES) {
+    const l2 = new Array(288).fill(8);
+    for (let i2 = 144; i2 < 256; i2++) l2[i2] = 9;
+    for (let i2 = 256; i2 < 280; i2++) l2[i2] = 7;
+    FIXED_TABLES = { lit: huffman(l2), dist: huffman(new Array(30).fill(5)) };
+  }
+  return FIXED_TABLES;
+}
+function inflateSync(src, max, expect, count = false) {
+  const zlibHead = src.length >= 2 && (src[0] & 15) === 8 && (src[0] << 8 | src[1]) % 31 === 0;
+  let pos = zlibHead ? 2 : 0, bitBuf = 0, bitCnt = 0;
+  const M2 = count ? 65535 : -1;
+  let out = new Uint8Array(count ? 65536 : Math.min(max, Number.isInteger(expect) && expect >= 0 ? expect : Math.max(1024, src.length * 4))), o2 = 0;
+  const STOP = { stop: true };
+  const bits = (n2) => {
+    while (bitCnt < n2) {
+      if (pos >= src.length) throw new Error("eof");
+      bitBuf |= src[pos++] << bitCnt;
+      bitCnt += 8;
+    }
+    const v2 = bitBuf & (1 << n2) - 1;
+    bitBuf >>>= n2;
+    bitCnt -= n2;
+    return v2;
+  };
+  const decode = (h2) => {
+    let code = 0, first = 0, index = 0;
+    for (let len = 1; len <= 15; len++) {
+      code |= bits(1);
+      const c2 = h2.count[len];
+      if (code - c2 < first) return h2.symbol[index + (code - first)];
+      index += c2;
+      first = first + c2 << 1;
+      code <<= 1;
+    }
+    throw new Error("bad code");
+  };
+  const room = (n2) => {
+    if (count) {
+      if (o2 + n2 > max) throw STOP;
+      return;
+    }
+    if (o2 + n2 <= out.length) return;
+    if (o2 + n2 > max) {
+      if (o2 < max) {
+      }
+      throw STOP;
+    }
+    let size = out.length;
+    while (size < o2 + n2) size *= 2;
+    const bigger = new Uint8Array(Math.min(size, max));
+    bigger.set(out.subarray(0, o2));
+    out = bigger;
+  };
+  try {
+    for (let last = 0; !last; ) {
+      last = bits(1);
+      const type = bits(2);
+      if (type === 0) {
+        bitBuf = 0;
+        bitCnt = 0;
+        if (pos + 4 > src.length) throw new Error("eof");
+        const len = src[pos] | src[pos + 1] << 8;
+        if ((len ^ 65535) !== (src[pos + 2] | src[pos + 3] << 8)) throw new Error("stored length");
+        pos += 4;
+        if (pos + len > src.length) throw new Error("eof");
+        const take = Math.min(len, max - o2);
+        room(take);
+        if (count) for (let i2 = 0; i2 < take; i2++) out[o2 + i2 & M2] = src[pos + i2];
+        else out.set(src.subarray(pos, pos + take), o2);
+        o2 += take;
+        pos += len;
+        if (take < len) throw STOP;
+        continue;
+      }
+      if (type === 3) throw new Error("block type");
+      let lit, dist;
+      if (type === 1) ({ lit, dist } = fixedTables());
+      else {
+        const nlen = bits(5) + 257, ndist = bits(5) + 1, ncode = bits(4) + 4;
+        if (nlen > 286 || ndist > 30) throw new Error("counts");
+        const cl = new Array(19).fill(0);
+        for (let i2 = 0; i2 < ncode; i2++) cl[CODE_LENGTH_ORDER[i2]] = bits(3);
+        const clh = huffman(cl);
+        if (!clh) throw new Error("code lengths");
+        const lens = [];
+        while (lens.length < nlen + ndist) {
+          const sym = decode(clh);
+          if (sym < 16) lens.push(sym);
+          else {
+            let rep, val = 0;
+            if (sym === 16) {
+              if (!lens.length) throw new Error("repeat");
+              val = lens[lens.length - 1];
+              rep = 3 + bits(2);
+            } else if (sym === 17) rep = 3 + bits(3);
+            else rep = 11 + bits(7);
+            if (lens.length + rep > nlen + ndist) throw new Error("repeat");
+            for (let i2 = 0; i2 < rep; i2++) lens.push(val);
+          }
+        }
+        if (lens[256] === 0) throw new Error("no end of block");
+        lit = huffman(lens.slice(0, nlen));
+        dist = huffman(lens.slice(nlen));
+        if (!lit || !dist) throw new Error("tables");
+      }
+      for (; ; ) {
+        const sym = decode(lit);
+        if (sym < 256) {
+          room(1);
+          out[o2++ & M2] = sym;
+          continue;
+        }
+        if (sym === 256) break;
+        const li2 = sym - 257;
+        if (li2 >= 29) throw new Error("length symbol");
+        const len = LEN_BASE[li2] + bits(LEN_EXTRA[li2]);
+        const ds2 = decode(dist);
+        if (ds2 >= 30) throw new Error("distance symbol");
+        const d2 = DIST_BASE[ds2] + bits(DIST_EXTRA[ds2]);
+        if (d2 > o2) throw new Error("distance");
+        const take = Math.min(len, max - o2);
+        room(take);
+        for (let i2 = 0; i2 < take; i2++, o2++) out[o2 & M2] = out[o2 - d2 & M2];
+        if (take < len) throw STOP;
+      }
+    }
+  } catch (e2) {
+    if (e2 === STOP) return { data: count ? null : out.subarray(0, o2), len: o2, full: false, end: pos };
+    return null;
+  }
+  return { data: count ? null : out.subarray(0, o2), len: o2, full: true, end: pos };
+}
+function inflateChecked(src, max, expect) {
+  if (!(src.length >= 6 && (src[0] & 15) === 8 && (src[0] << 8 | src[1]) % 31 === 0 && !(src[1] & 32))) return null;
+  let len = expect;
+  if (!Number.isInteger(len) || len < 0) {
+    const c2 = inflateSync(src, max, void 0, true);
+    if (!c2 || !c2.full) return null;
+    len = c2.len;
+  }
+  const r2 = inflateSync(src, max, len);
+  if (!r2 || !r2.full || r2.data.length !== len || r2.end + 4 !== src.length) return null;
+  const want = (src[r2.end] << 24 | src[r2.end + 1] << 16 | src[r2.end + 2] << 8 | src[r2.end + 3]) >>> 0;
+  return adler32(r2.data) === want ? r2.data : null;
+}
+var OBJ_WINDOW_MAX = 4 * 1024 * 1024;
+var STREAM_MAX = 8 * 1024 * 1024;
+var XMP_MAX = 2 * 1024 * 1024;
+function firstAscii(b2, needle, from = 0) {
+  const c0 = needle.charCodeAt(0);
+  for (let i2 = b2.indexOf(c0, from); i2 !== -1; i2 = b2.indexOf(c0, i2 + 1)) {
+    let k2 = 1;
+    while (k2 < needle.length && b2[i2 + k2] === needle.charCodeAt(k2)) k2++;
+    if (k2 === needle.length) return i2;
+  }
+  return -1;
+}
+var READ_BASE_MB = 25;
+var READ_PAGE_MB = 0.031;
+var READ_BARE_PAGE_MB = 6e-3;
+var READ_LIMIT_MB = 100;
+var READ_SAMPLE_PAGES = 16;
+var readingNeedMB = (pages, bytes, textShare) => READ_BASE_MB + bytes / 1048576 + pages * (READ_BARE_PAGE_MB + (READ_PAGE_MB - READ_BARE_PAGE_MB) * textShare);
+async function sampledTextShare(doc) {
+  const n2 = doc.pageCount, k2 = Math.min(READ_SAMPLE_PAGES, n2);
+  const notes = doc.notes.length, noted = new Set(doc._trailingNoted);
+  let showing = 0;
+  for (let i2 = 0; i2 < k2; i2++) {
+    let shows;
+    try {
+      shows = await pageShowsText(doc, doc.pageDict(k2 === 1 ? 0 : Math.round(i2 * (n2 - 1) / (k2 - 1))));
+    } catch {
+      shows = null;
+    }
+    if (shows !== false) showing++;
+  }
+  doc.notes.length = notes;
+  doc._trailingNoted = noted;
+  return k2 ? showing / k2 : 0;
+}
+var READ_BASE_DENSE_MB = 29;
+var READ_PAGE_DENSE_MB = 1e-3;
+var READ_MCHAR_MB = 1.8;
+var READ_SAMPLE_FROM = 64;
+var denseNeedMB = (pages, bytes, mchars) => READ_BASE_DENSE_MB + bytes / 1048576 + pages * READ_PAGE_DENSE_MB + mchars * READ_MCHAR_MB;
+async function sampledMChars(doc) {
+  const n2 = doc.pageCount, k2 = Math.min(READ_SAMPLE_PAGES, n2);
+  const notes = doc.notes.length, noted = new Set(doc._trailingNoted);
+  const fontCache = new FontCache();
+  let total = 0, most = 0, unread = 0;
+  for (let i2 = 0; i2 < k2; i2++) {
+    const pageMap = doc.pageDict(k2 === 1 ? 0 : Math.round(i2 * (n2 - 1) / (k2 - 1)));
+    let chars = null;
+    if (pageMap) {
+      try {
+        const got = await extractPageText(doc, i2, pageMap, fontCache);
+        chars = got.text.length + got.undetermined.reduce((c2, m2) => c2 + (Number.isFinite(m2.count) ? m2.count : 0), 0);
+      } catch {
+        chars = null;
+      }
+    }
+    if (chars === null) {
+      unread++;
+      continue;
+    }
+    total += chars;
+    most = Math.max(most, chars);
+  }
+  doc.notes.length = notes;
+  doc._trailingNoted = noted;
+  return k2 ? (total + unread * most) / k2 * n2 / 1e6 : 0;
+}
 async function loadPdf(bytes) {
   const doc = new PdfDoc(bytes);
   doc.scanTopLevel();
@@ -42003,6 +42752,31 @@ async function extractPdfStructure(bytes) {
     return { ok: false, container: "pdf", reason: "NOT_A_PDF" };
   }
   const doc = await loadPdf(bytes);
+  let textShare = 1;
+  let needMB = readingNeedMB(doc.pageCount, bytes.length, textShare);
+  if (needMB > READ_LIMIT_MB) {
+    textShare = doc.isEncrypted() ? 0 : await sampledTextShare(doc);
+    needMB = readingNeedMB(doc.pageCount, bytes.length, textShare);
+  }
+  let mchars = null;
+  if (needMB <= READ_LIMIT_MB && doc.pageCount > READ_SAMPLE_FROM && !doc.isEncrypted()) {
+    mchars = await sampledMChars(doc);
+    needMB = Math.max(needMB, denseNeedMB(doc.pageCount, bytes.length, mchars));
+  }
+  if (needMB > READ_LIMIT_MB) {
+    return {
+      ok: false,
+      container: "pdf",
+      reason: "TOO_LARGE_TO_READ",
+      failure: "final",
+      version: sig[1],
+      pages: doc.pageCount,
+      bytes: bytes.length,
+      need_mb: Math.round(needMB),
+      limit_mb: READ_LIMIT_MB,
+      text_share: textShare
+    };
+  }
   const links = [];
   for (let pageIdx = 0; pageIdx < doc.pageCount; pageIdx++) {
     const page = doc.pageDict(pageIdx);
@@ -42050,10 +42824,16 @@ async function extractPdfStructure(bytes) {
   for (const rec of await documentEmbeddedFiles(doc)) links.push(rec);
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
   for (const l2 of links) counts[l2.partition]++;
-  const placedByPage = /* @__PURE__ */ new Map();
-  const linkPages = new Set(links.map((l2) => l2.source && l2.source.page));
-  const text = await extractText2(doc, placedByPage, linkPages);
-  for (const l2 of links) l2.anchor = anchorOf(l2.source ? placedByPage.get(l2.source.page) : null, l2.source);
+  const linksOf = /* @__PURE__ */ new Map();
+  for (const l2 of links) {
+    if (!l2.source) continue;
+    if (!linksOf.has(l2.source.page)) linksOf.set(l2.source.page, []);
+    linksOf.get(l2.source.page).push(l2);
+  }
+  const text = await extractText2(doc, (idx, placed) => {
+    for (const l2 of linksOf.get(idx)) l2.anchor = anchorOf(placed, l2.source);
+  }, new Set(linksOf.keys()));
+  for (const l2 of links) if (!("anchor" in l2)) l2.anchor = anchorOf(null, l2.source);
   const imgs = await extractImages(doc);
   if (imgs.images) markImageContent(doc, text, imgs.images);
   if (imgs.images) markImagesUnread(doc, text, imgs.images);
@@ -42124,7 +42904,7 @@ var SURFACE = {
   structure: { method: "POST", mutating: false },
   version: { method: "GET", mutating: false }
 };
-var DEFAULT_MAX_PDF_BYTES = 16 * 1024 * 1024;
+var DEFAULT_MAX_PDF_BYTES = 64 * 1024 * 1024;
 var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
   status,

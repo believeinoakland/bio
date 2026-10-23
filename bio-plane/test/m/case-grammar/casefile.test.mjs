@@ -77,7 +77,8 @@ test("R12 the materials: and material_attestations: blocks round-trip as flat ro
   clean(text);
   const fm = fmOf(text);
   assert.deepEqual(fm.materials.map((r) => Object.keys(r)), MATERIALS.map(() => [...CG.MATERIAL_FIELDS]), "flat rows");
-  assert.deepEqual(fm.material_attestations.map((r) => Object.keys(r)), ATTESTATIONS.map(() => [...CG.MATERIAL_ATTESTATION_FIELDS]));
+  assert.deepEqual(fm.material_attestations.map((r) => Object.keys(r)), ATTESTATIONS.map(() => [...CG.MATERIAL_ATTESTATION_FIELDS]),
+                   "a row handed no sha is written with the seven fields it always had (G47)");
   const m = CG.materialsOf(fm);
   assert.deepEqual(m.materials, MATERIALS.map((r) => ({ ...r, title: null, obscured: null })),
                    "every material as written, included and rests_under as handed; a row stating no obscured answers null");
@@ -88,7 +89,7 @@ test("R12 the materials: and material_attestations: blocks round-trip as flat ro
     { ...ATTESTATIONS[3], level: null },
     { ...ATTESTATIONS[4], signature: null },
     { ...ATTESTATIONS[5], signature: "case" },
-    ATTESTATIONS[6]]);
+    ATTESTATIONS[6]].map((r) => ({ ...r, sha: null })), "G47: every row reads the capture it names, null when it names none");
   /* a member at group or project is never named in the bytes: no handle, no key, no signature */
   for (const secret of ["heron", "wren", "SIG-HERON", "SIG-WREN"]) assert.equal(text.includes(secret), false, secret);
   /* a material whose source's identity is withheld is listed like any other */
@@ -103,8 +104,8 @@ test("R12 the writer says nothing it was not handed: a kind or rests_under outsi
   assert.deepEqual(odd.materials, [{ ref: "R", kind: null, sha: null, text_sha: null, origin: null, archived_copy: null,
                                      included: false, rests_under: null, title: null, obscured: null }]);
   assert.deepEqual(odd.attestations, [
-    { ref: "R", by_kind: null, by: "x", level: null, at: null, signature: "s", recorded_in: null },
-    { ref: "R", by_kind: "member", by: null, level: null, at: null, signature: null, recorded_in: null }],
+    { ref: "R", by_kind: null, by: "x", level: null, at: null, signature: "s", recorded_in: null, sha: null },
+    { ref: "R", by_kind: "member", by: null, level: null, at: null, signature: null, recorded_in: null, sha: null }],
     "K1317 (6): a member row with no level chosen states none and carries no identity");
   assert.deepEqual(CG.materialBlockLines(), ["materials: []", "material_attestations: []"]);
   assert.deepEqual(CG.materialsOf(fmOf(doc(V6, CG.materialBlockLines()))), { materials: [], attestations: [] });
@@ -239,7 +240,7 @@ test("R1 DEC-119 a source whose identity is withheld is stated as Withheld with 
 test("R13 K1318 the case file's format: its token, its kinds, one path per kind read back, and a part fingerprinted over its files", () => {
   assert.equal(CG.CASE_FILE_FORMAT, "bio-case-file/3");
   assert.equal(CG.CASE_FILE_FORMAT_V2, "bio-case-file/2");
-  assert.deepEqual([...CG.CASE_FILE_FORMATS_ACCEPTED], ["bio-case-file/3", "bio-case-file/2", "bio-case-file/1"]);
+  assert.deepEqual([...CG.CASE_FILE_FORMATS_ACCEPTED], ["bio-case-file/4", "bio-case-file/3", "bio-case-file/2", "bio-case-file/1"]);
   assert.deepEqual([...CG.CASE_FILE_V2_KINDS], ["archive", "container", "criteria"]);
   assert.deepEqual([...CG.CASE_FILE_V3_KINDS], ["obscured"]);
   assert.equal(CG.CASE_FILE_MANIFEST_PATH, "manifest.json");
@@ -275,7 +276,7 @@ test("R13 K1318 the case file's format: its token, its kinds, one path per kind 
   for (const [kind, key] of [["finding", "../x"], ["finding", ""], ["document", "a/b"], ["attestation", "x"], ["nope", "x"],
                              ["finding", null], ["attestation", ["a", "../b"]], ["archive", R], ["archive", [R, "ABC"]],
                              ["container", ["../x", sha("m")]], ["container", [R, sha("m"), 1]], ["obscured", "../x"],
-                             ["obscured", [R, sha("c")]]])
+                             ["obscured", [R, "c"]]])
     assert.equal(CG.caseFilePath(kind, key), null, `${kind} ${key}`);
   for (const path of ["manifest.json", "/case.md", "findings/x/other.md", "findings/../x/finding.md", "materials/r/document/x",
                       "attestations/r/../x", "case.MD", "", null, 7, "findings/.x/finding.md",
@@ -306,7 +307,7 @@ test("R13 caseFileManifestCheck names every way a manifest departs from the rule
   const file = (i, over) => ({ ...manifest, files: manifest.files.map((f, j) => (j === i ? { ...f, ...over } : f)) });
   const doc0 = manifest.files.findIndex((f) => f.kind === "case_document");
   const cases = [
-    [set("format", "bio-case-file/4"), "format:format"],
+    [set("format", "bio-case-file/5"), "format:format"],
     [set("group", "Lakeshore Tenants"), "group:group"],
     [set("case", ""), "case:case"],
     [set("edition", 0), "edition:edition"],

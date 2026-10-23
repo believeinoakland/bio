@@ -1,6 +1,6 @@
 # text-chain (T51)
 
-**Status** · session_01RQyitqBGKNtCPSNEoaoewp · depth 2 · COMPLETE · handled B2
+**Status** · session_016U6ynRyZfVauCoMWgZaDey · depth 2 · COMPLETE · handled B5
 
 ## J1 · COMPLETE
 
@@ -49,3 +49,35 @@ Completion again after CHANGE B2 (K3962, K3965), commit 0761388f1e on job/T51/te
 **Deferred.** None. **Found in other modules.** None.
 
 Size (session_01RQyitqBGKNtCPSNEoaoewp): test runs 3, module lines 1983
+
+## J3 · QUESTION
+
+FR-41 / entry L6 names the wrong module. `visibleTextOfHtml` is not in text-chain's `paths` (`bio-plane/src/textchain.mjs`, which holds no HTML code: line 854 there is the tiersEvidenced comment). It is `export function visibleTextOfHtml` at `bio-plane/src/reading-pipeline/index.mjs:854-866`, owned by `reading-pipeline` (called from `textUnitsOfText`, line 876; its requirement is `reading-pipeline` R32). text-chain's requirements (R1-R104) say nothing about HTML or page text, and it is a pure chain/extent grammar, so there is nothing of mine to change, and I may not edit reading-pipeline's file (ownership check would fail).
+
+Best reading / recommendation: move L6 to `reading-pipeline` (it merges after text-chain anyway). The requirement line then belongs in `reading-pipeline.md` as an amendment to R32, not as text-chain R105, and I write no R105. The change itself is small and local: in `visibleTextOfHtml`, drop `nav` elements and any element with `role="navigation"` (with their contents, nesting-aware), skip links (an `a` whose href starts with `#` and whose text is "Skip to ..."), and unresolved template tokens (`{1}`, `{name}`-style numeric/identifier braces and `##LOC[...]##`); a page with no landmarks keeps all text. Tests are the four BOB listed (nav block, role=navigation block, skip link, tokens -> article only; no-landmark control; nav inside the article body dropped; two reads identical).
+
+Alternative if you want it here: I add a pure `pageContentText` helper to text-chain and reading-pipeline calls it; that needs a reading-pipeline change anyway and gives text-chain HTML knowledge it does not have, so I do not recommend it.
+
+I have made no change. Waiting for your ruling: re-place L6 to reading-pipeline (then FR-41 has no entries and text-chain can be archived), or tell me otherwise.
+
+## J4 · COMPLETE
+
+Completion of G48 (B5, TEXT-CHAIN #10). The J3 QUESTION above (FR-41/L6) is answered by B4 and no session waits on it; this section does not act on it.
+
+**What changed.** `bio-plane/src/textchain.mjs`: `glyphCount` (:1843) counts with a `charCodeAt` loop and no per-character regexp; the whitespace above U+00A0 is `isWideSpace` (:1827), spelled from R73's set; the `WHITESPACE` regexp had no other user and is removed. No signature, no other function changed. Definition to the letter: `0` for a non-string; a high surrogate followed by a low counts once with it; a lone surrogate counts once; whitespace is U+0009-000D, 0020, 00A0, 1680, 2000-200A, 2028, 2029, 202F, 205F, 3000, FEFF; other controls count.
+
+**Failing-first** `bio-plane/test/m/text-chain/g48-glyphs.test.mjs` (7 tests, each names R73): (a) zero `RegExp.prototype.test`/`exec` calls over a 10,000-character mixed string: red on the tip (17,500 calls, `test` calls `exec`), green after. (b) the control, the old loop spelled in the test: every UTF-16 code unit alone, between letters and doubled; surrogate arrangements; astral points at stride 257 with the first and last; the `\s` set and controls; a 1 MiB CSV-shaped text; non-strings give 0. Seen green on the tip first, green after.
+
+**Measured ratio** (information, not a test; node 26 child, 50,500,002 characters, old `for...of` plus regexp against the new loop, same answer 40,438,700): old 1.4-2.0 s, new 0.16 s, 8.7x to 12.4x here.
+
+**Suites.** text-chain: 128 pass, 0 fail (preload run from `bio-plane/`). Users that name `glyphCount`: extraction all 325 pass; reading-pipeline 233 of 234, the one failure being `pdf-pieces.test.mjs` R40 R36 (G26) at its 60 s limit under load, which passes alone (41.6 s). `impact.mjs` names 115 modules by import closure; only extraction and reading-pipeline use `glyphCount`, and both were run.
+
+**Checks** (`checks/run.mjs`): format 0, architecture 0, coverage 0 (6686 of 6686), channels 0, words 0 failures (inline, plain, testcopy, missingkey, handlist 0). coverage text-chain: 104 of 104. ownership: 3 files changed by text-chain, 0 failures.
+
+**Census (K4208).** I own no op; no accepted key changes. **Requirement lines proposed.** R73 unchanged in meaning; if BOB wants the method stated: "R73a: the count is made without a per-character regexp." (its test is (a)). **Deferred.** None. **Found in other modules.** None. **Providers' state.** None needed.
+
+Size (session_016U6ynRyZfVauCoMWgZaDey): test runs 9, module lines 1998
+
+## J5 · COMPLETE
+
+G48 complete (record section J4, commit on job/T51/text-chain): glyphCount is a charCodeAt loop, no per-character regexp, R73 to the letter. g48-glyphs.test.mjs 7 tests: (a) red on tip (17,500 regexp calls), green after; (b) independent-spelling control green before and after. text-chain 128 pass; extraction 325 pass; reading-pipeline 233/234 (pdf-pieces R40 R36 G26 timed out at 60s under load, passes alone in 41.6s). Ratio 8.7x-12.4x on 50.5M chars. checks/run.mjs 0 failures, ownership 0. No census op owned. Proposed line: R73a the count is made without a per-character regexp.

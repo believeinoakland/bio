@@ -68,10 +68,16 @@
  *   - content type alone: the exact .docx MIME type -> "likely" (the
  *     registry's second pass; a declared type is at most likely, per I7).
  *
- * SIZE GUARD: full text extraction is refused as a STATED text-undetermined
- * when the DECLARED UNCOMPRESSED bytes of the text parts we would inflate
+ * SIZE GUARD: the DECLARED UNCOMPRESSED bytes of the text parts we would inflate
  * (word/document.xml + word/comments.xml, summed from the central directory —
- * the COFF-6 metric) exceed ooxml.mjs's bound. Container walk, rels and
+ * the COFF-6 metric) are what this entry may hold in memory at once, up to
+ * ooxml.mjs's bound. Over it, up to its STREAMED_TEXT_BOUND_BYTES, the body is
+ * READ IN PIECES (R35, F7): inflated in windows and walked by the same two
+ * walks that read a small one, fed a piece at a time, so the part is never
+ * held; the tables' `cells` (N724) are not made (`cells` is null) and the
+ * answer says it was read in pieces (`piecewise`). Over the streamed ceiling
+ * full text extraction is refused as a STATED text-undetermined carrying the
+ * marker, its size and `final: true`. Container walk, rels and
  * core-properties still run; nothing is silently truncated. Every part read
  * at all passes ooxml.mjs's part cap (R12, F18): a refusal names its limit
  * where that part's failure is stated.
@@ -90,9 +96,9 @@
 import { linkWrapper } from "./subresources.mjs";
 import {
   hasZipMagic, readContainer, readPart, normalizePartName,
-  discriminate, walkRels, relsPartFor, sizeGuard,
+  discriminate, walkRels, relsPartFor, textPlan, readPartPieces, pieceWhy, cutAfterTag,
   CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
-  readVbaProject,
+  readVbaProject, MEASURED_OOXML_TEXT_BOUND_BYTES,
 } from "./ooxml.mjs";
 /* The one A1 column reading (a cycle with formats-xlsx.mjs, which imports
    this file's shared builders; both sides use only hoisted functions). */
@@ -254,6 +260,18 @@ export function mceSkipper() {
  *  included) — one sequence per paragraph, so a run index means the same
  *  thing to every reference into that paragraph. */
 export function walkDocumentBody(xml) {
+  const w = createBodyWalk();
+  w.feed(xml);
+  return w.result();
+}
+
+/** The same walk, fed the part in pieces (R35): `feed(xml)` takes each piece in
+ *  order (a piece may end anywhere; what it leaves unfinished is carried into
+ *  the next), `result()` the walk's collections once the last is fed. One piece
+ *  holding the whole part is `walkDocumentBody`. `paragraphText: false` keeps no
+ *  paragraph's text (a reader that needs the count and the structure, not the
+ *  words); the text of a tracked change is kept either way. */
+export function createBodyWalk({ paragraphText = true } = {}) {
   const paragraphs = [];
   const hyperlinks = [];
   const bookmarks = new Map();
@@ -281,12 +299,17 @@ export function walkDocumentBody(xml) {
   };
   const appendVisible = (s) => {
     if (!inPara || !s) return;
-    paragraphs[para].text += s;
+    if (paragraphText) paragraphs[para].text += s;
     for (const c of insStack) c.text += s;
   };
 
   const skipped = mceSkipper();
 
+  /* What the last piece left unread: the character data after its last token
+   * and any tag it ended inside. Read again with the next piece. */
+  let carry = "";
+  const feed = (piece) => {
+  const xml = carry + piece;
   TOKEN_RE.lastIndex = 0;
   let m, prev = 0;
   while ((m = TOKEN_RE.exec(xml)) !== null) {
@@ -382,7 +405,9 @@ export function walkDocumentBody(xml) {
         noteRid(attrs);
     }
   }
-  return { paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage };
+  carry = xml.slice(prev);
+  };
+  return { feed, result: () => ({ paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage }) };
 }
 
 /* ------------------------------------------------------------------ *
@@ -504,16 +529,28 @@ async function docxParts(bytes) {
     const e = container.byName.get(partName);
     if (e) declaredTextBytes += e.uncompressedSize;
   }
-  const guardR = sizeGuard(declaredTextBytes);
-  const guard = guardR.ok ? null : guardR;
+  const plan = textPlan(declaredTextBytes);
+  const guard = plan.read === "none" ? plan.guard : null;
+  const piecewise = plan.read === "pieces" ? plan.piecewise : null;
 
   let documentXml = null;
   let commentsXml = null;
-  if (!guard) {
-    const main = await readPart(b, container, mainPart);
-    if (main.ok) documentXml = UTF8.decode(main.bytes);
-    else undetermined.push({ part: mainPart, why: main.why });
-    if (container.byName.has(COMMENTS_PART)) {
+  if (plan.read !== "none") {
+    if (plan.read === "whole") {
+      const main = await readPart(b, container, mainPart);
+      if (main.ok) documentXml = UTF8.decode(main.bytes);
+      else undetermined.push({ part: mainPart, why: main.why });
+    } else if (!container.byName.has(mainPart)) {
+      /* Read in pieces by text() and structure(), each in its own pass; a body
+         the package does not hold is stated now (R35). */
+      undetermined.push({ part: mainPart, why: "part_absent" });
+    }
+    const comments = container.byName.get(COMMENTS_PART);
+    if (comments && comments.uncompressedSize > MEASURED_OOXML_TEXT_BOUND_BYTES) {
+      /* The comments are small in any document; one over the bound is not read
+         in pieces (they are parsed whole), and is stated with its size. */
+      undetermined.push({ part: COMMENTS_PART, why: "over_size_bound", size: comments.uncompressedSize, final: true });
+    } else if (comments) {
       const com = await readPart(b, container, COMMENTS_PART);
       if (com.ok) commentsXml = UTF8.decode(com.bytes);
       else undetermined.push({ part: COMMENTS_PART, why: com.why });
@@ -533,7 +570,7 @@ async function docxParts(bytes) {
   const active = await activeContent(b, container, rels, "word/");
 
   return { ok: true, format: "docx", variant: d.variant ?? null, bytes: b, container, mainPart,
-    documentXml, commentsXml, rels, core, active, guard, undetermined };
+    documentXml, commentsXml, rels, core, active, guard, piecewise, stream: plan.read === "pieces", undetermined };
 }
 
 /* ------------------------------------------------------------------ *
@@ -567,6 +604,14 @@ async function docxParts(bytes) {
  *  each bringing its paragraphs (in practice empty) so no text is dropped; a
  *  continuation with nothing to join stands as its own cell. */
 export function walkDocumentTables(xml) {
+  const w = createTablesWalk();
+  w.feed(xml);
+  return w.result();
+}
+
+/** The same walk, fed the part in pieces (R35), as `createBodyWalk` is: `feed`
+ *  each piece in order, `result()` once after the last. */
+export function createTablesWalk() {
   const done = [];
   const stack = [];
   let next = 0;
@@ -592,9 +637,13 @@ export function walkDocumentTables(xml) {
     done[t.table] = { table: t.table, rows,
       cols: t.gridCols > 0 ? t.gridCols : (t.maxTc > 0 ? t.maxTc : null), cells: t.cells };
   };
+  let carry = "";
+  const feed = (piece) => {
+  const xml = carry + piece;
   TOKEN_RE.lastIndex = 0;
-  let m;
+  let m, prev = 0;
   while ((m = TOKEN_RE.exec(xml)) !== null) {
+    prev = TOKEN_RE.lastIndex;
     if (m[1] === undefined) continue;
     const name = localOf(m[1]);
     const closing = m[0][1] === "/";
@@ -636,11 +685,16 @@ export function walkDocumentTables(xml) {
     else if (name === "vMerge") top.cell.vMerge = merge(attrsOf(m[2]).val ?? "continue");
     else if (name === "hMerge") top.cell.hMerge = merge(attrsOf(m[2]).val ?? "continue");
   }
-  /* A table the body never closed (a truncated part) is still a table this
-     walk saw open; its figures are what was seen, and its ordinal stands so
-     every later table keeps its number. */
-  while (stack.length) { const t = stack.pop(); finish(t, t.rows || null); }
-  return done;
+  carry = xml.slice(prev);
+  };
+  const result = () => {
+    /* A table the body never closed (a truncated part) is still a table this
+       walk saw open; its figures are what was seen, and its ordinal stands so
+       every later table keeps its number. */
+    while (stack.length) { const t = stack.pop(); finish(t, t.rows || null); }
+    return done;
+  };
+  return { feed, result };
 }
 
 /** N26's MIGRATION MAP — how a reading made before N26 (every branch of
@@ -721,12 +775,23 @@ async function docxStructure(parts) {
   }
   const notes = [];
   const links = [];
-  const walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
+  let walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
+  /* R35: a body over the bound is walked here in pieces, keeping no paragraph's
+     text (this answer counts paragraphs and states changes, and holds no words
+     but a change's own). A body that cannot be read to its end is stated. */
+  let pieceFailure = null;
+  if (!walk && parts.stream) {
+    const w = createBodyWalk({ paragraphText: false });
+    const read = await readPartPieces(parts.bytes, parts.container, parts.mainPart, cutAfterTag, (piece) => w.feed(piece));
+    if (read.ok) walk = w.result();
+    else pieceFailure = read;
+  }
   if (!walk) {
     notes.push(parts.guard
       ? localize("office-readers.docx.word_document_xml_not_read_over_the_size_bound", "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())")
       : localize("office-readers.docx.word_document_xml_unreadable_element_references", "word/document.xml unreadable: element references unavailable (stated)"));
   }
+  if (parts.piecewise) notes.push("text_read_in_pieces");
 
   /* Outbound rels -> deferred/refused, through the ONE linkWrapper. The
    * document part's rels get paragraph attribution from the body walk; every
@@ -822,6 +887,9 @@ async function docxStructure(parts) {
   }
   const evUndetermined = [...parts.undetermined];
   if (parts.guard) evUndetermined.push({ part: parts.mainPart, why: "over_size_bound", guard: parts.guard });
+  if (pieceFailure) {
+    evUndetermined.push({ part: parts.mainPart, ...pieceWhy(pieceFailure) });
+  }
   if (parts.commentsXml != null) {
     const parsed = parseComments(parts.commentsXml);
     if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
@@ -901,36 +969,57 @@ async function docxText(parts) {
     return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
   }
   if (parts.guard) {
-    /* Over the bound: the sizeGuard marker carried VERBATIM (COFF-2 shaped it
-     * for exactly this), never a silent truncation. */
+    /* Over the streamed ceiling: the sizeGuard marker carried VERBATIM (COFF-2
+     * shaped it for exactly this), never a silent truncation. */
     return {
       ok: true, container: "docx", document: null, paragraphs: [], tables: null,
       undetermined: [parts.guard],
       counts: { chars: 0, undetermined: 1 },
     };
   }
-  if (parts.documentXml == null) {
-    const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
-    return {
-      ok: true, container: "docx", document: null, paragraphs: [], tables: null,
-      undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart, why: stated?.why ?? "unreadable" }],
-      counts: { chars: 0, undetermined: 1 },
-    };
+  /* The body walked: whole (its XML in hand) or, over the bound, in pieces
+   * (R35), both walks fed each piece, so the part is never held. */
+  let walk, tablesDone;
+  if (parts.documentXml != null) {
+    walk = walkDocumentBody(parts.documentXml);
+    tablesDone = walkDocumentTables(parts.documentXml);
+  } else {
+    let read = null;
+    if (parts.stream) {
+      const body = createBodyWalk(), tables = createTablesWalk();
+      read = await readPartPieces(parts.bytes, parts.container, parts.mainPart, cutAfterTag, (piece) => {
+        body.feed(piece);
+        tables.feed(piece);
+      });
+      if (read.ok) { walk = body.result(); tablesDone = tables.result(); }
+    }
+    if (!walk) {
+      const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
+      return {
+        ok: true, container: "docx", document: null, paragraphs: [], tables: null,
+        undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart,
+          ...(read ? pieceWhy(read) : { why: stated?.why ?? "unreadable" }) }],
+        counts: { chars: 0, undetermined: 1 },
+      };
+    }
   }
-  const walk = walkDocumentBody(parts.documentXml);
   const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `¶${p.para + 1}`, text: p.text }));
   const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
   /* FW-19 / IC-124: the `doc-table` units — the bound the arm is checked
      against. An EMPTY list is a real zero (the body was walked and held no
-     table); the two branches above that walked nothing say `tables: null`. */
-  const tables = walkDocumentTables(parts.documentXml)
+     table); the two branches above that walked nothing say `tables: null`.
+     Read in pieces, a table lists no `cells` (null, as a body not read lists
+     no tables): they are the copies of the paragraphs' text a large body
+     cannot also carry (R35). */
+  const tables = tablesDone
     .filter(Boolean)
     .map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols,
-      cells: tableCells(t, walk.paragraphs) }));
+      cells: parts.stream ? null : tableCells(t, walk.paragraphs) }));
   return {
     ok: true, container: "docx", document, paragraphs, tables,
     undetermined: [],
     counts: { chars: document.length, undetermined: 0 },
+    ...(parts.piecewise ? { piecewise: parts.piecewise } : {}),
   };
 }
 

@@ -18,6 +18,8 @@ const { DOORBELL_CHECKS } = await import("../../../src/doorbell/checks.mjs");
 const { captureOf } = await import("../../../src/capture/index.mjs");
 const { provenanceOf } = await import("../../../src/provenance/index.mjs");
 const { recordOf } = await import("../../../src/record-core/index.mjs");
+const { extractionOf } = await import("../../../src/extraction/index.mjs");
+const { promotionOf } = await import("../../../src/promotion/index.mjs");
 
 const SESSION = "by=ann&identity=member:ann&viewer=member:ann";
 async function record() {
@@ -335,4 +337,65 @@ test("R7 (T42; N826; K2656; doorbell R13, R3): the internal route `inboxpullfile
     assert.deepEqual(asked.capture, [], "capture's instance is not asked under the old name either");
     assert.equal(doorbellOf(r.ctx).inboxGet(other.knockId).item.status, "new");
   } finally { for (const name of ["pullKnock", "inboxResolve"]) delete c[name]; }
+});
+
+/* R18 (fix round 4b, F6; K4487): the pull answers the pulled document's digest and whether it is still unread, so the door
+   reads it (control-plane R123). A 3 MB PDF knock: the doorbell builds its document with no reading and the promotion
+   projects none, so the answer is `reading_pending: true` naming the digest. */
+const PDF_3MB = (() => {
+  const head = new TextEncoder().encode("%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n");
+  const b = new Uint8Array(3 * 1024 * 1024);
+  b.fill(0x20);
+  b.set(head);
+  return b;
+})();
+const b64 = (u8) => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000)); return btoa(s); };
+
+test("R18 (F6): a 3 MB PDF knock pulled through the door's route answers its digest and `reading_pending: true`, and the bundle holds no reading — a direct pull and the `pulled` resolve alike; a repeated pull of a knock no reading was made for answers it still pending", async () => {
+  const r = await record();
+  const make = async (name) => (await r.go("knock?source=203.0.113.9", "POST",
+    { contentB64: b64(PDF_3MB), note: name, contact: "k@example.org", fileName: `${name}.pdf`, mediaType: "application/pdf", now: Date.now() })).json.result;
+  const k = await make("direct");
+  assert.equal(k.ok, true, JSON.stringify(k).slice(0, 300));
+  assert.equal(k.bytes, PDF_3MB.length);
+  const p = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: k.knockId });
+  assert.equal(p.json.result.ok, true, JSON.stringify(p.json).slice(0, 300));
+  assert.deepEqual([p.json.result.sha, p.json.result.reading_pending], [k.sha256, true]);
+  assert.equal(extractionOf(r.ctx).readingOf(k.sha256), null, "no reading exists at the pull: the door reads it (control-plane R123)");
+  /* a repeated pull: the bundle exists, still no reading held, so still pending */
+  const again = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: k.knockId });
+  assert.deepEqual([again.json.result.existed, again.json.result.sha, again.json.result.reading_pending], [true, k.sha256, true]);
+  /* the `pulled` resolve is the same pull */
+  const e = await make("resolved");
+  const s = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST", { knockId: e.knockId, status: "pulled", reason: "worth a look" });
+  assert.deepEqual([s.json.result.ok, s.json.result.sha, s.json.result.reading_pending], [true, e.sha256, true]);
+  /* a knock pulled around the door and promoted by the next pull is pending too */
+  const f = await make("around");
+  assert.equal((await r.go("inboxpull?by=ann", "POST", { knockId: f.knockId })).json.result.ok, true);
+  const late = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: f.knockId });
+  assert.deepEqual([late.json.result.ok, late.json.result.sha, late.json.result.reading_pending], [true, f.sha256, true]);
+});
+
+test("R18 control: a reading already held for the digest (extraction's), or one the document carries, is not pending; a refused pull names neither digest nor pending", async () => {
+  const r = await record();
+  const k = await r.knock("already read");
+  const deps = (extraction) => ({ doorbell: doorbellOf(r.ctx), promotion: promotionOf(r.ctx), record: recordOf(r.ctx), provenance: provenanceOf(r.ctx), extraction });
+  const who = { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann" };
+  const held = await P.pullAndFile(deps({ readingOf: (sha) => (sha === k.sha256 ? { reading: { found: true } } : null) }), who);
+  assert.deepEqual([held.ok, held.sha, held.reading_pending], [true, k.sha256, false]);
+  /* a document that carries its reading */
+  const c = await r.knock("carries its reading");
+  const carrying = { ...deps(null), doorbell: { async pullKnock(a) {
+    const out = await doorbellOf(r.ctx).pullKnock(a);
+    return out.ok ? { ...out, document: { ...out.document, reading: { found: true } } } : out;
+  } } };
+  const had = await P.pullAndFile(carrying, { ...who, knockId: c.knockId });
+  assert.deepEqual([had.ok, had.sha, had.reading_pending], [true, c.sha256, false]);
+  /* refused: nothing pending is claimed */
+  const none = await P.pullAndFile(deps(null), { ...who, knockId: "KNOCK-none" });
+  assert.equal(none.ok, false);
+  assert.equal("reading_pending" in none || "sha" in none, false);
+  const noPuller = await P.pullAndFile(deps(null), { ...who, by: undefined, knockId: (await r.knock("no puller")).knockId });
+  assert.equal(noPuller.ok, false);
+  assert.equal("reading_pending" in noPuller, false);
 });

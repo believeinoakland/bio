@@ -96,6 +96,53 @@ export function kindsOf(cs, view, lower) {
   }).filter(Boolean);
 }
 
+/** C64-law (`jurisdictions` R95 to R97): the laws a records request can go under, as the profile's `records_laws` lists them, each with its
+ *  own first-request window: the `deadlines` rule its `response` names, never a guess. A law with no window of its own carries none. */
+export function recordsLawsOf(profiles) {
+  const v = profiles && profiles.view ? profiles.view : {};
+  const ds = Array.isArray(v.deadlines) ? v.deadlines : [];
+  return (Array.isArray(v.records_laws) ? v.records_laws : []).filter(function (l) { return l && typeof l.citation === "string" && l.citation; }).map(function (l) {
+    const d = typeof l.response === "string" ? ds.find(function (x) { return x && x.rule === l.response && x.applies_to === "records_request"; }) : null;
+    return { citation: l.citation, level: typeof l.level === "string" ? l.level : "", name: typeof l.name === "string" ? l.name : "",
+      rule: d ? d.rule : "", amount: d && d.amount ? d.amount : 0, count: d && d.count ? d.count : "", dcitation: d && d.citation ? d.citation : "" };
+  });
+}
+
+/** C64-law: the records law the action goes under, as a member stated it (`actions` R25's `governing_laws`) and the profile lists it with
+ *  its own window (as `recordsLawsOf` reads each); null when none is stated or the stated one is not one the profile lists (an older
+ *  action's). Self-contained: it is serialised beside the screen that names it. */
+export function chosenLawOf(action, profiles) {
+  const gl = action && action.governing_laws && typeof action.governing_laws === "object" ? action.governing_laws : {};
+  const stated = gl.state === "stated" && Array.isArray(gl.laws) ? gl.laws : [];
+  const v = profiles && profiles.view ? profiles.view : {};
+  const ds = Array.isArray(v.deadlines) ? v.deadlines : [];
+  const laws = Array.isArray(v.records_laws) ? v.records_laws : [];
+  for (const x of stated) {
+    const l = laws.find(function (y) { return y && typeof y.citation === "string" && y.citation === (x && x.citation); });
+    if (!l) continue;
+    const d = typeof l.response === "string" ? ds.find(function (z) { return z && z.rule === l.response && z.applies_to === "records_request"; }) : null;
+    return { citation: l.citation, level: typeof l.level === "string" ? l.level : "", name: typeof l.name === "string" ? l.name : "",
+      rule: d ? d.rule : "", amount: d && d.amount ? d.amount : 0, count: d && d.count ? d.count : "", dcitation: d && d.citation ? d.citation : "" };
+  }
+  return null;
+}
+
+/** C64-more: an office by its role and body, each once: an office named by its agency alone (role and body the same words) is
+ *  drawn once, never "Office, Office". */
+export function officeLine(ad) {
+  const parts = [ad && ad.role, ad && (ad.body || ad.organisation)].filter(function (x) { return typeof x === "string" && x.trim(); })
+    .map(function (x) { return x.trim(); });
+  return parts.filter(function (x, i) { return parts.findIndex(function (y) { return y.toLowerCase() === x.toLowerCase(); }) === i; }).join(", ");
+}
+
+/** C64-template: whether `templatesforaction` offers a template for the action's kind (a version, and no court petition); a read that did
+ *  not answer offers none (never claimed). */
+export function templateOffered(view) {
+  const t = view.data.templates;
+  const v = t && t.state === "ok" && t.value ? t.value : null;
+  return !!v && v.court_petition !== true && Array.isArray(v.versions) && v.versions.length > 0;
+}
+
 /** R21: "Sent with" and "In this matter", from `stakeatpreparation` (`filings` R62: `group_stake`, `matter_stake`) and the
  *  team's name from `groupidentity`. A stake that cannot be read says so in its fold, open whenever drawn, never none. */
 export function stakeLines(cs, view) {
@@ -144,6 +191,24 @@ export function stakeAsk(cs, view) {
     + '<div class="mk-acts">' + save + (view.reachable ? cs.act("writinghelp", { data: { field: "stake", id: "action-stake", forop: "actionstake" } }) : "") + "</div>", { help: "stake.ask.help" });
 }
 
+/** E9 (K4557): a member invited to the action's project and not yet joined is told at the start that only members who have joined can
+ *  draft, approve, send or keep what speaks for the team, and is given the way to accept: a reference to the project's page, where
+ *  "Join" is drawn (the registry lists `projectjoin` on that screen and not on these; the door in place waits for the design stream,
+ *  K4559); "" for any other state, including one not read (the plane still refuses what she may not do). The state is her own
+ *  `participation` on the `projectlist` row of the action's project (`standing`, project-roster R34), read with the screen's others. */
+export function joinFirst(cs, view, project) {
+  const a = view.data.action && view.data.action.state === "ok" && view.data.action.value ? view.data.action.value : null;
+  const id = project || (a && typeof a.project === "string" ? a.project : "");
+  const r = view.data.standing;
+  const rows = r && r.state === "ok" && r.value && Array.isArray(r.value.projects) ? r.value.projects : [];
+  const hit = id ? rows.find(function (x) { return x && String(x.id) === String(id); }) : null;
+  if (!hit || hit.participation !== "invited") return "";
+  const l = view.data.projects;
+  const titled = l && l.state === "ok" && l.value && Array.isArray(l.value.bundles) ? l.value.bundles.find(function (b) { return b.bundle_id === id; }) : null;
+  return '<div class="cs-reason" role="region" data-gap="join"><p class="mk-note" role="alert">' + cs.w("refusal.PROJECT_ACT_NOT_A_PARTICIPANT") + "</p>"
+    + '<p class="mk-note">' + cs.ref("project", id, (titled && titled.title) || id, []) + "</p></div>";
+}
+
 /** The steps drawn: `o.request` adds the period, form and cost limit fields (R8) and the portal's warning and number. */
 export function sendSteps(cs, view, filings, o) {
   const P = view.parts;
@@ -156,8 +221,10 @@ export function sendSteps(cs, view, filings, o) {
   const part = function (key) { const s = cs.w(key); return /\{\w+\}/.test(s) ? "" : s; };
   const ui = view.ui;
   const n = String(ui.draftN || 0);
+  // E9 (K4557): an invited member is told at the start, and offered none of the steps that speak for the team
+  const joinFirst = P.joinFirst ? P.joinFirst(cs, view) : "";
   // R48: on `start-send` alone, the filing kept as the team's template, once approved (the step is second, send or sent)
-  const keep = !req && view.parts.templateKeep ? view.parts.templateKeep(cs, view, d, step) : "";
+  const keep = !req && !joinFirst && view.parts.templateKeep ? view.parts.templateKeep(cs, view, d, step) : "";
   // what the approval released, said once it lands (who: the member who pressed it; the day: the page's clock)
   const wasReleased = ui.releasedDone && Array.isArray(ui.releasedDone.items) && ui.releasedDone.items.length && (step === "second" || step === "send" || step === "sent") && view.me && view.me.handle
     ? ui.releasedDone.items.map(function (r) { return '<p class="mk-note">' + cs.w("screen.start-send.release.done", { who: String(view.me.handle), date: { html: cs.date(new Date(cs.now()).toISOString().slice(0, 10)) }, reason: r.reason }) + "</p>"; }).join("") : "";
@@ -165,8 +232,9 @@ export function sendSteps(cs, view, filings, o) {
     const s = d.sent.sending;
     return wasReleased + '<p class="mk-note" role="status">' + cs.w("screen.start-send.sent", { date: { html: cs.date(s.sent_on || s.at) } })
       + (s.reference ? " · " + cs.w("screen.start-send.reference", { reference: s.reference }) : "") + "</p>"
-      + '<a class="cs-ref" href="/app/action/' + encodeURIComponent(view.subject) + '" data-nav>' + cs.w("screen.start-send.openaction") + "</a>" + keep;
+      + '<a class="cs-ref" href="/app/action/' + encodeURIComponent(view.subject) + '" data-nav>' + cs.w("screen.start-send.openaction") + "</a>" + keep + joinFirst;
   }
+  if (joinFirst) return joinFirst + nosend;
   if (step === "second") {
     // R3: while a second approval waits, the screen says so and offers no send.
     return wasReleased + '<p class="mk-note" role="status">' + cs.w("screen.start-send.waitsecond") + "</p>"
@@ -174,7 +242,10 @@ export function sendSteps(cs, view, filings, o) {
   }
   if (step === "send") {
     // R3, R4, R8: the outward warning, then the member's record of the sending: the day, how, and the venue's number.
-    const how = req ? [1, 2, 3, 4].map(function (n) { return part("screen.request.howsend." + n); }).filter(Boolean) : [];
+    // C64-law: the city's own words (`howsend.3`: "the city can't send you updates") are not said of a request under the federal law
+    const fed = req && P.chosenLawOf ? (P.chosenLawOf(view.data.action && view.data.action.state === "ok" ? view.data.action.value : null,
+      view.data.profiles && view.data.profiles.state === "ok" ? view.data.profiles.value : null) || {}).level === "federal" : false;
+    const how = req ? [1, 2, 3, 4].filter(function (n) { return !(fed && n === 3); }).map(function (n) { return part("screen.request.howsend." + n); }).filter(Boolean) : [];
     return wasReleased + (how.length ? cs.sec("screen.request.howsend", '<ol class="mk-list"><li>' + how.join("</li><li>") + "</li></ol>") : "")
       + '<div class="cs-dialog" role="group" aria-label="' + cs.w("screen.start-send.outward") + '">' + '<span class="cs-tag-outward">' + cs.w("screen.start-send.outward") + "</span>"
       + '<p class="ends">' + cs.w(req ? "screen.request.outward" : "screen.start-send.outward.says") + "</p>"
@@ -212,7 +283,8 @@ export function sendSteps(cs, view, filings, o) {
     + cs.field("req-cost", "screen.request.cost", { help: "screen.request.cost.help" }) : "";
   const text = cs.field("send-text-" + n, req ? "screen.request.text" : "screen.start-send.text", {
     area: true, rec: true, value: draft ? draft.text || "" : "", draft: label,
-    help: req ? "screen.request.text.help" : "screen.start-send.text.help" });
+    // C64-template: "drafted from your team's template" only where the kind offers one; else the plain "from your own words" help
+    help: req && P.templateOffered && P.templateOffered(view) ? "screen.request.text.help" : "screen.start-send.text.help" });
   // R49 (filings R25): each exhibit's grade against what the venue accepts; a flagged exhibit stops nothing, the approval stays
   const venueWords = function (e) {
     const state = e && e.venue && typeof e.venue === "object" ? e.venue.state : "";
@@ -280,11 +352,15 @@ export const PREPARE = Object.freeze({
     const body = { action: view.subject, purpose: view.ui.purpose || "request", text: text };
     if (view.parts.isRequest && view.parts.isRequest()) {
       const from = String(cs.value("req-from") || ""), to = String(cs.value("req-to") || ""), cost = String(cs.value("req-cost") || "").trim();
+      // C64-template: the plane refuses a fill the text has no blank for (`FILL_UNKNOWN_BLANK`), so a box is sent only where her text names
+      // its blank (`{{period}}`, `{{form}}`, `{{cost_limit}}`); a plain request names none and sends no fills
+      const named = {};
+      String(text).replace(/\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g, function (m, n) { named[n] = true; return m; });
       const fills = {};
-      if (from || to) fills.period = from + " – " + to;
+      if ((from || to) && named.period) fills.period = from + " – " + to;
       const form = cs.value("req-form");
-      if (form) fills.form = String(form);
-      if (cost) fills.cost_limit = cost;
+      if (form && named.form) fills.form = String(form);
+      if (cost && named.cost_limit) fills.cost_limit = cost;
       if (Object.keys(fills).length) body.fills = fills;
     }
     return { body: body };

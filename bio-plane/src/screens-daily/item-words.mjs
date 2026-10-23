@@ -57,6 +57,13 @@ export function itemWords() {
     const t = typeof s.title === "string" && s.title.trim() ? s.title : typeof it.title === "string" && it.title.trim() ? it.title : "";
     return t || null;
   };
+  // C25 (K4437): a subject with no title yet, whose item carries the address it came from, is named by the one rule (screens-intake R54): its
+  // host and the day, never the file part of the address; with no address, the untitled word.
+  const hostOf = function (it) {
+    const s = it && it.subject || {};
+    const from = [it && it.summary, it && it.locator, s.locator].filter(function (x) { return typeof x === "string" && /^https?:\/\//i.test(x.trim()); })[0];
+    try { return from ? new URL(from.trim()).hostname : ""; } catch (e) { return ""; }
+  };
   const subject = function (cs, it) {
     const s = it && it.subject || {};
     const t = targetOf(it);
@@ -64,7 +71,9 @@ export function itemWords() {
     const screen = t.screen;
     const title = titleOf(it);
     const since = it.since || it.captured || s.captured || (it.age && it.age.since) || "";
-    return cs.ref(screen === "bias" ? "bias-debt" : screen, t.id, title || cs.w("queue.source.untitled", { date: { html: cs.date(String(since)) } }), []);
+    const host = title ? "" : hostOf(it);
+    const named = title || (host ? cs.w("document.untitled.web", { site: host, date: { html: cs.date(String(since)) } }) : cs.w("queue.source.untitled", { date: { html: cs.date(String(since)) } }));
+    return cs.ref(screen === "bias" ? "bias-debt" : screen, t.id, named, []);
   };
   const dated = function (cs, fills) {
     const out = Object.assign({}, fills);

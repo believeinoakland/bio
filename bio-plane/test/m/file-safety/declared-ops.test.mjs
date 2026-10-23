@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { declaredOpHolds } from "../../declared-ops.mjs";
 import { DECLARED_OPS, fileSafetyOps } from "../../../src/file-safety/index.mjs";
-import { world, pdf, sha } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha } from "./fixture.mjs";
 
 const HELD = sha(pdf(false, "declared"));
 const FOUND = { clamav: () => ({ result: "found", findings: ["Pdf.Trojan.Declared-1"] }) };

@@ -73,6 +73,33 @@ export function finderStates() {
       + (browse.truncated && browse.next ? '<p class="mk-note">' + cs.w("find.browse.more") + '</p><span class="mk-acts">' + cs.act("search", { label: "find.browse.showmore", data: { more: String(browse.next) } }) + "</span>" : "");
   };
 
+  /* ---- G16 (fix round 6): a route past its page continues by its op's own cursor ---- */
+  // What a route has shown and holds: `search` and `meaningrows` page by `offset` (rows shown against the query's `total`), `subjectsnamed`
+  // by `after` (its `next`). `rest(r)` is the query of the next page, or null when the route is whole.
+  const LISTS = { fields: "hits", passages: "rows", subjects: "subjects" };
+  const rest = function (route, r) {
+    if (!r || r.state !== "ok" || !r.value || !r.query) return null;
+    const v = r.value;
+    const shown = Array.isArray(v[LISTS[route]]) ? v[LISTS[route]].length : 0;
+    if (route === "subjects") return v.truncated && v.next ? Object.assign({}, r.query, { after: String(v.next) }) : null;
+    const at = (Number(v.offset) || 0) + shown;
+    return shown > 0 && typeof v.total === "number" && at < v.total ? Object.assign({}, r.query, { offset: String(at) }) : null;
+  };
+  // "Show more" on a route: the next page by the cursor, added below what is drawn; the totals stay the first answer's (the query's own).
+  const more = function (view, route, cs) {
+    const r = mine(view, route);
+    const query = rest(route, r);
+    if (!query) return null;
+    return cs.call(r.op, { query: query }).then(function (a) {
+      const b = bodyOf(a);
+      if (!b || b.ok === false || !Array.isArray(b[LISTS[route]])) return { refuse: "state.failed", fills: { reason: "" } };
+      const merged = Object.assign({}, b, r.value, { [LISTS[route]]: r.value[LISTS[route]].concat(b[LISTS[route]]) });
+      if (route === "subjects") { merged.truncated = !!b.truncated; merged.next = b.next || null; }
+      cs.set("route:" + route, Object.assign({}, r, { value: merged }));
+      return null;
+    }, function () { return { refuse: "state.failed", fills: { reason: "" } }; });
+  };
+
   /* ---- R56: the three routes, each read apart and counted apart ---- */
   const routes = function (cs, view, q, screenOf, pickBox) {
     const ui = view.ui || {};
@@ -89,7 +116,7 @@ export function finderStates() {
       const one = function (a) {
         const r = bodyOf(a);
         if (r === null) return { key: key, state: "failed", code: null, value: null };
-        return r.ok === false ? { key: key, state: "failed", code: String(r.code || r.reason || ""), value: r } : { key: key, state: "ok", code: null, value: r };
+        return r.ok === false ? { key: key, state: "failed", code: String(r.code || r.reason || ""), value: r } : { key: key, state: "ok", code: null, value: r, op: op, query: query };
       };
       cs.call(op, { query: query }).then(function (a) { cs.set("route:" + route, one(a)); }, function () { cs.set("route:" + route, { key: key, state: "failed", code: null, value: null }); });
     };
@@ -129,8 +156,12 @@ export function finderStates() {
       const where = h.snippet ? excerpt(h.snippet) : "";
       return cs.row(pickBox(id, title), cs.ref(screenOf(h.object_type, id), id, title, []) + '<span class="meta">' + grade + cs.mark("origin", "search") + (where ? " <span>" + where + "</span>" : "") + "</span>", "", "");
     }).join(""));
+    // G16: a route past its page says so and continues by its cursor (a held row's nearest stand-in: the browse's).
+    const moreOf = function (route, r) {
+      return rest(route, r) ? '<p class="mk-note">' + cs.w("find.browse.more") + '</p><span class="mk-acts">' + cs.act("search", { label: "find.browse.showmore", data: { route: route } }) + "</span>" : "";
+    };
     const fieldsSec = f && f.state === "ok" && ftotal > 0
-      ? cs.sec("screen.finder.route.fields", '<p class="mk-small">' + (ftotal === 1 ? cs.w("screen.finder.route.fields.holds.one") : cs.w("screen.finder.route.fields.holds.other", { n: String(ftotal) })) + "</p>" + fieldRows) : failedRoute(f);
+      ? cs.sec("screen.finder.route.fields", '<p class="mk-small">' + (ftotal === 1 ? cs.w("screen.finder.route.fields.holds.one") : cs.w("screen.finder.route.fields.holds.other", { n: String(ftotal) })) + "</p>" + fieldRows + moreOf("fields", f)) : failedRoute(f);
 
     // Passages: "In what the documents say".
     const prows = p && p.state === "ok" && Array.isArray(p.value.rows) ? p.value.rows : [];
@@ -148,8 +179,12 @@ export function finderStates() {
       return cs.row(cs.mark("origin", "search"), '<span class="rec">' + (r.snippet ? excerpt(r.snippet) : "") + '</span><span class="meta">' + cs.w("find.row.kind.passage") + (r.grade ? " · " + cs.grade("capture", String(r.grade)) : "")
         + (id ? " · " + cs.ref("document", id, t, []) : "") + (place !== undefined ? " · " + cs.w("screen.find-in.passage", { n: String(place) }) : "") + "</span>", "", "");
     }).join(""));
+    // The documents the matches lie in are counted from the rows loaded, so they are said only once every row is: before that the sentence
+    // says how many of the matches are shown (the query's own total against the rows loaded), never a document count of a part.
+    const pwhole = !rest("passages", p);
     const passagesSec = p && p.state === "ok" && ptotal > 0
-      ? cs.sec("screen.finder.route.passages", '<p class="mk-small">' + (ptotal === 1 ? cs.w("screen.finder.route.passages.holds.one") : cs.w("screen.finder.route.passages.holds.other", { n: String(ptotal), m: String(Math.max(pdocs, 1)) })) + "</p>" + passageRows) : failedRoute(p);
+      ? cs.sec("screen.finder.route.passages", '<p class="mk-small">' + (pwhole ? (ptotal === 1 ? cs.w("screen.finder.route.passages.holds.one") : cs.w("screen.finder.route.passages.holds.other", { n: String(ptotal), m: String(Math.max(pdocs, 1)) }))
+        : cs.w("screen.held.archivemore", { shown: String(prows.length), total: String(ptotal) })) + "</p>" + passageRows + moreOf("passages", p)) : failedRoute(p);
 
     // Subjects: "Subjects named".
     const srows = s && s.state === "ok" && Array.isArray(s.value.subjects) ? s.value.subjects : [];
@@ -162,7 +197,7 @@ export function finderStates() {
         + (n === 1 ? cs.w("screen.finder.named.nodoc.one") : cs.w("screen.finder.named.nodoc", { n: String(n) })) + "</span>", "", "");
     }).join(""));
     const subjectsSec = s && s.state === "ok" && scount > 0
-      ? cs.sec("screen.finder.subjects.heading", '<p class="mk-small">' + (scount === 1 ? cs.w("screen.finder.route.subjects.holds.one") : cs.w("screen.finder.route.subjects.holds.other", { n: String(scount) })) + "</p>" + subjectRows, { help: "screen.finder.subjects.help" })
+      ? cs.sec("screen.finder.subjects.heading", '<p class="mk-small">' + (scount === 1 ? cs.w("screen.finder.route.subjects.holds.one") : cs.w("screen.finder.route.subjects.holds.other", { n: String(scount) })) + "</p>" + subjectRows + moreOf("subjects", s), { help: "screen.finder.subjects.help" })
       : failedRoute(s);
 
     if (loading) return scopes + cs.state({ state: "loading" }, null) + cross;
@@ -202,6 +237,14 @@ export function finderStates() {
       rows.push(cs.row(cs.icon("capture"), "<b>" + cs.w("screen.finder.covered.docs") + '</b><span class="meta">'
         + (existence === 1 ? cs.w("screen.finder.covered.docs.says.one", { n: String(sc.documents) }) : cs.w("screen.finder.covered.docs.says.other", { n: String(sc.documents), p: String(existence) })) + "</span>", "", ""));
     }
+    // G16: the content-axis tally (`captures_counted` of the captures in scope, by state): the documents only partly searchable are counted, and a
+    // tally that covers only its first captures says so (stand-ins: the log's own words for a partial look, the browse's "more").
+    const vocab = src.value.content_axis && src.value.content_axis.vocabulary && typeof src.value.content_axis.vocabulary === "object" ? Object.keys(src.value.content_axis.vocabulary) : [];
+    const partly = vocab.length > 1 ? Number(sc[vocab[1]]) || 0 : 0;
+    if (partly > 0 || sc.captures_truncated === true) {
+      rows.push(cs.row(cs.icon("capture"), '<span class="meta">' + (partly > 0 ? "<b>" + cs.esc(String(partly)) + "</b> " + cs.w("observation-log.partial.looked_got_part") : "")
+        + (sc.captures_truncated === true ? (partly > 0 ? " · " : "") + cs.w("find.browse.more") : "") + "</span>", "", ""));
+    }
     rows.push(cs.row(cs.icon("nobody"), "<b>" + cs.w("screen.finder.covered.looked") + "</b>", "", "") + nobody);
     return cs.sec("screen.finder.covered.heading", '<p class="mk-small">' + cs.w("screen.finder.covered.levels") + "</p>" + cs.sheet(rows.join("")));
   };
@@ -212,16 +255,22 @@ export function finderStates() {
   // "Somebody has looked everywhere" (R77) is said only when every level answered, was read and has no place left unlooked.
   const frontier = function (cs, view) {
     const LEVELS = ["document", "content", "meaning", "internet"];
-    const STATES = ["LOOKED_FOUND", "LOOKED_ABSENT", "LOOKED_INDETERMINATE"];
+    const STATES = ["LOOKED_FOUND", "LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial"];
     let everywhere = true;
     let answered = 0;
     const ui = view.ui || {};
-    const textOf = function (html) { return String(html).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"); };
-    // A place's own words: not a digest, and not the id of the document it lies in.
+    // A place's own words: not a digest, and not the id of the document it lies in. A reference (the meaning level's `kind:key`, the
+    // identifier its source gave: `legislation:26-0788`) is named kind then key, never with the colon; an entity by what it is.
+    const referenceOf = function (x) {
+      const m = x && typeof x === "object" && x.subject_kind === "reference" && typeof x.subject === "string" ? /^([A-Za-z][\w-]*):(\S.*)$/.exec(x.subject.trim()) : null;
+      return m ? m[1] + " " + m[2] : "";
+    };
     const ownName = function (x) {
+      const ref = referenceOf(x);
+      if (ref) return ref;
       const named = x && typeof x === "object" ? (x.title || x.name || x.label || x.referent || x.detail || x.subject || "") : String(x);
       const label = String(named).trim();
-      return label && !/^[0-9a-f]{12,}$/i.test(label) && label !== String(x && x.bundle_id || "") ? label : "";
+      return label && !/^[0-9a-f]{12,}$/i.test(label) && label !== String(x && x.bundle_id || "") && !(x && x.subject_kind === "entity" && label === String(x.subject)) ? label : "";
     };
     // The places that name nothing themselves but lie in a document: their documents' titles, asked for once for all the levels
     // (`search` over `id:` terms), kept in the page's memory under the ids asked, drawn on arrival.
@@ -266,7 +315,12 @@ export function finderStates() {
         const items = (Array.isArray(v.never_looked) ? v.never_looked : []).map(function (x) {
           const label = ownName(x);
           const id = x && typeof x === "object" && x.bundle_id ? String(x.bundle_id) : "";
-          return "<li>" + cs.esc(label || (id && titleOf(id)) || textOf(cs.w("shell.card.document"))) + "</li>";
+          if (label || (id && titleOf(id))) return "<li>" + cs.esc(label || titleOf(id)) + "</li>";
+          // A place that is an entity is named for what it is; a document with no title is named by the day it came in, the one thing
+          // that tells it from the next (`registered` at the content level, `entered` at the meaning level), else by the plain word.
+          if (x && typeof x === "object" && x.subject_kind === "entity") return "<li>" + cs.w("shell.card.person") + "</li>";
+          const day = x && typeof x === "object" ? String(x.registered || x.entered || "") : "";
+          return "<li>" + (day && /^\d{4}-\d{2}-\d{2}/.test(day) ? cs.w("queue.source.untitled", { date: { html: cs.date(day) } }) : cs.w("shell.card.document")) + "</li>";
         }).join("");
         return cs.row(cs.icon("nobody"), name + '<span class="meta">' + cs.mark("gap", "nobody") + " " + (n === 1 ? cs.w("screen.finder.nobody.one") : cs.w("screen.finder.nobody", { n: String(n) })) + "</span>"
           + (items ? '<ul class="mk-list">' + items + "</ul>" : ""), "", "");
@@ -280,9 +334,11 @@ export function finderStates() {
         const key = s === "PRESENT" || s === "LOOKED_FOUND" ? "LOOKED_FOUND" : s;
         counts[key] = (counts[key] || 0) + (Number(tally[s]) || 0);
       });
+      // G16 (S4): a look that got part of what it looked at is not "looked everywhere": it is said, and it blocks that sentence.
+      if (counts.partial > 0) everywhere = false;
       const said = Object.keys(counts).filter(function (s) { return counts[s] > 0 && STATES.indexOf(s) >= 0; }).map(function (s) {
-        const state = s === "LOOKED_INDETERMINATE" ? cs.w("refusal.LOOKED_INDETERMINATE") : cs.w("screen.answers.state." + s);
-        return (s === "LOOKED_INDETERMINATE" ? state : cs.w("screen.answers.look", { level: { html: cs.w("screen.answers.level." + level) }, state: { html: state } })) + " (" + cs.esc(String(counts[s])) + ")";
+        const state = s === "LOOKED_INDETERMINATE" ? cs.w("refusal.LOOKED_INDETERMINATE") : s === "partial" ? cs.w("observation-log.partial.looked_got_part") : cs.w("screen.answers.state." + s);
+        return (s === "LOOKED_INDETERMINATE" || s === "partial" ? state : cs.w("screen.answers.look", { level: { html: cs.w("screen.answers.level." + level) }, state: { html: state } })) + " (" + cs.esc(String(counts[s])) + ")";
       });
       return cs.row(cs.icon("nobody"), name + (said.length ? '<span class="meta">' + said.join(" · ") + "</span>" : ""), "", "");
     }).filter(Boolean);
@@ -351,5 +407,5 @@ export function finderStates() {
     return { query: { handle: el.dataset.handle, project: q, role: role }, body: {} };
   };
 
-  return { hits: hits, keyOf: keyOf, table: table, routes: routes, covered: covered, frontier: frontier, cite: cite, citeSend: citeSend, chip: chip };
+  return { hits: hits, keyOf: keyOf, table: table, routes: routes, more: more, covered: covered, frontier: frontier, cite: cite, citeSend: citeSend, chip: chip };
 }

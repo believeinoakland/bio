@@ -33,6 +33,10 @@ const KEYED_QUEUE = [...QUEUE_KINDS.flatMap((k) => [`queue.${k}.summary`, `queue
 const KIND_NAMES = WORD_ROWS.map((r) => r[0]).filter((k) => k.startsWith("queue.kind."));
 // R60: the feeds the word list names (`queue.feed.<id>`), the ones `queue-states.mjs` can name when one did not answer.
 const KIND_FEEDS = WORD_ROWS.map((r) => r[0]).filter((k) => k.startsWith("queue.feed."));
+// G16, G20 (fix round 6): a list or a search that stops says so, in the nearest held words until the design gives its own.
+const CUT_EXTRA = { home: ["screen.held.more"], queue: ["screen.held.more"],
+  finder: ["screen.held.archivemore", "observation-log.partial.looked_got_part", "find.browse.more", "find.browse.showmore"],
+  "find-in": ["screen.held.archivemore", "screen.people.more", "find.browse.more", "find.browse.showmore"] };
 // R42: the ways into a project, and who to ask; R50: the team's own passed date.
 const JOIN = ["screen.home.join.heading", "screen.home.join.says", "screen.home.join.lead", "screen.home.join.nocreate", "screen.home.join.none",
   "queue.project-invitation.summary.unnamed", "queue.project-invitation.detail", "projects.findable.meta", "projects.request.asked", "act.projectrequest.label.home",
@@ -40,7 +44,7 @@ const JOIN = ["screen.home.join.heading", "screen.home.join.says", "screen.home.
 const OURS = ["due.ours.passed", "due.ours.passed_says"];
 // R22: the source notices, one item of each kind with its count; R28: a subject with no title; R31: a reply not recorded.
 const SOURCES = ["queue.source-modified.one", "queue.source-modified.many", "queue.source-removed.one", "queue.source-removed.many",
-  "queue.source.detail", "queue.source.untitled"];
+  "queue.source.detail", "queue.source.untitled", "document.untitled.web"];
 const PROJECT_ROWS = (w) => [`${w}.questions.one`, `${w}.questions.many`, `${w}.owner`, `${w}.owner.none`, `${w}.lastchange`, `${w}.lastchange.none`,
   `${w}.truncated`, `${w}.stage.means`, `${w}.stage.none`, ...["forming", "investigating", "matured", "closed"].map((s) => `${w}.stage.${s}`),
   "member.founder.unnamed", "screen.matter.unknown", "shell.glance.busy", "shell.glance.steady", "shell.glance.quiet", "project.rescue.title.nodate"];
@@ -66,7 +70,7 @@ const INVITE = ["screen.members.invite.shown", "screen.members.invite.noemail"];
 const ROUTED_ACTS = (screen) => [...ACTS(screen, ["adminendorse", "projectowneradd", "expertiseconfirm", "taskforward"]), `act.owed_taskdecide.label.${screen}`, "act.owed_taskdecide.does"];
 
 // R65: the doors to Held captures and the Inbox, on Home and the queue; on Home, the line that says how many wait for a member to look.
-const DOORS_TO = (screen) => [`act.release.label.${screen}`, "screen.held.name", "screen.inbox.name", ...(screen === "home" ? ["screen.home.waiting.counts"] : [])];
+const DOORS_TO = (screen) => [`act.release.label.${screen}`, "screen.held.name", "screen.inbox.name", "screen.home.waiting.counts", ...(screen === "queue" ? ["shell.queue.waiting"] : [])];
 
 // R17 (B21): the to-dos to vouch for the photos she captured (the dashboard's sentence for one photo at a place, Home's having none) and the
 // statements the vouching asks; approving a letter reads only its act's words.
@@ -163,7 +167,7 @@ const WORDS_OF = {
     "screen.finder.covered.read.says.other", "screen.finder.covered.docs", "screen.finder.covered.docs.says.one", "screen.finder.covered.docs.says.other", "screen.finder.covered.looked",
     // R67, R77, R78: the frontier at four levels, the partial match, a hit with no title.
     "screen.answers.look", "screen.answers.state.other", ...["document", "content", "meaning", "internet"].map((l) => `screen.answers.level.${l}`), ...["LOOKED_FOUND", "LOOKED_ABSENT", "NOT_LOOKED"].map((s) => `screen.answers.state.${s}`),
-    "screen.finder.noresult.partial", "screen.finder.partial.head", "queue.source.untitled", "shell.card.document", "shell.card.member",
+    "screen.finder.noresult.partial", "screen.finder.partial.head", "queue.source.untitled", "shell.card.document", "shell.card.member", "shell.card.person",
     "screen.find-in.passage", "act.cite.label.find-in", "screen.document.cite.question", "screen.document.cite.role", "screen.document.cite.noquestion", "screen.findin.cite.supports",
     "screen.findin.cite.against", "screen.findin.cite.norole", "queue.answered.col.did", ...["newly_cited_supporting_the_question", "left_as_it_was", "the_question_already_cited_it",
       "cite_every_document_you_hold_together_in", "each_document_is_cited_whole_as_its_own_", "a_document_the_question_already_cites_is", "if_the_set_changed_after_you_held_it_wha",
@@ -207,4 +211,4 @@ const WORDS_OF = {
 /** The seven screens, in the registry's order of the rail (Home and its Where else to go, Projects, Queue, Find, Find in
     this, Ask). */
 export const SCREENS = Object.freeze([home, elsewhere, projects, queue, finder, findIn, answers]
-  .map((s) => Object.freeze({ ...s, words: Object.freeze([...new Set(WORDS_OF[s.id])]) })));
+  .map((s) => Object.freeze({ ...s, words: Object.freeze([...new Set([...WORDS_OF[s.id], ...(CUT_EXTRA[s.id] || [])])]) })));

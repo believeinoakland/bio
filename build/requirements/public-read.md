@@ -67,7 +67,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
   - the complete edition (R24);
   - each member's published bytes and signature, and each finding a member's chain reaches, with its grading facts and its passages;
   - every material the `materials:` block lists `included: true`, whole, with its extracted text (`publication` R57); (T37; N757; T38: N779, K2248) and, for each material the case carries only as its copy (a photo, `case-carriage` R11, or a member document's cleaned copy, its R15; T39, N806), the copy as one file of kind `obscured` under that row's ref, at the SHA-256 `obscured.copy` names, read from the published projection by that hash, never the original's bytes, its metadata, its extracted text, or an archive or container record of it (R32); no route of this module serves the original of a material carried as its copy; a copy whose bytes do not hash to that digest is not carried and is named in `unheld`. The case file states `bio-case-file/3` (`case-grammar` R13);
-  - the attestations the block lists;
+  - the attestations the block lists; (fix round 6, G47; K4687) a row states the capture it attests (`sha`) only where its `ref` has two or more captures; it then joins that capture's material and account and is listed only if that capture is included; a `co_attestation` row stating `sha` carries the tokens `publication` held for that capture and those held for no one capture; a row stating none joins and carries by `ref` as before and is carried with no `sha` key;
   - each calculation the `calculations:` block lists (`case-grammar` R18) and each input it names, by the hash the row states, so the checker can recompute it (`case-checker`);
   - the signing keys.
 
@@ -106,6 +106,8 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 
   Controls: the same subject stamped with two different `group` values answers the same `hash`; with no source registered the identity reads null with its detail, never a guess; an unset setting answers `stake: null`, an unreadable one `"undetermined"`; a second registration is refused.
 - **R42** (fix round 4, C48/N6; K4429; amends R41) **`publishedAddress({case, edition}) → string | null`** is the one builder of a published case's public address, as `public-read` serves it (its route): the page, the case editor, the ceremony and the pre-flight (`case-authoring` R83) draw no address composed another way; `null` for a case or edition not published. Test: for `CASE-2026-4783` edition 1 the address equals the route `public-read` serves and opens the page; an unpublished edition answers `null`. Control: the address of edition 2 differs from edition 1's only by its edition.
+
+- **R43** (fix round 4, C47 seam; K4511; amends R41; case-grammar R17, case-disclosures R7) **A signed extent is read in its canonical form.** R41's `place` is read from the passage's signed `extent` whether it crosses as an object or as `content`'s canonical JSON text (the form case-grammar R17 signs and case-disclosures carries); text that does not parse to an extent gives `place: null`, never a throw. Test: `screens-publish/c47-seam.test.mjs` (the whole chain: the published page names "Paragraph 4" and "Paragraph 2"), and public-read's own fixture handing the string.
 
 ## Private
 

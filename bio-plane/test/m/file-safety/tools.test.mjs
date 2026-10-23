@@ -3,7 +3,7 @@
    scanner's provider routes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, T0 } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, T0 } from "./fixture.mjs";
 import { FILE_SAFETY_CHECKS, PROVIDER_REASON_WORDS, DEEPER_CHECKS_PER_MONTH, LOG_COUNT_KINDS, FileSafety, onOwnServers }
   from "../../../src/file-safety/index.mjs";
 import { PROVIDERS, REFUSED_PROVIDERS, HELD_PROVIDERS } from "../../../../file-scanner/src/providers/catalogue.mjs";

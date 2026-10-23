@@ -4,7 +4,7 @@
    module's interface. Every refusal is shown with its negative control. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, world, file, prepare, sign, post, fileAndPlace, legacyEntry, V, MACHINE, CASE, SUBJECT, NOW, DAY, OUTCOME, keyFor, sha }
+import { seeded, world, file, prepare, sign, post, fileAndPlace, legacyEntry, V, MACHINE, CASE, SUBJECT, NOW, DAY, OUTCOME, keyFor, sha, notJoinedOk }
   from "./fixture.mjs";
 import { DOCKET_CHECKS, OUTCOME_KINDS, PRESSURE_KINDS, COUNSEL_MATTER_CODE, counselMatterRow, docketOps, DOCKET_SCHEMA }
   from "../../../src/docket/index.mjs";
@@ -69,7 +69,7 @@ test("R1 (T45) the outcome's refusals come after R1's form checks, in order: out
   assert.equal(file(w, { ...bad, proposed: "both", outcome: OUTCOME.outcome, summary: OUTCOME.summary }).ok, true);
   /* the caller's refusals before every form check, as for every kind */
   rowOk(file(w, { ...bad, author: MACHINE, viewer: MACHINE }), "MACHINE_CANNOT_FILE_DOCKET");
-  rowOk(file(w, { ...bad, author: V("dave"), viewer: B }), "DOCKET_NOT_A_PARTICIPANT");
+  notJoinedOk(file(w, { ...bad, author: V("dave"), viewer: B }), "docketfile");
 });
 
 test("R1 (T45) a well-formed outcome files at once to the record, by a member, from anyone; recorded with its statement; never core", () => {
@@ -292,7 +292,7 @@ test("R28 (T45) the code is publication's row alone: docket's table holds no cop
   assert.ok(row && /^C-122\.\d+$/.test(row.check), `publication R78's row is of family C-122 (${row && row.check})`);
 });
 
-test("R28 (T45) docketFile on a counsel matter's case: refused after DOCKET_NOT_A_PARTICIPANT, before every form check, writing nothing; scope none files", () => {
+test("R28 (T45) docketFile on a counsel matter's case: refused after the not-joined refusal, before every form check, writing nothing; scope none files", () => {
   const w = seeded();
   w.roster.scopes.set(w.P, "counsel_matter");
   const before = w.snapshot();
@@ -301,7 +301,7 @@ test("R28 (T45) docketFile on a counsel matter's case: refused after DOCKET_NOT_
   counselOk(file(w, { edition: 9, capture: "x", reason: "" }));
   counselOk(w.docket.docketFile({ case: CASE, takesBack: "DKT-2026-9999", reason: "", author: B, viewer: B }));
   assert.deepEqual(w.snapshot(), before, "nothing written");
-  rowOk(file(w, { author: V("dave"), viewer: B }), "DOCKET_NOT_A_PARTICIPANT");
+  notJoinedOk(file(w, { author: V("dave"), viewer: B }), "docketfile");
   rowOk(file(w, { author: MACHINE, viewer: MACHINE }), "MACHINE_CANNOT_FILE_DOCKET");
   assert.equal(file(w, {}, "dave").reason, "NO_SUCH_CASE");
   assert.ok(w.roster.asked.includes(w.P), "the scope read is the case's owning project's");

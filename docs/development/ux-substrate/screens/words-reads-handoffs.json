@@ -731,6 +731,30 @@
     "line": 1832,
     "text": "no reservation was offered, and an unreserved admission is the overrun D-492 closed",
     "why": "the render allowance's internal decision reference, never shown to a member (B346, CAPTURE #37 J3)"
+   },
+   {
+    "file": "bio-plane/src/capture/index.mjs",
+    "line": 891,
+    "text": "filing a document where it is seen is a signed-in member's act, whose stamp names them; nothing was written",
+    "why": "a builder diagnostic carried as a refusal's detail; the member's sentence is the refusal row, not this string (B471, K4377, J11)"
+   },
+   {
+    "file": "bio-plane/src/capture/index.mjs",
+    "line": 905,
+    "text": "the record holds no such document that you may see; nothing was written",
+    "why": "a builder diagnostic carried as a refusal's detail; the member's sentence is the refusal row, not this string (B471, K4377, J11)"
+   },
+   {
+    "file": "bio-plane/src/capture/index.mjs",
+    "line": 916,
+    "text": "the record could not be written, so nothing was filed",
+    "why": "a builder diagnostic carried as a refusal's detail; the member's sentence is the refusal row, not this string (B471, K4377, J11)"
+   },
+   {
+    "file": "bio-plane/src/capture/index.mjs",
+    "line": 3220,
+    "text": "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)",
+    "why": "the op's declared description; the member's sentence is act.captureseenin.does (B471, K4377, J11)"
    }
   ],
   "retrieval": [
@@ -2675,6 +2699,24 @@
     "line": 18,
     "text": "scheduler: the security wakes; name no member and move no bundle",
     "why": "a grade-table note (NON_ACTS); no screen draws NON_ACTS (B364, L11)"
+   },
+   {
+    "file": "bio-plane/src/op-grades/t33.mjs",
+    "line": 214,
+    "text": "the money sets that concern an id, such as a project's trails, newest first, bounded",
+    "why": "an op's internal grading description; no member reads it (the member's sentence is its act.<op>.does row) (B472, K3944, K4384)"
+   },
+   {
+    "file": "bio-plane/src/op-grades/t51.mjs",
+    "line": 41,
+    "text": "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle",
+    "why": "an op's internal grading description; no member reads it (the member's sentence is its act.<op>.does row) (B472, K3944, K4384)"
+   },
+   {
+    "file": "bio-plane/src/op-grades/t51.mjs",
+    "line": 45,
+    "text": "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle",
+    "why": "an op's internal grading description; no member reads it (the member's sentence is its act.<op>.does row) (B472, K3944, K4384)"
    }
   ],
   "stewards": [

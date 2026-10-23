@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_012XpvBxY8DzCpmcr55C2RtT · depth 2 · COMPLETE · handled B14
+**Status** · session_01L1Y9FNxaoQ4v7iZDkLBJWG · depth 2 · COMPLETE · handled B28
 
 ## J1 · COMPLETE
 
@@ -345,3 +345,247 @@ COMPLETE for B13 (START, fix round 4, wave 1, #3), `job/T51/capture` (tranche/T5
 
 **Tests and checks.** capture + cap13-reuse-pages + d57selflink: 247 tests, 247 pass (p10-t51 5). Users run: screens-inquiry, screens-daily, interface-shell (1,026 pass), screens-intake, capture-requests (all pass; `screens-intake/capture.test.mjs` R22 failed once with another suite running at the same time and passes twice alone), op-grades + op-declarations 396 tests, 395 pass: the red is op-declarations `t36` R34 (affordances R48), which is red on `tranche/T51`'s tip too (checked with my `index.mjs` swapped for the tip's: same failure), not mine. `checks/run.mjs`: format 0, architecture 0, coverage: no capture id unnamed, words: none in capture (3 failures are op-grades', as before), ownership 0 failures.
 Size (session_012XpvBxY8DzCpmcr55C2RtT): test runs 14, module lines 4171
+
+## J15 · QUESTION
+
+QUESTION (not blocking; I carry on on this reading). R103's "a capture session's expiry ends no owed work" conflicts with R22's text ("load answers found: false for an unknown or expired session") and R46.
+
+My reading: every saved `capture_sessions` row is resume state for work still owed (acquisition saves one only while supporting files or a render are outstanding, and drops it when they end), so the clock must never delete it. Built: save and load no longer prune expired rows; `loadCaptureSession` finds an expired session and answers `expired: true` beside its state; `dropCaptureSession` (work done or ended with a stated final reason) is the only thing that removes a row; `liveCaptureSessions` (R46) still lists only unexpired sessions, so queue's partial-capture condition and the member's "Finish it" window are unchanged. Old rows already pruned stay lost (new data only, R-OLD); nothing to repair.
+
+Consequence: two existing tests pin the old behaviour (services.test.mjs R22 "an expired session found: false", and R74's list of writers, which counted `loadCaptureSession` as one because it pruned). I update both to the new reading, not weaken them. acquisition's ledger entry (R100) must call `dropCaptureSession` when its work ends or is final, or the row stays.
+
+If you want a different seam (e.g. the ledger entry carries the state itself and sessions still expire), say so and I redo this part; the upload half (R103's first sentence) does not depend on it.
+
+## J16 · QUESTION
+
+QUESTION (re B16; blocks only the last swap). Your CHANGE says to use acquisition's `keepPast`. `origin/job/T51/acquisition` (J21 COMPLETE) is not in `origin/tranche/T51` yet (`merge-base --is-ancestor` says no; the tranche's last acquisition merge is a72f652b4f), so I cannot import it without merging a provider's branch into mine, which would put acquisition's files into my ownership diff.
+
+State: R103 is built and tested green with a local helper in `capture/index.mjs` (`keepLargeFromParts` and the await-then-`keepLater` block in `uploadCapture`) that does exactly what `keepPast` does (await `putFromParts` within boundMs - 5 s - elapsed, else `keepLater`, answer `keep_pending`): `r103-t51.test.mjs` 6 of 6; capture suite 253 of 253; the session half is done as your B17 rules (J15's reading); checks clean.
+
+Smallest thing I need: merge `job/T51/acquisition` into `tranche/T51` (mechanics §6 step on a finished provider) and tell me. Then I merge the tranche, replace the local helper by `keepPast(this, ev, {sha, parts, boundMs, elapsedMs, keepLater})` (about 25 lines out, 6 in), re-run the suites and checks, and post COMPLETE. If you would rather keep the local helper (one more copy of 20 lines, same behaviour), say so and I post COMPLETE now.
+
+## J17 · COMPLETE
+
+COMPLETE for entry 4 (F2, F5; R103). Commit on job/T51/capture (tranche/T51 merged, acquisition included).
+
+**Root cause (F2).** `capture/index.mjs` `uploadCapture` called `keepWhole`, which returns `kept: false` at once past `MULTIPART_KEEP_MAX`; the `keepLater` arm existed only in `acquire`. **F5, capture's part:** `saveCaptureSession` and `loadCaptureSession` deleted every row past its `expires`, so owed resume state died by the clock. **Why tests missed it:** R86's tests used files of 12 MB or less; R22's test pinned expiry as `found: false`, and R74's writer list counted `loadCaptureSession` only because it pruned.
+
+**Changed.** `uploadCapture` (args `boundMs`, `keepLater` added): past 32 MiB it calls acquisition's `keepPast(this, ev, {sha, parts, boundMs, elapsedMs, keepLater})` (one copy, K4164); the answer carries `keep_pending: true` when the plane took the keep, on all three success shapes (new, existed with document, second sighting). The upload is filed in its parts either way, never refused for the keep. Sessions: no pruning in save or load; `loadCaptureSession` answers `expired` beside `found`; `dropCaptureSession` alone removes a row; `liveCaptureSessions` unchanged (B17).
+
+**Failing-first** (`test/m/capture/r103-t51.test.mjs`, 6 tests; seen red before the code: 5 of 6 failed, whole not held, no keepLater, no `expired`; green after): 40 MiB five-part upload through the real record-core `putFromParts` on a multipart bucket: whole held under its digest, nothing owed; keep not ending in the bound: `keep_pending`, plane handed `{sha, parts}` in order, then the real `putFromParts` the alarm runs holds the whole; controls (refusing or throwing store, no store call, no hand-off, 20 MiB and one-part unchanged, second press shares one store call); session survives past its hour, `expired: true`, not live, dropped only by drop. Updated two pinned tests (services.test.mjs R22 and R74's writer list) as B17 rules. Seam: control-plane R123 and plane R77 own the whole door and alarm path; they read `keep_pending` from this answer.
+
+**Platform (L: Miniflare/workerd, R2 emulation, real record-core `putFromParts`; local workerd does not enforce the 128 MB limit, memory held is one 8 MiB part):** 40 MiB keep 1.4 s, 100 MiB 3.6 s, 256 MiB 9.2 s, whole held each time; inside the 25 s bound.
+
+**Tests and checks.** capture + cap13-reuse-pages + d57selflink: 253 of 253. Users: acquisition 217 of 217, control-plane 369 of 369, machinery-producers 35 of 35, queue 210 of 210 (before the merge); plane 296 of 297, the failure is plane R24's words test (a module I did not touch). format 0 failures; architecture 0; coverage capture 56 of 56; ownership 4 files, 0 failures; checks/run.mjs: capture clean, words 0 findings (I added no sentence).
+
+**Decisions of mine, for BOB to record.** R-OLD: sessions already pruned are lost, none repairs: new data only. acquisition must call `dropCaptureSession` when its owed work ends (B16 told it; its J21 does).
+
+**Proposed requirement lines (BOB writes them).**
+- R103 (met): as written; add: "`uploadCapture` takes optional `boundMs` and `keepLater`; the answer carries `keep_pending: true` when the keep was handed to the plane."
+- R22: "A session holds a walk's resume state, owed work, until dropped; the clock never removes it. Load answers `found: false` for an unknown session; for one past its expiry `found: true` and `expired: true` with its state; drop removes it."
+- R46: "`liveCaptureSessions(now)` answers every session whose expiry is after `now`" (unchanged), noting an expired session is held but not live.
+- R74: the writers list no longer includes `loadCaptureSession` (it writes nothing).
+
+Size (session_01N9N3ozsPf3Ekjw63cL8GAe): test runs 12, module lines 3282
+
+## J18 · QUESTION
+
+QUESTION (CAPTURE #47, T51, entry E13). Best reading below; I carry on with it unless you answer otherwise.
+
+The code at tranche head already asks the evidence store one `head` per DISTINCT digest, `HELD_PAGE_LANES` (8) at a time (`#wholeOf`, capture/index.mjs:1594), and the examinations/groupings in lanes (`#pageAnswers`). So today a 27-row full read makes 27 heads only because the 27 digests are distinct. The only way to cut the heads is the plan's second half: answer `whole` from the size the register recorded at keeping.
+
+Two existing tests assert the OLD rule for the full row, so E13 cannot land with them unchanged: fix3b-t51 R77 C14 (the full list "asks the store once for each document", and its control that INFO-A2, register size past the keep bound but a whole object held, reads `whole: true`) and fix2-t51 R77 C10 (heads counted for the full list). R77 (requirements) also says the full row asks the store.
+
+My reading of the rule (differs from the START in one respect, to keep the A2 control true):
+- register size recorded and <= MULTIPART_KEEP_MAX (32 MiB): `whole: true`, no head.
+- size past MULTIPART_KEEP_MAX, or no size recorded: one `head` per distinct digest, as today (R103's `keepPast` can hold a whole object past the bound, so the size alone cannot say false; a store that holds it must still read true).
+- lanes of 8 and the page's wait unchanged; rows in page order; answer unchanged byte for byte for a store consistent with its register (a recorded golden, made on the unchanged code, is my test).
+The START said "head only when it holds no size"; reading size > bound as false would turn INFO-A2's control (object held, size says parts) false and break the vouch/OCR box for a kept-past-32 MiB capture.
+
+Need from you: (1) OK to rule as above, (2) OK for me to edit the two tests' assertions that state the old rule (fix3b-t51 lines ~84-90 and ~120-122; fix2-t51 ~377-379), keeping their other assertions, since they would otherwise fail by design. Until answered I write the new failing-first test and the golden and leave those two tests untouched and red-by-design after the change.
+
+## J19 · BLOCKED
+
+BLOCKED (cause: a provider not merged, not tests, not Bob, not context). E13 is done and pushed at b11f86b114 on job/T51/capture; E5's code half cannot be written until acquisition's `textTypeOf` is on `tranche/T51`.
+
+**The smallest thing I need:** acquisition (merge 2) merged into `tranche/T51` with `textTypeOf({bytes, type, name})` exported, and a RESUME from you. Origin/tranche/T51 has no `textTypeOf` today (`git grep` over bio-plane/src, checked at d0d7f9b920), and job/T51/acquisition carries none. Then I replace capture/index.mjs:757-768 (the `named`/`readAs`/`profilesAsText`/UTF-8 test) and `UPLOAD_NAME_TYPES` (:109) with the one call, the `e5-t51` test goes green, and I post COMPLETE. I need nothing else.
+
+**E13 (done).**
+- Root cause (file:line at the tranche head): `heldCaptures` (capture/index.mjs:1454) asked the evidence store one `head` per distinct digest (`#wholeOf` :1594, 8 lanes) for every full row, including the register's size which it held but used only for the picker (`#wholeBySize` :1584). With 27 distinct documents that is 27 heads. The rest of the plan's list was already in place at the tranche head (batched `#pageFacts`, one grade batch, lanes of 8 in `#pageAnswers` and `#wholeOf`, results in page order); the heads were the remaining per-row cost.
+- Change (your B20 ruling): :1519-1535 and new `#keptWholeBySize` :1600. A full row answers `whole: true` with no head for a capture the register records as held in one part (size recorded, <= 8 MiB, `UPLOAD_PART`); every other row (no size, or a capture held in parts) is asked of the store once per distinct digest, in lanes of 8, as before; with no evidence store, null as before. The register records no "whole kept" fact (its columns are capture_sha, bundle_id, path, encoding, bytes, registered), so a capture in parts is always asked.
+- Why the tests missed it: nothing counted heads or concurrency per page; `p10-t51` counted the set of keys touched, never calls. Gap fix: `e13-t51.test.mjs`.
+- Failing-first (`bio-plane/test/m/capture/e13-t51.test.mjs`), through `heldCaptures` (the op's own method), seen red at b2435f2e47 on the unchanged code, green at b11f86b114: (1) 27 documents of recorded one-part size: 27 heads before, 0 after (assert 0); (2) a mix of 6 small, one at exactly 8 MiB, 3 in parts with a whole held, one in parts with the keep owed (no whole object: `whole: false`), 14 unsized, 4 and one past 32 MiB (held and not): heads are exactly the unsized, in-parts and past-bound digests, none twice, peak in flight > 1 and <= 8, `whole` true/false as the store says; (3) rows in the page's order with the store answering out of order; (4) the answer byte for byte against `e13-golden.json`, recorded by running the test on the unchanged code (E13_WRITE_GOLDEN=1, tranche head fa28f1ee12 for src), never by hand.
+- Tests edited under your B20 (2): `fix3b-t51` (the list's heads 3 -> 1, a full list's 2 stays with its sentence; INFO-A2 control kept: past-the-bound, whole held, reads true) and `fix2-t51` (wholeWorld records INFO-1 as one part, INFO-2 in parts, INFO-3 unsized; heads 2; a failing head reads null for the two it is asked of and the unsized, INFO-1 true). Their other assertions are unchanged.
+- Measurement (local, no deploy): `heldCaptures`, 27 rows, limit 500, evidence store 40 ms per head: before 27 heads, 168 ms; after 0 heads, 13 ms. With the production store's per-head latency the saving is that latency times ceil(27/8) rounds for a screen of one-part documents; documents in parts keep their head. PERFORMANCE re-times Held on the copy.
+- R-OLD: nothing stored changes (a read only).
+
+**E5, capture's half, written first and red by name:** `e5-t51.test.mjs` (R92 R93 E5): fails at "acquisition exports textTypeOf ... (merge 2)"; once it exists it compares, for 13 cases (declared text types, .txt/.md/.csv names in two cases, empty type, .bin, no name, a declared non-text type beating a .md name, NUL and non-UTF-8 bytes), the upload's `profiled_from_text` with the rule's answer. It assumes `textTypeOf` answers the text type as a non-empty string when the bytes are text and null/empty otherwise; tell acquisition's job if it answers another shape and I adapt the test.
+
+**Suites and checks (the unchanged state of E5 aside).** capture + cap13-reuse-pages + d57selflink: 258 tests, 257 pass, 1 fail (the E5 test, red by name), 0 skipped. Users: the 71 test files outside capture that read `heldcaptures` (instance-setup, capture-requests, ratification, op-declarations, affordances, wizard-scripts, screens-intake/-inquiry/-daily/-settings/-action, ...): 937 tests, 0 fail, 0 skipped (`impact.mjs tranche/T51 HEAD` names 98 modules / 1498 test files through the import graph; none of the others read the row's `whole`; I did not run all 1498). `checks/run.mjs`: format 0, architecture 0, coverage 6605 of 6605 ids named, channels 0, words 0 failures (dev 268, unkeyed 1982; I added no string a member reads). `checks/ownership.mjs capture tranche/T51 job/T51/capture`: 7 files, 0 failures.
+
+**Requirement lines I propose (BOB writes them):**
+- R77, replacing "a page asks the store once per distinct fingerprint, nothing for an empty page" and "the full held row (not the picker's) ... a full row asks the store": *(fix round 5; E13; K4530, B20)* Each full row answers `whole: true` without asking the evidence store when the register records the capture's size as held in one part (at most 8 MiB, `acquisition` R10's part); every other row (no size recorded, or a capture held in parts, whose whole object may be owed) is asked of the store once for each distinct fingerprint, `HELD_PAGE_LANES` at a time, and answers true, false or null as before; the answer is otherwise unchanged. Test: `e13-t51.test.mjs`.
+- Test line for R91: the page's store reads overlap in lanes of `HELD_PAGE_LANES` and a page of one-part documents makes none (`e13-t51.test.mjs`).
+
+Size (session_01VM4D7r3cUFZacyS8LqnGx2): test runs 7 (capture suite 4, users 71 files once, checks 2), module lines 4196 (src/capture)
+
+## J20 · COMPLETE
+
+COMPLETE, CAPTURE #47, T51: E13 and E5 (capture's half). Pushed at 0e79647ee7 on job/T51/capture, tranche/T51 merged (acquisition's textTypeOf, K4537).
+
+**Changed**
+- E13 (b11f86b114): capture/index.mjs:1519-1535 and new `#keptWholeBySize` :1600. A full held row answers `whole: true` with no evidence-store `head` when the register records the capture as held in one part (size recorded, at most 8 MiB); a capture held in parts, or with no size recorded, is asked of the store once per distinct digest, 8 at a time, as before. No evidence store: null, as before. Read only; no stored data changes (R-OLD).
+- E5 (0e79647ee7): the upload (`uploadCapture`, ~:757) calls acquisition's `textTypeOf({bytes, type, name})` on the stored single-part bytes; capture's own copy of the rule (`UPLOAD_NAME_TYPES`, the `named`/`readAs`/`profilesAsText`/UTF-8 test) and the `profilesAsText` import are removed. The recorded declaration (`source_content_type`, `declared_by`) is unchanged. The upload tests R92 and R93 pass unchanged.
+
+**Failing-first, red then green**
+- `e13-t51.test.mjs` (4 tests): red at b2435f2e47 on the unchanged code (27 heads where 0; heads for sized one-part documents), green at b11f86b114. The byte-for-byte test compares the answer with `e13-golden.json`, recorded by running on the unchanged code (E13_WRITE_GOLDEN=1), never by hand.
+- `e5-t51.test.mjs` (R92 R93 E5, 13 cases against acquisition's rule): red by name until acquisition merged ("acquisition exports textTypeOf"), green at 0e79647ee7.
+- Tests edited under B20 (2): `fix3b-t51` and `fix2-t51`, only their assertions stating the old full-row rule; their other assertions and the INFO-A2 control are kept.
+
+**Measurement (local, no deploy):** `heldCaptures`, 27 documents, limit 500, store 40 ms per head: before 27 heads, 168 ms; after 0 heads, 13 ms. Lanes of 8 and the page's wait are unchanged; the mixed case peaks at more than 1 and at most 8 heads in flight.
+
+**Suites and checks**
+- capture + cap13-reuse-pages + d57selflink: 258 tests, 258 pass, 0 fail, 0 skipped.
+- Users: the 71 files outside capture that read `heldcaptures`: 937 tests, 0 fail (run before E5); the 30 files outside capture that call `uploadCapture` or `captureupload`: 338 tests, 320 pass, 18 fail, all in `journey-check/walker.test.mjs`, which stops at "playwright-core cannot be loaded (run `npm ci` in bio-plane/src/journey-check)": that directory has no node_modules in my checkout, not a result of this change. 29 of the 30 files pass with 0 fail. `impact.mjs tranche/T51 HEAD` names 98 modules; I ran the readers of the changed row and the callers of the upload, not all 1498 files.
+- `checks/run.mjs`: format 0, architecture 0, coverage 6610 of 6610 ids named, channels 0, words 0 failures (dev 268, unkeyed 1982, no string added). `checks/ownership.mjs capture tranche/T51 job/T51/capture`: 7 files, 0 failures.
+
+**Requirement lines I propose (BOB writes `build/requirements/`)**
+- R77, in place of "a page asks the store once per distinct fingerprint" for the full row: *(fix round 5; E13; K4530, B20)* Each full row answers `whole: true` without asking the evidence store when the register records the capture's size as held in one part (at most 8 MiB, `acquisition` R10's part); every other row (no size recorded, or a capture held in parts, whose whole object may be owed) is asked of the store once for each distinct fingerprint, `HELD_PAGE_LANES` at a time, and answers true, false or null as before; the answer is otherwise unchanged. Test: `e13-t51.test.mjs`.
+- R91 test line: the page's store reads overlap in lanes of `HELD_PAGE_LANES`; a page of one-part documents makes none (`e13-t51.test.mjs`).
+- R92/R93: add "the rule is `acquisition`'s `textTypeOf` (its R102), the one code the upload and the knock's pull share; this module keeps no copy. Test: `e5-t51.test.mjs`."
+- Uses, Private: `acquisition` gains `textTypeOf` (R92, R93) and drops nothing else.
+
+Deferred: none. Words owed: none (no new sentence). Size (session_01VM4D7r3cUFZacyS8LqnGx2): test runs 10 (capture suite 6, users 71 files and 30 files once each, checks 2), module lines 4189 (src/capture)
+
+## J21 · REPORT
+
+REPORT (CAPTURE #48, T51, fix round 6): the names of what capture publishes for G2, so control-plane and notice-producers can build against them now (BOB: please pass them on; capture will not change them).
+
+- `captureOf(ctx).recordFetchDone({session, document, opener, project, at})` -> `{recorded: true|false}`. One row per session (a second call for the same session records nothing and answers `recorded: false`); `session` and `document` non-blank strings, `opener` a member's stamp (`member:<id>`; a blank or machine one records nothing), `project` a string or null, `at` a whole-second UTC instant (this instance's clock when absent). Never throws. Table `fetch_done`. The caller is control-plane's delivery of a finished fetch, in process.
+- `captureOf(ctx).fetchesDone({after, limit})` -> `{ok: true, fetches: [{session, document, opener, project, at, cursor}], limit, truncated, next}`, oldest first by (`at`, `session`), at most `limit` (default 200, clamped 1..1000), `after` the `cursor` of an earlier row (as `taskEvents`); in process, no viewer (notice-producers sends to `opener` only). Never throws.
+- Assumed from acquisition (not yet merged): `notArchivesAmong(store, shas)` returns a Set of the digests acquisition has recorded as not archives, like `openedAmong`. If acquisition names it otherwise, tell me.
+- `openCaptures` stays acquisition's: capture passes its answer through unchanged, so a session with `fetch_pending` is listed as acquisition lists it.
+
+## Fix round 6 · CAPTURE #48 (B22)
+
+**Done** (commit e65bc0f3cd on `job/T51/capture`; `tranche/T51` merged).
+- **G6 (index.mjs `#pageFacts`)**: the row's `capture` is the document's whole. The register read orders `whole` rows first (provenance R72) when the column exists, and a capture that the document's own register document states as a part of a whole is replaced by that whole with its size; so `capture.sha256`, `bytes`, `actor`, `retrieved`, `grade` and `format` are the whole's. New data and data provenance's wake repair covers; a legacy bundle with no `parts` in its register document and no whole row cannot be told apart (R-OLD).
+- **G12d**: `#keptWholeBySize` is never true for a whole row or a stated part; a 40 MB row's `whole` is the store's answer under the whole's digest.
+- **G12a**: parts are never asked of the archive listing; digests in acquisition's `notArchivesAmong(store, shas)` (a Set) are dropped from the grouping; the picker row gains `format`. The call is guarded (`import * as acquisitionApi`), so until acquisition merges nothing is dropped.
+- **G2**: table `fetch_done`, `recordFetchDone`, `fetchesDone` (names posted as J21); `heldAt` check reads no body past 8 MiB (`HELD_AT_CHECK_MAX`): a declared length over it is not read at all, an undeclared one stops at it; the answer is `changed.state: "undetermined"` with `large: true` and `held` unchanged (I read "answers not held" as "not compared"). `openCaptures` stays acquisition's, passed through.
+- **G5**: `captureOp` relays a reader's deferral unchanged and answers a throwing or empty reading as 200 with the kept document, `reading_pending`, `sha` and `diag`, one `console.error`.
+
+**Failing first, red then green**: `r6-t51.test.mjs` (9 tests): red at the unchanged code (the whole not the part; `whole` from the store; no `recordFetchDone`; 100 MiB pulled; the throw reaching the door), green after. The G12a store-call test is red by name ("acquisition exports notArchivesAmong") until acquisition merges. Four old assertions of the picker's key set (fix2-t51, fix3-t51 x2, fix3b-t51) edited to state the new `format` field.
+
+**Proposed requirement lines** (BOB writes): R77 amend (the row's `capture` is the document's whole: register `whole` row first, else the whole its register document states; picker row also `format`; `whole` never from a part's size); R104 new (`recordFetchDone`/`fetchesDone`, table `fetch_done`); R105 new (`heldAt` check reads at most 8 MiB, `large: true`); R73 amend (a reading that fails after a kept acquire is a 200 deferral with `diag`). Word owed: none (diagnostics are identifiers).
+
+**Suites and checks**: capture + cap13 + d57: 266 tests, 265 pass, 1 fail (the by-name red). Users of the held rows and the act (83 files): 1050 tests, 0 fail. `checks/run.mjs`: architecture 0, coverage 6617/6617, words 0 (count unchanged), format 1 failure that is `build/plan/next.md:38` (BOB's). Ownership run before the commit.
+
+Size (session_01DvJ1NBRub48BYu8NPSwTbT): test runs 7, module lines 4390
+
+## J22 · COMPLETE
+
+COMPLETE, CAPTURE #48, T51 fix round 6 (G2, G4, G5-relay, G6, G12a, G12d). Pushed on job/T51/capture; the record's "Fix round 6" section has file-level detail, the red-then-green tests (r6-t51.test.mjs), suites and the proposed lines.
+
+Smallest thing I need: one CHANGE from you when acquisition's `notArchivesAmong(store, shas)` (a Set of digests it holds as no archive) is merged into tranche/T51. My code calls it guarded and my test "R77 R91 G12a ... acquisition exports notArchivesAmong" is red by name until then; on your CHANGE I merge, make it green and swap the guard for a named import.
+
+Rulings of mine for you to record: "answers not held, large: true" for heldAt check is read as `changed.state: undetermined` + `large: true` (held stays true); the row's capture is the register `whole` row, else the whole the register document states; fetch_done API as posted in J21 (recordFetchDone, fetchesDone). Proposed requirement lines are in the record: R77, R73 amended; R104, R105 new.
+Checks: architecture 0, coverage 0, words 0, ownership 0; format has one failure at build/plan/next.md:38 (yours). Users of the held rows: 83 files, 1050 tests, 0 fail.
+
+### Fix round 6, after B24 (CHANGE)
+`tranche/T51` merged (acquisition's `notArchivesAmong`). The guard is now a named import (`index.mjs` import line, `#pageFacts`). The G12a test "acquisition exports notArchivesAmong" is green: 20 null-format captures drawn twice, the second draw makes 0 `archiveList` calls and 0 store calls; mutation check: with the filter removed that test is red. `acquire`'s declaration now accepts `project` (index.mjs DECLARED_OPS, never required); test in `declared-ops.test.mjs` (R97). One old assertion in `t49.test.mjs` stated that a capture whose listing once failed to answer is always asked again; acquisition now remembers a decided non-archive, so it is edited to the new rule.
+Suites: capture + cap13 + d57 267/267. Users of the held rows and the act (83 files): 1061 tests, 1 fail, `control-plane/t51-visitor-copy.test.mjs` (E8), which fails identically on `origin/tranche/T51` without my commits (TypeError reading `capture` of undefined; control-plane's). Checks: format 0, architecture 0, coverage 6623/6623, words 0 (count unchanged).
+Size (session_01DvJ1NBRub48BYu8NPSwTbT): test runs 12, module lines 4390
+
+## J23 · COMPLETE
+
+COMPLETE (CAPTURE #48, B24): tranche/T51 merged; notArchivesAmong is a named import and the G12a test is green (mutation-checked); acquire declares and accepts `project` (test in declared-ops). Capture suite 267/267; format, architecture, coverage, words 0. One user failure, control-plane/t51-visitor-copy.test.mjs (E8), fails identically on tranche/T51 without my commits (control-plane). One old assertion in t49.test.mjs edited to the new rule (a decided non-archive is not asked again). Details in my record.
+
+## J24 · QUESTION
+
+QUESTION (G32; my best reading follows; I carry on with G27 meanwhile).
+
+Acquisition reads the held digest only from `opts.captureRequest.heldSha` (acquisition/index.mjs:972), the in-process drain's arm. That arm also takes the address, purpose, agent and credential from the row, deletes `body.render`, forbids parking (`mayPark` needs `!captureRequest`) and lets the daemon class through the R1 fence (:903). So capture's door `acquire` cannot hand it a member's request without changing all of that; I will not fake a captureRequest.
+
+Smallest thing I need: acquisition accepts a plain option `opts.heldSha` (64 hex, ignored otherwise), honoured for any caller exactly as `crHeldSha` is today (validators from `cap.validatorsOf({addressNorm, captureSha})`, not with render), the 304 answer unchanged. Then capture's `acquire` arm (index.mjs:3272, `heldAt` read of the address, the viewer-independent newest direct plain capture) passes `heldSha` and everything else stays.
+
+If you would rather keep acquisition untouched, the alternative inside capture alone is a conditional governed look of my own before calling `acquire` (a second request when the source changed; the 304 answer composed here), which duplicates acquisition's R22. I recommend the one-line option in acquisition.
+
+Until you answer I build the capture side against `opts.heldSha` and its test red by name; G27 is independent and is built now.
+
+## J25 · COMPLETE
+
+COMPLETE, CAPTURE #49, T51 fix round 6, wave 3: G27 (done) and G32 (capture side done; its through-the-door test is red by name until ACQUISITION #29's `opts.heldSha` merges, as B26 says; I then expect a CHANGE). Pushed on job/T51/capture. tranche/T51 merged first.
+
+## G27 · the door's read after a kept acquire (R73)
+1. Root cause: `captureOp` made one stub `at = store()` and used it for the acquire and for the read after it (`ops.mjs`, the old :196-206), so a read that came back unanswered after the object was reset was never made on a stub that could answer, and acquisition's `reading_pending` deferral (R87) was the only outcome. Cloudflare: do not reuse a stub after it throws; `retryable`/`overloaded` say what may be retried. The reader (`acquireReadingOp`, extraction) already turns a thrown call into `{body: {..., reading_pending: true, diag}}`, so the door sees a failed read as a body with `diag`, a thrown `readAcquired`, or an empty answer.
+2. Change (`bio-plane/src/capture/ops.mjs`, `captureOp` acquire arm, plus two helpers `readFailed` and `readOverloaded`): a failed read (thrown, empty or `reading_pending` with a `diag`) is made once more on a fresh stub (`store()`), unless overloaded (`.overloaded`, a `diag.overloaded`, or the platform's words "overloaded" in the message); a second failure is the existing deferral with the last attempt's `diag`; a deferral the reader chose itself (no `diag`) and the store's own refusal are not retried.
+3. Why the tests missed it: stubs that never fail on a second call, tiny replies, no memory limit in local workerd. Gap fixed: `g27-t51.test.mjs` drives the door's own entry (`captureOp("acquire")`) with stubs that fail as a reset object's does (a rejected fetch with `remote: true`; a reply that is no envelope), a reader written to extraction's `acquireReadingOp` contract (`reader.mjs`; capture cannot import extraction, the architecture check refuses it) and counts `store()` calls.
+4. Failing-first, seen red then green (the file, run before the change): 4 of 6 failed (first-read-throws-remote: got `reading_pending` + diag, wanted the document read; no-envelope reply: same; both-fail: `store()` count 1 not 2; a throwing `readAcquired`: not retried). After: 6 of 6. The controls that held before and after: overloaded is not retried (`store()` once, deferral answered), a read that answers is not retried, a deferral the door chose itself is relayed without a second read.
+5. Platform check (L): `g27-reset.probe.mjs` (committed, a probe, not a test), real workerd under Miniflare with a SQLite Durable Object that aborts itself (`ctx.abort`, the reset a memory limit causes) on its first `extractread`: `{"status":200,"read":{"read":true},"reading_pending":false,"stubs_made":2,"same_stub_after_reset_answers":true}`. So the retry on a fresh stub reads the document after a real object reset. Honest limit: local workerd enforces no memory limit (diagnosis-R6-G4.md), so the reset is made by `ctx.abort`, and the same stub also answers locally after it; the "broken stub" Cloudflare describes is not reproduced here. **P at the re-walk: dena, read `diag`** (a failure that persists after the retry still answers `reading_pending` with the second attempt's `diag`).
+6. Not done, not mine: the acquisition half of G27 (the renderer's reply not held resident while the request continues) is acquisition's. Found in extraction (P9), for BOB: `deferralDiag` (`extraction/ops.mjs`) keeps only `name`, `message`, `status`; adding the error's `overloaded` and `remote` booleans to `diag` would let me read the flag instead of the platform's words (I honour `diag.overloaded === true` already).
+
+## G32 · a held file is downloaded again (R106 proposed)
+1. Root cause: acquisition reads the held digest only from `opts.captureRequest.heldSha` (acquisition/index.mjs:972), the in-process drain's arm, so a member's or a bearer's `op=acquire` of a held address is never conditional (`crHeldSha`, :1137) and pulls the body again.
+2. Change: `ops.mjs` `acquireOp` forwards the caller's sight (`viewer`, from `captureOp`'s `h.viewer`; none handed sees nothing) in the query to the store; `index.mjs` the `acquire` route asks the new `Capture.heldCopyToCompare(body, viewer)` and, when it answers a digest, passes `opts.heldSha` to `acquire`. `heldCopyToCompare` (a read, never a fetch, never throws): the newest capture of `body.locator` the viewer may see (R96's compared copy), only when it came from a plain, direct fetch of that very address (receipt `via: direct`, plain address) and the register document says it was captured and not rendered; never for a body with `render`, `via`, `continue`, `file`, `subresources` or `address`, for an address that is no public https locator, or when the viewer sees no copy (an unseen copy is never named: the 304 answer carries the digest).
+3. Why the tests missed it: instant fixtures, no counter of the bytes pulled. Gap fixed: `g32-t51.test.mjs` pulls a 1 MiB document through a throttled stream with an ETag, counts the bytes pulled and the requests that carried `if-none-match`, and builds the register from the first real acquire's own document.
+4. Tests: (a) the arm hands the digest, under a member's session and under an admin bearer: green; (b) controls for each case above: green; (c) the second acquire pulls no body, answers `existed: true, unchanged: true, capture.sha256` of the held copy, under a member's session and under the admin bearer, the one second request carrying the ETag: **red by name** (`TypeError ... reading 'sha256'`: the answer is a full capture, the body was pulled again); with a throwaway local patch of acquisition (`opts.heldSha` read as `crHeldSha`, reverted, not committed) all four tests pass, so the test is red for that cause only; (d) a changed source (new ETag) is fetched and filed as before, and a held copy whose source sent no validator is fetched unconditionally. Platform check: L is this fixture's counted stream; **P**: one `curl -I` of the nps.gov file after the deploy (BOB's, read-only).
+5. "A member asking for a new copy still gets one": only when no validators were recorded or the source changed; an unchanged source with validators answers `unchanged`, as the drain's requests do (acquisition R22).
+
+## Requirement lines proposed (BOB writes `build/requirements/capture.md`)
+- R73 (amend): "(T51 fix round 6, G27) A read after a kept acquire that fails (the call threw, answered nothing, or the reader reported it unanswered with a `diag`) is made once more on a fresh stub of the object, never when the object is overloaded (the error's or `diag`'s `overloaded`, or the platform's words for it); a second failure is the deferral (`reading_pending`, `sha`, `diag` of the last attempt); a deferral the reader chose itself and the store's own refusal are not retried. Test: `g27-t51.test.mjs`."
+- R106 (new): "(fix round 6, G32; `acquisition` R22) A fetch of an address the record already holds from a plain fetch is conditional on that copy. `op=acquire` hands `acquisition` the digest (`opts.heldSha`) of the newest capture of `locator` the caller's viewer may see, when it came from a direct, plain fetch of that address, recorded as fetched and not rendered; a body asking for more than the plain document (`render`, `via`, `continue`, `file`, `subresources`, `address`), an address that is no public locator, a viewer who sees no copy, or a copy with no validators recorded fetches as before. `heldCopyToCompare(body, viewer)` answers the digest or null; a read, never throws. Test: `g32-t51.test.mjs`."
+- R73's Provides line for `op=acquire` may add: the query carries the caller's `viewer`.
+
+## Rulings of mine, for you to record (P17; none needs Bob)
+- Overloaded is read from `.overloaded` on a thrown error, `diag.overloaded`, or /overloaded/i in the message (extraction's `diag` carries no flag today).
+- The retry belongs to the door's read only; the acquire call itself is never retried (not idempotent).
+- Pass the viewer to the store as a query parameter, as `links` and the reads do, never in the body.
+
+## Tests and checks
+- `node --test --test-force-exit bio-plane/test/m/capture/ bio-plane/test/cap13-reuse-pages.test.mjs bio-plane/test/d57selflink.test.mjs`: 277 tests, 276 pass, 1 fail (g32 (c), red by name). `timings.test.mjs` stand-in gained `heldCopyToCompare` (the route now asks it).
+- Users (`impact.mjs` names 111 modules through the shared `DECLARED_OPS` table; I ran the 47 files of plane, control-plane, extraction and capture-requests that name `acquire`): 372 tests, 368 pass, 4 fail, the same four (E3 41.5 MB five-part, R117 C5b, R120/R121, R125 (b)) that fail identically on `tranche/T51` without my commits (checked in a worktree of the tranche: 5 fail there).
+- `checks/run.mjs`: format 0, architecture 0, coverage 0 (58 of 58 for capture), words 0 failures, `unkeyed` untouched (no new sentence a member reads). `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 0 failures.
+
+Size (session_01Uu76H7JzhRxSdMcBjFLc6j): test runs 14, module lines 4340
+
+## J26 · COMPLETE
+
+COMPLETE (CAPTURE #49, B27 CHANGE applied; J25 stands, this adds one item). Pushed on job/T51/capture; tranche/T51 merged (BOB #255's plan).
+
+**G27, B27: an acquire whose render is pending is not read inline.** `capture/ops.mjs` `captureOp`, acquire arm: when the acquire's answer carries `render.state === "pending"` (acquisition/index.mjs:1747, the kept shell with the render running on in the object) the inline `readAcquired` and its retry are skipped, and the kept capture is answered 200 with `reading_pending: true`, `sha` and the acquire's own `render` and note, with no `diag` and no log (a deferral by choice, as the door's `deferReading` answer is; the door owes the reading to the ledger from `reading_pending` as for any deferral). `owed`, `waiting`, `deferred` and no `render` are read inline as before.
+- Failing-first, seen red then green (`g27-t51.test.mjs`, two new tests): red before the change (the pending-render answer was read, `reads` 1 not 0, and carried no `reading_pending`); green after: `reads` 0 and `store()` once (no second stub), `reading_pending`, `sha`, `render` as given, `diag` undefined; control: `render` null, `owed`, `waiting`, `deferred` each read once and answered with the reading.
+- Requirement line proposed (extends the R73 line of J25): "(G27, B27) An acquire whose answer says its render is pending (`render.state` `pending`) is not read inline: it is answered at once as `reading_pending` with the digest and the render as given, no `diag`; any other render state is read as before. Test: `g27-t51.test.mjs`."
+- Platform: the probe of J25 is unchanged; the pending case needs no object (no read is made); acquisition's half (the deferred run's reply not held resident) is ACQUISITION #29's.
+
+Tests and checks after this change: capture + cap13 + d57: 279 tests, 278 pass, 1 fail (the G32 test, red by name until acquisition's `opts.heldSha` merges). Users (the 47 files of plane, control-plane, extraction, capture-requests naming `acquire`): 372 tests, 368 pass, the same 4 failures as before and on `tranche/T51` without my commits (E3 41.5 MB, R117 C5b, R120/R121, R125 (b)). `checks/run.mjs`: format, architecture, coverage (58 of 58 for capture), words 0 failures. `checks/ownership.mjs`: 8 files, 0 failures.
+
+Size (session_01Uu76H7JzhRxSdMcBjFLc6j): test runs 17, module lines 4345
+
+## G41b · a multipart upload is profiled from its declared type or name (R107 proposed; B28)
+
+1. Root cause (as the START says, confirmed): `uploadCapture` computed `ct` only `if (!multipart)`, so a file over one 8 MiB part reached `profileOf` with `ct` null; a CSV has no magic, so its format was `undetermined` although the upload declared `text/csv` (or was named `x.csv`).
+2. Acquisition is not an owner: read `profileOf` (acquisition/index.mjs:1857-1900) and `detectFormat` (formats.mjs:115): for a multipart, `profileOf` already calls `detectFormat(head, ct || null)` (:1887), so a given `ct` is honoured (pass 1, the bytes' signature, outranks it; pass 2 uses `ct`). Nothing in acquisition changes; R102's `textTypeOf` is used as it is.
+3. Change (`bio-plane/src/capture/index.mjs`): the stream keeps the file's first `UPLOAD_HEAD` (64 KiB, chosen, not measured; a protective bound for BOB's K1881 report) bytes as they arrive; for a multipart upload `ct = textTypeOf({bytes: withoutCutCodePoint(head), type, name})` (the same rule, over the head, less a UTF-8 code point cut at its end); `profileOf` then judges the format from the first part's sniff, and from `ct` where the sniff names none. `source_content_type` and `declared_by` are recorded as for one part (a declared type as the uploader's declaration; a name gives `ct` only, `source_content_type` null).
+4. Failing-first, seen red then green: `g41b-t51.test.mjs` (real `uploadCapture`, 9 MiB and 17 MiB files in 2 and 3 real parts, no stub): a 9 MiB CSV declared `text/csv` is `csv` (red: `undetermined`); a 17 MiB `x.csv` with no type is `csv`; text with multi-byte characters whose head ends inside a character is `csv` (red without the trim, shown by disabling it). Controls (held before and after): the one-part CSV byte for byte as before; non-text bytes (a NUL) declared `text/csv` stay `undetermined`, the declaration recorded; non-text bytes declared `text/html` are not `html`; a PDF-magic file declared `text/csv` is `pdf`; a multipart PDF with no type is `pdf` (R101); a declared non-text type is not overridden by a `.csv` name; neither type nor text name: `undetermined`.
+5. Platform check **L** (`g41b-plane.test.mjs`, real workerd under Miniflare, real DO SQLite and R2, `op=captureupload` through the door with a member session): a 9 MB CSV in two parts is `csv` declared `text/csv` and `csv` named `x.csv`, and `undetermined` with neither; red before the change (the first assertion), green after. **P** rides G41's re-walk (a 9 MB CSV uploaded by a member).
+6. My reading of one control, for BOB to confirm or correct: "a multipart upload declared `text/html` whose bytes are not HTML is not profiled `html`" is tested with bytes that are not text. A file whose bytes ARE text and declared `text/html` is profiled `html` on a multipart as on one part (R92: the declaration settles a text file the bytes' signature does not name; one part does so today, checked), so the two cases agree.
+7. R-OLD: new uploads only. No op's accepted keys change (nothing to re-declare, K4208). No sentence a member reads is added (`unkeyed` untouched). No other module's artifact is made stale.
+
+## Requirement lines proposed (BOB writes `build/requirements/capture.md`)
+- R92 and R93 (amend): drop "within one part": "(T51 fix round 6, G41; R107) For a file held in parts the rule is applied to its first 64 KiB (less a code point cut at their end); see R107."
+- R107 (new): "(T51 fix round 6, G41 follow-up; K4670; amends R92, R93, R101) **A file held in parts is profiled from its declared type or name as one part is.** `uploadCapture` of a file over one 8 MiB part judges, by `acquisition`'s `textTypeOf` (R102), the first 64 KiB of the file (`UPLOAD_HEAD`), less a UTF-8 code point cut at their end; when the head is text, the declared text type, or with none the `.txt`, `.md` or `.csv` name, is the content type `profileOf` is given, so a CSV over one part is profiled `csv`. The first part's byte signature still decides first (a PDF declared `text/csv` is `pdf`), a declaration is recorded as the uploader's and a name is not, and a head that is not text, or a declared type that is not text, leaves the profile as R101 has it. New uploads only. Test: `g41b-t51.test.mjs`; platform: `g41b-plane.test.mjs`."
+- Provides: nothing else changes.
+
+## Tests and checks (G41b)
+- Own suite under the preload (capture + cap13 + d57): 284 tests, 284 pass, 0 fail (includes the 4 + 1 new).
+- Users: the 47 test files outside my module that name `uploadCapture` or `captureupload`: 422 tests, 400 pass, 22 fail, none mine: `journey-check/walker` (17) failed only because its `node_modules` was missing in this container, and passes 17/17 after `npm ci` there (K4113); `affordances/t36` (4, `readheld` has no design sentence / ACT_HELP) fail identically on the unmodified tranche `capture/index.mjs` (4 fail, 10 pass), so not caused by this change; one remaining suite-level file load error was the same walker.
+- `checks/run.mjs`: format 0, architecture 0, coverage 0 (6685 of 6685), words 0 failures with `unkeyed` unchanged (no sentence added). `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 0 failures.
+- Protective bound set, for BOB to report to Bob (K1881): `UPLOAD_HEAD` = 64 KiB (the head of a file held in parts that is judged as text), chosen, not measured.
+- Unkeyed, deferred, open questions: none. Reading of one control: item 6 above.
+
+Size (session_01L1Y9FNxaoQ4v7iZDkLBJWG): test runs 9, module lines 4366
+
+## J27 · COMPLETE
+
+COMPLETE (CAPTURE #50, B28): G41 second cause fixed. uploadCapture keeps the file's first 64 KiB (UPLOAD_HEAD, a protective bound for K1881) and, for a multipart upload, gives profileOf the ct from acquisition's textTypeOf over that head (a cut trailing code point trimmed); acquisition unchanged (profileOf/detectFormat already honour ct for multipart). Failing-first red then green: g41b-t51.test.mjs (9 MiB csv declared text/csv; 17 MiB x.csv; multi-byte head; controls incl. PDF declared text/csv=pdf, NUL bytes, text/html non-text bytes, multipart PDF no type, one-part CSV). Platform L: g41b-plane.test.mjs through Miniflare, 9 MB CSV in two parts = csv (declared and named), undetermined with neither; red before. Suites: own 284/284; users 400/422, failures not mine (walker missing node_modules, passes 17/17 after npm ci; affordances t36 4 fail identically on unmodified tranche). checks/run: 0 failures; ownership 0. Proposed R107 plus R92/R93 amendment in my record. Reading to confirm: the text/html control is tested with non-text bytes; text bytes declared text/html are html on multipart as on one part. Size line in record.

@@ -25,7 +25,7 @@ function setup() {
 }
 const act = (P, over = {}) => ({ ...AUTHORED, project: P, targets: [Q], roles: { [Q]: "load_bearing" },
                                  viewer: V("alice"), author: "alice", tieAttested: true, ...over });
-const NONE = { prepared: null, published: null };
+const NONE = { case: null, prepared: null, published: null };
 
 test("R83: a draft never prepared states neither a prepared nor a published edition (control), and so does a refused pre-flight of it", () => {
   const { w, P } = setup();
@@ -41,12 +41,12 @@ test("R83: after publishCase prepares edition 1 the pre-flight states prepared 1
   const { w, P } = setup();
   const done = w.ca.publishCase(act(P));
   assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
-  for (let i = 0; i < 2; i++) assert.deepEqual(w.ca.publishPreflight(act(P)).editions, { prepared: 1, published: null });
+  for (let i = 0; i < 2; i++) assert.deepEqual(w.ca.publishPreflight(act(P)).editions, { case: done.caseId, prepared: 1, published: null });
   /* the case identity is the one the members serve or the preparation names: a call that refuses first still stands at it */
   const refused = w.ca.publishPreflight(act(P, { statement: "" }));
   assert.equal(refused.first.reason, "NO_STATEMENT");
-  assert.deepEqual(refused.editions, { prepared: 1, published: null });
-  assert.deepEqual(w.ca.publishPreflight(act(P, { caseId: done.caseId })).editions, { prepared: 1, published: null });
+  assert.deepEqual(refused.editions, { case: done.caseId, prepared: 1, published: null });
+  assert.deepEqual(w.ca.publishPreflight(act(P, { caseId: done.caseId })).editions, { case: done.caseId, prepared: 1, published: null });
   /* control: a new case asked for stands at no case at all */
   assert.deepEqual(w.ca.publishPreflight(act(P, { newCase: true })).editions, NONE);
 });
@@ -64,7 +64,7 @@ test("R83: after edition 1 is published the pre-flight states published {edition
   assert.equal(next.ok, true, JSON.stringify(next).slice(0, 300));
   assert.equal(next.edition, 2);
   assert.deepEqual(w.ca.publishPreflight(act(P, edition2)).editions,
-                   { prepared: 2, published: { edition: 1, address: `/app/published/${done.caseId}/1` } });
+                   { case: done.caseId, prepared: 2, published: { edition: 1, address: `/app/published/${done.caseId}/1` } });
   /* control: before the edition is published, nothing is stated published */
   const other = setup();
   assert.equal(other.w.ca.publishCase(act(other.P)).ok, true);
@@ -79,7 +79,7 @@ test("R83, R7, R8, R13: a second preparation of one draft with no edition publis
   assert.equal(second.ok, true, JSON.stringify(second).slice(0, 300));
   assert.deepEqual([second.caseId, second.edition, second.minted], [first.caseId, first.edition, false]);
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM case_documents WHERE case_id=?`, first.caseId).n, 1, "one document, replaced");
-  assert.deepEqual(w.ca.publishPreflight(act(P)).editions, { prepared: 1, published: null });
+  assert.deepEqual(w.ca.publishPreflight(act(P)).editions, { case: first.caseId, prepared: 1, published: null });
 });
 
 test("R83: a draft named by the call stands at the case its preparation names, so a reloaded ceremony reads prepared with its number", () => {
@@ -90,7 +90,7 @@ test("R83: a draft named by the call stands at the case its preparation names, s
   const done = w.ca.publishCase({ draft: "DRAFT-1", project: P, viewer: V("alice"), author: "alice", tieAttested: true });
   assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
   const pre = w.ca.publishPreflight({ draft: "DRAFT-1", project: P, viewer: V("alice"), author: "alice", tieAttested: true });
-  assert.deepEqual(pre.editions, { prepared: 1, published: null });
+  assert.deepEqual(pre.editions, { case: done.caseId, prepared: 1, published: null });
 });
 
 test("R83 (K4363): draftEditions({caseId, draft}) is the one read the pre-flight uses: by case, by the draft that prepared it (id or row), never prepared states neither, and it writes nothing", () => {
@@ -101,14 +101,14 @@ test("R83 (K4363): draftEditions({caseId, draft}) is the one read the pre-flight
   assert.deepEqual(w.ca.draftEditions({}), NONE);
   const done = w.ca.publishCase(ask);
   assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
-  const one = { prepared: 1, published: null };
+  const one = { case: done.caseId, prepared: 1, published: null };
   assert.deepEqual(w.ca.draftEditions({ caseId: done.caseId }), one);
   assert.deepEqual(w.ca.draftEditions({ draft: "DRAFT-2" }), one, "by the draft's id, from the document it made");
   assert.deepEqual(w.ca.draftEditions({ draft: { draft_id: "DRAFT-2", case_id: null } }), one);
   assert.deepEqual(w.ca.draftEditions({ caseId: done.caseId }), w.ca.publishPreflight(ask).editions);
   w.ratify(done);
   assert.deepEqual(w.ca.draftEditions({ caseId: done.caseId, draft: "DRAFT-2" }),
-                   { prepared: null, published: { edition: 1, address: `/app/published/${done.caseId}/1` } });
+                   { case: done.caseId, prepared: null, published: { edition: 1, address: `/app/published/${done.caseId}/1` } });
   assert.deepEqual(w.ca.draftEditions({ caseId: "CASE-2026-0000" }), NONE, "a case the record does not hold");
 });
 
@@ -121,6 +121,6 @@ test("R83 (C48 / N6): a draft that asks for a new case, once prepared, states pr
   assert.deepEqual(w.ca.publishPreflight(ask("DRAFT-N")).editions, NONE, "control: not yet prepared");
   const done = w.ca.publishCase(ask("DRAFT-N"));
   assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
-  for (let i = 0; i < 2; i++) assert.deepEqual(w.ca.publishPreflight(ask("DRAFT-N")).editions, { prepared: 1, published: null });
+  for (let i = 0; i < 2; i++) assert.deepEqual(w.ca.publishPreflight(ask("DRAFT-N")).editions, { case: done.caseId, prepared: 1, published: null });
   assert.deepEqual(w.ca.publishPreflight(ask("DRAFT-M")).editions, NONE, "control: another newCase draft, never prepared");
 });

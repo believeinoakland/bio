@@ -82,7 +82,7 @@ test("R77 (C16): `bundle_id` answers that one document's row only, the store rea
   for (const n of [1, 2, 3]) b.held.set(`bio/captures/${H(String(n))}`, new Uint8Array([n]));
   const all = await f.c.heldCaptures({ viewer: "member:m1", now: NOW });
   const heads = b.calls.length;
-  assert.equal(heads, 3, "the list asks the store once for each document");
+  assert.equal(heads, 1, "the list asks the store only about the document held in parts (INFO-A2); the others are recorded as held in one part (R77, fix round 5)");
   const one = await f.c.heldCaptures({ viewer: "member:m1", now: NOW, bundle_id: "INFO-A2" });
   assert.deepEqual(one.held, [all.held.find((x) => x.bundle_id === "INFO-A2")], "the same row the list gives");
   assert.deepEqual([one.truncated, one.next], [false, null]);
@@ -110,7 +110,7 @@ test("R77 (C14): a picker row answers `whole` from the size the register recorde
   assert.deepEqual(pick.held.map((x) => [x.bundle_id, x.whole]), [["INFO-A1", true], ["INFO-A2", false], ["INFO-B1", true]],
                    "a size the store keeps whole is whole; one past it is held in parts");
   assert.deepEqual(b.calls, [], "no store call for any row");
-  assert.deepEqual(Object.keys(pick.held[0]).sort(), ["actor", "bundle_id", "capture", "collected_since", "project", "source", "standing", "title", "whole"]);
+  assert.deepEqual(Object.keys(pick.held[0]).sort(), ["actor", "bundle_id", "capture", "collected_since", "format", "project", "source", "standing", "title", "whole"]);
   /* the register records nothing: undetermined, and no capture at all: undetermined */
   f.rows(`UPDATE register SET bytes = NULL WHERE bundle_id = 'INFO-B1'`);
   f.rows(`DELETE FROM register WHERE bundle_id = 'INFO-A1'`);
@@ -120,7 +120,7 @@ test("R77 (C14): a picker row answers `whole` from the size the register recorde
   /* control: the full row is read from the store (INFO-A2's whole object is there, though the register's size says parts) */
   const full = await f.c.heldCaptures({ viewer: "member:m1", now: NOW });
   assert.equal(full.held.find((x) => x.bundle_id === "INFO-A2").whole, true);
-  assert.equal(b.calls.length, 2, "a full list asks the store for each document with a capture");
+  assert.equal(b.calls.length, 2, "a full list asks the store for each document held in parts (INFO-A2) or with no recorded size (INFO-B1)");
   b.calls.length = 0;
   const single = await f.c.heldCaptures({ viewer: "member:m1", now: NOW, bundle_id: "INFO-A2" });
   assert.equal(single.held[0].whole, true);

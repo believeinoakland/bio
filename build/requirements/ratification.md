@@ -102,6 +102,8 @@ The verified-to-retired transition of many Information documents at once, over a
 
 - **R52** (Bob's S21 A, K3080; DEC-208 (1)) `caseratify` and `publishat` take `members: [{id, sha, signature}]`, the same signer's signatures of the same sitting over `ratifyStatement` for each finding the edition pins and each piece of evidence they rest on; each is verified as R4 verifies before anything commits, a refusal naming the member and writing nothing; with `caseratify` each commits after the case as R5 does; with `publishat` they are held with the waiting edition and committed by R42's publisher after the case, or stopped with it. Without `members` both act as before. Test: a sitting of 1 + 2 + 5 signatures; control: one bad signature commits nothing.
 
+- **R56** (fix round 4b, F3 verification; K4508; provenance R72, R73) **The publish of a bundle held in parts is unchanged by the whole's row.** `gateFacts` and `ratifyGate` pass a whole held in parts, and the part-by-part publish (`parted`) publishes the parts' files only, never a whole's row as a file of its own. Test: the three-part fixture ratified: the published files are its parts, as before provenance R72.
+
 ## Private
 
 ### Uses

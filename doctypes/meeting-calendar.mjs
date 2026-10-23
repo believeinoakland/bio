@@ -89,7 +89,9 @@ export default {
   detect(ctx) {
     const t = String(ctx.text || "");
     const signals = [];
-    if (/MeetingDetail\.aspx\?ID=/i.test(unescapeHtml(t))) signals.push("meeting detail links");
+    /* The pattern holds no character an entity stands for, so the text unescaped holds it exactly where the text as it
+       stands does (R37: no unescaped copy of a large text). */
+    if (/MeetingDetail\.aspx\?ID=/i.test(t)) signals.push("meeting detail links");
     if (/\bCalendar\.aspx/i.test(String(ctx.locator || "")) || /\bcalendar\b/i.test(String(ctx.locator || "")))
       signals.push("calendar address");
     if (/Date Range Dropdown|lstYears_Input/i.test(t)) signals.push("a date-range control");

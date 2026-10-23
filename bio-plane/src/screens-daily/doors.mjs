@@ -3,7 +3,7 @@
    (`heldcaptures`, `inbox`); `draw(cs, view, screen)` answers the doors' HTML for `screen` ("home" or "queue"): a door to `held`
    with the number held, when `heldcaptures` answers any (`act.release.label.<screen>`, the registry's "Vouch for photos"), and a
    door to `inbox` with the number of knocks still new. Neither is drawn at zero; a failed read is drawn failed in the door's place,
-   never as none. On Home, one status line (`screen.home.waiting.counts`) says both numbers, a zero as 0, whenever either door is
+   never as none. On Home and the queue, one status line (`screen.home.waiting.counts`) says both numbers, a zero as 0, whenever either door is
    drawn and both reads answered. Self-contained: it refers only to its parameters. */
 
 export function doors() {
@@ -40,10 +40,15 @@ export function doors() {
       const fresh = inbox.value.inbox.filter(function (k) { return k && k.status === "new"; }).length;
       if (fresh) door(inbox, "/app/inbox", "screen.inbox.name", "", fresh, "capture");
     }
-    // The status line (Home only): both counts, a zero shown as 0, drawn only when something waits and both reads answered.
-    const line = screen === "home" && nHeld !== null && nNew !== null && (nHeld || nNew)
-      ? '<p class="mk-sub">' + cs.w("screen.home.waiting.counts", { held: String(nHeld), inbox: String(nNew) }) + "</p>" : "";
-    return rows.length ? line + cs.sheet(rows.join("")) : "";
+    // The status line (Home and the queue, R95): both counts, a zero shown as 0, drawn only when something waits and both reads answered, so
+    // the doors' numbers are told apart from the queue's own items.
+    const line = (screen === "home" || screen === "queue") && nHeld !== null && nNew !== null && (nHeld || nNew)
+      ? '<p class="' + (screen === "home" ? "mk-sub" : "mk-small") + '">' + cs.w("screen.home.waiting.counts", { held: String(nHeld), inbox: String(nNew) }) + "</p>" : "";
+    // G20 (S11): the held captures are one bounded read (500); when more are waiting than it holds, the door's number is the count shown and says so
+    // (a held row's nearest stand-in: Held's own "more are waiting than are shown").
+    const cut = held && held.state === "ok" && held.value && held.value.truncated === true && Array.isArray(held.value.held)
+      ? '<p class="mk-small">' + cs.w("screen.held.more", { count: String(held.value.held.length) }) + "</p>" : "";
+    return rows.length ? line + cs.sheet(rows.join("")) + cut : "";
   };
   return { reads: reads, draw: draw };
 }

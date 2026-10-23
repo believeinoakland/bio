@@ -349,6 +349,12 @@ const DECISIONS = [
    present text, a whole label or a prompt's start) */
 for (const [key, was] of Object.entries(JSON.parse(fs.readFileSync(path.join(HERE, "words-t49.json"), "utf8")).affordances_names || {}))
   DECISIONS.push(["affordances", "affordances.mjs", (key.startsWith("act.") ? "=" : "^") + was, key]);
+/* DEC-413 (B473, K4458): on T51 after fix round 3, the declared ops' own descriptions (control-plane's owner ops, the plane's
+   ask), builders' grading text like op-grades' (their member sentences are act.<op>.does rows), and a bias file's section label. */
+for (const pre of ["upload-directed: ", "read: a case's drafts of its account", "case-directed: ", "action-directed: ", "credential: a member's own sign-in", "read: every interface word"])
+  DECISIONS.push(["control-plane", "control-plane/owner-ops.mjs", "^" + pre, dev("grade")]);
+DECISIONS.push(["plane", "plane/declared.mjs", "^member-directed: a member's own question", dev("grade")]);
+DECISIONS.push(["screens-settings", "screens-settings/bias.mjs", "=## What This Does Not Enforce", dev("filegrammar")]);
 /* What a module's remaining inline strings are, when no decision or word names them. */
 const DEFAULTS = {
   "op-grades": "grade", "journey-check": "harness", "interface-assets": "generated", "interface-shell": "elementnote",

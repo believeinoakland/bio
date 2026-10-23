@@ -5,7 +5,7 @@
 export const PARTS = Object.freeze({
   /** A refusal drawn in words beside what it answers (interface-shell R13): its translation, else the code. */
   said(cs, f) {
-    const words = f && f.translation ? cs.esc(f.translation) : cs.w("state.failed", { reason: (f && f.code) || cs.w("shell.noanswer") });
+    const words = f && f.translation ? cs.esc(f.translation) : cs.w("state.failed", { reason: f && f.code ? f.code : { html: cs.w("shell.noanswer") } });
     return `<p class="cs-gap" data-gap="refused" role="alert" data-refusal="${cs.esc((f && f.code) || "")}">${words}</p>`;
   },
   /** A read made as the screen draws, once per key: its outcome, in R10's four states, kept in the screen's memory
@@ -23,7 +23,7 @@ export const PARTS = Object.freeze({
           const f = !a ? {} : a.ok === false ? a : r;
           const code = String(f.code || f.reason || f.refused || "");
           const t = f.translation || f.why || null;
-          settle({ state: "failed", value: null, refusal: { code, words: t ? cs.esc(t) : cs.esc(code || cs.w("shell.noanswer")) } });
+          settle({ state: "failed", value: null, refusal: { code, words: t ? cs.esc(t) : code ? cs.esc(code) : cs.w("shell.noanswer") } });
         } else settle({ state: "ok", value: r, refusal: null });
       }, () => settle({ state: "failed", value: null, refusal: { code: "", words: cs.w("shell.noanswer") } }));
     }
@@ -72,6 +72,40 @@ export const PARTS = Object.freeze({
     const n = Number(String(page || "").trim());
     return { captureSha: s, extent: Number.isInteger(n) && n > 0 ? { kind: "pdf-page", page: n - 1 } : { kind: "document" } };
   },
+  /** R52, G20 (K4571): the documents `heldcaptures` answers for a picker, read on past the page the screen first asks. The first page is the
+   *  screen's own read (`view.data.docs`); while it says `truncated` with a `next`, the following page is read by that cursor (1000 rows,
+   *  `extra` being the screen's own filter, e.g. `{project}`), twice at most, each kept in `view.ui.later` and drawn on arrival. Answers
+   *  `{ rows, more }`: every row read so far, and whether documents remain unread (the bound kept, or a page that did not answer). */
+  docsAll(cs, view, extra) {
+    const d = view.data && view.data.docs;
+    const first = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value : null;
+    if (!first) return { rows: [], more: false };
+    const use = extra || view.ui.docsExtra || {};
+    view.ui.docsExtra = use;
+    const L = view.ui.later || (view.ui.later = {});
+    const rows = first.held.slice();
+    let cur = first, k = 1, waiting = false;
+    while (cur.truncated && typeof cur.next === "string" && cur.next && k < 3) {
+      const key = "docs:" + k;
+      const query = Object.assign({}, use, { state: "held_and_vouched", fields: "picker", limit: "1000", after: cur.next });
+      const q = JSON.stringify(query);
+      if (!L[key] || L[key].q !== q) {
+        L[key] = { q, state: "loading", value: null };
+        const settle = (x) => { L[key] = Object.assign({ q }, x); cs.set("later", L); };
+        cs.call("heldcaptures", { query }).then((a) => {
+          const r = a && typeof a === "object" && a.result !== undefined ? a.result : a;
+          const good = a && a.ok !== false && r && typeof r === "object" && r.ok !== false && Array.isArray(r.held);
+          settle(good ? { state: "ok", value: r } : { state: "failed", value: null });
+        }, () => settle({ state: "failed", value: null }));
+      }
+      const x = L[key];
+      if (x.state !== "ok") { waiting = x.state === "loading"; break; }
+      for (const r of x.value.held) rows.push(r);
+      cur = x.value;
+      k++;
+    }
+    return { rows, more: !waiting && !!cur.truncated };
+  },
   /** R34, R52, C95: "Which document": a choice among the documents `heldcaptures` answers (`view.data.docs`, the picker read, capture R77),
    *  by title and the date it was collected, each value the capture's digest (`capture.sha256`), never typed. The documents of `o.project`
    *  (the project the screen is about, when it has one) come first, the owner's order within each group; a search box (drawn when there
@@ -83,8 +117,8 @@ export const PARTS = Object.freeze({
     o = o || {};
     if (d && d.state === "failed") return cs.state("docs", view, () => "");
     const plain = (t) => String(t).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
-    const held = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value.held : [];
-    const rows = held.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256);
+    const all = this.docsAll(cs, view, o.query);
+    const rows = all.rows.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256);
     const here = typeof o.project === "string" ? o.project : "";
     const ordered = here ? rows.filter((r) => r.project === here).concat(rows.filter((r) => r.project !== here)) : rows;
     const titleOf = (r) => (typeof r.title === "string" && r.title ? r.title : plain(cs.w("screen.held.untitled")));
@@ -95,12 +129,19 @@ export const PARTS = Object.freeze({
       return { value: r.capture.sha256, text: day ? titleOf(r) + " · " + day : titleOf(r) };
     });
     if (view.ui) view.ui["docshown:" + id] = shown.map((r) => r.capture.sha256);
-    if (d && d.state !== "loading" && !rows.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
+    const labelled = (sentence) => `<div class="cs-field" data-empty="${cs.esc(id)}"><p class="mk-small"><b>${cs.w(o.label || "form.choose.document")}</b></p><p class="cs-state" data-state="empty">${sentence}</p></div>`;
+    if (d && d.state !== "loading" && !rows.length) return labelled(cs.w("state.empty"));
     const search = rows.length > 1
       ? cs.field(id + "-q", "form.choose.search", { value: asked, typing: (cs2, view2, value) => { cs2.set("docq:" + id, String(value || "").trim()); } }) : "";
-    if (d && d.state !== "loading" && !options.length) return search + `<p class="cs-state" data-state="empty">${cs.w("form.choose.search.none")}</p>`;
+    if (d && d.state !== "loading" && !options.length) return search + labelled(cs.w("form.choose.search.none"));
     return search + cs.choice(id, o.label || "form.choose.document", options, o.drive ? { acts: {} } : {}) + `<p class="mk-small">${cs.w(o.help || "form.choose.document.help")}</p>`
+      + (all.more ? `<p class="mk-small" data-docs-more>${cs.w("screen.people.more", { n: String(all.rows.length) })}</p>` : "")
       + (o.passage === false ? "" : `<p class="mk-small">${cs.w("form.choose.passage")}</p>`);
+  },
+  /** R23, R34, C59: a choice with nothing to choose from (none held), drawn under its own label in a slot of its own, so the empty state is never taken for
+   *  the sentence of the control before it. Answers HTML. */
+  emptyChoice(cs, id, labelKey) {
+    return `<div class="cs-field" data-empty="${cs.esc(id)}"><p class="mk-small"><b>${cs.w(labelKey)}</b></p><p class="cs-state" data-state="empty">${cs.w("state.empty")}</p></div>`;
   },
   /** R34, C59: the passage the member chose: the chosen document's digest and, when she selected words in `wordsId`'s picker, the extent of
    *  the first unit selected (a unit's extent is `content`'s own), else the whole document; null with no document chosen. */
@@ -121,8 +162,7 @@ export const PARTS = Object.freeze({
    *  why the words are not there (`retrieval.notread.not_extracted`, the design's own sentence for a capture nothing has read), never
    *  "Nothing here" and never "Could not read this". `later` is `PARTS.later`. With no document held, nothing (the document choice says so). */
   passagePick(cs, view, docId, wordsId, later) {
-    const d = view.data && view.data.docs;
-    const rows = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value.held : [];
+    const rows = this.docsAll(cs, view).rows;
     const shown = view.ui && view.ui["docshown:" + docId];
     const shas = Array.isArray(shown) ? shown : rows.map((r) => r && r.capture && r.capture.sha256).filter((x) => typeof x === "string" && x);
     if (!shas.length) return "";
@@ -195,7 +235,7 @@ export const PARTS = Object.freeze({
    *  to Explore). No score, rank or "most connected" is drawn (K1486). */
   graph(cs, g, o) {
     /* a read that answered nothing is a read that failed, never an empty graph (R18) */
-    if (!g || !Array.isArray(g.nodes)) return `<p class="cs-state" data-state="failed" role="alert">${cs.w("state.failed", { reason: cs.w("shell.noanswer") })}</p>`;
+    if (!g || !Array.isArray(g.nodes)) return `<p class="cs-state" data-state="failed" role="alert">${cs.w("state.failed", { reason: { html: cs.w("shell.noanswer") } })}</p>`;
     const W = 860, H = 660, CX = 430, CY = 322, R1 = 160, R2 = 300;
     const names = (o && o.names) || {};
     const nodes = Array.isArray(g.nodes) ? g.nodes : [];
@@ -308,6 +348,16 @@ export const PARTS = Object.freeze({
     const rows = io && io.state === "ok" && io.value && Array.isArray(io.value.entities) ? io.value.entities : [];
     for (const r of rows) if (r && typeof r.entity_id === "string" && Number(r.documents) > 0) out[r.entity_id] = Number(r.documents);
     return out;
+  },
+  /** C14, R18: the groups of the kinds a graph's steps carry, read from `affordances` (`later`, one read) only when the graph has a step to colour; a graph of
+   *  no step draws none and reads nothing. Answers `{kind: group}`. */
+  groupsFor(cs, view, g, later) {
+    if (!(g && Array.isArray(g.steps) && g.steps.length)) return {};
+    const v = later(cs, view, "vocab", "affordances", { query: {} });
+    const ck = v.state === "ok" && v.value && v.value.vocabularies && v.value.vocabularies.connection_kinds;
+    const m = {};
+    if (ck && Array.isArray(ck.values)) for (const k of ck.values) m[k] = (ck.words && ck.words[k] && ck.words[k].group) || (ck.groups && ck.groups[k]) || null;
+    return m;
   },
   /** R24, R27: the group a connection kind belongs to (`pos`, `part`, `money`, `ment`, `same`, `step_source`), from the vocabulary `affordances` answers. */
   groupMap(v) {

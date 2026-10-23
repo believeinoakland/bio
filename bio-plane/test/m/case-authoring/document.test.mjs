@@ -192,9 +192,11 @@ test("R16: citations — every non-severed cites edge of the project at the act,
   const r = w.publish(P, "alice", [Q]);
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const only = w.row(`SELECT capture_sha FROM register WHERE bundle_id=?`, DOC2).capture_sha;
-  const want = [{ target: Q, version: "no_bytes", capture: null }, { target: DOC, version: "pinned", capture: pin },
-                { target: DOC2, version: "only_capture", capture: only }, { target: DOC3, version: "undetermined", capture: null },
-                { target: DOC4, version: "no_capture", capture: null }];
+  const head = (id) => ({ bundle_sha: w.record.head(id).bundleSha });   /* K4609: a document row names the head too */
+  const want = [{ target: Q, version: "no_bytes", capture: null }, { target: DOC, version: "pinned", capture: pin, ...head(DOC) },
+                { target: DOC2, version: "only_capture", capture: only, ...head(DOC2) },
+                { target: DOC3, version: "undetermined", capture: null, ...head(DOC3) },
+                { target: DOC4, version: "no_capture", capture: null, ...head(DOC4) }];
   assert.deepEqual(r.case_citations, want);
   const fm = w.fm(docOf(w, r).text);
   assert.deepEqual(fm.case_citations.map((x) => [x.target, x.version, x.capture === "null" ? null : x.capture]),
@@ -202,7 +204,7 @@ test("R16: citations — every non-severed cites edge of the project at the act,
   const body = bodyOf(docOf(w, r).text);
   for (const x of want) assert.ok(body.includes(`- ${x.target}: ${CASE_CITATION_WORDS[x.version]}${x.capture ? ` ${x.capture}` : ""}`));
   /* a project citing nothing says so */
-  const w2 = setup(); w2.finding(Q, [{ target: DOC }]);
+  const w2 = setup(); w2.finding(Q2, [{ target: DOC }]); w2.finding(Q, [{ target: Q2 }]);   /* R86: resting on another finding names no document */
   const P2 = w2.project("Quiet", "alice", []);
   const q = w2.publish(P2, "alice", [Q]);
   assert.deepEqual(q.case_citations, []);
@@ -258,6 +260,10 @@ test("R17: the searched section is computed from the observation log at authorin
   /* 502 captures (the leg's own and the 501 above): 500 computed over, 2 folded into unidentified */
   assert.deepEqual([blv.content.subjects, blv.content.unidentified], [SEARCHED_SUBJECT_MAX, 2]);
   assert.notEqual(blv.content.outcome, "searched");
+  /* R14 (G47 4): 501 captures of one source carry attestation shas, so the document declares /9 through case-grammar's helper */
+  const bigFm = w2.fm(docOf(w2, big).text);
+  assert.equal((bigFm.material_attestations || []).some((a) => a.sha), true);
+  assert.equal(bigFm.format, "bio-case-document/9");
 });
 
 test("R17: searchedSection refuses to compute dishonestly — no instant, a subject source other than case_basis, no levels, a level or subject kind the vocabulary does not name — and never says never_looked where the evidence is one-sided", () => {
@@ -343,7 +349,7 @@ test("R26: undetermined is stated and never filled — a statement writer, an un
     { stated: r.completeness.statement_by_stated })));
   assert.deepEqual([fm.required_strength.connection, body.includes("no bar set on the connection axis")], [null, true]);
   assert.deepEqual([fm.bias_manifest.in_force, fm.bias_manifest.stated], [null, "a pin cannot be read"]);
-  assert.deepEqual(r.case_citations.find((x) => x.target === DOC3), { target: DOC3, version: "undetermined", capture: null });
+  assert.deepEqual(r.case_citations.find((x) => x.target === DOC3), { target: DOC3, version: "undetermined", capture: null, bundle_sha: w.record.head(DOC3).bundleSha });
   /* a draft from before the stamp: undetermined, never filled from the publisher */
   const w2 = setup(); w2.finding(Q, [{ target: DOC }]);
   const P2 = w2.project("Team", "alice", [Q]);

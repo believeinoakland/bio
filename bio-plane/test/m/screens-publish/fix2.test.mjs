@@ -96,15 +96,17 @@ test("R1 R13 C47 the editor's box for what the case leaves out is labelled for i
   const label = e.doc.querySelector('label[for="ce-statement"]');
   assert.ok(label && norm(label.textContent) === norm(word("review.statement.title")), "the box is labelled by the key of what it holds");
   assert.notEqual(norm(label.textContent), norm(word("screen.case-editor.statement.label")), "not \"what it says\"");
-  const two = DOCUMENT({ citations: [{ target: "INFO-2026-0004", version: "undetermined" }, { target: "INFO-2026-0005", version: "undetermined" }, { target: "FND-2026-0031", version: B1 }] });
+  const two = DOCUMENT({ citations: { state: "signed", rows: [{ target: "INFO-2026-0004", version: "undetermined" }, { target: "INFO-2026-0005", version: "undetermined" }, { target: "FND-2026-0031", version: "no_bytes" }] } });
   const p = await prepared({ plane: { casedocument: ok(two) } });
   assert.ok(drew(p, "screen.published.rests.on.the.council.minutes", { count: "2" }), "two documents not published with the case");
   assert.ok(!drew(p, "screen.ceremony.signs.count", { n: "2", findings: "1", evidence: "0" }), "\"0 pieces of evidence\" is not the whole truth");
   const q = await prepared();
   assert.ok(drew(q, "screen.ceremony.signs.count", { n: "3", findings: "1", evidence: "1" }), "control: published evidence is counted and listed");
   assert.deepEqual(main(q).querySelectorAll("[data-statement]").map((li) => li.getAttribute("data-statement")), ["case", "finding", "evidence"]);
-  assert.ok(drew(q, "screen.published.rests.on.the.council.minutes.one"), "the one document not published with it");
-  const none = await prepared({ plane: { casedocument: ok(DOCUMENT({ citations: [{ target: "FND-2026-0031", version: B1 }] })) } });
+  assert.ok(!drew(q, "screen.published.rests.on.the.council.minutes.one") && !main(q).querySelector("[data-unsignable]"), "control: every document signs with the edition, so none is said not to");
+  const solo = await prepared({ plane: { casedocument: ok(DOCUMENT({ citations: { state: "signed", rows: [{ target: "INFO-2026-0004", version: "only_capture", capture: "c".repeat(64), bundle_sha: E1 }, { target: "INFO-2026-0005", version: "undetermined", capture: null }, { target: "FND-2026-0031", version: "no_bytes", capture: null }] } })) } });
+  assert.ok(drew(solo, "screen.published.rests.on.the.council.minutes.one"), "the one document not signed with it");
+  const none = await prepared({ plane: { casedocument: ok(DOCUMENT({ citations: { state: "signed", rows: [{ target: "FND-2026-0031", version: "no_bytes", capture: null }] } })) } });
   assert.ok(!drew(none, "screen.published.rests.on.the.council.minutes", { count: "0" }) && !drew(none, "screen.published.rests.on.the.council.minutes.one"), "control: a case resting on no document says none");
 });
 
@@ -262,4 +264,22 @@ test("R42 C67 a sign step that was not reached draws no minutes line; one that w
   assert.ok(!drew(unreached, "signing.minutes.unread"));
   const reached = await open(CER, { plane: withSign({ open_requests: { read: true, lines: [] }, minutes: { undetermined: true } }) });
   assert.ok(drewIn(sectionOf(reached, "screen.ceremony.minutes.heading"), "signing.minutes.unread"), "control: a read that failed is still drawn");
+});
+
+test("R13 G29 a document row signs at the row's own `bundle_sha` and never at its capture or its classification; a row without one is named as not signable and no line is drawn for it", async () => {
+  const cap = "c".repeat(64), head = "9".repeat(64);
+  const doc = DOCUMENT({ citations: { state: "signed", rows: [
+    { target: "INFO-2026-0004", version: "only_capture", capture: cap, bundle_sha: head },
+    { target: "INFO-2026-0005", version: "pinned", capture: cap },
+    { target: "INFO-2026-0006", version: "undetermined", capture: null },
+    { target: "FND-2026-0031", version: "no_bytes", capture: null }] } });
+  const p = await prepared({ plane: { casedocument: ok(doc) } });
+  const lines = main(p).querySelectorAll("[data-statement=evidence]").map((li) => li.textContent);
+  assert.equal(lines.length, 1);
+  assert.ok(lines[0].includes(`bio-ratify INFO-2026-0004 ${head}`) && !lines[0].includes(cap), "signed at the head");
+  const named = main(p).querySelector("[data-unsignable]");
+  assert.ok(named && named.textContent.includes("INFO-2026-0005") && named.textContent.includes("INFO-2026-0006") && !named.textContent.includes("INFO-2026-0004"), "the two with no head are named");
+  assert.ok(drew(p, "screen.published.rests.on.the.council.minutes", { count: "2" }));
+  const q = await prepared();
+  assert.equal(main(q).querySelector("[data-unsignable]"), null, "control: every document has its head, none is named");
 });

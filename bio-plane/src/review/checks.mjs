@@ -146,4 +146,11 @@ export const REVIEW_COPY_CHECKS = Object.freeze({
     where: at('#grant', 'is-review-until'),
     translation: word('refusal.REVIEW_BAD_UNTIL'),
   },
+  /* fix round 6 (G12c): a batch read longer than its bound. The family continues at C-87.18. Its member words are the nearest held
+     row's (REVIEW_DRAFT_TOO_LARGE) until the design stream words `refusal.REVIEW_BATCH_TOO_LARGE` (T52, K4269). */
+  REVIEW_BATCH_TOO_LARGE: {
+    check: 'C-87.18',
+    where: at('batchTooLarge', 'is-review-batch-too-large'),
+    translation: word('refusal.REVIEW_DRAFT_TOO_LARGE'),
+  },
 });

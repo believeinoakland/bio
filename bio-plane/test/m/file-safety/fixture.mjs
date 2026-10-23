@@ -150,7 +150,7 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
 
 /* A world: the modules on one storage, a clock the test moves, the bucket and the scanner. `scan` false leaves the
    scanner unbound. Members: `m1`, `m2` (members), `boss` (an active administrator). */
-export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50 } = {}) {
+export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50, homed = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -178,21 +178,32 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50 } = {
     rows: exec, row: (q, ...a) => exec(q, ...a)[0] ?? null,
     tick(ms) { clock.now += ms; },
     /** Bytes held as a capture: stored, then a receipt as acquisition writes one (R1). */
-    async capture(bytes, { address = null, via = "direct", locator = null, reputation = undefined } = {}) {
+    async capture(bytes, { address = null, via = "direct", locator = null, reputation = undefined, homed: filed = homed } = {}) {
       const data = typeof bytes === "string" ? enc(bytes) : bytes;
       const s = sha(data);
       await b.put(`bio/captures/${s}`, data);
       const a = address || `https://files.example/${s.slice(0, 12)}`;
       prov.recordReceipt({ address: a, addressNorm: a, captureSha: s, retrieved: new Date(clock.now).toISOString().replace(/\.\d+Z$/, "Z"),
                            via, retrievalLocator: locator ?? a, ...(reputation !== undefined ? { reputation } : {}) });
+      /* R51 (D6): a member's sight is judged by the capture's home, and a capture with none is refused to a member, so a capture
+         is filed as the screen files it, in a bundle outside every project, when the world is `homed` (file-safety's own tests;
+         another module's tests that use this world keep the unfiled capture they always had) or the call says so */
+      if (filed && !exec(`SELECT 1 FROM register WHERE capture_sha = ?`, s).length) w.home(s, `INFO-AUTO-${s.slice(0, 8)}`);
       return s;
     },
     /** Register a capture under a bundle (its home), as a promotion would: the bundle row and the register row. */
     home(captureSha, bundleId, { project = null } = {}) {
+      exec(`DELETE FROM register WHERE capture_sha = ? AND bundle_id LIKE 'INFO-AUTO-%'`, captureSha);
       exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version, project)
             VALUES (?, 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1, ?)`, bundleId, project);
       exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered, authored) VALUES (?, ?, 'snapshots/x', 'binary', 1, '2026-01-01T00:00:00Z', 0)`,
            captureSha, bundleId);
+    },
+    /** Files every capture the record holds a receipt for and no register row names, as `capture` does (R51): the members an archive's
+     *  unpack cut are captures of their own, filed as the screen files them. */
+    homeAll() {
+      for (const r of prov.receipts({}).rows || [])
+        if (!exec(`SELECT 1 FROM register WHERE capture_sha = ?`, r.capture_sha).length) w.home(r.capture_sha, `INFO-AUTO-${r.capture_sha.slice(0, 8)}`);
     },
     /** A promoted Information document holding one capture, as a promotion leaves it: its bundle row, its live files
      *  (the capture, `bundle.md`, `data/provenance.json`) and its register row. */
@@ -244,3 +255,6 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50 } = {
 /* A minimal PDF: plain, or with an OpenAction script. */
 export const pdf = (active = false, tag = "") => enc(`%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R${active ? "/OpenAction<</S/JavaScript/JS(app.alert(1))>>" : ""}>>endobj\n`
   + `2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%${tag}\n%%EOF`);
+
+/* A world whose captures are filed (R51: a member's sight is judged by a capture's home), as file-safety's own tests use it. */
+export const filedWorld = (opts = {}) => world({ homed: true, ...opts });

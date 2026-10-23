@@ -259,7 +259,7 @@ test("R1 (T35; K1951, K1974): the drain and every count ask capture only for kin
   assert.deepEqual([...new Set(reads.map(([, kind]) => kind))], ["authority-undetermined"]);
 });
 
-test("R18 (K2038): after a tick that drains nothing the wake backs off by each event's own attempts, and past the retry limit an unfiled capture holds no timer", async () => {
+test("R18 (K2038): after a tick that drains nothing the wake backs off by each event's own attempts, and past the retry limit an unfiled capture is retried hourly, never dropped", async () => {
   const w = box([ev("zz")]);
   const c = w.t.drainConsumer();
   const at = (ms) => Date.parse(iso(ms));     // the drain stamps whole seconds
@@ -273,24 +273,24 @@ test("R18 (K2038): after a tick that drains nothing the wake backs off by each e
     assert.equal(w.queue[0].attempts, a);
     const next = c.wake(t);
     if (a < Tasks.TASK_DRAIN_RETRY_LIMIT) {
-      assert.equal(next, at(t) + Tasks.TASK_DRAIN_BACKSTOP_MS * 2 ** (a - 1), `after try ${a}`);
+      assert.equal(next, at(t) + Math.min(Tasks.TASK_DRAIN_BACKSTOP_MS * 2 ** (a - 1), Tasks.TASK_DRAIN_MAX_WAIT_MS), `after try ${a}`);
       wakes.push((next - t) / 60000);
       t = next;
-    } else assert.equal(next, null, "at the limit: no timer, though the event waits");
+    } else assert.equal(next, at(t) + Tasks.TASK_DRAIN_MAX_WAIT_MS, "at the limit: one hour, and the event still waits");
   }
-  assert.deepEqual(wakes, [1, 2, 4, 8, 16, 32, 64], "minutes between timed retries");
+  assert.deepEqual(wakes, [1, 2, 4, 8, 16, 32, 60], "minutes between timed retries, capped at one hour");
   assert.equal(w.queue.length, 1, "kept, never dropped");
   // a wake asked early on a backed-off event is the event's own due instant, never sooner than now
   w.queue[0].attempts = 3;
   assert.equal(c.wake(at(t) + 1000), at(t) + 4 * 60000);
   assert.equal(c.wake(at(t) + 10 * 60000), at(t) + 10 * 60000, "overdue: due now");
   w.queue[0].attempts = 9;
-  // an enqueue re-arms at the delay; another drain still retries it; then no timer again
+  // an enqueue re-arms at the delay; another drain still retries it; then an hour on
   await w.t.armDrain();
   assert.equal(c.wake(t), t + Tasks.TASK_DRAIN_DELAY_MS);
   c.tick(t);
   assert.equal(w.queue[0].attempts, 10, "retried by the drain that ran");
-  assert.equal(c.wake(t), null);
+  assert.equal(c.wake(t), at(t) + Tasks.TASK_DRAIN_MAX_WAIT_MS);
   // the earliest of several: an event never tried by a drain wants the plain backstop
   w.queue.push(ev("yy"));
   assert.equal(c.wake(t), t + Tasks.TASK_DRAIN_BACKSTOP_MS);
@@ -301,6 +301,27 @@ test("R18 (K2038): after a tick that drains nothing the wake backs off by each e
   await w.t.armDrain();
   assert.equal(c.tick(t).drain.created.length, 1);
   assert.equal(c.wake(t), null);
+});
+
+test("R25 (K4488): an event whose capture is filed after its eighth try is run at the next wake, never dropped by a count", () => {
+  const homes = {};
+  const w = inbox([ev("a3")], homes);
+  w.bundle(DOC2);
+  const c = w.t.drainConsumer();
+  let t = NOW;
+  for (let a = 1; a <= Tasks.TASK_DRAIN_RETRY_LIMIT; a++) {
+    w.now = t;
+    c.tick(t);
+    t = c.wake(t);
+  }
+  assert.equal(w.queue[0].attempts, Tasks.TASK_DRAIN_RETRY_LIMIT, "eight tries came back unfiled");
+  assert.notEqual(t, null, "still queued: a wake remains, however many tries it has had");
+  assert.ok(t - Date.parse(w.queue[0].lastTry) <= Tasks.TASK_DRAIN_MAX_WAIT_MS, "backed off to at most one hour");
+  homes.a3 = DOC2;     // the capture is filed after its eighth try
+  w.now = t;
+  const r = c.tick(t).drain;
+  assert.deepEqual(r.created.map((x) => x.refers_to), [DOC2]);
+  assert.equal(w.queue.length, 0, "run, and the event leaves the queue");
 });
 
 test("R1 (T36): the drain reads capture's queue in pages past each page's last cursor; a waiting event does not use up limit, so limit waiting events at the head never hide a filed one behind them", () => {
@@ -378,11 +399,11 @@ test("R18 (T36): the wake's reading of the waiting events pages with after as R1
   assert.deepEqual(w.reads.map((x) => x.after), [null, `place-${B}`, `place-${2 * B}`], "each past the last cursor read");
   const got = w.reads.flatMap((x) => x.got);
   assert.equal(new Set(got).size, events.length, "each waiting event read once");
-  // on the third, short page likewise; and at the retry limit everywhere, no wake
+  // on the third, short page likewise; and at the retry limit everywhere, one hour on
   w.queue[B + 77].attempts = 6; w.queue[2 * B + 10].attempts = 1;
   assert.equal(c.wake(NOW), at(NOW) + Tasks.TASK_DRAIN_BACKSTOP_MS);
   for (const e of w.queue) e.attempts = Tasks.TASK_DRAIN_RETRY_LIMIT;
-  assert.equal(c.wake(NOW), null);
+  assert.equal(c.wake(NOW), at(NOW) + Tasks.TASK_DRAIN_MAX_WAIT_MS);
   // exactly one full page: the next read comes back empty and ends it
   const w2 = box(Array.from({ length: B }, (_, i) => ev(`v${i}`)));
   const c2 = w2.t.drainConsumer();

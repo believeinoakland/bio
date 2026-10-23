@@ -1496,7 +1496,7 @@ var fleet_member_default = {
   testDir: "test",
   surface: {
     "POST /scan": "R1-R4: ClamAV's verdicts on a duplicate of each target's stored bytes",
-    "POST /mirror": "R6: one run of the signature mirror (also the daily scheduled trigger)",
+    "POST /mirror": "R6: one run of the signature mirror (also the scheduled trigger's daily run)",
     "POST /render": "R7: the safe view, a PDF of page images",
     "GET /version": "R8: the build, ClamAV's and the renderer's versions, the mirror's and lists' state, the catalogue, the bounds",
     "POST /provider/scan": "R5: an outside scanner's verdicts",
@@ -1584,7 +1584,7 @@ var fleet_member_default = {
   },
   triggers: {
     crons: [
-      "17 4 * * *"
+      "*/10 * * * *"
     ]
   },
   optional_bindings: [
@@ -1776,6 +1776,11 @@ async function readJson(bucket, key) {
 // src/clamav.mjs
 var CURRENT = "clamav/current.json";
 var STATE = "clamav/state.json";
+var REQUEST = "clamav/request.json";
+var RUN_STARTED = "RUN_STARTED";
+var RUN_DEAD_MS = 15 * 6e4;
+var DOOR_RUN_MS = 9e4;
+var MIRROR_EVERY_MS = 23 * 60 * 6e4;
 var runId = (now) => `r${new Date(now).toISOString().replace(/[-:.TZ]/g, "")}${Math.random().toString(36).slice(2, 8)}`;
 var reply = (status, body) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 function signaturesOf(current) {
@@ -1916,19 +1921,37 @@ async function seedUpdater(deps, run, previous) {
   }
   return true;
 }
-async function runMirror(deps) {
+var stateOf = (run) => run.stage ? { last_attempt: run.attempt, last_error: RUN_STARTED, stage: run.stage, stage_at: run.stage_at } : { last_attempt: run.attempt, last_error: run.error || null, stage: null, stage_at: null };
+async function writeState(deps, run, stage) {
+  if (stage) {
+    run.stage = stage;
+    run.stage_at = new Date(deps.now()).toISOString();
+  } else run.stage = null;
+  await writeObject(deps.bucket, STATE, JSON.stringify(stateOf(run)));
+}
+async function begin(deps) {
+  const run = { attempt: new Date(deps.now()).toISOString() };
+  await writeObject(deps.bucket, REQUEST, JSON.stringify({ requested_at: run.attempt }));
+  await writeState(deps, run, "seed");
+  return run;
+}
+async function runMirror(deps, begun) {
   const now = deps.now();
+  const run0 = begun || { attempt: new Date(now).toISOString() };
   const previous = await readJson(deps.bucket, CURRENT);
   const run = runId(now);
   const staged = [];
   const files = {};
   let error = null;
   try {
+    if (!begun) await writeState(deps, run0, "seed");
     if (previous && !await seedUpdater(deps, run, previous)) await askUpdater(deps, `/update/${run}`, { method: "DELETE" });
+    await writeState(deps, run0, "download");
     const got = await askUpdater(deps, `/update/${run}`, { method: "POST" });
     if (!got.ok || !Array.isArray(got.files)) {
       throw new Error(got.code === "MIRROR_REFUSED" ? `MIRROR_REFUSED:${String(got.detail || "no reason given").slice(0, 300)}` : "UPDATER_UNAVAILABLE");
     }
+    await writeState(deps, run0, "stage");
     try {
       const changed = new Set(Array.isArray(got.changed) ? got.changed : got.files);
       for (const name of got.files) {
@@ -1952,6 +1975,7 @@ async function runMirror(deps) {
     } finally {
       await askUpdater(deps, `/update/${run}`, { method: "DELETE" });
     }
+    await writeState(deps, run0, "verify");
     const fresh = Object.entries(files).filter(([, f]) => staged.includes(f.key));
     if (fresh.length) {
       for (const [db, f] of fresh) {
@@ -1979,23 +2003,44 @@ async function runMirror(deps) {
     await writeObject(deps.bucket, CURRENT, JSON.stringify(current));
     const keep = new Set(Object.values(files).map((f) => f.key));
     for (const f of Object.values(previous && previous.files || {})) if (!keep.has(f.key)) await deleteObject(deps.bucket, f.key);
-    await writeObject(deps.bucket, STATE, JSON.stringify({ last_attempt: new Date(now).toISOString(), last_error: null }));
+    await writeState(deps, run0, null);
+    await deleteObject(deps.bucket, REQUEST);
     return { ok: true, versions: signaturesOf(current), published: current.published };
   } catch (e) {
     error = String(e.message || e);
     for (const key of staged) await deleteObject(deps.bucket, key).catch(() => {
     });
-    await writeObject(deps.bucket, STATE, JSON.stringify({ last_attempt: new Date(now).toISOString(), last_error: error }));
+    run0.error = error;
+    await writeState(deps, run0, null);
+    await deleteObject(deps.bucket, REQUEST);
     const last = previous ? signaturesOf(previous) : null;
     return { ok: false, versions: last, published: previous ? previous.published : null, error };
   }
 }
 async function mirrorAsync(deps) {
   if (!deps.bucket) return reply(503, { ok: false, code: "R2_NOT_CONFIGURED" });
-  const run = runMirror(deps).catch(() => {
+  const begun = await begin(deps);
+  const run = runMirror(deps, begun).catch(() => {
   });
   if (typeof deps.waitUntil === "function") deps.waitUntil(run);
   return reply(202, { ok: true, started: true });
+}
+async function mirrorTick(deps) {
+  if (!deps.bucket) return { ok: false, skipped: "R2_NOT_CONFIGURED" };
+  const now = deps.now();
+  const state = await readJson(deps.bucket, STATE);
+  const request = await readJson(deps.bucket, REQUEST);
+  const underWay = state && state.last_error === RUN_STARTED && state.stage;
+  const age = underWay ? now - Date.parse(state.stage_at) : null;
+  if (request) {
+    if (underWay && age < DOOR_RUN_MS) return { ok: true, skipped: "RUN_ALIVE" };
+    return runMirror(deps);
+  }
+  if (underWay) return age < RUN_DEAD_MS ? { ok: true, skipped: "RUN_ALIVE" } : runMirror(deps);
+  const current = state ? null : await readJson(deps.bucket, CURRENT);
+  const last = state ? Date.parse(state.last_attempt) : current ? Date.parse(current.mirrored_at) : NaN;
+  if (Number.isFinite(last) && now - last < MIRROR_EVERY_MS) return { ok: true, skipped: "RUN_WITHIN_DAY" };
+  return runMirror(deps);
 }
 async function mirror(deps) {
   if (!deps.bucket) return reply(503, { ok: false, code: "R2_NOT_CONFIGURED" });
@@ -2004,12 +2049,16 @@ async function mirror(deps) {
 async function signatureState(bucket) {
   const current = bucket ? await readJson(bucket, CURRENT) : null;
   const state = bucket ? await readJson(bucket, STATE) : null;
+  const request = bucket ? await readJson(bucket, REQUEST) : null;
   return {
     versions: signaturesOf(current),
     published: current ? current.published : null,
     mirrored_at: current ? current.mirrored_at : null,
     last_attempt: state ? state.last_attempt : null,
-    last_error: state ? state.last_error : null
+    last_error: state ? state.last_error : null,
+    stage: state && state.stage ? state.stage : null,
+    stage_at: state && state.stage_at ? state.stage_at : null,
+    ...request && request.requested_at ? { request: request.requested_at } : {}
   };
 }
 
@@ -4409,6 +4458,7 @@ var POSTS = {
   "/provider/forward": providerForward,
   "/provider/test": providerTest
 };
+var scheduled = (deps) => mirrorTick(deps);
 async function handle(request, deps) {
   const { pathname, searchParams } = new URL(request.url);
   if (request.method === "GET" && pathname === "/version") return version(deps);
@@ -4480,7 +4530,7 @@ var worker_default = {
     return handle(request, depsOf(env, ctx));
   },
   scheduled(event, env, ctx) {
-    ctx.waitUntil(runMirror(depsOf(env, ctx)));
+    ctx.waitUntil(scheduled(depsOf(env, ctx)));
   }
 };
 export {

@@ -4,7 +4,7 @@
    (setup-words R14 answers the sentence the code wrote while the list is stale). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, DAY, T0 } from "./fixture.mjs";
+import { filedWorld as world, pdf, DAY, T0 } from "./fixture.mjs";
 
 const NONE = { versions: null, published: null, mirrored_at: null, last_attempt: "2026-10-19T03:00:00.000Z", last_error: "REFUSED:main.cvd:403" };
 const ABSENT = { result: "not_scanned", reason: "SIGNATURES_ABSENT" };

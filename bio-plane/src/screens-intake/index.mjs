@@ -76,6 +76,10 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.capture.later.head", "screen.capture.later.about", "screen.capture.later.waiting", "screen.capture.later.captured", "screen.capture.later.turned",
     /* R2 (T51 fix round 3, C17): whether a project-less upload was read */
     "screen.document.text.label", "screen.document.text.full", "screen.document.text.none", "screen.document.text.read", "screen.document.text.unread", "capture.picture.unread",
+    /* R49, R2, N4 (T51 fix round 4; DEC-412): the rows the design wrote for the filing of a found document, the none of "requests for later" and the next step of an unread upload */
+    "screen.capture.address.filedhere", "screen.capture.later.none", "screen.document.text.unread.next",
+    /* R38, R31 (fix round 5, E7, E8; K4530): a held copy's reading asked for by the press, and what "Finish it" was answered; the nearest held rows stand in (K4269) */
+    "transcribe.why.evidenceabsent", "refusal.CAPTURE_NOT_HELD", "acquisition.index.render_pending_note", "acquisition.note.continuation_files_new",
   ]),
   held: Object.freeze([
     "act.heldcaptures.label.held", "act.heldrestore.label.held", "act.heldsetaside.label.held",
@@ -95,6 +99,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.held.untitled", "screen.held.vouchbad", "screen.held.vouchmissing", "screen.held.waiting",
     "screen.held.withheld", "state.undetermined", "document.uploaded.by", "size.kb", "size.mb", "size.small",
     "screen.capture.openit", "screen.capture.openit.help", "state.item.review.name", "screen.held.name",
+    "screen.capture.address.filedhere", "shell.unread",
   ]),
   archive: Object.freeze([
     "act.archivelist.label.archive", "act.gradenote.label.archive", "act.heldsetaside.label.archive",
@@ -124,7 +129,8 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.open-file.risk.held.means",
     "screen.open-file.risk.high", "screen.open-file.risk.high.means", "screen.open-file.risk.low",
     "screen.open-file.risk.low.means", "screen.open-file.safe", "screen.open-file.safe.about",
-    "screen.open-file.safe.cell", "screen.open-file.safe.cite", "screen.open-file.safe.origin",
+    "screen.open-file.safe.cell", "screen.open-file.safe.cite", "screen.open-file.safe.cut", "screen.open-file.safe.cut.more",
+    "screen.open-file.safe.notdrawn", "screen.open-file.safe.sheet.unreadable", "screen.open-file.safe.sheetscut", "screen.open-file.safe.origin",
     "screen.open-file.safe.pages", "screen.open-file.safe.ready", "screen.open-file.safe.sheet",
     "screen.open-file.safe.truncated", "screen.open-file.safe.value", "screen.open-file.status",
     "screen.open-file.status.held", "screen.open-file.status.line", "screen.open-file.status.overdue",

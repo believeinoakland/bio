@@ -161,8 +161,8 @@ test("R77 R71 C50 a draft whose edition the record says is published draws it wi
   const first = COPY({ case: { case_id: C, edition: 1, identity: "The Coliseum lease", newCase: false } });
   const p = await open(CER, { plane: { reviewcopy: ok(first), publishpreflight: ok(PREFLIGHT({ editions: { prepared: null, published } })), publishedcase: refusedIn("NOT_PUBLISHED") } });
   assert.ok(drew(p, "screen.ceremony.published.edition", { n: "1" }));
-  const link = main(p).querySelector(`a[href="${published.address}"]`);
-  assert.ok(link, "the link is the address the record gives");
+  const link = main(p).querySelector(`a[href="/app/published/${encodeURIComponent(C + "/1")}"]`);
+  assert.ok(link && !main(p).querySelector(`a[href="${published.address}"]`), "the link is the case page's route as the shell opens it (K4450), never the record's bare-slash address");
   assert.ok(!ops(p).includes("publish") && !ops(p).includes("caseratify"), "no prepare for edition 1");
   const next = await open(CER, { plane: { publishpreflight: ok(PREFLIGHT({ editions: { prepared: null, published } })) } });
   assert.ok(drew(next, "screen.ceremony.published.edition", { n: "1" }) && ops(next).includes("publish"), "edition 2 is still offered as the new edition");
@@ -215,8 +215,8 @@ test("R78 R72 C51 a key file chosen at the Sign step is loaded for the sitting (
   assert.ok(p.doc.getElementById("ce-keyfile"), "the Sign step offers the key file");
   chooseKey(p, KEYFILE);
   await press(p, "caseratify", { reason: R });
-  await until(p, () => signDialog(p) && p.doc.getElementById("cs-key-file").value);
-  assert.equal(p.doc.getElementById("cs-key-file").value, KEYFILE, "the dialog holds the file's text, loaded by the kit's helper");
+  await until(p, () => signDialog(p));
+  assert.ok(!p.doc.getElementById("cs-key-file"), "the signer was handed the file's text, so the dialog asks for no key box (interface-shell R116)");
   await p.click('[data-shell="dialog-yes"]');
   await until(p, () => count(p, "caseratify") > 0);
   const b = last(p, "caseratify").body;
@@ -230,7 +230,7 @@ test("R78 R72 C51 the key a file loaded is the one registered when the plane has
   await until(p, () => p.doc.getElementById("ce-keyfile"));
   chooseKey(p, KEYFILE);
   await press(p, "caseratify", { reason: R });
-  await until(p, () => signDialog(p) && p.doc.getElementById("cs-key-file").value);
+  await until(p, () => signDialog(p));
   await p.click('[data-shell="dialog-yes"]');
   await until(p, () => p.doc.querySelector("[data-nokey]"));
   await press(p, "signerregisterown", { reason: R });

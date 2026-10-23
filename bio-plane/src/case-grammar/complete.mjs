@@ -44,6 +44,10 @@
  * nothing is covered. Every other row renders exactly as before T37, so an edition whose document states no `obscured`
  * renders the bytes it rendered before.
  *
+ * A COPY UNDER ITS ROW'S CAPTURE (G50). In a `bio-case-file/4` case file a ref that two or more rows state keeps each row's
+ * files at `materials/<ref>/<sha256>/…`, so each row's copy is read at its own row's path (`materialFileKey`); in every
+ * other format it is read at `materials/<ref>/obscured` as before.
+ *
  * A MEMBER DOCUMENT CARRIED AS ITS CLEANED COPY (T39; N806, K2333). Its row states `obscured` as a photo's does, with
  * `case-carriage`'s `COPY_CLEANED_LABEL`. Since T48 (R32; N1016) the edition reads which it is from R31's stored `kind`
  * first: `document` is listed by the cleaned-copy line, `photo` by the photo's copy line, whatever the copy's bytes are.
@@ -75,7 +79,7 @@ import { caseTensionsOf } from "./tensions.mjs";
 import { lensOf, lensStatementKey, LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE } from "./edition.mjs";
 import { WORDS, caseWordsOf } from "./words.mjs";
 import { methodOf, materialsOf, acceptedWorkOf, PAIR_AXES } from "./materials.mjs";
-import { caseFilePath } from "./casefile.mjs";
+import { caseFilePath, refsOnSeveralRows, materialFileKey } from "./casefile.mjs";
 import { CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
          CASE_DOCUMENT_FORMAT_LEGACY, caseDocumentRequiresMaterials } from "./formats.mjs";
 import { gradingFactsOf, passagesOf } from "./facts.mjs";
@@ -288,8 +292,13 @@ export function completeEditionOf(caseFile) {
 
     /* 3. the materials */
     const mats = materialsOf(fm);
+    /* G50: under `/4` a ref on several rows keeps each row's files under its capture, so the copy is read at its own row's path */
+    const several = refsOnSeveralRows(mats && mats.materials);
     const sources = (caseDocumentBlocks(docText).sources) || [];
-    const attestOf = (ref) => ((mats && mats.attestations) || []).filter((a) => a.ref === ref);
+    /* G47 (R12): an attestation naming its capture (`sha`) belongs to the material of that capture alone; one that names
+       none (a case signed before the field) belongs to every material of its `ref`, as it always did */
+    const lowered = (v) => (typeof v === "string" ? v.toLowerCase() : null);
+    const attestOf = (x) => ((mats && mats.attestations) || []).filter((a) => (a.sha ? lowered(a.sha) === lowered(x.sha) : a.ref === x.ref));
     const materialHtml = !mats || !mats.materials
       ? [p(SENTENCES.noMaterials)]
       : mats.materials.length === 0 ? [p("No document or observation is reached by this case's findings.")]
@@ -303,14 +312,14 @@ export function completeEditionOf(caseFile) {
             li(`Archived copy: ${said(x.archived_copy, "none recorded")}`),
             /* T40 (DEC-185 (1)): the copy line or the unmarked line by R12's `marked`, then the label word for word when
                there is one; `marked` absent reads by the label, so every earlier edition renders byte for byte */
-            ...(ob ? [...(copyIsDocument(ob, files.get(caseFilePath("obscured", x.ref))) ? [li(`${OBSCURED_WORDS.cleaned}${said(ob.copy)}`)]
+            ...(ob ? [...(copyIsDocument(ob, files.get(caseFilePath("obscured", materialFileKey(x, several, cf.format)))) ? [li(`${OBSCURED_WORDS.cleaned}${said(ob.copy)}`)]
                 : (ob.marked ?? ob.label !== null) ? [li(`${OBSCURED_WORDS.copy}${said(ob.copy)}`)]
                 : [li(`${OBSCURED_WORDS.unmarked}${said(ob.copy)}`)]), ...(ob.label === null ? [] : [li(ob.label)])]
               : [li(x.included ? SENTENCES.includedWhole : "Not included: only its fingerprint, origin and archived copy travel.")]),
             li(x.rests_under === "load_bearing" ? SENTENCES.reliesOn : SENTENCES.onlySupporting),
             ...src.map((r) => li(sourceRowWithheld(r) ? `Source: ${WITHHELD_SOURCE_LABEL}: ${WITHHELD_SOURCE_REASON}.`
                                                       : `Source: ${said(r.stated)}`)),
-            ...attestOf(x.ref).map((a) => li(attestationWords(a, W))),
+            ...attestOf(x).map((a) => li(attestationWords(a, W))),
           ])}`;
         });
 

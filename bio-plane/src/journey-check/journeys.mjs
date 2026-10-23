@@ -266,13 +266,17 @@ export async function signInBy(walk, page, base, who, label) {
 
 /* An administrator makes an invitation link for a new member, with the short id and the cover the group knows them by
    (`memberadd`), and `startProjects` ticks that she may start projects; the link is shown once. */
+/* The choice that lets the invited member start projects, as `members` draws the invitation's capabilities (`cs.checks("mi-caps")`:
+   one checkbox per capability, named `mi-caps`, valued by the capability, its id numbered by its place in the vocabulary). */
+export const START_PROJECTS_BOX = 'input[name="mi-caps"][value="create_projects"]';
+
 export async function inviteMember(walk, page, base, { id, cover, startProjects = false }) {
   let link = null;
   await walk.step(page, `members: an invitation link for ${id}`, async (p) => {
     await open(walk, p, base, "/app/members", "members");
     /* journey 28: she lets Mai start projects as well as contribute (DEC-286: a member may not by default), so Home offers her "What happened?" */
     if (startProjects) {
-      const box = p.locator("#mi-cap-create_projects");
+      const box = p.locator(START_PROJECTS_BOX);
       if (!(await box.count())) throw new Error(`the invitation form has no choice to let her start projects on ${where(p)}`);
       await reveal(box);
       await box.check();

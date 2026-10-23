@@ -1,6 +1,6 @@
 # review (T51)
 
-**Status** · session_01BgzvhhpsZ9CfjrbXUVyebx · depth 2 · COMPLETE · handled B12
+**Status** · session_016SWyQAUyjKySSg7jMkWWY1 · depth 2 · COMPLETE · handled B17
 
 ## Completion record (fix round 4, B13 START, K4429; REVIEW #22)
 
@@ -223,3 +223,65 @@ Size (session_01FnocwFJGM3fMnossXJZ36Q): test runs 12, module lines 1610
 ## J10 · COMPLETE
 
 COMPLETE for fix round 4 (C46, my part). Root cause: #finding read a finding's words only from the question's own bytes; a project's conclusion is its own record (inquiry_moved false), so the finding read 'Not concluded yet'. Fix: the project's recorded claim and falsifier (ratification caseConclusionFor) come first. Failing-first test conclusions.test.mjs through the real conclude (red 'Not concluded yet', then green); platform check N; review suite 86/86; users' reds identical on the tranche tip; checks and ownership clean for review. Proposed R41 amendment and the stale bundles are in my record (build/jobs/T51/review.md). No QUESTION open.
+
+## J11 · REPORT
+
+C48 (B14, R19 `editions.case`): the change is in, committed at 13f39a4c97 on job/T51/review.
+
+- `bio-plane/src/review/index.mjs` `#editions`: `editions` now carries `case` (the case id from case-authoring's `draftEditions`, `null` where it cannot answer), on the answer and on the throw path.
+- Failing-first test, `bio-plane/test/m/review/lists.test.mjs`, "R19 (C48): a draft prepared for a new case states that case id as editions.case ..." Red on the old source: `actual: undefined, expected: 'CASE-2026-0003'`. The first R19 test and the throw test now also assert `case`. Green with the change: `node --test --test-force-exit bio-plane/test/m/review/` = 87 pass, 0 fail.
+- Checks: ownership 0 failures (1 file changed by review); checks/run.mjs: no finding in review; the tranche-wide coverage and architecture reds are other modules' and are not touched.
+
+Not yet done, so I have not posted COMPLETE: the review tests use the scripted `draftEditions` double (fixture `ca.editions`), because review's fixture has no real case-authoring. B14 asked for the real one. Once case-authoring #37 merges and BOB sends CHANGE, I merge tranche/T51, re-run the R19 tests against the real `draftEditions` (case-authoring's R83 with `case`), and post COMPLETE with the Size line. If you want the real module wired into review's fixture for this test instead, say so and I will do it then.
+
+## J12 · COMPLETE
+
+COMPLETE for C48 (B14, CHANGE B15 / K4469). Branch job/T51/review, tranche/T51 merged (a5415384fc, case-authoring #37 included).
+
+**C48 (review's part; seam owner screens-publish, not this job)**
+1. Change: `bio-plane/src/review/index.mjs` `#editions` (about line 979-984) copies `case` from `draftEditions` on the answer and on the throw path (`case: null`). `editions` = `{prepared, published, case}`.
+2. Why the test missed it: the earlier fixture had no case-authoring `case` field (scripted double). Test gap closed: the new test wires the real `caseAuthoringOf` over review's own world (`lists.test.mjs`, "R19 (C48) ... from the real draftEditions"). The fixture's `published_cases` stub gained `ratified_at`, which the real read needs (`fixture.mjs`).
+3. Failing-first: the test was red on the old source (`case` undefined, before B15 wiring; and on the first attempt red with the real module because the stub lacked `ratified_at`, which made the real read return nulls: `case: null`, `prepared: null`). Green after the fixture fix and the change. Control: a never-prepared draft states `case: null`. Throw path stays on a double (`case: null`).
+4. Platform check: N (no platform surface; a data read).
+
+Suite: `node --test --test-force-exit bio-plane/test/m/review/` = 87 pass, 0 fail, 0 skip.
+Checks: format 0 failures; ownership 0 failures (3 files: index.mjs, lists.test.mjs, fixture.mjs); checks/run.mjs: no review finding. Impact (`node build/plan/impact.mjs origin/tranche/T51 HEAD`): 0 affected modules at the time of the run.
+Requirements met: R19 (the `editions.case` sentence). No open QUESTION. No deferred item.
+
+Size (session_01Mgd8f9TtwZNsFGWYR1ET9V): test runs 10, module lines 1633
+
+## Completion record (fix round 6, B16 START, K4570, K4571; REVIEW #24, session_016SWyQAUyjKySSg7jMkWWY1)
+
+COMPLETE for fix round 6, job 9 (G12c, provider for screens-daily's `casedrafts` and screens-publish's `reviewcopy`). Branch job/T51/review, `tranche/T51` merged at the start (up to date; nothing of this round was read from a double).
+
+**What changed**
+1. `bio-plane/src/review/index.mjs`: `listMany` (after `list`) and `copyMany` (after `copy`); `idList` (list or comma text, each id once, in order); `batchTooLarge`; `REVIEW_BATCH_LISTS_MAX` = 50 and `REVIEW_BATCH_COPIES_MAX` = 20; the ops map's `casedrafts` and `reviewcopy` arms take `projects` / `drafts` (a body list, else comma-separated in the query) and answer `{ok, kind: "review-drafts-batch", count, lists: {[project]: <the single answer>}}` / `{ok, kind: "review-copies", count, copies: {[draft]: <the single answer>}}`. Each id is answered by calling the single read itself (`list` / `copy`), so a project or draft the viewer may not see, or that does not exist, answers `NO_REVIEW_COPY`, byte-identical to the single read, and a recipient's batch (`bySecret`) gets her own draft's copy and the dead answer for every other. `limit` passes to each. Writes nothing.
+2. A list longer than its bound is refused whole, `REVIEW_BATCH_TOO_LARGE` (C-87.18, `checks.mjs`; `max` named), never answered in part. Its member words are the nearest held row's, `refusal.REVIEW_DRAFT_TOO_LARGE` (stand-in); **row owed: `refusal.REVIEW_BATCH_TOO_LARGE`** (the detail is `review.index.a_batch_names_at_most`). No screen reaches it: the owners send at most 50 projects / 20 drafts.
+3. `DECLARED_OPS` (K4208) gains `casedrafts` (classes admin/member/probe, read; accepts `project`, `projects`, `limit`) and `reviewcopy` (classes null, read; accepts `draft`, `drafts`, `limit`, `secret`); both require nothing, because a call with none of the keys is the one dead answer, which names nothing (R10, R19). `casedrafts`'s description is the hand row's (op-grades); `reviewcopy` has no hand description, so its sentence is new.
+
+**Failing-first tests** (`bio-plane/test/m/review/batch.test.mjs`, 8 tests, through `reviewOps` as the door runs it). Red on the unchanged source: the file did not load (`REVIEW_BATCH_COPIES_MAX` not exported), and the unchanged ops map ignores `projects` and `drafts`, answering the single dead answer. Green with the change: 8/8. They check: the batch equals the single answer id by id, with a hidden id and an unknown one (both the dead answer, byte-identical); a body list; a repeated id once; an empty list; no viewer / an outsider; a recipient's own draft and not another's, and a revoked grant; the bounds (at and over); `limit`; a snapshot proving nothing is written; the declarations held by `declaredOpHolds`.
+**Why the tests missed it:** no batch read existed, so every test (and the screens) asked per item. **Test-gap fix:** the batch tests compare each id with the single read it replaces.
+**Other test edits:** `declared-ops.test.mjs` (R42: all six ops, the list derived from the ops map, K3268; `casedrafts` and `reviewcopy` are reads), `invariants.test.mjs` (C-87.18 in the family table and driven at its interface).
+
+**Platform check: N** (a data read; the dry-run gates of a copy still run once per draft, as the single reads did, so a batch of 20 copies costs what 20 single reads cost in the object, and saves 19 hops at 115-160 ms). No timing is asserted from the object's clock (R-CLOCK). Expected for the walker's rows: Home sends one `casedrafts` for its projects instead of five; the Ceremony one `reviewcopy` instead of two (the owners' jobs change the calls).
+
+**Requirement lines I propose** (BOB writes `build/requirements/review.md`; test titles name R19, R10 R11 and R42 until then)
+- **R44** (G12c; amends R19) `casedrafts` also takes `projects`, a list of at most 50 project ids (a body list, else comma-separated in the query), and answers `{ok, kind: "review-drafts-batch", count, lists}`: for each project asked, once, in the order given, exactly the answer the single read gives it (`NO_REVIEW_COPY` for a project the viewer has no standing in and for one that does not exist alike). A longer list is `REVIEW_BATCH_TOO_LARGE` (C-87.18), naming `max`, and nothing is read. Test: the batch equals the single answers id by id, a hidden id and an unknown one included. Control: an empty list answers `lists: {}`; a call with neither key is the dead answer.
+- **R45** (G12c; amends R10, R11) `reviewcopy` also takes `drafts`, at most 20 draft ids, and answers `{ok, kind: "review-copies", count, copies}`, one copy per draft exactly as the single read gives it at either door (a recipient gets her grant's own draft and the dead answer for every other); `limit` applies to each; a longer list is `REVIEW_BATCH_TOO_LARGE`.
+- Amend **R23** (C-87.18 `REVIEW_BATCH_TOO_LARGE`) and **R42** (`DECLARED_OPS` also declares `casedrafts` and `reviewcopy`, reads, with the accepted keys above and nothing required).
+
+**For the seam owners (not mine):** control-plane's `casedrafts` arm (`index.mjs:3697`, `reviewAnswer`) and its `reviewcopy` stamping must forward `projects` / `drafts` and treat the answer, which is `ok` with the per-id answers inside, as a read answer (not as the dead answer's 404); store-door's `PROJECT_NAMING_READS` names `projects` and `drafts` and fences each id as the single read. Parameters: query `projects=a,b,c` / `drafts=a,b,c`, or a body list `{projects: [...]}`.
+
+**Deferred:** nothing. **Found in another module:** nothing new. **Words owed:** `refusal.REVIEW_BATCH_TOO_LARGE` (stand-in above).
+
+**Tests and checks run**
+- `node --test --test-force-exit bio-plane/test/m/review/` = 95 pass, 0 fail (was 87; 8 new).
+- The users `impact.mjs origin/tranche/T51 HEAD` names (10 modules, 184 files; 171 run besides review's 13): 1144 tests, 1143 pass, 1 fail: plane `release.test.mjs:74` R24 ("screen.objective.purpose is held by the words list"), a words-list state of the tranche, not touched by this change (the plan accepts `plane` `release` R24 by name).
+- `node checks/run.mjs /home/user/bio`: format 1 failure, `build/plan/next.md:38` (N1265), inherited and not mine; architecture 0; coverage 0 (6617 of 6617); channels 0; words 0 failures (handlist 0, testcopy 0, missingkey 0).
+- `node checks/ownership.mjs /home/user/bio review tranche/T51 job/T51/review`: 6 files changed by review, 0 failures.
+
+Size (session_016SWyQAUyjKySSg7jMkWWY1): test runs 9, module lines 1703
+
+## J13 · COMPLETE
+
+COMPLETE for fix round 6 (G12c, provider). casedrafts takes projects (at most 50) and reviewcopy takes drafts (at most 20), each answering one single-read answer per id, a hidden or unknown id the same dead answer byte for byte; an over-long list is refused whole, REVIEW_BATCH_TOO_LARGE (C-87.18, stand-in words, row owed refusal.REVIEW_BATCH_TOO_LARGE). Both ops declared (K4208). Failing-first batch.test.mjs 8 tests (red: unchanged source ignores the keys), review suite 95/95, users 1143/1144 (plane release R24, accepted by name), checks and ownership clean for review (format failure next.md:38 inherited). Requirement lines R44, R45 and the R23/R42 amendments are proposed in my record, with the parameters control-plane and store-door must forward. No QUESTION open, nothing deferred.

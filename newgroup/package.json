@@ -5,7 +5,7 @@
   "scripts": {
     "embed": "node scripts/embed-release.mjs",
     "build": "npm run embed && node scripts/build.mjs",
-    "test": "node test/embed.test.mjs && npm run embed && node test/wizard.test.mjs && node --test test/requirements.test.mjs test/t47.test.mjs test/t48.test.mjs test/t50.test.mjs test/t51.test.mjs test/corpus.test.mjs test/realsize.test.mjs && node --test test/steps/",
+    "test": "node test/embed.test.mjs && npm run embed && node test/wizard.test.mjs && node --test test/requirements.test.mjs test/t47.test.mjs test/t48.test.mjs test/t50.test.mjs test/t51.test.mjs test/t51-ascii.test.mjs test/corpus.test.mjs test/realsize.test.mjs && node --test test/steps/",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev"
   },

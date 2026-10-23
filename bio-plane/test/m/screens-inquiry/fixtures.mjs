@@ -19,6 +19,8 @@ await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), 
 registerGrades({ provenance: PROVENANCE, "case-import": CASE_IMPORT, investigation: INVESTIGATION });
 
 export { SCREENS, word };
+/** strength's batch (fix round 6, G12c) around a function giving one question's answer: `ids` answers `results`, keyed by id, each the single read's answer */
+export const batchStrength = (one) => (r) => ok(r.query.ids ? { ok: true, results: Object.fromEntries(String(r.query.ids).split(",").map((id) => [id, one(id)])) } : one(r.query.id));
 export const P = "PROJ-2026-0007";
 export const Q = "INQ-2026-0001-seven-days";
 export const Q2 = "INQ-2026-0002-closed";
@@ -45,7 +47,8 @@ export const inquiryMd = (project = P, refs = INQUIRY_REFS, o = {}) => ["---", `
   ...refs.flatMap(([t, rel, st, note]) => [`  - target: ${t}`, `    rel: ${rel}`, `    status: ${st}`, ...(note ? [`    note: ${note}`] : [])]),
   ...((o.legs || LEGS).length ? ["basis:", ...(o.legs || LEGS).flatMap((l) => [`  - target: ${l.target}`, `    role: ${l.role}`,
     ...(l.grade ? [`    grade: ${l.grade}`] : []), ...(l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : []), ...(l.ground ? [`    ground: ${l.ground}`] : []),
-    ...(l.extent_page !== undefined ? [`    extent_page: ${l.extent_page}`] : [])])] : []),
+    ...(l.extent_kind !== undefined ? [`    extent_kind: ${l.extent_kind}`] : []), ...(l.extent_page !== undefined ? [`    extent_page: ${l.extent_page}`] : []),
+    ...(l.extent_para !== undefined ? [`    extent_para: ${l.extent_para}`] : [])])] : []),
   ...(o.grounds ? ["grounds:", ...o.grounds.flatMap((g) => [`  - ground: ${g.ground}`, `    asserted_by: ${g.asserted_by}`, `    at: "${g.at}"`])] : []),
   "---", "", "## Question", "", "Is the city repairing reported potholes within seven days?", "",
   "## Session Log", "", ...(o.log || []), "## Review Notes", ""].join("\n");
@@ -101,7 +104,9 @@ export function plane(o = {}) {
     projectvisibility: ok({ ok: true, projectId: P, setting: "hidden", recorded: true, history: [{ setting: "hidden", set_by: "dev", reason: null, at: "2026-10-01T09:00:00Z" }] }),
     projectownervotes: ok({ ok: true, projectId: P, changes: [] }),
     plans: ok({ ok: true, plans: [] }),
-    inquirystrength: (r) => ok({ ok: true, target: r.query.id, ...(STRENGTH[r.query.id] || {}) }),
+    /* strength's batch (fix round 6, G12c): `ids` answers `results`, one entry for each id asked, keyed by id, each the single read's answer */
+    inquirystrength: (r) => ok(r.query.ids ? { ok: true, results: Object.fromEntries(String(r.query.ids).split(",").map((id) => [id, { ok: true, target: id, ...(STRENGTH[id] || {}) }])) }
+      : { ok: true, target: r.query.id, ...(STRENGTH[r.query.id] || {}) }),
     basisversions: (r) => ok({ ...BASIS(), ...(r.query.project ? { current: { project: r.query.project, version: "main", at: "2026-10-06T09:00:00Z", by: "dev" } } : {}) }),
     versionstrength: (r) => ok({ ok: true, inquiry: r.query.id, version: r.query.version, pair: { capture: { state: "graded", grade: "B" }, connection: { state: "graded", grade: "C" } } }),
     partitionindependence: ok({ ok: true, inquiry: Q, independence: { checked: true, parts: 2, shared: [], complete: true } }),

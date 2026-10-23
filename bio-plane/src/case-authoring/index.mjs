@@ -76,18 +76,23 @@
 import { recordOf, stampInstant, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { strengthOf, STRENGTH_AXES } from "../strength/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf, CASE_SOURCES_CHECKS } from "../publication/index.mjs";
+import * as publicationExports from "../publication/index.mjs";
 /* R72 (T45; N892): a project's scope, project-roster R23's. */
 import { projectRosterOf } from "../project-roster/index.mjs";
 /* R58 (N823; K2438): the waiting edition is `publish-schedule`'s (its R1, read through its R7), since publication's
    third split. */
 import { publishScheduleOf } from "../publish-schedule/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
+/* R85 (fix round 6, G9; K4573): `case-carriage`, the one instance on the host, whose `copyNow` makes a small member
+   document's publication copy inside `op=publish`. */
+import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { ratificationOf, SUBJECT_POSITIONS, completenessFields } from "../ratification/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
@@ -161,6 +166,11 @@ const SEARCHED_CHUNK = 50;
 const LENS_PAGE = 2000;
 /** R40: publication R12's `publishedTargets` reads at most 200 ids a call. */
 const PUBLISHED_TARGETS_CHUNK = 200;
+
+/** R85 (fix round 6, G9; K4573): the largest member document `op=publish` makes the copy of in the act itself, in bytes;
+ *  a larger one keeps the scheduler's alarm path. */
+export const COPY_NOW_MAX_BYTES = 2 * 1024 * 1024;
+const HEX64 = /^[0-9a-f]{64}$/;
 
 /** R65 (D57, D63): the authored fields of `op=publish`, exactly: the four statements, the scope, the bias acknowledgement
  *  and the account (R63), with the statements' citations (R63, K2533). A story, context or human-interest passage has
@@ -246,18 +256,20 @@ export class CaseAuthoring {
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, publishSchedule = null,
                 ratification = null, account = null, inputs = null, networkNotices = null, disclosures = null, calculations = null,
-                workbooks = null, events = null, caseTensions = null, projectRoster = null, now = null } = {}) {
+                workbooks = null, events = null, caseTensions = null, projectRoster = null, caseCarriage = null,
+                now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, publishSchedule,
                    ratification, account, inputs, networkNotices, disclosures, calculations, workbooks, events, caseTensions,
-                   projectRoster };
+                   projectRoster, caseCarriage };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
+  get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
@@ -291,6 +303,8 @@ export class CaseAuthoring {
   get workbooks() { return this.#deps.workbooks ||= workbooksOf(this.#deps.host); }
   /* R57: the timeline of the members' subjects and the events their legs cite (events R28–R30). */
   get events() { return this.#deps.events ||= eventsOf(this.#deps.host); }
+  /* R85 (fix round 6, G9): the one `case-carriage` instance on this host, read for `copyNow` only. */
+  get caseCarriage() { return this.#deps.caseCarriage ||= caseCarriageOf(this.#deps.host); }
   /* R72 (T45; N892): `projectScope` (project-roster R23), asking no viewer. */
   get projectRoster() { return this.#deps.projectRoster ||= projectRosterOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   /* R8, R55 (T33-62): `caseRelation` and `attributionStatements` are `case-tensions`' (its R1, R5): its one instance on
@@ -350,6 +364,26 @@ export class CaseAuthoring {
    * ========================================================================================================== */
   publishCase(args = {}, calculationFacts = null) {
     return this.record.transact(() => this.#publishCase(this.#withDraft(args), { calculationFacts }));
+  }
+
+  /** R85 (fix round 6, G9; K4573; amends R18): `op=publish`'s act. It gathers the calculations (R56), runs `publishCase`, and,
+   *  when that refuses `DOCUMENT_COPY_PENDING` (case-disclosures R6), awaits `case-carriage.copyNow` for the documents the
+   *  refusal names, at most `COPY_NOW_MAX_BYTES` each, and runs `publishCase` once more over the same facts. `publishCase`
+   *  itself stays synchronous (R18): the copy is made here, between the two runs. A copy not made (a larger document, no
+   *  `copyNow`, one that throws or rejects) leaves the first refusal as it was, and the alarm path makes it. */
+  async publishAct(args = {}) {
+    const facts = await this.calculationsAtPublication(args);
+    const first = this.publishCase(args, facts);
+    if (!first || first.ok !== false || first.code !== "DOCUMENT_COPY_PENDING") return first;
+    const shas = [...new Set((Array.isArray(first.pending) ? first.pending : [])
+      .flatMap((m) => (Array.isArray(m && m.materials) ? m.materials : []).map((x) => str(x && x.sha))).filter((x) => HEX64.test(x)))];
+    if (!shas.length) return first;
+    try {
+      const cc = this.caseCarriage;
+      if (!cc || typeof cc.copyNow !== "function") return first;
+      await cc.copyNow({ shas, maxBytes: COPY_NOW_MAX_BYTES });
+    } catch { return first; }
+    return this.publishCase(args, facts);
   }
 
   /* R78 (T51; C1; K4165; amends R9): THE DRAFT A CALL NAMES SUPPLIES WHAT THE CALL DID NOT SEND. The screens send the draft,
@@ -1091,7 +1125,7 @@ export class CaseAuthoring {
     /* R40 — DEC-103: the lens it was produced under, every statement of the manifest frozen above, read at this act. */
     const lensStatements = lensRead;
     /* R16 — REC-219 / D-579(a): the project's citation edges, with the version each was made against. */
-    const citations = this.#caseCitations(proj, members);
+    const citations = this.#caseCitations(proj, members, resting);
     /* R14 (`case-inputs` R3) — REC-212 / §3 rule 13: WHO WROTE THE SENTENCE, established before the list is read, because it decides what
        the list may contain (a reading by the writer is not a second reading). */
     const writer = this.inputs.statementWriter(proj, theCase, edition, stmt, who, namedDraftRow);
@@ -1154,6 +1188,21 @@ export class CaseAuthoring {
     const approvalsBlock = approvals.ok !== false && (approvals.rule || approvals.approvals.length)
       ? approvalsLines({ rule: approvals.rule, approvals: approvals.approvals }) : [];
     const docText = approvalsBlock.length ? render(approvalsBlock) : unapproved;
+    /* R14 (G47; K4666, K1881): THE DOCUMENT'S BYTES, measured as built and before any side effect (the reevaluation raise,
+       the standards judgment, the store). Over `publication`'s `CASE_DOCUMENT_BYTES_MAX` the act refuses and nothing is
+       prepared; the member reads the document before signing, so the bound is stated, never a silent cut. */
+    const docBytes = new TextEncoder().encode(docText);
+    const docBound = publicationExports.CASE_DOCUMENT_BYTES_MAX;
+    const materialCount = materialBlocks && Array.isArray(materialBlocks.rows) ? materialBlocks.rows.length : 0;
+    /* DEC-49 REGION is-case-document-too-large */
+    if (Number.isFinite(docBound) && docBytes.length > docBound) {
+      const mb = (n) => (n / 1048576).toFixed(1);
+      return actRefusal("CASE_DOCUMENT_TOO_LARGE", { size: docBytes.length, bound: docBound,
+        materials: materialCount, members: members.length,
+        detail: localize("case-authoring.index.case_document_too_large", "This case document is {size} MB, over the {bound} MB a case document may be, and it names {materials} materials and {members} findings. The record is unchanged and nothing was prepared. Leave out some of the materials or findings and prepare the case again.",
+          { size: mb(docBytes.length), bound: mb(docBound), materials: String(materialCount), members: String(members.length) }) });
+    }
+    /* END DEC-49 REGION is-case-document-too-large */
     /* R61 (N717; K2002, K2129): THE STANDARDS THIS CASE MEASURES AGAINST, JUDGED OVER THE TEXT IT WOULD STORE, the act's
        last refusal (`#standardsUse`). Nothing is written on a refusal: the act's transaction takes back every row. */
     const standardsUse = this.#standardsUse(docText, written, who, when);
@@ -1167,11 +1216,21 @@ export class CaseAuthoring {
     for (const f of written) if (f.reevaluation === null)
       f.reevaluation = run.preflight ? { source: "edition", edition: f.edition, raised_when: "published" }
         : this.reevaluation.raise({ target: f.target, source: "edition", since: when, edition: f.edition, viewer });
-    const docBytes = new TextEncoder().encode(docText);
     /* publication R21: stored unsigned, replacing an unsigned document of this case edition and never a signed one; the
        exclusions are projected in the same write. What this act answers with is what the store holds after the call. */
     const stored = this.publication.storeCaseDocument({ caseId: theCase, edition, text: docText, author: who, at: when,
                                                         draft: boundDraft });
+    /* R14 (G47): a refusal of the store, whatever its reason, is the act's refusal; never a prepared document with no sha. */
+    if (!stored || stored.ok === false || !stored.doc_sha) {
+      const why = stored && stored.reason ? String(stored.reason) : "CASE_DOCUMENT_NOT_STORED";
+      if (why === "CASE_DOCUMENT_TOO_LARGE")
+        return actRefusal("CASE_DOCUMENT_TOO_LARGE", { size: docBytes.length, bound: Number.isFinite(docBound) ? docBound : stored.bound ?? null,
+          materials: materialCount, members: members.length,
+          detail: localize("case-authoring.index.case_document_too_large", "This case document is {size} MB, over the {bound} MB a case document may be, and it names {materials} materials and {members} findings. The record is unchanged and nothing was prepared. Leave out some of the materials or findings and prepare the case again.",
+            { size: (docBytes.length / 1048576).toFixed(1), bound: ((Number.isFinite(docBound) ? docBound : stored.bound ?? 0) / 1048576).toFixed(1), materials: String(materialCount), members: String(members.length) }) });
+      return { ok: false, reason: why, code: why,
+        detail: localize("case-authoring.index.case_document_not_stored", "The case document could not be stored. The record is unchanged and nothing was prepared.") };
+    }
     /* R69 (record-grammar R52): after the document is stored, the member's acceptance of the draft her account began as,
        in its one shape (`case-account` R4's `acceptanceRecorded`), inside this act's transaction; none without a draft. */
     if (drafted.draft) A.acceptanceRecorded({ caseId: theCase, edition, drafted, by: who, at: when });
@@ -1682,7 +1741,9 @@ export class CaseAuthoring {
    *  `review` R19's draft rows share: `prepared` the edition number of the unsigned preparation, else null; `published`
    *  `{edition, address}` for the latest ratified edition, else null. `caseId` is the case the draft's identity names; with
    *  none, the case the draft's own preparation produced (publication R40: a document names the draft that made it,
-   *  `draft` an id or a row), else neither is stated. Reads only and never throws. The address is the case page's,
+   *  `draft` an id or a row), else neither is stated. (fix round 4, C48; K4467) `case` is that case id when the record holds
+   *  a preparation or a published edition of it, else null, so a reloaded page reads the prepared document by it even for a
+   *  draft that asks for a new case. Reads only and never throws. The address is the case page's,
    *  `/app/published/<case>/<edition>`, as the screens link it. */
   draftEditions({ caseId = null, draft = null } = {}) {
     try {
@@ -1696,14 +1757,14 @@ export class CaseAuthoring {
           id = made ? made.case_id : "";
         }
       }
-      if (!id) return { prepared: null, published: null };
+      if (!id) return { case: null, prepared: null, published: null };
       const prep = this.#one(`SELECT edition FROM case_documents WHERE case_id=? AND sig_armored IS NULL
                               ORDER BY edition DESC LIMIT 1`, id);
       const pub = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=? AND ratified_at IS NOT NULL`, id);
       const published = pub && pub.m != null ? Number(pub.m) : null;
-      return { prepared: prep ? Number(prep.edition) : null,
+      return { case: prep || published !== null ? id : null, prepared: prep ? Number(prep.edition) : null,
                published: published === null ? null : { edition: published, address: `/app/published/${id}/${published}` } };
-    } catch { return { prepared: null, published: null }; }
+    } catch { return { case: null, prepared: null, published: null }; }
   }
 
 
@@ -1895,8 +1956,13 @@ export class CaseAuthoring {
    *  many captures it holds of the document NOW: one (`only_capture`), several (`undetermined`, never back-filled),
    *  none (`no_capture`). A question has no bytes (`no_bytes`); a finding that is not a member of this case is not cited
    *  (C67; R16). Set-based: one grouped count per chunk of targets
-   *  (provenance R48's `register`, extraction R58's `readings`), never one read per edge. */
-  #caseCitations(project, members) {
+   *  (provenance R48's `register`, extraction R58's `readings`), never one read per edge, except a document with a capture
+   *  held in parts, which is counted by identity (R84). (G29, R86) After the project's own edges come the documents the
+   *  members' findings rest on (`resting`, `case-disclosures` R2: either role, one level deep), each once and none the
+   *  project already cites, classified the same way; a capture the findings name alone, of a document holding several, is
+   *  its pin. A case prepared from a question holds one edge, to the question, so these are the evidence's only rows.
+   *  (K4609) Every document row, `undetermined` included, also carries `bundle_sha`, the document's head at this act. */
+  #caseCitations(project, members, resting = []) {
     const text = this.#liveText(project);
     const refs = text !== null ? (parseFrontmatter(text).data?.references || []) : [];
     /* C67 (T51; K4303): the project cites the findings of all its drafts; this case cites its own. An edge to a finding
@@ -1906,28 +1972,59 @@ export class CaseAuthoring {
       && r.status !== "severed" && typeof r.target === "string" && r.target.trim()
       && (!isFinding(r.target.trim()) || (members || []).includes(r.target.trim())));
     const isDocument = (t) => normalizeType(OBJECT_TYPES[t.split("-")[0]]) === "information";
-    const docs = [...new Set(edges.map((r) => r.target.trim()).filter(isDocument))];
+    /* R86: the documents the findings rest on, found by the captures `case-disclosures.restingCaptures` names among the
+       registered captures of the documents the members' legs cite. */
+    const cited = new Set(edges.map((r) => r.target.trim()));
+    const restingDocs = new Map();
+    const caps = [...new Set((resting || []).map((x) => x.capture))];
+    const legTargets = (members || []).length ? new Set(this.#rows(
+      `SELECT DISTINCT target_id AS t FROM inquiry_basis WHERE bundle_id IN (${(members || []).map(() => "?").join(",")})`,
+      ...members).map((r) => r.t)) : new Set();
+    for (let i = 0; i < caps.length; i += SELECTION_ID_CHUNK) {
+      const part = caps.slice(i, i + SELECTION_ID_CHUNK);
+      for (const r of this.#rows(`SELECT bundle_id, capture_sha FROM register WHERE capture_sha IN (${part.map(() => "?").join(",")})
+                                  ORDER BY bundle_id, capture_sha`, ...part)) {
+        if (!legTargets.has(r.bundle_id) || !isDocument(r.bundle_id) || cited.has(r.bundle_id)) continue;
+        if (!restingDocs.has(r.bundle_id)) restingDocs.set(r.bundle_id, new Set());
+        restingDocs.get(r.bundle_id).add(r.capture_sha);
+      }
+    }
+    const docs = [...new Set([...edges.map((r) => r.target.trim()), ...restingDocs.keys()].filter(isDocument))];
     const held = new Map();
     const half = Math.floor(SELECTION_ID_CHUNK / 2);
     for (let i = 0; i < docs.length; i += half) {
       const part = docs.slice(i, i + half), qs = part.map(() => "?").join(",");
       for (const r of this.#rows(
-        `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n, MIN(capture_sha) AS one FROM (
-           SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${qs})
+        `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n, MIN(capture_sha) AS one, MAX(whole) AS whole FROM (
+           SELECT bundle_id, capture_sha, whole FROM register WHERE bundle_id IN (${qs})
            UNION ALL
-           SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${qs}))
-         GROUP BY bundle_id`, ...part, ...part)) held.set(r.t, { n: r.n, one: r.one });
+           SELECT bundle_id, capture_sha, 0 AS whole FROM readings WHERE bundle_id IN (${qs}))
+         GROUP BY bundle_id`, ...part, ...part)) held.set(r.t, { n: r.n, one: r.one, whole: Number(r.whole) === 1 });
     }
-    return edges.map((r) => {
+    /* R84: a document holding a capture in parts counts that capture once, by its whole (provenance R73): a part's row is
+       a file of it. Only a bundle with a whole's row is asked again, so the batch above stays one read for the rest. */
+    for (const [t, h] of held) {
+      if (!h.whole) continue;
+      const idents = new Set(this.provenance.capturesOf(t).map((c) => c.capture_sha));
+      for (const r of this.#rows(`SELECT DISTINCT capture_sha FROM readings WHERE bundle_id=?`, t)) idents.add(r.capture_sha);
+      held.set(t, { n: idents.size, one: [...idents].sort()[0] });
+    }
+    /* The findings' documents follow as edges of their own: pinned when the findings name one capture of several. */
+    const found = [...restingDocs].map(([target, shas]) => ({ target,
+      extent_capture: shas.size === 1 && (held.get(target)?.n ?? 0) > 1 ? [...shas][0] : null }));
+    return [...edges, ...found].map((r) => {
       const t = r.target.trim();
       const pin = typeof r.extent_capture === "string" && /^[0-9a-f]{64}$/.test(r.extent_capture.trim())
         ? r.extent_capture.trim() : null;
       if (!isDocument(t)) return { target: t, version: "no_bytes", capture: null };
-      if (pin) return { target: t, version: "pinned", capture: pin };
+      /* K4609: a document's row also names the head the ceremony's evidence signature is over (ratification R4's
+         `expectedSha`, the sha256 of its `bundle.md`), as it stands at this act; a capture's sha is not that head. */
+      const bundle_sha = this.record.head(t)?.bundleSha ?? null;
+      if (pin) return { target: t, version: "pinned", capture: pin, bundle_sha };
       const h = held.get(t);
-      if (!h || !h.n) return { target: t, version: "no_capture", capture: null };
-      return h.n === 1 ? { target: t, version: "only_capture", capture: h.one }
-                       : { target: t, version: "undetermined", capture: null };
+      if (!h || !h.n) return { target: t, version: "no_capture", capture: null, bundle_sha };
+      return h.n === 1 ? { target: t, version: "only_capture", capture: h.one, bundle_sha }
+                       : { target: t, version: "undetermined", capture: null, bundle_sha };
     });
   }
 
@@ -2172,7 +2269,7 @@ export function caseAuthoringOps(c, url, body) {
     /* R1–R18. The BODY carries the authored material (an exclusion list and the roles map are what a query string
        cannot express honestly); `targets`, `caseId`, `project` and `draft` also arrive on the query as the one-line
        form a probe can reach, and `newCase` from either, its string forms spelled out so `newCase=false` means false. */
-    publishcase: () => gathered(c, { ...b,
+    publishcase: () => c.publishAct({ ...b,
       target: q("target") || b.target,
       targets: b.targets || q("targets") || null,
       caseId: q("caseId") || b.caseId || null,
@@ -2180,7 +2277,7 @@ export function caseAuthoringOps(c, url, body) {
       project: q("project") || b.project || null,
       draft: q("draft") || b.draft || null,
       viewer: q("viewer"),
-      author: q("author") }, (a, f) => c.publishCase(a, f)),
+      author: q("author") }),
     /* R32 (N345): the ceremony's read before op=publish; `viewer` and `author` are the stamps, as op=publish's. */
     publishtensions: () => c.tensionsToDisclose({ ...b,
       target: q("target") || b.target,

@@ -3,7 +3,7 @@
    Archives are captured and unpacked by acquisition's real act (`unpack`), so their members are captures of their own. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, enc } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, enc } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { FileSafety, THREAT_REASONS } from "../../../src/file-safety/index.mjs";
 
@@ -28,6 +28,7 @@ async function unpacked(w, entries, { via = "direct", options = {} } = {}) {
   const z = makeZip(entries, options);
   const s = await w.capture(z, { via });
   const u = await w.acq.unpack({ core: w.record, provenance: w.prov }, { archiveSha: s, by: "m1", member: true });
+  w.homeAll();
   return { s, z, u };
 }
 
@@ -85,6 +86,7 @@ test("R6 (K1929 (Q1)): an archive is low only when its source condition holds, i
   assert.deepEqual(codes(await w.fs.threatOf({ captureSha: a.s })), ["archive_member_high"]);
   assert.deepEqual(codes(await w.fs.threatOf({ captureSha: sha(inner) })), ["archive_not_opened", "archive_waiting"]);
   await w.acq.unpack({ core: w.record, provenance: w.prov }, { archiveSha: sha(inner), by: "m1", member: true });
+  w.homeAll();
   const ga = await w.fs.threatOf({ captureSha: a.s });
   assert.deepEqual([ga.threat, ga.reasons, ga.format], ["low", [], "zip"], JSON.stringify(ga.reasons));
   assert.deepEqual(ga.archive, { opened: true, entries: 3, members_low: 3, members_high: 0 });
@@ -108,6 +110,7 @@ test("R6 (K1929 (Q1)): an archive is low only when its source condition holds, i
   const lz = symlinked(makeZip([{ name: "t.txt", data: "target words" }, { name: "ln", data: "t.txt", method: 0 }]), 1);
   const ls = await w.capture(lz);
   await w.acq.unpack({ core: w.record, provenance: w.prov }, { archiveSha: ls, by: "m1", member: true });
+  w.homeAll();
   const gl = await w.fs.threatOf({ captureSha: ls });
   assert.deepEqual(codes(gl), ["archive_link"]);
   /* a member graded high, counted */
@@ -150,6 +153,7 @@ test("R6 (N806, K2333): the source condition is provenance's one definition, R62
   const inner = makeZip([{ name: "deep.txt", data: "deep fetched words" }]);
   const a = await unpacked(w, [{ name: "m.txt", data: "member fetched words" }, { name: "inner.zip", data: inner }]);
   await w.acq.unpack({ core: w.record, provenance: w.prov }, { archiveSha: sha(inner), by: "m1", member: true });
+  w.homeAll();
   assert.deepEqual((await arm(sha("member fetched words"), true)).source, { fetched: true, routes: ["unpacked"], archive: a.s });
   assert.deepEqual((await arm(sha("deep fetched words"), true)).source, { fetched: true, routes: ["unpacked"], archive: sha(inner) });
   const kn = await unpacked(w, [{ name: "k.txt", data: "member of a knock" }], { via: "doorbell" });

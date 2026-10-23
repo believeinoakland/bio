@@ -8,20 +8,22 @@ import { eventsOf } from "../events/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { peopleOf } from "../people/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 import { RECORDED_BY_MODULES } from "./findin.mjs";
 import { say } from "./words.mjs";
 
 export class Marks {
   #recordedBy = [];             // R4: {module, fn, seq}
   #browseMarks = null;          // R11: {module, fn}
-  #order; #host; #entities; #recorders;
+  #order; #host; #entities; #recorders; #provenance;
 
   /** `order` is the modules' total order (`MODULE_ORDER` unless a test hands its own); `host` makes `events`, `standards`,
    *  `money`, `people` and `entities` when first asked unless handed (`recorders`, `entities`). */
-  constructor({ order = null, host = null, entities = undefined, recorders = null } = {}) {
+  constructor({ order = null, host = null, entities = undefined, recorders = null, provenance = undefined } = {}) {
     this.#order = Array.isArray(order) ? order : MODULE_ORDER;
     this.#host = host;
     this.#entities = entities;
+    this.#provenance = provenance;
     this.#recorders = new Map(RECORDED_BY_MODULES.map((m) =>
       [m, recorders && typeof recorders === "object" && recorders[m] !== undefined ? recorders[m] : undefined]));
   }
@@ -85,5 +87,15 @@ export class Marks {
       try { if (this.#host) this.#entities = entitiesOf(this.#host); } catch { this.#entities = null; }
     }
     return this.#entities;
+  }
+
+  /** R19: provenance's marks on a bundle's register rows (its R73: `whole`, and `part_of` on a part's row), the host's own
+   *  instance unless a caller handed one; null when none can be had. */
+  provenanceFor() {
+    if (this.#provenance === undefined) {
+      this.#provenance = null;
+      try { if (this.#host) this.#provenance = provenanceOf(this.#host); } catch { this.#provenance = null; }
+    }
+    return this.#provenance;
   }
 }

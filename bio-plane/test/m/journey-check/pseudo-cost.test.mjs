@@ -51,23 +51,25 @@ test("R30: every string of the body gets the result of trying every pattern", ()
   const whole = new Set(WORD_ROWS.map((r) => r[1]).filter((en) => typeof en === "string" && !/\{[A-Za-z0-9_]+\}/.test(en)));
   const strings = new Set();
   for (const r of JSON.parse(BODY).rows) for (const k of ["text", "en", "fallback"]) strings.add(r[k]);
-  const reaching = [...strings].filter((s) => s.length >= 5 && s.length <= 600 && !s.startsWith("[") && /\S\s+\S/.test(s) && !whole.has(s));
+  const reaching = [...strings].filter((s) => s.length >= 5 && !s.startsWith("[") && /\S\s+\S/.test(s) && !whole.has(s));
   assert.ok(reaching.length > 10000, "the strings that reach the patterns");
   const wrong = reaching.filter((s) => pseudoString(s) !== everyPattern(s));
   assert.deepEqual(wrong.slice(0, 5), []);
 });
 
-test("R30: 300 sampled rows with placeholders, filled with a value, are still made pseudo; control: a string that is not a sentence of the list is left as it was", () => {
-  const withFill = WORD_ROWS.filter((r) => typeof r[1] === "string" && !r[1].startsWith("[") && !/\{[^}]*,/.test(r[1]) && (r[1].match(SIMPLE) || []).length && r[1].replace(SIMPLE, "").trim().length >= 8);
-  assert.ok(withFill.length >= 300, "rows with placeholders");
-  const step = Math.floor(withFill.length / 300);
-  const sample = Array.from({ length: 300 }, (_, i) => withFill[i * step]);
-  for (const [i, r] of sample.entries()) {
-    const sentence = filled(r[1], i);
-    const made = pseudoString(sentence);
-    assert.notEqual(made, sentence, r[0]);
-    assert.deepEqual(escapedIn(made), [], r[0]);
+test("R30: every row of the list that is a sentence, with a value filled into each placeholder, is made pseudo, whatever its length; control: a string that is not a sentence of the list is left as it was", () => {
+  const sentence = (en) => typeof en === "string" && !en.startsWith("[") && !/\{[^}]*,/.test(en) && /\S\s+\S/.test(en)
+    && (!(en.match(SIMPLE) || []).length || en.replace(SIMPLE, "").trim().length >= 8);
+  const rows = WORD_ROWS.filter((r) => sentence(r[1]) && r[1].length >= 5);
+  assert.ok(rows.length > 20000, "every sentence row of the list: " + rows.length);
+  assert.ok(rows.some((r) => filled(r[1], 0).length > 600), "the list holds sentences longer than 600 characters");
+  const unmade = [];
+  for (const [i, r] of rows.entries()) {
+    const text = filled(r[1], i);
+    const made = pseudoString(text);
+    if (made === text || escapedIn(made).length) unmade.push(`${r[0]} (${text.length})`);
   }
+  assert.deepEqual(unmade, [], "rows whose English is drawn as it is");
   assert.equal(pseudoString("Roof repairs at 14 Lakeshore Row"), "Roof repairs at 14 Lakeshore Row");
   assert.equal(pseudoString("A line no list holds at all today"), "A line no list holds at all today");
 });

@@ -1,9 +1,11 @@
 /* op-grades — R48 (T51; DEC-340, U366; K3935; amends R8): THE THREE READS THE DESIGN'S NEW SCREENS ADD, stated absent as reads.
  * `holdsdue` (`action-holds` R19), `templatebyhandle` (`filing-templates` R34) and `rulefields` (`local-facts` R18) write
  * nothing, so they take no rung and no ground: each has its `NON_ACTS` reason, beginning "read: ", and no other grade.
- * `./index.mjs` spreads the table into `NON_ACTS`. This file imports nothing, so the spread closes no cycle. None is an
+ * `./index.mjs` spreads the table into `NON_ACTS`. This file imports only `setup-words` (`word`, as `t34.mjs` does), so the spread closes no cycle. None is an
  * `ACTS` row, so none is in `MACHINE_REFUSALS`, and none takes a `CONSEQUENCE_STATEMENTS` entry or joins `IRREVERSIBLE_WEIGHT`;
  * by R18 `phone` follows the rung and the ground, and a read answers `true`. */
+
+import { localize, word } from "../setup-words/index.mjs";
 
 /* ---- R48: the reads' reasons. Each names what it reads and writes nothing. ---- */
 export const T51_NON_ACTS = {
@@ -38,11 +40,11 @@ export const T51_RUNGS = {
   officeconfirm: "reversible",   // entities R64 · R3: an administrator's confirmation takes back nothing a member said; the mark returns by naming again
 };
 export const T51_RUNG_ABSENT = {
-  scanmirror: { ground: "substrate", is: "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle" },
-  captureseenin: { ground: "observational", is: "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)" },
+  scanmirror: { ground: "substrate", is: localize("file-safety.declared.scanmirror", "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle") },
+  captureseenin: { ground: "observational", is: localize("capture.declared.captureseenin", "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)") },
 };
 export const T51_ACT_NON_ACTS = {
-  scanmirror: "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle",
-  officeconfirm: "office-directed: an administrator confirms an office a member named; clears the mark and records who confirmed it and when, and changes no name, alias or note (entities R64)",
-  captureseenin: "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)",
+  scanmirror: localize("file-safety.declared.scanmirror", "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle"),
+  officeconfirm: word("entities.declared.officeconfirm"),
+  captureseenin: localize("capture.declared.captureseenin", "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)"),
 };

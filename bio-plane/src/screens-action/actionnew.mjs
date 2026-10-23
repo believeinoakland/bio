@@ -7,7 +7,7 @@
    date with where it comes from. "Start the action" sends `actioncreate` with the action's document composed as `request`
    composes its own, and the action opens. The subject is the project. It holds no member-facing English (R19). Every
    function here is self-contained (interface-shell R21 (1)). */
-import { readOnly, kindWord, kindsOf, WRITE_HELP } from "./send-steps.mjs";
+import { readOnly, kindWord, kindsOf, officeLine, WRITE_HELP } from "./send-steps.mjs";
 
 export const actionNew = Object.freeze({
   id: "actionnew",
@@ -31,7 +31,7 @@ export const actionNew = Object.freeze({
   },
 
   parts: {
-    readOnly: readOnly, kindWord: kindWord, kindsOf: kindsOf,
+    readOnly: readOnly, kindWord: kindWord, kindsOf: kindsOf, officeLine: officeLine,
     // R24: the offices a suggestion answered, else none
     officesOf: function (view) { return Array.isArray(view.ui.offices) ? view.ui.offices : []; },
     // R24: a leg's two ways of linking, each worded by its key where the design holds one
@@ -77,7 +77,7 @@ export const actionNew = Object.freeze({
       const suggest = leg ? cs.act("addresseesuggest", { data: { subject: leg } }) : "";
       const officeChoice = offices.length ? cs.choice("an-office", "screen.actionnew.to.who", [{ value: "", text: "" }].concat(offices.map(function (o, i) {
         const a = o.addressee || {};
-        return { value: String(i), text: [a.role, a.body].filter(Boolean).join(", ") };
+        return { value: String(i), text: P.officeLine(a) };
       }))) : "";
       const whoSec = cs.sec("screen.actionnew.to", to + (named
         ? cs.field("an-who", "screen.actionnew.to.who") + officeChoice + (suggest ? '<div class="mk-acts">' + suggest + "</div>" : "")

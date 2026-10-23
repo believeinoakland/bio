@@ -50,3 +50,13 @@ test("R75 R73 (C5a) L: on workerd the stage record is written to the object's st
   assert.equal(a.result.stageTimes.running, "read");
   assert.equal((await (await (await stub()).fetch("http://do/acquiretimings?trace=T-none")).json()).result.stageTimes, null);
 });
+
+test("R77 L: on workerd the ledger of the earlier shape is carried over by `ALTER TABLE ... RENAME` and copy, re-armed, twice over changing nothing, and the new kinds register with their detail", async () => {
+  const r = await ask("migrate-old");
+  assert.equal(r.rows.length, 1);
+  assert.deepEqual([r.rows[0].kind, r.rows[0].attempts, r.rows[0].final_why, r.rows[0].detail], ["reading", 0, null, "{}"]);
+  assert.ok(r.rows[0].due_at < Date.now() + 1000, "due now");
+  assert.equal(r.old, 0);
+  assert.deepEqual(r.owed, { ok: true });
+  assert.deepEqual(r.list.map((e) => [e.kind, e.state, e.detail]), [["reading", "owed", {}], ["ocr", "owed", { next_page: 25 }]]);
+});

@@ -37,8 +37,8 @@
  * line: the row is kept whole as `line`, never paired by guess, R2). */
 import { CONFIDENCE, CONTRACT, entity, diffEntities, alsoSatisfies,
          event, worstSignificance, isMeaningful, bySeverity } from "../docprofile/registry.mjs";
-import { nameSpans, isName, leadingName, withoutContacts, titlePatterns, titleSpans, removeSpans,
-         rosterWordPatterns, selfNamingLines, namedAs, linesOf, statedDate, datesIn, isUnitLine, UNIT_WORDS, EMAIL } from "./lines.mjs";
+import { hasNameSpan, isName, leadingName, withoutContacts, titlePatterns, titleSpans, removeSpans,
+         rosterWordPatterns, selfNamingLines, selfNamingLine, namedAs, eachLine, statedDate, datesIn, isUnitLine, UNIT_WORDS, EMAIL } from "./lines.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The fewest lines that carry a name with more beside it for the rows to be the body. MEASURED with the
@@ -65,8 +65,8 @@ const SPLIT_NAMES = /\s*(?:,|&|\/|\band\b|;)\s*/;
 
 /** One line as a roster reads it: rows (possibly several, for `Chair: A & B`), and whether the line
  *  carries a name with more beside it (the floor's unit). Lines carrying no name give no row. */
-export function readLine(lineText, titles) {
-  const { text } = withoutContacts(lineText);
+export function readLine(lineText, titles, bare = withoutContacts(lineText)) {
+  const { text } = bare;
   const t = text.replace(ROW_NUMBER, "").trim();
   if (!t) return { rows: [], paired: false, named: false };
   if (TITLE_CASE_PROSE.test(t)) return { rows: [], paired: false, named: false };
@@ -100,7 +100,7 @@ export function readLine(lineText, titles) {
     const contiguous = ts.every((h, i) => i === 0 || t.slice(ts[i - 1].index + ts[i - 1].text.length, h.index).trim() === "");
     if (isName(rest) && contiguous && (lead || tail))
       return { rows: [{ name: rest, title: ts.map((h) => h.text).join(" ").trim() }], paired: true, named: true };
-    if (nameSpans(rest).length)
+    if (hasNameSpan(rest))
       return { rows: [{ line: t, why: localize("roster-reader.staff-roster.the_line_prints_staff", "the line prints staff titles and names that do not divide into one name beside its title, so it is not paired by guess") }],
                paired: true, named: true };
     /* A post with no name on its line ("Electrician Leader") is a box, not a row. */
@@ -109,31 +109,36 @@ export function readLine(lineText, titles) {
   if (!ts.length && isName(t)) return { rows: [{ name: t }], paired: false, named: true };
   /* A heading that ends in a kind of unit ("Oakland Workforce Development Board") names the
      organisation or one of its parts, not a person. */
-  if (UNIT_WORDS.has((t.split(" ").pop() || "").replace(/[^\p{L}]/gu, "").toLowerCase()))
+  if (UNIT_WORDS.has(t.slice(t.lastIndexOf(" ") + 1).replace(/[^\p{L}]/gu, "").toLowerCase()))
     return { rows: [], paired: false, named: false };
   if (leadingName(t))
     return { rows: [{ line: t, why: localize("roster-reader.staff-roster.the_line_opens_with_a", "the line opens with a name but what follows it is not one of the view's staff titles, so where the name ends is not divided by guess") }],
              paired: true, named: true };
-  return { rows: [], paired: false, named: nameSpans(t).length > 0 };
+  return { rows: [], paired: false, named: hasNameSpan(t) };
 }
 
-/** The rows of a text, each with the offset of its line, and the counts the floor reads. */
-function readRows(raw, ctx) {
+/** The rows of a text, each with the offset of its line, and the counts the floor reads. With `keep` false
+ *  (`detect`), no line and no row is held: the counts and the document's self-naming lines are all it keeps, so
+ *  the reading of a 20 MB text holds one line at a time (R1). */
+function readRows(raw, ctx, keep = true) {
   const titles = titlePatterns(ctx);
-  const lines = linesOf(raw);
-  const rows = [];
-  let paired = 0, named = 0, contactLines = 0, boxes = 0;
-  for (const x of lines) {
+  const selfPatterns = keep ? [] : rosterWordPatterns(ctx);
+  const lines = [], rows = [], self = [];
+  let count = 0, paired = 0, named = 0, contactLines = 0, boxes = 0;
+  eachLine(raw, (x) => {
+    count++;
+    if (keep) lines.push(x);
+    else { const s = selfNamingLine(x, selfPatterns); if (s) self.push(s); }
     const bare = withoutContacts(x.text);
     if (bare.removed) contactLines++;
-    const r = readLine(x.text, titles);
+    const r = readLine(x.text, titles, bare);
     if (r.paired) paired++;
     if (r.named) named++;
     /* A line that is a post or a unit with no name on it: a chart's box, not a roster's row. */
     else if (titleSpans(titles, bare.text).length || isUnitLine(bare.text)) boxes++;
-    for (const row of r.rows) rows.push({ ...row, offset: x.offset });
-  }
-  return { lines, rows, paired, named, contactLines, boxes };
+    if (keep) for (const row of r.rows) rows.push({ ...row, offset: x.offset });
+  });
+  return { lines, count, rows, self, paired, named, contactLines, boxes };
 }
 
 function directoryShape(raw) {
@@ -187,8 +192,8 @@ export default {
 
   detect(ctx) {
     const raw = String((ctx && ctx.text) || "");
-    const { lines, paired, named, contactLines, boxes } = readRows(raw, ctx);
-    if (!lines.length) return no(localize("roster-reader.staff-roster.no_text_was_read_so", "no text was read, so there are no rows to recognise"));
+    const { count, self: selfLines, paired, named, contactLines, boxes } = readRows(raw, ctx, false);
+    if (!count) return no(localize("roster-reader.staff-roster.no_text_was_read_so", "no text was read, so there are no rows to recognise"));
     /* (1) ROWS ARE THE BODY: the floor. */
     if (paired < ROSTER_FLOOR)
       return no(localize("roster-reader.staff-roster.paired_line_s_carry_a", "{paired} line(s) carry a name with more beside it, below the floor of {ROSTER_FLOOR}: the rows are not the body of this document", { paired: String(paired), ROSTER_FLOOR: String(ROSTER_FLOOR) }));
@@ -203,16 +208,16 @@ export default {
     if (dates >= Math.max(3, paired / 2))
       return no(localize("roster-reader.staff-roster.dates_date_s_beside_paired", "{dates} date(s) beside {paired} row(s): the rows are dated events that name people, not a roster", { dates: String(dates), paired: String(paired) }));
     /* (1) ROWS ARE THE BODY: the share, and posts printed apart from names are a chart's boxes. */
-    const share = named / lines.length;
+    const share = named / count;
     if (share < ROSTER_SHARE)
-      return no(localize("roster-reader.staff-roster.named_of_length_lines_carry", "{named} of {length} lines carry a name ({round}%), below {round_2}%: names are mentioned in this document, not listed", { named: String(named), length: String(lines.length), round: String(Math.round(share * 100)), round_2: String(Math.round(ROSTER_SHARE * 100)) }));
+      return no(localize("roster-reader.staff-roster.named_of_length_lines_carry", "{named} of {length} lines carry a name ({round}%), below {round_2}%: names are mentioned in this document, not listed", { named: String(named), length: String(count), round: String(Math.round(share * 100)), round_2: String(Math.round(ROSTER_SHARE * 100)) }));
     if (boxes >= paired)
       return no(localize("roster-reader.staff-roster.boxes_line_s_print_a", "{boxes} line(s) print a post or unit with no name beside it, against {paired} row(s): posts laid out apart from their holders are a chart's boxes, not a roster's rows", { boxes: String(boxes), paired: String(paired) }));
-    const self = namedAs(selfNamingLines(lines, rosterWordPatterns(ctx)), "roster");
+    const self = namedAs(selfLines, "roster");
     if (self.only_other)
       return no(localize("roster-reader.staff-roster.it_names_itself_with_the_views", "it names itself, with the view's words, as a chart and not as a roster"));
     const signals = [localize("roster-reader.staff-roster.paired_line_s_carry_a_2", "{paired} line(s) carry a name with a title, unit or organisation beside it", { paired: String(paired) }),
-                     localize("roster-reader.staff-roster.named_of_length_lines_carry_2", "{named} of {length} lines carry a name ({round}%)", { named: String(named), length: String(lines.length), round: String(Math.round(share * 100)) })];
+                     localize("roster-reader.staff-roster.named_of_length_lines_carry_2", "{named} of {length} lines carry a name ({round}%)", { named: String(named), length: String(count), round: String(Math.round(share * 100)) })];
     if (self.as.length) {
       signals.push(localize("roster-reader.staff-roster.it_names_itself_a_roster", "it names itself a roster (\"{text}\")", { text: String(self.as[0].text.slice(0, 80)) }));
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };

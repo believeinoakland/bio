@@ -60,7 +60,7 @@ export function storage() {
 /* publication's read contract (R3, R5): only the columns this module reads, and a table the dry run writes. */
 const PUBLICATION_DDL = `
 CREATE TABLE cases (case_id TEXT PRIMARY KEY, project_id TEXT);
-CREATE TABLE published_cases (case_id TEXT NOT NULL, edition INTEGER NOT NULL, scope TEXT, PRIMARY KEY (case_id, edition));
+CREATE TABLE published_cases (case_id TEXT NOT NULL, edition INTEGER NOT NULL, scope TEXT, ratified_at TEXT, PRIMARY KEY (case_id, edition));
 CREATE TABLE published_case_members (case_id TEXT NOT NULL, edition INTEGER NOT NULL, ord INTEGER NOT NULL, bundle_id TEXT NOT NULL,
                                      version_sha TEXT, role TEXT, PRIMARY KEY (case_id, edition, bundle_id));
 CREATE TABLE case_documents (case_id TEXT NOT NULL, edition INTEGER NOT NULL, text TEXT, doc_sha TEXT, draft_id TEXT,
@@ -236,7 +236,7 @@ export function world({ now = NOW, injectClock = true, localFacts, combine = () 
     publishedCase(caseId, project, editions = 1, { scope = null, members = [] } = {}) {
       st.sql.exec(`INSERT OR IGNORE INTO cases (case_id, project_id) VALUES (?, ?)`, caseId, project);
       for (let e = 1; e <= editions; e++) {
-        st.sql.exec(`INSERT OR IGNORE INTO published_cases (case_id, edition, scope) VALUES (?, ?, ?)`, caseId, e, scope);
+        st.sql.exec(`INSERT OR IGNORE INTO published_cases (case_id, edition, scope, ratified_at) VALUES (?, ?, ?, ?)`, caseId, e, scope, clock.now);
         members.forEach(([id, role], i) => st.sql.exec(`INSERT OR IGNORE INTO published_case_members
           (case_id, edition, ord, bundle_id, role) VALUES (?, ?, ?, ?, ?)`, caseId, e, i + 1, id, role ?? null));
       }

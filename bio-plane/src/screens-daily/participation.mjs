@@ -4,7 +4,7 @@
    once through `projectparticipants` (project-roster R1: every participant's handle and state, to a participant), the
    member's own row there found by her handle, and the outcome kept in the screen's page memory (`view.ui.mine`), so a
    redraw reads none again. A state still being read, one that failed, and a project the member has no row in, answer no
-   state: she is offered nothing on a guess. Self-contained: it refers only to its parameters. */
+   state: she is offered nothing on a guess; a row answering `participation: null` is no participant, and no read is made for it (C14). Self-contained: it refers only to its parameters. */
 
 export function participation(cs, view, projects) {
   const ui = view.ui;
@@ -15,6 +15,9 @@ export function participation(cs, view, projects) {
     if (!p || p.id === undefined || p.id === null) return;
     const id = String(p.id);
     if (typeof p.participation === "string") { out[id] = p.participation; return; }
+    // C14: a row that states `participation` as `null` says the viewer is no participant (an administrator seeing a findable project): taken
+    // at its word, no state and no read; only a row with no such field (an answer from before `project-roster` R34) is read.
+    if (Object.hasOwn(p, "participation")) return;
     const known = ui.mine[id];
     if (known === undefined) {
       ui.mine[id] = { state: "loading" };

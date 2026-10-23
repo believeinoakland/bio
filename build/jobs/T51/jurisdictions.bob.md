@@ -1,6 +1,6 @@
 # BOB to jurisdictions (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -77,3 +77,15 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B5 · ANSWER · re J6
 
 ANSWER to J6 (BOB #244; K4438). (b): no profile template (approving a records-request text is a review that is Bob's, K921, R45, and not this round's); screens-action carries the cure. Yes: a first federal request is 5 U.S.C. § 552(a)(6)(A)(i), `foia_response`; the plan's "(A)(ii)" was the walker's pick of the appeal rule, which your finding explains; screens-action R9 is corrected. Your R96 (`response` on a records law) and R97 (`label` on a deadline) are written as you proposed on tranche/T51 (merge them); build them. Your notes for screens-action are in its START.
+
+## B6 · START
+
+START · JURISDICTIONS #17 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #246 is depth 1; fix round 4, C8 (found by screens-investigate); K4477)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/jurisdictions tranche/T51 && git branch -m job/T51/jurisdictions stale/jurisdictions-local && git checkout -b job/T51/jurisdictions origin/job/T51/jurisdictions`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module jurisdictions`; record `build/jobs/T51/jurisdictions.md`. Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). Always `node --test --test-force-exit`. You are the module job (P8, mechanics §6) for `jurisdictions`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first. Read in full (never scan; a document you cannot read whole: BLOCKED, cause `reading`, K3678) your requirements, the lines named below, and the code they name. Fix round 4 rules (`build/plan/fix-round-4-T51.md` §0): the failing-first test is seen red in your record, then green; no "not met" or deferred line at COMPLETE without naming the smallest thing you need; declare every census op you own. Wording waits for T52 (K4269): a new sentence is `localize(id, en)` with a plain stand-in, never a raw key. Bob's focus: an alpha release deployed as efficiently as possible: do what the cause needs, nothing more.
+
+Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio jurisdictions tranche/T51 job/T51/jurisdictions`. COMPLETE: what changed (file:line), the failing-first test red then green, the measurements, suite counts, the `Size` line.
+
+**Your entry: the first profile's `fiscal_year` (R49), data only.** SCREENS-INVESTIGATE #14's seam test on the real plane with `profilesset oakland-alameda` (its COMPLETE J25 on `job/T51/screens-investigate`) found that `jurisdictions/profiles/oakland-alameda.mjs` holds `fiscal_year_forms` but no `fiscal_year` (R49), so money cannot map a fiscal key: a member recording a figure "for FY2025-26" from Oakland's budget, as the walker did, is refused. Add `fiscal_year` for the profile's bodies that keep one (the City of Oakland and Alameda County at least), each `{body, start, named_by, label, status: "researched", basis}`, with `basis` a dated source you read live (the body's own budget page or adopted budget naming its fiscal year's first day and how it writes it, e.g. "FY 2025-26"); `label` to match how the body names its own years (consistent with the profile's `fiscal_year_forms`). Never guess a body's year: an entry you cannot source is left out and said so. Failing-first test: `recordfact` (money) with `{fiscal: "FY2025-26", body: <the City's counterparty body>}` on the first profile resolves the period July 1 2025 to June 30 2026 (red today, `MONEY_BAD_PERIOD`), through your profile's `fiscal_year` at your interface (`combine`/the profile's validation), and money's test of the same through `impact.mjs`'s users. Users: money, calculations, following, screens-investigate. Small job.

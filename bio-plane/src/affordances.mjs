@@ -137,7 +137,7 @@ export { ACT_HELP, ACT_HELP_KEYS, BROWSER_ACTS } from "./affordances/act-help.mj
 import { RUNG_LADDER, IRREVERSIBLE_CORRECTION_KEY, RUNG_ABSENCE_GROUNDS, CONSEQUENCE_STATEMENTS, LARGER_SCREEN_ACTS,
          IRREVERSIBLE_WEIGHT, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, NON_ACTS, phoneOf, OP_ALIASES } from "./op-grades/index.mjs";
 /* R39 (T33-85): the new closed vocabularies with the members' words, read at the call from the composed owners. */
-import { composedVocabularies } from "./affordances/words.mjs";
+import { composedVocabularies, EVENTS_VOCABULARY_KEYS } from "./affordances/words.mjs";
 /* R62, R64 (K3366; DEC-253): this module holds no member-facing English; every label, prompt and sentence is a key read through `word`. */
 import { word, hasWord } from "./setup-words/index.mjs";
 
@@ -606,7 +606,16 @@ export function vocabulariesFor(kinds, profile = null) {
     profiled.action_kind_labels = Object.fromEntries(Object.entries(p.action_kind_labels)
       .filter(([, label]) => typeof label === "string" && label.trim().length > 0));
   /* R39: T33's vocabularies, each `{values, words}`, present only where its owner is composed (./affordances/words.mjs). */
-  return { ...VOCABULARIES, action_kind: ok ? kinds : PRODUCT_KINDS, ...profiled, ...composedVocabularies() };
+  /* R39 (E14): `events` registers in the Durable Object only, so an isolate that has not started it composes none of its
+     five; the store's answer carries them, composed where the owner is registered, and fills what this isolate lacks. */
+  const composed = composedVocabularies();
+  const carried = {};
+  const fromStore = p.events_vocabularies && typeof p.events_vocabularies === "object" ? p.events_vocabularies : {};
+  for (const k of EVENTS_VOCABULARY_KEYS) {
+    const v = fromStore[k];
+    if (!composed[k] && v && Array.isArray(v.values) && v.words && typeof v.words === "object") carried[k] = v;
+  }
+  return { ...VOCABULARIES, action_kind: ok ? kinds : PRODUCT_KINDS, ...profiled, ...carried, ...composed };
 }
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the

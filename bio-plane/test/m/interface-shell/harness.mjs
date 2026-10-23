@@ -81,11 +81,14 @@ const undeclared = new Map();
 /* the ops that went out with no owner declaration, counted over the process (R104: `declared N of M ops`) */
 export const undeclaredOps = () => new Map(undeclared);
 
+/* a plane's `queue` answer for a list of items: the count (R93) when asked for it, else the list, as the queue answers both */
+export const queueOf = (items) => (req) => (req.query && req.query.count ? ok({ ok: true, member: "mai", count: items.length }) : ok({ items }));
 export const FRAME = Object.freeze({
   whoami: ok(MEMBER),
   interfacewords: ok({ ok: true, language: null, words: [] }),
   groupidentity: ok({ ok: true, group: "river-town", display_name: "River Town" }),
-  queue: ok({ items: [{ id: "a", class: "OBLIGATION" }, { id: "b", class: "FINDING" }, { id: "c", class: "OBLIGATION" }] }),
+  /* queue R93: the frame asks for the count alone (`count=true`) and a screen for the list */
+  queue: (req) => (req.query && req.query.count ? ok({ ok: true, member: "mai", count: 3 }) : ok({ items: [{ id: "a", class: "OBLIGATION" }, { id: "b", class: "FINDING" }, { id: "c", class: "OBLIGATION" }] })),
   infolevel: ok({ level: "prompt", set_at: null, asked_at: null }),
   assistantstate: ok({ on: false }),
   accountreference: ok({ held: false }),
@@ -156,7 +159,7 @@ export function fakeIndexedDB(dbs = new Map()) {
  * Answers `{doc, win, requests, root, clock, settle, click, fire, back, assigned, store, local, byOp, location, ...}`:
  * `store` is the tab's sessionStorage, `local` its localStorage.
  */
-export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false, version = null, declared = collectOwnerRows() } = {}) {
+export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, tabStore = null, tabThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false, version = null, declared = collectOwnerRows() } = {}) {
   const options = { ...(guide ? { guide } : {}), ...(testInstance ? { testInstance } : {}), ...(version ? { version } : {}) };
   html = html || served(interfacePage(screens, options));
   const doc = documentOf(html);
@@ -166,7 +169,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     const u = new URL(url, "https://group.example");
     /* R92: the version poll is a plain-text address of its own, not an op */
     const op = u.pathname === "/version" ? "version" : u.searchParams.get("op");
-    const req = { url: String(url), op, query: Object.fromEntries(u.searchParams), init, headers: { ...(init.headers || {}) },
+    const req = { url: String(url), op, at: performance.now(), query: Object.fromEntries(u.searchParams), init, headers: { ...(init.headers || {}) },
       body: init.body === undefined ? undefined : typeof init.body === "string" ? safeJson(init.body) : init.body, method: init.method || "GET" };
     /* R92: the version poll is a plain-text address of its own, no op: kept apart from `requests`, which are the op door's */
     (op === "version" ? polls : requests).push(req);
@@ -205,7 +208,8 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     async tick(ms) { const end = now + ms; for (;;) { const due = timers.filter((t) => t.f && t.at <= end).sort((a, b) => a.at - b.at)[0]; if (!due) break; now = due.at; const f = due.f; due.f = null; f(); await settle(5); } now = end; },
   };
   const assigned = [];
-  const store = new Map();
+  /* `tabStore` (a Map, from an earlier page's `store`) is the same tab's sessionStorage carried to a page load that follows; `tabThrows` a sessionStorage that denies every use (G12b) */
+  const store = tabStore || new Map();
   const localMap = group ? group.local : new Map();
   for (const [k, v] of Object.entries(local)) localMap.set(k, v);
   if (session) localMap.set(STORE_KEY, JSON.stringify(session));
@@ -219,7 +223,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
   const win = {
     document: doc, fetch, location,
     history: { pushState: (s, t, u) => go(u), replaceState: (s, t, u) => go(u) },
-    sessionStorage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) },
+    sessionStorage: { getItem: (k) => { if (tabThrows) throw new Error("denied"); return store.get(k) ?? null; }, setItem: (k, v) => { if (tabThrows) throw new Error("denied"); store.set(k, String(v)); }, removeItem: (k) => { if (tabThrows) throw new Error("denied"); store.delete(k); } },
     localStorage: {
       getItem: (k) => { if (throwsFor(k)) throw new Error("denied"); return localMap.get(k) ?? null; },
       setItem: (k, v) => { if (throwsFor(k)) throw new Error("denied"); localMap.set(k, String(v)); tell(k); },

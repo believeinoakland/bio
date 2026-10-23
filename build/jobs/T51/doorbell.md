@@ -1,6 +1,6 @@
 # doorbell (T51)
 
-**Status** · session_012xGAhuEiWYxdWHqLzyKcUo · depth 2 · COMPLETE · handled B2
+**Status** · session_01SJ3MSM2hnThczxNQgrgj8g · depth 2 · COMPLETE · handled B7
 
 ## Completion (T51-182, the words pass; session_01C6MLP8YoCGd3BrWthJxfJ5)
 
@@ -81,3 +81,28 @@ Size (session_012xGAhuEiWYxdWHqLzyKcUo): test runs 8, module lines 1182
 ## J4 · COMPLETE
 
 COMPLETE (fix round 3, wave 1, B4). C28: knocksof now answers file_name and media_type (inboxlist and inboxget already did); the name is held in doorbell's inbox row, nothing outside. Small 1: inboxlist declared in DECLARED_OPS where routed. Tests seen failing first, with controls: knock-name.test.mjs (R27 R15) and declared-ops.test.mjs (R26). Doorbell 88/88; sources, op-declarations, op-grades, test-support green; plane and store-door each one red (R24 words, groupdescriptiondraft) also on the tranche tip. format has one red (rulings.md:4346, K4349) on the tip; architecture, coverage 27/27, words, ownership 0. Proposed lines: R27 amended (knocksOf rows answer both), R26 gains inboxlist. For BOB (P9): the alias half of Small 1 is op-declarations' and control-plane's: OP_ALIASES needs inbox -> inboxlist and the hand row renamed; until then both are declared and the alias answers. Safe view needs a requirement, file-safety in uses, the op declared and routed, and an intake door (record). Record: build/jobs/T51/doorbell.md.
+
+## Round 5 (E5), DOORBELL #7 · session_01SJ3MSM2hnThczxNQgrgj8g
+
+Read whole: `fix-round-5-T51.md`, `build/requirements/doorbell.md`, `src/doorbell/index.mjs`; `fix-round-5-step0.md` does not exist yet (none of my entries waits on it).
+
+**Root cause** (`src/doorbell/index.mjs:652`): `profileOf({... ct: null ...})`; the pull ignores the knock's stored `media_type` and `file_name` (columns written at :463, read at :502), so `profile.profiled_from_text` is false for a `text/plain` knock and the reading states "not read as text".
+**Why the tests missed it:** `knock-origin` and the control-plane F6 case pull a probe type and a PDF; no test pulls plain text.
+**Failing-first** (`test/m/doorbell/knock-text.test.mjs`, R13): the walker's case (273 bytes of text, `knock-b.txt`, `text/plain`) and the `.TXT`/`.md` no-type case are red now (`false !== true`); the NUL, not-UTF-8, `application/pdf` and no-name-no-type controls pass today and must stay green.
+**Provider not merged:** the fix calls acquisition's `textTypeOf({bytes, type, name})` (plan section 3, merge 2). It is not on `tranche/T51` at 7115408d02 (`git grep textTypeOf` finds nothing). The test is written; the code waits for the merge (no copy of the rule is made here).
+
+## J5 · QUESTION
+
+E5 is ready except for its provider. My failing-first test (test/m/doorbell/knock-text.test.mjs, R13) is red on the walker's case: root cause src/doorbell/index.mjs:652 (ct: null; the knock's stored media_type and file_name are ignored). The fix is one call to acquisition's textTypeOf({bytes, type, name}), which the plan puts at merge 2 (before me), but tranche/T51 at 7115408d02 has no textTypeOf (git grep finds none; acquisition's round-5 job is not among the six started). Smallest thing I need: acquisition's textTypeOf on tranche/T51, with the signature the plan names; ring me when it is merged and I will merge tranche/T51 and finish. I will not copy the rule. If you would rather I wait on nothing, say so and I will add the call behind your chosen signature.
+
+**Done (E5).** Merged `tranche/T51` (acquisition's `textTypeOf` is on it). `src/doorbell/index.mjs:18` imports `textTypeOf`; `:652-655` `#pull` computes `ct = textTypeOf({bytes, type: row.media_type, name: row.file_name})` and hands it to `profileOf` (was `ct: null`). No copy of the rule.
+**Red then green:** `knock-text.test.mjs` R13 cases 1 and 2 red before (`false !== true`, recorded above), green after; controls (NUL, not UTF-8, `application/pdf` over text, no name and no type) green before and after. New data only: a knock pulled before this keeps its stored profile.
+**Suites:** `node --test --test-force-exit bio-plane/test/m/doorbell/`: 92 of 92 pass. `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 176 (doorbell only), affected test files 1.
+**Checks:** `checks/run.mjs`: format, architecture, coverage (6610 of 6610), channels, words (inline 0, plain 0, testcopy 0, missingkey 0) 0 failures; ownership 0 failures.
+**Proposed requirement line (BOB writes):** R13 add: "A pulled knock is profiled with the text type acquisition's `textTypeOf` answers for its bytes, its stated media type and file name (the upload's rule, acquisition R102); a knock whose bytes are not text, or whose stated type is not a text type, is profiled as before. New data only."
+**Through the door** (`op=knock`, `inboxpull`, `op=reading`) is control-plane's seam test.
+Size (session_01SJ3MSM2hnThczxNQgrgj8g): test runs 4, module lines 1185
+
+## J6 · COMPLETE
+
+E5 done. src/doorbell/index.mjs:18 imports acquisition's textTypeOf; #pull (:652-655) passes the knock's media_type and file_name through it into profileOf (was ct: null). Failing-first knock-text.test.mjs (R13): walker's case and the .txt/.md no-type case red before, green after; controls (NUL, not UTF-8, application/pdf over text, no name/type) green throughout. Doorbell suite 92/92; impact: doorbell only; checks/run.mjs and ownership 0 failures, words count not up. New data only. Proposed R13 line is in my record (BOB writes). Through-the-door seam test is control-plane's. Size (session_01SJ3MSM2hnThczxNQgrgj8g): test runs 4, module lines 1155.

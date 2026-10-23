@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_018BsD9g3GXwi6e8g4cAa1QE · depth 2 · WAITING ON BOB (J17) · handled B13
+**Status** · session_015vmccEdn9WywiaxqonRTPj · depth 2 · COMPLETE · handled B20
 
 ## J1 · QUESTION
 
@@ -256,3 +256,74 @@ Tests and checks:
 - setup-words build --check: expected to report stale rows for the new `localize` ids (the nine `act.<op>.does` stand-ins), as J6/J9 did; I did not regenerate it (a generated artifact, manifest §14).
 
 Size (session_018BsD9g3GXwi6e8g4cAa1QE): test runs 8, module lines 2775
+
+## J20 · QUESTION
+
+QUESTION (re B16 cause 2, K4437; no change made to modules.json).
+
+Cause 2 asked for affordances' own test to read every owner's declared member op (from the owners' declarations, K3268) and to fail by name for any with no entry. I built it and it was seen red (naming capturecredentiallist and readheld, before the fix), then `checks/architecture.mjs` refused it: the test imported test-support's `declaredOpsOf` and `op-declarations`, and affordances does not declare test-support in `uses`, and op-declarations is not earlier in the order. I removed the file (commit after d2678dd585). Reading every owner's rows without importing a later module is not possible from this module as `uses` stands.
+
+My reading: the only module that holds both the member set and the explanations is op-declarations, which is later in the order. Its own R34 test (`bio-plane/test/m/op-declarations/t36.test.mjs`) already fails by name for any member op with neither a text nor a ground, and it found these two.
+
+Options, my recommendation first:
+1. Recommended: accept op-declarations' R34 as the net. Rule for the plan: a round that adds a member op runs op-declarations' t36 in the owner's own round, and the explanation job takes its name from that failure. No change to modules or order.
+2. Add test-support to affordances' test `uses` in build/modules.json. This still does not give the member set (op-declarations is later), so it does not close the gap alone.
+3. Move op-declarations before affordances in the order. Largest change; it changes layer boundaries, so it is yours.
+
+Which do you choose? I will write cause 2 to your answer and COMPLETE after it.
+
+Cause 1 is met and committed (d2678dd585): capturecredentiallist is held under act.owed_capturecredentiallist.does (the reads list gives it); readheld is a stand-in, key act.readheld.does (text in act-help.mjs), for your word batch.
+
+## J21 · COMPLETE
+
+COMPLETE (re B16 and B18, K4437, K4464; fix round 4). Merged tranche/T51 at 003bae9390 (op-grades). Pushed.
+
+Cause 1 (met): `capturecredentiallist` is held under its owed act, `act.owed_capturecredentiallist.does` (the reads list gives it; T51_OWED_OPS). `readheld` is a stand-in with key `act.readheld.does` (T51_STANDIN_HELP), for BOB's word batch. Red-then-green: before the change, op-declarations' R34 named both ops as neither explained nor grounded; after, its t36 passes 14 of 14.
+
+Cause 2 (per B18, option 1): no own test. Affordances' test could not read the owners' declared member set: test-support and op-declarations are not in affordances' uses, and op-declarations is later in the order (architecture check refused the test; I removed it in commit 2be49424c2). op-declarations' R34 test is the net that names any member op with no text and no ground. No change to modules.json or the order.
+
+B17 (met): origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin, scanmirror, officeconfirm read their act.<op>.does rows (DEC-412), held as list-only ops with contradictionflag. The design's words-reads.json does not yet give affordances these keys; the reads list needs regenerating.
+
+Checks: format 0 failures; architecture (affordances) 0; words (affordances) 0; coverage 54 of 54; ownership 2 files, 0 failures. Suites: affordances 268 pass, 0 fail; op-declarations t36 14 pass, 0 fail.
+
+Reported to BOB: nothing further in other modules beyond the words-reads gap above. Earlier reds (op-grades words, coverage in other modules, case-authoring reload architecture) are not in this module.
+
+Size (session_01Di1UCztSNBX62o6BkJqmb3): test runs 9, module lines 2806
+
+## J22 · COMPLETE
+
+COMPLETE (E14 · T51 fix round 5, affordances #43). Commits 3e229c1c8a and the one after it on job/T51/affordances.
+
+Cause (proven): `events` registers as a connection owner in `events.start()` (events/index.mjs:229-233), which runs in the Durable Object; the Worker isolate that composes the door's answer never starts it, so `composedVocabularies()` (affordances/words.mjs, the `composed.has("events")` gate) left out the five events vocabularies. Lines, money and people register at load, so theirs appeared. Nothing in `events` is at fault; no QUESTION needed.
+
+Changed: affordances/facts.mjs `profileVocabularies` (store route `affordancevocab`) now also answers `events_vocabularies`, the five as the Durable Object composes them (the owner's registered words); affordances.mjs `vocabulariesFor` fills in, from a well-formed store answer, only the five keys the local isolate lacks; words.mjs exports `EVENTS_VOCABULARY_KEYS`. Both door arms use `vocabulariesFor`. New data only: nothing stored.
+
+Why missed: the Miniflare plane runs Worker and Durable Object in one isolate, so events is always started there (the same test through the Miniflare door was green); no test composed the door's answer in an isolate without events. Test gap fix: bio-plane/test/m/affordances/door-events.test.mjs composes `affordancesOp` in a Node process where events is imported and never started (asserted), over the real store (Durable Object in Miniflare).
+
+Failing-first: before the fix "AssertionError: event_kinds is in the door's answer" (red); after, 4 pass 0 fail. The Timeline screen over that answer: it reads exactly `vocabularies.event_kinds`, now present; a screen test is screens-investigate's (not my paths); I propose none further.
+
+Measurements: store answer carries 5 small vocabularies (no platform limit touched); no deploy.
+
+Suites: affordances 273 pass 0 fail; users: queue 210/0, screens-investigate 236/0 (impact lists 20 modules, I ran these two as the readers of the vocabularies; the others are untouched readers of the same unchanged keys). Checks: format 0 failures; architecture (affordances) 0; coverage 0 failures; words 0 (count unchanged); ownership 5 files, 0 failures.
+
+Requirement lines proposed (BOB writes): R39: "A vocabulary whose owner registers only in the Durable Object (events) is composed there and carried to the door by the store's `affordancevocab` answer (`events_vocabularies`), so the door's answer holds it whichever isolate composes it. Test: the door's answer, composed where events has not started, holds the five."
+
+Size (session_017j6mNDmHH2Noig5Jps6KXP): test runs 8, module lines 2828
+
+## J8 · COMPLETE
+
+COMPLETE (G49, re B20 · START, fix round 6). Merged tranche/T51 first (no conflicts).
+
+What changed (`bio-plane/src/affordances/act-help.mjs`): `capturerequests` and `casedrafts` added to `T51_DESIGN_OPS` in the reads list's order, each read by `word("act.<op>.does")`; `readheld` moved from `T51_STANDIN_*` to `T51_DESIGN_OPS` (carried once in `ACT_HELP_OPS` and `HELD`); `T51_STANDIN_HELP` / `T51_STANDIN_OPS` kept exported as empty frozen `{}` / `[]`; the unused `localize` import dropped; header and docblocks updated. The reads list now also gives all ten `T51_LIST_ONLY_OPS` ops (contradictionflag, origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin, scanmirror, officeconfirm): t36's arithmetic (456 held keys vs 466 expected) was red until they were held as design ops, so they moved into `T51_DESIGN_OPS` (same keys, same texts) and `T51_LIST_ONLY_OPS` is an empty frozen `[]`. `T51_DESIGN_OPS` is in the reads list's order (81 ops).
+
+Failing-first: t36 "R48 R53 … ACT_HELP", "R62 R65 keys" and "B12 strengthbarset" were red on the tranche (seen at the START; after the first edit the arithmetic test was still red, 456 vs 466, until the ten moved); all green now. Control: ACT_HELP dumped before and after: no key's text changed, two keys added (capturerequests, casedrafts), none removed.
+
+Tests/checks: bio-plane `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/affordances/`: 280 pass, 0 fail. Users (impact set): op-declarations 245/0, control-plane 447/0, store-door 56/0, tasks 128/0, admission 58/0, queue 210/0, interface-shell 348/0 (fail count 0 each). checks/run.mjs: format, architecture, coverage (6686 of 6686), channels, words all 0 failures. ownership affordances tranche/T51 job/T51/affordances: 2 files changed by affordances; 0 failures.
+
+Proposed R48 line: no change (its text holds: exactly the ops the reads list explains). Deferred: none. Found in other modules: none.
+
+Size (session_015vmccEdn9WywiaxqonRTPj): test runs 8, module lines 2721
+
+## J23 · COMPLETE
+
+COMPLETE (G49, B20). act-help.mjs holds capturerequests, casedrafts and readheld as design ops, plus the ten list-only ops the reads list now gives (t36 arithmetic); no existing text changed. Affordances 280/0; users op-declarations, control-plane, store-door, tasks, admission, queue, interface-shell 0 fail; checks/run.mjs and ownership 0 failures. See record J8.

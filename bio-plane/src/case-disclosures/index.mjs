@@ -206,6 +206,7 @@ export class CaseDisclosures {
       visible: (id) => gate.scope !== "DENY"
         && !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args),
       readFile: (b, p) => this.record.readFile(b, p),
+      registeredFor: (b) => this.provenance.registeredFor(b), partsNamed: (b, sha) => this.provenance.partsNamed(b, sha),
       unitsOf: (sha) => this.extraction.unitsOf(sha),
       sha256: (s) => createSha256().update(new TextEncoder().encode(s)).hex(), extractedTextOf,
     };

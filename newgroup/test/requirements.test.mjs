@@ -1449,8 +1449,8 @@ test.todo("R48 the installer's README publishes the stewards' contact address, w
 const ownBundle = async () => {
   const b = await bundleText(esbuild);
   await esbuild.stop();                          /* N1254: the build's child process must not outlive the suite */
-  const i = b.indexOf("RELEASE_PACKED = ");
-  const j = i + "RELEASE_PACKED = ".length, q = b[j];
+  const at = b.match(/\bRELEASE_PACKED ?= ?/);        /* the build minifies whitespace (installer R82) */
+  const j = at.index + at[0].length, q = b[j];
   let k = j + 1;
   while (k < b.length) { if (b[k] === "\\") { k += 2; continue; } if (b[k] === q) break; k++; }
   assert.equal(vm.runInNewContext(b.slice(j, k + 1)), RELEASE_PACKED, "only the embedded release is cut out");

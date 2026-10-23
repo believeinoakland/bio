@@ -43,6 +43,8 @@ const viewOf = (ids) => {
   for (const f of ["deadlines", "legal_organisations"]) if ((c.view[f] || []).length) want[f] = c.view[f];
   const venues = (c.view.action_kinds || []).filter((k) => k.venue).map((k) => ({ kind: k.kind, venue: k.venue }));
   if (venues.length) want.venues = venues;
+  /* (fix round 4, C64-law) records_laws, records_help and name, as combine gives them, absent when it states none */
+  for (const f of ["records_laws", "records_help", "name"]) if (c.view[f] !== undefined && !(Array.isArray(c.view[f]) && !c.view[f].length)) want[f] = c.view[f];
   return want;
 };
 
@@ -93,6 +95,34 @@ test("R12 R16 profiles() carries view: combine's deadlines and legal_organisatio
   const routed = await doAnswer(stubOver(w.m).fetch("http://do/profiles"));
   assert.deepEqual(routed.result.view, viewOf([OAK.id]));
   assert.deepEqual((await doAnswer(stubOver(scratch.m).fetch("http://do/profiles"))).result.view, {});
+});
+
+test("R12 profiles().view also carries records_laws (each law whole), records_help and name as combine gives them, and none of them when no profile is active (C64-law)", async () => {
+  const w = await world();
+  const OAK = REAL.find((p) => p.id === "oakland-alameda"), OTHER = TEST[0];
+  /* control: no active profile states none of the three */
+  const none = w.m.profiles().view;
+  for (const f of ["records_laws", "records_help", "name"]) assert.equal(f in none, false, `none active: ${f} absent`);
+  /* the first profile: its laws whole, the federal one naming foia_response, and its name */
+  w.record.setSetting("jurisdiction_profiles", [OAK.id], "admin");
+  const c = combine([OAK.id]);
+  const one = w.m.profiles().view;
+  assert.deepEqual(one.records_laws, c.view.records_laws);
+  assert.ok(one.records_laws.length >= 1);
+  for (const l of one.records_laws) for (const k of ["level", "name", "citation", "response", "stages", "requesters"]) assert.ok(k in l, `${l.name}: ${k}`);
+  assert.ok(one.records_laws.some((l) => l.level === "federal" && l.response === "foia_response"), "the federal law names foia_response");
+  assert.equal(one.name, c.view.name);
+  assert.equal("records_help" in one, c.view.records_help !== undefined);
+  /* a profile that states records_help: it reaches the view as combine gives it */
+  const stated = [OTHER.id], cs = combine(stated);
+  assert.ok(cs.view.records_help, "the premise: the test profile states records_help");
+  w.record.setSetting("jurisdiction_profiles", stated, "admin");
+  const two = w.m.profiles().view;
+  assert.deepEqual(two.records_help, cs.view.records_help);
+  assert.deepEqual(two.records_laws, cs.view.records_laws);
+  assert.equal(two.name, cs.view.name);
+  /* the three old facts are unchanged */
+  assert.deepEqual(w.m.profiles().view, viewOf(stated));
 });
 
 test("R13 at the first boot JURISDICTION_PROFILES (comma-separated, in order) is recorded when every id is held and none is a test profile; else nothing is recorded and profiles() says why; no later boot records it", async () => {

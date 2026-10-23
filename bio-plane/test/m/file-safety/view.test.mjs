@@ -2,7 +2,7 @@
    module's interface, over provenance's real tables (R37 reads them) and the scripted renderer and CDR tool. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, enc, T0 } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, enc, T0 } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { FILE_SAFETY_CHECKS, FILE_SAFETY_POLL_MS, derivedKey, fileSafetyOps } from "../../../src/file-safety/index.mjs";
@@ -46,12 +46,15 @@ test("R11: `safeView` by route: PDFs and office documents answer the image-only 
   const x = await w.capture(xlsx());
   const v = await w.fs.safeView({ captureSha: x, viewer: "member:m1" });
   assert.deepEqual([v.ok, v.kind, v.derived, v.of], [true, "data", true, x]);
-  assert.deepEqual(v.sheets, [{ name: "Budget", cells: [{ ref: "A1", value: "0.1", type: "number" }, { ref: "B1", value: "99", type: "number" }, { ref: "C1", value: "label", type: "text" }] }]);
+  assert.deepEqual(v.sheets, [{ name: "Budget", cells: [{ ref: "A1", value: "0.1", type: "number" }, { ref: "B1", value: "99", type: "number" }, { ref: "C1", value: "label", type: "text" }],
+                                rows: { from: 1, to: 1 }, total_rows: 1, truncated: false, next_row: null }]);
+  assert.deepEqual([v.sheets_total, v.sheets_truncated], [1, false]);
   assert.deepEqual(v.original, { may_open: true, path: "warned", why: null }, "the external link makes it high; nothing was followed");
   assert.equal(w.calls("/render").filter((c) => c.body.target.capture_sha === x).length, 0, "no render is asked for data");
   const c = await w.capture(enc("year,amount\n2025,310000\n"));
   assert.deepEqual((await w.fs.safeView({ captureSha: c, viewer: "member:m1" })).sheets, [{ name: "csv", cells: [
-    { ref: "A1", value: "year", type: "text" }, { ref: "B1", value: "amount", type: "text" }, { ref: "A2", value: "2025", type: "text" }, { ref: "B2", value: "310000", type: "text" }] }]);
+    { ref: "A1", value: "year", type: "text" }, { ref: "B1", value: "amount", type: "text" }, { ref: "A2", value: "2025", type: "text" }, { ref: "B2", value: "310000", type: "text" }],
+    rows: { from: 1, to: 2 }, total_rows: 2, truncated: false, next_row: null }]);
   /* no safe view for another format */
   refused(await w.fs.safeView({ captureSha: await w.capture(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), viewer: "member:m1" }), "NO_SAFE_VIEW");
   refused(await w.fs.safeView({ captureSha: await w.capture(makeZip([{ name: "a", data: "a" }])), viewer: "member:m1" }), "NO_SAFE_VIEW");

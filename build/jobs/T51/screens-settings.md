@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_01EaD3jDCDjBYrvU2dv7qq92 · depth 2 · COMPLETE · handled B35
+**Status** · session_01LW6V3mNSxPRyfn48u2tZEY · depth 2 · COMPLETE · handled B45
 
 ## J1 · QUESTION
 
@@ -312,3 +312,140 @@ COMPLETE (SCREENS-SETTINGS #15, T51 fix round 3), re B35. tranche/T51 merged (IN
 **Tests and checks.** Module suite 247 of 247. screens-inquiry (a user) 471 of 471. Each new test was seen failing against the old source (Security's 390 px test passes either way: it had no small control). format 0, architecture 0, coverage 76 of 76, words 0 findings, ownership 0 failures. Proposed requirement lines for BOB to write are in J21.
 
 Size (session_01EaD3jDCDjBYrvU2dv7qq92): test runs 14, module lines 5301
+
+## J24 · QUESTION
+
+QUESTION (J1) · C84 seam test needs two modules in my `uses`.
+
+My whole-path test (`bio-plane/test/m/screens-settings/security-seam.test.mjs`, green on my branch) presses the Security button through the real merged `file-safety` (`scanMirror`, `scanStatus`) over the real `file-scanner` handler (`/mirror?async=1` cut 20 ms after its 202, `/version`, the cron `scheduled`), as the START asks. It imports `bio-plane/test/m/file-safety/fixture.mjs` (its `world`) and `file-scanner/src/handler.mjs` + `file-scanner/test/helpers.mjs` (its bucket double). `checks/architecture.mjs` refuses: "imports ... of file-safety / file-scanner, which screens-settings does not declare in uses" (3 failures).
+
+Smallest thing I need: `build/modules.json` `screens-settings.uses` += `"file-safety"`, `"file-scanner"` (both earlier in the order). Nothing else changes. Please write it on `tranche/T51` (or tell me to drop the test's real providers and script them, which R-SEAM forbids).
+
+Best reading, so I carry on: tests are written; everything else in C84 is done (button and sentence by DEC-412's keys, status read from `MIRROR_REFUSED` lines, stale R15 test brought to its key). I go on with C14 meanwhile.
+
+## J25 · QUESTION
+
+QUESTION (J2; does not replace J1) · C14 on my screens: what I measured, and what I need.
+
+(1) Root cause, measured by opening each of my screens in the real shell harness and counting every request (frame included): the frame reads `bootstrap`, `whoami`, `groupidentity`, `groupkeystate`, `queue` for itself, and my screens read the same again because `view` hands them none of it: security `bootstrap` x2 (security.mjs:36), updates `bootstrap` x2 (updates.mjs:24), account `whoami` x2 (account.mjs:26), group `groupidentity` x2 (group.mjs:22), teamai `groupkeystate` x2 (teamai.mjs:18). members shows `memberlist` x2 and places `entitieskind` x2 (paged to the end, so legitimate); I find no repeat of `queue` and no per-project repeat in my module. So the repeats I can remove are the frame's, and only once the shell shares its frame answers with a screen (CAUSE-SHELL-4's "shared frame reads").
+(2) Gap: reads were counted per screen nowhere in my tests. I add one read-set test per screen: each op once, frame reads not repeated.
+(3) Failing-first: written against the shell's sharing API, so it is red by name until CAUSE-SHELL-4 merges.
+(4) P: not runnable from my session. The smoke copy answers a public `bootstrap` (200) but sends no `Server-Timing` yet, and my screens' reads are member-only and I hold no member token.
+
+What I need (smallest): (a) the name of the shell's shared-frame-read accessor (what a screen's `reads(view)` / `render` reads instead of asking again), or send me a CHANGE when CAUSE-SHELL-4 merges; (b) your ruling that C14's P check for my screens is closed by the read-set tests plus the local timing of the screens' reads in the harness, or what member token / probe I may use. Until then I finish everything else and wait for the CHANGE.
+
+## Completion (SCREENS-SETTINGS #16, session_013oBjn6cy9rDsXVNuTPr9A1)
+
+**C84 words (seam owner S).**
+(1) Root cause: `security.mjs:106` read a status only from the old `REFUSED:<db>:<status>` string, so a `MIRROR_REFUSED:exit N: … 403` reason fell back to the plane's own English; the button used stand-in keys (`act.monitor.label.capture`, `shell.working`). Fixed: status read from both forms (as file-safety R46 reads it); the button and its sentence are `act.scanmirror.label.security` and `screen.security.mirror.started` (DEC-412); keys listed in `index.mjs` words (run keys `file-safety.index.signatures_run_*`, `signatures_refused_unnumbered`).
+(2) Gap: the module's fixtures held scripted `scanstatus` answers; no test went from the press to the words. Test-gap fix: `security-seam.test.mjs`.
+(3) Failing-first, entry path the press (`scanmirror` pressed on the page, never a done function): real `file-safety` (`scanMirror`, `scanStatus`) over the real `file-scanner` handler (`/mirror?async=1` cut 20 ms after the 202, `/version`, cron `scheduled`), bucket and freshclam stand-ins only; the member's own-language rows show only a sentence drawn by its key. Red 1: button label was the stand-in; red 2: `MIRROR_REFUSED:exit 1: … HTTP status 403` drawn from the plane's English not `signatures_refused` {status: 403}. Green after: stale `REFUSED:main.cvd:403` by key; press -> `mirror.started`; run under way (`signatures_run_download`), stale refusal not drawn; second press refused `SIGNATURES_RUN_UNDER_WAY` (never "a few minutes ago"); 20 min on, `signatures_run_stopped` and the next press allowed; cron tick -> `MIRROR_REFUSED … 403` by key with status. Control: unnumbered refusal by its key. Stale R15 test (`security.test.mjs`, K4435) asserts the refusal by key through the shell.
+(4) Platform check: N for the screen (words); the scanner's L/P belong to file-scanner and file-safety. Old data: the stored 04:17 string is drawn as it is (accurate to it) until the first new run overwrites it (new data only).
+
+**C14 (this module's screens).**
+(1) Root cause (measured, harness, every request counted): the frame reads `bootstrap`, `whoami`, `groupidentity`, `groupkeystate`, `queue`; screens repeat them: security `bootstrap` x2 (security.mjs:36), updates `bootstrap` x2 (updates.mjs:24), account `whoami` x2 (account.mjs:26), group `groupidentity` x2 (group.mjs:22), teamai `groupkeystate` x2 (teamai.mjs:18). No repeat of `queue`, none per project; members `memberlist` x2 is the shell's name read; places `entitieskind` x2 is paging. The screens cannot drop them until cause-shell-4 shares the frame's answers (BOB K4466: CHANGE names the accessor).
+(2) Gap: reads were counted nowhere. `readset.test.mjs` (8 screens).
+(3) Test `readset.test.mjs`: RED BY NAME for security (R15), updates (R27), account (R3), group (R18), teamai (R48) until cause-shell-4 merges; green for members, places, settings. After the CHANGE I remove the five repeats and re-run.
+(4) P ruled (K4466): read-set tests plus local timing. Harness load times (reads, ms; not live): security 16/466 (first boot), updates 12/50, account 17/53, group 18/63, teamai 18/68, members 16/67, places 16/35, settings 10/20. Live time: the PERFORMANCE lane with Server-Timing.
+
+**Requirements met:** R15, R77, RC-R7 (words side), R62, R1, R3, R17-R19, R27, R48 (suites). Proposed line for BOB: R15 amended with C84 round 4 (keys above); R78 new: a Settings screen reads once each op the frame has read (C14).
+**Tests/checks:** screens-settings 257 tests, 252 pass, 5 fail (the five C14 read-sets above, by name). screens-inquiry 471/471 (a user). `format` 0 failures; `architecture` 0 failures (after BOB's `uses`); `ownership` 0 failures; coverage: none of its 8 failures is mine (screens-publish R80 named).
+Size (session_013oBjn6cy9rDsXVNuTPr9A1): test runs 14, module lines 5308
+
+## J26 · COMPLETE
+
+COMPLETE (per K4466): C84 done and green (seam test through the real file-safety and file-scanner, stale R15 test fixed); C14: read-set tests written, RED BY NAME for security, updates, account, group, teamai until CAUSE-SHELL-4's accessor merges (send CHANGE; I then drop the five repeats). Details, four fields, counts and Size line in my record. Suite 252/257 (the five); format, architecture, ownership 0 failures. Proposed lines: R15 amended (C84 keys), R78 new (a Settings screen reads once each op the frame has read).
+
+## J27 · COMPLETE
+
+COMPLETE (G20, fix round 6; START B39). The document picker of `grouprules` no longer stops silently at 200.
+
+**1. Root cause.** `grouprules.mjs:21` asked `heldcaptures` for `limit: 200` and the draft form (render, the `docs` list) ignored `truncated` and `next`: 250 held documents offered 200, nothing said.
+**2. Why the tests missed it.** R70's tests used fixtures of two or three documents; none went past the bound. Gap fixed: the tests below page past it.
+**3. Fix (file:line).** `grouprules.mjs` draft form, the `docs` block (about lines 106-130) and the source fieldset (about lines 160-166): the screen's first read stays `fields: "picker"`, `limit: 200`, `state: "held_and_vouched"`; while the answer says `truncated` with a `next`, the following page is read by that cursor (1000 rows, twice at most, kept in `view.ui.later`, drawn on arrival; `cs.call` + `cs.set`, shape of screens-investigate's `docsAll`, own code). Past the bound, or when a later page fails, `screen.people.more` ("The first {n} are shown. Search or filter to find the rest.") says how many are shown; a search box (`form.choose.search`, narrowing by title on the page, reading nothing more; `form.choose.search.none` when nothing matches) is the way to narrow. `index.mjs` adds the three keys to `grouprules`' `words` (the served page carries only listed keys: without them the "none" note drew the bare key; found by the test).
+**Stand-in words (R-OLD/words):** all three are held rows (nearest held rows, adopted from screens-investigate's C95/B447); no new row is owed to the design.
+**4. Failing-first tests** (`bio-plane/test/m/screens-settings/grouprules.test.mjs`), through the real screen over the harness's fake plane answering by `limit`/`after` as capture R77 does:
+ - `R70 G20: with 250 documents held the picker reaches the 250th...`: RED before (200 !== 250 options), GREEN after; asks twice (`after: "200"`), the 250th is drafted from (`source.captureSha`); control: 150 documents read once, no "more" sentence.
+ - `R70 G20: past the bound it keeps...`: 2,500 documents: 2,200 offered (200 + 1000 + 1000), "The first 2200 are shown", search narrows to one title and to none, no further `heldcaptures` read.
+ - `R70 G20: a page the cursor names that cannot be read...`: 200 stay offered and are said to be the first 200.
+**5. Platform check:** N.
+
+**Runs.** screens-settings 260 pass, 0 fail. Users named by `build/plan/impact.mjs origin/tranche/T51 HEAD` (screens-inquiry, control-plane, plane, journey-check): screens-inquiry 486 pass, 0 fail. journey-check 104 pass, 23 fail: the same 23 fail, test for test, on a clean worktree of `origin/tranche/T51` (so none is caused by this change; they are inherited reds of that suite: installer container fakes, the Miniflare local arm, R17 "group" word rows). control-plane and plane were not run: they use screens-settings only through its registry acts, which this change leaves as they were (impact lists them by the shared table).
+Checks: `checks/run.mjs`: format, architecture, coverage (6632 of 6632), channels, words 0 failures (screens-settings alone: inline 0, plain 0, testcopy 0, missingkey 0, unkeyed 0); `checks/ownership.mjs`: 4 files, 0 failures; `setup-words/build.mjs --check`: only the stale-rows note about a capture row (not this module).
+
+**Requirement lines I propose (BOB writes `build/requirements/`).** Amend R70: "(T51 fix round 6; G20, K4571) The picker never stops silently at its first page: while `heldcaptures` answers `truncated` with a `next`, the following page is read by that cursor (1000 rows, at most twice more); past that bound, or when a later page cannot be read, the form says how many documents it shows (`screen.people.more`) and a search by title (`form.choose.search`) narrows the choice. Test: 250 held documents reach the 250th; 2,500 say 2,200 are shown; control: 150 are read once and nothing is said."
+
+Size (session_01GPSmcx32NL7CpoTyeWoeYn): test runs 14, module lines 5338
+
+## J28 · QUESTION
+
+QUESTION (G42, words). START says the gauge's new sentences are `localize(id, en)` stand-ins added to `WORDS` and `keys.mjs`. Two held rules forbid that in this module: setup-words R13 ("a drawn-screen module (`screens-*`) reads through `word` only", K3930 (3)) and civicos-process `checks/words.mjs` (the `marker` arm fails a `localize` call in a drawn module; `DRAWN_MODULES` matches `screens-*`); screens-inquiry's fix round 4 removed its stand-ins for the same reason (48074ae70e). `docs/development/ux-substrate/screens/words.json` holds no row for the gauge.
+
+My best reading, which I am building on: the gauge reads every sentence by key through `cs.w`, the keys listed in `keys.mjs` and in `WORDS.group`, no English in this module. The rows themselves must come from you (a code-origin row from a `localize` call in a module the check allows, or UX-DESIGN's rows in `words.json`), with these ids and this English (one key per sentence; fills in braces):
+
+- `screen.group.storage.head` — How full your team's record is
+- `screen.group.storage.size` — Your team's record holds {used} GB of the {limit} GB one record can hold ({percent}%).
+- `screen.group.storage.unstated` — The size of your team's record is not stated.
+- `screen.group.storage.warn1` — Your team's record has passed 70% of what one record can hold. Decide what to do before it fills.
+- `screen.group.storage.warn2` — Your team's record has passed 90% of what one record can hold. At the limit, writes will fail: nothing more can be saved until room is made.
+- `screen.group.storage.factors.lead` — How large your record can realistically grow depends on four things.
+- `screen.group.storage.factors.plan` — The Cloudflare plan your team has and is willing to pay for.
+- `screen.group.storage.factors.pare` — How far you pare the record, by what your investigations and queries touch.
+- `screen.group.storage.factors.latency` — How much delay you accept when a search has to run in the background instead of at once.
+- `screen.group.storage.factors.limits` — The limits of the platform itself.
+
+Until the rows are on the tranche my gauge tests are red by name (`UNKNOWN_WORD`), as the seam is red until CONTROL-PLANE #50 merges. I verify locally with the rows added to an uncommitted copy of `rows.mjs`, which I do not commit (mechanics §14). If you would rather I use a different mechanism, or other English, tell me and I follow.
+
+## J29 · QUESTION
+
+QUESTION (R39, contract.test.mjs, red at the tranche tip before my change). Two assertions of `R39 words by key` were red on `tranche/T51` (ceb6bb151e) because the design stream's files at DEC-419 (f72b2f8a4c) moved the module's reads list: (1) `words-reads.json` now lists 73 keys for screens-settings that `keys.mjs` lacked (all are words of the list; e.g. `act.capturerequests.does`) — fixed: I added them to `keys.mjs` (a mechanical sync, R39 says the keys are the reads list); (2) its `unkeyed` list now holds one entry, `screens-settings/bias.mjs:262` "## What This Does Not Enforce", with the design's own reason (the record file's grammar, not member prose; sentences inside it are keyed, DEC-272), and the test asserts `unkeyed.length === 0` ("no string stays in source"). I will not weaken that assertion myself. My reading: the test should accept an `unkeyed` entry that carries a `why`, and fail one without. Decide: (a) I change the assertion that way (a requirement for BOB to word: R39's test), or (b) the design list drops the entry and bias.mjs keys the heading. Until you answer I leave it as it is; it is the one red of my suite besides the two the gauge owes (UNKNOWN_WORD until the rows; the administering member's seam until CONTROL-PLANE #50).
+
+## Completion (SCREENS-SETTINGS #18, session_01LW6V3mNSxPRyfn48u2tZEY)
+
+**G42 · the record's gauge (R-FOUR).**
+(1) Cause (BOB's, K4635/K4638): no screen read `stats`' `dbBytes`. Changed: `group` reads `{op: "stats"}` once, only when `me.administer` (a member's screen sends none, R78); a section `screen.group.storage.head` draws the size as GB (floored to 0.1) and a whole percent (floored, so 70 %/90 % never read under their edge) against 10,000,000,000 B; a warning from 70 % (`warn1`), at 90 % and over the second (`warn2`, writes will fail) in its place, each with `factors.lead` and the four factors (`plan`, `pare`, `latency`, `limits`), one key per sentence; `dbBytes` null or not a number = `unstated`; key absent = nothing; a failed read drawn failed. `stats` is declared for member, admin and probe and has no field row, so no sent-ops declaration change (the shell's guard let it through; not a census op, K4208).
+(2) Gap: no fixture answered `stats`; every record fixture's `databaseSize` is 0. `storage-seam.test.mjs` composes the real Worker entry (`plane/index.mjs`, so the real door and its capacity stamp) over the real `Store` and record-core, whose `databaseSize` the test sets; only the session lookup is scripted. (The plane's own start-up registration is answered by an empty module because the kit registers the declared ops once; noted in the test.)
+(3) Failing-first, red before the screen change: all gauge tests (nothing drawn, no `stats` read). Green after: 0 / 6,999,999,999 (69 %, none) / 7,000,000,000 and 8,999,999,999 (first) / 9,000,000,000 and 10,500,000,000 (second, 105 %); founder exact; member: no `stats`, door gives no `dbBytes`, nothing drawn; null "not stated".
+(4) Platform: L/P are control-plane's; none here.
+
+**Red by name at COMPLETE (both named in B41):** (a) every gauge test and `contract.test` R39 fail `UNKNOWN_WORD` until CONTROL-PLANE #50's ten `localize` rows are on the tranche and `rows.mjs` is regenerated (verified green with an uncommitted rows copy); (b) the administering member's seam test fails ("door answers an administering member the figure floored to 100 MB") until CONTROL-PLANE #50 merges.
+
+**Other changes:** `keys.mjs` synced to `words-reads.json` (73 keys the design's DEC-419 list added; was red at the tip); R39's test accepts a design `unkeyed` entry that carries a `why` (K4641).
+
+**New keys (rows owed, B491):** screen.group.storage.head, .size, .unstated, .warn1, .warn2, .factors.lead, .factors.plan, .factors.pare, .factors.latency, .factors.limits (English as in J28).
+
+**Proposed requirement line:** **R79** (T51 fix round 6; G42; K4635, K4638; amends R18, R78) *group: how full the team's record is.* To a session that administers, `group` reads `stats` once and, where the answer carries `dbBytes`, draws its size against 10,000,000,000 B as GB and a whole percentage (rounded down); from 70 % a warning, from 90 % a second saying writes will fail at the limit, each naming the four things that govern a record's realistic size (the team's Cloudflare plan, how far it pares the record, the delay it accepts for background search, the platform's limits), one key to a sentence; `dbBytes` null is "not stated", never zero; absent draws nothing; a member's screen sends no `stats`. Test: the six sizes at their edges through the real door and record; control: a member sends none and draws none.
+
+**Tests/checks:** screens-settings 270 tests, 259 pass, 11 fail (the ten gauge tests' words/stamp and R39, named above). Impact set (screens-inquiry, control-plane, plane, journey-check; 199 files): 1257 tests, 12 fail, the same 12 that fail on the untouched `origin/tranche/T51` (R24/R29 pseudo and release tests, screens-inquiry fr6), none mine. `checks/run.mjs`: format, architecture, coverage, channels, words 0 failures; ownership 0 failures. Platform preload not on the tranche; suites run without it.
+Size (session_01LW6V3mNSxPRyfn48u2tZEY): test runs 14, module lines 5417
+
+## J30 · COMPLETE
+
+COMPLETE (G42). `group` reads `stats` once for an administrator and draws the record's size against 10 GB (GB, whole percent, floored), a warning from 70 %, a second from 90 %, each naming the four factors; null = not stated; absent = nothing; a member sends no `stats`. Failing-first red then green recorded; seam test through the real Worker door and record-core with a settable `databaseSize`. New keys (rows owed, B491): screen.group.storage.{head,size,unstated,warn1,warn2,factors.lead,factors.plan,factors.pare,factors.latency,factors.limits}. Proposed line: R79 in my record. Also: `keys.mjs` synced to words-reads.json (73 keys), R39's test accepts an `unkeyed` entry with a `why` (K4641).
+RED BY NAME (B41): (a) the ten gauge tests and R39 fail UNKNOWN_WORD until CONTROL-PLANE #50's rows are on the tranche and rows.mjs regenerated (green with an uncommitted rows copy); (b) the administering member's seam test until CONTROL-PLANE #50 merges. Suite 259/270 (those 11). Impact set: the same 12 failures as the untouched tranche tip, none mine. checks/run.mjs and ownership 0 failures. Size: test runs 14, module lines 5417.
+
+## After B43 (CHANGE, K4644)
+
+Merged `tranche/T51` (CONTROL-PLANE #50 and the ten `screen.group.storage.*` rows are on it); no uncommitted rows copy. screens-settings 270 tests, 270 pass, 0 fail: the ten gauge tests, R39 and the administering member's seam (door floors `dbBytes` to 100 MB) are green. `checks/run.mjs` and ownership 0 failures. Both reds named in B41 are cleared.
+Size (session_01LW6V3mNSxPRyfn48u2tZEY): test runs 16, module lines 5417
+
+## J31 · COMPLETE
+
+COMPLETE (re B43). Merged tranche/T51; the gauge's ten rows and the administering member's capacity stamp are on it. screens-settings 270/270 (the ten gauge tests, R39 and the seam green); checks/run.mjs and ownership 0 failures. Everything else as in J30 (proposed R79, keys, impact set unchanged). Size: test runs 16, module lines 5417.
+
+## J32 · QUESTION
+
+CORRECTION to J31 (it said checks 0 failures; the architecture check has 2): storage-seam.test.mjs imports bio-plane/test/m/plane/fixture and bio-plane/src/plane/index.mjs (the real Worker entry and Store the seam needs, R-SEAM), and `plane` is not in screens-settings' `uses` in build/modules.json (a module file, yours). All else in J31 stands (270/270, format, coverage, words, channels, ownership 0). Please add `plane` to my uses (CHANGE), as you did for file-scanner/file-safety earlier; if you would rather the seam avoid the plane entry, say so and I rework it.
+
+## J33 · QUESTION
+
+Moved as ruled (K4648): g42-storage-seam.test.mjs is now bio-plane/test/m/plane/g42-storage-seam.test.mjs (one-file commit; passes 4/4 alone), the old file removed in a second commit, screens-settings' own tests unchanged (270 less the 4 seam tests; the screen's edges, member, null/absent stay on the fake plane). checks/run.mjs: architecture still 2 failures, now plane's: the test drives the screen through screens-settings' kit and fixtures (test/m/screens-settings/kit.mjs, fixtures.mjs), and plane does not declare screens-settings in uses. Fix is yours (modules.json): add screens-settings to plane's uses (plane 170 is later than 162, no cycle). Otherwise tell me how to drive the group screen from a plane test without its kit. Everything else: format, coverage, words, channels, ownership 0 failures.
+
+## After B44/B45 (K4648, K4652)
+
+The G42 seam test is `bio-plane/test/m/plane/g42-storage-seam.test.mjs` (own commit, moved from screens-settings' tests; plane's `uses` now holds screens-settings). Merged `tranche/T51`. screens-settings 266 tests plus the seam's 4 = 270 pass, 0 fail. `checks/run.mjs`: format, architecture, coverage, channels, words 0 failures. `ownership`: 1 failure, that one path (outside my paths; BOB accepts it by name at the merge, K4648).
+Size (session_01LW6V3mNSxPRyfn48u2tZEY): test runs 19, module lines 5417
+
+## J34 · COMPLETE
+
+COMPLETE (re B45). Merged tranche/T51 (plane's uses holds screens-settings). checks/run.mjs: format, architecture, coverage, channels, words 0 failures. ownership: 1, the named path bio-plane/test/m/plane/g42-storage-seam.test.mjs you accept at the merge (K4648). Tests: screens-settings 266 + the seam's 4 = 270 pass, 0 fail. Gauge R79, keys, keys.mjs sync and R39 test as in J30/J31. Size: test runs 19, module lines 5417.

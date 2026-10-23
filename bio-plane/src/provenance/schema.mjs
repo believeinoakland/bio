@@ -34,7 +34,12 @@ CREATE TABLE IF NOT EXISTS register (
   -- When the member says they OBSERVED it, which is THEIR statement. The
   -- record's own time of writing is registered above, and the two are kept
   -- apart as correspondence keeps them. NULL on every row that is not authored.
-  observed_at TEXT
+  observed_at TEXT,
+  -- R72 (fix round 4b, F3; K4487): 1 on the row that gives a capture held in parts its identity under the whole's sha:
+  -- the document stated 'parts' beside capture.sha256, and the promotion registered the parts' own rows as it always
+  -- did. The row has no file of its own (its path is the file the document names for the whole, which the bundle does
+  -- not hold); 0 on every other row, the true value for every row written before the column existed.
+  whole       INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS register_bundle ON register(bundle_id);
 
@@ -145,6 +150,7 @@ export const REGISTER_ADDITIVE = [
   ["captured_locators", "reputation", "TEXT"],
   ["captured_locators", "uploads", "TEXT"],
   ["register", "last_registered", "TEXT"],
+  ["register", "whole", "INTEGER NOT NULL DEFAULT 0"],
 ];
 
 /* Creates this module's tables on `sql` (the Durable Object's storage). Idempotent, run at every boot.

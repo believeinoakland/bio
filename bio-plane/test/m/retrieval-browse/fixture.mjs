@@ -108,12 +108,12 @@ export function provDoc(c) {
  *  `admins` too, as administrators. `w.locale` is what `localeOf` answers; `w.selection(handle, {owner, ids})` registers a
  *  selection `selectionRead` answers. */
 export function world({ members = ["ann", "vera"], admins = [], now = Date.parse("2026-09-27T03:00:00Z"), deps = {},
-                         before = null } = {}) {
+                         before = null, evidence = null } = {}) {
   const st = storage();
   const host = { storage: st };
   run(st.db, RECORD_SCHEMA);
   const clock = { now, sel: now };
-  const record = recordOf(host, { evidencePrefix: "bio/captures/" });
+  const record = recordOf(host, { ...(evidence ? { evidence } : {}), evidencePrefix: "bio/captures/" });
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();

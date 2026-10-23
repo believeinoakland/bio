@@ -100,7 +100,9 @@ test("R20 any other part is refused RRULE_UNSUPPORTED, naming it; a malformed ru
 
 test("R21 fiscalPeriod: the fiscal year holding a date under the body's fiscal_year fact, with start and end days; none held, or a band across two, undetermined", () => {
   const v = firstView(), t = testView();
-  /* the first profile holds no fiscal_year: undetermined, never a guessed year */
+  /* a profile holding no fiscal_year: undetermined, never a guessed year (the first profile keeps Oakland's since
+     jurisdictions R49, so the fact is removed here) */
+  delete v.fiscal_year;
   const none1 = fiscalPeriod({ date: day("2026-10-05", LA), body: "Oakland City Council", view: v });
   assert.equal(none1.undetermined, true);
   assert.deepEqual(none1.why, { key: "civil-time.missing.fiscal_year_absent", vars: { body: "Oakland City Council" } });

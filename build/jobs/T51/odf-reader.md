@@ -1,6 +1,6 @@
 # odf-reader (T51)
 
-**Status** · session_013zPuS6aCiGt1Nqw5Gii5vD · depth 2 · COMPLETE · handled B3
+**Status** · session_01Y3a7inMeXF8xJY4JE2EiKK · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
@@ -65,3 +65,31 @@ Checks:
 - `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note names other modules (for example `budget-doctypes`), not odf-reader; regenerating is left to R1's close, as B3 says.
 
 Size (session_013zPuS6aCiGt1Nqw5Gii5vD): test runs 3, module lines 2413
+
+## J5 · COMPLETE
+
+START B4 (G15, `lineRows`, provider; K4571, K4579) handled. Merged `tranche/T51` first.
+
+**Cause (rule 1).** `odsText` built each sheet's `text` from the rows `walkSheet` materialises, joined into `lines`, and kept no row number beside them (`bio-plane/src/odf.mjs`, the `lines` loop in `odsText`, before the change ~:1805-1819). Empty rows and repeated empty runs are skipped and repeated rows are expanded, so a line's index is not its row; a reader of `sheet.text` (READING-PIPELINE's row-block grain, #22) could not name a block's true rows.
+
+**Why the tests missed it (rule 2).** No requirement said a sheet's lines carry their rows; R19 states the text only. Gap fixed: the failing-first test below, which checks every line of a sheet with empty, repeated-empty, repeated-non-empty and multi-paragraph rows.
+
+**Change.** `bio-plane/src/odf.mjs:1806, 1823, 1870`: every sheet `odsEntry.text()` emits carries `lineRows`, one 1-based sheet row (as a spreadsheet shows it, `row.r`, repeats counted) per line of `sheet.text`, same length as `text.split("\n")`; a cell holding several paragraphs or line breaks gives several lines, each carrying its row; a sheet with no text carries `[]`. Over the guard or repeat bound and with no readable body, `sheets` is `[]` as before, so no sheet carries it there. Wording and every other field are unchanged. No census op is owned or changed (K4208: none). R-OLD: computed from bytes at each read, so new reads only; a stored reading made before this change has no `lineRows`, and the consumer reads absent as unknown (K4579). No new sentence a member reads, so no row owed. Platform check (rule 4): N.
+
+**Failing-first (rule 3).** `bio-plane/test/m/odf-reader/ods.test.mjs`, "R19 lineRows: every sheet carries one 1-based sheet row per line of its text, through empty rows, repeated rows and a cell holding several lines": through `odsEntry.text()` on bytes. Red before the change: `actual: undefined` for `lineRows` (the `text` assertion above it passed). Green after: `[1, 8, 9, 10, 11, 12, 12, 13]` for the sheet, `[]` for a blank sheet, `[2]` for the hidden sheet. The existing R18 test's field list now sets `lineRows` aside (as it does `cells`).
+
+**Requirement lines proposed (BOB writes `build/requirements/`).** Under R19, or as a new id: "`odsEntry.text()`'s every sheet also carries `lineRows`: one 1-based row number per line of the sheet's `text` (the row as a spreadsheet shows it, `table:number-rows-repeated` counted; a cell of several paragraphs or line breaks gives each of its lines that cell's row), the same length as `text.split("\n")`, and `[]` when the sheet has no text. It is the sheet's own rows, never the used range." My test is named R19; rename it if BOB gives the line another id.
+
+**Tests and checks.**
+- `node --test --test-force-exit test/m/odf-reader/*.test.mjs` (bio-plane): 74 pass, 0 fail.
+- Users (direct `uses` of odf-reader, since `impact.mjs origin/tranche/T51 HEAD` names 116 modules through a shared table): format-registry, doc-clean, file-safety: 175 tests, 173 pass, 1 fail (file-safety R24, accepted by name in plan §4... it is the refusal-table test, unrelated to a sheet's fields; not mine). acquisition, capture, `cap13-reuse-pages`, `d57selflink`: 486 pass, 0 fail.
+- `node checks/format.mjs /home/user/bio`: 176 modules, 0 failures. `architecture ... odf-reader`: 13 product files, 0 failures. `coverage ... odf-reader`: 48 of 48 live ids named, 0 failures. `ownership ... odf-reader tranche/T51 job/T51/odf-reader`: 3 files changed by odf-reader, 0 failures.
+- `node checks/run.mjs /home/user/bio`: 0 failures in every row; words: inline 0, plain 0, testcopy 0, missingkey 0, 18421 words, the same as `tranche/T51` run unchanged (18421; string literals 673477 vs 673447).
+
+Nothing deferred. Nothing found in another module.
+
+Size (session_01Y3a7inMeXF8xJY4JE2EiKK): test runs 4, module lines 2430
+
+## J6 · COMPLETE
+
+G15 done (commit on job/T51/odf-reader, record section J5). bio-plane/src/odf.mjs:1806,1823,1870: every ods sheet from odsEntry.text() carries lineRows (one 1-based sheet row per line of text, repeats counted, multi-paragraph cell lines each carry its row, [] when no text). Failing-first ods.test.mjs 'R19 lineRows ...' red (lineRows undefined) then green. odf-reader 74/74; users: acquisition+capture+cap13+d57 486/486, format-registry+doc-clean+file-safety 173/175... correction: 175 tests, 1 fail = file-safety R24 (accepted by name, plan s4). Checks format/architecture/coverage(48/48)/ownership 0 failures; run.mjs words unchanged (18421, 0 findings). Proposed requirement line is in J5 (under R19). No census op, no new sentence, nothing deferred.

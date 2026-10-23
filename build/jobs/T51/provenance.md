@@ -1,6 +1,6 @@
 # provenance (T51)
 
-**Status** · session_01PGsKtVkrKE46i1fEEmd3sp · depth 2 · COMPLETE · handled B6
+**Status** · session_01WPxSEtH41UFFdxzG3nBaLz · depth 2 · COMPLETE · handled B8
 
 ## J1 · REPORT
 
@@ -137,3 +137,32 @@ Size (session_01PGsKtVkrKE46i1fEEmd3sp): test runs 14, module lines 3051
 ## J8 · COMPLETE
 
 B6 applied: captureGrades(shas), one read per batch, same answers as captureGrade. Requirement line R71 proposed in my record (J7). Provenance suite 155 pass; direct users pass; checks clean. See record.
+
+## J9 · COMPLETE
+
+R72 applied (F3, D1) on job/T51/provenance (commit 9e5f6cf7f1, tranche/T51 merged after it).
+
+**Root cause** (audit F3): `screens-intake/capture.mjs:134-139` registers a multipart capture's parts only, so `register` held no row for the whole sha and `homeOf(whole)` (`provenance/index.mjs` homeOf) answered null for every caller keyed by the whole.
+
+**Why tests missed it**: suites register one row per capture; none built the parts-only register the screen builds. Gap fix: `whole-identity.test.mjs` builds the capture as the screen does (blob parts, parts-only register list, provenance.json stating `parts` beside the whole sha) through the real `promote`.
+
+**What changed**
+- `schema.mjs`: `register.whole INTEGER NOT NULL DEFAULT 0` (create and additive migration; old rows 0).
+- `index.mjs`: `wholesOf`/`wholesOfFiles` (read the promoted `data/provenance.json`: capture.sha256 beside non-empty `parts`, every part 64-hex; path = the document's `file`, bytes = stated size else parts' sum); `#project` writes the whole's row via `#putWhole` after the parts' rows (parts' rows unchanged; revision keeps `registered`, moves `last_registered`, as R1); `#testimonyFence` adds the whole sha to the one-home check (C-53.13); `migrate()` runs `#repairWholes` at every wake: for each bundle whose data/provenance.json states parts, inserts the missing whole row with the parts' first registration as its instants; never moves a row another existing bundle holds; replaces a row whose home is gone; idempotent.
+- `register.test.mjs`: R1's exact row now includes `whole: 0`.
+
+**Failing-first**: `test/m/provenance/whole-identity.test.mjs`, 8 tests, all 8 red before (main one: `homeOf(whole)` null after the real promotion; the rest `no such column: whole`), all 8 green after: the 20 MiB three-part fixture resolves by `homeOf` and by the register's whole row, parts' rows unchanged; verification unchanged (`partsNamed` identical, `registerAudit` sound, whole row `held_in_parts`, a missing part still named); single-part and malformed `parts` control: no whole row; revision; second record with the same whole refused CAPTURE_HELD_BY_ANOTHER_BUNDLE, nothing written; repair on a bundle promoted before (row deleted to simulate), second wake changes nothing; repair leaves a row held by another record; repair re-registers an orphaned row.
+
+**Suites**: provenance 164 pass, 0 fail (with mk6). Direct users (64 modules using provenance), after merging tranche/T51: all pass except reds also on the tranche tip, unrelated to the register: file-safety R24 (rows table), plane R24 (words "this instance"), extraction R82 R22 seam (named-red, needs reading-pipeline R37), plane `migrate-released.test.mjs` (system test, timed out at ~20 min; not rerun). acquisition's wording test failed on my first run and passes after merging the tip. store-door R17 failed once and passes after the merge.
+**Checks**: format 0; architecture provenance 0; coverage provenance 57 of 57, 0; words 0 in provenance (whole run: words count 0 failures); ownership 5 files, 0 failures. `checks/run.mjs` total reds are other modules' (tasks architecture import, ooxml R35, pdf-reader R42), none in provenance.
+
+**Platform check (rule 4)**: not applicable: one SQL upsert per multipart document at promotion; the repair scans `files` rows of `data/provenance.json` containing `"parts"` once per wake (like the existing per-boot respell).
+
+**Requirement lines for BOB to write**
+- R72 met (drop "not yet met"): as written, plus: the row's `path` is the file the document names for the whole (the bundle does not hold it), `bytes` the document's stated size else the parts' sum, `registered`/`last_registered` the promotion's clock; the repair back-fills at every wake from the bundle's own data/provenance.json, taking the parts' first registration as its instants; one capture, one home also refuses a whole held by another existing record (C-53.13).
+- R48: add `register.whole` to the read contract (1 = the whole of a capture held in parts; a reader wanting files at `path` skips `whole = 1` rows). Note `registeredFor(bundle)` (R11) and `capturesOf` now include the whole row.
+
+**Seam note for the verification worker (after merge)**: readers of `registeredFor`/`register` by bundle (ratification `gateFacts`, corpus-export, case-carriage) now see a row whose `path` is not a file of the bundle; ratification's D-556 route already handles a whole-hash row held in parts. Their tests passed; the real-chain fixture should confirm.
+
+Deferred: none. Open QUESTION: none.
+Size (session_01WPxSEtH41UFFdxzG3nBaLz): test runs 14, module lines 3193

@@ -185,7 +185,10 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
       if (!state.captured.some((c) => c.captureSha === captureSha && c.question === question && c.by === by)) state.captured.push({ captureSha, question, by, at });
       return { recorded: true };
     },
-    loadCaptureSession({ session }) { const s = state.sessions.get(session);
+    /* as capture's does (R22): a session past its hour is pruned on the way past, so it is not found */
+    loadCaptureSession({ session }) { const now = stamp(state.clockMs ?? Date.now());
+      for (const [k, x] of state.sessions) if (x.expires < now) state.sessions.delete(k);
+      const s = state.sessions.get(session);
       return s ? { session, found: true, locator: s.locator, primarySha: s.primarySha, primaryFile: s.primaryFile, base: s.base, ticks: s.ticks, state: s.state }
                : { session, found: false, note: word("capture.note.capture_session_either") }; },
     dropCaptureSession({ session }) { state.sessionDrops.push(session); state.sessions.delete(session); return { session, dropped: true }; },

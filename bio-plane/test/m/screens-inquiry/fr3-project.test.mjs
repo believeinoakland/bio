@@ -73,7 +73,7 @@ test("R128 'The project's documents': every document filed under the project, ea
   assert.ok(!says(s, "screen.project.docs.none1"), "control: with documents, no 'nothing filed'");
   /* the read: the project's held and vouched documents, bounded */
   const q = p.byOp("heldcaptures").map((r) => r.query).find((x) => x.project === P && x.state === "held_and_vouched");
-  assert.ok(q && Number(q.limit) > 0 && Number(q.limit) <= 1000 && q.fields === undefined, "state held_and_vouched, bounded, full rows");
+  assert.ok(q && Number(q.limit) > 0 && Number(q.limit) <= 1000 && q.fields === "picker", "state held_and_vouched, bounded, picker rows (fix round 6, G12a: the full row examines every capture with no recorded format)");
   assert.ok(actsIn(s).includes("heldcaptures"), "and its act");
 });
 

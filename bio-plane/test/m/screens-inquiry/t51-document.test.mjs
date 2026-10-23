@@ -459,7 +459,7 @@ test("R69 a keep or a move with no reason is drawn by its own key (a34.kept.nore
     const dec = (r) => ok({ ok: true, notices: r.query.holder === Q ? [{ ...NOTICE_Q, state, closed_by: "dev", closed_at: "2026-10-13T10:00:00Z" }] : [] });
     const k = await open(at, { images: { ...QPROJECT(LEG), ...TWO }, plane: { backlinks: () => backlinks2, reevaluationnotices: dec } });
     assert.ok(says(legs(k)[0], key, { member: "dev", date: day("2026-10-13T10:00:00Z") }), key);
-    assert.ok(!text(legs(k)[0]).includes(word("act.keepversion.label.document") + " ·") && !text(legs(k)[0]).includes("“"), "control: no composed fallback and no quotation");
+    assert.ok(!text(legs(k)[0]).includes(word("act.keepversion.label.document") + " ·") && !text(legs(k)[0].querySelector("[data-decided]")).includes("“"), "control: no composed fallback and no quotation of a reason (the cited words, R3 fix round 4, are drawn beside, apart from the decision)");
   }
 });
 

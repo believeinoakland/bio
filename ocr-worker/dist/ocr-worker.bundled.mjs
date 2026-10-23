@@ -202,11 +202,75 @@ var SPREAD_CLOCKS = {
 var LINK_TYPES = ["anchor", "intra", "deferred", "refused"];
 
 // ../bio-plane/src/pdfstructure.mjs
+var ASCII_FILTERS = /* @__PURE__ */ new Set(["ASCII85Decode", "A85", "ASCIIHexDecode", "AHx"]);
+function ascii85Decode(src) {
+  let i = 0;
+  while (i < src.length && isWhitespace(src[i])) i++;
+  if (src[i] === 60 && src[i + 1] === 126) i += 2;
+  let zs = 0;
+  for (let k = src.indexOf(122); k !== -1; k = src.indexOf(122, k + 1)) zs++;
+  const out = new Uint8Array(Math.ceil(src.length * 4 / 5) + 3 * zs + 4);
+  let o = 0, n = 0, acc = 0;
+  for (; i < src.length; i++) {
+    const c = src[i];
+    if (isWhitespace(c)) continue;
+    if (c === 126) break;
+    if (c === 122 && n === 0) {
+      o += 4;
+      continue;
+    }
+    if (c < 33 || c > 117) return null;
+    acc = acc * 85 + (c - 33);
+    if (++n === 5) {
+      if (acc > 4294967295) return null;
+      out[o++] = acc >>> 24;
+      out[o++] = acc >>> 16 & 255;
+      out[o++] = acc >>> 8 & 255;
+      out[o++] = acc & 255;
+      n = 0;
+      acc = 0;
+    }
+  }
+  if (n === 1) return null;
+  if (n > 1) {
+    for (let k = n; k < 5; k++) acc = acc * 85 + 84;
+    if (acc > 4294967295) return null;
+    const four = [acc >>> 24, acc >>> 16 & 255, acc >>> 8 & 255, acc & 255];
+    for (let k = 0; k < n - 1; k++) out[o++] = four[k];
+  }
+  return out.slice(0, o);
+}
+function asciiHexDecode(src) {
+  const out = new Uint8Array((src.length >> 1) + 1);
+  let o = 0, hi = -1;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (isWhitespace(c)) continue;
+    if (c === 62) break;
+    const d = c >= 48 && c <= 57 ? c - 48 : c >= 65 && c <= 70 ? c - 55 : c >= 97 && c <= 102 ? c - 87 : -1;
+    if (d < 0) return null;
+    if (hi < 0) hi = d;
+    else {
+      out[o++] = hi << 4 | d;
+      hi = -1;
+    }
+  }
+  if (hi >= 0) out[o++] = hi << 4;
+  return out.slice(0, o);
+}
+function undoAscii(names, raw) {
+  let data = raw, i = 0;
+  for (; i < names.length && ASCII_FILTERS.has(names[i]); i++) {
+    data = names[i] === "ASCIIHexDecode" || names[i] === "AHx" ? asciiHexDecode(data) : ascii85Decode(data);
+    if (!data) return null;
+  }
+  return { data, rest: names.slice(i) };
+}
 var PDF_LINK_TYPES = [...LINK_TYPES, "undetermined"];
 function binaryString(u8) {
   if (!(u8 instanceof Uint8Array)) return "";
   let out = "";
-  for (let i = 0; i < u8.length; i += 8192) out += String.fromCharCode.apply(null, u8.subarray(i, i + 8192));
+  for (let i = 0; i < u8.length; i += 16384) out += String.fromCharCode.apply(null, u8.subarray(i, i + 16384));
   return out;
 }
 function isWhitespace(c) {
@@ -269,9 +333,14 @@ async function inflateWithTrailing(u8) {
 }
 function adler32(u8) {
   let a = 1, b = 0;
-  for (let i = 0; i < u8.length; i++) {
-    a = (a + u8[i]) % 65521;
-    b = (b + a) % 65521;
+  for (let i = 0; i < u8.length; ) {
+    const end = Math.min(u8.length, i + 5552);
+    for (; i < end; i++) {
+      a += u8[i];
+      b += a;
+    }
+    a %= 65521;
+    b %= 65521;
   }
   return (b << 16 | a) >>> 0;
 }
@@ -350,6 +419,15 @@ function skipWs(s, pos) {
   }
   return pos;
 }
+var NAME_VALUES = /* @__PURE__ */ new Map();
+var NAME_VALUES_MAX = 4096;
+function nameValue(v) {
+  let n = NAME_VALUES.get(v);
+  if (n) return n;
+  n = Object.freeze({ t: "name", v });
+  if (NAME_VALUES.size < NAME_VALUES_MAX && v.length <= 64) NAME_VALUES.set(v, n);
+  return n;
+}
 function parseName(s, pos) {
   pos++;
   let out = "";
@@ -367,7 +445,7 @@ function parseName(s, pos) {
     out += s[pos];
     pos++;
   }
-  return { value: { t: "name", v: out }, pos };
+  return { value: nameValue(out), pos };
 }
 function parseNumber(s, pos) {
   const start = pos;
@@ -421,11 +499,14 @@ function parseArray(buf, s, pos) {
     items.push(r.value);
     pos = r.pos;
   }
-  return { value: { t: "arr", items }, pos };
+  return { value: { t: "arr", items: items.length < 16 ? items.slice() : items }, pos };
 }
+function Dict() {
+}
+Dict.prototype = /* @__PURE__ */ Object.create(null);
 function parseDict(buf, s, pos) {
   pos += 2;
-  const map = /* @__PURE__ */ Object.create(null);
+  const map = new Dict();
   while (true) {
     pos = skipWs(s, pos);
     if (pos >= s.length) break;
@@ -449,22 +530,223 @@ function parseDict(buf, s, pos) {
     let p = after + 6;
     if (s.charCodeAt(p) === 13) p++;
     if (s.charCodeAt(p) === 10) p++;
-    return { value: { t: "stream", dict: map, start: p }, pos: p, streamPending: true };
+    return { value: { t: "stream", dict: map, start: p + (typeof buf === "number" ? buf : 0) }, pos: p, streamPending: true };
   }
   return { value: { t: "dict", map }, pos };
+}
+var OBJ_CACHE_COST = 12e5;
+var INNER_CACHE_BYTES = 16 * 1024 * 1024;
+var INNER_DECODE_MAX = 128 * 1024 * 1024;
+var INNER_CHECK_BYTES = 2 * 1024 * 1024;
+var LARGE_RAW_BYTES = 128 * 1024;
+var isJsSpaceByte = (c) => c >= 9 && c <= 13 || c === 32 || c === 160;
+var isWordByte = (c) => c >= 48 && c <= 57 || c >= 65 && c <= 90 || c >= 97 && c <= 122 || c === 95;
+function parseWindow(bytes, pos, first = 512) {
+  if (!Number.isFinite(pos) || pos < 0 || pos >= bytes.length) return null;
+  pos = Math.trunc(pos);
+  for (let size = Math.max(32, first); ; size *= 8) {
+    const hi = Math.min(bytes.length, pos + size);
+    const s = binaryString(bytes.subarray(pos, hi));
+    const r = parseValueSafe(s, 0, pos);
+    const more = hi < bytes.length;
+    if (!r) {
+      if (more && skipWs(s, 0) + 16 > s.length) continue;
+      return null;
+    }
+    if (more && skipWs(s, r.pos) + 16 > s.length) continue;
+    return { value: r.value, len: r.pos };
+  }
+}
+var ObjectTable = class _ObjectTable {
+  constructor(doc) {
+    this.doc = doc;
+    this.hot = /* @__PURE__ */ new Map();
+    this.pins = /* @__PURE__ */ new Map();
+    this.cost = 0;
+    this.n = 0;
+    this.num = new Float64Array(256);
+    this.p = new Uint32Array(256);
+    this.w = new Int32Array(256);
+    this.stm = new Float64Array(256);
+    this.g = new Float64Array(256);
+    this.fl = new Uint8Array(256);
+    this.ty = new Uint16Array(256);
+    this.types = [null];
+    this.typeIx = /* @__PURE__ */ new Map();
+    this.slots = new Int32Array(512);
+  }
+  get size() {
+    return this.n;
+  }
+  static hash(n) {
+    return Math.imul(n % 4294967296 | 0, 2654435761) >>> 0;
+  }
+  row(n) {
+    const mask = this.slots.length - 1;
+    for (let i = _ObjectTable.hash(n) & mask, s; s = this.slots[i]; i = i + 1 & mask) if (this.num[s - 1] === n) return s - 1;
+    return -1;
+  }
+  has(n) {
+    return this.row(n) >= 0;
+  }
+  *keys() {
+    for (let i = 0; i < this.n; i++) yield this.num[i];
+  }
+  gen(n) {
+    const r = this.row(n);
+    return r < 0 ? void 0 : this.g[r];
+  }
+  grow() {
+    const cap = this.num.length * 2;
+    for (const k of ["num", "p", "w", "stm", "g", "fl", "ty"]) {
+      const a = new this[k].constructor(cap);
+      a.set(this[k]);
+      this[k] = a;
+    }
+  }
+  rehash() {
+    this.slots = new Int32Array(this.slots.length * 2);
+    const mask = this.slots.length - 1;
+    for (let r = 0; r < this.n; r++) {
+      let i = _ObjectTable.hash(this.num[r]) & mask;
+      while (this.slots[i]) i = i + 1 & mask;
+      this.slots[i] = r + 1;
+    }
+  }
+  /** A definition of `n` whose value, parsed at `p` of the file (`stm` -1) or of object stream `stm`, is `v`: the later
+   *  one replaces an earlier one's, keeping the number's place in the order. */
+  put(n, p, w, stm, g, v) {
+    let r = this.row(n);
+    if (r < 0) {
+      if (this.n === this.num.length) this.grow();
+      if ((this.n + 1) * 2 > this.slots.length) this.rehash();
+      r = this.n++;
+      this.num[r] = n;
+      const mask = this.slots.length - 1;
+      let i = _ObjectTable.hash(n) & mask;
+      while (this.slots[i]) i = i + 1 & mask;
+      this.slots[i] = r + 1;
+    }
+    this.p[r] = p;
+    this.w[r] = w;
+    this.stm[r] = stm;
+    this.g[r] = g;
+    const map = v && v.t === "dict" ? v.map : v && v.t === "stream" ? v.dict : null;
+    const ty = map && map.Type && map.Type.t === "name" ? map.Type.v : null;
+    let t = 0;
+    if (ty !== null) {
+      t = this.typeIx.get(ty);
+      if (t === void 0) {
+        t = this.types.length;
+        if (t > 65535) t = 0;
+        else {
+          this.types.push(ty);
+          this.typeIx.set(ty, t);
+        }
+      }
+    }
+    this.ty[r] = t;
+    const sd = map && map.Filter && map.Filter.t === "name" && map.Filter.v === "Standard" && map.R != null;
+    this.fl[r] = (v && v.t === "dict" ? 1 : v && v.t === "stream" ? 2 : 0) | (sd ? 4 : 0);
+    this.pins.delete(n);
+    const h = this.hot.get(n);
+    if (h) {
+      this.cost -= h.c;
+      this.hot.delete(n);
+    }
+  }
+  /** The parsed value of object `n`, or undefined; parsed objects are reused while they are recent. */
+  get(n) {
+    const r = this.row(n);
+    if (r < 0) return void 0;
+    if (this.pins.has(n)) return this.pins.get(n);
+    const h = this.hot.get(n);
+    if (h) {
+      this.hot.delete(n);
+      this.hot.set(n, h);
+      return h.v;
+    }
+    const got = this.parse(r);
+    if (!got) return void 0;
+    const c = 1 + got.len * 3;
+    this.hot.set(n, { v: got.value, c });
+    this.cost += c;
+    for (const [k, old] of this.hot) {
+      if (this.cost <= OBJ_CACHE_COST || this.hot.size <= 1) break;
+      this.hot.delete(k);
+      this.cost -= old.c;
+    }
+    return got.value;
+  }
+  /** The parsed value of `n` without keeping it. */
+  peek(n) {
+    const r = this.row(n);
+    if (r < 0) return void 0;
+    if (this.pins.has(n)) return this.pins.get(n);
+    const h = this.hot.get(n);
+    if (h) return h.v;
+    const got = this.parse(r);
+    return got ? got.value : void 0;
+  }
+  /** Keep object `n`'s parsed value for good: a caller that compares the identity of what it resolved asks for this. */
+  pin(n) {
+    const v = this.get(n);
+    if (v === void 0) return;
+    const h = this.hot.get(n);
+    if (h) {
+      this.cost -= h.c;
+      this.hot.delete(n);
+    }
+    this.pins.set(n, v);
+  }
+  parse(r) {
+    const stm = this.stm[r];
+    const src = stm < 0 ? this.doc._b : this.doc._innerBytes(stm);
+    return src ? parseWindow(src, this.p[r], this.w[r]) : null;
+  }
+  /** Object numbers, in order, whose winning definition is of kind `kind` (1 dictionary, 2 stream, 3 either) and, when
+   *  given, has the `/Type` name `type`. */
+  nums(kind, type) {
+    const out = [];
+    const t = type === void 0 ? -1 : this.typeIx.get(type);
+    if (t === void 0) return out;
+    for (let r = 0; r < this.n; r++) {
+      const k = this.fl[r] & 3;
+      if (!(kind === 3 ? k > 0 : k === kind) || t >= 0 && this.ty[r] !== t) continue;
+      out.push(this.num[r]);
+    }
+    return out;
+  }
+  /** Object numbers that could be the Standard security handler. */
+  standard() {
+    const out = [];
+    for (let r = 0; r < this.n; r++) if (this.fl[r] & 4) out.push(this.num[r]);
+    return out;
+  }
+};
+function fingerprint(a) {
+  let h1 = 2166136261, h2 = 16777619;
+  for (let i = 0; i < a.length; i++) {
+    h1 = Math.imul(h1 ^ a[i], 16777619);
+    h2 = Math.imul(h2 ^ a[i], 2246822507) + 2654435769 | 0;
+  }
+  return `${a.length}:${(h1 >>> 0).toString(16)}:${(h2 >>> 0).toString(16)}`;
 }
 var PdfDoc = class {
   constructor(bytes) {
     this.bytes = bytes;
-    this.s = binaryString(bytes);
-    this._objs = /* @__PURE__ */ new Map();
-    this._gens = /* @__PURE__ */ new Map();
+    this._b = bytes instanceof Uint8Array ? bytes : new Uint8Array(0);
+    this._objs = new ObjectTable(this);
+    this._inners = /* @__PURE__ */ new Map();
+    this._innerBytesHeld = 0;
+    this._sticky = /* @__PURE__ */ new Map();
+    this._innerLen = /* @__PURE__ */ new Map();
     this.pageIndexByObj = /* @__PURE__ */ new Map();
     this._pageOrder = [];
     this.pageCount = 0;
     this.root = null;
     this.notes = [];
-    this._trailingNoted = /* @__PURE__ */ new WeakSet();
+    this._trailingNoted = /* @__PURE__ */ new Set();
   }
   /** The resolved dict of the page at 0-based `pageIdx` in page order, or null
    *  (R31). */
@@ -476,19 +758,30 @@ var PdfDoc = class {
     this.notes.push(msg);
   }
   /** Scan every top-level `N G obj` in the file. Later definitions win, which
-   *  matches incremental-update semantics without parsing any xref. */
+   *  matches incremental-update semantics without parsing any xref. The first
+   *  reader scanned the file as a string with `/(\d+)\s+(\d+)\s+obj\b/g`; this
+   *  finds the same matches in the same order from the bytes (`\s` as
+   *  JavaScript means it: the PDF whitespace bytes, and 0x0B and 0xA0). */
   scanTopLevel() {
-    const s = this.s;
-    const re = /(\d+)\s+(\d+)\s+obj\b/g;
-    let m;
-    while (m = re.exec(s)) {
-      const num = parseInt(m[1], 10);
-      const bodyStart = m.index + m[0].length;
-      const r = parseValueSafe(s, bodyStart);
-      if (r) {
-        this._objs.set(num, r.value);
-        this._gens.set(num, parseInt(m[2], 10));
-      }
+    const b = this._b;
+    for (let j = b.indexOf(106); j !== -1; j = b.indexOf(106, j + 1)) {
+      if (j < 2 || b[j - 1] !== 98 || b[j - 2] !== 111 || isWordByte(b[j + 1])) continue;
+      let p = j - 3;
+      if (!(p >= 0 && isJsSpaceByte(b[p]))) continue;
+      while (p >= 0 && isJsSpaceByte(b[p])) p--;
+      const genEnd = p + 1;
+      while (p >= 0 && b[p] >= 48 && b[p] <= 57) p--;
+      const genStart = p + 1;
+      if (genStart === genEnd || !(p >= 0 && isJsSpaceByte(b[p]))) continue;
+      while (p >= 0 && isJsSpaceByte(b[p])) p--;
+      const numEnd = p + 1;
+      while (p >= 0 && b[p] >= 48 && b[p] <= 57) p--;
+      const numStart = p + 1;
+      if (numStart === numEnd) continue;
+      const num = parseInt(binaryString(b.subarray(numStart, numEnd)), 10);
+      const bodyStart = j + 1;
+      const r = parseWindow(b, bodyStart);
+      if (r) this._objs.put(num, bodyStart, r.len + 64, -1, parseInt(binaryString(b.subarray(genStart, genEnd)), 10), r.value);
     }
   }
   resolve(v, seen = 0) {
@@ -518,7 +811,7 @@ var PdfDoc = class {
     const len = this.resolve(streamObj.dict.Length);
     if (typeof len === "number" && len >= 0 && start + len <= this.bytes.length) {
       end = start + len;
-      const tail = this.s.indexOf("endstream", end - 2);
+      const tail = firstAscii(this.bytes, "endstream", Math.max(0, end - 2));
       if (tail === -1 || tail > end + 4) end = this._scanEndstream(start);
     } else {
       end = this._scanEndstream(start);
@@ -527,11 +820,11 @@ var PdfDoc = class {
     return this.bytes.subarray(start, end);
   }
   _scanEndstream(start) {
-    const idx = this.s.indexOf("endstream", start);
+    const idx = firstAscii(this.bytes, "endstream", start);
     if (idx === -1) return null;
     let e = idx;
-    if (this.s.charCodeAt(e - 1) === 10) e--;
-    if (this.s.charCodeAt(e - 1) === 13) e--;
+    if (this.bytes[e - 1] === 10) e--;
+    if (this.bytes[e - 1] === 13) e--;
     return e;
   }
   /** Decompress a stream's bytes if its filter chain is (Flate). Answers a
@@ -547,19 +840,30 @@ var PdfDoc = class {
     }
   }
   async _streamDecoded(streamObj) {
-    const raw = this.streamRawBytes(streamObj);
+    let raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
     const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f) => f && f.t === "name" ? f.v : null) : [null];
     if (names.length === 0) return raw;
-    if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+    const un = undoAscii(names, raw);
+    if (!un || !un.rest.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+    raw = un.data;
+    if (!un.rest.length) return this._unpredicted(streamObj, raw);
+    if (raw.length >= LARGE_RAW_BYTES) {
+      const exact = inflateChecked(raw, INNER_DECODE_MAX);
+      if (exact) return this._unpredicted(streamObj, exact);
+    }
     const inflated = await inflate(raw);
     if (!inflated) return null;
     let data = inflated.data;
-    if (inflated.trailing > 0 && !this._trailingNoted.has(streamObj)) {
-      this._trailingNoted.add(streamObj);
+    if (inflated.trailing > 0 && !this._trailingNoted.has(streamObj.start)) {
+      this._trailingNoted.add(streamObj.start);
       this.note(`flate_trailing_bytes:${inflated.trailing}`);
     }
+    return this._unpredicted(streamObj, data);
+  }
+  /** Optional PNG predictor via /DecodeParms. */
+  _unpredicted(streamObj, data) {
     let parms = this.resolve(streamObj.dict.DecodeParms) || this.resolve(streamObj.dict.DP);
     if (parms && parms.t === "arr") parms = this.resolve(parms.items[parms.items.length - 1]);
     if (parms && parms.t === "dict") {
@@ -576,37 +880,111 @@ var PdfDoc = class {
     }
     return data;
   }
-  /** Parse every /ObjStm and fold its contained objects into the map, so an
+  /** `streamDecoded`, for a Flate or unfiltered stream the platform decodes without recovery, in one step and without
+   *  notes: what R41's second reading of an object stream uses. Null for any other, which `loadObjectStreams` then keeps
+   *  as first decoded. */
+  _decodedSync(streamObj, expect) {
+    try {
+      const raw = this.streamRawBytes(streamObj);
+      if (!raw) return null;
+      const filter = this.resolve(streamObj.dict.Filter);
+      const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f) => f && f.t === "name" ? f.v : null) : [null];
+      if (names.length === 0) return raw;
+      const un = undoAscii(names, raw);
+      if (!un || !un.rest.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+      if (!un.rest.length) return this._unpredicted(streamObj, un.data);
+      const data = inflateChecked(un.data, INNER_DECODE_MAX, expect);
+      return data ? this._unpredicted(streamObj, data) : null;
+    } catch {
+      return null;
+    }
+  }
+  /** Object stream `stm`'s decoded bytes, read again when it is not one of the few held; null when it cannot be. */
+  _innerBytes(stm) {
+    const held = this._inners.get(stm);
+    if (held) {
+      this._inners.delete(stm);
+      this._inners.set(stm, held);
+      return held;
+    }
+    let data = this._sticky.get(stm);
+    if (!data) {
+      const st = this._objs.get(stm);
+      data = st && st.t === "stream" ? this._decodedSync(st, this._innerLen.get(stm)) : null;
+    }
+    if (!data) return null;
+    for (const [k, old] of this._inners) {
+      if (this._innerBytesHeld + data.length <= INNER_CACHE_BYTES || !this._inners.size) break;
+      this._inners.delete(k);
+      this._innerBytesHeld -= old.length;
+    }
+    this._inners.set(stm, data);
+    this._innerBytesHeld += data.length;
+    return data;
+  }
+  /** Parse every /ObjStm and fold its contained objects into the table, so an
    *  xref-stream PDF that keeps its page/annot dicts compressed is not empty.
    *  Objects already defined at top level are NOT overwritten (top-level and
    *  compressed definitions of one number should not coexist; if they do, the
-   *  uncompressed one is the safer read). */
+   *  uncompressed one is the safer read). Each is parsed once here, to know it
+   *  parses and what it is, and read again from the decoded stream when asked for (R41). */
   async loadObjectStreams() {
-    const streams = [];
-    for (const v of this._objs.values()) {
-      if (v && v.t === "stream") {
-        const type = v.dict.Type;
-        if (type && type.t === "name" && type.v === "ObjStm") streams.push(v);
+    const streams = this._objs.nums(2, "ObjStm");
+    for (const stm of streams) {
+      const st = this._objs.get(stm);
+      if (!st || st.t !== "stream") continue;
+      let proof = null;
+      {
+        let data = this._decodedSync(st);
+        const checked = data !== null;
+        if (!checked) data = await this.streamDecoded(st);
+        if (!data) {
+          this.note("objstm_undecodable");
+          continue;
+        }
+        const n = numberVal(this.resolve(st.dict.N));
+        const first = numberVal(this.resolve(st.dict.First));
+        if (n == null || first == null) continue;
+        const header = binaryString(data.subarray(0, first)).trim().split(/\s+/).map(Number);
+        const offs = [];
+        for (let i = 0; i < n; i++) if (Number.isFinite(header[i * 2 + 1])) offs.push(first + header[i * 2 + 1]);
+        offs.sort((a, b) => a - b);
+        const nextAbove = (at) => {
+          let lo = 0, hi = offs.length;
+          while (lo < hi) {
+            const m = lo + hi >> 1;
+            if (offs[m] <= at) lo = m + 1;
+            else hi = m;
+          }
+          return lo < offs.length ? offs[lo] : data.length;
+        };
+        let added = 0;
+        for (let i = 0; i < n; i++) {
+          const objNum = header[i * 2];
+          const off = header[i * 2 + 1];
+          if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
+          if (this._objs.has(objNum)) continue;
+          const at = first + off;
+          const r = parseWindow(data, at, nextAbove(at) - at + 16);
+          if (r) {
+            this._objs.put(objNum, Math.trunc(at), r.len + 64, stm, 0, r.value);
+            added++;
+          }
+        }
+        if (added) {
+          this._innerLen.set(stm, data.length);
+          if (!checked) {
+            if (data.length <= INNER_CHECK_BYTES) proof = { len: data.length, fp: fingerprint(data) };
+            else this._sticky.set(stm, data);
+          }
+        }
       }
-    }
-    for (const st of streams) {
-      const data = await this.streamDecoded(st);
-      if (!data) {
-        this.note("objstm_undecodable");
-        continue;
-      }
-      const inner = binaryString(data);
-      const n = numberVal(this.resolve(st.dict.N));
-      const first = numberVal(this.resolve(st.dict.First));
-      if (n == null || first == null) continue;
-      const header = inner.slice(0, first).trim().split(/\s+/).map(Number);
-      for (let i = 0; i < n; i++) {
-        const objNum = header[i * 2];
-        const off = header[i * 2 + 1];
-        if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
-        if (this._objs.has(objNum)) continue;
-        const r = parseValueSafe(inner, first + off);
-        if (r) this._objs.set(objNum, r.value);
+      if (proof) {
+        const again = this._decodedSync(st, proof.len);
+        if (!again || again.length !== proof.len || fingerprint(again) !== proof.fp) {
+          const first = await this.streamDecoded(st);
+          if (first) this._sticky.set(stm, first);
+        }
       }
     }
   }
@@ -614,12 +992,10 @@ var PdfDoc = class {
    *  object-number order if the tree cannot be walked (leniency). */
   buildPageIndex() {
     let root = null;
-    for (const v of this._objs.values()) {
-      const map = v && v.t === "dict" ? v.map : null;
-      if (map && map.Type && map.Type.t === "name" && map.Type.v === "Catalog") {
-        root = map;
-        break;
-      }
+    const cat = this._objs.nums(1, "Catalog")[0];
+    if (cat !== void 0) {
+      this._objs.pin(cat);
+      root = this._objs.get(cat).map;
     }
     this.root = root;
     const walkRef = (num, seen) => {
@@ -644,11 +1020,7 @@ var PdfDoc = class {
       walkRef(root.Pages.n, /* @__PURE__ */ new Set([root.Pages.n]));
     }
     if (this.pageIndexByObj.size === 0) {
-      const pages = [];
-      for (const [num, v] of this._objs) {
-        const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
-        if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num);
-      }
+      const pages = this._objs.nums(3, "Page");
       pages.sort((a, b) => a - b);
       pages.forEach((num, i) => this.pageIndexByObj.set(num, i));
       this.pageCount = pages.length;
@@ -677,13 +1049,10 @@ var PdfDoc = class {
   isEncrypted() {
     if (this._encrypted !== void 0) return this._encrypted;
     let enc = false;
-    for (const v of this._objs.values()) {
+    for (const num of this._objs.standard()) {
+      const v = this._objs.peek(num);
       const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
-      if (!map) continue;
-      const filter = map.Filter;
-      const isStandard = filter && filter.t === "name" && filter.v === "Standard";
-      const hasRevision = map.R != null && typeof this.resolve(map.R) === "number";
-      if (isStandard && hasRevision) {
+      if (map && typeof this.resolve(map.R) === "number") {
         enc = true;
         break;
       }
@@ -719,17 +1088,17 @@ var PdfDoc = class {
    *  from this one list, so the two cannot disagree about which is the last. */
   _trailers() {
     const cands = [];
-    const re = /\btrailer\b/g;
-    let m;
-    while (m = re.exec(this.s)) {
-      const r = parseValueSafe(this.s, m.index + 7);
-      if (r && r.value && r.value.t === "dict") cands.push([m.index, r.value.map]);
+    const b = this._b;
+    for (let t = firstAscii(b, "trailer", 0); t !== -1; t = firstAscii(b, "trailer", t + 1)) {
+      if (isWordByte(b[t - 1]) || isWordByte(b[t + 7])) continue;
+      const r = parseWindow(b, t + 7);
+      if (r && r.value && r.value.t === "dict") cands.push([t, r.value.map]);
     }
-    for (const v of this._objs.values()) {
-      const type = v && v.t === "stream" ? v.dict.Type : null;
-      if (type && type.t === "name" && type.v === "XRef") cands.push([v.start, v.dict]);
+    for (const num of this._objs.nums(2, "XRef")) {
+      const v = this._objs.peek(num);
+      if (v && v.t === "stream") cands.push([v.start, v.dict]);
     }
-    return cands.sort((a, b) => a[0] - b[0]).map((c) => c[1]);
+    return cands.sort((a, b3) => a[0] - b3[0]).map((c) => c[1]);
   }
   /** R37: the latest revision as a rewrite reads it — the last trailer, every
    *  indirect object reachable from it by any chain of references (each once,
@@ -740,11 +1109,13 @@ var PdfDoc = class {
    *  never throws. The walk is iterative, so a deep or cyclic file cannot
    *  exhaust the stack. */
   objects() {
+    ARENA = { buf: new ArrayBuffer(32768), off: 0 };
     try {
       const trailers = this._trailers();
       if (!trailers.length) return null;
       const trailer = trailers[trailers.length - 1];
-      const found = /* @__PURE__ */ new Map(), missing = /* @__PURE__ */ new Map(), queue = [];
+      const found = [], missing = /* @__PURE__ */ new Map(), queue = [];
+      const done = new Uint8Array(this._objs.size);
       const refsIn = (v) => {
         for (const stack = [v]; stack.length; ) {
           const x = stack.pop();
@@ -757,25 +1128,33 @@ var PdfDoc = class {
       refsIn({ t: "dict", map: trailer });
       for (let i = 0; i < queue.length; i++) {
         const { n, g } = queue[i];
-        if (found.has(n) || missing.has(n)) continue;
+        const row = this._objs.row(n);
+        if (row >= 0 ? done[row] : missing.has(n)) continue;
         const value = this.resolve({ t: "ref", n, g });
-        if (value === null) missing.set(n, { num: n, gen: g });
-        else found.set(n, { num: n, gen: this._gens.get(n) ?? 0, value });
+        if (value === null) {
+          missing.set(n, { num: n, gen: g });
+          if (row >= 0) done[row] = 1;
+        } else {
+          done[row] = 1;
+          found.push({ num: n, gen: this._objs.gen(n) ?? 0, value });
+        }
         refsIn(this._objs.get(n));
       }
-      const asc = (m) => [...m.values()].sort((a, b) => a.num - b.num);
-      return { trailer, objects: asc(found), unresolved: asc(missing) };
+      queue.length = 0;
+      return { trailer, objects: found.sort((a, b) => a.num - b.num), unresolved: [...missing.values()].sort((a, b) => a.num - b.num) };
     } catch {
       return null;
+    } finally {
+      ARENA = null;
     }
   }
 };
 function numberVal(v) {
   return typeof v === "number" ? v : null;
 }
-function parseValueSafe(s, pos) {
+function parseValueSafe(s, pos, base = 0) {
   try {
-    return parseValue(null, s, pos);
+    return parseValue(base, s, pos);
   } catch {
     return null;
   }
@@ -875,11 +1254,29 @@ function tokenizeContent(s, opts = {}) {
   }
   return toks;
 }
+var ARENA = null;
+function newBytes(n) {
+  if (!ARENA || n > 512) return new Uint8Array(n);
+  if (ARENA.off + n > ARENA.buf.byteLength) ARENA = { buf: new ArrayBuffer(32768), off: 0 };
+  const u = new Uint8Array(ARENA.buf, ARENA.off, n);
+  ARENA.off += n;
+  return u;
+}
 function readLiteralBytes(s, pos) {
   pos++;
+  let q = pos;
+  while (q < s.length) {
+    const c = s.charCodeAt(q);
+    if (c === 41 || c === 40 || c === 92 || c === 13) break;
+    q++;
+  }
+  if (q < s.length && s.charCodeAt(q) === 41) {
+    const out2 = newBytes(q - pos);
+    for (let i = 0; i < out2.length; i++) out2[i] = s.charCodeAt(pos + i);
+    return { bytes: out2, pos: q + 1 };
+  }
   const bytes = [];
   let depth = 1;
-  const simple = { 110: 10, 114: 13, 116: 9, 98: 8, 102: 12, 40: 40, 41: 41, 92: 92 };
   while (pos < s.length) {
     const c = s.charCodeAt(pos);
     if (c === 92) {
@@ -888,32 +1285,70 @@ function readLiteralBytes(s, pos) {
         break;
       }
       const nc = s.charCodeAt(pos + 1);
-      if (nc in simple) {
-        bytes.push(simple[nc]);
-        pos += 2;
-        continue;
-      }
       if (nc >= 48 && nc <= 55) {
-        let oct = "", p = pos + 1;
-        while (p < s.length && oct.length < 3 && s.charCodeAt(p) >= 48 && s.charCodeAt(p) <= 55) {
-          oct += s[p];
-          p++;
+        let v = nc - 48, p = pos + 2;
+        for (let n = 1; n < 3 && p < s.length; n++, p++) {
+          const d = s.charCodeAt(p);
+          if (d < 48 || d > 55) break;
+          v = v * 8 + d - 48;
         }
-        bytes.push(parseInt(oct, 8) & 255);
+        bytes.push(v & 255);
         pos = p;
         continue;
       }
-      if (nc === 10) {
-        pos += 2;
-        continue;
+      switch (nc) {
+        case 110:
+          bytes.push(10);
+          pos += 2;
+          continue;
+        // n
+        case 114:
+          bytes.push(13);
+          pos += 2;
+          continue;
+        // r
+        case 116:
+          bytes.push(9);
+          pos += 2;
+          continue;
+        // t
+        case 98:
+          bytes.push(8);
+          pos += 2;
+          continue;
+        // b
+        case 102:
+          bytes.push(12);
+          pos += 2;
+          continue;
+        // f
+        case 40:
+          bytes.push(40);
+          pos += 2;
+          continue;
+        // (
+        case 41:
+          bytes.push(41);
+          pos += 2;
+          continue;
+        // )
+        case 92:
+          bytes.push(92);
+          pos += 2;
+          continue;
+        // \
+        case 10:
+          pos += 2;
+          continue;
+        // line continuation
+        case 13:
+          pos += s.charCodeAt(pos + 2) === 10 ? 3 : 2;
+          continue;
+        default:
+          bytes.push(nc);
+          pos += 2;
+          continue;
       }
-      if (nc === 13) {
-        pos += s.charCodeAt(pos + 2) === 10 ? 3 : 2;
-        continue;
-      }
-      bytes.push(nc);
-      pos += 2;
-      continue;
     }
     if (c === 13) {
       bytes.push(10);
@@ -939,7 +1374,9 @@ function readLiteralBytes(s, pos) {
     bytes.push(c);
     pos++;
   }
-  return { bytes: Uint8Array.from(bytes), pos };
+  const out = newBytes(bytes.length);
+  out.set(bytes);
+  return { bytes: out, pos };
 }
 function readHexBytes(s, pos) {
   pos++;
@@ -951,7 +1388,7 @@ function readHexBytes(s, pos) {
   }
   pos++;
   if (hex.length % 2) hex += "0";
-  const bytes = new Uint8Array(hex.length / 2);
+  const bytes = newBytes(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
   return { bytes, pos };
 }
@@ -1247,6 +1684,218 @@ var PDFDOC_HIGH = Object.freeze({
   158: 382,
   160: 8364
 });
+var LEN_BASE = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258];
+var LEN_EXTRA = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+var DIST_BASE = [
+  1,
+  2,
+  3,
+  4,
+  5,
+  7,
+  9,
+  13,
+  17,
+  25,
+  33,
+  49,
+  65,
+  97,
+  129,
+  193,
+  257,
+  385,
+  513,
+  769,
+  1025,
+  1537,
+  2049,
+  3073,
+  4097,
+  6145,
+  8193,
+  12289,
+  16385,
+  24577
+];
+var DIST_EXTRA = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+var CODE_LENGTH_ORDER = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+function huffman(lengths) {
+  const count = new Int32Array(16);
+  for (const l of lengths) count[l]++;
+  let left = 1;
+  for (let len = 1; len <= 15; len++) {
+    left = left * 2 - count[len];
+    if (left < 0) return null;
+  }
+  const offs = new Int32Array(16);
+  for (let len = 1; len < 15; len++) offs[len + 1] = offs[len] + count[len];
+  const symbol = new Int32Array(lengths.length);
+  lengths.forEach((l, s) => {
+    if (l) symbol[offs[l]++] = s;
+  });
+  return { count, symbol };
+}
+var FIXED_TABLES = null;
+function fixedTables() {
+  if (!FIXED_TABLES) {
+    const l = new Array(288).fill(8);
+    for (let i = 144; i < 256; i++) l[i] = 9;
+    for (let i = 256; i < 280; i++) l[i] = 7;
+    FIXED_TABLES = { lit: huffman(l), dist: huffman(new Array(30).fill(5)) };
+  }
+  return FIXED_TABLES;
+}
+function inflateSync(src, max, expect, count = false) {
+  const zlibHead = src.length >= 2 && (src[0] & 15) === 8 && (src[0] << 8 | src[1]) % 31 === 0;
+  let pos = zlibHead ? 2 : 0, bitBuf = 0, bitCnt = 0;
+  const M = count ? 65535 : -1;
+  let out = new Uint8Array(count ? 65536 : Math.min(max, Number.isInteger(expect) && expect >= 0 ? expect : Math.max(1024, src.length * 4))), o = 0;
+  const STOP = { stop: true };
+  const bits = (n) => {
+    while (bitCnt < n) {
+      if (pos >= src.length) throw new Error("eof");
+      bitBuf |= src[pos++] << bitCnt;
+      bitCnt += 8;
+    }
+    const v = bitBuf & (1 << n) - 1;
+    bitBuf >>>= n;
+    bitCnt -= n;
+    return v;
+  };
+  const decode = (h) => {
+    let code = 0, first = 0, index = 0;
+    for (let len = 1; len <= 15; len++) {
+      code |= bits(1);
+      const c = h.count[len];
+      if (code - c < first) return h.symbol[index + (code - first)];
+      index += c;
+      first = first + c << 1;
+      code <<= 1;
+    }
+    throw new Error("bad code");
+  };
+  const room = (n) => {
+    if (count) {
+      if (o + n > max) throw STOP;
+      return;
+    }
+    if (o + n <= out.length) return;
+    if (o + n > max) {
+      if (o < max) {
+      }
+      throw STOP;
+    }
+    let size = out.length;
+    while (size < o + n) size *= 2;
+    const bigger = new Uint8Array(Math.min(size, max));
+    bigger.set(out.subarray(0, o));
+    out = bigger;
+  };
+  try {
+    for (let last = 0; !last; ) {
+      last = bits(1);
+      const type = bits(2);
+      if (type === 0) {
+        bitBuf = 0;
+        bitCnt = 0;
+        if (pos + 4 > src.length) throw new Error("eof");
+        const len = src[pos] | src[pos + 1] << 8;
+        if ((len ^ 65535) !== (src[pos + 2] | src[pos + 3] << 8)) throw new Error("stored length");
+        pos += 4;
+        if (pos + len > src.length) throw new Error("eof");
+        const take = Math.min(len, max - o);
+        room(take);
+        if (count) for (let i = 0; i < take; i++) out[o + i & M] = src[pos + i];
+        else out.set(src.subarray(pos, pos + take), o);
+        o += take;
+        pos += len;
+        if (take < len) throw STOP;
+        continue;
+      }
+      if (type === 3) throw new Error("block type");
+      let lit, dist;
+      if (type === 1) ({ lit, dist } = fixedTables());
+      else {
+        const nlen = bits(5) + 257, ndist = bits(5) + 1, ncode = bits(4) + 4;
+        if (nlen > 286 || ndist > 30) throw new Error("counts");
+        const cl = new Array(19).fill(0);
+        for (let i = 0; i < ncode; i++) cl[CODE_LENGTH_ORDER[i]] = bits(3);
+        const clh = huffman(cl);
+        if (!clh) throw new Error("code lengths");
+        const lens = [];
+        while (lens.length < nlen + ndist) {
+          const sym = decode(clh);
+          if (sym < 16) lens.push(sym);
+          else {
+            let rep, val = 0;
+            if (sym === 16) {
+              if (!lens.length) throw new Error("repeat");
+              val = lens[lens.length - 1];
+              rep = 3 + bits(2);
+            } else if (sym === 17) rep = 3 + bits(3);
+            else rep = 11 + bits(7);
+            if (lens.length + rep > nlen + ndist) throw new Error("repeat");
+            for (let i = 0; i < rep; i++) lens.push(val);
+          }
+        }
+        if (lens[256] === 0) throw new Error("no end of block");
+        lit = huffman(lens.slice(0, nlen));
+        dist = huffman(lens.slice(nlen));
+        if (!lit || !dist) throw new Error("tables");
+      }
+      for (; ; ) {
+        const sym = decode(lit);
+        if (sym < 256) {
+          room(1);
+          out[o++ & M] = sym;
+          continue;
+        }
+        if (sym === 256) break;
+        const li = sym - 257;
+        if (li >= 29) throw new Error("length symbol");
+        const len = LEN_BASE[li] + bits(LEN_EXTRA[li]);
+        const ds = decode(dist);
+        if (ds >= 30) throw new Error("distance symbol");
+        const d = DIST_BASE[ds] + bits(DIST_EXTRA[ds]);
+        if (d > o) throw new Error("distance");
+        const take = Math.min(len, max - o);
+        room(take);
+        for (let i = 0; i < take; i++, o++) out[o & M] = out[o - d & M];
+        if (take < len) throw STOP;
+      }
+    }
+  } catch (e) {
+    if (e === STOP) return { data: count ? null : out.subarray(0, o), len: o, full: false, end: pos };
+    return null;
+  }
+  return { data: count ? null : out.subarray(0, o), len: o, full: true, end: pos };
+}
+function inflateChecked(src, max, expect) {
+  if (!(src.length >= 6 && (src[0] & 15) === 8 && (src[0] << 8 | src[1]) % 31 === 0 && !(src[1] & 32))) return null;
+  let len = expect;
+  if (!Number.isInteger(len) || len < 0) {
+    const c = inflateSync(src, max, void 0, true);
+    if (!c || !c.full) return null;
+    len = c.len;
+  }
+  const r = inflateSync(src, max, len);
+  if (!r || !r.full || r.data.length !== len || r.end + 4 !== src.length) return null;
+  const want = (src[r.end] << 24 | src[r.end + 1] << 16 | src[r.end + 2] << 8 | src[r.end + 3]) >>> 0;
+  return adler32(r.data) === want ? r.data : null;
+}
+var OBJ_WINDOW_MAX = 4 * 1024 * 1024;
+var STREAM_MAX = 8 * 1024 * 1024;
+var XMP_MAX = 2 * 1024 * 1024;
+function firstAscii(b, needle, from = 0) {
+  const c0 = needle.charCodeAt(0);
+  for (let i = b.indexOf(c0, from); i !== -1; i = b.indexOf(c0, i + 1)) {
+    let k = 1;
+    while (k < needle.length && b[i + k] === needle.charCodeAt(k)) k++;
+    if (k === needle.length) return i;
+  }
+  return -1;
+}
 async function loadPdf(bytes) {
   const doc = new PdfDoc(bytes);
   doc.scanTopLevel();

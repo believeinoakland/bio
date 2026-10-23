@@ -57,6 +57,16 @@ CREATE TABLE IF NOT EXISTS calc_ingests (
   asked_by      TEXT NOT NULL,
   at            TEXT NOT NULL
 );
+-- R14 (G45): the pieces of a value of calc_ingests that passes INGEST_INLINE_MAX, in chunks of at most 256 Ki characters;
+-- the column then holds the marker {parts, bytes, count}. kind is rows, written or not_written.
+CREATE TABLE IF NOT EXISTS calc_ingest_parts (
+  ingest_key    TEXT NOT NULL,
+  kind          TEXT NOT NULL,
+  seq           INTEGER NOT NULL,
+  bundle_id     TEXT,
+  chunk         TEXT NOT NULL,
+  PRIMARY KEY (ingest_key, kind, seq)
+);
 -- R4–R11: one row per calculation.
 CREATE TABLE IF NOT EXISTS calculations (
   calc_id       TEXT PRIMARY KEY,
@@ -91,6 +101,9 @@ CREATE TABLE IF NOT EXISTS calc_inputs (
   input_name    TEXT NOT NULL,
   input_kind    TEXT NOT NULL,
   ref           TEXT NOT NULL,
+  -- R9 (G41): a figure input's engine mark as the create made it: JSON null (no engine) or {name, version}; SQL NULL on a
+  -- row stored before, made and written at the next read
+  engine_json   TEXT,
   PRIMARY KEY (calc_id, input_name, ref)
 );
 CREATE INDEX IF NOT EXISTS calc_inputs_ref ON calc_inputs(ref, calc_id);
@@ -215,6 +228,7 @@ export const CALCULATIONS_TABLES = Object.freeze([
   cls("calc_table_bytes", { export: "never", sight: "source", keys: ["bundle_id"] }),
   cls("calc_bindings", { export: "yes", sight: "source", keys: ["bundle_id"] }),
   cls("calc_ingests", { export: "yes", sight: "source", keys: ["bundle_id"] }),
+  cls("calc_ingest_parts", { export: "yes", sight: "source", keys: ["bundle_id"] }),
   cls("calculations", { export: "yes", sight: "bundle", keys: ["project"] }),
   cls("calc_inputs", { export: "yes", sight: "bundle", keys: ["project"] }),
   cls("calc_recomputes", { export: "yes", sight: "bundle", keys: ["project"], version_chain: true }),
@@ -230,7 +244,7 @@ export const CALCULATIONS_TABLES = Object.freeze([
 ]);
 
 /* Columns added to a table after it was first made: [table, column, declaration]. */
-const ADDED = Object.freeze([["calculations", "input_shas_json", "TEXT"], ["calc_draws", "question", "TEXT"]]);
+const ADDED = Object.freeze([["calculations", "input_shas_json", "TEXT"], ["calc_draws", "question", "TEXT"], ["calc_inputs", "engine_json", "TEXT"]]);
 
 /** Creates the tables where absent, and adds a column added since a table was made. Idempotent. */
 export function migrateCalculations(sql) {

@@ -38,8 +38,9 @@ const VARIANTS = { refused: refusedIn("SOME_REFUSAL", "The plane refused this re
    its screens is drawn (N1073: the acts are read from the registry, the owner's declaration, never hand-listed) */
 const NOT_NAMED = { project: ["owed:projectstakeset K3230"], assistant: ["ask"] };
 /* T50: the registry still owes `projectstakeset` (K3230, "owed:"); R53 draws it, re-pointed by interface-shell. Labels the requirements name by key. */
-const OWED = { project: ["projectstakeset"] };
-const LABEL = { citeimported: "act.owed_citeimported.label.question", withdrawimported: "act.owed_withdrawimported.label.question", projectstakeset: "stake.project.save", themeplace: { question: "theme.question.place", document: "theme.place" }, themepropose: "theme.propose", thread: "progression.thread.here",
+/* fix round 4 (R129): `readheld` on `document` is interface-shell's re-point (R117) until the registry lists it, labelled by the nearest held row until the design writes its own */
+const OWED = { project: ["projectstakeset"], document: ["readheld"] };
+const LABEL = { readheld: "document.read.title", citeimported: "act.owed_citeimported.label.question", withdrawimported: "act.owed_withdrawimported.label.question", projectstakeset: "stake.project.save", themeplace: { question: "theme.question.place", document: "theme.place" }, themepropose: "theme.propose", thread: "progression.thread.here",
   hashcopy: "shell.copy", revisioncompare: "screen.document.revisions.compare.act", linkopen: "act.owed_linkopen.label.document",
   declareorigin: "act.owed_declareorigin.label.document", projectclose: "screen.project.closenow.do", rerunread: "act.owed_rerunread.label.project", rerunpair: "act.owed_rerunpair.label.project" };
 const NAMED = Object.fromEntries(REGISTRY.screens.filter((s) => SCREENS.some((x) => x.id === s.id))

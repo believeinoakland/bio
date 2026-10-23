@@ -1822,7 +1822,11 @@ const undeterminedChars = (page) =>
  * a judgment about whether a document holds decoded text is read off THE TEXT IN
  * HAND, never off a producer's counter. The counter is a claim; the string is the
  * fact, and the two disagree by exactly the whitespace. */
-const WHITESPACE = /\s/u;
+/* The whitespace `\s` matches above U+00A0, spelled out so the count needs no per-character regexp (G48):
+   U+00A0, 1680, 2000-200A, 2028, 2029, 202F, 205F, 3000, FEFF (R73). */
+const isWideSpace = (c) =>
+  c === 0xa0 || c === 0x1680 || (c >= 0x2000 && c <= 0x200a) || c === 0x2028 || c === 0x2029 ||
+  c === 0x202f || c === 0x205f || c === 0x3000 || c === 0xfeff;
 /**
  * The glyphs a string holds: non-whitespace CODE POINTS, D-501's unit and the
  * one counter every reader that judges "is there decoded text here" must read
@@ -1842,7 +1846,18 @@ export function glyphCount(s) {
      once. A lone surrogate counts once too, which is the honest answer for a
      thing that is not a glyph either way. */
   let n = 0;
-  for (const ch of s) if (!WHITESPACE.test(ch)) n++;
+  const len = s.length;
+  for (let i = 0; i < len; i++) {
+    const c = s.charCodeAt(i);
+    if (c === 0x20 || (c >= 0x9 && c <= 0xd)) continue;
+    if (c >= 0xa0 && isWideSpace(c)) continue;
+    n++;
+    /* A high surrogate followed by a low one is one code point: step over the low. */
+    if (c >= 0xd800 && c <= 0xdbff && i + 1 < len) {
+      const d = s.charCodeAt(i + 1);
+      if (d >= 0xdc00 && d <= 0xdfff) i++;
+    }
+  }
   return n;
 }
 /* The AWARD's counter — one page's glyphs. The loop moved into `glyphCount`

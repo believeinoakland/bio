@@ -310,7 +310,12 @@ export const queue = Object.freeze({
         const head = picking ? '<p class="mk-sub">' + cs.w("queue.multi.head") + " " + cs.w("queue.multi.head2") + "</p>"
           : '<p class="mk-sub"><span>' + (n === 1 ? cs.w("screen.queue.count.one") : cs.w("screen.queue.count.many", { n: String(n) }))
           + "</span> · <span>" + how + "</span></p>";
-        return head + updateSection(updates) + states.snoozed(cs, held) + groups.map(function (g) {
+        // R95 (C70): what the number counts, in the words the masthead's explanation holds: the items the list holds by their three kinds, the
+        // member's own vouch to-dos among the to-dos. The doors' numbers (held captures, knocks) are told apart, with the doors, above.
+        const kindN = function (c) { return all.filter(function (x) { return x && x.class === c; }).length + (c === "OBLIGATION" && !picking ? vouch.length : 0); };
+        const says = picking ? "" : '<p class="mk-small">' + cs.w("shell.queue.waiting", { n: String(kindN("OBLIGATION") + kindN("FINDING") + kindN("CONDITION")),
+          todo: String(kindN("OBLIGATION")), noticed: String(kindN("FINDING")), status: String(kindN("CONDITION")) }) + "</p>";
+        return head + says + updateSection(updates) + states.snoozed(cs, held) + groups.map(function (g) {
           const title = g.c ? cs.ref("project", g.c.id, g.c.title || g.c.id, []) : cs.w("screen.queue.nocase");
           const snooze = g.c && !picking ? '<span class="mk-acts">' + actOf("queuesnooze", { project: String(g.c.id) }) + "</span>" : "";
           return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + snooze + cs.sheet(g.items.map(function (it) { return itemRow(it, picking); }).join("")) + "</section>";

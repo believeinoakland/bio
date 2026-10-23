@@ -27,10 +27,10 @@ import { WHAT_CHANGED_HEAD } from "./edition.mjs";
 import { wordsOfFormat } from "./words.mjs";
 import { SENTENCES } from "./sentences.mjs";
 
-export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
+export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V9, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
          CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
-         caseDocumentRequiresTensionSection, caseDocumentRequiresMaterials } from "./formats.mjs";
+         caseDocumentRequiresTensionSection, caseDocumentRequiresMaterials, caseDocumentFormatFor } from "./formats.mjs";
 export { caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
          withheldSourceStatement, sourceRowWithheld, WITHHELD_SOURCE_LABEL, WITHHELD_SOURCE_REASON,
          sourceRowsStanding, CAPTURE_FIELDS, ACKNOWLEDGEMENT_FIELDS, SOURCE_FIELDS, SOURCE_BASES,
@@ -45,14 +45,14 @@ export { WORDS, caseWordsOf } from "./words.mjs";
 export { SENTENCES } from "./sentences.mjs";
 export { WORKING_ON_KEY, NOTICE_REFERENCE_PATTERN, isNoticeReference, workingOnLines, workingOnOf } from "./reference.mjs";
 export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_TITLE_FIELD, MATERIAL_OBSCURED_FIELDS, MATERIAL_OBSCURED_MARKED_FIELD, MATERIAL_OBSCURED_KIND_FIELD,
-         MATERIAL_OBSCURED_KINDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_KINDS,
+         MATERIAL_OBSCURED_KINDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_ATTESTATION_SHA_FIELD, MATERIAL_KINDS,
          MATERIAL_RESTS_UNDER, ATTESTATION_BY_KINDS, ATTESTATION_LEVELS, ANONYMOUS_ATTESTATION_LEVELS,
          GROUP_ATTESTATION_SIGNATURE, materialsLines, materialAttestationLines, materialBlockLines, materialsOf, ACCEPTED_WORK_FIELDS, ACCEPTED_WORK_FLAG_FIELDS,
          PAIR_AXES, pairLine, pairOf, acceptedWorkBlockLines, acceptedWorkOf } from "./materials.mjs";
-export { CASE_FILE_FORMAT, CASE_FILE_FORMAT_V2, CASE_FILE_FORMAT_V1, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, CASE_FILE_PROV_PATH,
+export { CASE_FILE_FORMAT, CASE_FILE_FORMAT_V4, CASE_FILE_FORMAT_V2, CASE_FILE_FORMAT_V1, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, CASE_FILE_PROV_PATH,
          CASE_FILE_KINDS, CASE_FILE_V2_KINDS, CASE_FILE_V3_KINDS, CASE_FILE_ORIGINAL_KINDS, CASE_FILE_SINGLE_KINDS, CASE_FILE_OPTIONAL_SINGLE_KINDS, CASE_FILE_MANIFEST_FIELDS,
          CASE_FILE_KEY_FIELDS, CASE_FILE_PART_FIELDS, CASE_FILE_FILE_FIELDS, caseFilePath, caseFileEntryOf,
-         casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
+         caseFileFormatFor, refsOnSeveralRows, materialFileKey, casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
 export { GRADING_FACT_FIELDS, PASSAGE_FIELDS, gradingFactsLines, passagesLines, gradingFactsOf, passagesOf,
          extractedTextOf } from "./facts.mjs";
 export { BAR_AXES, STANDING_ROLE_WORDS, standingOf } from "./standing.mjs";

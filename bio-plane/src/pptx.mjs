@@ -94,10 +94,16 @@
  *     central directory) answers NULL — a renamed plain ZIP is not a .pptx.
  *   - content type alone: the exact .pptx MIME type -> "likely".
  *
- * SIZE GUARD: full text extraction is refused as a STATED text-undetermined
- * when the DECLARED UNCOMPRESSED bytes of the text parts we would inflate
- * (ppt/slides/*.xml + ppt/notesSlides/*.xml, summed from the central
- * directory — the COFF-6 metric) exceed ooxml.mjs's bound. Container walk,
+ * SIZE GUARD: the DECLARED UNCOMPRESSED bytes of the text parts we would
+ * inflate (ppt/slides/*.xml + ppt/notesSlides/*.xml, summed from the central
+ * directory — the COFF-6 metric) are what this entry may hold in memory at
+ * once, up to ooxml.mjs's bound. Over it, up to its STREAMED_TEXT_BOUND_BYTES,
+ * the deck is READ ONE PART AT A TIME (R35, F7): each slide and notes part is
+ * inflated, walked and let go when text() or structure() asks for it, so no
+ * deck is held, and the answer says it was read so (`piecewise`). A part
+ * that is itself over the bound is not read, and is stated with its size and
+ * `final: true`. Over the streamed ceiling full text extraction is refused as
+ * a STATED text-undetermined carrying the guard's marker. Container walk,
  * rels, presentation.xml (structural, tiny) and core-properties still run;
  * nothing is silently truncated. Every part read passes ooxml.mjs's part cap
  * (R12, F18).
@@ -113,7 +119,7 @@
 import { linkWrapper } from "./subresources.mjs";
 import {
   hasZipMagic, readContainer, readPart, normalizePartName,
-  discriminate, walkRels, relsPartFor, sizeGuard,
+  discriminate, walkRels, relsPartFor, textPlan, MEASURED_OOXML_TEXT_BOUND_BYTES,
   CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
 } from "./ooxml.mjs";
 import { mceSkipper, withMetadata, activeContent, withActive, detectByContentType } from "./docx.mjs";
@@ -415,8 +421,9 @@ async function pptxParts(bytes) {
     const e = container.byName.get(n);
     if (e) declaredTextBytes += e.uncompressedSize;
   }
-  const guardR = sizeGuard(declaredTextBytes);
-  const guard = guardR.ok ? null : guardR;
+  const plan = textPlan(declaredTextBytes);
+  const guard = plan.read === "none" ? plan.guard : null;
+  const piecewise = plan.read === "pieces" ? plan.piecewise : null;
 
   const rels = await walkRels(b, container);
 
@@ -460,26 +467,32 @@ async function pptxParts(bytes) {
     }
   }
 
-  /* Slide and notes XML, guard permitting. */
+  /* Slide and notes XML, guard permitting. Over the bound a slide is read here
+   * only for its root's `show` flag and let go: text() and structure() read
+   * each part again as they walk it (R35). A part over the bound itself is
+   * stated now, with its size. */
   const slideXml = new Map();
   const notesXml = new Map();
-  if (!guard) {
-    for (const n of slideParts) {
-      const r = await readPart(b, container, n);
-      if (r.ok) {
-        const xml = UTF8.decode(r.bytes);
-        slideXml.set(n, xml);
-        /* ECMA-376's location: CT_Slide@show on the part's <p:sld> root —
-         * where PowerPoint's "Hide Slide" writes it. */
-        const root = xml.match(SLD_ROOT_RE);
-        if (root && declaresNotShown(showAttrOf(root[1]))) hiddenParts.add(n);
-      } else undetermined.push({ part: n, why: r.why });
+  const readHere = async (n, into, root) => {
+    const e = container.byName.get(n);
+    if (plan.read === "pieces" && e && e.uncompressedSize > MEASURED_OOXML_TEXT_BOUND_BYTES) {
+      undetermined.push({ part: n, why: "over_size_bound", size: e.uncompressedSize, final: true });
+      return;
     }
-    for (const n of notesParts) {
-      const r = await readPart(b, container, n);
-      if (r.ok) notesXml.set(n, UTF8.decode(r.bytes));
-      else undetermined.push({ part: n, why: r.why });
+    const r = await readPart(b, container, n);
+    if (!r.ok) { undetermined.push({ part: n, why: r.why }); return; }
+    const xml = UTF8.decode(r.bytes);
+    if (plan.read === "whole") into.set(n, xml);
+    if (root) {
+      /* ECMA-376's location: CT_Slide@show on the part's <p:sld> root —
+       * where PowerPoint's "Hide Slide" writes it. */
+      const m = xml.match(SLD_ROOT_RE);
+      if (m && declaresNotShown(showAttrOf(m[1]))) hiddenParts.add(n);
     }
+  };
+  if (plan.read !== "none") {
+    for (const n of slideParts) await readHere(n, slideXml, true);
+    if (plan.read === "whole") for (const n of notesParts) await readHere(n, notesXml, false);
   }
 
   /* slide -> its notesSlide, through each slide's own .rels (the declaration
@@ -510,7 +523,7 @@ async function pptxParts(bytes) {
   return {
     ok: true, format: "pptx", variant: d.variant ?? null, bytes: b, container, mainPart, presentationXml,
     order, slideParts, notesParts, slideXml, notesXml, notesOf, hiddenParts,
-    rels, core, active, guard, undetermined,
+    rels, core, active, guard, piecewise, stream: plan.read === "pieces", undetermined,
   };
 }
 
@@ -575,6 +588,25 @@ export function pptxRenumbering(parts) {
  * family is named rather than one member (docx names its single main part). */
 const GUARDED_PARTS = "ppt/slides/* + ppt/notesSlides/*";
 
+/* One slide's or notes part's XML for a walk: the text read whole by parts()
+ * (`held`), or, for a deck read one part at a time (R35), read now and left to
+ * the caller to let go. `{ xml }`, or `{ why }` (with `size` and `final` for a
+ * part over the bound). The reason a part is missing is the one parts() stated,
+ * else "unreadable" (the whole read's own word). */
+async function partXml(parts, part, held) {
+  const xml = held.get(part);
+  if (xml != null) return { xml };
+  const stated = parts.undetermined.find((u) => u.part === part);
+  if (stated) return { why: stated.why, ...(stated.final ? { size: stated.size, final: true } : {}) };
+  if (!parts.stream) return { why: "unreadable" };
+  const e = parts.container.byName.get(part);
+  if (e && e.uncompressedSize > MEASURED_OOXML_TEXT_BOUND_BYTES) {
+    return { why: "over_size_bound", size: e.uncompressedSize, final: true };
+  }
+  const r = await readPart(parts.bytes, parts.container, part);
+  return r.ok ? { xml: UTF8.decode(r.bytes) } : { why: r.why };
+}
+
 /* ------------------------------------------------------------------ *
  * structure() — I2 links + the evidentiary envelope (I7 slot 3)
  * ------------------------------------------------------------------ */
@@ -595,10 +627,22 @@ async function pptxStructure(parts) {
     notes.push("slide/notes parts not read: over the size bound (stated in evidentiary.undetermined and by text())");
   }
 
+  /* What the walks give this answer: a slide's hyperlinks and the shape each
+     relationship is used at. A deck read one part at a time (R35) states a
+     part it cannot read now, once, unless parts() already did. */
   const walks = new Map();
+  const unreadNow = (part, got) => {
+    if (parts.stream && !parts.undetermined.some((u) => u.part === part)
+        && !evUndeterminedNow.some((u) => u.part === part)) {
+      evUndeterminedNow.push({ part, why: got.why, ...(got.final ? { size: got.size, final: true } : {}) });
+    }
+  };
+  const evUndeterminedNow = [];
   for (const { part } of deck) {
-    const xml = parts.slideXml.get(part);
-    if (xml != null) walks.set(part, walkSlide(xml));
+    const got = await partXml(parts, part, parts.slideXml);
+    if (got.xml == null) { unreadNow(part, got); continue; }
+    const w = walkSlide(got.xml);
+    walks.set(part, { hlinks: w.hlinks, ridUsage: w.ridUsage });
   }
   const relsPartToSlide = new Map();
   for (const { part } of deck) relsPartToSlide.set(relsPartFor(part), part);
@@ -714,8 +758,9 @@ async function pptxStructure(parts) {
 
   /* ---- the evidentiary envelope (DEC-5; IC-2 CONFIRMED, no variant) ---- */
   const items = [];
-  const evUndetermined = [...parts.undetermined];
+  const evUndetermined = [...parts.undetermined, ...evUndeterminedNow];
   if (parts.guard) evUndetermined.push({ part: GUARDED_PARTS, why: "over_size_bound", guard: parts.guard });
+  if (parts.piecewise) notes.push("text_read_in_pieces");
 
   /* HIDDEN SLIDES (DEC-5, COFF-7): a slide whose bytes declare show="0" is
    * invisible in every presented form of the deck — a first-class finding,
@@ -739,27 +784,36 @@ async function pptxStructure(parts) {
     const notesPart = parts.notesOf.get(part) ?? null;
     if (!notesPart) continue;
     mappedNotes.add(notesPart);
-    const xml = parts.notesXml.get(notesPart);
-    if (xml == null) {
-      /* Unreadable notes parts are already stated by parts(); a DECLARED
-       * notes part the container does not even hold is stated here. */
+    const got = await partXml(parts, notesPart, parts.notesXml);
+    if (got.xml == null) {
+      /* Unreadable notes parts are already stated by parts(), or, for a deck
+       * read one part at a time, now; a DECLARED notes part the container
+       * does not even hold is stated here. */
       if (!parts.guard && !parts.container.byName.has(notesPart))
         evUndetermined.push({ part: notesPart, why: "part_absent" });
+      else if (!parts.guard && parts.stream && !evUndetermined.some((u) => u.part === notesPart))
+        evUndetermined.push({ part: notesPart, why: got.why, ...(got.final ? { size: got.size, final: true } : {}) });
       continue;
     }
     items.push({
       kind: "speaker-notes",
       slide,
       part: notesPart,
-      text: walkSlide(xml).text,
+      text: walkSlide(got.xml).text,
       source: slide != null ? slideShapeRef(slide) : null,
     });
   }
   /* A notesSlide no slide claims (an orphan) still carries its evidence —
    * honestly unattributed to a slide number. */
   for (const np of parts.notesParts) {
-    if (mappedNotes.has(np) || !parts.notesXml.has(np)) continue;
-    items.push({ kind: "speaker-notes", slide: null, part: np, text: walkSlide(parts.notesXml.get(np)).text, source: null });
+    if (mappedNotes.has(np) || parts.guard) continue;
+    const got = await partXml(parts, np, parts.notesXml);
+    if (got.xml == null) {
+      if (parts.stream && !evUndetermined.some((u) => u.part === np))
+        evUndetermined.push({ part: np, why: got.why, ...(got.final ? { size: got.size, final: true } : {}) });
+      continue;
+    }
+    items.push({ kind: "speaker-notes", slide: null, part: np, text: walkSlide(got.xml).text, source: null });
   }
 
   if (parts.core) {
@@ -838,10 +892,10 @@ async function pptxText(parts) {
      * hidden slide is distinguishable from a visible one wherever a unit is
      * shown, cited or indexed. */
     const hidden = parts.hiddenParts.has(part);
-    const xml = parts.slideXml.get(part);
-    if (xml == null) {
-      const stated = parts.undetermined.find((u) => u.part === part);
-      undetermined.push({ reason: "slide_unreadable", part, why: stated?.why ?? "unreadable" });
+    const got = await partXml(parts, part, parts.slideXml);
+    if (got.xml == null) {
+      undetermined.push({ reason: "slide_unreadable", part, why: got.why,
+        ...(got.final ? { size: got.size, final: true } : {}) });
     } else {
       /* COFF-11 / IC-100 / D-359 — THE SLIDE'S SHAPE COUNT, which `walkSlide`
          has always returned and this entry has always discarded. ONE walk,
@@ -861,21 +915,21 @@ async function pptxText(parts) {
          `CONTENT-SEARCH-DESIGN.md` §4.1): that unit is a `slide-shape` extent
          with the SHAPE OMITTED, and `coversSlideShape` bounds the shape only
          when one is present. A deck-grain unit is untouched by this figure. */
-      const walked = walkSlide(xml);
+      const walked = walkSlide(got.xml);
       slides.push({ slide, ref: slide != null ? `slide ${slide}` : null, part, hidden,
         shapes: walked.shapes, text: walked.text });
     }
     const notesPart = parts.notesOf.get(part) ?? null;
     if (!notesPart) continue;
-    const nxml = parts.notesXml.get(notesPart);
-    if (nxml == null) {
-      const stated = parts.undetermined.find((u) => u.part === notesPart);
-      undetermined.push({ reason: "notes_unreadable", part: notesPart, why: stated?.why ?? "unreadable" });
+    const ngot = await partXml(parts, notesPart, parts.notesXml);
+    if (ngot.xml == null) {
+      undetermined.push({ reason: "notes_unreadable", part: notesPart, why: ngot.why,
+        ...(ngot.final ? { size: ngot.size, final: true } : {}) });
     } else {
       /* THE DISTINCTION (DEC-5): a speaker-notes unit is its OWN unit with
        * its own ref form — never appended to the slide's text, never in
        * `document`. */
-      speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, hidden, text: walkSlide(nxml).text });
+      speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, hidden, text: walkSlide(ngot.xml).text });
     }
   }
   /* Orphan notesSlides: their text is still evidence, honestly unnumbered —
@@ -883,8 +937,17 @@ async function pptxText(parts) {
    * the flag is lost; stated, never guessed either way. */
   const mapped = new Set([...parts.notesOf.values()]);
   for (const np of parts.notesParts) {
-    if (mapped.has(np) || !parts.notesXml.has(np)) continue;
-    speakerNotes.push({ slide: null, ref: null, part: np, hidden: null, text: walkSlide(parts.notesXml.get(np)).text });
+    if (mapped.has(np)) continue;
+    const got = await partXml(parts, np, parts.notesXml);
+    if (got.xml == null) {
+      /* Stated by parts() for a deck read whole; for one read a part at a time,
+         now (a part parts() did not state). */
+      if (parts.stream && !parts.undetermined.some((u) => u.part === np))
+        undetermined.push({ reason: "notes_unreadable", part: np, why: got.why,
+          ...(got.final ? { size: got.size, final: true } : {}) });
+      continue;
+    }
+    speakerNotes.push({ slide: null, ref: null, part: np, hidden: null, text: walkSlide(got.xml).text });
   }
 
   /* `document` is the deck's slide text, speaker notes NEVER in it. A HIDDEN
@@ -900,6 +963,7 @@ async function pptxText(parts) {
     deckLength: deckLengthOf(parts),
     undetermined,
     counts: { chars: document.length, notesChars, undetermined: undetermined.length },
+    ...(parts.piecewise ? { piecewise: parts.piecewise } : {}),
   };
 }
 

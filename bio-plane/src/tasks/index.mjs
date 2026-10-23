@@ -157,12 +157,12 @@ export class Tasks {
      bundle (taskDrain keeps those, it does not drop them), and retrying that at
      the short cadence would be a hot loop against work that only a later promote
      can unblock. BATCH bounds one tick; a deeper backlog re-arms and continues.
-     (R18; SCHEDULER #29 J1 (2), K2029, K2038) The backstop backs off: an event tried `a`
+     (R18; SCHEDULER #29 J1 (2), K2029, K2038; R25, K4488) The backstop backs off: an event tried `a`
      times is next due BACKSTOP × 2^(a−1) after its last try (capture R45's durable
-     `attempts` and `lastTry`), and one tried RETRY_LIMIT times wants no wake at
-     all, so an unfiled capture costs a bounded number of timed retries and then an
-     otherwise idle instance holds no timer (scheduler R15). It stays queued, never
-     dropped, and is retried by every drain that runs for another reason; an
+     `attempts` and `lastTry`), never more than MAX_WAIT (one hour); from RETRY_LIMIT tries on it is
+     due MAX_WAIT after its last try, every time. An unfiled capture is never dropped and never stops
+     being retried by count: it waits on the filing, which re-arms the drain at once (promotion), and
+     until then it is retried hourly at most. It is retried by every drain that runs for another reason; an
      enqueue (capture R44) and a committed promotion (promotion R45: only a
      promotion files a capture, provenance R1, R4) re-arm the drain at DELAY.
      DELAY is overridable per instance through TASK_DRAIN_DELAY_MS: production
@@ -172,6 +172,8 @@ export class Tasks {
   static TASK_DRAIN_BACKSTOP_MS = 60000;
   static TASK_DRAIN_ALARM_BATCH = 200;
   static TASK_DRAIN_RETRY_LIMIT = 8;
+  /* R25 (K4488): the longest the back-off waits between tries of an event still queued. */
+  static TASK_DRAIN_MAX_WAIT_MS = 60 * 60 * 1000;
 
   /** The RULED routing order, resolved at write time by the consumer.
    *
@@ -1178,11 +1180,13 @@ export class Tasks {
     let at = null;
     this.#eachQueued(() => Tasks.TASK_DRAIN_ALARM_BATCH, (e) => {
       const a = Number(e.attempts) || 0;
-      if (a >= Tasks.TASK_DRAIN_RETRY_LIMIT) return;
       const last = Date.parse(e.lastTry);
+      /* R25 (K4488): every try waits no longer than MAX_WAIT; from RETRY_LIMIT tries on, it is MAX_WAIT every time */
+      const gap = a >= Tasks.TASK_DRAIN_RETRY_LIMIT ? Tasks.TASK_DRAIN_MAX_WAIT_MS
+                                                   : Math.min(Tasks.TASK_DRAIN_BACKSTOP_MS * 2 ** (a - 1), Tasks.TASK_DRAIN_MAX_WAIT_MS);
       /* never tried by a drain (an event a mint could not yet take, R1): the plain backstop from now */
       const due = a < 1 || !Number.isFinite(last) ? now + Tasks.TASK_DRAIN_BACKSTOP_MS
-                                                  : Math.max(now, last + Tasks.TASK_DRAIN_BACKSTOP_MS * 2 ** (a - 1));
+                                                  : Math.max(now, last + gap);
       if (at === null || due < at) at = due;
     });
     return at;

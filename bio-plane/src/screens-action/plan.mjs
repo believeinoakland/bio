@@ -600,7 +600,16 @@ export const plan = Object.freeze({
         }
         if (at || on) {
           const cut = at.lastIndexOf("|");
-          body.reminders = [at ? { option: at.slice(0, cut), date: at.slice(cut + 1), on: on } : { date: "", on: on }];
+          if (at) body.reminders = [{ option: at.slice(0, cut), date: at.slice(cut + 1), on: on }];
+          else {
+            // C53-min: a day asked and the date list left blank: each option takes the first date it has; an option with none takes no reminder
+            const all = Array.isArray(view.data.plan && view.data.plan.value && view.data.plan.value.options) ? view.data.plan.value.options : [];
+            const firsts = options.map(function (id) {
+              const dates = view.parts.datesOf(all.find(function (x) { return x.id === id; }));
+              return dates.length ? { option: id, date: dates[0], on: on } : null;
+            }).filter(Boolean);
+            body.reminders = firsts.length ? firsts : [{ date: "", on: on }];
+          }
         }
         return { body: body };
       },

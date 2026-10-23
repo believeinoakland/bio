@@ -160,7 +160,8 @@ test("R2 R24 C38 'What your answer rests on' and the weakest part leave out a re
   assert.ok(sev.rests.textContent.includes(POLICY) && !sev.rests.textContent.includes("Work orders"), "the read-back holds the live passage alone");
   assert.ok(!sev.box.textContent.includes("Work orders"), "and the weakest part is not a removed citation");
   const live = await draw("confirmed");
-  assert.ok(says(live.rests, "question.rests.all", { passages: POLICY + ", Work orders" }), "control: live, both are read back");
+  /* fix round 4 (C36 aside; R24): each passage in the read-back is named with the words it cites where the reading shown states them */
+  assert.ok(says(live.rests, "question.rests.all", { passages: POLICY + " \u00b7 \u201cwithin seven calendar days of the report\u201d, Work orders" }), "control: live, both are read back, the first by its words");
   assert.ok(says(live.box, "screen.question.strength.weakest", { weakest: "Work orders" }), "control: and the weakest part is named");
 });
 

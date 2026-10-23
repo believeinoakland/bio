@@ -20,6 +20,7 @@
  * `register` and connections' `refs`. */
 
 import { recordOf } from "../record-core/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
@@ -47,11 +48,12 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const te = new TextEncoder();
 
 export class CorpusExport {
-  constructor({ storage, record, now = null, entities = null, events = null, lines = null, money = null } = {}) {
+  constructor({ storage, record, now = null, entities = null, events = null, lines = null, money = null, provenance = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     /* R10's owners: each an instance, or a function answering it on first use. */
     this.owners = { entities, events, lines, money };
+    this.dep = { provenance };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     this.purgeDeclaration = null;
   }
@@ -59,6 +61,8 @@ export class CorpusExport {
   migrate() { migrateCorpusExport(this.sql); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
+  /* provenance, an instance or a function answering it on first use (R13's `partsNamed`) */
+  #provenance() { const d = this.dep.provenance; return typeof d === "function" ? (this.dep.provenance = d()) : d; }
   #when() { const w = this.now(); return typeof w === "string" && w ? w : new Date().toISOString(); }
 
   /* ---- section 8: secure verified export ----
@@ -123,9 +127,20 @@ export class CorpusExport {
       bundles: out,
       tables,
       counts: { bundles: bundles.length, files: fileCount, tables: tables.length, rows: rowCount },
-      register: this.#rows(`SELECT bundle_id, path, capture_sha, bytes FROM register ORDER BY bundle_id`),
+      register: this.#register(),
       recorded: word("corpus-export.recorded.export_append_export"),
       verify: word("corpus-export.verify") };
+  }
+
+  /* R1, R13: the register. A capture held in parts has the row of its whole (provenance R72), an identity with no file of
+     its bundle: it travels marked `whole` and naming its parts in order (`provenance.partsNamed`), so an import verifies
+     it by the parts' concatenation. Every other row is as it was. */
+  #register() {
+    return this.#rows(`SELECT bundle_id, path, capture_sha, bytes, whole FROM register ORDER BY bundle_id`).map(({ whole, ...r }) => {
+      if (Number(whole) !== 1) return r;
+      const named = this.#provenance()?.partsNamed(r.bundle_id, r.capture_sha);
+      return { ...r, whole: 1, parts: named && named.state === "named" ? named.parts.map((p) => p.sha256) : null };
+    });
   }
 
   #declared() {
@@ -158,18 +173,25 @@ export class CorpusExport {
              sha256: createSha256().update(bytes).hex(), next: p.more ? p.last : null };
   }
 
-  /** R10: one rendering in an open standard, for `viewer`, from the rows R7 would carry to that viewer and no others.
-   *  It adds no fact and writes nothing but one `export_log` row naming the format. */
-  exportRendering({ format = null, viewer = null } = {}) {
+  /** R10, R14: one part of a rendering in an open standard, for `viewer`, from the rows R7 would carry to that viewer and
+   *  no others. It adds no fact and writes nothing but one `export_log` row naming the format. A source of more than
+   *  RENDER_MAX records is continued by `part` (1-based, default 1): the answer's `next` names the following part (null
+   *  on the last) and the body states the cut itself. A `part` that is not a whole number from 1 is refused
+   *  `EXPORT_PART_MALFORMED`. */
+  exportRendering({ format = null, viewer = null, part = null } = {}) {
     if (!FORMATS.includes(format))
       return { ok: false, reason: "EXPORT_FORMAT_UNKNOWN", format, formats: [...FORMATS],
                detail: localize("corpus-export.index.a_rendering_is_one_of", "a rendering is one of {FORMATS}; nothing was rendered or logged", { FORMATS: String(FORMATS.join(", ")) }) };
+    const n = part === null || part === undefined || part === "" ? 1 : Number(part);
+    if (!Number.isInteger(n) || n < 1)
+      return { ok: false, reason: "EXPORT_PART_MALFORMED", format,
+               detail: localize("corpus-export.index.a_part_is_a_whole_number", "a part of a rendering is named by a whole number from 1; nothing was rendered or logged") };
     const at = this.#when();
-    const { body, truncated } = render(format, { sql: this.sql, record: this.record, ...this.#ownerDeps() }, viewer, at);
+    const { body, more } = render(format, { sql: this.sql, record: this.record, ...this.#ownerDeps() }, viewer, at, n);
     const items = itemsOf(format, body);
     this.sql.exec(`INSERT INTO export_log (at,scope,bundles,files,note,tables,rows,format) VALUES (?,'rendering',0,0,NULL,NULL,?,?)`,
                   at, items, format);
-    return { ok: true, at, format, standard: STANDARDS[format], items, truncated, rendering: body,
+    return { ok: true, at, format, standard: STANDARDS[format], items, part: n, next: more ? n + 1 : null, truncated: more, rendering: body,
              recorded: word("corpus-export.recorded.rendering_append_export") };
   }
 
@@ -323,8 +345,22 @@ export function verifyCorpusExport(input) {
     }
     for (const r of Array.isArray(manifest.register) ? manifest.register : []) {
       counts.captures++;
-      part({ bundle: r ? r.bundle_id ?? null : null, path: r ? r.path ?? null : null, capture: r ? r.capture_sha ?? null : null },
-           r && r.capture_sha, r ? r.bytes : null, "CAPTURE_HASH_MISMATCH", "CAPTURE_SIZE_MISMATCH");
+      const where = { bundle: r ? r.bundle_id ?? null : null, path: r ? r.path ?? null : null, capture: r ? r.capture_sha ?? null : null };
+      /* R13: the row of a whole held in parts is an identity, verified by the concatenation of its parts' bytes unless the
+         concatenation itself was handed over (as it was before provenance R72). */
+      const pieces = r && Number(r.whole) === 1 && Array.isArray(r.parts) && r.parts.length && HEX64.test(lower(r.capture_sha))
+        && !derive(lower(r.capture_sha)) ? r.parts.map((p) => (typeof p === "string" ? held(lower(p)) : null)) : null;
+      if (!pieces) {
+        part(where, r && r.capture_sha, r ? r.bytes : null, "CAPTURE_HASH_MISMATCH", "CAPTURE_SIZE_MISMATCH");
+        continue;
+      }
+      if (pieces.some((b) => !b)) { failures.push({ reason: "BYTES_MISSING", ...where, expected: lower(r.capture_sha), found: null }); continue; }
+      const digest = createSha256();
+      let size = 0;
+      for (const b of pieces) { digest.update(b); size += b.length; }
+      const got = digest.hex();
+      if (got !== lower(r.capture_sha)) failures.push({ reason: "CAPTURE_HASH_MISMATCH", ...where, expected: lower(r.capture_sha), found: got });
+      else if (r.bytes != null && Number(r.bytes) !== size) failures.push({ reason: "CAPTURE_SIZE_MISMATCH", ...where, expected: r.bytes, found: size });
     }
     if (!Array.isArray(manifest.register))
       failures.push({ reason: "MANIFEST_MALFORMED", expected: "the register, a list", found: describe(manifest.register) });
@@ -443,9 +479,9 @@ export function corpusExportOps(ce, q) {
   return {
     export: () => ce.exportManifest({ note: q("note") }),
     exportlog: () => ce.exportLog({ limit: q("limit") }),
-    /* T33-61 (J1 (3), (4)): one page of a carried table (R8), and a rendering for the stamped viewer (R10). */
+    /* T33-61 (J1 (3), (4)): one page of a carried table (R8), and a part of a rendering for the stamped viewer (R10, R14). */
     exportpage: () => ce.exportPage({ table: q("table"), index: q("index"), after: q("after") }),
-    exportrender: () => ce.exportRendering({ format: q("format"), viewer: q("viewer") }),
+    exportrender: () => ce.exportRendering({ format: q("format"), viewer: q("viewer"), part: q("part") }),
   };
 }
 
@@ -456,6 +492,10 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["note"], requires: [] } },
   exportlog: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.exportlog.label.group",
     fields: { accepts: ["limit"], requires: [] } },
+  /* R15 (fix round 6 G22): `part` joins the keys the arm reads; `viewer` is the door's stamp. */
+  exportrender: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate",
+    description: localize("corpus-export.declared.exportrender", "export: keyed by (viewer, format); renders what the viewer would be carried and logs who took it"),
+    fields: { accepts: ["format","part"], requires: ["format"] } },
 });
 
 const instances = new WeakMap();
@@ -472,7 +512,7 @@ export function corpusExportOf(host, deps) {
     /* R10's owners, each reached through its factory on this host on first use unless given. */
     const owners = { entities: d.entities ?? (() => entitiesOf(host, { record })), events: d.events ?? (() => eventsOf(host, { record })),
                      lines: d.lines ?? (() => linesOf(host, { record })), money: d.money ?? (() => moneyOf(host, { record })) };
-    c = new CorpusExport({ ...d, ...owners, storage, record });
+    c = new CorpusExport({ ...d, ...owners, provenance: d.provenance ?? (() => provenanceOf(host, { record })), storage, record });
     instances.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("corpus-export", [], { exempt: [...CORPUS_EXPORT_EXEMPT] });

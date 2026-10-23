@@ -44,9 +44,14 @@ export const CASE_EDITOR = Object.freeze({
     // R28: a draft that names no case is titled by its project, never by the derivation prose its identity then holds.
     const named = !!(caseOf && caseOf.case_id && caseOf.identity);
     const edition = caseOf && caseOf.edition !== undefined && caseOf.edition !== null ? String(caseOf.edition) : "";
+    // C49: the copy of the chosen draft is read first, so a draft that names no case is headed by its own title (`review` R63), as the review
+    // copy and the ceremony head it, not by the project's
+    const chosenR = chosen ? P.later(cs, view, "copy", "reviewcopy", { query: { draft: chosen.draft_id } }) : null;
     out.push(cs.title(named ? caseOf.identity + (edition ? " · " + edition : "")
-      : chosen ? P.plain(cs.w("case.draft.untitled", { project: projectTitle })) : null, { thing: "case" }));
+      : chosen ? P.titleOf2(cs, chosenR && chosenR.state === "ok" ? chosenR.value : null, P.plain(cs.w("case.draft.untitled", { project: projectTitle }))) : null, { thing: "case" }));
     out.push('<span id="what-goes-in"></span>');
+    if (settled && chosen) out.push(P.editionsLine(cs, view, chosen));
+    if (settled) out.push(P.draftHead(cs, view, "case-editor", P.draftCopies(cs, view, drafts, chosen ? chosen.draft_id : "", chosenR), chosen ? chosen.draft_id : "", projectTitle));
     if (!settled) return out.concat([cs.sec("screen.case-editor.drafts", cs.state("drafts", function () { return ""; }))]).join("");
 
     // R28: who prepared it is the member's handle, never the sign-in name when the handle is known.
@@ -58,7 +63,6 @@ export const CASE_EDITOR = Object.freeze({
     // The project's drafts: with a choice (two or more) "Which draft" among them, each named by its scope and the day it was prepared, the
     // newest marked, and how many review links are live (C49; DEC-394, DEC-395); with one, its own row opening its editor. With none, the
     // screen's one empty state, which names the first step (R20).
-    const chosenR = chosen ? P.later(cs, view, "copy", "reviewcopy", { query: { draft: chosen.draft_id } }) : null;
     const list = P.draftCopies(cs, view, drafts, chosen ? chosen.draft_id : "", chosenR);
     out.push(d.state === "empty" ? cs.state("drafts", function () { return ""; }, { empty: "screen.case-editor.nodrafts" }) : cs.sec("screen.case-editor.drafts", drafts.length > 1
       ? P.draftChooser(cs, view, "case-editor", list, chosen.draft_id, projectTitle) + P.liveNote(cs, view, "case-editor", list)
@@ -134,7 +138,7 @@ export const CASE_EDITOR = Object.freeze({
     ];
     // R63 (L14): a draft that names no case says so in a fold, by the sentence `review` states; R47 (C7): the publish gates' first
     // refusal, from the copy, as what is missing
-    if (copy.state === "ok" && !(copy.value.case && copy.value.case.case_id)) out.push(P.fold(cs, "screen.case-editor.nocase.summary", "<p>" + cs.w("review.body.nocase") + "</p>"));
+    if (copy.state === "ok" && !(copy.value.case && copy.value.case.case_id) && !(chosen.editions && (chosen.editions.prepared || chosen.editions.published))) out.push(P.fold(cs, "screen.case-editor.nocase.summary", "<p>" + cs.w("review.body.nocase") + "</p>"));
     const miss = copy.state === "ok" && copy.value.gates === "refused" && Array.isArray(copy.value.missing) ? copy.value.missing[0] : null;
     const missing = miss ? '<ul class="mk-list" data-missing><li role="alert">' + (P.refusalText(cs, miss) || cs.esc(String(miss.reason || ""))) + "</li></ul>" : "";
     // R65 (C4): the owner's way to the reader's comments, or that there are none
@@ -171,9 +175,14 @@ export const CASE_EDITOR = Object.freeze({
     // acts are reasoned); nothing is deleted. Read from the project's own document, which keeps a removed citation.
     const cites = P.references(view.data.project && view.data.project.state === "ok" ? view.data.project.value : null)
       .filter(function (r) { return !r.rel || r.rel === "cites"; });
+    // C46: a passage the case cites is named by its title where the draft's copy states one (a finding it names), never by its id
+    const citeName = function (t) {
+      const x = found.find(function (y) { return y && y.target === t; });
+      return x && typeof x.title === "string" && x.title.trim() ? x.title.trim() : t;
+    };
     if (cites.length) out.push(cs.sec("screen.case-editor.the_passages_this_case_cites", cs.sheet(cites.map(function (r) {
       const gone = r.status === "severed";
-      return cs.row("", '<span class="rec" data-cited="' + cs.esc(r.target) + '" data-status="' + (gone ? "severed" : "live") + '">' + cs.esc(r.target) + "</span>"
+      return cs.row("", '<span class="rec" data-cited="' + cs.esc(r.target) + '" data-status="' + (gone ? "severed" : "live") + '">' + cs.esc(citeName(r.target)) + "</span>"
         + (gone && r.note ? '<span class="meta">' + cs.esc(r.note) + "</span>" : ""), "",
         cs.act(gone ? "reinstate" : "sever", { data: { handle: r.target } }));
     }).join("")) + P.said(view, "citation"), { help: ["screen.case-editor.removing_one_takes_it_out_of", "screen.case-editor.nothing_is_deleted_a_removed_citation"] }));

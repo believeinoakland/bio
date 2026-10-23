@@ -153,6 +153,8 @@ export const RE_POINTS = Object.freeze({
   /* R117 (fix round 3; C84, C64): each until the registry lists the op on that screen */
   security: Object.freeze(["scanmirror"]),
   places: Object.freeze(["officeconfirm"]),
+  /* B3 (K4467; screens-inquiry J21, N5): the read of a record stored unread, until the registry lists `readheld` on `document` */
+  document: Object.freeze(["readheld"]),
 });
 export const LOCKED_OPS = Object.freeze(["unlock"]);
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);
@@ -308,6 +310,8 @@ function dataOf(screens, guide) {
     ops: pick(() => true),
     /* R30, R45: the public ops (`classes: null`), the only ones a page with no session calls, by an act or by `cs.call` */
     publicOps: Object.keys(OPS).filter((op) => OPS[op].classes === null),
+    /* R123 (E12): the ops `OPS` declares not mutating, whichever screen asks them: the reads the page may share while they are in flight */
+    readOps: Object.keys(OPS).filter((op) => OPS[op].mutating === false),
     needs: pick((op) => (Object.hasOwn(NEEDS, op) ? NEEDS[op] : undefined)),
     /* R12 (K4237): a read is gated by its classes, not by `SESSION_OPS`, which holds mutating ops alone */
     readClasses: pick((op) => (OPS[op] && OPS[op].mutating === false && (OPS[op].classes === null || Array.isArray(OPS[op].classes)) ? (OPS[op].classes === null ? null : [...OPS[op].classes]) : undefined)),
@@ -340,13 +344,17 @@ function dataOf(screens, guide) {
 
 /* The shell's own styles (R56, R65: only these two, never a hand copy of a design rule, which `shell.css` carries): the
    page's height settings, so the frame's main column scrolls and the page never does (R57; the frame's own fixed height is
-   the design's `.cs-frame`), and motion stopped under reduced motion (R22). Every element the shell draws is a design
+   the design's `.cs-frame`), and motion stopped under reduced motion (R22); with the phone block (R108) and, R120, the grid of a
+   `cs.row` whose first part is empty (`data-lead="none"`: the design's grid is lead, text, act, and a row with no lead would give
+   the text the first column and the act what is left of the row). Every element the shell draws is a design
    class (R65), so nothing else is carried; no rule gives `cursor: help`, nor a pointer to an element that only explains
    itself (R52). */
 const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 #cs-root{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}#cs-root>.cs-frame{flex:1 1 auto;min-height:0;height:auto;overflow:hidden}
 #cs-root>.cs-frame>.cs-main{overflow:auto;min-height:0}#cs-root>.cs-frame:not(.cs-shell){display:grid;grid-template-rows:minmax(0,1fr)}
+.cs-main .cs-row[data-lead=none]{grid-template-columns:minmax(0,1fr) auto}.cs-main .cs-row[data-lead=none]>.meta{grid-column:1/-1}
 @media (max-width:${PHONE_WIDTH}px){
+:root:root .cs-main .cs-row[data-lead=none]{grid-template-columns:minmax(0,1fr)}:root:root .cs-main .cs-row[data-lead=none]>*{grid-column:1}
 .cs-main{overflow-x:hidden;overflow-wrap:anywhere}.cs-main .cs-row,.cs-main .mk-rowname{grid-template-columns:auto minmax(0,1fr);min-width:0}.cs-main .cs-row>*{min-width:0}
 .cs-main td,.cs-main th{min-width:0;overflow-wrap:anywhere}.cs-main .cs-field label{min-width:0}.cs-main fieldset.cs-field label{display:flex;align-items:flex-start;gap:8px}
 .cs-main fieldset.cs-field label>span{display:block;min-width:0}.cs-main [role=tablist]{flex-wrap:wrap}
@@ -421,26 +429,39 @@ export function checkClasses(screens, guide, program) {
 /* the page's own escaping of a served word */
 const escape = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-/* R1, R2 (fix round 3, C15; P2.4): the shell's script, composed from the shell's own functions and each screen's and the guide's; it depends
-   on those alone (the release version and the test-instance band are the page's), so it is the same for a release. Kept for the last
-   screens and guide handed in, so the page and its hash do not build it twice. */
+/* R1, R2 (fix round 3, C15; P2.4; fix round 6, G30, R126): the shell's script, composed from the shell's own functions and each screen's and the
+   guide's; it depends on those alone (the release version and the test-instance band are the page's), so it is the same for a release. The script,
+   the checks of the screens and guide it is made from and its hash are done once, for the last screens and guide handed in (a release's isolate
+   hands in the same ones every request): a front page and a script fetch after the first only read what was kept. A set that fails its checks
+   is kept nowhere and is refused again at the next ask. */
+const WORK = { scripts: 0, hashes: 0, checks: 0 };
+/* R126: how much work the page route has done in this isolate, as counts (the Worker's clock is frozen during synchronous work, so a time
+   measured in it reads as nothing, R-CLOCK): the scripts composed, the hashes taken of one and the screen and guide checks run. For a release
+   served by one isolate each is 1, however many pages and script fetches it has answered; control-plane's `page` log line states them. */
+export function pageWork() { return { ...WORK }; }
 let SCRIPT = null;
-export function interfaceScript(screens = [], options = {}) {
-  checkScreens(screens);
+function release(screens, options) {
   const guide = options && options.guide ? options.guide : null;
+  if (SCRIPT && SCRIPT.screens === screens && SCRIPT.guide === guide) return SCRIPT;
+  WORK.checks++;
+  checkScreens(screens);
   checkGuide(guide);
-  if (SCRIPT && SCRIPT.screens === screens && SCRIPT.guide === guide) return SCRIPT.source;
   const program = shellProgram.toString();
   checkClasses(screens, guide, program);
   const D = dataOf(screens, guide);
+  WORK.scripts++;
   const source = `(${program})(${toSource(D)}, ${toSource(screens)}, window, ${toSource(guide)}).start();`;
-  SCRIPT = { screens, guide, source };
-  return source;
+  return (SCRIPT = { screens, guide, source, hash: null });
+}
+export function interfaceScript(screens = [], options = {}) {
+  return release(screens, options).source;
 }
 const base64 = (hex) => btoa(hex.match(/../g).map((h) => String.fromCharCode(parseInt(h, 16))).join(""));
 /* R1: the hash the page policy names in place of a nonce (`answer-envelope` R6): `sha256-<base64>` of the script's UTF-8 bytes */
 export function interfaceScriptHash(screens = [], options = {}) {
-  return "sha256-" + base64(sha256HexSync(interfaceScript(screens, options)));
+  const made = release(screens, options);
+  if (made.hash === null) { WORK.hashes++; made.hash = "sha256-" + base64(sha256HexSync(made.source)); }
+  return made.hash;
 }
 /* R1: the address that carries the release version (`control-plane` R75 serves the script there, `immutable`) */
 export const scriptPath = (version) => "/app/shell-" + encodeURIComponent(String(version == null || version === "" ? "0" : version)) + ".js";

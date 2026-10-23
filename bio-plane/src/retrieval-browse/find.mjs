@@ -76,9 +76,11 @@ function scopeOf(r, form, value, viewer, owner) {
   const holdOf = (bundleIds) => {
     for (let i = 0; i < bundleIds.length; i += BROWSE_ID_CHUNK) {
       const part = bundleIds.slice(i, i + BROWSE_ID_CHUNK);
-      for (const row of r.rowsOf(`SELECT DISTINCT capture_sha, bundle_id FROM register
-                                   WHERE bundle_id IN (${part.map(() => "?").join(",")})`, ...part))
-        if (sees(row.bundle_id)) keep(row);
+      const rows = r.rowsOf(`SELECT DISTINCT capture_sha, bundle_id, whole FROM register
+                              WHERE bundle_id IN (${part.map(() => "?").join(",")})`, ...part).filter((row) => sees(row.bundle_id));
+      /* R19: a capture held in parts is one capture, its whole's: the row of a part (provenance R73's `part_of`) is skipped. */
+      const parts = r.partsHeldIn([...new Set(rows.filter((row) => Number(row.whole) === 1).map((row) => row.bundle_id))]);
+      for (const row of rows) if (!parts.has(row.capture_sha)) keep(row);
     }
   };
   const ownersOf = (sha) => r.rowsOf(`SELECT DISTINCT capture_sha, bundle_id FROM register WHERE capture_sha = ?`, sha)

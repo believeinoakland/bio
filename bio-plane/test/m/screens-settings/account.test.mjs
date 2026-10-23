@@ -16,7 +16,7 @@ test("R3 the reads: whoami, memberlanguage, the member's own expertiselist, sign
   const reads = a.p.all.map((r) => [r.op, r.query]);
   for (const want of [["whoami", {}], ["memberlanguage", {}], ["expertiselist", { memberId: "dev" }], ["signerlist", {}]])
     assert.ok(reads.some((r) => JSON.stringify(r) === JSON.stringify(want)), JSON.stringify(want));
-  assert.equal(reads.filter((r) => r[0] === "whoami").length, 2, "the shell's own, and the screen's");
+  assert.equal(reads.filter((r) => r[0] === "whoami").length, 1, "the shell's own and the screen's are one request (interface-shell R123)");
 });
 
 test("R3 the handle drawn fixed in DEC-197's words; no handlechange act, and no handle.changeable, handle.formerly or handle.refused.* drawn", async () => {

@@ -2645,7 +2645,9 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    (R34), and the partition tests read `ACT_HELP` itself (`test/m/op-declarations/help.mjs`), never a hand list. `strengthbarset`
    is no alias (R21): strength declares it itself, so it is no longer under the alias ground.
    (K4262, B20) `affordances` holds `strengthbarset`'s help under its own name and none for `strengthbar` (no screen sends it,
-   and the design gives it no text): `strengthbarset` leaves the unexplained ground and `strengthbar` takes it. */
+   and the design gives it no text): `strengthbarset` leaves the unexplained ground and `strengthbar` takes it.
+   T51 fix round 4b (R34, plane R77; K4524): `owedwork` (plane's read of what a document still owes, admin and member) is named
+   under the read ground, as a read a screen draws from, until `affordances`' `ACT_HELP` holds a text. */
 const ACT_HELP_ABSENT = Object.freeze({
   alias: Object.freeze({ ground: localize("op-declarations.index.an_alias_of_a_declared", "An alias of a declared op (R21): its op's explanation serves it."),
     ops: frozenList([
@@ -2674,7 +2676,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "lawrelations", "line", "linesof", "lookedat", "matterpromiseduties", "matters", "meaningrows",
       "memberlanguage", "memberties", "milestones", "money", "moneyamountchecks", "moneycheckparams",
       "moneydetectors", "moneyjunction", "moneynoticed", "moneyof", "moneyset", "moneysummable", "narrowcandidates",
-      "notes", "notices", "opencaptures", "originalstate", "overridesof", "partiesof", "patterns",
+      "notes", "notices", "opencaptures", "originalstate", "overridesof", "owedwork", "partiesof", "patterns",
       "personcredentials", "personinterests", "personstatements", "photomarks", "placewantedstate", "plancomments",
       "planreviewopen", "planreviews", "plantimeline", "powersof", "poweruses", "prepitems", "proceedinglinks",
       "proceedingstatus", "projectaccountstate", "projectaikeepawaystate", "projectholds", "projectinvitations",

@@ -44,9 +44,10 @@ function reads(view) {
     plans: { op: "plans", query: { project: id }, empty: (v) => !v || !(Array.isArray(v.plans) ? v.plans : v.items || []).length },
     /* R90: the determinations the project holds, which its Matter row opens; none held is a list of none, not an absence */
     dets: { op: "determinations", query: { project: id, live: "true", limit: "200" }, empty: () => false },
-    /* R128 (DEC-394 (3a); capture R77, R88): the documents filed under the project, held and vouched, the full rows (their capture date and,
-       where the row states one, their kind), one bounded page at a time; none filed is a list of none, not an absence */
-    docs: { op: "heldcaptures", query: { project: id, state: "held_and_vouched", limit: "200" }, empty: () => false },
+    /* R128 (DEC-394 (3a); capture R77, R88): the documents filed under the project, held and vouched, as picker rows (G12a: title, id, the capture's
+       day, and its `format`; the full row's examinations of every capture with no recorded format cost the page seconds), one bounded page at a time;
+       none filed is a list of none, not an absence */
+    docs: { op: "heldcaptures", query: { project: id, state: "held_and_vouched", limit: "200", fields: "picker" }, empty: () => false },
     /* R107: the project's reruns of imported editions (case-import R31); a project that is no rerun answers none, and no tab is drawn */
     rerun: { op: "rerunread", query: { project: id }, empty: (v) => !v || !Array.isArray(v.reruns) || !v.reruns.length },
     ...directory,
@@ -236,7 +237,7 @@ function render(cs, view) {
   }
 
   /* R128 (DEC-394 (3a); capture R77, R88): "The project's documents", after the project's acts and before its objective as the drawing has
-     it: every document filed under the project, held or vouched for, read by `heldcaptures` (`state` `held_and_vouched`, the full rows, a
+     it: every document filed under the project, held or vouched for, read by `heldcaptures` (`state` `held_and_vouched`, picker rows, a
      page of 200 at a time, read to its end). Each row is its title, a reference opening the document, and beneath it its kind (web page,
      spreadsheet or photo) where the row states a format or a content type, then `captured` and the day of its capture; a row that states no
      kind draws none, never a guess, and one that states no day draws none. None filed says so in the designed two sentences; a read that
@@ -249,7 +250,7 @@ function render(cs, view) {
     for (let i = 0; dmore && i < 20; i++) {
       listed.push(...(Array.isArray(dmore.held) ? dmore.held : []));
       if (!(dmore.truncated && dmore.next)) { dmore = null; break; }
-      const nx = later("dpage:" + dgen + ":" + dmore.next, "heldcaptures", { project: id, state: "held_and_vouched", limit: "200", after: String(dmore.next) });
+      const nx = later("dpage:" + dgen + ":" + dmore.next, "heldcaptures", { project: id, state: "held_and_vouched", limit: "200", fields: "picker", after: String(dmore.next) });
       if (nx.state === "loading") { dpend = true; dmore = null; } else if (nx.state === "failed") { dfail = nx; dmore = null; } else dmore = nx.value;
     }
     const kindOf = (r) => {
@@ -307,10 +308,12 @@ function render(cs, view) {
       + cs.act("promote", { label: "act.promote.label.project", data: { project: id }, tone: "primary" })
       + `<p class="mk-small">${W("act.promote.here.project")}</p>` + said + adddoc, { id: "state-b" }));
   } else {
+    /* G12c (R1, R9): the strength of every question in one read (for each 50), never one read for each */
+    const strengthOf = P.strengths((k, query) => later(k, "inquirystrength", query), items.map((x) => x.inquiry), cs.esc);
     const qInner = cs.state("questions", view, () => cs.sheet(items.map((x) => {
       const q = String(x.inquiry);
       const t = x.title || T("state.undetermined", { reason: "" });
-      const st = later("strength:" + q, "inquirystrength", { id: q });
+      const st = strengthOf(q);
       const grades = cs.state(st, (s) => {
         /* C43 (R39, R116): the card names no record id: an unrated axis is told once, by its mark (the question page's compact form,
            which draws no reason on the quiet axis), and an undetermined axis's reason has any record id put back into the plain
@@ -338,21 +341,28 @@ function render(cs, view) {
   if (drawAct) {
     const drawn = new Set(items.map((x) => String(x.inquiry)));
     const drawInner = cs.state("others", view, (v) => {
-      /* C35 (R16, R1): one option per question (a row the list repeats is one), each named with the project that draws on it, as the cite
-         picker names them (`screen.document.cite.option`): the projects she may see are `projectlist`'s (project-roster R26) and each one's
-         questions `projectquestions`' (basis-versions R50), read only for a project that holds some and only once there is a question to
-         choose; a question no project of hers draws on is named by its title alone. `list` rows carry no project. */
+      /* C35 (R16, R1), C14: one option per question (a row the list repeats is one). A question is named with its project where the project is
+         known: the one its list row states (`project`), else, only where its title is another candidate's too (the two are told apart by their
+         project), the one its own `image` states: a read for each such question, never one `projectquestions` read for each project she may see
+         (`list` rows carry no project; the project's name is `projectlist`'s, project-roster R26). A question whose project is not known is
+         named by its title alone. */
       const seen = new Set();
       const rows = (Array.isArray(v.bundles) ? v.bundles : []).filter((q) => q && q.bundle_id && !drawn.has(q.bundle_id) && q.title)
         .filter((q) => (seen.has(String(q.bundle_id)) ? false : (seen.add(String(q.bundle_id)), true)));
       if (!rows.length) return "";
       const projectOf = new Map();
       const pl = later("projects", "projectlist", { limit: "200" });
-      for (const pr of pl.state === "ok" && pl.value && Array.isArray(pl.value.projects) ? pl.value.projects : []) {
-        if (!pr || !pr.id || String(pr.id) === id || !pr.name || pr.question_count === 0) continue;
-        const pq = later("projectq:" + pr.id, "projectquestions", { project: String(pr.id), limit: "100" });
-        for (const x of pq.state === "ok" && pq.value && Array.isArray(pq.value.items) ? pq.value.items : [])
-          if (x && x.inquiry && !projectOf.has(String(x.inquiry))) projectOf.set(String(x.inquiry), String(pr.name));
+      const nameOf = new Map((pl.state === "ok" && pl.value && Array.isArray(pl.value.projects) ? pl.value.projects : []).filter((x) => x && x.id && x.name).map((x) => [String(x.id), String(x.name)]));
+      const sameTitle = new Map();
+      for (const q of rows) sameTitle.set(String(q.title), (sameTitle.get(String(q.title)) || 0) + 1);
+      for (const q of rows) {
+        let pid = /^PROJ-/.test(String(q.project || "")) ? String(q.project) : "";
+        if (!pid && sameTitle.get(String(q.title)) > 1 && pl.state !== "loading") {
+          const qi = later("qimg:" + q.bundle_id, "image", { id: String(q.bundle_id) });
+          const qf = qi.state === "ok" && qi.value && typeof qi.value["bundle.md"] === "string" ? P.front(qi.value["bundle.md"]) : null;
+          pid = qf && /^PROJ-/.test(String(qf.project || "")) ? String(qf.project) : "";
+        }
+        if (pid && nameOf.has(pid)) projectOf.set(String(q.bundle_id), nameOf.get(pid));
       }
       const opts = rows.map((q) => (projectOf.has(String(q.bundle_id))
         ? { value: String(q.bundle_id), key: "screen.document.cite.option", fills: { question: String(q.title), project: projectOf.get(String(q.bundle_id)) } }

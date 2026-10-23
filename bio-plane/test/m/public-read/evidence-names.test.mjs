@@ -9,6 +9,7 @@ import { world, stubOf, bucket, sha, SIG } from "./fixture.mjs";
 import { publishedGraphEdges, gradingFactsLines, passagesLines } from "../../../src/case-grammar/index.mjs";
 import { bindPublishedPlane, publishedRoutes } from "../../../src/publication/worker.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { canonicalJson } from "../../../src/record-grammar/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 bindPublishedPlane({
@@ -35,7 +36,7 @@ const ENC = (t) => new TextEncoder().encode(t);
 /* One case edition (`/7`) over F, which rests on two legs of one captured document (the minutes, at two places) and on one
    leg of working material (an observation). The case document signs the blocks R12 and R17 write for them. `falsifier`
    is the sentence the finding's published bytes state, when a test gives one. */
-async function evidenceWorld({ members = null, ids = {}, falsifier = null, title } = {}) {
+async function evidenceWorld({ members = null, ids = {}, falsifier = null, title, asExtent = canonicalJson } = {}) {
   const w = world(members ? { members } : {});
   const writer = ids.writer ?? "olive", publisher = ids.publisher ?? "olive";
   for (const m of new Set([writer, publisher])) w.member(m, { handle: ids.handles?.[m] ?? `h_${m}` });
@@ -48,8 +49,8 @@ async function evidenceWorld({ members = null, ids = {}, falsifier = null, title
     { finding: F, ord: 1, target: DOC_A, kind: "document", role: "supports", captures: [CAP_A] },
     { finding: F, ord: 2, target: DOC_W, kind: "observation", role: "supports", captures: [] }];
   const passages = [
-    { finding: F, ord: 0, content_id: "a".repeat(64), capture_sha: CAP_A, extent: { kind: "pdf-page", page: 1 }, chain: null, quoted: "the transfer was approved" },
-    { finding: F, ord: 1, content_id: "b".repeat(64), capture_sha: CAP_A, extent: { kind: "pdf-page", page: 4 }, chain: null, quoted: "from the sewer fund" }];
+    { finding: F, ord: 0, content_id: "a".repeat(64), capture_sha: CAP_A, extent: asExtent({ kind: "pdf-page", page: 1 }), chain: null, quoted: "the transfer was approved" },
+    { finding: F, ord: 1, content_id: "b".repeat(64), capture_sha: CAP_A, extent: asExtent({ kind: "pdf-page", page: 4 }), chain: null, quoted: "from the sewer fund" }];
   const text = (await import("../publication/fixture.mjs")).caseDoc(CASE, 1, {
     format: "bio-case-document/7", project: proj, method: { grading: "bio-grading/1", checks: "1.57.0" },
     materials: [{ ref: DOC_A, kind: "document", sha: CAP_A, text_sha: null, origin: ORIGIN, archived_copy: null, included: false,
@@ -202,5 +203,18 @@ test("R41 (1), C47 an evidence entry is named by the document's title as the sig
   for (const title of [null, undefined, "   "]) {
     const o = await evidenceWorld({ title });
     assert.equal((await anon(o.w, o.env, { id: F })).findings[0].basis[0].document.name, ORIGIN, `title ${JSON.stringify(title)}`);
+  }
+});
+
+test("R43 a signed extent is read as the canonical text the chain signs, as an object, and as no place when the text is no extent; never a throw", async () => {
+  const placesOf = async (asExtent) => {
+    const { w, env } = await evidenceWorld({ asExtent });
+    return (await anon(w, env, { id: F })).findings[0].basis.slice(0, 2).map((b) => b.document && b.document.place);
+  };
+  const want = [{ kind: "pdf-page", page: 1 }, { kind: "pdf-page", page: 4 }];
+  assert.deepEqual(await placesOf(canonicalJson), want, "the canonical text, as case-grammar R17 signs it");
+  assert.deepEqual(await placesOf((e) => e), want, "the object");
+  for (const bad of ["not json {", "", "\"pdf-page\"", "[1,2]", "null"]) {
+    assert.deepEqual(await placesOf(() => bad), [null, null], `text ${JSON.stringify(bad)} is no extent: place null`);
   }
 });

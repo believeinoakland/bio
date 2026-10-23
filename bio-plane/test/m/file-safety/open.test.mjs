@@ -2,7 +2,7 @@
    At the module's interface: `openOriginal` answers the bytes as capture's R21 get serves them, or its refusal. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, DAY } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, DAY } from "./fixture.mjs";
 import { FILE_SAFETY_CHECKS, RESCAN_INTERVAL_MS, DEEPER_CHECK_FRESH_MS, fileSafetyOps } from "../../../src/file-safety/index.mjs";
 
 const WARNED = { own_device: true, no_macros: true };

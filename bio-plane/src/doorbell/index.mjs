@@ -15,7 +15,7 @@
  * no later module: a later module registers the litigation-hold reader (`registerReader`, R3). At its creation it
  * creates its six tables and declares them to record-core's purge as exempt. */
 import { DOORBELL_VIA } from "../provenance/index.mjs";
-import { profileOf, profileView, firstHopWho, INSTALLATION_CHECKS } from "../acquisition/index.mjs";
+import { profileOf, profileView, firstHopWho, textTypeOf, INSTALLATION_CHECKS } from "../acquisition/index.mjs";
 import { viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { captureOf } from "../capture/index.mjs";
@@ -649,7 +649,10 @@ export class Doorbell {
        act under their session; a knock is made with no account (R1) and its row names no member session, so no knock
        is one, and every pull is profiled as `"fetch"`: a type read only from a member's own capture (court-doctypes R2)
        never matches a stranger's knock, whoever brings it in. */
-    const profile = await profileOf({ ev, sha, ct: null, total: bytes.length, multipart: false, headers: {}, locator: address,
+    /* R13 (fix round 5, E5): the knock's stated media type and file name go through acquisition's one text rule, as an upload's
+       do; the stated type is never a type check, so bytes that are not text profile as they always did. */
+    const ct = textTypeOf({ bytes, type: row.media_type, name: row.file_name });
+    const profile = await profileOf({ ev, sha, ct, total: bytes.length, multipart: false, headers: {}, locator: address,
                                       view: profileView(this.core), retrieved: when, origin: "fetch" });
     const document = this.#pulledDocument(row, { by, at: when, profile });
     const receiptOf = (fn) => { try { return fn(); } catch (e) { return { recorded: false, error: String(e && e.message || e).slice(0, 200) }; } };

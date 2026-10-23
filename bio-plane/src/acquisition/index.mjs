@@ -24,6 +24,15 @@
  * once, with no read-back (R96); the trusted timestamp is waited for no set time (R20); the render arm asks the governor with
  * a peek and the fetch books the visit once (R97); the document carries its own title (R98, `title.mjs`).
  *
+ * T51 fix round 5 (the second re-walk's E1, E5, E8, E10): a capture held in parts is profiled from the first KiB of its first part (R101);
+ * `textTypeOf` is the one rule for reading a member's file as text (R102); `read` is split into download, hash and store (R103); a
+ * visitor copy a member's "Finish it" finishes stays owed until its document is filed (R104).
+ *
+ * T51 fix round 6 (the third re-walk's G2, G3, G12a): a member's large or slow web capture is parked and owed to the plane's alarm, not read in the
+ * request (`owedFetch`, R105); "Finish it" renders nowhere in the request (R106); a capture decided to be no archive is not decided again (R107).
+ * Fix round 6 (G27, G32): a render that returns after its request has ended is kept in the evidence store at once and its reply dropped (`keepReply`, R5);
+ * a caller in process hands the held capture's digest as `opts.heldSha` and the fetch is conditional for a member too (R22).
+ *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
 import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, ISO_TS_RE, isMachineIdentity } from "../record-grammar/index.mjs";
@@ -60,7 +69,7 @@ export { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, C
 /* R38–R41, R43 (T35-21, N688, K1888): archives opened on capture, the read behind the archive screen, and the group's
    co-archive setting; the instance holding this module's tables is `acquisitionOf`'s. */
 export { ARCHIVE_CHECKS } from "./checks.mjs";
-export { unpack, archiveList, memberOf, membersOf, openedAmong, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
+export { unpack, archiveList, memberOf, membersOf, openedAmong, notArchivesAmong, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
          UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES, UNPACK_LIMITS,
          ARCHIVE_CHECK_READS } from "./unpack.mjs";
 
@@ -119,11 +128,31 @@ export function userAgent(env, purpose = "acquire", delegated = null) {
 /* Whether a primary is read back as TEXT for the recognisers and FW-4's digests: single-part, bounded, and a textual
    declared type. One rule, read by acquire when it records a capture and by op=monitor when it compares one (D-60). */
 export const PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+/* R17, R101: the bytes of a capture's head its format is judged from when the capture is held in parts: the first KiB of the first part. */
+export const FORMAT_HEAD = 1024;
 /* D-351: the bound on reading an OpenDocument capture back whole for its container digest. Chosen, not measured. */
 export const ODF_DIGEST_MAX = 8 * 1024 * 1024;
 export function profilesAsText(ct, total, multipart) {
   return !multipart && total <= PROFILE_TEXT_MAX
     && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
+}
+
+/** R102 (fix round 5, E5): THE ONE RULE for reading a file a member brought in as text, shared by the upload and the knock's pull.
+ *  `textTypeOf({bytes, type, name})` answers the text content type the bytes are to be profiled and read as, else null: the
+ *  declared `type` when it is a text type (`profilesAsText`), or, when none is declared, the type a `.txt`, `.md` or `.csv` name
+ *  stands for; and only for bytes that are text, valid UTF-8 with no NUL, within what a profile reads as text (`PROFILE_TEXT_MAX`).
+ *  A declared type that is not text is never overridden by a name. Pure; never throws. */
+const NAME_TEXT_TYPES = Object.freeze({ txt: "text/plain", md: "text/markdown", csv: "text/csv" });
+export function textTypeOf({ bytes = null, type = null, name = null } = {}) {
+  try {
+    if (!(bytes instanceof Uint8Array) || bytes.length > PROFILE_TEXT_MAX) return null;
+    const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name === "string" ? name : "") : null;
+    const readAs = named ? NAME_TEXT_TYPES[named[1].toLowerCase()] : type;
+    if (typeof readAs !== "string" || readAs === "" || !profilesAsText(readAs, bytes.length, false)) return null;
+    if (bytes.includes(0)) return null;
+    new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    return readAs;
+  } catch { return null; }
 }
 
 /** R17's `digests`: THE ONE FUNCTION that decides whether a document's normalised digests can be trusted to assert
@@ -290,7 +319,7 @@ function scopedFetch(target, { headers, credential, env, purpose, follow = true 
 const clockNow = () => performance.now();
 function openTimings(given) {
   const t = given && typeof given === "object" && !Array.isArray(given) ? given : {};
-  t.start = clockNow(); t.end = null; t.stages = {}; t.running = null;
+  t.start = clockNow(); t.end = null; t.stages = {}; t.running = null; t.split = null;
   return t;
 }
 function stageBegin(t, name) { stageEnd(t); t.running = { name, since: clockNow() }; }
@@ -303,14 +332,23 @@ async function timed(t, name, work) {
   stageBegin(t, name);
   try { return await work(); } finally { stageEnd(t); }
 }
+/* R103 (fix round 5, E10): inside `read`, the milliseconds the source's download (`download`), the hash (`hash`) and the store's
+   writes (`store`) took; each is measured where it runs and never nests with another. */
+function splitOpen(t) { t.split = { download: 0, hash: 0, store: 0 }; }
+async function splitTimed(t, part, work) {
+  const since = clockNow();
+  try { return await work(); } finally { if (t.split) t.split[part] += clockNow() - since; }
+}
 /** R95: `{total_ms, stages: {<stage>: ms}}` of an `acquire`, read at any moment: whole milliseconds, every stage floored and
- *  the total ceiled, so the stages sum to no more than the whole; a stage still running names itself as `running`. */
+ *  the total ceiled, so the stages sum to no more than the whole; a stage still running names itself as `running`. R103: once the
+ *  body is being read, `read_split` states, within `read`, the milliseconds of `download`, `hash` and `store`. */
 export function stageTimes(t) {
   if (!t || typeof t !== "object" || !t.stages) return { total_ms: 0, stages: {} };
   const now = clockNow(), stages = {};
   for (const [k, v] of Object.entries(t.stages)) stages[k] = Math.floor(v);
   if (t.running) stages[t.running.name] = Math.floor((t.stages[t.running.name] || 0) + (now - t.running.since));
-  return { total_ms: Math.ceil((t.end ?? now) - t.start), stages, ...(t.running ? { running: t.running.name } : {}) };
+  const split = t.split ? { download: Math.floor(t.split.download), hash: Math.floor(t.split.hash), store: Math.floor(t.split.store) } : null;
+  return { total_ms: Math.ceil((t.end ?? now) - t.start), stages, ...(split ? { read_split: split } : {}), ...(t.running ? { running: t.running.name } : {}) };
 }
 
 /* R47: the longest `for` (a question's id) a member may name. */
@@ -337,6 +375,36 @@ const KEEP_RESERVE_MS = 5000;
    for it and finds the object kept, never writing it twice. */
 const KEEPING = new Map();
 
+/* R100 (fix round 4b, F5, F11): OWED CAPTURE WORK IS NEVER DROPPED. A web capture's outstanding supporting files and its pending
+   render are parked as a capture session (capture R22), which capture prunes an hour after its last save; the session is
+   therefore parked for `OWED_SESSION_TTL_MS` when the plane's owed-work ledger can take the entry, and the entry is registered
+   with the hook the plane hands in at composition, read as `opts.owedLater` else the store's `owedLater` (as `keepLater` is):
+   an async `owedLater(entry) -> {ok: true}` that never throws. Acquisition cannot import the plane (it is earlier in the
+   order); with no hook handed in the session expires as before and a member's "Finish it" is the only way on. */
+export const OWED_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const oweOf = (cap, opts) => {
+  const f = opts && typeof opts.owedLater === "function" ? opts.owedLater : cap && typeof cap.owedLater === "function" ? (e) => cap.owedLater(e) : null;
+  if (!f) return null;
+  return async (entry) => { try { const r = await f(entry); return !!(r && r.ok === true); } catch { return false; } };
+};
+
+/* R105 (fix round 6, G2; K4562): A LARGE WEB CAPTURE IS OWED WORK, NOT THE MEMBER'S WAIT. The door answers in 25 s and a source's
+   download runs at the source's speed (a 15.9 MB file took 23 s), so a capture whose body is large, or slow, is not read in the
+   request: it is parked as a capture session, registered in the plane's ledger as `{kind: "fetch", session}`, and answered at once
+   `fetch_pending`; the alarm's `owedFetch` makes the capture with no bound but the alarm's own and hands the document to `deliver`.
+   `LARGE_FETCH_BYTES` is the most a request reads (a declared length over it is parked before one byte is read; with no length, the
+   body read past it is parked); `FETCH_WAIT_MS` the longest a request reads a body (~10 s, as `RENDER_WAIT_MS` bounds the render).
+   CHOSEN by the plan (K4562), not measured. */
+export const LARGE_FETCH_BYTES = 8 * 1024 * 1024;
+export const FETCH_WAIT_MS = 10000;
+/* the digest a parked fetch's session names as its primary: there is none yet, and the column is not null */
+const NO_PRIMARY = "0".repeat(64);
+/* the `Content-Length` a response declares, whole bytes, else null (absent, malformed, or not a number) */
+const declaredLength = (headers) => {
+  const v = headers && typeof headers.get === "function" ? headers.get("content-length") : null;
+  return typeof v === "string" && /^\d{1,15}$/.test(v.trim()) ? Number(v.trim()) : null;
+};
+
 /** R96 (C5 e; record-core R87, K4363): a capture too large for memory is made whole by the store itself, from the parts it
  *  holds: `ev.putFromParts(digest, partDigests)` writes one object under the digest by the store's own multipart upload,
  *  streaming each stored part in turn, so this module reads no part back and holds no more than the part being written. It is
@@ -356,6 +424,29 @@ function keepFromParts(ev, { sha, parts }) {
   })().finally(() => { if (KEEPING.get(sha) === mine) KEEPING.delete(sha); });
   KEEPING.set(sha, mine);
   return mine;
+}
+
+/** R96 (fix round 4, C5c; fix round 4b, F2; R100): the keep of a capture past what memory holds, as `acquire` makes it and as
+ *  `capture`'s upload makes it: the store makes the whole from the parts it holds (`putFromParts`, record-core R87), this call
+ *  AWAITS it within what is left of the door's bound (`boundMs` less the 5 s reserved for the rest of the call, less
+ *  `elapsedMs`), and a keep that has not ended by then is handed to `keepLater({sha, parts: [digest, ...]})` (the plane's
+ *  owed-work ledger, finished by its alarm): no keep relies on a promise nothing keeps alive after the answer. `parts` are the
+ *  part digests in order, or `{sha256}` objects. Answers `{started, kept, keep_pending}`: `started` false when the store offers
+ *  no such call (the capture stays in its parts); `kept` true when the whole was put in time; `keep_pending` true when the
+ *  ledger took it. Never throws. */
+export async function keepPast(cap, ev, { sha, parts, boundMs = ACQUIRE_BOUND_MS, elapsedMs = 0, keepLater = null } = {}) {
+  const digests = (Array.isArray(parts) ? parts : []).map((p) => (typeof p === "string" ? p : p && p.sha256));
+  const making = digests.length ? keepFromParts(ev, { sha, parts: digests.map((d) => ({ sha256: d })) }) : null;
+  if (!making) return { started: false, kept: false, keep_pending: false };
+  const left = Math.max(0, boundMs - KEEP_RESERVE_MS - elapsedMs);
+  const got = await within(making, left);
+  if (got.done && got.value && got.value.ok) return { started: true, kept: true, keep_pending: false };
+  /* BOB #244 (K4433): the plane's hand-off is `keepLater({sha, parts}) -> {ok: true}`, read as the caller's, else the store's;
+     with none handed the capture stays in its parts, as without a plane. */
+  const later = typeof keepLater === "function" ? keepLater : cap && typeof cap.keepLater === "function" ? (k) => cap.keepLater(k) : null;
+  let pending = false;
+  if (later) { try { const r = await later({ sha, parts: digests }); pending = !!(r && r.ok === true); } catch { pending = false; } }
+  return { started: true, kept: false, keep_pending: pending };
 }
 
 /** R10, R96 (C5): keep a multipart capture whole. With `bytes`, the parts' buffers the stream already holds (one for each
@@ -792,7 +883,7 @@ export async function acquire(cap, body0, opts = {}) {
 async function acquireRun(cap, body0, opts, t) {
   const { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null, ownHosts = null,
           reputation: reputationTool = undefined, fileScanner = null, renderWaitMs = undefined,
-          renderResume = null } = opts || {};
+          renderResume = null, heldSha: givenHeldSha = null } = opts || {};
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
@@ -886,6 +977,9 @@ async function acquireRun(cap, body0, opts, t) {
     if (cr && typeof cr === "object" && CREDENTIAL_KINDS.includes(cr.kind) && typeof cr.secret === "string" && cr.secret !== "")
       crCredential = cr;
   }
+  /* R22 (fix round 6, G32): the held capture's digest, handed in by an in-process caller (never read from a body), makes a member's fetch of
+     an address the record already holds conditional too: the source that says nothing changed is not read. Anything but 64 hex is ignored. */
+  if (!crHeldSha && typeof givenHeldSha === "string" && /^[0-9a-f]{64}$/.test(givenHeldSha)) crHeldSha = givenHeldSha;
   /* R4, CAP-8 — THE GOOGLE DRIVE HOST STACK (Bob, 2026-09-14: keep the link, export an OpenDocument version). The
      recognition, the composition and the fetch all happen inside the ONE call that files the bytes. */
   let driveCapture = null, driveHopRecorded = null;
@@ -925,6 +1019,11 @@ async function acquireRun(cap, body0, opts, t) {
     else sessionSkip = { reason: "NO_SUCH_SESSION", detail: ld && ld.note };
   }
 
+  /* one code per condition (K231; fix round 5): a continuation naming a session that is gone (finished, closed, expired) with no address of its
+     own to capture instead is NO_SUCH_SESSION, never BAD_LOCATOR. */
+  if (sessionSkip && (typeof body.locator !== "string" || !body.locator))
+    return answer(404, { ok: false, reason: "NO_SUCH_SESSION", op, session: String(body.continue).slice(0, 80),
+      detail: localize("acquisition.index.no_such_session", "no capture session of that name is held: it was finished, closed or has expired; nothing was fetched") });
   let locator = session ? session.locator : body.locator;
   if (!(archiveAsked && !session) && (typeof locator !== "string" || !isPublicHttpsLocator(locator)))
     return answer(400, { ok: false, reason: "BAD_LOCATOR",
@@ -933,8 +1032,18 @@ async function acquireRun(cap, body0, opts, t) {
      R42 (F16): no fetch goes to one of the group's own hosts, the render arm's included; refused before any request. */
   if (!archiveAsked && !session && onOwnHost(locator, own)) return answer(403, { ...ownHostRefused(locator), op });
   /* END DEC-49 REGION is-own-host */
-  if (session && session.state && session.state.render_pending) return finishRender(cap, { session, opts, t });
-  if (session) return continueCapture(cap, { body, session, cls, storeName, ev, own, t });
+  /* R105: a capture parked as an owed fetch has nothing for a member to finish: the answer is the state it is in. */
+  if (session && session.state && session.state.fetch_pending)
+    return answer(200, { ok: true, fetch_pending: { session: session.session, ...session.state.fetch_pending }, store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE });
+  /* R104: a visitor copy already finished and owed to the record: a second "Finish it" has nothing left to do and touches nothing, so the
+     session stays until `owedRun` has seen the copy filed or delivered it. */
+  if (session && session.state && session.state.render_done)
+    return answer(200, { ok: true, existed: true,
+      continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
+                   note: word("acquisition.note.continuation_files_new") },
+      render: { state: "owed", session: session.session }, store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE });
+  if (session && session.state && session.state.render_pending) return finishRender(cap, { session, opts, t, inRequest: true });
+  if (session) return continueCapture(cap, { body, session, cls, storeName, ev, own, t, owe: oweOf(cap, opts) });
 
   /* R15, D-97: authority is THREE-VALUED and undetermined is a task, not a blocker. */
   const authorityAsserted = typeof body.authority === "string" && body.authority.trim() ? body.authority.trim() : null;
@@ -1130,6 +1239,46 @@ async function acquireRun(cap, body0, opts, t) {
   /* R32: on the archive arm the success is the memento's, recorded once it is chosen (below), never for one refused. */
   if (!archiveMemento) await noteOutcome("success", res.status);
 
+  /* R105 (fix round 6, G2): THE LARGE OR SLOW BODY IS OWED, NOT READ HERE. Only a member's own web capture is parked (the capture-request
+     arm runs under no door's bound, the archive arm and the render arm read what they must to decide, and a call the alarm makes for a parked
+     fetch reads it whole), and only when the plane's ledger can take the entry. `parkFetch` answers the parked capture, or null when it could
+     not park (the ledger refuses, the session cannot be saved): the body is then read here, as it always was. */
+  const fetchOwe = oweOf(cap, opts);
+  let mayPark = !!fetchOwe && !!askingMember && !captureRequest && !archiveMemento && !renderAsked && opts.inlineFetch !== true;
+  const parkFetch = async ({ declared, why }) => {
+    try {
+      const live = typeof cap.liveCaptureSessions === "function" ? cap.liveCaptureSessions(stampSecond()) : [];
+      const twin = Array.isArray(live) ? live.find((x) => x && x.locator === documentAddress && x.state && x.state.fetch_pending && x.state.opened_by === askingMember) : null;
+      const fp = twin ? { session: twin.session, ...twin.state.fetch_pending }
+        : { session: `fp_${(await sha256Hex(`${documentAddress}\n${askingMember}`)).slice(0, 16)}_${Date.now().toString(36)}`, since: stampSecond(), declared_bytes: declared, why };
+      if (!twin) {
+        const carried = {};
+        for (const k of ["locator", "subresources", "authority", "file", "coArchive", "for", "project"]) if (body0 && body0[k] !== undefined) carried[k] = body0[k];
+        const project = typeof body0?.project === "string" && body0.project.length <= 200 ? body0.project : null;
+        const saved = cap.saveCaptureSession({ session: fp.session, locator: documentAddress, primarySha: NO_PRIMARY, primaryFile: "snapshots/pending-fetch", base: documentAddress,
+          state: { queue: [{ fetch: true }], opened_by: askingMember, ...(project ? { project } : {}), cls, store: storeName,
+                   fetch_pending: { since: fp.since, declared_bytes: fp.declared_bytes, why: fp.why }, body: carried },
+          ttlMs: OWED_SESSION_TTL_MS });
+        if (!(saved && saved.saved !== false) || !(await fetchOwe({ kind: "fetch", session: fp.session }))) {
+          try { cap.dropCaptureSession({ session: fp.session }); } catch { /* harmless */ }
+          return null;
+        }
+      }
+      return answer(200, { ok: true, fetch_pending: fp, store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE });
+    } catch { return null; }
+  };
+  const declared = declaredLength(res.headers);
+  if (mayPark && declared !== null && declared > CAPTURE_MAX) {
+    cancelBody(res);
+    return answer(413, { ok: false, reason: "TOO_LARGE", bytes: declared, maxBytes: CAPTURE_MAX,
+                         detail: localize("acquisition.index.the_document_exceeds_what_this", "the document exceeds what this surface will capture even in parts") });
+  }
+  if (mayPark && declared !== null && declared > LARGE_FETCH_BYTES) {
+    const parked = await parkFetch({ declared, why: "LARGE_DECLARED" });
+    if (parked) { cancelBody(res); return parked; }
+    mayPark = false;
+  }
+
   /* R10. Streamed in parts of 8 MiB, so peak residency is one part. The incremental hasher is RECORD-GRAMMAR'S, the
      one C-18.6 verifies parts with, so a disagreement between two implementations cannot look like tampering. */
   const PART = 8 * 1024 * 1024;
@@ -1145,10 +1294,13 @@ async function acquireRun(cap, body0, opts, t) {
   let keptParts = [], keptSize = 0, firstHead = null;
   /* R10: a part is exactly 8 MiB (the last one the remainder), whatever sizes the stream's chunks arrive in. */
   const part = async (buf) => {
-    const psha = hex(await crypto.subtle.digest("SHA-256", buf));
-    const heldBefore = !!(await ev.head(psha));
-    if (!heldBefore) await ev.put(psha, buf);
-    if (!parts.length) firstHead = buf.slice(0, 64);   // R17's ZIP magic is read from it, so the first part is not read back
+    const psha = await splitTimed(t, "hash", async () => hex(await crypto.subtle.digest("SHA-256", buf)));
+    const heldBefore = await splitTimed(t, "store", async () => {
+      const had = !!(await ev.head(psha));
+      if (!had) await ev.put(psha, buf);
+      return had;
+    });
+    if (!parts.length) firstHead = buf.slice(0, FORMAT_HEAD);   // R17's format and ZIP magic are read from it, so the first part is not read back
     parts.push({ sha256: psha, bytes: buf.length });
     partHeldBefore.push(heldBefore);
     if (keptParts) { keptSize += buf.length; if (keptSize > MULTIPART_KEEP_MAX) keptParts = null; else keptParts.push(buf); }
@@ -1173,11 +1325,13 @@ async function acquireRun(cap, body0, opts, t) {
   const reader = res.body && res.body.getReader ? res.body.getReader() : null;
   if (!reader) return answer(502, { ok: false, reason: "NO_BODY", locator });
   stageBegin(t, "read");
+  splitOpen(t);
+  const readStart = clockNow();
   for (;;) {
     /* R10: a body that breaks off mid-stream is a fetch that did not complete, answered by name, never a throw; the
        parts already stored are content-addressed and named by no document, as TOO_LARGE's are. */
     let chunk;
-    try { chunk = await reader.read(); }
+    try { chunk = await splitTimed(t, "download", () => reader.read()); }
     catch (e) {
       if (archiveMemento) return answer(502, archiveBroke(String(e && e.message || e)).payload);
       await noteOutcome("fetch_failed", null);
@@ -1189,7 +1343,14 @@ async function acquireRun(cap, body0, opts, t) {
     if (done) break;
     total += value.length;
     if (total > MAX) { oversize = true; break; }
-    whole.update(value);
+    /* R105: with no length declared, a body read past `LARGE_FETCH_BYTES`, or any body read for longer than `FETCH_WAIT_MS`, is parked: the
+       reader is cancelled (the parts stored so far are content-addressed and found again by the owed read) and the capture is owed. */
+    if (mayPark && ((declared === null && total > LARGE_FETCH_BYTES) || clockNow() - readStart > (opts.fetchWaitMs ?? FETCH_WAIT_MS))) {
+      const parked = await parkFetch({ declared, why: declared === null && total > LARGE_FETCH_BYTES ? "LARGE_BODY" : "SLOW_BODY" });
+      if (parked) { try { reader.cancel()?.catch?.(() => {}); } catch { /* the source may already be gone */ } return parked; }
+      mayPark = false;
+    }
+    await splitTimed(t, "hash", async () => whole.update(value));
     if (driveHead && driveHeadBytes < driveHead.length) {
       const take = Math.min(value.length, driveHead.length - driveHeadBytes);
       driveHead.set(value.subarray(0, take), driveHeadBytes);
@@ -1297,11 +1458,15 @@ async function acquireRun(cap, body0, opts, t) {
       const got = await timed(t, "render", () => within(run, captureRequest ? Infinity : (renderWaitMs ?? RENDER_WAIT_MS)));
       if (got.done) answerR = got.value;
       else if (opts.renderFinal) answerR = { ok: false, error: localize("acquisition.index.render_did_not_return", "the page as a visitor saw it did not come back in time") };   // R99: a render begun afresh is final
-      else renderDeferred = { run, pageUrl };
+      else renderDeferred = { run: run.then((a) => keepReply(ev, a)), pageUrl };   // R5 (G27): the reply is kept in the record when it returns, not held
     }
     if (!renderDeferred) {
     stageBegin(t, "render");
     const asked = { ...RENDER_DEFAULTS, locale: renderLocale(pv.view) };
+    /* R5 (G27): a render that returned after its request had ended was kept in the record at once (`keepReply`); its page is read back, its
+       bodies are the digests it recorded, and it is filed as a render waited for is. */
+    const kept = answerR && answerR.kept === true ? answerR : null;
+    if (kept) answerR = await replyOfKept(ev, kept);
     rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved });
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
     if (!rb.ok || rbytes.length > MAX)
@@ -1309,12 +1474,12 @@ async function acquireRun(cap, body0, opts, t) {
         detail: rb.ok ? localize("acquisition.index.the_rendered_document_is_length", "the rendered document is {length} bytes, over this surface's {MAX}.", { length: String(rbytes.length), MAX: String(MAX) }) : rb.problem });
     /* END DEC-49 REGION is-render-result */
     /* D-529: every subresource the render LOADED is hashed BY THE PLANE over bytes it KEEPS. */
-    const renderDigests = await keepRenderBodies(answerR, { sha256: sha256Hex,
+    const renderDigests = kept ? kept.digests : await keepRenderBodies(answerR, { sha256: sha256Hex,
       put: async (s, b) => { if (!(await ev.head(s))) await ev.put(s, b); } });
     rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved, digests: renderDigests });
-    const rsha = await sha256Hex(rbytes);
-    const renderedExisted = !!(await ev.head(rsha));
-    if (!renderedExisted) await ev.put(rsha, rbytes);
+    const rsha = kept ? kept.rsha : await sha256Hex(rbytes);
+    const renderedExisted = kept ? kept.existed : !!(await ev.head(rsha));
+    if (!renderedExisted && !kept) await ev.put(rsha, rbytes);
     renderedBytes = rbytes;
     stageEnd(t);
     shellRecorded = { file: `snapshots/${name}.shell.html`, sha256: sha, bytes: total,
@@ -1413,10 +1578,12 @@ async function acquireRun(cap, body0, opts, t) {
     subsSkipped = { reason: "RENDER_PENDING", detail: localize("acquisition.index.render_pending_files", "the page as a visitor saw it is still being made, and its supporting files are captured with it when you finish this capture") };
   if (body.subresources === true && !subsSkipped) {
     const w = await timed(t, "subresources", () => walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
-                                             retrieved, resume: null, sessionId: null, own, openedBy: actor }));
+                                             retrieved, resume: null, sessionId: null, own, openedBy: actor, owe: oweOf(cap, opts) }));
     subs = w.subs; subsSkipped = w.skipped; sessionId = w.sessionId;
   }
 
+  /* R108 (G19): what of the supporting files was kept, stated in the capture's facts and in the answer */
+  const supporting = supportingOf({ subs, render: renderRecorded, notWalked: body.subresources === true ? subsSkipped : null });
   /* R5 (T51; C13): the render still running is parked as a capture session, which the member finishes (`continue`, R12); the
      run is kept beside it so finishing it waits for the very render begun here. */
   let renderPending = null;
@@ -1425,8 +1592,12 @@ async function acquireRun(cap, body0, opts, t) {
     const carried = {};
     for (const k of ["subresources", "authority", "file", "coArchive"]) if (body[k] !== undefined) carried[k] = body[k];
     try {
-      cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base: renderDeferred.pageUrl,
-        state: { queue: [{ render: true }], ...(actor ? { opened_by: actor } : {}), render_pending: { since: retrieved, body: carried } } });
+      const owe = oweOf(cap, opts);
+      const saved = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base: renderDeferred.pageUrl,
+        state: { queue: [{ render: true }], ...(actor ? { opened_by: actor } : {}), render_pending: { since: retrieved, body: carried } },
+        ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}) });
+      /* R100: the render still to be finished is owed work too */
+      if (owe && saved) await owe({ kind: "subresources", sha, session: sid });
     } catch { /* the render still returns; the member captures again */ }
     PENDING_RENDERS.set(sid, { run: renderDeferred.run, since: Date.now() });
     const forget = setTimeout(() => PENDING_RENDERS.delete(sid), PENDING_RENDER_TTL_MS);
@@ -1525,6 +1696,7 @@ async function acquireRun(cap, body0, opts, t) {
       /* R16 (T51; C25): the file name the source gave the document, when it gave one, so a document with no title of its own is named by it */
       ...(fileNameOf(res.headers, resolvedUrl || locator) ? { file_name: fileNameOf(res.headers, resolvedUrl || locator) } : {}),
       ...(renderRecorded ? {} : { transport }),
+      ...(supporting ? { supporting } : {}),
       /* R23: that a supplied credential rode the fetch, whose and at which scope, never its secret. */
       ...(crCredential ? { credentialed: { credential: crCredential.credential ?? null, kind: crCredential.kind,
                                            supplied_by: crCredential.supplied_by ?? null, scope: crCredential.scope ?? null,
@@ -1553,6 +1725,7 @@ async function acquireRun(cap, body0, opts, t) {
     try {
       unpacked = await timed(t, "unpack", () => unpack(cap, { archiveSha: sha, by: actor, cls, member }, { automatic: true,
         parts: parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })), origin: document.origin,
+        ...(typeof opts.owedLater === "function" ? { owedLater: opts.owedLater } : {}),
         address: addressIsDerived ? documentAddress : (resolvedUrl || locator),
         addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator) }));
     } catch (e) {
@@ -1566,21 +1739,10 @@ async function acquireRun(cap, body0, opts, t) {
      One that has not ended by then is registered as pending with the store handed in (`keepLater`, the plane's `keeps_pending`,
      finished by its alarm) and the answer says `keep_pending`: the capture is kept in its parts and the whole follows. */
   let keepPending = false;
-  if (multipart && !renderRecorded && total > MULTIPART_KEEP_MAX) {
-    const making = keepFromParts(ev, { sha, parts });
-    if (making) {
-      const left = Math.max(0, (opts.boundMs ?? ACQUIRE_BOUND_MS) - KEEP_RESERVE_MS - (clockNow() - t.start));
-      const got = await timed(t, "keep", () => within(making, left));
-      if (!got.done || !(got.value && got.value.ok)) {
-        /* BOB #244 (K4433): the plane's hand-off is `keepLater({sha, parts: [partDigest, ...]}) -> {ok: true}`, read as `opts.keepLater` else the store's;
-           with none handed the capture stays in its parts, as without a plane. */
-        const later = typeof opts.keepLater === "function" ? opts.keepLater : typeof cap.keepLater === "function" ? (k) => cap.keepLater(k) : null;
-        if (later) {
-          try { const r = await later({ sha, parts: parts.map((p) => p.sha256) }); keepPending = !!(r && r.ok === true); }
-          catch { keepPending = false; }
-        }
-      }
-    }
+  if (multipart && !renderRecorded && total > MULTIPART_KEEP_MAX && ev && typeof ev.putFromParts === "function") {
+    const elapsedMs = clockNow() - t.start;
+    const k = await timed(t, "keep", () => keepPast(cap, ev, { sha, parts, boundMs: opts.boundMs ?? ACQUIRE_BOUND_MS, elapsedMs, keepLater: opts.keepLater }));
+    keepPending = k.keep_pending;
   }
   return answer(200, {
     ok: true, existed,
@@ -1594,12 +1756,46 @@ async function acquireRun(cap, body0, opts, t) {
     ...(renderPending ? { render: { state: "pending", session: renderPending.session } } : {}),
     ...snapshotOf(subs, sessionId, name, shellRecorded),
     ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
+    ...(supporting ? { supporting } : {}),
     ...(receiptSignature ? { receipt_signature: receiptSignature } : {}),
     ...(unpacked ? { unpack: unpacked } : {}),
     /* R44: what the scanner said of the address, stated to the caller as the receipt records it */
     reputation,
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE,
   });
+}
+
+/** R5, R12 (fix round 6, G27): A RENDER THAT RETURNS AFTER ITS REQUEST HAS ENDED IS KEPT IN THE RECORD, NOT IN MEMORY. The renderer's reply is the
+ *  page and every body the page loaded (up to `SUBRESOURCE_BUDGET`, 64 MiB, sent as base64 text): held by the pending render until the member's
+ *  "Finish it" or the alarm takes it, an hour at most, it was the whole of the object's 128 MB. When the run returns, its page and each body are
+ *  put in the evidence store as the filing would put them (content-addressed, named by no document until one is filed), and what is held in their
+ *  place is `{kept: true, rsha, existed, digests, reply}`: the reply without its page or bodies, the page's digest, whether the record held the
+ *  page already, and the bodies' digests. `replyOfKept` reads the page back when the render is filed. A failed or empty render is small and is
+ *  passed on as it came; a record that will not take a piece leaves the reply as it came too, held as before, so no render is lost. Never throws. */
+async function keepReply(ev, a) {
+  try {
+    if (!a || a.ok !== true || typeof a.html !== "string" || a.html.length === 0) return a;
+    let refused = false;
+    const put = async (s, b) => { try { if (!(await ev.head(s))) await ev.put(s, b); } catch (e) { refused = true; throw e; } };
+    const digests = await keepRenderBodies(a, { sha256: sha256Hex, put });
+    const page = new TextEncoder().encode(a.html);
+    if (refused || page.length > CAPTURE_MAX) return a;
+    const rsha = await sha256Hex(page);
+    const existed = !!(await ev.head(rsha));
+    if (!existed) await ev.put(rsha, page);
+    const { html, requests, ...rest } = a;
+    const bare = Array.isArray(requests) ? requests.map((r) => { if (!r || typeof r !== "object") return r; const { body_base64, body_text, ...meta } = r; return meta; }) : requests;
+    return { kept: true, rsha, existed, digests, reply: { ...rest, ...(bare === undefined ? {} : { requests: bare }) } };
+  } catch { return a; }
+}
+/** R5 (G27): the renderer's reply of a render `keepReply` kept, its page read back from the record; a page that cannot be read back is a failed
+ *  render, in words. Never throws. */
+async function replyOfKept(ev, kept) {
+  try {
+    const o = await ev.get(kept.rsha);
+    if (o) return { ...kept.reply, html: new TextDecoder("utf-8").decode(new Uint8Array(await o.arrayBuffer())) };
+  } catch { /* said below */ }
+  return { ok: false, error: localize("acquisition.index.render_page_not_read_back", "the page as a visitor saw it was made but could not be read back from the record") };
 }
 
 /* R44 (N714, N710; K1929 (2), K1939 (DEC-168 S12, S13), K1946 T2; T37, N774, K2155): THE ADDRESS'S REPUTATION, ASKED
@@ -1697,7 +1893,12 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
      ooxml's listing over the stored parts as a range source answering whole with neither an OPC content-type map nor an
      ODF `mimetype` in it, so an office or OpenDocument file is never profiled `zip`; a declared type never makes one. */
   if (!formatBytes && Array.isArray(parts) && parts.length) {
-    const z = await zipPastBound(ev, parts, firstPart);
+    /* R101 (fix round 5, E1): a capture held in parts is judged from the first KiB of its first part, as a single part is, so an
+       upload that declares no type (a PDF, an office file) is not `undetermined`; the head is the one the caller holds, else a
+       range read of the stored part (the head alone is transferred, never the part). */
+    const head = await headOf(ev, parts, firstPart);
+    if (head) profile.format = detectFormat(head, ct || null);
+    const z = await zipPastBound(ev, parts, head);
     if (z) profile.format = z;
     else if (profile.format && profile.format.format === "zip")
       profile.format = { format: "undetermined", confidence: "none",
@@ -1713,10 +1914,18 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
 /** R17: whether bytes held in `parts` (`[{sha256, bytes}]`, in order) are a plain ZIP archive, read without holding them
  *  whole: the ZIP magic in the first part, then `ooxml.listArchive` over the parts as a range source. Answers the format
  *  registry's shape for `zip`, or null. Never throws. */
-async function zipPastBound(ev, parts, firstPart = null) {
+/** R101: the first `FORMAT_HEAD` bytes of the first of `parts` (`[{sha256, bytes}]`), the caller's `firstPart` when it holds them, else a
+ *  range read of the stored part; null when the part is not there or cannot be read. Never throws. */
+async function headOf(ev, parts, firstPart = null) {
+  if (firstPart instanceof Uint8Array && firstPart.length) return firstPart.subarray(0, FORMAT_HEAD);
   try {
-    let head = firstPart instanceof Uint8Array ? firstPart : null;
-    if (!head) { const first = await ev.get(parts[0].sha256); head = first ? new Uint8Array(await first.arrayBuffer()) : null; }
+    const first = await ev.get(parts[0].sha256, { range: { offset: 0, length: FORMAT_HEAD } });
+    const b = first ? new Uint8Array(await first.arrayBuffer()) : null;
+    return b && b.length ? b.subarray(0, FORMAT_HEAD) : null;
+  } catch { return null; }
+}
+async function zipPastBound(ev, parts, head = null) {
+  try {
     if (!head || !hasZipMagic(head.subarray(0, 4))) return null;
     const l = await listArchive(partsSource(ev, parts));
     if (!l.ok) return null;
@@ -1725,6 +1934,39 @@ async function zipPastBound(ev, parts, firstPart = null) {
     return { format: "zip", confidence: "likely",
              signals: ["magic: PK\\x03\\x04 in the stored bytes", localize("acquisition.index.listed_whole_over_the_stored", "listed whole over the stored parts"),
                        `part: ${CONTENT_TYPES_PART} absent`, `part: ${ODF_MIMETYPE_PART} absent`, `entries: ${l.count}`] };
+  } catch { return null; }
+}
+
+/** R108 (fix round 6, G19; K4571 S10): WHAT OF A PAGE'S SUPPORTING FILES WAS KEPT, STATED. `supporting: {kept, skipped, total, reasons}` from the
+ *  records this module already holds: the walk's (`subs.subresources`, each `{ok, reason, cap | budgetBytes}`) and the render's (`render.subresources`,
+ *  each a loaded file whose digest is `undetermined` with a `digest_reason` when its bytes were not kept). `reasons` is `[{reason, count, limit?,
+ *  detail?}]`, one for each distinct reason a file was not kept, most first; `limit` is the cap's or the budget's figure; `detail` the renderer's own
+ *  words. A walk that was asked for and not made (`notWalked`: the page over 8 MiB or in parts, the primary unreadable, the session gone, the render
+ *  still pending) adds `not_walked` with its reason. Absent (null) when no walk or render was asked for or recorded, and for a page that has no
+ *  supporting files to speak of (`NOT_HTML`). Pure; never throws. */
+export function supportingOf({ subs = null, render = null, notWalked = null } = {}) {
+  try {
+    let kept = 0, total = 0;
+    const why = new Map();
+    const note = (reason, extra = {}) => { const g = why.get(reason) || { reason, count: 0, ...extra }; g.count++; why.set(reason, g); };
+    if (subs && Array.isArray(subs.subresources))
+      for (const r of subs.subresources) {
+        total++;
+        if (r && r.ok) { kept++; continue; }
+        const limit = r && Number.isFinite(r.cap) ? r.cap : r && Number.isFinite(r.budgetBytes) ? r.budgetBytes : undefined;
+        note(String(r && r.reason || "NOT_KEPT"), limit !== undefined ? { limit } : {});
+      }
+    if (render && Array.isArray(render.subresources))
+      for (const r of render.subresources) {
+        total++;
+        if (r && r.sha256 && r.sha256 !== "undetermined") { kept++; continue; }
+        note("BODY_NOT_KEPT", typeof (r && r.digest_reason) === "string" ? { detail: r.digest_reason } : {});
+      }
+    const stopped = notWalked && notWalked.reason && notWalked.reason !== "NOT_HTML" ? String(notWalked.reason) : null;
+    if (!total && !stopped) return null;
+    return { kept, skipped: total - kept, total,
+             reasons: [...why.values()].sort((a, b) => b.count - a.count || (a.reason < b.reason ? -1 : 1)),
+             ...(stopped ? { not_walked: stopped } : {}) };
   } catch { return null; }
 }
 
@@ -1756,7 +1998,7 @@ function snapshotOf(subs, sessionId, name, shellRecorded) {
 /** R19: the walk of a page's supporting files, over the primary READ BACK from the store (the parser sees the bytes
  *  the record holds, never a copy in flight beside them). Every bookkeeping write after it is stated or ignored,
  *  never a failed capture. */
-async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base, retrieved, resume, sessionId, own = null, openedBy = null }) {
+async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base, retrieved, resume, sessionId, own = null, openedBy = null, owe = null }) {
   const SUB_PARSE_MAX = 8 * 1024 * 1024;
   if (multipart || total > SUB_PARSE_MAX)
     return { subs: null, skipped: { reason: "TOO_LARGE_TO_PARSE", detail:
@@ -1829,8 +2071,11 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
     /* R19, R46 (T50): the member whose member session's `acquire` parked this session is recorded with it, in its state
        under `opened_by`; a session parked by any other caller records none. */
     const state = typeof openedBy === "string" && openedBy ? { ...subs.resumeState, opened_by: openedBy } : subs.resumeState;
-    try { subs.session = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base, state }); }
+    try { subs.session = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base, state,
+                                                  ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}) }); }
     catch { /* the caller starts over; the capture did not fail */ }
+    /* R100: what is outstanding is owed work, finished by the plane's alarm and never ended by the session's hour */
+    if (owe && subs.session) await owe({ kind: "subresources", sha, session: sid });
   } else if (sid) {
     try { cap.dropCaptureSession({ session: sid }); } catch { /* harmless */ }
   }
@@ -1863,10 +2108,31 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
  *  the primary, the page as it was served beside it) without a second render, a second reservation or a second charge. A render
  *  the object lost is rendered again, admitted and paid for as any render. The session is dropped once the pair is answered or
  *  the render has failed (`RENDER_FAILED`, the page filed first standing). */
-async function finishRender(cap, { session, opts, t }) {
+async function finishRender(cap, { session, opts, t, inRequest = false }) {
   const { cls = null, storeName = "bio", renderWaitMs = undefined } = opts || {};
   const rp = session.state.render_pending;
   const held = PENDING_RENDERS.get(session.session);
+  const pendingAnswer = () => ({ status: 200, body: { ok: true, existed: true,
+    continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
+                 note: word("acquisition.note.continuation_files_new") },
+    render: { state: "pending", session: session.session }, store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE } });
+  /* R106 (fix round 6, G3): A MEMBER'S "FINISH IT" RENDERS NOTHING IN THE REQUEST. With the plane's ledger handed in, the press looks at the run
+     it holds with no wait: one that has returned is finished below (the document is answered, as before); any other case (a run still
+     going, one the object lost when it restarted, one begun by a request that has ended) registers the session's owed row again, due now,
+     and answers at once that the render is pending. The alarm's `owedRun` finishes it (the render, however long it takes, is its work, not
+     the door's 25 s) and delivers the document. With no ledger handed in, or one that refuses the entry, nothing else could finish it,
+     and the press waits and renders as it always did. */
+  let rearmed = false;
+  if (inRequest) {
+    const owe = oweOf(cap, opts);
+    if (owe) {
+      const settled = held ? await timed(t, "render", () => within(held.run, 0)) : { done: false };
+      if (!settled.done) {
+        rearmed = await owe({ kind: "subresources", sha: session.primarySha, session: session.session });
+        if (rearmed) return pendingAnswer();
+      }
+    }
+  }
   /* R99 (fix round 4, C13b): a held run is trusted only as long as a live render can take (the renderer's own bound, reserved at
      admission, plus the wait): one not settled after that was begun by a request that has ended, and is lost. */
   const staleMs = opts && Number.isFinite(opts.renderStaleMs) ? opts.renderStaleMs : renderReserveMs(RENDER_DEFAULTS) + RENDER_WAIT_MS;
@@ -1874,19 +2140,40 @@ async function finishRender(cap, { session, opts, t }) {
   let resume = null, lost = !held;
   if (held) {
     const got = await timed(t, "render", () => within(held.run, stale ? 0 : (renderWaitMs ?? RENDER_WAIT_MS)));
-    if (got.done) resume = { answer: got.value };
-    else if (!stale)
-      return { status: 200, body: { ok: true, existed: true,
-        continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
-                     note: word("acquisition.note.continuation_files_new") },
-        render: { state: "pending", session: session.session }, store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE } };
+    if (got.done) {
+      resume = { answer: got.value };
+      /* G27: a render kept in the record whose page the record no longer holds (another store's, or purged) is lost like one the object lost */
+      if (got.value && got.value.kept === true) {
+        let there = false;
+        try { const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null; there = !!(ev && await ev.head(got.value.rsha)); } catch { there = false; }
+        if (!there) { resume = null; lost = true; PENDING_RENDERS.delete(session.session); }
+      }
+    }
+    else if (!stale) return pendingAnswer();
     else { lost = true; PENDING_RENDERS.delete(session.session); }
   }
   /* A render begun afresh is waited for to the renderer's own bound and is final: it files the pair, or is refused in words and the session closes. */
   const out = await acquireRun(cap, { ...(rp && rp.body && typeof rp.body === "object" ? rp.body : {}), locator: session.locator, render: true },
                                { ...opts, renderResume: resume, ...(lost ? { renderFinal: true, renderWaitMs: renderReserveMs(RENDER_DEFAULTS) + 2000 } : {}) }, t);
   if (out.status === 200 || (out.body && out.body.reason === "RENDER_FAILED")) {
-    try { cap.dropCaptureSession({ session: session.session }); } catch { /* harmless */ }
+    /* R100: the alarm's own run keeps the session until the rendered document is delivered (`owedRun`) */
+    if (!(opts && opts.keepSession)) {
+      /* R104 (fix round 5, E8): a member's call that completes the render answers the document, and that answer is the only thing that
+         carries it to the record; when the caller never files it (the door's bound passed, the tab closed) the copy would be lost. With the
+         plane's ledger handed in, the session stays, owing the finished document, until `owedRun` has seen it filed or delivered it. */
+      const owing = out.status === 200 && out.body && out.body.document && oweOf(cap, opts);
+      let kept = false;
+      if (owing) {
+        try {
+          const state = { queue: [], ...(session.state && typeof session.state.opened_by === "string" ? { opened_by: session.state.opened_by } : {}),
+                          render_done: { sha256: out.body.document.capture.sha256, since: stampSecond(), document: out.body.document } };
+          const saved = cap.saveCaptureSession({ session: session.session, locator: session.locator, primarySha: session.primarySha,
+            primaryFile: session.primaryFile, base: session.base, state, ttlMs: OWED_SESSION_TTL_MS });
+          kept = !!(saved && saved.saved !== false);
+        } catch { kept = false; }
+      }
+      if (!kept) { try { cap.dropCaptureSession({ session: session.session }); } catch { /* harmless */ } }
+    }
     PENDING_RENDERS.delete(session.session);
   }
   return out;
@@ -1895,7 +2182,7 @@ async function finishRender(cap, { session, opts, t }) {
 /** R12: a continuation resumes the session's outstanding supporting files against the session's OWN primary, read
  *  back from the store by its digest; the primary is not fetched again, and nothing new is filed about it, so the
  *  answer carries no document: the first tick answered it. */
-async function continueCapture(cap, { body, session, cls, storeName, ev, own = null, t }) {
+async function continueCapture(cap, { body, session, cls, storeName, ev, own = null, t, owe = null }) {
   const name = String(session.primaryFile || "snapshots/capture").replace(/^snapshots\//, "");
   let obj = null;
   try { obj = await ev.head(session.primarySha); } catch { obj = null; }
@@ -1903,14 +2190,138 @@ async function continueCapture(cap, { body, session, cls, storeName, ev, own = n
   const w = await timed(t, "subresources", () => walkSubresources(cap, { ev, sha: session.primarySha, total: size, multipart: false, ct: "text/html",
     name, locator: session.locator, base: session.base, retrieved: stampSecond(), resume: session.state, sessionId: session.session, own,
     /* R19: a session parked again keeps the member who began it, whoever continues it */
-    openedBy: session.state && typeof session.state.opened_by === "string" ? session.state.opened_by : null }));
+    openedBy: session.state && typeof session.state.opened_by === "string" ? session.state.opened_by : null, owe }));
   return { status: 200, body: {
     ok: true, existed: true,
     continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
                  note: word("acquisition.note.continuation_files_new") },
     ...snapshotOf(w.subs, w.sessionId, name, null),
     ...(w.skipped ? { subresources_skipped: w.skipped } : {}),
+    ...(supportingOf({ subs: w.subs, notWalked: w.skipped }) ? { supporting: supportingOf({ subs: w.subs, notWalked: w.skipped }) } : {}),
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE } };
+}
+
+/** R100 (fix round 4b, F5; plane R77): the plane's alarm runs a `subresources` entry of its owed-work ledger,
+ *  `owedRun(store, {kind: "subresources", session}, opts)`: the capture session's outstanding supporting files are fetched as a
+ *  member's `continue` fetches them (R12, past R1's gate: the entry is the capture's own continuation, begun by a caller R1
+ *  admitted), and a pending render is finished (afresh when the object lost the run, R99) and its document handed to
+ *  `opts.deliver({answer, session})`, the plane's promotion of it beside its shell, because no file of the record is written
+ *  here (R25); with no `deliver` a pending render is not begun and the session stays for the member's "Finish it". Answers
+ *  `{ok: true, done, outstanding?, reason?, final?}`: `done` ends the entry (also for a session that is gone, `reason`
+ *  `NO_SUCH_SESSION`, there being nothing left to do); `done: false` is more to do, run again after the ledger's back-off;
+ *  `final: true` with a `reason` ends it with a stated reason (`RENDER_FAILED`, `NOT_A_PAGE`). A throw is `{ok: false, reason}`:
+ *  the entry stays. The session is dropped when its work is done. */
+export async function owedRun(cap, entry, opts = {}) {
+  try {
+    if (!entry || entry.kind !== "subresources" || typeof entry.session !== "string" || !entry.session)
+      return { ok: false, reason: "OWED_MALFORMED" };
+    const ld = cap.loadCaptureSession({ session: entry.session });
+    if (!ld || !ld.found) return { ok: true, done: true, reason: "NO_SUCH_SESSION" };
+    const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null;
+    if (!ev) return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED" };
+    const t = openTimings(opts && opts.timings);
+    const run = { ...(opts || {}), cls: null, member: false, sessMember: null };
+    try {
+      /* R104: a visitor copy a member's call finished and answered. Filed (the register holds its digest) it is done; else it is delivered
+         as a finished render is, and the session goes once it is. */
+      if (ld.state && ld.state.render_done && typeof ld.state.render_done === "object") {
+        const done = ld.state.render_done;
+        let filed = false;
+        try { const h = await cap.provenance?.registerHolds?.({ sha: done.sha256 }); filed = !!(h && h.registered === true); } catch { filed = false; }
+        if (!filed) {
+          if (typeof opts.deliver !== "function") return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_NOT_HANDED" };
+          const given = await opts.deliver({ answer: { ok: true, document: done.document }, session: entry.session });
+          if (!(given && given.ok === true)) return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_REFUSED" };
+        }
+        try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
+        return { ok: true, done: true };
+      }
+      if (ld.state && ld.state.render_pending) {
+        if (typeof opts.deliver !== "function") return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_NOT_HANDED" };
+        const out = await finishRender(cap, { session: ld, opts: { ...run, keepSession: true }, t });
+        const b = out && out.body ? out.body : {};
+        if (b.ok === false) {
+          const stated = b.reason === "RENDER_FAILED" || b.reason === "RENDER_NOT_A_PAGE";
+          if (stated) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } }
+          return stated ? { ok: true, done: true, final: true, reason: b.reason } : { ok: true, done: false, outstanding: 1, reason: b.reason || "RENDER_NOT_FINISHED" };
+        }
+        if (!b.document) return { ok: true, done: false, outstanding: 1, reason: "RENDER_PENDING" };
+        const given = await opts.deliver({ answer: b, session: entry.session });
+        if (!(given && given.ok === true)) return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_REFUSED" };
+        try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
+        return { ok: true, done: true };
+      }
+      const out = await continueCapture(cap, { body: {}, session: ld, cls: null, storeName: opts.storeName || "bio", ev, own: ownHostsOf(cap, opts.ownHosts), t,
+                                               owe: async () => true });
+      const b = out && out.body ? out.body : {};
+      if (b.subresources_skipped) {
+        const why = String(b.subresources_skipped.reason || "SKIPPED");
+        if (why === "PRIMARY_UNREADABLE") return { ok: true, done: false, reason: why };
+        try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
+        return { ok: true, done: true, final: true, reason: why };
+      }
+      const left = b.snapshot && Number.isFinite(b.snapshot.outstanding) ? b.snapshot.outstanding : 0;
+      if (left > 0) return { ok: true, done: false, outstanding: left };
+      /* capture keeps a session until it is dropped (K4489): the end of the work is a drop, whoever ended it */
+      try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
+      return { ok: true, done: true };
+    } finally { stageEnd(t); }
+  } catch (e) { return { ok: false, reason: "OWED_RUN_FAILED", detail: String(e && e.message || e).slice(0, 200) }; }
+}
+
+/** R105 (fix round 6, G2; K4562; plane R77's `fetch` kind): the plane's alarm runs a `fetch` entry of its owed-work ledger,
+ *  `owedFetch(cap, {kind: "fetch", session}, opts)`: the capture the member asked for, parked because its body was large or slow,
+ *  is made now, as the member's own `acquire` would have made it (their stamps and the body they sent are the session's), read whole
+ *  with no bound but the alarm's, and its document is handed to `opts.deliver({answer: {ok, existed, document}, session})`, the
+ *  plane's promotion of it under the project the session names (no file of the record is written here, R25); with no `deliver` nothing
+ *  is fetched. A document made but not delivered is kept in the session (`fetch_done`) and delivered by the next run, never fetched
+ *  twice. When the delivery is accepted the session is dropped (what the delivery records, `capture`'s `recordFetchDone`, is the
+ *  caller's: it reads the session in `deliver`, before this drop). Answers `{ok: true, done}` (`done` ends the entry; a session that is gone is `done` with `reason` `NO_SUCH_SESSION`), `{ok: true, done: false,
+ *  outstanding: 1, reason}` for a try that goes again after the ledger's back-off (a source that was busy or broke off, a delivery
+ *  refused), `{ok: true, done: true, final: true, reason}` for a refusal no later try changes (the source refused it, it is over what
+ *  this surface captures): the session then stays, stating `fetch_pending.failed`, for the member to read. A throw is `{ok: false,
+ *  reason}`: the entry stays. */
+const FETCH_RETRY = Object.freeze(["HOST_COOLING_OFF", "FETCH_FAILED", "ACQUIRE_FAILED", "CAPTURE_NOT_KEPT", "ARCHIVE_UNREACHABLE", "EVIDENCE_STORAGE_NOT_CONFIGURED"]);
+export async function owedFetch(cap, entry, opts = {}) {
+  try {
+    if (!entry || entry.kind !== "fetch" || typeof entry.session !== "string" || !entry.session) return { ok: false, reason: "OWED_MALFORMED" };
+    const ld = cap.loadCaptureSession({ session: entry.session });
+    if (!ld || !ld.found) return { ok: true, done: true, reason: "NO_SUCH_SESSION" };
+    const st = ld.state && typeof ld.state === "object" ? ld.state : {};
+    if (typeof opts.deliver !== "function") return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_NOT_HANDED" };
+    const opener = typeof st.opened_by === "string" ? st.opened_by : "";
+    const final = (reason) => ({ ok: true, done: true, final: true, reason });
+    if (!opener) return final("NO_OPENER");
+    let made = st.fetch_done && typeof st.fetch_done === "object" ? st.fetch_done : null;
+    if (!made) {
+      if (!st.fetch_pending || st.fetch_pending.failed) return final(String(st.fetch_pending && st.fetch_pending.failed || "NOT_PENDING"));
+      const storeName = typeof st.store === "string" && st.store ? st.store : opts.storeName || "bio";
+      const out = await acquire(cap, st.body && typeof st.body === "object" ? { ...st.body } : { locator: ld.locator },
+        { ...opts, cls: typeof st.cls === "string" ? st.cls : "member", member: true, sessMember: opener, storeName, inlineFetch: true });
+      const b = out && out.body ? out.body : {};
+      if (!(out.status === 200 && b.ok === true && b.document)) {
+        const reason = String(b.reason || `STATUS_${out.status}`).slice(0, 80);
+        /* a source that was busy, a body that broke off, a store that was not there: tried again; any other refusal is the answer */
+        if (FETCH_RETRY.includes(reason) || (reason === "SOURCE_REFUSED" && (b.status === 429 || b.status >= 500)))
+          return { ok: true, done: false, outstanding: 1, reason };
+        try {
+          cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
+            state: { ...st, fetch_pending: { ...st.fetch_pending, failed: reason } }, ttlMs: OWED_SESSION_TTL_MS });
+        } catch { /* the entry still ends, stated */ }
+        return final(reason);
+      }
+      made = { sha256: b.document.capture.sha256, since: stampSecond(), answer: { ok: true, existed: b.existed, document: b.document } };
+      try {
+        cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: b.document.capture.sha256, primaryFile: b.document.file, base: ld.base,
+          state: { queue: [], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: storeName, fetch_done: made },
+          ttlMs: OWED_SESSION_TTL_MS });
+      } catch { /* delivered below; a failed delivery then fetches again */ }
+    }
+    const given = await opts.deliver({ answer: made.answer, session: entry.session });
+    if (!(given && given.ok === true)) return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_REFUSED" };
+    try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
+    return { ok: true, done: true };
+  } catch (e) { return { ok: false, reason: "OWED_FETCH_FAILED", detail: String(e && e.message || e).slice(0, 200) }; }
 }
 
 /* R46 (T50; N1094; DEC-240 (D3); K3317): A MEMBER'S OPEN CAPTURES, for Add's "Unfinished". */
@@ -1937,8 +2348,11 @@ export function openCaptures(store, { by = null, now = undefined } = {}) {
       const outstanding = Array.isArray(st.queue) ? st.queue.length : 0;
       const expires = Date.parse(s.expires);
       if (outstanding < 1 || !(Number.isFinite(expires) && expires > nowMs) || typeof s.session !== "string") continue;
-      mine.push({ session: s.session, locator: s.locator ?? null, primary_sha: s.primarySha ?? null, started: s.created ?? null,
-                  updated: s.updated ?? null, expires: s.expires, outstanding });
+      /* R105: a capture parked as an owed fetch is listed as such (`fetch_pending`: when it began, its declared size, why it is owed, and
+         `failed` once the owed fetch ended with a stated refusal), and has no primary yet: its screen words it, and offers no "Finish it" */
+      const fetching = st.fetch_pending && typeof st.fetch_pending === "object" ? { fetch_pending: st.fetch_pending } : null;
+      mine.push({ session: s.session, locator: s.locator ?? null, primary_sha: fetching ? null : s.primarySha ?? null, started: s.created ?? null,
+                  updated: s.updated ?? null, expires: s.expires, outstanding, ...(fetching || {}) });
     }
     mine.sort((a, b) => (Date.parse(b.started) || 0) - (Date.parse(a.started) || 0) || (a.session < b.session ? -1 : a.session > b.session ? 1 : 0));
     return { ok: true, captures: mine.slice(0, OPEN_CAPTURES_MAX), truncated: mine.length > OPEN_CAPTURES_MAX };

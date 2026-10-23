@@ -381,6 +381,30 @@ export class Filings {
     return b ? str(b.project) : null;
   }
 
+  /* R1, R6, R7, R8, R23, R36, R42, R47 (K4557; E9): a project's weighty filing acts need a member who has joined the project:
+     a member invited and not yet joined has view rights only (membership §7.5). The one question every such act asks, after
+     its sight check and before any write, of the stamped member: `membership.projectAuthority(project, identity, "joined",
+     act)`, whose refusal (PROJECT_ACT_NOT_A_PARTICIPANT, which tells the member to join) is relayed as it came. A machine
+     credential or an absent identity is not asked (membership's rule); a filing with no project is untouched, and so is
+     any act where no membership module answers (nothing else in this module could have read the project's sight either). */
+  #joinedBar(project, identity, act) {
+    const p = str(project);
+    const m = p ? this.membership : null;
+    return m && typeof m.projectAuthority === "function" ? m.projectAuthority(p, identity, "joined", act) : null;
+  }
+
+  /* The project of a filing about to be prepared: the action's own, else the project of the determination it rests on, as
+     the preparer reads it: the one the draft's basis will record (`#basisOf`), so a preparer who may not see the
+     determination prepares a draft that names no project, and the draft is not associated with one. */
+  #prepProject(a, viewer) {
+    return a.project || (this.#restsOn(a, viewer).det || {}).project || null;
+  }
+
+  /* The project of a draft: the action's, else the one its basis records (as R42 reads it). */
+  #draftProject(d) {
+    return this.#bundleProject(d.action_id) || (parse(d.basis) || {}).project || null;
+  }
+
   /* R24: the premise override an action carries (actions R8, shown in its read, R25: `{reason, by, at}`; R74 (T45): its
      `ground`); null when it carries none. */
   static #override(o) {
@@ -743,6 +767,8 @@ export class Filings {
     if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: localize("filings.index.no_stamped_preparer_a_draft_names", "no stamped preparer: a draft names who prepared it") };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    const bar = this.#joinedBar(this.#prepProject(a, viewer), who, "filingprepare");
+    if (bar) return bar;
     const closed = this.#closed(a);
     if (closed) return closed;
     const v = this.#view();
@@ -885,6 +911,8 @@ export class Filings {
     if (!who) return { ok: false, reason: "COMMUNICATION_NO_PREPARER", detail: localize("filings.index.no_stamped_preparer_a_draft_names", "no stamped preparer: a draft names who prepared it") };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    const bar = this.#joinedBar(this.#prepProject(a, viewer), who, "communicationprepare");
+    if (bar) return bar;
     const closed = this.#closed(a);
     if (closed) return closed;
     if (!assembled && (typeof text !== "string" || !text.trim() || WELL_FORMED.test(text) || utf8(text) > FILING_TEXT_MAX))
@@ -1443,6 +1471,8 @@ export class Filings {
                            : localize("filings.index.no_member_is_named_as_the_one", "no member is named as the one approving") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "filingapprove");
+    if (bar) return bar;
     const self = Filings.#notTheGroups(d);
     if (self) return self;
     const held = this.#alreadyApproved(d.filing_id);
@@ -1557,6 +1587,8 @@ export class Filings {
                            : localize("filings.index.no_member_is_named_as_the_one_who_sent", "no member is named as the one who sent it") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "filingsent");
+    if (bar) return bar;
     const self = Filings.#notTheGroups(d);
     if (self) return self;
     if (!this.#one(`SELECT 1 AS x FROM filing_approvals WHERE filing_id=?`, d.filing_id))
@@ -1658,6 +1690,8 @@ export class Filings {
                detail: who ? localize("filings.index.who_is_a_machine_identity_a_member", "'{who}' is a machine identity: a member approves", { who: who.slice(0, 60) }) : localize("filings.index.no_member_is_named_as_the_one", "no member is named as the one approving") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "filingsecondapprove");
+    if (bar) return bar;
     const ap = this.#one(`SELECT approved_by FROM filing_approvals WHERE filing_id=?`, d.filing_id);
     if (!ap) return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: localize("filings.index.a_member_approves_the_draft_before_a_second", "a member approves the draft before a second member does") };
     if (ap.approved_by === who)
@@ -1691,6 +1725,8 @@ export class Filings {
                detail: who ? localize("filings.index.who_is_a_machine_identity_a_member_records", "'{who}' is a machine identity: a member records a partner's signature", { who: who.slice(0, 60) }) : localize("filings.index.no_member_is_named", "no member is named") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "jointsignatory");
+    if (bar) return bar;
     const ap = this.#one(`SELECT sha, body_sha FROM filing_approvals WHERE filing_id=?`, d.filing_id);
     if (!ap) return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: localize("filings.index.a_joint_text_is_approved_here_before", "a joint text is approved here before a partner's signature is recorded") };
     const a = this.#action(d.action_id, viewer);
@@ -1734,6 +1770,9 @@ export class Filings {
       return { ...holdNotInPlace(p), why: word("filings.why.module_answers_holds") };
     const r = this.#call(() => h.holdsOf({ ...p, viewer }));
     if (!r || r.ok === false) return r || { ...holdNotInPlace(p), why: word("filings.why.hold_read") };
+    /* K4557: the notice speaks for the team, so it is the project's: the place's own, else its target's (an action's) */
+    const bar = this.#joinedBar(p.project || this.#bundleProject(p.target), who, "holdnoticeprepare");
+    if (bar) return bar;
     const list = Array.isArray(r.statements) ? r.statements : Array.isArray(r.holds) ? r.holds : Array.isArray(r.items) ? r.items : [];
     const latest = list.length ? list[list.length - 1] : null;
     if (!latest || latest.hold !== "in_place")
@@ -2417,6 +2456,8 @@ export class Filings {
                  : localize("filings.index.the_reason_is_n_characters_over", "the reason is {chars} characters, over the {max} a packet's reason is kept to; refused rather than cut", { chars, max: PACKET_REASON_MAX }) };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    const bar = this.#joinedBar(this.#prepProject(a, viewer), who, "counselpacket");
+    if (bar) return bar;
     /* R8 (K924): a packet at every governing tier; counsel is required at Tier 3 or an undetermined tier (never read as
        1, D-182), optional below it, and one given is named by both a name and an organisation. */
     const gov = this.governingTier(a);
@@ -3069,6 +3110,9 @@ export const DECLARED_OPS = Object.freeze({
   filingsecondapprove: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "terminal",
     description: localize("filings.declared.filingsecondapprove", "filing-directed: keyed by filing id; a member other than the approver records the second approval a project's setting asks, at most once; moves no bundle"),
     fields: { accepts: ["filing"], requires: ["filing"] } },
+  jointsignatory: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "undetermined",
+    description: localize("filings.declared.jointsignatory", "filing-directed: keyed by (filing, partner organisation); a member records that the partner approved the same text by its own act; no shared plan is made; moves no bundle"),
+    fields: { accepts: ["filing", "organisation", "body_sha", "account"], requires: ["filing", "organisation", "body_sha", "account"] } },
   counselpacket: { classes: MEMBER_ACTS, mutating: true, weight: "reasoned", description: "act.counselpacket.does",
     fields: { accepts: ["action", "counsel", "template", "reason", "purpose", "challenged"], requires: ["action", "reason"] } },
   holdnoticeprepare: { classes: MEMBER_ACTS, mutating: true, weight: "undetermined",

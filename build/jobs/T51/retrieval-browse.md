@@ -1,6 +1,6 @@
 # retrieval-browse (T51)
 
-**Status** · session_01G1CAemApraurD9bkv8qb3W · depth 2 · COMPLETE · handled B4
+**Status** · session_01DRhBLuRPVD8G3hWpq1rxBR · depth 2 · COMPLETE · handled B10
 
 ## Completion (T51-29)
 
@@ -91,3 +91,44 @@ CR-29 · retrieval-browse complete (B4, K4149).
 - Journey test not run (per BOB's note).
 
 Size (session_01G1CAemApraurD9bkv8qb3W): test runs 1, module lines 1365
+
+## Work (T51 G41, B5, RETRIEVAL-BROWSE #4)
+
+**What changed.** `bio-plane/src/retrieval-browse/findin.mjs`: `#load` (:342-356) adds `cellsHeld`, the set of sheet names in the reading's `cells_held` (a malformed value names none); `gridOf` (:650-) answers null for a held sheet, so `money` and `dates` read its rendered text through the existing arm for a sheet with no typed cells (:373, unchanged) and `#sheetRows` finds no row; `placed` (:695-) names a held sheet's hit by its sheet and its unit's range, `row` from `rowNumberOf` (a row only for a one-row range, else `null`), `cells: null` and `cells_why` = `localize("retrieval-browse.findin.cells_held_why", ...)`. A sheet not in `cells_held` keeps its earlier why. `#load` still reads the table (K4642); nothing spills. Test fixture: `fixture.mjs` `world({evidence})` hands record-core an evidence bucket (test path, mine).
+
+**Failing-first** (`test/m/retrieval-browse/g41-findin.test.mjs`, six tests). Seen red on the unchanged `findin.mjs`, green on the changed one: the block/one-row term test and the `money`/`dates` test (hand-written readings carrying `cells_held` as reading-pipeline R28 will emit it); controls green both ways (a sheet not named in `cells_held` keeps "holds no typed cells"; a malformed `cells_held` names nothing). The three tests through the op over the real extraction on the 1 MB CSV (`readHeld` into the same database; term `LASTROWMARK`, `money`, and the small-CSV control) are written; run under TEST-SUPPORT's preload (copied from `origin/job/T51/test-support`, not committed; the file is not on `tranche/T51`) the two big-file tests are RED at `readHeld` with `string or blob too big` (today's cause, the START's red), the small control is green. Without the preload they are red differently (the reading lists 72,392 cells, so `cells` is not null). They go green only when EXTRACTION #38 (with CSV-READER #3, READING-PIPELINE #26) emits `cells_held` and stores a small reading.
+
+**Not done, and why: the providers are not on `tranche/T51`.** The START says extraction #38 and content #18 are merged; none of `job/T51/test-support`, `csv-reader`, `office-readers`, `reading-pipeline`, `extraction`, `content` is an ancestor of `tranche/T51` (checked at `0eecd0dbbd`), `cells_held` is nowhere in their source on the tranche, and `bio-plane/test/platform-sqlite.mjs` is absent. So my two real-path tests cannot be green yet. I post BLOCKED (cause: tests, waiting on the merge order's providers) and will merge `tranche/T51` again when BOB tells me they merged.
+
+**Checks** (from `civicos-process`): `format` 0 failures; `architecture` 0; `coverage` 6674 of 6674 ids named, 0; `words` 18524 words, unkeyed 1982, the same as before my change (the new sentence is a `localize` stand-in); `ownership` 4 files changed by retrieval-browse, 0 failures. Suite `bio-plane/test/m/retrieval-browse/`: 61 tests, 59 pass, 2 fail (the two real-path big-file tests above, by name). Users: `retrieval`, `screens-daily` and `screens-inquiry` test files that name findin/findIn: 197 tests, all pass (the one listed failure was a JSON fixture picked up by my glob, not a test). `impact.mjs` names 80 modules; only `retrieval` (delegation) and `screens-daily` (reads `it.row`, `it.cells`) call this service, and the answer only gains `cells_why` on a held sheet's item.
+
+**Row owed (stand-in).** `retrieval-browse.findin.cells_held_why`: "this sheet's text is read whole and searchable; its cells are interpreted for a range when the sheet is opened or cited, so no row of cells is named here" (design row owed, B485/B491).
+
+**Not this round (N1272).** A column of a held sheet classified from every cell (`#columns` for `money` and `dates` over a held sheet) needs a cell index or an async find; find-in stays synchronous (K4639). A held sheet's `money` and `dates` therefore give cell-text hits from the rendered text, never a whole-column result.
+
+**Requirement lines proposed (BOB writes them).**
+- R8, replacing "Where the reading holds no typed cells for the sheet (over its reader's size guard), the match names `sheet` and the unit's range with `cells: null` and why": "A sheet the reading names in `cells_held` has no cell list: its text is indexed whole and searchable, and its cells are interpreted for a range when a member opens or cites it. A match found in it (any kind) names `sheet` and the unit's `sheet-range` with `cells: null` and `cells_why` saying so, and `row` only when that range is one row, else `row: null`; `money` and `dates` read its rendered text, not a column. Where the reading holds no typed cells and does not name the sheet in `cells_held`, `cells: null` and why as before. Test: a reading with `cells_held: ['data']` and a unit `A1:D500`: a term hit in it answers `cells: null`, the held-sheet why, `row: null`; in a unit `A501:D501`, `row: 501`. Control: a sheet not named in `cells_held` keeps its earlier why."
+- R2 `money`/`dates`: add "over a sheet named in `cells_held` they are read from its rendered text, each hit carrying R8's `cells_why`."
+- Uses (private): `extraction`'s reading field `cells_held` (reading-pipeline R28, as emitted).
+
+Size (session_01DRhBLuRPVD8G3hWpq1rxBR): test runs 9, module lines 2025
+
+## J5 · BLOCKED
+
+BLOCKED (cause: tests; waits on providers, not a defect of mine). G41 code is done and pushed: findin.mjs reads the reading's cells_held; a held sheet has no list, term hits name sheet + unit range, cells null, held-sheet cells_why; money/dates read its text. Hand-reading tests red->green; module suite 59/61; format, architecture, coverage, words (unchanged 18524), ownership all 0 failures. The 2 tests through the op over the real extraction on the 1 MB CSV stay red: your START says extraction #38 and content #18 are merged, but none of test-support, csv-reader, office-readers, reading-pipeline, extraction, content is on tranche/T51 (0eecd0dbbd), cells_held is in none of their source there, and bio-plane/test/platform-sqlite.mjs is absent. Smallest thing I need: merge those providers (shim first, then csv-reader, office-readers, reading-pipeline, extraction) into tranche/T51 and tell me; I then merge tranche/T51, run the two tests under the shim and COMPLETE. Detail in my record.
+
+## Completion (T51 G41, B10, RETRIEVAL-BROWSE #4)
+
+Providers merged (CSV-READER, OFFICE-READERS, READING-PIPELINE, EXTRACTION); `tranche/T51` merged into this branch. Changes beyond the Work section above: `findin.mjs` `#term` gives a held sheet's term hit the words of the row (line) holding the term, not the head of the block's text (found by the real-path test: the hit's `words` were the first 500 characters of a 18,098-row unit).
+
+**Failing-first, now all green.** `g41-findin.test.mjs`, six tests. Hand-reading tests: red on the old code, green. The 1 MB CSV through the op over the real extraction (`readHeld` into the same database): red under the shim before the providers (`string or blob too big` at `readHeld`; recorded above), green now: `term` LASTROWMARK finds the unit with its sheet and range, `cells: null`, held-sheet `cells_why`; `money` answers from the text; the small-CSV control lists cells and row.
+
+**Suite and checks.** Under the shim (copy of test-support's `platform-sqlite.mjs`, outside the tree; the file is still not on the tranche): `bio-plane/test/m/retrieval-browse/` 61 tests, 61 pass. Users (retrieval, screens-daily, screens-inquiry files naming findin/findIn): 208 pass, 0 fail. `checks/run.mjs`: format, architecture, coverage (6684 of 6684), channels, words (18524, unkeyed 1982, unchanged) all 0 failures. `ownership`: 4 files, 0 failures. No seam test red.
+
+**Row owed:** `retrieval-browse.findin.cells_held_why` (a `localize` stand-in; design row owed, B485/B491). **N1272:** a column of a held sheet classified from every cell is not done (needs a cell index or async find); find-in stays synchronous (K4639). **Requirement lines proposed:** as in the Work section above, plus for R8: a held sheet's term hit carries the words of the row holding the term.
+
+Size (session_01DRhBLuRPVD8G3hWpq1rxBR): test runs 16, module lines 2030
+
+## J6 · COMPLETE
+
+COMPLETE (G41, retrieval-browse). Providers merged in; all six g41-findin tests green under the shim (61/61 module suite; users 208/208; format, architecture, coverage, words (unchanged 18524), ownership 0 failures). A held sheet has no cell list: term hits name sheet + range, cells null, held-sheet cells_why, row only for a one-row range, words of the row holding the term; money/dates read its text. No seam red. Row owed: retrieval-browse.findin.cells_held_why. N1272 noted. Requirement lines and Size line in my record. Note: platform-sqlite.mjs still not on tranche; ran under an outside copy.

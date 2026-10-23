@@ -152,12 +152,14 @@ const TRACE_VALUE = /^[\x21-\x7e]{1,200}$/;
  *  (a refusal, a silence) or `{answer}`, the filed capture's answer, which `extraction` reads from the stored primary
  *  itself (`acquisition` R8, K49; N103: no second read of the primary here). */
 export async function acquireOp(req, env, store, { json, storeSilent, storeRefusal, storageAbsent, doAnswer, cls, member, sessMember,
-                                                    storeName, trace = null }) {
+                                                    storeName, trace = null, viewer = null }) {
   if (req.method !== "POST") return { response: json({ ok: false, error: "acquire is a POST" }, 405) };
   if (typeof env.CAPTURES?.put !== "function")
     return { response: storageAbsent("acquire", say("capture.response.group_civicsmith_evidence")) };
   const body = await req.json().catch(() => null);
-  const q = new URLSearchParams({ cls: cls || "", member: member ? "1" : "0", sessMember: sessMember || "", store: storeName || "bio" });
+  /* G32 (R106): the caller's sight, so the held copy the fetch is made conditional on is one this caller may see; none handed sees nothing. */
+  const q = new URLSearchParams({ cls: cls || "", member: member ? "1" : "0", sessMember: sessMember || "", store: storeName || "bio",
+                                  viewer: typeof viewer === "string" ? viewer : "" });
   const headers = { "content-type": "application/json" };
   if (typeof trace === "string" && TRACE_VALUE.test(trace)) headers[TRACE_HEADER] = trace;
   const r = await doAnswer(store.fetch(`http://x/acquire?${q}`, { method: "POST", headers, body: JSON.stringify(body || {}) }));
@@ -166,6 +168,23 @@ export async function acquireOp(req, env, store, { json, storeSilent, storeRefus
   const { status, body: answer } = r.result;
   if (!answer || answer.ok !== true || !answer.document) return { response: json(answer, status) };
   return { answer };
+}
+
+/** G27: whether a read after a kept acquire failed (it threw, answered nothing, or was reported by the reader as unanswered with a
+ *  `diag`), as against answering, being refused by the store (`response`) or being deferred by the reader's own choice. */
+function readFailed(read) {
+  if (read && read.response) return false;
+  if (!read || read.failed || !read.body || typeof read.body !== "object") return true;
+  return read.body.reading_pending === true && !!read.body.diag;
+}
+
+/** G27: whether the object said it is overloaded, which Cloudflare says is not to be retried: the flag on a thrown error or on the
+ *  reader's `diag`, else the words the platform gives that error. */
+function readOverloaded(read) {
+  const e = read && read.failed, d = read && read.body && read.body.diag;
+  if ((e && e.overloaded === true) || (d && d.overloaded === true)) return true;
+  const said = e ? e.message : d ? d.message : "";
+  return typeof said === "string" && /overloaded/i.test(said);
 }
 
 /** K72 (8): the op's answer, the reading block's findings placed on the document beside the profile, as the answer
@@ -197,10 +216,32 @@ export async function captureOp(op, req, url, env, store, h) {
     const at = store();
     const acquired = await acquireOp(req, env, at, { json, storeSilent, storeRefusal, storageAbsent: h.storageAbsent, doAnswer,
                                                      cls: h.cls, member: h.member, sessMember: h.sessMember, storeName: h.storeName,
-                                                     trace: h.trace });
+                                                     trace: h.trace, viewer: h.viewer });
     if (acquired.response) return acquired.response;
-    const read = await h.readAcquired(acquired.answer, at);
-    if (read.response) return read.response;
+    /* G4 (fix round 6; R73): a capture that is kept is never a failed act. A reading that throws or answers nothing is a deferral the
+       answer carries (`reading_pending`, the digest, a `diag` naming the failure, not drawn), logged once for the deploy to name; a
+       deferral the reader itself answers is relayed unchanged. */
+    /* G27 (B27; K4604): while the acquire's render runs on in the object (`render.state` `pending`) the object's memory is the render's, so the
+       kept capture is not read inline: it is answered at once as a deferral by choice (`reading_pending`, no `diag`, nothing failed) and the
+       door owes the reading to the ledger as for any deferral. */
+    if (acquired.answer.render && acquired.answer.render.state === "pending")
+      return json({ ...acquired.answer, reading_pending: true, sha: acquired.answer.document.capture?.sha256 ?? null, note: ACQUIRE_GRADE_NOTE }, 200);
+    const attempt = async (stub) => {
+      try { return await h.readAcquired(acquired.answer, stub); }
+      catch (e) { return { failed: e }; }
+    };
+    let read = await attempt(at);
+    /* G27 (fix round 6; R73): an object reset mid-act leaves the stub that spoke to it answering nothing (Cloudflare: do not reuse a
+       stub after it throws). The read is idempotent, so a read that failed is made once more on a fresh stub; an overloaded object is
+       left alone, and a second failure is the deferral below. A deferral the reader chose itself carries no `diag` and is not a failure. */
+    if (readFailed(read) && !readOverloaded(read)) read = await attempt(store());
+    if (read && read.response) return read.response;
+    if (!read || !read.body || typeof read.body !== "object") {
+      const e = read && read.failed;
+      const diag = { name: String((e && e.name) || "Error").slice(0, 80), message: String((e && e.message) || "READING_NOT_ANSWERED").slice(0, 200) };
+      try { console.error(JSON.stringify({ capture: "acquire", reading: "deferred", ...diag })); } catch { /* a log that cannot be written */ }
+      return json({ ...acquired.answer, reading_pending: true, sha: acquired.answer.document.capture?.sha256 ?? null, diag, note: ACQUIRE_GRADE_NOTE }, 200);
+    }
     return json(Object.assign(read.body, { note: ACQUIRE_GRADE_NOTE }), 200);
   }
   return null;

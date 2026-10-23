@@ -210,10 +210,10 @@ test("R92 a failed or non-text answer is no answer; a hidden page is not polled;
   await tick5(setup);
   assert.equal(setup.byOp("version").length, 0, "nor the setup frame");
   const a = await boot({ screens: ALL, plane: { version: versions(["v1\n"]) } });
-  const keys = new Set(a.local.keys());
+  const keys = new Set(a.local.keys()), tabKeys = new Set(a.store.keys());
   await tick5(a);
   assert.deepEqual([...a.local.keys()].filter((k) => !keys.has(k) && k !== STORE_KEY + ":active"), [], "a poll writes nothing");
-  assert.deepEqual([...a.store.keys()], []);
+  assert.deepEqual([...a.store.keys()].filter((k) => !tabKeys.has(k)), [], "a poll writes nothing to the tab's storage either (the frame's kept reads, R124, were written before it)");
 });
 
 /* ---------- R93 ---------- */

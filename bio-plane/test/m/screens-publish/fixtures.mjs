@@ -39,7 +39,7 @@ export const COPY = (o = {}) => ({ kind: "review-copy", reader: "member", draft:
   ...o });
 
 export const PREFLIGHT = (o = {}) => ({ wrote: false, ready: false,
-  first: { ok: false, code: "PHOTO_UNCHECKED", reason: "PHOTO_UNCHECKED", translation: "Photo 1 is not yet checked." },
+  first: { ok: false, code: "PHOTO_CHECK_UNWORDED", reason: "PHOTO_CHECK_UNWORDED", translation: "Photo 1 is not yet checked." }, // a code the list holds no word for (every code case-disclosures answers today has a refusal.<CODE> row, DEC-418)
   blockers: [{ ok: false, code: "TENSION_NOT_DISCLOSED", translation: "A contradiction is not yet disclosed." }],
   steps: [{ case: C, edition: 2, pinned: [{ target: "FND-2026-0031", bundleSha: B1 }] }, { roles: {}, required: null }, { tensions: [] },
     { photos: [{ ref: "INFO-2026-0007", sha: PHOTO, taken_by: "dev", relied_on_by: [{ member: "FND-2026-0031", role: "relied" }], state: "unchecked", marks: [], copy: null, refused: false, words: "photo.refused.unchecked" }], unchecked: 1 },
@@ -48,7 +48,10 @@ export const PREFLIGHT = (o = {}) => ({ wrote: false, ready: false,
 
 export const DOCUMENT = (o = {}) => ({ case_id: C, edition: 2, doc_sha: SHA, text: "…", published_at: null,
   sign: { namespace: "bio-ratify", statement: `bio-ratify-case ${C} 2 ${SHA}\n` },
-  citations: [{ target: "INFO-2026-0004", version: E1, capture: "x" }, { target: "FND-2026-0031", version: B1 }, { target: "INFO-2026-0005", version: "undetermined" }],
+  /* the shapes the real `casedocument` answers (publication; case-grammar R4, R6): `citations` is `{state, rows}`, and the roster the
+     signed document pins is `findings`, `[{target, version_sha, role}]` */
+  citations: { state: "signed", rows: [{ target: "INFO-2026-0004", version: "only_capture", capture: "c".repeat(64), bundle_sha: E1 }, { target: "FND-2026-0031", version: "no_bytes", capture: null }] },
+  findings: [{ target: "FND-2026-0031", version_sha: B1, role: "load_bearing" }],
   ...o });
 
 /** `casedetails`' standing values (case-inputs R23): each `{stated, value, set_by, set_at}`; every one not stated unless `o` sets it. */
@@ -204,9 +207,9 @@ export const last = (p, op) => p.byOp(op).at(-1);
 /** Every text node drawn that reads as a word key: a key the page holds no word for is drawn as itself (interface-shell R5). */
 export const rawKeys = (root) => textNodes(root).map((t) => String(t.data).trim()).filter((t) => /^[a-z][\w-]*(\.[\w-]+){2,}$/.test(t));
 /** A file chosen in a file field (the stand-in's `files`). */
-export function choose(p, id, bytes) {
+export function choose(p, id, bytes, name = "f.pdf", type) {
   const el = p.doc.getElementById(id);
-  el.files = [{ name: "f.pdf", size: bytes.length, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length) }];
+  el.files = [{ name, ...(type ? { type } : {}), size: bytes.length, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length) }];
 }
 
 /* ---------- T51-121: one finding's page, a reader's minimum, printing, the review copy as a file ---------- */

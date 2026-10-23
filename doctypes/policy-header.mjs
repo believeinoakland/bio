@@ -238,9 +238,36 @@ export function readHeader(ctx, raw, locate = () => null) {
   return best;
 }
 
-/** The header block read from one anchor (or, with none, from the first label). */
+/** The lines of `raw` from `lo` (a line's start) to the end of the line holding `hi`, offsets absolute (`full` when
+ *  the text ends there). */
+function linesBetween(raw, lo, hi) {
+  const nl = hi >= raw.length ? -1 : raw.indexOf("\n", hi);
+  const stop = nl < 0 ? raw.length : nl;
+  const out = [];
+  let at = lo;
+  for (const text of raw.slice(lo, stop).split("\n")) { out.push({ start: at, end: at + text.length, text }); at += text.length + 1; }
+  return { lines: out, full: nl < 0 };
+}
+const REGION = 1 << 16;
+
+/** The header block read from one anchor (or, with none, from the first label). R37: a header is read from the lines
+ *  around its anchor (14 above it, and as far below as the block and its title run), widened until the reading stays
+ *  inside them, so a large text is never cut into a list of all its lines; the answer is the whole text's. */
 function readAt(raw, labels, a, locate) {
-  const lines = linesOf(raw);
+  if (!a) return readAtLines(raw, labels, null, locate, null, true).result;
+  let lo = a.start > 0 ? raw.lastIndexOf("\n", a.start - 1) + 1 : 0;
+  for (let k = 0; k < 14 && lo > 0; k++) lo = lo - 1 > 0 ? raw.lastIndexOf("\n", lo - 2) + 1 : 0;
+  for (let hi = a.start + REGION; ; hi *= 2) {
+    const { lines, full } = linesBetween(raw, lo, hi);
+    const r = readAtLines(raw, labels, a, locate, lines, full);
+    if (full || !r.exhausted) return r.result;
+  }
+}
+
+/** `readAt` over the given lines; `exhausted` says the reading ran to the last of them without `full` text behind it. */
+function readAtLines(raw, labels, a, locate, given, full) {
+  let lines = given;
+  let exhausted = false;
   const from = a ? blockStart(lines, a.start) : 0;
   /* The block's end: the first line after the anchor (or, with none, after the first label)
      that is page furniture, an outline heading or body text. */
@@ -251,15 +278,18 @@ function readAt(raw, labels, a, locate) {
   })();
   const after = a ? (a.number ? a.number.end : a.end) : firstLabel;
   if (after === null || after === undefined)
-    return { header: null, why: localize("doctypes.policy-header.no_block", "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in it") };
+    return { result: { header: null, why: localize("doctypes.policy-header.no_block", "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in it") } };
+  if (!lines) lines = linesOf(raw);
   let end = raw.length, endLine = lines.length;
+  let stopped = false;
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
     if (l.start <= after) continue;
     if (FURNITURE.test(l.text) || OUTLINE.test(l.text) || (isBody(l.text) && !labels.some((x) => { x.re.lastIndex = 0; const m = x.re.exec(l.text); return m && m.index <= l.text.length - l.text.trimStart().length; }))) {
-      end = l.start; endLine = i; break;
+      end = l.start; endLine = i; stopped = true; break;
     }
   }
+  if (!full && !stopped) exhausted = true;
 
   /* Every label printed in the block, longest first where two begin together, never two
      overlapping; the anchor and its number are boundaries too. */
@@ -363,9 +393,11 @@ function readAt(raw, labels, a, locate) {
   if (!(header.title && header.title.inline)) {
     let i = endLine;
     while (i < lines.length && (FURNITURE.test(lines[i].text) || !lines[i].text.trim())) i++;
+    if (!full && i >= lines.length - 1) exhausted = true;
     if (i < lines.length && !OUTLINE.test(lines[i].text) && caps(lines[i].text)) {
       let j = i;
       while (j + 1 < lines.length && caps(lines[j + 1].text) && !OUTLINE.test(lines[j + 1].text) && !FURNITURE.test(lines[j + 1].text)) j++;
+      if (!full && j + 1 >= lines.length - 1) exhausted = true;
       const f = field(raw, lines[i].start, lines[j].end, locate);
       if (f) header.title = f;
     }
@@ -398,5 +430,11 @@ function readAt(raw, labels, a, locate) {
   for (const f of missing) if (!why[f]) why[f] = f === "type"
     ? localize("doctypes.policy-header.no_series_type", "no line of this text opens with a policy series the active jurisdiction profiles name")
     : localize("doctypes.policy-header.no_label", "no label the active jurisdiction profiles give for this field is printed in the header block");
-  return { header: { ...header, missing, missing_why: why, start: from, end }, why: null };
+  return { exhausted, result: { header: { ...header, missing, missing_why: why, start: from, end }, why: null } };
+}
+
+/** Does any line of `raw` open with a policy series' label of the view's, with the header labels near it (R26)? The
+ *  header's `type` is read only from such an anchor, so with none a text is no policy's. */
+export function headerAnchored(ctx, raw) {
+  return anchors(String(raw || ""), policySeries(ctx), headerLabels(ctx)).length > 0;
 }

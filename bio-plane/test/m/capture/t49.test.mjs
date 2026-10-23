@@ -192,8 +192,9 @@ test("R91 R77: an archive listing that never settles leaves that row archive {sh
   assert.equal("files_total" in zip || "files_truncated" in zip, false, "no file is counted as listed");
   assert.equal(zip.eligible, true, "its eligibility is its own answer, given in time");
   const plain = r.held.find((x) => x.bundle_id === "INFO-001");
-  assert.equal(plain.archive.grouping, null, "a capture whose listing did not answer is undetermined too: it may be an archive");
-  assert.equal(plain.files, null);
+  /* fix round 6 (G12a): the control draw above decided this capture is no archive, and acquisition remembers it, so it is not asked again */
+  assert.equal(plain.archive, undefined, "a capture acquisition has decided is no archive is not asked again");
+  assert.equal(plain.files, undefined);
   const none = r.held.find((x) => x.bundle_id === "INFO-NOCAPTURE");
   assert.equal(none.archive, undefined, "control: a document with no capture has nothing to group");
   assert.equal(none.files, undefined);

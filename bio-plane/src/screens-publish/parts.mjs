@@ -80,14 +80,18 @@ export const PARTS = Object.freeze({
   },
 
   /* A refusal the plane answered (a read that failed, or one inside a read's value: `blockers`, `first`), in the words the shell
-     gives it (interface-shell R13, R61, R83; DEC-342): `refusal.<CODE>` when the list holds it, else the answer's translation,
-     else `refusal.uncatalogued` with the code as the act gave it; never the builder's `detail`. "" when it names no code and
+     gives it (interface-shell R13, R61, R83; DEC-342): `refusal.<CODE>` when the list holds it, else the answer's translation
+     with its `{name}` placeholders filled from the refusal's own fields (G10), else `refusal.uncatalogued` with the code as the act gave it; never the builder's `detail`. "" when it names no code and
      carries no translation. */
   refusalText: function (cs, f) {
     if (!f || typeof f !== "object") return "";
     const code = String(f.code || f.reason || "");
     if (code) { const held = cs.w("refusal." + code, f); if (held !== "refusal." + code) return held; }
-    if (typeof f.translation === "string" && f.translation) return cs.esc(f.translation);
+    // G10 (fix round 6): the plane's canned text keeps its `{name}` placeholders (`{document}`, `{photo}`); each is filled from the refusal's own
+    // field of that name, and one the refusal does not carry is left out, never drawn raw
+    if (typeof f.translation === "string" && f.translation) {
+      return cs.esc(f.translation.replace(/\{(\w+)\}/g, function (m, k) { const v = f[k]; return typeof v === "string" || typeof v === "number" ? String(v) : ""; }).replace(/ {2,}/g, " "));
+    }
     return code ? cs.w("refusal.uncatalogued") + " <code>" + cs.esc(code) + "</code>" : "";
   },
 
@@ -278,18 +282,41 @@ export const PARTS = Object.freeze({
   titleOf2: function (cs, copy, fallback) {
     return copy && typeof copy.title === "string" && copy.title ? copy.title : fallback;
   },
-  noCase: function (cs, copy) {
+  noCase: function (cs, copy, editions) {
     const c = copy && copy.case ? copy.case : {};
-    return copy && !c.case_id ? '<p class="mk-sub" data-nocase>' + cs.w("review.body.nocase") + "</p>" : "";
+    // R80: a draft the record holds an edition of (prepared or published) is no draft that names no case
+    const known = editions && (editions.prepared || editions.published);
+    return copy && !c.case_id && !known ? '<p class="mk-sub" data-nocase>' + cs.w("review.body.nocase") + "</p>" : "";
   },
 
   /* C49 (DEC-394, DEC-395): the project's drafts as `casedrafts` lists them (oldest first), each with the review copy it answers: the one
      the screen shows reuses its own read (`chosenR`), every other draft is read once (`copy:<draft>`, page memory, read again after an
      act). Each entry is `{draft, r}`, `r` in R10's four states. */
   draftCopies: function (cs, view, drafts, chosenId, chosenR) {
+    const P = view.parts;
+    const shown = function (x) { return x.draft_id === chosenId && chosenR; };
+    // G12c (fix round 6): the copies of the other drafts are read in one `reviewcopy` (`drafts`, their ids comma-joined, at most 20 to a
+    // read), not one each; a lone other draft is the single read it was
+    const rest = drafts.filter(function (x) { return !shown(x); }).map(function (x) { return x.draft_id; });
+    const got = {};
+    if (rest.length > 1) for (let i = 0; i * 20 < rest.length; i++) {
+      const ids = rest.slice(i * 20, i * 20 + 20), b = P.later(cs, view, "copies:" + i, "reviewcopy", { query: { drafts: ids.join(",") } });
+      ids.forEach(function (id) { got[id] = P.copyIn(cs, view, b, id); });
+    }
     return drafts.map(function (x) {
-      return { draft: x, r: x.draft_id === chosenId && chosenR ? chosenR : view.parts.later(cs, view, "copy:" + x.draft_id, "reviewcopy", { query: { draft: x.draft_id } }) };
+      return { draft: x, r: shown(x) ? chosenR : got[x.draft_id] || P.later(cs, view, "copy:" + x.draft_id, "reviewcopy", { query: { draft: x.draft_id } }) };
     });
+  },
+
+  /* G12c: one draft's copy out of a batch read (`{ok, kind: "review-copies", count, copies: {<id>: the single answer}}`), in R10's four states: the
+     batch while it waits or has failed; an id it does not answer, or answers with a refusal, is failed, as the single read of it is. */
+  copyIn: function (cs, view, b, id) {
+    if (b.state !== "ok") return b;
+    const all = b.value && typeof b.value === "object" && b.value.copies && typeof b.value.copies === "object" ? b.value.copies : {};
+    const a = all[id];
+    if (a && typeof a === "object" && a.ok !== false) return { state: "ok", value: a, refusal: null };
+    const f = a && typeof a === "object" ? a : {};
+    return { state: "failed", value: null, fields: f, refusal: { code: String(f.code || f.reason || ""), words: view.parts.refusalText(cs, f) || cs.w("shell.unread") } };
   },
 
   /* C49: the review links still working on a draft's copy: the plane's own `live`, else a grant that is neither stopped nor lapsed. */
@@ -338,6 +365,26 @@ export const PARTS = Object.freeze({
     const here = view.ui.draft ? view.ui.draft.draft_id : view.ui.draftId || "";
     if (!pick || pick === here || !(Array.isArray(r.drafts) && r.drafts.some(function (x) { return x && x.draft_id === pick; }))) { P.forget(view); return { stay: true }; }
     cs.go(screen, String(view.subject || "").split("/")[0] + "/" + pick);
+  },
+
+  /* R80 (C48/N6; case-authoring R83, review R19): what the record holds for a draft: "Published: edition n" with the address of that edition
+     (the case page's route, written as `hrefOf` writes it: one encoded part), else "Edition n is prepared". Nothing for a draft the record
+     says neither of; the case it belongs to is the record's own (`editions.case`) or the draft's. */
+  editionsLine: function (cs, view, draft) {
+    const ed = draft && draft.editions && typeof draft.editions === "object" ? draft.editions : null;
+    if (!ed) return "";
+    const id = typeof ed.case === "string" && ed.case ? ed.case : draft.case && draft.case.case_id ? draft.case.case_id : "";
+    const pub = ed.published && Number(ed.published.edition) > 0 ? Number(ed.published.edition) : 0;
+    if (pub && id) return '<p role="status" data-published="' + pub + '">' + cs.w("screen.ceremony.published.edition", { n: String(pub) }) + ' <a href="/app/published/'
+      + encodeURIComponent(id + "/" + pub) + '" data-nav data-published-link>' + cs.w("screen.ceremony.publicpage") + "</a></p>";
+    return !pub && Number(ed.prepared) > 0 ? '<p role="status" data-prepared="' + Number(ed.prepared) + '">' + cs.w("screen.ceremony.prepared", { edition: String(Number(ed.prepared)) }) + "</p>" : "";
+  },
+
+  /* C49 (R73): under the heading, the draft the page shows named by its scope and the day it was prepared, drawn where the project has two
+     drafts or more and once that draft's own copy is read (a scope is never guessed). */
+  draftHead: function (cs, view, screen, list, chosenId, projectTitle) {
+    const e = list.length > 1 ? list.find(function (x) { return x.draft.draft_id === chosenId; }) : null;
+    return e && e.r.state === "ok" ? '<p class="mk-sub" data-draft-head>' + cs.esc(view.parts.draftLine(cs, view, screen, e, projectTitle)) + "</p>" : "";
   },
 
   /* C49 (DEC-394, DEC-395): beneath the chooser, how many review links are live and how many sit on an earlier draft than the newest, as
@@ -393,21 +440,35 @@ export const PARTS = Object.freeze({
   /* the findings a review copy names (a draft that names none cannot be published, R66) */
   findingsOf: function (copy) { return (copy && Array.isArray(copy.findings) ? copy.findings : []).map(function (f) { return f.target; }).filter(Boolean); },
 
+  /* E4 (fix round 5; publication `casedocument`'s `findings`; case-grammar R4, R6): `casedocument` answers `citations` as `{state, rows}`
+     (never an array) and the roster the signed document pins as `findings`, `[{target, version_sha, role}]`. `rosterOf` is that roster as
+     `[{target, bundleSha}]`, null when the answer states none, an entry with no full SHA-256 left out. */
+  rosterOf: function (doc) {
+    if (!doc || !Array.isArray(doc.findings)) return null;
+    return doc.findings.filter(function (f) { return f && typeof f.target === "string" && f.target && /^[0-9a-f]{64}$/.test(String(f.version_sha || "")); })
+      .map(function (f) { return { target: f.target, bundleSha: f.version_sha }; });
+  },
+
   /* What one sitting signs (interface-shell R41; ratification R52; this module's R13): the case statement `casedocument`
-     answers, one `bio-ratify <id> <sha>` line per finding the prepared edition pins, and one per piece of evidence the
-     signed document cites (`citations`' `{target, version}`), each once and none a finding already. */
+     answers, one `bio-ratify <id> <sha>` line per finding the edition pins (the document's own roster, else what `publish`
+     answered), and one per piece of evidence the signed document cites (`citations.rows`' `{target, version}`), each once and
+     none a finding already. */
   sitting: function (doc, prepared) {
     if (!doc || !doc.sign || typeof doc.sign.statement !== "string") return null;
     const list = [{ kind: "case", id: doc.case_id, edition: doc.edition, sha: doc.doc_sha, text: doc.sign.statement, namespace: doc.sign.namespace || "bio-ratify" }];
     const seen = {};
-    const findings = prepared && Array.isArray(prepared.findings) ? prepared.findings : [];
+    const pins = Array.isArray(doc.findings) ? doc.findings.filter(function (f) { return f && typeof f.target === "string" && /^[0-9a-f]{64}$/.test(String(f.version_sha || "")); })
+      .map(function (f) { return { target: f.target, bundleSha: f.version_sha }; }) : null;
+    const findings = pins || (prepared && Array.isArray(prepared.findings) ? prepared.findings : []);
     findings.forEach(function (f) {
       if (!f || !f.target || !f.bundleSha || seen[f.target]) return;
       seen[f.target] = true;
       list.push({ kind: "finding", id: f.target, sha: f.bundleSha, text: "bio-ratify " + f.target + " " + f.bundleSha + "\n", namespace: "bio-ratify" });
     });
-    (Array.isArray(doc.citations) ? doc.citations : []).forEach(function (c) {
-      const id = c && (c.target || c.bundle_id), sha = c && (c.version || c.bundle_sha);
+    // G29 (fix round 6; K4609, `case-authoring` R86): a document the case rests on is signed at its head, the `bundle_sha` its row carries
+    // (ratification verifies `ratifyStatement(id, head)`, R4/R52); nothing is signed from `version` (a classification word) or `capture`
+    (doc.citations && Array.isArray(doc.citations.rows) ? doc.citations.rows : []).forEach(function (c) {
+      const id = c && c.target, sha = c && c.bundle_sha;
       if (!id || typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha) || seen[id]) return;
       seen[id] = true;
       list.push({ kind: "evidence", id: id, sha: sha, text: "bio-ratify " + id + " " + sha + "\n", namespace: "bio-ratify" });
@@ -415,20 +476,29 @@ export const PARTS = Object.freeze({
     return list;
   },
 
-  /* C47 (fix round 2; public-read R39): how many documents the edition's document cites that are not published with the case: a
-     citation that is no finding of the edition and whose version is no full SHA-256 (what a sitting signs as evidence is published),
-     each counted once. */
-  notPublished: function (doc, prepared) {
-    const pinned = {}, seen = {};
-    (prepared && Array.isArray(prepared.findings) ? prepared.findings : []).forEach(function (f) { if (f && f.target) pinned[f.target] = true; });
-    let n = 0;
-    (doc && Array.isArray(doc.citations) ? doc.citations : []).forEach(function (c) {
-      const id = c && (c.target || c.bundle_id), sha = c && (c.version || c.bundle_sha);
-      if (!id || pinned[id] || seen[id]) return;
+  /* E4 (fix round 5, C48): the Sign step fails closed. True when the sitting lists fewer findings than the document pins, or none while
+     the draft names findings (`named`, their count) or the document pins some: an edition signed with its findings missing publishes an
+     incomplete case, and that cannot be taken back. */
+  sittingGap: function (doc, list, named) {
+    const listed = (list || []).filter(function (x) { return x.kind === "finding"; }).length;
+    const pinned = doc && Array.isArray(doc.findings) ? doc.findings.length : 0;
+    return listed < pinned || (listed === 0 && named > 0);
+  },
+
+  /* C47, G29 (public-read R39; K4609): the documents the edition's document cites that cannot be signed with it, by target, each once: a
+     document row (`version` other than `no_bytes`, which is a finding's or question's edge) that carries no `bundle_sha`, such as an edition
+     prepared before rows carried it. A finding of the edition is never one. */
+  unsignable: function (doc, prepared) {
+    const pinned = {}, seen = {}, out = [];
+    const roster = doc && Array.isArray(doc.findings) ? doc.findings : prepared && Array.isArray(prepared.findings) ? prepared.findings : [];
+    roster.forEach(function (f) { if (f && f.target) pinned[f.target] = true; });
+    (doc && doc.citations && Array.isArray(doc.citations.rows) ? doc.citations.rows : []).forEach(function (c) {
+      const id = c && c.target;
+      if (!id || pinned[id] || seen[id] || c.version === "no_bytes") return;
       seen[id] = true;
-      if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) n++;
+      if (!/^[0-9a-f]{64}$/.test(String(c.bundle_sha || ""))) out.push(id);
     });
-    return n;
+    return out;
   },
 
   /* The UTF-8 bytes of a statement the member's key signs (interface-shell R41's `{label, bytes, namespace}`). */
@@ -460,20 +530,14 @@ export const PARTS = Object.freeze({
      member types only the passphrase; an unreadable or empty file is refused in the kit's word and nothing is asked of the device; with no
      file chosen the dialog is as it was. `{signed}` is the signer's answer, or `{refuse}` a word key. */
   sitSign: async function (cs, view, list) {
-    let file = "";
+    // R116 (interface-shell): the key file's text is handed to the signer with the statements, which asks only the passphrase
+    let keyFile;
     if (view.ui.keyHeld === false) {
       const k = await cs.keyFile("ce-keyfile");
-      if (k.ok) file = k.text;
+      if (k.ok) keyFile = k;
       else if (k.word !== "shell.keyfile.none") return { refuse: k.word };
     }
-    const sitting = cs.signer.sign(list);
-    if (file) {
-      // the kit draws its dialog once it has looked for a held key, and answers a second look after the first: when this one is
-      // answered the dialog is drawn, and its box is the one place a key file's text goes (interface-shell R40)
-      await cs.signer.held();
-      if (cs.value("cs-key-file") !== null) cs.fill("cs-key-file", file);
-    }
-    return { signed: await sitting };
+    return { signed: await (keyFile ? cs.signer.sign(list, { keyFile: keyFile }) : cs.signer.sign(list)) };
   },
 
   /* R2, R62 (fix round 3, C94): a comment's or acknowledgement's author: the name an outside reader was given by the grant, as it is;

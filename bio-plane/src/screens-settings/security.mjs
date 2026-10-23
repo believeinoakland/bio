@@ -103,7 +103,12 @@ export const security = {
         if (ns) {
           // the key's word where the list holds it and every fill is answered; else the answer's own words (the shell draws a key the list lacks as the key)
           const said1 = (key, words, fills) => { const t = typeof key === "string" ? String(W(key, fills)) : ""; return t && t !== E(key) && !/\{\w+\}/.test(t) ? t : typeof words === "string" ? E(words) : ""; };
-          const status = /^REFUSED:[^:]*:(\d{3})$/.exec(String(ns.reason || ""));
+          // the status of the refusal the answer's `reason` holds (C84): the old `REFUSED:<db>:<status>`, or the updater's lines
+          // (`MIRROR_REFUSED:exit N: …`) naming an HTTP status as file-safety R46 reads it (never the exit code, a version or a count)
+          const reason = String(ns.reason || "");
+          const status = /^REFUSED:[^:]*:(\d{3})$/.exec(reason)
+            || (/^MIRROR_REFUSED\b/.test(reason) && (() => { const f = /(?:error code|status(?: code)?|http\/?[\d.]*|code)\s*[:=]?\s*([1-5]\d{2})(?!\d)|\(([1-5]\d{2})\)/i.exec(reason.replace(/^MIRROR_REFUSED:exit \d+:/, "")); return f ? [null, f[1] || f[2]] : null; })())
+            || null;
           const first = said1(ns.key, ns.words, ns.since ? { date: D(ns.since) } : {});
           const second = typeof ns.reason_key === "string" ? said1(ns.reason_key, ns.reason_words, status ? { status: status[1] } : {}) : "";
           if (first) h += `<p data-state="nosignatures">${first}</p>`;
@@ -112,10 +117,10 @@ export const security = {
           if (second) h += `<p data-state="nosignatures-reason">${second}</p>`;
           else h += `<p data-state="nosignatures-next">${W(S + "nosignatures.next")}</p>`;
         }
-        // C84: the button that checks for new signatures now (`scanmirror`, file-safety R49), beside the scanner's state. The design holds no row for its
-        // label or for "started" yet, so the nearest rows stand in (REPORTED, QUESTION J20): "Check it now", and "Working…" while the run asked for goes on
-        const mirror = cs.act("scanmirror", { label: "act.monitor.label.capture" });
-        if (mirror) h += `<div data-form="mirror">${mirror}${ui.mirror ? `<p data-state="mirror">${W("shell.working")}</p>` : ""}</div>`;
+        // C84: the button that checks for new signatures now (`scanmirror`, file-safety R49), beside the scanner's state, labelled and answered by the
+        // design's own rows (DEC-412: `act.scanmirror.label.security`, `screen.security.mirror.started`)
+        const mirror = cs.act("scanmirror", { label: "act.scanmirror.label.security" });
+        if (mirror) h += `<div data-form="mirror">${mirror}${ui.mirror ? `<p data-state="mirror">${W(S + "mirror.started")}</p>` : ""}</div>`;
       }
       return h;
     })));

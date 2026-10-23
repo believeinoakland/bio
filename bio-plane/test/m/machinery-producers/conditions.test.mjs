@@ -84,6 +84,23 @@ test("R2: partial-capture-outstanding is the capture ledger's own row, about the
     assert.ok(!w.read(who).items.some((i) => i.kind === "partial-capture-outstanding"), `the session dropped, it clears for ${who}`);
 });
 
+test("R2: partial-capture-outstanding is not raised for a large fetch parked as owed work (fetch_pending, no primary yet); control: a real partial capture still is, beside it (G25, K4577)", () => {
+  const { w, sessions } = corpus();
+  const NO_PRIMARY = "0".repeat(64);
+  sessions.push({ session: "cs_parked", locator: `https://${HOST}/big.pdf`, primarySha: NO_PRIMARY, created: iso(NOW - 5000), updated: iso(NOW),
+                  expires: iso(NOW + 60000), ticks: 0,
+                  state: { queue: ["https://x.example/a"], opened_by: "carol", fetch_pending: { since: iso(NOW - 5000), declared_bytes: 16000000, why: "large" } } });
+  sessions.push({ session: "cs_failed", locator: `https://${HOST}/bigger.pdf`, primarySha: NO_PRIMARY, created: iso(NOW - 5000), updated: iso(NOW),
+                  expires: iso(NOW + 60000), ticks: 0,
+                  state: { queue: ["https://x.example/b"], fetch_pending: { since: iso(NOW - 5000), declared_bytes: 30000000, why: "large", failed: "TOO_BIG" } } });
+  assert.deepEqual(w.read("carol").items.filter((i) => i.kind === "partial-capture-outstanding"), [],
+    "a parked fetch, or one that ended in a stated refusal, has captured nothing: no ceiling was reached, so no partial capture");
+  sessions.push({ session: "cs_partial", locator: AGENDA, primarySha: "cap88", created: iso(NOW - 5000), updated: iso(NOW),
+                  expires: iso(NOW + 60000), ticks: 2, state: { queue: ["a", "b", "c"], discovered: 41, spent: 45 } });
+  assert.deepEqual(w.read("carol").items.filter((i) => i.kind === "partial-capture-outstanding").map((i) => i.id),
+    ["CONDITION::partial-capture-outstanding::cs_partial"], "control: the real partial capture is still raised, and only it");
+});
+
 test("R2: capture-completed-unattended is the manifest's sequence, a person's document then a machine's revision, its writer named by the catalogue's one prefix; it clears when a person authors again", () => {
   const { w, manifest } = corpus();
   manifest("k1", "carol", "2026-07-31T12:00:00Z");

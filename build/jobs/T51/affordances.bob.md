@@ -1,6 +1,6 @@
 # BOB to affordances (T51)
 
-**Read** · handled J19
+**Read** · handled J23
 
 ## B1 · START
 
@@ -131,3 +131,47 @@ You are the module job (P8, mechanics §6) for `affordances`. Your diff touches 
 Every requirement you meet is named by a test seen failing first, with a negative control. R-NOTMET (no "not met" or "deferred" at COMPLETE; ask BOB). Run your suite, op-declarations', then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean. COMPLETE lists the four fields with the red-then-green evidence and `Size (<session id>): test runs <n>, module lines <n>`.
 
 **Added by BOB #245 (K4441):** citation's `cite` now accepts an optional `ground` (citation R19, R21 as amended): its op help names it beside the others.
+
+## B17 · CHANGE
+
+CHANGE (BOB #245, K4458): the design's DEC-412 rows are merged on tranche/T51 (rows regenerated). Your module reads act.contradictionflag.does and the new act.*.does rows (origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin); the registry puts scanmirror on security and officeconfirm on places. Merge the tranche before your tests.
+
+## B18 · ANSWER · re J20
+
+ANSWER (K4464): option 1. op-declarations' R34 (t36) is the net that names a member op with no explanation; no change to modules.json or the order. Write cause 2 to that (say so in COMPLETE: no own test reads the owners' rows, by P4), keep act.readheld.does as the stand-in, and COMPLETE. Also: OP-GRADES is merged (tranche @ 003bae9390): merge the tranche into your branch; your R61 R62 and op-declarations R34 (ACT_HELP partition) are yours to bring green if they are your partition.
+
+## B19 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/affordances tranche/T51 && git branch -m job/T51/affordances stale/affordances-local && git checkout -b job/T51/affordances origin/job/T51/affordances`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · AFFORDANCES #43 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #250 is depth 1; fix round 5, job 12 of 14; K4530)
+
+Mail with `--module affordances`; record `build/jobs/T51/affordances.md`. Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `affordances`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-5-T51.md` (the plan: section 0's rules bind you; section 2 and 2b give every cause with its walker rows, file:line evidence, the test gap and the failing-first case; section 3 the merge order and seam owners), `build/plan/fix-round-5-step0.md` (the live reads on biosmoke8 that replace the plan's "step 0" where it names one), then your requirements (both parts), the used services your entries touch, and your code. The plan's file:line evidence is your starting point, never a substitute for reading the code.
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause stated with file:line, else a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the walker's case (quoted below), through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (the object's 128 MB, the CPU limit, `waitUntil` cut ~30 s after the response, the door's 25 s), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers and inputs made by the member's own acts, never a hand-written answer shape; a provider tests the same case at its interface; a seam test needing an unmerged provider is written first and stays red by name until it merges (merge `tranche/T51` again when BOB says the provider merged). R-STOP: a "reading follows" test asserts the words are in `text_units`, never only that a reading exists. R-NOTMET: no "not met", "deferred", REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: a fix to stored data says "new data only" or carries its repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own (K4208). Bob's focus: an alpha release deployed as efficiently as possible: do what the entries need, nothing more.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio affordances tranche/T51 job/T51/affordances`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+**Your entry (plan E14, new at step 0; seam owner; merge 9c).** Walker B (C59/N3, Timeline): "under the document's words 'Could not read this, because your team's Civicsmith did not answer'". Step 0 (`fix-round-5-step0.md` §5, read live): `op=affordances` answers 200 in 0.7 s (member and administrator), but its `vocabularies` lack all five events vocabularies (`event_kinds`, `dated_fact_kinds`, `event_statuses`, `participant_roles`, `event_relation_kinds`); Timeline (`screens-investigate/timeline.mjs:98-101`) reads `event_kinds` and draws the failure without it. Likely cause, not proven: `affordances/words.mjs:116-122` `composedVocabularies` adds them only when `events` is in this isolate's owner registry, which `events.start()` (`events/index.mjs:229-233`) fills in the Durable Object, not in the Worker that composes the answer (the `lines` vocabularies do appear). Step 1: prove it with a test of the door's answer. Fix in your module where the cause is yours; if it lies in `events` (layer 5), post a QUESTION naming the line and BOB places it. Why missed: no test reads the door's `affordances` answer for the events vocabularies. Failing-first (Miniflare plane, through the real door): `op=affordances` holds `event_kinds` (red now); and the Timeline screen over that answer draws its kinds, not the failure.
+
+## B20 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/affordances tranche/T51 && git branch -m job/T51/affordances stale/affordances-local && git checkout -b job/T51/affordances origin/job/T51/affordances`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · AFFORDANCES #44 · tranche T51 · product believeinoakland/bio · depth 2 (fix round 6, G49; K4680) · reading set per mechanics §6 step 2 (your other tests are run, not read)
+
+Mail with `--module affordances`; record `build/jobs/T51/affordances.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never opus (K3518). Before tests: every lockfile directory has `node_modules` (K4113). Run your tests from `bio-plane/` with `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/affordances/`.
+
+**Reds you inherit (accepted by name; yours are not these, run them only as users):** plane `release` R24 and `l77-size` R77 L; file-safety R24; promotion row-census; case-checker R13, R25 (stale `program.mjs` until the round end); `fleetbundles` section 10, agent-worker `requirements`, ocr-worker, `newgroup-bundle-fresh` arms (C)/(D); newgroup R8, R11, R20, R33, R44, R55, R61, R71, `wizard.test.mjs`; case-authoring R17 until G47's owners merge. A failure not on this list is yours or a bug to report.
+
+**Providers' state.** None needed: the design's words are on the tranche (`setup-words/rows.mjs` holds `act.capturerequests.does`, `act.casedrafts.does`, `act.readheld.does` with source "design").
+
+**Read in full:** `build/plan/fix-round-6-T51.md` section 0 and the G49 entry; `build/requirements/affordances.md` R48, R53, R61, R62, R65, R69, R70; `bio-plane/src/affordances/act-help.mjs` whole; `bio-plane/test/m/affordances/t36.test.mjs` (the four tests named below). BOB fixed t36's B14 assertion (test only, K4297 (2)): `readheld`'s design row now exists, so that test asserts `ACT_HELP[op] === word(key)`.
+
+**Rules** (plan section 0): R-FOUR, R-ONE, R-NOTMET (no "not met", deferred or open QUESTION at COMPLETE), R-OLD. Words: you write no new sentence; every text comes from the word table by key (K3810, K3930). Declare every census op you own whose accepted keys change (none expected; K4208).
+
+**Your entry (G49).** `ACT_HELP` must hold exactly the ops the design's reads list for affordances explains (R48, R62). Add `capturerequests` and `casedrafts` to `T51_DESIGN_OPS` in the reads list's order and to `ACT_HELP_OPS`, each read by `word("act.<op>.does")`; move `readheld` from `T51_STANDIN_HELP`/`T51_STANDIN_OPS` to `T51_DESIGN_OPS` (its text is the design's row now), so `ACT_HELP_OPS` and `HELD` carry it once (act-help.mjs:138, :190); keep `T51_STANDIN_HELP` and `T51_STANDIN_OPS` exported as empty frozen values (`{}`, `[]`): `t36.test.mjs` imports both (:75, :86, :212-302) and their loops become no-ops; update the file's header comment and the `T51_STANDIN_HELP` docblock (op-declarations' "53 ops" note at `op-declarations/index.mjs:2643` is a comment, not yours). Failing-first: `t36.test.mjs`'s ACT_HELP, "R62 R65 keys" and "B12 strengthbarset" are red on the tranche today; they go green. Control: every other held op's text is unchanged (compare `ACT_HELP` before and after for every other key, deepEqual). Then run your suite, the impact set (`node build/plan/impact.mjs tranche/T51 HEAD` from the repository root) as users, `checks/run.mjs` (read each arm's own failure count) and `checks/ownership.mjs`.
+
+**Record and COMPLETE:** what changed, the tests red then green, suites and checks, a proposed R48 line if its text changes, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).

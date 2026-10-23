@@ -182,7 +182,11 @@ export const PROFILES = { profiles: [{ id: "p", name: "p", covers: [] }], confli
     { rule: "records_response", applies_to: "records_request", units: "days", amount: 10, count: "calendar", citation: "Gov. Code § 7922.535(b)",
       extension: { days: 14, citation: "Gov. Code § 7922.535(c)" } },
     { rule: "immediate_disclosure", applies_to: "records_request", units: "days", amount: 3, count: "business", citation: "Mun. Code § 2.20.230" },
-    { rule: "meeting_notice", applies_to: "comment", amount: 72, count: "calendar", citation: "Open meetings law" }] } };
+    { rule: "meeting_notice", applies_to: "comment", amount: 72, count: "calendar", citation: "Open meetings law" }],
+  // `jurisdictions` R7, R96: the laws a records request can go under, each naming its own first-request window (`response`, a `deadlines` rule)
+  records_laws: [
+    { level: "state", name: "Testland Records Act", citation: "Gov. Code § 7922.535(b)", response: "records_response" },
+    { level: "city", name: "Testville Sunshine Ordinance", citation: "Mun. Code § 2.20.230", response: "immediate_disclosure" }] } };
 
 /** The test profile's `records_help` block (`jurisdictions` R93, R84: differing in every value from any first profile's). */
 export const RECORDS_HELP = { law: "Testland Records Act", days: 7, extra_days: 9, status: "researched", basis: "TEST",
