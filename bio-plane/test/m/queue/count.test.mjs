@@ -3,7 +3,7 @@
    ops map as the plane calls it, the door as the control plane calls it, and the control plane's decoration. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, NOW, iso } from "./world.mjs";
+import { world, NOW, iso, plainCount } from "./world.mjs";
 import { queueOps, queueAnswer } from "../../../src/queue/index.mjs";
 import { queueFeedOp } from "../../../src/queue/door.mjs";
 
@@ -30,7 +30,7 @@ test("R93: count: true answers the number of the open items the list holds, with
   const list = w.q.queueFeed({ ...alice, limit: 500 });
   assert.equal(list.items.length, 5);
   const c = w.q.queueFeed({ ...alice, count: true });
-  assert.deepEqual(c, { ok: true, member: "alice", count: list.items.length });
+  assert.deepEqual(plainCount(c), { ok: true, member: "alice", count: list.items.length });
   assert.equal("items" in c, false, "no item is sent");
   // the query's "true" and "1" as the other flags read them
   for (const v of ["true", "1"]) assert.equal(w.q.queueFeed({ ...alice, count: v }).count, 5, v);
@@ -54,7 +54,7 @@ test("R93: the count is the list uncut by its limit, and leaves out what the mem
 test("R93: the route passes count on, the door passes it to the store, and the control plane's decoration leaves the count as it is", async () => {
   const w = setup();
   const viaRoute = queueOps(w.q, URL_OF("count=true"), null).queue();
-  assert.deepEqual(viaRoute, w.q.queueFeed({ ...alice, count: true }));
+  assert.deepEqual(plainCount(viaRoute), plainCount(w.q.queueFeed({ ...alice, count: true })));
   assert.deepEqual(queueAnswer(viaRoute, { gate: {} }), { status: 200, result: viaRoute });
   const asked = [];
   const store = { fetch: (u) => { asked.push(new URL(u)); return "queue"; } };
