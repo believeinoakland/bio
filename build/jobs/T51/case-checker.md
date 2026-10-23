@@ -139,3 +139,7 @@ G50 progress (record: Progress section). Goldens g1/g2 recorded at the base 124e
 **Deferred:** none. **Found in other modules:** none.
 
 Size (session_01Hzwm1zycMHWjX8D2N1KFXS): test runs 7, module lines 75
+
+## J8 · COMPLETE
+
+G50 complete (record: Completion section). tranche/T51 merged; g50-path 8/8 green against the real providers; module suite 107 tests, 2 fail (R13, R25, stale program.mjs); case-import 156/156. Old program.mjs on a /4 file: departs at format and at every discriminated path, all findings did_not_recreate, as expected. checks: format, architecture, coverage, ownership 0 failures. Words: 5 new inline strings in spec.mjs (the /4 specification, same class as the earlier judged ones) beside the accepted :11, for you and the design stream. Stale generated: program.mjs, dist/, release/. Requirements R2/R8/R14/R19 are yours (diff in my record). Size (session_01Hzwm1zycMHWjX8D2N1KFXS): test runs 7, module lines 75
