@@ -233,6 +233,7 @@ function render(cs, view) {
      `basis`) is a statement, not "none": it is drawn as that statement and offers no OCR re-read after it; a statement extraction states `repairable` (an old
      "(multipart)" final whose bytes now detect) offers "Read it" instead; a text reading with `more` is being read and is never drawn as complete. */
   const rdObj = rv0 && rv0.reading && typeof rv0.reading === "object" ? rv0.reading : null;
+  const cellsHeld = !!rdObj && Array.isArray(rdObj.cells_held) && rdObj.cells_held.some((n) => typeof n === "string" && n !== "");
   const flagOf = (k) => !!rv0 && (rv0[k] === true || (!!rdObj && rdObj[k] === true));
   const failure = rv0 ? String((rdObj && rdObj.failure) || rv0.failure || "") : "";
   const isMore = flagOf("more"), isRepairable = flagOf("repairable");
@@ -297,6 +298,10 @@ function render(cs, view) {
       + (wRead !== null && wTotal !== null && textState !== "reading" ? ` <span class="mk-small" data-words-read="1">${cs.w("screen.document.text.read", { read: String(wRead), total: String(wTotal) })}</span>` : "") + "</span></div>" : "")
     + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w("screen.document.fingerprint.means"))}">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
     + (sha ? `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(sha)}">${cs.w("screen.document.open")}</a></div>` : "") + "</div>");
+  /* G41 (D5; K4636): a sheet whose cells the reading does not list (`cells_held`, the names of the sheets) says what is interpreted: its text is read whole and
+     searchable, its cells are made for a range when it is opened or cited. One quiet line, read by key; never while the text is still being read (the sentence
+     says the text is whole), and never for a reading that names no held sheet. */
+  if (cellsHeld && textState !== "reading") out.push(`<p class="mk-small" data-cells-held="1">${cs.w("screen.document.cells_held")}</p>`);
   /* G19 (fix round 6; acquisition): the supporting files a web capture kept and skipped, with the reasons the capture recorded (`supporting: {kept, skipped, reasons}`
      on the register document); drawn only when something was skipped, as the sizes kept of all and each reason in the plane's own words (the sentence is owed: stand-in) */
   {
@@ -379,7 +384,10 @@ function render(cs, view) {
        "Nothing here": by the design's `screen.document.reading.stated` (with the size) or `.reading.repairable` where the words list holds them, else the plane's
        own words (the stand-in; the rows are owed to T52's list). */
     const basisWords = rdObj && typeof rdObj.basis === "string" ? rdObj.basis.trim() : "";
-    const statedSaid = textState === "repairable" && heldWord("screen.document.reading.repairable") ? cs.w("screen.document.reading.repairable")
+    /* G41 (D3): a reading stated too large to keep whole carries its size and its largest part in `basis` (`{size, key}`), drawn as that statement */
+    const tooLarge = rdObj && rdObj.basis && typeof rdObj.basis === "object" && Number.isFinite(rdObj.basis.size) && rdObj.basis.size >= 0 && typeof rdObj.basis.key === "string" ? rdObj.basis : null;
+    const statedSaid = textState === "stated" && tooLarge ? cs.w("screen.document.reading.too_large", { size: sizeWord(tooLarge.size), key: tooLarge.key })
+      : textState === "repairable" && heldWord("screen.document.reading.repairable") ? cs.w("screen.document.reading.repairable")
       : textState === "stated" && heldWord("screen.document.reading.stated") && Number.isInteger(rv0 && rv0.bytes) ? cs.w("screen.document.reading.stated", { size: sizeWord(rv0.bytes) })
       : comp && typeof comp.why === "string" && comp.why.trim() ? cs.esc(comp.why.trim()) : basisWords ? cs.esc(basisWords) : undetermined("");
     const statedHtml = textState === "stated" || textState === "repairable" ? `<p class="mk-note" data-reading="stated">${statedSaid}</p>` : "";
