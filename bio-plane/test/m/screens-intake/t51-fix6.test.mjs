@@ -243,11 +243,12 @@ test("R57 (G14) a capture whose reading says it is partial never draws 'full'; s
 
 test("R2 R59 (G19) a capture that skipped supporting files says how many of how many it kept and why; none skipped says nothing", async () => {
   const sup = (x) => async () => { const p = await open("/app/capture/address", { acquire: CAPTURED_OK({ supporting: x }), heldat: ok(NOT_HELD) }); await pressCapture(p); return p; };
-  const p = await sup({ kept: 400, skipped: 50, reasons: [{ reason: "body_unavailable", detail: "over the cap of 400" }] })();
+  const p = await sup({ kept: 400, skipped: 50, reasons: [{ reason: "CAP_REACHED", count: 50, limit: 400, detail: "the plane's own words" }] })();
   const line = main(p).querySelector("[data-supporting]");
   assert.ok(line, "the line is drawn");
-  assert.ok(line.textContent.includes("400") && line.textContent.includes("450"), "N of M");
-  assert.ok(line.textContent.includes("over the cap of 400"), "and the plane's reason");
+  assert.ok(line.textContent.includes(word("screen.capture.supporting.kept", { kept: "400", total: "450" })), "N of M");
+  assert.ok(line.textContent.includes(word("screen.capture.supporting.cap", { cap: "400" })), "and the reason, by its code's key (G110: the plane's `detail` is never drawn)");
+  assert.equal(line.textContent.includes("the plane's own words"), false);
   const none = await sup({ kept: 12, skipped: 0, reasons: [] })();
   assert.equal(main(none).querySelectorAll("[data-supporting]").length, 0, "control: nothing skipped, nothing said");
   const absent = await sup(undefined)();

@@ -285,6 +285,9 @@ const options = (p) => Array.from(main(p).querySelectorAll("select#ci-for option
 test("R29 (C35) two questions of different projects with the same title are told apart by project, one row per question", async () => {
   const p = await open(`/app/capture/address/${QA}`, { plane: { ...QPLANE2 } });
   await p.settle();
+  /* G111 (fix round 8): the settle reads only the routed question's project; the team's other projects are read afterwards */
+  await p.clock.tick(2000);
+  for (let i = 0; i < 8; i++) await p.settle(20);
   const o = options(p);
   assert.equal(o.filter((t) => t.includes("Seven days")).length, 2, "one row per question: the repeated hit is listed once");
   assert.ok(o.some((t) => t.includes("Seven days") && t.includes("Pothole repairs")) && o.some((t) => t.includes("Seven days") && t.includes("Housing repairs")), JSON.stringify(o));
