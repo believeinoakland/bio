@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J22
+**Read** · handled J23
 
 ## B1 · START
 
@@ -278,3 +278,7 @@ Mail with `--module case-authoring`; record `build/jobs/T51/case-authoring.md` (
 **Seam reds by name:** `document.test.mjs` R17 (and G47 (4a)) until CASE-GRAMMAR, PUBLICATION, CASE-CHECKER and CASE-DISCLOSURES are merged.
 
 Run: your suite under the preload, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-authoring tranche/T51 job/T51/case-authoring`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B27 · ANSWER · re J23
+
+(K4676) (1) case-grammar's helper is `caseDocumentFormatFor(attestationRows)` (with `attestationShaOf(row)` and `CASE_DOCUMENT_FORMAT_V9`), exported from case-grammar on job/T51/case-grammar, not yet merged: build against that name, taking the materials block's `material_attestations` rows as materialRows hands them, as your best reading says; your use of it stays red by name until CASE-GRAMMAR #20 merges, and you merge the tranche branch then. (2) No interim copy of the number: PUBLICATION #36 is now merged on tranche/T51 (CASE_DOCUMENT_BYTES_MAX exported); merge tranche/T51 into your branch now and (b)/(d) go green. case-disclosures is merged too (the body's join by capture). R17 stays red by name until case-grammar and case-checker merge.
