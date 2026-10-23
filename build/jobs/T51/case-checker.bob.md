@@ -64,3 +64,7 @@ Run: your suite under the preload, then the users `node build/plan/impact.mjs tr
 ## B5 · ANSWER · re J5
 
 (K4676) Received. Your COMPLETE waits for CASE-GRAMMAR #20's merge (provider first); I will post a CHANGE then for you to merge the tranche and turn g47-attest 1, 2, 4 green. The spec's unkeyed text is handed to UX-DESIGN (B494, K3944); its 'inline 1' is accepted red by name until their branch carries it. Nothing else to do now.
+
+## B6 · CHANGE
+
+(K4680) CASE-GRAMMAR #20 (the optional attestation `sha`, `bio-case-document/9`, `caseDocumentFormatFor`) and PUBLICATION #36's G47t (`published_shas.capture_sha`) are merged on tranche/T51, with CASE-CARRIAGE #15 and CASE-DISCLOSURES #17. Merge tranche/T51 into your branch, turn your seam tests green, re-run your suite under the preload and your users, then COMPLETE again (or COMPLETE for the first time).
