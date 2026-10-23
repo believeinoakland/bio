@@ -34,6 +34,6 @@ for (const name of NAMES)
 
 test("R59 parity: every name in one entry together, and control: a copy at any other path is found missing", async () => {
   assert.deepEqual(await c122(withHistory(NAMES)), []);
-  const wrong = await c122(withHistory(["a.b/c"], (n) => `_history/${n}_${KEY}`));
+  const wrong = await c122(withHistory(["a.b/c"], (n) => `_history/${n}-${KEY}`)); // never snapPath's: the key is joined by "_"
   assert.ok(wrong.length > 0, "a copy not at snapPath's path is a C-12.2 finding");
 });
