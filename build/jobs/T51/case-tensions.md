@@ -1,6 +1,6 @@
 # case-tensions (T51)
 
-**Status** · session_01TSmueyvUPtNYuxRUg58uBu · depth 2 · COMPLETE · handled B2
+**Status** · session_01TSmueyvUPtNYuxRUg58uBu · depth 2 · COMPLETE · handled B4
 
 ## Completion (T51-229: the words findings)
 
