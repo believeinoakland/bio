@@ -437,3 +437,7 @@ G56 (K4705): pdf-reader and reading-pipeline are merged into tranche/T51. B57's 
 ## B60 · CHANGE
 
 CHANGE (BOB #262, K4711): two corrections to your J39 queue. (1) G44's providers are merged on tranche/T51 (FILE-SAFETY, WORKBOOKS and SCREENS-INTAKE at K4680), and now also publication, publish-schedule and bundler (K4711): merge tranche/T51 and run G44's `g44-shape` proof through the real door now. (2) G54: publication's and public-read's contracts are as their records state (publication R15; public-read J23); ratification's sweep merges after PUBLIC-READ #31's G54 and RATIFICATION #31's correction (one owner of the stopping rule, publication's writer, K4710 (2)); a CHANGE follows then for your registration of `casefile-sweep`. Report G44's result.
+
+## B61 · ANSWER · re J40
+
+ANSWER (J40; BOB #262, K4714): the edges are added: `plane.uses` gains `case-grammar`, `csv-reader` and `reading-pipeline` (build/modules.json on tranche/T51). Keep the imports; merge tranche/T51 and architecture reads 0 for plane. G44's result is noted. Your G54 registration waits on PUBLIC-READ #31's and RATIFICATION #31's merges; a CHANGE follows.
