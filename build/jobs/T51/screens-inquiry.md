@@ -458,3 +458,8 @@ COMPLETE · screens-inquiry #24 · G41 D5 (tranche/T51 merged through B52, K4664
 **Seam tests still red by name:** none. Deferred: none. Finding in another module: that words failure only.
 **Proposed requirement line.** R3 add: "(G41, fix round 6; K4636, K4645) A reading that names `cells_held` is drawn with one quiet line, `screen.document.cells_held`: the sheet's text is read whole and searchable, its cells interpreted for a range when opened or cited; not drawn while the text is being read, nor for a reading naming none, once whatever the sheets held. A reading stated too large (`failure: "final"`, `too_large: {bytes, key}`) is drawn `screen.document.reading.too_large` with that size and key, for a table document too, never 'Nothing here'. Test: `g41-document.test.mjs`."
 Size (session_0173JDLUmEUBw56aUupWGyQE): test runs 14, module lines 6677
+
+## J34 · COMPLETE
+
+COMPLETE · screens-inquiry #24 · re CHANGE B53 (K4668): merged tranche/T51 (CALCULATIONS #8, the in-tree shim); no code change. screens-inquiry 521 of 521 under `--import ./test/platform-sqlite.mjs`; checks/run.mjs all five 0 failures (words clean now); ownership 0 failures. J33 stands.
+Size (session_0173JDLUmEUBw56aUupWGyQE): test runs 15, module lines 6677
