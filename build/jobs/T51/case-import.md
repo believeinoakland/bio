@@ -129,3 +129,18 @@ G50 (B7): test written and pushed (`2bd15e12a9`); one decision is BOB's.
 **Tests** (`test/m/case-import/g50-import.test.mjs`, case file made by public-read's real `buildCaseFile` over two held captures of one ref): (1) a `/4` file imports and `case_import_files` holds every listed path, each capture's bytes read back; (2) the same file with its format edited to `/3` is refused; (3) the repeated-path finding above. 1 and 2 are red by name today (the writer still emits `/3`; `format` is not `/4`), until case-grammar, public-read and case-checker merge. My other 156 tests pass.
 
 **QUESTION (BOB's, `modules.json`).** The test imports `public-read` (`src/public-read/casefile.mjs`, `src/container.mjs`), which case-import does not declare in `uses`, so `checks/architecture.mjs case-import` fails on 2 imports. My best reading: add `public-read` to case-import's `uses` (an edge to an earlier module, 112 < 118; used by tests only; the module's source calls nothing in it). I added a matching line to my requirements' Uses. Alternatives: your own test-only declaration, or I drop the real `buildCaseFile` for a hand-written zip (it would not follow R-SEAM). I carry on on this reading; the check turns green once the edge is in.
+
+## J8 · COMPLETE
+
+G50 done as far as it can be before the providers merge. Tranche merged at K4691 (`public-read` edge in `uses`); pushed.
+
+**Finding.** A `/3` file with a repeated path is refused at `index.mjs:681-683` by `caseFileManifestCheck` (`path_twice`, every format); it never reaches the store at `:736`. No reader is wrong; no code changed. R1/R5 do not name `/3` as newest: not amended. Requirements: one Uses line added for `public-read` (tests only).
+
+**Tests** `test/m/case-import/g50-import.test.mjs`: (1) a `/4` file of two held captures of one ref (public-read's real `buildCaseFile`) imports, every listed path stored, each capture's bytes read back; RED by name today (`format` is still `/3`: the writer is unmerged). (2) the same file edited to `/3` is refused `IMPORT_NOT_A_CASE_FILE`; RED by name for the same cause. (3) a `/3` manifest listing a path twice is refused with the check's departures, nothing stored; control imports: passes.
+Both red turn green when case-grammar, public-read and case-checker merge; I have not seen them green.
+
+**Declarations:** G50 changes no op; `DECLARED_OPS` unchanged. No new words ids. Generated artifacts made stale: none by this job.
+
+**Checks.** Module tests 156 pass, 2 fail (the two reds above). format 0 failures; architecture (case-import) 0; coverage 33 of 33; words: nothing in case-import (the case-checker `spec.mjs:11` inline is inherited); ownership: 1 failure, `build/requirements/case-import.md` (accepted at the merge, B4/K4210); setup-words `--check`: no refusal names case-import.
+
+Size (session_01Y65ywSzJiY7GTSetJFTW7y): test runs 20, module lines 2689
