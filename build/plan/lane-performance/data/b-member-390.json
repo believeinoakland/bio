@@ -1,0 +1,1570 @@
+[
+ {
+  "path": "/app",
+  "settle_ms": 3981,
+  "api_done_ms": 3452,
+  "requests": 35,
+  "api": 28,
+  "bytes": 41214,
+  "byOp": {
+   "/app/shell-0.86.0.js": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app": {
+    "n": 1,
+    "bytes": 2079,
+    "ms": 1186,
+    "maxms": 1186
+   },
+   "/app/assets/shell.css": {
+    "n": 1,
+    "bytes": 281,
+    "ms": 25,
+    "maxms": 25
+   },
+   "/app/assets/civicsmith.css": {
+    "n": 1,
+    "bytes": 318,
+    "ms": 25,
+    "maxms": 25
+   },
+   "/app/assets/fonts/source-sans-3-latin-wght-normal.woff2": {
+    "n": 1,
+    "bytes": 321,
+    "ms": 25,
+    "maxms": 25
+   },
+   "/app/assets/fonts/source-serif-4-latin-opsz-normal.woff2": {
+    "n": 1,
+    "bytes": 312,
+    "ms": 26,
+    "maxms": 26
+   },
+   "whoami": {
+    "n": 1,
+    "bytes": 655,
+    "ms": 164,
+    "maxms": 164
+   },
+   "interfacewords": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 12,
+    "maxms": 12
+   },
+   "infolevel": {
+    "n": 1,
+    "bytes": 449,
+    "ms": 267,
+    "maxms": 267
+   },
+   "queue": {
+    "n": 2,
+    "bytes": 11538,
+    "ms": 1631,
+    "maxms": 840
+   },
+   "peopledirectory": {
+    "n": 1,
+    "bytes": 723,
+    "ms": 784,
+    "maxms": 784
+   },
+   "browse": {
+    "n": 1,
+    "bytes": 605,
+    "ms": 786,
+    "maxms": 786
+   },
+   "inbox": {
+    "n": 1,
+    "bytes": 1958,
+    "ms": 788,
+    "maxms": 788
+   },
+   "assistantstate": {
+    "n": 1,
+    "bytes": 421,
+    "ms": 803,
+    "maxms": 803
+   },
+   "projectdirectory": {
+    "n": 1,
+    "bytes": 592,
+    "ms": 795,
+    "maxms": 795
+   },
+   "clocksrunning": {
+    "n": 1,
+    "bytes": 614,
+    "ms": 797,
+    "maxms": 797
+   },
+   "lookedsince": {
+    "n": 1,
+    "bytes": 451,
+    "ms": 800,
+    "maxms": 800
+   },
+   "memberlist": {
+    "n": 1,
+    "bytes": 1450,
+    "ms": 799,
+    "maxms": 799
+   },
+   "startfrom": {
+    "n": 1,
+    "bytes": 4705,
+    "ms": 806,
+    "maxms": 806
+   },
+   "subscriptionsignin": {
+    "n": 1,
+    "bytes": 495,
+    "ms": 897,
+    "maxms": 897
+   },
+   "/version": {
+    "n": 1,
+    "bytes": 320,
+    "ms": 948,
+    "maxms": 948
+   },
+   "groupidentity": {
+    "n": 2,
+    "bytes": 2035,
+    "ms": 2571,
+    "maxms": 1538
+   },
+   "accountreference": {
+    "n": 1,
+    "bytes": 578,
+    "ms": 1087,
+    "maxms": 1087
+   },
+   "bootstrap": {
+    "n": 1,
+    "bytes": 532,
+    "ms": 1290,
+    "maxms": 1290
+   },
+   "projectrequests": {
+    "n": 1,
+    "bytes": 596,
+    "ms": 1176,
+    "maxms": 1176
+   },
+   "projectlist": {
+    "n": 1,
+    "bytes": 1129,
+    "ms": 1194,
+    "maxms": 1194
+   },
+   "groupkeystate": {
+    "n": 1,
+    "bytes": 410,
+    "ms": 1367,
+    "maxms": 1367
+   },
+   "heldcaptures": {
+    "n": 1,
+    "bytes": 3204,
+    "ms": 1361,
+    "maxms": 1361
+   },
+   "publishedlist": {
+    "n": 1,
+    "bytes": 548,
+    "ms": 1751,
+    "maxms": 1751
+   },
+   "casedrafts": {
+    "n": 3,
+    "bytes": 3481,
+    "ms": 805,
+    "maxms": 276
+   },
+   "wizardsat": {
+    "n": 1,
+    "bytes": 414,
+    "ms": 268,
+    "maxms": 268
+   }
+  },
+  "words": [
+   {
+    "status": 200,
+    "body": -818,
+    "cc": "private, max-age=31536000, immutable",
+    "enc": "gzip",
+    "q": "?op=interfacewords&v=0.86.0",
+    "ms": 12
+   }
+  ],
+  "slowest": [
+   {
+    "op": "publishedlist",
+    "ms": 1751,
+    "wait": 1745,
+    "body": 548
+   },
+   {
+    "op": "groupidentity",
+    "ms": 1538,
+    "wait": 511,
+    "body": 1008
+   },
+   {
+    "op": "groupkeystate",
+    "ms": 1367,
+    "wait": 1363,
+    "body": 410
+   },
+   {
+    "op": "heldcaptures",
+    "ms": 1361,
+    "wait": 1356,
+    "body": 3204
+   },
+   {
+    "op": "bootstrap",
+    "ms": 1290,
+    "wait": 1288,
+    "body": 532
+   }
+  ]
+ },
+ {
+  "path": "/app/queue",
+  "settle_ms": 3436,
+  "api_done_ms": 2934,
+  "requests": 23,
+  "api": 16,
+  "bytes": 27250,
+  "byOp": {
+   "/app/shell-0.86.0.js": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/queue": {
+    "n": 1,
+    "bytes": 2086,
+    "ms": 1292,
+    "maxms": 1292
+   },
+   "/app/assets/civicsmith.css": {
+    "n": 1,
+    "bytes": 284,
+    "ms": 25,
+    "maxms": 25
+   },
+   "/app/assets/shell.css": {
+    "n": 1,
+    "bytes": 314,
+    "ms": 24,
+    "maxms": 24
+   },
+   "/app/assets/fonts/source-sans-3-latin-wght-normal.woff2": {
+    "n": 1,
+    "bytes": 321,
+    "ms": 40,
+    "maxms": 40
+   },
+   "/app/assets/fonts/source-serif-4-latin-opsz-normal.woff2": {
+    "n": 1,
+    "bytes": 396,
+    "ms": 41,
+    "maxms": 41
+   },
+   "whoami": {
+    "n": 1,
+    "bytes": 596,
+    "ms": 155,
+    "maxms": 155
+   },
+   "interfacewords": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 7,
+    "maxms": 7
+   },
+   "/version": {
+    "n": 1,
+    "bytes": 310,
+    "ms": 28,
+    "maxms": 28
+   },
+   "infolevel": {
+    "n": 1,
+    "bytes": 422,
+    "ms": 827,
+    "maxms": 827
+   },
+   "queue": {
+    "n": 3,
+    "bytes": 11941,
+    "ms": 2515,
+    "maxms": 858
+   },
+   "assistantstate": {
+    "n": 1,
+    "bytes": 424,
+    "ms": 836,
+    "maxms": 836
+   },
+   "accountreference": {
+    "n": 1,
+    "bytes": 563,
+    "ms": 837,
+    "maxms": 837
+   },
+   "groupkeystate": {
+    "n": 1,
+    "bytes": 447,
+    "ms": 836,
+    "maxms": 836
+   },
+   "inbox": {
+    "n": 1,
+    "bytes": 1963,
+    "ms": 828,
+    "maxms": 828
+   },
+   "memberlist": {
+    "n": 1,
+    "bytes": 1446,
+    "ms": 829,
+    "maxms": 829
+   },
+   "subscriptionsignin": {
+    "n": 1,
+    "bytes": 482,
+    "ms": 935,
+    "maxms": 935
+   },
+   "groupidentity": {
+    "n": 1,
+    "bytes": 1027,
+    "ms": 1065,
+    "maxms": 1065
+   },
+   "heldcaptures": {
+    "n": 1,
+    "bytes": 3200,
+    "ms": 1122,
+    "maxms": 1122
+   },
+   "bootstrap": {
+    "n": 1,
+    "bytes": 615,
+    "ms": 1350,
+    "maxms": 1350
+   },
+   "wizardsat": {
+    "n": 1,
+    "bytes": 413,
+    "ms": 261,
+    "maxms": 261
+   }
+  },
+  "words": [
+   {
+    "status": 200,
+    "body": -818,
+    "cc": "private, max-age=31536000, immutable",
+    "enc": "gzip",
+    "q": "?op=interfacewords&v=0.86.0",
+    "ms": 7
+   }
+  ],
+  "slowest": [
+   {
+    "op": "bootstrap",
+    "ms": 1350,
+    "wait": 1349,
+    "body": 615
+   },
+   {
+    "op": "/app/queue",
+    "ms": 1292,
+    "wait": 1290,
+    "body": 2086
+   },
+   {
+    "op": "heldcaptures",
+    "ms": 1122,
+    "wait": 1120,
+    "body": 3200
+   },
+   {
+    "op": "groupidentity",
+    "ms": 1065,
+    "wait": 1062,
+    "body": 1027
+   },
+   {
+    "op": "subscriptionsignin",
+    "ms": 935,
+    "wait": 930,
+    "body": 482
+   }
+  ]
+ },
+ {
+  "path": "/app/project/PROJ-2026-5304-walk-085-project",
+  "settle_ms": 3357,
+  "api_done_ms": 2855,
+  "requests": 36,
+  "api": 29,
+  "bytes": 22834,
+  "byOp": {
+   "/app/shell-0.86.0.js": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/project/PROJ-2026-5304-walk-085-project": {
+    "n": 1,
+    "bytes": 2084,
+    "ms": 927,
+    "maxms": 927
+   },
+   "/app/assets/shell.css": {
+    "n": 1,
+    "bytes": 312,
+    "ms": 25,
+    "maxms": 25
+   },
+   "/app/assets/civicsmith.css": {
+    "n": 1,
+    "bytes": 282,
+    "ms": 27,
+    "maxms": 27
+   },
+   "/app/assets/fonts/source-serif-4-latin-opsz-normal.woff2": {
+    "n": 1,
+    "bytes": 320,
+    "ms": 23,
+    "maxms": 23
+   },
+   "/app/assets/fonts/source-sans-3-latin-wght-normal.woff2": {
+    "n": 1,
+    "bytes": 306,
+    "ms": 24,
+    "maxms": 24
+   },
+   "whoami": {
+    "n": 1,
+    "bytes": 651,
+    "ms": 147,
+    "maxms": 147
+   },
+   "interfacewords": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 4,
+    "maxms": 4
+   },
+   "infolevel": {
+    "n": 1,
+    "bytes": 426,
+    "ms": 264,
+    "maxms": 264
+   },
+   "accountreference": {
+    "n": 1,
+    "bytes": 479,
+    "ms": 722,
+    "maxms": 722
+   },
+   "groupkeystate": {
+    "n": 1,
+    "bytes": 413,
+    "ms": 722,
+    "maxms": 722
+   },
+   "heldcaptures": {
+    "n": 1,
+    "bytes": 471,
+    "ms": 702,
+    "maxms": 702
+   },
+   "queue": {
+    "n": 1,
+    "bytes": 413,
+    "ms": 725,
+    "maxms": 725
+   },
+   "projectquestions": {
+    "n": 1,
+    "bytes": 468,
+    "ms": 705,
+    "maxms": 705
+   },
+   "image": {
+    "n": 1,
+    "bytes": 418,
+    "ms": 706,
+    "maxms": 706
+   },
+   "assistantstate": {
+    "n": 1,
+    "bytes": 527,
+    "ms": 728,
+    "maxms": 728
+   },
+   "plans": {
+    "n": 1,
+    "bytes": 429,
+    "ms": 707,
+    "maxms": 707
+   },
+   "list": {
+    "n": 1,
+    "bytes": 2079,
+    "ms": 709,
+    "maxms": 709
+   },
+   "projectdirectory": {
+    "n": 1,
+    "bytes": 602,
+    "ms": 709,
+    "maxms": 709
+   },
+   "subscriptionsignin": {
+    "n": 1,
+    "bytes": 486,
+    "ms": 835,
+    "maxms": 835
+   },
+   "projectownervotes": {
+    "n": 1,
+    "bytes": 654,
+    "ms": 827,
+    "maxms": 827
+   },
+   "strengthbarof": {
+    "n": 1,
+    "bytes": 653,
+    "ms": 832,
+    "maxms": 832
+   },
+   "rerunread": {
+    "n": 1,
+    "bytes": 672,
+    "ms": 832,
+    "maxms": 832
+   },
+   "projectparticipants": {
+    "n": 1,
+    "bytes": 764,
+    "ms": 834,
+    "maxms": 834
+   },
+   "projectvisibility": {
+    "n": 1,
+    "bytes": 659,
+    "ms": 834,
+    "maxms": 834
+   },
+   "determinations": {
+    "n": 1,
+    "bytes": 657,
+    "ms": 850,
+    "maxms": 850
+   },
+   "projectstake": {
+    "n": 1,
+    "bytes": 649,
+    "ms": 860,
+    "maxms": 860
+   },
+   "/version": {
+    "n": 1,
+    "bytes": 327,
+    "ms": 885,
+    "maxms": 885
+   },
+   "projectstage": {
+    "n": 1,
+    "bytes": 650,
+    "ms": 866,
+    "maxms": 866
+   },
+   "groupidentity": {
+    "n": 2,
+    "bytes": 2034,
+    "ms": 2405,
+    "maxms": 1444
+   },
+   "projectlist": {
+    "n": 1,
+    "bytes": 1130,
+    "ms": 276,
+    "maxms": 276
+   },
+   "bootstrap": {
+    "n": 1,
+    "bytes": 621,
+    "ms": 1243,
+    "maxms": 1243
+   },
+   "publishedlist": {
+    "n": 1,
+    "bytes": 526,
+    "ms": 1260,
+    "maxms": 1260
+   },
+   "projectaccountstate": {
+    "n": 1,
+    "bytes": 664,
+    "ms": 438,
+    "maxms": 438
+   },
+   "wizardsat": {
+    "n": 1,
+    "bytes": 1008,
+    "ms": 260,
+    "maxms": 260
+   }
+  },
+  "words": [
+   {
+    "status": 200,
+    "body": -818,
+    "cc": "private, max-age=31536000, immutable",
+    "enc": "gzip",
+    "q": "?op=interfacewords&v=0.86.0",
+    "ms": 4
+   }
+  ],
+  "slowest": [
+   {
+    "op": "groupidentity",
+    "ms": 1444,
+    "wait": 504,
+    "body": 1006
+   },
+   {
+    "op": "publishedlist",
+    "ms": 1260,
+    "wait": 1258,
+    "body": 526
+   },
+   {
+    "op": "bootstrap",
+    "ms": 1243,
+    "wait": 1240,
+    "body": 621
+   },
+   {
+    "op": "groupidentity",
+    "ms": 961,
+    "wait": 958,
+    "body": 1028
+   },
+   {
+    "op": "/app/project/PROJ-2026-5304-walk-085-project",
+    "ms": 927,
+    "wait": 925,
+    "body": 2084
+   }
+  ]
+ },
+ {
+  "path": "/app/held",
+  "settle_ms": 4387,
+  "api_done_ms": 3884,
+  "requests": 23,
+  "api": 16,
+  "bytes": 19868,
+  "byOp": {
+   "/app/shell-0.86.0.js": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/held": {
+    "n": 1,
+    "bytes": 2085,
+    "ms": 1316,
+    "maxms": 1316
+   },
+   "/app/assets/shell.css": {
+    "n": 1,
+    "bytes": 308,
+    "ms": 23,
+    "maxms": 23
+   },
+   "/app/assets/civicsmith.css": {
+    "n": 1,
+    "bytes": 375,
+    "ms": 24,
+    "maxms": 24
+   },
+   "/app/assets/fonts/source-serif-4-latin-opsz-normal.woff2": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/assets/fonts/source-sans-3-latin-wght-normal.woff2": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "whoami": {
+    "n": 1,
+    "bytes": 566,
+    "ms": 146,
+    "maxms": 146
+   },
+   "interfacewords": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 5,
+    "maxms": 5
+   },
+   "/version": {
+    "n": 1,
+    "bytes": 311,
+    "ms": 26,
+    "maxms": 26
+   },
+   "heldcaptures": {
+    "n": 3,
+    "bytes": 8883,
+    "ms": 2612,
+    "maxms": 1814
+   },
+   "accountreference": {
+    "n": 1,
+    "bytes": 478,
+    "ms": 545,
+    "maxms": 545
+   },
+   "subscriptionsignin": {
+    "n": 1,
+    "bytes": 492,
+    "ms": 547,
+    "maxms": 547
+   },
+   "queue": {
+    "n": 1,
+    "bytes": 410,
+    "ms": 548,
+    "maxms": 548
+   },
+   "groupkeystate": {
+    "n": 1,
+    "bytes": 410,
+    "ms": 549,
+    "maxms": 549
+   },
+   "projectlist": {
+    "n": 1,
+    "bytes": 1124,
+    "ms": 543,
+    "maxms": 543
+   },
+   "assistantstate": {
+    "n": 1,
+    "bytes": 511,
+    "ms": 549,
+    "maxms": 549
+   },
+   "infolevel": {
+    "n": 1,
+    "bytes": 439,
+    "ms": 550,
+    "maxms": 550
+   },
+   "groupidentity": {
+    "n": 1,
+    "bytes": 1000,
+    "ms": 786,
+    "maxms": 786
+   },
+   "wizardsat": {
+    "n": 1,
+    "bytes": 416,
+    "ms": 277,
+    "maxms": 277
+   },
+   "memberlist": {
+    "n": 1,
+    "bytes": 1443,
+    "ms": 284,
+    "maxms": 284
+   },
+   "bootstrap": {
+    "n": 1,
+    "bytes": 617,
+    "ms": 1022,
+    "maxms": 1022
+   }
+  },
+  "words": [
+   {
+    "status": 200,
+    "body": -818,
+    "cc": "private, max-age=31536000, immutable",
+    "enc": "gzip",
+    "q": "?op=interfacewords&v=0.86.0",
+    "ms": 5
+   }
+  ],
+  "slowest": [
+   {
+    "op": "heldcaptures",
+    "ms": 1814,
+    "wait": 1812,
+    "body": 5158
+   },
+   {
+    "op": "/app/held",
+    "ms": 1316,
+    "wait": 1313,
+    "body": 2085
+   },
+   {
+    "op": "bootstrap",
+    "ms": 1022,
+    "wait": 1020,
+    "body": 617
+   },
+   {
+    "op": "groupidentity",
+    "ms": 786,
+    "wait": 784,
+    "body": 1000
+   },
+   {
+    "op": "infolevel",
+    "ms": 550,
+    "wait": 547,
+    "body": 439
+   }
+  ]
+ },
+ {
+  "path": "/app/inbox",
+  "settle_ms": 2948,
+  "api_done_ms": 2446,
+  "requests": 19,
+  "api": 12,
+  "bytes": 10373,
+  "byOp": {
+   "/app/shell-0.86.0.js": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/inbox": {
+    "n": 1,
+    "bytes": 2082,
+    "ms": 1137,
+    "maxms": 1137
+   },
+   "/app/assets/civicsmith.css": {
+    "n": 1,
+    "bytes": 313,
+    "ms": 23,
+    "maxms": 23
+   },
+   "/app/assets/shell.css": {
+    "n": 1,
+    "bytes": 290,
+    "ms": 24,
+    "maxms": 24
+   },
+   "/app/assets/fonts/source-serif-4-latin-opsz-normal.woff2": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/assets/fonts/source-sans-3-latin-wght-normal.woff2": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "whoami": {
+    "n": 1,
+    "bytes": 594,
+    "ms": 148,
+    "maxms": 148
+   },
+   "interfacewords": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 7,
+    "maxms": 7
+   },
+   "/version": {
+    "n": 1,
+    "bytes": 402,
+    "ms": 29,
+    "maxms": 29
+   },
+   "groupkeystate": {
+    "n": 1,
+    "bytes": 411,
+    "ms": 267,
+    "maxms": 267
+   },
+   "assistantstate": {
+    "n": 1,
+    "bytes": 427,
+    "ms": 670,
+    "maxms": 670
+   },
+   "queue": {
+    "n": 1,
+    "bytes": 408,
+    "ms": 671,
+    "maxms": 671
+   },
+   "subscriptionsignin": {
+    "n": 1,
+    "bytes": 494,
+    "ms": 672,
+    "maxms": 672
+   },
+   "accountreference": {
+    "n": 1,
+    "bytes": 483,
+    "ms": 673,
+    "maxms": 673
+   },
+   "infolevel": {
+    "n": 1,
+    "bytes": 422,
+    "ms": 674,
+    "maxms": 674
+   },
+   "inbox": {
+    "n": 1,
+    "bytes": 1997,
+    "ms": 667,
+    "maxms": 667
+   },
+   "groupidentity": {
+    "n": 1,
+    "bytes": 1086,
+    "ms": 904,
+    "maxms": 904
+   },
+   "wizardsat": {
+    "n": 1,
+    "bytes": 440,
+    "ms": 259,
+    "maxms": 259
+   },
+   "bootstrap": {
+    "n": 1,
+    "bytes": 524,
+    "ms": 1261,
+    "maxms": 1261
+   }
+  },
+  "words": [
+   {
+    "status": 200,
+    "body": -818,
+    "cc": "private, max-age=31536000, immutable",
+    "enc": "gzip",
+    "q": "?op=interfacewords&v=0.86.0",
+    "ms": 7
+   }
+  ],
+  "slowest": [
+   {
+    "op": "bootstrap",
+    "ms": 1261,
+    "wait": 1259,
+    "body": 524
+   },
+   {
+    "op": "/app/inbox",
+    "ms": 1137,
+    "wait": 1135,
+    "body": 2082
+   },
+   {
+    "op": "groupidentity",
+    "ms": 904,
+    "wait": 899,
+    "body": 1086
+   },
+   {
+    "op": "infolevel",
+    "ms": 674,
+    "wait": 669,
+    "body": 422
+   },
+   {
+    "op": "accountreference",
+    "ms": 673,
+    "wait": 668,
+    "body": 483
+   }
+  ]
+ },
+ {
+  "path": "/app/document/INFO-2026-0001-walk085-sample-txt",
+  "settle_ms": 1989,
+  "api_done_ms": 1488,
+  "requests": 21,
+  "api": 14,
+  "bytes": 11437,
+  "byOp": {
+   "/app/shell-0.86.0.js": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/document/INFO-2026-0001-walk085-sample-txt": {
+    "n": 1,
+    "bytes": 2080,
+    "ms": 331,
+    "maxms": 331
+   },
+   "/app/assets/shell.css": {
+    "n": 1,
+    "bytes": 312,
+    "ms": 24,
+    "maxms": 24
+   },
+   "/app/assets/civicsmith.css": {
+    "n": 1,
+    "bytes": 284,
+    "ms": 26,
+    "maxms": 26
+   },
+   "/app/assets/fonts/source-serif-4-latin-opsz-normal.woff2": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/assets/fonts/source-sans-3-latin-wght-normal.woff2": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "whoami": {
+    "n": 1,
+    "bytes": 570,
+    "ms": 144,
+    "maxms": 144
+   },
+   "interfacewords": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 6,
+    "maxms": 6
+   },
+   "/version": {
+    "n": 1,
+    "bytes": 403,
+    "ms": 31,
+    "maxms": 31
+   },
+   "assistantstate": {
+    "n": 1,
+    "bytes": 430,
+    "ms": 534,
+    "maxms": 534
+   },
+   "infolevel": {
+    "n": 1,
+    "bytes": 423,
+    "ms": 535,
+    "maxms": 535
+   },
+   "image": {
+    "n": 1,
+    "bytes": 417,
+    "ms": 527,
+    "maxms": 527
+   },
+   "queue": {
+    "n": 1,
+    "bytes": 405,
+    "ms": 537,
+    "maxms": 537
+   },
+   "groupkeystate": {
+    "n": 1,
+    "bytes": 410,
+    "ms": 537,
+    "maxms": 537
+   },
+   "accountreference": {
+    "n": 1,
+    "bytes": 476,
+    "ms": 539,
+    "maxms": 539
+   },
+   "list": {
+    "n": 1,
+    "bytes": 2108,
+    "ms": 531,
+    "maxms": 531
+   },
+   "subscriptionsignin": {
+    "n": 1,
+    "bytes": 573,
+    "ms": 643,
+    "maxms": 643
+   },
+   "backlinks": {
+    "n": 1,
+    "bytes": 572,
+    "ms": 689,
+    "maxms": 689
+   },
+   "groupidentity": {
+    "n": 1,
+    "bytes": 1004,
+    "ms": 780,
+    "maxms": 780
+   },
+   "bootstrap": {
+    "n": 1,
+    "bytes": 549,
+    "ms": 1039,
+    "maxms": 1039
+   },
+   "wizardsat": {
+    "n": 1,
+    "bytes": 421,
+    "ms": 262,
+    "maxms": 262
+   }
+  },
+  "words": [
+   {
+    "status": 200,
+    "body": -818,
+    "cc": "private, max-age=31536000, immutable",
+    "enc": "gzip",
+    "q": "?op=interfacewords&v=0.86.0",
+    "ms": 6
+   }
+  ],
+  "slowest": [
+   {
+    "op": "bootstrap",
+    "ms": 1039,
+    "wait": 1037,
+    "body": 549
+   },
+   {
+    "op": "groupidentity",
+    "ms": 780,
+    "wait": 775,
+    "body": 1004
+   },
+   {
+    "op": "backlinks",
+    "ms": 689,
+    "wait": 686,
+    "body": 572
+   },
+   {
+    "op": "subscriptionsignin",
+    "ms": 643,
+    "wait": 639,
+    "body": 573
+   },
+   {
+    "op": "accountreference",
+    "ms": 539,
+    "wait": 534,
+    "body": 476
+   }
+  ]
+ },
+ {
+  "path": "/app/capture",
+  "settle_ms": 1909,
+  "api_done_ms": 1407,
+  "requests": 21,
+  "api": 14,
+  "bytes": 16312,
+  "byOp": {
+   "/app/shell-0.86.0.js": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/capture": {
+    "n": 1,
+    "bytes": 2055,
+    "ms": 265,
+    "maxms": 265
+   },
+   "/app/assets/shell.css": {
+    "n": 1,
+    "bytes": 305,
+    "ms": 23,
+    "maxms": 23
+   },
+   "/app/assets/civicsmith.css": {
+    "n": 1,
+    "bytes": 286,
+    "ms": 24,
+    "maxms": 24
+   },
+   "/app/assets/fonts/source-serif-4-latin-opsz-normal.woff2": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/assets/fonts/source-sans-3-latin-wght-normal.woff2": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "whoami": {
+    "n": 1,
+    "bytes": 569,
+    "ms": 144,
+    "maxms": 144
+   },
+   "interfacewords": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 5,
+    "maxms": 5
+   },
+   "/version": {
+    "n": 1,
+    "bytes": 310,
+    "ms": 30,
+    "maxms": 30
+   },
+   "accountreference": {
+    "n": 1,
+    "bytes": 476,
+    "ms": 268,
+    "maxms": 268
+   },
+   "infolevel": {
+    "n": 1,
+    "bytes": 421,
+    "ms": 560,
+    "maxms": 560
+   },
+   "queue": {
+    "n": 1,
+    "bytes": 409,
+    "ms": 563,
+    "maxms": 563
+   },
+   "assistantstate": {
+    "n": 1,
+    "bytes": 421,
+    "ms": 564,
+    "maxms": 564
+   },
+   "groupkeystate": {
+    "n": 1,
+    "bytes": 523,
+    "ms": 564,
+    "maxms": 564
+   },
+   "capturerequests": {
+    "n": 1,
+    "bytes": 435,
+    "ms": 546,
+    "maxms": 546
+   },
+   "opencaptures": {
+    "n": 1,
+    "bytes": 439,
+    "ms": 552,
+    "maxms": 552
+   },
+   "heldcaptures": {
+    "n": 1,
+    "bytes": 5590,
+    "ms": 671,
+    "maxms": 671
+   },
+   "subscriptionsignin": {
+    "n": 1,
+    "bytes": 489,
+    "ms": 687,
+    "maxms": 687
+   },
+   "groupidentity": {
+    "n": 1,
+    "bytes": 1006,
+    "ms": 793,
+    "maxms": 793
+   },
+   "bootstrap": {
+    "n": 1,
+    "bytes": 520,
+    "ms": 1026,
+    "maxms": 1026
+   },
+   "wizardsat": {
+    "n": 1,
+    "bytes": 2058,
+    "ms": 260,
+    "maxms": 260
+   }
+  },
+  "words": [
+   {
+    "status": 200,
+    "body": -818,
+    "cc": "private, max-age=31536000, immutable",
+    "enc": "gzip",
+    "q": "?op=interfacewords&v=0.86.0",
+    "ms": 5
+   }
+  ],
+  "slowest": [
+   {
+    "op": "bootstrap",
+    "ms": 1026,
+    "wait": 1025,
+    "body": 520
+   },
+   {
+    "op": "groupidentity",
+    "ms": 793,
+    "wait": 789,
+    "body": 1006
+   },
+   {
+    "op": "subscriptionsignin",
+    "ms": 687,
+    "wait": 684,
+    "body": 489
+   },
+   {
+    "op": "heldcaptures",
+    "ms": 671,
+    "wait": 668,
+    "body": 5590
+   },
+   {
+    "op": "assistantstate",
+    "ms": 564,
+    "wait": 560,
+    "body": 421
+   }
+  ]
+ },
+ {
+  "path": "/app/projects",
+  "settle_ms": 2548,
+  "api_done_ms": 2046,
+  "requests": 23,
+  "api": 16,
+  "bytes": 12684,
+  "byOp": {
+   "/app/shell-0.86.0.js": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/projects": {
+    "n": 1,
+    "bytes": 2171,
+    "ms": 964,
+    "maxms": 964
+   },
+   "/app/assets/civicsmith.css": {
+    "n": 1,
+    "bytes": 308,
+    "ms": 23,
+    "maxms": 23
+   },
+   "/app/assets/shell.css": {
+    "n": 1,
+    "bytes": 288,
+    "ms": 24,
+    "maxms": 24
+   },
+   "/app/assets/fonts/source-serif-4-latin-opsz-normal.woff2": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "/app/assets/fonts/source-sans-3-latin-wght-normal.woff2": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 0,
+    "maxms": 0
+   },
+   "whoami": {
+    "n": 1,
+    "bytes": 576,
+    "ms": 144,
+    "maxms": 144
+   },
+   "interfacewords": {
+    "n": 1,
+    "bytes": 0,
+    "ms": 6,
+    "maxms": 6
+   },
+   "/version": {
+    "n": 1,
+    "bytes": 315,
+    "ms": 29,
+    "maxms": 29
+   },
+   "projectdirectory": {
+    "n": 1,
+    "bytes": 617,
+    "ms": 517,
+    "maxms": 517
+   },
+   "assistantstate": {
+    "n": 1,
+    "bytes": 420,
+    "ms": 527,
+    "maxms": 527
+   },
+   "infolevel": {
+    "n": 1,
+    "bytes": 512,
+    "ms": 528,
+    "maxms": 528
+   },
+   "themeread": {
+    "n": 1,
+    "bytes": 442,
+    "ms": 520,
+    "maxms": 520
+   },
+   "queue": {
+    "n": 1,
+    "bytes": 416,
+    "ms": 530,
+    "maxms": 530
+   },
+   "projectlist": {
+    "n": 1,
+    "bytes": 1133,
+    "ms": 522,
+    "maxms": 522
+   },
+   "groupkeystate": {
+    "n": 1,
+    "bytes": 429,
+    "ms": 530,
+    "maxms": 530
+   },
+   "projectrequests": {
+    "n": 1,
+    "bytes": 599,
+    "ms": 523,
+    "maxms": 523
+   },
+   "memberlist": {
+    "n": 1,
+    "bytes": 1464,
+    "ms": 523,
+    "maxms": 523
+   },
+   "accountreference": {
+    "n": 1,
+    "bytes": 475,
+    "ms": 533,
+    "maxms": 533
+   },
+   "subscriptionsignin": {
+    "n": 1,
+    "bytes": 577,
+    "ms": 631,
+    "maxms": 631
+   },
+   "groupidentity": {
+    "n": 1,
+    "bytes": 999,
+    "ms": 771,
+    "maxms": 771
+   },
+   "wizardsat": {
+    "n": 1,
+    "bytes": 420,
+    "ms": 263,
+    "maxms": 263
+   },
+   "bootstrap": {
+    "n": 1,
+    "bytes": 523,
+    "ms": 1038,
+    "maxms": 1038
+   }
+  },
+  "words": [
+   {
+    "status": 200,
+    "body": -818,
+    "cc": "private, max-age=31536000, immutable",
+    "enc": "gzip",
+    "q": "?op=interfacewords&v=0.86.0",
+    "ms": 6
+   }
+  ],
+  "slowest": [
+   {
+    "op": "bootstrap",
+    "ms": 1038,
+    "wait": 1036,
+    "body": 523
+   },
+   {
+    "op": "/app/projects",
+    "ms": 964,
+    "wait": 962,
+    "body": 2171
+   },
+   {
+    "op": "groupidentity",
+    "ms": 771,
+    "wait": 766,
+    "body": 999
+   },
+   {
+    "op": "subscriptionsignin",
+    "ms": 631,
+    "wait": 628,
+    "body": 577
+   },
+   {
+    "op": "accountreference",
+    "ms": 533,
+    "wait": 529,
+    "body": 475
+   }
+  ]
+ }
+]
