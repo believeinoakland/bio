@@ -440,10 +440,13 @@ export class RecordCore {
    *  comes after this module's), a virtual table is not armed, and the counter's own table never is. Idempotent; writes no
    *  record row. */
   #watch() {
+    const made = new Map(this.#rows(`SELECT name, sql FROM sqlite_master WHERE type='table'`).map((r) => [r.name, r.sql]));
+    if (!made.has("record_counter")) return;       /* a store from before R89: its triggers wait for `migrate`, which makes the counter */
+    const armed = new Set(this.#rows(`SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'rc_w_%'`).map((r) => r.name));
+    /* A table its owner dropped and made again (a rebuild by rename) lost its triggers: every table once seen armed is asked again. */
+    for (const name of [...this.#watched]) if (!["i", "u", "d"].every((l) => armed.has(`rc_w_${name}_${l}`))) this.#watched.delete(name);
     const pending = this.#order.filter((d) => d.name !== "record_counter" && !this.#watched.has(d.name));
     if (!pending.length) return;
-    const made = new Map(this.#rows(`SELECT name, sql FROM sqlite_master WHERE type='table'`).map((r) => [r.name, r.sql]));
-    const armed = new Set(this.#rows(`SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'rc_w_%'`).map((r) => r.name));
     let fresh = false;
     for (const { name } of pending) {
       const ddl = made.get(name);

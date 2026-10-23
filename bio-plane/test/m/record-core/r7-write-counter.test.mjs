@@ -179,3 +179,29 @@ test("R89, R90: the counter is not itself purged or counted among the record's t
   assert.ok(rc.writeCount() > n);
   assert.equal(rows(s, `SELECT COUNT(*) AS c FROM record_counter`)[0].c, 1);
 });
+
+test("R89: a table its owner rebuilt by drop and rename keeps counting, and a store from before the counter takes writes until migrate makes it", () => {
+  const { s, rc } = fresh();
+  otherModule(s, rc);
+  s.sql.exec(`INSERT INTO other_rows VALUES ('a','1')`);
+  s.sql.exec(`CREATE TABLE other_rows_new (k TEXT PRIMARY KEY, v TEXT)`);
+  s.sql.exec(`INSERT INTO other_rows_new SELECT k, v FROM other_rows`);
+  s.sql.exec(`DROP TABLE other_rows`);
+  s.sql.exec(`ALTER TABLE other_rows_new RENAME TO other_rows`);
+  rc.writeCount();
+  assert.ok(rises(rc, () => s.sql.exec(`INSERT INTO other_rows VALUES ('b','1')`)).rose, "the rebuilt table is armed again");
+
+  const old = storage();
+  const had = recordOf({ storage: old });
+  had.migrate();
+  for (const t of rows(old, `SELECT name FROM sqlite_master WHERE type='trigger'`)) old.sql.exec(`DROP TRIGGER "${t.name}"`);
+  old.sql.exec(`DROP TABLE record_counter`);
+  const upgraded = recordOf({ storage: { sql: old.sql, transactionSync: old.transactionSync } });
+  upgraded.declareTable("other", [{ name: "other_rows", purge: "clear", expunge: "none", export: "never", sight: "group",
+    derive: "stored", version_chain: false }]);
+  old.sql.exec(`CREATE TABLE other_rows (k TEXT)`);
+  assert.doesNotThrow(() => { old.sql.exec(`INSERT INTO other_rows VALUES ('x')`); put(upgraded, "INFO-2026-0001", "k1"); }, "no write fails before migrate");
+  upgraded.migrate();
+  const n = upgraded.writeCount();
+  assert.ok(rises(upgraded, () => old.sql.exec(`INSERT INTO other_rows VALUES ('y')`)).rose && upgraded.writeCount() > n);
+});
