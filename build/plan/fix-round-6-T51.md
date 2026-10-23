@@ -517,7 +517,9 @@ Every job: medium effort, claude-sonnet-5-5; its suites then `build/plan/impact.
 | 42 | case-import (L8) | G50 (confirm, `/4` imported, the silent `INSERT OR IGNORE` drop tested; CASE-IMPORT #16; red until 39-41 merge) | case-import |
 | 43 | case-disclosures (L8) | G50 (test only: the end-to-end seam through `materialsJudged`, `materialRows`, `holdMaterials`; CASE-DISCLOSURES #18; red until 39-41 merge) | case-disclosures |
 | 44 | screens-publish (L11) | G51 (the keys list; SCREENS-PUBLISH #19) | screens-publish |
-| 44a | wizard-scripts | G53 (the registry re-taken at `f72b2f8a4c`; WIZARD-SCRIPTS #24; merges before 45) | wizard-scripts |
+| 44a | wizard-scripts (L11, 141) | G53 (the registry re-taken at `f72b2f8a4c`, vendored, the commit-equality test; WIZARD-SCRIPTS #24; merges first) | wizard-scripts |
+| 44b | op-declarations (L11, 153) | G53 (`OWED_BY_FIX_ROUND` gains the 31 T52 ops; OP-DECLARATIONS #36, haiku; `t50` red by name until 44a merges) | op-declarations |
+| 44c | interface-shell (L11, 159) | G53 (`RE_POINTS.security` drops `scanmirror`; INTERFACE-SHELL #19, haiku; `t50`, `fixround4` red by name until 44a merges) | interface-shell |
 | 45 | screens-action (L11) | G52 (the in-place Join; SCREENS-ACTION #16; red by name until 44a merges) | screens-action |
 
 **BOB's `uses` edges (recorded here, `order.mjs` unchanged):** notice-producers gains `capture`; screens-inquiry already has `provenance`; screens-daily and screens-publish gain nothing (they call the ops). **Cross-job notes:** scheduler's B3/B4 must be merged before plane's seam tests can pass (scheduler is layer 10, before plane; until then they stay red by name). SCHEDULER #39 names one test in `bio-plane/test/m/plane/plane.test.mjs` that encodes "only pulled earlier": BOB fixes it, test only (K4297 (2)). The plane job must run `plane` `release` (R24) knowing it is accepted by name.
