@@ -249,4 +249,4 @@ COMPLETE (J14): G1 provider done; see record section J14. Named reds accepted at
 **Proposed requirement line (BOB writes it):**
 - **R40** (T51 G54, fix round 6; K4702; amends R12 and R13) **The plane's Workers Logs are switched on.** Both uploads' metadata (`uploadInstall`, R12; `uploadUpdate`, R13) carry `observability: {enabled: true}`, the exported constant `OBSERVABILITY`, which equals the setting of `bio-plane/wrangler.jsonc`; the account's settings for the plane script (`/workers/scripts/<slug>/settings`) are read back after the upload and, unless they state `observability.enabled` as true, the act stops (`installer.fleet.why.program`, a stand-in; row owed `installer-steps.plane.observability`) before the schedule is set. No release statement carries it, so an older signed release needs nothing. Test: both acts send it; the constant equals the wrangler setting; an account that holds none, or disabled, stops both with nothing after; control: an account that keeps it completes.
 
-Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 6, module lines 1951
+Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 6, module lines 2091
