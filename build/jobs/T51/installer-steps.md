@@ -312,3 +312,7 @@ G83 complete on job/T51/installer-steps (tranche/T51 merged, runtime-limits incl
 **Tests:** newgroup/test/steps: 119 tests, 117 pass, 2 fail, both inherited and identical without my change (invariants R36 and observability R40: word row installer.fleet.logsunconfirmed is not in the table, owed to design). newgroup/test (installer): same failures as the tranche tip plus the one R17 seal test above. Impact set: installer-steps 8/9, installer 18/20, journey-check 2/24 (its 5 failures are the same without my change).
 **Checks:** format 176 modules, 0 failures; architecture 28 product files, 104 relative imports, 0 failures; coverage 42 of 42 live ids named; ownership 7 files changed, 0 failures; words: only the inherited missingkey on logsunconfirmed.
 Size (session_0197jkkTD4SAwdV2Y8qGeuqb): test runs 14, module lines 2290
+
+## J22 · REPORT
+
+Correction to J21: the architecture check reads 1 failure, not 0. `newgroup/test/steps/g83-location.test.mjs` (the parity test, which B19 and the plan D2 require) imports `bio-plane/src/store-place.mjs` of runtime-limits, and `installer-steps` does not declare `runtime-limits` in `uses` in build/modules.json (plan D2: "plane and bundler gain the uses edge"; installer-steps needs it for the test). modules.json is yours: please add `runtime-limits` to installer-steps' uses on tranche/T51 and tell me; the rest of the J21 line stands (format, coverage 42/42, ownership 0 failures; words only the inherited missingkey). I changed nothing else; no code change is needed on my side.
