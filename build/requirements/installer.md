@@ -138,7 +138,7 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - **R81** (T51 CR-23; K4121; `installer-steps` R37) `newgroup/src/index.mjs` no longer re-exports `MEMBER_OBJECTS` (gone with installer-steps R37); its export-list test drops the name. Test: the module's export list holds no `MEMBER_OBJECTS`.
 - **R82** (T51 fix round 6, G39; bundler R2; K4616, K4617, K4621) The installer's bundle (`newgroup/dist/newgroup.bundled.mjs`) is pure ASCII: no byte over 0x7F, so V8 holds its source one byte a character. The build is bundler's recipe, `bundler.asciiOptions()` with `bundler.asciiOutput(bytes)` over the result, in `scripts/build.mjs`'s `bundleOptions` and `bundleText` (the one function the build and the freshness guard call), the installer stating no option of its own; a character that pass will not edit refuses the build `[NON_ASCII_REMAINS]`. The bundle answers every route as the source does. Test: `bundleText` holds no character above U+007F, its options equal `asciiOptions()`, and the built bundle's `/`, `/update` and 404 answers equal the source's; control: `newgroup-bundle-fresh` arm (D) reads the committed bundle.
 
-- **R83** (fix round 7 G83; K4746, K4747, K4752; `installer-steps` R41, R42) **The team's room is created near the founder.** `POST /begin` reads the founder's request's `cf` (continent, longitude), carries the hint `installer-steps.locationHintFor` answers through the install's cookie to `/callback`, and the install hands it to the plane's upload; a request with no `cf`, or a `null` hint, installs exactly as today. No page, word or dialog changes in T51 (the region shown and the picker are N1273). *(not yet met: T51)*
+- **R83** (fix round 7 G83; K4746, K4747, K4752; `installer-steps` R41, R42) **The team's room is created near the founder.** `POST /begin` reads the founder's request's `cf` (continent, longitude), carries the hint `installer-steps.locationHintFor` answers through the install's cookie to `/callback`, and the install hands it to the plane's upload; a request with no `cf`, or a `null` hint, installs exactly as today. No page, word or dialog changes in T51 (the region shown and the picker are N1273).
 
 ## Private
 
@@ -159,7 +159,7 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - **R28** Its configuration pins the project's Cloudflare account.
 - **R29** There is one verifier: every signature check goes through `signatures`, and there is no second implementation.
 - **R30** The slug grammar and the member binding names are `instance-setup`'s, imported, never copied.
-- **R31** No place is named in this module's behaviour.
+- **R31** No place is named in this module's behaviour. A Cloudflare location hint is where the hosting platform runs the team's room, not a jurisdiction and not a place the product acts on (fix round 7, G3; K4752).
 
 ### Satisfies
 
