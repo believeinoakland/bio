@@ -871,13 +871,15 @@ function allUnitsOf(i2text) {
     : null;
 }
 /* The UTF-8 length of a string, counted without encoding it (the wire charges every unit, and a book is thousands). */
-export function utf8Length(s) {
+export function utf8Length(s) { return utf8Range(s, 0, s.length); }
+/* The UTF-8 length of `s.slice(from, to)`, counted in place (a pair cut at `to` is a lone surrogate there, as in the slice). */
+function utf8Range(s, from, to) {
   let n = 0;
-  for (let i = 0; i < s.length; i++) {
+  for (let i = from; i < to; i++) {
     const c = s.charCodeAt(i);
     if (c < 0x80) n += 1;
     else if (c < 0x800) n += 2;
-    else if (c >= 0xd800 && c <= 0xdbff && i + 1 < s.length && (s.charCodeAt(i + 1) & 0xfc00) === 0xdc00) { n += 4; i++; }
+    else if (c >= 0xd800 && c <= 0xdbff && i + 1 < to && (s.charCodeAt(i + 1) & 0xfc00) === 0xdc00) { n += 4; i++; }
     else n += 3;
   }
   return n;
@@ -940,10 +942,10 @@ const continuesWord = (before, chunk) => before.length > 0 && chunk.length > 0 &
    text has plus the words an OCR region below its floor held (carried as a count on the page, `unread_words`, never
    as text); `words_read` is the words of the units `textUnitsFor` keeps, a unit cut to its cap by the prefix it keeps. They
    are equal when the whole text was read. */
-export function textWordsFor(i2text, keptUnits = undefined, { budget } = {}) {
+export function textWordsFor(i2text, keptUnits = undefined, { budget, all: held } = {}) {
   const kept = keptUnits !== undefined ? keptUnits : textUnitsFor(i2text, { budget }).textUnits;
   if (!kept) return null;
-  const all = allUnitsOf(i2text) || [];
+  const all = held || allUnitsOf(i2text) || [];   /* `held`: the very list `allUnitsOf(i2text)` gave, handed by a caller that has it */
   const unread = (Array.isArray(i2text.pages) ? i2text.pages : [])
     .reduce((n, p) => n + (p && Number.isInteger(p.unread_words) && p.unread_words > 0 ? p.unread_words : 0), 0);
   const sum = (units) => units.reduce((n, u) => n + wordsOfUnit(u), 0);
@@ -1381,41 +1383,114 @@ function sheetBlocks(u, sheet) {
   return longRow ? blocks.map((b) => ({ ...b, truncated: true })) : blocks;
 }
 
+/* G48 (fix round 6; K4679): the way a sheet over the unit cap is cut into blocks (R41), planned before it is built. One
+   walk over the text, line by line with no line list, finds each block's lines, its UTF-8 bytes and whether a row is over
+   the cap; a block is built from its own span of the text when a piece asks for it (`sheetBlockAt`), so a first tick that
+   reads the first piece builds the first piece's blocks and counts the rest. The walk is `sheetBlocks`' own, line for line.
+   Null when the header leaves no room beside a row (the eager `sheetBlocks` cuts that sheet). */
+function sheetPlan(u) {
+  const text = u.text, cap = CAPTURE_TEXT_UNIT_CAP;
+  const nl0 = text.indexOf("\n");
+  const headLen = nl0 < 0 ? text.length : nl0;
+  if (headLen + 2 > cap) return null;
+  const limit = cap - headLen - 1;
+  const headBytes = utf8Range(text, 0, headLen);
+  const blocks = [];
+  let cur = null, longRow = false, i = 0, pos = 0;
+  const close = () => {
+    cur.end = i;
+    cur.bytes = (cur.first > 0 ? headBytes + 1 : 0) + cur.lineBytes + (cur.end - cur.first - 1);
+    blocks.push(cur); cur = null;
+  };
+  for (;;) {
+    const e = text.indexOf("\n", pos);
+    const end = e < 0 ? text.length : e;
+    const len = end - pos;
+    if (len > limit) longRow = true;
+    const budget = i > 0 ? limit : cap;
+    const keep = len > budget ? budget : len;   /* a single row over the cap stays one cut row, flagged */
+    if (cur && cur.size + keep + 1 > budget) close();
+    if (!cur) cur = { first: i, from: pos, to: end, size: 0, lineBytes: 0 };
+    cur.size += keep + 1; cur.lineBytes += utf8Range(text, pos, pos + keep); cur.to = end;
+    i++;
+    if (e < 0) break;
+    pos = e + 1;
+  }
+  close();
+  return { blocks, lines: i, longRow, headLen, headBytes };
+}
+/* One planned block built: the unit `sheetBlocks` would have made, `seq` its place in the whole list. */
+function sheetBlockAt(u, sheet, plan, k, seq) {
+  const b = plan.blocks[k], cap = CAPTURE_TEXT_UNIT_CAP;
+  const head = u.text.slice(0, plan.headLen);
+  if (plan.rows === undefined)   /* checked once for the sheet, at its first block */
+    plan.rows = sheet && Array.isArray(sheet.lineRows) && sheet.lineRows.length === plan.lines
+      && sheet.lineRows.every(Number.isInteger) ? sheet.lineRows : null;
+  const rows = plan.rows;
+  const corner = rows && typeof u.extent.range === "string" ? /:\$?([A-Za-z]{1,3})\$?\d+$/.exec(u.extent.range) : null;
+  const lastCol = corner ? corner[1].toUpperCase() : null;
+  const lines = u.text.slice(b.from, b.to).split("\n").map((l, j) => {
+    const budget = b.first + j > 0 ? cap - plan.headLen - 1 : cap;
+    return l.length > budget ? l.slice(0, budget) : l;
+  });
+  const text = b.first > 0 ? `${head}\n${lines.join("\n")}` : lines.join("\n");
+  const range = rows && lastCol ? `A${rows[b.first]}:${lastCol}${rows[b.end - 1]}` : u.extent.range;
+  const unit = { extent: { ...u.extent, range }, seq, text, ...(plan.longRow ? { truncated: true } : {}) };
+  return withOwnWords(unit, b.first > 0 ? wordsIn(head) : 0);
+}
+
 /* The units of a text from a format entry, the way a piece carries them (R41): `allUnitsOf`'s, a sheet over the unit cap
    in blocks of rows, a `doc-para` over it in runs; a page or slide over it is left for the wire's cut, flagged. `seq` is the
-   place in this whole list. */
-function pieceUnitsOf(i2text) {
-  const base = allUnitsOf(i2text) || [];
+   place in this whole list. The list is a plan (G48): each entry knows its UTF-8 bytes, and a sheet's block is built only
+   when asked for (`unitAt`), so the totals (`n`, `bytesBefore`) cost a counting walk and a piece costs its own blocks.
+   `base` is `allUnitsOf(i2text)` when the caller holds it. */
+function pieceUnitPlan(i2text, base = allUnitsOf(i2text) || []) {
   const sheets = Array.isArray(i2text && i2text.sheets) ? i2text.sheets : [];
-  const out = [];
+  const entries = [];   /* {bytes, unit, make?} */
+  const push = (bytes, unit, make) => entries.push({ bytes, unit, make });
   for (const u of base) {
     let parts;
-    if (u.extent.kind === "sheet-range" && u.text.length > CAPTURE_TEXT_UNIT_CAP)
+    if (u.extent.kind === "sheet-range" && u.text.length > CAPTURE_TEXT_UNIT_CAP) {
+      const sp = sheetPlan(u);
+      if (sp) {
+        const first = entries.length;
+        sp.blocks.forEach((b, k) => push(b.bytes, null, () => sheetBlockAt(u, sheets[u.seq], sp, k, first + k)));
+        continue;
+      }
       parts = sheetBlocks({ ...u, extent: { ...u.extent, range: u.extent.range } }, sheets[u.seq]);
+    }
     else if (u.extent.kind === "doc-para" && u.text.length > CAPTURE_TEXT_UNIT_CAP)
     { const cs = chunksOf(u.text);
       parts = cs.map((t, k) => ({ ...u, extent: { ...u.extent, run: k }, text: t, ...(k > 0 && continuesWord(cs[k - 1], t) ? { leadWords: 1 } : {}) })); }
     else parts = [u];
     for (const { leadWords = 0, ...p } of parts) {
       const cut = p.text.length > CAPTURE_TEXT_UNIT_CAP;
-      out.push(withOwnWords({ ...p, seq: out.length, text: cut ? p.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : p.text, ...(cut || p.truncated ? { truncated: true } : {}) }, leadWords));
+      const unit = withOwnWords({ ...p, seq: entries.length, text: cut ? p.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : p.text, ...(cut || p.truncated ? { truncated: true } : {}) }, leadWords);
+      push(utf8Length(unit.text), unit);
     }
   }
-  return out;
+  return unitPlanOf(entries);
 }
+/* A plan over entries `{bytes, unit, make?}`: `n`, the bytes of unit `k`, unit `k` (built once), the bytes of the units before `k`. */
+function unitPlanOf(entries) {
+  return { n: entries.length,
+           sizeAt: (k) => entries[k].bytes,
+           unitAt: (k) => (entries[k].unit ??= entries[k].make()),
+           bytesBefore: (upto) => { let n = 0; for (let k = 0; k < upto; k++) n += entries[k].bytes; return n; } };
+}
+const unitPlanOfList = (list) => unitPlanOf(list.map((unit) => ({ bytes: utf8Length(unit.text), unit })));
 
-/* A piece of a ready list of units, from index `i`. */
-function listPiece(all, { i, budget, maxUnits }) {
+/* A piece of a ready plan of units, from index `i`. */
+function listPiece(plan, { i, budget, maxUnits }) {
   const units = [];
   let room = budget, at = i;
-  for (; at < all.length; at++) {
-    const size = utf8Length(all[at].text) + ACQUIRE_TEXT_UNIT_ENVELOPE;
+  for (; at < plan.n; at++) {
+    const size = plan.sizeAt(at) + ACQUIRE_TEXT_UNIT_ENVELOPE;
     if (!fits(units, size, room, maxUnits)) break;
-    room -= size; units.push(all[at]);
+    room -= size; units.push(plan.unitAt(at));
   }
-  return { units, more: at < all.length, next: at };
+  return { units, more: at < plan.n, next: at };
 }
-const bytesOfUnits = (all, upto) => { let n = 0; for (let k = 0; k < upto; k++) n += utf8Length(all[k].text); return n; };
 
 /* Reads a cursor against what is in hand: `{at}` or `{refused}`. `shape` is "t" (a text read as text) or "u" (a list). */
 function cursorIn(cursor, { sha, shape, chars, n }) {
@@ -1444,7 +1519,8 @@ function rangeCursorIn(cursor, { sha }) {
    within the budget; `next` is the first page not yet read. */
 function rangePieceAnswer(i2text, { sha, from, count, total, budget, maxUnits }) {
   const all = (allUnitsOf(i2text) || []).map((u) => ({ ...u, seq: u.extent.page }));
-  const p = listPiece(all, { i: 0, budget, maxUnits });
+  const plan = unitPlanOfList(all);
+  const p = listPiece(plan, { i: 0, budget, maxUnits });
   const next = p.more ? all[p.next].extent.page : from + count;
   const more = next < total;
   let words = 0;
@@ -1474,19 +1550,19 @@ function textPieceAnswer(visible, { html, sha, cursor, budget, maxUnits }) {
 }
 
 /* One piece of a list of units (a format entry's text). */
-function listPieceAnswer(all, { sha, cursor, budget, maxUnits }) {
+function listPieceAnswer(plan, { sha, cursor, budget, maxUnits }) {
   let i = 0;
   if (cursor != null) {
-    const r = cursorIn(cursor, { sha, shape: "u", n: all.length });
+    const r = cursorIn(cursor, { sha, shape: "u", n: plan.n });
     if (r.refused) return r;
     i = r.at;
   }
-  const p = listPiece(all, { i, budget, maxUnits });
+  const p = listPiece(plan, { i, budget, maxUnits });
   let words = 0;
   for (const u of p.units) words += wordsOfUnit(u);
   return { units: p.units,
-           fields: { more: p.more, cursor: p.more ? b64({ v: 1, s: sha, k: "u", n: all.length, i: p.next }) : null,
-                     read_through: bytesOfUnits(all, p.next), total: bytesOfUnits(all, all.length) },
+           fields: { more: p.more, cursor: p.more ? b64({ v: 1, s: sha, k: "u", n: plan.n, i: p.next }) : null,
+                     read_through: plan.bytesBefore(p.next), total: plan.bytesBefore(plan.n) },
            piece: { units: p.units.length, words } };
 }
 
@@ -1603,6 +1679,16 @@ export function pageBoxesFrom(v) {
   return { boxes, of_page };
 }
 
+/* R11 (G48; K4571, K4679): the sentence a reading's basis carries when its sheet was classified over a bounded view
+   (`classified_over`, docprofile R19/R38): how much of the text the kind of document was judged from. A stand-in owed to
+   UX-DESIGN (code-origin, `localize`); built here from the figures, never from docprofile's own `why`. */
+export function classifiedOverSentence(co) {
+  const n = (v) => String(Number.isFinite(v) ? v : 0);
+  return localize("reading-pipeline.index.classified_over_sample",
+    "the kind of document was judged from a sample of its text ({chars} of its {of} characters: its opening, {windows} stretches spread through it and its end); the whole text is read in pieces",
+    { chars: n(co && co.chars), of: n(co && co.of), windows: n(Array.isArray(co && co.windows) ? co.windows.length : 0) });
+}
+
 /* R11: the reading a wired text produces. A determined reading carries `text_source` (the chain), `text_tier`,
    `text_container`, and a basis naming the reader, the chain, the tier, the tier-2 and tier-3 notes and where
    references were read; an undetermined one is a failed reading whose basis gives the tier notes and the entry's
@@ -1610,6 +1696,8 @@ export function pageBoxesFrom(v) {
 export function readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote,
                                   tier3Candidate = !!ocrNote }) {
   let reading = null;
+  /* G48 (K4571, K4679): a sheet classified over a bounded view says so, on the reading and in its basis, never silently. */
+  const sampled = wired && wired.classified_over && typeof wired.classified_over === "object" ? wired.classified_over : null;
   if (wired && wired.determined) {
     const { entities: wiredEntities, ...wrest } = (wired.parsed || {});
     const wfacts = (wrest && typeof wrest.facts === "object" && Object.keys(wrest).length === 1)
@@ -1636,7 +1724,9 @@ export function readingFromWire({ wired, docType, chain, wiredTier, fmt, retriev
             : word("reading-pipeline.why.reader_found_entities", { key: String(wtype.key), fmt: String(fmt), wired_tier: String(wiredTier) })))
         + (tier2note ? ` — ${tier2note}` : "")
         + (ocrNote ? ` — ${ocrNote}` : "")
-        + (posNote ? ` — ${posNote}` : ""),
+        + (posNote ? ` — ${posNote}` : "")
+        + (sampled ? ` — ${classifiedOverSentence(sampled)}` : ""),
+      ...(sampled ? { classified_over: sampled } : {}),
       ...(tier3Candidate ? { tier3_candidate: true } : {}),
       position_parts: wired.position_parts ?? 0,
       position_why: positioned ? null : (wired.position_why || null),
@@ -1647,6 +1737,7 @@ export function readingFromWire({ wired, docType, chain, wiredTier, fmt, retriev
       read_from_text: false, found: false, entities: [], facts: {}, at: retrieved,
       text_source: chain, text_tier: wiredTier, text_container: fmt,
       basis: [tier2note, ocrNote ? `${ocrNote} (${wired.why})` : wired.why].filter(Boolean).join(" — "),
+      ...(sampled ? { classified_over: sampled } : {}),
       ...(tier3Candidate ? { tier3_candidate: true } : {}),
     };
   }
@@ -1961,7 +2052,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
   let reading, classifiedText = null, member = null;
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null, heldCounts = null, joinedDropped = false;
-  let pieceInfo = null, pieceWords = null, rangeScope = null;
+  let pieceInfo = null, pieceWords = null, rangeScope = null, pieceBase = null;
 
   if (!wireable && textRead) {
     /* R1: text read as text with no format entry that reads it goes to the content type's reader. */
@@ -2153,10 +2244,13 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         }
       } else if (piecesOn) {
         /* R40/R41: the units of the entry's text in pieces, from the first or the cursor's; a piece after the first is units alone. */
-        const p = listPieceAnswer(pieceUnitsOf(i2text), { sha, ...pieceAsk });
+        const all = allUnitsOf(i2text) || [];
+        const plan = pieceUnitPlan(i2text, all);   /* G48: made once for the piece and its totals */
+        const p = listPieceAnswer(plan, { sha, ...pieceAsk });
         if (p.refused) return p;
         textUnits = p.units.length ? p.units : null;
-        pieceInfo = { ...p.fields, piece: { ...p.piece, units_total: pieceUnitsOf(i2text).length } };
+        pieceInfo = { ...p.fields, piece: { ...p.piece, units_total: plan.n } };
+        pieceBase = all;
         if (pieceAsk.cursor !== null) return { ...(textUnits ? { text_units: textUnits } : {}), ...p.fields, piece: p.piece };
       } else ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text, { budget: unitsBudget }));
       if (i2text) {
@@ -2182,7 +2276,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         : { ...failed(doc, classify().docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })]
               .filter(Boolean).join(" — "), { failure: memberDown ? FAILURE_TRANSIENT : FAILURE_FINAL }) };
       /* R35: a reading with text units counts its words. */
-      if (textUnits) Object.assign(reading, rangeScope ? { words_total: null, words_read: pieceInfo.piece.words } : textWordsFor(i2text, textUnits));
+      if (textUnits) Object.assign(reading, rangeScope ? { words_total: null, words_read: pieceInfo.piece.words } : textWordsFor(i2text, textUnits, pieceBase ? { all: pieceBase } : undefined));
       /* R37 (D4): a reading that read nothing says whether it can be read again: a member that was down is a cause outside
          the document, anything else is the document's own. */
       if (!wired || !wired.determined) reading.failure = memberDown ? FAILURE_TRANSIENT : FAILURE_FINAL;

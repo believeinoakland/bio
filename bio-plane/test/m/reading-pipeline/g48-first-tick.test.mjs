@@ -153,6 +153,30 @@ test("R40/R41 (G48): the first tick reads the sheet's text no more often than a 
   });
 });
 
+
+test("R41 (G48): the first tick builds the blocks of its own piece and counts the rest: it reads the sheet's lineRows as a later tick that builds one block does", async () => {
+  const b = bucket();
+  const document = doc({ digest: await hold(b, "sheet bytes"), bytes: 11, ct: "application/x-g48rows", format: "g48rows" });
+  const reads = { n: 0 };
+  const rowOf = (i) => i + 1 + Math.floor(i / 50);
+  const lineRows = new Proxy(SHEET_LINES.map((_, i) => rowOf(i)), { get(target, key, recv) { if (typeof key === "string" && /^\d+$/.test(key)) reads.n++; return Reflect.get(target, key, recv); } });
+  const entry = { format: "g48rows", text: async () => ({ ok: true, document: SHEET_TEXT,
+    sheets: [{ name: "Budget", rows: null, cols: null, usedRows: rowOf(SHEET_LINES.length - 1), usedCols: 3,
+              range: { kind: "sheet-range", sheet: "Budget", range: `A1:C${rowOf(SHEET_LINES.length - 1)}` }, text: SHEET_TEXT, cells: null, undetermined: [], lineRows }],
+    counts: { chars: SHEET_TEXT.length, undetermined: 0 }, undetermined: [], container: "xlsx" }) };
+  await withEntry(entry, async () => {
+    const first = await firstTick(b, document, { maxUnits: 1 });
+    const firstReads = reads.n;
+    assert.equal(first.piece.units, 1);
+    assert.ok(first.piece.units_total >= 4, `${first.piece.units_total} blocks in all`);
+    reads.n = 0;
+    const second = await firstTick(b, document, { maxUnits: 1, cursor: first.cursor });
+    assert.equal(second.piece.units, 1);
+    assert.equal(firstReads, reads.n, "the first tick built one block, as the later tick did; it did not build them all");
+    assert.ok(firstReads < SHEET_LINES.length + 2 * first.piece.units_total, "the rows of the blocks not asked for are not read");
+  });
+});
+
 /* ---- (c) controls: byte-identical to the record made on the tip before the change ---------------------------------------- */
 
 /* The sampled-classification statement is the one change a reading over the bound may show (DOCPROFILE #7's view): taken off
