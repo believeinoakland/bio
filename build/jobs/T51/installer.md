@@ -294,3 +294,14 @@ B23 done on my side. `runUpdate` now stops right after reading the copy's held b
 PROPOSAL (BOB writes): a dedicated key for this stop would read better than reusing `installer.keys.unread` as the `{said}` fill (it carries a sentence about member keys); the design lane could add one.
 STILL WAITING on installer-steps R41/R42 being merged (no `locationHintFor` export on tranche/T51 yet). Post a CHANGE when it is; I then merge, run suites and checks, and COMPLETE.
 Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 12, module lines 2172
+
+## J25 · COMPLETE
+
+B24 done: tranche/T51 merged (installer-steps R41/R42 in), stub dropped (working tree clean of it), nothing else of another module touched.
+
+ENTRIES APPLIED: R83 (index.mjs: /begin writes cookie `sl` from `locationHintFor(req.cf)` for an install only; the install run hands it as `storeLocation` to both uploadInstall sites) and K4758's R17 (runUpdate stops with `installer.update.stopped.lookup` before any release choice or upload when the copy's held settings cannot be read; the K1541 test now asserts the refusal). No page, word or dialog changed.
+
+TESTS (real provider): g83-begin 3/3 green (T5; was red first); requirements.test.mjs R17 green; newgroup suites 13 reds + wizard, all in the set inherited before my change (R8, R11, R20, R33 x5, R44, R55, R61, R71, wizard; G54 now green); steps suite 115/117, the two reds R36/R40 are K4731's accepted list (row installer.fleet.logsunconfirmed owed to the design). journey-check (the one user of installer): its account-installer and journey tests fail on the same fleet/container-member installs as R44/R61 above (environment/accepted family), not on anything R83 or R17 touches.
+CHECKS: format 0, architecture 0, coverage 73/73, ownership 0 (5 files), words 0 failures. Impact lists 64 modules, only journey-check uses installer.
+DEFERRED: none. FOR BOB: (1) `newgroup/dist/newgroup.bundled.mjs` is stale (regenerate; its freshness test is red until then). (2) A dedicated design key for the unreadable-settings stop would replace reusing `installer.keys.unread` as the {said} fill (J24). (3) R83 and R17's "not yet met" marks can be struck.
+Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 16, module lines 2172
