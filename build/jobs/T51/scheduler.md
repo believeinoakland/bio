@@ -154,3 +154,7 @@ Size (session_018N7Bmi8XF4uXxoG5G6hHKL): test runs 12, module lines 928
 **Deferred:** none. **Other modules:** none found. **Generated artifacts:** `bio-plane/dist/bio-plane.bundled.mjs` carries scheduler source; stale after this; BOB regenerates (I changed none). **Census ops:** none. **Rows owed to UX-DESIGN:** none (no sentence).
 
 Size (session_01Avk4ZxytfuErZjqjRYMN2B): test runs 7, module lines 941
+
+## J7 · COMPLETE
+
+G70 applied: per-alarm logging (scheduled_for, started, ended, next_set_for, gap_ms) in the sched_beat heartbeat and one structured line; no pace or rule changed. r7-pace.test.mjs red then green; scheduler suite 163/163; plane watchdog 10/10; format, architecture, coverage, ownership 0 failures. Platform read (P) is yours after the redeploy. Proposed R28 line, stale bundle note and size are in my record (de70118258).
