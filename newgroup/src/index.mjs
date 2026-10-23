@@ -37,7 +37,7 @@ import { CF_API, RELEASE_LATEST, RELEASE_TAGGED, Session, patiently, WAIT_BOUND_
   BINDING_OF, membersPresent, instanceAiOk, SEAL_BINDING, heldBindings, hostOf, planeLimits, reportsBuilds, vpcServiceOk,
   uploadInstall, uploadUpdate, planeInSync, putSecret, rotateSecrets, loadFleet, installFleet, bindMembers, ensureSubdomain,
   verifyInstall, failedLags, verifyServing, confirmContainers, offerSubdomain, waitForAnswer, currentDeployment, rollBack, withByteLags, logsStep, copyWorkers,
-  ARMED_SIGNERS } from "./steps/index.mjs";
+  locationHintFor, ARMED_SIGNERS } from "./steps/index.mjs";
 /* R63: the words of what a copy already holds. */
 import { describeCopy } from "./held.mjs";
 /* R53 (DEC-122 (3); K3100): interface-assets' stylesheet and faces, carried in this bundle and served at ASSET_PREFIX. */
@@ -792,6 +792,8 @@ async function installRun(emit0, code, saved, guard) {
   const present = await membersPresent(token, acct.id, names);
   if (present.length) completed.push(present.length === 1 ? word("installer.partial.what.programs.one") : word("installer.partial.what.programs.other", { n: present.length }));
   const profiles = Array.isArray(saved.p) && !profilesRefusal(saved.p, "install") ? saved.p : [];
+  /* R83: the place /begin read from the founder's request, handed to the creating upload (an upload of a script that exists restates the one it holds). */
+  const storeLocation = typeof saved.sl === "string" && saved.sl ? saved.sl : null;
   let selfRefused = false;
   await emit.step("install", word("screen.install.progress.placing"));
   /* R67, R69: the plane is uploaded unless the account already holds exactly this release's deployed state (its bytes, its
@@ -810,7 +812,7 @@ async function installRun(emit0, code, saved, guard) {
       await uploadUpdate(token, acct.id, slug, true, release, { names, members: present, secrets, profiles, note });
       emit.ok("install");
     } else {
-      await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles, names, note });
+      await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles, names, note, storeLocation });
       emit.ok("install");
     }
   } catch (e) {
@@ -826,7 +828,7 @@ async function installRun(emit0, code, saved, guard) {
     let degraded = false;
     try {
       if (held) await uploadUpdate(token, acct.id, slug, true, release, { names, members: present, secrets, profiles, noSelf: true, note });
-      else await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles, names, note });
+      else await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles, names, note, storeLocation });
       degraded = true;
     } catch (e2) { if (special(e2)) throw e2; /* the original refusal is the one worth reporting */ }
     selfRefused = degraded;
@@ -1462,7 +1464,13 @@ export default {
         return json({ ok: false, error: word("installer.begin.vpc") }, 400);
       /* R36, R37 (T36): nothing else /begin is sent is kept: no field carries a Claude credential, and the install takes no
          choice about the assistant (an `assistant` field is taken nowhere). */
+      /* R83 (G83; K4746, K4752): the founder's own request says where on the edge they are (`cf`, set by the platform); the hint
+         `installer-steps` answers from it rides the cookie to the install, which hands it to the plane's creating upload so the
+         team's room is made near the team. An install only (an update restates the place the copy holds and never moves it); no
+         `cf` or no hint writes nothing, and the install is then the install it was. */
+      const sl = mode === "install" && req.cf && typeof req.cf === "object" ? locationHintFor(req.cf) : null;
       const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...(ai ? { ai } : {}), ...(p ? { p } : {}),
+        ...(typeof sl === "string" && sl ? { sl } : {}),
         ...(vpc ? { vpc } : {}), ...(mode === "update" ? { r: chosen } : {}),
         ...(mode === "install" && body.alongside === true ? { al: 1 } : {}), ...(mode === "removeconfirm" ? { ty: body.typed } : {}),
         ...(typeof body.lock === "string" && /^[0-9A-Za-z_-]{6,64}$/.test(body.lock) ? { lk: body.lock } : {}) })));
