@@ -462,19 +462,20 @@ export async function keepPast(cap, ev, { sha, parts, boundMs = ACQUIRE_BOUND_MS
  *  from the store and no part is hashed again; the store verifies the whole by the checksum it is handed, and each buffer is
  *  released as it is copied. Without them (a caller that holds none: `capture`'s upload of a file the member sent) the parts
  *  just stored are read back one at a time, each held, each its stated size and digest, assembled and hashed against the
- *  digest given. Answers `{ok: true, kept}` (`kept` false for one part or past `MULTIPART_KEEP_MAX`, where nothing is done)
+ *  digest given; with `compose: true` the store is asked to make the whole from its parts first (see below). Answers `{ok: true, kept}` (`kept` false for one part or past `MULTIPART_KEEP_MAX`, where nothing is done)
  *  or `{ok: false, why}`, a sentence for the member: a part gone, a part that is not what was stored, bytes that do not add
  *  up to the digest, or a store that will not take the whole. Never throws. */
-export async function keepWhole(ev, { sha, parts, total, bytes = null }) {
+export async function keepWhole(ev, { sha, parts, total, bytes = null, compose = false }) {
   if (!Array.isArray(parts) || parts.length < 2 || total > MULTIPART_KEEP_MAX) return { ok: true, kept: false };
   const fail = (why) => ({ ok: false, why });
   const held = Array.isArray(bytes) && bytes.length === parts.length && bytes.every((b) => b instanceof Uint8Array) ? bytes : null;
   const work = async () => {
     try {
       if (await ev.head(sha)) return { ok: true, kept: true };
-      /* R96 (fix round 7, G79): with no buffers in hand, the store makes the whole from the parts it holds (`putFromParts`, record-core R87): this module reads no
-         part back, hashes nothing again and puts no whole; the store verifies the whole against its digest. A store that offers none is read back, as before. */
-      if (!held && typeof ev.putFromParts === "function") {
+      /* R96 (fix round 7, G79): a caller that holds no buffers (`capture`'s upload) may ask `compose`: the store then makes the whole from the parts it holds
+         (`putFromParts`, record-core R87), and this module reads no part back, hashes nothing again and puts no whole; the store verifies the whole against
+         its digest. A store that offers none, or refuses, is read back, as without `compose`. */
+      if (!held && compose === true && typeof ev.putFromParts === "function") {
         const r = await ev.putFromParts(sha, parts.map((p) => p.sha256));
         return r && r.ok === true ? { ok: true, kept: true }
           : fail(localize("acquisition.index.keep_store_refused", "the store would not take it ({detail})", { detail: String(r && (r.reason || r.detail || r.code) || "refused").slice(0, 120) }));

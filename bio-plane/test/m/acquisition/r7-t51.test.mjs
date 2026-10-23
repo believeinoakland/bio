@@ -2,7 +2,7 @@
    16.8 s, Wikipedia 15.2 s) because the render was waited a fixed 10 s after the fetch whatever the fetch had already used; an upload's keep read every part
    back and re-hashed it (`keepWhole` with no buffers) and a large keep was awaited to the door's bound. Provider side, tested here:
    (a) the render waits what is left of the 15 s bar less the room promotion needs, never more than `RENDER_WAIT_MS`;
-   (b) `keepWhole` with no buffers asks the store to make the whole from the parts it holds (`putFromParts`), reads no part back and puts no whole itself;
+   (b) `keepWhole` with no buffers and `compose: true` asks the store to make the whole from the parts it holds (`putFromParts`), reads no part back and puts no whole itself (without `compose` it reads them back, as before);
    (c) `keepPast` with `defer` hands the keep to the ledger at once (the alarm finishes it) and awaits it only when no ledger took it.
    Failing first: the render waited its fixed 10 s; `keepWhole` read every part back; `keepPast` always awaited. The consumers (capture's upload) are tested in their own module. */
 import { test } from "node:test";
@@ -93,11 +93,11 @@ async function threeParts(w) {
   return { parts, whole, wholeSha: sha(whole), total: 3000 };
 }
 
-test("R96 (G79): `keepWhole` with no buffers asks the store to make the whole from its parts: no part is read back, no whole is put by this module, and the whole is the document's own bytes", async () => {
+test("R96 (G79): `keepWhole` with no buffers and `compose` asks the store to make the whole from its parts: no part is read back, no whole is put by this module, and the whole is the document's own bytes", async () => {
   const w = world(); multipart(w.b);
   const m = await threeParts(w);
   const ev = counted(w.core.evidenceStore());
-  const r = await keepWhole(ev, { sha: m.wholeSha, parts: m.parts, total: m.total });
+  const r = await keepWhole(ev, { sha: m.wholeSha, parts: m.parts, total: m.total, compose: true });
   assert.deepEqual([r.ok, r.kept], [true, true]);
   assert.equal(ev.calls.putFromParts, 1, "the store makes the whole");
   assert.equal(ev.calls.get, 0, "no part is read back by this module");
@@ -105,15 +105,20 @@ test("R96 (G79): `keepWhole` with no buffers asks the store to make the whole fr
   assert.deepEqual(w.bytesOf(m.wholeSha), m.whole, "the whole is held under the document's digest, byte for byte");
 });
 
-test("R96 (G79) control: with the buffers in hand the whole is put once, none read back; a store with no `putFromParts` reads the parts back as before", async () => {
-  const w = world();
+test("R96 (G79) control: without `compose` (or with a store that cannot) the parts are read back as before; with the buffers in hand the whole is put once, none read back", async () => {
+  const w = world(); multipart(w.b);
   const m = await threeParts(w);
-  const ev = counted(w.core.evidenceStore(), { parts: false });
+  const ev = counted(w.core.evidenceStore());
   const r = await keepWhole(ev, { sha: m.wholeSha, parts: m.parts, total: m.total });
   assert.deepEqual([r.ok, r.kept], [true, true]);
-  assert.equal(ev.calls.get, 3, "no way to compose in the store: each part is read back");
-  assert.equal(ev.calls.put, 1);
+  assert.deepEqual([ev.calls.get, ev.calls.put, ev.calls.putFromParts], [3, 1, 0], "no `compose` asked: each part is read back, the whole put, the store asked nothing");
   assert.deepEqual(w.bytesOf(m.wholeSha), m.whole);
+  const w1 = world();
+  const m1 = await threeParts(w1);
+  const ev1 = counted(w1.core.evidenceStore(), { parts: false });
+  const r1 = await keepWhole(ev1, { sha: m1.wholeSha, parts: m1.parts, total: m1.total, compose: true });
+  assert.deepEqual([r1.ok, r1.kept], [true, true]);
+  assert.deepEqual([ev1.calls.get, ev1.calls.put], [3, 1], "a store with no way to compose is read back");
   const w2 = world(); multipart(w2.b);
   const m2 = await threeParts(w2);
   const ev2 = counted(w2.core.evidenceStore());
@@ -123,12 +128,23 @@ test("R96 (G79) control: with the buffers in hand the whole is put once, none re
   assert.deepEqual([ev2.calls.get, ev2.calls.put, ev2.calls.putFromParts], [0, 1, 0], "buffers in hand: one put of the whole, nothing read, nothing composed");
 });
 
+test("R96 (G79): a store that would not compose the whole (no multipart upload to offer) is read back as before, and the document is kept", async () => {
+  const w = world();   // its bucket offers no multipart upload: `putFromParts` refuses
+  const m = await threeParts(w);
+  const ev = counted(w.core.evidenceStore());
+  const r = await keepWhole(ev, { sha: m.wholeSha, parts: m.parts, total: m.total, compose: true });
+  assert.deepEqual([r.ok, r.kept], [true, true]);
+  assert.equal(ev.calls.putFromParts, 1, "composing was asked first");
+  assert.equal(ev.calls.get, 3, "then each part was read back");
+  assert.deepEqual(w.bytesOf(m.wholeSha), m.whole);
+});
+
 test("R96 (G79): a store that cannot compose the whole (a part not held) refuses in words and keeps nothing", async () => {
   const w = world(); multipart(w.b);
   const m = await threeParts(w);
   w.b.held.delete(`bio/captures/${m.parts[1].sha256}`);
   const ev = counted(w.core.evidenceStore());
-  const r = await keepWhole(ev, { sha: m.wholeSha, parts: m.parts, total: m.total });
+  const r = await keepWhole(ev, { sha: m.wholeSha, parts: m.parts, total: m.total, compose: true });
   assert.equal(r.ok, false);
   assert.equal(typeof r.why, "string");
   assert.ok(r.why.length > 0);
