@@ -1322,8 +1322,8 @@ const fits = (units, size, room, maxUnits) => !units.length || (units.length < m
 
 /* The piece of a text read as text, from `at` (null: the start; else `{o, p, q, r}`: the scan offset, the next `para`, the
    next `seq`, the next run of that paragraph). `{units, grain, more, at, through}`. */
-function textPiece(visible, { html, at, budget, maxUnits }) {
-  const grain = grainOf(visible, html);
+function textPiece(visible, { html, at, budget, maxUnits, grain: given }) {
+  const grain = given ?? grainOf(visible, html);
   const walk = runWalker(visible, grain, html, at ? at.o : 0);
   let para = at ? at.p : 0, seq = at ? at.q : 0, run0 = at ? at.r : 0;
   const units = [];
@@ -1451,15 +1451,15 @@ function sheetBlockAt(u, sheet, plan, k, seq) {
    `base` is `allUnitsOf(i2text)` when the caller holds it. */
 function pieceUnitPlan(i2text, base = allUnitsOf(i2text) || []) {
   const sheets = Array.isArray(i2text && i2text.sheets) ? i2text.sheets : [];
-  const entries = [];   /* {bytes, unit, make?} */
-  const push = (bytes, unit, make) => entries.push({ bytes, unit, make });
+  const entries = [];   /* {bytes, unit, make?, meta?} */
+  const push = (bytes, unit, make, meta) => entries.push({ bytes, unit, make, meta });
   for (const u of base) {
     let parts;
     if (u.extent.kind === "sheet-range" && u.text.length > CAPTURE_TEXT_UNIT_CAP) {
       const sp = sheetPlan(u);
       if (sp) {
         const first = entries.length;
-        sp.blocks.forEach((b, k) => push(b.bytes, null, () => sheetBlockAt(u, sheets[u.seq], sp, k, first + k)));
+        sp.blocks.forEach((b, k) => push(b.bytes, null, () => sheetBlockAt(u, sheets[u.seq], sp, k, first + k), { sheet: u, sheetAt: sheets[u.seq], plan: sp, first: b.first }));
         continue;
       }
       parts = sheetBlocks({ ...u, extent: { ...u.extent, range: u.extent.range } }, sheets[u.seq]);
@@ -1481,6 +1481,7 @@ function unitPlanOf(entries) {
   return { n: entries.length,
            sizeAt: (k) => entries[k].bytes,
            unitAt: (k) => (entries[k].unit ??= entries[k].make()),
+           metaAt: (k) => entries[k].meta,
            bytesBefore: (upto) => { let n = 0; for (let k = 0; k < upto; k++) n += entries[k].bytes; return n; } };
 }
 const unitPlanOfList = (list) => unitPlanOf(list.map((unit) => ({ bytes: utf8Length(unit.text), unit })));
@@ -1549,7 +1550,7 @@ function textPieceAnswer(visible, { html, sha, cursor, budget, maxUnits }) {
   const through = p.more ? utf8Length(visible.slice(0, p.at.o)) : utf8Length(visible);
   let words = 0;
   for (const u of p.units) words += wordsOfUnit(u);
-  return { units: p.units, grain: p.grain,
+  return { units: p.units, grain: p.grain, at: p.at,
            fields: { more: p.more, cursor: cur, read_through: through, total: utf8Length(visible) },
            piece: { units: p.units.length, words } };
 }
@@ -1565,7 +1566,7 @@ function listPieceAnswer(plan, { sha, cursor, budget, maxUnits }) {
   const p = listPiece(plan, { i, budget, maxUnits });
   let words = 0;
   for (const u of p.units) words += wordsOfUnit(u);
-  return { units: p.units,
+  return { units: p.units, next: p.next,
            fields: { more: p.more, cursor: p.more ? b64({ v: 1, s: sha, k: "u", n: plan.n, i: p.next }) : null,
                      read_through: plan.bytesBefore(p.next), total: plan.bytesBefore(plan.n) },
            piece: { units: p.units.length, words } };
@@ -1577,6 +1578,293 @@ export function isBareStub(doc) {
   const c = doc.capture;
   return !!c && typeof c === "object" && typeof c.sha256 === "string" && !Array.isArray(doc.parts)
     && !Number.isFinite(c.bytes) && typeof doc.retrieved !== "string" && !(doc.profile && typeof doc.profile === "object");
+}
+
+/* ===================================================================== *
+ * A reading in pieces by a byte window (R40, G68).
+ * ===================================================================== */
+
+/* G68 (fix round 7; diagnosis-R7-reading.md R1): every tick re-opened the whole object: a 17 MiB CSV tick decoded the 17 MiB to
+   cut one piece, and a 12 MB text decoded its 12 MB. The first piece still reads the whole (R35's totals, R14's provenance and the
+   classification are over the whole text), and then names where the next piece begins in the OBJECT: a cursor of kind `w` holds
+   a byte offset, and a later tick asks the evidence store for that window alone (record-core R88's ranged `get`) and reads the
+   piece from it. The units, their `seq`, extents, words and the totals are exactly those of the cursors above (`t`, `u`): the
+   same functions cut the same runs and blocks, only from a window. What a window cannot know it is told by the cursor: the
+   text's grain, the sheet's last column, whether a row was cut, the bytes already read. A capture that cannot be windowed (an
+   HTML page, whose visible text is judged over the whole markup; a text that is not valid UTF-8; a CSV in UTF-16; any other
+   format; an object not held whole under the document's digest) is given the cursor above, read whole by each tick as before,
+   and a cursor of the kinds above is still read as it was. */
+export const WINDOW_BYTES = 1024 * 1024;
+/* The bytes of a CSV's head that its encoding and delimiter signatures read (csv-reader's SIGNATURE_WINDOW_BYTES, 1 MiB, past a
+   BOM): a window of the body is decoded beside this head, so the entry finds the dialect it found over the whole. */
+const CSV_HEAD_BYTES = 1024 * 1024 + 3;
+/* A chunk of a CSV is cut at the first record boundary at or after its nominal size; the bytes read beyond it to find one. */
+const CSV_SLACK_BYTES = 64 * 1024;
+const FATAL_UTF8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+const LENIENT_UTF8 = new TextDecoder("utf-8", { fatal: false, ignoreBOM: true });
+
+/* The bytes [offset, offset + length) of a held object, or null when it is not held. A store that ignored the range and gave the
+   whole object is cut here. `size` is the object's own, or null when the store did not say. */
+async function rangeBytes(evidence, digest, offset, length) {
+  const o = await evidence.get(digest, { range: { offset, length: Math.max(1, length) } });
+  if (!o) return null;
+  const all = new Uint8Array(await o.arrayBuffer());
+  const size = Number.isFinite(o.size) ? o.size : null;
+  if (all.length > length && size !== null && all.length === size) return { bytes: all.subarray(offset, offset + length), size };
+  return { bytes: all, size };
+}
+
+/* The window cursor of a cursor string, or null when it is not one. */
+function windowCursorOf(cursor) {
+  const c = unb64(cursor);
+  return c && c.v === 1 && c.k === "w" ? c : null;
+}
+const windowCursor = (sha, o) => b64({ v: 1, k: "w", s: sha, ...o });
+const mismatch = () => refusal(CURSOR_MISMATCH, "reading-pipeline.index.bytes_not_held");
+
+/* --- a text read as text ------------------------------------------------------------------------------------------------ */
+
+/* The end of the runs a window holds whole: the last separator (a blank line for paragraphs, a line break for lines) with
+   something after it in the window, else 0. A match that reaches the window's end might go on beyond it, so it is no end. */
+function completeRunsEnd(vis, grain) {
+  if (grain === "lines") { const i = vis.lastIndexOf("\n"); return i < 0 ? 0 : i + 1; }
+  const sep = new RegExp(BLANK_LINE_RUN.source, "g");
+  let end = 0;
+  for (let m = sep.exec(vis); m; m = sep.exec(vis)) {
+    const e = m.index + m[0].length;
+    if (e < vis.length) end = e;
+  }
+  return end;
+}
+
+/* The cursor a first (or `t`) piece of a text read as text hands on when the next piece can be read by a window, else null.
+   `at` is textPiece's resume point (the scan offset in characters, the next `para`, `seq` and run), `through` the UTF-8 bytes of
+   the text before it. The text is the object's bytes decoded without loss (valid UTF-8; a BOM only at its start). */
+function textWindowCursorOf({ sha, bytes, text, whole, at, through, grain }) {
+  if (!whole || !at || !(bytes instanceof Uint8Array)) return null;
+  const bom = bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? 3 : 0;
+  if (text.includes("�")) { try { FATAL_UTF8.decode(bytes); } catch { return null; } }
+  if (utf8Length(text) !== bytes.length - bom) return null;
+  return windowCursor(sha, { m: "t", n: bytes.length, ob: through + bom, bm: bom, g: grain === "lines" ? 1 : 0, p: at.p, q: at.q, r: at.r });
+}
+
+/* A later piece of a text read as text, from the window the cursor names. */
+async function textWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }) {
+  if (![c.n, c.ob, c.bm, c.p, c.q, c.r].every(natural) || !(c.g === 0 || c.g === 1) || c.ob < c.bm || c.ob >= c.n || (c.bm !== 0 && c.bm !== 3)) return mismatch();
+  const grain = c.g === 1 ? "lines" : "paragraphs";
+  const pre = Math.min(4, c.ob);
+  for (let want = windowBytes; ; want *= 2) {
+    const len = Math.min(want, c.n - c.ob);
+    const got = await rangeBytes(evidence, sha, c.ob - pre, pre + len);
+    if (!got) return { gone: true };
+    if (got.size !== null && got.size !== c.n) return mismatch();
+    const b = got.bytes;
+    if (b.length !== pre + len) return mismatch();
+    /* the offset begins a character, and the character before it is white space (or it is the text's first): the start of a run */
+    if ((b[pre] & 0xc0) === 0x80) return mismatch();
+    if (c.ob > c.bm) {
+      const before = LENIENT_UTF8.decode(b.subarray(0, pre));
+      if (!before.length || !/\s/.test(before[before.length - 1])) return mismatch();
+    }
+    const eof = c.ob + len >= c.n;
+    let end = len;   /* a window not at the end of the object may cut a character: it ends at the one before */
+    if (!eof) {
+      let i = len - 1;
+      while (i > 0 && (b[pre + i] & 0xc0) === 0x80) i--;
+      const lead = b[pre + i], need = lead < 0x80 ? 1 : lead >= 0xf0 ? 4 : lead >= 0xe0 ? 3 : lead >= 0xc0 ? 2 : 1;
+      if (i + need > len) end = i;
+    }
+    let vis;
+    try { vis = FATAL_UTF8.decode(b.subarray(pre, pre + end)); } catch { return mismatch(); }
+    const upto = eof ? vis.length : completeRunsEnd(vis, grain);
+    if (!eof && upto === 0) continue;   /* not one whole run yet: a longer window */
+    const text = vis.slice(0, upto);
+    const p = textPiece(text, { html: false, at: { o: 0, p: c.p, q: c.q, r: c.r }, budget, maxUnits, grain });
+    if (!p.more && !eof) continue;      /* every whole run in the window was taken and the piece is not full: a longer window */
+    let words = 0;
+    for (const u of p.units) words += wordsOfUnit(u);
+    const more = p.more, ob = more ? c.ob + utf8Length(text.slice(0, p.at.o)) : c.n;
+    return { units: p.units,
+             fields: { more, cursor: more ? windowCursor(sha, { m: "t", n: c.n, bm: c.bm, g: c.g, ob, p: p.at.p, q: p.at.q, r: p.at.r }) : null,
+                       read_through: ob - c.bm, total: c.n - c.bm },
+             piece: { units: p.units.length, words } };
+  }
+}
+
+/* --- a CSV ---------------------------------------------------------------------------------------------------------------- */
+
+/* The record boundaries of CSV bytes, as csv-reader walks records (RFC 4180): a line break outside double quotes ends a record, a
+   CR, an LF or a CRLF as one; a double quote opens or closes quotes, so a doubled one inside quotes is two turns and no change.
+   The delimiter takes no part. `b` begins at the object offset `base`; each offset where a record ends and the next begins is
+   pushed to `out`, in order. `st` carries the scan between pieces of one run ({inQ, cr, crAt}); `finishScan` settles a CR that
+   ended the last piece. An offset at the end of the object begins no record and is for the caller to drop. */
+function newScan() { return { inQ: false, cr: false, crAt: 0 }; }
+function scanBoundaries(b, base, st, out) {
+  let inQ = st.inQ, cr = st.cr, crAt = st.crAt;
+  for (let i = 0; i < b.length; i++) {
+    const c = b[i];
+    if (cr) { cr = false; if (c === 0x0a) { out.push(base + i + 1); continue; } out.push(crAt); }
+    if (inQ) { if (c === 0x22) inQ = false; continue; }
+    if (c === 0x22) inQ = true;
+    else if (c === 0x0a) out.push(base + i + 1);
+    else if (c === 0x0d) { cr = true; crAt = base + i + 1; }
+  }
+  st.inQ = inQ; st.cr = cr; st.crAt = crAt;
+}
+function finishScan(st, out) { if (st.cr) { st.cr = false; out.push(st.crAt); } }
+
+/* From a first (or `u`) piece of a CSV whose next block is the one at line `L`: the cursor that reads the next piece by a window,
+   or null when it cannot (the object is not held whole, its encoding is UTF-16, the file is not longer than the head a window
+   needs, the sheet's lines are not named by row, or its header leaves no room beside a row). `meta` is the plan's entry for the
+   block, `read` and `total` the bytes of units before it and in all. Scans the head of the object in the store, as far as the block's
+   record (the first piece's size), never the file. */
+async function csvWindowCursorOf(evidence, { sha, whole, size, i2text, meta, next, read, total }) {
+  if (!whole || !meta || !meta.plan || !Number.isInteger(size) || !i2text || i2text.container !== "csv") return null;
+  const enc = i2text.dialect ? i2text.dialect.encoding : undefined;
+  if (!(enc === "utf-8" || enc === "us-ascii" || enc === null)) return null;
+  const sheet = meta.sheetAt, u = meta.sheet, lines = meta.plan.lines;
+  if (!sheet || !Array.isArray(sheet.lineRows) || sheet.lineRows.length !== lines || !sheet.lineRows.every(Number.isInteger)) return null;
+  if (!u || !u.extent || u.extent.kind !== "sheet-range" || typeof u.extent.sheet !== "string" || typeof u.extent.range !== "string") return null;
+  const L = meta.first, row = sheet.lineRows[L];
+  if (!(L > 0) || !(row >= 1)) return null;
+  let f = L;
+  while (f > 0 && sheet.lineRows[f - 1] === row) f--;
+  const corner = /:\$?([A-Za-z]{1,3})\$?\d+$/.exec(u.extent.range);
+  /* the object, from its start, as far as the first record at or past the head and the block's own record */
+  const st = newScan(), seen = [];
+  let target = row === 1 ? 0 : null, he = null, hr = null, count = 0;
+  for (let at = 0; at < size && (target === null || he === null); at += WINDOW_BYTES) {
+    const got = await rangeBytes(evidence, sha, at, Math.min(WINDOW_BYTES, size - at));
+    if (!got || got.bytes.length !== Math.min(WINDOW_BYTES, size - at)) return null;
+    seen.length = 0;
+    scanBoundaries(got.bytes, at, st, seen);
+    if (at + got.bytes.length >= size) finishScan(st, seen);
+    for (const b of seen) {
+      if (b >= size) continue;
+      if (target === null && count === row - 2) target = b;
+      if (he === null && b >= CSV_HEAD_BYTES) { he = b; hr = count + 1; }
+      count++;
+    }
+  }
+  if (target === null || he === null) return null;
+  return windowCursor(sha, { m: "c", n: size, ob: target, rw: row, li: L, sk: L - f, bi: next, rt: read, tt: total, he, hr,
+                             lr: meta.plan.longRow ? 1 : 0, lc: corner ? corner[1].toUpperCase() : "", rg: u.extent.range, sh: u.extent.sheet });
+}
+
+/* A later piece of a CSV, from the window the cursor names: the blocks R41 makes of the sheet's lines, built from the lines of the
+   records in a window, and the head the entry's signatures need before it. The lines are the entry's own (its text of the head
+   and the window together), so a line, its row and its words are what the whole read gives. */
+async function csvWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }) {
+  const nums = [c.n, c.ob, c.rw, c.li, c.sk, c.bi, c.rt, c.tt, c.he, c.hr];
+  if (!nums.every(natural) || !(c.lr === 0 || c.lr === 1) || typeof c.lc !== "string" || typeof c.rg !== "string" || typeof c.sh !== "string") return mismatch();
+  if (c.ob >= c.n || c.he >= c.n || c.he < CSV_HEAD_BYTES || c.rw < 1 || c.sk > c.li || !c.sh) return mismatch();
+  const entry = getFormat("csv");
+  if (!entry || typeof entry.text !== "function") return mismatch();
+  const cap = CAPTURE_TEXT_UNIT_CAP;
+  const units = [];
+  let room = budget, added = 0, seq = c.bi, stop = null;
+  let headLine = null, limit = 0, headWords = 0;
+  let cur = [], size = 0, first = null, last = 0;
+  const build = () => {
+    const text = `${headLine}\n${cur.join("\n")}`;
+    const range = c.lc ? `A${first.row}:${c.lc}${last}` : c.rg;
+    const unit = { extent: { kind: "sheet-range", sheet: c.sh, range }, seq, text, ...(c.lr ? { truncated: true } : {}) };
+    return withOwnWords(unit, headWords);
+  };
+  /* the open block is whole; `nextAt` is the first line of the block after it (null at the end of the sheet) */
+  const emit = (nextAt) => {
+    const unit = build(), bytes = utf8Length(unit.text);
+    if (!fits(units, bytes + ACQUIRE_TEXT_UNIT_ENVELOPE, room, maxUnits)) { stop = first; return false; }
+    units.push(unit); room -= bytes + ACQUIRE_TEXT_UNIT_ENVELOPE; added += bytes; seq++;
+    cur = []; size = 0;
+    if (nextAt && units.length >= maxUnits) { stop = nextAt; return false; }
+    return true;
+  };
+  const feed = (line, at) => {
+    const l = line.length > limit ? line.slice(0, limit) : line;   /* a row over the cap stays one cut row (R41) */
+    if (cur.length && size + l.length + 1 > limit && !emit(at)) return false;
+    if (!cur.length) first = at;
+    cur.push(l); size += l.length + 1; last = at.row;
+    return true;
+  };
+
+  let start = c.ob < c.he ? 0 : c.ob;          /* the chunk's first byte: a record boundary */
+  let rowBase = c.ob < c.he ? 1 : c.rw;        /* the row of the record that begins it */
+  let skip = c.ob < c.he ? c.li : c.sk;        /* lines the chunk gives that are before the next block */
+  let lineIdx = c.ob < c.he ? 0 : c.li - c.sk;  /* the index, in the sheet's lines, of the chunk's first line */
+  let head = null, eofSeen = false;
+  while (!eofSeen && stop === null) {
+    const withHead = start >= c.he;
+    /* the chunk: from `start` to the first record boundary at or after its nominal size (and, from the start of the object, past
+       the head), so the signatures read what they read over the whole */
+    let end = null, starts = null, region = null;
+    for (let want = windowBytes; end === null; want *= 2) {
+      const aim = Math.max(start + want, withHead ? 0 : c.he);
+      const len = Math.min(c.n - start, aim - start + CSV_SLACK_BYTES);
+      const got = await rangeBytes(evidence, sha, start, len);
+      if (!got) return { gone: true };
+      if (got.size !== null && got.size !== c.n) return mismatch();
+      if (got.bytes.length !== len) return mismatch();
+      const st = newScan(), bounds = [];
+      scanBoundaries(got.bytes, start, st, bounds);
+      const atEnd = start + len >= c.n;
+      if (atEnd) finishScan(st, bounds);
+      const at = bounds.find((b) => b >= aim && b < c.n);
+      if (at !== undefined) { end = at; starts = [start, ...bounds.filter((b) => b < at)]; region = got.bytes.subarray(0, at - start); }
+      else if (atEnd) { end = c.n; eofSeen = true; starts = [start, ...bounds.filter((b) => b < c.n)]; region = got.bytes; }
+    }
+    if (withHead && !head) {
+      const h = await rangeBytes(evidence, sha, 0, c.he);
+      if (!h || h.bytes.length !== c.he) return h ? mismatch() : { gone: true };
+      head = h.bytes;
+    }
+    let input = region;
+    if (withHead) { input = new Uint8Array(head.length + region.length); input.set(head, 0); input.set(region, head.length); }
+    const res = await entry.text(input, { inlineCellsMax: 0 });
+    const sheet = res && res.ok !== false && Array.isArray(res.sheets) ? res.sheets[0] : null;
+    if (!sheet || typeof sheet.text !== "string" || !Array.isArray(sheet.lineRows)) throw new Error("the csv entry gave no sheet for a window");
+    const rows = sheet.lineRows, all = rows.length ? sheet.text.split("\n") : [];
+    if (all.length !== rows.length) throw new Error("the csv entry's lines and their rows differ for a window");
+    if (headLine === null) {
+      if (!all.length) return mismatch();
+      headLine = all[0]; limit = cap - headLine.length - 1; headWords = wordsIn(headLine);
+      if (limit < 1) return mismatch();
+    }
+    /* the lines of the chunk (the head's lines come first and are not the chunk's), each with where it is in the object */
+    let prevJ = -1, inRec = 0;
+    for (let t = 0; t < all.length && stop === null; t++) {
+      const rel = rows[t] - (withHead ? c.hr : 0);
+      if (rel < 1) continue;
+      const j = rel - 1;
+      if (j >= starts.length) throw new Error("the csv entry numbered a row past the window's records");
+      inRec = j === prevJ ? inRec + 1 : 0; prevJ = j;
+      const at = { offset: starts[j], row: rowBase + j, line: lineIdx, inRec };
+      lineIdx++;
+      if (skip > 0) { skip--; continue; }
+      if (!feed(all[t], at)) break;
+    }
+    rowBase += starts.length;
+    start = end;
+  }
+  if (stop === null && cur.length) emit(null);   /* the end of the sheet: its last block */
+  let words = 0;
+  for (const u of units) words += wordsOfUnit(u);
+  const more = stop !== null;
+  const read = c.rt + added;
+  return { units,
+           fields: { more,
+                     cursor: more ? windowCursor(sha, { m: "c", n: c.n, ob: stop.offset, rw: stop.row, li: stop.line, sk: stop.inRec, bi: seq, rt: read,
+                                                        tt: c.tt, he: c.he, hr: c.hr, lr: c.lr, lc: c.lc, rg: c.rg, sh: c.sh }) : null,
+                     read_through: more ? read : c.tt, total: c.tt },
+           piece: { units: units.length, words } };
+}
+
+/* A later piece by a window cursor (R40): `{refused}` or `{gone}` (the object is not held) or the piece's units and fields. */
+async function windowTick(evidence, sha, c, ask) {
+  if (c.s !== sha || !natural(c.n) || c.n < 1) return mismatch();
+  if (c.m === "t") return textWindowTick(evidence, sha, c, ask);
+  if (c.m === "c") return csvWindowTick(evidence, sha, c, ask);
+  return mismatch();
 }
 
 /* ===================================================================== *
@@ -1908,12 +2196,12 @@ function refusalOf(a) {
  *  reading). Never throws; every failure is a failed reading, and says whether it is `transient` or `final`. */
 export async function read(document, { evidence = null, env = {}, storeName = "bio", view, planeVersion = null,
                                         liveCalibration = null, transcription = null, unitsBudget, ocrInvocations,
-                                        owe = null, cursor, maxUnits, rangePages } = {}) {
+                                        owe = null, cursor, maxUnits, rangePages, windowBytes } = {}) {
   /* R39: a digest alone is no document; it is refused before anything is loaded, and no reading is composed. */
   if (isBareStub(document)) return refusal(BARE_DIGEST, "reading-pipeline.index.bytes_not_held");
   try { return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
                                            unitsBudget, ocrInvocations, owe,
-                                           pieces: cursor === undefined ? null : { cursor, maxUnits, rangePages } }); }
+                                           pieces: cursor === undefined ? null : { cursor, maxUnits, rangePages, windowBytes } }); }
   catch (e) {
     const reading = failed(document, null, localize("reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", { detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT });
     reading.metadata = null;   /* R28: no entry's answer reached the reading */
@@ -1950,11 +2238,11 @@ export async function bytesOf(evidence, doc) {
   /* the store is asked only when the document states no size */
   const held = wholeSha && total === null ? await sizeHeld(evidence, wholeSha) : null;
   if (held !== null && held > WHOLE_READ_MAX) return tooBig(held);
-  if (!parts) return { bytes: await whole(doc.capture.sha256) };
+  if (!parts) { const b = await whole(doc.capture.sha256); return b ? { bytes: b, whole: true } : { bytes: b }; }
   /* R2 (T51 fix round 2, C5): the whole object held under the document's fingerprint is read first; parts are
      assembled, and bounded, only when none is held. */
   const got = wholeSha ? await whole(wholeSha).catch(() => null) : null;
-  if (got) return { bytes: got };
+  if (got) return { bytes: got, whole: true };
   if (total > MULTIPART_READ_MAX)
     return { bytes: null, failure: FAILURE_TRANSIENT,
              why: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(parts.length), multipart_read_max: String(MULTIPART_READ_MAX) }) };
@@ -2003,8 +2291,27 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   if (!sha) return early(failed(doc, null, localize("reading-pipeline.index.no_capture_digest", "the document names no capture digest, so there are no bytes to read"), { failure: FAILURE_FINAL }));
   /* DEC-149 (T35-24): member-facing, so it names the group's Civicsmith, never "this instance". */
   if (!evidence) return early(failed(doc, null, word("reading-pipeline.no_evidence_store"), { failure: FAILURE_TRANSIENT }));
+  /* R40: the ask of a piece (a cursor passed, null for the first). */
+  const piecesOn = pieces !== null;
+  const pieceAsk = piecesOn ? {
+    cursor: pieces.cursor ?? null,
+    budget: unitsBudget === undefined ? ACQUIRE_TEXT_UNITS_BUDGET : unitsBudget,
+    maxUnits: Number.isInteger(pieces.maxUnits) && pieces.maxUnits > 0 ? pieces.maxUnits : PIECE_UNITS_MAX,
+    rangePages: Number.isInteger(pieces.rangePages) && pieces.rangePages > 0 ? pieces.rangePages : PDF_RANGE_PAGES,
+    windowBytes: Number.isInteger(pieces.windowBytes) && pieces.windowBytes > 0 ? pieces.windowBytes : WINDOW_BYTES } : null;
+  /* G68: a piece after the first, by a cursor of kind `w`, is read from the window it names; the object is not read whole. */
+  if (piecesOn && pieceAsk.cursor !== null) {
+    const wc = windowCursorOf(pieceAsk.cursor);
+    if (wc) {
+      const w = await windowTick(evidence, sha, wc, pieceAsk);
+      if (w.refused) return w;
+      if (w.gone) return early(failed(doc, null, localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"), { failure: FAILURE_TRANSIENT }));
+      return { ...(w.units.length ? { text_units: w.units } : {}), ...w.fields, piece: w.piece };
+    }
+  }
   const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
   let bytes = got.bytes;
+  const objLen = bytes ? bytes.length : 0;
   got.bytes = null;
   /* R2 (T51 fix round 5, E1; K4530): the recorded profile is never trusted over bytes the reader holds. A capture held in
      parts is profiled from no byte, so an upload's recorded format is `undetermined` (or none): it is detected again from
@@ -2020,17 +2327,14 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   }
   /* R40: a later piece of a text is its units alone, drawn from the bytes now held. It runs before any recogniser: the
      reading is the first piece's, and the text is not classified again for each piece. */
-  const piecesOn = pieces !== null;
-  const pieceAsk = piecesOn ? {
-    cursor: pieces.cursor ?? null,
-    budget: unitsBudget === undefined ? ACQUIRE_TEXT_UNITS_BUDGET : unitsBudget,
-    maxUnits: Number.isInteger(pieces.maxUnits) && pieces.maxUnits > 0 ? pieces.maxUnits : PIECE_UNITS_MAX,
-    rangePages: Number.isInteger(pieces.rangePages) && pieces.rangePages > 0 ? pieces.rangePages : PDF_RANGE_PAGES } : null;
   if (piecesOn && pieceAsk.cursor !== null && bytes && textRead) {
     const e0 = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
     if (!(e0 && (typeof e0.text === "function" || typeof e0.structure === "function"))) {
       const p = textPieceAnswer(visibleOf(text, fmt === "html"), { html: fmt === "html", sha, ...pieceAsk });
       if (p.refused) return p;
+      /* G68: the pieces after this one are read by a window when the capture can be (a cursor of the old kind is moved on to one) */
+      if (p.fields.more && fmt !== "html")
+        p.fields.cursor = textWindowCursorOf({ sha, bytes, text, whole: got.whole === true, at: p.at, through: p.fields.read_through, grain: p.grain }) ?? p.fields.cursor;
       return { ...(p.units.length ? { text_units: p.units } : {}), ...p.fields, piece: p.piece };
     }
   }
@@ -2071,6 +2375,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       const html = fmt === "html", visible = visibleOf(text, html);
       const p = textPieceAnswer(visible, { html, sha, ...pieceAsk });
       if (p.refused) return p;
+      if (p.fields.more && !html)
+        p.fields.cursor = textWindowCursorOf({ sha, bytes, text, whole: got.whole === true, at: p.at, through: p.fields.read_through, grain: p.grain }) ?? p.fields.cursor;
       const tot = totalsOfText(visible, html, p.grain);
       textUnits = p.units.length ? p.units : null;
       pieceInfo = { ...p.fields, piece: { ...p.piece, units_total: tot.units } };
@@ -2253,6 +2559,13 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         const plan = pieceUnitPlan(i2text, all);   /* G48: made once for the piece and its totals */
         const p = listPieceAnswer(plan, { sha, ...pieceAsk });
         if (p.refused) return p;
+        /* G68: the pieces after this one are read by a window when the capture can be (a cursor of the old kind is moved on to one) */
+        if (p.fields.more && fmt === "csv") {
+          const meta = plan.metaAt(p.next);
+          const w = meta ? await csvWindowCursorOf(evidence, { sha, whole: got.whole === true, size: objLen, i2text, meta, next: p.next,
+                                                               read: p.fields.read_through, total: p.fields.total }) : null;
+          if (w) p.fields.cursor = w;
+        }
         textUnits = p.units.length ? p.units : null;
         pieceInfo = { ...p.fields, piece: { ...p.piece, units_total: plan.n } };
         pieceBase = all;
