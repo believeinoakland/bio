@@ -112,7 +112,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.ceremony.when.help", "screen.ceremony.when.needed", "screen.ceremony.when.now",
     "screen.ceremony.when.time", "screen.ceremony.withdraw.reason", "photo.refused.format", "signing.ceremony.who",
     "screen.ceremony.nothing", "crumb.project.unjoined", "refusal.NO_REVIEW_COPY", "review.body.nocase", "case.links.editor", "shell.card.case-editor", "ceremony.gate.heading", "ceremony.gate.notargets",
-    "ceremony.gate.other", "screen.ceremony.gate.addfinding", "refusal.PUBLISH_NO_FINDING", "act.publish.here.ceremony", "signing.ceremony.declined", "signing.ceremony.signedat", "signing.ceremony.signednow", "signing.ceremony.nokey",
+    "ceremony.gate.other", "screen.ceremony.gate.addfinding", "refusal.GATE_REFUSED", "refusal.PUBLISH_AT_NO_ZONE", "case-authoring.publish_at_not_reached_sentence", "case-authoring.publish_at_unanswered_sentence", "refusal.PUBLISH_NO_FINDING", "act.publish.here.ceremony", "signing.ceremony.declined", "signing.ceremony.signedat", "signing.ceremony.signednow", "signing.ceremony.nokey",
     "signing.ceremony.keepkey", "screen.ceremony.signs.linesabout", "screen.published.rests.on.the.council.minutes", "screen.published.rests.on.the.council.minutes.one", "signing.ceremony.notowner", "signing.ceremony.phone", "time.clock", "time.am", "time.pm", "shell.unavailable.home",
     "refusal.NO_CASE_DOCUMENT", "screen.ceremony.conf.row.done", "screen.ceremony.conf.row.missing.co_archive", "screen.ceremony.conf.row.missing.timestamp", "screen.ceremony.registering", "shell.keyfile.none",
     "screen.ceremony.openrequests.heading","screen.ceremony.openrequests.says", "screen.ceremony.minutes.heading",

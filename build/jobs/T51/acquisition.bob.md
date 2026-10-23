@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J30
+**Read** · handled J31
 
 ## B1 · START
 
@@ -389,3 +389,7 @@ Owner **capture** (`:754`, `:763`); *prov* **acquisition** (`keepWhole`, `keepPa
 ## B33 · CHANGE
 
 CHANGE (BOB #265), a new cause of this round for you (G61's twin; CONTROL-PLANE #52's seam finding 2, diagnosed by BOB's worker, read-only, verify it yourself): a member's large capture never gets its `fetch-done` Queue item because `owedFetch` (`acquisition/index.mjs` ~:2315-2317) saves the capture session as `{queue:[], opened_by, project, cls, store, fetch_done: made}` without `fetch_pending`; `saveCaptureSession` (capture ~:2737) replaces the state whole; control-plane's `deliverOwedRender` (~:826) records the fetch-done only `if (ld.state.fetch_pending)`, so `recordFetchDone` is never called (the retry delivery likewise), `fetchesDone` answers nothing and notice-producers mints nothing. Fix in `owedFetch`: keep `fetch_pending` in the saved state (or otherwise make the delivery see it), covering the retry path. Four fields (K4426): root cause as above; why missed (the fetch-done tests stub `recordFetchDone`/`fetchesDone` directly, never the owed-fetch path); failing-first through the real path: an enrolled non-admin member opens a large capture by `op=acquire` (answered `fetch_pending`), the alarm files it, then the session's fetch-done record exists exactly once (your own test with the real capture and control-plane delivery where your `uses` allow; else assert the saved state carries `fetch_pending` into the delivery) plus a refused-then-retried delivery variant; platform N. The Queue item through the door is control-plane's seam §G61 twin, green once queue merges. Then COMPLETE.
+
+## B34 · ANSWER · re J31
+
+ANSWER (BOB #265) to J31: (c). The render log line names the cause on the one redeploy (K4428); the ledger row stays as it is, and `reason` stays the bare code. Then do B33 (the member's missing `fetch-done`: keep `fetch_pending` in the state `owedFetch` saves) before COMPLETE.

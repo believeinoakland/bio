@@ -35,8 +35,8 @@ const SHA = /^[0-9a-f]{64}$/;
 // ---- RFC 4180 ----
 
 /* The rows of CSV text, one array of strings at a time (RFC 4180: quoted fields, doubled quotes, CRLF or LF line ends,
-   a leading BOM dropped); its return value is `{rows}` (the count) or `{error}` naming the first fault. */
-function* csvScan(text) {
+   a leading BOM dropped; `sep` the separator's char code); its return value is `{rows}` (the count) or `{error}` naming the first fault. */
+function* csvScan(text, sep = 44) {
   if (typeof text !== "string") return { error: "the source is not text" };
   const s = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   const n = s.length;
@@ -57,13 +57,13 @@ function* csvScan(text) {
       }
       field = parts.join("");
       const c = s.charCodeAt(i);
-      if (i < n && c !== 44 && c !== 10 && c !== 13)
+      if (i < n && c !== sep && c !== 10 && c !== 13)
         return { error: `a quoted field on line ${count + 1} is followed by text before its separator` };
     } else {
       let j = i;
       while (j < n) {
         const c = s.charCodeAt(j);
-        if (c === 44 || c === 10 || c === 13) break;
+        if (c === sep || c === 10 || c === 13) break;
         if (c === 34) return { error: `a quote opens inside an unquoted field on line ${count + 1}` };
         j++;
       }
@@ -72,7 +72,7 @@ function* csvScan(text) {
     }
     row.push(field);
     if (i >= n) { yield row; return { rows: count + 1 }; }
-    if (s.charCodeAt(i) === 44) {
+    if (s.charCodeAt(i) === sep) {
       i++;
       if (i >= n) { row.push(""); yield row; return { rows: count + 1 }; }
       continue;
@@ -86,9 +86,11 @@ function* csvScan(text) {
 }
 
 /** Reads CSV text row by row, handing each row, a list of strings, to `onRow` as it is read, so a large table is never
- *  held twice. `{rows}` (the count) or `{error}` naming the first fault. Never throws, unless `onRow` does. */
-export function scanCsv(text, onRow) {
-  const it = csvScan(text);
+ *  held twice. `delimiter` is the one-character separator (default a comma; G64: a source may use a tab, a semicolon or a
+ *  pipe, the canonical bytes stay comma). `{rows}` (the count) or `{error}` naming the first fault. Never throws, unless
+ *  `onRow` does. */
+export function scanCsv(text, onRow, delimiter = ",") {
+  const it = csvScan(text, delimiter.charCodeAt(0));
   for (;;) {
     const s = it.next();
     if (s.done) return s.value;

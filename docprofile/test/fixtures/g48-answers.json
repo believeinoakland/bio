@@ -1749,27 +1749,17 @@
    "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
    "stack": {
     "handler": {
-     "key": "client_rendered",
-     "label": "an application that builds its pages in the browser",
+     "key": "conservative",
+     "label": "an unrecognised document",
      "version": 1,
-     "textual": true,
-     "shell": true,
-     "warning": "This address builds its page in the browser, so what was collected is the empty frame and not the figures. It cannot be relied on as evidence of what the page shows. Collecting it properly needs the page to be rendered first."
+     "conservative": true,
+     "fallback": true,
+     "textual": true
     },
-    "confidence": "possible",
-    "signals": [
-     "no links and no prose in the body"
-    ],
-    "considered": [
-     {
-      "key": "client_rendered",
-      "confidence": "possible",
-      "signals": [
-       "no links and no prose in the body"
-      ]
-     }
-    ],
-    "kind": "shell"
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
    },
    "doctype": {
     "type": {
@@ -1803,27 +1793,17 @@
    "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
    "stack": {
     "handler": {
-     "key": "client_rendered",
-     "label": "an application that builds its pages in the browser",
+     "key": "conservative",
+     "label": "an unrecognised document",
      "version": 1,
-     "textual": true,
-     "shell": true,
-     "warning": "This address builds its page in the browser, so what was collected is the empty frame and not the figures. It cannot be relied on as evidence of what the page shows. Collecting it properly needs the page to be rendered first."
+     "conservative": true,
+     "fallback": true,
+     "textual": true
     },
-    "confidence": "possible",
-    "signals": [
-     "no links and no prose in the body"
-    ],
-    "considered": [
-     {
-      "key": "client_rendered",
-      "confidence": "possible",
-      "signals": [
-       "no links and no prose in the body"
-      ]
-     }
-    ],
-    "kind": "shell"
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
    },
    "doctype": {
     "type": {

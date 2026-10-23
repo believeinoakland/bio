@@ -87,11 +87,12 @@ export function setText(date, hhmm, today) {
   return isCalendarDate(date) && time ? say("time.at", { date: dayText(date, today), time }) : "";
 }
 
-/** A code another module states, read through its word `queue.fill.<kind>.<code>` (DEC-359): grade letters lower-cased; empty when
- *  the list holds no word for the code, so a code with no key is never written into a sentence. */
+/** A code another module states, read through its word `queue.fill.<kind>.<code>` (DEC-359): a grade lower-cased with its underscores
+ *  closed up (content's `NOT_FOUND` is the row `notfound`); empty when the list holds no word for the code, so a code with no
+ *  key is never written into a sentence. */
 export function fillWord(kind, code) {
   if (typeof code !== "string" || code === "") return "";
-  const key = `queue.fill.${kind}.${kind === "grade" ? code.toLowerCase() : code}`;
+  const key = `queue.fill.${kind}.${kind === "grade" ? code.toLowerCase().replace(/_/g, "") : code}`;
   return /^[A-Za-z0-9_-]+$/.test(code) && hasWord(key) ? say(key) : "";
 }
 
