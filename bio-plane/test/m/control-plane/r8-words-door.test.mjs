@@ -8,7 +8,7 @@ import "../../sandbox.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { Miniflare } from "miniflare";
-import { wrapScript, readCalls, doCalls } from "./wrap-entry-read.mjs";
+import { wrapScript, readCalls, doCalls } from "./wrap-entry.mjs";
 
 const ADM = "adm-r8words-0123456789abcdef", PASSWORD = "the founder's long password, words", ORIGIN = "https://group.example", VERSION = "4.8.1";
 const mf = new Miniflare({

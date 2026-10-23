@@ -12,7 +12,7 @@ import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 import { PARTS } from "../../../src/screens-publish/parts.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import "./register-declared.mjs";
-import { wrapScript } from "./wrap-entry-read.mjs";
+import { wrapScript } from "./wrap-entry.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 export const MB = 1024 * 1024;

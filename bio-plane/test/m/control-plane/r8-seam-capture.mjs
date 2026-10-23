@@ -3,6 +3,7 @@
    FIRST and stay RED BY NAME until their providers have merged (acquisition for G103-G105; screens-intake for G108, G109). `sections(kit)` registers them over the kit
    `makeKit` answers. A wait is a test-side poll (R-CLOCK); a count or a state is asserted, never a duration (R-NOLOAD). A sentence is read from the word table
    (`word`), never copied (K3810). */
+import { OPS } from "../../../src/op-declarations/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
@@ -127,7 +128,7 @@ export function sections(kit) {
 
   /* ---- G108, G109: the Add screen itself, over the real plane. The page is the screens' own (interface-shell's harness and DOM stand-in); each op it asks goes to the
      real plane as the member, and the page's clock is ticked while the real alarm delivers ---- */
-  const FORWARDED = ["acquire", "heldat", "opencaptures", "heldcaptures", "capturerequests", "projectlist", "projectquestions", "image", "allocid", "promote", "reading", "readheld", "captureseenin"];
+  const FORWARDED = Object.keys(OPS);   /* every op the door declares, answered by the plane (K3268: no hand list) */
   async function addScreenOf(auth, path) {
     const asked = [], seen = {};
     const plane = {};

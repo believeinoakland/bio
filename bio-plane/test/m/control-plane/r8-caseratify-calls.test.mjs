@@ -8,7 +8,7 @@
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { makeKit } from "./r8-kit.mjs";
-import { readCalls, readEvents, peak, depth, doCalls, r2Calls } from "./wrap-entry-read.mjs";
+import { readCalls, readEvents, peak, depth, doCalls, r2Calls } from "./wrap-entry.mjs";
 
 const kit = makeKit({ tag: "r8case", counting: true });
 after(() => kit.mf.dispose());
