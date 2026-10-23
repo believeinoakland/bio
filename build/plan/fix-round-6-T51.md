@@ -236,6 +236,220 @@ The E3 harness (`bio-plane/test/m/plane/shape/harness.mjs`: the real plane Store
 
 - **G52 · The design's registry at DEC-419 (`f72b2f8a4c`) adds the act `projectjoin` ("Join", a declared op) to `start-send`, `request` and `action`; screens-action's `acts` (`start-send.mjs:153`, `request.mjs:176`, `action.mjs:501`) lack it, so `contract.test.mjs:34` (R1-R6, interface-shell R21, R38: each screen's acts are exactly its registry acts) is red, and an invited, not yet joined member on those screens is told to join (K4557) with no Join in place.** Owner **screens-action** (new job SCREENS-ACTION #16, sonnet). (1) **Cause, certain:** `send-steps.mjs:196` drew Join only on the project page, "the door in place waits for the design stream (K4559)"; the design has now drawn it (mock screens: "If you were invited and have not joined yet", a Join button). A member can reach the case: invited, not joined, opening a filing draft (K4557's weighty-act note in `joinFirst`, ~:198). (2) **Missed:** the contract test caught it; unplaced after the design merge (K4686). (3) **Design (review K4686, five points adopted).** The invited-not-joined note becomes the design's fold (`mock-screens.js:2193, 2211, 2279`; DEC-417, B477): a `<details>` whose summary is `screen.projectact.invited.head` (`setup-words/rows.mjs:11144`), holding `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited` (:11143) and the Join act, drawn by `joinFirst` (`send-steps.mjs:199-207`, which today draws the generic `refusal.PROJECT_ACT_NOT_A_PARTICIPANT` and a link to the project page); where the in-place Join is drawn the project-page link is dropped, as the design draws it (K4557's link was the stand-in until the door existed, K4559), and `joinFirst`'s comment (:195-197) is corrected. Each of the three screens' `acts` (`start-send.mjs:153`, `request.mjs:176`, `action.mjs:501`) gains `projectjoin`, sent as `home.mjs:143, :276, :440-441` send it (`cs.act("projectjoin", {label, data: {project}})`, query `projectId`; declared at `op-declarations/index.mjs:717`), its `rereads` naming `standing` (the `projectlist` read these screens draw the note from, `start-send.mjs:39`, `request.mjs:40`, `action.mjs:41`) and `projects`, so the weighty act is offered after the join. The words: `screen.projectact.invited.head`, `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited` and the labels `act.projectjoin.label.start-send`, `.request`, `.action` (`rows.mjs:17543, 17557, 17565`) are added to each screen's `words` list (`screens-action/index.mjs`, e.g. :66) and pinned in `contract.test.mjs` (its words check, ~:84, skips an act label with no word); none is in `words-reads.json`'s reads list for screens-action, so the job names them to BOB for a HANDOFF to UX-DESIGN (the reads list is the design's). No copied sentence in code or tests (K3810). **Failing-first:** `contract.test.mjs:34` red today on all three screens (it stops at `start-send`; the job confirms `request` and `action` red too), green after; `join-t51.test.mjs:98`'s `test.todo` ("K4559 … Join beside the sentence") made real, per screen: an invited, not joined member sees the fold with the `.invited` sentence and Join, presses it, `projectjoin` is sent with the project, and the screen rereads `standing` and offers the act (red today: no Join); its helper `told()` (~:40), which asserts the project-page link, is revised to the fold; and `join-seam-t51.test.mjs` (which opens the project page's link, :34, its header :5) is revised to press Join in place in the fold, the real `projectjoin` through the door (second review, K4686); control: a joined member sees no fold and the screen's other acts are unchanged. Census: no op's accepted keys change. (4) **N** (no platform shape); **P** at the re-walk: on biosmoke8 an invited member presses Join on the Act screen and then drafts (section 7 item 3, E9's invited-then-joined case).
 
+### G50 · Two material rows of one `ref` give two case-file entries one path, and a court order joins a copy to its original by `ref` (public-read "Deferred: originalOf", PUBLIC-READ #30 J19/J20; diagnosis `originalOf-diagnosis.md`; BOB's design under P17; review `G50-review.md` applied whole, its six defects and every gap adopted by BOB; the case-file half of G47's family)
+
+- **G50 · `caseFilePath` spells one path per `ref` for every per-ref kind of file (`document`, `extracted_text`, `observation`, `obscured`). So a case whose `materials:` block lists a `ref` on two or more rows builds a case file that lists one path twice: the checker's own rule `path_twice` flags it, and the zip is refused (`DUPLICATE_PATH`, HTTP 409). Separately, `#editionItems` joins a copied material to its original by `ref`, so under a court order the last original of the `ref` wins: an order sealing capture A's original leaves A's copy served, and an order naming B's original withholds A's copy.** Owners, in merge order (providers first, `modules.json`): **case-grammar** (105; the path with a capture discriminator, the format version that declares it, the manifest check, the complete edition's lookup; new job CASE-GRAMMAR #21), **public-read** (112; (A) the withholding join by the copy's own hash, (B) the writer of the paths and the version and the order's reach over the new paths; new job PUBLIC-READ #31), **case-checker** (117; its readers of a file by `ref`, the specification `/4`; new job CASE-CHECKER #17), **case-import** (118; its store of imported files keyed by path; new job CASE-IMPORT, next number), and last **case-disclosures** (119; test only: the seam test from the member's acts through assembly, R-SEAM; new job CASE-DISCLOSURES #18). (A) is public-read's alone and needs no provider. case-carriage and publication need no code. Their rows are per copy sha and already carry `ref` and `sha`. `published_shas` keys by `(sha256, bundle_id, path)`, and the copy's `path` there is `materials/<sha>`, never the case-file path. `recordCaseManifest` registers whatever paths the manifest lists (`publication/index.mjs:2255`). case-authoring needs nothing (its fixtures stub `checkCaseFile`).
+  (1) **Cause, certain** (read; the diagnosis' probe and T3 run).
+  *(A)* `#editionItems` (`public-read/index.mjs:1675`) builds `originalOf = Map<ref, sha>` by `Map.set` over the signed rows (:1687-1691), so k copied rows of one `ref` leave only the last original. Each `obscured` file's item is `[f.path, caseFilePath("document", ref), originalOf.get(ref)]` (:1695-1697), with `ref` read from the path by `f.path.split("/")[1]` (:1695). `withholdingOf` matches an item by any of its paths or its sha (`courtorders.mjs:62-82`). Run on two copied rows of one ref, originals A and B:
+  - `seal` naming A: `publishedbytes` answers 200 for A's copy and 200 for B's (**under-withheld**).
+  - `seal` naming B: 451 for A's copy and 451 for B's (**A's copy over-withheld for an order naming another capture**).
+  *(B)* `caseFilePath(kind, key)` (`case-grammar/casefile.mjs:108-123`, `MATERIAL_FILES` :94-95) accepts one segment, the `ref`. `buildCaseFile` adds one entry per row with that path (`public-read/casefile.mjs:120` document or observation, :124 `extracted_text`, :145 `obscured`) and sorts; nothing dedupes or disambiguates. `caseFileManifestCheck` flags the second entry `path_twice` (:248), and `containerEntries`/`serialiseContainer` refuse it (`container.mjs:98-107`, `publication/worker.mjs:602-603`: 409). Files are still stored and served by hash, so the harm is three things: an unbuildable zip, a checker departure on the publisher's own file, and the withholding above.
+  *Run, T3:* two INCLUDED, non-copied captures of one `ref`, both held, through `buildCaseFile` over the facts `caseFileFacts` answers. The manifest lists `materials/INFO-1/document` twice and `materials/INFO-1/extracted.txt` twice, and `caseFileManifestCheck` answers `path_twice` at `files[4].path` and `files[6].path`. **The collision is not only `obscured`'s: it hits `document`, `extracted_text` and `observation` too.**
+  **Can a real member produce it? Yes, by G47's route, with one condition that G47's own R17 case does not meet.**
+  - A leg without a `content_id` reaches every register row of its bundle (`case-disclosures/materials.mjs:15-26`, `materialsOfLeg`). So a source captured twice (the address re-fetched after it changed, both captures kept) is two materials of one `ref`.
+  - Each is `included` when its bytes are held whole (`case-disclosures/index.mjs:~495`, `included: plain && held.whole`).
+  - `caseFileFacts` (`public-read/index.mjs:1469-1498`) makes one `materials` entry per included row and one `obscured` entry per copied row, with no dedupe.
+  - For copies, each capture must itself be a photo, or a member document in state `copy`.
+  - **R17's 501 captures of one source (`case-authoring/document.test.mjs:214-267`) do NOT collide.** Its synthetic captures are not held ("so Q travels supporting"), so every row is `included: false` with no copy and gives no file. The same case with 501 HELD captures would collide at `document` and `extracted_text` and carry 1,002 files.
+  - The claim is made by the member's acts in this job: case-disclosures' seam test (4) builds the two captures through `materialsJudged`/`materialRows` and `holdMaterials`, then assembles (R-SEAM, K4427). Until it runs, reachability rests on the reading.
+  *Also found, same family:*
+  - (i) **`original_carried` is judged by `ref`** (`casefile.mjs:289`, `copies.has(entry.ref)`). A `ref` with one copied row and one included row (a legitimate mix) departs for the included row's own `document`. `/4` fixes it by construction. A `/3` file keeps today's verdict (R-OLD).
+  - (ii) **`withholdChains`** (`public-read/index.mjs:145-157`) reaches a document's archive and container records by the prefix of the document's path. With the document one directory deeper, the prefix no longer covers them (under-withholding).
+  - (iii) **An archive shared by two captures of one `ref`** is added twice at the same path with the same bytes (`public-read/casefile.mjs:134`).
+  - (iv) **`case-import` stores imported files with `INSERT OR IGNORE` keyed by path** (`case-import/index.mjs:736`). A second file at the same path is dropped without a word, if such a file reaches that line. `/4` removes the repeated path, so the drop cannot occur for a file this plane writes; the case-import test proves both files are stored.
+  - (v) **A several-ref row whose `sha` is not 64 lower-case hex after lower-casing** has no capture to spell. Spelling it plain would put a plain path in a `/4` file (`capture_missing` against itself). Leaving `caseFilePath` null would make `buildCaseFile` answer `CASE_FILE_NOT_ASSEMBLED` (the unspelled check, `public-read/casefile.mjs:180-183`) where today it publishes.
+  (2) **Missed:** no test anywhere has two `materials:` rows of one `ref` that carry files.
+  - `public-read/obscured.test.mjs` builds one capture per bundle (`scene()`) and one `copyRow`. Its R28 test (:186) puts the order on the document PATH, which withholds the copy whichever hash is stored, so the `originalOf` branch (:1697) is never exercised.
+  - `casefile.test.mjs` and `case-grammar/obscured.test.mjs` build one copy per ref. `casefile.test.mjs:335,397` test `path_twice` only on a hand-duplicated entry.
+  - `case-grammar/casefile.mjs:287-289` already builds `copies: Map<ref, [copy…]>`, a list per ref, so several copies per `ref` were expected while the path scheme cannot spell them.
+  - The harnesses hand-write the `materials` rows (`w.prepare`) and register copies by hand, so no test drives two captures of one bundle from the acts.
+  Gap fixed by the tests below: each runs through the real entry path, with goldens recorded before any change, and one seam test starts from the acts.
+  (3) **The design (BOB's, P17).**
+  *(A) Court orders, public-read alone.*
+  - `#editionItems` builds `originalsOfCopy: Map<copySha, Set<originalSha>>` from the signed rows (`r.obscured.copy` and `r.sha`, both lower-cased). It is a `Set` so that two rows with identical copy bytes withhold both originals.
+  - An `obscured` file's item lists `originalsOfCopy.get(lower(f.sha256))` in place of `originalOf.get(ref)`. Nothing is keyed by `ref`.
+  - A one-capture edition's items are unchanged byte for byte.
+  - The `ref` is read by `caseFileEntryOf(f.path).ref`, never by splitting the path.
+  *(B) The path.*
+  - **When a `ref` occurs on two or more rows of the case document's `materials:` block, every per-ref entry of those rows takes the row's capture as a path segment: `materials/<ref>/<sha>/<leaf>`.** Rows are counted over all rows, carried or not, as G47 counts. `<sha>` is the row's `sha`, lower-cased, 64 hex (for a copied row, the ORIGINAL's). `<leaf>` is the kind's existing leaf: `document`, `extracted.txt`, `observation.md`, `obscured`.
+  - These four are every kind `MATERIAL_FILES` spells. `archive` and `container` are already keyed by digest. An attestation is `attestations/<ref>/<n>-<by_kind>.json`, with `n` its place among that ref's rows (`public-read/casefile.mjs:150-161`). These are unchanged.
+  - A `ref` on one row keeps today's path byte for byte.
+  - **A several-ref row whose `sha` is not 64 hex after lower-casing is never spelled plain.** Each of its files is named in `unheld` (`{ref, sha, what}`, as `held()` already does for a non-hex digest, `public-read/casefile.mjs:104-107`), and the case file is still built.
+  - **Shas are compared lower-cased everywhere:** the writer, the joins, every departure (`capture_unnamed` included) and the checker.
+  *Why the full sha and not its first 16 hex:* a truncated sha is not collision-free by construction, and a collision would silently bring `path_twice` back. Every join would also become a prefix test. The full sha costs 48 more bytes per path; the longest path is 289 bytes, and 64-hex segments are already this format's habit.
+  *Parsing:* `caseFileEntryOf` reads a 4-segment `materials/<ref>/<seg>/<leaf>` path as follows:
+  - a chain, when `<seg>` is `archives` or `containers`;
+  - a discriminated material file, when `<seg>` is 64 lower-case hex and `<leaf>` a material leaf;
+  - otherwise null.
+  *The format: `bio-case-file/4` (`CASE_FILE_FORMAT_V4`).*
+  - It is declared only for a case file with at least one discriminated path, through `caseFileFormatFor(paths)`. Every other file keeps `bio-case-file/3` and its bytes.
+  - `CASE_FILE_FORMATS_ACCEPTED` becomes `[V4, V3, V2, V1]`. The `isCaseFileManifest` gate (`publication/worker.mjs:576`) reads this list.
+  *An old reader meeting `/4` fails loudly:* it departs at `format`, and `check.mjs:299/583` carries the departure into every finding, so each finding is `did_not_recreate` (pinned for unknown formats at `check.test.mjs:54`). An old import refuses `IMPORT_NOT_A_CASE_FILE`.
+  *R-OLD:*
+  - No published case file is rewritten, and none is migrated.
+  - `/1`-`/3` files read exactly as before, including a `/3` file whose `ref` is on two rows. **The discriminated spelling is `/4`'s alone**: every reader decides the spelling from the manifest's format, never from the rows alone. Goldens recorded at HEAD prove this (4).
+  - A stored case file with a repeated path cannot be zipped and is not rewritten. The P scan (5) counts them.
+  *Consequence, by design:* a new case with any `ref` on two rows and at least one file for it is `/4`, even when that ref's files would not have collided.
+  *The design per owner:*
+  **case-grammar** (105):
+  - New exports: `CASE_FILE_FORMAT_V4`, `KINDS_LACKED[V4] = []`, and `caseFilePath(kind, [ref, sha])` for the four material kinds. It answers null for a ref that is not a segment, or a sha that is not 64 hex after lower-casing; the writer avoids the null by rule (B)'s `unheld`. Also `caseFileEntryOf` answering `{kind, ref, capture}`, `caseFileFormatFor(paths)`, `refsOnSeveralRows(rows)`, and `materialFileKey(row, several, format)`, which answers `[ref, lower(sha)]` under `/4` for a several-ref row, else `ref`. All are exported through `index.mjs` (one definition for writer, complete edition and checker).
+  - **R13 is reworded, not only extended.** Its sentence "`CASE_FILE_FORMAT` is `bio-case-file/3`" becomes: the format written is `/4` for a case file with a discriminated path and `/3` otherwise; `/1`-`/4` are read as written, each by its own spelling.
+  - `caseFileManifestCheck` gains five departures, each a `localize('case-grammar.casefile.<slug>', …)` row:
+    - `path_format`: a discriminated path under another format.
+    - `format_unused`: a `/4` manifest with no discriminated path.
+    - Given the rows, under `/4`: `capture_missing` (a plain per-ref path of a several-ref `ref`), `capture_needless` (a discriminated path under a one-row `ref`) and `capture_unnamed` (a capture that no row of that `ref` names, compared lower-cased).
+  - The three copy rules are judged by `(ref, capture)` where the path states a capture, and by `ref` as now where it does not. `archive` and `container` under a several-ref `ref` depart only when every row of that `ref` is a copy.
+  - **Words:** the `format` departure's row `case-grammar.casefile.format` (`casefile.mjs:192`) names the accepted list `{accepted}` instead of "{current} (or {v2} or {v1})". This is a stand-in change owed to UX-DESIGN (a §5 line, BOB appends), and the words check stays green.
+  - `complete.mjs:309` reads the copy at `materialFileKey(x, several, cf.format)`.
+  **public-read** (112):
+  - `caseFileFacts` adds `capture` to each several-ref `materials` and `obscured` entry: the lower-cased sha, or `null` with `capture_invalid: true` when it is not 64 hex.
+  - `buildCaseFile`:
+    - spells `[ref, capture]` paths (:120, :124, :145);
+    - names each file of a `capture_invalid` entry in `unheld`;
+    - lists an identical (path, sha256) once;
+    - sets `head.format = caseFileFormatFor(paths)` before rendering the complete edition.
+  - `#editionItems`:
+    - (A) as above.
+    - A file with a capture in its path is also known by its kind's ref-level path. A copy is also known by `caseFilePath("document", ref)`, by `caseFilePath("document", [ref, capture])` and by the originals of its sha.
+    - A file without a capture: today's items byte for byte.
+  - `withholdChains` (:145) reads `caseFileEntryOf(d.path)`:
+    - **A one-row `ref` and every `/1`-`/3` manifest keep today's prefix rule byte for byte** (the archives and containers under the document's directory, `materials/<ref>/`).
+    - **Only for a `ref` on several rows of a `/4` manifest is the first link matched exactly:** the record `containers/<member>.json` whose `member` is the withheld document's capture (the member is in the path, so no record text is read).
+    - **Every link that cannot be resolved falls back to the ref level** (every archive and container under `materials/<ref>/`). That covers every outward link, every archive (an archive's path states no capture, and one archive may hold several captures), and any record whose text is not readable in the withheld index (a blob-backed record whose `archive` is not held inline in `publishedMaterialText`).
+    - So it may over-withhold a sibling capture's chain, and **never under-withholds**. BOB records it in `build/rulings.md`.
+  - `publishedcase`'s file list (`index.mjs:1213`) treats paths as opaque: no change, confirmed by test.
+  - `isCaseFileManifest` needs no edit.
+  **case-checker** (117):
+  - `check.mjs:163` adds `capture`.
+  - A new `fileOfMaterial(kind, mat)` matches `f.ref === mat.ref` and, where the file states a capture, `f.capture === lower(mat.sha)`. It replaces `fileOf(kind, "ref", mat.ref)` at :622, :708 and :941.
+  - :695 and :488 become capture-aware.
+  - `spec.mjs` gains `V4 = edit(V3, …)` and `CASE_FILE_SPECS["bio-case-file/4"]`. The changes are the title and version sentences, the paths of section 3 (:46-48 and :204-209: "at most one per `ref`" becomes one per row at `materials/<ref>/<sha>/obscured` for a several-ref `ref`), the `format` line, rules 1 and 7, and the five departures.
+  - `program.mjs` goes stale and BOB regenerates it at the round end. The committed program is the OLD reader, which the job runs once (4).
+  **case-import** (118):
+  - Reads only through `readCaseFile` and `caseFileManifestCheck(read.manifest)` (:681), without rows, and accepts `/4` through case-grammar's list.
+  - Its store `INSERT OR IGNORE INTO case_import_files … path` (:736) silently drops a second same-path file. `/4` fixes that for every file this plane writes. The job first checks whether a `/3` file with a repeated path can reach :736 or is refused at :681-683, and reports which. Code changes only if a reader is wrong; then it stops and names the reader to BOB.
+  **case-disclosures** (119): no code; the acts seam test.
+  **Every reader of case-file paths and of the version string** (grep over `bio-plane/src`, `test`, `site`, `docs`, `requirements`):
+  - *Paths:*
+    - case-grammar: `casefile.mjs`; `complete.mjs:226,259,261,309`.
+    - public-read: `casefile.mjs:85-199,227`; `index.mjs:145-157` (`withholdChains`), `:1213` (`publishedcase` file list, opaque), `:1675-1700` (`#editionItems`).
+    - case-checker: `check.mjs:115,163,205,313,488,527,622,695,708,941`; `spec.mjs`; `program.mjs` (generated).
+    - case-import: `index.mjs:681` (manifest check without rows) and `:736` (store keyed by path).
+    - publication: `index.mjs:1344` and `:2255` (path-agnostic); `worker.mjs:427,559,576,602`.
+  - *The version string:* `casefile.mjs:57,187-192`, `public-read/casefile.mjs:191,227`, `publication/worker.mjs:576`, `case-checker/check.mjs:537`, `case-checker/spec.mjs:244`, and case-import through the manifest check.
+  - *Generated, BOB's only:* `bio-plane/dist/bio-plane.bundled.mjs`, `release/bio-plane.bundled.mjs`, `case-checker/program.mjs`.
+  - **Not covered, named:** none. `docs/development/ux-substrate/screens/words-reads*.json` mention the path in prose; they are the UX stream's words, not a reader.
+  *Requirements to amend:*
+  - case-grammar **R13** (reworded as above) and **R14**.
+  - public-read **R23** (the copy under its row's capture for a several-ref `ref`; `/3` or `/4`; a non-hex several-ref sha `unheld`; an identical (path, sha256) once) and **R28** (a copy is withheld by its path, its ref's path, its capture's path, its own hash or an original it was made from, never by ref; a container by its member).
+  - case-checker **R14**, **R8**, **R2**, **R19**.
+  - case-import **R1**/**R5** only if their text names `/3` as newest.
+  *Census ops whose accepted keys change: none.*
+  - `casefilefacts` is internal and routed by no door. It is not in public-read's `DECLARED_OPS` (`index.mjs:2029`, which declares `verify` only), so no declaration pins its answer shape; public-read's job confirms this against `test/m/public-read/declared-ops.test.mjs`.
+  - `publishedbytes`, `publishedcase` and `withheld` keep their keys and answer shapes.
+  - Each job confirms and declares every census op it owns (K4208).
+  (4) **Failing-first** (red today, seen red), through the real entries: `assembleCaseContainer`, `publishedbytes` (the manifest, the zip part, a copy by hash), `publishedcase`, `caseFileManifestCheck` and `checkCaseFile`.
+  **R-OLD goldens, recorded first, at the G50 base (the tranche commit before any G50 job merges, which BOB names in each START).** Each is made by a one-off script run at that commit, by today's real code, never by the new code. Only its JSON output is committed, with the script beside it as `make-g50-goldens.mjs`. The script is not a test and is not run by the suite.
+  They cover two `/3` case files, built by today's `buildCaseFile` over facts in `caseFileFacts`' shape, with the plane's fixtures:
+  - (g1) a `ref` with a copy beside an included document;
+  - (g2) a `ref` with an included and an excluded row.
+  Each golden belongs to the job that owns the test comparing against it:
+  - **public-read** commits `test/m/public-read/g50-old-goldens.json`: each file's manifest, its parts' bytes, its complete edition, and the files a court order on the included document withholds (today's prefix rule). Its tests compare against them.
+  - **case-checker** commits `test/m/case-checker/g50-old-verdicts.json`: today's `checkCaseFile` verdict over those parts, made by its own script at the base from public-read's real writer. Its tests compare against it.
+  - **case-grammar** uses neither public-read nor case-checker. Its own script at the base records `test/m/case-grammar/g50-old-goldens.json`: for the same two manifests, hand-built from `casefile-fixture.mjs` with the same paths, today's `caseFileManifestCheck` (with and without the rows) and today's `completeEditionOf`. It compares only those two.
+  After the change, the new readers must match byte for byte. **The stated expectation for g1: `original_carried` still departs for the included row's `document`, exactly as today** (`casefile.mjs:289`). For g2: no departure.
+  **Pinned tests this entry changes**, each named in its owner's START with its new expectation:
+  - `case-grammar/casefile.test.mjs:243`: `CASE_FILE_FORMATS_ACCEPTED` becomes `["bio-case-file/4", "bio-case-file/3", "bio-case-file/2", "bio-case-file/1"]`.
+  - `case-checker/spec.test.mjs:15` and `:165`: `CASE_FILE_SPEC_VERSIONS` becomes `[V1, V2, V3, V4]`.
+  - `case-checker/fixture.mjs:260`: gains a `/4` arm (a discriminated path gives `/4`).
+  - Every test that asserts the `format` departure's words compares with the reworded `localize` row.
+  - Any other found is named to BOB at once.
+  *case-grammar*, `test/m/case-grammar/g50-path.test.mjs`:
+  - `caseFilePath` with `[ref, sha]` for the four kinds; null for a bad ref, a short sha or a non-hex sha. An upper-case sha is spelled lower-cased by `materialFileKey`.
+  - `caseFileEntryOf` reads each back, and every plain and chain path as before; `materials/R/<hex>/archives` and `materials/R/archives/<hex>` do not cross-parse.
+  - `caseFileFormatFor`.
+  - `caseFileManifestCheck`:
+    - a `/4` file with two copies (given the rows) answers `[]`;
+    - a `/3` file with two copies at one path still answers `path_twice`;
+    - `path_format`, `format_unused`, `capture_missing`, `capture_needless` and `capture_unnamed` (including an upper-case row sha that matches its lower-case path, so no departure);
+    - the copy rules by `(ref, capture)`, with the archive rule;
+    - the reworded `format` row names the accepted list.
+  - `completeEditionOf`: a `/4` file renders each copy line from its own file (red: the second line reads the first copy); the `/6`, `/7` and `/7-pre-T37` goldens are byte for byte.
+  - case-grammar's own goldens: the manifest check (with and without the rows; g1's `original_carried` included) and the complete edition are byte-equal. It compares nothing else.
+  *public-read*, `test/m/public-read/g50-copies.test.mjs`. The `obscured.test.mjs` harness has its `publish` split, and holds two copied rows of one ref with both copies registered.
+  - **(A):**
+    - `seal [A]`: cA 451, cB 200 (red: 200, 200).
+    - `unseal`, then `seal [B]`: cA 200, cB 451 (red: 451, 451).
+    - A seal on cA's own hash withholds cA only.
+    - Copies of identical bytes with two originals: an order naming either original withholds that copy.
+    - Controls: one-capture original-hash order; the ref's plain path withholds both copies; after (B), `materials/PHOTO/<A>/document` withholds cA only.
+  - **(B):**
+    - `caseFileManifestCheck(manifest, {materials: rows})` answers `[]` (red: `path_twice`); the format is `/4`; the copy paths are `materials/PHOTO/<A>/obscured` and `materials/PHOTO/<B>/obscured`.
+    - The zip part answers 200 with each entry hashing to its copy (red: 409); `publishedbytes` answers 200 for each copy.
+    - The complete edition renders each row's own copy line.
+    - `publishedcase`'s file list (`:1213`) lists both paths, and `obscured` lists both rows.
+  - **T3:** two included captures give `materials/R/<A>/document`, `materials/R/<A>/extracted.txt` and B's, format `/4`, zip 200; observation rows likewise.
+  - **Mixed ref (new file):** no `original_carried`, `/4`.
+  - **Non-hex several-ref sha** (its sibling rows of the same `ref` still discriminated): that row's files are named in `unheld` and never spelled plain, and the case file is built, `/4`. The expectation per kind, with `caseFileManifestCheck(manifest, {materials: rows})`:
+    - an included `document` row: its `document` and `extracted_text` unheld; the check answers `[]` (no row-relative rule asks for an included file; the checker reports it `missing`);
+    - an included `observation` row: its `observation` unheld; the check answers `[]`;
+    - an `obscured` row whose original sha is invalid: its copy is unheld; the check answers exactly one `obscured_copy_missing` for that row (it states a copy that no file carries), and nothing else;
+    - an excluded row: no file either way; the check answers `[]`;
+    - in every case, no `capture_unnamed` and no `capture_missing` (the row has no file).
+  - **Orders over the new paths:**
+    - an order on the ref's plain path withholds every capture's document;
+    - an order on A's path withholds A's document only;
+    - under a several-ref `ref` of a `/4` file: a withheld document's own container record is withheld (red if the prefix rule is kept: the deeper path's prefix misses it); every archive and every outward link of that `ref` is withheld at ref level; a sibling capture's first-link container is not withheld;
+    - **an unreadable record** (a blob-backed container whose text `publishedMaterialText` does not answer): its link falls back to the ref level, so every archive and container under the `ref` is withheld (**never under-withholds**);
+    - **controls:** a one-row `ref`, and a `/3` manifest (golden g1), withhold exactly the files today's prefix rule withholds, byte for byte.
+  - **Shared archive:** listed once.
+  - **Controls:**
+    - The one-capture-per-ref manifests, `/3`, and part digests equal goldens taken before the change (the existing `casefile.test.mjs`, `obscured.test.mjs` and `archives.test.mjs` pass unchanged).
+    - A `ref` on two rows with no file stays `/3`.
+    - A manifest sorted by plain string order (hex directories beside `archives/`) passes `file_order`.
+    - The STORED goldens g1 and g2 are served and read byte for byte (manifest, complete edition, `/3`, no rewrite). A NEW build of their facts is `/4` by the rule (each has a several-ref `ref` with a file), and its check answers `[]`; for g1's mixed `ref`, that means no `original_carried`.
+  *case-checker*, `test/m/case-checker/g50-path.test.mjs`. The case file is made by the real `buildCaseFile`.
+  - Two included captures of one `ref`, with a passage quoted only in B's text: the case recreates, `integrity.intact` is true, and the passage is found in B's text (red after the providers merge and before this job: `fileOf` takes the first file).
+  - Two copies: each is found by its row; a tampered copy B is reported against B only.
+  - The spec of `/4` is held and names the five departures.
+  - **Controls:**
+    - An unknown format (`/5`) departs at `format`, with every finding `did_not_recreate`.
+    - The verdicts recorded in `g50-old-verdicts.json` are byte-equal, g1's `original_carried` included.
+    - The one-capture fixtures are unchanged.
+  *case-import*, `test/m/case-import/g50-import.test.mjs`:
+  - A `/4` file of two included captures of one `ref` imports, and `case_import_files` holds BOTH files (the `:736` drop is fixed by distinct paths).
+  - The same file with its format edited to `/3` is refused `IMPORT_NOT_A_CASE_FILE`.
+  - The job's finding on how a `/3` file with a repeated path is handled is stated in the test file's header.
+  *case-disclosures*, `test/m/case-disclosures/g50-acts.test.mjs`, the seam from the member's acts:
+  1. Two captures of one bundle, both held and both photos with copies (real `photoMarks`/`documentCopy` states), each reached by one leg without `content_id`.
+  2. `materialsJudged`, then `materialRows`: two rows of one `ref`, each `obscured`.
+  3. `case-carriage`'s real `holdMaterials`: two copies registered.
+  4. The real `assembleCaseContainer` (publication's Worker): manifest `/4`, check `[]`, zip 200.
+  5. The same for two included documents.
+  Red today at `path_twice`; once the providers merge, the test is green.
+  (5) **Platform check.**
+  **L: a local workerd run (Miniflare), not the preload.** The preload is only the value bound. The k = 501 held-capture case (1,002+ files) is assembled through `assembleCaseContainer`, and one zip part is served through `publishedbytes`. The run counts:
+  - the bucket calls (each file is read, checked with `head` and `put`, `worker.mjs:421-428`);
+  - the DO calls (`recordCaseManifest` inserts one row per file);
+  - the subrequests, against the Worker's ceiling as `subresources.mjs:848` measures it;
+  - the CPU for 1,000+ sha256s and for the zip serve;
+  - the stored manifest's bytes, against the value bound of 2,098,176 B.
+  The job reports each number. **If any passes a platform ceiling, the job reports it to BOB at once as a separate cause and never claims it fixed.** The case assembles today with the collision, so a ceiling is not G50's.
+  The committed (old) `program.mjs` is run once on a `/4` file: expected `format` and `did_not_recreate`.
+  **P, read-only, BOB's, on biosmoke8 before the redeploy:** scan every stored `published_cases.manifest` for duplicate paths and report the count, by case and edition. None is rewritten; any found are named as unzippable (409). Account `20b533579290b9b93168345edd3b7f72` only.
+  **Re-walk:** the walked case's manifest is still `/3` with the same paths, and the regenerated checker recreates it (the live R-OLD control). No `/4` file is expected.
+  **Merge order, one statement: case-grammar (105), public-read (112), case-checker (117), case-import (118), case-disclosures (119).**
+  - **Tests red by name, each stated once:**
+    - public-read: the (B), T3, mixed-ref, non-hex, order-path, shared-archive and k = 501 tests in `g50-copies.test.mjs`, until case-grammar merges. (A) is green when public-read merges.
+    - case-checker: `g50-path.test.mjs`, until case-grammar and public-read merge.
+    - case-import: `g50-import.test.mjs`, until case-grammar, public-read and case-checker merge.
+    - case-disclosures: `g50-acts.test.mjs`, until all four merge.
+    - Inherited: `case-checker/test/program.test.mjs` R13/R25 (stale program), until BOB regenerates.
+  - **No wrong-verdict window:**
+    - Once case-grammar and public-read (B) are merged and before case-checker is, the in-tree checker's `fileOf(kind, "ref")` would take the FIRST capture's file of a `/4` case file: a wrong verdict, not a loud one.
+    - So **nothing of public-read's (B) is built into `dist/` or deployed before case-checker has merged.** All five jobs merge at the tranche boundary, and BOB regenerates (`program.mjs`, the bundles, in the manifest's order) and redeploys only once, at the round end, after all of them.
+  - **Models:** every job runs claude-sonnet-5-5 at medium effort. Workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never opus.
+
 ### K4597 · Enforcing K4426 at planning (owed in this round)
 
 - **E1** `checks/fixplan.mjs` in civicos-process (`prep/T51-close-v2`, reaching `main` with T51's close PR): rule (1) of `rulings-active.md`'s K4597 line, with fixture tests; run by `checks/run.mjs`. A worker (sonnet medium) builds it; BOB reviews; this plan then made to pass it.
@@ -292,6 +506,13 @@ Every job: medium effort, claude-sonnet-5-5; its suites then `build/plan/impact.
 | 36 | reading-pipeline (L4) | G48 (owner: piece units once, the lazy first piece, the sample stated in `basis` on every branch; READING-PIPELINE #27) | reading-pipeline |
 | 37 | plane (L11) | G48 (the 17 MiB first tick at most 8 s on the shape harness; a CHANGE to PLANE #52) | plane |
 | 38 | affordances (L11) | G49 (owner: `capturerequests`, `casedrafts` held from the design's words; `readheld` moved to the design ops; AFFORDANCES #44) | affordances |
+| 39 | case-grammar (L8) | G50 (prov: the discriminated path for a `ref` on two or more rows, `bio-case-file/4` declared only then, R13 reworded; CASE-GRAMMAR #21) | case-grammar |
+| 40 | public-read (L8) | G50 (A: a copy's originals by its own sha; B: the case file's paths, `withholdChains`; PUBLIC-READ #31; (B) red by name until 39 merges; not built into `dist/` or deployed before 41 merges) | public-read |
+| 41 | case-checker (L8) | G50 (its `fileOf` by capture, `/4` accepted, the spec; CASE-CHECKER #17; seam red until 39, 40 merge) | case-checker |
+| 42 | case-import (L8) | G50 (confirm, `/4` imported, the silent `INSERT OR IGNORE` drop tested; CASE-IMPORT #16; red until 39-41 merge) | case-import |
+| 43 | case-disclosures (L8) | G50 (test only: the end-to-end seam through `materialsJudged`, `materialRows`, `holdMaterials`; CASE-DISCLOSURES #18; red until 39-41 merge) | case-disclosures |
+| 44 | screens-publish (L11) | G51 (the keys list; SCREENS-PUBLISH #19) | screens-publish |
+| 45 | screens-action (L11) | G52 (the in-place Join; SCREENS-ACTION #16) | screens-action |
 
 **BOB's `uses` edges (recorded here, `order.mjs` unchanged):** notice-producers gains `capture`; screens-inquiry already has `provenance`; screens-daily and screens-publish gain nothing (they call the ops). **Cross-job notes:** scheduler's B3/B4 must be merged before plane's seam tests can pass (scheduler is layer 10, before plane; until then they stay red by name). SCHEDULER #39 names one test in `bio-plane/test/m/plane/plane.test.mjs` that encodes "only pulled earlier": BOB fixes it, test only (K4297 (2)). The plane job must run `plane` `release` (R24) knowing it is accepted by name.
 
