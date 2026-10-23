@@ -21,7 +21,7 @@ import { normalizeType } from "../record-grammar/types.mjs";
 import { sectionText } from "../record-grammar/document.mjs";
 import { NS_RATIFY, ratifyStatement, caseRatifyStatement } from "../sshsig.mjs";
 import { serialiseContainer, containerEntries } from "../container.mjs";
-import { buildCaseFile, isCaseFileManifest, caseFilePartLayout, caseFileParts, sha256Hex, CASEFILE_CODES } from "../public-read/casefile.mjs";
+import { buildCaseFile, isCaseFileManifest, caseFilePartLayout, caseFileParts, sha256Hex, CASEFILE_CODES, CASEFILE_GROUP } from "../public-read/casefile.mjs";
 import { inbandQuartet } from "../inband.mjs";
 import { caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { legReaderOf } from "../public-read/legs.mjs";
@@ -529,7 +529,10 @@ async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes
   const missing = built.unheld.filter((u) => !u.why && !u.unspellable && !u.unregistered && /^[0-9a-fA-F]{64}$/.test(String(u.sha ?? ""))).length + (prior && Array.isArray(prior.materials_missing) ? prior.materials_missing.length : 0);
   if (missing) return statement("MATERIAL_MISSING", "materials", { files: built.files.length, missing });
   mark("bucket_put");
-  for (const f of built.files) if (!(await b.head(key(f.sha256)))) await b.put(key(f.sha256), f.content);
+  /* R44 (G121): the files are checked and put in groups of 8, each object once (two paths of one file are one object). */
+  const objects = [...new Map(built.files.map((f) => [f.sha256, f])).values()];
+  for (let i = 0; i < objects.length; i += CASEFILE_GROUP)
+    await Promise.all(objects.slice(i, i + CASEFILE_GROUP).map(async (f) => { if (!(await b.head(key(f.sha256)))) await b.put(key(f.sha256), f.content); }));
   mark("quartet");
   const { bytes: mBytes, quartet: inband } = await inbandQuartet({
     subject: built.manifest,

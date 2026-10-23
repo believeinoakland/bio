@@ -29,20 +29,25 @@ import { json, doAnswer, storeSilent, storeRefusal, STORE_SILENT_REASON, STORE_S
 import { SCRATCH, sha256Hex, caseReader, captureKey, storageAbsent } from "../control-plane/index.mjs";
 import { storeStub } from "../store-place.mjs";
 
+/* R96 (fix round 8, G106, G120; control-plane R128): the door's `stateTiming(name, ms)`, handed in the context the door gives these hooks, reaches
+   every handler's context as `stateTiming`; absent when the door gave none (a module's call is then a no-op). Nothing is made up here. */
+const timingHook = (stateTiming) => (typeof stateTiming === "function" ? { stateTiming } : {});
+
 /* The public ops: each owner's handler asked in turn; the bootstrap report answers any other. */
 /* K2062 (control-plane's door, admission R20, R21): the hook is handed the caller's presented `credential` (read from the
    header or body, never the query), the keyed `source` and Cloudflare's `country`. `credential` reaches the readers of a
    case (`caseReader`, admission's `readerOf`); `country` reaches doorbell's knock (doorbell R20). A JSON body's `token` is
    the caller's credential and no arm passes it on. */
-export async function publicOp({ req, url, env, op, stub, fp, presentedAi, credential = null, country = null }) {
-  { const pr = await publicReadDoorOp(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }); if (pr) return pr; }
-  { const pd = await publicationDoorOp(op, url, stub, { json, storeSilent, storeRefusal, doAnswer, sha256Hex, NS_RATIFY,
+export async function publicOp({ req, url, env, op, stub, fp, presentedAi, credential = null, country = null, stateTiming = null }) {
+  const hook = timingHook(stateTiming);
+  { const pr = await publicReadDoorOp(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer, ...hook }); if (pr) return pr; }
+  { const pd = await publicationDoorOp(op, url, stub, { json, storeSilent, storeRefusal, doAnswer, sha256Hex, NS_RATIFY, ...hook,
       caseRatifyStatement, readerOf: () => caseReader(url, env, "bio", presentedAi.cred, credential),
       /* publication R73 (F1; K2011): the request's body, read on a copy and only when its door asks for it, so the
          review copy's secret arrives in the body and the request stays readable by the arms after it. */
       body: () => req.clone().json() }); if (pd) return pd; }
   /* Anyone, no token, no session: the doorbell (R37), confined to the inbox namespace. */
-  { const knocked = await doorbellPublicOp(op, req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer, country }); if (knocked) return knocked; }
+  { const knocked = await doorbellPublicOp(op, req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer, country, ...hook }); if (knocked) return knocked; }
   /* R95 (T51; instance-setup, K4076): the bootstrap report states its seven facts only to a credentialed caller, handed as
      the control plane resolves who is asking (`caseReader`, the admission gate's `readerOf`): `{cls: "admin"}` for an
      admin-class token or an administrator's signed-in session; none for a caller that presented nothing, a stranger or a
@@ -50,14 +55,21 @@ export async function publicOp({ req, url, env, op, stub, fp, presentedAi, crede
   let caller = null;
   try {
     const reader = await caseReader(url, env, "bio", presentedAi.cred, credential);
-    if (!reader.silent && reader.cls === "admin") caller = { cls: "admin" };
+    if (!reader.silent) {
+      /* instance-setup R103 (fix round 8, G114): a signed-in member's viewer, in the session's form the door stamps elsewhere (never a machine identity),
+         so the report carries her `language` and `words_version`; absent without a session. */
+      const viewer = (reader.cls === "member" || reader.cls === "admin") && typeof reader.viewer === "string" && reader.viewer !== ""
+                     && !reader.viewer.startsWith(MACHINE_CLASS_PREFIX) ? reader.viewer : null;
+      if (reader.cls === "admin" || viewer) caller = { ...(reader.cls === "admin" ? { cls: "admin" } : {}), ...(viewer ? { viewer } : {}) };
+    }
   } catch { caller = null; }
-  return bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer, caller });
+  return bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer, caller, ...hook });
 }
 
 /* The admitted ops whose handler is a module's door; undefined for control-plane's generic forward. */
 export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights,
-                                sessCaps, aiCred, storeName, stub, grantMember, trace = null, memberRef = null, timings = null, deferReading = null }) {
+                                sessCaps, aiCred, storeName, stub, grantMember, trace = null, memberRef = null, timings = null, deferReading = null, stateTiming = null }) {
+  const hook = timingHook(stateTiming);
   const store = () => storeStub(env, storeName);
   /* The stamps, from the authenticated caller: a session's member, viewer and identity; an `ai` credential's principal
      as its viewer and identity, and `class:ai/<tokenId>` as its author (control-plane R17, as its generic forward stamps
@@ -74,25 +86,25 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
   /* R55 (T48; N1015; K3103; control-plane R93): the door's `trace` and member ref, minted per request by the door and handed
      here in process, reach the ask's call to agent-worker as headers (`ask.mjs`' `doorHeaders`); none is taken from the
      caller, and none is read here. */
-  if (op === "ask") return askOp({ req, url, env, viaSession, sessMember, grantMember, trace, memberRef });
+  if (op === "ask") return askOp({ req, url, env, viaSession, sessMember, grantMember, trace, memberRef, ...hook });
   /* R41 (T45; K2824, K2881): the assistant's infraction and reply-bearing drafts, a member's own act on the `bio` object */
-  if (ACTION_DRAFT_OPS.includes(op)) return actionDraftOp({ req, url, env, op, viaSession, sessMember, sessViewer, trace, memberRef });
+  if (ACTION_DRAFT_OPS.includes(op)) return actionDraftOp({ req, url, env, op, viaSession, sessMember, sessViewer, trace, memberRef, ...hook });
   if (op === "affordances")
     return affordancesOp(url, store(), { json, doAnswer, storeSilent, storeRefusal, gate: ACT_GATE, viewer, identity, author,
-      by, storeName, cls });
+      by, storeName, cls, ...hook });
   if (QUEUE_DOOR_OPS.includes(op)) return queueOp(op, url, store, { json, doAnswer, storeRefusal, storeSilent, gate: ACT_GATE,
-    storeName, cls, viewer, member: viaSession ? sessMember : "" });
+    storeName, cls, viewer, member: viaSession ? sessMember : "", ...hook });
   if (op === "registeraudit") return registerAuditOp(env, store(), { json, doAnswer, storeSilent, storeRefusal, captureKey,
-    storeName, cls });
+    storeName, cls, ...hook });
   if (INSTANCE_SETUP_OPS.includes(op)) return instanceSetupOp(op, url, env, storeName, { cls, scratch: SCRATCH, json, doAnswer,
-    storeSilent, storeRefusal, viewer });
+    storeSilent, storeRefusal, viewer, ...hook });
   if (CONNECTIONS_OPS.includes(op)) return connectionsOp(op, url, store, { json, doAnswer, storeRefusal, storeSilent,
-    viewer, identity });
-  if (GOVERNOR_OPS.includes(op)) return governorOpResponse(op, url, store, { json, doAnswer, storeRefusal, storeSilent });
+    viewer, identity, ...hook });
+  if (GOVERNOR_OPS.includes(op)) return governorOpResponse(op, url, store, { json, doAnswer, storeRefusal, storeSilent, ...hook });
   {
     const c = await captureOp(op, req, url, env, store, { json, storeSilent, storeRefusal, doAnswer, storageAbsent,
       requiredArgument, cls, member: viaSession, sessMember, storeName, key: (s) => captureKey(storeName, s), viewer,
-      timings, trace,   /* control-plane R115: `acquire`'s stage timings; capture R99: the door's `trace`, sent to the object as a header so it holds them under it (plane R73) */
+      timings, trace, ...hook,   /* control-plane R115: `acquire`'s stage timings; capture R99: the door's `trace`, sent to the object as a header so it holds them under it (plane R73) */
       readAcquired: (answer, st) => {
         /* R75 (K4440; control-plane R120): the door asks of the document just filed whether its reading will not fit the bound; if so the read
            step is skipped and the document answered with `reading_pending: true`, the reading following by `readHeld` and the object's alarm.
@@ -105,14 +117,14 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
     if (c) return c;
   }
   if (EXTRACTION_OPS.includes(op)) return extractionOp(op, url, env, store, { json, storeSilent, storeRefusal, doAnswer,
-    storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps, viewer, author, storeName });
+    storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps, viewer, author, storeName, ...hook });
   /* R36 (K2635, K2656; control-plane R74): a member's transcription of a stored scan's unread pages, extraction's exported
      handler, beside `pdfstructure`'s arm, with the same stamps. */
   if (op === "pagetranscribe") return pageTranscribeOp(url, env, store(), { json, storeSilent, storeRefusal, doAnswer,
-    storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps, viewer, author, storeName, trace, memberRef });
-  if (op === "attest") return attestOp(req, env, store(), { json, doAnswer, storageAbsent, captureKey, storeName, cls });
+    storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps, viewer, author, storeName, trace, memberRef, ...hook });
+  if (op === "attest") return attestOp(req, env, store(), { json, doAnswer, storageAbsent, captureKey, storeName, cls, ...hook });
   if (op === "monitor") return monitorOp(req, store(), { json, storeSilent, storeRefusal, requiredArgument, doAnswer,
-    viaSession, sessViewer, storeName, cls });
+    viaSession, sessViewer, storeName, cls, ...hook });
   return ratificationOp(op, req, stub, { env, json, doAnswer, storeSilent, storeRefusal, storeName, cls, aiCred, viaSession,
-    sessViewer, sessRights, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL });
+    sessViewer, sessRights, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL, ...hook });
 }

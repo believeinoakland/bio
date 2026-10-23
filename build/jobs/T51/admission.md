@@ -1,6 +1,6 @@
 # admission (T51)
 
-**Status** · session_01Ubr53UtKq7fm4Lcgq9Dr6r · depth 2 · COMPLETE · handled B2
+**Status** · session_017HGmsDoJ43QYVkTR8QtABy · depth 2 · COMPLETE · handled B2
 
 ## Completion (T51-108)
 
@@ -79,3 +79,19 @@ COMPLETE, commit 6ed48b0707 (branch job/T51/admission, merged with tranche/T51 a
 - impact set: admission 19/19, control-plane 69/85 and plane 54/66 as named users; both run as above.
 
 Size (session_01Ubr53UtKq7fm4Lcgq9Dr6r): test runs 9, module lines 1141
+
+## J5 · COMPLETE
+
+COMPLETE, fix round 8, cause G119 (R32, one session read per request), session ADMISSION #17.
+
+**G119, the four fields.**
+1. Cause: three places read the same session for one request: `admit` (`admission/index.mjs`, the gated path), `readerOf` and `liveSessionDigest` (the window's), each calling `sessionPresented` and so the store's `session` route. Fix: `sessionRead`, a memo keyed (weakly) on the door's one `presentedCredential` answer for the request, holding the first read's promise (a silence too) and reused only for the same token, `background` mark, `env` and `doAnswer`; a credential with no door object is read each time. No door change. `doorwindow` is kept (K1881). New data: none; old records: none.
+2. Why missed: no test counted the store's session reads of a request; op tests called each gate on its own.
+3. Failing-first `bio-plane/test/m/admission/r8-session-reads.test.mjs` (9 tests, R32 named in each), seen RED before the change: `AssertionError: the session is read once for the request (red before G119: two)` (window + reader, and reader + admit), `AssertionError: red before G119: three` (all three), `request 1: one read for that request`; GREEN after (admission folder 73 of 73). Controls: second request reads again; background and foreground are separate reads (a background read stays no activity); unknown session and a store silence are one read answered the same to each gate; no door object reads each time; another token is its own read; a locked session is read once and still counted by source.
+4. Platform check **L** (the count) is the test above; the door confirmation `control-plane/r8-hops.test.mjs` is control-plane's and is not on the tranche yet. **P** is BOB's.
+
+**Applied entries:** G119 only. **Deferred:** none. **Found in another module:** none. **Stale generated artifacts:** none made. **Requirement wording:** R32's "(not yet met: T51)" mark is met; no wording change proposed.
+
+**Tests and checks:** admission 73 of 73. Impact set (origin/tranche/T51..HEAD): admission 20/20, control-plane 70/87, plane 59/73, pdf-worker 1/12 as named users. control-plane folder 477 of 478: `R122 (the page's bootstrap is read once per load)` failed once under a concurrent plane run (54 s) and passes alone (clean tranche: pass; this branch: pass). plane folder 430 of 434: `R24` words and the two `R77 L` child-capped PDF tests fail as on the clean tranche (named in J4); `R84 G41` failed under load, passes alone on this branch and on the clean tranche. format 0 failures; architecture 0 failures; coverage 32 of 32 live ids named; words 0 failures; ownership 0 failures.
+
+Size (session_017HGmsDoJ43QYVkTR8QtABy): test runs 8, module lines 1590

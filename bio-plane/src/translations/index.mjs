@@ -3,7 +3,7 @@
  * with every earlier text still readable; the grants that let named members translate; the assistant's drafts, stored as
  * labeled machine work that no member outside the workspace sees; the second check a protected word waits for; the undo;
  * the marks "this translation looks wrong"; the words in a member's language, never blank; and which language a passage
- * is read in. Requirements: build/requirements/translations.md (R1–R16). Built by copy from `instance-setup` (R67–R75,
+ * is read in. Requirements: build/requirements/translations.md (R1–R20). Built by copy from `instance-setup` (R67–R75,
  * R87; K624, N1084, P6; `build/extraction/translations.md`), its SQL unchanged; `instance-setup`'s copy is deleted in its
  * own job (T50-23).
  *
@@ -710,13 +710,16 @@ export class Translations {
     }
   }
 
-  /** R8, op=interfacewords: every word for `language` (by default the viewer's own, `instance-setup` R64, read through
-   *  R11), the team's shown translation where one is held and the English otherwise (`fallback: true`), never blank, with
-   *  `en` beside it. An awaiting word answers the English. Writes nothing; never throws. */
+  /** R8, R19, op=interfacewords: the words for `language` (by default the viewer's own, `instance-setup` R64, read through
+   *  R11). With no `language` named, only the words the team shows in the viewer's language (`fallback: false`), so with
+   *  none held the answer holds no word; with a `language` named (the settings screen's translation read), every word, the
+   *  team's shown translation where one is held and the English otherwise (`fallback: true`), never blank, `en` beside it.
+   *  An awaiting word is the English. Writes nothing; never throws. */
   interfaceWords({ language = undefined, viewer = null } = {}) {
+    const named = language !== undefined && language !== null && language !== "";
     try {
       let tag = null;
-      if (language !== undefined && language !== null && language !== "") {
+      if (named) {
         const lang = this.#translationLanguage(language);
         if (lang.refused) return lang.refused;
         tag = lang.tag;
@@ -730,13 +733,25 @@ export class Translations {
           const c = Translations.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
           if (c.state === "shown") shown.set(g.key, c.adoption.text);
         }
-      return { ok: true, language: tag, words: interfaceWords().map((w) => (shown.has(w.key)
+      const word = (w) => (shown.has(w.key)
         ? { key: w.key, text: shown.get(w.key), en: w.en, fallback: false }
-        : { key: w.key, text: w.en, en: w.en, fallback: true })) };
+        : { key: w.key, text: w.en, en: w.en, fallback: true });
+      return { ok: true, language: tag, words_version: this.wordsVersion(), words: named ? interfaceWords().map(word)
+        : interfaceWords().filter((w) => shown.has(w.key)).map(word) };
     } catch {
-      return { ok: true, language: null, words: interfaceWords().map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })),
+      return { ok: true, language: null, words_version: this.wordsVersion(), words: named ? interfaceWords().map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })) : [],
                detail: localize("translations.index.the_teams_translations_could_not", "the team's translations could not be read, so every word is shown in English.") };
     }
+  }
+
+  /** R20, in-process: `words_version`, a short string that names no member and no word and changes whenever a translation
+   *  of the team is adopted, confirmed or undone (the three tables are append-only, so the highest row number of each
+   *  only grows); otherwise the same across requests and isolates, being read from the storage alone. Never throws. */
+  wordsVersion() {
+    try {
+      const top = (t) => this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM ${t}`).n;
+      return `${top("translation_adoptions")}.${top("translation_confirmations")}.${top("translation_undos")}`;
+    } catch { return "0.0.0"; }
   }
 
   /* =====================================================================

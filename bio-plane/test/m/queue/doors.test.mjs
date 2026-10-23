@@ -93,7 +93,7 @@ test("R28 (C62): a set reads the caller's feed once for all its refusals", () =>
     [["CLASS_NOT_DISPOSED", "adminendorse"], ["CLASS_NOT_DISPOSED", "expertiseconfirm"], ["CLASS_NOT_DISPOSED", "adminendorse"]]);
   const alone = pd(w, { key: "OBLIGATION::endorsement-owed::E1" });
   assert.equal(alone.instead, "adminendorse");
-  assert.equal(w.reads.n - before, 2, "a single refusal reads it once");
+  assert.equal(w.reads.n - before, 1, "a single refusal reads nothing more: the derivation the set made is the one kept (R94)");
 });
 
 test("R39, R59 (K4213): a task put aside by taskresolve carries resolved_undecided; it is a resolving event, so resolved_by is not null (control: a decided one carries decided then resolved)", () => {

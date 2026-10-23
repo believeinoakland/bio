@@ -59,7 +59,7 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 
 #### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
 
-- **R32** (fix round 8, G119; K4814 (4), K4817) **One session read per request.** One request through `gate`, `readerOf` and `liveSessionDigest` reads its session once (a memo for that request only); `doorwindow` stays (a protective limit, K1881). Test: one session read per request (red: three); through the door `groupidentity` makes three object calls. *(not yet met: T51)*
+- **R32** (fix round 8, G119; K4814 (4), K4817) **One session read per request.** One request through `gate`, `readerOf` and `liveSessionDigest` reads its session once (a memo for that request only); `doorwindow` stays (a protective limit, K1881). Test: one session read per request (red: three); through the door `groupidentity` makes three object calls.
 
 ## Private
 

@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01DF6wNQ8rKsb7yeYo9gZnev · depth 2 · COMPLETE · handled B71
+**Status** · session_015vZsp754WjWKhCj8FmnyQQ · depth 2 · COMPLETE · handled B74
 
 ## Record (PLANE #41, T51-125)
 
@@ -786,3 +786,37 @@ COMPLETE (PLANE #54, B70: G83, R95), with the provider and four owners still to 
 ## J49 · COMPLETE
 
 COMPLETE (PLANE #54, B71). Merged tranche/T51 (store-place.mjs now tracked; my untracked copy removed). Plane suite 431 tests (l77-size run apart: its 2 accepted reds): 427 pass; reds are release R24 (accepted) and, BY NAME until the other owners merge, g83 T1 (15 sites: ai-runs 2106 2155; admission 309; control-plane 625 819 1045 1057 1314; instance-setup livefire 29, setup 3085 3095 3107 3118 3201 3307) and the two g83 Worker-wide cases wnam and generation-2, which fail only on instance-setup's public read (with those sites re-pointed in my tree, all 15 g83-location tests passed). Impact set: plane only (71 files). Checks: architecture, coverage, ownership 0 failures. Branch pushed. Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 16, module lines 190.
+
+## Record (PLANE #55, B72: R96, fix round 8)
+
+**Entries applied.** (1) `door.mjs`: `publicOp` and `gatedOp` take an optional `stateTiming` field (control-plane's side not yet merged; accepted as optional) and put it, only when it is a function, into the context of every handler they build (`publicReadDoorOp`, `publicationDoorOp`, `doorbellPublicOp`, `bootstrapOp`, `askOp`, `actionDraftOp`, `affordancesOp`, `queueOp`, `registerAuditOp`, `instanceSetupOp`, `connectionsOp`, `governorOpResponse`, `captureOp`, `extractionOp`, `pageTranscribeOp`, `attestOp`, `monitorOp`, `ratificationOp`); absent when not handed. (2) `store.mjs`: every route answer states `server-timing: object;dur=<ms>, object-age;dur=<ms>`, the age from an instant taken when the Store is constructed. control-plane's `phase-clock.mjs` reads `object;` entries by a pattern that does not match `object-age;`, so R78's read is unchanged; control-plane reads the new entry (R129).
+
+**Cause fields.** (1) Root cause: no hook carried the door's timing into module contexts (`door.mjs` gatedOp/publicOp built contexts without it) and the object stated no age (`store.mjs` `objectTiming`). (2) Why missed: no test asked the door's context for a timing hook or the object's age; now `r8-timing-hook.test.mjs` does. (3) Failing-first, seen RED then green: `AssertionError [ERR_ASSERTION]: captureOp receives stateTiming  actual: 'undefined', expected: 'function'` and `AssertionError: object-age;dur in object;dur=19  actual: null, expected: true`; both green after. Handlers are real-door-reached, replaced by recording stand-ins in a child (node module mocks) that state one entry each; controls: none handed (handlers receive none), a younger instance states less age. (4) Platform check N.
+
+**Existing test changed.** `fix5-r77.test.mjs` R78: the header shape now `object;dur=<n>, object-age;dur=<n>` and a carried-in value is still replaced (R96 changes the header's content).
+
+**Tests and checks.** Plane suite 436 tests: 433 pass; reds are the accepted ones only (release R24, l77-size R77 L x2). `impact.mjs origin/tranche/T51 HEAD`: plane only (60 of 74 plane files, no other module). format 0 failures; architecture 0 failures; coverage 96 of 96, 0 failures; ownership 0 failures; words 0 failures.
+
+**Stale generated artifact (BOB regenerates):** `bio-plane/dist/bio-plane.bundled.mjs` and its manifest (plane source changed).
+
+**Proposed requirement wording.** Mark R96 met; add that the entry is `object-age;dur` in the same `server-timing` value as `object;dur`, and that the door accepts the hook as an optional `stateTiming` field of `publicOp` and `gatedOp`'s arguments.
+
+Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 6, module lines 52
+
+## J50 · COMPLETE
+
+COMPLETE (PLANE #55, B72: R96). Door: publicOp/gatedOp take an optional stateTiming and put it in every handler context (absent when not handed). Store: every answer states 'object;dur=<ms>, object-age;dur=<ms>' (age from the instant of construction). Test r8-timing-hook.test.mjs (R96): seen RED (captureOp receives stateTiming: undefined; object-age;dur absent) then green; control none handed; fix5-r77 R78 shape updated. Plane suite 436: only accepted reds (release R24, l77-size R77 L x2). impact: plane only. Checks: format, architecture, coverage 96/96, words, ownership 0 failures. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs (+manifest). Proposed R96 wording in record. Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 6, module lines 52.
+
+## Record (PLANE #55, B73, B74: bootstrap caller, two test fixes)
+
+**B73 (1) applied.** `door.mjs` `publicOp`: `caller` for `bootstrapOp` now also carries `viewer`, the session's viewer from `caseReader` (only for a `member` or `admin` session reader, never a `class:` machine identity, absent without a session); the door's `stateTiming` rides in the same io object (R96). Test (`r8-timing-hook.test.mjs`, R96, real door and real object, only admission's session read stood in, in a child): RED before (`language` actual undefined, expected 'es'), green after; a member's bootstrap carries `language` and `words_version`; no session or a machine identity carries neither; an administrator's session carries them too; the report states `fleet` and `facts` entries through the door's hook. **B73 (2) applied (test only):** `compose.test.mjs` R11 writes a member row between the two reads (queue R94's kept derivation is keyed on the record's write counter); 5/5 green (was red).
+
+**B74 applied (test only).** `shape/g41.probe.mjs`: the tick bars (10 s, first tick 8 s) stay as G37/G48 state them and are multiplied by a same-run control (a fixed SHA-256 plus 5e7 integer steps timed in the test process before and after the case, best of three, against an idle reference of 60 ms, never below 1); an idle machine meets the bars as stated. `g41-shape.test.mjs` gains a test of the control (an idle control leaves the bars, a slow one widens them, a slow tick on an idle machine still fails). All 8 pass alone.
+
+**Tests and checks.** Plane suite 438: 435 pass; reds are the accepted ones only (release R24, l77-size R77 L x2). Impact (`origin/tranche/T51`..HEAD): plane only. format, architecture, coverage 96 of 96, words, ownership: 0 failures. Stale generated artifact (BOB regenerates): `bio-plane/dist/bio-plane.bundled.mjs` and manifest.
+
+Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 14, module lines 70
+
+## J51 · COMPLETE
+
+COMPLETE (PLANE #55, B72-B74). B73(1): door hands bootstrapOp caller.viewer (member/admin session, never a machine identity) and stateTiming; test RED (language undefined) then green. B73(2): compose R11 writes a row between reads, 5/5. B74: g41 tick bars scaled by a same-run control, never below the stated bars, test of the control, 8/8 alone. Plane suite 438: only accepted reds (release R24, l77-size R77 L x2). impact: plane only. Checks: format, architecture, coverage 96/96, words, ownership 0 failures. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs (+manifest). Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 14, module lines 70.
