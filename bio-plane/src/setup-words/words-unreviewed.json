@@ -8685,175 +8685,182 @@
       "en": "calculation-directed: keyed by calculation; a member's acceptance after an agreeing recompute",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 2251
+      "line": 2315
     },
     {
       "id": "calculations.declared.calculationcreate",
       "en": "calculation-directed: keyed by a new CALC- id; writes calculations' rows and moves no bundle",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 2249
+      "line": 2313
     },
     {
       "id": "calculations.declared.calculationdraw",
       "en": "set-directed: keyed by (set, seed, size, method); records a reproducible draw and moves no bundle",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 2253
+      "line": 2317
     },
     {
       "id": "calculations.declared.spotcheckvisit",
       "en": "draw-directed: keyed by a draw and one drawn item, reached from the spot-check; ties the visitor's own testimony to the item; moves no bundle",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 2255
+      "line": 2319
     },
     {
       "id": "calculations.declared.tabledeclare",
       "en": "table-directed: keyed by a table's digest; writes calculations' rows and moves no bundle",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 2247
+      "line": 2311
     },
     {
       "id": "calculations.index.a_binding_is_adopted_by",
       "en": "a binding is adopted by a member (K1468). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1495
+      "line": 1559
     },
     {
       "id": "calculations.index.a_population_estimate_is_answered",
       "en": "a population estimate is answered only over a recorded draw (a seeded draw over a frozen set), with its exact interval (K1448). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 837
+      "line": 900
     },
     {
       "id": "calculations.index.a_ranking_orders_by_one",
       "en": "a ranking orders by one stated, measured quantity; several measures composed into one figure are refused (K1471, K1473). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 890
+      "line": 953
     },
     {
       "id": "calculations.index.a_table_is_declared_by",
       "en": "a table is declared by a member; a machine may not declare one (K1468). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 414
+      "line": 473
     },
     {
       "id": "calculations.index.an_id_space_normalises",
       "en": "an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1554
+      "line": 1618
     },
     {
       "id": "calculations.index.an_organisation_and_a_date",
       "en": "an organisation and a date are needed",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1968
+      "line": 2032
+    },
+    {
+      "id": "calculations.index.its_cells_could_not_be",
+      "en": "its cells could not be read to say whether a third-party engine computed them, so its grade is undetermined",
+      "module": "calculations",
+      "file": "bio-plane/src/calculations/index.mjs",
+      "line": 394
     },
     {
       "id": "calculations.index.its_values_were_computed_by",
       "en": "its values were computed by a third-party engine ({name}) whose agreement is not recorded as measured, so its grade is undetermined (K1447 (ii)){v1}",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 342
+      "line": 399
     },
     {
       "id": "calculations.index.money_facts_are_read_from",
       "en": "money facts are read from a table only at a member's request (K1468). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1561
+      "line": 1625
     },
     {
       "id": "calculations.index.taking_every_row_of_a",
       "en": "taking every row of a table is the rare case; state the reason (K1468). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1568
+      "line": 1632
     },
     {
       "id": "calculations.index.the_change_is_a_held",
       "en": "the change is a held standard's version or a date (YYYY-MM-DD). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 926
+      "line": 989
     },
     {
       "id": "calculations.index.the_column_v_is_not",
       "en": "the column \"{v}\" is not declared with the role {role}; the table's declaration is the member's (R2). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1505
+      "line": 1569
     },
     {
       "id": "calculations.index.the_input_name_holds_facts",
       "en": "the input \"{name}\" holds facts of phase {v1}; it holds only {phase} facts (each total within one phase, R12). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 867
+      "line": 930
     },
     {
       "id": "calculations.index.the_join_as_is_not",
       "en": "the join \"{as}\" is not keyed through an id space ({SPACES}) or a captured crosswalk declared as one (its crosswalk_from and crosswalk_to columns); a join on a name alone is refused (K1452). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 825
+      "line": 888
     },
     {
       "id": "calculations.index.the_provisions_standard_is_held",
       "en": "the provision's standard is held {v1}, not as its own words, so it is not a measure an act is held against (standards R34). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 946
+      "line": 1009
     },
     {
       "id": "calculations.index.the_quantity_named_stands_for",
       "en": "the quantity named stands for a judgment, not a measured quantity; a figure standing for importance, suspicion, significance or severity never orders a ranking (K1471, K1473). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 895
+      "line": 958
     },
     {
       "id": "calculations.index.the_ranking_counts_rows_of",
       "en": "the ranking counts rows of {length} kinds ({kinds}) as one measure; a measure across mixed kinds of link is refused, a count of one kind is a fact (K1471). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1006
+      "line": 1069
     },
     {
       "id": "calculations.index.the_standard_holds_no_target",
       "en": "the standard holds no target (standards R42): a metric, a threshold, a period and a definition. Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 932
+      "line": 995
     },
     {
       "id": "calculations.index.v1_is_a_hypothesis_hunches",
       "en": "\"{v1}\" is a hypothesis: hunches and hypotheses are held in the working inquiry and are never a calculation's input or threshold (K1467). Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 769
+      "line": 832
     },
     {
       "id": "calculations.index.your_teams_civicsmith_has_no",
       "en": "your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 459
+      "line": 518
     },
     {
       "id": "calculations.index.your_teams_civicsmith_has_no_2",
       "en": "your team's Civicsmith has no evidence store set up, so the table's bytes cannot be held. Nothing was written.",
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1914
+      "line": 1978
     },
     {
       "id": "calculations.tables.a_table_schema_is",
@@ -18016,14 +18023,14 @@
       "en": "the capture's metadata could not be read",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1328
+      "line": 1363
     },
     {
       "id": "content.index.capture_not_office_document",
       "en": "the capture is not an office document",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1325
+      "line": 1360
     },
     {
       "id": "content.index.capture_short_is_itemised_as",
@@ -18058,7 +18065,7 @@
       "en": "connection — no captured resolution of this document to the subject",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1440
+      "line": 1475
     },
     {
       "id": "content.index.container_extent_format_entry",
@@ -18093,14 +18100,14 @@
       "en": "the crop was taken from bytes whose sha256 is not the capture this row names, so it is not handed back",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1371
+      "line": 1406
     },
     {
       "id": "content.index.derived_rendition_for_display",
       "en": "a derived rendition for display: the evidence is the capture's bytes plus the extent, and this crop is not itself evidence",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1378
+      "line": 1413
     },
     {
       "id": "content.index.describeextent_is_a_part_no",
@@ -18142,7 +18149,7 @@
       "en": "the evidence store holds no object under this row's capture, so no crop was made",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1360
+      "line": 1395
     },
     {
       "id": "content.index.exact_typing_already_recorded",
@@ -18156,21 +18163,21 @@
       "en": "the format registry could not determine this capture's format at acquire, so whether it is a container is UNDETERMINED",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1427
+      "line": 1462
     },
     {
       "id": "content.index.image_could_not_be_cut",
       "en": "the image this row's extent names could not be cut out of its document; pdf-pixels' own reason is beside this one",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1367
+      "line": 1402
     },
     {
       "id": "content.index.image_member_of_container",
       "en": "this row cites an image that is a member of a container (an embedded part), whose bytes are the image itself rather than a rectangle of a page; there is nothing to cut out of it",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1352
+      "line": 1387
     },
     {
       "id": "content.index.lab_cites_describeextent_of_target",
@@ -18219,7 +18226,7 @@
       "en": "no capture of this document resolves to this inquiry's subject at A, B or C, so this row earns nothing on the connection axis. The honest leg is testimony (grade D, with an author and a date) or no grade at all. Absence here is a fact about what the recogniser matched, never evidence about what the document says",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1441
+      "line": 1476
     },
     {
       "id": "content.index.no_cited_passage_by_the",
@@ -18240,14 +18247,14 @@
       "en": "no content row is addressed by this id in this record",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1346
+      "line": 1381
     },
     {
       "id": "content.index.no_content_row_by_that",
       "en": "this record holds no content row by that id",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1292
+      "line": 1298
     },
     {
       "id": "content.index.no_document_is_addressed_by",
@@ -18275,7 +18282,7 @@
       "en": "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no crop was made. That is a fact about how your team's Civicsmith is set up, not about the image",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1356
+      "line": 1391
     },
     {
       "id": "content.index.no_minter_names_who",
@@ -18296,7 +18303,7 @@
       "en": "this record holds no reading of that capture",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1316
+      "line": 1351
     },
     {
       "id": "content.index.no_transcription_readable_here_is",
@@ -18345,42 +18352,42 @@
       "en": "position within the reading — reading_refs records THAT a reference was read in this document and not WHERE it was read (I2, FW-17)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1443
+      "line": 1478
     },
     {
       "id": "content.index.reading_carries_container_extent",
       "en": "the capture's reading carries a container extent an office entry itemised, so it is an office container, though no format key was recorded",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1422
+      "line": 1457
     },
     {
       "id": "content.index.reading_holds_no_office",
       "en": "the capture's reading holds no office metadata (its file has no readable core-properties part, or it was read before readings carried it)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1326
+      "line": 1361
     },
     {
       "id": "content.index.record_does_not_hold_format",
       "en": "this record does not hold this capture's format (it was promoted before the format was projected, and its reading names no container), so whether it is a container is UNDETERMINED",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1428
+      "line": 1463
     },
     {
       "id": "content.index.row_cells_could_not",
       "en": "the row's cells could not be read",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1303
+      "line": 1313
     },
     {
       "id": "content.index.row_cited_under_earlier",
       "en": "the row was cited under an earlier reading of its document, and the cells held now are the newer reading's, which may not be the cells cited",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1294
+      "line": 1300
     },
     {
       "id": "content.index.target_has_no_typings",
@@ -18408,7 +18415,7 @@
       "en": "the row cites a {extent_kind} extent, which names no cells of a sheet",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1297
+      "line": 1303
     },
     {
       "id": "content.index.the_typed_text_is_empty",
@@ -18436,7 +18443,7 @@
       "en": "this leg cites {describeExtent} and refers only to that portion (Bob, 2026-09-14). Whether any resolution of this document to the subject was established inside it is undetermined and stated, never borrowed from the whole document. The document-grain answer is under earned.connection for {bundle_id}, and it is the DOCUMENT's, not this portion's",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1444
+      "line": 1479
     },
     {
       "id": "content.index.this_re_read_staled_n",
@@ -18471,7 +18478,7 @@
       "en": "this row cites a {extent_kind} extent, and only an image on a PDF page has a crop",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1351
+      "line": 1386
     },
     {
       "id": "content.index.this_row_is_a_members",
@@ -18506,7 +18513,7 @@
       "en": "{v1}, so it states no office metadata",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1325
+      "line": 1360
     },
     {
       "id": "content.index.version_chains_visible_to",
@@ -18548,7 +18555,7 @@
       "en": "the cited passage's extent could not be read back from its row",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 176
+      "line": 182
     },
     {
       "id": "content.notice.cited_passage_held_only",
@@ -18562,21 +18569,21 @@
       "en": "every unit of the newer version's text is byte-identical at the same position",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 212
+      "line": 218
     },
     {
       "id": "content.notice.image_cited_as_bytes",
       "en": "the passage is an image cited as its bytes, and the record holds no per-part digest of the newer capture to compare it with",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 178
+      "line": 184
     },
     {
       "id": "content.notice.in_the_newer_version_why",
       "en": "in the newer version {why}",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 188
+      "line": 194
     },
     {
       "id": "content.notice.newer_capture_matched",
@@ -18597,49 +18604,49 @@
       "en": "the newer version's text is byte-identical, divided into different units",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 214
+      "line": 220
     },
     {
       "id": "content.notice.newer_unit_truncated",
       "en": "a unit of the newer version is held only to the per-unit cap, so the passage may be in the part not held",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 244
+      "line": 250
     },
     {
       "id": "content.notice.the_newer_versions_text_is",
       "en": "the newer version's text is held only in part (its index reads {said}), so the passage may be in the part not held",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 242
+      "line": 248
     },
     {
       "id": "content.notice.the_record_does_not_hold",
       "en": "the record does not hold the newer version's text whole (its index reads {said})",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 209
+      "line": 215
     },
     {
       "id": "content.notice.the_record_holds_no_text",
       "en": "the record holds no text of the newer version (its index reads {said}), so where the passage went cannot be looked for",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 240
+      "line": 246
     },
     {
       "id": "content.notice.why_so_there_is_nothing",
       "en": "{why}, so there is nothing to compare",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 185
+      "line": 191
     },
     {
       "id": "content.notice.why_so_there_is_nothing_2",
       "en": "{why}, so there is nothing to compare",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 203
+      "line": 209
     },
     {
       "id": "contradiction.checks.disclosure_malformed",
@@ -45081,11 +45088,18 @@
       "line": 20
     },
     {
+      "id": "retrieval-browse.findin.cells_held_why",
+      "en": "this sheet's text is read whole and searchable; its cells are interpreted for a range when the sheet is opened or cited, so no row of cells is named here",
+      "module": "retrieval-browse",
+      "file": "bio-plane/src/retrieval-browse/findin.mjs",
+      "line": 707
+    },
+    {
       "id": "retrieval-browse.findin.no_cells_named",
       "en": "the reading holds no typed cells for this sheet, or the words found run across cells, so no row of cells is named",
       "module": "retrieval-browse",
       "file": "bio-plane/src/retrieval-browse/findin.mjs",
-      "line": 698
+      "line": 709
     },
     {
       "id": "retrieval-browse.findin.no_matcher_for_lang_yet",
@@ -45120,7 +45134,7 @@
       "en": "no text: this capture's reading holds no text unit to find a held name in",
       "module": "retrieval-browse",
       "file": "bio-plane/src/retrieval-browse/findin.mjs",
-      "line": 550
+      "line": 553
     },
     {
       "id": "retrieval-browse.findin.not_extracted",
@@ -45134,7 +45148,7 @@
       "en": "not minutes or an agenda",
       "module": "retrieval-browse",
       "file": "bio-plane/src/retrieval-browse/findin.mjs",
-      "line": 460
+      "line": 463
     },
     {
       "id": "retrieval.declared.findin",

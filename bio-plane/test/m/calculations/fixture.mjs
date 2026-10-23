@@ -200,6 +200,8 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
     readingOf: (s) => (ex.readings[s] ? { reading: { page_boxes: null, ...(ex.readings[s].reading || {}) }, chain: null, pageCount: 3, textContainer: null, captureFormat: null, ...ex.readings[s] } : null),
     unitsOf: (s) => ex.units[s] || { units: [], state: null },
     capturesReadFor: () => [],
+    /* G41: the ranged cells of a held sheet, answered by `ex.cellsOf` when a test sets one (the real extraction's), else none */
+    cellsOf: (...a) => (ex.cellsOf ? ex.cellsOf(...a) : undefined),
     onReading: () => ({ ok: true }),
   };
   const content = contentOf(host, { record, membership, extraction, now: () => clock.now });
