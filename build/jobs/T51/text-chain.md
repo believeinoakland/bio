@@ -77,3 +77,7 @@ Completion of G48 (B5, TEXT-CHAIN #10). The J3 QUESTION above (FR-41/L6) is answ
 **Census (K4208).** I own no op; no accepted key changes. **Requirement lines proposed.** R73 unchanged in meaning; if BOB wants the method stated: "R73a: the count is made without a per-character regexp." (its test is (a)). **Deferred.** None. **Found in other modules.** None. **Providers' state.** None needed.
 
 Size (session_016U6ynRyZfVauCoMWgZaDey): test runs 9, module lines 1998
+
+## J5 · COMPLETE
+
+G48 complete (record section J4, commit on job/T51/text-chain): glyphCount is a charCodeAt loop, no per-character regexp, R73 to the letter. g48-glyphs.test.mjs 7 tests: (a) red on tip (17,500 regexp calls), green after; (b) independent-spelling control green before and after. text-chain 128 pass; extraction 325 pass; reading-pipeline 233/234 (pdf-pieces R40 R36 G26 timed out at 60s under load, passes alone in 41.6s). Ratio 8.7x-12.4x on 50.5M chars. checks/run.mjs 0 failures, ownership 0. No census op owned. Proposed line: R73a the count is made without a per-character regexp.
