@@ -41,7 +41,7 @@ import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
 import { acquireHandlerParts, acquireTimingsOps, traceStamped, ACQUIRE_STAGES_DDL } from "./acquire-timings.mjs";
-import { pendingOf, pendingOps } from "./pending.mjs";
+import { pendingOf, pendingOps, administersOf } from "./pending.mjs";
 
 /** R78 (K4530, B34; fix round 6, G12e): the response header `server-timing: object;dur=<ms>`, the milliseconds of I/O time the object spent on a
  *  route; control-plane reads it and adds `in-<route>` beside its `do-<route>`. It is I/O time and nothing more: workerd freezes `Date.now()` during
@@ -420,7 +420,7 @@ export class Store extends DurableObject {
        clear (record-core K23). Acquisition reads `cap.keepLater` as it reads `cap.waitUntil`: a keep that will not end inside the
        door's bound is written down here and put by the alarm, never left to a promise nothing keeps alive. */
     const pending = pendingOf(ctx, { env, store: () => this.#ownNamespace() || "bio", deliver: deliverOwedRender });
-    recordOf(ctx).declarePurge("plane", ["keeps_pending", "acquire_stages"]);
+    recordOf(ctx).declarePurge("plane", ["keeps_pending", "keeps_last", "acquire_stages"]);
     capture.keepLater = (a) => pending.keepLater(a);
     capture.owedLater = (a) => pending.owedLater(a);   /* R77, acquisition R100: the ledger's `subresources` and `unpack` entries, registered the same way */
     /* R83 (fix round 6, G8, G13; extraction R89): the same ledger handed to extraction, which owes it the repair of an old reading and the restart of a partial text at start; guarded, as extraction's own merge is later than this line */
@@ -805,8 +805,8 @@ export class Store extends DurableObject {
       ...acquireTimingsOps(ctx, url),
       /* R75: the door's deferred reading (control-plane R120), registered for the alarm; store-internal, no caller's own */
       ...pendingOps(pendingOf(ctx), url, { health: () => schedulerOf(ctx, env).health(),
-        /* R80: an administrator is the root of trust's credential (`class:admin`) or a member membership R64 names (the founder, an active member of role `admin`) */
-        administers: (v) => v === "class:admin" || (typeof v === "string" && v.startsWith("member:") && membershipOf(ctx).isAdministrator(v.slice(7))) }),
+        /* R80, R90: an administrator is the root of trust's credential (`class:admin`), the founder's session (the door stamps the bare `admin`) or a member membership R64 names (an active member of role `admin`) */
+        administers: administersOf((id) => membershipOf(ctx).isAdministrator(id)) }),
       ...captureOps(captureOf(ctx), url, body, env, acquireHandlerParts(ctx, url)),
       /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, each answered by doorbell's instance
          (capture's copy deleted in T43, N849). */
