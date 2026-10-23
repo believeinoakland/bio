@@ -467,3 +467,13 @@ Mail with `--module plane`; record `build/jobs/T51/plane.md` (append a new secti
 **Later (a CHANGE from BOB, when RATIFICATION #32 merges):** G57's plane test (`g57-heal.test.mjs`, the entry's (3) *plane*). Post COMPLETE for G55 when it is done; the CHANGE re-opens you.
 
 **Record and COMPLETE:** what changed, the test red then green (or why not), the figures (slices, alarm firings, facts), suites and checks, the proposed R line, census ops (none change), and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B64 · CHANGE
+
+CHANGE · G57 (fix round 6; K4724, K4727). RATIFICATION #32 is merged on `tranche/T51` (the sweep heals each owed edition's member findings' `bundle.md` by record-core's `textAtSha` before the assembly; ratification R57 and R6 amended), and your PLANE #53 G55 work is merged with it. Merge `tranche/T51` into your branch, then apply your part, tests only:
+
+Read whole: the G57 entry of `build/plan/fix-round-6-T51.md` (its (3) *plane* paragraph is yours) and `build/requirements/ratification.md` R57.
+
+Write `bio-plane/test/m/plane/g57-heal.test.mjs`: a real `Store` and the real scheduler, an edition completed through the real `op=ratify` with the finding's copy to the published bucket failing once; then the `casefile-sweep` consumer's tick through the object's alarm (never a hand-fired `caseFileSweep`) heals the finding's `bundle.md` and builds the case file; `publishedcase` answers `case_file.state` `built`; `publishedbytes` of the finding's `bundle.md` answers 200. Seen red first on a scratch tree without RATIFICATION #32's heal (the tranche before cfe063d2e5), or record why a red cannot be shown and what the control proves. Control: a healthy edition is built with no finding put. No plane source changes; if one is needed, say so to BOB at once.
+
+Propose a plane requirement line (a new R id) in your record; BOB writes it. Then your plane suite (non-heavy with concurrency, heavy alone), `checks/run.mjs` (each arm's own failure count) and `checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`; record, `Size` line for this session, state COMPLETE, post COMPLETE, ring BOB.
