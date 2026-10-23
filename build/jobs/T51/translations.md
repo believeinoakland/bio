@@ -2,6 +2,32 @@
 
 **Status** · session_0127cgdteY6TNWkhQcKQFfuz · depth 2 · WORKING · handled B2
 
+## Completion, fix round 8, G113 and G114 (TRANSLATIONS #3, session_0127cgdteY6TNWkhQcKQFfuz, START B3)
+
+**G113 (R19, amends R8).** (1) Cause: `interfaceWords` (`bio-plane/src/translations/index.mjs`, the method, formerly :716-740) answered every word of the list as `{key, text, en, fallback}`, `fallback: true` for each word with no shown translation, whatever the request; the shell keeps only `fallback === false`. Now, with no `language` named, only the words the team shows in the viewer's language are answered (none held: `words: []`, a few dozen bytes); with a `language` named, every word as before (the settings screen's read). The error answer follows the same split (no word without a language, every word in English with one). (2) Missed because no test bounded what the answer holds against what the shell uses; now `r8-shown-words.test.mjs` asserts the answer is at most 4 KiB with no translation held, through the method and through the route. (3) Failing-first test `bio-plane/test/m/translations/r8-shown-words.test.mjs`, "R19 with no language named ...": seen RED against the old code (its first assertion, the empty `words` list against the 25,808-word answer, fails; the file failed), then green: 41 of 41. It covers none held, one adoption (exactly that word, `fallback: false`), an awaiting word not sent until confirmed, the `language` arm and the route answering every word, another language and a viewer with none. (4) **N** here (**P** after the redeploy is BOB's).
+
+**G114, my half (R20).** `wordsVersion()` (in-process): `"<max adoption seq>.<max confirmation seq>.<max undo seq>"` read from the three append-only tables, e.g. `0.0.0`; it names no member and no word, is the same across reads and isolates (read from the storage alone), and changes at an adoption, a confirmation and an undo; a mark, a draft, a refused act and a read leave it. Test (failing-first, red against the old code: `wordsVersion` is not a function): "R20 wordsVersion() ...", green. instance-setup (R103) and control-plane (R127) call it; I added no op and no wire field.
+
+**Existing tests changed (R8 amended, not weakened).** `translations.test.mjs` (the R8 `interfaceWords` test, the R4 shown-reading and the draft-is-no-state reading) and `reading.test.mjs` (R11) read the default arm and now assert the shown words alone; each keeps its every-word, never-blank assertions through a `language` named.
+
+**Owed to BOB (outside my paths).**
+- Requirements: R8's `interfaceWords` bullet should say what R19 says (default arm: only `fallback: false` words; `language` named: every word); R19 and R20 lose "not yet met".
+- Word row (K4269): the op's declared description, `op-grades/t37.mjs:67` and its row in `setup-words/rows.mjs` (:21294), still reads "every interface word in a language ... never blank, with `en` beside it". Proposed: "the interface words the team shows in the member's language, each with the English beside it; with a language named, every word in that language, the English where none is shown". I did not touch either (not my paths).
+- The settings screen asks the full list with `language` named (`screens-settings/translations.mjs:21`), which this change keeps; `translations/index.mjs` `translationsOps` already passes `language` from the query or body.
+
+**Deferred.** None.
+
+**Found in another module.** Nothing new.
+
+**Stale generated artifacts.** `bio-plane/dist/bio-plane.bundled.mjs` (holds the old arm); `setup-words/rows.mjs` (description row above). BOB regenerates.
+
+**Ran.**
+- `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/translations/`: 41 tests, 41 pass, 0 fail.
+- Users the impact names that read this op: `instance-setup/t50`, `control-plane/t37-door` and `t51-interfacewords`, `plane/t50`, `screens-settings/translations`, `op-grades/t37`: 38 tests, 38 pass. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 8 modules affected (instance-setup 26/26, answer-envelope 5/5, store-door 6/6, signin-door 2/2, screens-action 2/30, control-plane 70/87, plane 59/73, translations); I ran the files above, not the whole set.
+- `checks/format.mjs`: 0 failures. `architecture` 0. `coverage` 20 of 20 live ids, 0. `words` 0. `ownership` (1 file as of the first commit) 0.
+
+Size (session_0127cgdteY6TNWkhQcKQFfuz): test runs 6, module lines 1030
+
 ## Completion, fix round 7, G84 (TRANSLATIONS #2, session_01D3PnCpi1vCRCeUDnt7Sw8P, START B2)
 
 **Applied: R2 as BOB rewrote it.** `INTERFACE_WORDS` is now `interfaceWords()` (`bio-plane/src/translations/index.mjs:37`), built at its first call and the same frozen array after; the key map (`wordByKey()`) is lazy likewise; `INTERFACE_WORDS_COMMIT` stays a constant. Every use inside the module and the seven test files that read the constant is re-pointed.
