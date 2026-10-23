@@ -127,16 +127,18 @@ test("R38 the stack is read from the whole text, and a matched type's parse is h
   const t = sheetOf(6 * MB);
   reset();
   const probe = readText(csv(t), {});
-  // a link that sits in a gap between two windows is outside the view and inside the stack's text
+  // a <body> opening tag in a gap between two windows is outside the view and inside the stack's text: markup is what lets
+  // site-profiles count a text with no links and no prose as a shell (G76), and the view holds none, so the two answers differ
   const w = probe.classified_over.windows, gap = Math.floor((w[4].to + w[5].from) / 2);
   const at = t.indexOf("\t", gap);
-  assert.ok(at > w[4].to && at + 12 < w[5].from);
-  const marked = t.slice(0, at) + '<a href="x">' + t.slice(at + 12);
+  const marker = "<body>";
+  assert.ok(at > w[4].to && at + marker.length < w[5].from);
+  const marked = t.slice(0, at) + marker + t.slice(at + marker.length);
   assert.equal(marked.length, t.length);
   reset();
   const r = readText(csv(marked), {});
   assert.deepEqual(r.classified_over.windows, w, "the same layout");
-  assert.ok(!seen.texts[0].includes('<a href="x">'), "outside the view");
+  assert.ok(!seen.texts[0].includes(marker), "outside the view");
   assert.deepEqual(r.stack, identify({ text: marked, pages: [] }), "the stack is identify over the whole text");
   assert.notDeepEqual(r.stack, identify({ text: seen.texts[0], pages: [] }), "and not over the view");
   // a type that wins on the head parses the whole sheet
