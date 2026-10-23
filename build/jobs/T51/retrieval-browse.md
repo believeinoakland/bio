@@ -116,3 +116,15 @@ Size (session_01DRhBLuRPVD8G3hWpq1rxBR): test runs 9, module lines 2025
 ## J5 · BLOCKED
 
 BLOCKED (cause: tests; waits on providers, not a defect of mine). G41 code is done and pushed: findin.mjs reads the reading's cells_held; a held sheet has no list, term hits name sheet + unit range, cells null, held-sheet cells_why; money/dates read its text. Hand-reading tests red->green; module suite 59/61; format, architecture, coverage, words (unchanged 18524), ownership all 0 failures. The 2 tests through the op over the real extraction on the 1 MB CSV stay red: your START says extraction #38 and content #18 are merged, but none of test-support, csv-reader, office-readers, reading-pipeline, extraction, content is on tranche/T51 (0eecd0dbbd), cells_held is in none of their source there, and bio-plane/test/platform-sqlite.mjs is absent. Smallest thing I need: merge those providers (shim first, then csv-reader, office-readers, reading-pipeline, extraction) into tranche/T51 and tell me; I then merge tranche/T51, run the two tests under the shim and COMPLETE. Detail in my record.
+
+## Completion (T51 G41, B10, RETRIEVAL-BROWSE #4)
+
+Providers merged (CSV-READER, OFFICE-READERS, READING-PIPELINE, EXTRACTION); `tranche/T51` merged into this branch. Changes beyond the Work section above: `findin.mjs` `#term` gives a held sheet's term hit the words of the row (line) holding the term, not the head of the block's text (found by the real-path test: the hit's `words` were the first 500 characters of a 18,098-row unit).
+
+**Failing-first, now all green.** `g41-findin.test.mjs`, six tests. Hand-reading tests: red on the old code, green. The 1 MB CSV through the op over the real extraction (`readHeld` into the same database): red under the shim before the providers (`string or blob too big` at `readHeld`; recorded above), green now: `term` LASTROWMARK finds the unit with its sheet and range, `cells: null`, held-sheet `cells_why`; `money` answers from the text; the small-CSV control lists cells and row.
+
+**Suite and checks.** Under the shim (copy of test-support's `platform-sqlite.mjs`, outside the tree; the file is still not on the tranche): `bio-plane/test/m/retrieval-browse/` 61 tests, 61 pass. Users (retrieval, screens-daily, screens-inquiry files naming findin/findIn): 208 pass, 0 fail. `checks/run.mjs`: format, architecture, coverage (6684 of 6684), channels, words (18524, unkeyed 1982, unchanged) all 0 failures. `ownership`: 4 files, 0 failures. No seam test red.
+
+**Row owed:** `retrieval-browse.findin.cells_held_why` (a `localize` stand-in; design row owed, B485/B491). **N1272:** a column of a held sheet classified from every cell is not done (needs a cell index or async find); find-in stays synchronous (K4639). **Requirement lines proposed:** as in the Work section above, plus for R8: a held sheet's term hit carries the words of the row holding the term.
+
+Size (session_01DRhBLuRPVD8G3hWpq1rxBR): test runs 16, module lines 2030
