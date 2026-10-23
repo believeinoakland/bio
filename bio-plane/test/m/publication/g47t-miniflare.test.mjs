@@ -1,14 +1,20 @@
 /* publication — G47t platform check L (K4677): a populated `published_shas` of the old six-column shape, inside a real
    Durable Object's SQLite (Miniflare), takes `migratePublication`'s `ALTER TABLE ... ADD COLUMN capture_sha`, the
    seven-column attestation insert and its `DO UPDATE`. The module's own `schema.mjs` runs in the object; the plane's
-   Miniflare suites (`members.test.mjs`, `stats-disclosure.test.mjs`) are the pattern, here narrowed to the one table
+   Miniflare suites (`members.test.mjs`, `stats-disclosure.test.mjs`) are the pattern (their `sandbox.mjs` is test-support's, which this module does not use), here narrowed to the one table
    because the statement is the platform's question. */
-import "../../sandbox.mjs";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { Miniflare } from "miniflare";
 
+/* Miniflare's sandbox lands in a directory this test owns and removes when the process exits (D-186: it leaks otherwise). */
+const owned = mkdtempSync(join(tmpdir(), "g47t-"));
+process.env.TMPDIR = owned;
+process.on("exit", () => rmSync(owned, { recursive: true, force: true }));
 const schemaSrc = readFileSync(new URL("../../../src/publication/schema.mjs", import.meta.url), "utf8");
 const worker = `
 import { migratePublication, ATTESTATION_SHA_UPSERT } from "./schema.mjs";
