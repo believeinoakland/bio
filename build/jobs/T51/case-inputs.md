@@ -138,3 +138,27 @@ COMPLETE for B6 (FR-17), after merging `tranche/T51` (6c78a2be15 on the job bran
 - Neighbours: `public-read` 228/0, `test-support` 61/0, `case-authoring` 192/0, `consequences` 69/0, `filings` 140/0, `action-replies` 31/0 (now as at the base).
 
 Size (session_018B8XxZpqqS4khqQXoeQ55b): test runs 32, module lines 1597
+
+## J9 · COMPLETE
+
+COMPLETE for B8 (G47, fix round 6).
+
+**What changed.** `bio-plane/src/case-inputs/index.mjs` `#reauthorAcknowledgements` (about :884-890): when publication's splice leaves the hash unmoved, the answer now also carries the splice's `too_large` and `why` when it gave them, so a refused splice is never presented as done. Nothing else; nothing stored changes (R-OLD). Census ops: none changes its accepted keys (K4208).
+
+**Failing-first tests** (`bio-plane/test/m/case-inputs/g47-splice.test.mjs`, titles name R2):
+1. Pass-through, the publication's refusal shape stood in: red before (`too_large` and `why` undefined), green after; control: a working splice states neither key.
+2. Seam, the real publication, a document sitting at `CASE_DOCUMENT_BYTES_MAX`: red now **by name** ("publication exports CASE_DOCUMENT_BYTES_MAX (PUBLICATION #36 has not merged)"); it waits for PUBLICATION #36 and goes green when it merges (control: a small document still re-authors).
+
+**Providers' state.** CASE-GRAMMAR #20, PUBLICATION #36, CASE-CHECKER #16, CASE-DISCLOSURES #17 not merged when I ran. Please post a CHANGE when PUBLICATION lands so I re-run the seam test.
+
+**Suite counts.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/case-inputs/*.test.mjs`: 72 pass, 1 fail (the seam test only). `build/plan/impact.mjs origin/tranche/T51 HEAD`: 45 modules affected; files failing outside my module: pdf-worker, scheduler, affordances, queue, screens-wizards, control-plane, plane, journey-check. I ran scheduler (151/0), queue (210/0) and affordances (274 pass, 4 fail: strengthbar/ACT_HELP/op-help tables, nothing about acknowledgements or the splice) directly; the rest are on the accepted-reds list or missing `src/journey-check/node_modules`; none touches this change.
+
+**Checks** (`checks/run.mjs`): format, architecture, coverage (6685 of 6685), channels, words 0 failures, testcopy 0, inline 0. Ownership: 1 file changed by case-inputs (the pushed tests are in the commit after this run's snapshot; re-run at your merge), 0 failures.
+
+**Requirement lines proposed (BOB writes them):** R2: "A re-author that publication refuses (`reauthored: false`, with `why` and, when the new text would pass the case-document byte bound, `too_large`) is answered by `acknowledgeStatement`'s `case_documents` entry as refused, with that `why` and `too_large`, the hash unmoved."
+
+**Protective bound:** none set by this module (publication's `CASE_DOCUMENT_BYTES_MAX`, 1,572,864 B, is read, not owned).
+
+**Deferred:** none. **Flaws in other modules:** none found.
+
+Size (session_01QBHmyVdK3F9mLRdReuQNVZ): test runs 6, module lines 1604
