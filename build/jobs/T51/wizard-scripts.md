@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_015FfhtgWHE6mdMnqa5TBkFo · depth 2 · COMPLETE · handled B20
+**Status** · session_01H5ogzKbBJfic7Cqb8K8bF6 · depth 2 · COMPLETE · handled B21
 
 ## J1 · BLOCKED
 
@@ -449,3 +449,34 @@ FOUND IN OTHER MODULES: screens-action (its C64 half: request's entitycreate act
 WORDS: no new member-facing sentence.
 
 Size (session_015FfhtgWHE6mdMnqa5TBkFo): test runs 10, module lines 2569
+
+## G53 · WIZARD-SCRIPTS #24 · work record (fix round 6; K4694, K4699)
+
+Merged tranche/T51 first (6eb35d19b8). Entry: G53 in `build/plan/fix-round-6-T51.md`, merged first of its three owners (wizard-scripts 141, op-declarations 153, interface-shell 159).
+
+**Cause (R-FOUR).** `bio-plane/src/wizard-scripts/build-data.mjs:29` (`SOURCES.registry.commit`) stood at `43379a1a44` (R49) while the design's `registry.json` on the tranche is DEC-419's (`f72b2f8a4c`). `interface-shell` `checkScreens` (index.mjs:197-215) admits a page's act only when the generated registry holds it. **Why tests missed it:** the screens' contract tests read the design file, which was green; the shell reads the generated copy; nothing compared the vendored/generated registry with the design file on the tranche. **Gap fixed:** `t52g53.test.mjs` asserts the vendored `source/registry.json` equals `docs/development/ux-substrate/screens/registry.json` byte for byte, and that the generated `SCREEN_REGISTRY_SOURCE.sha256` names that file. Seen red first (all three R50 tests failed before the re-take), green after.
+
+**Built.**
+- `SOURCES.registry.commit` is `f72b2f8a4c`; `source/registry.json` is the tranche's file; the old one kept whole as `source/registry-43379a1a44.json`; `screen-registry.mjs` regenerated (only generated file that changed; the library and the front doors are unchanged: `--check` green, `library.json` is byte-identical to `library-1cc4a957f0.json`).
+- Counts at `f72b2f8a4c`: 84 screens, 609 acts (448 declared, 83 function, 78 owed; 62 owed ops, 58 without the installer's four). The diff 564 to 609 adds acts only, and one screen, `registers` (declared `search`, `explore`); every act registered at `43379a1a44` is still registered (tested).
+- Pin sites moved (found: all as BOB listed, plus these): `t50:26` `REG_COMMIT`, `t50:113/118/130/126/186` (84 screens; 62 owed ops, 58 net of the installer's four; `registers` among the screens new since R38), `t51:33/37-38/42/79/92/119-120/124-125/141`, `t51fr3:29-32/52`, `library.test:83/85/149/154`, `t47:64/66`, `t48:98/103-105/108`. The one-byte arms (`t51:79,141`, `t51fr3:52`) now flip `f72b2f8a4c`, so they test something.
+
+**Through the door (note 6), scratch worktree never committed** (my head + `origin/job/T51/screens-action` at f9656cfc0c): `checkScreens` admits `projectjoin` on `start-send`, `request` and `action`, and refuses it on `docket` (control). control-plane and plane impact files (126 files): 746 tests, 745 pass, 1 fail: plane `release` R24 (accepted). The scratch worktree is removed.
+
+**Census (note 7).** Newly registered declared/function ops between the two files: `scanmirror` (security) and `officeconfirm` (places); both are already used by shipped modules (screens-settings, file-safety) and `registryActGaps` names no gap for them. The 31 newly owed T52 ops (`registersearch`, `followfrom`, `explore*`, `register*`, `alertconnect`, `installcheck`...) show as gaps in op-declarations `t50:391` until 44b merges (its `OWED_BY_FIX_ROUND`). No op's accepted keys change; `DECLARED_OPS` unchanged.
+
+**Tests and checks.**
+- Module suite: 137 tests, 137 pass, 0 fail (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/wizard-scripts/`).
+- Impact set (`build/plan/impact.mjs origin/tranche/T51 HEAD`, 27 modules), one process at a time: control-plane and plane in the scratch tree as above; the other 24 modules (453 files) in my tree: 4287 tests, 4280 pass, 4 fail, all expected, none mine: screens-action `contract.test.mjs:34` (G52, held until G53 merges: green once this merges, per the scratch run), interface-shell `t50:32` and `fixround4:17` (`RE_POINTS.security` still lists `scanmirror`: 44c), op-declarations `t50:391` (the owed T52 ops: 44b). journey-check was not run (live walks; accepted-by-name set unchanged by this diff).
+- checks/run.mjs: format 0, architecture 0, coverage 0 (6686 of 6686), channels 0, words 1 failure: `case-checker/spec.mjs:11` inline 1 (accepted by name). ownership (tranche/T51 to job/T51/wizard-scripts): 12 files, 0 failures. `setup-words/build.mjs --check` not run: no words, no word row changed.
+
+**Proposed requirement line for BOB to write (R50), amending R49:**
+- **R50** (T51 fix round 6; G53; DEC-419; K4393, K4691; amends R49) The registry is re-taken at `f72b2f8a4c`: `SCREEN_REGISTRY_SOURCE` becomes `f72b2f8a4c`, 84 screens and 609 acts (448 declared, 83 function, 78 owed; 62 owed ops); `start-send`, `request` and `action` register `projectjoin`; the new screen `registers` is carried (its declared acts `search`, `explore`). The earlier file is kept whole beside the carried one at `43379a1a44`. The library and the front doors are unchanged. Test: the vendored `registry.json` equals the design's `docs/development/ux-substrate/screens/registry.json` on the tranche byte for byte, so a design merge that moves the registry fails until it is re-taken; the pin, the counts, `projectjoin` on the three screens, every act of `43379a1a44` still registered, and `build-data.mjs --check` passes; a one-byte change to the generated registry fails it.
+
+**Deferred:** none. **Found in other modules:** none beyond the 44b/44c reds above. **Words:** no new member-facing sentence. Declarations: no census op changed.
+
+Size (session_01H5ogzKbBJfic7Cqb8K8bF6): test runs 14, module lines 2866
+
+## J22 · COMPLETE
+
+COMPLETE · G53 (fix round 6): registry re-taken at f72b2f8a4c (84 screens, 609 acts: 448 declared, 83 function, 78 owed), vendored file equals the tranche's design file (commit-equality test t52g53, seen red then green), projectjoin admitted by checkScreens on start-send/request/action (scratch tree with screens-action merged: control-plane+plane 745/746, only plane release R24 accepted). Module suite 137/137. Impact: other reds are 44b/44c's and G52's held contract.test:34 only. Library and doors unchanged. R50 text proposed in my record. Checks: format/architecture/coverage 0, ownership 0, words only case-checker inline 1. Size (session_01H5ogzKbBJfic7Cqb8K8bF6): test runs 14, module lines 2866

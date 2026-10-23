@@ -26,11 +26,20 @@ export const browserActs = (registry) => {
    registry's own owed rows (K3268: no hand list): every owed act that is no op, no browser act (R76) and no installer
    route; an act leaves the list when it becomes an op. */
 const INSTALLER = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
-const registryRows = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
-const OWED_ALL = [...new Set(registryRows.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed")
-  .map((a) => a.op.replace(/^owed:/, "").split(" ")[0]))];
+const owedActs = (file) => {
+  const rows = JSON.parse(readFileSync(new URL(`./fixtures/${file}`, import.meta.url), "utf8"));
+  return [...new Set(rows.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed")
+    .map((a) => a.op.replace(/^owed:/, "").split(" ")[0]))];
+};
+/* Two registries are read: t34 to t51 take the one at `43379a1a44` (the fixture they were written against); R73 takes the
+   design's, at `f72b2f8a4c` (DEC-419; G53), which owes the T52 acts too (K4403, DEC-406, DEC-409, DEC-415). */
+const OWED_ALL = owedActs("registry-43379a1a44.json");
 const DECLARED_BY_OWNERS = new Set(Object.values(REGISTERED).flatMap((rows) => Object.keys(rows)));
 /** The owed acts an owner declares (class (a) of R21, R80): each is read as served by its declaration, so it is an op. */
 export const OWED_SERVED_BY_OWNERS = OWED_ALL.filter((act) => DECLARED_BY_OWNERS.has(act) && !Object.hasOwn(BROWSER_ACTS, act)).sort();
-export const OWED_BY_FIX_ROUND = OWED_ALL
+const notBuilt = (acts) => acts
   .filter((act) => !Object.hasOwn(OPS, act) && !Object.hasOwn(BROWSER_ACTS, act) && !INSTALLER.includes(act)).sort();
+/** The owed acts of the registry at `43379a1a44` that no op, browser act or installer route is (what t34 to t51 read). */
+export const OWED_BY_FIX_ROUND_AT_43379A1A44 = notBuilt(OWED_ALL);
+/** The same for the design's registry at `f72b2f8a4c`: the acts the fix rounds and T52 still owe (R73). */
+export const OWED_BY_FIX_ROUND = notBuilt(owedActs("registry-f72b2f8a4c.json"));

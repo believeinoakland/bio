@@ -197,6 +197,7 @@ test("R12: the install's upload states exactly the listed metadata; the module p
       { type: "browser", name: "BROWSER" },
       { type: "service", name: BINDING_OF.get("pdf-worker"), service: "pdf-worker-grp" },
     ],
+    observability: { enabled: true },
     migrations: { new_tag: "v1", new_sqlite_classes: ["Store"] },
   });
   assert.equal(await put.form.get("index.mjs").text(), rel.src);
@@ -238,6 +239,7 @@ test("R13: the update's upload states exactly the listed metadata, keeps secrets
       { type: "plain_text", name: "OWN_HOSTS", text: "grp.pfx.workers.dev" },
     ],
     keep_bindings: ["secret_text", "durable_object_namespace"],
+    observability: { enabled: true },
   });
   await uploadUpdate(session(), "A1", "grp", false, release_, { names: NAMES, members: ["pdf-worker"] });
   const noR2 = w.puts.at(-1).meta;
@@ -474,7 +476,7 @@ test("R38: the multipart part is found whatever the chunking, across preambles, 
 });
 
 test("R38: the upload carries the release's Blob as it is, never turned into a string or a buffer, whose bytes reach the account once", async () => {
-  const calls = sequence([cfok({}), cfok({})]);
+  const calls = sequence([cfok({}), cfok({ observability: { enabled: true } }), cfok({})]);
   const seen = [];
   const blob = new Blob([MB29]);
   for (const m of ["text", "arrayBuffer", "bytes"]) blob[m] = async () => { seen.push(m); throw new Error("held whole by " + m); };
@@ -484,7 +486,7 @@ test("R38: the upload carries the release's Blob as it is, never turned into a s
   assert.deepEqual(seen, [], "no whole-body copy was asked of the release's Blob");
   assert.equal(part.size, MB29.length, "the part is the module's bytes, once");
   seen.length = 0;
-  sequence([cfok({}), cfok({})]);
+  sequence([cfok({}), cfok({ observability: { enabled: true } }), cfok({})]);
   await uploadUpdate(session(), "A1", "grp", true, rel, { secrets: SECRETS, names: NAMES });
   assert.deepEqual(seen, [], "the update's upload likewise");
 });
