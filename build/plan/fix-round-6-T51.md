@@ -574,6 +574,7 @@ Every job: medium effort, claude-sonnet-5-5; its suites then `build/plan/impact.
 | 52 | ratification (L8, 116) | G54 (records the outcome on every completing path; step 0's probe; RATIFICATION #31) | ratification |
 | 53 | screens-publish (L11, 168) | G54 (the reader told plainly; SCREENS-PUBLISH #20) | screens-publish |
 | 54 | plane (L11, 171) | G54 (S: the seam and the sweep's wiring; a CHANGE to PLANE #52), G56 (L: re-run G26 and the shape set) | plane |
+| 54a | installer-steps (L11) | G54 (prov: `observability` sent at install and update, the read-back; INSTALLER-STEPS #7, K4702) | installer-steps |
 | 55 | installer (L11, 173) | G54 (the release carries `observability`; INSTALLER #24) | installer |
 | 56 | entities, money, calculations (L5) | G55 tier 1 then tier 2 (ENTITIES #20, MONEY #8, CALCULATIONS #9) | each its own |
 | 57 | scheduler (141), op-grades (143), notice-producers (149), op-declarations (154) | G55 tier 2 (SCHEDULER #41, OP-GRADES #25, NOTICE-PRODUCERS #16; a CHANGE to OP-DECLARATIONS #36) | each its own |
