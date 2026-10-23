@@ -343,6 +343,26 @@ async function sessionPresented(t, env, doAnswer, background = false) {
   return { sess: out.result?.session ?? null };
 }
 
+/* R32 (G119; K4814 (4), K4817) — ONE SESSION READ PER REQUEST. The three places that read a session (`admit`, `readerOf` and
+   `liveSessionDigest`, the window's) are handed the door's one `presentedCredential` answer for the request, so that
+   object is the request's key: the first read is kept, as the promise of its answer (a silence included), and the others
+   of the same request take it. It holds only what the first read asked, the token, `background` and the `env` and
+   `doAnswer` it was asked with; a different token, `background` mark, `env` or reader is its own read. Weakly held, so it
+   lives no longer than the request; a credential presented without the door's object has nothing to key on and is read
+   each time. A read that fails is dropped from the memo. `doorwindow` is not read here and stays asked (K1881). */
+const sessionReads = new WeakMap();
+function sessionRead(credential, t, env, doAnswer, background) {
+  const bg = background === true;
+  if (!credential || typeof credential !== "object") return sessionPresented(t, env, doAnswer, bg);
+  const memo = sessionReads.get(credential);
+  if (memo && memo.t === t && memo.bg === bg && memo.env === env && memo.doAnswer === doAnswer) return memo.looked;
+  const looked = sessionPresented(t, env, doAnswer, bg);
+  const kept = { t, bg, env, doAnswer, looked };
+  sessionReads.set(credential, kept);
+  looked.catch(() => { if (sessionReads.get(credential) === kept) sessionReads.delete(credential); });
+  return looked;
+}
+
 /* REC-132 / D-422 — WHO A SESSION IS, IN TWO HALVES KEPT APART. `viewer` is what it may SEE (the founder's is the bare
    `admin`, `viewerPredicate`'s root-administrator spelling; every other session `member:<id>`); `identity` is WHO it is
    (`member:<id>`, the founder's `member:admin`), for authorship, ownership and positional facts; `member` the folded
@@ -664,7 +684,7 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
             + "agent credential a member creates for it." } } };
   if (!cls) {
     if (t && SESSION_TOKEN_SHAPE.test(t)) {
-      const looked = await sessionPresented(t, env, doAnswer, background);
+      const looked = await sessionRead(credential, t, env, doAnswer, background);
       if (looked.silent) return { silent: looked.silent };
       if (looked.sess) {
         const kind = looked.sess.role === "admin" ? "admin" : "member";
@@ -870,7 +890,7 @@ export async function readerOf(url, env, storeName, presented, doAnswer, credent
     return { viewer: scoped && !scoped.refusal ? scoped.viewer : "", cls: "ai" };
   }
   if (SESSION_TOKEN_SHAPE.test(t)) {
-    const looked = await sessionPresented(t, env, doAnswer, background);
+    const looked = await sessionRead(credential, t, env, doAnswer, background);
     if (looked.silent) return { silent: looked.silent };
     /* R24 (T47): a locked session reads nothing until it is unlocked, so it is no one here */
     if (!looked.sess || looked.sess.locked === true) return { viewer: "" };
@@ -1014,7 +1034,7 @@ async function liveSessionDigest({ req, env, doAnswer, credential, background })
   if (typeof t !== "string" || !SESSION_TOKEN_SHAPE.test(t) || typeof doAnswer !== "function") return null;
   try {
     if ((await bindingOf(t, env)) !== null) return null;
-    const looked = await sessionPresented(t, env, doAnswer, background === null ? backgroundOf(req) : background === true);
+    const looked = await sessionRead(credential, t, env, doAnswer, background === null ? backgroundOf(req) : background === true);
     if (looked.silent) {
       console.warn(`admission: the session was not read for the door's window; the request is counted by source (correlation ${
         typeof looked.silent.correlation === "string" ? looked.silent.correlation : "none"})`);
