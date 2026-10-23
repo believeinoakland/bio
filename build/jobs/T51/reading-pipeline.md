@@ -590,3 +590,14 @@ Done: a CSV and a text are read in pieces by a byte window. The first piece read
 Waiting, both named earlier: (1) the PDF half: the wiring is written and tested against a local stand-in of `openPdfRange`; 4 tests in `r7-pdf-tick.test.mjs` are red by name until pdf-reader merges; send the CHANGE then, and I make the import plain, run the PDF L check and `pdf-pieces.test.mjs` five of five alone (the inherited red is the PDF half; it passed in my last two full runs). (2) `NEEDS BOB` (J28): the refused probe loop for the 17 MB CSV, the 12 and 24 MB texts; say if those figures are to be taken at the redeploy instead.
 
 Suites: reading-pipeline 308 tests, 304 pass, the 4 failing the PDF seam; the users in extraction and plane 93 of 93; format, architecture, coverage (43 of 43), ownership and words checks 0 failures. Requirement lines proposed in the record (R40, R1/R2/R11, Uses). Size line is in the record.
+
+## J30 · QUESTION
+
+QUESTION (G82; the stretches that are not mine, with my best reading).
+
+Measured in node on the three shapes, the longest synchronous stretch of one `read` (no yield to the event loop), with my own phases being sliced and yielded now: 17 MiB CSV first tick 1.6 s -> about 0.7 s after my part, of which csv-reader's `entry.text` is one unbroken stretch of about 0.7 s (its `forEachRecord` walks the 1 MiB windows one after another and `text()` never awaits); 12 MB text first tick 0.71 s -> about 0.4 s and falling with my slices (all mine); a PDF: the whole-file open (`scanTopLevel`, `loadObjectStreams`, `buildPageIndex`) of pdf-reader is one stretch (0.56-0.84 s in PLANE #54's L).
+
+I can get my own share under 500 ms, but not these two, from here (they are inside other modules and csv-reader's text cannot be cut by me without re-making its output). Smallest thing I need, as one provider each:
+1. csv-reader: `text(partsOrBytes, {inlineCellsMax, yieldNow})`: when `yieldNow` is a function, `text()` awaits `yieldNow()` between its 1 MiB windows (so a 17 MiB body is 17 stretches of about 40 ms). I pass `yieldNow` (a timer turn) on every call. Absent, it behaves as today.
+2. pdf-reader (PDF-READER #13's R44, `openPdfRange(bytes, {yieldNow})`): the same between the scan, the object streams and the page index, so the open is several stretches.
+Decision I ask of BOB: (a) add both to those modules' jobs and send a CHANGE when they merge, I pass `yieldNow` and run my workerd contention test then; or (b) rule that the first tick's csv/PDF share is read at P and stays above the bar. Meanwhile I do everything mine: yields between the phases of a first tick, the word, glyph and byte sweeps sliced, the hash already yielding, and my own workerd test (bounded by what the providers allow).
