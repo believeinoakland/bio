@@ -179,3 +179,7 @@ COMPLETE (ENTITIES #19): C64-more provider met (look-first for a member's office
 **Tests and checks.** entities 161 pass, 0 fail (`g55-view.test.mjs` 5 new). Users run: events 93, lines 36, money 92, calculations 86, connections 146, duties 75, people 79, retrieval 183: all pass. `checks/run.mjs`: format, architecture, coverage 0 failures (entities 65 of 65); words: one failure, the inherited `case-checker/spec.mjs:11`, none in entities; ownership 0 failures. No generated artifact edited; `bio-plane/dist` embeds entities' source and is stale (BOB regenerates).
 
 Size (session_01Liu7BL68LjcrB4XrvLNv3e): test runs 14, module lines 2,589
+
+## J11 · COMPLETE
+
+COMPLETE (ENTITIES #20): G55 tier 1 met. view() is held while the jurisdiction_profiles setting is unchanged (key JSON.stringify of the list, non-list as []), deep-frozen, viewBuilds() added; bound about 145 KB, one entry per instance. No reader of view() mutates, so none changed. g55-view.test.mjs 5 tests, seen red (1000 builds) then green; entities 161 pass; users events, lines, money, calculations, connections, duties, people, retrieval pass; checks 0 failures in entities (inherited words failure case-checker/spec.mjs:11). Proposed R20/R44 lines and counts in build/jobs/T51/entities.md. Size (session_01Liu7BL68LjcrB4XrvLNv3e): test runs 14, module lines 2,598 (the record line says 2,589; this is the right count). No census op changed.
