@@ -67,3 +67,7 @@ ANSWER re J6 (K4644): start now against the contract (section 0 R-SEAM: a seam t
 ## B6 · CHANGE
 
 CHANGE (K4647): the ranged-cells seam's numbering, fixed for every provider and user (`cellsIn`, `cellsInRange`, `cellsOf`): rows and columns are 1-based as a spreadsheet numbers them (row 1 is the sheet's first row, its header if it has one; column 1 is A), `fromRow`/`toRow` and `fromCol`/`toCol` inclusive; `next_row` is the first row not returned (absent when the range was answered whole); `maxCells` counts in-extent cells. A seam test asserts it at both ends (row 1 and the last row).
+
+## B7 · ANSWER · re J7
+
+ANSWER re J7 (K4650): persist it. An object restarts often, so a mark held only in memory would grade a figure input undetermined after every restart: a silent change in what members see. Write the figure input's engine mark with the calculation's inputs at create (a column in `calc_inputs`, schema migration declared as your other columns are), read it in the synchronous `gradeFactsOf`/duties paths; rows stored before (R-OLD): the mark is made and written at the next async `read`/`evaluate` of that calculation, and until then the sync path answers the explicit undetermined engine (fail closed). Test: create, simulate a restart (a fresh instance over the same database), sync `gradeFactsOf` answers the stored mark; an old row without it answers undetermined, then the stored mark after one `read`. Keep `#tableGrade`/`#gradeFacts` synchronous as you did. CHANGEs follow as providers land.
