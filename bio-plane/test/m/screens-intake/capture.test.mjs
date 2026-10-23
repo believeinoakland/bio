@@ -877,7 +877,7 @@ test("R38 an address held whose change could not be looked at: the copy is named
   assert.ok(newCopy(p) && leaveIt(p), "the same two acts");
 });
 
-test("R38 control: an address not held sends acquire once as R1 says, after the one look; a copy under an unknown title is Untitled, never an id", async () => {
+test("R38 R54 (G75) control: an address not held sends acquire once as R1 says, after the one look; a copy under no stored title is named by its host and the day it was captured, only a copy with neither is Untitled, never an id", async () => {
   const p = await open("/app/capture/address", { plane: { ...A64, heldat: NOT_HELD, ...CAPTURED } });
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
@@ -887,8 +887,14 @@ test("R38 control: an address not held sends acquire once as R1 says, after the 
   const q = await open("/app/capture/address", { plane: { opencaptures: OPEN0, heldcaptures: ok({ ok: true, held: [] }), memberlist: ROSTER, heldat: HELD_AT("unchanged") } });
   fill(q, { "ci-address": ADDRESS });
   await press(q, "acquire");
-  assert.ok(text(q).includes(word("screen.held.untitled")));
+  assert.ok(says(q, "document.untitled.web", { site: new URL(ADDRESS).hostname, date: dayOf(COPY.retrieved) }), "the chain a delivery names a document by, not Untitled capture");
+  assert.ok(!says(q, "screen.held.untitled"));
   assert.ok(!text(q).includes(COPY_DOC), "never the record id as a title");
+  const r = await open("/app/capture/address", { plane: { opencaptures: OPEN0, heldcaptures: ok({ ok: true, held: [] }), memberlist: ROSTER, heldat: HELD_AT("unchanged", { copy: { ...COPY, address: undefined, retrieved: undefined } }) } });
+  fill(r, { "ci-address": "upload:abc" });
+  await press(r, "acquire");
+  assert.ok(says(r, "screen.held.untitled"), "neither a host nor a day is known: the word");
+  assert.ok(!text(r).includes(COPY_DOC), "never the record id as a title");
 });
 
 test("R38 a heldat that is refused, unanswered or answers held: null is drawn failed beside the address and acquire is not sent; the act stays usable", async () => {

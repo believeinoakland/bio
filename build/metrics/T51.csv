@@ -746,3 +746,10 @@ session_011tm6afKMQNi7iG6sqa1TmS,job,ratification,5079897,134528,78,22731,,8,398
 session_018ia9y7957RisU9biUjnUGX,job,queue-producers,2395827,59349,48,7631,,5,3189
 session_01D28pDd4hME17u4TLcoQx9s,job,screens-publish,14541614,231533,131,44806,,9,3716
 session_01HsSRN6atp6a4mqkSVXsNjM,job,pdf-reader,12403353,252381,110,48466,,40,4598
+session_01WJj3GuTrPYB69f6V7UH6CP,job,acquisition,27063211,302223,204,73411,,24,4018
+session_018DeoSKvDLtRvtfBB1oDTG9,job,capture,28277921,325952,216,75413,,22,4402
+session_01Up6JyxDqREE6g4kR9CVELS,job,interface-shell,15554626,189606,175,38835,,24,3355
+session_011gitascPHEDui5fp6fWAF4,job,screens-intake,22366772,293216,174,60247,,9,102
+session_01FDqgsYyKdawCypvN6ZABTN,job,csv-reader,3157423,88618,56,15612,,14,1005
+session_01BbxeN7eqKoShAhoTFxmLAv,BOB-final,,92174960,882849,38162,182435,,,
+session_01XjGQ7KjpogoaVW83PPQsQX,job,record-core,18080290,430878,168,56866,,14,2024

@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01Y4v2DQazrd7Uhg2kPv1nLA · depth 2 · COMPLETE · handled B31
+**Status** · session_01WJj3GuTrPYB69f6V7UH6CP · depth 2 · COMPLETE · handled B34
 
 ## J1 · REPORT
 
@@ -475,3 +475,37 @@ COMPLETE (ACQUISITION #29, T51 fix round 6: G27 and G32; B30 CHANGE done, B31 fo
 **Proposed lines**: R22 amended; R109 new (the deferred render is kept in the record); one word stand-in owed to the design: `acquisition.index.render_page_not_read_back`. Census: no op key changed.
 
 Size (session_01Y4v2DQazrd7Uhg2kPv1nLA): test runs 14, module lines 3973
+
+## J31 · QUESTION
+
+G72 (ACQUISITION #30): one thing I need from you before COMPLETE, in a file that is not mine. I carry on with everything else on my best reading (c).
+
+Done and pushed (head on job/T51/acquisition): `owedRun` ends a visitor view whose render failed with `{ok: true, done: true, final: true, reason: "RENDER_FAILED", detail: <the render's problem, at most 200 characters, the renderer's own words, no page text>}`, and `acquire` writes one log line `{"event":"render_failed","problem":...,"ms":...}` where the render fails. The session is dropped on that end, so `opencaptures` no longer lists it (tested).
+
+The gap: the ledger row stores only the reason. `bio-plane/src/plane/pending.mjs:175` is `if (r && r.final === true && r.reason) return stop(row, at, String(r.reason).slice(0, 160))`; it never reads `r.detail`, so `op=owedwork` still shows "RENDER_FAILED" with no why. That file is the plane's.
+
+Options, smallest first:
+(a) the plane's job passes `r.detail` into the row (its change; I change nothing more);
+(b) I put the detail inside `reason` ("RENDER_FAILED: <problem>", cut to 160); the row would then carry it, but anything that compares the stored reason to "RENDER_FAILED" exactly would stop matching (I found none in src; tests in screens-intake/t51-fix5 read the code, which I have not changed);
+(c) the log line alone is enough for K4428 (the one redeploy names the cause from the render log) and the row stays as it is.
+
+Best reading: (c) is enough for the plan's own words ("the render log names the cause on the one redeploy, K4428"); add (a) only if you want the why in `op=owedwork`. Please answer with a, b or c.
+
+## J32 · COMPLETE
+
+Fix round 7 (G72, G79, B33) applied. Head 9dc384966c on job/T51/acquisition, tranche/T51 merged. J31 (plane's `stop` drops `detail`) is unanswered; I took my best reading (c): the log line is the platform evidence, the row stays as it is. If you want (a), it is a one-line plane change (`pending.mjs:175` reads `r.detail`); `owedRun` already returns it.
+
+**G72** (`index.mjs`, `acquireRun` RENDER_FAILED block ~:1502, `owedRun` ~:2290): the render's problem is logged as one line `{"event":"render_failed","problem","ms"[,"renderer_ms"]}`; `owedRun` ends a failed visitor view `{ok:true, done:true, final:true, reason:"RENDER_FAILED", detail}` (detail = the refusal's problem, at most 200 characters, no page text). The session is dropped on that end, so `opencaptures` no longer lists it (3b, tested); "Finish it" on it answers 404 NO_SUCH_SESSION (the screen half is screens-intake's). Cause of the render failure itself stays unknown until the redeploy's log line (P, BOB's). Test `r7-render-failed.test.mjs` (3 tests): red first on the missing `detail`, then green.
+
+**G79** (provider side): (a) the render waits `renderWaitFor(elapsed)` = min(RENDER_WAIT_MS, 15 s - 3.5 s - elapsed) (`ACQUIRE_BAR_MS`, `PROMOTE_RESERVE_MS` exported, both CHOSEN: 3.5 s covers acadia's 3.4 s promote; callers may hand `acquireBarMs`, `promoteReserveMs`); (b) `keepWhole(..., {compose: true})` with no buffers asks the store to make the whole (`putFromParts`): no part read back, no whole put by this module; a store that refuses or offers none is read back as before. OPT-IN on purpose: made the default it turned plane's g41 CSV shape tests red (their bucket stand-in's composed whole is empty) and would break capture's r103 control; capture passes `compose: true` in its own job. (c) `keepPast(..., {defer: true})` hands the keep to the ledger at once (`keep_pending`) without starting it; with no ledger, or one that refuses, it awaits within the bound as before. `r7-t51.test.mjs` (9 tests), seen RED on the old code: the fixed 10.7 s render wait, the read-back, the always-awaited keep; then green. No L figure from me: the 24 MiB / 40 MB runs belong to capture, which makes the call (my provider code is what it calls); no P in a job.
+
+**B33** (`owedFetch` ~:2315): the saved session now keeps `fetch_pending {since, declared_bytes, why}` beside `fetch_done`, on the first delivery and the retry after a refusal. `r7-fetchdone.test.mjs` (2 tests) red first (no `fetch_pending` in the state the delivery loads), then green. Through the door, `t51-round6-seam.test.mjs` "R105, R124 (G2)" now goes red at its last step only: `op=queue` answers `NO_SUCH_KIND 'fetch-done'` because the queue module does not know that kind yet (the fetch-done record is now made, as you said it would be); it passed 7/7 before my B33 change and is green once queue merges.
+
+**Proposed requirement lines** (BOB writes): R5 (amend): the render is waited min(`RENDER_WAIT_MS`, `ACQUIRE_BAR_MS` - `PROMOTE_RESERVE_MS` - time used), 0 when nothing is left; a render not back is the page filed as served and the render pending. R96 (amend): `keepWhole` takes `compose: true` (store-made whole, fallback to read-back); `keepPast` takes `defer: true` (handed to the ledger at once). R100 (amend): `owedRun` ends a failed visitor view final with `detail`, and the failing render writes one `render_failed` log line. R105 (amend): the saved session of a made fetch keeps `fetch_pending` for the delivery.
+
+Census ops: none new. Rows owed to UX-DESIGN: none from me (no new sentence; the closed-capture sentence is section 5's, screens-intake's stand-in). Words: no new localize id; `checks/run.mjs` names no acquisition finding, words count 18524 unchanged, plain 0.
+
+Tests: acquisition `test/m/acquisition/`: tests 261, pass 261, fail 0. Users: capture 282/282; control-plane 446/447 (the queue line above); plane 394/399 with the same five reds on tranche before my change (l77 PDF x2, g41 xlsx, release R24 words, l79 a timing flake that passes alone).
+Checks: format 0 failures; architecture 0 failures; coverage 63 of 63 ids named, 0 failures; ownership 0 failures (5 files, all in my paths).
+
+Size (session_01WJj3GuTrPYB69f6V7UH6CP): test runs 24, module lines 4018

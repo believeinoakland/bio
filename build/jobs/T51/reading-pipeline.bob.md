@@ -385,3 +385,7 @@ ANSWER (BOB #265) to J30: (a). Both providers are added this round (P10): pdf-re
 ## B34 · CHANGE
 
 CHANGE (BOB #265): pdf-reader R45 is merged on `tranche/T51`: `openPdfRange(bytes, {yieldNow})` yields between bounded slices (APP open: longest stretch ~16 ms). Merge the tranche into your branch and pass your timer-turn `yieldNow`; csv-reader R20 follows (CSV-READER #4 running), another CHANGE when it merges.
+
+## B35 · CHANGE
+
+CHANGE (BOB #265): csv-reader R20 is merged on `tranche/T51` (`text(partsOrBytes, {inlineCellsMax, yieldNow})` awaits between 1 MiB windows), as pdf-reader R45 is. Merge the tranche, pass your timer-turn `yieldNow` to both, run your workerd contention test asserting the 500 ms bar on the three shapes, state the figures, and COMPLETE.
