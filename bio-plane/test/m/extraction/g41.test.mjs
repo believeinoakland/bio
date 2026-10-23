@@ -140,10 +140,15 @@ test("R97 (G41): through `readHeld`, a docx whose tables hold more than 1 MiB of
 });
 
 test("R97 (G41): the same for an ods workbook whose cells pass 1 MiB (the entry keeps whole cells)", async () => {
-  const odf = await import("../odf-reader/pkg.mjs");
   const cell = (t) => `<table:table-cell office:value-type="string"><text:p>${t}</text:p></table:table-cell>`;
   const rows = Array.from({ length: 1500 }, (_, r) => `<table:table-row>${Array.from({ length: 6 }, (_, c) => cell(`r${r}c${c} some words in a cell`)).join("")}</table:table-row>`).join("");
-  const bytes = odf.pkg("ods", { body: `<table:table table:name="Budget">${rows}</table:table>` });
+  const NS = 'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"';
+  const TYPE = "application/vnd.oasis.opendocument.spreadsheet";
+  const bytes = F.zip([
+    { name: "mimetype", data: TYPE, method: 0 },
+    { name: "META-INF/manifest.xml", data: `<?xml version="1.0" encoding="UTF-8"?><manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.3"><manifest:file-entry manifest:full-path="/" manifest:media-type="${TYPE}"/></manifest:manifest>` },
+    { name: "content.xml", data: `<?xml version="1.0" encoding="UTF-8"?><office:document-content ${NS} office:version="1.3"><office:body><office:spreadsheet><table:table table:name="Budget">${rows}</table:table></office:spreadsheet></office:body></office:document-content>` },
+  ]);
   const { w, d } = await home(bytes, { ct: "application/vnd.oasis.opendocument.spreadsheet", format: "ods" });
   const first = await w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} });
   assert.deepEqual([first.ok, first.read, first.found, first.more], [true, true, false, undefined], JSON.stringify(first));

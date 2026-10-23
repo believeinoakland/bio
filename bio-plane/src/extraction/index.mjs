@@ -76,6 +76,8 @@ function cut(cells, interpreted, ats, max, entryNext = null) {
     if (firstDropped !== null && ats[max - 1] && ats[max - 1].row === firstDropped) {
       let k = max; while (k > 0 && ats[k - 1] && ats[k - 1].row === firstDropped) k--;
       if (k > 0) n = k;
+      /* a row wider than the cap is answered whole (no sheet has 20,000 columns): a row is never answered in part without saying so */
+      else { n = ats.findIndex((a) => a && a.row !== firstDropped); if (n < 0) n = cells.length; }
     }
     next = firstDropped !== null && ats[n - 1] && ats[n - 1].row === firstDropped ? firstDropped + 1 : firstDropped;
   }
