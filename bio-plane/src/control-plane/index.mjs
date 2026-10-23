@@ -863,6 +863,22 @@ function pulledEntries(result) {
   return [{ sha, document: result.document && typeof result.document === "object" ? result.document : { capture: result.capture ?? { sha256: sha } } }];
 }
 
+/* R129 (fix round 8, G106; K4428; R-LOG): ONE LINE WHEN AN `acquire` OR A `captureupload` BEGINS AND ONE WHEN IT ENDS. `request_start` is written before the object is asked, `request_done`
+   after: `{event, op, total_ms, stages, door, queued_ms, isolate_ms, object_ms}`, the ages of the isolate and of the object (null until the object states its own, R128), the object
+   route's `do-` less its `in-` as `queued_ms`, the door's phases, and the stages the object stated when the answer carried them. Counts and instants only: no credential, member,
+   address or name, and nothing of the caller's. */
+function requestStart(seen, op) {
+  seen.began = true;
+  const { isolate_ms, object_ms } = seen.clock.cold();
+  console.log(JSON.stringify({ event: "request_start", op, isolate_ms, object_ms }));
+}
+function requestDone(seen) {
+  if (!seen.began) return;
+  const { isolate_ms, object_ms } = seen.clock.cold();
+  console.log(JSON.stringify({ event: "request_done", op: seen.op, total_ms: Math.round(seen.clock.elapsed()), stages: seen.stages ?? {}, door: seen.clock.door(),
+                               queued_ms: seen.clock.queued(seen.op), isolate_ms, object_ms }));
+}
+
 export function makeFetch(hooks = {}) {
   /* R25: the door's one outermost catch. */
   /* R50: `seen.session` is set once admission has admitted a member's session, so a refusal answered to it is tallied;
@@ -874,15 +890,17 @@ export function makeFetch(hooks = {}) {
     /* R121: the object is reached through the clocked environment, so each call to it is timed and the phases of an `acquire` are told */
     try { res = await fetch(req, clockedEnv(env, clock), seen); } catch (e) { res = planeInternalError(e, req); }
     res = await withTrace(res, seen.trace);
-    await tallySessionRefusal(res, seen.session);
-    res = await tallyOnTheWayOut(res, seen, req, env);
+    /* R116, R127 (fix round 8, G114): the words answer is read once, for its key, before the tallies; an answer that is the words holds no refusal, so
+       the tallies, which look for one, do not read it again (a refusal this op gives is read and tallied as every answer's is) */
+    if (seen.op === "interfacewords") { const kept = await interfaceWordsCache(res, req, env); res = kept.res; seen.table = kept.table; }
+    if (!seen.table) await tallySessionRefusal(res, seen.session);
+    if (!seen.table) res = await tallyOnTheWayOut(res, seen, req, env);
     /* R75 (fix round 3, C15): a page of the interface leaves with the policy that names its script by hash, in place of a nonce */
     res = await withPagePolicy(res, { scriptHashes: seen.scriptHashes });
-    /* R116: last, so the tallies above read the answer as it was made and a refusal is never kept */
-    if (seen.op === "interfacewords") res = await interfaceWordsCache(res, req, env);
     /* R121: every answer of the door states the time it took; the op is the metric when the table declares it, `page` for a page, else `door` */
     const metric = seen.op !== null && Object.hasOwn(OPS, seen.op) ? seen.op : seen.op !== null ? "unknown"
       : /text\/html/i.test(res?.headers?.get?.("content-type") || "") ? "page" : "door";
+    requestDone(seen);
     return withServerTiming(res, clock.header(metric));
   };
   planeDoor.limits = PLANE_LIMITS;
@@ -2546,9 +2564,11 @@ export function makeFetch(hooks = {}) {
     /* R121 (fix round 4, C5a; amends R115): the timings of an `acquire` that failed or was stopped: the object's stage record as it states it (R95; its
        `stages` are `{}` when it states none) beside `door`, the three phases as the door's own clock saw them. The clock is the door's, so
        it stands though the object was stopped or restarted and lost its stages. */
-    const failedTimings = (stages) => ({ ...(stages && typeof stages === "object" && !Array.isArray(stages) ? stages : {}),
-      stages: stages && typeof stages === "object" && stages.stages && typeof stages.stages === "object" ? stages.stages : {},
-      door: seen.clock.door() });
+    const failedTimings = (stages) => {
+      const given = stages && typeof stages === "object" && stages.stages && typeof stages.stages === "object" ? stages.stages : {};
+      seen.stages = given;
+      return { ...(stages && typeof stages === "object" && !Array.isArray(stages) ? stages : {}), stages: given, door: seen.clock.door() };
+    };
     const bounded = (work) => {
       if (op !== "acquire") return work;
       let timer;
@@ -2587,6 +2607,8 @@ export function makeFetch(hooks = {}) {
       }
     }
     const deferReading = (document) => op === "acquire" && readingWontFit(document);
+    /* R129 (fix round 8, G106): the line that says this request began is out BEFORE the object is asked, for Workers Logs lost the tail of a long firing */
+    if (op === "acquire") requestStart(seen, op);
     const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, deferReading: op === "acquire" ? deferReading : undefined, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub, memberRef,   /* R93: the plane's ask and transcribe; R106: the `ai` caller's viewer */
       trace: trace ?? acquireTrace,   /* K4234: `acquire`'s trace, the key its stages are kept under */
@@ -3073,6 +3095,7 @@ export function makeFetch(hooks = {}) {
        decoded or kept here; its words (`statement`, `name`, `within`) and a `step` it is a product of travel in the
        address. Capture's answer is relayed as given, and a step named is tied after the capture lands (R71). */
     if (op === "captureupload") {
+      requestStart(seen, op);   /* R129: before the object is asked */
       const uploaded = await stub.fetch(new Request(inner, withGrant({ method: "POST", body: req.body,
         headers: { "content-type": "application/octet-stream",
                    ...(req.headers.get("content-length") ? { "content-length": req.headers.get("content-length") } : {}) },
