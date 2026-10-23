@@ -117,3 +117,8 @@ BLOCKED (cause: tests): the module change is done and green on a stand-in; the r
 **Deferred.** None. **Owed to the real path (waiting on the providers above, not deferred):** `g41-real.test.mjs` (the 1 MB CSV read by `readHeld` under the shim, `cellsAt` at its last rows through the real `cellsOf`, red today with `SQLITE_TOOBIG`, then green), the 5,000-row workbook case, and the platform check (L, then P at the re-walk).
 
 Size (session_01KzzQvxzJFF2TeRz3VbyabJ): test runs 6, module lines 3631
+
+## J6 · REPORT
+
+REPORT (re B7): the real-path seam tests are written and red by name: `bio-plane/test/m/content/g41-real.test.mjs` (R52 G41 a, b, b2, c, d), the real extraction (`fresh` of extraction's fixture) reading a 1 MB CSV by `readHeld` to its end, `cellsAt` at its last rows, one cell, a column subset and a reversed corner, a small sheet (control), and a range over `CELLS_RANGE_MAX` (`cells_truncated`, whole rows, `next_row`). Run under a copy of the shim kept outside the tree: `node --import <shim copy> --test --test-force-exit bio-plane/test/m/content/g41-real.test.mjs`: (a) (b) (b2) (d) fail today with "string or blob too big" (the reading is over the limit: the SQLITE_TOOBIG of the walker); (c) passes (control, a small sheet lists its cells). They go green when csv-reader, office-readers, reading-pipeline and extraction have merged and I merge `tranche/T51`; `cellsOf`'s numbering (1-based, inclusive bounds, `next_row` the first row not returned) is my reading of the contract and the test will confirm it. The stand-in tests (`g41-cells.test.mjs`) stay green. I merge on your next CHANGE; state WORKING until then.
+Size (session_01KzzQvxzJFF2TeRz3VbyabJ): test runs 8, module lines 3631
