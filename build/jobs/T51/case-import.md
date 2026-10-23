@@ -144,3 +144,13 @@ Both red turn green when case-grammar, public-read and case-checker merge; I hav
 **Checks.** Module tests 156 pass, 2 fail (the two reds above). format 0 failures; architecture (case-import) 0; coverage 33 of 33; words: nothing in case-import (the case-checker `spec.mjs:11` inline is inherited); ownership: 1 failure, `build/requirements/case-import.md` (accepted at the merge, B4/K4210); setup-words `--check`: no refusal names case-import.
 
 Size (session_01Y65ywSzJiY7GTSetJFTW7y): test runs 20, module lines 2689
+
+## J9 · COMPLETE
+
+B9 (K4711) applied: tranche/T51 merged (case-grammar, public-read G50, case-checker), pushed.
+
+**G50 seam tests are green** (3 of 3) against the merged providers. One fix in my test: the writer spells a several-ref `ref`'s files by the `capture` that `caseFileFacts` states per row, and my hand-built facts lacked it, so it still wrote `/3`. The facts now carry each row's `capture` (the shape `caseFileFacts` documents); the header says so. The full seam from the member's acts is case-disclosures' G50 test. No module code changed; the earlier finding stands (a `/3` repeated path is refused at `index.mjs:681-683`).
+
+**Checks.** case-import suite: 158 pass, 0 fail (all 17 files). format 0; architecture (case-import) 0; coverage 33 of 33; words: no failure names case-import (the failures are other modules', inline 6 / missingkey 5 among them, installer-steps and case-checker); ownership: 1 failure, `build/requirements/case-import.md` (accepted at the merge, B4). Declarations: no op changed. No new word ids.
+
+Size (session_01Y65ywSzJiY7GTSetJFTW7y): test runs 36, module lines 2689
