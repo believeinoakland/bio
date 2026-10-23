@@ -103,3 +103,19 @@ test("R20 wordsVersion() is a short string that names no member and no word, the
   const again = boot({ st: w.st });
   assert.equal(again.m.wordsVersion(), afterUndo, "the same across isolates");
 });
+
+test("R20 every ok answer of interfaceWords, with a language named or not and over a storage that throws, carries words_version beside language, equal to wordsVersion() and moving with an adoption; control: a refused tag carries none", async () => {
+  const w = await world();
+  w.say("tom", "es");
+  const v0 = w.m.wordsVersion();
+  for (const a of [w.m.interfaceWords({ viewer: "tom" }), w.m.interfaceWords({ language: "es", viewer: "tom" }), w.m.interfaceWords({ viewer: "nobody" })])
+    assert.equal(a.words_version, v0);
+  assert.equal((await route(w.m, "interfacewords?viewer=tom")).words_version, v0);
+  w.m.translationAdopt({ language: "es", key: ORDINARY.key, text: "Algo", by: "ruth" });
+  const v1 = w.m.wordsVersion();
+  assert.notEqual(v1, v0);
+  assert.equal(w.m.interfaceWords({ viewer: "tom" }).words_version, v1);
+  assert.equal(w.m.interfaceWords({ language: "not a tag" }).words_version, undefined);
+  w.st.db.exec("DROP TABLE translation_adoptions");
+  assert.equal(typeof w.m.interfaceWords({ viewer: "tom" }).words_version, "string");
+});

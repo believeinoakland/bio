@@ -736,10 +736,10 @@ export class Translations {
       const word = (w) => (shown.has(w.key)
         ? { key: w.key, text: shown.get(w.key), en: w.en, fallback: false }
         : { key: w.key, text: w.en, en: w.en, fallback: true });
-      return { ok: true, language: tag, words: named ? interfaceWords().map(word)
+      return { ok: true, language: tag, words_version: this.wordsVersion(), words: named ? interfaceWords().map(word)
         : interfaceWords().filter((w) => shown.has(w.key)).map(word) };
     } catch {
-      return { ok: true, language: null, words: named ? interfaceWords().map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })) : [],
+      return { ok: true, language: null, words_version: this.wordsVersion(), words: named ? interfaceWords().map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })) : [],
                detail: localize("translations.index.the_teams_translations_could_not", "the team's translations could not be read, so every word is shown in English.") };
     }
   }

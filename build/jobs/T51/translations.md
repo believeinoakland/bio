@@ -2,6 +2,10 @@
 
 **Status** · session_0127cgdteY6TNWkhQcKQFfuz · depth 2 · COMPLETE · handled B2
 
+## Change B4 (K4822, from control-plane J47)
+
+Every ok answer of `interfaceWords` (both arms, and the throwing-storage answer) now carries `words_version` (R20's `wordsVersion()`) beside `language`; a refused tag carries none. Test: "R20 every ok answer of interfaceWords ... carries words_version" (red before: the field was undefined). translations 42/42; instance-setup/t50, control-plane/t51-interfacewords, screens-settings/translations green; the module's bundle stays stale (BOB regenerates).
+
 ## Completion, fix round 8, G113 and G114 (TRANSLATIONS #3, session_0127cgdteY6TNWkhQcKQFfuz, START B3)
 
 **G113 (R19, amends R8).** (1) Cause: `interfaceWords` (`bio-plane/src/translations/index.mjs`, the method, formerly :716-740) answered every word of the list as `{key, text, en, fallback}`, `fallback: true` for each word with no shown translation, whatever the request; the shell keeps only `fallback === false`. Now, with no `language` named, only the words the team shows in the viewer's language are answered (none held: `words: []`, a few dozen bytes); with a `language` named, every word as before (the settings screen's read). The error answer follows the same split (no word without a language, every word in English with one). (2) Missed because no test bounded what the answer holds against what the shell uses; now `r8-shown-words.test.mjs` asserts the answer is at most 4 KiB with no translation held, through the method and through the route. (3) Failing-first test `bio-plane/test/m/translations/r8-shown-words.test.mjs`, "R19 with no language named ...": seen RED against the old code (its first assertion, the empty `words` list against the 25,808-word answer, fails; the file failed), then green: 41 of 41. It covers none held, one adoption (exactly that word, `fallback: false`), an awaiting word not sent until confirmed, the `language` arm and the route answering every word, another language and a viewer with none. (4) **N** here (**P** after the redeploy is BOB's).
