@@ -445,3 +445,25 @@ QUESTION (G47, two things I need before I can finish; I carry on with the rest o
 **Protective bound (K1881):** none set by this module; it reads publication's 1,572,864 B.
 **Census ops:** none changes its accepted keys.
 **Proposed requirement lines (R14 amended):** "The document is measured as built; over `publication`'s `CASE_DOCUMENT_BYTES_MAX` the act is refused `CASE_DOCUMENT_TOO_LARGE` (C-136.9) carrying `size`, `bound`, `materials`, `members`, before any side effect, and a refusal of the store is the act's refusal, never a prepared document with no `doc_sha`."
+
+## Fix round 6, G47: completion record (B26 START, B27 ANSWER, B28 CHANGE)
+
+**Providers' state at COMPLETE.** Merged on `tranche/T51` and merged into my branch: PUBLICATION #36 (`CASE_DOCUMENT_BYTES_MAX`), CASE-DISCLOSURES #17, CASE-GRAMMAR #20 (`caseDocumentFormatFor`), CASE-CARRIAGE #15. **Not merged when I last merged: CASE-CHECKER #16, CASE-INPUTS #8.** No red of mine waits on them: R17 is green.
+
+**What changed.**
+- `checks.mjs` (end of `PUBLISH_ACT_CHECKS`): `CASE_DOCUMENT_TOO_LARGE`, C-136.9, `where` `#publishCase > is-case-document-too-large`; `localize` stand-in words (`case-authoring.checks.case_document_too_large`), row owed to UX-DESIGN (B491).
+- `index.mjs` `#publishCase` (after `docText`, about :1190-1215): `docBytes` moved up; over `publicationExports.CASE_DOCUMENT_BYTES_MAX` the act refuses `CASE_DOCUMENT_TOO_LARGE {size, bound, materials, members}` before the reevaluation raise, `#standardsUse` and the store; after `storeCaseDocument` (about :1230) `ok === false` or no `doc_sha` is the act's refusal (the store's own `reason`; its `CASE_DOCUMENT_TOO_LARGE` is the same row; else `CASE_DOCUMENT_NOT_STORED`).
+- `document.mjs`: the `format:` line, `attributionBodyLines` and `lensSectionLines` take `caseDocumentFormatFor(materials.attestations)` (`/9` only when a row carries a `sha`, else `/8`).
+- Tests: new `g47-refusal.test.mjs` (b, c, d); `document.test.mjs` R17 now also asserts `/9` and an attestation `sha` for 501 captures of one source; `carries.test.mjs` R55's three deepEqual tests gain `sha: null` (B28); `invariants.test.mjs` R29 lists C-136.9 and its `where`.
+
+**Failing-first.** (c) red on the old source (answered `ok` with `doc_sha: null`), green. (b) and (d) were red by name before PUBLICATION merged (no exported bound) and are green now. R17 was the seam test: green after the merges, with the `/9` assertion added.
+
+**Measures.** Bound read from publication: 1,572,864 B; this module sets none (K1881 is BOB's to report). A document of 1,572,864 B or less is prepared (case (d), measured near the bound); over it, refused with nothing written (case (b): snapshot equal). Census ops: none changes its accepted keys. Screen: screens-publish draws a refusal by its words; whether it needs a row for C-136.9 is for BOB to settle with the design stream (the check row's `translation` and `detail` carry the words today).
+
+**Suite.** `bio-plane/test/m/case-authoring/` under the preload: 244 pass, 0 fail. format 0, architecture 0, coverage 58 of 58, words 0 failures (inline 0). Ownership: see COMPLETE.
+
+**Users** (impact.mjs: 822 files in 44 modules). Run: screens-publish, screens-settings, screens-wizards, tasks, store-door, signin-door, screens-intake, screens-investigate, affordances, screens-action, plane release: all pass except 11 failures that fail identically with my three source files replaced by `origin/tranche/T51`'s: screens-publish (R3 ceremony words, R4 R30 photo facts, R3 R50 placeholder, R24 x2), screens-intake `t51-fix5` R31 (E8), `affordances/t36` x4, `screens-action/contract` R24 or R1-R6, plane `release` R24 (accepted). Not mine; all pre-existing at the tranche.
+
+**Proposed requirement lines (R14 amended).** "The document is measured as built; over `publication`'s `CASE_DOCUMENT_BYTES_MAX` the act is refused `CASE_DOCUMENT_TOO_LARGE` (C-136.9) carrying `size`, `bound`, `materials` and `members`, before any side effect, and a refusal of the store is the act's refusal, never a prepared document with no `doc_sha`. The document declares its format through `case-grammar`'s `caseDocumentFormatFor` over its attestation rows (`/9` only when a row carries a `sha`, else `/8`)."
+
+**Size (session_01MN9xdJBsqY5jNetBuRbobY): test runs 9, module lines 3,070** (`bio-plane/src/case-authoring/*.mjs`).

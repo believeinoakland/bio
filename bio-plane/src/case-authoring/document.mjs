@@ -14,15 +14,14 @@
  * `bias_manifest` beside `bias_manifest_bundles`. */
 
 import { fmSafe, whatChangedBlockLines, whatChangedSectionLines, lensBlockLines,
-         lensSectionLines, workingOnLines, methodBlockLines, materialBlockLines, acceptedWorkBlockLines,
+         lensSectionLines, caseDocumentFormatFor, workingOnLines, methodBlockLines, materialBlockLines, acceptedWorkBlockLines,
          gradingFactsLines, passagesLines } from "../case-grammar/index.mjs";
 /* N529 (K1333): the disclosure renderers and their fixed sentences are `case-disclosures`' (its R1–R4, R7, R13, R14),
    moved there and imported here, never copied, so the signed document is byte-identical before and after the split. */
 import { FLAG_SENTENCE, tensionFrontmatterLines, tensionBodyLines, tensionSentence, captureBodyLines, carriesBodyLines,
          acceptedBodyLines } from "../case-disclosures/index.mjs";
-import { CASE_DOCUMENT_FORMAT, attributionFrontmatterLines, attributionBodyLines, captureBlockLines,
+import { attributionFrontmatterLines, attributionBodyLines, captureBlockLines,
          sourceBlockLines } from "../publication/index.mjs";
-import * as caseGrammar from "../case-grammar/index.mjs";
 import { caseConclusionRowLines } from "../ratification/index.mjs";
 /* R14 (T47; N908; K1333): the acknowledgement list's two renderings are `case-inputs`' (its R2), moved there and imported
    here, never copied, so the signed document is byte-identical before and after the split. */
@@ -100,8 +99,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
   const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
   /* R14 (G47; K4672): the format the document declares, through case-grammar's helper (`/9` only when an attestation row
      carries a `sha`, else `/8`). */
-  const format = typeof caseGrammar.caseDocumentFormatFor === "function"
-    ? caseGrammar.caseDocumentFormatFor((materials && materials.attestations) || []) : CASE_DOCUMENT_FORMAT;
+  const format = caseDocumentFormatFor((materials && materials.attestations) || []);
   const fm = [
     "---",
     `format: ${format}`,
