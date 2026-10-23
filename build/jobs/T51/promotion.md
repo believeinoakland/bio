@@ -105,3 +105,7 @@ Size (session_01FxMw8iuonFjynFMH9nWcSM): test runs 6, module lines 3966
 **Deferred.** None.
 
 Size (session_017BterrfaggzcXm1vXYhTRC): test runs 9, module lines 3977
+
+## J8 · COMPLETE
+
+G74 done. promote refuses a session member stamped actorMemberId whose document states a project she has no participation in (NOT_A_PARTICIPANT via membership.notAParticipant, act promote); joined, owner, invited, machine, replay and no-project pass. Failing-first test r7-foreign-project.test.mjs seen red then green. promotion 160 pass; users green (two screens-intake tests flaked under concurrent load, pass alone); format, architecture, coverage 61/61, ownership 0 failures. No new row, code or localize; row owed to UX-DESIGN named in the record. Administrators who are not participants are refused too, as worded.
