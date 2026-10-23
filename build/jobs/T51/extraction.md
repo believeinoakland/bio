@@ -576,3 +576,5 @@ I carry on with G71 (done, red then green) and G82 (the L run) meanwhile, and wi
 **G76 · the held CSVs and texts carrying the shell profile. Waiting on BOB's answer to J31.** The premise of the plan's entry does not hold in extraction's data (the profile is in the capture's register document, not in the stored reading); J31 gives my reading of it and asks BOB to choose. The site-profiles provider (G76) is not yet merged on the tranche, so any test of the re-profile is red by name until then. Nothing built yet.
 
 **Suites so far** (from `bio-plane/`, under the shim): `test/m/extraction/` 328 of 328, 0 fail (the new file included). Size lines come at COMPLETE.
+
+**Checks and users so far:** `format.mjs` 0 failures; `architecture.mjs extraction` 0 failures; `coverage.mjs extraction` 74 of 74 live ids named; `ownership.mjs extraction origin/tranche/T51 job/T51/extraction` 0 failures (4 files); `checks/run.mjs`: the words count shows 11 failures, none in extraction's files (case-checker spec, installer-steps keys). Users that read `words_read`, run: screens-inquiry fr3/fr5-document, plane round6-extraction, screens-intake t51-pending/fix3/fix6: 77 of 77.
