@@ -12,13 +12,17 @@
    (`domain_claim.well_known`, the page building none); and a hosting account recorded at setup or by Civicsmith itself said so, not "by
    set at setup".
    T51 fix round 3 (C85; R66): each count of a copy, in the list and in the sentence for the copy just taken, is drawn with its label, the tables
-   after a comma. */
+   after a comma.
+   Fix round 6 (G42; K4635, K4638): how full the team's record is, for a session that administers (`stats`, read once; `dbBytes` floored to
+   100 MB for an administering member by the door): its size against 10 GB, a warning from 70 %, a second from 90 % saying writes will fail. */
 
 export const group = {
   id: "group",
 
-  reads() {
+  reads(view) {
     return {
+      // G42 (K4635, K4638): the record's size, read once and only for a session that administers (a member's screen sends no `stats`)
+      ...(view && view.me && view.me.administer === true ? { stats: { op: "stats" } } : {}),
       identity: { op: "groupidentity" },
       languages: { op: "grouplanguages" },
       court: { op: "courtnotice" },
@@ -232,6 +236,24 @@ export const group = {
       h += logAct;
       if (list) h += cs.sheet(list.map((r) => cs.row("", `${data1(D(r.at))} · ${data2(count(r.bundles, "queue.export-performed.records.one", "queue.export-performed.records.other"))} · ${data2(count(r.files, "queue.export-performed.files.one", "queue.export-performed.files.other"))} · ${data2(count(r.tables, S + "export.count.tables.one", S + "export.count.tables.other"))}`, "", r.note ? `<span class="rec">${E(r.note)}</span>` : "")).join("")) + `<p class="mk-note">${W(S + "export.log.cap")}</p>`;
       section(S + "export.head", h);
+    }
+
+    // R79 (G42; K4635, K4638): how full the team's record is. The record is one object of 10 GB (decimal, pinned here), past which every write
+    // fails. Drawn for a caller whose `stats` answer carries `dbBytes` (an administrator; to an administering member it is floored to 100 MB
+    // by the door): its size in GB and whole percent (floored, so "70%" is never drawn under the first warning's edge), a warning at 70% and
+    // over, a second at 90% and over saying writes will fail, each naming the four things that govern a record's realistic size (one key per
+    // sentence). A key absent draws nothing; null (the object states no size) is "not stated", never zero.
+    if (admin) {
+      const LIMIT = 10_000_000_000;
+      section(S + "storage.head", cs.state(data.stats, (v) => {
+        if (!v || typeof v !== "object" || !("dbBytes" in v)) return "";
+        const n = v.dbBytes;
+        if (typeof n !== "number" || !Number.isFinite(n) || n < 0) return `<p data-state="storage">${W(S + "storage.unstated")}</p>`;
+        const level = n * 10 >= LIMIT * 9 ? 2 : n * 10 >= LIMIT * 7 ? 1 : 0;
+        let h = `<p data-state="storage">${W(S + "storage.size", { used: (Math.floor(n / 1e8) / 10).toFixed(1), limit: String(LIMIT / 1e9), percent: String(Math.floor((n * 100) / LIMIT)) })}</p>`;
+        if (level) h += `<div class="mk-msg" data-state="storagewarn${level}"><p>${W(S + "storage.warn" + level)}</p><p>${W(S + "storage.factors.lead")}</p><ul class="mk-small">${["plan", "pare", "latency", "limits"].map((k) => `<li>${W(S + "storage.factors." + k)}</li>`).join("")}</ul></div>`;
+        return h;
+      }));
     }
 
     // R40 (DEC-231; instance-setup R11, R77): the group's declared stake, in its own words, who set it and when; an administrator edits it
