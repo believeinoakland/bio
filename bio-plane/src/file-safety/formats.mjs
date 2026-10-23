@@ -8,7 +8,7 @@ import { pptxEntry } from "../pptx.mjs";
 import { xlsxEntry } from "../formats-xlsx.mjs";
 import { csvEntry } from "../csv.mjs";
 import { odtEntry, odsEntry, odpEntry } from "../odf.mjs";
-import { hasZipMagic } from "../ooxml.mjs";
+import { hasZipMagic, readContainer, declaredTextBytes } from "../ooxml.mjs";
 
 const LATIN1 = new TextDecoder("latin1");
 
@@ -103,18 +103,88 @@ export async function readActive(format, bytes) {
   }
 }
 
-/** R11's data view: each sheet's cells as the reader read them, `{name, cells:[{ref, value, type}]}`, the value the
- *  file holds (a formula's cached value), never computed; or `{ok:false, why}`. */
-export async function sheetsOf(format, bytes) {
+/* G44 (K4655, K4662, K4665; R11 amended, R21): the first screen of a spreadsheet's safe view, and what bounds it. A sheet shows at most
+   `SAFE_VIEW_CELLS_MAX` cells (whole rows, from row 1; a first row alone over it is shown whole), a workbook at most
+   `SAFE_VIEW_SHEETS_MAX` sheets and `SAFE_VIEW_TOTAL_CELLS_MAX` cells together, the cut stated. `SAFE_VIEW_INLINE_CELLS_MAX_BYTES` is the
+   figure handed the entries' `text()` (bytes of the cells' JSON it may list; this module's own, it has no edge to reading-pipeline's):
+   past it the cells are held and `cellsIn` makes the first rows. `SAFE_VIEW_ODS_DECLARED_MAX` is the declared size of an OpenDocument
+   sheet's content.xml above which no preview is drawn (its entry has neither slot, so it lists every cell; measured, G44). */
+export const SAFE_VIEW_CELLS_MAX = 1000;
+export const SAFE_VIEW_SHEETS_MAX = 20;
+export const SAFE_VIEW_TOTAL_CELLS_MAX = 5000;
+export const SAFE_VIEW_INLINE_CELLS_MAX_BYTES = 512 * 1024;
+export const SAFE_VIEW_ODS_DECLARED_MAX = 8 * 1024 * 1024;
+
+const DATA_ENTRY = Object.freeze({ xlsx: xlsxEntry, ods: odsEntry, csv: csvEntry });
+const cellOf = (c) => ({ ref: c.source && c.source.cell ? c.source.cell : null, value: c.value, type: c.type });
+const rowOfCell = (c) => { const m = /(\d+)$/.exec(c.ref ?? ""); return m ? Number(m[1]) : null; };
+/* R51 / R11: a spreadsheet above what a preview can show: its size and the bound, never an empty view (K4571). */
+const notDrawn = (size, bound) => ({ ok: false, why: "PREVIEW_NOT_DRAWN", size, bound });
+
+/* The first whole rows of `cells` (in row order) within `max` cells: the first row always, a later one only if it fits. A first row
+   alone over `max` is cut to its first `max` cells, and `cut` says so (the sheet is then truncated though no row follows). */
+function firstRows(cells, max) {
+  const rows = [];
+  for (let i = 0; i < cells.length; i++) {
+    const r = rowOfCell(cells[i]);
+    const last = rows[rows.length - 1];
+    if (last && (r === null || r === last.row)) last.to = i + 1; else rows.push({ row: r, from: i, to: i + 1 });
+  }
+  let take = 0;
+  while (take < rows.length && (take === 0 || rows[take].to <= max)) take++;
+  const end = take ? rows[take - 1].to : 0;
+  const cut = end > max;
+  return { cells: cells.slice(0, cut ? max : end), next_row: take < rows.length ? rows[take].row : null, cut };
+}
+
+/* One sheet of the answer: `{name, cells, rows, total_rows, truncated, next_row}` and, for a sheet that could not be shown, a `reason`
+   with no cells and no size. */
+const sheetAnswer = (s, cells, nextRow, cut = false) => ({ name: s.name, cells,
+  rows: cells.length ? { from: rowOfCell(cells[0]), to: rowOfCell(cells[cells.length - 1]) } : null,
+  total_rows: Number.isInteger(s.usedRows) ? s.usedRows : null, truncated: nextRow != null || cut, next_row: nextRow ?? null });
+const unreadable = (s, reason) => ({ name: s.name, cells: [], rows: null, total_rows: null, truncated: false, next_row: null, reason });
+
+async function firstScreen(entry, parts, s, max) {
+  if (Array.isArray(s.cells)) { const f = firstRows(s.cells.map(cellOf), max); return sheetAnswer(s, f.cells, f.next_row, f.cut); }
+  if (!s.cells_held || typeof entry.cellsIn !== "function") return unreadable(s, "sheet_unreadable");
+  /* a row is shown to `SAFE_VIEW_CELLS_MAX` columns at most, so a row of a million fields is cut, and says so */
+  const r = await entry.cellsIn(parts, { sheet: s.sheet, fromRow: 1, ...(s.usedRows >= 1 ? { toRow: s.usedRows } : {}), toCol: SAFE_VIEW_CELLS_MAX, maxCells: max });
+  if (!r || r.ok !== true || !Array.isArray(r.cells)) return unreadable(s, "cells_unreadable");
+  return sheetAnswer(s, r.cells.map(cellOf), r.next_row, Number.isInteger(s.usedCols) && s.usedCols > SAFE_VIEW_CELLS_MAX);
+}
+
+/** R11's data view: each sheet's first whole rows as the reader read them, `{name, cells:[{ref, value, type}], rows, total_rows,
+ *  truncated, next_row}`, the value the file holds (a formula's cached value), never computed, with `sheets_total` and
+ *  `sheets_truncated`; a sheet that could not be shown carries a `reason`; or `{ok:false, why}`, with `size` and `bound` when the
+ *  file is above what a preview can show (`why` `PREVIEW_NOT_DRAWN`). `entries` is the readers by format (the tests'). */
+export async function sheetsOf(format, bytes, entries = DATA_ENTRY) {
   try {
-    const entry = format === "csv" ? csvEntry : ENTRY[format];
+    const entry = entries[format];
     if (!entry || safeViewRoute(format) !== "data") return { ok: false, why: "no_sheets" };
-    const t = await entry.text(bytes);
+    if (format === "ods") {
+      const declared = declaredTextBytes(readContainer(bytes), (n) => n === "content.xml").total;
+      if (!(declared <= SAFE_VIEW_ODS_DECLARED_MAX)) return notDrawn(declared, SAFE_VIEW_ODS_DECLARED_MAX);
+    }
+    const parts = await entry.parts(bytes);
+    if (!parts || parts.ok === false) return { ok: false, why: (parts && (parts.why || parts.reason)) || "reader_failed" };
+    if (parts.guard) return notDrawn(parts.guard.size, parts.guard.bound);
+    if (parts.piecewise) return notDrawn(parts.piecewise.declared, parts.piecewise.bound);
+    const t = await entry.text(parts, { inlineCellsMax: SAFE_VIEW_INLINE_CELLS_MAX_BYTES });
     if (!t || t.ok === false || !Array.isArray(t.sheets)) return { ok: false, why: (t && (t.why || t.reason)) || "reader_failed" };
-    return { ok: true, sheets: t.sheets.map((s) => ({
-      name: s.name,
-      cells: Array.isArray(s.cells) ? s.cells.map((c) => ({ ref: c.source && c.source.cell ? c.source.cell : null, value: c.value, type: c.type })) : null,
-    })) };
+    if (!t.sheets.length) {
+      /* no sheet came back: the entry stated why (a size guard, a repeat bound), never an empty view */
+      const u = (Array.isArray(t.undetermined) ? t.undetermined : []).map((x) => (x && x.guard) || x).find((x) => x && Number.isFinite(x.bound));
+      return notDrawn(u ? (Number.isFinite(u.size) ? u.size : u.units) : bytes.length, u ? u.bound : null);
+    }
+    const sheets = [];
+    let budget = SAFE_VIEW_TOTAL_CELLS_MAX;
+    for (const s of t.sheets.slice(0, SAFE_VIEW_SHEETS_MAX)) {
+      if (sheets.length && budget <= 0) break;
+      const a = await firstScreen(entry, parts, s, Math.min(SAFE_VIEW_CELLS_MAX, Math.max(1, budget)));
+      sheets.push(a);
+      budget -= a.cells.length;
+    }
+    return { ok: true, sheets, sheets_total: t.sheets.length, sheets_truncated: sheets.length < t.sheets.length };
   } catch { return { ok: false, why: "reader_failed" }; }
 }
 
