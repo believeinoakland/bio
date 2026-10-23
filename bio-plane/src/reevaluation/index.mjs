@@ -2668,6 +2668,34 @@ export class Reevaluation {
                    ON CONFLICT(id) DO UPDATE SET receipt_seq = receipt_seq + 1`);
   }
 
+  /* R41, R25: whether an open notice raised undetermined now reads otherwise: the copy it waits on has been read since, which
+     is neither a receipt nor a filing. Asked of content as the sweep asks it (a machine viewer), once per passage, only for
+     the open undetermined leg notices (at most one page of them); an unread chain or an unchanged grade is not owed. Reads
+     only. */
+  #regradeOwed() {
+    const open = this.#rows(`SELECT content_id, newer_capture, grade FROM reevaluation_notices
+                              WHERE state='open' AND affects='undetermined' AND across IS NULL ORDER BY notice_id LIMIT ?`,
+                            NOTICE_SWEEP_MAX);
+    if (!open.length) return false;
+    const ids = [...new Set(open.map((o) => o.content_id))];
+    const rows = new Map(this.#rows(`SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as FROM content
+                                      WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`, JSON.stringify(ids), ids.length)
+      .map((r) => [r.content_id, r]));
+    const memo = new Map(), noticeMemo = new Map();
+    for (const o of open) {
+      const row = rows.get(o.content_id);
+      if (!row) continue;
+      let n = noticeMemo.get(o.content_id);
+      if (n === undefined) {
+        try { n = this.content.noticeForRow(row, MACHINE_ADMIN, memo); } catch { n = null; }
+        noticeMemo.set(o.content_id, n);
+      }
+      const c = n && n.state !== "chain_unread" ? (n.candidates || []).find((x) => x.capture_sha === o.newer_capture) : null;
+      if (c && (c.affects !== "undetermined" || (c.grade ?? null) !== (o.grade ?? null))) return true;
+    }
+    return false;
+  }
+
   /* R25: pending while a pass is part-way, when a receipt was counted or a document was filed (G66: a register row
      written or purged) since the last complete pass began, or, with no pass yet complete, when any basis leg rests on a passage. A
      pass written before the filing mark existed holds none, which reads as one pass owed. */
@@ -2675,7 +2703,7 @@ export class Reevaluation {
     if (row.pass_began !== null) return true;
     if (row.complete_began !== null)
       return Number(row.receipt_seq) > Number(row.complete_seq ?? 0)
-        || row.complete_mark === null || this.#filingMark() !== Number(row.complete_mark);
+        || row.complete_mark === null || this.#filingMark() !== Number(row.complete_mark) || this.#regradeOwed();
     return !!this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE content_id IS NOT NULL AND content_id <> '' LIMIT 1`);
   }
 

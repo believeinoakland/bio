@@ -102,3 +102,19 @@ The gap: a reading finishing is neither a receipt nor a filing, so R25 does not 
 My best reading, built and then reverted: R25 also pending while an open undetermined leg notice now reads otherwise (`#regradeOwed`: ask content.noticeForRow, as the sweep does, for the open undetermined notices only; pending only when the copy's candidate now grades differently; it rests once re-graded; a copy never read is not polled). It passes my tests but FAILS `plane/round6-reevaluation.test.mjs:103` ("the newer capture read after the sweep ... the sweep rests"), a plane test that pins the old R25, which I may not change. Patch kept in my scratchpad.
 
 Ask: (a) keep R25 as is (R41 re-grades whenever the sweep next runs for any reason), or (b) amend R25 with that trigger and have plane's line 103 run one tick before "rests". I carry on on (a) meanwhile. Recommendation: (b).
+
+## G89 · R41 (REEVALUATION #26)
+
+**Cause (index.mjs, `raiseNotices`).** The existing-id skip wrote an open notice's grade once and never updated it; `notices()` serves the stored column, so a notice raised UNDETERMINED (copy filed, unread) kept that grade after the copy was read, while `versionNotice` answered affected. **Why missed:** no test read the copy after the raise.
+
+**What changed.** `raiseNotices`: per leg (and per case part) the open notices by newer capture are read once; a candidate that matches one is re-graded by `#regrade` (UPDATE grade, affects, only while `state='open'`), else raised as before. A settled notice is not in the open set, so it keeps its grade; the id check still blocks a second notice. The answer gains `regraded` (`notice, newer_capture, grade_before, affects_before, grade, affects`); `unread` and the log line are unchanged. Not told to listeners again (R8, one telling per raise). `#sweepPending` gains `#regradeOwed()` (BOB's answer B6, option b): pending while an open undetermined leg notice's candidate now grades otherwise; rests once re-graded; a copy never read is not polled.
+**Old records:** none to repair; the first sweep after the deploy re-grades any open undetermined notice whose copy is now read.
+
+**Tests.** `test/m/reevaluation/r14-regrade-after-read.test.mjs` (7): red on the old code 7 of 7 (4 on the stale grade, 3 controls on the missing `regraded`/`pending`), green now. `r14-regrade-door.test.mjs` (Miniflare, cite, capture again, alarm, `reevaluationnotices` against `versionnotice`): green; not red before the fix, since `acquire` reads the copy in the request and the notice is raised graded: the undetermined window is not reachable there (module test covers it). `test/m/reevaluation/`: 163 of 163. Users (34 files naming the service, incl. scheduler, queue-producers, control-plane seam): 344 of 345.
+
+**Another module's test turned red (BOB fixes at merge, test-only):** `test/m/plane/round6-reevaluation.test.mjs:103`, the "(the newer capture read after the sweep)" case. It reads the copy at line 98, after the notice was raised undetermined, then asserts `noticeSweepDue(...)` is null. With R41 the sweep is owed once (the reading re-grades the notice). Change: insert `r.noticeSweep(Date.now());` immediately before line 103; then it rests. Verified on a temp copy: 3 of 3 pass. No other test of another module is red.
+
+**Checks.** `checks/run.mjs`: format 0, architecture 0, coverage 0 (6723 of 6723); words 13 failures, none in reevaluation (case-checker spec, installer-steps keys, screens-intake key; unchanged). `ownership.mjs`: 0. Words/setup-words generated artifacts: none touched.
+**Requirement lines proposed:** none beyond B6's sentence for R25/R41. **Census ops:** none new. **Rows owed to UX-DESIGN:** none. **Found in other modules:** none beyond the plane line above.
+
+Size (session_01XcvJkCvweiQ8KgQqV3UTdh): test runs 14, module lines 3452

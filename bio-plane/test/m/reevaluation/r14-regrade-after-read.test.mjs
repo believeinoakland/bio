@@ -57,13 +57,16 @@ test("R41 R14 (G89): the copy is read after the raise, the next tick re-grades t
 test("R41 R25 (G89): the tick that runs the sweep (noticeSweep) re-grades in the same tick it reads the copy again", () => {
   const { w, b, n } = raisedUnread();
   assert.equal(w.r.noticeSweepDue(NOW + 2), null, "the pass is complete");
+  assert.equal(w.r.noticeSweepDue(NOW + 2), null, "the copy is still unread: nothing is owed, nothing is polled");
   w.read(b.sha, [U(0, "alpha"), U(1, "something else entirely")]);
-  w.doc(OTHER, [w.cap("c", "unrelated")]);   /* a filing makes the sweep pending (R25); the reading itself is not a trigger */
+  /* the reading is neither a receipt nor a filing; the sweep is pending because the open notice now reads otherwise */
   assert.equal(w.r.noticeSweepDue(NOW + 3), NOW + 3);
+  assert.equal(w.r.noticeSweepWake(NOW + 3), NOW + 3 + 1000);
   const tick = w.r.noticeSweep(NOW + 3);
   assert.deepEqual([tick.count, tick.chain_unread], [0, 0]);
   assert.equal(only(w).affects, "affected");
   assert.equal(only(w).notice, n.notice);
+  assert.equal(w.r.noticeSweepDue(NOW + 4), null, "re-graded: the sweep rests");
 });
 
 test("R41 (G89): a reading that finds the passage unchanged re-grades the open notice to unaffected and leaves it open: only a member's act closes it", () => {
