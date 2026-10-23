@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J32
+**Read** · handled J34
 
 ## B1 · START
 
@@ -551,3 +551,7 @@ CHANGE (K4661): EXTRACTION #38 is merged into tranche/T51 (the 1 MiB row guard, 
 ## B52 · CHANGE
 
 CHANGE (K4664): CONTENT #19 (`cellsAt` async over held sheets, R52) and RETRIEVAL-BROWSE #4 (find-in over held sheets, R8) are merged into tranche/T51. Merge tranche/T51 into your branch.
+
+## B53 · CHANGE
+
+CHANGE (K4668): CALCULATIONS #8 is merged into tranche/T51 (G41: `cellsAt` awaited, undetermined engine on a truncated read). Also on the tranche: test-support's preload `bio-plane/test/platform-sqlite.mjs` (K4666; run your tests with `node --import ./test/platform-sqlite.mjs`), now words-clean. Merge tranche/T51.

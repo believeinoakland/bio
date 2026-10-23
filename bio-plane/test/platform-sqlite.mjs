@@ -41,7 +41,7 @@ const tooBig = () => {
   const e = new Error("string or blob too big");
   e.code = "ERR_SQLITE_ERROR";
   e.errcode = 18;
-  e.errstr = "string or blob too big";
+  e.errstr = e.message;
   return e;
 };
 
