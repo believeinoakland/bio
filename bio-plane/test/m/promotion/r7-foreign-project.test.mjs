@@ -5,8 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, infoDoc, create, T0 } from "./fixtures.mjs";
-import { notAParticipant } from "../../../src/membership/index.mjs";
-import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 function projectEnv() {
   const env = makePromotion();
@@ -22,25 +21,28 @@ const filing = (project, id, who, extra = {}) =>
   create(id, infoDoc(id, { project }), { actorMemberId: who, actorIdentity: `member:${who}`, actorViewer: `member:${who}`,
                                          author: `member:${who}`, ...extra });
 
-test("R53 G74: a member who is neither in the project nor invited to it is refused NOT_A_PARTICIPANT and nothing is written", () => {
+test("R53 G74: a member who is neither in the project nor invited to it is refused PROMOTE_NOT_A_PARTICIPANT and nothing is written", () => {
   const { p, record, membership, project } = projectEnv();
   membership.hidden.add(project);
   membership.discoverable.add(project);
   const before = record.dump();
   const refused = p.promote(filing(project, "INFO-2026-0001", "dee"));
   assert.equal(refused.ok, false);
-  assert.equal(refused.reason, "NOT_A_PARTICIPANT");
-  /* membership's one answer for the condition (its R87, C-56.3), byte for byte, with the act named */
-  assert.deepEqual(refused, notAParticipant(project, "dee", { act: "promote" }));
+  assert.equal(refused.reason, "PROMOTE_NOT_A_PARTICIPANT");
   assert.equal(refused.act, "promote");
+  /* the sentence names the project by its name, never its id (UX-DESIGN's row refusal.PROMOTE_NOT_A_PARTICIPANT) */
+  assert.match(refused.detail, /Sewer Fund/);
+  assert.ok(!refused.detail.includes(project));
   assert.equal(record.dump(), before, "no bundle, manifest entry, history or file was written");
   assert.equal(record.bundleInfo("INFO-2026-0001"), null);
 });
 
-test("R53 G74: the refusal's served sentence is the stand-in row's: it states the condition and the remedy", () => {
-  assert.equal(hasWord("refusal.NOT_A_PARTICIPANT"), true);
-  const sentence = word("refusal.NOT_A_PARTICIPANT");
-  assert.ok(sentence.length > 20 && /Nothing was changed\./.test(sentence) && /invite/i.test(sentence), sentence);
+test("R53 G74: the refusal's sentence is the keyed row's and states the condition and the remedy", () => {
+  const { p, project } = projectEnv();
+  const r = p.promote(filing(project, "INFO-2026-0011", "dee"));
+  assert.equal(r.detail, localize("refusal.PROMOTE_NOT_A_PARTICIPANT", "Only the members of {project}, and those invited to it, can file documents into it. Nothing was filed. Ask an owner of the project to invite you, or file it into a project you are in.", { project: "Sewer Fund" }));
+  assert.match(r.detail, /Nothing was filed\./);
+  assert.match(r.detail, /invite you/);
 });
 
 test("R53 G74 control: a joined member files into the project", () => {
@@ -80,13 +82,13 @@ test("R53 G74: a revision that moves a document into a project she is not in is 
   const moved = p.promote({ bundleId: "INFO-2026-0008", base: made.bundleSha, snapKey: "k2", author: "member:dee",
     actorMemberId: "dee", actorIdentity: "member:dee", actorViewer: "member:dee", meta: {},
     files: [{ path: "bundle.md", text: infoDoc("INFO-2026-0008", { project }) }] });
-  assert.equal(moved.reason, "NOT_A_PARTICIPANT");
+  assert.equal(moved.reason, "PROMOTE_NOT_A_PARTICIPANT");
 });
 
 test("R53 G74: a project that does not exist is refused alike, so the refusal tells a stranger nothing about which projects exist", () => {
   const { p, project } = projectEnv();
   const absent = p.promote(filing("PROJ-2026-9999-none", "INFO-2026-0009", "dee"));
   const foreign = p.promote(filing(project, "INFO-2026-0010", "dee"));
-  assert.equal(absent.reason, "NOT_A_PARTICIPANT");
-  assert.deepEqual({ ...absent, project: null }, { ...foreign, project: null });
+  assert.equal(absent.reason, "PROMOTE_NOT_A_PARTICIPANT");
+  assert.deepEqual([absent.ok, absent.code, absent.act], [foreign.ok, foreign.code, foreign.act]);
 });

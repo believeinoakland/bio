@@ -698,8 +698,15 @@ class Promotion {
          Membership's one answer (its R87); its served sentence carries the remedy. Nothing is written. */
       const filedInto = projectOf(sentFm, promotedType);
       const filer = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
-      if (!replay && filer && filedInto && !membership.participation(filedInto, filer))
-        return notAParticipant(filedInto, filer, { act: "promote" });
+      if (!replay && filer && filedInto && !membership.participation(filedInto, filer)) {
+        /* The sentence names the project by its name where she may see that it exists, else as she sent it; never an id
+           the record gives. Keyed `refusal.PROMOTE_NOT_A_PARTICIPANT` (UX-DESIGN's row, U463); `en` is its stand-in. */
+        const named = String(membership.sight(filedInto, pkg.actorViewer ?? "")).toUpperCase() !== "NONE"
+          ? record.bundleInfo(filedInto)?.title : null;
+        return { ok: false, reason: "PROMOTE_NOT_A_PARTICIPANT", code: "PROMOTE_NOT_A_PARTICIPANT", act: "promote",
+                 project: filedInto,
+                 detail: localize("refusal.PROMOTE_NOT_A_PARTICIPANT", "Only the members of {project}, and those invited to it, can file documents into it. Nothing was filed. Ask an owner of the project to invite you, or file it into a project you are in.", { project: String(named || filedInto) }) };
+      }
 
       /* R56 (N456, form (b)): a project's stage is computed, never written; a creation is written at `forming` or
          `closed` only. A revision's move is R15's, below, over the declared table. */
