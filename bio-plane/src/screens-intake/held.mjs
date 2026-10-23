@@ -1,3 +1,5 @@
+import { heldTitle } from "./capture.mjs";
+
 /* The `held` screen (Add › Held captures; R4; DEC-97). Self-contained functions over the kit `cs` (interface-shell
  * R21 (1)). */
 
@@ -128,7 +130,7 @@ function renderHeld(cs, view) {
   const list = cs.state(view.data.held, (v) => cs.rows({
     id: "held",
     cols: ["screen.held.col"],
-    name: (r) => r.title || cs.w("screen.held.untitled"),
+    name: (r) => view.parts.heldTitle(cs, r),
     /* R4: the hold strip (shell R19): one reason to set the picked aside; or vouching, in the member's own words */
     hold: () => `${cs.act("heldsetaside")}`
       + cs.field("ch-ack", "screen.held.ack", { help: "screen.held.ackhelp", max: 500 })
@@ -137,7 +139,7 @@ function renderHeld(cs, view) {
     items: v.held.map(merged),
     key: (r) => r.bundle_id,
     pick: true,
-    cells: (r) => [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}`
+    cells: (r) => [`${thumb(r)}${cs.ref("document", r.bundle_id, view.parts.heldTitle(cs, r), [])}`
       /* C23: the one word for the state a held capture is in, the Find chip's (`state.item.review.name`); what only a full row says (its age,
          grade, eligibility, questions and files) is drawn once the full fields have arrived */
       + `<span class="meta">${cs.w("state.item.review.name")} · ${r._full ? `${grade(r)} ` : ""}${[r._full ? age(r.age_days) : "", projectOf(r)].filter(Boolean).join(" · ")}`
@@ -153,14 +155,14 @@ function renderHeld(cs, view) {
     + cs.state(view.data.aside, (v) => cs.rows({
       id: "aside",
       cols: ["screen.held.col"],
-      name: (r) => r.title || cs.w("screen.held.untitled"),
+      name: (r) => view.parts.heldTitle(cs, r),
       hold: () => cs.act("heldrestore"),
       items: v.held,
       key: (r) => r.bundle_id,
       pick: true,
       cells: (r) => {
         const a = r.set_aside || {};
-        return [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}`
+        return [`${thumb(r)}${cs.ref("document", r.bundle_id, view.parts.heldTitle(cs, r), [])}`
           + `<span class="meta">${grade(r)} ${projectOf(r)}</span>`
           + `<span>${cs.w("screen.held.asideby", { author: a.author || "", reason: a.reason || "" })}${a.at ? ` ${cs.date(a.at)}` : ""}</span>`];
       },
@@ -275,6 +277,8 @@ export const HELD_SCREEN = Object.freeze({
   id: "held",
   reads: heldReads,
   render: renderHeld,
+  /* G75 (fix round 7): a row with no stored title is named by the chain a delivery names a document by (its host and the day), as `capture` draws it */
+  parts: Object.freeze({ heldTitle }),
   acts: Object.freeze([
     Object.freeze({ op: "heldcaptures", label: "act.heldcaptures.label.held", send: sendRefresh, rereads: Object.freeze(["held"]) }),
     Object.freeze({ op: "release", label: "act.release.label.held", send: sendRelease, done: doneRelease, rereads: Object.freeze(["held"]), reasonField: "acknowledgment", refusals: RELEASE_REFUSALS }),

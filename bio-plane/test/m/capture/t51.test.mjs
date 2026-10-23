@@ -297,7 +297,7 @@ test("R96 (T51; A64): an address the record holds once answers held true with th
     const before = everything(f.rows);
     const r = await f.c.heldAt({ address: ADDR, viewer: "member:m1" });
     assert.deepEqual([r.ok, r.held, r.versions, r.truncated], [true, true, 1, false]);
-    assert.deepEqual(r.copy, { sha256: H("a1"), document: "INFO-1", project: null, retrieved: "2026-02-01T10:00:00Z", actor: "m1",
+    assert.deepEqual(r.copy, { sha256: H("a1"), document: "INFO-1", project: null, title: "title INFO-1", retrieved: "2026-02-01T10:00:00Z", actor: "m1",
                                grade: GRADE(H("a1")), address: ADDR });
     assert.deepEqual([r.changed.state, r.changed.as_of, r.changed.earlier_differs], ["undetermined", "2026-02-01T10:00:00Z", false]);
     assert.equal(typeof r.changed.basis, "string");

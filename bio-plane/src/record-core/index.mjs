@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R88).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R90).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -22,7 +22,8 @@
    T42 job (its R55), minted opaque by its form alone and named by its own sentence (R62, R76). T46 (T46-3; N904): the
    strict `getSetting` tells an unreadable setting (`SETTING_UNREADABLE`) from an unset one (R83). T47 (T47-6; N939):
    `setSetting` refuses a value that does not round-trip through JSON, `SETTING_NOT_JSON` under its own row (R84). T48
-   (T48-8; N1018, K3112): `WCD` and `OUTC`, `case-inputs`' opaque prefixes, each named by its own sentence (R62). */
+   (T48-8; N1018, K3112): `WCD` and `OUTC`, `case-inputs`' opaque prefixes, each named by its own sentence (R62). Fix round 7
+   (G80; K4736): the record's write counter (R89, R90). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -422,6 +423,21 @@ export class RecordCore {
       this.#sql.exec(`ALTER TABLE bundles DROP COLUMN classification`);
     for (const [legacy, canonical] of Object.entries(LEGACY_TYPE_ALIASES))
       this.#sql.exec(`UPDATE bundles SET object_type=? WHERE object_type=?`, canonical, legacy);
+  }
+
+  /* ---- the write counter (R89, R90) ---- */
+
+  /** R89, R90 (fix round 7, G80; K4736): THE RECORD'S WRITE COUNTER, a whole number that rises by at least one for every row
+   *  any statement on this object's storage inserts, updates or deletes, and by nothing else. It is SQLite's own
+   *  `total_changes()` for the connection the object holds, so it sees every writer by every path: this module's services,
+   *  and the plain SQL of the modules that own the tables `queue` derives its feed from (its mutes, a question, a deadline, a
+   *  notice), declared or not, and it adds no table, no trigger and no row a snapshot of the store could read, no write
+   *  cost, and no I/O beyond the storage. A read changes nothing, so two answers with no write between are equal; a write
+   *  that rolls back may still be counted (the counter then rises for a change that was not kept, which a cache keyed on it
+   *  only meets as one recomputation). It counts from the object's start and is 0 for a record nothing has written since;
+   *  the object's memory, where a cache keyed on it lives, starts again with it. DDL moves no row and is not counted. */
+  writeCount() {
+    return Number(this.#one(`SELECT total_changes() AS n`).n);
   }
 
   /* ---- transactions (R32, R66) ---- */

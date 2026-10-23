@@ -48,7 +48,12 @@ test("R124 (G12b) the store holds the six reads' answers and no token, no route,
   assert.deepEqual([...p.store.keys()], [KEY], "the one key");
 });
 
-test("R124 (G12b) a second page load in the session sends none of the six frame reads before the screen's reads have settled, and asks each once after", async () => {
+/* G81 (fix round 7): of the six, `groupidentity` and `infolevel` are constants of the team; a kept one answered less than a day ago is not asked again
+   (fixround7.test.mjs); the other four are asked once on every load. `aged` moves the time the tab holds for the constants back by `ms`. */
+const aged = (a, ms) => { const o = JSON.parse(a.store.get(KEY)); for (const n of Object.keys(o.at)) o.at[n] -= ms; return new Map([[KEY, JSON.stringify(o)]]); };
+const DAY_AND = 25 * 3600 * 1000;
+
+test("R124 (G12b, G81) a second page load in the session sends none of the six frame reads before the screen's reads have settled, and asks the four that can change once after (the two constants not at all)", async () => {
   const a = await first();
   const slow = deferred();
   const p = await next(a, { heldcaptures: () => slow.wait.then(() => ok({ items: [{ id: "h1" }] })) });
@@ -57,10 +62,11 @@ test("R124 (G12b) a second page load in the session sends none of the six frame 
   assert.ok(dockButton(p), "the assistant button is drawn from what the tab kept");
   slow.release();
   await settle();
-  for (const op of SIX) assert.equal(p.byOp(op).length, 1, op + ": asked again once");
+  for (const op of REACH_OPS) assert.equal(p.byOp(op).length, 1, op + ": asked again once");
+  for (const op of TEAM) assert.equal(p.byOp(op).length, 0, op + ": kept less than a day, so not asked");
   assert.equal(p.byOp("heldcaptures").length, 1);
   await p.back("/app/held");
-  for (const op of SIX) assert.equal(p.byOp(op).length, 1, op + ": a route in the page asks no more");
+  for (const op of REACH_OPS) assert.equal(p.byOp(op).length, 1, op + ": a route in the page asks no more");
 });
 
 test("R124 (G12b) a second page load whose reads never settle never asks the six; the kept ones are all it draws", async () => {
@@ -70,10 +76,10 @@ test("R124 (G12b) a second page load whose reads never settle never asks the six
   assert.deepEqual(sixOf(p), []);
 });
 
-test("R124 (G12b) the frame follows an answer that differs from what the tab kept: the assistant goes, the name changes", async () => {
+test("R124 (G12b, G81) the frame follows an answer that differs from what the tab kept: the assistant goes, the name (kept over a day) changes", async () => {
   const a = await first({ groupidentity: ok({ ok: true, display_name: "Old Name" }) });
   const slow = deferred();
-  const p = await next(a, { heldcaptures: () => slow.wait.then(() => ok({ items: [{ id: "h1" }] })), assistantstate: ok({ on: false }), groupidentity: ok({ ok: true, display_name: "New Name" }) });
+  const p = await next(a, { heldcaptures: () => slow.wait.then(() => ok({ items: [{ id: "h1" }] })), assistantstate: ok({ on: false }), groupidentity: ok({ ok: true, display_name: "New Name" }) }, { tabStore: aged(a, DAY_AND) });
   assert.ok(dockButton(p), "kept: the button");
   slow.release();
   await settle();
@@ -88,7 +94,8 @@ test("R124 (G12b) a kept read the screen itself read in this load is not asked a
   const p = await boot({ screens: [mine], guide: GUIDE, path: "/app/held", tabStore: a.store, local: Object.fromEntries(a.local), plane: plane({ groupidentity: ok({ ok: true, display_name: "New Name" }) }) });
   assert.equal(p.byOp("groupidentity").length, 1, "the screen's one request is the revalidation");
   assert.equal(p.root().querySelector(".cs-mast .mk-grp").textContent, "New Name");
-  for (const op of SIX.filter((o) => o !== "groupidentity")) assert.equal(p.byOp(op).length, 1, op);
+  for (const op of REACH_OPS) assert.equal(p.byOp(op).length, 1, op);
+  assert.equal(p.byOp("infolevel").length, 0, "the other constant is kept and fresh");
 });
 
 test("R125 (G12b) the guide's marks are asked with the screen's first read (within 50 ms, the read still out), once, and the marks draw from that answer", async () => {
@@ -191,7 +198,8 @@ test("R124 (G12b) the member's own change of the level is not kept: the next loa
   assert.deepEqual(sixOf(p), ["infolevel"], "and only it");
   slow.release();
   await settle();
-  for (const op of SIX) assert.equal(p.byOp(op).length, 1, op);
+  for (const op of ["infolevel", ...REACH_OPS]) assert.equal(p.byOp(op).length, 1, op);
+  assert.equal(p.byOp("groupidentity").length, 0, "the name is kept and fresh");
 });
 
 test("R124 (G12b) a kept read that does not answer when it is asked again keeps what it held, and is not asked again in the page", async () => {

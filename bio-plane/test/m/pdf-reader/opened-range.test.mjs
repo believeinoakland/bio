@@ -215,3 +215,84 @@ test("R44: the opened 15.2 MiB volume, held through 14 ranges of 100 pages in a 
   assert.ok(b.peakMB <= a.peakMB + MARGIN_MB, `the opened document peaked ${b.peakMB.toFixed(1)} MB; one parse peaked ${a.peakMB.toFixed(1)} MB`);
   assert.ok(b.peakMB < 64, `peak ${b.peakMB.toFixed(1)} MB above idle`);
 });
+
+/* R45 (fix round 7, G82; K4743): `openPdfRange(bytes, {yieldNow})` gives the thread back while it opens. */
+const later = () => new Promise((r) => setImmediate(r));
+/** a `yieldNow` that counts its calls and takes, with the test's own clock outside the call, the longest stretch between
+ *  the open's start (`mark()`), its yields and its end (`end()`) */
+function stretches() {
+  let last = 0, longest = 0, calls = 0;
+  const lap = () => { const t = performance.now(); longest = Math.max(longest, t - last); last = t; };
+  return { yieldNow: async () => { calls++; lap(); await later(); last = performance.now(); },
+    mark: () => { last = performance.now(); }, end: lap, get calls() { return calls; }, get longest() { return longest; } };
+}
+
+test("R45: the opening awaits yieldNow between its phases, and within them while the file's work grows", async () => {
+  const bytes = openedDoc();
+  const small = stretches();
+  small.mark();
+  const o = await openPdfRange(bytes, { yieldNow: small.yieldNow });
+  assert.equal(o.ok, true);
+  assert.ok(small.calls >= 3, `${small.calls} calls over a 13-page file: one after each of the three phases`);
+  /* more work, more yields: a file of many objects yields inside the scan */
+  const big = densePdf({ pages: 2500, linesPerPage: 1 });
+  let n = 0;
+  await openPdfRange(big, { yieldNow: async () => { n++; } });
+  assert.ok(n > small.calls, `${n} calls for 2,500 pages, ${small.calls} for 13`);
+  /* without a function, as R44: no call, same opened document */
+  for (const none of [undefined, null, 5, "yes", {}]) {
+    const w = await openPdfRange(bytes, none === undefined ? undefined : { yieldNow: none });
+    assert.equal(JSON.stringify(await w.range({ from: 0, count: 13 })), JSON.stringify(await extractPdfRange(bytes, { from: 0, count: 13 })));
+  }
+});
+
+test("R45: every range of an opened document answers the same with yieldNow as without, whatever yieldNow does", async () => {
+  const bytes = openedDoc();
+  const plain = await openPdfRange(bytes);
+  const variants = {
+    "a timer turn": async () => later(),
+    "a plain function": () => {},
+    "one that throws": () => { throw new Error("no"); },
+    "one that rejects": () => Promise.reject(new Error("no")),
+  };
+  for (const [name, yieldNow] of Object.entries(variants)) {
+    const y = await openPdfRange(bytes, { yieldNow });
+    assert.equal(y.pages, plain.pages, name);
+    for (const maxBytes of [undefined, bytes.length / 13 * 2.5]) {
+      for (const from of FROMS) for (const count of COUNTS) {
+        const args = { from, count, maxBytes };
+        assert.equal(JSON.stringify(await y.range(args)), JSON.stringify(await plain.range(args)), `${name} ${JSON.stringify(args)}`);
+      }
+    }
+  }
+  /* a file of many pages (the page tree walked in slices) and a file with no pages */
+  const big = densePdf({ pages: 700, linesPerPage: 2 });
+  const a = await openPdfRange(big), b = await openPdfRange(big, { yieldNow: async () => later() });
+  assert.equal(b.pages, 700);
+  for (const args of [{ from: 0, count: 50 }, { from: 333, count: 100 }, { from: 650, count: 100 }]) {
+    assert.equal(JSON.stringify(await b.range(args)), JSON.stringify(await a.range(args)));
+  }
+  const none = bytesOf("%PDF-1.7\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n");
+  assert.deepEqual(await (await openPdfRange(none, { yieldNow: later })).range({ from: 0, count: 3 }), await (await openPdfRange(none)).range({ from: 0, count: 3 }));
+  /* a refusal is the refusal */
+  assert.deepEqual(await openPdfRange("x", { yieldNow: later }), await openPdfRange("x"));
+});
+
+const STRETCH_BAR_MS = 60;
+test("R45: opening the real BUDGET-2024-APP, no synchronous stretch of the open is longer than the bar, and the ranges are the same", { timeout: 900_000 }, async () => {
+  const path = await fixture(APP);
+  const bytes = new Uint8Array(readFileSync(path));
+  const t0 = performance.now();
+  const plain = await openPdfRange(bytes);
+  const unsliced = performance.now() - t0;
+  const s = stretches();
+  s.mark();
+  const y = await openPdfRange(bytes, { yieldNow: s.yieldNow });
+  s.end();
+  console.log(`R45 ${APP.name}: the open without yieldNow is one stretch of ${Math.round(unsliced)} ms; with it ${s.calls} yields, longest stretch ${s.longest.toFixed(1)} ms (bar ${STRETCH_BAR_MS} ms)`);
+  assert.ok(s.calls >= 80, `${s.calls} yields`);
+  assert.ok(s.longest < STRETCH_BAR_MS, `the longest stretch was ${s.longest.toFixed(1)} ms`);
+  for (const args of [{ from: 0, count: 100 }, { from: 1300, count: 100 }, { from: 650, count: 1 }]) {
+    assert.equal(JSON.stringify(await y.range(args)), JSON.stringify(await plain.range(args)), JSON.stringify(args));
+  }
+});
