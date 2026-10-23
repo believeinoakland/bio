@@ -115,3 +115,7 @@ G74 done. promote refuses a session member stamped actorMemberId whose document 
 B8 (U463, DEC-425): the refusal is now `reason`/`code` `PROMOTE_NOT_A_PARTICIPANT`, `act: "promote"`, `project` the id as sent, and `detail` the sentence keyed `refusal.PROMOTE_NOT_A_PARTICIPANT` via `localize` (rows.mjs is stale until BOB regenerates, so the design's sentence is the `en`, verbatim; the list wins once held). `{project}` is the project's name where she has at least existence sight of it, else as she sent it; the record's id is never given. `src/promotion/index.mjs` (the G74 block before R56's fence). The earlier stand-in (`refusal.NOT_A_PARTICIPANT`, membership's `notAParticipant`) is gone; the "row owed to UX-DESIGN" is now delivered. Tests: `r7-foreign-project.test.mjs` updated (name not id, sentence equals the keyed text, absent project refused alike); `test/m/promotion/` + `d526-refusal-order`: 161 pass, 0 fail. format, architecture, coverage (61/61) and ownership: 0 failures. No census row, no op change.
 
 Size (session_017BterrfaggzcXm1vXYhTRC): test runs 12, module lines 3987
+
+## J9 · COMPLETE · re B8
+
+B8 applied: promote refuses with PROMOTE_NOT_A_PARTICIPANT, sentence keyed refusal.PROMOTE_NOT_A_PARTICIPANT with the design's text as en (rows.mjs stale until you regenerate), {project} by name where she has existence sight else as sent, never the record's id. promotion 161 pass; format, architecture, coverage 61/61, ownership 0 failures. Pushed.
