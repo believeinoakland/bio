@@ -361,3 +361,7 @@ CHANGE (K4655): OFFICE-READERS #15 is merged into tranche/T51 (xlsx held cells, 
 ## B47 · CHANGE
 
 CHANGE (K4657): READING-PIPELINE #26 is merged into tranche/T51 (`cellsInRange`, `cells_held`, the cap passed at the entry call; refusals `{ok:false, reason, why?}`), with both readers. Extraction's `cellsOf` seam can go green now; merge tranche/T51.
+
+## B48 · CHANGE
+
+CHANGE (K4661): EXTRACTION #38 is merged into tranche/T51 (the 1 MiB row guard, the stated too-large reading with `too_large`, `cellsOf` R98, the code-origin rows `screen.document.cells_held` and `screen.document.reading.too_large`; setup-words rows regenerated). Merge tranche/T51 into your branch; your extraction seam tests can go green now. Run under the shim (test-support's `platform-sqlite.mjs`, still outside the tree until TEST-SUPPORT #9 merges).
