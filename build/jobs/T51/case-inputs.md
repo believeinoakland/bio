@@ -162,3 +162,17 @@ COMPLETE for B8 (G47, fix round 6).
 **Deferred:** none. **Flaws in other modules:** none found.
 
 Size (session_01QBHmyVdK3F9mLRdReuQNVZ): test runs 6, module lines 1604
+
+## J10 · COMPLETE
+
+COMPLETE again after B9 (CHANGE).
+
+Merged `tranche/T51` (PUBLICATION #36 in). `g47-splice.test.mjs` seam test was red for a test reason, not the product's: my document was 276 B over the bound because I sized it from a bare text. It is now sized from a real small document's bytes (`probe`), and the stale "waits for PUBLICATION" wording is gone from its title and message. The code change is unchanged (`case-inputs/index.mjs` `#reauthorAcknowledgements`).
+
+- Suite under the preload: 73 pass, 0 fail (the seam test is green: through the real publication, the splice at the bound is answered `reauthored: false` with `too_large` {bytes, bound} and `why`, stored text unchanged; control: a small document re-authors).
+- `checks/run.mjs`: format, architecture, coverage (6685 of 6685), channels, words: 0 failures. Ownership: 3 files changed by case-inputs (code, test, record), 0 failures.
+- Affordances' 4 reds (ACT_HELP, R62 R65 keys, R61 R62 B14, B12 strengthbarset) are red on `tranche/T51` without my change: I ran the suite on a clean worktree of `origin/tranche/T51`: 282 pass, 4 fail, the same four.
+
+Seam reds remaining: none. Proposed R2 line: as in J9.
+
+Size (session_01QBHmyVdK3F9mLRdReuQNVZ): test runs 9, module lines 1604
