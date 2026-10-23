@@ -1,6 +1,6 @@
 # READING-ARCHITECTURE lane: state for the next session
 
-**Status** · Written by READING-ARCHITECTURE #2 (`session_017kq2bRE1EtmVj9y9wY1LTT`), 2026-10-23, well under half its context window. Replaced whole at each handoff. Read with `CHARTER.md` and `HANDOFF.md`.
+**Status** · Written by READING-ARCHITECTURE #2 (`session_017kq2bRE1EtmVj9y9wY1LTT`), 2026-10-23, well under half its context window (final for deliverables 1-6). Replaced whole at each handoff. Read with `CHARTER.md` and `HANDOFF.md`.
 
 ## Done (committed on `lane/reading-architecture`)
 
@@ -10,16 +10,12 @@
 | 2 | `PLATFORM.md` (spikes in `spikes/`) | RA2 |
 | 3 | `CHALLENGES.md` | RA3 |
 | 4 | `OPTIONS.md` (the writer's draft read whole against `options-brief.md`, corrected and adopted; the review's changes listed in its §0) | RA5 |
-| 5 | `FOR-BOB.md` (ten questions for Bob, each with an explanation, options and a recommendation; a closing list of what is not asked and why) | RA6 |
+| 5 | `FOR-BOB.md` (ten questions for Bob, each with an explanation, options and a recommendation; a closing list of what is not asked and why); Bob confirmed all ten as recommended, K4831 | RA6 |
+| 6 | `GAP.md` (entries GAP-0.1 to GAP-3.9 by stage, the fallback GAP-6.x, every held cause mapped kept / absorbed / dropped, the requirement changes) | RA7 |
 
 ## Waiting
 
-- On Bob, through BOB: his answers to `FOR-BOB.md`, above all question 1 (the architecture). BOB renders it for him and records his answers as K rulings.
-
-## Then
-
-- Deliverable 6, `GAP.md`, only after Bob confirms an architecture. It maps every change from today's code to the confirmed design, module by module and in order of work, each as a plan entry BOB places, with the existing reading causes mapped to it (kept, absorbed or dropped). Inputs: `OPTIONS.md` §2 (the modules each shared part touches), §3 (h) per option, §5.2 (stages), and the held fix-round causes G91 to G100 (K4812, K4814). Findings already noted for it: RR-F1 must state the object's total (OPTIONS WN6); stale part-keyed rows need a migration (OPTIONS §2.2); the alpha's stated interim bounds if Bob answers FOR-BOB question 3 (b).
-- If Bob chooses D: the Stage 0 live measurements (OPTIONS §5.2) are BOB's to place before Stage 2 and Stage 3.
+- On BOB: to place GAP.md's entries in T51 and open the fix round for the kept causes (GAP.md §7.5). The charter's six deliverables are done; the lane has nothing further unless BOB asks (a question on an entry, a stage's result that changes the gap, or the fallback of GAP.md §6).
 
 ## Context for the successor
 

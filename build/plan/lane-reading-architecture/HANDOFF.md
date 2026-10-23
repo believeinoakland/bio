@@ -74,3 +74,29 @@ A closing section says what was not asked and why: answered by K4628, K4630, K45
 - Render `FOR-BOB.md` for Bob and record his answers as rulings.
 - The lane now waits: deliverable 6 (`GAP.md`) follows only once he confirms an architecture. When he does, start READING-ARCHITECTURE #3 on this branch for it, or send the ruling to this session if it is still open.
 - `STATE.md` is current. No safety check refused any act in this session.
+
+## RA7 · 2026-10-23 · Deliverable 6 ready: `GAP.md` (against K4831)
+
+`GAP.md` lists every change from today's code to D, built in stages, with Bob's nine other answers. The entries are by stage, each with an owner module, its providers, the change, what it waits on, a failing-first test and what it serves:
+- **§2, Stage 0:** four live-probe acts, grouping P-M1 to P-M24 by what they gate.
+- **§3, Stage 1:** twelve entries for the shared shape on today's carrier. The harness comes first. Then `READ_BOUNDS` with standard, alpha and protective columns, declared-size checks, the job table and one registrar, one identity and direct-to-R2 upload, units and completeness, the poison rule, the reader contract, every part marked with its kind, the member's view, safety beside reading, and the five screen answers.
+- **§4, Stage 2:** four entries: the `reading-flow` Workflow Worker, the light kinds moved into steps with the ledger's reading arm retired, the second clock, and the interim OCR fan-out.
+- **§5, Stage 3:** ten entries: licences first, then `reader-container` with its cap, then PDF, images, archives (ZIP, TAR, GZ, 7z), OCR with Spanish, office and legacy formats, the grade, the report to Bob, and a found threat's text leaving search.
+- **§6:** the fallback C entries.
+- **§1:** each K4831 answer is mapped to its entries.
+
+**One proposal rests in it, BOB's to accept (§0):** the alpha ships with its limits stated (K4831 (3)). So Stage 1 makes the heavy-kind JavaScript readers correct, safe and honest within those limits, but does not rewrite them to the standard's sizes. Stage 3 replaces them, so that rewrite would be thrown away. The light kinds stay in Workers and are brought fully to the standard in Stage 1. If the fallback C is taken, the rewrite becomes GAP-6.1.
+
+**§7 maps every held cause** as kept, absorbed or dropped:
+- fix round 8's G91–G100, G102, G117 and G122;
+- its §8 (SCAN #1 S-items; PDF N3–N24 and F-1–F-7);
+- SHEET #1's S-1–S-41;
+- DOCS #1's X1–X36.
+
+The scheduler's G91–G95 are **kept**, because the scheduler carries reading until Stage 2 and keeps its other consumers after. Most of the rest are absorbed into a Stage 1 entry, whose START carries the cause's failing-first test. §7.5 names the small fix round K4831 asks for: G91–G95 plus five small kept items. §8 lists the requirement changes, whose wording is BOB's.
+
+**For BOB:**
+- Place the entries in T51 and open the §7.5 fix round.
+- Stage 0's probes are BOB's acts on a throwaway Worker on the pinned account.
+- The lane's six deliverables are done, and `STATE.md` is current. The lane has nothing open unless BOB asks.
+- No safety check refused any act.
