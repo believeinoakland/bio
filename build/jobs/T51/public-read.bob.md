@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -182,3 +182,27 @@ Run: your suite under the preload, then the users `node build/plan/impact.mjs tr
 ## B17 · ANSWER · re J19
 
 (K4676) Confirmed: tokens collide per ref. Planned as G47t (BOB's design: a nullable `capture_sha` on `published_shas`, written by case-carriage, publication's registration carrying it; a row with null keeps the ref join). It is under independent review now (K4597); the full ANSWER with what to build against follows once reviewed. Meanwhile finish the rest; do not COMPLETE yet.
+
+## B18 · ANSWER · re J19
+
+ANSWER · PUBLIC-READ #30 · J19 (G47t, the timestamp tokens) · tranche T51 · BOB's decision (P17), binding. You are unblocked: finish your side and COMPLETE; a seam test red by name is not an open question.
+
+**Decision: your recommendation, with refinements (K4677).** A nullable `capture_sha TEXT` on `published_shas` (publication's table), a column and not a path (your `path=('materials/'||sha256)` reads, `publishedbytes` and the PK stay). Written for EVERY new attestation token, whatever the document (readers use it only when the row states `sha`, so one-capture pages are byte for byte as before); a token two different captures name is stored NULL (shared); a stored NULL is never rewritten to a value (an old row keeps null); a stored non-null that differs is cleared to NULL. An archive's tokens carry the member material's sha. The entry is the G47t entry of `build/plan/fix-round-6-T51.md` (bullet `G47t`, with its tightenings line) (G47t), read it whole.
+
+**Who builds it.** CASE-CARRIAGE #15 (new): `holdMaterials`' `files` entries carry `capture_sha`. PUBLICATION #36 (a CHANGE, posted with this): the column, its migration, the INSERT at `publication/index.mjs:1171` and its conflict clause. Merge order by `modules.json`: case-grammar #20 (105), case-carriage #15 (107), case-tensions (108), publication #36 (109), then you (112). You build nothing in their modules.
+
+**What you build against.** For a row that states `sha`, the lookup at `index.mjs:1510-1512` adds `AND (capture_sha IS NULL OR capture_sha = ?)` with the row's `sha` (lowercase), so a token with NULL (registered before this, or shared) is shown as the ref join shows it today; for a row that states none, today's query, unchanged. **No feature check:** you merge last (after publication), so the shipped query assumes the column; until then your seam tests are red by name. Do not carry `capture_sha` in the row you answer (`held` items stay `{sha, text}`; `casefile` and the census keys do not change, say so, K4208). Do not touch `index.mjs:653`. Tokens are not edition-filtered (`:1476-1481` filters the archive pool only); unchanged. **By design, unchanged:** a `co_attestation`/`co_archive` row of one capture still shows that capture's other tokens; the key separates captures, not tokens.
+
+**Your seam.** `test/m/public-read/g47t-tokens.test.mjs` needs, besides the column, case-grammar's optional attestation-row `sha` (G47 (a), CASE-GRAMMAR #20, unmerged): it is red by name until CASE-GRAMMAR #20, CASE-CARRIAGE #15 and PUBLICATION #36 have merged, and says so in its titles and your record. No hand-made row shapes: the case is built by the real commit (the one `casefile.test.mjs:265` uses) and the real writer of case-grammar. Cases, k = 2 captures of one source, each with a token and its own attestation row stating `sha`: A's token under A's row only, B's under B's (red today: both under both); a NULL token (old, or shared) under both rows; edition 2 adding capture B: each token under its own capture; control: one capture per source, `attestations` byte for byte as before. To see them green earlier use local stand-ins, not committed. BOB posts a CHANGE as each provider lands. L: none of yours; P: none.
+
+Propose the requirement line (BOB writes it): R23's `attestations` text gains that a `co_attestation` row stating `sha` carries the tokens `publication` held for that capture, and those held for no one capture (null), and a row stating none carries every token of the `ref`.
+
+**Tightening (short review, K4677):** at `public-read/index.mjs:1510` lowercase the row's `sha` and narrow by `capture_sha` only when it is 64 hex characters; any other value falls back to the ref join (today's query). Test a malformed `sha`.
+
+## B19 · ANSWER · re J20
+
+(K4678) Received. Your seam reds wait for CASE-GRAMMAR #20 and PUBLICATION #36's G47t merge (CASE-CARRIAGE #15 is merged now); I post a CHANGE when both have landed. Nothing to do until then. The `originalOf` keying of copied captures by ref is noted for BOB.
+
+## B20 · CHANGE
+
+(K4680) CASE-GRAMMAR #20 (the optional attestation `sha`, `bio-case-document/9`, `caseDocumentFormatFor`) and PUBLICATION #36's G47t (`published_shas.capture_sha`) are merged on tranche/T51, with CASE-CARRIAGE #15 and CASE-DISCLOSURES #17. Merge tranche/T51 into your branch, turn your seam tests green, re-run your suite under the preload and your users, then COMPLETE again (or COMPLETE for the first time). Also: case-grammar's reader now answers `sha: null` for a row without one, so your R23 deepEqual of attestation rows needs `sha: null` where the reader gives it (CASE-GRAMMAR #20 J5); your `originalOf` finding (copied captures keyed by ref) is BOB's to place, not yours.

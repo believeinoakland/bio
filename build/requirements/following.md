@@ -38,8 +38,8 @@ Terms. A **follow** is a member's standing act naming what is followed and for w
 
 #### Portal snapshots (§8.5)
 
-- **R10** `followPortal({address, query, key, author, viewer})` follows a portal's dataset, keyed to its query (the address with its query parameters, normalised), with a declared key field. Each tick captures the dataset's answer as a snapshot, a capture like any other, and records it as a vintage whose validity is the capture instant (`civil-time` `validAt`).
-- **R11** `snapshotDiff({follow, from, to})` answers, between two snapshots of one portal follow, the rows `added` and `removed` by key and, for a key in both, each `changed` field `{key, field, before, after}`. A key missing or repeated in either snapshot makes that row `undetermined` with its reason, never matched by position. It writes nothing; a difference is never a finding.
+- **R10** `followPortal({address, query, key, author, viewer})` follows a portal's dataset, keyed to its query (the address with its query parameters, normalised), with a declared key field. Each tick captures the dataset's answer as a snapshot, a capture like any other, and records it as a vintage whose validity is the capture instant (`civil-time` `validAt`). (Amended, fix round 6, G46; K4669, K4678.) A snapshot's rows are stored whole when their JSON is at most 524,288 bytes (`PORTAL_ROWS_INLINE_MAX`), byte for byte; above it they are stored in pieces of at most 256 Ki characters in `portal_snapshot_parts`, written with the snapshot row in one transaction, so no stored value passes 1 MiB; a snapshot stored earlier stays whole. A capture over 4 MiB (`PORTAL_PARSE_MAX_BYTES`, checked on its byte length before it is decoded) is not parsed: the snapshot is written with no rows and a `why` stating its size and the bound, the capture held whole and cited (K1881, protective). A read whose capture is held but has no snapshot writes the snapshot once instead of answering unchanged.
+- **R11** `snapshotDiff({follow, from, to})` answers, between two snapshots of one portal follow, the rows `added` and `removed` by key and, for a key in both, each `changed` field `{key, field, before, after}`. A key missing or repeated in either snapshot makes that row `undetermined` with its reason, never matched by position. It writes nothing; a difference is never a finding. (Amended, G46.) `snapshotDiff` reads a snapshot's rows whole or joined from its pieces; a snapshot with no rows is `undetermined` with its `why`, as before.
 
 #### For `scheduler`: followDue(now), followWake(now), followTick(now, rank?), onFollowed(module, fn)
 
@@ -118,7 +118,7 @@ Rule 3's list: `monitoring` (`sweepHost`, its R65; R14's frequencies), `capture`
 
 - **R15** (K1449; `monitoring` R36) Nothing is fetched unattended that a member's credential or a fee would pay for, and no daemon path uses a member's credential or a group-level paid account.
 - **R16** (Intake Doctrine §4, §6; `monitoring` R37) Following is mechanical: a tick captures and records, and never states what a change means; what lands is never verified (a member's act).
-- **R17** (S0-3) Its tables (follows, per-meeting schedule, snapshot vintages) are declared with their classes; a person query's follow takes the narrowest sight of its author's project.
+- **R17** (S0-3) Its tables (follows, per-meeting schedule, snapshot vintages) are declared with their classes; a person query's follow takes the narrowest sight of its author's project. (Amended, G46.) `portal_snapshot_parts` is declared with `portal_snapshots`' classes (keys `bundle_id`, sight `source`, purge `clear`).
 - **R18** No place is named in this module's behaviour or outward text: bodies, schemes, notice periods and Legistar's client name come from the profile or site data.
 
 ### Satisfies

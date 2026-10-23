@@ -54,10 +54,22 @@ function renderOpenFile(cs, view) {
     if (s.kind === "text") return said("screen.open-file.safetext") + `<div class="mk-passage" data-safetext="1">`
       + String(s.text ?? "").split(/\r\n|\r|\n/).map((l) => `<p>${cs.esc(l)}</p>`).join("") + "</div>"
       + (s.truncated ? said("screen.open-file.safetext.cut") : "");
-    if (s.kind === "data") return (Array.isArray(s.sheets) ? s.sheets : []).map((sh) => `<h3>${cs.w("screen.open-file.safe.sheet", { name: sh.name || "" })}</h3>`
-      + `<table class="mk-table"><thead><tr><th scope="col">${cs.w("screen.open-file.safe.cell")}</th><th scope="col">${cs.w("screen.open-file.safe.value")}</th></tr></thead><tbody>`
-      + (Array.isArray(sh.cells) ? sh.cells : []).map((c) => `<tr><td>${cs.esc(c.ref ?? "")}</td><td>${cs.esc(c.value ?? "")}</td></tr>`).join("")
-      + "</tbody></table>").join("");
+    /* R5 (G44; file-safety R11): each sheet's cells as the answer holds them; a sheet that could not be shown says so, a cut sheet says
+       which rows are shown and that the original holds the rest, a cut list of sheets says how many are shown; a whole sheet and an answer
+       without the new keys (an older record's) draw none of them */
+    if (s.kind === "data") {
+      const sheets = Array.isArray(s.sheets) ? s.sheets : [];
+      return sheets.map((sh) => {
+        const r = sh.rows && typeof sh.rows === "object" ? sh.rows : {}, from = r.from ?? 1, to = r.to ?? 0;
+        const cut = sh.truncated !== true ? "" : Number.isFinite(sh.total_rows)
+          ? said("screen.open-file.safe.cut", { from, to, total: sh.total_rows }) : said("screen.open-file.safe.cut.more", { from, to });
+        return `<h3>${cs.w("screen.open-file.safe.sheet", { name: sh.name || "" })}</h3>`
+          + (sh.reason ? said("screen.open-file.safe.sheet.unreadable", { name: sh.name || "" })
+            : `<table class="mk-table"><thead><tr><th scope="col">${cs.w("screen.open-file.safe.cell")}</th><th scope="col">${cs.w("screen.open-file.safe.value")}</th></tr></thead><tbody>`
+              + (Array.isArray(sh.cells) ? sh.cells : []).map((c) => `<tr><td>${cs.esc(c.ref ?? "")}</td><td>${cs.esc(c.value ?? "")}</td></tr>`).join("")
+              + "</tbody></table>") + cut;
+      }).join("") + (s.sheets_truncated === true ? said("screen.open-file.safe.sheetscut", { shown: sheets.length, total: s.sheets_total ?? sheets.length }) : "");
+    }
     return said("screen.open-file.safe.ready")
       + (Number.isFinite(s.pages) ? said(s.truncated ? "screen.open-file.safe.truncated" : "screen.open-file.safe.pages", { pages: s.pages, total: s.source_pages ?? s.pages }) : "");
   };
@@ -72,7 +84,7 @@ function renderOpenFile(cs, view) {
     const safe = cs.sec("screen.open-file.safe", `<p class="mk-small">${cs.w("screen.open-file.safe.about")} `
       + `${cs.mark("origin", "machine")} ${cs.w("screen.open-file.safe.origin")}. ${cs.w("screen.open-file.safe.cite")}</p>`
       + `<div class="mk-acts">${cs.act("safeview", { tone: kind === "low" ? undefined : "primary" })}</div>`
-      + (U.safeRefused ? `<p class="cs-state" data-state="failed" role="alert">${U.safeRefused.key ? cs.w(U.safeRefused.key) : cs.esc(U.safeRefused.text)}</p>` : "") + safeDrawn(U.safe));
+      + (U.safeRefused ? `<p class="cs-state" data-state="failed" role="alert">${U.safeRefused.key ? cs.w(U.safeRefused.key, U.safeRefused.vars) : cs.esc(U.safeRefused.text)}</p>` : "") + safeDrawn(U.safe));
     const deep = U.deeper || t.latest_deeper;
     const deeper = cs.sec("screen.open-file.deeper", `<p class="mk-small">${cs.w("screen.open-file.deeper.about")}</p>`
       + (deep && deep.state ? `<p class="mk-small">${cs.w("screen.open-file.deeper.state", { state: cs.w(`screen.open-file.deeper.${deep.state === "done" ? "done"
@@ -171,7 +183,11 @@ async function sendSafeView(view, el, cs) {
   if (!got || !got.ok) {
     cs.set("safe", null);
     const code = a && (a.code || a.reason), words = a && (a.translation || "");
-    cs.set("safeRefused", code === "NO_SAFE_VIEW" ? { key: "refusal.NO_SAFE_VIEW" } : words ? { text: words } : { key: "shell.unread" });
+    /* G44 (file-safety R11, R51): a file above what a preview can show says so with its size and the bound in MB (one decimal), never
+       an empty table or the generic sentence alone; a refusal without the figures is drawn as before */
+    const mb = (n) => (n / 1048576).toFixed(1), drawn = (a.renderer_reason === "TOO_LARGE" || a.renderer_reason === "PREVIEW_NOT_DRAWN") && Number.isFinite(a.size) && Number.isFinite(a.bound);
+    cs.set("safeRefused", code === "NO_SAFE_VIEW" ? { key: "refusal.NO_SAFE_VIEW" } : code === "SAFE_VIEW_FAILED" && drawn ? { key: "screen.open-file.safe.notdrawn", vars: { size: mb(a.size), bound: mb(a.bound) } }
+      : words ? { text: words } : { key: "shell.unread" });
     return null;
   }
   cs.set("refused", null);

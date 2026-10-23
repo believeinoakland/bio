@@ -45,3 +45,7 @@ Mail with `--module case-tensions`; record `build/jobs/T51/case-tensions.md` (ap
 **Seam reds by name:** the cases that read the `sha` field, until CASE-GRAMMAR #20 merges.
 
 Run: your suite under the preload, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-tensions tranche/T51 job/T51/case-tensions`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B4 · CHANGE
+
+(K4680) CASE-GRAMMAR #20 (the optional attestation `sha`, `bio-case-document/9`, `caseDocumentFormatFor`) and PUBLICATION #36's G47t (`published_shas.capture_sha`) are merged on tranche/T51, with CASE-CARRIAGE #15 and CASE-DISCLOSURES #17. Merge tranche/T51 into your branch, turn your seam tests green, re-run your suite under the preload and your users, then COMPLETE again (or COMPLETE for the first time).

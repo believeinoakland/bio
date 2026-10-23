@@ -881,7 +881,12 @@ export class CaseInputs {
                                                      lines: { frontmatter: ackFrontmatterLines(acks),
                                                               body: ackBodyLines(acks, project) } });
     const nowSha = after ? after.doc_sha ?? null : null;
-    if (nowSha === doc.doc_sha) return { case_id: doc.case_id, edition: doc.edition, reauthored: false, doc_sha: doc.doc_sha };
+    /* G47: a splice publication refuses (its `why`, and `too_large` when the new text would pass the byte bound) is
+       answered as refused with both, never as `reauthored` alone. */
+    if (nowSha === doc.doc_sha)
+      return { case_id: doc.case_id, edition: doc.edition, reauthored: false, doc_sha: doc.doc_sha,
+               ...(after && after.too_large ? { too_large: after.too_large } : {}),
+               ...(after && after.why ? { why: after.why } : {}) };
     return { case_id: doc.case_id, edition: doc.edition, reauthored: nowSha !== null,
              doc_sha: nowSha, acknowledged: acks.rows.length,
              read: `op=casedocument&case=${doc.case_id}&edition=${doc.edition}` };

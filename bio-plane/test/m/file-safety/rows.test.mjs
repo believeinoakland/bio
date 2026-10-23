@@ -159,7 +159,7 @@ test("R25: its tables are declared to record-core's purge: a bundle's purge remo
 test("R26: no place is named in its behaviour or outward text: its source, every row, reason and finding kind it holds, and the answers its services build", async () => {
   const PLACES = /\b(oakland|alameda|berkeley|california|san francisco|bay area|emeryville|contra costa)\b/i;
   const files = readdirSync(SRC).filter((f) => f.endsWith(".mjs")).sort();
-  assert.deepEqual(files, ["checks.mjs", "formats.mjs", "index.mjs", "kinds.mjs", "schema.mjs", "words.mjs"]);
+  assert.deepEqual(files, ["checks.mjs", "formats.mjs", "index.mjs", "kinds.mjs", "schema.mjs", "screen-words.mjs", "words.mjs"]);
   for (const f of files) assert.doesNotMatch(readFileSync(new URL(f, SRC), "utf8"), PLACES, f);
   for (const t of [FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS, FINDING_KINDS]) assert.doesNotMatch(JSON.stringify(t), PLACES);
   const w = world();

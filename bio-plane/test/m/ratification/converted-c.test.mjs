@@ -266,7 +266,7 @@ test("R8 (d442 §5): over a /6 document in op=publish's shape, with its body and
   assert.deepEqual(errorsOf(checkCaseDocument({ ...fm, format: "bio-case-document/1", case_strength: undefined,
                                                 case_strength_grounds: undefined }, ctx)), [],
     "rule 12 (e): a legacy /1 document's format is accepted and the member arms are not asked of it");
-  assert.ok(errorsOf(checkCaseDocument({ ...fm, format: "bio-case-document/9" }, ctx)).includes("C-41.1"));
+  assert.ok(errorsOf(checkCaseDocument({ ...fm, format: "bio-case-document/10" }, ctx)).includes("C-41.1"));
 });
 
 /* ================================================================ ratify-authority */
