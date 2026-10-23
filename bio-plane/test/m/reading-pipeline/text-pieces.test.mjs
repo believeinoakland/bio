@@ -110,8 +110,13 @@ test("R40: a cursor that no longer matches the bytes is refused, with no reading
   const d = await hold(b, text);
   const document = doc({ digest: d, bytes: text.length, ct: "text/plain", format: "undetermined", fromText: true });
   const first = await readOf(b, document, pieceOpts());
-  const cur = decode(first.cursor);
+  /* G68: the first piece hands on a window cursor (`w`); a cursor of the kind it replaced (`t`, the offset in characters and the
+     text's length in characters) is still read, and refused when it does not fit. This ASCII text has a character for each byte. */
+  const win = decode(first.cursor);
+  assert.equal(win.k, "w");
+  const cur = { v: 1, s: win.s, k: "t", c: text.length, o: win.ob, p: win.p, q: win.q, r: win.r };
   assert.equal(cur.s, d);
+  first.cursor = encode(cur);
 
   const other = await hold(b, text.slice(0, 100000) + " changed");
   const otherDoc = doc({ digest: other, bytes: 100008, ct: "text/plain", format: "undetermined", fromText: true });
