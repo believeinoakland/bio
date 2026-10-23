@@ -178,3 +178,7 @@ Mail with `--module public-read`; record `build/jobs/T51/public-read.md` (append
 **Seam reds by name:** the cases that read the `sha` field, until CASE-GRAMMAR #20 merges.
 
 Run: your suite under the preload, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio public-read tranche/T51 job/T51/public-read`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B17 · ANSWER · re J19
+
+(K4676) Confirmed: tokens collide per ref. Planned as G47t (BOB's design: a nullable `capture_sha` on `published_shas`, written by case-carriage, publication's registration carrying it; a row with null keeps the ref join). It is under independent review now (K4597); the full ANSWER with what to build against follows once reviewed. Meanwhile finish the rest; do not COMPLETE yet.
