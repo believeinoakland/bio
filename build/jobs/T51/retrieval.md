@@ -182,3 +182,17 @@ Found in other modules: none caused by this change. Named, not fixed: the op-dec
 Deferred: none.
 
 Size (session_01LrQ9js5UiMGt6HCSH7ugeW): test runs 7, module lines 3002
+
+## Completion (fix round 7, G62, RETRIEVAL #26)
+
+**Entries applied.** G62's retrieval part, the logging alone: `zone({why: true})` answers `{zone, source, why}`; plain `zone()` (and `zone({why: false})`) answers the zone as before. Change: `bio-plane/src/retrieval/index.mjs` `zone` (now a thin read of the private `#zoneRead`, the same lookups in the same order). `source` is `local-facts` or `profiles`, null with no zone. With no zone `why` is a code, never a sentence: `no_profiles` (the `jurisdiction_profiles` setting unset or empty), `profiles_disagree` (profiles governing different zones), `no_zone_stated` (neither local-facts nor the combined profiles state one, or both threw); null when a zone is found. No retrieval fix planned or made (the plan's R-FOUR (1): cause unknown live; logging rides the deploy).
+
+**Test first, seen RED, then green** (`bio-plane/test/m/retrieval/t51-round7.test.mjs`, two tests, named R69): (a) a zone from local-facts, a local correction, the profiles' own, and a local-facts that throws, each answering `{zone, source, why: null}`; (b) no profile, an empty list, two profiles disagreeing, a profile that states none, each `{zone: null, source: null, why}`. Red before the change: `zone({why:true})` answered the bare string / null. Controls in the same tests: plain `zone()` and `zone({why:false})` equal the zone alone, null in every no-zone case. Platform check **N** for this module (L and P are the seam's and BOB's).
+
+**Tests and checks** (from `/home/user/bio`): `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/retrieval/` (from `bio-plane/`): 185 of 185 pass. Users: `ratification` and `case-authoring/signing.test.mjs`: 308 of 308 pass. `checks/run.mjs`: format 0, architecture 0, coverage 1 failure (record-core R89, R90, not mine), words 11 failures (case-checker spec.mjs, installer-steps; none in retrieval), channels 0. `checks/ownership.mjs retrieval tranche/T51 job/T51/retrieval`: 0 failures.
+
+**Requirement line proposed for BOB to write** (retrieval R69 or a new id): `zone({why: true})` answers `{zone, source, why}`: the zone R69 gives, `source` `local-facts` or `profiles` (null when none) and, when none, `why` one of `no_profiles`, `profiles_disagree`, `no_zone_stated`; the plain `zone()` is unchanged. Test: `t51-round7.test.mjs`.
+
+**Census ops** I own: none new (no op added or changed). **Rows owed to UX-DESIGN:** none (codes only; ratification and screens-publish word them). **Found in other modules:** none. **Deferred:** none.
+
+Size (session_01FoEGtPsn2WnLGd9CYBxrwS): test runs 6, module lines 3023
