@@ -679,6 +679,7 @@ export class CaseTensions {
       .filter((x) => x && String(x.sha || "").toLowerCase() === cap).map((x) => x.ref));
     const bare = (v) => String(v ?? "").replace(/^member:/, "");
     const mine = (r) => r && r.by_kind === "member" && refs.has(r.ref)
+      && (!r.sha || String(r.sha).toLowerCase() === cap)
       && (r.by == null || r.by === "null" || ["group", "project"].includes(r.level)
           || [bare(who), me.handle, me.cover].filter(Boolean).includes(bare(r.by)));
     if (!rows || !rows.some(mine))

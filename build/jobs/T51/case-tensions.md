@@ -45,3 +45,19 @@ T51-229 (case-tensions, words) is done on job/T51/case-tensions at b991d71be9.
 - Other modules: none found in my reads. checks/run.mjs from the process repo exits 1 on other modules (2,260 words failures, 25 coverage failures); none is in case-tensions.
 - setup-words --check: stale-rows note only (expected; BOB regenerates rows.mjs at the layer close).
 Size (session_01BXkX7UvYkvSAS5FNme8396): test runs 2, module lines 972.
+
+## G47 (fix round 6, session_01TSmueyvUPtNYuxRUg58uBu)
+
+**Providers' state.** None of CASE-GRAMMAR #20, PUBLICATION #36 is merged on `tranche/T51` when I ran. `materialAttestationLines` does not yet write `sha`, so the stand-in document cannot carry it.
+
+**Changed.** `bio-plane/src/case-tensions/index.mjs`, `#reauthorCaptureAttestation`, the `mine` predicate: a row is also chosen only if `!r.sha || String(r.sha).toLowerCase() === cap`. The splice spreads rows, so `sha` is kept. A document with no `sha` behaves as before. Nothing stored changes (R-OLD). No census op's accepted keys change. No protective bound set.
+
+**Tests.** New `test/m/case-tensions/g47-reauthor.test.mjs` (two tests, naming R7): k = 2 (two captures of one source, one `ref`), choosing A's level leaves B's row untouched; control: no `sha` on the rows, unchanged behaviour.
+- Control: green.
+- k = 2 test: **red by name (seam)** until CASE-GRAMMAR #20 merges: case-grammar's line builder drops `sha` today, so the document the test builds carries no `sha` and both rows are changed. I could not see it red-then-green on the code change alone for that reason; it turns green when `sha` is written.
+
+**Suite.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/case-tensions/`: 26 tests, 25 pass, 1 fail (the seam test above). Checks: format 0 failures; architecture 0; coverage 12 of 12 ids named; words (case-tensions) 0 failures; ownership 0 failures. `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules besides this one.
+
+**Proposed requirement line (R7, BOB writes it):** When several captures of one source share a `ref`, choosing one capture's level re-authors only the attesting member rows that carry that capture's `sha` (or carry none); rows of other captures are kept as written.
+
+Size (session_01TSmueyvUPtNYuxRUg58uBu): test runs 3, module lines 973
