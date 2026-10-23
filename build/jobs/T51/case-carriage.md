@@ -98,3 +98,18 @@ Red then green: before the change the file failed to load (`COPY_NOW_MAX_BYTES` 
 **Words:** no new sentence; no row owed.
 Deferred: none. Found in another module: none. No QUESTION open.
 Size (session_01TiUC4aAJHXVFiQ6sXRqvjg): test runs 9, module lines 1706
+
+## G47t (CASE-CARRIAGE #15, session_01C7Ti52rsnFVf8d7G9TFirt; B6)
+
+**Changed** (`bio-plane/src/case-carriage/index.mjs`, `holdMaterials`): a per-call `capture` variable set to the material's sha at the top of the loop (:246); `hold` stamps `capture_sha` on the `files` entry of kind `attestation` only (an archive's tokens are held inside the same iteration, so they carry the member's sha); `named` is now a Map from `(sha, ref)` to the pushed entry, and `stamped` keeps the set of captures that named each token: a second, different capture sets that entry's `capture_sha` to null, never back (A, B, A ends null); the same capture again changes nothing. No other answer, text or table write changed. Nothing stored by me changes (R-OLD); no census op changes (`DECLARED_OPS` untouched).
+
+**Failing-first** `test/m/case-carriage/g47t-token.test.mjs` (6 tests; (a) two captures of one ref, (b) shared token both orders, (c) archive token = member's sha, (d) duplicated row, provenance+archive of one capture, A, B, A, (e) single capture, controls: observation/token-less document and non-attestation kinds carry no key). Seen red with `index.mjs` reverted: 5 fail (the control passes); green with it: 6/6. `archive.test.mjs`:129 (the existing full-entry check of an archive token) accounts for the new key (`capture_sha: memberSha`); the `hold.test.mjs` token test compares fields, passes unchanged.
+
+**Suites:** case-carriage 98/98; users: publication 158 (157 pass, 0 fail, 1 todo already there), public-read 244/244. `impact.mjs` lists the shared-table fan-out; the only readers of `files` are those two.
+
+**Checks:** `checks/run.mjs`: format, architecture, coverage (6685 of 6685), channels, words all 0 failures (words count not risen); ownership `origin/tranche/T51..job/T51/case-carriage`: 0 failures.
+
+**Proposed lines** (BOB writes): R1's `files` bullet (requirements/case-carriage.md:38) gains: "A `files` entry of kind `attestation` also carries `capture_sha`, the lowercase SHA-256 of the capture it stamps (an archive's token: the member material it is shown under); null when two different captures named that token in the call. No other kind carries the key." And "For callers" (:158): `publication` registers `capture_sha` beside each token (G47t). Header: "Last changed T51 fix round 6 (G9: R15; G47t: R1)".
+
+**Words:** no new sentence. Census ops: none changes. Deferred: none. Found in another module: none. No QUESTION open.
+Size (session_01C7Ti52rsnFVf8d7G9TFirt): test runs 7, module lines 1715
