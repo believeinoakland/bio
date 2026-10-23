@@ -269,3 +269,7 @@ G65 applied (fix round 7). tranche/T51 merged first.
 **Tests/checks.** queue-producers 154 pass, 0 fail; users queue 210 pass, 0 fail; control-plane 447 pass, 0 fail; `impact.mjs` names 0 further modules. `checks/coverage` 41 of 41, 0 failures; `checks/words queue-producers` 0 failures; `checks/ownership` 0 failures; `checks/run.mjs`: failures only in case-checker and installer-steps, none in my files.
 
 Size (session_018ia9y7957RisU9biUjnUGX): test runs 5, module lines 3189
+
+## J14 · COMPLETE
+
+G65 applied: fillWord closes up a grade's underscores so NOT_FOUND reads queue.fill.grade.notfound. Two failing-first tests (red then green); queue-producers 154, queue 210, control-plane 447 pass; coverage, words, ownership 0 failures. Details in record J5.
