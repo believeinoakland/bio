@@ -160,3 +160,18 @@ No other pinned test changes so far. The R-OLD goldens are committed first (5bfb
 **Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit` from `bio-plane`: case-grammar 185 of 185 (before this job 173; +12 in `g50-path.test.mjs`). Users run once each, all pass: public-read casefile, obscured, archives, photos, calculations (31); case-checker check, spec, account, standards-offline, words (69); case-import real (5); publication t33 (8). `checks/run.mjs`: format 0, architecture 0, coverage 6686 of 6686, words: one finding, the inherited `inline` at `case-checker/spec.mjs:11`, none in case-grammar. `checks/ownership.mjs` (case-grammar, vs `tranche/T51`): 0 failures.
 
 Size (session_01AWTXz3dDga9C9mXYok9S8p): test runs 33, module lines 3126
+
+## J7 · COMPLETE
+
+G50 (105) done: `bio-case-file/4` with the capture in the path for a ref on several rows, the five departures, the copy rules by (ref, capture), the complete edition's copy read at its row's path. Details, rulings and the new ids are in my record (Completion G50, fix round 6).
+
+- Failing-first: with the base code 11 of the 12 new tests in `g50-path.test.mjs` are red; the 12th is the R-OLD golden test, byte-equal before and after (g1 departs `original_carried` twice as at the base, g2 none).
+- case-grammar 185 of 185. Users run and pass: public-read (casefile, obscured, archives, photos, calculations), case-checker (check, spec, account, standards-offline, words), case-import real, publication t33.
+- `checks/run.mjs`: format 0, architecture 0, coverage complete; words shows only the inherited `inline` at `case-checker/spec.mjs:11`. ownership 0 failures.
+- For your decision: the reworded `format` sentence has a NEW id, `case-grammar.casefile.format-accepted`. The list wins over the code's English for an existing id, so rewording `case-grammar.casefile.format` would have shown the old words until `rows.mjs` is regenerated. §5 line for UX-DESIGN: "the format is one of {accepted}, each read as written, and this manifest states {value}". Overrule and I will re-key it.
+- New ids for the checker program: `case-grammar.casefile.` + format-accepted, path-format, format-unused, capture-missing, capture-needless, capture-unnamed. The old `.format` row drops at regeneration.
+- Stale (generated, not touched): `case-checker/program.mjs`, `dist/`, `release/`, `setup-words` rows and `words-unreviewed.json`.
+- Pinned tests changed: `casefile.test.mjs` :243 (named), :310 (`/4` was the unknown-format case, now `/5`) and :279 (an obscured `[ref, sha]` key is now valid, not null).
+- Census ops: none changed.
+
+Size (session_01AWTXz3dDga9C9mXYok9S8p): test runs 33, module lines 3126
