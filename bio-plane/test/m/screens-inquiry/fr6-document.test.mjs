@@ -28,7 +28,7 @@ test("R96 R129 G6 a 5-part capture whose reading is stored under the whole as a 
   const reads = p.byOp("reading").map((r) => r.query.sha256);
   assert.deepEqual(reads, [WHOLE], "the reading is asked of the whole's digest, never a part's");
   const m = main(p);
-  assert.ok(text(m).includes(BASIS), "the statement the plane stored is drawn, in the plane's own words");
+  assert.ok(text(m).includes(hasWord(OWED.stated) ? word(OWED.stated, { size: sizeWord() }) : BASIS), "the statement the plane stored is drawn, by the design's row when held, else in the plane's own words");
   assert.ok(text(m).includes(sizeWord()), "with the file's size");
   assert.ok(!says(m, "state.empty"), "the section is not 'Nothing here'");
   const acts = actsIn(m);
@@ -49,7 +49,7 @@ test("R96 G6 control: a reading that found no words and states no failure still 
 test("R96 R129 G8 a statement extraction states repairable (the old '(multipart)' final) offers 'Read it'; a plain final does not; pressing it sends readheld with the digest", async () => {
   const rep = await open(at, { images: five, plane: { reading: stated({ repairable: true }), readheld: ok({ ok: true, read: true }) } });
   assert.ok(actsIn(main(rep)).includes("readheld"), "Read it is offered for a repairable statement");
-  assert.ok(text(main(rep)).includes(BASIS), "the statement is still said");
+  assert.ok(text(main(rep)).includes(hasWord(OWED.repairable) ? word(OWED.repairable) : BASIS), "the statement is still said");
   assert.ok(!actsIn(main(rep)).includes("pdfstructure"), "and no OCR re-read");
   const plain = await open(at, { images: five, plane: { reading: stated() } });
   assert.ok(!actsIn(main(plain)).includes("readheld"), "a plain final is not offered Read it");
@@ -136,7 +136,7 @@ test("R96 G14 a reading that states itself refused whole (a PDF over 16 MiB) dra
     completeness: { state: "stated", why: WHY } }) } });
   const m = main(p);
   assert.equal(m.querySelector("[data-text-state]").getAttribute("data-text-state"), "stated");
-  assert.ok(text(m).includes(WHY), "the reason, in the plane's words");
+  assert.ok(text(m).includes(hasWord(OWED.stated) ? word(OWED.stated, { size: word("size.mb", { n: (BYTES2 / 1048576).toFixed(1) }) }) : WHY), "the statement: the design's row when held, else the reason in the plane's words");
   assert.ok(text(m).includes(word("size.mb", { n: (BYTES2 / 1048576).toFixed(1) })), "with the file's size");
   assert.ok(!text(m).includes(word("screen.document.text.partial", { pages: "3–6" })) && !m.querySelector('[data-text-state="none"]'), "never 'pages have no text', never none");
   assert.ok(!actsIn(m).includes("pdfstructure") && !actsIn(m).includes("pagetranscribe") && !actsIn(m).includes("transcribe"), "no OCR, no typing of pages the size left unread");

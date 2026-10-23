@@ -1,6 +1,6 @@
 # BOB to case-inputs (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -70,3 +70,31 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B7 · ANSWER · re J7
 
 ANSWER J7 (K4210): (1) uses + public-read, entities, promotion added on tranche/T51 (merge it). (2) needs: contribute for casedetailsset: yes. (3) noted: their hand rows go in the round's second pass. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/case-inputs tranche/T51 && git branch -m job/T51/case-inputs stale/case-inputs-local && git checkout -b job/T51/case-inputs origin/job/T51/case-inputs`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CASE-INPUTS #8 · tranche T51 · product believeinoakland/bio · depth 2 (fix round 6, G47; K4666, K4669) · reading set per mechanics §6 step 2 (your other tests are run, not read)
+
+Mail with `--module case-inputs`; record `build/jobs/T51/case-inputs.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never opus (K3518). Before tests: every lockfile directory has `node_modules` (K4113). TEST-SUPPORT #9's preload `bio-plane/test/platform-sqlite.mjs` is merged on the tranche (K4666): run your tests with `node --import ./test/platform-sqlite.mjs --test --test-force-exit ...` from `bio-plane/` (`.github/scripts/module-tests.mjs` loads it too); it refuses any bound value over 2,098,176 B as Durable Object SQLite does, and K4639's practice is that a stored row value stays under 1 MiB. At most two suites at once. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). Your diff touches only your module's paths, tests and your record. Merge `tranche/T51` first, and again when a provider merges.
+
+**Reds you inherit (accepted by name, `build/handoff.md` "Accepted reds"; yours are not these, run them only as users):** plane `release` R24 and `l77-size` R77 L; file-safety R24; promotion row-census; `fleetbundles` section 10, agent-worker `requirements`, ocr-worker, `newgroup-bundle-fresh` arms (C)/(D); newgroup R8, R11, R20, R33, R44, R55, R61, R71, `wizard.test.mjs`; screens-inquiry R96 G6 x2, G8, G14. case-authoring `document.test.mjs` R17 is red under the preload until G47 merges (it is case-authoring's seam test, not yours). case-authoring `document.test.mjs` R17 is red under the preload until G47 merges (the 16,831,411 B document; the job's own case, not a regression); it goes green only with CASE-DISCLOSURES and CASE-AUTHORING. A failure not on this list is yours or a bug to report.
+
+**Providers' state (say it plainly in your record).** G47's owners merge in `modules.json` order: CASE-GRAMMAR #20, PUBLICATION #36, CASE-CHECKER #16, CASE-DISCLOSURES #17, CASE-INPUTS #8, CASE-AUTHORING #41. None is merged when this is posted; a seam test that needs another stays red by name, and BOB posts a CHANGE as each lands. You wait for PUBLICATION's refusal (`too_large`, `why`); until it merges the seam case stays red by name.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` section 0 and the G47 entry (e), rulings K4666, K4669, K4571, `build/requirements/case-inputs.md` (the re-author of acknowledgements), `case-inputs/index.mjs` (:860-890), the tests naming it.
+
+**Bob (K4426):** "We need to be rigorous about truely understanding the issues we're experiencing, understanding (and fixing) why they weren't caught in the fixtures, and be confident that we do understand, can properly tes, and have really fixed every issue before we do another deployment." **Bob's focus: an alpha release as quickly and efficiently as possible: do what the entry needs, nothing more.**
+
+**Rules** (plan section 0): R-FOUR, R-SEAM, R-ONE, R-NOTMET (no "not met", deferred or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now), R-OLD (as the entry says), R-CLOCK (no test asserts a compute time from the object's clock), K4571 (never a silent cut or partial read), K4630. Words: a drawn-screen module reads sentences by key only (K4640); any other module writes a new sentence as `localize(id, en, vars)` stand-ins (K3930), `word(...)` where a row exists; a test never copies a sentence (K3810); rows owed to UX-DESIGN are named in your record. Declare every census op you own whose accepted keys change (K4208): confirm and say none changes if so. The scans rule (K3678) binds you. A protective bound you set is BOB's to report to Bob (K1881): give BOB its numbers at once and name each in your COMPLETE.
+
+**Your entry (G47, one line).** `index.mjs:879-886`: after `publication.reauthorSection`, a refused splice (`reauthored: false` with `too_large` and `why`, because the new text would pass `CASE_DOCUMENT_BYTES_MAX` and grow the stored text) is answered by this module as `reauthored: false` with no `why` today; pass `why` and `too_large` to your own answer, so a refused splice is never presented as done. No other change. R-OLD: nothing stored changes. Failing-first (red today, seen red): one test through your real entry with the real publication's refusal (`test/m/case-inputs/g47-splice.test.mjs`), seam red by name until PUBLICATION #36 merges. N platform check.
+
+**Seam reds by name:** the refused-splice case, until PUBLICATION #36 merges.
+
+Run: your suite under the preload, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-inputs tranche/T51 job/T51/case-inputs`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B9 · CHANGE
+
+(K4676) PUBLICATION #36 is merged on tranche/T51 (CASE_DOCUMENT_BYTES_MAX exported). Merge tranche/T51 into your branch, re-run g47-splice (the seam test should go green) and your suite under the preload, then COMPLETE again. Also tell me whether affordances' 4 reds (strengthbar/ACT_HELP/op-help tables) are red on tranche/T51 without your change (run it there once); if they are, say so and nothing more.

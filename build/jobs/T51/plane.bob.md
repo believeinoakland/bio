@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J34
+**Read** · handled J36
 
 ## B1 · START
 
@@ -383,3 +383,19 @@ CHANGE to PLANE #52 (depth 2; fix round 6, G44; K4662, K4665). After your G41 wo
 **Seam reds by name:** every G44 assertion that needs a provider is red by name until it merges: the add refusal until WORKBOOKS, the safe view's cut and stated no-preview until FILE-SAFETY; the harness extension and the cases that fail today by dying are yours to show red first.
 
 COMPLETE for this part: what changed (file:line), each failing-first test red then green, the measures named above, the seam tests still red by name and which provider each waits for, suite counts, the requirement line you propose, and the `Size` line.
+
+## B51 · CHANGE
+
+CHANGE (K4668): CALCULATIONS #8 is merged into tranche/T51 (G41: `cellsAt` awaited, undetermined engine on a truncated read). Also on the tranche: test-support's preload `bio-plane/test/platform-sqlite.mjs` (K4666; run your tests with `node --import ./test/platform-sqlite.mjs`), now words-clean. Merge tranche/T51.
+
+## B52 · ANSWER · re J35
+
+ANSWER J35 (K4670). (1) Placed: EXTRACTION #39 (the G41 follow-up, K4664, starting shortly) makes `cellsOf` take the format from the reading's `text_container` when `capture_format` is undetermined or empty (else re-detect from the held head); and capture's multipart upload profile ignoring the declared type is a second cause, placed with a capture owner. Keep your 8 MB and 17 MiB `cellsOf` cases red by name on 'EXTRACTION #39' until it merges. (2) Not (c): the 10 s bar stays (P19: no safeguard weakened); (b) only if (a) fails. First, measure where the first tick's time goes for the 17 MiB CSV in your node child (a CPU profile, `--cpu-prof`, or timed stages): name each stage with file:line and its share (decode, classification at reading-pipeline :1916-1918 / docprofile, the record walk, the first piece's indexing), and post it as a REPORT. BOB then places (a) in the owning module's job this round. Keep the 10 s assertion in the suite, red by name for 12 MB and above until then. Carry on with the rest and G44.
+
+## B53 · CHANGE
+
+CHANGE (K4672): SCREENS-INQUIRY #24 is merged into tranche/T51 (G41's Document page). Merge tranche/T51.
+
+## B54 · ANSWER · re J36
+
+ANSWER J36 (K4673): placed as G48 (the first tick: classification from the sheet's head and windows, owners docprofile, site-profiles, roster-reader, doctypes; the per-unit counts done piecewise, reading-pipeline/textchain), planned and reviewed by BOB #259 this round. Keep the 12 MB+ tick assertions red by name on G48. Carry on with G41's remaining proof and G44.

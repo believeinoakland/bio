@@ -925,17 +925,42 @@ export class Extraction {
     return Number.isFinite(b) && b > 0 ? b : null;
   }
 
+  /** The first KiB of the object held under `digest` (a range), or null when none is held or it is empty. */
+  async #heldHead(digest, ev) {
+    try {
+      const o = await ev.get(digest, { range: { offset: 0, length: 1024 } });
+      const head = o ? new Uint8Array(await o.arrayBuffer()).subarray(0, 1024) : null;
+      return head && head.length ? head : null;
+    } catch { return null; }
+  }
+
+  /** (fix round 6, G41 follow-up; R98; K4664, K4669) The format key `cellsOf` hands `reading-pipeline.cellsInRange` for a held sheet. A named
+   *  `capture_format` is used as it is. One that is `undetermined`, empty or absent (an upload over one part, or a capture made before it was
+   *  profiled) is replaced, never guessed: by the reading's own `text_container` when the format registry has an entry for it with a `cellsIn` slot
+   *  (the entry the pipeline chose from the bytes, R73, and wrote the reading by), else by the format detected again over the held head and the
+   *  declared type, as the pipeline detects it (`detectFormat(bytes, source_content_type || content_type)`) when that format has the slot. The
+   *  head is only the first KiB, so a workbook (which needs its central directory to be recognised) is named by its declared type, as in the
+   *  pipeline, and a sheet that neither names is left unnamed (`null`: `cells_not_interpretable`). */
+  async #cellsFormat(recorded, container, document, digest, ev) {
+    if (typeof recorded === "string" && recorded && recorded !== "undetermined") return recorded;
+    const slot = (key) => (typeof key === "string" && key && key !== "undetermined" && typeof (getFormat(key) || {}).cellsIn === "function" ? key : null);
+    const named = slot(container);
+    if (named) return named;
+    const head = await this.#heldHead(digest, ev);
+    if (!head) return null;
+    const profile = document && document.profile && typeof document.profile === "object" ? document.profile : {};
+    const ct = profile.source_content_type || (document && document.capture && document.capture.content_type) || null;
+    const seen = detectFormat(head, ct);
+    return slot(seen && seen.format);
+  }
+
   /** (fix round 5, E1) The format the held bytes now detect (`format-registry.detectFormat` over the first KiB of the
    *  object, a range), as the `profile.format` a read hands the pipeline; null when they detect none. UTF-8 without NUL
    *  under a declared text type is not a format: that case is the pipeline's own (reading-pipeline R2), which the
    *  caller's read then tries, so it answers the profile's recorded format unchanged. */
   async #nowDetected(document, digest, ev) {
-    let head = null;
-    try {
-      const o = await ev.get(digest, { range: { offset: 0, length: 1024 } });
-      head = o ? new Uint8Array(await o.arrayBuffer()).subarray(0, 1024) : null;
-    } catch { head = null; }
-    if (!head || !head.length) return null;
+    const head = await this.#heldHead(digest, ev);
+    if (!head) return null;
     const f = detectFormat(head, null);
     if (f && f.format && f.format !== "undetermined") return f;
     const declared = document && document.profile && typeof document.profile.source_content_type === "string"
@@ -1622,7 +1647,8 @@ export class Extraction {
     if (c0 !== null && c1 !== null && c0 > c1) [c0, c1] = [c1, c0];
     const facts = this.#one(
       `SELECT CASE WHEN json_valid(reading) AND json_type(reading)='object' THEN json_extract(reading, '$.cells_held') END AS held,
-              CASE WHEN json_valid(reading) AND json_type(reading)='object' THEN json_extract(reading, '$.cells') END AS cells
+              CASE WHEN json_valid(reading) AND json_type(reading)='object' THEN json_extract(reading, '$.cells') END AS cells,
+              CASE WHEN json_valid(reading) AND json_type(reading)='object' THEN json_extract(reading, '$.text_container') END AS container
          FROM readings WHERE capture_sha=?`, sha);
     const heldSheets = Array.isArray(safeJson(facts && facts.held)) ? safeJson(facts.held) : [];
     const listed = safeJson(facts && facts.cells);
@@ -1647,8 +1673,8 @@ export class Extraction {
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     if (!ev || typeof pipeline.cellsInRange !== "function")
       return none("cells_not_interpretable", localize("extraction.index.cells_not_interpretable", "this document's cells cannot be made from its file here"));
-    const format = typeof row.capture_format === "string" && row.capture_format ? row.capture_format : null;
     const document = (row.bundle_id && this.#storedDocument(row.bundle_id, sha)) || { capture: { sha256: sha } };
+    const format = await this.#cellsFormat(row.capture_format, facts && facts.container, document, sha, ev);
     let got;
     try {
       got = await pipeline.cellsInRange(ev, document, { format, sheet, fromRow: r0 ?? 1, toRow: r1 ?? undefined,
