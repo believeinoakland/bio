@@ -323,3 +323,7 @@ Tests/checks: bio-plane `node --import ./test/platform-sqlite.mjs --test --test-
 Proposed R48 line: no change (its text holds: exactly the ops the reads list explains). Deferred: none. Found in other modules: none.
 
 Size (session_015vmccEdn9WywiaxqonRTPj): test runs 8, module lines 2721
+
+## J23 · COMPLETE
+
+COMPLETE (G49, B20). act-help.mjs holds capturerequests, casedrafts and readheld as design ops, plus the ten list-only ops the reads list now gives (t36 arithmetic); no existing text changed. Affordances 280/0; users op-declarations, control-plane, store-door, tasks, admission, queue, interface-shell 0 fail; checks/run.mjs and ownership 0 failures. See record J8.
