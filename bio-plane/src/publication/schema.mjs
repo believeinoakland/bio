@@ -257,6 +257,12 @@ CREATE TABLE IF NOT EXISTS published_cases (
   ratified_at  TEXT,
   manifest_sha TEXT,
   manifest     TEXT,
+  -- G54 (K4426): the case file's own ledger, written only by recordCaseFileAttempt (R15). NULL on every row written
+  -- before, and NULL with a manifest reads built; never back-filled.
+  casefile_state        TEXT,      -- building | failed | stopped | built
+  casefile_attempts     INTEGER,
+  casefile_attempted_at TEXT,
+  casefile_why          TEXT,      -- JSON {code, step, error?, detail?, bytes?, files?, run?}, under 1 KB
   PRIMARY KEY (case_id, edition)
 );
 -- The case -> findings MEMBERSHIP, as DECLARED in every member's own ratified
@@ -551,6 +557,14 @@ const ADDITIVE_COLUMNS = [
      under A when a case holds two captures of one source. NULL says no single capture is named: every row written
      before this, every kind but `attestation`, and a token two different captures share. Never back-filled. */
   ["published_shas", "capture_sha", "TEXT"],
+  /* G54 (K4426, K4565, K4566): THE CASE FILE'S OWN LEDGER on the edition's row, so a complete edition left without a
+     (whole) case file is stated, counted and retried and never silent. NULL on every row written before: NULL state
+     with a manifest reads `built`, NULL state without one reads never attempted. Never back-filled (R-OLD): the two
+     editions on the plane that were left are repaired by the sweep, which owes them as never attempted. */
+  ["published_cases", "casefile_state", "TEXT"],
+  ["published_cases", "casefile_attempts", "INTEGER"],
+  ["published_cases", "casefile_attempted_at", "TEXT"],
+  ["published_cases", "casefile_why", "TEXT"],
 ];
 
 /** G47t (K4677): the registration of a kind `attestation` token: a stored capture that differs from the new one is cleared
