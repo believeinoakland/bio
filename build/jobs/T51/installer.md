@@ -253,3 +253,7 @@ Failing-first (3), seen red: through the real install and update runs, `planePut
 Suites: t51 9 pass, 1 fail (this test, red by name); t50 and requirements unchanged by my change (same failures with and without it: R61, R71; R8, R11, R20, R44, all on the inherited list). Not run: newgroup-bundle-fresh (no source or bundle input of mine changed). Census ops: none. Words: none. Generated artifacts: none made stale.
 Reading of the read-back refusal: my test asserts the run stops (`page.failed`) and is not done when the account states no observability; if installer-steps' refusal takes another form, the assertion follows it at their merge.
 Size (session_01Vk7s17rF6Xh1AySjTxhLSy): test runs 7, module lines 2922.
+
+## J19 · COMPLETE
+
+COMPLETE (G54, Route A). Failing-first test in newgroup/test/t51.test.mjs (install and update metadata carry observability {enabled: true}; a run whose account states none afterwards stops and is not done; control: normal run not refused), seen red (meta.observability undefined), red by name until installer-steps #7 merges. fixture.mjs: the fake account states observability from the last upload (option observabilityDropped). No source edited. Checks: format, architecture, coverage (72 of 72), ownership 0 failures. t50/requirements failures are the inherited ones, identical without my change. My assertion of the refusal is 'page.failed set, done null'; adjust at installer-steps' merge if its refusal differs. Record J18. Size (session_01Vk7s17rF6Xh1AySjTxhLSy): test runs 7, module lines 2922.
