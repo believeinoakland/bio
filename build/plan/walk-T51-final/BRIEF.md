@@ -1,6 +1,6 @@
 # The final pass of T51, in substance: brief for each walker (Bob K4781-K4785, K4787; K4426; K4733)
 
-**Status** · DRAFT by BOB #268 (on branch `prep/bob268-final-brief`, after its handoff; K4781 and K4782 said this file existed when it did not), for BOB #269 to review, correct and adopt. Its areas are the draft coverage map's (`walk-coverage-T51.md` §3, K4784): **BOB #269 re-cuts them from COVERAGE #1's completed map before any walker starts**, and fills the copy's commit and the new room's details.
+**Status** · DRAFT by BOB #268 (on branch `prep/bob268-final-brief`, after its handoff; K4781 and K4782 said this file existed when it did not), for BOB #269 to review, correct and adopt. **Reviewed and merged by BOB #269 (K4805)**, still DRAFT until its areas are re-cut from COVERAGE #1's completed map; the review's three additions are marked (K4805). Its areas are the draft coverage map's (`walk-coverage-T51.md` §3, K4784): **BOB #269 re-cuts them from COVERAGE #1's completed map before any walker starts**, and fills the copy's commit and the new room's details.
 
 **What:** one real investigation, worked through every construct a team uses, from biosmoke8's new, empty, claimed room (K4752), first **offline** through the door, then **live**. Alpha is declared only when it completes (Bob, K4781). Scope (Bob, K4782): every row of the coverage map that is STALE or NEVER, plus the last fix round's changes; a WALKED-CURRENT row is crossed only as the journey passes it.
 
@@ -14,7 +14,7 @@ One investigation a real team would run, the same in both phases, chosen by BOB 
 
 1. Open the room (claim, first invitation, sign in and out, roster, administrators' acts, account, updates, declared bias).
 2. Daily rhythm and projects (Home, Queue, a project, membership both ways, objective, themes, dashboards).
-3. Bring documents in (one file of every kind: web page, visitor view, PDF ordinary, large and scanned, text, CSV, Word, PowerPoint, OpenDocument, RTF, email, image, ZIP; an observation).
+3. Bring documents in (one file of every kind: web page, visitor view, PDF ordinary, large and scanned, text, CSV, Word, PowerPoint, OpenDocument, RTF, email, image, ZIP; an observation). (K4805) Each family's files include its envelope corpus's live subset once built (PDF, scans and images, spreadsheets, documents and archives; Bob's K4785 (4), K4798), each read to its last line and found by search.
 4. Receive, vouch, watch, read, cite (held list, vouching, Inbox, source protection, watches and leads, reading to the last page, Find in this, a changing source, contradiction).
 5. People, organizations, ties.
 6. Money, time, connections, registers.
@@ -39,5 +39,6 @@ The whole plane in Miniflare (the seam files' way: `bio-plane/test/m/control-pla
 
 - Each walker writes `build/plan/walk-T51-final/<area>.md` **as it goes, one row per check the moment it is done** (re-walk 7's walker A wrote only at the end; BOB checks the file at every backstop and asks once if it is empty after 20 minutes). Row: `row id | check | width | role | what I did | WORKS / BROKEN / NOT REACHED | what I saw (Server-Timing, wall) | screenshot`. Screenshots under `shots/<area>/`, small PNG, at 1280 and 390 px.
 - End: counts with severity (BLOCKER a journey cannot complete; MAJOR wrong result, error, a bar missed on `Server-Timing`, a member would not understand; MINOR layout or wording, to `later-ux.md`).
-- **Leftovers:** everything a walker makes is in the walk's room and named in its record; a signed case is published for good, so only the area 9 walker signs.
+- **Leftovers:** everything a walker makes is in the walk's room and named in its record, signing keys and invitations included (re-walk 7's walker B registered about seven keys finding the dialog; K4805: register one key, on purpose, and name it); a signed case is published for good, so only the area 9 walker signs.
 - No walker fixes, commits, pushes or deploys; BOB commits the records.
+- (K4805) Phase 2 starts only after fix round 8's redeploy and its targeted re-walk, on the commit BOB names here; the five walkers' times are reported beside PERFORMANCE #2's quiet re-time of the same screens and acts, never instead of it.
