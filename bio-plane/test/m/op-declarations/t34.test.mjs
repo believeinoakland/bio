@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { REGISTERED } from "./register-owners.mjs";
 import { explained } from "./help.mjs";
-import { browserActs, OWED_BY_FIX_ROUND, OWED_SERVED_BY_OWNERS } from "./browser.mjs";
+import { browserActs, OWED_BY_FIX_ROUND_AT_43379A1A44, OWED_SERVED_BY_OWNERS } from "./browser.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
 import { credentialsOps } from "../../../src/credentials/index.mjs";
 import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
@@ -248,7 +248,7 @@ test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the re
   /* T51 (R76; DEC-330 owed, U348): the seven browser acts are owed rows too, read as a class of their own (b), no op */
   const BROWSER = browserActs(registry);
   /* R80: an owed act an owner declares is read as served by its declaration (`register-owners.mjs`), an op like any other */
-  assert.deepEqual([...new Set(owed)].sort(), [...new Set([...STILL_OWED, ...OWED_T47, ...OWED_T48, ...OWED_T49, ...OWED_T50, ...INSTALLER_ROUTES, ...OWED_BY_FIX_ROUND, ...OWED_SERVED_BY_OWNERS, ...BROWSER])].sort());
+  assert.deepEqual([...new Set(owed)].sort(), [...new Set([...STILL_OWED, ...OWED_T47, ...OWED_T48, ...OWED_T49, ...OWED_T50, ...INSTALLER_ROUTES, ...OWED_BY_FIX_ROUND_AT_43379A1A44, ...OWED_SERVED_BY_OWNERS, ...BROWSER])].sort());
   for (const op of OWED_SERVED_BY_OWNERS) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: declared by its owner and not an op`);
   assert.ok(Object.hasOwn(OP_FAMILIES.membership.kinds, "founderhandleset") && SESSION_OPS.admin.has("founderhandleset")
             && !SESSION_OPS.member.has("founderhandleset"), "founderhandleset: not membership's founder-only op");
@@ -257,9 +257,9 @@ test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the re
     assert.ok(Object.hasOwn(OPS, op), `${op} is owed or re-pointed and declared: no spec`);
     assert.ok(!Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op), `${op} is aliased`);
   }
-  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)).sort(), [...INSTALLER_ROUTES, ...OWED_BY_FIX_ROUND, ...BROWSER].sort());
+  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)).sort(), [...INSTALLER_ROUTES, ...OWED_BY_FIX_ROUND_AT_43379A1A44, ...BROWSER].sort());
   /* negative control: an owed act with no spec, named by no list here, would be seen */
-  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op) && !INSTALLER_ROUTES.includes(op) && !OWED_BY_FIX_ROUND.includes(op) && !BROWSER.includes(op)), ["nosuchowedact"]);
+  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op) && !INSTALLER_ROUTES.includes(op) && !OWED_BY_FIX_ROUND_AT_43379A1A44.includes(op) && !BROWSER.includes(op)), ["nosuchowedact"]);
 });
 
 test("R22, R6: membership's T34 ops — the ten administrator's acts with hostingaccessset's spec (admin, member, probe; machineClasses admin, probe), mutating, by stamped from the query, a present null NEEDS row, in both session sets and in neither bearer fence; the two doors public, mutating, stamped nothing, in no session set and no NEEDS row; courtnotice a read of admin, member, probe stamped nothing; groupdescription a public read with viewer set; checkaddressees no spec (R6)", async () => {

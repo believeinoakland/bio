@@ -451,3 +451,24 @@ Applied B36 (the R34 partition red, found by BOB's whole-suite run). Pushed at 1
 **Notes.** My first `mail start` pull hit a rebase conflict on the record: my local commit carried a stale status line (`handled B12`). I skipped that local commit (it was never pushed), then re-ran `mail start`, which recorded this session at `handled B35`. The branch was fast-forwarded to origin before my work.
 
 Size (session_01UtphkgeNiefrhZDFoSHZ1a): test runs 3, module lines 3468
+
+## G53 · fix round 6 (START B37; OP-DECLARATIONS #36)
+
+Entry G53 (`build/plan/fix-round-6-T51.md`), owner op-declarations. tranche/T51 merged in first. No op's accepted keys changed; no src file changed.
+
+**Change (tests only).**
+- `bio-plane/test/m/op-declarations/fixtures/registry-f72b2f8a4c.json`: new, byte-equal to `docs/development/ux-substrate/screens/registry.json` at `f72b2f8a4c` and on the tranche. The old fixture `registry-43379a1a44.json` stays.
+- `browser.mjs:29-47`: the derivation reads both fixtures through one function (`owedActs`, `notBuilt`): `OWED_BY_FIX_ROUND` is now derived from the new fixture (read by t50 R73, which runs over `SCREEN_REGISTRY`); `OWED_BY_FIX_ROUND_AT_43379A1A44` keeps the old derivation (empty today) for the tests written against the old registry. Never a hand list (K3268).
+- t34, t37, t38, t46, t47, t48, t51: import `OWED_BY_FIX_ROUND_AT_43379A1A44` (they read the old fixture). Why: with the new list alone, their R21/R76 totality tests went red (7 reds: they subtract `OWED_BY_FIX_ROUND` from registries that do not hold the T52 acts); named per BOB's note 2.
+
+**The derived `OWED_BY_FIX_ROUND` gains exactly the T52 acts, 19 distinct names on 31 owed rows (BOB's "31" counts rows):** alertconnect, exploreall, explorecontinue, explorepath, exploreshorter, followfrom (7 rows), installcheck, registerask, registerdelta, registerfilter, registerlist, registermatch, registerpreread, registerpropose, registerrowcite, registersearch (7 rows), registerwatch, registerwatchpropose, registerwatchstop. None is in `OPS` as built; none is a browser act or installer route (the derivation's own filter would have dropped it).
+
+**Red then green (t50 R73).** In a scratch regeneration (never committed; `registry.json` copied over `wizard-scripts/source/registry.json`, `SOURCES.registry.commit` set to `f72b2f8a4c`, `build-data.mjs` run; reverted after each run): before my change t50 R73 red, "gaps" listing installcheck, followfrom, registersearch and the others; after: t50 18 of 18 pass, and the whole suite per file 247 of 247 pass against the re-taken registry. (A single whole-directory run in the scratch tree stopped at 232 tests with no failure and no error, a runner quirk; per-file runs total 247.)
+
+**On this branch, until wizard-scripts (44a) merges:** the generated `screen-registry.mjs` is still at `43379a1a44`, so t50 R73 is red by name here ("R73, R21 ... every act of the registry has a declaration": the T52 acts are not yet in `SCREEN_REGISTRY`); the other 246 pass. It goes green when wizard-scripts' re-take merges (verified in the scratch tree).
+
+**Checks.** `checks/run.mjs`: format 0, architecture 0, coverage 6686 of 6686, channels 0; words 1 failure, the accepted `inline 1` at `case-checker/spec.mjs:11` (none in op-declarations). `checks/ownership.mjs op-declarations tranche/T51 job/T51/op-declarations`: 0 failures.
+
+**Deferred.** Nothing. **Found in other modules.** None.
+
+Size (session_015mbjCf96bpaBuNz4yP3orh): test runs 9, module lines 3468

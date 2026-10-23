@@ -11,7 +11,7 @@ import { REGISTERED } from "./register-owners.mjs";
 import { composeNeeds } from "../../../src/op-declarations/compose.mjs";
 import { explained } from "./help.mjs";
 import { T51_SHARES, T51_FAMILIES } from "../../../src/op-declarations/t51.mjs";
-import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
+import { browserActs, OWED_BY_FIX_ROUND_AT_43379A1A44 } from "./browser.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
 import { checkScript } from "../../../src/wizard-scripts/index.mjs";
@@ -141,7 +141,7 @@ test("R76: a browser act is not an op — no spec in OPS, no row in NEEDS, no pl
 test("R76, R21: the totality — every act the registry marks owed is exactly one of (a) read as served (an op declared under its name), (b) a browser act whose `registry` string equals the row's `owed:<act> DEC-330`, or (c) still owed, named: the registry's owed acts split with nothing in two classes and nothing left over (negative control: an owed act in no class is seen)", () => {
   const owedRows = registry.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed").map((a) => a.op);
   const nameOf = (row) => row.replace(/^owed:/, "").split(" ")[0];
-  const STILL_OWED = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND];   /* the installer's own routes, no plane op (R21), and the acts this round's owners declare (DEC-378) */
+  const STILL_OWED = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND_AT_43379A1A44];   /* the installer's own routes, no plane op (R21), and the acts this round's owners declare (DEC-378) */
   const classOf = (row) => {
     const act = nameOf(row);
     const a = Object.hasOwn(OPS, act) && !Object.hasOwn(BROWSER_ACTS, act);
