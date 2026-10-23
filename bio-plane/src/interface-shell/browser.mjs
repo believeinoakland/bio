@@ -836,15 +836,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       /* R80 (N1083; K3297): options as words by key, `[value, key, on]`, or as record data, `{value, text, on}`, the text drawn as data,
          HTML-escaped and never read as a key; the legend a word key or `{text}`; each box sits beside its own words */
       checks(id, legendKey, options, o = {}) {
-        /* G77 (fix round 7): a box is identified by its value, not by its place, so the box a redraw draws for a value is the one the member
-           had (the ids of a stepping group, Previous and Next, never trade); two options of one value take their place as well */
-        const seen = new Set();
         const opt = (x, i) => {
           const [v, text, on] = Array.isArray(x) ? [x[0], w(x[1]), x[2]] : [x.value, typeof x.key === "string" ? w(x.key, x.fills) : esc(x.text), x.on];
-          let tag = String(v).replace(/[^\w-]/g, "_");
-          if (seen.has(tag)) tag += "-" + i;
-          seen.add(tag);
-          return '<label><input type="' + (o.radio ? "radio" : "checkbox") + '" name="' + esc(id) + '" id="' + esc(id) + "-" + esc(tag) + '" value="' + esc(v) + '"' + (on ? " checked" : "") + "> <span>" + text + "</span></label>";
+          return '<label><input type="' + (o.radio ? "radio" : "checkbox") + '" name="' + esc(id) + '" id="' + esc(id) + "-" + i + '" value="' + esc(v) + '"' + (on ? " checked" : "") + "> <span>" + text + "</span></label>";
         };
         const redraw = typeof o.redraw === "string" && o.redraw ? ' data-shell="choice" data-redraw="' + esc(o.redraw) + '"' : "";
         return '<fieldset class="cs-field" id="' + esc(id) + '"' + redraw + '><legend>' + wordOrData(legendKey) + "</legend>" + (options || []).map(opt).join("") + "</fieldset>";

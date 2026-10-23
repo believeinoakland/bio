@@ -725,7 +725,7 @@ test("R90 (K4073) cs.sec and cs.field take help as one key or a list, each its o
   assert.equal(one.doc.getElementById("g-help").textContent, "fx h1");
   const r = await boot({ screens: [SEARCHING], path: "/app/finder", plane: { search: { status: 400, json: { ok: false, code: "BAD" } } } });
   assert.equal(r.doc.getElementById("own").textContent, "fx h1", "the refusal drawn with the screen's own words, by the kit");
-  const box = p.doc.getElementById("ck-v"); box.checked = true; p.fire(box, "change"); await p.settle();
+  const box = p.doc.getElementById("ck-1"); box.checked = true; p.fire(box, "change"); await p.settle();
   assert.deepEqual(JSON.parse(p.doc.getElementById("marks").textContent), ["u", "v"], "checks redraws with the boxes ticked");
 });
 

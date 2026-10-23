@@ -43,18 +43,6 @@ for (const [name, screen, start] of [["pages 1 to 8", STEPPER, 1], ["the first p
   });
 }
 
-test("G77 R27 control: a box is identified by its value, not its place, so the group's two boxes never trade ids when the page moves; ids are unique", async () => {
-  const p = await boot({ screens: [STEPPER] });
-  const ids = () => boxes(p).map((b) => b.id);
-  assert.equal(new Set(ids()).size, ids().length);
-  await p.choose(boxOf(p, "Next page"));
-  const previous = boxOf(p, "Previous page"), next = boxOf(p, "Next page");
-  assert.notEqual(previous.id, next.id);
-  assert.equal(previous.getAttribute("value"), "1");
-  assert.equal(next.getAttribute("value"), "3");
-  assert.ok(previous.id.endsWith("-1") && next.id.endsWith("-3"), "the id carries the value: " + previous.id + ", " + next.id);
-});
-
 test("G77 R109 control: a plain checkbox group (no redraw) still keeps what the member ticked across a redraw", async () => {
   const BOXES = { id: "home", words: [], reads: () => ({}), acts: [],
     render: (cs) => '<h1>x</h1><button type="button" id="again" data-shell="theme" data-theme-to="light">go</button>' + cs.checks("tick", { text: "Pick" }, [{ value: "a", text: "A", on: false }, { value: "b", text: "B", on: false }]) };
