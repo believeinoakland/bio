@@ -50,7 +50,10 @@ const K = new Uint32Array([
   0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08,
   0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
   0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]);
-function sha256Stream(chunks) {
+/* G82 (fix round 7): the object's one thread is given back between the slices of a big digest, so a cheap read waits for a slice, not for
+   the book. A real macrotask turn (a timer), not a resolved promise, which gives nothing back. */
+export const yieldNow = () => new Promise((r) => setTimeout(r, 0));
+function sha256Core() {
   const h = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
   const w = new Uint32Array(64), block = new Uint8Array(64);
   let fill = 0, total = 0;
@@ -80,15 +83,27 @@ function sha256Stream(chunks) {
     for (; i + 64 <= bytes.length; i += 64) compress(bytes.subarray(i, i + 64));
     while (i < bytes.length) block[fill++] = bytes[i++];
   };
-  for (const c of chunks) feed(c);
-  block[fill++] = 0x80;
-  if (fill > 56) { block.fill(0, fill); compress(block); fill = 0; }
-  block.fill(0, fill);
-  const bits = total * 8;
-  new DataView(block.buffer).setUint32(56, Math.floor(bits / 2 ** 32));
-  new DataView(block.buffer).setUint32(60, bits >>> 0);
-  compress(block);
-  return [...h].map((x) => (x >>> 0).toString(16).padStart(8, "0")).join("");
+  const end = () => {
+    block[fill++] = 0x80;
+    if (fill > 56) { block.fill(0, fill); compress(block); fill = 0; }
+    block.fill(0, fill);
+    const bits = total * 8;
+    new DataView(block.buffer).setUint32(56, Math.floor(bits / 2 ** 32));
+    new DataView(block.buffer).setUint32(60, bits >>> 0);
+    compress(block);
+    return [...h].map((x) => (x >>> 0).toString(16).padStart(8, "0")).join("");
+  };
+  return { feed, end };
+}
+function sha256Stream(chunks) {
+  const core = sha256Core();
+  for (const c of chunks) core.feed(c);
+  return core.end();
+}
+async function sha256StreamYielding(chunks) {
+  const core = sha256Core();
+  for (const c of chunks) { core.feed(c); await yieldNow(); }
+  return core.end();
 }
 const SLICE = 256 * 1024;
 function* utf8Slices(s) {
@@ -102,7 +117,7 @@ function* utf8Slices(s) {
   }
 }
 export async function sha256Hex(s) {
-  if (s.length > 4 * 1024 * 1024) return sha256Stream(utf8Slices(s));
+  if (s.length > 4 * 1024 * 1024) return sha256StreamYielding(utf8Slices(s));
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
