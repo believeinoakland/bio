@@ -350,11 +350,29 @@ export class Calculations {
     return this.#engines.has(row.content_id) ? this.#engines.get(row.content_id) : UNDETERMINED_ENGINE;
   }
 
+  /* R9: a figure input's mark as the create stored it (the synchronous reads, R19 and R30, read it; an object restart
+     loses nothing): the explicit undetermined engine for a row stored before, until a read makes it. */
+  #figureEngine(calcId, inp) {
+    const r = this.#one(`SELECT engine_json FROM calc_inputs WHERE calc_id=? AND input_name=? AND ref=?`, calcId, inp.name, inp.figure);
+    if (!r || r.engine_json == null) return UNDETERMINED_ENGINE;
+    const m = parse(r.engine_json);
+    return m && m.name === UNDETERMINED_ENGINE.name ? UNDETERMINED_ENGINE : m && typeof m.name === "string" ? { name: m.name, version: m.version ?? null } : null;
+  }
+
   /* Make the marks of a calculation's inputs (a figure's row; a table whose source records none) before a grade is read. */
   async #warmEngines(c) {
     for (const inp of parse(c.inputs_json) || []) {
       if (!plain(inp)) continue;
-      if (inp.figure !== undefined) await this.#engineFor(this.content.contentRow(inp.figure));
+      if (inp.figure !== undefined) {
+        const row = this.content.contentRow(inp.figure);
+        const mark = await this.#engineFor(row);
+        /* R-OLD: a row stored before holds no mark, or an undetermined one a failed cellsAt made: written now */
+        const have = this.#one(`SELECT engine_json FROM calc_inputs WHERE calc_id=? AND input_name=? AND ref=?`, c.calc_id, inp.name, inp.figure);
+        const stored = have && have.engine_json != null ? parse(have.engine_json) : undefined;
+        const mine = row ? json(mark ?? null) : null;
+        if (have && mine !== null && (stored === undefined || (stored && stored.name === UNDETERMINED_ENGINE.name && mark !== UNDETERMINED_ENGINE)))
+          this.sql.exec(`UPDATE calc_inputs SET engine_json=? WHERE calc_id=? AND input_name=? AND ref=?`, mine, c.calc_id, inp.name, inp.figure);
+      }
       else if (inp.table !== undefined) await this.#warmTable(this.#one(`SELECT sha, source_json FROM calc_tables WHERE sha=?`, inp.table));
       else if (inp.calculation !== undefined) {
         const o = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, inp.calculation);
@@ -728,13 +746,14 @@ export class Calculations {
         const row = typeof ref === "string" ? this.content.contentRow(ref) : null;
         if (!row || !this.#sees(row.bundle_id, viewer)) { missing(inp.name, String(ref)); break; }
         let text = null;
-        if (row.extent_kind === "sheet-cell") { let c = null; try { c = await this.content.cellsAt(ref); } catch { c = null; } text = c && !c.cells_truncated && Array.isArray(c.cells) && c.cells.length === 1 ? String(c.cells[0].value ?? "") : null; await this.#engineFor(row); }
+        if (row.extent_kind === "sheet-cell") { let c = null; try { c = await this.content.cellsAt(ref); } catch { c = null; } text = c && !c.cells_truncated && Array.isArray(c.cells) && c.cells.length === 1 ? String(c.cells[0].value ?? "") : null; }
         else { try { text = this.content.passageText(ref); } catch { text = null; } }
+        const mark = await this.#engineFor(row);
         const f = typeof text === "string" ? parseFigure(text) : { refused: "FIGURE_INVALID", why: word("calculations.why.passage_text_held") };
         if (f.refused) { refused = no("FIGURE_NOT_READ", `the input "${inp.name}" cites a passage that does not read as one figure: ${f.why}. Nothing was written.`, { input: inp.name, ref }); break; }
         const fig = { ...f }; delete fig.as_read;
         const g = this.#contentGrade(row);
-        bound[inp.name] = fig; held(inp.name, { content: ref, figure: fig }); refs.push({ name: inp.name, kind, ref });
+        bound[inp.name] = fig; held(inp.name, { content: ref, figure: fig }); refs.push({ name: inp.name, kind, ref, engine: mark });
         described.push({ name: inp.name, kind, ref, as_read: f.as_read, grade: g.grade, why: g.why });
       } else if (kind === "value") {
         const f = typeof ref === "string" ? parseFigure(ref) : { refused: "FIGURE_INVALID", why: word("calculations.why.typed_figure_text") };
@@ -1219,8 +1238,8 @@ export class Calculations {
         c.threshold ? json(c.threshold) : null, METHOD, str(methodNote) || null, evidences ? json(evidences) : null,
         c.result_key, json(c.results), at, by, at, json(c.hashes));
       for (const ref of c.refs)
-        this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref) VALUES (?,?,?,?,?)`,
-          calcId, project ? str(project) : null, ref.name, ref.kind, ref.ref);
+        this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref, engine_json) VALUES (?,?,?,?,?,?)`,
+          calcId, project ? str(project) : null, ref.name, ref.kind, ref.ref, ref.kind === "figure" ? json(ref.engine ?? null) : null);
       if (c.threshold && c.threshold.content)
         this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref) VALUES (?,?,?,?,?)`,
           calcId, project ? str(project) : null, "threshold", "figure", c.threshold.content);
@@ -1380,7 +1399,7 @@ export class Calculations {
       }
       if (inp.figure !== undefined) {
         const row = this.content.contentRow(inp.figure);
-        const g = row ? this.#withEngine(this.#contentGrade(row), this.#engineOf(row)) : { grade: null, why: word("calculations.why.cited_passage_held"), engine: null, engine_measured: null };
+        const g = row ? this.#withEngine(this.#contentGrade(row), this.#figureEngine(c.calc_id, inp)) : { grade: null, why: word("calculations.why.cited_passage_held"), engine: null, engine_measured: null };
         per.push({ name: inp.name, kind: "figure", ref: inp.figure, ...g }); continue;
       }
       if (inp.money !== undefined) {

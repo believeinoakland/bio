@@ -7,7 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, R } from "./fixture.mjs";
-import { FILE_ENGINE } from "../../../src/calculations/index.mjs";
+import { FILE_ENGINE, Calculations } from "../../../src/calculations/index.mjs";
 import { fresh, bundle, bucket, doc, sha } from "../extraction/fixture.mjs";
 
 const PERIOD = { from: "2025-01-01", to: "2026-12-31" };
@@ -86,14 +86,19 @@ test("R9 (G41): a figure citing a formula cell of a held sheet is graded with it
   assert.equal(w.c.gradeFactsOf({ calcId: b.calc_id, viewer: V("carol") }).inputs[0].engine, null);
 });
 
-test("R9 (G41): a cellsAt that answers cells_truncated, or that fails, gives an explicit undetermined engine (never null) when the grade is read, read and gradeFactsOf alike", async () => {
+test("R9 (G41): a cellsAt that answers cells_truncated, or that fails, when a figure is bound gives an explicit undetermined engine (never null), read and gradeFactsOf alike; a later read with cells available makes the mark and writes it", async () => {
   const w = world();
-  w.behave.cellsAt = () => ({ cells: [{ source: { kind: "sheet-cell", cell: "B3" }, value: "31", type: "n" }] });
-  const a = await w.c.create({ question: "Q", period: PERIOD, kind: "difference", inputs: [{ name: "x", figure: cellRow(w, "B3") }, { name: "y", value: "2" }], recipe: DIFF, by: V("bob") });
-  assert.equal(a.ok, true);
   const tbl = await w.c.declareTable({ source: w.sheet([], "A1:B3"), schema: { fields: F }, header: ["dept", "amount"], by: V("bob") });
+  w.behave.cellsAt = () => ({ cells: [{ source: { kind: "sheet-cell", cell: "B3" }, value: "31", type: "n" }] });
+  assert.equal(tbl.ok, true);
   for (const [label, behaviour] of [["truncated", () => ({ cells: null, cells_truncated: true, reason: "cells_truncated" })],
                                     ["rejected", () => { throw new Error("the held bytes could not be read"); }]]) {
+    const row = cellRow(w, "B3");
+    /* the figure's value is read first (it answers), then the engine read fails: the create stores the undetermined mark */
+    let n = 0;
+    w.behave.cellsAt = (id) => (n++ === 0 ? { cells: [{ source: { kind: "sheet-cell", cell: "B3" }, value: "31", type: "n" }] } : behaviour(id));
+    const a = await w.c.create({ question: `Q ${label}`, period: PERIOD, kind: "difference", inputs: [{ name: "x", figure: row }, { name: "y", value: "2" }], recipe: DIFF, by: V("bob") });
+    assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
     w.behave.cellsAt = behaviour;
     const read = await w.c.read({ calcId: a.calc_id, viewer: V("carol") });
     const [i] = read.grade.inputs;
@@ -102,11 +107,46 @@ test("R9 (G41): a cellsAt that answers cells_truncated, or that fails, gives an 
     assert.equal(i.grade, null);
     assert.match(i.why, /undetermined/);
     assert.deepEqual(w.c.gradeFactsOf({ calcId: a.calc_id, viewer: V("carol") }).inputs, read.grade.inputs, `${label}: R30 answers what read does`);
-    assert.notEqual(read.grade.inputs[0].engine, null);
   }
-  assert.equal(tbl.ok, true, "a table declared before keeps its recorded engine (null): a later failure of cellsAt does not rewrite it");
   w.behave.cellsAt = () => { throw new Error("down"); };
-  assert.equal((await w.c.readTable({ sha: tbl.sha, viewer: V("bob") })).table.grade_facts.engine, null);
+  assert.equal((await w.c.readTable({ sha: tbl.sha, viewer: V("bob") })).table.grade_facts.engine, null, "a table declared before keeps its recorded engine: a later failure of cellsAt does not rewrite it");
+});
+
+test("R9 (G41): the mark of a figure whose engine read failed at create is undetermined, then one read with the cells available makes it (null for a sheet with no formula) and the synchronous answer follows", async () => {
+  const w = world();
+  w.behave.cellsAt = () => ({ cells: [{ source: { kind: "sheet-cell", cell: "B3" }, value: "31", type: "n" }] });
+  const row = cellRow(w, "B3");
+  const a = await w.c.create({ question: "Q", period: PERIOD, kind: "difference", inputs: [{ name: "x", figure: row }, { name: "y", value: "2" }], recipe: DIFF, by: V("bob") });
+  assert.equal(a.ok, true);
+  w.st.sql.exec(`UPDATE calc_inputs SET engine_json='{"name":"undetermined","version":null}' WHERE calc_id=? AND input_name='x'`, a.calc_id);
+  assert.equal(w.c.gradeFactsOf({ calcId: a.calc_id, viewer: V("carol") }).inputs[0].engine, "undetermined");
+  assert.equal((await w.c.read({ calcId: a.calc_id, viewer: V("carol") })).grade.inputs[0].engine, null, "the read makes the mark, writes it, and answers by it");
+  assert.equal(w.c.gradeFactsOf({ calcId: a.calc_id, viewer: V("carol") }).inputs[0].engine, null, "now made: no formula, no engine");
+});
+
+test("R9 (G41, K4650): a figure input's engine mark is stored with the calculation's inputs at create, so after a restart (a fresh instance over the same database) the synchronous gradeFactsOf answers the stored mark; a row stored before holds none and answers the explicit undetermined engine until one read makes and writes it", async () => {
+  const w = world();
+  const fresh2 = () => new Calculations({ storage: w.st, host: Object.create(w.host), record: w.record, membership: w.membership, content: w.c.content,
+    provenance: w.prov, money: w.money, now: () => w.clock.now });
+  w.behave.cellsAt = () => ({ cells: [{ source: { kind: "sheet-cell", cell: "B3" }, value: "30", type: "n", formula: "B2+18", cached: "30" }] });
+  const withF = await w.c.create({ question: "Q", period: PERIOD, kind: "difference", inputs: [{ name: "x", figure: cellRow(w, "B3") }, { name: "y", value: "2" }], recipe: DIFF, by: V("bob") });
+  w.behave.cellsAt = () => ({ cells: [{ source: { kind: "sheet-cell", cell: "B4" }, value: "31", type: "n" }] });
+  const plain1 = await w.c.create({ question: "Q2", period: PERIOD, kind: "difference", inputs: [{ name: "x", figure: cellRow(w, "B4") }, { name: "y", value: "2" }], recipe: DIFF, by: V("bob") });
+  assert.equal(withF.ok && plain1.ok, true);
+  const engines = (c, id) => c.gradeFactsOf({ calcId: id, viewer: V("carol") }).inputs.map((i) => i.engine);
+  const after = fresh2();
+  assert.deepEqual(engines(after, withF.calc_id), [FILE_ENGINE, null], "the stored mark, after a restart");
+  assert.deepEqual(engines(after, plain1.calc_id), [null, null], "a stored 'no engine' stays no engine, not undetermined");
+  /* a row stored before: no mark */
+  w.st.sql.exec(`UPDATE calc_inputs SET engine_json=NULL WHERE calc_id IN (?,?)`, withF.calc_id, plain1.calc_id);
+  const old = fresh2();
+  assert.deepEqual(engines(old, withF.calc_id), ["undetermined", null], "no mark yet: fail closed, never null");
+  w.behave.cellsAt = () => ({ cells: [{ source: { kind: "sheet-cell", cell: "B3" }, value: "30", type: "n", formula: "B2+18", cached: "30" }] });
+  const oldWithContent = new Calculations({ storage: w.st, host: Object.create(w.host), record: w.record, membership: w.membership, content: w.c.content,
+    provenance: w.prov, money: w.money, now: () => w.clock.now });
+  const read = await oldWithContent.read({ calcId: withF.calc_id, viewer: V("carol") });
+  assert.equal(read.grade.inputs[0].engine, FILE_ENGINE, "one read makes it");
+  assert.deepEqual(engines(fresh2(), withF.calc_id), [FILE_ENGINE, null], "and has written it");
 });
 
 test("R1 (G41): a range over the cells limit, answered cells_truncated, is a stated fault of the table (SOURCE_NOT_READ naming it), nothing written, never a short table", async () => {
