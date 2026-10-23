@@ -1,6 +1,6 @@
 # translations (T51)
 
-**Status** · session_01XjFJQ53dT8DEubR4duSRf2 · depth 2 · COMPLETE · handled B1
+**Status** · session_01D3PnCpi1vCRCeUDnt7Sw8P · depth 2 · WORKING · handled B1
 
 ## Completion (TRANSLATIONS #2, T51-105)
 
