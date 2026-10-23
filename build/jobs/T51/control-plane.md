@@ -675,3 +675,7 @@ G42 control-plane half done and pushed; see record J34 (door and Miniflare L tes
 The gauge's ten words (K4640) added as code-origin rows: `bio-plane/src/control-plane/storage-words.mjs` exports `STORAGE_WORDS` (frozen), each a `localize(id, en)` with the ids and English as B50 gave; `size` is a function of `{used, limit, percent}` (`localize` fills its variables at the call, so it cannot run bare at load). Screens-settings reads the rows by key. Test `storage-words.test.mjs` (names R40): the ten entries, `size` fills its three variables; no English copied. `setup-words/build.mjs --check`: only the expected stale-rows note (first stale word `screen.group.storage.factors.latency`; rows.mjs not committed). `checks/run.mjs`: format, architecture, coverage, channels, words 0 failures. Proposed requirement: R40's G42 line also says "the gauge's ten sentences are control-plane's code-origin rows, `screen.group.storage.*`".
 
 Size (session_01YAZZqemwaGayLxQo7ovcWS): test runs 11, module lines 4645
+
+## J37 · COMPLETE · re B50
+
+B50 done and pushed: STORAGE_WORDS (ten screen.group.storage.* rows, size a function of used/limit/percent) in control-plane/storage-words.mjs, test storage-words.test.mjs; words check 0; setup-words --check reports only the stale-rows note. See J36.
