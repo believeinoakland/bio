@@ -1499,17 +1499,26 @@ export class PublicRead {
     const refs = new Set(included.map((m) => m.ref));
     const accounts = (caseDocumentBlocks(state.document.text).captures || [])
       .flatMap((cap) => (cap.accounts || []).map((a) => ({ capture: cap.capture, ...a })));
+    /* R23 (fix round 6, G47): a row states the capture it attests (`sha`, `case-grammar` R12) only where its `ref` has two
+       or more captures in the document; it then joins that capture's material and is listed only if that capture is
+       included, so an excluded capture of an included `ref` is excluded. A row stating none joins by `ref`, as every
+       document written before does. */
+    const lower = (s) => String(s ?? "").toLowerCase();
+    const captureOf = (a) => (HEX64.test(lower(a.sha)) ? lower(a.sha) : null);
+    const materialOf = (a) => included.find((m) => m.ref === a.ref && (captureOf(a) === null || lower(m.sha) === captureOf(a)));
     const attestations = (Array.isArray(mats.attestations) ? mats.attestations : [])
-      .filter((a) => a && refs.has(a.ref)).map((a) => {
+      .filter((a) => a && refs.has(a.ref) && materialOf(a)).map((a) => {
         const named = a.by_kind === "member" && !["group", "project"].includes(a.level);
-        const material = included.find((m) => m.ref === a.ref);
+        const material = materialOf(a);
         const account = named ? accounts.find((x) => x.by === a.by && material && x.capture === material.sha) ?? null : null;
         /* K1315: each timestamp token or co-archive record `publication` held for this material (its R57), by its own
            hash, registered under the material's ref with kind `attestation`. */
         const held = a.by_kind !== "co_attestation" ? [] : this.#rows(
           `SELECT sha256 FROM published_shas WHERE bundle_id=? AND kind='attestation' AND path=('materials/' || sha256)
             ORDER BY sha256`, a.ref).map((r) => ({ sha: r.sha256, text: text(r.sha256) }));
-        return { row: a, account: account ? { by: account.by, at: account.at, text: account.text,
+        /* a row stating no capture (`sha: null` as the reader answers it) is carried as it always was: no key added */
+        const { sha: stated, ...plain } = a;
+        return { row: stated == null ? plain : a, account: account ? { by: account.by, at: account.at, text: account.text,
                                               signature: account.signature } : null,
                  held };
       });
