@@ -90,3 +90,15 @@ G66 (fix round 7, C69) complete. Commit c7e455dcdc on job/T51/reevaluation. The 
 - `checks/run.mjs`: format 0, architecture 0, coverage 1 failure and words 11 failures, none in reevaluation (case-checker spec text and installer-steps keys, as at the start).
 
 Size (session_01JoHaCf6NLCN4qcShZVgtCh): test runs 8, module lines 3410 (index.mjs 3019, checks.mjs 171, schema.mjs 220)
+
+## J5 · QUESTION
+
+QUESTION (G89, R41): what re-runs the sweep when a notice's copy is read?
+
+Built and green: `raiseNotices` re-grades an OPEN notice (leg and case) when it reads its copy again, in the same tick (`#regrade`, index.mjs); a settled notice keeps its grade; no second notice; the answer gains `regraded`. Tests: r14-regrade-after-read (module, 7 of 7, red before the fix) and r14-regrade-door (Miniflare, green).
+
+The gap: a reading finishing is neither a receipt nor a filing, so R25 does not make the sweep pending after it. A notice raised UNDETERMINED (copy filed, unread) is therefore only re-graded when some other receipt or filing happens to run the sweep. In the walker's order that may be never.
+
+My best reading, built and then reverted: R25 also pending while an open undetermined leg notice now reads otherwise (`#regradeOwed`: ask content.noticeForRow, as the sweep does, for the open undetermined notices only; pending only when the copy's candidate now grades differently; it rests once re-graded; a copy never read is not polled). It passes my tests but FAILS `plane/round6-reevaluation.test.mjs:103` ("the newer capture read after the sweep ... the sweep rests"), a plane test that pins the old R25, which I may not change. Patch kept in my scratchpad.
+
+Ask: (a) keep R25 as is (R41 re-grades whenever the sweep next runs for any reason), or (b) amend R25 with that trigger and have plane's line 103 run one tick before "rests". I carry on on (a) meanwhile. Recommendation: (b).
