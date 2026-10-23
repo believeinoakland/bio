@@ -1,6 +1,6 @@
 # admission (T51)
 
-**Status** · session_01Ubr53UtKq7fm4Lcgq9Dr6r · depth 2 · WAITING ON BOB (J3) · handled B2
+**Status** · session_01Ubr53UtKq7fm4Lcgq9Dr6r · depth 2 · COMPLETE · handled B2
 
 ## Completion (T51-108)
 
