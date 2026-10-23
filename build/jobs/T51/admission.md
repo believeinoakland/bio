@@ -57,3 +57,25 @@ BLOCKED, cause: tests (the provider is not merged; not a fault of this job).
 **Needs:** BOB merges `tranche/T51` into this branch after runtime-limits merges and posts the CHANGE, or tells me to merge the tranche branch now. Then I run the folder and `g83-location.test.mjs`, and COMPLETE. I will not COMPLETE red on it.
 
 **Deferred:** none. **Found in another module:** none.
+
+## J4 · COMPLETE
+
+COMPLETE, commit 6ed48b0707 (branch job/T51/admission, merged with tranche/T51 after CHANGE K4757).
+
+**Entries applied:** G83. `bioStore` (bio-plane/src/admission/index.mjs:310) obtains the room by `storeStub(env, "bio")` (runtime-limits R28). Its four store paths (lookup, storeSource, doorWindowGate, securityTally) all go through it. No requirement id is new. Test `bio-plane/test/m/admission/g83-location.test.mjs` (five tests, failing first, red at import until the helper merged, now green).
+
+**Deferred:** none.
+
+**Found in another module (pre-existing on the clean tranche, not caused by this change):**
+- control-plane: `R123, R125 (G7)` in `t51-round6-seam.test.mjs` fails deterministically (2 of 2 reruns, and on a clean origin/tranche/T51 worktree).
+- plane: 11 failures (R24 words, R77 L gate x2, R86 G48 (c1), and the L-entry scripts g54, g55, g57, l75, l77, l79, r42). The same 11 fail on the clean tranche (compared by name).
+- plane's test run rewrites `bio-plane/test/m/plane/fixtures/g48-plane-answers.json`. I restored it; not committed. Worth a look by the plane owner.
+
+**Tests and checks:**
+- admission folder: 64 of 64 pass (includes the 5 G83 tests).
+- control-plane folder: 451 of 452 (the R123/R125 failure above).
+- plane folder: 401 of 412 (the 11 above).
+- format 0 failures; architecture 0 failures; coverage 31 of 31 live ids named; ownership 0 failures; words 0 failures.
+- impact set: admission 19/19, control-plane 69/85 and plane 54/66 as named users; both run as above.
+
+Size (session_01Ubr53UtKq7fm4Lcgq9Dr6r): test runs 9, module lines 1141
