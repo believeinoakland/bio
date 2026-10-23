@@ -262,7 +262,10 @@ export const CSV_SHEET_NAME = "csv";
  * decoded and walked in 1 MiB windows (`createRecordWalk`), each record is
  * folded into the sheet's text as it completes and none is kept, and the
  * typed `cells` list is not made (`cells` is null, as over the guard); the
- * answer says so (`piecewise`). A body in UTF-16 over the bound is not read in
+ * answer says so (`piecewise`). G41 (K4636): a body over SHEET_WINDOW_MIN_BYTES
+ * is walked so at any size, keeping no records, and a caller that passes
+ * `{inlineCellsMax}` gets the cells only while they fit it (`cells_held`
+ * otherwise); `cellsIn` makes the cells of a range from the held body. A body in UTF-16 over the bound is not read in
  * pieces (the strict decode that tells a valid UTF-16 body from an invalid
  * one needs the whole body), and is stated with its size and `final`. Over the
  * streamed ceiling the text is refused with the marker, its size and `final`. */
