@@ -384,9 +384,10 @@ function render(cs, view) {
        "Nothing here": by the design's `screen.document.reading.stated` (with the size) or `.reading.repairable` where the words list holds them, else the plane's
        own words (the stand-in; the rows are owed to T52's list). */
     const basisWords = rdObj && typeof rdObj.basis === "string" ? rdObj.basis.trim() : "";
-    /* G41 (D3): a reading stated too large to keep whole carries its size and its largest part in `basis` (`{size, key}`), drawn as that statement */
-    const tooLarge = rdObj && rdObj.basis && typeof rdObj.basis === "object" && Number.isFinite(rdObj.basis.size) && rdObj.basis.size >= 0 && typeof rdObj.basis.key === "string" ? rdObj.basis : null;
-    const statedSaid = textState === "stated" && tooLarge ? cs.w("screen.document.reading.too_large", { size: sizeWord(tooLarge.size), key: tooLarge.key })
+    /* G41 (D3; K4645): a reading stated too large to keep whole carries `too_large: {bytes, key}` beside its `basis` sentence: the size of its largest part and its key */
+    const tl = rdObj && rdObj.too_large && typeof rdObj.too_large === "object" ? rdObj.too_large : rv0 && rv0.too_large && typeof rv0.too_large === "object" ? rv0.too_large : null;
+    const tooLarge = tl && Number.isFinite(tl.bytes) && tl.bytes >= 0 && typeof tl.key === "string" ? tl : null;
+    const statedSaid = textState === "stated" && tooLarge ? cs.w("screen.document.reading.too_large", { size: sizeWord(tooLarge.bytes), key: tooLarge.key })
       : textState === "repairable" && heldWord("screen.document.reading.repairable") ? cs.w("screen.document.reading.repairable")
       : textState === "stated" && heldWord("screen.document.reading.stated") && Number.isInteger(rv0 && rv0.bytes) ? cs.w("screen.document.reading.stated", { size: sizeWord(rv0.bytes) })
       : comp && typeof comp.why === "string" && comp.why.trim() ? cs.esc(comp.why.trim()) : basisWords ? cs.esc(basisWords) : undetermined("");

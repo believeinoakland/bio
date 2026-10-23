@@ -1,6 +1,6 @@
 /* screens-inquiry fix round 6 (T51), G41 D5: the Document page states what is interpreted (K4636). A sheet whose cells the reading does not list (`cells_held`, the
  * names of the sheets) draws one quiet line, read by key: its text is read whole and every line can be searched and cited, its cells are interpreted for a range when
- * opened or cited; a reading stated too large to keep whole (`failure: "final"`, `basis` `{size, key}`) is drawn as that statement, not "Nothing here". The seam test
+ * opened or cited; a reading stated too large to keep whole (`failure: "final"`, `too_large` `{bytes, key}`) is drawn as that statement, not "Nothing here". The seam test
  * makes its reading by the real plane (Miniflare, the platform's own value limit) from the member's own upload of a 1 MB CSV; the others copy the shapes it answers.
  * Red by name `UNKNOWN_WORD` until EXTRACTION #38 adds the code-origin rows `screen.document.cells_held` and `screen.document.reading.too_large` (K4640's pattern);
  * red by the 1 MB CSV's storing until READING-PIPELINE #26 and EXTRACTION #38 merge. Every expectation is a word read by key (R44). */
@@ -62,7 +62,7 @@ test("R96 G13 G41 (c) while the text is still being read the line is not drawn: 
 test("R3 R96 G41 (b) a reading stated too large to keep whole is drawn as that statement with its size and largest part, for a table document too; no 'Nothing here', no OCR re-read", async () => {
   const BYTES = 1572864;
   const tooLarge = (rd) => sheetReading({ text_units: [], units_total: 0, bytes: BYTES, format: "xlsx" }, { found: false, failure: "final", cells_held: undefined,
-    basis: { size: BYTES, key: "cells" }, ...rd });
+    basis: "the reading is too large to keep whole", too_large: { bytes: BYTES, key: "cells" }, ...rd });
   const p = await open(at, { plane: { reading: tooLarge() } });
   const m = main(p);
   assert.ok(String(m.textContent).includes(word(TOO_LARGE, { size: word("size.mb", { n: (BYTES / 1048576).toFixed(1) }), key: "cells" })), "the statement, with {size} and {key}");
@@ -70,7 +70,7 @@ test("R3 R96 G41 (b) a reading stated too large to keep whole is drawn as that s
   assert.ok(!String(m.textContent).includes(word("state.empty")), "never 'Nothing here'");
   assert.ok(!actsIn(m).includes("pdfstructure") && !actsIn(m).includes("readheld"), "no act after a statement that stands");
   assert.equal(held(m), null, "and no held-cells line");
-  const str = await open(at, { plane: { reading: tooLarge({ basis: "the reading is too large" }) } });
+  const str = await open(at, { plane: { reading: tooLarge({ too_large: undefined }) } });
   assert.ok(main(str).querySelector('[data-reading="stated"]') && !String(main(str).textContent).includes(word(TOO_LARGE, { size: "x", key: "cells" }).split("x")[0]),
     "control: a basis that is a string is drawn as the statement it was, not as the too-large one");
 });
