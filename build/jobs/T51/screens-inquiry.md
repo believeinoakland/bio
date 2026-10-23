@@ -1,6 +1,6 @@
 # screens-inquiry (T51)
 
-**Status** · session_01M1fv1GBHS7ibQw58BKZSWn · depth 2 · COMPLETE · handled B44
+**Status** · session_0173JDLUmEUBw56aUupWGyQE · depth 2 · COMPLETE · handled B53
 
 ## J1 · REPORT
 
@@ -420,3 +420,46 @@ COMPLETE (SCREENS-INQUIRY #23, re START B44, G38 screen half). tranche/T51 merge
 **Proposed requirement lines.** R3 add: "(G38, fix round 6) The reads that use a reading's units (the words a leg cites, R69; the passages a contradiction flag is set beside, R127; whether a newer copy has a text to move citations to, R124) follow `next` of `op=reading` until each has what it needs and never stop at the first page; a page that cannot be read is said, never taken for the unit's absence; a page kept while the reading was being read is read again once its totals change. Test: a reading of three pages whose cited unit and flagged unit sit on page 3 draws the words as cited and offers the passage to flag, each page read once. Control: a one-page reading makes one read." R2/R34 add: "the words a leg cites are found on any page of the cited document's reading."
 
 Size (session_01M1fv1GBHS7ibQw58BKZSWn): test runs 9, module lines 6648
+
+## J31 · QUESTION
+
+QUESTION · screens-inquiry #24 · G41 D5 · three points, my best reading carried on meanwhile.
+
+0. Facts against the START: `tranche/T51` (4dbc2cc2be) holds NEITHER the shim (`bio-plane/test/platform-sqlite.mjs` is only on `job/T51/test-support`) NOR reading-pipeline #26 / extraction #38 (both just started: no `cells_held` in `src`, no `screen.document.*` row). So the seam test (the real extraction's reading of the 1 MB CSV, under the shim) cannot run yet; I write it first and it stays red by name until they merge, as the plan's R-SEAM says. I will merge `tranche/T51` again at each provider merge.
+
+1. Shape of the too-large statement. The START says "`failure: "final"`, size and key in `basis`". `basis` is a string today (the reading-pipeline R38 sentence). The page reads fields and parses no English (R58), so I read it as an object: `rdObj.basis = {size: <bytes of the largest bound value>, key: <name of the largest key>}`, drawn `cs.w("screen.document.reading.too_large", {size: sizeWord(size), key})`. When `basis` is a string the page draws it as today. Is that the shape EXTRACTION #38 writes? If it writes the English in a string plus separate fields, tell me the field names and I follow.
+
+2. (c) The English of `screen.document.cells_held` says the text "is read whole". I therefore do NOT draw it while the reading is `more` (the "being read" state stands alone, never beside a claim of whole); it appears when `more` is false. Tell me if you meant it drawn beside "being read".
+
+3. The line sits as one quiet paragraph (`mk-small`, `data-cells-held`) directly under the facts row, once per page, whatever the number of held sheets (`cells_held` is a list of sheet names; no sheet name is drawn).
+
+## J32 · BLOCKED
+
+BLOCKED · cause: providers not merged (needs BOB's merge order) · screens-inquiry #24 · G41 D5. Code and tests are pushed; the seam cannot be seen green until READING-PIPELINE #26, EXTRACTION #38 (and TEST-SUPPORT #9) merge. I stay available and will merge `tranche/T51` when you ring.
+
+**Changed.** `document.mjs` :236 `cellsHeld` (the reading's `cells_held` names a sheet); :304 one quiet line `<p class="mk-small" data-cells-held>` with `cs.w("screen.document.cells_held")`, under the facts row, not drawn while `more` (the English says the text is whole); :389 a reading stated too large, `basis` an object `{size, key}`, drawn `cs.w("screen.document.reading.too_large", {size: sizeWord, key})`, a string `basis` as before. No `localize` of mine.
+**Tests** `g41-document.test.mjs` (6): (a) held line on a CSV reading, once, two sheets draw one line and no name; (b) controls: small sheet, PDF, empty list draw none; too-large statement (xlsx-style), no "Nothing here", no OCR/Read it, string basis unchanged; (c) while `more` no line; seam (real Miniflare plane, 1 MB CSV upload, then a 3-row control). RED on the unfixed screen: (a) "one line" fails, too-large throws UNKNOWN_WORD. GREEN with the two code-origin rows temporarily added to `rows.mjs` in my tree (reverted, not committed): 5 of 5 scripted tests. Seam: RED by name today: `captureupload` of a 1 MB CSV makes a document whose `reading` is 11.4 MB, and `promoteDocument` is refused `OVERSIZE_INLINE` (`data/provenance.json` 19,957,845 B) before any reading is stored.
+**Finding (not my module, please place):** that upload path (capture/acquisition, `captureupload`'s `document.reading` and `text_units` embedded in the provenance document) carries the whole cell list too; G41's opt-in `inlineCellsMax` must reach it (reading-pipeline's call at the upload) or capture/acquisition needs its own change; otherwise the member's 1 MB CSV is refused at filing, whatever extraction does. Please have READING-PIPELINE/CAPTURE confirm.
+**Stale tests of mine fixed** (red at the tranche tip, unrelated to G41): fr6-document G6, G8, G14 and fr6-seam G6 expected the plane's basis words; the design's rows `screen.document.reading.stated`/`.repairable` are held now, so they read the held word (the OWED pattern the file already used). 18 of 18 in those two files.
+**Checks:** format, architecture, coverage (6674/6674), channels, words (counts unchanged: 18524, dev 268, unkeyed 1982) 0 failures; ownership 0 failures. Full suite before the fr6 fix: 4 reds, all the fr6 ones above; the g41 seam is the only other red. Shim not run (not on the tranche).
+**Rows owed (UX-DESIGN B491):** `screen.document.cells_held`, `screen.document.reading.too_large` ({size}, {key}); extraction adds them as code-origin rows.
+**Proposed requirement lines.** R3 add: "(G41, fix round 6; K4636) A reading that names `cells_held` (sheets whose cells it does not list) is drawn with one quiet line, `screen.document.cells_held`, saying the sheet's text is read whole and searchable and its cells are interpreted for a range when opened or cited; not drawn while the text is being read, and not for a reading naming none. A reading stated too large to keep whole (`failure: "final"`, `basis` `{size, key}`) is drawn as `screen.document.reading.too_large`, for a table document too, never 'Nothing here'. Test: `g41-document.test.mjs`."
+Size (session_0173JDLUmEUBw56aUupWGyQE): test runs 7, module lines 6676
+
+## J33 · COMPLETE
+
+COMPLETE · screens-inquiry #24 · G41 D5 (tranche/T51 merged through B52, K4664).
+
+**What changed.** `document.mjs` :236 `cellsHeld`; :304 one quiet line `<p class="mk-small" data-cells-held>` = `cs.w("screen.document.cells_held")` under the facts row, once per page, not drawn while `more`; :387-390 a reading with `too_large: {bytes, key}` (beside its `basis` sentence, K4645) stated is drawn `cs.w("screen.document.reading.too_large", {size: sizeWord(bytes), key})`, any other stated reading as before. No `localize`. Rows are extraction's (merged); owed to UX-DESIGN B491: `screen.document.cells_held`, `screen.document.reading.too_large`.
+**Failing-first** (`g41-document.test.mjs`, 6 tests): RED on the unfixed screen (held line absent: "one line" fails; too-large threw UNKNOWN_WORD); RED before the providers: the real-plane test failed at filing (`OVERSIZE_INLINE`, the upload's provenance held an 11.4 MB reading), then by name `UNKNOWN_WORD screen.document.cells_held` after READING-PIPELINE merged; GREEN after EXTRACTION #38: 6 of 6, including the real Miniflare plane (the platform's own value limit): the 1 MB CSV filed, read whole, page draws the line, the 3-row CSV draws none. Controls: small sheet, PDF, empty list, string-basis stated reading, `more` draws none.
+**Stale tests of mine fixed** (red at the tranche tip, not G41): fr6-document G6, G8, G14 and fr6-seam G6 now read the held DEC-418 rows (`screen.document.reading.stated`, `.repairable`) when held.
+**Suites** (under a copy of the shim, outside the tree): screens-inquiry 521 of 521; control-plane 447 of 447; journey-check 104 pass, 23 fail: the accepted reds of plan rule 5 item 5 (R1 (a) installer/watchdog/registry-screen walk; none names the Document line); needed `npm ci` in src/journey-check (K4113). plane not re-run (impact lists 51/59; it is the job after mine).
+**Checks:** format, architecture, coverage (6685/6685), channels 0 failures; ownership 0 failures; words: 1 failure, `test-support bio-plane/test/platform-sqlite.mjs:44 [plain] "string or blob too big"`, test-support's merged file, not mine (words counts otherwise unchanged: 18524, dev 268, unkeyed 1982): REPORT for BOB/TEST-SUPPORT.
+**Seam tests still red by name:** none. Deferred: none. Finding in another module: that words failure only.
+**Proposed requirement line.** R3 add: "(G41, fix round 6; K4636, K4645) A reading that names `cells_held` is drawn with one quiet line, `screen.document.cells_held`: the sheet's text is read whole and searchable, its cells interpreted for a range when opened or cited; not drawn while the text is being read, nor for a reading naming none, once whatever the sheets held. A reading stated too large (`failure: "final"`, `too_large: {bytes, key}`) is drawn `screen.document.reading.too_large` with that size and key, for a table document too, never 'Nothing here'. Test: `g41-document.test.mjs`."
+Size (session_0173JDLUmEUBw56aUupWGyQE): test runs 14, module lines 6677
+
+## J34 · COMPLETE
+
+COMPLETE · screens-inquiry #24 · re CHANGE B53 (K4668): merged tranche/T51 (CALCULATIONS #8, the in-tree shim); no code change. screens-inquiry 521 of 521 under `--import ./test/platform-sqlite.mjs`; checks/run.mjs all five 0 failures (words clean now); ownership 0 failures. J33 stands.
+Size (session_0173JDLUmEUBw56aUupWGyQE): test runs 15, module lines 6677

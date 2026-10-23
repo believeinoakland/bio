@@ -91,6 +91,9 @@ CREATE TABLE IF NOT EXISTS calc_inputs (
   input_name    TEXT NOT NULL,
   input_kind    TEXT NOT NULL,
   ref           TEXT NOT NULL,
+  -- R9 (G41): a figure input's engine mark as the create made it: JSON null (no engine) or {name, version}; SQL NULL on a
+  -- row stored before, made and written at the next read
+  engine_json   TEXT,
   PRIMARY KEY (calc_id, input_name, ref)
 );
 CREATE INDEX IF NOT EXISTS calc_inputs_ref ON calc_inputs(ref, calc_id);
@@ -230,7 +233,7 @@ export const CALCULATIONS_TABLES = Object.freeze([
 ]);
 
 /* Columns added to a table after it was first made: [table, column, declaration]. */
-const ADDED = Object.freeze([["calculations", "input_shas_json", "TEXT"], ["calc_draws", "question", "TEXT"]]);
+const ADDED = Object.freeze([["calculations", "input_shas_json", "TEXT"], ["calc_draws", "question", "TEXT"], ["calc_inputs", "engine_json", "TEXT"]]);
 
 /** Creates the tables where absent, and adds a column added since a table was made. Idempotent. */
 export function migrateCalculations(sql) {
