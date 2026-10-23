@@ -296,3 +296,21 @@ COMPLETE (SCREENS-ACTION #15, G20 for this screen; re B28). Pushed on `job/T51/s
 
 **Found in other modules:** none new.
 Size (session_01G4KPZ8PUsRbsiLajjUaHCP): test runs 9, module lines 5136
+
+## Round 6 · G52 (SCREENS-ACTION #16, session_015opo2yPs5rDEGC6mU3j4mb, B29 START)
+
+**What changed.** `start-send`, `request` and `action` register `projectjoin` (`JOIN` in `send-steps.mjs`: sent as `{query: {projectId}}`, `rereads` `standing` and `projects`). `joinFirst` draws the design's fold (DEC-417, B477): a `<details>` whose summary is `screen.projectact.invited.head`, holding `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited` and Join in place; where Join is drawn the project-page link is dropped (a screen that does not register the act, the dashboard, still gets the link, and only its truthiness). Words added to the three screens' lists: `screen.projectact.invited.head`, `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited` (the act labels `act.projectjoin.label.<screen>` come with the acts). No sentence written; no test copies one.
+
+**Tests, red then green.** `join-t51.test.mjs`: `told()` revised to the fold; the `test.todo` (K4559) made real, one test per screen (press Join: `projectjoin` sent with the project, `standing` re-read, the act offered; control: a joined member sees no fold). `join-seam-t51.test.mjs`: presses Join in place in the fold, the real `projectjoin` through the door. `send-t51.test.mjs`: the registry-acts test lists `projectjoin`. Red before the code (registry carrying the act): 13 fail in those four files; green after: whole suite 278 pass, 0 fail.
+
+**Provider not on the tranche (reported, J-entry below).** The shell checks each screen's acts against wizard-scripts' generated `screen-registry.mjs`, which is still taken at design commit `43379a1a44` (its `SOURCES.registry`), so it lacks `projectjoin` on these three screens. Until wizard-scripts re-takes the registry at DEC-419 (`f72b2f8a4c`), `checkScreens` throws "screen start-send's act projectjoin is not the registry's for it" for every page that composes `SCREENS`: with only my commit, the impact set (control-plane, plane) has 26 failures beyond the accepted `release` R24. To measure my change I added `projectjoin` to those three rows in the generated file locally, ran everything, and reverted it (never committed; it is wizard-scripts' artifact, mechanics §14). With the row present: screens-action 278/0; control-plane and plane impact files (123): 740 pass, 1 fail (`release` R24, inherited).
+
+**Proposed requirement line (R3's last sentence, "The door in place waits for the design registry (K4559, T52)"):** replace with "G52, K4686: the invited, not joined member's sentence is the design's fold, `screen.projectact.invited.head` holding `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited` and Join in place (`projectjoin`, a registry act of `start-send`, `request` and `action`); the screen reads her place again after the join and offers the act; where Join is not drawn, a reference to the project's page." Also drop "(where Join is drawn)" and the reference wording from R3's earlier sentence. The three screens' act counts in R3, R4, R5 gain `projectjoin`.
+
+**Word keys for the design's reads list (BOB hands them to UX-DESIGN).** None of these is in `words-reads.json`'s reads for screens-action: `screen.projectact.invited.head`, `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited`, `act.projectjoin.label.start-send`, `.request`, `.action` (and their `act.projectjoin.does`).
+
+**Checks.** `checks/run.mjs`: format 0, architecture 0, coverage 0 (6686/6686), channels 0, words 1 failure (the inherited `inline` at `case-checker/spec.mjs:11`); ownership 9 files, 0 failures. Census: no op's accepted keys change.
+
+**State.** Code and tests complete; not COMPLETE only because the merge waits on the wizard-scripts registry re-take.
+
+Size (session_015opo2yPs5rDEGC6mU3j4mb): test runs 9, module lines 4975
