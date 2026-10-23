@@ -732,3 +732,7 @@ The delivery's `cs` (`control-plane/index.mjs` ~:795) now unwraps `{html}` varia
 Control-plane directory after merging tranche/T51: tests 463, pass 457, fail 6. The six are the seam sections red by name for providers not merged: G58, G61 (ingest-done), G61 twin (fetch-done, BOB diagnosing), G64 (calculations CHANGE), G62 x2 (screens-publish CHANGE). G59 and G74 now pass (their providers have merged).
 
 Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 11, module lines 4690
+
+## J40 · COMPLETE
+
+B53 done: G75 fixed in the delivery's cs (date formatted, html vars unwrapped); seam G75 green. Control-plane dir 463 tests, 457 pass, 6 red by name (G58, G61, G61 twin, G64, G62 x2); G59 and G74 now green. Record updated.
