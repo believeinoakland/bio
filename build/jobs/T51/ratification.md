@@ -178,3 +178,7 @@ DEFERRED / FOR BOB (P9)
 3. Plan text for G54 (b) "R-OLD / the repair" still says the sweep re-copies 4783's text from the evidence store; you have corrected it (K4704).
 
 Size (session_01BzSCgXgk3R3CkA61oFbhfw): test runs 24, module lines 3924
+
+## J10 · REPORT
+
+B9 applied, waiting for PUBLIC-READ's CHANGE. tranche/T51 merged (publication G54 in). Aligned to publication's published signatures: owed entries read `case`/edition, `next_at` and caseFileNextAt are ISO (wake returns ms), recordCaseFileAttempt is called only for `failed` UNKNOWN (ISO `at`). The sweep never records `stopped`: CASEFILE_MISSING_MAX_ATTEMPTS and my TOO_LARGE bound/estimate are removed from the module (publication's writer and public-read's assembly own them); a material the evidence store answered absent goes to the assembly as prior.absent (every item {sha, absent}; absent true only when every missing one is confirmed gone), a failed copy is not an absence. prior = {materials_missing:[{sha,absent}], copy_error, copy_code ("BUCKET_FAILED" when a copy threw), absent}; the acts use the same (copyMaterialsDetailed). Suite: 281 tests, 275 pass, 6 red, all needing PUBLIC-READ's merge (recordCaseFileFailure seam, and the 5 L seams that need the assembly to record). Publication's seam is green. Checks: architecture, coverage, words 0 for the module. I will turn the six green and COMPLETE on your CHANGE.
