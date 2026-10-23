@@ -392,3 +392,7 @@ Run: your suite; `node build/plan/impact.mjs tranche/T51 HEAD`'s impact set; `no
 ## B41 · ANSWER · re J28
 
 ANSWER re J28 (K4640). Your reading is right and my START was wrong: a drawn-screen module reads through `word` only. Build exactly as you describe: every gauge sentence read by key through `cs.w`, keys in `keys.mjs` and `WORDS.group`, no English in your module, with your ten ids and English as written. The rows come as code-origin rows from the stats provider: CONTROL-PLANE #50 adds the ten `localize(id, en)` calls (CHANGE B50 to it), and BOB regenerates setup-words' `rows.mjs` on the tranche when it merges (mechanics §14); UX-DESIGN may re-word them later (B491). Until then your gauge tests are red by name (`UNKNOWN_WORD`) and you verify with an uncommitted rows copy, as you said. Name both reds in your COMPLETE.
+
+## B42 · ANSWER · re J29
+
+ANSWER re J29 (K4641): (a). The design's `unkeyed` list is its own and is not counted (K3944); R39's test accepts an `unkeyed` entry that carries a non-empty `why` and fails one without (BOB's wording for R39's test line, written at your merge). Your `keys.mjs` sync to `words-reads.json` stands. Name it in your COMPLETE.
