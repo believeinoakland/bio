@@ -5,12 +5,11 @@
    (through the op map), and `recordCaseManifest` is the real manifest record. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { planeWorld as world, NOW, sha } from "./fixture.mjs";
+import { planeWorld as world, NOW, sha, V } from "./fixture.mjs";
+import { publicationOps } from "../../../src/publication/index.mjs";
 import { migratePublication } from "../../../src/publication/schema.mjs";
 import { CASEFILE_MISSING_MAX_ATTEMPTS, CASEFILE_STEPS, CASEFILE_GRACE_MS, CASEFILE_BACKOFF_FIRST_MS, CASEFILE_BACKOFF_MAX_MS,
          CASEFILE_BUILDING_WAIT_MS, CASEFILE_TEXT_MAX, CASEFILE_WHY_BYTES_MAX, CASEFILES_OWED_MAX } from "../../../src/publication/index.mjs";
-import * as O from "../../../src/op-declarations/index.mjs";
-import "../op-declarations/register-owners.mjs";
 
 const T0 = Date.parse(NOW);
 const iso = (ms) => new Date(ms).toISOString();
@@ -262,9 +261,15 @@ test("R15 the hop `recordcasefile` is served through the real dispatcher beside 
   assert.equal(w.op("recordcasemanifest", {}, { caseId: id, edition: 1, manifest: { files: [] }, manifestSha: sha("m"), bytes: 1 }).ok, true);
   /* a body's own copy of a stamp never reaches it; the query is not read at all */
   assert.deepEqual(w.op("recordcasefile", { case: "OTHER", edition: 7, state: "built" }, { caseId: id, edition: 1, state: "building", at: iso(T0 + 1) }).state, "building");
-  /* the census: no declared op, public or member, is this hop (the hop is a store-internal route, like the manifest's) */
-  for (const hop of ["recordcasefile", "recordcasemanifest"]) {
-    assert.equal(Object.hasOwn(O.OPS, hop), false, `${hop} is no declared op`);
-    assert.equal(O.SESSION_OPS.member.has(hop) || O.SESSION_OPS.admin.has(hop), false, `${hop} is in no session's op set`);
+  /* the census: the hop is a store-internal route beside the manifest's. No other op of the map (the two hops aside) can
+     write the ledger, whatever a caller's query or body carries: each is run with the ledger's own keys and the four
+     columns are read after. */
+  const keys = Object.keys(publicationOps(w.p, new URL("http://do/x"), {}));
+  assert.ok(keys.includes("recordcasefile") && keys.includes("recordcasemanifest"));
+  const fixed = ledger(w, id);
+  const body = { caseId: id, edition: 1, case: id, state: "built", why: FAIL, at: iso(T0 + 7), absent: true, manifest: { files: [] }, manifestSha: sha("zzz") };
+  for (const k of keys.filter((x) => !["recordcasefile", "recordcasemanifest"].includes(x))) {
+    try { w.op(k, { case: id, edition: 1, id, viewer: V("olive"), by: V("olive"), state: "built" }, body); } catch { /* a refusal or a throw is no write */ }
+    assert.deepEqual(ledger(w, id), fixed, `${k} leaves the ledger`);
   }
 });
