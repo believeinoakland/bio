@@ -13,7 +13,7 @@ import { open, main, press, word, tick, keptKey, answerSign, ok, refused, PREFLI
 const PATH = `/app/ceremony/${P}/${DR}`;
 const R = "because";
 /** The gate's own answer over a held finding: `C-12.2`, a snapshot the manifest records but the store does not hold. */
-const REPAIR = word("record-grammar.bundle.record_a_history_loss_finding_and");
+const REPAIR = "resnapshot-fixture"; // the gate's own repair text is data the plane sends
 const HELD = { check: "C-12.2", severity: "error", message: "snapshot 'upload-x' is missing from the manifest", repairs: REPAIR };
 /** The gate's answer over held findings, as `runCaseGate` maps them (`gate.mjs`:1324) */
 const gateOf = (...held) => ({ ok: held.length === 0, gateVersion: "plane-gate/1.0", findings: held.map((x) => ({ check: x.check, detail: x.message, ...(x.repairs ? { repairs: x.repairs } : {}) })) });
