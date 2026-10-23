@@ -6,12 +6,28 @@
  * answering the generator's cells at the same cap, the largest stored value under 1 MiB. The memory peaks are printed. A size that does not fit is reported with the largest that does.
  *   node g41.probe.mjs [csv4 csv8 csvmax xlsx ...]     (default: all four; one run at a time) */
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 import { shapeRun, csvDoc, xlsxRowsDoc, report, STORED_VALUE_BOUND } from "./harness.mjs";
 import { MEASURED_CSV_TEXT_BOUND_BYTES } from "../../../../src/csv-reader/index.mjs";
 
 export const D_MB = 39;
 export const TICK_MS_MAX = 10_000;
 export const FIRST_TICK_MS_MAX = 8_000;   /* G48 (K4670, K4679): G37's 10 s bar with a 1.25x margin on the node child */
+/** R-NOLOAD (K4787): a wall-time bar on a busy machine fails the machine, not the product. The bars stay what G37/G48 state; the run carries a SAME-RUN CONTROL, a fixed piece of work
+ *  (a SHA-256 over 32 MiB and 5e7 integer steps) timed in this process before and after the case, at its best of three; the bars are multiplied by how much slower than the idle
+ *  reference (`IDLE_REF_MS`, about 55 ms measured idle on the test machine) the slower of the two controls ran, never below 1. An idle machine meets the bars as stated. */
+export const IDLE_REF_MS = 60;
+const REF_BUF = Buffer.alloc(32 * 1048576, 7);
+export function referenceMs() {
+  let best = Infinity;
+  for (let i = 0; i < 3; i++) {
+    const t = performance.now(); createHash("sha256").update(REF_BUF).digest();
+    let x = 0; for (let j = 0; j < 5e7; j++) x = (x + j * 31) | 0;
+    best = Math.min(best, performance.now() - t + (x === 0.5 ? 1 : 0));
+  }
+  return best;
+}
+export const loadFactor = (...refs) => Math.max(1, Math.max(...refs) / IDLE_REF_MS);
 export const XLSX_ROWS = 200_000;
 export const MARKS = ["FIRSTROWMARK", "MIDROWMARK", "LASTROWMARK"];
 /** the cap for a file of `bytes` (N MB = MiB the bytes take in the object): 128 + D - N */
@@ -30,17 +46,20 @@ export const CASES = {
 export async function runCase(name, capOverride = null) {
   const { label, doc } = await CASES[name]();
   const cap = capOverride ?? g41Cap(doc.bytes);
+  const before = referenceMs();
   const r = await shapeRun({ doc, search: MARKS, readingEachTick: true, cellsOf: true, maxTicks: 600 }, { capMB: cap });
-  return { name, label, cap, r, failed: failures(r) };
+  const load = loadFactor(before, referenceMs());
+  return { name, label, cap, r, load, failed: failures(r, load) };
 }
 
-export function failures(r) {
+export function failures(r, load = 1) {
   const f = [];
   if (r.died) return [`the child died: ${r.error || r.stderr || r.signal || "exit " + r.code}`];
   const d = r.done;
   if (d.left.length) f.push(`the ledger still owes ${d.left} after ${d.ticks} ticks`);
-  const slow = r.ticks.filter((t) => t.ms >= TICK_MS_MAX); if (slow.length) f.push(`${slow.length} tick(s) at or over 10 s (max ${Math.max(...slow.map((t) => t.ms))} ms)`);
-  if (r.ticks[0] && r.ticks[0].ms > FIRST_TICK_MS_MAX) f.push(`the first tick took ${r.ticks[0].ms} ms, over ${FIRST_TICK_MS_MAX} ms`);
+  const tickMax = TICK_MS_MAX * load, firstMax = FIRST_TICK_MS_MAX * load;   /* load: the same-run control above, 1 on an idle machine */
+  const slow = r.ticks.filter((t) => t.ms >= tickMax); if (slow.length) f.push(`${slow.length} tick(s) at or over 10 s x ${load.toFixed(2)} (max ${Math.max(...slow.map((t) => t.ms))} ms)`);
+  if (r.ticks[0] && r.ticks[0].ms > firstMax) f.push(`the first tick took ${r.ticks[0].ms} ms, over ${firstMax} ms`);
   const mute = r.ticks.filter((t) => !t.readingFor || t.readingFor.error || !(t.readingFor.state || t.readingFor.failure)); if (mute.length) f.push(`readingFor did not state its state at ${mute.length} tick(s), first: ${JSON.stringify(mute[0] && mute[0].readingFor)}`);
   for (const m of MARKS) {
     if (!(d.found[m] >= 1)) f.push(`${m} is not in the index (capture_text_fts rows: ${d.found[m]})`);

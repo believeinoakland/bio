@@ -118,6 +118,9 @@ test("R11: queue is handed the composed filing-templates and local-facts, so op=
   const PATH = "profile:p/time_zone", dueAsked = [];
   actionClocksOf(x.ctx).calendarFactsRead = () => ({ ok: true, paths: [{ path: PATH, actions: [{ action: "ACT-1", project: null, created_by: "bob" }] }] });
   localFactsOf(x.ctx).factsDue = (a) => { dueAsked.push(a); return { ok: true, due: [], unknown: [] }; };
+  /* queue R94: a derivation is kept while the record's write counter is unchanged, so the swapped answers are read only after a row is written */
+  x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+                          VALUES ('carol', 'Cover carol', 'h_carol', 'member', 'active', '["contribute"]', 't', 't')`);
   const r = await read();
   const item = (r.items || []).find((i) => i.kind === "template-review-requested");
   assert.ok(item, JSON.stringify(kinds(r)));
