@@ -51,3 +51,7 @@ Their recorded `stack` is `{confidence: 'possible', kind: 'shell', ...}`; with t
 **Checks.** `node --test --test-force-exit site-profiles/test/`: 37 pass, 0 fail. format 0 failures; architecture 0; coverage 19 of 19 ids, 0; words 0 (plain 0, testcopy 0, missingkey 0, inline 0); ownership 0 failures (3 files).
 
 Size (session_01A2MMvEgG7LXVhZmak6geHZ): test runs 4, module lines 1720
+
+## J2 · COMPLETE
+
+G76 applied: NO_PROSE counts only where markup exists (site-profiles/handlers/client-rendered.mjs), so CSV and plain text are never client_rendered; failing-first test r7-plain-text.test.mjs seen red then green; site-profiles 37 pass, checks all 0. For docprofile's job: three docprofile R38 tests pin the old shell answer for markup-free text and now fail (named in my record); they need re-recording as conservative/none. Extraction owns the held-record re-profile. Details in build/jobs/T51/site-profiles.md.
