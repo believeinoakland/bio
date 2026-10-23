@@ -41921,6 +41921,342 @@
    "en": "Until it is read again in smaller pieces, its words can't be searched or cited.",
    "protected": false,
    "note": "DEC-423: B492 G41 (B493; extraction R97): drawn after screen.document.reading.too_large; such a reading keeps no text, names or cells"
+  },
+  {
+   "key": "screen.published.casefile.being_prepared",
+   "en": "This edition is complete and signed. Its case file is being prepared and will be offered here when it is ready.",
+   "protected": false,
+   "note": "DEC-424: B495 screens-publish (G54; public-read/casefile-words.mjs): a complete edition whose case file is not built yet and is still being tried"
+  },
+  {
+   "key": "screen.published.casefile.retrying",
+   "en": "This edition is complete and signed, but its case file couldn't be built yet. Civicsmith will try again.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: a complete edition whose last build failed for a reason that may pass; a reason line (screen.published.casefile.code.*) may follow"
+  },
+  {
+   "key": "screen.published.casefile.stopped",
+   "en": "This edition is complete and signed, but its case file can't be built, because a material it lists is no longer held. Civicsmith has stopped trying. The team that published this case can say more.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: a complete edition whose case file cannot be built because a material is no longer held (a stop, not a wait); BOB: say plainly it is complete and signed"
+  },
+  {
+   "key": "screen.published.casefile.waiting_on_members",
+   "en": "This edition isn't complete yet, so it has no case file. It is waiting for the rest of its signatures.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: an edition still short of its signatures; no build is attempted"
+  },
+  {
+   "key": "screen.published.casefile.code.NO_BUCKET",
+   "en": "The place where published files are kept wasn't available.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: the reason line for the stable code NO_BUCKET, a sentence on its own after the state's"
+  },
+  {
+   "key": "screen.published.casefile.code.STORE_SILENT",
+   "en": "The record didn't answer.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: the reason line for STORE_SILENT"
+  },
+  {
+   "key": "screen.published.casefile.code.MATERIAL_MISSING",
+   "en": "A material the case file lists is no longer held.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: the reason line for MATERIAL_MISSING, the code behind the 'stopped' state"
+  },
+  {
+   "key": "screen.published.casefile.code.FINDING_MISSING",
+   "en": "The text of a finding couldn't be found.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: the reason line for FINDING_MISSING"
+  },
+  {
+   "key": "screen.published.casefile.code.BUCKET_FAILED",
+   "en": "A file of the case file couldn't be stored.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: the reason line for BUCKET_FAILED"
+  },
+  {
+   "key": "screen.published.casefile.code.NOT_RECORDED",
+   "en": "The list of the case file's files couldn't be recorded.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: the reason line for NOT_RECORDED"
+  },
+  {
+   "key": "screen.published.casefile.code.INTERRUPTED",
+   "en": "An earlier attempt to build it was interrupted.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: the reason line for INTERRUPTED"
+  },
+  {
+   "key": "screen.published.casefile.code.TOO_LARGE",
+   "en": "The case file is too large to build in one piece.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: the reason line for TOO_LARGE"
+  },
+  {
+   "key": "screen.published.casefile.code.UNKNOWN",
+   "en": "It couldn't be built, for a reason Civicsmith doesn't know yet.",
+   "protected": false,
+   "note": "DEC-424: B495 G54: the reason line for any code the closed set does not name"
+  },
+  {
+   "key": "calculations.ingest.started",
+   "en": "{rows} rows are being read into money facts in the background. You will be told when it is done. Until then the facts it writes are marked as not complete.",
+   "protected": false,
+   "note": "DEC-424: B495 calculations R14 (G55): the answer that starts a large ingest; {rows} the count asked for"
+  },
+  {
+   "key": "calculations.ingest.already",
+   "en": "This table is already being read into money facts in the background. Wait until it is done (you will be told), then ask again. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-424: B495 G55: a second ingest of a table whose first is still running; refused"
+  },
+  {
+   "key": "calculations.ingest.stopped_attempts",
+   "en": "Reading this table failed three times in a row, so it was stopped. The money facts already written stay, marked as not complete. Look at which rows were written before you ask for more.",
+   "protected": false,
+   "note": "DEC-424: B495 G55: the stop reason after three failed attempts; also the 'says' of the stopped notice's state"
+  },
+  {
+   "key": "calculations.ingest.stopped_table",
+   "en": "The table changed while it was being read, so the reading was stopped. The money facts already written stay, marked as not complete.",
+   "protected": false,
+   "note": "DEC-424: B495 G55: the stop reason when the bound table changed under a running ingest"
+  },
+  {
+   "key": "calculations.ingest.no_ingest",
+   "en": "Choose which background reading you mean.",
+   "protected": false,
+   "note": "DEC-424: B495 G55: an ingest read asked with no ingest named"
+  },
+  {
+   "key": "calculations.ingest.bad_kind",
+   "en": "Choose what to see of a background reading: where it stands, the rows that were written, or the rows that were not.",
+   "protected": false,
+   "note": "DEC-424: B495 G55: an ingest read with a kind that is none of state, written, not_written"
+  },
+  {
+   "key": "calculations.index.a_reason_is_at_most",
+   "en": "A reason can be at most {max} characters. Shorten it and ask again. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-424: B495 G55: a reason for taking every row of a table that is over its bound; {max} the bound"
+  },
+  {
+   "key": "calculations.index.one_act_reads_at_most",
+   "en": "One request can read at most {bound_rows} rows, and this asks for {rows}. Ask for the rows in batches of {bound_rows} or fewer. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-424: B495 G55: an ingest naming more rows than one act takes; {rows} the count asked for, {bound_rows} the bound"
+  },
+  {
+   "key": "calculations.declared.moneyingestread",
+   "en": "Reads what a money ingest has stored, a page at a time, with the true counts and whether the ingest is complete. Changes nothing.",
+   "protected": false,
+   "note": "DEC-424: B495 G55: the declared op's description (a builders' line like the other declared ops'; written because BOB asked for the row)"
+  },
+  {
+   "key": "notice-producers.ingest.done",
+   "en": "Your table has been read: {written} of {rows} rows were written as money facts, and {not_written} were not.",
+   "protected": false,
+   "note": "DEC-424: B495 G55: the Queue item to the member who asked, when a background ingest is done; {written} {rows} {not_written} counts"
+  },
+  {
+   "key": "notice-producers.ingest.stopped",
+   "en": "Reading your table stopped after {written} of {rows} rows were written as money facts; the rest were not. The facts already written stay, marked as not complete.",
+   "protected": false,
+   "note": "DEC-424: B495 G55: the Queue item when a background ingest was stopped; {written} {rows} counts; the stop's own reason follows from calculations.ingest.stopped_*"
+  },
+  {
+   "key": "money.ingest.partial",
+   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Background reading: {ingest}",
+   "protected": false,
+   "note": "DEC-424: B495 G55: beside any money fact written by an open or stopped ingest; {ingest} the ingest's key"
+  },
+  {
+   "key": "case-authoring.index.case_document_too_large",
+   "en": "This case document is {size} MB, over the {bound} MB a case document may be. It names {materials} materials and {members} findings. Nothing was prepared and nothing was changed. Leave out some of the materials or findings and prepare the case again.",
+   "protected": false,
+   "note": "DEC-424: B495 case-authoring R14 (G47): preparing a case whose document is over its bound; {size} {bound} in MB, {materials} {members} counts"
+  },
+  {
+   "key": "case-authoring.checks.case_document_too_large",
+   "en": "This case document is {size} MB, over the {bound} MB a case document may be. It names {materials} materials and {members} findings. Nothing was prepared and nothing was changed. Leave out some of the materials or findings and prepare the case again.",
+   "protected": false,
+   "note": "DEC-424: B495 G47: the same sentence as the check's translation (C-136.9); same fills"
+  },
+  {
+   "key": "case-authoring.index.case_document_not_stored",
+   "en": "The case document couldn't be stored, so nothing was prepared and nothing was changed. Prepare the case again. If it fails again, tell an administrator.",
+   "protected": false,
+   "note": "DEC-424: B495 G47: the store refused the document for a reason other than its size"
+  },
+  {
+   "key": "case-grammar.casefile.capture-missing",
+   "en": "{path} is the one path for {ref}, which {count} rows of the case document's materials state, so each of their files must be under its own row's capture",
+   "protected": false,
+   "note": "DEC-424: B495 case-grammar R13 (G50): a checker's finding on a case file; a plain path for a reference stated on several rows; {path} {ref} {count}"
+  },
+  {
+   "key": "case-grammar.casefile.capture-needless",
+   "en": "{path} is under a capture, but the case document's materials state {ref} on one row only, so its files must not be under a capture",
+   "protected": false,
+   "note": "DEC-424: B495 G50: a checker's finding; a capture path for a reference stated on one row; {path} {ref}"
+  },
+  {
+   "key": "case-grammar.casefile.capture-unnamed",
+   "en": "{path} is under the capture {capture}, but no row of the case document's materials states that capture for {ref}",
+   "protected": false,
+   "note": "DEC-424: B495 G50: a checker's finding; a capture no row of that reference names; {path} {capture} {ref}"
+  },
+  {
+   "key": "case-grammar.casefile.format-accepted",
+   "en": "the format must be one of {accepted}, each read as written, and this manifest states {value}",
+   "protected": false,
+   "note": "DEC-424: B495 G50: a checker's finding; {accepted} the formats read, {value} what the manifest states"
+  },
+  {
+   "key": "case-grammar.casefile.format-unused",
+   "en": "a {format} case file has at least one file under a row's capture, and this one lists none",
+   "protected": false,
+   "note": "DEC-424: B495 G50: a checker's finding; {format} the format that needs a capture-path file"
+  },
+  {
+   "key": "case-grammar.casefile.path-format",
+   "en": "{path} puts a capture in its path, which only {v4} does, and this manifest is {format}",
+   "protected": false,
+   "note": "DEC-424: B495 G50: a checker's finding; {path} {v4} the format that spells captures, {format} the manifest's"
+  },
+  {
+   "key": "reading-pipeline.index.classified_over_sample",
+   "en": "What kind of document this is was judged from a sample of its text: {chars} of its {of} characters, taken from its opening, {windows} stretches spread through it, and its end. The whole text is still read, in pieces.",
+   "protected": false,
+   "note": "DEC-424: B495 reading-pipeline R11 (G48): the basis of a reading whose sheet was classified over a bounded view; {chars} {of} {windows} counts"
+  },
+  {
+   "key": "docprofile.readtext.the_sheet_is_over_the_bound_so_its_type_was_judged_from_a_view",
+   "en": "This sheet is over {bound} characters, so what kind of document it is was judged from {chars} of its {of} characters: the first {head} and {n} stretches spread across it. Where it came from and what it holds are read from all of it.",
+   "protected": false,
+   "note": "DEC-424: B495 docprofile (G48): the same fact in the profile's own reason; 'the stack' is the software that made the file; {bound} {chars} {of} {head} {n} counts"
+  },
+  {
+   "key": "installer.fleet.logsunconfirmed",
+   "en": "Cloudflare didn't say whether the logs of your team's Civicsmith are switched on, so that couldn't be confirmed. The install went on. The next update checks again; you can also look at Workers Logs for it in your Cloudflare account.",
+   "protected": false,
+   "note": "DEC-424: B495 newgroup steps/uploads.mjs R40: after an install or update, the program's logs setting could not be read back; the run continues (a note, not a stop)"
+  },
+  {
+   "key": "installer-steps.plane.observability",
+   "en": "The program was uploaded, but your Cloudflare account did not switch on its logs (Workers Logs), so this step stopped there. Without logs a problem could go unseen. Switch on Workers Logs for the program in your Cloudflare account, then run the update again.",
+   "protected": false,
+   "note": "DEC-424: B495 newgroup steps/uploads.mjs R40: the refusal when the program's settings were read back and its logs are off; replaces the stand-in installer.fleet.why.program; UNSURE whether an update leaves the earlier program running"
+  },
+  {
+   "key": "money.index.a_fiscal_key_is_a",
+   "en": "A fiscal period needs a name, such as the label your team's profile gives a fiscal year.",
+   "protected": false,
+   "note": "DEC-424: B495 money R29: the detail the money screen draws beside refusal.MONEY_BAD_PERIOD (screens-investigate/money.mjs)"
+  },
+  {
+   "key": "money.index.a_period_has_no_field",
+   "en": "A period can't have a field called {extra}.",
+   "protected": false,
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; {extra} the field named"
+  },
+  {
+   "key": "money.index.a_period_is_from_to",
+   "en": "A period is a start (with an end if one is stated), a precision and a time zone, or a fiscal year with the body it belongs to.",
+   "protected": false,
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; the shape of a period, said without field names"
+  },
+  {
+   "key": "money.index.a_period_states_its_start",
+   "en": "A period needs a start.",
+   "protected": false,
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
+  },
+  {
+   "key": "money.index.a_periods_end_is_a",
+   "en": "A period's end must be written to the same precision as its start, or left out when it isn't stated.",
+   "protected": false,
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
+  },
+  {
+   "key": "money.index.a_periods_precision_is_day",
+   "en": "A period's precision must be day, minute or second.",
+   "protected": false,
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
+  },
+  {
+   "key": "money.index.the_active_profiles_hold_no",
+   "en": "Your team's profiles hold no fiscal year for {body}, so {fiscal} can't be turned into dates.",
+   "protected": false,
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; {body} {fiscal}"
+  },
+  {
+   "key": "money.index.the_period_ends_before_it",
+   "en": "The period ends before it starts.",
+   "protected": false,
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
+  },
+  {
+   "key": "money.index.the_period_states_no_zone",
+   "en": "The period names no time zone, and your team's profiles give none.",
+   "protected": false,
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
+  },
+  {
+   "key": "money.index.the_periods_end_why",
+   "en": "The end of the period: {why}",
+   "protected": false,
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; {why} the reason the date was refused, as the code gives it"
+  },
+  {
+   "key": "money.index.the_periods_start_why",
+   "en": "The start of the period: {why}",
+   "protected": false,
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; {why} the reason the date was refused, as the code gives it"
+  },
+  {
+   "key": "money.index.the_profiles_fiscal_year_for",
+   "en": "Your team's profile for {body} has no fiscal year {fiscal}.",
+   "protected": false,
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; {body} {fiscal}"
+  },
+  {
+   "key": "money.index.events_is_not_wired_here",
+   "en": "Events aren't connected here yet, so the contract's award and its change orders can't be read.",
+   "protected": false,
+   "note": "DEC-424: B495 money: the reason the money screen's committed-against-paid line gives when no figure can be shown (screens-investigate/money.mjs, cap.difference.why)"
+  },
+  {
+   "key": "money.index.more_than_one",
+   "en": "more than one",
+   "protected": false,
+   "note": "DEC-424: B495 money: a fill of money.undetermined.fact_concerns_events, drawn in a trail's 'where it moved' reason"
+  },
+  {
+   "key": "notice-producers.index.fetch_done_summary",
+   "en": "{document} has been fetched",
+   "protected": false,
+   "note": "DEC-424: B495 notice-producers R27: the Queue item's title (fetch-done); {document} its title. Beside notice.fetch.done (DEC-418), which the Queue draws only where it holds a queue.<kind> row"
+  },
+  {
+   "key": "notice-producers.index.fetch_done_detail",
+   "en": "The large page you asked for is fetched and filed. Open it to read it.",
+   "protected": false,
+   "note": "DEC-424: B495 notice-producers R27: the Queue item's line (fetch-done)"
+  },
+  {
+   "key": "notice-producers.index.machine_work_from_your_standing",
+   "en": "Machine work, from your standing question. {v1}{v2}. You are told about this once.",
+   "protected": false,
+   "note": "DEC-424: B495 notice-producers: the standing-answer item's line; {v1} 'N new finds' or 'New finds are held', {v2} empty or '; the assistant did not answer, because ...'"
+  },
+  {
+   "key": "notice-producers.index.open_the_document",
+   "en": "Open the document",
+   "protected": false,
+   "note": "DEC-424: B495 notice-producers R27: the fetch-done item's door; the same words as notice.fetch.done.door (DEC-418)"
   }
  ],
  "rewrite": {

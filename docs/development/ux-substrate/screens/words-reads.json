@@ -34,6 +34,7 @@
     "ai-accounts.declared.groupkeyremove",
     "ai-accounts.declared.groupkeyset",
     "ai-accounts.declared.groupkeyswitch",
+    "calculations.declared.moneyingestread",
     "consequence.actionholdrelease",
     "consequence.attribute",
     "consequence.entitycreate",
@@ -58,10 +59,10 @@
     "translations.declared.translationrevert"
    ],
    "counts": {
-    "reads": 39,
+    "reads": 40,
     "minted": 8,
     "keyedRows": 0,
-    "literalKeys": 39,
+    "literalKeys": 40,
     "inline": 790,
     "inlineKeyed": 0,
     "inlineUnkeyed": 790,
@@ -2500,481 +2501,481 @@
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 285,
+     "line": 286,
      "text": "calculation-directed: keyed by a new CALC- id; writes calculations' rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 286,
+     "line": 287,
      "text": "calculation-directed: keyed by calculation; a member's acceptance after an agreeing recompute",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 287,
+     "line": 288,
      "text": "set-directed: keyed by (set, seed, size, method); records a reproducible draw and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 288,
+     "line": 289,
      "text": "query-directed: keyed by the set's digest; freezes the ids a saved query answered",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 289,
+     "line": 290,
      "text": "pattern-directed: keyed by (pattern, version); records a measured false-alarm rate on a gold set, an administrator's",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 290,
+     "line": 291,
      "text": "pattern-directed: keyed by (pattern, project); a member's switch, moving no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 291,
+     "line": 292,
      "text": "one declared table — its schema, rows and grade facts",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 292,
+     "line": 293,
      "text": "the vintage of a table key valid on a date, or undetermined",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 293,
+     "line": 294,
      "text": "what a calculation would store for a recipe and its inputs",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 294,
+     "line": 295,
      "text": "one stored calculation with its grade facts and recompute status, never recomputed",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 295,
+     "line": 296,
      "text": "each pattern's gated results, labeled Noticed, or why they are not shown",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 297,
+     "line": 298,
      "text": "workbook-directed: keyed by (capture, project); writes workbooks' rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 298,
+     "line": 299,
      "text": "workbook-directed: keyed by (capture, project) and a range; writes a binding and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 299,
+     "line": 300,
      "text": "binding-directed: keyed by binding; keeps it, shown taken back",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 300,
+     "line": 301,
      "text": "workbook-directed: keyed by (capture, project); records the engine's recompute and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 301,
+     "line": 302,
      "text": "workbook-directed: keyed by (capture, project, finding); a member's note, kept",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 302,
+     "line": 303,
      "text": "workbook-directed: keyed by (capture, project); the method's documentation, the latest current and every one kept",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 303,
+     "line": 304,
      "text": "workbook-directed: keyed by (capture, project); a second member's check, disclosed and never a gate",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 304,
+     "line": 305,
      "text": "one workbook with its bindings, inputs, recompute, lint, notes and checks; never recomputed",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 305,
+     "line": 306,
      "text": "a workbook's input cells, bound or unbound",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 306,
+     "line": 307,
      "text": "a workbook's lint findings with members' notes",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 307,
+     "line": 308,
      "text": "a calculation as a workbook file",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 309,
+     "line": 310,
      "text": "tally: unattributed, keyed by (day, mode, kind, code); names no member",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 310,
+     "line": 311,
      "text": "the copy's configuration: whether its rule services answer; an administrator's, not an act on an object",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 311,
+     "line": 312,
      "text": "personal state, keyed (member, STQ- id): a member's own standing question, seen only by them",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 312,
+     "line": 313,
      "text": "personal state, keyed (member, STQ- id): a member ends their own standing question",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 313,
+     "line": 314,
      "text": "the copy's configuration: whether standing questions' AI half runs; an administrator's, not an act on an object",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 314,
+     "line": 315,
      "text": "one rule service's value with its basis, grade and label, or not held",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 315,
+     "line": 316,
      "text": "the day counts of answered, refused and withheld results, to an administrator",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 316,
+     "line": 317,
      "text": "a member's own standing questions",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 317,
+     "line": 318,
      "text": "the runs of a member's own standing questions that found something new",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 319,
+     "line": 320,
      "text": "body-directed: keyed by (body, period); a member's follow of a body's meetings, moving no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 320,
+     "line": 321,
      "text": "follow-directed: keyed by follow; its author ends it, and it stays readable",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 321,
+     "line": 322,
      "text": "register-directed: keyed by the register's address; a member's follow, moving no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 322,
+     "line": 323,
      "text": "register-directed: keyed by (register, identifier); a member's follow of one named query, never a crawl of a person",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 323,
+     "line": 324,
      "text": "portal-directed: keyed by (address, key field); a member's follow of a dataset, moving no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 324,
+     "line": 325,
      "text": "address-directed: keyed by a watched address; names the body its captures follow, the latest governing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 325,
+     "line": 326,
      "text": "follow-directed: keyed by follow; a fresh capture with the member's own credential",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 326,
+     "line": 327,
      "text": "the follows and per-meeting watches the viewer may see, each with when it is next due",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 327,
+     "line": 328,
      "text": "a portal follow's snapshots, each valid at its capture",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 328,
+     "line": 329,
      "text": "the rows added, removed and changed between two snapshots of a portal follow",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 330,
+     "line": 331,
      "text": "standard-directed: keyed by a new relation between two standards or portions; writes standards' rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 331,
+     "line": 332,
      "text": "standard-directed: keyed by a relation, link or treatment; keeps it, shown withdrawn",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 332,
+     "line": 333,
      "text": "standard-directed: keyed by a new proposal; stored apart and labeled, recorded only when a member's act names it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 333,
+     "line": 334,
      "text": "standard-directed: keyed by a court standard and a portion; writes standards' rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 334,
+     "line": 335,
      "text": "standard-directed: keyed by two decisions; writes standards' rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 335,
+     "line": 336,
      "text": "whether a standard, or an instrument's portion, was in force on a date, and which version",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 336,
+     "line": 337,
      "text": "the documents citing a standard, or the standards a document cites",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 337,
+     "line": 338,
      "text": "a standard's temporal and referential relations, withdrawn ones marked",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 338,
+     "line": 339,
      "text": "every key and portion a provision has been held under",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 339,
+     "line": 340,
      "text": "whether a court decision still stood on a date, or undetermined",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 340,
+     "line": 341,
      "text": "whether a held capture states a court citation",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 342,
+     "line": 343,
      "text": "credential governance: a member's own assistant account reference, never answered; the subject is a credential, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 343,
+     "line": 344,
      "text": "credential governance: a member removes their own account reference; the subject is a credential, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 344,
+     "line": 345,
      "text": "credential governance: a member's own short-lived ai grant; the subject is a credential, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 345,
+     "line": 346,
      "text": "credential governance: the group's key for a keyed outside service, an administrator's; never answered",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 346,
+     "line": 347,
      "text": "the copy's configuration: whether a keyed outside service is on; an administrator's, not an act on an object",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 347,
+     "line": 348,
      "text": "a member's own account reference state, never its secret",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 348,
+     "line": 349,
      "text": "each keyed outside service held and switched, never a key",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 350,
+     "line": 351,
      "text": "capture-mark: keyed by the member's own capture sha; records the paid source it came from, never the query",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 351,
+     "line": 352,
      "text": "registry write, keyed by (entity, scheme): holds a scheme identifier with its validity and basis",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 352,
+     "line": 353,
      "text": "personal state, keyed by the member's own dated wait: records that they looked and moves nothing in the inquiry",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 354,
+     "line": 355,
      "text": "one page of a carried table's rows and their digest, for an export",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 355,
+     "line": 356,
      "text": "export: keyed by (viewer, format); renders what the viewer would be carried and logs who took it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 357,
+     "line": 358,
      "text": "the offices the record holds as responsible for an action's subject on its date, as a suggestion",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 358,
+     "line": 359,
      "text": "action-directed: keyed by (action, rule, proposer); a proposal stored apart, never a clock entry until a member adopts it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 361,
+     "line": 362,
      "text": "an iCalendar file of named actions' pending dated clock entries",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 362,
+     "line": 363,
      "text": "the group's own lateness: commitments met on time, met late, or pending past their date",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 364,
+     "line": 365,
      "text": "one account's month of assistant use per use, to its owners, naming no member, or a member's own use per payer and per use against each limit that bound them",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 366,
+     "line": 367,
      "text": "run-directed: keyed by (mode, run); a member's evidenced verification of a mode's first live run",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 368,
+     "line": 369,
      "text": "host-directed: keyed by a host; a group-wide mark that the host is a login-gated platform",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 369,
+     "line": 370,
      "text": "host-directed: keyed by a host; withdraws its platform mark, kept with who and when",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 370,
+     "line": 371,
      "text": "the hosts marked platforms",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 372,
+     "line": 373,
      "text": "the instance's configuration: seeds the active profiles' offices and bodies as entities; an administrator's",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 375,
+     "line": 376,
      "text": "the instance's configuration: seeds the seats of matched bodies and their holders from held captures; an administrator's",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 376,
+     "line": 377,
      "text": "personal state, keyed by member: the assistant's disclosure shown to them, with its version",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 377,
+     "line": 378,
      "text": "member-directed: a member's own question to the assistant under their own account; no object is before them",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 378,
+     "line": 379,
      "text": "whether the assistant is enabled for this copy, with who set it and when",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 379,
+     "line": 380,
      "text": "a member's own record of the assistant's disclosure shown to them",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/t33.mjs",
-     "line": 381,
+     "line": 382,
      "text": "whether one standard was in force on a date, with why",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
@@ -5098,6 +5099,47 @@
     "act.outcomecarry.does",
     "act.owed_actioninquiry.does",
     "act.owed_actionstake.does",
+    "act.owed_aiaccountadd.does",
+    "act.owed_aiaccountpick.does",
+    "act.owed_aiaccountremove.does",
+    "act.owed_aiaccountswitch.does",
+    "act.owed_aiaskadmin.does",
+    "act.owed_aibudgetset.does",
+    "act.owed_aicheckset.does",
+    "act.owed_aichooseother.does",
+    "act.owed_aiconnecttest.does",
+    "act.owed_aicontinue.does",
+    "act.owed_aikeycloudflare.does",
+    "act.owed_aikeyenter.does",
+    "act.owed_aikeyreference.does",
+    "act.owed_aimemberallow.does",
+    "act.owed_aimineuse.does",
+    "act.owed_aimodelchoose.does",
+    "act.owed_aimycheckset.does",
+    "act.owed_aiorderset.does",
+    "act.owed_aiownadd.does",
+    "act.owed_aipersonalchoose.does",
+    "act.owed_aiplanconnect.does",
+    "act.owed_aiprojectbudget.does",
+    "act.owed_aiprojectcheckset.does",
+    "act.owed_aiprojectorder.does",
+    "act.owed_aiprojectuse.does",
+    "act.owed_airesultsdecline.does",
+    "act.owed_airesultsend.does",
+    "act.owed_airesultsopen.does",
+    "act.owed_airesultsread.does",
+    "act.owed_airunstart.does",
+    "act.owed_aisend.does",
+    "act.owed_aisendrefuse.does",
+    "act.owed_aisignin.does",
+    "act.owed_aistop.does",
+    "act.owed_aiswitchaccount.does",
+    "act.owed_aitermsaccept.does",
+    "act.owed_aitestopen.does",
+    "act.owed_aitestrun.does",
+    "act.owed_aitestsetup.does",
+    "act.owed_aiwait.does",
+    "act.owed_aiwithout.does",
     "act.owed_alertconnect.does",
     "act.owed_aliaswithdraw.does",
     "act.owed_capturecredentiallist.does",
@@ -5118,6 +5160,7 @@
     "act.owed_hashcopy.does",
     "act.owed_importregrade.does",
     "act.owed_installalongside.does",
+    "act.owed_installcheck.does",
     "act.owed_installremove.does",
     "act.owed_installremoveconfirm.does",
     "act.owed_installupdate.does",
@@ -5519,21 +5562,21 @@
     "refusal.uncatalogued"
    ],
    "counts": {
-    "reads": 693,
+    "reads": 735,
     "minted": 0,
     "keyedRows": 0,
-    "literalKeys": 43,
-    "inline": 2,
-    "inlineKeyed": 1,
+    "literalKeys": 42,
+    "inline": 1,
+    "inlineKeyed": 0,
     "inlineUnkeyed": 1,
-    "computedKeys": 553,
-    "actHelp": 455,
+    "computedKeys": 596,
+    "actHelp": 457,
     "vocabulary": 144
    },
    "unkeyed": [
     {
      "file": "affordances/facts.mjs",
-     "line": 369,
+     "line": 370,
      "text": "affordances are asked of an object: pass target=",
      "why": "API usage for the client holding the value, never drawn"
     }
@@ -5545,7 +5588,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 25602
+    "generatedRows": 25805
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -5595,13 +5638,13 @@
     },
     {
      "file": "op-declarations/index.mjs",
-     "line": 2656,
+     "line": 2660,
      "text": "A read a screen draws from: no control on a screen offers it as an act.",
      "why": "a builder's ground for an op no control offers; no screen draws it"
     },
     {
      "file": "op-declarations/index.mjs",
-     "line": 2695,
+     "line": 2699,
      "text": "A step another act takes, which no control on a screen offers: a promotion's lease and identifier, a run's tick, the count of a check, a wizard's progress, a capture a tool files (the screen's upload is captureupload), or the mark a screen records of itself when it opens (Home's lookedsince).",
      "why": "a builder's ground for an op no control offers; no screen draws it"
     }
@@ -6047,6 +6090,7 @@
     "shell.card.dash-project",
     "shell.card.docket",
     "shell.card.document",
+    "shell.card.hold",
     "shell.card.knock",
     "shell.card.matter",
     "shell.card.member",
@@ -6080,6 +6124,7 @@
     "shell.icon.capture",
     "shell.icon.clock",
     "shell.icon.group",
+    "shell.icon.hold",
     "shell.icon.plan",
     "shell.keyfile.empty",
     "shell.keyfile.none",
@@ -6171,31 +6216,31 @@
     "weight.dots.means"
    ],
    "counts": {
-    "reads": 258,
+    "reads": 260,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 198,
     "inline": 3,
     "inlineKeyed": 0,
     "inlineUnkeyed": 3,
-    "computedKeys": 60
+    "computedKeys": 62
    },
    "unkeyed": [
     {
      "file": "interface-shell/browser.mjs",
-     "line": 118,
+     "line": 155,
      "text": "Bearer ${…}",
      "why": "an HTTP header's value"
     },
     {
      "file": "interface-shell/index.mjs",
-     "line": 375,
+     "line": 376,
      "text": "the path's element, read by journey-check's walker (its screens.mjs) and the screen modules' tests",
      "why": "a builder's note on an element, read by tests"
     },
     {
      "file": "interface-shell/index.mjs",
-     "line": 377,
+     "line": 378,
      "text": "a row of `cs.rows`, read by the screen modules' tests",
      "why": "a builder's note on an element, read by tests"
     },
@@ -6507,6 +6552,47 @@
     "act.owed_actioninquiry.label.action",
     "act.owed_actionstake.does",
     "act.owed_actionstake.label.start-send",
+    "act.owed_aiaccountadd.does",
+    "act.owed_aiaccountpick.does",
+    "act.owed_aiaccountremove.does",
+    "act.owed_aiaccountswitch.does",
+    "act.owed_aiaskadmin.does",
+    "act.owed_aibudgetset.does",
+    "act.owed_aicheckset.does",
+    "act.owed_aichooseother.does",
+    "act.owed_aiconnecttest.does",
+    "act.owed_aicontinue.does",
+    "act.owed_aikeycloudflare.does",
+    "act.owed_aikeyenter.does",
+    "act.owed_aikeyreference.does",
+    "act.owed_aimemberallow.does",
+    "act.owed_aimineuse.does",
+    "act.owed_aimodelchoose.does",
+    "act.owed_aimycheckset.does",
+    "act.owed_aiorderset.does",
+    "act.owed_aiownadd.does",
+    "act.owed_aipersonalchoose.does",
+    "act.owed_aiplanconnect.does",
+    "act.owed_aiprojectbudget.does",
+    "act.owed_aiprojectcheckset.does",
+    "act.owed_aiprojectorder.does",
+    "act.owed_aiprojectuse.does",
+    "act.owed_airesultsdecline.does",
+    "act.owed_airesultsend.does",
+    "act.owed_airesultsopen.does",
+    "act.owed_airesultsread.does",
+    "act.owed_airunstart.does",
+    "act.owed_aisend.does",
+    "act.owed_aisendrefuse.does",
+    "act.owed_aisignin.does",
+    "act.owed_aistop.does",
+    "act.owed_aiswitchaccount.does",
+    "act.owed_aitermsaccept.does",
+    "act.owed_aitestopen.does",
+    "act.owed_aitestrun.does",
+    "act.owed_aitestsetup.does",
+    "act.owed_aiwait.does",
+    "act.owed_aiwithout.does",
     "act.owed_alertconnect.does",
     "act.owed_aliaswithdraw.does",
     "act.owed_capturecredentiallist.does",
@@ -6527,6 +6613,7 @@
     "act.owed_hashcopy.does",
     "act.owed_importregrade.does",
     "act.owed_installalongside.does",
+    "act.owed_installcheck.does",
     "act.owed_installremove.does",
     "act.owed_installremoveconfirm.does",
     "act.owed_installupdate.does",
@@ -6601,6 +6688,9 @@
     "act.projectinvite.does",
     "act.projectjoin.does",
     "act.projectjoin.label.action",
+    "act.projectjoin.label.project",
+    "act.projectjoin.label.projects",
+    "act.projectjoin.label.queue",
     "act.projectjoin.label.request",
     "act.projectjoin.label.start-send",
     "act.projectkeynoticeseen.does",
@@ -6861,6 +6951,7 @@
     "refusal.PHASE_OPTION_NOT_CHOSEN",
     "refusal.PLAN_CLOSED",
     "refusal.PLAN_NO_REASON",
+    "refusal.PROJECT_ACT_NOT_A_PARTICIPANT",
     "refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited",
     "refusal.REMINDER_REFUSED",
     "refusal.SECOND_APPROVAL_NEEDED",
@@ -7111,6 +7202,20 @@
     "screen.actionnew.to.undetermined.label",
     "screen.actionnew.to.unsent",
     "screen.actionnew.to.who",
+    "screen.aiconnect.name",
+    "screen.aiconnect.purpose",
+    "screen.aimine.name",
+    "screen.aimine.purpose",
+    "screen.aimoments.name",
+    "screen.aimoments.purpose",
+    "screen.aiproject.name",
+    "screen.aiproject.purpose",
+    "screen.aiproviders.name",
+    "screen.aiproviders.purpose",
+    "screen.airesults.name",
+    "screen.airesults.purpose",
+    "screen.aitest.name",
+    "screen.aitest.purpose",
     "screen.answers.name",
     "screen.answers.purpose",
     "screen.archive.name",
@@ -7239,6 +7344,7 @@
     "screen.group.purpose",
     "screen.grouprules.name",
     "screen.grouprules.purpose",
+    "screen.held.more",
     "screen.held.name",
     "screen.held.purpose",
     "screen.help-records.does",
@@ -7968,14 +8074,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 1757,
+    "reads": 1818,
     "minted": 0,
     "keyedRows": 0,
-    "literalKeys": 1053,
+    "literalKeys": 1051,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 704
+    "computedKeys": 767
    },
    "unkeyed": []
   },
@@ -8251,6 +8357,47 @@
     "act.outcomecarry.does",
     "act.owed_actioninquiry.does",
     "act.owed_actionstake.does",
+    "act.owed_aiaccountadd.does",
+    "act.owed_aiaccountpick.does",
+    "act.owed_aiaccountremove.does",
+    "act.owed_aiaccountswitch.does",
+    "act.owed_aiaskadmin.does",
+    "act.owed_aibudgetset.does",
+    "act.owed_aicheckset.does",
+    "act.owed_aichooseother.does",
+    "act.owed_aiconnecttest.does",
+    "act.owed_aicontinue.does",
+    "act.owed_aikeycloudflare.does",
+    "act.owed_aikeyenter.does",
+    "act.owed_aikeyreference.does",
+    "act.owed_aimemberallow.does",
+    "act.owed_aimineuse.does",
+    "act.owed_aimodelchoose.does",
+    "act.owed_aimycheckset.does",
+    "act.owed_aiorderset.does",
+    "act.owed_aiownadd.does",
+    "act.owed_aipersonalchoose.does",
+    "act.owed_aiplanconnect.does",
+    "act.owed_aiprojectbudget.does",
+    "act.owed_aiprojectcheckset.does",
+    "act.owed_aiprojectorder.does",
+    "act.owed_aiprojectuse.does",
+    "act.owed_airesultsdecline.does",
+    "act.owed_airesultsend.does",
+    "act.owed_airesultsopen.does",
+    "act.owed_airesultsread.does",
+    "act.owed_airunstart.does",
+    "act.owed_aisend.does",
+    "act.owed_aisendrefuse.does",
+    "act.owed_aisignin.does",
+    "act.owed_aistop.does",
+    "act.owed_aiswitchaccount.does",
+    "act.owed_aitermsaccept.does",
+    "act.owed_aitestopen.does",
+    "act.owed_aitestrun.does",
+    "act.owed_aitestsetup.does",
+    "act.owed_aiwait.does",
+    "act.owed_aiwithout.does",
     "act.owed_alertconnect.does",
     "act.owed_aliaswithdraw.does",
     "act.owed_capturecredentiallist.does",
@@ -8271,6 +8418,7 @@
     "act.owed_hashcopy.does",
     "act.owed_importregrade.does",
     "act.owed_installalongside.does",
+    "act.owed_installcheck.does",
     "act.owed_installremove.does",
     "act.owed_installremoveconfirm.does",
     "act.owed_installupdate.does",
@@ -8344,6 +8492,7 @@
     "act.projectfork.does",
     "act.projectinvite.does",
     "act.projectjoin.does",
+    "act.projectjoin.label.action",
     "act.projectjoin.label.home",
     "act.projectjoin.label.project",
     "act.projectjoin.label.projects",
@@ -8734,6 +8883,7 @@
     "mark.strength.means",
     "member.founder.unnamed",
     "money.flow.step",
+    "observation-log.partial.looked_got_part",
     "passage.facts.count",
     "passage.facts.count.one",
     "progression.finding.state.dismissed",
@@ -9218,8 +9368,10 @@
     "screen.findin.cite.supports",
     "screen.held.ack",
     "screen.held.ackhelp",
+    "screen.held.archivemore",
     "screen.held.mitigation",
     "screen.held.mitigationhelp",
+    "screen.held.more",
     "screen.held.name",
     "screen.held.none",
     "screen.held.selectfailed",
@@ -9242,6 +9394,7 @@
     "screen.home.area.members",
     "screen.home.area.need.many",
     "screen.home.area.need.one",
+    "screen.home.area.nothing",
     "screen.home.area.ourmove",
     "screen.home.area.theirmove",
     "screen.home.areas",
@@ -9320,6 +9473,7 @@
     "screen.money.f.payer",
     "screen.money.f.stage",
     "screen.money.name",
+    "screen.people.more",
     "screen.person.kind.address",
     "screen.person.kind.birth",
     "screen.person.kind.contact",
@@ -9530,14 +9684,14 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 1547,
+    "reads": 1595,
     "minted": 3,
     "keyedRows": 0,
-    "literalKeys": 653,
+    "literalKeys": 657,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 894
+    "computedKeys": 938
    },
    "unkeyed": [
     {
@@ -9817,6 +9971,47 @@
     "act.outcomecarry.does",
     "act.owed_actioninquiry.does",
     "act.owed_actionstake.does",
+    "act.owed_aiaccountadd.does",
+    "act.owed_aiaccountpick.does",
+    "act.owed_aiaccountremove.does",
+    "act.owed_aiaccountswitch.does",
+    "act.owed_aiaskadmin.does",
+    "act.owed_aibudgetset.does",
+    "act.owed_aicheckset.does",
+    "act.owed_aichooseother.does",
+    "act.owed_aiconnecttest.does",
+    "act.owed_aicontinue.does",
+    "act.owed_aikeycloudflare.does",
+    "act.owed_aikeyenter.does",
+    "act.owed_aikeyreference.does",
+    "act.owed_aimemberallow.does",
+    "act.owed_aimineuse.does",
+    "act.owed_aimodelchoose.does",
+    "act.owed_aimycheckset.does",
+    "act.owed_aiorderset.does",
+    "act.owed_aiownadd.does",
+    "act.owed_aipersonalchoose.does",
+    "act.owed_aiplanconnect.does",
+    "act.owed_aiprojectbudget.does",
+    "act.owed_aiprojectcheckset.does",
+    "act.owed_aiprojectorder.does",
+    "act.owed_aiprojectuse.does",
+    "act.owed_airesultsdecline.does",
+    "act.owed_airesultsend.does",
+    "act.owed_airesultsopen.does",
+    "act.owed_airesultsread.does",
+    "act.owed_airunstart.does",
+    "act.owed_aisend.does",
+    "act.owed_aisendrefuse.does",
+    "act.owed_aisignin.does",
+    "act.owed_aistop.does",
+    "act.owed_aiswitchaccount.does",
+    "act.owed_aitermsaccept.does",
+    "act.owed_aitestopen.does",
+    "act.owed_aitestrun.does",
+    "act.owed_aitestsetup.does",
+    "act.owed_aiwait.does",
+    "act.owed_aiwithout.does",
     "act.owed_alertconnect.does",
     "act.owed_aliaswithdraw.does",
     "act.owed_capturecredentiallist.does",
@@ -9837,6 +10032,7 @@
     "act.owed_hashcopy.does",
     "act.owed_importregrade.does",
     "act.owed_installalongside.does",
+    "act.owed_installcheck.does",
     "act.owed_installremove.does",
     "act.owed_installremoveconfirm.does",
     "act.owed_installupdate.does",
@@ -10400,14 +10596,14 @@
     "state.undetermined"
    ],
    "counts": {
-    "reads": 842,
+    "reads": 884,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 123,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 720
+    "computedKeys": 762
    },
    "unkeyed": [],
    "retired": [
@@ -11346,6 +11542,13 @@
     "screen.document.passages.head",
     "screen.document.place.restson",
     "screen.document.purpose",
+    "screen.document.reading.done",
+    "screen.document.reading.partial",
+    "screen.document.reading.progress",
+    "screen.document.reading.repairable",
+    "screen.document.reading.repairable.door",
+    "screen.document.reading.stated",
+    "screen.document.reading.too_large",
     "screen.document.record.added",
     "screen.document.record.release",
     "screen.document.release.ack",
@@ -11380,6 +11583,7 @@
     "screen.document.testify.which",
     "screen.document.testify.which.help",
     "screen.document.testify.who",
+    "screen.document.text.full",
     "screen.document.text.partial",
     "screen.document.text.read",
     "screen.document.text.tip",
@@ -11556,6 +11760,7 @@
     "screen.objective.you-cannot-reopen-it",
     "screen.objective.you-must-have-joined-this-project",
     "screen.objective.your-name-and-the-date-are-kept-with-the-link",
+    "screen.people.more",
     "screen.plan.empty",
     "screen.plan.name",
     "screen.proceeding.name",
@@ -12040,6 +12245,7 @@
     "shell.glance.timeline",
     "shell.glance.weeks",
     "shell.icon.clock",
+    "shell.more",
     "shell.reason",
     "shell.reason.help",
     "shell.reason.lead",
@@ -12102,19 +12308,20 @@
     "translate.read"
    ],
    "counts": {
-    "reads": 1683,
+    "reads": 1693,
     "minted": 2,
     "keyedRows": 0,
-    "literalKeys": 1200,
+    "literalKeys": 1211,
     "inline": 2,
     "inlineKeyed": 2,
     "inlineUnkeyed": 0,
-    "computedKeys": 483
+    "computedKeys": 482
    },
    "unkeyed": []
   },
   "screens-intake": {
    "reads": [
+    "acquisition.note.continuation_files_new",
     "act.acquire.label.capture",
     "act.archivelist.label.archive",
     "act.capturerequest.label.capture",
@@ -12199,6 +12406,7 @@
     "refusal.CAPTURE_CREDENTIAL_NOT_A_MEMBER",
     "refusal.CAPTURE_CREDENTIAL_OWN_HOST",
     "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE",
+    "refusal.CAPTURE_NOT_HELD",
     "refusal.CAPTURE_REQUEST_NOT_RETRYABLE",
     "refusal.CRUCIAL_IN_BATCH",
     "refusal.DIGEST_MISMATCH",
@@ -12213,6 +12421,7 @@
     "refusal.NO_SAFE_VIEW",
     "refusal.PRESENT",
     "refusal.RESOLVE_NO_REASON",
+    "refusal.SAFE_VIEW_FAILED",
     "refusal.SCAN_HOLD",
     "refusal.SOURCE_REFUSED",
     "refusal.SWEEP_RATIFY_NOT_AN_OWNER",
@@ -12371,6 +12580,9 @@
     "screen.capture.cred.user",
     "screen.capture.cred.why1",
     "screen.capture.cred.why2",
+    "screen.capture.fetch.done",
+    "screen.capture.fetch.pending",
+    "screen.capture.fetch.why",
     "screen.capture.file.choose",
     "screen.capture.file.choosehelp",
     "screen.capture.file.done",
@@ -12741,17 +12953,18 @@
     "state.empty",
     "state.item.review.name",
     "state.loading",
-    "state.undetermined"
+    "state.undetermined",
+    "transcribe.why.evidenceabsent"
    ],
    "counts": {
-    "reads": 627,
+    "reads": 634,
     "minted": 0,
     "keyedRows": 0,
-    "literalKeys": 612,
+    "literalKeys": 618,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 15
+    "computedKeys": 16
    },
    "unkeyed": []
   },
@@ -14064,6 +14277,7 @@
     "refusal.IMPORTED_NOT_ACCEPTED",
     "refusal.IMPORT_ACCEPT_NO_REASON",
     "refusal.IMPORT_NOTHING_ACCEPTED",
+    "refusal.NOT_RECORDED",
     "refusal.NOT_THE_CAPTURING_ACTOR",
     "refusal.NOT_THE_PROJECT_OWNER",
     "refusal.NO_CASE_DOCUMENT",
@@ -14072,10 +14286,12 @@
     "refusal.NO_SUCH_ACCOUNT_DRAFT",
     "refusal.NO_SUCH_CASE",
     "refusal.PROJECT_ACT_NOT_THE_OWNER",
+    "refusal.PUBLISH_AT_NO_ZONE",
     "refusal.PUBLISH_NO_FINDING",
     "refusal.REVIEW_NO_SUCH_CASE",
     "refusal.SECRET_NOT_RECOGNISED",
     "refusal.STATEMENT_ACK_NO_REASON",
+    "refusal.TOO_LARGE",
     "refusal.reference",
     "refusal.uncatalogued",
     "review.body.nocase",
@@ -14536,6 +14752,7 @@
     "screen.imported.withdraw.label",
     "screen.imported.withdraw.none.summary",
     "screen.panel.limit.remove",
+    "screen.people.more",
     "screen.person.fact.notstated",
     "screen.published.a.filtered.view.you.constructed",
     "screen.published.a.leg.the.team.holds.explain",
@@ -14544,6 +14761,19 @@
     "screen.published.a.way.to.read.the.explain",
     "screen.published.back.to.the.whole.case",
     "screen.published.below",
+    "screen.published.casefile.being_prepared",
+    "screen.published.casefile.code.BUCKET_FAILED",
+    "screen.published.casefile.code.FINDING_MISSING",
+    "screen.published.casefile.code.INTERRUPTED",
+    "screen.published.casefile.code.MATERIAL_MISSING",
+    "screen.published.casefile.code.NOT_RECORDED",
+    "screen.published.casefile.code.NO_BUCKET",
+    "screen.published.casefile.code.STORE_SILENT",
+    "screen.published.casefile.code.TOO_LARGE",
+    "screen.published.casefile.code.UNKNOWN",
+    "screen.published.casefile.retrying",
+    "screen.published.casefile.stopped",
+    "screen.published.casefile.waiting_on_members",
     "screen.published.check.the.signature.at.the",
     "screen.published.choose.the.weakest.strength.you",
     "screen.published.choose_a_file_or_paste",
@@ -14764,10 +14994,10 @@
     "time.pm"
    ],
    "counts": {
-    "reads": 857,
+    "reads": 874,
     "minted": 0,
     "keyedRows": 0,
-    "literalKeys": 855,
+    "literalKeys": 872,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
@@ -15083,6 +15313,47 @@
     "act.outcomecarry.does",
     "act.owed_actioninquiry.does",
     "act.owed_actionstake.does",
+    "act.owed_aiaccountadd.does",
+    "act.owed_aiaccountpick.does",
+    "act.owed_aiaccountremove.does",
+    "act.owed_aiaccountswitch.does",
+    "act.owed_aiaskadmin.does",
+    "act.owed_aibudgetset.does",
+    "act.owed_aicheckset.does",
+    "act.owed_aichooseother.does",
+    "act.owed_aiconnecttest.does",
+    "act.owed_aicontinue.does",
+    "act.owed_aikeycloudflare.does",
+    "act.owed_aikeyenter.does",
+    "act.owed_aikeyreference.does",
+    "act.owed_aimemberallow.does",
+    "act.owed_aimineuse.does",
+    "act.owed_aimodelchoose.does",
+    "act.owed_aimycheckset.does",
+    "act.owed_aiorderset.does",
+    "act.owed_aiownadd.does",
+    "act.owed_aipersonalchoose.does",
+    "act.owed_aiplanconnect.does",
+    "act.owed_aiprojectbudget.does",
+    "act.owed_aiprojectcheckset.does",
+    "act.owed_aiprojectorder.does",
+    "act.owed_aiprojectuse.does",
+    "act.owed_airesultsdecline.does",
+    "act.owed_airesultsend.does",
+    "act.owed_airesultsopen.does",
+    "act.owed_airesultsread.does",
+    "act.owed_airunstart.does",
+    "act.owed_aisend.does",
+    "act.owed_aisendrefuse.does",
+    "act.owed_aisignin.does",
+    "act.owed_aistop.does",
+    "act.owed_aiswitchaccount.does",
+    "act.owed_aitermsaccept.does",
+    "act.owed_aitestopen.does",
+    "act.owed_aitestrun.does",
+    "act.owed_aitestsetup.does",
+    "act.owed_aiwait.does",
+    "act.owed_aiwithout.does",
     "act.owed_alertconnect.does",
     "act.owed_aliaswithdraw.does",
     "act.owed_capturecredentiallist.does",
@@ -15104,6 +15375,7 @@
     "act.owed_hashcopy.does",
     "act.owed_importregrade.does",
     "act.owed_installalongside.does",
+    "act.owed_installcheck.does",
     "act.owed_installremove.does",
     "act.owed_installremoveconfirm.does",
     "act.owed_installupdate.does",
@@ -15376,6 +15648,7 @@
     "act.writinghelp.label.hold",
     "act.writinghelp.label.leads",
     "act.writinghelp.label.notes",
+    "act.writinghelp.label.plan",
     "act.writinghelp.label.project",
     "act.writinghelp.label.question",
     "act.writinghelp.label.watching",
@@ -15462,6 +15735,8 @@
     "file-scanner.credential.api_secret",
     "file-scanner.credential.client_id",
     "file-scanner.credential.client_secret",
+    "form.choose.search",
+    "form.choose.search.none",
     "glossary.term.acfr",
     "glossary.term.cafr",
     "glossary.term.fingerprint",
@@ -15587,6 +15862,20 @@
     "screen.action.purpose",
     "screen.actionnew.name",
     "screen.actionnew.purpose",
+    "screen.aiconnect.name",
+    "screen.aiconnect.purpose",
+    "screen.aimine.name",
+    "screen.aimine.purpose",
+    "screen.aimoments.name",
+    "screen.aimoments.purpose",
+    "screen.aiproject.name",
+    "screen.aiproject.purpose",
+    "screen.aiproviders.name",
+    "screen.aiproviders.purpose",
+    "screen.airesults.name",
+    "screen.airesults.purpose",
+    "screen.aitest.name",
+    "screen.aitest.purpose",
     "screen.answers.name",
     "screen.answers.purpose",
     "screen.archive.name",
@@ -16394,6 +16683,7 @@
     "screen.panel.uses.none",
     "screen.panel.uses.stops",
     "screen.panel.within",
+    "screen.people.more",
     "screen.people.name",
     "screen.people.purpose",
     "screen.person.name",
@@ -16561,6 +16851,7 @@
     "screen.settings.groups",
     "screen.settings.name",
     "screen.settings.purpose",
+    "screen.settings.storage.head",
     "screen.settings.sub",
     "screen.settings.yours",
     "screen.setup.name",
@@ -16807,14 +17098,14 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 2028,
+    "reads": 2089,
     "minted": 2,
     "keyedRows": 0,
-    "literalKeys": 1986,
+    "literalKeys": 2031,
     "inline": 1,
     "inlineKeyed": 0,
     "inlineUnkeyed": 1,
-    "computedKeys": 47
+    "computedKeys": 63
    },
    "unkeyed": [
     {
@@ -16848,9 +17139,9 @@
     "minted": 8,
     "keyedRows": 0,
     "literalKeys": 13,
-    "inline": 20,
+    "inline": 21,
     "inlineKeyed": 0,
-    "inlineUnkeyed": 20,
+    "inlineUnkeyed": 21,
     "computedKeys": 2
    },
    "unkeyed": [
@@ -16862,7 +17153,7 @@
     },
     {
      "file": "control-plane/archive.mjs",
-     "line": 43,
+     "line": 59,
      "text": "Changes: ${…}",
      "why": "the record file's own grammar (its front matter and section labels, as record-grammar parses them), not member prose; the sentences inside it are keyed (DEC-272)"
     },
@@ -16874,67 +17165,73 @@
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 283,
+     "line": 289,
      "text": "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 479,
+     "line": 322,
+     "text": "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
+     "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
+    },
+    {
+     "file": "control-plane/index.mjs",
+     "line": 518,
      "text": "knockerconsent is a POST",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 553,
+     "line": 592,
      "text": "the pack could not be rendered",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 967,
+     "line": 1064,
      "text": "instance has no bootstrap credential set",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 970,
+     "line": 1067,
      "text": "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 973,
+     "line": 1070,
      "text": "bootstrap credential does not match",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1204,
+     "line": 1308,
      "text": "capabilities are set by an administrator and gate what this account may DO, not what it may see",
      "why": "whoami's `detail`, which no screen draws"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1205,
+     "line": 1309,
      "text": "a machine credential has no member behind it and therefore holds no capabilities; it is bounded by the operation table and by namespace confinement instead",
      "why": "whoami's `detail`, which no screen draws"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 2236,
+     "line": 2344,
      "text": "this promotion says it is a replay of the record's own past, and a replay is honoured only when the plane can check it: it must name a drive-provenance capture (`provenanceCapture`) that this promotion registers at ${…}, whose bytes the record holds, and whose preserved promotion records name this record and list this revision's bundle.md SHA-256. One of those did not hold. Nothing was written.",
      "why": "a replaying tool's refusal `detail`, never a member's"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 3586,
+     "line": 3801,
      "text": "a POST to op=reviewcopy with the value above as `secret` in its JSON body, never in the address",
      "why": "API usage for the client holding the value, never drawn"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 3606,
+     "line": 3821,
      "text": "a POST to op=templateread with the value above as `secret` in its JSON body, never in the address",
      "why": "API usage for the client holding the value, never drawn"
     },
@@ -16981,6 +17278,7 @@
     "ai.draft.planunread",
     "ai.draft.recordsunread",
     "ai.keepaway.unread",
+    "plane.pending.interrupted",
     "refusal.AGENT_WORKER_SILENT",
     "refusal.AGENT_WORKER_UNBOUND",
     "refusal.ASK_NOT_A_MEMBER",
@@ -16989,13 +17287,13 @@
     "translate.undetermined.language"
    ],
    "counts": {
-    "reads": 9,
+    "reads": 10,
     "minted": 8,
     "keyedRows": 0,
-    "literalKeys": 9,
-    "inline": 24,
-    "inlineKeyed": 0,
-    "inlineUnkeyed": 24,
+    "literalKeys": 10,
+    "inline": 26,
+    "inlineKeyed": 1,
+    "inlineUnkeyed": 25,
     "computedKeys": 0
    },
    "unkeyed": [
@@ -17096,6 +17394,12 @@
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
+     "file": "plane/declared.mjs",
+     "line": 17,
+     "text": "what the object still owes one document, or the counts of what it owes: the keeps, readings, scan pages, supporting files and archive entries left for its alarm, each owed or ended for a stated reason; writes nothing",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
      "file": "plane/unpack.mjs",
      "line": 74,
      "text": "SELF or DAEMON_TOKEN is not bound, so no archive is unpacked by the daemon",
@@ -17180,6 +17484,13 @@
     "screen.account.name",
     "screen.action.name",
     "screen.actionnew.name",
+    "screen.aiconnect.name",
+    "screen.aimine.name",
+    "screen.aimoments.name",
+    "screen.aiproject.name",
+    "screen.aiproviders.name",
+    "screen.airesults.name",
+    "screen.aitest.name",
     "screen.answers.machine",
     "screen.answers.name",
     "screen.archive.name",
@@ -17283,73 +17594,115 @@
     "shell.unavailable.nothing.title"
    ],
    "counts": {
-    "reads": 126,
+    "reads": 133,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 42,
-    "inline": 277,
+    "inline": 284,
     "inlineKeyed": 0,
-    "inlineUnkeyed": 277,
-    "computedKeys": 84
+    "inlineUnkeyed": 284,
+    "computedKeys": 91
    },
    "unkeyed": [
     {
      "file": "journey-check/account.mjs",
-     "line": 45,
+     "line": 53,
+     "text": "states more than one",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/account.mjs",
+     "line": 60,
+     "text": "the plane's script {slug} is not in the account",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/account.mjs",
+     "line": 62,
+     "text": "the plane's bytes state no watchdog cron ({tag}: {why})",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/account.mjs",
+     "line": 63,
+     "text": "the plane states the cron \"{stated}\", not the watchdog's \"{watchdog}\"",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/account.mjs",
+     "line": 65,
+     "text": "the plane's script {slug} holds no cron: no schedules were set on it",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/account.mjs",
+     "line": 66,
+     "text": "the plane's script {slug} holds \"{got}\", its statement says \"{stated}\"",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/account.mjs",
+     "line": 73,
      "text": "Journey test account",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/account.mjs",
-     "line": 71,
+     "line": 101,
      "text": "Allow access (test account)",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/account.mjs",
-     "line": 71,
+     "line": 101,
      "text": "Allow access to ${…}",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/account.mjs",
-     "line": 71,
+     "line": 101,
      "text": "This is the walk's stand-in for Cloudflare's own consent page.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/account.mjs",
-     "line": 84,
+     "line": 114,
      "text": "PKCE verifier does not match",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/account.mjs",
-     "line": 98,
+     "line": 128,
      "text": "Service binding '${…}' references Worker '${…}' which was not found",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/account.mjs",
-     "line": 173,
+     "line": 209,
      "text": "The specified bucket does not exist.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/account.mjs",
-     "line": 176,
+     "line": 212,
      "text": "The bucket you tried to create already exists",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/account.mjs",
-     "line": 202,
+     "line": 226,
+     "text": "The cron triggers of this script could not be set.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/account.mjs",
+     "line": 244,
      "text": "Authentication error",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/account.mjs",
-     "line": 210,
+     "line": 252,
      "text": "the walk's fake account does not answer this",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
@@ -18507,181 +18860,181 @@
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 116,
+     "line": 120,
      "text": "Teo, from flat 9",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 126,
+     "line": 130,
      "text": "she signs in on her own computer",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 127,
+     "line": 131,
      "text": "assistant not ready: her connect screen",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 132,
+     "line": 136,
      "text": "she signs in on her own computer",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 155,
+     "line": 159,
      "text": "Roof repairs at 14 Lakeshore Row",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 155,
+     "line": 159,
      "text": "Mai, from flat 4",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 155,
+     "line": 159,
      "text": "Teo, from flat 9",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 155,
+     "line": 159,
      "text": "Interpreting, Spanish and English",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 156,
+     "line": 160,
      "text": "Water has come through the ceiling of flat 4 since Monday; reported twice.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 156,
+     "line": 160,
      "text": "Flat 4, second floor",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 156,
+     "line": 160,
      "text": "Housing notice 2026-118: repair order, 14 Lakeshore Row",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 157,
+     "line": 161,
      "text": "Housing notice 2026-131: heating order, 14 Lakeshore Row",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 157,
+     "line": 161,
      "text": "When did the tenants first report the leak to the landlord?",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 157,
+     "line": 161,
      "text": "The city withdrawing or amending notice",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 158,
+     "line": 162,
      "text": "The city's notice orders",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 158,
+     "line": 162,
      "text": "City repair order",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 158,
+     "line": 162,
      "text": "Flat 4, 14 Lakeshore Row",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 158,
+     "line": 162,
      "text": "My note of when the water came through the ceiling.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 159,
+     "line": 163,
      "text": "The copy is the notice the city published at that address",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 159,
+     "line": 163,
      "text": "Recorded by the release walk.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 159,
+     "line": 163,
      "text": "This is what the tenants need answered.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 159,
+     "line": 163,
      "text": "Tenants of 14 Lakeshore Row report water coming in.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 225,
+     "line": 229,
      "text": "1 · sign in by her handle",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 232,
+     "line": 236,
      "text": "she signs in by her handle",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 233,
+     "line": 237,
      "text": "assistant not ready: her connect screen",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 241,
+     "line": 245,
      "text": "she signs in by her handle",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 262,
+     "line": 266,
      "text": "{id}: not drawn signed out at its bare address, so its title and weight marks were not checked ({why})",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 283,
+     "line": 287,
      "text": "the live arm needs the test instance's address (--live",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 284,
+     "line": 288,
      "text": "the environment does not hold ${…}",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 303,
+     "line": 307,
      "text": "${…}: open / and sign in",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
@@ -37216,6 +37569,570 @@
      "line": 1308,
      "text": "money's read names no host and this isolate holds ${…} money stores",
      "why": "a wiring diagnostic (which store instance answers a host), for builders; no member reaches it"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 404,
+     "text": "a balance class is read against a fund a party names, and none is named",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 518,
+     "text": "a calculation is never a money fact's source: its result is a calculation, and the facts it read are the sources (K1468)",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1327,
+     "text": "a calculation is never a money fact's source",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 483,
+     "text": "a canonical table row read through a binding a member adopted (source {table, row, binding})",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1151,
+     "text": "a chain of authority is read for one money fact (MNY-...)",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 387,
+     "text": "a code names one of the active profiles' classification schemes{v1} and its code",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1333,
+     "text": "a duty is never named in a money fact",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 472,
+     "text": "a figure states how it was read: {list}{v1}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 525,
+     "text": "a found table's amount column is declared and counted through calculations, never read into money facts row by row; record a figure from one passage of the table instead",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1242,
+     "text": "a fund's type is {list}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1243,
+     "text": "a fund's type names its basis: the source that states it",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1329,
+     "text": "a hypothesis is never named in a money fact ({k})",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1338,
+     "text": "a hypothesis is never named in a money fact",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 378,
+     "text": "a {kind} takes a stage of {list}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 496,
+     "text": "a machine records a money fact only with {list}; anything else is proposed to a member, never written",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 476,
+     "text": "a machine's reading is one of {list}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 435,
+     "text": "a money fact concerns an entity of kind {list}; {id} is a {k}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 445,
+     "text": "a money fact concerns events, entities of kind contract, fund, program or proceeding, or lines; {id} is none of them",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 330,
+     "text": "a money fact is an object of its fields",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 690,
+     "text": "a money fact is read by its id (MNY-...)",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 359,
+     "text": "a money fact keeps the figure exactly as its source printed it (as_read)",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 360,
+     "text": "a money fact names its currency",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1337,
+     "text": "a money fact never concerns a duty",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 449,
+     "text": "a money fact never names a duty; the duty names the fact it cites",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 513,
+     "text": "a money fact rests on exactly one source: a content extent or another money fact",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 514,
+     "text": "a money fact rests on exactly one source",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 348,
+     "text": "a money fact states its amount",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 270,
+     "text": "a money fact states the accounting period it covers",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 361,
+     "text": "a money fact's sign is explicit: + or -",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 892,
+     "text": "a money set has a label a person can read",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 943,
+     "text": "a money set is read by its id (MSR-...)",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 891,
+     "text": "a money set's purpose is {list}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 932,
+     "text": "a proposal names the method that proposed it",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 365,
+     "text": "a range carries its low and high as {low, high}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 353,
+     "text": "a range's amount is {low, high}, each an exact decimal written as a string",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 367,
+     "text": "a range's low is above its high",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 763,
+     "text": "a read names the member reading; an absent viewer is neither an administrator nor the public",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 529,
+     "text": "a source has no field {k}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 533,
+     "text": "a source's ingest is the key of the ingest that read a table row, a non-empty string of at most {max} characters, and only a table row source has one",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 519,
+     "text": "a source is {capture_sha, extent}, {content_id} or {fact}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 536,
+     "text": "a source is {capture_sha, extent}, {content_id}, {table, row, binding} or {fact}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 537,
+     "text": "a source is one of a content extent or a money fact, never both",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 549,
+     "text": "a table row source names its table, its row and the binding it was read through",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1330,
+     "text": "a total is a calculation, never stored as a money fact",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 900,
+     "text": "a trail concerns one id, or none",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 406,
+     "text": "a {type} fund's classes are {list}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 474,
+     "text": "a typed transcription is a member's act; a machine's reading names its method",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 672,
+     "text": "a withdrawal states why",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 980,
+     "text": "after names no set in this list; start again without it",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 374,
+     "text": "an actual amount names its stage: one of {list} for {kind}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 357,
+     "text": "an amount is an exact decimal written as a string of digits (thousands separators and one point allowed), unsigned and unscaled; never a number with a binary fraction. The sign is its own field",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 897,
+     "text": "an attribution set concerns one registered entity of kind contract",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 792,
+     "text": "an entity's money is read by the entity's id (moneyof&entity=ENT-...)",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 767,
+     "text": "an extent is one of content's kinds ({list})",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 245,
+     "text": "an ingest is marked by its key, a non-empty string of at most {max} characters",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 247,
+     "text": "an ingest is marked open (true) or closed (false)",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 371,
+     "text": "basis is one of {list}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 502,
+     "text": "buys is {quantity, unit, what}, the quantity an exact decimal",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 384,
+     "text": "codes are a list of {scheme, code}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 421,
+     "text": "concerns is a list of ids",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1080,
+     "text": "{contract} is not a registered contract",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 424,
+     "text": "each id concerned is a string",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 418,
+     "text": "{end}.as_written is the party's name as the source writes it",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 415,
+     "text": "{end}.fund names {v1}, which is not registered as a fund",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 853,
+     "text": "{fact_id} is withdrawn and is never counted",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1246,
+     "text": "{fund} is not registered as a fund",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 442,
+     "text": "{id} is not a line the record holds that the writer can see",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 369,
+     "text": "kind is one of {list}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 638,
+     "text": "{module}'s listener failed on {change} of {factId}: {String}. Nothing was written.",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 966,
+     "text": "money sets are listed by what they concern: name the id (moneysets&concerns=...)",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 848,
+     "text": "name the money facts by their ids",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1182,
+     "text": "no authorising event is held for this event",
+     "why": "the authorising chain's `says`, for builders: the money screen draws the chain's hop count (screen.money.auth.chain), never this sentence (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 582,
+     "text": "no money fact id could be drawn",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 89,
+     "text": "no money fact with that id is held here, or it is not visible to the asker; a money fact is recorded with op=moneyrecord before anything can name it",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 916,
+     "text": "no money set {String} is held",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 405,
+     "text": "no type is held for the fund {fund}, so its balance-class family is not known (setFundType)",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 403,
+     "text": "only a balance carries a balance class",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 366,
+     "text": "only a fact of precision range carries {low, high}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 376,
+     "text": "only an actual amount has a stage; this one is {phase}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 370,
+     "text": "phase is one of {list}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 363,
+     "text": "precision is one of {list}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 1182,
+     "text": "the authorising events held toward this event",
+     "why": "the authorising chain's `says`, for builders: the money screen draws the chain's hop count (screen.money.auth.chain), never this sentence (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 565,
+     "text": "the capture named",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 457,
+     "text": "the fact an adjustment names ({String}) is not held",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 394,
+     "text": "the party {end} is {entity?, fund?, account?, as_written}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 465,
+     "text": "the question {String} is not an inquiry held here, or not visible to the writer",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 568,
+     "text": "the source's extent: {detail}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 837,
+     "text": "these facts differ in {v1}: {fact_id} and {fact_id_2}; a sum is taken only over one kind, phase and stage, basis, currency and period",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 913,
+     "text": "to {act} a fact is a member's act; a machine proposes (proposeInclusion)",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 914,
+     "text": "to {act} a fact states why",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 538,
+     "text": "{what} is not held here, or not visible to the writer",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 334,
+     "text": "{where} has no field {String}; a money fact holds only {list}. Nothing was written.",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 764,
+     "text": "who recorded from a passage is read for one capture, by its sha256",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+    },
+    {
+     "file": "bio-plane/src/money/index.mjs",
+     "line": 785,
+     "text": "who recorded from this capture could not be read: {String}",
+     "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
     }
    ],
    "batch": "DEC-260"
@@ -50197,6 +51114,144 @@
      "line": 749,
      "text": "The security level of your group's Civicsmith has been High since ${…}, and in that time ${…}.",
      "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1262,
+     "text": "a cost message is steps' (its R15): relayed once to the owners of each other sharing project, with its writer's handle, naming no project unless its writer did.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 747,
+     "text": "a dated wait is inquiry's (its R54–R57), due from the start of its local day; it goes to the member who set it and to nobody else, and leaves when they look, re-date or remove it, or the question concludes.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 491,
+     "text": "a detector's result is money-checks' (its R6–R10): shown only for a version gated at or under 20% and switched on for the project, to a viewer who may see every input.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 898,
+     "text": "a difference between two captures of a policy's published copy (following R21), never a finding of the record and never what the change means; it leaves when an amendment is held for it or its recipient disposes of it.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1440,
+     "text": "a fetch-done record is capture's: written once when a large capture's background fetch is filed; told once, to the member who asked, and to nobody else.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1187,
+     "text": "a find is the system's work (question-explorer R5), offered once to each of the question's recipients who may see it; it is not evidence until a member takes it in.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1208,
+     "text": "a later arrival is steps' (its R23): told once to each recipient of a referring question who may see the step and what arrived, and to the member who did the step; no outcome moves by itself.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1093,
+     "text": "a limit first reached in its current period is ai-use's (its R5), answered to that account's owners; it is told once a period, and names no member.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1280,
+     "text": "a milestone overdue is investigation's (its R3): told once to each joined participant; a reminder to the member who asked, on its day, and to nobody else.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1118,
+     "text": "a project's sign-in account serves only while the project has one member (ai-accounts R13); answered to the project's owners, naming no member.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1301,
+     "text": "a quiet spell is investigation's (its R18): told once per spell to the project's joined participants; no member act declares the objective met.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1316,
+     "text": "a reviewer's comments left out are review's (its R33): told once to each member reviewer, who may file a response in the case's docket.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 961,
+     "text": "a scanner's `found` note (file-safety R15) places a scan hold (its R16): the original does not open, the safe view stays; two members' releases (its R17) or a second engine's clean check of a hold the built-in scanner alone placed (its R18) open it again.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1246,
+     "text": "a shared cost is steps' (its R14): answered to each owner of each sharing project only, never when any of them is hidden; told once per step, totals and project set.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 535,
+     "text": "a standing question's run is answers' (its R17–R20), seen only by its author; one entry per run that found something new, so each new find is told once (DEC-94).",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1226,
+     "text": "a step's date and a reminder are steps' (its R12): told once, to the member who set the date or asked for the reminder, and to nobody else.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1014,
+     "text": "a tool answering PRIVATE_MODE_NOT_HONOURED is switched off (file-safety R31) and is used again only once an administrator's test passes (its R29).",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1393,
+     "text": "a watched item's last change is retrieval's (its R85), later than the instant this member's own watch mark was set (following R35); told once per change, to her alone, and it says nothing of what changed.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1050,
+     "text": "an account's Ask is ai-use's (its R9): at most one a local day, answered to that account's owners; silence means no.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 1494,
+     "text": "an ingest's end is calculations' (its R14): told once, to the member who ingested, when a background run is done or was stopped, and to nobody else.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 443,
+     "text": "an interest check's result is people's (its R23–R25): shown only once its version's gate is recorded open, switched on for the project, and to a viewer who may see every input.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 705,
+     "text": "an occurrence's state is duties' (its R9–R11), derived on read as of this read's instant; a body is overdue only after the latest candidate due date, possibly overdue between (K1444 (i)).",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+    },
+    {
+     "file": "bio-plane/src/notice-producers/index.mjs",
+     "line": 787,
+     "text": "the level is credentials' (its R45), over counts only (its R44); an episode is an unbroken run of hours at whose end the level was High, told once to each administrator, and a later one is told again.",
+     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
     }
    ],
    "note": "the design's words govern, the module's own differing: queue.milestone-overdue.summary, queue.temporal-expectation-due.undetermined.summary",

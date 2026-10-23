@@ -354,6 +354,10 @@ for (const [key, was] of Object.entries(JSON.parse(fs.readFileSync(path.join(HER
 for (const pre of ["upload-directed: ", "read: a case's drafts of its account", "case-directed: ", "action-directed: ", "credential: a member's own sign-in", "read: every interface word"])
   DECISIONS.push(["control-plane", "control-plane/owner-ops.mjs", "^" + pre, dev("grade")]);
 DECISIONS.push(["plane", "plane/declared.mjs", "^member-directed: a member's own question", dev("grade")]);
+/* DEC-424 (B495): on T51 after fix round 6, the plane's owedwork op description is builders' grading text like the other declared ops'; the
+   interrupted reading's reason is the design's own word (DEC-417 plane.pending.interrupted, whose English the code's stand-in no longer matches). */
+DECISIONS.push(["plane", "plane/declared.mjs", "^what the object still owes one document", dev("grade")]);
+DECISIONS.push(["plane", "plane/pending.mjs", "=the reading did not finish; the object stopped", "plane.pending.interrupted"]);
 DECISIONS.push(["screens-settings", "screens-settings/bias.mjs", "=## What This Does Not Enforce", dev("filegrammar")]);
 /* What a module's remaining inline strings are, when no decision or word names them. */
 const DEFAULTS = {

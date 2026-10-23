@@ -6534,3 +6534,18 @@ the design: `screen.document.reading.too_large` "Civicsmith read this document, 
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-423").
 owed: BOB: the reading's keys that can be largest, so each has a plain name (any not listed takes `.other`); whether this document's words stay searchable and citable when its reading is stated so, so a second sentence can say so.
 amended: 2026-10-23 (B493, K4675): the fills keyed by the reading's own keys, `.part.text_units` "its text", `.pages`, `.cells`, `.entities`, `.facts` "the names and dates found in it", `.references` "the references found in it", `.tables` "its tables", `.other`; and the second sentence `screen.document.reading.too_large.lost` "Until it is read again in smaller pieces, its words can't be searched or cited." (such a reading keeps no text, names or cells, extraction R97). Owed answered. The plain-name fills and the second sentence are T52's (later-ux.md); the stand-in serves T51.
+
+### DEC-424 · answered
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B495: fix round 6's stand-ins, K4685, K4687, K4702, K4710 (5), K4716, K4717, K4721, K4728; tranche/T51 @ 583d8072dd)
+for: design (T51)
+question: Design rows for the round's code-origin stand-ins (the case file's state on a published case, money read in the background, a case document too large, the case-file format checks, a large sheet's reading), two keys with no row, the reads and unkeyed lists, and which internal descriptions a member reads.
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: 56 rows (block "DEC-424" in `screens/words-drawn.src.py`), same keys and fills as the stand-ins: `screen.published.casefile.{being_prepared, retrying, stopped, waiting_on_members}` and `.code.*` (nine causes in plain words; "stopped": "This edition is complete and signed, but its case file can't be built, because a material it lists is no longer held. …"); `calculations.ingest.*`, `notice-producers.ingest.*`, `money.ingest.partial` ("being read in the background", never "ingest", to a member); the case document too large and not stored; the seven case-file format checks; the large sheet's reading; `installer.fleet.logsunconfirmed` and `installer-steps.plane.observability`; 14 money period and trail details and 4 notice rows a member reads. Of the 140 internal descriptions, 122 are judged unread (refusal details and notice bases never drawn), recorded in `words-reads-handoffs.json` (DEC-344's way), with two `DECISIONS` in `words-reads.src.mjs`. `words-reads.json` regenerated from 583d8072dd: the case-checker spec strings (line 11 and the five bio-case-file/4 lines) and screens-action's Join keys kept (now carried in `words-reads-handoffs.json`); on the tranche the words check reads 0 failures (missingkey and inline cleared).
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-424"); `screens/words-reads-handoffs.json`.
+owed: BOB: the keys read with these fills, or a QUESTION naming any that differ; whether an update stopped by `installer-steps.plane.observability` leaves anything changed (the row says no "Nothing was changed." until it is known).
