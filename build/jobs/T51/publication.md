@@ -131,3 +131,7 @@ G47 (store bound): complete. CASE_DOCUMENT_BYTES_MAX = 1,572,864 B (BOB's consta
 **Checks.** publication suite under the preload: `tests 165, pass 163, fail 1 (the seam above), todo 1`; public-read suite `244/244`. `checks/run.mjs /home/user/bio`: format `0 failures`; architecture `4300 product files ... 0 failures`; coverage `6685 of 6685 ... 0 failures`; words `18524 words ... 0 failures` (no new sentence); channels `0 failures`. Ownership: below.
 
 Size (session_01QheArVvjbWvvMPvEMfwKVF): test runs 17, module lines 2503
+
+## J7 · COMPLETE
+
+G47t (CHANGE B6): complete, one seam red by name. published_shas.capture_sha added (CREATE + ADDITIVE_COLUMNS, never back-filled); kind attestation files inserted with it through ATTESTATION_SHA_UPSERT (differing stored capture -> NULL, stored NULL never filled, same capture unchanged); every other kind and writer unchanged. g47t-registry.test.mjs: 4 of 6 red on unfixed source, now 5 green (k=2, later editions, R-OLD migration, declaration unchanged, one-capture control). SEAM RED BY NAME: 'R57 R40 seam, over the real case-carriage' waits for CASE-CARRIAGE #15 (holdMaterials does not yet answer capture_sha); tell me to merge tranche/T51 when it lands. L: g47t-miniflare.test.mjs passes in a real DO SQLite (ALTER ADD COLUMN, 7-col insert, DO UPDATE). Publication suite 165 (163 pass, 1 seam fail, 1 todo); public-read 244/244; format/architecture/coverage/words/ownership 0 failures. No census op changes. Proposed R40/R57 lines in my record (section G47t).
