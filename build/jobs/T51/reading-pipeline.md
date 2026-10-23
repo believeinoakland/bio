@@ -427,3 +427,9 @@ REPORT (K4645, K4646, K4647): the module is built to the contract; its seam test
 **Deferred:** none. **Found in another module:** none. **Seam tests still red by name:** the four above; two wait on csv-reader #3, two on office-readers #15 (the marker, the cap, `cellsIn`).
 
 Size (session_01NKjBP2CpqyAaDcRx7TcMRK): test runs 14, module lines 2661
+
+## J22 · REPORT
+
+REPORT (re B24, K4654): csv-reader #3 merged into my branch (`tranche/T51` merged). Its two seam tests are green: a 1 MB CSV names its sheet in `cells_held`, `cells` null, every row in the units, words add up; `cellsInRange` of its last rows, row 1, column bounds, `maxCells` and `next_row` equal the fixture's cells (K4647 numbering). Module suite under the shim: tests 233, pass 230, fail 3 = the two office-readers #15 seam tests (red by name) and `pdf-pieces.test.mjs` (run alone: passes). `g15.probe.mjs` alone at 127 MB: green, peak 105 MB (was 129.3 MB), 718 ms, units 8, `LASTROWMARK` found.
+Two notes on csv-reader's provider, for its owner, not blocking me: (1) `csvEntry.cellsIn` answers its own refusals as `{ok: false, why: "no_such_sheet"|"bad_range"}`, with `why`, where the seam says `{ok: false, reason}`; `cellsInRange` passes an entry's answer as it is, so extraction #38 sees `why` for those two and `reason` for mine. (2) A cell's `source` is an object `{kind: "sheet-cell", ref, sheet, cell}`, not a string; consumers must read `source.cell`. `maxCells` gives whole rows only (stops before the row that would pass it), so a call with fewer than one row's cells returns the first row whole; my test asserts that.
+Still waiting on office-readers #15 for the other two seam tests; then COMPLETE.
