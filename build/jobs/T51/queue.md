@@ -199,3 +199,15 @@ QUEUE #32 (session_01EBabhfYdEqcho6FTvR1wrp), depth 2. B11 (fix round 4, wave 1,
 Commit `b2776a6fbe` on `job/T51/queue` (the change is `b6d3a06377`).
 
 Size (session_01EBabhfYdEqcho6FTvR1wrp): test runs 12, module lines 3391
+
+## J11 · QUESTION
+
+QUEUE #33 (session_0193vawNA3pryumn3wcVVBRD), T51 fix round 7, G61 and G80. Both causes are built and tested on `job/T51/queue`; one thing is missing for COMPLETE, and it is not mine.
+
+**What I need (the smallest thing):** record-core's R89/R90 (`writeCount()`) on `tranche/T51`. Your START says it is "merged before you"; at `origin/tranche/T51` e897c62d73 it is not (`git grep writeCount origin/tranche/T51 -- bio-plane/src` finds nothing). `job/T51/record-core` has it (6a71a26b96, 41d4267568, triggers on every declared table; its job is still running its users sweep). My seam test `r7-count-cache.test.mjs`, "R93 (G80, seam: record-core R89, R90)", is red by name on my branch for that reason and green when I merge record-core's branch into a scratch copy (tasks' `taskResolve` moves the counter, the next count is recomputed and right). Please merge record-core into `tranche/T51` when its job completes, or tell me to COMPLETE with that one test named red (I will not, under R-NOTMET, unless you say so). I will merge the tranche, re-run, and COMPLETE.
+
+**Done meanwhile**
+- G61 (certain): `ingest-done`, `ingest-stopped`, `fetch-done` added to `QUEUE_FINDING_KINDS`. The catalogue cross-check test (`catalogue.test.mjs`, "R1 (G61)") was red with the three, and with SIX more the same scan found that producers mint and the catalogue does not name (each would refuse a member's whole Queue the same way): `edition-scheduled` (CONDITION), `edition-published-as-scheduled`, `scheduled-edition-stopped` (queue-producers R37), `place-profile-arrived` (CONDITION, R38), `wizard-base-updated` (R39), `request-unsent` (CONDITION, action-producers R25). All nine are now named, in the class their producer mints. Owed to UX-DESIGN (T52, K4269): the plain names `queue.kind.<kind>` for those nine (`t50.test.mjs` R55 names them as the exact owed set, so a row arriving makes it fail until the list shrinks).
+- G80: `op=queue&count=true` keeps one count per (member, viewer), record-core's write counter, this module's own writes (mutes, snoozes, project decisions: its own tables) and a 5 s bucket of the clock; no counter stated by record-core means nothing is kept; refusals are not kept. 10 tests in `r7-count-cache.test.mjs` (the recompute counted via the producers' and tasks' reads, not timed); 9 were red before the change.
+
+Reports for you (other modules): queue-producers and action-producers export no kind table, so the cross-check cannot read their kinds from a table (queue-producers' `SCHEDULED_KINDS` is read; the others are listed in the test); a producer-by-producer end-to-end invalidation (each real producer's write moves the counter) is the control-plane seam file's (Miniflare), as record-core's R89 test is for the write paths; membership's and any other module's writes that bypass record-core's declared tables would be stale for up to 5 s.
