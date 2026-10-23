@@ -7,7 +7,7 @@
  * the plan states, and the last test holds capture's own declaration of `acquire` to carrying `project`, red by name until capture merges. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, main, fill, press, ok, says, DOCUMENT_STUB } from "./page.mjs";
+import { open as openPage, main, fill, press, ok, says, word, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { collectOwnerRows as realRows } from "../interface-shell/harness.mjs";
 
@@ -37,9 +37,7 @@ test("R58 (G2) a capture answered fetch_pending is said at once (size, where it 
   await pressCapture(p);
   assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS, project: PROJ }], "the project rides so the delivery can file it");
   assert.equal(fetching(p), 1, "the what-and-why line is drawn once");
-  assert.ok(says(p, "screen.capture.address.working.head"));
-  assert.ok(says(p, size[0], size[1]), "about 15.2 MB, by size.mb");
-  assert.ok(says(p, "capture.filed.project", { project: "Yosemite" }), "and where it will be filed");
+  assert.ok(says(p, "screen.capture.fetch.pending", { size: word(size[0], size[1]), project: "Yosemite" }), "the DEC-418 row: about 15.2 MB, and where it will be filed");
   assert.equal(p.byOp("allocid").length + p.byOp("promote").length, 0, "no document is promoted from a document-less answer");
   const before = p.byOp("opencaptures").length;
   await p.clock.tick(4000);
@@ -63,7 +61,7 @@ test("R58 (G2) a capture whose declared size is not stated draws the line withou
   await pressCapture(p);
   assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS }], "no project, none sent");
   assert.equal(fetching(p), 1);
-  assert.equal(main(p).textContent.includes("MB"), false, "no size is invented");
+  assert.equal(/\d+\.\d MB/.test(main(p).textContent), false, "no size is invented (the why row's own \"8 MB\" is not one)");
   assert.equal(says(p, "capture.filed.project", { project: "Yosemite" }), false);
 });
 
