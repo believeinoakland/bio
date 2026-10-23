@@ -274,6 +274,13 @@ const proceedingView = (p) => ({ forum: p.forum, forum_kind: p.forum_kind, numbe
   basis: p.basis_capture ? { capture_sha: p.basis_capture, extent: parseJson(p.basis_extent) } : null });
 /* The view's time zone, or null (jurisdictions R41). */
 const viewZone = (view) => (view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null);
+/* R20 (G55): the held view is shared by every reader, so it is frozen to its depth; a reader that wants to change one copies. */
+function deepFreeze(v, seen = new WeakSet()) {
+  if (v === null || typeof v !== "object" || seen.has(v)) return v;
+  seen.add(v);
+  for (const k of Reflect.ownKeys(v)) deepFreeze(v[k], seen);
+  return Object.freeze(v);
+}
 const parseJson = (s) => { if (s == null) return null; try { return JSON.parse(s); } catch { return s; } };
 const isMachine = (by) => typeof by === "string" && by.startsWith(MACHINE_CLASS_PREFIX);
 
@@ -406,6 +413,8 @@ function registerFigures(e, record) {
 export class Entities {
   #sql; #storage; #record; #membership; #provenance; #now;
   #onResolved = []; #onAttempt = []; #declared = false;
+  /* R20, R44 (G55): the last view built, with the key it was built from, and how many views were built (`viewBuilds`). */
+  #heldView = null; #heldKey = null; #viewBuilds = 0;
 
   constructor(storage, { record, membership = null, provenance = null, now = null } = {}) {
     this.#storage = storage;
@@ -2052,10 +2061,20 @@ export class Entities {
   /** R20 (N6; record-core R26): `jurisdictions.combine` of the instance's `jurisdiction_profiles`; an instance
    *  holding none has an empty view, over which every local fact is undetermined (jurisdictions R16). */
   view() {
-    const ids = this.#record && typeof this.#record.getSetting === "function" ? this.#record.getSetting("jurisdiction_profiles") : null;
-    const c = combine(Array.isArray(ids) ? ids : []);
-    return c && c.ok ? { ...c.view, conflicts: Array.isArray(c.conflicts) ? c.conflicts : [] } : { conflicts: [] };
+    const raw = this.#record && typeof this.#record.getSetting === "function" ? this.#record.getSetting("jurisdiction_profiles") : null;
+    const ids = Array.isArray(raw) ? raw : [];
+    const key = JSON.stringify(ids);
+    if (this.#heldView !== null && key === this.#heldKey) return this.#heldView;
+    const c = combine(ids);
+    this.#heldView = deepFreeze(c && c.ok ? { ...c.view, conflicts: Array.isArray(c.conflicts) ? c.conflicts : [] } : { conflicts: [] });
+    this.#heldKey = key;
+    this.#viewBuilds++;
+    return this.#heldView;
   }
+
+  /** R20, R44 (G55): how many times `view()` has built the view (it is held while the setting it is built from is
+   *  unchanged), so a test counts builds without touching `jurisdictions`. */
+  viewBuilds() { return this.#viewBuilds; }
 
   /* R22: a capture the record holds (its register home, provenance R48) and the viewer can see, with every address
      the record located it at (`captured_locators`, provenance R48), at most IDMATCH_ADDRESS_LIMIT, one more read
