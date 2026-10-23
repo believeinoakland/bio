@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { main, text, press, button, last, ok, W, PROJECTS } from "./page.mjs";
 import { realWorld, realPlane, profilesOf, open, until, V } from "./real.mjs";
 
-const NOT_JOINED = "refusal.PROJECT_ACT_NOT_A_PARTICIPANT";
+const NOT_JOINED = "refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited";
 
 /** The world: `quinn` invited to the project and not joined, an action of the project, the plane as `quinn` sees it. */
 function inviteWorld() {
@@ -31,15 +31,17 @@ test("E9 (R3, R4, R48): the walker's case over the real providers: the invited m
   const p = await open(`/app/start-send/${id}`, plane);
   assert.ok(text(p).includes(W(NOT_JOINED)), "the held sentence");
   for (const op of ["communicationprepare", "filingprepare", "filingapprove", "filingrecordsent", "templatesave"]) assert.ok(!button(p, op), `no ${op}`);
-  const ref = main(p).querySelector(`a[href="/app/project/${x.proj}"]`);
-  assert.ok(ref && ref.textContent.includes("Parks"), "the way to accept: the project's page");
+  assert.ok(button(p, "projectjoin"), "the way to accept: Join, in place in the fold");
+  assert.ok(!main(p).querySelector("details[data-gap=join]").querySelector(`a[href="/app/project/${x.proj}"]`), "no link to the project's page in the fold");
   assert.equal(drafts(x, id), 0, "nothing was drafted");
   // the same on the request screen
   const req = await open(`/app/request/${id}`, plane);
   assert.ok(text(req).includes(W(NOT_JOINED)) && !button(req, "communicationprepare"), "request: told, no draft step");
-  // she presses "Join" on the project's page: the op it sends, answered by the real membership
-  const joined = await plane.projectjoin({ url: `/api/?op=projectjoin&projectId=${x.proj}`, query: { projectId: x.proj }, body: null });
-  assert.equal(joined.json.result.ok !== false, true, JSON.stringify(joined.json.result).slice(0, 200));
+  // she presses "Join" in the fold on the request screen: the real `projectjoin` through the door, answered by the real membership
+  assert.ok(button(req, "projectjoin"), "request: Join in place");
+  await press(req, "projectjoin");
+  assert.equal(last(req, "projectjoin").query.projectId, x.proj, "projectjoin sent with the project");
+  await until(req, () => !button(req, "projectjoin") && button(req, "communicationprepare"), "the request screen to offer the steps once joined");
   assert.equal(x.roster.projectList({ viewer: V("quinn") }).projects.find((r) => r.id === x.proj).participation, "joined");
   // she returns: the steps are offered and work, end to end, over the real filings and filing-templates
   const back = await open(`/app/start-send/${id}`, plane);

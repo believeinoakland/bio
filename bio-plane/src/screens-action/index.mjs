@@ -21,6 +21,8 @@ export { SCREEN_WORDS };
 const SHARED = ["state.loading", "state.empty", "state.failed", "shell.unread"];
 // R21: the matter's stake on both preparation screens; the question and its refusals on `start-send` alone.
 const STAKE_LINES = ["stake.sentwith", "stake.inmatter", "stake.source.project", "stake.source.action", "stake.none", "stake.unreadable", "stake.unreadable.summary"];
+// G52 (K4686): the design's fold for a member invited and not yet joined (DEC-417), on the three screens that register `projectjoin`
+const INVITED = ["screen.projectact.invited.head", "refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited"];
 const STAKE_ASK = ["stake.ask.title", "stake.ask.says", "stake.ask.help", "stake.ask.undetermined", "stake.undetermined.summary", "stake.action.label", "stake.action.help",
   "stake.action.save", "refusal.MACHINE_CANNOT_SET_STAKE", "refusal.STAKE_MALFORMED.action"];
 // An owed act is explained under its `owed_` key until its op is no longer owed (affordances R65).
@@ -28,9 +30,9 @@ const OWED = ["actionstake", "actioninquiry"];
 const EXTRA = {
   plan: ["plan.offer.document", "plan.offer.document.means", "plan.offer.chancetofix", "plan.offer.chancetofix.means",
     "plan.offer.chancetofix.again", "plan.close.lessons", "mark.due.means"],
-  "start-send": [...STAKE_LINES, ...STAKE_ASK],
-  request: ["screen.help-records.name", "screen.places.name", "screen.places.purpose", ...STAKE_LINES],
-  action: ["mark.due.means", "law.title", "law.help", "law.stated", "law.undetermined", "law.change", "law.proposed", "law.proposal.not", "law.propose",
+  "start-send": [...STAKE_LINES, ...STAKE_ASK, ...INVITED],
+  request: ["screen.help-records.name", "screen.places.name", "screen.places.purpose", ...STAKE_LINES, ...INVITED],
+  action: [...INVITED, "mark.due.means", "law.title", "law.help", "law.stated", "law.undetermined", "law.change", "law.proposed", "law.proposal.not", "law.propose",
     "risk.title", "risk.help", "risk.tier", "risk.tier.1", "risk.tier.2", "risk.tier.3", "risk.tier.undetermined", "risk.set", "risk.revise", "risk.proposed",
     "risk.proposal", "risk.proposal.not", "action.noreply.title", "action.noreply.says", "action.noreply.question", "action.noreply.question.help",
     "act.owed_actioninquiry.label.action", "refusal.ACTION_INQUIRY_NO_QUESTION", "refusal.ACTION_NO_PROJECT", "refusal.MACHINE_CANNOT_OPEN_FROM_ACTION",
