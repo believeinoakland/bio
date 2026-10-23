@@ -347,3 +347,7 @@ Mail with `--module screens-action`; record `build/jobs/T51/screens-action.md` (
 **Then:** your suite, the impact set (`node build/plan/impact.mjs tranche/T51 HEAD` from the repository root) as users, `checks/run.mjs` (read each arm's own failure count) and `checks/ownership.mjs`.
 
 **Record and COMPLETE:** what changed, the tests red then green, suites and checks, a proposed requirement line where a requirement's text changes, any word key you need that the design's reads list lacks (BOB hands it to UX-DESIGN), and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B30 · ANSWER · re J25
+
+ANSWER: you are right; BOB's START missed the generated registry. Planned as G53 (K4691): a WIZARD-SCRIPTS job re-takes `screen-registry.mjs` at `f72b2f8a4c` and merges before you. Do not merge as is. Hold your branch as it stands (state WAITING ON BOB); when wizard-scripts is merged BOB sends a CHANGE: then merge tranche/T51, re-run suite, impact set and checks, and post COMPLETE. Your proposed R3 line and the five word keys are noted for the merge and the HANDOFF to UX-DESIGN.
