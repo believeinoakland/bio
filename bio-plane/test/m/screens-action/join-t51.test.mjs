@@ -2,12 +2,14 @@
    who have joined can draft, approve, send or keep what speaks for the team, and given the way to accept; the steps are not offered and then
    refused. The state is her own `participation` on the `projectlist` row of the action's project (project-roster R34), read with the screen's
    other reads. Every sentence is asserted by its key (R19). Three groups: the screens at their interface (scripted plane), the same member's
-   whole path over the REAL membership and filings (`join-seam-t51.test.mjs`), and the door to accept in place (a `test.todo`, K4559). */
+   whole path over the REAL membership and filings (`join-seam-t51.test.mjs`), and the door to accept in place (G52, K4686: the design's fold holding the
+   sentence and "Join", on `start-send`, `request` and `action`). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, ops, press, button, last, ok, W, DATA_PLANE, ROSTER, PROJECT, ACTION_ID, ACTION, FILING, FILINGS, READ, draft, ACTIONS } from "./page.mjs";
 
-const NOT_JOINED = "refusal.PROJECT_ACT_NOT_A_PARTICIPANT";
+const NOT_JOINED = "refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited";
+const FOLD_HEAD = "screen.projectact.invited.head";
 const STEP2 = `/app/start-send/${ACTION_ID}`;
 const REQUEST = `/app/request/${ACTION_ID}`;
 const ACTION_PAGE = `/app/action/${ACTION_ID}`;
@@ -30,10 +32,14 @@ const stepPlane = (participation, step, more = {}) => planeAt(participation, { f
 const WEIGHTY = ["communicationprepare", "filingprepare", "filingapprove", "filingsecondapprove", "filingrecordsent", "templatesave"];
 const writes = (p) => p.requests.filter((r) => r.op && WEIGHTY.includes(r.op));
 
-/** The sentence is drawn, the way to accept is the project's page (until the registry lists the door in place), no weighty act is drawn or sent. */
+/** The design's fold is drawn (its summary, the sentence and Join in place, no link to the project's page), no weighty act is drawn or sent. */
 function told(p, what) {
-  assert.ok(text(p).includes(W(NOT_JOINED)), `${what}: the held sentence`);
-  assert.ok(main(p).querySelector(`a[href="/app/project/${PROJECT}"]`), `${what}: the way to accept: the project's page, where Join is drawn`);
+  const fold = main(p).querySelector("details[data-gap=join]");
+  assert.ok(fold, `${what}: the fold`);
+  assert.equal(text(p, fold.querySelector("summary")), W(FOLD_HEAD), `${what}: the fold's summary`);
+  assert.ok(text(p, fold).includes(W(NOT_JOINED)), `${what}: the held sentence inside the fold`);
+  assert.ok(button(p, "projectjoin"), `${what}: Join in place`);
+  assert.ok(!fold.querySelector(`a[href="/app/project/${PROJECT}"]`), `${what}: no link to the project's page in the fold, where Join is in place`);
   for (const op of WEIGHTY) assert.ok(!button(p, op), `${what}: no ${op}`);
   assert.equal(writes(p).length, 0, `${what}: nothing sent`);
 }
@@ -91,8 +97,36 @@ test("E9 (R30): on the Action dashboard an invited member is not offered the app
   assert.ok(button(await open("/app/dash-action", plane("joined")), "filingapprove"), "control: a joined member approves here");
 });
 
-/* ---------- the door to accept, in place ---------- */
+/* ---------- the door to accept, in place (G52, K4686) ---------- */
 
-/* K4559 (BOB, K208): the registry lists `projectjoin` on `projects` and `project` and not on `action`, `request` or `start-send`, and the registry is the design
-   stream's; the door drawn beside the sentence, and the steps appearing at its press, wait for T52 (K4269). The way to accept today is the project's page. */
-test.todo("K4559: pressing 'Join' beside the sentence accepts the invitation in place, sends projectjoin for the action's project, and the steps appear (T52: the registry lists `projectjoin` on action, request and start-send)");
+/** A plane whose `projectlist` answers `invited` until `projectjoin` is sent, then `joined`: the screen's own re-read shows the change. */
+function joining(step, more = {}) {
+  let place = "invited";
+  const plane = stepPlane("invited", step, more);
+  plane.projectlist = () => standing(place);
+  plane.projectjoin = () => { place = "joined"; return ok({ ok: true }); };
+  return plane;
+}
+const unsentAction = { ...ACTION, correspondence: [], entries: [] };
+const SCREENS_AT = [
+  ["start-send", STEP2, "prepare", {}, (p) => button(p, "communicationprepare")],
+  ["request", REQUEST, "prepare", {}, (p) => button(p, "communicationprepare")],
+  ["action", ACTION_PAGE, "prepare", { action: ok(unsentAction) }, (p) => main(p).querySelector('[data-list="start-send"]')],
+];
+for (const [id, path, step, more, offered] of SCREENS_AT) {
+  test(`G52 (R3, R4, R5): on ${id}, an invited, not joined member presses Join in the fold; projectjoin is sent with the project, the screen reads her place again and offers the act; control: a joined member sees no fold`, async () => {
+    const plane = joining(step, more);
+    const p = await open(path, plane);
+    told(p, id);
+    assert.ok(!offered(p), `${id}: the act is not offered before the join`);
+    await press(p, "projectjoin");
+    const sent = last(p, "projectjoin");
+    assert.equal(sent.query.projectId, PROJECT, `${id}: projectjoin is sent with the action's project`);
+    assert.equal(p.requests.filter((r) => r.op === "projectjoin").length, 1, `${id}: sent once`);
+    assert.ok(!main(p).querySelector("details[data-gap=join]"), `${id}: no fold once she has joined`);
+    assert.ok(offered(p), `${id}: the act is offered after the join`);
+    assert.equal(writes(p).length, 0, `${id}: joining sends no weighty act`);
+    const member = await open(path, stepPlane("joined", step, more));
+    assert.ok(!main(member).querySelector("details[data-gap=join]") && !button(member, "projectjoin"), `${id}: control: a joined member sees no fold and no Join`);
+  });
+}

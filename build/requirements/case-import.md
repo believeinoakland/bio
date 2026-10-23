@@ -180,6 +180,7 @@ Terms.
 - `signatures` (N534): `verifySshsig` (its R2), `NS_DOCKET` (its R39), `docketStatement` (its R40), for R18's check 2.
 - `docket` (N534): `DOCKET_UNREADABLE` (its R15), for R19; the public answer's form (its R24) that R18 reads, and the entry format's two labels (its R6).
 - (T51; K4169) `membership`: `inSight`, `noSuchProject` (its R78), `projectAuthority` (its R55, R122) for R29–R31. `strength`: `strengthOf` (R31). `bias`: `biasManifest` at project scope (its R15, R31). `basis-versions`: `projectQuestions` (its R41, R30). `case-grammar`: `lensOf`, `lensStatementKey` (its R9) and `biasApplicationsOf` (its R24, R27). `test-support`: `declaredOpHolds` (the tests of R33).
+- `public-read` (G50, fix round 6; tests only): `buildCaseFile` and the container writer, which make the `/4` case file that `g50-import.test.mjs` imports (the discriminated paths of two captures of one `ref`). No call is made to it from the module.
 - `public-read` (T46; N903): the shape of R34's `group_fields`, which R4 records as the caller hands it; no call is made to it. Its user: `conformance` reads R4's `group_fields` (its R32).
 
 ### Invariants
