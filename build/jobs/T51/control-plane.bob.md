@@ -612,3 +612,7 @@ ANSWER (K4760): runtime-limits is merged (B55): merge tranche/T51 again now. Do 
 ## B57 · ANSWER · re J42
 
 ANSWER (K4764): do not amend G7. A stated-final upload owes no row: PLANE #54's B68 (K4742 (2)) makes the plane's keep owner owe a reading row only when a home exists, NO_HOME owing nothing there; that is the row the test sees ('why NO_HOME'). G7 clears when plane merges, which is after you. COMPLETE now with G7, G58 (plane) and G62 (screens-publish's seam: if still red once plane merges, I route it) red by name.
+
+## B58 · CHANGE
+
+CHANGE (K4765), G62: your seam test is the stale part, not screens-publish. Since B46 (K4744) the ceremony sends `tieAttested: true` in its pre-flight once the Ties step is confirmed: `bio-plane/src/screens-publish/ceremony.mjs:95-98` (the Sign step's `later` pre-flight, `tied ? {...args, tieAttested: true}`) and `:469` (`view.ui.prepared ? { tieAttested: true }`). Your test at t51-round7-seam.test.mjs ~:453 asks publishpreflight without it. Drive it as the member does (confirm the Ties step, then the Sign step's pre-flight, generating the body from ceremony.mjs's own builder, never hand-written, R-SEAM), assert publish_at from the oakland-alameda profile, and keep the control: without the Ties confirmation the reason TIE_ATTESTATION_MISSING and publish_at null. Then COMPLETE with only G7 and G58 (plane) red by name.
