@@ -118,3 +118,7 @@ Ask: (a) keep R25 as is (R41 re-grades whenever the sweep next runs for any reas
 **Requirement lines proposed:** none beyond B6's sentence for R25/R41. **Census ops:** none new. **Rows owed to UX-DESIGN:** none. **Found in other modules:** none beyond the plane line above.
 
 Size (session_01XcvJkCvweiQ8KgQqV3UTdh): test runs 14, module lines 3452
+
+## J6 · COMPLETE
+
+COMPLETE (G89, R41): see the record's G89 section. Re-grade in raiseNotices, sweep pending via #regradeOwed (B6 b). 163/163 module, users 344/345: plane/round6-reevaluation.test.mjs:103 needs 'r.noticeSweep(Date.now());' before it (verified 3/3). Checks 0 (words 13, none mine).
