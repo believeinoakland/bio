@@ -1,7 +1,8 @@
-/* control-plane R105, R123 (fix round 7, G58, G59, G61, G62, G63, G64, G66, G74, G75, G79; K4736; R-SEAM, R-STOP, R-CLOCK): THE WALKER'S CASES THROUGH THE REAL PLANE. The Worker the
+/* control-plane R105, R123 (fix round 7, G58, G59, G60, G61, G62, G63, G64, G66, G74, G75, G79; K4736; R-SEAM, R-STOP, R-CLOCK): THE WALKER'S CASES THROUGH THE REAL PLANE. The Worker the
    product deploys, its object, its alarm and R2 under Miniflare, as `t51-round6-seam.test.mjs` runs them; every case is a member's own act through the door and ends at the
    record's own reads. Inputs are made by the acts, never by a hand-written answer shape. R-CLOCK: the times asserted are the test's own, taken outside the object.
      G58  the founder's `op=owedwork` (with and without `sha`) carries the five watchdog fields; a member's carries none; an enrolled administrator's carries them;
+     G60  a case whose cited document holds a finding the case gate sees at signing is refused `GATE_REFUSED` with its findings, and the ceremony draws them;
      G61  a member's Queue after a finished ingest, and after a finished large fetch, answers 200 and holds the notice; the administrator's holds neither;
      G64  a tab-delimited source declared as a table has the declared columns and the data rows only;
      G63  `moneyingest` over 10,000 rows answers `ingesting` quickly, after a restart too, beside a trivial member act (the floor).
@@ -16,6 +17,8 @@ import { Miniflare } from "miniflare";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 import { PARTS } from "../../../src/screens-publish/parts.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import "./register-declared.mjs";
+import * as CE from "../screens-publish/fixtures.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const MB = 1024 * 1024;
@@ -350,10 +353,23 @@ async function questionOf(auth, project, question) {
   return id;
 }
 
+/* G60: a member's own revision of her filed document under a snap key the history cannot name (a promotion's `snapKey` is any non-blank string; the history
+   files it writes are named by it, and C-12.2 maps each back to a manifest entry by the stamp's shape). The record keeps it; the case gate, which reads each
+   cited member's image at signing, finds it. The revision carries the document's stored bytes by their address, as the screens carry them. */
+async function reviseUnnamed(cs, bundle, size) {
+  const img = R(await cs.call("image", { query: { id: bundle } }));
+  const row = R(await cs.call("list", {})).find((b) => b.bundle_id === bundle);
+  assert.ok(row && row.bundle_sha, "the document's head: " + JSON.stringify(row));
+  const files = Object.keys(img).filter((k) => !k.startsWith("_history/")).map((path) => ({ path,
+    ...(path === "bundle.md" ? { text: img[path] + "\n" } : path.startsWith("snapshots/upload-") ? { blobSha: path.slice(17), sha256: path.slice(17), bytes: size } : { text: img[path] }) }));
+  const done = R(await cs.call("promote", { body: { bundleId: bundle, base: row.bundle_sha, snapKey: "not-a-stamp", meta: { object_type: "information" }, files } }));
+  assert.equal(done.ok, true, "the revision is kept: " + JSON.stringify(done).slice(0, 400));
+}
+
 /* the owner's own chain to a prepared case edition: a text uploaded and filed in her project, vouched or not, one sentence of it cited in a question she opened and
    concluded, the case drafted in the editor and prepared by the ceremony's `publish` (src/screens-publish/case-editor.mjs, ceremony.mjs) */
 const BIAS = "This group holds that contracts should be adopted in public session.";
-async function preparedEdition(handle, tag, { vouch, prepare = true }) {
+async function preparedEdition(handle, tag, { vouch, prepare = true, spoil = false }) {
   const { auth, password } = await ownerOf(handle);
   const cs = screenCall(auth);
   const project = await projectOf(auth, `Round seven ${tag} project`);
@@ -376,6 +392,7 @@ async function preparedEdition(handle, tag, { vouch, prepare = true }) {
     const rel = await cs.call("release", { query: { handle: sel.handle, acknowledgment: "I checked this file is the minutes as filed.", mitigation: "Nothing in it names a private person." } });
     assert.ok(rel.ok !== false && R(rel).ok !== false && R(rel).released.includes(bundle), "vouched: " + JSON.stringify(rel).slice(0, 400));
   }
+  if (spoil) await reviseUnnamed(cs, bundle, bytes.length);
   const question = await questionOf(auth, project, "Did the clerk stamp the contract before the vote?");
   /* Find in this document (a term), then "Cite in the question" the one sentence found (document.mjs `cite`: project = the question, role, found) */
   const found = R(await cs.call("findin", { body: { scope: { capture: sha(bytes) }, kinds: ["term"], term: "stamped the amended contract" } }));
@@ -729,4 +746,55 @@ test("R105 (G79): a 24 MiB text (three 8 MiB parts) uploaded through `captureupl
     const r = await until(async () => { const x = await readingOf(ann, digest); return x && x.found ? x : null; }, 60000, 1500);
     assert.ok(r, "the capture reads back through the door (stated)");
   }
+});
+
+/* ---- G60 ---- */
+
+/* the ceremony of screens-publish, drawn over its own fixtures' reads, with the door's answer to the press (`caseratify`) given as the door made it */
+const CEREMONY = `/app/ceremony/${CE.P}/${CE.DR}`;
+async function ceremonySigned(answer) {
+  const p = await CE.open(CEREMONY, { boot: { idb: await CE.keptKey() }, plane: { caseratify: answer } });
+  CE.tick(p, "ce-tie", "yes");
+  await CE.press(p, "publish", { reason: "because" });
+  const { slot } = await CE.press(p, "caseratify", { reason: "because" });
+  await CE.answerSign(p, true, "caseratify");
+  await p.settle();
+  return { p, slot: slot() };
+}
+
+test("R105 (G60): a case whose cited document the case gate finds a problem in passes the pre-flight, is refused at `caseratify` with GATE_REFUSED and its findings, and the ceremony, given that answer, draws the refusal and each finding's check, text and repairs", { timeout: 600000 }, async () => {
+  const e = await preparedEdition("g60-ann", "g60a", { vouch: true, spoil: true });
+  const asked = R(await ceremonyPreflight(e, { tied: true }));
+  assert.equal(asked.first, null, "the pre-flight, which reads the case's own bytes, finds nothing to stop on: " + JSON.stringify(asked.first).slice(0, 400));
+  const { res } = await sitAndSign(e);
+  assert.equal(res.status, 409, gateLine(res));
+  assert.equal(res.body.reason, "GATE_REFUSED", gateLine(res));
+  const found = res.body.findings;
+  assert.ok(Array.isArray(found) && found.length >= 1, "the refusal carries what the gate found: " + gateLine(res));
+  assert.ok(found.every((x) => typeof x.check === "string" && x.check && typeof x.detail === "string" && x.detail), "each finding names its check and its text: " + JSON.stringify(found).slice(0, 500));
+  assert.ok(found.some((x) => x.check === "C-12.2"), "the held finding is the history's: " + JSON.stringify(found).slice(0, 500));
+  const pub = await get(e.auth, { op: "publishedcase", id: e.prepared.caseId });
+  assert.ok(!R(pub) || R(pub).caseId === undefined || R(pub).ok === false, "nothing is published on the refusal: " + JSON.stringify(pub).slice(0, 300));
+  const { p, slot } = await ceremonySigned({ status: res.status, json: res.body });
+  assert.ok(slot.textContent.includes(CE.word("refusal.GATE_REFUSED")), "the refusal's own sentence is drawn");
+  assert.ok(slot.textContent.includes(CE.word("ceremony.gate.heading")), "under the heading the ceremony lists its stops by");
+  const items = slot.querySelectorAll("[data-gate-finding]");
+  assert.deepEqual(items.map((i) => i.getAttribute("data-gate-finding")), found.map((x) => x.check), "one line a finding, each by its check");
+  items.forEach((item, i) => {
+    assert.ok(item.textContent.includes(found[i].detail), "the finding's text, as the gate stated it, is drawn");
+    for (const r of [].concat(found[i].repairs || [])) assert.ok(item.textContent.includes(r), "each repair the gate stated is drawn");
+  });
+  assert.equal(CE.main(p).querySelector("[data-signed]"), null, "nothing is drawn signed on a refusal");
+});
+
+test("R105 (G60 control): the same case with no held finding is signed: `caseratify` answers 200 and the ceremony, given that answer, draws no refusal and no finding", { timeout: 600000 }, async () => {
+  const e = await preparedEdition("g60-bea", "g60b", { vouch: true });
+  const { res } = await sitAndSign(e);
+  assert.equal(res.status, 200, gateLine(res));
+  assert.equal(res.body.ok, true, gateLine(res));
+  assert.equal(res.body.findings, undefined, "a signing carries no refusal's findings");
+  const { p } = await ceremonySigned({ status: res.status, json: res.body });
+  assert.equal(CE.main(p).textContent.includes(CE.word("refusal.GATE_REFUSED")), false, "no refusal is drawn");
+  assert.equal(CE.main(p).querySelectorAll("[data-gate-finding]").length, 0, "no finding is drawn");
+  assert.ok(CE.main(p).querySelector("[data-signed]"), "the signing is drawn as signed");
 });
