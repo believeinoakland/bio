@@ -33,3 +33,9 @@ As in K4731's list (plane `release` R24, `l77-size` R77 L two; newgroup's and in
 - Deploys to biosmoke8 by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296: Bob's approval covers the T51 build to biosmoke8; standing list: not added); none refused through K4730.
 - The live copy is reached only through the environment's proxy (K4733: the direct route is refused by auto mode, never tried).
 - Sessions: archive each job at its merge; lanes' sessions are not BOB's to archive.
+
+## Addendum (14:05, after the handoff commit)
+
+- **PERFORMANCE #2 already exists** and waits to be rung (its doorbell at 14:04): do NOT create one; after round 7's redeploy, ring it (a one-time routine into its session; find it with `list_sessions`, title `PERFORMANCE #2`) naming the redeploy's commit, for the re-time against K4354. This replaces item 5's "start PERFORMANCE #2".
+- **PERFORMANCE P16** (HANDOFF.md @ `fcc5c9bf72`): the plane's start-up is about 1.1 s in Node against Cloudflare's 1 s limit, bundle 25.8 MiB (K4554's 32.4 MiB out of date); a fix is proposed for bundler (large data as data modules) and file-safety. A risk to every deploy: confirm at the platform's shape and, if real, it is a cause of this round (P10), planned with K4426's four fields and reviewed before its START. **P17** (Cloudflare service levels) Bob asked the lane directly; the study is published for him (https://claude.ai/artifact/8iQmXKYWFX8Kb4crKkao3U); its technical parts are BOB's; the choice is between Bob and the lane. **P18**: the lane's tools go through the proxy and report net of it.
+- `node --test` with an empty computed file list runs every test in the tree (K4741): check the list first.
