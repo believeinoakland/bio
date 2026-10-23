@@ -89,3 +89,8 @@ Results: module 143 tests, 142 pass, 1 red by name (the seam). format 0, archite
 Proposed requirement line (BOB writes): R28 (G55, K4562): FINDINGs `ingest-done` / `ingest-stopped`, one per ingest `calculations.ingestNotices` answers the viewer, keyed `FINDING::ingest-<state>::<ingest>`, told to the viewer alone while active; each cycle reads from the start, pages by `next` to 1,000, window 90 days of `finished_at`; `facts.ingest`; a failing read named `calculations` in `facts.failed`; Uses gain `calculations`.
 Census ops owned: none changed.
 Size (session_01CVXguWMv2q1pfSMTRFJZDM): test runs 8, module lines 1561
+
+## J7 · COMPLETE
+
+COMPLETE (G55, R28 proposed): ingest-done and ingest-stopped notices built to calculations' published ingestNotices shape (B6). Module 143 tests, 142 pass; the one red is the seam over the real calculations, red by name until CALCULATIONS #9 merges, and queue/noticed.test.mjs:288 for the same cause (facts.failed gains calculations). format, architecture, coverage 27/27, words, ownership: 0 failures. Rows owed to the design: notice-producers.ingest.done, notice-producers.ingest.stopped (localize). CHANGE me at calculations' merge and I re-run both. Details in my record.
+Size (session_01CVXguWMv2q1pfSMTRFJZDM): test runs 8, module lines 1561
