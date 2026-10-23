@@ -1135,6 +1135,9 @@ async function updateRun(emit00, code, saved, guard) {
 
   /* R64: a copy installed under the fixed names keeps them; any other is named by its slug. Its own plane's bindings say which. */
   const held = await heldBindings(token, acct.id, slug);
+  /* R17 (K4758; `installer-steps` R42): the copy's settings say what it holds, the room's place among it, and an upload cannot
+     restate what it cannot read; an update whose settings do not answer is refused before anything is changed, and says why. */
+  if (!held) return stopped(word("installer.update.stopped.lookup", { said: word("installer.keys.unread") }));
   let scheme = held ? schemeOf(held.list, slug) : null;
   if (!scheme) {
     /* Its plane's bindings do not say (an older copy, or settings that do not answer): the fixed names, when the account holds
