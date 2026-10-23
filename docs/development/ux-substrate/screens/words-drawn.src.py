@@ -7747,6 +7747,22 @@ w420('screen.airesults.speed', 'Standard jobs: {speed}, {cost}.', 'airesults: sp
 w420('screen.airesults.by', 'Tested by {who} on {date}.', 'airesults: by')
 w420('screen.airesults.note', 'A team is named only when it agreed to be. Otherwise it is “a team”.', 'airesults: note')
 
+# DEC-422: the record's size and a sheet's cells (B491; K4635, K4636; fix round 6 G41, G42)
+def w422(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-422: B491 ' + note))
+w422('screen.settings.storage.head', "How full your team's record is", "(1) G42 (K4635): the section on Settings, above the team's settings, administrators only")
+w422('screen.settings.storage.used', '{used} of {limit} ({pct}%)', '(1) G42: the gauge; {used}, {limit} sizes such as 8.1 GB and 10 GB; {pct} a whole number')
+w422('screen.settings.storage.what', 'The record holds everything your team keeps: documents, notes, findings and their history. Only administrators see this.', '(1) G42: beneath the gauge')
+w422('screen.settings.storage.unknown', "The record's size hasn't been measured yet.", '(1) G42: the size not stated')
+w422('screen.settings.storage.warn70', 'The record has passed 70% of what it can hold. Nothing has stopped yet. Plan now, with the four things below.', '(1) G42: the 70% warning')
+w422('screen.settings.storage.warn90', 'The record has passed 90% of what it can hold. When it is full, nothing new can be saved: no document, note or change. Act now.', '(1) G42: the 90% warning (writes fail at the limit)')
+w422('screen.settings.storage.factors', "How large a record can grow depends on four things: your team's Cloudflare plan; paring the record down to what your investigations and searches use; how long searches in the background take as it grows; and Cloudflare's own limits.", "(1) G42: Bob's four factors (K4635), shown with the gauge and with each warning")
+w422('screen.settings.storage.more', "When it passes 90%, or its size isn't known", '(1) G42: the drawing\'s fold only (mockup)')
+w422('screen.document.sheet.read', 'Every line of this sheet is read, and can be searched and cited. Its cells are read as figures and dates only for the rows a member opens or cites.', '(2) G41 (K4636): on the Document page of a sheet')
+w422('screen.document.sheet.rows', 'Cells read as figures and dates for rows {from} to {to}.', "(2) G41: what is interpreted, stated; BOB's 'cells interpreted for rows {from}-{to}'; more than one range joins them: rows 2 to 140 and 300 to 310")
+w422('screen.document.sheet.none', 'No cells read as figures and dates yet.', '(2) G41: before any row is opened or cited')
+w422('screen.document.sheet.fold', 'When the document is a spreadsheet', "(2) G41: the drawing's fold only (mockup)")
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

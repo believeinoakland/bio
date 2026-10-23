@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7618,
+  "screen": 7630,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -233,7 +233,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18988,
+  "total": 19000,
   "protected": 1156
  },
  "words": [
@@ -80333,6 +80333,90 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-420: B488 airesults: note"
+  },
+  {
+   "key": "screen.settings.storage.head",
+   "en": "How full your team's record is",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42 (K4635): the section on Settings, above the team's settings, administrators only"
+  },
+  {
+   "key": "screen.settings.storage.used",
+   "en": "{used} of {limit} ({pct}%)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: the gauge; {used}, {limit} sizes such as 8.1 GB and 10 GB; {pct} a whole number"
+  },
+  {
+   "key": "screen.settings.storage.what",
+   "en": "The record holds everything your team keeps: documents, notes, findings and their history. Only administrators see this.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: beneath the gauge"
+  },
+  {
+   "key": "screen.settings.storage.unknown",
+   "en": "The record's size hasn't been measured yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: the size not stated"
+  },
+  {
+   "key": "screen.settings.storage.warn70",
+   "en": "The record has passed 70% of what it can hold. Nothing has stopped yet. Plan now, with the four things below.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: the 70% warning"
+  },
+  {
+   "key": "screen.settings.storage.warn90",
+   "en": "The record has passed 90% of what it can hold. When it is full, nothing new can be saved: no document, note or change. Act now.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: the 90% warning (writes fail at the limit)"
+  },
+  {
+   "key": "screen.settings.storage.factors",
+   "en": "How large a record can grow depends on four things: your team's Cloudflare plan; paring the record down to what your investigations and searches use; how long searches in the background take as it grows; and Cloudflare's own limits.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: Bob's four factors (K4635), shown with the gauge and with each warning"
+  },
+  {
+   "key": "screen.settings.storage.more",
+   "en": "When it passes 90%, or its size isn't known",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: the drawing's fold only (mockup)"
+  },
+  {
+   "key": "screen.document.sheet.read",
+   "en": "Every line of this sheet is read, and can be searched and cited. Its cells are read as figures and dates only for the rows a member opens or cites.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (2) G41 (K4636): on the Document page of a sheet"
+  },
+  {
+   "key": "screen.document.sheet.rows",
+   "en": "Cells read as figures and dates for rows {from} to {to}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (2) G41: what is interpreted, stated; BOB's 'cells interpreted for rows {from}-{to}'; more than one range joins them: rows 2 to 140 and 300 to 310"
+  },
+  {
+   "key": "screen.document.sheet.none",
+   "en": "No cells read as figures and dates yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (2) G41: before any row is opened or cited"
+  },
+  {
+   "key": "screen.document.sheet.fold",
+   "en": "When the document is a spreadsheet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (2) G41: the drawing's fold only (mockup)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

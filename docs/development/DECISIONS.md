@@ -6503,3 +6503,18 @@ decided: 2026-10-22 · the design session (P17)
 the design: 24 findings applied (about 85 texts reworded; 368 rows): "limit", never "budget", as the alpha says; "account" is what is on and ordered, "plan" only what a provider sells; "Switch on"/"Switch off" everywhere; the order rule stated once (`aiproviders.use.note`), the personal-subscription rule once (`aimine.own.personal`), the grades once (`aiproviders.add.grades`), the lock rule once for each reader; "check/uncheck", not "tick"; plain words for endpoint, aggregator, reference, sealed bundle, effort, calls; the free-tier box names {provider}, never one provider; values inside sentences are placeholders; the origin check (Bob's AIR43) keeps its meaning, worded "Not made by an organization based in China".
 reasoning recorded in: this entry; `screens/mock-screens.js` and `screens/words-drawn.src.py` (blocks "DEC-420").
 owed: as DEC-420.
+
+### DEC-422 · answered
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B491, beneath Bob's K4635 and K4636; B489, B490 read)
+for: design (T51, fix round 6 G41, G42)
+question: The words and placement of the record's storage gauge for administrators, and the Document page's statement of what a sheet's cells are interpreted for.
+why it is Bob's: it is not (P17): words and placement beneath his rulings.
+provisional: as below.
+alternative: the gauge on Your team (`group`); not taken: Settings is the page every administrator passes, and the gauge leads the team's section there.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: 12 rows (block "DEC-422" in `screens/words-drawn.src.py`). Settings, above the team's section, administrators only: "How full your team's record is", "{used} of {limit} ({pct}%)", what the record holds, the 70% warning ("Nothing has stopped yet. Plan now, with the four things below."), the 90% warning ("When it is full, nothing new can be saved: no document, note or change. Act now."), the size not measured, and Bob's four factors in one sentence, shown with the gauge and each warning. Document page of a sheet: "Every line of this sheet is read, and can be searched and cited. Its cells are read as figures and dates only for the rows a member opens or cites.", "Cells read as figures and dates for rows {from} to {to}." (BOB's "interpreted" said plainly), and none yet.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-422").
+owed: BOB: the keys read with these fills ({used}, {limit}, {pct}, {from}, {to}), or a QUESTION naming any that differ.
