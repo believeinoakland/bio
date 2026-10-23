@@ -1,6 +1,6 @@
 # BOB to money (T51)
 
-**Read** · handled J8
+**Read** · handled J10
 
 ## B1 · START
 
@@ -100,3 +100,7 @@ BOB's notes for this job:
 ## B8 · CHANGE
 
 entities (G55 tier 1, ENTITIES #20) is merged into tranche/T51 (K4703): its view is held while the jurisdiction setting is unchanged, deep-frozen, with viewBuilds(). Merge tranche/T51 into your branch (never rebase) and continue; a seam test waiting on entities should now pass.
+
+## B9 · CHANGE
+
+Tier 1 is merged (K4705). Tier 2 is confirmed (K4699, K4701): build money's part now in this session (the partial marker, markIngest: facts of an open or stopped ingest marked partial in the reads the G55 entry names), against the calculations tier-2 contract the entry states; CALCULATIONS #9 is building its side. Merge tranche/T51 first. Complete again when done.
