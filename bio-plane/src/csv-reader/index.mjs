@@ -137,7 +137,7 @@
  * WRITES nothing.
  */
 
-import { MEASURED_OOXML_TEXT_BOUND_BYTES, textPlan } from "../ooxml.mjs";
+import { textPlan } from "../ooxml.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
 /* ------------------------------------------------------------------ *
@@ -255,28 +255,22 @@ export const CSV_SHEET_NAME = "csv";
  * marker below and its DIALECT is still stated, so the record says which of
  * the two it is — never a silent truncation.
  *
- * R35 (F7, fix round 4b): THIS IS NOW THE BOUND ON WHAT THE WALK HOLDS, NOT ON
- * WHAT IS READ. The 12x above is the walk's records (an array of arrays of
- * strings) and its typed cells, both of which grow with the file in objects.
- * Over the bound, up to ooxml.mjs's STREAMED_TEXT_BOUND_BYTES, the body is
- * decoded and walked in 1 MiB windows (`createRecordWalk`), each record is
- * folded into the sheet's text as it completes and none is kept, and the
- * typed `cells` list is not made (`cells` is null, as over the guard); the
- * answer says so (`piecewise`). G41 (K4636): a body over SHEET_WINDOW_MIN_BYTES
- * is walked so at any size, keeping no records, and a caller that passes
- * `{inlineCellsMax}` gets the cells only while they fit it (`cells_held`
- * otherwise); `cellsIn` makes the cells of a range from the held body. A body in UTF-16 over the bound is not read in
- * pieces (the strict decode that tells a valid UTF-16 body from an invalid
- * one needs the whole body), and is stated with its size and `final`. Over the
- * streamed ceiling the text is refused with the marker, its size and `final`. */
-export const MEASURED_CSV_TEXT_BOUND_BYTES = MEASURED_OOXML_TEXT_BOUND_BYTES;
+ * G41 (K4636, K4652): THE BOUND IS NOW MEASURED AT THE PLANE, AND IS 17 MiB. The
+ * plane's object (128 MB) read a harness CSV whole at its real shape up to 17.5
+ * MiB and died at 17.75 (the copies are reading-pipeline's row-block units and
+ * classification, after this entry; this entry's own share of a 20 MB body is
+ * about 31 MB). A body over the bound, up to ooxml.mjs's STREAMED_TEXT_BOUND_BYTES,
+ * is therefore STATED with its size and `final` and never read in pieces (the
+ * read in pieces of fix round 4b, F7, is dropped: that band died at the plane
+ * the same way); over the ceiling the marker is `textPlan`'s. Up to the bound a
+ * body over SHEET_WINDOW_MIN_BYTES is walked in windows, keeping no records, and
+ * a caller that passes `{inlineCellsMax}` gets the cells only while they fit it
+ * (`cells_held` otherwise); `cellsIn` makes the cells of a range from the held
+ * body. Raising the bound again is N1267's (the text read by range). */
+export const MEASURED_CSV_TEXT_BOUND_BYTES = 17 * 1024 * 1024;   // 17,825,792
 
-/** The window a body over the bound is decoded and walked in (R35), and the most
- *  per-cell "could not be read" entries such a read lists before it says how
- *  many more there were: a cell is a small object, and a file in a legacy
- *  encoding can hold a million of them. */
+/** The window a large body is decoded and walked in. */
 const CSV_WINDOW_BYTES = 1 << 20;
-const CSV_STREAMED_UNDETERMINED_MAX = 10000;
 const CSV_TEXT_CHUNK_LINES = 2048;
 
 /** A body over this many bytes is walked in `CSV_WINDOW_BYTES` windows and no record list is kept (G41, K4636): the
@@ -547,24 +541,22 @@ async function csvParts(bytes) {
   if (!sig.ok) return sig;
   const { b, enc, body, delim } = sig;
 
-  /* THE BOUND, on the body's own length — the metric a CSV has (header §4). Up
-     to it the body is walked whole; over it, up to the streamed ceiling, in
-     windows (R35), and over that it is refused, the marker stating the size.
-     A UTF-16 body over the bound is not read in pieces (header §4) and is
-     stated at the bound, with its size and `final`. */
+  /* THE BOUND, on the body's own length — the metric a CSV has (header §4).
+     Up to MEASURED_CSV_TEXT_BOUND_BYTES the body is read whole; over it, up to
+     ooxml's ceiling, it is STATED with its size and `final` (G41, K4652), never
+     read in pieces: the plane's object holds the text several times over, and
+     the largest body it read at its real shape was 17.5 MiB. Over the ceiling
+     the marker is `textPlan`'s guard. */
   const plan = textPlan(body.length);
   const utf16 = enc.encoding === "utf-16le" || enc.encoding === "utf-16be";
   const bodyMetric = { metric: "body_bytes" };
-  let guard = null, piecewise = null;
+  let guard = null;
   if (plan.read === "none") guard = { ...plan.guard, ...bodyMetric };
-  else if (plan.read === "pieces" && utf16) {
+  else if (body.length > MEASURED_CSV_TEXT_BOUND_BYTES) {
     guard = { ok: false, text: "undetermined", why: "over_size_bound", size: body.length,
       bound: MEASURED_CSV_TEXT_BOUND_BYTES, boundName: "MEASURED_CSV_TEXT_BOUND_BYTES", ...bodyMetric,
-      final: true, encoding: enc.encoding };
-  } else if (plan.read === "pieces") {
-    piecewise = { ...plan.piecewise, boundName: "MEASURED_CSV_TEXT_BOUND_BYTES", ...bodyMetric };
+      final: true, ...(utf16 ? { encoding: enc.encoding } : {}) };
   }
-  const stream = piecewise != null;
   const windowed = !guard && body.length > SHEET_WINDOW_MIN_BYTES;
 
   /* The records. For every encoding whose delimiters, quotes and line breaks
@@ -597,7 +589,7 @@ async function csvParts(bytes) {
   return {
     ok: true, format: "csv", bytes: b,
     bodyBytes: body.length, encoding: enc, delimiter: delim, guard, records, transport, invalidUtf16,
-    stream, windowed, utf16, body, piecewise,
+    windowed, utf16, body,
   };
 }
 
@@ -678,7 +670,6 @@ function csvStructure(parts) {
     word("csv.notes.url_cell_text"),
   ];
   if (parts.guard) notes.push("text_body_over_bound");
-  if (parts.piecewise) notes.push("text_read_in_pieces");
   return {
     ok: true,
     container: "csv",
@@ -805,10 +796,9 @@ function csvText(parts, opts) {
      the rows and the counts, and `cellsIn` makes the cells of a range from the
      held body. A caller that passes nothing gets every cell, as before. */
   const inlineMax = Number.isFinite(opts?.inlineCellsMax) && opts.inlineCellsMax >= 0 ? opts.inlineCellsMax : null;
-  let cells = parts.stream ? null : [];
-  let cellsHeld = parts.stream;
+  let cells = [];
+  let cellsHeld = false;
   let cellsBytes = 2;   // "[]"
-  let undeterminedMore = 0;
   const listCell = (row, col, value) => {
     if (!cells) return;
     const cell = typedCell(row, col, value);
@@ -833,9 +823,7 @@ function csvText(parts, opts) {
         /* The grid survives an encoding that cannot read these bytes; these
            characters do not. Named per cell with its own reference, never
            mojibake. */
-        if (undetermined.length < (parts.stream ? CSV_STREAMED_UNDETERMINED_MAX : Infinity)) {
-          undetermined.push({ sheet: 0, cell: `${columnLetters(col)}${row}`, reason: read.why });
-        } else undeterminedMore++;
+        undetermined.push({ sheet: 0, cell: `${columnLetters(col)}${row}`, reason: read.why });
         listCell(row, col, null);
         if (row > usedRows) usedRows = row;
         if (col > usedCols) usedCols = col;
@@ -861,9 +849,6 @@ function csvText(parts, opts) {
     }
   };
   forEachRecord(parts, addRecord);
-  if (undeterminedMore) {
-    undetermined.push({ sheet: 0, cell: null, reason: "more_cells_undetermined", count: undeterminedMore });
-  }
 
   if (lines.length) chunks.push(lines.join("\n"));
   const text = chunks.length === 1 ? chunks[0] : chunks.join("\n");
@@ -884,7 +869,6 @@ function csvText(parts, opts) {
     undetermined,
     counts: { chars: text.length, cells: cellCount, formulas: 0,
       undetermined: undetermined.length },
-    ...(parts.piecewise ? { piecewise: parts.piecewise } : {}),
   };
 }
 

@@ -29,7 +29,7 @@ test("R17 (proposed) a 1 MB CSV read with {inlineCellsMax} has cells null and ce
   assert.deepEqual(s.undetermined, []);
   assert.equal(t.counts.cells, rows * 4, "the count of cells is the sheet's, held or listed");
   assert.equal(t.document, s.text);
-  assert.equal(t.piecewise, undefined, "piecewise keeps meaning 'over the bound, read in pieces' and is not set by this rule");
+  assert.equal(t.piecewise, undefined, "a held sheet is not a read in pieces");
   assert.ok(s.text.includes("LASTROWMARK"), "the last row is in the text");
 });
 
@@ -57,17 +57,6 @@ test("R17 (proposed) the cap is on the sheet's cells JSON in bytes: a body whose
   const over = (await csvEntry.text(bytes, { inlineCellsMax: size - 1 })).sheets[0];
   assert.ok(over.cells === null, "cells is null (held)");
   assert.equal(over.cells_held, true);
-});
-
-test("R17 (proposed) a body over the size bound read in pieces: cells null, cells_held true, piecewise stated, with or without the option", async () => {
-  const { bytes } = harnessCsv(21 * MIB);
-  for (const opts of [undefined, { inlineCellsMax: INLINE }]) {
-    const t = await csvEntry.text(bytes, opts);
-    assert.equal(t.ok, true);
-    assert.ok(t.sheets[0].cells === null, "cells is null");
-    assert.equal(t.sheets[0].cells_held, true);
-    assert.ok(t.piecewise);
-  }
 });
 
 /* ------------------------------------------------------------------ */
