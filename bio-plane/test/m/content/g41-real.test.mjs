@@ -25,7 +25,7 @@ async function home(lines) {
   bundle(w.s, "INFO-1");
   const bytes = new TextEncoder().encode(text), d = sha(bytes);
   await evidence.put(`bio/captures/${d}`, bytes);
-  const document = doc({ digest: d, bytes: bytes.length, ct: "text/csv", format: "undetermined", fromText: true });
+  const document = doc({ digest: d, bytes: bytes.length, ct: "text/csv", format: "csv", fromText: true });
   w.core.readFile = (b, p) => (b === "INFO-1" && p === "data/provenance.json" ? { text: JSON.stringify({ documents: [document] }) } : null);
   /* The read, to its end: the cursor loop `readHeld` answers `more` for. */
   let out;
