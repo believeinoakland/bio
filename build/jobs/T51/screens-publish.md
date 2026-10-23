@@ -612,3 +612,13 @@ COMPLETE (B44, fix round 7: G60, G62), record section 'Fix round 7'. G60: GATE_R
 ## J40 · REPORT · re B45
 
 B45 read. Merged tranche/T51 (suite unchanged). The rows named in B45 (screen.ceremony.gate.head, .gate.check, .publishat.nozone, .notreached, .nooffer) are in no words.json or rows.mjs I can reach (commit 21d62cc33b is not on tranche/T51 or main as fetched), and a key the word table lacks would draw nothing, so my stand-ins stay: ceremony.gate.heading + the check id (G60); refusal.PUBLISH_AT_NO_ZONE, case-authoring.publish_at_not_reached_sentence, case-authoring.publish_at_unanswered_sentence (G62: nozone / notreached / nooffer, data-publish-at-none). Mapping if the design keeps its names: gate.head replaces ceremony.gate.heading; gate.check {check} replaces the bare id; publishat.nozone / .notreached {reason} / .nooffer replace the three. Merge the design rows to tranche/T51 and send CHANGE; I switch the keys (3 lines in ceremony.mjs, keys.mjs) and re-run. COMPLETE otherwise stands.
+
+## Fix round 7, B46 (G62 cause: the pre-flight never sent `tieAttested`)
+
+- Changed: `ceremony.mjs` (the render's pre-flight read, before `const pre`; the "Check again" act's send). The pre-flight body carries `tieAttested: true` once the edition is prepared (this page's own `publish`, or the draft's `editions.prepared` in `casedrafts`, so a reload keeps it), and not before; nothing else is added (R50). The not-reached sentence stands before the attestation. `data-why` is carried beside `data-source` for `publish_at.why` (ratification's `source`/`why` are not on `tranche/T51` yet at this merge; the screen draws nothing from them but the attribute).
+- Failing-first: `r7-tie.test.mjs` (2 tests; a fake plane that answers as case-authoring does: no `tieAttested`, no `publish_at`). Red first: "the pre-flight after preparing carries it" and the date/time offer absent; green after. The seam's test 1 (control-plane's `t51-round7-seam.test.mjs` §G62) is the real-op check.
+- Suite `test/m/screens-publish/`: 286 tests, 284 pass, 0 fail, 2 todo. Checks: format, architecture, ownership 0 failures; words no finding in screens-publish.
+- Requirement line proposed (R50): "(fix round 7, G62) Once the member has attested the ties and the edition is prepared, the ceremony's pre-flight carries `tieAttested: true`, so the signing check is reached and a publishing time offered."
+- B45's design keys are still not in the word table here (see J40); stand-ins stand.
+
+Size (session_01D28pDd4hME17u4TLcoQx9s): test runs 9, module lines 3716
