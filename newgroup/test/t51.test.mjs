@@ -293,3 +293,24 @@ test("G54 the install and the update upload the plane with observability {enable
   /* Control: the fake states what the upload sent, so a PUT without it states none (the shape the platform showed). */
   assert.equal((await run({ slug: "g54-ctl", rel })).page.failed ?? null, null, "an account that states it is not refused");
 });
+
+/* G54 (installer-steps J17): the read-back of the logs continues when the plane's settings cannot be read, and says so through
+ * `opts.note`; the installer shows that sentence among the run's other notes. By key, through the real install and update. */
+test("G54 an unreadable settings read-back shows the step's note on the install's and the update's page and the run continues; control: a read-back stating enabled shows none", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT });
+  /* The sentence is installer-steps' (read by its own key); this run holds none of it: the page gains one notice the control page lacks. */
+  const notices = (w) => new Set(w.page.done.match(/<div class="notice">[\s\S]*?<\/div>/g) || []);
+  const extra = (w, c) => [...notices(w)].filter((n) => !notices(c).has(n));
+  const cleanI = await run({ slug: "g54-note-i", rel });
+  const inst = await run({ slug: "g54-note-i", rel, observabilityUnreadable: true });
+  assert.equal(inst.page.failed ?? null, null, "the install goes on");
+  assert.equal(extra(inst, cleanI).length, 1, "the install's page shows the note");
+  assert.equal(extra(cleanI, inst).length, 0, "control: the page that read enabled shows none");
+  const pre = { "g54-note-u": planeBase("g54-note-u") };
+  const cleanU = await run({ slug: "g54-note-u", mode: "update", rel, pre });
+  const upd = await run({ slug: "g54-note-u", mode: "update", rel, pre, observabilityUnreadable: true });
+  assert.equal(upd.page.failed ?? null, null, "the update goes on");
+  assert.equal(extra(upd, cleanU).length, 1, "the update's page shows the note");
+  assert.equal(extra(cleanU, upd).length, 0, "control: the page that read enabled shows none");
+});

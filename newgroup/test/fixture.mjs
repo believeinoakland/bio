@@ -255,7 +255,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   grantedScope = CFG.SCOPES.join(" "), containers = "ok", preApps = [], preClasses = {}, settingsBlind = false,
   refuseSecretDelete = false, refuseMark = false,
   /* G54: the account states each script's `observability` as the last upload sent it; `observabilityDropped` makes it state none (an upload that lost it). */
-  observabilityDropped = false,
+  observabilityDropped = false, observabilityUnreadable = false,
   /* T36: `vpc` the Workers VPC service the operator names (R45), `refuseVpc` an upload naming one refused; `logpush` the
      account's Logpush jobs, or "refused" (R46); `refuseSchedules` a schedule refused (R44). */
   vpc, refuseVpc = false, logpush = [], refuseSchedules = false,
@@ -475,6 +475,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/settings$/.test(u) && mth === "GET", f: (u) => {
       const name = u.split("/workers/scripts/")[1].split("/")[0];
+      if (observabilityUnreadable && name === slug && planePuts.length > 0) return cfok({});
       if (settingsFail || lookupFail.includes(name)) return cferr("upstream trouble", 500);
       /* Settings name each binding, a secret by its name and type only. */
       return acct.has(name) ? cfok(settingsBlind ? {} : { ...(observed.get(name) === undefined || observabilityDropped ? {} : { observability: observed.get(name) }), bindings: (acct.get(name) || []).map(({ text, ...b }) => (b.type === "plain_text" ? { ...b, text } : b)) })
