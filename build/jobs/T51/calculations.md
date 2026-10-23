@@ -259,3 +259,13 @@ Waiting on: MONEY #8 (tier 1 view + tier 2 marker) merged, then I run check L in
 **Deferred / not met:** none.
 
 Size (session_01JvAUJPqBqefbQpFDLeiHqB): test runs 31, module lines 3,810
+
+## J13 · COMPLETE
+
+COMPLETE: G55 (calculations) done on job/T51/calculations (818fef4601); detail and the proposed R14 lines in my record, section "Round 6 · G55 · COMPLETE".
+- Check L (Miniflare/workerd, DO SQLite): INGEST_INLINE_ROWS = 10,000 (10,000 resolving rows inline 1.26-1.28 s; 10,001 answers started in 57 ms). Slices: 2,000 facts in 234-292 ms; 25,000 rows in 13 ticks, 3.2 s; 100,000 mixed rows 5 ticks, 1.2 s; 20 MiB table (100,000 x 190 B) 5 ticks, 0.9 s, act 0.5 s; killed after tick 2 and finished in a fresh Miniflare over the persisted store: 25,000 facts, 25,000 distinct rows. Slice constants stay 20,000 rows / 2,000 facts / 3 attempts. Not driven: the real alarm (SCHEDULER #41 unmerged), the HTTP door.
+- Suites under the preload: calculations 104/104; users (affordances t33, op-grades, people, money, strength, workbooks) 577 pass. Both money seams green against the real module. op-declarations has one red not mine: owners.test.mjs "publication: recordcasefile has no spec". checks/run.mjs: format, architecture, coverage, channels 0 failures; words no finding in calculations; ownership 0 failures.
+- Done: moneyingestread declared (DECLARED_OPS, key calculations.declared.moneyingestread, read, not mutating, classes admin/member/probe as the hand row); NO_INGEST when no key; B18's two corrections; g45 tests adapted (see J12).
+- Census ops (K4208): moneyingest keeps its keys and inline answer; new op moneyingestread. Words owed: calculations.ingest.started, .already, .stopped_attempts, .stopped_table, .bad_kind, .no_ingest.
+- Note for BOB: build/plan/diagnosis-R6-g55-measure.md is yours to update from my record (ownership refuses my write there).
+Size (session_01JvAUJPqBqefbQpFDLeiHqB): test runs 31, module lines 3,810
