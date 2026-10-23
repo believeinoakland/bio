@@ -10,8 +10,8 @@ export const WHOLE_BOUND = 2 * 1024 * 1024;   /* docprofile's candidate `CLASSIF
 export const BUDGET = 512 * 1024;
 
 /* A budget table of about `chars` characters, exactly `chars` long when `exact`: a header, then rows, the last row padded. */
-export function csvText(chars, { exact = true } = {}) {
-  const rows = ["id,department,amount,note"];
+export function csvText(chars, { exact = true, header = "id,department,amount,note" } = {}) {
+  const rows = [header];
   let n = rows[0].length + 1, i = 0;
   while (n < chars - 120) {
     const r = `${i},Dept ${i % 17},${(i * 37) % 9973}.${String(i % 100).padStart(2, "0")},note ${i} on the council item`;
@@ -53,6 +53,47 @@ export const CASES = [
   { name: "text-capture", chars: 0, budget: BUDGET,
     make: async (b) => { const t = textBody(); return doc({ digest: await hold(b, t), bytes: t.length, ct: "text/plain", format: "text", fromText: true }); } },
 ];
+
+
+/* Edge sheets (recorded on the tip with the rest): a row over the cap with an astral pair at the cut, blank lines and a
+   trailing newline, a header the cut leaves little room beside, with and without `lineRows`. */
+const sheetEntry = (format, name, text, { lineRows = false } = {}) => ({ format, text: async () => {
+  const lines = text.split("\n");
+  return { ok: true, document: text,
+    sheets: [{ name, rows: null, cols: null, usedRows: lines.length, usedCols: 3, range: { kind: "sheet-range", sheet: name, range: `A1:C${lines.length}` },
+              text, cells: null, undetermined: [], ...(lineRows ? { lineRows: lines.map((_, i) => i + 1 + Math.floor(i / 7)) } : {}) }],
+    counts: { chars: text.length, undetermined: 0 }, undetermined: [], container: "xlsx" }; } });
+const CAP = 128 * 1024;
+const longRowText = () => {
+  const head = "Fund\tAmount\tNote";
+  const limit = CAP - head.length - 1;
+  const rows = [head];
+  for (let i = 1; i < 2500; i++) rows.push(`Fund ${i}\t${i * 100}\tnote ${i} \u{1F3DB} civic`);
+  rows.push("A".repeat(limit - 1) + "\u{1F600}" + "tail of the long row");      /* the pair straddles the cut */
+  for (let i = 0; i < 40; i++) rows.push(`Fund b${i}\t${i}\tnote`);
+  rows.push("B".repeat(limit + 5000));
+  rows.push("end\t1\tdone");
+  return rows.join("\n");
+};
+const blankText = () => {
+  const rows = ["Name\tTotal"];
+  for (let i = 0; i < 12_000; i++) rows.push(i % 9 === 0 ? "" : `Row ${i}\t${i}\t\u00e9\u4e2d ${i}`);
+  return rows.join("\n") + "\n";
+};
+const bigHeadText = () => {
+  const head = Array.from({ length: 70_000 }, (_, i) => `h${i}`.slice(0, 1)).join("") + "\tAmount";   /* a header of 70,000 characters */
+  const rows = [head];
+  for (let i = 1; i < 3000; i++) rows.push(`Row ${i}\t${i}\tnote about the line ${i}`);
+  return rows.join("\n");
+};
+const hugeHeadText = () => ["H".repeat(130_000) + "\tAmount", ...Array.from({ length: 1500 }, (_, i) => `Row ${i + 1}\t${i}\tnote about the line ${i}`)].join("\n");
+const edge = (name, format, text, opts) => ({ name, chars: 0, budget: 150 * 1024, entry: sheetEntry(format, "Edge", text, opts),
+  make: async (b) => doc({ digest: await hold(b, `${name} bytes`), bytes: 10, ct: `application/x-${format}`, format }) });
+CASES.push(edge("sheet-long-rows", "g48long", longRowText()),
+           edge("sheet-long-rows-lineRows", "g48longr", longRowText(), { lineRows: true }),
+           edge("sheet-blank-lines", "g48blank", blankText(), { lineRows: true }),
+           edge("sheet-big-header", "g48bighead", bigHeadText()),
+           edge("sheet-huge-header", "g48hugehead", hugeHeadText()));
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
