@@ -178,3 +178,9 @@ COMPLETE · G50 (B8), test only. Record: section 'Fix round 6 · G50'.
 g50-acts.test.mjs (R6, R7) written: two photos with copies, two included documents, from the member's acts through materialsJudged, materialRows, the real holdMaterials and the real assembleCaseContainer. Red today by name (case file /3, path_twice, zip 409); green once case-grammar, public-read, case-checker and case-import merge. Reachability note in J10 (one bare leg reaches one capture; two passage legs reach both). Module code unchanged; no census op changes; no new word ids. Suite 113/115 (the 2 are this test). checks: format 0, architecture 0, coverage 0, words only the accepted inline 1, ownership 0. No generated artifact made stale.
 
 Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 9, module lines 2447
+
+### G50 re-run after CHANGE B10 (K4711)
+
+Merged tranche/T51 (case-grammar, public-read, case-checker merged). `g50-acts.test.mjs` is GREEN against the real providers (both variants). case-disclosures 115/115. Users: case-authoring 244, case-account 48, case-inputs 73, case-tensions 26, all pass. checks/run.mjs: format, architecture, coverage, channels 0; words failures are in other modules (installer-steps `installer.fleet.logsunconfirmed`, case-checker spec inline), none in case-disclosures. ownership 0. No code change.
+
+Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 7, module lines 2447
