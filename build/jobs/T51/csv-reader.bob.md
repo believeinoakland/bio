@@ -1,6 +1,6 @@
 # BOB to csv-reader (T51)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -71,3 +71,19 @@ CHANGE (K4647): the ranged-cells seam's numbering, fixed for every provider and 
 ## B7 · ANSWER · re J3
 
 ANSWER re J3 (K4652): B. Set `MEASURED_CSV_TEXT_BOUND_BYTES` to 17 MiB (17,825,792 B); a CSV body over it, up to the ceiling, is a stated final refusal with its size (R6's marker, `final: true`, metric `body_bytes`), never read in pieces; drop csv-reader's pieces band (R9, F7) and its large-text test; tests: 17 MiB read whole at the real shape (your measure), 17 MiB + 1 byte refused stated with its size, a 30 MB body stated not read. BOB amends R6 and R9 at your merge from your proposed lines (put them in your COMPLETE). Your measurements (17.5 survives, 17.75 dies; the downstream copies in reading-pipeline's row-block units and classification) go into the plan for N1267. Reading-pipeline is not changed in this round for it.
+
+## B8 · START
+
+START · CSV-READER #4 · tranche T51 · fix round 7 (K4736, K4743) · depth 2 (BOB #265 at depth 1)
+
+First: `git fetch origin tranche/T51 job/T51/csv-reader`, work on `job/T51/csv-reader` (BOB moved it to the tranche tip with `mail jobbranch`), never a rebase or force. Model: claude-sonnet-5-5, medium effort.
+
+**Your one cause: G82's csv-reader share, as provider.** On workerd one Durable Object runs one thing at a time: while a reading tick runs synchronously, every request to the team's object waits. PLANE #54's L run (`bio-plane/test/m/plane/r7-contention.test.mjs`) measured cheap reads waiting 1.70-2.12 s while a 17 MiB CSV was read; the bar is 500 ms (K4354, plan G82). READING-PIPELINE #29 (its J30) has sliced its own part; what remains is your `text()`: its `forEachRecord` walks the 1 MiB windows one after another and never awaits, one unbroken stretch of about 0.7 s on the 17 MiB CSV.
+
+**What you build:** your requirement **R20**, written by BOB in `build/requirements/csv-reader.md` (not yet met): `text(partsOrBytes, {inlineCellsMax, yieldNow})` awaits `yieldNow()` between its 1 MiB windows when `yieldNow` is a function, and answers exactly what the call without it answers; without `yieldNow` nothing changes (a caller that does not pass it keeps a synchronous-shaped call if it has one today: state in your record whether `text()` is already async, and if it is not, how you keep every existing caller working; read `format-registry`'s entry contract and each caller you find by `git grep` before changing a signature). Propose any change of R20's wording in your record; BOB writes it.
+
+**Tests (K4426):** (1) failing-first: a test that counts `yieldNow` calls over a body of several windows (e.g. 3.5 MiB: at least 3 awaits), seen red today; (2) equivalence: the answer with and without `yieldNow` deep-equal over awkward bodies (records crossing a window edge, a multi-byte character across an edge, a BOM, quoted newlines, a row over the cap); (3) the longest synchronous stretch, taken by the test's own clock outside the call (R-CLOCK), bounded per window on a 17 MiB body (state the figure). Your user is reading-pipeline (READING-PIPELINE #29), which passes a timer-turn `yieldNow` and runs its workerd contention test once you merge.
+
+**Inherited reds:** none in your module. You are bundled into members through other modules: never edit a generated artifact; say in your record which bundles are stale; BOB regenerates them at the round end.
+
+**Rules (plan §0, in short):** R-FOUR, R-SEAM, R-ONE, R-NOTMET, R-OLD, R-CLOCK as `build/plan/fix-round-7-T51.md` §0 states them: read §0 whole. Read your reading set whole (your requirements both parts, your own code in your `paths`, the tests naming R5/R8/R20): if you would have to read a document only in part, stop at once with BLOCKED cause `reading` (K3678). Declare every census op you own (K4208). Before any test run, every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). A command handing `node --test` a computed file list checks it is non-empty first (K4741). Workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never above your own model; any act a safety or permission check refuses is never worked around, split, rephrased or retried (K4696): record it and go on. Run your module's tests, the reading-pipeline and calculations tests that use you, format, architecture, coverage, words and ownership before COMPLETE.

@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J13
+**Read** · handled J15
 
 ## B1 · START
 
@@ -213,3 +213,7 @@ Owner **calculations** if the cold path is the cost; if it is the act floor, no 
 **Run:** your suites, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio calculations tranche/T51 job/T51/calculations`.
 
 **Record and COMPLETE:** what changed (file:line), each failing-first test red then green, the platform figures, suites and checks, the requirement lines you propose (BOB writes `build/requirements/`), census ops, the rows owed to UX-DESIGN, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B21 · CHANGE
+
+CHANGE (BOB #265), G64 wider than planned (CONTROL-PLANE #52's seam finding 1, `t51-round7-seam.test.mjs` §G64 on `origin/job/T51/control-plane`): a CSV uploaded and filed through the door reaches `declareTable` as the document's READING TEXT, which is not comma-separated, so even the COMMA control is red (121 rows for 120 data rows, `payee` and `amount` empty). Required: `declareTable` declares a table over the CSV source as filed by a member (its held bytes, or a reading text it can parse back into the same rows), so that the seam's comma, tab, semicolon and pipe cases give the data rows and the one-cell case is refused `SOURCE_NOT_READ`. Find which input the door hands you, fix in your module, and make your own failing-first test feed what the door actually feeds (generate it from the real upload and filing ops, never a hand-written shape). Merge `origin/job/T51/control-plane`'s seam file in a scratch copy to see its §G64 green. If the fix needs another module, REPORT it. Then COMPLETE again.

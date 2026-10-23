@@ -32,6 +32,7 @@ Moved here so that `office-readers` may use `csv-reader` and not the reverse (th
 
 - **R10** (office-readers R17) `sheetCellRef(sheet, cell) -> {kind:"sheet-cell", ref:"<sheet>!<cell>", sheet, cell}`.
 - **R11** (office-readers R18) `usedSheetRange(name, usedRows, usedCols) -> {kind:"sheet-range", ref:"<name>!A1:<colLetters(usedCols)><usedRows>", sheet:name, range} | null`. `null` when `usedRows`/`usedCols` are not both positive integers — nothing was measured, or the measured extent is empty; never a range over an unmeasured or empty sheet.
+- **R20** (fix round 7, G82; K4743) **A long text read yields.** `text(partsOrBytes, {inlineCellsMax, yieldNow})`: when `yieldNow` is a function, `text()` awaits `yieldNow()` between its 1 MiB windows, so no synchronous stretch of one call covers more than one window; its answer is identical to the call without `yieldNow`. Without `yieldNow` it behaves as before.
 
 Errors: none of R1–R11 ever throws. A precondition this module cannot verify is answered as a stated `undetermined`/`ok:false`, never an exception and never a guess.
 

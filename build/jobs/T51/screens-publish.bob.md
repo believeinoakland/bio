@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J38
+**Read** · handled J41
 
 ## B1 · START
 
@@ -545,3 +545,7 @@ Owner **screens-publish (S)**; *prov* ratification (the pre-flight's reason), re
 ## B45 · CHANGE
 
 CHANGE: UX-DESIGN wrote this round's rows ahead (U463, DEC-425, merge 21d62cc33b, on main at T51's close): use these keys (or tell BOB the key your code names, and the design renames it): G60 screen.ceremony.gate.head, screen.ceremony.gate.check ({check}); G62 screen.ceremony.publishat.nozone, .notreached ({reason}), .nooffer. Also merged: retrieval's zone({why}) (K4739); ratification's source/why follows at its merge. Your COMPLETE stands unless a key differs.
+
+## B46 · CHANGE
+
+CHANGE (BOB #265), G62 cause found by CONTROL-PLANE #52's seam (finding 3, `t51-round7-seam.test.mjs` §G62): the ceremony's `publishpreflight` body never sends `tieAttested`, so the pre-flight's `first` is `TIE_ATTESTATION_MISSING`, `publish_at` is null with `publish_at_stated` "not reached", and the Sign step draws "isn't set"; with `tieAttested: true` the zone is offered (`America/Los_Angeles`). Required: once the member has attested the ties in the ceremony, the Sign step's pre-flight carries `tieAttested: true` (as `caseratify` will), so `publish_at` is reached and offered; before attestation the not-reached sentence stands. Failing-first: the walker's ceremony through your real screen ops (the seam's test 1 asserts the ceremony's call). Also read `publish_at.source`/`why` when they arrive (ratification merges this round). Then COMPLETE again.

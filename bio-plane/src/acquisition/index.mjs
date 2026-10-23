@@ -434,16 +434,24 @@ function keepFromParts(ev, { sha, parts }) {
  *  part digests in order, or `{sha256}` objects. Answers `{started, kept, keep_pending}`: `started` false when the store offers
  *  no such call (the capture stays in its parts); `kept` true when the whole was put in time; `keep_pending` true when the
  *  ledger took it. Never throws. */
-export async function keepPast(cap, ev, { sha, parts, boundMs = ACQUIRE_BOUND_MS, elapsedMs = 0, keepLater = null } = {}) {
+export async function keepPast(cap, ev, { sha, parts, boundMs = ACQUIRE_BOUND_MS, elapsedMs = 0, keepLater = null, defer = false } = {}) {
   const digests = (Array.isArray(parts) ? parts : []).map((p) => (typeof p === "string" ? p : p && p.sha256));
-  const making = digests.length ? keepFromParts(ev, { sha, parts: digests.map((d) => ({ sha256: d })) }) : null;
-  if (!making) return { started: false, kept: false, keep_pending: false };
+  if (!digests.length || !ev || typeof ev.putFromParts !== "function") return { started: false, kept: false, keep_pending: false };
+  /* R96, R100 (fix round 7, G79): `defer` hands the keep to the ledger AT ONCE: the answer does not wait for it and this call does not start it, the plane's
+     alarm makes the whole (the ledger keeps it alive, so the reason holds). A ledger that is not handed in, or refuses the entry, leaves the keep
+     to be made here and awaited within the bound, as without `defer`. */
+  const laterOf = typeof keepLater === "function" ? keepLater : cap && typeof cap.keepLater === "function" ? (k) => cap.keepLater(k) : null;
+  if (defer && laterOf) {
+    try { const r = await laterOf({ sha, parts: digests }); if (r && r.ok === true) return { started: true, kept: false, keep_pending: true }; }
+    catch { /* a ledger that threw took nothing: the keep is made here */ }
+  }
+  const making = keepFromParts(ev, { sha, parts: digests.map((d) => ({ sha256: d })) });
   const left = Math.max(0, boundMs - KEEP_RESERVE_MS - elapsedMs);
   const got = await within(making, left);
   if (got.done && got.value && got.value.ok) return { started: true, kept: true, keep_pending: false };
   /* BOB #244 (K4433): the plane's hand-off is `keepLater({sha, parts}) -> {ok: true}`, read as the caller's, else the store's;
      with none handed the capture stays in its parts, as without a plane. */
-  const later = typeof keepLater === "function" ? keepLater : cap && typeof cap.keepLater === "function" ? (k) => cap.keepLater(k) : null;
+  const later = laterOf;
   let pending = false;
   if (later) { try { const r = await later({ sha, parts: digests }); pending = !!(r && r.ok === true); } catch { pending = false; } }
   return { started: true, kept: false, keep_pending: pending };
@@ -454,16 +462,25 @@ export async function keepPast(cap, ev, { sha, parts, boundMs = ACQUIRE_BOUND_MS
  *  from the store and no part is hashed again; the store verifies the whole by the checksum it is handed, and each buffer is
  *  released as it is copied. Without them (a caller that holds none: `capture`'s upload of a file the member sent) the parts
  *  just stored are read back one at a time, each held, each its stated size and digest, assembled and hashed against the
- *  digest given. Answers `{ok: true, kept}` (`kept` false for one part or past `MULTIPART_KEEP_MAX`, where nothing is done)
+ *  digest given; with `compose: true` the store is asked to make the whole from its parts first (see below). Answers `{ok: true, kept}` (`kept` false for one part or past `MULTIPART_KEEP_MAX`, where nothing is done)
  *  or `{ok: false, why}`, a sentence for the member: a part gone, a part that is not what was stored, bytes that do not add
  *  up to the digest, or a store that will not take the whole. Never throws. */
-export async function keepWhole(ev, { sha, parts, total, bytes = null }) {
+export async function keepWhole(ev, { sha, parts, total, bytes = null, compose = false }) {
   if (!Array.isArray(parts) || parts.length < 2 || total > MULTIPART_KEEP_MAX) return { ok: true, kept: false };
   const fail = (why) => ({ ok: false, why });
   const held = Array.isArray(bytes) && bytes.length === parts.length && bytes.every((b) => b instanceof Uint8Array) ? bytes : null;
   const work = async () => {
     try {
       if (await ev.head(sha)) return { ok: true, kept: true };
+      /* R96 (fix round 7, G79): a caller that holds no buffers (`capture`'s upload) may ask `compose`: the store then makes the whole from the parts it holds
+         (`putFromParts`, record-core R87), and this module reads no part back, hashes nothing again and puts no whole; the store verifies the whole against
+         its digest. A store that offers none, or refuses, is read back, as without `compose`. */
+      if (!held && compose === true && typeof ev.putFromParts === "function") {
+        let r = null;
+        try { r = await ev.putFromParts(sha, parts.map((p) => p.sha256)); } catch { r = null; }
+        if (r && r.ok === true) return { ok: true, kept: true };
+        /* a store that would not compose it (no multipart upload offered, a refusal) leaves the parts to be read back below, which says which part is wrong if one is */
+      }
       const whole = new Uint8Array(total);
       let at = 0;
       for (const [i, p] of parts.entries()) {
@@ -508,6 +525,20 @@ const notKept = (parts, why) => { const row = CAPTURE_KEEP_CHECKS.CAPTURE_NOT_KE
    read it fits the door's 25 s with room; recorded by BOB. The co-attestation (timestamp and co-archive; measured 9.6 to
    21.5 s a page) is waited for no set time (R20, fix round 3, C12): see `acquireRun`. */
 export const RENDER_WAIT_MS = 10000;
+/* R5 (fix round 7, G79): THE RENDER WAITS WHAT IS LEFT OF THE BAR, not a fixed 10 s on top of a fetch that has used some of it. A member's capture
+   is to be answered inside `ACQUIRE_BAR_MS` (15 s, the walk's bar) less `PROMOTE_RESERVE_MS`, the room the caller's promotion of the document needs after
+   the answer (1.3 to 3.4 s in the walk: dena, acadia). CHOSEN, not measured here; recorded by BOB. A render that is not back by then is the page filed as
+   served and the render pending, which the member finishes (R12) or the alarm does (R100). A caller may hand its own as `opts.acquireBarMs` and
+   `opts.promoteReserveMs`. */
+export const ACQUIRE_BAR_MS = 15000;
+export const PROMOTE_RESERVE_MS = 3500;
+/** R5 (G79): the milliseconds the render is waited, `elapsedMs` into the call: `RENDER_WAIT_MS` at most, less what the bar leaves after the room for
+ *  promotion; 0 with nothing left, never negative; an elapsed time that is not a number leaves the full wait. Pure; never throws. */
+export function renderWaitFor(elapsedMs, { barMs = ACQUIRE_BAR_MS, reserveMs = PROMOTE_RESERVE_MS } = {}) {
+  if (!Number.isFinite(elapsedMs)) return RENDER_WAIT_MS;
+  const bar = Number.isFinite(barMs) ? barMs : ACQUIRE_BAR_MS, room = Number.isFinite(reserveMs) ? reserveMs : PROMOTE_RESERVE_MS;
+  return Math.max(0, Math.min(RENDER_WAIT_MS, Math.floor(bar - room - elapsedMs)));
+}
 const LATE = Symbol("late");
 /** `{done: true, value}` when `p` settled within `ms`, else `{done: false}`; no wait at all for a non-finite `ms`. */
 async function within(p, ms) {
@@ -883,7 +914,7 @@ export async function acquire(cap, body0, opts = {}) {
 async function acquireRun(cap, body0, opts, t) {
   const { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null, ownHosts = null,
           reputation: reputationTool = undefined, fileScanner = null, renderWaitMs = undefined,
-          renderResume = null, heldSha: givenHeldSha = null } = opts || {};
+          renderResume = null, heldSha: givenHeldSha = null, acquireBarMs = undefined, promoteReserveMs = undefined } = opts || {};
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
@@ -1455,7 +1486,8 @@ async function acquireRun(cap, body0, opts, t) {
         catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
         return a;
       })();
-      const got = await timed(t, "render", () => within(run, captureRequest ? Infinity : (renderWaitMs ?? RENDER_WAIT_MS)));
+      const got = await timed(t, "render", () => within(run, captureRequest ? Infinity
+        : (renderWaitMs ?? renderWaitFor(clockNow() - t.start, { barMs: acquireBarMs, reserveMs: promoteReserveMs }))));
       if (got.done) answerR = got.value;
       else if (opts.renderFinal) answerR = { ok: false, error: localize("acquisition.index.render_did_not_return", "the page as a visitor saw it did not come back in time") };   // R99: a render begun afresh is final
       else renderDeferred = { run: run.then((a) => keepReply(ev, a)), pageUrl };   // R5 (G27): the reply is kept in the record when it returns, not held
@@ -1469,9 +1501,15 @@ async function acquireRun(cap, body0, opts, t) {
     if (kept) answerR = await replyOfKept(ev, kept);
     rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved });
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
-    if (!rb.ok || rbytes.length > MAX)
+    if (!rb.ok || rbytes.length > MAX) {
+      /* R100 (fix round 7, G72): why a render fails is named on the log, one structured line with the problem (the renderer's own words, never the page) and the
+         milliseconds the render stage had run; the ledger row keeps it as the entry's `detail` (`owedRun`) */
+      try { console.log(JSON.stringify({ event: "render_failed", problem: String(rb.ok ? "RENDERED_DOCUMENT_OVER_BOUND" : rb.problem).slice(0, 200),
+                                         ms: stageTimes(t).stages.render ?? 0, ...(Number.isFinite(answerR && answerR.elapsed_ms) ? { renderer_ms: answerR.elapsed_ms } : {}) })); }
+      catch { /* a line that cannot be written never changes the answer */ }
       return answer(502, { ok: false, reason: "RENDER_FAILED", ...renderRow("RENDER_FAILED"), op, shell_sha256: sha, filed: false,
         detail: rb.ok ? localize("acquisition.index.the_rendered_document_is_length", "the rendered document is {length} bytes, over this surface's {MAX}.", { length: String(rbytes.length), MAX: String(MAX) }) : rb.problem });
+    }
     /* END DEC-49 REGION is-render-result */
     /* D-529: every subresource the render LOADED is hashed BY THE PLANE over bytes it KEEPS. */
     const renderDigests = kept ? kept.digests : await keepRenderBodies(answerR, { sha256: sha256Hex,
@@ -2243,7 +2281,9 @@ export async function owedRun(cap, entry, opts = {}) {
         if (b.ok === false) {
           const stated = b.reason === "RENDER_FAILED" || b.reason === "RENDER_NOT_A_PAGE";
           if (stated) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } }
-          return stated ? { ok: true, done: true, final: true, reason: b.reason } : { ok: true, done: false, outstanding: 1, reason: b.reason || "RENDER_NOT_FINISHED" };
+          /* R100 (fix round 7, G72): the entry ends with the reason AND the detail the refusal carried (the render's problem, cut to a bound; the renderer's words, no page) */
+          const detail = typeof b.detail === "string" && b.detail ? b.detail.slice(0, 200) : undefined;
+          return stated ? { ok: true, done: true, final: true, reason: b.reason, ...(detail ? { detail } : {}) } : { ok: true, done: false, outstanding: 1, reason: b.reason || "RENDER_NOT_FINISHED" };
         }
         if (!b.document) return { ok: true, done: false, outstanding: 1, reason: "RENDER_PENDING" };
         const given = await opts.deliver({ answer: b, session: entry.session });
@@ -2313,7 +2353,10 @@ export async function owedFetch(cap, entry, opts = {}) {
       made = { sha256: b.document.capture.sha256, since: stampSecond(), answer: { ok: true, existed: b.existed, document: b.document } };
       try {
         cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: b.document.capture.sha256, primaryFile: b.document.file, base: ld.base,
-          state: { queue: [], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: storeName, fetch_done: made },
+          state: { queue: [], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: storeName,
+                   /* B33: the delivery reads `fetch_pending` to know this was a parked fetch (control-plane records the member's fetch-done by it); saving replaces the state whole, so it is kept */
+                   ...(st.fetch_pending && typeof st.fetch_pending === "object" ? { fetch_pending: { since: st.fetch_pending.since, declared_bytes: st.fetch_pending.declared_bytes, why: st.fetch_pending.why } } : {}),
+                   fetch_done: made },
           ttlMs: OWED_SESSION_TTL_MS });
       } catch { /* delivered below; a failed delivery then fetches again */ }
     }
