@@ -240,7 +240,60 @@ const V3 = edit(V2, [
    + "is a finding's, so offline only the first can depart).\n"],
 ]);
 
+/* R14 (fix round 6, G50; K4688): version 4 is version 3 with the path of a material's files when one `ref` is on several rows
+   of the `materials:` block (`case-grammar` R13): `materials/<ref>/<sha>/<leaf>`, the row's capture a segment of the path, and
+   the five departures that keep the spelling and the format together. No kind and no field is added. A case file with no such
+   path stays `bio-case-file/3`. Built as version 3 is, by named changes; the specification's test reads every addition. */
+const V4 = edit(V3, [
+  ["# The case file, format bio-case-file/3\n\nThis document specifies version 3 of the case file:",
+   "# The case file, format bio-case-file/4\n\nThis document specifies version 4 of the case file:"],
+  [/\nVersion 2 added three kinds of file to version 1 [^\n]*\n/,
+   "\nVersion 2 added three kinds of file to version 1 (`archive`, `container` and `criteria`, section 3) and one check (rule 12, "
+   + "section 8). Version 3 added one kind of file to version 2 (`obscured`, section 3), the `obscured` fields of a `materials:` "
+   + "row (section 4) and their checks (rules 1 and 7), and the criteria rows' `captures` (section 3, rule 12). Version 4 adds "
+   + "no kind and no field: it spells the path of a material's files differently when one `ref` is on several rows of the "
+   + "`materials:` block, a source captured more than once (section 3), and adds the departures that keep that spelling and the "
+   + "format together (rule 1). A case file is `bio-case-file/4` when at least one of its paths states a capture, and keeps "
+   + "`bio-case-file/3` otherwise. A `bio-case-file/3`, `/2` or `/1` case file is read as written, by its own specification, each "
+   + "held beside this one, and never by this one's spelling of a path: a `/3` manifest with a path that states a capture departs "
+   + "from its format, and a checker meeting a format it does not hold departs at `format`.\n"],
+  ["- `format`: `bio-case-file/3`.", "- `format`: `bio-case-file/4`."],
+  ["`<finding>` is a finding's id, `<ref>` a material's `ref` and `<calc>` a calculation's `calc` (section 4).\n",
+   "`<finding>` is a finding's id, `<ref>` a material's `ref` and `<calc>` a calculation's `calc` (section 4).\n\n"
+   + "**One `ref` on several rows.** A source captured more than once is several rows of the `materials:` block with one `ref` "
+   + "(section 4), counted over all its rows, carried or not. For such a `ref`, each file of the kinds `document`, "
+   + "`extracted_text`, `observation` and `obscured` takes its row's capture as a segment of its path: "
+   + "`materials/<ref>/<sha>/<leaf>`, where `<sha>` is the row's `sha`, in lower case, 64 hex (for a row carried as its copy, the "
+   + "original's), and `<leaf>` is that kind's leaf in the paths above (`document`, `extracted.txt`, `observation.md`, `obscured`). "
+   + "A `ref` on one row keeps its path as above, and so does every case file whose `ref`s are each on one row. The `archive` and "
+   + "`container` kinds are already named by a digest and keep their paths (`materials/<ref>/archives/<sha256>`, "
+   + "`materials/<ref>/containers/<sha256>.json`); a path of four segments is read as such a file when its third segment is "
+   + "`archives` or `containers`, and as a file of a capture when its third segment is 64 lower-case hex and its fourth is a "
+   + "material leaf. An `attestation` keeps its path. A checker decides the spelling from the manifest's format, never from the "
+   + "rows alone: the spelling is `bio-case-file/4`'s alone.\n"],
+  ["under that row's `ref`, at most one per `ref`. An `obscured` file no row names,",
+   "under that row's `ref`, at `materials/<ref>/obscured` for a `ref` on one row and, for a `ref` on several rows, one for each "
+   + "row at `materials/<ref>/<sha>/obscured`. An `obscured` file no row names,"],
+  ["under its `ref` at the original's fingerprints (the original never travels) each depart (rule 1).",
+   "under its `ref` at the original's fingerprints (the original never travels) each depart (rule 1); for a `ref` on several "
+   + "rows the departure is judged for the row whose capture the path states, and for `archive` and `container` only when every "
+   + "row of that `ref` is a copy."],
+  ["Every file's SHA-256 and length match its row; every part's files recompute its `sha256`.",
+   "Every file's SHA-256 and length match its row; every part's files recompute its `sha256`. A `bio-case-file/4` manifest "
+   + "departs when: a path states a capture and the manifest's format is not `/4` (`path_format`); its format is `/4` and no path "
+   + "states a capture (`format_unused`); given the case document's rows, a plain path of a material's file stands under a `ref` on "
+   + "several rows (`capture_missing`), a path stating a capture stands under a `ref` on one row (`capture_needless`), or a path "
+   + "states a capture that no row of that `ref` names, `sha` compared in lower case (`capture_unnamed`). No path repeats in any "
+   + "format (`path_twice`)."],
+  ["is presentable when the case file carries an `obscured` file at that SHA-256 under its `ref`, whose bytes rule 1 checks;",
+   "is presentable when the case file carries an `obscured` file at that SHA-256 under its `ref` (for a `ref` on several rows, under "
+   + "the row's capture), whose bytes rule 1 checks;"],
+  ["Not carried is missing; not listed, or listed as not included, differs. A row stating",
+   "Not carried is missing; not listed, or listed as not included, differs. For a `ref` on several rows, each row is asked for "
+   + "the files of its own capture, and a passage in a capture is found in that capture's text. A row stating"],
+]);
+
 /** R14: every specification held, by the format it specifies. */
-export const CASE_FILE_SPECS = Object.freeze({ "bio-case-file/1": V1, "bio-case-file/2": V2, "bio-case-file/3": V3 });
+export const CASE_FILE_SPECS = Object.freeze({ "bio-case-file/1": V1, "bio-case-file/2": V2, "bio-case-file/3": V3, "bio-case-file/4": V4 });
 /** R15: the versions held, oldest first. */
 export const CASE_FILE_SPEC_VERSIONS = Object.freeze(Object.keys(CASE_FILE_SPECS));

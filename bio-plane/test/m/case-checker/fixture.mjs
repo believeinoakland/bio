@@ -253,11 +253,13 @@ export function manifestFor(listed, { keys = ["group", "alice", "bob"], over = {
     return { index, ...CG.casePartDigest(files, index) };
   });
   const doc = files.find((f) => f.kind === "case_document");
-  /* a case file carrying the kind `/3` adds is `/3`, one carrying a kind `/2` adds `/2` (`case-grammar` R13); else `/1`,
+  /* a case file with a discriminated path is `/4`, one carrying the kind `/3` adds is `/3`, one carrying a kind `/2` adds `/2` (`case-grammar` R13); else `/1`,
      as every case file before T36 */
   const v3 = files.some((f) => f.kind === "obscured");
   const v2 = files.some((f) => ["archive", "container", "criteria"].includes(f.kind));
-  return { format: v3 ? "bio-case-file/3" : v2 ? "bio-case-file/2" : "bio-case-file/1", group: GROUP, case: CASE, edition: 2, case_document_sha: doc ? doc.sha256 : null,
+  /* G50: a case file with a discriminated path (a `ref` on several rows, a capture a segment of the path) is `/4` */
+  const v4 = files.some((f) => { const e = CG.caseFileEntryOf(f.path); return !!(e && e.capture); });
+  return { format: v4 ? "bio-case-file/4" : v3 ? "bio-case-file/3" : v2 ? "bio-case-file/2" : "bio-case-file/1", group: GROUP, case: CASE, edition: 2, case_document_sha: doc ? doc.sha256 : null,
            keys: keys.map((k) => ({ key: keyFor(k).line, fingerprint: fingerprintOf(keyFor(k).b64) })), parts, files, ...over };
 }
 

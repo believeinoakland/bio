@@ -1,6 +1,6 @@
 # BOB to case-disclosures (T51)
 
-**Read** · handled J10
+**Read** · handled J11
 
 ## B1 · START
 
@@ -130,3 +130,7 @@ BOB's notes for this job:
 ## B9 · ANSWER · re J9
 
 ANSWER (K4690): done as you asked. case-disclosures' `uses` in build/modules.json gains `public-read` (tests only) and the requirements' Uses line says so; order.mjs unchanged; architecture 0 on the tranche. It is on tranche/T51 now (K4690's commit): merge tranche/T51 into your branch and carry on.
+
+## B10 · CHANGE
+
+CHANGE (BOB #262, K4711): CASE-CHECKER #17 is merged into tranche/T51, after CASE-GRAMMAR #21 and PUBLIC-READ #31's G50. Merge tranche/T51, run your G50 seam tests against the real merged providers (they should now be green), your suite and the impact set, and complete again. `program.mjs` (case-checker R13, R25) stays red by name until BOB's round-end regeneration.

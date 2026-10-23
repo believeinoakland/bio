@@ -160,7 +160,7 @@ function readParts(parts) {
     const e = entryOf(f.path) || {};
     return { path: str(f.path) || "", kind: str(f.kind) || "", sha256: str(f.sha256) || "",
              bytes: Number.isSafeInteger(f.bytes) ? f.bytes : null, content: null, state: "missing",
-             part: Number.isSafeInteger(f.part) ? f.part : null, finding: str(e.finding), ref: str(e.ref),
+             part: Number.isSafeInteger(f.part) ? f.part : null, finding: str(e.finding), ref: str(e.ref), capture: str(e.capture),
              calc: str(e.calc), input: str(e.input), detail: null };
   });
   /* Which given ZIP is which listed part: the one carrying every file the manifest puts in it. */
@@ -207,6 +207,10 @@ function readParts(parts) {
   }
   return { manifest, files, departures, parts: partStates };
 }
+
+/** G50: whether a file's path states no capture, or the capture whose SHA-256 is `sha` (both compared in lower case). */
+const ownsCapture = (f, sha) => f.capture === null || f.capture === lowerSha(sha);
+const lowerSha = (v) => (typeof v === "string" ? v.toLowerCase() : null);
 
 /* The case document's `materials:` rows (`case-grammar` R12), read from the carried case document when it is the bytes
    the manifest lists; null otherwise, so only what the manifest alone shows is checked. */
@@ -311,6 +315,11 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
     for (const g of files.filter((f) => f.state === "missing" && f.sha256 === doc.sha)) { g.state = "supplied"; g.content = b; doc.used = true; }
   }
   const fileOf = (kind, key, value) => files.find((f) => f.kind === kind && (key === null || f[key] === value)) || null;
+  /* G50 (R2, R8, R19): the file of a material row. Under `bio-case-file/4` a `ref` on several rows has one file of each kind
+     for each row, at a path that states the row's capture, so a file that states one belongs to the row whose `sha` it
+     names (compared in lower case); a file that states none (every path of `/1`-`/3`, and a one-row `ref` of `/4`) is read
+     by its `ref`, as it always was. */
+  const fileOfMaterial = (kind, mat) => files.find((f) => f.kind === kind && f.ref === mat.ref && ownsCapture(f, mat.sha)) || null;
   const filesOf = (kind) => files.filter((f) => f.kind === kind);
 
   /* The case document and its front matter. */
@@ -485,7 +494,7 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
       else if (!sigCase.verified) fail(localize("case-checker.check.group_attestation_fails", "the team's attestation of {ref} is the case document's signature, which {why}",
         { ref, why: caseSig ? localize("case-checker.check.does_not_verify", "does not verify") : localize("case-checker.check.case_file_does_not_carry", "the case file does not carry") }));
     } else if (row.by_kind === "project" || row.by_kind === "co_attestation") {
-      const carried = mat.included !== true || files.some((f) => f.ref === ref);
+      const carried = mat.included !== true || files.some((f) => f.ref === ref && (!rowSha || ownsCapture(f, rowSha)));
       if (!carried) fail(row.by_kind === "project"
         ? localize("case-checker.check.project_attestation_unlisted", "a project attestation names {ref}, which the case file's manifest does not list", { ref })
         : localize("case-checker.check.co_attestation_unlisted", "a co-attestation names {ref}, which the case file's manifest does not list", { ref }));
@@ -566,7 +575,7 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
   const standards_use = standardsUseOf({ files, docText, materials, signedPassages, fileOf });
 
   /* ---------------------------------------------------------- R24: the account, offline */
-  const account = fm ? accountUseOf({ fm, files, facts, materials, signedPassages, fileOf, caseLevel }) : null;
+  const account = fm ? accountUseOf({ fm, files, facts, materials, signedPassages, fileOfMaterial, caseLevel }) : null;
 
   /* ---------------------------------------------------------- per finding */
   const bar = fm && isObj(fm.required_strength) ? fm.required_strength : null;
@@ -619,7 +628,7 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
       const where = word("case-checker.where", { document: cap || word("case-checker.text.unnamed_document"), id });
       if (!HEX64.test(String(row.content_id ?? "")) || contentIdFor(cap, row.extent, row.chain ?? null) !== row.content_id) {
         differs.push(entry("passage", id, localize("case-checker.check.passage_content_id_differs", "{where} does not recompute to the content id it states ({content_id})", { where, content_id: String(row.content_id) }))); continue; }
-      const tf = mat && mat.kind === "observation" ? fileOf("observation", "ref", mat.ref) : mat ? fileOf("extracted_text", "ref", mat.ref) : null;
+      const tf = mat && mat.kind === "observation" ? fileOfMaterial("observation", mat) : mat ? fileOfMaterial("extracted_text", mat) : null;
       if (!tf || !tf.content) {
         missing.push(entry("passage", id, localize("case-checker.check.passage_text_not_carried", "{where} cannot be found, because the document's extracted text is not carried", { where }) + (mat ? `; ${fetchMaterial(mat, "document")}` : ""),
           { sha256: tf ? tf.sha256 : cap, ...(mat && mat.origin ? { origin: mat.origin } : {}) }));
@@ -692,7 +701,7 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
          travels. */
       const ob = obscuredOf(mat);
       if (ob) {
-        const f = files.find((x) => x.kind === "obscured" && x.ref === mat.ref && x.sha256 === ob.copy) || null;
+        const f = files.find((x) => x.kind === "obscured" && x.ref === mat.ref && ownsCapture(x, mat.sha) && x.sha256 === ob.copy) || null;
         if (f && f.entry) differs.push(f.entry);
         else if (!f || !f.content)
           missing.push(entry(lb ? "presentability" : "integrity", id, localize("case-checker.check.copy_not_carried_fetch", "the copy of {what} carried in its place (a photo with its marked areas obscured, or a member document cleaned) is not carried; fetch the file whose SHA-256 is {sha}", { what, sha: ob.copy }), { sha256: ob.copy, copy: ob.copy }));
@@ -705,7 +714,7 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
       if (lb && mat.included !== true)
         differs.push(entry("presentability", id, localize("case-checker.check.load_bearing_not_whole", "{id} is load-bearing and rests on {what}, which the case lists as not travelling whole", { id, what }), { sha256: mat.sha }));
       for (const [kind, signedSha] of needs) {
-        const f = fileOf(kind, "ref", mat.ref);
+        const f = fileOfMaterial(kind, mat);
         if (f && f.content && signedSha && f.sha256 !== signedSha)
           differs.push(entry("integrity", id, localize("case-checker.check.carried_not_signed_bytes", "{carried} is not the bytes the signed case fingerprints ({sha})", {
             carried: kind === "extracted_text" ? localize("case-checker.check.carried_extracted_text", "the carried extracted text of {what}", { what })
@@ -921,7 +930,7 @@ function standardsUseOf({ files, docText, materials, signedPassages, fileOf }) {
  *  (`lens_statements:`, `case-grammar` R9) and the conclusions with their legs. A sentence citing material the case
  *  file lacks is not judged: it is named, and that is a `missing` entry for the case. Each departure is a `differs`
  *  entry for the case naming its code. Null for a document with no `account:` block. Pure; never throws. */
-function accountUseOf({ fm, files, facts, materials, signedPassages, fileOf, caseLevel }) {
+function accountUseOf({ fm, files, facts, materials, signedPassages, fileOfMaterial, caseLevel }) {
   const rows = accountOf(fm);
   if (!Array.isArray(rows)) return null;
   const cited = [], lacking = new Set();
@@ -938,7 +947,7 @@ function accountUseOf({ fm, files, facts, materials, signedPassages, fileOf, cas
     : files.filter((x) => x.kind === "passages" && x.content).flatMap((x) => { const v = jsonOf(x.content); return Array.isArray(v) ? v : isObj(v) && Array.isArray(v.passages) ? v.passages : []; });
   for (const p of passageRows.filter(isObj)) if (str(p.content_id)) cited.push({ ref: p.content_id, text: String(p.quoted ?? "") });
   for (const mat of materials) {
-    const tf = mat.kind === "observation" ? fileOf("observation", "ref", mat.ref) : fileOf("extracted_text", "ref", mat.ref);
+    const tf = fileOfMaterial(mat.kind === "observation" ? "observation" : "extracted_text", mat);
     let text = null;
     if (tf && tf.content) {
       if (mat.kind === "observation") text = textOf(tf.content);
