@@ -553,6 +553,20 @@ function checkReferences(ctx, findings) {
      rule 2), so the findings keep their order. */
 }
 
+/* G59 (fix round 7): WHERE A SNAPSHOT'S COPY IS STORED, derived exactly as record-core's `snapPath` derives it: the key
+   goes in the file's NAME before its last dot, or at the end of a name with no dot, and the dot is looked for in the name
+   after the last `/`, never in the whole path. A name with no dot (`snapshots/upload-<sha>`, which the capture writer
+   names so) once lost its last character to the extension formula and the checker looked for a copy that is not stored
+   (C-12.2 "is missing", so a case citing a vouched upload could not be signed); a directory with a dot and a file
+   without one (`a.b/c`) needs the cut at the last `/` first. */
+function snapshotCopyPath(name, key) {
+  const cut = name.lastIndexOf('/');
+  const dir = cut === -1 ? '' : name.slice(0, cut + 1);
+  const base = cut === -1 ? name : name.slice(cut + 1);
+  const dot = base.lastIndexOf('.');
+  return dot === -1 ? `_history/${dir}${base}_${key}` : `_history/${dir}${base.slice(0, dot)}_${key}${base.slice(dot)}`;
+}
+
 /** C-12: history manifest coherence and snapshot accounting. */
 function checkHistoryCoherence(ctx, findings) {
   const histFiles = [...ctx.files.keys()].filter(p => p.startsWith('_history/'));
@@ -586,8 +600,7 @@ function checkHistoryCoherence(ctx, findings) {
     }
     if (Array.isArray(e?.snapshotted)) {
       for (const name of e.snapshotted) {
-        const dot = name.lastIndexOf('.');
-        const snapPath = `_history/${name.slice(0, dot)}_${e.key}${name.slice(dot)}`;
+        const snapPath = snapshotCopyPath(name, e.key);
         // 1.16.5: hasFile_, not files.has. This is an EXISTENCE assertion, and
         // the 1.13.0 presence rule above says existence assertions consult
         // files UNION elided. Using files.has here made every tier-scoped read
@@ -648,7 +661,8 @@ function checkHistoryCoherence(ctx, findings) {
       }
       continue;
     }
-    const m = /_((?:\d{8}T\d{6}Z)_[0-9a-f]{8})\./.exec(p) || /^_history\/promotion_(.+)\.json$/.exec(p);
+    /* The key is followed by the extension's dot, or ends the name when the copy's name has none (G59). */
+    const m = /_((?:\d{8}T\d{6}Z)_[0-9a-f]{8})(?:\.|$)/.exec(p) || /^_history\/promotion_(.+)\.json$/.exec(p);
     const key = m ? m[1] : null;
     if (!key || !keys.has(key)) {
       findings.push(f('C-12.2', 'error', localize('record-grammar.bundle.history_file_p_maps_to', 'history file \'{p}\' maps to no manifest entry', { p: String(p) }), [localize('record-grammar.bundle.rebuild_manifest_entry_from_surviving_files', 'rebuild manifest entry from surviving files')]));
