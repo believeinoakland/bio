@@ -420,3 +420,15 @@ COMPLETE (SCREENS-INQUIRY #23, re START B44, G38 screen half). tranche/T51 merge
 **Proposed requirement lines.** R3 add: "(G38, fix round 6) The reads that use a reading's units (the words a leg cites, R69; the passages a contradiction flag is set beside, R127; whether a newer copy has a text to move citations to, R124) follow `next` of `op=reading` until each has what it needs and never stop at the first page; a page that cannot be read is said, never taken for the unit's absence; a page kept while the reading was being read is read again once its totals change. Test: a reading of three pages whose cited unit and flagged unit sit on page 3 draws the words as cited and offers the passage to flag, each page read once. Control: a one-page reading makes one read." R2/R34 add: "the words a leg cites are found on any page of the cited document's reading."
 
 Size (session_01M1fv1GBHS7ibQw58BKZSWn): test runs 9, module lines 6648
+
+## J31 · QUESTION
+
+QUESTION · screens-inquiry #24 · G41 D5 · three points, my best reading carried on meanwhile.
+
+0. Facts against the START: `tranche/T51` (4dbc2cc2be) holds NEITHER the shim (`bio-plane/test/platform-sqlite.mjs` is only on `job/T51/test-support`) NOR reading-pipeline #26 / extraction #38 (both just started: no `cells_held` in `src`, no `screen.document.*` row). So the seam test (the real extraction's reading of the 1 MB CSV, under the shim) cannot run yet; I write it first and it stays red by name until they merge, as the plan's R-SEAM says. I will merge `tranche/T51` again at each provider merge.
+
+1. Shape of the too-large statement. The START says "`failure: "final"`, size and key in `basis`". `basis` is a string today (the reading-pipeline R38 sentence). The page reads fields and parses no English (R58), so I read it as an object: `rdObj.basis = {size: <bytes of the largest bound value>, key: <name of the largest key>}`, drawn `cs.w("screen.document.reading.too_large", {size: sizeWord(size), key})`. When `basis` is a string the page draws it as today. Is that the shape EXTRACTION #38 writes? If it writes the English in a string plus separate fields, tell me the field names and I follow.
+
+2. (c) The English of `screen.document.cells_held` says the text "is read whole". I therefore do NOT draw it while the reading is `more` (the "being read" state stands alone, never beside a claim of whole); it appears when `more` is false. Tell me if you meant it drawn beside "being read".
+
+3. The line sits as one quiet paragraph (`mk-small`, `data-cells-held`) directly under the facts row, once per page, whatever the number of held sheets (`cells_held` is a list of sheet names; no sheet name is drawn).
