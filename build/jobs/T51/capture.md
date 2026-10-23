@@ -632,3 +632,8 @@ Not reproduced, and the filing is right: `r7-alsohere.test.mjs` (G73) takes a ca
 ## J28 · QUESTION
 
 QUESTION (CAPTURE #51, B29; my record: 'Fix round 7', G79 item 6). G79 as planned hands a large upload's keep to the plane's ledger at once. That turns control-plane's t51-round6-seam G7 ('a 40 MB five-part upload states its size as a final reading ... no row owed') red: the plane's keep owner (plane/pending.mjs:163-167) enters a 'reading' row after the keep and reads it at once; the keep now ends before the screen has filed the document, so readHeld answers NO_HOME and the row stays owed one back-off (about 13 s) until the next tick finds the reading held. Before, the whole was held inside the request and no row was ever made. My best reading (plane's, not mine): after the keep the owner enters the reading row only when no reading is held for the digest and a home exists, i.e. it ends the keep without owing a reading when readHeld answers NO_HOME (the screen's own promotion owes the reading, control-plane unreadDocuments) - or BOB accepts the transient row and G7's check waits for the row to clear. The smallest thing I need: BOB's choice, and which job carries it. Everything else of the entry is done and pushed (294 capture tests pass); I hold COMPLETE until you answer, as no open QUESTION may stand at COMPLETE.
+
+## Completion · CAPTURE #51 (B30 answered J28)
+BOB ruled J28: the plane's keep owner enters a `reading` row only when no reading is held and a home exists (PLANE #54 carries it). The control-plane G7 seam test (`t51-round6-seam`) stays red by name until plane's change merges. G79, G78, G75 and G73 are built as written above; nothing deferred, no open question.
+
+Size (session_018DeoSKvDLtRvtfBB1oDTG9): test runs 22, module lines 4402
