@@ -211,8 +211,10 @@ test("R61 R62 (T51, B14; K4376): the ops op-declarations' registration leaves wi
   assert.equal(ACT_HELP.contradictionflag, word("act.contradictionflag.does"));
   for (const op of T51_STANDIN_OPS) {
     assert.equal(ACT_HELP[op], T51_STANDIN_HELP[op], op);
-    // a stand-in: no row the design wrote (since K4422 the regenerated table holds the code's own default, source "code")
-    assert.notEqual(WORD_ROWS.find((r) => r[0] === `act.${op}.does`)?.[5], "design", `${op} has no design sentence yet: a stand-in`);
+    // a stand-in is read under its key: while the list holds no design row it is the code's default (source "code"); once the design
+    // row lands (readheld, DEC-413) the key reads the design's sentence and the table answers `word(key)`
+    const row = WORD_ROWS.find((r) => r[0] === `act.${op}.does`);
+    if (row?.[5] === "design") assert.equal(ACT_HELP[op], word(`act.${op}.does`), `${op}: the design's row now stands`);
   }
   const without = (op) => Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== op));
   for (const op of [...T51_OWED_OPS, ...T51_LIST_ONLY_OPS, ...T51_STANDIN_OPS]) assert.equal(meetsR48(without(op)), false, op);
