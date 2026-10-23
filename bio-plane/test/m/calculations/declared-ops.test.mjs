@@ -75,3 +75,8 @@ test("R42 calculations declares spotcheckvisit: its requires alone raise no refu
   await declaredOpHolds({ op: "spotcheckvisit", declaration: DECLARED_OPS["spotcheckvisit"], call: mk("spotcheckvisit", {"viewer":"member:bob"}, async () => (mkVisit()), null, (fields, env) => (visited(fields, env))),
     refusedNaming: named({"draw":["NO_SUCH_DRAW"],"item":["NOT_DRAWN"],"testimony":["NOT_TESTIMONY"],"finding":["BAD_FINDING"]}, true), values: {"finding":"yes"}, same: sameCode });
 });
+
+test("R42 calculations declares moneyingestread: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "moneyingestread", declaration: DECLARED_OPS["moneyingestread"], call: mk("moneyingestread", {"viewer":"member:bob"}),
+    refusedNaming: named({"ingest":["NO_INGEST"]}, true), values: {"ingest":"no-such-ingest"}, same: sameCode });
+});
