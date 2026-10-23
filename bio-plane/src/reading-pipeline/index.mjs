@@ -15,7 +15,7 @@
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor, applyConfidenceFloor, mergedChain,
          convertedChain, readingSource, mergeTier2Text, tier2Note, glyphCount, stepCovers } from "../textchain.mjs";
 import { getFormat, readingDialect, detectFormat } from "../formats.mjs";
-import { identify, doctypeFor, readText } from "../../../docprofile/registry.mjs";
+import { identify, doctypeFor, doctypeForYielding, readText } from "../../../docprofile/registry.mjs";
 import { driveConvertStep } from "../drive.mjs";
 import { extractPdfRange, openPdfRange } from "../pdfstructure.mjs";
 import { readingProvenance, describePages, yieldNow } from "./readingprov.mjs";
@@ -2419,6 +2419,17 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     const stackId = identify(profCtx);
     return { stackId, docType: doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw }) };
   })();
+  /* G88 (R42): the same classification, in pieces and over a text longer than BREATHE_AT, gives the thread back between the recognisers
+     (docprofile's yielding twin: the same answer, one `detect` a stretch). It is asked only where the text is read as text, and keeps its
+     answer in the one memo, so every later `classify()` returns it. Asked after `classify()` has answered, it is that answer. */
+  const classifyYielding = async () => {
+    if (classified === null) {
+      const stackId = identify(profCtx);
+      const docType = await doctypeForYielding({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw }, { yieldNow });
+      classified ??= { stackId, docType };
+    }
+    return classified;
+  };
   if (!bytes)
     return early(failed(doc, classify().docType, got.why || localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"),
                         { failure: got.failure || FAILURE_TRANSIENT }));
@@ -2433,7 +2444,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     /* R1: text read as text with no format entry that reads it goes to the content type's reader. */
     classifiedText = text; member = "plane";
     if (piecesOn) await breathe(text.length);
-    const { stackId, docType } = classify();
+    const { stackId, docType } = piecesOn && text.length > BREATHE_AT ? await classifyYielding() : classify();
     if (piecesOn) await breathe(text.length);
     /* R32: its text units, drawn from the decoded text (the page's visible text for HTML); a capture whose text holds
        no glyph has none. The reader's outcome below does not change them. */

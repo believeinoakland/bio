@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01SNN2SB35FYPNhzC5KBpM7p · depth 2 · COMPLETE · handled B35
+**Status** · session_01PDMVnd94vzFAbdb4iBDvRV · depth 2 · COMPLETE · handled B35
 
 ## J1 · COMPLETE
 
@@ -616,3 +616,31 @@ Size (session_01SNN2SB35FYPNhzC5KBpM7p): test runs 62, module lines 3213
 
 COMPLETE: G68 (CSV, text, PDF kept open) and G82 (the thread given back) and G76's test; record section "G82" in `build/jobs/T51/reading-pipeline.md`.
 Workerd contention test (4 shapes, p95 asserted under 500 ms, all green): cheap-read wait while the ticks run, p95 / longest: 12 MiB CSV 85/250 ms, 17 MiB CSV 91/231, 21 MB PDF 225/261, 12 MB text 57/631-806 (that longest is docprofile's classification over the whole text, about 1 s, outside the three shapes). First tick 1.7-2.2 s wall but in slices; later CSV ticks at most 183 ms and 3.1 MiB from the store; later PDF ticks 0 bytes. Directory 312 of 312; pdf-pieces 5 of 5 alone; format, architecture, coverage, ownership, words 0 failures. The memory test is a flake the tranche has too (1 of 12 alone unchanged), noted in the record.
+
+### G88 · a long text is classified in pieces by docprofile's yielding twin (B36, READING-PIPELINE #30; docprofile R39 merged)
+
+**What changed.** `bio-plane/src/reading-pipeline/index.mjs`: `doctypeForYielding` imported from `docprofile/registry.mjs`; `classifyYielding()` beside `classify()` (it builds the same ctx, awaits `doctypeForYielding(ctx, {yieldNow})`, and keeps its answer in the same `classified` memo, so every later `classify()` returns the one answer: R42); it is used only at the text-read-as-text call (`const { stackId, docType } = piecesOn && text.length > BREATHE_AT ? await classifyYielding() : classify()`); not in pieces, or at `BREATHE_AT` characters and under, the call stays the synchronous one. `identify` is not yielded (about 100-250 ms up to 24 MiB, under the bar; stated).
+**Tests (new, all under my `tests`).** `r7-classify-yield.test.mjs` (5 tests, R42): registered real types plus a stub CERTAIN winner first; every `detect` re-registered wrapped and `globalThis.setTimeout` wrapped into one event log; for a 12 MB text no type matches, a 12 MB text a CERTAIN winner takes with types after it (the `also` pass) and a 12 MB minutes-like text the real meeting-minutes type reads (its `parse` included): a yield before every `detect` (the first included) and at least 8 detects; the first tick's answer deep-equals `fixtures/r7-classify-answers.json`, recorded by `make-r7-classify-answers.mjs` on the code before the change (deterministic: two recordings are byte-equal); the threshold at 256 KiB - 1, 256 KiB and 256 KiB + 1 characters (detects follow one another at the first two, a yield precedes each at the third); a read not in pieces keeps the synchronous call. Shared builders: `r7-texts.mjs`, `r7-classify-cases.mjs`. **Seen RED** before the call-site change (4 of 5: "a detect with no yield before it since the one before", and the threshold test), GREEN after (5 of 5).
+`r7-contention.test.mjs` gains, for the 12 MB text and a new 12 MB minutes-like shape: `max(waits) - controlMax < 500` ms (the printed `rawget` control subtracted), both printed. **RED before** the call-site change (the old `index.mjs` put back): longest wait 711 ms less the control 79 = **632 ms**, and the minutes text 779 - 75 = **703 ms**; GREEN after (below). Why it was missed (K4426 (2)): the test asserted p95 only and printed the longest.
+**L (workerd under Miniflare, the 12 MB shapes alone, five runs; longest cheap-read wait / control / difference, ms):**
+
+| run | 12 MB text | 12 MB minutes text |
+|---|---|---|
+| 1 | 372 / 130 / 242 | 384 / 67 / 317 |
+| 2 | 433 / 62 / 371 | 398 / 92 / 306 |
+| 3 | 336 / 119 / 217 | 401 / 90 / 312 |
+| 4 | 298 / 42 / 256 | 402 / 29 / 373 |
+| 5 | 229 / 39 / 191 | 442 / 33 / 409 |
+
+All ten under the bar of 500 (before the change: 632 and 703). `memory.test.mjs` alone: 4 of 4. **The residual (K4768, stated, not built):** a 24 MiB text (`WHOLE_READ_MAX`), two runs, longest wait 685 and 705 ms, less the control (63, 213) 622 and 493 ms; first tick 3.2-3.3 s wall, later ticks at most 44 ms. One `detect` (regulation's) is still one stretch; printed by `G88 residual` in the contention test, not asserted. **P** is BOB's at the redeploy (`own_ms` of a text tick); the bundles that import `doctypeFor` (`bio-plane/dist`, `release/*.bundled.mjs`, `agent-worker/dist`) are generated and stale until BOB rebuilds them.
+**Requirement lines:** R42's G88 sentence (written by BOB) is met; its test is `r7-classify-yield.test.mjs`. I propose no change of wording, and no `*(not yet met)*` remains on it from my side: BOB removes the G88 note. No census op, no word row (no sentence added).
+**Deferred / found in others:** nothing deferred. For BOB: the residual at 24 MiB above (doctypes' detectors, filed by the docprofile job); `acquisition` `profileOf` (N1) is BOB's.
+
+**Suites and checks (job branch, `origin/tranche/T51` already inside it).** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit` over `test/m/reading-pipeline/*.test.mjs` less the heavy files: `tests 303, pass 303, fail 0`; `memory.test.mjs` alone 4/4; `pdf-pieces.test.mjs` alone 1/1; `r7-classify-yield.test.mjs` 5/5; d606, tier2-wire and pdf-worker-binding 3/3; the users `test/m/extraction/{r82,round6-pieces,round6,testimony,read}` and `test/m/plane/{compose,door,fix6-pending,g55-alarm-l,t36,watch}`: `tests 93, pass 93, fail 0`. `impact.mjs origin/tranche/T51 HEAD`: 108 modules (the transitive set); the direct users of `read` are those above. format `176 modules, 176 requirements files; 0 failures`; architecture `73 product files, 201 relative imports; 0 failures`; coverage `43 of 43 live requirement ids named by a test; 0 failures`; ownership `8 files changed by reading-pipeline between tranche/T51 and HEAD; 0 failures`; words `unkeyed 0, dev 0; 0 failures`.
+
+Size (session_01PDMVnd94vzFAbdb4iBDvRV): test runs 22, module lines 3197
+
+## J32 · COMPLETE
+
+COMPLETE: G88 (K4768), the call site. Record section "G88" in build/jobs/T51/reading-pipeline.md.
+Done: in pieces, a text longer than BREATHE_AT is classified by docprofile's doctypeForYielding with my yieldNow (classifyYielding, kept in the one-per-read memo; R42's sentence met); not in pieces, the call is still synchronous. Tests: r7-classify-yield.test.mjs 5 of 5 (a yield before every detect on a no-match, a CERTAIN-winner and a minutes-like 12 MB text; first-tick answers equal fixtures recorded before the change; threshold at 256 KiB -1/0/+1; not-in-pieces), red before, green after. Contention test now asserts max(waits) - control < 500: red before (632 ms plain, 703 ms minutes), green after in five alone-runs each (191-371 and 306-409 ms). memory.test.mjs alone 4/4. Residual stated, not built: a 24 MiB text, longest wait 685 and 705 ms (622 and 493 less the control). P and the stale bundles are yours at the redeploy. Suites: reading-pipeline 303/303 + heavy files alone, users 93/93; format, architecture, coverage 43/43, ownership, words 0 failures.
