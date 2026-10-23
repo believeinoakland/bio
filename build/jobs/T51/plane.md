@@ -756,3 +756,7 @@ COMPLETE (PLANE #54, B65-B68). G58 founder's owedwork carries the five watchdog 
 **B69 (`g48-classify` c1).** Merged tranche/T51. Cause as BOB said: site-profiles' G76 (K4739) answers `handler: conservative` for markup-free text; 28 of the 69 corpus readings are plain-text fixtures whose recorded stack was `client_rendered`/`shell`. Re-recorded from the real classifier, never by hand: `make-g48-plane-answers.mjs --update <reason>` recomputes every reading and rewrites only those whose answer differs, listing them with the reason in `rerecorded` in `fixtures/g48-plane-answers.json`. The diff changes only `read.stack` (handler and kind) of those 28: every `type`, `confidence`, `signals`, `considered` and `also` is unchanged, so the test's intent (the 17 types classify as before G48) stands. The corpus inputs belong to the doctype, roster, budget and court modules' fixtures, so no markup was added to them. `g48-classify` 13/13. Test and fixture files only.
 
 Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 24, module lines 148
+
+## J47 · COMPLETE
+
+COMPLETE (PLANE #54, B69). g48-classify c1 re-recorded from the real classifier (make-g48-plane-answers.mjs --update, 28 plain-text readings, only read.stack handler/kind changed; listed in 'rerecorded' with the reason); 13/13. Plane suite 414 of 417: only the accepted reds (release R24, l77-size R77 L x2). Checks: format, architecture, coverage 89/89, ownership 0 failures. Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 24, module lines 148.
