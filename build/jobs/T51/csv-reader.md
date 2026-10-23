@@ -35,3 +35,20 @@ csv-reader COMPLETE. Files: bio-plane/src/csv-reader/index.mjs (865 lines), bio-
 ## J2 · COMPLETE
 
 csv-reader #2 COMPLETE, G15 lineRows. index.mjs csvText: sheets[0].lineRows, one 1-based row (record number, as cells/usedRows count it) per line of sheet.text; whole-file and streamed paths. Red-then-green through csvEntry.text: line-rows.test.mjs (3 tests: empty rows + quoted line break; plain and empty-only; >20 MiB streamed body) - all red before (lineRows undefined), green after. text.test.mjs R5 exact-shape assertion now includes lineRows. csv-reader 42 pass; office-readers 104 pass (unchanged). checks: format, architecture, coverage, words (268/1982 unchanged), ownership 0 failures. Nothing imports csv-reader yet, so no users to run. Proposed R16 text and note on the START's 'streamed 1 MB' (streaming is only over 20 MiB; both paths tested) in my record. No deferral, REPORT or question. Size: test runs 8, module lines 884.
+
+## J3 · QUESTION
+
+QUESTION (replaces none) — the largest CSV the plane reads whole is 17 MiB, not 20, and the START's "lower the bound, refuse at N+1" does not fit R6/R9 as written. Best reading below; I carry on with everything else.
+
+MEASURED (plane/shape harness, csvDoc(N MiB), cap 167 - N, i.e. 128 + 39 - N; reading-pipeline's call patched in a scratch worktree only to pass {inlineCellsMax: 512 KiB}, so cells are held and no record list is kept; csv-reader as committed on my branch):
+- survives: N = 4, 8, 12, 16, 17, 17.5. dies (SIGABRT, heap): 17.75, 18, 19, 19.9 (20,900,000 B), 21. At 24 MiB the plane's own hand-off gate (25,165,824 B) states the file and no entry runs.
+- 19.9 MiB needs a cap of 156-160 here (147 given): about 10 MB short.
+- csv-reader's own share is small and is not where it dies: a 20.9 MB body needs old space 47 MB in a bare node (16 idle) = 31 MB above idle (before this job: 53, and with records and every cell it was 14.9 MB per MB of file). Heap after the entry returns is idle 87.7 + 20.7 (text 19.5 + lineRows); the object dies in the stages after the entry (reading-pipeline's row-block units and classification copy the text), which are not this module's.
+- So lowering MEASURED_CSV_TEXT_BOUND_BYTES alone changes nothing at the plane: R6/R9 read a body over the bound, up to ooxml's 32 MiB ceiling, in pieces (cells null), and that band dies in the plane the same way (21 MiB did) because the text is still held whole downstream.
+
+OPTIONS
+A. Change no bound; report the numbers (done here). The plane keeps dying on 17.75-24 MiB CSVs (read three times, then "the object stopped", plane R77) until reading-pipeline stops holding the text several times, which is its job's and N1267's.
+B. (my recommendation for the alpha, K1881) Set MEASURED_CSV_TEXT_BOUND_BYTES to 17 MiB (17,825,792 B; half a MiB under the largest that fit) and make a body over it a STATED, final refusal with its size (the marker R6 already carries, `final: true`, metric body_bytes), up to the ceiling, instead of reading in pieces; the pieces band for csv (R9, F7) is dropped from csv-reader (its code and large-text test go; a 30 MB body is stated, not read). Needs R6 and R9 amended by you; the plane then states 17-24 MiB CSVs instead of dying, and a later round re-raises the figure when downstream holds the text once.
+C. Keep the pieces band (R9) and lower the constant only so the marker names 17 MiB: no behaviour change, no protection.
+
+I will not change the bound or R9 until you answer. Everything else of the entry (cap, cells_held, cellsIn, windowed walk, memory test) proceeds on the figures above; B is a small change afterwards (the constant, one branch, one test at 17 MiB + 1).
