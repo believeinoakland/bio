@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Civicsmith Service Levels</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--mute:#5d5b55;--line:#dcd8cf;--card:#ffffff;--accent:#1f5f8b;--warn:#8a5a00;--good:#2d6a3e;--tint:#eef3f7}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#17181a;--fg:#e9e7e2;--mute:#a7a49c;--line:#34363a;--card:#1f2124;--accent:#7fb6dc;--warn:#e0b25a;--good:#8cc79c;--tint:#1d2730}}
+:root[data-theme="dark"]{--bg:#17181a;--fg:#e9e7e2;--mute:#a7a49c;--line:#34363a;--card:#1f2124;--accent:#7fb6dc;--warn:#e0b25a;--good:#8cc79c;--tint:#1d2730}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 Georgia,"Iowan Old Style",serif}
+main{max-width:860px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:1.9rem;line-height:1.2;margin:0 0 6px}
+h2{font:600 1.2rem/1.3 system-ui,sans-serif;margin:40px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+h3{font:600 1rem/1.3 system-ui,sans-serif;margin:22px 0 6px}
+.meta{color:var(--mute);font:0.9rem/1.4 system-ui,sans-serif;margin-bottom:24px}
+.lede{font-size:1.08rem}
+.box{background:var(--tint);border-left:4px solid var(--accent);padding:12px 16px;margin:16px 0;border-radius:4px}
+.box.warn{border-left-color:var(--warn)}
+table{border-collapse:collapse;width:100%;font:0.9rem/1.4 system-ui,sans-serif;margin:10px 0}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{font-weight:600;background:var(--card)}
+.wrap{overflow-x:auto}
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:14px 0}
+.lv{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;font:0.92rem/1.45 system-ui,sans-serif}
+.lv h3{margin-top:0;color:var(--accent)}
+.lv ul{padding-left:18px;margin:6px 0}
+.tag{display:inline-block;font:600 0.75rem system-ui,sans-serif;padding:1px 7px;border-radius:10px;border:1px solid var(--line);color:var(--mute)}
+.rec{color:var(--good);font-weight:600}
+small,.src{color:var(--mute);font:0.82rem/1.4 system-ui,sans-serif}
+ol li,ul li{margin:4px 0}
+code{font:0.85em ui-monospace,Menlo,monospace}
+</style>
+</head>
+<body>
+<main>
+<h1>How far a team's copy can grow on Cloudflare</h1>
+<div class="meta">For Bob · from the PERFORMANCE lane (PERFORMANCE #2), 2026-10-23 · measured on biosmoke8 (release 0.86.0) and Cloudflare's own pages read today · record: <code>build/plan/lane-performance/HANDOFF.md</code> P17</div>
+
+<p class="lede"><strong>Short answer to your first question: yes.</strong> Workers Paid ($5 a month) is the plan every copy needs today (your ruling D5, K3060), and the installer refuses a Free account.</p>
+
+<div class="box">
+<strong>What I found.</strong>
+<ul>
+<li>A team's copy is limited first by Civicsmith's own design, not by the Cloudflare plan.</li>
+<li>Today a team's whole record lives in one Durable Object: one "room" on Cloudflare with one worker inside it and a 10 GB shelf.</li>
+<li><strong>No Cloudflare plan, Enterprise included, makes that room faster or its shelf bigger.</strong></li>
+<li>What the higher plans buy: uptime guarantees, support, larger uploads, control over where data is kept, and higher limits on other services.</li>
+</ul>
+So a service level has two parts: how Civicsmith stores the team's record, and which Cloudflare plan the team pays for. The first decides how big and how responsive a copy can be. The second adds guarantees.
+</div>
+
+<h2>1. What limits a copy, in the order a growing team meets it</h2>
+<div class="wrap"><table>
+<tr><th>#</th><th>Limit</th><th>Where today's copy stands (measured)</th><th>Does a higher Cloudflare plan lift it?</th></tr>
+<tr><td>1</td><td><strong>The team room has one worker.</strong> Every member's screen, every act and every background reading of a large file wait in one line. Cloudflare's guidance is about 1,000 simple requests a second per object, and 200–500 complex ones.</td><td>Each call averages <strong>30 ms</strong> of work and reads about <strong>4,800 rows</strong>. That puts this room's ceiling near <strong>30 calls a second</strong>, roughly 1–1.5 screen loads a second for the whole team. My estimate: about <strong>15–25 members working at the same moment</strong> before screens slow. A large-file reading running in the background lowers that.</td><td><strong>No.</strong> Not listed as raisable on any plan. It is lifted by Civicsmith's design: cheaper calls now, then splitting the record across several rooms.</td></tr>
+<tr><td>2</td><td><strong>The record's shelf is 10 GB</strong> (per object; past it every write fails).</td><td>The test team holds <strong>416 MB</strong> for 496 documents and 2.2 GB of captured files. The database runs at about <strong>19% of the captured bytes</strong>, so the shelf fills at about <strong>50 GB of captured files</strong> (roughly 8,000–12,000 documents of today's mix). The Settings screen already warns at 70% and 90%.</td><td><strong>No.</strong> Lifted by the design only: bulk text and indexes moved to other rooms or to Cloudflare's file storage (your K4635: "A now and perhaps B for the beta").</td></tr>
+<tr><td>3</td><td><strong>Start-up must finish within 1 second</strong> (every plan). A Worker that takes longer cannot be deployed.</td><td>The main Worker's code is 25.8 MiB and takes about <strong>1.05 s</strong> to start on this machine (0.94–1.27 s). Cloudflare's own machines are evidently faster, since it deploys, but the margin is small and grows thinner as code is added.</td><td><strong>No.</strong> The same 1 s on every plan. A technical fix is underway (BOB's, P16).</td></tr>
+<tr><td>4</td><td><strong>Memory: 128 MB</strong> per room and per Worker (every plan).</td><td>It sets every file bound today: read whole up to 24 MiB, CSV 17 MiB, kept in one piece up to 32 MiB. Your beta standard (K4628) is 100 MB documents and 500 MB archives, read in pieces.</td><td><strong>No.</strong> Lifted by reading in pieces (your K4630, K4632), which is in progress.</td></tr>
+<tr><td>5</td><td><strong>Upload size through the Worker:</strong> 100 MB (Free and Pro zone plans), 200 MB (Business), up to 5 GB (Enterprise).</td><td>Fine for documents up to 100 MB. A 500 MB archive (beta standard) cannot pass through the Worker below Enterprise.</td><td><strong>Yes</strong>, by zone plan. Or by design: the member's browser sends large files straight to Cloudflare's file storage, which works on every plan.</td></tr>
+<tr><td>6</td><td><strong>Browsers for visitor-view captures:</strong> 200 at once per account on Paid; 10 included, then $2 per extra browser; 10 browser-hours a month included, then $0.09 an hour.</td><td>Civicsmith caps itself at 10 at once and 20 browser-minutes a day (about 150–400 visitor captures a day).</td><td>Already ample on Paid; Enterprise can raise it on request. Cost, not the limit, is the knob.</td></tr>
+<tr><td>7</td><td><strong>Containers</strong> (the file scanner): 1,500 vCPU per account; billed only while running.</td><td>Two scanner types, three instances each, asleep after 5–10 idle minutes.</td><td>Not a constraint at any level.</td></tr>
+</table></div>
+<p class="src">Sources, read 2026-10-23: developers.cloudflare.com: Durable Objects limits, pricing and "Rules of Durable Objects"; Workers limits and pricing; Browser Run limits and pricing (updated 2026-10-14); R2 and Containers limits and pricing; cloudflare.com/plans and /business-sla. The copy's figures come from Cloudflare's analytics for its account (read-only) and the product's own <code>stats</code> read.</p>
+
+<h2>2. What it costs</h2>
+<p>Money is not what limits a small or medium team. On Workers Paid, the test copy's busiest day stays inside the $5 allowance for requests, CPU, object time, rows read and storage. The first charge past the $5 is <strong>rows written</strong>: 50 million a month are included, then $1 per million. Writing is heaviest when large documents are read in. Sustained, the test copy's busiest day would add about <strong>$20 a month</strong>. Stored files cost $0.015 per GB a month, so 50 GB is $0.75, with no charge for sending them out. Browsers and the file scanner each cost a few dollars a month at Civicsmith's own caps.</p>
+<div class="wrap"><table>
+<tr><th>Cloudflare offering</th><th>Price (published)</th><th>What it adds that matters to Civicsmith</th></tr>
+<tr><td>Workers Paid (account)</td><td>$5/month + usage</td><td>Everything the product needs to run.</td></tr>
+<tr><td>Pro zone (own domain)</td><td>$20–25/month</td><td>Web security rules on the team's own address. No uptime guarantee.</td></tr>
+<tr><td>Business zone</td><td>$200–250/month</td><td>100% uptime guarantee (1x credit); uploads up to 200 MB.</td></tr>
+<tr><td>Enterprise (contract)</td><td>Not published (by quote)</td><td>Uploads to 5 GB; higher limits on request; data kept in chosen regions (Data Localization Suite, an add-on); 24x7 support; 10x–25x uptime credits.</td></tr>
+<tr><td>Workers for Platforms</td><td>$25/month + usage</td><td>Lets one operator host many teams' copies. Relevant only if Civicsmith is ever offered as a hosted service.</td></tr>
+</table></div>
+<p class="src">"Workers Paid … is separate from any other Cloudflare plan (Free, Professional, Business)" (Workers pricing page). Not stated anywhere: whether the Business SLA covers Workers and Durable Objects by name, and Enterprise prices.</p>
+
+<h2>3. Three service levels</h2>
+<p>Each level names the product's design stage and the Cloudflare plan it needs. Team sizes are my estimates from today's measurements. They should be confirmed by a load test on a scratch copy before any figure is shown to a team.</p>
+<div class="levels">
+<div class="lv"><h3>Level 1 · Team</h3><span class="tag">available now (alpha)</span>
+<ul>
+<li><strong>Design:</strong> one room per team (today's).</li>
+<li><strong>Cloudflare:</strong> Workers Paid; any domain.</li>
+<li><strong>Size:</strong> up to about 50 GB of captured files (8,000–12,000 documents).</li>
+<li><strong>Responsiveness:</strong> about 15–25 members working at once today. Roughly 2–4 times that after the fixes already proposed (fewer calls per screen, cheaper reads), which change nothing a member sees.</li>
+<li><strong>Files:</strong> uploads to 100 MB.</li>
+<li><strong>Cost:</strong> $5 to about $25 a month.</li>
+</ul></div>
+<div class="lv"><h3>Level 2 · Organization</h3><span class="tag">needs the beta's split record (N1271)</span>
+<ul>
+<li><strong>Design:</strong> record split across rooms (per project, with bulk text in file storage), so projects no longer wait on each other.</li>
+<li><strong>Cloudflare:</strong> Workers Paid; Business zone optional, for the uptime guarantee and 200 MB uploads.</li>
+<li><strong>Size:</strong> about 10 GB of database per project; hundreds of GB in total.</li>
+<li><strong>Responsiveness:</strong> each project gets its own line, so the ceiling grows with the number of active projects.</li>
+<li><strong>Cost:</strong> about $10–60 a month, plus $200–250 with Business.</li>
+</ul></div>
+<div class="lv"><h3>Level 3 · Coalition / institution</h3><span class="tag">beta and later</span>
+<ul>
+<li><strong>Design:</strong> Level 2, with very busy tables split further and reads cached.</li>
+<li><strong>Cloudflare:</strong> Enterprise contract.</li>
+<li><strong>Adds:</strong> uploads to 5 GB; data kept in chosen regions (for teams with legal or funder requirements); higher limits on request; 24x7 support; strongest uptime credits.</li>
+<li><strong>Cost:</strong> by quote from Cloudflare (not published).</li>
+</ul></div>
+</div>
+<p><small>A team moves up by changing its own Cloudflare plan (its own act, N1265). The move from Level 1 to Level 2 also needs the record moved into the split design, which must be built as an upgrade step the copy runs on its own data.</small></p>
+
+<h2>4. Your decision</h2>
+<p><strong>Question:</strong> how should Civicsmith define the service levels a team can be at?</p>
+<ol>
+<li><strong>A. Three levels defined by what the copy can do</strong> (record size, members working at once, upload size), each naming the design stage and the Cloudflare plan it needs, as in section 3. <span class="rec">Recommended.</span>
+<ul>
+<li>It tells a team the truth: buying Enterprise does not by itself make a one-room copy faster.</li>
+<li>It fits your K4635 (one room now, split for the beta), so N1271's capacity study measures against these levels.</li>
+<li>The figures are confirmed by measurement before a team sees them.</li>
+</ul></li>
+<li><strong>B. Levels named after Cloudflare's plans</strong> (Paid / Business / Enterprise). Simpler to say, but it promises what the plans cannot deliver: a team that upgrades without the split record gets guarantees and support, not speed or space.</li>
+<li><strong>C. One level for the alpha; define levels only after N1271's capacity study.</strong> No commitment now, but teams and the installer have nothing to plan around, and the study has no targets.</li>
+</ol>
+
+<h2>5. What happens without asking you (technical; BOB's)</h2>
+<ul>
+<li><strong>Cheaper calls (raises Level 1).</strong> Each read makes 2–5 calls to the room, and some reads scan thousands of rows. Folding the checks into one call and caching counts are already proposed (P11, G80).</li>
+<li><strong>Start-up margin (P16).</strong> About a quarter of the 1 s start-up is four large data tables compiled as code. Packaging them as data instead is a contained change.</li>
+<li><strong>Placing the room near the team.</strong> Cloudflare lets a room be placed in a region (for example western North America) when it is first created; it cannot move afterwards. This is free on every plan. The lane will measure the gain once BOB allows a throwaway test (P15). Where a team's records live may later be yours to rule, if teams need a choice.</li>
+<li><strong>Confirming the team-size figures.</strong> A load test on a scratch copy (never the shared test copy) replaces my estimates with measurements before any number reaches a team.</li>
+</ul>
+<p class="src">Method and caveats: the copy's figures cover 2026-10-22 and 2026-10-23, with a few walkers active. The 15–25 figure assumes about 2 screens a minute per working member, 20–40 room calls per screen, and the measured 30 ms per call; queues lengthen well before 100% use. The 50 GB figure assumes today's ratio of database to file bytes (19%).</p>
+</main>
+</body>
+</html>
