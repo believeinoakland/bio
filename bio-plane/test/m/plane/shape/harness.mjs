@@ -217,7 +217,13 @@ async function child(spec) {
   const T0 = Date.now(); let at = Date.now() + 1000, n = 0;
   while (open().length && n < (spec.maxTicks || 120)) {
     peak = used(); const t = Date.now();
+    /* spec.profileFirstTick = a file path: the first tick under the inspector's CPU profiler, written there (where the first tick's time goes) */
+    let prof = null;
+    if (spec.profileFirstTick && n === 0) { const { Session } = await import("node:inspector"); prof = new Session(); prof.connect();
+      const post = (m, p) => new Promise((ok, no) => prof.post(m, p, (e, r) => (e ? no(e) : ok(r))));
+      await post("Profiler.enable"); await post("Profiler.setSamplingInterval", { interval: 500 }); await post("Profiler.start"); prof.stop = async () => (await post("Profiler.stop")).profile; }
     await x.s.onAlarm(at); at += 3_600_000; n++;
+    if (prof) { const { writeFileSync } = await import("node:fs"); writeFileSync(spec.profileFirstTick, JSON.stringify(await prof.stop())); }
     sample();
     const ms = Date.now() - t;
     /* the member's own read, stating its state at this tick (K4426 (3)): what `op=reading` would answer between two alarms */
