@@ -428,3 +428,7 @@ RED BY NAME (B41): (a) the ten gauge tests and R39 fail UNKNOWN_WORD until CONTR
 
 Merged `tranche/T51` (CONTROL-PLANE #50 and the ten `screen.group.storage.*` rows are on it); no uncommitted rows copy. screens-settings 270 tests, 270 pass, 0 fail: the ten gauge tests, R39 and the administering member's seam (door floors `dbBytes` to 100 MB) are green. `checks/run.mjs` and ownership 0 failures. Both reds named in B41 are cleared.
 Size (session_01LW6V3mNSxPRyfn48u2tZEY): test runs 16, module lines 5417
+
+## J31 · COMPLETE
+
+COMPLETE (re B43). Merged tranche/T51; the gauge's ten rows and the administering member's capacity stamp are on it. screens-settings 270/270 (the ten gauge tests, R39 and the seam green); checks/run.mjs and ownership 0 failures. Everything else as in J30 (proposed R79, keys, impact set unchanged). Size: test runs 16, module lines 5417.
