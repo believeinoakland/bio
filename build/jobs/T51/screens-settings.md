@@ -432,3 +432,7 @@ Size (session_01LW6V3mNSxPRyfn48u2tZEY): test runs 16, module lines 5417
 ## J31 · COMPLETE
 
 COMPLETE (re B43). Merged tranche/T51; the gauge's ten rows and the administering member's capacity stamp are on it. screens-settings 270/270 (the ten gauge tests, R39 and the seam green); checks/run.mjs and ownership 0 failures. Everything else as in J30 (proposed R79, keys, impact set unchanged). Size: test runs 16, module lines 5417.
+
+## J32 · QUESTION
+
+CORRECTION to J31 (it said checks 0 failures; the architecture check has 2): storage-seam.test.mjs imports bio-plane/test/m/plane/fixture and bio-plane/src/plane/index.mjs (the real Worker entry and Store the seam needs, R-SEAM), and `plane` is not in screens-settings' `uses` in build/modules.json (a module file, yours). All else in J31 stands (270/270, format, coverage, words, channels, ownership 0). Please add `plane` to my uses (CHANGE), as you did for file-scanner/file-safety earlier; if you would rather the seam avoid the plane entry, say so and I rework it.
