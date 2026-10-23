@@ -6,6 +6,9 @@ import { read } from "../../../src/reading-pipeline/index.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
 registerDoctypes(registerDoctype);
+import { identify, doctypeFor } from "../../../../docprofile/registry.mjs";
+import { flattenText } from "../../../../docprofile/readtext.mjs";
+import { glyphCount } from "../../../src/textchain.mjs";
 
 const PREFIX = "bio/captures/";
 let served = 0;   /* the bytes the store has handed out */
@@ -15,6 +18,19 @@ export default {
     const u = new URL(req.url), q = (k) => u.searchParams.get(k);
     if (u.pathname === "/cheap") return json({ ok: true });
     if (u.pathname === "/put") { const bytes = await req.arrayBuffer(); await env.CAPTURES.put(PREFIX + q("sha"), bytes); return json({ ok: true, bytes: bytes.byteLength }); }
+    if (u.pathname === "/rawget") { const o = await env.CAPTURES.get(PREFIX + q("sha")); const n = (await o.arrayBuffer()).byteLength; return json({ bytes: n }); }   /* the control: the bucket stand-in's own read of the object */
+    if (u.pathname === "/phase") {   /* a probe: one phase of a text tick, alone, over the object */
+      const o = await env.CAPTURES.get(PREFIX + q("sha")); const bytes = new Uint8Array(await o.arrayBuffer());
+      const name = q("name");
+      const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+      let r;
+      if (name === "decode") r = new TextDecoder("utf-8", { fatal: false }).decode(bytes).length;
+      else if (name === "blank") r = /\r?\n[ \t\f\v\u00a0 ]*(?:\r?\n[ \t\f\v\u00a0 ]*)+/.test(text);
+      else if (name === "glyph") r = glyphCount(text);
+      else if (name === "classify") { const ctx = { headers: {}, locator: "https://x/x", content_type: "text/plain", text, origin: "fetch" }; const id = identify(ctx); r = doctypeFor({ ...ctx, handler: id.handler, kind: id.kind }).type.key; }
+      else if (name === "flatten") r = flattenText(text).text.length;
+      return json({ name, r: String(r) });
+    }
     if (u.pathname === "/tick") {
       const sha = q("sha"), bytes = Number(q("bytes")), kind = q("kind");
       const evidence = { get: async (d, o) => { const r = await env.CAPTURES.get(PREFIX + d, o); if (r) served += o && o.range ? Math.min(o.range.length, r.size - o.range.offset) : r.size; return r; },

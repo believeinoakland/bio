@@ -2559,7 +2559,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       } else if (typeof entry.text === "function") {
         const parts = typeof entry.parts === "function" ? await entry.parts(bytes) : bytes;
         if (piecesOn) await breathe(bytes.length);
-        const tt = await entry.text(parts, { inlineCellsMax: INLINE_CELLS_MAX_BYTES, ...(bytes.length > BREATHE_AT ? { yieldNow } : {}) });   /* R44: the cap is opt-in, asked here only; G82: and the turn given back between windows, where the entry can */
+        const tt = await entry.text(parts, { inlineCellsMax: INLINE_CELLS_MAX_BYTES, ...(piecesOn && bytes.length > BREATHE_AT ? { yieldNow } : {}) });   /* R44: the cap is opt-in, asked here only; G82: and the turn given back between windows, where the entry can */
         if (piecesOn) await breathe(objLen);
         bytes = null;
         if (tt && tt.ok !== false) { i2text = tt; wiredTier = 1; }

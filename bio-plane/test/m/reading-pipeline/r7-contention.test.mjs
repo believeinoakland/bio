@@ -33,6 +33,11 @@ async function measure(label, kind, bytes) {
   assert.equal((await put.json()).ok, true);
   await cheap();
   const idle = []; for (let i = 0; i < 4; i++) idle.push(...await Promise.all(Array.from({ length: BURST }, cheap)));
+  /* the control: the wait of the same twelve cheap reads while the bucket stand-in alone reads the whole object (no read of this module's) */
+  const ctl = [];
+  { let d = false; const g = (async () => { for (let i = 0; i < 3; i++) await (await mf.dispatchFetch(`http://x/rawget?sha=${sha}`)).json(); d = true; })();
+    while (!d) { ctl.push(...await Promise.all(Array.from({ length: BURST }, cheap))); await new Promise((r) => setTimeout(r, 5)); } await g; }
+  console.log(`# G82 L control ${label}: while the bucket stand-in alone reads the whole object three times: cheap read p95 ${pct(ctl, .95).toFixed(0)} max ${Math.max(...ctl).toFixed(0)} ms`);
   const waits = [], ticks = [], store = [];
   let cursor = "", done = false;
   const reader = (async () => {
