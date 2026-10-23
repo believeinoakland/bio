@@ -233,6 +233,24 @@ test("R40 (G68): a window cursor that does not fit is refused with no reading an
   }
 });
 
+test("R40 (G68): a store that cannot answer a range leaves every cursor of the old kind, and the pieces are still the one-piece read's units", async () => {
+  const b = bucket();
+  const noRange = { head: evidenceStore(b).head, put: evidenceStore(b).put,
+    get: (d, options) => { if (options && options.range) throw new Error("this store cannot answer a range"); return evidenceStore(b).get(d); } };
+  for (const [text, ct, format, extra] of [
+    [lineLog(30000), "text/plain", "undetermined", { unitsBudget: 100 * 1024, maxUnits: 300 }],
+    [awkwardCsv({ rows: 16000 }), "text/csv", "csv", { unitsBudget: 150 * 1024, maxUnits: 3 }]]) {
+    const document = doc({ digest: await hold(b, text), bytes: MB(text), ct, format, fromText: true });
+    const want = await oracle(noRange, document);
+    const run = [];
+    let cursor = null;
+    for (let g = 0; g < 500; g++) { const p = await readOf(noRange, document, cursor, extra); run.push({ ask: cursor, p }); if (!p.more) break; cursor = p.cursor; }
+    assert.ok(run.length >= 3);
+    assert.ok(run.slice(1).every((r) => kindOf(r.ask) !== "w"), "no window cursor was made");
+    assert.deepEqual(run.flatMap((r) => r.p.text_units || []), want.text_units);
+  }
+});
+
 test("R40 R24 (G68): a window read of an object the store no longer holds is a failed reading that says it can be read again; a store that ignores the range gives the same units", async () => {
   const text = lineLog(30000);
   const b = bucket();

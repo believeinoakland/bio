@@ -1641,11 +1641,13 @@ function completeRunsEnd(vis, grain) {
 /* The cursor a first (or `t`) piece of a text read as text hands on when the next piece can be read by a window, else null.
    `at` is textPiece's resume point (the scan offset in characters, the next `para`, `seq` and run), `through` the UTF-8 bytes of
    the text before it. The text is the object's bytes decoded without loss (valid UTF-8; a BOM only at its start). */
-function textWindowCursorOf({ sha, bytes, text, whole, at, through, grain }) {
+async function textWindowCursorOf(evidence, { sha, bytes, text, whole, at, through, grain }) {
   if (!whole || !at || !(bytes instanceof Uint8Array)) return null;
   const bom = bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? 3 : 0;
-  if (text.includes("�")) { try { FATAL_UTF8.decode(bytes); } catch { return null; } }
+  if (text.includes("\ufffd")) { try { FATAL_UTF8.decode(bytes); } catch { return null; } }
   if (utf8Length(text) !== bytes.length - bom) return null;
+  /* the window is an improvement: a store that cannot answer a range leaves the piece its cursor of the old kind */
+  try { const probe = await rangeBytes(evidence, sha, through + bom, 1); if (!probe || probe.bytes.length !== 1) return null; } catch { return null; }
   return windowCursor(sha, { m: "t", n: bytes.length, ob: through + bom, bm: bom, g: grain === "lines" ? 1 : 0, p: at.p, q: at.q, r: at.r });
 }
 
@@ -1719,7 +1721,11 @@ function finishScan(st, out) { if (st.cr) { st.cr = false; out.push(st.crAt); } 
    needs, the sheet's lines are not named by row, or its header leaves no room beside a row). `meta` is the plan's entry for the
    block, `read` and `total` the bytes of units before it and in all. Scans the head of the object in the store, as far as the block's
    record (the first piece's size), never the file. */
-async function csvWindowCursorOf(evidence, { sha, whole, size, i2text, meta, next, read, total }) {
+async function csvWindowCursorOf(evidence, args) {
+  try { return await csvWindowCursorIn(evidence, args); }
+  catch { return null; }   /* the cursor of a window is an improvement: a store that cannot answer a range leaves the piece its cursor of the old kind */
+}
+async function csvWindowCursorIn(evidence, { sha, whole, size, i2text, meta, next, read, total }) {
   if (!whole || !meta || !meta.plan || !Number.isInteger(size) || !i2text || i2text.container !== "csv") return null;
   const enc = i2text.dialect ? i2text.dialect.encoding : undefined;
   if (!(enc === "utf-8" || enc === "us-ascii" || enc === null)) return null;
@@ -2350,7 +2356,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (p.refused) return p;
       /* G68: the pieces after this one are read by a window when the capture can be (a cursor of the old kind is moved on to one) */
       if (p.fields.more && fmt !== "html")
-        p.fields.cursor = textWindowCursorOf({ sha, bytes, text, whole: got.whole === true, at: p.at, through: p.fields.read_through, grain: p.grain }) ?? p.fields.cursor;
+        p.fields.cursor = (await textWindowCursorOf(evidence, { sha, bytes, text, whole: got.whole === true, at: p.at, through: p.fields.read_through, grain: p.grain })) ?? p.fields.cursor;
       return { ...(p.units.length ? { text_units: p.units } : {}), ...p.fields, piece: p.piece };
     }
   }
@@ -2392,7 +2398,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       const p = textPieceAnswer(visible, { html, sha, ...pieceAsk });
       if (p.refused) return p;
       if (p.fields.more && !html)
-        p.fields.cursor = textWindowCursorOf({ sha, bytes, text, whole: got.whole === true, at: p.at, through: p.fields.read_through, grain: p.grain }) ?? p.fields.cursor;
+        p.fields.cursor = (await textWindowCursorOf(evidence, { sha, bytes, text, whole: got.whole === true, at: p.at, through: p.fields.read_through, grain: p.grain })) ?? p.fields.cursor;
       const tot = totalsOfText(visible, html, p.grain);
       textUnits = p.units.length ? p.units : null;
       pieceInfo = { ...p.fields, piece: { ...p.piece, units_total: tot.units } };
