@@ -1,6 +1,6 @@
 # The final pass of T51, in substance: brief for each walker (Bob K4781-K4785, K4787; K4426; K4733)
 
-**Status** · DRAFT by BOB #268 (on branch `prep/bob268-final-brief`, after its handoff; K4781 and K4782 said this file existed when it did not), for BOB #269 to review, correct and adopt. **Reviewed and merged by BOB #269 (K4805)**, still DRAFT until its areas are re-cut from COVERAGE #1's completed map; the review's three additions are marked (K4805). Its areas are the draft coverage map's (`walk-coverage-T51.md` §3, K4784): **BOB #269 re-cuts them from COVERAGE #1's completed map before any walker starts**, and fills the copy's commit and the new room's details.
+**Status** · DRAFT by BOB #268 (on branch `prep/bob268-final-brief`, after its handoff; K4781 and K4782 said this file existed when it did not), for BOB #269 to review, correct and adopt. **Reviewed and merged by BOB #269 (K4805)**, its areas re-cut from COVERAGE #1's completed map (K4808); **in force once the map's per-area files are split out and its one partly read source read whole (K4808)**; the review's three additions are marked (K4805). Its areas are the draft coverage map's (`walk-coverage-T51.md` §3, K4784): **BOB #269 re-cuts them from COVERAGE #1's completed map before any walker starts**, and fills the copy's commit and the new room's details.
 
 **What:** one real investigation, worked through every construct a team uses, from biosmoke8's new, empty, claimed room (K4752), first **offline** through the door, then **live**. Alpha is declared only when it completes (Bob, K4781). Scope (Bob, K4782): every row of the coverage map that is STALE or NEVER, plus the last fix round's changes; a WALKED-CURRENT row is crossed only as the journey passes it.
 
@@ -10,20 +10,25 @@
 
 One investigation a real team would run, the same in both phases, chosen by BOB #269 from the canon's sample investigations (a public body's spending against its stated policy is the default): it needs a regulation (a code chapter and its sections), a policy, a standard held from three document kinds, a court decision and its citations, a proceeding, people with careers and organizations with offices and holders on dates, ties between them, a money table ingested and reconciled, a timeline, a question carried to a conclusion with a claim check, a case signed and published, and an act (a records request and a filing). Every input is made by the walkers' own acts in the room, never seeded.
 
-## Areas (draft; one walker each, in founder order)
+## Areas (re-cut by BOB #269 from COVERAGE #1's completed map, K4808; one walker per sitting, in founder order)
 
-1. Open the room (claim, first invitation, sign in and out, roster, administrators' acts, account, updates, declared bias).
-2. Daily rhythm and projects (Home, Queue, a project, membership both ways, objective, themes, dashboards).
-3. Bring documents in (one file of every kind: web page, visitor view, PDF ordinary, large and scanned, text, CSV, Word, PowerPoint, OpenDocument, RTF, email, image, ZIP; an observation). (K4805) Each family's files include its envelope corpus's live subset once built (PDF, scans and images, spreadsheets, documents and archives; Bob's K4785 (4), K4798), each read to its last line and found by search.
-4. Receive, vouch, watch, read, cite (held list, vouching, Inbox, source protection, watches and leads, reading to the last page, Find in this, a changing source, contradiction).
-5. People, organizations, ties.
-6. Money, time, connections, registers.
-7. Law and courts (regulations, a standard, a policy, a court decision and citations, a proceeding).
-8. Question to conclusion.
-9. Case to publication (ceremony, a refusal read in full, a reload before signing, set-time publish, verify and recreate, docket and correction, an imported case).
-10. Act (records request to reply, plan to start-and-send, determination to consequences, counsel, hold and notice, template).
+From `walk-coverage-T51.md` §3: thirteen sittings, each walker reading whole its area's file `build/plan/walk-T51-final/coverage/<area>.md` (the map's §1, its area's rows of §4 and its area's notes of §6, split out so each is read whole, P20) and the overlay file, which every walker also walks.
 
-Areas 2-10 depend on area 1's room and people; later areas use the documents and constructs earlier ones made, so the offline phase runs the areas in order as one journey, and the live phase starts each area once its inputs exist.
+1. **Install, claim, set up the room** (17 rows; install and update rows walk 0.87.0 only once cut, G90, so in the alpha's pass they confirm the built-in route's refusal is the known one).
+2. **The team's people and accounts** (16 rows).
+3. **Projects and the daily rhythm** (16 rows; Home and the Queue walked again at the ends of areas 6, 10 and 11).
+4. **Bring documents in**, sitting **4a** and sitting **4b** (25 rows; the records request is sent here and its reply arrives as a document; each family's envelope corpus live subset once built, K4805).
+5. **Vouch; the people, organizations and ties the documents name** (9 rows).
+6. **Read, find, cite into a question** (12 rows).
+7. **Money, time, connections, registers** (9 rows).
+8. **Law and courts** (5 rows: regulations, a standard, a policy, a court decision and its citations, a proceeding).
+9. **Question to conclusion, and the plan opened** (18 rows).
+10. **Case to publication**, sitting **10a** and sitting **10b** (25 rows; only 10b signs; a reload before signing; the after-publication source change ends it).
+11. **Act** (20 rows; the plan starts only after a determination).
+- **Overlay, for every walker** (8 rows: speed against K4354 judged on `Server-Timing`, 1280 and 390 px, words a member would not understand, and the rest of the overlay's rows).
+- **Not walked in the alpha:** the map's area 12 (14 rows needing the assistant, K3717).
+
+Sittings 2-11 depend on sitting 1's room and people; later sittings use what earlier ones made, so the offline phase runs them in order as one journey, and the live phase starts each sitting once its inputs exist. A row the walker cannot reach is recorded NOT REACHED with why, never skipped. A row marked "(owed)" or "(not built: …)" in the map is walked to confirm its state, its absence recorded, not logged as a defect.
 
 ## Phase 1: offline, through the door (K4781, BOB's detail)
 
