@@ -112,3 +112,7 @@ First: `git fetch origin tranche/T51 job/T51/instance-setup`, work on `job/T51/i
 **The provider.** `runtime-limits` (RUNTIME-LIMITS #6, started with you) builds `bio-plane/src/store-place.mjs` (R27, R28: `STORE_HINTS`, `storeHint`, `storeGeneration`, `storeId`, `storeStub`). Write against R27/R28 as written; BOB posts a CHANGE when it is merged: then merge `tranche/T51` into your branch and run your tests. Until then your tests that need it may be red; never COMPLETE red on it.
 
 **Also, for G84 (K4753):** TRANSLATIONS #2 replaces the constant `INTERFACE_WORDS` by the function `interfaceWords()` (its R2). Once BOB's CHANGE says it is merged, merge the tranche and re-point `bio-plane/src/setup.mjs:61`'s re-export and `bio-plane/test/m/instance-setup/t50.test.mjs` to it (same content); never COMPLETE red on it.
+
+## B10 · CHANGE
+
+CHANGE (K4757): runtime-limits is merged into tranche/T51 (`bio-plane/src/store-place.mjs`, R27, R28). Merge `tranche/T51` into your branch now, run your tests and impact set, and COMPLETE when green. Also (G84): TRANSLATIONS #2 is COMPLETE on `job/T51/translations` (read it there: `interfaceWords()` replaces `INTERFACE_WORDS`, its R2). Re-point `bio-plane/src/setup.mjs:61` (re-export `interfaceWords`) and `bio-plane/test/m/instance-setup/t50.test.mjs` now; until translations merges these stay red by name (the import of `interfaceWords` only). BOB merges translations and you together in one verified push, so COMPLETE with only that red named.
