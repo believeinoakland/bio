@@ -51,7 +51,7 @@ const fires = (mutate, check, ctx = CTX) => R.checkCaseDocument(mutate(doc()), c
 
 /* The seventeen arms of C-41, each with the one mutation that fires it (casesign's list, extended to every arm). */
 const ARMS = [
-  ["FORMAT", "C-41.1", (d) => { d.format = "bio-case-document/9"; return d; }],
+  ["FORMAT", "C-41.1", (d) => { d.format = "bio-case-document/10"; return d; }],
   ["IDENTITY", "C-41.2", (d) => { d.case_id = "CASE-2026-9999"; return d; }],
   ["EDITION", "C-41.3", (d) => { d.case_edition = 7; return d; }],
   ["PROJECT", "C-41.4", (d) => { d.case_project = "null"; return d; }],
@@ -303,11 +303,11 @@ test("R1, R4 (N538): a /7 case document is read as /6 and a /8 one as /7: each d
       { declared: fmt, v1: "null", v2: "" }));
   }
   /* C-41.1 names the current format (CASE_DOCUMENT_FORMAT, in force) and every format accepted as written */
-  const [bad] = run(as("bio-case-document/9"), CTX).filter((x) => x.check === "C-41.1");
+  const [bad] = run(as("bio-case-document/10"), CTX).filter((x) => x.check === "C-41.1");
   for (const fmt of ["/8", "/7", "/6", "/5", "/4", "/3", "/2", "/1"]) assert.ok(bad.message.includes(`'bio-case-document${fmt}'`), fmt);
   assert.equal(bad.message, localize("case-catalogue.checks.a_case_document_declares_format",
     "a case document declares format '{CASE_DOCUMENT_FORMAT}', or one of the earlier formats accepted as written ({map}) (got '{format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one",
-    { CASE_DOCUMENT_FORMAT, map: CASE_DOCUMENT_FORMATS_ACCEPTED.filter((x) => x !== CASE_DOCUMENT_FORMAT).map((x) => `'${x}'`).join(", "), format: "bio-case-document/9" }));
+    { CASE_DOCUMENT_FORMAT, map: CASE_DOCUMENT_FORMATS_ACCEPTED.filter((x) => x !== CASE_DOCUMENT_FORMAT).map((x) => `'${x}'`).join(", "), format: "bio-case-document/10" }));
 });
 
 test("R4: the family is declared gate findings, not refusal rows: no export is named *_CHECKS, no row carries a where or a code, and each row names its check and what it asks", () => {

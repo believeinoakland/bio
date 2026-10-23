@@ -117,7 +117,7 @@ import { word, localize } from "../setup-words/index.mjs";
 import { delivererOf } from "../deliverer.mjs";
 import { rowOf } from "./checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, PUBLICATION_DECLARATIONS, migratePublication,
-         registerCaseDocumentSha, caseDocumentPath } from "./schema.mjs";
+         registerCaseDocumentSha, caseDocumentPath, ATTESTATION_SHA_UPSERT } from "./schema.mjs";
 import { corpusExportOf } from "../corpus-export/index.mjs";
 import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
@@ -1167,9 +1167,17 @@ export class Publication {
        every file it answers by hash, every write to `published_shas` being this module's. A material this copy cannot
        hold at its stated digest never refuses the commit: it is named, and the case file shows it missing. */
     const held = this.caseCarriage.holdMaterials(docFm, { caseId: id, edition: ed, at: when });
-    for (const f of held.files)
-      this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
-                     ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, f.sha256, f.ref, f.path, f.kind, f.bytes ?? null, when);
+    for (const f of held.files) {
+      /* G47t (K4677): an attestation token records the capture it stamps. A stored capture that differs from the new
+         one is cleared to NULL (the token is shared: edition 2 adds capture B naming edition 1's token); a stored NULL
+         is never rewritten to a value (an old row keeps the ref join); the same capture again changes nothing. */
+      if (f.kind === "attestation") {
+        const cap = typeof f.capture_sha === "string" && f.capture_sha ? f.capture_sha.toLowerCase() : null;
+        this.sql.exec(ATTESTATION_SHA_UPSERT, f.sha256, f.ref, f.path, f.kind, f.bytes ?? null, when, cap);
+      } else
+        this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+                       ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, f.sha256, f.ref, f.path, f.kind, f.bytes ?? null, when);
+    }
     /* R22 (K1632; public-read R23): EACH CALCULATION'S INPUTS, COMMITTED AS A MATERIAL'S. Every input a `calculations:` row
        names (case-grammar R18) is registered by its SHA-256 at its case-file path, and answered `held: "evidence"`: a
        declared table's canonical bytes are held in the evidence store under that hash (calculations R1), so ratification's
