@@ -130,7 +130,8 @@ test("R2 publishWake answers the earliest waiting publish_at or null; publishDue
   const late = "2026-10-01T15:30:00.000Z";
   w.clock.now = late;
   const out = await w.ps.publishDue(late);
-  assert.deepEqual(out.taken, [{ case: CASE, edition: 1, state: "published", published_at: late }], "only the due one");
+  assert.deepEqual(out.taken, [{ case: CASE, edition: 1, state: "published", published_at: late, case_file_at_settle: "unknown" }],
+                    "only the due one; this publisher gives no case files, so the entry states unknown (G54)");
   assert.equal(pub.calls.length, 1);
   assert.deepEqual([pub.calls[0].now, pub.calls[0].entry.checked, pub.calls[0].entry.signature, pub.calls[0].entry.doc_sha,
                     pub.calls[0].entry.publish_at], [late, { sources: [], ties: [], holds: [] }, SIG(1), docOf(w).doc_sha, AT_UTC]);
