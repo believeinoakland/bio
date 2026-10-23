@@ -578,3 +578,10 @@ I carry on with G71 (done, red then green) and G82 (the L run) meanwhile, and wi
 **Suites so far** (from `bio-plane/`, under the shim): `test/m/extraction/` 328 of 328, 0 fail (the new file included). Size lines come at COMPLETE.
 
 **Checks and users so far:** `format.mjs` 0 failures; `architecture.mjs extraction` 0 failures; `coverage.mjs extraction` 74 of 74 live ids named; `ownership.mjs extraction origin/tranche/T51 job/T51/extraction` 0 failures (4 files); `checks/run.mjs`: the words count shows 11 failures, none in extraction's files (case-checker spec, installer-steps keys). Users that read `words_read`, run: screens-inquiry fr3/fr5-document, plane round6-extraction, screens-intake t51-pending/fix3/fix6: 77 of 77.
+
+## COMPLETE (fix round 7)
+
+Entries applied: G71 (fixed, red then green, `r7-words-read.test.mjs`), G82 (L run: no block in extraction's piece loops; nothing built; figures above), G76 (BOB's ANSWER B45 to J31: new data only, nothing built; held CSVs and texts already stored keep their shell note, stated in the plan; extraction's part closed with no change).
+Deferred: none. Found in other modules: the first tick's pipeline `read` (751 ms for 12 MB, 1.1 s for a 17 MiB CSV) is reading-pipeline's, carried to G68 and the plane's seam. Requirement line proposed (R90 amended): *`readingFor`'s `words_read` is the index state's for any reading read in pieces, a PDF's included.* Census ops: none new. Rows owed to UX-DESIGN: none.
+Tests/checks: extraction 328 of 328; users reading `words_read` 77 of 77; format, architecture, coverage 74 of 74, ownership 0 failures.
+Size (session_01EEMpAQRdm5Ju5HajHRvsLv): test runs 9, module lines 4,397
