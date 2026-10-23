@@ -1,6 +1,6 @@
 # test-support (T51)
 
-**Status** · session_0161FtoUuJFb1r4CZvpGeae3 · depth 2 · COMPLETE · handled B5
+**Status** · session_01NsoiLyHMoVNrYC5YG4oMt4 · depth 2 · COMPLETE · handled B6
 
 ## J1 · COMPLETE
 
@@ -121,3 +121,41 @@ CHANGE B5 applied (K4240). Commit 1cf205fc9c on job/T51/test-support, pushed; tr
 - words (checks/run.mjs): 33 failures in other modules, 26 testcopy and 6 missingkey (op-grades' tests t35–t49 among them), and 1 inline. None in test-support.
 
 Size (session_0161FtoUuJFb1r4CZvpGeae3): test runs 4, module lines 136
+
+## Round 6, wave 6: G41's gap fix (TEST-SUPPORT #9, B6; K4631 (8))
+
+**Changed.** `bio-plane/test/platform-sqlite.mjs` (new; BOB adds it to `paths` at the merge, K1043; `ownership` and `architecture` name it until then) and `bio-plane/test/m/test-support/platform-sqlite.test.mjs` (7 tests). The preload wraps `StatementSync.prototype.run/all/get/iterate` and the tag store's four methods; it throws before the statement runs when one bound string or blob, or the bound strings and blobs together, are over 2,098,176 B. Error shape read from a real refusal (`new DatabaseSync(":memory:", {limits: {length: 1000}})`, node 26.10.0): `Error`, message `string or blob too big`, own `code` `ERR_SQLITE_ERROR`, `errcode` 18, `errstr` `string or blob too big`; the test compares the preload's refusal to that real one field by field. Cannot judge: computed values (`||`, `json_set`, `group_concat`, `zeroblob`), literals in SQL text, a column grown by UPDATE from its own value.
+
+**Failing-first.** Red with the preload file absent: 6 of 7 fail (the 7th is the control that the same fixture is not refused without it). Green with it: 7 of 7. Each check is a child `node [--import <it>] --test <fixture>` (the runner's `NODE_TEST_CONTEXT` is removed so the nested runner really spawns). `node --test` hands `--import` to each test file's process: asserted by the fixtures (a fresh `DatabaseSync` in a test file refuses 2,252,800 B); `NODE_OPTIONS=--import=<abs path>` reaches them equally, and is what the full run used.
+
+**Why tests missed it.** node:sqlite has no value limit and every fixture builds its own `DatabaseSync`; a per-fixture shim would miss modules (diagnosis-R6-g41 §3). Gap closed once, in the preload.
+
+**Full run** (`NODE_OPTIONS=--import=$PWD/bio-plane/test/platform-sqlite.mjs node .github/scripts/module-tests.mjs`, alone, tranche/T51 merged at 84d8a188a7): 18 of 182 modules red. The same 18 re-run without the preload (a runner of the same file lists): **7 + 1 tests turn red under the preload and not without it**:
+- (a) product write over the limit, extraction (7 tests: g38 "1 MB CSV through the op", g40 six): `reading_history.reading` bound at `extraction/index.mjs:1150` (`#keepReading`, called from `writeReading` :1024), 11,820,513 B (the 1 MB CSV's reading) and 2,585,472 B; `readings.reading` :1030 would follow. This is G41's own case.
+- (a) case-authoring `document.test.mjs` R17 (searched section bounded by SEARCHED_SUBJECT_MAX): `case_documents.text` bound at `publication/index.mjs:490` (`storeCaseDocument`, from `case-authoring/index.mjs:1206`), 16,831,411 B. NEW: not in the audit; a case document's text has no byte bound before storage. A real write over the limit if a case reaches that size (the test builds the large searched section on purpose); owner publication (writes) and case-authoring (builds the text).
+- (b) fixtures unlike the platform: none found.
+- Not shim-caused (red without it too, identical sets): setup-words 2, bundler 1, ocr-worker 1, promotion 1, file-safety 1, reading-pipeline 1, agent-worker 1, case-checker 2, affordances 4, screens-settings 1, screens-intake 2, screens-inquiry 4, screens-publish 5, screens-action 1, plane 2, installer 15, journey-check 23. screens-intake `t51-fix5` R31 (E8) failed once under the preload and once without it, passed on two other runs of each: a flake, not the preload.
+
+**Measured under the preload (smallest scripts through the ops; `measure-calc.mjs`, `measure-follow.mjs` in the scratchpad, not committed):**
+- calculations `calc_ingests`: `ingestMoney rows:"all"` over an 18,098-row table (698,409 B CSV, no payer identified): `not_written_json` bound at `calculations/index.mjs:1620` is **2,746,775 B** (about 152 B a row; over the limit from about 13,800 rows). **RED**: the act throws SQLITE_TOOBIG inside `transact`.
+- following `portal_snapshots.rows`: a 1,500,035 B portal CSV (24,121 rows) through `followTick` -> `#readPortal` :842: `rows` (JSON.stringify of the dataset rows) is **3,067,862 B** (2x the file; over the limit from about 1.0 MB). **RED**: the tick records the follow as failed with reason `string or blob too big`; no snapshot is stored.
+
+**Proposed requirement (BOB writes it):** "**R18** `bio-plane/test/platform-sqlite.mjs`, loaded as `node --import <it>` (or `NODE_OPTIONS=--import=<it>`), makes `node:sqlite` refuse, as Durable Object SQLite does, any statement run through `run`, `all`, `get` or `iterate` (and a tag store's) whose single bound string (judged by its UTF-8 bytes) or blob is over 2,098,176 B, or whose bound strings and blobs sum over it, before the statement runs, with an `Error` of message `string or blob too big`, `code` `ERR_SQLITE_ERROR`, `errcode` 18, `errstr` as node's own SQLITE_TOOBIG; it judges no number, bigint or null, no literal in SQL text, no computed value; importing it twice wraps once. Test tooling: only the test commands load it." (Private invariant: R9 unchanged; it creates nothing outside the sandbox.)
+
+**Checks.** `checks/run.mjs`: format, coverage (6674 of 6674), channels, words: 0 failures; architecture 1 failure: `platform-sqlite.mjs` owned by no module (expected until BOB adds it). `ownership.mjs`: the same file outside paths (expected). Suite: `node --test --test-force-exit bio-plane/test/m/test-support/` run, results below.
+
+Size (session_01NsoiLyHMoVNrYC5YG4oMt4): test runs 5, module lines 205
+
+## J7 · REPORT
+
+REPORT (G41 full run under the preload, tranche/T51 84d8a188a7, full detail in my record's new section).
+Reds under the shim and not without it: 8 tests.
+(a) extraction (7 tests, g38 + g40): reading_history.reading at extraction/index.mjs:1150 (#keepReading, via writeReading :1024), 11,820,513 B and 2,585,472 B. G41's own case.
+(a) NEW, not in the audit: case-authoring document.test.mjs R17 (searched section): case_documents.text at publication/index.mjs:490 (storeCaseDocument, from case-authoring/index.mjs:1206), 16,831,411 B; a case document's text has no byte bound before storage. Owner publication / case-authoring: your call whether it is a real-member risk or only the test's deliberate size.
+(b) fixture unlike the platform: none found.
+Red without the shim too (not the shim's): 16 modules, identical sets; screens-intake t51-fix5 R31 is a flake (failed once with and once without, passed otherwise).
+Measured under the shim: calculations calc_ingests.not_written_json (calculations/index.mjs:1620), ingestMoney rows:"all", 18,098 unidentified payers: 2,746,775 B (~152 B a row; over from ~13,800 rows) RED, the act throws. following portal_snapshots.rows (following/index.mjs:842), 1,500,035 B CSV (24,121 rows): 3,067,862 B RED, the tick records the follow failed "string or blob too big". So rows 3 and 4 of the diagnosis both need jobs (K4631 (7)).
+
+## J8 · COMPLETE
+
+COMPLETE. Changed: bio-plane/test/platform-sqlite.mjs (new preload; add to paths) and bio-plane/test/m/test-support/platform-sqlite.test.mjs (7 tests); record section "Round 6, wave 6" holds everything. Failing-first: 6 of 7 red with the preload absent, 7 of 7 green; test-support suite 72 pass 0 fail. Full run under NODE_OPTIONS=--import=<abs path>, alone: 8 tests red only under it (extraction 7: reading_history.reading extraction/index.mjs:1150, 11,820,513 B and 2,585,472 B; case-authoring R17: case_documents.text publication/index.mjs:490, 16,831,411 B), none class (b); 16 modules red the same without it. Measured: calc_ingests.not_written_json 2,746,775 B (18,098 rows) RED; portal_snapshots.rows 3,067,862 B (1.5 MB CSV) RED. Proposed R18 text is in my record and my REPORT J7. Checks: format, coverage, channels, words 0 failures; architecture and ownership each name only platform-sqlite.mjs as owned by no module (BOB adds it at the merge). Size (session_01NsoiLyHMoVNrYC5YG4oMt4): test runs 5, module lines 205.
