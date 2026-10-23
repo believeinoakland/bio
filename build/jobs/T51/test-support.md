@@ -145,3 +145,13 @@ Size (session_0161FtoUuJFb1r4CZvpGeae3): test runs 4, module lines 136
 **Checks.** `checks/run.mjs`: format, coverage (6674 of 6674), channels, words: 0 failures; architecture 1 failure: `platform-sqlite.mjs` owned by no module (expected until BOB adds it). `ownership.mjs`: the same file outside paths (expected). Suite: `node --test --test-force-exit bio-plane/test/m/test-support/` run, results below.
 
 Size (session_01NsoiLyHMoVNrYC5YG4oMt4): test runs 5, module lines 205
+
+## J7 · REPORT
+
+REPORT (G41 full run under the preload, tranche/T51 84d8a188a7, full detail in my record's new section).
+Reds under the shim and not without it: 8 tests.
+(a) extraction (7 tests, g38 + g40): reading_history.reading at extraction/index.mjs:1150 (#keepReading, via writeReading :1024), 11,820,513 B and 2,585,472 B. G41's own case.
+(a) NEW, not in the audit: case-authoring document.test.mjs R17 (searched section): case_documents.text at publication/index.mjs:490 (storeCaseDocument, from case-authoring/index.mjs:1206), 16,831,411 B; a case document's text has no byte bound before storage. Owner publication / case-authoring: your call whether it is a real-member risk or only the test's deliberate size.
+(b) fixture unlike the platform: none found.
+Red without the shim too (not the shim's): 16 modules, identical sets; screens-intake t51-fix5 R31 is a flake (failed once with and once without, passed otherwise).
+Measured under the shim: calculations calc_ingests.not_written_json (calculations/index.mjs:1620), ingestMoney rows:"all", 18,098 unidentified payers: 2,746,775 B (~152 B a row; over from ~13,800 rows) RED, the act throws. following portal_snapshots.rows (following/index.mjs:842), 1,500,035 B CSV (24,121 rows): 3,067,862 B RED, the tick records the follow failed "string or blob too big". So rows 3 and 4 of the diagnosis both need jobs (K4631 (7)).
