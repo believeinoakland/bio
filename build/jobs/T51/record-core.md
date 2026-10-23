@@ -113,4 +113,4 @@ R88 met: evidenceStore().get(digest, {range:{offset,length}}) asks the bucket fo
 
 **Tests and checks.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/record-core/` from `bio-plane/`: tests 198, pass 198, fail 0 (the old R21, R22, R31, R71 table lists are untouched, the counter adds no table). Users (every file `impact.mjs tranche/T51 HEAD` names outside record-core, 2032 files, two at a time) with the table-based design: 15,444 tests, 56 fail; with the final design I re-ran every file that had failed plus `stats-disclosure` and `members`: failures equal the tranche tip's own 11 reds plus the two stale-artifact tests above (`program.test.mjs` R13, R25); the tranche tip's reds are other modules' (row-census, and others). Process repository, product `/home/user/bio`: `format` 176 modules, 0; `architecture record-core` 0; `coverage record-core` 90 of 90, 0; `ownership record-core tranche/T51 job/T51/record-core` 5 files, 0; `run.mjs`: no line names record-core.
 
-Size (session_01XjGQ7KjpogoaVW83PPQsQX): test runs 14, module lines 2447
+Size (session_01XjGQ7KjpogoaVW83PPQsQX): test runs 14, module lines 2024
