@@ -572,3 +572,7 @@ COMPLETE (CHANGE B43; G54 with public-read merged). Merged `tranche/T51`; `publi
 Suite: 275 tests, 271 pass, 2 fail (the two above), 2 todo. Impact set: screens-publish 23/23, control-plane 72/85, plane 51/59 (146 files; not run beyond the module, the consumers are unchanged by a page-local addition). Checks: format, architecture, coverage (6691/6691) 0 failures; words: no finding in screens-publish (inherited case-checker spec, and installer-steps' `installer.fleet.logsunconfirmed`, not mine). Row owed (BOB, `later-ux.md`): the 13 keys named in J35.
 
 Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 9, module lines 3659
+
+## J38 · COMPLETE
+
+COMPLETE after B43, record J37. Seam and page tests green; one red until rows.mjs is regenerated (g54-page 13 keys are words, common.test R24). Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 9, module lines 3659
