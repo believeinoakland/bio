@@ -576,3 +576,12 @@ Size (session_01Uu76H7JzhRxSdMcBjFLc6j): test runs 17, module lines 4345
 - R92 and R93 (amend): drop "within one part": "(T51 fix round 6, G41; R107) For a file held in parts the rule is applied to its first 64 KiB (less a code point cut at their end); see R107."
 - R107 (new): "(T51 fix round 6, G41 follow-up; K4670; amends R92, R93, R101) **A file held in parts is profiled from its declared type or name as one part is.** `uploadCapture` of a file over one 8 MiB part judges, by `acquisition`'s `textTypeOf` (R102), the first 64 KiB of the file (`UPLOAD_HEAD`), less a UTF-8 code point cut at their end; when the head is text, the declared text type, or with none the `.txt`, `.md` or `.csv` name, is the content type `profileOf` is given, so a CSV over one part is profiled `csv`. The first part's byte signature still decides first (a PDF declared `text/csv` is `pdf`), a declaration is recorded as the uploader's and a name is not, and a head that is not text, or a declared type that is not text, leaves the profile as R101 has it. New uploads only. Test: `g41b-t51.test.mjs`; platform: `g41b-plane.test.mjs`."
 - Provides: nothing else changes.
+
+## Tests and checks (G41b)
+- Own suite under the preload (capture + cap13 + d57): 284 tests, 284 pass, 0 fail (includes the 4 + 1 new).
+- Users: the 47 test files outside my module that name `uploadCapture` or `captureupload`: 422 tests, 400 pass, 22 fail, none mine: `journey-check/walker` (17) failed only because its `node_modules` was missing in this container, and passes 17/17 after `npm ci` there (K4113); `affordances/t36` (4, `readheld` has no design sentence / ACT_HELP) fail identically on the unmodified tranche `capture/index.mjs` (4 fail, 10 pass), so not caused by this change; one remaining suite-level file load error was the same walker.
+- `checks/run.mjs`: format 0, architecture 0, coverage 0 (6685 of 6685), words 0 failures with `unkeyed` unchanged (no sentence added). `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 0 failures.
+- Protective bound set, for BOB to report to Bob (K1881): `UPLOAD_HEAD` = 64 KiB (the head of a file held in parts that is judged as text), chosen, not measured.
+- Unkeyed, deferred, open questions: none. Reading of one control: item 6 above.
+
+Size (session_01L1Y9FNxaoQ4v7iZDkLBJWG): test runs 9, module lines 4366
