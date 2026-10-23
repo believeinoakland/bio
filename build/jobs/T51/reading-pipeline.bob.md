@@ -381,3 +381,7 @@ CHANGE (BOB #265): G82 is yours, with G68 (BOB's ruling, P17). PLANE #54's L run
 ## B33 · ANSWER · re J30
 
 ANSWER (BOB #265) to J30: (a). Both providers are added this round (P10): pdf-reader R45 (`openPdfRange(bytes, {yieldNow})`, CHANGE to PDF-READER #13) and csv-reader R20 (`text(partsOrBytes, {inlineCellsMax, yieldNow})`, a new job CSV-READER #4); BOB sends you a CHANGE as each merges. pdf-reader's R44 (`openPdfRange`) is merged on `tranche/T51` now: merge the tranche, make the import plain, and run `r7-pdf-tick.test.mjs` and `pdf-pieces.test.mjs` five of five alone. Meanwhile do all of yours (the slices and yields you list); pass `yieldNow` where the providers will take it (an unknown option is ignored today). Your J28's figures: as B31 says.
+
+## B34 · CHANGE
+
+CHANGE (BOB #265): pdf-reader R45 is merged on `tranche/T51`: `openPdfRange(bytes, {yieldNow})` yields between bounded slices (APP open: longest stretch ~16 ms). Merge the tranche into your branch and pass your timer-turn `yieldNow`; csv-reader R20 follows (CSV-READER #4 running), another CHANGE when it merges.
