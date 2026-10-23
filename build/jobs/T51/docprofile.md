@@ -1,6 +1,6 @@
 # docprofile (T51)
 
-**Status** · session_0175TpeWdCZgsPcC8Xw3BtqV · depth 2 · COMPLETE · handled B3
+**Status** · session_011RwpSSvSEy7a1VmwRpqYF6 · depth 2 · COMPLETE · handled B4
 
 ## J1 · REPORT
 
@@ -72,3 +72,35 @@ COMPLETE, docprofile G48 (fix round 6; K4673). Pushed on job/T51/docprofile (tra
 **Deferred:** none. **Found in other modules:** none. **Not done:** nothing in the entry; the shape proof is PLANE #52's CHANGE and the basis statement is reading-pipeline's.
 
 Size (session_0175TpeWdCZgsPcC8Xw3BtqV): test runs 14, module lines 1269
+
+## J6 · REPORT
+
+REPORT (G88, for `doctypes`; nothing changed there). The residual G5 states: `doctypeForYielding` puts a yield between types, never inside one `detect`. Regulation's `detect` alone (`doctypes/regulation.mjs`, windowed, never yielding) is about 0.5-0.7 s on a 24 MiB text (`WHOLE_READ_MAX`), 0.23-0.29 s at 12 MB in node (the plan's and the review's figures; I did not re-measure, R-CLOCK forbids a timing test). I found nothing that makes it matter beyond G5's ruling; it is filed here as G5 asks. Meeting-minutes (97-169 ms at 12 MB) and meeting-agenda (56-113 ms) are the next longest single stretches. A `detect` taking an optional async `yield`, or a sampled first pass, would be doctypes' interface change, BOB's call.
+
+## J7 · COMPLETE
+
+COMPLETE, docprofile R39 (fix round 7, G88; K4768), pushed on job/T51/docprofile. Nothing in `site-profiles` or `doctypes` changed.
+
+**What changed.**
+- `docprofile/doctypes/registry.mjs`: one generator `walk(ctx)` holds the whole classification (the engine's `recognise` spelled out with site-profiles' exported `CONFIDENCE`/`confidenceRank`, then the `also` pass as `alsoWalk`), yielding a marker before every `detect`, in the main walk and in the `also` pass (a skipped fallback or self key yields nothing). `doctypeFor` drives it straight through, still synchronous; new `doctypeForYielding(ctx, {yieldNow})` awaits `yieldNow()` per marker only when `ctx.text` is a string over `CLASSIFY_YIELD_AT_CHARS` (256 * 1024 characters, exported) and `yieldNow` is a function; one that throws or rejects is ignored; otherwise it awaits nothing. A throwing `detect` in the main walk rejects the twin as it throws from `doctypeFor`; in the `also` pass it is recorded `{confidence: null, signals: [], error}`. `alsoFor`/`askAll` are untouched (the independent spelling the suite compares to). Exported beside `doctypeFor` through `docprofile/registry.mjs`'s `export *`. No new `t()`/`localize` call.
+- Tests: `docprofile/test/g88-yield.test.mjs` (10 tests, own stubs only: `g48-readings.mjs` `registerCorpusTypes` plus two marker stubs, every `detect` re-registered wrapped under its key; never imports `doctypes`). `memory.test.mjs` + `memory-child.mjs`: new R38/R39 test, mode `twin`: the twin over the 13.6 M character text in the child process, peak 0.2 MB above what the caller holds (limit 16), the type handed `ctx.pages`.
+
+**Failing-first.** First I wrote `doctypeForYielding = async (ctx) => doctypeFor(ctx)` (the stub the plan names). Red: 5 of 10 — no-match yields, also-pass yields after a CERTAIN winner, the 256 KiB threshold, the answer-equality test's LIKELY-winner interleaving, and the "at or under 256 KiB / over yields" test. The other 5 (NO_TYPE, throw in main walk and in `also`, a missing/throwing/rejecting `yieldNow`, ctx unchanged) are equality-with-`doctypeFor` assertions, and a stub that returns `doctypeFor`'s answer meets them by construction; they are the guard on the real twin sharing the walk. Then the real twin: 10/10 green. Order, never time: each yield is logged at its start and end, so a `detect` between the two would fail the test.
+
+**Why missed (R-FOUR 2).** G48's tests were sheet shapes only; nothing fed a long non-sheet text to the classification and nothing counted yields.
+
+**Tests and checks** (from /home/user/bio unless noted).
+- `node --test docprofile/test/`: 63 pass, 0 fail, 0 skipped. R38's memory test alone: `memory.test.mjs` 4 pass (R38 readText 0.5 MB; the twin 0.2 MB).
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 119 of 176 modules affected (1920 of 2509 test files; docprofile 8/8). Users' suites run, whole directories: doctypes 60/60, legistar-reader 18/18, roster-reader 27/27, court-doctypes 24/24, budget-doctypes 27/27, acquisition 261/261, monitoring 168/168, capture 294/294, doorbell 92/92, reading-pipeline 311/312. The one failure, `reading-pipeline/memory.test.mjs` BUDGET-2024-APP ("did not complete in a 87 MB heap (SIGABRT)"), passed when I ran that file alone with my change (4/4) and on the tip's registry.mjs (4/4): it died near its heap limit while the whole directory ran in one process beside other tests; I take it as load, not this change. I did not run the other ~110 affected modules' suites (impact is transitive through `plane` imports; this change adds one export and moves the walk behind unchanged answers, checked by G48's recorded answers and the equality tests).
+- `node checks/format.mjs /home/user/bio`: 0 failures. `architecture docprofile`: 0 failures. `coverage docprofile`: 28 of 28 live ids named, 0 failures. `ownership docprofile tranche/T51`: 5 files, 0 failures.
+- Words (`node bio-plane/src/setup-words/build.mjs --check`): reports `rows.mjs` stale at `calculations.index.the_source_reads_as_one` (the rows file carries `calculations.index.the_standard_holds_no_target` there). Not docprofile's (I added no sentence); BOB regenerates at the round end, or setup-words' / calculations' job.
+
+**Proposed requirement wording (BOB writes it).** R39: drop "*(not yet met: T51)*"; add "The threshold is the exported constant `CLASSIFY_YIELD_AT_CHARS` (256 KiB of characters)." The test line stays `docprofile/test/g88-yield.test.mjs`; add "and `docprofile/test/memory.test.mjs` (the twin holds no second copy, R38)".
+
+**Stale generated artifacts (BOB regenerates at the round end).** The bundles that import `doctypeFor`: `bio-plane/dist/bio-plane.bundled.mjs`, `agent-worker/dist/agent-worker.bundled.mjs` (and `release/*.bundled.mjs` copies). I did not touch them.
+
+**For READING-PIPELINE #30.** Import `doctypeForYielding` from `docprofile/registry.mjs`; call `await doctypeForYielding(ctx, {yieldNow})` with the ctx `classify()` builds today. The answer is deep-equal to `doctypeFor`'s on every shape tested. Note `identify` is not part of it and needs no yield (G6).
+
+**Found in other modules.** G5's residual, filed as J6 (REPORT) naming `doctypes`. N1 (acquisition `profileOf`, 8 MiB, one synchronous stretch) is the sibling G88 names; the twin would serve it, not built here. Census ops: none owned. Deferred: none.
+
+Size (session_011RwpSSvSEy7a1VmwRpqYF6): test runs 14, module lines 1322
