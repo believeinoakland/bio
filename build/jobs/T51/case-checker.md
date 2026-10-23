@@ -117,3 +117,7 @@ G47 COMPLETE after CHANGE B6: tranche merged, g47-attest all 4 cases green (seam
 ```
 
 **Not yet done (waits on the providers):** merge `tranche/T51` after case-grammar and public-read; run `g50-path.test.mjs` green; report the old `program.mjs` run once on a `/4` file (step 4 of the START; expected `format`, every finding `did_not_recreate`); the words check, `build.mjs --check`, `checks/run.mjs`; the COMPLETE entry with the Size line.
+
+## J7 · REPORT
+
+G50 progress (record: Progress section). Goldens g1/g2 recorded at the base 124e62bfa8 (commit 3d4ec4a24f). Module: files read by capture (fileOfMaterial), /4 specified, pinned spec/fixture tests updated, g50-path.test.mjs written with the real buildCaseFile: its 4 provider-dependent tests are red by name (DUPLICATE_PATH today) until case-grammar and public-read merge; controls green. checks format/architecture/coverage/ownership: 0 failures. Two things for BOB: (1) build/requirements/case-checker.md is outside my paths (ownership refuses it), so the R2/R8/R14/R19 amendments are yours: proposed text is the diff in my record. (2) I wait for case-grammar and public-read to merge on tranche/T51; ring me when both have, and I merge, go green, run the old program.mjs once on a /4 file, and complete.
