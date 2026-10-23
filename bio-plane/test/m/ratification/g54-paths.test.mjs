@@ -17,8 +17,7 @@ import * as publicationWorker from "../../../src/publication/worker.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 
-const { caseConclusionRowLines, CASEFILE_SWEEP_EDITIONS, CASEFILE_SWEEP_FILES, CASEFILE_SWEEP_BYTES,
-        CASEFILE_TOO_LARGE_FILES, CASEFILE_MISSING_MAX_ATTEMPTS } = ratification;
+const { caseConclusionRowLines, CASEFILE_SWEEP_EDITIONS, CASEFILE_SWEEP_FILES, CASEFILE_SWEEP_BYTES } = ratification;
 const OWN = { version: "first", claim: "the transfer was authorised", falsifier: "an adopted resolution forbidding it",
               falsifier_override: null, by: "member:iris", at: "2026-09-27T10:00:00Z" };
 const AT = { date: "2026-10-09", time: "09:30" };
@@ -86,13 +85,13 @@ function ledgerOn(w) {
         if (!cs || !cs.complete || row.state === "stopped" || row.state === "built") continue;
         if (cs.manifest_sha && !row.state) continue;
         if (row.next_at && row.next_at > now) continue;
-        out.push({ case_id: r.case_id, edition: r.edition, attempts: row.attempts ?? 0, state: row.state ?? null,
-                   why: row.why ?? null, next_at: row.next_at ?? null });
+        out.push({ case: r.case_id, edition: r.edition, attempts: row.attempts ?? 0, state: row.state ?? null,
+                   why: row.why ?? null, next_at: new Date(row.next_at ?? 0).toISOString() });
       }
       return out.slice(0, limit);
     },
     owedAsked: [],
-    nextAt: () => { const t = [...rows.values()].map((r) => r.next_at).filter(Boolean); return t.length ? Math.min(...t) : null; },
+    nextAt: () => { const t = [...rows.values()].map((r) => r.next_at).filter(Boolean); return t.length ? new Date(Math.min(...t)).toISOString() : null; },
     record({ caseId, edition, state, why, at }) { ledger.recorded.push({ caseId, edition, state, why, at });
       const row = rows.get(key(caseId, edition)) || { attempts: 0 };
       rows.set(key(caseId, edition), { ...row, state, why, attempts: row.attempts + (state === "stopped" ? 0 : 1), at });
@@ -103,6 +102,7 @@ function ledgerOn(w) {
       const cs = a.cs, id = cs.caseId ?? cs.case_id;
       const row = rows.get(key(id, cs.edition)) || { attempts: 0 };
       const miss = a.prior && a.prior.materials_missing && a.prior.materials_missing.length;
+      ledger.absentSeen = a.prior && a.prior.absent;
       const next = ledger.next?.(a);
       if (next) { rows.set(key(id, cs.edition), { ...row, state: "failed", why: { code: next.code, step: "build" },
                                                   attempts: row.attempts + 1, next_at: ledger.clock + 1000 * 2 ** row.attempts });
@@ -136,12 +136,12 @@ test("R6, R57: op=caseratify — a sitting member's copy that throws after the c
                    "the answer states the copy that failed where it would have counted");
   assert.equal(bad.p.assembled.length, 1);
   assert.match(bad.p.assembled[0].prior.copy_error, /bucket refused/);
-  assert.deepEqual(bad.p.assembled[0].prior.materials_missing, []);
+  assert.deepEqual([bad.p.assembled[0].prior.materials_missing, bad.p.assembled[0].prior.copy_code], [[], "BUCKET_FAILED"]);
   const s2 = await house();
   const e2 = await s2.edition(1);
   const ok = await s2.act(caseRatifyOp, e2.body());
   assert.equal(ok.status, 200);
-  assert.deepEqual(ok.p.assembled[0].prior, { materials_missing: [], copy_error: null }, "control: nothing failed");
+  assert.deepEqual(ok.p.assembled[0].prior, { materials_missing: [], copy_error: null, copy_code: null, absent: false }, "control: nothing failed");
   assert.equal("reason" in ok.body.sitting[0].published, false);
 });
 
@@ -154,7 +154,7 @@ test("R6, R39, R57: op=caseratify — the materials copyMaterials could not copy
     const r = await s.act(caseRatifyOp, e.body(), {}, (p) => { if (present) p.captures.set(`s/captures/${A}`, new TextEncoder().encode("document A")); });
     assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 300));
     assert.deepEqual(r.body.materials_copied, present ? { copied: 1, present: 0, missing: [] } : { copied: 0, present: 0, missing: [A] });
-    assert.deepEqual(r.p.assembled[0].prior, { materials_missing: present ? [] : [A], copy_error: null }, present ? "control" : "missing");
+    assert.deepEqual(r.p.assembled[0].prior, { materials_missing: present ? [] : [{ sha: A, absent: true }], copy_error: null, copy_code: null, absent: !present }, present ? "control" : "missing");
   }
 });
 
@@ -206,7 +206,7 @@ test("R6, R57: op=ratify — the last member's copy that throws is stated in the
   assert.deepEqual([bad.body.container.ok, bad.body.container.reason, bad.body.container.code], [false, "COPY_FAILED", "BUCKET_FAILED"]);
   const good = await run((p) => { p.ctx.recordCaseFileFailure = recorder; });
   assert.deepEqual([good.p.assembled.length, recorded.length], [1, 1], "control: one assembly, nothing more recorded");
-  assert.deepEqual(good.p.assembled[0].prior, { materials_missing: [], copy_error: null });
+  assert.deepEqual(good.p.assembled[0].prior, { materials_missing: [], copy_error: null, copy_code: null, absent: false });
   assert.equal("reason" in good.body.published, false);
 });
 
@@ -241,7 +241,7 @@ test("R6, R42, R57: the scheduled publisher completing two editions keeps both o
     assert.equal(calls.length, containers.length);
     assert.deepEqual(spied.after.container, two ? { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_SILENT" } : { manifest_sha: "9".repeat(64), files: 3 },
                      "after.container stays the last edition's statement, as before");
-    assert.deepEqual(calls[0].prior, { materials_missing: [], copy_error: null });
+    assert.deepEqual(calls[0].prior, { materials_missing: [], copy_error: null, copy_code: null, absent: false });
   }
 });
 
@@ -325,7 +325,7 @@ test("R57: the sweep takes the oldest owed editions, two a tick (a third waits),
   assert.deepEqual(t2.built.map((b) => b.case), [s.editions[2].caseId]);
   const calls = s.ledger.calls.length;
   const t3 = await s.w.r.caseFileSweep(3_000);
-  assert.deepEqual([t3.built, t3.failed, t3.stopped, s.ledger.calls.length], [[], [], [], calls], "idempotent: nothing owed, no assembly");
+  assert.deepEqual([t3.built, t3.failed, s.ledger.calls.length], [[], [], calls], "idempotent: nothing owed, no assembly");
   assert.equal(s.w.r.caseFileWake(3_000), null, "nothing owed: no wake");
 });
 
@@ -341,7 +341,7 @@ test("R57: a failed assembly is recorded with its code by the assembly and retri
   assert.equal(asked.at(-1), "test-group");
   const inside = await s.w.r.caseFileSweep(1_500);
   assert.deepEqual([inside.failed, inside.built], [[], []], "inside its backoff the ledger owes nothing");
-  assert.equal(s.w.r.caseFileWake(1_500), 2_000, "the wake is the ledger's earliest next try");
+  assert.equal(s.w.r.caseFileWake(1_500), 2_000, "the wake is the ledger's earliest next try, in ms");
   s.ledger.next = null;
   const after = await s.w.r.caseFileSweep(2_500);
   assert.deepEqual(after.built.map((b) => b.case), [s.editions[0].caseId]);
@@ -354,7 +354,7 @@ test("R39, R57: the sweep copies the materials first — one the evidence store 
   const t1 = await s.w.r.caseFileSweep(1_000);
   assert.equal(s.published.has(`s/published/${A}`), true, "copied first");
   assert.equal(s.published.has(`s/published/${"c3".repeat(32)}`), false, "inline material is never copied");
-  assert.deepEqual(s.ledger.calls[0].prior, { materials_missing: [B], copy_error: null });
+  assert.deepEqual(s.ledger.calls[0].prior, { materials_missing: [{ sha: B, absent: true }], copy_error: null, copy_code: null, absent: true });
   assert.deepEqual(t1.failed.map((f) => f.code), ["MATERIAL_MISSING"]);
   assert.equal(s.w.realPub.caseEditionState(s.editions[0].caseId, 1).manifest_sha, null, "no manifest recorded over a missing material");
   s.captures.set(`s/captures/${B}`, new TextEncoder().encode("document B"));
@@ -362,48 +362,41 @@ test("R39, R57: the sweep copies the materials first — one the evidence store 
   const t2 = await s.w.r.caseFileSweep(10_000);
   assert.equal(s.published.has(`s/published/${B}`), true);
   assert.deepEqual(t2.built.map((b) => b.case), [s.editions[0].caseId], "tick 2: the material is there, the case file builds");
-  assert.deepEqual(s.ledger.calls[1].prior, { materials_missing: [], copy_error: null });
+  assert.deepEqual(s.ledger.calls[1].prior, { materials_missing: [], copy_error: null, copy_code: null, absent: false });
 });
 
-test("R57: an edition is stopped only for a material the evidence store ANSWERS absent, after the bound of tries (CASEFILE_MISSING_MAX_ATTEMPTS) the ledger counted; stopped, it is written no more; a copy that failed, or one try short of the bound, never stops it", async () => {
+test("R57: the sweep never records stopped itself — a material the evidence store ANSWERS absent is told to the assembly (prior.absent true, each item {sha, absent}), and the ledger's writer holds the count and the stop; a copy that failed is not an absence (prior.absent false)", async () => {
   const lacking = [{ sha: B, held: "evidence" }];
-  const stop = async (attempts, { fail = false, code = "MATERIAL_MISSING" } = {}) => {
+  const run = async ({ fail = false } = {}) => {
     const s = await owedHouse(1);
     s.w.publication.heldMaterialsOf = () => lacking;
     if (fail) s.env.CAPTURES.get = async () => { throw new Error("read failed (injected)"); };
-    s.ledger.rows.set(`${s.editions[0].caseId}#1`, { state: "failed", why: { code, step: "materials" }, attempts });
-    const tick = await s.w.r.caseFileSweep(1_000);
-    return { s, tick };
+    await s.w.r.caseFileSweep(1_000);
+    return s;
   };
-  const bound = await stop(CASEFILE_MISSING_MAX_ATTEMPTS);
-  assert.deepEqual(bound.tick.stopped, [{ case: bound.s.editions[0].caseId, edition: 1, code: "MATERIAL_MISSING" }]);
-  assert.equal(bound.s.ledger.calls.length, 0, "no assembly for a stopped edition");
-  assert.deepEqual(bound.s.ledger.recorded.map((r) => [r.state, r.why.code, r.why.step]), [["stopped", "MATERIAL_MISSING", "materials"]]);
-  const next = await bound.s.w.r.caseFileSweep(2_000);
-  assert.deepEqual([next.stopped, next.built, next.failed, bound.s.ledger.calls.length], [[], [], [], 0], "the next tick: nothing owed, the assembly called 0 times");
-  const short = await stop(CASEFILE_MISSING_MAX_ATTEMPTS - 1);
-  assert.deepEqual([short.tick.stopped, short.s.ledger.calls.length], [[], 1], "one try short of the bound: still retried");
-  const failedCopy = await stop(CASEFILE_MISSING_MAX_ATTEMPTS, { fail: true });
-  assert.deepEqual([failedCopy.tick.stopped, failedCopy.s.ledger.calls.length], [[], 1], "a copy that failed is never a reason to stop");
-  const other = await stop(CASEFILE_MISSING_MAX_ATTEMPTS, { code: "BUCKET_FAILED" });
-  assert.deepEqual([other.tick.stopped, other.s.ledger.calls.length], [[], 1], "only MATERIAL_MISSING stops an edition");
+  const gone = await run();
+  assert.deepEqual(gone.ledger.calls[0].prior, { materials_missing: [{ sha: B, absent: true }], copy_error: null, copy_code: null, absent: true });
+  assert.deepEqual(gone.ledger.recorded, [], "the sweep records no state itself");
+  const failed = await run({ fail: true });
+  assert.deepEqual(failed.ledger.calls[0].prior, { materials_missing: [{ sha: B, absent: false }], copy_error: null, copy_code: null, absent: false });
+  const mixed = await owedHouse(1);
+  mixed.w.publication.heldMaterialsOf = () => [{ sha: A, held: "evidence" }, { sha: B, held: "evidence" }];
+  mixed.env.CAPTURES.get = async (k) => { if (k.endsWith(A)) throw new Error("read failed (injected)"); return null; };
+  await mixed.w.r.caseFileSweep(1_000);
+  assert.equal(mixed.ledger.calls[0].prior.absent, false, "absent only when every missing material is confirmed gone");
 });
 
-test("R57: the tick is bounded — it takes no further edition once it has pulled the files or the bytes constant; an edition over CASEFILE_TOO_LARGE_FILES is failed TOO_LARGE (recorded, stated, not attempted); the constants are the named ones", async () => {
-  assert.deepEqual([CASEFILE_SWEEP_EDITIONS, CASEFILE_SWEEP_FILES, CASEFILE_SWEEP_BYTES, CASEFILE_TOO_LARGE_FILES, CASEFILE_MISSING_MAX_ATTEMPTS],
-                   [2, 400, 16 * 1024 * 1024, 4000, 6], "provisional until the platform check L measured them");
+test("R57: the tick is bounded — it takes no further edition once it has pulled the files or the bytes constant; the constants are the named ones; no stop or size constant here (publication's writer and public-read's assembly own those)", async () => {
+  assert.deepEqual([CASEFILE_SWEEP_EDITIONS, CASEFILE_SWEEP_FILES, CASEFILE_SWEEP_BYTES], [2, 400, 16 * 1024 * 1024],
+                   "provisional until the platform check P measured them");
+  assert.equal("CASEFILE_MISSING_MAX_ATTEMPTS" in ratification, false);
+  assert.equal("CASEFILE_TOO_LARGE_FILES" in ratification, false);
   for (const [name, set] of [["files", (l) => { l.files = CASEFILE_SWEEP_FILES; }], ["bytes", (l) => { l.bytes = CASEFILE_SWEEP_BYTES; }]]) {
     const s = await owedHouse(2);
     set(s.ledger);
     const t = await s.w.r.caseFileSweep(1_000);
     assert.deepEqual([t.built.length, s.ledger.calls.length], [1, 1], `after the first edition passes the ${name} bound the tick stops`);
   }
-  const big = await owedHouse(1);
-  big.w.publication.heldMaterialsOf = () => Array.from({ length: 1400 }, (_, i) => ({ sha: i.toString(16).padStart(64, "0"), held: "evidence" }));
-  const t = await big.w.r.caseFileSweep(1_000);
-  assert.deepEqual(t.failed, [{ case: big.editions[0].caseId, edition: 1, code: "TOO_LARGE" }]);
-  assert.equal(big.ledger.calls.length, 0, "not attempted");
-  assert.equal(big.ledger.recorded[0].why.code, "TOO_LARGE");
 });
 
 test("R57: caseFileWake is now while an edition is due, else the ledger's earliest next try, else null; with no reach to the published bucket from here it is null; the sweep never throws", async () => {
@@ -471,6 +464,6 @@ test("G54 SEAM (publication, public-read): the real ledger and the real assembly
   const t2 = await s.w.r.caseFileSweep(Date.now() + 3_600_000);
   assert.deepEqual(t2.built.map((b) => b.case), [s.editions[2].caseId]);
   const t3 = await s.w.r.caseFileSweep(Date.now() + 3_600_000);
-  assert.deepEqual([t3.built, t3.failed, t3.stopped], [[], [], []], "nothing owed: the assembly called 0 times");
+  assert.deepEqual([t3.built, t3.failed], [[], []], "nothing owed: the assembly called 0 times");
   assert.equal(s.w.r.caseFileWake(Date.now() + 3_600_000), null);
 });

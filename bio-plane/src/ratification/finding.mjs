@@ -346,10 +346,16 @@ export const errorText = (e) => String((e && e.message) || e).slice(0, 160);
 export const failedCopy = (e) => ({ copied: 0, present: 0, r2state: "COPY_FAILED", partsPublished: null,
                                     failed: { reason: "COPY_FAILED", detail: errorText(e) } });
 
-/** R57 (G54): what the caller's own copy knew when it reached the assembly, `{materials_missing, copy_error}`: the materials
- *  `copyMaterials` could not copy (shas), and the copy that threw (its text), else null. */
-export const priorOf = ({ missing = [], copyError = null } = {}) =>
-  ({ materials_missing: [...missing], copy_error: copyError ? errorText(copyError) : null });
+/** R57 (G54): what the caller's own copy knew when it reached the assembly (public-read's R6 `prior`): the materials it could
+ *  not copy, each `{sha, absent}` (`absent` true when the evidence store ANSWERED it gone), `absent` true when there are some
+ *  and every one is (the confirmation the ledger's writer needs to stop an edition), and the copy that threw (its text and
+ *  code), else null. */
+export const priorOf = ({ missing = [], absent = [], copyError = null } = {}) => {
+  const gone = new Set(absent);
+  return { materials_missing: missing.map((sha) => ({ sha, absent: gone.has(sha) })),
+           copy_error: copyError ? errorText(copyError) : null, copy_code: copyError ? "BUCKET_FAILED" : null,
+           absent: missing.length > 0 && missing.every((sha) => gone.has(sha)) };
+};
 
 /** R6, R57 (G54): the assembly of one case edition's case file, after the commit, whoever calls it, and never a throw:
  *  `assemble` is public-read's one assembly (its R6), which records the attempt itself and answers a statement; should it

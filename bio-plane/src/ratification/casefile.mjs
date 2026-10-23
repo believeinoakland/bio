@@ -11,25 +11,16 @@
 import { copyMaterialsDetailed } from "./ops.mjs";
 import { assembleEdition, priorOf, errorText } from "./finding.mjs";
 
-/* The tick's bounds, PROVISIONAL until the platform check L measured them (`build/plan/diagnosis-R6-g54-cause.md`; pinned by
-   `g54-paths.test.mjs`): the editions a tick takes, the files and bytes after which it takes no further edition, the files an
-   edition may have to be attempted (over it, `TOO_LARGE`, stated and not attempted), and the times a material confirmed
-   absent is retried before the edition is stopped. */
+/* The tick's bounds, PROVISIONAL until the platform check P measured them (`build/plan/diagnosis-R6-g54-cause.md` 7.3; pinned by
+   `g54-paths.test.mjs`): the editions a tick takes, and the files and bytes after which it takes no further edition. The
+   edition too large to attempt (`TOO_LARGE`) is public-read's (its R6), and the stopping rule (the sixth `MATERIAL_MISSING`
+   with the absence confirmed) is publication's writer's alone (its R15): this module only says what it found. */
 export const CASEFILE_SWEEP_EDITIONS = 2;
 export const CASEFILE_SWEEP_FILES = 400;
 export const CASEFILE_SWEEP_BYTES = 16 * 1024 * 1024;
-export const CASEFILE_TOO_LARGE_FILES = 4000;
-export const CASEFILE_MISSING_MAX_ATTEMPTS = 6;
-
-/* The files an edition's case file would hold, at most: four for each finding (its bytes, its signature, its grading facts,
-   its passages), three for each material held outside the record's text (its bytes, its text, a token) and the fixed few
-   (the case document, its signature, the criteria, the manifest). An estimate before any byte is read, to refuse an edition
-   no tick could hold. */
-const filesEstimate = (cs, items) => 4 * (Array.isArray(cs.findings) ? cs.findings.length : 0) + 3 * items.length + 8;
 
 const reach = (w) => !!(w && w.env && w.storeName && w.stub);
-const json = (v) => { if (v && typeof v === "object") return v; try { return JSON.parse(String(v)); } catch { return null; } };
-const caseOf = (e) => String(e.case_id ?? e.caseId ?? e.case ?? "");
+const caseOf = (e) => String(e.case ?? e.case_id ?? e.caseId ?? "");
 
 /** R57: whether an assembly's statement says the case file was built: it names its manifest and does not say `ok: false`. */
 export const builtOf = (c) => !!(c && typeof c === "object" && c.ok !== false && typeof c.manifest_sha === "string" && c.manifest_sha);
@@ -45,9 +36,9 @@ export const outcomeOf = (cs, container) => ({
  *  edition)` (the materials the commit held outside the record's text); `worker` is the Worker's reach (`env`, `stub`,
  *  `storeName`); `assemble` and `recordFailure` public-read's. Answers what the tick did, never throws: an edition that
  *  fails in an unforeseen way is recorded and the tick goes on. */
-export async function sweepCaseFiles({ publication, stateOf, materialsOf, worker, now, assemble, recordFailure, log = console }) {
+export async function sweepCaseFiles({ publication, stateOf, materialsOf, worker, now, assemble, recordFailure }) {
   const at = typeof now === "number" && Number.isFinite(now) ? now : Date.now();
-  const out = { ok: true, ran: false, built: [], failed: [], stopped: [], files: 0, bytes: 0 };
+  const out = { ok: true, ran: false, built: [], failed: [], files: 0, bytes: 0 };
   if (!reach(worker)) return out;
   out.ran = true;
   let owed;
@@ -55,46 +46,28 @@ export async function sweepCaseFiles({ publication, stateOf, materialsOf, worker
     const read = publication.caseFilesOwed({ now: at, limit: CASEFILE_SWEEP_EDITIONS });
     owed = Array.isArray(read) ? read : Array.isArray(read && read.editions) ? read.editions : [];
   } catch (e) { return { ...out, ok: false, reason: "OWED_UNREADABLE", detail: errorText(e) }; }
-  const record = (id, ed, state, why) => {
-    try { return publication.recordCaseFileAttempt({ caseId: id, edition: ed, state, why, at }); } catch { return null; }
-  };
+  const iso = new Date(at).toISOString();
   for (const e of owed.slice(0, CASEFILE_SWEEP_EDITIONS)) {
     if (out.files >= CASEFILE_SWEEP_FILES || out.bytes >= CASEFILE_SWEEP_BYTES) break;
     const id = caseOf(e), ed = Number(e.edition);
     try {
       const cs = stateOf(id, ed);
       if (!cs || !cs.complete) continue;
-      const items = materialsOf(id, ed);
-      const estimate = filesEstimate(cs, items);
-      if (estimate > CASEFILE_TOO_LARGE_FILES) {
-        record(id, ed, "failed", { code: "TOO_LARGE", step: "build", files: estimate });
-        out.failed.push({ case: id, edition: ed, code: "TOO_LARGE" });
-        continue;
-      }
-      const copy = await copyMaterialsDetailed(worker.env, worker.storeName, items);
-      /* A material the evidence store answered absent, after the bound of tries the ledger has counted, stops the edition:
-         it is stated (state and code on the row, the page's sentence) and written no more. A copy that failed is never a
-         reason to stop; only an answered absence is. */
-      const why = json(e.why ?? e.casefile_why);
-      const tries = Number(e.attempts ?? e.casefile_attempts ?? 0);
-      if (copy.absent.length && copy.absent.length === copy.missing.length && why && why.code === "MATERIAL_MISSING"
-          && tries >= CASEFILE_MISSING_MAX_ATTEMPTS) {
-        record(id, ed, "stopped", { code: "MATERIAL_MISSING", step: "materials", files: copy.absent.length });
-        log.error(JSON.stringify({ event: "casefile_stopped", case: id, edition: ed, code: "MATERIAL_MISSING",
-                                   attempts: tries, absent: copy.absent.length }));
-        out.stopped.push({ case: id, edition: ed, code: "MATERIAL_MISSING" });
-        continue;
-      }
+      /* The materials first. What the evidence store ANSWERED absent is told to the assembly (`prior.absent`), which records
+         `failed` `MATERIAL_MISSING` and lets the ledger's writer stop the edition at the bound; a copy that failed is not
+         an absence and never counts toward it. */
+      const copy = await copyMaterialsDetailed(worker.env, worker.storeName, materialsOf(id, ed));
       const container = await assembleEdition({ assemble, recordFailure, env: worker.env, stub: worker.stub,
-        storeName: worker.storeName, cs, via: "casefilesweep", prior: priorOf({ missing: copy.missing }) });
+        storeName: worker.storeName, cs, via: "casefilesweep", prior: priorOf({ missing: copy.missing, absent: copy.absent }) });
       const outcome = outcomeOf(cs, container);
       (outcome.built ? out.built : out.failed).push(outcome);
       out.files += Number(container && container.files) || 0;
       out.bytes += Array.isArray(container && container.part_addresses)
         ? container.part_addresses.reduce((n, p) => n + (Number(p && p.bytes) || 0), 0) : 0;
     } catch (x) {
-      record(id, ed, "failed", { code: "UNKNOWN", step: "build", error: errorText(x) });
-      out.failed.push({ case: id, edition: ed, code: "UNKNOWN" });
+      try { publication.recordCaseFileAttempt({ caseId: id, edition: ed, state: "failed", at: iso,
+                                                why: { code: "UNKNOWN", step: "build", error: errorText(x) } }); } catch { /* the edition stays owed */ }
+      out.failed.push({ case: id, edition: ed, built: false, code: "UNKNOWN" });
     }
   }
   return out;
@@ -109,6 +82,7 @@ export function wakeOfCaseFiles({ publication, worker, now }) {
     const due = publication.caseFilesOwed({ now: at, limit: 1 });
     if ((Array.isArray(due) ? due : Array.isArray(due && due.editions) ? due.editions : []).length) return at;
     const next = publication.caseFileNextAt();
-    return Number.isFinite(next) ? next : null;
+    const t = typeof next === "number" ? next : Date.parse(next);
+    return Number.isFinite(t) ? t : null;
   } catch { return null; }
 }

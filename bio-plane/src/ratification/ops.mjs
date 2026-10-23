@@ -239,7 +239,7 @@ async function caseCeremony(req, stub, ctx, later) {
        its pin is COMPLETE at this act, and no op=ratify will come to assemble it — so it is
        assembled here, by the one function op=ratify uses. `completedCase` is the store's internal
        state and is destructured OFF the answer above, never spread into it (REC-58's pick). */
-    const materialsCopied = await copyMaterials(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []);
+    const { absent: materialsAbsent, ...materialsCopied } = await copyMaterialsDetailed(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []);
     /* R52: each member committed with the case is copied and re-checked as op=ratify does after its commit (R6), and
        the editions complete now (the case's own, or one its members completed) are assembled once, after every copy. */
     const commits = Array.isArray(memberCommits) ? memberCommits : [];
@@ -253,7 +253,7 @@ async function caseCeremony(req, stub, ctx, later) {
     }
     let container = null;
     const containers = new Map();
-    const prior = priorOf({ missing: materialsCopied.missing, copyError });
+    const prior = priorOf({ missing: materialsCopied.missing, absent: materialsAbsent, copyError });
     for (const cs of editionsToAssemble(completedCase, commits)) {
       container = await assembleEdition({ assemble: assembleCaseContainer, recordFailure, env, stub, storeName, cs,
                                           via: "caseratify", prior });

@@ -88,8 +88,7 @@ export * from "./checks.mjs";
 export { RELEASE_ACK_MAX, CLASS_REASONS } from "./release.mjs";
 export { EDGE_REASON_MAX } from "./retire.mjs";
 export { CHECKED_PARTS, keyFingerprint } from "./schedule.mjs";
-export { CASEFILE_SWEEP_EDITIONS, CASEFILE_SWEEP_FILES, CASEFILE_SWEEP_BYTES, CASEFILE_TOO_LARGE_FILES,
-         CASEFILE_MISSING_MAX_ATTEMPTS } from "./casefile.mjs";
+export { CASEFILE_SWEEP_EDITIONS, CASEFILE_SWEEP_FILES, CASEFILE_SWEEP_BYTES } from "./casefile.mjs";
 
 /* The viewer stamp membership mints for an organisation-scoped agent credential (`aiCredentialMint`'s principal). */
 const AGENT_ORGANISATION_STAMP = `${MACHINE_CLASS_PREFIX}ai`;
