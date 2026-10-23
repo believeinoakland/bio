@@ -4414,6 +4414,8 @@ export async function extractPdfStructure(bytes) {
  * `from` at or past the pages answers `count: 0` and no pages; bytes that are not a PDF answer as `extractPdfStructure`
  * does. It never applies R42's refusal (a refusal exists for the whole document; a range is how the large one is read), an
  * encrypted document answers its one `encrypted` marker and no pages (R9), and the font cache is kept for the call only.
+ * An optional `range.maxBytes` (G56) shrinks `count` to the pages that many file bytes carry at the document's bytes per page,
+ * at least one; absent, or not a finite number above 0, the call is unchanged.
  * The images of the range's own pages give R26's and R34's markers as the whole reading gives them; the one difference is that
  * the whole reading drops them everywhere when a page elsewhere cannot be walked, which a range cannot know. */
 export async function extractPdfRange(bytes, range) {
@@ -4422,7 +4424,13 @@ export async function extractPdfRange(bytes, range) {
   const doc = await loadPdf(bytes);
   const total = doc.pageCount;
   const from = Math.max(0, Math.floor(Number(range && range.from)) || 0);
-  const asked = range && range.count !== undefined ? Math.floor(Number(range.count)) : total;
+  let asked = range && range.count !== undefined ? Math.floor(Number(range.count)) : total;
+  /* An optional `maxBytes` (fix round 6, G56) bounds the call by work as well as by pages: the pages that many file bytes
+     carry at the document's own bytes per page, at least one so a cursor always moves. It only shrinks the ask. */
+  const maxBytes = range && range.maxBytes;
+  if (typeof maxBytes === "number" && Number.isFinite(maxBytes) && maxBytes > 0 && total > 0) {
+    asked = Math.min(Number.isFinite(asked) ? asked : total, Math.max(1, Math.floor(maxBytes / (bytes.length / total))));
+  }
   const count = Math.max(0, Math.min(Number.isFinite(asked) ? asked : total, total - from));
   const out = (pages, undetermined, chars) => ({
     ok: true, container: "pdf", pages: total, from, count: pages.length,

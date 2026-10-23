@@ -1,11 +1,12 @@
-/* case-grammar — the case file's format, `bio-case-file/3`, `/2` and `/1` files read as written (requirements:
- * `build/requirements/case-grammar.md` R13; DEC-112 (3), `BIO_Publication_v0_1.md` §5C "The case file"; K1134 (1);
- * N717, K2004; T37: N757, DEC-180 (4), K2206). The one spelling of the format for
+/* case-grammar — the case file's format: `bio-case-file/4` for a case file with a path that states a capture, `/3`
+ * otherwise, and `/2` and `/1` files read as written (requirements: `build/requirements/case-grammar.md` R13; DEC-112 (3),
+ * `BIO_Publication_v0_1.md` §5C "The case file"; K1134 (1); N717, K2004; T37: N757, DEC-180 (4), K2206; fix round 6, G50).
+ * The one spelling of the format for
  * `public-read` (its R23, which writes it), `case-checker` (which checks it, and whose R14 is its readable
  * specification) and `case-import` (which imports it). Pure; nothing here throws.
  *
  * THE MANIFEST, as `manifest.json` at the root of each part carries it (canonical JSON, `record-grammar` R12):
- *   {format: "bio-case-file/3", group, case, edition, case_document_sha,       (or "/2" or "/1", read as written)
+ *   {format: "bio-case-file/3", group, case, edition, case_document_sha,       (or "/4", "/2" or "/1", each read as written)
  *    keys:  [{key, fingerprint}],                        the signing keys, each an SSH public key and its fingerprint
  *    parts: [{index, sha256, bytes}],                    one per part, indexed from 1, in order
  *    files: [{path, sha256, bytes, part, kind}]}         every file, in path order, each in exactly one part
@@ -29,10 +30,21 @@
  *   materials/<ref>/containers/<sha256>.json                             `/2`: the container record of the member so named
  *   criteria.json                                                        `/2`: the edition's criteria rows, at most once
  *   materials/<ref>/obscured                                             `/3`: a material's copy, carried in its original's place
+ *   materials/<ref>/<sha256>/document, …/extracted.txt, …/observation.md, …/obscured
+ *                                                                        `/4`: the same four, under their row's capture
  * The three calculation paths are one kind, `calculation` (R13); `caseFileEntryOf` tells them apart. An archive is
  * named by its own SHA-256 and a container record by its member's (`case-carriage` R8), so the pair for a member, then
  * for its archive (itself a member of an outer archive), outward to the outermost, sit side by side under the ref of the
  * material whose chain they belong to. A `/1` manifest names none of the `/2` kinds, and a `/2` manifest no `obscured`.
+ *
+ * THE CAPTURE IN THE PATH (G50). A `ref` that two or more rows of the case document's `materials:` block state is two
+ * captures of one source, and the four per-ref kinds (`document`, `extracted_text`, `observation`, `obscured`) of those
+ * rows would meet at one path. Each is then spelled under its row's capture, `materials/<ref>/<sha256>/<leaf>`, the
+ * row's `sha` lower-cased (the original's, for a copied row). A `ref` on one row keeps its plain path. A case file with at
+ * least one such path declares `bio-case-file/4` (`caseFileFormatFor`), every other keeps `/3`, and the discriminated
+ * spelling is `/4`'s alone: a reader decides the spelling from the manifest's format, never from the rows alone. The
+ * rule's three copy departures are judged by the row (`ref`, capture) where a path states a capture. An archive and a
+ * container are keyed by digest, not by capture, and are unchanged.
  *
  * THE COPY (T37; N757; DEC-180 (4); T38: N779, K2248; T39: N806, K2333). Every photo a published case carries travels
  * as its copy, with nothing of the original but its pixels and its marked areas, if any, covered, and so does every
@@ -52,9 +64,10 @@ import { localize } from "../setup-words/index.mjs";
 
 /** R13: the format token written, and the formats read as written (newest first). */
 export const CASE_FILE_FORMAT = "bio-case-file/3";
+export const CASE_FILE_FORMAT_V4 = "bio-case-file/4";
 export const CASE_FILE_FORMAT_V2 = "bio-case-file/2";
 export const CASE_FILE_FORMAT_V1 = "bio-case-file/1";
-export const CASE_FILE_FORMATS_ACCEPTED = Object.freeze([CASE_FILE_FORMAT, CASE_FILE_FORMAT_V2, CASE_FILE_FORMAT_V1]);
+export const CASE_FILE_FORMATS_ACCEPTED = Object.freeze([CASE_FILE_FORMAT_V4, CASE_FILE_FORMAT, CASE_FILE_FORMAT_V2, CASE_FILE_FORMAT_V1]);
 /** R13: the manifest's name at each part's root. No file of the case file may take it. */
 export const CASE_FILE_MANIFEST_PATH = "manifest.json";
 /** R13: every kind of file a case file carries. */
@@ -68,7 +81,7 @@ export const CASE_FILE_V3_KINDS = Object.freeze(["obscured"]);
 const KIND_FORMAT = Object.freeze(Object.fromEntries([...CASE_FILE_V2_KINDS.map((k) => [k, CASE_FILE_FORMAT_V2]),
   ...CASE_FILE_V3_KINDS.map((k) => [k, CASE_FILE_FORMAT])]));
 const KINDS_LACKED = Object.freeze({ [CASE_FILE_FORMAT_V1]: [...CASE_FILE_V2_KINDS, ...CASE_FILE_V3_KINDS],
-                                     [CASE_FILE_FORMAT_V2]: [...CASE_FILE_V3_KINDS], [CASE_FILE_FORMAT]: [] });
+                                     [CASE_FILE_FORMAT_V2]: [...CASE_FILE_V3_KINDS], [CASE_FILE_FORMAT]: [], [CASE_FILE_FORMAT_V4]: [] });
 /** R13 (T37): the kinds of the original that never travel under the ref of a row carried as its copy. */
 export const CASE_FILE_ORIGINAL_KINDS = Object.freeze(["document", "extracted_text", "archive", "container"]);
 /** R13: the kinds a case file carries exactly once, and the kinds it carries at most once. */
@@ -103,14 +116,19 @@ const chainLeaf = (kind, sha) => (kind === "container" ? `${sha}.json` : sha);
 /** R13: the path a file of `kind` is carried at. `key` is the finding id (the finding kinds), the material's ref (the
  *  material kinds), `[ref, name]` (an attestation), `[ref, sha256]` (an `archive`, by the archive's SHA-256; a
  *  `container`, by its member's), or for a `calculation` its id (the row), `[calc, sha256]` (one of its inputs) or
- *  `"prov"` (R19's rendering, `CASE_FILE_PROV_PATH`); the single kinds (and `criteria`) take none. Null for anything
- *  this format does not spell. */
+ *  `"prov"` (R19's rendering, `CASE_FILE_PROV_PATH`); the single kinds (and `criteria`) take none. For the four material
+ *  kinds `key` may instead be `[ref, sha256]`, the file under its row's capture (`/4`, G50), the SHA-256 spelled
+ *  lower-cased. Null for anything this format does not spell. */
 export function caseFilePath(kind, key = null) {
   if (Object.hasOwn(SINGLE_PATHS, kind)) return SINGLE_PATHS[kind];
   if (Object.hasOwn(CHAIN_DIRS, kind)) return Array.isArray(key) && key.length === 2 && SEGMENT.test(String(key[0] ?? ""))
     && HEX64.test(String(key[1] ?? "")) ? `materials/${key[0]}/${CHAIN_DIRS[kind]}/${chainLeaf(kind, key[1])}` : null;
   if (Object.hasOwn(FINDING_FILES, kind)) return SEGMENT.test(String(key ?? "")) ? `findings/${key}/${FINDING_FILES[kind]}` : null;
-  if (Object.hasOwn(MATERIAL_FILES, kind)) return SEGMENT.test(String(key ?? "")) ? `materials/${key}/${MATERIAL_FILES[kind]}` : null;
+  if (Object.hasOwn(MATERIAL_FILES, kind)) {
+    if (!Array.isArray(key)) return SEGMENT.test(String(key ?? "")) ? `materials/${key}/${MATERIAL_FILES[kind]}` : null;
+    const capture = typeof key[1] === "string" ? key[1].toLowerCase() : "";
+    return key.length === 2 && SEGMENT.test(String(key[0] ?? "")) && HEX64.test(capture) ? `materials/${key[0]}/${capture}/${MATERIAL_FILES[kind]}` : null;
+  }
   if (kind === "attestation" && Array.isArray(key) && key.length === 2 && key.every((k) => SEGMENT.test(String(k ?? ""))))
     return `attestations/${key[0]}/${key[1]}`;
   if (kind === "calculation") {
@@ -122,9 +140,9 @@ export function caseFilePath(kind, key = null) {
   return null;
 }
 
-/** R13: what a path spells: `{kind, finding?, ref?, name?, calc?, input?, prov?, archive?, member?}` (`archive` the
- *  archive's SHA-256, `member` the SHA-256 of the member a container record names), or null for a path this format
- *  does not spell. */
+/** R13: what a path spells: `{kind, finding?, ref?, capture?, name?, calc?, input?, prov?, archive?, member?}` (`archive` the
+ *  archive's SHA-256, `member` the SHA-256 of the member a container record names, `capture` the SHA-256 a `/4` material
+ *  file is under), or null for a path this format does not spell. */
 export function caseFileEntryOf(path) {
   if (typeof path !== "string") return null;
   for (const [kind, p] of Object.entries(SINGLE_PATHS)) if (path === p) return { kind };
@@ -135,8 +153,12 @@ export function caseFileEntryOf(path) {
     return { kind: "calculation", calc: parts[1], input: parts[3] };
   if (parts.length === 4 && parts[0] === "materials" && SEGMENT.test(parts[1])) {
     const kind = Object.keys(CHAIN_DIRS).find((k) => CHAIN_DIRS[k] === parts[2]);
+    if (!kind) {
+      const material = HEX64.test(parts[2]) ? Object.keys(MATERIAL_FILES).find((k) => MATERIAL_FILES[k] === parts[3]) : undefined;
+      return material ? { kind: material, ref: parts[1], capture: parts[2] } : null;
+    }
     const sha = kind === "container" ? (parts[3].endsWith(".json") ? parts[3].slice(0, -5) : "") : parts[3];
-    if (!kind || !HEX64.test(sha)) return null;
+    if (!HEX64.test(sha)) return null;
     return kind === "archive" ? { kind, ref: parts[1], archive: sha } : { kind, ref: parts[1], member: sha };
   }
   if (parts.length !== 3 || !SEGMENT.test(parts[1])) return null;
@@ -164,17 +186,61 @@ export function casePartDigest(files, index) {
            bytes: mine.reduce((n, f) => n + (Number.isSafeInteger(f.bytes) ? f.bytes : 0), 0) };
 }
 
+/** R13 (G50): the format a case file whose files are at `paths` declares: `bio-case-file/4` when any path states a capture
+ *  (`materials/<ref>/<sha256>/<leaf>`), else `bio-case-file/3`. Pure; never throws. */
+export function caseFileFormatFor(paths) {
+  try {
+    for (const path of paths ?? []) if (caseFileEntryOf(path)?.capture) return CASE_FILE_FORMAT_V4;
+  } catch { /* unreadable paths declare no capture */ }
+  return CASE_FILE_FORMAT;
+}
+
+/** R13 (G50): the refs that two or more of the case document's `materials:` rows state, counted over every row, carried as
+ *  its copy or not. A `Set`. Pure; never throws. */
+export function refsOnSeveralRows(rows) {
+  const seen = new Set();
+  const several = new Set();
+  try {
+    for (const r of Array.isArray(rows) ? rows : []) {
+      const ref = r !== null && typeof r === "object" ? r.ref : null;
+      if (typeof ref !== "string") continue;
+      if (seen.has(ref)) several.add(ref);
+      else seen.add(ref);
+    }
+  } catch { /* the rows read so far stand */ }
+  return several;
+}
+
+/** R13 (G50): the key `caseFilePath` takes for a material row's files in a case file of `format`: `[ref, sha256]`, the sha
+ *  lower-cased, under `bio-case-file/4` when the row's ref is one of `several` (`refsOnSeveralRows`, or `true`), else the
+ *  `ref`. The one place a writer and a reader decide the spelling. Pure; never throws (null for a row with no ref). */
+export function materialFileKey(row, several, format) {
+  try {
+    const ref = row !== null && typeof row === "object" ? row.ref : null;
+    if (typeof ref !== "string") return null;
+    const many = several instanceof Set ? several.has(ref) : several === true;
+    return format === CASE_FILE_FORMAT_V4 && many ? [ref, typeof row.sha === "string" ? row.sha.toLowerCase() : null] : ref;
+  } catch {
+    return null;
+  }
+}
+
 const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const shown = (v) => { try { const s = JSON.stringify(v); return s === undefined ? String(v) : s.slice(0, 120); } catch { return localize("case-grammar.casefile.unreadable-value", "an unreadable value"); } };
 
-/** R13: every way `manifest` departs from the format it states (`bio-case-file/3`, or `/2` or `/1` read as written:
+/** R13: every way `manifest` departs from the format it states (`bio-case-file/4` or `/3`, or `/2` or `/1` read as written:
  *  a kind a later format adds is a departure in an earlier one), each `{at, rule, detail}` (`at` the field's place,
- *  `rule` a short name, `detail` one sentence), in the manifest's order; `[]` when it departs in none. Handed the case
+ *  `rule` a short name, `detail` one sentence), in the manifest's order; `[]` when it departs in none. A path that states
+ *  a capture belongs to `/4` alone: under another format it is `path_format`, and a `/4` manifest with none is
+ *  `format_unused`. Handed the case
  *  document's `materials:` rows (`{materials}`, as `materialsOf(fm).materials` reads them; T37), it also answers the
  *  three departures of a material carried as its copy (a photo, or a member document's cleaned copy, T39):
  *  `obscured_unnamed` (an `obscured` file no row names at that SHA-256 under its ref), `obscured_copy_missing` (a row
  *  stating `obscured` whose copy no `obscured` file under its ref carries at that SHA-256) and `original_carried` (a `document`, `extracted_text`, `archive` or `container` file
  *  under the ref of a row stating `obscured`: the original never travels). Without rows, those three are not judged.
+ *  Under `/4` the three are judged by the row (ref, capture) where a path states a capture, and three more are answered
+ *  from the rows: `capture_missing` (a plain per-ref path of a ref on several rows), `capture_needless` (a path stating a
+ *  capture under a ref on one row) and `capture_unnamed` (a capture no row of that ref names, shas compared lower-cased).
  *  Pure; never throws. */
 export function caseFileManifestCheck(manifest, given = {}) {
   const out = [];
@@ -189,7 +255,7 @@ export function caseFileManifestCheck(manifest, given = {}) {
     for (const k of Object.keys(manifest))
       if (!CASE_FILE_MANIFEST_FIELDS.includes(k)) no(k, "unknown_field", localize("case-grammar.casefile.unknown-field", "the manifest has no field {field} in {format}", { field: shown(k), format }));
     if (!CASE_FILE_FORMATS_ACCEPTED.includes(manifest.format))
-      no("format", "format", localize("case-grammar.casefile.format", "the format is {current} (or {v2} or {v1}, read as written), and this manifest states {value}", { current: CASE_FILE_FORMAT, v2: CASE_FILE_FORMAT_V2, v1: CASE_FILE_FORMAT_V1, value: shown(manifest.format) }));
+      no("format", "format", localize("case-grammar.casefile.format-accepted", "the format is one of {accepted}, each read as written, and this manifest states {value}", { accepted: CASE_FILE_FORMATS_ACCEPTED.join(", "), value: shown(manifest.format) }));
     if (typeof manifest.group !== "string" || !SLUG.test(manifest.group))
       no("group", "group", localize("case-grammar.casefile.group", "the source group is named by its slug, and this manifest states {value}", { value: shown(manifest.group) }));
     if (typeof manifest.case !== "string" || !SEGMENT.test(manifest.case))
@@ -244,6 +310,8 @@ export function caseFileManifestCheck(manifest, given = {}) {
       if (!entry) no(`${at}.path`, "path", localize("case-grammar.casefile.path", "{path} is not a path {format} spells for any file", { path: shown(f.path), format }));
       else if (CASE_FILE_KINDS.includes(f.kind) && entry.kind !== f.kind)
         no(`${at}.path`, "path_kind", localize("case-grammar.casefile.path-kind", "{path} is where a {carried} is carried, and this file says it is a {kind}", { path: shown(f.path), carried: entry.kind, kind: f.kind }));
+      if (entry && entry.capture && format !== CASE_FILE_FORMAT_V4)
+        no(`${at}.path`, "path_format", localize("case-grammar.casefile.path-format", "{path} states a capture in its path, which only {v4} spells, and this manifest is {format}", { path: shown(f.path), v4: CASE_FILE_FORMAT_V4, format }));
       if (typeof f.path === "string") {
         if (paths.has(f.path)) no(`${at}.path`, "path_twice", localize("case-grammar.casefile.path-twice", "{path} is listed twice", { path: shown(f.path) }));
         paths.add(f.path);
@@ -257,6 +325,8 @@ export function caseFileManifestCheck(manifest, given = {}) {
       if (!indices.has(f.part) || f.part == null) no(`${at}.part`, "part", localize("case-grammar.casefile.file-part", "a file is in one of the parts listed, and this one names {value}", { value: shown(f.part) }));
       if (CASE_FILE_KINDS.includes(f.kind)) kinds.set(f.kind, [...(kinds.get(f.kind) || []), f]);
     });
+    if (files && manifest.format === CASE_FILE_FORMAT_V4 && !files.some((f) => plain(f) && caseFileEntryOf(f.path)?.capture))
+      no("format", "format_unused", localize("case-grammar.casefile.format-unused", "a {format} case file carries at least one file under its row's capture, and this one lists none", { format: CASE_FILE_FORMAT_V4 }));
     if (files) for (let i = 1; i < files.length; i++)
       if (plain(files[i - 1]) && plain(files[i]) && typeof files[i - 1].path === "string" && typeof files[i].path === "string"
           && files[i - 1].path > files[i].path) {
@@ -281,25 +351,48 @@ export function caseFileManifestCheck(manifest, given = {}) {
           no(`files[${i}].path`, "chain_without_document", localize("case-grammar.casefile.chain-without-document", "{path} is a {kind} under {ref}, and the case file carries no document under that ref", { path: shown(f.path), kind: f.kind, ref: shown(entry.ref) }));
       });
     }
-    /* T37 (N757), T39 (N806): a material carried as its copy, judged against the case document's rows when they are handed */
+    /* T37 (N757), T39 (N806): a material carried as its copy, judged against the case document's rows when they are handed.
+       G50: under `/4` by the row (ref, capture) where a path states a capture; every other format as it always was */
     const rows = given && typeof given === "object" && Array.isArray(given.materials) ? given.materials : null;
     if (files && rows) {
+      const v4 = format === CASE_FILE_FORMAT_V4;
+      const lower = (v) => (typeof v === "string" ? v.toLowerCase() : null);
+      const ofRef = new Map();
       const copies = new Map();
-      for (const r of rows) if (plain(r) && plain(r.obscured) && typeof r.ref === "string")
-        copies.set(r.ref, [...(copies.get(r.ref) || []), r.obscured.copy]);
+      for (const r of rows) if (plain(r) && typeof r.ref === "string") {
+        ofRef.set(r.ref, [...(ofRef.get(r.ref) || []), r]);
+        if (plain(r.obscured)) copies.set(r.ref, [...(copies.get(r.ref) || []), { copy: r.obscured.copy, sha: lower(r.sha) }]);
+      }
       const carried = new Set();
       files.forEach((f, i) => {
         if (!plain(f)) return;
         const entry = caseFileEntryOf(f.path);
         if (!entry || entry.kind !== f.kind || !entry.ref) return;
+        const capture = v4 ? entry.capture : undefined;
+        const mine = ofRef.get(entry.ref) || [];
+        if (v4 && Object.hasOwn(MATERIAL_FILES, f.kind)) {
+          if (capture) {
+            if (!mine.some((r) => lower(r.sha) === capture))
+              no(`files[${i}].path`, "capture_unnamed", localize("case-grammar.casefile.capture-unnamed", "{path} is under the capture {capture}, and no row of the case document's materials states that capture under {ref}", { path: shown(f.path), capture: shown(capture), ref: shown(entry.ref) }));
+            if (mine.length === 1)
+              no(`files[${i}].path`, "capture_needless", localize("case-grammar.casefile.capture-needless", "{path} is under a capture, and the case document's materials state {ref} on one row only", { path: shown(f.path), ref: shown(entry.ref) }));
+          } else if (mine.length > 1)
+            no(`files[${i}].path`, "capture_missing", localize("case-grammar.casefile.capture-missing", "{path} is the one path of {ref}, which {count} rows of the case document's materials state, so each of their files is under its row's capture", { path: shown(f.path), ref: shown(entry.ref), count: mine.length }));
+        }
         if (f.kind === "obscured") {
-          if ((copies.get(entry.ref) || []).includes(f.sha256)) carried.add(`${entry.ref} ${f.sha256}`);
+          const named = capture ? mine.some((r) => lower(r.sha) === capture && plain(r.obscured) && r.obscured.copy === f.sha256)
+            : (copies.get(entry.ref) || []).some((c) => c.copy === f.sha256);
+          if (named) carried.add(capture ? `${entry.ref} ${capture} ${f.sha256}` : `${entry.ref} ${f.sha256}`);
           else no(`files[${i}]`, "obscured_unnamed", localize("case-grammar.casefile.obscured-unnamed", "{path} is a copy carried in its original's place, and no row of the case document's materials names a copy at {sha} under {ref}", { path: shown(f.path), sha: shown(f.sha256), ref: shown(entry.ref) }));
-        } else if (CASE_FILE_ORIGINAL_KINDS.includes(f.kind) && copies.has(entry.ref))
+          if (capture && named) carried.add(`${entry.ref} ${f.sha256}`);
+        } else if (CASE_FILE_ORIGINAL_KINDS.includes(f.kind)
+            && (!v4 ? copies.has(entry.ref)
+              : capture ? mine.some((r) => lower(r.sha) === capture && plain(r.obscured))
+              : mine.length > 0 && mine.every((r) => plain(r.obscured))))
           no(`files[${i}]`, "original_carried", localize("case-grammar.casefile.original-carried", "{path} is a {kind} under {ref}, whose material the case carries as its copy: the original never travels", { path: shown(f.path), kind: f.kind, ref: shown(entry.ref) }));
       });
-      for (const [ref, list] of copies) for (const copy of list)
-        if (!carried.has(`${ref} ${copy}`))
+      for (const [ref, list] of copies) for (const { copy, sha } of list)
+        if (!carried.has(v4 && (ofRef.get(ref) || []).length > 1 ? `${ref} ${sha} ${copy}` : `${ref} ${copy}`))
           no("files", "obscured_copy_missing", localize("case-grammar.casefile.obscured-copy-missing", "the case document carries {ref} as its copy at {sha}, and the case file lists no obscured file under that ref at that SHA-256", { ref: shown(ref), sha: shown(copy) }));
     }
     const doc = (kinds.get("case_document") || [])[0];

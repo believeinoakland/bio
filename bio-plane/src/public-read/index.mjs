@@ -47,7 +47,7 @@ import { membershipOf } from "../membership/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          lensClosingSentencesOf, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
-import { caseFilePath, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
+import { caseFilePath, caseFileEntryOf, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { rowOf } from "./checks.mjs";
@@ -141,15 +141,28 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const lowerSha = (v) => (typeof v === "string" && /^[0-9a-fA-F]{64}$/.test(v) ? v.toLowerCase() : v);
 /* R28 with R32 (K2145): a carried archive member's archives hold its bytes, so when an order withholds a material's
    `document` file, every `archive` and `container` file the case file carries under that material's ref (its record and
-   each enclosing archive, outward) is withheld too, by the same orders. Mutates `withheld` (`withholdingOf`'s map). */
+   each enclosing archive, outward) is withheld too, by the same orders. Mutates `withheld` (`withholdingOf`'s map).
+   Fix round 6, G50 (B): a `document` file at a capture's own path (`materials/<ref>/<sha>/document`, only a `ref` on several
+   rows of a `/4` case file has one) sits one directory deeper than the ref's chain, so the directory prefix no longer
+   covers it. There only the first link is matched exactly, by the member in its path (the document's own `container`
+   record, `containers/<capture>.json`); every other link (every archive, every outward record) is not resolved here, so it
+   falls back to the ref level (everything under `materials/<ref>/`), except another capture's own first-link record, which
+   belongs to a document this order does not name. It may therefore over-withhold a sibling capture's outward chain and never
+   under-withholds. A one-row `ref` and every `/1`-`/3` file keep the directory prefix rule as it was. */
 function withholdChains(withheld, manifest) {
   const files = manifest && Array.isArray(manifest.files) ? manifest.files : [];
+  const entryOf = (f) => (f && typeof f.path === "string" ? caseFileEntryOf(f.path) : null);
   for (const d of files) {
     if (!d || d.kind !== "document" || typeof d.path !== "string" || !withheld.has(d.sha256)) continue;
-    const under = d.path.slice(0, d.path.lastIndexOf("/") + 1);
+    const at = entryOf(d);
+    const captured = at && at.kind === "document" && at.capture ? at : null;
+    const under = captured ? `materials/${captured.ref}/` : d.path.slice(0, d.path.lastIndexOf("/") + 1);
+    const siblings = captured ? new Set(files.map(entryOf).filter((e) => e && e.kind === "document" && e.ref === captured.ref && e.capture
+      && e.capture !== captured.capture).map((e) => e.capture)) : null;
     const orders = withheld.get(d.sha256);
     for (const f of files) {
       if (!f || (f.kind !== "archive" && f.kind !== "container") || typeof f.path !== "string" || !f.path.startsWith(under)) continue;
+      if (siblings && f.kind === "container") { const e = entryOf(f); if (e && siblings.has(e.member)) continue; }
       const prev = withheld.get(f.sha256) || [];
       withheld.set(f.sha256, [...prev, ...orders.filter((o) => !prev.includes(o))]);
     }
@@ -1430,6 +1443,9 @@ export class PublicRead {
    *    such an original answers `original_of_copy` and nothing of its bytes;
    *  - `obscured` (T37; N757): each row stating `obscured` (`case-grammar` R12), never an included material: its ref, the
    *    copy's SHA-256 and label as signed, and whether the commit registered the copy under that ref (`registered`);
+   *  - (G50) in `materials` and `obscured`, an entry of a `ref` on two or more rows of the document also carries `capture`,
+   *    the row's `sha` lower-cased (a copied row's is its original's), or `capture: null` with `capture_invalid: true` for
+   *    a sha that is not 64 hex; an entry of a `ref` on one row carries neither;
    *  - `criteria`: the edition's frozen criteria rows, or null when not recorded (R33);
    *  - `attestations`: each `material_attestations:` row of included material, a `member` row with its signed account
    *    from the document (when the row may name one), a `co_attestation` row with each token `publication` held for
@@ -1480,13 +1496,24 @@ export class PublicRead {
       .map((x) => String(x && x.sha != null ? x.sha : "").toLowerCase()).filter((s) => HEX64.test(s)));
     const pool = this.#archivePool([...included, ...copied].map((m) => m.ref), text, heldHere);
     const originals = new Set(copied.map((m) => String(m.sha ?? "").toLowerCase()).filter((s) => HEX64.test(s)));
+    /* Fix round 6, G50 (B): a `ref` on two or more rows of the document (counted over all rows, carried or not, as G47
+       counts) names each of its files by the row's capture (`case-grammar` R13's `/4`): the entry carries `capture`, the
+       row's `sha` lower-cased (a copied row's is its original's), or `capture: null` with `capture_invalid: true` for a sha
+       that is not 64 hex, which `buildCaseFile` never spells plain. A `ref` on one row adds no key. */
+    const several = new Set(rows.filter((r, i) => r && typeof r.ref === "string" && rows.findIndex((x) => x && x.ref === r.ref) !== i).map((r) => r.ref));
+    const captureFields = (m) => {
+      if (!several.has(m.ref)) return {};
+      const c = String(m.sha ?? "").toLowerCase();
+      return HEX64.test(c) ? { capture: c } : { capture: null, capture_invalid: true };
+    };
     /* The narrower walk (kept, K2223): what any edition registered shows which archives hold a copy-carried original. */
     const holdsOriginal = this.#archivesHolding(originals, this.#archivePool([...included, ...copied].map((m) => m.ref), text));
     const materials = included.map((m) => originals.has(String(m.sha ?? "").toLowerCase())
-      ? { ref: m.ref, kind: m.kind, sha: m.sha ?? null, text_sha: m.text_sha ?? null, original_of_copy: true, archives: [] }
+      ? { ref: m.ref, kind: m.kind, sha: m.sha ?? null, text_sha: m.text_sha ?? null, original_of_copy: true, archives: [],
+          ...captureFields(m) }
       : { ref: m.ref, kind: m.kind, sha: m.sha ?? null, text_sha: m.text_sha ?? null,
           bytes_text: text(m.sha), extracted_text: m.kind === "document" ? text(m.text_sha) : null,
-          archives: m.kind === "document" ? this.#archiveChain(m.sha, pool, holdsOriginal) : [] });
+          archives: m.kind === "document" ? this.#archiveChain(m.sha, pool, holdsOriginal) : [], ...captureFields(m) });
     /* R23 (T37): each copy, at the SHA-256 the row names, read by that hash from the published projection only: it is
        carried when the commit registered it under the row's ref as kind `obscured` (`publication` R57, through
        `case-carriage` R1), its bytes read from the published bucket, where `ratification` R39 copies them. */
@@ -1494,7 +1521,8 @@ export class PublicRead {
       const copy = String(m.obscured && m.obscured.copy != null ? m.obscured.copy : "").toLowerCase();
       const registered = HEX64.test(copy) && !!this.#one(`SELECT 1 AS x FROM published_shas WHERE sha256=? AND bundle_id=?
         AND kind='obscured' AND path=('materials/' || sha256) LIMIT 1`, copy, m.ref);
-      return { ref: m.ref, copy: HEX64.test(copy) ? copy : null, label: m.obscured ? m.obscured.label ?? null : null, registered };
+      return { ref: m.ref, copy: HEX64.test(copy) ? copy : null, label: m.obscured ? m.obscured.label ?? null : null, registered,
+               ...captureFields(m) };
     });
     const refs = new Set(included.map((m) => m.ref));
     const accounts = (caseDocumentBlocks(state.document.text).captures || [])
@@ -1681,20 +1709,36 @@ export class PublicRead {
     if (HEX64.test(String(manifestSha ?? ""))) items.push({ sha256: manifestSha, paths: ["manifest.json", "MANIFEST.json"] });
     const files = manifest && Array.isArray(manifest.files) ? manifest.files
       : manifest && Array.isArray(manifest.parts) ? manifest.parts : [];
-    /* R28 with R23 (T37; K2145's reading): an obscured copy is the material's own copy (a photo with areas covered, a
-       member document cleaned), so an order naming the material (its `document` path under the row's ref, or its
-       original's hash) withholds the copy too. */
-    const originalOf = new Map();
+    /* R28 with R23 (T37; K2145's reading; fix round 6, G50 (A)): an obscured copy is the material's own copy (a photo with
+       areas covered, a member document cleaned), so an order naming the material (its `document` path under the row's ref)
+       or an original it was made from (that original's hash) withholds the copy too. A copy is joined to its originals by
+       its OWN hash, from the signed rows, never by `ref`: a `ref` on two copied rows has two originals, and an order
+       naming one capture's original withholds that capture's copy and no other. A `Set`, so that two rows with the same
+       copy bytes withhold both originals' copy. */
+    const originalsOfCopy = new Map();
     if (files.some((f) => f && f.kind === "obscured")) {
       const signed = signedParts(doc);
       const rows = signed ? (materialsOf(signed.fm) || {}).materials : null;
-      for (const r of Array.isArray(rows) ? rows : []) if (r && r.obscured != null && typeof r.ref === "string") originalOf.set(r.ref, r.sha);
+      for (const r of Array.isArray(rows) ? rows : []) {
+        if (!r || r.obscured == null) continue;
+        const copy = String(r.obscured.copy ?? "").toLowerCase(), original = String(r.sha ?? "").toLowerCase();
+        if (!HEX64.test(copy) || !HEX64.test(original)) continue;
+        if (!originalsOfCopy.has(copy)) originalsOfCopy.set(copy, new Set());
+        originalsOfCopy.get(copy).add(original);
+      }
     }
     for (const f of files) {
       if (!f || typeof f.sha256 !== "string") continue;
-      const ref = f.kind === "obscured" && typeof f.path === "string" ? f.path.split("/")[1] : null;
+      const entry = typeof f.path === "string" ? caseFileEntryOf(f.path) : null;
+      const ref = f.kind === "obscured" && entry && entry.kind === "obscured" ? entry.ref : null;
+      /* G50 (B): a file at a capture's own path is also known by its kind's ref-level path, so an order naming the ref's
+         path reaches every capture's file; a copy is also known by its capture's `document` path. A file without a
+         capture in its path is known as it was. */
+      const capture = entry && entry.capture ? entry.capture : null;
       items.push({ sha256: f.sha256, paths: ref ? [f.path, caseFilePath("document", ref),
-        ...(HEX64.test(String(originalOf.get(ref) ?? "")) ? [originalOf.get(ref)] : [])] : [f.path] });
+        ...(capture ? [caseFilePath("document", [ref, capture])] : []),
+        ...(originalsOfCopy.get(f.sha256.toLowerCase()) || [])]
+        : capture ? [f.path, caseFilePath(entry.kind, entry.ref)] : [f.path] });
     }
     for (const f of (state && state.findings) || []) {
       if (typeof f.bundle_sha === "string")
