@@ -58,3 +58,19 @@ Deferred: none. New file outside paths: none.
 FOUND IN ANOTHER MODULE (reading-pipeline, job 27): test/m/reading-pipeline/read.test.mjs:370 'R13: dialect absent when no entry answered...' deep-equals the readingDialect key list and now fails on the two new keys assumed and disagree (R15 as BOB amended it). It is the only new red among the users; otherwise acquisition 276/276 pass, file-safety 100/103 and reading-pipeline 303/319 with exactly the failures the unchanged tranche formats.mjs also gives (same names, checked against origin/tranche/T51's file). Needs reading-pipeline's job to accept the two keys.
 Tests and checks: format-registry suite 56 pass, 0 fail. checks format 0 failures; architecture 0 failures; coverage 32 of 32 live ids; words 0 failures; ownership 0 failures. Words owed to later-ux: the stand-in ids format-registry.formats.name_and_delimited_head and format-registry.formats.container_judged_from_end (new signal sentences, English only).
 Size (session_019Jfv3mJzeNs65nwh7mC8TQ): test runs 14, module lines 502
+
+## Fix round 9, job 52 (R20, K4900) · FORMAT-REGISTRY #6
+
+Merged tranche/T51 first (BOB's R20 amendment read). Entry applied:
+- **R20.** (1) Cause: `formats.mjs` pdf `detect` (was :325) answered `pdf` for any head containing `%PDF-` in its first 1024 bytes, and R23 asks `pdf` before `zip`, so a ZIP whose first member is a PDF stored with method 0 (the PDF's bytes sit inside the first KiB) was a `pdf`. Fix: the bytes must not begin with the ZIP local-file magic (`ooxml.hasZipMagic`); such a file falls through to R28's `zip` or the office/ODF entries. A range source needed no change: its head goes through the same entry, and a container above the head is judged by `ooxml.discriminate` (R32). (2) No test: no fixture put a stored PDF first in a ZIP; G130a's polyglot set was pictures and HTML. (3) Failing-first: `test/m/format-registry/zip-pdf.test.mjs`, three tests seen RED before the edit, GREEN after:
+  - `R20: a ZIP whose first member is a PDF stored uncompressed is a zip, whole and from a range source` — RED `Expected values to be strictly equal: actual 'pdf' expected 'zip'` (zip-pdf.test.mjs:22).
+  - `R20: an office file whose first stored entry holds %PDF- stays docx, and an OpenDocument one odt` — RED `actual 'pdf' expected 'docx'` (:36).
+  - `R20: a real PDF is a pdf — %PDF- at byte 0, and after junk that is not the ZIP magic; the ZIP magic first is not` — RED `the ZIP magic first is never a PDF` (:53); the `pdf` at 0 and after 500 junk bytes (Acrobat's rule) and `application/pdf` alone stay `pdf`.
+  (4) Platform check N.
+- Through the door: file-safety `r56-structure.test.mjs` X19 (`R6 R56 G136b (X19)`) green now; with acquisition `unpack.test.mjs` and `r9-unpack-transient.test.mjs`: 24 pass, 0 fail.
+
+Deferred: none. New file outside paths: none. Found in another module: none. No generated artifact made stale by me beyond the plane's bundle (formats.mjs is a bundled input; BOB regenerates at the round end). No new sentence, no words row owed.
+
+Tests and checks: format-registry suite 59 pass, 0 fail. Users: acquisition 321 pass, 0 fail; file-safety + capture 466 pass, 1 fail (`file-safety/rows.test.mjs:85`, the R24 words red the START carries round-wide). `impact.mjs origin/tranche/T51 HEAD`: 114 of 176 modules, 1971 of 2634 test files (every user of the registry); the named users above were run. Checks: format 0 failures; architecture 0 failures; coverage 32 of 32 live ids, 0 failures; words 0 failures; ownership 0 failures.
+
+Size (session_0147VzMb43eV1VmXi1y6293X): test runs 8, module lines 507
