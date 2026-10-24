@@ -11,7 +11,8 @@ import { tickCountFailures, markExtentFailures } from "./bars.mjs";
 import { MEASURED_CSV_TEXT_BOUND_BYTES } from "../../../../src/csv-reader/index.mjs";
 
 export const XLSX_ROWS = 200_000;
-export const MARKS = ["FIRSTROWMARK", "MIDROWMARK", "LASTROWMARK"];
+/** the marks of a document: the CSV generator's three, or sheetgen's `<seed>-R<row>-C<col>` (G123e) */
+export const marksOf = (doc) => doc.marks;
 /** the cap for a file of `bytes` (N MB = MiB the bytes take in the object): the one convention, `capFor` (G123a) */
 export const g41Cap = (bytes) => capFor(bytes / 1048576);
 const csvMax = MEASURED_CSV_TEXT_BOUND_BYTES;
@@ -28,7 +29,7 @@ export const CASES = {
 export async function runCase(name, capOverride = null) {
   const { label, doc } = await CASES[name]();
   const cap = capOverride ?? g41Cap(doc.bytes);
-  const r = await shapeRun({ doc, search: MARKS, readingEachTick: true, cellsOf: true, maxTicks: 600 }, { capMB: cap });
+  const r = await shapeRun({ doc, search: doc.marks, readingEachTick: true, cellsOf: true, maxTicks: 600 }, { capMB: cap });
   return { name, label, cap, r, failed: failures(r, doc.bytes) };
 }
 
@@ -40,7 +41,7 @@ export function failures(r, fileBytes) {
   f.push(...tickCountFailures(r.ticks, fileBytes));   /* G123b: the work budget is a count, never node's wall time (R-CLOCK) */
   const mute = r.ticks.filter((t) => !t.readingFor || t.readingFor.error || !(t.readingFor.state || t.readingFor.failure)); if (mute.length) f.push(`readingFor did not state its state at ${mute.length} tick(s), first: ${JSON.stringify(mute[0] && mute[0].readingFor)}`);
   f.push(...markExtentFailures(d));
-  for (const m of MARKS) {
+  for (const m of Object.keys((d.gen && d.gen.markRows) || {})) {
     if (!(d.found[m] >= 1)) f.push(`${m} is not in the index (capture_text_fts rows: ${d.found[m]})`);
     const s = d.search[m]; if (!s || s.error || !(s.total >= 1)) f.push(`op=search passage:${m} found nothing: ${JSON.stringify(s)}`);
   }
@@ -63,7 +64,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       if (name.startsWith("csv")) {   /* the stated bound: the largest CSV that fits, at its cap */
         for (const mb of [16, 12, 8, 6, 4, 2, 1]) {
           if (mb * 1048576 >= (await CASES[name]()).doc.bytes) continue;
-          const t = await shapeRun({ doc: csvDoc(mb * 1048576), search: MARKS, readingEachTick: true, cellsOf: true, maxTicks: 600 }, { capMB: g41Cap(mb * 1048576) });
+          const t = await shapeRun({ doc: csvDoc(mb * 1048576), search: doc.marks, readingEachTick: true, cellsOf: true, maxTicks: 600 }, { capMB: g41Cap(mb * 1048576) });
           const tf = failures(t, mb * 1048576); console.log(`  try ${mb} MB at cap ${g41Cap(mb * 1048576)}: ${tf.length ? "FAIL " + tf[0] : "PASS (the largest that fits)"}`);
           if (!tf.length) break;
         }

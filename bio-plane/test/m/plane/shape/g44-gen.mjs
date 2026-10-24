@@ -1,7 +1,9 @@
 /* G44's generated files (fix round 6; diagnosis-R6-g44.md): short-row workbooks whose declared sheet text is `declaredMiB` MiB, three cells a row
  * (`<c><v>n</v></c>`, an inline string, `<c s="1"><v>n.5</v></c>`; 142 B a row, so 10 MiB declared is about 73,800 rows and 221,000 cells in a 1.4 MB file), a
  * many-sheet variant, and an ODS of the same rows. They are small files (the deflate of repeated rows), made whole in the child. */
-import { zipChunks } from "./xlsx-gen.mjs";
+import { zipChunks64 } from "../../../make-zip.mjs";   /* test-support's ZIP writer (G123d): the harness keeps no writer of its own */
+/** this file's entries (`{name, text, chunks, stored}`) as test-support's (`{name, data, chunks, method}`) */
+const zipChunks = (entries) => zipChunks64(entries.map(({ name, text, chunks, stored }) => ({ name, ...(text !== undefined ? { data: text } : { chunks }), ...(stored ? { method: 0 } : {}) })));
 
 export const ROW_BYTES = 142;
 const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";

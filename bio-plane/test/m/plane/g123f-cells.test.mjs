@@ -52,13 +52,13 @@ test("R84 G123f: a 16,000-row xlsx: the same ranges equal the generator's, the t
   assert.equal(op(r, "workbookadd").ok, true, JSON.stringify(op(r, "workbookadd")));
 });
 
-test("R85 G123f: a 30,000-row xlsx (90,000 cells) is refused WORKBOOK_TOO_LARGE with its count and the add's bound when the bound is under it, added when the bound is over it (250,000 once workbooks R20 merges), never silently cut; its table is declared either way", { timeout: 600_000 }, async () => {
+test("R85 G123f: a 30,000-row xlsx (90,003 cells with its header row) is refused WORKBOOK_TOO_LARGE with its count and the add's bound when the bound is under it, added when the bound is over it (250,000 once workbooks R20 merges), never silently cut; its table is declared either way", { timeout: 600_000 }, async () => {
   const r = await run(await xlsxRowsDoc(30_000));
   assert.equal(r.died, false, r.error || r.stderr);
   const add = op(r, "workbookadd");
   if (add.ok === false) {
     assert.equal(add.reason, "WORKBOOK_TOO_LARGE");
-    assert.equal(add.cells, 90_000);
+    assert.equal(add.cells, 30_001 * 3, "the header row is cells too");
     assert.ok(Number.isInteger(add.bound_cells) && add.bound_cells < add.cells, "refused only because the count is over the stated bound");
   } else assert.equal(add.ok, true, JSON.stringify(add));
   assert.equal(op(r, "tabledeclare").ok, true);

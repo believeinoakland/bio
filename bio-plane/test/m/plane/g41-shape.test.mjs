@@ -6,7 +6,7 @@
    stored value under 1 MiB. HEAVY: run alone (`node --import $PWD/bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/plane/g41-shape.test.mjs`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runCase, CASES, MARKS, g41Cap, failures } from "./shape/g41.probe.mjs";
+import { runCase, CASES, g41Cap, failures } from "./shape/g41.probe.mjs";
 import { report, capFor, OBJECT_MB, STORED_VALUE_BOUND } from "./shape/harness.mjs";
 import { TICK_COUNT_BARS } from "./shape/bars.mjs";
 
@@ -18,7 +18,7 @@ for (const name of Object.keys(CASES)) {
       console.log(report(out.label, out.r));
       assert.deepEqual(out.failed, [], `${out.label} at cap ${out.cap} MB`);
       assert.ok(out.r.largestStored < STORED_VALUE_BOUND);
-      for (const m of MARKS) assert.ok(out.r.done.found[m] >= 1 && out.r.done.search[m].total >= 1, m);
+      for (const m of Object.keys(out.r.done.gen.markRows)) assert.ok(out.r.done.found[m] >= 1 && out.r.done.search[m].total >= 1, m);
     });
 }
 test("R84 G123a: the cap is the one convention, `capFor`: the sheet runs' and the PDF runs' are the same function of the held MiB, and a larger file leaves a smaller cap", () => {

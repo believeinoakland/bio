@@ -859,3 +859,9 @@ Size (session_011em5NMVJqsV8WDNmpEHRAd): test runs 16, module lines 1629 (test f
 ## J53 · COMPLETE
 
 COMPLETE (plane-1, PLANE #56): G123a (harness side, caps re-pointed to byte-ledger `capFor`: shape/harness.mjs, g41.probe, g44.probe, g26.probe, g41-shape, g44-shape), G123b, G123c, G123f, G123h and K4843 applied; reds by name written for G91 (`r8-headofline`), G93 (`r8-heal-door`), G123g (`r8-lag`, `r8-wave`), each seen red for its stated reason, controls green. New files outside paths: none. Checks: format, architecture, ownership, words 0 failures; coverage names R97 R98 R100 R101 R104 R106 as untested (plane-2's). Whole-suite reds are the intended ones plus inherited R24 and l77-size. Details, the R100 harness-bound note and a reading re-serve finding in my record.
+
+### CHANGE B76/B77/B78 (plane-1)
+- B76: tranche merged; `shape/cap.mjs` imports `capFor`/`PLATFORM_FIGURES` from `byte-ledger.mjs` (no formula kept); caps re-pointed: `shape/harness.mjs`, `g41.probe.mjs`, `g44.probe.mjs`, `g26.probe.mjs`, `g41-shape.test.mjs`, `g44-shape.test.mjs`.
+- B78 (1): the harness's xlsx is now `sheetgen`'s (`sheetDoc`/`xlsxRowsDoc` in `harness.mjs`; marks `<seed>-R<row>-C<col>` in a non-header cell; extent/search checks, fts and cell truth read from `sheetgen`'s truth); `shape/xlsx-gen.mjs` deleted. (2): `shape/g44-gen.mjs` takes `zipChunks64` from `make-zip.mjs`; no local ZIP writer remains.
+- FINDING (for the owner of the xlsx reader; REPORT, not a harness edit): a sheetgen xlsx of 200,000 rows x 3 cols (seed `hx200000`, types text/integer/text, 4.88 MB) is read `stated`/`final`: "the text of this document is undetermined (1 undecodable region(s))", no unit written; 150,000 rows (3.66 MB) and below read whole. `g41-shape` "200,000-row xlsx" is red by name for it (R84); the CSV cases and G123f/G44 pass.
+- Tests: g41-shape 8/9 (the xlsx above), g123f 3/3, g44-shape + shape-harness 16/16.
