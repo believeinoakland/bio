@@ -869,3 +869,13 @@ COMPLETE (plane-1, PLANE #56): G123a (harness side, caps re-pointed to byte-ledg
 ## J54 · COMPLETE
 
 COMPLETE again (plane-1, re B76-B78). B76: caps follow byte-ledger `capFor` (files named in my record and in J53). B78 (1): the harness xlsx is sheetgen's, marks in a non-header cell, search/cell truth from its truth; (2) g44-gen's ZIP writer is make-zip's `zipChunks64`; xlsx-gen.mjs deleted. REPORT (other module, xlsx reader): a sheetgen 200,000-row x 3-col xlsx (seed hx200000, 4.88 MB) is read stated/final "text undetermined (1 undecodable region)", no unit written; 150,000 rows reads whole. `g41-shape`'s 200,000-row xlsx case is therefore red by name (R84); every other plane test in the files I touched passes. Details in my record.
+
+## J55 · QUESTION
+
+PLANE #57 (job 37), three readings; I carry on with each, none blocks me.
+
+1. **How extraction receives the registrar (2c item 1: "extraction receives it as `opts.registerJob`").** Extraction-1 (job 28) is not merged, so I cannot read which `opts` it means. My reading: the plane hands it BOTH ways, so either reading of job 28 finds it: (a) `extractionOf(ctx, {..., registerJob})` at construction (a function calling the ledger's `registerJob`, asked lazily), and (b) `registerJob` (and `armJobs`) in every `readHeld({...})` call the ledger makes; the existing `registerOwe` hook stays wired and now writes the same job table (its `owe({kind, sha, ...})` is `registerJob` of that kind, R98's "retired as a separate one" by being the same write). Please confirm with job 28 which one it reads, or rule one.
+
+2. **`watchdog_ran` (G94, R103) is scheduler's (`watch` records `ran`, scheduler R29; job 33), and job 33 has no round-9 START yet.** My reading: the plane adds `watchdog_ran` and `running_since` to `WATCHDOG_FIELDS` for the administrator only, read from `health()` (null until the scheduler answers it); my unit test of the route uses a scripted `health`; the test through the real scheduler (`watchdog_ran` within the test's bracket for a 26-minute-late fire) is written now and stays RED BY NAME until job 33 merges (R-SEAM). The Store passes `at` (the slot) to `watch(at)` as today; no plane clock invents `ran`.
+
+3. **The object-call count (K4848 (2)).** The object cannot see the Worker's calls to it, so the entry is made in the plane's Worker entry (`plane/index.mjs`, mine): each request's `env.STORE` is wrapped so its stubs' `fetch` calls are counted (the counting door's `do` count; RPC methods are not counted, as `doCalls` does not count them), and `object-calls;dur=<n>` is appended to the answer's `server-timing`, absent when the request made no call (never 0). Calls after the answer (`waitUntil`) are not counted, as the counting door does not.
