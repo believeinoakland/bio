@@ -246,3 +246,13 @@ test("R68 (C13b): the request that began the render ended and the render never c
   assert.equal(w.store.state.sessions.has(sid), false, "the session is closed");
 });
 ```
+
+## J7 · REPORT
+
+REPORT · capture-sources round 9: the interface acquisition (job 23) and capture (job 24) may code against. Working in my tree; merged to my branch at COMPLETE.
+
+- `renderWithBinding` (browserrender.mjs): every `{ok:false}` answer now carries `elapsed_ms` (whole ms, session open to close, close included), `failure_class` ("transient" for a session refused / three a second / open bound spent; else "permanent") and `detail` (the error's words, <= 200 chars). The success answer is unchanged. A success still reports `elapsed_ms` taken before the close.
+- `renderBlock(answer, {..., domBound})` (render.mjs): `{ok:false, problem, failure_class}` for: renderer not ok (its failure_class passes through, "permanent" when unstated), no html, `domBound.size > domBound.bound` (R71: the caller passes `domBound: {size, bound}` in bytes, from `READ_BOUNDS`), a main-frame status >= 400, a `chrome-error://` location, an empty shell. Every "page did not render" problem is "permanent". The block's `render.undetermined` always holds `RENDER_COPY_STATEMENT` (exported; the one stand-in sentence `capture-sources.render.copy_first_load_not_scrolled`, row owed to later-ux). `isEmptyShell(html)` is exported.
+- `keepRenderBodies` (R70): same signature and answers; bodies decoded one at a time (acquisition's `keepReply` need change nothing).
+- Found by the real-Chromium test and fixed in my module: the main document's `status` was `null` on every page rendered by a real browser (the response arrives before `Page.navigate` answers); now read off. R11's status >= 400 test depends on it. A page that hydrates by a timer with no network request (not by a fetch) is captured as the browser had it at network idle: a shell, and now "the page did not render".
+- Not in my requirements (stated, no action): "banner text marked" (V6) names no requirement of mine; I state banners as not dismissed (R69) and dismiss page dialogs so a render does not hang on one.
