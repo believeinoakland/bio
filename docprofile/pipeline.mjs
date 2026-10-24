@@ -37,7 +37,7 @@
  * which keeps the expensive parsing off the overwhelming majority of checks where
  * the bytes are identical or the difference is machinery.
  */
-import { identify, compare, profileRecord, isMeaningful, worstSignificance } from "../site-profiles/index.mjs";
+import { identify, compare, profileRecord, isMeaningful, worstSignificance, CONFIDENCE } from "../site-profiles/index.mjs";
 import { doctypeFor } from "./doctypes/registry.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
@@ -73,8 +73,10 @@ export async function assess(before, after, ctx) {
 
   /* A shell is settled here and nothing below applies: its bytes are stable and
      its substance is absent, so every layer beneath would answer a question about
-     a document that was never captured. */
-  if (id.handler.shell)
+     a document that was never captured. Only a CERTAIN shell settles it (R12, R41; G140):
+     one framework marker on a server-rendered page is a POSSIBLE match, and a possibility
+     gates nothing. The verdict gates WATCHING and never the reading of the text. */
+  if (id.handler.shell && id.confidence === CONFIDENCE.CERTAIN)
     return out({ verdict: "unwatchable", meaningful: null, events: [], connections: [],
                  why: id.handler.warning });
 
