@@ -155,3 +155,12 @@ test("R101 (G129c; K4904 (1); DOCS killAt): the window at the cursor the ledger 
   assert.deepEqual(c.stated_units, [{ at: 60, why: "UNIT_KILLED_READER" }]);
   assert.equal(c.counts.skipped_named, 1);
 });
+
+test("R101 (progress only forward): an OCR pass whose answered pages merge to no glyph has read nothing: it writes nothing and ends `NO_PROGRESS`, owing nothing, so the job never loops", async () => {
+  const { w, d } = await scan(3);
+  const empty = member((b) => ({ ...ocrAnswer(b.pages, { text: () => "   " }) }));
+  const before = w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading;
+  const a = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: empty } });
+  assert.deepEqual([a.read, a.owed, a.why], [false, undefined, "NO_PROGRESS"], JSON.stringify(a));
+  assert.equal(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading, before, "nothing written");
+});

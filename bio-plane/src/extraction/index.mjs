@@ -1103,6 +1103,10 @@ export class Extraction {
     reading.reextracted = { at: stampInstant("second"), by: author, engine: t3.engine ? t3.engine.engine : null, version: t3.engine ? t3.engine.version : null,
       calibration: t3.engine ? t3.engine.calibration ?? null : null, pages: t3.filled, via };
     const entry = t3.left ? { kind: "ocr", sha: digest, cursor: t3.left.cursor, pages_left: t3.left.pages.length } : null;
+    /* (R101: progress only forward) a pass whose filled pages hold no glyph has read nothing: it ends, stated, and re-registers nothing, so a member
+       answer that merges to empty pages never loops the job */
+    const glyphsIn = (pg) => { const x = (t3.i2text && Array.isArray(t3.i2text.pages) ? t3.i2text.pages : []).find((q) => q && q.page === pg); return !!x && glyphCount(x.text || "") > 0; };
+    if (!newlyStated.length && !t3.filled.some(glyphsIn)) return { filled: [], transient: false, why: "NO_PROGRESS", killed: t3.killed };
     const w = await this.#writeReread({ basis, sha: digest, reading, text: t3.i2text, author, ungated: true, job: entry, call });
     if (w.changed) return { filled: [], transient: true, changed: true, killed: t3.killed };
     /* R34: what the pass did and what the listeners and the index reported, as the press answered it */
