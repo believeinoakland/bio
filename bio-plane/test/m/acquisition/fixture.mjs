@@ -356,3 +356,9 @@ export function rendererEnv(answer) {
   const calls = [];
   return { calls, RENDERER: { fetch: async (u, init) => { calls.push(JSON.parse(init.body)); return new Response(JSON.stringify(typeof answer === "function" ? answer() : answer)); } } };
 }
+
+/* R122: the door promotes what a call files, so each filed member of an archive has a home; a test that runs the daemon over an archive after a
+   call that filed members, with no door in between, states that promotion here (a member with no home is offered again, R122 (2)). */
+export function promoteFiled(w) {
+  for (const r of w.rows("SELECT sha256 FROM archive_entries WHERE state='filed' AND sha256 IS NOT NULL")) w.prov.homes[r.sha256] ??= "INFO-door";
+}
