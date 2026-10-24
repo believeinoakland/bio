@@ -164,3 +164,7 @@ COMPLETE · fix round 9, batch D · R19 (G127f; K4928): a parted upload's part i
 **Deferred:** none. **Found in another module:** none beyond the 3 reds above (control-plane's `t51-visitor-copy`, plane's `g41-shape` and `release` R24).
 
 Size (session_01QLTzPedPAoRQP9VWrUzxYJ): test runs 5, module lines 706
+
+## J11 · COMPLETE
+
+COMPLETE · R19 applied: STREAMED_BODY_OPS gains captureuploadpart (dispatch.mjs). Failing-first test in dispatch.test.mjs; store-door suite 57 of 57; format, architecture, coverage (19 of 19), words, ownership all 0 failures. Impact users: 599 tests, 3 red, identical without my change (control-plane t51-visitor-copy, plane g41-shape, plane release R24). Details in J10 of my record. Drop 'not yet met' from R19.
