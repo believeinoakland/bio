@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01AWoVVqkqd48jwuoT2GtVPZ · depth 2 · COMPLETE · handled B89
+**Status** · session_01MuMF5vhSWNsf1HhrqP9yuH · depth 2 · COMPLETE · handled B89
 
 ## Record (PLANE #41, T51-125)
 
@@ -996,3 +996,26 @@ Size (session_01AWoVVqkqd48jwuoT2GtVPZ): test runs 9, module lines 2310
 ## J60 · COMPLETE
 
 Job 84 done: R109 (registerJob arms after the commit), R110 (stampUnit; kill charged to the page), R97 failed_why {kind, capture_sha, holder}. Red first for each. Light suite 470/472 (release R24 and l77 R77, inherited); heavy alone green incl. L files; impact: plane only; format, architecture, coverage, words, ownership 0 failures. Record has the four fields and Size.
+
+## Record (PLANE #60, fix round 9 batch D, job 93; B90)
+
+**Entries applied**
+- R97 amended (G168, K4985): in `settle`, a `reading` row answered `{ok: true, read: false, why: "NO_HOME"}` goes through the new `wait` (backed off, `last_why` NO_HOME, `state` queued/partial, no `failed`, no `failed_why`); the `ocr` kind is unchanged (ends, `OCR_NOTHING_OWED`). A non-`ocr` row answered `READING_HELD` with `counters` keeps `written = MAX(row, answer)` and `skipped` alike, then `finish`; a held answer without `counters` ends as before. An owner's real failure is still counted (control test).
+- Tests (`r9-jobs.test.mjs`): "R97 NO_HOME …" (NO_HOME then READING_HELD counters 8 → finished, written 8, skipped 1, failed 0, due later after the first) and its control (MAX with a row at 5 vs answer 3; `{ok:false, why:"BROKEN"}` still `failed 1`).
+
+**Red first:** both new tests failed on `tranche/T51`'s `pending.mjs` (row `failed 1, written 0`); green after.
+**Cause:** `settle`'s last line sent a `reading` NO_HOME to `attempt` (counts a failure), and the finishing READING_HELD answer's counters were never read. **Why missed:** plane's tests stubbed `readHeld` and asserted `[kind, attempts]`, never counters. **Platform check:** seam §11 (L) once extraction's job 94 merges; no workerd behaviour here.
+**Deferred:** none. **Rows owed:** none (no sentence a member reads).
+**Found in other modules:** none.
+
+**Tests and checks**
+- Light plane files (77): tests 469, pass 467, fail 2, both inherited: `release` R24 (words.json lacks the key) and `l77-size` R77 L gate. r9-jobs alone: 37/37.
+- Heavy, alone: g54-sweep 5/5, g55-alarm-l 2/2, r7-contention 5/5, r8-heal-door 4/4, r9-memory 3/3; `g54-l` 5/6: "R87 G54 L publishedcase" fails identically on `tranche/T51`'s own `pending.mjs` (checked), so inherited and unrelated to this change (casefile sweep).
+- `impact.mjs origin/tranche/T51 HEAD`: 1 of 176 modules (plane), 66 test files; no other user named.
+- format 0 failures; architecture 0; coverage 110 of 110, 0; words (plane) 0; ownership 0.
+
+Size (session_01MuMF5vhSWNsf1HhrqP9yuH): test runs 9, module lines 3769
+
+## J61 · COMPLETE · re B90
+
+Job 93 done: R97 amended (G168). A reading row answered NO_HOME waits uncounted (no failure); READING_HELD with counters keeps written/skipped as MAX(row, answer), then finishes. Red first (2 new tests failed on the tranche's pending.mjs), green after. Light suite 467/469 (release R24 words, l77 R77 L: inherited); heavy alone green except g54-l R87 publishedcase, which fails identically on the tranche's own pending.mjs (inherited). Impact: plane only. format, architecture, coverage 110/110, words, ownership: 0 failures. Cause: settle sent reading NO_HOME to attempt and never read READING_HELD counters; missed: tests asserted [kind, attempts], not counters. Platform check L: seam section 11 once extraction job 94 merges. Record has Size.

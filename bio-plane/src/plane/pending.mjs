@@ -340,7 +340,14 @@ export function pendingOf(ctx, deps = {}) {
              at, at + backoff(row.attempts), because, failedWhy(row, because), row.sha, row.kind);
     return "retried";
   };
-  /* R97: an ended row stays, `finished`, for the table's readers; the document's page no longer lists it as owed */
+  /* R97 (G168): a wait that is no failure: the owner has no home for the capture yet (`NO_HOME`); the row is tried again, backed off, and counts nothing */
+  const wait = (row, at, because) => {
+    sql.exec(`UPDATE keeps_pending SET ${ended(row, "retried")}, last_try=?, due_at=?, last_why=?,
+                state=CASE WHEN written>0 THEN 'partial' ELSE 'queued' END WHERE sha=? AND kind=?`,
+             at, at + backoff(row.attempts), because, row.sha, row.kind);
+    return "retried";
+  };
+  /* R97 (G168): an ended row stays, `finished`, for the table's readers; the document's page no longer lists it as owed */
   const finish = (row, units = null) => {
     sql.exec(`UPDATE keeps_pending SET ${ended(row, "finished", units)}, state='finished', ended_at=?, final_why=NULL, last_why=NULL, owed=0
                 WHERE sha=? AND kind=?`, now(), row.sha, row.kind);
@@ -433,6 +440,14 @@ export function pendingOf(ctx, deps = {}) {
       return attempt(row, at, String(r.why || "OWED"), t.units);
     }
     /* an end: the owner read it, or did it, and owes nothing; a picture's or a page's OCR that read nothing is no end (G129d) */
+    /* G168: no home yet for a reading waits, uncounted, as the `ocr` kind's ends without a failure */
+    if (r && r.ok === true && r.read === false && r.why === "NO_HOME" && row.kind === "reading") return wait(row, at, "NO_HOME");
+    /* G168: a reading already held ends with the units the held reading wrote, whoever wrote them: the larger of the row's and the answer's */
+    if (r && r.ok === true && r.why === "READING_HELD" && row.kind !== "ocr" && plain(r.counters)) {
+      const c = countersIn(r);
+      sql.exec(`UPDATE keeps_pending SET written=MAX(written, ?), skipped=MAX(skipped, ?) WHERE sha=? AND kind=?`, c.written ?? 0, c.skipped ?? 0, row.sha, row.kind);
+      return finish(row, c.written);
+    }
     if (r && r.ok === true && (r.read === true || r.done === true || (r.why === "READING_HELD" && row.kind !== "ocr")
                                || (row.kind === "ocr" && OCR_NOTHING_OWED.includes(r.why)))) { const t = tally(row, r, false); return finish(row, t.units); }
     return attempt(row, at, String(r && (r.why || r.code || r.reason) || "NOT_DONE"));

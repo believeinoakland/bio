@@ -673,3 +673,38 @@ test("R110 control: a whole read with no unit stamped is charged to `whole` as b
   await y.s.onAlarm(Date.now() + 1000);
   assert.equal(got, "undefined");
 });
+
+/* ---- R97 (G168, K4985): no home yet waits uncounted; the finishing answer's counters are kept ---- */
+
+test("R97 NO_HOME: a `reading` row answered NO_HOME waits and counts no failure; then READING_HELD with counters 8 ends it finished, written 8, failed 0", async () => {
+  const d = sha("a scan read to its end");
+  const answers = [{ ok: true, read: false, why: "NO_HOME" }, { ok: true, read: false, why: "READING_HELD", counters: { written: 8, skipped: 1 } }];
+  const x = await world(undefined, { readAnswer: () => answers.shift() });
+  x.jobs.registerJob({ kind: "reading", sha: d });
+  let at = Date.now() + 1000;
+  await x.s.onAlarm(at);
+  let row = x.jobs.jobRow({ sha: d, kind: "reading" });
+  assert.deepEqual([row.state, row.failed, row.failed_why, row.last_why, row.written], ["queued", 0, {}, "NO_HOME", 0], JSON.stringify(row));
+  assert.ok(row.due_at > at, "tried again later");
+  at += 3_600_000;
+  await x.s.onAlarm(at);
+  row = x.jobs.jobRow({ sha: d, kind: "reading" });
+  assert.deepEqual([row.state, row.written, row.skipped, row.failed, row.owed], ["finished", 8, 1, 0, 0], JSON.stringify(row));
+});
+
+test("R97 NO_HOME control: the row keeps the larger of its own and the answer's counters; an owner's real failure is still counted", async () => {
+  const d = sha("a reading with units already written");
+  const answers = [{ ok: true, read: false, why: "READING_HELD", counters: { written: 3, skipped: 0 } }];
+  const x = await world(undefined, { readAnswer: () => answers.shift() });
+  x.jobs.registerJob({ kind: "reading", sha: d });
+  x.ctx.storage.sql.exec(`UPDATE keeps_pending SET written=5 WHERE sha=? AND kind='reading'`, d);
+  await x.s.onAlarm(Date.now() + 1000);
+  const row = x.jobs.jobRow({ sha: d, kind: "reading" });
+  assert.deepEqual([row.state, row.written, row.failed], ["finished", 5, 0]);
+  const e = sha("a reading that fails");
+  const y = await world(undefined, { readAnswer: () => ({ ok: false, why: "BROKEN" }) });
+  y.jobs.registerJob({ kind: "reading", sha: e });
+  await y.s.onAlarm(Date.now() + 1000);
+  const bad = y.jobs.jobRow({ sha: e, kind: "reading" });
+  assert.deepEqual([bad.failed, bad.failed_why], [1, { BROKEN: 1 }]);
+});
