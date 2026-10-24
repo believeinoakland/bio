@@ -625,3 +625,7 @@ Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-e
 Checks: format 0 failures; architecture (acquisition) 0 failures; coverage (acquisition) 75 of 75, 0 failures; `checks/run.mjs`: no finding names acquisition (words 19 failures, none mine, none in my files); ownership: 1 failure, the requirements file, as B3/B4 accept.
 Deferred: none. Words: no new sentence.
 Size (session_018XJZd3Y6SC5rJeKSargNwt): test runs 6, module lines 4358
+
+## J38 · COMPLETE
+
+COMPLETE job 65 (G124b): R115 met on the undeclared, overrunning and short-declared paths; title read only from a one-buffer whole (else null, stated in R115); R115 test non-vacuous (red on 879a7ce60f, 3 reds). Details, tests (325/325), checks and Size in the record's Job 65 section. Requirement R115 amended in build/requirements/acquisition.md (ownership lists that one file, per B3/B4). One claim not measured: the undeclared join's resident peak depends on lazy zero-fill commit.
