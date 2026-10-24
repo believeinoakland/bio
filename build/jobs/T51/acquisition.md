@@ -565,3 +565,13 @@ Until the rows merge I code `boundOf("capture","keep_bytes")` etc.; my tests for
 
 **Stale generated artifacts** (BOB regenerates): `bio-plane/dist/bio-plane.bundled.mjs`, `.bundle.json`, `agent-worker/dist/*` list `src/acquisition/index.mjs` and `unpack.mjs` as inputs.
 **New files**: `src/acquisition/range.mjs` (in my `paths`), tests `r9-*.test.mjs` (7 files).
+
+## J35 · BLOCKED
+
+BLOCKED (cause: context). Past half my window after the reading set (~550 KB) and eight causes; I finish here and end my turn. All pushed on job/T51/acquisition (commit "registrar callers (R116), failed fetch listing (N1), record"); the record's "Fix round 9" section lists everything.
+
+Done and green (module suite 309 tests, 308 pass, 1 red by name): R113 `readRange` (G127d), R121 (G129e), R119 (G138), R120 (G131g), R118 (G137c, except its DOM-bound test, red by name until `render.dom_bytes` merges), R115 (G124b), R116 registrar callers (G126f/G126g callers) and N1 (K4853).
+
+Remaining for my restart, in order: (1) R114 constants from `boundOf` — needs RUNTIME-LIMITS #9's three rows merged and your CHANGE (B37); (2) R117 a pending render held as a job row (G126g); (3) R101 / G130c format from head AND tail through `readRange`; (4) impact users, format/architecture/coverage/words/ownership checks, Size line, COMPLETE.
+
+Two things for you: (a) the interface `readRange` takes the store first (`readRange(store, sha, offset, length)`), as every act of this module does — tell me if the callers should have it bound instead. (b) Generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json`, `agent-worker/dist/*` (inputs `src/acquisition/index.mjs`, `unpack.mjs`).
