@@ -305,3 +305,13 @@ TESTS (real provider): g83-begin 3/3 green (T5; was red first); requirements.tes
 CHECKS: format 0, architecture 0, coverage 73/73, ownership 0 (5 files), words 0 failures. Impact lists 64 modules, only journey-check uses installer.
 DEFERRED: none. FOR BOB: (1) `newgroup/dist/newgroup.bundled.mjs` is stale (regenerate; its freshness test is red until then). (2) A dedicated design key for the unreadable-settings stop would replace reusing `installer.keys.unread` as the {said} fill (J24). (3) R83 and R17's "not yet met" marks can be struck.
 Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 16, module lines 2172
+
+## J26 · QUESTION
+
+Two readings I code on, until you correct them (I carry on meanwhile).
+
+(1) installer-steps R43-R45 interface, as I read it (job 72 has pushed no code yet): `storageEntitlement(token, acctId)` -> `{state: "on"|"not_entitled"|"permission"|"unknown", said?}` (R43); `addressState(token, acctId, slug)` -> `{sub: <prefix>|null, proposed: <slug>|null}` (R44; `proposed` is null when the account has a prefix); `registerSubdomain(token, acctId, name)` -> `{ok: true}` | `{ok: false, taken: true}`, other refusals thrown with Cloudflare's message; `ensureSubdomain(token, acctId, slug)` still answers `{sub, registered}` with `registered` null and registers nothing (I pass no `offer`); `missingScopes(granted, needed)` -> array of the `needed` names absent from `granted` (the token response's scope string, or null when it states none; I skip the comparison for null). `needed` is the installer's own list: SCOPES less `account-logs.read` and `connectivity-directory.bind`. If job 72 shapes any of these otherwise, tell me and I follow; in my tests a temporary stand-in of exactly this, not committed.
+
+(2) Containers: Cloudflare's measured answer codes are not in hand (the diagnosis says "not documented"; K4942's measurement is owed). I decide by `e.code` against one exported table in `newgroup/src/ready.mjs` (permission: 10000, 9109; plan: 100328, the one plan refusal code measured so far; anything else is "could not tell", stated), each marked "documented shape; BOB measures on the rehearsal account (K4942)". There is no "off" state any more (no documented switch): the old words-regex arm goes. Replace the plan code (and add any "off" code) in that one table when you measure.
+
+(3) Words: B25 says each new sentence is `localize`d at its use; `checks/words.mjs` reports a `marker` finding for every `localize` call in a drawn-screen module and `installer` is one (DRAWN_MODULES). My previous job refused for that reason (J25). I follow B25 and will list the marker findings (one per new key) in my record as expected, not as defects. Say if you want otherwise.
