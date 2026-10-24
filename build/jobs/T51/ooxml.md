@@ -70,3 +70,20 @@ Rows (kind, name: standard / alpha / protective; key `limit.<kind>.<name>`), the
 5. `office`, `piece_chars`: 8,388,608 in all three columns. R35's "carrying at most 8 MiB" before `piece_unbounded` (today the literal `TEXT_PIECE_MAX_CHARS`).
 
 The other ceilings have rows already: archive.members (ARCHIVE_ENTRIES_MAX and ARCHIVE_TREE_ENTRIES_MAX), archive.unpacked_bytes (ARCHIVE_TOTAL_MAX and ARCHIVE_TREE_TOTAL_MAX), archive.ratio, archive.depth, archive.directory, archive.name, office.entries. If you prefer other names or figures, tell me; I use what you add.
+
+## J6 · COMPLETE
+
+COMPLETE · round 9 (B3, B5, B7). Causes, each with its failing-first test (round9.test.mjs, seen RED on the old source: 24 of 26 failed, e.g. `RangeError: Invalid code point 1114112` at String.fromCodePoint; `decodeText is not a function`; `1972 against 69` fetches for the shuffled listing; the unterminated-tag part 9.4 s) then green (99 of 99 in the module):
+- G131g (R36): `decodeText` exported, owner; every part this module decodes goes through it; `readPartPieces` decodes by BOM/layout/prolog (ENCODING_UNSUPPORTED named).
+- G133c (R37): bad numeric references and lone surrogates make core/rels/content-types unparseable, final, never a throw; tag scan is linear.
+- G125d, G125h (R3, R5, R31): OFFICE_ENTRIES_MAX, ARCHIVE_DIRECTORY_MAX, ARCHIVE_NAME_MAX in `readContainer`; ratio check in `readPart`; MEMBER_ENCRYPTED; new STRUCTURAL_PART_MAX (8 MiB, K4859) for the XML parts the module decodes itself.
+- G124c part, G124g, G124 quotes (R6, R30, R35): every ceiling through `boundOf`, no literal; `final: true` on every refusal carrying `limit`.
+- G130e (R10): dotx, potx, ppsx rows. G130c (R11): `discriminate` and `readPart` take a range source; same answer as whole bytes, reads only structures.
+- G133e (R38): local headers read in physical order; 10,001 entries refused.
+- G126d: audit test per container kind (R7), already holding.
+- B5: `readPartPieces` awaits the promise `onPiece` returns (test).
+Proposed wording for BOB (R5/R31): readPart also answers MEMBER_ENCRYPTED, ARCHIVE_RATIO_MAX and, for the structural XML parts, STRUCTURAL_PART_MAX {name, declared, limit}; every refusal that carries `limit` also carries `final: true` (R31's literal shape lacks it). R23: the one import is `./read-bounds.mjs` (`boundOf`). R11: a range source that cannot be read answers `source_unreadable`. R3: entries carry a non-enumerable `flags`. ARCHIVE_LIMITS gains OFFICE_ENTRIES_MAX, ARCHIVE_DIRECTORY_MAX, ARCHIVE_NAME_MAX; STRUCTURAL_PART_MAX exported. Uppercase `&#X` is not an XML reference and is refused. xltx is not in R10 and is not read.
+Deferred: none. Other modules: none. New files outside paths: none. Stale generated artifacts: none known.
+Tests: module 99/99; users green: office-readers 115, odf-reader+format-registry 117, csv-reader+doc-clean+provenance+attestation 301 (1 skipped), capture-sources+site-profiles 117; file-safety R24 words and reading-pipeline BUDGET-2024-APP memory (2) are the named inherited/PDF reds; acquisition R95 passes alone.
+Checks: format 0, architecture 0, coverage 38/38, ownership 0, words: no ooxml finding.
+Size (session_0189TCqWsfgZ58Dcm8TZihQh): test runs 14, module lines 2480
