@@ -31,6 +31,7 @@ import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL
 import { evidenceAbsent } from "../capture/ops.mjs";
 import { readRange } from "../acquisition/index.mjs";
 import { boundOf } from "../read-bounds.mjs";
+import { PLATFORM_FIGURES } from "../byte-ledger.mjs";
 import { say } from "./words.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
@@ -89,9 +90,19 @@ function cut(cells, interpreted, ats, max, entryNext = null) {
 /** (G41; R96) Whether a string is over `limit` UTF-8 bytes, answered without counting when its length decides it (a UTF-16 unit is at most three bytes). */
 const overBytes = (s, limit) => typeof s === "string" && s.length > limit / 3 && (s.length > limit || utf8Bytes(s) > limit);
 
-/* R22 (CONTENT-SEARCH-DESIGN §4.3, M-20): the index's per-capture bounds. */
+/* R22 (CONTENT-SEARCH-DESIGN §4.3, M-20): what one piece of a read asks the reader for (its `unitsBudget` and `maxUnits`, reading-pipeline R40) and
+   what one page of `unitsOf` answers (R36). (fix round 9, G128f; R22, R99) Neither bounds a write any more: the writer cuts and drops no unit, and the
+   index grows to the last line, in batches of LAND_BATCH_BYTES. */
 export const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 export const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
+/** (fix round 9, G128; R99; K4838 (4); R-GATE) The most UTF-8 bytes of unit text one batch lands in one transaction: runtime-limits' `PLATFORM_FIGURES`
+ *  entry, 1 MiB until BOB records P-M9 (far below the 2,098,176-byte value bound; a 10,000-row write blocks the object about 2.8 s). A unit over it lands
+ *  alone in its own batch, never cut. */
+export const LAND_BATCH_BYTES = PLATFORM_FIGURES.LAND_BATCH_BYTES.value;
+/** (fix round 9, G128j; R105 (b)) The shape of reading this module writes, stated on every reading it writes (`readings.reading_shape`): 9 is fix round
+ *  9's (the units land whole in batches, every part with its kind, completeness from the counters, the stored PDF reading completed by its pieces). A
+ *  reading stored with none, or an older one, was written by an older reader and is re-read by `migrateReadings` when it is in one of the old shapes. */
+export const READING_SHAPE = 9;
 /** (fix round 6, G38; R93, R94) what one answer of `op=reading` carries: a page of units holds about 1 MiB of unit text (a unit over it alone
  *  on its page), and a key of the stored reading over 256 KiB (a sheet's `cells`, 11.8 MB for a 1 MB CSV) is named, never carried. */
 export const READING_PAGE_BYTES = 1048576;
@@ -155,7 +166,16 @@ const ADDITIVE_COLUMNS = [
   ["capture_text_state", "ended_why", "TEXT"],
   /* R101 (K4904 (1)): the windows stepped past because they killed their reader three times, `[{at, why}]` (JSON), stated by `completeness` */
   ["capture_text_state", "stated", "TEXT"],
+  /* R107 (fix round 9, G134d, G128h): a unit's kind (reading-pipeline R47's closed list; null for a unit stored before, or one no reader named), a
+     sheet block's row of each line (`lineRows`, JSON) and its cells' `undetermined` list (JSON); null when the unit carries none */
+  ["capture_text", "kind", "TEXT"], ["capture_text", "line_rows", "TEXT"], ["capture_text", "undetermined", "TEXT"],
+  /* R105 (b) (fix round 9, G128j): the shape of reading the writer that stored it wrote (READING_SHAPE); null for a reading stored before */
+  ["readings", "reading_shape", "INTEGER"],
 ];
+/* R99 (fix round 9, G128; plan 2c item 1): batch idempotence, `(sha, kind, batch)`, the table the plan names beside the job row. Created here, with the
+   plan's columns, until plane-2's job table lands it (the same statement, IF NOT EXISTS). */
+const JOB_BATCHES_DDL = `CREATE TABLE IF NOT EXISTS job_batches (sha TEXT NOT NULL, kind TEXT NOT NULL, batch TEXT NOT NULL, landed_at TEXT NOT NULL,
+                                                         PRIMARY KEY (sha, kind, batch))`;
 
 /* ---- REC-36 / REC-40: the name terms (R19, R37), and the term fold (R59, N108): `reading_ref_terms.term` is exactly
    `labelTerms` of its source string, so a module matching a name against it folds with these two. ---- */
@@ -589,6 +609,7 @@ export class Extraction {
       }
     }
     addColumns();
+    this.#sql.exec(JOB_BATCHES_DDL);
     /* REC-91: the text index is EXTERNAL CONTENT over `capture_text`, rowid aligned, kept by triggers (a plain
        `DELETE FROM capture_text_fts` answers SQLITE_CORRUPT_VTAB on workerd, measured). `INSERT OR REPLACE` into
        `capture_text` fires no delete trigger, so the writer deletes and plainly inserts (R22). Here and not in the
@@ -973,20 +994,21 @@ export class Extraction {
     const entry = this.#ocrEntry(digest, out.reading);
     let owing = null;
     const stated = skip && out.stated && typeof out.stated === "object" ? { at: st.read_through ?? null, why: String(out.stated.why || "UNIT_KILLED_READER").slice(0, 80) } : null;
-    const wrote = this.core.transact(() => {
-      const now = this.#one(`SELECT cursor FROM capture_text_state WHERE capture_sha=? AND more=1`, digest);
-      if (!now || now.cursor !== st.cursor) return null;
-      const w = this.indexUnits(bundleId, digest, units, (out.reading || safeJson((this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest) || {}).reading) || {}).text_source ?? null,
-        { append: !restart, more: pieceOf(out) });
-      /* the stated window is kept with the index state (R-SILENT: `completeness` says it), counted skipped */
-      if (stated) {
-        const had = safeJson((this.#one(`SELECT stated FROM capture_text_state WHERE capture_sha=?`, digest) || {}).stated);
-        this.#sql.exec(`UPDATE capture_text_state SET stated=?, state='partial', skipped_named=skipped_named+1 WHERE capture_sha=?`,
-                       JSON.stringify([...(Array.isArray(had) ? had : []), stated]), digest);
-      }
-      if (entry) owing = via.owe(entry);
-      return w;
-    });
+    /* (fix round 9, G128f; R99) the piece's units land in batches, each in its own transaction keyed by the piece's cursor, so a kill between two batches
+       resumes from the next; the state moves to the piece's cursor last, only while it still stands at the one this piece was read from */
+    const cursorStands = () => { const now = this.#one(`SELECT cursor FROM capture_text_state WHERE capture_sha=? AND more=1`, digest); return !!now && now.cursor === st.cursor; };
+    if (!cursorStands()) return left("READING_HELD");
+    const wrote = this.indexUnits(bundleId, digest, units, (out.reading || safeJson((this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest) || {}).reading) || {}).text_source ?? null,
+      { append: !restart, more: pieceOf(out), batchKey: `p:${restart ? "start" : st.cursor}`, guard: cursorStands,
+        after: () => {
+          /* the stated window is kept with the index state (R-SILENT: `completeness` says it), counted skipped */
+          if (stated) {
+            const had = safeJson((this.#one(`SELECT stated FROM capture_text_state WHERE capture_sha=?`, digest) || {}).stated);
+            this.#sql.exec(`UPDATE capture_text_state SET stated=?, state='partial', skipped_named=skipped_named+1 WHERE capture_sha=?`,
+                           JSON.stringify([...(Array.isArray(had) ? had : []), stated]), digest);
+          }
+          if (entry) owing = via.owe(entry);
+        } });
     if (!wrote) return left("READING_HELD");
     if (stated) {
       const st2 = { stated };
@@ -1571,27 +1593,36 @@ export class Extraction {
       cals.length ? JSON.stringify(cals) : null);
   }
 
-  /** R22: the text index. The capture's rows (and its named gaps and state) are deleted first, even when no unit
-   *  is offered; blank units dropped (D-531); the rest ordered by `seq` (a caller's order is not the record's);
-   *  each capped at CAPTURE_TEXT_UNIT_CAP (`truncated`, OR'd with the wire's own cut, D-685); a capture holds at
-   *  most CAPTURE_TEXT_CAPTURE_UNIT_BOUND units and CAPTURE_TEXT_CAPTURE_BOUND bytes, the rest counted over bound;
-   *  a unit with no extent kind, or an address already written, counted unaddressable. N28: each unit's chain kind
-   *  is `text-chain.chainKindFor` for its page (text-chain R81), the document's last step for a unit with no page
-   *  grain, `undetermined` when neither can be said. D-724: every unit skipped is named, as runs, the wire's runs
-   *  read beside this loop's. The answer gives `offered`, `written`, `truncated`, `over_bound` (with the wire's own
-   *  count), `unaddressable`, the chain kind, and `skipped`. */
-  indexUnits(bundleId, captureSha, units, chain, { wireOverBound = 0, wireSkipped = null, more = null, append = false } = {}) {
-    /* (fix round 6, G13; R90) `append`: the next piece of a text read in pieces. The capture's earlier units, named gaps and
-       counts stay and this piece's are added to them, the bound (R22) applying to each piece in turn, never to the capture. */
+  /** R22, R99, R107: the text index. The capture's rows (and its named gaps, state and landed batches) are deleted first, even when no unit is offered;
+   *  blank units dropped (D-531); the rest ordered by `seq` (a caller's order is not the record's) and stored whole: (fix round 9, G128d, G128f) no unit
+   *  is cut and no bound of units or bytes drops one, a unit over CAPTURE_TEXT_UNIT_CAP having been chunked into consecutive units by the reader
+   *  (reading-pipeline R47); `truncated` is only the wire's own cut (D-685), counted, never made here. A unit with no extent kind, or an address already
+   *  written, counted unaddressable. (R99) The units land in batches of at most LAND_BATCH_BYTES of text (a unit over it alone), each batch in its own
+   *  `record-core.transact` with its `job_batches` row `(sha, "reading", <batchKey>:<k>)`: a batch landed already is not landed again, so a retried or
+   *  re-entered piece leaves each unit once, and a kill between two batches resumes from the next (inside a caller's transaction the batches are its
+   *  savepoints and commit with it). (R107) Each unit's `kind` (reading-pipeline R47: `body`, `footnote`, ...; null when the producer names none), a
+   *  sheet block's `lineRows` and its cells' `undetermined` list are stored beside its extent. N28: each unit's chain kind is `text-chain.chainKindFor`
+   *  for its page (text-chain R81), the document's last step for a unit with no page grain, `undetermined` when neither can be said. D-724: the runs the
+   *  wire skipped are named. The state row is written last, in one transaction with the caller's `guard` (asked first: false writes no state and the
+   *  answer is null, the batches landed staying, keyed) and `after` (the caller's writes beside the state). The answer gives `offered`, `written`, `truncated`, `over_bound` (the wire's own count), `unaddressable`, the chain kind,
+   *  `skipped` and `batches` (landed, and already landed). */
+  indexUnits(bundleId, captureSha, units, chain, { wireOverBound = 0, wireSkipped = null, more = null, append = false, batchKey = "w", guard = null,
+                                                   after = null } = {}) {
+    /* (fix round 6, G13; R90) `append`: the next piece of a text read in pieces. The capture's earlier units, named gaps and counts stay and this
+       piece's are added to them. */
     const before = append ? this.#one(`SELECT * FROM capture_text_state WHERE capture_sha=?`, captureSha) : null;
     if (!append) {
       this.#sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
       this.#sql.exec(`DELETE FROM capture_text_skipped WHERE capture_sha=?`, captureSha);
+      this.#sql.exec(`DELETE FROM job_batches WHERE sha=? AND kind='reading'`, captureSha);
     }
     const list = Array.isArray(units) ? units : [];
     const ordered = list
       .filter((u) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0)
-      .map((u, i) => ({ extent: u.extent, text: u.text, seq: Number.isInteger(u.seq) ? u.seq : i, wireCut: u.truncated === true }))
+      .map((u, i) => ({ extent: u.extent, text: u.text, seq: Number.isInteger(u.seq) ? u.seq : i, wireCut: u.truncated === true,
+                        kind: typeof u.kind === "string" && u.kind ? u.kind : null,
+                        lineRows: Array.isArray(u.lineRows) && u.lineRows.every(Number.isInteger) ? u.lineRows : null,
+                        undetermined: Array.isArray(u.undetermined) && u.undetermined.length ? u.undetermined : null }))
       .sort((a, b) => a.seq - b.seq);
     const docKind = checkChain(chain) ? null : terminalStep(chain);
     const kindOf = (extent) => {
@@ -1599,42 +1630,55 @@ export class Extraction {
         ? chainKindFor(chain, extent.page) : (docKind && !chain.some((s) => s && s.extent) ? docKind : null);
       return k || "undetermined";
     };
-    let bytes = 0, written = 0, truncatedUnits = 0, overBound = 0, unaddressable = 0;
+    let bytes = 0, written = 0, truncatedUnits = 0, unaddressable = 0;
     const kinds = new Set(), unaddressed = [];
-    const seen = new Set();
-    const runs = [];
-    let run = null;
-    const skip = (u, extent) => {
-      if (run) { run.last = u.extent; run.lastExtent = extent; run.last_seq = u.seq; run.units++; return; }
-      run = { first: u.extent, firstExtent: extent, first_seq: u.seq, last: u.extent, lastExtent: extent,
-              last_seq: u.seq, units: 1, side: "store" };
-      runs.push(run);
-    };
+    /* the addresses to write, in order, each checked against this write and (appending) the capture's earlier units */
+    const seen = new Set(), rows = [];
     for (const u of ordered) {
       const kind = u.extent && typeof u.extent === "object" && typeof u.extent.kind === "string" ? u.extent.kind : null;
       if (!kind) { unaddressable++; unaddressed.push({ seq: u.seq, why: say("extraction.why.unit_names_extent") }); continue; }
       const extent = canonicalExtent(u.extent);
-      if (seen.has(extent) || (append && this.#one(`SELECT 1 AS x FROM capture_text WHERE capture_sha=? AND extent_kind=? AND extent=?`, captureSha, kind, extent))) {
-        unaddressable++; unaddressed.push({ seq: u.seq, extent: u.extent, why: say("extraction.why.earlier_unit_holds") }); continue;
-      }
+      if (seen.has(extent)) { unaddressable++; unaddressed.push({ seq: u.seq, extent: u.extent, why: say("extraction.why.earlier_unit_holds") }); continue; }
       seen.add(extent);
-      const full = u.text;
-      const capped = full.length > CAPTURE_TEXT_UNIT_CAP ? full.slice(0, CAPTURE_TEXT_UNIT_CAP) : full;
-      const size = new TextEncoder().encode(capped).length;
-      if (written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND || bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) {
-        overBound++; skip(u, extent); continue;
-      }
-      bytes += size; run = null;
-      const cut = capped.length < full.length || u.wireCut;
-      if (cut) truncatedUnits++;
-      const chainKind = kindOf(u.extent);
-      kinds.add(chainKind);
-      this.#sql.exec(
-        `INSERT INTO capture_text (capture_sha,bundle_id,extent_kind,extent,ref,seq,text,truncated,chain_kind)
-         VALUES (?,?,?,?,?,?,?,?,?)`,
-        captureSha, bundleId, kind, extent, describeExtent(u.extent), u.seq, capped, cut ? 1 : 0, chainKind);
-      written++;
+      rows.push({ u, kind, extent, size: utf8Bytes(u.text) });
     }
+    /* R99: whole units, in order, at most LAND_BATCH_BYTES of text a batch */
+    const batches = [];
+    for (const r of rows) {
+      const last = batches[batches.length - 1];
+      if (last && last.size + r.size <= LAND_BATCH_BYTES) { last.rows.push(r); last.size += r.size; }
+      else batches.push({ rows: [r], size: r.size });
+    }
+    let landed = 0, already = 0, stopped = false;
+    const held = new Set();
+    batches.forEach((b, k) => {
+      const id = `${batchKey}:${k}`;
+      if (stopped) return;
+      this.core.transact(() => {
+        /* a piece read while the state moved lands nothing more (the caller's guard, asked in each batch) */
+        if (typeof guard === "function" && guard() === false) { stopped = true; return; }
+        if (this.#one(`SELECT 1 AS x FROM job_batches WHERE sha=? AND kind='reading' AND batch=?`, captureSha, id)) { already++; return; }
+        for (const { u, kind, extent } of b.rows) {
+          if (append && this.#one(`SELECT 1 AS x FROM capture_text WHERE capture_sha=? AND extent_kind=? AND extent=?`, captureSha, kind, extent)) {
+            unaddressable++; held.add(u); unaddressed.push({ seq: u.seq, extent: u.extent, why: say("extraction.why.earlier_unit_holds") }); continue;
+          }
+          const chainKind = kindOf(u.extent);
+          this.#sql.exec(
+            `INSERT INTO capture_text (capture_sha,bundle_id,extent_kind,extent,ref,seq,text,truncated,chain_kind,kind,line_rows,undetermined)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+            captureSha, bundleId, kind, extent, describeExtent(u.extent), u.seq, u.text, u.wireCut ? 1 : 0, chainKind, u.kind,
+            u.lineRows ? JSON.stringify(u.lineRows) : null, u.undetermined ? JSON.stringify(u.undetermined) : null);
+        }
+        this.#sql.exec(`INSERT INTO job_batches (sha, kind, batch, landed_at) VALUES (?, 'reading', ?, ?)`, captureSha, id, stampInstant("second"));
+        landed++;
+      });
+    });
+    /* what the index holds of this write (a batch an earlier try landed counts as written: its units are in the index) */
+    for (const { u, size } of rows) {
+      if (held.has(u)) continue;
+      bytes += size; written++; kinds.add(kindOf(u.extent)); if (u.wireCut) truncatedUnits++;
+    }
+    const runs = [];
     for (const w of (Array.isArray(wireSkipped) ? wireSkipped : [])) {
       const ok = (e) => e && typeof e === "object" && typeof e.kind === "string";
       if (!w || !ok(w.first) || !ok(w.last) || !Number.isInteger(w.first_seq) || !Number.isInteger(w.last_seq)
@@ -1642,43 +1686,50 @@ export class Extraction {
       runs.push({ first: w.first, firstExtent: canonicalExtent(w.first), first_seq: w.first_seq,
                   last: w.last, lastExtent: canonicalExtent(w.last), last_seq: w.last_seq, units: w.units, side: "wire" });
     }
-    let skippedNamed = 0;
-    const skipped = [];
-    for (const r of runs) {
-      const fromRef = describeExtent(r.first), toRef = describeExtent(r.last);
-      this.#sql.exec(
-        `INSERT INTO capture_text_skipped (capture_sha,bundle_id,first_seq,last_seq,units,first_extent,first_ref,last_extent,last_ref,side)
-         VALUES (?,?,?,?,?,?,?,?,?,?)`,
-        captureSha, bundleId, r.first_seq, r.last_seq, r.units, r.firstExtent, fromRef, r.lastExtent, toRef, r.side);
-      skippedNamed += r.units;
-      skipped.push({ from: fromRef, to: toRef, units: r.units, side: r.side,
-                     first: { extent: r.first, seq: r.first_seq }, last: { extent: r.last, seq: r.last_seq } });
-    }
     const wire = Number.isInteger(wireOverBound) && wireOverBound > 0 ? wireOverBound : 0;
     const offered = ordered.length + wire;
-    const over = overBound + wire;
+    const over = wire;
     const chainKind = kinds.size === 1 ? [...kinds][0] : kinds.size ? "mixed" : (docKind || "undetermined");
     /* the state is the capture's, so a piece adds to what the earlier pieces counted; "whole" only when nothing is left over, skipped or
        unaddressable and nothing more follows (R36), so a capture read through its first piece alone is never stated whole */
     const sum = (k, now) => (before ? Number(before[k] || 0) : 0) + now;
-    const [offeredAll, writtenAll, overAll, unaddrAll, truncAll, skippedAll] = [sum("offered", offered), sum("written", written),
-      sum("over_bound", over), sum("unaddressable", unaddressable), sum("truncated", truncatedUnits), sum("skipped_named", skippedNamed)];
-    const followed = !!(more && typeof more === "object" && more.more === true && more.cursor != null);
-    /* (R101, K4904 (1)) a window stepped past is kept across the pieces that follow, and the index is never whole while it stands */
-    const statedKept = append && before && typeof before.stated === "string" && Array.isArray(safeJson(before.stated)) && safeJson(before.stated).length ? before.stated : null;
-    const state = !offeredAll ? "none" : (overAll || unaddrAll || followed || statedKept) ? "partial" : "whole";
-    const prog = more && typeof more === "object" ? more : null;
-    const keptChain = before && before.chain_kind && before.chain_kind !== chainKind ? "mixed" : chainKind;
-    this.#sql.exec(
-      `INSERT OR REPLACE INTO capture_text_state (capture_sha,bundle_id,state,offered,written,over_bound,unaddressable,
-                                                  truncated,skipped_named,chain_kind,at,more,cursor,read_through,total,words_read,stated)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-      captureSha, bundleId, state, offeredAll, writtenAll, overAll, unaddrAll, truncAll, skippedAll, keptChain,
-      stampInstant("second"), followed ? 1 : 0, followed ? String(prog.cursor) : null,
-      prog && Number.isFinite(prog.read_through) ? prog.read_through : null, prog && Number.isFinite(prog.total) ? prog.total : null,
-      prog ? (before && Number.isFinite(before.words_read) ? before.words_read : 0) + (Number.isFinite(prog.words) ? prog.words : 0) : null, statedKept);
+    let skippedNamed = 0;
+    const skipped = [];
+    const wrote = this.core.transact(() => {
+      if (typeof guard === "function" && guard() === false) return null;
+      for (const r of runs) {
+        const fromRef = describeExtent(r.first), toRef = describeExtent(r.last);
+        this.#sql.exec(
+          `INSERT INTO capture_text_skipped (capture_sha,bundle_id,first_seq,last_seq,units,first_extent,first_ref,last_extent,last_ref,side)
+           VALUES (?,?,?,?,?,?,?,?,?,?)`,
+          captureSha, bundleId, r.first_seq, r.last_seq, r.units, r.firstExtent, fromRef, r.lastExtent, toRef, r.side);
+        skippedNamed += r.units;
+        skipped.push({ from: fromRef, to: toRef, units: r.units, side: r.side,
+                       first: { extent: r.first, seq: r.first_seq }, last: { extent: r.last, seq: r.last_seq } });
+      }
+      const [offeredAll, writtenAll, overAll, unaddrAll, truncAll, skippedAll] = [sum("offered", offered), sum("written", written),
+        sum("over_bound", over), sum("unaddressable", unaddressable), sum("truncated", truncatedUnits), sum("skipped_named", skippedNamed)];
+      const followed = !!(more && typeof more === "object" && more.more === true && more.cursor != null);
+      /* (R101, K4904 (1)) a window stepped past is kept across the pieces that follow, and the index is never whole while it stands */
+      const statedKept = append && before && typeof before.stated === "string" && Array.isArray(safeJson(before.stated)) && safeJson(before.stated).length ? before.stated : null;
+      const state = !offeredAll ? "none" : (overAll || unaddrAll || followed || statedKept) ? "partial" : "whole";
+      const prog = more && typeof more === "object" ? more : null;
+      const keptChain = before && before.chain_kind && before.chain_kind !== chainKind ? "mixed" : chainKind;
+      this.#sql.exec(
+        `INSERT OR REPLACE INTO capture_text_state (capture_sha,bundle_id,state,offered,written,over_bound,unaddressable,
+                                                    truncated,skipped_named,chain_kind,at,more,cursor,read_through,total,words_read,stated)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        captureSha, bundleId, state, offeredAll, writtenAll, overAll, unaddrAll, truncAll, skippedAll, keptChain,
+        stampInstant("second"), followed ? 1 : 0, followed ? String(prog.cursor) : null,
+        prog && Number.isFinite(prog.read_through) ? prog.read_through : null, prog && Number.isFinite(prog.total) ? prog.total : null,
+        prog ? (before && Number.isFinite(before.words_read) ? before.words_read : 0) + (Number.isFinite(prog.words) ? prog.words : 0) : null, statedKept);
+      if (typeof after === "function") after();
+      return state;
+    });
+    if (wrote === null) return null;
     return { offered, written, bytes, truncated: truncatedUnits, over_bound: over, wire_over_bound: wire,
-             unaddressable, unaddressed, chain_kind: chainKind, skipped, skipped_named: skippedNamed, state };
+             unaddressable, unaddressed, chain_kind: chainKind, skipped, skipped_named: skippedNamed, state: wrote,
+             batches: { landed, already, bytes: LAND_BATCH_BYTES } };
   }
 
   /** R61 (N294, K337): a member's authored observation (provenance R28) indexed as its capture's own text, inside
