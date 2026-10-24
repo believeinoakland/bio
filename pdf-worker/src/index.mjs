@@ -49,8 +49,9 @@ if (typeof Math.sumPrecise !== "function") {
 }
 
 import { getDocumentProxy, extractText } from "unpdf";
-import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs";
+import { openPdfRange } from "../../bio-plane/src/pdfstructure.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { boundOf, statement } from "../../bio-plane/src/read-bounds.mjs";
 
 /* The member's surface, declared: hand it a capture, get back the I2
  * structure+text shape, and ask it which build is answering. `fleet-member.json`
@@ -65,16 +66,16 @@ export const SURFACE = {
   version:   { method: "GET",  mutating: false },
 };
 
-/* The Tier-2 envelope. pdf.js pulls the WHOLE document into memory, so a document over this size is declined rather
- * than risking the Worker memory ceiling — and it is declined HONESTLY: the text field comes back `undetermined`
- * (reason "over_envelope", with `bytes` and `limit`), never silently truncated (I6), so the caller can state the size
- * as the reason. MEASURED (G34, T51; `test/envelope-memory.probe.mjs`, raw workerd with the V8 heap limited as the 128 MB
- * isolate limits it): the smallest old space in which `POST /structure` reads at tier 2 is 20 MB for a 23.8 MiB text
- * file in WinAnsi fonts and 64 MiB files of 5 and 300 pages, 21 / 30 / 39 MB for 23 MiB files of 400 / 1,000 / 1,600
- * text-dense pages (the most pages tier 1's own refusal, pdf-reader R42, lets through at that size); heap plus the
- * file's bytes is at most 84 MB for a 64 MiB file, under 128 MB with 44 MB left for the isolate itself. 64 MiB is the
- * bound; tier 1 refuses what is larger than about 75 MiB before this check is reached. Overridable via env. */
-const DEFAULT_MAX_PDF_BYTES = 64 * 1024 * 1024;
+/* The Tier-2 envelope (R8, R44). pdf.js pulls the WHOLE document into memory, so a document over this size is declined
+ * rather than risking the Worker memory ceiling — and it is declined HONESTLY: the text field comes back `undetermined`
+ * (reason "over_envelope", with `bytes` and `limit`), never silently truncated (I6), so the caller can state the size as
+ * the reason. The figure is the table's (`READ_BOUNDS`, pdf / worker_bytes; runtime-limits R29-R31), not this module's.
+ * MEASURED (G34, T51; `test/envelope-memory.probe.mjs`, raw workerd with the V8 heap limited as the 128 MB isolate limits
+ * it): the smallest old space in which `POST /structure` reads at tier 2 is 20 MB for a 23.8 MiB text file in WinAnsi
+ * fonts and 64 MiB files of 5 and 300 pages, 21 / 30 / 39 MB for 23 MiB files of 400 / 1,000 / 1,600 text-dense pages;
+ * heap plus the file's bytes is at most 84 MB for a 64 MiB file, under 128 MB with 44 MB left for the isolate itself.
+ * Overridable via env. */
+const DEFAULT_MAX_PDF_BYTES = boundOf("pdf", "worker_bytes");
 
 /* D-478 — THE NAMESPACES THIS MEMBER WILL READ FROM: EXACTLY `bio` OR `scratch`, AND NOTHING ELSE.
  *
@@ -112,29 +113,57 @@ function overEnvelopeText(bytes, limit) {
   return { document: "", pages: [], undetermined: [marker], counts: { chars: 0, undetermined: 1 } };
 }
 
+/* What tier 2 has done, as counts (R-CLOCK): documents opened by pdf.js and pages decoded. The answer never depends on it. */
+const WORK = { opens: 0, pagesDecoded: 0 };
+export function tier2Work() { return { ...WORK }; }
+
 /* unpdf/pdf.js text, reshaped into the RECORD's terms (fleet rule 1): the same
  * `text` shape Tier 1 emits, not pdf.js's. A page pdf.js recovered nothing for
  * is a no-text-layer (scanned/image) page — OCR territory neither tier provides,
- * NAMED as undetermined rather than returned as a silent blank. */
-async function tier2Text(bytes) {
-  const pdf = await getDocumentProxy(bytes);
-  const { text } = await extractText(pdf, { mergePages: false });
-  const perPage = Array.isArray(text) ? text : [text];
+ * NAMED as undetermined rather than returned as a silent blank. Only the pages
+ * [from, from + count) are decoded (R9, R42); pdf.js opens the document lazily,
+ * so the bytes it decodes are the range's. `open` is false for a range with no page in it. */
+async function tier2Text(bytes, from, count, open) {
   const pages = [];
   const undetermined = [];
-  for (let i = 0; i < perPage.length; i++) {
-    const pageText = perPage[i] || "";
-    const u = [];
-    if (pageText.trim().length === 0) {
-      const marker = { page: i, reason: "no_text_layer", font: null, codes: "", count: 0 };
-      u.push(marker);
-      undetermined.push(marker);
+  if (open) {
+    WORK.opens++;
+    const pdf = await getDocumentProxy(bytes);
+    const last = Math.min(pdf.numPages, from + count);
+    for (let i = from; i < last; i++) {
+      WORK.pagesDecoded++;
+      const content = await (await pdf.getPage(i + 1)).getTextContent();
+      const pageText = content.items.filter((item) => item.str != null).map((item) => item.str + (item.hasEOL ? "\n" : "")).join("");
+      const u = [];
+      if (pageText.trim().length === 0) {
+        const marker = { page: i, reason: "no_text_layer", font: null, codes: "", count: 0 };
+        u.push(marker);
+        undetermined.push(marker);
+      }
+      pages.push({ page: i, text: pageText, undetermined: u });
     }
-    pages.push({ page: i, text: pageText, undetermined: u });
   }
   const document = pages.map((p) => p.text).filter((t) => t.length).join("\n");
   return { document, pages, undetermined, counts: { chars: document.length, undetermined: undetermined.length } };
 }
+
+/* R8 (G124a): the answer for a file over the envelope, made before any parse: tier 1, no text, the size and the limit
+ * stated, and final (a retry reads the same file). The sentence is a stand-in keyed through `localize`; its row is owed. */
+function overEnvelopeAnswer(size, max) {
+  const { key } = statement("pdf", "worker_bytes", size);
+  return json({
+    ok: true, container: "pdf", tier: 1, failure: "final",
+    text: overEnvelopeText(size, max),
+    notes: ["tier2_declined_over_envelope"],
+    refusal: {
+      size, bound: max, key,
+      detail: localize("pdf-worker.index.over_envelope", "this document is {size} bytes and this member reads up to {bound} bytes, so its text was not read here.", { size: String(size), bound: String(max) }),
+    },
+  });
+}
+
+/* R42: `from` and `count`, when named, are non-negative integers. */
+const wholeNumber = (v) => Number.isSafeInteger(v) && v >= 0;
 
 async function handleStructure(req, env) {
   if (typeof env.CAPTURES?.get !== "function")
@@ -157,28 +186,45 @@ async function handleStructure(req, env) {
                   detail: localize("pdf-worker.index.a_capture_is_read_from", "a capture is read from the namespace the caller names, and no namespace by that name exists on any instance this member can be bound to, so nothing was read. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message. This is NOT the same answer as NOT_FOUND, which says the namespace exists and holds no such capture."),
                   asked: store.slice(0, 80), namespaces: [...NAMESPACES] }, 400);
 
+  /* R42: the range asked, checked after R4 and before R5. */
+  if ((body.from !== undefined && !wholeNumber(body.from)) || (body.count !== undefined && !wholeNumber(body.count)))
+    return json({ ok: false, reason: "BAD_RANGE", detail: "from and count must be non-negative whole numbers" }, 400);
+  const from = body.from ?? 0;
+
   // I1 §2: the R2 key shape, promoted here from documentation to a load-bearing
   // dependency with a second consumer. READ ONLY — never head/put/delete.
   const obj = await env.CAPTURES.get(`${store}/captures/${sha}`);
   if (!obj) return json({ ok: false, reason: "NOT_FOUND", capture_sha: sha, store }, 404);
-  const bytes = new Uint8Array(await obj.arrayBuffer());
 
-  // The full I2 baseline (links + structure) from the shared pure-JS extractor.
-  const structure = await extractPdfStructure(bytes);
-  if (!structure.ok) return json(structure, 422); // NOT_A_PDF / NOT_BYTES — stated, not faked.
-
+  /* R6, R8: the size is judged before any parse, and before the body is read when the object states its size. */
   const max = Number(env.MAX_PDF_BYTES) || DEFAULT_MAX_PDF_BYTES;
-  if (bytes.length > max) {
-    structure.text = overEnvelopeText(bytes.length, max);
-    structure.tier = 1;
-    structure.notes = [...structure.notes, "tier2_declined_over_envelope"];
-    return json(structure);
-  }
+  if (Number.isFinite(obj.size) && obj.size > max) return overEnvelopeAnswer(obj.size, max);
+  const bytes = new Uint8Array(await obj.arrayBuffer());
+  if (bytes.length > max) return overEnvelopeAnswer(bytes.length, max);
+
+  /* R6: pdf-reader opens the file once and reads the range asked: no whole-file tier-1 parse beside the tier-2 pass. */
+  const opened = await openPdfRange(bytes);
+  if (!opened.ok) return json(opened, 422); // NOT_A_PDF / NOT_BYTES — stated, not faked.
+  const structure = await opened.range({ from, ...(body.count !== undefined ? { count: body.count } : {}) });
+  structure.notes = [];
+  const asked = body.count ?? Infinity;
+  /* a range with no page in it opens nothing; a document tier 1 found no page in is still opened, for pdf.js may find them */
+  const open = opened.pages === 0 || Math.min(asked, opened.pages - from) > 0;
 
   try {
-    structure.text = await tier2Text(bytes);
+    structure.text = await tier2Text(bytes, from, asked, open);
     structure.tier = 2;
   } catch (e) {
+    if (e && e.name === "PasswordException") {
+      /* R9: a document that needs a user password is not a tier-2 failure; nothing is invented. */
+      structure.text = {
+        document: "", pages: [],
+        undetermined: [{ page: null, reason: "password_required", font: null, codes: "", count: 0 }],
+        counts: { chars: 0, undetermined: 1 },
+      };
+      structure.tier = 1;
+      return json(structure);
+    }
     // Tier 2 itself failed (corruption, a runtime artifact): SAY so, keep the
     // structure, do not crash and do not invent text.
     structure.text = {
