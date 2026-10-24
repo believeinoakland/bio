@@ -69,9 +69,9 @@ test("R48: every C-45 refusal this module answers, at the grammar, the mint and 
 
 test("R48: the extent algebra is text-chain's: its eight kinds (with envelope beside them), A1 notation, canonical and human forms and cited_as, answer for answer", () => {
   assert.equal(CONTENT_EXTENT_A1_RE, textChain.CONTENT_EXTENT_A1_RE, "the one pattern");
-  const { envelope, ...eight } = CONTENT_EXTENT_KINDS;
+  const { envelope, "doc-part": docPart, ...eight } = CONTENT_EXTENT_KINDS;
   assert.deepEqual(eight, textChain.CONTENT_EXTENT_KINDS);
-  assert.ok(envelope && envelope.landed);
+  assert.ok(envelope && envelope.landed && docPart && docPart.landed);
   const extents = [];
   const cells = ["B14", "$b$14", "zz9", "14B", undefined];
   for (const kind of Object.keys(textChain.CONTENT_EXTENT_KINDS))

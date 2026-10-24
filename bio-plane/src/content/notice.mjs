@@ -150,7 +150,7 @@ export function kindAt(held, extent) {
 const LOGICAL = new WeakMap();
 /** An element carried as consecutive chunks (`run` 0, 1, ...) as ONE unit: its chunks' text in order, joined with nothing
  *  (a seam's overlap is a field beside a chunk and never in its text, so it is counted once), `truncated` where a chunk is
- *  or the run does not start at 0 or has a gap. Any other unit as itself. Memoised on the units list. Pure. */
+ *  or the run does not start at 0, has a gap, or is one chunk alone (an element is chunked only past the cap, into two at least). Any other unit as itself. Memoised on the units list. Pure. */
 export function logicalUnits(held) {
   const units = held.units;
   const had = LOGICAL.get(units);
@@ -161,7 +161,7 @@ export function logicalUnits(held) {
     if (u.run === null || u.run === undefined) { out.push(u); continue; }
     const group = [];
     for (let j = i, want = u.run; j < units.length && units[j].extent === u.extent && units[j].run === want; j++, want++) group.push(units[j]);
-    out.push({ ...u, run: null, chunked: true, text: group.map((g) => g.text).join(""), truncated: u.run !== 0 || group.some((g) => g.truncated) });
+    out.push({ ...u, run: null, chunked: true, text: group.map((g) => g.text).join(""), truncated: u.run !== 0 || group.length < 2 || group.some((g) => g.truncated) });
     i += group.length - 1;
   }
   LOGICAL.set(units, out);
