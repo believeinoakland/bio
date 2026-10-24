@@ -4374,7 +4374,7 @@ function inflateProved(src, max, expect) {
 const OBJ_WINDOW = 4096;               // the first look at an object; grown only while its dictionary is unfinished
 const OBJ_WINDOW_MAX = DIRECT_OBJECT_MAX; // an object's dictionary is never read past this (R47)
 const STREAM_MAX = STREAM_CAPS.object_stream; // a cross-reference or object stream, inflated, is never larger (R22)
-const XMP_MAX = 2 * 1024 * 1024;        // nor is an XMP packet read past this
+const XMP_MAX = boundOf("pdf", "xmp");     // nor is an XMP packet read past this (R48)
 const XREF_CHAIN_MAX = 64;
 
 /** The first index of ASCII `needle` in `b` at or after `from`, hopping on its first byte; -1 for none. */

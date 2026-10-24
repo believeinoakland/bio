@@ -349,3 +349,23 @@ Size (session_01VR2yTKx57ew9DXwWoxnBaf): test runs 24, module lines 4964
 ## J12 · BLOCKED
 
 BLOCKED (cause: context). PDF-READER #14 is past half its window. Done and pushed: R8, R9, R12, R22, R41 (page_over_bound), R43, R46, R47, R48 coded and tested (checks: format, architecture, coverage 48/48, ownership all 0 failures). NOT done: R49 `pageSource` (B15/B16), the embedded-file streaming hash, a 40/60 MiB page measure, the last bounds test run, and swapping `XMP_MAX` for `boundOf("pdf","xmp")` after runtime-limits' second merge. All listed under "Next" and "Also owed" in my record. Restart a PDF-READER #15 from the record.
+
+## Completion (fix round 9, job 14, finished by PDF-READER #15, session_016yJWxBnqwtLKmTKCGHKJiL)
+
+Merged `tranche/T51` (runtime-limits' rows 20-22 are in). All code in `bio-plane/src/pdfstructure.mjs` (4,964 -> 5,860 lines); new tests `pagesource.test.mjs` (9, R49), `embedded.test.mjs` (3, R22), `bigpage.test.mjs` (2, R41/R22), `lexer.test.mjs` (4, R41); `memory-child.mjs` gains modes `embedded` and `bigpage`. No other module touched.
+
+- **R49 `pageSource(source, pageIndex)`**: reads the trailer, xref chain (tables, streams, hybrid, object streams) and page tree through `readRange` alone, never scans; a node whose `/Count` equals its kids is flat (the kid at the index is read, the others not); other nodes are skipped by `/Count`. Writes a small PDF (renumbered objects, MediaBox/CropBox/Rotate/Resources inherited into the page, Annots/Parent/Thumb etc. dropped, Page/Pages/Catalog references nulled, streams copied raw with checked `/Length`). Any irregularity (no startxref, `/Encrypt`, bad index, damaged object, lying length or count, tree loop, no MediaBox, failing source) answers `{ok:false, fallback:true, why}`, never throws. Red first (missing export); three mutations each red. Real BUDGET-2024-APP pages 0/700/1353: under 1 MB read of 15.2 MB, text/images/box equal the whole's. Said plainly: an xref stream is read whole, and a compressed object stream holding the page's objects is read whole.
+- **R22 embedded file hashed as it streams**: incremental SHA-256 over the decoder's chunks (unfiltered or one Flate stage, no predictor); other streams keep the held path to the same cap. 60 MiB embedded file: live peak 3.9 MB above baseline (tranche code 60.3 MB), same hash. Exact at every block boundary.
+- **R41/R22 large page**: text pieces kept as flat chunks (`PieceList`, the array stays for a page with a link) and page content lexed from bytes (`tokenizeContentBytes`). A 40 MiB and a 60 MiB page of dense text read in `--max-old-space-size=128` (tranche code dies at 8 MB of such text). 600-case fuzz of random content: answers (whole and range) identical to the tranche's. A page with a link still holds per-glyph boxes (heavier).
+- **R48**: `XMP_MAX` is `boundOf("pdf","xmp")`. R41's BUDGET-2025-PER test is green with the 32 MiB row.
+- Platform check: L not run for R49 (pure bytes; Node with counted `readRange`); the 128 MB heap runs are Node.
+
+**Tests and checks.** `test/m/pdf-reader/` + `pdfstructure.test.mjs`: 190 tests, 189 pass, the one red (PER) green after the merge (memory, title, bounds re-run: 35/35). Users: format-registry 43/43; doc-clean 64/65 (R3 R12 TOO_MANY_ENTRIES, `entries` bound, not mine); file-safety 102/103 (R24, `TOO_LARGE_TO_READ` row, known). format 0, architecture 0, coverage 49 of 49, ownership 0 failures.
+
+**Found elsewhere.** Stale bundles (manifest 14): pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. reading-pipeline job 27's four reds (R46/R43 seam) stand as in the earlier section.
+
+**Proposed requirement lines (BOB writes).** R49 as written is met; add "a node whose /Count equals its kid count is read flat". R41: "a 40 MiB and a 60 MiB page of text read in a 128 MB heap".
+
+**Questions.** None. **Deferred.** None.
+
+Size (session_016yJWxBnqwtLKmTKCGHKJiL): test runs 30, module lines 5860
