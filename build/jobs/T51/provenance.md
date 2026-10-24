@@ -185,3 +185,7 @@ Fix round 9 (B9): G127a, G127c, G127d (`partsOf`), G127e. Commits on job/T51/pro
 
 Deferred: none. Open QUESTION: none.
 Size (session_01PLcYEHrnJ6MSU2YWXJwvkm): test runs 12, module lines 3279
+
+## J11 · COMPLETE
+
+B9 applied (G127a/c/d/e): register key is the whole; register_parts; partsOf; repairParts; R74-R79 met, 9 new tests red then green; provenance 181 pass; checks clean. Other modules' fixtures on the old parts-only register now fail (retrieval-browse, case-disclosures, case-authoring, corpus-export): see J10.
