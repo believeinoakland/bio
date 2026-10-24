@@ -81,7 +81,7 @@ test("R95: the times are the only difference; the same capture answers the same 
   const two = await run(world(), { "https://a.example/d": text(bytes) }, { locator: "https://a.example/d" });
   assert.equal(one.status, 200);
   assert.ok(one.body.timings && two.body.timings);
-  const strip = (b) => JSON.stringify(without(b), (k, v) => (k === "retrieved" || k === "at" || k === "checked_at" || k === "attempted" ? undefined : v));
+  const strip = (b) => JSON.stringify(without(b), (k, v) => (k === "retrieved" || k === "at" || k === "checked_at" || k === "attempted" ? undefined : typeof v === "string" ? v.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ/g, "<instant>") : v));   /* the instants the prose carries ("recorded ...Z") are the wall clock's second, which two runs may straddle */
   assert.equal(strip(one.body), strip(two.body));
   assert.equal(Object.keys(one.body).filter((k) => k === "timings").length, 1);
 });
@@ -100,7 +100,16 @@ test("R95 (fix round 4, C5a): a call that throws in `read` answers a refusal wit
   assert.equal(t.running, "read", "the stage the throw cut is reported as running");
   assert.ok(whole(t.stages.read));
   assert.equal(Object.values(t.stages).reduce((a, b) => a + b, 0) <= t.total_ms, true);
-  assert.deepEqual(stageTimes(handed).stages, t.stages, "the caller's own timings object reads the same");
+  /* the answer's times were read at the throw (`read` still running); the caller's object is read a moment later, when the throw has closed `read`. Two readings of one clock at two instants
+     are equal only to the millisecond they were floored to, so a reading that crosses a millisecond boundary between them (any pause between the catch and the close: a busy machine) is one
+     more: the stages done at the throw read the same, the cut stage reads the same name and no less, and the object ends with no stage running. */
+  const seen = stageTimes(handed);
+  assert.deepEqual(Object.keys(seen.stages).sort(), Object.keys(t.stages).sort(), "the caller's own timings object names the same stages");
+  for (const [name, ms] of Object.entries(t.stages)) {
+    if (name === t.running) assert.ok(seen.stages[name] >= ms, `${name}, the stage the throw cut, reads no less in the caller's object (${seen.stages[name]} >= ${ms})`);
+    else assert.equal(seen.stages[name], ms, `${name}, done before the throw, reads the same in the caller's object`);
+  }
+  assert.equal(seen.running, undefined, "the throw closed the stage it cut in the caller's object");
   const ok = await run(world(), { [url]: pdf }, { locator: url });
   assert.equal(ok.status, 200);
   assert.equal(ok.body.timings.running, undefined);

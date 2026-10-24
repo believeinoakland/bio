@@ -26,6 +26,11 @@ const call = async (cmd, params = {}, body = null) => {
   const r = await mf.dispatchFetch(`https://probe.example/?${q}`, body === null ? {} : { method: "POST", body: body instanceof Uint8Array ? body : JSON.stringify(body) });
   return await r.json();
 };
+/* A part the door answers WITHOUT reading its body (a part already put: `existed`; an upload that is gone: `UPLOAD_UNKNOWN`) is answered at once and the connection closed with the body unread, which is
+   workerd's way with an unread request body. A client still writing 8-16 MiB when that close lands gets `write ECONNRESET` instead of the answer, whenever the machine is slow enough to
+   be still writing (a harness race, not the door's answer: the answer is given before the body is read, so no byte of it is asked for). The request for such an answer therefore carries one byte,
+   which the socket takes whole before any answer can come; what is asserted is the answer. */
+const unread = (cmd, params) => call(cmd, params, new Uint8Array(1));
 const varied = (n, seed) => { const b = new Uint8Array(n); for (let i = 0; i < n; i++) b[i] = (seed + (i % 251) + Math.floor(i / 4999)) & 255; return b; };
 const partsOf = (bytes, size) => { const out = []; for (let at = 0; at < bytes.length; at += size) out.push(bytes.subarray(at, Math.min(at + size, bytes.length))); return out; };
 
@@ -40,7 +45,7 @@ test("R113 (L): a 105 MiB file is begun, its seven 16 MiB parts sent in separate
     assert.equal(r.next, i + 1);
   }
   /* a part put again is idempotent */
-  const again = await call("part", { upload: b.upload, index: "2", sha256: sha(ps[2]) }, ps[2]);
+  const again = await unread("part", { upload: b.upload, index: "2", sha256: sha(ps[2]) });
   assert.deepEqual([again.ok, again.existed], [true, true]);
   const before = await call("state", { sha256: whole });
   assert.equal(before.size, null, "nothing is held under the digest until the completion");
@@ -73,6 +78,6 @@ test("R113 (L): an upload abandoned part-way is aborted by the member and holds 
   assert.deepEqual(await call("abort", { upload: b.upload }), { ok: true, aborted: true });
   const st = await call("state", { sha256: whole });
   assert.deepEqual([st.size, st.rows], [null, 0]);
-  const late = await call("part", { upload: b.upload, index: "2", sha256: sha(ps[2]) }, ps[2]);
+  const late = await unread("part", { upload: b.upload, index: "2", sha256: sha(ps[2]) });
   assert.equal(late.reason, "UPLOAD_UNKNOWN");
 });
