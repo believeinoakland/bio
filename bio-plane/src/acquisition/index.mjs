@@ -499,7 +499,7 @@ export async function keepPast(cap, ev, { sha, parts, boundMs = ACQUIRE_BOUND_MS
  *  digest given; with `compose: true` the store is asked to make the whole from its parts first (see below). Answers `{ok: true, kept}` (`kept` false for one part or past `MULTIPART_KEEP_MAX`, where nothing is done)
  *  or `{ok: false, why}`, a sentence for the member: a part gone, a part that is not what was stored, bytes that do not add
  *  up to the digest, or a store that will not take the whole. Never throws. */
-export async function keepWhole(ev, { sha, parts, total, bytes = null, compose = false, whole: given = null }) {
+export async function keepWhole(ev, { sha, parts, total, bytes = null, compose = false, whole: given = null, ledger = null }) {
   if (!Array.isArray(parts) || parts.length < 2 || total > MULTIPART_KEEP_MAX) return { ok: true, kept: false };
   const fail = (why) => ({ ok: false, why });
   const held = Array.isArray(bytes) && bytes.length === parts.length && bytes.every((b) => b instanceof Uint8Array) ? bytes : null;
@@ -517,6 +517,9 @@ export async function keepWhole(ev, { sha, parts, total, bytes = null, compose =
       }
       /* R115: the whole was received into one buffer; it is put as it is, no second copy */
       if (given instanceof Uint8Array && given.length === total) { await ev.put(sha, given); return { ok: true, kept: true }; }
+      const counted = !held && ledger && typeof ledger.hold === "function" ? ledger : null;
+      if (counted) counted.hold(total, "kept");
+      try {
       const whole = new Uint8Array(total);
       let at = 0;
       for (const [i, p] of parts.entries()) {
@@ -526,15 +529,18 @@ export async function keepWhole(ev, { sha, parts, total, bytes = null, compose =
           const o = await ev.get(p.sha256);
           if (!o) return fail(localize("acquisition.index.keep_part_missing", "part {n} of {parts} was not there when it was read back", { n: String(i + 1), parts: String(parts.length) }));
           b = new Uint8Array(await o.arrayBuffer());
+          if (counted) counted.hold(b.length, "part");
         }
         if (b.length !== p.bytes || at + b.length > total || (!held && hex(await crypto.subtle.digest("SHA-256", b)) !== p.sha256))
           return fail(localize("acquisition.index.keep_part_differs", "part {n} of {parts} is not what was stored", { n: String(i + 1), parts: String(parts.length) }));
         whole.set(b, at); at += b.length;
+        if (counted && !held) counted.release(b.length, "part");
       }
       if (at !== total || (!held && hex(await crypto.subtle.digest("SHA-256", whole)) !== sha))
         return fail(localize("acquisition.index.keep_parts_do_not_add_up", "the parts do not add up to the document that arrived"));
       await ev.put(sha, whole);
       return { ok: true, kept: true };
+      } finally { if (counted) counted.release(total, "kept"); }
     } catch (e) {
       return fail(localize("acquisition.index.keep_store_refused", "the store would not take it ({detail})", { detail: String(e && e.message || e).slice(0, 120) }));
     }
@@ -1395,11 +1401,13 @@ async function acquireRun(cap, body0, opts0, t) {
   /* R115 (fix round 9, G124b): THE WHOLE IS NEVER HELD TWICE. A body whose declared length is a multipart capture within `MULTIPART_KEEP_MAX` is
      received straight into ONE buffer of that length (`keptWhole`), each part copied in as it is stored and its own buffer let go, so the
      call holds the kept bytes once plus the one part being read, and the whole is put from that buffer with no second copy made. Every byte
-     held is counted by the byte ledger (`opts.ledger`, runtime-limits). A body that does not match its declared length is held as separate
-     parts and joined as before. */
+     held is counted by the byte ledger (`opts.ledger`, runtime-limits). A body that declares no length, or overruns the one it declared, holds no
+     bytes once a second part shows it is several: the parts are already stored, and the whole is made from them (read back one part at a time into the one buffer of the whole), never joined from held parts. */
   const ledger = opts && opts.ledger && typeof opts.ledger.hold === "function" ? opts.ledger : { hold() {}, release() {} };
   let keptWhole = declared !== null && declared > PART && declared <= MULTIPART_KEEP_MAX && !renderAsked ? new Uint8Array(declared) : null;
-  if (keptWhole) ledger.hold(keptWhole.length, "kept");
+  let keptHeld = 0;   // the bytes held under the ledger's tag "kept": the one buffer of the whole, or the parts held singly
+  if (keptWhole) { ledger.hold(keptWhole.length, "kept"); keptHeld = keptWhole.length; }
+  const dropKept = () => { if (keptHeld) ledger.release(keptHeld, "kept"); keptHeld = 0; keptWhole = null; keptParts = null; };
   /* R10: a part is exactly 8 MiB (the last one the remainder), whatever sizes the stream's chunks arrive in. */
   const part = async (buf, inPlace = false) => {
     const psha = await splitTimed(t, "hash", async () => hex(await crypto.subtle.digest("SHA-256", buf)));
@@ -1415,10 +1423,10 @@ async function acquireRun(cap, body0, opts0, t) {
       if (keptWhole && keptSize + buf.length <= keptWhole.length) {
         if (!inPlace) keptWhole.set(buf, keptSize);
         keptParts.push(keptWhole.subarray(keptSize, keptSize + buf.length)); keptSize += buf.length;
+      } else if (!keptWhole && !keptParts.length && keptSize + buf.length <= MULTIPART_KEEP_MAX) {
+        keptSize += buf.length; keptParts.push(buf); ledger.hold(buf.length, "kept"); keptHeld += buf.length;   // the first part of a body with no length declared, held singly: a capture of one part needs it for its title
       } else {
-        keptSize += buf.length;
-        if (keptSize > MULTIPART_KEEP_MAX) { if (keptWhole) ledger.release(keptWhole.length, "kept"); keptWhole = null; keptParts = null; }
-        else { keptWhole = null; keptParts.push(buf); ledger.hold(buf.length, "kept"); }
+        dropKept();   // R115: a second part of a body not received into one buffer, an overrun of the declared length, or a body past what is held: no bytes are held, the whole is made from the stored parts
       }
     }
     if (!inPlace) ledger.release(buf.length, "part");
@@ -1656,8 +1664,10 @@ async function acquireRun(cap, body0, opts0, t) {
      call holds without reading any page, cleaned as a page's is; a PDF with neither, or one past what is held in memory, answers null. */
   let pdfTitled = null;
   if (!renderRecorded && keptParts && keptParts.length && typeof pdfReader.pdfTitle === "function") {
-    const whole0 = keptParts.length === 1 ? keptParts[0] : keptWhole && keptSize === keptWhole.length ? keptWhole : (() => { const b = new Uint8Array(keptSize); let at = 0; for (const k of keptParts) { b.set(k, at); at += k.length; } return b; })();
-    if (detectFormat(whole0.subarray(0, 1024), ct || null).format === "pdf") {
+    /* R115: the title is read where the whole is held in ONE buffer (a single part, or the buffer a declared length was received into); a capture
+       of several parts received otherwise is not joined in memory to read it, and answers null here, to be named by its reading (R98). */
+    const whole0 = keptParts.length === 1 ? keptParts[0] : keptWhole && keptSize <= keptWhole.length && keptSize === total ? keptWhole.subarray(0, keptSize) : null;
+    if (whole0 && detectFormat(whole0.subarray(0, 1024), ct || null).format === "pdf") {
       try { pdfTitled = cleanedTitle(await pdfReader.pdfTitle(whole0)); } catch { pdfTitled = null; }
     }
   }
@@ -1668,9 +1678,14 @@ async function acquireRun(cap, body0, opts0, t) {
   /* R10, R96 (T51; C5): a capture held in parts is kept whole too, under its own fingerprint, put once from the parts held in
      memory (stage `keep`, apart from `read`), or refused in words with nothing filed. */
   if (multipart && !renderRecorded && total <= MULTIPART_KEEP_MAX) {
-    const kept = await timed(t, "keep", () => keepWhole(ev, { sha, parts, total, bytes: keptParts, whole: keptWhole && keptSize === total && keptWhole.length === total ? keptWhole : null }));
+    const inOne = !!keptWhole && keptSize === total && keptWhole.length >= total;   // a body shorter than its declared length fills the front of the buffer
+    /* R115: the one buffer it was received into, else nothing held: they are read back one at a time into the one buffer of the whole */
+    const kept = await timed(t, "keep", () => keepWhole(ev, { sha, parts, total, bytes: inOne ? keptParts : null, whole: inOne ? keptWhole.subarray(0, total) : null, ledger }));
     if (!kept.ok) return answer(502, notKept(parts.length, kept.why));
   }
+
+  /* R115: the bytes held for the keep and the title are let go once the keep is done (the call goes on holding nothing of the capture's body) */
+  dropKept();
 
   /* R13, D-58: the acquisition receipt, UNCONDITIONALLY, for every filed capture: under the DOCUMENT address (the
      CDX original, the Drive link as given, or for a direct fetch the address it resolved to), `via`, and the

@@ -65,7 +65,7 @@ test("R101: a fetched 10 MB PDF the source serves with no content type is profil
   const w = world();
   const url = "https://oakland.example/big.pdf";
   const bytes = pdfOf(10 * MIB);
-  const r = await run(w, { [url]: () => new Response(bytes, { headers: {} }) }, { locator: url });
+  const r = await run(w, { [url]: () => new Response(bytes, { headers: { "content-length": String(bytes.length) } }) }, { locator: url });
   assert.equal(r.status, 200);
   assert.equal(r.body.parts, 2);
   assert.equal(r.body.document.profile.format.format, "pdf");
