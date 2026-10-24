@@ -737,3 +737,14 @@ Branch `job/T51/reading-pipeline`, `tranche/T51` merged first (K4840's requireme
 - Words owed to T52 (stand-ins keyed through `localize`): `reading-pipeline.index.too_large`, `.structure_over_bound`, `.unsupported_rtf`, `.unsupported_email`, `.unsupported_legacy_word`, `.unsupported_legacy_excel`, `.unsupported_legacy_powerpoint`, `.unsupported_legacy_office`, `.unsupported_tiff`, `.unsupported_gif`, `.unsupported_webp`, `.unsupported_heic`, `.unsupported_avif`, `.unsupported_bmp`, `.unsupported_jp2`, `.unsupported_ico`, `.unsupported_kind`.
 
 **Not yet done (next, in order):** (a) R50 · G131i: text, JSON and XML in byte windows with a carry, 24-50 MiB read from the first piece by range (as `csvRangedHead`), a run with no separator in a window chunked mid-run, 50 MB + 1 refused with the figure, bytes pulled <= 2 x the file; (b) R52 · G133f: the classification test by count (the work is docprofile's `ctx.work`; this module's share is that every route hands `doctypeFor` the text it holds and `classified_over` reaches the basis); (c) the heavy files alone (`memory`, `pdf-pieces`, `r7-contention`), impact set, the checks, COMPLETE.
+
+## J37 · QUESTION
+
+QUESTION (R50, K4834; with my best reading; I carry on with the rest).
+
+Built and green: R54 (named refusals, G135a/b/d/e), R51 (HTML in one linear pass, tables keep rows and columns, link lists kept, later ticks read nothing; G131f/h), R50 (text, JSON and XML in byte windows with a carry; 24-50 MiB read by range from the first piece; a run with no separator in chunks; 50 MB + 1 stated with the figure; bytes pulled <= 2 x the file), R52 (G133f: the view is stated on a text's reading; the rest was docprofile's).
+
+The one thing R50 does not yet cover: a text, JSON or XML between 24 MiB (WHOLE_READ_MAX) and 50 MB in an encoding other than UTF-8/US-ASCII (UTF-16, windows-1252, ISO-8859-x; R49's encodings). The byte windows decode UTF-8 only. Today such a file is stated against the whole-read ceiling (TOO_LARGE, 24 MiB), which is true of what is built but is not the standard's 50 MB for these kinds.
+(1) Best reading: build the window decode per encoding in this job (the head's encoding from ooxml.decodeText kept in the cursor; single-byte encodings are one byte a character, UTF-16 is read in even offsets with a surrogate pair kept whole), so every encoding reaches 50 MB. Cost: one more session-sized piece in textWindowTick and its tests; I would do it after your answer.
+(2) Or: accept the statement against 24 MiB for non-UTF-8 text over 24 MiB in the alpha, and tell me so; then I COMPLETE now (the statement already holds size and bound).
+HTML over 24 MiB is not in R50's list (html is read whole to 24 MiB, as before); say if it is meant to reach 50 MB too.
