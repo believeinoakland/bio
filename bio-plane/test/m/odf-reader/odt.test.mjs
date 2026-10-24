@@ -137,12 +137,16 @@ test("R11 text(): every body paragraph as {para, ref, text} in order; document i
     "Spaces   and\ttab\nbreak & <ent> A", "host",
   ].map((text, para) => ({ para, ref: `¶${para + 1}`, text })));
   assert.equal(t.document, t.paragraphs.map((p) => p.text).filter(Boolean).join("\n"));
-  assert.deepEqual(t.counts, { chars: t.document.length, undetermined: 0 });
+  assert.deepEqual({ ...t.counts, scanned_bytes: undefined }, { chars: t.document.length, undetermined: 0, scanned_bytes: undefined });
   assert.deepEqual(t.undetermined, []);
-  // a character reference naming no character is kept as written, never a failed read
+  // R51 (fix round 9): a character reference naming no character makes the part unreadable, stated and final, never a failed read;
+  // an entity name that is no character reference (`&bogus;`) is kept as written
   const odd = await T("<text:p>a &#99999999; b &#x110000; c &bogus; d &#65;</text:p>");
   assert.equal(odd.ok, true);
-  assert.equal(odd.paragraphs[0].text, "a &#99999999; b &#x110000; c &bogus; d A");
+  assert.equal(odd.document, null);
+  assert.deepEqual(odd.undetermined, [{ reason: "main_part_unreadable", part: "content.xml", why: "char_ref_invalid", final: true }]);
+  const named = await T("<text:p>c &bogus; d &#65;</text:p>");
+  assert.equal(named.paragraphs[0].text, "c &bogus; d A");
   const empty = await T("");
   assert.deepEqual([empty.paragraphs, empty.document], [[], ""]);
 });
@@ -180,9 +184,9 @@ test("R12 tables: one per <table:table> as it opens, nested included, rows and c
 
 test("R13 text() over the guard carries the guard marker verbatim; with no readable body, main_part_unreadable naming why", async () => {
   const over = await odtEntry.text(buildZip(withCd(members("odt", { body: RICH }), "content.xml", { usize: OVER_BOUND })));
-  assert.deepEqual({ ...over, images: undefined, imagesWhy: undefined }, {
-    ok: true, container: "odt", document: null, paragraphs: [], tables: null,
-    undetermined: [{ ...sizeGuard(OVER_BOUND), final: true }], counts: { chars: 0, undetermined: 1 }, images: undefined, imagesWhy: undefined,
+  assert.deepEqual({ ...over, images: undefined, imagesWhy: undefined, counts: { ...over.counts, scanned_bytes: undefined } }, {
+    ok: true, container: "odt", document: null, paragraphs: [], tables: null, parts: null,
+    undetermined: [{ ...sizeGuard(OVER_BOUND), final: true }], counts: { chars: 0, undetermined: 1, scanned_bytes: undefined }, images: undefined, imagesWhy: undefined,
     active: [{ kind: "unread", part: "content.xml", why: "over_size_bound" }],
   });
   assert.deepEqual(over.undetermined[0], { ok: false, text: "undetermined", why: "over_size_bound", size: OVER_BOUND,
@@ -198,6 +202,6 @@ test("R13 text() over the guard carries the guard marker verbatim; with no reada
     assert.deepEqual(t.paragraphs, []);
     assert.equal(t.tables, null);
     assert.deepEqual(t.undetermined, [{ reason: "main_part_unreadable", part: "content.xml", why }]);
-    assert.deepEqual(t.counts, { chars: 0, undetermined: 1 });
+    assert.deepEqual({ ...t.counts, scanned_bytes: undefined }, { chars: 0, undetermined: 1, scanned_bytes: undefined });
   }
 });
