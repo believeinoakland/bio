@@ -170,6 +170,8 @@ Size (session_01UqB6MGJZC34pq9fKcsf621): test runs 34, module lines 2870
 
 **For reading-pipeline (job 90):** `paras` is present on every ODT `text_box` part; entries of `paragraphs` named in it have `text: ""`.
 
-**Tests and checks.** `test/m/odf-reader/`: 122 tests, 122 pass (2 new, named R53; one existing updated). Users (`acquisition` grades, `doc-clean` oracles, `format-registry` builtins, `reading-pipeline` read): see line below. format 0 failures; architecture 22 files, 0; coverage 55 of 55, 0; ownership below. Words: no new sentence; no rows owed. Generated artifacts made stale: none. Found in another module: none.
+**Tests and checks.** `test/m/odf-reader/`: 122 tests, 122 pass (2 new, named R53; one existing updated). Users (`acquisition` grades, `doc-clean` oracles, `format-registry` builtins, `reading-pipeline` read): 47 tests, 46 pass, 0 fail, 1 skipped; `impact.mjs` names 116 modules through a shared table, so the callers were run. format 0 failures; architecture 22 files, 0; coverage 55 of 55, 0; ownership 3 files, 0 failures. Words: no new sentence; no rows owed. Generated artifacts made stale: none. Found in another module: none.
 
 Cause: the walker took a text box as a unit only when inside a paragraph. Why missed: R53's tests built the frame inside a paragraph. Platform check: none needed (pure module).
+
+Size (session_01ADqp4HKjkPA6rcj1FoXALV): test runs 7, module lines 2900
