@@ -79,3 +79,13 @@ Size (session_01CDmjLZR4AnXcUoKjGVUyEk): test runs 15, module lines 1400
 **Deferred:** none. **Found in another module:** none beyond the above.
 
 Size (session_01EpDRQfdEuiWiTfK47byiUx): test runs 9, module lines 1594
+
+## J5 · QUESTION
+
+Three things I need before COMPLETE; I carry on with the rest on my best readings.
+
+1. **A READ_BOUNDS row (REPORT, B8 ruling 1).** `picturepixels.mjs` must read `PICTURE_SOURCE_MAX` as `boundOf("image", "picture_source")` (R42, R49), and `bio-plane/src/read-bounds.mjs` has no such row (`image` has `pixels`, `edge`, `chunks`, `row_stride`, `cover_bytes`, `picture_frame`). Row to add, kind `image`, name `picture_source`: standard 603979776, alpha 603979776, protective 603979776 (16384 x 12288 x 3, today's figure, measured at T44), key `limit.image.picture_source`. Until it is on `tranche/T51`, `picturepixels.mjs` cannot load; tell me when and I merge. Nothing else in my files needs a new row (`pixels` 120000000, `edge` 65535, `picture_frame`, and `pdf.tree_depth` for the /Parent walk are all there).
+
+2. **R47 has no provider, and needs one new file.** `pdf-reader` offers `openPdf(bytes)` only (whole lenient read); no ranged open. My reading: I read through `readRange` the tail (`startxref`), the cross-reference chain (tables and streams, object streams), the page tree down to the page, and that page's objects (contents, resources, images), assemble them into a small PDF in memory (inherited MediaBox/Rotate/Resources written into the page) and run the existing page path on it; the answer equals the whole-bytes one. Any irregularity (no usable xref, encryption in the trailer, a page index out of range) falls back to reading the whole file, so the refusals stay identical. The code is about 250 lines; I propose a new file `pdf-worker/src/pagesource.mjs`. **Please add it to pdf-pixels' `paths` in `build/modules.json`** (K1043) and tell me; if you would rather it live inside `pagepixels.mjs` (47 KB now), say so and I do that instead.
+
+3. **R48 on the DCT pass-through.** The publisher's JPEG bytes cannot be turned without decoding. My reading: with `opts.turn` other than 0 the default DCT route decodes (route `decoded-dct`, as with `decodeDct`), so `upright` is true after the turn as R48 says; with turn 0 or absent nothing changes. The alternative is to refuse it. Tell me if you want the refusal.
