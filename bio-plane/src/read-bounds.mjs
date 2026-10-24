@@ -58,6 +58,8 @@ const TABLE = {
     tree_depth: same(256, k("pdf", "tree_depth")),
     bfrange_codes: same(65536, k("pdf", "bfrange_codes")),
     xmp: same(2 * MiB, k("pdf", "xmp")),
+    /* the most of a PDF one member request reads; above it the work is owed to the ledger, never refused (K4901) */
+    request_bytes: same(2 * MiB, k("pdf", "request_bytes")),
   },
   image: {
     pixels: same(120000000, k("image", "pixels")),
