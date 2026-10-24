@@ -29,7 +29,7 @@ const slowBucket = () => {
   const cost = (bytes) => 400 + Math.round(400 * Math.min(1, bytes / (8 * MiB)));
   const put = b.put.bind(b), get = b.get.bind(b);
   b.put = async (k, bytes, o) => { clock.ms += cost(bytes.length); return put(k, bytes, o); };
-  b.get = async (k) => { const r = await get(k); if (r) clock.ms += cost(r.size); return r; };
+  b.get = async (k, o) => { const r = await get(k, o); if (r) clock.ms += cost(o && o.range ? Math.min(o.range.length, r.size) : r.size); return r; };
   b.clock = clock;
   return b;
 };
@@ -37,18 +37,21 @@ const setup = (b = slowBucket()) => ({ ...fresh({ evidence: b, env: { INSTANCE_N
 const up = (c, bytes, extra = {}) => c.uploadCapture({ bytes: streamOf(bytes), statement: STATEMENT, by: "m1", at: AT, ...extra });
 const wholeKey = (big) => `bio/captures/${sha(big)}`;
 const count = (b, what) => b.calls.filter((x) => x[0] === what).length;
+/* a `get` that asks for the whole object (no range): acquisition's R101 judges an upload's format by ranged reads of its head, which are no read-back of a part */
+const wholeGets = (b) => b.calls.filter((x) => x[0] === "get" && !x[2]).length;
 
-test("R103 (G79): a 24 MiB upload in three parts reads no part back: the store is asked for no `get`, each part is put once and the whole once, and the whole is held under its digest", async () => {
+test("R103 (G79): a 24 MiB upload in three parts reads no part back: the store is asked for no whole-part `get`, each part is put once and the whole once, and the whole is held under its digest", async () => {
   const { c, b } = setup();
   const big = varied(24 * MiB, 3);
   const r = await up(c, big);
   assert.equal(r.ok, true);
   assert.equal(r.document.parts.length, 3);
-  assert.equal(count(b, "get"), 0, "a part was read back from the store");
+  assert.equal(wholeGets(b), 0, "a part was read back from the store");
   assert.equal(b.calls.filter((x) => x[0] === "put").length, 4, "three parts and the whole, each put once");
   assert.equal(sha(b.held.get(wholeKey(big))), sha(big), "and the whole is the bytes uploaded");
-  /* the store's cost on the test's own clock: three parts and the whole at 400 to 800 ms each, with no read-back (the old path added three gets) */
-  assert.ok(b.clock.ms <= 4 * 800, `the store cost ${b.clock.ms} ms on the test's clock`);
+  /* the store's cost on the test's own clock */
+  /* three parts and the whole, and the one ranged read of the head that acquisition's R101 makes (about 450 ms); the old path added three whole-part gets (2,400 ms) */
+  assert.ok(b.clock.ms <= 4 * 800 + 500, `the store cost ${b.clock.ms} ms on the test's clock`);
 });
 
 test("R103 (G79): 17 MiB in three parts (2 MiB in the last) and exactly 32 MiB in four parts are kept whole the same way; one part and two parts as before", async () => {
@@ -57,7 +60,7 @@ test("R103 (G79): 17 MiB in three parts (2 MiB in the last) and exactly 32 MiB i
     const big = varied(size, 5);
     const r = await up(c, big);
     assert.equal(r.ok, true);
-    assert.equal(count(b, "get"), 0, `${size}: no part read back`);
+    assert.equal(wholeGets(b), 0, `${size}: no part read back`);
     assert.equal(sha(b.held.get(wholeKey(big))), sha(big), `${size}: the whole is held`);
   }
   const { c, b } = setup();
@@ -80,7 +83,7 @@ test("R103 (G79): a 40 MB upload in five parts is answered once its parts are st
   assert.equal(r.document.parts.length, 5);
   assert.equal(r.keep_pending, true);
   assert.equal(asked, 0, "the upload awaited a keep it had handed over");
-  assert.equal(count(b, "get"), 0);
+  assert.equal(wholeGets(b), 0);
   assert.deepEqual(given, [{ sha: sha(big), parts: r.document.parts.map((p) => p.sha256) }]);
   /* the parts are stored and named by the document: the file is filed in them */
   for (const p of r.document.parts) assert.equal(b.held.has(`bio/captures/${p.sha256}`), true);

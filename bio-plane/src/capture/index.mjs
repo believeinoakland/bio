@@ -48,7 +48,11 @@ import { say } from "./words.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
 import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
-         firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX, textTypeOf } from "../acquisition/index.mjs";
+         firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX, LARGE_FETCH_BYTES, textTypeOf } from "../acquisition/index.mjs";
+/* R111 (fix round 9; G124, G124b): the figures a body is bounded by are quoted, never written here: the capture ceiling is `acquisition`'s `CAPTURE_MAX` (the
+   archive row of `READ_BOUNDS`, `runtime-limits`), the platform's request-body ceiling an entry of `PLATFORM_FIGURES`. */
+import { statement as boundStatement } from "../read-bounds.mjs";
+import { PLATFORM_FIGURES } from "../byte-ledger.mjs";
 import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
 /* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
    module's users import (`affordances`' tests among them) still resolve, with no spelling of capture's own. */
@@ -88,7 +92,8 @@ const rawReplayOf = (archived) => {
   const m = /^(https:\/\/web\.archive\.org\/web\/)(\d{14})(?:[a-z_]*)\/(.+)$/.exec(String(archived || ""));
   return m ? `${m[1]}${m[2]}id_/${m[3]}` : null;
 };
-const REPLAY_MAX = 256 * 1024 * 1024;
+/* R68: a co-archive's replay larger than any capture this surface keeps cannot be the capture, so the comparison reads no more than `CAPTURE_MAX` (R111's figure). */
+const REPLAY_MAX = CAPTURE_MAX;
 
 /* N380: the tag a throw of R86's `within` is carried out of the transaction under. */
 const WITHIN_FAULT = Symbol("within's fault");
@@ -240,7 +245,7 @@ export const HELD_FILES_IN_ROW = 50;
 export const HELD_IDS_MAX = 50;
 /** R105 (fix round 6; G2): the most of a source's body a `check` reads, in bytes: 8 MiB, the size past which `acquisition` hands a fetch to
  *  the plane. A larger body is not read: the look says so (`large`) and decides nothing. */
-export const HELD_AT_CHECK_MAX = 8 * 1024 * 1024;
+export const HELD_AT_CHECK_MAX = LARGE_FETCH_BYTES;
 /** R96: the most captures at one address `heldAt` counts; `truncated` says when more lie past. */
 export const HELD_AT_VERSIONS_MAX = 200;
 /* R91 (T49; N1080; M-T49-3): the one wait a page of held captures gives its documents' answers, in milliseconds: R78's
@@ -679,7 +684,40 @@ export class Capture {
    *  upload) answer `existed: true` the same way, with the document as a new upload's (T51 fix round 2). `within` (N380's seam, `store-door` R7): called inside the upload's own
    *  transaction after the receipt and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
    *  `UPLOAD_WITHIN_FAILED`. It writes no bundle. */
-  async uploadCapture({ bytes, statement, name = null, type = null, by, at = null, within = null, boundMs = null, keepLater = null } = {}) {
+  async uploadCapture(args = {}) {
+    const tally = Capture.#tally(args && args.ledger);
+    try { return await this.#upload(args ?? {}, tally); } finally { tally.end(); }
+  }
+
+  /* R111: the byte ledger as one upload counts what it holds (`runtime-limits`' `byteLedger`: `hold(n, tag)`, `release(n, tag)`); no ledger handed, or one that
+     cannot count, is no fault of the upload's. `end` releases whatever the call still holds, on every path out of it. */
+  static #tally(ledger) {
+    const on = !!ledger && typeof ledger.hold === "function" && typeof ledger.release === "function";
+    let held = 0;
+    const t = {
+      hold(n) { if (on && n > 0) { try { ledger.hold(n, "upload"); held += n; } catch { /* a ledger that cannot count */ } } },
+      release(n) { if (on && n > 0) { const k = Math.min(n, held); try { ledger.release(k, "upload"); held -= k; } catch { /* a ledger that cannot count */ } } },
+      end() { t.release(held); },
+    };
+    return t;
+  }
+
+  /* R111: a ceiling a caller may only LOWER (a scaled figure for a test, K4840): the real figure, or the given one when it is a whole number below it. */
+  static #lowered(real, given) { return Number.isSafeInteger(given) && given >= 0 && given < real ? given : real; }
+
+  /* R111: the 413 an over-large body is refused with: its size and the figure it was judged against (`size`, `bound`; `bytes`, `maxBytes` as R86 always
+     said them) and the key of the sentence. The capture ceiling is the archive row of `READ_BOUNDS`; the request ceiling is the platform's. */
+  static #tooLarge(size, which, bound) {
+    const request = which === "request";
+    return { ok: false, reason: "TOO_LARGE", status: 413, bytes: size, maxBytes: bound, size, bound,
+             key: request ? "capture.index.body_over_request_ceiling" : boundStatement("archive", "uploaded_bytes", size).key,
+             detail: request
+               ? localize("capture.index.body_over_request_ceiling", "the file is larger than the {bound} bytes one request may carry, so it was refused whole; nothing was written", { bound: String(bound) })
+               : localize("capture.index.file_too_large", "the file exceeds what this surface will capture even in parts; nothing was written") };
+  }
+
+  async #upload({ bytes, statement, name = null, type = null, by, at = null, within = null, boundMs = null, keepLater = null,
+                  registerJob = null, armJobs = null, declared = null, bounds = null } = {}, tally) {
     const startedAt = Date.now();
     if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
       return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
@@ -705,6 +743,15 @@ export class Capture {
     }
     const reader = uploadReader(bytes);
     if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: localize("capture.index.upload_no_bytes", "the upload carried no bytes; nothing was written") };
+    /* R111: a body is bounded before it is held. The two ceilings are quoted (`CAPTURE_MAX`, the request-body entry of `PLATFORM_FIGURES`); the lower is the one
+       a member meets, and the one a refusal names. A size declared up front (the request's length) is judged before one byte is read. */
+    const capMax = Capture.#lowered(CAPTURE_MAX, bounds && bounds.capture);
+    const reqMax = Capture.#lowered(PLATFORM_FIGURES.request_body_max.value, bounds && bounds.request);
+    const ceiling = Math.min(capMax, reqMax), ceilingIs = reqMax <= capMax ? "request" : "capture";
+    if (Number.isSafeInteger(declared) && declared > ceiling) {
+      await reader.cancel();
+      return Capture.#tooLarge(declared, ceilingIs, ceiling);
+    }
     /* `acquisition` R10's form: the whole hashed as it arrives by record-grammar's incremental hasher, the bytes held in
        parts of exactly 8 MiB (the last the remainder), each under its own digest; whether each was held before. */
     const whole = createSha256();
@@ -712,25 +759,28 @@ export class Capture {
     let held = [], heldBytes = 0, total = 0;
     /* R107: the first `UPLOAD_HEAD` bytes of the file, kept as they arrive, so a file held in parts is also judged as text from its head. */
     const head = new Uint8Array(UPLOAD_HEAD);
+    tally.hold(UPLOAD_HEAD);
     let headLen = 0;
     /* R103 (fix round 7; G79): the buffers of the parts as they are stored, while the file can still be kept whole by this module
        (up to `MULTIPART_KEEP_MAX`), so `keepWhole` puts the whole from them and reads no part back; dropped once the file is larger. */
-    let partBytes = [];
+    let partBytes = [], keptBytes = 0;
     const flush = async (all) => {
       while (heldBytes >= UPLOAD_PART || (all && heldBytes > 0)) {
         const n = Math.min(UPLOAD_PART, heldBytes);
         const buf = new Uint8Array(n);
+        tally.hold(n);
         let k = 0;
         while (k < n) {
           const c = held[0], take = Math.min(c.length, n - k);
           buf.set(c.subarray(0, take), k); k += take;
+          tally.release(take);
           if (take === c.length) held.shift(); else held[0] = c.subarray(take);
         }
         heldBytes -= n;
         const psha = hexOf(await crypto.subtle.digest("SHA-256", buf));
         if (!(await ev.head(psha))) await ev.put(psha, buf);
         parts.push({ sha256: psha, bytes: n });
-        if (partBytes) partBytes.push(buf);
+        if (partBytes) { partBytes.push(buf); keptBytes += n; } else tally.release(n);
       }
     };
     try {
@@ -739,15 +789,14 @@ export class Capture {
         if (done) break;
         if (!value) throw new Error("not bytes");
         total += value.length;
-        if (total > CAPTURE_MAX) {
+        if (total > ceiling) {
           await reader.cancel();
-          return { ok: false, reason: "TOO_LARGE", status: 413, bytes: total, maxBytes: CAPTURE_MAX,
-                   detail: localize("capture.index.file_too_large", "the file exceeds what this surface will capture even in parts; nothing was written") };
+          return Capture.#tooLarge(total, ceilingIs, ceiling);
         }
         whole.update(value);
-        if (partBytes && total > MULTIPART_KEEP_MAX) partBytes = null;
+        if (partBytes && total > MULTIPART_KEEP_MAX) { partBytes = null; tally.release(keptBytes); keptBytes = 0; }
         if (headLen < UPLOAD_HEAD) { const k = Math.min(value.length, UPLOAD_HEAD - headLen); head.set(value.subarray(0, k), headLen); headLen += k; }
-        held.push(value); heldBytes += value.length;
+        held.push(value); heldBytes += value.length; tally.hold(value.length);
         if (heldBytes >= UPLOAD_PART) await flush(false);
       }
       await flush(true);
@@ -768,22 +817,57 @@ export class Capture {
     if (multipart && !(await keepWhole(ev, { sha, parts, total, bytes: partBytes })).ok)
       return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
                detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
+    /* a file in one part is judged as text from the buffer just stored, not read back (it is at most one 8 MiB part); the ledger counts it until then */
+    const onlyPart = !multipart && partBytes && partBytes.length === 1 ? partBytes[0] : null;
     partBytes = null;
+    if (!onlyPart) { tally.release(keptBytes); keptBytes = 0; }
+    /* R109 (fix round 9; G126; K4835 (2)): the work this upload owes is one job row each, written through the registrar, read as `keepLater` is: the store's
+       `registerJob` when it is a function, else the call's, else none (the answer then says so). The rows are written inside the filing transaction below, and the
+       alarm is armed after its commit. */
+    const reg = typeof this.registerJob === "function" ? (e) => this.registerJob(e) : typeof registerJob === "function" ? registerJob : null;
+    const arm = async () => {
+      const f = typeof this.armJobs === "function" ? () => this.armJobs() : typeof armJobs === "function" ? armJobs : null;
+      if (reg && f) { try { await f(); } catch { /* an alarm not armed is the backstop's, never the upload's */ } }
+    };
     /* R103 (fix round 4b, F2; fix round 7, G79): past `MULTIPART_KEEP_MAX` the whole is made from the stored parts by the store itself
-       (`putFromParts`). The plane's owed-work ledger keeps it alive after the answer (`keepLater`, finished by its alarm), so the answer
-       is not held for it: the keep is handed over at once and the answer says `keep_pending`. With no ledger (or one that declines)
-       this call AWAITS the keep within what is left of the door's bound, as a promise nothing keeps alive is not a keep; one that has
-       not ended by then is handed over then. The file is filed in its parts either way, never refused for it. */
-    let keepPending = false;
+       (`putFromParts`). The plane's owed-work ledger keeps it alive after the answer, so the answer is not held for it: the keep is handed
+       over at once and the answer says `keep_pending`. R109: with the registrar the handover IS the `keep` row, registered in the filing
+       transaction with the parts; else, with the plane's `keepLater`, as before; with neither this call AWAITS the keep within what is left of the door's
+       bound, as a promise nothing keeps alive is not a keep; one that has not ended by then is handed over then. The file is filed in its parts either way,
+       never refused for it. */
+    let keepPending = false, keepRow = false;
     if (multipart && total > MULTIPART_KEEP_MAX) {
-      const later = typeof keepLater === "function" ? keepLater : typeof this.keepLater === "function" ? (k) => this.keepLater(k) : null;
-      if (later && typeof ev.putFromParts === "function") {
-        try { const r = await later({ sha, parts: parts.map((p) => p.sha256) }); keepPending = !!(r && r.ok === true); } catch { keepPending = false; }
+      if (reg && typeof ev.putFromParts === "function") { keepPending = true; keepRow = true; }
+      else {
+        const later = typeof keepLater === "function" ? keepLater : typeof this.keepLater === "function" ? (k) => this.keepLater(k) : null;
+        if (later && typeof ev.putFromParts === "function") {
+          try { const r = await later({ sha, parts: parts.map((p) => p.sha256) }); keepPending = !!(r && r.ok === true); } catch { keepPending = false; }
+        }
+        if (!keepPending)
+          keepPending = (await keepPast(this, ev, { sha, parts, boundMs: boundMs ?? undefined, elapsedMs: Date.now() - startedAt, keepLater })).keep_pending;
       }
-      if (!keepPending)
-        keepPending = (await keepPast(this, ev, { sha, parts, boundMs: boundMs ?? undefined, elapsedMs: Date.now() - startedAt, keepLater })).keep_pending;
     }
     const pending = keepPending ? { keep_pending: true } : {};
+    /* R109: the rows this upload owes: `reading` always, `unpack` when the profile names `zip` (R110), `keep` when the handover is the row. Called inside the
+       filing transaction; a refusal (or a throw) of the registrar rolls the upload back and is answered, never swallowed. */
+    const isZip = (profile) => !!(profile && profile.format && profile.format.format === "zip");
+    const carrier = `snapshots/upload-${sha}`, partShas = parts.map((p) => p.sha256);
+    const register = (profile) => {
+      if (!reg) return { ok: true };
+      const entries = [{ kind: "reading", sha, carrier, ...(multipart ? { parts: partShas } : {}) },
+                       ...(isZip(profile) ? [{ kind: "unpack", sha, carrier, ...(multipart ? { parts: partShas } : {}) }] : []),
+                       ...(keepRow ? [{ kind: "keep", sha, carrier, parts: partShas }] : [])];
+      for (const e of entries) {
+        let r;
+        try { r = reg(e); } catch { r = null; }
+        if (!(r && r.ok === true))
+          return { ok: false, reason: "JOB_NOT_REGISTERED", status: 502, job: { kind: e.kind, reason: String((r && r.reason) || "REGISTRAR_REFUSED").slice(0, 80) },
+                   detail: localize("capture.index.job_not_registered", "the work this file owes could not be registered, so nothing was filed") };
+      }
+      return { ok: true };
+    };
+    /* R109: with no registrar the answer says which rows it could not register */
+    const jobsNote = (profile) => (reg ? {} : { jobs: { not_registered: [{ kind: "reading", reason: "NO_REGISTRAR" }, ...(isZip(profile) ? [{ kind: "unpack", reason: "NO_REGISTRAR" }] : [])] } });
     let holds = null;
     try { holds = await this.provenance?.registerHolds?.({ sha }); } catch { holds = null; }
     /* The record holds the bytes when its register files them or a receipt names them (provenance R5). Bytes merely in
@@ -803,10 +887,14 @@ export class Capture {
     const notWritten = { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502,
                          detail: localize("capture.index.receipt_not_written", "the acquisition receipt could not be written, so nothing was filed") };
     const receiptOf = (r) => ({ address, via: UPLOAD_VIA, retrieved: when, observation: r.observation ?? null });
+    /* a second sighting: the receipt and the rows it owes (one each, by the whole sha, so a second upload leaves the one), in one transaction */
+    const sighting = (profile) => this.#tx(() => { const r = writeReceipt(); if (!r) return notWritten; const j = register(profile); return j.ok === false ? j : { ok: true, receipt: r }; });
     if (registered) {
       /* a second sighting of bytes the record holds: the receipt only, no document, no actor, `within` not called */
-      const r = this.#tx(writeReceipt);
-      return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r), ...pending } : notWritten;
+      const r = sighting(null);
+      if (!r.ok) return r;
+      await arm();
+      return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), ...pending, ...jobsNote(null) };
     }
     /* R92, R93: the one rule, `acquisition`'s `textTypeOf` (E5): a declared text type, or with none a `.txt`, `.md` or `.csv` name,
        reads the bytes as text when they are text (valid UTF-8, no NUL). R107: a file held in parts is judged from its head, the first
@@ -816,10 +904,10 @@ export class Capture {
     let ct = null;
     if (!multipart) {
       try {
-        const obj = await ev.get(sha);
-        const raw = obj ? new Uint8Array(await obj.arrayBuffer()) : null;
+        const raw = onlyPart ?? await (async () => { const obj = await ev.get(sha); return obj ? new Uint8Array(await obj.arrayBuffer()) : null; })();
         if (raw && raw.length === total) ct = textTypeOf({ bytes: raw, type, name });
       } catch { ct = null; }
+      tally.release(keptBytes); keptBytes = 0;
     } else {
       ct = textTypeOf({ bytes: withoutCutCodePoint(head.subarray(0, headLen)), type, name });
     }
@@ -833,8 +921,10 @@ export class Capture {
       /* R86 (T51 fix round 2; C10): a receipt names the bytes but the register files them under no document (an upload
          interrupted before it was filed): the receipt is written as a second sighting and the document is answered as a new
          upload's, so the screen can file it for the viewer; no actor is recorded and `within` is not called. */
-      const r = this.#tx(writeReceipt);
-      return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r), document, ...pending } : notWritten;
+      const r = sighting(profile);
+      if (!r.ok) return r;
+      await arm();
+      return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), document, ...pending, ...jobsNote(profile) };
     }
     let done;
     try {
@@ -842,6 +932,8 @@ export class Capture {
         const r = writeReceipt();
         if (!r) return notWritten;
         this.recordCaptureActor({ captureSha: sha, actor: by, at: when });
+        const j = register(profile);
+        if (j.ok === false) return j;
         if (typeof within !== "function") return { ok: true, receipt: r };
         const w = Capture.#callWithin(within, document);
         if (w && typeof w === "object" && w.ok === false) return w;
@@ -853,7 +945,8 @@ export class Capture {
       throw e;
     }
     if (!done.ok) return done;
-    return { ok: true, existed: false, capture: { sha256: sha, bytes: total }, receipt: receiptOf(done.receipt), document, ...pending,
+    await arm();
+    return { ok: true, existed: false, capture: { sha256: sha, bytes: total }, receipt: receiptOf(done.receipt), document, ...pending, ...jobsNote(profile),
              ...(typeof within === "function" ? { within: done.within } : {}) };
   }
 

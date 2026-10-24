@@ -8,7 +8,10 @@ import { normalizeAddress } from "../subresources.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
 import { say } from "./words.mjs";
 import { localize } from "../setup-words/index.mjs";
-import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
+import { ACQUIRE_GRADE_NOTE, CAPTURE_MAX } from "../acquisition/index.mjs";
+import { statement as boundStatement } from "../read-bounds.mjs";
+import { PLATFORM_FIGURES } from "../byte-ledger.mjs";
+import { createSha256 } from "../record-grammar/index.mjs";
 
 /** R64 (N339, K421): the one way this module's handlers answer what `doAnswer` read that was not an answer. The
  *  store's own refusal (`refused`: `ok: false` below 500, control-plane R23) is relayed with the store's status, code
@@ -69,10 +72,30 @@ export function evidenceAbsent(sha, store, extra = null) {
   /* END DEC-49 REGION is-evidence-held */
 }
 
+/** R111 (fix round 9; G124b): a ceiling a caller may only LOWER (a scaled figure for a test): the real figure, or the given one when it is a whole number below it. */
+const lowered = (real, given) => (Number.isSafeInteger(given) && given >= 0 && given < real ? given : real);
+
+/** R111: the 413 a put over a ceiling is answered with: its size and the figure it was judged against (`size`, `bound`), the sentence's key and the sentence. The
+ *  capture ceiling is the archive row of `READ_BOUNDS` (`CAPTURE_MAX`); the request ceiling is the platform's entry of `PLATFORM_FIGURES`; the lower is the one named. */
+function putTooLarge(size, request, bound, { storeName, cls }) {
+  return { ok: false, reason: "TOO_LARGE", size, bound, bytes: size, maxBytes: bound,
+           key: request ? "capture.ops.body_over_request_ceiling" : boundStatement("archive", "uploaded_bytes", size).key,
+           detail: request
+             ? localize("capture.ops.body_over_request_ceiling", "the body is larger than the {bound} bytes one request may carry, so it was refused whole; nothing was written", { bound: String(bound) })
+             : localize("capture.ops.body_over_capture_ceiling", "the body is larger than the {bound} bytes this surface keeps as one capture, so it was refused whole; nothing was written", { bound: String(bound) }),
+           store: storeName, tokenClass: cls };
+}
+
 /** R21: op=capture, the evidence store by digest. A put whose body hashes to anything else is refused naming both
  *  digests; an object already held is not rewritten; a get answers the bytes (206 for a range) or R63's absence.
- *  `key` is the object key of a digest in this store's namespace. */
-export async function captureObjectOp(req, url, env, { json, storageAbsent, requiredArgument, key, storeName, cls }) {
+ *  `key` is the object key of a digest in this store's namespace.
+ *
+ *  R111 (fix round 9; G124b): a put is bounded BEFORE its body is held: a length it declares over the ceiling (the lower of `CAPTURE_MAX` and the platform's
+ *  request-body entry of `PLATFORM_FIGURES`) is refused 413 naming its size and the figure before one byte is read, and a body that goes past it while it streams is
+ *  refused and cancelled. The body is held ONCE (the old read held the request's buffer and a copy for the digest): its bytes are collected into one buffer as they
+ *  arrive, hashed as they arrive, and put; the byte `ledger` (`runtime-limits`; none handed, none counted) counts what is held and is empty again when the put is
+ *  answered. `bounds` only lowers the figures (a scaled bound for a test). */
+export async function captureObjectOp(req, url, env, { json, storageAbsent, requiredArgument, key, storeName, cls, ledger = null, bounds = null }) {
   if (typeof env.CAPTURES?.get !== "function") return storageAbsent("capture", "R2 is not configured on this instance");
   const sha = (url.searchParams.get("sha256") || "").toLowerCase();
   if (!/^[0-9a-f]{64}$/.test(sha))
@@ -80,16 +103,58 @@ export async function captureObjectOp(req, url, env, { json, storageAbsent, requ
       "capture requires sha256=<64 lowercase hex>") }, 400);
   const k = key(sha);
   if (req.method === "PUT" || req.method === "POST") {
-    const body = new Uint8Array(await req.arrayBuffer());
-    const d = await crypto.subtle.digest("SHA-256", body);
-    const digest = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
-    if (digest !== sha)
-      return json({ ok: false, reason: "INTEGRITY", detail: localize("capture.ops.body_hash_mismatch", "body hash does not match the sha256 parameter"),
-                    expected: sha, got: digest, store: storeName, tokenClass: cls }, 400);
-    const existing = await env.CAPTURES.head(k);
-    if (existing) return json({ ok: true, sha256: sha, bytes: existing.size, existed: true, store: storeName, tokenClass: cls });
-    await env.CAPTURES.put(k, body, { sha256: d });
-    return json({ ok: true, sha256: sha, bytes: body.length, existed: false, store: storeName, tokenClass: cls });
+    const capMax = lowered(CAPTURE_MAX, bounds && bounds.capture), reqMax = lowered(PLATFORM_FIGURES.request_body_max.value, bounds && bounds.request);
+    const ceiling = Math.min(capMax, reqMax), request = reqMax <= capMax;
+    const counting = !!ledger && typeof ledger.hold === "function" && typeof ledger.release === "function";
+    let held = 0;
+    const hold = (n) => { if (counting && n > 0) { try { ledger.hold(n, "put"); held += n; } catch { /* a ledger that cannot count */ } } };
+    const release = () => { if (counting && held > 0) { try { ledger.release(held, "put"); } catch { /* a ledger that cannot count */ } held = 0; } };
+    const refuse = async (size) => {
+      try { await (req.body && typeof req.body.cancel === "function" ? req.body.cancel() : null); } catch { /* already closed */ }
+      return json(putTooLarge(size, request, ceiling, { storeName, cls }), 413);
+    };
+    try {
+      const said = req.headers.get("content-length");
+      const declared = typeof said === "string" && /^\d{1,15}$/.test(said.trim()) ? Number(said.trim()) : null;
+      if (declared !== null && declared > ceiling) return await refuse(declared);
+      let body, total = 0;
+      const sum = createSha256();
+      if (!req.body) body = new Uint8Array(0);
+      else {
+        const reader = req.body.getReader();
+        /* a declared length is allocated once and filled as the body arrives; with none, the chunks are collected and joined into one buffer at the end */
+        let buf = declared !== null ? new Uint8Array(declared) : null;
+        if (buf) hold(declared);
+        const chunks = [];
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          total += value.length;
+          if (total > ceiling) { try { await reader.cancel(); } catch { /* already closed */ } return json(putTooLarge(total, request, ceiling, { storeName, cls }), 413); }
+          sum.update(value);
+          /* a body longer than its declared length goes on as an undeclared one: what was filled is kept as the first chunk (the ceiling still binds) */
+          if (buf && total > buf.length) { chunks.push(buf.subarray(0, total - value.length)); buf = null; }
+          if (buf) buf.set(value, total - value.length);
+          else { chunks.push(value); hold(value.length); }
+        }
+        if (buf) body = buf.length === total ? buf : buf.subarray(0, total);
+        else {
+          body = new Uint8Array(total);
+          hold(total);
+          let at = 0;
+          for (const c of chunks) { body.set(c, at); at += c.length; }
+          chunks.length = 0;
+        }
+      }
+      const digest = sum.hex();
+      if (digest !== sha)
+        return json({ ok: false, reason: "INTEGRITY", detail: localize("capture.ops.body_hash_mismatch", "body hash does not match the sha256 parameter"),
+                      expected: sha, got: digest, store: storeName, tokenClass: cls }, 400);
+      const existing = await env.CAPTURES.head(k);
+      if (existing) return json({ ok: true, sha256: sha, bytes: existing.size, existed: true, store: storeName, tokenClass: cls });
+      await env.CAPTURES.put(k, body, { sha256: digest });
+      return json({ ok: true, sha256: sha, bytes: body.length, existed: false, store: storeName, tokenClass: cls });
+    } finally { release(); }
   }
   const wantRange = req.headers.get("range");
   const obj = await env.CAPTURES.get(k, wantRange ? { range: req.headers } : undefined);
@@ -210,7 +275,7 @@ export async function captureOp(op, req, url, env, store, h) {
   if (op === "links") return linksOp(url, store(), { json, storeSilent, storeRefusal, doAnswer, viewer: h.viewer });
   if (op === "capture")
     return captureObjectOp(req, url, env, { json, storageAbsent: h.storageAbsent, requiredArgument: h.requiredArgument, key: h.key,
-                                            storeName: h.storeName, cls: h.cls });
+                                            storeName: h.storeName, cls: h.cls, ledger: h.ledger ?? null, bounds: h.bounds ?? null });
   if (op === "archivelookup") return archiveLookupOp(req, url, store(), { json, storeSilent, storeRefusal, doAnswer });
   if (op === "acquire") {
     const at = store();

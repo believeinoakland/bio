@@ -7,7 +7,8 @@ import { fresh, bucket, provenance, network, register, sha } from "./fixture.mjs
 import { UPLOAD_STATEMENT_MAX, UPLOAD_NAME_MAX, UPLOAD_WITHIN_FAILED_DETAIL } from "../../../src/capture/index.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { provenanceOf, UPLOAD_VIA } from "../../../src/provenance/index.mjs";
-import { INSTALLATION_CHECKS, firstHopWho, CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
+import { INSTALLATION_CHECKS, firstHopWho, CAPTURE_MAX, textTypeOf } from "../../../src/acquisition/index.mjs";
+import { PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
 
 const te = new TextEncoder();
 const MiB = 1024 * 1024;
@@ -94,22 +95,26 @@ test("R86 (acquisition R10): zero bytes is EMPTY and no bytes at all NO_BODY, ea
   assert.deepEqual([one.ok, one.capture], [true, { sha256: sha(Uint8Array.of(7)), bytes: 1 }]);
 });
 
-test("R86 (acquisition R10): more than 256 MiB is TOO_LARGE (413) with the stream cancelled, and no receipt, actor or document; exactly 256 MiB is admitted, held in parts of 8 MiB", async () => {
+test("R86 R111 (acquisition R10, R114): more than the lower of the capture ceiling (256 MiB) and the platform's request ceiling (100 MiB) is TOO_LARGE (413) naming its size and that figure, with the stream cancelled, and no receipt, actor or document; exactly the figure is admitted, held in parts of 8 MiB", async () => {
   assert.equal(CAPTURE_MAX, 256 * MiB);
+  const ceiling = PLATFORM_FIGURES.request_body_max.value;
+  assert.equal(ceiling, 100 * MiB, "today the platform's ceiling is the lower, so it is the one a member meets");
   const chunk = new Uint8Array(8 * MiB).fill(0x61);
   const big = setup();
-  const s = streamOf(chunk, 40);
+  const s = streamOf(chunk, 14);
   const r = await big.c.uploadCapture({ ...ok, bytes: s.stream });
-  assert.deepEqual([r.ok, r.reason, r.status, r.maxBytes, r.bytes], [false, "TOO_LARGE", 413, CAPTURE_MAX, 33 * 8 * MiB], "refused at the first chunk past the limit");
+  assert.deepEqual([r.ok, r.reason, r.status, r.maxBytes, r.bytes, r.size, r.bound], [false, "TOO_LARGE", 413, ceiling, 13 * 8 * MiB, 13 * 8 * MiB, ceiling],
+                   "refused at the first chunk past the figure");
   assert.equal(s.cancelled, true, "the stream cancelled");
   assert.deepEqual(big.prov.receipts, [], "no receipt");
   assert.equal(big.rows(`SELECT count(*) n FROM capture_actors`)[0].n, 0, "no actor");
-  /* negative control: exactly the limit is filed, in 32 parts of 8 MiB, each under its own digest */
+  /* negative control: exactly the figure is filed, in 12 parts of 8 MiB and one of 4 MiB, each under its own digest */
   const fit = setup();
-  const r2 = await fit.c.uploadCapture({ ...ok, bytes: streamOf(chunk, 32).stream });
-  assert.deepEqual([r2.ok, r2.existed, r2.capture.bytes], [true, false, CAPTURE_MAX]);
-  assert.equal(r2.document.parts.length, 32);
-  assert.ok(r2.document.parts.every((p, i) => p.bytes === 8 * MiB && p.sha256 === sha(chunk)
+  const exact = new Uint8Array(ceiling).fill(0x61);
+  const r2 = await fit.c.uploadCapture({ ...ok, bytes: streamOf(exact, 1).stream });
+  assert.deepEqual([r2.ok, r2.existed, r2.capture.bytes], [true, false, ceiling]);
+  assert.equal(r2.document.parts.length, 13);
+  assert.ok(r2.document.parts.every((p, i) => p.bytes === (i < 12 ? 8 * MiB : 4 * MiB)
     && p.file === `snapshots/upload-${r2.capture.sha256}.part${String(i).padStart(3, "0")}`));
   assert.ok(fit.b.held.has(`bio/captures/${sha(chunk)}`), "the part held under its own digest");
 });
@@ -315,8 +320,16 @@ test("R92 (controls): the same bytes with no type profile as before; text/plain 
   const nul = (await setup().c.uploadCapture({ ...ok, bytes: new Uint8Array([97, 0, 98, 10]), type: "text/plain" })).document.profile;
   assert.equal(nul.profiled_from_text, false);
   assert.deepEqual([nul.source_content_type, nul.declared_by], ["text/plain", "uploader"], "recorded as declared");
-  const bad = (await setup().c.uploadCapture({ ...ok, bytes: new Uint8Array([0xff, 0xfe, 0x41, 10]), type: "text/plain" })).document.profile;
-  assert.equal(bad.profiled_from_text, false, "not valid UTF-8");
+  /* G131g: the one decode (`acquisition` R102, R120): a UTF-16 byte order mark reads as text, as a fetched file's does, so the upload
+     is profiled from text exactly when `textTypeOf` says the bytes are text, never by a UTF-8-only rule of this module's own */
+  const bom = new Uint8Array([0xff, 0xfe, 0x41, 10]);
+  const viaBom = (await setup().c.uploadCapture({ ...ok, bytes: bom, type: "text/plain" })).document.profile;
+  assert.equal(textTypeOf({ bytes: bom, type: "text/plain" }), "text/plain", "acquisition decodes a byte order mark as text");
+  assert.equal(viaBom.profiled_from_text, true, "an upload reads it as text too");
+  const binary = new Uint8Array([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1, 0]);
+  const notText = (await setup().c.uploadCapture({ ...ok, bytes: binary, type: "text/plain" })).document.profile;
+  assert.equal(textTypeOf({ bytes: binary, type: "text/plain" }), null);
+  assert.equal(notText.profiled_from_text, false, "bytes acquisition does not decode as text are not profiled from text");
   const other = (await setup().c.uploadCapture({ ...ok, bytes: text, type: "application/octet-stream" })).document.profile;
   assert.equal(other.profiled_from_text, false);
   assert.deepEqual([other.source_content_type, other.declared_by], ["application/octet-stream", "uploader"]);
