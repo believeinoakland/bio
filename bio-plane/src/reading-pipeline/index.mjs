@@ -3144,6 +3144,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           /* a later range is its units and what its pages add: the OCR it left, refused or lost, and the pictures it left unread */
           const facts = {};
           stateOcr(facts, ocrLeft, ocrFacts, i2text);
+          /* K4911 (B47): the chain of this range's own pages, as the whole read's `text_source` restricted to them (the tiers that read them: layer, ocr, ...), so what the
+             range's units are stored under is theirs and not the first piece's; absent when no page of the range holds text */
+          const hasText = (Array.isArray(i2text && i2text.pages) ? i2text.pages : []).some((pg) => pg && typeof pg.text === "string" && glyphCount(pg.text) > 0);
+          const pieceChain = hasText ? (chain || layerChainFor(i2text, { tier: wiredTier, container: fmt })) : null;
+          if (Array.isArray(pieceChain)) facts.piece_chain = pieceChain;
           return { ...(textUnits ? { text_units: textUnits } : {}), ...p.fields, piece: p.piece,
                    ...(Object.keys(facts).length ? { reading: facts } : {}) };
         }

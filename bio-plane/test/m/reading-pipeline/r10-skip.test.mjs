@@ -111,3 +111,42 @@ test("R29 R6 (K4909): the transcription sentence counts only the pages that gain
     assert.match(basis, /1 page\(s\) \(2\) could not be read by text recognition|1 page\(s\) \(page 2\) could not be read by text recognition/);
   });
 });
+
+test("R40 R57 (K4911, B47): a later PDF range answers its own pages' chain: typed pages under `layer`, scanned pages under `pixels -> ocr`; the first range's chain is not borrowed", async () => {
+  const { deflateSync } = await import("node:zlib");
+  const { chunked } = await import("./scans.mjs");
+  const objs = [{ num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" }];
+  const kinds = ["t", "t", "t", "t", "s", "s"];
+  objs.push({ num: 2, body: `<< /Type /Pages /Kids [${kinds.map((_, i) => `${5 + i * 3} 0 R`).join(" ")}] /Count ${kinds.length} >>` });
+  const cmap = Buffer.from("/CIDInit /ProcSet findresource begin 12 dict begin begincmap /CMapName /Adobe-Identity-UCS def /CMapType 2 def 1 begincodespacerange <00> <FF> endcodespacerange 1 beginbfrange <00> <FF> <0000> endbfrange endcmap CMapName currentdict /CMap defineresource pop end end", "latin1");
+  objs.push({ num: 3, head: `<< /Length ${cmap.length} >>`, stream: cmap });
+  objs.push({ num: 4, body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /ToUnicode 3 0 R >>" });
+  const img = deflateSync(Buffer.alloc(256, 0x80));
+  kinds.forEach((k, i) => {
+    const p = 5 + i * 3;
+    const content = Buffer.from(k === "t" ? `BT /F1 12 Tf 72 700 Td (Typed page ${i} has real words in its text layer.) Tj ET` : "q 612 0 0 792 0 0 cm /Im0 Do Q", "latin1");
+    objs.push({ num: p, body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> /XObject << /Im0 ${p + 2} 0 R >> >> /Contents ${p + 1} 0 R >>` });
+    objs.push({ num: p + 1, head: `<< /Length ${content.length} >>`, stream: content });
+    objs.push({ num: p + 2, head: `<< /Type /XObject /Subtype /Image /Width 16 /Height 16 /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode /Length ${img.length} >>`, stream: img });
+  });
+  const chunks = [Buffer.from("%PDF-1.7\n", "latin1")];
+  for (const o of objs) {
+    chunks.push(Buffer.from(`${o.num} 0 obj\n`, "latin1"));
+    if (o.stream) chunks.push(Buffer.from(o.head + "\nstream\n", "latin1"), o.stream, Buffer.from("\nendstream\n", "latin1")); else chunks.push(Buffer.from(o.body + "\n", "latin1"));
+    chunks.push(Buffer.from("endobj\n", "latin1"));
+  }
+  chunks.push(Buffer.from("%%EOF\n", "latin1"));
+  const bytes = new Uint8Array(Buffer.concat(chunks));
+  const b = bucket();
+  const d = await hold(b, bytes);
+  const document = doc({ digest: d, bytes: bytes.length, ct: "application/pdf", format: "pdf" });
+  const env = { OCR_WORKER: chunked() };
+  const steps = (c) => (Array.isArray(c) ? c.map((x) => x.step) : []);
+  const first = await readOf(b, document, { env, cursor: null, rangePages: 2, unitsBudget: Infinity });
+  assert.ok(first.more, "read in ranges");
+  const second = await readOf(b, document, { env, cursor: first.cursor, rangePages: 2, unitsBudget: Infinity });
+  assert.deepEqual(steps(second.reading.piece_chain), ["layer"], "typed pages 2-3");
+  const third = await readOf(b, document, { env, cursor: second.cursor, rangePages: 2, unitsBudget: Infinity });
+  assert.ok(steps(third.reading.piece_chain).includes("ocr"), `scanned pages 4-5: ${JSON.stringify(steps(third.reading.piece_chain))}`);
+  assert.ok(!steps(third.reading.piece_chain).every((s) => s === "layer"), "not the first piece's layer chain");
+});
