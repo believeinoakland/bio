@@ -145,3 +145,9 @@ START B5 handled (fix round 9; G133a, G133b, G133c, G133d, G134a, G134b, G134d, 
 - Heavy file `r8-held-cells.test.mjs` alone, five runs: 8/8 each; with `r9-linear` on one core (`taskset -c 0`): 17/17.
 
 Size (session_01UqB6MGJZC34pq9fKcsf621): test runs 31, module lines 2903
+
+## J9 · COMPLETE
+
+CHANGE B7 (K4863) handled. `decodeTextFallback` and its `typeof` switch are removed from `bio-plane/src/odf.mjs`; `readXmlText` calls `ooxml.decodeText` through the namespace import. ooxml has not merged, so 99 of 120 odf-reader tests are red by name now (every read goes through the decode: `ooxml.decodeText is not a function` is stated as `reader_failed:TypeError`); the 21 that pass read no part (detect, digest, quotes, predicate). Nothing else changed; all of J8's results hold once ooxml's `decodeText` merges (they were green with the stand-in). I need the CHANGE you promised when ooxml merges, to merge `tranche/T51` and re-run the module, impact and the checks. The J8 line "BOB may send CHANGE to delete it" is done.
+
+Size (session_01UqB6MGJZC34pq9fKcsf621): test runs 32, module lines 2870
