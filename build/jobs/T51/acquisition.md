@@ -637,3 +637,7 @@ Red first: the undeclared test now asserts the stored parts are read back once e
 Superseded tests, amended (R115 amends R96's "no read-back" for such a body only; R115's text says so): `fix3-t51.test.mjs` (16 MiB capture: each stored part read back once, no whole get) and `fix5-t51.test.mjs` R101 (the fixture now declares its length, so the head is judged without any read-back).
 Suite: tests 325, pass 325, fail 0. capture tests naming acquisition: 243/243. format, architecture, coverage (75 of 75): 0 failures; words: none in my files; ownership: 1 failure, the requirements file (accepted per B3/B4).
 Size (session_018XJZd3Y6SC5rJeKSargNwt): test runs 10, module lines 4358
+
+## J39 · COMPLETE · re B41
+
+COMPLETE re B41: option (a). No join: a body with no declared length or overrunning its declared length holds nothing past its first part; the whole is made by reading the stored parts back one at a time (ledger: whole + one part). Red first (undeclared test asserts the read-back; red on the join commit). Two older tests encoding R96's no-read-back for such bodies amended (fix3-t51 C5, fix5-t51 R101), R115 text says so. Suite 325/325, capture users 243/243, checks 0 failures (ownership lists the requirements file, per B3/B4). Record: 'after B41'.
