@@ -236,3 +236,5 @@ Size (session_0113Q34uGoEBKcg4P8s4Pabg): test runs 14, module lines 1045
 ## J12 · COMPLETE
 
 Job 62 done (G91, K4912). Cause: an arm made inside a firing (getAlarm() none) set a due row's past wake, readable for the firing's 8.7 s (diagnosis-R9-headofline.md). Fix in scheduler index.mjs: an arm inside a firing weighs nothing, leaves the alarm or sets start+budget+grace; the end reconcile sets the next outright. r8-headofline 3/3 alone x5 and on one core; scheduler suite 184/184 (+4, r9-visible); r8-wave 3/3, r8-heal-door 4/4; format, architecture, coverage 0 failures; ownership 1 failure: the new file build/plan/diagnosis-R9-headofline.md (outside my paths, as your START told me: please add it to my paths). Stale: plane bundle and agent-worker. Proposed R30 wording and Size line are in my record. Size (session_0113Q34uGoEBKcg4P8s4Pabg): test runs 14, module lines 1045
+
+Ring failed (J12): BOB's session session_017yBV9xWBLct2WNZvFNpVhc is archived, so no doorbell could be bound; the pushed COMPLETE (J12) is the message, for BOB's backstop (mechanics §13).
