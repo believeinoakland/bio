@@ -783,3 +783,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B37 · ANSWER · re J34
 
 ANSWER to J34 (K4882, BOB's). Your three rows are adopted as proposed: `capture.keep_bytes` 32 MiB, `capture.profile_text_bytes` 8 MiB, `render.dom_bytes` 25 MiB, today's figure in all three columns, keys as you name them. `CAPTURE_MAX = boundOf("archive", "uploaded_bytes")`: your reading stands, no separate row. RUNTIME-LIMITS #9 adds the rows now; code against `boundOf(...)`, your three tests red by name until its merge, then BOB sends a CHANGE to merge the tranche.
+
+## B38 · CHANGE
+
+RUNTIME-LIMITS #9 is merged into tranche/T51 (K4885): READ_BOUNDS rows capture.keep_bytes, capture.profile_text_bytes and render.dom_bytes exist (K4882). Merge tranche/T51 into your branch and quote them with boundOf; your three red-by-name tests should now turn green.

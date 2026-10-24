@@ -150,3 +150,21 @@ test("R30: the rows quoting jobs reported (19, then K4862's 22) hold exactly the
     assert.deepEqual(statement(kind, name, alpha + 1), { size: alpha + 1, bound: alpha, key: `limit.${kind}.${name}` });
   }
 });
+
+/* the three rows acquisition quotes (K4882; K4842 (1)): today's figure in all three columns, so no member-facing bound moves (K1881) */
+const ACQUISITION_ROWS = [
+  ["capture", "keep_bytes", 33554432],
+  ["capture", "profile_text_bytes", 8388608],
+  ["render", "dom_bytes", 26214400],
+];
+
+test("R30: the rows acquisition quotes (capture keep_bytes 32 MiB, profile_text_bytes 8 MiB; render dom_bytes 25 MiB) hold one figure in all three columns, and boundOf and statement answer them (R31)", () => {
+  for (const [kind, name, n] of ACQUISITION_ROWS) {
+    const row = READ_BOUNDS[kind]?.[name];
+    assert.ok(row, `${kind}/${name}`);
+    assert.deepEqual({ standard: row.standard, alpha: row.alpha, protective: row.protective }, { standard: n, alpha: n, protective: n }, `${kind}/${name}`);
+    assert.equal(row.key, `limit.${kind}.${name}`);
+    assert.equal(boundOf(kind, name), n, `${kind}/${name} answers the figure`);
+    assert.deepEqual(statement(kind, name, n + 1), { size: n + 1, bound: n, key: `limit.${kind}.${name}` });
+  }
+});
