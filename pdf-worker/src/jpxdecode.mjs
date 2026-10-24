@@ -44,7 +44,7 @@
 
 import { MqDecoder, mqContexts } from "./mq.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
-import { boundOf, statement } from "../../bio-plane/src/read-bounds.mjs";
+import { READ_BOUNDS, boundOf, statement } from "../../bio-plane/src/read-bounds.mjs";
 
 export class JpxRefusal extends Error {
   constructor(code, detail = {}) {
@@ -97,8 +97,13 @@ export const JPX_REFUSES = Object.freeze({
  * proposed, BOB confirming for JPX). */
 const PIXELS_MAX = boundOf("image", "pixels");
 const EDGE_MAX = boundOf("image", "edge");
-const WORKING_SET_MAX = boundOf("ocr", "frame_bytes");
-const OBJECTS_MAX = boundOf("office", "retained_objects");
+/* the two rows BOB ruled for this module (K4858): `image.working_set` and `image.retained_objects`. Until runtime-limits has added them
+ * the same figures are read from the rows that hold them today, `ocr.frame_bytes` and `office.retained_objects`; the guard needs no
+ * edit when the rows land. */
+const WORKING_ROW = Object.hasOwn(READ_BOUNDS.image, "working_set") ? ["image", "working_set"] : ["ocr", "frame_bytes"];
+const OBJECTS_ROW = Object.hasOwn(READ_BOUNDS.image, "retained_objects") ? ["image", "retained_objects"] : ["office", "retained_objects"];
+const WORKING_SET_MAX = boundOf(...WORKING_ROW);
+const OBJECTS_MAX = boundOf(...OBJECTS_ROW);
 const tooLarge = (kind, name, size, note, extra) => new JpxRefusal("IMAGE_TOO_LARGE", { note, bound_name: name, ...statement(kind, name, size), ...extra });
 
 /** What decoding this codestream must hold at once, from its headers alone:
@@ -115,17 +120,26 @@ function workingSet(cs, nTiles) {
 }
 
 /** The objects tier 2 would build for the tiles present, counted from the headers alone: per band, one per precinct and one
- *  per code-block, and one per tile. Stops at the bound, so a hostile count is not summed past it. */
+ *  per code-block; per tile, one, and one entry of the packet order for every layer of every precinct of every component
+ *  and resolution (`packetOrder` lists them all before a packet byte is read). Stops at the bound, so a hostile count is
+ *  not summed past it. */
 function retainedObjects(cs, nTiles) {
   let n = 0;
   for (const [no, t] of cs.tiles) {
     if (no >= nTiles) continue;
     n++;
-    for (const x of tileLayout(cs, t, no).tc) for (const R0 of x.res) for (const B of R0.bands) {
-      const bw = Math.max(0, B.x1 - B.x0), bh = Math.max(0, B.y1 - B.y0);
-      n += R0.npw * R0.nph + ceilDiv(bw, 2 ** B.xcb) * ceilDiv(bh, 2 ** B.ycb);
+    let precincts = 0;
+    const { tc, cod } = tileLayout(cs, t, no);
+    for (const x of tc) for (const R0 of x.res) {
+      precincts += R0.npw * R0.nph;
+      for (const B of R0.bands) {
+        const bw = Math.max(0, B.x1 - B.x0), bh = Math.max(0, B.y1 - B.y0);
+        n += R0.npw * R0.nph + ceilDiv(bw, 2 ** B.xcb) * ceilDiv(bh, 2 ** B.ycb);
+      }
       if (n > OBJECTS_MAX) return n;
     }
+    n += cod.layers * precincts;
+    if (n > OBJECTS_MAX) return n;
   }
   return n;
 }
@@ -982,11 +996,11 @@ export function decodeJpx(d) {
     throw tooLarge("image", "pixels", W * H, localize("image-codecs.jpxdecode.the_image_is_w_by_h_2", "the image is {W} by {H}, past the {bound} pixels the decoder reads", { W: String(W), H: String(H), bound: String(PIXELS_MAX) }), { width: W, height: H, components: nc });
   const need = workingSet(cs, nTiles);
   if (need > WORKING_SET_MAX)
-    throw tooLarge("ocr", "frame_bytes", need, localize("image-codecs.jpxdecode.the_decode_would_hold_bytes_at", "the decode would hold {bytes} bytes at once, past the {bound} the memory bound allows: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile", { bytes: String(need), bound: String(WORKING_SET_MAX) }),
+    throw tooLarge(...WORKING_ROW, need, localize("image-codecs.jpxdecode.the_decode_would_hold_bytes_at", "the decode would hold {bytes} bytes at once, past the {bound} the memory bound allows: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile", { bytes: String(need), bound: String(WORKING_SET_MAX) }),
       { bound_name: "working_set", working_set_bytes: need, bound_bytes: WORKING_SET_MAX, width: W, height: H, components: nc });
   const objects = retainedObjects(cs, nTiles);
   if (objects > OBJECTS_MAX)
-    throw tooLarge("office", "retained_objects", objects, localize("image-codecs.jpxdecode.the_codestream_s_precincts_and_code", "the codestream's precincts and code-blocks would be {objects} objects, past the {bound} the decoder builds", { objects: String(objects), bound: String(OBJECTS_MAX) }), { bound_name: "objects", width: W, height: H, components: nc });
+    throw tooLarge(...OBJECTS_ROW, objects, localize("image-codecs.jpxdecode.the_codestream_s_precincts_and_code", "the codestream's precincts and code-blocks would be {objects} objects, past the {bound} the decoder builds", { objects: String(objects), bound: String(OBJECTS_MAX) }), { bound_name: "objects", width: W, height: H, components: nc });
   if (cs.tiles.size < nTiles) throw truncated(localize("image-codecs.jpxdecode.size_of_ntiles_tiles_are", "{size} of {nTiles} tiles are present", { size: String(cs.tiles.size), nTiles: String(nTiles) }));
   let out = null;
   const t1 = { tmp: new Int32Array(4096), flags: new Uint16Array(1026 * 6) };

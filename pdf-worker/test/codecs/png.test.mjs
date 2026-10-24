@@ -21,7 +21,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { crc32, deflateSync, inflateSync } from "node:zlib";
 import { decodePng, PNG_REFUSES, PngRefusal } from "../../src/pngdecode.mjs";
-import { boundOf } from "../../../bio-plane/src/read-bounds.mjs";
+import { READ_BOUNDS, boundOf } from "../../../bio-plane/src/read-bounds.mjs";
 import { peakAllocationAsync } from "./alloc-spy.mjs";
 
 const FIX = JSON.parse(readFileSync(new URL("fixtures/png-variants.json", import.meta.url), "utf8"));
@@ -250,7 +250,8 @@ test("R10 R7 every other refusal, each as the bytes require; every code and ever
 });
 
 test("R10 R12 a frame past the memory bound is refused IMAGE_TOO_LARGE from its header, before any sample, and the bound counts the output", async () => {
-  const WORKING = boundOf("ocr", "frame_bytes");
+  const WORKING_ROW = Object.hasOwn(READ_BOUNDS.image, "working_set") ? ["image", "working_set"] : ["ocr", "frame_bytes"];   // K4858
+  const WORKING = boundOf(...WORKING_ROW);
   const sized = (name, w, h) => edited(name, (cs) => withIhdr(cs, [[0, be32(w)], [4, be32(h)]]));
   const memory = async (d) => { const r = await refusal(d); return r.code === "IMAGE_TOO_LARGE" && r.detail.bound_name === "working_set" ? r : null; };
   const r = await memory(sized("basn2c08.png", 6000, 6000));
@@ -258,7 +259,7 @@ test("R10 R12 a frame past the memory bound is refused IMAGE_TOO_LARGE from its 
   assert.deepEqual([r.code, r.detail.width, r.detail.height, r.detail.components, r.detail.bound_bytes, r.detail.bound], ["IMAGE_TOO_LARGE", 6000, 6000, 3, WORKING, WORKING]);
   assert.equal(r.detail.working_set_bytes, 6000 * 6000 * 3 + 2 * (6000 * 3 + 1), "the output, and two stored rows");
   assert.equal(r.detail.size, r.detail.working_set_bytes);
-  assert.equal(r.detail.key, "limit.ocr.frame_bytes");
+  assert.equal(r.detail.key, `limit.${WORKING_ROW.join(".")}`);
   assert.ok(r.detail.transient === undefined && r.transient === undefined, "final, never retried");
   /* The output is 8-bit, one component for grey and three for the rest, alpha and 16 bits included. */
   assert.equal((await memory(sized("basn6a16.png", 4400, 4643))).detail.components, 3, "RGBA 16-bit: 61.29 MB of output, its two 35 KB rows past the bound");

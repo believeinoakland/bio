@@ -26,13 +26,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { decodeJpx, JPX_REFUSES, JpxRefusal } from "../../src/jpxdecode.mjs";
-import { boundOf } from "../../../bio-plane/src/read-bounds.mjs";
+import { READ_BOUNDS, boundOf } from "../../../bio-plane/src/read-bounds.mjs";
 
 const FIX = JSON.parse(readFileSync(new URL("../fixtures/jpx-variants.json", import.meta.url), "utf8"));
 const V = FIX.variants;
 const bytesOf = (v) => new Uint8Array(Buffer.from(v.data_b64, "base64"));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
-const WORKING = boundOf("ocr", "frame_bytes");
+const WORKING_ROW = Object.hasOwn(READ_BOUNDS.image, "working_set") ? ["image", "working_set"] : ["ocr", "frame_bytes"];   // K4858
+const WORKING = boundOf(...WORKING_ROW);
 
 function refusal(fn) {
   try { fn(); } catch (e) {
@@ -128,7 +129,7 @@ test("R4 R12 N34 a decode past the memory bound is refused IMAGE_TOO_LARGE, from
   assert.deepEqual([e.detail.width, e.detail.height, e.detail.components], [5000, 5000, 3]);
   assert.ok(e.detail.working_set_bytes > 5000 * 5000 * 3, "the output, and the decode's buffers beside it");
   assert.equal(e.detail.bound_bytes, WORKING);
-  assert.deepEqual([e.detail.size, e.detail.bound, e.detail.key], [e.detail.working_set_bytes, WORKING, "limit.ocr.frame_bytes"]);
+  assert.deepEqual([e.detail.size, e.detail.bound, e.detail.key], [e.detail.working_set_bytes, WORKING, `limit.${WORKING_ROW.join(".")}`]);
   assert.ok(e.detail.transient === undefined && e.transient === undefined, "final, never retried");
   assert.ok(!("image-past-memory-bound" in JPX_REFUSES), "the UNSUPPORTED key is retired by IMAGE_TOO_LARGE (R4, R7)");
   /* A declaration far past any memory is refused just as fast: nothing is allocated. */

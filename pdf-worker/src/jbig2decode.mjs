@@ -39,7 +39,7 @@
 
 import { MqDecoder, mqContexts } from "./mq.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
-import { boundOf, statement } from "../../bio-plane/src/read-bounds.mjs";
+import { READ_BOUNDS, boundOf, statement } from "../../bio-plane/src/read-bounds.mjs";
 
 export class Jbig2Refusal extends Error {
   constructor(code, detail = {}) {
@@ -70,13 +70,14 @@ export const JBIG2_REFUSES = Object.freeze({
 const PIXELS_MAX = boundOf("image", "pixels");
 const EDGE_MAX = boundOf("image", "edge");
 /* the symbols of a dictionary and the patterns of a pattern dictionary are retained objects, one bitmap each: the table's
- * retained-objects bound (250,000; the same row JPX counts its precincts against, see jpxdecode.mjs) */
-const OBJECTS_MAX = boundOf("office", "retained_objects");
+ * retained-objects bound (250,000; `image.retained_objects`, the row JPX counts its precincts against, see jpxdecode.mjs; K4858) */
+const OBJECTS_ROW = Object.hasOwn(READ_BOUNDS.image, "retained_objects") ? ["image", "retained_objects"] : ["office", "retained_objects"];
+const OBJECTS_MAX = boundOf(...OBJECTS_ROW);
 /** IMAGE_TOO_LARGE: final and deterministic, with the declared size, the bound it was judged against and the sentence's key. */
 const tooLarge = (kind, name, size, note, extra) => new Jbig2Refusal("IMAGE_TOO_LARGE", { note, bound_name: name, ...statement(kind, name, size), ...extra });
 const tooWide = (w, h) => tooLarge("image", "edge", Math.max(w, h),
   localize("image-codecs.jbig2decode.the_bitmap_is_w_by_h", "the bitmap is {w} by {h}, and the decoder reads an edge of at most {bound}", { w: String(w), h: String(h), bound: String(EDGE_MAX) }), { width: w, height: h });
-const tooManyObjects = (n, note) => tooLarge("office", "retained_objects", n, note, { bound_name: "objects" });
+const tooManyObjects = (n, note) => tooLarge(...OBJECTS_ROW, n, note, { bound_name: "objects" });
 const tooMany = (w, h) => tooLarge("image", "pixels", w * h,
   localize("image-codecs.jbig2decode.the_bitmap_is_w_by_h_2", "the bitmap is {w} by {h}, past the {bound} pixels the decoder reads", { w: String(w), h: String(h), bound: String(PIXELS_MAX) }), { width: w, height: h });
 

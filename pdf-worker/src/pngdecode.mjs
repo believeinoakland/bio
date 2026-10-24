@@ -46,7 +46,7 @@
  */
 
 import { localize } from "../../bio-plane/src/setup-words/index.mjs"
-import { boundOf, statement } from "../../bio-plane/src/read-bounds.mjs"
+import { READ_BOUNDS, boundOf, statement } from "../../bio-plane/src/read-bounds.mjs"
 
 export class PngRefusal extends Error {
   constructor(code, detail = {}) {
@@ -78,7 +78,10 @@ export const PNG_REFUSES = Object.freeze({
 const PIXELS_MAX = boundOf("image", "pixels");
 const EDGE_MAX = boundOf("image", "edge");
 const CHUNKS_MAX = boundOf("image", "chunks");
-const WORKING_SET_MAX = boundOf("ocr", "frame_bytes");
+/* the working-set row BOB ruled for this module (K4858): `image.working_set`. Until runtime-limits has added it the same figure is
+ * read from the row that holds it today, `ocr.frame_bytes`; the guard needs no edit when the row lands. */
+const WORKING_ROW = Object.hasOwn(READ_BOUNDS.image, "working_set") ? ["image", "working_set"] : ["ocr", "frame_bytes"];
+const WORKING_SET_MAX = boundOf(...WORKING_ROW);
 const tooLarge = (kind, name, size, note, extra) => new PngRefusal("IMAGE_TOO_LARGE", { note, bound_name: name, ...statement(kind, name, size), ...extra });
 
 const SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -210,7 +213,7 @@ export async function decodePng(bytes) {
   const rowBytes = Math.ceil((W * ch * depth) / 8);
   const need = W * H * comps + 2 * (rowBytes + 1);
   if (need > WORKING_SET_MAX)
-    throw tooLarge("ocr", "frame_bytes", need, localize("image-codecs.pngdecode.the_decode_would_hold_bytes_at", "the decode would hold {bytes} bytes at once, past the {bound} the memory bound allows: the 8-bit output, and beside it two rows of the stored image", { bytes: String(need), bound: String(WORKING_SET_MAX) }),
+    throw tooLarge(...WORKING_ROW, need, localize("image-codecs.pngdecode.the_decode_would_hold_bytes_at", "the decode would hold {bytes} bytes at once, past the {bound} the memory bound allows: the 8-bit output, and beside it two rows of the stored image", { bytes: String(need), bound: String(WORKING_SET_MAX) }),
       { bound_name: "working_set", working_set_bytes: need, bound_bytes: WORKING_SET_MAX, width: W, height: H, components: comps });
 
   /* The palette and transparency, as the colour type reads them. */

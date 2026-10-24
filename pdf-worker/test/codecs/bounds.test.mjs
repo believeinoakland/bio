@@ -14,7 +14,7 @@ import "../../../bio-plane/test/sandbox.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { boundOf } from "../../../bio-plane/src/read-bounds.mjs";
+import { READ_BOUNDS, boundOf } from "../../../bio-plane/src/read-bounds.mjs";
 import { peakAllocation } from "./alloc-spy.mjs";
 import { ccittDecode, CcittRefusal } from "../../src/ccittdecode.mjs";
 import { decodeBaselineJpeg, decodeBaselineJpegRows, DctRefusal } from "../../src/dctdecode.mjs";
@@ -22,7 +22,10 @@ import { decodeJbig2, Jbig2Refusal } from "../../src/jbig2decode.mjs";
 import { decodeJpx, JpxRefusal } from "../../src/jpxdecode.mjs";
 
 const PIXELS = boundOf("image", "pixels"), EDGE = boundOf("image", "edge");
-const OBJECTS = boundOf("office", "retained_objects");
+/* the rows BOB ruled (K4858), or the rows holding the same figures until runtime-limits has added them */
+const OBJECTS_ROW = Object.hasOwn(READ_BOUNDS.image, "retained_objects") ? ["image", "retained_objects"] : ["office", "retained_objects"];
+const WORKING_ROW = Object.hasOwn(READ_BOUNDS.image, "working_set") ? ["image", "working_set"] : ["ocr", "frame_bytes"];
+const OBJECTS = boundOf(...OBJECTS_ROW);
 
 const u16 = (n) => [(n >>> 8) & 255, n & 255];
 const u32 = (n) => [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255];
@@ -171,10 +174,10 @@ test("R12 JBIG2: the pixel bound either side", () => {
 
 /** A codestream's main header and one tile-part, declaring a `size` x `size` single-tile grey picture in 8 bytes of
  *  data: `levels` decomposition levels, precincts of 2^pp (or the default, whole-tile, precincts when pp is null). */
-function codestream({ size, w = size, h = size, levels = 5, pp = null, cblk = 4, comps = 1 }) {
+function codestream({ size, w = size, h = size, levels = 5, pp = null, cblk = 4, comps = 1, layers = 1 }) {
   const siz = [0, 0, ...u32(w), ...u32(h), ...u32(0), ...u32(0), ...u32(w), ...u32(h), ...u32(0), ...u32(0), ...u16(comps)];
   for (let c = 0; c < comps; c++) siz.push(7, 1, 1);
-  const cod = [pp === null ? 0 : 1, 0, ...u16(1), 0, levels, cblk, cblk, 0, 1];
+  const cod = [pp === null ? 0 : 1, 0, ...u16(layers), 0, levels, cblk, cblk, 0, 1];
   if (pp !== null) for (let r = 0; r <= levels; r++) cod.push((pp << 4) | pp);
   const qcd = [0x40];
   for (let i = 0; i < 1 + 3 * levels; i++) qcd.push(8 << 3);
@@ -212,6 +215,11 @@ test("R12 R4 JPX: the retained-objects bound counts precincts and code-blocks; t
   /* the same picture with the default precincts has a handful of objects: it is not refused for them (its few bytes decode, to nothing) */
   const plain = refusal(codestream({ size: 500, pp: null }));
   assert.notEqual(plain?.code, "IMAGE_TOO_LARGE");
+  /* the packet order lists every layer of every precinct before a byte is read: 65,535 layers of a small picture's six resolutions are 393,210 entries */
+  const layered = refusal(codestream({ size: 100, pp: null, layers: 65535 }));
+  assert.ok(layered instanceof JpxRefusal && layered.code === "IMAGE_TOO_LARGE" && layered.detail.bound_name === "objects", `${layered && layered.code}`);
+  assert.ok(layered.detail.size > OBJECTS);
+  assert.notEqual(refusal(codestream({ size: 100, pp: null, layers: 12 }))?.code, "IMAGE_TOO_LARGE", "twelve layers are not");
   /* the pixel bound is judged from SIZ too */
   const huge = refusal(codestream({ size: 11000, pp: null }));
   assert.ok(huge instanceof JpxRefusal && huge.code === "IMAGE_TOO_LARGE", `${huge && huge.code}`);
@@ -232,7 +240,7 @@ test("R13 the module's source holds no numeric literal for a ceiling it keeps: e
   /* every figure of every column of the rows this module quotes, in the ways a number is written */
   const figures = [
     ...["pixels", "edge", "chunks", "row_stride"].map((n) => boundOf("image", n)),
-    boundOf("ocr", "frame_bytes"), boundOf("office", "retained_objects"),
+    boundOf(...WORKING_ROW), boundOf(...OBJECTS_ROW),
   ];
   const spellings = (n) => [String(n), n.toLocaleString("en-US").replaceAll(",", "_"), `0x${n.toString(16)}`, ...(Number.isInteger(Math.log2(n)) ? [`1 << ${Math.log2(n)}`, `2 ** ${Math.log2(n)}`] : []),
     ...(n % 1048576 === 0 ? [`${n / 1048576} * 1024 * 1024`, `${n / 1048576} * 1048576`] : [])];
