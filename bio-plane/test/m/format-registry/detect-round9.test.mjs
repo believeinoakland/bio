@@ -92,9 +92,9 @@ test("R31: SHEET C32 C33 C23 C24 — a delimited text declared ms-excel, octet-s
       assert.deepEqual(Object.keys(r), ["format", "confidence", "signals"]);
     }
   }
-  // a type no entry claims is the same: pass 3 runs only when passes 1 and 2 found nothing
-  isHit(detectFormat(CSV, "application/x-unknown", "budget.csv"), "csv", "likely");
-  isHit(detectFormat(CSV, null, "budget.csv"), "csv", "likely");
+  // a type outside csv-reader's R21 list, or none, is not judged a sheet by name alone
+  assert.equal(detectFormat(CSV, "application/x-unknown", "budget.csv").format, "undetermined");
+  assert.equal(detectFormat(CSV, null, "budget.csv").format, "undetermined");
   // a .tsv declared text/tab-separated-values is the csv entry's own pass-2 answer, unchanged
   assert.deepEqual(detectFormat(TSV, "text/tab-separated-values", "rows.tsv"), getFormat("csv").detect(null, "text/tab-separated-values"));
   // negative controls: the name's extension, the shape of the head and a binary signature all matter
