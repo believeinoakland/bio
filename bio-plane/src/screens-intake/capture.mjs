@@ -406,15 +406,8 @@ function renderCapture(cs, view) {
       const x = g && g.supporting;
       if (!x || !(x.skipped > 0)) return "";
       const total = x.kept + x.skipped;
-      const why = {};
-      for (const r of Array.isArray(x.reasons) ? x.reasons : []) {
-        if (!r || typeof r !== "object") continue;
-        const code = String(r.reason || r.code || ""), n = Number.isFinite(r.count) && r.count > 0 ? r.count : 1;
-        const kind = code === "CAP_REACHED" && Number.isFinite(r.limit) ? "cap" : code === "TOO_LARGE" || code === "BUDGET_EXHAUSTED" ? "toolarge" : "unavailable";
-        why[kind] = why[kind] || { n: 0, cap: kind === "cap" ? r.limit : 0 };
-        why[kind].n += n;
-      }
-      const lines = ["cap", "toolarge", "unavailable"].filter((k) => why[k]).map((k) => `<p class="mk-small muted" data-supporting-why="${k}">${cs.w("screen.capture.supporting." + k, { n: String(why[k].n), cap: String(why[k].cap) })}</p>`).join("");
+      const why = view.parts.supportingReasons(x.reasons);
+      const lines = ["cap", "toolarge", "unavailable"].filter((k) => why[k]).map((k) => `<p class="mk-small muted" data-supporting-why="${k}">${cs.w("screen.capture.supporting." + k, { n: String(why[k].n), cap: String(why[k].cap || 0) })}</p>`).join("");
       return `<div role="status" data-supporting><p class="mk-small">${cs.w("screen.capture.supporting.kept", { kept: String(x.kept), total: String(total) })}</p>${lines}</div>`;
     };
     /* R31 (N1094; DEC-240 D3): the member's own unfinished captures, each titled from the held document that holds its
@@ -478,8 +471,8 @@ function renderCapture(cs, view) {
     /* R50 (A1, A2): the working line from the press until the answer; the result is a status line under the button */
     const working = U.working ? `<p class="mk-note" role="status" data-working><b>${cs.w("screen.capture.address.working.head")}</b> ${cs.w("screen.capture.address.working")}</p>` : "";
     /* G72 (fix round 7): "Finish it" on a capture the plane no longer holds (`NO_SUCH_SESSION`: finished, closed or expired) says so in a status line and the
-       Unfinished line leaves; the nearest held row (`acquisition.index.no_such_session`) stands in until `refusal.NO_SUCH_SESSION` has its own row (K4269) */
-    const closedLine = U.closed ? `<p class="mk-note" role="status" data-closed>${cs.w("acquisition.index.no_such_session")}</p>` : "";
+       Unfinished line leaves; the design's row `refusal.NO_SUCH_SESSION` (DEC-425) is the sentence */
+    const closedLine = U.closed ? `<p class="mk-note" role="status" data-closed>${cs.w("refusal.NO_SUCH_SESSION")}</p>` : "";
     /* R31 (fix round 5, E8; K4530): "Finish it" says what the continuation answered: the visitor copy still being made, its supporting files fetched
        with nothing new filed (each in the nearest held row's words, K4269), or the visitor copy filed (a new document, below) */
     const finishLine = (g) => `<p class="mk-note" role="status" data-finish="${g.finish}">${cs.w(g.finish === "pending" ? "acquisition.index.render_pending_note" : "acquisition.note.continuation_files_new")}</p>`;
@@ -982,7 +975,21 @@ function checkOutcome(cs, answer, title) {
   const t = String(title || "");
   return cs.w("screen.capture.address.checked." + st, st === "unknown" ? { title: t, note: typeof a.note === "string" ? a.note : "" } : { title: t });
 }
-export { checkOutcome, heldTitle };
+/* R67 (fix round 9; K4969): the one classification of a capture's `supporting.reasons`, for every screen that states why supporting files were not kept
+   (the Add screen's line, screens-inquiry's Document page): by code, `CAP_REACHED` with a `limit` the cap, `TOO_LARGE` and `BUDGET_EXHAUSTED` too large, any other
+   code unavailable; a reason's `count` summed (else 1); a non-object skipped. A kind with no reason is absent. */
+function supportingReasons(reasons) {
+  const why = {};
+  for (const r of Array.isArray(reasons) ? reasons : []) {
+    if (!r || typeof r !== "object") continue;
+    const code = String(r.reason || r.code || ""), n = Number.isFinite(r.count) && r.count > 0 ? r.count : 1;
+    const kind = code === "CAP_REACHED" && Number.isFinite(r.limit) ? "cap" : code === "TOO_LARGE" || code === "BUDGET_EXHAUSTED" ? "toolarge" : "unavailable";
+    why[kind] = why[kind] || (kind === "cap" ? { n: 0, cap: r.limit } : { n: 0 });
+    why[kind].n += n;
+  }
+  return why;
+}
+export { checkOutcome, heldTitle, supportingReasons };
 
 /* R2: the upload. `statement` composed from the three answers in order, each with its label, at most 2,000 characters;
  * nothing is sent while one is empty, and the screen says which. The file's bytes are the raw body (control-plane R72),
@@ -1369,7 +1376,7 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, doneUpload, estimateOf, filedFor, filedHeld, forOf, heldTitle, homeOf, jobStateOf, notMemberWords, pictureOf, projectOf, promoteDocument, readProjectQuestions, readRefusalHtml, readingOf, refusalHtml, refusedHtml, repairedReading, sendInParts, sha256Hasher, titleOf, watchFetch, watchReading }),
+  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, doneUpload, estimateOf, filedFor, filedHeld, forOf, heldTitle, homeOf, jobStateOf, notMemberWords, pictureOf, projectOf, promoteDocument, readProjectQuestions, readRefusalHtml, readingOf, refusalHtml, refusedHtml, repairedReading, sendInParts, sha256Hasher, supportingReasons, titleOf, watchFetch, watchReading }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
                     /* G72: a session the plane no longer holds is the end of that capture, not a failure: `done` draws it (its line is the screen's own, so the note beside the act is empty) */
