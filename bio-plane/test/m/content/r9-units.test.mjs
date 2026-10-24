@@ -375,3 +375,12 @@ test("R59: a capture held only in parts is cropped from its whole digest through
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   assert.equal(r.capture_sha256, whole);
 });
+
+test("R1, R3 (K4913): content's canonical form for a doc-part is text-chain's, and a content id over it is the one minted before the arm moved", async () => {
+  const tc = await import("../../../src/textchain.mjs");
+  const { contentIdFor: idFor } = await import("../../../src/content/index.mjs");
+  const xs = [PART, { kind: "doc-part", part: " p ", ref: " r " }, { kind: "doc-part", ref: "r" }, { kind: "doc-part", part: "p" }, { kind: "doc-part", part: "", ref: "" }, { kind: "doc-part" }];
+  for (const x of xs) assert.equal(canonicalExtent(x), tc.canonicalExtent(x), JSON.stringify(x));
+  /* pinned from before the move (content's own arm): the ids of the first four shapes */
+  assert.deepEqual(xs.slice(0, 4).map((x) => idFor("a".repeat(64), x, null).slice(0, 12)), ["a33870be253e", "e6cc3ada024e", "8118ded0a641", "c93b659ef24a"]);
+});
