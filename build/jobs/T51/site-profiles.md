@@ -55,3 +55,7 @@ Size (session_01A2MMvEgG7LXVhZmak6geHZ): test runs 4, module lines 1720
 ## J2 · COMPLETE
 
 G76 applied: NO_PROSE counts only where markup exists (site-profiles/handlers/client-rendered.mjs), so CSV and plain text are never client_rendered; failing-first test r7-plain-text.test.mjs seen red then green; site-profiles 37 pass, checks all 0. For docprofile's job: three docprofile R38 tests pin the old shell answer for markup-free text and now fail (named in my record); they need re-recording as conservative/none. Extraction owns the held-record re-profile. Details in build/jobs/T51/site-profiles.md.
+
+## J3 · BLOCKED
+
+BLOCKED (cause: needs Bob). NEEDS BOB: approve, in this session, the one refused shell act: creating a scratch directory under my scratchpad, clearing it, and extracting the HEAD copy of site-profiles/ and bio-plane/src/setup-words/ into it with git archive (to run the old detects as a test oracle against my linear ones). The permission check refused it. I have not retried or rephrased it. It blocks nothing else: I carry on with the job (scan.mjs, the handlers, identify, digests, the tests) and will build the oracle table by other means in my own tests only if you or Bob clear it.
