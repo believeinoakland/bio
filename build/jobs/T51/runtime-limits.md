@@ -145,3 +145,16 @@ Size (session_01HB2uM2PSYhuqXKXfVqYh67): test runs 5, module lines 11
 ## J10 · COMPLETE · re B9
 
 COMPLETE B9: READ_BOUNDS rows text/request_bytes (3 MiB x3), content/held_text_chars (32 Mi x3), content/kind_scan_pages (16 x3) added and tested (R30, R31); boundOf(text, request_bytes) answers 3 MiB. Suite 56/56; importers 246/249, the 2 failures (fleetbundles stale bundles, g41-shape xlsx) identical on tranche/T51 without my diff; format, architecture, coverage, ownership 0 failures; words 19 failures none in my module. Bundles with read-bounds.mjs as input are stale; BOB regenerates at round end. Details in my record.
+
+## Completion (RUNTIME-LIMITS #13, fix round 9, batch D, B10, K4922)
+
+**Entries applied.** Two rows in a new `table` entry of `READ_BOUNDS` (`bio-plane/src/read-bounds.mjs`), today's figure in all three columns, each `same(n, k(...))`: `table`/`bytes` 20,971,520 (20 MiB of canonical CSV), key `limit.table.bytes`; `table`/`cells` 1,000,000, key `limit.table.cells`. No sentence added. Test: `read-bounds.test.mjs`, "R30: the rows calculations quotes ...", through `boundOf` and `statement` (R31), and the entry's keys are exactly those two.
+
+**Deferred.** None.
+
+**Found in another module.** `bio-plane/test/m/plane/g41-shape.test.mjs` ("R84 G41 K4855: a 200,000-row xlsx ... at cap 201 MB") fails identically on `origin/tranche/T51` without my change (checked), so it is not caused by this job; it belongs to plane.
+
+**Tests.** runtime-limits suite: 57 tests, 57 pass. Importers run (g41-shape, r9-memory, acquisition r9-ceilings, reading-pipeline r9-reader, file-safety r57-bounds, pdf-reader bounds, csv-reader bounds, ooxml round9, capture r9-t51): 98 tests, 97 pass, 1 fail (the plane one above, pre-existing). The full `impact.mjs` set (2185 files) was not run: the change adds a key to a frozen table and moves no existing figure.
+**Checks.** format: 176 modules, 176 requirements files; 0 failures. architecture: 0 failures. coverage: 32 of 32 live requirement ids named by a test; 0 failures. ownership: 3 files changed by runtime-limits; 0 failures. (words not run: not in the process repository's checks.)
+
+Size (session_01Ra4BjLK2eQyeYJ4TDpTTos): test runs 4, module lines 169
