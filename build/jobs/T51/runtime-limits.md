@@ -191,3 +191,8 @@ COMPLETE · RUNTIME-LIMITS #14 · B11 (K4936): READ_BOUNDS workbook rows: cells 
 **Rows owed (sentences).** The six keys `limit.provenance.part_verify_bytes`, `limit.acquisition.odf_digest_bytes`, `limit.acquisition.large_fetch_bytes`, `limit.case.copy_now_bytes`, `limit.monitoring.docket_read_bytes`, `limit.following.portal_parse_bytes` name sentences the quoting modules own; none is added here.
 
 **Tests.** runtime-limits suite: 59 tests, 59 pass.
+**Impact.** `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 138 of 176 modules, 2197 of 2665 test files affected (every user of the table). The change only adds six rows; a grep of `bio-plane/src` and `bio-plane/test` finds no code that iterates the whole table (`Object.entries/values/keys(READ_BOUNDS)`) except this module's own test, which checks rows by invariants, so I did not run the users' suites.
+**Checks.** format 0 failures; architecture 0 failures; coverage 33 of 33 live ids named, 0 failures; ownership 3 files changed by runtime-limits, 0 failures; words 0 failures.
+**Cause / why missed / red first / platform check.** Cause: six reading ceilings in provenance, acquisition, case-authoring, case-carriage, monitoring and following were literals with no row in the table (control-plane's all-modules grep, seam §14). Why missed: they were added before R29 made the table the one home, and no earlier job quoted them. Red first: the R35 test fails at `assert.ok(row)` before the rows exist, passes after. Platform check: pure frozen data, no platform call; the runtime-limits suite includes its workerd test (R28) and passes.
+
+Size (session_01KNBHkxJ8mc4TazP5cEK4wj): test runs 3, module lines 175
