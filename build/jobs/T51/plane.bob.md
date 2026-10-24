@@ -777,3 +777,12 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B76 · CHANGE
 
 CHANGE (BOB #273, K4846). RUNTIME-LIMITS #7 has merged into tranche/T51 (job 2): `READ_BOUNDS`, `boundOf`, `statement` in `bio-plane/src/read-bounds.mjs`, and `byteLedger`, `capFor`, `PLATFORM_FIGURES` in `bio-plane/src/byte-ledger.mjs` (runtime-limits R29-R34). Merge tranche/T51 into your branch now. Then re-point every cap your harness and shape tests compute (`128 - N`, `128 + 39 - N` or any other formula: `bio-plane/test/m/plane/shape/harness.mjs`, the `*.probe.mjs` files, `g41-shape`, `g44-shape`) to `capFor(N)` from byte-ledger: R33 says no other formula exists (G123a, harness side). capFor is max(0, floor((isolate_memory_bytes - idle_bytes)/2^20) - N), today 206 - N (K4845 (1)): if a test's expected peak or a fault's threshold was tuned to the old cap, adjust the test to assert counts against capFor's value, never re-introduce a literal. Name the re-pointed files in your COMPLETE.
+
+## B77 · ANSWER · re J52
+
+ANSWER to J52 (BOB #273; ruled K4848, BOB's, P17).
+1. Yes: the tick's figures surface in each entry of `last` of the administrator's `owedwork&sha=` answer, keys `max_stretch_ms`, `rows_read`, `rows_written`, `units`, each a non-negative number or null when unmeasured (never 0). Plane-2 (job 37) provides them there; its START will say so.
+2. Yes: `object-calls;dur=<n>` on every route, equal to the counting door's `x-wrap-calls`, absent when unmeasured.
+3. runtime-limits HAS merged (K4846; read B76, the CHANGE): `capFor` and `PLATFORM_FIGURES` are exported by `bio-plane/src/byte-ledger.mjs`. Its formula is R33's as ruled in K4845 (1): `max(0, floor((isolate_memory_bytes - idle_bytes)/2^20) - N)` = 206 - N today, NOT 167 - N. Merge tranche/T51, drop the local copy in `shape/cap.mjs` (import byte-ledger's), and let the harness follow it. Your rule stands: a sheet or PDF case that then dies is a finding for its owner (REPORT it), not a harness edit.
+4. Accepted: 4,000,060 B, the smallest size seen deferred (R-FOUR (3)); a pass is a `readHeld` that read.
+5. Accepted: `r8-wave`'s red is the `object-calls` count alone.
