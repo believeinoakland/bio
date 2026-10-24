@@ -1,8 +1,8 @@
 /* provenance: a reader by bundle meets a capture held in parts as ONE capture (R73; fix round 4b, F3 verification, K4508;
-   amends R12). The common fixture is R72's: a ~20 MiB three-part capture promoted by the real chain exactly as the
-   capture screen promotes it, the register list holding the parts alone and R72 adding the whole's row. Before R73
-   `capturesOf` listed the three parts and the whole at one instant, tied by digest, so the bundle's first-held
-   capture was a part about three times in four. No stored data changes (the rows are R72's). */
+   amends R12; restated fix round 9, K4833). The common fixture is R72's: a ~20 MiB three-part capture promoted by the
+   real chain, the register list naming the whole with its `parts` (R75): the register holds the whole alone and the
+   parts are rows of `register_parts` (R74). Before R73 `capturesOf` listed the three parts and the whole at one instant,
+   tied by digest, so the bundle's first-held capture was a part about three times in four. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, infoMd, provDoc } from "./fixture.mjs";
@@ -17,7 +17,7 @@ function multipartDoc(label) {
     capture: { method: "acquire", grade: "B", actor_class: "session", sha256: whole, encoding: "binary",
                bytes: held.reduce((n, p) => n + p.bytes, 0) },
     parts: held });
-  return { whole, held, doc };
+  return { whole, held, doc, label };
 }
 function promoteMultipart(w, id, m, { base = null, snapKey = `k${Math.random().toString(16).slice(2)}`, extraDocs = [], extraFiles = [], extraRegister = [] } = {}) {
   return w.promotion.promote({
@@ -25,7 +25,8 @@ function promoteMultipart(w, id, m, { base = null, snapKey = `k${Math.random().t
     files: [{ path: "bundle.md", text: infoMd(id) },
             { path: "data/provenance.json", text: JSON.stringify({ documents: [m.doc, ...extraDocs] }, null, 1) },
             ...m.held.map((p) => ({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes })), ...extraFiles],
-    register: [...m.held.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes })), ...extraRegister] });
+    register: [{ sha256: m.whole, path: `snapshots/${m.label}`, encoding: "binary", bytes: m.held.reduce((n, p) => n + p.bytes, 0),
+                 parts: m.held.map((p) => ({ sha256: p.sha256, path: p.file, bytes: p.bytes })) }, ...extraRegister] });
 }
 
 /* Labels whose whole sorts before every part, and labels whose whole sorts after the first part: both orders, so the
@@ -48,18 +49,20 @@ test("R73: capturesOf lists a capture held in parts by its whole alone, for ever
     const m = multipartDoc(label);
     const id = "INFO-2026-0001-big";
     assert.equal(promoteMultipart(w, id, m).ok, true);
-    assert.equal(w.count("register"), 4, "R72's rows: three parts and the whole");
+    assert.equal(w.count("register"), 1, "the whole alone (R74); its three parts are register_parts rows");
+    assert.equal(w.count("register_parts"), 3);
     assert.deepEqual(w.prov.capturesOf(id), [{ capture_sha: m.whole, held_at: "2026-10-22T01:00:00.000Z" }], label);
   }
 });
 
-test("R73: the whole is listed at the earliest instant any of its rows was held, a part's receipt included", () => {
+test("R73: the whole is listed at the earliest instant its row or any receipt of it was held", () => {
   const w = world({ now: "2026-10-22T01:00:00.000Z" });
   const m = multipartDoc("early");
   assert.equal(promoteMultipart(w, "INFO-2026-0002-early", m).ok, true);
+  /* a part is no capture: a receipt naming a part's digest is no receipt of the whole and moves nothing */
   w.prov.recordReceipt({ address: "https://example.org/big", addressNorm: "https://example.org/big", captureSha: m.held[1].sha256,
                          retrieved: "2026-10-21T08:00:00Z" });
-  assert.deepEqual(w.prov.capturesOf("INFO-2026-0002-early"), [{ capture_sha: m.whole, held_at: "2026-10-21T08:00:00Z" }]);
+  assert.deepEqual(w.prov.capturesOf("INFO-2026-0002-early"), [{ capture_sha: m.whole, held_at: "2026-10-22T01:00:00.000Z" }]);
   /* the whole's own receipt counts as it did */
   w.prov.recordReceipt({ address: "https://example.org/big", addressNorm: "https://example.org/big", captureSha: m.whole,
                          retrieved: "2026-10-20T08:00:00Z" });
@@ -80,7 +83,7 @@ test("R73: the bundle's first-held capture is the document's identity: a multipa
   assert.equal(got.length, 2);
 });
 
-test("R73: registeredFor keeps every row and marks the whole's row and each part's whole", () => {
+test("R73: registeredFor answers the wholes only, the whole held in parts marked with its parts in order", () => {
   const w = world();
   const m = multipartDoc("marks");
   const single = w.cap("plain");
@@ -88,13 +91,14 @@ test("R73: registeredFor keeps every row and marks the whole's row and each part
     extraDocs: [provDoc(single)], extraFiles: [{ path: single.path, text: single.text }],
     extraRegister: [{ sha256: single.sha, path: single.path, encoding: "utf8", bytes: Buffer.byteLength(single.text) }] }).ok, true);
   const rows = w.prov.registeredFor("INFO-2026-0004-marks");
-  assert.equal(rows.length, 5, "every row is kept");
+  assert.equal(rows.length, 2, "the whole and the plain capture: a part is no row");
   const by = Object.fromEntries(rows.map((r) => [r.capture_sha, r]));
   assert.equal(by[m.whole].whole, 1);
-  assert.equal(by[m.whole].part_of, null);
-  for (const p of m.held) { assert.equal(by[p.sha256].whole, 0); assert.equal(by[p.sha256].part_of, m.whole); }
+  assert.deepEqual(by[m.whole].parts, m.held.map((p) => ({ sha256: p.sha256, path: p.file, bytes: p.bytes })));
+  for (const p of m.held) assert.equal(by[p.sha256], undefined);
   assert.equal(by[single.sha].whole, 0);
-  assert.equal(by[single.sha].part_of, null);
+  assert.equal("parts" in by[single.sha], false);
+  assert.equal("part_of" in by[m.whole], false, "part_of is retired");
   assert.deepEqual(rows.map((r) => r.capture_sha), [...rows.map((r) => r.capture_sha)].sort(), "still in capture_sha order");
 });
 
@@ -103,19 +107,24 @@ test("R73 (control): a bundle with no capture held in parts lists and marks as R
   const a = w.cap("a"), b = w.cap("b");
   assert.equal(w.promoteInfo("INFO-2026-0005-plain", { captures: [a, b] }).ok, true);
   assert.deepEqual(w.prov.capturesOf("INFO-2026-0005-plain").map((c) => c.capture_sha).sort(), [a.sha, b.sha].sort());
-  for (const r of w.prov.registeredFor("INFO-2026-0005-plain")) { assert.equal(r.whole, 0); assert.equal(r.part_of, null); }
+  for (const r of w.prov.registeredFor("INFO-2026-0005-plain")) { assert.equal(r.whole, 0); assert.equal("parts" in r, false); }
   assert.deepEqual(w.prov.capturesOf("INFO-2026-9999-none"), []);
   assert.deepEqual(w.prov.registeredFor("INFO-2026-9999-none"), []);
 });
 
-test("R73 (R-OLD): no stored data changes: the register and receipts are as R72 wrote them, and a repaired old bundle reads the same", () => {
+test("R73 (R-OLD): a bundle written by the old register is read as the new one once the repair has run, and the readers write nothing", () => {
   const w = world({ now: "2026-10-22T01:00:00.000Z" });
   const m = multipartDoc("old");
   assert.equal(promoteMultipart(w, "INFO-2026-0006-old", m).ok, true);
+  /* the register as fix round 4b left it: the parts as rows, no register_parts */
+  w.st.sql.exec(`DELETE FROM register_parts`);
   w.st.sql.exec(`DELETE FROM register WHERE capture_sha = ?`, m.whole);
+  for (const p of m.held) w.st.sql.exec(
+    `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered,authored,whole) VALUES (?,?,?,?,?,?,?,0,0)`,
+    p.sha256, "INFO-2026-0006-old", p.file, "binary", p.bytes, "2026-10-22T01:00:00.000Z", "2026-10-22T01:00:00.000Z");
   w.prov.migrate();
   const before = w.snapshot();
   assert.deepEqual(w.prov.capturesOf("INFO-2026-0006-old").map((c) => c.capture_sha), [m.whole]);
-  w.prov.registeredFor("INFO-2026-0006-old");
+  assert.deepEqual(w.prov.registeredFor("INFO-2026-0006-old").map((r) => r.capture_sha), [m.whole]);
   assert.deepEqual(w.snapshot(), before, "the readers write nothing");
 });

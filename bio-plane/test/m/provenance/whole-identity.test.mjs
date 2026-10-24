@@ -1,7 +1,9 @@
-/* provenance: a capture held in parts has one identity, its whole sha (R72; fix round 4b, F3, D1; K4487). The common
-   fixture is the audit's: a three-part capture of about 20 MiB promoted by the real chain exactly as the capture
-   screen promotes it (`screens-intake` `promoteDocument`): the parts' files as blobs, the register list of the parts
-   alone, and `data/provenance.json` stating the whole's sha beside `parts`. */
+/* provenance: a capture held in parts has one identity, its whole sha (R72; fix round 4b, F3, D1; K4487; restated fix
+   round 9, K4833). The common fixture is the audit's: a three-part capture of about 20 MiB promoted by the real chain as
+   the capture screen's upload promotes it: the parts' files as blobs, the register list naming the whole with its
+   `parts` (R75), and `data/provenance.json` stating the whole's sha beside `parts`. The parts are rows of
+   `register_parts`, never of `register` (R74). The repair tests build the old shapes by hand: the parts as register
+   rows (fix round 4b's and before). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, infoMd, provDoc, evidence } from "./fixture.mjs";
@@ -19,10 +21,10 @@ function multipartDoc(label, { parts = PARTS } = {}) {
     capture: { method: "acquire", grade: "B", actor_class: "session", sha256: whole, encoding: "binary",
                bytes: held.reduce((n, p) => n + p.bytes, 0) },
     parts: held });
-  return { whole, held, doc };
+  return { whole, held, doc, label };
 }
 
-/* The promotion the screen makes: a register list of the parts, no whole. */
+/* The promotion the upload makes: a register list of the whole carrying its parts. */
 function promoteMultipart(w, id, m, { base = null, snapKey = `k${Math.random().toString(16).slice(2)}`, extra = {} } = {}) {
   const md = infoMd(id);
   const prov = JSON.stringify({ documents: [m.doc] }, null, 1);
@@ -30,11 +32,24 @@ function promoteMultipart(w, id, m, { base = null, snapKey = `k${Math.random().t
     bundleId: id, base, snapKey, author: "member:alice", meta: { object_type: "information" },
     files: [{ path: "bundle.md", text: md }, { path: "data/provenance.json", text: prov },
             ...m.held.map((p) => ({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes }))],
-    register: m.held.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes })),
+    register: [{ sha256: m.whole, path: `snapshots/${m.label}`, encoding: "binary", bytes: m.held.reduce((n, p) => n + p.bytes, 0),
+                 parts: m.held.map((p) => ({ sha256: p.sha256, path: p.file, bytes: p.bytes })) }],
     ...extra });
 }
 
-test("R72: a multipart capture's whole sha resolves to its bundle by homeOf and by the register table (whole row), the parts' rows unchanged", () => {
+/* A bundle as the code before round 9 left it: the parts as register rows, the whole's row (`whole` 1) only when
+   `withWhole`, and no register_parts rows. */
+function asOld(w, bundle, m, { withWhole = false, at = "2026-10-22T01:00:00.000Z" } = {}) {
+  w.st.sql.exec(`DELETE FROM register_parts WHERE bundle_id = ?`, bundle);
+  w.st.sql.exec(`DELETE FROM register WHERE bundle_id = ?`, bundle);
+  const put = (sha_, path, bytes, whole) => w.st.sql.exec(
+    `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered,authored,whole) VALUES (?,?,?,?,?,?,?,0,?)`,
+    sha_, bundle, path, "binary", bytes, at, at, whole);
+  for (const p of m.held) put(p.sha256, p.file, p.bytes, 0);
+  if (withWhole) put(m.whole, `snapshots/${m.label}`, TOTAL, 1);
+}
+
+test("R72: a multipart capture's whole sha resolves to its bundle by homeOf and by the register table (whole row), its parts rows of register_parts", () => {
   const w = world({ now: "2026-10-22T01:00:00.000Z" });
   const m = multipartDoc("big");
   assert.equal(w.prov.homeOf(m.whole), null, "before the promotion nothing names the whole");
@@ -52,15 +67,12 @@ test("R72: a multipart capture's whole sha resolves to its bundle by homeOf and 
   assert.equal(row.last_registered, "2026-10-22T01:00:00.000Z");
   assert.equal(row.authored, 0);
 
-  /* The parts' rows are as the screen registered them, and are not marked. */
-  for (const p of m.held) {
-    const pr = w.row(`SELECT * FROM register WHERE capture_sha = ?`, p.sha256);
-    assert.deepEqual({ bundle_id: pr.bundle_id, path: pr.path, encoding: pr.encoding, bytes: pr.bytes, whole: pr.whole },
-                     { bundle_id: "INFO-2026-0001-big", path: p.file, encoding: "binary", bytes: p.bytes, whole: 0 });
-  }
-  assert.equal(w.count("register"), 4);
-  assert.deepEqual(w.prov.registeredFor("INFO-2026-0001-big").map((x) => x.capture_sha).sort(),
-                   [m.whole, ...m.held.map((p) => p.sha256)].sort());
+  /* The parts are rows of register_parts under the bundle that holds the whole, and no part is a register row (R74). */
+  for (const p of m.held) assert.equal(w.row(`SELECT COUNT(*) AS n FROM register WHERE capture_sha = ?`, p.sha256).n, 0);
+  assert.deepEqual(w.rows(`SELECT part_sha, bytes, path FROM register_parts WHERE bundle_id = ? ORDER BY idx`, "INFO-2026-0001-big").map((r) => ({ ...r })),
+                   m.held.map((p) => ({ part_sha: p.sha256, bytes: p.bytes, path: p.file })));
+  assert.equal(w.count("register"), 1);
+  assert.deepEqual(w.prov.registeredFor("INFO-2026-0001-big").map((x) => x.capture_sha), [m.whole]);
   /* acquire's question for a multipart capture (D-476) now has an answer. */
   assert.equal(w.prov.registerHolds({ sha: m.whole }).registered, true);
   /* A later module's own SQL on the read contract (R48) finds the home by the whole sha. */
@@ -81,8 +93,9 @@ test("R72: a bundle's verification is unchanged: the whole row is held in parts,
   assert.equal(report.sound, true, JSON.stringify(report));
   assert.equal(report.unbacked, 0);
   assert.equal(report.mismatched, 0);
-  assert.equal(report.held_in_parts, 1, "the whole's row; the parts' rows are the bundle's live files");
-  assert.equal(report.live, 3);
+  assert.equal(report.held_in_parts, 1, "the whole's row, the register's only row for the capture");
+  assert.equal(report.total, 1);
+  assert.equal(report.live, 0);
   /* A part gone from the store is named missing, as before. */
   const lost = m.held[1].sha256;
   const short = { ...store, head: async (k) => (k === lost ? null : store.head(k)) };
@@ -121,7 +134,8 @@ test("R72: a revision of the bundle keeps the whole row's first registration and
   assert.equal(r.ok, true, JSON.stringify(r));
   const row = w.row(`SELECT registered, last_registered, whole FROM register WHERE capture_sha = ?`, m.whole);
   assert.deepEqual({ ...row }, { registered: "2026-10-22T01:00:00.000Z", last_registered: "2026-10-22T05:00:00.000Z", whole: 1 });
-  assert.equal(w.count("register"), 4);
+  assert.equal(w.count("register"), 1);
+  assert.equal(w.count("register_parts"), 3, "replaced, not doubled");
 });
 
 test("R72 (R2): one capture, one home extends to the whole: a second record registering the same whole is refused, and nothing is written", () => {
@@ -131,6 +145,7 @@ test("R72 (R2): one capture, one home extends to the whole: a second record regi
   /* different parts, the same whole sha: only the whole names the clash */
   const n = multipartDoc("second");
   n.doc.capture.sha256 = m.whole;
+  n.whole = m.whole;
   const before = w.snapshot();
   const r = promoteMultipart(w, "INFO-2026-0007-second", n);
   assert.equal(r.ok, false);
@@ -146,8 +161,8 @@ test("R72: a bundle promoted before the change is repaired at the next wake: the
   assert.equal(promoteMultipart(w, "INFO-2026-0008-old", m).ok, true);
   const single = w.cap("plain");
   assert.equal(w.promoteInfo("INFO-2026-0009-plain", { captures: [single] }).ok, true);
-  /* a bundle promoted by the code before this change registered the parts alone, and its rows carry no mark */
-  w.st.sql.exec(`DELETE FROM register WHERE capture_sha = ?`, m.whole);
+  /* a bundle promoted by the code before fix round 4b registered the parts alone, and its rows carry no mark */
+  asOld(w, "INFO-2026-0008-old", m);
   assert.equal(w.prov.homeOf(m.whole), null, "red: the old bundle's whole resolves to nothing");
 
   w.clock.now = "2026-10-22T09:00:00.000Z";
@@ -168,13 +183,14 @@ test("R72: a bundle promoted before the change is repaired at the next wake: the
   w.prov.migrate();
   assert.deepEqual(w.snapshot(), after);
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM register WHERE whole = 1`).n, 1);
+  assert.equal(w.prov.partsOf(m.whole).length, 3, "and the parts are rows of register_parts now (R79)");
 });
 
 test("R72: the repair never moves a capture another record holds, and writes nothing for a bundle that states no parts (control)", () => {
   const w = world();
   const m = multipartDoc("held");
   assert.equal(promoteMultipart(w, "INFO-2026-0010-held", m).ok, true);
-  w.st.sql.exec(`DELETE FROM register WHERE capture_sha = ?`, m.whole);
+  asOld(w, "INFO-2026-0010-held", m);
   /* another record came to hold those bytes in the meantime, as an ordinary single capture */
   const other = { path: "snapshots/other.bin", text: "other", sha: m.whole };
   const r = w.promotion.promote({ bundleId: "INFO-2026-0011-other", base: null, snapKey: "o", author: "member:alice",
@@ -193,6 +209,7 @@ test("R72: a register row of a home that is gone does not hold the whole: the re
   assert.equal(promoteMultipart(w, "INFO-2026-0012-orphan", m).ok, true);
   /* a stale row for the whole under a bundle that no longer exists */
   w.st.sql.exec(`UPDATE register SET bundle_id = 'INFO-2026-0099-gone', whole = 0 WHERE capture_sha = ?`, m.whole);
+  w.st.sql.exec(`DELETE FROM register_parts`);
   assert.equal(w.prov.homeOf(m.whole), null);
   w.prov.migrate();
   assert.equal(w.prov.homeOf(m.whole).bundleId, "INFO-2026-0012-orphan");

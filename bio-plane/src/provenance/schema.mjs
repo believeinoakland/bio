@@ -43,6 +43,23 @@ CREATE TABLE IF NOT EXISTS register (
 );
 CREATE INDEX IF NOT EXISTS register_bundle ON register(bundle_id);
 
+-- R74, R75 (fix round 9, G127a; K4833, K4837): THE PARTS OF A CAPTURE HELD IN PARTS. The register's key is the digest of a
+-- WHOLE; a multipart capture's parts (the 8 MiB cuts the store keeps it as) are rows here, one per part, in the child
+-- table of the bundle that holds the whole, and never rows of register. A part is a function of the whole's bytes, so two
+-- documents (or two bundles) may share a byte-equal part and name its digest in rows of their own: part_sha is no key
+-- and no home, and a promotion writes, replaces or removes only its own bundle's rows.
+CREATE TABLE IF NOT EXISTS register_parts (
+  bundle_id TEXT    NOT NULL, -- the bundle that holds the whole
+  whole_sha TEXT    NOT NULL, -- the register row of the whole this is a part of
+  idx       INTEGER NOT NULL, -- the part's place in order, from 0
+  part_sha  TEXT    NOT NULL, -- the part's digest: never a register.capture_sha, unless it is also a whole's
+  bytes     INTEGER NOT NULL,
+  path      TEXT    NOT NULL, -- the file the bundle holds the part as (snapshots/<name>.partNNN)
+  PRIMARY KEY (bundle_id, whole_sha, idx)
+);
+CREATE INDEX IF NOT EXISTS register_parts_whole ON register_parts(whole_sha);
+CREATE INDEX IF NOT EXISTS register_parts_part ON register_parts(part_sha);
+
 -- Which ADDRESSES the record has captured, and when. The register is keyed by
 -- capture hash and carries no locator, so nothing could answer "does the store
 -- hold a capture of https://..." without this. One row per (address, capture),

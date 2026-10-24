@@ -41,7 +41,7 @@ import { word, localize } from "../setup-words/index.mjs";
 export { PROVENANCE_SCHEMA } from "./schema.mjs";
 
 /** The tables this module owns (R41): no other module declares, writes or reshapes them. */
-export const PROVENANCE_TABLES = ["register", "captured_locators", "origin_declarations", "authority_decisions"];
+export const PROVENANCE_TABLES = ["register", "register_parts", "captured_locators", "origin_declarations", "authority_decisions"];
 export { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN, UNPACKED_METHOD, UPLOAD_ORIGIN,
          UPLOADED_METHOD } from "./register-checks.mjs";
 export { REGISTER_ENTRY_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS, TESTIMONY_CHECKS } from "./checks.mjs";
@@ -66,6 +66,8 @@ const bareSha = (v) => (typeof v === "string" ? v.trim().replace(/^sha256:/, "")
 /* SQLite's order over text with nulls first, so a grade read in code ranks receipts as the statement it replaced did. */
 const cmp = (a, b) => (a === b ? 0 : a == null ? -1 : b == null ? 1 : a < b ? -1 : 1);
 
+const statedBytes = (n) => Number.isSafeInteger(n) && n >= 0;
+
 /* R72: the captures a register document states as held in parts, each as the register row of its whole sha: the
    document's `capture.sha256` beside a non-empty list of `parts`, every part with a 64-hex digest. The row has no file
    of its own: its `path` is the file the document names for the whole (which the bundle does not hold), its `bytes`
@@ -77,11 +79,12 @@ function wholesOf(reg, skip = new Set()) {
     if (!isObj(d) || !Array.isArray(d.parts) || !d.parts.length || !isObj(d.capture)) continue;
     const sha256 = bareSha(d.capture.sha256);
     if (!sha256 || !/^[0-9a-f]{64}$/.test(sha256) || skip.has(sha256) || seen.has(sha256)) continue;
-    const parts = d.parts.map((p) => (isObj(p) ? bareSha(p.sha256) : null));
-    if (parts.some((x) => !x || !/^[0-9a-f]{64}$/.test(x))) continue;
-    const sum = d.parts.reduce((n, p) => n + (Number.isSafeInteger(p.bytes) && p.bytes >= 0 ? p.bytes : NaN), 0);
-    const bytes = Number.isSafeInteger(d.capture.bytes) && d.capture.bytes >= 0 ? d.capture.bytes : sum;
-    if (!Number.isSafeInteger(bytes)) continue;
+    const shas = d.parts.map((p) => (isObj(p) ? bareSha(p.sha256) : null));
+    if (shas.some((x) => !x || !/^[0-9a-f]{64}$/.test(x))) continue;
+    const sum = d.parts.reduce((n, p) => n + (statedBytes(p.bytes) ? p.bytes : NaN), 0);
+    if (!Number.isSafeInteger(sum)) continue;
+    const parts = d.parts.map((p, i) => ({ sha256: shas[i], bytes: p.bytes, path: typeof p.file === "string" ? p.file : "" }));
+    const bytes = statedBytes(d.capture.bytes) ? d.capture.bytes : sum;
     seen.add(sha256);
     out.push({ sha256, parts, bytes,
                path: typeof d.file === "string" && d.file ? d.file : String(d.parts[0].file ?? ""),
@@ -89,12 +92,54 @@ function wholesOf(reg, skip = new Set()) {
   }
   return out;
 }
-/* The wholes a promotion's files state (R72), beyond the digests its own `register` list already names. */
-function wholesOfFiles(files, register) {
+/* R75, R77: the register list a promotion carries, folded to its wholes. A row is a whole `{sha256, path, encoding, bytes,
+   parts?}`; a multipart document's row carries `parts: [{sha256, path, bytes}]` in order (R75). A part sent as its own row
+   (the old shape, R77) is a row whose digest is a file's `blobSha` and whose `path` is `<name>.partNNN`: it is read as a
+   part of the whole row whose path is `<name>`, in the order of its number, and is no row of its own. A digest that the
+   package's own `data/provenance.json` states as a capture's is that capture's whole, however its path is spelled (a
+   document of one part). Answers `{wholes}` or `{fault}`: the first entry that cannot be read, `{kind, index, part?,
+   sha256, path}`, so nothing is written for it. */
+const PART_NAME = /^(.+)\.part(\d{3,})$/;
+const HEX64 = /^[0-9a-f]{64}$/;
+function foldRegister(register, files) {
+  const list = Array.isArray(register) ? register : [];
+  const blobs = new Set((Array.isArray(files) ? files : []).map((f) => (f && typeof f.blobSha === "string" ? f.blobSha : null)).filter(Boolean));
   const prov = Array.isArray(files) ? files.find((f) => f && f.path === "data/provenance.json") : null;
-  const reg = prov && typeof prov.text === "string" ? safeJson(prov.text) : null;
-  const named = new Set((Array.isArray(register) ? register : []).map((e) => (e && typeof e.sha256 === "string" ? bareSha(e.sha256) : null)));
-  return wholesOf(reg, named);
+  const doc = prov && typeof prov.text === "string" ? safeJson(prov.text) : null;
+  const stated = new Set((Array.isArray(doc?.documents) ? doc.documents : []).map((d) => (isObj(d) && isObj(d.capture) ? bareSha(d.capture.sha256) : null)).filter(Boolean));
+  const wholes = [], legacy = [];
+  list.forEach((e, index) => {
+    if (!isObj(e) || typeof e.sha256 !== "string") return;
+    const m = e.parts === undefined && typeof e.path === "string" ? PART_NAME.exec(e.path) : null;
+    if (m && blobs.has(e.sha256) && !stated.has(e.sha256)) legacy.push({ index, e, name: m[1], n: Number(m[2]) });
+    else wholes.push({ index, e, parts: null });
+  });
+  for (const w of wholes) {
+    const { e, index } = w;
+    if (e.parts === undefined || e.parts === null) continue;
+    if (!Array.isArray(e.parts)) return { fault: { kind: "digest", index, part: null, sha256: null, path: String(e.path ?? "") } };
+    const parts = [];
+    for (let part = 0; part < e.parts.length; part++) {
+      const p = e.parts[part];
+      const sha256 = isObj(p) && typeof p.sha256 === "string" ? p.sha256 : null;
+      const path = isObj(p) && typeof p.path === "string" ? p.path : "";
+      if (!sha256 || !HEX64.test(sha256)) return { fault: { kind: "digest", index, part, sha256, path } };
+      if (!statedBytes(p.bytes)) return { fault: { kind: "bytes", index, part, sha256, path, bytes: p.bytes } };
+      parts.push({ sha256, path, bytes: p.bytes });
+    }
+    w.parts = parts.length ? parts : null;
+  }
+  for (const l of legacy) {
+    const w = wholes.find((x) => x.e.path === l.name);
+    if (!w) return { fault: { kind: "orphan", index: l.index, sha256: l.e.sha256, path: l.e.path } };
+    if (w.parts !== null) continue;                    /* the whole states its own parts: the old rows repeat them */
+    (w.old ??= []).push(l);
+  }
+  for (const w of wholes) {
+    if (w.parts === null && w.old) w.parts = w.old.sort((x, y) => (x.n - y.n) || (x.index - y.index))
+      .map((l) => ({ sha256: l.e.sha256, path: l.e.path, bytes: l.e.bytes }));
+  }
+  return { wholes: wholes.map((w) => ({ sha256: w.e.sha256, path: w.e.path, encoding: w.e.encoding, bytes: w.e.bytes, parts: w.parts })) };
 }
 
 /* D-15: the bundle gate compiled over a QUALIFIED column (the legacy store's `#bundleGate`), for reads that join a
@@ -444,30 +489,63 @@ class Provenance {
   /** This module's tables (R41), created or brought up to shape. Called by the host at every boot; idempotent. */
   migrate() {
     migrateProvenance(this.#sql);
-    this.#repairWholes();
+    this.repairParts();
     return { ok: true };
   }
 
-  /* R72 (R-OLD): the repair at the plane's wake. A bundle promoted before a capture held in parts had an identity under
-     its whole sha registered the parts alone. For every bundle whose own `data/provenance.json` states `parts`, the
-     whole's row is written once, `whole` 1, with the first registration of its parts as its instants. A row that
-     already holds the whole under a bundle that exists is left as it is (one capture, one home, R2); a row whose home
-     is gone is registered afresh (R2). Idempotent, so a second wake writes nothing; a store without the record's
-     tables (a module test over this module alone) has nothing to repair. */
-  #repairWholes() {
+  /** R72, R79 (R-OLD): the repair at the plane's wake, or when asked. For every bundle whose own `data/provenance.json`
+   *  states a capture held in parts: the whole's row is written once when no bundle that exists holds it (`whole` 1, the
+   *  first registration of its parts as its instants; one capture, one home, R2, so a row held by another record is left
+   *  as it is and a row whose home is gone is registered afresh); the bundle's `register_parts` rows are written from the
+   *  document; and each `register` row that is a part of that whole, not the digest of a whole and not of a file the
+   *  bundle holds whole, is moved out of `register` (R74). Answers `{moved, left}`: the part rows moved, and the rows
+   *  named as a part (`<name>.partNNN`) that are still in `register` because no document accounts for them, left and
+   *  never deleted. Idempotent: a second run writes nothing. A store without the record's tables (a module test over
+   *  this module alone) has nothing to repair. */
+  repairParts() {
     const table = (t) => this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = ?`, t);
-    if (!table("files") || !table("bundles")) return;
-    const stated = this.#rows(`SELECT f.bundle_id, f.content FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
-                                WHERE f.path = 'data/provenance.json' AND f.content LIKE '%"parts"%'`);
-    for (const { bundle_id: bundleId, content } of stated) {
-      for (const w of wholesOf(safeJson(content))) {
-        if (this.#one(`SELECT 1 AS x FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ?`, w.sha256)) continue;
-        const first = this.#one(`SELECT MIN(registered) AS at FROM register WHERE bundle_id = ? AND capture_sha IN (SELECT value FROM json_each(?))`,
-                                bundleId, JSON.stringify(w.parts));
-        const at = first && first.at ? first.at : this.#now();
-        this.#putWhole(bundleId, w, at, at, 0);
+    let moved = 0;
+    if (table("files") && table("bundles")) {
+      const stated = this.#rows(`SELECT f.bundle_id, f.content FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
+                                  WHERE f.path = 'data/provenance.json' AND f.content LIKE '%"parts"%'`);
+      for (const { bundle_id: bundleId, content } of stated) {
+        for (const w of wholesOf(safeJson(content))) {
+          const holder = this.#one(`SELECT r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ?`, w.sha256);
+          if (holder && holder.bundle_id !== bundleId) continue;
+          const json = JSON.stringify(w.parts.map((p) => p.sha256));
+          const old = this.#rows(`SELECT capture_sha, registered FROM register WHERE bundle_id = ? AND whole = 0 AND capture_sha IN (SELECT value FROM json_each(?))`,
+                                 bundleId, json);
+          if (!holder) {
+            const first = old.map((r) => r.registered).filter(Boolean).sort()[0];
+            const at = first || this.#now();
+            this.#putWhole(bundleId, w, at, at, 0);
+          }
+          this.#putParts(bundleId, w);
+          const paths = JSON.stringify(w.parts.map((p) => p.path));
+          for (const r of old) {
+            if (this.#one(`SELECT 1 AS x FROM files WHERE bundle_id = ? AND sha256 = ? AND path NOT IN (SELECT value FROM json_each(?)) LIMIT 1`,
+                          bundleId, r.capture_sha, paths)) continue;
+            this.#sql.exec(`DELETE FROM register WHERE capture_sha = ? AND bundle_id = ? AND whole = 0`, r.capture_sha, bundleId);
+            moved++;
+          }
+        }
       }
     }
+    const left = this.#one(`SELECT COUNT(*) AS n FROM register WHERE whole = 0 AND path GLOB '*.part[0-9][0-9][0-9]'`).n;
+    return { moved, left };
+  }
+
+  /* R74: the bundle's `register_parts` rows for one whole, replaced by the document's: a revision that states other
+     parts leaves no row of the old ones, and no other bundle's row is read or written. A write only when they differ. */
+  #putParts(bundleId, w) {
+    const want = JSON.stringify(w.parts.map((p, i) => [i, p.sha256, p.bytes, p.path]));
+    const have = JSON.stringify(this.#rows(`SELECT idx, part_sha, bytes, path FROM register_parts WHERE bundle_id = ? AND whole_sha = ? ORDER BY idx`,
+                                           bundleId, w.sha256).map((r) => [r.idx, r.part_sha, r.bytes, r.path]));
+    if (want === have) return;
+    this.#sql.exec(`DELETE FROM register_parts WHERE bundle_id = ? AND whole_sha = ?`, bundleId, w.sha256);
+    w.parts.forEach((p, i) => this.#sql.exec(
+      `INSERT INTO register_parts (bundle_id, whole_sha, idx, part_sha, bytes, path) VALUES (?,?,?,?,?,?)`,
+      bundleId, w.sha256, i, p.sha256, p.bytes, p.path));
   }
 
   /* R72: the whole's register row. A re-registration under the bundle that holds it keeps `registered` when `revising`
@@ -496,8 +574,10 @@ class Provenance {
     const { pkg, bundleId, files, register, head, promotedType, replay } = c;
     const unstated = this.#registerEntries(bundleId, register);
     if (unstated) return unstated;
+    const folded = foldRegister(register, files);
+    if (folded.fault) return this.#registerFault(bundleId, folded.fault);
     const testimony = pkg && pkg[TESTIMONY_PATH] ? pkg[TESTIMONY_PATH] : null;
-    const fenced = this.#testimonyFence(bundleId, files, register, testimony,
+    const fenced = this.#testimonyFence(bundleId, files, folded.wholes, testimony,
       { identity: pkg ? pkg.actorIdentity ?? null : null, viewer: pkg ? pkg.actorViewer ?? null : null });
     if (fenced) return fenced;
     return this.#registerArms({ bundleId, files, head, promotedType, replay, docFm: c.docFm });
@@ -530,6 +610,31 @@ class Provenance {
       /* END DEC-49 REGION is-register-bytes */
     }
     return null;
+  }
+
+  /* R75, R77: an entry of the register list that cannot be read as a whole or as a part of one, refused by name before
+     anything is written. A part's size is R50's rule (C-53.14, naming the part); a part's digest that is not 64 lowercase
+     hex, and a part sent as its own row whose whole the list does not name, carry no catalogue row (as NO_SUCH_BUNDLE). */
+  #registerFault(bundleId, f) {
+    const extra = { bundleId, index: f.index, part: f.part ?? null, sha256: f.sha256 ?? null, path: f.path ?? null };
+    const shown = typeof f.bytes === "string" ? JSON.stringify(f.bytes).slice(0, 40)
+                : f.bytes !== null && typeof f.bytes === "object" ? (Array.isArray(f.bytes) ? "a list" : "an object")
+                : String(f.bytes);
+    if (f.kind === "bytes")
+      return rowRefusal(REGISTER_ENTRY_CHECKS)("REGISTER_BYTES_UNSTATED",
+        localize("provenance.index.register_part_bytes",
+                 "register[{index}] part {part} ({sha}) {said}: a part states its size as a whole number of bytes at least 0. Nothing was written",
+                 { index: String(f.index), part: String(f.part), sha: String(f.sha256.slice(0, 16)),
+                   said: f.bytes === undefined ? word("provenance.states_bytes") : `states bytes ${shown}` }), extra);
+    if (f.kind === "digest")
+      return { ok: false, reason: "REGISTER_PART_MALFORMED", code: "REGISTER_PART_MALFORMED", ...extra,
+               detail: localize("provenance.index.register_part_digest",
+                                "register[{index}] part {part} names {digest}: a part is named by its SHA-256, 64 lowercase hex characters. Nothing was written",
+                                { index: String(f.index), part: String(f.part ?? "(parts)"), digest: JSON.stringify(f.sha256).slice(0, 80) }) };
+    return { ok: false, reason: "REGISTER_PART_WITHOUT_WHOLE", code: "REGISTER_PART_WITHOUT_WHOLE", ...extra,
+             detail: localize("provenance.index.register_part_without_whole",
+                              "register[{index}] ({sha}, path {path}) is a part of a capture whose whole the list does not name: a part is registered under its whole, which the list names. Nothing was written",
+                              { index: String(f.index), sha: String(String(f.sha256).slice(0, 16)), path: String(f.path).slice(0, 120) }) };
   }
 
   /* R42–R46 at the write (K72 (4)): the C-18 arms over the promoted package, for an information bundle whose register
@@ -622,12 +727,13 @@ class Provenance {
        held) is a capture registering afresh (R2), and both instants start anew. */
     const at = this.#now();
     const revising = head ? 1 : 0;
-    for (const r of Array.isArray(register) ? register : []) {
-      if (!r || typeof r.sha256 !== "string") continue;
+    /* R74, R75: the register's rows are wholes. A part is a row of `register_parts` under the bundle that holds the whole,
+       replaced by this promotion's own list and never another bundle's. */
+    for (const r of foldRegister(register, files).wholes ?? []) {
       const own = !!(testimony && testimony.captureSha === r.sha256);
       this.#sql.exec(
-        `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered,authored,author,observed_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?)
+        `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered,authored,author,observed_at,whole)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)
          ON CONFLICT(capture_sha) DO UPDATE SET
            registered=CASE WHEN register.bundle_id = excluded.bundle_id AND ? = 1
                            THEN register.registered ELSE excluded.registered END,
@@ -635,14 +741,12 @@ class Provenance {
            bytes=excluded.bytes, last_registered=excluded.last_registered,
            authored=MAX(register.authored, excluded.authored),
            author=COALESCE(excluded.author, register.author),
-           observed_at=COALESCE(excluded.observed_at, register.observed_at)`,
+           observed_at=COALESCE(excluded.observed_at, register.observed_at),
+           whole=excluded.whole`,
         r.sha256, bundleId, r.path, r.encoding ?? "utf8", r.bytes, at, at,
-        own ? 1 : 0, own ? testimony.author : null, own ? testimony.observedAt : null, revising);
+        own ? 1 : 0, own ? testimony.author : null, own ? testimony.observedAt : null, r.parts ? 1 : 0, revising);
+      this.#putParts(bundleId, { sha256: r.sha256, parts: r.parts ?? [] });
     }
-    /* R72: a capture the document states as held in parts also has the row of its whole sha, marked `whole`, beside the
-       parts' own rows above (which are as they were): so `homeOf(whole)` and every reader of `register` by `capture_sha`
-       find its bundle. It has no file of its own, and the bundle's verification is the parts' (R6, R7) as before. */
-    for (const w of wholesOfFiles(files, register)) this.#putWhole(bundleId, w, at, at, revising);
     return null;
   }
 
@@ -915,39 +1019,42 @@ class Provenance {
                  authored: Number(r.authored) === 1 } : null;
   }
 
-  /** R11, R73 — every register row whose home is `bundleId`, in `capture_sha` order, each marked: `whole` 1 on the row
-   *  of a capture held in parts (R72: an identity, no file of the bundle), and `part_of` on a part's row the whole it
-   *  belongs to, else null, so a reader by bundle can tell a file from an identity. */
+  /** R11, R73 — every register row whose home is `bundleId`, in `capture_sha` order: wholes only (R74), each with `whole`
+   *  (1 for a whole held in parts, else 0) and, for a whole held in parts, `parts: [{sha256, path, bytes}]` in order, read
+   *  from `register_parts`. */
   registeredFor(bundleId) {
     const id = String(bundleId ?? "");
-    const partOf = this.#partsOfWholes(id);
+    const parts = new Map();
+    for (const p of this.#rows(`SELECT whole_sha, part_sha, path, bytes FROM register_parts WHERE bundle_id = ? ORDER BY whole_sha, idx`, id)) {
+      if (!parts.has(p.whole_sha)) parts.set(p.whole_sha, []);
+      parts.get(p.whole_sha).push({ sha256: p.part_sha, path: p.path, bytes: p.bytes });
+    }
     return this.#rows(`SELECT capture_sha, path, bytes, encoding, registered, authored, whole FROM register
                         WHERE bundle_id = ? ORDER BY capture_sha`, id)
       .map((r) => ({ capture_sha: r.capture_sha, path: r.path, bytes: r.bytes, encoding: r.encoding,
                      registered: r.registered, authored: Number(r.authored) === 1, whole: Number(r.whole) === 1 ? 1 : 0,
-                     part_of: partOf.get(r.capture_sha) ?? null }));
+                     ...(Number(r.whole) === 1 ? { parts: parts.get(r.capture_sha) ?? [] } : {}) }));
   }
 
-  /* R73: the parts of each whole this bundle holds as a row (R72), `Map(part sha → whole sha)`, read from the bundle's
-     own `data/provenance.json` (the repair's source, R72). A part is a part only while the whole's row is this
-     bundle's; a store without the record's tables (a module test over this module alone) has none. */
-  #partsOfWholes(bundleId) {
-    const out = new Map();
-    const has = this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'files'`);
-    if (!has) return out;
-    const doc = this.#one(`SELECT content FROM files WHERE bundle_id = ? AND path = 'data/provenance.json'`, bundleId);
-    if (!doc || typeof doc.content !== "string" || !doc.content.includes('"parts"')) return out;
-    const wholes = new Set(this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? AND whole = 1`, bundleId).map((r) => r.capture_sha));
-    for (const w of wholesOf(safeJson(doc.content))) if (wholes.has(w.sha256)) for (const p of w.parts) out.set(p, w.sha256);
-    return out;
+  /** R78 — the parts of a whole in order, `[{sha256, bytes}]`, as `register_parts` names them (R74): a function of the
+   *  whole's bytes, so the same list whichever bundle holds it. `null` when no row names the whole (a capture held whole,
+   *  one the register does not hold, a part's own digest) and for a malformed digest. `acquisition`'s `readRange` is its
+   *  reader; no other module resolves parts. Reads only; never throws. */
+  partsOf(sha) {
+    const s = bareSha(sha);
+    if (!s || !HEX64.test(s)) return null;
+    const home = this.#one(`SELECT p.bundle_id FROM register_parts p JOIN bundles b ON b.bundle_id = p.bundle_id
+                             WHERE p.whole_sha = ? ORDER BY p.bundle_id LIMIT 1`, s);
+    if (!home) return null;
+    return this.#rows(`SELECT part_sha, bytes FROM register_parts WHERE bundle_id = ? AND whole_sha = ? ORDER BY idx`, home.bundle_id, s)
+      .map((r) => ({ sha256: r.part_sha, bytes: r.bytes }));
   }
 
   /** R12, R73 · D-580 — the bundle's captures in the order the record first held them. `held_at` is the earlier of the
    *  row's `registered` and its earliest receipt's `first_retrieved`, both this instance's clock, compared as
    *  instants and never as strings (`…:00Z` is before `…:00.123Z`). A document's own stated date never orders them,
-   *  and no other clock is put in the column. Ties break on the capture's digest, so the order is total. A capture
-   *  held in parts is listed once, by its whole (its parts' rows omitted), at the earliest instant any of its rows was
-   *  held, so the bundle's first-held capture is the document's identity whatever the digests' order. */
+   *  and no other clock is put in the column. Ties break on the capture's digest, so the order is total. The register
+   *  holds wholes only (R74), so a capture held in parts is listed once, by its whole, and a part is no capture. */
   capturesOf(bundleId) {
     const id = String(bundleId ?? "");
     const rows = this.#rows(
@@ -955,19 +1062,11 @@ class Provenance {
               (SELECT MIN(cl.first_retrieved) FROM captured_locators cl WHERE cl.capture_sha = r.capture_sha) AS first
          FROM register r WHERE r.bundle_id = ?`, id);
     const ms = (v) => (typeof v === "string" && v ? Date.parse(v) : NaN);
-    const earlier = (a, b) => (Number.isFinite(b.t) && (!Number.isFinite(a.t) || b.t < a.t) ? b : a);
-    const held = new Map(rows.map((r) => {
+    return rows.map((r) => {
       const a = ms(r.registered), b = ms(r.first);
       const at = Number.isFinite(b) && (!Number.isFinite(a) || b < a) ? r.first : r.registered;
-      return [r.capture_sha, { capture_sha: r.capture_sha, held_at: at, t: ms(at) }];
-    }));
-    for (const [part, whole] of this.#partsOfWholes(id)) {
-      const p = held.get(part), w = held.get(whole);
-      if (!p) continue;
-      held.delete(part);
-      if (w) { const e = earlier(w, p); w.held_at = e.held_at; w.t = e.t; }
-    }
-    return [...held.values()].sort((x, y) => ((Number.isFinite(x.t) ? x.t : Infinity) - (Number.isFinite(y.t) ? y.t : Infinity))
+      return { capture_sha: r.capture_sha, held_at: at, t: ms(at) };
+    }).sort((x, y) => ((Number.isFinite(x.t) ? x.t : Infinity) - (Number.isFinite(y.t) ? y.t : Infinity))
                       || (x.capture_sha < y.capture_sha ? -1 : x.capture_sha > y.capture_sha ? 1 : 0))
       .map(({ capture_sha, held_at }) => ({ capture_sha, held_at }));
   }
@@ -1715,8 +1814,9 @@ class Provenance {
        control plane sets beside `actorIdentity` (membership's `inSight`, fail-closed on a stamped identity with
        no viewer). An unstamped write is not a caller (the store's own writes, fixtures driven at the
        store) and is told the holder, on the legacy store's `#rosterInSight` precedent. */
-    /* R72: the whole of a capture the document states as held in parts is registered too, so it has one home as well. */
-    const shas = [...new Set([...regs.map((c) => c.sha256), ...wholesOfFiles(files, register).map((w) => w.sha256)])];
+    /* R74, R76: `register` is the list folded to its wholes (R75): the digest of a part is no key, so only a whole has a
+       home to be held by another bundle, and a part two documents share is no conflict. */
+    const shas = [...new Set(regs.map((c) => c.sha256))];
     const homes = shas.length ? this.#rows(
       `SELECT r.capture_sha, r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
         WHERE r.bundle_id <> ? AND r.capture_sha IN (SELECT value FROM json_each(?)) LIMIT ?`,
@@ -1730,7 +1830,7 @@ class Provenance {
         `this promotion registers capture ${h.capture_sha.slice(0, 16)}… under ${bundleId}, and those bytes are `
         + `already registered under ${named ? h.bundle_id : "another record"}. One capture has one home, the `
         + `original's; registering it here would move that record's register row`,
-        { bundleId, capture_sha: h.capture_sha, holder: named ? h.bundle_id : null });
+        { bundleId, capture_sha: h.capture_sha, kind: "whole", holder: named ? h.bundle_id : null });
     }
     /* END DEC-49 REGION is-register-home */
     return null;
@@ -1941,7 +2041,7 @@ export function provenanceOf(host, deps) {
     const promotion = d.promotion || promotionOf(host);
     p = new Provenance({ ...d, storage: d.storage || host.storage, record, membership, promotion });
     instances.set(host, p);
-    record.declarePurge("provenance", ["register", "origin_declarations", "authority_decisions", { name: "captured_locators", keys: [] }]);
+    record.declarePurge("provenance", ["register", "register_parts", "origin_declarations", "authority_decisions", { name: "captured_locators", keys: [] }]);
     p.joinPromotion();
     /* N92, record-core R59 (K130): the C-18 register arms (R42–R46) join the audit over the same image the catalogue
        reads, so the audit judges each bundle once, whole, and loses none of them. */
