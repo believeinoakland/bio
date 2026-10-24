@@ -13,8 +13,8 @@
  * WHAT IS READ FROM ELSEWHERE, and from where (the module's Uses):
  *   - `record-grammar`: the id, type, actor and grade vocabularies;
  *   - `content`: the extent face the leg's part is judged by (`checkContentExtent`, `legExtent`,
- *     `legHasAuthoredExtent`, `CONTENT_ID_RE`, `CONTENT_EXTENT_DOCUMENT_ONLY`; its R1, R48: all ten kinds, `doc-part` among them);
- *   - `text-chain`: the extent kinds the repair sentence lists (`CONTENT_EXTENT_KINDS`, its R92);
+ *     `legHasAuthoredExtent`, `CONTENT_ID_RE`, `CONTENT_EXTENT_DOCUMENT_ONLY`, and `CONTENT_EXTENT_KINDS`, whose landed kinds the repair sentence lists; its
+ *     R1, R48: all ten kinds, `doc-part` among them);
  *   - `connections`: `themeLegFindings` (C-81.1, its R46), asked of each leg before any other complaint about it;
  *   - `observation-log`: `LEAD_ID_RE`, a lead id's shape (its R14);
  *   - `civil-time`: `isCalendarDate`, whether a `YYYY-MM-DD` names a real day (its R6; R3 and the hunch's date, T33-43);
@@ -31,9 +31,8 @@
 import { BUNDLE_ID_RE, ISO_TS_RE, OBJECT_TYPES, normalizeType, isMachineIdentity, BASIS_ROLES, BASIS_GRADES, GRADE_AXES,
   TESTIMONY_GRADE, GRADE_SOURCES, EARNED_GRADE_SOURCES, idPattern } from "../record-grammar/index.mjs";
 import { isCalendarDate } from "../civil-time/index.mjs";
-import { checkContentExtent, legExtent, legHasAuthoredExtent, CONTENT_ID_RE, CONTENT_EXTENT_DOCUMENT_ONLY }
+import { checkContentExtent, legExtent, legHasAuthoredExtent, CONTENT_ID_RE, CONTENT_EXTENT_DOCUMENT_ONLY, CONTENT_EXTENT_KINDS }
   from "../content/extent.mjs";
-import { CONTENT_EXTENT_KINDS } from "../textchain.mjs";
 import { themeLegFindings } from "../connections/checks.mjs";
 import { LEAD_ID_RE } from "../observation-log/checks.mjs";
 import { isPortionPath, PORTION_PATH_MAX } from "../standards/instrument.mjs";

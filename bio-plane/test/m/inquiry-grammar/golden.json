@@ -945,7 +945,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -958,7 +958,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -971,7 +971,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -986,7 +986,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'pdf-pge' is not one of: document, pdf-page, sheet-cell, slide-shape, doc-para, sheet-range, doc-table, image",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_UNREADABLE"
@@ -999,7 +999,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'pdf-pge' is not one of: document, pdf-page, sheet-cell, slide-shape, doc-para, sheet-range, doc-table, image",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_UNREADABLE"
@@ -1012,7 +1012,7 @@
      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'pdf-pge' is not one of: document, pdf-page, sheet-cell, slide-shape, doc-para, sheet-range, doc-table, image",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_UNREADABLE"
@@ -7987,7 +7987,7 @@
      "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -8094,7 +8094,7 @@
      "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -8201,7 +8201,7 @@
      "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
-      "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+      "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
       "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
      ],
      "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -11912,7 +11912,7 @@
       "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
       "repairable": true,
       "repairs": [
-       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+       "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
        "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
       ],
       "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -11925,7 +11925,7 @@
       "message": "basis_version_legs[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
       "repairable": true,
       "repairs": [
-       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+       "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
        "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
       ],
       "code": "CONTENT_EXTENT_NO_PRODUCER"
@@ -11942,7 +11942,7 @@
       "message": "basis[0] names an extent this record cannot evaluate: extent kind 'pdf-pge' is not one of: document, pdf-page, sheet-cell, slide-shape, doc-para, sheet-range, doc-table, image",
       "repairable": true,
       "repairs": [
-       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+       "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
        "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
       ],
       "code": "CONTENT_EXTENT_UNREADABLE"
@@ -11955,7 +11955,7 @@
       "message": "basis_version_legs[0] names an extent this record cannot evaluate: extent kind 'pdf-pge' is not one of: document, pdf-page, sheet-cell, slide-shape, doc-para, sheet-range, doc-table, image",
       "repairable": true,
       "repairs": [
-       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
+       "name one of the landed extent kinds — doc-para, doc-part, doc-table, document, envelope, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
        "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
       ],
       "code": "CONTENT_EXTENT_UNREADABLE"
