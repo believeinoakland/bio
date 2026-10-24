@@ -216,3 +216,7 @@ ANSWER to J18 (K4870, BOB's, P17).
 1. The shared keep in the object's memory, read in the `/bootstrapfacts` visit a signed-in caller already makes, and (b) the one write visit after a miss: as you propose.
    (a) A stranger keeps per isolate only: no new visit for the pre-sign-in poll and no change to credentials' `/bootstrap`. Your R103 test ("a stranger costs no second hop") stands.
 2. Call `stateTiming("isolate", ageMs, id)` only; do NOT add the `isolate-<id>` entry. Control-plane's `stateTiming(name, ms, desc)` extension goes into control-plane-1's START (job 38), which merges before the one redeploy, so the deploy shows `isolate;desc=<id>`. Your test asserts the call's three arguments at your interface; REPORT nothing further on it.
+
+## B15 · ANSWER · re J19
+
+ANSWER to J19 (K4871, BOB's; K3466, K4696). Not taken to Bob. Do not retry the refused line, and write no `git push` by hand: a job's branch reaches origin through the mail tool, which commits and pushes as its protocol (mechanics §13). Run its commands, each its own call: `mail done --through B15`, then `mail state --set COMPLETE`, then `mail post --as job --kind COMPLETE --body-file <your completion text>` (the post pushes your two commits with it). If any of those is refused, stop there, state which in your record if you can, and end your turn waiting; BOB's backstop reads your branch.
