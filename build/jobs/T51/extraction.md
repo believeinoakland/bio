@@ -811,3 +811,15 @@ Size (session_017P5Gk2MeNj4hZRwdEWXaSA): test runs 6, module lines 4870
 ## J41 · COMPLETE
 
 COMPLETE job 88, R109 (G165): readHeld reads halfBudgetPages (half OCR invocations, red 24 vs 12 then green) and passes stampUnit unchanged to the reader (read and tier3Extend). Module 377/378: the one red, by name, is the end-to-end stampUnit page-order case, waiting for reading-pipeline job 87's stampUnit('p<page>') call; the hand-off itself is green. Users (35 files) 167/167. Checks: format, architecture, coverage 85/85, words, ownership 0 failures. Size: test runs 6, module lines 4870.
+
+## Fix round 9, batch D (B56, EXTRACTION #44, session_018hma5T31jiQyk2xrc5Nbiy): job 94, R80 amended (G168)
+
+**Entries applied.** `readHeld`'s local `left` adds `counters: {written, skipped}` (from `#completenessOf(digest)`, never `owed`) to every `READING_HELD` answer, so every branch that answers a held reading carries them; other answers are unchanged. No sentence added, so no row owed.
+- **Cause:** R80 gave `READING_HELD` no counters, so plane's `reading` row never learned the units the door's read and the OCR pass wrote.
+- **Why missed:** extraction's tests never looked at the answer's counters; plane's tests stub `readHeld` with canned answers.
+- **Red first:** `r80-counters.test.mjs` "readHeld of a held reading of 8 units": failed with the change stashed (no `counters`), green after. Control: NO_HOME and a deferred read carry none.
+- **Platform check:** N.
+
+**Tests/checks.** Module: `ℹ tests 380`, `ℹ pass 380`, `ℹ fail 0`. Users (28 files naming `readHeld`/`READING_HELD`; heavy plane l75/l77/l79, r7-contention and control-plane round5-seam not run, except the one below): `ℹ tests 203`, `ℹ pass 202`, `ℹ fail 1`: control-plane `t51-round5-seam.test.mjs` "E3 (a 40 MB five-part upload)" (`reading.failure` undefined, expected `final`), which fails identically with my change reverted, so not caused here; control-plane's or reading-pipeline's to look at. impact.mjs: 107 modules, 1819 files. format 0 failures; architecture 0; coverage 85 of 85, 0; words 0; ownership 3 files, 0 failures.
+
+Size (session_018hma5T31jiQyk2xrc5Nbiy): test runs 5, module lines 4875
