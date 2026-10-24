@@ -2,7 +2,6 @@
  * own (`KEYS`); the build also finds each literal `word("…")` call, so this list and the source agree by a test. The sentences it
  * writes first in code are `localize` ids (`installer-steps.<area>.<name>`) and are reported to BOB, not listed here. */
 export const STEP_KEYS = Object.freeze([
-  "installer.address.prefixtaken",
   "installer.cfsaid",
   "installer.connect.address.done",
   "installer.connect.address.refused",
