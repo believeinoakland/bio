@@ -27,21 +27,22 @@ const deferred = () => { let release; const promise = new Promise((r) => { relea
 const clockAt = (start) => { let t = start; const now = () => t; now.advance = (ms) => { t += ms; }; return now; };
 
 /* A store whose routes are counted by path, answering through this module's own frame. */
-async function counted(more = {}) {
-  const w = await boot({ env: { INSTANCE_NAME: "river-town" }, more });
+async function counted(more = {}, now = null) {
+  const w = await boot({ env: { INSTANCE_NAME: "river-town" }, more, ...(now ? { now } : {}) });
   const paths = [];
   const inner = stubOver(w.m, { bootstrap: () => storeAnswer });
   const stub = { fetch: async (input, init) => { const req = input instanceof Request ? input : new Request(input, init);
-    paths.push(new URL(req.url).pathname.slice(1)); return inner.fetch(req, init); } };
+    paths.push(new URL(req.url).pathname.slice(1) + (req.method === "POST" ? " POST" : "")); return inner.fetch(req, init); } };
   return { w, stub, paths };
 }
 const ask = async (env, stub, extra = {}) => (await read(await bootstrapReport(env, "fp", { stub, ...io, ...extra }))).body;
 
 test("R104 two bootstrap answers in 10 s ask each fleet binding once; a third a minute on asks again; the kept parts are the same answer", async () => {
-  const { stub } = await counted();
+  /* the object and the Worker read one clock, as on the platform */
+  const now = clockAt(Date.parse("2026-10-23T10:00:00Z"));
+  const { stub } = await counted({}, now);
   const f = fleet();
   const env = f.env();
-  const now = clockAt(Date.parse("2026-10-23T10:00:00Z"));
   const first = await ask(env, stub, { now });
   now.advance(10 * SECOND);
   const second = await ask(env, stub, { now });
@@ -91,10 +92,13 @@ test("R104 bootstrap states fleet;dur (0 when kept) and facts;dur (the store hop
   const f = fleet();
   const env = f.env();
   const entries = [];
-  const stateTiming = (name, ms) => entries.push([name, ms]);
+  const stateTiming = (name, ms, desc) => entries.push([name, ms, desc]);
   const now = clockAt(Date.parse("2026-10-23T10:00:00Z"));
   await ask(env, stub, { stateTiming, now });
-  assert.deepEqual(entries.map(([n]) => n).sort(), ["facts", "fleet"]);
+  /* G118b: and the isolate's age, its id as the third argument, and the same age as a plain entry named for it */
+  const names = entries.map(([n]) => n).sort();
+  assert.deepEqual(names.slice(0, 3), ["facts", "fleet", "isolate"]);
+  assert.match(names[3], /^isolate-[0-9a-f]{8}$/);
   for (const [, ms] of entries) assert.ok(Number.isInteger(ms) && ms >= 0);
   entries.length = 0;
   await ask(env, stub, { stateTiming, now });
@@ -124,7 +128,7 @@ test("R103 a signed-in caller's bootstrap answers the viewer's language and the 
   const before = await ask(env, stub, { caller: { viewer: "ada" } });
   assert.equal(before.language, "es");
   assert.equal(before.words_version, "w-1");
-  assert.deepEqual(paths.filter((p) => p === "bootstrapfacts").length, 1, "one hop for the viewer's keys");
+  assert.deepEqual(paths.filter((p) => p === "bootstrapfacts").length, 1, "one hop for the viewer's keys (the keep's one write is a POST beside it)");
   WORDS.stamp = "w-2";
   assert.equal((await ask(env, stub, { caller: { viewer: "ada" } })).words_version, "w-2", "an adoption changes the stamp");
   const none = await ask(env, stub, { caller: { viewer: "ruth" } });
@@ -144,7 +148,8 @@ test("R103 control: without a session neither key is in the answer, whatever the
     const b = await ask(env, stub, { caller });
     for (const k of BOOTSTRAP_VIEWER_KEYS) assert.equal(k in b, false, `${JSON.stringify(caller)} ${k}`);
   }
-  assert.equal(paths.includes("bootstrapfacts"), false, "a stranger costs no second hop");
+  /* G118b: a stranger's visit to the object asks the kept parts only (the first on an environment; the rest find its entry), none of the seven */
+  assert.ok(paths.filter((p) => p === "bootstrapfacts").length <= 1, "one read for the strangers of one environment");
   const admin = await ask(env, stub, { caller: { cls: "admin" } });
   for (const k of BOOTSTRAP_FACT_KEYS) assert.ok(k in admin, k);
   for (const k of BOOTSTRAP_VIEWER_KEYS) assert.equal(k in admin, false, k);
