@@ -26,3 +26,11 @@ Size (session_01Ha6MYafmZ1NtDAwR8FeQEx): test runs 4, module lines 36
 ## J1 · COMPLETE
 
 R27 and R28 met in bio-plane/src/store-place.mjs (new; add to runtime-limits paths in modules.json). 32 module tests pass, format/architecture/coverage/ownership 0 failures, impact 0 of 176. Notes in my record: setup-words build --check is stale from calculations' new word (not mine).
+
+## J2 · QUESTION
+
+QUESTION (best reading given; I carry on with it, none of it blocks the files). Three things the R30/R33/R34 text leaves to a figure I must not guess (R-GATE):
+1. capFor(N): I read R33 as capFor(N) = max(0, floor(isolate_memory_bytes/2^20 - idle_bytes/2^20 - N)), i.e. 256 - 50 - N = 206 - N with today's entries, one formula for PDF and sheet runs (it replaces plane's 128-N and the sheet 128+39-N; those are test-support's and plane's to repoint, I only report). Tell me if a share per object of a class (the isolate is shared by up to five) must enter the formula.
+2. standard column of the heavy-kind rows R30 gives no standard for (pdf bytes, xlsx declared, ods content, worker bytes, need_mb, cover_bytes, clean_bytes, grade_read, ocr frame...): I set standard = max(alpha, 50 MB = 52,428,800) for byte rows, standard = alpha for count/protective rows with no separate figure (so alpha never above standard holds), and protective = the figure R30 names, else = standard. Wrong figures are one-line edits of one file; say which.
+3. PLATFORM_FIGURES `source` strings: R34 says `K4838 (<n>)` but gives no n; I write `K4838` for the four Stage-0 figures and `K4616` for idle_bytes, and the test pins the shape /^(K[0-9]+( \([0-9]+\))?|PLATFORM\.md P-M[0-9]+)$/.
+Also: the render DOM row is "the figure the capture-sources job proposes"; I add no row for it (that job adds it, R30).
