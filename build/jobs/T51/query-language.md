@@ -111,3 +111,7 @@ Session session_01Uv26d4DQG2M8TmwzaWeGkF (QUERY-LANGUAGE #13). Tranche T51 merge
 
 **Deferred:** none.
 Size (session_01Uv26d4DQG2M8TmwzaWeGkF): test runs 9, module lines 3006
+
+## J6 · COMPLETE
+
+T51 query-language · fix round 9 batch D (B6): R34 done, on job/T51/query-language (pushed; tranche/T51 merged in). Entries applied: R34: every page hit carries snippet_unit, the rowid of the unit the passage snippet was cut from (one shared unit selection, same order as R33), else null. Tests: R34 x2 (red first, then green); query-language suite 59 pass, 0 fail. Checks: format 0, architecture 0, coverage 34/34 ids named 0, ownership 0, words: no finding naming query-language. impact: retrieval, agent-steps, agent-worker run. FOUND IN OTHER MODULES: (1) retrieval search.test.mjs:30 (R6) lists hit keys exactly and now fails on snippet_unit: retrieval job 30 must add it (R95/R96). (2) retrieval's three R94 tests and agent-worker R45 (bundle byte-identity, static check) fail on the unchanged tranche too (inherited). (3) agent-worker's bundle includes query.mjs: stale for this change, regenerate at layer close. Deferred: none. Size (session_01Uv26d4DQG2M8TmwzaWeGkF): test runs 9, module lines 3006.
