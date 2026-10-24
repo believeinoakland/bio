@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_0163P54gLUEcmDWPVLMFfvL7 · depth 2 · NEEDS BOB · handled B15
+**Status** · session_0163P54gLUEcmDWPVLMFfvL7 · depth 2 · COMPLETE · handled B15
 
 ## J1 · REPORT · re B1
 
