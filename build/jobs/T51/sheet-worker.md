@@ -59,3 +59,19 @@ The sentences reach the caller as the refusal's `detail` and `why`, so none is t
 **Commit.** `a618b5f20d` on `job/T51/sheet-worker`, pushed (fast-forward from `cc6f19a2a2`). No pull request, per the job role.
 
 **Size (session_01G7yjQ7EPaZVj42HQyis376): test runs 4, module lines 1904.** Module lines count `sheet-worker/src`, `test` and `scripts` (the vendored wasm, the Rust engine and the generated bundle are not counted).
+
+## Fix round 9 (T51) · job 44 · G124 quotes · SHEET-WORKER #5
+
+**Entry applied.** R14 (amended by BOB, K4840): `MAX_UNZIPPED_BYTES`, `MAX_CELLS` and `TIME_BUDGET_MS` in `sheet-worker/src/contract.mjs` are now `boundOf("sheet_worker", "bytes")`, `boundOf("sheet_worker", "cells")` and `boundOf("sheet_worker", "ms")`; no numeric literal of the three remains in the member. The three rows already existed in `bio-plane/src/read-bounds.mjs` (kind `sheet_worker`, names `bytes`, `cells`, `ms`; keys `limit.sheet_worker.bytes|cells|ms`; figures 9,000,000 / 250,000 / 120,000, all three columns equal; the bytes row's standard and protective are 52,428,800 (K4845)). `/version`'s `bounds` still reports them through `member.mjs`. Refusal behaviour is unchanged. The sheet-worker module takes a `uses` edge to runtime-limits (already in `modules.json`). The member's configuration still declares `cpu_ms=300000`.
+
+**Failing first.** New test `R14: the three bounds are the READ_BOUNDS rows of the sheet worker, read through boundOf, typed nowhere else in the member, and reported by /version` (equals the table through `boundOf`; greps `src` comment-stripped for the three literals; `/version` bounds; control: exactly 250,000 cells is not `OVER_BOUND`, 250,001 is, naming 250001 and 250000).
+- RED: `AssertionError [ERR_ASSERTION]: contract.mjs types a literal matching /\b9[_,]?000[_,]?000\b/`
+- GREEN after the change: `node --test --test-force-exit test/` in `sheet-worker/`: tests 38, pass 38, fail 0, skipped 0.
+
+**Deferred.** Nothing. **Words.** No new sentence; nothing owed to T52.
+
+**Found in another module.** Stale generated artifacts from this change (BOB regenerates, not rebuilt here): `sheet-worker/dist/sheet-worker.bundled.mjs` and `.bundle.json` (the bundle now inlines `bio-plane/src/read-bounds.mjs`; the member's bundle inputs may need that file listed by bundler), and `bio-plane/dist/bio-plane.bundled.mjs` (inlines `contract.mjs`). `workerd` tests in `worker.test.mjs` ran against the committed bundle and passed.
+
+**Checks** (process repo, product `/home/user/bio`): `node --test` as above; `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 46 of 176, workbooks 9/9, sheet-worker 3/3 (control-plane 83/96 and plane 65/81 are the round's carried reds); `format`: 0 failures; `architecture sheet-worker`: 0 failures; `coverage sheet-worker`: 17 of 17, 0 failures; `ownership sheet-worker tranche/T51`: 3 files changed, 0 failures; `checks/run.mjs`: no finding names `sheet-worker` (the failures are other modules'); `setup-words build.mjs --check`: stale-rows note only.
+
+Size (session_015vsvGpKy672zBH3KSU5T3u): test runs 3, module lines 1930
