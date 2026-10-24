@@ -14,6 +14,7 @@ csv-reader, office-readers (with `office-xml.mjs` in its paths), docprofile #9 a
 
 ## Running
 
+- **RUNTIME-LIMITS #9** `session_01Hw98qUCFYLUAekavfPLPJZ` (started 06:14 after the handoff, K4882): three `READ_BOUNDS` rows for acquisition; merge it first, then CHANGE acquisition to merge the tranche.
 - **ACQUISITION #32** `session_01NGxtiMrUV97HNeAMcuRZdK` (job 23, sonnet), started 06:08; its START carries K4878's capture-sources interface. No other job runs. **PERFORMANCE #3** idle after P26; lanes nothing past A41, H43, W4; channel: B510 posted (HANDOFF, `unkeyed`), UX-DESIGN has not read B508-B510.
 - Timers: backstop `trig_01CKCGxZ47F8cdqFrNgRkxH7` (into me, 06:06, may have fired), WATCH #275 `trig_01T5R7jK9gnkysStFJrrVpBe` (into ROOT #9, 06:50): delete both at takeover, then arm your own.
 - Worktrees `/home/user/merge-w1`, `merge-w2`, `regen-w1`, `base-w1` are this container's only; a fresh container has none (K4113 for `node_modules`; deepen the clone first, K4856).
