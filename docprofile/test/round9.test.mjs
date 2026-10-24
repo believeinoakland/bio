@@ -28,6 +28,7 @@ const SCAN = (key, marker, confidence) => ({
   },
   parse: (ctx) => ({ entities: [], facts: { read_by: key, text_len: ctx.text.length, paragraphs: (ctx.text.match(/<p>/g) || []).length } }),
 });
+const stand = (k) => SCAN(k, `NEVER-${k}`, CONFIDENCE.LIKELY);
 const FALLBACK = { key: "r9_fallback", label: "r9 fallback", version: 1, fallback: true, contract: CONTRACT.SUBSTANCE,
   detect: () => ({ match: false }), parse: (ctx) => ({ entities: [], facts: { read_by: "r9_fallback", text_len: ctx.text.length } }) };
 for (const t of [SCAN("r9_a", "R9-A", CONFIDENCE.CERTAIN), SCAN("r9_page", "SERVERTEXT-29", CONFIDENCE.CERTAIN), FALLBACK])
@@ -164,9 +165,10 @@ test("R39 every kind of text over the bound is classified from the stated view: 
   assert.equal(ctx.text, big, "the caller's ctx is not changed");
 });
 
-test("R40 each detect is handed the view's window and one shared work count, and the types together examine at most four times the view", () => {
+test("R40 each detect is handed the view's window and one shared work count, and every registered type is asked on any text", () => {
   const stands = ["r9_s1", "r9_s2"].map((k) => SCAN(k, `NEVER-${k}`, CONFIDENCE.LIKELY));
   for (const t of stands) assert.equal(registerDoctype(t).ok, true);
+  const registered = dp.doctypes().length;
   const shapes = {
     "a long run of one pattern": "a-".repeat(200_000), "16,000 addresses on one line": Array.from({ length: 16_000 }, (_, i) => `u${i}@city.example`).join(" "),
     "40,000 definitions": Array.from({ length: 40_000 }, (_, i) => `"Term${i}" means a thing.`).join("\n"),
@@ -183,35 +185,52 @@ test("R40 each detect is handed the view's window and one shared work count, and
       assert.deepEqual(h.window, { from: 0, to: view, of: text.length }, name);
       assert.equal(h.work, handed[0].work, `${name}: one work object for the whole classification`);
     }
-    assert.equal(r.work.limit, 4 * view, name);
+    assert.equal(dp.CLASSIFY_WORK_FACTOR, 4);
+    assert.equal(r.work.limit, 4 * view * registered, `${name}: four views for each registered type`);
     assert.equal(r.work.chars, handed.length * view, `${name}: the count is what the detects charged`);
-    assert.ok(r.work.chars <= r.work.limit, `${name}: ${handed.length} passes over the view are at most four views`);
+    assert.ok(r.work.chars <= r.work.limit, name);
     assert.equal(r.work.stopped_before, null, name);
   }
 });
 
-test("R40 a classification whose detects pass the work limit asks no further type, and says which and why", () => {
+test("R40 seven honest detects are all asked over a view, and a runaway first detect still stops those after it", () => {
   const many = ["r9_w1", "r9_w2", "r9_w3", "r9_w4", "r9_w5", "r9_w6", "r9_w7"].map((k) => SCAN(k, `NEVER-${k}`, CONFIDENCE.LIKELY));
   for (const t of many) assert.equal(registerDoctype(t).ok, true);
+  const registered = dp.doctypes().length;
   const text = lines(100_000);
+  // honest: each detect charges one pass over the view; eleven passes are far under four per registered type
   handed = [];
   const r = doctypeFor({ text });
-  const asked = handed.map((h) => h.key);
-  // r9_a, r9_page, r9_s1, r9_s2, r9_w1..: each charges one pass, the limit is four, the check is between detects
-  assert.equal(r.work.chars, 5 * text.length, "stopped after the detect that crossed the limit");
-  assert.equal(asked.length, 5);
-  assert.equal(r.work.stopped_before, "r9_w2");
-  assert.ok(!asked.includes("r9_w2") && !asked.includes("r9_w7"));
-  assert.ok(r.why.includes("r9_w2") && r.why.includes(String(r.work.limit)) && r.why.includes(String(r.work.chars)), "stated, with the figures");
+  assert.deepEqual(handed.map((h) => h.key), ["r9_a", "r9_page", "r9_s1", "r9_s2", ...many.map((m) => m.key)], "every type was asked, in order");
+  assert.equal(r.work.limit, 4 * text.length * registered);
+  assert.equal(r.work.chars, handed.length * text.length);
+  assert.equal(r.work.stopped_before, null);
   assert.equal(r.type.key, "r9_fallback", "nothing recognised it: the registered fallback, as ever");
-  // the also pass is under the same count: a CERTAIN winner, the rest asked until the count passes
-  handed = [];
-  const won = text + "\nR9-A";
-  const w = doctypeFor({ text: won });
-  assert.equal(w.type.key, "r9_a");
-  assert.equal(w.work.chars, handed.length * won.length, "every pass is counted, the winner's and the also pass's alike");
-  assert.ok(w.work.stopped_before, "the also pass stopped at the limit");
-  assert.ok(w.work.chars > w.work.limit && w.work.chars <= w.work.limit + won.length);
+  assert.ok(!r.why || !r.why.includes("work budget"), "no budget statement when every type was asked");
+  // a runaway: one detect charging far over its share stops the types after it, stated with the figures
+  const runaway = { ...SCAN("r9_s1", "NEVER-r9_s1", CONFIDENCE.LIKELY), detect(ctx) {
+    handed.push({ key: "r9_s1", len: ctx.text.length, work: ctx.work }); ctx.work.chars += 60 * ctx.text.length; return { match: false };
+  } };
+  assert.equal(registerDoctype(runaway).replaced, true);
+  try {
+    handed = [];
+    const x = doctypeFor({ text });
+    const asked = handed.map((h) => h.key);
+    assert.deepEqual(asked, ["r9_a", "r9_page", "r9_s1"], "stopped after the detect that crossed the limit");
+    assert.equal(x.work.stopped_before, "r9_s2");
+    assert.ok(x.work.chars > x.work.limit && x.work.chars <= x.work.limit + 60 * text.length);
+    assert.ok(x.why.includes("r9_s2") && x.why.includes(String(x.work.limit)) && x.why.includes(String(x.work.chars)), "stated, with the figures");
+    // the also pass is under the same count: a CERTAIN winner first, the rest asked until the count passes
+    handed = [];
+    const won = text + "\nR9-A";
+    const w = doctypeFor({ text: won });
+    assert.equal(w.type.key, "r9_a");
+    assert.deepEqual(handed.map((h) => h.key), ["r9_a", "r9_page", "r9_s1"], "the also pass stopped at the runaway");
+    assert.equal(w.work.stopped_before, "r9_s2");
+    assert.ok(w.work.chars > w.work.limit);
+  } finally {
+    assert.equal(registerDoctype(stand("r9_s1")).replaced, true);
+  }
 });
 
 test("R40 a ctx whose text is an accessor is wrapped, not read ahead: each detect reads it as it always did", () => {
