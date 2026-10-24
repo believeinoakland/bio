@@ -15,6 +15,14 @@
  *     acquire; a refused page keeps its marker and the pages after it are still asked; a page answered by a different
  *     engine build is not merged; a page answered to the wrong call is dropped.
  *
+ * RESTATED 2026-10-24 (fix round 9, job 40; B48, K4909): the INLINE pass (`op=acquire`'s reading, `captureupload`, the press) makes no OCR call (reading-pipeline R55,
+ * `read(..., {ocrInvocations: 0})`; extraction R103, job 28): every page is stated `ocr_left` and owed to the ledger. So the arms below that read pages
+ * "through the op" were stale. They now assert, at `op=acquire`, that the OCR member is NOT called and the pages are owed and registered (`ocr_left`, never
+ * transcribed in the request); and the PER-PAGE LOOP they proved (one call per deferred page, the budget of 24, the throw, the refusal, the other build, the
+ * stray page) is proved on the ledger's pass: `read` of the acquired document with the member bound, default `ocrInvocations`, exactly as the ledger's
+ * continuation tick calls it. What §1 proved with the committed member over D-460's fixture (agenda-p2 reads meeting_agenda) is
+ * `test/m/reading-pipeline/convert-ocr.test.mjs` "R4 R6 (d606 §1)" (the same committed member, the same fixture, bound as OCR_WORKER).
+ *
  * NEGATIVE CONTROL: RUN 2026-09-25, one arm, declared before arming. (1) STOP READING `deferred` — in
  * `askMemberPerPage` (then in the plane's `index.mjs`; now `bio-plane/src/reading-pipeline/index.mjs`) `const deferred = (first && Array.isArray(first.deferred) ? … : [])`
  * becomes `const deferred = ([])` (1 match, armed). DECLARED: MUST fail "agenda-p2 reads meeting_agenda through the op"
@@ -32,6 +40,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
 import { ocrWorkerDef } from "../../ocr-worker/test/memberworker.mjs";
+import { read } from "../src/reading-pipeline/index.mjs";
 
 const SRC = fileURLToPath(new URL("../src/plane/index.mjs", import.meta.url));
 const FIX = (n) => new Uint8Array(readFileSync(fileURLToPath(new URL(`./fixtures/d460/${n}`, import.meta.url))));
@@ -144,28 +153,35 @@ try {
       const r2 = await acquire(mf, "/p2.pdf");
       const rd = r2.document?.reading || {};
       t("agenda-p2 (the agenda on page 1 only) is acquired", r2.ok, true);
-      t("agenda-p2 reads meeting_agenda through the op — page 1 was asked for and read", rd.content_type, "meeting_agenda");
-      t("agenda-p2: both scanned pages transcribed, none left unread", [filledOf(rd), unreadOf(rd)], [2, 0]);
-      t("agenda-p2 no longer wants OCR (the reading carries `tier3_candidate` only when true)", rd.tier3_candidate ?? false, false);
+      t("agenda-p2: the inline pass asked the member for no page: none transcribed, both pages owed (`ocr_left`), still a candidate", [filledOf(rd), rd.ocr_left && rd.ocr_left.pages, rd.tier3_candidate], [0, 2, true]);
       const r1 = await acquire(mf, "/p1.pdf");
-      t("over-strictness: agenda-p1 (the agenda on page 0) still reads meeting_agenda", r1.document?.reading?.content_type, "meeting_agenda");
-      t("agenda-p1: both pages transcribed", [filledOf(r1.document?.reading), unreadOf(r1.document?.reading)], [2, 0]);
+      const rd1 = r1.document?.reading || {};
+      t("agenda-p1: likewise none transcribed in the request, both pages owed", [filledOf(rd1), rd1.ocr_left && rd1.ocr_left.pages], [0, 2]);
     } finally { await mf.dispose(); }
   }
 
+  /* the inline pass (`op=acquire`) asks the member nothing; the ledger's pass is `read` of the acquired document with the member bound */
   const stubRun = async (mode, path) => {
     const mf = new Miniflare({ workers: [planeDef("ocr-stub"), stubDef(mode)] });
     try {
       const r = await acquire(mf, path);
-      const log = await (await (await mf.getWorker("ocr-stub")).fetch("http://s/log")).json();
-      return { r, rd: r.document?.reading || {}, log, doc: r.document };
+      const logOf = async () => await (await (await mf.getWorker("ocr-stub")).fetch("http://s/log")).json();
+      const inline = await logOf();
+      const bytes = DOCS[path];
+      const evidence = { head: async () => ({ size: bytes.length }),
+        get: async (_d, o) => { const at = o && o.range ? o.range.offset : 0, end = o && o.range ? Math.min(bytes.length, at + o.range.length) : bytes.length;
+          return { size: bytes.length, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset + at, bytes.byteOffset + end) }; } };
+      const out = await read(r.document, { evidence, env: { OCR_WORKER: await mf.getWorker("ocr-stub") }, storeName: "bio" });
+      const log = await logOf();
+      return { r, rd: out.reading || {}, log, doc: out.reading, inline, inlineRd: r.document?.reading || {} };
     } finally { await mf.dispose(); }
   };
 
   console.log("\n--- 2 · the budget: a 30-page scan, one call per page, at most 24 calls ---");
   {
-    const { r, rd, log } = await stubRun("chunk", "/scan30.pdf");
+    const { r, rd, log, inline, inlineRd } = await stubRun("chunk", "/scan30.pdf");
     t("the acquire succeeds", r.ok, true);
+    t("the inline pass (op=acquire) made NO call to the member; its 30 pages are owed (`ocr_left`) and none transcribed", [inline.length, inlineRd.ocr_left && inlineRd.ocr_left.pages, filledOf(inlineRd)], [0, 30, 0]);
     t("the first call asked for all 30 pages", (log[0] || []).length, 30);
     t("every later call asked for exactly ONE page, in order", log.slice(1).map((l) => l.length === 1 ? l[0] : l),
       Array.from({ length: 23 }, (_, i) => i + 1));

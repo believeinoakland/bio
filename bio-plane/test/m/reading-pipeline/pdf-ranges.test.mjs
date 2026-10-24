@@ -35,7 +35,8 @@ test("R40: a PDF read in pieces is read by page ranges from the cursor's page: t
   assert.ok(pieces.length >= Math.ceil(N / PDF_RANGE_PAGES) && pieces.length < N / 20, `${pieces.length} pieces`);
   assert.deepEqual(pieces.flatMap((p) => p.text_units), whole.text_units);
   assert.deepEqual(pieces.flatMap((p) => p.text_units).map((u) => u.seq), Array.from({ length: N }, (_, i) => i));
-  assert.ok(pieces.slice(1).every((p) => p.reading === undefined), "a later piece is units alone");
+  /* R40, R57 (K4911): a later range is its units and the facts its pages add; the chain of its own pages (`piece_chain`) is one, and no part of the first reading */
+  assert.ok(pieces.slice(1).every((p) => p.reading === undefined || Object.keys(p.reading).every((k) => k === "piece_chain" || /^(?:ocr_|units_skipped|pictures_unread|legibility|folio_pages)/.test(k))), "a later piece is units and the facts its pages add");
   const last = pieces[pieces.length - 1];
   assert.equal(last.more, false); assert.equal(last.cursor, null);
   assert.equal(last.read_through, N); assert.equal(last.total, N, "for a PDF read_through and total count pages");

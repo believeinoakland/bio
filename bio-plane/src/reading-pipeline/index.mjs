@@ -343,8 +343,15 @@ const REFUSAL_SAYS = {
 export function tier3Note(m, memberNote, layerPages) {
   const say = [];
   const kept = Array.isArray(layerPages) ? layerPages.length : 0;
-  if (!m.wholesale && m.filled.length)
-    say.push(word("reading-pipeline.scanned_page_transcribed", { filled: String(m.filled.length), kept: String(kept ? word("reading-pipeline.already_text_kept", { kept: kept === 1 ? "page" : "pages" }) : "") }));
+  /* K4909: `filled` is the pages the OCR member answered (R29, extraction read it); the member is told only of the pages whose text gained a glyph, and of the ones
+     answered with none (every region below its floor) that text recognition could not read */
+  const gainedAt = new Set((m.text && Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && typeof p.text === "string" && glyphCount(p.text) > 0).map((p) => p.page));
+  const gained = (m.filled || []).filter((p) => gainedAt.has(p));
+  const answeredEmpty = (m.filled || []).filter((p) => !gainedAt.has(p));
+  if (!m.wholesale && gained.length)
+    say.push(word("reading-pipeline.scanned_page_transcribed", { filled: String(gained.length), kept: String(kept ? word("reading-pipeline.already_text_kept", { kept: kept === 1 ? "page" : "pages" }) : "") }));
+  if (!m.wholesale && answeredEmpty.length)
+    say.push(localize("reading-pipeline.index.pages_not_read_text_recognition", "{count} page(s) ({pages}) could not be read by text recognition", { count: String(answeredEmpty.length), pages: String(describePages(answeredEmpty)) }));
   if (!m.wholesale && Array.isArray(m.appended) && m.appended.length)
     say.push(word("reading-pipeline.page_already_held", { appended: String(m.appended.length), appended_2: String(m.appended.length === 1 ? "that page is" : "those pages are") }));
   if (m.unanswered.length)
@@ -3137,6 +3144,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           /* a later range is its units and what its pages add: the OCR it left, refused or lost, and the pictures it left unread */
           const facts = {};
           stateOcr(facts, ocrLeft, ocrFacts, i2text);
+          /* K4911 (B47): the chain of this range's own pages, as the whole read's `text_source` restricted to them (the tiers that read them: layer, ocr, ...), so what the
+             range's units are stored under is theirs and not the first piece's; absent when no page of the range holds text */
+          const hasText = (Array.isArray(i2text && i2text.pages) ? i2text.pages : []).some((pg) => pg && typeof pg.text === "string" && glyphCount(pg.text) > 0);
+          const pieceChain = hasText ? (chain || layerChainFor(i2text, { tier: wiredTier, container: fmt })) : null;
+          if (Array.isArray(pieceChain)) facts.piece_chain = pieceChain;
           return { ...(textUnits ? { text_units: textUnits } : {}), ...p.fields, piece: p.piece,
                    ...(Object.keys(facts).length ? { reading: facts } : {}) };
         }
