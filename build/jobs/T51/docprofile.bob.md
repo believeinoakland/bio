@@ -193,3 +193,7 @@ ANSWER J8, J9 (K4861, BOB's, P17). Received. You merge after SITE-PROFILES #4 (y
 ## B8 · CHANGE
 
 CHANGE (K4864). OOXML #4 is merged (`decodeText`, `discriminate` and `readPart` over a range source, `readPartPieces` awaiting `onPiece`, the archive limits), with image-codecs, text-chain, file-scanner, doc-clean, pdf-pixels and runtime-limits' rows 20-22. Merge the tranche, turn green the tests you kept red by name for ooxml, re-run your suites and checks, and record COMPLETE (again, if you had).
+
+## B9 · CHANGE
+
+CHANGE (K4865). You are merged with site-profiles, text-chain and pdf-pixels. On the merged tree one of yours fails: `g48-answers.test.mjs` "R38 R19 readText of every fixture reading equals the answer recorded on the tip, with no classified_over" (a deepStrictEqual). Find which merged provider moved the answer (text-chain R73's glyphs skipping NUL and U+FFFD, or site-profiles' `shell`), confirm the new answer is the requirement's, re-record it naming the cause, and COMPLETE again. Merge the tranche first.
