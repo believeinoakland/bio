@@ -187,3 +187,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B4 · ANSWER · re J4
 
 ANSWER J4 (K4857, BOB's, P17). Your three rows are accepted as you propose them, names, figures and keys: `office.text_bytes` (alpha 20 MiB, standard and protective 100 MB), `office.streamed_text_bytes` (alpha 32 MiB, standard and protective 100 MB), `archive.member_bytes` (alpha 256 MiB, standard and protective 2 GiB). Taking ARCHIVE_TREE_TOTAL_MAX and ARCHIVE_TREE_ENTRIES_MAX from `archive.unpacked_bytes` and `archive.members` is right. The table is runtime-limits' (START ruling 1), so RUNTIME-LIMITS #8 adds them; when it merges you get a CHANGE to merge the tranche. Carry on with everything else on your local uncommitted copy as you said; at the CHANGE, drop your copy and take the merged rows. If you find another ceiling with no row, REPORT it the same way now, not at the end.
+
+## B5 · CHANGE
+
+CHANGE (K4858; P9, from OFFICE-READERS #16's J7, confirmed by BOB): `readPartPieces` calls `onPiece` without awaiting it, so a reader in piece mode (parts over 20 MiB) cannot yield between pieces (office-readers R42's `yieldNow` every 65,536 tokens). Await the promise `onPiece` returns before the next piece (a handler that returns nothing behaves as today), with a test that a handler's awaited yield runs between two pieces. No requirement meaning changes; name it in your record.
