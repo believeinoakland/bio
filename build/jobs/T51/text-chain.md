@@ -131,3 +131,27 @@ Completion again after CHANGE B8 (K4863). Tranche/T51 merged first.
 **Deferred.** None. **Found in other modules.** Nothing new beyond J6's REPORT 1 (reading-pipeline's `transcribe.test.mjs:132`).
 
 Size (session_01XYjSqzMCJiW54TqbtMFFcE): test runs 24, module lines 2072
+
+## J8 · COMPLETE
+
+Completion of job 63 (K4913), START B9: each chunk and part its own address. Code commit on job/T51/text-chain (tranche/T51 merged first).
+
+**R-FOUR.** (1) Cause: `canonicalExtent` (`textchain.mjs`) kept `run` for `doc-para` only and had no `doc-part` arm. (2) Missed: R97's tests used single-chunk units and no part extents. (3) Red first, on the code before: `canonicalExtent({kind:"pdf-page",page:2,rect:null,run:1})` equalled run 0's form; `{kind:"doc-part",part:"word/footnotes.xml",ref:"fn1"}` equalled `ref:"fn2"`'s (both `{kind:"doc-part",fields:null}`); `describeExtent` of a doc-part read `fn1`, not `part fn1`. Green after. (4) N.
+
+**Entries applied.**
+- R97: `pdf-page`, `slide-shape`, `sheet-range` carry `run` when it is an integer and omit it otherwise; `doc-part` {kind, part, ref}, each a trimmed string or `null`. Pin (new test): for every arm the form of an extent with no integer `run` is byte-identical to before (so no stored content id moves); `document`, `sheet-cell`, `doc-table`, `image` ignore `run`; `doc-para` unchanged.
+- R98: `doc-part` reads "part <ref>" through `localize` (new id `text-chain.textchain.part_ref`), `run` never in the sentence; with no ref it reads the unnamed-part sentence (`textchain.text.part_document_record`).
+- Tests: `test/m/text-chain/extent.test.mjs` oracles `r97`/`r98` and the input sweep now cover `run` and `doc-part`; three new tests.
+
+**Interpretation to confirm (REPORT).** A `doc-part`'s `ref` is its element reference, an address field, while R98 says an authored non-blank `ref` is returned first. I read `ref` of a `doc-part` as the address, so `describeExtent` reads the doc-part arm before the authored-ref rule (otherwise "part <ref>" is never reached with a ref). R97's "`ref` never among them" holds for every other arm. If you rule otherwise, it is one line.
+**Content's shape.** `CONTENT_EXTENT_KINDS` keeps R92's eight keys; `content/extent-core.mjs` imports nothing from text-chain that needs `doc-part` (content R1 admits it in its own shape check, job 29). No other export changed.
+
+**Deferred.** None. **Found in other modules.** Nothing.
+
+**Tests and checks.**
+- `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/text-chain/*.test.mjs` (bio-plane): 128 pass, 0 fail (the directory form prints a lower count).
+- Direct users, pass/fail: content 155/0, connections 146/0, observation-log 84/0, query-language 57/0, inquiry-grammar 85/0, leg-earning 57/0, inquiry 225/0 (one skipped), basis-version-grammar 33/0, basis-versions 182/0, run-productions 65/0, reevaluation 163/0, answer-envelope 43/0, extraction 350/0 (skips), reading-pipeline 397/0 (skips). doctypes and ocr-worker not run (their suites need their own node_modules; neither reads canonicalExtent or describeExtent). `impact.mjs` names 115 modules; I ran the direct users only.
+- format 0 failures; architecture 0; coverage text-chain 106 of 106; ownership 3 files changed by text-chain, 0 failures.
+- Stale generated artifacts: the bundles holding `textchain.mjs` (`bio-plane/dist/bio-plane.bundled.mjs`, agent-worker's); BOB regenerates.
+
+Size (session_017axPWY6DHbvZpqTGuJogoE): test runs 6, module lines 2090
