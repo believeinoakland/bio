@@ -116,3 +116,18 @@ Completion of fix round 9 (START B6): G141 (owner), G131g (`glyphCount`), G124e 
 **Deferred.** None.
 
 Size (session_01XYjSqzMCJiW54TqbtMFFcE): test runs 19, module lines 2072
+
+## J7 · COMPLETE
+
+Completion again after CHANGE B8 (K4863). Tranche/T51 merged first.
+
+**Done.** `gradeCeiling`'s `why` for an undetermined page now spells the page 1-based ("for page 1" for stored page 0), like the chain sentence (R39); the stored page numbers are untouched. R57's test now asserts page 0 reads "page 1" (and not "page 0") and page 4 reads "page 5".
+
+**Tests and checks.**
+- `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/text-chain/*.test.mjs` (bio-plane): 146 tests, 146 pass, 0 fail. (The directory form `test/m/text-chain/` prints a lower count, 122 to 133, from the runner, with 0 failures; the file list runs every file.)
+- Users of `gradeCeiling`: leg-earning 57/0, content 155/0, inquiry 225/0, basis-versions 182/0.
+- format: 0 failures. architecture: 0 failures. coverage text-chain: 106 of 106 ids named by a test. ownership: 6 files changed by text-chain, 0 failures.
+
+**Deferred.** None. **Found in other modules.** Nothing new beyond J6's REPORT 1 (reading-pipeline's `transcribe.test.mjs:132`).
+
+Size (session_01XYjSqzMCJiW54TqbtMFFcE): test runs 24, module lines 2072
