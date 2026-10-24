@@ -270,7 +270,10 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
      `choice` the mode a /begin carries (R62). */
   alongside = false, containersOff = false, containersOdd = false, expireAfter = null, sourceFlaky = 0, sourceDown = false, preSources = {}, preTags = {},
   rolloutKeepsImage = false, silentAddress = false, wakeAfter = 0, cfFlaky = null, typed, objects = {}, refuseDelete = [], lockedBy = null,
-  builtInFleet = false,
+  builtInFleet = false, crons = {},
+  /* R84 (1): the answer to the storage entitlement read (`GET /r2/buckets`): "off" (R2's not-entitled answer, code 10042: documented
+     shape), "permission", "error" (a 500, waited out and then a lasting failure), "other" (a refusal of another kind); `choose` the founder's choices a /begin carries: `account` and `subdomain`. */
+  storage = "ok", choose = {},
   /* R78 (K3868): what the copy records as its producing team when the run asks: a short name (the default, the slug: a copy that
      recorded it at its first boot), `null` (records none: `group: null`), or "silent" (does not answer `op=instancegroup`);
      `seedRefused` the code `op=instancegroupseed` refuses with; `groupFlat` answers `op=instancegroup` with the group at the top level
@@ -395,6 +398,11 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       return cfok({});
     } },
     { m: (u) => u.endsWith("/logpush/jobs"), f: () => logpush === "refused" ? cferr("Authentication error", 403, 10000) : cfok(logpush) },
+    /* R84 (3): the scheduled jobs a Worker holds (`crons`: more, for a script of the account's, by name). */
+    { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "GET", f: (u) => {
+      const name = u.split("/workers/scripts/")[1].split("/")[0];
+      return cfok({ schedules: [...(schedules.get(name) || []), ...(crons[name] || [])].map((cron) => ({ cron })) });
+    } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "PUT", f: (u, init) => {
       if (refuseSchedules) return cferr("schedules refused <i>by the fake</i>", 403);
       schedules.set(u.split("/workers/scripts/")[1].split("/")[0], JSON.parse(init.body).map((x) => x.cron));
@@ -405,7 +413,8 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     { m: (u) => u.includes("/containers/applications"), f: (u, init) => {
       const mth = (init.method || "GET").toUpperCase();
       if (containersOdd) return cferr("Something unexpected happened with the request", 400, 10001);
-      if (containersOff) return cferr("Containers are not enabled on this account. Enable Containers in the dashboard.", 403, 10000);
+      /* R84 (2): documented shapes, decided by code (BOB measures them on the rehearsal account, K4942): the plan refusal, then the permission one below. */
+      if (containersOff) return cferr("Containers are not available on this plan.", 403, 100328);
       if (containers === "read") return cferr("Authentication error", 403, 10000);
       const one = /\/containers\/applications\/([^/]+)(\/rollouts)?$/.exec(u);
       if (mth === "GET" && one && !one[2]) { const a = apps.find((x) => x.id === one[1]); return a ? cfok(a) : cferr("not found", 404); }
@@ -442,7 +451,8 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       acct.delete(name); classes.delete(name); sources.delete(name); removed.push(name);
       return cfok({});
     } },
-    { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => cfok({ buckets: (r2 === "late" ? [] : [...buckets]).map((name) => ({ name })) }) },
+    { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => storage === "off" ? cferr("Account not entitled to this feature.", 403, 10042)
+      : storage === "permission" ? cferr("Authentication error", 403, 10000) : storage === "error" ? cferr("Internal error", 500, 7003) : storage === "other" ? cferr("The request could not be understood by R2", 400, 10001) : cfok({ buckets: (r2 === "late" ? [] : [...buckets]).map((name) => ({ name })) }) },
     { m: (u, mth) => /\/r2\/buckets\/[^/]+\/usage$/.test(u) && mth === "GET", f: (u) => {
       const b = u.split("/r2/buckets/")[1].split("/")[0];
       return buckets.has(b) ? cfok({ objectCount: (bucketObjects.get(b) || []).length }) : cferr("The specified bucket does not exist.", 404, 10006);
@@ -566,7 +576,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   if (!ck) ({ cookie: ck, state: st } = await begin(slug, mode, { ...(ai === undefined ? {} : { instanceAi: ai }),
     ...(alongside ? { alongside: true } : {}), ...(typed === undefined ? {} : { typed }),
     ...(mode === "update" ? { version: version ?? (rel ? rel.version : RELEASE_VERSION) } : {}),
-    ...(vpc === undefined ? {} : { securityVpc: vpc }) }));
+    ...(vpc === undefined ? {} : { securityVpc: vpc }), ...choose }));
   let out;
   try { out = await callback(`code=GOODCODE&state=${st}`, ck); }
   finally { globalThis.setTimeout = realTimeout; globalThis.fetch = realFetch; armWith(...signersBefore); }

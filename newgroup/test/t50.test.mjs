@@ -458,7 +458,8 @@ test("R69 every step is resumable, partial states are detected, one install runs
 test("R70 what is missing is found before anything is created: a free-plan account, a Containers-off account, an account at its worker limit and a taken name each stop before a write, naming the cause and that nothing was created; control: a clean account passes all four", async () => {
   const stops = [
     ["plan", { plan: "free" }, word("screen.install.stopped.plan") + " " + word("installer.install.stopped.plan.why"), word("screen.install.stopped.plan.do")],
-    ["containers", { containersOff: true }, word("screen.install.stopped.containers"), word("screen.install.stopped.containers.do")],
+    /* R84 (2): Containers refused for the plan (Cloudflare's code, not its words) is the plan's own stop. */
+    ["containers", { containersOff: true }, word("screen.install.stopped.plan") + " " + word("installer.install.stopped.plan.why"), word("screen.install.stopped.plan.do")],
     ["limit", { pre: Object.fromEntries([...Array(496)].map((_, i) => [`other-${i}`, []])) }, word("screen.install.stopped.limit", { limit: word("installer.limit.workers.other", { n: 500 }) }), word("screen.install.stopped.limit.do")],
     ["name", { pre: { "taken-name": [] } }, word("screen.install.stopped.nametaken", { name: "taken-name" }), word("screen.install.stopped.nametaken.do", { free: "taken-name-2" })],
   ];
@@ -472,37 +473,37 @@ test("R70 what is missing is found before anything is created: a free-plan accou
     /* Before a write: no write to the account other than the plan probe the plan check itself makes (deleted again) and the lock. */
     assert.deepEqual(writes(w).filter((x) => !/bio-plan-probe/.test(x)), [], `${why}: before a write`);
   }
-  /* Containers named in plain clicks, with the line that says when it is done. */
-  assert.ok(hasWord("screen.install.stopped.containers.done"));
-  /* The stop waits for the founder to say it is done, which begins again: the page offers "It's on now", which begins the run again
+  /* The stop waits for the founder to say it is done, which begins again: the page offers its "Check again", which begins the run again
      with what it held (the same short name and mode), through the same /begin. */
   const containers = await run({ slug: "pre-containers", containersOff: true });
-  assert.equal(containers.page.retry.label, word("screen.install.stopped.containers.done"));
+  assert.equal(containers.page.retry.label, word("screen.install.stopped.plan.done"));
   assert.equal(containers.page.retry.body.slug, "pre-containers");
   assert.equal(containers.page.retry.body.mode, "install");
   assert.equal(JSON.stringify(containers.page.retry.body).includes("token"), false, "no credential rides it");
   const { slug: again, mode: how, ...rest } = containers.page.retry.body;
   const begun = await begin(again, how, rest);
   assert.equal(begun.j.ok, true, "/begin takes it, and goes to Cloudflare again");
-  /* F2: an answer that does not show Containers on is not read as on: an unknown answer stops, saying it could not tell, beside the plain step. */
+  /* F2: an answer that does not show Containers on is not read as on: an unknown answer stops, saying it could not tell, with Cloudflare's own words and "Check again". */
   const odd = await run({ slug: "pre-odd", containersOdd: true });
-  assert.equal(odd.page.failed.said, word("installer.install.stopped.lookup", { said: "Something unexpected happened with the request" }));
-  assert.equal(odd.page.failed.d, word("screen.install.stopped.containers.do"));
+  assert.ok(odd.page.failed.said.includes("Something unexpected happened with the request"));
+  assert.ok(odd.page.retry, "it offers Check again");
   assert.equal(odd.page.status("install"), null, "nothing installed");
   assert.deepEqual([...odd.buckets], [], "nothing created");
-  /* Control: a refusal for want of permission is the container member's own matter (R38): the install continues. */
+  /* R84 (2): a refusal for want of permission asks to approve again, before anything is created. */
   const noperm = await run({ slug: "pre-noperm", containers: "read" });
-  assert.equal(noperm.page.status("room"), "ok");
+  assert.equal(noperm.page.status("room"), "no");
+  assert.ok(noperm.page.done.includes("data-begin"), "the approval is asked again");
+  assert.deepEqual([...noperm.buckets], [], "nothing created");
   /* The Workers Paid stop offers its own "Check again", beginning the run again as the Containers stop's does. */
   const free = await run({ slug: "pre-free", plan: "free" });
   assert.equal(free.page.retry.label, word("screen.install.stopped.plan.done"));
   assert.equal(free.page.retry.body.slug, "pre-free");
-  /* F7: an account with no workers.dev prefix is told, before anything is created, the free one it is offered; one that has a prefix is told nothing. */
+  /* R84 (4), F7: an account with no workers.dev prefix is asked, before anything is created, to choose the name it is offered; one that has a prefix is asked nothing. */
   const fresh = await run({ slug: "offer-one", subdomain: null });
-  assert.equal(fresh.page.says, word("installer.address.offer", { prefix: "offer-one" }));
-  assert.equal(fresh.page.status("addr"), "ok");
-  const stepsBefore = fresh.page.events.findIndex((e) => e.id === "r2");
-  assert.ok(stepsBefore > fresh.page.events.findIndex((e) => e.id === "room"), "said in the room step, before the first resource");
+  assert.equal(fresh.page.status("room"), "no");
+  assert.match(fresh.page.done, /id="address-name"[^>]*value="offer-one"/);
+  assert.deepEqual([...fresh.buckets], [], "nothing created");
+  assert.equal(fresh.prefix(), null, "nothing registered without the click");
   const had = await run({ slug: "offer-two" });
   assert.equal(had.page.says, null);
   /* Control: a clean account passes all four checks. */

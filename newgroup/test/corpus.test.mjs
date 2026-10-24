@@ -11,6 +11,7 @@ import { RELEASE_VERSION } from "../src/release.mjs";
 import { run, req, release, armWith, restoreSigners, SIGNER, bump, heldCopy, jres, begin, callback, parsePage, RUNNER, DESCRIPTOR } from "./fixture.mjs";
 import { hostingControlBlock, HOSTING_CONTROL, HOSTING_RECOVERY_DEPLOYER } from "../../bio-plane/src/setup-fleet.mjs";
 import { WORD_ROWS } from "../../bio-plane/src/setup-words/index.mjs";
+import { readFileSync } from "node:fs";
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
@@ -29,7 +30,11 @@ const rowRe = (t) => {
   return new RegExp(parts.map((p, i) => (i === 0 ? p : (p === "" && i === parts.length - 1 ? "(?:\\S+\\s*){1,8}?" : (i === 1 && parts[0] === "" ? "\\S+" : ".{0,200}?") + p))).join(""), "g");
 };
 const longestFirst = (texts) => texts.map((t) => flatten(t).trim()).filter((t) => t.length >= 2).sort((a, b) => b.length - a.length).map(rowRe);
-const PATTERNS = longestFirst([...KEYS, ...STEP_KEYS].map((k) => rows.get(k)).filter((t) => typeof t === "string"));
+/* R84: the sentences the module writes first in code, `localize(id, en)`: the list wins when it holds a row, else the `en` is the sentence,
+   so a drawn one is read as a key's word is. They are taken from the source's literal pairs, never copied here. */
+const ready = readFileSync(new URL("../src/ready.mjs", import.meta.url), "utf8") + readFileSync(new URL("../src/index.mjs", import.meta.url), "utf8");
+const written = [...ready.matchAll(/localize\(\s*"([^"]+)",\s*("(?:[^"\\]|\\.)*")/g)].map((m) => rows.get(m[1]) ?? JSON.parse(m[2]));
+const PATTERNS = longestFirst([...[...KEYS, ...STEP_KEYS].map((k) => rows.get(k)).filter((t) => typeof t === "string"), ...written]);
 
 /* What a drawn text holds beside the keys' words: the runs of three or more consecutive lower-case words are English. A name,
    a version, an address or a count is no word; Cloudflare's own text and the leaf text another module owns are exempt below. */
@@ -71,6 +76,12 @@ async function states() {
   await add("install sourceflaky", run({ slug: "cor-flaky", sourceFlaky: 1 }));
   await add("install box", run({ slug: "cor-box", rel: await release({ version: NEXT, container: true }) }));
   await add("install box unasked", run({ slug: "cor-box2", rel: await release({ version: NEXT, container: true }), grantedScope: null, containers: "read" }));
+  await add("install storage off", run({ slug: "cor-st", storage: "off" }));
+  await add("install address ask", run({ slug: "cor-ad", subdomain: null }));
+  await add("install address taken", run({ slug: "cor-ad", subdomain: null, taken: ["cor-ad"], choose: { subdomain: "cor-ad" } }));
+  await add("install scopes", run({ slug: "cor-sc", grantedScope: "workers-scripts.write" }));
+  await add("install accounts", run({ slug: "cor-ac", accounts: [{ id: "a", name: "One" }, { id: "b", name: "Two" }] }));
+  await add("install containers odd", run({ slug: "cor-co", containersOdd: true }));
   await add("install box refused", run({ slug: "cor-box3", rel: await release({ version: NEXT, container: true }), containers: "create" }));
   await add("install scanner", run({ slug: "cor-scan", rel: await release({ version: NEXT, scanner: true }) }));
   for (const [k, opts] of Object.entries({ token: { tokenFail: true }, accounts: { accountsFail: true }, none: { accounts: [] }, free: { plan: "free" },
