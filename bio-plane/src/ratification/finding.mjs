@@ -178,21 +178,28 @@ export async function copyFinding(env, storeName, { shas, partShaSet, partedRows
   let copied = 0, present = 0, r2state = "not configured";
   if (typeof env?.PUBLISHED?.put === "function" && r2) {
     r2state = "ok";
-    for (const s of shas) {
+    /* R60 (G120): the parts are copied in groups of 8, each group's together; the outcomes are counted in the parts' order. */
+    const one = async (s) => {
       const key = `${storeName}/published/${s.sha256}`;
-      if (await env.PUBLISHED.head(key)) { present++; continue; }
+      if (await env.PUBLISHED.head(key)) return "present";
       if (s.kind === "capture" || s.kind === "capture_part") {
         const obj = await env.CAPTURES.get(`${storeName}/captures/${s.sha256}`);
-        if (!obj) { r2state = "INCOMPLETE: capture vanished between gate and copy"; continue; }
+        if (!obj) return "vanished";
         if (!partShaSet.has(s.sha256)) await env.PUBLISHED.put(key, obj.body);
         /* D-556: a part is put with its digest, so R2 refuses bytes that do not hash to it; a refused put
            leaves the part absent, and the re-verification below names it. */
-        else try { await env.PUBLISHED.put(key, obj.body, { sha256: s.sha256 }); } catch { continue; }
+        else try { await env.PUBLISHED.put(key, obj.body, { sha256: s.sha256 }); } catch { return "refused"; }
       } else {
         await env.PUBLISHED.put(key, new TextEncoder().encode(s.text));
       }
-      copied++;
-    }
+      return "copied";
+    };
+    for (let i = 0; i < shas.length; i += 8)
+      for (const state of await Promise.all(shas.slice(i, i + 8).map(one))) {
+        if (state === "present") present++;
+        else if (state === "vanished") r2state = "INCOMPLETE: capture vanished between gate and copy";
+        else if (state === "copied") copied++;
+      }
   }
   /* D-556 (BOB #34, 2026-09-25 00:00Z): EVERY PART, RE-VERIFIED AT THE DESTINATION. A part copied or found
      already present is headed in the published bucket and its digest checked by the same `partsHeld` the
