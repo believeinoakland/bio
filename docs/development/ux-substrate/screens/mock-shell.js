@@ -5,7 +5,7 @@ const RAIL = [['home', 'Home', 'home'], ['queue', 'Queue', 'queue', 13], ['find'
 const TABS = [['home', 'Home', 'home'], ['queue', 'Queue', 'queue'], ['add', 'Add', 'add'], ['find', 'Find', 'search'], ['more', 'More', 'settings']];
 const BANDS = {
   working: `<b>Working</b> · not public · seen by your team's members`,
-  review: `${I('outward')}<b>Shared for review</b> · 2 people outside the team can read this until 20 October`,
+  review: `${I('outward')}<b>Shared for review</b> · 2 people outside the team can read this until October 20`,
   imported: `${I('elsewhere')}<b>Another team's case:</b> West Oakland Neighbors · Edition 2 · read-only · 1 of 3 findings recreated`,
 };
 /* what the assistant says beside each screen, when the member has connected their own account */
@@ -59,7 +59,7 @@ function mast(c, s) {
     ${c.ai ? `<button type="button" class="cs-btn" data-tone="quiet" aria-label="The assistant">${I('machine')}<span class="mk-hide-phone">Assistant</span></button>` : ''}
     <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}13</span><details class="mk-usermenu"><summary class="mk-avatar" aria-label="Mai: your menu" data-tip="<b>Your menu</b>: your account, and signing out of this device.">M</summary><div class="mk-menu" role="menu"><span class="mk-small muted">Mai · signed in as mai-k</span><a href="#" role="menuitem" onclick="return false">Your account</a><a href="#" role="menuitem" onclick="return false" data-tip="<b>Sign out</b>: ends your session on this device and goes to the sign-in page. Nothing you wrote is lost; drafts stay where they were.">Sign out</a></div></details></header>`;
 }
-// DEC-154 (Bob, 6 October): every screen shows where it is, in the same place: its path, from the section of the rail
+// DEC-154 (Bob, October 6): every screen shows where it is, in the same place: its path, from the section of the rail
 // (or, outside the workspace, the team or Civicsmith) to the screen's own name, which is always last. The heading below
 // names the thing shown (a question's words, a person's name); the path names the screen.
 const PATH = {
@@ -83,16 +83,18 @@ const PATH = {
   'case-editor': ['Projects', 'The Coliseum lease', 'Case'], 'review-copy': ['Projects', 'The Coliseum lease', 'Review copy'],
   ceremony: ['Projects', 'The Coliseum lease', 'Publish'], docket: ['Projects', 'The Coliseum lease', 'Docket'],
   imported: ['Projects', 'Imported cases', "Another team's case"],
+  hold: ['Projects', 'Pothole repairs', 'Action', 'Litigation hold'], holdnotice: ['Projects', 'Pothole repairs', 'Action', 'Litigation hold', 'Hold notice'],
+  counsel: ['Projects', 'Pothole repairs', 'Action', 'Brief counsel'], grouprules: ['Settings', 'Places and offices', "Your team's own rules"],
 };
 const pathOf = (id, s) => PATH[id] && !(id === 'answers') ? PATH[id] : id === 'answers' ? ['Find', s.title] : [(RAIL.find(r => r[0] === s.rail) || ['', 'Settings'])[1], s.title];
 const pathNav = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map((x, i) => i === list.length - 1 ? `<b aria-current="page">${esc(x)}</b>` : `<a href="#" onclick="return false">${esc(x)}</a>`).join(' <i>›</i> ')}</nav>`;
 
-// DEC-160, widened on Bob's direction (6 October): the references on each screen, each with what it is and why it matters
+// DEC-160, widened on Bob's direction (October 6): the references on each screen, each with what it is and why it matters
 // on that screen. Hover or focus shows the card; a click opens it (null: a card only). Attached as the screen draws.
-const tipOf = (what, why, go) => `${what}${why ? `<span class=why><b>Here:</b> ${why}</span>` : ''}${go ? '<span class=more>Click to open it.</span>' : ''}`;
+const tipOf = (what, why, go) => `${what}${why ? `<span class=why><b>Here:</b> ${why}</span>` : ''}${go ? '<span class=more>Press or tap to open it.</span>' : ''}`;
 const AQ = 'Is the city repairing reported potholes within seven days?';
 const REFS = {
-  home: [['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · project · 3 questions · Edition 2 published 18 September', '2 items in it wait on you this week.'],
+  home: [['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · project · 3 questions · Edition 2 published September 18', '2 items in it wait on you this week.'],
          ['Pothole repairs', 'project', '<b>Pothole repairs</b> · project · 2 questions · its main question is short on connection', 'A better link between reports and work orders would bring it to the bar.'],
          ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · project · a money trail across FY2022 to FY2024', 'Ana\'s question there waits for the FY2024–25 budget.']],
   members: [['Rosa', null, '<b>Rosa</b> · administrator · cover name R. Medina', 'The team\'s only administrator: the team depends on her and the hosting account.'],
@@ -104,27 +106,27 @@ const REFS = {
   finder: [['Public Works work orders, FY2025 (CSV)', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · capture B', 'The city\'s own record of every pothole report: what your search matched most.'],
            ['Pothole repair policy, Administrative Instruction 4.12', 'document', '<b>Administrative Instruction 4.12</b> · Public Works · capture B · current version', 'Sets the seven-day standard your question tests the city against.'],
            ['Report to council: street maintenance performance', 'document', '<b>Report to council: street maintenance performance</b> · 2026 · capture B', 'Where the city claims 90% of potholes were filled.']],
-  held: [['City budget FY2024–25, adopted (PDF)', 'document', '<b>City budget FY2024–25, adopted</b> · 412 pages · captured 2 October · not yet released', 'Held until a member vouches for it; Ana\'s question is waiting for it.'],
-         ['Council minutes, 14 May 2024', 'document', '<b>Council minutes, 14 May 2024</b> · captured 28 September · not yet released', 'Records the vote on the FY2024 transfers.'],
-         ['Lease amendment, March 2024', 'document', '<b>Lease amendment, March 2024</b> · the city posted a newer version on 3 October', 'Can\'t be released here: part of it is withheld by its source.']],
+  held: [['City budget FY2024–25, adopted (PDF)', 'document', '<b>City budget FY2024–25, adopted</b> · 412 pages · captured October 2 · not yet released', 'Held until a member vouches for it; Ana\'s question is waiting for it.'],
+         ['Council minutes, May 14, 2024', 'document', '<b>Council minutes, May 14, 2024</b> · captured September 28 · not yet released', 'Records the vote on the FY2024 transfers.'],
+         ['Lease amendment, March 2024', 'document', '<b>Lease amendment, March 2024</b> · the city posted a newer version on October 3', 'Can\'t be released here: part of it is withheld by its source.']],
   project: [[AQ, 'question', `<b>${AQ}</b> · question · capture B, connection C · short on connection`, 'The project\'s main question, and the one closest to the bar.'],
             ['Does "closed" in the city\'s records mean "repaired"?', 'question', '<b>Does “closed” mean “repaired”?</b> · question · unrated · opened by Mai', 'If the answer is no, the main question\'s count overstates repairs.']],
   question: [['812 of 903 reports closed within 7 days', 'calculation', '<b>Reports closed within seven days, FY2025</b> · a calculation from the city\'s work orders', 'Supports the question, using the city\'s own count of “closed”.']],
   answers: [['Public Works work orders, FY2025', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · capture B', 'The answer counts its rows.']],
-  timeline: [['City Clerk releases schedules', 'action', '<b>The City Clerk released the rent schedules</b> · 18 September · answering the team\'s request', 'The team\'s own act and the office\'s reply, in the second lane.']],
+  timeline: [['City Clerk releases schedules', 'action', '<b>The City Clerk released the rent schedules</b> · September 18 · answering the team\'s request', 'The team\'s own act and the office\'s reply, in the second lane.']],
   explore: [['J. Ortega', 'person', '<b>J. Ortega</b> · Council District 3 since 2023, from Legistar', 'Where this chain starts.'],
             ['Bayline Properties', 'money', '<b>Bayline Properties</b> · paid $1.2M in FY2024 under the Coliseum lease', 'Where the money in this chain ends up.']],
-  plan: [['Records request: inspection logs', 'action', '<b>Records request: inspection logs</b> · sent to the City Clerk 2 October · reply due 14 October', 'The plan\'s first step; the next one waits on its reply.'],
+  plan: [['Records request: inspection logs', 'action', '<b>Records request: inspection logs</b> · sent to the City Clerk October 2 · reply due October 14', 'The plan\'s first step; the next one waits on its reply.'],
          ['Complaint to the city auditor', 'action', '<b>Complaint to the city auditor</b> · an option, not started', 'Becomes ready if the inspection logs show reports closed without repair.']],
   'start-send': [['Asha Rao', 'person', '<b>Asha Rao</b> · City Clerk since March 2021, from the city\'s roster', 'Holds the office this request goes to, today.']],
-  'review-copy': [['Prof. N. Iyer', null, '<b>Prof. N. Iyer</b> · housing-law professor · an outside reader named by Dev · can read until 20 October', 'Reviewing Edition 2 before it is published.']],
+  'review-copy': [['Prof. N. Iyer', null, '<b>Prof. N. Iyer</b> · housing-law professor · an outside reader named by Dev · can read until October 20', 'Reviewing Edition 2 before it is published.']],
   imported: [['Port lease revenue fell short of the adopted budget in three years', 'question', '<b>Port lease revenue fell short of the adopted budget in three years</b> · West Oakland Neighbors\' finding · recreated here', 'Recreated from their case; it counts for your team only once a member accepts it.']],
 };
 
-// Things named on many screens: one card wherever they appear (DEC-160, widened 6 October). [text, opens, what it is, why here
+// Things named on many screens: one card wherever they appear (DEC-160, widened October 6). [text, opens, what it is, why here
 // (usually none: a screen's own REFS add that), screens where it is not attached].
 const GLOBAL_REFS = [
-  ['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · a project · <span class=mk-data>whether the city kept the terms of its lease of the Coliseum land, including rent raised in 2024 without a council vote</span> · owner: Dev · Edition 2 published 18 September', null, ['project']],
+  ['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · a project · <span class=mk-data>whether the city kept the terms of its lease of the Coliseum land, including rent raised in 2024 without a council vote</span> · owner: Dev · Edition 2 published September 18', null, ['project']],
   ['Pothole repairs', 'project', '<b>Pothole repairs</b> · a project · <span class=mk-data>whether the city repairs reported potholes within the seven days its own policy sets</span> · 2 questions', null, ['project']],
   ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · a project · <span class=mk-data>where sewer-fee money moved between funds, FY2022 to FY2024, and whether each transfer was authorized</span> · owner: Ana', null, []],
   ['Lakeshore Tenants', null, '<b>Lakeshore Tenants</b> · your team · <span class=mk-data>tenants near the Coliseum, meeting since 2025</span> · 6 members, 1 administrator', null, ['install', 'setup', 'join', 'doorbell', 'published']],
@@ -141,9 +143,9 @@ const GLOBAL_REFS = [
   ['City Administrator', null, '<b>City Administrator</b> · an office · <span class=mk-data>runs the city\'s departments and answers to the council</span>', null, []],
   ['Director of Public Works', null, '<b>Director of Public Works</b> · an office · <span class=mk-data>runs the department that repairs streets</span> · held today by L. Chen', null, []],
   ['Administrative Instruction 4.12', 'document', '<b>Administrative Instruction 4.12</b> · a document · the city\'s pothole repair policy · Public Works · capture B · sets seven calendar days', null, ['document']],
-  ['Lease amendment 1', 'document', '<b>Lease amendment 1</b> · a document · the Coliseum lease change approved 12 January 2024', null, []],
+  ['Lease amendment 1', 'document', '<b>Lease amendment 1</b> · a document · the Coliseum lease change approved January 12, 2024', null, []],
   ['Bayline Properties', 'money', '<b>Bayline Properties</b> · a firm · paid $1.2M in FY2024 under the Coliseum lease', null, []],
-  ['Edition 2', 'published', '<b>Edition 2</b> of The Coliseum lease · a published case · published 18 September 2026 at the time Dev set when signing', null, ['published']],
+  ['Edition 2', 'published', '<b>Edition 2</b> of The Coliseum lease · a published case · published September 18, 2026 at the time Dev set when signing', null, ['published']],
   ['Edition 1', 'published', '<b>Edition 1</b> of The Coliseum lease · a published case, since corrected by Edition 2', null, []],
   ['West Oakland Neighbors', 'imported', '<b>West Oakland Neighbors</b> · another team · its published cases can be imported and recreated here', null, ['imported']],
   ['Bay Courier', null, '<b>Bay Courier</b> · a newsroom · <span class=mk-data>Teo reports for it; its story cites Edition 2</span>', null, []],
@@ -183,9 +185,9 @@ const railW = () => window.CS_RAILW || 184;
 // DEC-163: every element type, decided once (the table on the layouts page): explanations and links added to the whole frame
 // (masthead, path, rail and tabs, wizard marks, step lists, row icons, the published page's head and foot), not only the
 // screen's main area. Level 1 (marks and names) always; level 2 (guidance) when the member has guidance on (DEC-162).
-const GROUP_CARD = '<b>Lakeshore Tenants</b> · your team · <span class=mk-data>tenants near the Coliseum, meeting since 2025</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · 6 members<span class=more>Click to see who your team is.</span>';
+const GROUP_CARD = '<b>Lakeshore Tenants</b> · your team · <span class=mk-data>tenants near the Coliseum, meeting since 2025</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · 6 members<span class=more>Press or tap to see who your team is.</span>';
 const GROUP_PUBLIC = '<b>Lakeshore Tenants</b> · <span class=mk-data>a tenants\' team near the Oakland Coliseum</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · its published cases are signed by its project owners';
-const ICON_KIND = { capture: 'A document or a capture', subject: 'A person or organization your team\'s record follows', group: 'An office, a member or a team', question: 'A question', finding: 'A finding', case: 'A case', plan: 'A plan or an action', timeline: 'An event', money: 'A money item', clock: 'Something with a time limit', camera: 'A photo', changed: 'Something that changed', tension: 'Two things that disagree', hold: 'Held, not yet in the record', signed: 'Signed', wizard: 'A wizard' };
+const ICON_KIND = { capture: 'A document or a capture', subject: 'A person or organization your team\'s record follows', group: 'An office, a member or a team', question: 'A question', finding: 'A finding', case: 'A case', plan: 'An action plan', timeline: 'An event', money: 'A money item', clock: 'Something with a time limit', camera: 'A photo', changed: 'Something that changed', tension: 'Two things that disagree', hold: 'Held, not yet in the record', signed: 'Signed', wizard: 'A wizard' };
 const CRUMB_GO = { Home: 'home', Queue: 'queue', Find: 'finder', Add: 'capture', Projects: 'project', People: 'people', Settings: 'account' };
 function decorate(html, id, c) {
   if (typeof document === 'undefined') return html;
@@ -195,7 +197,7 @@ function decorate(html, id, c) {
   set(R.querySelector('.cs-mast .grp'), GROUP_CARD, 1, 'group-identity');
   set(R.querySelector('.mk-mastsearch'), '<b>Search</b>: everything your team holds, documents, questions, people and more.', 2);
   set(R.querySelector('.cs-mast [aria-label="The assistant"]'), '<b>The assistant</b>: opens beside your work. It answers only from what your team holds, on the account that serves you, and never concludes, signs or sends.', 2);
-  set(R.querySelector('.cs-mast .cs-kind'), '<b>13 items wait on you</b> in your queue: 5 to do, 5 noticed, 3 status.<span class=more>Click to open your queue.</span>', 1, 'queue');
+  set(R.querySelector('.cs-mast .cs-kind'), '<b>13 items wait on you</b> in your queue: 5 to do, 5 noticed, 3 status.<span class=more>Press or tap to open your queue.</span>', 1, 'queue');
   set(R.querySelector('.mk-avatar'), '<b>You: Mai</b> · member of Lakeshore Tenants · works on Pothole repairs<span class=more>Click for your account and settings.</span>', 1, 'account');
   R.querySelectorAll('.mk-crumbs a').forEach(a => { const x = a.textContent.trim(); const g = (typeof GLOBAL_REFS !== 'undefined' ? GLOBAL_REFS : []).find(r => r[0] === x);
     if (g) set(a, tipOf(g[2], null, g[1]), 1, g[1]); else set(a, `Back to <b>${x}</b>.`, 2, CRUMB_GO[x]); });
@@ -219,6 +221,8 @@ function decorate(html, id, c) {
 function render(screenId, c) { return decorate(renderFrame(screenId, c), screenId, c); }
 /* DEC-249: the test-copy band (interface-shell R36, R53, R58), its words instance.test.band and instance.test.notice. */
 const testBand = c => c.test ? `<div class="cs-testband" role="note"><b>Test Civicsmith</b><span>This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.</span></div>` : '';
+/* DEC-330 (B306, census A9): the "newer version" band. It sits across the top of every page when the program in the browser is older than the live one; shown here on Your account, state "a newer version is live". */
+const updBand = `<div class="cs-testband mk-updband" role="status" style="display:none"><b>A newer version is ready</b><span style="display:block">Your team's Civicsmith has been updated since this page opened. Reload when you are ready: nothing reloads by itself.</span><button type="button" class="cs-btn" data-tone="quiet" data-tip="<b>Reload</b>: brings in the newest version of Civicsmith. Anything you have typed and not saved is lost, so save it first.">Reload</button></div>`;
 function renderFrame(screenId, c) {
   WRITE_ON = !!c.ai;
   const s = SCR[screenId](c);
@@ -229,12 +233,13 @@ function renderFrame(screenId, c) {
     s.main = s.main.replace(/<h1([ >])/, th ? `<h1 data-level="1" data-tip="${esc(th + '<span class=more>This screen: ' + SCREEN_HELP[screenId] + '</span>')}"$1` : `<h1 data-level="2" data-tip="${esc(SCREEN_HELP[screenId])}"$1`);
   }
   const frame = s.frame || 'working';
+  if (frame === 'public' || frame === 'published') s.main = s.main.replace(/<span class="w"><span class="cs-pips">(?:<i[^>]*><\/i>)+<\/span>[A-Za-z]+<\/span>/g, '');   // R84: a public page (R30) carries no weight mark
   const dock = c.wizard ? wizardGuide(c.wizard) : (s.dock === 'assistant' && c.ai) || (c.dockAssist && c.ai) ? assistantPanel(screenId, c) : '';
   if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published">${testBand(c)}<header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>
     <footer class="cs-pubfoot"><span class="id">${G.slug} · signed by an owner of the project · 7c1e…a90b</span><span class="cs-credit">Made with <svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></footer></div>`;
   if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}">${testBand(c)}<main class="mk-plainmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}</div>`;
   const band = s.band || 'working';
-  return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}${railW() < 120 ? ' rail-icons' : ''}" data-frame="working" style="--rail:${railW()}px">${testBand(c)}${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
+  return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}${railW() < 120 ? ' rail-icons' : ''}" data-frame="working" style="--rail:${railW()}px">${testBand(c)}${s.updband ? updBand : ''}${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
    <nav class="cs-rail" aria-label="Sections">${RAIL.map(([k, l, ic, n]) => `<a href="#" onclick="return false" data-level="${railW() < 120 ? 1 : 2}" data-tip="${typeof RAIL_HELP !== 'undefined' ? esc(RAIL_HELP[k] || l) : l}"${s.rail === k ? ' aria-current="page"' : ''}>${I(ic)}${l}${n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}<button type="button" class="cs-grip" role="separator" aria-orientation="vertical" aria-label="Width of the sections list" aria-valuemin="64" aria-valuemax="320" aria-valuenow="${railW()}" title="Drag to resize; arrow keys too; double-click to reset"></button></nav>
    <main class="cs-main"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}
    <nav class="cs-tabs" aria-label="Sections">${TABS.map(([k, l, ic]) => `<a href="#" onclick="return false"${(s.rail === k || (k === 'more' && ['projects', 'people', 'settings'].includes(s.rail))) ? ' aria-current="page"' : ''}>${I(ic)}${l}</a>`).join('')}</nav></div>`;

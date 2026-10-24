@@ -23,7 +23,8 @@ MACHINE_REFUSALS = {'release', 'conclude', 'withdrawconclusion', 'reopen', 'publ
 MACHINE_DRAFTS = {'whatchangedpropose', 'escalationreasondraft'}  # wizard-scripts R13
 # Served through a door rather than declared as op=… in a requirement, as BOB states in B149 (T46's HANDOFF):
 SERVED_BY_DOOR = {'ask': 'the plane\'s ask door, agent-worker R54', 'subscriptionsignin': 'control-plane R65',
-                  'infolevelset': 'instance-setup R79 (T46)', 'projectaikeepaway': 'op-declarations R41 (BOB\'s B172: declared and served, T47)'}
+                  'infolevelset': 'instance-setup R79 (T46)', 'projectaikeepaway': 'op-declarations R41 (BOB\'s B172: declared and served, T47)',
+                  'linewithdraw': 'lines R8 (op linewithdraw, served by the lines module and listed open in op-declarations; its module row has no classes object the check reads)'}
 
 def op_universe(ref):
     try:
@@ -39,6 +40,13 @@ def op_universe(ref):
             txt = t.extractfile(m).read().decode('utf-8', 'replace')
             for o in re.findall(r'op=([a-z]+)', txt): declared.setdefault(o, set()).add(mod)
             for f in re.findall(r'\b([a-z][a-zA-Z0-9]+)\(\{', txt): functions.setdefault(f.lower(), set()).add(mod)
+    # An op declared in op-declarations (the plane's one table of ops) counts as declared even where its module's
+    # requirements name only the function (intent's setCondition is op objectivecondition; DEC-374, B398 C46).
+    try:
+        od = subprocess.check_output(['git', 'show', ref + ':bio-plane/src/op-declarations/index.mjs'], cwd=ROOT, stderr=subprocess.DEVNULL).decode('utf-8', 'replace')
+        for o in re.findall(r'^  ([a-z]+):\s+\{\s*classes', od, re.M): declared.setdefault(o, set()).add('op-declarations')
+    except subprocess.CalledProcessError:
+        pass
     return ref, declared, functions
 
 def load(src, name):

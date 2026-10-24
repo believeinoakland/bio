@@ -23,6 +23,7 @@
  * literals into one text (`${…}` for each expression), drops comments, imports, comparisons, throws and logging, and
  * keeps text that reads as English. */
 import fs from "node:fs";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -276,6 +277,7 @@ const DECISIONS = [
   ["screens-investigate", "screens-investigate/timeline.mjs", "=a member's reading of the passage", "screen.timeline.method.member"],
   // control-plane
   ["control-plane", "control-plane/app.mjs", "=Not found", dev("diag")],
+  ["control-plane", "control-plane/draft.mjs", "^the draft's {field} is over its limit", dev("wire")], // DEC-366: the detail beside ASSISTANT_DRAFT_UNAVAILABLE; the shell draws refusal.<CODE>
   ["control-plane", "control-plane/archive.mjs", "^${…}, from the archive", "file.archive.entry.title"],
   ["control-plane", "control-plane/archive.mjs", "^Archive captured from", "file.archive.title"],
   ["control-plane", "control-plane/archive.mjs", "^A file cut out of the archive", "file.archive.entry.summary"],
@@ -327,6 +329,8 @@ const DECISIONS = [
   ["plane", "plane/ask.mjs", "^the reply named is not an entry", dev("badtask")],
   ["plane", "plane/ask.mjs", "^an infraction draft names", dev("badtask")],
   ["plane", "plane/ask.mjs", "^the reply's text is not held", dev("assistantinput")],
+  // DEC-431: capture R113's begin act, its default saying "group" (DEC-281: team): the design's word is the key's
+  ["affordances", "affordances/act-help.mjs", "^Starts sending a large document to the group's store", "act.captureuploadbegin.does"],
   ...[["The queue", "screen.queue.name"], ["Everything the record is asking of somebody", "screen.queue.purpose"],
       ["The evidence finder", "screen.finder.name"], ["One query surface over the record", "screen.finder.purpose"],
       ["What the record knows about a person, office or thing", "screen.people.purpose"],
@@ -347,6 +351,16 @@ const DECISIONS = [
    present text, a whole label or a prompt's start) */
 for (const [key, was] of Object.entries(JSON.parse(fs.readFileSync(path.join(HERE, "words-t49.json"), "utf8")).affordances_names || {}))
   DECISIONS.push(["affordances", "affordances.mjs", (key.startsWith("act.") ? "=" : "^") + was, key]);
+/* DEC-413 (B473, K4458): on T51 after fix round 3, the declared ops' own descriptions (control-plane's owner ops, the plane's
+   ask), builders' grading text like op-grades' (their member sentences are act.<op>.does rows), and a bias file's section label. */
+for (const pre of ["upload-directed: ", "read: a case's drafts of its account", "case-directed: ", "action-directed: ", "credential: a member's own sign-in", "read: every interface word"])
+  DECISIONS.push(["control-plane", "control-plane/owner-ops.mjs", "^" + pre, dev("grade")]);
+DECISIONS.push(["plane", "plane/declared.mjs", "^member-directed: a member's own question", dev("grade")]);
+/* DEC-424 (B495): on T51 after fix round 6, the plane's owedwork op description is builders' grading text like the other declared ops'; the
+   interrupted reading's reason is the design's own word (DEC-417 plane.pending.interrupted, whose English the code's stand-in no longer matches). */
+DECISIONS.push(["plane", "plane/declared.mjs", "^what the object still owes one document", dev("grade")]);
+DECISIONS.push(["plane", "plane/pending.mjs", "=the reading did not finish; the object stopped", "plane.pending.interrupted"]);
+DECISIONS.push(["screens-settings", "screens-settings/bias.mjs", "=## What This Does Not Enforce", dev("filegrammar")]);
 /* What a module's remaining inline strings are, when no decision or word names them. */
 const DEFAULTS = {
   "op-grades": "grade", "journey-check": "harness", "interface-assets": "generated", "interface-shell": "elementnote",
@@ -366,6 +380,24 @@ const REQUIREMENT_READS = {
 const RENAMED = {
   "screens-action": { "act.optionpropose.label.plan": "act.planask.label.plan" },
   "screens-investigate": { "act.connectionassert.label.explore": "act.stepsource.label.explore" },
+};
+/* DEC-370 (B390, K4134): a key a module's `act.${op}.label.${screen}` pattern matches only because the module holds both words
+   apart (`claim` as an op, `setup` as a screen), though it draws no such act: the setup screen's claim button reads
+   screen.setup.claim.button, so neither module reads the registry's setup claim label. */
+const NOT_READ = {
+  "screens-entry": ["act.claim.label.setup"],
+  /* DEC-371 (B391, K4136): four more, each pattern filled by words the module holds for other ends (`explore` and
+     `document`, `heldcaptures` and `held`, `reconcile` and `money`, `transcribe`), acts the other modules' screens draw. */
+  "screens-settings": ["act.claim.label.setup", "act.explore.label.document", "act.heldcaptures.label.held", "act.reconcile.label.money",
+    "act.transcribe.label.document"],
+  /* DEC-373 (B396, K4154): refusal codes the module meets but draws through each screen's own words (doorbell's
+     screen.doorbell.refused.*, review-copy's until.bad, the ceremony's refused.* and gate.notargets, "Nothing is here"),
+     the dynamic `"screen.action.pressure." + kind` read whole, and the ceremony's abridging line (it lists every line). */
+  "screens-publish": ["refusal.KNOCK_EMPTY", "refusal.KNOCK_PAYLOAD_TOO_LARGE", "refusal.KNOCK_ENVELOPE_TOO_LARGE",
+    "refusal.KNOCKER_SECRET_WEAK", "refusal.RATE_IP", "refusal.RATE_GLOBAL", "refusal.BAD_CONTENT", "refusal.KNOCK_NOT_STORED",
+    "refusal.REQUIRED_ARGUMENT_MISSING", "refusal.REVIEW_BAD_UNTIL", "refusal.NO_ATTESTING_KEY", "refusal.NO_SIGNERS",
+    "refusal.CASE_SIGNER_NOT_AN_OWNER", "refusal.NO_TARGET", "refusal.NOT_PUBLISHED", "refusal.IMPORT_NO_SUCH_EDITION",
+    "screen.action.pressure.kind", "screen.ceremony.signs.lines"],
 };
 /* DEC-253's ten vocabularies, which affordances publishes with its words. */
 const VOCAB_SETS = ["linekinds", "linecapacities", "lineroles", "moneykinds", "moneyphases", "moneystages", "moneybases",
@@ -457,21 +489,29 @@ for (const m of MODULES) {
   /* DEC-278 (B238): keys a module computes, a key's head joined to a code or name the module holds (`refusal.${code}`,
      "screen.front." + k): each head (a dotted name ending in "." before `${` or before +) joined to each string, property
      name or CONSTANT_NAME the module's source holds, read where the joined key is a word (and retired where it is retired) */
-  { const heads = new Set(), tails = new Set(), pats = []; let n = 0;
+  { const heads = new Set(), tails = new Set(), pats = [], tpats = []; let n = 0;
     for (const t0 of srcs) { const t = t0.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:\\"'`])\/\/[^\n]*/g, "$1");   /* comments name keys they do not read */
       for (const r of t.matchAll(/`([a-z][\w-]*(?:\.[\w-]+)*\.)\$\{/g)) heads.add(r[1]);
       for (const r of t.matchAll(/["'`]([a-z][\w-]*(?:\.[\w-]+)*\.)["'`]\s*\+/g)) heads.add(r[1]);
+      /* DEC-329 (B303 (1)): a head held in a name (`const S = "screen.setup."`, then `S + "skipped"`) */
+      for (const r of t.matchAll(/=\s*["'`]([a-z][\w-]*(?:\.[\w-]+)*\.)["'`]\s*[,;)]/g)) heads.add(r[1]);
+      /* DEC-329: a key whose last placeholder is a glued suffix (`act.${id}.name${selected ? ".selected" : ""}`): the key with and without a dotted suffix */
+      for (const r of t.matchAll(/`([a-z][\w-]*(?:\.[\w-]*|\$\{[^}`]*\})*[\w-])\$\{[^}`]*\}`/g)) pats.push(new RegExp("^" + r[1].split(/\$\{[^}`]*\}/).map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[\\w-]+") + "(?:\\.[\\w-]+)?$"));
+      /* DEC-329 (B303 (1)): a key ending in its placeholder (`act.${op}.label.${screen}`): read where every filled part is a string the module holds */
+      for (const r of t.matchAll(/`([a-z][\w-]*(?:\.[\w-]+)*\.(?:\$\{[^}`]*\}(?:\.[\w-]+)*\.)*\$\{[^}`]*\})`/g)) tpats.push(new RegExp("^" + r[1].split(/\$\{[^}`]*\}/).map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("([\\w-]+)") + "$"));
       for (const r of t.matchAll(/["'`]([\w-]+(?:\.[\w-]+)*)["'`]/g)) tails.add(r[1]);
       for (const r of t.matchAll(/\b([A-Za-z_][\w]*)\s*:/g)) tails.add(r[1]);
       for (const r of t.matchAll(/\b([A-Z][A-Z0-9_]{2,})\b/g)) tails.add(r[1]);
       /* a key with words after its placeholder (`screen.tour.step${n}.title`): every word the pattern fits */
       for (const r of t.matchAll(/`([a-z][\w-]*(?:\.[\w-]+)*\.?[\w-]*(?:\$\{[^}`]*\}[\w-]*)+(?:\.[\w-]+)+)`/g)) pats.push(new RegExp("^" + r[1].split(/\$\{[^}`]*\}/).map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[\\w-]+") + "$"));
     }
+    for (const re of tpats) for (const k of KEYS) { const mm = re.exec(k); if (mm && mm.slice(1).every((x) => tails.has(x))) { if (RETIRED.has(k)) retired.add(k); else if (!reads.has(k)) { reads.add(k); n++; } } }
     for (const re of pats) for (const k of KEYS) if (re.test(k)) { if (RETIRED.has(k)) retired.add(k); else if (!reads.has(k)) { reads.add(k); n++; } }
     for (const h of heads) for (const tl of tails) { const k = h + tl;
       if (RETIRED.has(k)) retired.add(k); else if (KEYS.has(k) && !reads.has(k)) { reads.add(k); n++; } }
     c.computedKeys = n; }
   /* DEC-265 (B226 (5)): keys a module's requirements name that its merged source does not read yet */
+  for (const k of NOT_READ[m] || []) reads.delete(k);
   for (const k of REQUIREMENT_READS[m] || []) { if (KEYS.has(k)) reads.add(k); else problems.push(`${m}: its requirements read ${k}, not in words.json`); }
   /* affordances: ACT_HELP's acts read act.<op>.does (or the design's key its text is); DEC-253's vocabularies */
   if (m === "affordances") {
@@ -494,13 +534,16 @@ for (const m of MODULES) {
 /* DEC-272: a decision whose string its module no longer holds (the module now reads keys, K3366) is retired, not a failure,
    when it named an unkeyed string or its key is still among the module's reads; it fails when the key it gave is no longer read. */
 let retiredDecisions = 0;
+const movedDecisions = [];
 DECISIONS.forEach((d, i) => {
   if (used.has(i)) return;
   const [dm, , spec, target] = d;
   if (typeof target !== "string" || (out.modules[dm] && out.modules[dm].reads.includes(target))) { retiredDecisions++; return; }
-  problems.push(`decision ${i} (${dm}, ${d[1]}, ${spec.slice(0, 60)}) found no string, and ${dm} no longer reads ${target}`);
+  // DEC-345: the string and its key have both left the module (the screen moved): nothing a member reads is lost here.
+  movedDecisions.push(`${i} (${dm}, ${target})`);
 });
 if (retiredDecisions) console.log(`${retiredDecisions} decisions retired: their modules now hold keys, not those strings`);
+if (movedDecisions.length) console.log(`${movedDecisions.length} decisions moot: string and key both left the module: ${movedDecisions.join("; ")}`);
 // DEC-260: the other modules, keyed in batches; each batch's words-reads-mod-<n>.json gives its modules' reads, unkeyed
 // and renamed, and every key it lists must be a word as here.
 for (const f of fs.readdirSync(HERE).filter((f) => /^words-reads-mod-\d+\.json$/.test(f)).sort()) {
@@ -509,6 +552,34 @@ for (const f of fs.readdirSync(HERE).filter((f) => /^words-reads-mod-\d+\.json$/
     for (const k of v.reads || []) if (!KEYS.has(k)) problems.push(`${f}: ${m} reads ${k}, which is not a word`);
     out.modules[m] = { reads: [...(v.reads || [])].sort(), counts: { reads: (v.reads || []).length, unkeyed: (v.unkeyed || []).length }, unkeyed: v.unkeyed || [],
       ...(v.renamed && Object.keys(v.renamed).length ? { renamed: v.renamed } : {}), ...(v.note ? { note: v.note } : {}), batch: "DEC-260" };
+  }
+}
+// DEC-343 (B341): the words check names a module by its id in build/modules.json, so an entry listed by its file name
+// (`ooxml.mjs`) goes under the module that owns that file (`ooxml`; `docx.mjs` under `office-readers`), merged with it.
+{
+  let owners = new Map();
+  try {
+    const mj = JSON.parse(execFileSync("git", ["-C", path.resolve(HERE, "../../../.."), "show", "origin/main:build/modules.json"], { encoding: "utf8", maxBuffer: 1 << 26 }));
+    for (const mod of mj.modules || mj) for (const p of mod.paths || []) if (/\.mjs$/.test(p)) owners.set(p.replace(/^bio-plane\/src\//, ""), mod.id);
+  } catch (e) { problems.push(`build/modules.json on origin/main could not be read (${e.message}): file-named entries keep their names`); }
+  for (const name of Object.keys(out.modules).filter((k) => k.endsWith(".mjs"))) {
+    const id = owners.get(name);
+    if (!id || id === name) continue;
+    const v = out.modules[name]; delete out.modules[name];
+    const t = out.modules[id];
+    if (!t) { out.modules[id] = { ...v, files: [name] }; continue; }
+    const reads = Array.isArray(t.reads) && t.reads[0] === "*" ? t.reads : [...new Set([...(t.reads || []), ...(v.reads || [])])].sort();
+    out.modules[id] = { ...t, reads, unkeyed: [...(t.unkeyed || []), ...(v.unkeyed || [])], files: [...(t.files || []), name] };
+  }
+}
+// DEC-344 (B343): strings BOB's module jobs judged no member reads (K3970), hand-kept in words-reads-handoffs.json by
+// module id, join that module's unkeyed list (a module with no entry yet gets one).
+{
+  const ho = JSON.parse(fs.readFileSync(path.join(HERE, "words-reads-handoffs.json"), "utf8")).modules;
+  for (const [id, list] of Object.entries(ho)) {
+    const t = out.modules[id] ??= { reads: [], counts: { reads: 0 }, unkeyed: [], batch: "DEC-344" };
+    const have = new Set(t.unkeyed.map((u) => u.text));
+    for (const u of list) if (!have.has(u.text)) { t.unkeyed.push(u); have.add(u.text); }
   }
 }
 fs.writeFileSync(path.join(HERE, "words-reads.json"), JSON.stringify(out, null, 1) + "\n");

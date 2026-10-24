@@ -3216,21 +3216,23 @@
    "audience": [
     "member"
    ],
-   "goal": "Temporarily connect evidence ahead of support; the hunch must be cleared before publication.",
-   "trigger": "Nothing else joins the evidence up.",
+   "goal": "Keep a hunch beside a question as a hypothesis, never as a leg; it is changed or taken back, and cleared before publication.",
+   "trigger": "A member suspects a connection the evidence does not yet support.",
    "constructs": [
     "bias-debt",
-    "leg"
+    "hypothesis"
    ],
    "acts": [
+    "question: Keep a hunch",
+    "question: Change or take back a hunch",
     "bias-debt: Clear a hunch before publishing"
    ],
-   "outcome": "Hunch legs inert in strength; publication refused UNCLEARED_HUNCH.",
+   "outcome": "A hunch never moves a grade or a finding; publication refused UNCLEARED_HUNCH.",
    "coveredByRequirements": "yes",
    "requirementIds": "case-authoring R12, R34 (C-120.7); strength R5",
-   "src": "DEC-15; DEC-20; Declared Bias 'HUNCH DEBT'",
+   "src": "DEC-15; DEC-20; Declared Bias 'HUNCH DEBT'; K1467 (hunches are never legs); DEC-382",
    "basis": "fixed",
-   "coverageNote": "Publishing refuses an uncleared hunch; a hunch still counts at its stated grade in strength (R5 not yet met)."
+   "coverageNote": "Met by the hypotheses and the publication refusal for an uncleared hunch; no hunch-graded leg is built (K1467, B406)."
   },
   {
    "id": "UC-062",

@@ -787,7 +787,7 @@
  },
  {
   "key": "screen.setup.handle.help",
-  "en": "The record shows your handle on your work and on every case you sign, so choose it with care: it can't be changed, and no one else can ever take it. It needn't be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit.",
+  "en": "The record shows your handle on your work and on every case you sign, so choose it with care: it can't be changed, and no one else can ever take it. It needn't be your legal name. Lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit.",
   "protected": false,
   "note": "DEC-230"
  },
@@ -817,7 +817,7 @@
  },
  {
   "key": "refusal.BAD_HANDLE",
-  "en": "A handle uses only lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.",
+  "en": "A handle uses only lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.",
   "protected": false,
   "note": "DEC-230; membership R12"
  },
@@ -3067,9 +3067,27 @@
  },
  {
   "key": "question.conclude.commentary.help",
-  "en": "Optional. Your note beside the conclusion; it is marked as not evidence.",
+  "en": "A note beside the conclusion (optional). It is marked as not evidence.",
   "protected": false,
-  "note": "DEC-245: conclude commentary"
+  "note": "DEC-245: conclude commentary; B411 L17: a separate optional note, the reason is its own required box"
+ },
+ {
+  "key": "question.conclude.reason",
+  "en": "Why you are concluding it",
+  "protected": false,
+  "note": "B411 L17/A7: the required reason box of the conclusion, as the reopen and the shell ask for a reason"
+ },
+ {
+  "key": "question.conclude.reason.help",
+  "en": "Required. Say why this reading answers the question. It is kept with the conclusion, under your name.",
+  "protected": false,
+  "note": "B411 L17/A7: help of the required reason box"
+ },
+ {
+  "key": "question.conclude.reason.needed",
+  "en": "Say why you are concluding it first: a question is concluded only with a reason. Write it in the box above, then conclude again.",
+  "protected": false,
+  "note": "B411 L17/A7: refusal when the reason box is empty"
  },
  {
   "key": "question.concluded.heading",
@@ -3459,13 +3477,31 @@
   "key": "updates.running.release_setup",
   "en": "Release {version} · installed {date}, when your team's Civicsmith was set up",
   "protected": false,
-  "note": "DEC-248: D30, screens-settings R37; for an install with no member behind it (setup, admin before a handle, a token)"
+  "note": "DEC-248: D30, screens-settings R37; B411 T-08: only when the release is the one installed at setup, so its install date IS the setup date; for any later install with no member behind it use updates.running.release_noactor"
+ },
+ {
+  "key": "updates.running.release_noactor",
+  "en": "Release {version} · installed {date}",
+  "protected": false,
+  "note": "B411 T-08: an install with no member behind it (a token, an admin before a handle) whose date is not the setup date; the date is the release's own, never the setup date"
+ },
+ {
+  "key": "updates.earlier.installed_noactor",
+  "en": "Release {version} · installed {date}",
+  "protected": false,
+  "note": "B411 T-08: as updates.running.release_noactor, in the list of earlier releases"
+ },
+ {
+  "key": "updates.running.setup_on",
+  "en": "Your team's Civicsmith was set up on {date}.",
+  "protected": false,
+  "note": "B411 T-08: said once, apart from any release, as the one set-up date"
  },
  {
   "key": "updates.earlier.installed_setup",
   "en": "Release {version} · installed {date}, when your team's Civicsmith was set up",
   "protected": false,
-  "note": "DEC-248"
+  "note": "DEC-248; B411 T-08: only when that release is the one installed at setup"
  },
  {
   "key": "refusal.NO_NODE",

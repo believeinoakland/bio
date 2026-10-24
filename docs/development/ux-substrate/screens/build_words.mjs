@@ -19,7 +19,7 @@ const fail = m => { console.error('build_words: ' + m); process.exit(1); };
 // the mockup scripts, evaluated as the page evaluates them (functions that touch the DOM are never called here)
 const ctx = vm.createContext({ console, CSS: { escape: s => s } });
 const js = ['mock-acts.js', 'mock-kit.js', 'mock-screens.js', 'mock-shell.js', 'mock-refs.js'].map(R).join('\n')
-  + '\n;globalThis.__W = { ACT_HELP, WNAME, WEIGHT, OUTWARD: [...OUTWARD], RAIL, TABS, SCREEN_HELP, RAIL_HELP, COL_HELP, WRITE_ACT, KINDS, GRAPH_WORDS, NODE_KIND, USAGE_WORDS };';
+  + '\n;globalThis.__W = { ACT_HELP, WNAME, WSHOW, WEIGHT, OUTWARD: [...OUTWARD], RAIL, TABS, SCREEN_HELP, RAIL_HELP, COL_HELP, WRITE_ACT, KINDS, GRAPH_WORDS, NODE_KIND, USAGE_WORDS };';
 vm.runInContext(js, ctx);
 const W = ctx.__W;
 const page = R('page.src.html');
@@ -43,7 +43,7 @@ const drawnSeen = new Set();
 // group-identity) keep "group". These rows keep the word in another sense: a grouping of reasons, legs or cases, or a kind of
 // organization in the world (a community group, neighborhood groups).
 const TEAM_WORD = /(^|[^{\w.-])[Gg]roups?\b(?![}\w-])/;
-const GROUP_SENSE = /^(refusal\.PARTITION_INDEPENDENCE_\w+|inquiry\.next\.group_strength_weakest|calculations\.(says\.group_two_like|why\.act_undetermined_falls|why\.groups_act_like)|basis-versions\.(claimed|unclaimed|unstated)|entity\.relation\.kind\.help|screen\.group-identity\.kind\.(community|issue|professional)|screen\.site\.line2|public-read\.neighborhood_issue_groups|refusal\.ADDRESSEE_REFUSED)$/;
+const GROUP_SENSE = /^(refusal\.PARTITION_INDEPENDENCE_\w+|inquiry\.next\.group_strength_weakest|calculations\.(says\.group_two_like|why\.act_undetermined_falls|why\.groups_act_like)|basis-versions\.(claimed|unclaimed|unstated)|entity\.relation\.kind\.help|screen\.group-identity\.kind\.(community|issue|professional)|screen\.site\.line2|public-read\.neighborhood_issue_groups|refusal\.ADDRESSEE_REFUSED|refusal\.(BAD_TERMS|NO_PARTITION|BAD_PARTITION|BAD_STATEMENT)|action-grammar\.checks\.copied_i_is_not_a|ai-use\.index\.a_limit_s_owner_is|ai-use\.index\.an_estimate_is_for|ai-use\.index\.exploring_is_approved_for|ai-use\.index\.limits_are_read_for|ai-use\.index\.the_use_names_no_paying|ai-use\.index\.use_is_read_for|ai-use\.index\.use_over_time_is_read_for|calc-grammar\.recipe\.why_its_groups_sum_is|calculations\.application\.the_share_of_each|case-authoring\.document\.axis_group_ground_state|court-citations\.translate\.back_reference_to_v1_before|inquiry\.index\.basis_raw_is_claimed_by|inquiry\.index\.grounds_i_legs_must_be|inquiry\.index\.grounds_i_legs_names_ord|inquiry\.index\.pass_grounds_an_array|inquiry\.index\.the_structure_this_would_author|link-sweep\.sweep-match\.a_closes_no_group|link-sweep\.sweep-match\.a_named_group_s|link-sweep\.sweep-match\.an_unclosed_group|link-sweep\.sweep-match\.an_unclosed_group_name|link-sweep\.sweep-match\.an_unopened_group|link-sweep\.sweep-match\.escape_refers_back_to_a|link-sweep\.sweep-match\.the_group_k|link-sweep\.sweep-match\.v1_is_not_a_group|promotion\.index\.this_store_records_no_producing|query-language\.query\.select_name_as_field_fieldref|skills\.skilldoctrine\.an_action_is_addressed_to|skills\.skilldoctrine\.the_count_a_run_publishes|strength\.index\.a_standard_of_evidence_is_a_property_of_a_project|strength\.index\.group_carries_no_name|strength\.index\.group_lists_no_reasons|strength\.index\.group_names_something_other_than_a_position|strength\.index\.groups_name_is_longer_than_200_characters|strength\.index\.groups_were_proposed_and_a_written_reading_holds|strength\.index\.is_not_a_question_so_it_has_no_reasons|strength\.index\.no_question_by_that_id_is_readable_no_reasons|strength\.index\.pass_partition_a_non_empty_list_of_groups|strength\.index\.reason_positions_are_in_no_group|strength\.index\.two_groups_are_both_named)$/;
 const add = (key, en, prot, source, note) => {
   if (T49.retired.includes(key)) { retiredSeen.add(key); return; }   // DEC-256: withdrawn by the requirements
   if (key in T49.rewrite) { rewriteSeen.add(key); en = T49.rewrite[key]; note = (note ? note + '; ' : '') + ((T49.rewrite_dec || {})[key] || 'DEC-256') + ': reworded'; }
@@ -61,7 +61,7 @@ const opkey = op => op.startsWith('owed:') ? 'owed_' + op.slice(5).split(' ')[0]
 const weightOf = op => W.WEIGHT[opkey(op)] || 2;
 
 // 1. Weights: the five names and what each means (protected: the weights, DEC-157 (4))
-W.WNAME.forEach((n, i) => { if (!i) return; add(`weight.${n.toLowerCase()}.name`, n, true, 'mock-kit.js WNAME'); });
+W.WNAME.forEach((n, i) => { if (!i) return; add(`weight.${n.toLowerCase()}.name`, W.WSHOW[n] || n, true, 'mock-kit.js WNAME, WSHOW'); });
 for (const [n, t] of Object.entries(G.weight)) add(`weight.${n.toLowerCase()}.means`, t, true, 'page.src.html marks');
 add('weight.dots.means', must(page, 'page.src.html', 'The dots show how much an act weighs, from two to five. A button without dots does something you can undo.'), true, 'page.src.html marks; S26 (DEC-295): said once, the first time a member opens a marked button\'s explanation');
 
@@ -136,8 +136,8 @@ must(scr, 'mock-screens.js', 'is already taken in Lakeshore Tenants. Try another
 add('handle.changeable', 'You can still change it: none of your work is in a published case yet.', false, 'DEC-186; kept until handlechange is retired (DEC-197)');
 add('handle.fixed', 'Your handle can\'t be changed: it names your work for good, and no one else can ever take it.', false, 'DEC-197 (was DEC-186); kept while membership reads it');
 add('handle.formerly', 'formerly {handle}', false, 'DEC-186; kept until handlechange is retired (DEC-197)');
-add('handle.characters', 'A handle uses only lower-case letters, digits and hyphens.', false, 'mock-screens.js join');
-must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and hyphens');
+add('handle.characters', 'A handle uses only lowercase letters, digits and hyphens.', false, 'mock-screens.js join');
+must(scr, 'mock-screens.js', 'A handle uses only lowercase letters, digits and hyphens');
 
 add('handle.refused.paused', 'Too many handles checked in a short time. Try again in {minutes} minutes.', false, 'DEC-188', 'HANDLE_CHECK_PAUSED');
 
@@ -162,7 +162,7 @@ add('ai.refused.limitinvalid', 'That limit can\'t be set: {field}. A limit is a 
 add('ai.refused.unitunavailable', 'A limit in dollars needs an API key: a subscription doesn\'t report what a use costs. Set it in tokens or calls instead.', false, 'DEC-188', 'LIMIT_UNIT_UNAVAILABLE');
 add('ai.refused.explorenotenabled', 'Exploring is off on {whose} account. Its owners can switch it on.', false, 'DEC-189', 'EXPLORE_NOT_ENABLED; an exploring limit is never required (ai-use R3): the overall limit judges exploring when no exploring limit is set');
 add('ai.queue.limitreached', '{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on.', true, 'DEC-189', 'the told-once Noticed item, scope a use; names no member; {when} from ai.until.*');
-must(scr, 'mock-screens.js', 'reached its monthly limit for runs on 12 October. It pauses runs until 1 November; its other uses go on.');
+must(scr, 'mock-screens.js', 'reached its monthly limit for runs on October 12. It pauses runs until November 1; its other uses go on.');
 add('ai.queue.suspended', must(scr, 'mock-screens.js', 'a second member joined, and a sign-in serves a project only while it has one member. Members\\\' acts there now use their own accounts, or the team\\\'s key.').replace(/\\'/g, "'").replace(/^/, 'Your sign-in no longer serves {project}: '), true, 'mock-screens.js queue', 'the project account suspended; names no member');
 add('ai.queue.exploreask', 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn\'t.', false, 'DEC-188', 'the daily Ask, shown as Noticed with Explore today');
 must(scr, 'mock-screens.js', 'If nobody says yes today, it doesn\\\'t.');
@@ -173,9 +173,9 @@ add('ai.owner.group', 'the team', false, 'DEC-188', 'enabled_by for the team');
 // 4c'. The fills of the AI sentences (DEC-189; BOB's B124 and B126): each placeholder above that names a fixed word has a key
 for (const [k, t] of [['day', 'daily'], ['month', 'monthly']]) add(`ai.period.${k}`, t, false, 'DEC-189', '{period}');
 add('ai.when.day', 'tomorrow', false, 'DEC-189', '{when} for a daily limit');
-add('ai.when.month', 'on 1 {month}', false, 'DEC-192', '{when} for a monthly limit, as in "It works again on 1 November"; {month} from date.month.*; day before month, as date.daymonth');
+add('ai.when.month', 'on {month} 1', false, 'DEC-192', '{when} for a monthly limit, as in "It works again on November 1"; {month} from date.month.*; month before day, as date.daymonth (DEC-333)');
 add('ai.until.day', 'tomorrow', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a daily limit');
-add('ai.until.month', '1 {month}', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a monthly limit: "pause until 1 November"');
+add('ai.until.month', '{month} 1', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a monthly limit: "pause until November 1" (DEC-333)');
 ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
   .forEach(m => add(`date.month.${m}`, m[0].toUpperCase() + m.slice(1), false, 'DEC-189', 'a month\'s name in a sentence'));
 add('ai.refused.limit.unjudged', 'The assistant stopped here: your team\'s Civicsmith couldn\'t check the use of {whose} account just now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.', true, 'DEC-189', 'AI_LIMIT_REACHED when the limit can\'t be judged (ai-use R3 failing closed); in place of a {period} and {when}');
@@ -201,8 +201,8 @@ add('ai.queue.limitreached.overall', '{account} reached its {period} limit on {d
 add('ai.queue.limitreached.member', '{account}: a member reached the {period} amount each member may use, on {date}. Their uses on it pause until {when}; other members\' go on.', true, 'DEC-189', 'the told-once Noticed item, scope per_member; names no member; {when} from ai.until.*');
 add('ai.refused.exploreoutofscope', 'The assistant can\'t explore this question on {whose} account: it lies outside what the account\'s owners chose to explore.', false, 'DEC-191', 'EXPLORE_OUT_OF_SCOPE (C-143.5)');
 add('ai.refused.exploreaskinvalid', 'Nothing was recorded: an ask to explore names the day and what is worth exploring that day.', false, 'DEC-191', 'EXPLORE_ASK_INVALID (C-143.6); ai-use\'s sentence kept');
-add('date.daymonthyear', '{day} {month} {year}', false, 'DEC-192', 'a local day not in the current year, such as 3 March 2027');
-add('date.daymonth', '{day} {month}', false, 'DEC-191', 'a local day in a sentence, such as 14 October; {month} from date.month.*; {date} in ai.queue.limitreached* and every queue item');
+add('date.daymonthyear', '{month} {day}, {year}', false, 'DEC-192', 'a local day not in the current year, such as March 3, 2027');
+add('date.daymonth', '{month} {day}', false, 'DEC-191', 'a local day in a sentence, such as October 14; {month} from date.month.*; {date} in ai.queue.limitreached* and every queue item');
 add('ai.scope.group', 'your team\'s work', false, 'DEC-189', '{scope} in ai.queue.exploreask for the team\'s key');
 add('ai.scope.own', 'your own questions', false, 'DEC-189', '{scope} in ai.queue.exploreask for a member\'s own account; a project\'s is its name');
 

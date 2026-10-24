@@ -135,7 +135,7 @@ w6('screen.explore.nocentre', 'Choose where to start: a person, an organization,
 # carries sample data is keyed as a template, the drawing an instance of it.
 def w7(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-257' + (': ' + note if note else '')))
 REWRITE7 = {
-  'screen.capture.file.wherehelp': 'Filled from the photo where it says; correct it if it is wrong.',
+  'screen.capture.file.wherehelp': "Required. Write the place, then the date and time, such as “6012 Seminary Ave, October 4, 2026, 9:12 AM”; the time can't be later than now. Where the photo records them they are filled in; correct them if wrong.",
   'screen.connect.group.allowance': 'The team pays, up to {limit} for each member, a limit your administrators set.',   # DEC-262
   'screen.connect.group.allowance.reached': 'At the limit, the assistant pauses for you until the next {period}; everything else works as usual.',
   'screen.connect.own.apikey': 'The assistant serves you on your own Claude account, with your own API key. Only you use it; you pay for it.',   # DEC-262: no part of a key is shown
@@ -247,8 +247,8 @@ w7('screen.home.group.requestdue', "{office}'s reply to your records request is 
 w7('screen.home.area.meetbar', '{count} questions meet the bar')
 w7('screen.home.area.edition', 'Edition {n} of {case} published {date}; a draft is shared for review until {until}, no comment to answer')
 w7('screen.home.area.camein', '{count} things came in since you last looked: {latest}')
-w7('screen.home.area.ourmove', 'Our move: {what}, due {date}')
-w7('screen.home.area.theirmove', 'Their move: {reply}, none recorded by {date}; {reply2}, due {due}')
+w7('screen.home.area.ourmove', 'Our move: {n}, the earliest due {date}')
+w7('screen.home.area.theirmove', 'Their move: {n}, the earliest due {date}')
 w7('screen.home.area.nothing', 'nothing needs you here')
 w7('screen.home.area.expertise', 'Expertise on hand: {people}')
 w7('screen.home.area.invitation', "{name}'s invitation link is out, unused")

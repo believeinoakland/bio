@@ -1790,9 +1790,9 @@
   },
   {
    "key": "strength.why.unrated_load_bearing",
-   "en": "{from} is UNRATED on {axis}, so it is not load-bearing here",
+   "en": "{from} has no grade on {axis} yet, so it is not counted here",
    "protected": false,
-   "note": "DEC-260: strength, why"
+   "note": "DEC-260: strength, why; B411 I-22/I-23: plain words"
   },
   {
    "key": "strength.why.target_held_standard",
@@ -1819,20 +1819,8 @@
    "note": "DEC-260: strength, text"
   },
   {
-   "key": "strength.text.two_strengths_finding",
-   "en": "1. Two strengths, never one. A finding has a capture strength (how faithfully the documents it rests on were taken in) and a connection strength (how firmly they are tied to what the finding is about), with testimony (a member's own firsthand account) graded beside them. Each is worked out on its own, from the legs graded for it, and they are never combined into one figure. Grades run from A, the strongest, to D.",
-   "protected": false,
-   "note": "DEC-260: strength, text"
-  },
-  {
    "key": "strength.text.legs_count_leg",
    "en": "2. Which legs count. A leg counts only for the strength its grade names. A capture grade is never above what the record holds for that document; a testimony grade is always D. A leg with no grade, or one marked as a hunch, is listed and counts for nothing: it never lowers or raises a strength. A capture or testimony grade written on a leg to another question, or to another team's finding, has nothing to grade and is listed, not counted.",
-   "protected": false,
-   "note": "DEC-260: strength, text"
-  },
-  {
-   "key": "strength.text.questions_resting_questions",
-   "en": "3. Questions resting on questions. A leg to another question contributes that question's own strengths, worked out the same way, up to six steps down. Past six steps, or where that question's strength is not known, the strength is stated as undetermined: unknown, not low.",
    "protected": false,
    "note": "DEC-260: strength, text"
   },
@@ -1843,46 +1831,10 @@
    "note": "DEC-260: strength, text"
   },
   {
-   "key": "strength.text.sets_reasons_legs",
-   "en": "5. Sets of reasons. Legs the author did not sort into sets of reasons are all needed together, so they are only as strong as the weakest of them. A set of reasons is only as strong as the weakest leg in it. Where the author named several sets that each carry the finding on their own, the strongest set is what counts. The strength is then the weaker of the legs needed by every set and that strongest set.",
-   "protected": false,
-   "note": "DEC-260: strength, text"
-  },
-  {
-   "key": "strength.text.strength_undetermined_strength",
-   "en": "6. When a strength is undetermined. A strength is undetermined only when something it needs is unknown: one of the legs every set needs, or every set at once. A set that is unknown beside a known one could only be stronger, and is named. A strength with no counted leg is unrated, and says it rests on nothing established.",
-   "protected": false,
-   "note": "DEC-260: strength, text"
-  },
-  {
    "key": "strength.text.anonymous_testimony_evidence",
    "en": "7. Anonymous testimony and evidence. Testimony from a member credited only to the team or the project, and material from an unnamed source that such a member attests, counts only when something independent beside it bears it out; otherwise it is listed and counts for nothing. What bears it out is a counted leg on a document that shares no origin with it (not the same document, not the same capture, not the same web address) and is not itself credited anonymously; for anonymous testimony, also a member's testimony credited by cover name or real name, by another member, sharing no origin with it. Testimony or material credited by cover name or real name is graded as usual.",
    "protected": false,
    "note": "DEC-260: strength, text"
-  },
-  {
-   "key": "strength.text.named_strength_names",
-   "en": "8. What is named. Each strength names the leg that sets it, and every leg that does not count, with the reason. It also states how many hunches it left out.",
-   "protected": false,
-   "note": "DEC-260: strength, text"
-  },
-  {
-   "key": "strength.v2_legs.calculations_held_standards",
-   "en": "8. Calculations, held standards and obligations. A leg to a calculation counts for the capture strength only, at the weakest of its inputs' capture strengths, each no stronger than where it came from: a figure quoted from a document by that passage, a money figure by its own grade, a table by its source, another calculation by its own capture strength. The arithmetic of the recipe never weakens it. A value typed in with no captured source is testimony, D. A value another program computed is unknown until that program's agreement has been measured. The method is stated beside the grade and is not graded. A calculation whose result is not accepted, or an input that cannot be read, makes the strength undetermined.",
-   "protected": false,
-   "note": "DEC-260: strength, =V2_LEGS"
-  },
-  {
-   "key": "strength.v2_legs.leg_held_standard",
-   "en": "9. A leg to a held standard counts for the capture strength only, no stronger than the record holds for the text of that standard at the version cited; if the record holds no text at that version, the strength is undetermined.",
-   "protected": false,
-   "note": "DEC-260: strength, =V2_LEGS"
-  },
-  {
-   "key": "strength.v2_legs.leg_occurrence_obligation",
-   "en": "10. A leg to one occurrence of an obligation counts for the capture strength only, at the weaker of the text of the rule in force and the record of the date that started it. Whether it was met, late or overdue is stated beside the grade and never changes it. Where any part of how it was worked out is unknown, the strength is undetermined.",
-   "protected": false,
-   "note": "DEC-260: strength, =V2_LEGS"
   },
   {
    "key": "strength.stopped.case_file_states",
@@ -3272,7 +3224,7 @@
   },
   {
    "key": "refusal.TEMPLATE_KIND_REFUSED",
-   "en": "A template's kind is written as a kind is: lower-case letters, digits and underscores.",
+   "en": "A template's kind is written as a kind is: lowercase letters, digits and underscores.",
    "protected": false,
    "note": "DEC-260: filing-templates, refusal by its code"
   },
@@ -4250,7 +4202,7 @@
   },
   {
    "key": "refusal.ACCEPT_MUST_REAUTHOR",
-   "en": "Accepting this as it was proposed would make you vouch for words the machine wrote. Write it in your own words instead, by editing it or writing your own, and the record keeps that the words are yours.",
+   "en": "Accepting this as it was proposed would make you vouch for words the assistant wrote. Write it in your own words instead, by editing it or writing your own, and the record keeps that the words are yours.",
    "protected": false,
    "note": "DEC-260: record-grammar, refusal by its code"
   },
@@ -4963,24 +4915,6 @@
    "note": "DEC-260: case-inputs, acks.rows.map()"
   },
   {
-   "key": "case-inputs.acks.rows.map.participant",
-   "en": "- {by}, a participant of {project}, on {at}",
-   "protected": false,
-   "note": "DEC-260: case-inputs, acks.rows.map()"
-  },
-  {
-   "key": "case-inputs.acks.rows.map.given_draft",
-   "en": "given on draft {draft}",
-   "protected": false,
-   "note": "DEC-260: case-inputs, acks.rows.map()"
-  },
-  {
-   "key": "case-inputs.document.list_stops_acknowledgments",
-   "en": "- (the list stops here; more acknowledgments are recorded than this document lists)",
-   "protected": false,
-   "note": "DEC-260: case-inputs, page/document"
-  },
-  {
    "key": "case-inputs.document.nobody_acknowledged_case",
    "en": "{ack_prose_head} Nobody acknowledged it FOR THIS CASE. An acknowledgment is never required to publish — a team may be one person — and its absence is stated rather than left for a reader to infer.",
    "protected": false,
@@ -5025,30 +4959,6 @@
   {
    "key": "case-inputs.why.source_answered_malformed",
    "en": "the source answered a malformed row",
-   "protected": false,
-   "note": "DEC-260: case-inputs, why"
-  },
-  {
-   "key": "case-inputs.listed.reading_draft_named",
-   "en": "this is a reading of draft {draft}, which {by} named as the draft of edition {edition} of {case_id} when publishing it ({at}), so it is a reading of that case.",
-   "protected": false,
-   "note": "DEC-260: case-inputs, listed"
-  },
-  {
-   "key": "case-inputs.listed.edition_already_signed",
-   "en": "That edition is already SIGNED, and its list is what the signature covers: this reading can appear in no signed document of it, and is recorded as the act it was.",
-   "protected": false,
-   "note": "DEC-260: case-inputs, listed"
-  },
-  {
-   "key": "case-inputs.listed.case_document_authored",
-   "en": "Its case document is authored and unsigned, so it now lists this reading (case_documents), re-authored; its owner signs the new bytes.",
-   "protected": false,
-   "note": "DEC-260: case-inputs, listed"
-  },
-  {
-   "key": "case-inputs.why.case_document_authored",
-   "en": "this case document was authored before acknowledgments were recorded, so it has no list to add to; it is left exactly as it was signed-for-review",
    "protected": false,
    "note": "DEC-260: case-inputs, why"
   },
@@ -5528,7 +5438,7 @@
   },
   {
    "key": "refusal.NO_REVIEW_COPY",
-   "en": "No review copy answers to this request. A review copy is read through the grant issued for it, or by a member with standing in the project that produced it. A grant that was withdrawn, one whose draft has moved on to another edition, and one that never existed all answer the same way, so this answer tells you nothing about which of those is the case.",
+   "en": "There is no review copy here for you to read. Ask the owner of the project for a new review link, or join the project if you are a member of the team. The answer is the same whether the link was withdrawn, replaced by a newer edition or never existed.",
    "protected": false,
    "note": "DEC-260: review, refusal by its code"
   },
@@ -5642,9 +5552,9 @@
   },
   {
    "key": "review.text.next_edition_draft",
-   "en": "the next edition ({edition}) of {case_id} — but this draft also asks for a new case, and publication refuses those two instructions together, so which case it is stays UNDETERMINED until one of them is withdrawn",
+   "en": "the next edition ({edition}) of {case_id}, but this draft also asks for a new case, and publication refuses those two requests together, so which case it is stays open until one of them is withdrawn",
    "protected": false,
-   "note": "DEC-260: review, text"
+   "note": "DEC-260: review, text; B411 L14: plain words, no capitals"
   },
   {
    "key": "review.text.next_edition",
@@ -5654,15 +5564,15 @@
   },
   {
    "key": "review.text.new_case_whose",
-   "en": "a new case, whose identity is not yet allocated — a case id is minted only by publication",
+   "en": "a new case, which gets its number when it is published",
    "protected": false,
-   "note": "DEC-260: review, text"
+   "note": "DEC-260: review, text; B411 L14: plain words"
   },
   {
    "key": "review.text.case_draft_name",
-   "en": "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED here: the draft names no case and does not ask for a new one, so publication reads the record at that moment — a further edition of the one case its findings already serve, a refusal to choose if they serve several, and a new case only if they serve none and no prepared, unsigned edition claims them",
+   "en": "a draft that does not name a case yet; which case it becomes is settled when it is published",
    "protected": false,
-   "note": "DEC-260: review, text"
+   "note": "DEC-260: review, text; B411 L14: plain words, no capitals; the heading is review.title.draft"
   },
   {
    "key": "review.text.edit_draft",
@@ -5768,51 +5678,51 @@
   },
   {
    "key": "refusal.NOT_A_COVERABLE_FORMAT",
-   "en": "The photo is neither a JPEG nor an 8-bit PNG this module covers.",
+   "en": "Areas can be obscured only on a JPEG or an ordinary 8-bit PNG photo, and this file is neither. Save it as one of those and try again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.UNSUPPORTED_JPEG_PROCESS",
-   "en": "The JPEG is progressive, arithmetic-coded, lossless, 12-bit, or otherwise not a baseline or extended-sequential Huffman 8-bit JPEG in one scan.",
+   "en": "This JPEG is saved in a form your team's Civicsmith cannot obscure areas on, such as progressive or 12-bit. Save it again as an ordinary JPEG, or as a PNG, and try again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.PNG_INTERLACED",
-   "en": "The PNG is interlaced (Adam7).",
+   "en": "This PNG is interlaced, a form your team's Civicsmith cannot obscure areas on. Save it again without interlacing and try again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.AREA_MALFORMED",
-   "en": "An area is not four integers [x0, y0, x1, y1] with x0 < x1 and y0 < y1.",
+   "en": "An area to obscure could not be read as a rectangle: its left edge must lie left of its right, and its top above its bottom. Mark the area again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.AREA_OUTSIDE",
-   "en": "An area lies wholly outside the picture.",
+   "en": "An area to obscure lies wholly outside the photo. Mark the area again on the photo itself.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.PHOTO_TOO_LARGE",
-   "en": "The photo is larger, in bytes or in pixels, than the most this module covers.",
+   "en": "This photo is larger, in file size or in pixels, than your team's Civicsmith can work with. Save a smaller copy and try again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.TRUNCATED_IMAGE_DATA",
-   "en": "The image data ends before the image does.",
+   "en": "This photo file ends before the picture does, so it may be incomplete. Copy it again from its source and try again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
   },
   {
    "key": "refusal.IMAGE_DATA_CORRUPT",
-   "en": "The image data cannot be read: a bad Huffman code or table, a wrong restart marker, a PNG CRC or zlib error.",
+   "en": "This photo file is damaged, so its picture cannot be read. Copy it again from its source and try again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
   },
   {
    "key": "refusal.NOT_A_STRIPPABLE_FORMAT",
@@ -6259,12 +6169,6 @@
    "note": "DEC-260: capture-sources, unsigned_reason"
   },
   {
-   "key": "lines.text.date_read",
-   "en": "the date could not be read: {refused}",
-   "protected": false,
-   "note": "DEC-260: lines, text"
-  },
-  {
    "key": "lines.why.stated_current_through",
    "en": "{why}; it is stated current through {day}, and the date is after that",
    "protected": false,
@@ -6273,30 +6177,6 @@
   {
    "key": "lines.text.recorded",
    "en": "as recorded by {system} on {recorded_at}",
-   "protected": false,
-   "note": "DEC-260: lines, text"
-  },
-  {
-   "key": "lines.undetermined.line_covers_date",
-   "en": "no line covers the date",
-   "protected": false,
-   "note": "DEC-260: lines, undetermined"
-  },
-  {
-   "key": "lines.text.lines_hold_post",
-   "en": "{inn} lines hold the post at the date",
-   "protected": false,
-   "note": "DEC-260: lines, text"
-  },
-  {
-   "key": "lines.text.lines_read_holds",
-   "en": "more lines than one read holds name this office",
-   "protected": false,
-   "note": "DEC-260: lines, text"
-  },
-  {
-   "key": "lines.text.line_naming_office",
-   "en": "a line naming this office may cover the date, and the record does not settle it",
    "protected": false,
    "note": "DEC-260: lines, text"
   },
