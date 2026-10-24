@@ -305,35 +305,15 @@ function countReplaced(text) {
   return n;
 }
 
-/* The same contract as ooxml's `decodeText` (its R36), for a build whose ooxml does not export it: UTF-8 and UTF-16 by
-   BOM or by the first bytes of the XML, a declared charset by its label. */
-function localDecode(bytes, { declared, name }) {
-  const b = bytes;
-  let label = null, assumed = false;
-  if (b.length >= 3 && b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf) label = "utf-8";
-  else if (b.length >= 2 && b[0] === 0xff && b[1] === 0xfe) label = "utf-16le";
-  else if (b.length >= 2 && b[0] === 0xfe && b[1] === 0xff) label = "utf-16be";
-  else if (b.length >= 2 && b[0] === 0x3c && b[1] === 0) label = "utf-16le";
-  else if (b.length >= 2 && b[0] === 0 && b[1] === 0x3c) label = "utf-16be";
-  if (!label && declared) label = String(declared).toLowerCase();
-  if (!label) {
-    const head = new TextDecoder("latin1").decode(b.subarray(0, 200));
-    const m = /^\s*<\?xml[^>]*?encoding\s*=\s*["']([A-Za-z0-9._-]+)["']/.exec(head);
-    if (m) label = m[1].toLowerCase();
-  }
-  if (!label) { label = "utf-8"; assumed = true; }
-  let dec;
-  try { dec = new TextDecoder(label, { fatal: false }); } catch { return { ok: false, why: "ENCODING_UNSUPPORTED", name }; }
-  const text = dec.decode(b);
-  const replaced = countReplaced(text);
-  return { ok: true, text, encoding: label, assumed, replaced, replaced_ratio: text.length ? replaced / text.length : 0, disagree: [] };
-}
-
 /** A text part's bytes as text: ooxml's `decodeText` when it is there, else the local one of the same contract. */
 export function decodePart(bytes, part, declared = null) {
   try {
     if (typeof OOXML.decodeText === "function") return OOXML.decodeText(bytes, { declared, name: part, kind: "xml" });
-    return localDecode(bytes, { declared, name: part });
+    /* ooxml has not merged `decodeText` (its R36) yet: until it does, the reading every part had before this round
+       (UTF-8), and no second decode; R41's tests stay red by name until then. */
+    const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+    const replaced = countReplaced(text);
+    return { ok: true, text, encoding: "utf-8", assumed: true, replaced, replaced_ratio: text.length ? replaced / text.length : 0, disagree: [] };
   } catch {
     return { ok: false, why: "ENCODING_UNSUPPORTED", name: part };
   }
