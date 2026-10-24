@@ -273,3 +273,7 @@ QUEUE #34 (session_011pqGr91RHciRQowMDqiftF), T51 fix round 8, G116 (R94). Compl
 **Checks** (each read by its failure count): queue suite 229 of 229; format 176 modules, 0 failures; architecture 41 product files, 0 failures; coverage queue 55 of 55 ids, 0 failures; words queue, 0 failures; ownership 4 files, 0 failures.
 
 Size (session_01MHgZjvBKiaDWFEhDJRUvf3): test runs 7, module lines 2956
+
+## J14 · COMPLETE
+
+QUEUE #35 (session_01MHgZjvBKiaDWFEhDJRUvf3), job 70, R1 reading-ended (G135f, K4933). Complete on job/T51/queue; the record's last section has the fields. classOfKind('reading-ended') is FINDING with a code-origin sentence (notice-producers R29). Red first: catalogue.test.mjs R1 (G61), then green; two hand lists in my tests (R1's FINDING list, R55's OWED list) gained the kind. Queue suite 229/229; format, architecture, coverage, words, ownership 0 failures. Impact set 599 tests, 3 red, the same 3 on tranche/T51 without my change (control-plane t51-visitor-copy, plane release R24, plane g41-shape). Owed to the design stream: the plain name queue.kind.reading-ended.
