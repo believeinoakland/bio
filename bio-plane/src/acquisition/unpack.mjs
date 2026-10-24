@@ -23,7 +23,7 @@ import { viewerPredicate, notAnAdmin, membershipOf } from "../membership/index.m
 import { recordOf } from "../record-core/index.mjs";
 import { detectFormat } from "../formats.mjs";
 import { ARCHIVE_CHECKS, firstHopWho } from "./checks.mjs";
-import { profileOf, profileView, evidenceStorageAbsent } from "./index.mjs";
+import { profileOf, profileView, evidenceStorageAbsent, textTypeOf } from "./index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
 /* R40: one call's share, and the day's for automatic opening, each exported by its name (K1940: BOB's, K1881). The
@@ -822,6 +822,8 @@ async function fileDocument(ctx, row, stored, receipt) {
     const head = o ? new Uint8Array(await o.arrayBuffer()) : null;
     const f = head ? detectFormat(head, null) : null;
     ct = f && FORMAT_MEDIA_TYPES[f.format] ? FORMAT_MEDIA_TYPES[f.format] : null;
+    /* R39, R102 (G163): bytes with no magic are typed by the one rule for a file as text, from the entry's decoded name; only a member held in one part is read whole */
+    if (!ct && head && !multipart) ct = textTypeOf({ bytes: head, name: typeof row.name === "string" ? row.name : null });
   } catch { ct = null; }
   const name = `zip-${sha}-${row.index}`;
   const profile = await profileOf({ ev, sha: stored.sha256, ct, total: stored.bytes, multipart, headers: {},
@@ -846,7 +848,9 @@ async function fileDocument(ctx, row, stored, receipt) {
     }],
     capture: {
       method: UNPACKED_VIA,
-      ...(g && g.grade ? { grade: g.grade } : { ...(g && g.basis ? { grade_basis: g.basis } : {}) }),
+      ...(g && g.grade ? { grade: g.grade }
+        /* R39 (G161): with no letter the basis stated is the ARCHIVE's (provenance C-18.1: the basis of the route that decided it), never the member's own */
+        : (() => { const basis = g && g.archive && typeof g.archive === "object" && g.archive.basis ? g.archive.basis : g && g.basis; return basis ? { grade_basis: basis } : {}; })()),
       actor_class: isMember ? "member" : (cls === "probe" ? "session" : "daemon"),
       actor,
       sha256: stored.sha256, encoding: "binary", bytes: stored.bytes,

@@ -100,7 +100,7 @@ test("R38 R39 R26: each file is cut out exactly, stored under its own digest, re
   assert.equal(d0.capture.sha256, sha(PDF));
   assert.deepEqual([d0.capture.encoding, d0.capture.bytes, d0.capture.content_type], ["binary", PDF.length, "application/pdf"]);
   assert.equal("transport" in d0.capture, false, "no response, so no transport and no header is recorded");
-  assert.equal(d1.capture.content_type, undefined, "a type the bytes do not show is absent, never invented");
+  assert.equal(d1.capture.content_type, "text/plain", "bytes with no magic are typed by R102's rule from the entry's name (R39, G163); a type neither shows stays absent (r123-batch-d.test.mjs)");
   assert.deepEqual([d0.capture.actor_class, d0.capture.actor], ["member", "m1"]);
   assert.equal(d0.locator, `${URL1}#zip:0`);
   assert.equal(d0.file, `snapshots/zip-${archiveSha}-0`, "named from the archive's digest and the index, never the entry's name");
