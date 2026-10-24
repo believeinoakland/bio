@@ -45,6 +45,11 @@ for (const [label, stated] of [["no length declared", null], ["a declared length
     assert.ok(ledger.peak() <= Math.max(kept, stated ?? 0) + PART + slack, `peak ${ledger.peak()} is over the kept bytes (the buffer the declared length asked for) plus one part`);
     assert.ok(ledger.peak() < 2 * kept, "a buffer of the whole's size is not formed beside the kept parts");
     assert.equal(ledger.held(), 0, "every byte the call held is let go when it ends");
+    if (stated !== 12 * MIB && stated !== 22 * MIB) {
+      /* K4926: a body received into no single buffer is not joined from held parts: the stored parts are read back one at a time (red against a join, which reads none) */
+      const back = w.b.calls.filter((c) => c[0] === "get" && !(c[2] && c[2].range)).map((c) => c[1]).sort();
+      assert.deepEqual(back, r.body.document.parts.map((p) => `bio/captures/${p.sha256}`).sort(), "each stored part is read back once");
+    }
   });
 }
 

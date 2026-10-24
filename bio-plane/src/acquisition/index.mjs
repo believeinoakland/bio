@@ -517,7 +517,7 @@ export async function keepWhole(ev, { sha, parts, total, bytes = null, compose =
       }
       /* R115: the whole was received into one buffer; it is put as it is, no second copy */
       if (given instanceof Uint8Array && given.length === total) { await ev.put(sha, given); return { ok: true, kept: true }; }
-      const counted = !held && ledger && typeof ledger.hold === "function" ? ledger : null;   // parts handed over (held) are already counted as the bytes they become
+      const counted = !held && ledger && typeof ledger.hold === "function" ? ledger : null;
       if (counted) counted.hold(total, "kept");
       try {
       const whole = new Uint8Array(total);
@@ -1401,9 +1401,8 @@ async function acquireRun(cap, body0, opts0, t) {
   /* R115 (fix round 9, G124b): THE WHOLE IS NEVER HELD TWICE. A body whose declared length is a multipart capture within `MULTIPART_KEEP_MAX` is
      received straight into ONE buffer of that length (`keptWhole`), each part copied in as it is stored and its own buffer let go, so the
      call holds the kept bytes once plus the one part being read, and the whole is put from that buffer with no second copy made. Every byte
-     held is counted by the byte ledger (`opts.ledger`, runtime-limits). A body that declares no length is held as separate parts, and `keepWhole`
-     hands them to the one buffer of the whole part by part, dropping each as it is copied (the call never holds the whole beside all of its parts).
-     A body that overruns the length it declared holds no bytes: the whole is made from the stored parts (`compose`, else read back one at a time). */
+     held is counted by the byte ledger (`opts.ledger`, runtime-limits). A body that declares no length, or overruns the one it declared, holds no
+     bytes once a second part shows it is several: the parts are already stored, and the whole is made from them (read back one part at a time into the one buffer of the whole), never joined from held parts. */
   const ledger = opts && opts.ledger && typeof opts.ledger.hold === "function" ? opts.ledger : { hold() {}, release() {} };
   let keptWhole = declared !== null && declared > PART && declared <= MULTIPART_KEEP_MAX && !renderAsked ? new Uint8Array(declared) : null;
   let keptHeld = 0;   // the bytes held under the ledger's tag "kept": the one buffer of the whole, or the parts held singly
@@ -1424,10 +1423,10 @@ async function acquireRun(cap, body0, opts0, t) {
       if (keptWhole && keptSize + buf.length <= keptWhole.length) {
         if (!inPlace) keptWhole.set(buf, keptSize);
         keptParts.push(keptWhole.subarray(keptSize, keptSize + buf.length)); keptSize += buf.length;
-      } else if (keptWhole || keptSize + buf.length > MULTIPART_KEEP_MAX) {
-        dropKept();   // R115: a body that overruns the length it declared, or one past what is held: no bytes are held, the whole is made from the stored parts
+      } else if (!keptWhole && !keptParts.length && keptSize + buf.length <= MULTIPART_KEEP_MAX) {
+        keptSize += buf.length; keptParts.push(buf); ledger.hold(buf.length, "kept"); keptHeld += buf.length;   // the first part of a body with no length declared, held singly: a capture of one part needs it for its title
       } else {
-        keptSize += buf.length; keptParts.push(buf); ledger.hold(buf.length, "kept"); keptHeld += buf.length;   // no length declared: the parts are held singly and handed to the whole one by one (keepWhole)
+        dropKept();   // R115: a second part of a body not received into one buffer, an overrun of the declared length, or a body past what is held: no bytes are held, the whole is made from the stored parts
       }
     }
     if (!inPlace) ledger.release(buf.length, "part");
@@ -1680,8 +1679,8 @@ async function acquireRun(cap, body0, opts0, t) {
      memory (stage `keep`, apart from `read`), or refused in words with nothing filed. */
   if (multipart && !renderRecorded && total <= MULTIPART_KEEP_MAX) {
     const inOne = !!keptWhole && keptSize === total && keptWhole.length >= total;   // a body shorter than its declared length fills the front of the buffer
-    /* R115: the one buffer, else the separate parts handed on one by one; a body that overran its declared length holds nothing and the store makes the whole from the stored parts */
-    const kept = await timed(t, "keep", () => keepWhole(ev, { sha, parts, total, bytes: keptParts, whole: inOne ? keptWhole.subarray(0, total) : null, compose: !keptParts, ledger }));
+    /* R115: the one buffer it was received into, else nothing held: they are read back one at a time into the one buffer of the whole */
+    const kept = await timed(t, "keep", () => keepWhole(ev, { sha, parts, total, bytes: inOne ? keptParts : null, whole: inOne ? keptWhole.subarray(0, total) : null, ledger }));
     if (!kept.ok) return answer(502, notKept(parts.length, kept.why));
   }
 
