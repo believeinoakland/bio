@@ -147,8 +147,9 @@ function reasonOf(code, extra = {}) {
 
 export class FileSafety {
   constructor({ sql, record, membership, credentials, provenance, acquisition, env = null, store = "bio", now = null,
-                scanWaitMs = SCAN_WAIT_MS, callBoundMs = SCANNER_CALL_BOUND_MS, registerJob = null } = {}) {
+                scanWaitMs = SCAN_WAIT_MS, callBoundMs = SCANNER_CALL_BOUND_MS, registerJob = null, ledger = null } = {}) {
     this.sql = sql;
+    this.ledger = ledger && typeof ledger.hold === "function" && typeof ledger.release === "function" ? ledger : null;   /* runtime-limits R32: the bytes a look holds */
     this.record = record;
     this.membership = membership;
     this.credentials = credentials;
@@ -411,6 +412,13 @@ export class FileSafety {
     if (cache) cache.set(`look:${sha}`, out);
     return out;
   }
+  /* X19 (G136b): a look is let go once its grade is made, so a call over an archive of thousands of members holds one member's bytes at a
+     time and not all of them until it returns. */
+  #letGo(cache, sha) {
+    const l = cache.get(`look:${sha}`);
+    if (l && l.held && this.ledger) this.ledger.release(l.held, "file-safety.look");
+    cache.delete(`look:${sha}`);
+  }
   async #lookAt(sha) {
     try {
       const size = await this.#sizeOf(sha);
@@ -422,7 +430,9 @@ export class FileSafety {
       if (!whole && needsWholeFile(head) && !tooLarge) { bytes = await src.read(0, size); whole = true; }
       const d = await describe(src, { head, bytes: whole ? bytes : null });
       if (!whole && !needsWholeFile(head)) bytes = wholeCharacters(head);
-      return { bytes, whole, size, src, ...d, ...(tooLarge ? { tooLarge: size } : {}) };
+      const held = bytes.length;
+      if (this.ledger) this.ledger.hold(held, "file-safety.look");
+      return { bytes, whole, size, src, held, ...d, ...(tooLarge ? { tooLarge: size } : {}) };
     } catch { return null; }
   }
 
@@ -831,6 +841,8 @@ export class FileSafety {
                 safe_view: view ? { state: view.render_state, route: view.render_route, sha256: view.render_sha } : null,
                 safe_copy: copy ? { state: copy.state, sha256: copy.copy_sha } : null, archive };
     cache.set(sha, g);
+    /* a member's bytes are let go when its grade is in; the call's own file stays for the call's other readers */
+    if (path.length) this.#letGo(cache, sha);
     return g;
   }
 
@@ -839,7 +851,9 @@ export class FileSafety {
     try {
       const h = this.#held(captureSha, viewer);
       if (h.refused) return h.refused;
-      return { ok: true, captureSha: h.sha, ...(await this.#grade(h.sha, [], new Map())), reading: readingStatement() };
+      const cache = new Map();
+      try { return { ok: true, captureSha: h.sha, ...(await this.#grade(h.sha, [], cache)), reading: readingStatement() }; }
+      finally { this.#letGo(cache, h.sha); }
     } catch { return refusal("FILE_NOT_HELD", "The grade could not be computed. Nothing was read.", { captureSha: captureSha ?? null }); }
   }
 
@@ -1079,7 +1093,8 @@ export class FileSafety {
       this.sql.exec(`UPDATE fs_files SET render_state = ?, render_route = ? WHERE capture_sha = ?`, route ? "data" : "none", route, sha);
       return route ? "data" : "none";
     }
-    if (look.encrypted || this.#scanNoteEncrypted(sha)) return this.#renderFinal(sha, route, "ENCRYPTED", null);
+    /* R54: an encrypted file is refused without a call to the renderer, so it does not use the tick */
+    if (look.encrypted || this.#scanNoteEncrypted(sha)) { this.#renderFinal(sha, route, "ENCRYPTED", null); return "refused"; }
     this.sql.exec(`UPDATE fs_files SET render_state = 'rendering', render_started_at = ? WHERE capture_sha = ?`, iso(this.now()), sha);
     try { return await this.#renderCall(sha, route); } catch (e) {
       /* a fault after the mark: the file is queued again, not left marked in flight */
@@ -1214,7 +1229,7 @@ export class FileSafety {
         if (got.late) { inFlight++; break; }
         const r = got.value;
         if (r in out) out[r]++;
-        if (r === "retry") out.failed++;
+        if (r === "retry" || r === "refused") out.failed++;
         if (r === "rendered" || r === "failed" || r === "retry") break;
       }
       const tool = this.#routineTools("cdr")[0];
@@ -1779,7 +1794,8 @@ export class FileSafety {
     const format = look.format;
     if (format === "image")
       return entry("not_examined", READ_IMAGES.includes(look.image) ? "IMAGE" : `UNREAD_IMAGE_TYPE:${look.image}`);
-    if (look.tooLarge && !(CONTAINER_FORMATS.includes(format) || format === "zip")) return entry("not_scanned", "TOO_LARGE");
+    /* R51: a capture above GRADE_READ_MAX is not loaded by its structure check: `not_scanned TOO_LARGE`, its grade being R56's from range reads */
+    if (look.tooLarge) return entry("not_scanned", "TOO_LARGE");
     if (format === "zip") {
       const l = await this.#listing(sha);
       if (!l.ok) return entry("flagged", `refused:${l.code}`);
@@ -1790,8 +1806,7 @@ export class FileSafety {
       return flags.length ? entry("flagged", flags.join(", ")) : entry("clean", "zip");
     }
     if (ACTIVE_FORMATS.includes(format)) {
-      const read = look.tooLarge ? await activeFromDirectory(format, look.src, look.directory) : await readActive(format, bytes);
-      const f = structureFlags(read);
+      const f = structureFlags(await readActive(format, bytes));
       return f.flags.length ? entry("flagged", f.flags.join(", ")) : entry("clean", format);
     }
     if (format === "text") return entry("clean", format);
@@ -2157,7 +2172,12 @@ export class FileSafety {
         /* R51: views waiting for their bytes are looked at again at the earliest of their instants */
         const w = this.#one(`SELECT MIN(render_wait_at) AS t FROM fs_files WHERE render_state = 'waiting'`);
         const t = w && w.t ? Date.parse(w.t) : NaN;
-        return this.#answer("render", Number.isFinite(t) ? Math.max(poll, t) : w && w.t === null && this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'waiting' LIMIT 1`) ? poll : null);
+        const waiting = Number.isFinite(t) ? Math.max(poll, t) : w && w.t === null && this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'waiting' LIMIT 1`) ? poll : null;
+        /* R55: a render marked in flight is looked at again when its mark would be stale, so a firing that stopped leaves no file behind */
+        const f = this.#one(`SELECT MIN(render_started_at) AS t FROM fs_files WHERE render_state = 'rendering'`);
+        const ft = f && f.t ? Date.parse(f.t) + RENDER_INFLIGHT_STALE_MS : NaN;
+        const inflight = Number.isFinite(ft) ? Math.max(poll, ft) : null;
+        return this.#answer("render", waiting === null ? inflight : inflight === null ? waiting : Math.min(waiting, inflight));
       }
       return this.#answer("render", poll);
     } catch { return this.#answer("render", poll); }
@@ -2223,7 +2243,7 @@ export class FileSafety {
 const OF = new WeakMap();
 export function fileSafetyOf(ctx, { record = null, membership = null, credentials = null, provenance = null, acquisition = null,
                                     env = null, store = "bio", now = null, scanWaitMs = SCAN_WAIT_MS, callBoundMs = SCANNER_CALL_BOUND_MS,
-                                    registerJob = null } = {}) {
+                                    registerJob = null, ledger = null } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let fs = OF.get(storage);
   if (fs) return fs;
@@ -2233,7 +2253,7 @@ export function fileSafetyOf(ctx, { record = null, membership = null, credential
   const prov = provenance || provenanceOf(ctx, { record: rec, membership: mem });
   const acq = acquisition || acquisitionOf(ctx, { record: rec, provenance: prov, membership: mem });
   fs = new FileSafety({ sql: storage.sql, record: rec, membership: mem, credentials: cred, provenance: prov, acquisition: acq,
-                        env, store, now, scanWaitMs, callBoundMs, registerJob });
+                        env, store, now, scanWaitMs, callBoundMs, registerJob, ledger });
   OF.set(storage, fs);
   fs.start();
   return fs;
@@ -2253,7 +2273,7 @@ export function fileSafetyOps(fs, url, body, env) {
     originalstate: () => fs.originalState({ captureSha: sha(), viewer: viewer() }),
     openoriginal: () => fs.openOriginal({ captureSha: sha(), viewer: viewer(), override: b.override === true || q("override") === "1" }),
     openwithwarning: () => fs.openOriginal({ captureSha: sha(), viewer: viewer(), warned: b.warned ?? null }),
-    safeview: () => fs.safeView({ captureSha: sha(), viewer: viewer() }),
+    safeview: () => fs.safeView({ captureSha: sha(), viewer: viewer(), sheet: q("sheet") ?? b.sheet ?? null, fromRow: q("fromRow") ?? b.fromRow ?? null }),
     safecopyrequest: () => fs.requestSafeCopy({ captureSha: sha(), viewer: viewer() }),
     safecopy: () => fs.safeCopy({ captureSha: sha(), viewer: viewer() }),
     scanbatch: () => fs.scanBatch({ limit: b.limit ?? q("limit") ?? undefined, at: b.at ?? q("at") ?? null }),
@@ -2292,7 +2312,7 @@ export const DECLARED_OPS = Object.freeze({
   releasescanhold: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("file-safety.declared.releasescanhold", "file-directed: keyed by a capture's digest under a scan hold, reached from the held file; one member's reasoned act of two, never a machine's; moves no bundle"),
     fields: { accepts: ["capture","captureSha","reason"], requires: [["capture","captureSha"],"reason"] } },
   safeview: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("file-safety.declared.safeview", "read: a file's safe view, a derived copy so labeled, with what opening the original would answer; writes nothing"),
-    fields: { accepts: ["capture","captureSha"], requires: [["capture","captureSha"]] } },
+    fields: { accepts: ["capture","captureSha","sheet","fromRow"], requires: [["capture","captureSha"]] } },
   scanmirror: { classes: ["admin","member"], machineClasses: [], mutating: true, stamps: ["viewer"], needs: null, weight: "substrate", description: localize("file-safety.declared.scanmirror", "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle"),
     fields: { accepts: ["at"], requires: [] } },
   securitytooladd: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("file-safety.declared.securitytooladd", "setting: the group's security tools, an administrator's act; moves no bundle"),

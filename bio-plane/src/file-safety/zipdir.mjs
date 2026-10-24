@@ -4,7 +4,7 @@
  * range source `{size, read(offset, length) -> Uint8Array}`; a source that cannot be read, or a directory that does not
  * hold together, answers `{ok:false, why}`, never a throw. Reads names and flags only; it inflates nothing but the small
  * relationship parts `memberText` is asked for, and runs nothing. */
-import { ARCHIVE_DIRECTORY_MAX, ARCHIVE_ENTRIES_MAX, ARCHIVE_NAME_MAX } from "../ooxml.mjs";
+import { ARCHIVE_DIRECTORY_MAX, ARCHIVE_ENTRIES_MAX, ARCHIVE_NAME_MAX, STRUCTURAL_PART_MAX } from "../ooxml.mjs";
 
 const SIG_EOCD = 0x06054b50, SIG_LOC64 = 0x07064b50, SIG_REC64 = 0x06064b50, SIG_CENTRAL = 0x02014b50, SIG_LOCAL = 0x04034b50;
 const u16 = (b, o) => b[o] | (b[o + 1] << 8);
@@ -77,8 +77,8 @@ export async function readDirectory(src) {
   } catch { return { ok: false, why: "source_unreadable" }; }
 }
 
-/** One small member's text (a relationships part), at most `max` bytes inflated; `{ok:true, text}` or `{ok:false, why}`. */
-export async function memberText(src, entry, max = 1_048_576) {
+/** One small member's text (a relationships part), at most `max` bytes inflated (ooxml's structural-part ceiling by default); `{ok:true, text}` or `{ok:false, why}`. */
+export async function memberText(src, entry, max = STRUCTURAL_PART_MAX) {
   try {
     if (entry.encrypted) return { ok: false, why: "MEMBER_ENCRYPTED" };
     if (!(entry.uncompressed <= max)) return { ok: false, why: "over_bound" };

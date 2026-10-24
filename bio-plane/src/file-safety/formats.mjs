@@ -416,9 +416,10 @@ export async function sheetWindow(format, bytes, { sheet = null, fromRow = 1 } =
     if (!r.ok) return r;
     const { entry, parts, t } = r;
     const start = Number.isInteger(fromRow) && fromRow >= 1 ? fromRow : 1;
+    const named = sheet === null || sheet === undefined || sheet === "" ? -1 : t.sheets.findIndex((s) => s.name === String(sheet));
     const i = sheet === null || sheet === undefined || sheet === "" ? 0
-      : typeof sheet === "number" && Number.isInteger(sheet) ? sheet
-      : t.sheets.findIndex((s) => s.name === sheet);
+      : named >= 0 ? named
+      : /^\d+$/.test(String(sheet)) ? Number(sheet) : -1;
     const s = i >= 0 ? t.sheets[i] : null;
     if (!s) return { ok: false, why: "SHEET_NOT_HELD" };
     let a;
