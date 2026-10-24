@@ -104,3 +104,24 @@ test("R68 control: a basis with no cutting leg is judged as before, and a cuttin
   assert.equal(grounded([SUP({ ground: "a" })], undefined).length, 1);
   assert.deepEqual(grounded([SUP({}), CUT({})], undefined), []);
 });
+
+/* R4 (fix round 9, G167; K4985): the leg's extent is judged by content's ten kinds, `doc-part` among them. */
+const extentOf = (l) => plain(run((f) => IG.checkLegExtentGrammar(l, "basis[0]", "C-2.8", f)).findings);
+const partLeg = (o) => ({ target: "INF-2026-0001-doc", role: "supports", extent_kind: "doc-part", ...o });
+
+test("R4 a citation of a footnote, header, comment or other part found by a search passes checkLegExtentGrammar (control-plane seam §10)", () => {
+  for (const l of [partLeg({ extent_part: "word/footnotes.xml", extent_ref: "footnote 2" }), partLeg({ extent_part: "word/header1.xml" }),
+                   partLeg({ extent_ref: "comment 3" }), partLeg({ extent_part: "word/comments.xml", extent_ref: "comment 3" })])
+    assert.deepEqual(extentOf(l), [], JSON.stringify(l));
+});
+
+test("R4 control: a doc-part leg naming neither part nor reference is refused C-2.8, and an extent kind not in content's list is refused as before", () => {
+  const none = extentOf(partLeg({}));
+  assert.equal(none.length, 1);
+  assert.equal(none[0].check, "C-2.8");
+  assert.equal(none[0].code, "CONTENT_EXTENT_UNREADABLE");
+  const unknown = extentOf(partLeg({ extent_kind: "doc-prt", extent_part: "word/footnotes.xml" }));
+  assert.equal(unknown.length, 1);
+  assert.equal(unknown[0].check, "C-2.8");
+  assert.ok(unknown[0].message.includes("doc-prt"), unknown[0].message);
+});

@@ -1,6 +1,6 @@
 # inquiry-grammar (T51)
 
-**Status** · session_01FVBE32weVwYCP8rNDY5AVJ · depth 2 · COMPLETE · handled B2
+**Status** · session_01B4tHNxMTJamTy5UFQiCoZy · depth 2 · COMPLETE · handled B7
 
 ## Completion (CR-8)
 
@@ -65,3 +65,35 @@ Ownership refuses my writing build/requirements/inquiry-grammar.md, so R68 is no
 - **R68** (T51; K4194; amends R1, R4) **A leg that cuts against is never in a ground.** The totality of the grounds (C-2.8: "a basis is grouped whole or not at all") counts the supporting legs only: when any leg names a ground, every leg whose `role` is not `cuts_against` must; a `cuts_against` leg need not, and a basis whose supporting legs all name grounds is judged whole whatever its cutting legs. A `cuts_against` leg that names a ground (a non-empty `ground`) is one C-2.8 error naming the leg and the label, and the label is not counted toward a ground, so a ground that only it carried is "declared, no basis leg belongs to it" as ever. A basis with no `cuts_against` leg is judged exactly as before. The strength arithmetic's side (`strength`, `inquiry`) leaves the cutting leg out of every ground likewise. *(not yet met: T51)* Test: one supporting and one cutting leg, the first in a declared ground, is clean; control: a supporting leg left out of the partition is still refused, as is a cutting leg named in a ground (with its own finding naming the leg); a basis with no cutting leg is judged as the golden answers have it.
 
 Until it is there, coverage cannot count R68 live (my tests name it already). Also lift the R13/R19 not-yet-met markers (met in CR-8).
+
+## J4 · REPORT
+
+R4 amendment (job 92) is in and pushed (commit on job/T51/inquiry-grammar), but not COMPLETE: it waits on content's job 91.
+
+Done: grammar.mjs now imports checkContentExtent/legExtent/legHasAuthoredExtent/CONTENT_ID_RE/CONTENT_EXTENT_DOCUMENT_ONLY from content/extent.mjs (the public face, ten kinds) instead of extent-core.mjs. t51.test.mjs gained two R4 tests. Red first seen: checkLegExtentGrammar refused a doc-part footnote leg with the "not one of: document, pdf-page, ..." sentence. After the re-point: the footnote with extent_ref passes; the controls (doc-part naming neither part nor ref, and kind 'doc-prt') are refused; the whole existing suite stays green (golden unchanged).
+
+Still red (1 test, by design, not weakened): a doc-part leg that names only `extent_part` (e.g. word/header1.xml, no extent_ref). content's core `legExtent` (extent-core.mjs) reads extent_part only under `image`, so the part is dropped and checkPart sees "neither". That is the second defect of the diagnosis, content job 91's. Please tell me when tranche/T51 carries job 91; I merge it and re-run, no change of mine needed.
+
+For BOB (not mine to change, byte-identity of R4 pins it): the unknown-kind repair sentence still lists the eight text-chain kinds (grammar.mjs ~565, from textchain.CONTENT_EXTENT_KINDS), so it does not offer doc-part/envelope. Using content's ten changes that sentence in 7 pinned tests/golden; say if you want it as a separate entry.
+Checks so far (this module): format 0, architecture 0, coverage 0 (20 of 20), words 0, ownership 0 failures. impact.mjs names 86 modules / 1478 test files (content face is widely used); I'll run the direct users after the merge.
+
+## Completion (fix round 9, batch D: R4 amended, G167; K4985, K4986)
+
+**Cause**: `grammar.mjs` imported `checkContentExtent` and `legExtent` from content's core (`extent-core.mjs`, the eight text-chain kinds), so `checkLegExtentGrammar` refused a `doc-part` (footnote) citation C-2.8. **Why missed**: no inquiry-grammar test or corpus leg held a `doc-part`; content's tests exercised its own public face only. **Red first**: `checkLegExtentGrammar` on a footnote leg gave "extent kind 'doc-part' is not one of: document, pdf-page, …". **Platform check**: pure grammar, no platform; seam §10 footnote citation is control-plane's to re-run.
+
+**Entries applied**: (1) the import is from `content/extent.mjs`, the public face (ten kinds); with content's job 91 merged, a part-only `doc-part` leg passes too. (2) The unknown-kind repair sentence lists content's landed kinds (`CONTENT_EXTENT_KINDS` from content, not text-chain's eight): 13 golden strings and the pinned test (`grammar.test.mjs` 173) follow by replacing that one sentence; I did not regenerate the golden (no script exists), every other golden entry is byte-identical.
+**Tests**: `t51.test.mjs`, two added (R4 footnote/header/comment/part-only pass; controls: neither part nor ref refused, `doc-prt` refused as before); red seen before the change.
+**Requirement lines**: R4 is BOB's (K4986); the *(not yet met: T51)* marker is BOB's to lift, my tests name R4.
+**Deferred**: none. **Found in other modules**: case-checker `program.mjs` embeds the grammar and is stale (BOB regenerates); `rows.mjs` / `words-unreviewed.json` hold the old repair sentence's key text only in the stale form: no new localize id, the sentence is the same key with a new variable value.
+
+**Tests and checks run**
+- `node --test bio-plane/test/m/inquiry-grammar/*.test.mjs`: tests 87, pass 87, fail 0.
+- Users of the service, each fail 0: accepted-work 28, basis-version-grammar 33, basis-versions 182, leg-earning 57, citation 132, strength 182, reevaluation 163, and all 33 `inquiry` files.
+- `impact.mjs origin/tranche/T51 HEAD`: 87 modules, 1480 of 2686 test files (content's face); I ran the direct users above, not all.
+- format, architecture, coverage, words: 0 failures each (see output of this run); ownership: 0 failures.
+
+Size (session_01B4tHNxMTJamTy5UFQiCoZy): test runs 14, module lines 2050
+
+## J5 · COMPLETE
+
+R4 amended: leg extent judged through content's public face (ten kinds, doc-part admitted, part-only too after job 91); unknown-kind repair lists content's kinds, golden/test follow. Suite 87/87; users (accepted-work, basis-version-grammar, basis-versions, leg-earning, citation, strength, reevaluation, inquiry) all green; format, architecture, coverage, words, ownership 0 failures. Details in my record. Case-checker program.mjs stale (BOB regenerates); R4 marker BOB's to lift.
