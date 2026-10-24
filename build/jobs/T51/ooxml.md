@@ -1,6 +1,6 @@
 # ooxml (T51)
 
-**Status** · session_0189TCqWsfgZ58Dcm8TZihQh · depth 2 · COMPLETE · handled B7
+**Status** · session_012TKKHe5Adb9PswRVKrEcj8 · depth 2 · COMPLETE · handled B7
 
 ## J1 · REPORT
 
@@ -87,3 +87,15 @@ Deferred: none. Other modules: none. New files outside paths: none. Stale genera
 Tests: module 99/99; users green: office-readers 115, odf-reader+format-registry 117, csv-reader+doc-clean+provenance+attestation 301 (1 skipped), capture-sources+site-profiles 117; file-safety R24 words and reading-pipeline BUDGET-2024-APP memory (2) are the named inherited/PDF reds; acquisition R95 passes alone.
 Checks: format 0, architecture 0, coverage 38/38, ownership 0, words: no ooxml finding.
 Size (session_0189TCqWsfgZ58Dcm8TZihQh): test runs 14, module lines 2480
+
+## J7 · COMPLETE
+
+COMPLETE · B8 (R36 amended, G169, K4985).
+Cause: `sniffEncoding` (ooxml.mjs) sent any undeclared text that is not wholly valid UTF-8 to windows-1252, so UTF-8 with one stray byte read 'Å“uvre' for 'œuvre'. Fix: new `mostlyUtf8(b)`; such bytes stay UTF-8 (`assumed: true`, replacements counted) when valid multi-byte sequences number at least four times the invalid bytes (each byte outside a well-formed sequence counts one, a cut-off tail included); else windows-1252 as before.
+Why missed: the R36 detection was all-or-nothing, with no case of a single stray byte in a mostly-UTF-8 text.
+Red first: round9.test.mjs, test "R36 decodeText keeps undeclared UTF-8 with stray bytes ... (G169)" failed on the old source (windows-1252 against utf-8), now passes: stray 0xFF mid-text (replaced 1, other characters true), cut-off tail, boundary (4 sequences to 1 invalid byte is UTF-8, 3 is windows-1252); controls: real Latin-1 and 1 valid to 1 invalid stay windows-1252, declared encodings unchanged.
+Platform check: none (pure function; no platform figure applies).
+Deferred: none. Found in another module: none. Rows owed (words): none.
+Tests: ooxml 100/100. Users of decodeText run: format-registry 60/60; csv-reader, odf-reader and office-readers all test files green (the only failures listed were worker/child helper scripts my glob wrongly handed to the runner, not tests). `impact.mjs origin/tranche/T51 HEAD`: 130 of 176 modules, 2144 of 2684 test files (ooxml is a base module); I ran the direct decodeText users only.
+Checks (civicos-process): format 0 failures; architecture 0; coverage 0 (38 of 38 ids); ownership 0; words: no ooxml finding in run.mjs.
+Size (session_012TKKHe5Adb9PswRVKrEcj8): test runs 6, module lines 28

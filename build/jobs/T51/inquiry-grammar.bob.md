@@ -59,3 +59,7 @@ Mail with `--module inquiry-grammar`; record `build/jobs/T51/inquiry-grammar.md`
 ## B6 · ANSWER · re J4
 
 ANSWER J4 (BOB #282): (1) the unknown-kind repair: do it in this job (P8). R4 now says the repair lists content's kinds, the same ten, departing from the catalogue's byte identity for that one sentence (K4986, on the tranche): update the pinned tests and the golden to the new list, and keep every other finding byte-identical. (2) Content's job 91 is merging into tranche/T51 now; a CHANGE will tell you when it has: then merge the tranche (it carries R4's new text too), re-run, and COMPLETE.
+
+## B7 · CHANGE
+
+CHANGE (BOB #282, K4988): content's job 91 (the core carries doc-part; legExtent keeps extent_part) is merged into tranche/T51, with R4's new sentence (K4986). Merge the tranche into your branch, re-run, make the repair change of B6, run the checks, and COMPLETE.

@@ -324,6 +324,39 @@ test("R36 decodeText reads UTF-8 with or without a BOM, UTF-16 with or without a
   assert.deepEqual(decodeText(new Uint8Array(0), {}), { ok: true, text: "", encoding: "utf-8", assumed: true, replaced: 0, replaced_ratio: 0, disagree: [] });
 });
 
+test("R36 decodeText keeps undeclared UTF-8 with stray bytes as UTF-8 when its valid sequences number at least four times its invalid bytes, and reads real Latin-1 as windows-1252 (G169)", () => {
+  const body = "L'œuvre de l'été: résumé, naïve, café, Zoë";
+  const stray = (at, byte) => { const b = enc(body); return Uint8Array.from([...b.subarray(0, at), byte, ...b.subarray(at)]); };
+  // one stray byte in the middle: UTF-8, assumed, one replacement, every other character true
+  const mid = decodeText(stray(20, 0xff), { name: "u.txt" });
+  assert.equal(mid.ok, true);
+  assert.equal(mid.encoding, "utf-8");
+  assert.equal(mid.assumed, true);
+  assert.equal(mid.replaced, 1);
+  assert.ok(mid.text.includes("œuvre") && mid.text.includes("résumé") && mid.text.includes("Zoë"));
+  assert.equal(mid.text.replace("\ufffd", ""), body);
+  // a character cut off at the end is one invalid run: still UTF-8
+  const cut = Uint8Array.from([...enc(body), 0xc3]);
+  const tail = decodeText(cut, {});
+  assert.equal(tail.encoding, "utf-8");
+  assert.equal(tail.assumed, true);
+  assert.equal(tail.replaced, 1);
+  assert.ok(tail.text.startsWith(body));
+  // the boundary: exactly four valid sequences against one invalid byte is UTF-8; three is not
+  const four = Uint8Array.from([...enc("éééé"), 0xff]);
+  assert.equal(decodeText(four, {}).encoding, "utf-8");
+  assert.equal(decodeText(Uint8Array.from([...enc("ééé"), 0xff]), {}).encoding, "windows-1252");
+  // controls: real Latin-1 (no valid sequence), and one valid against one invalid, stay windows-1252
+  const latin = decodeText(latin1("Caf\xe9 r\xe9sum\xe9 na\xefve"), {});
+  assert.equal(latin.encoding, "windows-1252");
+  assert.equal(latin.assumed, true);
+  assert.equal(latin.replaced, 0);
+  assert.equal(decodeText(Uint8Array.from([...enc("é"), 0xff]), {}).encoding, "windows-1252");
+  // a declared encoding is unchanged
+  assert.equal(decodeText(stray(20, 0xff), { declared: "windows-1252" }).encoding, "windows-1252");
+  assert.equal(decodeText(stray(20, 0xff), { declared: "utf-8" }).encoding, "utf-8");
+});
+
 test("R36 decodeText reads windows-1252 and ISO-8859-x by declaration or by detection, and never leaves a replacement character for what its declared encoding decodes", () => {
   const cp1252 = latin1("Caf\xe9 r\xe9sum\xe9 \x80 \x93q\x94");
   const detected = decodeText(cp1252, { name: "l.txt" });
