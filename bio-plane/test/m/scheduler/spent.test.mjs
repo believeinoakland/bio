@@ -91,13 +91,36 @@ test("R28: a request that finds owed work with no alarm, or a spent one, arms it
     await s.onAlarm(st.alarm);
     assert.equal(ran.length, 1);
   }
-  const { c } = owed(NOW - 60e3);
+  const { c } = owed(NOW + 600e3);
   const { s, st } = world();
   st.alarm = NOW + 30e3;
   s.register("scheduler-test", c);
-  assert.equal(await s.heal(NOW), NOW + 30e3);
-  assert.equal(c.wakes, 0, "no consumer was asked");
+  assert.equal(await s.heal(NOW), NOW + 30e3, "a live alarm with no wake come yet is not disturbed");
   assert.deepEqual(sets(st), []);
+  assert.equal(c.ticks.length, 0, "no tick");
+});
+
+test("R28 (G159, K4980): an alarm set four hours ahead with a consumer's wake already come: one request's heal brings the alarm to now, runs no tick, and looks once in five seconds", async () => {
+  const { c, ran } = owed(NOW - 60e3);
+  const { s, st } = world();
+  st.alarm = NOW + 4 * HOUR;                       // the daily alarm; the due row was registered behind it
+  s.register("scheduler-test", c);
+  assert.equal(await s.heal(NOW), NOW, "brought forward to now, not to the past wake");
+  assert.deepEqual(sets(st), [NOW]);
+  assert.equal(c.ticks.length, 0, "heal runs no tick (R17)");
+  const looks = c.wakes;
+  assert.equal(await s.heal(NOW + 1000), null, "one look in five seconds");
+  assert.equal(c.wakes, looks, "the second request asked nothing");
+  await s.onAlarm(st.alarm);
+  assert.equal(ran.length, 1, "the alarm it set runs the owed row");
+  /* controls: a wake not yet come, or an alarm already due, is left alone */
+  for (const [alarm, wake] of [[NOW + 4 * HOUR, NOW + HOUR], [NOW, NOW - 60e3], [NOW - 30e3, NOW - 60e3]]) {
+    const w = world();
+    w.st.alarm = alarm;
+    w.s.register("scheduler-test", owed(wake).c);
+    await w.s.heal(NOW);
+    assert.deepEqual(sets(w.st), [], `alarm ${alarm - NOW} with wake ${wake - NOW} is kept`);
+  }
 });
 
 test("R28: health is stale when work has been owed five minutes with no firing completed in them, false otherwise, and records the last firing", async () => {
