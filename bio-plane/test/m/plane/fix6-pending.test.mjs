@@ -14,11 +14,13 @@ import { extractionOf } from "../../../src/extraction/index.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
 import { pendingOf, PENDING_KINDS } from "../../../src/plane/pending.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
-const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending ORDER BY registered_at, sha, kind`)];
-const stopped = localize("plane.pending.interrupted", "the reading did not finish; the object stopped");
+/* R97: the rows still held as work (owed, or ended for a stated reason); a finished row stays in the job table for its readers */
+const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending WHERE state <> 'finished' ORDER BY registered_at, sha, kind`)];
+/* R101 (fix round 9, G129c): "three interruptions end the whole read" is retired; a run that dies three times on the unit it was on (here the
+   whole: no page or piece) states that unit, which ends the row */
+const stopped = "PAGE_KILLED_READER";
 let began = () => {};
 const NEVER = () => { began(); return new Promise(() => {}); };
 const alarm = (x, at) => Promise.race([x.s.onAlarm(at), new Promise((r) => { began = () => r("killed"); })]);
@@ -137,12 +139,14 @@ test("R82 (G13): a reading answered `more` with a cursor is asked again at the n
   for (let i = 0; i < 3; i++) { await x.s.onAlarm(at); at += 1000; }
   assert.deepEqual(x.read.map((a) => a.detail), [{}, { cursor: "c1" }, { cursor: "c2" }], "each piece is asked with the cursor the last left");
   assert.equal(rows(x).length, 0, "ended with the last piece");
-  /* between pieces the row is owed and due, its tries cleared, its cursor kept */
-  const y = await world(undefined, { readAnswer: () => ({ ok: true, more: true, detail: { cursor: "c9" } }) });
+  /* between pieces the row is owed and due, its tries cleared, its cursor kept; each piece moves the cursor (R101's control: a row that
+     advances each tick is never ended by the no-progress rule) */
+  let n = 0;
+  const y = await world(undefined, { readAnswer: () => ({ ok: true, more: true, detail: { cursor: `c${++n}` } }) });
   await y.call(`/pendingadd?kind=reading&sha=${d}`);
   for (let i = 0, t = Date.now() + 1000; i < 40; i++, t += 1000) await y.s.onAlarm(t);
   const [r] = rows(y);
-  assert.deepEqual([r.attempts, r.final_why, JSON.parse(r.detail)], [0, null, { cursor: "c9" }], "forty pieces and it is still owed: no count or clock ends it");
+  assert.deepEqual([r.attempts, r.final_why, JSON.parse(r.detail)], [0, null, { cursor: "c40" }], "forty pieces and it is still owed: no count or clock ends it");
   assert.equal(y.read.length, 40);
 });
 
@@ -163,7 +167,7 @@ test("R82 (G13): one heavy piece for each tick across rows: two readings going o
   assert.equal(x.read.length, 6, "three pieces each");
 });
 
-test("R82 (G13): the interrupted-run accounting is kept across pieces: a piece that never returns is counted and asked again at the same cursor; a piece that moved the cursor clears the count; three at one cursor end it stated", async () => {
+test("R82 (G13): the interrupted-run accounting is kept across pieces: a piece that never returns is counted and asked again at the same cursor; a piece that moved the cursor clears the count; three at one cursor hand that cursor to the reader to step past (K4904)", async () => {
   const d = sha("a long text whose pieces are killed now and then");
   const script = [];
   const answer = () => script.shift()();
@@ -196,7 +200,11 @@ test("R82 (G13): the interrupted-run accounting is kept across pieces: a piece t
   }
   [r] = rows(x);
   assert.equal(r.interrupted, 3);
-  assert.equal(r.final_why, stopped, "three interruptions at one cursor end it, stated");
+  /* (fix round 9, K4904) a window killed three times is no end of the read: the reader is handed it as `killedCursor` and steps past it, stated */
+  assert.equal(r.final_why, null, "three interruptions at one cursor do not end it");
+  script.push(more("c3"));
+  await x.s.onAlarm((at += 3_600_000));
+  assert.equal(x.read[x.read.length - 1].killedCursor, "c2", "the cursor killed three times is handed to the reader to step past");
   /* control: a reading that never answers `more` is handed no cursor but the empty one */
   const y = await world(undefined, { readAnswer: () => ({ ok: true, read: true }) });
   await y.call(`/pendingadd?kind=reading&sha=${d}`);
@@ -209,7 +217,8 @@ test("R83 (G8, G13): the plane hands extraction the ledger's `owedLater` at cons
   const d = sha("a reading extraction owes at start");
   const x = await store({ before: (ctx) => { extractionOf(ctx).registerOwe = (fn) => given.push(fn); } });
   assert.equal(given.length, 1, "handed once, at construction");
-  assert.deepEqual(await given[0]({ kind: "reading", sha: d }), { ok: true });
+  /* R98 (fix round 9; K4898 (1)): the hook IS the registrar, synchronous, answering the row's state */
+  assert.deepEqual(given[0]({ kind: "reading", sha: d }), { ok: true, existed: false, state: "queued" });
   assert.deepEqual(pendingOf(x.ctx).list().map((r) => [r.sha, r.kind, r.state]), [[d, "reading", "owed"]]);
   /* control: where extraction has no `registerOwe` the object is built and owes nothing */
   const y = await store({});

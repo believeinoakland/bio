@@ -713,10 +713,10 @@ export class Capture {
     }
     /* END DEC-49 REGION is-upload-stated */
     if (name != null && (typeof name !== "string" || [...name].length > UPLOAD_NAME_MAX))
-      return Capture.#missingArgument(op, "name", `a string of at most ${UPLOAD_NAME_MAX} characters`, name);
+      return Capture.#missingArgument(op, "name", localize("capture.index.shape_string_max", "a string of at most {max} characters", { max: String(UPLOAD_NAME_MAX) }), name);
     /* R92: the media type the member's browser declared, a string of at most 255 characters when given. */
     if (type != null && (typeof type !== "string" || [...type].length > UPLOAD_TYPE_MAX))
-      return Capture.#missingArgument(op, "type", `a string of at most ${UPLOAD_TYPE_MAX} characters`, type);
+      return Capture.#missingArgument(op, "type", localize("capture.index.shape_string_max", "a string of at most {max} characters", { max: String(UPLOAD_TYPE_MAX) }), type);
     return null;
   }
 
@@ -1061,9 +1061,9 @@ export class Capture {
     const fenced = Capture.#fence({ by, statement, name, type, op: "captureuploadbegin" });
     if (fenced) return fenced;
     if (typeof sha256 !== "string" || !HEX64.test(sha256))
-      return Capture.#missingArgument("captureuploadbegin", "sha256", "64 lowercase hex characters, the digest of the whole file", sha256);
+      return Capture.#missingArgument("captureuploadbegin", "sha256", localize("capture.index.shape_sha256_whole", "64 lowercase hex characters, the digest of the whole file"), sha256);
     if (!Number.isSafeInteger(bytes) || bytes < 1)
-      return Capture.#missingArgument("captureuploadbegin", "bytes", "the file's size in bytes, a whole number from 1", bytes);
+      return Capture.#missingArgument("captureuploadbegin", "bytes", localize("capture.index.shape_bytes", "the file's size in bytes, a whole number from 1"), bytes);
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     if (!ev) return Capture.#storageAbsent();
     /* R111: the size is judged before any part is accepted. A whole may be larger than one request may carry, so only the capture ceiling binds it. */
@@ -1113,11 +1113,11 @@ export class Capture {
     try {
       const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureuploadpart" });
       if (fenced) return await stop(fenced);
-      if (typeof upload !== "string" || !upload) return await stop(Capture.#missingArgument("captureuploadpart", "upload", "the upload's name, as the begin answered it", upload));
+      if (typeof upload !== "string" || !upload) return await stop(Capture.#missingArgument("captureuploadpart", "upload", localize("capture.index.shape_upload_name", "the upload's name, as the begin answered it"), upload));
       if (!Number.isSafeInteger(index) || index < 0)
-        return await stop(Capture.#missingArgument("captureuploadpart", "index", "a whole number from 0, the part's place in the file", index));
+        return await stop(Capture.#missingArgument("captureuploadpart", "index", localize("capture.index.shape_part_index", "a whole number from 0, the part's place in the file"), index));
       if (typeof sha256 !== "string" || !HEX64.test(sha256))
-        return await stop(Capture.#missingArgument("captureuploadpart", "sha256", "64 lowercase hex characters, the digest of this part", sha256));
+        return await stop(Capture.#missingArgument("captureuploadpart", "sha256", localize("capture.index.shape_sha256_part", "64 lowercase hex characters, the digest of this part"), sha256));
       const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
       const got = await this.#partedRow(upload, by, bucket, keyOf);
       if (got.refusal) return await stop(got.refusal);
@@ -1126,7 +1126,7 @@ export class Capture {
         return await stop({ ok: false, reason: "UPLOAD_NOT_OPEN", status: 409,
                             detail: localize("capture.index.upload_not_open", "this upload has no part left to put; complete it") });
       if (index >= count)
-        return await stop(Capture.#missingArgument("captureuploadpart", "index", `a whole number from 0 to ${count - 1}`, index));
+        return await stop(Capture.#missingArgument("captureuploadpart", "index", localize("capture.index.shape_part_index_last", "a whole number from 0 to {last}", { last: String(count - 1) }), index));
       if (index < row.parts.length) {
         if (row.parts[index].sha256 === sha256) return await stop({ ok: true, existed: true, index, next: row.parts.length, parts: count });
         return await stop({ ok: false, reason: "PART_CONFLICT", status: 409, index, next: row.parts.length,
@@ -1197,10 +1197,10 @@ export class Capture {
   async completePartedUpload({ upload = null, parts = null, by, within = null, at = null, registerJob = null, armJobs = null, key = null } = {}) {
     const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureuploadcomplete" });
     if (fenced) return fenced;
-    if (typeof upload !== "string" || !upload) return Capture.#missingArgument("captureuploadcomplete", "upload", "the upload's name, as the begin answered it", upload);
+    if (typeof upload !== "string" || !upload) return Capture.#missingArgument("captureuploadcomplete", "upload", localize("capture.index.shape_upload_name", "the upload's name, as the begin answered it"), upload);
     const named = Array.isArray(parts) ? parts.map((p) => (p && typeof p === "object" ? p.sha256 : p)) : null;
     if (!named || !named.every((d) => typeof d === "string" && HEX64.test(d)))
-      return Capture.#missingArgument("captureuploadcomplete", "parts", "the list of the parts' digests, in order, each 64 lowercase hex characters", parts);
+      return Capture.#missingArgument("captureuploadcomplete", "parts", localize("capture.index.shape_parts_digests", "the list of the parts' digests, in order, each 64 lowercase hex characters"), parts);
     const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
     const got = await this.#partedRow(upload, by, bucket, keyOf);
     if (got.refusal) return got.refusal;
@@ -1261,7 +1261,7 @@ export class Capture {
   async abortPartedUpload({ upload = null, by, key = null } = {}) {
     const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureuploadabort" });
     if (fenced) return fenced;
-    if (typeof upload !== "string" || !upload) return Capture.#missingArgument("captureuploadabort", "upload", "the upload's name, as the begin answered it", upload);
+    if (typeof upload !== "string" || !upload) return Capture.#missingArgument("captureuploadabort", "upload", localize("capture.index.shape_upload_name", "the upload's name, as the begin answered it"), upload);
     const row = typeof upload === "string" && upload ? this.#one(`SELECT * FROM parted_uploads WHERE upload = ?`, upload) : null;
     if (!row || memberIdOf(row.by) !== memberIdOf(by)) return { ok: true, aborted: false };
     if (!(await this.#partedDrop(row, this.#partedBucket(), this.#partedKey(key))))

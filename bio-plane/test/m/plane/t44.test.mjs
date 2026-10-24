@@ -90,7 +90,8 @@ test("R36 (T44; N869; DEC-191 (5)): a progressive JPEG's page is answered NO_PAG
   const x = await pathFor(PROGRESSIVE);
   const r = await x.ask([0]);
   assert.deepEqual(r, { ok: false, reason: "NO_PAGE_RENDERED",
-                        refused: [{ page: 0, reason: "UNSUPPORTED_JPEG_PROCESS", process: own.process }] });
+                        refused: [{ page: 0, reason: "UNSUPPORTED_JPEG_PROCESS", process: own.process }],
+                        asked: [0], sent: [], owed: [] }, "R106: the pages asked and sent are stated");
   assert.match(r.refused[0].process, /progressive/);
   assert.equal(x.worker.seen.length, 0, "nothing posted");
   assert.ok(!JSON.stringify(r).includes(SENTINEL));
@@ -101,7 +102,8 @@ test("R36 (T44; N869; DEC-191 (5)): an oversized frame (a JPEG over PICTURE_SOUR
   const own = await renderPictureToPixels(HUGE, 0, { maxEdge: 1568, grey: true });
   assert.equal(own.reason, "IMAGE_TOO_LARGE", JSON.stringify(own));
   const x = await pathFor(HUGE);
-  assert.deepEqual(await x.ask([0]), { ok: false, reason: "NO_PAGE_RENDERED", refused: [{ page: 0, reason: "IMAGE_TOO_LARGE" }] });
+  assert.deepEqual(await x.ask([0]), { ok: false, reason: "NO_PAGE_RENDERED", refused: [{ page: 0, reason: "IMAGE_TOO_LARGE" }],
+                                         asked: [0], sent: [], owed: [] });
   assert.equal(x.worker.seen.length, 0);
 });
 
@@ -109,7 +111,8 @@ test("R36 (T44; N869): a PDF page that paints no image is refused NOT_IMAGE_ONLY
   const own = await renderPageToPixels(VECTOR, 0, { decodeDct: true });
   assert.equal(own.reason, "NOT_IMAGE_ONLY", JSON.stringify(own));
   const x = await pathFor(VECTOR);
-  assert.deepEqual(await x.ask([0]), { ok: false, reason: "NO_PAGE_RENDERED", refused: [{ page: 0, reason: "NOT_IMAGE_ONLY" }] });
+  assert.deepEqual(await x.ask([0]), { ok: false, reason: "NO_PAGE_RENDERED", refused: [{ page: 0, reason: "NOT_IMAGE_ONLY" }],
+                                         asked: [0], sent: [], owed: [] });
   assert.equal(x.worker.seen.length, 0);
 });
 
@@ -125,6 +128,8 @@ test("R36 (T44) negative control: a rendered page is posted, and the answer carr
   assert.equal(ry.ok, true);
   assert.equal(Object.hasOwn(ry, "refused"), false);
   assert.deepEqual(y.worker.seen[0].pages.map((p) => p.page), [0]);
+  /* R106: the page not sent is named unread, never dropped silently */
+  assert.deepEqual([ry.asked, ry.sent, ry.unread.map((u) => u.page)], [[0, 1], [0], [1]]);
 });
 
 test("R36 (T44; N869): `refused` holds one entry per asked page not sent, in ascending order: the renderer's own key, DECODE_FAILED for a renderer that throws or answers no PNG, IMAGE_TOO_LARGE for a PNG over TRANSCRIBE_IMAGE_MAX_BYTES, `process` only when the renderer's detail names one", async () => {

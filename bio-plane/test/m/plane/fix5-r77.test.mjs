@@ -11,14 +11,16 @@ import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { pendingOf, PENDING_BATCH } from "../../../src/plane/pending.mjs";
 import { DECLARED_OPS } from "../../../src/plane/declared.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
-const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending ORDER BY registered_at, sha, kind`)];
+/* R97: the rows still held as work (owed, or ended for a stated reason); a finished row stays in the job table for its readers */
+const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending WHERE state <> 'finished' ORDER BY registered_at, sha, kind`)];
 /* a run that never returns: it tells the test it has begun, then waits for ever (the isolate is gone) */
 let began = () => {};
 const NEVER = () => { began(); return new Promise(() => {}); };
-const stopped = localize("plane.pending.interrupted", "the reading did not finish; the object stopped");
+/* R101 (fix round 9, G129c): "three interruptions end the whole read" is retired; a run that dies three times on the unit it was on (here the
+   whole: no page or piece) states that unit, which ends the row */
+const stopped = "PAGE_KILLED_READER";
 
 /* an object over `db` whose `readHeld` is `answer(a)`, a log of what it was asked */
 async function world(db, answer) {

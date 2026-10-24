@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_011em5NMVJqsV8WDNmpEHRAd · depth 2 · COMPLETE · handled B78
+**Status** · session_01U3Cn7msFQfwLaBjAPpmVKZ · depth 2 · COMPLETE · handled B83
 
 ## Record (PLANE #41, T51-125)
 
@@ -869,3 +869,74 @@ COMPLETE (plane-1, PLANE #56): G123a (harness side, caps re-pointed to byte-ledg
 ## J54 · COMPLETE
 
 COMPLETE again (plane-1, re B76-B78). B76: caps follow byte-ledger `capFor` (files named in my record and in J53). B78 (1): the harness xlsx is sheetgen's, marks in a non-header cell, search/cell truth from its truth; (2) g44-gen's ZIP writer is make-zip's `zipChunks64`; xlsx-gen.mjs deleted. REPORT (other module, xlsx reader): a sheetgen 200,000-row x 3-col xlsx (seed hx200000, 4.88 MB) is read stated/final "text undetermined (1 undecodable region)", no unit written; 150,000 rows reads whole. `g41-shape`'s 200,000-row xlsx case is therefore red by name (R84); every other plane test in the files I touched passes. Details in my record.
+
+## J55 · QUESTION
+
+PLANE #57 (job 37), three readings; I carry on with each, none blocks me.
+
+1. **How extraction receives the registrar (2c item 1: "extraction receives it as `opts.registerJob`").** Extraction-1 (job 28) is not merged, so I cannot read which `opts` it means. My reading: the plane hands it BOTH ways, so either reading of job 28 finds it: (a) `extractionOf(ctx, {..., registerJob})` at construction (a function calling the ledger's `registerJob`, asked lazily), and (b) `registerJob` (and `armJobs`) in every `readHeld({...})` call the ledger makes; the existing `registerOwe` hook stays wired and now writes the same job table (its `owe({kind, sha, ...})` is `registerJob` of that kind, R98's "retired as a separate one" by being the same write). Please confirm with job 28 which one it reads, or rule one.
+
+2. **`watchdog_ran` (G94, R103) is scheduler's (`watch` records `ran`, scheduler R29; job 33), and job 33 has no round-9 START yet.** My reading: the plane adds `watchdog_ran` and `running_since` to `WATCHDOG_FIELDS` for the administrator only, read from `health()` (null until the scheduler answers it); my unit test of the route uses a scripted `health`; the test through the real scheduler (`watchdog_ran` within the test's bracket for a 26-minute-late fire) is written now and stays RED BY NAME until job 33 merges (R-SEAM). The Store passes `at` (the slot) to `watch(at)` as today; no plane clock invents `ran`.
+
+3. **The object-call count (K4848 (2)).** The object cannot see the Worker's calls to it, so the entry is made in the plane's Worker entry (`plane/index.mjs`, mine): each request's `env.STORE` is wrapped so its stubs' `fetch` calls are counted (the counting door's `do` count; RPC methods are not counted, as `doCalls` does not count them), and `object-calls;dur=<n>` is appended to the answer's `server-timing`, absent when the request made no call (never 0). Calls after the answer (`waitUntil`) are not counted, as the counting door does not.
+
+## Record (PLANE #57, fix round 9, job 37: plane-2, the job table)
+
+**Entries applied** (B79; B80 K4898; B81 K4899; B82 K4904; B83 K4905)
+- **R97 (G126, G126g, G126j, G129d, G127c)** `keeps_pending` is the job table: additive columns `state` (`queued`, `fetching`, `reading`, `partial`, `refused`, `finished`, `final`), `verdict`, `cursor`, `written`, `skipped`, `owed`, `failed`, `failed_why`, `last_progress_at`, `rate_per_s`, `carrier`, `reader_version`, `priority`, `ended_at`, `member`; tables `job_unit_attempts` and `job_batches` (`landBatch`, once by (sha, kind, batch)); kinds `scan`, `safe_view`, `grade`, `ingest` added (owner from the composition's `workers`, else `NO_OWNER`, owed). An ended row stays (`finished`/`refused`/`final`) for its readers; the member's `owedwork` list is unchanged in shape (`state` owed/final, plus `job_state` and the counters). A row ends only when its counters say nothing is owed (G126j); an `ocr` pass that read nothing (`UNREADABLE`) is no end (G129d); a stated end keeps the refused digest, its holder and `whole`/`part` in `failed_why` (G127c). Old ledger: columns added, a stated end becomes `final`, the rest `queued`. All three new tables declared to purge by the plane (R9).
+- **R98** one registrar `registerJob` (synchronous, never throws, idempotent, re-arm keeps counters, `raised` never lowered, a `verdict.ok:false` registers `refused`), `armJobs`; `capture.registerJob`/`armJobs` wired beside `keepLater`; extraction's `registerOwe` hook IS the registrar and every `readHeld` the ledger makes carries `registerJob`/`armJobs` (K4898 (1)); `readingsEnded({after, limit})` handed to notice-producers.
+- **R99 (G126i)** `wrangler.jsonc` `limits.cpu_ms` 300000 = `PLATFORM_FIGURES.cpu_ms` (source K4838, named in the comment).
+- **R100** memory stated as a total: `r9-memory.test.mjs` (the largest CSV the alpha takes held inside `capFor(N)`; a leak inside one tick fails the same judge; no "above idle" figure in the requirements).
+- **R101 (G129a-c, G129b at pending.mjs's end clause)** no-progress: a `more` that moved neither cursor nor counter ends `final` `NO_PROGRESS`; a transient answer (`transient`, `failure: "transient"`) is tried again at any tick, never the end; poison: each run stamps its unit (`p<page>`, `c<cursor>`, `whole`) before the reader runs, a dead run counts one kill, a member's `killed`/`ocr_killed` pages count one each; a page killed twice is handed in `halfBudgetPages`, three times in `killedPages`; a window cursor killed three times is handed as `killedCursor` (K4904) and the row goes on; only the whole of a cursor-less read ends `final` `PAGE_KILLED_READER`. `PENDING_INTERRUPTED_MAX` and its sentence (`plane.pending.interrupted`) retired.
+- **R102 (G93)** `Store.fetch` calls `scheduler.heal(now)` before the dispatch, caught.
+- **R103 (G94)** `WATCHDOG_FIELDS` + `watchdog_ran`, `running_since`, administrator only.
+- **R104** handlers idempotent on re-entry (the row's cursor, the unit stamp, `landBatch`), tested.
+- **R105 (G123g)** per-run lag meter (`max_stretch_ms`), `rows_read`/`rows_written` (platform cursor counts, NULL when unmeasured), `units`, on each `last` of `owedwork&sha=`; the Worker entry appends `object-calls;dur=<n>` (stub `fetch` calls of the request, absent when none; K4848, K4898 (3)).
+- **R106 (G126e)** the transcriber reads by `acquisition.readRange`, sizes from the store's record (head, else the register's parts), loads nothing over `TRANSCRIBE_LOAD_MAX` (see REPORT), owes left pages as an `ocr` row, states `asked`, `sent`, `owed` and names unread pages (`refused` on NO_PAGE_RENDERED as T44 had it; `unread` on a posted answer).
+- **G129e** the unpack row's and the drain's `op=unpack` carry the archive's `project` when given.
+- **R84 (K4855)** `g41-shape`: 150,000-row xlsx read whole; 200,000-row xlsx refused, final in one tick, 42.66 MiB and 32.00 MiB stated; the later-tick bar (`laterTickBytes`, 5 MiB, J-5) seen red against a whole-file re-read. A due `keep` is the tick's heavy row before its reading.
+- **K4899** `capture.evidenceKey = (d) => <namespace>/captures/<d>`; through the Store a parted begin answers `ok` with its parts.
+- Tests re-pinned to the amended requirements: `fix4-r75`, `fix4b-r77`, `fix4b-r77-owners`, `fix5-r77`, `fix6-pending` (owed rows exclude `finished`; R101's reason and `killedCursor`), `l77-size-child`, `shape/harness.mjs` (same), `watchdog` (seven fields; the frame's one look, R102), `worker` (`fetch` keeps the door's `limits`), `t42`/`t44` (R106's fields), `r8-heal-door` (the setup's own look of five seconds waited out by the test's clock).
+
+**The four fields per cause**
+- G126 / G126g / G126j / G129d / G127c: (1) `pending.mjs:179, 206-207, 261` (round-8 numbering: an end on `read`/`READING_HELD` whatever was owed, the `ocr` row ended on any `ok`, no registrar, no detail on a stated end); (2) tests passed a hand-written hook and ended rows by count; gap: `r9-jobs` R97/R98 tests on the real table; (3) red first on the merged tip: `SyntaxError: The requested module '../../../src/plane/pending.mjs' does not provide an export named 'JOB_KINDS'` → `not ok 1 - test/m/plane/r9-jobs.test.mjs`; green: r9-jobs 29/29; (4) L (unit) and the seam's section 11 (control-plane 43).
+- G129a-c: (1) `pending.mjs:63, 193-202` (`PENDING_INTERRUPTED_MAX`), `settle`'s `more` with an unmoved cursor retried for ever; (2) no `killPage` fault, first-tick tests; (3) same red line; green: the six R101 tests (300-page scan, page 150 stated, 299 read; NO_PROGRESS; password in one tick; transient at tick 3); (4) L.
+- G93: (1) `heal` had no caller (`scheduler/index.mjs:684`); (2) no request through the door then asked the alarm; (3) red on the tip: `✖ R102 G93 L: a member's ordinary read (op=whoami) re-arms a lost alarm as well`; green 4/4 (workerd); (4) L.
+- G94: (1) `WATCHDOG_FIELDS` (`pending.mjs:388`) withheld `running_since`; `watchdog_ran` is scheduler's (merged K4905); (2) only five fields' presence was asked; (3) red: `✖ R103 watchdogRan G94 ... watchdog_ran undefined` before job 33; green after the merge; (4) L.
+- G123g: (1) no instrument in the object (`pending.mjs:89, 133-137`); (2) the G82 L run asserted `whoami` only; (3) red on the tip: `✖ R105 G123g L: the ledger's last run of a 12 MB text ... states max_stretch_ms, rows_read, rows_written and units` and `✖ R105 G123g L: each route of the wave states its object-call count in Server-Timing`; green r8-lag 2/2, r8-wave 3/3 (alone; worst p95 443 ms, reported); (4) L.
+- G126e: (1) `plane/transcribe.mjs:64` loaded the whole object and cut to 8 pages silently; (2) no test of the press at size; (3) red: `SyntaxError: ... transcribe.mjs' does not provide an export named 'OWED'` → `not ok 2 - test/m/plane/t42.test.mjs`; green t42 20/20, t44 6/6; (4) L.
+- G126i: (1) `wrangler.jsonc:175` set `subrequests` only; (2) no test read the limit; (3) red: R99's test (`cpu_ms undefined`) before the edit; green; (4) P is BOB's (the deployed value).
+- G129e (plane's piece): (1) `plane/unpack.mjs:83`, `pending.mjs:261` sent `archiveSha` alone; (2) no fault in unpack; (3)/(4): carried by the seam's section 6 (control-plane 38) with acquisition's merged fix; the plane passes `project` when its row or event names it.
+
+**Deferred:** none.
+
+**Found in other modules (REPORT J56)**
+- `READ_BOUNDS` has no row for the inline ceiling G126e names ("none loads a PDF over 2 MB in a request"): proposed row `pdf.request_bytes` {standard 2 MiB, alpha 2 MiB, protective 2 MiB}, key `limit.pdf.request_bytes`; `transcribe.mjs` quotes it by `boundOf` and falls back to 2 MiB marked "proposed; BOB records" until it exists (control-plane's `READING_DEFER_PDF_BYTES` holds the same figure unexported).
+- record-core's `BOOKKEEPING_TABLES` (its R91) lacks `job_unit_attempts` and `job_batches`, which a tick writes: `writeCount()` moves on a ledger tick.
+- `r8-headofline` "R80 G91 L: ... never answers an alarm_at in the past" is red on the tip before and after this job, with scheduler 33 and file-safety merged: during a 12 s scan held past the firing's budget, `getAlarm()` answers a past wake for many seconds (the firing's reconcile, not a plane arm: the heal frame does not look during a firing). Scheduler's to place.
+- extraction's suite: 7 reds (`g40` 2, `g41` 3, `n26` 1, `r82` 1), identical on the merged tip without this change (job 28 open).
+- Proposed requirement wording (BOB writes): R101 add "a window its cursor names, killed three times, is handed to the reader as `killedCursor` and stepped past (K4904); only a read with no cursor ends stated"; R106 "a posted answer names the pages left unread in `unread`, the NO_PAGE_RENDERED answer in `refused` (T44)".
+
+**Stale generated artifacts:** `bio-plane/src/setup-words/rows.mjs` (the retired `plane.pending.interrupted` row), `bio-plane/dist/bio-plane.bundled.mjs`.
+**Words owed (T52):** none new; DEC-417's "three interruptions" sentence retired (`plane.pending.interrupted`), a HANDOFF for UX-DESIGN.
+**New files outside my paths:** none (new tests under `test/m/plane/`: `r9-jobs.test.mjs`, `r9-memory.test.mjs`).
+
+**Tests and checks**
+- Plane suite on the merged tree (scheduler 33 in), concurrency 2: tests 500, pass 496, fail 4: `release` R24 and `l77-size` R77 (inherited, accepted), `r8-headofline` alarm_at (REPORT above), `g41-shape` csvmax (the keep order, fixed after: `g41-shape` alone 11/11).
+- Re-run alone after the last fix: g41-shape 11/11, r9-jobs 29/29, fix4-r75 7/7, fix4b-r77 8/8, fix5-r77 7/7, fix6-pending 10/10, r8-heal-door 4/4, r8-lag 2/2, r8-wave 3/3, r9-memory 3/3, t42 20/20, t44 6/6, watchdog 10/10.
+- Users (impact set, the modules the change touches): capture 312/0, doorbell 97/0, acquisition 321/0, scheduler 163/0, notice-producers 143/0, record-core 207/0, extraction 321/7 (identical on the tip).
+- Checks: format 0, architecture 0, coverage 106 of 106, words (plane) 0, ownership 0 failures; `run.mjs` whole product: no failure names plane.
+
+Size (session_01U3Cn7msFQfwLaBjAPpmVKZ): test runs 38, module lines 3733
+
+## J56 · REPORT
+
+PLANE #57 (job 37), four findings outside my module (each in my record, "Found in other modules"):
+1. **READ_BOUNDS (runtime-limits), a ceiling with no row (K4842 (1)).** G126e's inline ceiling ("none loads a PDF over 2 MB in a request"), which the transcriber now keeps: kind `pdf`, name `request_bytes`, standard 2 MiB, alpha 2 MiB, protective 2 MiB, key `limit.pdf.request_bytes`. `plane/transcribe.mjs` quotes it by `boundOf("pdf", "request_bytes")` and falls back to 2 MiB marked "proposed; BOB records" until the row exists (control-plane's unexported `READING_DEFER_PDF_BYTES` holds the same figure).
+2. **record-core R91's `BOOKKEEPING_TABLES`** lacks the job table's `job_unit_attempts` and `job_batches`, which every ledger tick writes: `writeCount()` moves on a tick. A requirement change of record-core's.
+3. **`r8-headofline` "R80 G91 L: ... never answers an alarm_at in the past"** is red on the tip before and after this job, with scheduler 33 and file-safety merged: during a 12 s scan held past the firing's budget, `getAlarm()` answers one past wake for many seconds (e.g. alarm 1792841480751 against polls at +2.1 s ... +6 s). Not a plane arm: the heal frame does not look during a firing and the ledger arms only on registration. The scheduler's reconcile at the budget's end with a consumer in flight looks like the setter; scheduler's to place. The other two tests of the file are green.
+4. **extraction**: 7 reds (g40 2, g41 3, n26 1, r82 1), identical on the merged tip without this job (job 28 open).
+
+## J57 · COMPLETE
+
+COMPLETE (PLANE #57, job 37, B79-B83): the job table and its one registrar (R97, R98), cpu_ms (R99), memory as a total (R100), no-progress and poison rules with killedCursor (R101, K4904), the heal frame (R102), the watchdog's fields (R103, green with scheduler 33), idempotent handlers (R104), the instruments and object-call count (R105), the transcriber by ranges (R106), G129e's project, R84's split and later-tick bar (K4855), capture.evidenceKey (K4899). Plane suite 496/500 on the merged tree (R24, R77 inherited; r8-headofline alarm_at REPORTED J56; csvmax fixed after, 11/11 alone); users green but extraction's 7 (identical on the tip). format, architecture, coverage 106/106, words, ownership: 0 failures. Record: build/jobs/T51/plane.md, section PLANE #57. Size (session_01U3Cn7msFQfwLaBjAPpmVKZ): test runs 38, module lines 3733

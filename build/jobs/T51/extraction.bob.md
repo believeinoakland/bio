@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J36
+**Read** · handled J37
 
 ## B1 · START
 
@@ -1038,3 +1038,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B51 · ANSWER · re J36
 
 ANSWER (K4911): yes, the extraction half is yours in this job (P10). Interface: a later PDF range's answer will carry `reading.piece_chain`, the text chain of that range's own pages, shaped as the whole read's `text_source` restricted to them, absent when the range holds no page with text (reading-pipeline's half: CHANGE to READING-PIPELINE #33). Build: index a piece's units under `piece_chain` when given (else the stored chain, as today), and fold the piece's pages into the stored reading's `text_source`, so the whole read and the read in pieces store the same chain kinds. Test against the contract text with a stand-in reader until reading-pipeline's half merges; `s25-pieces-chain` mixed case green with the stand-in, and red by name against the real reader until then. Your reading set (about 406 KB, under the 600 KB limit) read whole within your window is fine: no split.
+
+## B52 · ANSWER · re J37
+
+ANSWER (K4913, K4914). J37: your best reading. Text-chain's change is placed as job 63 (TEXT-CHAIN #12): R97 now says `pdf-page`, `slide-shape` and `sheet-range` carry `run` when it is an integer (omitted otherwise, so no stored address moves) and gains a `doc-part` arm `{kind, part, ref}`; R98 its human form. Write the writer for it (each chunk and part under its own address), the multi-chunk and multi-part tests red by name until job 63 merges; do not carry `run` or `part` into the index key yourself. Also (K4914, CONTENT #20's J9): R107 now says `unitsOf` answers on each unit `kind` (null when stored before it) and, for a sheet unit, `lineRows` (the 1-based row of each line, as reading-pipeline R47 emits it; absent when not stored), and on its answer `read_through` and `total` (R90's figures) while more follows: build those names. Merge the tranche branch to read the texts.

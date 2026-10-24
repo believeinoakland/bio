@@ -26,7 +26,8 @@ import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { CIVICSMITH_TEST_SET } from "../../../src/run-rules/index.mjs";
 import { assistantGateOf } from "../../../src/plane/ask.mjs";
-import { transcriberOf, renderPages, TRANSCRIBE_PAGES_MAX, TRANSCRIBE_IMAGE_MAX_BYTES } from "../../../src/plane/transcribe.mjs";
+import { transcriberOf, renderPages, TRANSCRIBE_PAGES_MAX, TRANSCRIBE_IMAGE_MAX_BYTES, TRANSCRIBE_LOAD_MAX, PAGES_MAX, OWED } from "../../../src/plane/transcribe.mjs";
+import { pendingOf } from "../../../src/plane/pending.mjs";
 import { publicOp, gatedOp } from "../../../src/plane/door.mjs";
 import * as AGENT_WORKER_OPS from "../../../../agent-worker/src/ops.mjs";
 import { renderPageToPixels } from "../../../../pdf-worker/src/pagepixels.mjs";
@@ -393,7 +394,8 @@ test("R36 (K2611): the pages are rendered one at a time in ascending order, at m
   const r = await transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", at: "2026-10-11T06:00:00Z" })
     .transcribe({ account: { ok: true, kind: "apikey", level: "member", key: SENTINEL }, capture_sha: d, pages: [5, 6] });
   assert.deepEqual(r, { ok: false, reason: "NO_PAGE_RENDERED", refused: [{ page: 5, reason: "NO_SUCH_PAGE" },
-                                                                     { page: 6, reason: "NO_SUCH_PAGE" }] }, "K2684 (2); T44's `refused`");
+                                                                     { page: 6, reason: "NO_SUCH_PAGE" }],
+                        asked: [5, 6], sent: [], owed: [] }, "K2684 (2); T44's `refused`; R106: the pages asked and sent are stated");
   assert.equal(worker.seen.length, 0);
   /* K2684 (2): the capture's bytes absent from the evidence store: EVIDENCE_ABSENT, nothing posted */
   const gone = await transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", at: "2026-10-11T06:00:00Z" })
@@ -515,4 +517,45 @@ test("R6 (control-plane R17; CONTROL-PLANE #29 J1, B3): the gated hook stamps an
   assert.ok(aff.length > 0 && aff.every((v) => v === "member:ann"), JSON.stringify(aff));
   /* negative control: a binding class is stamped as its class, never a principal */
   assert.deepEqual(await run("pdfstructure", "admin", null), ["class:admin"]);
+});
+
+/* ---- R106 (fix round 9, G126e; K4835): the transcriber reads by ranges and names what it left ---- */
+
+test("R106 G126e: on a 24 MiB PDF and a 300-page scan the press loads no object in the request (no get of the evidence store at all), owes every asked page as a job row, and names the pages asked, sent (none) and owed", async () => {
+  const worker = agentWorker();
+  const x = await plane({ worker });
+  for (const [what, bytes, pages] of [["a 24 MiB PDF", 24 * 1048576, [0, 1, 2]], ["a 300-page scan", 3 * 1048576, Array.from({ length: 300 }, (_, i) => i)]]) {
+    const big = new Uint8Array(bytes); big.set(SCAN);
+    const d = await hold(x.evidence, big);
+    assert.ok(big.length > TRANSCRIBE_LOAD_MAX, `${what} is over the inline ceiling`);
+    const gets = x.evidence.calls.filter((c) => c[0] === "get").length;
+    const r = await transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", at: "2026-10-24T06:00:00Z" })
+      .transcribe({ account: { ok: true, kind: "apikey", level: "member", key: SENTINEL }, capture_sha: d, pages });
+    assert.equal(x.evidence.calls.filter((c) => c[0] === "get").length, gets, `${what}: the object is not loaded in the request`);
+    assert.deepEqual([r.ok, r.reason, r.asked, r.sent, r.owed, r.size, r.limit], [false, "NO_PAGE_RENDERED", pages, [], pages, big.length, TRANSCRIBE_LOAD_MAX], what);
+    assert.deepEqual(r.refused, pages.map((page) => ({ page, reason: OWED })), `${what}: each page named`);
+    const row = pendingOf(x.ctx).jobRow({ sha: d, kind: "ocr" });
+    assert.deepEqual([row.state, row.owed, row.detail.pages], ["queued", pages.length, pages], `${what}: what is left is owed as a job row`);
+    const said = await x.call(`/owedwork?sha=${d}`);
+    assert.deepEqual(said.owed.map((e) => [e.kind, e.state]), [["ocr", "owed"]], `${what}: owedwork lists what is left`);
+  }
+  assert.equal(worker.seen.length, 0, "nothing posted");
+});
+
+test("R106 (control): a 3-page file under the ceiling is read in the request by ranges as before; the answer names the pages filled; a page asked beyond TRANSCRIBE_PAGES_MAX is named unread and owed, never dropped", async () => {
+  const worker = agentWorker();
+  const x = await plane({ worker });
+  const d = await hold(x.evidence, SCAN);
+  const pages = Array.from({ length: TRANSCRIBE_PAGES_MAX + 2 }, (_, i) => i);
+  const r = await transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", at: "2026-10-24T06:00:00Z" })
+    .transcribe({ account: { ok: true, kind: "apikey", level: "member", key: SENTINEL }, capture_sha: d, pages });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.deepEqual(r.asked, pages);
+  assert.deepEqual(r.sent, worker.seen[0][1].pages.map((p) => p.page), "the pages filled are the pages sent, stated");
+  const beyond = pages.slice(TRANSCRIBE_PAGES_MAX);
+  assert.deepEqual(r.unread.filter((f) => f.reason === PAGES_MAX).map((f) => f.page), beyond, "named unread, never dropped");
+  assert.equal(Object.hasOwn(r, "refused"), false, "a posted answer carries no `refused` (T44)");
+  assert.deepEqual(r.owed, beyond);
+  assert.deepEqual(pendingOf(x.ctx).jobRow({ sha: d, kind: "ocr" }).detail.pages, beyond, "and owed as a job row");
+  assert.ok(x.evidence.calls.some((c) => c[0] === "head"), "the size is asked of the store's record, never by loading the object first");
 });

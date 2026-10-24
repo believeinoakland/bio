@@ -34,7 +34,8 @@ async function pendingStore({ db, bucket = multipartBucket(), answer = { ok: tru
   extractionOf(x.ctx).readHeld = async (a) => { asked.push(a); return typeof answer === "function" ? answer(a) : answer; };
   return Object.assign(x, { bucket, asked });
 }
-const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending ORDER BY registered_at, sha`)];
+/* R97: the rows still held as work (owed, or ended for a stated reason); a finished row stays in the job table for its readers */
+const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending WHERE state <> 'finished' ORDER BY registered_at, sha`)];
 
 test("R75 R4 (C5c): a keep left pending is finished by the object's alarm within a minute: the whole is held, the pending entry is gone, and `readHeld` was asked for it; a second alarm with nothing pending does nothing", async () => {
   const x = await pendingStore();
