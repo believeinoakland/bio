@@ -258,7 +258,7 @@ test("R79: the repair runs at the plane's wake, back-fills an old bundle that ha
   w.st.sql.exec(`INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered,authored,whole) VALUES (?,?,?,?,?,?,?,0,0)`,
     stray, "INFO-2026-0001-wake", "snapshots/nowhere.part000", "binary", 7, "2026-10-20T08:00:00.000Z", "2026-10-20T08:00:00.000Z");
   w.clock.now = "2026-10-24T09:00:00.000Z";
-  w.prov.migrate();
+  assert.deepEqual(w.prov.migrate(), { ok: true });
   assert.equal(w.prov.homeOf(m.whole).bundleId, "INFO-2026-0001-wake");
   assert.equal(w.prov.homeOf(m.whole).registered, "2026-10-20T08:00:00.000Z", "the parts' first registration is the whole's instant");
   assert.equal(w.prov.partsOf(m.whole).length, 3);
