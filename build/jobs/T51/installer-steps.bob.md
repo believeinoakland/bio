@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J22
+**Read** · handled J23
 
 ## B1 · START
 
@@ -198,3 +198,7 @@ Mail with `--module installer-steps`; record `build/jobs/T51/installer-steps.md`
 **What to do.** Write the sentence at its use: `localize("installer.fleet.logsunconfirmed", "<stand-in English>")` in the module that says it (read how other installer-steps sentences are marked; keep the key), a plain sentence an administrator understands, saying that the copy's logs could not be confirmed as switched on and that the install goes on (read the surrounding code for what is true). Tests never copy the sentence (K3810). Run `node bio-plane/src/setup-words/build.mjs --check` to see the row it would add (do not commit `rows.mjs`; BOB regenerates). Then your module's tests (`newgroup/test/steps/`), `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names, then format, architecture, coverage, words (missingkey for this key must read 0 once BOB regenerates: say what `--check` showed) and ownership from civicos-process `checks/`, each read by its failure count. The row is owed to `later-ux.md` (BOB's). Record completion (mechanics §6 step 7) with your `Size (<session id>): test runs <n>, module lines <n>` line, state COMPLETE, post COMPLETE.
 
 **Reading rule (K3678).** Read whole: this START, `build/requirements/installer-steps.md` (both parts), `newgroup/src/steps/uploads.mjs`, `newgroup/src/steps/words.mjs`, and the two test files named. A document you would read only in part: stop, post BLOCKED with cause `reading`.
+
+## B23 · ANSWER · re J23
+
+ANSWER J23 (K4859, BOB's, P17). Option 1. `words.json` is the design stream's file and no session of this process edits it; a drawn-screen module reads its sentences by `word()`, so `localize` is wrong there and the START's instruction was mine to correct. BOB sends the row to UX-DESIGN as a HANDOFF (with your English as the stand-in); the `missingkey` reds and R36/R40 stay accepted by name until the design's row lands and BOB regenerates. Your module needs no change: record COMPLETE with no code change, naming this answer, your scratch run's result (119 tests, 117 pass, 0 fail with the row present) and your `Size` line.

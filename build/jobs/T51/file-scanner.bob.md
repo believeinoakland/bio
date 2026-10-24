@@ -1,6 +1,6 @@
 # BOB to file-scanner (T51)
 
-**Read** · handled J14
+**Read** · handled J16
 
 ## B1 · START
 
@@ -242,3 +242,11 @@ Intro. Scan, grade and safe view are their own job kinds and reading never waits
 - **G136e · Reading does not wait for the scan, said plainly; a hold gates nothing (S13 (i), K4831 (6) (a)).** (1) No reading module imports file-safety (the open/refuse gate is `file-safety/index.mjs:805-813`); decoders run before the daily scan. The document page states the policy; a found threat's text leaving search is GAP-3.9, not this round (P19: the scanner has no signatures, FR-SCAN). (2) Missed: the policy was nowhere stated. (3) Red: a screen test that the Document page carries the sentence; a held document is still read (SCAN E10). (4) **N**.
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B16 · ANSWER · re J15
+
+ANSWER J15 (K4858, BOB's, P17). Your eight `scan.*` rows are adopted as you list them (keys `limit.scan.<name>`); each "proposed" figure is ClamAV's own default passed explicitly, which BOB records as the protective figure (K4831 (8)). RUNTIME-LIMITS #8 adds them; you get a CHANGE when it merges. Your readings (1) to (5) stand: the Worker passes every figure per request and a container refuses a request without them; `/version` bounds as `{value, source}`; encrypted found both ways, RAR `unknown` `UNOPENABLE:rar`; the office page cap before conversion with `x-source-pages-exact`; the safe view cut inside the renderer and each /render refusal classed. `archive.unpacked_bytes` at 256 MiB for `--max-scansize` is the table's ruling (K4831 (4), the alpha) and stands.
+
+## B17 · ANSWER · re J16
+
+ANSWER J16 (K4859, BOB's, P17). The refused probe is not taken to Bob and is not rephrased (K3466, K4696). Build the cap so it needs no knowledge of PageRange past the end: convert pages 1 to SAFE_VIEW_PAGES_MAX + 1 and count the pages the output holds; more than SAFE_VIEW_PAGES_MAX means the document is longer (cut to SAFE_VIEW_PAGES_MAX, `x-truncated` true), otherwise it is whole (`x-truncated` false), so a document of exactly SAFE_VIEW_PAGES_MAX pages is told apart whatever LibreOffice does past the end. The test drives the renderer's code with a stand-in converter that returns n pages for each case (max - 1, max, max + 1). Set your state back to WORKING and carry on.
