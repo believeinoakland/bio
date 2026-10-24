@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J25
+**Read** · handled J26
 
 ## B1 · START
 
