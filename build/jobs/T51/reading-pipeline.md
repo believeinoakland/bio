@@ -754,3 +754,7 @@ Size (session_015XBRHPUV281zekgBFSdDuV): test runs 60, module lines 4,086
 - **Item 9, `folio_pages`.** A reading (and a later range's facts) lists `folio_pages`, ascending, the pages still carrying `image_content_unread` after tier 3 (a page OCR filled has discharged it); absent when none; new data only.
 - Tests `r10-skip.test.mjs` (3), RED on the code before (`✖ R45 R46 R54 (K4904, item 8) ...`, `✖ ... item 9 ...`, all three), GREEN after: a 30,000-line text stepped at a 64 KiB window (8 bytes read to step), the last line read after it; a list stepped, the control reads the unit; folio pages [1, 2] and absent. Module 381 pass, 0 fail; format, architecture, coverage (57 of 57), words, ownership (12 files) 0 failures.
 Size (session_015XBRHPUV281zekgBFSdDuV): test runs 66, module lines 4,160
+
+## J37 · REPORT
+
+REPORT: B43 items 8 and 9 are built, tested and recorded (record section 'B43 · CHANGE'); module 381 pass; checks 0 failures. Still waiting on J37 before COMPLETE. Open for extraction: CSV window cursors are not stepped by skipKilled.
