@@ -782,3 +782,14 @@ Commit on `job/T51/capture`. Files: `bio-plane/src/capture/index.mjs`, `bio-plan
 **Tests and checks.** capture suite 338/338 (`node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/capture/` from `bio-plane/`); timings test 3 runs on one core, all pass. Impact set: 98 modules name capture; the users that drive the real `uploadCapture` (screens-inquiry g41/fr5/fr6, journey-check route-encoding, wizard-scripts t47, affordances t36, op-declarations t41/t47, plane r8-heal-door, r8-headofline, r9-jobs): 97/98, the one red the `fr6-seam` G13 above, identical without my change. `format` 0 failures; `architecture` 0; `coverage` 66 of 66, 0; `words` capture 0 failures (inline 0); `ownership` 0.
 
 Size (session_01TcCgd312RDvc5erHPTSkhN): test runs 9, module lines 4963
+
+## J34 · COMPLETE
+
+COMPLETE (CAPTURE #55, job 75, B34; R109 amended, G152, K4958). Record section "Fix round 9 · job 75" on job/T51/capture.
+
+Applied: (1) no `reading` row for an upload over the whole-read ceiling of its kind (PDF pdf.bytes, CSV csv.bytes, text text.bytes, every other kind pdf.bytes, as control-plane's wholeRowOf); the answer says `reading_stated: true`, also on a second sighting. (2) A one-part upload's profile reads the bytes the upload holds: acquisition.profileOf takes NO `bytes` argument (B34 said it did), so capture hands it the evidence store with `get` of the file's digest answering the held bytes (Capture.#holding); nothing in acquisition touched.
+Red first: a 25 MiB PDF upload registered a `reading` row; a counting bucket saw one whole get for a 3 MiB PDF and a 3 MiB text upload. Both green now. Test `R109 (keep)` adapted: its 33 MiB file is text (still reading + keep); a 33 MiB file of no kind owes `keep` alone.
+Checks: capture suite 338/338; impact users that drive the real upload 97/98, the one red (fr6-seam "R96 G13 real plane") is red on the tranche tip too; format, architecture, ownership 0; coverage 66/66; words capture 0 failures.
+REPORT items for you: (a) acquisition.profileOf could take `bytes` itself and replace my wrapper; (b) the kind-to-row map now exists in control-plane and capture: one exported map (runtime-limits or acquisition) is the fix; (c) the door may pass `reading_stated` through. No new words. Nothing deferred.
+
+Size (session_01TcCgd312RDvc5erHPTSkhN): test runs 9, module lines 4963
