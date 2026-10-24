@@ -304,3 +304,37 @@ test("R105 (b) (control): a reading under the current shape is left; a registrar
   const refused = await old.w.x.migrateReadings();
   assert.deepEqual([refused.done, refused.registered, refused.refused], [false, 0, "JOB_TABLE_FULL"]);
 });
+
+/* ---------------------------------------------------------------------------------------------------- G128d, G134d: every chunk and every part under its own address */
+
+test("R22 R99 (G128d; DOCS T5): a 300,009-character single line, chunked by the reader into consecutive units, is stored whole in its chunks and found at its last word", { timeout: 120_000 }, async () => {
+  const line = "council ".repeat(37_500) + "LASTWORDMARK";
+  assert.equal(line.length, 300_012);
+  const { w, d } = await home(line, { fromText: true });
+  await readAll(w, d);
+  assert.equal(fts(w, "LASTWORDMARK"), 1, "the last word is found");
+  const st = w.x.unitsOf(d);
+  assert.deepEqual([st.counts.written > 1, st.counts.unaddressable, st.counts.truncated, st.state], [true, 0, 0, "whole"], "every chunk stored, none cut, none dropped");
+  assert.equal(w.one(`SELECT sum(length(text)) n FROM capture_text WHERE capture_sha=?`, d).n >= line.length, true);
+});
+
+test("R22 R99 (G128d; PDF A10, red.mjs N15): a PDF page of 300,000 characters is stored in its chunks and its last line is found; red by name until text-chain's canonicalExtent carries a chunk's `run` (J37)", { timeout: 120_000 }, async () => {
+  const { g, bytes } = await pdfOf({ size: { pages: 3, lines: 2 }, kinds: ["text"], heavy: { page: 2, lines: 9000 } });
+  const { w, d } = await home(bytes, { ct: "application/pdf", format: "pdf" });
+  await readAll(w, d);
+  const heavy = g.truth.page(2).lines;
+  assert.ok(heavy.join("\n").length > 131_072, "the page is over the unit cap");
+  const st = w.x.unitsOf(d);
+  assert.deepEqual([st.counts.unaddressable, st.state], [0, "whole"], "no chunk lost as an address already written");
+  assert.equal(fts(w, heavy[heavy.length - 1].split(" ")[0]), 1, "the heavy page's last line is found");
+});
+
+test("R107 (G134d; DOCS O4): two comments of one .docx are each stored with `kind` `comment`; red by name until text-chain's canonicalExtent carries a part's `part` and `ref` (J37)", async () => {
+  const comments = '<w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+    + '<w:comment w:id="1"><w:p><w:r><w:t>FIRSTCOMMENT one</w:t></w:r></w:p></w:comment><w:comment w:id="2"><w:p><w:r><w:t>SECONDCOMMENT two</w:t></w:r></w:p></w:comment></w:comments>';
+  const { w, d } = await home(F.docx({ body: F.wp(F.wr("Body")), comments }), { ct: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", format: "docx" });
+  await readAll(w, d);
+  assert.equal(fts(w, "FIRSTCOMMENT"), 1);
+  assert.equal(fts(w, "SECONDCOMMENT"), 1, "the second part is stored, not counted as an address already written");
+  assert.deepEqual(w.rows(`SELECT kind FROM capture_text WHERE capture_sha=? AND kind='comment'`, d).length, 2);
+});
