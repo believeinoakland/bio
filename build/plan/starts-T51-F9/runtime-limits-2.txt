@@ -1,0 +1,34 @@
+START · RUNTIME-LIMITS #8 · tranche T51 · product believeinoakland/bio · fix round 9, batch B: the `READ_BOUNDS` rows the quoting jobs report (K4857; K4842 (1); runtime-limits R30) · depth 2 (BOB #274 at depth 1)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/runtime-limits tranche/T51 && git branch -m job/T51/runtime-limits stale/runtime-limits-local && git checkout -b job/T51/runtime-limits origin/job/T51/runtime-limits`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module runtime-limits`; record `build/jobs/T51/runtime-limits.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <your test files>` from the repository root (the command RUNTIME-LIMITS #7's record used). Your diff touches only this module's `paths`, its `tests` and your record (ownership). Never contact any live deployment.
+
+**Why this job.** `bio-plane/src/read-bounds.mjs` is runtime-limits' alone (K4842 (1), governing over R30's "a quoting module's job adds a row"): a quoting job of batch B that keeps a ceiling with no row REPORTs it to BOB, and BOB carries it to you as a `CHANGE`. You add each row exactly as BOB's entry gives it (kind, name, standard, alpha, protective, key; the table's own `bytes(...)` helper where it is a byte figure; MB and GB are 2^20 and 2^30, K4840 (1)), with a test that `boundOf(kind, name)` answers the alpha (the standard for the light kinds, R31) and `statement` answers the key, and the test pinning that every row has its three figures and key stays green. You choose no figure: a row whose figures are unclear is a QUESTION. Read whole: this START, `build/requirements/runtime-limits.md` (both parts), `bio-plane/src/read-bounds.mjs`, and the tests that name R29-R31.
+
+**Stay open (P10).** After you record COMPLETE for the rows below, BOB merges you at once (the quoting jobs wait on it) and may send further `CHANGE`s with more rows while batch B runs: each re-opens you; add, test, check, COMPLETE again. BOB archives you when batch B closes.
+
+**The rows, from OOXML #4's J4 (accepted by BOB, K4857):**
+1. `office`, `text_bytes`: alpha 20,971,520 (20 MiB; ooxml R6 `MEASURED_OOXML_TEXT_BOUND_BYTES`), standard 104,857,600, protective 104,857,600, key `limit.office.text_bytes`.
+2. `office`, `streamed_text_bytes`: alpha 33,554,432 (32 MiB; ooxml R35 `STREAMED_TEXT_BOUND_BYTES`), standard 104,857,600, protective 104,857,600, key `limit.office.streamed_text_bytes`.
+3. `archive`, `member_bytes`: alpha 268,435,456 (256 MiB; ooxml R30 `MEMBER_MAX`), standard 2,147,483,648, protective 2,147,483,648, key `limit.archive.member_bytes`.
+
+**Rules.** Plan section 0 (`build/plan/fix-round-9-T51.md`) binds, R-SILENT and R-GATE above all: a row records a figure the module already holds, never a new bound on what a member may do (K1881). Before COMPLETE: your tests, `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names, then format, architecture, coverage, words and ownership (civicos-process `checks/`), each read by its failure count. Record completion as mechanics section 6 step 7 says, with your `Size` line.
+
+**More rows (K4858), from OFFICE-READERS #16's J7, IMAGE-CODECS #7's J4 and FILE-SCANNER #12's J15:**
+4. `office`, `decoded_chars`: 67,108,864 characters for standard, alpha and protective (a count, not bytes), key `limit.office.decoded_chars`.
+5. `image`, `working_set`: 61,300,000 bytes for all three, key `limit.image.working_set`.
+6. `image`, `retained_objects`: 250,000 for all three (a count), key `limit.image.retained_objects`.
+7. `scan`, `max_bytes`: standard 524,288,000, alpha 268,435,456, protective 524,288,000, key `limit.scan.max_bytes`.
+8. `scan`, `time_ms`: 900,000 for all three (milliseconds), key `limit.scan.time_ms`.
+9. `scan`, `embedded_pe`: 41,943,040 for all three, key `limit.scan.embedded_pe`.
+10. `scan`, `html_normalize`: 41,943,040 for all three, key `limit.scan.html_normalize`.
+11. `scan`, `script_normalize`: 20,971,520 for all three, key `limit.scan.script_normalize`.
+12. `scan`, `zip_type_rcg`: 1,048,576 for all three, key `limit.scan.zip_type_rcg`.
+13. `scan`, `partitions`: 50 for all three (a count), key `limit.scan.partitions`.
+14. `scan`, `icons_pe`: 100 for all three (a count), key `limit.scan.icons_pe`.
+15. `office`, `structural_part_bytes`: 8,388,608 for all three, key `limit.office.structural_part_bytes` (K4859, OOXML #4's J5; protective).
+16. `office`, `piece_chars`: 8,388,608 characters for all three (a count), key `limit.office.piece_chars` (K4859).
+17. `image`, `picture_source`: 603,979,776 bytes for all three, key `limit.image.picture_source` (K4859, PDF-PIXELS #9's J5).
+18. `ocr`, `picture_edge`: 4,096 pixels for all three (a count), key `limit.ocr.picture_edge` (K4860, OCR-WORKER #10's J5).
+19. `document`, `part_bytes`: standard 104,857,600, alpha 33,554,432, protective 33,554,432, key `limit.document.part_bytes` (K4860, DOC-CLEAN #4's J4).

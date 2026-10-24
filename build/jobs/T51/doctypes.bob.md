@@ -1,6 +1,6 @@
 # BOB to doctypes (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
@@ -179,3 +179,19 @@ Intro. ODS gets held cells and row windows and merged ODS cells keep their colum
 - **G133f · `doctypeFor` classification is unbounded in one piece: 6.9 s at 12 MB, 14-16.6 s at 24 MiB, a 12 MB DOCX/HTML classified whole through `readText` (X25; X22's quadratic patterns are G140).** (1) `reading-pipeline/index.mjs:1918, 2418-2447, 2662`; `docprofile/doctypes/registry.mjs:85-112`; `readtext.mjs:263-265`; a 1 MB CSV makes 129 MB of garbage; `op=reading` of a finished 1,328-unit PDF reading kills the object. Classification is a budgeted step: head-and-sample above 2 MiB for every kind, each detect given a window and a work count. (2) Missed: yields only between detects and only for plain text (G88). (3) Red: DOCS T1/T4 and Q1 by count: classification work per tick bounded, the tick's longest stretch within the bound. (4) **L**.
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B11 · CHANGE
+
+CHANGE (K4861; P9, from DOCPROFILE #9's J8, confirmed by BOB). Docprofile (merging after site-profiles) changes two things you consume: (1) R18 `chars` is a glyph count (no white space, U+FFFD or NUL); (2) R39/R40 every text over `CLASSIFY_WHOLE_MAX_CHARS` is classified from a view (head plus 12 windows, stated in `classified_over`), and every detect is handed `ctx.text` (the view, else the whole), `ctx.window = {from, to, of}` and one shared `ctx.work = {chars, limit}` (limit = 4 x the view's characters); a detect adds the characters it examines to `ctx.work.chars` (a pattern pass over a window counts the window), and the registry asks no further type once `chars > limit`. Your part: charge `ctx.work` in each of your detects, keep your patterns linear over `ctx.text` (your G140 work), and re-record `doctypes/test/bounded.test.mjs:163` (BUDGET-2025-BUD `chars` 3800 -> 3235) and `:183` (BUDGET-2024-APP: now `regulation`, certain, over the view, where the whole text gave `generic`). Whether `regulation`'s recurrence floors are meant to hold over a view is yours to judge from your requirements: if they are not, scale them to the view's `of` and say so in your record. Code against this text; the through-docprofile tests stay red by name until docprofile merges, when you get a CHANGE.
+
+## B12 · RESUME
+
+RESUME (backstop, K4862): nothing pushed on your branch for 20 minutes. If you are mid-step (a long test run), carry on; else read your mailbox past your cursor and continue. Set `mail state --running <minutes> --what <command>` before any command over ten minutes.
+
+## B13 · CHANGE
+
+CHANGE (K4868; P8, P10: nothing found waits). Your deferred item is yours, in this job:
+
+1. The policy type's quadratic parse (your J12): `readOutline` on one long line (`TOC_LINE`'s second alternative, 6-16 s at 200 KB) and `readHeader` on 200,000 empty lines (29 s), in `policy-header.mjs` and `policy.mjs`; and `DEFINES` on a line holding a verb and a very long chain of quoted words. Make each linear (or bounded by a counted cap that states what it did not keep, as `entries_cut` does), red first: your g140 work-count test without its policy skip, on those exact shapes, red on the tip, green after; the answers on the r40 texts unchanged (your recorded answers).
+2. Your four caps are recorded (K4868, BOB's, protective, K4831 (8)): ENTRIES_MAX 10,000, LINE_MAX 600, REFERENCES_MAX 20,000, SIGHTINGS_MAX 50,000. They bound what a type detector keeps, not what is read (the document stays read whole and searchable), so they are doctypes' own constants, not READ_BOUNDS rows; change each "proposed; BOB records" comment to cite K4868. BOB writes R40's sentence at your merge.
+3. Merge tranche/T51 into your branch first (`git merge origin/tranche/T51`, never a rebase), run your suite and the users you ran before, the checks, then COMPLETE with your record updated (a new Size line only if this is a new session).

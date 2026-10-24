@@ -1,6 +1,6 @@
 # text-chain (T51)
 
-**Status** · session_016U6ynRyZfVauCoMWgZaDey · depth 2 · COMPLETE · handled B5
+**Status** · session_01XYjSqzMCJiW54TqbtMFFcE · depth 2 · COMPLETE · handled B8
 
 ## J1 · COMPLETE
 
@@ -81,3 +81,53 @@ Size (session_016U6ynRyZfVauCoMWgZaDey): test runs 9, module lines 1998
 ## J5 · COMPLETE
 
 G48 complete (record section J4, commit on job/T51/text-chain): glyphCount is a charCodeAt loop, no per-character regexp, R73 to the letter. g48-glyphs.test.mjs 7 tests: (a) red on tip (17,500 regexp calls), green after; (b) independent-spelling control green before and after. text-chain 128 pass; extraction 325 pass; reading-pipeline 233/234 (pdf-pieces R40 R36 G26 timed out at 60s under load, passes alone in 41.6s). Ratio 8.7x-12.4x on 50.5M chars. checks/run.mjs 0 failures, ownership 0. No census op owned. Proposed line: R73a the count is made without a per-character regexp.
+
+## J6 · COMPLETE
+
+Completion of fix round 9 (START B6): G141 (owner), G131g (`glyphCount`), G124e (kept). Tranche/T51 merged first (requirement file read whole, R39, R73, R76, R78, R105, R106).
+
+**Entries applied (`bio-plane/src/textchain.mjs`; no file outside my paths created).**
+- **R39** `describeChain`/`pageList` spell a page 1-based ("page 1", "pages 1-3, 6"); stored extents, R22, R27, R47 untouched.
+- **R73** `glyphCount` skips U+0000 and U+FFFD.
+- **R105** `mergeTier2Text` keeps every page: an unnumbered base page is kept as tier 1 after the numbered pages (in `kept` as `null`); a tier-2 page the base lacks is adopted as tier 2 at its page number (in `replaced`); an unnumbered tier-2 page is adopted after the numbered pages (in `replaced` as `null`); `document`, `counts`, `undetermined`, `perPageTier` follow the pages; two tier-2 pages with one number: the later is the page (once).
+- **R106** `appendStep` is linear: a chain returned by `layerChain`, `appendStep`, `convertedChain` or `mergedChain` is remembered (WeakMap with its length and last step) with a running state of `derivationCap`'s whole-document question; an append folds only the new step. A branch (append to an older chain), a chain pushed to since it was returned, and a hand-built chain are answered by the whole check, exactly as before. `derivationCap` shares the same fold (one implementation of the question).
+- **G124e** `canonicalRange` past ZZZ: kept, no code change (BOB's START). Pinned by a test: XFD (16,384) works, the 4-letter form stays null.
+
+**R-FOUR, per cause.**
+- *G141 chain sentence, R39.* (1) `pageList` printed the stored 0-based number (`textchain.mjs:352-360`). (2) Tests pinned the 0-based text (chain.test R39) and no test said the stored numbers stay 0-based. (3) Failing-first `round9.test.mjs` "R39 (G141)", red: `+ actual "the document's own text layer (page 0)"  - expected "... (page 1)"`; green now. (4) N.
+- *G141 `mergeTier2Text`, R105.* (1) `usable` filter (`:1902`) and the loop over `usable` only (`:1936-1960`) dropped unnumbered base pages and tier-2 pages the base lacks. (2) Tests covered numbered, equal page sets only. (3) Four "R105" tests, red against the old source: base `[loose, 0, "7", 1]` lost `loose` and `seven` (diff `- { text: 'loose', tier: 1 ...`), adopted pages absent, unnumbered tier-2 page absent; green now. (4) N.
+- *G141 `appendStep`, R106.* (1) `appendStep` ran `checkChain(chain)` and `derivationCap(chain)` (itself a `checkChain` and a pass over every step) per append: quadratic. (2) Chains in tests were short. (3) "R106 (G141): 5,000 appendStep calls inspect at most 4 times 5,000 steps" counts reads of `STEP_KINDS.layer.role` (one per step inspected); red against the old source (assertion over 4 × 5,000; the test took 6.6 s there against 1.3 s now); green now at a few thousand reads. A second R106 test appends 1,500 random steps (scoped, unreadable, parts, conversions, attestations, refusals, branches from older chains) to chains the module returned and to hand-built copies, and compares the answers, `derivationCap` and `describeChain`: equal in every case. (4) N.
+- *G131g `glyphCount`, R73.* (1) `textchain.mjs:1852` counted U+FFFD and NUL as glyphs. (2) Tests used no decode failures. (3) "R73 (G131g)" red against the old source (`1 !== 0` on `glyphCount("\u0000")`); the G48 control `spelled` and two G48 cases updated to the new definition (they pinned the old one); green now. (4) L, as the plan says, is the encoding matrix, which is the decode owners' and control-plane's seam, not mine.
+- *G124e.* (1) `canonicalRange` is null past ZZZ by design (R93: 1-3 letters), kept. (2) No wide fixture. (3) "R93 R95 (G124e)": green on the old and the new source (nothing changed, pinned). (4) N.
+
+**Tests and checks.**
+- Module: `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/text-chain/` (bio-plane): 146 tests, 146 pass, 0 fail (new file `round9.test.mjs`, 9 tests; `chain.test.mjs` R39 expectation moved to 1-based; `g48-glyphs.test.mjs` control moved to R73).
+- Direct users of the module (`modules.json` `uses`), pass/fail: query-language 57/0, inquiry-grammar 85/0, leg-earning 57/0, inquiry 225/0 of 226 (one skipped), basis-version-grammar 33/0, basis-versions 182/0, run-productions 65/0, reevaluation 163/0, answer-envelope 43/0, extraction 328/0, content 155/0, connections 146/0, observation-log 84/0, d606-perpage-ocr 1/0, tier2-wire 1/0, doctypes 60/0, ocr-worker 1/0, reading-pipeline 316 of 319 (below).
+- reading-pipeline: three failures. (a) `transcribe.test.mjs:132` "R29 R23" pins the chain sentence 0-based (`(pages 1-2)`; now `(pages 2-3)`): a consequence of ruling (6), see REPORT 1. (b) "R40 R36 (G26)" and "G88 R42" are timing tests that failed while two suites ran at once; each passes alone (R-NOLOAD: 1/0 and 38/0).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs text-chain`: 0 failures. `checks/coverage.mjs text-chain`: 106 of 106 live requirement ids named by a test. `checks/ownership.mjs ... tranche/T51`: 5 files changed by text-chain, 0 failures. `checks/words.mjs`: no finding in text-chain (17 failures in other modules; I added no sentence, so no stand-in and no words row is owed).
+
+**REPORT to BOB (nothing blocks; all are other modules' or your wording).**
+1. *reading-pipeline's test* `bio-plane/test/m/reading-pipeline/transcribe.test.mjs:132` pins the 0-based chain sentence ("text-chain's 0-based pages"); its job changes the expectation to `(pages 2-3)`. No other test outside my module pins a 0-based `describeChain` text (searched `(page[s] N` over bio-plane, doctypes, ocr-worker tests).
+2. *Same defect class, outside ruling (6)'s sentence:* `gradeCeiling`'s `why` for an undetermined page reads "for page N" with the stored 0-based number (R57; word `textchain.why.step_text_provenance`, `{page}` filled at `textchain.mjs` gradeCeiling). R57's test pins `/page 0/`. I left it because ruling (6) names the chain sentence only. If you rule it 1-based, the change is one expression and one test line in my module.
+3. *Proposed requirement wording (BOB writes it):* R105 should say the `kept`/`replaced` entry of a page with no integer number is `null`, which is what I built (consumers `reading-pipeline` index.mjs:2561-2564 and `extraction` index.mjs:2216 read only `.length` or pass the lists to `mergedChain`, which keeps only integer pages, so an unnumbered page sits in no part's extent there; that is their reading of an unnumbered page, not text-chain's).
+4. *R106 and a mutated chain:* a returned chain that a caller mutates in place by replacing a step (not by push or truncate) is not detected; the contract says chains are values and no module in the tree does this.
+5. *Generated artifacts made stale:* `bio-plane/dist/bio-plane.bundled.mjs` and the agent-worker bundle include `textchain.mjs`; BOB regenerates at the round end.
+
+**Deferred.** None.
+
+Size (session_01XYjSqzMCJiW54TqbtMFFcE): test runs 19, module lines 2072
+
+## J7 · COMPLETE
+
+Completion again after CHANGE B8 (K4863). Tranche/T51 merged first.
+
+**Done.** `gradeCeiling`'s `why` for an undetermined page now spells the page 1-based ("for page 1" for stored page 0), like the chain sentence (R39); the stored page numbers are untouched. R57's test now asserts page 0 reads "page 1" (and not "page 0") and page 4 reads "page 5".
+
+**Tests and checks.**
+- `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/text-chain/*.test.mjs` (bio-plane): 146 tests, 146 pass, 0 fail. (The directory form `test/m/text-chain/` prints a lower count, 122 to 133, from the runner, with 0 failures; the file list runs every file.)
+- Users of `gradeCeiling`: leg-earning 57/0, content 155/0, inquiry 225/0, basis-versions 182/0.
+- format: 0 failures. architecture: 0 failures. coverage text-chain: 106 of 106 ids named by a test. ownership: 6 files changed by text-chain, 0 failures.
+
+**Deferred.** None. **Found in other modules.** Nothing new beyond J6's REPORT 1 (reading-pipeline's `transcribe.test.mjs:132`).
+
+Size (session_01XYjSqzMCJiW54TqbtMFFcE): test runs 24, module lines 2072

@@ -119,7 +119,7 @@ test("R35 readPartPieces: the refusals are readPart's, each carrying the name; v
   const absent = await pieces(buildZip(good), "nope.xml");
   assert.deepEqual(absent.r, { ok: false, why: "part_absent", name: "nope.xml" });
   const bomb = await pieces(buildZip([{ ...good[0], cd: { usize: MEMBER_MAX + 1 } }]), "p.xml");
-  assert.deepEqual(bomb.r, { ok: false, why: "MEMBER_MAX", name: "p.xml", declared: MEMBER_MAX + 1, limit: MEMBER_MAX });
+  assert.deepEqual(bomb.r, { ok: false, why: "MEMBER_MAX", name: "p.xml", declared: MEMBER_MAX + 1, limit: MEMBER_MAX, final: true });
   const total = await pieces(buildZip([good[0], { name: "other.xml", data: "x", cd: { usize: ARCHIVE_TOTAL_MAX } }]), "p.xml");
   assert.equal(total.r.why, "ARCHIVE_TOTAL_MAX");
 });
@@ -156,4 +156,34 @@ test("R35 pieceWhy: a member with no place to end a piece is over_size_bound wit
     { why: "over_size_bound", detail: "piece_unbounded", size: 99, final: true });
   assert.deepEqual(pieceWhy({ ok: false, why: "crc_mismatch", name: "p.xml" }), { why: "crc_mismatch" });
   assert.deepEqual(pieceWhy(undefined), { why: undefined });
+});
+
+test("R35 readPartPieces awaits the promise onPiece returns before it makes the next piece, so a reader can yield between pieces (K4858)", async () => {
+  const bytes = buildZip([{ name: "p.xml", data: markup(5 * MIB) }]);
+  const container = readContainer(bytes);
+  const events = [];
+  const handler = async (piece) => {
+    events.push("piece");
+    await new Promise((resolve) => setTimeout(resolve, 3));
+    events.push("yielded");
+    return piece.length;
+  };
+  const r = await readPartPieces(bytes, container, "p.xml", cutAfterTag, handler);
+  assert.equal(r.ok, true);
+  assert.ok(events.filter((e) => e === "piece").length >= 4, events.join());
+  // never two pieces without the handler's own yield between them
+  for (let i = 0; i < events.length; i += 2) assert.deepEqual(events.slice(i, i + 2), ["piece", "yielded"]);
+  // a timer that fires while the handler waits runs between two pieces
+  const order = [];
+  const timer = setInterval(() => order.push("tick"), 1);
+  await readPartPieces(bytes, container, "p.xml", cutAfterTag, async () => { order.push("piece"); await new Promise((resolve) => setTimeout(resolve, 5)); });
+  clearInterval(timer);
+  const firstTwo = order.slice(order.indexOf("piece") + 1, order.indexOf("piece", order.indexOf("piece") + 1));
+  assert.ok(firstTwo.includes("tick"), order.join());
+  // a handler that returns nothing behaves as before, and a promise that rejects is reader_failed
+  const plain = [];
+  assert.equal((await readPartPieces(bytes, container, "p.xml", cutAfterTag, (p) => { plain.push(p); })).ok, true);
+  assert.equal(plain.join("").length, 5 * MIB);
+  const rejected = await readPartPieces(bytes, container, "p.xml", cutAfterTag, () => Promise.reject(new Error("no")));
+  assert.deepEqual(rejected, { ok: false, why: "reader_failed", name: "p.xml" });
 });

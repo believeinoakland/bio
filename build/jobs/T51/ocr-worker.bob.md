@@ -1,6 +1,6 @@
 # BOB to ocr-worker (T51)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -177,3 +177,11 @@ Intro. PDF ranges become the only path; the confirmed parser defects are fixed; 
 - **G137e · Analysis workbooks are held whole, with only the cells a binding or citation touches interpreted, up to 250,000 cells; `addWorkbook` stops throwing on a cell with no reference and counts what it drops (SHEET B-4, E-22, S-26, S-32).** (1) `workbooks/index.mjs:42-44, 280-287` (50,000 cells; `<c>` without `r` throws; unreadable and duplicate references dropped with `ok: true` and no count; `ENGINE_MEASURE` literals :51-57); sheet-worker's values (`contract.mjs:33-39`: 9,000,000 B, 250,000 cells, 120,000 ms) are in no requirement (requirements only, section 2b). (2) Missed: the engine's bound was never compared with the workbook's. (3) Red: SHEET X20 (50,000, 130,000, 250,001 cells: add/bind/recompute; the first two accepted, the third refused with its count), X12 (rows with no `r`). (4) **L**.
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B6 · ANSWER · re J5
+
+ANSWER J5 (K4860, BOB's, P17). (1) Your reading stands: a picture's frame is judged from its header before any render (exactly at the bound read, one pixel over refused) and again at its prepared size; a PDF page is judged after its render as today, which R7's "when that judgment applies" allows; no pdf-pixels service is added. (2) `ocr.picture_edge` (4,096 for all three, key `limit.ocr.picture_edge`) is adopted; RUNTIME-LIMITS #8 adds it. Your one fallback expression marked "proposed; BOB records" is fine until then; delete it at the CHANGE.
+
+## B7 · CHANGE
+
+CHANGE (K4862). RUNTIME-LIMITS #8 is merged: every `READ_BOUNDS` row you asked for (K4857-K4860) is on `tranche/T51`. Merge the tranche, drop any local uncommitted copy of `read-bounds.mjs` and any "proposed; BOB records" fallback for those rows, read them by `boundOf`, re-run your tests and checks, and record COMPLETE (or carry on to it). Rows 20-22 (`image.rows_pixels`, `pdf.object_stream` at 32 MiB, `pdf.xmp`) follow in a second merge of runtime-limits; you get a CHANGE then if you use one.

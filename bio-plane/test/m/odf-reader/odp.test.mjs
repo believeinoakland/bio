@@ -105,7 +105,7 @@ test("R25 speakerNotes only for pages with notes text; document is the deck as p
   ]);
   assert.equal(t.document, "Title one\ncustom link\nin group A\nin group B\nrect text\ncaption\nfour");
   assert.ok(!t.document.includes("note"));
-  assert.deepEqual(t.counts, { chars: t.document.length, notesChars: "note for one\nin notes".length + "   \nn4".length, undetermined: 0 });
+  assert.deepEqual({ ...t.counts, scanned_bytes: undefined }, { chars: t.document.length, notesChars: "note for one\nin notes".length + "   \nn4".length, undetermined: 0, scanned_bytes: undefined });
 });
 
 /* ------------------------------------------------------------------ R26 */
@@ -123,9 +123,9 @@ test("R26 deckLength equals the slide count once the body is read, and is null o
 
 test("R27 text() over the guard, or with no readable body: document null, lists empty, the guard marker or main_part_unreadable", async () => {
   const over = await odpEntry.text(buildZip(withCd(members("odp", { body: DECK }), "content.xml", { usize: OVER_BOUND })));
-  const want = (undetermined, active = []) => ({ ok: true, container: "odp", document: null, slides: [], speakerNotes: [], deckLength: null,
-    undetermined, counts: { chars: 0, notesChars: 0, undetermined: 1 }, active });
-  const strip = ({ images, imagesWhy, ...r }) => r;
+  const want = (undetermined, active = []) => ({ ok: true, container: "odp", document: null, slides: [], speakerNotes: [], parts: null, deckLength: null,
+    undetermined, counts: { chars: 0, notesChars: 0, undetermined: 1, scanned_bytes: undefined }, active });
+  const strip = ({ images, imagesWhy, ...r }) => ({ ...r, counts: { ...r.counts, scanned_bytes: undefined } });
   assert.deepEqual(strip(over), want([{ ...sizeGuard(OVER_BOUND), final: true }], [{ kind: "unread", part: "content.xml", why: "over_size_bound" }]));
   assert.deepEqual(strip(await odpEntry.text(buildZip(withCd(members("odp"), "content.xml", { crc: 5 })))),
     want([{ reason: "main_part_unreadable", part: "content.xml", why: "crc_mismatch" }], [{ kind: "unread", part: "content.xml", why: "crc_mismatch" }]));

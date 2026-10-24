@@ -79,13 +79,24 @@
  */
 
 import { openPdf, pageShowsText, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
+import * as reader from "../../bio-plane/src/pdfstructure.mjs";
 import { decodeBaselineJpeg, DctRefusal } from "./dctdecode.mjs";
 import { decodeJbig2, Jbig2Refusal, JBIG2_REFUSES } from "./jbig2decode.mjs";
-import { decodeJpx, JpxRefusal, JPX_REFUSES, MEMORY_FEATURE } from "./jpxdecode.mjs";
+import { decodeJpx, JpxRefusal, JPX_REFUSES } from "./jpxdecode.mjs";
 import { ccittDecode } from "./ccittdecode.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
 
 const LATIN1 = new TextDecoder("latin1");
+
+/* R46, R49: the ceilings this module keeps, read from READ_BOUNDS (runtime-limits). */
+const PIXELS_MAX = boundOf("image", "pixels");
+const EDGE_MAX = boundOf("image", "edge");
+const TREE_DEPTH_MAX = boundOf("pdf", "tree_depth");
+
+/** A source `{size, readRange(offset, length)}` and not bytes (R47). */
+export const isSource = (x) => x != null && typeof x === "object" && !(x instanceof Uint8Array) && !(x instanceof ArrayBuffer)
+  && Number.isInteger(x.size) && x.size >= 0 && typeof x.readRange === "function";
 
 /** Every reason this module can refuse with. Exported so a caller can branch on
  *  the set rather than on a string it guessed, and so the suite can assert that
@@ -107,6 +118,7 @@ export const REFUSALS = {
   DECODE_FAILED: localize("pdf-pixels.pagepixels.the_decoder_could_not_read", "the decoder could not read the image data"),
   UNSUPPORTED_JPEG_PROCESS: "the JPEG is not baseline (progressive, arithmetic-coded, lossless, hierarchical or not 8-bit); only baseline is decoded here",
   IMAGE_TOO_LARGE: localize("pdf-pixels.pagepixels.decoding_the_image_would_need", "decoding the image would need more memory than a decode may use here"),
+  PIXELS_UNDETERMINED: localize("pdf-pixels.pagepixels.this_reader_cannot_give_the", "this reader cannot give the page's true pixels for this image, and says so rather than give wrong ones"),
 };
 
 /* R25: the REFUSALS reason for each feature a codec refuses as UNSUPPORTED —
@@ -116,7 +128,7 @@ export const REFUSALS = {
 export const featureReasons = (declared, named) =>
   Object.freeze(Object.fromEntries(Object.keys(declared).map((k) => [k, named[k] ?? "UNSUPPORTED_FILTER"])));
 const JBIG2_FEATURE_REASONS = featureReasons(JBIG2_REFUSES, {});
-const JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { [MEMORY_FEATURE]: "IMAGE_TOO_LARGE" });
+const JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, {});
 
 const refuse = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
@@ -165,7 +177,7 @@ function decodeParms(doc, dict, idx) {
  *  from /Pages rendered un-turned. */
 function inheritedAttr(doc, pageMap, key) {
   let p = pageMap;
-  for (let d = 0; p && d <= 32; d++) {
+  for (let d = 0; p && d <= TREE_DEPTH_MAX; d++) {
     if (p[key] !== undefined) return doc.resolve(p[key]);
     p = doc.dictOf(p.Parent);
   }
@@ -343,6 +355,15 @@ export async function analyzePage(doc, pageIndex) {
  * decoder produced them and a calibration therefore applies to it too.
  */
 export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
+  if (isSource(bytes)) {
+    /* R47: pdf-reader's `pageSource` reads the page's own bytes through the source and
+     * answers a small PDF of that one page; on `fallback` (or where the provider is not
+     * yet merged) the whole file is read, so every refusal stays the whole file's. */
+    const got = typeof reader.pageSource === "function" ? await reader.pageSource(bytes, pageIndex) : null;
+    if (!got || !got.ok) return renderPageToPixels(await bytes.readRange(0, bytes.size), pageIndex, opts);
+    const r = await renderPageToPixels(got.bytes, 0, opts);
+    return "page" in r ? { ...r, page: pageIndex } : r;
+  }
   const doc = await loadPdf(bytes);
   if (!doc) return refuse("NOT_A_PDF");
   if (doc.isEncrypted()) return refuse("ENCRYPTED");
@@ -380,7 +401,9 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
   if (!im.obj) {
     return refuse("IMAGE_UNREADABLE", { page: pageIndex, filters: im.filters, note: localize("pdf-pixels.pagepixels.an_inline_image_reading_inline", "an inline image; reading inline images is not built") });
   }
-  const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate });
+  /* R48: a turn the caller found necessary, applied after the page's own /Rotate. */
+  const turn = [90, 180, 270].includes(opts.turn) ? opts.turn : 0;
+  const out = await decodeImage(doc, im, { ...opts, turn, rotate: (a.rotate + turn) % 360 });
   if (!out.ok) return { ...out, page: pageIndex };
 
   return {
@@ -396,6 +419,7 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
      * to discover it in its output. See the note on rotateBilevel. */
     upright: out.upright,
     rotate_deg: a.rotate,
+    turned_deg: turn,
     source: {
       filters: im.filters,
       colorSpace: im.colorSpace,
@@ -437,6 +461,10 @@ export async function decodeImage(doc, im, opts) {
   const filters = im.filters;
   const last = filters[filters.length - 1] || null;
 
+  /* R46: the declared size is judged first, before the stream is read, inflated,
+   * copied or handed to a decoder. */
+  const large = declaredTooLarge(im);
+  if (large) return large;
 
   /* DCTDecode: the stream IS a JPEG. Hand the publisher's own bytes on — or,
    * when the caller asked for pixels it can read, decode them (D-320). */
@@ -447,7 +475,16 @@ export async function decodeImage(doc, im, opts) {
     if (!(raw[0] === 0xff && raw[1] === 0xd8)) {
       return refuse("DECODE_FAILED", { filters, note: "DCT stream does not start with SOI" });
     }
-    if (opts.decodeDct) return decodeDct(doc, im, raw, opts.rotate || 0);
+    /* A turn cannot be made on the publisher's bytes: it needs the pixels (R48). */
+    if (opts.decodeDct || opts.turn) return decodeDct(doc, im, raw, opts.rotate || 0);
+    /* R22, R45: the pass-through is examined, not trusted: the JPEG's own header
+     * must agree with the image dictionary. */
+    const frame = jpegFrame(raw);
+    const pdfComps = colourComponents(doc, dict.ColorSpace);
+    if (!frame || frame.width !== im.width || frame.height !== im.height || (pdfComps != null && frame.comps !== pdfComps)) {
+      return refuse("PIXELS_UNDETERMINED", { detail: "dct_unexamined", filters,
+        declared: { width: im.width, height: im.height, comps: pdfComps }, jpeg: frame });
+    }
     /* NOT ROTATED, AND THAT IS THE POINT OF THE ROUTE. Rotating a JPEG means
      * decoding and re-encoding it, which throws away the one property this
      * route has — that the bytes in the record are the publisher's own, with no
@@ -480,6 +517,9 @@ export async function decodeImage(doc, im, opts) {
     /* Mixed mode (K>0) needs the per-row tag bit only an EOL carries, so it has
      * no decoder here: a filter refusal, not a failed decode. */
     if (K > 0) return refuse("UNSUPPORTED_FILTER", { filters, note: "mixed-mode (K>0) CCITT is not decoded here" });
+    if (columns !== im.width) {
+      return refuse("PIXELS_UNDETERMINED", { detail: "ccitt_columns", filters, columns, width: im.width });
+    }
     const blackIs1 = doc.resolve(p.BlackIs1) === true;
     const byteAlign = doc.resolve(p.EncodedByteAlign) === true;
 
@@ -538,7 +578,7 @@ export async function decodeImage(doc, im, opts) {
     } catch (e) {
       if (!(e instanceof Jbig2Refusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
       const reason = e.code === "UNSUPPORTED" ? JBIG2_FEATURE_REASONS[e.detail.feature] ?? "UNSUPPORTED_FILTER"
-        : { TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e.code] || "DECODE_FAILED";
+        : { TRUNCATED: "TRUNCATED_IMAGE_DATA", IMAGE_TOO_LARGE: "IMAGE_TOO_LARGE" }[e.code] || "DECODE_FAILED";
       return refuse(reason, { filter: last, filters, jbig2: e.code, ...e.detail });
     }
     if (out.width !== im.width || out.height > im.height) {
@@ -579,7 +619,7 @@ export async function decodeImage(doc, im, opts) {
     } catch (e) {
       if (!(e instanceof JpxRefusal)) return refuse("DECODE_FAILED", { filters, note: String(e && e.message || e) });
       const reason = e.code === "UNSUPPORTED" ? JPX_FEATURE_REASONS[e.detail.feature] ?? "UNSUPPORTED_FILTER"
-        : { UNSUPPORTED_SAMPLES: "UNSUPPORTED_SAMPLES", TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e.code] || "DECODE_FAILED";
+        : { UNSUPPORTED_SAMPLES: "UNSUPPORTED_SAMPLES", TRUNCATED: "TRUNCATED_IMAGE_DATA", IMAGE_TOO_LARGE: "IMAGE_TOO_LARGE" }[e.code] || "DECODE_FAILED";
       return refuse(reason, { filter: last, filters, jpx: e.code, ...e.detail });
     }
     if (pdfComps !== null && pdfComps !== out.comps) {
@@ -598,12 +638,15 @@ export async function decodeImage(doc, im, opts) {
 
   /* FlateDecode or unfiltered raw samples. */
   if (filters.length === 0 || filters.every((f) => f === "FlateDecode" || f === "Fl")) {
-    const data = await doc.streamDecoded(im.obj);
-    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
     const bpc = im.isMask ? 1 : (im.bpc ?? 8);
     const cs = im.colorSpace;
     const comps = im.isMask ? 1 : cs === "DeviceRGB" ? 3 : cs === "DeviceGray" ? 1 : null;
     if (comps == null) return refuse("UNSUPPORTED_SAMPLES", { colorSpace: cs, bpc, filters });
+    /* R24, R45: what the samples alone would get wrong, stated before they are inflated. */
+    const undetermined = rawUndetermined(doc, dict, comps, filters);
+    if (undetermined) return undetermined;
+    const data = await doc.streamDecoded(im.obj);
+    if (!data) return refuse("IMAGE_UNREADABLE", { filters });
 
     const rowBytes = Math.ceil((im.width * comps * bpc) / 8);
     const need = rowBytes * im.height;
@@ -631,6 +674,68 @@ export async function decodeImage(doc, im, opts) {
   }
 
   return refuse("UNSUPPORTED_FILTER", { filters });
+}
+
+/* R46: width, height and pixel count as the image dictionary declares them,
+ * against READ_BOUNDS; null when within them (or not declared: the route's own
+ * refusal says so). */
+function declaredTooLarge(im) {
+  const { width, height } = im;
+  if (!(width > 0 && height > 0)) return null;
+  const pixels = width * height;
+  if (width <= EDGE_MAX && height <= EDGE_MAX && pixels <= PIXELS_MAX) return null;
+  return refuse("IMAGE_TOO_LARGE", {
+    declared: { width, height, pixels, bitsPerComponent: im.bpc, colorSpace: im.colorSpace },
+    bound: { pixels: PIXELS_MAX, edge: EDGE_MAX },
+  });
+}
+
+/* R45: what a raw route cannot show truly. */
+function rawUndetermined(doc, dict, comps, filters) {
+  const why = (detail, more = {}) => refuse("PIXELS_UNDETERMINED", { detail, filters, ...more });
+  const p = decodeParms(doc, dict, filters.length - 1);
+  if (p && numOf(doc, p.Predictor) === 2) return why("tiff_predictor");
+  if (dict.SMask !== undefined && doc.resolve(dict.SMask) != null) return why("smask");
+  if (dict.Mask !== undefined && doc.resolve(dict.Mask) != null) return why("mask");
+  const dec = doc.resolve(dict.Decode);
+  if (dec && dec.t === "arr") {
+    const v = dec.items.map((x) => numOf(doc, x));
+    const dflt = v.length === 2 * comps && v.every((x, i) => x === i % 2);
+    if (!dflt) return why("decode_array", { decode: v });
+  }
+  return null;
+}
+
+/** The frame a JPEG states (any process: pass-through never decodes), or null. */
+function jpegFrame(d) {
+  let p = 2;
+  while (p + 4 <= d.length) {
+    if (d[p] !== 0xff) { p++; continue; }
+    const m = d[p + 1];
+    if (m === 0xff) { p++; continue; }
+    if (m === 0xd8 || m === 0x01 || (m >= 0xd0 && m <= 0xd7)) { p += 2; continue; }
+    if (m === 0xd9 || m === 0xda) return null;
+    const len = (d[p + 2] << 8) | d[p + 3];
+    if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) {
+      if (p + 10 > d.length) return null;
+      return { height: (d[p + 5] << 8) | d[p + 6], width: (d[p + 7] << 8) | d[p + 8], comps: d[p + 9] };
+    }
+    p += 2 + len;
+  }
+  return null;
+}
+
+/** An image's PDF colour space as a component count, null when it cannot be told. */
+function colourComponents(doc, csv) {
+  const cs = doc.resolve(csv);
+  if (cs == null) return null;
+  if (cs.t === "name") return { DeviceGray: 1, DeviceRGB: 3, DeviceCMYK: 4, CalGray: 1, CalRGB: 3 }[cs.v] ?? null;
+  if (cs.t === "arr") {
+    const head = nameOf(doc, cs.items[0]);
+    if (head === "ICCBased") return numOf(doc, doc.dictOf(cs.items[1])?.N);
+    if (head === "Indexed" || head === "I" || head === "Separation") return 1;
+  }
+  return null;
 }
 
 /** PDF 1-bit samples (packed rows) to a grey-1 PNG, rotated. A sample 0 is
@@ -682,6 +787,7 @@ export const DCT_TO_REFUSAL = {
   NOT_A_JPEG: "DECODE_FAILED",
   CORRUPT_DATA: "DECODE_FAILED",
   UNSUPPORTED_FRAME: "DECODE_FAILED",
+  IMAGE_TOO_LARGE: "IMAGE_TOO_LARGE",
 };
 
 async function decodeDct(doc, im, raw, rotate) {

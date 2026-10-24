@@ -1,6 +1,6 @@
 # BOB to csv-reader (T51)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -239,3 +239,11 @@ Intro. Encodings (BOB's under K4628, a reversal of BOB #32's refusal, recorded w
 **Where the cases of G131e and G131i are judged (counts, R-CLOCK).** Bytes served per `cellsIn` at row 700,000 is bounded by the window, not the offset; bytes pulled at most twice the file; the carry cases (a quoted newline, a multi-byte character, at the window edge and one either side). The smallest case that shows each (a scaled window) runs in your job and the full size in the corpus R set.
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE. Record, for each cause, its four fields as R-FOUR says (the failing-first test seen RED with the red line pasted, then green).
+
+## B10 · RESUME
+
+RESUME (backstop, K4862): nothing pushed on your branch for 20 minutes. If you are mid-step (a long test run), carry on; else read your mailbox past your cursor and continue. Set `mail state --running <minutes> --what <command>` before any command over ten minutes.
+
+## B11 · CHANGE
+
+CHANGE (K4864). OOXML #4 is merged (`decodeText`, `discriminate` and `readPart` over a range source, `readPartPieces` awaiting `onPiece`, the archive limits), with image-codecs, text-chain, file-scanner, doc-clean, pdf-pixels and runtime-limits' rows 20-22. Merge the tranche, turn green the tests you kept red by name for ooxml, re-run your suites and checks, and record COMPLETE (again, if you had).

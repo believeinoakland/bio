@@ -404,7 +404,7 @@ test("R39: describeChain joins one sentence per step with ' -> '", () => {
   assert.equal(describeChain([{ step: "attested", member: "m1", at: "2026-01-01" }]), `${lab("attested")} (m1, 2026-01-01)`);
   assert.equal(describeChain([{ step: "typed", member: "m2" }]), `${lab("typed")} (m2)`);
   assert.equal(describeChain([L(null, { extent: pages([0, 1, 2, 5]) }), O("C", { extent: pages([3]) }), { ...ok.ai, extent: pages([]) }]),
-    `${lab("layer")} (pages 0-2, 5) -> ${lab("ocr")} (eng) (page 3) -> ${lab("ai")} (model) (over an extent this record cannot read)`);
+    `${lab("layer")} (pages 1-3, 6) -> ${lab("ocr")} (eng) (page 4) -> ${lab("ai")} (model) (over an extent this record cannot read)`);
   /* A verification step is never given a page clause. */
   assert.equal(describeChain([ok.layer, { ...ok.attested, extent: pages([1]) }]), `${lab("layer")} -> ${lab("attested")} (m1, 2026-01-01)`);
 });

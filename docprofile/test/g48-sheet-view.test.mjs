@@ -92,14 +92,14 @@ test("R38 the first lines of every sheet of a workbook text are in the view, emp
   assert.deepEqual([off.heads_used, off.sheet_heads], [false, []]);
 });
 
-test("R19 classified_over is answered only when the view was used, with the sentence in why by its function; whole-text classes are unchanged", () => {
+test("R19 R39 classified_over is answered only when the view was used, with the sentence in why by its function; whole-text classes are unchanged", () => {
   const t = sheetOf(3 * MB);
-  const base = readText({ document: t }, {});
+  const base = readText({ document: t.slice(0, MB) }, {});
   assert.equal("classified_over" in base, false);
   const r = readText(csv(t), {});
   assert.deepEqual(Object.keys(r.classified_over), ["chars", "of", "head_chars", "windows", "sheet_heads", "heads_used"]);
   assert.deepEqual(Object.keys(r).filter((k) => k !== "classified_over"), Object.keys(base));
-  assert.equal(r.why, `${base.why}; ${dp.classifiedWhy(r.classified_over)}`);
+  assert.ok(r.why.endsWith(`; ${dp.classifiedWhy(r.classified_over)}`), "the sentence stating the view ends why");
   for (const v of [dp.CLASSIFY_WHOLE_MAX_CHARS, r.classified_over.chars, t.length, r.classified_over.head_chars, r.classified_over.windows.length])
     assert.ok(dp.classifiedWhy(r.classified_over).includes(String(v)), String(v));
   // exactly the bound: whole; one over: sampled
@@ -110,16 +110,20 @@ test("R19 classified_over is answered only when the view was used, with the sent
   assert.ok(!exact.why.includes(";"));
   reset();
   assert.equal("classified_over" in readText(csv(at + "x"), {}), true);
-  // a bare string, pages and paragraphs are never sampled, of any size (K4571)
+  // R39 (fix round 9, G133f; X25): a bare string, pages and paragraphs are classified from the same view, of any size, without sheet heads
   const big = sheetOf(5 * MB);
   const shapes = { string: big, pages: { pages: [{ page: 0, text: big }] }, paragraphs: { paragraphs: [{ para: 0, text: big }] },
                    "document with pages": { document: big, pages: [{ page: 0, text: big }] } };
   for (const [name, supplied] of Object.entries(shapes)) {
     reset();
     const w = readText(supplied, {});
-    assert.equal("classified_over" in w, false, name);
-    assert.deepEqual(seen.lens, [big.length], `${name} is handed whole`);
-    assert.ok(!w.why.includes(";"), name);
+    const co = w.classified_over;
+    assert.ok(co, `${name} is classified from a stated view`);
+    assert.deepEqual(seen.lens, [co.chars], `${name} is handed the view`);
+    assert.ok(co.chars <= dp.CLASSIFY_VIEW_MAX_CHARS && co.of === big.length, name);
+    assert.deepEqual([co.sheet_heads, co.heads_used], [[], false], name);
+    assert.equal(co.windows.length, dp.CLASSIFY_WINDOWS, name);
+    assert.ok(w.why.endsWith(`; ${dp.classifiedWhy(co)}`), name);
   }
 });
 

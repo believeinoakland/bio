@@ -33,8 +33,9 @@
  */
 
 import { readJpegHeader, decodeBaselineJpegRows, DctRefusal } from "./dctdecode.mjs";
-import { decodePng, PngRefusal, PNG_REFUSES, MEMORY_FEATURE } from "./pngdecode.mjs";
-import { REFUSALS, DCT_TO_REFUSAL, featureReasons, encodePng8 } from "./pagepixels.mjs";
+import { decodePng, PngRefusal, PNG_REFUSES } from "./pngdecode.mjs";
+import { REFUSALS, DCT_TO_REFUSAL, featureReasons, encodePng8, isSource } from "./pagepixels.mjs";
+import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
 
 /** The largest frame held whole here, as `width × height × components`
  *  (R42): a PNG's full frame, read from its header, and a JPEG's REDUCED frame,
@@ -43,7 +44,7 @@ import { REFUSALS, DCT_TO_REFUSAL, featureReasons, encodePng8 } from "./pagepixe
  *  4000×3000, 4080×3072) pass whole. Measured at T43-5 (its job record): a
  *  whole decode's live working set is 2.0–2.33 bytes per sample, so this bound
  *  holds it under 88 MB of a 128 MB isolate. */
-export const PICTURE_FRAME_MAX = 4096 * 3072 * 3;
+export const PICTURE_FRAME_MAX = boundOf("image", "picture_frame");
 
 /** The largest JPEG frame decoded here, as `width × height × components` read
  *  from its header (R42, T44): 16384 × 12288 × 3, a 201-megapixel colour
@@ -53,7 +54,8 @@ export const PICTURE_FRAME_MAX = 4096 * 3072 * 3;
  *  process's own, at 48 and at 195 MP, beside the input bytes the caller
  *  holds), so the bound is CPU time: 40–60 ms per megapixel in node, about
  *  12 s for a 200 MP colour reduction, 8 s grey, under a 30 s CPU limit. */
-export const PICTURE_SOURCE_MAX = 16384 * 12288 * 3;
+export const PICTURE_SOURCE_MAX = boundOf("image", "picture_source");
+const EDGE_MAX = boundOf("image", "edge");
 
 const refuse = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
@@ -62,8 +64,8 @@ const refuse = (reason, detail = {}) => {
 
 /* R42: a codec's refusal mapped as R22 and R25 map them, total over PNG_REFUSES
  * (every declared feature is UNSUPPORTED_FILTER unless named here). */
-const PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, { [MEMORY_FEATURE]: "IMAGE_TOO_LARGE" });
-const PNG_CODE_REASONS = { TRUNCATED: "TRUNCATED_IMAGE_DATA" };
+const PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, {});
+export const PNG_CODE_REASONS = { TRUNCATED: "TRUNCATED_IMAGE_DATA", IMAGE_TOO_LARGE: "IMAGE_TOO_LARGE" };
 /** The `REFUSALS` reason each PNG_REFUSES feature answers, declared so a test
  *  can see the mapping is total. (The memory key is behind `PICTURE_FRAME_MAX`,
  *  which refuses first.) */
@@ -151,6 +153,21 @@ function orientationIn(t) {
 const AXES = [null,
   [true, false, false], [true, true, false], [true, true, true], [true, false, true],
   [false, false, false], [false, false, true], [false, true, true], [false, true, false]];
+
+/* R43, R48: the orientation that is `o` followed by a clockwise turn of `deg`.
+ * Each orientation is the signed permutation it applies to (x, y); a clockwise
+ * quarter turn on a picture with y downwards is (x, y) -> (-y, x). */
+const matrixOf = (o) => {
+  const [xToX, xRev, yRev] = AXES[o];
+  const sx = xRev ? -1 : 1, sy = yRev ? -1 : 1;
+  return xToX ? [sx, 0, 0, sy] : [0, sy, sx, 0];
+};
+function turnedOrientation(o, deg) {
+  let m = matrixOf(o);
+  for (let q = deg / 90; q > 0; q--) m = [-m[2], -m[3], m[0], m[1]];
+  for (let c = 1; c <= 8; c++) if (matrixOf(c).every((v, i) => v === m[i])) return c;
+  throw new Error(`no orientation for ${o} turned ${deg}`);
+}
 
 /** The orientation's picture size: 5–8 swap the sides. */
 const orientedSize = (w, h, o) => (AXES[o][0] ? [w, h] : [h, w]);
@@ -435,9 +452,11 @@ export function preparePicture({ samples, width: w, height: h }, maxEdge) {
  * refusal from `REFUSALS`. `maxEdge` (a positive integer) bounds the long edge;
  * `grey` turns the picture grey.
  */
-export async function renderPictureToPixels(bytes, pageIndex, { maxEdge, grey = false, prepare = false } = {}) {
+export async function renderPictureToPixels(bytes, pageIndex, { maxEdge, grey = false, prepare = false, turn: turnAsked = 0 } = {}) {
   if (!Number.isInteger(maxEdge) || maxEdge < 1) throw new TypeError("renderPictureToPixels: maxEdge must be a positive integer");
   if (prepare) grey = true;   /* R44: the preparation works on grey */
+  const turn = [90, 180, 270].includes(turnAsked) ? turnAsked : 0;   /* R48 */
+  if (isSource(bytes)) bytes = await bytes.readRange(0, bytes.size);   /* R47: a picture is read whole */
   const b = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
   const format = b && sniff(b);
   if (!format) return refuse("NOT_A_PICTURE");
@@ -448,40 +467,42 @@ export async function renderPictureToPixels(bytes, pageIndex, { maxEdge, grey = 
     try { h = readJpegHeader(b); } catch (e) { return jpegRefusal(e); }
     const source = { format, width: h.frame.width, height: h.frame.height, comps: h.frame.comps.length };
     const orientation = exifOrientation(b);
-    const k = reductionFor(...orientedSize(source.width, source.height, orientation), maxEdge);
-    const tooBig = overBound(source, PICTURE_SOURCE_MAX, "PICTURE_SOURCE_MAX") ?? overReduced(source, k);
+    const applied = turnedOrientation(orientation, turn);
+    const k = reductionFor(...orientedSize(source.width, source.height, applied), maxEdge);
+    const tooBig = overEdge(source) ?? overBound(source, PICTURE_SOURCE_MAX, "PICTURE_SOURCE_MAX") ?? overReduced(source, k);
     if (tooBig) return tooBig;
     /* Decoded while reduced (T44): the decoder hands over a strip of finished
      * rows at a time and only the reduced picture is kept. */
-    const red = reducer(source.width, source.height, source.comps, { grey, orientation, k });
+    const red = reducer(source.width, source.height, source.comps, { grey, orientation: applied, k });
     try { decodeBaselineJpegRows(b, { onRows: (rows, y0, count) => red.rows(rows, y0, count) }); } catch (e) { return jpegRefusal(e); }
-    return answer(red.done(), { source, orientation, k }, prepare, maxEdge);
+    return answer(red.done(), { source, orientation, k, turn }, prepare, maxEdge);
   }
 
   /* A PNG is decoded whole (image-codecs R10) and judged on its full frame
    * against PICTURE_FRAME_MAX; it is never turned (R43). */
   const hd = pngHeader(b);
   const source = { format, width: hd ? hd.width : null, height: hd ? hd.height : null, comps: hd ? hd.comps : null };
-  const tooBig = hd && overBound(source, PICTURE_FRAME_MAX, "PICTURE_FRAME_MAX");
+  const tooBig = hd && (overEdge(source) ?? overBound(source, PICTURE_FRAME_MAX, "PICTURE_FRAME_MAX"));
   if (tooBig) return tooBig;
   let pic;
   try { pic = await decodePng(b); } catch (e) { return pngRefusal(e); }
   if (!hd) Object.assign(source, { width: pic.width, height: pic.height, comps: pic.comps });
-  const k = reductionFor(pic.width, pic.height, maxEdge);
-  const red = reducer(pic.width, pic.height, pic.comps, { grey, orientation: 1, k });
+  const applied = turnedOrientation(1, turn);
+  const k = reductionFor(...orientedSize(pic.width, pic.height, applied), maxEdge);
+  const red = reducer(pic.width, pic.height, pic.comps, { grey, orientation: applied, k });
   red.rows(pic.samples, 0, pic.height);
   pic.samples = null;
-  return answer(red.done(), { source, orientation: 1, k }, prepare, maxEdge);
+  return answer(red.done(), { source, orientation: 1, k, turn }, prepare, maxEdge);
 }
 
-async function answer(r, { source, orientation, k }, prepare, maxEdge) {
+async function answer(r, { source, orientation, k, turn }, prepare, maxEdge) {
   const prepared = prepare ? preparePicture(r, maxEdge) : null;
   if (prepared) r = prepared;
   return {
     ok: true, page: 0, route: "decoded-picture", mediaType: "image/png",
     bytes: await encodePng8(r.samples, r.width, r.height, r.comps),
     width: r.width, height: r.height, upright: true,
-    orientation, reduced_by: k, source,
+    orientation, turned_deg: turn, reduced_by: k, source,
     ...(prepared ? { prepared: prepared.prepared } : {}),
     pixels_sha256: await sha256Hex(r.samples),
   };
@@ -492,6 +513,13 @@ function overBound({ width, height, comps }, bound, name) {
   const samples = width * height * comps;
   return samples > bound
     ? refuse("IMAGE_TOO_LARGE", { page: 0, width, height, comps, samples, bound, bound_name: name })
+    : null;
+}
+
+/** Either side of the header's frame against the edge bound (R42, R46). */
+function overEdge({ width, height, comps }) {
+  return width > EDGE_MAX || height > EDGE_MAX
+    ? refuse("IMAGE_TOO_LARGE", { page: 0, width, height, comps, bound: EDGE_MAX, bound_name: "edge" })
     : null;
 }
 

@@ -1,6 +1,6 @@
 # image-codecs (T51)
 
-**Status** · session_01YPCgAZ8Ga6MXdTiGufjUD7 · depth 2 · COMPLETE · handled B4
+**Status** · session_015qkDnLHcfXrkvLPEKdDKjT · depth 2 · COMPLETE · handled B7
 
 ## J1 · COMPLETE
 
@@ -71,3 +71,53 @@ If you would rather keep the English value and accept the words-check failure fo
 - `node bio-plane/src/setup-words/build.mjs --check` exits 1: `rows.mjs` is stale for `image-codecs.jpxdecode.marker_0x_m_where_sot` (the generated row list). It is generated; I have not regenerated it, as BOB does that at layer close.
 
 Size (session_01YPCgAZ8Ga6MXdTiGufjUD7): test runs 36, module lines 3423.
+
+## J4 · QUESTION
+
+QUESTION (best reading given; I carry on with it). Fix round 9, image-codecs R4, R10, R12, R13.
+
+My ceilings and the rows I read (no numeric literal of mine, R13):
+- `boundOf("image","pixels")` 120,000,000, `"edge"` 65,535, `"row_stride"` 8 MiB, `"chunks"` 65,536: all four exist.
+- R4/R10 keep a working-set ("memory") bound, today `61_300_000` in jpxdecode.mjs and pngdecode.mjs (the measured OCR-isolate figure). No `image` row holds it. I read `boundOf("ocr","frame_bytes")` (61,300,000, the same figure and source) so the behaviour is unchanged and no member limit moves. If you want a row of its own, it is `image.working_set` {standard 61300000, alpha 61300000, protective 61300000} for runtime-limits to add; I change one import line.
+- R4 says the JPX precinct/tile objects are counted against "the table's retained-objects bound": I read `boundOf("office","retained_objects")` (250,000 proposed, BOB confirming for JPX). I count precinct objects plus code-block objects per band, from the header, closed form. If you want an `image.retained_objects` row instead, same one-line change.
+
+Needed from you: nothing if both readings stand; say so only if you want the two rows added and the import re-pointed.
+Also noted for later: I keep exporting `MEMORY_FEATURE` (an identifier, no longer a key of JPX_REFUSES/PNG_REFUSES) so pdf-pixels' imports in pagepixels.mjs and picturepixels.mjs still load; the memory refusal is now code `IMAGE_TOO_LARGE`, which pdf-pixels (job 14) must map (today it falls to DECODE_FAILED).
+
+## J5 · QUESTION
+
+QUESTION (best reading given; I carry on with it). Fix round 9, image-codecs R12 against pdf-pixels' picture route.
+
+R12 judges every JPEG entry point against `image.pixels` (120,000,000). The picture route of pdf-pixels decodes a member's photo with `decodeBaselineJpegRows` (my R11, which holds no full-size plane: its live set is one MCU row) and admits frames up to its own `PICTURE_SOURCE_MAX` = 16384 x 12288 x 3 (a 201-megapixel frame; its R42 tests drive 16320 x 12240). With R12 as written the rows decoder refuses a JPEG over 120 megapixels `IMAGE_TOO_LARGE` from its header, so a 120-200 MP phone photo that reads today would be refused: that changes what a member may do, which is Bob's (R-SILENT, K1881).
+
+My reading, implemented now: follow R12 literally for both entry points (`decodeBaselineJpeg` and `decodeBaselineJpegRows`): the table's figure, no second figure of mine. The hostile case R12 names (a 330-byte JPEG declaring 60,000 x 60,000) needs the rows route judged too, since its cost there is time, not memory.
+
+Choices, for you to rule: (a) keep as implemented: photos over 120 MP are refused, and pdf-pixels' R42 tests that drive 16320 x 12240 change with it (pdf-pixels, job 14); (b) judge the rows route against a row of its own, e.g. `image.rows_pixels` = 201,326,592 (16384 x 12288) alpha, standard and protective, key `limit.image.rows_pixels`, for runtime-limits to add, and I re-point one line; the 120 MP stays for the whole-frame `decodeBaselineJpeg`.
+I recommend (b) if the 200 MP phone frames are meant to keep reading; (a) if 120 MP is the intended ceiling of every picture.
+
+## J6 · COMPLETE
+
+COMPLETE · fix round 9 (B5): G125a (ccitt, dct, jbig2), G125b (jpx), G132l (d) (mq, jbig2), G124 quotes (R13). Commits on job/T51/image-codecs up to the one pushed with this entry.
+
+**Entries applied.**
+- R12/G125a: ccitt, dct, jbig2, png judge declared size before any allocation, `IMAGE_TOO_LARGE` in the codec's class (`CcittRefusal` new, `DctRefusal`, `Jbig2Refusal`, `PngRefusal`, `JpxRefusal`), detail `{bound_name, size, bound, key, width, height...}`, final, no `transient`. Bounds: image.pixels, image.edge, image.chunks (png); jbig2 also counts symbols/patterns against retained objects; row stride is implied by the edge (65,535 x 8 B << 8 MiB), so it is not judged apart.
+- R4/G125b: jpx counts tile, precinct, code-block and packet-order objects in closed form per band before `addPrecincts`; working set and pixels/edge from the table; `MEMORY_FEATURE` still exported (identifier only, no longer a key of JPX_REFUSES/PNG_REFUSES, R7).
+- R5/G132l (d): `MqDecoder(data, start, end, {onShort})`; marker feeds past the coder's look-ahead (4; legit streams measured max 2 over 148 coders) count as bytes missing; all six JBIG2 arithmetic sites stop at once with TRUNCATED.
+- R13/G124: no ceiling literal in the six sources; a test greps them (negative control run). Guards that are not size ceilings (loop-termination guards `1<<16`, `+1e6`, `4*w+16`, `nl>32`) are kept.
+- Ruled rows (K4858, K4862): the code reads `image.working_set`, `image.retained_objects`, `image.rows_pixels` when the table has them, else the row holding the same figure (`ocr.frame_bytes`, `office.retained_objects`, `image.pixels`); verified both ways (tests green with and without the three rows added locally). No edit is needed when runtime-limits' rows land; the guard lines may be deleted at any later CHANGE. NOTE: until `image.rows_pixels` lands, the rows decoder is judged at 120 MP (pdf-pixels' 200 MP R42 tests will not pass until then).
+
+**Red then green (R-FOUR 3).** Reds seen before the code: CCITT 60000x60000 `ok:true` after 3.4 s (red: "R12 CCITT: 8,000 bytes declaring 60,000 x 60,000 ... actual false expected true"); DCT 60000x60000 gave `CORRUPT_DATA` not `IMAGE_TOO_LARGE`; JBIG2 16000x16000 not refused; JPX SIZ 500 2x2 gave `TRUNCATED` not `IMAGE_TOO_LARGE`; R5 `onShort` never called; JBIG2 taller region decoded. 19 reds, all green now: codecs suite 80/80, bounds.test.mjs 5 runs and `taskset -c 0` green.
+
+**Known limit (G132l d).** A region taller than its data is refused when the invented rows cost bits (12 of 16 generic fixtures at +400 rows). The other 4 decode white from the coder's 1-bit feed; that cannot be told from a legitimate blank tail. The test says so.
+
+**Found in other modules (REPORT-equivalent).** pdf-pixels: `pagepixels.mjs` maps codec codes by `e.code`; `IMAGE_TOO_LARGE` (any codec, and CCITT's plain Error is now `CcittRefusal` for it) falls to DECODE_FAILED. Failing today, as expected: `pdf-worker/test/jpx.test.mjs` (4, the R25 memory-bound cases) and `pagepixels.test.mjs` (2, R42 total mapping of PNG_REFUSES and a control). BOB has forwarded the mapping to job 14. Also `ocr-worker` R19 STALE BUNDLE.
+
+**Stale generated artifacts I made.** `ocr-worker/dist/ocr-worker.bundled.mjs` and its manifest, `bio-plane/dist/bio-plane.bundled.mjs`, `agent-worker/dist/*`, `release/*.bundled.mjs`, and setup-words `rows.mjs` (new ids below; retired `image-codecs.jpxdecode.the_decode_would_hold_more`, `image-codecs.pngdecode.the_decode_would_hold_more`, `image-codecs.jbig2decode.bitmap_of_w_x_h`).
+
+**Words owed (later-ux.md, stand-ins keyed through localize):** ccittdecode.the_picture_is_columns_wide(_2); dctdecode.the_picture_is_width_by_height; jbig2decode.the_bitmap_is_w_by_h(_2), the_symbol_dictionary_declares_n, the_pattern_dictionary_declares_n; jpxdecode.the_image_is_w_by_h(_2), the_decode_would_hold_bytes_at, the_codestream_s_precincts_and_code; pngdecode.the_file_holds_more_than_chunks, the_image_is_w_by_h(_2), the_decode_would_hold_bytes_at.
+
+**New files:** `pdf-worker/test/codecs/bounds.test.mjs`, `alloc-spy.mjs` (both under my tests path).
+
+**Tests and checks.** codecs 80/80 (`node --test pdf-worker/test/codecs/`); impact users run: image-cover/doc-clean 57 pass 0 fail, case-carriage 98/98, pdf-pixels files as above. format 0 failures (176 modules); architecture 0; coverage 13 of 13 ids, 0; words 0 (inline 0, plain 0); ownership 14 files, 0.
+
+Size (session_015qkDnLHcfXrkvLPEKdDKjT): test runs 40, module lines 3,170
