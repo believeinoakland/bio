@@ -1,6 +1,6 @@
 # Diagnosis S25: OCR text of a later piece under a chain that does not cover it
 
-**Status** · Written by EXTRACTION #42 (job 41, fix round 9), 2026-10-24, before any change to the module (B50: "write it FIRST"). Result: **reproduced**, for a PDF whose first piece holds typed pages and whose later pieces hold scans. Not a cause until BOB opens a G-entry for it (P10). Reproduction: `bio-plane/test/m/extraction/s25-pieces-chain.test.mjs`.
+**Status** · Written by EXTRACTION #42 (job 41, fix round 9), 2026-10-24, before any change to the module (B50: "write it FIRST"). Result: **reproduced**, for a PDF whose later pieces hold pages of another kind than its first (typed then scans, or scans then typed). BOB ruled the extraction half into job 41 (K4911): a later range answers `reading.piece_chain`; this module indexes under it and folds it into the stored chain. Not a cause until BOB opens a G-entry for it (P10). Reproduction: `bio-plane/test/m/extraction/s25-pieces-chain.test.mjs`.
 
 ## The hypothesis (plan, entry G128, item S25)
 
@@ -19,7 +19,9 @@ The OCR member is a scripted stand-in answering every page it is asked with `sca
 |---|---|---|---|
 | every page a scan | yes | yes (`ocr`) | yes |
 | two typed pages, then four scans | yes | **no**: pages 2 to 5 are `layer` in pieces, `ocr` whole | **no** |
-| two scans, then four typed pages | yes | yes | yes |
+| two scans, then four typed pages | yes | **no**: pages 2 to 5 are `ocr` in pieces, `layer` whole | **no** |
+
+(Correction, the same day: a first run built the typed pages in pdfgen's default `winansi` font, which tier 1 reads as undecodable without the pdf-worker member, so its "typed" pages held no text and the scans-first case looked unaffected. Built in `type0`, which tier 1 decodes, both mixed orders fail.)
 
 The red line (pieces against whole, pages 2 to 5): `actual: [ [ 2, 'layer' ], [ 3, 'layer' ], [ 4, 'layer' ], [ 5, 'layer' ] ]`, `expected: [ [ 2, 'ocr' ], [ 3, 'ocr' ], [ 4, 'ocr' ], [ 5, 'ocr' ] ]`.
 
@@ -29,7 +31,7 @@ The red line (pieces against whole, pages 2 to 5): `actual: [ [ 2, 'layer' ], [ 
 2. `extraction/index.mjs:979` (`#continueText`): the piece is indexed under `(out.reading || stored reading).text_source`. With OCR facts present `out.reading` is the facts object and its `text_source` is undefined, so the chain is null; without them the first piece's stored chain is used. Either way the units of the OCR'd later pages take `chain_kind` from a chain that does not name them (`layer` from the first piece's typed pages, or `undetermined`).
 3. The stored reading is not rewritten by a piece (R90), so its `text_source` stays the first piece's: a content row minted over a later page (`content`'s address over capture, extent and chain) is addressed under a chain that says the page was a text layer when OCR read it, and `op=reading`'s `text_provenance` says the same.
 
-The text itself is right in every case: only the provenance of a later piece's pages is wrong. A document read in one piece, and one whose first piece already carries a document-wide OCR chain, are unaffected.
+The text itself is right in every case: only the provenance of a later piece's pages is wrong. A document read in one piece, and one whose pages are all of one kind, are unaffected; any PDF whose later ranges hold pages of a kind the first range does not is affected.
 
 ## The fix it needs (for BOB's G-entry; not applied here)
 
