@@ -2886,6 +2886,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
        true), so `extraction` stores it and `content`'s extent gate finds one. A reading with no unit list has none. */
     /* R49: the encoding the text was decoded in, whether it was assumed, the windows that disagree, and a replacement past the
        tolerance counted as a part not read (partial) */
+    /* R52 (G133f): a text judged from a view (docprofile R19, R40: above 2 MiB, whatever its kind) says so, as the entry path's reading does (R11) */
+    { const sampled = docType.classified_over && typeof docType.classified_over === "object" ? docType.classified_over : null;
+      if (sampled) { reading.classified_over = sampled; reading.basis = reading.basis ? `${reading.basis} — ${classifiedOverSentence(sampled)}` : classifiedOverSentence(sampled); } }
     Object.assign(reading, encodingFacts(decoded));
     if (decoded && decoded.ok && decoded.replaced_ratio > REPLACED_TOLERANCE) reading.units_skipped = (reading.units_skipped || 0) + 1;
     if (textUnits) {
