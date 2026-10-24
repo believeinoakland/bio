@@ -217,3 +217,17 @@ CHANGE (K4862). You are merged (rows 1-19). Three more rows, each exactly as giv
 20. `image`, `rows_pixels`: 201,326,592 pixels for standard, alpha and protective (a count; 16384 x 12288, today's photo ceiling of the rows route), key `limit.image.rows_pixels`.
 21. `pdf`, `object_stream`: change its alpha and protective figures to 33,554,432 (32 MiB; standard as it is if higher, else 33,554,432): the 16 MiB protective figure refused a real govinfo file's 18.55 MiB object stream.
 22. `pdf`, `xmp`: 2,097,152 bytes for all three, key `limit.pdf.xmp`.
+
+## B6 · START
+
+START · RUNTIME-LIMITS #9 · tranche T51 · product believeinoakland/bio · fix round 9, batch C: three `READ_BOUNDS` rows for acquisition (K4882; K4842 (1); runtime-limits R30) · depth 2 (BOB #275 at depth 1)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/runtime-limits tranche/T51 && git branch -m job/T51/runtime-limits stale/runtime-limits-local && git checkout -b job/T51/runtime-limits origin/job/T51/runtime-limits`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module runtime-limits`; record `build/jobs/T51/runtime-limits.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <your test files>` from the repository root (the command RUNTIME-LIMITS #7's record used). Your diff touches only this module's `paths`, its `tests` and your record (ownership). Never contact any live deployment.
+
+**Why this job.** `bio-plane/src/read-bounds.mjs` is runtime-limits' alone (K4842 (1)). ACQUISITION #32 (job 23, running) quotes three ceilings with no row; add each exactly as given (kind, name, standard, alpha, protective, key; the table's own `bytes(...)` helper where the file uses it), each with today's figure in all three columns, so no member-facing bound moves (K1881):
+1. `capture`, `keep_bytes`: 33,554,432 (32 MiB; acquisition `MULTIPART_KEEP_MAX`) standard, alpha and protective; key `limit.capture.keep_bytes`.
+2. `capture`, `profile_text_bytes`: 8,388,608 (8 MiB; `PROFILE_TEXT_MAX`) x3; key `limit.capture.profile_text_bytes`.
+3. `render`, `dom_bytes`: 26,214,400 (25 MiB, the serialised-DOM bound handed to capture-sources' `renderBlock` as `domBound.bound`; BOB's protective figure, K4831 (8)) x3; key `limit.render.dom_bytes`.
+Merge `origin/tranche/T51` into your branch first (never a rebase). Test each row through `boundOf` and `statement` beside the table's existing tests (a test naming R30's row contract), run runtime-limits' suite and its importers (`build/plan/impact.mjs origin/tranche/T51 HEAD`), the checks (format, architecture, coverage, words, ownership), then COMPLETE with a `Size` line. The rows' sentences are the quoting module's keys; add no sentence. Nothing else in this job.
