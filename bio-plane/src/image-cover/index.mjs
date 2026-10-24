@@ -11,19 +11,14 @@
  * and never throwing (R8): the image's metadata left behind without re-encoding it, the coded data copied byte for
  * byte (`strip.mjs`). `format` is "jpeg", "png", "gif", "webp", "jp2" or "j2k"; `changed` is false exactly when
  * nothing was removed, and then `bytes` equal the input. */
-import { CoverRefusal, checkAreas } from "./geometry.mjs";
+import { CoverRefusal, checkAreas, COVER_MAX_BYTES, COVER_MAX_PIXELS } from "./geometry.mjs";
 import { coverJpeg } from "./jpeg.mjs";
 import { coverPng } from "./png.mjs";
 import { stripImage } from "./strip.mjs";
 import { localize, word } from "../setup-words/index.mjs";
 
-/** The largest photo covered, in bytes; a larger one is refused before a byte of it is read (R3, R4). */
-export const COVER_MAX_BYTES = 32 * 1024 * 1024;
-
-/** The most pixels a photo may declare; more is refused from its header, before anything is decoded (R3): a small
- *  file can declare a huge image, and the cover's time grows with the pixels. 120 MP admits every phone camera's
- *  usual output (12, 48, 50, 108 MP) and refuses a 200 MP sensor's full-resolution file. */
-export const COVER_MAX_PIXELS = 120_000_000;
+/* The ceilings this module keeps are read from `READ_BOUNDS` (R3, R10, R11): `geometry.mjs` holds them. */
+export { COVER_MAX_BYTES, COVER_MAX_PIXELS };
 
 /** Every refusal code, with what it means (R3). */
 export const COVER_REFUSALS = Object.freeze({
@@ -35,6 +30,8 @@ export const COVER_REFUSALS = Object.freeze({
   PHOTO_TOO_LARGE: word("refusal.PHOTO_TOO_LARGE"),
   TRUNCATED_IMAGE_DATA: word("refusal.TRUNCATED_IMAGE_DATA"),
   IMAGE_DATA_CORRUPT: word("refusal.IMAGE_DATA_CORRUPT"),
+  /* a stand-in: the held row of this code speaks of a page image to transcribe; the row owed is this module's (R10) */
+  IMAGE_TOO_LARGE: localize("image-cover.index.image_too_large", "The photo is too large to cover safely, so it was refused. Nothing was changed."),
 });
 
 const isJpeg = (d) => d.length >= 3 && d[0] === 0xff && d[1] === 0xd8 && d[2] === 0xff;
@@ -67,6 +64,7 @@ export const STRIP_REFUSALS = Object.freeze({
   TRUNCATED_IMAGE_DATA: word("refusal.TRUNCATED_IMAGE_DATA"),
   IMAGE_DATA_CORRUPT: word("refusal.IMAGE_DATA_CORRUPT"),
   ANIMATED_IMAGE: word("refusal.ANIMATED_IMAGE"),
+  IMAGE_TOO_LARGE: COVER_REFUSALS.IMAGE_TOO_LARGE,
 });
 
 /** Strip an image's metadata without re-encoding it (R8): what R2 forbids is left behind, the coded data is kept

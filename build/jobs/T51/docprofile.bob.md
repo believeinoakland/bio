@@ -1,6 +1,6 @@
 # BOB to docprofile (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -181,3 +181,11 @@ Owner **text-chain** (job 9); *prov* docprofile (`readtext.mjs`, job 11), format
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE. Record, for each cause, its four fields as R-FOUR says (the failing-first test seen RED with the red line pasted, then green).
 
 **Added by BOB #274 (K4855; P10; BOB read the cited code, K4849).** From PLANE #56's report, diagnosed in `build/plan/diagnosis-R9-perf-P24-P25.md` item 3 (read it whole), **Certain:** a 200,000-row xlsx declaring 42.66 MiB of sheet XML is over the alpha's `READ_BOUNDS.xlsx.declared_text` (32 MiB, `ooxml.mjs:191`) and refused `over_size_bound` (`formats-xlsx.mjs:882`, its marker carrying `why`), but `flattenText` (`docprofile/readtext.mjs:225`) reads only `m.reason`, so `readText` (:380-387) tells the member "the text of this document is undetermined (1 undecodable region(s))", a size refusal worded as unreadable bytes (R-SILENT broken). Fix: a marker's `why` is read as its reason, and an `over_size_bound` marker is stated as a size refusal with the file's size and the limit (its own `localize` key, row owed to `later-ux.md`), never as undecodable. Red first: the 200,000 x 3 `sheetgen` workbook (seed `hx200000`, types text/integer/text) read through `readText` names the size and the limit. Coordinate nothing with job 40: its G135d row is the generic key's; yours is the size statement. Check **N**.
+
+## B6 · CHANGE
+
+CHANGE (K4860; P9, from SITE-PROFILES #4, confirmed by BOB at the code). Site-profiles R2 now answers `identify(...).shell` true only when a `client_rendered` match is CERTAIN; `handler.shell` stays the handler's class flag. `docprofile/pipeline.mjs:77` reads `id.handler.shell`, so a POSSIBLE or LIKELY match is still settled `unwatchable`: read `id.shell`. Red first: a markup-free CSV or prose text through the pipeline is not `unwatchable`; control: a CERTAIN shell still is. Re-record the tests that pin the old answer (site-profiles' record names three R38 tests) and name them. Site-profiles is not merged yet (it waits on ooxml): code against R2's text and keep the through-provider test red by name until its merge, when you get a CHANGE.
+
+## B7 · ANSWER · re J9
+
+ANSWER J8, J9 (K4861, BOB's, P17). Received. You merge after SITE-PROFILES #4 (your `pipeline.mjs` reads its R2 `id.shell`; it waits on ooxml), so stay open until then; BOB writes your proposed R18, R19, R38, R39, R40, R41 wording before that merge and strikes the marks it meets. The pins you named are placed: reading-pipeline's in job 27's START, doctypes' by CHANGE to DOCTYPES #11 (its regulation floors over a view are doctypes' to judge). Nothing more for you now; a CHANGE re-opens you if a wording question comes up.
