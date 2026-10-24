@@ -807,3 +807,7 @@ session_019jzP674bQQxG4CVu7SZEUt,job,subresources,2610603,96532,44,9182,,6,1403
 session_012TFpuR6hxXes7JUpRFtJKB,job,installer-steps,3411545,88171,60,10428,,4,2160
 session_01JwFMfy4ht6vi8HQYUy47Nm,job,image-cover,3763643,119954,58,28226,,8,1348
 session_01PhBb7MkFDrjvHxjEN19MtM,job,pdf-worker,10747966,184488,120,50622,,22,264
+session_015qkDnLHcfXrkvLPEKdDKjT,job,image-codecs,39118269,389803,754,141129,,40,3170
+session_01TDA3atpeF5SKeYhvA5nna4,job,file-scanner,24077821,283182,1206,115624,,18,5932
+session_01WbxrGGnsckmJi79PwS3pyv,job,doc-clean,13052105,216355,130,62929,,2,1139
+session_0189TCqWsfgZ58Dcm8TZihQh,job,ooxml,21893452,325513,164,123039,,14,2480
