@@ -7,7 +7,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, caseFm, makePng, sha, NOW } from "./fixture.mjs";
 import { pdf, has, SECRETS } from "../doc-clean/fixtures.mjs";
-import { makeZip } from "../../make-zip.mjs";
+import { makeZip, zipChunks64 } from "../../make-zip.mjs";
+import { readContainer } from "../../../src/ooxml.mjs";
+import { docx, unzipCopy, enc } from "../doc-clean/fixtures.mjs";
 import { CLEAN_MAX_BYTES } from "../../../src/doc-clean/index.mjs";
 import { DOCUMENT_COPY_BATCH_MAX, DOCUMENT_COPY_RETRY_MS, COPY_NOW_MAX_BYTES, COPY_CLEANED_LABEL, OBSCURED_LABEL, CASE_CARRIAGE_CHECKS,
          CASE_CARRIAGE_DOCUMENT_TABLES, MEMBER_DOCUMENT_ONLY_AS_COPY, ARCHIVE_SUPPLIED_BY_MEMBER, obscuredKey }
@@ -519,4 +521,74 @@ test("R15 (T51; G9) copyNow keeps copyBatch's rules: only documents named and qu
   assert.deepEqual(w4.snapshot(), before);
   /* never rejects on bad input */
   for (const bad of [undefined, null, {}, { shas: "x" }, { shas: [] }]) assert.equal((await w.cc.copyNow(bad)).ok, true);
+});
+
+test("R15 (T51; G136c) the attempt is stamped (tried) before the clean runs, so a cleaner that crashes mid-clean is not re-run on every wake: a clean that throws is attempted once and not again until DOCUMENT_COPY_RETRY_MS; copyWake reads the stamp; a clean that succeeds after a stamped attempt stores as before", async () => {
+  /* the stamp is in the table while the clean is still running (a crash there leaves it) */
+  const w = world();
+  const knock = supplied(w, "INFO-2026-0101-knock", KNOCKED);
+  const real = w.cc.clean;
+  let seen = null;
+  w.cc.clean = async (bytes) => { seen = queue(w); return real(bytes); };
+  const ok = await w.cc.copyBatch({});
+  assert.deepEqual(seen, [{ capture: knock, queued: NOW, tried: NOW }], "tried is stamped before the clean is called");
+  assert.deepEqual([ok.copied, ok.failed, ok.remaining], [1, 0, 0], "a clean that succeeds stores as before");
+  assert.equal(w.cc.documentCopy(knock).state, "copy");
+  assert.deepEqual(queue(w), []);
+  /* a clean that throws: attempted once; the next wake does not call it until its back-off */
+  const t = world();
+  const crash = supplied(t, "INFO-2026-0101-crash", KNOCKED);
+  let calls = 0;
+  t.cc.clean = async () => { calls++; throw new Error("the cleaner crashed mid-clean"); };
+  const first = await t.cc.copyBatch({});
+  assert.deepEqual([calls, first.failed, first.remaining], [1, 1, 1]);
+  const now = Date.parse(NOW);
+  assert.equal(t.cc.copyWake(now), now + DOCUMENT_COPY_RETRY_MS, "the wake waits for the back-off");
+  t.clock.now = LATER(1000);
+  assert.equal((await t.cc.copyBatch({})).failed, 0);
+  assert.equal(calls, 1, "the next wake does not call the cleaner again");
+  t.clock.now = LATER(DOCUMENT_COPY_RETRY_MS);
+  await t.cc.copyBatch({});
+  assert.equal(calls, 2, "after the back-off it is tried again");
+  assert.equal(t.cc.documentCopy(crash).state, "pending");
+  /* copyNow stamps before too (it ignores the delay, as the act asked) */
+  const n = world();
+  const named = supplied(n, "INFO-2026-0101-named", KNOCKED);
+  const realN = n.cc.clean;
+  let sawNow = null;
+  n.cc.clean = async (bytes) => { sawNow = queue(n)[0].tried; return realN(bytes); };
+  await n.cc.copyNow({ shas: [named] });
+  assert.equal(sawNow, NOW, "copyNow stamps before the clean");
+});
+
+test("R15 (T51; G136c, DOCS C1) a 70,009-entry DOCX through the real doc-clean: a cleaner that crashes after its work is attempted once and not re-run on the next wake; after the back-off the copy is made with its written count equal to the read count", async () => {
+  const entries = unzipCopy(docx({ meta: false })).parts.map((p) => ({ name: p.name, data: p.data, method: p.method }));
+  for (let i = 0; i < 70000; i++) entries.push({ name: `x/${i}`, data: enc("p"), method: 0, zip64: false });
+  const chunks = [];
+  for await (const c of zipChunks64(entries)) chunks.push(c);
+  const big = new Uint8Array(Buffer.concat(chunks));
+  const read = readContainer(big);
+  assert.equal(read.ok, true);
+  const w = world();
+  const s = supplied(w, "INFO-2026-0101-big", big, { name: "file.docx", type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+  const real = w.cc.clean;
+  let calls = 0, made = null;
+  w.cc.clean = async (bytes) => {
+    calls++;
+    made = await real(bytes);
+    if (calls === 1) throw new Error("the cleaner died after its work");
+    return made;
+  };
+  const first = await w.cc.copyBatch({});
+  assert.deepEqual([calls, first.failed, first.remaining], [1, 1, 1]);
+  w.clock.now = LATER(1000);
+  await w.cc.copyBatch({});
+  assert.equal(calls, 1, "the next wake does not loop");
+  w.clock.now = LATER(DOCUMENT_COPY_RETRY_MS);
+  const again = await w.cc.copyBatch({});
+  assert.equal(calls, 2);
+  assert.equal(made.ok, true, made.detail);
+  assert.equal(again.copied + again.clean, 1, "the copy is made after the back-off");
+  assert.equal(again.remaining, 0);
+  if (made.bytes) assert.equal(readContainer(made.bytes).entries.length, read.entries.length, "written count == read count");
 });
