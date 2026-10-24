@@ -9,11 +9,14 @@ import { openCaptures } from "../../../src/acquisition/index.mjs";
 
 const ADDRESS = "https://www.govinfo.gov/content/pkg/BUDGET-2021-APP/pdf/BUDGET-2021-APP.pdf";
 const SESSION = "rs_held_elsewhere";
-const NOW = "2026-10-23T12:30:00Z";
-const store = { liveCaptureSessions: () => [{ session: SESSION, locator: ADDRESS, created: "2026-10-23T12:00:00Z", updated: NOW, expires: "2026-10-24T12:00:00Z", primarySha: null,
-  state: { opened_by: "mai", queue: [], fetch_done: { since: "2026-10-23T12:00:00Z" }, fetch_pending: { since: "2026-10-23T12:00:00Z", declared_bytes: 17400000, why: "over_wait", failed: "CAPTURE_HELD_BY_ANOTHER_BUNDLE" } } }] };
+/* the listing is made now (N1, fix round 9: a failed line is listed for a day from the fetch, so a fixed date would age out) */
+const iso = (ms) => new Date(ms).toISOString().split(".")[0] + "Z";
+const NOW = iso(Date.now());
+const SINCE = iso(Date.now() - 1800000);
+const store = { liveCaptureSessions: () => [{ session: SESSION, locator: ADDRESS, created: SINCE, updated: NOW, expires: iso(Date.now() + 86400000), primarySha: null,
+  state: { opened_by: "mai", queue: [], fetch_done: { since: SINCE }, fetch_pending: { since: SINCE, declared_bytes: 17400000, why: "over_wait", failed: "CAPTURE_HELD_BY_ANOTHER_BUNDLE" } } }] };
 const listing = openCaptures(store, { by: "member:mai", now: NOW });
-const PENDING = ok({ ok: true, fetch_pending: { session: SESSION, since: "2026-10-23T12:00:00Z", declared_bytes: 17400000, why: "over_wait" } });
+const PENDING = ok({ ok: true, fetch_pending: { session: SESSION, since: SINCE, declared_bytes: 17400000, why: "over_wait" } });
 const open = (path, plane) => openPage(path, { plane: { projectlist: ok({ projects: [] }), heldcaptures: ok({ ok: true, held: [], truncated: false }), ...plane }, screens: [...SCREENS, DOCUMENT_STUB] });
 
 test("R58 (B44) the real listing states the refusal under fetch_pending.failed", () => {

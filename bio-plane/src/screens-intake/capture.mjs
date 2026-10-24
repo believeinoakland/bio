@@ -383,11 +383,16 @@ function renderCapture(cs, view) {
       return `<p class="mk-note" role="status" data-fetching>${head}${wh && wh !== "screen.capture.fetch.why" ? " " + wh : ""}</p>`;
     };
     /* G2 (B31): a session whose owed fetch ended with a stated refusal lists it as `failed`; it is drawn from that reason at once, in the refusal's words */
-    const failedLine = (reason) => `<p class="cs-state" data-state="failed" role="alert" data-fetch-failed>${view.parts.refusalHtml(cs, { code: String(reason) }) || cs.w("refusal.FETCH_FAILED")}</p>`;
+    /* N1 (fix round 9; K4853, K4855): the failed line names its document, by its address (as the unfinished line does), so it is never a sentence among unrelated presses
+       that names nothing; and it is listed for a day (the failure's own instant when the listing states one, else when the fetch began), as the ruling has it */
+    const failedLine = (reason, c) => `<p class="cs-state" data-state="failed" role="alert" data-fetch-failed>${c && c.locator ? `<span class="mk-data" data-fetch-address>${cs.esc(String(c.locator))}</span> \u00b7 ` : ""}${view.parts.refusalHtml(cs, { code: String(reason) }) || cs.w("refusal.FETCH_FAILED")}</p>`;
+    const staleFailure = (c) => { const fp = c.fetch_pending || {}; const at = Date.parse(String(fp.failed_at || fp.since || c.started || "")); return Number.isFinite(at) && (cs.now ? cs.now() : Date.now()) - at > 86400000; };
     /* G2 (DEC-418): the finished line, `screen.capture.fetch.done` ({document}, {project}). G108 (fix round 8): a capture filed under no project (or under one whose name
        is not known) has nothing to fill {project} with, so it is not drawn with an empty fill: the nearest held row stands in, `screen.capture.address.done` (the
        document, where it waits); the row owed is named in the job record (K4269). */
     const fetchedLine = (g) => {
+      /* P25: bytes the team already held are said as R49 says them ("already in the record as <title>", linked), never as a capture this press made */
+      if (g.existed) return said("screen.capture.address.existed", { title: bare(g.title) }) + made(g);
       const doc = { html: cs.ref("document", g.bundleId, g.title || g.bundleId, []) };
       const project = g.filed && g.filed.id && g.filed.title ? g.filed.title : "";
       const t = project ? cs.w("screen.capture.fetch.done", { document: doc, project }) : cs.w("screen.capture.address.done", { title: doc });
@@ -424,7 +429,7 @@ function renderCapture(cs, view) {
         if (c.fetch_pending && typeof c.fetch_pending === "object") {
           /* G105 (fix round 8; acquisition R111): the stated refusal is the listing's `fetch_pending.failed` */
           const bad = c.fetch_pending.failed || c.failed;
-          if (bad) return failedLine(bad);
+          if (bad) return staleFailure(c) ? "" : failedLine(bad, c);
           return U.captured && U.captured.fetching && U.captured.fetching.session === c.session ? "" : fetchingLine(Number.isFinite(c.fetch_pending.declared_bytes) ? c.fetch_pending.declared_bytes : null, null, c.fetch_pending.why);
         }
         return `<p class="mk-note" role="status">${cs.w("capture.unfinished", { title, n: c.outstanding, ago: { html: cs.date(c.started) } })} `
@@ -739,7 +744,7 @@ async function doneAcquire(view, answer, cs) {
     const t = view.parts.titleOf(cs, { doc: {}, address });
     cs.set("captured", { title: t, address, bundleId: null, sha: "", filed: f && f.id ? f : null,
                          fetching: { session: String(fp.session || ""), bytes: Number.isFinite(fp.declared_bytes) ? fp.declared_bytes : null, why: typeof fp.why === "string" ? fp.why : "" } });
-    view.parts.watchFetch(cs, { session: String(fp.session || ""), address, title: t, filed: f && f.id ? f : null, finish: "" });
+    view.parts.watchFetch(cs, { session: String(fp.session || ""), address, title: t, filed: f && f.id ? f : null, finish: "", since: Date.parse(String(fp.since || "")) });
     return;
   }
   /* R31 (E8): what a continuation answered: the visitor copy still being made (`render.state`), or its supporting files fetched; either files no new document */
@@ -799,7 +804,9 @@ function watchFetch(cs, o, n = 0, missed = 0) {
     if (bad) {
       k.set("ended", o.session);
       k.set("captured", null);
-      k.set("promoteRefused", { tab: "address", html: v.parts.refusalHtml(k, { code: String(bad) }) || k.w("refusal.FETCH_FAILED") });
+      const holder = typeof (mine.fetch_pending && mine.fetch_pending.holder) === "string" ? mine.fetch_pending.holder : "";
+      const words = holder ? await v.parts.refusedHtml(v, k, { code: String(bad), holder }) : v.parts.refusalHtml(k, { code: String(bad) });
+      k.set("promoteRefused", { tab: "address", html: `<span class="mk-data" data-fetch-address>${k.esc(String(o.address || ""))}</span> \u00b7 ${words || k.w("refusal.FETCH_FAILED")}` });
       return;
     }
     if (mine) return again(0);
@@ -811,12 +818,15 @@ function watchFetch(cs, o, n = 0, missed = 0) {
       /* the list the screen read before is stale: this session is over, whatever it says */
       k.set("ended", o.session);
       k.set("captured", null);
-      k.set("promoteRefused", { tab: "address", html: k.w("refusal.FETCH_FAILED") });
+      k.set("promoteRefused", { tab: "address", html: `<span class="mk-data" data-fetch-address>${k.esc(String(o.address || ""))}</span> \u00b7 ${k.w("refusal.FETCH_FAILED")}` });
       return;
     }
     k.set("ended", o.session);
     /* G109 (fix round 8): the delivered document is named by the title it was stored under (`heldat`'s `copy.title`), else the press's own */
-    k.set("captured", { title: typeof copy.title === "string" && copy.title.trim() ? copy.title.replace(/\s+/g, " ").trim().slice(0, 200) : o.title, address: o.address, bundleId: copy.document, sha: String(copy.sha256 || ""), filed: o.filed, ...(o.finish ? { finish: o.finish } : { fetched: true }) });
+    k.set("captured", { title: typeof copy.title === "string" && copy.title.trim() ? copy.title.replace(/\s+/g, " ").trim().slice(0, 200) : o.title, address: o.address, bundleId: copy.document, sha: String(copy.sha256 || ""), filed: o.filed,
+      /* P25 (fix round 9; K4855; R49): a copy the record already held when the fetch began (it was captured before the fetch's own `since`, both the plane's clock) is said as the inline path says an existing
+         document: "already in the record", with its title and link; one this fetch delivered is the finished line */
+      ...(o.finish ? { finish: o.finish } : Number.isFinite(o.since) && Date.parse(String(copy.retrieved || "")) < o.since ? { fetched: true, existed: true } : { fetched: true }) });
   });
 }
 
