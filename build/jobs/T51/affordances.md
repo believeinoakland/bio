@@ -360,3 +360,7 @@ Checks: architecture, channels, words 0 failures; ownership 0 failures. Not mine
 Deferred: none. Found in other modules: the tasks and queue reds above.
 
 Size (session_01F6cD98xuTLXGhudyFtHWu4): test runs 7, module lines 2726
+
+## J25 · COMPLETE
+
+COMPLETE (job 80, re B22 · K4968). The four parted-upload ops moved to T51_DESIGN_OPS and read by their DEC-431 rows; t36 R48 green; affordances 287/0; op-declarations 248/0, affordances-pack 4/0, store-door 57/0, admission 73/0; architecture, channels, words, ownership 0 failures. Inherited reds, identical without my change: tasks R25 (K4488), queue R55. Not run to the end: control-plane whole (hangs at t51-round8-seam), interface-shell. See record, job 80.
