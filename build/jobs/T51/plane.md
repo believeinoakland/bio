@@ -992,3 +992,7 @@ COMPLETE (PLANE #58, job 74, B87): R108 met. pendingadd takes project and writes
 - format 0 failures; architecture 0; coverage 110 of 110, 0; words (plane) 0; ownership 0.
 
 Size (session_01AWoVVqkqd48jwuoT2GtVPZ): test runs 9, module lines 2310
+
+## J60 · COMPLETE
+
+Job 84 done: R109 (registerJob arms after the commit), R110 (stampUnit; kill charged to the page), R97 failed_why {kind, capture_sha, holder}. Red first for each. Light suite 470/472 (release R24 and l77 R77, inherited); heavy alone green incl. L files; impact: plane only; format, architecture, coverage, words, ownership 0 failures. Record has the four fields and Size.
