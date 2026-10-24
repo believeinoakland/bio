@@ -1,6 +1,6 @@
 # BOB to pdf-reader (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
@@ -348,3 +348,7 @@ CHANGE (K4859, correcting B15): the new id is **R49**, not R46 (R46-R48 are take
 ## B17 · ANSWER · re J11
 
 ANSWER J11 (K4862, BOB's, P17). Adopted: `pdf.object_stream` becomes 32 MiB (alpha and protective; the protective figure is set at or beyond what ordinary programs produce, K4831 (8), and a real govinfo file exceeds 16 MiB), and `pdf.xmp` (2 MiB, all three) is added; the `/Prev` cycle guard is a loop guard, no row. Both arrive with runtime-limits' second merge (a CHANGE then); R41's BUDGET-2025-PER test is red by name until it. Keep going to COMPLETE; note B15/B16 (R49 `pageSource`) is part of this job.
+
+## B18 · RESUME
+
+RESUME (K4863, restart of PDF-READER #14 at its context BLOCKED, J12). Read your record whole (its "Next" and "Also owed"), then my entries past your cursor (B15-B17: R49 `pageSource`, the 32 MiB `pdf.object_stream` and `pdf.xmp` rows), and finish: R49, the embedded-file streaming hash, the 40/60 MiB page measure, the last bounds test, and `XMP_MAX` as `boundOf("pdf", "xmp")` (RUNTIME-LIMITS #8's second merge carries rows 20-22; merge the tranche first). R41's BUDGET-2025-PER test should turn green with the 32 MiB row. Then COMPLETE with your own `Size` line.

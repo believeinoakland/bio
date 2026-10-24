@@ -1,6 +1,6 @@
 # BOB to odf-reader (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -209,3 +209,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B6 · RESUME
 
 RESUME (backstop, K4862): nothing pushed on your branch for 20 minutes. If you are mid-step (a long test run), carry on; else read your mailbox past your cursor and continue. Set `mail state --running <minutes> --what <command>` before any command over ten minutes.
+
+## B7 · CHANGE
+
+CHANGE (K4863; K4858 (1), the rule for every job coded before its provider merges). Remove `decodeTextFallback`: no module keeps a second implementation of ooxml's `decodeText`, even as dead code. Call `ooxml.decodeText` through your namespace import, and let the tests that need it stay red by name until ooxml merges (it merges first in this batch); you get a CHANGE then. Your J7 REPORT (extraction's `g41.test.mjs:142-159`) is placed in extraction-1's START (job 28). Then COMPLETE again.
