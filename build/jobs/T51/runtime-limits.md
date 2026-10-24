@@ -1,6 +1,6 @@
 # runtime-limits (T51)
 
-**Status** · session_01Hw98qUCFYLUAekavfPLPJZ · depth 2 · COMPLETE · handled B5
+**Status** · session_01GcfAY6gBYxDeKZVA2QwFeC · depth 2 · COMPLETE · handled B5
 
 ## Completion (RUNTIME-LIMITS #6, fix round 7, G83)
 
@@ -101,3 +101,21 @@ Size (session_01Hw98qUCFYLUAekavfPLPJZ): test runs 3, module lines 261
 ## J6 · COMPLETE
 
 B6 applied (K4882): capture/keep_bytes 33,554,432, capture/profile_text_bytes 8,388,608, render/dom_bytes 26,214,400, each one figure in all three columns, keys limit.<kind>.<name>; test names R30/R31. Module 53/53; format, architecture, coverage, ownership 0 failures; words 19 failures are other modules'. Importers (18 files): 188/190. REPORT: ocr-worker's bundle is now stale against read-bounds.mjs (its test fails for that alone); agent-worker's bundle was already stale on tranche/T51; both for regeneration at layer close, pdf-worker's to be checked then. Nothing deferred.
+
+## RUNTIME-LIMITS #10 · fix round 9, batch C: one row for file-safety (B7, K4893)
+
+- **Entry applied.** `file_safety`, `ods_declared`: 8,388,608 (8 MiB) in standard, alpha and protective (`same(8 * MiB, k("file_safety", "ods_declared"))`), key `limit.file_safety.ods_declared`, beside `grade_read` in `bio-plane/src/read-bounds.mjs`. No member-facing bound moves; no sentence added.
+- **Test.** `read-bounds.test.mjs`: new test naming R30 and R31: the three figures, the key, `boundOf` answers the figure, `statement` answers `{size, bound, key}`; the invariants test (R29) covers the new row.
+- **Deferred / found in another module.** None.
+- **Ran.** runtime-limits suite: 54 tests, 54 pass, 0 fail. Importers (doc-clean, csv-reader, image-cover): 184 tests, 183 pass, 0 fail (1 not counted pass, none failing). `impact.mjs origin/tranche/T51 HEAD` lists 138 modules through the table's import tree; the change only adds a row, so I ran the importers listed in `src`. Checks: format 0 failures; architecture 0 failures; coverage 32 of 32 ids, 0 failures; ownership 3 files, 0 failures; words 19 failures, the same 19 on `origin/tranche/T51` without my diff (installer-steps `missingkey` and others, none in this module).
+- Generated artifacts made stale: every bundle whose inputs include `bio-plane/src/read-bounds.mjs` (the bundles built from it, e.g. ocr-worker and pdf-worker; their `.bundle.json` input hashes no longer match). Not regenerated; BOB regenerates at the round end.
+
+Size (session_01GcfAY6gBYxDeKZVA2QwFeC): test runs 4, module lines 164
+
+## J7 · COMPLETE
+
+COMPLETE B7: READ_BOUNDS row file_safety/ods_declared (8 MiB x3, key limit.file_safety.ods_declared) added and tested (R30, R31). Suite 54/54; importers 183/184 pass, 0 fail; format, architecture, coverage, ownership 0 failures; words 19 failures identical to tranche/T51 without my diff. Details in my record.
+
+## J8 · REPORT
+
+Stale generated artifacts: bundles whose inputs include bio-plane/src/read-bounds.mjs (grep of dist manifests above in my record) are stale against this row; not regenerated, BOB regenerates at round end.

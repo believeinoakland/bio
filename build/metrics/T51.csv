@@ -842,3 +842,6 @@ session_01NGxtiMrUV97HNeAMcuRZdK,job,acquisition,41626717,391898,250,80943,,,
 session_01CAeRS3pRKYW3YBwY2Fp8nC,job,acquisition,19906649,248249,1694,51488,,14,4342
 session_018jzqQCCMHsksN8RehgXxB7,job,reading-pipeline,65207520,481600,342,138586,,,
 session_01LUWHRgbf5NrxEMrYzKCSgx,job,capture,29017253,419537,180,108808,,22,4560
+session_01W1qFDLihyPDuY1fytvKzdh,job,docprofile,5800578,131693,84,27704,,14,1420
+session_01SNmBaYG8fmPmaVutFww2Xa,job,doorbell,4708937,113411,72,19429,,6,1203
+session_01GcfAY6gBYxDeKZVA2QwFeC,job,runtime-limits,1905011,62863,40,7179,,4,164

@@ -42,6 +42,30 @@ test("R38 readText over a 13.6 M character text adds under 16 MB, hands the type
                    ["scans_pages", "certain", [], { entities: [], facts: { pages: 1354 } }, 1354, "document"]);
 });
 
+/* A text over the classification bound (R38, R39): the view is built from it and nothing more is copied. The measure is the plane's
+ * (peak heap + array buffers above what the caller holds, polled while `readText` runs, no collection inside it, a 2 MB young
+ * generation); the types are stand-ins, so what is measured is this module's own work (the view, `bounded`, `flattenText`). The
+ * real types' garbage over the view is `doctypes`' own share (REPORT, K4889). */
+for (const bytes of [3 * 1048576, 12 * 1048576]) {
+  test(`R38 readText over a ${bytes / 1048576} MiB sheet, over the classification bound, adds under 6 MB of its own: the view and nothing else`, { timeout: 300_000 }, async () => {
+    const m = await child(["sheet", String(bytes)]);
+    assert.equal(m.code, 0, m.err.slice(0, 300));
+    const r = JSON.parse(m.out);
+    console.log(`R38 sheet: ${r.chars} characters, ${Math.round(r.ms)} ms, peak above what the caller holds ${r.peakMB.toFixed(1)} MB`);
+    assert.ok(r.chars >= bytes - 200, `${r.chars} characters`);
+    assert.ok(r.chars > 2 * 1048576, "over CLASSIFY_WHOLE_MAX_CHARS");
+    assert.ok(r.peakMB < 6, `peak ${r.peakMB.toFixed(1)} MB above what the caller holds`);
+    const a = r.answers;
+    assert.equal(a.determined, true);
+    assert.equal(a.calls, 1, "the type is asked once");
+    assert.equal(a.classifiedOver.of, r.chars);
+    assert.equal(a.sawText, a.classifiedOver.chars, "the type was handed the view");
+    assert.ok(a.sawText <= 1536 * 1024, `${a.sawText} characters handed to a detect`);
+    assert.deepEqual(a.window, { from: 0, to: a.sawText, of: r.chars });
+    assert.equal(a.work.stopped_before, null);
+  });
+}
+
 test("R38 R39 doctypeForYielding over a 13.6 M character text holds no second copy of it: under 16 MB, the type handed the pages, the answer doctypeFor's", { timeout: 300_000 }, async () => {
   const m = await child(["twin", "1354", "10042"]);
   assert.equal(m.code, 0, m.err.slice(0, 300));
