@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, bucket, V, sha, infoMd, provDoc, LAYER, onePagePdf } from "./fixture.mjs";
 import {
-  canonicalExtent, describeExtent, checkContentExtent, extentRelation, mintUndetermined, contentIdFor, CONTENT_EXTENT_KINDS,
+  canonicalExtent, describeExtent, checkContentExtent, extentRelation, mintUndetermined, CONTENT_EXTENT_KINDS,
   PART_KIND_WORDS, HELD_TEXT_CHARS_MAX,
 } from "../../../src/content/index.mjs";
 import { heldTextAt, normUnits } from "../../../src/content/notice.mjs";
@@ -50,10 +50,8 @@ test("R61: a document extent's text is the units' lines once each: a sheet block
     U(SHEET("A4:B6"), "h1\th2\ne\tf\ng\th", 1, { kind: "body", lineRows: [1, 4, 5] }),
     U(SHEET("A6:B7"), "h1\th2\ni\tj\nk\tl", 2, { kind: "body", lineRows: [1, 6, 7] }),
   ];
-  const { id } = (() => { const s = setup({ units, size: 10 }); return { ...s, id: s.id({ kind: "document" }), w: s.w }; })();
   const s = setup({ units, size: 10 });
   assert.equal(s.w.content.passageText(s.id({ kind: "document" })), "h1\th2\na\tb\nc\td\ne\tf\ng\th\ni\tj\nk\tl");
-  assert.ok(id);
   /* a record's quoted line break: every line of it carries its row, and only a block's FIRST line can repeat */
   const multi = [
     U(SHEET("A1:B2"), "h\nx\ny", 0, { lineRows: [1, 2, 2] }),
@@ -172,7 +170,6 @@ test("R1 (K4910): a doc-part extent is the tenth kind: canonical {kind, part, re
   }
   assert.equal(checkContentExtent(PART, { chain: null, pageCount: 1, container: {} }).code, "CONTENT_EXTENT_NO_CHAIN");
   assert.equal(mintUndetermined(PART, ctx).level, "part_list");
-  assert.deepEqual(["same", "narrower", "wider", "disjoint"].map(() => null).length, 4);
   assert.equal(extentRelation(PART, PART), "same");
   assert.equal(extentRelation({ kind: "document" }, PART), "narrower");
   assert.equal(extentRelation(PART, { kind: "document" }), "wider");

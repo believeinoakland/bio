@@ -83,8 +83,7 @@ test("R61 (G128g): an xlsx sheet over the unit cap reads as its rows once each (
   const n = 5200;
   const rows = [["id", "name", "note"]];
   for (let i = 0; i < n; i++) rows.push([String(i), `name ${i}`, `council note ${i} budget line`]);
-  /* numbers are written as text so the reader's value is the field as written */
-  const cell = (r, c, v) => ({ r: `${"ABC"[c]}${r + 1}`, t: "inlineStr", v: null, is: v });
+  /* every value is written as a string, so the reader's value is the field as written */
   const bytes = xlsx({ sheets: [{ name: "Budget", rows: rows.map((row, r) => row.map((v, c) => ({ r: `${"ABC"[c]}${r + 1}`, t: "str", v }))) }] });
   const { d, w, content, id } = await home(bytes, { format: "xlsx", ct: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   const units = w.x.unitsOf(d);

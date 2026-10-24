@@ -107,7 +107,9 @@ const said = (s) => s || "never recorded";
 export function splitRun(extent) {
   let e = extent;
   if (typeof e === "string") { try { e = JSON.parse(e); } catch { e = null; } }
-  if (!isObj(e)) return { extent: typeof extent === "string" ? extent : canonicalExtent(extent), run: null };
+  /* an extent held as a string with no run is already its address, as stated */
+  if (typeof extent === "string" && !(isObj(e) && Number.isInteger(e.run))) return { extent, run: null };
+  if (!isObj(e)) return { extent: canonicalExtent(extent), run: null };
   const { run, ...rest } = e;
   return { extent: canonicalExtent(rest), run: Number.isInteger(run) && run >= 0 ? run : null };
 }
