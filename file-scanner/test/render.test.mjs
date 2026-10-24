@@ -6,7 +6,7 @@ import { readFileSync, readdirSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { handle } from '../src/handler.mjs';
-import { SAFE_VIEW_DPI, SAFE_VIEW_PAGES_MAX, SCAN_MAX_BYTES } from '../src/limits.mjs';
+import { SAFE_VIEW_DPI, SAFE_VIEW_PAGES_MAX, SAFE_VIEW_BYTES_MAX, RENDER_TIME_MS, SCAN_MAX_BYTES, SCAN_LIMITS } from '../src/limits.mjs';
 import { makePdf, content } from '../../pdf-worker/test/make-pdf.mjs';
 import { memoryBucket, putCapture, putDerived, rendererImage, depsWith, post, enc, sha, rendererPresent } from './helpers.mjs';
 
@@ -93,7 +93,11 @@ test('R7 pages beyond SAFE_VIEW_PAGES_MAX are not rendered, and the headers say 
   const deps = depsWith({ bucket, renderer: (path, init) => { seen.push(path); return image.fetch(path.replace(`max=${SAFE_VIEW_PAGES_MAX}`, 'max=2'), init); } });
   const t = putCapture(bucket, richPdf(4));
   const r = await call(deps, { store: 'bio', target: t, route: 'pdf' });
-  assert.deepEqual(seen, [`/render?route=pdf&dpi=${SAFE_VIEW_DPI}&max=${SAFE_VIEW_PAGES_MAX}`], 'the member asks for SAFE_VIEW_PAGES_MAX');
+  assert.equal(seen.length, 1);
+  const asked = new URL(`http://x${seen[0]}`);
+  assert.equal(asked.pathname, '/render');
+  assert.deepEqual(Object.fromEntries(asked.searchParams), { route: 'pdf', dpi: String(SAFE_VIEW_DPI), max: String(SAFE_VIEW_PAGES_MAX), bytes: String(SAFE_VIEW_BYTES_MAX),
+    ms: String(RENDER_TIME_MS), entries: String(SCAN_LIMITS.max_files), directory: String(SCAN_LIMITS.zip_directory) }, 'the member asks with every figure, quoted from the table');
   assert.deepEqual([r.headers.get('x-pages'), r.headers.get('x-source-pages'), r.headers.get('x-truncated')], ['2', '4', 'true']);
   assertImagesOnly(await bodyOf(r), 2);
 });
@@ -112,19 +116,23 @@ test('R7 refusals by name: R1\'s and R2\'s, ENCRYPTED, NOT_RENDERABLE, TIME_LIMI
   const huge = { capture_sha: '2'.repeat(64), parts: [{ sha256: '3'.repeat(64), bytes: SCAN_MAX_BYTES + 1 }] };
   assert.deepEqual(await answer({ store: 'bio', target: huge, route: 'pdf' }), [413, { ok: false, code: 'TOO_LARGE' }]);
   const enc1 = putCapture(bucket, readFileSync(new URL('./fixtures/encrypted.pdf', import.meta.url)));
-  assert.deepEqual(await answer({ store: 'bio', target: enc1, route: 'pdf' }), [422, { ok: false, code: 'ENCRYPTED' }]);
+  assert.deepEqual(await answer({ store: 'bio', target: enc1, route: 'pdf' }), [422, { ok: false, code: 'ENCRYPTED', class: 'final' }]);
   const text = putCapture(bucket, enc('just some text'));
-  assert.deepEqual((await answer({ store: 'bio', target: text, route: 'pdf' }))[1].code, 'NOT_RENDERABLE');
+  assert.deepEqual((await answer({ store: 'bio', target: text, route: 'pdf' }))[1], { ok: false, code: 'NOT_RENDERABLE', class: 'final' });
   assert.deepEqual((await answer({ store: 'bio', target: text, route: 'office' }))[1].code, 'NOT_RENDERABLE');
   assert.deepEqual((await answer({ store: 'bio', target: pdf, route: 'spreadsheet' }))[1].code, 'NOT_RENDERABLE');
   // TIME_LIMIT: the image stops a render past its budget.
   process.env.RENDER_TIME_MS = '1';
-  try { assert.deepEqual(await answer({ store: 'bio', target: pdf, route: 'pdf' }), [504, { ok: false, code: 'TIME_LIMIT' }]); }
+  try { assert.deepEqual(await answer({ store: 'bio', target: pdf, route: 'pdf' }), [504, { ok: false, code: 'TIME_LIMIT', class: 'transient' }]); }
   finally { delete process.env.RENDER_TIME_MS; }
   // RENDER_FAILED carries the converter's message, at most 300 characters.
   const failing = depsWith({ bucket, renderer: async () => new Response(JSON.stringify({ ok: false, code: 'RENDER_FAILED', message: 'x'.repeat(900) }), { status: 500 }) });
   const [s, b] = await answer({ store: 'bio', target: pdf, route: 'pdf' }, failing);
-  assert.deepEqual([s, b.code, b.message.length], [500, 'RENDER_FAILED', 300]);
+  assert.deepEqual([s, b.code, b.class, b.message.length], [500, 'RENDER_FAILED', 'final', 300]);
+  // an unreachable renderer is a refusal a later try can answer
+  const unreachable = depsWith({ bucket, renderer: async () => { throw new Error('no route to the renderer'); } });
+  const [s2, b2] = await answer({ store: 'bio', target: pdf, route: 'pdf' }, unreachable);
+  assert.deepEqual([s2, b2.code, b2.class], [503, 'RENDER_FAILED', 'transient']);
 });
 
 test('R7 R2 a derived target (area "derived") renders from ${store}/derived/<sha> as a capture does; any other area is BAD_TARGET', { skip }, async () => {
