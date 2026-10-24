@@ -1,12 +1,12 @@
 # K4426 pre-deploy check of T51, fix round 9 (G91-G95, G123-G143, plus the jobs of section 3c)
 
-**Status** · DRAFT prepared 2026-10-24 by a reading worker for BOB, from `origin/tranche/T51` at `bfaf9b575d` (last ruling read: K4901). Not committed. Format and column layout follow `k4426-check-T51-F8.md` (read whole). **What was read whole:** F8; `build/rulings.md` lines K4837 to K4901 (the end of the file); plan §3 (job table), §3a, §3b, §3c (with row 55 added by K4901); plan §2.1 (G91-G95) and the whole G124 entry. **Not read whole (stated):** plan §2.2/§2.3 bullets for the other causes: only each piece's heading line (to name the piece), and its `(4)` field (for what P probes), were taken; the four fields of a cause come from the job records, never from the plan. **Job records:** for each merged module, its fix-round-9 sections of `build/jobs/T51/<module>.md` on the tranche, read whole from the section's heading to the end of the file (earlier rounds' sections not read). The plan's intent was never used to fill a cell: where a record does not state a point the cell says `MISSING: <what>`. No test was run for this check; every number and RED line is a job's own or a ruling's. A RED line is quoted as the job pasted it.
+**Status** · DRAFT prepared 2026-10-24 by a reading worker for BOB, from `origin/tranche/T51` at `bfaf9b575d` (last ruling read: K4901). Not committed. Format and column layout follow `k4426-check-T51-F8.md` (read whole). **What was read whole:** F8; `build/rulings.md` lines K4837 to K4901 (the end of the file); plan §3 (job table), §3a, §3b, §3c (with row 55 added by K4901); plan §2.1 (G91-G95) and the whole G124 entry. **Not read whole (stated):** plan §2.2/§2.3 bullets for the other causes: only each piece's heading line (to name the piece), and its `(4)` field (for what P probes), were taken; the four fields of a cause come from the job records, never from the plan. **Job records:** for each merged module, its fix-round-9 sections of `build/jobs/T51/<module>.md` on the tranche, read whole from the section's heading to the end of the file (earlier rounds' sections not read). The plan's intent was never used to fill a cell: where a record does not state a point the cell says `MISSING: <what>`. No test was run for this check; every number and RED line is a job's own or a ruling's. A RED line is quoted as the job pasted it. **Fold, 2026-10-24, by a reading worker for BOB #279, not yet reviewed by BOB:** the cells of drafts A (`k4426-check-T51-F9-cells-A.md`, jobs 1-22, 39, 44-47) and B (`-cells-B.md`, jobs 7, 20, 23-27, 28, 33, 40, 56-59) were folded in, only where a draft cites concrete evidence (a job record section, a ruling id K####, a file:line, or a test name with its RED line); the citation stays in the cell, tagged `draft A` or `draft B`, with the pre-merge commit the drafter ran against. The RED lines are the drafters' scratch runs on `<merge>^1` and were not rerun by the folder; the folder confirmed the citations that read a job record (`build/jobs/T51/<module>.md`), a ruling (K4902-K4916) or a pre-merge source line, and left every cell as it was where a draft gave no evidence. Verdicts follow the rules in the Key; a cell a draft calls NOT RED (the failing-first test passes on the old code or cannot load) is written `NOT RED` or `NOT SEEN RED` in the cell and keeps the verdict MISSING-class, flagged in the verdict column, for BOB to reopen as an entry or accept. Merges after this file's baseline (K4901) that the folded cells rely on: job 33 (K4905), jobs 28 and 40 (K4909), jobs 56-59 (the K4900 jobs 52-55 renumbered by K4903, merged K4902); job 37 and job 60 (K4912) and later rulings K4910-K4916 were NOT folded, so rows still waiting on job 37 stay OPEN here.
 
 **Key.** `j<n>` = job number of plan §3 / §3c; `rec` = the module's record in `build/jobs/T51/<module>.md`; `K####` = `build/rulings.md` (the merge ruling is the first K id where the job's work was merged). `open: job N` = owner (or a provider of the piece) not merged: nothing invented; file names and lines in the job column of an open job are plan §3a's piece locations, not findings. Platform check: L local (node, capped child, Miniflare, raw workerd), P read-only probe of biosmoke8 at the redeploy (BOB's; marked "P owed, redeploy" with what to probe), N none. Verdict: **DONE** = merged, all four points closed, only L/N; **DONE-P** = the same with a P probe owed; **MISSING** = merged but at least one cell is MISSING; **OPEN** = an owner or provider job is unmerged (a merged part of the row is still reported in its cells); **OPEN+MISSING** = both.
 
 **Numbering notes.** (a) K4860 and K4869 call the monitoring job "job 52" (MONITORING #25, G140's consumer half, merged K4872); K4900 (§3c) gives job 52 to format-registry-2. In this table monitoring is written "monitoring (K4860's job 52)" and job 52 means format-registry-2. (b) The record headings of the merged jobs name their own J-numbers; these are not job numbers. (c) Jobs 45-51 and 44 carry causes (G112b, G120b, G121b, G118b, G136c, R14) that are not `### G` entries of §2; they are in Table 3 below; the per-module G124 quotes are Table 2. (d) Merge rulings: j1 K4852; j2 K4846 (table) with rows K4862, K4864, K4885, K4895; j3 K4864; j4 K4872; j5 K4872 (held K4865); j6 K4866; j7 K4866; j8 K4877; j9 K4864 (R57 CHANGE K4865); j10 K4865; j11 K4865 and K4872 (R40 K4879; view-garbage tests K4892); j12 K4876 (doctypes-2: K4899); j13 K4864; j14 K4864/K4865 (reds cleared K4866); j15 K4860; j16 K4860 (doc-clean #5: K4872); j17 K4861; j18 K4872; j19 K4864; j20 K4855; j21 K4880; j22 K4878; j23 K4887; j24 K4891; j25 K4893; j26 K4899; j27 K4896; j39 K4860; j42 K4899; j44 K4860; j45 K4872; j46 K4860; j47 K4872; j48, j49, j50 K4872; j51 K4874.
 
-**Open jobs (no cell invented for them):** 28 extraction-1, 29 content, 30 retrieval, 31 calculations, 32 workbooks, 33 scheduler, 34 notice-producers, 35 screens-intake, 36 screens-inquiry, 37 plane-2, 38 control-plane-1, 40 reading-pipeline-2, 41 extraction-2, 43 control-plane-2, 52 format-registry-2, 53 affordances, 54 file-safety-2, and (added by K4901, plan §3c row 55) 55 runtime-limits-5 (RUNTIME-LIMITS #11).
+**Open jobs (no cell invented for them):** 28 extraction-1, 29 content, 30 retrieval, 31 calculations, 32 workbooks, 33 scheduler, 34 notice-producers, 35 screens-intake, 36 screens-inquiry, 37 plane-2, 38 control-plane-1, 40 reading-pipeline-2, 41 extraction-2, 43 control-plane-2, 52 format-registry-2, 53 affordances, 54 file-safety-2, and (added by K4901, plan §3c row 55) 55 runtime-limits-5 (RUNTIME-LIMITS #11). **Since this file's baseline:** job 28 (K4909), job 33 (K4905), job 40 (K4909) and the K4900 jobs 52-55, renumbered 56-59 by K4903 (K4902), are merged and their rows are folded; the rows of Table 3 still carry the old numbers 52-55 in their keys. Job 37 (plane-2) and job 60 (K4912) are merged but not folded.
 
 **Cross-cutting facts that bear on many rows.**
 (a) **Generated artifacts** (plane, agent-worker, ocr-worker, pdf-worker, sheet-worker, file-scanner bundles, `setup-words/rows.mjs`) were regenerated once at K4875 and are stale again by every later merge; the round end regenerates them (K4860, K4864, K4895, K4899). The file-scanner container images rebuild through `container-images` at the redeploy (K4864). Where a row's test reads a committed bundle, the job says it ran against the SOURCE until BOB rebuilds.
@@ -90,7 +90,7 @@
 | **G131a** UTF-8 CSV cells lost through the cp1252 transport | j4 csv-reader (K4872) | the byte transport was `TextDecoder("latin1")` (windows-1252: 0x92 became U+2019) | j4 (draft A): `text.test.mjs` before the job used ASCII and single-byte fixtures only (the one UTF-8 case at `:65` had a single high-byte field), so the latin1 transport (`csv-reader/index.mjs:508` `BYTE_TRANSPORT = new TextDecoder("latin1")`, used `:624`) never failed; closed by `windows.test.mjs` G131a tests and `text.test.mjs` R5 | RED old `{"undetermined":2,"cells":["a","b","1",null,"2",null]}`, new `{"undetermined":0,...,"it’s",...,"É Ñ 日本 😀"}` (draft A) old `windows.test.mjs`: `✖ G131a a UTF-8 file with ’ in 300,000 rows reads every cell: no cell is null (C27)` `actual: 600000, expected: 0`; tests 17, pass 1, fail 16; new 17/17 | L (capped child: a 50 MiB read survives 144 MB old space, not 128 MB: a Stage-3 platform figure) | DONE |
 | **G131b** a stray `"` swallows the rest of the file | j4 csv-reader (K4872), j27 mirror (K4896) | j4: quote opened anywhere in a field (rec; no line); j27: `scanBoundaries` opened quotes anywhere | j4 (draft A): no old test had a stray `"` inside an unquoted field (the walk opened quote mode at any quote, `index.mjs:478`); closed by `windows.test.mjs` R23 | j4: RED old `{"usedRows":100,"of":500}` new `{"usedRows":500}`. j27: RED `✖ R41 R40 (G131b ...)`: `60014 !== 60001` (draft A) old: `✖ R23 one stray quote does not swallow the rest of the file ... (C14)` `actual: 100, expected: 500000` | L | DONE |
 | **G131c** the dialect fails all or nothing | j4 csv-reader (K4872) | one quoted newline, ragged row, title line or CR-only ending made the dialect fail (rec: now decided per window) | j4 (draft A): dialect and encoding were decided once from the first 50 lines/first window (`index.mjs:103`, `:520-531`) and the old tests only used files whose head was clean; closed by `windows.test.mjs` R24 | RED old `{"title":null,"crOnly":null,"firstLineOver1MiB":null,"utf16NoBom":"us-ascii"}` new `comma, semicolon, comma, utf-16le` (draft A) old: `✖ R24 a ragged file with a 5-line title preamble, CR-only endings and a quoted newline still finds its delimiter (C18, C19)` `actual: null, expected: 'comma'` | L | DONE |
-| **G131d** an empty cell shifts the row's values left | j4 csv-reader (K4872, text path); open: job 31 calculations (table seam `:506-515`) | the text path dropped an empty field's column (old `P100\t100`) | MISSING j4 (draft A): old text tests had no empty field in a first, middle or last column (`index.mjs:842` `if (field === "") return;` dropped the slot, then `vals.join("\t")`); closed by `windows.test.mjs` "G131d empty cells keep their column" and `text.test.mjs:47` | RED old `{"text":"id\tqty\tprice\nP100\t100"}` new "P100\t\t100" (draft A) old: `row 4 actual: [ 'b4', 'c4' ]` | N | OPEN+MISSING |
+| **G131d** an empty cell shifts the row's values left | j4 csv-reader (K4872, text path); open: job 31 calculations (table seam `:506-515`) | the text path dropped an empty field's column (old `P100\t100`) | j4 (draft A): old text tests had no empty field in a first, middle or last column (`index.mjs:842` `if (field === "") return;` dropped the slot, then `vals.join("\t")`); closed by `windows.test.mjs` "G131d empty cells keep their column" and `text.test.mjs:47` | RED old `{"text":"id\tqty\tprice\nP100\t100"}` new "P100\t\t100" (draft A) old: `row 4 actual: [ 'b4', 'c4' ]` | N | OPEN |
 | **G131e** `cellsIn` is quadratic | j4 csv-reader (CSV half), j5 office-readers (XLSX half `formats-xlsx.mjs:1218`) | j4 (draft A): `csv-reader/index.mjs:889-935` `csvCellsIn` calls `forEachRecord(parts, ...)` from byte 0 and counts `row++` until `fromRow`, with no access point, so a range late in the file costs the whole walk each call. j5: a point read inflated and walked the whole sheet part per call (`formats-xlsx.mjs:1218`, `:1272`) | j4: `g41-held.test.mjs` tested `cellsIn` for equality on 1 MB files (`:64`, `:77`) and never the bytes pulled; j5: `g41-held.test.mjs` R37 tests (`:110-:173`) equality only; closed by `windows.test.mjs` "R18 the bytes cellsIn pulls are bounded by the window, not the offset" (CSV) and `dates-typed.test.mjs` R37 (xlsx) (draft A) | j5 (`dates-typed.test.mjs` on `3868441e0b^1`; tests 5, pass 1, fail 4; new 5/5): `✖ R37 a point read parses the blocks that hold the rows asked for, not the sheet ...` `TypeError [Error]: Cannot read properties of undefined (reading 'get')` (no access points on old); test: 80,000-row sheet, row 79,990 served at most 2 MiB. j4 (old `windows.test.mjs`): `✖ R18 the bytes cellsIn pulls are bounded by the window, not the offset: rows 699,998 to 700,000 of an 8.9 MiB file ...` red; `✖ R18 cellsIn from an access point equals the whole read ...` red | L | DONE |
 | **G131f** HTML tables are cells-as-paragraphs; `visibleTextOfHtml` quadratic | job 40 reading-pipeline-2 (READING-PIPELINE #33, K4909; merged) | `reading-pipeline/index.mjs:1325` (old `visibleTextOfHtml`, `4e9a39f381`) with `endOfElement` (`:1161`) and `probeBlock` (`:1228`): regex-and-rescan, each rescanning an element to its end (cost size x depth); an only-links list was furniture (4,000 `<li><a>` gave 1 character); every table cell was a paragraph (a 500 x 20 table gave 10,001 paragraphs) (draft B) | no deep markup, no multi-tick HTML and no table fixture in the old tests; closed by `r10-html.test.mjs` (6 tests, with `html-oracle.mjs`, the old pass kept as the oracle) (draft B) | file does not load on `4e9a39f381` (no `html.mjs`); with that import stubbed: `✖ R51 R35 R15 (G131f, SHEET D02): a 500 x 20 table keeps its rows and columns` `AssertionError: Before., 500 rows, After.` `actual: 10001, expected: 502`; green `094ba969f5` 6/6. Timing reds (nested div 4,000: 5,403 ms; 20,000 unbalanced `<div title="`: 224,697 ms) are the job's own with the oracle, not rerun | L (R-CLOCK: counts, not times) (draft B) | DONE |
 | **G131g** no encoding stated or read by any module | j3 ooxml (K4864, `decodeText` owner), j5, j6, j8, j9, j10, j23, j27 | j3 (draft A): `ooxml.mjs:67` `const UTF8 = new TextDecoder("utf-8", { fatal: false })` is the only decoder for every part the module decodes (`:1029`, `:1153`, `:1243`, `:1288`); no encoding detection; `decodeText` did not exist. j6: five sites decoded with `UTF8.decode` (`odf.mjs:187` old). j9: `textchain.mjs:1852` counted U+FFFD and NUL as glyphs. j27: `reading-pipeline/index.mjs:2323, 2388` `TextDecoder("utf-8")`. j23 (draft B): UTF-8-only decodes in the old module: `acquisition/index.mjs:158` (`TextDecoder("utf-8", { fatal: true })`), `:245`, `:1932`, `:2095-2096`; `title.mjs:73-74` read only a meta charset. j5, j8, j10: MISSING | j6: fixtures were UTF-8. j9: tests used no decode failures. j27 (draft B): the old tests used UTF-8 files only and one pinned the defect (`text-units.test.mjs` asserted `["caf� au lait", "second"]` for a Latin-1 file, changed in the merge); closed by `r9-reader.test.mjs:266, :280`. j3, j5, j8, j10, j23: MISSING | j3: RED (aggregate) `decodeText is not a function`; `✖ R36 every part the module decodes to text goes through decodeText: a UTF-16 part is read, not found empty` `actual: 'undetermined', expected: 'docx'` (draft A). j6: four `R54` ✖; green 5/5. j9: `1 !== 0` on `glyphCount("\u0000")`. j27: RED `✖ R49 (G131g ...): + 'Caf� r�sum�' - 'Café résumé'` (`r9-reader.test.mjs:266`). j23 (`879a7ce60f`, `r9-decode.test.mjs`; pass 0 fail 7; green 7/7): `✖ R120 (T7, 102400 bytes): UTF-16LE with a BOM, and UTF-8 with a BOM, are decoded` `TypeError: Cannot read properties of undefined (reading 'encoding')`; `✖ R120 (H5)` and `✖ R120 (T7)` fail the same way. j5, j8, j10: MISSING: RED line | L (encoding matrix is the owners' and seam §12 j43) | MISSING |
@@ -107,7 +107,7 @@
 | **G132i** folio page routed to OCR, `allowTextPage` never passed | j18 ocr-worker (K4872), j14 pdf-pixels (K4864/K4865) | j18: `ocr-worker/src/member.mjs:101` passed `{decodeDct: true}` only | j18: `allowTextPage` was tested alone in pdf-pixels. j14 (draft A): pdf-pixels already took `allowTextPage` before the job (`R16` tests at `pagepixels.test.mjs:118-123` with synthetic `Tj` operators); the defect "never passed" is the caller's (ocr-worker, j18); the missing case was a real scan with a text line through the real render, added at `:124-130` (pdfgen `mixed`, with and without `allowTextPage`) | j18: RED `G132i page renderer options · want {"decodeDct":true,"allowTextPage":true} · got {"decodeDct":true}`; green (confirmed by the ocr-worker rec line 110). j14 (draft A): NOT RED on `e191d0f0a3^1`: `R16 a scan with a text line is refused PAGE_HAS_TEXT_LAYER without the option` and `R16 ... is rendered with allowTextPage` print PASS on the old `pagepixels.mjs` (scratch-patched file: 452 PASS, 95 FAIL, none in R16; new 537 PASS, 7 FAIL, none in R16): the j14 test cannot fail on the old code; the red is j18's | L | MISSING (j14 NOT RED; j18 red) |
 | **G132j** ocr-worker has no top-level guard | j18 ocr-worker (K4872) | `member.mjs:140-146` wrapped only the engine call | the mutation run threw nothing | RED `G132j renderer throws: 200 UNEXPECTED_FAILURE at render · want [200,"UNEXPECTED_FAILURE","render"] · got ["RangeError: blew"]` (request rejected); green | L | DONE |
 | **G132k** the OCR cost per page is the file's | j18 ocr-worker (K4872, member half), j14 pdf-pixels (K4864/K4865, R47 `pageSource`); open: job 28 (pass half) | j18: `member.mjs:271-273` read the whole object per call | no test counted bytes read | j18: RED `G132k R2 reads of a 4 MiB capture (every read a range) · want ["range"] · got ["whole"]`; the SEAM test was red by name until pdf-reader's `pageSource` merged (K4866). j14: RED line `FAIL  R47 page 20: the bytes read are the page's, under a quarter of the 60432-byte file (read 60432)` (by name until PDF-READER #15); green K4866 (`pagepixels` 541/0) Job 28 pass half (K4909; draft B), `094ba969f5`: `✖ R103 R35 (K4904 (2); plan 2c item 9): a page the reading lists in folio_pages keeps its folio and is OCRed by the pass` `AssertionError: {"ok":true,"read":false,"why":"NO_PAGES_LEFT"}`; with the R103 `says`/pass tests of G126e. Cause `extraction/index.mjs` `#continueOcr` (`:903-917`) | L | DONE |
-| **G132l** four routes give wrong pixels with `ok:true` | j7 (a, TIFF predictor), j14 (b, `/Decode`, smask/mask, `dct_unexamined`; K4864/K4865), j13 (d, `mq.mjs:65-69`; K4864) | j14: `pagepixels` accepted `/Decode [1 0]`, smask, mask, TIFF predictor, `/Columns` as `/Width`. j7 (a, draft B): `pdfstructure.mjs:238` `if (predictor < 10) return data;` returned a TIFF-predicted (Predictor 2) stream's bytes as un-predicted, answered as decoded (callers `:838-841`, `:4076-4078`). j13 (d, draft A): `MqDecoder.byteIn` (`mq.mjs:46-60` pre-merge; the table cites `mq.mjs:65-69`) fed marker bytes past the end of the data silently, so a JBIG2 stream shorter than its region decoded white to the end and was never reported short (`onShort` did not exist) | j13: `mq.test.mjs` before the job round-tripped complete streams only (`:97`); no test truncated one or ended it in a marker; closed by `mq.test.mjs` R5 (two tests) and `jbig2.test.mjs` (draft A). j7: MISSING. j14: see rec | j14: RED `FAIL R45 8-bit grey with /Decode [1 0]: PIXELS_UNDETERMINED, decode_array, no bytes` (same for `smask`, `mask`, `tiff_predictor`, `ccitt_columns`, four `dct_unexamined`). j13 (`16c59da658^1`; tests 8, pass 6, fail 2; new 8/8): `✖ R5 (fix round 9, G132l (d)) data running out is detected as the bytes are consumed: onShort is called at the first byte the decode lacks` `actual: undefined`; `✖ R5 ... a stream that ends in its 0xFFAC marker is short ...` `actual: undefined`. j7 (draft B, `c0880172c0`): `bounds.test.mjs:91` alone: `✖ R22: a stream with a TIFF predictor is not passed through as if un-predicted: streamDecoded answers null; PNG predictors still decode` `actual: Uint8Array(100) [ ... ], expected: null`; green (bounds 8/8) | L | MISSING |
+| **G132l** four routes give wrong pixels with `ok:true` | j7 (a, TIFF predictor), j14 (b, `/Decode`, smask/mask, `dct_unexamined`; K4864/K4865), j13 (d, `mq.mjs:65-69`; K4864) | j14: `pagepixels` accepted `/Decode [1 0]`, smask, mask, TIFF predictor, `/Columns` as `/Width`. j7 (a, draft B): `pdfstructure.mjs:238` `if (predictor < 10) return data;` returned a TIFF-predicted (Predictor 2) stream's bytes as un-predicted, answered as decoded (callers `:838-841`, `:4076-4078`). j13 (d, draft A): `MqDecoder.byteIn` (`mq.mjs:46-60` pre-merge; the table cites `mq.mjs:65-69`) fed marker bytes past the end of the data silently, so a JBIG2 stream shorter than its region decoded white to the end and was never reported short (`onShort` did not exist) | j13: `mq.test.mjs` before the job round-tripped complete streams only (`:97`); no test truncated one or ended it in a marker; closed by `mq.test.mjs` R5 (two tests) and `jbig2.test.mjs` (draft A). j7: MISSING: gap not stated | j14: RED `FAIL R45 8-bit grey with /Decode [1 0]: PIXELS_UNDETERMINED, decode_array, no bytes` (same for `smask`, `mask`, `tiff_predictor`, `ccitt_columns`, four `dct_unexamined`). j13 (`16c59da658^1`; tests 8, pass 6, fail 2; new 8/8): `✖ R5 (fix round 9, G132l (d)) data running out is detected as the bytes are consumed: onShort is called at the first byte the decode lacks` `actual: undefined`; `✖ R5 ... a stream that ends in its 0xFFAC marker is short ...` `actual: undefined`. j7 (draft B, `c0880172c0`): `bounds.test.mjs:91` alone: `✖ R22: a stream with a TIFF predictor is not passed through as if un-predicted: streamDecoded answers null; PNG predictors still decode` `actual: Uint8Array(100) [ ... ], expected: null`; green (bounds 8/8) | L | MISSING |
 | **G132m** a sideways or upside-down picture answered `ok:true` with garbage | j14 pdf-pixels (R48 `turn`), j18 ocr-worker (engine orientation) | j18: `getOrientation` (`tesslib.mjs:827`) was never called and the turn did not exist in the renderers. j14 (draft A): `pdf-worker/src/pagepixels.mjs` `renderPageToPixels` (`:345`) and `decodeImage` (`:435-513`) handled `/Rotate` only (`opts.rotate`, `:450-460`, `:509`) and no `turn` option existed in `pagepixels.mjs` or `picturepixels.mjs`; a page photographed sideways or upside-down was answered `ok:true` with its pixels as stored and no `turned_deg` | j18: no turned page in any fixture | j18: RED `G132m a PDF page the engine finds turned 90: asked again with turn 270, read · want [true,[0,270],"the upright line"] · got [true,[0],"xq zv jk"]`. j14 (`pagepixels.test.mjs` on `e191d0f0a3^1`, scratch-patched; old 452 PASS 95 FAIL, new 537 PASS 7 FAIL): `FAIL R48 an 8-bit page, turn 90: the samples turned exactly, turned_deg 90, upright / want [2,3,"650ea45b48cac2f3...",90,0,true] / got [3,2,"801da61dbcec49...",null,0,true]` and about 50 further R48 FAIL lines (turns 180/270, 1-bit mask, DCT, CCITT, EXIF orientations 1-8). The 7 new FAILs: R42 mapping total and the three R47 bytes-read tests among them (their providers merged later) | L (engine measured: orientation exact at 300 dpi, unreliable below, rec) | DONE |
 | **G133a** an ODS cannot be read within the bound (held cells, row windows) | j6 odf-reader (K4866); seam §3 (jobs 38, 43) | `walkSheet` (old :1475-1566) materialised every row and cell; `typedCells` (:1439), `odsText` (:1776-1883); `entryFor.text` ignored `inlineCellsMax` (:2202); a 20.4 MB `content.xml` died at 112 MB | `large.test.mjs` tested only the over-bound refusal; no test passed `inlineCellsMax` to an ODS or ran one near the bound in a capped heap; `r8-held-cells.test.mjs` | RED `R49 inlineCellsMax: past the bound ... actual: [ ...cells ] expected: null`; `R49 yieldNow ... actual: false expected: true`; child at 112 MB red (exit 1); old module by hand: `FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory`, exit 134; green 8/8 | L done (capped child, real 112 MB); P owed, redeploy: the ODS digest's `owedwork`, `op=reading` raw, `heldcaptures`, `captureupload` Server-Timing (rec/plan) | DONE-P |
 | **G133b** ODS `covered-table-cell` never iterated (cells shift left) | j6 odf-reader (K4866) | `odf.mjs:1507` (old) iterated only `table:table-cell` | no merged-cell fixture | RED `R50 a value to the right of a merge keeps its column...` x3 ✖; green 3/3 | N, L (child's shape) | DONE |
@@ -199,211 +199,68 @@ Column layout as Table 1. Merged: 3, 4, 5, 6, 7, 13, 14, 15, 16, 17, 18, 19, 23,
 | plane `release` R24 and `l77-size` R77 L (2); plane R24 (`screen.objective.purpose`) | K4731 (inherited; restated K4855, K4899) | no round-9 job named (K4731 list) |
 | workbooks `g44-large.test.mjs` (seven reds, retired cap convention) | K4872 | job 32 workbooks (START: G123a) |
 | control-plane `t51-visitor-copy.test.mjs:58` (R117 reverses its `pending`) | K4887 | job 38 control-plane-1 |
-| extraction `r82.test.mjs:103`, `n26.test.mjs:81`; extraction G40/G41 pins (the 5-7 reds identical on the tranche before the merges) | K4896, K4880 | job 28 (G40/G41: jobs 28 and 41) |
+| extraction `r82.test.mjs:103`, `n26.test.mjs:81`; extraction G40/G41 pins (the 5-7 reds identical on the tranche before the merges) | K4896, K4880 | job 28 (G40/G41: jobs 28 and 41); job 28 merged K4909: `r82:103`, `n26:81`, `g40`, `g41` green (K4909) |
 | retrieval `whole-rows.test.mjs` R94 (three) | K4896 | job 30 retrieval |
-| file-safety `r56-structure.test.mjs` X19 (the 12 MiB ZIP of stored PDFs refused `NOT_AN_ARCHIVE`) | K4899, K4900 | job 52 format-registry-2 |
-| op-declarations R34 (two tests) and R47 (red since capture-upload merged) | K4899 | job 53 affordances |
+| file-safety `r56-structure.test.mjs` X19 (the 12 MiB ZIP of stored PDFs refused `NOT_AN_ARCHIVE`) | K4899, K4900 | job 52 format-registry-2 (= job 56; merged K4902, X19 green 5 of 5 alone; draft B: 7/7 on `93941622e2`) |
+| op-declarations R34 (two tests) and R47 (red since capture-upload merged) | K4899 | job 53 affordances (= job 57; merged K4902, K4899's reds cleared) |
 | screens-inquiry `fr6-seam` R96 G13 (boots before the reading exists) | K4847 (fragile; job 36's START) | job 36 screens-inquiry (also named "red until extraction's `more` merges", F8) |
 | file-safety `rows.test.mjs` R24 (words) | K4731, restated K4852, K4899 | design's `unkeyed` list / regeneration (no job) |
 | words: inline 14 (test-support 6, case-checker `spec.mjs` 6, `pdfstructure.mjs:5683, 5695` 2) and missingkey 5 (`installer.fleet.logsunconfirmed`); installer-steps R36, R40 | K4855, K4859, K4872, K4883 | design U469 MERGE then BOB's regeneration (no job) |
 | newgroup `t48` R55, `t50` R61 R71, `wizard`, journey-check `account-installer`, `plane-cron`, and the local arm's "install: each step finishes" | K4847, K4875 (cause: the signed release `release/` 0.86.0 lacks `bio-plane-crons/1`) | the next signed cut 0.87.0 (G90); no job |
 | journey-check `group` 4/1 (R17), `live` R9 step 2 | K4868 (4) | R17: T52 (K4269); `live`: not placed |
 | `test.todo` R50-R52, R54 G135a/b/d/e in reading-pipeline; R99, R100, R107, R105 (b) in extraction (not reds) | K4888, K4901 | job 40 (reading-pipeline-2); job 41 (extraction-2) |
-| plane `shape-harness` R84 G123b control (bimodal peak) | K4889, re-attributed K4892 | doctypes-2 (j12, merged K4899): its record shows 12/12 green alone; K4899 does not itself state the control green (confirm at the next plane run) |
+| plane `shape-harness` R84 G123b control (bimodal peak) | K4889, re-attributed K4892 | doctypes-2 (j12, merged K4899): its record shows 12/12 green alone; K4899 does not itself state the control green (confirm at the next plane run). Draft B ran `shape-harness.test.mjs`: 6/7 at the job-20 merge `d1325da819` (twice; the failing test is the G123b control, `AssertionError: control`), 7/7 at the tip `b9a4c9acb0` |
 
-## Verdict counts
+## Verdict counts (recomputed after the fold of drafts A and B, 2026-10-24)
 
-Table 1 has 122 rows (the causes of §2 by piece, including the G124 table row, the G126 registrar-callers row and S25), Table 2 has 14 rows, Table 3 has 10 rows. Counting each row once, by its verdict (a row with both an unmerged job and a MISSING cell counts as open):
+Table 1 has 122 rows, Table 2 has 14 rows, Table 3 has 10 rows. Counting each row once, by the first word of its verdict (a parenthesis after a verdict flags a NOT RED piece, see the next section; the open/merged status of jobs is this file's baseline plus the merges named in the Status line):
 
-**Table 1:** OPEN (including OPEN+MISSING) 58 (34 plain OPEN, 24 OPEN+MISSING); MISSING 53; DONE-P 3 (G125g, G133a, G142); DONE 8.
-**Table 2:** OPEN 1; MISSING 12; DONE 1.
-**Table 3:** OPEN 6 (G118b, job 46, 52, 53, 54, 55); MISSING 1 (job 47); DONE-P 3 (G112b, G120b, G121b).
+**Table 1:** OPEN 48 (plain); OPEN+MISSING 4 (G124b, G124f, G128e, G128i); MISSING 10 (G123b, G125a, G127b, G130c, G131g, G132d, G132i, G132l, G133c, G140); DONE-P 8; DONE 52.
+**Table 2:** OPEN 1 (calculations / workbooks / control-plane-1); MISSING 2 (ooxml, office-readers; both NOT RED); DONE 11.
+**Table 3:** OPEN 2 (G118b, the R14 row); DONE-P 3 (G112b, G120b, G121b); DONE 5 (job 47 and the four rows of jobs 56-59, still keyed "job 52-55").
 
-**All tables, 146 rows:** open 65 (58 + 1 + 6); MISSING 66 (53 + 12 + 1); done 15 (11 in Table 1: 8 DONE and 3 DONE-P, 1 in Table 2, 3 in Table 3). Rows with at least one MISSING cell: 91 (the list at the end).
+**All tables, 146 rows:** OPEN 51 and OPEN+MISSING 4 (open 55 in all); MISSING 12; done 79 (DONE 68, DONE-P 11). Rows with at least one cell still reading MISSING: 8 (G124f, G125a, G128e, G128i, G130c, G131g, G132l, G133c). Rows whose verdict is held MISSING only by a NOT RED or NOT SEEN RED piece (no cell reads MISSING): 7 (G123b, G124b, G127b, G132i, G140, quotes/ooxml, quotes/office-readers). G132d keeps the verdict MISSING it had in the first draft, with no cell reading MISSING (its root-cause cell has "no line in rec"; neither draft covers it).
 
-## Every MISSING cell, one line each
+## NOT RED, NOT SEEN RED or weak reds named by drafts A and B (BOB reads each and reopens it as an entry of this round, or accepts it)
 
-One line per MISSING cell (the row key, the point (1)-(4), the job where the cell names one, and what is missing); a bare "MISSING" cell reads as the default text of its column. 182 cells in 91 rows.
+- **G124b, acquisition R115** (draft B): `r9-multipart-memory.test.mjs` passes 3/3 on `879a7ce60f`, vacuously (`ledger.peak()` is 0 on the old module, `PEAK 29360128` on `d821b61a02`); the defect is `acquisition/index.mjs:1576` (`whole0`, the second whole-sized buffer). Owner: acquisition. R114 of the same row is red (1/3 old).
+- **G127b, capture R108** (draft B): `r9-t51.test.mjs` R108 tests pass 2/2 on `b2dad8337f`; capture rec: no cause in capture, the digest was already the whole's. Owner: capture. The same file's two R112 (G137c) tests also pass on the old code.
+- **G123b** (draft B): the leak-inside-one-tick test is not shown red alone (the old harness lacks `shimApplied`/`leakAt`; the file does not load). Cause `shape/harness.mjs:254-255`, owner plane (job 20).
+- **G124e, j9 text-chain** (draft A, and the text-chain rec): "R93 R95 (G124e)" passes on the old and new source, by design (pinned, BOB's START).
+- **G126d, j3 ooxml** (draft A, and the ooxml rec "G126d: audit test per container kind (R7), already holding"): no defect in ooxml; the j6 piece (`isOdfTextPart`) is new code, red by import error.
+- **Quote rows quotes/ooxml and quotes/office-readers** (draft A): the value tests pass on the old code (figures equal). ooxml's module-side red is R30 (`OFFICE_ENTRIES_MAX`, a new limit); office-readers' is G124c R44.
+- **G124c, j3 side** (draft A): R6/R35 pass on `7ef1a0a1c3^1`; R30 is red.
+- **G132i, j14 pdf-pixels** (draft A): the two R16 tests pass on the old `pagepixels.mjs`; the defect is the caller's (ocr-worker j18), whose test is red.
+- **G140 site-profiles j10** (draft A): `r9-bounded.test.mjs` R20 passes on the old code in 130,600 ms (red only by time, R-CLOCK). **G140 (2), j12** was drafted from the old test directory listing and the rec; the drafter did not run `g140.test.mjs`.
+- **G136c, j16 doc-clean** (draft A): weak red; the first DOCS C1 test prints a failing line, then the process aborts out of memory (exit 134) before the assertion detail. Same for **G128e, j5** (R45, exit 134 or 137) and **G125d, j5** 100 MiB case, **G125a, j7** (process killed, exit 137).
+- **G128i** (drafts A and B): not closed; the j23 rec and diff carry no G128i item; the X20 piece is G129e and the X29 piece is, if anything, G138; the audit rows of G128i are job 41's and reading-pipeline's. Left MISSING, unplaced.
+- **Red by load failure only** (draft B): G123c and G123f (j20; the old harness lacks what the test imports), `r57-bounds` second test (j26; fails on the old module's file count).
 
-- G92 (1): file:line (rec states the fix: `#bounded`/`#clamavOnce` share one in-flight call per file, return at `callBoundMs`
-- G92 (2): gap not stated
-- G123a (1): j20 file:line (rec names the re-pointed files: `shape/harness.mjs`, `g41.probe.mjs`, `g44.probe.mjs`, `g26.probe.mjs`, `g41-shape`/`g4
-- G123a (2): j20 gap not stated
-- G123a (3): j20 RED line (rec: g41 and g44 "pass at the new caps")
-- G123b (1): root cause (rec lists the change: sampler stays on, in-tick sampling points, per-tick counts, `shape/bars.mjs` count bars)
-- G123b (2): gap not stated
-- G123b (3): RED line (rec: the leak-inside-one-tick test "seen red with the sampler off", no line)
-- G123c (1): j20 root cause not stated
-- G123c (2): j20 gap not stated
-- G123c (3): j20 RED line (rec: `shape-harness.test.mjs` 7/7)
-- G123e (3): RED of the committed tests (the pasted line is a scratch run)
-- G123f (1): root cause
-- G123f (2): gap
-- G123f (3): RED line
-- G123h (2): gap not stated
-- G123h (3): RED line (rec: `g123h-preload.test.mjs` "seen red first")
-- G124a (3): j27 RED line for `r9-reader` "R37 (G124)" (the J34 reds listed are other tests)
-- G124b (1): j23 root cause
-- G124b (2): j23 gap not stated
-- G124b (3): j23 RED line (R115 `r9-multipart-memory.test.mjs`, R114 `r9-ceilings.test.mjs`)
-- G124c (1): j3 root cause not stated
-- G124c (2): j5 gap not stated
-- G124c (2): j3 gap not stated
-- G124c (3): j5 RED line (R44: 250,000 retained objects, `TOO_MANY_OBJECTS`)
-- G124d (2): gap not stated
-- G124e (2): j9 gap not stated
+## Every cell still reading MISSING
+
 - G124f (1): no record states a cause
 - G124f (2): gap not stated
 - G124f (3): no record names a SHEET C03-C08 or X05 test
-- G124g (1): j24 root cause (j24 rec: `CAPTURE_MAX` is `boundOf("archive","uploaded_bytes")`, alpha 256 MiB, K4882)
-- G124g (2): gap not stated
-- G124g (3): RED lines (j23 `r9-ceilings.test.mjs`
-- G125a (1): j13 file:line (rec: "judge declared size before any allocation")
-- G125a (2): gap not stated
-- G125a (3): j7 RED line
-- G125b (1): file:line (rec: precinct/tile/code-block/packet objects counted in closed form before `addPrecincts`)
-- G125b (2): gap not stated
-- G125c (1): cause statement (rec describes the fix: `png.mjs` judges the chunk count as walked and the row stride straight after the header, b
-- G125c (2): gap not stated
-- G125d (1): j3 root cause not stated
-- G125d (2): gap not stated
-- G125d (3): j5 RED line (rec: a 100 MiB zero-filled embedding in a 100 KB package is refused before inflation)
-- G125e (2): gap not stated
-- G125f (2): gap not stated
-- G125h (1): j3 file:line (rec J6: OFFICE_ENTRIES_MAX, ARCHIVE_DIRECTORY_MAX, ARCHIVE_NAME_MAX in `readContainer`, ratio in `readPart`)
-- G125h (2): j3 gap not stated
-- G125h (3): j3 RED line
-- G126d (1): j3 root cause not stated
-- G126d (2): j6 gap not stated
-- G126d (3): j6 RED line (R55 is new code: predicate true for exactly `content.xml`, `styles.xml`, `meta.xml`, tested)
-- G126f (1): j23 root cause not stated
-- G126f (2): j23 gap not stated
-- G126f (3): j23 RED line (`r9-registrar.test.mjs`, 5 tests on `jobRegistrarStub`)
-- G126g (2): gap not stated
-- G126j (3): RED line not pasted
-- G126 (2): j26 gap not stated
-- G127b (2): gap not stated (rec: tested for TIFF, JPEG, two members)
-- G127b (3): RED line (rec: green at first run for digest, parts, second-member assertions
-- G127d (1): j23 root cause (rec: new service)
-- G127d (2): gap not stated
-- G127d (3): j23 RED line (`r9-read-range.test.mjs`, 4 tests)
-- G127e (2): gap
-- G128b (2): gap not stated
-- G128b (3): RED line (not among the reds J34 pasted)
-- G128c (1): root cause not stated
-- G128c (2): gap not stated
-- G128c (3): RED line (reds seen are j27's seam: `R40/R41 (G48) control: pdf` records `images: null`, now `images: []`)
-- G128d (3): RED line
-- G128e (1): j5 root cause not stated
-- G128e (1): j27 root cause not stated
-- G128e (2): j27 gap not stated
-- G128e (3): j5 RED line
-- G128g (1): root cause not stated
-- G128g (2): gap not stated
-- G128g (3): RED line (`r9-reader`: 9,000 rows, each row once, header once)
-- G128h (1): root cause not stated
-- G128h (2): gap not stated
-- G128h (3): RED line
+- G125a (1): j14 and j7 root cause not stated
+- G125a (2): j14 and j7 gap not stated
+- G128e (2): j5 gap not stated
 - G128i (1): rec of j23 does not itemize G128i
 - G128i (2): gap not stated
 - G128i (3): RED line not pasted
-- G129c (2): gap not stated
-- G129c (3): RED line
-- G129e (2): gap not stated
-- G129e (3): j23 RED line (`r9-unpack-transient.test.mjs`, A11)
-- G129f (2): gap
-- G130a (3): RED output line (names only)
-- G130b (3): j8 RED line (detect-round9 R9/R31/R13)
-- G130c (1): j27 root cause not stated
-- G130c (3): j8 RED line (detect-round9 R32 tests)
-- G130d (1): file:line (rec: structure by `readRange`/`partsOf`, any size)
-- G130d (2): gap not stated
-- G130e (1): root cause not stated
-- G130e (2): gap not stated
-- G130e (3): RED line
-- G131a (2): gap not stated
-- G131b (2): gap not stated
-- G131c (2): gap not stated
-- G131d (2): gap not stated
-- G131e (1): j4 root cause not stated
-- G131e (2): gap not stated
-- G131e (3): j5 RED line (test: 80,000-row sheet, row 79,990 served at most 2 MiB)
-- G131g (1): j3 root cause not stated
-- G131g (2): j27 gap not stated
-- G131g (3): j23 RED line
-- G131i (2): gap not stated
-- G132a (2): gap not stated
-- G132c (2): gap not stated
-- G132e (2): gap not stated
-- G132f (2): gap not stated
-- G132g (2): gap not stated
-- G132i (2): j14 gap not stated
-- G132i (3): j14 RED line (test renders a `mixed` scan with and without `allowTextPage`)
-- G132l (1): j7 root cause not stated
-- G132l (1): j13 root cause not stated
-- G132l (2): j13 gap not stated
-- G132l (3): j7 RED line
-- G132m (1): j14 root cause not stated
-- G132m (3): j14 RED line
-- G133c (2): j12 gap not stated
-- G133c (3): j5 RED line
-- G133d (2): j16 gap not stated
-- G133d (3): RED line
-- G133e (1): file:line (rec: local headers read in physical order, 10,001 entries refused)
-- G133e (2): gap not stated
-- G134a (1): j5 root cause not stated
-- G134a (2): j5 gap not stated
-- G134a (3): j5 RED line (`parts-kinds.test.mjs`)
-- G134c (2): gap not stated
-- G134c (3): RED line (`dates-typed.test.mjs`)
-- G134d (2): gap not stated
-- G134d (3): j27 RED line (Test DOCS O4 at the interface)
-- G136a (1): j26 root cause not stated
-- G136b (1): j26 root cause not stated
-- G136c (1): j16 file:line (rec: the package writer wrote a 16-bit count)
-- G136c (2): j16 gap not stated
-- G136c (3): RED line not pasted
-- G136d (1): root cause not stated
-- G136d (2): gap not stated
-- G136e (1): root cause not stated
-- G136e (2): gap not stated
-- G137a (1): root cause not stated
-- G137a (2): gap not stated
-- G137b (1): root cause not stated
-- G137b (2): gap not stated
-- G137c (1): j23 root cause not stated
-- G137c (2): j23 gap not stated
-- G137c (3): j23 RED line (`r9-render-charge.test.mjs`, 6 tests)
-- G137d (2): j27 gap not stated
-- G137d (3): j27 RED line (`r9-reader` R56)
-- G138 (3): j23 RED line (`r9-pictures-unread.test.mjs`)
-- G140 (2): j12 gap not stated
-- G140 (3): j10 RED line ("seen red before ... takes seconds")
-- G141 (3): j8's RED output line (names only)
-- quotes/ooxml (1): literals replaced (rec: every ceiling through `boundOf`, no literal
-- quotes/ooxml (2): gap not stated
-- quotes/ooxml (3): RED line (aggregate "24 of 26 failed" has no quote item)
-- quotes/csv-reader (1): literals replaced by `boundOf` (50 MB, 1,048,576 records)
-- quotes/csv-reader (2): gap not stated
-- quotes/csv-reader (3): RED line ("bounds 2 of 2" red against the old module, no output)
-- quotes/office-readers (2): gap not stated
-- quotes/office-readers (3): RED line
-- quotes/odf-reader (2): gap not stated
-- quotes/odf-reader (3): RED line
-- quotes/pdf-reader (2): gap not stated
-- quotes/pdf-reader (3): RED line
-- quotes/image-codecs (1): literals in six sources (rec: R13, a test greps them, "negative control run")
-- quotes/image-codecs (2): gap not stated
-- quotes/image-codecs (3): RED line
-- quotes/pdf-pixels (2): gap not stated
-- quotes/pdf-pixels (3): RED line
-- quotes/image-cover (2): gap not stated
-- quotes/image-cover (3): RED line for R11 (the 7/7 RED belongs to R10, G125c)
-- quotes/doc-clean (2): gap not stated
-- quotes/doc-clean (3): RED line
-- quotes/file-scanner (1): root cause not stated
-- quotes/file-safety (1): root cause not stated
-- quotes/file-safety (2): gap not stated
-- quotes/sheet-worker (2): gap not stated
-- job 46 (2): gap not stated
-- job 47 (2): gap not stated
+- G130c (1): j23 and j3 root cause not stated
+- G131g (1): j5, j8, j10 root cause not stated
+- G131g (2): j3, j5, j8, j10, j23 gap not stated
+- G131g (3): j5, j8, j10 RED line
+- G132l (2): j7 gap not stated
+- G133c (2): j5 and j3 gap not stated
+
+15 cells in 8 rows (was 182 cells in 91 rows).
+
+## BOB #279's review of the folded cells (K4920; BOB read the cited code, K4849)
+
+- **G124b** (acquisition R115): reopened. At the tip `acquisition/index.mjs:1401` makes the one buffer only for a declared length within `MULTIPART_KEEP_MAX` and no render; `:1659` still joins `keptParts` into a second whole-sized buffer otherwise (the comment at `:1395-1399` says so). Job 65 (acquisition-2), which also makes `r9-multipart-memory` non-vacuous (the old module ignored the ledger: peak 0).
+- **G140 (site-profiles)**: closed by BOB's test-only fix (K4297 (2)): `site-profiles/test/r9-bounded.test.mjs` R20 now requires each detect to count at least the text it reads; red on `af83ccca31^1` ("client_rendered on 240 KB of <div with no closing counted 0 of 240000: the reading is not metered"), green on the tip; site-profiles 46/0. G140 (2) doctypes stands on its record ("12 of 18 fail").
+- **G127b** (capture R108): no cause in capture (its record and its two tests, green before and after: a characterization). The first-part-digest symptom is the register builder's (G127a/c): it closes with seam section 5 at screens-intake's merge (job 35, running).
+- **G123b**: the cause is confirmed at `plane/shape/harness.mjs:254-255` (the sampler cleared on the next line); the leak test was never shown red alone. **Seen red by BOB's mutation run (K4921):** the tip's harness in a scratch copy with the old sampling restored (`clearInterval(timer)` on the line after `setInterval(sample, 2)`, `:286`, and no in-tick sampling point, `hook.sample = sample` at `:285` removed): "R84 G123b" reads `AssertionError: tick 1 peak 1.1 MB above base`; on the tip it passes. With the interval cleared alone it still passes: the in-tick points (`:166`, `:168`, `:185`) are what make a one-tick peak seen. DONE.
+- **G124e** (text-chain): DONE by design (`canonicalRange` null past ZZZ), pinned. **G126d**: OPEN on job 38 (K4916 (4): odf-reader's `isOdfTextPart`). **The quote rows** (ooxml, office-readers; G124c's R6/R35): a figure moved from a literal to the table at the same value cannot read red; their failing-first test is the all-modules grep of seam section 14 (job 38), red while any literal stays. **G132i**: closed by ocr-worker's red (job 18, `member.mjs:101`); pdf-pixels' two tests are controls. **G136c**, **G128e** (j5), **G125d** (j5), **G125a** (j7): red by the process dying at the cause's input (memory), accepted as red; their MISSING (1)/(2) cells are closed from the records before the redeploy (§7.2). **G128i**: not ownerless: job 41 (its START names it twice), its (3) the corpus R set's cases at the round end. **G124f**: no work of its own; it closes with G131i (the light kinds' windows) and the table's alpha column (job 2).
+- Still MISSING after this review: the 15 cells the worker listed (G124f, G125a, G128e (2), G128i, G130c (1), G131g, G132l (2), G133c (2)), each closed from its record or its owner's run before the redeploy.
