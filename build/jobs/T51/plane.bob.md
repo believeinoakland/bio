@@ -1114,3 +1114,7 @@ ANSWER to J55 (K4898).
 ## B81 · CHANGE
 
 CHANGE (K4899): CAPTURE #53 (job 42) has merged: merge tranche/T51 into your branch. Capture R113 (new) states the parted upload: a file past the request-body ceiling is sent in parts through the Worker into R2's multipart upload. Wiring owed by the composition root (yours, `plane/store.mjs`), read from capture's record `build/jobs/T51/capture.md` section "Fix round 9 · job 42", "Other modules": assign `capture.evidenceKey = (digest) => <namespace>/captures/<digest>` (the same key record-core's evidence store uses for a capture, its R38; or the door hands `key`), beside `capture.registerJob` and `capture.armJobs` (already owed, B79 and section 2c item 1). Without it `captureuploadbegin` answers `PARTED_UPLOAD_UNAVAILABLE`. The four route arms are control-plane's (job 38), not yours. Test: through the Store, a begin answers `ok` with `parts` (not `PARTED_UPLOAD_UNAVAILABLE`).
+
+## B82 · CHANGE
+
+CHANGE (K4904): plan section 2c item 8 (merge tranche/T51 and read "Section 2c items added by BOB #277" in `build/plan/fix-round-9-T51.md`): beside `killedPages`, hand `readHeld` `killedCursor`, a window cursor that `job_unit_attempts` has stamped three times for the entry (a text window, slide or sheet block), so extraction steps past it with reading-pipeline's `read(..., {skipKilled: true})`. Test with the real table: a cursor stamped three times reaches `readHeld` as `killedCursor`.

@@ -1,6 +1,6 @@
 # file-safety (T51)
 
-**Status** · session_015kbzetYAMCNEmG4ma5vT3W · depth 2 · COMPLETE · handled B19
+**Status** · session_015APyFqZNBSsmXdhzGxAkgD · depth 2 · COMPLETE · handled B19
 
 ## Completion (T51-183, words)
 
@@ -437,3 +437,22 @@ Existing tests updated to the new rules (one render per tick, ranged store reads
 ## J17 · COMPLETE
 
 COMPLETE: fix round 9 applied (see the completion section of my record); checks clean; impact set has only failures that also fail on the base.
+
+## Completion (fix round 9, job 54: R39's render wake, K4900; FILE-SAFETY #21, session_015APyFqZNBSsmXdhzGxAkgD)
+
+1. **The line.** `renderBatch` keeps `left` (views due now, plus safe copies beyond those it looked at, when a routine tool exists) in its `render` wake row (`index.mjs`, the `#keep("render", …)` before its answer); `renderWake` (`index.mjs`, after the unreadable case) answers `now` while `left` is above 0 and no file is marked `rendering`. The unreadable-queue case, the null cases, the back-off and waiting cases and the in-flight hold are unchanged: a view in its back-off is not counted, so no spin.
+2. **Why missed.** R39's test (`wakes.test.mjs`) asserted `last renderBatch + FILE_SAFETY_POLL_MS` with a queue left behind; with one render a tick (#20, R12) that fixed the pace at about 12 an hour.
+3. **Red first, then green.** `r39-render-wake.test.mjs`, three files queued: RED on the pre-change code, `actual: 1791461103000, expected: 1791460803000` (now + 300,000); and the in-flight case red too. Green 3/3 with the change. `wakes.test.mjs` R39 updated to the new rule (a view left queued: `now`, kept across a restart).
+4. **Platform check:** N.
+
+Module tests: pass 132, fail 2 (`rows.test.mjs` R24 words, inherited, named in the START; the run before it also showed `r56-structure` X19 red once, green on the second run, inherited). Impact set (`impact.mjs origin/tranche/T51 HEAD`): plane `t36`, op-declarations `t33`, notice-producers `files`, store-door `dispatch`, control-plane `t51-routes` all green. format 0, architecture 0, coverage 57 of 57, words 0, ownership 0.
+
+**For BOB (scheduler's job 33).** `bio-plane/test/m/scheduler/files.test.mjs:279` ("R24, R9 … never the firing instant") assumes the old wake: with three files queued, `onAlarm` renders one, and `r.nextAt` is now `at` (R39 as amended says so), so `assert.ok(r.nextAt === null || r.nextAt > at, "no spin")` fails: `1791460803000 after 1791460803000`. It passes on `origin/tranche/T51` without my change. The scheduler's firing loop spinning at `now` is the intended cadence while views are queued; scheduler should assert it ends (null after the last view) rather than `> at`. Also red on the base, not mine: op-declarations `t36` R34.
+
+No new files outside my paths; no generated artifact made stale beyond the member's bundle (`file-safety` is inside the plane's bundle; BOB regenerates). No new words.
+
+Size (session_015APyFqZNBSsmXdhzGxAkgD): test runs 9, module lines 3374
+
+## J18 · COMPLETE
+
+COMPLETE: job 54 applied (R39 render wake is now while renderBatch left a view or safe copy queued; completion section of my record). Red/green shown; module tests 132 pass, 2 fail (rows.test R24 inherited, X19 flaked once). checks: format, architecture, coverage, words, ownership 0. FOR SCHEDULER (job 33): scheduler files.test.mjs:279 assumes the old wake (nextAt > at) and now fails; passes on the tranche base. Details in my record.
