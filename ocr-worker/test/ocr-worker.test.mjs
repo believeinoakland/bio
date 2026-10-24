@@ -1023,7 +1023,7 @@ console.log("\n--- A15 · R26 R25 R30: the member over the real engine, with the
   const encodeGrey = (rgba, w, h) => png({ width: w, height: h, rows: Array.from({ length: h }, (_, y) => Uint8Array.from({ length: w }, (_, x) => rgba[(y * w + x) * 4])) });
   const withTurn = (real) => async (bytes, page, opts) => {
     const a = await real(bytes, page, opts);
-    if (!a.ok || !opts.turn) return a;
+    if (!a.ok || !opts.turn || a.turned_deg === opts.turn) return a;   /* a renderer that turns (pdf-pixels R48 merged) is not turned twice */
     const s = await pngToSamples(a.bytes);
     const f = turnRgba({ rgba: samplesToRgba(s), width: s.width, height: s.height }, opts.turn);
     const out = encodeGrey(f.rgba, f.width, f.height);
@@ -1317,8 +1317,7 @@ console.log("\n--- A23 · R31: no ceiling this module keeps is a numeric literal
 {
   const bounds = await import("../../bio-plane/src/read-bounds.mjs");
   t("R31 R7.4 MAX_FRAME_BYTES is the table's ocr.frame_bytes row, as the active figure", [MAX_FRAME_BYTES, MAX_FRAME_BYTES === bounds.boundOf("ocr", "frame_bytes")], [61_300_000, true]);
-  t("R31 PICTURE_MAX_EDGE is the table's ocr.picture_edge row where the table has one (4096 as proposed until then; BOB records)",
-    PICTURE_MAX_EDGE, Object.hasOwn(bounds.READ_BOUNDS.ocr, "picture_edge") ? bounds.boundOf("ocr", "picture_edge") : 4096);
+  t("R31 PICTURE_MAX_EDGE is the table's ocr.picture_edge row, as the active figure", [PICTURE_MAX_EDGE, PICTURE_MAX_EDGE === bounds.boundOf("ocr", "picture_edge")], [4096, true]);
   const SRC = fileURLToPath(new URL("../src/", import.meta.url));
   const strip = (x) => x.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1").replace(/"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`|'(?:[^'\\\n]|\\.)*'/g, '""');
   const own = readdirSync(SRC).filter((f) => f.endsWith(".mjs") && f !== "tesslib.mjs");
@@ -1327,17 +1326,17 @@ console.log("\n--- A23 · R31: no ceiling this module keeps is a numeric literal
     const big = [...line.matchAll(/(?<![\w.])(\d[\d_]{3,})(?![\w.])/g)].map((m) => m[1]);
     if (big.length) literals.push([f, line.trim().slice(0, 100)]);
   }
-  /* the module's numeric literals of four digits or more: the ceiling's own proposed fallback and the one read size are
-     what remain (a header read, a conversion factor); a literal ceiling anywhere else would be listed here */
-  t("R31 the module's source holds no numeric literal of four digits or more for a ceiling: only the picture edge's proposed figure, one read size and the two measured byte lengths of the engine's own parts (R19) remain",
+  /* the module's numeric literals of four digits or more: the read size of a picture's header and the measured byte
+     lengths of the engine's own parts are what remain; a literal ceiling anywhere else would be listed here */
+  t("R31 the module's source holds no numeric literal of four digits or more for a ceiling: only one read size and the two measured byte lengths of the engine's own parts (R19) remain",
     literals.map(([f, l]) => `${f}: ${l.replace(/\s+/g, " ")}`).sort(),
-    ["contract.mjs: : 4096;", "contract.mjs: const HEADER_WINDOW = 65536;", "tessengine.mjs: export const MODEL_BYTES = 4113088;", "tessengine.mjs: export const WASM_BYTES = 1839004;"]);
+    ["contract.mjs: const HEADER_WINDOW = 65536;", "tessengine.mjs: export const MODEL_BYTES = 4113088;", "tessengine.mjs: export const WASM_BYTES = 1839004;"]);
   const ceilings = [...own].flatMap((f) => [...readFileSync(SRC + f, "utf8").matchAll(/export const ([A-Z_]*(?:MAX|BOUND)[A-Z_]*) =\s*([^;]*);/g)].map((m) => [f, m[1], m[2]]));
   t("R31 every exported ceiling constant is read through boundOf", ceilings.filter(([, , init]) => !/boundOf\(/.test(init)).map(([f, n]) => `${f}:${n}`), []);
   t("R31 and the ceilings found are the two this module keeps", ceilings.map(([, n]) => n).sort(), ["MAX_FRAME_BYTES", "PICTURE_MAX_EDGE"]);
 }
 
-console.log("\n--- A24 · R27 SEAM: the member over the REAL renderers asked a source (pdf-pixels R47, job 14) ---");
+console.log("\n--- A24 · R27 SEAM: the member over the REAL renderers asked a source (pdf-pixels R47, job 14; pdf-reader pageSource) ---");
 {
   /* red by name until pdf-pixels' source reading merges: the member, its real page and picture renderers, a capture in a bucket */
   const asked = async (doc) => {
@@ -1347,7 +1346,7 @@ console.log("\n--- A24 · R27 SEAM: the member over the REAL renderers asked a s
   };
   const pdfAsk = await asked(TWO_PAGE);
   const wholeObject = pdfAsk.bucket.log.filter(([k]) => k === "get").reduce((n, [, , range]) => n + (range ? range.length : TWO_PAGE.length), 0);
-  t("R27 SEAM pdf-pixels R47: a scanned PDF page through the real page renderer is read from ranges of the object, fewer bytes than the file holds",
+  t("R27 SEAM pdf-reader pageSource (through pdf-pixels R47): a scanned PDF page through the real page renderer is read from ranges of the object, fewer bytes than the file holds",
     [pdfAsk.out.body.ok, pdfAsk.bucket.log.every(([k, , range]) => k !== "get" || range), wholeObject < TWO_PAGE.length], [true, true, true]);
   const picAsk = await asked(PHOTO_JPG);
   t("R27 SEAM pdf-pixels R47: a photograph through the real picture renderer is answered from a source", [picAsk.out.body.ok], [true]);

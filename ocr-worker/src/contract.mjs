@@ -30,7 +30,7 @@
  *  note already uses for an OCR pass, so this member reports the letter this
  *  estate already means rather than minting a second convention. */
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
-import { boundOf, READ_BOUNDS } from "../../bio-plane/src/read-bounds.mjs";
+import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
 
 export const CAP = "C";
 
@@ -147,9 +147,7 @@ export const LEGIBLE_REFUSE_BELOW = 0.2;
  *  4096-pixel edge (pdf-pixels R42), so a 12-megapixel camera frame (4032 x 3024, 4000 x 3000) reaches the engine
  *  at its own resolution and a larger one is reduced by a whole factor; a 4:3 frame at this edge is 50.3 MB of
  *  RGBA, under `MAX_FRAME_BYTES`, and a squarer frame that would pass it is refused by R7 step 4, never attempted. */
-export const PICTURE_MAX_EDGE = Object.hasOwn(READ_BOUNDS.ocr, "picture_edge")
-  ? boundOf("ocr", "picture_edge")
-  : 4096;   /* proposed; BOB records: the row `ocr.picture_edge` (4096 / 4096 / 4096) is runtime-limits' to add (R31) */
+export const PICTURE_MAX_EDGE = boundOf("ocr", "picture_edge");
 
 /** R23 · Are these bytes a JPEG or a PNG picture, by their signature? The picture renderer re-judges them; this
  *  only decides which renderer is asked, so bytes that are neither are left to the page renderer's refusal as today. */
