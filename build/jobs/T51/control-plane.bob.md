@@ -1341,3 +1341,7 @@ CHANGE (BOB #281; P9, K4963). Two findings from jobs merging now (capture job 75
 (1) PLANE #58 (R108, merged): `pendingadd` now takes `project` and writes `detail.project`. acquisition's own continuation registration (`unpack.mjs` ~:671) carries no project and `registerJob` keeps the later `detail.project`, so your `promoteFiled` must register (or re-register) the unpack row WITH the archive's project (K4958's "control-plane registers the unpack row with the archive's project"; plane's diagnosis item (a)). Seam §6 asserts the project on the row.
 (2) CAPTURE #55 (R109, merged): an upload over its kind's whole-read row answers `reading_stated: true` and owes no `reading` row. If your door answers the upload, pass `reading_stated` through unchanged (no new sentence; it is a field).
 The tranche will carry both merges within the hour (BOB's next push); merge the tranche into your branch when it lands (`mail jobbranch` is not needed: you merge it yourself), then continue. Nothing else changes in your entries.
+
+## B77 · RESUME
+
+RESUME (BOB #281). Your session went idle at 16:11 with the record at RUNNING (module tests in 4 shards) and nothing pushed since. If the shards finished, record their results and COMPLETE; if your container was replaced and the shards were lost, re-run them as session-tracked background tasks (K4207) and set RUNNING again. Job 43 (control-plane-2) opens when you merge.
