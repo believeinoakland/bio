@@ -64,6 +64,7 @@ import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
 import { titleOfBytes, cleanedTitle, decodeAs, charsetOf } from "./title.mjs";
 import * as pdfReader from "../pdfstructure.mjs";
 import { baseViewer, viewerMember } from "../member-roster/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 
 /* R24, R29, R33: the one user agent, the one first hop's `who`, and this module's rows, for every module that sends,
    writes or judges them. The pre-rename aliases are gone (R34, N539). */
@@ -546,6 +547,9 @@ export const PROMOTE_RESERVE_MS = 3500;
    those stages need, `KEEP_FOLLOWING_MS` (a profile reads the page back, a receipt is written: a trip or two). Bodies the keep has not reached in it leave the render
    pending (R5), the keep going on from the record. A caller may hand its own as `opts.postKeepMs`. CHOSEN, not measured (the live copy's trip is ~0.27 s); recorded by BOB. */
 export const KEEP_FOLLOWING_MS = 1000;
+/* R118 (G137c): a `transient` render failure is tried up to this many times, waiting these milliseconds before the second and the third. CHOSEN, not measured; recorded by BOB. */
+export const RENDER_TRIES = 3;
+export const RENDER_BACKOFF_MS = Object.freeze([1000, 3000]);
 /** R112: the milliseconds the keep of the bodies a render loaded is awaited, `elapsedMs` into the call: what the bar leaves for the render (`renderWaitFor`) less the room the
  *  stages after the keep need, `followingMs` else `KEEP_FOLLOWING_MS` at most a quarter of the share (so a smaller bar is a proportionally smaller room); 0 with nothing left,
  *  never negative. Pure; never throws. */
@@ -560,6 +564,14 @@ export function renderWaitFor(elapsedMs, { barMs = ACQUIRE_BAR_MS, reserveMs = P
   if (!Number.isFinite(elapsedMs)) return RENDER_WAIT_MS;
   const bar = Number.isFinite(barMs) ? barMs : ACQUIRE_BAR_MS, room = Number.isFinite(reserveMs) ? reserveMs : PROMOTE_RESERVE_MS;
   return Math.max(0, Math.min(RENDER_WAIT_MS, Math.floor(bar - room - elapsedMs)));
+}
+/** R118: the size of the page a render answered against the render-DOM bound (`READ_BOUNDS`, `render.dom_bytes`), as capture-sources' `renderBlock`
+ *  takes it; null (no judgement) when the page is not text or the row is not in the table. Never throws. */
+function domBoundOf(a) {
+  try {
+    if (!a || typeof a.html !== "string") return null;
+    return { size: new TextEncoder().encode(a.html).length, bound: boundOf("render", "dom_bytes") };
+  } catch { return null; }
 }
 const LATE = Symbol("late");
 /** `{done: true, value}` when `p` settled within `ms`, else `{done: false}`; no wait at all for a non-finite `ms`. */
@@ -1500,11 +1512,21 @@ async function acquireRun(cap, body0, opts, t) {
     else {
       /* R7: the locale R17's view names, the default only as capture-sources' own fallback. */
       /* R42: the render is handed the group's own hosts, which its driver never lets a page reach (capture-sources R64). */
+      /* R118 (G137c, X23): a failed render is charged the time it really took (its own `elapsed_ms`, else the wall this call measured), every
+         attempt added, and is retried by its class: `transient` (a session refused, three a second, the open bound) up to `RENDER_TRIES`
+         times with back-off, `permanent` once and final. The reservation is released once, with the sum. */
       const run = (async () => {
-        let a;
-        try { a = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view), ...(own ? { own_hosts: own } : {}) }); }
-        catch (e) { a = { ok: false, error: String(e && e.message || e) }; }
-        try { cap.renderSpend({ ms: a && a.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved }); }
+        let a, spent = 0;
+        for (let attempt = 1; ; attempt++) {
+          const began = clockNow();
+          try { a = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view), ...(own ? { own_hosts: own } : {}) }); }
+          catch (e) { a = { ok: false, error: String(e && e.message || e), failure_class: "transient" }; }
+          spent += a && Number.isFinite(a.elapsed_ms) ? a.elapsed_ms : Math.max(0, Math.round(clockNow() - began));
+          if (!(a && a.ok === false && a.failure_class === "transient") || attempt >= RENDER_TRIES) break;
+          const back = Array.isArray(opts.renderBackoffMs) ? opts.renderBackoffMs[attempt - 1] ?? 0 : RENDER_BACKOFF_MS[attempt - 1] ?? 0;
+          if (back > 0) await new Promise((r) => setTimeout(r, back));
+        }
+        try { cap.renderSpend({ ms: spent, releaseMs: renderReserved, slot: renderSlot, at: retrieved }); }
         catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
         return a;
       })();
@@ -1533,7 +1555,7 @@ async function acquireRun(cap, body0, opts, t) {
        bodies are the digests it recorded, and it is filed as a render waited for is. */
     const kept = answerR && answerR.kept === true ? answerR : keptNow;
     if (kept && answerR.kept === true) answerR = await replyOfKept(ev, kept);   // R112: a keep made in this call leaves the page in memory, not read back
-    rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved });
+    rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved, domBound: domBoundOf(answerR) });
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
     if (!rb.ok || rbytes.length > MAX) {
       /* R100 (fix round 7, G72): why a render fails is named on the log, one structured line with the problem (the renderer's own words, never the page) and the
@@ -1542,6 +1564,7 @@ async function acquireRun(cap, body0, opts, t) {
                                          ms: stageTimes(t).stages.render ?? 0, ...(Number.isFinite(answerR && answerR.elapsed_ms) ? { renderer_ms: answerR.elapsed_ms } : {}) })); }
       catch { /* a line that cannot be written never changes the answer */ }
       return answer(502, { ok: false, reason: "RENDER_FAILED", ...renderRow("RENDER_FAILED"), op, shell_sha256: sha, filed: false,
+        failure_class: rb.ok ? "permanent" : rb.failure_class === "transient" ? "transient" : "permanent",
         detail: rb.ok ? localize("acquisition.index.the_rendered_document_is_length", "the rendered document is {length} bytes, over this surface's {MAX}.", { length: String(rbytes.length), MAX: String(MAX) }) : rb.problem });
     }
     /* END DEC-49 REGION is-render-result */
@@ -2332,6 +2355,9 @@ export async function owedRun(cap, entry, opts = {}) {
         const out = await finishRender(cap, { session: ld, opts: { ...run, keepSession: true }, t });
         const b = out && out.body ? out.body : {};
         if (b.ok === false) {
+          /* R118: a render that failed for a cause that may pass (`transient`, after its tries in the call) goes again with the ledger's back-off; a permanent one is final */
+          if (b.reason === "RENDER_FAILED" && b.failure_class === "transient")
+            return { ok: true, done: false, outstanding: 1, reason: "RENDER_FAILED", ...(typeof b.detail === "string" && b.detail ? { detail: b.detail.slice(0, 200) } : {}) };
           const stated = b.reason === "RENDER_FAILED" || b.reason === "RENDER_NOT_A_PAGE";
           if (stated) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } }
           /* R100 (fix round 7, G72): the entry ends with the reason AND the detail the refusal carried (the render's problem, cut to a bound; the renderer's words, no page) */
