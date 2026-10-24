@@ -106,6 +106,11 @@ const TABLE = {
     held_text_chars: same(32 * MiB, k("content", "held_text_chars")),
     kind_scan_pages: same(16, k("content", "kind_scan_pages")),
   },
+  /* the calculations module's read ceilings, today's figures (K4922): `TABLE_MAX_BYTES` (20 MiB of canonical CSV) and `TABLE_MAX_CELLS` (a count) */
+  table: {
+    bytes: same(20 * MiB, k("table", "bytes")),
+    cells: same(1000000, k("table", "cells")),
+  },
   office: {
     entries: same(100000, k("office", "entries")),
     retained_objects: same(250000, k("office", "retained_objects")),

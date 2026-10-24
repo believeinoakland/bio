@@ -205,3 +205,16 @@ test("R30: the rows control-plane and content quote (text request_bytes 3 MiB, c
   assert.equal(boundOf("text", "bytes"), 52428800);
   assert.equal(READ_BOUNDS.text.bytes.alpha, 24 * MiB);
 });
+
+/* the rows calculations quotes (K4922; K4842 (1)): today's figures in all three columns, so no member-facing bound moves (K1881) */
+test("R30: the rows calculations quotes (table bytes 20 MiB, table cells 1,000,000) hold one figure in all three columns, and boundOf and statement answer them (R31)", () => {
+  for (const [name, n] of [["bytes", 20 * MiB], ["cells", 1000000]]) {
+    const row = READ_BOUNDS.table?.[name];
+    assert.ok(row, `table/${name}`);
+    assert.deepEqual({ standard: row.standard, alpha: row.alpha, protective: row.protective }, { standard: n, alpha: n, protective: n }, `table/${name}`);
+    assert.equal(row.key, `limit.table.${name}`);
+    assert.equal(boundOf("table", name), n, `table/${name} answers the figure`);
+    assert.deepEqual(statement("table", name, n + 1), { size: n + 1, bound: n, key: `limit.table.${name}` });
+  }
+  assert.deepEqual(Object.keys(READ_BOUNDS.table), ["bytes", "cells"]);
+});
