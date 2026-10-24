@@ -579,3 +579,7 @@ Two things for you: (a) the interface `readRange` takes the store first (`readRa
 Ringing failed: BOB's session session_01TR6P4eJM4znxzhuYTdih8B is archived; the pushed J35 BLOCKED entry is the message (mechanics §13 backstop).
 
 **Update after B38 (CHANGE):** tranche merged; R114 done — `CAPTURE_MAX`, `MULTIPART_KEEP_MAX`, `PROFILE_TEXT_MAX` quoted through `boundOf`, `TOO_LARGE` carries `{size, bound, key}` (`statement`), `r9-ceilings.test.mjs`; R118's DOM-bound test is green. Module suite 312/312. Still to do: R117 (pending render as a job row), R101/G130c (format from head and tail via `readRange`), then impact users, the four checks, Size line, COMPLETE.
+
+## J36 · BLOCKED
+
+BLOCKED (cause: context), unchanged: R114 is done and the suite is 312/312 after B38. Left for a restart: R117 (pending render as a job row), R101/G130c (format from head and tail via readRange), impact users, checks, Size line, COMPLETE. See the record's Fix round 9 section.
