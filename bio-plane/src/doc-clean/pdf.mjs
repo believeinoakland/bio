@@ -275,7 +275,7 @@ function write(d, out, rootNum) {
   const version = /%PDF-(\d\.\d)/.exec(latin1(d, 0, Math.min(d.length, 1024)))?.[1] ?? "1.7";
   const order = [...out.keys()].sort((a, b) => a - b);
   const renum = new Map(order.map((n, i) => [n, i + 1]));
-  let buf = new Uint8Array(d.length + (d.length >> 3) + 65536), at = 0;
+  let buf = new Uint8Array(d.length + (d.length >> 3) + (1 << 12)), at = 0;
   const need = (k) => { if (at + k > buf.length) { const b = new Uint8Array(Math.max(Math.ceil(buf.length * 1.5), at + k)); b.set(buf.subarray(0, at)); buf = b; } };
   const put = (s) => { need(s.length); for (let i = 0; i < s.length; i++) buf[at++] = s.charCodeAt(i); };
   put(`%PDF-${version}\n%\xe2\xe3\xcf\xd3\n`);
