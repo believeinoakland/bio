@@ -767,6 +767,15 @@ export function pendingOps(holder, url, { health, administers } = {}) {
   };
   return {
     pendingadd: () => holder.add({ kind: url.searchParams.get("kind"), sha: url.searchParams.get("sha") }),
+    /* R107 (K4916; control-plane R135): one job row, every column, ended rows included, `row: null` when none; store-internal (the door
+       applies the sight check), a read */
+    jobrow: () => {
+      const sha = url.searchParams.get("sha"), kind = url.searchParams.get("kind");
+      if (!JOB_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND" };
+      const good = SESSION_KEYED.includes(kind) ? typeof sha === "string" && sha !== "" && sha.length <= 200 : typeof sha === "string" && DIGEST.test(sha);
+      if (!good) return { ok: false, reason: "BAD_SHA" };
+      return { ok: true, row: typeof holder.jobRow === "function" ? holder.jobRow({ sha, kind }) : null };
+    },
     owedwork: () => {
       const sha = url.searchParams.get("sha");
       if (sha === null) return stalled({ ok: true, owed: holder.summary() });

@@ -536,3 +536,25 @@ test("R98 R2 (capture R113, K4899): the composition assigns capture's `evidenceK
   const n = await x.call("/captureuploadbegin?by=member:ann", { sha256: sha("another"), bytes: 200 * 1048576, statement: "handed to me", name: "b.pdf", type: "application/pdf" });
   assert.equal(n.reason, "PARTED_UPLOAD_UNAVAILABLE");
 });
+
+/* ---- R107 (K4916; control-plane R135): one job row by a store-internal route ---- */
+
+test("R107: `jobrow?sha=&kind=` answers one job row whole, a finished and a refused row included (cursor, last_progress_at, verdict); a malformed digest or session is BAD_SHA, a kind outside R97's BAD_KIND; it writes nothing", async () => {
+  const x = await world(undefined, { readAnswer: () => ({ ok: true, read: true, counters: { written: 4 } }) });
+  const done = sha("a reading that finished"), big = sha("a file refused by its bound");
+  x.jobs.registerJob({ kind: "reading", sha: done, cursor: "c0" });
+  x.jobs.registerJob({ kind: "reading", sha: big, verdict: { ok: false, size: 60, limit: 50, bound_key: "csv.bytes" } });
+  await x.s.onAlarm(Date.now() + 1000);
+  const before = rowsOf(x).map((r) => JSON.stringify(r));
+  const fin = await x.call(`/jobrow?sha=${done}&kind=reading`), ref = await x.call(`/jobrow?sha=${big}&kind=reading`);
+  assert.equal(fin.ok, true);
+  assert.deepEqual([fin.row.state, fin.row.cursor, fin.row.written, typeof fin.row.last_progress_at], ["finished", "c0", 4, "number"]);
+  assert.deepEqual([ref.row.state, ref.row.verdict, ref.row.final_why], ["refused", { ok: false, size: 60, limit: 50, bound_key: "csv.bytes" }, "csv.bytes"]);
+  assert.deepEqual(Object.keys(fin.row).sort(), Object.keys(x.jobs.jobRow({ sha: done, kind: "reading" })).sort(), "every column");
+  assert.deepEqual(await x.call(`/jobrow?sha=nope&kind=reading`), { ok: false, reason: "BAD_SHA" });
+  assert.deepEqual(await x.call(`/jobrow?sha=&kind=fetch`), { ok: false, reason: "BAD_SHA" });
+  assert.deepEqual(await x.call(`/jobrow?sha=${done}&kind=nope`), { ok: false, reason: "BAD_KIND" });
+  assert.deepEqual(rowsOf(x).map((r) => JSON.stringify(r)), before, "a read: nothing written");
+  /* control: an absent row */
+  assert.deepEqual(await x.call(`/jobrow?sha=${sha("never registered")}&kind=ocr`), { ok: true, row: null });
+});
