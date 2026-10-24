@@ -406,9 +406,11 @@ test("R76 R27 R36 (T49; K3387): op=reading answers text_units, the capture's uni
   w.x.writeReading({ bundleId: "PROJ-1", captureSha: S1, reading: await reading([]), textUnits: units });
   const mine = w.x.readingFor(S1, "class:admin");
   const stored = w.x.unitsOf(S1).units;
-  assert.deepEqual(mine.text_units, stored.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated })));
+  assert.deepEqual(mine.text_units, stored.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated, kind: u.kind })));
   assert.deepEqual(mine.text_units.map((u) => [u.text, u.truncated, u.extent.para]), [["first", false, 0], ["second", true, 1]], "seq order");
-  assert.deepEqual(Object.keys(mine.text_units[0]).sort(), ["extent", "reference", "text", "truncated"]);
+  /* (fix round 9, G134d; R107) each unit answers its kind, null for one whose producer named none */
+  assert.deepEqual(Object.keys(mine.text_units[0]).sort(), ["extent", "kind", "reference", "text", "truncated"]);
+  assert.equal(mine.text_units[0].kind, null);
   /* control: the viewer refused the bundle receives none, and the bundle is withheld as before */
   const hidden = w.x.readingFor(S1, "member:outsider");
   assert.equal(hidden.bundle_id, null);

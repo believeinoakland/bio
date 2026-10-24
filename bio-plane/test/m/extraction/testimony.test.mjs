@@ -34,7 +34,7 @@ test("R61: indexTestimony replaces the capture's index by R22's rule over one un
   const u = w.x.unitsOf(S1);
   assert.equal(u.state, "whole");
   assert.deepEqual(u.units, [{ extent: { kind: "document" }, ref: u.units[0].ref, text: WORDS, truncated: false, seq: 0,
-                               chain_kind: "undetermined" }]);
+                               chain_kind: "undetermined", kind: null }]);
   assert.equal(w.one(`SELECT bundle_id FROM capture_text WHERE capture_sha=?`, S1).bundle_id, "B-1");
   assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH 'clerk'`).length, 1, "searchable");
   assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH 'older'`).length, 0, "the old rows gone");
