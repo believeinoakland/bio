@@ -355,17 +355,68 @@ test("R113 (abandoned): an abandoned upload is aborted and holds nothing: by the
   assert.deepEqual(await w.c.abortPartedUpload({ upload: z.upload, by: "m1" }), { ok: true, aborted: true });
 });
 
-test("R113 (a restarted instance): if the instance lost the hash of the parts so far between parts, the upload is aborted and holds nothing, and the answer says to begin again; a begin of the same file again by the same member abandons the first", async () => {
+/* a second instance over the same storage, as after the object was taken out of memory: it has the rows and none of the hashing in memory */
+const restarted = (w) => {
+  const c2 = new Capture(w.s, { record: w.core, env: { ...w.c.env }, governor: w.c.governor, provenance: w.c.provenance, credentials: w.c.credentials });
+  c2.evidenceKey = keyOf;
+  c2.clock = w.c.clock;
+  return c2;
+};
+
+test("R113 (G173, an instance taken out of memory between parts): the next part in order is accepted by an instance that has none of the hashing in memory, and the completion's digest is the declared one; a wrong part and a wrong whole are still refused", async () => {
+  const w = setup();
+  const file = varied(2500, 12), ps = partsOf(file, 1000);
+  const b = await begin(w.c, file);
+  assert.equal((await put(w.c, b.upload, 0, ps[0])).ok, true);
+  /* the object is taken out of memory: the instance that took part 0 is gone, and the one that takes part 1 has only the storage */
+  const c2 = restarted(w);
+  /* control: a wrong part is still refused by the restarted instance, and nothing is stored for it */
+  const wrong = await c2.putUploadPart({ upload: b.upload, index: 1, bytes: varied(1000, 99), sha256: sha(ps[1]), by: "m1" });
+  assert.deepEqual([wrong.ok, wrong.reason], [false, "PART_DIGEST_MISMATCH"]);
+  assert.equal(w.b.mp.parts.length, 1, "no part was written for the wrong one");
+  const r1 = await put(c2, b.upload, 1, ps[1]);
+  assert.deepEqual([r1.ok, r1.existed, r1.next], [true, false, 2]);
+  /* and again between the next two */
+  const c3 = restarted(w);
+  assert.equal((await put(c3, b.upload, 2, ps[2])).ok, true);
+  const done = await restarted(w).completePartedUpload({ upload: b.upload, parts: ps.map((p) => sha(p)), by: "m1", at: AT });
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
+  assert.deepEqual([done.capture.sha256, done.capture.bytes], [sha(file), file.length], "the completion's digest is the declared one");
+  assert.deepEqual(w.b.held.get(keyOf(sha(file))), file, "the object is the file");
+  /* control: a restarted instance still refuses a whole that is not the declared one (a part's bytes differ from the file the begin declared) */
+  const other = varied(2500, 13), qs = partsOf(other, 1000), wrongWhole = partsOf(file, 1000);
+  const b2 = await begin(w.c, other);
+  assert.equal((await put(w.c, b2.upload, 0, qs[0])).ok, true);
+  const c4 = restarted(w);
+  assert.equal((await put(c4, b2.upload, 1, qs[1])).ok, true);
+  /* the third part is the right size and digest on its own, but of another file */
+  const bad = wrongWhole[2].length === qs[2].length ? wrongWhole[2] : null;
+  assert.ok(bad);
+  assert.equal((await put(restarted(w), b2.upload, 2, bad)).ok, true);
+  const mismatch = await restarted(w).completePartedUpload({ upload: b2.upload, parts: [qs[0], qs[1], bad].map((p) => sha(p)), by: "m1", at: AT });
+  assert.deepEqual([mismatch.ok, mismatch.reason, mismatch.status], [false, "WHOLE_DIGEST_MISMATCH", 400]);
+  assert.equal(w.b.openUploads(), 0, "and the refused upload holds nothing");
+});
+
+test("R113 (G173, UPLOAD_LOST only when the digest cannot be told): an open upload whose row keeps no digest of its parts (begun before it was kept) or one that does not describe the parts held is aborted and answered UPLOAD_LOST, nothing held; a begin of the same file again by the same member abandons the first", async () => {
   const w = setup();
   const file = varied(2500, 12), ps = partsOf(file, 1000);
   const b = await begin(w.c, file);
   await put(w.c, b.upload, 0, ps[0]);
-  /* a second instance over the same storage, as after the object was restarted: it has the rows and none of the hashing */
-  const c2 = new Capture(w.s, { record: w.core, env: { ...w.c.env }, governor: w.c.governor, provenance: w.c.provenance, credentials: w.c.credentials });
-  c2.evidenceKey = keyOf;
-  const lost = await put(c2, b.upload, 1, ps[1]);
+  w.s.db.prepare(`UPDATE parted_uploads SET hash_state = NULL WHERE upload = ?`).run(b.upload);
+  const lost = await put(restarted(w), b.upload, 1, ps[1]);
   assert.deepEqual([lost.ok, lost.reason, lost.status], [false, "UPLOAD_LOST", 409]);
   assert.deepEqual([w.b.openUploads(), w.b.mp.aborted.length], [0, 1]);
+  /* a state that is another length than the parts held is no state of them */
+  const b3 = await begin(w.c, file);
+  await put(w.c, b3.upload, 0, ps[0]); await put(w.c, b3.upload, 1, ps[1]);
+  const kept = w.s.db.prepare(`SELECT hash_state FROM parted_uploads WHERE upload = ?`).get(b3.upload).hash_state;
+  const one = partsOf(file, 1000)[0];
+  const early = Object.assign(JSON.parse(kept), { t: one.length, b: "" });
+  w.s.db.prepare(`UPDATE parted_uploads SET hash_state = ? WHERE upload = ?`).run(JSON.stringify(early), b3.upload);
+  const lost2 = await put(restarted(w), b3.upload, 2, ps[2]);
+  assert.deepEqual([lost2.ok, lost2.reason], [false, "UPLOAD_LOST"]);
+  assert.equal(w.b.openUploads(), 0);
   /* the same member begins again: the earlier session is abandoned */
   const first = await begin(w.c, file);
   const second = await begin(w.c, file);

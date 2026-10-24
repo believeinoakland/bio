@@ -484,8 +484,9 @@ CREATE INDEX IF NOT EXISTS seen_in_project ON seen_in (project);
 -- part_bytes the size of every part but the last; by the member's stamp, the only one who may put, complete or abort it; statement, name and
 -- type what the begin was given, kept for the filing; r2 the id of R2's own multipart upload (null when the whole was already held); state
 -- 'open' until R2's upload is completed, then 'completed' until the filing is done (a retry of the completion then files, and completes nothing
--- twice); parts the JSON list of the parts put so far, in order, each {sha256, etag, bytes}; created and expires whole-second UTC instants. The
--- row is removed when the upload is filed, aborted or expired; it holds no byte of the file.
+-- twice); parts the JSON list of the parts put so far, in order, each {sha256, etag, bytes}; hash_state the running SHA-256 of those parts in order (a few
+-- hundred characters, written with the part that advanced it: G173), so the object taken out of memory between two parts loses nothing; created and expires
+-- whole-second UTC instants. The row is removed when the upload is filed, aborted or expired; it holds no byte of the file.
 CREATE TABLE IF NOT EXISTS parted_uploads (
   upload     TEXT PRIMARY KEY,
   sha256     TEXT NOT NULL,
@@ -498,6 +499,7 @@ CREATE TABLE IF NOT EXISTS parted_uploads (
   r2         TEXT,
   state      TEXT NOT NULL DEFAULT 'open',
   parts      TEXT NOT NULL DEFAULT '[]',
+  hash_state TEXT,
   created    TEXT NOT NULL,
   expires    TEXT NOT NULL
 );
@@ -511,6 +513,7 @@ export const CAPTURE_ADDITIVE_COLUMNS = [
   ["site_asset_refs", "reused_from", "TEXT"],        // CAP-14
   ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],   // D-492: 0 is the measured truth
   ["links", "chrome_basis", "TEXT"],                 // D-340: the region a contained link sat in
+  ["parted_uploads", "hash_state", "TEXT"],          // G173: the running digest of the parts put so far, kept beside them
 ];
 
 /* A derived table whose KEY changed shape is dropped and rebuilt rather than altered: `links` gained

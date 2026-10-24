@@ -41,6 +41,7 @@
  * rows and of R96's `changed` are held here as inline builder diagnostics: the screens draw their own keyed words from
  * the answer's `state` (words.json is the design stream's, and WORD_KEYS is its `reads` list for this module). */
 import { isPublicHttpsLocator, createSha256, isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
+import { createResumableSha256 } from "./sha256-resume.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { RENDERED_METHOD } from "../render.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
@@ -389,7 +390,8 @@ function registerFigures(c) {
 export class Capture {
   #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false; #acquisition = null; #acquisitionHost = null;
   #reputationReader = null; #fileScanner = null; #hasWhole = null; #provenHeld = new Set();
-  /* R113: the live state of the uploads sent in parts that this instance is receiving: the hasher of the bytes so far, in order, and the part it expects next. */
+  /* R113: the live state of the uploads sent in parts that this instance is receiving: the hasher of the bytes so far, in order, and the part it expects next.
+     It is a cache of what the upload's row keeps (`hash_state`, G173): an instance taken out of memory between two parts takes it up again from the row. */
   #parted = new Map();
 
   constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null,
@@ -1067,6 +1069,20 @@ export class Capture {
     return { row: { ...row, parts } };
   }
 
+  /* R113 (G173): the live state of an open upload whose `parts` are put: the one this instance holds when it holds the right one, else taken up again from the
+     digest kept with the row. Null only when the row's state is missing or does not describe the parts held (an upload begun before the state was kept, or a
+     row that was altered): then the digest of the parts so far cannot be told and the caller answers `UPLOAD_LOST`. */
+  #liveOf(row) {
+    const held = row.parts.length, have = this.#parted.get(row.upload);
+    if (have && have.next === held) return have;
+    if (held === 0) return have ?? null;
+    const hasher = typeof row.hash_state === "string" ? createResumableSha256(row.hash_state) : null;
+    if (!hasher || hasher.length !== row.parts.reduce((n, p) => n + p.bytes, 0)) return null;
+    const live = { hasher, next: held, busy: have ? have.busy : false, whole: null };
+    this.#parted.set(row.upload, live);
+    return live;
+  }
+
   /* R113: abort what a session holds in R2 (when its upload is still open) and remove its row and its live state. True when it is gone; false when the bucket
      would not abort, the row then staying for the next sweep. */
   async #partedDrop(row, bucket, key) {
@@ -1135,10 +1151,10 @@ export class Capture {
     const now = this.#instant(), upload = crypto.randomUUID().replace(/-/g, "");
     const created = stampSecond(now), expires = stampSecond(now + PARTED_UPLOAD_TTL_MS);
     this.#tx(() => this.#sql.exec(
-      `INSERT INTO parted_uploads (upload, sha256, bytes, part_bytes, by, statement, name, type, r2, state, parts, created, expires)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', ?, ?)`,
-      upload, sha256, bytes, partBytes, by, statement, name ?? null, type ?? null, r2, held ? "completed" : "open", created, expires));
-    if (!held) this.#parted.set(upload, { hasher: createSha256(), next: 0, busy: false, whole: null });
+      `INSERT INTO parted_uploads (upload, sha256, bytes, part_bytes, by, statement, name, type, r2, state, parts, hash_state, created, expires)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', ?, ?, ?)`,
+      upload, sha256, bytes, partBytes, by, statement, name ?? null, type ?? null, r2, held ? "completed" : "open", held ? null : createResumableSha256().snapshot(), created, expires));
+    if (!held) this.#parted.set(upload, { hasher: createResumableSha256(), next: 0, busy: false, whole: null });
     return { ok: true, upload, sha256, bytes, part_bytes: partBytes, parts: held ? 0 : count, next: 0, held, created, expires };
   }
 
@@ -1148,7 +1164,8 @@ export class Capture {
    *  `PART_SIZE` and the stream is cancelled. Parts go in order, because the whole file's digest is hashed in order across them: a part past the next one is
    *  `PART_OUT_OF_ORDER` (answering `next`); a part already put, put again, is idempotent, answered `existed: true` and stored once, and one put again with other
    *  bytes is `PART_CONFLICT`. The part is held once in memory (the byte `ledger` counts it) and written to R2's upload before it is recorded. If this instance
-   *  has lost the hash of the parts so far (it was restarted between parts) the upload is aborted and answered `UPLOAD_LOST`: begin again. */
+   *  has been taken out of memory between parts, the digest of the parts so far is taken up again from the upload's row (G173), so the next part is accepted
+   *  whatever the pause; only an upload whose row cannot say that digest is aborted and answered `UPLOAD_LOST`: begin again. */
   async putUploadPart({ upload = null, index = null, bytes, sha256 = null, by, declared = null, ledger = null, key = null } = {}) {
     const tally = Capture.#tally(ledger);
     const reader = uploadReader(bytes);
@@ -1178,13 +1195,13 @@ export class Capture {
       if (index > row.parts.length)
         return await stop({ ok: false, reason: "PART_OUT_OF_ORDER", status: 409, index, next: row.parts.length,
                             detail: localize("capture.index.part_out_of_order", "the parts go in order, because the file's digest is taken across them in order; send the part named next") });
-      let live = this.#parted.get(row.upload);
-      if (row.parts.length > 0 && (!live || live.next !== row.parts.length)) {
+      let live = this.#liveOf(row);
+      if (row.parts.length > 0 && !live) {
         await this.#partedDrop(row, bucket, keyOf);
         return await stop({ ok: false, reason: "UPLOAD_LOST", status: 409,
                             detail: localize("capture.index.upload_lost", "your group's Civicsmith lost the digest of the parts so far, so the upload was aborted and holds nothing; begin it again") });
       }
-      if (!live) { live = { hasher: createSha256(), next: 0, busy: false, whole: null }; this.#parted.set(row.upload, live); }
+      if (!live) { live = { hasher: createResumableSha256(), next: 0, busy: false, whole: null }; this.#parted.set(row.upload, live); }
       if (live.busy)
         return await stop({ ok: false, reason: "PART_IN_PROGRESS", status: 409, index,
                             detail: localize("capture.index.part_in_progress", "a part of this upload is still arriving; send the next one when it is answered") });
@@ -1224,7 +1241,8 @@ export class Capture {
         live.hasher.update(buf);
         live.next = index + 1;
         const parts = [...row.parts, { sha256, etag, bytes: expected }];
-        this.#tx(() => this.#sql.exec(`UPDATE parted_uploads SET parts = ? WHERE upload = ?`, JSON.stringify(parts), row.upload));
+        /* the part and the digest through it are recorded together (G173): the row never names a part its state does not include */
+        this.#tx(() => this.#sql.exec(`UPDATE parted_uploads SET parts = ?, hash_state = ? WHERE upload = ?`, JSON.stringify(parts), live.hasher.snapshot(), row.upload));
         return { ok: true, existed: false, index, next: parts.length, parts: count, bytes: expected };
       } finally { live.busy = false; }
     } finally { tally.end(); }
@@ -1259,7 +1277,7 @@ export class Capture {
       if (differs >= 0 || named.length !== row.parts.length)
         return { ok: false, reason: "PARTS_OUT_OF_ORDER", status: 409, index: differs >= 0 ? differs : row.parts.length,
                  detail: localize("capture.index.parts_out_of_order", "the parts named are not the ones put, in the order they were put, so the upload was not completed and nothing was written") };
-      const live = this.#parted.get(row.upload);
+      const live = this.#liveOf(row);
       if (!live || live.next !== count) {
         await this.#partedDrop(row, bucket, keyOf);
         return { ok: false, reason: "UPLOAD_LOST", status: 409,

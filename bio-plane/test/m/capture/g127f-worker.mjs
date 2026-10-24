@@ -25,6 +25,7 @@ export class Probe extends DurableObject {
     this.c.migrate();
     this.c.evidenceKey = KEY;
     this.receipts = receipts;
+    this.inst = crypto.randomUUID();   /* which in-memory object answered: it changes when workerd took the object out of memory */
   }
 
   async fetch(request) {
@@ -41,7 +42,7 @@ export class Probe extends DurableObject {
     else if (q("cmd") === "state") {
       const h = await this.env.CAPTURES.head(KEY(q("sha256")));
       const listed = await this.env.CAPTURES.list({ prefix: "bio/captures/" });
-      out = { ok: true, size: h ? h.size : null, objects: listed.objects.map((o) => o.key), receipts: this.receipts,
+      out = { ok: true, inst: this.inst, size: h ? h.size : null, objects: listed.objects.map((o) => o.key), receipts: this.receipts,
               rows: [...this.ctx.storage.sql.exec(`SELECT count(*) AS n FROM parted_uploads`)][0].n };
     } else out = { ok: false, reason: "UNKNOWN_COMMAND" };
     return new Response(JSON.stringify(out), { headers: { "content-type": "application/json" } });
