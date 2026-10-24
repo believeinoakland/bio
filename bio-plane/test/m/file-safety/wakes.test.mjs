@@ -245,7 +245,7 @@ test("R40: onFileWork(module, fn) registers once (a second by one module LISTENE
   heard.length = 0;
   const ct = await w.tool("glasswall-halo", { config: { host: "halo.example.org" } });
   w.exec("UPDATE fs_tools SET use = 'routine' WHERE tool_id = ?", ct);
-  await w.fs.renderBatch({});
+  for (let i = 0; i < 6; i++) await w.fs.renderBatch({});   /* one render is begun per tick (R12) */
   /* nothing is queued: only the views waiting for bytes the store never held (R51) are left, at their own instant */
   assert.equal(w.fs.renderWake(w.clock.now), Date.parse(w.row("SELECT MIN(render_wait_at) AS t FROM fs_files WHERE render_state = 'waiting'").t), "as the scheduler asks after a tick");
   w.tick(POLL + 1);

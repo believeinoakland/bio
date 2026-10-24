@@ -34,7 +34,7 @@ test("R1: every receipt (direct, web archive, doorbell, and each member of an un
   const s = await w.fs.scanBatch({});
   assert.equal(s.scanned, 6);
   /* the render queue: only files with a safe-view route reach /render; the image and the archive's text files do not */
-  await w.fs.renderBatch({ limit: 50 });
+  for (let i = 0; i < 3; i++) await w.fs.renderBatch({ limit: 50 });   /* R12 (G136b): one render is begun per tick */
   assert.deepEqual(w.calls("/render").map((x) => x.body.target.capture_sha).sort(), [a, b].sort());
   assert.equal(w.row("SELECT render_state FROM fs_files WHERE capture_sha = ?", c).render_state, "none");
   /* the receipt and its answer are provenance's alone; the listener ran inside it */

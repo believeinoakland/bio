@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS fs_files (
   render_detail TEXT,
   rendered_at TEXT,
   scan_wait_at TEXT,
-  render_wait_at TEXT
+  render_wait_at TEXT,
+  render_started_at TEXT,
+  render_tries INTEGER NOT NULL DEFAULT 0
 );
 -- R2, R3: the verdict notes, append-only.
 CREATE TABLE IF NOT EXISTS fs_notes (
@@ -148,7 +150,9 @@ CREATE TABLE IF NOT EXISTS fs_wakes (
    event `reason`, T37). */
 export const FILE_SAFETY_ADDITIVE_COLUMNS = Object.freeze([["fs_tool_events", "reason", "TEXT"],
   /* R51 (fix round 4b): the instant a file whose whole is not held is looked at again, for its scan and for its safe view */
-  ["fs_files", "scan_wait_at", "TEXT"], ["fs_files", "render_wait_at", "TEXT"]]);
+  ["fs_files", "scan_wait_at", "TEXT"], ["fs_files", "render_wait_at", "TEXT"],
+  /* R12, R55 (fix round 9, G136b): the instant a render began (its in-flight mark), and the tries a transient failure has had */
+  ["fs_files", "render_started_at", "TEXT"], ["fs_files", "render_tries", "INTEGER NOT NULL DEFAULT 0"]]);
 
 /* R25 (record-core R21, R46): the tables, each declared with its classes. A file's rows are keyed to its home bundle
    and cleared by that bundle's purge; the tools, their use, their events and the counts are the group's, not any

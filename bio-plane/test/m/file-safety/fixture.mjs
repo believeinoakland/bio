@@ -27,11 +27,14 @@ export function bucket() {
   return {
     held, calls,
     async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length } : null; },
-    async get(k) {
+    /* `range` is R2's option: the object's `size` is the whole's, the body and `arrayBuffer` the range alone */
+    async get(k, opts) {
       calls.push(["get", k]);
       if (!held.has(k)) return null;
-      const b = held.get(k);
-      return { key: k, size: b.length, body: new Response(b).body, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) };
+      const all = held.get(k);
+      const r = opts && opts.range;
+      const b = r ? all.subarray(r.offset, r.offset + r.length) : all;
+      return { key: k, size: all.length, body: new Response(b).body, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) };
     },
     async put(k, bytes, opts) { calls.push(["put", k, opts]); held.set(k, new Uint8Array(bytes)); return { key: k }; },
   };
@@ -59,7 +62,9 @@ const verdict = (capture_sha, tool, engine, fields) => ({ capture_sha, tool, eng
                             cancelled (nothing follows) until a test calls `binding.stage(name)` or `binding.end(error)`
      signatures           → the signature state /version answers (default: a set published an hour ago); `null` versions and
                             `published` is a scanner that has mirrored none
-     render(sha, route)   → bytes | {code, detail}
+     render(sha, route)   → bytes | {bytes, pages, sourcePages, truncated} | {code, class?, detail?, status?}
+     gate                 → {scan, render, "provider/scan", "provider/cdr", ...}: a promise per path, awaited before that path answers (a test opens it;
+                            R55: a call that takes as long as the test likes)
    Every request is recorded as `{path, body}`. */
 export function scanner(script = {}, { now = () => T0 } = {}) {
   const calls = [];
@@ -76,6 +81,8 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
       const body = req.method === "POST" ? await req.json() : null;
       calls.push({ path: u.pathname, search: u.search, body, method: req.method });
       const at = now();
+      if (s.gate && s.gate[u.pathname.slice(1)]) await s.gate[u.pathname.slice(1)];
+      if (s.throwOn && s.throwOn.has(u.pathname.slice(1))) throw new Error("the scanner is not reached");
       if (u.pathname === "/version") return reply({ ok: true, name: "file-scanner", version: "1.0.0", clamav_version: "1.4.3",
         signatures: s.signatures ?? { versions: { main: 62 }, published: new Date(at - 3_600_000).toISOString(), mirrored_at: null, last_attempt: null, last_error: null },
         providers: {}, reputation_lists: s.lists ?? [], renderer_version: "libreoffice 7; poppler 24", bounds: {} });
@@ -98,10 +105,12 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
         return reply({ ok: true, verdicts: out });
       }
       if (u.pathname === "/render") {
-        const r = s.render ? s.render(body.target.capture_sha, body.route) : enc(`%PDF-1.4 safe view of ${body.target.capture_sha}`);
-        if (!(r instanceof Uint8Array)) return reply({ ok: false, ...r }, 422);
-        return new Response(r, { status: 200, headers: { "content-type": "application/pdf", "x-derived-sha256": sha(r),
-          "x-pages": "2", "x-source-pages": "3", "x-truncated": "true" } });
+        let r = s.render ? s.render(body.target.capture_sha, body.route) : enc(`%PDF-1.4 safe view of ${body.target.capture_sha}`);
+        if (r && r.bytes) { const pages = r.pages ?? 2, source = r.sourcePages ?? 3; r = { ...r, headers: { "x-pages": String(pages), "x-source-pages": String(source),
+          "x-truncated": String(r.truncated ?? pages < source) } }; }
+        else if (r instanceof Uint8Array) r = { bytes: r, headers: { "x-pages": "2", "x-source-pages": "3", "x-truncated": "true" } };
+        if (!r.bytes) return reply({ ok: false, ...r }, r.status ?? 422);
+        return new Response(r.bytes, { status: 200, headers: { "content-type": "application/pdf", "x-derived-sha256": sha(r.bytes), ...r.headers } });
       }
       if (u.pathname === "/provider/scan") {
         const id = body.tool.provider_id, sha0 = body.target.capture_sha;
@@ -150,7 +159,7 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
 
 /* A world: the modules on one storage, a clock the test moves, the bucket and the scanner. `scan` false leaves the
    scanner unbound. Members: `m1`, `m2` (members), `boss` (an active administrator). */
-export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50, homed = false } = {}) {
+export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50, homed = false, callBoundMs = undefined, registerJob = null, ledger = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -168,7 +177,7 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50, home
   const acq = acquisitionOf(host, { record, provenance: prov, membership });
   const fsScanner = bound ? scanner(scan, { now: () => clock.now }) : null;
   const env = { CAPTURES: b, ...(fsScanner ? { FILE_SCANNER: fsScanner } : {}) };
-  const fs = fileSafetyOf(host, { record, membership, credentials, provenance: prov, acquisition: acq, env, now: () => clock.now, scanWaitMs });
+  const fs = fileSafetyOf(host, { record, membership, credentials, provenance: prov, acquisition: acq, env, now: () => clock.now, scanWaitMs, callBoundMs, registerJob, ledger });
   fs.migrate();
   const exec = (q, ...a) => [...st.sql.exec(q, ...a)];
   for (const [m, role] of [["m1", "member"], ["m2", "member"], ["boss", "admin"]])
