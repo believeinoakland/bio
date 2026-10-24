@@ -1696,6 +1696,26 @@ async function textWindowCursorOf(evidence, { sha, bytes, text, whole, at, throu
   return windowCursor(sha, { m: "t", n: bytes.length, ob: through + bom, bm: bom, g: grain === "lines" ? 1 : 0, p: at.p, q: at.q, r: at.r });
 }
 
+/* R50, R49 (job 40, B44 (1)): a window of a text in any encoding R49 reads. The head's encoding (ooxml's `decodeText`) is kept in the cursor (`en`, absent for UTF-8 and
+   US-ASCII) and each window is decoded by it: UTF-8 as before; a single-byte charset (windows-125x, ISO-8859-x) one byte a character; UTF-16 in even offsets, a surrogate pair
+   kept whole. `pre` the bytes of context read before a window, `startOk` whether the offset begins a character, `end` the bytes of a window that end at a character, `bytes`
+   the bytes of a decoded string. */
+const SINGLE_BYTE = /^(?:windows-125\d|iso-8859-\d+|ibm\d+|cp\d+|macintosh|koi8-[ru]|x-mac-cyrillic)$/;
+const A_UTF8 = { pre: 4, startOk: (b, pre) => (b[pre] & 0xc0) !== 0x80, lenient: (x) => LENIENT_UTF8.decode(x), decode: (x) => FATAL_UTF8.decode(x),
+  end: (b, pre, len) => { let i = len - 1; while (i > 0 && (b[pre + i] & 0xc0) === 0x80) i--; const lead = b[pre + i], need = lead < 0x80 ? 1 : lead >= 0xf0 ? 4 : lead >= 0xe0 ? 3 : lead >= 0xc0 ? 2 : 1; return i + need > len ? i : len; },
+  bytes: (str) => utf8Length(str) };
+export const windowEncodable = (en) => !en || en === "utf-8" || en === "us-ascii" || en === "utf-16le" || en === "utf-16be" || SINGLE_BYTE.test(en);
+function adapterFor(en) {
+  if (!en || en === "utf-8" || en === "us-ascii") return A_UTF8;
+  const td = new TextDecoder(en, { ignoreBOM: true });
+  if (en === "utf-16le" || en === "utf-16be") {
+    const le = en === "utf-16le";
+    return { pre: 2, startOk: (b, pre, c) => (c.ob - c.bm) % 2 === 0, lenient: (x) => td.decode(x), decode: (x) => td.decode(x),
+      end: (b, pre, len) => { let e = len - (len % 2); if (e >= 2 && ((le ? b[pre + e - 1] : b[pre + e - 2]) & 0xfc) === 0xd8) e -= 2; return e; }, bytes: (str) => str.length * 2 };
+  }
+  return { pre: 1, startOk: () => true, lenient: (x) => td.decode(x), decode: (x) => td.decode(x), end: (b, pre, len) => len, bytes: (str) => str.length };
+}
+
 /* R50 (G131i; K4834): the start and end of the first separator of a text's runs in `vis` (a blank line for paragraphs, a line break for lines), or null. */
 function firstSeparator(vis, grain) {
   if (grain === "lines") { const i = vis.indexOf("\n"); return i < 0 ? null : [i, i + 1]; }
@@ -1734,9 +1754,11 @@ function openRunPiece(region, { c, complete, room, maxUnits, room0 }) {
    chunks from the window (`openRunPiece`), its cursor marked `md`, so a text of one 50 MB line is read as a text of many lines is: neither holds the file
    whole. `src` is the range source of a capture read by range from its first piece (`ro`): its parts first, never the whole (R45). */
 async function textWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }, src = null) {
-  if (![c.n, c.ob, c.bm, c.p, c.q, c.r].every(natural) || !(c.g === 0 || c.g === 1) || c.ob < c.bm || c.ob >= c.n || (c.bm !== 0 && c.bm !== 3)) return mismatch();
+  if (![c.n, c.ob, c.bm, c.p, c.q, c.r].every(natural) || !(c.g === 0 || c.g === 1) || c.ob < c.bm || c.ob >= c.n || (c.bm !== 0 && c.bm !== 2 && c.bm !== 3) || (c.en !== undefined && !(typeof c.en === "string" && windowEncodable(c.en)))) return mismatch();
+  const A = adapterFor(c.en);
+  const enc = c.en ? { en: c.en } : {};
   const grain = c.g === 1 ? "lines" : "paragraphs";
-  const pre = Math.min(4, c.ob);
+  const pre = Math.min(A.pre, c.ob);
   const mid = c.md === 1;
   const ro = c.ro === 1;
   const get = async (o, l) => {
@@ -1759,21 +1781,16 @@ async function textWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes 
     const b = got.bytes;
     if (b.length !== pre + len) return mismatch();
     /* the offset begins a character, and (but inside a run) the character before it is white space (or it is the text's first): the start of a run */
-    if ((b[pre] & 0xc0) === 0x80) return mismatch();
+    if (!A.startOk(b, pre, c)) return mismatch();
     if (c.ob > c.bm && !mid) {
-      const before = LENIENT_UTF8.decode(b.subarray(0, pre));
+      const before = A.lenient(b.subarray(0, pre));
       if (!before.length || !/\s/.test(before[before.length - 1])) return mismatch();
     }
     const eof = c.ob + len >= c.n;
     let end = len;   /* a window not at the end of the object may cut a character: it ends at the one before */
-    if (!eof) {
-      let i = len - 1;
-      while (i > 0 && (b[pre + i] & 0xc0) === 0x80) i--;
-      const lead = b[pre + i], need = lead < 0x80 ? 1 : lead >= 0xf0 ? 4 : lead >= 0xe0 ? 3 : lead >= 0xc0 ? 2 : 1;
-      if (i + need > len) end = i;
-    }
+    if (!eof) end = A.end(b, pre, len);
     let vis;
-    try { vis = FATAL_UTF8.decode(b.subarray(pre, pre + end)); } catch { return mismatch(); }
+    try { vis = A.decode(b.subarray(pre, pre + end)); } catch { return mismatch(); }
     const sep = firstSeparator(vis, grain);
     const upto = eof ? vis.length : completeRunsEnd(vis, grain);
     const openStart = mid || (!eof && upto === 0);   /* the window begins inside a run, or holds no whole run */
@@ -1787,9 +1804,9 @@ async function textWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes 
       units = o.units;
       if (!o.done) {   /* more of this run follows: the next window takes it up at the chunk after the last given */
         if (!units.length) { if (!eof) { grow(true); continue; } return mismatch(); }
-        const ob = c.ob + utf8Length(vis.slice(0, o.used));
+        const ob = c.ob + A.bytes(vis.slice(0, o.used));
         let words = 0; for (const u of units) words += wordsOfUnit(u);
-        const cursor = windowCursor(sha, { m: "t", n: c.n, bm: c.bm, g: c.g, ob, p, q: q + units.length, r: o.runs, md: 1, ld: o.ld ? 1 : 0, ...(ro ? { ro: 1, wr: (c.wr || 0) + words } : {}) });
+        const cursor = windowCursor(sha, { m: "t", n: c.n, bm: c.bm, g: c.g, ...enc, ob, p, q: q + units.length, r: o.runs, md: 1, ld: o.ld ? 1 : 0, ...(ro ? { ro: 1, wr: (c.wr || 0) + words } : {}) });
         return { units, fields: { more: true, cursor, read_through: ob - c.bm, total: c.n - c.bm }, piece: { units: units.length, words } };
       }
       pos = sep ? sep[1] : vis.length; p += 1; q += units.length;
@@ -1808,9 +1825,9 @@ async function textWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes 
     const at = pc && pc.more ? { c: pos + pc.at.o, p: pc.at.p, q: pc.at.q, r: pc.at.r }
       : { c: stopped && !pc ? pos : Math.max(pos, upto), p: pc ? pc.para : p, q: pc ? pc.seq : q, r: 0 };
     const more = stopped || (pc && pc.more) || !eof;
-    const ob = more ? c.ob + utf8Length(vis.slice(0, at.c)) : c.n;
+    const ob = more ? c.ob + A.bytes(vis.slice(0, at.c)) : c.n;
     if (more && !all.length && ob === c.ob) { if (!eof) { grow(false); continue; } return mismatch(); }
-    const cursor = more ? windowCursor(sha, { m: "t", n: c.n, bm: c.bm, g: c.g, ob, p: at.p, q: at.q, r: at.r, ...(ro ? { ro: 1, wr: (c.wr || 0) + words } : {}) }) : null;
+    const cursor = more ? windowCursor(sha, { m: "t", n: c.n, bm: c.bm, g: c.g, ...enc, ob, p: at.p, q: at.q, r: at.r, ...(ro ? { ro: 1, wr: (c.wr || 0) + words } : {}) }) : null;
     return { units: all, fields: { more, cursor, read_through: ob - c.bm, total: c.n - c.bm }, piece: { units: all.length, words },
              ...(!more && ro ? { facts: { words_total: (c.wr || 0) + words } } : {}) };
   }
@@ -2067,18 +2084,20 @@ async function textRangedHead(evidence, doc, { recorded, declared, textual, char
   const src = rangeSource(evidence, doc);
   if (!(Number.isInteger(src.size) && src.size > WHOLE_READ_MAX && src.size <= boundOf("text", "bytes"))) return null;
   if (!textual || !(recorded === null || recorded === "undetermined" || recorded === "text" || recorded === "json" || recorded === "xml")) return null;
-  if (charset && !/^(?:utf-?8|us-ascii|ascii)$/i.test(charset)) return null;
   const want = Math.min(src.size, WINDOW_BYTES + 4);
   const probe = await src.readRange(0, want);
-  if (!(probe instanceof Uint8Array) || probe.length < want || probe.includes(0)) return null;
-  if (detectFormat(probe, declared).format !== "undetermined") return null;
-  const bm = probe.length >= 3 && probe[0] === 0xef && probe[1] === 0xbb && probe[2] === 0xbf ? 3 : 0;
-  let end = probe.length;
-  while (end > bm && (probe[end - 1] & 0xc0) === 0x80) end--;   /* the head ends at a character */
-  if (end > bm) { const lead = probe[end - 1], need = lead < 0x80 ? 1 : lead >= 0xf0 ? 4 : lead >= 0xe0 ? 3 : lead >= 0xc0 ? 2 : 1; if (need > 1 || lead >= 0xc0) end--; }
-  let text;
-  try { text = FATAL_UTF8.decode(probe.subarray(bm, end)); } catch { return null; }
-  return { src, size: src.size, head: probe.subarray(0, end), bm, text, grain: grainOf(text, false) };
+  if (!(probe instanceof Uint8Array) || probe.length < want) return null;
+  const bom16 = probe.length >= 2 && ((probe[0] === 0xff && probe[1] === 0xfe) || (probe[0] === 0xfe && probe[1] === 0xff));
+  if (!bom16 && probe.includes(0) && !/^utf-16/i.test(charset || "")) {
+    /* a NUL in the head: UTF-16 without a BOM, only if the decode says so below; a binary file is no text */
+  }
+  const d = decodeText(probe.subarray(0, probe.length - (probe.length % 2)), { declared: charset, name: charset, kind: "text" });
+  if (!d.ok || d.replaced_ratio > REPLACED_TOLERANCE || !windowEncodable(d.encoding)) return null;
+  const en = d.encoding === "us-ascii" ? "utf-8" : d.encoding;
+  if (!/^utf-16/.test(en) && probe.includes(0)) return null;
+  if (!/^utf-16/.test(en) && detectFormat(probe, declared).format !== "undetermined") return null;
+  const bm = en === "utf-8" ? (probe.length >= 3 && probe[0] === 0xef && probe[1] === 0xbb && probe[2] === 0xbf ? 3 : 0) : /^utf-16/.test(en) ? (bom16 ? 2 : 0) : 0;
+  return { src, size: src.size, head: probe, bm, text: d.text, decoded: d, en: en === "utf-8" ? undefined : en, grain: grainOf(d.text, false) };
 }
 
 /* --- a PDF -------------------------------------------------------------------------------------------------------------- */
@@ -2786,7 +2805,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   /* the charset declared by the transport first (the header wins over the markup's own, H5), then the capture's and the profile's type */
   const declaredType = [headers["content-type"], ct, profile.source_content_type].find((t) => charsetOf(t)) || null;
   let decoded = textRead ? decodedTextOf(bytes, declaredType, fmt === "xml" ? "xml" : fmt === "html" ? "html" : "text") : null;
-  if (rangedTxt) { textRead = true; decoded = { ok: true, text: rangedTxt.text, encoding: "utf-8", assumed: true, replaced: 0, replaced_ratio: 0, disagree: [] }; }
+  if (rangedTxt) { textRead = true; decoded = rangedTxt.decoded; }
   /* R49, R54: an encoding the rule cannot decode is stated by its name, never read as replacement characters */
   if (decoded && !decoded.ok)
     return early(failed(doc, null, localize("reading-pipeline.index.encoding_unsupported", "the text declares the encoding {name}, which is not read here, so nothing was read", { name: String(decoded.name) }),
@@ -2867,7 +2886,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (rangedTxt) {
         /* R50: the first piece of a text read by range: its units are the windows' from the start; the head gave the reading's facts and the grain, and what only
            the whole could give (the document's words) is stated by the last piece or not at all */
-        const w = await textWindowTick(evidence, sha, { m: "t", s: sha, n: rangedTxt.size, ob: rangedTxt.bm, bm: rangedTxt.bm, g: rangedTxt.grain === "lines" ? 1 : 0, p: 0, q: 0, r: 0, ro: 1, wr: 0 }, pieceAsk, rangedTxt.src);
+        const w = await textWindowTick(evidence, sha, { m: "t", s: sha, n: rangedTxt.size, ob: rangedTxt.bm, bm: rangedTxt.bm, g: rangedTxt.grain === "lines" ? 1 : 0, p: 0, q: 0, r: 0, ro: 1, wr: 0, ...(rangedTxt.en ? { en: rangedTxt.en } : {}) }, pieceAsk, rangedTxt.src);
         if (w.refused) return w;
         if (w.gone) return early(failed(doc, null, localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"), { failure: FAILURE_TRANSIENT }));
         textUnits = w.units.length ? w.units : null;

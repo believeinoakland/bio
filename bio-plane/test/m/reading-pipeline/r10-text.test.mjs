@@ -125,3 +125,35 @@ test("R50 R41 (G131i, carry): at a scaled window the pieces of a text equal the 
     assert.deepEqual(got.map((u) => [u.extent.para, u.extent.run, u.seq, u.text]), whole.text_units.map((u) => [u.extent.para, u.extent.run, u.seq, u.text]));
   }
 });
+
+/* B44 (1), R49 R50 (K4834): every R49 encoding reaches the standard's 50 MB: the head's encoding is kept in the cursor and each window decoded by it */
+const accented = (i) => `ligne ${String(i).padStart(7, "0")} café déjà vu naïve ${"council minutes ".repeat(4)}`;
+for (const [name, enc, ct] of [["windows-1252", "windows-1252", "text/plain; charset=windows-1252"], ["UTF-16LE with a BOM", "utf-16le", "text/plain"], ["UTF-16BE with a BOM", "utf-16be", "text/plain"], ["UTF-16LE with a BOM, JSON", "utf-16le", "application/json"]]) {
+  test(`R49 R50 (B44 (1), ${name}): a text of about 26 MiB is read in windows from its first piece, each line once, the last line read and searchable, bytes pulled at most twice the file`, async () => {
+    const perLine = enc === "windows-1252" ? 100 : 200;
+    const n = Math.ceil((26 * MiB) / perLine);
+    const rows = Array.from({ length: n }, (_, i) => accented(i).padEnd(99, ".") + (enc === "windows-1252" ? "" : "😀"));
+    rows.push("DERNIÈRE-LIGNE € fin");
+    const str = rows.join("\n");
+    let bytes;
+    if (enc === "windows-1252") bytes = Buffer.from(str.replace(/€/g, "\x80"), "latin1");
+    else {
+      const le = enc === "utf-16le", u = Buffer.alloc(2 + str.length * 2);
+      if (le) u.writeUInt16LE(0xfeff, 0); else u.writeUInt16BE(0xfeff, 0);
+      for (let i = 0; i < str.length; i++) (le ? u.writeUInt16LE : u.writeUInt16BE).call(u, str.charCodeAt(i), 2 + i * 2);
+      bytes = u;
+    }
+    assert.ok(bytes.length > WHOLE_READ_MAX && bytes.length < TEXT_BOUND, `${bytes.length}`);
+    const b = bucket();
+    const d = await hold(b, new Uint8Array(bytes));
+    const document = doc({ digest: d, bytes: bytes.length, ct, format: "undetermined", fromText: true });
+    const pieces = await allPieces(b, document);
+    const units = pieces.flatMap((p) => p.text_units || []);
+    assert.equal(units.length, n + 1, "every line once");
+    for (const i of [0, 1, 12345, n - 1]) assert.equal(units[i].text, rows[i].trim(), `line ${i}`);
+    assert.equal(units[n].text, "DERNIÈRE-LIGNE € fin");
+    assert.equal(pieces.at(-1).more, false);
+    assert.ok(b.served <= 2 * bytes.length, `${b.served} of ${bytes.length}`);
+    assert.equal(pieces[0].reading.encoding, enc);
+  });
+}
