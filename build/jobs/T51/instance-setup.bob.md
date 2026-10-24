@@ -1,6 +1,6 @@
 # BOB to instance-setup (T51)
 
-**Read** · handled J17
+**Read** · handled J19
 
 ## B1 · START
 
@@ -209,3 +209,14 @@ Mail with `--module instance-setup`; record `build/jobs/T51/instance-setup.md` (
 
 **Before COMPLETE:** your module's tests, `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership (civicos-process `checks/`), each read by its failure count. Record completion (mechanics section 6 step 7) with `Size (<session id>): test runs <n>, module lines <n>` and each cause's four fields; state COMPLETE; post COMPLETE.
 **G118b · `op=bootstrap`'s 60 s fleet keep misses on most calls live** (re-walk 8 A: `fleet;dur` 423-662 ms on 6 of 10 calls 2.5 s apart; diagnosis item 3: cause class Certain, mechanism not shown). (1) The keep is `keptParts`, a `WeakMap` keyed by `env` in isolate memory (`bio-plane/src/setup.mjs:160-186`, `PARTS_KEPT_MS` 60 s at :159; a hit at :178-181); locally 10 calls ask the fleet once, so a live miss is a call reaching an isolate (or an `env`) with no entry. (2) Missed: the test used one `env` in one process. **Ruled (K4853, BOB's detail, P17):** keep the fleet's answer where every isolate reads it, in the team's object that `bootstrap` already visits (a stored value with its time, read in the visit the call already makes, never an extra call), the isolate's `WeakMap` kept only as a first look; and add `isolate;desc=<an id made once per isolate>` to `bootstrap`'s `Server-Timing` so the next deploy shows how many isolates answer (R-LOG). (3) Red: `r9-parts-kept-outside-isolate.test.mjs`: two different `env`s (two isolates) within 60 s ask the fleet once in all; past 60 s, once more; the `isolate` entry present and stable within one `env`. (4) **P** at the next deploy (BOB's).
+
+## B14 · ANSWER · re J18
+
+ANSWER to J18 (K4870, BOB's, P17).
+1. The shared keep in the object's memory, read in the `/bootstrapfacts` visit a signed-in caller already makes, and (b) the one write visit after a miss: as you propose.
+   (a) A stranger keeps per isolate only: no new visit for the pre-sign-in poll and no change to credentials' `/bootstrap`. Your R103 test ("a stranger costs no second hop") stands.
+2. Call `stateTiming("isolate", ageMs, id)` only; do NOT add the `isolate-<id>` entry. Control-plane's `stateTiming(name, ms, desc)` extension goes into control-plane-1's START (job 38), which merges before the one redeploy, so the deploy shows `isolate;desc=<id>`. Your test asserts the call's three arguments at your interface; REPORT nothing further on it.
+
+## B15 · ANSWER · re J19
+
+ANSWER to J19 (K4871, BOB's; K3466, K4696). Not taken to Bob. Do not retry the refused line, and write no `git push` by hand: a job's branch reaches origin through the mail tool, which commits and pushes as its protocol (mechanics §13). Run its commands, each its own call: `mail done --through B15`, then `mail state --set COMPLETE`, then `mail post --as job --kind COMPLETE --body-file <your completion text>` (the post pushes your two commits with it). If any of those is refused, stop there, state which in your record if you can, and end your turn waiting; BOB's backstop reads your branch.
