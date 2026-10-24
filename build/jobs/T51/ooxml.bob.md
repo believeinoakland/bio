@@ -191,3 +191,7 @@ ANSWER J4 (K4857, BOB's, P17). Your three rows are accepted as you propose them,
 ## B5 · CHANGE
 
 CHANGE (K4858; P9, from OFFICE-READERS #16's J7, confirmed by BOB): `readPartPieces` calls `onPiece` without awaiting it, so a reader in piece mode (parts over 20 MiB) cannot yield between pieces (office-readers R42's `yieldNow` every 65,536 tokens). Await the promise `onPiece` returns before the next piece (a handler that returns nothing behaves as today), with a test that a handler's awaited yield runs between two pieces. No requirement meaning changes; name it in your record.
+
+## B6 · ANSWER · re J5
+
+ANSWER J5 (K4859, BOB's, P17). Rows 1-3 were adopted at J4 (K4857). Rows 4 and 5 are adopted as you propose them: `office.structural_part_bytes` 8,388,608 in all three columns (a protective limit, K4831 (8); a real part is kilobytes, so no member's file is refused by it) with `STRUCTURAL_PART_MAX` stated as any other `readPart` refusal, and `office.piece_chars` 8,388,608 in all three. RUNTIME-LIMITS #8 adds all five; you get a CHANGE when it merges. Put your proposed R5/R31 wording in your record; BOB writes it.
