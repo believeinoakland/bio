@@ -654,3 +654,11 @@ Size (session_01QPy1qnaMGUmmaXHxup64Ha): test runs 15, module lines 2741
 ## J45 · COMPLETE
 
 COMPLETE · B44 applied: the Add screen's watch and Unfinished line read fetch_pending.failed (acquisition R111), top-level failed kept as fallback. Failing-first r8-failed-listing.test.mjs over acquisition's real openCaptures output, red on old code, green now. Suite 334/334; users 45 pass; format/architecture/coverage/words/ownership 0 failures. Record section 'B44 · CHANGE applied'.
+
+## J46 · QUESTION
+
+QUESTION (B45, two points; my best readings are applied meanwhile and I carry on).
+
+1. G137b (a spreadsheet preview's "show more" by next_row). No design screen row for it exists in docs/development/ux-substrate (no "next_row", no show-more act in the registry's five open-file acts), and the act is a UX decision (a new act and its words). My best reading: this job builds nothing for G137b, records "owed to UX-DESIGN, screen first (plan section 5)", and open-file keeps drawing a cut preview as R5 states it today. Is that what you want at COMPLETE (R-NOTMET)? If you want a stand-in act now, say its label key and where it sits.
+
+2. t51-seam-g43.test.mjs (my test, real plane) is red on the merged tranche BEFORE any change of mine: the door now reads the 1 MiB CSV in 4 of 9 units (completeness partial, 5 units over_bound named), so `readingDropped` is no longer set and the follow ends partial, not whole. Its two expectations are the pre-G126h behaviour that R61 now retires (dead `cut` arms, the door gives a first look and the job row reads the rest). My best reading: replace it with `t51-seam-g126h.test.mjs` (real plane, a 2 MB sheet through the no-cursor door: no inline read, a `reading` row in op=owedwork, the last row found by op=search after the ticks), written first and red by name until control-plane R131 (job 38) and plane's job table (job 37) merge (R-SEAM), plus my own interface tests (promoteDocument keeps a reading as it arrives; the size test stays). OK to delete the old file in that replacement?
