@@ -111,3 +111,7 @@ B6 applied (K4882): capture/keep_bytes 33,554,432, capture/profile_text_bytes 8,
 - Generated artifacts made stale: none.
 
 Size (session_01GcfAY6gBYxDeKZVA2QwFeC): test runs 4, module lines 164
+
+## J7 · COMPLETE
+
+COMPLETE B7: READ_BOUNDS row file_safety/ods_declared (8 MiB x3, key limit.file_safety.ods_declared) added and tested (R30, R31). Suite 54/54; importers 183/184 pass, 0 fail; format, architecture, coverage, ownership 0 failures; words 19 failures identical to tranche/T51 without my diff. Details in my record.
