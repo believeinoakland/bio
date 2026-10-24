@@ -148,3 +148,13 @@ COMPLETE, docprofile fix round 9 (T51): G140 (`pipeline.mjs`, `doctypes/registry
 **Deferred:** none. Census ops: none owned.
 
 Size (session_01PUj465a1Wdq4EoDMWhQ3Ga): test runs 16, module lines 1419
+
+## J10 · COMPLETE
+
+COMPLETE, CHANGE B6 (K4860) applied: `docprofile/pipeline.mjs:79` now reads `id.shell` (site-profiles R2's answer) instead of the handler flag with my own CERTAIN test. Merged tranche/T51 first. Pushed.
+
+**Red by name until site-profiles merges (the provider is not in tranche/T51 yet: `identify` returns no `shell`):** 5 of 73 docprofile tests fail, all of them because a CERTAIN shell is no longer settled `unwatchable` without the provider: R11 (assess runs L1 to L6), R12 (the verdict is one of the seven), R13 (meaningful null for unwatchable), R12 "an unwatchable verdict only for a CERTAIN shell", and the new "R12 R41 markup-free text ... a CERTAIN shell still is" (its CSV and prose halves pass; only its CERTAIN control is red). They turn green on the CHANGE that follows the merge; I will re-run then.
+
+Markup-free CSV and prose through `assess` are not `unwatchable` (green now, and already were via site-profiles' G76). The three R38 tests site-profiles named (g48-answers, g48-sheet-view, memory) were re-recorded in my first COMPLETE (J9) for R18/R39 and pass; none pins a shell answer for markup-free text in this module.
+
+Checks unchanged from J9 except the five reds above. Size (session_01PUj465a1Wdq4EoDMWhQ3Ga): test runs 18, module lines 1420
