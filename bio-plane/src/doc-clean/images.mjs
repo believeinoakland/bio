@@ -5,15 +5,10 @@
  * when the bytes are not an image this module knows. Nothing here reads a name or a declared type. */
 import { stripMetadata } from "../image-cover/index.mjs";
 import { editXml } from "./xml.mjs";
+import { CleanRefusal } from "./refusal.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
-export class CleanRefusal extends Error {
-  constructor(code, detail) {
-    super(`${code}: ${detail}`);
-    this.code = code;
-    this.detail = detail;
-  }
-}
+export { CleanRefusal };
 
 const at = (d, o, ...b) => d.length >= o + b.length && b.every((x, i) => d[o + i] === x);
 /** The bytes `d[o, o + n)` as a string of one character per byte. */
@@ -157,7 +152,7 @@ export function jbig2WithoutComments(d, where) {
     if (count === 7) { count = ((d[o] & 0x1f) << 24 | d[o + 1] << 16 | d[o + 2] << 8 | d[o + 3]) >>> 0; o += 4 + Math.ceil((count + 1) / 8); }
     else if (count > 4) throw bad(localize("doc-clean.images.a_malformed_referred_to_count", "a malformed referred-to count"));
     else o += 1;
-    o += count * (num <= 256 ? 1 : num <= 65536 ? 2 : 4) + (flags & 0x40 ? 4 : 1);
+    o += count * (num <= 256 ? 1 : num <= 0x10000 ? 2 : 4) + (flags & 0x40 ? 4 : 1);
     if (o + 4 > d.length) throw bad(localize("doc-clean.images.a_truncated_segment_header", "a truncated segment header"));
     const len = ((d[o] << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3]) >>> 0;
     o += 4;
@@ -192,7 +187,7 @@ function bareGzip(d) {
 }
 
 /** Strip, keep or refuse one image (R2, R3). `kind` is `imageKind(bytes)`, never `null`. */
-export async function cleanImage(bytes, kind, where, maxInflated) {
+export async function cleanImage(bytes, kind, where, maxInflated, scan) {
   switch (kind) {
     case "jpeg": case "png": case "gif": case "webp": case "jp2": case "j2k": {
       const r = stripMetadata(bytes);
@@ -219,7 +214,7 @@ export async function cleanImage(bytes, kind, where, maxInflated) {
       const s = ascii(bytes, 0, bytes.length);
       const m = /<([\w.-]+:)?(image|metadata)(?=[\s/>])/i.exec(s);
       if (m) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_an_svg_image_with_an", "{where}: an SVG image with an <{tag}> element", { where: String(where), tag: m[2].toLowerCase() }));
-      const out = editXml(bytes, SVG_RULES);
+      const out = await editXml(bytes, SVG_RULES, { where, scan });
       return { bytes: out, changed: out !== bytes };
     }
     case "gzip": {
@@ -229,7 +224,7 @@ export async function cleanImage(bytes, kind, where, maxInflated) {
       const media = k ? null : mediaKind(inner);
       if (media) throw new CleanRefusal("EMBEDDED_MEDIA", localize("doc-clean.images.where_media_compressed", "{where}: {media}, compressed", { where: String(where), media: String(media) }));
       if (k && k !== "gzip") {
-        const r = await cleanImage(inner, k, where, maxInflated);
+        const r = await cleanImage(inner, k, where, maxInflated, scan);
         if (r.changed) return { bytes: await gzip(r.bytes), changed: true };
       }
       const bare = bareGzip(bytes);

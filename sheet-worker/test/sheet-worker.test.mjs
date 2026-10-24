@@ -4,10 +4,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { parseJsonc } from "../../bio-plane/scripts/jsonc.mjs";
 import * as contract from "../src/contract.mjs";
 import * as limits from "../src/limits.mjs";
+import { READ_BOUNDS, boundOf } from "../../bio-plane/src/read-bounds.mjs";
 import { moduleCheck } from "../src/enginecore.mjs";
 import { withEngineSection } from "../scripts/build-engine.mjs";
 import { workbook, zip } from "./xlsx.mjs";
@@ -479,6 +480,32 @@ test("R14: the bounds are fixed positive constants, the configuration declares i
   assert.equal(cfg.limits.cpu_ms, 300000);
   assert.ok(TIME_BUDGET_MS < cfg.limits.cpu_ms);
   /* "refused whole" is asserted on every OVER_BOUND answer above (no `cells`) */
+});
+
+test("R14: the three bounds are the READ_BOUNDS rows of the sheet worker, read through boundOf, typed nowhere else in the member, and reported by /version", async () => {
+  /* the values and the table's pairs */
+  assert.deepEqual([MAX_UNZIPPED_BYTES, MAX_CELLS, TIME_BUDGET_MS], [9000000, 250000, 120000]);
+  assert.deepEqual([MAX_UNZIPPED_BYTES, MAX_CELLS, TIME_BUDGET_MS],
+    [boundOf("sheet_worker", "bytes"), boundOf("sheet_worker", "cells"), boundOf("sheet_worker", "ms")]);
+  assert.ok(Object.hasOwn(READ_BOUNDS.sheet_worker, "bytes") && Object.hasOwn(READ_BOUNDS.sheet_worker, "cells") && Object.hasOwn(READ_BOUNDS.sheet_worker, "ms"));
+  /* no numeric literal of the three remains in the member's source */
+  const forms = [/\b9[_,]?000[_,]?000\b/, /\b250[_,]?000\b/, /\b120[_,]?000\b/];
+  for (const f of readdirSync(`${MEMBER_DIR}src/`).filter((x) => x.endsWith(".mjs"))) {
+    const text = readFileSync(`${MEMBER_DIR}src/${f}`, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    for (const re of forms) assert.ok(!re.test(text), `${f} types a literal matching ${re}`);
+  }
+  /* /version states them */
+  const r = await call(member(), new Request("https://sheet-worker/version"), ON);
+  assert.deepEqual(r.body.bounds, { max_unzipped_bytes: boundOf("sheet_worker", "bytes"), max_cells: boundOf("sheet_worker", "cells"), time_budget_ms: boundOf("sheet_worker", "ms") });
+  /* control: exactly MAX_CELLS cells is not refused for its cells; one over is */
+  const sheetOf = (n) => `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1">${"<c/>".repeat(n)}</row></sheetData></worksheet>`;
+  const wb = (n) => workbook({ sheets: [{ name: "S", cells: [] }], extra: { "xl/worksheets/sheet1.xml": sheetOf(n) }, deflate: true });
+  const m = makeMember(realEngine());
+  const atBound = await recomputeVia(m, wb(MAX_CELLS));
+  assert.notEqual(atBound.body.reason, "OVER_BOUND", `exactly ${MAX_CELLS} cells: ${JSON.stringify(atBound.body).slice(0, 200)}`);
+  const over = await recomputeVia(m, wb(MAX_CELLS + 1));
+  assert.equal(over.body.reason, "OVER_BOUND");
+  assert.deepEqual([over.body.measure, over.body.measured, over.body.bound], ["cells", MAX_CELLS + 1, MAX_CELLS]);
 });
 
 /** Every distinct limits statement a reader of the bundle's text finds: a quoted `bio-member-limits/1 …` string, read

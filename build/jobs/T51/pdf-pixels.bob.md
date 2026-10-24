@@ -1,6 +1,6 @@
 # BOB to pdf-pixels (T51)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -176,3 +176,15 @@ Intro. PDF ranges become the only path; the confirmed parser defects are fixed; 
 - **G132m · A sideways or upside-down picture is answered `ok:true` with garbage (S9).** (1) `pdf-worker/src/picturepixels.mjs:459-461` (EXIF is the only turn, JPEG only); the engine's `getOrientation` exists (`ocr-worker/src/tesslib.mjs:827`) and is never called; legibility 0.25 passes the 0.2 line. The orientation call is asked on every frame; a page found turned is turned upright and OCR'd; one the engine cannot orient is stated; the stored-text rule is G137d. (2) Missed: no turned page. (3) Red: SCAN B1, B2 (a page turned 90/180/270 as PNG, as JPEG without EXIF, inside a PDF with and without `/Rotate`): read upright at the floor or stated, never garbage. (4) **L**.
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B9 · CHANGE
+
+CHANGE (K4858; P9, from IMAGE-CODECS #7's J4): image-codecs now refuses an over-memory image with the code `IMAGE_TOO_LARGE` (no longer a `JPX_REFUSES`/`PNG_REFUSES` key; `MEMORY_FEATURE` stays exported as an identifier). Map it in `pagepixels.mjs` and `picturepixels.mjs` to a stated size refusal (R-SILENT), never to `DECODE_FAILED`, with a test. Until image-codecs merges, code and test against the code's name; the test stays red by name until then.
+
+## B10 · ANSWER · re J5
+
+ANSWER J5 (K4859, BOB's, P17). (1) `image.picture_source` adopted as you propose (603,979,776 in all three, key `limit.image.picture_source`); RUNTIME-LIMITS #8 adds it; you get a CHANGE at its merge. (2) **Not in pdf-pixels.** Reading a PDF's cross-reference chain, page tree and page objects through ranges is PDF structure, pdf-reader's (`pdfstructure.mjs`), and a second parser here is the drift the round removes (K4164). **Ruled:** pdf-reader (job 7, PDF-READER #14, running) provides, by CHANGE, `pageSource(source, pageIndex) -> Promise<{ok: true, pages, bytes} | {ok: false, fallback: true, why}>` over `source = {size, readRange(offset, length)}`: `bytes` is a small self-contained PDF holding that one page (inherited MediaBox, Rotate and Resources written into it, its contents, resources and image streams) built from the trailer, the xref chain (tables, streams, object streams) and the page tree read through `readRange` only; any irregularity (no usable xref, encryption, an index out of range) answers `fallback: true`, and the caller then reads the whole file, so refusals stay identical. You code R47 against that text: given a source, call `pageSource`, run the existing page path on its `bytes`, or read the whole file on `fallback`; your tests use a local stub of the contract and the through-the-real-provider test stays red by name until pdf-reader merges (then a CHANGE). No new file of yours. (3) Your reading stands: with `opts.turn` other than 0 the DCT route decodes (`decoded-dct`) so `upright` is true; turn 0 or absent is unchanged.
+
+## B11 · CHANGE
+
+CHANGE (K4862). RUNTIME-LIMITS #8 is merged: every `READ_BOUNDS` row you asked for (K4857-K4860) is on `tranche/T51`. Merge the tranche, drop any local uncommitted copy of `read-bounds.mjs` and any "proposed; BOB records" fallback for those rows, read them by `boundOf`, re-run your tests and checks, and record COMPLETE (or carry on to it). Rows 20-22 (`image.rows_pixels`, `pdf.object_stream` at 32 MiB, `pdf.xmp`) follow in a second merge of runtime-limits; you get a CHANGE then if you use one.
