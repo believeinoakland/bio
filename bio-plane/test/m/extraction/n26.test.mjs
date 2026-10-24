@@ -118,7 +118,8 @@ test("R66: a pre-N26 docx reading is migrated once: re-read from its bytes, ever
      the paragraph units, which are N26's numbering */
   const units = f.rows(`SELECT extent_kind, extent, text FROM capture_text WHERE capture_sha=? ORDER BY seq`, f.digest);
   assert.deepEqual(units.filter((u) => u.extent_kind === "doc-para").map((u) => [JSON.parse(u.extent).para, u.text]),
-                   NEW_PARAS.map((t, i) => [i, t]).filter(([, t]) => t.length));
+                   /* (K4985, G166) a text box's paragraphs (1 and 4) are its `doc-part` unit only, never also a body paragraph */
+                   NEW_PARAS.map((t, i) => [i, t]).filter(([i, t]) => t.length && i !== 1 && i !== 4));
   assert.deepEqual(units.filter((u) => u.extent_kind !== "doc-para").map((u) => [u.extent_kind, u.text]), [["doc-part", "boxed"], ["doc-part", "t in box"]]);
   /* K4929: both text boxes are their own units since office-readers R38 gives each its own `ref` (before, the second shared `ref: null` and was dropped as already written) */
   assert.deepEqual(f.rows(`SELECT occurrence FROM reading_refs WHERE ref='item:1' ORDER BY seq`).map((r) => r.occurrence),

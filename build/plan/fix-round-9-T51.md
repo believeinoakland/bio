@@ -580,6 +580,8 @@ None stops a member completing an operation; stand-in sentences are in code, key
 5. The final pass (K4781) walks the reading as built at the round it reaches (K4834); G90's release and T51's close follow per `current.md`.
 6. **The RUNNING cap and the QUIET rule (K4976):** civicos-process `prep/running-cap-K4976` merged into its `main` at T51's close (with K4349's and K4385's branches); until then BOB runs `check` from it and every START states the 30-minute cap.
 
+7. **Fixtures at the providers' real shapes (Bob, 2026-10-24, K4990), first in T51's next fix round with the load-red fixes (K4977):** (a) an audit worker (sonnet, medium) lists every module test under `bio-plane/test/m/` that hand-builds another module's answer, a stub of its interface or a refusal it raises, starting from the seams this round broke (registrar and arming, refusal facts, held-reading counters, unpack members, profile inputs, extents, parts); (b) each provider owning such an answer gains, in its own job, a published fixture made by calling its real code (`test-support` holds only the harness), checked by the provider's own tests; (c) each user's test re-points to it in its own job or, where the edit needs no judgment, in one mechanical pass (§5.10); (d) each through-the-door seam test of a cause is written BEFORE its module jobs start (K4989). The audit's list is read by BOB whole and becomes that round's plan entries.
+
 ### 3c. Jobs added by BOB #277 (K4900; P10: found in the round, done in it; numbered 56-59 by K4903, job 52 being monitoring's, K4860)
 
 | # | batch | job (layer, position) | after | causes | model | reads |
