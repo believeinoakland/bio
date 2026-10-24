@@ -2,7 +2,7 @@
    a transient failure is read again; nothing read is cut short. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, doc, sha } from "./fixture.mjs";
+import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, doc, sha, pressThenPass } from "./fixture.mjs";
 import { wp, wr, wtbl, box, docx, bucket as _b } from "./fixture.mjs";
 import { textUnitsFor, layerChainFor, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
 import { glyphCount } from "../../../src/textchain.mjs";
@@ -53,8 +53,8 @@ test("R82 R22 seam (needs reading-pipeline R37's `budget` option) (F8): the re-r
   const { w, d } = await held();
   await withEntry(pdf(t), () => w.x.readHeld({ sha: d }));
   const ocr = member((b) => ocrAnswer(b.pages));
-  const out = await withEntry(pdf(t), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", session: false, env: { OCR_WORKER: ocr } }));
-  assert.equal(out.body.reextraction.written, true);
+  const { x } = await pressThenPass(w, d, { OCR_WORKER: ocr });
+  assert.equal(x.written, true);
   assert.equal(w.x.unitsOf(d).units.length, PAGES, "every page of the re-read is indexed");
 });
 

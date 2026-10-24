@@ -30,6 +30,7 @@ import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL
          pagesSaid, AGENT_WORKER_REASONS } from "./checks.mjs";
 import { evidenceAbsent } from "../capture/ops.mjs";
 import { readRange } from "../acquisition/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 import { say } from "./words.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
@@ -105,6 +106,9 @@ export const PRIOR_READING_COPY_MAX_BYTES = 2098176;
 /** (G41; R98) The most typed cells `cellsOf` answers a call: 20,000 cells in the extent asked for, so 20,000 cells per citation is the stated
  *  bound, the rest named by `next_row`. A protective bound, reported to Bob (K1881). */
 export const CELLS_RANGE_MAX = 20000;
+/** (fix round 9, G126e; R103; R-SILENT; K4901) The most of a capture a member's request loads whole: the `READ_BOUNDS` row `pdf.request_bytes` (2 MiB in
+ *  all three columns, the figure the plan states and control-plane's inline gate holds). */
+export const REQUEST_READ_MAX = boundOf("pdf", "request_bytes");
 /* R29, R39, R48: the one pair of bounds for the text-source rows (REC-60/REC-70's ratchet). */
 export const TEXT_SOURCE_LIMIT_DEFAULT = 200;
 export const TEXT_SOURCE_LIMIT_MAX = 5000;
@@ -802,7 +806,7 @@ export class Extraction {
    *  `kind: "ocr"` the stored reading's unread pages are asked of the OCR member, those the stored units do not hold, and the
    *  re-read is written as a composed reading; a member that is down leaves the entry owed, pages it declines end it. */
   async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined, kind = null, defer = false, registerJob = null, armJobs = null,
-                   killedPages = null } = {}) {
+                   killedPages = null, detail = null } = {}) {
     /* (fix round 9, G126b; R103; K4898) the ledger's tick names its job's kind (and hands the registrar); a call with neither is inside a member's
        request (`op=readheld`, the door's own read after a capture), which makes no OCR call */
     const call = typeof registerJob === "function" ? { registerJob, armJobs } : null;
@@ -864,7 +868,7 @@ export class Extraction {
        the ledger, which the door writes; nothing is read. */
     if (defer === true) return left("READING_PENDING");
     const e = env || this.env || {};
-    if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages });
+    if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages, detail });
     /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
     const reader = repair ? { ...document, profile: { ...(document.profile || {}), format: repair } } : document;
     const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: null },
@@ -955,24 +959,126 @@ export class Extraction {
     return { ok: true, read: true, bundle_id: bundleId, found: true, ...ow };
   }
 
-  /** R82 (F9): one pass of the OCR member over the pages a stored scan's reading still leaves unread (R35's seeding is the
-   *  cursor), written as a composed re-read. `owed` says whether the digest still has work: pages left after a pass that read
-   *  some, or a pass that read none because the member was down or answered an error. Pages the member declines in a 200
-   *  answer are the document's own, so that ends the entry (`why: "OCR_NO_PROGRESS"`). */
-  async #continueOcr({ digest, heldReading, bundleId, storeName, env, left }) {
-    if (!heldReading || heldReading.tier3_candidate !== true) return left(heldReading ? "NO_PAGES_LEFT" : "NO_READING");
+  /** R82 (F9), R106, G132k (fix round 9): one pass of the OCR member over the pages a stored reading still leaves unread, a PDF's or a picture's one
+   *  page (G129d: no PDF-only structure read), written as a composed re-read by R34's rule. The pass loads no object and parses nothing: the pages are
+   *  the stored units (`#storedPages`), and the OCR member reads each page it is asked for from the store itself. `owed` says whether the digest still
+   *  has work: pages left after a pass that read some (re-registered with the first of them as the cursor), or a pass that read none because the
+   *  member was down or answered an error (the row stands: never `UNREADABLE`, never finished while the page stays unread). Pages the member declines
+   *  in a 200 answer are the document's own, so that ends the entry (`OCR_NO_PROGRESS`). A stored reading that changed while the pass ran is not
+   *  written over: the entry stays owed and is read again. */
+  async #continueOcr({ digest, heldReading, bundleId, storeName, env, left, call = null, killedPages = null, detail = null }) {
+    if (!heldReading) return left("NO_READING");
+    const basis = this.reextractBasis({ captureSha: digest, ungated: true });
+    if (!basis.held) return left("NO_READING");
+    /* the pages left are judged as the press judges them: by the stored units (a page with no glyph that no earlier pass read) */
+    if (!this.#pagesLeft(digest, basis).length) return left("NO_PAGES_LEFT");
     if (!env.OCR_WORKER) return left("NO_OCR_MEMBER");
-    const watch = { down: false };
-    const traced = { ...env, OCR_WORKER: { fetch: async (...a) => {
-      try { const r = await env.OCR_WORKER.fetch(...a); if (!r.ok) watch.down = true; return r; }
-      catch (err) { watch.down = true; throw err; } } } };
-    const done = await this.pdfStructure({ sha: digest, ocr: "1", ungated: true, author: PLANE_AUTHOR, storeName, env: traced });
-    const re = done.status === 200 && done.body ? done.body.reextraction : null;
-    if (!re) return left(done.status === 404 ? "NO_WHOLE_OBJECT" : "UNREADABLE");
-    if (!re.performed || !re.written) return left("OCR_NO_PROGRESS", watch.down ? { owed: true } : {});
-    const now = this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, digest);
-    const more = !!(now && (this.#readingFacts(digest) || {}).tier3_candidate === true);
-    return { ok: true, read: true, bundle_id: bundleId, found: true, ...(more ? { owed: true } : {}) };
+    /* the press's job carries who asked and by which act (`detail`, R34's `by` and `via`); the ledger's own continuation is the plane's */
+    const d = detail && typeof detail === "object" ? detail : {};
+    const author = typeof d.by === "string" && d.by ? d.by : PLANE_AUTHOR;
+    const via = d.via === "op=pdfstructure&ocr=1" ? d.via : "ledger";
+    const pass = await this.#ocrPass({ digest, basis, env, storeName, author, via, killedPages, call });
+    if (pass.changed) return left("BASIS_CHANGED", { owed: true });
+    if (!pass.filled.length) return left(pass.why || "OCR_NO_PROGRESS", pass.transient ? { owed: true } : {});
+    return { ok: true, read: true, bundle_id: bundleId, found: true, reextraction: pass.summary,
+             ...(pass.entry ? { owed: true, registration: pass.registration } : {}) };
+  }
+
+  /** (fix round 9, G126e, G132k pass half) The stored reading's pages as the I2 text tier 3 and tier 4 take (`{document, pages, undetermined}`), built
+   *  from the capture's stored `pdf-page` units, so no object is loaded and nothing is parsed: a page with a glyph keeps its text; a page with none, and a
+   *  page an earlier OCR or AI pass read (`tier3SeedFrom`'s kept pages, re-marked so they are kept under their own chain and never asked again), is
+   *  marked `no_text_layer`; a page the member refused (`ocr_refused`) is marked `ocr_refused`, which selects nothing. `pages` is the stored
+   *  `page_count`, a picture's one page when it states none; null when the reading names no pages. */
+  #storedPages(basis, fmt) {
+    const stored = basis.reading || {};
+    const n = Number.isInteger(stored.page_count) && stored.page_count > 0 ? stored.page_count : PICTURE_FORMATS.includes(fmt) ? 1 : null;
+    if (n === null) return null;
+    const seed = tier3SeedFrom(stored, basis.units);
+    const text = new Map(basis.units.map((u) => [u.page, u.text]));
+    const refused = new Set((Array.isArray(stored.ocr_refused) ? stored.ocr_refused : []).map((r) => r && r.page).filter(Number.isInteger));
+    const pages = [], undetermined = [];
+    for (let p = 0; p < n; p++) {
+      const t = text.get(p) ?? "";
+      const seeded = !!(seed && seed.text.has(p));
+      if (!seeded && glyphCount(t) > 0) { pages.push({ page: p, text: t, undetermined: [] }); continue; }
+      const mark = { page: p, reason: refused.has(p) && !seeded ? "ocr_refused" : "no_text_layer", font: null, codes: null, count: 1 };
+      pages.push({ page: p, text: "", undetermined: [mark] });
+      undetermined.push(mark);
+    }
+    const document = pages.map((x) => x.text).filter((t) => t.length).join("\n");
+    return { pages: n, seed, i2text: { document, pages, undetermined, counts: { chars: document.length, undetermined: undetermined.length } } };
+  }
+
+  /** The pages a stored reading still leaves for OCR (`#storedPages`' `no_text_layer` marks, less the pages an earlier pass read), ascending. */
+  #pagesLeft(sha, basis) {
+    const fmt = (this.#one(`SELECT capture_format FROM readings WHERE capture_sha=?`, sha) || {}).capture_format || basis.reading.text_container || "pdf";
+    const built = this.#storedPages(basis, fmt);
+    const seeded = built && built.seed ? built.seed.text : new Map();
+    return built ? built.i2text.undetermined.filter((m) => m.reason === "no_text_layer" && !seeded.has(m.page)).map((m) => m.page) : [];
+  }
+
+  /** The tier the stored reading's text layer was read at (its chain's first `layer` step), 1 when it names none. */
+  static #layerTier(stored) {
+    const chain = stored && Array.isArray(stored.text_source) ? stored.text_source : [];
+    const l = chain.find((x) => x && x.step === "layer" && Number.isInteger(x.tier));
+    return l ? l.tier : 1;
+  }
+
+  /** (fix round 9, G126e, G132k, R106) One OCR pass over a stored reading (the ledger's), composed and written by R34's rule: tier 3 over
+   *  `#storedPages` (the OCR member asked for the pages left, within the call's budget), the reading composed as the press composed it, written by
+   *  `#writeReread` only while the stored reading is still `basis` (R103), and the pages still left re-registered. Answers `{filled, transient, why,
+   *  changed?, entry?, registration?}`. */
+  async #ocrPass({ digest, basis, env, storeName, author, via, killedPages = null, call = null }) {
+    const stored = basis.reading || {};
+    const fmt = (this.#one(`SELECT capture_format FROM readings WHERE capture_sha=?`, digest) || {}).capture_format || stored.text_container || "pdf";
+    const built = this.#storedPages(basis, fmt);
+    if (!built) return { filled: [], transient: false, why: "NO_PAGES" };
+    const baseTier = Extraction.#layerTier(stored);
+    const t3 = await tier3Extend(env, { sha: digest, storeName, i2text: built.i2text, wiredTier: baseTier, tier2PerPage: null, fmt,
+      seed: built.seed, liveCalibration: (q) => this.#liveCalibration(q), ...(Array.isArray(killedPages) ? { killedPages } : {}) });
+    if (!t3.filled.length) return { filled: [], transient: t3.transient === true, why: t3.transient ? "OCR_MEMBER_DOWN" : "OCR_NO_PROGRESS" };
+    const chain = (t3.chainSet ? t3.chain : null) || layerChainFor(t3.i2text, { tier: t3.wiredTier, container: fmt });
+    const reading = await this.#composedReread({ stored, basis, i2text: t3.i2text, chain, wiredTier: t3.wiredTier, fmt, pages: built.pages, env,
+      ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting, t3 });
+    reading.reextracted = { at: stampInstant("second"), by: author, engine: t3.engine ? t3.engine.engine : null, version: t3.engine ? t3.engine.version : null,
+      calibration: t3.engine ? t3.engine.calibration ?? null : null, pages: t3.filled, via };
+    const entry = t3.left ? { kind: "ocr", sha: digest, cursor: t3.left.cursor, pages_left: t3.left.pages.length } : null;
+    const w = await this.#writeReread({ basis, sha: digest, reading, text: t3.i2text, author, ungated: true, job: entry, call });
+    if (w.changed) return { filled: [], transient: true, changed: true };
+    /* R34: what the pass did and what the listeners and the index reported, as the press answered it */
+    const summary = { performed: true, written: w.ok === true, ...unwrittenWhy(w, "re-read"), pages: t3.filled, engine: t3.engine,
+      text_source: chain, chain: describeChain(chain), via,
+      reading: { content_type: reading.content_type, read_from_text: reading.read_from_text, found: reading.found,
+                 entities: Array.isArray(reading.entities) ? reading.entities.length : 0, text_tier: reading.text_tier },
+      staled: w.staled ?? 0, units: w.indexed ?? null, observed: w.observed ?? null, compared: w.compared ?? null, after_read: w.afterRead ?? null,
+      candidates: localize("extraction.index.reread_candidates_frontier", "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now") };
+    return { filled: t3.filled, transient: false, w, summary, ...(entry ? { entry, registration: w.registration } : {}) };
+  }
+
+  /** R34, R71 (fix round 9: from the stored pages, no structure): the reading a re-read or a transcription writes, by reading-pipeline R11's rule with
+   *  the stored reading's type, `at` the capture instant, the stored page count, page boxes and container extent carried (G128c: the boxes are the
+   *  stored rows'), reading-pipeline R18's provenance, the read's own counts and emitted fields, what tier 3 left (`ocr_left`, `ocr_refused`), and the
+   *  stored test-instance label kept (R74). */
+  async #composedReread({ stored, basis, i2text, chain, wiredTier, fmt, pages, env, ocrNote = null, tier3Candidate = false, t3 = null, tier2note = null }) {
+    const vw = this.view();
+    const wired = readText(decodeView(i2text), { headers: null, locator: basis.locator || null, content_type: null, at: stored.at ?? null, ...(vw ? { view: vw } : {}) });
+    const reading = readingFromWire({ wired, docType: { type: { key: stored.content_type ?? null, version: stored.reader_version ?? null } },
+      chain, wiredTier, fmt, retrieved: stored.at ?? null, tier2note, ocrNote, tier3Candidate });
+    reading.page_count = pages;
+    if (Object.prototype.hasOwnProperty.call(stored, "page_boxes")) reading.page_boxes = stored.page_boxes;
+    if (Object.prototype.hasOwnProperty.call(stored, "container_extent")) reading.container_extent = stored.container_extent;
+    reading.provenance = await readingProvenance({ text: i2text, chain, tier: wiredTier, container: fmt, planeVersion: (env && env.VERSION) || null });
+    { const n = textCountsOf(i2text); if (n) Object.assign(reading, n); }
+    { const n = textWordsFor(i2text); if (n) Object.assign(reading, n); }
+    Object.assign(reading, emittedFieldsOf(i2text));
+    /* reading-pipeline R28: what the entry emitted beside the text is the stored reading's (nothing is parsed here) */
+    if (Object.prototype.hasOwnProperty.call(stored, "metadata")) reading.metadata = stored.metadata;
+    if (t3 && t3.left) reading.ocr_left = { cursor: t3.left.cursor, pages: t3.left.pages.length };
+    const refused = [...(Array.isArray(stored.ocr_refused) ? stored.ocr_refused : []), ...((t3 && Array.isArray(t3.refused)) ? t3.refused : [])]
+      .filter((r) => r && Number.isInteger(r.page) && !(t3 && t3.filled.includes(r.page)));
+    if (refused.length) reading.ocr_refused = [...new Map(refused.map((r) => [r.page, { page: r.page, reason: r.reason }])).values()].sort((x, y) => x.page - y.page);
+    keepUntested(reading, stored, null);
+    return reading;
   }
 
   /** (fix round 5, E3) The capture's size from its own document: its parts' sizes, else its stated size; null when the
@@ -2286,13 +2392,15 @@ export class Extraction {
     const row = sha ? this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha) : null;
     if (!row || !(ungated || this.#sees(row.bundle_id, viewer))) return { held: false };
     const doc = this.#storedDocument(row.bundle_id, sha);
-    const units = [];
+    /* (fix round 9, G126e, G132k) a page's units in reading order, joined: a page over the unit cap is stored as consecutive runs (reading-pipeline R47) */
+    const byPage = new Map();
     for (const u of this.#rows(
-      `SELECT extent, text FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page' AND truncated=0`, sha)) {
+      `SELECT extent, text FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page' AND truncated=0 ORDER BY seq`, sha)) {
       const e = safeJson(u.extent);
-      if (e && Number.isInteger(e.page) && typeof u.text === "string") units.push({ page: e.page, text: u.text });
+      if (e && Number.isInteger(e.page) && typeof u.text === "string") byPage.set(e.page, (byPage.get(e.page) ?? "") + u.text);
     }
-    return { held: true, bundleId: row.bundle_id, reading: safeJson(row.reading) || {},
+    const units = [...byPage].sort((a, b) => a[0] - b[0]).map(([page, text]) => ({ page, text }));
+    return { held: true, bundleId: row.bundle_id, reading: safeJson(row.reading) || {}, json: row.reading,
              locator: doc && typeof doc.locator === "string" ? doc.locator : null, units };
   }
 
@@ -2332,11 +2440,17 @@ export class Extraction {
           detail: localize("extraction.index.this_record_holds_no_reading", "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.") } };
     }
     /* END DEC-49 REGION is-reextract */
-    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
-    const obj = ev ? await ev.get(sha) : null;
+    /* (fix round 9, G126b, G126e; R103) the press makes no OCR call and loads nothing in the request: it owes the pages left, "Read it" */
+    if (ocrAsked) {
+      /* R31 (N285): an absent object is capture's one answer for it, asked of the store's `head` (no byte is read) */
+      if (!(await this.#heldByWhole(sha))) return evidenceAbsent(sha, storeName, { tokenClass: cls });
+      return this.#pressOwes({ sha, basis: reBasis, op, author });
+    }
+    const got = await this.#requestBytes(sha);
     /* R31 (N285): an absent object is capture's one answer for it (its R63), byte-identical to op=capture's own. */
-    if (!obj) return evidenceAbsent(sha, storeName, { tokenClass: cls });
-    const bytes = new Uint8Array(await obj.arrayBuffer());
+    if (got.absent) return evidenceAbsent(sha, storeName, { tokenClass: cls });
+    if (got.over) return { status: 200, body: await this.#overRequest(op, sha, got.size) };
+    const bytes = got.bytes;
     const pdfEntry = getFormat("pdf");
     if (!pdfEntry || typeof pdfEntry.structure !== "function")
       return { status: 501, body: { ok: false, reason: "FORMAT_UNREGISTERED", format: "pdf",
@@ -2366,79 +2480,7 @@ export class Extraction {
     structure.tier = structureTier;
     /*__REC98_TIER2_WIRE_STRUCTURE_END__*/
 
-    let structureChain = null;
-    if (ocrAsked) {
-      const stored = reBasis.reading || {};
-      /* R35 (D-616): seeded with the pages the stored reading already transcribed. */
-      const t3 = await tier3Extend(e, { sha, storeName, i2text: structure.text, wiredTier: structureTier,
-        tier2PerPage: readT2PerPage, fmt: "pdf", seed: tier3SeedFrom(stored, reBasis.units),
-        liveCalibration: (q) => this.#liveCalibration(q) });
-      const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, the MEASUREMENTS ledger)";
-      if (!t3.filled.length) {
-        /* R33: nothing filled, nothing written, the reason stated. */
-        structure.reextraction = {
-          performed: false, written: false, cost,
-          candidate: t3.seeded && t3.seeded.length ? t3.stillWanting : needsTier3(structure.text),
-          why: t3.ocrNote || say("extraction.why.page_document_lacks"),
-        };
-      } else {
-        /* R34: the reading by reading-pipeline R11's rule with the stored reading's type, `at` the capture instant, page count and
-           container extent carried, reading-pipeline R18's provenance, and `reextracted`; written by R19; no bundle version. */
-        let chain = t3.chainSet ? t3.chain : null;
-        if (!chain) chain = layerChainFor(t3.i2text, { tier: t3.wiredTier, container: "pdf" });
-        const vw = this.view();
-        const wired = readText(decodeView(t3.i2text), { headers: null, locator: reBasis.locator || null,
-                                                        content_type: null, at: stored.at ?? null, ...(vw ? { view: vw } : {}) });
-        const reading = readingFromWire({
-          wired, docType: { type: { key: stored.content_type ?? null, version: stored.reader_version ?? null } },
-          chain, wiredTier: t3.wiredTier, fmt: "pdf", retrieved: stored.at ?? null,
-          tier2note: readT2Note, ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting });
-        reading.page_count = Number.isInteger(structure.pages) && structure.pages > 0
-          ? structure.pages : (Number.isInteger(stored.page_count) && stored.page_count > 0 ? stored.page_count : null);
-        /* N100 (R34): the structure's boxes, else the stored reading's when it held the key, else absent. */
-        { const pb = pageBoxesFrom(structure.pageBoxes);
-          if (pb) reading.page_boxes = pb;
-          else if (Object.prototype.hasOwnProperty.call(stored, "page_boxes")) reading.page_boxes = stored.page_boxes; }
-        if (Object.prototype.hasOwnProperty.call(stored, "container_extent")) reading.container_extent = stored.container_extent;
-        reading.provenance = await readingProvenance({ text: t3.i2text, chain, tier: t3.wiredTier,
-                                                       container: "pdf", planeVersion: e.VERSION || null });
-        /* N139 (reading-pipeline R17): the re-read's own counts, by the acquire path's rule. */
-        { const n = textCountsOf(t3.i2text); if (n) Object.assign(reading, n); }
-        /* reading-pipeline R35 (C17): the re-read counts its words as the first reading does. */
-        { const n = textWordsFor(t3.i2text); if (n) Object.assign(reading, n); }
-        /* reading-pipeline R28 (K1557, CHANGE B4): what the pdf entry emitted beside the text, unaltered, by the read's own
-           rule: its `metadata` or null, and `cells` only for a workbook or a `.docx` (R70), never for a pdf. */
-        Object.assign(reading, emittedFieldsOf(t3.i2text));
-        /* R74: a test-instance label the stored reading carries is kept by the re-read that writes over it. */
-        keepUntested(reading, stored, null);
-        structureChain = chain;
-        reading.reextracted = {
-          at: stampInstant("second"), by: author,
-          engine: t3.engine ? t3.engine.engine : null, version: t3.engine ? t3.engine.version : null,
-          calibration: t3.engine ? t3.engine.calibration ?? null : null,
-          pages: t3.filled, via: "op=pdfstructure&ocr=1",
-        };
-        const w = await this.#writeReread({ basis: reBasis, sha, reading, text: t3.i2text, author, viewer, ungated });
-        structure.text = t3.i2text;
-        structure.tier = t3.wiredTier;
-        if (t3.ocrNote) structure.notes = [...structure.notes, t3.ocrNote];
-        structure.reextraction = {
-          performed: true, written: w.ok === true, cost,
-          /* Two different facts, never answered alike: the capture left the caller's sight before the write, or
-             the write ran and was rolled back whole (a listener refused it, R24), so nothing of it was kept. */
-          ...unwrittenWhy(w, "re-read"),
-          pages: t3.filled, engine: t3.engine,
-          text_source: chain, chain: describeChain(chain),
-          reading: { content_type: reading.content_type, read_from_text: reading.read_from_text,
-                     found: reading.found, entities: Array.isArray(reading.entities) ? reading.entities.length : 0,
-                     text_tier: reading.text_tier },
-          staled: w.staled ?? 0, units: w.indexed ?? null, observed: w.observed ?? null,
-          compared: w.compared ?? null,
-          after_read: w.afterRead ?? null,
-          candidates: localize("extraction.index.reread_candidates_frontier", "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now"),
-        };
-      }
-    }
+    const structureChain = null;
     /* R52 (N48, K135, K138): the item-to-file membership derived from containment, beside `links[]` and never inside it,
        under the link shapes the active profiles state; null with its reason when none applies. */
     Object.assign(structure, membershipBeside(structure, this.view()));
@@ -2448,19 +2490,73 @@ export class Extraction {
     return { status: 200, body: structure };
   }
 
+  /** (fix round 9, G126e; R103) The bytes of a capture a member's request may load whole: read by its whole digest through `readRange` when it is at most
+   *  REQUEST_READ_MAX; `{absent}` when nothing is held under it, `{over, size}` past the bound (nothing read). */
+  async #requestBytes(sha) {
+    let size = null;
+    try { const h = await this.#evidenceOf(sha).head(sha); size = h && Number.isFinite(h.size) ? h.size : (h ? null : -1); } catch { size = -1; }
+    if (size === -1) return { absent: true };
+    if (size !== null && size > REQUEST_READ_MAX) return { over: true, size };
+    const b = await readRange(this.#rangeStore(), sha, 0, size ?? REQUEST_READ_MAX + 1);
+    if (!(b instanceof Uint8Array)) return { absent: true };
+    if (b.length > REQUEST_READ_MAX) return { over: true, size: b.length };
+    return { bytes: b };
+  }
+
+  /** (fix round 9, G126e; R103; R-SILENT; K4901 (2)) `op=pdfstructure` of a PDF over REQUEST_READ_MAX: nothing is read in the request; a raised `reading`
+   *  job is registered (the ledger reads it in pieces) and the answer states the file's size and the bound. Stand-in until T52 (K4269); the row owed:
+   *  `extraction.why.request_too_large`. */
+  async #overRequest(op, sha, size) {
+    const entry = { kind: "reading", sha, priority: "raised" };
+    const registration = owedAnswer(entry, await this.#oweVia(null).owe(entry));
+    return { ok: true, op, sha256: sha, size, limit: REQUEST_READ_MAX,
+             reextraction: { performed: false, written: false, owed: true, registration,
+               why: localize("extraction.why.request_too_large", "this file is {size} bytes, more than a request reads whole here ({limit} bytes), so it is read in the background", { size: String(size), limit: String(REQUEST_READ_MAX) }) } };
+  }
+
+  /** (fix round 9, G126b, G126e; R103; R33, R35) The press, `op=pdfstructure&ocr=1`, after its refusals: no byte is loaded and no OCR call is made in the
+   *  request. The pages the stored reading leaves unread (its stored units, as `#storedPages` reads them) are registered as one `ocr` job, raised ("Read
+   *  it"), which the ledger reads by R34's rule; the answer's `reextraction` says nothing was performed or written here, which pages are owed and whether
+   *  the registrar holds them. A reading with no page left owes nothing (R33). */
+  async #pressOwes({ sha, basis, op, author = null }) {
+    const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, the MEASUREMENTS ledger)";
+    const pages = this.#pagesLeft(sha, basis);
+    if (!pages.length)
+      return { status: 200, body: { ok: true, op, sha256: sha, reextraction: { performed: false, written: false, cost, candidate: [],
+        why: say("extraction.why.page_document_lacks") } } };
+    const entry = { kind: "ocr", sha, cursor: pages[0], pages_left: pages.length, priority: "raised",
+                    detail: { via: "op=pdfstructure&ocr=1", ...(typeof author === "string" && author ? { by: author } : {}) } };
+    const via = this.#oweVia(null);
+    const registration = owedAnswer(entry, await via.owe(entry));
+    return { status: 200, body: { ok: true, op, sha256: sha, reextraction: { performed: false, written: false, owed: true, cost, candidate: pages, registration,
+      /* stand-in until T52 (K4269); the row owed: `extraction.why.press_owed` */
+      why: localize("extraction.why.press_owed", "your team's Civicsmith reads {count} page(s) with its text recognition in the background, and the reading shows them as each is read", { count: String(pages.length) }) } } };
+  }
+
   /** R34, R71: a composed reading written by R19's writer while the capture is still in the caller's sight, then
    *  recorded as composed here (R21), with R69's after-read outcome and what the listeners and index reported. Answers
    *  `{ok: true, staled, observed, compared, afterRead, indexed}`, `{ok: false}` when the capture left the caller's
    *  sight, or `{ok: false, rolledBack: true}` when the write was refused while it ran and nothing of it was kept. */
-  async #writeReread({ basis, sha, reading, text, author, viewer, ungated = false }) {
+  async #writeReread({ basis, sha, reading, text, author, viewer, ungated = false, job = null, call = null }) {
     const u = textUnitsFor(text, { budget: Infinity });
     let w = { ok: false };
+    const via = this.#oweVia(call);
+    let owing = null;
     try {
+      /* (fix round 9, G126e; R103) compare-and-set: the stored reading is written over only while it is still the one this reading was composed from;
+         a changed basis is never overwritten (`changed`: the caller reads it again) */
       const out = ungated || this.#sees(basis.bundleId, viewer)
-        ? this.writeReading({ bundleId: basis.bundleId, captureSha: sha, reading, textUnits: u.textUnits,
-                              textUnitsOverBound: u.textUnitsOverBound, textUnitsSkipped: u.textUnitsSkipped,
-                              author, composed: true })
+        ? this.core.transact(() => {
+            const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
+            if (typeof basis.json === "string" && (!now || now.reading !== basis.json)) return { changed: true };
+            const wr = this.writeReading({ bundleId: basis.bundleId, captureSha: sha, reading, textUnits: u.textUnits,
+                                           textUnitsOverBound: u.textUnitsOverBound, textUnitsSkipped: u.textUnitsSkipped,
+                                           author, composed: true });
+            if (job) owing = via.owe(job);
+            return wr;
+          })
         : null;
+      if (out && out.changed) return { ok: false, changed: true };
       if (out) {
         this.recordComposed(reading, sha);
         /* R69: the after-read hooks' outcome, reported with the reading. */
@@ -2469,7 +2565,9 @@ export class Extraction {
         const staled = ls.reduce((n, l) => n + (l && Number.isInteger(l.staled) ? l.staled : 0), 0);
         const observed = (ls.find((l) => l && l.observed) || {}).observed ?? null;
         w = { ok: true, staled, observed, compared: out.kept ? out.kept.compared : null, afterRead,
-              indexed: { written: out.indexed.written, offered: out.indexed.offered, over_bound: out.indexed.over_bound } };
+              indexed: { written: out.indexed.written, offered: out.indexed.offered, over_bound: out.indexed.over_bound },
+              ...(owing ? { registration: owedAnswer(job, await owing) } : {}) };
+        await via.arm();
       }
     } catch { w = { ok: false, rolledBack: true }; }
     return w;
@@ -2540,37 +2638,27 @@ export class Extraction {
     const away = reg.t.keptAway({ project: this.#projectOfBundle(basis.bundleId), use: TRANSCRIBE_USE });
     if (away) return { status: refusalStatus(away), body: withRefusedSays(away) };
     /* END DEC-49 REGION is-transcribe */
-    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
-    const obj = ev ? await ev.get(sha) : null;
-    if (!obj) return evidenceAbsent(sha, storeName, { tokenClass: cls });
-    const bytes = new Uint8Array(await obj.arrayBuffer());
+    /* (fix round 9, G126e; R103) nothing is loaded whole in the request: the format from the first KiB through `readRange`, the pages from the stored units */
+    const head = await this.#heldHead(sha);
+    if (!head) return evidenceAbsent(sha, storeName, { tokenClass: cls });
     /* R73 (N853b): the format as the stored bytes answer it now, never the profile recorded at capture (a photo
        captured before its entry was registered was profiled `undetermined`), read through that format's entry. A
        format with no `structure`, or whose entry cannot read these bytes, is no refusal: nothing is read or written. */
-    const fmt = detectFormat(bytes, null).format;
+    const fmt = detectFormat(head, null).format;
     const entry = getFormat(fmt);
     const unread = (why) => ({ status: 200, body: { ok: true, op, sha256: sha, format: fmt,
       transcription: { performed: false, written: false, why } } });
     if (!entry || typeof entry.structure !== "function")
       return unread(say("extraction.unread.stored_bytes_read", {
         fmt: fmt === "undetermined" ? say("extraction.unread.format_group_civicsmith") : `"${fmt}"` }));
-    const structure = await entry.structure(bytes);
-    if (!structure || !structure.ok)
-      return unread(say("extraction.unread.stored_bytes_read_reader", {
-        format: fmt, reason: structure && structure.reason ? ` (${structure.reason})` : "" }));
-    /* R71 (R31, reading-pipeline R3): tier 2 by the one escalation every path runs. */
-    let tier = 1, t2PerPage = null, t2Note = null, text = structure.text;
-    const notes = [...(Array.isArray(structure.notes) ? structure.notes : [])];
-    const t2 = await tier2Escalate(e, { sha, storeName, text });
-    if (t2.outcome === "merged") {
-      text = t2.text; tier = t2.replaced.length ? 2 : 1; t2PerPage = t2.perPage; t2Note = t2.note;
-      if (t2.note) notes.push(t2.note);
-    } else if (t2.outcome === "refused") { t2Note = t2.note; notes.push(t2.note); }
-    /* R71, R35 (reading-pipeline R30): tier 3 seeded with the pages the stored reading holds, OCR's and the AI's, so
-       none is asked of the OCR member or the AI again; `tier3Extend` asks the OCR member only when it is bound. */
+    const built = this.#storedPages(basis, fmt);
+    if (!built) return unread(say("extraction.unread.stored_bytes_read_reader", { format: fmt, reason: " (NO_PAGES)" }));
     const stored = basis.reading || {};
-    const t3 = await tier3Extend(e, { sha, storeName, i2text: text, wiredTier: tier, tier2PerPage: t2PerPage, fmt,
-      seed: tier3SeedFrom(stored, basis.units), liveCalibration: (q) => this.#liveCalibration(q) });
+    const tier = Extraction.#layerTier(stored), t2Note = null, notes = [];
+    /* R71, R35 (reading-pipeline R30): tier 3 seeded with the pages the stored reading holds, OCR's and the AI's, so none is asked of the AI again; no
+       OCR call in the request (R103, reading-pipeline R55): the pages OCR has not read are left, and owed below */
+    const t3 = await tier3Extend(e, { sha, storeName, i2text: built.i2text, wiredTier: tier, tier2PerPage: null, fmt,
+      seed: built.seed, invocations: 0, liveCalibration: (q) => this.#liveCalibration(q) });
     const chain3 = (t3.chainSet ? t3.chain : null) || layerChainFor(t3.i2text, { tier: t3.wiredTier, container: fmt });
     const at = stampInstant("second");
     /* R72 (T50; N1082): the door's `trace` and `memberRef`, handed on only when each is a non-empty string, so a call
@@ -2608,36 +2696,23 @@ export class Extraction {
     /* R71 by R34's rule: the stored reading's type, `at` the capture instant, page count and container extent carried,
        reading-pipeline R18's provenance, the read's own counts and emitted fields, and `reextracted`. */
     const chain = t4.chain;
-    const vw = this.view();
-    const wired = readText(decodeView(t4.i2text), { headers: null, locator: basis.locator || null,
-                                                    content_type: null, at: stored.at ?? null, ...(vw ? { view: vw } : {}) });
-    const reading = readingFromWire({
-      wired, docType: { type: { key: stored.content_type ?? null, version: stored.reader_version ?? null } },
-      chain, wiredTier: t4.wiredTier, fmt, retrieved: stored.at ?? null,
-      tier2note: t2Note, ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting });
-    reading.page_count = Number.isInteger(structure.pages) && structure.pages > 0
-      ? structure.pages : (Number.isInteger(stored.page_count) && stored.page_count > 0 ? stored.page_count : null);
-    { const pb = pageBoxesFrom(structure.pageBoxes);
-      if (pb) reading.page_boxes = pb;
-      else if (Object.prototype.hasOwnProperty.call(stored, "page_boxes")) reading.page_boxes = stored.page_boxes; }
-    if (Object.prototype.hasOwnProperty.call(stored, "container_extent")) reading.container_extent = stored.container_extent;
-    reading.provenance = await readingProvenance({ text: t4.i2text, chain, tier: t4.wiredTier, container: fmt,
-                                                   planeVersion: e.VERSION || null });
-    { const n = textCountsOf(t4.i2text); if (n) Object.assign(reading, n); }
-    /* reading-pipeline R35 (C17): the re-read counts its words as the first reading does. */
-    { const n = textWordsFor(t4.i2text); if (n) Object.assign(reading, n); }
-    Object.assign(reading, emittedFieldsOf(t4.i2text));
+    /* the OCR pages tier 3 left that the AI did not fill stay owed (R103) */
+    const ocrLeft = t3.left ? t3.left.pages.filter((pg) => !t4.filled.includes(pg)) : [];
+    const reading = await this.#composedReread({ stored, basis, i2text: t4.i2text, chain, wiredTier: t4.wiredTier, fmt, pages: built.pages, env: e,
+      ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting, t3: { ...t3, left: ocrLeft.length ? { cursor: ocrLeft[0], pages: ocrLeft } : null },
+      tier2note: t2Note });
     /* R74 (T46; N897 (2)): the test-instance label the plane handed in for this act, recorded on the reading it writes;
        a label already stored stays, whatever this act was admitted by. */
     const untested = untestedOf(tx);
-    keepUntested(reading, stored, untested);
+    if (!reading.untested) keepUntested(reading, stored, untested);
     const act = tx && typeof tx.act === "string" && tx.act ? tx.act : null;
     reading.reextracted = {
       at, by, engine: t3.engine ? t3.engine.engine : null, version: t3.engine ? t3.engine.version : null,
       calibration: t3.engine ? t3.engine.calibration ?? null : null, pages: t3.filled, via: "op=pagetranscribe",
       ai: { engine: t4.engine.engine, version: t4.engine.version, pages: t4.filled, act },
     };
-    const w = await this.#writeReread({ basis, sha, reading, text: t4.i2text, author: by, viewer });
+    const owedOcr = ocrLeft.length ? { kind: "ocr", sha, cursor: ocrLeft[0], pages_left: ocrLeft.length } : null;
+    const w = await this.#writeReread({ basis, sha, reading, text: t4.i2text, author: by, viewer, job: owedOcr });
     return { status: 200, body: { ok: true, op, sha256: sha, tier: t4.wiredTier, notes,
       transcription: {
         performed: true, written: w.ok === true, ...unwrittenWhy(w, "transcription"),
@@ -2651,7 +2726,9 @@ export class Extraction {
         staled: w.staled ?? 0, units: w.indexed ?? null, observed: w.observed ?? null, compared: w.compared ?? null,
         after_read: w.afterRead ?? null,
       },
-      ...(w.ok === true ? { says: fillWords("transcribe.done", { pages: pagesSaid(asked.pages ?? t4.filled) }) } : {}) } };
+      /* (fix round 9, G126e; R71 as R103 amends it) the pages filled, never the pages asked */
+      ...(w.ok === true ? { says: fillWords("transcribe.done", { pages: pagesSaid(t4.filled) }) } : {}),
+      ...(w.registration ? { owed: w.registration } : {}) } };
   }
 
   /* ---- drift obligations (R38–R40) ---- */
@@ -2722,6 +2799,8 @@ function owedAnswer(entry, a) {
    R24), so nothing of it was kept. Nothing for a written one. */
 function unwrittenWhy(w, act) {
   if (w.ok === true) return {};
+  /* (fix round 9, R103) stand-in until T52 (K4269); the row owed: `extraction.why.basis_changed` */
+  if (w.changed === true) return { why: localize("extraction.why.basis_changed", "the stored reading changed while this {act} was being made, so it was not written over; it can be asked again", { act }) };
   return w.rolledBack === true
     ? { why: say("extraction.why.record_reading_capture", { act }) }
     : { why: say("extraction.why.record_reading_capture_written") };

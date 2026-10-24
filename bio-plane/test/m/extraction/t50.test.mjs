@@ -6,7 +6,7 @@
    control (K874). Each test names its ids. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, withEntry, i2, noText } from "./fixture.mjs";
+import { fresh, bundle, hold, withEntry, i2, noText, pageUnits } from "./fixture.mjs";
 import { extractionOps } from "../../../src/extraction/index.mjs";
 import { pageTranscribeOp } from "../../../src/extraction/ops.mjs";
 
@@ -46,7 +46,7 @@ async function heldScan(opts = {}, { text = SCAN } = {}) {
   bundle(w.s, "B-1");
   const d = await hold(w.evidence, "%PDF-1.7 " + Math.random());
   w.x.writeReading({ bundleId: "B-1", captureSha: d, reading: { content_type: "generic", reader_version: 1, found: false,
-    entities: [], facts: {}, at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 3 } });
+    entities: [], facts: {}, at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 3 }, textUnits: pageUnits(text) });
   const tr = transcriber(opts);
   w.x.registerTranscriber("plane", tr.t);
   const payloads = [];

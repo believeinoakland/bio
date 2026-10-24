@@ -4,7 +4,7 @@
    are read by key from `words.json` (`./words.mjs`); a key the list lacks fails the test. Each test names its ids. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, doc, withEntry, i2, noText } from "./fixture.mjs";
+import { fresh, bundle, hold, doc, withEntry, i2, noText, pageUnits } from "./fixture.mjs";
 import { REEXTRACT_CHECKS, TRANSCRIBE_WORDS } from "../../../src/extraction/index.mjs";
 import { WORD } from "./words.mjs";
 import { crc32 as zlibCrc } from "node:zlib";
@@ -44,12 +44,12 @@ function storedZip(name, data) {
 }
 const writes = (w) => JSON.stringify([w.rows(`SELECT * FROM readings`), w.rows(`SELECT * FROM capture_text`), w.rows(`SELECT * FROM reading_history`)]);
 
-async function heldScan() {
+async function heldScan(text = SCAN) {
   const w = fresh();
   bundle(w.s, "B-1");
   const d = await hold(w.evidence, "%PDF-1.7 " + Math.random());
   w.x.writeReading({ bundleId: "B-1", captureSha: d, reading: { content_type: "generic", reader_version: 1, found: false,
-    entities: [], facts: {}, at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 3 } });
+    entities: [], facts: {}, at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: text.pages.length }, textUnits: pageUnits(text) });
   return { w, d };
 }
 /* A baseline JPEG's first bytes (SOI, APP0 JFIF): the jpeg entry reads the signature and decodes nothing. */
@@ -71,7 +71,7 @@ test("R47 (T43, N862): C-51.7's translation is words.json's transcribe.refused.n
   assert.notEqual(REEXTRACT_CHECKS.REEXTRACT_NOT_READ.translation, WORD("transcribe.refused.notdeployed"));
 });
 
-test("R71 (T43, N862): a written transcription's label is transcribe.label and says is transcribe.done over the pages asked for; with the write rolled back no says", async () => {
+test("R71 R103 (T43, N862; fix round 9, G126e): a written transcription's label is transcribe.label and says is transcribe.done over the pages filled, never the pages asked; with the write rolled back no says", async () => {
   const { w, d } = await heldScan();
   const tr = transcriber({ answer: () => ({ ok: true, engine: "claude-test", version: "1", pages: [{ page: 1, text: "AI text" }] }) });
   w.x.registerTranscriber("plane", tr.t);
@@ -79,7 +79,7 @@ test("R71 (T43, N862): a written transcription's label is transcribe.label and s
   assert.equal(r.body.transcription.written, true);
   assert.equal(r.body.transcription.label, WORD("transcribe.label"));
   assert.deepEqual(tr.calls.transcribe.map((q) => q.pages), [[1, 2]]);
-  assert.equal(r.body.says, WORD("transcribe.done").replace("{pages}", "2, 3"));
+  assert.equal(r.body.says, WORD("transcribe.done").replace("{pages}", "2"), "page 2 filled of pages 2 and 3 asked");
   /* negative control: a listener refuses the write, so nothing was written and nothing is said done */
   const v = await heldScan();
   v.w.x.registerTranscriber("plane", transcriber().t);
@@ -96,7 +96,7 @@ test("R71 (T43, N862, K2689): transcribe.none only when agent-worker was asked a
   assert.deepEqual([r.status, r.body.transcription.performed, r.body.transcription.written], [200, false, false]);
   assert.equal(r.body.says, WORD("transcribe.none").replace("{pages}", "2, 3").replace("{why}", r.body.transcription.why));
   assert.equal(writes(w), before);
-  const n = await heldScan();
+  const n = await heldScan(i2([{ page: 0, text: "all text" }]));
   n.w.x.registerTranscriber("plane", transcriber().t);
   const z = await withEntry(pdfEntry(i2([{ page: 0, text: "all text" }]), 1), () => n.w.x.pageTranscribe({ captureSha: n.d, ...member1 }));
   assert.deepEqual([z.body.transcription.performed, "says" in z.body], [false, false], "no page left: the AI was not asked");
