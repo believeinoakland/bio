@@ -155,6 +155,30 @@ test("R47 (G134d, DOCS O4 at the interface): every part an entry emits is a unit
   });
 });
 
+test("R47 (G166): a paragraph a text_box part names in paras is no body unit, so the box's words are one unit of kind text_box; without paras every paragraph stays a body unit", async () => {
+  const paragraphs = [0, 1, 2, 3, 4].map((para) => ({ para, text: para === 3 ? "words inside the box" : `Body paragraph ${para}` }));
+  const reading = (paras) => ({ format: "x9box", text: async () => ({ container: "docx", document: paragraphs.map((p) => p.text).join("\n\n"), paragraphs,
+    parts: [{ kind: "text_box", ref: "\u00b64", part: "word/document.xml", text: "words inside the box", ...(paras ? { paras } : {}) }],
+    counts: { chars: 100, undetermined: 0 } }) });
+  const unitsOf = async (paras) => {
+    let units;
+    await withEntry(reading(paras), async () => {
+      const { w, document } = await heldDoc("x", "x9box");
+      units = (await read(document, { evidence: ev(w), env: {}, unitsBudget: Infinity })).text_units;
+    });
+    return units;
+  };
+  const named = await unitsOf([3]);
+  assert.deepEqual(named.filter((u) => u.kind === "body").map((u) => u.extent.para), [0, 1, 2, 4], "paragraph 3 is no body unit");
+  assert.deepEqual(named.filter((u) => u.text === "words inside the box").map((u) => u.kind), ["text_box"], "the words are one unit, of one kind");
+  const two = await unitsOf([3, 4]);
+  assert.deepEqual(two.filter((u) => u.kind === "body").map((u) => u.extent.para), [0, 1, 2], "every paragraph the part names is left out");
+  const none = await unitsOf(null);
+  assert.deepEqual(none.filter((u) => u.kind === "body").map((u) => u.extent.para), [0, 1, 2, 3, 4], "control: without paras every paragraph is a body unit");
+  const bad = await unitsOf([9, "x", -1]);
+  assert.equal(bad.filter((u) => u.kind === "body").length, 5, "control: indices that name no paragraph leave every paragraph a body unit");
+});
+
 test("R47 R41 (G128g, G128h): a sheet's units carry lineRows, every block naming its rows, the repeated header line naming row 1, so a join that drops a repeated first line gives each row once", async () => {
   const lines = ["payer,payee,amount", ...Array.from({ length: 9000 }, (_, i) => `PBs${String(i).padStart(6, "0")},P002,${i + 1}`)];
   const entry = { format: "x9sheet", text: async () => ({ container: "csv", document: lines.join("\n"),
