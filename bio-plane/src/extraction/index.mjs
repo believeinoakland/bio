@@ -878,7 +878,12 @@ export class Extraction {
       const mine = this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, digest);
       home = mine && typeof mine.bundle_id === "string" && mine.bundle_id ? { bundleId: mine.bundle_id } : null;
     }
-    const left = (why, more = {}) => ({ ok: true, read: false, why, ...more });
+    /* (fix round 9, G168; R80) a held reading answers its own counters `{written, skipped}` (never `owed`: the OCR row's), so the job row learns the units
+       the door's read and the passes wrote */
+    const left = (why, more = {}) => {
+      const c = why === "READING_HELD" ? this.#completenessOf(digest).counters : null;
+      return { ok: true, read: false, why, ...(c ? { counters: { written: c.written, skipped: c.skipped } } : {}), ...more };
+    };
     if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left("NO_HOME");
     if (viewer !== undefined && !this.#sees(home.bundleId, viewer)) return left("NO_HOME");
     const stored = this.#storedDocument(home.bundleId, digest);

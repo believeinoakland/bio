@@ -1784,7 +1784,7 @@ async function acquireRun(cap, body0, opts0, t) {
      read only from a member's own capture (court-doctypes R2) never matches a fetch. */
   stageBegin(t, "profile");
   const profile = await profileOf({ ev, sha, ct, total, multipart, headers: profHeaders, locator: documentAddress, view: pv,
-                                    retrieved, origin: "fetch", parts: renderRecorded ? null : parts, firstPart });
+                                    retrieved, origin: "fetch", name: fetchedName(documentAddress), declaredType: ct, parts: renderRecorded ? null : parts, firstPart });
   /* R4, CAP-8: Google's hop, built from what this call established. Its confirmation is the FORMAT registry's own
      detection over the stored export's BYTES, whole (an OpenDocument package is recognised by its central directory,
      which lies past the first KiB `profile.format` reads for any export of real size): a detection that fell back to
@@ -2039,6 +2039,14 @@ async function addressReputation(address, given, scanner) {
   } finally { clearTimeout(timer); }
 }
 
+/** R17 (G170): the name a fetched address ends in, its last path segment decoded, else null. */
+function fetchedName(address) {
+  try {
+    const seg = new URL(String(address)).pathname.split("/").pop();
+    return seg ? decodeURIComponent(seg) : null;
+  } catch { return null; }
+}
+
 /** R17: the profile of a capture the store holds under `sha`: docprofile's `identify` over the headers, the document
  *  address, the content type and (single-part, textual, within bound) the stored bytes read back; `doctypeFor` under
  *  `view` (`profileView`); `profileRecord`; the normalisation rules and boundary; `format` from the bytes (the first
@@ -2049,7 +2057,10 @@ async function addressReputation(address, given, scanner) {
  *  needs a member's own capture does not match. `firstPart` (R96), the first bytes of the first part when the caller holds them, is
  *  what the ZIP magic is read from, so a capture of several parts reads none back for it. */
 export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved,
-                                  origin = null, parts = null, firstPart = null, unread = null }) {
+                                  origin = null, parts = null, firstPart = null, unread = null, name = null, declaredType = null }) {
+  /* R17 (G170): the file's name and the type its sender declared go to `detectFormat` beside the bytes (format-registry R31's name pass) */
+  const fileName = typeof name === "string" && name ? name : null;
+  const declared0 = (typeof declaredType === "string" && declaredType ? declaredType : null) || ct || null;
   const pv = view || { view: undefined, ids: null };
   let profileText = "", profileBytes = null, textEncoding = null;
   if (profilesAsText(ct, total, multipart)) {
@@ -2088,7 +2099,7 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
     ...(textEncoding ? { text_encoding: textEncoding } : {}),
     /* R17 (N3, N10): which jurisdiction view the content type was judged under. */
     jurisdiction_view: pv.ids,
-    format: detectFormat(formatBytes, ct || null),
+    format: detectFormat(formatBytes, declared0, fileName),
   };
   /* R101 (fix round 9, G130c; amends R17): a capture held in several parts, or whole past the bytes read back, is judged from RANGE READS of its head and of its
      tail, never from a 1 KiB prefix alone: `format-registry.detectFormat` over a range source reads the head for the signatures (an image before a PDF or a web
@@ -2108,12 +2119,12 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
       return new Uint8Array(0);
     } };
     let byBytes = null;
-    try { byBytes = await detectFormat(src, null); } catch { byBytes = null; }
+    try { byBytes = await detectFormat(src, null, fileName); } catch { byBytes = null; }
     if (byBytes && byBytes.format !== "undetermined") profile.format = byBytes;
     else {
       /* no signature in the bytes: the declared type, as before, from the head that was read (a ZIP is never made by a declared type) */
       let declared = null;
-      try { const head = await src.readRange(0, FORMAT_HEAD); declared = detectFormat(head.length ? head : null, ct || null); } catch { declared = null; }
+      try { const head = await src.readRange(0, FORMAT_HEAD); declared = detectFormat(head.length ? head : null, declared0, fileName); } catch { declared = null; }
       profile.format = declared && declared.format === "zip"
         ? { format: "undetermined", confidence: "none",
             signals: [...(declared.signals || []), "the stored bytes were not read as a ZIP archive, so the declared type does not make one"] }
