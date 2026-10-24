@@ -150,3 +150,16 @@ QUESTION (re R58, G134d; the one thing that decides what I build for R58's "a ro
 **Best reading (what I will build unless you say otherwise).** R1 gains a tenth kind in `content/extent.mjs` (the pattern of `envelope`, R33, K102): `doc-part {part, ref}`, canonical form `{kind, part, ref}`, human form "part <ref>", cited as `text`, bound by nothing the reading lists (checkContentExtent admits it with `undetermined` naming the unheld part list, R8; refused only when the shape is malformed), `extentRelation` `same` only as itself, `narrower` than `document`, otherwise `disjoint`. R58's kind is then read from the stored unit at exactly the row's extent (`unitsOf`), `part_kind` on `contentRead`, `contentRow`, `passageNotice` candidates and on the row's `ref` shown to the member ("footnote" by a stand-in keyed through `localize`, row owed to later-ux). The kind is no part of the content id (R3), as R58 says.
 
 **What I need from you:** write R1 and R58 to admit `doc-part` (or tell me the extent a footnote is cited at, if it is not `doc-part`). I carry on with everything else on this reading (kind lookup by exact extent; null where the unit carries none).
+
+## J9 · QUESTION
+
+QUESTION (re R61, R60, R58; what I need from `extraction.unitsOf` once job 41 merges: the three fields content reads that it does not answer today).
+
+**Finding.** Read on tranche/T51 as merged (job 28): `unitsOf(captureSha, {after, maxBytes})` answers each unit as `{extent, ref, text, truncated, seq, chain_kind}` and the index as `{state, counts: {offered, written, over_bound, unaddressable, truncated, skipped_named}, skipped, next?}` (`extraction/index.mjs:1988-2032`). Three things my entries read are not in it: a unit's `kind` (R107 says `unitsOf` answers it; job 41 adds the column), a sheet unit's `lineRows` (R107 says it is "stored with the reading's units" but names only `kind` as answered by `unitsOf`), and the job row's figures for R60's `searched` (how far the reading has got).
+
+**What I built, on this reading** (all four of my seam tests that read a real CSV and xlsx through `readHeld` are red by name today and stay so until job 41 merges, R-SEAM; `r9-sheet-real.test.mjs`):
+1. A sheet block unit carries `lineRows`: an array of 1-based row numbers, one per line of its `text`, as `reading-pipeline` R47 emits it (`blockRows`: a later block's first entry is the sheet's first row, its repeated header). `heldTextAt` drops that first line of a later block of the same sheet. A unit with no `lineRows` is joined whole, nothing dropped (a data line cannot be told from a repeated header without it).
+2. A unit carries `kind` (string of R107's closed list, or null/absent for a unit stored before it).
+3. `searched: {through, total}` is read from the `unitsOf` answer's `read_through` and `total` (the job row's counters, extraction R90's names) when it carries them, else from `counts.written` and `counts.offered`. It is absent for `state` `whole`, and for a capture never indexed (`state` null with no counts).
+
+**What I need from you:** have job 41 answer `lineRows` and `kind` on each unit and `read_through`/`total` on the answer of `unitsOf` (or tell me the names it will use and I change `normUnits` and `searchedOf`, nothing else). After job 41 merges, a CHANGE to me turns the four red tests green; I have not weakened them.
