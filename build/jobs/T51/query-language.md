@@ -110,4 +110,4 @@ Session session_01Uv26d4DQG2M8TmwzaWeGkF (QUERY-LANGUAGE #13). Tranche T51 merge
 3. agent-worker bundles `query.mjs` (manifest §14): its bundle is stale for this change, to be regenerated at the layer close. Its `requirements.test.mjs` R45 byte-identity and static-check tests already fail on the unchanged tranche (no lockfile or `node_modules` in `agent-worker/` and `agent-steps/`, so `npm ci` could not run there). agent-steps: all its tests pass.
 
 **Deferred:** none.
-Size (session_01Uv26d4DQG2M8TmwzaWeGkF): test runs 9, module lines 3015
+Size (session_01Uv26d4DQG2M8TmwzaWeGkF): test runs 9, module lines 3006
