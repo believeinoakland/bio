@@ -151,3 +151,13 @@ Size (session_01UqB6MGJZC34pq9fKcsf621): test runs 31, module lines 2903
 CHANGE B7 (K4863) handled. `decodeTextFallback` and its `typeof` switch are removed from `bio-plane/src/odf.mjs`; `readXmlText` calls `ooxml.decodeText` through the namespace import. ooxml has not merged, so 99 of 120 odf-reader tests are red by name now (every read goes through the decode: `ooxml.decodeText is not a function` is stated as `reader_failed:TypeError`); the 21 that pass read no part (detect, digest, quotes, predicate). Nothing else changed; all of J8's results hold once ooxml's `decodeText` merges (they were green with the stand-in). I need the CHANGE you promised when ooxml merges, to merge `tranche/T51` and re-run the module, impact and the checks. The J8 line "BOB may send CHANGE to delete it" is done.
 
 Size (session_01UqB6MGJZC34pq9fKcsf621): test runs 32, module lines 2870
+
+## J10 · COMPLETE
+
+CHANGE B8 (K4864) handled. Merged `tranche/T51` (ooxml #4 included) into the job branch and pushed. The tests kept red for `decodeText` are green: `test/m/odf-reader/` 120 of 120 with ooxml's real `decodeText` (UTF-16, declared Latin-1/windows-1252, partial count all pass through it).
+
+Users re-run: format-registry + doc-clean + acquisition 385 tests, 384 pass; capture, cap13, d57selflink, file-safety 399, 398 pass (1 = file-safety R24, accepted by name); office-readers range-units/detect-parts, extraction g41, reading-pipeline read, ooxml 105, 104 pass (1 = extraction g41 R97 ods, reported in J7, placed in job 28). New red, not mine: doc-clean "R3 R12 TOO_MANY_ENTRIES ... boundOf(office, entries)" (a doc-clean test of the archive-entries row that came with this merge; no odf-reader code is involved: it counts entries of a package copy).
+
+Checks: format 0 failures; architecture 22 files, 0; coverage 55 of 55, 0; ownership 16 files, 0; run.mjs: no odf finding, words 18,524 unchanged (inline 12, missingkey 5, none mine).
+
+Size (session_01UqB6MGJZC34pq9fKcsf621): test runs 34, module lines 2870
