@@ -25,8 +25,33 @@ const REACH = { assistantstate: ok({ on: true }), groupkeystate: ok({ on: true, 
    page; it draws nothing of its own. */
 export const DOCUMENT_STUB = Object.freeze({ id: "document", reads: () => ({}), render: () => "", acts: Object.freeze([]), words: Object.freeze([]) });
 
+/* R66 (G143; K4836, K4787): a test reads a screen only once it has drawn what the act answered, which it learns from COUNTS and events, never from a time. The plane
+   doubles' answers are counted while they are out (`out`); the platform's digests, which the event loop's ticks cannot see (they resolve on the thread pool, however
+   long a busy machine takes), are waited for by the event of their completion (`digesting`, `drained`), not by a number of ticks. `idle` settles until no answer
+   and no digest is out and no request has been added for three rounds running; a double a test holds on purpose (a gate) is waited on for a bounded number of rounds
+   only, so the test can read the screen as it stands while the answer is held. */
+let out = 0, digesting = 0, drainers = [];
+const counted = (a) => (typeof a === "function" ? async (req) => { out++; try { return await a(req); } finally { out--; } } : a);
+const subtle = globalThis.crypto && globalThis.crypto.subtle;
+if (subtle && !subtle.digest.counted) {
+  const real = subtle.digest.bind(subtle);
+  subtle.digest = (...a) => { digesting++; return real(...a).finally(() => { if (--digesting === 0) { const d = drainers; drainers = []; d.forEach((r) => r()); } }); };
+  subtle.digest.counted = true;
+}
+const drained = () => (digesting === 0 ? Promise.resolve() : new Promise((r) => drainers.push(r)));
+
+export async function idle(p, rounds = 400) {
+  let quiet = 0, seen = p.requests.length;
+  for (let i = 0; i < rounds && quiet < 3; i++) {
+    await drained();
+    await p.settle(10);
+    quiet = out === 0 && digesting === 0 && p.requests.length === seen ? quiet + 1 : 0;
+    seen = p.requests.length;
+  }
+}
+
 export async function open(path, { plane = {}, me = MEMBER, reachable = false, screens = SCREENS } = {}) {
-  const p = await boot({ screens, path, plane: { whoami: ok(me), ...(reachable ? REACH : {}), ...plane } });
+  const p = await boot({ screens, path, plane: { whoami: ok(me), ...(reachable ? REACH : {}), ...Object.fromEntries(Object.entries(plane).map(([op, a]) => [op, counted(a)])) } });
   await p.settle();
   return p;
 }
@@ -59,8 +84,8 @@ export async function press(p, op, { reason, sel = "" } = {}) {
     await p.click(slot.querySelector('[data-shell="reason-send"]'));
   }
   /* an act's `done` may itself call the plane (acquire's promote, after `cs.digest`, which the platform answers off the
-     event loop): let every request it makes be answered */
-  for (let i = 0; i < 12; i++) { await p.settle(20); await new Promise((r) => setTimeout(r, 2)); }
+     event loop): let every request it makes be answered (counted, R66) */
+  await idle(p);
   return { slot: () => main(p).querySelector(`[data-slot="${ai}"]`) };
 }
 

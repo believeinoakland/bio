@@ -168,7 +168,7 @@ test("R57 (G7) an upload answered with its reading draws no 'reading follows' be
 
 /* ---- G6: the upload's register ---- */
 
-test("R21 (G6) a multipart upload is registered with its whole first, then its parts; a single-part upload registers its one file", async () => {
+test("R21 (G6; G127a, G127c) a multipart upload is registered as its whole, one row carrying its parts in order and no part as a row; a single-part upload registers its one file", async () => {
   const WHOLE = "e".repeat(64), P1 = "1".repeat(64), P2 = "9".repeat(64);
   const FILE = new File(["x"], "w40.pdf", { type: "application/pdf" });
   const multi = ok({ ok: true, existed: false, capture: { sha256: WHOLE, bytes: 41502904 },
@@ -178,8 +178,9 @@ test("R21 (G6) a multipart upload is registered with its whole first, then its p
   fill(p, { "ci-file": FILE, "ci-how-made": true, "ci-where": "City hall", "ci-what": "The packet." });
   await press(p, "captureupload");
   const reg = p.byOp("promote")[0].body.register;
-  assert.deepEqual(reg.map((r) => r.sha256), [WHOLE, P1, P2], "the whole first, then the parts in order");
+  assert.deepEqual(reg.map((r) => r.sha256), [WHOLE], "the register is the whole alone: a part's digest is no row (K4833)");
   assert.equal(reg[0].bytes, 41502904, "with its total size");
+  assert.deepEqual(reg[0].parts, [{ sha256: P1, path: "snapshots/upload-part-1", bytes: 8388608 }, { sha256: P2, path: "snapshots/upload-part-2", bytes: 8388608 }], "the parts, in order, on the whole's row");
   const single = await open("/app/capture/file", { captureupload: ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 9 }, document: { file: `snapshots/upload-${SHA}`, locator: `upload:${SHA}`, capture: { method: "uploaded", sha256: SHA, encoding: "binary", bytes: 9 }, source: { kind: "uploader" } } }) });
   fill(single, { "ci-file": FILE, "ci-how-made": true, "ci-where": "City hall", "ci-what": "The packet." });
   await press(single, "captureupload");
@@ -198,7 +199,9 @@ test("R58 (G2 seam) capture's own declaration of acquire accepts `project` (capt
 /* ---- B31: a session whose owed fetch ended in a stated refusal ---- */
 
 test("R58 (B31) an entry kept with `failed` draws the failure in the refusal's words at once, from the poll and from the list, without waiting for three asks", async () => {
-  const failedEntry = { session: SESSION, locator: ADDRESS, started: "2026-10-22T10:00:00Z", outstanding: 1, fetch_pending: { since: "2026-10-22T10:00:00Z", declared_bytes: BYTES, why: "LARGE_DECLARED", failed: "TOO_LARGE" } };
+  /* listed for a day from the fetch (N1, fix round 9; K4855): the entry is recent */
+  const recent = new Date(Date.now() - 600000).toISOString().split(".")[0] + "Z";
+  const failedEntry = { session: SESSION, locator: ADDRESS, started: recent, outstanding: 1, fetch_pending: { since: recent, declared_bytes: BYTES, why: "LARGE_DECLARED", failed: "TOO_LARGE" } };
   const state = { listed: true, held: false };
   const p = await open(`/app/capture/address/${PROJ}`, { acquire: PENDING, heldat: heldat(state),
     opencaptures: () => ok({ ok: true, truncated: false, captures: state.listed ? [failedEntry] : [] }) });
