@@ -17,7 +17,8 @@ import { member, withEntry, i2, noText, ocrAnswer } from "../extraction/fixture.
 import { PENDING_RETRY_MAX_MS } from "../../../src/plane/pending.mjs";
 
 const hex = (b) => createHash("sha256").update(b).digest("hex");
-const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending ORDER BY registered_at, sha, kind`)];
+/* R97: the rows still held as work (owed, or ended for a stated reason); a finished row stays in the job table for its readers */
+const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending WHERE state <> 'finished' ORDER BY registered_at, sha, kind`)];
 const WHO = { author: "ann", actorMemberId: "ann", actorIdentity: "member:ann", actorViewer: "member:ann" };
 /* a document promoted the way the capture screen files one: its bundle, its provenance, the register (the screen's own composition is screens-intake's, not a use of this module) */
 const len = (t) => new TextEncoder().encode(t).length;

@@ -17,7 +17,8 @@ import { DECLARED_OPS } from "../../../src/plane/declared.mjs";
 
 const MiB = 1024 * 1024;
 const sha = (b) => createHash("sha256").update(b).digest("hex");
-const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending ORDER BY registered_at, sha, kind`)];
+/* R97: the rows still held as work (owed, or ended for a stated reason); a finished row stays in the job table for its readers */
+const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending WHERE state <> 'finished' ORDER BY registered_at, sha, kind`)];
 const wake = (x, at) => pendingOf(x.ctx).consumer().wake(at);
 async function world(env = { CAPTURES: bucketStandIn() }) {
   const x = await store({ env });

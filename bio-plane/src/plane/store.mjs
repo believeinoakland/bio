@@ -434,12 +434,22 @@ export class Store extends DurableObject {
        clear (record-core K23). Acquisition reads `cap.keepLater` as it reads `cap.waitUntil`: a keep that will not end inside the
        door's bound is written down here and put by the alarm, never left to a promise nothing keeps alive. */
     const pending = pendingOf(ctx, { env, store: () => this.#ownNamespace() || "bio", deliver: deliverOwedRender });
-    recordOf(ctx).declarePurge("plane", ["keeps_pending", "keeps_last", "acquire_stages"]);
+    recordOf(ctx).declarePurge("plane", ["keeps_pending", "keeps_last", "acquire_stages", "job_unit_attempts", "job_batches"]);   /* R9, R97 */
     capture.keepLater = (a) => pending.keepLater(a);
     capture.owedLater = (a) => pending.owedLater(a);   /* R77, acquisition R100: the ledger's `subresources` and `unpack` entries, registered the same way */
-    /* R83 (fix round 6, G8, G13; extraction R89): the same ledger handed to extraction, which owes it the repair of an old reading and the restart of a partial text at start; guarded, as extraction's own merge is later than this line */
+    /* R98 (fix round 9, G126; K4835 (2); 2c item 1): THE ONE REGISTRAR. Acquisition, capture and doorbell read it as they read `keepLater`: a
+       synchronous write of the job row, made inside the caller's filing transaction; the alarm is armed by `armJobs` after the commit. */
+    capture.registerJob = (e) => pending.registerJob(e);
+    capture.armJobs = () => pending.armJobs();
+    /* capture R113 (fix round 9, G127f; K4899): the object key of a digest in the evidence bucket, record-core's own (its R38, the prefix R2 hands
+       it), so a file past the request-body ceiling is written in parts under the key its whole is read by */
+    capture.evidenceKey = (digest) => `${this.#ownNamespace() || "bio"}/captures/${digest}`;
+    /* R83 (fix round 6, G8, G13; extraction R89), R98 (fix round 9; K4898 (1)): extraction's `owe` IS the registrar: its hook is handed `registerJob`
+       (synchronous, so a reader may owe inside its own transaction), the alarm armed beside each row kept; every `readHeld` the ledger makes also
+       carries `registerJob` and `armJobs` (pending.mjs). Guarded, as extraction's own merge is later than this line. */
     const extraction = extractionOf(ctx);
-    if (typeof extraction.registerOwe === "function") extraction.registerOwe((a) => pending.owedLater(a));
+    if (typeof extraction.registerOwe === "function")
+      extraction.registerOwe((a) => { const r = pending.registerJob(a); if (r && r.ok === true) void pending.armJobs(); return r; });
     /* R37 (T42; N826; K2607 rule 3, K2629, K2630; doorbell R25): doorbell, directly after capture in the modules' order,
        the one instance per host (actions' factory may have reached it first for its hold reader, actions R55); it takes no
        `env` of its own and reads capture's at each use, the instance above. */
@@ -521,7 +531,9 @@ export class Store extends DurableObject {
     const noticeProducers = noticeProducersOf(ctx, { membership: membershipOf(ctx), people, moneyChecks: moneyChecksOf(ctx), duties,
       answers: answersOf(ctx), inquiry: inquiryOf(ctx), credentials: credentialsOf(ctx), following: followingOf(ctx), standards,
       fileSafety, provenance, aiUse: aiUseOf(ctx), steps: stepsOf(ctx), questionExplorer, investigation: investigationOf(ctx),
-      review: reviewOf(ctx) });
+      review: reviewOf(ctx),
+      /* R98 (fix round 9): the job table's ended rows, a callback (a lower module reaches a higher one only so, as `updateNotice`, R52) */
+      readingsEnded: (q) => pending.readingsEnded(q) });
     /* K1868 (2): queue-producers' one instance per storage, built here with the providers queue would hand it
        (`Queue.PRODUCER_DEPS`), since its factory reads its deps on the first call only; handed to queue as its producers
        and to instance-setup, whose start registers `placeArrivals` through it (instance-setup R62, queue-producers R38),
@@ -741,6 +753,9 @@ export class Store extends DurableObject {
   async fetch(req0) {
     if (this.#retired) return retiredAnswer();
     const t0 = Date.now();
+    /* R102 (fix round 9, G93; K4565; scheduler R28): ANY REQUEST RE-ARMS. The scheduler's `heal` looks at the alarm at most once in five
+       seconds for the instance and never during a firing, arming a lost or spent one; it never raises the request's answer. */
+    try { await schedulerOf(this.ctx, this.env).heal(Date.now()); } catch { /* the watchdog's cron is the backstop */ }
     const req = await traceStamped(req0);   /* R73: `acquire`'s trace, from the header capture sends */
     const res = await this.#dispatch(req);
     /* R78 (fix round 5, E10; K4530; fix round 6, G12e): the I/O time this object spent on the route, to its response (a stream's, to its first

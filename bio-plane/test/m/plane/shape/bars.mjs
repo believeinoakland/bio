@@ -10,6 +10,10 @@ export const TICK_COUNT_BARS = Object.freeze({
   bytesServedPerFileByte: 8,     /* bytes those reads serve, as a multiple of the file's own bytes */
   unitsWritten: PIECE_UNITS_MAX, /* text units one tick adds: a piece */
   sql: 20_000,                   /* statements one tick runs on the object's SQL */
+  /* K4855 (2): from the second tick on, the evidence bytes a tick reads are bounded by the windows it needs, never the file: the sheet family's J-5 (a later tick hands the
+     store at most 5 MiB of ranged reads; a 12 MiB CSV's ticks measured about 4.4 MB each, the dialect head read again each tick). A reader that reads the whole file every tick
+     (8 times the file passed the bar above) fails this one. */
+  laterTickBytes: 5 * 1048576,
 });
 
 /** the failures of the counts of every tick of a run against the bars (empty: pass); `fileBytes` is the file's length */
@@ -20,6 +24,7 @@ export function tickCountFailures(ticks, fileBytes, bars = TICK_COUNT_BARS) {
     if (!c) { f.push(`tick ${t.n} states no counts`); continue; }
     if (c.gets > bars.gets) f.push(`tick ${t.n} read the evidence store ${c.gets} times, over ${bars.gets}`);
     if (c.bytesServed > bars.bytesServedPerFileByte * fileBytes) f.push(`tick ${t.n} served ${c.bytesServed} B of a ${fileBytes} B file, over ${bars.bytesServedPerFileByte} times it`);
+    if (t.n >= 2 && bars.laterTickBytes !== undefined && c.bytesServed > bars.laterTickBytes) f.push(`tick ${t.n} served ${c.bytesServed} B, over the ${bars.laterTickBytes} B a later tick's windows need`);
     if (c.unitsWritten > bars.unitsWritten) f.push(`tick ${t.n} wrote ${c.unitsWritten} units, over ${bars.unitsWritten}`);
     if (c.sql > bars.sql) f.push(`tick ${t.n} ran ${c.sql} statements, over ${bars.sql}`);
   }

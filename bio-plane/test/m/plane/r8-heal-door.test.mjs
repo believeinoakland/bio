@@ -71,6 +71,9 @@ async function lose(w) {   /* the alarm is lost: deleted, a row owed */
   assert.ok(s.pending.length >= 1, "a row is owed");
   await w.get("kill-alarm");
   assert.equal((await w.get("counters")).alarm, null, "the alarm is deleted");
+  /* the setup's own requests (the upload) had the frame's one look of these five seconds: the test's clock, outside the object, lets them pass */
+  await sleep(5_500);
+  assert.equal((await w.get("counters")).alarm, null, "and nothing armed it meanwhile");
 }
 
 test("R102 G93 L: a row owed and the alarm deleted, one ordinary read by the founder (op=owedwork) through the real door sets the alarm", { timeout: 180_000 }, async () => {
