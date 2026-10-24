@@ -73,8 +73,10 @@ export async function assess(before, after, ctx) {
 
   /* A shell is settled here and nothing below applies: its bytes are stable and
      its substance is absent, so every layer beneath would answer a question about
-     a document that was never captured. */
-  if (id.handler.shell)
+     a document that was never captured. Only a CERTAIN shell settles it, which `identify`'s `shell` answers (site-profiles R2; R12, R41; G140):
+     one framework marker on a server-rendered page is a POSSIBLE match, and a possibility
+     gates nothing. The verdict gates WATCHING and never the reading of the text. */
+  if (id.shell)
     return out({ verdict: "unwatchable", meaningful: null, events: [], connections: [],
                  why: id.handler.warning });
 

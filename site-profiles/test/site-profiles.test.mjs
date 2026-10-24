@@ -103,7 +103,7 @@ test("R2 kind is the winning handler's own classification of the address, and ab
   for (const ctx of CTXS) {
     const r = identify(ctx);
     if (r.confidence === CONFIDENCE.NONE) continue;
-    if (typeof r.handler.kind === "function") assert.equal(r.kind, r.handler.kind(ctx));
+    if (typeof r.handler.kind === "function") assert.equal(r.kind, r.handler.kind(ctx, r.confidence));
     else assert.ok(!("kind" in r));
   }
 });

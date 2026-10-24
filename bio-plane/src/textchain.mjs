@@ -1282,7 +1282,7 @@ export function gradeCeiling(chain, target, attestations = []) {
   const cap = derivationCap(chain, target);
   return { ceiling: cap, determinant: "derivation", by: [],
            why: cap == null
-             ? word("textchain.why.step_text_provenance", { page: String(target && Number.isInteger(target.page) ? ` for page ${target.page}` : "") })
+             ? word("textchain.why.step_text_provenance", { page: String(target && Number.isInteger(target.page) ? ` for page ${target.page + 1}` : "") })
              : word("textchain.why.bounded_weakest_step", { chain: String(describeChain(chain)) }) };
 }
 

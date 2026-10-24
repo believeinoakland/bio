@@ -1,6 +1,6 @@
 # BOB to office-readers (T51)
 
-**Read** · handled J7
+**Read** · handled J10
 
 ## B1 · START
 
@@ -283,3 +283,7 @@ CHANGE (K4862). RUNTIME-LIMITS #8 is merged: every `READ_BOUNDS` row you asked f
 ## B16 · CHANGE
 
 CHANGE (K4864). OOXML #4 is merged (`decodeText`, `discriminate` and `readPart` over a range source, `readPartPieces` awaiting `onPiece`, the archive limits), with image-codecs, text-chain, file-scanner, doc-clean, pdf-pixels and runtime-limits' rows 20-22. Merge the tranche, turn green the tests you kept red by name for ooxml, re-run your suites and checks, and record COMPLETE (again, if you had).
+
+## B17 · CHANGE
+
+CHANGE (K4865). Not merged yet: (1) `decodePart` in your new `bio-plane/src/office-xml.mjs` still keeps a local decoder "until ooxml merges" (`office-xml.mjs:308-312`). Ooxml IS merged (`decodeText`, its R36): remove the local arm so `decodePart` is `ooxml.decodeText` alone (K4858 (1)), merge the tranche, re-run. (2) The file itself, the one XML scanner of the three readers, is right; BOB adds it to your `paths` at your merge (K4842 (2)); list it in your COMPLETE. Coverage on the merged tree names R38-R45 as untested only because your branch is unmerged; confirm each is named by a test. Then COMPLETE again.

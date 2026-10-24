@@ -73,9 +73,9 @@ if (isMainThread) {
     r = { chars: supplied.document.length, determined: true, doctype: d, position_parts: pages.length, text_from: "document", parsed: { entities: [], facts: { pages: pages.length } } };
   } else r = readText(supplied, {});
   const ms = performance.now() - t0;
-  parentPort.postMessage({ endMB: Math.max(0, used() - base) / MB, ms, chars: r.chars,
+  parentPort.postMessage({ endMB: Math.max(0, used() - base) / MB, ms, chars: supplied.document.length,
     answers: { determined: r.determined, type: r.doctype.type.key, confidence: r.doctype.confidence, also: r.doctype.also,
                parsed: r.parsed, positionParts: r.position_parts, textFrom: r.text_from,
-               typeSawPages: seenPages === supplied.pages, scanned, sawText } });
+               typeSawPages: seenPages === supplied.pages, scanned, sawText, classifiedOver: r.doctype.classified_over || null } });
   }
 }
