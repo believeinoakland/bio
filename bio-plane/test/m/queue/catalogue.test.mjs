@@ -59,7 +59,9 @@ const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectati
   /* T51 fix round 7 (G61; notice-producers R27, R28; K4562): a finished background fetch and a finished or stopped ingest;
      queue-producers R37 (the scheduled edition's findings) and R39 (`wizard-base-updated`) */
   "fetch-done", "ingest-done", "ingest-stopped", "edition-published-as-scheduled", "scheduled-edition-stopped",
-  "wizard-base-updated"];
+  "wizard-base-updated",
+  /* T51 fix round 9 (G135f; K4933; notice-producers R29): a reading of a supplied document ended */
+  "reading-ended"];
 /* observation-log's twenty (R5): its twelve, the five sweep kinds (link-sweep R11, queue-producers R26) and the three
    notice kinds (network-notices R12, R13, queue-producers R27) its R33 added in T23 (K1099); and the overdue action
    clock (K611). */
@@ -256,6 +258,9 @@ test("R1 (G61): every kind notice-producers and queue-producers mint is named by
   assert.equal(classOfKind("place-profile-arrived"), "CONDITION");
   assert.equal(classOfKind("wizard-base-updated"), "FINDING");
   assert.equal(classOfKind("request-unsent"), "CONDITION");
+  // R1 (G135f; K4933): the reading notice notice-producers R29 mints is a FINDING a recipient disposes of
+  assert.equal(classOfKind("reading-ended"), "FINDING");
+  assert.ok(QUEUE_FINDING_KINDS["reading-ended"].trim().length > 0);
   // control: a near-miss is still outside the vocabulary
   for (const v of ["ingest-finished", "ingest_done", "fetch-complete", "INGEST-DONE", "FINDING::ingest-done"])
     assert.equal(classOfKind(v), null, v);
