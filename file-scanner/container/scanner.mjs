@@ -11,7 +11,9 @@
 //   POST /verify/<run>             {ok, files: {<file>: {verified, version, build_time, sigs, detail?}}}  (R6)
 //   PUT  /job/<job>/<i>            one target's copy
 //   DELETE /job/<job>/<i>          a copy whose digest did not hold (R2)
-//   POST /job/<job>/scan?set=<s>   {ok, engine_version, results: {<i>: {result, findings, detail?}}}  then removed
+//   POST /job/<job>/scan?set=<s>&limits=<json>   {ok, engine_version, results: {<i>: {result, findings, detail?}}}  then
+//                                  removed; `limits` is every figure the run is told (R35), sent by the Worker, which quotes
+//                                  them from the table; a scan without them is refused 400 LIMITS_MISSING
 //   PUT  /update/<run>/<file>      a file of the set already mirrored, handed over before the run so that `freshclam`
 //                                  brings it up to date and does not fetch it whole (R6)
 //   POST /update/<run>             {ok, files: [<name>], changed: [<name>]} | {ok:false, code, detail}  ClamAV's own
@@ -22,13 +24,15 @@
 //   DELETE /update/<run>           the run's directory removed
 import { createWriteStream, createReadStream } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, open, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { pipeline } from 'node:stream/promises';
 import { join } from 'node:path';
-import { NAME, json, run, serve, freshDir, removeDir } from './common.mjs';
-import { SCAN_MAX_BYTES, SCAN_TIME_MS } from '../src/limits.mjs';
+import { NAME, json, run, serve, freshDir, removeDir, fileHas, zipDirectory } from './common.mjs';
 
-const scanTimeMs = () => Number(process.env.SCAN_TIME_MS || SCAN_TIME_MS);
+// The kill budget for a run is the scan time ClamAV is told, plus this much for it to report what it reached first (the
+// environment's SCAN_TIME_MS stands in for the whole in a test).
+const KILL_GRACE_MS = 30_000;
+const scanTimeMs = (limits) => (process.env.SCAN_TIME_MS ? Number(process.env.SCAN_TIME_MS) : limits.scan_time_ms + KILL_GRACE_MS);
 const CLAMSCAN = process.env.CLAMSCAN || 'clamscan';
 const SIGTOOL = process.env.SIGTOOL || 'sigtool';
 export const MIRROR_HOST = 'database.clamav.net';
@@ -38,10 +42,27 @@ const jobs = new Map();
 const sigRoot = () => process.env.FILE_SCANNER_SIGS || '/var/lib/file-scanner/sigs';
 
 // R3: archives, OLE2, PDF and HTML scanned inside; a file past ClamAV's own limits alerts (`Heuristics.Limits.*`) and
-// is answered `unknown`, never `clean`. Every match is listed (`--allmatch`), and only the loaded set is read (R4).
-const SCAN_FLAGS = ['--no-summary', '--stdout', '--allmatch=yes', '--scan-archive=yes', '--scan-ole2=yes',
-  '--scan-pdf=yes', '--scan-html=yes', '--alert-exceeds-max=yes', '--alert-encrypted=no', '--bytecode=yes',
-  `--max-filesize=${SCAN_MAX_BYTES}`, `--max-scansize=${SCAN_MAX_BYTES * 4}`];
+// is answered `unknown`, never `clean`; a password-protected one alerts (`Heuristics.Encrypted.*`) and is `encrypted`.
+// Every match is listed (`--allmatch`), and only the loaded set is read (R4).
+const FIXED_FLAGS = ['--no-summary', '--stdout', '--allmatch=yes', '--scan-archive=yes', '--scan-ole2=yes', '--scan-pdf=yes',
+  '--scan-html=yes', '--alert-exceeds-max=yes', '--alert-encrypted=yes', '--bytecode=yes'];
+
+/** R35: the figures a scan is run with, each told to ClamAV explicitly, none left at its default. */
+export const LIMIT_NAMES = Object.freeze(['max_filesize', 'max_scansize', 'max_files', 'max_recursion', 'scan_time_ms', 'embedded_pe',
+  'html_normalize', 'script_normalize', 'zip_type_rcg', 'partitions', 'icons_pe', 'zip_directory']);
+
+/** The limits of a request, or null when one is missing or is not a positive whole number. */
+export function limitsOf(param) {
+  let l;
+  try { l = JSON.parse(param || ''); } catch { return null; }
+  if (!l || typeof l !== 'object' || !LIMIT_NAMES.every((n) => Number.isSafeInteger(l[n]) && l[n] > 0)) return null;
+  return Object.fromEntries(LIMIT_NAMES.map((n) => [n, l[n]]));
+}
+
+export const scanFlags = (l) => [...FIXED_FLAGS, `--max-filesize=${l.max_filesize}`, `--max-scansize=${l.max_scansize}`,
+  `--max-files=${l.max_files}`, `--max-recursion=${l.max_recursion}`, `--max-scantime=${l.scan_time_ms}`,
+  `--max-embeddedpe=${l.embedded_pe}`, `--max-htmlnormalize=${l.html_normalize}`, `--max-scriptnormalize=${l.script_normalize}`,
+  `--max-ziptypercg=${l.zip_type_rcg}`, `--max-partitions=${l.partitions}`, `--max-iconspe=${l.icons_pe}`];
 
 async function receive(req, path) {
   await mkdir(join(path, '..'), { recursive: true });
@@ -59,10 +80,11 @@ async function loadedSet() {
   return names.find((n) => NAME.test(n) && !n.endsWith('.partial')) || null;
 }
 
-/** One clamscan output line per file: `<path>: <name> FOUND`, `<path>: OK`, or another state. */
+/** One clamscan output line per file: `<path>: <name> FOUND`, `<path>: OK`, or another state. A match is a finding, a
+ *  limit alert (`Heuristics.Limits.Exceeded.<name>`), or an encrypted alert (`Heuristics.Encrypted.<type>`). */
 export function parseScan(out, files) {
   const results = {};
-  for (const [i, path] of files) results[i] = { found: [], limits: [], ok: false };
+  for (const [i, path] of files) results[i] = { found: [], limits: [], encrypted: [], ok: false };
   const byPath = new Map(files.map(([i, p]) => [p, i]));
   for (const line of out.split('\n')) {
     const m = /^(.*): (.+?) (FOUND|OK|ERROR)$/.exec(line) || /^(.*): (OK)$/.exec(line);
@@ -72,17 +94,59 @@ export function parseScan(out, files) {
     const r = results[i];
     if (m[2] === 'OK') { r.ok = true; continue; }
     if (m[3] !== 'FOUND') continue;
-    const lim = /^Heuristics\.Limits\.Exceeded\.([A-Za-z]+)$/.exec(m[2]);
-    if (lim) r.limits.push(lim[1]); else r.found.push(m[2]);
+    const lim = /^Heuristics\.(?:Limits\.Exceeded|Exceeds\.Max)(?:\.([A-Za-z]+))?$/.exec(m[2]);
+    const encType = /^Heuristics\.(?:[A-Za-z0-9]+\.)*Encrypted(?:\.([A-Za-z0-9]+))?/.exec(m[2]);
+    if (lim) r.limits.push(lim[1] || 'Unspecified');
+    else if (encType) r.encrypted.push((encType[1] || 'unknown').toLowerCase());
+    else r.found.push(m[2]);
   }
   const verdicts = {};
   for (const [i, r] of Object.entries(results)) {
     if (r.found.length) verdicts[i] = { result: 'found', findings: [...new Set(r.found)] };
+    else if (r.encrypted.length) verdicts[i] = { result: 'encrypted', findings: [], detail: `ENCRYPTED:${r.encrypted[0]}` };
     else if (r.limits.length) verdicts[i] = { result: 'unknown', findings: [], detail: `LIMIT:${r.limits[0]}` };
     else if (r.ok) verdicts[i] = { result: 'clean', findings: [] };
     else verdicts[i] = { result: 'unknown', findings: [], detail: 'CLAMAV_ERROR' };
   }
   return verdicts;
+}
+
+const OLE2 = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+const ENCRYPTED_PACKAGE = Buffer.from('EncryptedPackage', 'utf16le');
+
+/** A ZIP's central directory: `{encrypted}` when an entry among the first `max_files` has its encryption flag, `{limit}`
+ *  when the directory is over the limit, else `{}`. */
+async function zipEncrypted(fh, size, limits) {
+  const d = await zipDirectory(fh, size, { maxEntries: limits.max_files, maxBytes: limits.zip_directory });
+  if (d.limit) return { limit: d.limit };
+  return d.entries.some((e) => e.flags & 1) ? { encrypted: 'zip' } : {};
+}
+
+/** What the image itself can tell of a target beside ClamAV's answer (R3, G136a): a password-protected ZIP (an entry's
+ *  encryption flag) or Office document (an OLE2 container holding an `EncryptedPackage`), `{encrypted: <type>}`; a RAR,
+ *  which the image does not unpack, `{unopenable: 'rar'}`; a directory past the limit, `{limit}`. Never throws. */
+export async function inspect(path, limits) {
+  let fh;
+  try {
+    fh = await open(path, 'r');
+    const { size } = await fh.stat();
+    const head = Buffer.alloc(Math.min(size, 8));
+    await fh.read(head, 0, head.length, 0);
+    if (head.subarray(0, 6).equals(Buffer.from('Rar!\x1a\x07', 'latin1'))) return { unopenable: 'rar' };
+    if (head[0] === 0x50 && head[1] === 0x4b) return await zipEncrypted(fh, size, limits);
+    if (head.equals(OLE2) && await fileHas(fh, size, ENCRYPTED_PACKAGE)) return { encrypted: 'office' };
+    return {};
+  } catch { return {}; } finally { await fh?.close().catch(() => {}); }
+}
+
+/** One target's verdict: ClamAV's, unless a finding is not ClamAV's to make less than it is: `found` stands; then what the
+ *  image saw (`encrypted`, `unopenable`, a directory limit) replaces a `clean` or an `unknown`. */
+export function settle(verdict, seen) {
+  if (verdict.result === 'found') return verdict;
+  if (seen.encrypted && verdict.result !== 'encrypted') return { result: 'encrypted', findings: [], detail: `ENCRYPTED:${seen.encrypted}` };
+  if (seen.unopenable) return { result: 'unknown', findings: [], detail: `UNOPENABLE:${seen.unopenable}` };
+  if (seen.limit && verdict.result === 'clean') return { result: 'unknown', findings: [], detail: `LIMIT:${seen.limit}` };
+  return verdict;
 }
 
 /** R6: what `sigtool --info` states of one signature file, and whether its digital signature verified. */
@@ -189,14 +253,17 @@ async function routes(req, res, url) {
       let status = 200, body;
       try {
         const set = url.searchParams.get('set');
-        if (!set || set !== (await loadedSet())) { status = 409; body = { ok: false, code: 'SET_NOT_LOADED' }; }
+        const limits = limitsOf(url.searchParams.get('limits'));
+        if (!limits) { status = 400; body = { ok: false, code: 'LIMITS_MISSING' }; }
+        else if (!set || set !== (await loadedSet())) { status = 409; body = { ok: false, code: 'SET_NOT_LOADED' }; }
         else {
           const files = (await readdir(dir)).filter((n) => /^\d+$/.test(n)).map((n) => [n, join(dir, n)]);
           let results = {};
           if (files.length) {
-            const r = await run(CLAMSCAN, [...SCAN_FLAGS, `--database=${join(sigRoot(), set)}`, ...files.map(([, f]) => f)], { ms: scanTimeMs() });
+            const r = await run(CLAMSCAN, [...scanFlags(limits), `--database=${join(sigRoot(), set)}`, ...files.map(([, f]) => f)], { ms: scanTimeMs(limits) });
             results = parseScan(r.out, files);
             if (r.timedOut) for (const [i] of files) if (results[i].result !== 'found') results[i] = { result: 'unknown', findings: [], detail: 'LIMIT:ScanTime' };
+            for (const [i, f] of files) results[i] = settle(results[i], await inspect(f, limits));
           }
           body = { ok: true, engine_version: await clamavVersion(), results };
         }
