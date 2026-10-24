@@ -95,3 +95,7 @@ COMPLETE: fix round 9, G140 and G131g (R2, R20, R21, R22) applied; details in bu
 Merged `tranche/T51`; `ooxml.decodeText` is the real one. The R22 seam test and all the tests I had kept red by name are green. One change: the real function echoes `name` back (null when none given), so `digests` now passes `ctx.name || ctx.locator || declared`, and the refusal always names the source or the encoding. `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit site-profiles/test/`: 46 pass, 0 fail. format 0 (176 modules); architecture 0; coverage 22 of 22 ids, 0; words 0 (plain 0, testcopy 0, missingkey 0, inline 0); ownership below. Nothing deferred. The REPORT of J4 (docprofile/pipeline.mjs:77 and monitoring/index.mjs:635-636 read `id.shell`) stands.
 
 Size (session_015KRmXt7cbEfmR33Lj1GWYb): test runs 9, module lines 2095
+
+## J5 · COMPLETE
+
+COMPLETE (again) after CHANGE B5: merged tranche/T51 with the real ooxml decodeText; the 19 tests kept red by name are green; one fix (the refusal names the declared encoding when no name is given). site-profiles 46 pass, 0 fail; format, architecture, coverage 22/22, words, ownership 0 failures. J4's REPORT stands (docprofile pipeline.mjs:77 and monitoring index.mjs:635-636 read id.shell).
