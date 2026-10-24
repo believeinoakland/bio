@@ -79,3 +79,6 @@ Size (session_01XfNoWiwyETDV2uHxVRHPQy): test runs 3, module lines 241
 **Entries applied.** `image`/`rows_pixels` 201,326,592 for all three (new); `pdf`/`object_stream` changed to 33,554,432 for all three (was 16 MiB; standard was below, so 32 MiB); `pdf`/`xmp` 2,097,152 for all three (new); keys `limit.<kind>.<name>`. Tranche merged first. Tests: the added-rows test now holds 22 rows (R30, R31); the protective-figures test's `pdf/object_stream` expectation changed from 16 MiB to 32 MiB (the figure BOB changed). No other file read `pdf/object_stream` through `boundOf` yet (grep). **Deferred.** None. **Found in another module.** None. **Words.** None. **Generated artifacts made stale.** None.
 
 **Run.** Module tests: 52 tests, 52 pass, 0 fail. Checks below.
+Checks (civicos-process): format 0 failures; architecture 0 failures; coverage 32 of 32 ids named, 0 failures; ownership 0 failures; words 17 failures, all in other modules as before, none mine.
+
+Size (session_01XfNoWiwyETDV2uHxVRHPQy): test runs 4, module lines 244
