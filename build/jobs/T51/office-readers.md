@@ -127,3 +127,7 @@ Reds seen that are not mine: file-safety `rows.test.mjs` R24 (on the START's lis
 Replaces nothing: J7 stands (decodeText fallback in office-xml.mjs until ooxml merges); no answer needed to complete.
 
 **B14/B15 applied.** Local decoder removed (no `localDecode`); `office-xml.mjs` keeps only the scanner, `decodePart` (ooxml `decodeText` by namespace import; until ooxml merges it, the plain UTF-8 reading every part had, no second decode) and the rest, which BOB adds to `paths`. The decoded-characters constant is gone: `boundOf("office","decoded_chars")` (67,108,864) in docx.mjs and pptx.mjs, test reads the row. Piece handler returns `yieldNow()`'s promise (already). Capped-child note: a docx of 30 MiB declared text reads inside a 128 MB old space (`large-text.test.mjs`, passes), so the row does not bind below the 32 MiB ceiling. **Red by name until ooxml merges:** the two R41 tests in `chars-decode.test.mjs` (UTF-16, legacy charset, partial, ENCODING_UNSUPPORTED); a CHANGE turns them green. office-readers 117 pass, 2 red by name.
+
+## J9 · COMPLETE
+
+COMPLETE (B14, B15 applied): local decoder removed, office.decoded_chars read by boundOf, no uncommitted fallback. office-readers 117 pass; the two R41 tests (chars-decode.test.mjs) are red by name until ooxml's decodeText merges; send a CHANGE then. Checks as J8; office-xml.mjs still to be added to paths.
