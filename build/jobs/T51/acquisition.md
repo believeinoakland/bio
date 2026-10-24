@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01NGxtiMrUV97HNeAMcuRZdK · depth 2 · BLOCKED (context) · handled B38
+**Status** · session_01CAeRS3pRKYW3YBwY2Fp8nC · depth 2 · WORKING · handled B38
 
 ## J1 · REPORT
 
