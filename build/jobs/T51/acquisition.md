@@ -705,3 +705,28 @@ Size (session_01GRvfGdeJxS5azaPFdT5hLD): test runs 9, module lines 4426
 ## J42 · COMPLETE
 
 COMPLETE re B43 (job 86; G160, G161, G163; R39, R116). Record J41. Suite 336/336, users fail 0, checks 0 failures (ownership: the requirements file, per B3/B4). Control-plane's detail (job 43) is read from either shape.
+
+## J43 · COMPLETE
+
+COMPLETE re B44 (ACQUISITION #37; job 96; R17 amended, G170, K4985). Head below.
+
+Applied
+- `profileOf` takes `name` and `declaredType` and hands both to `detectFormat` (the bytes pass, and the range-read passes of R101: the name to the byte read, name and declared type to the declared-type fallback). On the fetch's path `acquire` passes the address's last path segment (decoded) as `name` and the response's content type as `declaredType`. A declared type the bytes contradict still decides nothing (format-registry's pass order); a PDF named `x.csv` stays a PDF.
+- R17's `not yet met` mark removed in `build/requirements/acquisition.md` (ownership lists that one file, accepted per B3/B4).
+- Own flaw fixed (P8): `stage-times.test.mjs` R95 (C5a) compared the cut stage's milliseconds at two moments for equality and failed about one run in three on a one-millisecond difference; it now compares every ended stage exactly and the cut stage to within a millisecond (8 of 8 runs green).
+- Capture's job 97 passes `name`/`declaredType` on the upload path; nothing here is needed from it to merge. No sentence added; no word row owed.
+
+Tests: `r17-name-type.test.mjs` (4 tests; red first, 3 red and the control green): CSV uploaded as `application/vnd.ms-excel` and as `application/octet-stream` profiled `csv`; `.tsv` declared `text/plain` profiled as a table; controls (PDF named `x.csv` stays `pdf`; the same CSV with no name is not `csv`); the fetch path through `acquire` (octet-stream CSV, text/plain TSV, PDF named x.csv).
+
+The four fields
+- cause: `profileOf` called `detectFormat(formatBytes, ct)` with no name, so format-registry R31's name pass never ran, on either path.
+- why missed: no test profiled bytes with a name or a non-text declared type; capture's upload path passes `ct` null for a non-text type.
+- red first: `r17-name-type.test.mjs` run before the change: 3 of 4 red (format `undetermined`/text), control green. Green after.
+- platform check: L; nothing platform-specific (no SQL, no storage call); node:sqlite only.
+
+Checks (run in this session)
+- acquisition suite: tests 340, pass 340, fail 0.
+- impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`, before commit): 0 modules; users of `profileOf` run: capture 338/338, doorbell 97/97, fail 0.
+- format 0 failures; architecture 0; coverage 76 of 76, 0; words 0 failures (acquisition: inline 0, plain 0, testcopy 0); ownership: acquisition's changed files, 0 failures after commit.
+
+Size (session_01QSsP9bjU3egDoknVjvNuYp): test runs 9, module lines 4432
