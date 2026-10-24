@@ -1,4 +1,4 @@
-/* R33 (T50; N1166): the page's `snippet` and `snippet_from`. A text snippet is cut from the record's body or title and
+/* R33 (T50; N1166): the page's `snippet` and `snippet_from`; R34 (fix round 9): `snippet_unit`. A text snippet is cut from the record's body or title and
    never from `meta`; a hit found through `passage:` carries the words of the first matching unit of its captures. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -129,4 +129,40 @@ test("R33 R7 the snippet arguments move and the statement text does not, for eve
   assert.equal(sql("alpha passage:beta"), sql(`"x' OR 1=1" passage:"y*/"`));
   const args = compile({ q: "alpha passage:beta", viewer: V }).statements.page().args;
   assert.ok(args.includes('"alpha"') && args.includes('"beta"'));
+});
+
+/* R34: the unit a passage snippet came from, found by the unit's own text, never by the snippet's words alone. */
+const unitText = (w, rowid) => w.all({ sql: "SELECT text FROM capture_text WHERE rowid = ?", args: [rowid] })[0]?.text;
+
+test("R34 a passage hit's snippet_unit is the row whose text holds the snippet's words, the first of two matching units by the R33 order", () => {
+  const w = scene();
+  const h = hitsOf(w, { q: "passage:420" });
+  assert.equal(h["DOC-1"].snippet_from, "passage");
+  assert.equal(typeof h["DOC-1"].snippet_unit, "number");
+  const text = unitText(w, h["DOC-1"].snippet_unit);
+  assert.match(text, /earlier page of the first capture/, "sha-a, seq 1 comes before sha-a seq 3 and sha-b");
+  for (const word of words(h["DOC-1"].snippet)) assert.ok(text.includes(word), `${word} is in the unit the snippet names`);
+  assert.match(unitText(w, h["DOC-2"].snippet_unit), /zebrafish habitat survey/);
+  const tie = world();
+  tie.bundle("T", { title: "Tie" });
+  tie.insert("capture_text", { capture_sha: "s", bundle_id: "T", extent_kind: "pdf-page", extent: '{"page":9}', ref: "p", seq: 0, text: "second extent holds needle", truncated: 0, chain_kind: "layer" });
+  tie.insert("capture_text", { capture_sha: "s", bundle_id: "T", extent_kind: "pdf-page", extent: '{"page":1}', ref: "p", seq: 0, text: "first extent holds needle", truncated: 0, chain_kind: "layer" });
+  assert.match(unitText(tie, hitsOf(tie, { q: "passage:needle" }).T.snippet_unit), /first extent/, "extent breaks a tie of capture and seq");
+});
+
+test("R34 control: a text hit, a text hit that also matches a passage, and an unmatched hit carry snippet_unit null; the key is always present", () => {
+  const w = world();
+  w.bundle("B", { title: "Notes", body: "the hydrant inspection notes", meta: "x" });
+  w.bundle("N", { title: "Other", body: "plain", meta: "y" });
+  unit(w, "B", "s", 0, "hydrant inspection passage text");
+  const text = hitsOf(w, { q: "hydrant passage:hydrant" }).B;
+  assert.deepEqual([text.snippet_from, text.snippet_unit], ["text", null]);
+  assert.equal(typeof hitsOf(w, { q: "x passage:hydrant" }).B.snippet_unit, "number", "the passage supplies it when text matches only meta");
+  for (const q of ["", "id:N", "passage:hydrant", "plain"]) {
+    for (const r of w.run({ q, viewer: V }).rows) {
+      assert.ok(Object.keys(r).includes("snippet_unit"), `${q}: ${r.bundle_id} carries the key`);
+      if (r.snippet_from !== "passage") assert.equal(r.snippet_unit, null, `${q}: ${r.bundle_id}`);
+    }
+  }
+  assert.deepEqual(Object.keys(w.run({ q: "", viewer: V }).rows[0]).slice(-3), ["snippet", "snippet_from", "snippet_unit"]);
 });
