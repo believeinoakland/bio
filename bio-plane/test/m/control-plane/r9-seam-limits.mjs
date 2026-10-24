@@ -26,11 +26,13 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { READ_BOUNDS, boundOf, statement } from "../../../src/read-bounds.mjs";
-import { byteLedger, capFor } from "../../../src/byte-ledger.mjs";
-import { zipChunks64, ZIP64_OVERHEAD } from "../../make-zip.mjs";
+import { capFor } from "../../../src/byte-ledger.mjs";
+import { zipChunks64 } from "../../make-zip.mjs";
 import { collect, generate } from "../../corpus.mjs";
+import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
+import { READING_DEFER_OTHER_BYTES } from "../../../src/control-plane/reading-gate.mjs";
 import { makeKit } from "./r8-kit.mjs";
-import { wrapScript, readCalls, doCalls } from "./wrap-entry.mjs";
+import { wrapScript, readCalls } from "./wrap-entry.mjs";
 
 const MiB = 1048576;
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
@@ -185,27 +187,40 @@ export function sections(kit, counting) {
   const adminOwed = async (sha) => { const q = await kit.get(await kit.founder(), { op: "owedwork", sha }); return (R(q).owed ?? []); };
 
   /* ---------------------------------------------------------------------------------------------------------------------------------------------------- 14a */
-  test("R9 seam §14a (G124a; R132, R125, R131, R130; PDF A3/A2): a PDF one byte over the alpha ceiling is STATED at once with its size, the limit and the key of the alpha sentence, owing nothing (no job row); one at the ceiling is not stated: its `reading` row is held and the alarm reads it", { timeout: 900000 }, async () => {
+  /* the over-ceiling PDF is made once: its upload is the member's act, the statement and the job table are what the other tests read of it */
+  let overDoc = null;
+  const overCeiling = () => (overDoc ??= (async () => {
     const { auth } = await kit.ownerOf("r9lim-a");
     const ceiling = boundOf("pdf", "bytes");
-    /* A3: ceiling + 1 */
-    const over = pdfExact("R132 over the ceiling one byte", ceiling + 1);
-    assert.equal(over.length, ceiling + 1);
-    const res = await upload(auth, over);
+    const bytes = pdfExact("R132 over the ceiling one byte", ceiling + 1);
+    assert.equal(bytes.length, ceiling + 1);
+    const res = await upload(auth, bytes);
     const body = await res.json();
-    assert.equal(res.status, 200, JSON.stringify(body).slice(0, 300));
-    const r = R(body);
-    assert.equal(r.ok, true);
-    assert.equal(r.capture.bytes, ceiling + 1, "the capture is held, whole");
-    const reading = r.document.reading;
+    return { auth, ceiling, bytes, sha: sha256(bytes), status: res.status, body, r: R(body) };
+  })());
+
+  test("R9 seam §14a (G124a; R132, R125 (a); PDF A3): a PDF one byte over the alpha ceiling is STATED at once, held whole, with its size, the limit and the key of the alpha sentence, and the answer promises no reading", { timeout: 900000 }, async () => {
+    const d = await overCeiling();
+    assert.equal(d.status, 200, JSON.stringify(d.body).slice(0, 300));
+    assert.equal(d.r.ok, true);
+    assert.equal(d.r.capture.bytes, d.ceiling + 1, "the capture is held, whole");
+    const reading = d.r.document.reading;
     assert.ok(reading, "the answer carries the statement as the document's reading");
     assert.deepEqual([reading.failure, reading.reason, reading.size, reading.bound, reading.key],
-      ["final", "TOO_LARGE", ceiling + 1, ceiling, statement("pdf", "bytes", ceiling + 1).key], "the size, the limit and the key of the alpha sentence");
-    assert.ok(String(reading.basis).includes(String(ceiling + 1)) && String(reading.basis).includes(String(ceiling)), "its sentence holds the file's size and the limit");
-    assert.equal(r.reading_pending, undefined, "stated, never promised");
-    assert.deepEqual(await adminOwed(sha256(over)), [], "nothing is owed: no job row of any kind");
-    assert.equal(R(await kit.get(await kit.founder(), { op: "reading", sha256: sha256(over) })).job.state, null, "and the job state of the digest is none");
-    /* A2: the ceiling itself is read: not stated, deferred as a row, the alarm reads it */
+      ["final", "TOO_LARGE", d.ceiling + 1, d.ceiling, statement("pdf", "bytes", d.ceiling + 1).key], "the size, the limit and the key of the alpha sentence");
+    assert.ok(String(reading.basis).includes(String(d.ceiling + 1)) && String(reading.basis).includes(String(d.ceiling)), "its sentence holds the file's size and the limit");
+    assert.equal(d.r.reading_pending, undefined, "stated, never promised");
+    assert.equal(R(await kit.get(await kit.founder(), { op: "reading", sha256: d.sha })).job.state, null, "and the digest has no job state");
+  });
+
+  test("R9 seam §14a (G124a; R132, R125 (a); PDF A3) (red until capture stops registering a `reading` row for a file over the whole-read ceiling: capture R109 registers one always): a file stated over the ceiling owes nothing: `owedwork` lists no job row for it", { timeout: 900000 }, async () => {
+    const d = await overCeiling();
+    assert.deepEqual(await adminOwed(d.sha), [], "nothing is owed: no job row of any kind");
+  });
+
+  test("R9 seam §14a (G124a; R132, R125, R131, R130; PDF A2): a PDF AT the alpha ceiling is not stated: its `reading` row is held, the answer says `reading_pending`, and a PDF between the inline ceiling and the alpha ceiling is deferred as a row and not stated (control)", { timeout: 900000 }, async () => {
+    const { auth } = await kit.ownerOf("r9lim-a2");
+    const ceiling = boundOf("pdf", "bytes");
     const at = pdfExact("R132 at the ceiling exactly", ceiling);
     assert.equal(at.length, ceiling);
     const ok = R(await (await upload(auth, at)).json());
@@ -215,6 +230,16 @@ export function sections(kit, counting) {
     const rows = await adminOwed(sha256(at));
     assert.ok(rows.some((x) => x.kind === "reading"), `a reading row is held for it: ${JSON.stringify(rows).slice(0, 300)}`);
     assert.ok(!rows.some((x) => x.state === "final"), "and none ended for a reason");
+    /* A2: and it is read: filed as the capture screen files it, the alarm's ticks make the reading and its words are in `text_units` (R-STOP) */
+    const made = await CAPTURE_SCREEN.parts.promoteDocument(kit.screenCall(auth), { doc: ok.document, title: "at the ceiling", locator: ok.document.locator, project: "" });
+    assert.equal(made.refused, undefined, "filed: " + JSON.stringify(made).slice(0, 300));
+    const read = await kit.until(async () => { const r = R(await kit.get(auth, { op: "reading", sha256: sha256(at) })); return r.found && r.reading && JSON.stringify(r.text_units ?? []).includes("at the ceiling exactly") ? r : null; }, 420000, 3000);
+    assert.ok(read, "the ticks read the PDF at the ceiling: its words are in text_units");
+    assert.notEqual(read.reading.failure, "final", "and it is not stated");
+    const mid = pdfExact("R132 between the two ceilings", 5 * MiB);
+    const m = R(await (await upload(auth, mid)).json());
+    assert.deepEqual([m.reading_pending, m.document.reading], [true, undefined], "control: 5 MiB is owed as a row, not stated");
+    assert.ok((await adminOwed(sha256(mid))).some((x) => x.kind === "reading"));
   });
 
   /* ---------------------------------------------------------------------------------------------------------------------------------------------------- 14b */
@@ -279,8 +304,8 @@ export function sections(kit, counting) {
     const bound = boundOf("archive", "uploaded_bytes");
     const begin = (bytes, sha) => kit.post(auth, "captureuploadbegin", { sha256: sha, bytes, statement: "an archive the clerk handed me", name: "a.zip", type: "application/zip" });
     const over = await begin(bound + 1, "c".repeat(64));
-    assert.equal(over.status, 413, JSON.stringify(over.body).slice(0, 300));
     const o = R(over.body);
+    assert.equal(o.status, 413, JSON.stringify(over.body).slice(0, 300));
     assert.equal(o.ok, false);
     assert.equal(o.reason, "TOO_LARGE");
     assert.deepEqual([sizeOf(o), limitOf(o), o.key], [bound + 1, bound, statement("archive", "uploaded_bytes", bound + 1).key], "refused with its size, the limit and the key");
@@ -300,28 +325,32 @@ export function sections(kit, counting) {
     ];
     return collect(zipChunks64(entries));
   }
-  test("R9 seam §14g (G124g; R134, R111, acquisition R38) (red until acquisition's refusal states the declared size): an archive whose directory declares one byte over `archive.unpacked_bytes` is refused by name with its size and limit; the bound itself is accepted", { timeout: 900000 }, async () => {
+  const unpackOf = async (auth, total) => {
+    const zip = await archiveDeclaring(total);
+    const up = R(await (await upload(auth, zip, { type: "application/zip", name: `a${total}.zip` })).json());
+    assert.equal(up.ok, true, JSON.stringify(up).slice(0, 300));
+    return R((await kit.post(auth, "unpack", { archiveSha: up.capture.sha256 })).body);
+  };
+  test("R9 seam §14g (G124g; R134, R111, acquisition R38): an archive whose directory declares one byte over `archive.unpacked_bytes` is refused by name `ARCHIVE_TOTAL_MAX` with the limit; the bound itself is not refused for its total", { timeout: 900000 }, async () => {
     const { auth } = await kit.ownerOf("r9lim-g2");
     const bound = boundOf("archive", "unpacked_bytes");
-    const filed = async (total) => {
-      const zip = await archiveDeclaring(total);
-      const up = R(await (await upload(auth, zip, { type: "application/zip", name: `a${total}.zip` })).json());
-      assert.equal(up.ok, true, JSON.stringify(up).slice(0, 300));
-      return { sha: up.capture.sha256, unpack: await kit.post(auth, "unpack", { archiveSha: up.capture.sha256 }) };
-    };
-    const over = await filed(bound + 1);
-    const o = R(over.unpack.body);
-    assert.equal(o.ok, false, JSON.stringify(over.unpack.body).slice(0, 400));
+    const o = await unpackOf(auth, bound + 1);
+    assert.equal(o.ok, false, JSON.stringify(o).slice(0, 400));
     assert.equal(o.reason, "ARCHIVE_TOTAL_MAX", "refused by name");
     assert.equal(limitOf(o), bound, "with the limit");
-    assert.equal(sizeOf(o), bound + 1, `and the size the directory declares (the refusal says ${JSON.stringify(o).slice(0, 300)})`);
-    const at = await filed(bound);
-    const a = R(at.unpack.body);
-    assert.notEqual(a.reason, "ARCHIVE_TOTAL_MAX", `the bound itself is not refused for its total: ${JSON.stringify(at.unpack.body).slice(0, 400)}`);
+    const a = await unpackOf(auth, bound);
+    assert.notEqual(a.reason, "ARCHIVE_TOTAL_MAX", `the bound itself is not refused for its total: ${JSON.stringify(a).slice(0, 400)}`);
+  });
+  test("R9 seam §14g (G124g; R134, R111, R-SILENT) (red until acquisition's refusal states the size the directory declares): the refusal of an archive over `archive.unpacked_bytes` carries the declared total beside the limit", { timeout: 900000 }, async () => {
+    const { auth } = await kit.ownerOf("r9lim-g3");
+    const bound = boundOf("archive", "unpacked_bytes");
+    const o = await unpackOf(auth, bound + 1);
+    assert.equal(o.reason, "ARCHIVE_TOTAL_MAX");
+    assert.equal(sizeOf(o), bound + 1, `the size the directory declares (the refusal's fields: ${Object.keys(o).join(", ")})`);
   });
 
   /* ---------------------------------------------------------------------------------------------------------------------------------------------------- G124 */
-  test("R9 seam §14 (G124, R132; K3268): THE ALL-MODULES GREP: no module declares a reading ceiling as a number that `READ_BOUNDS` does not hold: every ceiling constant of every module resolves to the table through boundOf/statement or is an accepted non-ceiling", () => {
+  test("R9 seam §14 (G124, R132; K3268) (red until each quoting job below merges and runtime-limits records the rows its constants need): THE ALL-MODULES GREP: no module declares a reading ceiling as a number that `READ_BOUNDS` does not hold: every ceiling constant of every module resolves to the table through boundOf/statement or is an accepted non-ceiling", () => {
     const { found, scanned, modules, declared } = ceilingConstantsOfModules();
     assert.ok(scanned > 500, `the walk read the modules' source (${scanned} files of ${modules.size} of ${declared} modules)`);
     const loose = found.filter((c) => !Object.hasOwn(ACCEPTED, acceptedKey(c)));
