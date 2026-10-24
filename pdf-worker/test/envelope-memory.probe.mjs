@@ -6,7 +6,8 @@
  * does (`obj.arrayBuffer()`), and the handler runs with `MAX_PDF_BYTES` high enough that tier 2 is attempted. The smallest
  * `--max-old-space-size` (MB) in which the answer is a tier-2 text is found by bisection; the object's need is that heap
  * plus the file's bytes (held outside old space) under 128 MB. One line per file: bytes, heap, heap + bytes, request ms and
- * the characters read. The numbers are recorded in build/jobs/T51/pdf-worker.md. */
+ * the characters read. `PROBE_BUNDLE` names the bundle to measure (default: the committed one). The numbers are recorded in
+ * build/jobs/T51/pdf-worker.md. */
 import { spawn } from "node:child_process";
 import { mkdirSync, writeFileSync, copyFileSync, statSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -18,7 +19,7 @@ const [dir, ...files] = process.argv.slice(2);
 if (!dir || !files.length) { console.error("usage: envelope-memory.probe.mjs <dir> <file.pdf>..."); process.exit(2); }
 const BIN = here("../node_modules/.bin/");
 mkdirSync(join(dir, "pdfs"), { recursive: true });
-copyFileSync(here("../dist/pdf-worker.bundled.mjs"), join(dir, "pdf-worker.bundled.mjs"));
+copyFileSync(process.env.PROBE_BUNDLE || here("../dist/pdf-worker.bundled.mjs"), join(dir, "pdf-worker.bundled.mjs"));
 writeFileSync(join(dir, "worker.mjs"), `
 import pdfWorker from "./pdf-worker.bundled.mjs";
 export default { async fetch(req, env) {
