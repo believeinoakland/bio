@@ -64,7 +64,7 @@ import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
 import { titleOfBytes, cleanedTitle, decodeAs, charsetOf } from "./title.mjs";
 import * as pdfReader from "../pdfstructure.mjs";
 import { baseViewer, viewerMember } from "../member-roster/index.mjs";
-import { boundOf } from "../read-bounds.mjs";
+import { boundOf, statement } from "../read-bounds.mjs";
 
 /* R24, R29, R33: the one user agent, the one first hop's `who`, and this module's rows, for every module that sends,
    writes or judges them. The pre-rename aliases are gone (R34, N539). */
@@ -135,7 +135,7 @@ export function userAgent(env, purpose = "acquire", delegated = null) {
 
 /* Whether a primary is read back as TEXT for the recognisers and FW-4's digests: single-part, bounded, and a textual
    declared type. One rule, read by acquire when it records a capture and by op=monitor when it compares one (D-60). */
-export const PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+export const PROFILE_TEXT_MAX = boundOf("capture", "profile_text_bytes");
 /* R17, R101: the bytes of a capture's head its format is judged from when the capture is held in parts: the first KiB of the first part. */
 export const FORMAT_HEAD = 1024;
 /* D-351: the bound on reading an OpenDocument capture back whole for its container digest. Chosen, not measured. */
@@ -366,7 +366,7 @@ export const FOR_MAX = 200;
 
 /* R10: the most this surface will take from one source, in parts or not; exported once, so every other reader of the
    limit imports it (K231; N825, K2453). */
-export const CAPTURE_MAX = 256 * 1024 * 1024;
+export const CAPTURE_MAX = boundOf("archive", "uploaded_bytes");   // R114: quoted from READ_BOUNDS
 
 /* R10, R11, R96 (T51; the walk's C5): a capture held in several parts is also kept WHOLE, under the whole document's own
    fingerprint, up to this many bytes, so every reader that asks the evidence store for a capture by its digest (the reading,
@@ -375,7 +375,7 @@ export const CAPTURE_MAX = 256 * 1024 * 1024;
    alone, as before (provenance R7 reads such a capture by its parts), until the object store offers a way to make the whole
    from parts without reading them (R96's past-memory arm). CHOSEN, not measured: four parts, the most the object holds in
    memory beside the whole it assembles; recorded by BOB. */
-export const MULTIPART_KEEP_MAX = 32 * 1024 * 1024;
+export const MULTIPART_KEEP_MAX = boundOf("capture", "keep_bytes");
 /* R96 (fix round 4, C5c): the door's bound for an `acquire` (control-plane R105: 25 s) and what `acquire` leaves of it for the rest of the call
    after awaiting a keep. CHOSEN, not measured; the plane may hand its own as `opts.boundMs`. */
 const ACQUIRE_BOUND_MS = 25000;
@@ -854,7 +854,7 @@ export async function archiveLookup(cap, { address, at } = {}) {
     const h = await hashBody(res);
     if (h.failed) return { fail: archiveBroke(h.failed) };
     if (h.oversize)
-      return { fail: { ok: false, status: 413, payload: { ok: false, reason: "TOO_LARGE", bytes: h.bytes, maxBytes: CAPTURE_MAX,
+      return { fail: { ok: false, status: 413, payload: { ok: false, reason: "TOO_LARGE", bytes: h.bytes, maxBytes: CAPTURE_MAX, ...statement("archive", "uploaded_bytes", h.bytes),
         retrieval_locator: locator, detail: localize("acquisition.index.the_memento_exceeds_what_this", "the memento exceeds what this surface will capture even in parts") } } };
     const row = mementoRow(answer, { sha256: h.sha, bytes: h.bytes });
     return selectCapture([row]).ok ? { sha: h.sha, bytes: h.bytes } : { row };
@@ -1369,7 +1369,7 @@ async function acquireRun(cap, body0, opts0, t) {
   const declared = declaredLength(res.headers);
   if (mayPark && declared !== null && declared > CAPTURE_MAX) {
     cancelBody(res);
-    return answer(413, { ok: false, reason: "TOO_LARGE", bytes: declared, maxBytes: CAPTURE_MAX,
+    return answer(413, { ok: false, reason: "TOO_LARGE", bytes: declared, maxBytes: CAPTURE_MAX, ...statement("archive", "uploaded_bytes", declared),
                          detail: localize("acquisition.index.the_document_exceeds_what_this", "the document exceeds what this surface will capture even in parts") });
   }
   if (mayPark && declared !== null && declared > LARGE_FETCH_BYTES) {
@@ -1496,7 +1496,7 @@ async function acquireRun(cap, body0, opts0, t) {
   /* END DEC-49 REGION is-drive-bytes */
   if (oversize) {
     try { await reader.cancel(); } catch { /* the source may already be gone */ }
-    return answer(413, { ok: false, reason: "TOO_LARGE", bytes: total, maxBytes: MAX,
+    return answer(413, { ok: false, reason: "TOO_LARGE", bytes: total, maxBytes: MAX, ...statement("archive", "uploaded_bytes", total),
                          detail: localize("acquisition.index.the_document_exceeds_what_this", "the document exceeds what this surface will capture even in parts") });
   }
   await flush();

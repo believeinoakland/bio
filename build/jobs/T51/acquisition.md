@@ -577,3 +577,5 @@ Remaining for my restart, in order: (1) R114 constants from `boundOf` — needs 
 Two things for you: (a) the interface `readRange` takes the store first (`readRange(store, sha, offset, length)`), as every act of this module does — tell me if the callers should have it bound instead. (b) Generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json`, `agent-worker/dist/*` (inputs `src/acquisition/index.mjs`, `unpack.mjs`).
 
 Ringing failed: BOB's session session_01TR6P4eJM4znxzhuYTdih8B is archived; the pushed J35 BLOCKED entry is the message (mechanics §13 backstop).
+
+**Update after B38 (CHANGE):** tranche merged; R114 done — `CAPTURE_MAX`, `MULTIPART_KEEP_MAX`, `PROFILE_TEXT_MAX` quoted through `boundOf`, `TOO_LARGE` carries `{size, bound, key}` (`statement`), `r9-ceilings.test.mjs`; R118's DOM-bound test is green. Module suite 312/312. Still to do: R117 (pending render as a job row), R101/G130c (format from head and tail via `readRange`), then impact users, the four checks, Size line, COMPLETE.
