@@ -733,6 +733,15 @@ function linearMarkup(text) {
     if (cached !== null && cached >= from) return cached;
     return (closer[key] = text.indexOf(token, from));
   };
+  /* The next quote of a kind at or after `from`; the search only moves forward, so what one search found (or that there
+     is none ahead) holds for the next, and a long run of openers never searches the same stretch twice. */
+  const quoted = { 34: null, 39: null };
+  const quote = (ch, from) => {
+    const cached = quoted[ch];
+    if (cached === -1) return -1;
+    if (cached !== null && cached >= from) return cached;
+    return (quoted[ch] = text.indexOf(ch === 34 ? '"' : "'", from));
+  };
   let i = text.indexOf("<");
   while (i !== -1) {
     const c = text.charCodeAt(i + 1);
@@ -753,7 +762,7 @@ function linearMarkup(text) {
         const ch = text.charCodeAt(j);
         if (ch === 62) { end = j + 1; break; }
         if (ch === 34 || ch === 39) {
-          const q = text.indexOf(ch === 34 ? '"' : "'", j + 1);
+          const q = quote(ch, j + 1);
           if (q === -1 || q >= limit) { j = limit; break; }
           j = q + 1;
         } else j++;
