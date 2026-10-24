@@ -713,7 +713,8 @@ export function pendingOf(ctx, deps = {}) {
           const due = live().filter((r) => r.due_at <= at);
           /* the light kinds first, then one heavy row: a read that can starve the object is never followed by another in the same tick */
           const light = due.filter((r) => !HEAVY.includes(r.kind)).slice(0, PENDING_BATCH);
-          const heavy = due.filter((r) => HEAVY.includes(r.kind)).slice(0, 1);
+          /* a due keep goes first: it makes the whole its digest's reading then reads in the same tick */
+          const heavy = due.filter((r) => HEAVY.includes(r.kind)).sort((a, b) => (a.kind === "keep" ? 0 : 1) - (b.kind === "keep" ? 0 : 1)).slice(0, 1);
           for (const row of [...light, ...heavy]) {
             out.asked++;
             const done = await run(row, at);
