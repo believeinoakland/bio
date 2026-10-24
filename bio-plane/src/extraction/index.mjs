@@ -755,10 +755,19 @@ export class Extraction {
 
   /** (fix round 9, G126a; R102) The `ocr` job a reading owes: `{kind: "ocr", sha, cursor, pages_left}` from its `ocr_left` (reading-pipeline R37: the first
    *  page owed and how many), only while pages remain; null when none does or the digest is no digest. */
-  #ocrEntry(sha, reading) {
+  #ocrEntry(sha, reading, units = null) {
     const left = reading && typeof reading === "object" ? reading.ocr_left : null;
-    if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha) || !left || !(Number.isInteger(left.pages) && left.pages > 0)) return null;
-    return { kind: "ocr", sha, cursor: Number.isInteger(left.cursor) ? left.cursor : null, pages_left: left.pages };
+    if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return null;
+    if (left && Number.isInteger(left.pages) && left.pages > 0)
+      return { kind: "ocr", sha, cursor: Number.isInteger(left.cursor) ? left.cursor : null, pages_left: left.pages };
+    /* (fix round 9, R100, R102) a reading still wanting OCR (`tier3_candidate`) that states no `ocr_left` (a member that answered some of the pages asked and
+       named no rest) owes the pages its units leave without a glyph, less those refused: never left unowed while completeness counts them owed */
+    const n = reading && reading.tier3_candidate === true && Number.isInteger(reading.page_count) && reading.page_count > 0 ? reading.page_count : 0;
+    if (!n || !Array.isArray(units)) return null;
+    const read = new Set(units.filter((u) => u && u.extent && u.extent.kind === "pdf-page" && glyphCount(u.text || "") > 0).map((u) => u.extent.page));
+    const refused = new Set((Array.isArray(reading.ocr_refused) ? reading.ocr_refused : []).map((r) => r && r.page));
+    const pages = Array.from({ length: n }, (_, p) => p).filter((p) => !read.has(p) && !refused.has(p));
+    return pages.length ? { kind: "ocr", sha, cursor: pages[0], pages_left: pages.length } : null;
   }
 
   /** (fix round 9, G126a; R102; BOB's K4898) The registrar a write owes work through: the `registerJob` the ledger's call hands (`call.registerJob`,
@@ -919,7 +928,7 @@ export class Extraction {
     /* (fix round 9, G126a; R102) the OCR pages the read left are owed in the same transaction as the reading (the registrar's row commits or rolls back
        with it), before the answer */
     const via = this.#oweVia(call);
-    const entry = this.#ocrEntry(digest, out.reading);
+    const entry = this.#ocrEntry(digest, out.reading, out.more === true ? null : out.text_units);
     let owing = null;
     const wrote = this.core.transact(() => {
       const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
@@ -2540,8 +2549,8 @@ export class Extraction {
     if (!r || (Number.isInteger(r.v) && r.v >= READING_SHAPE)) return null;
     if (r.tl === "object" && !r.units) return "stated_bare";
     if (r.cut) return "cut_units";
-    if (r.tc === "pdf" && r.ts === "array" && (r.gt !== "integer" || r.wt !== "integer")) return "first_range";
     if (r.t3 === "true" || r.ol === "object") return "pages_unread";
+    if (r.tc === "pdf" && r.ts === "array" && (r.gt !== "integer" || r.wt !== "integer")) return "first_range";
     return null;
   }
 
