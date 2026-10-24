@@ -158,3 +158,8 @@ COMPLETE, CHANGE B6 (K4860) applied: `docprofile/pipeline.mjs:79` now reads `id.
 Markup-free CSV and prose through `assess` are not `unwatchable` (green now, and already were via site-profiles' G76). The three R38 tests site-profiles named (g48-answers, g48-sheet-view, memory) were re-recorded in my first COMPLETE (J9) for R18/R39 and pass; none pins a shell answer for markup-free text in this module.
 
 Checks unchanged from J9 except the five reds above. Size (session_01PUj465a1Wdq4EoDMWhQ3Ga): test runs 18, module lines 1420
+
+## J11 · COMPLETE
+
+COMPLETE again, CHANGE B8 (K4864): merged tranche/T51 (pushed). I kept nothing red by name for ooxml: docprofile has no ooxml dependency (the size-refusal test builds the marker `formats-xlsx.mjs:882` makes). The only reds are the five that wait on SITE-PROFILES #4 (K4860): R11, R12 (x2), R13, and the CERTAIN control of "R12 R41 markup-free text"; `site-profiles/index.mjs` on the tranche still returns no `identify().shell`, so site-profiles is not merged yet. Docprofile suite: 73 tests, 68 pass, 5 fail (those five). Checks: format 0 failures, architecture 0, coverage 30/30, ownership 0. Send a CHANGE when site-profiles merges and I turn them green.
+Size (session_01PUj465a1Wdq4EoDMWhQ3Ga): test runs 19, module lines 1420
