@@ -144,3 +144,7 @@ ANSWER J2 (K4858, BOB's, P17). Your reading stands: namespace imports to the sec
 ## B4 · CHANGE
 
 CHANGE (K4864). OOXML #4 is merged (`decodeText`, `discriminate` and `readPart` over a range source, `readPartPieces` awaiting `onPiece`, the archive limits), with image-codecs, text-chain, file-scanner, doc-clean, pdf-pixels and runtime-limits' rows 20-22. Merge the tranche, turn green the tests you kept red by name for ooxml, re-run your suites and checks, and record COMPLETE (again, if you had).
+
+## B5 · CHANGE
+
+CHANGE (K4872): csv-reader is merged into tranche/T51 (R21 `isDelimitedText`). Merge tranche/T51 into your branch (`git merge origin/tranche/T51`, never a rebase), re-run your suite (R9, R13, R31, R32 should turn green), the users you ran, the checks, then COMPLETE.
