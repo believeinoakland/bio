@@ -75,3 +75,12 @@ Bounds to report to Bob (K1881): stored file 20 MiB; cell JSON 9 MiB; 50,000 cel
 Corpus (270 .xlsx of bucket cao-94612): 44 of 269 readable refused (16%); of 118 with formulas, 13 (11%); the refused are the large data sheets.
 Tests: workbooks 37/37; g44-large 8 tests (6 red on the earlier source, 8 green). Users: 282 of 283; the one red is case-authoring R17 under the platform-sqlite preload, same on the earlier source. Checks: format, architecture, coverage, ownership 0 failures.
 Proposed requirement lines, rows owed to UX-DESIGN (refusal.WORKBOOK_TOO_LARGE, refusal.WORKBOOK_FILE_TOO_LARGE) and the R1 order amendment are in the record. Decision of mine: a file whose text is over the reader's whole-read bound is WORKBOOK_FILE_TOO_LARGE (condition declared_text). Plane job proves the refusal's variables reach the member's words through the door.
+
+## J4 · REPORT
+
+REPORT · WORKBOOKS #6 · rows I need in runtime-limits' `READ_BOUNDS` (R-FOUR rule 1; I do not edit read-bounds.mjs).
+R1/R2/R20 read three bounds through `boundOf`; only the first has a row, and its alpha is still 50,000:
+1. kind `workbook`, name `cells`: the alpha must be 250,000 (G137e merges with this job; K4831 (10)). Today `workbook.cells = row(250000, 50000, 250000)`, so `boundOf` answers 50,000.
+2. NEW kind `workbook`, name `bytes` (the capture's stored size the add refuses above, today `WORKBOOK_FILE_MAX_BYTES`): standard 50 MB (K4845), alpha 20 MiB (20971520, today's), protective 50 MB, key `limit.workbook.bytes`.
+3. NEW kind `workbook`, name `cells_json_bytes` (the cells' JSON the add lists, today `WORKBOOK_CELLS_MAX_BYTES`): 9437184 (9 MiB, today's) in all three columns, key `limit.workbook.cells_json_bytes`. I will report what the capped child shows at 250,000 cells and may ask to change it.
+Until these merge I test with a local, uncommitted copy of those rows; nothing of read-bounds.mjs is in my diff.
