@@ -211,3 +211,7 @@ COMPLETE. Changed: bio-plane/test/platform-sqlite.mjs (new preload; add to paths
 ## J9 · REPORT
 
 REPORT (found while running checks/run.mjs; not test-support's, not changed). words: installer-steps missingkey installer.fleet.logsunconfirmed, 5 failures (newgroup/src/steps/uploads.mjs:41; newgroup/test/steps/observability.test.mjs:69 and :86); the key is not in words.json. Not among the reds my START names. Also for your routing: coverage on bio reports 33 failures in other modules (round-9 ids not yet named by a test: acquisition, capture, plane, reading-pipeline, scheduler and 25 more); none is test-support's.
+- R-NOLOAD, each heavy file alone, five runs, then once on one core (`taskset -c 0`; 4-core host): `generators.test.mjs` 22 pass 0 fail every run (75-78 s; one core 78 s); `zip64.test.mjs` 7 pass 0 fail every run (10-12 s; one core 11 s); `corpus.test.mjs` 17 pass 0 fail every run (21-23 s; one core 23 s). No test asserts a time (R-CLOCK).
+- REPORT J9 answered by B8 (both already placed: job 46, and round 9's own ids); nothing open.
+
+Size (session_01EuoP4BVxYVJN8Zit2i4p66): test runs 52, module lines 2682
