@@ -2231,6 +2231,8 @@ export class Extraction {
              ...(more ? { next: units[units.length - 1].seq } : {}),
              state: completeness ? completeness.state : null,
              ...(completeness ? { counters: completeness.counters, ...(completeness.owed ? { owed: completeness.owed } : {}) } : {}),
+             /* (R107, K4914) how far a text read in pieces has been read (R90's figures) while more follows */
+             ...(st && st.more ? { read_through: st.read_through ?? null, total: st.total ?? null } : {}),
              ...(st ? { counts: { offered: st.offered, written: st.written, over_bound: st.over_bound,
                                   unaddressable: st.unaddressable, truncated: st.truncated,
                                   skipped_named: st.skipped_named }, chain_kind: st.chain_kind, at: st.at,
