@@ -389,6 +389,7 @@ Every job: medium effort; its suites, then `build/plan/impact.mjs tranche/T51 HE
 | 48 | C | case-authoring (L8, 122) | B | G112b: a prepared edition's own bias acknowledgement read back for the pre-flight after a reload, as `tieAttested` (K4850) | sonnet | 250 |
 | 49 | C | ratification (L8, 116) | B | G120b: each read a sitting needs made once per act, the reuse check concurrent; chain counted per phase (K4850) | sonnet | 300 |
 | 50 | C | public-read (L8, 112) | B | G121b: the assembly's awaited R2 chain cut to its data dependencies (K4850) | sonnet | 250 |
+| 51 | D | instance-setup (L11, 152) | B | G118b: the fleet keep held in the team's object every isolate reads; `isolate` in Server-Timing (K4853) | sonnet | 250 |
 | 45 | C | case-carriage (L8, 107) | 16 | G136c (`tried` stamped before the work, `case-carriage/index.mjs:1270-1282`; K4842) | sonnet | 120 |
 | 21 | C | provenance (L3, 44) | B, 3 | G127a (OWNER: whole the only key, `register_parts`), G127c (the fix, G127a's), G127e (migration), `partsOf` and the `promote` register shape (section 2c, G127d) | sonnet | 460 |
 | 22 | C | capture-sources (L3, 47) | B | G138 (owner), G142 (owner), G137c (owner: charge, content test, retry class, words) | sonnet | 390 |
