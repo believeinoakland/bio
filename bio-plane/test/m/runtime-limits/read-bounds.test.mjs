@@ -112,3 +112,38 @@ test("R30 (K4845): the heavy kinds' standards are K4628's per kind: documents 10
   assert.equal(std("ocr", "frame_bytes"), 61300000);
   assert.equal(boundOf("pdf", "bytes"), 24 * MiB);
 });
+
+/* the rows the quoting jobs of batch B reported (K4857, K4858, K4859, K4860; R30: a quoting job's row, added by this module, K4842 (1)) */
+const ADDED = [
+  ["office", "text_bytes", 104857600, 20 * MiB, 104857600],
+  ["office", "streamed_text_bytes", 104857600, 32 * MiB, 104857600],
+  ["archive", "member_bytes", 2 * GiB, 256 * MiB, 2 * GiB],
+  ["office", "decoded_chars", 67108864, 67108864, 67108864],
+  ["image", "working_set", 61300000, 61300000, 61300000],
+  ["image", "retained_objects", 250000, 250000, 250000],
+  ["scan", "max_bytes", 524288000, 268435456, 524288000],
+  ["scan", "time_ms", 900000, 900000, 900000],
+  ["scan", "embedded_pe", 41943040, 41943040, 41943040],
+  ["scan", "html_normalize", 41943040, 41943040, 41943040],
+  ["scan", "script_normalize", 20971520, 20971520, 20971520],
+  ["scan", "zip_type_rcg", 1048576, 1048576, 1048576],
+  ["scan", "partitions", 50, 50, 50],
+  ["scan", "icons_pe", 100, 100, 100],
+  ["office", "structural_part_bytes", 8388608, 8388608, 8388608],
+  ["office", "piece_chars", 8388608, 8388608, 8388608],
+  ["image", "picture_source", 603979776, 603979776, 603979776],
+  ["ocr", "picture_edge", 4096, 4096, 4096],
+  ["document", "part_bytes", 104857600, 33554432, 33554432],
+];
+
+test("R30: the 19 rows quoting jobs reported hold exactly the figures BOB gave, and boundOf and statement answer them (R31)", () => {
+  assert.equal(ADDED.length, 19);
+  for (const [kind, name, standard, alpha, protective] of ADDED) {
+    const row = READ_BOUNDS[kind]?.[name];
+    assert.ok(row, `${kind}/${name}`);
+    assert.deepEqual({ standard: row.standard, alpha: row.alpha, protective: row.protective }, { standard, alpha, protective }, `${kind}/${name}`);
+    assert.equal(row.key, `limit.${kind}.${name}`);
+    assert.equal(boundOf(kind, name), alpha, `${kind}/${name} answers the alpha`);
+    assert.deepEqual(statement(kind, name, alpha + 1), { size: alpha + 1, bound: alpha, key: `limit.${kind}.${name}` });
+  }
+});

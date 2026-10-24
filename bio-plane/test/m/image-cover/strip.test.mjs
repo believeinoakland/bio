@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { pngDeclaring } from "./hostile.mjs";
 import { stripMetadata, STRIP_REFUSALS, COVER_MAX_BYTES } from "../../../src/image-cover/index.mjs";
 import { decodeJpx } from "../../../../pdf-worker/src/jpxdecode.mjs";
 import { fixture, tiffIfd0 } from "./answers.mjs";
@@ -305,6 +306,7 @@ test("R8 refusals by name, nothing answered but the refusal, and never a throw: 
   const png = fixture("strip-clean.png");
   const crit = Buffer.concat([png.subarray(0, 33), Buffer.from([0, 0, 0, 0, 0x43, 0x67, 0x42, 0x49, 0, 0, 0, 0]), png.subarray(33)]);
   check(stripMetadata(crit), "NOT_A_STRIPPABLE_FORMAT", "an unknown critical chunk (CgBI)");
+  check(stripMetadata(pngDeclaring(30_000_000, 1)), "IMAGE_TOO_LARGE", "a row over the stride bound (R10)");
   assert.deepEqual([...reached].sort(), Object.keys(STRIP_REFUSALS).sort(), "every declared code reached, and no other");
   /* never throws: every fixture cut short at many points and with bytes flipped answers ok or a declared refusal */
   const files = [...STRIP.cases.map((c) => c.file), "refuse-arithmetic.jpg", "phone-420-o6.jpg", "screenshot-rgba-o6.png"];
