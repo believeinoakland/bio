@@ -204,13 +204,6 @@
       "line": 1124
     },
     {
-      "id": "acquisition.index.render_did_not_return",
-      "en": "the page as a visitor saw it did not come back in time",
-      "module": "acquisition",
-      "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1612
-    },
-    {
       "id": "acquisition.index.render_page_not_read_back",
       "en": "the page as a visitor saw it was made but could not be read back from the record",
       "module": "acquisition",
@@ -398,13 +391,6 @@
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
       "line": 1210
-    },
-    {
-      "id": "acquisition.index.the_rendered_document_is_length",
-      "en": "the rendered document is {length} bytes, over this surface's {MAX}.",
-      "module": "acquisition",
-      "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1632
     },
     {
       "id": "acquisition.index.the_served_bytes_are_v1",
@@ -657,34 +643,6 @@
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
       "line": 600
-    },
-    {
-      "id": "act.captureuploadabort.does",
-      "en": "Stops sending a large document in parts. Nothing of it is kept.",
-      "module": "affordances",
-      "file": "bio-plane/src/affordances/act-help.mjs",
-      "line": 153
-    },
-    {
-      "id": "act.captureuploadbegin.does",
-      "en": "Starts sending a large document to the group's store in parts. Nothing is kept until the last part has arrived.",
-      "module": "affordances",
-      "file": "bio-plane/src/affordances/act-help.mjs",
-      "line": 150
-    },
-    {
-      "id": "act.captureuploadcomplete.does",
-      "en": "Finishes sending a large document once every part has arrived, and files it as one document.",
-      "module": "affordances",
-      "file": "bio-plane/src/affordances/act-help.mjs",
-      "line": 152
-    },
-    {
-      "id": "act.captureuploadpart.does",
-      "en": "Sends one part of a large document that is being sent in parts. The part is checked as it arrives.",
-      "module": "affordances",
-      "file": "bio-plane/src/affordances/act-help.mjs",
-      "line": 151
     },
     {
       "id": "action-clocks.count.amount_unit_after_anchor",
@@ -8730,13 +8688,6 @@
       "line": 2761
     },
     {
-      "id": "calculations.declared.moneyingestread",
-      "en": "read: a money ingest's stored lists, a page at a time, with true counts and whether the ingest is complete (`calculations` R14); writes nothing",
-      "module": "calculations",
-      "file": "bio-plane/src/calculations/index.mjs",
-      "line": 2757
-    },
-    {
       "id": "calculations.declared.spotcheckvisit",
       "en": "draw-directed: keyed by a draw and one drawn item, reached from the spot-check; ties the visitor's own testimony to the item; moves no bundle",
       "module": "calculations",
@@ -8770,13 +8721,6 @@
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
       "line": 1122
-    },
-    {
-      "id": "calculations.index.a_reason_is_at_most",
-      "en": "a reason is at most {max} characters; shorten it. Nothing was written.",
-      "module": "calculations",
-      "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1851
     },
     {
       "id": "calculations.index.a_table_is_declared_by",
@@ -8821,13 +8765,6 @@
       "line": 1849
     },
     {
-      "id": "calculations.index.one_act_reads_at_most",
-      "en": "one act reads at most {bound_rows} rows and this asks for {rows}; list the rows in windows of at most {bound_rows} (rows: [..]). Nothing was written.",
-      "module": "calculations",
-      "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1875
-    },
-    {
       "id": "calculations.index.table_over_bytes_bound",
       "en": "the table is {size} bytes, over the bound of {bound} bytes. Nothing was written.",
       "module": "calculations",
@@ -8840,13 +8777,6 @@
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
       "line": 706
-    },
-    {
-      "id": "calculations.index.taking_every_row_of_a",
-      "en": "taking every row of a table is the rare case; state the reason (K1468). Nothing was written.",
-      "module": "calculations",
-      "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1870
     },
     {
       "id": "calculations.index.the_change_is_a_held",
@@ -8919,13 +8849,6 @@
       "line": 1238
     },
     {
-      "id": "calculations.index.the_source_reads_as_one",
-      "en": "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.",
-      "module": "calculations",
-      "file": "bio-plane/src/calculations/index.mjs",
-      "line": 666
-    },
-    {
       "id": "calculations.index.the_standard_holds_no_target",
       "en": "the standard holds no target (standards R42): a metric, a threshold, a period and a definition. Nothing was written.",
       "module": "calculations",
@@ -8952,48 +8875,6 @@
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
       "line": 2419
-    },
-    {
-      "id": "calculations.ingest.already",
-      "en": "this table is already being ingested in the background; wait for it to finish (you will be told), then ask again. Nothing was written.",
-      "module": "calculations",
-      "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1857
-    },
-    {
-      "id": "calculations.ingest.bad_kind",
-      "en": "read an ingest's state, its written rows or its not-written rows.",
-      "module": "calculations",
-      "file": "bio-plane/src/calculations/index.mjs",
-      "line": 2090
-    },
-    {
-      "id": "calculations.ingest.no_ingest",
-      "en": "an ingest is read by its key.",
-      "module": "calculations",
-      "file": "bio-plane/src/calculations/index.mjs",
-      "line": 2086
-    },
-    {
-      "id": "calculations.ingest.started",
-      "en": "{rows} rows are being ingested in the background; you will be told when it is done, and the facts it writes are marked as not yet complete until then.",
-      "module": "calculations",
-      "file": "bio-plane/src/calculations/index.mjs",
-      "line": 1940
-    },
-    {
-      "id": "calculations.ingest.stopped_attempts",
-      "en": "this ingest failed three times in a row and was stopped; the facts already written stay, marked as not complete.",
-      "module": "calculations",
-      "file": "bio-plane/src/calculations/index.mjs",
-      "line": 2109
-    },
-    {
-      "id": "calculations.ingest.stopped_table",
-      "en": "the table this ingest reads is no longer the one it was asked for, so it was stopped; the facts already written stay, marked as not complete.",
-      "module": "calculations",
-      "file": "bio-plane/src/calculations/index.mjs",
-      "line": 2108
     },
     {
       "id": "calculations.tables.a_table_schema_is",
@@ -10046,25 +9927,11 @@
       "line": 3112
     },
     {
-      "id": "capture.index.file_bytes_unreadable",
-      "en": "the file's bytes could not be read whole or held under their own digest, so nothing was written",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 852
-    },
-    {
       "id": "capture.index.file_no_bytes",
       "en": "the file has no bytes; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
       "line": 854
-    },
-    {
-      "id": "capture.index.file_too_large",
-      "en": "the file exceeds what this surface will capture even in parts; nothing was written",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 780
     },
     {
       "id": "capture.index.held_acts_unreadable",
@@ -10543,13 +10410,6 @@
       "line": 1055
     },
     {
-      "id": "capture.index.vouched_basis",
-      "en": "this document is already vouched for, so whether it could be vouched for in a batch is not asked",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 283
-    },
-    {
       "id": "capture.index.whole_digest_mismatch",
       "en": "the parts, taken in order, do not hash to the digest declared for the file, so the upload was aborted and nothing was held",
       "module": "capture",
@@ -10604,13 +10464,6 @@
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/checks.mjs",
       "line": 35
-    },
-    {
-      "id": "case-authoring.checks.case_document_too_large",
-      "en": "This case document is {size} MB, over the {bound} MB a case document may be, and it names {materials} materials and {members} findings. The record is unchanged and nothing was prepared. Leave out some of the materials or findings and prepare the case again.",
-      "module": "case-authoring",
-      "file": "bio-plane/src/case-authoring/checks.mjs",
-      "line": 62
     },
     {
       "id": "case-authoring.checks.publishing_puts_the_teams_name",
@@ -10961,20 +10814,6 @@
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
       "line": 695
-    },
-    {
-      "id": "case-authoring.index.case_document_not_stored",
-      "en": "The case document could not be stored. The record is unchanged and nothing was prepared.",
-      "module": "case-authoring",
-      "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1233
-    },
-    {
-      "id": "case-authoring.index.case_document_too_large",
-      "en": "This case document is {size} MB, over the {bound} MB a case document may be, and it names {materials} materials and {members} findings. The record is unchanged and nothing was prepared. Leave out some of the materials or findings and prepare the case again.",
-      "module": "case-authoring",
-      "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1203
     },
     {
       "id": "case-authoring.index.case_thecase_is_claimedproject_s",
@@ -13798,27 +13637,6 @@
       "line": 323
     },
     {
-      "id": "case-grammar.casefile.capture-missing",
-      "en": "{path} is the one path of {ref}, which {count} rows of the case document's materials state, so each of their files is under its row's capture",
-      "module": "case-grammar",
-      "file": "bio-plane/src/case-grammar/casefile.mjs",
-      "line": 380
-    },
-    {
-      "id": "case-grammar.casefile.capture-needless",
-      "en": "{path} is under a capture, and the case document's materials state {ref} on one row only",
-      "module": "case-grammar",
-      "file": "bio-plane/src/case-grammar/casefile.mjs",
-      "line": 378
-    },
-    {
-      "id": "case-grammar.casefile.capture-unnamed",
-      "en": "{path} is under the capture {capture}, and no row of the case document's materials states that capture under {ref}",
-      "module": "case-grammar",
-      "file": "bio-plane/src/case-grammar/casefile.mjs",
-      "line": 376
-    },
-    {
       "id": "case-grammar.casefile.case",
       "en": "the case is named by its id, and this manifest states {value}",
       "module": "case-grammar",
@@ -13908,20 +13726,6 @@
       "module": "case-grammar",
       "file": "bio-plane/src/case-grammar/casefile.mjs",
       "line": 279
-    },
-    {
-      "id": "case-grammar.casefile.format-accepted",
-      "en": "the format is one of {accepted}, each read as written, and this manifest states {value}",
-      "module": "case-grammar",
-      "file": "bio-plane/src/case-grammar/casefile.mjs",
-      "line": 258
-    },
-    {
-      "id": "case-grammar.casefile.format-unused",
-      "en": "a {format} case file carries at least one file under its row's capture, and this one lists none",
-      "module": "case-grammar",
-      "file": "bio-plane/src/case-grammar/casefile.mjs",
-      "line": 329
     },
     {
       "id": "case-grammar.casefile.input-sha",
@@ -14076,13 +13880,6 @@
       "module": "case-grammar",
       "file": "bio-plane/src/case-grammar/casefile.mjs",
       "line": 310
-    },
-    {
-      "id": "case-grammar.casefile.path-format",
-      "en": "{path} states a capture in its path, which only {v4} spells, and this manifest is {format}",
-      "module": "case-grammar",
-      "file": "bio-plane/src/case-grammar/casefile.mjs",
-      "line": 314
     },
     {
       "id": "case-grammar.casefile.path-kind",
@@ -32817,13 +32614,6 @@
       "line": 188
     },
     {
-      "id": "instance-setup.selftest.store_place_note",
-      "en": "store_location and store_generation are what this copy is configured with for where its team's room is first created and which room it uses. They do not say where the room runs.",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 3363
-    },
-    {
       "id": "instance-setup.setup.a_draft_carries_no_project",
       "en": "a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.",
       "module": "instance-setup",
@@ -37283,13 +37073,6 @@
       "line": 472
     },
     {
-      "id": "money.index.a_fiscal_key_is_a",
-      "en": "a fiscal key is a non-empty string, such as the profile's label for a fiscal year",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 278
-    },
-    {
       "id": "money.index.a_found_tables_amount_column",
       "en": "a found table's amount column is declared and counted through calculations, never read into money facts row by row; record a figure from one passage of the table instead",
       "module": "money",
@@ -37463,41 +37246,6 @@
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
       "line": 968
-    },
-    {
-      "id": "money.index.a_period_has_no_field",
-      "en": "a period has no field {extra}",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 273
-    },
-    {
-      "id": "money.index.a_period_is_from_to",
-      "en": "a period is {from, to, precision, zone} or {fiscal, body}",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 271
-    },
-    {
-      "id": "money.index.a_period_states_its_start",
-      "en": "a period states its start (from)",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 298
-    },
-    {
-      "id": "money.index.a_periods_end_is_a",
-      "en": "a period's end is a value of its precision, or null when unstated",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 305
-    },
-    {
-      "id": "money.index.a_periods_precision_is_day",
-      "en": "a period's precision is day, minute or second",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 300
     },
     {
       "id": "money.index.a_proposal_names_the_method",
@@ -37724,13 +37472,6 @@
       "line": 415
     },
     {
-      "id": "money.index.events_is_not_wired_here",
-      "en": "events is not wired here, so the award and its change orders are not read",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 1090
-    },
-    {
       "id": "money.index.events_is_not_wired_here_2",
       "en": "events is not wired here",
       "module": "money",
@@ -37785,13 +37526,6 @@
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
       "line": 966
-    },
-    {
-      "id": "money.index.more_than_one",
-      "en": "more than one",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 1048
     },
     {
       "id": "money.index.name_the_money_facts_by",
@@ -37885,13 +37619,6 @@
       "line": 363
     },
     {
-      "id": "money.index.the_active_profiles_hold_no",
-      "en": "the active profiles hold no fiscal year for {body}, so {fiscal} cannot be mapped",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 283
-    },
-    {
       "id": "money.index.the_authorising_events_held_toward",
       "en": "the authorising events held toward this event",
       "module": "money",
@@ -37918,41 +37645,6 @@
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
       "line": 394
-    },
-    {
-      "id": "money.index.the_period_ends_before_it",
-      "en": "the period ends before it starts",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 308
-    },
-    {
-      "id": "money.index.the_period_states_no_zone",
-      "en": "the period states no zone and the active profiles give no time zone",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 276
-    },
-    {
-      "id": "money.index.the_periods_end_why",
-      "en": "the period's end: {why}",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 307
-    },
-    {
-      "id": "money.index.the_periods_start_why",
-      "en": "the period's start: {why}",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 303
-    },
-    {
-      "id": "money.index.the_profiles_fiscal_year_for",
-      "en": "the profile's fiscal year for {body} names no period {fiscal}",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 293
     },
     {
       "id": "money.index.the_question_string_is_not",
@@ -38016,13 +37708,6 @@
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
       "line": 785
-    },
-    {
-      "id": "money.ingest.partial",
-      "en": "This fact was written by an ingest of a table that has not finished, or was stopped. Do not read what is held so far as the whole table. Ingest: {ingest}",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 259
     },
     {
       "id": "monitoring.checks.only_a_member_asks_for",
@@ -38508,53 +38193,11 @@
       "line": 717
     },
     {
-      "id": "notice-producers.index.fetch_done_detail",
-      "en": "The large page you asked for is fetched and filed. Open it to read it.",
-      "module": "notice-producers",
-      "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1449
-    },
-    {
-      "id": "notice-producers.index.fetch_done_summary",
-      "en": "{document} has been fetched",
-      "module": "notice-producers",
-      "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1448
-    },
-    {
-      "id": "notice-producers.index.machine_work_from_your_standing",
-      "en": "Machine work, from your standing question. {v1}{v2}. This is told once.",
-      "module": "notice-producers",
-      "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 543
-    },
-    {
-      "id": "notice-producers.index.open_the_document",
-      "en": "Open the document",
-      "module": "notice-producers",
-      "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 186
-    },
-    {
       "id": "notice-producers.index.the_level_is_credentials",
       "en": "the level is credentials' (its R45), over counts only (its R44); an episode is an unbroken run of hours at whose end the level was High, told once to each administrator, and a later one is told again.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
       "line": 799
-    },
-    {
-      "id": "notice-producers.ingest.done",
-      "en": "Your table has been ingested: {written} of {rows} rows were written as money facts, {not_written} were not.",
-      "module": "notice-producers",
-      "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1494
-    },
-    {
-      "id": "notice-producers.ingest.stopped",
-      "en": "Your table's ingest was stopped after {written} of {rows} rows were written; the rest were not.",
-      "module": "notice-producers",
-      "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1495
     },
     {
       "id": "notice-producers.reading.finished",
@@ -44304,20 +43947,6 @@
       "line": 816
     },
     {
-      "id": "reading-pipeline.index.bytes_not_held",
-      "en": "the capture's bytes are not held in the evidence store, so nothing was read",
-      "module": "reading-pipeline",
-      "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2797
-    },
-    {
-      "id": "reading-pipeline.index.classified_over_sample",
-      "en": "the kind of document was judged from a sample of its text ({chars} of its {of} characters: its opening, {windows} stretches spread through it and its end); the whole text is read in pieces",
-      "module": "reading-pipeline",
-      "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2236
-    },
-    {
       "id": "reading-pipeline.index.csv_in_pieces",
       "en": "this CSV is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet",
       "module": "reading-pipeline",
@@ -44346,32 +43975,11 @@
       "line": 2846
     },
     {
-      "id": "reading-pipeline.index.entry_no_text",
-      "en": "the {fmt} entry produced no text from these bytes",
-      "module": "reading-pipeline",
-      "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 3215
-    },
-    {
-      "id": "reading-pipeline.index.entry_not_read_bytes",
-      "en": "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text",
-      "module": "reading-pipeline",
-      "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 3248
-    },
-    {
       "id": "reading-pipeline.index.multipart",
       "en": "multipart",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
       "line": 488
-    },
-    {
-      "id": "reading-pipeline.index.no_capture_digest",
-      "en": "the document names no capture digest, so there are no bytes to read",
-      "module": "reading-pipeline",
-      "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2777
     },
     {
       "id": "reading-pipeline.index.no_progress",
@@ -44428,13 +44036,6 @@
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
       "line": 2959
-    },
-    {
-      "id": "reading-pipeline.index.reading_not_composed",
-      "en": "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document",
-      "module": "reading-pipeline",
-      "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2626
     },
     {
       "id": "reading-pipeline.index.reported_characters",
@@ -46236,13 +45837,6 @@
       "line": 81
     },
     {
-      "id": "refusal.PROMOTE_NOT_A_PARTICIPANT",
-      "en": "Only the members of {project}, and those invited to it, can file documents into it. Nothing was filed. Ask an owner of the project to invite you, or file it into a project you are in.",
-      "module": "promotion",
-      "file": "bio-plane/src/promotion/index.mjs",
-      "line": 708
-    },
-    {
       "id": "refusal.SIGNATURES_RUN_UNDER_WAY",
       "en": "Your team's Civicsmith is already checking for new signatures, so it did not start another check. Look again in a few minutes.",
       "module": "file-safety",
@@ -47678,13 +47272,6 @@
       "line": 7
     },
     {
-      "id": "screen.document.reading.too_large",
-      "en": "This document's reading is too large to keep whole: {size}; the largest part is {key}.",
-      "module": "extraction",
-      "file": "bio-plane/src/extraction/screen-words.mjs",
-      "line": 9
-    },
-    {
       "id": "screen.group.storage.factors.latency",
       "en": "How much delay you accept when a search has to run in the background instead of at once.",
       "module": "control-plane",
@@ -47788,97 +47375,6 @@
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/screen-words.mjs",
       "line": 11
-    },
-    {
-      "id": "screen.published.casefile.being_prepared",
-      "en": "This edition is complete and signed. Its case file is being prepared and will be offered here when it is ready.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 11
-    },
-    {
-      "id": "screen.published.casefile.code.BUCKET_FAILED",
-      "en": "A file of the case file could not be stored.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 19
-    },
-    {
-      "id": "screen.published.casefile.code.FINDING_MISSING",
-      "en": "The text of a finding could not be found.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 18
-    },
-    {
-      "id": "screen.published.casefile.code.INTERRUPTED",
-      "en": "An earlier attempt to build it was interrupted.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 21
-    },
-    {
-      "id": "screen.published.casefile.code.MATERIAL_MISSING",
-      "en": "A material the case file lists is not held.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 17
-    },
-    {
-      "id": "screen.published.casefile.code.NOT_RECORDED",
-      "en": "The list of the case file's files could not be recorded.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 20
-    },
-    {
-      "id": "screen.published.casefile.code.NO_BUCKET",
-      "en": "The place where published files are kept was not available.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 15
-    },
-    {
-      "id": "screen.published.casefile.code.STORE_SILENT",
-      "en": "The record did not answer.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 16
-    },
-    {
-      "id": "screen.published.casefile.code.TOO_LARGE",
-      "en": "The case file is too large to build in one piece.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 22
-    },
-    {
-      "id": "screen.published.casefile.code.UNKNOWN",
-      "en": "It could not be built, for a reason not yet known.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 23
-    },
-    {
-      "id": "screen.published.casefile.retrying",
-      "en": "This edition is complete and signed, but its case file could not be built yet. It will be tried again.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 12
-    },
-    {
-      "id": "screen.published.casefile.stopped",
-      "en": "This edition is complete and signed, and its case file cannot be built because a material is no longer held.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 13
-    },
-    {
-      "id": "screen.published.casefile.waiting_on_members",
-      "en": "This edition is not complete yet, so it has no case file. It is waiting for the rest of its signatures.",
-      "module": "public-read",
-      "file": "bio-plane/src/public-read/casefile-words.mjs",
-      "line": 14
     },
     {
       "id": "sheet-worker.contract.loading_the_workbook_took_longer",
@@ -51995,13 +51491,6 @@
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
       "line": 149
-    },
-    {
-      "id": "translations.index.the_teams_translations_could_not",
-      "en": "the team's translations could not be read, so every word is shown in English.",
-      "module": "translations",
-      "file": "bio-plane/src/translations/index.mjs",
-      "line": 743
     },
     {
       "id": "translations.index.the_texts_placeholders_v1_differ",
