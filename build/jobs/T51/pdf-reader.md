@@ -293,3 +293,15 @@ G68 provider half, R44 met. New export openPdfRange(bytes) in bio-plane/src/pdfs
 ## J10 · COMPLETE
 
 R45 met (CHANGE B13). openPdfRange(bytes, {yieldNow}) awaits yieldNow after each phase and between slices (scan: 2000 objects or 1 MiB; object streams: 16 streams / 2000 entries; page-tree walk: 2000 nodes); throwing/rejecting/non-function yieldNow = R44 behaviour; answers identical (every range of a 13-page object-stream file x 4 yieldNow kinds, plus 700-page, no-page, refusal). Real BUDGET-2024-APP: open without yieldNow is one 179-293 ms stretch; with it 103 yields, longest stretch 15.4-16.5 ms by the test's own clock outside the call (bar 60). Red first: 0 yields on the unchanged code. All pdf-reader tests and reading-pipeline pdf-ranges/g56-range pass; format/architecture/ownership 0 failures; coverage reds are csv-reader R20 and record-core R89 R90 (not mine); words reds not mine. Stale bundles: pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. Record: build/jobs/T51/pdf-reader.md.
+
+## J11 · QUESTION
+
+**QUESTION (pdf-reader, T51 round 9): the protective bound `pdf.object_stream` (16 MiB proposed) refuses an ordinary file.**
+
+Finding: BUDGET-2025-PER.pdf (govinfo, 8.8 MB, the file R41's own test reads) has one object stream of 19,446,595 bytes decoded (18.55 MiB). The largest in BUDGET-2025-BUD.pdf is 3.76 MiB and in BUDGET-2024-APP.pdf 0.02 MiB. At 16 MiB my reader states `stream_over_bound:object_stream` for that stream and its objects are unread, so R41's test "BUDGET-2025-PER: the answer is unchanged" is red (the digest differs; nothing in the text changes, only the unread objects of the structure tree). I tried 32 MiB locally in `read-bounds.mjs` (file restored, not committed): all 12 `memory.test.mjs` tests pass and the answer is the answer before.
+
+Recommendation: record `pdf.object_stream` as 32 MiB for the alpha and protective columns (runtime-limits' row; I do not edit it). My code quotes it by name, so nothing of mine changes when you do. Until then that one test is red by name.
+
+Also, for R48: one ceiling of mine has no row, `pdfTitle`'s XMP packet read (kind `pdf`, name `xmp`, standard 2 MiB, alpha 2 MiB, protective 2 MiB). I keep it as a named constant with a comment until you carry a row to runtime-limits. The cross-reference chain length (64 sections) is a loop guard on a `/Prev` cycle, not a limit on a file, so I propose no row for it.
+
+Status: R8, R9, R12, R22, R41 (page_over_bound), R43 (maxBytes by each page's own size), R46, R47 (depth, objects, operands), R48 are coded and tested; I am running the users' tests and the six checks, and will post COMPLETE or a context BLOCKED.
