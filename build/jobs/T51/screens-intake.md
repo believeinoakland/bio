@@ -1,6 +1,6 @@
 # screens-intake (T51)
 
-**Status** · session_01QPy1qnaMGUmmaXHxup64Ha · depth 2 · COMPLETE · handled B42
+**Status** · session_01QPy1qnaMGUmmaXHxup64Ha · depth 2 · COMPLETE · handled B44
 
 ## Record
 
@@ -644,3 +644,13 @@ Size (session_01QPy1qnaMGUmmaXHxup64Ha): test runs 11, module lines 2739
 COMPLETE · B43 (fix round 8: G108, G109, G110, G111). Record section 'B43 · START applied'. G108: a project-less fetched line is finished by the nearest held row (screen.capture.address.done), no empty fill; with a project as before. G109: heldat's copy.title wins in the "Already in the record as" row, the watched delivery's finished line and the existed result. G110: supporting-file reasons are drawn by code key (screen.capture.supporting.kept/.cap/.toolarge/.unavailable, rows exist), detail never drawn. G111: Add reads only the routed question's project at settle (1 call; was 37); the other projects are read once each by cs.later(500) afterwards.
 DEVIATION to decide (not a question that blocks): the START says the other projects are read "when the member opens the chooser"; interface-shell gives a screen no event for a select being opened, so the reads run in the background shortly after settle. If you want the read on the open itself, interface-shell needs a focus/open hook for cs.choice.
 Failing-first seen red (new r8-*.test.mjs, 12 tests: 6 red on the old code, 6 controls green): "projectquestions reads at settle: 37", the G108/G109/G110 equality checks; all green now. Module suite 331/331. Also fixed in my module: the two R26 reds (index.mjs listed refusal.NO_SUCH_SESSION, not a row), a words missingkey in r7-project-picker.test.mjs, and a load-fragile wait in t51-fix5 E8. Users: 36/36 control-plane seam files green; one red by name outside my module (a screens-inquiry/extraction 'R96 G13 ... red by name until extraction's more merges'). format 0, architecture 0, coverage 61/61, words 0 (module), ownership 0, setup-words --check match. Rows owed (later-ux.md): "Fetched. {document} waits in Held captures" (plan §5, listed); refusal.NO_SUCH_SESSION. No generated artifact touched.
+
+## B44 · CHANGE applied (K4833; control-plane J48, seam A2, G105)
+
+Merged `tranche/T51`. Cause: the Unfinished line and the watch (`watchFetch`) read a top-level `failed` on an `opencaptures` entry; acquisition R111 lists the refusal as `fetch_pending.failed` (`openCaptures`, `acquisition/index.mjs` ~2476). Fix in `capture.mjs`: both read `fetch_pending.failed`, the top-level `failed` kept as a fallback for older entries. Failing-first `r8-failed-listing.test.mjs` (R58): the listing is acquisition's real `openCaptures` output over a store holding such a session (R-SEAM); red on the old code (watch polled on, Unfinished line did not state the refusal; 3 red incl. the B31 test once its fixture used the real shape), green now. `t51-fix6` B31 fixture changed from the top-level shape to the real nested one. Suite `tests 334, pass 334, fail 0`; users (screens-inquiry fr4/g41, control-plane round5/round7/held-failed): 45 pass; format, architecture, coverage (61/61), words and ownership 0 failures.
+
+Size (session_01QPy1qnaMGUmmaXHxup64Ha): test runs 15, module lines 2741
+
+## J45 · COMPLETE
+
+COMPLETE · B44 applied: the Add screen's watch and Unfinished line read fetch_pending.failed (acquisition R111), top-level failed kept as fallback. Failing-first r8-failed-listing.test.mjs over acquisition's real openCaptures output, red on old code, green now. Suite 334/334; users 45 pass; format/architecture/coverage/words/ownership 0 failures. Record section 'B44 · CHANGE applied'.
