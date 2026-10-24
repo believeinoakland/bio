@@ -15,6 +15,9 @@
  *                 // r.readingDied: the child died asking it (spec `readingFor: false` skips it)
  *   r.pages       // then every later page by `next`: { pages, units, largestBytes, peakMB }; r.pagingDied: the child died paging (spec `pageAll: false` skips it)
  *   report(label, r)  the run as text, one line a tick
+ *   spec.faults   // G123c, the fault injectors, each at a tick number: { leakAt, leakMB (a buffer held inside the tick), storeFailAt (writes refused for that tick), entryThrowsAt (the reading owner throws at its entry),
+ *                 // objectGoneAt (the evidence object deleted), killAt + killAfterSql (the object dies after that many statements; a new one is built over the same storage), restartAt (as a deploy would),
+ *                 // pokeAfterRestart (one ordinary request after the restart; the tick's `poked` says whether the alarm was armed before and after) }; a tick's `injected` lists what acted, `counts` what it did
  *   r.fed         // { sha, bytes, parts, keep_pending, uploadMs, idleMB, ... } (the feed, before the first tick)
  * SPEC (G41 adds `readingEachTick: true` (the member's `readingFor` stated at every tick), `cellsOf: true` (extraction's `cellsOf` of the last row, the generator's cells expected); the child runs under TEST-SUPPORT #9's
  *        preload (`SHIM`, env BIO_PLATFORM_SHIM overrides), so a bound value over 2,098,176 B throws as on the platform, and `r.largestStored` / `r.overBound` say the largest stored value against 1 MiB; `xlsxRowsDoc(rows)` is a streamed workbook):
@@ -66,6 +69,12 @@ export const STORED_VALUE_BOUND = 1048576;
 /** TEST-SUPPORT #9's preload, the platform's single-value limit (2,098,176 B) in the child as it is in the object */
 export const SHIM = process.env.BIO_PLATFORM_SHIM || fileURLToPath(new URL("../../../platform-sqlite.mjs", import.meta.url));
 export const pdfDoc = (path) => ({ kind: "pdf", path, bytes: statSync(path).size, name: "doc.pdf", type: "application/pdf", marks: [] });
+
+/** G123c: the platform's single-value limit is applied in THIS process (a bound value of 2,100,000 B is refused, as the object's SQLite refuses it); a suite that must run under it asserts it */
+export async function shimApplied() {
+  const { DatabaseSync } = await import("node:sqlite"); const db = new DatabaseSync(":memory:"); db.exec("CREATE TABLE t(v TEXT)");
+  try { db.prepare("INSERT INTO t VALUES (?)").run("x".repeat(2_100_000)); return false; } catch { return true; }
+}
 
 /** Run one document through the real plane in a child capped at `capMB` (null: uncapped). Never throws; `died` says what happened. */
 export function shapeRun(spec, { capMB = null, semiMB = 2, timeoutMs = 1_800_000, traceGc = false } = {}) {
@@ -149,8 +158,9 @@ async function child(spec) {
   };
   /* COUNTS (R-CLOCK, G123b): what a tick did is counted, never timed: the evidence-store reads and the bytes they served, the statements run on the object's SQL and the rows they answered */
   const ct = { gets: 0, bytes: 0, sql: 0, rowsOut: 0 };
+  const hook = { sample: () => {}, leakNow: null };   /* an in-tick sampling point: every evidence read served and every 64th statement (an interval cannot run inside a stretch of microtasks, so a peak reached there was never seen) */
   const baseGet = bucket.get.bind(bucket);
-  bucket.get = async (k, ...a) => { const o = await baseGet(k, ...a); ct.gets++; if (o && typeof o.arrayBuffer === "function") { const ab = o.arrayBuffer.bind(o); o.arrayBuffer = async () => { const b = await ab(); ct.bytes += b.byteLength; return b; }; } return o; };
+  bucket.get = async (k, ...a) => { const o = await baseGet(k, ...a); ct.gets++; if (o && typeof o.arrayBuffer === "function") { const ab = o.arrayBuffer.bind(o); o.arrayBuffer = async () => { const b = await ab(); ct.bytes += b.byteLength; if (hook.leakNow) { const lk = Buffer.alloc(hook.leakNow << 20, 1); hook.leakNow = null; hook.sample(); lk.fill(0, 0, 1); } hook.sample(); return b; }; } return o; };
   const external = () => { let n = 0; for (const b of bucket.held.values()) n += b.byteLength; return n; };
   const used = () => { const m = process.memoryUsage(); return m.heapUsed + m.arrayBuffers - external(); };
   const mb = (n) => +(n / 1048576).toFixed(1);
@@ -167,7 +177,7 @@ async function child(spec) {
       if (faults.deadCtx.has(c)) throw new Error("the object was killed");
       if (faults.killAfterSql != null && ct.sql >= faults.killAfterSql) { faults.killAfterSql = null; faults.deadCtx.add(c); throw new Error("the object was killed"); }
       if (faults.failWrites && /^\s*(INSERT|UPDATE|DELETE|REPLACE)/i.test(q)) throw Object.assign(new Error("the store did not answer"), { transient: true });
-      ct.sql++; const rows = raw(q, ...a).toArray(); ct.rowsOut += rows.length; return cur(rows); }; };
+      if (++ct.sql % 64 === 0) hook.sample(); const rows = raw(q, ...a).toArray(); ct.rowsOut += rows.length; return cur(rows); }; };
   instrument(ctx);
   const rows = () => [...ctx.storage.sql.exec(`SELECT kind, attempts, interrupted, final_why, last_why, last_ms, last_mem, started_at FROM keeps_pending`)];
   const open = () => rows().filter((r) => r.final_why == null);
@@ -265,6 +275,7 @@ async function child(spec) {
              text: withText ? one(`SELECT max(length(CAST(text AS BLOB))) AS n FROM capture_text`) : null }; };
   let peak = base, peakRss = 0, peakAll = base;
   const sample = () => { const u = used(); if (u > peak) peak = u; if (u > peakAll) peakAll = u; const r = process.memoryUsage().rss; if (r > peakRss) peakRss = r; };
+  hook.sample = sample;
   const timer = setInterval(sample, 2);   /* G123b: on for the ticks and the ops, cleared at the end (it was cleared on the next line, so `peakMB` was a tick-boundary reading) */
   /* G44: the ops asked of the real door (the object's own `fetch`, as the frame does) on the held file, without the reading pipeline's ticks (spec.ops: [{op, path, body}], "$SHA" and "$PROJECT" filled in) */
   if (spec.ops) {
@@ -297,20 +308,25 @@ async function child(spec) {
     const nth = n + 1, F = spec.faults || {};
     /* G123c, the fault injectors, acting through the real object at the tick they name (counts, never clocks): a leak inside the tick, a store that refuses writes, the owner that throws at its entry,
        the evidence object gone, a kill after k statements, and a restart (a new object over the same storage, as the platform's after a kill or a deploy) */
-    let leaked = null;
-    if (F.leakAt === nth) setImmediate(() => { leaked = Buffer.alloc((F.leakMB || 30) << 20, 1); setImmediate(() => { leaked = null; }); });
-    if (F.storeFailAt === nth) faults.failWrites = true;
+    const injected = []; let poked = null;
+    if (F.leakAt === nth) injected.push("leak");
+    if (F.leakAt === nth) hook.leakNow = F.leakMB || 30;   /* a buffer held for one evidence read inside the tick, then dropped: only a sampler inside the tick sees it */
+    if (F.storeFailAt === nth) { faults.failWrites = true; injected.push("storeFail"); }
     let restoreEntry = null;
-    if (F.entryThrowsAt === nth) { const ex = extractionOf(ctx), real = ex.readHeld; ex.readHeld = async () => { throw new Error("the reading owner threw at its entry"); }; restoreEntry = () => { ex.readHeld = real; }; }
-    if (F.objectGoneAt === nth) bucket.held.delete(`bio/captures/${sha}`);
-    if (F.killAt === nth) faults.killAfterSql = ct.sql + (F.killAfterSql ?? 40);
+    if (F.entryThrowsAt === nth) { const ex = extractionOf(ctx), real = ex.readHeld; ex.readHeld = async () => { throw new Error("the reading owner threw at its entry"); }; restoreEntry = () => { ex.readHeld = real; }; injected.push("entryThrows"); }
+    if (F.objectGoneAt === nth) { bucket.held.delete(`bio/captures/${sha}`); injected.push("objectGone"); }
+    if (F.killAt === nth) { faults.killAfterSql = ct.sql + (F.killAfterSql ?? 40); injected.push("kill"); }
     let threw = null;
     try { await x.s.onAlarm(at); } catch (e) { threw = String(e && e.message || e).slice(0, 160); }
     faults.failWrites = false; if (restoreEntry) restoreEntry();
+    if (injected.includes("leak")) global.gc();   /* the leak is garbage now: the next tick starts from what is live, not from what has not been collected yet */
     at += 3_600_000; n++;
     if (F.killAt === nth || F.restartAt === nth) {   /* the platform starts the object again over the same storage */
       const db = x.db; faults.deadCtx.add(ctx);
-      x = await store({ db, env: x.env }); ctx = x.ctx; instrument(ctx); }
+      x = await store({ db, env: x.env }); ctx = x.ctx; instrument(ctx); injected.push("restart");
+      /* the poke-after-restart helper (the Workflows poke, used from Stage 2; G93's heal on the plane): ONE ordinary request through the door after the restart, and whether the alarm stood armed before and after it */
+      if (F.pokeAfterRestart) { const armedBefore = await ctx.storage.getAlarm(); const r = await call("http://do/owedwork?viewer=class%3Aadmin", { method: "POST", body: "null" }); await r.text();
+        poked = { status: r.status, armedBefore: armedBefore != null, armedAfter: (await ctx.storage.getAlarm()) != null }; } }
     if (prof) { const { writeFileSync } = await import("node:fs"); writeFileSync(spec.profileFirstTick, JSON.stringify(await prof.stop())); }
     sample();
     const ms = Date.now() - t;
@@ -321,9 +337,9 @@ async function child(spec) {
       catch (e) { rd = { error: String(e && e.message || e).slice(0, 200) }; }
       sample(); }
     const counts = { gets: ct.gets - before.gets, bytesServed: ct.bytes - before.bytes, sql: ct.sql - before.sql, rowsOut: ct.rowsOut - before.rowsOut, unitsWritten: units() - before.units };
-    emit({ ev: "tick", n, ms, counts, threw, readingFor: rd, largest: largest(false), peakMB: mb(peak), aboveBaseMB: mb(peak - base), peakRssMB: mb(peakRss), rows: rows(), units: units(), left: open().map((r) => r.kind) });
+    emit({ ev: "tick", n, ms, counts, threw, injected, poked, readingFor: rd, largest: largest(false), peakMB: mb(peak), aboveBaseMB: mb(peak - base), peakRssMB: mb(peakRss), rows: rows(), units: units(), left: open().map((r) => r.kind) });
   }
-  clearInterval(timer);
+ 
   /* G123b: search is judged by EXTENT: each mark is found in the text rows whose range holds the row the generator put it on (the truth), not by `total >= 1` alone */
   const rowsOfRange = (r) => { const m = /(\d+)\D+(\d+)$/.exec(String(r || "")); return m ? [+m[1], +m[2]] : null; };
   const markExtents = {};
