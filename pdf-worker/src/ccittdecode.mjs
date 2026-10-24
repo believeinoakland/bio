@@ -4,6 +4,30 @@
  * the rotation helpers (`getBit`/`setBit`) stay with the page code in `pdf-pixels`.
  */
 
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { boundOf, statement } from "../../bio-plane/src/read-bounds.mjs";
+
+/** The refusal of a size the decoder will not allocate for (image-codecs R12): the code is `IMAGE_TOO_LARGE`, the
+ *  `detail` the declared size, the bound it was judged against and the sentence's key. A stream that merely cannot be
+ *  read still throws a plain Error, as before. */
+export class CcittRefusal extends Error {
+  constructor(code, detail = {}) {
+    super(`${code}${detail.note ? `: ${detail.note}` : ""}`);
+    this.code = code;
+    this.detail = detail;
+  }
+}
+
+/* THE DECLARED SIZES (R12, fix round 9, G125a): the columns and rows a caller declares are judged against the table
+ * before a row is allocated. The output is a bit a pixel, so the bound on pixels bounds the rows at `columns` wide. */
+const PIXELS_MAX = boundOf("image", "pixels");
+const EDGE_MAX = boundOf("image", "edge");
+const tooLarge = (name, size, note, extra) => new CcittRefusal("IMAGE_TOO_LARGE", { note, bound_name: name, ...statement("image", name, size), ...extra });
+const tooWide = (columns, rows) => tooLarge("edge", Math.max(columns, rows),
+  localize("image-codecs.ccittdecode.the_picture_is_columns_wide", "the picture is {columns} wide and {rows} high, and the decoder reads an edge of at most {bound}", { columns: String(columns), rows: String(rows), bound: String(EDGE_MAX) }), { columns, rows });
+const tooMany = (columns, rows) => tooLarge("pixels", columns * rows,
+  localize("image-codecs.ccittdecode.the_picture_is_columns_wide_2", "the picture is {columns} wide and {rows} high, past the {bound} pixels the decoder reads", { columns: String(columns), rows: String(rows), bound: String(PIXELS_MAX) }), { columns, rows });
+
 /* ── CCITT Group 3/4 ──────────────────────────────────────────────────────────
  * ITU-T T.4 / T.6. The tables below are the standard code books, written out in
  * full rather than generated, because a generated table is a second thing to be
@@ -115,11 +139,16 @@ function readRun(br, table) {
  * turns that into TRUNCATED_IMAGE_DATA rather than padding it with white.
  */
 export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign = false }) {
+  const declared = rows && rows > 0;
+  if (columns > EDGE_MAX || (declared && rows > EDGE_MAX)) throw tooWide(columns, rows || 0);
+  if (declared && columns * rows > PIXELS_MAX) throw tooMany(columns, rows);
+  /* rows not declared: the data may give as many as keep the output within the bound; one more is refused */
+  const rowCap = Math.floor(PIXELS_MAX / Math.max(1, columns));
   const br = new BitReader(data);
   const rowBytes = Math.ceil(columns / 8);
   const out = [];
   let ref = [columns, columns];       // reference line: changing elements
-  const maxRows = rows && rows > 0 ? rows : 1 << 20;
+  const maxRows = declared ? rows : rowCap + 1;
 
   const eol = () => br.peek(12) === "000000000001";
 
@@ -132,6 +161,7 @@ export function ccittDecode(data, { K = 0, columns = 1728, rows = 0, byteAlign =
       if (K > 0) br.skip(1);           // mixed mode: the 1D/2D tag bit
     }
     if (br.eof) break;
+    if (!declared && r >= rowCap) throw tooMany(columns, r + 1);
 
     /* K < 0 is pure 2D (G4); K == 0 is pure 1D (G3). MIXED mode (K > 0) carries
      * a per-row tag bit after each EOL, and a stream without EOLs gives no way

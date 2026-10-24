@@ -9,7 +9,7 @@
  * replaces `current.json`, so a failed run leaves the last good set. A run writes its state when it starts and at each
  * stage, so the invocation the platform cuts after the answer leaves its start and its stage behind, and the
  * scheduled trigger (`mirrorTick`) finishes what was left. */
-import { SCAN_BATCH_MAX, SIGNATURES_MAX_AGE_MS } from './limits.mjs';
+import { SCAN_BATCH_MAX, SIGNATURES_MAX_AGE_MS, SCAN_MAX_BYTES, SCAN_LIMITS } from './limits.mjs';
 import { normaliseTarget, knownStore, sizeTarget, targetStream, writeObject, deleteObject, readJson } from './store.mjs';
 
 export const CURRENT = 'clamav/current.json';
@@ -90,12 +90,15 @@ export async function scan(deps, body) {
   }
   const job = runId(deps.now());
   const staged = [];
+  let stagedBytes = 0;
   for (let i = 0; i < targets.length; i++) {
     const t = normaliseTarget(targets[i]);
     if (!t) { out[i] = notScanned(shaOf(targets[i]), 'BAD_TARGET'); continue; }
     if (setReason) { out[i] = notScanned(t.capture_sha, setReason); continue; }
     const size = await sizeTarget(deps.bucket, store, t);
     if (!size.ok) { out[i] = notScanned(t.capture_sha, size.reason); continue; }
+    // R2 (G136b): the targets staged for one run total at most SCAN_MAX_BYTES; one that would pass it is left for the caller to send again.
+    if (stagedBytes + size.bytes > SCAN_MAX_BYTES) { out[i] = notScanned(t.capture_sha, 'BATCH_BUDGET'); continue; }
     const { stream, outcome } = targetStream(deps.bucket, store, t);
     const put = await ask(deps.scanner, `/job/${job}/${i}`, { method: 'PUT', body: stream, duplex: 'half' });
     // An image that answered before reading the copy whole took nothing to scan.
@@ -106,9 +109,10 @@ export async function scan(deps, body) {
       continue;
     }
     staged.push([i, t.capture_sha]);
+    stagedBytes += size.bytes;
   }
   if (staged.length) {
-    const r = await ask(deps.scanner, `/job/${job}/scan?set=${encodeURIComponent(current.set)}`, { method: 'POST' });
+    const r = await ask(deps.scanner, `/job/${job}/scan?set=${encodeURIComponent(current.set)}&limits=${encodeURIComponent(JSON.stringify(SCAN_LIMITS))}`, { method: 'POST' });
     if (r) engineVersion = r.engine_version || 'not reported';
     for (const [i, sha] of staged) {
       const v = r && r.results[i];

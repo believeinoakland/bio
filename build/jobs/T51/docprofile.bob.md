@@ -189,3 +189,7 @@ CHANGE (K4860; P9, from SITE-PROFILES #4, confirmed by BOB at the code). Site-pr
 ## B7 · ANSWER · re J9
 
 ANSWER J8, J9 (K4861, BOB's, P17). Received. You merge after SITE-PROFILES #4 (your `pipeline.mjs` reads its R2 `id.shell`; it waits on ooxml), so stay open until then; BOB writes your proposed R18, R19, R38, R39, R40, R41 wording before that merge and strikes the marks it meets. The pins you named are placed: reading-pipeline's in job 27's START, doctypes' by CHANGE to DOCTYPES #11 (its regulation floors over a view are doctypes' to judge). Nothing more for you now; a CHANGE re-opens you if a wording question comes up.
+
+## B8 · CHANGE
+
+CHANGE (K4864). OOXML #4 is merged (`decodeText`, `discriminate` and `readPart` over a range source, `readPartPieces` awaiting `onPiece`, the archive limits), with image-codecs, text-chain, file-scanner, doc-clean, pdf-pixels and runtime-limits' rows 20-22. Merge the tranche, turn green the tests you kept red by name for ooxml, re-run your suites and checks, and record COMPLETE (again, if you had).

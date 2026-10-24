@@ -64,6 +64,8 @@
  * imports nothing from it.
  */
 
+import { boundOf } from "./read-bounds.mjs";
+
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 const LATIN1 = new TextDecoder("latin1");
 
@@ -111,7 +113,7 @@ function findEntry(container, want) {
  * A document over this bound gets full central-directory and metadata
  * treatment but full text extraction is refused as a STATED
  * `text-undetermined`, never silently truncated. */
-export const MEASURED_OOXML_TEXT_BOUND_BYTES = 20 * 1024 * 1024; // 20,971,520
+export const MEASURED_OOXML_TEXT_BOUND_BYTES = boundOf("office", "text_bytes"); // 20,971,520 (R6)
 
 /** Sum the DECLARED UNCOMPRESSED sizes of the container's text-bearing parts
  *  (which parts are text-bearing is the format entry's knowledge, passed as a
@@ -188,12 +190,12 @@ export function sizeGuard(declaredBytes, bound = MEASURED_OOXML_TEXT_BOUND_BYTES
  * and is STATED: its size, the ceiling, and `final: true` (the document's own
  * size, not a failure that a later try could mend). It is raised by measuring
  * on the plane, not by arguing here; xlsx and csv alone would take more. */
-export const STREAMED_TEXT_BOUND_BYTES = 32 * 1024 * 1024;
+export const STREAMED_TEXT_BOUND_BYTES = boundOf("office", "streamed_text_bytes");
 /* The decoded text a piece is cut at (when a cut point exists), and the most a
  * reader will carry waiting for one: a part with no cut point in this much text
  * cannot be read in pieces. */
 const TEXT_PIECE_CHARS = 1 << 20;
-const TEXT_PIECE_MAX_CHARS = 8 << 20;
+const TEXT_PIECE_MAX_CHARS = boundOf("office", "piece_chars");
 /* The window the deflated (or stored) bytes are fed through. */
 const INFLATE_WINDOW = 1 << 20;
 
@@ -261,22 +263,36 @@ export function pieceWhy(read) {
  * limits on every part `readPart` inflates, F18). The depth and the two tree
  * limits are counted from the outermost archive across a whole unpack, which
  * only the unpack act (`acquisition`) sees; they are published here so the
- * figures live in one place. */
-export const ARCHIVE_ENTRIES_MAX = 10000;
-/* `acquisition` R10's 256 MiB capture cap, reused: an archive's declared
- * uncompressed total may be no larger than a capture this copy would hold. */
-export const ARCHIVE_TOTAL_MAX = 268435456;
-export const MEMBER_MAX = 268435456;
+ * figures live in one place. Every figure is a row of runtime-limits'
+ * `READ_BOUNDS` taken through `boundOf` (fix round 9, G124g; R30): this module
+ * writes no ceiling as a number. A refusal on a limit is `final`: the same
+ * bytes refuse again. */
+export const ARCHIVE_ENTRIES_MAX = boundOf("archive", "members");
+export const ARCHIVE_TOTAL_MAX = boundOf("archive", "unpacked_bytes");
+export const MEMBER_MAX = boundOf("archive", "member_bytes");
+/* The entries of an office package (G125h), the central directory and one name
+ * (G133e): the reader path's counterparts of the listing's limits. */
+export const OFFICE_ENTRIES_MAX = boundOf("office", "entries");
+export const ARCHIVE_DIRECTORY_MAX = boundOf("archive", "directory");
+export const ARCHIVE_NAME_MAX = boundOf("archive", "name");
 /* Above deflate's possible 1,032:1, so a larger declared ratio is malformed,
  * not merely large (Fifield, "A better zip bomb", WOOT '19). */
-export const ARCHIVE_RATIO_MAX = 1100;
-export const ARCHIVE_DEPTH_MAX = 3;
-export const ARCHIVE_TREE_TOTAL_MAX = 268435456;
-export const ARCHIVE_TREE_ENTRIES_MAX = 10000;
+export const ARCHIVE_RATIO_MAX = boundOf("archive", "ratio");
+export const ARCHIVE_DEPTH_MAX = boundOf("archive", "depth");
+export const ARCHIVE_TREE_TOTAL_MAX = boundOf("archive", "unpacked_bytes");
+export const ARCHIVE_TREE_ENTRIES_MAX = boundOf("archive", "members");
 export const ARCHIVE_LIMITS = Object.freeze({
-  ARCHIVE_ENTRIES_MAX, ARCHIVE_TOTAL_MAX, MEMBER_MAX, ARCHIVE_RATIO_MAX,
-  ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX,
+  ARCHIVE_ENTRIES_MAX, ARCHIVE_TOTAL_MAX, MEMBER_MAX, OFFICE_ENTRIES_MAX, ARCHIVE_DIRECTORY_MAX, ARCHIVE_NAME_MAX,
+  ARCHIVE_RATIO_MAX, ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX,
 });
+/* The XML parts this module decodes itself (`[Content_Types].xml`, `*.rels`,
+ * `docProps/core.xml`, `mimetype`) are kilobytes in any real package; one
+ * declared above this is refused before inflation (G125d: a 100 MiB `.rels`
+ * passes the ratio check at about 1,000:1). */
+export const STRUCTURAL_PART_MAX = boundOf("office", "structural_part_bytes");
+
+/* A refusal on a limit: it names the limit, carries its figure and is final. */
+const overLimit = (why, limit, extra = {}) => ({ ok: false, why, ...extra, limit, final: true });
 
 /* The declared uncompressed total of a container's entries, the per-file
  * total every part read counts against (F18). Remembered per entries array,
@@ -436,6 +452,109 @@ export function normalizePartName(name) {
   try { return String(name ?? "").replace(/^\/+/, ""); } catch { return ""; }
 }
 
+/* A container's structures are read through a WALK: a generator that yields
+ * `[offset, length]` for the bytes it needs next and is handed them. One walk
+ * serves both callers, so they cannot drift: `runSync` hands it ranges of a
+ * buffer the caller holds (`readContainer`, `readPart`), `runAsync` ranges of
+ * a range source (R11, G130c: a file of any size is judged from its end
+ * record, its central directory and the small parts it names). */
+function runSync(walk, b) {
+  let step = walk.next();
+  while (!step.done) {
+    const [at, length] = step.value;
+    step = walk.next(b.subarray(at, at + length));
+  }
+  return step.value;
+}
+async function runAsync(walk, src) {
+  let step = walk.next();
+  while (!step.done) {
+    const [at, length] = step.value;
+    step = walk.next(await src.read(at, length));
+  }
+  return step.value;
+}
+
+/** `bytes` of a ZIP given as a range source `{size, read(offset, length)}`
+ *  (R27) rather than as bytes. */
+const isRangeSource = (x) => !!x && typeof x === "object" && typeof x.read === "function"
+  && !ArrayBuffer.isView(x) && !(x instanceof ArrayBuffer);
+
+function* walkContainer(size) {
+  if (size < 22) return { ok: false, why: "too_short_for_zip" };
+
+  /* EOCD: fixed 22 bytes + a comment of up to 0xFFFF; scan back for the
+   * signature over exactly that window and no further. */
+  const scanFloor = Math.max(0, size - 22 - 0xffff);
+  const win = yield [scanFloor, size - scanFloor];
+  let eocd = -1;
+  for (let p = size - 22; p >= scanFloor; p--) {
+    if (u32(win, p - scanFloor) === SIG_EOCD) { eocd = p; break; }
+  }
+  if (eocd < 0) return { ok: false, why: "eocd_not_found" };
+
+  let { diskEntries, totalEntries, cdSize, cdOffset } = parseEocd(win, eocd - scanFloor);
+  let directoryEnd = eocd;
+
+  /* ZIP64 (N688; K1844): a sentinel in the EOCD sends the reader to the
+   * locator directly before it and the end record it names, whose 64-bit
+   * values are used. A sentinel without a well-formed pair is refused by name,
+   * never read as the 16- or 32-bit value it literally holds. */
+  if (needsZip64({ diskEntries, totalEntries, cdSize, cdOffset })) {
+    const locAt = eocd - 20;
+    const loc = locAt >= 0 ? yield [locAt, 20] : null;
+    const recAt = zip64RecordOffset(loc);
+    const z = Number.isFinite(recAt) && recAt + 56 <= locAt
+      ? zip64End(loc, locAt, yield [recAt, 56], recAt) : null;
+    if (!z) return { ok: false, why: "zip64_record_invalid" };
+    ({ diskEntries, totalEntries, cdSize, cdOffset } = z);
+    directoryEnd = z.recordOffset;
+  }
+  if (diskEntries !== totalEntries) return { ok: false, why: "multi_disk_unsupported" };
+  /* R3 (G125h, G133e): the declared count and the declared directory are
+   * judged against their limits before a byte of the directory is read. */
+  if (totalEntries > OFFICE_ENTRIES_MAX) return overLimit("OFFICE_ENTRIES_MAX", OFFICE_ENTRIES_MAX);
+  if (cdSize > ARCHIVE_DIRECTORY_MAX) return overLimit("ARCHIVE_DIRECTORY_MAX", ARCHIVE_DIRECTORY_MAX);
+  if (cdOffset + cdSize > directoryEnd) return { ok: false, why: "central_directory_truncated" };
+
+  const cd = yield [cdOffset, cdSize];
+  const entries = [];
+  const byName = new Map();
+  let p = 0;
+  for (let i = 0; i < totalEntries; i++) {
+    if (p + 46 > cd.length || u32(cd, p) !== SIG_CENTRAL) {
+      return { ok: false, why: "central_directory_truncated" };
+    }
+    const flags = u16(cd, p + 8);
+    const method = u16(cd, p + 10);
+    const crc = u32(cd, p + 16);
+    const nameLen = u16(cd, p + 28);
+    const extraLen = u16(cd, p + 30);
+    const commentLen = u16(cd, p + 32);
+    if (nameLen > ARCHIVE_NAME_MAX) return overLimit("ARCHIVE_NAME_MAX", ARCHIVE_NAME_MAX);
+    if (p + 46 + nameLen + extraLen + commentLen > cd.length) {
+      return { ok: false, why: "central_directory_truncated" };
+    }
+    const values = centralValues(cd, p, cd.subarray(p + 46 + nameLen, p + 46 + nameLen + extraLen));
+    if (!values) return { ok: false, why: "zip64_record_invalid" };
+    const { compressed: compressedSize, uncompressed: uncompressedSize, offset: localHeaderOffset } = values;
+    const nameBytes = cd.subarray(p + 46, p + 46 + nameLen);
+    /* General-purpose bit 11 declares UTF-8 names; otherwise cp437, for which
+     * latin1 is this walk's approximation (the listing, `listArchive`, decodes
+     * cp437 itself; K1903 (3); OOXML part names are
+     * ASCII, where the two agree exactly). */
+    const name = (flags & 0x0800) ? UTF8.decode(nameBytes) : LATIN1.decode(nameBytes);
+    const entry = { name, method, crc32: crc, compressedSize, uncompressedSize, localHeaderOffset };
+    /* The general-purpose flags decide whether the member is encrypted (R5);
+     * they are not part of the entry's published shape. */
+    Object.defineProperty(entry, "flags", { value: flags, enumerable: false });
+    entries.push(entry);
+    if (!byName.has(name)) byName.set(name, entry);
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+  return { ok: true, entries, byName, count: entries.length };
+}
+
 /** Walk the END OF CENTRAL DIRECTORY record and the central directory itself.
  *  The central directory is the authority on what the archive contains — a
  *  local header may lie (data-descriptor zeros), so sizes/CRC come from here.
@@ -447,72 +566,17 @@ export function normalizePartName(name) {
  *  `central_directory_truncated` — a stated undetermined, never the readable
  *  prefix silently presented as the whole archive. ZIP64's 64-bit values are
  *  read where a sentinel calls for them; a sentinel without them is
- *  `zip64_record_invalid`. */
+ *  `zip64_record_invalid`. A count, a directory or a name over its limit
+ *  (R30) is refused by that limit's name, final, before the directory is
+ *  walked or the name kept. */
 export function readContainer(bytes) {
   const b = toBytes(bytes);
-  if (b.length < 22) return { ok: false, why: "too_short_for_zip" };
+  return runSync(walkContainer(b.length), b);
+}
 
-  /* EOCD: fixed 22 bytes + a comment of up to 0xFFFF; scan back for the
-   * signature over exactly that window and no further. */
-  const scanFloor = Math.max(0, b.length - 22 - 0xffff);
-  let eocd = -1;
-  for (let p = b.length - 22; p >= scanFloor; p--) {
-    if (u32(b, p) === SIG_EOCD) { eocd = p; break; }
-  }
-  if (eocd < 0) return { ok: false, why: "eocd_not_found" };
-
-  let { diskEntries, totalEntries, cdSize, cdOffset } = parseEocd(b, eocd);
-  let directoryEnd = eocd;
-
-  /* ZIP64 (N688; K1844): a sentinel in the EOCD sends the reader to the
-   * locator directly before it and the end record it names, whose 64-bit
-   * values are used. A sentinel without a well-formed pair is refused by name,
-   * never read as the 16- or 32-bit value it literally holds. */
-  if (needsZip64({ diskEntries, totalEntries, cdSize, cdOffset })) {
-    const locAt = eocd - 20;
-    const loc = locAt >= 0 ? b.subarray(locAt, eocd) : null;
-    const recAt = zip64RecordOffset(loc);
-    const z = Number.isFinite(recAt) && recAt + 56 <= locAt
-      ? zip64End(loc, locAt, b.subarray(recAt, recAt + 56), recAt) : null;
-    if (!z) return { ok: false, why: "zip64_record_invalid" };
-    ({ diskEntries, totalEntries, cdSize, cdOffset } = z);
-    directoryEnd = z.recordOffset;
-  }
-  if (diskEntries !== totalEntries) return { ok: false, why: "multi_disk_unsupported" };
-  if (cdOffset + cdSize > directoryEnd) return { ok: false, why: "central_directory_truncated" };
-
-  const entries = [];
-  const byName = new Map();
-  let p = cdOffset;
-  const cdEnd = cdOffset + cdSize;
-  for (let i = 0; i < totalEntries; i++) {
-    if (p + 46 > cdEnd || u32(b, p) !== SIG_CENTRAL) {
-      return { ok: false, why: "central_directory_truncated" };
-    }
-    const flags = u16(b, p + 8);
-    const method = u16(b, p + 10);
-    const crc = u32(b, p + 16);
-    const nameLen = u16(b, p + 28);
-    const extraLen = u16(b, p + 30);
-    const commentLen = u16(b, p + 32);
-    if (p + 46 + nameLen + extraLen + commentLen > cdEnd) {
-      return { ok: false, why: "central_directory_truncated" };
-    }
-    const values = centralValues(b, p, b.subarray(p + 46 + nameLen, p + 46 + nameLen + extraLen));
-    if (!values) return { ok: false, why: "zip64_record_invalid" };
-    const { compressed: compressedSize, uncompressed: uncompressedSize, offset: localHeaderOffset } = values;
-    const nameBytes = b.subarray(p + 46, p + 46 + nameLen);
-    /* General-purpose bit 11 declares UTF-8 names; otherwise cp437, for which
-     * latin1 is this walk's approximation (the listing, `listArchive`, decodes
-     * cp437 itself; K1903 (3); OOXML part names are
-     * ASCII, where the two agree exactly). */
-    const name = (flags & 0x0800) ? UTF8.decode(nameBytes) : LATIN1.decode(nameBytes);
-    const entry = { name, method, crc32: crc, compressedSize, uncompressedSize, localHeaderOffset };
-    entries.push(entry);
-    if (!byName.has(name)) byName.set(name, entry);
-    p += 46 + nameLen + extraLen + commentLen;
-  }
-  return { ok: true, entries, byName, count: entries.length };
+/* The same walk over a range source (already `sourceOf`-wrapped). */
+function readContainerFrom(src) {
+  return runAsync(walkContainer(src.size), src);
 }
 
 /* ------------------------------------------------------------------ *
@@ -549,10 +613,12 @@ async function inflateRaw(u8, limit) {
   }
 }
 
-/* The member's compressed bytes: caps first (F18), then its local header.
- * `{ ok:true, entry, raw }` or the named refusal `readPart` and
- * `readPartPieces` both answer. */
-function locatePart(b, container, want) {
+/* The member's compressed bytes: the caps first (F18; G125d), judged on the
+ * central directory's declared sizes before anything is read, then its local
+ * header. `{ ok:true, entry, raw }` or the named refusal `readPart` and
+ * `readPartPieces` both answer. `structural` is a part this module decodes to
+ * text itself (R5, `STRUCTURAL_PART_MAX`). */
+function* locate(size, container, want, structural) {
   const entry = findEntry(container, want);
   if (!entry) return { ok: false, why: "part_absent", name: want };
 
@@ -560,40 +626,74 @@ function locatePart(b, container, want) {
    * declared sizes: this member, then everything the file declares. A size
    * that is not a number is never shown to be under a limit. */
   const declared = entry.uncompressedSize;
-  if (!(declared <= MEMBER_MAX)) return { ok: false, why: "MEMBER_MAX", name: want, declared, limit: MEMBER_MAX };
+  const name = { name: want };
+  if (!(declared <= MEMBER_MAX)) return overLimit("MEMBER_MAX", MEMBER_MAX, { ...name, declared });
   const total = declaredTotal(container);
-  if (!(total <= ARCHIVE_TOTAL_MAX)) {
-    return { ok: false, why: "ARCHIVE_TOTAL_MAX", name: want, declared: total, limit: ARCHIVE_TOTAL_MAX };
+  if (!(total <= ARCHIVE_TOTAL_MAX)) return overLimit("ARCHIVE_TOTAL_MAX", ARCHIVE_TOTAL_MAX, { ...name, declared: total });
+  /* G125d: a declared size over the ratio's reach of the compressed one is
+   * malformed, not large; a zero compressed size with a non-zero declared
+   * one included. */
+  if (!(declared <= entry.compressedSize * ARCHIVE_RATIO_MAX)) {
+    return overLimit("ARCHIVE_RATIO_MAX", ARCHIVE_RATIO_MAX, { ...name, declared });
+  }
+  if (structural && !(declared <= STRUCTURAL_PART_MAX)) {
+    return overLimit("STRUCTURAL_PART_MAX", STRUCTURAL_PART_MAX, { ...name, declared });
   }
 
   const lh = entry.localHeaderOffset;
-  if (lh + 30 > b.length || u32(b, lh) !== SIG_LOCAL) {
-    return { ok: false, why: "local_header_invalid", name: want };
-  }
-  const nameLen = u16(b, lh + 26);
-  const extraLen = u16(b, lh + 28);
+  if (!(lh + 30 <= size)) return { ok: false, why: "local_header_invalid", name: want };
+  const head = yield [lh, 30];
+  if (u32(head, 0) !== SIG_LOCAL) return { ok: false, why: "local_header_invalid", name: want };
+  const nameLen = u16(head, 26);
+  const extraLen = u16(head, 28);
   const dataStart = lh + 30 + nameLen + extraLen;
   const dataEnd = dataStart + entry.compressedSize;
-  if (dataEnd > b.length) return { ok: false, why: "member_truncated", name: want };
+  if (!(dataEnd <= size)) return { ok: false, why: "member_truncated", name: want };
+  /* G130e: ZipCrypto (bit 0, 6, 13) and AES (method 99) members are stated
+   * encrypted. The central directory's flags decide; an entry that carries
+   * none (a container assembled by hand) is judged by its local header's. */
+  const flags = entry.flags ?? u16(head, 6);
+  if ((flags & 0x2041) !== 0 || entry.method === 99) return { ok: false, why: "MEMBER_ENCRYPTED", name: want };
   if (entry.method !== 0 && entry.method !== 8) {
     return { ok: false, why: "unsupported_compression_method", method: entry.method, name: want };
   }
-  return { ok: true, entry, raw: b.subarray(dataStart, dataEnd) };
+  const raw = yield [dataStart, entry.compressedSize];
+  return { ok: true, entry, raw };
+}
+
+/* `locate` over the bytes or the range source the caller gave. A range
+ * source that cannot be read is `source_unreadable`, never a throw. */
+async function locatePart(source, container, want, structural) {
+  if (!isRangeSource(source)) {
+    const b = toBytes(source);
+    return runSync(locate(b.length, container, want, structural), b);
+  }
+  const src = sourceOf(source);
+  if (!src) return { ok: false, why: "source_unreadable", name: want };
+  try {
+    return await runAsync(locate(src.size, container, want, structural), src);
+  } catch {
+    return { ok: false, why: "source_unreadable", name: want };
+  }
 }
 
 /** Read ONE member's bytes, verified. Sizes and CRC come from the central
  *  directory (the authority), the data offset from the local header it points
- *  at. Every failure is a NAMED reason:
- *    part_absent · local_header_invalid · member_truncated ·
+ *  at. `bytes` may be a range source (R11). Every failure is a NAMED reason:
+ *    part_absent · MEMBER_MAX · ARCHIVE_TOTAL_MAX · ARCHIVE_RATIO_MAX ·
+ *    local_header_invalid · member_truncated · MEMBER_ENCRYPTED ·
  *    unsupported_compression_method · inflate_failed · size_mismatch ·
  *    crc_mismatch
  *  A success is `{ ok:true, bytes }` and the bytes are PROVEN to be the whole
  *  member (length AND CRC-32 against the central directory) — a partial
  *  inflate can never pass as whole. */
-export async function readPart(bytes, container, name) {
-  const b = toBytes(bytes);
+export function readPart(bytes, container, name) {
+  return readPartOf(bytes, container, name, false);
+}
+
+async function readPartOf(source, container, name, structural) {
   const want = normalizePartName(name);
-  const found = locatePart(b, container, want);
+  const found = await locatePart(source, container, want, structural);
   if (!found.ok) return found;
   const { entry, raw } = found;
 
@@ -622,8 +722,10 @@ export async function readPart(bytes, container, name) {
  *  piece may end at, 0 when the buffer holds none yet), so the caller is given
  *  whole elements, or whole tokens, as it asks. The member is inflated in
  *  windows (the host's `DecompressionStream`, or the stored bytes as they
- *  are), decoded as UTF-8 the way `UTF8.decode` decodes it, and never held
- *  whole: the reader carries a piece and the bytes of the window it is in.
+ *  are), decoded as a stream by the part's own encoding (R36: UTF-8, or UTF-16
+ *  by its BOM, its alternating NULs or its declaration; a declaration this
+ *  module cannot decode is `ENCODING_UNSUPPORTED`) and never held whole: the
+ *  reader carries a piece and the bytes of the window it is in.
  *
  *  Verification is `readPart`'s, with the same refusals (R5, R31), but it
  *  comes AFTER the pieces: the length and the CRC-32 are checked as the
@@ -634,25 +736,23 @@ export async function readPart(bytes, container, name) {
  *  `TEXT_PIECE_MAX_CHARS` with no cut point in it is
  *  `{ ok:false, why:"piece_unbounded", name, size, final:true }`: the member
  *  cannot be read in pieces, and the answer states its size. Success is
- *  `{ ok:true, size }`. Async; never throws (`onPiece` throwing is
- *  `{ ok:false, why:"reader_failed" }`). */
+ *  `{ ok:true, size }`. Async; never throws (`onPiece` throwing, or returning
+ *  a promise that rejects, is `{ ok:false, why:"reader_failed" }`; a promise it
+ *  returns is awaited before the next piece is made). */
 export async function readPartPieces(bytes, container, name, cut, onPiece) {
-  const b = toBytes(bytes);
   const want = normalizePartName(name);
-  const found = locatePart(b, container, want);
+  const found = await locatePart(bytes, container, want, false);
   if (!found.ok) return found;
   const { entry, raw } = found;
   const declared = entry.uncompressedSize;
 
-  const decoder = new TextDecoder("utf-8", { fatal: false });
+  let decoder = null;
+  let head = [], headLen = 0;
   let crc = 0xffffffff, size = 0, buf = "";
   let failure = null;
 
-  /* One inflated chunk in; pieces out. Returns false to stop the member. */
-  const take = (chunk) => {
-    size += chunk.length;
-    if (size > declared) { failure = { ok: false, why: "size_mismatch", name: want, expected: declared, got: size }; return false; }
-    crc = crcUpdate(crc, chunk);
+  /* One decoded chunk in; pieces out. Returns false to stop the member. */
+  const text = async (chunk) => {
     buf += decoder.decode(chunk, { stream: true });
     while (buf.length >= TEXT_PIECE_CHARS) {
       const at = cut(buf);
@@ -665,12 +765,34 @@ export async function readPartPieces(bytes, container, name, cut, onPiece) {
       }
       const piece = buf.slice(0, at);
       buf = buf.slice(at);
-      if (!give(piece)) return false;
+      if (!(await give(piece))) return false;
     }
     return true;
   };
-  const give = (piece) => {
-    try { onPiece(piece); return true; } catch {
+  /* The encoding is read from the member's first bytes, once. */
+  const open = async () => {
+    const all = new Uint8Array(headLen);
+    let at = 0;
+    for (const c of head) { all.set(c, at); at += c.length; }
+    head = [];
+    const seen = sniffEncoding(all, { declared: null, kind: "xml", detect: false });
+    if (!seen.ok) { failure = { ok: false, why: "ENCODING_UNSUPPORTED", name: want }; return false; }
+    decoder = new TextDecoder(seen.encoding, { fatal: false });
+    return await text(all);
+  };
+  const take = async (chunk) => {
+    size += chunk.length;
+    if (size > declared) { failure = { ok: false, why: "size_mismatch", name: want, expected: declared, got: size }; return false; }
+    crc = crcUpdate(crc, chunk);
+    if (decoder) return await text(chunk);
+    head.push(chunk);
+    headLen += chunk.length;
+    return headLen >= SNIFF_BYTES ? await open() : true;
+  };
+  /* The caller may return a promise (a reader that yields between pieces): it
+   * is awaited before the next piece is made (fix round 9, K4858). */
+  const give = async (piece) => {
+    try { await onPiece(piece); return true; } catch {
       failure = { ok: false, why: "reader_failed", name: want };
       return false;
     }
@@ -679,7 +801,7 @@ export async function readPartPieces(bytes, container, name, cut, onPiece) {
   try {
     if (entry.method === 0) {
       for (let at = 0; at < raw.length; at += INFLATE_WINDOW) {
-        if (!take(raw.subarray(at, at + INFLATE_WINDOW))) break;
+        if (!(await take(raw.subarray(at, at + INFLATE_WINDOW)))) break;
       }
     } else {
       let at = 0;
@@ -695,15 +817,16 @@ export async function readPartPieces(bytes, container, name, cut, onPiece) {
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
-          if (!take(value)) { reader.cancel().catch(() => {}); break; }
+          if (!(await take(value))) { reader.cancel().catch(() => {}); break; }
         }
       } catch {
         return failure ?? { ok: false, why: "inflate_failed", name: want };
       }
     }
     if (failure) return failure;
-    buf += decoder.decode();
-    if (buf.length && !give(buf)) return failure;
+    if (!decoder && headLen && !(await open())) return failure;
+    if (decoder) buf += decoder.decode();
+    if (buf.length && !(await give(buf))) return failure;
   } catch {
     return failure ?? { ok: false, why: "reader_failed", name: want };
   }
@@ -713,17 +836,205 @@ export async function readPartPieces(bytes, container, name, cut, onPiece) {
 }
 
 /* ------------------------------------------------------------------ *
+ * Bytes to text: the one decode (R36; fix round 9, G131g; K4628 reversed)
+ * ------------------------------------------------------------------ *
+ *
+ * Upload, fetch and the parts of a package are decoded by this one function.
+ * The encoding is decided by the strongest evidence the bytes carry, in this
+ * order: a byte-order mark; text laid out as UTF-16 (every other byte NUL, as
+ * ASCII-range UTF-16 is); the encoding the caller declares (`declared`, a
+ * header's `charset`: it wins over what the text says of itself); the text's
+ * own declaration (`kind` "xml": the prolog; "html": a `meta`); and, when
+ * nothing declares it, the text itself: valid UTF-8 is UTF-8, anything else
+ * windows-1252. Only that last case is `assumed`. The encodings read are
+ * UTF-8, UTF-16, windows-125x and ISO-8859-x; a declaration naming another is
+ * refused by name, never decoded as if it named one of these. */
+
+/* The bytes read for an in-text declaration and for the layout of UTF-16. */
+const SNIFF_BYTES = 1024;
+const PARITY_SAMPLE = 4096;
+/* The bytes of one window whose detected encoding is compared with the
+ * file's (`disagree`). */
+const DETECT_WINDOW = 65536;
+
+const ENCODING_LABEL = /^(?:utf-?8|unicode-1-1-utf-8|utf-?16(?:le|be)?|ucs-?2|unicode|us-ascii|ascii|iso[-_ ]?8859[-_ ]?\d{1,2}|latin[1-9]|l[1-9]|(?:windows|cp|x-cp)[-_ ]?125[0-8])$/;
+
+/* The host's canonical name for a label this module reads, or null. */
+function canonicalEncoding(label) {
+  let l;
+  try { l = String(label ?? "").trim().toLowerCase(); } catch { return null; }
+  if (!ENCODING_LABEL.test(l)) return null;
+  try { return new TextDecoder(l).encoding; } catch { return null; }
+}
+
+function bomOf(b) {
+  if (b.length >= 3 && b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf) return "utf-8";
+  if (b.length >= 2 && b[0] === 0xff && b[1] === 0xfe) return "utf-16le";
+  if (b.length >= 2 && b[0] === 0xfe && b[1] === 0xff) return "utf-16be";
+  return null;
+}
+
+/* Text laid out as UTF-16 without a mark: one byte of each pair NUL, as the
+ * ASCII range of UTF-16 is. "utf-16le", "utf-16be" or null. */
+function utf16Layout(b) {
+  const n = Math.min(b.length, PARITY_SAMPLE) & ~1;
+  if (n < 2) return null;
+  let even = 0, odd = 0;
+  for (let i = 0; i < n; i += 2) { if (b[i] === 0) even++; if (b[i + 1] === 0) odd++; }
+  const pairs = n / 2;
+  if (odd >= pairs * 0.3 && even <= pairs * 0.02) return "utf-16le";
+  if (even >= pairs * 0.3 && odd <= pairs * 0.02) return "utf-16be";
+  return null;
+}
+
+/* Whether `b[from, to)` is valid UTF-8 (RFC 3629: no overlong form, no
+ * surrogate, nothing above U+10FFFF); `multi` is whether it holds any
+ * non-ASCII character. */
+function utf8Check(b, from = 0, to = b.length) {
+  let multi = false;
+  for (let i = from; i < to;) {
+    const c = b[i];
+    if (c < 0x80) { i++; continue; }
+    multi = true;
+    let need, min;
+    if (c >= 0xc2 && c <= 0xdf) { need = 1; min = 0x80; }
+    else if (c >= 0xe0 && c <= 0xef) { need = 2; min = 0x800; }
+    else if (c >= 0xf0 && c <= 0xf4) { need = 3; min = 0x10000; }
+    else return { valid: false, multi };
+    if (i + need >= to) return { valid: false, multi };
+    let cp = c & (0x3f >> need);
+    for (let k = 1; k <= need; k++) {
+      const x = b[i + k];
+      if ((x & 0xc0) !== 0x80) return { valid: false, multi };
+      cp = (cp << 6) | (x & 0x3f);
+    }
+    if (cp < min || cp > 0x10ffff || (cp >= 0xd800 && cp <= 0xdfff)) return { valid: false, multi };
+    i += need + 1;
+  }
+  return { valid: true, multi };
+}
+
+/* The encoding a text declares of itself: the XML prolog's `encoding`, an
+ * HTML `meta` charset. null when it declares none. */
+function declaredInText(b, kind) {
+  if (kind !== "xml" && kind !== "html") return null;
+  let head;
+  try { head = LATIN1.decode(b.subarray(0, kind === "xml" ? SNIFF_BYTES : 4 * SNIFF_BYTES)); } catch { return null; }
+  const m = kind === "xml"
+    ? head.match(/^\s*<\?xml[^>]*?\bencoding\s*=\s*["']([^"']+)["']/i)
+    : head.match(/<meta\b[^>]*?\bcharset\s*=\s*["']?\s*([^\s"';>/]+)/i);
+  return m ? m[1] : null;
+}
+
+/* The encoding of `b`: `{ ok:true, encoding, assumed }` or `{ ok:false }` for
+ * a declaration this module cannot decode. `detect` false leaves the text
+ * itself out of the evidence (a member read in pieces is not held to be
+ * judged whole: UTF-8 is then what nothing else declares). */
+function sniffEncoding(b, { declared, kind, detect }) {
+  const bom = bomOf(b);
+  if (bom) return { ok: true, encoding: bom, assumed: false };
+  const layout = utf16Layout(b);
+  if (layout) return { ok: true, encoding: layout, assumed: kind !== "xml" };
+  if (declared != null && declared !== "") {
+    const encoding = canonicalEncoding(declared);
+    return encoding ? { ok: true, encoding, assumed: false } : { ok: false };
+  }
+  const inText = declaredInText(b, kind);
+  if (inText != null) {
+    const encoding = canonicalEncoding(inText);
+    if (!encoding) return { ok: false };
+    /* UTF-16 in the text of an 8-bit-looking file is not UTF-16 (the layout
+     * above is how UTF-16 without a mark shows itself). */
+    return { ok: true, encoding: encoding.startsWith("utf-16") ? "utf-8" : encoding, assumed: false };
+  }
+  if (detect && !utf8Check(b).valid) return { ok: true, encoding: "windows-1252", assumed: true };
+  return { ok: true, encoding: "utf-8", assumed: true };
+}
+
+/* The windows of an 8-bit-compatible text whose own detection differs from
+ * the file's: a window that is not UTF-8 in a file read as UTF-8, a window
+ * that is UTF-8 with non-ASCII characters in a file read as a legacy charset.
+ * A window cut inside a character is judged without the cut ends. */
+function disagreeing(b, encoding) {
+  const out = [];
+  if (b.length <= DETECT_WINDOW || encoding.startsWith("utf-16")) return out;
+  const asUtf8 = encoding === "utf-8";
+  for (let at = 0; at < b.length; at += DETECT_WINDOW) {
+    let from = at, to = Math.min(b.length, at + DETECT_WINDOW);
+    if (at > 0) for (let k = 0; k < 3 && from < to && (b[from] & 0xc0) === 0x80; k++) from++;
+    if (to < b.length) {
+      for (let k = 1; k <= 3 && to - k >= from; k++) {
+        const x = b[to - k];
+        if ((x & 0xc0) === 0x80) continue;
+        if (x >= 0xc0 && ((x >= 0xf0 ? 4 : x >= 0xe0 ? 3 : 2) > k)) to -= k;
+        break;
+      }
+    }
+    const seen = utf8Check(b, from, to);
+    if (asUtf8 ? !seen.valid : seen.valid && seen.multi) out.push(at);
+  }
+  return out;
+}
+
+/** The one decode of bytes to text (R36). Synchronous and pure; never throws.
+ *  `{ ok:true, text, encoding, assumed, replaced, replaced_ratio, disagree }`
+ *  or `{ ok:false, why:"ENCODING_UNSUPPORTED", name }`. */
+export function decodeText(bytes, options) {
+  const o = options && typeof options === "object" ? options : {};
+  const name = o.name ?? null;
+  const unsupported = { ok: false, why: "ENCODING_UNSUPPORTED", name };
+  try {
+    const b = toBytes(bytes);
+    const seen = sniffEncoding(b, { declared: o.declared, kind: o.kind, detect: true });
+    if (!seen.ok) return unsupported;
+    const text = new TextDecoder(seen.encoding, { fatal: false }).decode(b);
+    let replaced = 0;
+    for (let at = text.indexOf("�"); at >= 0; at = text.indexOf("�", at + 1)) replaced++;
+    let characters = text.length;
+    for (const _ of text.matchAll(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g)) characters--;
+    return {
+      ok: true, text, encoding: seen.encoding, assumed: seen.assumed, replaced,
+      replaced_ratio: characters ? replaced / characters : 0, disagree: disagreeing(b, seen.encoding),
+    };
+  } catch {
+    return unsupported;
+  }
+}
+
+
+/* ------------------------------------------------------------------ *
  * Minimal XML attribute/element extraction — enough for OPC's three tiny
  * grammars ([Content_Types].xml, .rels, core.xml), dependency-free, and
  * honest about failure: a document these patterns cannot read yields a
  * stated `unparseable`, never a guessed structure.
  * ------------------------------------------------------------------ */
 
+/* A numeric character reference is a complete `&#nn;` or `&#xhh;` naming a
+ * Unicode scalar value: not U+0000, not a surrogate, not above U+10FFFF. */
+const scalar = (code) => code > 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff);
+const NUMERIC_REFERENCE = /&#(?:x([0-9a-fA-F]+)|([0-9]+));/y;
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+
+/* R37 (G133c): whether the part holds an `&#` that is not a complete
+ * reference to a scalar value (above U+10FFFF, a surrogate, U+0000, digits
+ * that do not parse), or a lone surrogate. Such a part is not read: no value
+ * is made of it, so nothing downstream (`String.fromCodePoint`,
+ * `encodeURIComponent`) can throw on it. One pass, linear in the part. */
+function malformedReferences(xml) {
+  if (LONE_SURROGATE.test(xml)) return true;
+  for (let at = xml.indexOf("&#"); at >= 0; at = xml.indexOf("&#", at + 2)) {
+    NUMERIC_REFERENCE.lastIndex = at;
+    const m = NUMERIC_REFERENCE.exec(xml);
+    if (!m || !scalar(m[1] !== undefined ? parseInt(m[1], 16) : parseInt(m[2], 10))) return true;
+  }
+  return false;
+}
+
 function decodeXmlEntities(s) {
   return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
     if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+      const code = e[1] === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      return scalar(code) ? String.fromCodePoint(code) : m;
     }
     return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
   });
@@ -733,10 +1044,16 @@ function decodeXmlEntities(s) {
  * attributes decoded. Attribute lookup is by local name too. */
 function xmlElements(xml, localName) {
   const out = [];
-  const re = new RegExp(`<(?:[\\w.-]+:)?${localName}\\b([^>]*?)/?>`, "g");
-  for (const m of xml.matchAll(re)) {
+  /* The tag's end is found once per element (`indexOf`), so a part of
+   * unterminated tags costs one pass, not one pass per tag. */
+  const re = new RegExp(`<(?:[\\w.-]+:)?${localName}\\b`, "g");
+  for (let m = re.exec(xml); m; m = re.exec(xml)) {
+    const end = xml.indexOf(">", re.lastIndex);
+    if (end < 0) break;
+    const body = xml.slice(re.lastIndex, end);
+    re.lastIndex = end + 1;
     const attrs = {};
-    for (const a of m[1].matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    for (const a of body.matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
       const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
       attrs[local] = decodeXmlEntities(a[3] ?? a[4] ?? "");
     }
@@ -771,6 +1088,7 @@ export function parseContentTypes(xml) {
   if (typeof xml !== "string" || !/<(?:[\w.-]+:)?Types\b/.test(xml)) {
     return { ok: false, why: "content_types_unparseable" };
   }
+  if (malformedReferences(xml)) return { ok: false, why: "content_types_unparseable", final: true };
   const defaults = new Map();
   const overrides = new Map();
   for (const d of xmlElements(xml, "Default")) {
@@ -908,8 +1226,11 @@ export const ODF_FLAVOURS = [
  * Each main content type is the one Office writes for that kind (Microsoft's
  * `vnd.ms-*.macroEnabled` types, as requirement R10 lists them); none is the
  * plain twin's, so a row can match only its own. */
+/* The templates and the show (G130e; X32): read as their twin too, with their
+ * variant: `dotx` as docx, `potx` and `ppsx` as pptx. */
 /** The table `discriminate()` uses when a caller names none: both part-maps,
- *  OPC first (the plain rows, then the macro-enabled ones). Order matters
+ *  OPC first (the plain rows, then the macro-enabled and the template and
+ *  show ones). Order matters
  *  only in that a container carrying BOTH `[Content_Types].xml` and a
  *  `mimetype` member is read as OPC — see the precedence note in
  *  `discriminate`. Written out row by row, never spread or mapped, so
@@ -926,6 +1247,9 @@ export const CONTAINER_FLAVOURS = [
   { partMap: "opc", flavour: "pptx", variant: "potm", mainContentType: "application/vnd.ms-powerpoint.template.macroEnabled.main+xml", conventionalMainPart: "ppt/presentation.xml" },
   { partMap: "opc", flavour: "pptx", variant: "ppsm", mainContentType: "application/vnd.ms-powerpoint.slideshow.macroEnabled.main+xml", conventionalMainPart: "ppt/presentation.xml" },
   { partMap: "opc", flavour: "pptx", variant: "ppam", mainContentType: "application/vnd.ms-powerpoint.addin.macroEnabled.main+xml", conventionalMainPart: "ppt/presentation.xml" },
+  { partMap: "opc", flavour: "docx", variant: "dotx", mainContentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml", conventionalMainPart: "word/document.xml" },
+  { partMap: "opc", flavour: "pptx", variant: "potx", mainContentType: "application/vnd.openxmlformats-officedocument.presentationml.template.main+xml", conventionalMainPart: "ppt/presentation.xml" },
+  { partMap: "opc", flavour: "pptx", variant: "ppsx", mainContentType: "application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml", conventionalMainPart: "ppt/presentation.xml" },
   ODF_FLAVOURS[0], ODF_FLAVOURS[1], ODF_FLAVOURS[2],
 ];
 
@@ -965,27 +1289,42 @@ export const CONTAINER_FLAVOURS = [
  *  pinned COFF-2 outcome, so the existing determination stands and the suite
  *  asserts both halves: still `zip`, and never an ODF flavour.) */
 export async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAVOURS) {
-  const b = toBytes(bytes);
   const signals = [];
   if (contentType) {
     let declared;
     try { declared = String(contentType); } catch { declared = "(not a string)"; }
     signals.push(`declared-content-type:${declared} (not used for the determination)`);
   }
+  /* R11 (G130c): `bytes` is the file, or a range source standing for it, of
+   * any size; the answer is the same either way. A range source that cannot
+   * be read answers `source_unreadable`. */
+  const range = isRangeSource(bytes) ? sourceOf(bytes) : null;
+  if (isRangeSource(bytes) && !range) return { ok: false, why: "source_unreadable", signals };
+  try {
+    return await judge(range ? bytes : toBytes(bytes), range, signals, flavours);
+  } catch (e) {
+    if (e instanceof Unreadable) return { ok: false, why: "source_unreadable", signals };
+    throw e;
+  }
+}
 
-  if (!hasZipMagic(b)) {
+async function judge(bytes, range, signals, flavours) {
+  const magic = range
+    ? range.size >= 4 && u32(await range.read(0, 4), 0) === SIG_LOCAL
+    : hasZipMagic(bytes);
+  if (!magic) {
     signals.push("magic:absent (no PK\\x03\\x04)");
     return { ok: false, why: "not_a_zip", signals };
   }
   signals.push("magic:zip (PK\\x03\\x04)");
 
-  const container = readContainer(b);
+  const container = range ? await readContainerFrom(range) : readContainer(bytes);
   if (!container.ok) {
     /* A ZIP whose central directory cannot be read has NO honest flavour:
      * stated undetermined with the container's own reason, never the readable
-     * prefix promoted to a verdict. */
+     * prefix promoted to a verdict. A limit it was refused on is carried. */
     signals.push(`container:${container.why}`);
-    return { ok: false, why: container.why, signals };
+    return { ok: false, why: container.why, ...(container.limit !== undefined ? { limit: container.limit, final: true } : {}), signals };
   }
   signals.push(`container:zip entries=${container.count}`);
 
@@ -1015,21 +1354,22 @@ export async function discriminate(bytes, contentType = null, flavours = CONTAIN
      * It returns null — pushing NOTHING — for a container with no `mimetype`
      * member at all, so a ZIP with neither part map reaches the plain-ZIP
      * determination below with exactly the result object it always had. */
-    const odf = odfRows.length ? await discriminateOdf(b, container, odfRows, signals) : null;
+    const odf = odfRows.length ? await discriminateOdf(bytes, container, odfRows, signals) : null;
     if (odf) return odf;
     signals.push(`part:${CONTENT_TYPES_PART} absent → plain ZIP`);
     return { ok: true, format: "zip", signals };
   }
 
-  const ctBytes = await readPart(b, container, CONTENT_TYPES_PART);
+  const ctBytes = await readPartOf(bytes, container, CONTENT_TYPES_PART, true);
   if (!ctBytes.ok) {
     signals.push(`part:${CONTENT_TYPES_PART} unreadable (${ctBytes.why})`);
     return { ok: true, format: "undetermined", why: `content_types_unreadable:${ctBytes.why}`, signals };
   }
-  const types = parseContentTypes(UTF8.decode(ctBytes.bytes));
+  const ctText = decodeText(ctBytes.bytes, { name: CONTENT_TYPES_PART, kind: "xml" });
+  const types = ctText.ok ? parseContentTypes(ctText.text) : { ok: false, why: "content_types_unparseable" };
   if (!types.ok) {
     signals.push(`part:${CONTENT_TYPES_PART} present but unparseable`);
-    return { ok: true, format: "undetermined", why: "content_types_unparseable", signals };
+    return { ok: true, format: "undetermined", why: "content_types_unparseable", ...(types.final ? { final: true } : {}), signals };
   }
   signals.push(`part:${CONTENT_TYPES_PART} parsed (${types.defaults.size} defaults, ${types.overrides.size} overrides)`);
 
@@ -1139,7 +1479,7 @@ async function discriminateOdf(bytes, container, rows, signals) {
     return { ok: true, format: "undetermined", why: "odf_mimetype_oversized", signals };
   }
 
-  const read = await readPart(bytes, container, ODF_MIMETYPE_PART);
+  const read = await readPartOf(bytes, container, ODF_MIMETYPE_PART, true);
   if (!read.ok) {
     signals.push(`odf:${ODF_MIMETYPE_PART} unreadable (${read.why})`);
     return { ok: true, format: "undetermined", why: `odf_mimetype_unreadable:${read.why}`, signals };
@@ -1150,8 +1490,9 @@ async function discriminateOdf(bytes, container, rows, signals) {
    * so a trailing newline is a non-conforming producer to be NAMED, not a
    * difference to be absorbed. `undetermined` carries the value it actually
    * read, which is what makes such a producer diagnosable in one look. */
-  const declared = UTF8.decode(read.bytes);
-  const row = rows.find((f) => f.mimetype === declared);
+  const decoded = decodeText(read.bytes, { name: ODF_MIMETYPE_PART, kind: "text" });
+  const declared = decoded.ok ? decoded.text : null;
+  const row = declared === null ? undefined : rows.find((f) => f.mimetype === declared);
   if (!row) {
     /* The part names may look exactly like an ODF package's — this is the
      * negative control the row names — and it still is not one. Undetermined
@@ -1217,6 +1558,7 @@ export function parseRels(xml) {
   if (typeof xml !== "string" || !/<(?:[\w.-]+:)?Relationships\b/.test(xml)) {
     return { ok: false, why: "rels_unparseable" };
   }
+  if (malformedReferences(xml)) return { ok: false, why: "rels_unparseable", final: true };
   const relationships = xmlElements(xml, "Relationship")
     .filter((a) => a.Target != null)
     .map((a) => ({
@@ -1238,10 +1580,11 @@ export async function walkRels(bytes, container) {
   const outbound = [];
   const undetermined = [];
   for (const part of listRelsParts(container)) {
-    const read = await readPart(bytes, container, part);
+    const read = await readPartOf(bytes, container, part, true);
     if (!read.ok) { undetermined.push({ part, why: read.why }); continue; }
-    const parsed = parseRels(UTF8.decode(read.bytes));
-    if (!parsed.ok) { undetermined.push({ part, why: parsed.why }); continue; }
+    const text = decodeText(read.bytes, { name: part, kind: "xml" });
+    const parsed = text.ok ? parseRels(text.text) : { ok: false, why: "rels_unparseable" };
+    if (!parsed.ok) { undetermined.push({ part, why: parsed.why, ...(parsed.final ? { final: true } : {}) }); continue; }
     byPart.push({ part, relationships: parsed.relationships, outbound: parsed.outbound });
     for (const r of parsed.outbound) outbound.push({ part, ...r });
   }
@@ -1264,6 +1607,7 @@ export function parseCoreProperties(xml) {
   if (typeof xml !== "string" || !/<(?:[\w.-]+:)?coreProperties\b/.test(xml)) {
     return { ok: false, why: "core_properties_unparseable" };
   }
+  if (malformedReferences(xml)) return { ok: false, why: "core_properties_unparseable", final: true };
   const revision = xmlElementText(xml, "revision");
   const revisionNumber = revision != null && /^\d+$/.test(revision.trim())
     ? parseInt(revision.trim(), 10) : null;
@@ -1283,9 +1627,10 @@ export function parseCoreProperties(xml) {
  *  (it is optional in OPC) is `{ ok:false, why:"part_absent" }` — stated, and
  *  distinct from a package whose core.xml exists but cannot be read. */
 export async function readCoreProperties(bytes, container) {
-  const read = await readPart(bytes, container, CORE_PROPERTIES_PART);
+  const read = await readPartOf(bytes, container, CORE_PROPERTIES_PART, true);
   if (!read.ok) return { ok: false, why: read.why };
-  return parseCoreProperties(UTF8.decode(read.bytes));
+  const text = decodeText(read.bytes, { name: CORE_PROPERTIES_PART, kind: "xml" });
+  return text.ok ? parseCoreProperties(text.text) : { ok: false, why: "core_properties_unparseable" };
 }
 
 /* ------------------------------------------------------------------ *
@@ -1451,9 +1796,7 @@ class Unreadable extends Error {}
  * hold `length` bytes; fewer, a rejection or a non-byte answer makes the whole
  * service answer `source_unreadable`, never a partial reading. */
 function sourceOf(source) {
-  const isRange = source && typeof source === "object" && typeof source.read === "function"
-    && !ArrayBuffer.isView(source) && !(source instanceof ArrayBuffer);
-  if (!isRange) {
+  if (!isRangeSource(source)) {
     const b = toBytes(source);
     return { size: b.length, read: async (offset, length) => b.subarray(offset, offset + length), whole: b };
   }
@@ -1530,7 +1873,8 @@ async function listFrom(src) {
     zip64 = true;
   }
   if (diskEntries !== totalEntries) return refusal("multi_disk_unsupported");
-  if (totalEntries > ARCHIVE_ENTRIES_MAX) return refusal("ARCHIVE_ENTRIES_MAX", { limit: ARCHIVE_ENTRIES_MAX });
+  if (totalEntries > ARCHIVE_ENTRIES_MAX) return refusal("ARCHIVE_ENTRIES_MAX", { limit: ARCHIVE_ENTRIES_MAX, final: true });
+  if (cdSize > ARCHIVE_DIRECTORY_MAX) return refusal("ARCHIVE_DIRECTORY_MAX", { limit: ARCHIVE_DIRECTORY_MAX, final: true });
   if (cdOffset + cdSize > directoryEnd) return refusal("central_directory_truncated");
 
   /* THE CENTRAL DIRECTORY, every record, the sole authority (R24). */
@@ -1540,6 +1884,7 @@ async function listFrom(src) {
   for (let i = 0; i < totalEntries; i++) {
     if (p + 46 > cd.length || u32(cd, p) !== SIG_CENTRAL) return refusal("central_directory_truncated");
     const nameLen = u16(cd, p + 28), extraLen = u16(cd, p + 30), commentLen = u16(cd, p + 32);
+    if (nameLen > ARCHIVE_NAME_MAX) return refusal("ARCHIVE_NAME_MAX", { limit: ARCHIVE_NAME_MAX, final: true });
     if (p + 46 + nameLen + extraLen + commentLen > cd.length) return refusal("central_directory_truncated");
     const nameBytes = cd.subarray(p + 46, p + 46 + nameLen);
     const values = centralValues(cd, p, cd.subarray(p + 46 + nameLen, p + 46 + nameLen + extraLen));
@@ -1557,18 +1902,22 @@ async function listFrom(src) {
    * the rows as read. */
   const directoryFilled = p === cd.length && cdOffset + cdSize === directoryEnd;
 
-  const entries = [];
+  /* R38 (G133e): the directory is read once above; the local headers are
+   * read in the order they lie in the file, whatever order the directory
+   * lists the entries in, so a source that fetches parts of a file reads each
+   * part once and not once per jump. The rows keep the directory's order. */
+  const entries = records.map((r, index) => rowOf(index, r));
   const ranges = [];
   let outOfRange = false;
-  for (const [index, r] of records.entries()) {
-    const row = rowOf(index, r);
-    const local = await crossCheck(src, r, row, cdOffset);
+  const physical = entries.map((_, i) => i).sort((a, b) => entries[a].local_offset - entries[b].local_offset || a - b);
+  for (const i of physical) {
+    const row = entries[i];
+    const local = await crossCheck(src, records[i], row, cdOffset);
     if (local.outOfRange) outOfRange = true;
     ranges.push(local.range);
     row.verdict = verdictOf(row, local.agrees);
-    if (row.verdict === "MEMBER_MAX") row.limit = MEMBER_MAX;
-    if (row.verdict === "ARCHIVE_RATIO_MAX") row.limit = ARCHIVE_RATIO_MAX;
-    entries.push(row);
+    if (row.verdict === "MEMBER_MAX") Object.assign(row, { limit: MEMBER_MAX, final: true });
+    if (row.verdict === "ARCHIVE_RATIO_MAX") Object.assign(row, { limit: ARCHIVE_RATIO_MAX, final: true });
   }
   const shared = new Map();
   for (const row of entries) shared.set(row.name_raw, (shared.get(row.name_raw) ?? 0) + 1);
@@ -1585,7 +1934,7 @@ async function listFrom(src) {
   let declared_total = 0;
   for (const row of entries) if (row.kind === "file") declared_total += row.uncompressed;
   const out = { ok: true, entries, count: entries.length, declared_total, zip64, verdict: "ok" };
-  if (declared_total > ARCHIVE_TOTAL_MAX) { out.verdict = "ARCHIVE_TOTAL_MAX"; out.limit = ARCHIVE_TOTAL_MAX; }
+  if (declared_total > ARCHIVE_TOTAL_MAX) { out.verdict = "ARCHIVE_TOTAL_MAX"; out.limit = ARCHIVE_TOTAL_MAX; out.final = true; }
   return out;
 }
 
@@ -1767,7 +2116,7 @@ export function streamMember(source, row) {
   if (row?.verdict !== "ok") {
     early = { ok: false, why: typeof row?.verdict === "string" ? row.verdict : "row_invalid", index: row?.index ?? null };
     const limit = ARCHIVE_LIMITS[early.why];
-    if (limit !== undefined) early.limit = limit;
+    if (limit !== undefined) { early.limit = limit; early.final = true; }
   } else if (!valid) {
     early = { ok: false, why: "row_invalid", index: row?.index ?? null };
   }
