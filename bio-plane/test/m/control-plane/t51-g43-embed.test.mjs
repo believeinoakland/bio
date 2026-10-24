@@ -64,10 +64,10 @@ test("R58 (G43; K4651): an archive's document or a member the door promotes carr
   assert.deepEqual(Object.keys(r.json.promoted[0]).sort(), ["bundleId", "sha256"]);
   assert.deepEqual(r.json.not_promoted, []);
   /* the readings that were left out follow: the archive's own and the first member's, each asked of `readHeld` (its digest has no home yet) and written down as owed;
-     the second member carried none, so it is not followed */
+     the second member carried none, and since G162 (R134, K4980) every member the door filed is followed, so it is followed too */
   const follows = (route) => w.env.calls.filter((c) => c.route === route).map((c) => c.params.sha256 ?? c.params.sha);
-  assert.deepEqual(follows("readheldfor").sort(), [S("a"), S("b")]);
-  assert.deepEqual(follows("pendingadd").sort(), [S("a"), S("b")]);
+  assert.deepEqual(follows("readheldfor").sort(), [S("a"), S("b"), S("c")]);
+  assert.deepEqual(follows("pendingadd").sort(), [S("a"), S("b"), S("c")]);
   /* control: a reading that fits stays in the file, the indent unchanged */
   const small = archiveWorld({ ok: true, existed: false, document: archiveDoc(readingOf(2000)), unpack: { ok: true, archive: { sha256: S("a") }, documents: members(readingOf(2000)) } });
   const s = await call(small.env, { op: "acquire", token: small.S.ann, method: "POST", hooks: small.hooks, body: {} });
@@ -78,7 +78,9 @@ test("R58 (G43; K4651): an archive's document or a member the door promotes carr
     assert.equal(d.text_units[0].text.length, 2000, "the reading that fits is embedded");
     assert.equal(provOf(p).text, JSON.stringify({ documents: [d] }, null, 2));
   }
-  assert.equal(small.env.calls.filter((c) => c.route === "readheldfor" || c.route === "pendingadd").length, 0, "nothing to follow");
+  /* G162 (R134, K4980): every member filed is followed, so the two members are, though their readings were embedded; the archive's own document, whose reading was not dropped, is not */
+  const followed = small.env.calls.filter((c) => c.route === "readheldfor" || c.route === "pendingadd").map((c) => c.params.sha256 ?? c.params.sha);
+  assert.deepEqual([...new Set(followed)].sort(), [S("b"), S("c")], "the members are followed, the archive's own document is not");
 });
 
 test("R58 (G43): a document that carries no reading, or only a large field that is not a reading, is filed whole; `promoteArchive` hands back only the documents it filed without their reading (`onDropped`), after a promotion that stood", async () => {
