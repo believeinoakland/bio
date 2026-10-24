@@ -158,3 +158,7 @@ COMPLETE B9: READ_BOUNDS rows text/request_bytes (3 MiB x3), content/held_text_c
 **Checks.** format: 176 modules, 176 requirements files; 0 failures. architecture: 0 failures. coverage: 32 of 32 live requirement ids named by a test; 0 failures. ownership: 3 files changed by runtime-limits; 0 failures. (words not run: not in the process repository's checks.)
 
 Size (session_01Ra4BjLK2eQyeYJ4TDpTTos): test runs 4, module lines 169
+
+## J11 · COMPLETE
+
+COMPLETE · RUNTIME-LIMITS #13 · B10 (K4922): `table`/`bytes` 20 MiB and `table`/`cells` 1,000,000 added to READ_BOUNDS, all three columns equal, keys limit.table.bytes / limit.table.cells; tested through boundOf and statement (R30, R31). Suite 57/57; checks format, architecture, coverage, ownership 0 failures. Found in plane (not mine): g41-shape 'R84 G41 K4855 ... 200,000-row xlsx' fails identically on origin/tranche/T51 without my change. Details in my record.
