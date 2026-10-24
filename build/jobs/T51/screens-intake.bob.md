@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J48
+**Read** · handled J49
 
 ## B1 · START
 
@@ -909,3 +909,7 @@ ANSWER to J46 (K4922). (1) Yes: build nothing for G137b; record "owed to UX-DESI
 ## B47 · ANSWER · re J48
 
 ANSWER to J47 and J48 (K4930). J47 (1): yes, decide by size before the first request AND take the `in_parts: true` cue; `PARTS_FROM` 64 MiB is the act's own threshold (when to send in parts, not a read ceiling: G124 does not apply), it stays your constant, no row, its comment saying why it sits under the edge's 104,857,600 B. (2): yes, no Cancel button (a new act is the design's; owed to UX-DESIGN in `later-ux.md`); the page aborts when it stops the upload itself, begins again on `UPLOAD_LOST`/`UPLOAD_EXPIRED`, and leaving the screen ends its loop. J48: `provenance` is now in screens-intake's `uses` (order 44 < 164; `modules.json` on the tranche): merge `origin/tranche/T51`; keep both register tests.
+
+## B48 · CHANGE
+
+CHANGE (BOB #280, K4939): tranche/T51 no longer tracks seven node_modules symlinks my merge c156abe97d added by mistake. Merge origin/tranche/T51 into your branch now (never a rebase); if a node_modules path in your checkout is a symlink afterwards, delete the link and run K4113's npm ci loop. Your diff must not add or keep any node_modules entry.

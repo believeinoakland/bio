@@ -9,7 +9,8 @@ import { runCase, CASES } from "./shape/g44.probe.mjs";
 import { report } from "./shape/harness.mjs";
 
 const WHAT = {
-  add10: "the add of the 10 MiB-declared short-row workbook (221,529 cells, a 1.4 MB file) is refused WORKBOOK_TOO_LARGE with its count and the bound, nothing written, the child alive (WORKBOOKS)",
+  add10: "the add of a short-row workbook past the 250,000-cell row is refused WORKBOOK_TOO_LARGE with its count and the bound, nothing written, the child alive (WORKBOOKS; K4945)",
+  hold10: "the add of the 10 MiB-declared short-row workbook (221,529 cells, a 1.4 MB file) is held whole, the child alive (WORKBOOKS, G137e; K4945)",
   view10: "the safe view of the same workbook answers kind data within its bound, the first sheet's truncated, next_row and total_rows stated, the child alive (FILE-SAFETY)",
   small: "a workbook of about 20,000 cells is added, read, linted, its inputs read and previewed, the cut stated",
   sheets: "a 60-sheet workbook's safe view states the sheet total and what it shows (FILE-SAFETY)",

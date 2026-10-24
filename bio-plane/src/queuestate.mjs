@@ -414,6 +414,11 @@ export const QUEUE_FINDING_KINDS = {
                               + "publishing needs a new signing — LIVE: queue-producers R37",
   "wizard-base-updated":        "the wizard script your copy is based on has a new version; read what changed, or bring it "
                               + "across — LIVE: queue-producers R39",
+  /* T51 fix round 9 (R1; G135f; K4933; notice-producers R29): a reading of a document the member supplied finished, ended in
+     part or was refused, told once to its opener and disposed of by its recipient. Named nowhere here, it left the
+     opener's whole Queue refused `NO_SUCH_KIND` as soon as one reading ended (as G61 did for the fetch and ingest notices). */
+  "reading-ended":              "a reading of a document you supplied finished, ended in part or was refused "
+                              + "— LIVE: notice-producers R29",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before

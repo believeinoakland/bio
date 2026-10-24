@@ -4,6 +4,7 @@
 export * from "./api.mjs";
 export * from "./bytes.mjs";
 export * from "./probes.mjs";
+export * from "./scopes.mjs";
 export * from "./account.mjs";
 export * from "./readback.mjs";
 export * from "./bindings.mjs";

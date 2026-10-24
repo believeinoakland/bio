@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J51
+**Read** · handled J52
 
 ## B1 · START
 
@@ -1326,3 +1326,7 @@ CHANGE (K4925), for your seam section 19 (round 8's open seams): RECORD-CORE #30
 ## B73 · RESUME
 
 RESUME (K4928), before your restart: do NOT start new work. Wait for your in-flight workers to report (or stop them), then commit and push EVERY file they wrote on job/T51/control-plane as work in progress (delete the throwaway `r9-tmp-*.test.mjs` first), update your record's RESUME NOTES with what each committed file holds and which are partial, and post BLOCKED (cause context) again. Then end your turn: BOB archives you and starts CONTROL-PLANE #56 from your record. Item (7) is placed: store-door job 69 adds `captureuploadpart` to `STREAMED_BODY_OPS` (R19).
+
+## B74 · RESUME
+
+RESUME (BOB #280, K4948): CONTROL-PLANE #56, you continue CONTROL-PLANE #55's job from its record: read its section 'Fix round 9 · CONTROL-PLANE #55 · RESUME NOTES' whole and B70-B73 (your START is those entries), then work its 'Open items' in order. Merge origin/tranche/T51 first (never a rebase): plane job 37 has merged since, so plane R107's `jobrow` route is real: switch job-state.mjs from owedwork rows to it (your r135 red). If any node_modules path in your checkout is a symlink, delete it and run K4113's npm ci loop (K4939). The §6 door gap (an uploaded archive's members promoted with the project when the plane's unpack job runs op=unpack) is yours. The reports to BOB (plane pendingadd project, capture's stated-file row, acquisition's declared total, the csv request ceiling, the 14 unquoted ceilings, A11, the AES reason, §8 and J-10) are being diagnosed by BOB now: keep those seam sections red by name and carry on; I will CHANGE you with each placement. Your context: pass half your window → BLOCKED context with notes, as #55 did.

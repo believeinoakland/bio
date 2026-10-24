@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_012TFpuR6hxXes7JUpRFtJKB · depth 2 · COMPLETE · handled B23
+**Status** · session_0151nwFcvAu3ohYr5sDUGqb9 · depth 2 · COMPLETE · handled B24
 
 ## J1 · QUESTION
 
@@ -343,3 +343,24 @@ COMPLETE, no code change (answers B23, K4859: option 1; the START's `localize` i
 **Checks at the tip (unchanged code):** format 176 modules, 0 failures; architecture 0 failures; coverage 42 of 42 live ids named; ownership 0 failures; words: missingkey 3 for this key, marker 0 at the tip. Generated artifacts made stale: none.
 
 Size (session_012TFpuR6hxXes7JUpRFtJKB): test runs 4, module lines 2160
+
+## J25 · COMPLETE
+
+COMPLETE (B24, job 72: R43, R44, R45). Pushed on job/T51/installer-steps; tranche/T51 merged in.
+
+**Entries applied (names and answers exactly as B24):**
+- R43 `storageEntitlement(session, account)`: one `GET /r2/buckets`, nothing written. `{state:"on"}`; `{state:"not_entitled"}` on code 10042; `{state:"permission"}` on any other 403; else `{state:"unknown", said}`. An `approveAgain`/`lasting` is rethrown. `ensureBuckets` reads "already exists" by code 10073, not words.
+- R44 `addressState` answers `{sub, proposed}` (`sub` held, `proposed` null; or `sub` null and `proposed` = slug), never registers. `registerSubdomain(session, account, name)` registers exactly that name: `{ok:true}`, `{ok:false, taken:true}`, else throws Cloudflare's message. `ensureSubdomain(session, account, slug)` registers nothing; it still answers `{sub, registered:null}`; with no prefix held it throws an Error with `noPrefix:true` (a fault of the caller, not a founder sentence; no `localize`/`word`). Its old fourth argument is gone.
+- R45 `missingScopes(granted, needed)` in new `steps/scopes.mjs`, exported through the barrel.
+
+**My readings (tell me if wrong):** (1) the taken answer's code is not measured: it is read as HTTP 409 (fixture comment: "documented shape; BOB measures on the rehearsal account, K4942"); (2) R2 "permission" is any 403 that is not 10042; (3) `missingScopes` with a `granted` that is empty or absent answers `[]` (an absence not established is not established; R20 reads the Containers API then); (4) `needed` is the caller's: this module holds no scope list. Unmeasured fixtures: 10042/403 (R2's error table), 10000/403 for permission, 409 for taken.
+
+**Words rows owed:** none new. `installer.address.prefixtaken` is no longer read, so it left `STEP_KEYS` (the row can retire).
+
+**For BOB, installer (job 73), not mine:** `newgroup/src/index.mjs` still imports `offerSubdomain` and calls `ensureSubdomain(…, offer)`; I kept `offerSubdomain` as a thin wrapper over `addressState` (candidates = [slug]) only so the installer loads; remove it once job 73 lands. The installer's own fixture `newgroup/test/fixture.mjs` answers "already exists" and the R2 refusal without codes (10073, 10042) and registers on a fresh account through `ensureSubdomain`. With this change 7 installer tests turn red against the tranche tip's 16 (all 16 are the same as before): requirements.test R7 `r2`, R14 `addr`, R47, R67, R69, R70, R78. They are the contract change reaching the installer's fixture and flow (codes on its fake; the founder-chosen registration), for job 73.
+
+**Red first (before, on the old code):** 5 failing in `plane.test.mjs`: "R9 (R44)…", "R43: storageEntitlement…", "R43: ensureBuckets reads 'already exists' by R2's code…", "R44: addressState…", "R45: missingScopes…". Green after: `node --test newgroup/test/steps/` 122 tests, 120 pass, 2 fail: R36 and R40, the accepted `installer.fleet.logsunconfirmed` row (K4859), unchanged from the tip.
+
+**Checks (civicos-process):** format 176 modules, 0 failures; architecture 0 failures; coverage 45 of 45 live ids named, 0 failures; ownership 0 failures; words missingkey 5 (all `installer.fleet.logsunconfirmed`, inherited), marker 0, no new failure from this job (the two `pdfgen.mjs` inline are others'). `impact.mjs origin/tranche/T51 HEAD`: installer-steps, installer 19/21, journey-check 2/25; `node --test newgroup/test/` (installer): 241 tests, 211 pass, 23 fail = the tip's 16 plus the 7 above; journey-check not run beyond the impact listing. Generated artifacts made stale: `newgroup/dist/newgroup.bundled.mjs` (installer-steps is its input); BOB regenerates.
+
+Size (session_0151nwFcvAu3ohYr5sDUGqb9): test runs 8, module lines 2180

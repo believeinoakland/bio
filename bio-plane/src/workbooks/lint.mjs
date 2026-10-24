@@ -9,23 +9,20 @@ import { word } from "../setup-words/index.mjs";
 export const LINT_KINDS = Object.freeze(["short_range", "constant_in_formula", "hidden_input", "number_as_text",
   "error_value", "cross_foot"]);
 
-/** A workbook's held cells and facts, indexed once for lint and the input read. `cells`: the held rows
- *  (`{sheet, cell, r, c, type, value, formula, cached}`); `facts`: `{sheets: [{name, hidden}], hidden_rows: {sheet:
- *  [r]}, hidden_cols: {sheet: [{min, max}]}, names: {name: ref}}`. */
-export function indexWorkbook(cells, facts) {
-  const bySheet = new Map();
-  for (const c of cells) {
-    if (!bySheet.has(c.sheet)) bySheet.set(c.sheet, { map: new Map(), rows: 0, cols: 0, list: [] });
-    const s = bySheet.get(c.sheet);
-    s.map.set(`${c.r},${c.c}`, c);
-    s.list.push(c);
-    s.rows = Math.max(s.rows, c.r); s.cols = Math.max(s.cols, c.c);
-  }
-  const at = (sheet, r, c) => bySheet.get(sheet)?.map.get(`${r},${c}`) || null;
-  const extent = (sheet) => { const s = bySheet.get(sheet); return s ? { rows: s.rows, cols: s.cols } : { rows: 0, cols: 0 }; };
+/** A workbook's held cells and facts, read for lint and the input read (R20: a workbook of up to 250,000 cells is held
+ *  whole in the store, and only the cells a formula's text names are interpreted, so no cell is held here that a
+ *  formula, a lint finding or an input does not touch). `grid` answers from the store, one cursor or one lookup at a time:
+ *  `formulas()` the formula cells, `at(sheet, r, c)` a held cell or null, `extent(sheet)` `{rows, cols}`, `constantsIn(
+ *  sheet, r1, c1, r2, c2)` the cells of a rectangle that hold a constant, `errors()` the cells of type error;
+ *  `facts`: `{sheets: [{name, hidden}], hidden_rows: {sheet: [r]}, hidden_cols: {sheet: [{min, max}]}, names: {name: ref}}`.
+ *  A cell is `{sheet, cell, r, c, type, value, formula, cached}`. */
+export function indexWorkbook(grid, facts) {
+  const extents = new Map();
+  const extent = (sheet) => { if (!extents.has(sheet)) extents.set(sheet, grid.extent(sheet)); return extents.get(sheet); };
   const opts = { names: facts.names || {}, extent };
-  const formulas = cells.filter((c) => c.formula !== null && c.formula !== undefined);
-  return { bySheet, at, extent, opts, formulas, facts };
+  const hiddenRows = new Map(Object.entries(facts.hidden_rows || {}).map(([k, v]) => [k, new Set(v)]));
+  return { at: (sheet, r, c) => grid.at(sheet, r, c), extent, opts, formulas: () => grid.formulas(), constantsIn: (...a) => grid.constantsIn(...a),
+           errors: () => grid.errors(), hiddenRows, facts };
 }
 
 /** R5: the input cells: every cell holding a constant (no formula, a value) that some formula's text names. Each
@@ -33,22 +30,15 @@ export function indexWorkbook(cells, facts) {
 export function inputCells(ix) {
   const seen = new Set(), out = [];
   const rects = new Map();
-  for (const f of ix.formulas)
+  for (const f of ix.formulas())
     for (const r of referencesIn(f.formula, f.sheet, ix.opts).refs) rects.set(`${r.sheet}|${r.r1}|${r.c1}|${r.r2}|${r.c2}`, r);
   for (const r of rects.values()) {
-    const s = ix.bySheet.get(r.sheet);
-    if (!s) continue;
-    const area = (Math.min(r.r2, s.rows) - r.r1 + 1) * (Math.min(r.c2, s.cols) - r.c1 + 1);
-    const pick = (c) => {
+    const e = ix.extent(r.sheet);
+    if (!e.rows) continue;
+    for (const c of ix.constantsIn(r.sheet, r.r1, r.c1, Math.min(r.r2, e.rows), Math.min(r.c2, e.cols))) {
       const k = `${c.sheet}!${c.cell}`;
-      if (seen.has(k) || c.formula !== null && c.formula !== undefined || c.value === null || c.value === undefined) return;
-      seen.add(k); out.push(c);
-    };
-    if (area > s.list.length) {
-      for (const c of s.list) if (c.r >= r.r1 && c.r <= r.r2 && c.c >= r.c1 && c.c <= r.c2) pick(c);
-    } else {
-      for (let row = r.r1; row <= Math.min(r.r2, s.rows); row++)
-        for (let col = r.c1; col <= Math.min(r.c2, s.cols); col++) { const c = s.map.get(`${row},${col}`); if (c) pick(c); }
+      if (seen.has(k)) continue;
+      seen.add(k); out.push({ sheet: c.sheet, cell: c.cell, r: c.r, c: c.c, type: c.type, value: c.value });
     }
   }
   const order = new Map((ix.facts.sheets || []).map((s, i) => [s.name, i]));
@@ -62,7 +52,7 @@ const numberOf = (c) => figureOf(plainDecimal(c.formula ? c.cached : c.value));
 function hiddenPlace(ix, c) {
   const sheet = (ix.facts.sheets || []).find((s) => s.name === c.sheet);
   if (sheet && sheet.hidden) return word("workbooks.sheet_hidden", { sheet: String(c.sheet) });
-  if ((ix.facts.hidden_rows?.[c.sheet] || []).includes(c.r)) return word("workbooks.row_hidden", { row: String(c.r) });
+  if (ix.hiddenRows.get(c.sheet)?.has(c.r)) return word("workbooks.row_hidden", { row: String(c.r) });
   if ((ix.facts.hidden_cols?.[c.sheet] || []).some((x) => c.c >= x.min && c.c <= x.max)) return word("workbooks.column_hidden", { count: String(cellName(1, c.c).replace(/1$/, "")) });
   return null;
 }
@@ -73,7 +63,7 @@ export function lintFindings(ix, inputs = inputCells(ix)) {
   const ref = (c) => `${c.sheet}!${c.cell}`;
   /* short_range: an aggregate over one column or row stops short of, or starts after, the contiguous run of numbers
      around it in that column or row */
-  for (const f of ix.formulas) {
+  for (const f of ix.formulas()) {
     for (const { fn, ref: r } of aggregatesIn(f.formula, f.sheet, ix.opts)) {
       const vertical = r.c1 === r.c2 && r.r2 > r.r1, horizontal = r.r1 === r.r2 && r.c2 > r.c1;
       if (!vertical && !horizontal) continue;
@@ -94,7 +84,7 @@ export function lintFindings(ix, inputs = inputCells(ix)) {
     }
   }
   /* constant_in_formula */
-  for (const f of ix.formulas) {
+  for (const f of ix.formulas()) {
     const ns = numbersIn(f.formula, f.sheet, ix.opts);
     if (ns.length) out.push({ kind: "constant_in_formula", cell: ref(f), detail: `the formula writes ${ns.join(", ")} in its text` });
   }
@@ -106,11 +96,10 @@ export function lintFindings(ix, inputs = inputCells(ix)) {
   for (const c of inputs)
     if (c.type === "text" && isFigureText(c.value)) out.push({ kind: "number_as_text", cell: ref(c), detail: `stored as text: "${c.value}"` });
   /* error_value: a cached error value, constant or formula */
-  for (const s of ix.bySheet.values())
-    for (const c of s.list) {
-      const v = c.formula ? c.cached : c.value;
-      if (c.type === "error") out.push({ kind: "error_value", cell: ref(c), detail: `the file holds ${v ?? "an error"}` });
-    }
+  for (const c of ix.errors()) {
+    const v = c.formula ? c.cached : c.value;
+    out.push({ kind: "error_value", cell: ref(c), detail: `the file holds ${v ?? "an error"}` });
+  }
   /* cross_foot */
   out.push(...crossFoot(ix));
   const order = new Map((ix.facts.sheets || []).map((s, i) => [s.name, i]));
@@ -141,7 +130,8 @@ function sumLine(ix, f) {
    row) cover the same block, and whose two sets of cached totals do not add to the same grand total. */
 function crossFoot(ix) {
   const out = [];
-  const lines = ix.formulas.map((f) => sumLine(ix, f)).filter(Boolean);
+  const lines = [];
+  for (const f of ix.formulas()) { const l = sumLine(ix, f); if (l) lines.push(l); }
   const groups = new Map();
   for (const l of lines) {
     const k = `${l.f.sheet}|${l.dir}|${l.dir === "row" ? l.f.c : l.f.r}|${l.from}|${l.to}`;
