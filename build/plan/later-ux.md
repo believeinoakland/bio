@@ -159,3 +159,4 @@
 - Add · a reading ended in part, with its reason (`notice-producers.reading.partial`, `.partial.counted`; `{why}` is a code today: the member's words for each reason are the design's) · fix round 9, NOTICE-PRODUCERS #17 (K4933) · 2026-10-24
 - Add · a document not taken in, with its reason (`notice-producers.reading.refused`) · fix round 9, NOTICE-PRODUCERS #17 (K4933) · 2026-10-24
 - Add · the plain name of a reading that ended (`queue.kind.reading-ended`) · fix round 9, QUEUE #35 (K4944) · 2026-10-24
+- Add · cells a workbook's add dropped, with their count (`workbooks.dropped_cells`) · fix round 9, WORKBOOKS #6 (K4945) · 2026-10-24

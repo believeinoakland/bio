@@ -48,7 +48,7 @@ test("R8: an existing bucket is named in the answer, a refused creation throws w
   assert.deepEqual(posts, [NAMES.captures, NAMES.published], "the captures bucket and then the published one");
   w.restore();
   w = account({ r2: "refused" });
-  await assert.rejects(ensureBuckets(session(), "A1", NAMES), /payment method/);
+  await assert.rejects(ensureBuckets(session(), "A1", NAMES), /not entitled/);
   w.restore();
   w = account({ pre: { there: [] }, lookupFail: ["bad"], preClasses: {} });
   assert.equal(await scriptExists(session(), "A1", "there"), true);
@@ -58,41 +58,19 @@ test("R8: an existing bucket is named in the answer, a refused creation throws w
   w.restore();
 });
 
-test("R9: a held prefix is used; none is registered from the slug; a taken slug registers the suffixed name; both taken throws; a refused enabling throws", async () => {
+test("R9 (R44): a held prefix is used and the copy's address enabled; with none held nothing is registered and nothing enabled; a refused enabling throws", async () => {
   let w = account({ subdomain: "held" });
   assert.deepEqual(await ensureSubdomain(session(), "A1", "grp"), { sub: "held", registered: null });
   assert.ok(w.enabled.has("grp"));
+  assert.ok(w.calls.every((c) => c.method !== "PUT" || !c.u.endsWith("/workers/subdomain")), "no registration");
   w.restore();
   w = account({ subdomain: "" });
-  assert.deepEqual(await ensureSubdomain(session(), "A1", "grp"), { sub: "grp", registered: "grp" });
-  w.restore();
-  w = account({ subdomain: "", taken: ["grp"] });
-  const r = await ensureSubdomain(session(), "A1", "grp");
-  assert.match(r.registered, /^grp-[a-z0-9]{1,4}$/);
-  assert.equal(r.sub, r.registered);
-  w.restore();
-  w = account({ subdomain: "", taken: ["grp"] });
-  const real = Math.random;
-  const gv = crypto.getRandomValues.bind(crypto);
-  crypto.getRandomValues = (a) => { a.fill(0); return a; };
-  const suffixed = "grp-" + rand(3).toLowerCase().replace(/[^a-z0-9]/g, "x").slice(0, 4);
-  crypto.getRandomValues = gv; Math.random = real;
-  w.restore();
-  w = account({ subdomain: "", taken: ["grp"] });
-  w.calls.length = 0;
-  const gv2 = crypto.getRandomValues.bind(crypto);
-  crypto.getRandomValues = (a) => { a.fill(0); return a; };
-  try {
-    const taken = [ "grp", suffixed ];
-    w.restore(); w = account({ subdomain: "", taken });
-    await assert.rejects(ensureSubdomain(session(), "A1", "grp"), new RegExp(word("installer.address.prefixtaken").replace(/[.]/g, "\\.")));
-  } finally { crypto.getRandomValues = gv2; }
+  await assert.rejects(ensureSubdomain(session(), "A1", "grp"), (e) => e.noPrefix === true);
+  assert.equal(w.prefix(), "", "control: ensureSubdomain registers nothing itself");
+  assert.equal(w.enabled.has("grp"), false);
   w.restore();
   w = account({ enableFail: true });
   await assert.rejects(ensureSubdomain(session(), "A1", "grp"), /could not enable/);
-  w.restore();
-  w = account({ subdomain: "", subdomainPut: "fail" });
-  await assert.rejects(ensureSubdomain(session(), "A1", "grp"), /not permitted/, "any other error is thrown as it is");
   w.restore();
 });
 
@@ -381,23 +359,57 @@ test("R21: a member's limits, in the shape R10 reads; none stated is null; an un
   assert.equal(memberLimits(`"bio-plane-limits/1 cpu_ms=1"`).limits, null, "the plane's statement is not a member's");
 });
 
-test("R9 (F7): the address is offered before the copy is created, nothing registered; ensureSubdomain then tries exactly the names offered", async () => {
-  const { offerSubdomain } = await import("../../src/steps/index.mjs");
+test("R43: storageEntitlement reads and writes nothing: on, not entitled by R2's code, permission, unknown with Cloudflare's message", async () => {
+  const { storageEntitlement } = await import("../../src/steps/index.mjs");
+  for (const [r2, want] of [["ok", { state: "on" }], ["refused", { state: "not_entitled" }], ["permission", { state: "permission" }],
+                           ["unknown", { state: "unknown", said: "The fake could not say" }]]) {
+    const w = account({ r2 });
+    assert.deepEqual(await storageEntitlement(session(), "A1"), want, r2);
+    assert.ok(w.calls.every((c) => c.method === "GET"), `${r2}: nothing is written`);
+    w.restore();
+  }
+  const w = account({ r2: "ok" });
+  w.calls.length = 0;
+  await storageEntitlement(session(), "A1");
+  assert.deepEqual(w.calls.map((c) => c.u.replace(/^.*\/accounts\/A1/, "")), ["/r2/buckets"], "one read of the bucket list");
+  w.restore();
+});
+
+test("R43: ensureBuckets reads 'already exists' by R2's code 10073, never by words", async () => {
+  let w = account({ r2: "exists" });
+  assert.deepEqual(await ensureBuckets(session(), "A1", NAMES), [NAMES.captures]);
+  w.restore();
+  w = account({ r2: "exists" });
+  const fetch0 = globalThis.fetch;
+  globalThis.fetch = async (u, init) => {
+    const r = await fetch0(u, init);
+    if (init?.method !== "POST" || !String(u).endsWith("/r2/buckets")) return r;
+    const j = await r.clone().json();
+    if (j.success !== false) return r;
+    return new Response(JSON.stringify({ success: false, errors: [{ code: 1, message: "The bucket you tried to create already exists" }] }), { status: 409 });
+  };
+  try { await assert.rejects(ensureBuckets(session(), "A1", NAMES), /already exists/, "control: the words without the code are not the conflict"); }
+  finally { globalThis.fetch = fetch0; w.restore(); }
+});
+
+test("R44: addressState proposes the slug and registers nothing; registerSubdomain registers exactly the chosen name and answers taken", async () => {
+  const { addressState, registerSubdomain } = await import("../../src/steps/index.mjs");
   let w = account({ subdomain: "held" });
-  assert.deepEqual(await offerSubdomain(session(), "A1", "grp"), { sub: "held", candidates: [] });
+  assert.deepEqual(await addressState(session(), "A1", "grp"), { sub: "held", proposed: null });
   w.restore();
-  w = account({ subdomain: "", taken: ["grp"] });
-  const offer = await offerSubdomain(session(), "A1", "grp");
-  assert.equal(offer.sub, null);
-  assert.equal(offer.candidates[0], "grp");
-  assert.match(offer.candidates[1], /^grp-[a-z0-9]{1,4}$/);
-  assert.equal(w.prefix(), "", "nothing is registered by the offer");
+  w = account({ subdomain: "", taken: ["mine"] });
+  assert.deepEqual(await addressState(session(), "A1", "grp"), { sub: null, proposed: "grp" });
+  assert.equal(w.prefix(), "", "nothing is registered by the proposal");
   assert.ok(w.calls.every((c) => c.method === "GET"));
-  const r = await ensureSubdomain(session(), "A1", "grp", offer);
-  assert.deepEqual(r, { sub: offer.candidates[1], registered: offer.candidates[1] });
+  assert.deepEqual(await registerSubdomain(session(), "A1", "mine"), { ok: false, taken: true });
+  assert.equal(w.prefix(), "");
+  assert.deepEqual(await registerSubdomain(session(), "A1", "chosen"), { ok: true });
+  assert.equal(w.prefix(), "chosen", "exactly the name chosen");
+  const puts = w.calls.filter((c) => c.method === "PUT" && c.u.endsWith("/workers/subdomain")).map((c) => JSON.parse(c.init.body).subdomain);
+  assert.deepEqual(puts, ["mine", "chosen"], "no other name is tried");
   w.restore();
-  w = account({ subdomain: "", taken: ["grp"] });
-  await assert.rejects(ensureSubdomain(session(), "A1", "grp", { sub: null, candidates: ["grp"] }), /./, "control: only the names offered are tried");
+  w = account({ subdomain: "", subdomainPut: "fail" });
+  await assert.rejects(registerSubdomain(session(), "A1", "x"), /not permitted/, "any other refusal is thrown with Cloudflare's message");
   w.restore();
 });
 
@@ -499,4 +511,14 @@ test("R38: the incremental SHA-256 equals the whole-buffer hash for every length
     for (let i = 0, k = 1; i < n; i += k, k = (k * 3) % 29 + 1) h.update(bytes.subarray(i, i + k));
     assert.equal(h.hex(), await sha(bytes), "length " + n);
   }
+});
+
+test("R45: missingScopes answers the needed scopes absent from the granted space-separated scope", async () => {
+  const { missingScopes } = await import("../../src/steps/index.mjs");
+  const needed = ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write"];
+  assert.deepEqual(missingScopes("workers-scripts.write workers-r2.write account-settings.read containers.write account-logs.read", needed), []);
+  assert.deepEqual(missingScopes("workers-scripts.write  account-settings.read", needed), ["workers-r2.write", "containers.write"], "in the order of needed, extra spaces ignored");
+  assert.deepEqual(missingScopes("workers-r2.writer", ["workers-r2.write"]), ["workers-r2.write"], "a longer name is not the scope");
+  assert.deepEqual(missingScopes("a", []), []);
+  for (const none of ["", "   ", undefined, null, 5]) assert.deepEqual(missingScopes(none, needed), [], "control: a response that states no scope names none missing (R20 reads the API then)");
 });

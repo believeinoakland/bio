@@ -23,7 +23,10 @@ const ADD = { op: "workbookadd", path: "/workbookadd", body: addBody };
 const VIEW = { op: "safeview", path: viewQ };
 
 export const CASES = {
-  add10: async () => ({ label: "G44 add of the 10 MiB-declared workbook", doc: await xlsxDoc(10), ops: [ADD], check: (r, ops) => refusedAdd(ops[0], r) }),
+  /* K4945: the add's cells row is 250,000 since G137e (K4831 (10), K4936): the 10 MiB-declared workbook (221,529 cells) is held whole,
+     and the refusal is shown on one past the row (xlsxDoc(11.3), WORKBOOKS #6's J6) */
+  add10: async () => ({ label: "G44 add of a workbook past the 250,000-cell row", doc: await xlsxDoc(11.3), ops: [ADD], check: (r, ops) => refusedAdd(ops[0], r) }),
+  hold10: async () => ({ label: "G44 add of the 10 MiB-declared workbook, held whole", doc: await xlsxDoc(10), ops: [ADD], check: (r, ops) => (ops[0].ok === true ? [] : [`the add answered ${JSON.stringify([ops[0].ok, ops[0].reason])}`]) }),
   view10: async () => ({ label: "G44 safe view of the 10 MiB-declared workbook", doc: await xlsxDoc(10), ops: [VIEW], check: (r, ops) => cutView(ops[0], { sheets: 1, minTotal: 70_000 }) }),
   small: async () => ({ label: "G44 20,000-cell workbook (add, read, lint, inputs, view)", doc: await xlsxDoc(0.9), ops: [ADD, { op: "workbook", path: readQ("workbook") }, { op: "workbooklint", path: readQ("workbooklint") }, { op: "workbookinputs", path: readQ("workbookinputs") }, VIEW],
                         check: (r, ops) => [...(ops[0].ok === true ? [] : [`the add answered ${JSON.stringify([ops[0].ok, ops[0].reason])}`]),
