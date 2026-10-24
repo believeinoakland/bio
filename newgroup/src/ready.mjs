@@ -7,14 +7,14 @@
  *
  * Cloudflare offers no permission to buy a plan or turn R2 on for the founder (its OAuth scope list, read 2026-10-24, holds no
  * billing scope), so these stay walk-throughs. Every Cloudflare answer shape below is "documented shape; BOB measures on the
- * rehearsal account (K4942)". The sentences are written first here (`localize`, K3930): the design reviews every new row. */
-import { word, localize } from "../../bio-plane/src/setup-words/index.mjs";
+ * rehearsal account (K4942)". Its sentences are read by key (`word`); a key the word list does not hold yet is the design's to write (K4947), listed in the job record. */
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 import { storageEntitlement, addressState, registerSubdomain, missingScopes, listScripts, listNamespaces, listBuckets, special } from "./steps/index.mjs";
 import { RELEASE_MANIFEST, RELEASE_CONTAINERS } from "./release.mjs";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-export const CHECK_AGAIN = () => localize("installer.ready.checkagain", "Check again");
+export const CHECK_AGAIN = () => word("installer.ready.checkagain");
 
 /* ---------------------------------------------------------------- (5) the permission granted */
 
@@ -26,7 +26,7 @@ export function scopesStop(granted, scopes) {
   if (typeof granted !== "string") return null;
   const missing = missingScopes(granted, neededScopes(scopes));
   if (!missing.length) return null;
-  return { said: localize("installer.ready.scopes", "Stopped: the permission you gave Cloudflare does not include everything the installer needs ({missing}). Nothing was created. Approve again, and keep every permission Cloudflare lists switched on.", { missing: missing.join(", ") }), approveAgain: true };
+  return { said: word("installer.ready.scopes", { missing: missing.join(", ") }), approveAgain: true };
 }
 
 /* ---------------------------------------------------------------- (6) the account */
@@ -38,12 +38,12 @@ export function pickAccount(accts, chosen) {
   const hit = chosen ? accts.find((a) => a.id === chosen) : null;
   return hit ? { acct: hit } : { choose: accts };
 }
-export const accountSentence = () => localize("installer.ready.account.which", "Your Cloudflare sign-in can reach more than one account. Choose the one your team's Civicsmith is for. Nothing has been created.");
+export const accountSentence = () => word("installer.ready.account.which");
 export function accountPanel(accts, body) {
   const b = (a) => esc(JSON.stringify({ ...body, account: a.id }));
-  return `<section id="account-choice"><h2>${esc(localize("installer.ready.account.head", "Which Cloudflare account?"))}</h2>
+  return `<section id="account-choice"><h2>${esc(word("installer.ready.account.head"))}</h2>
 <p>${esc(accountSentence())}</p>
-${accts.map((a) => `<div class="cs-sheet ng-block"><h3>${esc(a.name)}</h3><div class="ng-acts"><button type="button" class="cs-btn" data-tone="primary" data-account="${esc(a.id)}" data-begin="${b(a)}">${esc(localize("installer.ready.account.use", "Use {name}", { name: a.name }))}</button></div></div>`).join("\n")}
+${accts.map((a) => `<div class="cs-sheet ng-block"><h3>${esc(a.name)}</h3><div class="ng-acts"><button type="button" class="cs-btn" data-tone="primary" data-account="${esc(a.id)}" data-begin="${b(a)}">${esc(word("installer.ready.account.use", { name: a.name }))}</button></div></div>`).join("\n")}
 <p class="err" id="begin-err" role="alert"></p></section>`;
 }
 
@@ -53,14 +53,14 @@ export async function storageReady(token, acct) {
   const s = await storageEntitlement(token, acct);
   if (s.state === "on") return null;
   if (s.state === "not_entitled") {
-    return { said: localize("installer.ready.storage.off", "Stopped: your Cloudflare account has not turned on R2, the storage your team's Civicsmith keeps its evidence in. Nothing was created."),
-      d: localize("installer.ready.storage.do", "In the Cloudflare dashboard open Storage & databases, then R2, then Overview, and complete the checkout that adds an R2 subscription to the account. Then come back and choose Check again."), retry: CHECK_AGAIN() };
+    return { said: word("installer.ready.storage.off"),
+      d: word("installer.ready.storage.do"), retry: CHECK_AGAIN() };
   }
   if (s.state === "permission") {
-    return { said: localize("installer.ready.storage.permission", "Stopped: the permission you gave does not let the installer look at your account's storage. Nothing was created. Approve again, and keep every permission Cloudflare lists switched on."), approveAgain: true };
+    return { said: word("installer.ready.storage.permission"), approveAgain: true };
   }
-  return { said: localize("installer.ready.storage.unknown", "Stopped: Cloudflare would not say whether your account's storage is turned on ({said}). Nothing was created.", { said: s.said ?? "" }),
-    d: localize("installer.ready.unknown.do", "Choose Check again in a moment. If it keeps happening, the message above is what to give whoever helps you with Cloudflare."), retry: CHECK_AGAIN() };
+  return { said: word("installer.ready.storage.unknown", { said: s.said ?? "" }),
+    d: word("installer.ready.unknown.do"), retry: CHECK_AGAIN() };
 }
 
 /* ---------------------------------------------------------------- (2) Containers */
@@ -85,10 +85,10 @@ export function containersStop(c, planStop) {
   if (c.state === "on") return null;
   if (c.state === "plan") return planStop;
   if (c.state === "permission") {
-    return { said: localize("installer.ready.containers.permission", "Stopped: the permission you gave does not let the installer look at your account's Containers. Nothing was created. Approve again, and keep every permission Cloudflare lists switched on."), approveAgain: true };
+    return { said: word("installer.ready.containers.permission"), approveAgain: true };
   }
-  return { said: localize("installer.ready.containers.unknown", "Stopped: the installer could not tell whether your Cloudflare account can run Containers ({said}). Nothing was created.", { said: c.said }),
-    d: localize("installer.ready.unknown.do", "Choose Check again in a moment. If it keeps happening, the message above is what to give whoever helps you with Cloudflare."), retry: CHECK_AGAIN() };
+  return { said: word("installer.ready.containers.unknown", { said: c.said }),
+    d: word("installer.ready.unknown.do"), retry: CHECK_AGAIN() };
 }
 
 /* ---------------------------------------------------------------- (3) the account's limits */
@@ -106,7 +106,7 @@ export const ACCOUNT_LIMITS = Object.freeze({
   crons: { ceiling: 250, need: 1 + RELEASE_MANIFEST.fleet.length },
 });
 const limitSentence = (k, ceiling) => k === "crons"
-  ? localize("installer.limit.crons.other", "{n} scheduled jobs", { n: ceiling })
+  ? word("installer.limit.crons.other", { n: ceiling })
   : word(`installer.limit.${k}.${ceiling === 1 ? "one" : "other"}`, { n: ceiling });
 
 /* The scheduled jobs the account's Workers already hold, read per Worker (Cloudflare lists none account-wide); a Worker whose
@@ -159,15 +159,15 @@ export async function addressReady(token, acct, slug, chosen) {
   return r.ok ? { ok: true, registered: chosen } : { ask: { name: chosen, taken: true } };
 }
 export const addressSentence = (taken, name) => taken
-  ? localize("installer.ready.address.taken", "The name {name} is already taken on Cloudflare. Choose another. Nothing has been created.", { name })
-  : localize("installer.ready.address.none", "Your Cloudflare account has no workers.dev address yet. Choose the name your team's Civicsmith will be reached at. Nothing has been created.");
+  ? word("installer.ready.address.taken", { name })
+  : word("installer.ready.address.none");
 export function addressPanel({ name, taken }, body) {
-  return `<section id="address-choice"><h2>${esc(localize("installer.ready.address.head", "Choose your account's address"))}</h2>
+  return `<section id="address-choice"><h2>${esc(word("installer.ready.address.head"))}</h2>
 <p id="address-says">${esc(addressSentence(taken, name))}</p>
-<p>${esc(localize("installer.ready.address.permanent", "This name is permanent for the whole Cloudflare account: every address in it ends with the name, and changing it later breaks every address already given out."))}</p>
-<div class="cs-field"><label for="address-name">${esc(localize("installer.ready.address.label", "Address name"))}</label>
+<p>${esc(word("installer.ready.address.permanent"))}</p>
+<div class="cs-field"><label for="address-name">${esc(word("installer.ready.address.label"))}</label>
 <input id="address-name" class="cs-input id" type="text" autocomplete="off" spellcheck="false" value="${esc(name)}"></div>
-<div class="ng-acts"><button type="button" class="cs-btn" data-tone="primary" data-sub-from="address-name" data-begin="${esc(JSON.stringify(body))}">${esc(localize("installer.ready.address.use", "Use this address"))}</button></div>
+<div class="ng-acts"><button type="button" class="cs-btn" data-tone="primary" data-sub-from="address-name" data-begin="${esc(JSON.stringify(body))}">${esc(word("installer.ready.address.use"))}</button></div>
 <p class="err" id="begin-err" role="alert"></p></section>`;
 }
 
@@ -177,11 +177,11 @@ export function addressPanel({ name, taken }, body) {
    read 2026-10-24: "There is no compressed size limit. Only the uncompressed bundle size counts."). */
 export const WORKER_SIZE_LIMIT = 64 * 1024 * 1024;
 export const planeTooBig = (release) => (release.blob && release.blob.size > WORKER_SIZE_LIMIT) || release.bytes > WORKER_SIZE_LIMIT
-  ? { said: localize("installer.ready.size.plane", "Stopped: the Civicsmith program of this release is larger than the 64 MiB Cloudflare allows for one Worker, so it cannot be installed. Nothing was created."), d: "" } : null;
+  ? { said: word("installer.ready.size.plane"), d: "" } : null;
 /* A member whose bundle is over the limit is left out by name, as any member the release cannot install is (R38). Answers the
    fleet with that member's entry carrying its reason, so the fleet step names it. */
 export function leaveOutOversize(loaded) {
   if (!loaded || !loaded.members) return loaded;
   return { ...loaded, members: loaded.members.map((L) => (!L.error && Number(L.m.bytes) > WORKER_SIZE_LIMIT
-    ? { m: L.m, error: localize("installer.ready.size.member", "its program is larger than the 64 MiB Cloudflare allows for one Worker") } : L)) };
+    ? { m: L.m, error: word("installer.ready.size.member") } : L)) };
 }

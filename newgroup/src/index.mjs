@@ -650,7 +650,7 @@ async function installRun(emit0, code, saved, guard) {
 
   /* R84 (1): the account's storage, read without writing, before anything else reads the account (the look at what it holds lists
      its buckets, which an account without R2 refuses). */
-  await emit.step("ready", localize("installer.ready.step.storage", "Checking that your account has storage turned on"));
+  await emit.step("ready", word("installer.step.storage"));
   try {
     const stop = await storageReady(token, acct.id);
     if (stop) return await halt(emit, "ready", stop);
@@ -1464,10 +1464,10 @@ export default {
          neither an account id nor a name Cloudflare could register is refused by name, never dropped. */
       const ac = typeof body.account === "string" ? body.account.trim() : "";
       if (ac && !/^[0-9A-Za-z_-]{1,64}$/.test(ac))
-        return json({ ok: false, error: localize("installer.begin.account", "That Cloudflare account could not be used. Start again from the first page.") }, 400);
+        return json({ ok: false, error: word("installer.begin.account") }, 400);
       const sd = typeof body.subdomain === "string" ? body.subdomain.trim().toLowerCase() : "";
       if (typeof body.subdomain === "string" && body.subdomain.trim() && !SUBDOMAIN_RE.test(sd))
-        return json({ ok: false, error: localize("installer.begin.subdomain", "That address name cannot be used. Use letters, digits and dashes, not starting or ending with a dash.") }, 400);
+        return json({ ok: false, error: word("installer.begin.subdomain") }, 400);
       /* R36, R37 (T36): nothing else /begin is sent is kept: no field carries a Claude credential, and the install takes no
          choice about the assistant (an `assistant` field is taken nowhere). */
       /* R83 (G83; K4746, K4752): the founder's own request says where on the edge they are (`cf`, set by the platform); the hint

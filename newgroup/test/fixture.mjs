@@ -512,8 +512,9 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     } },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: async (u, init) => {
       const { name } = JSON.parse(init.body);
-      if (r2 === "refused") return cferr("Please enable R2 by adding a payment method", 403);
-      if (buckets.has(name)) return cferr(`The bucket you tried to create already exists`, 409);
+      if (r2 === "refused") return cferr("Account not entitled to this feature.", 403, 10042);
+      /* R2's BucketConflict, code 10073 (documented shape; BOB measures on the rehearsal account, K4942): the install matches the code, never the words. */
+      if (buckets.has(name)) return cferr(`The bucket you tried to create already exists`, 409, 10073);
       buckets.add(name); return cfok({ name });
     } },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => prefix ? cfok({ subdomain: prefix })
