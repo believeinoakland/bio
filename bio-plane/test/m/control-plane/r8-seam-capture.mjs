@@ -18,7 +18,7 @@ const main = (p) => p.doc.getElementById("cs-main");
 function fill(p, values = {}) {
   for (const [id, v] of Object.entries(values)) {
     const el = p.doc.getElementById(id);
-    if (!el) throw new Error(`no field ${id}`);
+    if (!el) throw new Error(`no field ${id}: ${(main(p) && main(p).textContent || "").slice(0, 400)}`);
     el.value = v;
   }
 }
@@ -165,6 +165,8 @@ export function sections(kit) {
     const auth = await person(handle, "member", ["contribute"]);
     const f = served(label, 10 * MB, 3 * MB);
     const { p, asked, seen } = await addScreenOf(auth, "/app/capture/address");
+    /* the real plane answers in real time: the page is given it until the field is drawn */
+    await until(async () => { await p.settle(20); return p.doc.getElementById("ci-address") ? true : null; }, 60000, 300);
     fill(p, { "ci-address": f.locator });
     await press(p, "acquire");
     /* the real plane answers in real time: the page is given it */
@@ -192,6 +194,8 @@ export function sections(kit) {
     const { auth, f, p } = await pressedAndWatched("r8-gwen", "g109");
     const stored = (await heldAt(auth, f.locator)).copy.title;
     assert.ok(stored && stored.length > 0, "heldat states a title for the delivered copy");
+    /* the real plane answers in real time: the page is given it until the field is drawn */
+    await until(async () => { await p.settle(20); return p.doc.getElementById("ci-address") ? true : null; }, 60000, 300);
     fill(p, { "ci-address": f.locator });
     await press(p, "acquire");
     await until(async () => { await p.settle(20); return main(p).querySelector(".rec,[data-state=failed]") ? true : null; }, 60000, 300);
