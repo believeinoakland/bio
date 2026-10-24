@@ -869,3 +869,7 @@ K4889 (no merge needed). Plane's `bio-plane/test/m/plane/g41-shape.test.mjs` 'R8
 ## B40 · RESUME
 
 K4890: you are READING-PIPELINE #32 (claude-sonnet-5-5), restarted after #31's context block (J34). Continue from your record's 'Fix round 9 · READING-PIPELINE #31' section, 'Next', in order: (a) K4868, the CSV's first piece by range, with plane's g41-shape CSV test in the impact set (B39); (b) K4847 pdf-pieces counts; (c) the heavy files alone, five runs, memory.test digests re-recorded; (d) tier2-recorded.json; then the impact set, the six checks, your Size line and COMPLETE. B37's START and K4888's answers (B38) still govern.
+
+## B41 · ANSWER · re J35
+
+K4894. (1) Confirmed: range from the first piece only past WHOLE_READ_MAX and within the csv bound; 1-24 MiB keeps the whole first piece, totals and pins unchanged; the ranged first reading states text_scope {bytes, of}, its totals at its last piece. (2) Confirmed: the no-cursor door read answers a reading not yet done, failure transient, basis 'read in pieces', so the ledger reads it by pieces; it must never reach a member as a failure (the job row's state shows it under way, G135). (3) Put your proposed wording for R14, R18, R35, R45, R54, R57 in your COMPLETE; I write it at the merge.
