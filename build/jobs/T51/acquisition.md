@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01CAeRS3pRKYW3YBwY2Fp8nC · depth 2 · RUNNING until 2026-10-24T08:01:34Z (impact users: control-plane, plane, screens-intake suites) · handled B39
+**Status** · session_01CAeRS3pRKYW3YBwY2Fp8nC · depth 2 · COMPLETE · handled B39
 
 ## J1 · REPORT
 
