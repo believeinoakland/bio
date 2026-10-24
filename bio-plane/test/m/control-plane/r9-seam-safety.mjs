@@ -46,7 +46,7 @@ export function sections(kit, counting) {
     await k.until(async () => {
       os = (await k.get(auth, { op: "originalstate", capture: sha })).result;
       notes = ((await k.get(auth, { op: "verdictnotes", capture: sha })).result || {}).notes || [];
-      return calls.includes(sha) && (notes.length || (os && os.may_open === true)) ? true : null;
+      return (os && os.not_scanned) || (calls.includes(sha) && (notes.length || (os && os.may_open === true))) ? true : null;
     }, 150000, 2000);
     return { auth, sha, os, notes };
   }
@@ -61,7 +61,8 @@ export function sections(kit, counting) {
     for (const [label, bytes, type] of [["zip", zip, "application/zip"], ["docx", docx, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]]) {
       const r = await scanned(bytes, { name: `enc.${label}`, type });
       if (!(r.os && r.os.why === "NOT_SCANNED" && r.os.not_scanned === "ENCRYPTED" && r.os.may_open === false)) bad.push(`${label}: originalstate is ${JSON.stringify(r.os).slice(0, 240)}`);
-      if (!r.notes.some((n) => n.result === "encrypted")) bad.push(`${label}: no note says encrypted: ${JSON.stringify(r.notes.map((n) => n.result))}`);
+      /* the scanner is asked about a ZIP and says encrypted; an encrypted Word file is known so from its structure and is not sent to the scanner (file-safety R54): its state is the answer, no note is owed */
+      if (label === "zip" && !r.notes.some((n) => n.result === "encrypted")) bad.push(`${label}: no note says encrypted: ${JSON.stringify(r.notes).slice(0, 500)}; originalstate ${JSON.stringify(r.os).slice(0, 200)}`);
       if (r.notes.some((n) => n.result === "clean")) bad.push(`${label}: a note says clean`);
     }
     const control = await scanned(text, { name: "ok.txt", type: "text/plain" });
