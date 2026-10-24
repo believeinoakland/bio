@@ -63,6 +63,17 @@ Not run: any module's whole suite once (only the five files themselves). Not com
 - Test left as is (it asserts the work and is correct; making it arm the alarm itself would hide the defect). Failing-first test for the owning job: in this file's test, immediately after `acquire` answers `fetch_pending`, `owedwork` (founder) must show `oldest_overdue === null` or `alarm_at` at most 60 s after it; red now by name in 1 s instead of after 600 s.
 - Owner: acquisition (job to be named by BOB).
 
+## 7b. Step 4: each touched module's whole suite once under L-PIN (3 burners, the suite process pinned to core 0), with the fixes in
+| suite | tests | pass | fail | wall |
+|---|---|---|---|---|
+| acquisition (50 files) | 330 | 330 | 0 | 480 s |
+| capture (54 files) | 338 | 338 | 0 | 708 s (g127f-plane green, three tests) |
+| reading-pipeline (66 files) | 403 | 402 | 0 (1 not passing as pass: skipped or todo) | 1658 s (r7-contention green) |
+| screens-inquiry (54 files) | 521 | 520 | **1** | 1707 s |
+| plane, the harness users and heavy files alone: g41-shape 11/11 (291 s), g44-shape 10/10 (196 s), g123f-cells 3/3, shape-harness 7/7, r9-memory 3/3, g54-l 6/6 (210 s) | 40 | 40 | 0 | |
+- control-plane's whole file was not run under L-PIN: no control-plane test file was changed, and its t51-round7-seam alone takes 10 min quiet (18/18 green quiet, section 7).
+- The one red, screens-inquiry `fr6-seam.test.mjs:131` "R96 G13 (the real plane) a 12 MB text ...": `data-text-state` read as `unread` where the test wants `reading` (line 143). NOT caused by my change (I touched only `fr5-seam`, and not this file). Alone it is green: quiet 2/2, L-PIN 5/5, three copies at once pinned beside 3 burners 6/6; red once in the suite run. Reading the code: `unread` is `reading.state === "empty"` (src/screens-inquiry/document.mjs:240), the page's first `op=reading` found no stored piece yet; the test reads the state at ONE instant, 60 s `until` for the element and no wait for the first piece. So the likely cause is the first piece of the owed 12 MB read being stored later than the page's first draw on a starved machine (TEST: assert at an instant; the product draws `unread` honestly). Not proven, because it did not reproduce in 17 loaded runs; recorded as a new load red, hypothesis only. Proposed test fix once it reproduces: wait until the state leaves `unread` (bounded only by the test's own timeout), then assert it is `reading` or, if the read has finished, that the reading is whole and no `more` waits.
+
 ## 8. PRODUCT findings, K4426's four fields each (no product code was changed by this session)
 Each entry: (1) root cause with file:line, (2) why the tests missed it, (3) the failing-first test the owning job adds, (4) the platform check. Owner named; BOB places the jobs.
 
@@ -102,7 +113,7 @@ Each entry: (1) root cause with file:line, (2) why the tests missed it, (3) the 
 3. In `g127f-plane.test.mjs`: begin, part 0, a 12 s pause, part 1 must be accepted (red now: `UPLOAD_LOST`); the product persists the hasher state (the SHA-256 midstate) with the part row, or recomputes it from the parts held, so an eviction costs nothing.
 4. The same case on the deployed plane with a real eviction (an idle gap over the platform's window).
 
-## Files changed (uncommitted, all test files)
+## Files changed (all test files, now committed)
 bio-plane/test/m/acquisition/stage-times.test.mjs
 bio-plane/test/m/capture/g127f-plane.test.mjs
 bio-plane/test/m/reading-pipeline/r7-contention.test.mjs
@@ -110,6 +121,7 @@ bio-plane/test/m/reading-pipeline/r7-contention-entry.mjs
 bio-plane/test/m/plane/shape/harness.mjs
 bio-plane/test/m/plane/g54-l.test.mjs
 bio-plane/test/m/plane/g54-l-entry.mjs
+bio-plane/test/m/screens-inquiry/fr5-seam.test.mjs (this session: the `until` guard, section 6)
 All temporary copies (zz-*) are removed. Burners and loops are stopped.
 
 ## Notes
