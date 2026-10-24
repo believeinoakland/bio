@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01Lv37K3RbyQhtwcLT3uXGvx · depth 2 · WORKING · handled B45
+**Status** · session_01Lv37K3RbyQhtwcLT3uXGvx · depth 2 · COMPLETE · handled B45
 
 ## J1 · REPORT
 
