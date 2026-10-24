@@ -413,9 +413,11 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     { m: (u) => u.includes("/containers/applications"), f: (u, init) => {
       const mth = (init.method || "GET").toUpperCase();
       if (containersOdd) return cferr("Something unexpected happened with the request", 400, 10001);
-      /* R84 (2): documented shapes, decided by code (BOB measures them on the rehearsal account, K4942): the plan refusal, then the permission one below. */
-      if (containersOff) return cferr("Containers are not available on this plan.", 403, 100328);
+      /* R84 (2): the plan refusal as measured on the Free rehearsal account (HTTP 401, code 1000, K4970; build/plan/measure-R9-account-shapes.md), then the permission one below (documented shape). */
+      if (containersOff) return cferr(JSON.stringify({ error: "Unauthorized: You do not have access to Cloudflare Containers. Deploying containers requires the Workers Paid plan. Upgrade your plan at https://dash.cloudflare.com/?to=/:account/workers/plans" }), 401, 1000);
       if (containers === "read") return cferr("Authentication error", 403, 10000);
+      if (containers === "bare1000") return cferr("Something else answered code 1000", 400, 1000);
+      if (containers === "expired") return cferr("Authentication error", 401, 10000);
       const one = /\/containers\/applications\/([^/]+)(\/rollouts)?$/.exec(u);
       if (mth === "GET" && one && !one[2]) { const a = apps.find((x) => x.id === one[1]); return a ? cfok(a) : cferr("not found", 404); }
       if (mth === "GET") return cfok(apps);
@@ -451,7 +453,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       acct.delete(name); classes.delete(name); sources.delete(name); removed.push(name);
       return cfok({});
     } },
-    { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => storage === "off" ? cferr("Account not entitled to this feature.", 403, 10042)
+    { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => storage === "off" ? cferr("Please enable R2 through the Cloudflare Dashboard.", 403, 10042)
       : storage === "permission" ? cferr("Authentication error", 403, 10000) : storage === "error" ? cferr("Internal error", 500, 7003) : storage === "other" ? cferr("The request could not be understood by R2", 400, 10001) : cfok({ buckets: (r2 === "late" ? [] : [...buckets]).map((name) => ({ name })) }) },
     { m: (u, mth) => /\/r2\/buckets\/[^/]+\/usage$/.test(u) && mth === "GET", f: (u) => {
       const b = u.split("/r2/buckets/")[1].split("/")[0];
@@ -518,12 +520,12 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       buckets.add(name); return cfok({ name });
     } },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => prefix ? cfok({ subdomain: prefix })
-      : cferr("no subdomain", 404) },
+      : cferr("You do not have a workers.dev subdomain. Please go to https://dash.cloudflare.com/?to=/:account/workers/workers-and-pages. Opening the Workers & Pages landing page for the first time will create a workers.dev subdomain automatically.", 404, 10007) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "PUT", f: (u, init) => {
       const want = JSON.parse(init.body).subdomain;
       if (subdomainPut === "fail") return cferr("not permitted", 403);
       if (subdomainPut === "down") return cferr("upstream trouble", 500);
-      if (taken.includes(want)) return cferr("That subdomain is taken", 409);
+      if (taken.includes(want)) return cferr(`Subdomain '${want}' is unavailable. Please try a different one.`, 403, 10031);
       prefix = want; return cfok({ subdomain: want });
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/subdomain$/.test(u) && mth === "POST", f: (u) => {

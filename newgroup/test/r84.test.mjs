@@ -71,6 +71,16 @@ test("R84 (2) Containers: decided by Cloudflare's answer code, never its words: 
   assert.ok(perm.page.done.includes("data-begin"), "the page asks to approve again");
   assert.ok(perm.page.failed.said.length > 0);
   nothingCreated(perm, "permission");
+  /* Measured, K4970: the plan answer is HTTP 401 with code 1000 on this path. A 1000 under another status is not the plan; a 401
+     under another code is an expired permission (approve again), not the plan. */
+  const bare = await run({ slug: "ct-bare", containers: "bare1000" });
+  assert.ok(bare.page.failed.said.includes("Something else answered code 1000"), "a bare 1000 is could-not-tell, Cloudflare's words");
+  assert.notEqual(bare.page.failed.said, plan.page.failed.said);
+  nothingCreated(bare, "bare 1000");
+  const expired = await run({ slug: "ct-exp", containers: "expired" });
+  assert.ok(expired.page.done.includes("data-begin"), "a 401 of another code asks to approve again");
+  assert.notEqual(expired.page.failed.said, plan.page.failed.said);
+  nothingCreated(expired, "expired");
   const odd = await run({ slug: "ct-odd", containersOdd: true });
   assert.ok(odd.page.failed.said.includes("Something unexpected happened with the request"), "Cloudflare's words, stated");
   await checkAgain(odd, "ct-odd", "could not tell");

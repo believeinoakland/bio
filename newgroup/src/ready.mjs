@@ -65,17 +65,26 @@ export async function storageReady(token, acct) {
 
 /* ---------------------------------------------------------------- (2) Containers */
 
-/* Cloudflare's answer to the Containers list, decided by its CODE and never by its words (K4937). Documented shape; BOB
-   measures on the rehearsal account (K4942): the codes below are the ones in hand (10000 and 9109 are Cloudflare's own
-   "not authenticated for this" answers; 100328 is the plan refusal measured for Workers on Free), to be replaced by the measured
-   ones in this one table. There is no "off" state: no switch to turn Containers on is documented. */
-export const CONTAINERS_CODES = Object.freeze({ permission: Object.freeze([10000, 9109]), plan: Object.freeze([100328]) });
-/* "on" (the list answered), "plan", "permission", or "unknown" with Cloudflare's words. */
+/* Cloudflare's answer to the Containers list, decided by its status and CODE and never by its words (K4937). Measured on the
+   rehearsal account (K4970; build/plan/measure-R9-account-shapes.md): a Free account answers this path with HTTP 401, code 1000
+   ("Unauthorized: ... requires the Workers Paid plan"). A 1000 on any other path is not the plan, nor is a bare 401 (an expired
+   permission, which asks to approve again, R71). 10000 and 9109 are Cloudflare's own "not authenticated for this" answers (documented,
+   not measured); 100328 is the plan refusal measured for a Worker's CPU limits on Free, kept for the day this path answers it.
+   There is no "off" state: no switch to turn Containers on is documented. */
+export const CONTAINERS_CODES = Object.freeze({
+  permission: Object.freeze([10000, 9109]),
+  plan: Object.freeze([100328]),
+  planUnauthorized: Object.freeze({ status: 401, code: 1000 }),
+});
+const planAnswer = (e) => !!e && (CONTAINERS_CODES.plan.includes(e.code)
+  || (e.status === CONTAINERS_CODES.planUnauthorized.status && e.code === CONTAINERS_CODES.planUnauthorized.code));
+/* "on" (the list answered), "plan", "permission", or "unknown" with Cloudflare's words. The plan answer is a 401, which the
+   request layer otherwise raises as "approve again": it is read here first, by its code. */
 export async function containersState(api) {
   try { await api("/containers/applications"); return { state: "on" }; }
   catch (e) {
+    if (planAnswer(e)) return { state: "plan" };
     if (special(e)) throw e;
-    if (CONTAINERS_CODES.plan.includes(e && e.code)) return { state: "plan" };
     if (CONTAINERS_CODES.permission.includes(e && e.code)) return { state: "permission" };
     return { state: "unknown", said: e && e.message || String(e) };
   }
