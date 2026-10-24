@@ -72,3 +72,11 @@ G41 applied (office-readers): xlsx text(parts, {inlineCellsMax}) lists a workboo
 ## J6 · COMPLETE
 
 B9-B11 applied: no exported cap constant (option is a number of bytes; measure 161.6 B/cell, 512 KiB = about 3,240 cells); cellsIn numbering per K4647 asserted at row 1 and last row; next_row absent when answered whole. office-readers 115 pass under the shim; checks and ownership 0 failures. Everything else as J5. Size (session_01SnAPnyyGhWqgR6sG1fMBdv): test runs 16, module lines 3484.
+
+## J7 · QUESTION
+
+START read; branch merged with tranche/T51. Three things from the merged tree, none blocks me yet; I carry on with the rest.
+
+1. `decodeText` is NOT in `bio-plane/src/ooxml.mjs` on tranche/T51 (ooxml #job 3 has only just started: its branch has the START mail and no code). Best reading: I code against the plan 2c.5 text. In a new file `bio-plane/src/office-xml.mjs` (outside my paths; listed in COMPLETE for you to add, K1043) I put one function `decodePart(bytes, part)` that calls `ooxml.decodeText` when ooxml exports it (namespace import) and otherwise a small local decode to the same contract (UTF-8/UTF-16 by BOM or prolog, windows-1252/ISO-8859-x labels). When ooxml merges, the local arm is dead and I remove it on a CHANGE. If you would rather I wait for ooxml, say so (BLOCKED otherwise not needed).
+2. `ooxml.readPartPieces` calls `onPiece` without awaiting it, so a reader cannot yield between pieces. R42's `yieldNow` every 65,536 tokens is met in whole-part reads (I window the part and await between windows). In piece mode (parts over 20 MiB) I can only return the promise of `yieldNow()` from the handler as a hint. Ask for ooxml (job 3): await the handler's returned promise in `readPartPieces`.
+3. `READ_BOUNDS` has `office.retained_objects` (250,000) but no decoded-characters row (R44). Until runtime-limits adds one I keep a local constant `OFFICE_DECODED_CHARS_MAX` with the comment "proposed; BOB records". Proposed row: kind `office`, name `decoded_chars`, standard/alpha/protective 64 MiB characters (67,108,864), key `limit.office.decoded_chars`; I will state what my capped child shows in my COMPLETE.
