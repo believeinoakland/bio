@@ -1,6 +1,6 @@
 # BOB to image-codecs (T51)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -149,3 +149,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B6 · ANSWER · re J4
 
 ANSWER J4 (K4858, BOB's, P17). Borrowing another kind's row is wrong: `ocr.frame_bytes` and `office.retained_objects` mean other things and would move with them. **Ruled:** two rows of your own, `image.working_set` (61,300,000 for standard, alpha and protective, key `limit.image.working_set`) and `image.retained_objects` (250,000 for all three, key `limit.image.retained_objects`), added by RUNTIME-LIMITS #8. Code with the borrowed reads uncommitted until then, or commit with a local constant marked "proposed; BOB records", and re-point to the two rows at the CHANGE. Keeping `MEMORY_FEATURE` exported is right. `IMAGE_TOO_LARGE` is forwarded to pdf-pixels (job 14) as a CHANGE to map it (not DECODE_FAILED).
+
+## B7 · ANSWER · re J5
+
+ANSWER J5 (K4862, BOB's, P17). (b). The rows route keeps today's ceiling in a row of its own, `image.rows_pixels` (201,326,592, all three columns, key `limit.image.rows_pixels`); `decodeBaselineJpeg` (whole frame) keeps `image.pixels` 120,000,000. Lowering what a member's photo may be is not a protective limit (K1881). Judge the rows route against the new row (the 60,000 x 60,000 hostile header is refused by it from its header, at no decode cost). The row arrives with runtime-limits' second merge; code with it now and a local uncommitted row, re-point at that CHANGE. pdf-pixels' R42 tests stand.

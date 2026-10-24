@@ -1,6 +1,6 @@
 # BOB to pdf-worker (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 

@@ -1,6 +1,6 @@
 # runtime-limits (T51)
 
-**Status** · session_01Bbx2ng6oqCwJyEKMZdPRg2 · depth 2 · COMPLETE · handled B3
+**Status** · session_01XfNoWiwyETDV2uHxVRHPQy · depth 2 · COMPLETE · handled B3
 
 ## Completion (RUNTIME-LIMITS #6, fix round 7, G83)
 
@@ -59,3 +59,17 @@ Size (session_01Bbx2ng6oqCwJyEKMZdPRg2): test runs 3, module lines 205
 ## J3 · COMPLETE
 
 R29-R34 met in bio-plane/src/read-bounds.mjs and byte-ledger.mjs (new: add both to runtime-limits paths). 51 module tests pass; format, architecture, coverage 0 failures; ownership lists only those two files. B3 applied. Re-points owed: plane shape/harness.mjs capFor and the two g44-large tests' capFor to byte-ledger capFor. No open question. Record: build/jobs/T51/runtime-limits.md
+
+## Round 9, batch B (RUNTIME-LIMITS #8): the READ_BOUNDS rows the quoting jobs reported
+
+**Entries applied (B4: K4857, K4858, K4859, K4860).** The 19 rows added to `bio-plane/src/read-bounds.mjs` exactly as BOB gave them, keys `limit.<kind>.<name>`: `office` text_bytes, streamed_text_bytes, decoded_chars, structural_part_bytes, piece_chars; `archive` member_bytes; `image` working_set, retained_objects, picture_source; `ocr` picture_edge; `document` part_bytes; and the new kind `scan` (max_bytes, time_ms, embedded_pe, html_normalize, script_normalize, zip_type_rcg, partitions, icons_pe). No figure chosen by me; no new file, no `paths` change. Test: `read-bounds.test.mjs`, one test (R30, with R31's `boundOf` and `statement`) pins each row's three figures, key, the alpha answered by `boundOf` and `statement`'s `{size, bound, key}`; the shape test (R29) covers the new rows by invariants and stays green. Seen: rows absent before the edit (the new test is a lookup of the 19).
+
+**Deferred.** None. **Found in another module.** None. **Words.** None. **Generated artifacts made stale.** None.
+
+**Run.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/runtime-limits/`: 52 tests, 52 pass, 0 fail. Importers of `read-bounds.mjs` (image-cover, doc-clean, sheet-worker; rows were only added, no existing answer changed): 116 tests, 115 pass, 0 fail, 1 not run as pass (skipped by its own file). `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 62 of 176 (the users of runtime-limits; the full set not run, as no existing figure changed). Checks (civicos-process, product /home/user/bio): format `176 modules, 176 requirements files; 0 failures`; architecture `9 product files, 10 relative imports; 0 failures`; coverage `32 of 32 live requirement ids named by a test; 0 failures`; ownership `3 files changed by runtime-limits between origin/tranche/T51 and HEAD; 0 failures`; words `17 failures`, all in other modules (missingkey installer-steps `installer.fleet.logsunconfirmed` and the carried reds), none in runtime-limits (no sentence added).
+
+Size (session_01XfNoWiwyETDV2uHxVRHPQy): test runs 3, module lines 241
+
+## J4 · COMPLETE
+
+19 READ_BOUNDS rows of B4 (K4857-K4860) added to read-bounds.mjs exactly as given (office, archive member_bytes, image, ocr picture_edge, document part_bytes, new kind scan); test names each by its figures, boundOf and statement. Module 52/52, importers 115/116 (0 fail); format, architecture, coverage, ownership 0 failures; words failures are other modules'. No new file, no paths change, nothing deferred or open. Record: build/jobs/T51/runtime-limits.md
