@@ -13,6 +13,7 @@
      - `inline`: read in the request, when R131 (3)'s clock allows (the door's, per request). */
 import { boundOf, statement } from "../read-bounds.mjs";
 import { readContainer, declaredTextBytes } from "../ooxml.mjs";
+import { isOdfTextPart } from "../odf.mjs";
 
 const MiB = 1048576;
 /* R131 (1): the most of a PDF one member request reads (runtime-limits' row, K4901) */
@@ -83,7 +84,10 @@ export async function containerUnpacked(env, storeName, sha) {
     if (!whole) return null;
     const listed = readContainer(new Uint8Array(await whole.arrayBuffer()));
     if (!listed || listed.ok !== true || !Array.isArray(listed.entries)) return { container: true, unpacked: Infinity, lying: true };
-    const { total } = declaredTextBytes(listed, (name) => CONTAINER_TEXT_PART.test(name));
+    /* an ODF container (its `mimetype` and manifest parts) is summed by odf-reader's own predicate (BOB B70 (4)); any other by the local superset */
+    const names = new Set(listed.entries.map((e) => e.name));
+    const odf = names.has("mimetype") && names.has("META-INF/manifest.xml");
+    const { total } = declaredTextBytes(listed, odf ? isOdfTextPart : (name) => CONTAINER_TEXT_PART.test(name));
     return Number.isFinite(total) && total >= 0 ? { container: true, unpacked: total } : { container: true, unpacked: Infinity, lying: true };
   } catch { return null; }
 }

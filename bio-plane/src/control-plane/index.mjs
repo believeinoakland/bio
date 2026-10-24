@@ -2642,7 +2642,8 @@ export function makeFetch(hooks = {}) {
         }
       }
     }
-    const deferReading = (document) => op === "acquire" && readingWontFit(document);
+    /* async since B70 (2): the container gate reads the central directory; plane awaits it (R76) */
+    const deferReading = async (document) => op === "acquire" && await readingWontFitHere(document);
     /* R129 (fix round 8, G106): the line that says this request began is out BEFORE the object is asked, for Workers Logs lost the tail of a long firing */
     if (op === "acquire") requestStart(seen, op);
     const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, stateTiming, deferReading: op === "acquire" ? deferReading : undefined, sessMember, sessViewer,
