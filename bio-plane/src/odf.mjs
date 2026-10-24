@@ -170,7 +170,7 @@
  *
  * FIX ROUND 9 (T51; R49–R55), in one place:
  *   - every part read for text (`content.xml`, `meta.xml`, `styles.xml`, the manifest) goes through one reader
- *     (`readXmlText`): decoded by ooxml's `decodeText` (R54; a minimal local decode stands in until that merges), checked
+ *     (`readXmlText`): decoded by ooxml's `decodeText` (R54), checked
  *     for a character reference that names no scalar value (R51: the part is stated unreadable, final), and made linear to
  *     walk (R52: one scan that turns any unclosed opener, or a tag over 64 KiB, into text, so no walk meets a token that
  *     never ends and no hostile run costs more than one scan);
@@ -674,25 +674,6 @@ function declaredEncoding(bytes) {
   return decl ? (decl[2] ?? decl[3]).trim() || null : null;
 }
 
-/** A minimal decode of one part with `decodeText`'s answer (ooxml R36), for a build where ooxml does not yet export it:
- *  a UTF-8 or UTF-16 byte-order mark, UTF-16 without one (a `<` and a NUL), else the declared charset, else UTF-8. */
-function decodeTextFallback(bytes, { declared, name }) {
-  let label = null, assumed = false, from = 0;
-  if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) { label = "utf-8"; from = 3; }
-  else if (bytes[0] === 0xff && bytes[1] === 0xfe) { label = "utf-16le"; from = 2; }
-  else if (bytes[0] === 0xfe && bytes[1] === 0xff) { label = "utf-16be"; from = 2; }
-  else if (bytes[0] === 0x3c && bytes[1] === 0x00) label = "utf-16le";
-  else if (bytes[0] === 0x00 && bytes[1] === 0x3c) label = "utf-16be";
-  else if (declared && !/^utf-?16/i.test(declared)) label = declared;     // a UTF-16 claim with no BOM and no NUL is not believed
-  else { label = "utf-8"; assumed = true; }
-  let dec;
-  try { dec = new TextDecoder(label, { fatal: false }); } catch { return { ok: false, why: "ENCODING_UNSUPPORTED", name: String(declared ?? label) }; }
-  const text = dec.decode(from ? bytes.subarray(from) : bytes);
-  let replaced = 0;
-  for (let i = text.indexOf("\ufffd"); i !== -1; i = text.indexOf("\ufffd", i + 1)) replaced++;
-  return { ok: true, text, encoding: dec.encoding, assumed, replaced, replaced_ratio: text.length ? replaced / text.length : 0, disagree: [] };
-}
-
 /** A numeric character reference in `text` that names no Unicode scalar value (above U+10FFFF, a surrogate, U+0000,
  *  or digits that do not parse): the part cannot be read as XML. One pass, each reference read once. */
 function hasInvalidCharRef(text) {
@@ -783,8 +764,7 @@ function linearMarkup(text) {
 /** One part's bytes to the text a walk reads (R54, R51, R52), or the stated reason it cannot be:
  *  `{ok:true, xml, replaced, replacedRatio, scanned, tagOver, unterminated}` or `{ok:false, why, final?}`. */
 function readXmlText(bytes, name) {
-  const decode = typeof ooxml.decodeText === "function" ? ooxml.decodeText : decodeTextFallback;
-  const d = decode(bytes, { declared: declaredEncoding(bytes), name, kind: "xml" });
+  const d = ooxml.decodeText(bytes, { declared: declaredEncoding(bytes), name, kind: "xml" });
   if (!d || !d.ok) return { ok: false, why: d?.why ?? "ENCODING_UNSUPPORTED", name: d?.name ?? null };
   if (hasInvalidCharRef(d.text)) return { ok: false, why: "char_ref_invalid", final: true };
   const lin = linearMarkup(d.text);
