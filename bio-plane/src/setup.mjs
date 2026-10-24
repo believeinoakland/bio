@@ -151,13 +151,18 @@ export async function memberVersions(env) {
    `SERVING` true, `UNBOUND` false, otherwise null. No reason beyond the part. */
 export const PARTS = Object.freeze([["part_signin", RUNNER_MEMBER], ["part_scanner", "file-scanner"], ["part_safe_view", "file-scanner"]]);
 const presentOf = (report) => (report && report.state === "SERVING" ? true : report && report.state === "UNBOUND" ? false : null);
-/* R104 (fix round 8, G118; K4817: 60 s, BOB's figure): the fleet's versions are asked at most once a minute in an isolate. `op=bootstrap`
-   is every screen's frame, and its two asks of the fleet (agent-worker and file-scanner, each bounded at 4 s) were awaited on every call;
-   the parts are now kept for `PARTS_KEPT_MS` per environment, so a call within that time answers the kept parts without asking and
-   without waiting for them (a call that finds the ask still running shares it, never starts a second). The first after a cold start
-   waits as before. A read given its `versions` (`members=1`, which asks the whole fleet itself) is not kept: it asks nothing here. */
+/* R104 (fix round 8, G118; fix round 9, G118b; K4817, K4853: 60 s, BOB's figure): the fleet's versions are asked at most once a minute
+   for the whole copy. `op=bootstrap` is every screen's frame, and its two asks of the fleet (agent-worker and file-scanner, each
+   bounded at 4 s) were awaited on every call. A Worker is served from many isolates, so an isolate's memory alone could keep them
+   only once a minute per isolate: the answer is also kept in the team's object, which every isolate visits, as a value with the
+   object's own time (the object answers its age, so no two isolates' clocks are compared). The isolate's `WeakMap` stays as the
+   first look; a call that finds neither asks the fleet itself, and then tells the object, once. A call that finds the ask still
+   running shares it, never starts a second. The first after a cold object waits as before. A read given its `versions`
+   (`members=1`, which asks the whole fleet itself) is not kept: it asks nothing here. */
 export const PARTS_KEPT_MS = 60_000;
 const keptParts = new WeakMap();
+const PART_KEYS = Object.freeze(PARTS.map(([key]) => key));
+const NO_PARTS = Object.freeze(Object.fromEntries(PART_KEYS.map((k) => [k, null])));
 const askParts = async (env, v) => {
   const need = [...new Set(PARTS.map(([, m]) => m))].filter((m) => !v[m]);
   if (need.length) {
@@ -171,23 +176,77 @@ const askParts = async (env, v) => {
   }
   return Object.fromEntries(PARTS.map(([key, m]) => [key, presentOf(v[m])]));
 };
-/* `{parts, kept}`: `kept` is true when no ask was made or awaited by this call (the answer was already held). */
-async function partsAnswer(env, versions, now) {
-  if (versions || !env || typeof env !== "object") return { parts: await askParts(env, versions || {}), kept: false };
+/* The parts as the object keeps them: exactly the three flat keys, each `true`, `false` or `null`; anything else is no parts. */
+const flatParts = (v) => (v && typeof v === "object" && !Array.isArray(v) && PART_KEYS.every((k) => v[k] === true || v[k] === false || v[k] === null)
+  ? Object.fromEntries(PART_KEYS.map((k) => [k, v[k]])) : null);
+/* Whether asking the fleet cost anything here: with neither member bound the ask is answered at once, `UNBOUND`, and the object is not told. */
+const fleetBound = (env) => !!env && [RUNNER_HOST, "file-scanner"].some((m) => {
+  const b = env[(FLEET_BINDINGS.find(([x]) => x === m) || [])[1]];
+  return !!b && typeof b.fetch === "function";
+});
+/* The first look: this isolate's entry for `env` when it is live (`owner` false), else a new entry this call owns (`owner` true). */
+function claimParts(env, now) {
   const at = now();
   const held = keptParts.get(env);
-  if (held && at - held.at < PARTS_KEPT_MS && at >= held.at) {
-    const done = held.parts;
-    return done ? { parts: { ...done }, kept: true } : { parts: { ...(await held.asking) }, kept: false };
-  }
-  const entry = { at, parts: null, asking: null };
-  entry.asking = askParts(env, {}).then((p) => { entry.parts = p; return p; });
+  if (held && at - held.at < PARTS_KEPT_MS && at >= held.at) return { entry: held, owner: false };
+  const entry = { at, parts: null, asking: null, how: null, askMs: 0 };
   keptParts.set(env, entry);
-  return { parts: { ...(await entry.asking) }, kept: false };
+  return { entry, owner: true };
 }
-export async function partsReport(env, versions = null, { now = () => Date.now() } = {}) {
-  return (await partsAnswer(env, versions, now)).parts;
+/* The owner's work: the object's kept parts first (`readKept` answers `{parts, age_ms}` or null), else the fleet, told to the
+   object afterwards (`writeKept`). It never rejects: a failure leaves no entry and answers every part `null`. */
+function runOwner(entry, env, now, { readKept, writeKept }) {
+  entry.asking = (async () => {
+    try {
+      let kept = null;
+      try { kept = await readKept(); } catch { kept = null; }
+      const shared = kept ? flatParts(kept.parts) : null;
+      if (shared && Number.isFinite(kept.age_ms) && kept.age_ms >= 0 && kept.age_ms < PARTS_KEPT_MS) {
+        entry.at -= kept.age_ms; entry.how = "shared"; entry.parts = shared;
+        return shared;
+      }
+      const t = now();
+      const parts = await askParts(env, {});
+      entry.askMs = Math.max(0, now() - t); entry.how = "asked"; entry.parts = parts;
+      if (fleetBound(env)) { try { await writeKept(parts); } catch { /* the object not told is only a later isolate asking again */ } }
+      return parts;
+    } catch {
+      if (keptParts.get(env) === entry) keptParts.delete(env);
+      return { ...NO_PARTS };
+    }
+  })();
 }
+/* `{parts, kept, ms}`: `kept` is true when no ask of the fleet was made or awaited by this call (the answer was already held, here or in the
+   object); `ms` the time this call spent on the fleet. */
+async function partsResult(claim, env, versions, now, since) {
+  if (!claim) return { parts: await askParts(env, versions ? { ...versions } : {}), kept: false, ms: Math.max(0, now() - since) };
+  const e = claim.entry;
+  if (claim.owner) { const parts = await e.asking; return { parts: { ...parts }, kept: e.how === "shared", ms: e.how === "asked" ? e.askMs : 0 }; }
+  if (e.parts) return { parts: { ...e.parts }, kept: true, ms: 0 };
+  const parts = await e.asking;
+  return { parts: { ...parts }, kept: false, ms: Math.max(0, now() - since) };
+}
+const claimable = (env, versions) => !versions && !!env && typeof env === "object";
+/* `partsReport(env, versions, {now, stub, doAnswer})`: the parts alone. With the object (`stub`, `doAnswer`) the keep is shared with every
+   isolate as `bootstrap` shares it; without, it is this isolate's. */
+export async function partsReport(env, versions = null, { now = () => Date.now(), stub = null, doAnswer = null } = {}) {
+  const since = now();
+  const claim = claimable(env, versions) ? claimParts(env, now) : null;
+  if (claim && claim.owner) {
+    const shared = stub && typeof doAnswer === "function";
+    runOwner(claim.entry, env, now, {
+      readKept: async () => (shared ? (await bootstrapFactsOf(stub, doAnswer, { facts: false, viewer: null, parts: true })).kept : null),
+      writeKept: async (parts) => { if (shared) await keepPartsOf(stub, doAnswer, parts); },
+    });
+  }
+  return (await partsResult(claim, env, versions, now, since)).parts;
+}
+/* G118b (R-LOG): which isolate answered. The id is made once per isolate, at its first use; the age is its own. */
+let isolateMark = null;
+const isolateOf = (now) => {
+  if (!isolateMark) isolateMark = { id: Array.from(globalThis.crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, "0")).join(""), at: now() };
+  return isolateMark;
+};
 
 /* R80 (T46; N897 (2); ai-runs R78): whether this is a test instance, asked of `ai-runs`' own `testInstance` over this
    isolate's environment (the one computation, never a copy of its condition); a read that throws is `false`. */
@@ -942,7 +1001,7 @@ function cmpVersion(a, b) {
  * `sleep`; each defaults to the module's own factory on the same `ctx`.
  * ===================================================================== */
 export class InstanceSetup {
-  #ctx; #env; #deps; #sql; #started = false; #languageRegistered = null;
+  #ctx; #env; #deps; #sql; #started = false; #languageRegistered = null; #fleetKept = null;
 
   constructor(ctx, env = {}, deps = {}) {
     this.#ctx = ctx;
@@ -2636,7 +2695,7 @@ export class InstanceSetup {
    *  copy's own projects, documents, published case editions and active members, each taken whole, never through a
    *  viewer's sight. A fact that cannot be read now is `null`, never omitted and never `0`; no value names a member,
    *  handle or role, and none is nested. Writes nothing; never throws. */
-  bootstrapFacts({ facts = true, viewer = null } = {}) {
+  bootstrapFacts({ facts = true, viewer = null, parts = false } = {}) {
     const read = (f) => { try { return f(); } catch { return null; } };
     const text = (f) => { const v = read(f); return typeof v === "string" && v ? v : null; };
     const count = (f) => { const n = read(f); return Number.isInteger(n) && n >= 0 ? n : null; };
@@ -2644,9 +2703,12 @@ export class InstanceSetup {
        same answer so `bootstrap` makes one hop for both; a stamp that cannot be read is `null`, never guessed. */
     const viewerOut = viewer ? { language: text(() => this.memberLanguage({ viewer }).language),
                                  words_version: text(() => this.#translationsSvc().wordsVersion()) } : {};
-    if (!facts) return viewerOut;
+    /* R104 (G118b): the fleet's parts the object keeps, in the same visit, only when asked; the default answer is unchanged. */
+    const keptOut = parts ? { kept_parts: this.keptFleetParts() } : {};
+    if (!facts) return { ...viewerOut, ...keptOut };
     return {
       ...viewerOut,
+      ...keptOut,
       team_name: text(() => this.groupIdentityPublic().display_name),
       installed_at: text(() => this.#runningOut().installed_at),
       last_used_at: text(() => this.#credentials().lastActivity()),
@@ -2656,6 +2718,22 @@ export class InstanceSetup {
       count_members: count(() => { const l = this.#membership().memberList({ administer: false });
         return Array.isArray(l && l.members) ? l.members.filter((x) => x && x.status === "active").length : null; }),
     };
+  }
+  /** R104 (fix round 9, G118b; K4853): the fleet's parts, kept for every isolate. The isolate that asked the fleet tells the object
+   *  (`keepFleetParts`), by the three flat keys; the object keeps them with its own time, in memory (a restart loses them, and the
+   *  next call asks the fleet once). `keptFleetParts` answers them with their age by the object's clock, or `null` when none is
+   *  kept or they are past `PARTS_KEPT_MS`. Neither writes the record, throws, or answers any key but the three and the age. */
+  keptFleetParts() {
+    const k = this.#fleetKept;
+    if (!k) return null;
+    const age = this.#now() - k.at;
+    return age >= 0 && age < PARTS_KEPT_MS ? { ...k.parts, age_ms: age } : null;
+  }
+  keepFleetParts(parts) {
+    const flat = flatParts(parts);
+    if (!flat) return { ok: false, reason: "PARTS_NOT_KEPT" };
+    this.#fleetKept = { at: this.#now(), parts: flat };
+    return { ok: true };
   }
   /* R95: every project the record holds, paged whole through record-core's `listByType`. */
   #countProjects() {
@@ -3011,7 +3089,9 @@ export function instanceSetupOps(m, url, body) {
     adminrecoverystep: () => m.adminRecoveryStep({ viewer: q("viewer") }),
     /* R95 (T51): the seven facts `op=bootstrap` states to a credentialed caller; a store-internal route (no spec), asked
        by `bootstrapReport` only for such a caller. */
-    bootstrapfacts: () => m.bootstrapFacts({ facts: q("facts") !== "0", viewer: q("viewer") }),
+    bootstrapfacts: () => (body && typeof body === "object" && !Array.isArray(body) && body.keep !== undefined
+      ? m.keepFleetParts(body.keep)
+      : m.bootstrapFacts({ facts: q("facts") !== "0", viewer: q("viewer"), parts: q("parts") === "1" })),
     /* R84, R85 (T47; DEC-205): the group's logo and languages; `grouplogo` is the read control-plane serves. */
     /* R86: the logo's bytes are the request's body (a stream or bytes as the door hands them on, with `rawType` its
        content-type stamped in the query), or a JSON `{raw, rawType}` (`raw` base64, or null to clear). */
@@ -3167,12 +3247,27 @@ export async function groupLogoAsset(env, storeName, io) {
  *  the store's own `bootstrapfacts` route; a caller with none, or of another class, is answered exactly R132's key set. */
 export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer, storeRefusal, caller = null, stateTiming = null, now = () => Date.now() }) {
   /* R104: `stateTiming(name, ms)`, when the door hands one, is told `fleet` (the time of the parts' ask, 0 when kept) and `facts` (the
-     time of this report's hops to the store), which the door states in `Server-Timing` (`fleet;dur`, `facts;dur`). */
-  const tell = (name, ms) => { try { if (typeof stateTiming === "function") stateTiming(name, Math.max(0, Math.round(ms))); } catch { /* a sink never fails the report */ } };
+     time of this report's hops to the store), which the door states in `Server-Timing` (`fleet;dur`, `facts;dur`). G118b (R-LOG): and
+     `isolate`, this isolate's age, with its id as the third argument (`desc`), so a deploy shows how many isolates answer. */
+  const tell = (name, ms, desc) => { try { if (typeof stateTiming === "function") stateTiming(name, Math.max(0, Math.round(ms)), desc); } catch { /* a sink never fails the report */ } };
+  const tellIsolate = () => { const iso = isolateOf(now); tell("isolate", now() - iso.at, iso.id); };
   let storeMs = 0;
   const hop = async (f) => { const t = now(); try { return await f(); } finally { storeMs += now() - t; } };
-  const out = await hop(() => doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`))));
-  if (!out.answered) { tell("facts", storeMs); return notAnswered(out, "bootstrap", { json, storeSilent, storeRefusal }); }
+  /* The first look at the parts is made before the hops. A signed-in caller's call that must ask the fleet reads the object's keep in the
+     one visit it already makes for the facts, and tells the object once after an ask (K4870); a stranger's keeps to this isolate and makes
+     no visit of its own for it, and a call that finds this isolate's entry reads none. */
+  const since = now();
+  const claim = !members && claimable(env, null) ? claimParts(env, now) : null;
+  const owner = !!claim && claim.owner;
+  const signedIn = credentialedCaller(caller) || !!signedInViewer(caller);
+  const outHop = hop(() => doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`))));
+  const factsHop = hop(() => bootstrapFactsOf(stub, doAnswer, { facts: credentialedCaller(caller), viewer: signedInViewer(caller), parts: owner && signedIn }));
+  if (owner) runOwner(claim.entry, env, now, {
+    readKept: async () => (signedIn ? (await factsHop).kept : null),
+    writeKept: async (parts) => { if (signedIn) await hop(() => keepPartsOf(stub, doAnswer, parts)); },
+  });
+  const out = await outHop;
+  if (!out.answered) { await factsHop; tell("facts", storeMs); tellIsolate(); return notAnswered(out, "bootstrap", { json, storeSilent, storeRefusal }); }
   const versions = members ? await memberVersions(env) : null;
   /* R80, R82: the deployment's facts are this isolate's alone, so a store answer naming any of them sets nothing, and
      the retired nested `parts` (R81) is never relayed. R95: nor does it set any of the seven facts, which only a
@@ -3180,17 +3275,13 @@ export async function bootstrapReport(env, fp, { members = false, stub, json, st
   const { parts: _retired, test_instance: _t, part_signin: _s, part_scanner: _c, part_safe_view: _v, ...held } =
     out.result && typeof out.result === "object" ? out.result : {};
   const store = Object.fromEntries(Object.entries(held).filter(([k]) => !BOOTSTRAP_FACT_KEYS.includes(k) && !BOOTSTRAP_VIEWER_KEYS.includes(k)));
-  /* The parts' ask and the store's second route are independent: made together (R104). */
-  const partsStart = now();
-  const [parts, facts] = await Promise.all([
-    partsAnswer(env, versions ? { ...versions } : null, now).then((a) => ({ ...a, ms: now() - partsStart })),
-    hop(() => bootstrapFactsOf(stub, doAnswer, { facts: credentialedCaller(caller), viewer: signedInViewer(caller) })),
-  ]);
-  tell("fleet", parts.kept ? 0 : parts.ms);
+  const [parts, facts] = await Promise.all([partsResult(claim, env, versions, now, since), factsHop]);
+  tell("fleet", parts.ms);
   tell("facts", storeMs);
+  tellIsolate();
   return json({ ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
                 bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...store,
-                test_instance: testInstanceOf(env), ...parts.parts, ...facts,
+                test_instance: testInstanceOf(env), ...parts.parts, ...facts.out,
                 ...(members ? { memberVersions: versions } : {}) }, 200);
 }
 
@@ -3212,12 +3303,14 @@ const signedInViewer = (caller) => {
 /* R95, R103: the store's answer, in one hop. With `facts` the seven, each key a non-empty string or a non-negative integer,
    else `null`; with a `viewer` the viewer's `language` and the `words_version`, each a non-empty string or `null`. A read
    that does not answer states every key asked `null`, never leaving a key out and never inventing a count; nothing asked,
-   no hop. */
-async function bootstrapFactsOf(stub, doAnswer, { facts = true, viewer = null } = {}) {
-  if (!facts && !viewer) return {};
+   no hop. R104 (G118b): with `parts` the same visit also asks the fleet's parts the object keeps for every isolate, answered
+   as `kept`: `{parts, age_ms}` (the three flat keys and the age by the object's own clock), or `null` when none is kept, they
+   are past the minute, or the visit was not answered. `{out, kept}`: `out` is what the answer states, `kept` is read by the owner of the ask. */
+async function bootstrapFactsOf(stub, doAnswer, { facts = true, viewer = null, parts = false } = {}) {
+  if (!facts && !viewer && !parts) return { out: {}, kept: null };
   let got = null;
   try {
-    const q = new URLSearchParams({ facts: facts ? "1" : "0", ...(viewer ? { viewer } : {}) });
+    const q = new URLSearchParams({ facts: facts ? "1" : "0", ...(viewer ? { viewer } : {}), ...(parts ? { parts: "1" } : {}) });
     const a = await doAnswer(stub.fetch(new Request(`http://do/bootstrapfacts?${q}`)));
     got = a.answered && a.result && typeof a.result === "object" ? a.result : null;
   } catch { got = null; }
@@ -3229,7 +3322,14 @@ async function bootstrapFactsOf(stub, doAnswer, { facts = true, viewer = null } 
     out[k] = ok ? v : null;
   }
   if (viewer) for (const k of BOOTSTRAP_VIEWER_KEYS) out[k] = text(got ? got[k] : null);
-  return out;
+  const k = parts && got && got.kept_parts && typeof got.kept_parts === "object" ? got.kept_parts : null;
+  const flat = k ? flatParts(k) : null;
+  return { out, kept: flat && Number.isFinite(k.age_ms) ? { parts: flat, age_ms: k.age_ms } : null };
+}
+/* R104 (G118b): the owner of an ask tells the object what the fleet answered, the three flat keys, so every other isolate reads it. */
+async function keepPartsOf(stub, doAnswer, parts) {
+  const a = await doAnswer(stub.fetch(new Request("http://do/bootstrapfacts", { method: "POST", body: JSON.stringify({ keep: parts }) })));
+  return a.answered === true;
 }
 
 /** R18, op=selftest: deployment health as JSON, so "did the deploy work" is a link rather than a command. It

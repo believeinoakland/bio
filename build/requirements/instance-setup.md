@@ -198,7 +198,7 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 
 - **R103** (fix round 8, G114; K4817; amends R17) **`bootstrap` carries the viewer's language and the words stamp.** To a signed-in caller `op=bootstrap` also answers `language` (the viewer's screen language, R64, or `null`) and `words_version` (`translations` R20); without a session neither key is in the answer. Test: a member with Spanish set answers `es` and the stamp; after an adoption the stamp differs; control: no session, neither key.
 
-- **R104** (fix round 8, G118; K4817: 60 s, BOB's figure) **The fleet's versions are asked at most once a minute.** `partsReport`'s asks of the fleet members' `/version` are kept for 60 s in the isolate: a `bootstrap` within that time answers the kept parts without asking and without waiting for them; the first after a cold start may wait as before. `bootstrap`'s `Server-Timing` states `fleet;dur` (the time of `partsReport`, 0 when kept) and `facts;dur` (the record's calls). Test: two `bootstrap` answers in 10 s ask each fleet binding once; the two entries exist.
+- **R104** (fix round 8, G118; K4817: 60 s, BOB's figure) **The fleet's versions are asked at most once a minute.** `partsReport`'s asks of the fleet members' `/version` are kept for 60 s for the whole copy: in the isolate as the first look and, for a signed-in caller, in the team's object (a value with the object's own time, read in the visit `bootstrap` already makes for the caller's facts and told to it once after an ask; a stranger keeps in the isolate only; K4874): a `bootstrap` within that time answers the kept parts without asking and without waiting for them; the first after a cold start may wait as before. `bootstrap`'s `Server-Timing` states `fleet;dur` (the time of `partsReport`, 0 when kept) and `facts;dur` (the record's calls). Test: two `bootstrap` answers in 10 s ask each fleet binding once; the two entries exist.
 
 ## Private
 
@@ -227,7 +227,7 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 - (T46) `ai-runs` (layer 6, earlier): `testInstance` (its R78; R80), a new `modules.json` edge. agent-worker's `/version` `runner` (its R30) is read through the fleet binding R17 already asks (R17, R81), no new edge.
 
 ### Invariants
-
+ `bootstrap`'s `Server-Timing` states `isolate;desc=<an id made once per isolate>` with the isolate's age as `dur` (K4874). Test: two environments over one object within a minute ask each fleet binding once in all; the isolate entry exists.
 - **R26** The slug is recorded once: no act updates or deletes it, and a second value is refused (R4). The history of names and claims and the log of checks are append-only.
 - **R27** The display name is presentation only: it enters no signed bytes. Signed bytes carry the slug (State Rules §3.1).
 - **R28** `instance_group`, `group_identity_history` and `group_domain_checks` are declared to record-core exempt from purge, in both forms (record-core R21, R23); the profiles setting is exempt as every setting is (record-core R25).
