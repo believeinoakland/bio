@@ -132,7 +132,7 @@ export const FILE_WORK_BATCHES = Object.freeze(["scan", "render", "deeper", "for
 /* R53 (fix round 9, G136e): reading does not wait for the scan, and the sentence that says so plainly is this module's, read by key. */
 export const READING_KEY = "file-safety.index.reading_is_not_gated";
 export const readingStatement = () => ({ gated: false, key: READING_KEY });
-export const readingWords = () => localize(READING_KEY, "This file is read without waiting for its scan. The scan is a separate check, and a threat it finds does not yet take the file out of reading or search.");
+export const readingWords = () => localize("file-safety.index.reading_is_not_gated", "This file is read without waiting for its scan. The scan is a separate check, and a threat it finds does not yet take the file out of reading or search.");
 
 /* R24: every refusal answers its row. */
 function refusal(code, detail, extra = {}) {
@@ -994,12 +994,11 @@ export class FileSafety {
   /* R11 (G137a): the safe view is a view, not a reading, and says so; a view cut at the page cap says how much of the document it holds. */
   static #viewStatement(pages = null, sourcePages = null, truncated = false) {
     if (truncated && Number.isFinite(pages) && Number.isFinite(sourcePages) && pages > 0 && sourcePages > pages) {
-      const key = "file-safety.index.safe_view_first_pages";
-      return { key, words: localize(key, "This shows the first {pages} pages of the document's {source_pages}. It is a view of the document, not a reading of it.",
-                                    { pages: String(pages), source_pages: String(sourcePages) }), pages, source_pages: sourcePages };
+      return { key: "file-safety.index.safe_view_first_pages",
+               words: localize("file-safety.index.safe_view_first_pages", "This shows the first {pages} pages of the document's {source_pages}. It is a view of the document, not a reading of it.",
+                               { pages: String(pages), source_pages: String(sourcePages) }), pages, source_pages: sourcePages };
     }
-    const key = "file-safety.index.safe_view_is_a_view";
-    return { key, words: localize(key, "This is a view of the document, not a reading of it.") };
+    return { key: "file-safety.index.safe_view_is_a_view", words: localize("file-safety.index.safe_view_is_a_view", "This is a view of the document, not a reading of it.") };
   }
   /* R54: whether the scanner could not read the file for a password (its newest ClamAV note), as the structure shows it too. */
   #scanNoteEncrypted(sha) {

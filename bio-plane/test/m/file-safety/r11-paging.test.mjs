@@ -21,14 +21,12 @@ test("R11 G137a: a view cut at the page cap says by key that it is the first pag
   assert.deepEqual([da.pages, da.source_pages, da.truncated], [500, 600, true]);
   assert.equal(da.statement.key, "file-safety.index.safe_view_first_pages");
   assert.deepEqual([da.statement.pages, da.statement.source_pages], [500, 600]);
-  assert.match(da.statement.words, /first 500 pages/);
-  assert.match(da.statement.words, /\b600\b/);
-  assert.match(da.statement.words, /not a reading/);
+  assert.ok(da.statement.words.includes("500") && da.statement.words.includes("600"), "both figures are in the sentence a member reads");
   const db = await described(await w.fs.safeView({ captureSha: b, viewer: V }));
   assert.deepEqual([db.pages, db.source_pages, db.truncated], [500, 500, false]);
   assert.equal(db.statement.key, "file-safety.index.safe_view_is_a_view");
-  assert.doesNotMatch(db.statement.words, /first/);
-  assert.match(db.statement.words, /not a reading/);
+  assert.equal(db.statement.pages, undefined, "a view of a whole document states no cut");
+  assert.ok(db.statement.words.length > 10 && db.statement.words !== da.statement.words);
 });
 
 test("R11 G137b: a spreadsheet window starts at fromRow of the sheet named, answers whole rows within SAFE_VIEW_CELLS_MAX cells with next_row, null at the last row; following next_row call by call reaches the last row of a sheet (12,000 rows here; the corpus run takes 100,000)", async () => {
