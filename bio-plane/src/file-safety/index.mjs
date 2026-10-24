@@ -1239,6 +1239,9 @@ export class FileSafety {
       }
       copies.queued = Number(this.#one(`SELECT COUNT(*) AS n FROM fs_copies WHERE state = 'queued'`).n);
       const remaining = Number(this.#one(`SELECT COUNT(*) AS n FROM fs_files WHERE render_state = 'queued'`).n);
+      /* R39 (K4900): views due now, and copies beyond those this batch looked at, are what makes the next wake `now`; a view in its back-off is not */
+      const dueViews = Number(this.#one(`SELECT COUNT(*) AS n FROM fs_files WHERE render_state = 'queued' AND COALESCE(render_wait_at, '') <= ?`, iso(this.now())).n);
+      this.#keep("render", { last: this.now(), unreadable: false, left: dueViews + (tool ? Math.max(0, copies.queued - queuedCopies.length) : 0) });
       return { ok: true, ...out, copies, remaining, ...(inFlight ? { in_flight: inFlight } : {}) };
     } catch {
       /* a fault once rendering began: what was done is stated, and the rest wait for the next round (as R36's) */
@@ -2160,6 +2163,8 @@ export class FileSafety {
     const poll = kept && Number.isFinite(kept.last) ? Math.max(n, kept.last + FILE_SAFETY_POLL_MS) : n;
     try {
       if (kept && kept.unreadable) return this.#answer("render", poll);
+      /* R39 (K4900): one render a tick, so while the last batch left a view or safe copy queued the next tick is now, as scanWake's; a render in flight holds it (R55) */
+      if (kept && Number(kept.left) > 0 && !this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'rendering' LIMIT 1`)) return this.#answer("render", n);
       /* G136b: a view queued again after a transient failure is due at the end of its back-off */
       const views = this.#one(`SELECT MIN(COALESCE(render_wait_at, '')) AS t FROM fs_files WHERE render_state = 'queued'`);
       const copies = this.#one(`SELECT 1 AS x FROM fs_copies WHERE state = 'queued' LIMIT 1`);
