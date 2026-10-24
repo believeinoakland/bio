@@ -91,7 +91,9 @@ for (const [what, block, type] of DECIDERS) {
     const at = { gap: Math.floor((co.windows[4].to + co.windows[5].from) / 2), window: Math.floor((co.windows[3].from + co.windows[3].to) / 2) };
     for (const where of ["gap", "window"]) {
       const p = lineAt(base, at[where]), t = base.slice(0, p) + b + "\n" + base.slice(p);
-      const rt = readText(sheetOf(t), PA), w = wholeOf(t, PA);
+      /* the control is the block in a table read whole: a text over docprofile's CLASSIFY_WHOLE_MAX_CHARS is classified from its view (R39), so the 3 MiB text itself is no "whole" control (K4889) */
+      const small = rowsTable(MiB), q = lineAt(small, small.length >> 1);
+      const rt = readText(sheetOf(t), PA), w = wholeOf(small.slice(0, q) + b + "\n" + small.slice(q), PA);
       const inView = rt.classified_over.windows.some((x) => p >= x.from && p + b.length <= x.to) || p + b.length <= rt.classified_over.head_chars;
       assert.equal(inView, where === "window", `the block lies ${where === "window" ? "inside a window" : "in a gap"} of the result's own view`);
       assert.equal(w.d.type.key, type, "the whole text gives the type");
