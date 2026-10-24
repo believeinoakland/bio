@@ -117,3 +117,21 @@ Size (session_01C7Ti52rsnFVf8d7G9TFirt): test runs 7, module lines 1715
 ## J5 · COMPLETE
 
 COMPLETE (G47t, B6): every attestation token's files entry now carries capture_sha (the capture's sha, lowercase; an archive's token: the member's); null when two different captures name it (A, B, A stays null); other kinds carry no key. index.mjs holdMaterials; g47t-token.test.mjs 6 tests seen red (5 fail with the change reverted) then green; archive.test.mjs:129 accounts for the key. Suites: case-carriage 98/98, publication 157 pass 0 fail 1 todo, public-read 244/244. checks/run.mjs 0 failures; ownership 0 failures. Census ops: none changes. Proposed requirement lines are in my record. Nothing deferred, no QUESTION open.
+
+## Round 9 · G136c (case-carriage #16, session_01VyoeUd2RteSyDN2p9gjFYw)
+
+Entry: G136c's case-carriage piece, `tried` stamped before the clean (X21). R14 (BOB's amendment) concerns `READ_BOUNDS` and touches no code of this module (it holds none of those three figures).
+
+1. Root cause: `bio-plane/src/case-carriage/index.mjs` `#copyRows` stamped `tried` only after `#copyOne` returned, so a cleaner that dies mid-clean (worker killed, no throw) left `tried` null and `copyWake` answered `now` on every wake.
+2. Why the tests missed it: every R15 test cleaned to completion or failed on the read; none looked at the queue row while the clean ran. Gap fixed by the test below, which reads the row inside the clean.
+3. Fix: `#copyOne` stamps `tried` in `document_copy_queue` immediately before `this.clean(bytes)` (after the cheap gates: photo, fetched, too large, skipped, bytes read and verified, so a skipped or refused-unread document is not stamped). A failure to stamp counts as `failed`. Both `copyBatch` and `copyNow` go through it. A successful clean after a stamped attempt stores as before (the queue row is deleted).
+4. Failing-first test (`documents.test.mjs`, R15 G136c): RED `AssertionError [ERR_ASSERTION]: tried is stamped before the clean is called`; green after. It also checks: a throwing clean is called once, `copyWake` = now + `DOCUMENT_COPY_RETRY_MS`, the next wake does not call it, it is called again at the back-off; `copyNow` stamps before.
+   DOCS C1 (real merged doc-clean, 70,009-entry DOCX, crash after the work): attempted once, not looped, copy made at the back-off, written entry count (ZIP64 field) equal to the read count. Green.
+5. Platform check: **L** (local). No P step.
+New ids: none. Requirement wording proposed: none. Words: no new sentence. Files outside paths: none. Generated artifacts made stale: none.
+Deferred / found in other modules: none.
+
+Tests: `cd bio-plane && node --test --test-force-exit test/m/case-carriage/`: 100 tests, 100 pass, 0 fail. Users: scheduler 163 pass, case-authoring 249 pass, 0 fail (`impact.mjs origin/tranche/T51 HEAD` names publication, public-read, ratification et al. through the shared DECLARED_OPS table, which I did not change).
+Checks: format 0 failures; architecture (case-carriage) 16 files, 0 failures (the first run failed on a test import of `ooxml`, which I removed); coverage case-carriage 23 of 23, 0 failures; words case-carriage 0 failures; ownership 0 failures.
+
+Size (session_01VyoeUd2RteSyDN2p9gjFYw): test runs 9, module lines 1718
