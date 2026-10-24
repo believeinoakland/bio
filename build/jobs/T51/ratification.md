@@ -298,3 +298,7 @@ Two tests pinned the old call order and now assert the invariant that stays (not
 
 Tests: ratification 329/329; 41 files of users naming caseratify/ratification ops 389/389; `impact.mjs origin/tranche/T51 HEAD` (45 modules affected; users touched are those 41). Checks: format 1 failure not mine (`build/modules.json` office-readers path `bio-plane/src/office-xml.mjs`, unchanged by this job; same on the commit before); architecture 0; coverage 59 of 59, 0; words 0 (ratification); ownership 0 (4 files).
 Size (session_01V7rHxcZteb1q3kLiGE9C2N): test runs 9, module lines 4040
+
+## J17 · COMPLETE
+
+COMPLETE (START B16, G120b). A sitting now reads the list of known ids once (not once a member); each member's gatefacts, image and list are asked together (gate phase 5 -> 4 object levels, refusal order unchanged); the members' reuse checks run together. Red first on a sitting of 7 (list 7 times, depth 5, reusedparts in flight 1), green after. Counting door (r8-caseratify-calls, unchanged): chain 25 -> 23, 61 -> 60 calls. ratification 329/329, 41 user files 389/389; architecture, coverage 59/59, words, ownership 0; format has one failure not mine (modules.json office-readers path office-xml.mjs, same before my change). Finding for BOB: gatefacts, image and ratifygate remain per member (different bundles); a batch route is plane/control-plane's. Two tests pinning the old call order restated as invariants. Record section 'Fix round 9' pushed.
