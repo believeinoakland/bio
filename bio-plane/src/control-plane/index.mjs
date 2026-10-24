@@ -914,6 +914,7 @@ export function makeFetch(hooks = {}) {
     const metric = seen.op !== null && Object.hasOwn(OPS, seen.op) ? seen.op : seen.op !== null ? "unknown"
       : /text\/html/i.test(res?.headers?.get?.("content-type") || "") ? "page" : "door";
     requestDone(seen);
+    try { clock.shape(new URL(req.url).searchParams); } catch { /* a shape is status */ }
     return withServerTiming(res, clock.header(metric));
   };
   planeDoor.limits = PLANE_LIMITS;

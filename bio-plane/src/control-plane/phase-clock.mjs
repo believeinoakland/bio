@@ -84,6 +84,17 @@ export function makeClock(now = () => Date.now()) {
       const d = typeof desc === "string" && DESC.test(desc) ? `;desc=${desc}` : "";
       this.state(statedEntries(`${name};dur=${Math.round(ms)}${d}`));
     },
+    /** P24 (fix round 9; R-LOG): the SHAPE of the op asked, never its content: `shape;desc=f<n>:l<limit>` for a request that names `fields` (n = how many, as a count) and/or a
+     *  `limit` (a whole number); a request naming neither states nothing. */
+    shape(search) {
+      let q;
+      try { q = search instanceof URLSearchParams ? search : new URLSearchParams(String(search ?? "")); } catch { return; }
+      const f = q.get("fields"), l = q.get("limit");
+      const n = f === null ? null : f.split(",").filter((x) => x.trim() !== "").length;
+      const lim = l !== null && /^[0-9]{1,9}$/.test(l) ? Number(l) : null;
+      const parts = [...(n !== null ? [`f${n}`] : []), ...(lim !== null ? [`l${lim}`] : [])];
+      if (parts.length) this.stateTiming("shape", 0, parts.join(":"));
+    },
     /** R128: one object answer's body was read to its end by the door: the time it took and its length. */
     bodyRead(ms, bytes, route) {
       read.ms += Math.max(0, ms); read.bytes += Math.max(0, bytes); read.any = true;
