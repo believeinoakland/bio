@@ -104,3 +104,7 @@ DOC-CLEAN #5, START B6 (batch C): the entry cap now refused by ooxml (K4866).
 **Deferred / found in other modules.** None. Words: no new sentence.
 
 Size (session_01GLQmY1ex7pDodDcbS94kDg): test runs 4, module lines 1157
+
+## J8 · COMPLETE
+
+COMPLETE (START B6). ooxml's OFFICE_ENTRIES_MAX refusal (readContainer and discriminate) now maps to TOO_MANY_ENTRIES with the declared count, nothing written; the package of exactly the bound is still copied (package.mjs tooManyEntries, index.mjs packageFormat). Red: round9 'R3 R12 TOO_MANY_ENTRIES' (AssertionError OFFICE_ENTRIES_MAX, then DOCUMENT_UNREADABLE); green after. The test's own count of the over-bound fixture used readContainer, which ooxml now refuses; it uses endCounts. doc-clean tests 66 (65 pass, 1 skipped oracle absent), case-carriage 98/98, case-disclosures 115/115. Checks: format 0, architecture 0, coverage 0, ownership 0 failures; words: no finding in doc-clean (the 19 failures are pdfgen.mjs inline x2 and installer-steps missingkey x5 etc., not mine). Details in build/jobs/T51/doc-clean.md 'Completion notes'.
