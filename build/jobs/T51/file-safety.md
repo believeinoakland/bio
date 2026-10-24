@@ -404,3 +404,8 @@ R52 (fix round 7 G84) done at commit b3364426e0 (pushed to job/T51/file-safety; 
 - `checks/words.mjs /home/user/bio`: 13 failures, none in file-safety (above).
 
 **Size (session_01FFRPRUV4obmxBQTQJntsxb): test runs 10, module lines 2739** (`bio-plane/src/file-safety/*.mjs`, all files, at commit b3364426e0).
+
+## J16 · REPORT
+
+REPORT (ruling 1, READ_BOUNDS): a ceiling file-safety keeps that has no row.
+kind `file_safety`, name `ods_declared` (the declared size of an OpenDocument sheet's content.xml above which no preview is drawn; today `SAFE_VIEW_ODS_DECLARED_MAX`, formats.mjs). Proposed figures: standard 8 MiB (8,388,608), alpha 8 MiB, protective 8 MiB (`same(8 * MiB, k("file_safety","ods_declared"))`, as the file_safety row beside `grade_read`). My code quotes `boundOf("file_safety", "ods_declared")` (R21, R57), which throws at import until the row exists, so every test that imports file-safety is red on my branch until runtime-limits' file carries it. I run locally with an uncommitted copy of that one row and do not commit it (ownership). Please carry the row to runtime-limits' file on tranche/T51.
