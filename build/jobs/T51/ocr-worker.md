@@ -81,3 +81,11 @@ T51-FR67 · ocr-worker · re-run after CHANGE B4 (K4292). Tests only; no source 
 - `node checks/ownership.mjs /home/user/bio ocr-worker tranche/T51 job/T51/ocr-worker`: 1 file changed by ocr-worker; 0 failures.
 
 Size (session_013tFr4MZkgDf57StoymPBB3): test runs 3, module lines 808 (ocr-worker/src excluding the generated src/tesslib.mjs)
+
+## J5 · QUESTION
+
+QUESTION (J-next) · ocr-worker, two readings I am carrying on; tell me only if either is wrong.
+
+1. R7 step 4, "the frame is first judged from its declared size". For a PICTURE I read the header (PNG IHDR, JPEG SOF) through a ranged read and judge the frame the renderer will make (reduced to the picture edge): a frame whose reduced size is already over the bound is refused before any render, exactly at the bound is read, one pixel over is refused; preparation can only grow a frame, never shrink it, so a refusal here is certain; the rendered, prepared frame is judged again at its true size. For a PDF PAGE the declared size is the placed image's /Width x /Height, which only pdf-pixels' analysis knows; pdf-pixels R46-R48 name no function that answers it. My reading: the PDF page is judged after its render, as today (the requirement's "when that judgment applies"). If you want the PDF page judged before the render too, pdf-pixels must export a declared-frame answer (e.g. `declaredFrame(source, page) -> {width, height}`), which I would call; say so and I will code against that name.
+
+2. G124, the picture edge. `PICTURE_MAX_EDGE` (4096, the long edge a picture is reduced to) is a ceiling my files keep and READ_BOUNDS has no row for it (`ocr.frame_bytes` exists). Row for runtime-limits, REPORT per ruling (1): kind `ocr`, name `picture_edge`, standard 4096, alpha 4096, protective 4096, key `limit.ocr.picture_edge`. Until it lands I read it as `boundOf("ocr","picture_edge")` when the row exists and otherwise hold the figure as "proposed; BOB records" in one fallback expression, so the module stays green; I delete the fallback in a CHANGE once the row is in.
