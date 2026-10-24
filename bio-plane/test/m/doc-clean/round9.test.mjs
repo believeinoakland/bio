@@ -121,7 +121,7 @@ test("R3 R12 TOO_MANY_ENTRIES: a package of more entries than boundOf(office, en
   assert.equal(CLEAN_MAX_ENTRIES, boundOf("office", "entries"));
   assert.ok(Object.hasOwn(CLEAN_REFUSALS, "TOO_MANY_ENTRIES"), "the refusal has its meaning");
   const over = await bigDocx(CLEAN_MAX_ENTRIES + 1 - 10);
-  assert.equal(names(over).length, CLEAN_MAX_ENTRIES + 1);
+  assert.equal(endCounts(over).zip64 ?? endCounts(over).field, CLEAN_MAX_ENTRIES + 1, "the fixture states one entry over (readContainer itself refuses it, ooxml R3/R31)");
   refused(await cleanDocument(over), "TOO_MANY_ENTRIES", new RegExp(`${CLEAN_MAX_ENTRIES + 1} entries.*${CLEAN_MAX_ENTRIES}`));
   const exact = await bigDocx(CLEAN_MAX_ENTRIES - 10);
   assert.equal(names(exact).length, CLEAN_MAX_ENTRIES);
