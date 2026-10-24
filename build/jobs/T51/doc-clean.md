@@ -78,3 +78,15 @@ All answers whole copies. R4 is met, with the small-object PDF's margin (about 1
 `document.part_bytes` is not yet in `READ_BOUNDS` (RUNTIME-LIMITS #8 not merged); I re-point `CLEAN_MAX_PART_BYTES` to `boundOf("document", "part_bytes")` at that CHANGE.
 
 Size (session_01WbxrGGnsckmJi79PwS3pyv): test runs 16, module lines 1139
+
+## J7 · COMPLETE
+
+Answering B5 (CHANGE, K4862); tranche/T51 merged (no conflict). `CLEAN_MAX_PART_BYTES` is now `boundOf("document", "part_bytes")` (the 2 x clean_bytes stand-in is gone); no local read-bounds copy, no fallback. R12's test now asserts the row.
+
+With image-cover merged, the three SCAN D7/D8 tests (hostile PNG/JPEG in a DOCX) pass: IMAGE_TOO_LARGE naming the part.
+
+Tests: node --test --test-force-exit bio-plane/test/m/doc-clean/: 66 tests, 65 pass, 0 fail, 1 skipped (oracle tool missing, by name).
+Checks: format 0; architecture doc-clean 0; coverage doc-clean 12 of 12, 0; ownership doc-clean tranche/T51 0; words doc-clean 0 (unkeyed 0, missingkey 0).
+R4 figures are in J6. Entry-cap mapping from ooxml's refusal name (J5) still waits on ooxml's merge; I use no rows 20-22.
+
+Size (session_01WbxrGGnsckmJi79PwS3pyv): test runs 2, module lines 1139
