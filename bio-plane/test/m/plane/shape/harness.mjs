@@ -99,7 +99,7 @@ export function shapeRun(spec, { capMB = null, semiMB = 2, timeoutMs = 1_800_000
       const stored = [done && done.largest, ...ev.filter((e) => e.ev === "tick").map((t) => t.largest)].filter(Boolean);
       const largestStored = stored.length ? Math.max(...stored.flatMap((l) => [l.readings, l.history, l.text].map((n) => n || 0))) : null;
       resolve({ capMB, shim: SHIM, gcByTick, ops: ev.filter((e) => e.ev === "op"), largestStored, overBound: largestStored != null && largestStored > STORED_VALUE_BOUND, cells: ev.find((e) => e.ev === "cells") || null,
-                died: !done, readingDied: !!done && staged && !reading, reading, code, signal, timedOut: killed, stderr: fatal.slice(0, 300), fed: ev.find((e) => e.ev === "fed") || null,
+                died: !done, ranges: ev.find((e) => e.ev === "ranges") || null, readingDied: !!done && staged && !reading, reading, code, signal, timedOut: killed, stderr: fatal.slice(0, 300), fed: ev.find((e) => e.ev === "fed") || null,
                 ticks: ev.filter((e) => e.ev === "tick"), done, pages: ev.find((e) => e.ev === "pages") || null,
                 pagingDied: !!reading && reading.next != null && !ev.some((e) => e.ev === "pages"), error: (ev.find((e) => e.ev === "error") || {}).message || null });
     });
@@ -278,10 +278,12 @@ async function child(spec) {
   hook.sample = sample;
   const timer = setInterval(sample, 2);   /* G123b: on for the ticks and the ops, cleared at the end (it was cleared on the next line, so `peakMB` was a tick-boundary reading) */
   /* G44: the ops asked of the real door (the object's own `fetch`, as the frame does) on the held file, without the reading pipeline's ticks (spec.ops: [{op, path, body}], "$SHA" and "$PROJECT" filled in) */
-  if (spec.ops) {
-    const fill = (v) => JSON.parse(JSON.stringify(v).replaceAll("$SHA", sha).replaceAll("$PROJECT", projectId || ""));
+  /* the ops asked of the real door on the held file (spec.ops before any tick; spec.opsAfter after the reading, G123f: `workbookadd`/`tabledeclare` of the file just read) */
+  const ids = { doc: null, edge: null };   /* content ids a test's ops name: `$DOC` the document's own, `$EDGE` the range that crosses a block edge (G123f) */
+  async function runOps(list) {
+    const fill = (v) => JSON.parse(JSON.stringify(v).replaceAll("$SHA", sha).replaceAll("$PROJECT", projectId || "").replaceAll("$DOC", ids.doc || "").replaceAll("$EDGE", ids.edge || ""));
     let peakOp = base; const timerOp = setInterval(() => { const u = used(); if (u > peakOp) peakOp = u; }, 2);
-    for (const o of spec.ops) {
+    for (const o of list) {
       peakOp = used(); const t = Date.now(); let status = null, text = "", err = null;
       try { const r = await call("http://do" + fill(o.path), { method: "POST", body: JSON.stringify(fill(o.body ?? null)) }); status = r.status; text = await r.text(); } catch (e) { err = String(e && e.message || e).slice(0, 300); }
       const ms = Date.now() - t; let j = null; try { j = JSON.parse(text); } catch { /* not json */ }
@@ -292,6 +294,9 @@ async function child(spec) {
              sheets_total: res && res.sheets_total, sheets_truncated: res && res.sheets_truncated, head: text.slice(0, 240), largest: largest(true) });
     }
     clearInterval(timerOp);
+  }
+  if (spec.ops) {
+    await runOps(spec.ops);
     const wbRows = (() => { try { return { workbooks: sql(`SELECT count(*) AS n FROM workbooks`)[0].n, cells: sql(`SELECT count(*) AS n FROM workbook_cells`)[0].n }; } catch { return null; } })();
     emit({ ev: "done", wbRows, ticks: 0, totalMs: 0, left: [], rows: [], units: 0, state: null, extents: [], last: null, found: {}, search: {}, largest: largest(true), gen, baseMB: mb(base), peakMB: mb(peakOp), peakRssMB: 0, door });
     process.exit(0);
@@ -375,6 +380,56 @@ async function child(spec) {
       emit({ ev: "cells", ms: Date.now() - tc, peakMB: mb(peak), lastRow: gen.lastRow, expected: gen.lastCells, values: (got.cells || []).map((c) => String(c.value)), interpreted: got.interpreted ?? null, next_row: got.next_row ?? null,
              answer: (got.cells || []).length ? undefined : JSON.stringify(got).slice(0, 400) + (direct ? " | direct: " + direct : "") });
     } catch (e) { emit({ ev: "cells", ms: Date.now() - tc, lastRow: gen.lastRow, expected: gen.lastCells, error: String(e && e.message || e).slice(0, 300) }); }
+  }
+  /* G123f (S-36): a range of cells CITED and read back, equal to the generator's truth cell for cell: the last row, a range crossing a block edge of the reading's own text rows, and a range over the call's
+     bound (CELLS_RANGE_MAX) read to its end by `next_row`; then the ops asked of the same file (`spec.opsAfter`: `workbookadd`, `tabledeclare`) */
+  if (spec.cellRanges && gen.lastRow) {
+    const ex = extractionOf(ctx), { cellAddress, CELLS_RANGE_MAX } = await import("../../../../src/extraction/index.mjs");
+    const sheet = gen.sheet || (await import("../../../../src/csv-reader/index.mjs")).CSV_SHEET_NAME;
+    const { xlsxCells } = await import("./xlsx-gen.mjs");
+    const truth = (r) => doc.kind === "xlsx" ? xlsxCells(doc.rows, r).map(String)
+      : r === 1 ? ["id", "name", "amount", "note"] : r === gen.lastRow ? gen.lastCells
+      : [String(r - 2), `name ${r - 2}`, `${((r - 2) * 37) % 9973}.${(r - 2) % 100}`, r === 2 ? "FIRSTROWMARK" : r === gen.markRows.MIDROWMARK ? "MIDROWMARK" : `council note ${r - 2} budget line`];
+    const width = doc.kind === "xlsx" ? 3 : 4;
+    const blocks = sql(`SELECT extent FROM capture_text WHERE capture_sha=? AND extent_kind='sheet-range' ORDER BY seq`, sha).map((r) => { try { return rowsOfRange(JSON.parse(r.extent).range); } catch { return null; } }).filter(Boolean);
+    const edge = blocks.length >= 2 ? blocks[Math.floor((blocks.length - 1) / 2)][1] : null;
+    const boundRows = Math.min(gen.lastRow, Math.ceil(CELLS_RANGE_MAX / width) * 2 + 10);
+    const wanted = { last: [gen.lastRow, gen.lastRow], ...(edge ? { edge: [edge - 2, edge + 3] } : {}), bound: [1, boundRows] };
+    const ranges = {};
+    for (const [label, [from, to]] of Object.entries(wanted)) {
+      let cur = from, calls = 0, got = null, bad = null, seen = 0; const byRow = new Map();
+      while (cur != null && calls < 12) {
+        try { got = await ex.cellsOf(sha, sheet, { fromRow: cur, toRow: to }); } catch (e) { bad = "threw " + String(e && e.message || e).slice(0, 200); break; }
+        calls++; sample();
+        if (!Array.isArray(got.cells)) { bad = "no cells: " + JSON.stringify(got).slice(0, 200); break; }
+        for (const c of got.cells) { const a = cellAddress(c); if (!a) continue; seen++; (byRow.get(a.row) || byRow.set(a.row, []).get(a.row))[a.col - 1] = String(c.value); }
+        cur = got.next_row ?? null;
+      }
+      let wrong = null;
+      for (let r = from; r <= to && !bad && !wrong; r++) { const have = byRow.get(r) || []; if (JSON.stringify(have) !== JSON.stringify(truth(r))) wrong = { row: r, have, want: truth(r) }; }
+      ranges[label] = { from, to, calls, cells: seen, error: bad, wrong, stoppedWithNext: cur != null };
+    }
+    /* and a range CITED by its content id and read back (`content.cellsAt`, the citation path: a range over the call's bound answers `cells_truncated` + `next_row`), equal to the truth for its rows */
+    const cited = {};
+    try {
+      const { contentOf } = await import("../../../../src/content/index.mjs"), content = contentOf(ctx), last = String.fromCharCode(64 + width);
+      const citeOf = { ...(edge ? { edge: [edge - 2, edge + 3] } : {}), bound: [1, boundRows] };
+      for (const [label, [from, to]] of Object.entries(citeOf)) {
+        const m = content.contentMint({ bundleId: id, extent: { kind: "sheet-range", sheet, range: `A${from}:${last}${to}` }, mintedBy: "member:ann", viewer: "member:ann", at: now });
+        if (!m || m.ok !== true) { cited[label] = { error: "the range was not citable: " + JSON.stringify(m).slice(0, 200) }; continue; }
+        const got = await content.cellsAt(m.content_id); sample();
+        let wrong = null, n = 0, lastRowSeen = 0;
+        for (const c of got.cells || []) { const a = cellAddress(c); if (!a) continue; n++; lastRowSeen = Math.max(lastRowSeen, a.row);
+          if (String(c.value) !== truth(a.row)[a.col - 1]) wrong ||= { row: a.row, col: a.col, have: String(c.value), want: truth(a.row)[a.col - 1] }; }
+        if (label === "edge") ids.edge = m.content_id;
+        cited[label] = { from, to, id: m.content_id, cells: n, truncated: got.cells_truncated === true, next_row: got.next_row ?? null, lastRowSeen, reason: got.reason || null, wrong };
+      }
+    } catch (e) { cited.error = String(e && e.message || e).slice(0, 200); }
+    emit({ ev: "ranges", blocks: blocks.length, edge, ranges, cited });
+  }
+  if (spec.opsAfter) {
+    try { const { contentOf } = await import("../../../../src/content/index.mjs"); const m = contentOf(ctx).contentMint({ bundleId: id, extent: { kind: "document" }, mintedBy: "member:ann", viewer: "member:ann", at: now }); ids.doc = m && m.content_id || null; } catch { /* no document id: the op states it */ }
+    await runOps(spec.opsAfter);
   }
   /* then the member's own read of the finished reading (`op=reading`, extraction's `readingFor`): up to 4,096 units in one answer */
   if (spec.readingFor !== false) {
