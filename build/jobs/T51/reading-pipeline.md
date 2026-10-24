@@ -714,6 +714,7 @@ What it costs, and why I did not apply it from 1 MiB: a ranged first piece canno
 - R54 (append): "(K4868) A CSV over its bound (`READ_BOUNDS` csv bytes) is refused at once, `final`, `TOO_LARGE` with its size and that bound (`limit.csv.bytes`)."
 - R57 (append): "(K4868) The same completion for a CSV read by range: its last piece states `words_total`."
 - R37, R44: `cellsInRange` of such a CSV reads it by the range source's one read.
+**Also:** content and events pass; retrieval `whole-rows.test.mjs` 3 red, red on the tranche tip too (not this job's).
 **Report to BOB:** extraction's `r82.test.mjs:103` and `n26.test.mjs:81` (above) and the five `g40`/`g41` reds red on the tranche (not this job's). **Files made outside `paths`:** none. **Generated artifacts made stale:** the plane's and the others' bundles that include `reading-pipeline` (BOB regenerates at the round end).
 
 Size (session_01AbxdEFuxSqVBpz5Bascgjh): test runs 40, module lines 3,297
