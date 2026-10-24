@@ -9,7 +9,7 @@
 //                                                       200 application/pdf with x-derived-sha256, x-pages,
 //                                                       x-source-pages, x-truncated (and x-source-pages-exact: false when
 //                                                       an office source's page count past the cap is not stated by it);
-//                                                       or {ok:false, code, message?}. The Worker sends every figure (it
+//                                                       or {ok:false, code, message?, reason?}. The Worker sends every figure (it
 //                                                       quotes them from the table, which the image cannot import); a
 //                                                       render without them is refused 400 LIMITS_MISSING (R7, R16).
 import { createWriteStream } from 'node:fs';
@@ -26,7 +26,7 @@ const ENCRYPTED_PACKAGE = Buffer.from('EncryptedPackage', 'utf16le');
 const SOFFICE = process.env.SOFFICE || 'soffice';
 
 // A refusal, as `work` answers it; `render` sends it once the request's directory is gone.
-const refuse = (res, status, code, message) => ({ status, body: { ok: false, code, ...(message ? { message: String(message).slice(0, 300) } : {}) } });
+const refuse = (res, status, code, message, reason) => ({ status, body: { ok: false, code, ...(message ? { message: String(message).slice(0, 300) } : {}), ...(reason ? { reason } : {}) } });
 
 /** What the source is, from its first bytes: `pdf`, `zip` (OOXML, ODF), `ole2` (Word 97, PowerPoint 97), `rtf`. */
 export function sniff(head) {
@@ -181,7 +181,7 @@ async function work(req, res, url, dir) {
   const route = url.searchParams.get('route');
   if (route !== 'pdf' && route !== 'office') return refuse(res, 400, 'NOT_RENDERABLE', 'route must be pdf or office');
   const f = figuresOf(url);
-  if (!f) return refuse(res, 400, 'LIMITS_MISSING', 'dpi, max, bytes, ms, entries and directory are each required');
+  if (!f) return refuse(res, 400, 'LIMITS_MISSING');
   const { dpi, max } = f;
   const deadline = Date.now() + renderTimeMs(f.ms);
   const left = () => Math.max(1, deadline - Date.now());
@@ -206,12 +206,14 @@ async function work(req, res, url, dir) {
   } else {
     if (!kind || kind === 'pdf') return refuse(res, 422, 'NOT_RENDERABLE', 'the source is not a Word, presentation or ODF text document');
     if (info.encrypted) return refuse(res, 422, 'ENCRYPTED');
-    if (info.limit) return refuse(res, 422, 'NOT_RENDERABLE', 'the document\'s package directory is over the limit');
+    if (info.limit) return refuse(res, 422, 'NOT_RENDERABLE');
     const ext = kind === 'rtf' ? 'rtf' : kind === 'ole2' ? 'doc' : 'docx';
     const named = join(dir, `source.${ext}`);
     await rename(src, named);
-    // R7 (G136b): only the first `max` pages are ever converted, so a long document costs `max` pages of work.
-    const first = await convert(info.app, named, dir, 'out', `1-${max}`, left());
+    // R7 (G136b): only the first `max` pages and one more are ever converted, so a long document costs `max` + 1 pages of
+    // work and the page past the cap tells a longer document from one of exactly `max` pages, whatever LibreOffice does
+    // past the end of a document.
+    const first = await convert(info.app, named, dir, 'out', `1-${max + 1}`, left());
     if (first.r.timedOut) return refuse(res, 504, 'TIME_LIMIT');
     pdf = first.pdf;
     if (!first.made) {
@@ -227,15 +229,11 @@ async function work(req, res, url, dir) {
   if (counted.info.code !== 0 || !pages) return refuse(res, 422, 'NOT_RENDERABLE', counted.info.err.trim() || 'no pages');
   last = Math.min(pages, max);
   sourcePages = pages;
-  if (route === 'office') {
-    // What the source has beyond the pages converted: its own statement of its page count, else one page past the cap asked
-    // of the converter (a one-page range that exists only when the source is longer than the cap).
+  if (route === 'office' && pages > max) {
+    // The converter was asked for one page past the cap and made it: the source is longer. Its own statement of its page
+    // count is used when it states one that agrees; else only that it has more than `max` pages is known.
     if (info.pages && info.pages >= pages) sourcePages = info.pages;
-    else if (pages === max) {
-      const probe = await convert(info.app, join(dir, `source.${kind === 'rtf' ? 'rtf' : kind === 'ole2' ? 'doc' : 'docx'}`), dir, 'probe', `${max + 1}-${max + 1}`, left());
-      if (probe.r.timedOut) return refuse(res, 504, 'TIME_LIMIT');
-      if (probe.made && (await pagesOf(probe.pdf, left())).pages === 1) { sourcePages = max + 1; exact = false; }
-    }
+    else exact = false;
   }
   const raster = await run('pdftoppm', ['-r', String(dpi), '-jpeg', '-jpegopt', 'quality=85', '-f', '1', '-l', String(last),
     pdf, join(dir, 'page')], { ms: left() });
@@ -245,7 +243,7 @@ async function work(req, res, url, dir) {
   const out = join(dir, 'safe-view.pdf');
   let written;
   try { written = await writeImagePdf(images.map((n) => join(dir, n)), dpi, out, f.bytes); }
-  catch (e) { return refuse(res, 500, 'RENDER_FAILED', e.message); }
+  catch { return refuse(res, 500, 'RENDER_FAILED', null, 'FIRST_PAGE_OVER_BOUND'); }
   return { file: out, headers: { 'content-type': 'application/pdf', 'x-derived-sha256': written.sha, 'x-pages': String(written.pages),
     'x-source-pages': String(Math.max(sourcePages, written.pages)), 'x-truncated': String(sourcePages > written.pages),
     ...(exact ? {} : { 'x-source-pages-exact': 'false' }) } };

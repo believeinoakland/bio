@@ -53,7 +53,7 @@ async function rendering(figures = {}) {
   return { bucket, deps, image };
 }
 
-test('R7 G136b only the first SAFE_VIEW_PAGES_MAX pages of an office document are converted: a longer one costs the cap, and says it is longer', { skip }, async () => {
+test('R7 G136b only the first SAFE_VIEW_PAGES_MAX pages of an office document, and one more, are converted: a longer one costs the cap and says it is longer', { skip }, async () => {
   const doc = wordDocument(7);
   assert.ok(doc.total >= 5, `the fixture has ${doc.total} pages`);
   const cap = 2;
@@ -63,38 +63,32 @@ test('R7 G136b only the first SAFE_VIEW_PAGES_MAX pages of an office document ar
   assert.equal(r.status, 200);
   const view = await bytesOf(r);
   const made = conversions();
-  const main = made.find((c) => c.outdir === 'out');
-  assert.match(main.convert, /^pdf:writer_pdf_Export:/);
-  assert.deepEqual(JSON.parse(main.convert.slice('pdf:writer_pdf_Export:'.length)), { PageRange: { type: 'string', value: `1-${cap}` } });
-  assert.equal(main.pages, cap, 'the converter made only the first pages: the cap applies before conversion');
-  assert.ok(made.every((c) => c.pages <= cap), 'no conversion produced more than the cap');
+  assert.equal(made.length, 1, 'one conversion');
+  assert.match(made[0].convert, /^pdf:writer_pdf_Export:/);
+  assert.deepEqual(JSON.parse(made[0].convert.slice('pdf:writer_pdf_Export:'.length)), { PageRange: { type: 'string', value: `1-${cap + 1}` } });
+  assert.equal(made[0].pages, cap + 1, 'the converter made the first pages and one more: the cap applies before conversion');
   assert.equal(pageCount(view), cap);
   assert.deepEqual([r.headers.get('x-pages'), r.headers.get('x-truncated')], [String(cap), 'true']);
   assert.ok(Number(r.headers.get('x-source-pages')) > cap, 'the source is stated to be longer than the cap');
 });
 
-test('R7 G136b a document of exactly the cap and one shorter than it are not truncated; a longer one is', { skip }, async () => {
+test('R7 G136b a document of exactly the cap and one shorter than it are whole; one page more than the cap is truncated', { skip }, async () => {
   const doc = wordDocument(4);
-  const { bucket, deps } = await rendering({ max: doc.total });
-  const t = putCapture(bucket, doc.bytes);
-  conversions();
-  let r = await call(deps, { store: 'bio', target: t, route: 'office' });
-  assert.deepEqual(headers(r), [String(doc.total), String(doc.total), 'false'], 'exactly the cap');
-  assert.equal(r.headers.get('x-source-pages-exact'), null);
-  await r.arrayBuffer();
-  const exact = conversions();
-  assert.ok(exact.every((c) => c.pages <= doc.total));
-  const shorter = await rendering({ max: doc.total + 3 });
-  conversions();
-  r = await call(shorter.deps, { store: 'bio', target: putCapture(shorter.bucket, doc.bytes), route: 'office' });
-  assert.deepEqual(headers(r), [String(doc.total), String(doc.total), 'false'], 'shorter than the cap');
-  await r.arrayBuffer();
-  assert.equal(conversions().length, 1, 'a document within the cap is converted once');
-  const longer = await rendering({ max: doc.total - 1 });
-  r = await call(longer.deps, { store: 'bio', target: putCapture(longer.bucket, doc.bytes), route: 'office' });
-  assert.deepEqual([r.headers.get('x-pages'), r.headers.get('x-truncated')], [String(doc.total - 1), 'true']);
-  assert.ok(Number(r.headers.get('x-source-pages')) >= doc.total);
-  await r.arrayBuffer();
+  const at = async (max) => {
+    const { bucket, deps } = await rendering({ max });
+    conversions();
+    const r = await call(deps, { store: 'bio', target: putCapture(bucket, doc.bytes), route: 'office' });
+    await r.arrayBuffer();
+    return { r, made: conversions() };
+  };
+  const exact = await at(doc.total);
+  assert.deepEqual(headers(exact.r), [String(doc.total), String(doc.total), 'false'], 'exactly the cap');
+  assert.equal(exact.r.headers.get('x-source-pages-exact'), null);
+  const shorter = await at(doc.total + 3);
+  assert.deepEqual(headers(shorter.r), [String(doc.total), String(doc.total), 'false'], 'shorter than the cap');
+  const longer = await at(doc.total - 1);
+  assert.deepEqual([longer.r.headers.get('x-pages'), longer.r.headers.get('x-truncated')], [String(doc.total - 1), 'true']);
+  for (const x of [exact, shorter, longer]) assert.equal(x.made.length, 1, 'a document is converted once');
 });
 
 test('R7 G136b the safe view is cut at the last page that fits SAFE_VIEW_BYTES_MAX, truncated true; a first page over it is a final refusal', { skip }, async () => {
@@ -117,7 +111,8 @@ test('R7 G136b the safe view is cut at the last page that fits SAFE_VIEW_BYTES_M
   assert.equal(r.headers.get('x-derived-sha256'), (await import('node:crypto')).createHash('sha256').update(view).digest('hex'));
   const none = await rendering({ bytes: 1 });
   r = await call(none.deps, { store: 'bio', target: putCapture(none.bucket, textPdf(2)), route: 'pdf' });
-  assert.deepEqual([r.status, (await r.json()).class], [500, 'final']);
+  const refused = await r.json();
+  assert.deepEqual([r.status, refused.code, refused.class, typeof refused.message], [500, 'RENDER_FAILED', 'final', 'string']);
 });
 
 test('R7 the Worker holds the renderer\'s answer to SAFE_VIEW_BYTES_MAX: an answer that declares more is refused, one that streams more ends in an error', async () => {
