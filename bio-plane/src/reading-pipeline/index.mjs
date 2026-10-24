@@ -378,14 +378,22 @@ export const OCR_SAME_PROVENANCE = ["engine", "version", "cap", "measured_by", "
    its legibility carries it. */
 const refusalReasonOf = (b) => (b && b.refusal && b.refusal.render && typeof b.refusal.render.reason === "string" ? b.refusal.render.reason
   : b && typeof b.reason === "string" ? b.reason : "DECLINED");
-export async function askMemberPerPage(env, { sha, storeName, wantPages, invocations = OCR_INVOCATIONS_PER_REQUEST }) {
+export async function askMemberPerPage(env, { sha, storeName, wantPages, invocations = OCR_INVOCATIONS_PER_REQUEST, stampUnit = null }) {
   if (!(invocations > 0))
     return { status: 200, answer: null, loop: { invocations: 0, asked: 0, notAsked: [...wantPages], threw: null, strays: [], mismatched: [],
                                                 refused: [], refusedWhy: [], down: [], legibility: {} } };
+  /* R59 (fix round 9, G165; K4980): the plane's `stampUnit` is told the page in flight, `"p<page>"`, synchronously before each member
+     call (the first call takes the lowest page asked, as the member does), so a kill is charged to that page and not to `whole`.
+     A stamp that fails never stops the read: the row is then charged as it was before. */
+  const stamp = (page) => {
+    if (typeof stampUnit !== "function") return;
+    try { stampUnit(`p${page}`); } catch { /* the page stays unstamped */ }
+  };
   const call = (pages) => env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ capture_sha: sha, store: storeName, pages }),
   });
+  stamp(Math.min(...wantPages));
   const r = await call(wantPages);
   if (!r.ok) return { status: r.status };
   const first = await r.json();
@@ -399,6 +407,7 @@ export async function askMemberPerPage(env, { sha, storeName, wantPages, invocat
     if (loop.invocations >= invocations) { loop.notAsked = deferred.slice(i); break; }
     loop.invocations++; loop.asked++;
     try {
+      stamp(page);
       const rp = await call([page]);
       if (rp.status >= 500) loop.down.push(page);   /* R37: the member was down for this page; it is owed, not declined */
       const body = rp.ok ? await rp.json() : { ok: false, reason: `HTTP_${rp.status}` };
@@ -582,7 +591,7 @@ export function ocrTextFromMember(res, { calibration = null } = {}) {
    with its reason (final: never owed); `legibility` the legibility the member stated for each page it read or refused (R56). */
 export const PAGE_KILLED_READER = "PAGE_KILLED_READER";
 export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt, seed = null,
-                                         liveCalibration = null, invocations = OCR_INVOCATIONS_PER_REQUEST, killedPages = [] }) {
+                                         liveCalibration = null, invocations = OCR_INVOCATIONS_PER_REQUEST, killedPages = [], stampUnit = null }) {
   let chain, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [], loop = null;
   let seeded = [], transient = false, owed = [], killed = [], refused = [], legibility = {};
   const wanted = !!(i2text && needsTier3(i2text));
@@ -661,7 +670,7 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
     } else if (env && env.OCR_WORKER) {
       let failure = null;
       try {
-        const asked = askPages.length ? await askMemberPerPage(env, { sha, storeName, wantPages: askPages, invocations })
+        const asked = askPages.length ? await askMemberPerPage(env, { sha, storeName, wantPages: askPages, invocations, stampUnit })
                                        : { status: 200, answer: null, loop: null };
         loop = asked.loop || null;
         if (loop) {
@@ -2604,14 +2613,15 @@ async function skipWindow(evidence, doc, cursor, windowBytes) {
  *  `liveCalibration` (R5); and, only at a member's act, `transcription` (R29, `tier4Extend`): without it the answer is
  *  exactly what it was before R29. R37: `unitsBudget` is the bytes the text units may spend (default the acquire answer's,
  *  R15; the index path hands `Infinity`), `ocrInvocations` the OCR calls this request may make (default 24; 0 makes none, R55),
- *  and `killedPages` the pages the caller states killed their reader three times (R54, G129c). The `owe` hook is retired (R55,
+ *  and `killedPages` the pages the caller states killed their reader three times (R54, G129c); `stampUnit` (R59, G165) is called with
+ *  `"p<page>"` before each page's OCR call. The `owe` hook is retired (R55,
  *  G126j): nothing here registers owed work; the pages left are `ocr_left` and `counters.owed`, the caller's to owe. R39: a document that is a digest alone (no parts,
  *  size, retrieval instant or profile) answers `{refused: {code: "BARE_DIGEST", why}}` and no reading. R40: `cursor`
  *  (null, or the string a piece answered; with `maxUnits`) reads a capture read as text in pieces (the answer adds `piece`; a refusal is `{refused}` with no
  *  reading). Never throws; every failure is a failed reading, and says whether it is `transient` or `final`. */
 export async function read(document, { evidence = null, env = {}, storeName = "bio", view, planeVersion = null,
                                         liveCalibration = null, transcription = null, unitsBudget, ocrInvocations,
-                                        killedPages, skipKilled, cursor, maxUnits, rangePages, windowBytes } = {}) {
+                                        killedPages, stampUnit, skipKilled, cursor, maxUnits, rangePages, windowBytes } = {}) {
   /* R39: a digest alone is no document; it is refused before anything is loaded, and no reading is composed. */
   if (isBareStub(document)) return refusal(BARE_DIGEST, "reading-pipeline.index.bytes_not_held");
   if (skipKilled === true && typeof cursor === "string") {
@@ -2620,7 +2630,7 @@ export async function read(document, { evidence = null, env = {}, storeName = "b
   }
   let out;
   try { out = await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
-                                          unitsBudget, ocrInvocations, killedPages,
+                                          unitsBudget, ocrInvocations, killedPages, stampUnit,
                                           pieces: cursor === undefined ? null : { cursor, maxUnits, rangePages, windowBytes } }); }
   catch (e) {
     const reading = failed(document, null, localize("reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", { detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT });
@@ -2752,7 +2762,7 @@ const encodingFacts = (d) => (d && d.ok ? { encoding: d.encoding, encoding_assum
   ...(d.replaced ? { encoding_replaced: d.replaced } : {}) } : {});
 
 async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
-                              unitsBudget, ocrInvocations, killedPages, pieces }) {
+                              unitsBudget, ocrInvocations, killedPages, stampUnit, pieces }) {
   const retrieved = doc && typeof doc.retrieved === "string" ? doc.retrieved : null;
   const sha = doc && doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : null;
   const ct = doc && doc.capture && typeof doc.capture.content_type === "string" ? doc.capture.content_type : "";
@@ -3111,7 +3121,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       /* R4–R6: tier 3. */
       const t3 = await tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt, liveCalibration,
                                           ...(Number.isInteger(ocrInvocations) && ocrInvocations >= 0 ? { invocations: ocrInvocations } : {}),
-                                          ...(Array.isArray(killedPages) ? { killedPages } : {}) });
+                                          ...(Array.isArray(killedPages) ? { killedPages } : {}),
+                                          ...(typeof stampUnit === "function" ? { stampUnit } : {}) });
       i2text = t3.i2text; wiredTier = t3.wiredTier;
       ocrFacts = t3;
       if (t3.transient) memberDown = true;
