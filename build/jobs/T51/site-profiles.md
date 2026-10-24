@@ -89,3 +89,9 @@ Size (session_015KRmXt7cbEfmR33Lj1GWYb): test runs 6, module lines 2094
 ## J4 · COMPLETE
 
 COMPLETE: fix round 9, G140 and G131g (R2, R20, R21, R22) applied; details in build/jobs/T51/site-profiles.md. 46 module tests pass against a local stand-in of ooxml's decodeText; as committed 19 are red by name until ooxml's job merges decodeText (R-SEAM; nothing to change then). The J3 BLOCKED is withdrawn, no approval needed. REPORT: docprofile/pipeline.mjs:77 and monitoring/index.mjs:635-636 must read id.shell (CERTAIN only) instead of id.handler.shell. New file site-profiles/scan.mjs and test r9-bounded.test.mjs are inside my paths. Words owed: site-profiles.index.the_document_is_written_in. Checks: format, architecture, coverage 22/22, words, ownership all 0 failures.
+
+## J5 · after CHANGE B5 (ooxml merged)
+
+Merged `tranche/T51`; `ooxml.decodeText` is the real one. The R22 seam test and all the tests I had kept red by name are green. One change: the real function echoes `name` back (null when none given), so `digests` now passes `ctx.name || ctx.locator || declared`, and the refusal always names the source or the encoding. `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit site-profiles/test/`: 46 pass, 0 fail. format 0 (176 modules); architecture 0; coverage 22 of 22 ids, 0; words 0 (plain 0, testcopy 0, missingkey 0, inline 0); ownership below. Nothing deferred. The REPORT of J4 (docprofile/pipeline.mjs:77 and monitoring/index.mjs:635-636 read `id.shell`) stands.
+
+Size (session_015KRmXt7cbEfmR33Lj1GWYb): test runs 9, module lines 2095
