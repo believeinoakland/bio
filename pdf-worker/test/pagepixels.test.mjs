@@ -25,6 +25,9 @@ import { renderPictureToPixels, PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX, PNG_REFUS
 import { PNG_REFUSES, MEMORY_FEATURE } from "../src/pngdecode.mjs";
 import { CROP_REFUSALS } from "../src/imagecrop.mjs";
 import { openPdf, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
+import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
+import { generate as generatePdf } from "../../bio-plane/test/pdfgen.mjs";
+import { cropImage } from "../src/imagecrop.mjs";
 import { makePdf, onePage, content, image, readPng, turn, hex, deflateSync, runner } from "./make-pdf.mjs";
 
 const { Miniflare } = await (async () => {
@@ -194,7 +197,7 @@ console.log("\n--- R20, R23, R40: the scanned CCITT page against an independent 
 {
   const r = await render(SCAN, 0);
   t("R20 the success shape", Object.keys(r).sort(), ["bytes", "ccitt", "height", "mediaType", "ok", "page", "page_geometry",
-    "page_marks", "pixels_sha256", "rotate_deg", "route", "source", "upright", "width"]);
+    "page_marks", "pixels_sha256", "rotate_deg", "route", "source", "turned_deg", "upright", "width"]);
   t("R20 route, media type, page", fields(r, "ok", "page", "route", "mediaType"), [true, 0, "decoded-ccitt-g4", "image/png"]);
   t("R20 source", r.source, { filters: ["CCITTFaxDecode"], colorSpace: "DeviceGray", bitsPerComponent: 1, imageMask: false });
   t("R20 page geometry", r.page_geometry, { mediaBoxPt: { w: 792, h: 612 }, rotate: 270, dpi: { x: 300, y: 300 } });
@@ -252,10 +255,10 @@ console.log("\n--- R24: raw samples, no filter or FlateDecode ---");
   const pad = (u) => Uint8Array.from(u, (b, i) => (i % 2 ? b & 0b11000000 : b));
   for (const [label, extra, want] of [
     ["1-bpc grey", "/ColorSpace /DeviceGray /BitsPerComponent 1", pad(bits)],
-    ["1-bpc grey with /Decode [1 0]", "/ColorSpace /DeviceGray /BitsPerComponent 1 /Decode [1 0]", pad(bits.map((b) => ~b & 0xff))],
+    ["1-bpc grey with the default /Decode [0 1]", "/ColorSpace /DeviceGray /BitsPerComponent 1 /Decode [0 1]", pad(bits)],
     ["an /ImageMask", "/ImageMask true", pad(bits)],
     ["an /ImageMask, FlateDecode", "/ImageMask true /Filter /FlateDecode", pad(bits)],
-    ["an /ImageMask with /Decode [1 0]", "/ImageMask true /Decode [1 0]", pad(bits.map((b) => ~b & 0xff))],
+    ["an /ImageMask with the default /Decode [0 1]", "/ImageMask true /Decode [0 1]", pad(bits)],
   ]) {
     const data = /FlateDecode/.test(extra) ? deflateSync(bits) : bits;
     const r = await render(imagePage(image(10, 3, extra, data), { w: 10, h: 3 }), 0);
@@ -518,7 +521,7 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
   const pe = PV.variants.find((v) => v.name === "photo-4032x3024-o6").expect[0];
   const ph = await picture(PHOTO, 0, { maxEdge: 1568, grey: true });
   t("R42 the success shape", Object.keys(ph).sort(), ["bytes", "height", "mediaType", "ok", "orientation", "page", "pixels_sha256",
-    "reduced_by", "route", "source", "upright", "width"]);
+    "reduced_by", "route", "source", "turned_deg", "upright", "width"]);
   t("R42 R43 a 4032×3024 colour JPEG, Orientation 6: a portrait grey PNG, long edge at most 1,568, Pillow's pixels",
     [ph.ok, ph.page, ph.route, ph.mediaType, ph.upright, ph.orientation, ph.reduced_by, ph.width, ph.height, ph.height > ph.width,
       Math.max(ph.width, ph.height) <= 1568, ph.pixels_sha256],
@@ -821,7 +824,7 @@ console.log("\n--- R44: a photographed page, made ready for the engine ---");
     const a = await photo("page-combined-a", { prepare: true }), b = await photo("page-combined-a", { prepare: true });
     t("R44 R40 the same bytes and options prepare to the same pixels, and the answer's keys are R42's with `prepared`",
       [a.pixels_sha256 === b.pixels_sha256, Object.keys(a).sort(), a.route, a.mediaType, a.upright, a.page],
-      [true, ["bytes", "height", "mediaType", "ok", "orientation", "page", "pixels_sha256", "prepared", "reduced_by", "route", "source", "upright", "width"], "decoded-picture", "image/png", true, 0]);
+      [true, ["bytes", "height", "mediaType", "ok", "orientation", "page", "pixels_sha256", "prepared", "reduced_by", "route", "source", "turned_deg", "upright", "width"], "decoded-picture", "image/png", true, 0]);
     t("R44 the pixels_sha256 is over the prepared samples", a.pixels_sha256, createHash("sha256").update(readPng(a.bytes).samples).digest("hex"));
     t("R44 control: without prepare the answer carries no `prepared` and is R42's grey", [(await photo("page-combined-a")).prepared, (await photo("page-combined-a")).width], [undefined, PAGES["page-combined-a"].width]);
     const colour = await renderPictureToPixels(variant("reduce"), 0, { maxEdge: 200, prepare: true });
@@ -832,6 +835,207 @@ console.log("\n--- R44: a photographed page, made ready for the engine ---");
     t("R44 R42 a refusal still refuses as R42 does (bytes that are no picture)", (await renderPictureToPixels(new Uint8Array([1, 2, 3, 4]), 0, { maxEdge: 64, prepare: true })).reason, "NOT_A_PICTURE");
     t("R44 a tiny picture with no text lines is answered, not refused", [tiny.ok, tiny.prepared.text_found], [true, false]);
   }
+}
+
+console.log("\n--- R45: wrong pixels are never ok:true ---");
+{
+  const undetermined = async (label, bytes, detail, opts = {}) => {
+    const r = await render(bytes, 0, opts);
+    t(`R45 ${label}: PIXELS_UNDETERMINED, ${detail}, no bytes`, [r.ok, r.reason, r.detail, r.bytes], [false, "PIXELS_UNDETERMINED", detail, undefined]);
+    return r;
+  };
+  const grey = (extra, data = G) => imagePage(image(3, 2, `/ColorSpace /DeviceGray /BitsPerComponent 8 ${extra}`, data), { w: 3, h: 2 });
+  const bits1 = Uint8Array.from([0b10110011, 0b01000000, 0b00001111, 0b11000000, 0b11111111, 0b00000000]);
+  const rgb = Uint8Array.from({ length: 18 }, (_, i) => (i * 29 + 3) & 0xff);
+
+  /* /Decode (R24): a sample inverted by the dictionary is never presented as it is stored */
+  await undetermined("8-bit grey with /Decode [1 0]", grey("/Decode [1 0]"), "decode_array");
+  await undetermined("8-bit RGB with /Decode [1 0 1 0 1 0]", imagePage(image(3, 2, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Decode [1 0 1 0 1 0]", rgb), { w: 3, h: 2 }), "decode_array");
+  await undetermined("1-bit grey with /Decode [1 0]", imagePage(image(10, 3, "/ColorSpace /DeviceGray /BitsPerComponent 1 /Decode [1 0]", bits1), { w: 10, h: 3 }), "decode_array");
+  await undetermined("an /ImageMask with /Decode [1 0]", imagePage(image(10, 3, "/ImageMask true /Decode [1 0]", bits1), { w: 10, h: 3 }), "decode_array");
+  await undetermined("8-bit grey with /Decode [0 0.5] (a stretch)", grey("/Decode [0 0.5]"), "decode_array");
+  await undetermined("8-bit grey with /Decode of the wrong length", grey("/Decode [0 1 0 1]"), "decode_array");
+  t("R45 (control) 8-bit grey with the default /Decode [0 1] is rendered, the same pixels as with none",
+    [(await render(grey("/Decode [0 1]"), 0)).pixels_sha256, (await render(grey(""), 0)).pixels_sha256], [hex(G), hex(G)]);
+  t("R45 (control) 8-bit RGB with the default /Decode [0 1 0 1 0 1] is rendered",
+    (await render(imagePage(image(3, 2, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Decode [0 1 0 1 0 1]", rgb), { w: 3, h: 2 }), 0)).pixels_sha256, hex(rgb));
+
+  /* /SMask and /Mask (R24) */
+  const withObj = (extra, obj) => onePage({ box: [0, 0, 3, 2], res: "/XObject << /Im 5 0 R >>", ops: "q 3 0 0 2 0 0 cm /Im Do Q",
+    more: [image(3, 2, `/ColorSpace /DeviceGray /BitsPerComponent 8 ${extra}`, G), obj] });
+  const alpha = image(3, 2, "/ColorSpace /DeviceGray /BitsPerComponent 8", new Uint8Array(6).fill(128));
+  await undetermined("an image with an /SMask", withObj("/SMask 6 0 R", alpha), "smask");
+  await undetermined("an image with a stencil /Mask stream", withObj("/Mask 6 0 R", image(3, 2, "/ImageMask true /BitsPerComponent 1", new Uint8Array(2))), "mask");
+  await undetermined("an image with a colour-key /Mask [0 10]", withObj("/Mask [0 10]", "<< >>"), "mask");
+  t("R45 (control) the same page with neither is rendered", (await render(withObj("", "<< >>"), 0)).pixels_sha256, hex(G));
+
+  /* a TIFF predictor (R24) */
+  const flate = (extra, data) => imagePage(image(3, 2, `/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode ${extra}`, deflateSync(data)), { w: 3, h: 2 });
+  await undetermined("FlateDecode with /Predictor 2", flate("/DecodeParms << /Predictor 2 /Colors 1 /BitsPerComponent 8 /Columns 3 >>", G), "tiff_predictor");
+  t("R45 (control) FlateDecode with /Predictor 1 is rendered", (await render(flate("/DecodeParms << /Predictor 1 >>", G), 0)).pixels_sha256, hex(G));
+  const png15 = Uint8Array.from([0, ...G.subarray(0, 3), 0, ...G.subarray(3, 6)]);
+  t("R45 (control) a PNG predictor (15), which pdf-reader undoes, is rendered",
+    (await render(flate("/DecodeParms << /Predictor 15 /Colors 1 /BitsPerComponent 8 /Columns 3 >>", png15), 0)).pixels_sha256, hex(G));
+
+  /* CCITT /Columns against /Width (R23) */
+  const ccitt = (parms) => imagePage(image(3300, 2550, `/ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /CCITTFaxDecode /DecodeParms ${parms}`, CCITT), { w: 792, h: 612, pageExtra: "/Rotate 270" });
+  const cc = await undetermined("CCITT /Columns 3000 on a 3300-wide image", ccitt("<< /K -1 /Columns 3000 /Rows 2550 >>"), "ccitt_columns");
+  t("R45 ...naming both figures", [cc.columns, cc.width], [3000, 3300]);
+  await undetermined("CCITT with no /Columns (1,728) on a 3300-wide image", ccitt("<< /K -1 /Rows 2550 >>"), "ccitt_columns");
+  t("R45 (control) CCITT with /Columns equal to /Width is rendered, the independent decoder's pixels",
+    (await render(ccitt("<< /K -1 /Columns 3300 /Rows 2550 >>"), 0)).pixels_sha256, IND_UPRIGHT_SHA);
+
+  /* the DCT pass-through is examined (R22) */
+  const dctPage = (w, h, cs, data = jpeg("rgb-444")) => imagePage(image(w, h, `/ColorSpace ${cs} /BitsPerComponent 8 /Filter /DCTDecode`, data), { w: 63, h: 47 });
+  await undetermined("a pass-through whose JPEG is 63 wide under a dictionary that says 64", dctPage(64, 47, "/DeviceRGB"), "dct_unexamined");
+  await undetermined("a pass-through whose JPEG is 47 high under a dictionary that says 48", dctPage(63, 48, "/DeviceRGB"), "dct_unexamined");
+  await undetermined("a pass-through whose JPEG has 3 components under /DeviceGray", dctPage(63, 47, "/DeviceGray"), "dct_unexamined");
+  await undetermined("a pass-through whose stream states no frame at all", dctPage(63, 47, "/DeviceRGB", Uint8Array.from([0xff, 0xd8, 0xff, 0xd9, 0, 0, 0, 0])), "dct_unexamined");
+  const okp = await render(dctPage(63, 47, "/DeviceRGB"), 0);
+  t("R45 (control) the agreeing pass-through is the publisher's bytes", [okp.ok, okp.route, hex(okp.bytes)], [true, "passthrough-dct", hex(jpeg("rgb-444"))]);
+  const prog = await render(dctPage(63, 47, "/DeviceRGB", jpeg("refuse-progressive")), 0);
+  t("R45 (control) an agreeing progressive JPEG is still passed through (its frame is read, not decoded)", [prog.ok, prog.route], [true, "passthrough-dct"]);
+  const crop = await cropImage(dctPage(64, 47, "/DeviceRGB"), { kind: "image", page: 0, rect: [0, 0, 63, 47] });
+  t("R45 a crop of the disagreeing image says the decoder's reason", [crop.ok, crop.reason, crop.decoder], [false, "DECODE_REFUSED", "PIXELS_UNDETERMINED"]);
+}
+
+console.log("\n--- R46: declared sizes are judged before any decode, with the table's figures ---");
+{
+  const PIXELS = boundOf("image", "pixels"), EDGE = boundOf("image", "edge");
+  const sized = (w, h, filter, parms, data) => imagePage(image(w, h, `/ColorSpace /DeviceGray /BitsPerComponent 1 ${filter ? `/Filter /${filter}` : ""} ${parms}`, data), { w: 8, h: 8 });
+  const over = async (label, bytes) => {
+    const r = await render(bytes, 0);
+    t(`R46 ${label}: IMAGE_TOO_LARGE with the declared size and the bounds, no decode, no bytes`,
+      [r.ok, r.reason, r.declared?.width, r.declared?.height, r.bound, r.bytes, r.rowsDecoded, r.jbig2, r.jpx, r.jpeg],
+      [false, "IMAGE_TOO_LARGE", r.declared?.width, r.declared?.height, { pixels: PIXELS, edge: EDGE }, undefined, undefined, undefined, undefined, undefined]);
+    return r;
+  };
+  const big = await over("an 8 KB CCITT stream declaring 60,000 x 60,000", sized(60000, 60000, "CCITTFaxDecode", "/DecodeParms << /K -1 /Columns 60000 /Rows 60000 >>", new Uint8Array(8000)));
+  t("R46 ...its figures", [big.declared.width, big.declared.height, big.declared.pixels], [60000, 60000, 3.6e9]);
+  await over("a DCT pass-through declaring 60,000 x 60,000 (judged before the header is compared)", imagePage(image(60000, 60000, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode", jpeg("rgb-444")), { w: 8, h: 8 }));
+  await over("a JBIG2 stream declaring 16,000 x 16,000", sized(16000, 16000, "JBIG2Decode", "", new Uint8Array(20)));
+  await over("a JPX stream declaring 30,000 x 30,000", sized(30000, 30000, "JPXDecode", "", new Uint8Array(20)));
+  await over("raw samples declaring 12,000 x 10,001 (one row over the pixel bound)", sized(12000, 10001, "", "", new Uint8Array(8)));
+  const wide = await over("a raw image 65,536 wide and one row high (under the pixel bound, over the edge bound)", sized(EDGE + 1, 1, "", "", new Uint8Array(8)));
+  t("R46 ...the edge is what it breaks", [wide.declared.pixels <= PIXELS, wide.declared.width > EDGE], [true, true]);
+  /* the controls: at the bounds the route is reached and gives its own answer */
+  const atPixels = await render(sized(12000, 10000, "", "", new Uint8Array(8)), 0);
+  t("R46 (control) 12,000 x 10,000, exactly the pixel bound, reaches its route: TRUNCATED_IMAGE_DATA", [atPixels.reason, 12000 * 10000 === PIXELS], ["TRUNCATED_IMAGE_DATA", true]);
+  const atEdge = await render(sized(EDGE, 1, "", "", new Uint8Array(8)), 0);
+  t("R46 (control) 65,535 x 1, exactly the edge bound, reaches its route: TRUNCATED_IMAGE_DATA", atEdge.reason, "TRUNCATED_IMAGE_DATA");
+  /* a crop reads the same rule */
+  const c = await cropImage(sized(60000, 60000, "CCITTFaxDecode", "/DecodeParms << /K -1 /Columns 60000 /Rows 60000 >>", new Uint8Array(8000)), { kind: "image", page: 0, rect: [0, 0, 8, 8] });
+  t("R46 a crop of it: DECODE_REFUSED naming IMAGE_TOO_LARGE", [c.ok, c.reason, c.decoder], [false, "DECODE_REFUSED", "IMAGE_TOO_LARGE"]);
+}
+
+console.log("\n--- R48: a turned page or picture is turned upright on request ---");
+{
+  const rgb = Uint8Array.from({ length: 18 }, (_, i) => (i * 29 + 3) & 0xff);
+  const page = (rot, img = GREY_IMG) => imagePage(img, { w: 3, h: 2, pageExtra: `/Rotate ${rot}` });
+  const wantGrey = (deg) => { const tr = turn((x, y) => G[y * 3 + x], 3, 2, deg); const o = []; for (let Y = 0; Y < tr.H; Y++) for (let X = 0; X < tr.W; X++) o.push(tr.at(X, Y)); return [tr.W, tr.H, hex(Uint8Array.from(o))]; };
+  for (const deg of [0, 90, 180, 270]) {
+    const r = await render(page(0), 0, { turn: deg });
+    t(`R48 an 8-bit page, turn ${deg}: the samples turned exactly, turned_deg ${deg}, upright`, [r.width, r.height, r.pixels_sha256, r.turned_deg, r.rotate_deg, r.upright], [...wantGrey(deg), deg, 0, true]);
+    t(`R48 (control) the same page, turn ${deg}: the png's samples are the digest's`, hex(readPng(r.bytes).samples), r.pixels_sha256);
+  }
+  const both = await render(page(90), 0, { turn: 90 });
+  t("R48 the turn follows the page's own /Rotate (90 then 90 is 180); rotate_deg stays the page's", [both.pixels_sha256, both.rotate_deg, both.turned_deg, both.upright], [wantGrey(180)[2], 90, 90, true]);
+  const plain = await render(page(0), 0);
+  for (const bad of [45, "90", -90, 360, null, 1.5, undefined]) {
+    const r = await render(page(0), 0, { turn: bad });
+    t(`R48 a turn of ${JSON.stringify(bad)} is ignored as 0`, [r.pixels_sha256, r.turned_deg], [plain.pixels_sha256, 0]);
+  }
+  t("R48 no turn asked: turned_deg 0", plain.turned_deg, 0);
+  const ign = await render(page(90), 0, { turn: 0, rotate: 180 });
+  t("R48 R21 opts.rotate is still ignored", ign.pixels_sha256, wantGrey(90)[2]);
+  /* 1-bit: a bit lands on a bit */
+  const bits = Uint8Array.from([0b10110011, 0b01000000, 0b00001111, 0b11000000, 0b11111111, 0b00000000]);
+  const bitAt = (x, y) => (bits[y * 2 + (x >> 3)] >> (7 - (x & 7))) & 1;
+  for (const deg of [90, 180, 270]) {
+    const r = await render(imagePage(image(10, 3, "/ImageMask true", bits), { w: 10, h: 3 }), 0, { turn: deg });
+    const tr = turn(bitAt, 10, 3, deg), rb = Math.ceil(tr.W / 8), want = new Uint8Array(rb * tr.H);
+    for (let Y = 0; Y < tr.H; Y++) for (let X = 0; X < tr.W; X++) if (tr.at(X, Y)) want[Y * rb + (X >> 3)] |= 0x80 >> (X & 7);
+    t(`R48 a 1-bit mask, turn ${deg}: every bit on its bit`, [r.width, r.height, r.pixels_sha256, r.turned_deg], [tr.W, tr.H, hex(want), deg]);
+  }
+  /* a DCT page: the pass-through cannot be turned, so a turn decodes it */
+  const dctPg = imagePage(image(63, 47, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode", jpeg("rgb-420-h2v2")), { w: 63, h: 47 });
+  const dt = await render(dctPg, 0, { turn: 90 });
+  t("R48 a DCT page with turn 90 is decoded and turned: Pillow's own turn of the same JPEG",
+    [dt.route, dt.upright, dt.width, dt.height, dt.turned_deg, dt.pixels_sha256], ["decoded-dct", true, 47, 63, 90, VARIANTS.find((v) => v.name === "rgb-420-rotate90").pillow_sha256]);
+  const d0 = await render(dctPg, 0, { turn: 0 });
+  t("R48 (control) turn 0 leaves the pass-through as it was", [d0.route, d0.upright, d0.turned_deg], ["passthrough-dct", true, 0]);
+  const sc = await render(SCAN, 0, { turn: 180 });
+  t("R48 the CCITT scan (/Rotate 270) with turn 180 is 90 in all: width and height follow", [sc.ok, sc.width, sc.height, sc.rotate_deg, sc.turned_deg], [true, 2550, 3300, 270, 180]);
+
+  /* a picture: after the EXIF orientation, a PNG too */
+  const PV = JSON.parse(Buffer.from(F("fixtures/picture-variants.json")).toString("utf8"));
+  const pic = (name) => new Uint8Array(Buffer.from(PV.variants.find((v) => v.name === name).b64, "base64"));
+  const samplesOf = (r) => { const p = readPng(r.bytes); return { w: p.width, h: p.height, s: p.samples, c: p.colorType === 2 ? 3 : 1 }; };
+  const check = async (name, comps) => {
+    const base = await renderPictureToPixels(pic(name), 0, { maxEdge: 4096, grey: true });
+    const b = samplesOf(base);
+    for (const deg of [90, 180, 270]) {
+      const r = await renderPictureToPixels(pic(name), 0, { maxEdge: 4096, grey: true, turn: deg });
+      answers.push(r);
+      const tr = turn((x, y) => b.s[y * b.w + x], b.w, b.h, deg), g = samplesOf(r), want = new Uint8Array(tr.W * tr.H);
+      for (let Y = 0; Y < tr.H; Y++) for (let X = 0; X < tr.W; X++) want[Y * tr.W + X] = tr.at(X, Y);
+      t(`R48 ${name} (EXIF ${base.orientation}), turn ${deg}: the oriented picture turned exactly`,
+        [r.ok, g.w, g.h, hex(g.s), r.turned_deg, r.orientation, r.upright], [true, tr.W, tr.H, hex(want), deg, base.orientation, true]);
+    }
+  };
+  for (let o = 1; o <= 8; o++) await check(`orient-${o}`);
+  await check("png-rgb");
+  const p0 = await renderPictureToPixels(pic("orient-6"), 0, { maxEdge: 4096, grey: true });
+  t("R48 a picture with no turn states turned_deg 0", p0.turned_deg, 0);
+  for (const bad of [45, "90", null, 360])
+    t(`R48 a picture's turn of ${JSON.stringify(bad)} is ignored`, (await renderPictureToPixels(pic("orient-6"), 0, { maxEdge: 4096, grey: true, turn: bad })).pixels_sha256, p0.pixels_sha256);
+}
+
+console.log("\n--- R47: a page is rendered from the page's own bytes ---");
+{
+  const sourceOf = (bytes) => { const log = { reads: 0, bytes: 0 }; return { log, size: bytes.length, readRange: async (o, n) => { log.reads++; const out = bytes.slice(o, o + n); log.bytes += out.length; return out; } }; };
+  const same = (a, b) => JSON.stringify({ ...a, bytes: a.bytes ? hex(a.bytes) : null }) === JSON.stringify({ ...b, bytes: b.bytes ? hex(b.bytes) : null });
+  const enc = onePage({ ops: "q 8 0 0 8 0 0 cm /Im Do Q", res: "/XObject << /Im 5 0 R >>", more: [GREY_IMG, "<< /Filter /Standard /V 1 /R 2 /O (owner) /U (user) /P -4 >>"], trailer: "/Encrypt 6 0 R" });
+  for (const [label, bytes, page, opts] of [
+    ["the CCITT scan", SCAN, 0, {}], ["the DCT scan decoded", DCT_SCAN, 0, { decodeDct: true }],
+    ["a small page", imagePage(GREY_IMG, { w: 3, h: 2 }), 0, {}], ["a page past the end", imagePage(GREY_IMG, { w: 3, h: 2 }), 5, {}],
+    ["an encrypted file", enc, 0, {}], ["bytes that are no PDF", new Uint8Array(64).fill(7), 0, {}],
+  ]) {
+    const a = await render(bytes, page, opts), b = await render(sourceOf(bytes), page, opts);
+    t(`R47 ${label}: the source answers what the bytes answer`, same(a, b), true);
+  }
+  /* a many-page scan: one page costs about that page, not the file (needs pdf-reader's pageSource) */
+  const file = generatePdf({ kind: "pdf", seed: "r47", size: { pages: 24, lines: 4 }, kinds: ["scan"], scan: { dpi: 150, bits: 1 }, structure: "classic" });
+  const whole = await file.bytes();
+  for (const [page, label] of [[19, "page 20"], [0, "page 1"], [23, "the last page"]]) {
+    const src = sourceOf(whole);
+    const a = await render(whole, page, { decodeDct: true }), b = await render(src, page, { decodeDct: true });
+    t(`R47 ${label} of 24, through pdf-reader's pageSource: the same answer as the whole file's`, same(a, b), true);
+    t(`R47 ${label}: the bytes read are the page's, under a quarter of the ${whole.length}-byte file (read ${src.log.bytes})`, src.log.bytes < whole.length / 4, true);
+  }
+  const pv = JSON.parse(Buffer.from(F("fixtures/picture-variants.json")).toString("utf8")).variants.find((v) => v.name === "orient-6");
+  const picBytes = new Uint8Array(Buffer.from(pv.b64, "base64"));
+  t("R47 a picture given as a source answers what its bytes answer",
+    same(await renderPictureToPixels(sourceOf(picBytes), 0, { maxEdge: 64, grey: true }), await renderPictureToPixels(picBytes, 0, { maxEdge: 64, grey: true })), true);
+}
+
+console.log("\n--- R49: no ceiling of the module's own ---");
+{
+  const src = (f) => readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), "utf8");
+  const code = (f) => src(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+  /* the figures READ_BOUNDS holds for the rows this module quotes, as literals in any spelling */
+  const figures = ["image.pixels", "image.edge", "image.picture_frame", "image.picture_source"].map((k) => boundOf(...k.split(".")));
+  const spellings = (n) => [String(n), n.toLocaleString("en-US"), n.toString(16), `0x${n.toString(16)}`];
+  const seen = (f, n) => spellings(n).some((x) => new RegExp(`(^|[^0-9A-Za-z_.])${x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^0-9A-Za-z_.]|$)`).test(code(f)));
+  const MINE = ["imagecrop.mjs", "pagepixels-worker.mjs", "pagepixels.mjs", "picturepixels.mjs"];
+  t("R49 no figure READ_BOUNDS holds for these rows is written as a literal in the module's code",
+    MINE.flatMap((f) => figures.filter((n) => seen(f, n)).map((n) => `${f}:${n}`)), []);
+  t("R49 no product of literals spells a frame bound (4096 * 3072 * 3, 16384 * 12288 * 3)",
+    MINE.filter((f) => /\b4096\s*\*\s*3072|\b16384\s*\*\s*12288/.test(code(f))), []);
+  t("R49 the /Parent walk's depth is the table's too: no literal bound on the loop", MINE.filter((f) => /d\s*<=?\s*\d+\s*;/.test(code(f))), []);
+  t("R49 (the check sees a literal where one is written)", seen("pagepixels.mjs", 1728) && !seen("pagepixels.mjs", 120000000), true);
+  t("R49 the exported frame bounds are the table's", [PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX], [boundOf("image", "picture_frame"), boundOf("image", "picture_source")]);
+  t("R49 the quoted rows are the figures the requirements name", [boundOf("image", "pixels"), boundOf("image", "edge")], [120000000, 65535]);
 }
 
 console.log("\n--- R41: no place named ---");
@@ -879,6 +1083,7 @@ console.log("\n--- R39: every refusal is declared, in its own words ---");
     "pdf-pixels.pagepixels.the_jbig2globals_stream_could_not",
     "pdf-pixels.pagepixels.a_jbig2_image_is_1",
     "pdf-pixels.pagepixels.a_colour_space_other_than",
+    "pdf-pixels.pagepixels.this_reader_cannot_give_the",
   ];
   t("words R14 every id is a dotted pdf-pixels.pagepixels word id, named once", WORD_IDS.filter((id) => !/^pdf-pixels\.pagepixels\.[a-z0-9_]+$/.test(id)).concat(WORD_IDS.length - new Set(WORD_IDS).size ? ["duplicate"] : []), []);
 }
