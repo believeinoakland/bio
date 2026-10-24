@@ -176,3 +176,7 @@ Intro. PDF ranges become the only path; the confirmed parser defects are fixed; 
 - **G132m · A sideways or upside-down picture is answered `ok:true` with garbage (S9).** (1) `pdf-worker/src/picturepixels.mjs:459-461` (EXIF is the only turn, JPEG only); the engine's `getOrientation` exists (`ocr-worker/src/tesslib.mjs:827`) and is never called; legibility 0.25 passes the 0.2 line. The orientation call is asked on every frame; a page found turned is turned upright and OCR'd; one the engine cannot orient is stated; the stored-text rule is G137d. (2) Missed: no turned page. (3) Red: SCAN B1, B2 (a page turned 90/180/270 as PNG, as JPEG without EXIF, inside a PDF with and without `/Rotate`): read upright at the floor or stated, never garbage. (4) **L**.
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B9 · CHANGE
+
+CHANGE (K4858; P9, from IMAGE-CODECS #7's J4): image-codecs now refuses an over-memory image with the code `IMAGE_TOO_LARGE` (no longer a `JPX_REFUSES`/`PNG_REFUSES` key; `MEMORY_FEATURE` stays exported as an identifier). Map it in `pagepixels.mjs` and `picturepixels.mjs` to a stated size refusal (R-SILENT), never to `DECODE_FAILED`, with a test. Until image-codecs merges, code and test against the code's name; the test stays red by name until then.
