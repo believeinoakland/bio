@@ -519,3 +519,7 @@ The PDF plan's I1-I14, re-cut for a sheet. Each is a sentence for the module nam
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
 
 **Added by BOB #273 (K4846): re-point to the one cap convention.** runtime-limits (job 2) has merged `capFor(N)` in `bio-plane/src/byte-ledger.mjs` (runtime-limits R33; today 206 - N, K4845 (1)). Your `bio-plane/test/m/file-safety/g44-large.test.mjs` computes its own cap: replace that formula with an import of `capFor` from byte-ledger (test-only change; no other formula for the cap may remain, R33).
+
+## B18 · ANSWER · re J16
+
+K4893: row file_safety.ods_declared 8 MiB x3, key limit.file_safety.ods_declared, as you propose; RUNTIME-LIMITS #10 adds it now and merges first; I send a CHANGE when it is on tranche/T51 (merge the tranche then). Keep working against your uncommitted copy meanwhile; never commit it.
