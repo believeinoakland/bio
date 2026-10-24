@@ -31,7 +31,7 @@ test("R53 an ODT annotation, a tracked deletion and a text box are units; the an
   const by = Object.fromEntries(t.parts.map((p) => [p.kind, p]));
   assert.deepEqual(by.comment, { kind: "comment", ref: "¶1", part: "content.xml", text: "Check this." });
   assert.deepEqual(by.tracked_deletion, { kind: "tracked_deletion", ref: "¶1", part: "content.xml", text: "Removed clause." });
-  assert.deepEqual(by.text_box, { kind: "text_box", ref: "¶1", part: "content.xml", text: "Boxed words." });
+  assert.deepEqual(by.text_box, { kind: "text_box", ref: "¶1", part: "content.xml", text: "Boxed words.", paras: [] });
   assert.equal(t.document.includes("Removed clause"), false);
 });
 
@@ -72,4 +72,33 @@ test("R53 a file with no further parts answers parts [] on all three entries, ne
   assert.deepEqual((await odtEntry.text(buildZip(members("odt", { body: "<text:p>x</text:p>" })))).parts, []);
   assert.deepEqual((await odsEntry.text(ods(tableOf("T", rowOf(cellOf("x")))))).parts, []);
   assert.deepEqual((await odpEntry.text(buildZip(members("odp", { body: `<draw:page draw:name="p"><draw:frame presentation:class="title"><draw:text-box><text:p>t</text:p></draw:text-box></draw:frame></draw:page>` })))).parts, []);
+});
+
+test("R53 an ODT text box's words are answered once, as a text_box naming its paragraphs (G166); a paragraph outside a box stays body", async () => {
+  const box = (words) => `<draw:frame text:anchor-type="page"><draw:text-box><text:p>${words}</text:p></draw:text-box></draw:frame>`;
+  const cases = {
+    page_anchored: { body: `<text:p>Before</text:p>${box("Boxed words.")}<text:p>After</text:p>`, document: "Before\nAfter", paras: [1], ref: "¶2" },
+    in_table_cell: { body: `<table:table table:name="T"><table:table-row><table:table-cell>${box("Boxed words.")}</table:table-cell></table:table-row></table:table><text:p>After</text:p>`, document: "After", paras: [0], ref: "¶1" },
+    in_paragraph: { body: `<text:p>Before <draw:frame><draw:text-box><text:p>Boxed words.</text:p></draw:text-box></draw:frame>after</text:p><text:p>After</text:p>`, document: "Before after\nAfter", paras: [], ref: "¶1" },
+  };
+  for (const [name, c] of Object.entries(cases)) {
+    const t = await odtEntry.text(buildZip(members("odt", { body: c.body })));
+    const boxes = t.parts.filter((p) => p.kind === "text_box");
+    assert.deepEqual(boxes, [{ kind: "text_box", ref: c.ref, part: "content.xml", text: "Boxed words.", paras: c.paras }], name);
+    assert.equal(t.document, c.document, name);
+    assert.equal(JSON.stringify(t.paragraphs).includes("Boxed words"), false, name);
+    for (const i of c.paras) assert.equal(t.paragraphs[i].text, "", name);      // the slot is the file's, the words are the unit's
+    assert.equal(t.paragraphs.find((p) => p.text === "After")?.ref !== undefined, true, name);   // control: body stays body
+  }
+});
+
+test("R53 R6 R7 a text box's paragraphs keep their slots in structure() and its links stay the body's", async () => {
+  const body = `<text:p>Before</text:p><draw:frame><draw:text-box><text:p>Box <text:a xlink:href="https://example.org/x">link</text:a></text:p><text:p>Second</text:p></draw:text-box></draw:frame><text:p>After</text:p>`;
+  const bytes = buildZip(members("odt", { body }));
+  const s = await odtEntry.structure(bytes);
+  const t = await odtEntry.text(bytes);
+  assert.equal(s.paragraphs, 4);
+  assert.equal(t.paragraphs.length, 4);
+  assert.equal(s.links.filter((l) => l.target?.url === "https://example.org/x").length, 1);
+  assert.deepEqual(t.parts.find((p) => p.kind === "text_box").paras, [1, 2]);
 });
