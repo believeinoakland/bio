@@ -1,6 +1,6 @@
 # pdf-worker (T51)
 
-**Status** · session_01TvicQZEyi2UWLiFnXQfFaz · depth 2 · COMPLETE · handled B0
+**Status** · session_01PhBb7MkFDrjvHxjEN19MtM · depth 2 · WORKING · handled B0
 
 ## Completion (fix round 6, G34: the 23 MB PDFs end with no words)
 
