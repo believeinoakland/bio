@@ -240,3 +240,9 @@ Tests/checks: retrieval suite 190 of 197 (the 7 above); users run earlier unchan
 ## J13 · COMPLETE
 
 COMPLETE · retrieval T51 fix round 9 (G134d, G128h, G135f; R25, R94-R97). B13 applied: hits read their unit by snippet_unit (query-language R34), partial readings by extraction progressOf (R108) else capture_text_state. Retrieval suite 190 of 197; the 7 reds are named in the record and wait on providers: six hit tests on job 66 (snippet_unit), one on job 41 (progressOf); all verified green with R34 emulated locally (reverted). R94 fixed (provenance R74 made the frontier's part filter dead; deleted, fixture re-shaped). Checks format, architecture, coverage 86/86, words, ownership: 0 failures. New file outside nothing: units.mjs is in paths. Rows owed to later-ux: retrieval.levels.searched_so_far, retrieval.levels.searched_so_far_unmeasured. Stale generated: dist bundle (BOB regenerates). Details and RED lines in build/jobs/T51/retrieval.md.
+
+## Completion after B14 (job 41 merged; RETRIEVAL #27)
+
+Merged `origin/tranche/T51`. The tally already asks `extraction.progressOf` when present, so no code change; the fixture's extraction stand-in now forwards `progressOf` to the real `extractionOf` over the same store (and `reading()` takes a body), and the red-by-name R108 test is now green through the real provider (`R97, R108: through the real extraction's progressOf ...`, a 30-page scan with `ocr_left` 6 counted partial, `owed` 6). One test claim changed: a capture indexed to `none` is not "not partial" under the real R108 (anything not whole is `partial`), so that claim is dropped.
+
+Retrieval suite 191 of 197; the 6 reds are the hit-side tests waiting on `snippet_unit` (query-language R34, job 66), green with R34 emulated. format, architecture, coverage 86/86, words, ownership: 0 failures. Size (session_01E8rJsiNPGQhSTzqHve1gec): test runs 19, module lines 3097

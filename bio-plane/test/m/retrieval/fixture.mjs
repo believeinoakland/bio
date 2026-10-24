@@ -15,6 +15,7 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { provenanceRoutesOf } from "../../../src/provenance-routes/index.mjs";
 import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
+import { extractionOf } from "../../../src/extraction/index.mjs";
 import { CAPTURE_SCHEMA } from "../../../src/capture/schema.mjs";
 import { CONTENT_SCHEMA } from "../../../src/content/index.mjs";
 import { ENTITIES_SCHEMA } from "../../../src/entities/index.mjs";
@@ -174,7 +175,9 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
                  VALUES (?,?,?,?, 'active', ?, ?, ?)`,
       m, `cover ${m}`, m, admins.includes(m) ? "admin" : "member", JSON.stringify(["contribute", "create_projects"]), T0, T0);
   const w = { st, host, record, membership, promotion, prov, routes, clock, runs: {}, drift: [],
-              extraction: { driftFor: () => w.drift } };
+              extraction: { driftFor: () => w.drift,
+                            /* R108: the real extraction's own `progressOf`, over this store (made when first asked) */
+                            progressOf: (shas) => (w.realExtraction ??= extractionOf(host, { record, membership })).progressOf(shas) } };
   const log = OL.observationLogOf(host, { record, membership, provenance: null, extraction: null });
   /* The run authority's resolver ai-runs registers (observation-log R13): the runs each viewer may read. */
   log.registerAuthority("run", (run, viewer) => (w.runs[run] || []).includes(viewer));
@@ -229,8 +232,8 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
       return [...st.sql.exec(`SELECT MAX(seq) AS s FROM observation_log`)][0].s;
     },
     /** A reading row for a capture (its existence is the content level's pre-log evidence). */
-    reading(capSha, bundleId) {
-      st.sql.exec(`INSERT INTO readings (capture_sha, bundle_id, reading, at) VALUES (?,?,?,?)`, capSha, bundleId, "{}", T0);
+    reading(capSha, bundleId, body = {}) {
+      st.sql.exec(`INSERT INTO readings (capture_sha, bundle_id, reading, at) VALUES (?,?,?,?)`, capSha, bundleId, JSON.stringify(body), T0);
     },
     /** One indexed unit of a capture's text, as extraction's index writes it. */
     unit(capSha, bundleId, seq, text, extent = { kind: "pdf-page", page: seq }, kind = undefined) {

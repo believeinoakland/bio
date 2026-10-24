@@ -178,13 +178,12 @@ test("R97: a search over a text read to half finds its hit in the part read and 
   assert.notEqual(rowsOf(w, "passage:culverts").says, hit.says);
 });
 
-test("R97: a partial reading whose extent is not stated (a unit bound hit, no pieces) is counted apart with through and total null, and says only that it was searched so far; a capture never indexed and one indexed to nothing are not partial", () => {
+test("R97: a partial reading whose extent is not stated (a unit bound hit, no pieces) is counted apart with through and total null, and says only that it was searched so far; a capture never indexed is not partial", () => {
   const w = world();
   const a = w.cap("a.pdf", "a bytes"), b = w.cap("b.pdf", "b bytes"), n = w.cap("n.pdf", "n bytes");
   w.doc("INFO-A", {}, { captures: [a] }); w.doc("INFO-B", {}, { captures: [b] }); w.doc("INFO-N", {}, { captures: [n] });
   w.unit(a.sha, "INFO-A", 0, "a page about culverts");
   w.indexState(a.sha, "INFO-A", { state: "partial" });
-  w.indexState(b.sha, "INFO-B", { state: "none" });
   const r = rowsOf(w, "passage:zzqx");
   assert.deepEqual([r.scope.partial, r.scope.partial_reads], [1, [{ capture_sha: a.sha, through: null, total: null, owed: 0 }]]);
   assert.ok(!r.says.includes("null") && !r.says.includes("undefined"), "no figure is made up where none is stated");
@@ -229,7 +228,18 @@ test("R97, K4571: a reading with pages owed is counted partial and never whole â
   assert.ok(calls.length >= 1 && calls.every((n) => n <= 500));
 });
 
-test("R97, R108 (red until extraction job 41 merges): the real extraction answers progressOf, and a scan with pages owed is counted partial through it", () => {
+test("R97, R108: through the real extraction's progressOf, a scan with pages owed is counted partial with the pages owed whatever its unit index says; a whole text is not", () => {
   const w = world();
-  assert.equal(typeof w.retrieval.extraction.progressOf, "function", "extraction R108's progressOf");
+  const scan = w.cap("scan.pdf", "scan bytes"), text = w.cap("text.txt", "text bytes");
+  w.doc("INFO-SCAN", {}, { captures: [scan] }); w.doc("INFO-TXT", {}, { captures: [text] });
+  w.unit(scan.sha, "INFO-SCAN", 0, "a scanned page about culverts");
+  w.unit(text.sha, "INFO-TXT", 0, "a text about culverts");
+  w.indexState(scan.sha, "INFO-SCAN", { state: "whole" });
+  w.indexState(text.sha, "INFO-TXT", { state: "whole" });
+  w.reading(scan.sha, "INFO-SCAN", { found: true, page_count: 30, ocr_left: { pages: 6, cursor: 24 } });
+  w.reading(text.sha, "INFO-TXT", { found: true });
+  const r = rowsOf(w, "passage:zzqx");
+  assert.equal(r.scope.partial, 1);
+  assert.deepEqual(r.scope.partial_reads.map((x) => [x.capture_sha, x.owed]), [[scan.sha, 6]]);
+  assert.equal(typeof w.retrieval.extraction.progressOf, "function");
 });
