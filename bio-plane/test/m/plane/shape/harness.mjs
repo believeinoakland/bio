@@ -294,9 +294,10 @@ async function child(spec) {
              sheets_total: res && res.sheets_total, sheets_truncated: res && res.sheets_truncated, head: text.slice(0, 240), largest: largest(true) });
     }
     clearInterval(timerOp);
+    return peakOp;
   }
   if (spec.ops) {
-    await runOps(spec.ops);
+    const peakOp = await runOps(spec.ops);
     const wbRows = (() => { try { return { workbooks: sql(`SELECT count(*) AS n FROM workbooks`)[0].n, cells: sql(`SELECT count(*) AS n FROM workbook_cells`)[0].n }; } catch { return null; } })();
     emit({ ev: "done", wbRows, ticks: 0, totalMs: 0, left: [], rows: [], units: 0, state: null, extents: [], last: null, found: {}, search: {}, largest: largest(true), gen, baseMB: mb(base), peakMB: mb(peakOp), peakRssMB: 0, door });
     process.exit(0);
