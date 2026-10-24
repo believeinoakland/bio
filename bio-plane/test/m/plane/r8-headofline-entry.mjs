@@ -14,18 +14,31 @@ const json = (v, status = 200) => new Response(JSON.stringify(v), { status, head
 export class Headline extends Store {
   #passes = 0;
   #wrapped = false;
+  #counted = null;   /* the platform's alarm calls the object made, counted (G93: "storage reads counted") */
   #wrap() {
     if (this.#wrapped) return;
     const ex = extractionOf(this.ctx), real = ex.readHeld.bind(ex);
     ex.readHeld = async (...a) => { const r = await real(...a); if (r && r.ok !== false) this.#passes++; return r; };
     this.#wrapped = true;
   }
+  /* counts the object's calls on the platform's alarm: `getAlarm` (a look), `setAlarm` (an arm), `deleteAlarm` */
+  #count() {
+    if (this.#counted) return this.#counted;
+    const st = this.ctx.storage, c = { getAlarm: 0, setAlarm: 0, deleteAlarm: 0, wrapped: true };
+    for (const k of ["getAlarm", "setAlarm", "deleteAlarm"]) {
+      const real = st[k].bind(st);
+      try { Object.defineProperty(st, k, { value: (...a) => { c[k]++; return real(...a); }, configurable: true, writable: true }); } catch { c.wrapped = false; }
+    }
+    return (this.#counted = c);
+  }
   async fetch(req) {
+    this.#count();
     const url = new URL(req.url);
     if (!url.pathname.startsWith("/r8/")) { this.#wrap(); return super.fetch(req); }
     this.#wrap();
     const step = url.pathname.slice(4);
     if (step === "state") return json({ passes: this.#passes });
+    if (step === "counters") { const alarm = await this.ctx.storage.getAlarm(); this.#counted.getAlarm--; return json({ ...this.#counted, alarm }); }   /* this read is not counted */
     if (step === "rows") {
       let health = null; try { health = await schedulerOf(this.ctx, this.env).health(Date.now()); } catch (e) { health = { error: String(e && e.message || e) }; }
       return json({ passes: this.#passes, pending: pendingOf(this.ctx).list(), health, alarm: await this.ctx.storage.getAlarm() });
