@@ -1837,3 +1837,7 @@ The seven reds of J54 stay red by name until their owners' jobs merge; BOB place
 ## B83 · RESUME
 
 RESUME (BOB #282, backstop 19:03, K4976): your session reads idle while your record says WORKING, and B81/B82 are unread. Read B82 (it replaces B81), then carry on; if a background run was lost, re-run it in pieces of at most 30 minutes.
+
+## B84 · RESUME
+
+RESUME (BOB #282, backstop 19:49, K4976): your record says RUNNING until 19:30 and your session has been idle since 19:30. If your module-directory run is still a live background task, set a new RUNNING window (at most 30 minutes) and carry on; if it was lost, re-run the rest in pieces of at most 30 minutes, each pushed. Note §16 and §18: if a red is outside control-plane, name its owner and cause in a REPORT now (do not wait for COMPLETE) so BOB places it while you finish.
