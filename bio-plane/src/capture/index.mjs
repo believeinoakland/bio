@@ -48,7 +48,7 @@ import { say } from "./words.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
 import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
-         firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX, LARGE_FETCH_BYTES, textTypeOf } from "../acquisition/index.mjs";
+         firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX, LARGE_FETCH_BYTES, textTypeOf, profilesAsText } from "../acquisition/index.mjs";
 /* R111 (fix round 9; G124, G124b): the figures a body is bounded by are quoted, never written here: the capture ceiling is `acquisition`'s `CAPTURE_MAX` (the
    archive row of `READ_BOUNDS`, `runtime-limits`), the platform's request-body ceiling an entry of `PLATFORM_FIGURES`. */
 import { statement as boundStatement, boundOf } from "../read-bounds.mjs";
@@ -952,10 +952,12 @@ export class Capture {
     });
     /* the profile of the bytes: from the bytes the upload holds when it holds them, else as `profileOf` reads the store */
     const profileThe = async (ct) => {
+      /* a declared text type over bytes the one rule judged not text (`ct` null) is no declaration of a format: the declaration never contradicts the bytes (R107) */
+      const declaredFor = (judged) => (typeof type === "string" && type !== "" && !(judged == null && profilesAsText(type, 0, false)) ? type : null);
       const profile = await profileOf({ ev: held ? Capture.#holding(ev, sha, held) : ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
                                         retrieved: when, origin: "member", parts: multipart && parts.length ? parts : null, firstPart,
                                         /* R107 (fix round 9, G170): the file's name and the declared type reach the format, as for a fetched file (acquisition R17) */
-                                        name: typeof name === "string" && name !== "" ? name : null, declaredType: typeof type === "string" && type !== "" ? type : null });
+                                        name: typeof name === "string" && name !== "" ? name : null, declaredType: declaredFor(ct) });
       if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
       else if (ct) profile.source_content_type = null;
       return profile;
