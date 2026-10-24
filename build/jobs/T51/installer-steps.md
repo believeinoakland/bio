@@ -316,3 +316,18 @@ Size (session_0197jkkTD4SAwdV2Y8qGeuqb): test runs 14, module lines 2290
 ## J22 · REPORT
 
 Correction to J21: the architecture check reads 1 failure, not 0. `newgroup/test/steps/g83-location.test.mjs` (the parity test, which B19 and the plan D2 require) imports `bio-plane/src/store-place.mjs` of runtime-limits, and `installer-steps` does not declare `runtime-limits` in `uses` in build/modules.json (plan D2: "plane and bundler gain the uses edge"; installer-steps needs it for the test). modules.json is yours: please add `runtime-limits` to installer-steps' uses on tranche/T51 and tell me; the rest of the J21 line stands (format, coverage 42/42, ownership 0 failures; words only the inherited missingkey). I changed nothing else; no code change is needed on my side.
+
+## J23 · QUESTION
+
+QUESTION (replaces nothing). Fix round 9, job 46 (K4846): the START tells me to write `localize("installer.fleet.logsunconfirmed", "<English>")` in installer-steps. I did, and the words check refuses it.
+
+**What I found.** `checks/words.mjs` (civicos-process) line 45: `DRAWN_MODULES` includes `installer-steps`, and line 473 fails any `localize` call in a drawn-screen module: "marker installer-steps newgroup/src/steps/uploads.mjs:40 localize call in a drawn-screen module (read by word())". A drawn-screen module reads its sentences with `word()`; the row comes from `docs/development/ux-substrate/screens/words.json` (the design's). So a `localize` in my module trades the 3 inherited `missingkey` failures for 1 new `marker` failure, and I cannot meet "read how other installer-steps sentences are marked" with `localize`, since none of them is.
+
+**What I did.** Tried it: with the call written and `rows.mjs` regenerated in a scratch run (reverted, not committed), `node --test newgroup/test/steps/` was 119 tests, 117 pass, 0 fail, and `build.mjs --check` showed the row it would add: `["installer.fleet.logsunconfirmed","We could not confirm that the logs of your copy's main program are switched on. The install goes on; you can check this in your Cloudflare account.",null,null,false,"code"]`. But the words check then reports `marker 1`. I reverted my edit; the module is exactly as at the tranche tip. Nothing committed but this entry.
+
+**Best reading and options.**
+1. (Recommended) The row is added to `docs/development/ux-substrate/screens/words.json` by whoever owns it (the design stream / BOB; the START says the row is owed to `later-ux.md`), with the English above or the design's own; my code stays as it is (`word()` guarded by `hasWord`, key in `STEP_KEYS`), and R36/R40 go green on regeneration. No change to my module.
+2. A `localize` call placed in a module that is not a drawn screen (another module's file, so not mine; BOB would have to give it to its owner).
+3. BOB removes `installer-steps` from `DRAWN_MODULES` (a check change in the process repository, BOB's).
+
+I carry on with nothing else: the answer decides what I build. If you choose 1 or 2, there is nothing for me to change; I will re-run R36/R40 on the regenerated rows and COMPLETE.
