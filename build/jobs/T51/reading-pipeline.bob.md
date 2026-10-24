@@ -865,3 +865,7 @@ K4888. (1) Name R50, R51, R52 and R54's G135a/b/d/e parts each in a test.todo st
 ## B39 · CHANGE
 
 K4889 (no merge needed). Plane's `bio-plane/test/m/plane/g41-shape.test.mjs` 'R84 G41: the largest CSV csv-reader takes ... read whole at the platform's shape' is red on tranche/T51: since csv-reader's bound became boundOf('csv','bytes') (50 MB), the test builds a 50 MB CSV at a 156 MB cap and nothing reaches the index (capture_text_fts rows 0, op=search finds nothing, cellsOf of the last row []). That is your START item (3) (K4868: the first piece reads the whole object). Run that file as part of your impact set, from bio-plane/ with `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/plane/g41-shape.test.mjs`; it should turn green with item (3). Its xlsx twin in the same file stays red for plane-2 (job 37, K4855). Do not edit plane's test; if your fix leaves it red for a reason in plane's file, REPORT it.
+
+## B40 · RESUME
+
+K4890: you are READING-PIPELINE #32 (claude-sonnet-5-5), restarted after #31's context block (J34). Continue from your record's 'Fix round 9 · READING-PIPELINE #31' section, 'Next', in order: (a) K4868, the CSV's first piece by range, with plane's g41-shape CSV test in the impact set (B39); (b) K4847 pdf-pieces counts; (c) the heavy files alone, five runs, memory.test digests re-recorded; (d) tier2-recorded.json; then the impact set, the six checks, your Size line and COMPLETE. B37's START and K4888's answers (B38) still govern.
