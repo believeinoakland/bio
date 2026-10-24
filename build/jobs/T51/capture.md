@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01TcCgd312RDvc5erHPTSkhN · depth 2 · COMPLETE · handled B34
+**Status** · session_01Jx17YoKtyusq7GHL5JmPG7 · depth 2 · COMPLETE · handled B36
 
 ## J1 · COMPLETE
 
@@ -793,3 +793,28 @@ Checks: capture suite 338/338; impact users that drive the real upload 97/98, th
 REPORT items for you: (a) acquisition.profileOf could take `bytes` itself and replace my wrapper; (b) the kind-to-row map now exists in control-plane and capture: one exported map (runtime-limits or acquisition) is the fix; (c) the door may pass `reading_stated` through. No new words. Nothing deferred.
 
 Size (session_01TcCgd312RDvc5erHPTSkhN): test runs 9, module lines 4963
+
+## Fix round 9 · job 97 (CAPTURE #56, B35; R107 amended, G170, K4985)
+
+**Entries applied**
+1. `uploadCapture` hands `profileOf` the file's `name` (when a non-empty string) and its declared `type` as `declaredType` (when a non-empty string), at `capture/index.mjs` `profileThe` (one call site; a one-part and a multipart upload alike, and a second sighting). No other line changed. A call with neither passes `null` for both, so an upload with no name is profiled from its bytes as before.
+
+**Tests** (R107): new `bio-plane/test/m/capture/g170-t51.test.mjs`, six tests through the real `uploadCapture`: a CSV named `c.csv` declared `application/vnd.ms-excel`, the same declared `application/octet-stream`, and a `.tsv` declared `text/plain` are profiled `csv`; `text/csv` and `text/tab-separated-values` stay `csv`; controls: the same bytes with no name are not `csv`, and a ZIP named `c.csv` declared octet-stream is not `csv` and equals the same ZIP uploaded bare.
+
+**Red first (seen):** with my change in and acquisition's tranche tip as it stands, the three declared-type cases are `undetermined` (3 fail, 3 pass): `profileOf` does not yet take `name` and `declaredType` (acquisition job 96). They turn green when it merges.
+
+**After the merge (B36).** `g170-t51` 6/6 green (the three red cases now `csv`). One further change in my module, found by `g41b-t51`'s first control: acquisition's `profileOf` now prefers `declaredType` over `ct`, so a declared text type over bytes `textTypeOf` judged not text (a NUL in the head, `ct` null) made the format `csv` from the declaration alone. R107 says a declaration never contradicts the bytes, so `profileThe` hands `declaredType` only when it is not a text type the bytes failed (`declaredFor(ct)`, using acquisition's exported `profilesAsText`); non-text declared types (octet-stream, vnd.ms-excel) are handed as the amendment requires. `g41b-t51`'s last control (a 9 MiB `x.csv` declared octet-stream) is now `csv` and records the declaration as the uploader's, judged against R107 amended and format-registry R31: the text content type is still never overridden by a name (textTypeOf's rule), the format is decided by the name pass, as for the one-part file.
+
+**Found in another module (for BOB).** acquisition `profileOf`: `declared0 = declaredType || ct` lets a declared text type over bytes judged not text decide the format; capture guards it on its side (above). The guard could live in `profileOf` for every caller (a fetch passes `declaredType: ct`, the same value). Efficiency/robustness only.
+
+**Deferred.** Nothing. **Rows owed.** None (no sentence added).
+
+**Tests and checks.** capture suite 344/344; `cap13-reuse-pages`, `d57selflink` 2/2; users that drive the real upload: control-plane r100-upload 4, r131-gate 13, r72-parted 8; op-declarations t41 11; plane r8-heal-door 4, r8-headofline 3, r9-jobs 35; screens-inquiry fr5-document/question/reads/seam 7/2/3/3, g41-document 6; wizard-scripts t47 7: all green. `format` 0 failures; `architecture` 0; `coverage` 66 of 66, 0; `words` 0 failures (inline 0, plain 0, testcopy 0, missingkey 0); `ownership` 0 (4 files).
+
+**COMPLETE fields.** Cause: `uploadCapture` called `profileOf` without the file's name or declared type, so format-registry R31's name pass never ran for an upload. Why missed: capture's tests uploaded CSVs declared `text/csv` or named `.csv` with no type, never a CSV declared with a non-text type nor a `.tsv` as `text/plain`. Red first: `g170-t51` 3 of 6 red before acquisition's job 96 merged, green after. Platform check: none owed (no platform behaviour changed; the real-upload users above are green).
+
+Size (session_01Jx17YoKtyusq7GHL5JmPG7): test runs 9, module lines 4966
+
+## J35 · COMPLETE
+
+COMPLETE (CAPTURE #56, job 97, B35/B36; R107 amended, G170). The upload hands profileOf the file's name and declared type (declaredType); a declared text type over bytes judged not text is not handed, so a declaration never contradicts the bytes. Cause: no name/type reached format-registry R31's name pass. Why missed: tests only used text/csv or a .csv name with no type. Red first: g170-t51 3 of 6 red before acquisition job 96, green after. Platform check: none owed. g41b-t51's last control (9 MiB x.csv declared octet-stream) is now csv, judged against R107 and R31. Capture suite 344/344, real-upload users green; format, architecture, coverage (66/66), words, ownership 0 failures. For you: acquisition profileOf could guard 'declared text type over non-text bytes' for every caller (a fetch passes declaredType: ct). No rows owed. Size (session_01Jx17YoKtyusq7GHL5JmPG7): test runs 9, module lines 4966.

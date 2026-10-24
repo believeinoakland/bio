@@ -91,8 +91,11 @@ test("R107 controls: a declaration never contradicts the bytes", async () => {
   assert.equal(formatOf(await upload(pdfOf(9 * MiB), { type: "text/csv" })), "pdf");
   /* a multipart PDF with no type is as R101 has it */
   assert.equal(formatOf(await upload(pdfOf(9 * MiB))), "pdf");
-  /* a declared non-text type is never overridden by a .csv name (textTypeOf's rule) */
-  assert.equal(formatOf(await upload(csvOf(9 * MiB), { type: "application/octet-stream", name: "x.csv" })), "undetermined");
+  /* a declared non-text type is never overridden by a .csv name as the text content type (textTypeOf's rule); the FORMAT is decided by the
+     name pass (format-registry R31, R107 amended, G170), as for a one-part file */
+  const named = await upload(csvOf(9 * MiB), { type: "application/octet-stream", name: "x.csv" });
+  assert.equal(formatOf(named), "csv");
+  assert.equal(named.profile.source_content_type, "application/octet-stream", "still recorded as the uploader's declaration");
   /* a multipart upload with neither type nor text name is as before */
   assert.equal(formatOf(await upload(csvOf(9 * MiB))), "undetermined");
   assert.equal(formatOf(await upload(csvOf(9 * MiB), { name: "x.bin" })), "undetermined");
