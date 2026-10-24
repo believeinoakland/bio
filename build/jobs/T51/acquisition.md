@@ -583,3 +583,31 @@ Ringing failed: BOB's session session_01TR6P4eJM4znxzhuYTdih8B is archived; the 
 ## J36 · BLOCKED
 
 BLOCKED (cause: context), unchanged: R114 is done and the suite is 312/312 after B38. Left for a restart: R117 (pending render as a job row), R101/G130c (format from head and tail via readRange), impact users, checks, Size line, COMPLETE. See the record's Fix round 9 section.
+
+## J37 · COMPLETE
+
+Fix round 9 complete for acquisition (R113-R121, N1, B39 answer applied). Head: the commit on job/T51/acquisition after this entry; tranche/T51 merged at START.
+
+**Done this session**
+- **R117 / G126g** (`index.mjs` `persistRender`, `finishRender`): when the run of a render this call did not wait for returns, what it answered (`keepReply`'s small `{kept, rsha, existed, digests, reply}`, or a failed render's `{ok:false, error, failure_class}`; over `RENDER_ANSWER_MAX` 2 MiB of JSON it is not written) is written into the capture session the job row names (`render_pending.answer`; a session gone or no longer pending is never written back). `finishRender` of an object restarted after that finds it: "Finish it" files the pair at once and the alarm's `owedRun` delivers once, with no second render, reservation or charge; a restart before the render returned still renders afresh (R99); `PENDING_RENDERS` is now only the live handle in the object that began the run. `r9-pending-render.test.mjs` (4 tests), RED before (no answer written; the restarted run rendered again), GREEN after; controls: restart before return, a render within the bound leaves no row or session, a failed render ends final without rendering again.
+- **R101 / G130c**: `profileOf` for a capture held in parts, or whole past the 8 MiB read, judges `format` through `format-registry.detectFormat` over a range source built on `rangeReaderOf` (range.mjs; the one reader behind `readRange`, asking once whether the whole is held): head signatures, the end record and the central directory. An office or ODF file of any size is `docx`/`odt`; a plain ZIP is `zip` only from bytes; a declared type never makes a ZIP; no signature keeps the declared type else `undetermined`; an absent part is stated; a store that cannot read sets the caller's `unread.reason` (new optional arg; `archiveProfile` in unpack.mjs then does not remember a "not an archive" decision, R121). `r9-format-range.test.mjs` (5 tests), RED before (docx/odt past 8 MiB undetermined), GREEN after. `headOf`/`zipPastBound` removed.
+- Earlier in the round (see Fix round 9 section and J35/J36): R113, R114, R115, R116, R118, R119, R120, R121, N1.
+
+**Old lines reversed by R101/R117 (in my tests):** fix3-t51 (two "no get" lines: now "no whole get"), fix5-t51 R101 (head range up to 1 MiB, tail allowed; "no part read whole"), unpack.test (the ZIP signal now reads "judged from the end record and the central directory"), t50 R48 kept-whole case (budget 5 to 6 reads: the head of the key, the 1 KiB look, the 1 MiB head, the end record, the directory, the listing).
+
+**Found in other modules (for BOB; none changed by me)**
+- Capture, `test/m/capture`: R103 (G79) "17 MiB ... kept whole", "24 MiB upload reads no part back", "40 MB upload ... ledger" count any `get`; R101 now profiles the upload by range reads of its head and tail, so each sees ranged gets (never a whole part). Capture's job should assert no whole-part get.
+- Capture `upload.test.mjs:309` (R92 controls: bytes `FF FE 41 0A`) and `R107 controls` (`FF FE` in a csv declared text/html) and doorbell `knock-text.test.mjs:41` (R13: `61 FF FE 62 63`) assert the old UTF-8-only rule; R120/R102 decode UTF-16 (BOM) and legacy charsets as text. They failed identically before this session's commit.
+- Control-plane `t51-visitor-copy.test.mjs:58` (R104 R100 R99 E8): after the render returned and the object restarted, "Finish it" now finishes the copy in the request (R106: a run that has returned is finished) instead of answering pending; its expectation of `pending` is the old R99 shape, and R117 (amends R106) reverses it.
+- Stale generated artifacts (BOB regenerates): `bio-plane/dist/bio-plane.bundled.mjs`, `.bundle.json`, `agent-worker/dist/*` (inputs index.mjs, unpack.mjs, range.mjs).
+
+**Proposed requirement wording (BOB writes):** R117: the answer is written to the session's `render_pending.answer`, size bound `RENDER_ANSWER_MAX`; R101: `profileOf` takes `unread`, the range reads, and R48's held-whole bound with the decision's reads named; R46 gains "a refused fetch is listed one day after its failure and a re-press replaces it (`FAILED_LISTED_MS`)"; R116 names `jobs.not_registered`; R119's `pictures_unread` lives in `supporting`; R120's `profile.text_encoding`.
+
+**Census / words:** no op added or changed; words check 0 failures (plain 0, missingkey 0).
+
+**Tests and checks**
+- acquisition `test/m/acquisition/`: tests 321, pass 321, fail 0.
+- Users: capture 289/294 and doorbell 91/92 (the six reds above, three of them identical before my commit); control-plane 523/524 (visitor-copy, above); screens-intake 334/334 (a first run under load had 9 flaky reds, none on rerun); plane 439/463 under a load of four suites at once, every red a workerd or heavy L test (alarm, sheet, scan); R75 R4 (C5c), the one on acquisition's keep, passes alone.
+- format: 176 modules; 0 failures. architecture (acquisition): 55 files, 223 imports; 0 failures. coverage: 75 of 75 live ids named; 0 failures. words: 0 failures. ownership (against tranche/T51): 22 files changed by acquisition; 0 failures.
+
+Size (session_01CAeRS3pRKYW3YBwY2Fp8nC): test runs 14, module lines 4342
