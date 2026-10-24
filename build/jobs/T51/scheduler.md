@@ -192,3 +192,7 @@ Tranche/T51 merged first; the suite was green there (163) before any edit. Provi
 **Deferred:** none. **Other modules:** none. **Generated artifacts made stale:** `bio-plane/dist/bio-plane.bundled.mjs` carries scheduler source; BOB regenerates. **Census ops:** none. **Rows owed to UX-DESIGN:** none (no sentence). **New files outside my paths:** none.
 
 Size (session_01YK5oJDSuoRHrdsfRWfQ9cd): test runs 14, module lines 1027
+
+## J8 · COMPLETE
+
+Fix round 9 done (G91, G95, G94, G92, G123g; R28-R33). Scheduler suite 180/180 (+17: r8-budget, r8-stale), each failing-first red then green; format, architecture, coverage (33 of 33), words, ownership 0 failures; plane watchdog/watch and other users green. Interface for plane-2, proposed wording, stale bundle note and Size line are in my record. Size (session_01YK5oJDSuoRHrdsfRWfQ9cd): test runs 14, module lines 1027
