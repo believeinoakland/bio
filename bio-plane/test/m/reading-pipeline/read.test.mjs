@@ -128,7 +128,10 @@ test("R2: a multi-part capture within the bound is assembled from its parts for 
   assert.match(missing.reading.basis, /part 2 of 2 is not held/);
   const over = await withEntry({ format: "t3multi", text: async () => ({ ok: true }) },
     () => w.read(doc({ digest: "f".repeat(64), format: "t3multi", parts: [{ sha256: p1, bytes: 30 * 1024 * 1024 }] })));
-  assert.match(over.reading.basis, /over the \d+ B a format entry is handed/);
+  /* R54 (fix round 9): a size over the bound states the size and the limit (TOO_LARGE), not "parts" */
+  assert.equal(over.reading.reason, "TOO_LARGE");
+  assert.equal(over.reading.size, 30 * 1024 * 1024);
+  assert.ok(over.reading.basis.includes(String(over.reading.bound)) && over.reading.basis.includes(String(over.reading.size)), over.reading.basis);
 });
 
 test("R3 R10: tier 2 is asked only when undetermined markers outnumber glyphs (not for scan markers alone), merged page by page; two tiers give two page-scoped parts; tier 2 only when a page moved; the producer marker carried", async () => {

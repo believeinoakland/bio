@@ -55,10 +55,16 @@ test("R32 (T51 fix round 3, C19; K4356): a block whose only visible content is c
     '<div><button type="button">Cancel</button><button>Close</button></div>',
     '<form><label>Search</label><input type="text" name="q"><button>Go</button></form>',
     '<p><select><option>One</option><option>Two</option></select></p>',
-    '<ul><li><a href="/a">Quick Links</a></li><li><a href="/b">Contact Us</a></li></ul>',
     '<div><a href="/a">Facebook</a> <a href="/b">Twitter</a></div>',
     '<div><div><a href="/a">Deep link</a></div></div>',
   ]) assert.deepEqual(await words(around(furniture)), NOTICE, furniture);
+  /* R51 (fix round 9; amends R32): a list of links, and a table of links, in the page's content are the page's own words, kept; a bar of links is furniture */
+  assert.deepEqual(await words(around('<ul><li><a href="/a">Quick Links</a></li><li><a href="/b">Contact Us</a></li></ul>')),
+    [...NOTICE.slice(0, 2), "Quick Links", "Contact Us", NOTICE[2]], "a list of links is kept");
+  assert.deepEqual(await words(around('<div><ul><li><a href="/a">Minutes</a></li><li><a href="/b">Agendas</a></li></ul></div>')),
+    [...NOTICE.slice(0, 2), "Minutes", "Agendas", NOTICE[2]], "a list of links in a div is kept");
+  assert.deepEqual(await words(around('<div><table><tr><td><a href="/a">Row A</a></td><td><a href="/b">Row B</a></td></tr></table></div>')),
+    [...NOTICE.slice(0, 2), "Row A\tRow B", NOTICE[2]], "a table of links is kept, its row one paragraph");
   assert.deepEqual(await words(around('<p>Read the <a href="/r">full report</a> before 1 May.</p><ul><li>Item with words <a href="/i">and a link</a></li></ul>')),
     [...NOTICE.slice(0, 2), "Read the full report before 1 May.", "Item with words and a link", NOTICE[2]], "words of its own keep a block");
   assert.deepEqual(await words(around('<h2><a href="/s">Heading that is a link</a></h2><table><tr><td><a href="/c">Cell link</a></td></tr></table>')),
