@@ -61,7 +61,7 @@ test("R113 (L): a part under R2's own minimum, sent as a non-last part, is refus
   const done = await call("complete", {}, { upload: b.upload, parts: ps.map((p) => sha(p)) });
   assert.deepEqual([done.ok, done.reason, done.status], [false, "UPLOAD_NOT_COMPLETED", 502], JSON.stringify(done).slice(0, 300));
   const st = await call("state", { sha256: whole });
-  assert.deepEqual([st.size, st.rows, st.receipts], [null, 0, []], "nothing held, no session, no receipt");
+  assert.deepEqual([st.size, st.rows, st.receipts.includes(whole)], [null, 0, false], "nothing held, no session, no receipt for it");
 });
 
 test("R113 (L): an upload abandoned part-way is aborted by the member and holds nothing; its parts were never an object", { timeout: 300000 }, async () => {

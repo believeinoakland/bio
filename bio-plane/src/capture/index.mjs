@@ -1013,7 +1013,7 @@ export class Capture {
     const row = typeof upload === "string" && upload ? this.#one(`SELECT * FROM parted_uploads WHERE upload = ?`, upload) : null;
     if (!row || memberIdOf(row.by) !== memberIdOf(by))
       return { refusal: { ok: false, reason: "UPLOAD_UNKNOWN", status: 404,
-                          detail: localize("capture.index.upload_unknown", "this instance holds no upload in parts under that name for you; begin it again") } };
+                          detail: localize("capture.index.upload_unknown", "your group's Civicsmith holds no upload in parts under that name for you; begin it again") } };
     if (row.expires <= stampSecond(this.#instant())) {
       await this.#partedDrop(row, bucket, key);
       return { refusal: { ok: false, reason: "UPLOAD_EXPIRED", status: 410,
@@ -1072,7 +1072,7 @@ export class Capture {
     const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
     if (!bucket || !keyOf)
       return { ok: false, reason: "PARTED_UPLOAD_UNAVAILABLE", status: 503,
-               detail: localize("capture.index.parted_unavailable", "this instance cannot take a file in parts (its evidence bucket offers no multipart upload, or its key is not known), so nothing was written") };
+               detail: localize("capture.index.parted_unavailable", "your group's Civicsmith cannot take a file in parts (its evidence bucket offers no multipart upload, or its key is not known), so nothing was written") };
     await this.expireUploads({ key });
     /* the same member's earlier session for this file is abandoned: a restarted upload begins clean */
     for (const old of this.#rows(`SELECT * FROM parted_uploads WHERE by = ? AND sha256 = ?`, by, sha256)) await this.#partedDrop(old, bucket, keyOf);
@@ -1139,7 +1139,7 @@ export class Capture {
       if (row.parts.length > 0 && (!live || live.next !== row.parts.length)) {
         await this.#partedDrop(row, bucket, keyOf);
         return await stop({ ok: false, reason: "UPLOAD_LOST", status: 409,
-                            detail: localize("capture.index.upload_lost", "this instance lost the digest of the parts so far, so the upload was aborted and holds nothing; begin it again") });
+                            detail: localize("capture.index.upload_lost", "your group's Civicsmith lost the digest of the parts so far, so the upload was aborted and holds nothing; begin it again") });
       }
       if (!live) { live = { hasher: createSha256(), next: 0, busy: false, whole: null }; this.#parted.set(row.upload, live); }
       if (live.busy)
@@ -1220,7 +1220,7 @@ export class Capture {
       if (!live || live.next !== count) {
         await this.#partedDrop(row, bucket, keyOf);
         return { ok: false, reason: "UPLOAD_LOST", status: 409,
-                 detail: localize("capture.index.upload_lost", "this instance lost the digest of the parts so far, so the upload was aborted and holds nothing; begin it again") };
+                 detail: localize("capture.index.upload_lost", "your group's Civicsmith lost the digest of the parts so far, so the upload was aborted and holds nothing; begin it again") };
       }
       if (live.whole === null) live.whole = live.hasher.hex();
       if (live.whole !== row.sha256) {

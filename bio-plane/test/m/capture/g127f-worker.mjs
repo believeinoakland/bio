@@ -35,7 +35,7 @@ export class Probe extends DurableObject {
     if (q("cmd") === "begin") { const b = await json(); out = await this.c.beginPartedUpload({ ...b, by, bounds: b.bounds ?? null }); }
     else if (q("cmd") === "part")
       out = await this.c.putUploadPart({ upload: q("upload"), index: Number(q("index")), sha256: q("sha256"), bytes: request.body, by,
-                                         declared: Number(request.headers.get("content-length")) });
+                                         declared: request.headers.has("content-length") ? Number(request.headers.get("content-length")) : null });
     else if (q("cmd") === "complete") { const b = await json(); out = await this.c.completePartedUpload({ upload: b.upload, parts: b.parts, by, at: "2026-10-24T12:00:00Z" }); }
     else if (q("cmd") === "abort") out = await this.c.abortPartedUpload({ upload: q("upload"), by });
     else if (q("cmd") === "state") {
