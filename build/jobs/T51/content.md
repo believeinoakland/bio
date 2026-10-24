@@ -1,6 +1,6 @@
 # content (T51)
 
-**Status** · session_01K9HMgas2XJZzhRzt7oMHQn · depth 2 · COMPLETE · handled B17
+**Status** · session_01K9HMgas2XJZzhRzt7oMHQn · depth 2 · COMPLETE · handled B18
 
 ## J1 · COMPLETE
 
@@ -217,3 +217,9 @@ Size (session_01K9HMgas2XJZzhRzt7oMHQn): test runs 28, module lines 3913
 
 COMPLETE (re B17). Merged `origin/tranche/T51` (job 64 in). `HELD_TEXT_CHARS_MAX = boundOf("content", "held_text_chars")` and `KIND_SCAN_PAGES_MAX = boundOf("content", "kind_scan_pages")`, no literal; `runtime-limits` was already in content's `uses`, so no edge is owed. Suite: tests 174, pass 170, fail 4 (the R61 seam tests, red by name until job 41). format, architecture, coverage (61 of 61), words, ownership: 0 failures. Pushed.
 Size (session_01K9HMgas2XJZzhRzt7oMHQn): test runs 30, module lines 3914
+
+## J14 · COMPLETE
+
+COMPLETE (re B18, R52 `cellsAt(contentId, {fromRow})`). Merged `origin/tranche/T51`. RED first: the two new tests in `g41-cells.test.mjs` failed on the old code (the window read from row 1 whatever `fromRow` said: actual cell `A1` where `A5` was asked; a null options object threw). GREEN: `cellsAt(id, {fromRow})` answers the extent's cells from `fromRow` (held sheet: `extraction.cellsOf` is asked from it, the answer's `interpreted.from_row` is it, `cells_truncated` and `next_row` as for the first window; listed sheet: the cells of rows from it); a `fromRow` that is not a whole number from 1 inside the extent's rows (a sheet-cell has one) is refused `reason: "from_row_outside_extent"`, stated, with the file not asked; none, null, `{}` or `{fromRow: null}` is the first window as before; other refusals come first. A 400-row range is read in 100 calls of four whole rows each, every row once in order (test). New sentence: stand-in `content.index.from_row_outside_extent` (row owed to later-ux).
+Suite: tests 176, pass 172, fail 4 (the R61 seam tests, red by name until job 41). `test/m/calculations/` (the caller) 114 of 114. format, architecture, coverage (61 of 61), words, ownership: 0 failures. Pushed.
+Size (session_01K9HMgas2XJZzhRzt7oMHQn): test runs 34, module lines 3925

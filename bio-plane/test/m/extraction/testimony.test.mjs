@@ -34,15 +34,15 @@ test("R61: indexTestimony replaces the capture's index by R22's rule over one un
   const u = w.x.unitsOf(S1);
   assert.equal(u.state, "whole");
   assert.deepEqual(u.units, [{ extent: { kind: "document" }, ref: u.units[0].ref, text: WORDS, truncated: false, seq: 0,
-                               chain_kind: "undetermined" }]);
+                               chain_kind: "undetermined", kind: null }]);
   assert.equal(w.one(`SELECT bundle_id FROM capture_text WHERE capture_sha=?`, S1).bundle_id, "B-1");
   assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH 'clerk'`).length, 1, "searchable");
   assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH 'older'`).length, 0, "the old rows gone");
-  /* R22's per-unit cap holds for the words too */
+  /* (fix round 9, G128d; R22 amended) R22's rule stores the words whole, never cut, however long */
   const long = "w".repeat(CAPTURE_TEXT_UNIT_CAP + 10);
-  const cut = w.x.indexTestimony({ bundleId: "B-1", captureSha: S2, words: long, author: "member:m1" });
-  assert.deepEqual([cut.written, cut.truncated], [1, 1]);
-  assert.equal(w.one(`SELECT length(text) AS n, truncated FROM capture_text WHERE capture_sha=?`, S2).n, CAPTURE_TEXT_UNIT_CAP);
+  const kept = w.x.indexTestimony({ bundleId: "B-1", captureSha: S2, words: long, author: "member:m1" });
+  assert.deepEqual([kept.written, kept.truncated], [1, 0]);
+  assert.deepEqual({ ...w.one(`SELECT length(text) AS n, truncated FROM capture_text WHERE capture_sha=?`, S2) }, { n: CAPTURE_TEXT_UNIT_CAP + 10, truncated: 0 });
 });
 
 test("R61: words that are not a string holding a glyph index nothing and answer written: 0, the capture's old rows still deleted first; a request naming no bundle or capture writes nothing; none of these throws", async () => {
