@@ -10295,14 +10295,14 @@
       "en": "read: the publication ceremony's dry run — op=publish's first refusal, every other refusal reachable, and whether the case is ready, over the same arguments, rolled back; writes nothing",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 2286
+      "line": 2301
     },
     {
       "id": "case-authoring.declared.publishtensions",
       "en": "read: the contradictions a case must disclose before it is published, each side the publisher cannot see highlighted and withheld; writes nothing",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 2289
+      "line": 2304
     },
     {
       "id": "case-authoring.document.a_conclusion_belongs_to_a",
@@ -10568,525 +10568,525 @@
       "en": "a case is a PRODUCTION OF A PROJECT (DEC-72): pass project=<project id>. The project is what supplies the standard of evidence this case is held to, read from that project alone at this moment — so a publication naming no project is one whose bar nobody declared, and an absent publisher is not a publisher of none.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1380
+      "line": 1381
     },
     {
       "id": "case-authoring.index.a_case_rests_on_at",
       "en": "a case rests on at least one LOAD-BEARING finding (DEC-72). Every member here is supporting, so the case asserts nothing conclusively — while its completeness assertion claims coverage of a question no member answers. Designate the finding the case actually rests on, or do not publish this as a case yet.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1502
+      "line": 1503
     },
     {
       "id": "case-authoring.index.a_declared_position_with_no",
       "en": "a declared position with no reasoning behind it is the checkbox this gate exists to refuse. Say why — including why the team chose not to give notice — and a reader weighs it exactly as they weigh any other declared bias.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 701
+      "line": 702
     },
     {
       "id": "case-authoring.index.a_finding_already_in_a_published_case",
       "en": "A finding already in a published case is REOPENED first (op=reopen) and concluded again, which is what makes the next edition a separate document carrying its own conclusion, its own falsifier and its own freshly authored completeness (DEC-12, DEC-72).",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1441
+      "line": 1442
     },
     {
       "id": "case-authoring.index.a_finding_is_an_inquiry",
       "en": "a FINDING is an inquiry that reached a conclusion; nothing else is publishable as a member of a case.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1411
+      "line": 1412
     },
     {
       "id": "case-authoring.index.a_new_case",
       "en": "a new case",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 914
+      "line": 915
     },
     {
       "id": "case-authoring.index.a_published_case_carries_the",
       "en": "a published case carries the bias it was produced under, as a fact the reader weighs. Acknowledge it here, in the ceremony, fresh for this edition — a pre-flight checkbox would be the checkbox this gate exists to refuse (DEC-46). This is a DISCLOSURE and never a bar: declaring a bias does not stop a case being published, and nothing here reads WHICH bias you name (DEC-20). The only bias that disqualifies is an uncleared HUNCH, and that is refused by name before any signature exists.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 711
+      "line": 712
     },
     {
       "id": "case-authoring.index.a_published_case_is_a_container",
       "en": "a published case is a CONTAINER over ONE OR MORE FINDINGS, scoped to the question that brought them together: pass targets=[<inquiry id>, ...]. One finding is legal and is the degenerate case (DEC-44); what is not legal is publishing nothing.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 672
+      "line": 673
     },
     {
       "id": "case-authoring.index.a_published_case_states_its",
       "en": "a published case states its own SCOPE — what brought these findings together and what question the case as a whole answers. It is authored by the team and never derived from the findings' titles: a scope your team's Civicsmith wrote is not a scope the team made (DEC-44). Completeness says what the case left OUT; scope says what it is ABOUT.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 708
+      "line": 709
     },
     {
       "id": "case-authoring.index.a_published_case_states_what",
       "en": "a published case states what it does NOT cover. A case silent about its own limits is claiming to cover everything, which is the overclaim this record exists to refuse.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 694
+      "line": 695
     },
     {
       "id": "case-authoring.index.case_document_not_stored",
       "en": "The case document could not be stored. The record is unchanged and nothing was prepared.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1232
+      "line": 1233
     },
     {
       "id": "case-authoring.index.case_document_too_large",
       "en": "This case document is {size} MB, over the {bound} MB a case document may be, and it names {materials} materials and {members} findings. The record is unchanged and nothing was prepared. Leave out some of the materials or findings and prepare the case again.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1202
+      "line": 1203
     },
     {
       "id": "case-authoring.index.case_thecase_is_claimedproject_s",
       "en": "case {theCase} is {claimedProject}'s production, and a case does not change hands between editions (DEC-72). The bar a case is held to is read from its publishing project at the moment of publication, so letting edition 2 name a different project would change this case's standard of evidence with nobody authoring the change. Publish the new edition as {claimedProject_2}, or publish this material as a new case.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 950
+      "line": 951
     },
     {
       "id": "case-authoring.index.count_other_projects_this_viewer_can_see",
       "en": "{count} other project(s) this viewer can see HAVE concluded it ({projects}) — information, never this project's stance (§7.1 item 8). ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1438
+      "line": 1439
     },
     {
       "id": "case-authoring.index.declare_the_teams_position_on",
       "en": "declare the team's position on putting this case to its subject. The gate is that the position is DECLARED — never that contact happened, and never that the answer was favourable (DEC-13). Deciding not to give notice is a legitimate position and is declared like any other.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 698
+      "line": 699
     },
     {
       "id": "case-authoring.index.draft_draftnamed_is_prepared_for",
       "en": "draft {draftNamed} is prepared for {caseIdentitySentence}, and this act publishes {v1}. Naming it would bind its readings to a case they were not given for. Publish the case the draft names {v2}, or name the draft of this one.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 914
+      "line": 915
     },
     {
       "id": "case-authoring.index.draft_draftnamed_was_already_named",
       "en": "draft {draftNamed} was already named as the draft of edition {edition} of {case_id}, and its readings bound to that case at that act. One draft produces one case: binding its readings to a second would list the same readers under two productions.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 923
+      "line": 924
     },
     {
       "id": "case-authoring.index.edition_edition_of_thecase_is",
       "en": "edition {edition} of {theCase} is signed and waiting to be published{v1}. The next edition is prepared once it is published, stopped at its time, or cancelled (op=publishatcancel). Nothing was prepared.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 870
+      "line": 871
     },
     {
       "id": "case-authoring.index.edition_of_caseid_must_say_what_changed",
       "en": "edition {edition} of {caseId} must say what changed in it since the edition before, and why (whatChanged: {text}): a reader of a later edition is owed the difference in the team's own words, not left to compare two documents (DEC-101). A first edition carries none. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1354
+      "line": 1355
     },
     {
       "id": "case-authoring.index.edition_predicted_of_thecase",
       "en": "edition {predicted} of {theCase}",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 914
+      "line": 915
     },
     {
       "id": "case-authoring.index.excluded_i_carries_no_reason",
       "en": "excluded[{i}] carries no reason. WHAT was left out and WHY are two statements and one does not stand in for the other.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 727
+      "line": 728
     },
     {
       "id": "case-authoring.index.excluded_i_is_not_an",
       "en": "excluded[{i}] is not an object",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 716
+      "line": 717
     },
     {
       "id": "case-authoring.index.excluded_i_names_neither_a",
       "en": "excluded[{i}] names neither a target nor a description. Every exclusion row carries a target id OR prose, never neither — otherwise the row asserts nothing and the index cannot answer \"which published cases excluded this document\".",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 724
+      "line": 725
     },
     {
       "id": "case-authoring.index.field_is_a_list_of",
       "en": "{field} is a list of {calc, words?}: each names a calculation (or a workbook's capture) by its id, and its words, when given, are at most {COMPLETENESS_MAX} characters with no quote, backslash or line break",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 496
+      "line": 497
     },
     {
       "id": "case-authoring.index.id_carries_no_authored_designation",
       "en": "{id} carries no authored designation. Every member of a case is declared load_bearing or supporting BY THE PUBLISHER (DEC-72): a load-bearing finding is one the case rests on and must meet the project's standard of evidence, and a supporting one travels with the case without being presented as carrying it. There is no default, because a member designated by omission was designated by nobody.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1491
+      "line": 1492
     },
     {
       "id": "case-authoring.index.id_is_designated_r_which",
       "en": "{id} is designated '{r}', which is not one of: {MEMBER_ROLES}. The two terms are the record's own and are spelled as the schema spells them.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1494
+      "line": 1495
     },
     {
       "id": "case-authoring.index.its_arguments",
       "en": "its arguments",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 225
+      "line": 226
     },
     {
       "id": "case-authoring.index.listed_a_load_bearing_finding_rests",
       "en": "{listed}: a load-bearing finding rests on a calculation that gives a different result when your team's Civicsmith recomputes it, or on an input typed with no source, and this act does not disclose it. List each in calculationsDisclosed, with your own words if you choose, and the published case states it. A disclosed one never blocks (DEC-76 item 4). Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 554
+      "line": 555
     },
     {
       "id": "case-authoring.index.m_appears_twice_in_this",
       "en": "{m} appears twice in this case. A finding is in a case once — listing it twice would give the container two copies of one document and the ordinal no meaning.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 678
+      "line": 679
     },
     {
       "id": "case-authoring.index.map_a_counsel_matter_is",
       "en": "{map}: a counsel matter is never published, and this case would rest on one. Nothing was prepared.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1471
+      "line": 1472
     },
     {
       "id": "case-authoring.index.map_a_published_case_carries",
       "en": "{map} A published case carries a standard that is not free to read only as the passages a finding relies on, and a finding that rests only on benchmarks says \"slower than\" or \"below\", never \"violated\" or \"nonconforming\" (K1723, K1739). Change the case and prepare it again. Nothing was prepared.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1212
+      "line": 1213
     },
     {
       "id": "case-authoring.index.missing_the_team_requires_their",
       "en": "{missing}: the team requires their approval of this version of the case before it is signed, and it is not given. Ask them to approve it, then prepare it again so the document carries the approvals. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1712
+      "line": 1713
     },
     {
       "id": "case-authoring.index.name_is_at_most_completeness",
       "en": "{name} is at most {COMPLETENESS_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 738
+      "line": 739
     },
     {
       "id": "case-authoring.index.no_answer",
       "en": "no answer",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1846
+      "line": 1861
     },
     {
       "id": "case-authoring.index.no_draft_of_caseid_statement",
       "en": "no draft of {caseId}'s statement of what changed answers to {named} (op=whatchangeddrafts&case={caseId} lists them). Name one of them, or write the statement in your own words (whatChanged: {text}) and publish again. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1365
+      "line": 1366
     },
     {
       "id": "case-authoring.index.no_draft_of_proj_that",
       "en": "no draft of {proj} that you can read answers to {draftNamed}. A draft you cannot read is answered exactly as one that does not exist. Name the draft this case was prepared in, or publish without draft= and its readings are stated as undetermined.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 906
+      "line": 907
     },
     {
       "id": "case-authoring.index.no_published_case_answers_to",
       "en": "no published case answers to {theCase}. A case identity is minted by this act and carried in the signed bytes; it is never taken from a caller, because an identity a caller can hand us is one a caller can invent.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 855
+      "line": 856
     },
     {
       "id": "case-authoring.index.not_reached_op_publish_refuses_before",
       "en": "not reached: op=publish refuses before the case and its pins are known",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 322
+      "line": 323
     },
     {
       "id": "case-authoring.index.not_reached_op_publish_refuses_first",
       "en": "not reached: op=publish refuses first ({reason})",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1846
+      "line": 1861
     },
     {
       "id": "case-authoring.index.notallowed_a_case_carries_no",
       "en": "{notAllowed}: a case carries no field of that name. What a publisher authors is exactly the four statements (statement, subjectJustification, excluded with its reasons, whatChanged), the scope, the bias acknowledgement and the account, each sentence of which rests on what it cites (D57, D63). A story, context or human-interest passage has no place in a case. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 747
+      "line": 748
     },
     {
       "id": "case-authoring.index.on_date_at_time",
       "en": " on {date} at {time}",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 870
+      "line": 871
     },
     {
       "id": "case-authoring.index.only_a_concluded_finding_may_be",
       "en": "only a CONCLUDED finding may be a case member: a material set cannot be asserted over a question with no conclusion, and `concluded` is asked of the PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md §7.1 item 4). ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1429
+      "line": 1430
     },
     {
       "id": "case-authoring.index.op_caseratify_over_op_publish_document",
       "en": "op=caseratify over op=publish's document (case {caseId}, edition {edition})",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1937
+      "line": 1952
     },
     {
       "id": "case-authoring.index.op_publish_first",
       "en": "op=publish first",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1938
+      "line": 1953
     },
     {
       "id": "case-authoring.index.pass_excluded_an_empty_list",
       "en": "pass excluded[]. An EMPTY list is a claim — this case left nothing material out — and is legal; an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 704
+      "line": 705
     },
     {
       "id": "case-authoring.index.proj_concluded_this_question_and_withdrew",
       "en": "{proj} concluded this question and WITHDREW that conclusion, so it stands on none today (op=withdrawconclusion; §7.1 item 7 — the withdrawal is history, never the stance). Conclude it again for this project (op=conclude&project={proj}). ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1433
+      "line": 1434
     },
     {
       "id": "case-authoring.index.proj_has_not_concluded_this_question",
       "en": "{proj} has not concluded this question. A conclusion belongs to the project's relationship with the inquiry (§7.1): another team's conclusion, and a conclusion written in the question's own bytes with no project, are both readable here and neither is this project's. Conclude it for this project (op=conclude&project={proj}&version=<reading>). ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1436
+      "line": 1437
     },
     {
       "id": "case-authoring.index.proj_is_a_object_type",
       "en": "{proj} is a {object_type}, and only a PROJECT has a standard of evidence to hold a case to (DEC-72). Publication is wielded at the top of a project's roster.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1389
+      "line": 1390
     },
     {
       "id": "case-authoring.index.proj_latest_entry_names_an_act",
       "en": "{proj}'s latest entry about this question names an act your team's Civicsmith does not know, so what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1435
+      "line": 1436
     },
     {
       "id": "case-authoring.index.project_holding_members",
       "en": "{project} (holding {members})",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1472
+      "line": 1473
     },
     {
       "id": "case-authoring.index.project_the_publishing_project",
       "en": "{project} (the publishing project)",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1471
+      "line": 1472
     },
     {
       "id": "case-authoring.index.publishing_discloses_each_of_these",
       "en": "publishing discloses each of these, and is never blocked by a conflict (DEC-76 item 4): list each in tensionsDisclosed at op=publish, with your own words if you choose. A highlighted one rests on a side in conflict with a record you cannot see; the published case will not name that record or who holds it.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1564
+      "line": 1565
     },
     {
       "id": "case-authoring.index.publishing_is_proj_s_own",
       "en": "publishing is {proj}'s own production and is wielded by an OWNER of it (DEC-72). An administrator sees every project and directs none of them, and a participant who is not an owner contributes to the work without putting the project's name on it.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1394
+      "line": 1395
     },
     {
       "id": "case-authoring.index.publishing_puts_the_teams_name",
       "en": "publishing puts the team's name on a case. A machine credential may prepare one and may never author the completeness assertion or the position on putting it to its subject, both of which are declared bias. Sign in as a member.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 655
+      "line": 656
     },
     {
       "id": "case-authoring.index.ratification_pre_flight_gave_no_answer",
       "en": "ratification's pre-flight gave no answer",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1815
+      "line": 1830
     },
     {
       "id": "case-authoring.index.ratification_pre_flight_reads_the_document",
       "en": "ratification's pre-flight reads the document op=publish would store, and op=publish refuses first",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1613
+      "line": 1614
     },
     {
       "id": "case-authoring.index.review_the_case_document_and_ratify_it",
       "en": "review the CASE DOCUMENT (op=casedocument&case={caseId}&edition={edition}) and ratify it (op=caseratify): it carries the case's scope, its completeness assertion, its bias acknowledgement, its standard of evidence, the whole roster PINNED AT THE VERSION HASHES each finding has now, and each member's own edition and frozen strength as this case reads it — and your signature over it is what commits them. Nothing was written on any finding (BIO_Publication_v0_1.md §3 rule 12). ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1297
+      "line": 1298
     },
     {
       "id": "case-authoring.index.roles_is_a_map_from_finding_id",
       "en": "roles is a map from finding id to designation — {\"INQ-…\": \"load_bearing\"} — one entry per member of this case. It is not a list: a list would be positional against the roster, and a partition that can silently reorder is not one anybody authored.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1485
+      "line": 1486
     },
     {
       "id": "case-authoring.index.signing_publishes_this_case_edition",
       "en": "Signing publishes this case edition, and each finding in it at the version pinned here. A published edition is never withdrawn or edited: it is corrected only by a later edition.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1855
+      "line": 1870
     },
     {
       "id": "case-authoring.index.state_no_grade",
       "en": "{state} (no grade)",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1528
+      "line": 1529
     },
     {
       "id": "case-authoring.index.target_is_load_bearing_in",
       "en": "{target} is LOAD-BEARING in this case and reaches {axis} {v1}, against {proj}'s declared standard of '{want}'. A case rests on its load-bearing findings, so those are what the project's bar is asked of. A finding below the bar may still travel with this case — designate it SUPPORTING and it is published, marked as not carrying the case (DEC-72). That is the honest move and never severing the citation.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1528
+      "line": 1529
     },
     {
       "id": "case-authoring.index.the_approvals_the_teams_rule",
       "en": "the approvals the team's rule requires could not be read, so whether every one is given is not known. Signing is refused until they can be. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1709
+      "line": 1710
     },
     {
       "id": "case-authoring.index.the_bias_acknowledgement_is_byte",
       "en": "the bias acknowledgement is byte-identical to edition {edition}'s. An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and never carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked. The lens itself may well be unchanged — what must be fresh is what it means for THIS edition's findings. Say that, as of this edition. Declaring a bias never blocks publication (DEC-20).",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 997
+      "line": 998
     },
     {
       "id": "case-authoring.index.the_case_documents_searched_section",
       "en": "the case document's searched section could not be computed: {why}. A case document publishes what was looked for beside what it claims to cover (D-196); it does not publish the claim with the record of the looking left blank.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1075
+      "line": 1076
     },
     {
       "id": "case-authoring.index.the_team_requires_no_approval",
       "en": "The team requires no approval before a case is signed.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1919
+      "line": 1934
     },
     {
       "id": "case-authoring.index.then_ratify_each_of_these_findings",
       "en": "Then ratify EACH of these {count} findings (op=ratify): every finding is signed on its own bytes because the finding is the unit of truth, and this case edition becomes servable as a container when the last of them lands.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1301
+      "line": 1302
     },
     {
       "id": "case-authoring.index.then_ratify_the_finding_itself",
       "en": "Then ratify the finding itself (op=ratify): it is signed on its own bytes because the finding is the unit of truth.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1300
+      "line": 1301
     },
     {
       "id": "case-authoring.index.these_findings_already_serve_length",
       "en": "these findings already serve {length} published cases ({sort}), and this act did not say which case it is publishing. A finding can serve many cases (DEC-72 clause 6), so membership no longer says which case this is: name the case to publish a further edition of it, or say so and a new case is minted. The record will not choose for you.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 847
+      "line": 848
     },
     {
       "id": "case-authoring.index.this_act_both_names_case",
       "en": "this act both NAMES case {str} and asks for a new case to be minted. Those are opposite instructions and the record will not choose between them: name the case to publish a further edition of it, or ask for a new one, not both.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 842
+      "line": 843
     },
     {
       "id": "case-authoring.index.this_act_was_asked_without",
       "en": "this act was asked without the calculations its findings rest on having been recomputed and read, so whether one differs or rests on an unbound input is not known here. Publish through op=publish, which recomputes them first. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 514
+      "line": 515
     },
     {
       "id": "case-authoring.index.this_finding_is_already_a",
       "en": "this finding is already a member of a published case at the version it stands at now, and that edition already records the conclusion this act would record (the publishing project's relationship, its reading and its claim — INVESTIGATIVE-SESSION.md §7.1 item 9), so there is nothing here a new edition would say differently. An EDITION IS A SEPARATE DOCUMENT (DEC-12): it carries its own conclusion, its own falsifier and its own freshly authored completeness, and minting one that says what an edition already says would make the edition number a count of publish calls rather than a record of what changed. Two routes lead to a new edition, and each leaves a reader able to see what moved: the project withdraws its conclusion and concludes again (op=withdrawconclusion, then op=conclude&project=), or the finding is reopened (op=reopen), worked, concluded again and published — the route DEC-12 built.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 890
+      "line": 891
     },
     {
       "id": "case-authoring.index.this_inquiry_has_no_readable_bundle",
       "en": "this inquiry has no readable bundle.md, so its state cannot be moved",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1415
+      "line": 1416
     },
     {
       "id": "case-authoring.index.this_question_is_state",
       "en": "This question is {state}, and a case cannot be asserted over one the team has set down or carried forward. Reopen it (op=reopen) or work the children a division produced (DEC-28); a conclusion a project wrote while the question was open does not survive the question leaving the states a case can rest on. ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1431
+      "line": 1432
     },
     {
       "id": "case-authoring.index.v1_is_byte_identical_to",
       "en": "{v1} is byte-identical to edition {edition}'s. A completeness claim carried forward unchanged is a checkbox, and C-21.1 exists to refuse it: every edition is a separate document and states its own limits in its own words, as of its own date. If nothing about the limits changed, say THAT, as of this edition.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 993
+      "line": 994
     },
     {
       "id": "case-authoring.index.what_changed_in_this_edition",
       "en": "what changed in this edition is at most {WHAT_CHANGED_MAX} characters, and this statement is {length}. Say it shorter. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1359
+      "line": 1360
     },
     {
       "id": "case-authoring.searched.a_searched_section_requires_a",
@@ -11156,14 +11156,14 @@
       "en": "photo-directed: keyed by a photo's capture, reached from the Photos step; a member's mark of areas to obscure in the published copy; withdrawn only by a reasoned act, never erased (R28); moves no bundle",
       "module": "case-carriage",
       "file": "bio-plane/src/case-carriage/index.mjs",
-      "line": 1448
+      "line": 1451
     },
     {
       "id": "case-carriage.declared.obscuremarkwithdraw",
       "en": "photo-directed: keyed by a photo's capture and one mark, reached from the Photos step; a member's reasoned withdrawal of a mark, recorded beside it, never erased; moves no bundle",
       "module": "case-carriage",
       "file": "bio-plane/src/case-carriage/index.mjs",
-      "line": 1450
+      "line": 1453
     },
     {
       "id": "case-carriage.index.a_mark_holds_at_most",
@@ -20445,378 +20445,399 @@
       "en": "a malformed referred-to count",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 158
+      "line": 153
     },
     {
       "id": "doc-clean.images.a_segment_longer_than_the_stream",
       "en": "a segment longer than the stream",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 165
+      "line": 160
     },
     {
       "id": "doc-clean.images.a_segment_of_unstated_length",
       "en": "a segment of unstated length",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 164
+      "line": 159
     },
     {
       "id": "doc-clean.images.a_truncated_segment_header",
       "en": "a truncated segment header",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 153
+      "line": 148
     },
     {
       "id": "doc-clean.images.name_emf",
       "en": "an EMF",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 90
+      "line": 85
     },
     {
       "id": "doc-clean.images.name_heif",
       "en": "a HEIC or AVIF",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 88
+      "line": 83
     },
     {
       "id": "doc-clean.images.name_jxl",
       "en": "a JPEG XL",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 89
+      "line": 84
     },
     {
       "id": "doc-clean.images.name_svm",
       "en": "an SVM",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 92
+      "line": 87
     },
     {
       "id": "doc-clean.images.name_tiff",
       "en": "a TIFF",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 87
+      "line": 82
     },
     {
       "id": "doc-clean.images.name_wmf",
       "en": "a WMF",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 91
+      "line": 86
     },
     {
       "id": "doc-clean.images.the_image_could_not_be_stripped",
       "en": "the image could not be stripped",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 199
+      "line": 194
     },
     {
       "id": "doc-clean.images.where_a_bmp_image_carrying",
       "en": "{where}: a BMP image carrying a colour profile",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 210
+      "line": 205
     },
     {
       "id": "doc-clean.images.where_a_bmp_image_holding",
       "en": "{where}: a BMP image holding {v1} image",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 207
+      "line": 202
     },
     {
       "id": "doc-clean.images.where_a_compressed_image_that",
       "en": "{where}: a compressed image that cannot be read whole",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 227
+      "line": 222
     },
     {
       "id": "doc-clean.images.where_a_compressed_image_whose",
       "en": "{where}: a compressed image whose header cannot be read",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 236
+      "line": 231
     },
     {
       "id": "doc-clean.images.where_a_jbig2_stream_whose",
       "en": "{where}: a JBIG2 stream whose segments cannot be walked ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 150
+      "line": 145
     },
     {
       "id": "doc-clean.images.where_an_image_of_no",
       "en": "{where}: an image of no format this module knows",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 240
+      "line": 235
     },
     {
       "id": "doc-clean.images.where_an_svg_image_with_an",
       "en": "{where}: an SVG image with an <{tag}> element",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 221
+      "line": 216
     },
     {
       "id": "doc-clean.images.where_media_compressed",
       "en": "{where}: {media}, compressed",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 230
+      "line": 225
     },
     {
       "id": "doc-clean.images.where_v1_image_holding_held",
       "en": "{where}: {v1} image holding {held} image",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 215
+      "line": 210
     },
     {
       "id": "doc-clean.images.where_v1_image_whose_metadata",
       "en": "{where}: {v1} image, whose metadata this module cannot strip",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 203
+      "line": 198
     },
     {
       "id": "doc-clean.index.a_compound_file_a_legacy",
       "en": "a compound file (a legacy office document), not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 79
+      "line": 87
     },
     {
       "id": "doc-clean.index.a_data_image_uri_at",
       "en": "a data:image URI at character {index}",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 92
+      "line": 100
     },
     {
       "id": "doc-clean.index.a_mime_message_not_a",
       "en": "a MIME message, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 86
+      "line": 94
     },
     {
       "id": "doc-clean.index.a_postscript_document_not",
       "en": "a PostScript document, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 85
+      "line": 93
     },
     {
       "id": "doc-clean.index.a_zip_archive_that_is_neither",
       "en": "a ZIP archive that is neither an OOXML nor an ODF package",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 66
+      "line": 74
     },
     {
       "id": "doc-clean.index.a_zip_package_of_no",
       "en": "a ZIP package of no office format this module cleans ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 69
+      "line": 77
     },
     {
       "id": "doc-clean.index.an_embedded_image_is_of_a_kind",
       "en": "an embedded image is of a kind whose metadata cannot be stripped",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 25
+      "line": 28
     },
     {
       "id": "doc-clean.index.an_encrypted_office_document_an",
       "en": "an encrypted office document (an EncryptedPackage compound file)",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 78
+      "line": 86
     },
     {
       "id": "doc-clean.index.an_rtf_document_not_a_format",
       "en": "an RTF document, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 84
+      "line": 92
     },
     {
       "id": "doc-clean.index.an_xml_or_svg_document",
       "en": "an XML or SVG document, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 88
+      "line": 96
     },
     {
       "id": "doc-clean.index.the_document_carries_a_video_audio",
       "en": "the document carries a video, audio, RichMedia or 3D part, whose own metadata can hold a time and place",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 27
+      "line": 30
     },
     {
       "id": "doc-clean.index.the_document_carries_an_embedded",
       "en": "the document carries an embedded file: a PDF attachment, an office file's embedding or macro project, or an ODF embedded object",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 24
+      "line": 27
     },
     {
       "id": "doc-clean.index.the_document_could_not_be",
       "en": "the document could not be read whole ({String})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 57
+      "line": 64
     },
     {
       "id": "doc-clean.index.the_document_is_encrypted",
       "en": "the document is encrypted",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 23
+      "line": 26
     },
     {
       "id": "doc-clean.index.the_document_is_length_bytes",
       "en": "the document is {length} bytes, over the {CLEAN_MAX_BYTES} this module reads",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 42
+      "line": 49
     },
     {
       "id": "doc-clean.index.the_document_or_one_of",
       "en": "the document, or one of its parts, is larger than this module reads",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 30
+      "line": 33
     },
     {
       "id": "doc-clean.index.the_document_s_bytes_are_not",
       "en": "the document's bytes are not a byte array",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 40
+      "line": 47
     },
     {
       "id": "doc-clean.index.the_document_s_structure_cannot",
       "en": "the document's structure cannot be read whole",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 31
+      "line": 34
     },
     {
       "id": "doc-clean.index.the_file_is_a_zip_archive",
       "en": "the file is a ZIP archive, not an office package; a member-supplied archive is never carried",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 28
+      "line": 31
     },
     {
       "id": "doc-clean.index.the_file_is_neither_a_pdf",
       "en": "the file is neither a PDF, an office package nor text",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 82
+      "line": 90
     },
     {
       "id": "doc-clean.index.the_file_is_of_no_format",
       "en": "the file is of no format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 29
+      "line": 32
     },
     {
       "id": "doc-clean.index.the_html_document_embeds_an",
       "en": "the HTML document embeds an image as a data: URI",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 26
+      "line": 29
     },
     {
       "id": "doc-clean.index.the_package_cannot_be_read",
       "en": "the package cannot be read ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 68
+      "line": 76
+    },
+    {
+      "id": "doc-clean.index.the_package_holds_more_entries",
+      "en": "the package holds more entries than this module copies",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 35
     },
     {
       "id": "doc-clean.index.the_zip_directory_cannot_be",
       "en": "the ZIP directory cannot be read ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
-      "line": 65
+      "line": 73
     },
     {
       "id": "doc-clean.package.part_cannot_be_read_why",
       "en": "part {name} cannot be read ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/package.mjs",
-      "line": 150
+      "line": 168
     },
     {
       "id": "doc-clean.package.part_n_appears_twice",
       "en": "part {n} appears twice",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/package.mjs",
-      "line": 186
+      "line": 224
     },
     {
       "id": "doc-clean.package.part_n_declares_uncompressedsize_bytes",
       "en": "part {n} declares {uncompressedSize} bytes, over the {CLEAN_MAX_PART_BYTES} this module reads",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/package.mjs",
-      "line": 189
+      "line": 227
+    },
+    {
+      "id": "doc-clean.package.part_n_declares_uncompressedsize_bytes_in",
+      "en": "part {n} declares {uncompressedSize} bytes in {compressedSize}, over the ratio of {RATIO_MAX} this module inflates",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/package.mjs",
+      "line": 229
     },
     {
       "id": "doc-clean.package.part_n_is_an_embedded",
       "en": "part {n} is an embedded file",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/package.mjs",
-      "line": 191
+      "line": 231
     },
     {
       "id": "doc-clean.package.part_n_is_or_belongs",
       "en": "part {n} is or belongs to an embedded object",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/package.mjs",
-      "line": 192
+      "line": 232
     },
     {
       "id": "doc-clean.package.part_n_media",
       "en": "part {n}: {media}",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/package.mjs",
-      "line": 218
+      "line": 258
     },
     {
       "id": "doc-clean.package.part_path_is_an_embedded",
       "en": "part {path} is an embedded object",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/package.mjs",
-      "line": 203
+      "line": 243
+    },
+    {
+      "id": "doc-clean.package.the_package_holds_count_entries",
+      "en": "the package holds {count} entries, over the {CLEAN_MAX_ENTRIES} this module copies",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/package.mjs",
+      "line": 213
     },
     {
       "id": "doc-clean.package.the_package_s_manifest_lists_encrypted",
       "en": "the package's manifest lists encrypted parts",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/package.mjs",
-      "line": 198
+      "line": 238
     },
     {
       "id": "doc-clean.package.the_packages_zip_directory_cannot",
       "en": "the package's ZIP directory cannot be read ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/package.mjs",
-      "line": 182
+      "line": 220
     },
     {
       "id": "doc-clean.pdf.a_number_the_pdf_writer",
@@ -20980,6 +21001,13 @@
       "line": 49
     },
     {
+      "id": "doc-clean.xml.where_has_a_tag_of_more",
+      "en": "{where} has a tag of more than {max} bytes",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/xml.mjs",
+      "line": 63
+    },
+    {
       "id": "docket.checks.order_unreadable",
       "en": "A court order is placed with what it orders (remove, redact, seal or unseal), the published editions it names, and, to redact, seal or unseal, the parts of the edition it names. This one does not say so. Nothing was published.",
       "module": "docket",
@@ -21054,245 +21082,259 @@
       "en": "cannot say: the stack is not recognised confidently enough",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 110
+      "line": 112
     },
     {
       "id": "docprofile.pipeline.its_contents_could_not_be",
       "en": "its contents could not be read this time ({String})",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 167
+      "line": 169
     },
     {
       "id": "docprofile.pipeline.no_content_type_could_be_decided",
       "en": "no content type could be decided",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 141
+      "line": 143
     },
     {
       "id": "docprofile.pipeline.none_stated_the_content_type",
       "en": "none stated: the {content_type} reader failed to derive them",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 187
+      "line": 189
     },
     {
       "id": "docprofile.pipeline.nothing_is_claimed_about_the",
       "en": "nothing is claimed about the content: {why}",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 153
+      "line": 155
     },
     {
       "id": "docprofile.pipeline.the_content_type_content_type",
       "en": "the {content_type} content type declares no reader",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 160
+      "line": 162
     },
     {
       "id": "docprofile.pipeline.the_content_type_reader_could",
       "en": "the {content_type} reader could not compare the two readings ({String})",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 171
+      "line": 173
     },
     {
       "id": "docprofile.pipeline.the_content_type_reader_could_2",
       "en": "the {content_type} reader could not say",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 174
+      "line": 176
     },
     {
       "id": "docprofile.pipeline.the_document_differs_and_this",
       "en": "the document differs and this kind of document is not recognised well enough to say whether the difference matters",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 112
+      "line": 114
     },
     {
       "id": "docprofile.pipeline.the_document_is_unchanged_only",
       "en": "the document is unchanged; only machinery this site rebuilds differs",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 124
+      "line": 126
     },
     {
       "id": "docprofile.pipeline.the_document_itself_is_unchanged_navigation",
       "en": "the document itself is unchanged; something around it moved, such as navigation",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 132
+      "line": 134
     },
     {
       "id": "docprofile.pipeline.the_document_itself_is_unchanged_surroundings",
       "en": "the document itself is unchanged; the site around it changed",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 131
+      "line": 133
     },
     {
       "id": "docprofile.pipeline.the_source_is_still_serving",
       "en": "the source is still serving exactly what the record holds",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 105
+      "line": 107
     },
     {
       "id": "docprofile.pipeline.the_source_served_exactly_the",
       "en": "the source served exactly the bytes the record holds",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 104
+      "line": 106
     },
     {
       "id": "docprofile.pipeline.the_substance_differs_and_which",
       "en": "the substance differs, and which kind of document this is could not be decided ({String}), so what changed is not described",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 143
+      "line": 145
     },
     {
       "id": "docprofile.pipeline.the_substance_differs_and_why",
       "en": "the substance differs and {why}, so what changed is not described",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 155
+      "line": 157
     },
     {
       "id": "docprofile.pipeline.the_substance_is_the_same",
       "en": "the substance is the same; only machinery this site rebuilds on every visit differs",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 123
+      "line": 125
     },
     {
       "id": "docprofile.pipeline.the_two_captures_could_not",
       "en": "the two captures could not be compared ({String}), so nothing is claimed",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 94
+      "line": 96
     },
     {
       "id": "docprofile.pipeline.the_two_captures_could_not_be_compared",
       "en": "the two captures could not be compared",
       "module": "docprofile",
       "file": "docprofile/pipeline.mjs",
-      "line": 92
+      "line": 94
     },
     {
       "id": "docprofile.readtext.no_text_was_supplied_so_no",
       "en": "no text was supplied, so no reading was attempted",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 386
+      "line": 307
     },
     {
       "id": "docprofile.readtext.read_over_a_full_decode",
       "en": "read over a full decode ({chars} characters)",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 451
+      "line": 373
     },
     {
       "id": "docprofile.readtext.read_over_a_partial_decode",
       "en": "read over a PARTIAL decode, stated: {undetermined} undetermined region(s)/code point(s){named} beside {chars} decoded characters",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 450
+      "line": 372
     },
     {
       "id": "docprofile.readtext.the_key_content_type_declares",
       "en": "the {key} content type declares no reader",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 444
-    },
-    {
-      "id": "docprofile.readtext.the_sheet_is_over_the_bound_so_its_type_was_judged_from_a_view",
-      "en": "the sheet is over {bound} characters, so its type was judged from {chars} of its {of} characters, the first {head} and {n} windows spread across it; the stack and the reading of it are from all of it",
-      "module": "docprofile",
-      "file": "docprofile/readtext.mjs",
-      "line": 358
+      "line": 366
     },
     {
       "id": "docprofile.readtext.the_text_arrived_as_a",
       "en": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 167
+      "line": 186
+    },
+    {
+      "id": "docprofile.readtext.the_text_is_over_the_bound_so_its_type_was_judged_from_a_view",
+      "en": "the text is over {bound} characters, so its type was judged from {chars} of its {of} characters, the first {head} and {n} windows spread across it; the stack and the reading of it are from all of it",
+      "module": "docprofile",
+      "file": "docprofile/classify-view.mjs",
+      "line": 129
     },
     {
       "id": "docprofile.readtext.the_text_of_this_document",
       "en": "the text of this document is undetermined ({undetermined} undecodable region(s){named}); a reading over text nobody decoded would be an invented one",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 385
+      "line": 306
+    },
+    {
+      "id": "docprofile.readtext.the_text_of_this_document_was_not_read_over_the_size_limit",
+      "en": "the text of this document was not read: it is {size} MiB of text against the {bound} MiB that is read",
+      "module": "docprofile",
+      "file": "docprofile/readtext.mjs",
+      "line": 298
     },
     {
       "id": "docprofile.readtext.the_tier_that_produced_this",
       "en": "the tier that produced this text could not decode most of it ({undetermined} undetermined against {chars} decoded{named}); a reading over the fragment would silently misrepresent the document",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 398
+      "line": 319
     },
     {
       "id": "docprofile.readtext.this_producer_emitted_document_text",
       "en": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 201
+      "line": 220
     },
     {
       "id": "docprofile.readtext.this_producers_document_text_is_not_its_pages",
       "en": "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 193
+      "line": 212
     },
     {
       "id": "docprofile.readtext.this_producers_document_text_is_not_its_paragraphs",
       "en": "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 199
+      "line": 218
     },
     {
       "id": "docprofile.readtext.this_producers_source_carry_no",
       "en": "this producer's {source} carry no part index, so where in the document a reference was read cannot be said",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 216
+      "line": 235
     },
     {
       "id": "docprofile.registry.no_content_type_is_registered",
       "en": "no content type is registered",
       "module": "docprofile",
       "file": "docprofile/doctypes/registry.mjs",
-      "line": 44
+      "line": 45
     },
     {
       "id": "docprofile.registry.no_content_type_is_registered_to_recognise",
       "en": "no content type is registered to recognise documents, so this one is not read as any type: nothing is read from it and what changes in it is not described",
       "module": "docprofile",
       "file": "docprofile/doctypes/registry.mjs",
-      "line": 139
+      "line": 173
     },
     {
       "id": "docprofile.registry.no_registered_content_type_recognised",
       "en": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
       "module": "docprofile",
       "file": "docprofile/doctypes/registry.mjs",
-      "line": 141
+      "line": 175
     },
     {
       "id": "docprofile.registry.the_key_content_type_has",
       "en": "the {key} content type has no detect function, so it could never recognise a document",
       "module": "docprofile",
       "file": "docprofile/doctypes/registry.mjs",
-      "line": 56
+      "line": 57
+    },
+    {
+      "id": "docprofile.registry.the_work_budget_ran_out_before_every_type_was_asked",
+      "en": "the types examined {chars} characters of this text, over the {limit} allowed, so the {key} content type and those after it were not asked",
+      "module": "docprofile",
+      "file": "docprofile/doctypes/registry.mjs",
+      "line": 178
     },
     {
       "id": "doctypes.generic.changed",
@@ -26195,18 +26237,32 @@
       "line": 27
     },
     {
+      "id": "file-scanner.render.the_first_page_is_over_the_limit",
+      "en": "the first page of the safe view is over the limit of {limit} bytes",
+      "module": "file-scanner",
+      "file": "file-scanner/src/render.mjs",
+      "line": 58
+    },
+    {
       "id": "file-scanner.render.the_renderer_answered_status",
       "en": "the renderer answered {status}",
       "module": "file-scanner",
       "file": "file-scanner/src/render.mjs",
-      "line": 46
+      "line": 59
     },
     {
       "id": "file-scanner.render.the_renderer_could_not",
       "en": "the renderer could not be reached",
       "module": "file-scanner",
       "file": "file-scanner/src/render.mjs",
-      "line": 42
+      "line": 54
+    },
+    {
+      "id": "file-scanner.render.the_safe_view_is_over_the_limit",
+      "en": "the safe view is {bytes} bytes, over the limit of {limit}",
+      "module": "file-scanner",
+      "file": "file-scanner/src/render.mjs",
+      "line": 65
     },
     {
       "id": "file-scanner.routes.a_test_record_of",
@@ -28358,739 +28414,830 @@
       "line": 537
     },
     {
+      "id": "image-codecs.ccittdecode.the_picture_is_columns_wide",
+      "en": "the picture is {columns} wide and {rows} high, and the decoder reads an edge of at most {bound}",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/ccittdecode.mjs",
+      "line": 27
+    },
+    {
+      "id": "image-codecs.ccittdecode.the_picture_is_columns_wide_2",
+      "en": "the picture is {columns} wide and {rows} high, past the {bound} pixels the decoder reads",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/ccittdecode.mjs",
+      "line": 29
+    },
+    {
       "id": "image-codecs.dctdecode.bogus_huffman_table_definition_get",
       "en": "bogus Huffman table definition: {get}",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 172
+      "line": 182
     },
     {
       "id": "image-codecs.dctdecode.dc_symbol_s_past_15",
       "en": "DC symbol {s} past 15",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 191
+      "line": 201
     },
     {
       "id": "image-codecs.dctdecode.entropy_coded_data_ended_before",
       "en": "entropy-coded data ended before the last MCU ({fabricated} bits zero-filled)",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 661
+      "line": 676
     },
     {
       "id": "image-codecs.dctdecode.huffman_code_longer_than_16",
       "en": "Huffman code longer than 16 bits",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 265
+      "line": 275
     },
     {
       "id": "image-codecs.dctdecode.huffman_table_class_or_id",
       "en": "Huffman table class or id past the four tables",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 141
+      "line": 151
     },
     {
       "id": "image-codecs.dctdecode.huffman_table_counts_run_past",
       "en": "Huffman table counts run past their DHT",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 142
+      "line": 152
     },
     {
       "id": "image-codecs.dctdecode.huffman_table_missing_for_component",
       "en": "Huffman table missing for component {id}",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 511
+      "line": 526
     },
     {
       "id": "image-codecs.dctdecode.huffman_table_of_total_symbols",
       "en": "Huffman table of {total} symbols {v1}",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 147
+      "line": 157
     },
     {
       "id": "image-codecs.dctdecode.length_of_nc_components_in",
       "en": "{length} of {nc} components in the first scan",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 490
+      "line": 500
     },
     {
       "id": "image-codecs.dctdecode.libjpeg_s_default_for_three",
       "en": "libjpeg's default for three components",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 390
+      "line": 400
     },
     {
       "id": "image-codecs.dctdecode.marker_0x_m_runs_past",
       "en": "marker 0x{m} runs past end",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 109
+      "line": 119
     },
     {
       "id": "image-codecs.dctdecode.quantisation_table_tq_missing",
       "en": "quantisation table {tq} missing",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 498
+      "line": 508
+    },
+    {
+      "id": "image-codecs.dctdecode.the_picture_is_width_by_height",
+      "en": "the picture is {width} by {height}, past the {bound} pixels the decoder reads",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/dctdecode.mjs",
+      "line": 514
     },
     {
       "id": "image-codecs.dctdecode.v1_codes_of_l_bits",
       "en": "{v1} codes of {l} bits overflow the code space, or use the all-ones code",
       "module": "image-codecs",
       "file": "pdf-worker/src/dctdecode.mjs",
-      "line": 188
+      "line": 198
     },
     {
       "id": "image-codecs.jbig2decode.a_custom_huffman_table_the",
       "en": "a custom Huffman table the segment does not refer to",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 858
+      "line": 875
     },
     {
       "id": "image-codecs.jbig2decode.a_custom_huffman_table_with",
       "en": "a custom Huffman table with no end",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 250
+      "line": 268
     },
     {
       "id": "image-codecs.jbig2decode.a_generic_region_of_unknown",
       "en": "a generic region of unknown length never ends",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 674
+      "line": 692
     },
     {
       "id": "image-codecs.jbig2decode.a_halftone_region_with_no",
       "en": "a halftone region with no pattern dictionary",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 1034
+      "line": 1050
     },
     {
       "id": "image-codecs.jbig2decode.a_huffman_code_no_table",
       "en": "a Huffman code no table line holds",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 233
+      "line": 251
     },
     {
       "id": "image-codecs.jbig2decode.a_huffman_coded_symbol_dictionary",
       "en": "a Huffman-coded symbol dictionary or text region refines its symbols",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 60
+      "line": 61
     },
     {
       "id": "image-codecs.jbig2decode.a_page_of_unknown_height",
       "en": "a page of unknown height that is not striped",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 715
+      "line": 733
     },
     {
       "id": "image-codecs.jbig2decode.a_pattern_of_no_size",
       "en": "a pattern of no size",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 1007
+      "line": 1023
     },
     {
       "id": "image-codecs.jbig2decode.a_refined_symbol_of_negative",
       "en": "a refined symbol of negative size",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 569
+      "line": 587
     },
     {
       "id": "image-codecs.jbig2decode.a_refinement_aggregate_symbol_of",
       "en": "a refinement/aggregate symbol of no instances",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 901
+      "line": 919
     },
     {
       "id": "image-codecs.jbig2decode.a_region_s_colour_extension",
       "en": "a region's colour-extension flag (T.88 Amendment 3) is set",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 57
+      "line": 58
     },
     {
       "id": "image-codecs.jbig2decode.a_repeated_symbol_id_length",
       "en": "a repeated symbol-id length with nothing before it",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 608
+      "line": 626
     },
     {
       "id": "image-codecs.jbig2decode.a_segment_type_t_88",
       "en": "a segment type T.88 does not define",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 62
+      "line": 63
     },
     {
       "id": "image-codecs.jbig2decode.a_symbol_dictionary_reuses_a",
       "en": "a symbol dictionary reuses a previous dictionary's arithmetic contexts",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 59
+      "line": 60
     },
     {
       "id": "image-codecs.jbig2decode.a_symbol_id_length_code",
       "en": "a symbol-id length code outside the run table",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 603
+      "line": 621
     },
     {
       "id": "image-codecs.jbig2decode.a_text_region_with_no",
       "en": "a text region with no end",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 588
+      "line": 606
     },
     {
       "id": "image-codecs.jbig2decode.adaptive_template_pixel_ax_ay",
       "en": "adaptive template pixel ({ax},{ay}) is not yet decoded",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 277
+      "line": 295
     },
     {
       "id": "image-codecs.jbig2decode.an_export_run_past_the",
       "en": "an export run past the symbols",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 946
+      "line": 964
     },
     {
       "id": "image-codecs.jbig2decode.an_extension_segment_the_decoder",
       "en": "an extension segment the decoder must understand and does not",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 61
-    },
-    {
-      "id": "image-codecs.jbig2decode.bitmap_of_w_x_h",
-      "en": "bitmap of {w}x{h} pixels is beyond any page",
-      "module": "image-codecs",
-      "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 71
+      "line": 62
     },
     {
       "id": "image-codecs.jbig2decode.generic_refinement_region_template_template",
       "en": "generic refinement region, template {template}{v1}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 835
+      "line": 853
     },
     {
       "id": "image-codecs.jbig2decode.generic_region_arithmetic_template_template",
       "en": "generic region, arithmetic, template {template}{v1}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 810
+      "line": 828
     },
     {
       "id": "image-codecs.jbig2decode.huffman_coded_data_ends_early",
       "en": "Huffman-coded data ends early",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 214
+      "line": 232
     },
     {
       "id": "image-codecs.jbig2decode.huffman_table_selection_sel",
       "en": "Huffman table selection {sel}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 861
+      "line": 878
     },
     {
       "id": "image-codecs.jbig2decode.huffman_table_selection_sel_2",
       "en": "Huffman table selection {sel}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 978
+      "line": 995
     },
     {
       "id": "image-codecs.jbig2decode.length_symbols_exported_where_sdnumexsyms",
       "en": "{length} symbols exported where SDNUMEXSYMS is {numEx}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 951
+      "line": 969
     },
     {
       "id": "image-codecs.jbig2decode.mmr_data_ends_eofb_after",
       "en": "MMR data ends (EOFB) after {y} of {h} rows",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 427
+      "line": 445
     },
     {
       "id": "image-codecs.jbig2decode.mmr_data_ends_or_breaks",
       "en": "MMR data ends or breaks in row {y} of {h}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 448
+      "line": 466
     },
     {
       "id": "image-codecs.jbig2decode.mmr_data_ends_or_breaks_2",
       "en": "MMR data ends or breaks in row {y} of {h}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 454
+      "line": 472
     },
     {
       "id": "image-codecs.jbig2decode.mmr_row_y_runs_backwards",
       "en": "MMR row {y} runs backwards",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 463
+      "line": 481
     },
     {
       "id": "image-codecs.jbig2decode.more_symbol_id_lengths_than",
       "en": "more symbol-id lengths than symbols",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 612
+      "line": 630
     },
     {
       "id": "image-codecs.jbig2decode.oob_where_what_is_required",
       "en": "OOB where {what} is required",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 145
+      "line": 163
     },
     {
       "id": "image-codecs.jbig2decode.refinement_adaptive_pixel_is_not",
       "en": "refinement adaptive pixel is not yet decoded",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 488
+      "line": 506
     },
     {
       "id": "image-codecs.jbig2decode.refinement_of_symbol_id_of",
       "en": "refinement of symbol {id} of {length}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 910
+      "line": 928
     },
     {
       "id": "image-codecs.jbig2decode.segment_number_of_type_type",
       "en": "segment {number} of type {type} has an unknown length",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 655
+      "line": 673
     },
     {
       "id": "image-codecs.jbig2decode.symbol_id_id_of_length",
       "en": "symbol id {id} of {length}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 563
+      "line": 581
+    },
+    {
+      "id": "image-codecs.jbig2decode.the_bitmap_is_w_by_h",
+      "en": "the bitmap is {w} by {h}, and the decoder reads an edge of at most {bound}",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 79
+    },
+    {
+      "id": "image-codecs.jbig2decode.the_bitmap_is_w_by_h_2",
+      "en": "the bitmap is {w} by {h}, past the {bound} pixels the decoder reads",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 82
     },
     {
       "id": "image-codecs.jbig2decode.the_generic_regions_arithmetic_data",
       "en": "the generic region's arithmetic data ran out ({overrun} bytes short)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 815
+      "line": 832
     },
     {
       "id": "image-codecs.jbig2decode.the_halftone_region_s_arithmetic",
       "en": "the halftone region's arithmetic data ran out",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 1061
+      "line": 1071
+    },
+    {
+      "id": "image-codecs.jbig2decode.the_pattern_dictionary_declares_n",
+      "en": "the pattern dictionary declares {n} patterns, past the {bound} the decoder holds",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 1024
     },
     {
       "id": "image-codecs.jbig2decode.the_pattern_dictionary_s_arithmetic",
       "en": "the pattern dictionary's arithmetic data ran out",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 1016
+      "line": 1031
     },
     {
       "id": "image-codecs.jbig2decode.the_refinement_regions_arithmetic_data",
       "en": "the refinement region's arithmetic data ran out ({overrun} bytes short)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 838
+      "line": 854
     },
     {
       "id": "image-codecs.jbig2decode.the_stream_holds_more_than",
       "en": "the stream holds more than one page",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 63
+      "line": 64
     },
     {
       "id": "image-codecs.jbig2decode.the_stream_holds_no_page",
       "en": "the stream holds no page information segment",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 64
+      "line": 65
+    },
+    {
+      "id": "image-codecs.jbig2decode.the_symbol_dictionary_declares_n",
+      "en": "the symbol dictionary declares {n} symbols, past the {bound} the decoder holds",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 888
     },
     {
       "id": "image-codecs.jbig2decode.the_symbol_dictionarys_arithmetic_data",
       "en": "the symbol dictionary's arithmetic data ran out ({overrun} bytes short)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 952
+      "line": 898
     },
     {
       "id": "image-codecs.jbig2decode.the_text_regions_arithmetic_data",
       "en": "the text region's arithmetic data ran out ({overrun} bytes short)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 999
+      "line": 1012
     },
     {
       "id": "image-codecs.jbig2decode.what_n_bytes_needed_v1",
       "en": "{what}: {n} bytes needed, {v1} left",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
-      "line": 102
+      "line": 120
     },
     {
       "id": "image-codecs.jpxdecode.a_code_block_larger_than",
       "en": "a code-block larger than 4096 samples",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 182
+      "line": 229
     },
     {
       "id": "image-codecs.jpxdecode.a_code_block_of_31",
       "en": "a code-block of 31 or more bit-planes",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 807
+      "line": 854
     },
     {
       "id": "image-codecs.jpxdecode.a_colour_transform_over_mixed",
       "en": "a colour transform over mixed wavelets",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 967
+      "line": 1021
     },
     {
       "id": "image-codecs.jpxdecode.a_marker_segment_length_under",
       "en": "a marker segment length under 2",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 248
+      "line": 295
     },
     {
       "id": "image-codecs.jpxdecode.a_packets_code_block_data",
       "en": "a packet's code-block data runs past the tile ({v1} bytes)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 730
+      "line": 777
     },
     {
       "id": "image-codecs.jpxdecode.an_image_and_tile_geometry",
       "en": "an image and tile geometry the standard does not allow",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 171
+      "line": 218
     },
     {
       "id": "image-codecs.jpxdecode.marker_0x_m_where_sot",
       "en": "marker 0x{m} where SOT was expected",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 259
+      "line": 306
     },
     {
       "id": "image-codecs.jpxdecode.nc_components_only_1_grey",
       "en": "{nc} components; only 1 (grey) or 3 (colour) are decoded here",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 938
+      "line": 985
     },
     {
       "id": "image-codecs.jpxdecode.no_quantisation_step_for_band",
       "en": "no quantisation step for band {bi}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 623
+      "line": 670
     },
     {
       "id": "image-codecs.jpxdecode.prec_bit_samples_only_8",
       "en": "{prec}-bit samples; only 8-bit are decoded here",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 942
+      "line": 989
     },
     {
       "id": "image-codecs.jpxdecode.size_of_ntiles_tiles_are",
       "en": "{size} of {nTiles} tiles are present",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 950
+      "line": 1004
     },
     {
       "id": "image-codecs.jpxdecode.the_codestream_ends_before_any",
       "en": "the codestream ends before any tile",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 245
+      "line": 292
+    },
+    {
+      "id": "image-codecs.jpxdecode.the_codestream_s_precincts_and_code",
+      "en": "the codestream's precincts and code-blocks would be {objects} objects, past the {bound} the decoder builds",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 1003
     },
     {
       "id": "image-codecs.jpxdecode.the_codestream_uses_part_15",
       "en": "the codestream uses Part 15 (HTJ2K) block coding",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 62
+      "line": 67
     },
     {
-      "id": "image-codecs.jpxdecode.the_decode_would_hold_more",
-      "en": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile",
+      "id": "image-codecs.jpxdecode.the_decode_would_hold_bytes_at",
+      "en": "the decode would hold {bytes} bytes at once, past the {bound} the memory bound allows: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 67
+      "line": 999
+    },
+    {
+      "id": "image-codecs.jpxdecode.the_image_is_w_by_h",
+      "en": "the image is {W} by {H}, and the decoder reads an edge of at most {bound}",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 994
+    },
+    {
+      "id": "image-codecs.jpxdecode.the_image_is_w_by_h_2",
+      "en": "the image is {W} by {H}, past the {bound} pixels the decoder reads",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 996
     },
     {
       "id": "image-codecs.jpxdecode.the_image_s_samples_index",
       "en": "the image's samples index a palette (pclr box)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 63
+      "line": 68
     },
     {
       "id": "image-codecs.jpxdecode.the_jp2_box_type_runs",
       "en": "the JP2 box '{type}' runs past the data",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 116
+      "line": 163
     },
     {
       "id": "image-codecs.jpxdecode.the_jp2_colour_specification_is",
       "en": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 64
+      "line": 69
     },
     {
       "id": "image-codecs.jpxdecode.the_jp2_file_holds_no",
       "en": "the JP2 file holds no codestream (jp2c box)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 143
+      "line": 190
     },
     {
       "id": "image-codecs.jpxdecode.the_tiles_packets_run_out",
       "en": "the tile's packets run out at packet {v1} of {length}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 687
+      "line": 734
     },
     {
       "id": "image-codecs.jpxdecode.tile_part_of_tile_isot",
       "en": "tile-part of tile {isot} runs past the codestream",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 265
+      "line": 312
     },
     {
       "id": "image-codecs.jpxdecode.what_runs_past_the_codestream",
       "en": "{what} runs past the codestream",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 153
+      "line": 200
     },
     {
       "id": "image-codecs.pngdecode.a_chunk_the_decoder_must",
       "en": "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 64
+      "line": 69
     },
     {
       "id": "image-codecs.pngdecode.a_chunk_type_that_is",
       "en": "a chunk type that is not four letters at byte {p}",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 116
+      "line": 129
     },
     {
       "id": "image-codecs.pngdecode.a_plte_of_length_bytes",
       "en": "a PLTE of {length} bytes",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 205
+      "line": 223
     },
     {
       "id": "image-codecs.pngdecode.an_ihdr_of_len_bytes",
       "en": "an IHDR of {len} bytes, not 13",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 154
+      "line": 167
     },
     {
       "id": "image-codecs.pngdecode.bit_depth_depth_with_colour",
       "en": "bit depth {depth} with colour type {colourType}",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 161
+      "line": 174
     },
     {
       "id": "image-codecs.pngdecode.filter_type_f_in_row",
       "en": "filter type {f} in row {y}",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 234
+      "line": 252
     },
     {
       "id": "image-codecs.pngdecode.palette_index_v_past_the",
       "en": "palette index {v} past the palette's {entries} entries",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 271
+      "line": 289
     },
     {
       "id": "image-codecs.pngdecode.the_data_ends_at_byte",
       "en": "the data ends at byte {p}, before an IEND chunk",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 113
+      "line": 126
     },
     {
-      "id": "image-codecs.pngdecode.the_decode_would_hold_more",
-      "en": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image",
+      "id": "image-codecs.pngdecode.the_decode_would_hold_bytes_at",
+      "en": "the decode would hold {bytes} bytes at once, past the {bound} the memory bound allows: the 8-bit output, and beside it two rows of the stored image",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 65
+      "line": 216
+    },
+    {
+      "id": "image-codecs.pngdecode.the_file_holds_more_than_chunks",
+      "en": "the file holds more than {bound} chunks",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/pngdecode.mjs",
+      "line": 125
     },
     {
       "id": "image-codecs.pngdecode.the_first_chunk_is_type",
       "en": "the first chunk is {type}, not IHDR",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 125
+      "line": 138
     },
     {
       "id": "image-codecs.pngdecode.the_image_data_does_not",
       "en": "the image data does not inflate (row {y} of {H})",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 308
+      "line": 326
     },
     {
       "id": "image-codecs.pngdecode.the_image_data_ends_after",
       "en": "the image data ends after {y} of {H} rows",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 315
+      "line": 333
     },
     {
       "id": "image-codecs.pngdecode.the_image_data_inflates_past",
       "en": "the image data inflates past the frame",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 313
+      "line": 331
     },
     {
       "id": "image-codecs.pngdecode.the_image_data_s_zlib",
       "en": "the image data's zlib trailer is damaged or missing",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 308
+      "line": 326
+    },
+    {
+      "id": "image-codecs.pngdecode.the_image_is_w_by_h",
+      "en": "the image is {W} by {H}, and the decoder reads an edge of at most {bound}",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/pngdecode.mjs",
+      "line": 210
+    },
+    {
+      "id": "image-codecs.pngdecode.the_image_is_w_by_h_2",
+      "en": "the image is {W} by {H}, past the {bound} pixels the decoder reads",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/pngdecode.mjs",
+      "line": 212
     },
     {
       "id": "image-codecs.pngdecode.the_type_chunk_at_byte",
       "en": "the {type} chunk at byte {p} runs past the data",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 118
+      "line": 131
     },
     {
       "id": "image-codecs.pngdecode.the_type_chunk_declares_a",
       "en": "the {type} chunk declares a length past 2^31 - 1",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 117
+      "line": 130
     },
     {
       "id": "image-codecs.pngdecode.the_type_chunks_crc_does",
       "en": "the {type} chunk's CRC does not match its data",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 122
+      "line": 135
     },
     {
       "id": "image-cover.geometry.area_i_lies_wholly_outside",
       "en": "area {i} lies wholly outside the {DW} x {DH} picture",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/geometry.mjs",
-      "line": 58
+      "line": 84
     },
     {
       "id": "image-cover.geometry.the_photo_declares_w_x",
       "en": "the photo declares {w} x {h} pixels, over the {max} this module covers",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/geometry.mjs",
-      "line": 31
+      "line": 44
+    },
+    {
+      "id": "image-cover.index.image_too_large",
+      "en": "The photo is too large to cover safely, so it was refused. Nothing was changed.",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/index.mjs",
+      "line": 34
     },
     {
       "id": "image-cover.index.the_image_is_length_bytes",
       "en": "the image is {length} bytes, over the {COVER_MAX_BYTES} this module reads",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 79
+      "line": 77
     },
     {
       "id": "image-cover.index.the_images_bytes_are_not_a_byte_array",
       "en": "the image's bytes are not a byte array",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 77
+      "line": 75
     },
     {
       "id": "image-cover.index.the_images_structure_cannot_be",
       "en": "the image's structure cannot be walked ({v1})",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 83
+      "line": 81
     },
     {
       "id": "image-cover.index.the_photo_is_length_bytes",
       "en": "the photo is {length} bytes, over the {COVER_MAX_BYTES} this module covers",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 50
+      "line": 47
     },
     {
       "id": "image-cover.index.the_photo_is_neither_a_jpeg_nor_a_png",
       "en": "the photo is neither a JPEG nor a PNG",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 55
+      "line": 52
     },
     {
       "id": "image-cover.index.the_photos_bytes_are_not_a_byte_array",
       "en": "the photo's bytes are not a byte array",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/index.mjs",
-      "line": 48
+      "line": 45
     },
     {
       "id": "image-cover.jpeg.multi_scan_sequential_length_of",
       "en": "multi-scan sequential: {length} of {nc} components in the first scan",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/jpeg.mjs",
-      "line": 221
+      "line": 246
     },
     {
       "id": "image-cover.jpeg.the_jpeg_data_cannot_be",
@@ -29118,14 +29265,14 @@
       "en": "PNG bit depth {depth}; only 8-bit PNGs are covered",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/png.mjs",
-      "line": 152
+      "line": 153
     },
     {
       "id": "image-cover.png.png_colour_type_ct_is",
       "en": "PNG colour type {ct} is not defined",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/png.mjs",
-      "line": 151
+      "line": 152
     },
     {
       "id": "image-cover.png.the_png_data_cannot_be",
@@ -29146,280 +29293,280 @@
       "en": "a box header runs past its container",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 366
+      "line": 375
     },
     {
       "id": "image-cover.strip.a_chunk_runs_past_the_end_of_the_file",
       "en": "a chunk runs past the end of the file",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 132
+      "line": 135
     },
     {
       "id": "image-cover.strip.a_chunk_type_that_is",
       "en": "a chunk type that is not four letters at byte {p}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 134
+      "line": 137
     },
     {
       "id": "image-cover.strip.a_marker_runs_past_the_end_of_the_codestream",
       "en": "a marker runs past the end of the codestream",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 283
+      "line": 291
     },
     {
       "id": "image-cover.strip.a_scan_before_the_frame_header",
       "en": "a scan before the frame header",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 84
+      "line": 85
     },
     {
       "id": "image-cover.strip.a_second_frame_header_hex",
       "en": "a second frame header {hex} outside a hierarchical image",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 102
+      "line": 103
     },
     {
       "id": "image-cover.strip.a_second_soi_at_byte",
       "en": "a second SOI at byte {p}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 70
+      "line": 71
     },
     {
       "id": "image-cover.strip.a_tile_part_header_marker_runs_past_its_tile_part",
       "en": "a tile-part header marker runs past its tile-part",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 319
+      "line": 327
     },
     {
       "id": "image-cover.strip.a_tile_part_header_runs_past_its_tile_part",
       "en": "a tile-part header runs past its tile-part",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 316
+      "line": 324
     },
     {
       "id": "image-cover.strip.a_tile_part_length_of",
       "en": "a tile-part length of {psot}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 308
+      "line": 316
     },
     {
       "id": "image-cover.strip.a_tile_part_runs_past_the_end_of_the_codestream",
       "en": "a tile-part runs past the end of the codestream",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 310
+      "line": 318
     },
     {
       "id": "image-cover.strip.a_vp8x_chunk_out_of_place_or_short",
       "en": "a VP8X chunk out of place or short",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 245
+      "line": 252
     },
     {
       "id": "image-cover.strip.an_lzw_minimum_code_size",
       "en": "an LZW minimum code size of {v1}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 208
+      "line": 215
     },
     {
       "id": "image-cover.strip.block_hex_at_byte_p",
       "en": "block {hex} at byte {p} is neither an extension, an image nor the trailer",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 217
+      "line": 224
     },
     {
       "id": "image-cover.strip.box_type_declares_length_len",
       "en": "box {type} declares length {len}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 374
+      "line": 383
     },
     {
       "id": "image-cover.strip.box_type_runs_past_its",
       "en": "box {type} runs past its container",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 375
+      "line": 384
     },
     {
       "id": "image-cover.strip.box_type_s_length_runs",
       "en": "box {type}'s length runs past its container",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 370
+      "line": 379
     },
     {
       "id": "image-cover.strip.chunk_fourcc_runs_past_the",
       "en": "chunk {fourcc} runs past the RIFF's end",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 242
+      "line": 249
     },
     {
       "id": "image-cover.strip.chunk_type_declares_length_len",
       "en": "chunk {type} declares length {len}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 135
+      "line": 138
     },
     {
       "id": "image-cover.strip.chunk_type_runs_past_the_end_of_the_file",
       "en": "chunk {type} runs past the end of the file",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 137
+      "line": 140
     },
     {
       "id": "image-cover.strip.expected_sot_at_byte_p",
       "en": "expected SOT at byte {p}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 304
+      "line": 312
     },
     {
       "id": "image-cover.strip.marker_hex_declares_length_len",
       "en": "marker {hex} declares length {len}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 74
+      "line": 75
     },
     {
       "id": "image-cover.strip.marker_hex_declares_length_len_2",
       "en": "marker {hex} declares length {len}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 286
+      "line": 294
     },
     {
       "id": "image-cover.strip.marker_hex_runs_past_the",
       "en": "marker {hex} runs past the end of the file",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 75
+      "line": 76
     },
     {
       "id": "image-cover.strip.marker_hex_runs_past_the_2",
       "en": "marker {hex} runs past the end of the codestream",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 287
+      "line": 295
     },
     {
       "id": "image-cover.strip.marker_hex_s_length_runs",
       "en": "marker {hex}'s length runs past the end of the file",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 72
+      "line": 73
     },
     {
       "id": "image-cover.strip.no_marker_at_byte_at",
       "en": "no marker at byte {at}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 284
+      "line": 292
     },
     {
       "id": "image-cover.strip.no_marker_at_byte_p",
       "en": "no marker at byte {p}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 65
+      "line": 66
     },
     {
       "id": "image-cover.strip.reserved_marker_hex_at_byte",
       "en": "reserved marker {hex} at byte {p}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 111
+      "line": 112
     },
     {
       "id": "image-cover.strip.the_box_after_the_signature_is_not_ftyp",
       "en": "the box after the signature is not ftyp",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 396
+      "line": 405
     },
     {
       "id": "image-cover.strip.the_file_ends_before_the_image_data",
       "en": "the file ends before the image data",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 207
+      "line": 214
     },
     {
       "id": "image-cover.strip.the_file_ends_before_the_trailer",
       "en": "the file ends before the trailer",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 192
+      "line": 199
     },
     {
       "id": "image-cover.strip.the_file_ends_inside_a_marker",
       "en": "the file ends inside a marker",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 67
+      "line": 68
     },
     {
       "id": "image-cover.strip.the_file_ends_inside_an_extension",
       "en": "the file ends inside an extension",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 196
+      "line": 203
     },
     {
       "id": "image-cover.strip.the_file_ends_inside_scan",
       "en": "the file ends inside scan {scans}'s data",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 88
+      "line": 89
     },
     {
       "id": "image-cover.strip.the_file_ends_inside_scan_2",
       "en": "the file ends inside scan {scans}'s data",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 90
+      "line": 91
     },
     {
       "id": "image-cover.strip.the_file_ends_inside_the_global_colour_table",
       "en": "the file ends inside the global colour table",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 188
+      "line": 195
     },
     {
       "id": "image-cover.strip.the_file_ends_inside_the_image_descriptor",
       "en": "the file ends inside the image descriptor",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 204
+      "line": 211
     },
     {
       "id": "image-cover.strip.the_file_ends_inside_the_screen_descriptor",
       "en": "the file ends inside the screen descriptor",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 185
+      "line": 192
     },
     {
       "id": "image-cover.strip.the_file_ends_inside_what",
       "en": "the file ends inside {what}",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 177
+      "line": 184
     },
     {
       "id": "image-cover.strip.the_fmt_data_ends_before",
@@ -29440,7 +29587,7 @@
       "en": "the trailer before any image",
       "module": "image-cover",
       "file": "bio-plane/src/image-cover/strip.mjs",
-      "line": 219
+      "line": 226
     },
     {
       "id": "inquiry-grammar.checks.dividing_a_question_says_the",
@@ -32954,63 +33101,63 @@
       "en": "as {role}: whoami answered no member session after sign-in",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/run.mjs",
-      "line": 315
+      "line": 326
     },
     {
       "id": "journey-check.run.as_the_role_open_replace",
       "en": "\nAs the {role}: open {replace} (the link the connect screen shows), sign in to Claude, approve, then type the code Anthropic's page shows (it is not echoed) and press Enter:\n",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/run.mjs",
-      "line": 203
+      "line": 214
     },
     {
       "id": "journey-check.run.id_at_width_px_element",
       "en": "{id} at {width}px: {element}: \"{text}\" escaped the word list",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/run.mjs",
-      "line": 171
+      "line": 182
     },
     {
       "id": "journey-check.run.id_at_width_px_kind",
       "en": "{id} at {width}px: {kind}: {detail}",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/run.mjs",
-      "line": 267
+      "line": 278
     },
     {
       "id": "journey-check.run.id_not_drawn_signed_out",
       "en": "{id}: not drawn signed out at its bare address, so its title and weight marks were not checked ({why})",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/run.mjs",
-      "line": 266
+      "line": 277
     },
     {
       "id": "journey-check.run.id_the_design_mock_at",
       "en": "{id}: the design mock at {commit} draws no such screen",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/run.mjs",
-      "line": 335
+      "line": 346
     },
     {
       "id": "journey-check.run.id_the_member_is_drawn",
       "en": "{id}: the member is drawn {op}, the administrator is not",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/run.mjs",
-      "line": 366
+      "line": 377
     },
     {
       "id": "journey-check.run.the_role_s_credential_signs",
       "en": "the {role}'s credential signs in a session whoami answers with administer: {v1}",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/run.mjs",
-      "line": 317
+      "line": 328
     },
     {
       "id": "journey-check.run.the_world_did_not_close",
       "en": "the world did not close: {message}",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/run.mjs",
-      "line": 191
+      "line": 202
     },
     {
       "id": "journey-check.states.name_not_reached_on_this_instance",
@@ -34621,6 +34768,27 @@
       "module": "legistar-reader",
       "file": "legistar-reader/index.mjs",
       "line": 458
+    },
+    {
+      "id": "limit.image.chunks",
+      "en": "the image holds at least {size} {unit}, over the {bound} this module reads",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/geometry.mjs",
+      "line": 57
+    },
+    {
+      "id": "limit.image.row_stride",
+      "en": "the image declares rows of {size} bytes, over the {bound} this module reads",
+      "module": "image-cover",
+      "file": "bio-plane/src/image-cover/geometry.mjs",
+      "line": 50
+    },
+    {
+      "id": "limit.ocr.frame_bytes",
+      "en": "a {width}x{height} page needs a {frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is {MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling — the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/member.mjs",
+      "line": 156
     },
     {
       "id": "lines.declared.recordline",
@@ -37301,84 +37469,84 @@
       "en": "capture-directed: the monitor tick on a captured source (metadata published in capture_acts)",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3334
+      "line": 3336
     },
     {
       "id": "monitoring.declared.monitoring",
       "en": "read: the watched addresses a viewer may see, each with its frequency, when it was last checked, when it is next due and its end date; writes nothing",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3337
+      "line": 3339
     },
     {
       "id": "monitoring.declared.monitorpause",
       "en": "an administrator's setting over the instance's own fetching, refused NOT_AN_ADMIN to a member who is not one; not an act on an object",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3340
+      "line": 3342
     },
     {
       "id": "monitoring.declared.monitorset",
       "en": "bundle-directed: whether a captured document is watched, and how often; a member's own revision of the bundle; fetches nothing",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3343
+      "line": 3345
     },
     {
       "id": "monitoring.declared.monitorslate",
       "en": "read: the due slate, the watched addresses, named requests and sweeps now due, as a prompt a member runs by hand; writes nothing",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3346
+      "line": 3348
     },
     {
       "id": "monitoring.declared.namedrequests",
       "en": "read: every named request of the bundles a viewer may see, with its last attempt and when it is next due; writes nothing",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3354
+      "line": 3356
     },
     {
       "id": "monitoring.declared.namedrequestset",
       "en": "bundle-directed: a named request in a bundle's gathering file, planted or revised by a member; fetches nothing, the daemon gathers it at its cadence",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3350
+      "line": 3352
     },
     {
       "id": "monitoring.index.a_tick_records_that_the",
       "en": "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1261
+      "line": 1263
     },
     {
       "id": "monitoring.index.fetched_the_opendocument_export",
       "en": " — fetched {exportAddress}, the OpenDocument export composed from the Drive {kind} in {address}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1149
+      "line": 1151
     },
     {
       "id": "monitoring.index.frequency_when_given_must_be",
       "en": "'frequency', when given, must be one of {MONITOR_FREQ}. Nothing was written.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2022
+      "line": 2024
     },
     {
       "id": "monitoring.index.gathered_for_the_named_request",
       "en": "Gathered for the named request {id}, carried by {bundle}'s data/gathering.json, which authorised the fetch; locator {v1} of {length} in the request's order. Collected {at}. Filed at {GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2570
+      "line": 2572
     },
     {
       "id": "monitoring.index.monitoring_set_by_member_v1",
       "en": "Monitoring set by {member}: {v1}{v2} (a member's act; nothing was fetched).",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2037
+      "line": 2039
     },
     {
       "id": "monitoring.index.text_session_log_entry",
@@ -37392,98 +37560,98 @@
       "en": "the addresses the archive tick would find eligible could not be read: {String}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2960
+      "line": 2962
     },
     {
       "id": "monitoring.index.the_capture_is_rendered_and",
       "en": "the capture is rendered and its register row names no shell digest (pair.shell.sha256), so nothing was compared; {RENDER_TICK_UNDETERMINED}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 954
+      "line": 956
     },
     {
       "id": "monitoring.index.the_drive_export_address_answered",
       "en": "the Drive export address answered `{declaredType}`, which is the application shell",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 887
+      "line": 889
     },
     {
       "id": "monitoring.index.the_drive_export_address_served",
       "en": "the Drive export address served HTML under `{v1}`",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 924
+      "line": 926
     },
     {
       "id": "monitoring.index.the_evidentiary_digests_were_compared",
       "en": "the evidentiary digests were compared, both normalised under {key} v{version} (certain)",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1002
+      "line": 1004
     },
     {
       "id": "monitoring.index.the_fetched_bytes_identify_as",
       "en": "the fetched bytes identify as {key} v{version} but the baseline was normalised under {handler} v{handler_version}, so the raw bytes were compared",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 995
+      "line": 997
     },
     {
       "id": "monitoring.index.the_flagged_monitored_documents_could",
       "en": "the flagged monitored documents could not be read: {String}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2999
+      "line": 3001
     },
     {
       "id": "monitoring.index.the_reason_must_be_one",
       "en": "the reason must be one of {keys}, or {CUSTOM_REASON} with the member's own words of 1 to {FREQUENCY_REASON_MAX} characters. Nothing was written.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1914
+      "line": 1916
     },
     {
       "id": "monitoring.index.the_served_bytes_could_not",
       "en": "the served bytes could not be written to R2: {String}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1085
+      "line": 1087
     },
     {
       "id": "monitoring.index.v1_its_bytes_are_file",
       "en": "{v1} Its bytes are `{file}`, exactly as served; nothing here summarises them.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2568
+      "line": 2570
     },
     {
       "id": "monitoring.index.whether_a_document_is_watched",
       "en": "whether a document is watched is asked by a named member; a machine may propose it (R33) and never sets it. Nothing was written.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2006
+      "line": 2008
     },
     {
       "id": "monitoring.index.why_a_shape_your_teams",
       "en": "{why} A shape your team's Civicsmith cannot read is a shape it cannot promise to be watching.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 755
+      "line": 757
     },
     {
       "id": "monitoring.index.why_no_export_address_can",
       "en": "{why} No export address can be composed, so there is nothing this tick could compare but the application page.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 749
+      "line": 751
     },
     {
       "id": "monitoring.index.why_watching_it_is_the",
       "en": "{why} Watching it is the same question one step on: a tick would compare Google's listing page, whose bytes are rebuilt on every render, and report a change nobody made.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 742
+      "line": 744
     },
     {
       "id": "monitoring.named_requests.asked_by_a_named_member",
@@ -37546,7 +37714,7 @@
       "en": "an objective",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 3112
+      "line": 3114
     },
     {
       "id": "network-notices.declared.noticepost",
@@ -38526,140 +38694,168 @@
       "en": "a picture is a one-page document (page 0); the page asked for does not exist",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 102
+      "line": 103
     },
     {
       "id": "ocr-worker.contract.measurements_md_2026_09_10",
       "en": "MEASUREMENTS.md 2026-09-10 (CPDF-15) — tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed page, ONE engine version, ONE model. Every other corpus figure in that row is agreement-with-the-local-floor and NOT accuracy — and D-314/CPDF-16 measured that NEITHER local model passes the noise control, so no agreement figure may be read as accuracy at all.",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 42
+      "line": 43
     },
     {
       "id": "ocr-worker.contract.no_capture_with_that",
       "en": "no capture with that sha in that store",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 93
+      "line": 94
     },
     {
       "id": "ocr-worker.contract.no_namespace_by_that_name",
       "en": "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 91
+      "line": 92
+    },
+    {
+      "id": "ocr-worker.contract.ocr_psm_is_not_a_page_segmentation_mode",
+      "en": "this member's OCR_PSM setting is not a page-segmentation mode the engine accepts (a whole number from 0 to 13), so no page was read",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 111
     },
     {
       "id": "ocr-worker.contract.pages_must_be_a_non",
       "en": "pages must be a non-empty array of 0-based page numbers",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 92
+      "line": 93
+    },
+    {
+      "id": "ocr-worker.contract.something_failed_inside_this_call",
+      "en": "something failed inside this call before the page could be read; the step and the error's name are beside this message, and the page stays unread",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 109
     },
     {
       "id": "ocr-worker.contract.store_must_be_named_this",
       "en": "store must be named: this member reads a capture from one namespace and guesses none",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 87
+      "line": 88
     },
     {
       "id": "ocr-worker.contract.the_engine_refused_or_failed",
       "en": "the engine refused or failed on this frame",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 98
+      "line": 99
     },
     {
       "id": "ocr-worker.contract.the_engine_returned_no_anchorable",
       "en": "the engine returned no anchorable word for this page",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 99
+      "line": 100
     },
     {
       "id": "ocr-worker.contract.the_page_could_not",
       "en": "the page could not be turned into pixels, and the renderer says why",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 95
+      "line": 96
     },
     {
       "id": "ocr-worker.contract.the_picture_is_too_unclear_to_read",
       "en": "the picture is too unclear to read: the engine rated almost none of its words as read, so no text is given rather than text that is mostly wrong",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 104
+      "line": 105
     },
     {
       "id": "ocr-worker.contract.the_rendered_container_could_not",
       "en": "the rendered container could not be read back to samples",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 97
+      "line": 98
+    },
+    {
+      "id": "ocr-worker.contract.this_page_is_sideways_or_too_faint_to_read",
+      "en": "this page is sideways or too faint to read: the engine rated almost none of its words as read, so no text is given rather than text that is mostly wrong",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 107
     },
     {
       "id": "ocr-worker.contract.this_page_s_frame_is",
       "en": "this page's frame is larger than the largest frame measured to complete",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
-      "line": 96
-    },
-    {
-      "id": "ocr-worker.member.a_width_x_height_page",
-      "en": "a {width}x{height} page needs a {frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is {MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling — the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.",
-      "module": "ocr-worker",
-      "file": "ocr-worker/src/member.mjs",
-      "line": 121
+      "line": 97
     },
     {
       "id": "ocr-worker.member.the_engine_boxed_boxes_region",
       "en": "the engine boxed {boxes} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.",
       "module": "ocr-worker",
       "file": "ocr-worker/src/member.mjs",
-      "line": 195
+      "line": 278
+    },
+    {
+      "id": "ocr-worker.member.the_orientation_of_this_page_could_not_be_determined",
+      "en": "the engine could not tell which way up this page is, so it was read as it lies; if it is turned, the reading below is of a turned page.",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/member.mjs",
+      "line": 251
     },
     {
       "id": "ocr-worker.member.the_picture_has_no_lines_of_text",
       "en": "no line of text was found in this picture, so it was not given to the engine to read; there is nothing here this record could anchor.",
       "module": "ocr-worker",
       "file": "ocr-worker/src/member.mjs",
-      "line": 128
+      "line": 115
     },
     {
       "id": "ocr-worker.member.the_picture_is_only_partly_legible",
       "en": "the engine rated {confident} of the {words} words it read in this picture as read; the rest may be wrong or missing, so this reading is partial.",
       "module": "ocr-worker",
       "file": "ocr-worker/src/member.mjs",
-      "line": 230
+      "line": 339
     },
     {
       "id": "ocr-worker.member.the_route_route_hands_back",
       "en": "the {route} route hands back {mediaType} bytes, and no decoder for that container is built into this member — workerd has neither a canvas nor createImageBitmap. This page is not transcribed and is not guessed at.",
       "module": "ocr-worker",
       "file": "ocr-worker/src/member.mjs",
-      "line": 112
+      "line": 102
     },
     {
       "id": "ocr-worker.member.this_member_transcribes_one_page",
       "en": "this member transcribes ONE PAGE PER INVOCATION and {length} further page(s) ({deferred}) were NOT transcribed by this call. The bound is MEMORY and it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed (CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed — call again per page. Those pages keep their markers and stay honestly unread.",
       "module": "ocr-worker",
       "file": "ocr-worker/src/member.mjs",
-      "line": 218
+      "line": 324
+    },
+    {
+      "id": "ocr-worker.member.this_page_is_only_partly_legible",
+      "en": "the engine rated {confident} of the {words} words it read on this page as read; the rest may be wrong or missing, so this reading is only partly legible.",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/member.mjs",
+      "line": 340
     },
     {
       "id": "ocr-worker.member.unanchored_region_s_the_engine",
       "en": "{unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded — text nobody can point at a page to verify is exactly what this path refuses to put in the record.",
       "module": "ocr-worker",
       "file": "ocr-worker/src/member.mjs",
-      "line": 225
+      "line": 333
     },
     {
       "id": "ocr-worker.member.unrated_region_s_came_back",
       "en": "{unrated} region(s) came back with no engine-computed confidence and are stated as 'none' rather than given a number this member would have had to invent.",
       "module": "ocr-worker",
       "file": "ocr-worker/src/member.mjs",
-      "line": 227
+      "line": 335
     },
     {
       "id": "ocr-worker.pngsamples.a_scanline_uses_a_filter",
@@ -38667,6 +38863,13 @@
       "module": "ocr-worker",
       "file": "ocr-worker/src/pngsamples.mjs",
       "line": 46
+    },
+    {
+      "id": "ocr-worker.pngsamples.the_image_data_of_the_png_does_not_inflate",
+      "en": "the image data of the PNG does not inflate: it is not a valid compressed stream",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/pngsamples.mjs",
+      "line": 49
     },
     {
       "id": "ocr-worker.pngsamples.the_inflated_raster_is_shorter",
@@ -38680,217 +38883,245 @@
       "en": "the language model is {v1} B, the measured pair is {MODEL_BYTES} B (tessdata_fast eng) — a different model is a different measurement and this member's stated fidelity would not be about it",
       "module": "ocr-worker",
       "file": "ocr-worker/src/tessengine.mjs",
-      "line": 63
+      "line": 64
     },
     {
       "id": "odf-reader.odf.content_xml_byte_identical_across",
       "en": "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2281
+      "line": 2736
     },
     {
       "id": "odf-reader.odf.content_xml_could_not_be",
       "en": "content.xml could not be read whole ({why})",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2410
+      "line": 2865
     },
     {
       "id": "odf-reader.odf.content_xml_is_not_valid",
       "en": "content.xml is not valid UTF-8, so it was not decoded lossily and no digest was taken",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2417
+      "line": 2872
     },
     {
       "id": "odf-reader.odf.content_xml_is_not_valid_2",
       "en": "content.xml is not valid UTF-8, so the normalisation was not applied and no digest was taken",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2424
+      "line": 2879
     },
     {
       "id": "odf-reader.odf.content_xml_is_over_the",
       "en": "content.xml is over the declared-uncompressed text bound ({v1}), so it was not inflated and no digest was taken",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2408
+      "line": 2863
     },
     {
       "id": "odf-reader.odf.content_xml_not_read_its",
       "en": "content.xml not read: its repeats expand past {boundName} (stated in evidentiary.undetermined and by text())",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 1055
+      "line": 1288
     },
     {
       "id": "odf-reader.odf.content_xml_not_read_over",
       "en": "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 1054
+      "line": 1287
     },
     {
       "id": "odf-reader.odf.content_xml_references_length_package",
       "en": "content.xml references {length} package member(s) whose bytes it does not hold ({refs}{v1}); a digest of content.xml cannot speak for them, so none is claimed",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2421
+      "line": 2876
     },
     {
       "id": "odf-reader.odf.no_flavour_export_has_been",
       "en": "no .{flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2403
+      "line": 2858
     },
     {
       "id": "odf-reader.odf.no_intra_link_odf_manifest",
       "en": "no intra link: {ODF_MANIFEST_PART} could not be read ({manifestWhy}), so embedded members were not looked for (stated in evidentiary.undetermined)",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 1033
+      "line": 1266
     },
     {
       "id": "odf-reader.odf.no_intra_link_odf_manifest_2",
       "en": "no intra link: {ODF_MANIFEST_PART} lists no embedded member",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 1035
+      "line": 1268
     },
     {
       "id": "odf-reader.odf.no_odp_export_has_been",
       "en": "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2285
+      "line": 2740
     },
     {
       "id": "odf-reader.odf.part_odf_mimetype_part_is",
       "en": "part: {ODF_MIMETYPE_PART} is the FIRST member, STORED, CRC-verified",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 616
+      "line": 823
     },
     {
       "id": "odf-reader.odf.the_bytes_are_not_an",
       "en": "the bytes are not an OpenDocument package detected with certainty, so no container digest was taken",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2399
+      "line": 2854
     },
     {
       "id": "odf-reader.odf.the_packages_central_directory_could",
       "en": "the package's central directory could not be read ({why})",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2405
+      "line": 2860
     },
     {
       "id": "odf-reader.odf.the_sha256_of_the_flavour",
       "en": "the sha256 of the .{flavour} package's content.xml member (inflated, length and CRC-32 verified){v1}, odf-evidentiary v{ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: {v2}",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2428
+      "line": 2883
     },
     {
       "id": "odf-reader.odf.this_package_carries_no_meta",
       "en": "this package carries no meta.xml, so NO core-properties item is emitted; the absence of the part is not evidence the document has no author",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 719
+      "line": 944
+    },
+    {
+      "id": "office-readers.csv.a_tab_separated_file_is_read_by_this_entry",
+      "en": "a tab-separated file is read by this entry; its delimiter is decided from the bytes",
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 1251
     },
     {
       "id": "office-readers.csv.declared_by_the_producer_in_the_bytes",
       "en": "declared by the producer in the bytes",
       "module": "csv-reader",
       "file": "bio-plane/src/csv-reader/index.mjs",
-      "line": 344
+      "line": 625
+    },
+    {
+      "id": "office-readers.csv.delimiter_in_the_majority_of_the_records",
+      "en": "{name} occurs {v1} time(s) outside quotes on {times} of the {length} complete lines read, a majority",
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 408
     },
     {
       "id": "office-readers.csv.every_multi_byte_sequence_in_the_signature_window",
       "en": "every multi-byte sequence in the signature window is valid utf-8",
       "module": "csv-reader",
       "file": "bio-plane/src/csv-reader/index.mjs",
-      "line": 355
+      "line": 649
     },
     {
       "id": "office-readers.csv.length_candidates_are_equally_consistent",
       "en": "{length} candidates are equally consistent over {length_2} lines: {map}",
       "module": "csv-reader",
       "file": "bio-plane/src/csv-reader/index.mjs",
-      "line": 411
+      "line": 413
     },
     {
       "id": "office-readers.csv.length_complete_line_s_in",
       "en": "{length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything",
       "module": "csv-reader",
       "file": "bio-plane/src/csv-reader/index.mjs",
-      "line": 393
+      "line": 390
     },
     {
       "id": "office-readers.csv.likely_not_certain_a_declared_type_is_a_claim",
       "en": "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against",
       "module": "csv-reader",
       "file": "bio-plane/src/csv-reader/index.mjs",
-      "line": 956
+      "line": 1244
     },
     {
       "id": "office-readers.csv.likely_not_certain_validity_is_evidence",
       "en": "likely, not certain: validity is evidence, not the producer's declaration",
       "module": "csv-reader",
       "file": "bio-plane/src/csv-reader/index.mjs",
-      "line": 356
+      "line": 652
     },
     {
       "id": "office-readers.csv.name_occurs_v1_time_s",
       "en": "{name} occurs {v1} time(s) outside quotes on every one of the first {length} complete lines",
       "module": "csv-reader",
       "file": "bio-plane/src/csv-reader/index.mjs",
-      "line": 406
+      "line": 407
     },
     {
       "id": "office-readers.csv.no_candidate_map_occurs_a",
       "en": "no candidate ({map}) occurs a consistent, non-zero number of times over {length} lines",
       "module": "csv-reader",
       "file": "bio-plane/src/csv-reader/index.mjs",
-      "line": 415
+      "line": 417
+    },
+    {
+      "id": "office-readers.csv.the_bytes_are_not_utf_8_read_as_the_legacy_charset",
+      "en": "the bytes are not utf-8: read as the legacy charset {encoding}",
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 650
+    },
+    {
+      "id": "office-readers.csv.the_nul_bytes_of_ascii_text_sit_at_one_parity",
+      "en": "the NUL bytes of ASCII text sit at one parity: {encoding} without a BOM",
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 628
     },
     {
       "id": "office-readers.csv.us_ascii_not_utf_8_every_8_bit_superset",
       "en": "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically",
       "module": "csv-reader",
       "file": "bio-plane/src/csv-reader/index.mjs",
-      "line": 350
+      "line": 639
     },
     {
       "id": "office-readers.docx.the_macro_enabled_flavour_variant",
       "en": "the macro-enabled flavour {variant}, read as {format} (R33)",
       "module": "office-readers",
       "file": "bio-plane/src/docx.mjs",
-      "line": 1137
+      "line": 1307
     },
     {
       "id": "office-readers.docx.word_document_xml_not_read_over_the_size_bound",
       "en": "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())",
       "module": "office-readers",
       "file": "bio-plane/src/docx.mjs",
-      "line": 791
+      "line": 893
     },
     {
       "id": "office-readers.docx.word_document_xml_unreadable_element_references",
       "en": "word/document.xml unreadable: element references unavailable (stated)",
       "module": "office-readers",
       "file": "bio-plane/src/docx.mjs",
-      "line": 792
+      "line": 894
     },
     {
       "id": "office-readers.formats-xlsx.parts_content_types_part_and",
       "en": "parts: {CONTENT_TYPES_PART} and {WORKBOOK_PART} present",
       "module": "office-readers",
       "file": "bio-plane/src/formats-xlsx.mjs",
-      "line": 1245
+      "line": 1521
     },
     {
       "id": "op-declarations.index.an_act_or_a_draft",
@@ -39016,147 +39247,168 @@
       "en": "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 575
+      "line": 615
     },
     {
       "id": "pdf-pixels.pagepixels.a_jbig2_image_is_1",
       "en": "a JBIG2 image is 1 bit per sample",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 534
+      "line": 574
     },
     {
       "id": "pdf-pixels.pagepixels.an_inline_image_reading_inline",
       "en": "an inline image; reading inline images is not built",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 381
+      "line": 402
     },
     {
       "id": "pdf-pixels.pagepixels.decoding_the_image_would_need",
       "en": "decoding the image would need more memory than a decode may use here",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 109
+      "line": 120
     },
     {
       "id": "pdf-pixels.pagepixels.the_colour_space_has_pdfcomps",
       "en": "the colour space has {pdfComps} components; the image has {comps}",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 586
+      "line": 626
     },
     {
       "id": "pdf-pixels.pagepixels.the_decoded_image_is_short",
       "en": "the decoded image is short of its declared height",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 106
+      "line": 117
     },
     {
       "id": "pdf-pixels.pagepixels.the_decoder_could_not_read",
       "en": "the decoder could not read the image data",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 107
+      "line": 118
     },
     {
       "id": "pdf-pixels.pagepixels.the_document_is_encrypted_streams",
       "en": "the document is encrypted; streams are ciphertext to this reader",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 96
+      "line": 107
     },
     {
       "id": "pdf-pixels.pagepixels.the_image_s_filter_chain",
       "en": "the image's filter chain has no decoder here",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 104
+      "line": 115
     },
     {
       "id": "pdf-pixels.pagepixels.the_image_s_sample_layout",
       "en": "the image's sample layout has no decoder here",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 105
+      "line": 116
     },
     {
       "id": "pdf-pixels.pagepixels.the_image_xobject_s_stream",
       "en": "the image XObject's stream could not be read",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 103
+      "line": 114
     },
     {
       "id": "pdf-pixels.pagepixels.the_jbig2globals_stream_could_not",
       "en": "the /JBIG2Globals stream could not be read",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 532
+      "line": 572
     },
     {
       "id": "pdf-pixels.pagepixels.the_jpeg_2000_image_is",
       "en": "the JPEG 2000 image is {width}x{height}; the PDF declares {width_2}x{height_2}",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 589
+      "line": 629
     },
     {
       "id": "pdf-pixels.pagepixels.the_page_carries_a_text",
       "en": "the page carries a text layer; it does not need pixels",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 99
+      "line": 110
     },
     {
       "id": "pdf-pixels.pagepixels.the_page_carries_marks_that",
       "en": "the page carries marks that are not an embedded image",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 100
+      "line": 111
     },
     {
       "id": "pdf-pixels.pagepixels.the_page_composes_several_images",
       "en": "the page composes several images; compositing is not built",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 102
+      "line": 113
     },
     {
       "id": "pdf-pixels.pagepixels.the_page_index_is_outside",
       "en": "the page index is outside the document",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 97
+      "line": 108
     },
     {
       "id": "pdf-pixels.pagepixels.the_page_object_could_not",
       "en": "the page object could not be read",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 98
+      "line": 109
     },
     {
       "id": "pdf-pixels.pagepixels.the_page_paints_no_image",
       "en": "the page paints no image",
       "module": "pdf-pixels",
       "file": "pdf-worker/src/pagepixels.mjs",
-      "line": 101
+      "line": 112
+    },
+    {
+      "id": "pdf-pixels.pagepixels.this_reader_cannot_give_the",
+      "en": "this reader cannot give the page's true pixels for this image, and says so rather than give wrong ones",
+      "module": "pdf-pixels",
+      "file": "pdf-worker/src/pagepixels.mjs",
+      "line": 121
     },
     {
       "id": "pdf-worker.index.a_capture_is_read_from",
       "en": "a capture is read from the namespace the caller names, and no namespace by that name exists on any instance this member can be bound to, so nothing was read. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message. This is NOT the same answer as NOT_FOUND, which says the namespace exists and holds no such capture.",
       "module": "pdf-worker",
       "file": "pdf-worker/src/index.mjs",
-      "line": 157
+      "line": 186
     },
     {
       "id": "pdf-worker.index.a_capture_lives_inside_one",
       "en": "a capture lives inside one namespace and this member guesses none: the caller must say which. A default namespace here would read the real record for a caller who believed it was reading a scratch one.",
       "module": "pdf-worker",
       "file": "pdf-worker/src/index.mjs",
-      "line": 150
+      "line": 179
+    },
+    {
+      "id": "pdf-worker.index.from_and_count_are_whole",
+      "en": "the range asked is two whole numbers, the page to start at and how many pages, neither below zero.",
+      "module": "pdf-worker",
+      "file": "pdf-worker/src/index.mjs",
+      "line": 191
+    },
+    {
+      "id": "pdf-worker.index.over_envelope",
+      "en": "this document is {size} bytes and this member reads up to {bound} bytes, so its text was not read here.",
+      "module": "pdf-worker",
+      "file": "pdf-worker/src/index.mjs",
+      "line": 160
     },
     {
       "id": "people.checks.join_shape",
@@ -40430,28 +40682,28 @@
       "en": "a finding id, a material's ref or a calculation's id is not one the case file's format can spell as a path",
       "module": "public-read",
       "file": "bio-plane/src/public-read/casefile.mjs",
-      "line": 227
+      "line": 246
     },
     {
       "id": "public-read.casefile.a_finding_s_published_bytes",
       "en": "a finding's published bytes are not in the published object store at their hash",
       "module": "public-read",
       "file": "bio-plane/src/public-read/casefile.mjs",
-      "line": 134
+      "line": 153
     },
     {
       "id": "public-read.casefile.signed_document_text_does_not",
       "en": "the signed case document's text does not hash to its digest",
       "module": "public-read",
       "file": "bio-plane/src/public-read/casefile.mjs",
-      "line": 94
+      "line": 114
     },
     {
       "id": "public-read.casefile.the_case_edition_is_published",
       "en": "the case edition is published and its findings answer by hash; its case file was not built, because it would have left out something it must carry. Nothing was recorded for it.",
       "module": "public-read",
       "file": "bio-plane/src/public-read/casefile.mjs",
-      "line": 60
+      "line": 80
     },
     {
       "id": "public-read.container.a_part_named_in_the_manifest",
@@ -40626,14 +40878,14 @@
       "en": "`authored` is what op=conclude wrote into the frontmatter and what the gate holds the finding to; the section fields are the prose printed beside it in the signed bytes. `falsifier_override`, when it is not null, is the member who recorded that NO falsifier could be stated for this finding, and when they did so.",
       "module": "public-read",
       "file": "bio-plane/src/publication/worker.mjs",
-      "line": 852
+      "line": 869
     },
     {
       "id": "public-read.worker.format_zip_serialises_a_case",
       "en": "format=zip serialises a case CONTAINER, which is addressed by its MANIFEST's hash. This hash names a part inside a container, not a container.",
       "module": "public-read",
       "file": "bio-plane/src/publication/worker.mjs",
-      "line": 654
+      "line": 671
     },
     {
       "id": "public-read.worker.no_published_part_answers_to",
@@ -40647,14 +40899,14 @@
       "en": "publishedbytes requires sha256=<64 lowercase hex>. This surface answers BY HASH and never by path, so there is nothing to walk.",
       "module": "public-read",
       "file": "bio-plane/src/publication/worker.mjs",
-      "line": 578
+      "line": 595
     },
     {
       "id": "public-read.worker.tamper_evident_not_tamper_proof",
       "en": "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own record sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith.",
       "module": "public-read",
       "file": "bio-plane/src/publication/worker.mjs",
-      "line": 936
+      "line": 953
     },
     {
       "id": "public-read.worker.that_hash_is_published_and",
@@ -40668,42 +40920,42 @@
       "en": "this case file has {count} part(s); ask for one by part=<index>, one of {parts} (1 by default)",
       "module": "public-read",
       "file": "bio-plane/src/publication/worker.mjs",
-      "line": 692
+      "line": 709
     },
     {
       "id": "public-read.worker.this_hash_is_a_ratified",
       "en": "this hash is a ratified case document's and is published, but the record could not produce bytes that hash to it, so nothing is served. Nothing here says the document was never ratified: op=verify still answers for the hash.",
       "module": "public-read",
       "file": "bio-plane/src/publication/worker.mjs",
-      "line": 627
+      "line": 644
     },
     {
       "id": "public-read.worker.this_leg_is_named_and",
       "en": "this leg is NAMED and not served: what it rests on is not in the published record, so this surface can say the finding cites it and can hand over nothing of it.",
       "module": "public-read",
       "file": "bio-plane/src/publication/worker.mjs",
-      "line": 906
+      "line": 923
     },
     {
       "id": "public-read.worker.this_leg_rests_on_a",
       "en": "this leg rests on a published finding, so it can be served from this surface.",
       "module": "public-read",
       "file": "bio-plane/src/publication/worker.mjs",
-      "line": 905
+      "line": 922
     },
     {
       "id": "public-read.worker.this_teams_civicsmith_cannot_hand",
       "en": "this team's Civicsmith cannot hand over the bytes of that edition, so its conclusion is not rendered here. It is NOT read from the working record instead: the frozen strength and the rendered body must come from the same bytes.",
       "module": "public-read",
       "file": "bio-plane/src/publication/worker.mjs",
-      "line": 854
+      "line": 871
     },
     {
       "id": "public-read.worker.this_teams_civicsmith_has_no",
       "en": "this team's Civicsmith has no published object store configured, so its published bytes are not servable. The hash is genuine and this team's Civicsmith cannot hand over the bytes.",
       "module": "public-read",
       "file": "bio-plane/src/publication/worker.mjs",
-      "line": 641
+      "line": 658
     },
     {
       "id": "publication.deliverer.who_delivered_this_ratification_was",
@@ -42838,49 +43090,49 @@
       "en": "no active registered signing keys; an admin must register a member key before anything can be ratified",
       "module": "ratification",
       "file": "bio-plane/src/ratification/ops.mjs",
-      "line": 172
+      "line": 175
     },
     {
       "id": "ratification.ops.ratifying_is_a_members_own",
       "en": "ratifying is a member's own signed act, delivered through that member's own signed-in session. The credential that asked is the operator's `{cls}`-class bearer token: the signature says who authorised publication, and the credential that delivers it decides when the record changes, so a bearer token may not carry it in (D-421).",
       "module": "ratification",
       "file": "bio-plane/src/ratification/ops.mjs",
-      "line": 411
+      "line": 414
     },
     {
       "id": "ratification.ops.ratifying_is_a_members_signed",
       "en": "ratifying is a member's signed act. An assistant's credential may prepare the finding and may never carry the signature in, whoever's key made it (DEC-24 rule 4).",
       "module": "ratification",
       "file": "bio-plane/src/ratification/ops.mjs",
-      "line": 386
+      "line": 389
     },
     {
       "id": "ratification.ops.so_its_container_is_assembled",
       "en": ", so its container is assembled ({zip}).",
       "module": "ratification",
       "file": "bio-plane/src/ratification/ops.mjs",
-      "line": 313
+      "line": 316
     },
     {
       "id": "ratification.ops.the_case_document_has_changed",
       "en": "the case document has changed since it was reviewed; read it again and re-sign",
       "module": "ratification",
       "file": "bio-plane/src/ratification/ops.mjs",
-      "line": 158
+      "line": 161
     },
     {
       "id": "ratification.ops.the_case_is_committed_and",
       "en": "the case is committed and every member finding is already ratified at the version this case pinned{v1}",
       "module": "ratification",
       "file": "bio-plane/src/ratification/ops.mjs",
-      "line": 312
+      "line": 315
     },
     {
       "id": "ratification.ops.the_case_is_committed_length",
       "en": "the case is committed. {length} member finding(s) still to ratify (op=ratify): {awaiting}. This edition becomes servable as a container when the last of them lands.",
       "module": "ratification",
       "file": "bio-plane/src/ratification/ops.mjs",
-      "line": 311
+      "line": 314
     },
     {
       "id": "ratification.refusals.a_finding_in_caseid_rests",
@@ -46779,56 +47031,56 @@
       "en": "loading the workbook took longer than the time budget, so evaluation was not started",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 84
+      "line": 86
     },
     {
       "id": "sheet-worker.contract.no_capture_with_that_sha_in",
       "en": "no capture with that sha in that store",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 77
+      "line": 79
     },
     {
       "id": "sheet-worker.contract.recompute_is_not_enabled_here",
       "en": "workbook recompute is not enabled on this instance; an administrator enables it after the release deploys this member",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 78
+      "line": 80
     },
     {
       "id": "sheet-worker.contract.store_must_be_named_this",
       "en": "store must be named: this member reads a capture from one namespace and guesses none",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 73
+      "line": 75
     },
     {
       "id": "sheet-worker.contract.the_engine_did_not_load",
       "en": "the engine did not load as the pinned build, so no workbook is recomputed",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 79
+      "line": 81
     },
     {
       "id": "sheet-worker.contract.the_engine_refused_or_failed",
       "en": "the engine refused or failed on this workbook",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 83
+      "line": 85
     },
     {
       "id": "sheet-worker.contract.the_workbook_is_larger_than",
       "en": "the workbook is larger than this member recomputes; nothing of it was recomputed",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 81
+      "line": 83
     },
     {
       "id": "sheet-worker.contract.the_workbook_refers_to_other",
       "en": "the workbook refers to other workbooks, whose values are not here",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 82
+      "line": 84
     },
     {
       "id": "sheet-worker.enginecore.the_engine_module_did_not",
@@ -46968,119 +47220,126 @@
       "en": "an advertising or analytics slot",
       "module": "site-profiles",
       "file": "site-profiles/handlers/aspnet-webforms.mjs",
-      "line": 96
+      "line": 98
     },
     {
       "id": "site-profiles.aspnet-webforms.page_state_this_site_rebuilds",
       "en": "page state this site rebuilds on every visit",
       "module": "site-profiles",
       "file": "site-profiles/handlers/aspnet-webforms.mjs",
-      "line": 77
+      "line": 79
     },
     {
       "id": "site-profiles.client-rendered.an_application_that_builds_its",
       "en": "an application that builds its pages in the browser",
       "module": "site-profiles",
       "file": "site-profiles/handlers/client-rendered.mjs",
-      "line": 40
+      "line": 31
     },
     {
       "id": "site-profiles.client-rendered.no_links_and_no_prose_in_the",
       "en": "no links and no prose in the body",
       "module": "site-profiles",
       "file": "site-profiles/handlers/client-rendered.mjs",
-      "line": 26
+      "line": 27
     },
     {
       "id": "site-profiles.client-rendered.this_address_builds_its_page",
       "en": "This address builds its page in the browser, so what was collected is the empty frame and not the figures. It cannot be relied on as evidence of what the page shows. Collecting it properly needs the page to be rendered first.",
       "module": "site-profiles",
       "file": "site-profiles/handlers/client-rendered.mjs",
-      "line": 90
+      "line": 82
     },
     {
       "id": "site-profiles.index.a_file_the_page_needs",
       "en": "a file the page needs in order to look the way the source published it has not been collected",
       "module": "site-profiles",
       "file": "site-profiles/index.mjs",
-      "line": 258
+      "line": 279
     },
     {
       "id": "site-profiles.index.everything_around_the_document_itself",
       "en": "everything around the document itself, such as navigation and footers",
       "module": "site-profiles",
       "file": "site-profiles/index.mjs",
-      "line": 143
+      "line": 144
     },
     {
       "id": "site-profiles.index.everything_the_page_needs_to",
       "en": "everything the page needs to read correctly is held; some decoration is not",
       "module": "site-profiles",
       "file": "site-profiles/index.mjs",
-      "line": 260
+      "line": 281
     },
     {
       "id": "site-profiles.index.no_handler_recognised_this_document",
       "en": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported",
       "module": "site-profiles",
       "file": "site-profiles/index.mjs",
-      "line": 299
+      "line": 320
     },
     {
       "id": "site-profiles.index.the_document_differs_and_this_kind",
       "en": "the document differs and this kind of document is not recognised well enough to say whether the difference matters",
       "module": "site-profiles",
       "file": "site-profiles/index.mjs",
-      "line": 220
+      "line": 241
+    },
+    {
+      "id": "site-profiles.index.the_document_is_written_in",
+      "en": "the document is written in an encoding this system cannot read, so it is compared byte for byte",
+      "module": "site-profiles",
+      "file": "site-profiles/index.mjs",
+      "line": 176
     },
     {
       "id": "site-profiles.index.the_source_served_exactly_the_same",
       "en": "the source served exactly the same document",
       "module": "site-profiles",
       "file": "site-profiles/index.mjs",
-      "line": 214
+      "line": 235
     },
     {
       "id": "site-profiles.index.the_substance_and_the_appearance",
       "en": "the substance and the appearance are both the same; only machinery this site rebuilds on every visit differs",
       "module": "site-profiles",
       "file": "site-profiles/index.mjs",
-      "line": 228
+      "line": 249
     },
     {
       "id": "site-profiles.index.the_substance_is_the_same",
       "en": "the substance is the same; something around it changed, such as navigation or related links",
       "module": "site-profiles",
       "file": "site-profiles/index.mjs",
-      "line": 226
+      "line": 247
     },
     {
       "id": "site-profiles.index.the_substance_of_the_document",
       "en": "the substance of the document differs",
       "module": "site-profiles",
       "file": "site-profiles/index.mjs",
-      "line": 223
+      "line": 244
     },
     {
       "id": "site-profiles.wordpress.a_page_published_with_wordpress",
       "en": "a page published with WordPress",
       "module": "site-profiles",
       "file": "site-profiles/handlers/wordpress.mjs",
-      "line": 26
+      "line": 27
     },
     {
       "id": "site-profiles.wordpress.a_version_stamp_on_a_design",
       "en": "a version stamp on a design file",
       "module": "site-profiles",
       "file": "site-profiles/handlers/wordpress.mjs",
-      "line": 87
+      "line": 88
     },
     {
       "id": "site-profiles.wordpress.an_advertising_or_analytics",
       "en": "an advertising or analytics slot",
       "module": "site-profiles",
       "file": "site-profiles/handlers/wordpress.mjs",
-      "line": 89
+      "line": 90
     },
     {
       "id": "skills.skilldoctrine.11_and_14a_and_sk",
@@ -50293,175 +50552,175 @@
       "en": "a {scheme} reference is not something this surface fetches",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 995
+      "line": 999
     },
     {
       "id": "subresources.subresources.a_viewer_must_be_able",
       "en": "a viewer must be able to verify every byte it substitutes against the record before showing it",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1397
+      "line": 1401
     },
     {
       "id": "subresources.subresources.and_earlier_capture_undetermined",
       "en": " (and {count} earlier capture whose page the record does not name, counted as undetermined)",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1076
+      "line": 1080
     },
     {
       "id": "subresources.subresources.and_earlier_captures_undetermined",
       "en": " (and {count} earlier captures whose page the record does not name, counted as undetermined)",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1077
+      "line": 1081
     },
     {
       "id": "subresources.subresources.by_a_capture_undetermined",
       "en": " by a capture the record does not name (undetermined)",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1074
+      "line": 1078
     },
     {
       "id": "subresources.subresources.by_capture",
       "en": " by capture {capture}",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1073
+      "line": 1077
     },
     {
       "id": "subresources.subresources.cross_origin_script_image_or_media",
       "en": "cross-origin script, image, or media: advertising, analytics, and social widgets are not part of the document",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 761
+      "line": 763
     },
     {
       "id": "subresources.subresources.derived_banner",
       "en": "<!-- DERIVED ARTIFACT, not evidence. Generated by bio-plane from the capture\n     {primarySha}\n     at {when}. The raw bytes as served are the evidence and are stored\n     separately, unmodified. This file has had scripts and frames removed and\n     every subresource reference replaced with an about:capture#<sha256>\n     placeholder resolved from data/snapshot-manifest.json. Opened without a\n     resolving viewer it renders blank, on purpose. -->\n",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 405
+      "line": 407
     },
     {
       "id": "subresources.subresources.entries_with_fetched_this_capture",
       "en": "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, made by the capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. A capture ratified as evidence must re-fetch them.",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1311
+      "line": 1315
     },
     {
       "id": "subresources.subresources.every_a_the_page_carried",
       "en": "Every <a> the page carried, characterised. `intra` resolves inside this record and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another record is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1361
+      "line": 1365
     },
     {
       "id": "subresources.subresources.every_entry_the_viewer_renders",
       "en": "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion.",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1362
+      "line": 1366
     },
     {
       "id": "subresources.subresources.found_in_region_basis_which",
       "en": "found in {region_basis}, which belongs to the site rather than to this document",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 765
+      "line": 767
     },
     {
       "id": "subresources.subresources.held_back_from_a_previously_observed",
       "en": "held back from a previously observed runtime limit so the invocation ends on our terms rather than mid-fetch",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1033
+      "line": 1037
     },
     {
       "id": "subresources.subresources.index_of_the_render_companion",
       "en": "index of the render companion's placeholders to the content-addressed captures they resolve to",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1396
+      "line": 1400
     },
     {
       "id": "subresources.subresources.no_limit_was_reached",
       "en": "no limit was reached, so the ceiling is at least spent_this_invocation and its true value is unknown",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1325
+      "line": 1329
     },
     {
       "id": "subresources.subresources.not_fetched_during_this_capture",
       "en": "not fetched during this capture: the source was seen serving these exact bytes at {last_fetched}{v1}, across {documents} documents on this host{v2}, and they are reused from the record rather than requested again",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1072
+      "line": 1076
     },
     {
       "id": "subresources.subresources.one_of_family_size_responsive",
       "en": "one of {family_size} responsive candidates for one picture; the largest is captured",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 756
+      "line": 758
     },
     {
       "id": "subresources.subresources.the_address_is_not_public_https",
       "en": "the address is not public https, and the fence that guards the primary locator guards this one",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 996
+      "line": 1000
     },
     {
       "id": "subresources.subresources.the_capturing_worker_s_clock",
       "en": "the capturing Worker's clock, stamped as this capture issued the request",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 719
+      "line": 721
     },
     {
       "id": "subresources.subresources.the_earliest_and_latest_instants",
       "en": "the earliest and latest instants at which this composite's parts were fetched, per clock. `capture` instants were stamped by this capture; `record` instants are when an earlier capture's fetch of a reused part was filed, on the Store's clock. The two are never ordered against each other, so a composite holding both states each and leaves the composite-wide earliest and latest null. undetermined counts held parts whose instant the record does not give.",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 749
+      "line": 751
     },
     {
       "id": "subresources.subresources.the_fanout_cap_was_reached",
       "en": "the fanout cap was reached before this reference; it is recorded rather than dropped so the truncation is visible",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1039
+      "line": 1043
     },
     {
       "id": "subresources.subresources.the_raw_capture_is_the",
       "en": "the raw capture is the evidence and is never rewritten, so showing the page as it was needs a separate artifact that says it is one",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1393
+      "line": 1397
     },
     {
       "id": "subresources.subresources.the_runtime_refused_an_outbound",
       "en": "the runtime refused an outbound request at this count; record it and pass it back as platformCeiling",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1324
+      "line": 1328
     },
     {
       "id": "subresources.subresources.the_runtime_refused_another",
       "en": "the runtime refused another outbound request in this invocation; the source was never asked, and this says nothing about whether it would have answered",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1120
+      "line": 1124
     },
     {
       "id": "subresources.subresources.this_invocation_reached_the_runtime",
       "en": "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it",
       "module": "subresources",
       "file": "bio-plane/src/subresources.mjs",
-      "line": 1032
+      "line": 1036
     },
     {
       "id": "tasks.checks.forwarding_hands_an_obligation_to",
@@ -50545,175 +50804,175 @@
       "en": "text produced by a machine carries the image region a reader can check it against; without one, nothing in the record can be verified against the pixels it came from",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1100
+      "line": 1147
     },
     {
       "id": "text-chain.textchain.a_page_extent_names_which_page",
       "en": "a page extent names which page (0-based)",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1152
+      "line": 1199
     },
     {
       "id": "text-chain.textchain.a_region_confidence_is_either",
       "en": "a region's confidence is either the stated string 'none' or {value, basis}; an absent confidence is not the same claim as a stated absent one",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1020
+      "line": 1067
     },
     {
       "id": "text-chain.textchain.a_region_extent_names_the",
       "en": "a region extent names the region that was checked: {detail}",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1156
+      "line": 1203
     },
     {
       "id": "text-chain.textchain.a_transcription_must_name_at",
       "en": "a transcription must name at least one step that produced it; {v1} was given, and text with no stated provenance is indistinguishable from text a publisher typed",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 600
+      "line": 601
     },
     {
       "id": "text-chain.textchain.an_attestation_carries_the_date",
       "en": "an attestation carries the date it was made",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1146
+      "line": 1193
     },
     {
       "id": "text-chain.textchain.an_attestation_is_scoped_to",
       "en": "an attestation is scoped to what was actually checked — one of {keys}. An unscoped attestation would be read as covering the whole document, which is the generous reading of a claim nobody made",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1150
+      "line": 1197
     },
     {
       "id": "text-chain.textchain.an_attestation_names_no_member",
       "en": "an attestation names no member. Nobody said this, and unattributed is not the same as attested",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1144
+      "line": 1191
     },
     {
       "id": "text-chain.textchain.confidence_basis_v1_is_not",
       "en": "confidence basis '{v1}' is not {keys}. A number a model reported about itself is not a calibrated confidence and may not be thresholded as one — it costs nothing to produce, which is exactly what makes it worthless as evidence",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1023
+      "line": 1070
     },
     {
       "id": "text-chain.textchain.decoded_glyphs_held",
       "en": "{count} decoded glyph(s)",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1929
+      "line": 1979
     },
     {
       "id": "text-chain.textchain.reported_characters_no_text_read",
       "en": "{reported} character(s) its producer counted and no text this merge can read",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1928
+      "line": 1978
     },
     {
       "id": "text-chain.textchain.step_i_is_not_an",
       "en": "step {i} is not an object",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 603
+      "line": 604
     },
     {
       "id": "text-chain.textchain.step_i_is_v1_which",
       "en": "step {i} is '{v1}', which is not one of {keys}. A step nobody classified is neither a derivation nor a verification, and this record will not guess which",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 606
+      "line": 607
     },
     {
       "id": "text-chain.textchain.step_i_names_a_calibration",
       "en": "step {i} names a calibration that is not a readable identifier ({stringify}). A transcription names the MEASUREMENT its grade rests on so a superseded measurement can name exactly the transcriptions resting on it; a pointer nothing can resolve breaks that join while looking like it works",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 631
+      "line": 632
     },
     {
       "id": "text-chain.textchain.string_is_a_machine_credential",
       "en": "'{String}' is a machine credential. Attesting is a person saying they checked this text against the image — an act with a name behind it. A machine cannot perform it, and recording one would put a claim on the record that nobody holds",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1141
+      "line": 1188
     },
     {
       "id": "text-chain.textchain.text_a_machine_read_off",
       "en": "Text a machine read off an image has to say WHERE on the page it came from, so anyone can look at that part of the scan and see for themselves. Without it the reading cannot be checked against the document at all.",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 507
+      "line": 508
     },
     {
       "id": "text-chain.textchain.text_source_is_chain_a",
       "en": "text_source is '{chain}', a single label. A transcription's provenance is a CHAIN — each step naming what performed it — because 'ocr' does not say which engine, and an engine is what a re-run and a calibration are OF",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 597
+      "line": 598
     },
     {
       "id": "text-chain.textchain.the_anchor_names_kind_string",
       "en": "the anchor names kind '{String}'; a transcription's anchor is a pdf-page reference (I2 IC-1), because that is the arm carrying page and rect",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1103
+      "line": 1150
     },
     {
       "id": "text-chain.textchain.the_anchor_names_no_page",
       "en": "the anchor names no page (0-based integer required)",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1105
+      "line": 1152
     },
     {
       "id": "text-chain.textchain.the_anchor_names_no_rect",
       "en": "the anchor names no rect; a page alone is not a region a reader can be pointed at",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 1109
+      "line": 1156
     },
     {
       "id": "text-chain.textchain.the_step_step_claims_fidelity",
       "en": "the {step} step claims fidelity {stringify} and names no calibration. A {step_2} step's cap is UNDETERMINED until a measurement of it exists, and a letter written here without one would be the record claiming a fidelity nobody measured",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 640
+      "line": 641
     },
     {
       "id": "text-chain.textchain.the_step_step_claims_fidelity_2",
       "en": "the {step} step claims fidelity {stringify}. What a member typed is UNDETERMINED until a SECOND member attests it against the page; a letter on the step itself would be the typist grading their own work",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 647
+      "line": 648
     },
     {
       "id": "text-chain.textchain.the_step_step_does_not",
       "en": "the {step} step does not name its {unnamed}. Who performed a derivation, and what it produced, are the facts the chain exists to carry — a calibration is OF a named producer and format, and neither can be recovered from the word '{step_2}'",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 619
+      "line": 620
     },
     {
       "id": "text-chain.textchain.the_step_step_names_no",
       "en": "the {step} step names no engine. What performed a derivation is the fact the chain exists to carry — a calibration is OF an engine and a version, and neither can be recovered from the word '{step_2}'",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 612
+      "line": 613
     },
     {
       "id": "text-chain.textchain.this_step_step_claims_fidelity",
       "en": "this {step} step claims fidelity {cap}, stronger than the {have} the chain already carries. A derivation can only weaken what it received: text that was cleaned is more READABLE, not more RELIABLE, and the hazard of this whole capability is output that looks better than its input",
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
-      "line": 675
+      "line": 704
     },
     {
       "id": "translations.declared.translationgrant",
