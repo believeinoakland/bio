@@ -111,3 +111,17 @@ Causes: G134a, G134c, G134d (emits), G133c, G133d, G125d, G124c, G128e (docx/ppt
 5. file-safety `rows.test.mjs` R24 and the reading-pipeline PDF test `R40 R36 (G26)` (45 s, a PDF test, not touched by this module) were red in the run; the first is on the START's list.
 
 **Deferred:** none. **Size (session_01Pv6M4ffDmqfEt4kYWWRrfK): test runs 18, module lines 4,430** (docx 1,362 + pptx 1,077 + formats-xlsx 1,558 + office-xml 432 = 4,429, csv 1; `wc -l`).
+
+## J8 · COMPLETE
+
+COMPLETE · OFFICE-READERS #16 · fix round 9: G134a, G134c, G134d (emits), G133c, G133d, G125d, G124c, G128e (docx), G131e (xlsx), G131g, G124 quotes. R12, R30, R36-R45 applied, each named by its own test; office-readers 119 pass, 0 fail; format, architecture, coverage (39 of 39), words 0 failures. Ownership: one file to add to `paths`: `bio-plane/src/office-xml.mjs` (new, the shared scanner and decode).
+
+REPORT items (details in my record):
+1. ooxml (3): `decodeText` not yet exported (my fallback in office-xml.mjs goes dead when it is; send a CHANGE to remove it); `readPartPieces` should await its handler so a reader can yield between pieces.
+2. runtime-limits (2): add row kind `office`, name `decoded_chars`, standard/alpha/protective 33,554,432, key `limit.office.decoded_chars`; I keep `OFFICE_DECODED_CHARS_MAX` (docx.mjs, pptx.mjs) "proposed; BOB records" until then. It cannot bind below the 32 MiB ceiling of a read in pieces; it is a backstop.
+3. doc-clean `oracles.test.mjs` R5 compares the whole text() answer, now with `counts.scanned_bytes` (a work count that differs with the copy's bytes): it must leave that field out. Red now.
+4. extraction `g41.test.mjs` R97 (docx over 1 MiB of cells) asserts the old G128e cliff: reading-pipeline-1 passes `inlineCellsMax` to the docx entry and extraction-2 rewrites it. Red now on `more:true`.
+5. Added answer field `served:{bytes,blocks}` on xlsx `cellsIn` (R37); add to the requirement if wanted. pptx lists no table cells, so R45 omits nothing there.
+6. xlsx R44 reading: the retained objects of a workbook are the typed cells a read holds (so an unopted read of more than 250,000 cells is refused `TOO_MANY_OBJECTS`; with `inlineCellsMax` they are held and the read is not). The shared-strings list is not counted (R12/32 MiB bound it). Say if you want it otherwise.
+Reds seen that are not mine: file-safety `rows.test.mjs` R24 (on the START's list) and reading-pipeline `R40 R36 (G26)` PDF test.
+Replaces nothing: J7 stands (decodeText fallback in office-xml.mjs until ooxml merges); no answer needed to complete.
