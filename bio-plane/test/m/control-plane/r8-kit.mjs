@@ -18,7 +18,7 @@ const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.ur
 export const MB = 1024 * 1024;
 export const BIAS = "This group holds that contracts should be adopted in public session.";
 
-export function makeKit({ tag = "r8kit", counting = false, bindings = {}, outbound = null, serviceBindings = null } = {}) {
+export function makeKit({ tag = "r8kit", counting = false, bindings = {}, outbound = null, serviceBindings = null, workers = null } = {}) {
   const ADM = `adm-${tag}-0123456789abcdef`, PASSWORD = `the founder's long password, ${tag}`, ORIGIN = "https://group.example";
   const sha = (b) => createHash("sha256").update(b).digest("hex");
   const later = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -301,7 +301,8 @@ export function makeKit({ tag = "r8kit", counting = false, bindings = {}, outbou
       return new Response(f.rate ? slowBody(f.bytes, f.rate) : f.bytes, { headers });
     }),
   };
-  const mf = new Miniflare(OPTIONS);
+  /* `workers`: other workers hosted beside the plane under the one Miniflare (a fleet member from its committed bundle, bound by name in `serviceBindings`) */
+  const mf = new Miniflare(workers ? { workers: [{ name: "plane", ...OPTIONS }, ...workers] } : OPTIONS);
   const plane = (url, init = {}) => mf.dispatchFetch(new URL(url, ORIGIN).href, init);
   return { mf, OPTIONS, plane, ADM, PASSWORD, founder, person, screenCall, get, post, until, later, sha, te, serve, slowBody, upstream, pdfOf, acquire, projectOf, ownerOf, questionOf,
            preparedEdition, sitAndSign, gateLine, reviseUnnamed, profileSet, signStepOf, ceremonyPreflight, newKey, signText, R, MB };

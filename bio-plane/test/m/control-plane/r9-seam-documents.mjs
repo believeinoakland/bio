@@ -100,6 +100,8 @@ export function sections(kit, counting) {
   };
   const readingOf = async (k, auth, sha) => body(await k.get(auth, { op: "reading", sha256: sha }));
   const rowsOf = async (k, auth, sha) => (body(await k.get(auth, { op: "owedwork", sha })) || {}).owed || [];
+  /* G164: a row that ended `finished` is no longer owed; the last run of its (digest, kind) stands in `last`. The rows a digest has are the owed ones plus its last runs. */
+  const rowsAndLast = async (k, auth, sha) => { const w = body(await k.get(auth, { op: "owedwork", sha })) || {}; return [...(w.owed || []), ...(w.last || [])]; };
   const listOf = async (k, auth, archive) => body(await k.get(auth, { op: "archivelist", archive, limit: "1000" })) || {};
   /* "searchable" is asked of the member's find-in-this-document (op=search answers bundles by their own words, not a capture's units) */
   const findIn = async (k, auth, sha, term) => { const f = body((await k.post(auth, "findin", { scope: { capture: sha }, kinds: ["term"], term })).body); return ((f && f.kinds || [])[0] || {}).items || []; };
@@ -156,7 +158,7 @@ export function sections(kit, counting) {
       const r = await readingOf(k, ann, sha);
       if (r && r.found === true) {
         assert.ok(r.job && typeof r.job === "object", "op=reading answers `job` beside a reading");
-        const rows = (await rowsOf(k, await k.founder(), sha)).filter((x) => x.kind === "reading" || x.kind === "ocr");
+        const rows = (await rowsAndLast(k, await k.founder(), sha)).filter((x) => x.kind === "reading" || x.kind === "ocr");
         assert.equal(r.job.state === null, rows.length === 0, `job.state is null exactly when no reading row exists (state ${r.job.state}, rows ${rows.length})`);
       }
     }
@@ -488,11 +490,14 @@ export function sections(kit, counting) {
     const admin = await k.founder();
     let row = null;
     if (session) row = await k.until(async () => { const r = (await rowsOf(k, admin, session)).find((x) => x.sha === session); return r && r.state === "final" ? r : null; }, 120000, 2000);
-    const detail = (row && row.detail) || press.body.detail || {};
     const text = JSON.stringify({ body: press.body, row });
     assert.ok(text.includes(HELD_ELSEWHERE), `the same bytes pressed by another member are refused as held by another bundle: ${text.slice(0, 500)}`);
-    assert.equal(detail.kind ?? (row && row.detail && row.detail.kind), "whole", `the refusal is for the whole only: ${JSON.stringify(detail)}`);
-    assert.ok(detail.holder, `the refusal names the holder: ${JSON.stringify(detail)}`);
+    /* plane R97: the row keeps the refusal's facts in `failed_why[<code>]`, as provenance answered them (control-plane R124, G160) */
+    const facts = (row && row.failed_why && row.failed_why[HELD_ELSEWHERE]) || {};
+    assert.equal(facts.kind, "whole", `the refusal is for the whole only: ${JSON.stringify(row && row.failed_why)}`);
+    assert.equal(facts.sha, k.sha(a), `and names the digest refused: ${JSON.stringify(facts)}`);
+    /* D-15: provenance names the holder only to a caller who may see the holder's record; the second member shares no project with the first, so it is null */
+    assert.equal(facts.holder ?? null, null, `the holder is not named to a member who cannot see it: ${JSON.stringify(facts)}`);
   });
 
   /* ======================================== 7 · G129a ======================================== */
