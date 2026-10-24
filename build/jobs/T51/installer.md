@@ -415,3 +415,14 @@ COMPLETE (B28, R85). Merged tranche/T51 first.
 **Deferred / other modules.** `words-reads.json` (design's) lacks the 63 keys. The generated bundle and `invite-page.mjs` are untouched; the bundle is stale (BOB regenerates).
 
 Size (session_0133bNMzhnXsy441ZfjLU6xR): test runs 62, module lines 3262
+
+## Job 83 (G157, R84 amended: Containers on Free is 401 / 1000, K4970) — INSTALLER #27, session_01EBZBHpiJKKbVycjEP1ox2e
+
+**Done in this module.** `newgroup/src/ready.mjs`: `CONTAINERS_CODES.planUnauthorized = {status: 401, code: 1000}`; `containersState` reads the plan answer (that pair, or 100328) before `special(e)`, so a measured Free answer is state `plan` and the plan stop (R6); a bare 1000 under another status is "unknown" (Cloudflare's words), a 401 of another code stays "approve again". `newgroup/test/fixture.mjs` brought to the measured shapes: Containers plan 401/1000 (the measured message), R2 not entitled 403/10042, no prefix 404/10007, taken prefix 403/10031 (plan probe 400/100328 was already so); new knobs `containers: "bare1000"` and `"expired"`. `r84.test.mjs` R84 (2) gains the two controls. No sentence added.
+
+**Found in installer-steps (another module; needs BOB, two one-line changes), both measured in `measure-R9-account-shapes.md`:**
+1. `api.mjs` `failureOf` raises every 401 as `ApproveAgain` with `status` and `apiMessage` but NOT `code`; so `containersState` cannot tell the measured Free answer (401/1000) from an expired permission, and the fresh run asks the founder to approve again instead of showing the plan stop. Fix: `{ status: 401, code: e.code, apiMessage: e.message }`.
+2. `probes.mjs` `registerSubdomain` reads a taken prefix as HTTP 409; the measured answer is 403 / code 10031. Fix: also accept `e.code === 10031` (not `e.status === 403` alone: 403 is also "not permitted"). Until then a taken name ends the run as a lookup failure instead of asking for another.
+With both applied locally (then reverted, not committed) `newgroup/test/r84.test.mjs`: 8 pass, 0 fail. Without them: R84 (2) and R84 (4) fail on these two points alone.
+
+**Checks run (before the steps fix).** format 0 failures; architecture 0 failures; coverage 0 failures (75 of 75). Not yet run: words, ownership, impact, the full suite (waiting on the installer-steps change, which changes the suite's outcome).
