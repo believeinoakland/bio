@@ -1,6 +1,6 @@
 # docprofile (T51)
 
-**Status** · session_01PUj465a1Wdq4EoDMWhQ3Ga · depth 2 · COMPLETE · handled B7
+**Status** · session_01PUj465a1Wdq4EoDMWhQ3Ga · depth 2 · WAITING ON BOB (J10) · handled B7
 
 ## J1 · REPORT
 
