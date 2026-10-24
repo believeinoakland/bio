@@ -121,6 +121,13 @@ console.log("\n--- R16: a page that shows text ---");
   }
   const allowed = await render(withOps("BT /F1 1 Tf (a) Tj ET", "/Fm 7 0 R"), 0, { allowTextPage: true });
   t("R16 allowTextPage renders it", [allowed.ok, allowed.page_marks?.hasTextOps], [true, true]);
+  {
+    /* G132i: a page of a scan with a text line over it (pdfgen "mixed"), generated, through the real render */
+    const folio = await generatePdf({ kind: "pdf", seed: "folio", size: { pages: 2, lines: 3 }, kinds: ["mixed"], scan: { dpi: 100, bits: 1 } }).bytes();
+    const refused = await render(folio, 0), allowedFolio = await render(folio, 0, { allowTextPage: true });
+    t("R16 a scan with a text line is refused PAGE_HAS_TEXT_LAYER without the option", [refused.ok, refused.reason], [false, "PAGE_HAS_TEXT_LAYER"]);
+    t("R16 a scan with a text line is rendered with allowTextPage: its scan, its text noted", [allowedFolio.ok, allowedFolio.page_marks?.hasTextOps, allowedFolio.upright], [true, true, true]);
+  }
   for (const [label, ops] of [["a bare BT … ET", "BT ET"], ["BT with only a font set", "BT /F1 1 Tf ET"],
     ["Tj spelled inside a string", "/Span << /ActualText (a note Tj about it) >> BDC EMC"]]) {
     const r = await render(withOps(ops), 0);
