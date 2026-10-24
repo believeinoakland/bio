@@ -1,6 +1,6 @@
 # file-safety (T51)
 
-**Status** · session_015APyFqZNBSsmXdhzGxAkgD · depth 2 · COMPLETE · handled B19
+**Status** · session_01DQq5SUCuskyyd5iwgeuLR7 · depth 2 · COMPLETE · handled B21
 
 ## Completion (T51-183, words)
 
@@ -456,3 +456,27 @@ Size (session_015APyFqZNBSsmXdhzGxAkgD): test runs 9, module lines 3374
 ## J18 · COMPLETE
 
 COMPLETE: job 54 applied (R39 render wake is now while renderBatch left a view or safe copy queued; completion section of my record). Red/green shown; module tests 132 pass, 2 fail (rows.test R24 inherited, X19 flaked once). checks: format, architecture, coverage, words, ownership 0. FOR SCHEDULER (job 33): scheduler files.test.mjs:279 assumes the old wake (nextAt > at) and now fails; passes on the tranche base. Details in my record.
+
+## Completion (job 99, fix round 9 batch D: R39, R12 amended, G171; K4998; B21)
+
+**Entries applied.** (A) R39: `renderWake` answers `now` while a view is queued with no back-off (`render_wait_at` NULL), so a view queued after a batch that left nothing is drawn at the next wake, not 300 s after the last batch; a view in back-off keeps its instant. (B) R12: `#renderCall` classes a renderer answer of 5xx with no classed refusal as `SCANNER_UNREACHABLE` (transient, back-off retry); a 5xx that carries its own `code` keeps its class, a 4xx with none stays `RENDER_FAILED`, final. (C) R4/R39 sibling (R-PATH): `fs_files.queued_at` was cut to the second, so a file queued within the second of a `scanBatch` read as "sent by that batch" and waited a poll (300 s) against R4's "a newly queued file at once". It is now written to the millisecond (`#onReceipt`, `#ensureQueued`); the unused `second` helper is removed. The fix is mine, not the diagnosis's diff: that diff covered A and B only.
+
+**Four fields.**
+- Cause: A, `renderWake` fell to the last batch plus the poll for a view whose `render_wait_at` is NULL. B, a 5xx with no class fell to `RENDER_FAILED`. C, the second-truncated `queued_at` compared `<=` the batch instant.
+- Why missed: `wakes.test.mjs` and `r39-render-wake` queued a view before any batch or after a batch that left work; `r12-render-classes` made "unreachable" a rejected fetch, never a 5xx. No test queued a file after a batch that left nothing, in either queue.
+- Red first (`r39-after-batch.test.mjs`, before the fix): `now, not now + 299000 (the last batch plus the poll)`, actual 1791461100000, expected 1791460801000; `[ 'failed', 'RENDER_FAILED' ]` expected `[ 'queued', 'SCANNER_UNREACHABLE' ]`; scan: actual 1791461100000, expected 1791460800001. Green after: 3 pass, 0 fail.
+- Platform check: **L** (the seam in Miniflare, the real alarm) is BOB's; I did not run it.
+
+**Seam §16.** `--test-name-pattern="R9 seam §16"` on `control-plane/t51-round9-seam.test.mjs`, alone: 5 tests, 5 pass, 0 fail, including G137a (safe view, 205 ms) and G136b (OVER_BOUND 3.1 s; S5 42.6 s).
+
+**Scheduler.** Its tests assume no old wake: the scheduler, notice-producers, queue, plane, store-door, op-declarations and affordances tests that name file-safety all pass (the three failures `node --test` lists are `fixtures/registry-*.json` and `plane/r8-headofline-entry.mjs`, helper files my grep handed it, not tests).
+
+**Deferred.** None. **Found in another module.** None. **Rows owed.** None (no sentence added). **Generated artifacts staled.** The plane bundle (`bio-plane.bundled.mjs`) takes file-safety's source; BOB regenerates it at the round end. **New files outside `paths`.** None. **Requirement wording.** R12 and R39 already carry the amendments; the scan clause (C) needs none (R4 already says "at once").
+
+**Tests and checks.** `test/m/file-safety/*.test.mjs`: tests 137, pass 137, fail 0 (R24 and X19 now green). `impact.mjs origin/tranche/T51 HEAD`: affected modules 11 of 176. format 176 modules, 0 failures; architecture 0 failures; coverage 57 of 57 ids named, 0 failures; ownership 3 files, 0 failures; words 0 failures.
+
+Size (session_01DQq5SUCuskyyd5iwgeuLR7): test runs 8, module lines 3376
+
+## J19 · COMPLETE
+
+COMPLETE · FILE-SAFETY #22 · job 99, batch D (G171): R39 renderWake now for a view queued with no back-off; R12 5xx with no class is SCANNER_UNREACHABLE; R4 sibling fixed (queued_at to the millisecond). Red first seen for all three; file-safety 137/137; control-plane seam §16 5/5 alone; format, architecture, coverage, words, ownership 0 failures. Platform check L is yours. Plane bundle stale (regenerate). Details in my record.
