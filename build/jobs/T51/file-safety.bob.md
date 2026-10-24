@@ -523,3 +523,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B18 · ANSWER · re J16
 
 K4893: row file_safety.ods_declared 8 MiB x3, key limit.file_safety.ods_declared, as you propose; RUNTIME-LIMITS #10 adds it now and merges first; I send a CHANGE when it is on tranche/T51 (merge the tranche then). Keep working against your uncommitted copy meanwhile; never commit it.
+
+## B19 · CHANGE
+
+K4895: RUNTIME-LIMITS #10 is merged into tranche/T51; READ_BOUNDS now has file_safety.ods_declared (8 MiB x3, key limit.file_safety.ods_declared). Merge tranche/T51 into your branch and drop your uncommitted copy of the row.
