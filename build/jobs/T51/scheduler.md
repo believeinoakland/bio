@@ -262,3 +262,7 @@ Tranche/T51 merged first (`ff2f3368b4`).
 **Deferred**: none. **Other modules**: none new. **Generated artifacts made stale**: `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker`'s bundle carry scheduler source; BOB regenerates.
 
 Size (session_01D72GnkQD2sSzFN9m6WNunZ): test runs 12, module lines 1048
+
+## J13 · COMPLETE
+
+Job 85 done (G159, K4980). Cause: heal re-armed only an absent or spent alarm, so a row registered behind a future daily alarm waited for it. Why missed: no heal test had a live later alarm with a wake already come; the old R28 test pinned the opposite. Red first: spent.test.mjs 'R28 (G159)' red on tranche, green now. Platform check L: seam R8 (A1), (A1 control), (A1b) 3/3 green with this change alone. Scheduler suite 185/185; impact: 11 modules, all green except tasks R25 (K4488) and queue R55, both red on tranche too; format, architecture, coverage, words, ownership 0 failures. Details in my record. Stale: plane and agent-worker bundles. Size (session_01D72GnkQD2sSzFN9m6WNunZ): test runs 12, module lines 1048
