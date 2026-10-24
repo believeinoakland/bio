@@ -167,7 +167,7 @@ test("R82 (G13): one heavy piece for each tick across rows: two readings going o
   assert.equal(x.read.length, 6, "three pieces each");
 });
 
-test("R82 (G13): the interrupted-run accounting is kept across pieces: a piece that never returns is counted and asked again at the same cursor; a piece that moved the cursor clears the count; three at one cursor end it stated", async () => {
+test("R82 (G13): the interrupted-run accounting is kept across pieces: a piece that never returns is counted and asked again at the same cursor; a piece that moved the cursor clears the count; three at one cursor hand that cursor to the reader to step past (K4904)", async () => {
   const d = sha("a long text whose pieces are killed now and then");
   const script = [];
   const answer = () => script.shift()();
@@ -200,7 +200,11 @@ test("R82 (G13): the interrupted-run accounting is kept across pieces: a piece t
   }
   [r] = rows(x);
   assert.equal(r.interrupted, 3);
-  assert.equal(r.final_why, stopped, "three interruptions at one cursor end it, stated");
+  /* (fix round 9, K4904) a window killed three times is no end of the read: the reader is handed it as `killedCursor` and steps past it, stated */
+  assert.equal(r.final_why, null, "three interruptions at one cursor do not end it");
+  script.push(more("c3"));
+  await x.s.onAlarm((at += 3_600_000));
+  assert.equal(x.read[x.read.length - 1].killedCursor, "c2", "the cursor killed three times is handed to the reader to step past");
   /* control: a reading that never answers `more` is handed no cursor but the empty one */
   const y = await world(undefined, { readAnswer: () => ({ ok: true, read: true }) });
   await y.call(`/pendingadd?kind=reading&sha=${d}`);

@@ -35,8 +35,9 @@
    UNIT it is on (the page or piece its cursor names, else the whole) stamped in `job_unit_attempts`, before its owner runs; every answer
    clears both stamps. A row found started and not finished at a later tick, by an isolate that is not running it, is an interrupted run:
    counted in `interrupted` (kept across a re-registration, never ending the row), and its unit counted one kill. A unit killed twice is
-   asked once more at half the budget; a unit killed three times is stated unread alone (`PAGE_KILLED_READER`, handed to the reader as
-   `killedPages`) while the row goes on with the rest; a unit that is no page (a whole file, a text piece) is the row's own end, stated.
+   asked once more at half the budget; a unit killed three times is stated unread alone (a page: `PAGE_KILLED_READER`, handed to the reader as
+   `killedPages`; a window its cursor names: handed as `killedCursor`, which the reader steps past, K4904) while the row goes on with the rest;
+   the whole of a file read with no cursor has no unit to leave out, and is the row's own end, stated.
    "Three interruptions end the whole read" is retired. A step that moved neither its cursor nor any counter ends the row `final`,
    `NO_PROGRESS`, on that tick (R101 (1)); a transient failure is tried again, never written as the end (R101 (3)). A tick runs the
    light kinds (`subresources`, `unpack`, `grade`) and at most one heavy row, so one document's read never holds the object that answers
@@ -452,7 +453,12 @@ export function pendingOf(ctx, deps = {}) {
       if (u.tries >= UNIT_KILLS_MAX) killedPages.push(p);
       else if (u.tries === UNIT_KILLS_MAX - 1) halfBudgetPages.push(p);
     }
-    return { killedPages: killedPages.sort((a, b) => a - b), halfBudgetPages: halfBudgetPages.sort((a, b) => a - b) };
+    /* (2c item 8, K4904) a window the row's cursor names (a text window, a slide, a sheet block), killed three times: handed as `killedCursor`, so
+       the reader steps past it (reading-pipeline's `skipKilled`), states it and goes on */
+    const d = json(row.detail, {}), unit = unitOf(d);
+    const here = unit.startsWith("c") ? all(`SELECT tries FROM job_unit_attempts WHERE sha=? AND kind=? AND unit=?`, row.sha, row.kind, unit)[0] : null;
+    const killedCursor = here && here.tries >= UNIT_KILLS_MAX ? (d.cursor ?? d.next) : null;
+    return { killedPages: killedPages.sort((a, b) => a - b), halfBudgetPages: halfBudgetPages.sort((a, b) => a - b), ...(killedCursor !== null ? { killedCursor } : {}) };
   };
   /* a row found started by an isolate that is gone: an interrupted run, counted, and one kill of the unit it was on; a unit that is no page
      the reader can leave out, killed three times, ends the row stated */
@@ -465,8 +471,9 @@ export function pendingOf(ctx, deps = {}) {
                 WHERE sha=? AND kind=?`, "OBJECT_STOPPED", row.sha, row.kind);
       const unit = unitOf(json(row.detail, {}));
       const u = all(`SELECT tries FROM job_unit_attempts WHERE sha=? AND kind=? AND unit=?`, row.sha, row.kind, unit)[0];
-      const paged = PAGED.includes(row.kind) && pageOf(unit) !== null;
-      if (u && u.tries >= UNIT_KILLS_MAX && !paged) {
+      /* a page or a window the reader can step past goes on (`killedPages`, `killedCursor`); only the whole, which has no unit to leave out, ends stated */
+      const steppable = PAGED.includes(row.kind) && (pageOf(unit) !== null || unit.startsWith("c"));
+      if (u && u.tries >= UNIT_KILLS_MAX && !steppable) {
         sql.exec(`UPDATE keeps_pending SET final_why=?, last_why=?, state='final', ended_at=?, last_try=? WHERE sha=? AND kind=?`,
                  PAGE_KILLED_READER, PAGE_KILLED_READER, now(), at, row.sha, row.kind);
         noteLast(row, { last_ms: null, own_ms: null, wait_ms: null, last_mem: null, max_stretch_ms: null, rows_read: null, rows_written: null, units: null }, "final");

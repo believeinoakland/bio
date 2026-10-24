@@ -399,6 +399,22 @@ test("R101 (2): a unit that is no page (the whole file) killed three times ends 
   assert.ok(!["final", "finished"].includes(q.state), `three interruptions on three pieces do not end it: ${q.state} ${q.final_why}`);
 });
 
+test("R101 (2c item 8, K4904): with the real table, a window cursor stamped three times reaches `readHeld` as `killedCursor`, and the row goes on past it; a page keeps `killedPages`", async () => {
+  const d = sha("a deck whose slide 7 kills its reader");
+  const step = (q) => (q.killedCursor === "slide-7" ? { ok: true, more: true, detail: { cursor: "slide-8" }, counters: { written: 0, skipped: 1 } } : NEVER());
+  let x = await world(undefined, { readAnswer: step });
+  const db = x.db;
+  x.jobs.registerJob({ kind: "reading", sha: d, detail: { cursor: "slide-7" } });
+  let at = Date.now() + 1000;
+  for (let i = 0; i < 3; i++, at += 3_600_000) { assert.equal(await alarm(x, at), "killed"); x = await world(db, { readAnswer: step }); }
+  await x.s.onAlarm(at);
+  const last = x.read[x.read.length - 1];
+  assert.equal(last.killedCursor, "slide-7", "stamped three times: handed to the reader");
+  assert.deepEqual(last.killedPages, []);
+  const r = pendingOf(x.ctx).jobRow({ sha: d, kind: "reading" });
+  assert.deepEqual([r.state, JSON.parse(JSON.stringify(r.detail)), r.skipped], ["partial", { cursor: "slide-8" }, 1], "stepped past, stated as skipped, going on");
+});
+
 /* ---- R103: the watchdog's fields ---- */
 
 test("R103 watchdogRan G94: `watchdog_ran` and `running_since` join R80's fields in an administrator's `owedwork`, with and without a digest; a member's answer carries none of the seven", async () => {
