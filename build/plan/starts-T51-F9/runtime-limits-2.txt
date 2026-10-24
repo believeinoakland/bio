@@ -30,3 +30,5 @@ Mail with `--module runtime-limits`; record `build/jobs/T51/runtime-limits.md` (
 15. `office`, `structural_part_bytes`: 8,388,608 for all three, key `limit.office.structural_part_bytes` (K4859, OOXML #4's J5; protective).
 16. `office`, `piece_chars`: 8,388,608 characters for all three (a count), key `limit.office.piece_chars` (K4859).
 17. `image`, `picture_source`: 603,979,776 bytes for all three, key `limit.image.picture_source` (K4859, PDF-PIXELS #9's J5).
+18. `ocr`, `picture_edge`: 4,096 pixels for all three (a count), key `limit.ocr.picture_edge` (K4860, OCR-WORKER #10's J5).
+19. `document`, `part_bytes`: standard 104,857,600, alpha 33,554,432, protective 33,554,432, key `limit.document.part_bytes` (K4860, DOC-CLEAN #4's J4).
