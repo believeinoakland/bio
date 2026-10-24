@@ -1,6 +1,6 @@
 # image-codecs (T51)
 
-**Status** · session_015qkDnLHcfXrkvLPEKdDKjT · depth 2 · WAITING ON BOB (J5) · handled B7
+**Status** · session_015qkDnLHcfXrkvLPEKdDKjT · depth 2 · COMPLETE · handled B7
 
 ## J1 · COMPLETE
 
