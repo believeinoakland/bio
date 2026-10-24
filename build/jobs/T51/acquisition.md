@@ -611,3 +611,17 @@ Fix round 9 complete for acquisition (R113-R121, N1, B39 answer applied). Head: 
 - format: 176 modules; 0 failures. architecture (acquisition): 55 files, 223 imports; 0 failures. coverage: 75 of 75 live ids named; 0 failures. words: 0 failures. ownership (against tranche/T51): 22 files changed by acquisition; 0 failures.
 
 Size (session_01CAeRS3pRKYW3YBwY2Fp8nC): test runs 14, module lines 4342
+
+## Job 65 (acquisition-2; ACQUISITION #34; B40 · G124b, R-PATH) · R115 on the sibling paths
+
+Red first, on the tip: `r9-multipart-memory.test.mjs` with the same 20 MiB capture served with no length, with a shorter declared length (12 MiB) and a longer one (22 MiB): peak 30 MiB and over, against the kept bytes plus one part. The R115 test was vacuous before job 23: shown red against `git show 879a7ce60f:bio-plane/src/acquisition/index.mjs` copied in place (3 reds: "the ledger counted the kept bytes (peak 0)"; the first test now asserts `peak() >= kept` too), green on the fix.
+
+Fix (`bio-plane/src/acquisition/index.mjs`): (1) the whole0 join for the PDF title is gone: the title is read only where the whole is in one buffer (a single part, or the buffer a declared length asked for); a several-part capture received otherwise answers `title: null` at capture, named by its reading (R98 states it; test "named by its reading"). Choice, as BOB allowed: title left to the reading, stated in R115. Detection already reads `firstHead`. (2) A body with no declared length keeps its parts singly and `keepWhole` hands them to the one buffer part by part (it nulls each as copied; the shared array drops the reference), counted by the ledger as the bytes they become, with no read-back and no compose, as R96's tests require. (3) A body that overruns the length it declared holds no bytes (`dropKept`): the whole is made from the stored parts (`putFromParts`, else read back one at a time, the ledger counting the whole and one part). (4) A declared-longer body fills the front of its buffer (a `subarray` view is put). (5) The kept bytes are released at the end of the keep. `keepWhole` takes an optional `ledger`.
+
+Claim to read with care: in (2) the join allocates the whole while the parts are still referenced, then drops them as they are copied; the ledger counts it as a handover, and the resident peak depends on the engine committing a zero-filled buffer lazily. Not measured here.
+
+Requirement: R115 amended in `build/requirements/acquisition.md` (my own file, K4210); ownership lists that one file, accepted at the merge.
+Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/acquisition/*.test.mjs`: tests 325, pass 325, fail 0. Users named by impact (capture, doorbell, screens-intake, control-plane): capture tests that name acquisition: 243/243.
+Checks: format 0 failures; architecture (acquisition) 0 failures; coverage (acquisition) 75 of 75, 0 failures; `checks/run.mjs`: no finding names acquisition (words 19 failures, none mine, none in my files); ownership: 1 failure, the requirements file, as B3/B4 accept.
+Deferred: none. Words: no new sentence.
+Size (session_018XJZd3Y6SC5rJeKSargNwt): test runs 6, module lines 4358
