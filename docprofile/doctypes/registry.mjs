@@ -112,17 +112,18 @@ export async function doctypeForYielding(ctx, opts) {
   return s.value;
 }
 
-/** THE WORK BUDGET (R40; fix round 9, G140, G133f). Every `detect` of one classification shares `ctx.work`, an object `{chars,
- *  limit}`: `limit` is this many times the characters of the text the types are asked about (the view, R39), and a `detect` adds
- *  to `chars` the characters it examines (a pass of a pattern over a window counts that window). A classification whose
- *  detects have examined more than `limit` asks no further type, and its answer says which it stopped before. */
+/** THE WORK BUDGET (R40; fix round 9, G140, G133f; K4876). Every `detect` of one classification shares `ctx.work`, an object
+ *  `{chars, limit}`: `limit` is this many times the characters of the text the types are asked about (the view, R39), for each
+ *  registered type, and a `detect` adds to `chars` the characters it examines (a pass of a pattern over a window counts that
+ *  window). Each type is charged its window, so an ordinary text asks every type; a classification whose detects have examined
+ *  more than `limit` (one type's runaway) asks no further type, and its answer says which it stopped before. */
 export const CLASSIFY_WORK_FACTOR = 4;
 
 /* What the types are handed: the text bounded to the view above CLASSIFY_WHOLE_MAX_CHARS, for a text of any kind (R39: head and
    sample; `ctx.sheets`, when it is the supplied sheets, gives the sheets' heads), `window` saying which part of the text that is
    (`{from, to, of}`: the characters of `ctx.text` it holds and how many the whole text has), and the shared `work`. A text at or
    under the bound is handed whole and unchanged, the same string, copied nowhere. */
-function bounded(ctx) {
+function bounded(ctx, typeCount) {
   const base = ctx && typeof ctx === "object" ? ctx : {};
   /* A `text` that is an accessor is read by each `detect` as it always was, never once here: such a ctx is wrapped, not copied. */
   const own = Object.getOwnPropertyDescriptor(base, "text");
@@ -132,7 +133,7 @@ function bounded(ctx) {
   const v = over ? classificationView(whole, Array.isArray(base.sheets) ? base.sheets : null) : null;
   const text = v ? v.view : whole;
   const counted = text !== null;
-  const work = { chars: 0, limit: counted ? CLASSIFY_WORK_FACTOR * text.length : Infinity };
+  const work = { chars: 0, limit: counted ? CLASSIFY_WORK_FACTOR * text.length * Math.max(1, typeCount) : Infinity };
   const window = { from: 0, to: counted ? text.length : 0, of: counted ? whole.length : 0 };
   const dctx = plain
     ? { ...base, ...(v ? { text } : {}), window, work }
@@ -146,8 +147,8 @@ function bounded(ctx) {
    every `detect` it runs. A throw from a `detect` in the main walk leaves the generator, as it left `recognise`; one in the
    `also` pass is recorded, as `askAll` records it. The members are those registered when the walk starts. */
 function* walk(ctx) {
-  const { dctx, work, classified_over } = bounded(ctx);
   const all = types.all();
+  const { dctx, work, classified_over } = bounded(ctx, all.length);
   const considered = [];
   let best = null, stopped = null;
   for (const m of all) {
