@@ -186,3 +186,6 @@ export const boundOf = (kind, name) => {
 
 /* the size the caller measured, the figure it was judged against and the member sentence's key */
 export const statement = (kind, name, size) => ({ size, bound: boundOf(kind, name), key: rowOf(kind, name).key });
+
+/* the row that is a document's whole-read ceiling by its kind (K4965): pdf, csv and text each their own `bytes`, any other kind or none the whole-load row `pdf.bytes` */
+export const wholeReadRow = (kind) => (kind === "csv" || kind === "text" ? [kind, "bytes"] : ["pdf", "bytes"]);

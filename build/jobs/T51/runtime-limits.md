@@ -200,3 +200,12 @@ Size (session_01KNBHkxJ8mc4TazP5cEK4wj): test runs 3, module lines 175
 ## J13 · COMPLETE · re B12
 
 COMPLETE · RUNTIME-LIMITS #15 · B12 (K4958): R35's six READ_BOUNDS rows added (provenance.part_verify_bytes 8 MiB, acquisition.odf_digest_bytes 8 MiB, acquisition.large_fetch_bytes 8 MiB, case.copy_now_bytes 2 MiB, monitoring.docket_read_bytes 8 MiB, following.portal_parse_bytes 4 MiB), each same(), keys limit.<kind>.<name>; tested through boundOf and statement (R35, R31). Suite 59/59; format, architecture, coverage, words, ownership 0 failures. No sentence added. Bundles with read-bounds.mjs as input are stale. Details in my record.
+
+## Completion (RUNTIME-LIMITS #16, fix round 9, batch D, B13, K4965)
+
+**Entries applied.** R36: `wholeReadRow(kind) -> [kind, name]` exported from `bio-plane/src/read-bounds.mjs` beside `boundOf`: `"csv"` gives `["csv","bytes"]`, `"text"` `["text","bytes"]`, any other kind or none `["pdf","bytes"]`. No sentence, nothing else. Capture and control-plane untouched (BOB's round-end re-points).
+**Test.** `bio-plane/test/m/runtime-limits/read-bounds.test.mjs`, `R36:` — pdf, csv, text, other kinds (docx, json, `PDF`, empty, `constructor`, null, undefined, a number, no argument); `boundOf(...wholeReadRow(k))` equals the row's active figure.
+**Cause.** Two declarations of one rule (K4164). **Why missed.** No requirement named the map. **Red first.** The import failed (`does not provide an export named 'wholeReadRow'`) before the function was added. **Platform check.** N.
+**Deferred.** Nothing. **Found in another module.** Nothing new. Requirements text R36 still reads `(not yet met: T51)`: BOB's file, to update.
+**Ran.** runtime-limits suite (`test/m/runtime-limits/*.test.mjs`): 60 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 176 (no user imports the new export yet). Checks: architecture 0 failures; coverage 34 of 34 ids named, 0 failures; ownership 0 failures; words 33 failures, none in runtime-limits, same count without my change; format 1 failure, `build/rulings.md:4959` K4964 (BOB's file; no standing-list decision stated), same without my change. Sentences added: none, so no rows owed.
+Size (session_01QmrRSjKFkRXYrPwjisNpp2): test runs 4, module lines 3
