@@ -1,5 +1,5 @@
 /* plane R85 (proposed, fix round 6, G44; K4662, K4665), THE SHAPE PROOF OF THE TWO CALLERS: a workbook added as a workbook and a file previewed in the safe view are asked of the real door in a child
-   under TEST-SUPPORT #9's value limit and the cap `capFor(N) + 39` for a file of N MB (165 for the 1.44 MB workbook; `shape/g44.probe.mjs`), the file held, a project and a member set up. The 10 MiB-declared
+   under TEST-SUPPORT #9's value limit and the cap `capFor(N)` (the one cap convention, G123a) for a file of N MB (165 for the 1.44 MB workbook; `shape/g44.probe.mjs`), the file held, a project and a member set up. The 10 MiB-declared
    short-row workbook: the add is refused WORKBOOK_TOO_LARGE with its count and the bound, nothing written; the safe view answers within its bound with the first sheet's cut stated; the child lives in both.
    Controls: the 20,000-cell workbook is added, read, linted, its inputs read and previewed; a 60-sheet workbook states how many sheets it has; an ODS over file-safety's bound is refused with its size and
    bound; a 4 MB and a 17.7 MB CSV are previewed with the cut stated. Green on the merged WORKBOOKS and FILE-SAFETY (K4680). HEAVY: run alone. */

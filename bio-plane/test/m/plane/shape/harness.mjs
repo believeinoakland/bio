@@ -39,9 +39,7 @@ import { xlsxChunks, xlsxFileBytes, xlsxInfo, XLSX_SHEET } from "./xlsx-gen.mjs"
 import { g44Plan, xlsxFile, odsFile, bytesOfStream } from "./g44-gen.mjs";
 
 const SELF = fileURLToPath(import.meta.url);
-export const OBJECT_MB = 128;
-/** the old-space cap for a file whose bytes the object holds, `heldMiB` of them: the object's 128 less them, no "idle +" */
-export const capFor = (heldMiB) => Math.floor(OBJECT_MB - heldMiB);
+export { OBJECT_MB, capFor, CAP_SOURCE } from "./cap.mjs";   /* G123a: the ONE cap convention (cap.mjs), for a PDF run and a sheet run alike */
 /** a synthetic text PDF (reading-pipeline's `bigpdf.mjs`, the generator its heavy synth uses) written once to the fixture cache and fed as `pdfDoc` feeds a file; `bytes` are about `targetBytes`, so
  *  `targetBytes / pages` is the bytes a page carries (G26's volume carries 11.8 KB a page). Deterministic text; the padding is random, so the file is made once and kept by its parameters. */
 export async function synthPdfDoc({ pages, linesPerPage = 30, targetBytes = 0 }) {
@@ -105,7 +103,7 @@ export function report(label, r) {
   if (r.fed && r.fed.format) L.push(`  upload profile format: ${JSON.stringify(r.fed.format)}`);
   if (r.fed && r.fed.held) L.push(`  held in the stand-in bucket (key tail, real bytes, stated length): ${JSON.stringify(r.fed.held)}`);
   if (r.fed) L.push(`  fed: ${r.fed.bytes} B in ${r.fed.parts} part(s), upload ${r.fed.uploadMs} ms, keep_pending ${r.fed.keep_pending}, idle heap ${r.fed.idleMB} MB, ledger [${r.fed.ledger}], stubs ${r.fed.door.stubs}, stub faults ${r.fed.door.threw}`);
-  for (const t of r.ticks) L.push(`  tick ${t.n}: ${t.ms} ms, peak heap+buffers ${t.peakMB} MB (${t.aboveBaseMB} above base), rows [${t.rows.map((x) => `${x.kind} att ${x.attempts} int ${x.interrupted}${x.final_why ? " final: " + x.final_why : ""}`)}], units ${t.units}${t.readingFor ? `, readingFor ${JSON.stringify(t.readingFor)}` : ""}`);
+  for (const t of r.ticks) L.push(`  tick ${t.n}: ${t.ms} ms (node's wall time, reported only), counts ${JSON.stringify(t.counts)}, peak heap+buffers ${t.peakMB} MB (${t.aboveBaseMB} above base), rows [${t.rows.map((x) => `${x.kind} att ${x.attempts} int ${x.interrupted}${x.final_why ? " final: " + x.final_why : ""}`)}], units ${t.units}${t.readingFor ? `, readingFor ${JSON.stringify(t.readingFor)}` : ""}`);
   if (r.done) { const d = r.done; L.push(`  done: ${d.ticks} ticks, ${d.totalMs} ms, max tick ${Math.max(0, ...r.ticks.map((t) => t.ms))} ms, peak ${d.peakMB} MB, units ${d.units}, state ${JSON.stringify(d.state)}, found ${JSON.stringify(d.found)}, search ${JSON.stringify(d.search)}, extents ${JSON.stringify(d.extents)}, left [${d.left}]`); }
   for (const o of r.ops || []) L.push(`  op ${o.label}: status ${o.status}${o.err ? " ERR " + o.err : ""}, ${o.ms} ms, peak ${o.peakMB} MB, answer ${o.answerBytes} B, ok ${o.ok}${o.reason ? " " + o.reason : ""}${o.kind ? " kind " + o.kind : ""}${o.cells != null && typeof o.cells === "number" ? " cells " + o.cells : ""}${o.bound_cells != null ? " bound_cells " + o.bound_cells : ""}${o.size != null ? " size " + o.size : ""}${o.bound != null ? " bound " + o.bound : ""}${o.renderer_reason ? " " + o.renderer_reason : ""}${o.sheets ? " sheets " + JSON.stringify(o.sheets) : ""}${o.sheets_total != null ? " sheets_total " + o.sheets_total : ""} | ${o.head}`);
   if (r.done && r.done.largest) L.push(`  largest stored value: ${r.largestStored} B (readings ${r.done.largest.readings}, reading_history ${r.done.largest.history}, capture_text ${r.done.largest.text}); bound ${STORED_VALUE_BOUND} B: ${r.overBound ? "OVER" : "within"}; shim ${r.shim}`);
@@ -149,12 +147,28 @@ async function child(spec) {
                                      const whole = new Uint8Array(0); Object.defineProperty(whole, "length", { value: size }); bucket.held.set(k, whole); return { key: k, size }; },
              abort: async () => { over = true; } };
   };
+  /* COUNTS (R-CLOCK, G123b): what a tick did is counted, never timed: the evidence-store reads and the bytes they served, the statements run on the object's SQL and the rows they answered */
+  const ct = { gets: 0, bytes: 0, sql: 0, rowsOut: 0 };
+  const baseGet = bucket.get.bind(bucket);
+  bucket.get = async (k, ...a) => { const o = await baseGet(k, ...a); ct.gets++; if (o && typeof o.arrayBuffer === "function") { const ab = o.arrayBuffer.bind(o); o.arrayBuffer = async () => { const b = await ab(); ct.bytes += b.byteLength; return b; }; } return o; };
   const external = () => { let n = 0; for (const b of bucket.held.values()) n += b.byteLength; return n; };
   const used = () => { const m = process.memoryUsage(); return m.heapUsed + m.arrayBuffers - external(); };
   const mb = (n) => +(n / 1048576).toFixed(1);
 
-  const x = await store({ env: { CAPTURES: bucket, INSTANCE_NAME: "town" } });
-  const ctx = x.ctx;
+  let x = await store({ env: { CAPTURES: bucket, INSTANCE_NAME: "town" } });
+  let ctx = x.ctx;
+  /* the object's SQL, counted and, for the fault injectors (G123c), able to fail or to die: `deadCtx` is a killed object's storage (every statement throws, as an isolate killed mid-tick runs nothing more),
+     `failWrites` a store that refuses writes for a stretch (the transient failure of a tick two or later, N14) */
+  const faults = { failWrites: false, deadCtx: new WeakSet(), killAfterSql: null };
+  const instrument = (c) => { const sqlApi = c.storage.sql, raw = sqlApi.exec.bind(sqlApi);
+    const cur = (rows) => { let i = 0; const k = { next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; }, [Symbol.iterator]() { return k; },
+      toArray() { const o = rows.slice(i); i = rows.length; return o; }, one() { const r = k.toArray(); if (r.length !== 1) throw new Error(`expected one row, got ${r.length}`); return r[0]; } }; return k; };
+    sqlApi.exec = (q, ...a) => {
+      if (faults.deadCtx.has(c)) throw new Error("the object was killed");
+      if (faults.killAfterSql != null && ct.sql >= faults.killAfterSql) { faults.killAfterSql = null; faults.deadCtx.add(c); throw new Error("the object was killed"); }
+      if (faults.failWrites && /^\s*(INSERT|UPDATE|DELETE|REPLACE)/i.test(q)) throw Object.assign(new Error("the store did not answer"), { transient: true });
+      ct.sql++; const rows = raw(q, ...a).toArray(); ct.rowsOut += rows.length; return cur(rows); }; };
+  instrument(ctx);
   const rows = () => [...ctx.storage.sql.exec(`SELECT kind, attempts, interrupted, final_why, last_why, last_ms, last_mem, started_at FROM keeps_pending`)];
   const open = () => rows().filter((r) => r.final_why == null);
 
@@ -167,21 +181,21 @@ async function child(spec) {
     yield Buffer.from("ENDMARKER" + " ".repeat(total - n * 100 - 9));
   }
   /* the CSV's first data row (row 2) carries FIRSTROWMARK, the row at half the bytes MIDROWMARK, the last LASTROWMARK; `gen` says the last row's number and cells */
-  const gen = { sheet: null, lastRow: null, lastCells: null };
+  const gen = { sheet: null, lastRow: null, lastCells: null, markRows: {} };
   async function* csvChunks(total) {
     yield Buffer.from("id,name,amount,note\n");
     let n = 20, i = 0, buf = [], mid = false;
     for (; n < total; i++) {
-      const note = i === 0 ? "FIRSTROWMARK" : !mid && n >= total / 2 ? (mid = true, "MIDROWMARK") : `council note ${i} budget line`;
+      const note = i === 0 ? (gen.markRows.FIRSTROWMARK = 2, "FIRSTROWMARK") : !mid && n >= total / 2 ? (mid = true, gen.markRows.MIDROWMARK = i + 2, "MIDROWMARK") : `council note ${i} budget line`;
       const r = `${i},"name ${i}",${(i * 37) % 9973}.${i % 100},"${note}"\n`; buf.push(r); n += r.length;
       if (buf.length === 2000) { yield Buffer.from(buf.join("")); buf = []; }
     }
     buf.push(`LASTROWMARK,"last name",1.00,"the final row of the sheet"\n`);
-    gen.lastRow = i + 2; gen.lastCells = ["LASTROWMARK", "last name", "1.00", "the final row of the sheet"];
+    gen.lastRow = i + 2; gen.markRows.LASTROWMARK = i + 2; gen.lastCells = ["LASTROWMARK", "last name", "1.00", "the final row of the sheet"];
     yield Buffer.from(buf.join(""));
   }
   const source = doc.kind === "text" ? textChunks(doc.bytes) : doc.kind === "csv" ? csvChunks(doc.bytes) : doc.kind === "xlsx" ? xlsxChunks(doc.rows) : doc.held ? null : createReadStream(doc.path, { highWaterMark: 1 << 20 });
-  if (doc.kind === "xlsx") Object.assign(gen, doc.info);
+  if (doc.kind === "xlsx") { Object.assign(gen, doc.info); gen.markRows = { FIRSTROWMARK: 1, MIDROWMARK: doc.info.midRow, LASTROWMARK: doc.info.lastRow }; }
 
   /* the door's stub, with the fault: the first call on the first stub throws `{remote:true}` and that stub stays broken */
   const door = { stubs: 0, threw: 0 };
@@ -251,8 +265,7 @@ async function child(spec) {
              text: withText ? one(`SELECT max(length(CAST(text AS BLOB))) AS n FROM capture_text`) : null }; };
   let peak = base, peakRss = 0, peakAll = base;
   const sample = () => { const u = used(); if (u > peak) peak = u; if (u > peakAll) peakAll = u; const r = process.memoryUsage().rss; if (r > peakRss) peakRss = r; };
-  const timer = setInterval(sample, 2);
-  clearInterval(timer);
+  const timer = setInterval(sample, 2);   /* G123b: on for the ticks and the ops, cleared at the end (it was cleared on the next line, so `peakMB` was a tick-boundary reading) */
   /* G44: the ops asked of the real door (the object's own `fetch`, as the frame does) on the held file, without the reading pipeline's ticks (spec.ops: [{op, path, body}], "$SHA" and "$PROJECT" filled in) */
   if (spec.ops) {
     const fill = (v) => JSON.parse(JSON.stringify(v).replaceAll("$SHA", sha).replaceAll("$PROJECT", projectId || ""));
@@ -280,7 +293,24 @@ async function child(spec) {
     if (spec.profileFirstTick && n === 0) { const { Session } = await import("node:inspector"); prof = new Session(); prof.connect();
       const post = (m, p) => new Promise((ok, no) => prof.post(m, p, (e, r) => (e ? no(e) : ok(r))));
       await post("Profiler.enable"); await post("Profiler.setSamplingInterval", { interval: 500 }); await post("Profiler.start"); prof.stop = async () => (await post("Profiler.stop")).profile; }
-    await x.s.onAlarm(at); at += 3_600_000; n++;
+    const before = { ...ct, units: units() };
+    const nth = n + 1, F = spec.faults || {};
+    /* G123c, the fault injectors, acting through the real object at the tick they name (counts, never clocks): a leak inside the tick, a store that refuses writes, the owner that throws at its entry,
+       the evidence object gone, a kill after k statements, and a restart (a new object over the same storage, as the platform's after a kill or a deploy) */
+    let leaked = null;
+    if (F.leakAt === nth) setImmediate(() => { leaked = Buffer.alloc((F.leakMB || 30) << 20, 1); setImmediate(() => { leaked = null; }); });
+    if (F.storeFailAt === nth) faults.failWrites = true;
+    let restoreEntry = null;
+    if (F.entryThrowsAt === nth) { const ex = extractionOf(ctx), real = ex.readHeld; ex.readHeld = async () => { throw new Error("the reading owner threw at its entry"); }; restoreEntry = () => { ex.readHeld = real; }; }
+    if (F.objectGoneAt === nth) bucket.held.delete(`bio/captures/${sha}`);
+    if (F.killAt === nth) faults.killAfterSql = ct.sql + (F.killAfterSql ?? 40);
+    let threw = null;
+    try { await x.s.onAlarm(at); } catch (e) { threw = String(e && e.message || e).slice(0, 160); }
+    faults.failWrites = false; if (restoreEntry) restoreEntry();
+    at += 3_600_000; n++;
+    if (F.killAt === nth || F.restartAt === nth) {   /* the platform starts the object again over the same storage */
+      const db = x.db; faults.deadCtx.add(ctx);
+      x = await store({ db, env: x.env }); ctx = x.ctx; instrument(ctx); }
     if (prof) { const { writeFileSync } = await import("node:fs"); writeFileSync(spec.profileFirstTick, JSON.stringify(await prof.stop())); }
     sample();
     const ms = Date.now() - t;
@@ -290,9 +320,16 @@ async function child(spec) {
       try { const g = extractionOf(ctx).readingFor(sha, "class:admin"); rd = { ms: Date.now() - tr, state: g.completeness && g.completeness.state, read_through: g.read_through, total: g.total, more: g.more, units: (g.text_units || []).length, failure: g.reading && g.reading.failure }; }
       catch (e) { rd = { error: String(e && e.message || e).slice(0, 200) }; }
       sample(); }
-    emit({ ev: "tick", n, ms, readingFor: rd, largest: largest(false), peakMB: mb(peak), aboveBaseMB: mb(peak - base), peakRssMB: mb(peakRss), rows: rows(), units: units(), left: open().map((r) => r.kind) });
+    const counts = { gets: ct.gets - before.gets, bytesServed: ct.bytes - before.bytes, sql: ct.sql - before.sql, rowsOut: ct.rowsOut - before.rowsOut, unitsWritten: units() - before.units };
+    emit({ ev: "tick", n, ms, counts, threw, readingFor: rd, largest: largest(false), peakMB: mb(peak), aboveBaseMB: mb(peak - base), peakRssMB: mb(peakRss), rows: rows(), units: units(), left: open().map((r) => r.kind) });
   }
   clearInterval(timer);
+  /* G123b: search is judged by EXTENT: each mark is found in the text rows whose range holds the row the generator put it on (the truth), not by `total >= 1` alone */
+  const rowsOfRange = (r) => { const m = /(\d+)\D+(\d+)$/.exec(String(r || "")); return m ? [+m[1], +m[2]] : null; };
+  const markExtents = {};
+  for (const term of [...(doc.marks || []), ...(spec.marks || [])]) {
+    markExtents[term] = sql(`SELECT extent FROM capture_text WHERE capture_sha=? AND rowid IN (SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH ?)`, sha, term)
+      .map((r) => { try { return rowsOfRange(JSON.parse(r.extent).range); } catch { return null; } }); }
   const found = {}; for (const term of [...(doc.marks || []), ...(spec.marks || [])]) found[term] = count(`SELECT count(*) FROM capture_text_fts WHERE capture_text_fts MATCH ?`, term);
   const state = sql(`SELECT state, offered, written, over_bound FROM capture_text_state WHERE capture_sha=?`, sha)[0] || null;
   const extents = sql(`SELECT extent_kind, count(*) AS n, sum(truncated) AS cut, max(length(text)) AS longest FROM capture_text WHERE capture_sha=? GROUP BY extent_kind`, sha);
@@ -300,10 +337,10 @@ async function child(spec) {
   const search = {};
   for (const term of spec.search || []) {
     try { const r = await call(`http://do/search?q=${encodeURIComponent("passage:" + term)}&viewer=${encodeURIComponent("class:admin")}&limit=5`, { method: "POST", body: "null" });
-          const j = await r.json(); const res = j.result || {}; search[term] = { status: r.status, total: res.total ?? null, hits: Array.isArray(res.hits) ? res.hits.length : null, first: res.hits && res.hits[0] ? { bundle: res.hits[0].bundle_id, snippet: JSON.stringify(res.hits[0]).match(/ENDMARKER|FIRSTROWMARK|MIDROWMARK|LASTROWMARK/)?.[0] ?? null } : null }; }
+          const j = await r.json(); const res = j.result || {}; search[term] = { status: r.status, total: res.total ?? null, hits: Array.isArray(res.hits) ? res.hits.length : null, first: res.hits && res.hits[0] ? { raw: JSON.stringify(res.hits[0]).slice(0, 900), bundle: res.hits[0].bundle_id, snippet: JSON.stringify(res.hits[0]).match(/ENDMARKER|FIRSTROWMARK|MIDROWMARK|LASTROWMARK/)?.[0] ?? null } : null }; }
     catch (e) { search[term] = { error: String(e.message || e).slice(0, 200) }; }
   }
-  emit({ ev: "done", ticks: n, totalMs: Date.now() - T0, left: open().map((r) => r.kind), rows: rows(), units: units(), state, extents, last, found, search, largest: largest(true), gen,
+  emit({ ev: "done", ticks: n, totalMs: Date.now() - T0, left: open().map((r) => r.kind), rows: rows(), units: units(), state, extents, last, found, markExtents, search, largest: largest(true), gen,
          baseMB: mb(base), peakMB: mb(peakAll), peakRssMB: mb(peakRss), door });
   /* then the typed cells of the last row, made from the held file (extraction `cellsOf`, G41 D4): the same cap, the generator's cells expected */
   if (spec.cellsOf && gen.lastRow) {
