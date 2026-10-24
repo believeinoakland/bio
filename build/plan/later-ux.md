@@ -138,3 +138,4 @@
 - Document · a deterministic failure on the file's own bytes, final with its reason, not "try again" (G133c); "omitted with a statement": a reading over 1 MiB keeps its units and states the omitted part (G128e) · fix round 9 §5 · 2026-10-24
 - Document · "encrypted" and "could not be scanned" as their own states, "the scanner stopped at its limit" with the limit (G136a, G136b) · fix round 9 §5 · 2026-10-24
 - Add · a workbook refused with the count of its cells (G137e); a light-kind file refused over 50 MB or 1,048,576 rows with the figure (G131i) · fix round 9 §5 · 2026-10-24
+- Add · an upload whose job could not be registered (`capture.index.job_not_registered`); a body over the request ceiling, with size and limit (`capture.index.body_over_request_ceiling`, `capture.ops.body_over_request_ceiling`); a body over the capture ceiling (`capture.ops.body_over_capture_ceiling`) · fix round 9, CAPTURE #52 (K4891) · 2026-10-24
