@@ -141,3 +141,7 @@ COMPLETE B8: READ_BOUNDS row pdf/request_bytes (2 MiB x3, key limit.pdf.request_
 - **Ran.** Tranche merged first. runtime-limits suite: 56 tests, 56 pass, 0 fail. Test files importing `read-bounds`/`READ_BOUNDS` (23 files): 249 tests, 246 pass, 2 fail (the two above, identical on `origin/tranche/T51`). `impact.mjs origin/tranche/T51 HEAD` lists 138 modules / 2181 test files (the table is global); I ran the direct importers, not that whole set. Checks: format 0 failures; architecture 0 failures; coverage 32 of 32 ids named, 0 failures; ownership 3 files changed, 0 failures; words 19 failures, none in runtime-limits (installer-steps etc., as before my diff).
 
 Size (session_01HB2uM2PSYhuqXKXfVqYh67): test runs 5, module lines 11
+
+## J10 · COMPLETE · re B9
+
+COMPLETE B9: READ_BOUNDS rows text/request_bytes (3 MiB x3), content/held_text_chars (32 Mi x3), content/kind_scan_pages (16 x3) added and tested (R30, R31); boundOf(text, request_bytes) answers 3 MiB. Suite 56/56; importers 246/249, the 2 failures (fleetbundles stale bundles, g41-shape xlsx) identical on tranche/T51 without my diff; format, architecture, coverage, ownership 0 failures; words 19 failures none in my module. Bundles with read-bounds.mjs as input are stale; BOB regenerates at round end. Details in my record.
