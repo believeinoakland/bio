@@ -57,3 +57,16 @@ Rows (kind, name, standard, alpha, protective, key), all as `bytes(alpha, key, M
 3. `archive`, `member_bytes`: alpha 268,435,456 (256 MiB; R30 `MEMBER_MAX`), standard 2,147,483,648 (the archive unpacked standard, one member cannot exceed the archive), protective 2,147,483,648, key `limit.archive.member_bytes`.
 
 The other nine ceilings I keep have rows already: archive.members, unpacked_bytes, ratio, directory, name, depth; office.entries. ARCHIVE_TREE_TOTAL_MAX and ARCHIVE_TREE_ENTRIES_MAX I take from archive.unpacked_bytes and archive.members (same figures). If you prefer other names or figures, tell me; I will use what you add.
+
+## J5 · QUESTION · re J4
+
+QUESTION (replaces J4; R-NOTMET: the smallest thing I need). R6, R30, R31 and R35 take every ceiling through `boundOf`, but `read-bounds.mjs` (runtime-limits' alone, START ruling 1) has no row for five ceilings this module keeps, so `boundOf` would throw at import. I need these five rows added to the table before I can commit the import. I carry on meanwhile on a local, uncommitted copy of the rows and never commit it.
+
+Rows (kind, name: standard / alpha / protective; key `limit.<kind>.<name>`), the byte rows as the table's own `bytes(alpha, key, MB100)` helper (K4845):
+1. `office`, `text_bytes`: 104,857,600 / 20,971,520 / 104,857,600. R6 `MEASURED_OOXML_TEXT_BOUND_BYTES` (20 MiB).
+2. `office`, `streamed_text_bytes`: 104,857,600 / 33,554,432 / 104,857,600. R35 `STREAMED_TEXT_BOUND_BYTES` (32 MiB).
+3. `archive`, `member_bytes`: 2,147,483,648 / 268,435,456 / 2,147,483,648. R30 `MEMBER_MAX` (256 MiB alpha; a member cannot exceed the archive's unpacked standard).
+4. `office`, `structural_part_bytes`: 8,388,608 in all three columns. NEW, my own, for DOCS O6 (G125d: a 100 MiB `.rels`, a 20 MiB `[Content_Types].xml`, which a ratio check alone passes at about 1,000:1): the XML parts this module itself decodes (`[Content_Types].xml`, `*.rels`, `docProps/core.xml`, `mimetype`) are refused by declared size, before inflation, above it. A real one is kilobytes (a 5,000-slide deck's `[Content_Types].xml` is about 1 MB). The refusal is `STRUCTURAL_PART_MAX` with name, declared, limit, `final: true`, stated by each caller as any other `readPart` refusal. I will propose the wording for R5/R31 in my record.
+5. `office`, `piece_chars`: 8,388,608 in all three columns. R35's "carrying at most 8 MiB" before `piece_unbounded` (today the literal `TEXT_PIECE_MAX_CHARS`).
+
+The other ceilings have rows already: archive.members (ARCHIVE_ENTRIES_MAX and ARCHIVE_TREE_ENTRIES_MAX), archive.unpacked_bytes (ARCHIVE_TOTAL_MAX and ARCHIVE_TREE_TOTAL_MAX), archive.ratio, archive.depth, archive.directory, archive.name, office.entries. If you prefer other names or figures, tell me; I use what you add.
