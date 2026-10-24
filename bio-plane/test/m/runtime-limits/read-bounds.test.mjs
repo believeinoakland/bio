@@ -3,7 +3,7 @@
  * row changes none of these expectations (a row is checked by its invariants, never by counting the table). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { READ_BOUNDS, boundOf, statement } from "../../../src/read-bounds.mjs";
+import { READ_BOUNDS, boundOf, statement, wholeReadRow } from "../../../src/read-bounds.mjs";
 
 const MiB = 1048576, GiB = 1073741824, MB50 = 52428800;
 const LIGHT = ["text", "csv", "tsv", "json", "xml"];
@@ -248,4 +248,19 @@ test("R35: the six rows (provenance part_verify_bytes 8 MiB, acquisition odf_dig
     assert.equal(boundOf(kind, name), n, `${kind}/${name} answers the figure`);
     assert.deepEqual(statement(kind, name, n + 1), { size: n + 1, bound: n, key: `limit.${kind}.${name}` });
   }
+});
+
+/* the one declaration of the whole-read row by a document's kind (K4965; R36) */
+test("R36: wholeReadRow(kind) gives pdf, csv and text their own bytes row, every other kind or none the whole-load row pdf.bytes, and boundOf of the row is its active figure", () => {
+  const want = [["pdf", ["pdf", "bytes"]], ["csv", ["csv", "bytes"]], ["text", ["text", "bytes"]],
+    ["docx", ["pdf", "bytes"]], ["json", ["pdf", "bytes"]], ["PDF", ["pdf", "bytes"]], ["", ["pdf", "bytes"]], ["constructor", ["pdf", "bytes"]],
+    [null, ["pdf", "bytes"]], [undefined, ["pdf", "bytes"]], [42, ["pdf", "bytes"]]];
+  for (const [kind, row] of want) {
+    assert.deepEqual(wholeReadRow(kind), row, `kind ${String(kind)}`);
+    assert.equal(boundOf(...wholeReadRow(kind)), boundOf(row[0], row[1]), `kind ${String(kind)} bound`);
+  }
+  assert.deepEqual(wholeReadRow(), ["pdf", "bytes"]);
+  assert.equal(boundOf(...wholeReadRow("pdf")), READ_BOUNDS.pdf.bytes.alpha);
+  assert.equal(boundOf(...wholeReadRow("csv")), READ_BOUNDS.csv.bytes.standard);
+  assert.equal(boundOf(...wholeReadRow("text")), READ_BOUNDS.text.bytes.standard);
 });
