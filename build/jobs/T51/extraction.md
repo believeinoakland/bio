@@ -827,3 +827,15 @@ Size (session_018hma5T31jiQyk2xrc5Nbiy): test runs 5, module lines 4875
 ## J42 · COMPLETE
 
 COMPLETE job 94, R80 (G168): READING_HELD now carries counters {written, skipped}, never owed. Red first (no counters on a held reading of 8 units), then green. Module 380/380. Users 202/203: the one red, control-plane t51-round5-seam 'E3 (a 40 MB five-part upload)', fails identically with my change reverted. format, architecture, coverage 85/85, words, ownership: 0 failures. Record updated. Cause, why missed, red first, platform check (N) and Size are in it.
+
+## Fix round 9, batch D (B57, EXTRACTION #45, session_01YX5e8Td46Lgn5yQ3k9x68C): job 100, R82 amended (G172)
+
+**Entries applied.** `readHeld`'s `owed` (`extraction/index.mjs` about 964) no longer counts the OCR-member-bound clause when the reading ended `failure: "final"`: a reading the member refused from its header owes nothing, a member bound or not. Diagnosis's proven fix, judged and applied as it stands (one clause plus a comment). No sentence added, so no row owed.
+- **Cause:** the third clause of `owed` (`tier3_candidate && OCR_WORKER`) ignored a reading that had ended final, so plane's `settle` took the `reading` row as owed and counted a failure until its next pass.
+- **Why missed:** `r82.test.mjs` asserted the decline on the `ocr` pass only; no test ran the first `reading` pass with registerJob and a declining member.
+- **Red first:** the new `r82.test.mjs` "R82 R37 (G172)" test: held 1-page scan, member answering `{ok:false, reason:"IMAGE_TOO_LARGE"}`, `readHeld({kind:"reading", registerJob, armJobs})` answered `owed: true` (red), `owed` not true after. Control in the same test: a member answering 503 still owed.
+- **Platform check:** L. control-plane's `R9 seam §18` (`r9-seam-hostile.mjs`, alone) could NOT be run here: the file dies with `JavaScript heap out of memory` at about 40 s (also with `--max-old-space-size=6000`, and identically with my change reverted), so it is a container limit, not a result. It needs a platform run.
+
+**Tests/checks.** Module: `ℹ tests 381`, `ℹ pass 381`, `ℹ fail 0`. Users (23 files naming `readHeld` outside extraction; heavy l75/l77/l79, r7-contention, round5-seam not run): `ℹ tests 174`, `ℹ pass 174`, `ℹ fail 0`. checks/run.mjs: format 0 failures, architecture 0, coverage 0 (6927 of 6927), channels 0, words 0; ownership 0 failures (3 files); setup-words `--check`: stale-rows note only. impact.mjs: 107 of 176 modules affected (the tranche is wide); only the users above were run.
+
+Size (session_01YX5e8Td46Lgn5yQ3k9x68C): test runs 9, module lines 4876
