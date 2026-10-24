@@ -26,6 +26,7 @@
 import wasmModule from "../assets/tesseract-core.wasm";
 import MODEL from "../assets/eng.traineddata";
 import { createOCREngine } from "./tesslib.mjs";
+import { readFrame, REGION_GRAIN } from "./frame.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /** The engine, named exactly. "tesseract" is not a version, and the chain step
@@ -64,82 +65,12 @@ export function engineCheck() {
   return null;
 }
 
-/** THE REGION GRAIN, AND IT IS `line` FOR A MEASURED REASON RATHER THAN A
- *  PREFERENCE — the one design decision in this member that a reader would
- *  otherwise have to guess at.
- *
- *  The plane composes a page's text from the member's regions by JOINING THEIR
- *  TEXT WITH A NEWLINE (`ocrTextFromMember`, `bio-plane/src/extraction/pipeline.mjs`). So the
- *  grain of a region IS the grain of a line in the record's text, and at `word`
- *  grain **every OCR'd document becomes one word per line** — which is not a
- *  cosmetic difference. MEASURED on the real Oakland page 2026-09-12: at `word`
- *  grain `meeting-agenda`'s definitive signal (a file number ALONE ON A LINE,
- *  chosen because "HTML never carries them alone on a line") becomes trivially
- *  satisfiable by any number-shaped word, while its phrase signals — `Roll Call`,
- *  `Subject:` followed by its value — become UNREACHABLE, because no two words
- *  ever share a line. One grain choice in a member silently changed what every
- *  line-anchored recogniser in the estate could see.
- *
- *  `line` makes an OCR'd page look like what it is: lines of text. The anchor is
- *  no weaker — a line's rectangle is a checkable image region exactly as a word's
- *  is, and it is the region a reader would actually be pointed at. The confidence
- *  is still the engine's own, computed over that line's decode.
- *
- *  WHAT IS GIVEN UP, STATED: the confidence floor now discards a LINE rather than
- *  a word, so one badly-decoded word can take its line's text with it. That is
- *  the conservative direction — rule 4's whole point is that a region below the
- *  floor reads `undetermined` and never a best guess — and it is the direction to
- *  be on. A finer grain is a real option the day somebody measures a threshold
- *  worth applying at word level. */
-export const REGION_GRAIN = "line";
+export { REGION_GRAIN };
 
-/** Transcribe ONE RGBA frame. Returns `{ ok, regions }` where a region is
- *  `{ text, rect: [x0,y0,x1,y1], confidence }` in PIXEL coordinates of the frame
- *  it was given, or `{ ok:false, reason, error }`.
- *
- *  THE CONFIDENCE IS THE ENGINE'S OWN, computed from its character-level decode,
- *  which is what makes `basis:"engine"` truthful upstream. Nothing here derives,
- *  smooths or invents one; a region the engine gives no usable number for is
- *  handed on with `confidence: null` and the caller states it rather than
- *  choosing a value.
- *
- *  `getTextBoxes`, NOT `getTextItems` — the low-level engine API and the
- *  worker-thread client API do not share method names, and only the low-level
- *  one exists inside an isolate. CPDF-15's first box arm DID NOT ARM for
- *  exactly that reason and said so. */
-export async function transcribeFrame(rgba, width, height, { psm = null } = {}) {
-  let engine = null;
-  try {
-    engine = await createOCREngine({ instantiateWasm, locateFile });
-    engine.loadModel(new Uint8Array(MODEL));
-    if (psm) engine.setVariable("tessedit_pageseg_mode", String(psm));
-    engine.loadImage({ data: rgba, width, height });
-    const boxes = engine.getTextBoxes(REGION_GRAIN) || [];
-    const regions = [];
-    for (const b of boxes) {
-      const text = typeof b.text === "string" ? b.text : "";
-      const r = b.rect || {};
-      if (![r.left, r.top, r.right, r.bottom].every((n) => typeof n === "number" && Number.isFinite(n)))
-        continue;   /* no readable geometry means nothing to anchor: dropped, and COUNTED by the caller */
-      const c = typeof b.confidence === "number" && Number.isFinite(b.confidence) ? b.confidence : null;
-      regions.push({ text, rect: [r.left, r.top, r.right, r.bottom], confidence: c });
-    }
-    /* R25: the engine's own rating of each word, for the legibility a picture states. A line's rating is the mean of its
-       words', so one bad word hides its good ones; the word boxes are read from the same recognition (no second pass). */
-    const words = (engine.getTextBoxes("word") || [])
-      .filter((b) => typeof b.text === "string" && b.text.trim().length)
-      .map((b) => ({ confidence: typeof b.confidence === "number" && Number.isFinite(b.confidence) ? b.confidence : null }));
-    return { ok: true, regions, grain: REGION_GRAIN, boxCount: boxes.length, words };
-  } catch (e) {
-    /* A refusal is a measurement (CPDF-15's posture). It comes back as one, with
-       the frame size beside it, rather than as an opaque throw — the caller
-       turns it into a STATED refusal and the document stays honestly unread. */
-    return { ok: false, reason: "ENGINE_FAILED", error: String((e && e.message) || e),
-             name: e && e.name, frame_bytes: width * height * 4 };
-  } finally {
-    try { if (engine) engine.destroy(); } catch { /* the isolate is going anyway */ }
-  }
-}
+/** Transcribe ONE RGBA frame (the core is `frame.mjs`'s `readFrame`; this is it over the compiled core and the model this
+ *  build carries). */
+export const transcribeFrame = (rgba, width, height, opts) =>
+  readFrame(() => createOCREngine({ instantiateWasm, locateFile }), MODEL, rgba, width, height, opts);
 
 /** The engine as `member.mjs` takes it (`makeMember`). */
 export const TESSERACT = Object.freeze({

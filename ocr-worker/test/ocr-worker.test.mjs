@@ -32,8 +32,11 @@ import { pathToFileURL } from "node:url";
 import { deflateSync } from "node:zlib";
 import { ocrWorkerDef, WASM, MODEL } from "./memberworker.mjs";
 import { makeMember, NAMESPACES } from "../src/member.mjs";
-import { MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES as CONTRACT_NAMESPACES, PICTURE_MAX_EDGE, PLANE_OPS, REFUSALS, LEGIBLE_CONFIDENCE, LEGIBLE_NOTE_BELOW, LEGIBLE_REFUSE_BELOW } from "../src/contract.mjs";
-import { PNG_REFUSALS } from "../src/pngsamples.mjs";
+import { MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES as CONTRACT_NAMESPACES, PICTURE_MAX_EDGE, PLANE_OPS, REFUSALS, LEGIBLE_CONFIDENCE, LEGIBLE_NOTE_BELOW, LEGIBLE_REFUSE_BELOW, PAGE_SEG_MODES, declaredPictureFrame, psmFrom, sourceOfBytes } from "../src/contract.mjs";
+import { PNG_REFUSALS, pngToSamples, samplesToRgba } from "../src/pngsamples.mjs";
+import { createOCREngine as srcCreate } from "../src/tesslib.mjs";
+import { readFrame } from "../src/frame.mjs";
+import { generate } from "../../bio-plane/test/imggen.mjs";
 import { renderPageToPixels } from "../../pdf-worker/src/pagepixels.mjs";
 import { renderPictureToPixels as realRenderPicture } from "../../pdf-worker/src/picturepixels.mjs";
 import { renderPictureToPixels } from "../../pdf-worker/src/picturepixels.mjs";
@@ -56,6 +59,11 @@ const t = (label, got, want) => {
   ok ? pass++ : fail++;
 };
 const keys = (o) => Object.keys(o || {}).sort();
+/* Part B boots the COMMITTED bundle, which BOB rebuilds once after batch B (fix round 9): until then it is the bundle of
+   the round's start, and after it the source's. What the rebuild adds to an answer (a PDF page's `legibility`, the
+   image's `turned_deg`) is set aside where the committed answer is compared, so the arm reads the same either side of it;
+   the new behaviour is tested over the source in Part A. */
+const settled = (o) => { if (!o || typeof o !== "object") return o; const { turned_deg, ...rest } = o; return rest; };
 
 /* Every wire answer this suite sees, for R20. */
 const WIRE = [];
@@ -86,7 +94,7 @@ function pdf(objs) {
   return new Uint8Array(Buffer.concat(chunks));
 }
 /** A one-page image-only PDF: one 1-bit FlateDecode image of the given size, filled from `fill(byteIndex)`. */
-function bilevelPagePdf(width, height, fill) {
+function bilevelPagePdf(width, height, fill, rotate = 0) {
   const raw = Buffer.alloc(Math.ceil(width / 8) * height);
   for (let i = 0; i < raw.length; i++) raw[i] = fill(i);
   const data = deflateSync(raw);
@@ -94,7 +102,7 @@ function bilevelPagePdf(width, height, fill) {
   return pdf([
     { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
     { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
-    { num: 3, body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] `
+    { num: 3, body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] ${rotate ? `/Rotate ${rotate} ` : ""}`
                   + `/Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>` },
     { num: 4, head: `<< /Length ${content.length} >>`, stream: content },
     { num: 5, head: `<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} `
@@ -159,6 +167,34 @@ const GREY4x3 = png({ width: 4, height: 3, rows: [[0, 64, 128, 255], [1, 2, 3, 4
 const RGB2x2 = png({ width: 2, height: 2, colorType: 2, rows: [[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]] });
 const BILEVEL9x2 = png({ width: 9, height: 2, bitDepth: 1, rows: [[0b10110000, 0b10000000], [0xff, 0x00]] });
 
+/** An RGBA frame `{rgba, width, height}` turned clockwise by 90, 180 or 270 degrees (pdf-pixels R48's convention). */
+const turnRgba = ({ rgba, width: w, height: h }, deg) => {
+  const [W, H] = deg % 180 ? [h, w] : [w, h];
+  const out = new Uint8Array(W * H * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const [nx, ny] = deg === 90 ? [h - 1 - y, x] : deg === 180 ? [w - 1 - x, h - 1 - y] : deg === 270 ? [y, w - 1 - x] : [x, y];
+    const a = (y * w + x) * 4, b = (ny * W + nx) * 4;
+    out[b] = rgba[a]; out[b + 1] = rgba[a + 1]; out[b + 2] = rgba[a + 2]; out[b + 3] = 255;
+  }
+  return { rgba: out, width: W, height: H };
+};
+
+/** pdf-pixels R47 (job 14, unmerged when this was written) as a minimal local implementation: a renderer that takes a source
+ *  `{size, readRange}` in place of bytes, over a renderer that takes the bytes. It reads the whole object, so it proves the
+ *  member's logic over the real renderer, not R47; the seam test (A24) is the real renderers asked a source. */
+const viaBytes = (render) => async (input, page, opts) => render(input instanceof Uint8Array ? input : await input.readRange(0, input.size), page, opts);
+
+/** THE REAL ENGINE, as the committed source drives it: `frame.mjs`'s reading over `tesslib.mjs` and the committed core and
+ *  model, compiled here as the platform compiles them at upload. `reads` counts the frames it was given. */
+const wasmCore = await WebAssembly.compile(readFileSync(WASM));
+const modelBytes = readFileSync(MODEL);
+const srcEngine = { name: "tesseract-wasm", version: "0.11.0", model: "tessdata_fast/eng", reads: 0, check: () => null,
+  transcribeFrame(rgba, width, height, opts) {
+    srcEngine.reads++;
+    return readFrame(() => srcCreate({ instantiateWasm: (info, receive) => { const i = new WebAssembly.Instance(wasmCore, info); receive(i, wasmCore); return i.exports; }, locateFile: (p) => p }),
+                     modelBytes, rgba, width, height, opts);
+  } };
+
 /* ============================================================================================================ *
  * Part A — the member's code in node: `makeMember`, a recording bucket, stand-ins where a step needs one
  * ============================================================================================================ */
@@ -166,7 +202,7 @@ const BILEVEL9x2 = png({ width: 9, height: 2, bitDepth: 1, rows: [[0b10110000, 0
 const REAL_ENGINE_NAMES = { name: "tesseract-wasm", version: "0.11.0", model: "tessdata_fast/eng" };
 
 /** A stand-in engine. `regions` is what `transcribeFrame` answers; `calls` records every frame it was given. */
-function stubEngine({ regions = [], check = null, frame = null, boxCount, words } = {}) {
+function stubEngine({ regions = [], check = null, frame = null, boxCount, words, orientation = { rotation: 0 } } = {}) {
   const e = { ...REAL_ENGINE_NAMES, calls: [], checks: 0 };
   e.check = () => { e.checks++; return check; };
   e.transcribeFrame = async (rgba, width, height, opts) => {
@@ -174,14 +210,15 @@ function stubEngine({ regions = [], check = null, frame = null, boxCount, words 
     if (frame) return frame(rgba, width, height, opts);
     /* the engine's words (R25): each word of a region at its line's rating, unless the test names them */
     const ws = words ?? regions.flatMap((r) => String(r.text).trim().split(/\s+/).filter(Boolean).map(() => ({ confidence: r.confidence })));
-    return { ok: true, regions, grain: "line", boxCount: boxCount ?? regions.length, words: ws };
+    return { ok: true, regions, grain: "line", boxCount: boxCount ?? regions.length, words: ws,
+             orientation: typeof orientation === "function" ? orientation(rgba, width, height, opts) : orientation };
   };
   return e;
 }
 /** A stand-in renderer answering `answer` (a function of the page, or a value), recording every call. */
 function stubRender(answer) {
-  const r = async (bytes, page, opts) => { r.calls.push({ page, opts, bytes: bytes.length });
-    return typeof answer === "function" ? answer(page) : answer; };
+  const r = async (bytes, page, opts) => { r.calls.push({ page, opts, bytes: bytes.length ?? bytes.size });
+    return typeof answer === "function" ? answer(page, opts, bytes) : answer; };
   r.calls = [];
   return r;
 }
@@ -193,8 +230,12 @@ const pngPage = (bytes, width, height, extra = {}) => ({
 function recordingBucket(objects = new Map()) {
   const log = [];
   const target = {
-    get: async (key) => { log.push(["get", key]); const b = objects.get(key);
-      return b ? { arrayBuffer: async () => b.slice().buffer } : null; },
+    get: async (key, opts) => { log.push(["get", key, opts && opts.range ? { ...opts.range } : null]); const b = objects.get(key);
+      if (!b) return null;
+      const r = opts && opts.range;
+      if (r && (b.length === 0 || r.offset >= b.length || !(r.length > 0))) throw new Error("get: The requested range is not satisfiable (10039)");
+      const part = r ? b.subarray(r.offset, Math.min(b.length, r.offset + r.length)) : b;
+      return { size: b.length, arrayBuffer: async () => part.slice().buffer }; },
   };
   const proxy = new Proxy(target, { get(o, p) { log.push(["touch", String(p)]); return o[p]; } });
   return { proxy, log, objects };
@@ -211,7 +252,7 @@ async function post(member, env, body, path = "/transcribe") {
   WIRE.push(out.body);
   return out;
 }
-function world({ engine = stubEngine({ regions: [{ text: "a line", rect: [0, 0, 2, 1], confidence: 0.5 }] }),
+function world({ engine = stubEngine({ regions: [{ text: "a line", rect: [0, 0, 2, 1], confidence: 0.9 }] }),
                  render = stubRender(pngPage(GREY4x3, 4, 3)), renderPicture = stubRender(pngPage(GREY4x3, 4, 3, { route: "decoded-picture" })),
                  doc = DOC, env = {} } = {}) {
   const sha = hex(doc);
@@ -368,7 +409,7 @@ console.log("\n--- A5 · R7: the page's refusals, in their order, every one 200 
     t(`R7.2 the renderer's ${reason} -> 200 PAGE_NOT_RENDERABLE carrying that reason verbatim`,
       [r.status, r.body.ok, r.body.reason, r.body.refusal.render.reason, r.body.refusal.render.detail.imageCount],
       [200, false, "PAGE_NOT_RENDERABLE", reason, 3]);
-    t(`R7.2 the member asked the renderer to decode DCT (${reason})`, w.render.calls[0].opts, { decodeDct: true });
+    t(`R7.2 R30 the member asked the renderer to decode DCT and to render a page that shows text (${reason})`, w.render.calls[0].opts, { decodeDct: true, allowTextPage: true });
   }
   const wNull = world({ render: stubRender(null) });
   const rNull = await wNull.ask(good());
@@ -472,11 +513,13 @@ console.log("\n--- A6 · R8, R9, R10, R17, R18: the successful answer, its regio
     { text: "string coord", rect: [0, 0, "1", 1] },
     { text: "rect a string", rect: "0,0,1,1" },
   ];
-  const w = world({ engine: stubEngine({ regions }), render: stubRender((page) => pngPage(GREY4x3, 4, 3, { rotate_deg: 90, page })) });
+  /* the engine rates every word it read at 0.9: the page is legible (R25), so what is under test is the regions */
+  const w = world({ engine: stubEngine({ regions, words: Array.from({ length: 20 }, () => ({ confidence: 0.9 })) }),
+                    render: stubRender((page) => pngPage(GREY4x3, 4, 3, { rotate_deg: 90, page })) });
   const { status, body } = await w.ask(good({ pages: [6, 8] }));
   t("R8 a successful answer is 200 ok:true", [status, body.ok], [200, true]);
   t("R8 it carries exactly the named fields",
-    keys(body), ["cap", "confidence_floor", "deferred", "engine", "grain", "image", "measured_by", "model", "notes", "ok", "pages", "version"]);
+    keys(body), ["cap", "confidence_floor", "deferred", "engine", "grain", "image", "legibility", "measured_by", "model", "notes", "ok", "pages", "version"]);
   t("R8 engine, version, model name the engine", [body.engine, body.version, body.model],
     ["tesseract-wasm", "0.11.0", "tessdata_fast/eng"]);
   t("R8 cap is the fixed letter C", body.cap, "C");
@@ -487,7 +530,7 @@ console.log("\n--- A6 · R8, R9, R10, R17, R18: the successful answer, its regio
   t("R8 grain is line; deferred as R6; notes an array", [body.grain, body.deferred, Array.isArray(body.notes)], ["line", [8], true]);
   t("R8 image carries exactly the rendered frame's facts",
     body.image, { width: 4, height: 3, frame_bytes: 48, route: "stub-route", upright: true, rotate_deg: 90, dpi: 300,
-                  pixels_sha256: "f".repeat(64) });
+                  pixels_sha256: "f".repeat(64), turned_deg: 0 });
   t("R8 pages is exactly one {page, regions}", [body.pages.length, keys(body.pages[0]), body.pages[0].page],
     [1, ["page", "regions"], 6]);
   t("R8 the engine was given the RGBA frame of the page, width*height*4",
@@ -545,7 +588,7 @@ console.log("\n--- A7 · R8: the confidence floor is the instance's, or a stated
   const w = world({ env: { OCR_CONFIDENCE_FLOOR: "0.99" } });
   const r = await w.ask(good());
   t("R8 the member states the floor and never applies it: a region under it is still on the wire",
-    [r.body.confidence_floor, r.body.pages[0].regions.map((x) => x.confidence.value)], [0.99, [0.5]]);
+    [r.body.confidence_floor, r.body.pages[0].regions.map((x) => x.confidence.value)], [0.99, [0.9]]);
   const p = world({ env: { OCR_PSM: "6" } });
   await p.ask(good());
   t("R21 the instance's OCR_PSM is threaded to the engine as its segmentation mode", p.engine.calls[0].opts, { psm: "6" });
@@ -583,7 +626,7 @@ console.log("\n--- A8 · R11, R12, R13, R14: /version and every other route ---"
 
 console.log("\n--- A9 · R15, R21: what the member touched — only CAPTURES.get, no network, no state ---");
 {
-  const w = world({ engine: stubEngine({ regions: [{ text: "x", rect: [0, 0, 1, 1], confidence: 0.3 }] }) });
+  const w = world({ engine: stubEngine({ regions: [{ text: "x", rect: [0, 0, 1, 1], confidence: 0.9 }] }) });
   const a1 = await w.ask(good({ pages: [0, 3] }));
   const b = await w.ask(good({ capture_sha: "0".repeat(64) }));
   const a2 = await w.ask(good({ pages: [0, 3] }));
@@ -652,7 +695,7 @@ console.log("\n--- A10 · R23: a JPEG or PNG capture is a one-page document, tak
   const pdfW = world();
   const pr = await pdfW.ask(good());
   t("R23 control: a PDF page is rendered by the page renderer, asked to decode DCT, and the picture renderer is never asked",
-    [pr.body.ok, pdfW.render.calls.length, pdfW.render.calls[0].opts, pdfW.renderPicture.calls.length], [true, 1, { decodeDct: true }, 0]);
+    [pr.body.ok, pdfW.render.calls.length, pdfW.render.calls[0].opts, pdfW.renderPicture.calls.length], [true, 1, { decodeDct: true, allowTextPage: true }, 0]);
   const neither = world({ doc: NOT_PDF, render: stubRender({ ok: false, reason: "NOT_A_PDF" }) });
   const nr = await neither.ask({ capture_sha: neither.sha, store: "scratch", pages: [0] });
   t("R23 control: bytes that are neither a picture nor a PDF are refused as today, by the page renderer",
@@ -703,28 +746,10 @@ console.log("\n--- A11 · R24: a photographed page is prepared before the engine
   /* a PDF page is as before */
   const pdfW = world();
   const pr = await pdfW.ask(good());
-  t("R24 control: a PDF page is rendered without prepare", [pr.body.ok, pdfW.render.calls[0].opts], [true, { decodeDct: true }]);
+  t("R24 control: a PDF page is rendered without prepare", [pr.body.ok, pdfW.render.calls[0].opts], [true, { decodeDct: true, allowTextPage: true }]);
 
-  /* THE REAL PATH: the real picture renderer, the real engine (the vendor package this module pins, in node) */
-  const pkg = createRequire(fileURLToPath(new URL("../package.json", import.meta.url)));
-  const { createOCREngine } = await import(pathToFileURL(pkg.resolve("tesseract-wasm")).href);
-  const wasmBinary = readFileSync(pkg.resolve("tesseract-wasm").replace(/lib\.js$/, "tesseract-core.wasm"));
-  const model = new Uint8Array(readFileSync(MODEL));
-  const realEngine = { name: "tesseract-wasm", version: "0.11.0", model: "tessdata_fast/eng", reads: 0, check: () => null,
-    async transcribeFrame(rgba, width, height) {
-      realEngine.reads++;
-      const e = await createOCREngine({ wasmBinary });
-      try {
-        e.loadModel(model);
-        e.loadImage({ data: rgba, width, height });
-        const boxes = e.getTextBoxes("line") || [];
-        /* the words' own ratings, read as `tessengine.mjs` reads them (R25; that file imports workers module types, so
-           node cannot load it: Part B drives it under workerd) */
-        const words = (e.getTextBoxes("word") || []).filter((b) => b.text.trim().length).map((b) => ({ confidence: b.confidence }));
-        return { ok: true, grain: "line", boxCount: boxes.length, words,
-                 regions: boxes.map((b) => ({ text: b.text, rect: [b.rect.left, b.rect.top, b.rect.right, b.rect.bottom], confidence: b.confidence })) };
-      } finally { e.destroy(); }
-    } };
+  /* THE REAL PATH: the real picture renderer, the real engine (the member's own engine code, in node) */
+  const realEngine = srcEngine;   /* the member's own engine code over the committed core and model (frame.mjs, tesslib.mjs) */
   /* the words each photograph holds: the page's own text, as drawn (`fixtures/page-words.json`) */
   const TRUTH = JSON.parse(Buffer.from(F("./fixtures/page-words.json")).toString("utf8"));
   const words = (x) => x.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean);
@@ -740,7 +765,7 @@ console.log("\n--- A11 · R24: a photographed page is prepared before the engine
   const realWorld = (doc, renderPicture) => {
     const sha = hex(doc);
     const bucket = recordingBucket(new Map([[`scratch/captures/${sha}`, doc]]));
-    const member = makeMember(realEngine, { renderPicture });
+    const member = makeMember(realEngine, { renderPicture: viaBytes(renderPicture) });
     return post(member, { CAPTURES: bucket.proxy, VERSION: "stub-build" }, { capture_sha: sha, store: "scratch", pages: [0] });
   };
   const got = (a) => (a.body.ok ? a.body.pages[0].regions.map((r) => r.text).join(" ") : "");
@@ -836,14 +861,496 @@ console.log("\n--- A12 · R25: a picture says how much of it the engine could re
   const edge2 = await ask([line("a b", 0.9), line("c d e f g h i j", 0.1)]);
   t("R25 a share of exactly 0.2 (2 of 10) is not refused: it is answered, with its note", [edge2.r.body.ok, edge2.r.body.legibility.share, edge2.r.body.notes.length], [true, 0.2, 1]);
 
-  /* controls: a PDF page keeps R8's fields and says nothing about legibility, whatever its confidences */
-  const pdfW = world({ engine: stubEngine({ regions: [line("fumnery Staft recorwenends thet", 0.3)] }) });
-  const pr = await pdfW.ask(good());
-  t("R25 control: a PDF page read at low confidence is answered as before, with no legibility field and no note",
-    [pr.body.ok, "legibility" in pr.body, pr.body.notes], [true, false, []]);
+  /* fix round 9, G137d: a PDF page is judged by the same figures as a picture, refused with its own reason */
+  const pdfPart = world({ engine: stubEngine({ regions: [line("one two three four", 0.9), line("five six", 0.4)] }) });
+  const pp = await pdfPart.ask(good());
+  t("R25 a PDF page read in part states its legibility like a picture does, says it in a note, and answers its text whole",
+    [pp.body.ok, pp.body.legibility, pp.body.notes.length, pp.body.pages[0].regions.map((x) => x.text)],
+    [true, { words: 6, confident_words: 4, share: 0.67 }, 1, ["one two three four", "five six"]]);
+  const pdfWhole = world({ engine: stubEngine({ regions: [line("one two three four", 0.9)] }) });
+  const pw = await pdfWhole.ask(good());
+  t("R25 a PDF page read whole states share 1 and says nothing more", [pw.body.legibility, pw.body.notes], [{ words: 4, confident_words: 4, share: 1 }, []]);
+  const pdfJunk = world({ engine: stubEngine({ regions: [line("fumnery Staft recorwenends thet", 0.3)] }) });
+  const pj = await pdfJunk.ask(good());
+  t("R25 a PDF page under LEGIBLE_REFUSE_BELOW is refused PAGE_NOT_LEGIBLE (200, ok:false) with its legibility and no text",
+    [pj.status, pj.body.ok, pj.body.reason, pj.body.refusal.legibility, pj.body.pages, pj.body.detail === REFUSALS.PAGE_NOT_LEGIBLE],
+    [200, false, "PAGE_NOT_LEGIBLE", { words: 4, confident_words: 0, share: 0 }, undefined, true]);
+  t("R25 PAGE_NOT_LEGIBLE is a declared refusal, and says why in a sentence in the answer's notes",
+    [typeof REFUSALS.PAGE_NOT_LEGIBLE, pj.body.notes.length, pj.body.notes[0].trim().length > 0], ["string", 1, true]);
+  const pdfNoWords = world({ engine: stubEngine({ regions: [line("fumnery", 0.1)], words: [] }) });
+  const pn = await pdfNoWords.ask(good());
+  t("R25 an engine that gave no words states no legibility for a PDF page either (nothing invented)",
+    [pn.body.ok, "legibility" in pn.body, pn.body.notes], [true, false, []]);
+  const pdfEdge = world({ engine: stubEngine({ regions: [line("a b", 0.9), line("c d e f g h i j", 0.1)] }) });
+  const pe = await pdfEdge.ask(good());
+  t("R25 a share of exactly 0.2 is not refused for a PDF page either: answered, with its note", [pe.body.ok, pe.body.legibility.share, pe.body.notes.length], [true, 0.2, 1]);
   /* the old answer without text_found: a picture is still judged by what the engine read */
   const bare = await ask([line("one two", 0.9)], { renderPicture: stubRender(pngPage(GREY4x3, 4, 3, { route: "decoded-picture" })) });
   t("R25 control: an answer with no prepared field is judged by the same figures", [bare.r.body.ok, bare.r.body.legibility.share], [true, 1]);
+}
+
+console.log("\n--- A13 · R26: the engine's orientation is asked of every frame; a page found turned is read upright, and one it cannot orient is stated ---");
+{
+  const UPRIGHT = png({ width: 3, height: 4, rows: [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]] });
+  const SIDE_SHA = "a".repeat(64), UP_SHA = "b".repeat(64);
+  const JPG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+  const clear = { text: "the upright line", rect: [0, 0, 8, 1], confidence: 0.9 };
+  const partial = { text: "half read of it", rect: [0, 0, 8, 1], confidence: 0.9, words: [0.9, 0.9, 0.3, 0.3, 0.3, 0.3] };
+  const garbage = { text: "xq zv jk", rect: [0, 0, 8, 1], confidence: 0.3 };
+  const tall = { text: "the upright line", rect: [0, 0, 1, 8], confidence: 0.9 };
+  const wordsOf = (r) => (r.words ? r.words.map((c) => ({ confidence: c })) : r.text.split(" ").map(() => ({ confidence: r.confidence })));
+  /* an engine that reads the sideways frame (4 wide) as `side` and the upright one (3 wide) as `up`, and claims `claim`
+     of the sideways frame (the upright frame it calls upright); it records the width of every frame it was given */
+  const turnEngine = ({ claim, side, up }) => {
+    const e = { ...REAL_ENGINE_NAMES, calls: [], check: () => null };
+    e.transcribeFrame = async (rgba, w) => {
+      e.calls.push(w);
+      const r = w === 4 ? side : up;
+      return { ok: true, regions: r ? [r] : [], grain: "line", boxCount: r ? 1 : 0, words: r ? wordsOf(r) : [],
+               ...(claim === undefined ? {} : { orientation: w === 4 ? claim : { rotation: 0 } }) };
+    };
+    return e;
+  };
+  /* a renderer that turns a page when asked (pdf-pixels R48): the sideways frame as it lies, the upright one turned */
+  const turner = (route) => stubRender((page, opts) => (opts.turn
+    ? pngPage(UPRIGHT, 3, 4, { route, pixels_sha256: UP_SHA, turned_deg: opts.turn, prepared: { text_found: true, tilt_deg: 0, scale: 1, line_px: 30 } })
+    : pngPage(GREY4x3, 4, 3, { route, pixels_sha256: SIDE_SHA, prepared: { text_found: true, tilt_deg: 0, scale: 1, line_px: 30 } })));
+  const run = async ({ kind, claim, side, up, render }) => {
+    const picture = kind === "picture";
+    const rend = render || turner(picture ? "decoded-picture" : "stub-route");
+    const w = world({ engine: turnEngine({ claim, side, up }), doc: picture ? JPG : DOC,
+                      ...(picture ? { renderPicture: rend } : { render: rend }) });
+    const r = await w.ask({ capture_sha: w.sha, store: "scratch", pages: [0] });
+    return { w, r, rend, turns: rend.calls.map((c) => c.opts.turn ?? 0) };
+  };
+
+  for (const kind of ["pdf", "picture"]) for (const [rotation, turn] of [[90, 270], [180, 180], [270, 90]]) {
+    const x = await run({ kind, claim: { rotation }, side: garbage, up: clear });
+    const body = x.r.body, reg = body.pages?.[0].regions[0];
+    t(`R26 a ${kind} the engine finds turned ${rotation} degrees is asked again with turn ${turn} and read upright`,
+      [body.ok, x.turns, x.w.engine.calls, body.image.turned_deg], [true, [0, turn], [4, 3], turn]);
+    t(`R26 ${kind} turned ${rotation}: the image, the rectangles, source.image and pixels_sha256 are those of the turned frame`,
+      [body.image.width, body.image.height, body.image.pixels_sha256, reg.text, reg.source.rect, reg.source.image.pixels_sha256, reg.source.image.width, reg.source.image.height],
+      [3, 4, UP_SHA, "the upright line", [0, 0, 8, 1], UP_SHA, 3, 4]);
+    t(`R26 R25 ${kind} turned ${rotation}: read upright at the legibility floor, with no note`,
+      [body.legibility, body.notes], [{ words: 3, confident_words: 3, share: 1 }, []]);
+  }
+  const picOpts = (await run({ kind: "picture", claim: { rotation: 90 }, side: garbage, up: clear })).rend.calls;
+  t("R26 the picture renderer is asked for the turn with the same options it was first asked for (R24)",
+    picOpts.map((c) => c.opts), [{ maxEdge: PICTURE_MAX_EDGE, grey: true, prepare: true }, { maxEdge: PICTURE_MAX_EDGE, grey: true, prepare: true, turn: 270 }]);
+  const pdfOpts = (await run({ kind: "pdf", claim: { rotation: 270 }, side: garbage, up: clear })).rend.calls;
+  t("R26 R30 the page renderer is asked for the turn with the options it was first asked for",
+    pdfOpts.map((c) => c.opts), [{ decodeDct: true, allowTextPage: true }, { decodeDct: true, allowTextPage: true, turn: 90 }]);
+
+  /* the controls: an upright page is not turned; the engine's claim of a turn is not obeyed against a page it reads clearly */
+  for (const kind of ["pdf", "picture"]) {
+    const up = await run({ kind, claim: { rotation: 0 }, side: clear, up: clear });
+    t(`R26 control: an upright ${kind} is not turned: one render, turned_deg 0, no note`,
+      [up.r.body.ok, up.turns, up.r.body.image.turned_deg, up.r.body.notes], [true, [0], 0, []]);
+    const wrong = await run({ kind, claim: { rotation: 90 }, side: clear, up: garbage });
+    t(`R26 control: a ${kind} the engine calls turned but reads clearly across the frame is read as it lies (one render)`,
+      [wrong.r.body.ok, wrong.turns, wrong.r.body.image.turned_deg, wrong.r.body.notes], [true, [0], 0, []]);
+    const quarter = await run({ kind, claim: { rotation: 90 }, side: tall, up: clear });
+    t(`R26 a ${kind} read clearly by the engine with its lines running up the frame is still turned upright (the engine reads a quarter turn inside)`,
+      [quarter.r.body.ok, quarter.turns, quarter.r.body.image.turned_deg], [true, [0, 270], 270]);
+    const worse = await run({ kind, claim: { rotation: 270 }, side: partial, up: garbage });
+    t(`R26 a ${kind} whose turned reading is worse than its reading as it lies is kept as it lies (turned_deg 0), with R25's note`,
+      [worse.r.body.ok, worse.turns, worse.r.body.image.turned_deg, worse.r.body.legibility.share, worse.r.body.notes.length], [true, [0, 90], 0, 0.33, 1]);
+    const blank = await run({ kind, claim: { rotation: 180 }, side: null, up: clear });
+    t(`R26 a ${kind} the engine read nothing of and finds turned is asked again, and read upright`,
+      [blank.r.body.ok, blank.turns, blank.r.body.image.turned_deg], [true, [0, 180], 180]);
+    const both = await run({ kind, claim: { rotation: 90 }, side: garbage, up: garbage });
+    t(`R26 R25 a ${kind} still under the floor after being turned is refused as R25 says, with no text`,
+      [both.r.body.ok, both.r.body.reason, both.turns, both.r.body.pages, both.r.body.refusal.legibility.share],
+      [false, kind === "picture" ? "PICTURE_NOT_LEGIBLE" : "PAGE_NOT_LEGIBLE", [0, 270], undefined, 0]);
+  }
+
+  /* an engine that cannot tell is stated, never read as garbage and answered with no mention */
+  for (const [label, claim] of [["answers nothing", null], ["has no orientation to give", undefined], ["answers a turn that is no quarter turn", { rotation: 45 }]]) {
+    for (const kind of ["pdf", "picture"]) {
+      const x = await run({ kind, claim, side: clear, up: clear });
+      t(`R26 an engine that ${label}: the ${kind} is read as it lies and notes states that its orientation could not be determined`,
+        [x.r.body.ok, x.turns, x.r.body.image.turned_deg, x.r.body.notes.length, typeof x.r.body.notes[0], x.r.body.notes[0].trim().length > 0],
+        [true, [0], 0, 1, "string", true]);
+    }
+  }
+  const unread = await run({ kind: "pdf", claim: null, side: garbage, up: garbage });
+  t("R26 and a page that cannot be oriented and cannot be read is refused with the statement among its notes",
+    [unread.r.body.reason, unread.r.body.notes.length], ["PAGE_NOT_LEGIBLE", 2]);
+
+  /* a turn the renderer refuses leaves the page read as it lies, and says so */
+  const refusing = stubRender((page, opts) => (opts.turn ? { ok: false, reason: "PIXELS_UNDETERMINED" } : pngPage(GREY4x3, 4, 3, { pixels_sha256: SIDE_SHA })));
+  const rf = await run({ kind: "pdf", claim: { rotation: 90 }, side: partial, up: clear, render: refusing });
+  t("R26 a turn the renderer refuses leaves the page read as it lies, with the statement that its orientation could not be determined",
+    [rf.r.body.ok, rf.turns, rf.r.body.image.turned_deg, rf.r.body.notes.length], [true, [0, 270], 0, 2]);
+}
+
+console.log("\n--- A14 · R26: the real engine's orientation, asked before its text is read, through the member's own code ---");
+let SCAN_CROP = null;
+{
+  /* the scanned page of the fixtures, its top 1100 rows: a 300-dpi page, which is where the engine's orientation is exact */
+  const first = await renderPageToPixels(SCAN, 0, { decodeDct: true });
+  const s0 = await pngToSamples(first.bytes);
+  const full = samplesToRgba(s0);
+  SCAN_CROP = { rgba: full.slice(0, s0.width * 1100 * 4), width: s0.width, height: 1100 };
+  SCAN_CROP.turned = (deg) => turnRgba(SCAN_CROP, deg);
+  const upright = await srcEngine.transcribeFrame(SCAN_CROP.rgba, SCAN_CROP.width, SCAN_CROP.height);
+  t("R26 the real engine, on an upright 300-dpi page, answers an orientation of 0 with its text", [upright.ok, upright.orientation, upright.regions.length > 5], [true, { rotation: 0 }, true]);
+  for (const deg of [90, 180, 270]) {
+    const f = SCAN_CROP.turned(deg);
+    const out = await srcEngine.transcribeFrame(f.rgba, f.width, f.height);
+    t(`R26 the real engine finds the same page turned ${deg} degrees clockwise turned ${deg}`, [out.ok, out.orientation], [true, { rotation: deg }]);
+  }
+  /* asking the orientation first changes nothing it reads: the same lines as the vendor engine gives without the question */
+  const vpkg = createRequire(fileURLToPath(new URL("../package.json", import.meta.url)));
+  const { createOCREngine: vendorEngine } = await import(pathToFileURL(vpkg.resolve("tesseract-wasm")).href);
+  const e = await vendorEngine({ wasmBinary: readFileSync(vpkg.resolve("tesseract-wasm").replace(/lib\.js$/, "tesseract-core.wasm")) });
+  let plain;
+  try {
+    e.loadModel(new Uint8Array(readFileSync(MODEL)));
+    e.loadImage({ data: SCAN_CROP.rgba, width: SCAN_CROP.width, height: SCAN_CROP.height });
+    plain = e.getTextBoxes("line").map((b) => b.text);
+  } finally { e.destroy(); }
+  t("R26 the orientation is asked before the text is read and the text read is unchanged by the question",
+    upright.regions.map((r) => r.text), plain);
+}
+
+console.log("\n--- A15 · R26 R25 R30: the member over the real engine, with the page renderer turning pages as pdf-pixels R48 says ---");
+{
+  /* pdf-pixels' `turn` is job 14's and unmerged when this was written: `withTurn` is a minimal local implementation of
+     R48's contract over the real renderer's own answer (the page turned clockwise by `turn`), so this arm tests the
+     member's logic against the real engine; the arm after it is the real renderers' seam. */
+  const encodeGrey = (rgba, w, h) => png({ width: w, height: h, rows: Array.from({ length: h }, (_, y) => Uint8Array.from({ length: w }, (_, x) => rgba[(y * w + x) * 4])) });
+  const withTurn = (real) => async (bytes, page, opts) => {
+    const a = await real(bytes, page, opts);
+    if (!a.ok || !opts.turn) return a;
+    const s = await pngToSamples(a.bytes);
+    const f = turnRgba({ rgba: samplesToRgba(s), width: s.width, height: s.height }, opts.turn);
+    const out = encodeGrey(f.rgba, f.width, f.height);
+    return { ...a, bytes: out, width: f.width, height: f.height, turned_deg: opts.turn, pixels_sha256: hex(f.rgba) };
+  };
+  const memberOf = () => makeMember(srcEngine, { render: withTurn(renderPageToPixels), renderPicture: withTurn(realRenderPicture) });
+  const body = async (bytes) => (await memberOf().transcribeRequest(bytes, [0], {}));
+  const pictureOf = (deg) => { const f = SCAN_CROP.turned(deg); return encodeGrey(f.rgba, f.width, f.height); };
+  const pagePdf = (deg, rotate) => {
+    const f = SCAN_CROP.turned(deg);
+    const rowBytes = Math.ceil(f.width / 8);
+    const raw = Buffer.alloc(rowBytes * f.height);
+    for (let y = 0; y < f.height; y++) for (let x = 0; x < f.width; x++) if (f.rgba[(y * f.width + x) * 4] > 127) raw[y * rowBytes + (x >> 3)] |= 0x80 >> (x & 7);
+    return bilevelPagePdf(f.width, f.height, (i) => raw[i], rotate);
+  };
+  const upright = await body(pictureOf(0));
+  t("R26 control: an upright picture of the page is read clearly and is not turned", [upright.ok, upright.image.turned_deg, upright.legibility.share >= 0.8, upright.notes], [true, 0, true, []]);
+  const wanted = upright.pages[0].regions.map((r) => r.text.replace(/\s+/g, " ").trim()).join(" ");
+  const sharedWords = (a, b) => { const bag = new Map(); for (const w of a.toLowerCase().split(/\W+/).filter(Boolean)) bag.set(w, (bag.get(w) || 0) + 1);
+    let hit = 0, total = 0; for (const w of b.toLowerCase().split(/\W+/).filter(Boolean)) { total++; if (bag.get(w) > 0) { hit++; bag.set(w, bag.get(w) - 1); } } return total ? hit / total : 0; };
+  for (const deg of [90, 180, 270]) {
+    const r = await body(pictureOf(deg));
+    const got = r.ok ? r.pages[0].regions.map((x) => x.text.replace(/\s+/g, " ").trim()).join(" ") : "";
+    t(`R26 B1 a picture of the page turned ${deg} degrees is turned upright and read at the legibility floor`,
+      [r.ok, r.image.turned_deg, r.legibility.share >= 0.8, sharedWords(wanted, got) >= 0.9], [true, (360 - deg) % 360, true, true]);
+  }
+  for (const [label, deg, rotate] of [["turned 90 degrees as its image", 90, 0], ["turned 180 degrees as its image", 180, 0], ["upright and carrying /Rotate 90", 0, 90], ["upright and carrying /Rotate 270", 0, 270]]) {
+    const r = await body(pagePdf(deg, rotate));
+    const got = r.ok ? r.pages[0].regions.map((x) => x.text.replace(/\s+/g, " ").trim()).join(" ") : "";
+    const asked = (360 - ((deg + rotate) % 360)) % 360;
+    t(`R26 B2 a PDF page ${label} is turned upright (${asked}) and read at the legibility floor`,
+      [r.ok, r.image.turned_deg, r.legibility.share >= 0.8, sharedWords(wanted, got) >= 0.9], [true, asked, true, true]);
+  }
+}
+
+console.log("\n--- A16 · R26 R25 R30 SEAM: the member over the REAL renderers (pdf-pixels R48, job 14) ---");
+{
+  /* red by name until pdf-pixels' `turn` merges: the member asked of the real page and picture renderers, unwrapped */
+  const real = makeMember(srcEngine);
+  const f = SCAN_CROP.turned(90);
+  const bytes = png({ width: f.width, height: f.height, rows: Array.from({ length: f.height }, (_, y) => Uint8Array.from({ length: f.width }, (_, x) => f.rgba[(y * f.width + x) * 4])) });
+  const r = await real.transcribeRequest(bytes, [0], {});
+  t("R26 SEAM pdf-pixels R48: the real picture renderer turns the page the member asks it to, and the page is read upright",
+    [r.ok, r.ok && r.image.turned_deg, r.ok && r.legibility.share >= 0.8], [true, 270, true]);
+}
+
+console.log("\n--- A17 · R25 G137d: one rule for photographs and PDF pages (inverted, blank, faint, noisy, clear) ---");
+{
+  const greyPdf = (w, h, pixels) => {
+    const data = deflateSync(Buffer.from(pixels));
+    const content = Buffer.from(`q ${w} 0 0 ${h} 0 0 cm /Im0 Do Q`, "latin1");
+    return pdf([
+      { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+      { num: 3, body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${w} ${h}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>` },
+      { num: 4, head: `<< /Length ${content.length} >>`, stream: content },
+      { num: 5, head: `<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode /Length ${data.length} >>`, stream: data },
+    ]);
+  };
+  const recipes = [["clear", {}], ["inverted", { invert: true }], ["faint", { contrast: true }], ["noisy", { noise: 0.2 }], ["tilted and shaded", { tilt: 3, shade: 0.5 }]];
+  const real = makeMember(srcEngine);
+  const classify = (r) => (!r.ok ? (/NOT_LEGIBLE$/.test(r.reason) ? "illegible" : r.reason)
+    : r.legibility ? (r.legibility.share >= LEGIBLE_NOTE_BELOW ? "clear" : "partial") : "unrated");
+  const consistent = (r, kind) => {
+    if (!r.ok) {
+      if (!/NOT_LEGIBLE$/.test(r.reason)) return true;        /* another finding (nothing transcribed ...), not a legibility answer */
+      return r.reason === (kind === "picture" ? "PICTURE_NOT_LEGIBLE" : "PAGE_NOT_LEGIBLE") && r.refusal.legibility.share < LEGIBLE_REFUSE_BELOW && r.pages === undefined;
+    }
+    if (!r.legibility) return true;
+    return r.legibility.share >= LEGIBLE_REFUSE_BELOW && (r.legibility.share < LEGIBLE_NOTE_BELOW) === (r.notes.length > 0);
+  };
+  const seen = [];
+  for (const [label, degrade] of recipes) {
+    const g = generate({ kind: "png", seed: "g137", size: { lines: 12 }, dpi: 150, mode: "L", degrade });
+    const picBytes = await g.bytes();
+    const tp = g.truth.pages[0];
+    const pdfBytes = greyPdf(tp.width, tp.height, tp.pixels());
+    const pic = await real.transcribeRequest(picBytes, [0], {});
+    const page = await real.transcribeRequest(pdfBytes, [0], {});
+    seen.push([label, classify(pic), classify(page)]);
+    t(`R25 G137d ${label}: the picture's answer follows R25's rule (refused under 1/5 with PICTURE_NOT_LEGIBLE and no text, a note under 4/5)`,
+      [consistent(pic, "picture")], [true]);
+    t(`R25 G137d ${label}: the PDF page's answer follows the same rule with its own reason`,
+      [consistent(page, "page")], [true]);
+    if (page.ok && page.legibility && page.legibility.share < LEGIBLE_NOTE_BELOW)
+      t(`R25 G137d ${label}: a PDF page partly legible keeps its text and says so in a note`, [page.pages[0].regions.length > 0, page.notes.length > 0], [true, true]);
+  }
+  console.log("        classes (picture / page): " + seen.map(([l, a, b]) => `${l} ${a}/${b}`).join(", "));
+  const blank = greyPdf(600, 800, new Uint8Array(600 * 800).fill(255));
+  const rb = await real.transcribeRequest(blank, [0], {});
+  t("R25 G137d a blank page is answered NOTHING_TRANSCRIBED, as a blank picture is", [rb.ok, rb.reason], [false, "NOTHING_TRANSCRIBED"]);
+  const g0 = generate({ kind: "png", seed: "g137", size: { lines: 12 }, dpi: 150, mode: "L", degrade: {} });
+  const clearPic = await real.transcribeRequest(await g0.bytes(), [0], {});
+  t("R25 G137d control: the clear page is not refused as a picture, and its legibility is stated", [clearPic.ok, typeof clearPic.legibility.share], [true, "number"]);
+}
+
+console.log("\n--- A18 · R27: a call reads its page's bytes, not the file's ---");
+{
+  const SIZE = 8 * 1024 * 1024;
+  const big = new Uint8Array(SIZE); big.set([0x25, 0x50, 0x44, 0x46, 0x2d], 0);
+  const reading = () => stubRender(async (pg, opts, src) => {
+    await src.readRange(src.size - 1024, 1024);          /* the cross-reference data */
+    await src.readRange(2048 + pg * 4096, 4096);         /* the page's own objects */
+    await src.readRange(1 << 20, 64 * 1024);             /* its image stream */
+    return pngPage(GREY4x3, 4, 3);
+  });
+  const w = world({ doc: big, render: reading() });
+  const sha = hex(big);
+  const gets = () => w.bucket.log.filter(([k]) => k === "get");
+  let worst = 0;
+  for (let page = 0; page < 24; page++) {
+    const before = gets().length;
+    const r = await w.ask({ capture_sha: sha, store: "scratch", pages: [page] });
+    const mine = gets().slice(before);
+    const bytesAsked = mine.reduce((n, [, , range]) => n + (range ? range.length : SIZE), 0);
+    worst = Math.max(worst, bytesAsked);
+    if (page === 0 || page === 23)
+      t(`R27 page ${page} of a ${SIZE}-byte capture: answered, every R2 read is a range, and the bytes asked are the page's`,
+        [r.body.ok, mine.every(([, , range]) => range && range.length > 0), bytesAsked < 100 * 1024], [true, true, true]);
+  }
+  t("R27 across the up to 24 calls of a document no call asked for more than the page's bytes (the largest was a fiftieth of the file)", worst < SIZE / 50, true);
+  t("R27 and the source the renderer is given states the capture's size", w.render.calls[0].bytes, SIZE);
+  t("R27 R15 only `get` was ever touched on CAPTURES", [...new Set(w.bucket.log.filter(([k]) => k === "touch").map(([, p]) => p))], ["get"]);
+
+  /* the small capture is read from the first read: the sniff of what it is costs no second read */
+  const small = world();
+  await small.ask(good());
+  t("R27 a capture smaller than the first read costs one R2 read in all", small.bucket.log.filter(([k]) => k === "get").length, 1);
+
+  /* a picture: its header is judged from a bounded start of the file and the renderer reads the rest through the source */
+  const JPG = new Uint8Array(2 * 1024 * 1024); JPG.set([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0xff, 0xc0, 0, 17, 8, 0x07, 0xd0, 0x0b, 0xb8, 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1]);
+  const pw = world({ doc: JPG, renderPicture: stubRender(async (pg, opts, src) => { await src.readRange(0, 4096); return pngPage(GREY4x3, 4, 3, { route: "decoded-picture" }); }) });
+  const pr = await pw.ask({ capture_sha: pw.sha, store: "scratch", pages: [0] });
+  t("R27 a picture capture is read as a range too: its header start and what the renderer asks, never the whole object",
+    [pr.body.ok, pw.bucket.log.filter(([k]) => k === "get").every(([, , range]) => range && range.length <= 65536)], [true, true]);
+
+  /* an object with nothing in it is a capture R2 will not take a range of: it is read plainly and refused by the renderer */
+  const empty = world({ doc: new Uint8Array(0), render: stubRender({ ok: false, reason: "NOT_A_PDF" }) });
+  const er = await empty.ask({ capture_sha: empty.sha, store: "scratch", pages: [0] });
+  t("R27 a capture of no bytes is answered 200 with the renderer's own refusal, not an error", [er.status, er.body.reason, er.body.refusal.render.reason], [200, "PAGE_NOT_RENDERABLE", "NOT_A_PDF"]);
+}
+
+console.log("\n--- A19 · R28: a top-level guard — whatever throws inside a call is a 200 ok:false with the step and the error's name ---");
+{
+  const JPG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+  const throwing = (e) => async () => { throw e; };
+  const cases = [
+    ["the page renderer throws", { render: throwing(new RangeError("page renderer blew")) }, DOC, "render", "RangeError"],
+    ["the picture renderer throws", { renderPicture: throwing(new TypeError("picture renderer blew")), doc: JPG }, JPG, "render", "TypeError"],
+    ["the renderer answers bytes the PNG reader cannot take at all", { render: stubRender(pngPage(12345n, 4, 3)) }, DOC, "png", "TypeError"],
+    ["the engine's check throws", { engine: (() => { const e = stubEngine(); e.check = () => { throw new Error("check blew"); }; return e; })() }, DOC, "engine_check", "Error"],
+  ];
+  for (const [label, opts, doc, stage, name] of cases) {
+    const w = world({ doc, ...opts });
+    const r = await w.ask({ capture_sha: w.sha, store: "scratch", pages: [3, 0] });
+    t(`R28 ${label}: 200 ok:false UNEXPECTED_FAILURE naming the step and the error, the deferred page kept`,
+      [r.status, r.body.ok, r.body.reason, r.body.stage, r.body.error_name, r.body.refusal.stage, r.body.refusal.error_name, r.body.page, r.body.deferred],
+      [200, false, "UNEXPECTED_FAILURE", stage, name, stage, name, 0, [3]]);
+  }
+  const rr = await post(world().member, { CAPTURES: { get: async () => { throw new Error("R2 blew"); } }, VERSION: "b" }, good());
+  t("R28 R2 throws: 200 ok:false UNEXPECTED_FAILURE at the read, never a 5xx and never a thrown error",
+    [rr.status, rr.body.ok, rr.body.reason, rr.body.stage, rr.body.error_name], [200, false, "UNEXPECTED_FAILURE", "read", "Error"]);
+  t("R28 the answer states the sentence of the refusal and no other status", [typeof REFUSALS.UNEXPECTED_FAILURE, rr.body.detail === REFUSALS.UNEXPECTED_FAILURE], ["string", true]);
+
+  /* the controls: a request R1-R4 refuse is still refused as it was, and a good request is unchanged */
+  const w = world();
+  const bad = await w.ask({ capture_sha: "x", store: "scratch", pages: [0] });
+  const ok = await w.ask(good());
+  t("R28 control: the checks of R1-R5 still answer their own statuses, and a good request is still answered ok", [bad.status, bad.body.reason, ok.status, ok.body.ok], [400, "BAD_SHA", 200, true]);
+
+  /* the PNG reader's corrupt-stream case is a refusal of its own, no throw and no unhandled rejection */
+  const rawBad = (() => { const head = Buffer.alloc(13); head.writeUInt32BE(4, 0); head.writeUInt32BE(3, 4); head[8] = 8; head[9] = 0;
+    return new Uint8Array(Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", head), chunk("IDAT", Buffer.from([1, 2, 3, 4, 5, 6, 7, 8])), chunk("IEND", Buffer.alloc(0))])); })();
+  const cw = world({ render: stubRender(pngPage(rawBad, 4, 3)) });
+  const cr = await cw.ask(good());
+  t("R28 R7.5 a PNG whose image data does not inflate is PIXELS_UNREADABLE (PNG_CORRUPT_DATA), a stated finding", [cr.status, cr.body.reason, cr.body.refusal.png.reason], [200, "PIXELS_UNREADABLE", "PNG_CORRUPT_DATA"]);
+}
+
+console.log("\n--- A20 · R29: an OCR_PSM that is no page-segmentation mode is refused on every call ---");
+{
+  let bodyRead = false;
+  const req = (body = good()) => ({ method: "POST", url: "http://ocr-worker/transcribe", json: async () => { bodyRead = true; return body; } });
+  for (const value of ["abc", "14", "-1", "3.5", "03", " 3", "3 ", "1e1", "0x6", "13.0", "99", 14, -1, 3.5, true, {}, ["3"], "x".repeat(200)]) {
+    const w = world({ env: { OCR_PSM: value } });
+    bodyRead = false;
+    const r = await w.member.fetch(req(), w.env);
+    const b = await r.json(); WIRE.push(b);
+    t(`R29 OCR_PSM ${JSON.stringify(value).slice(0, 24)} -> 503 BAD_PSM naming the value, the body never read`,
+      [r.status, b.ok, b.reason, typeof b.value, b.value.length <= 80, bodyRead, w.engine.calls.length], [503, false, "BAD_PSM", "string", true, false, 0]);
+  }
+  const long = world({ env: { OCR_PSM: "y".repeat(200) } });
+  const lr = await (await long.member.fetch(req(), long.env)).json();
+  t("R29 the value is named and truncated to 80 characters", lr.value, "y".repeat(80));
+  t("R29 BAD_PSM is a declared refusal", typeof REFUSALS.BAD_PSM, "string");
+  const noBucket = await world({ env: { OCR_PSM: "abc" } }).member.fetch(req(), { OCR_PSM: "abc" });
+  t("R29 R5 with no CAPTURES binding R5 is answered first (503 R2_NOT_CONFIGURED)", (await noBucket.json()).reason, "R2_NOT_CONFIGURED");
+  for (const value of ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", 6, 13, 0]) {
+    const w = world({ env: { OCR_PSM: value } });
+    const r = await w.ask(good());
+    t(`R29 OCR_PSM ${JSON.stringify(value)} is a page-segmentation mode: accepted, and given to the engine as the text ${JSON.stringify(String(value))}`,
+      [r.status, r.body.ok, w.engine.calls[0].opts], [200, true, { psm: String(value) }]);
+  }
+  for (const value of [undefined, null, ""]) {
+    const w = world({ env: { OCR_PSM: value } });
+    const r = await w.ask(good());
+    t(`R29 control: OCR_PSM ${JSON.stringify(value)} is no setting: accepted, the engine given none`, [r.status, r.body.ok, w.engine.calls[0].opts], [200, true, { psm: null }]);
+  }
+  t("R29 the set the member accepts is exactly tesseract's 14 modes, frozen", [PAGE_SEG_MODES, Object.isFrozen(PAGE_SEG_MODES)], [["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"], true]);
+  t("R29 psmFrom reads the setting the way the member does", [psmFrom({ OCR_PSM: "6" }), psmFrom({}), psmFrom({ OCR_PSM: "zz" })],
+    [{ set: true, ok: true, mode: "6", value: "6" }, { set: false, ok: true, mode: null }, { set: true, ok: false, mode: null, value: "zz" }]);
+}
+
+console.log("\n--- A21 · R30: a page routed here is read though it shows text ---");
+{
+  /* a scanned page carrying a printed folio: an image page with a text-showing operator */
+  const W = 600, H = 800;
+  const raw = Buffer.alloc(Math.ceil(W / 8) * H, 0xff);
+  const data = deflateSync(raw);
+  const content = Buffer.from(`q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q BT /F1 10 Tf 20 20 Td (3) Tj ET`, "latin1");
+  const FOLIO = pdf([
+    { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 5 0 R >> /Font << /F1 6 0 R >> >> /Contents 4 0 R >>` },
+    { num: 4, head: `<< /Length ${content.length} >>`, stream: content },
+    { num: 5, head: `<< /Type /XObject /Subtype /Image /Width ${W} /Height ${H} /ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /FlateDecode /Length ${data.length} >>`, stream: data },
+    { num: 6, body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>" },
+  ]);
+  const without = await renderPageToPixels(FOLIO, 0, { decodeDct: true });
+  t("R30 the page renderer, asked as it was before, refuses the folio page for its text layer (the cause)", [without.ok, without.reason], [false, "PAGE_HAS_TEXT_LAYER"]);
+  const sha = hex(FOLIO);
+  const line = { text: "RESOLUTION No. 1", rect: [10, 10, 200, 40], confidence: 0.9 };
+  const engine = stubEngine({ regions: [line] });
+  const bucket = recordingBucket(new Map([[`scratch/captures/${sha}`, FOLIO]]));
+  const r = await post(makeMember(engine, { render: viaBytes(renderPageToPixels) }), { CAPTURES: bucket.proxy, VERSION: "v" }, { capture_sha: sha, store: "scratch", pages: [0] });
+  t("R30 R7.2 the member transcribes a scanned page that carries a printed folio, through the real page renderer: it is not refused",
+    [r.status, r.body.ok, r.body.reason, r.body.pages?.[0].regions.map((x) => x.text), engine.calls.length], [200, true, undefined, ["RESOLUTION No. 1"], 1]);
+  const asked = world({ doc: FOLIO });
+  await asked.ask({ capture_sha: sha, store: "scratch", pages: [0] });
+  t("R30 the page renderer is asked with allowTextPage and decodeDct", asked.render.calls[0].opts, { decodeDct: true, allowTextPage: true });
+}
+
+console.log("\n--- A22 · R7 R24 G125g: a picture's frame is judged from its header, before anything is rendered ---");
+{
+  const jpegOf = (width, height) => new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0,
+    0xff, 0xc0, 0, 17, 8, height >> 8, height & 255, width >> 8, width & 255, 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1, 0xff, 0xd9]);
+  const pngOf = (width, height) => png({ width, height, rows: [] });
+  const edge = PICTURE_MAX_EDGE, bound = MAX_FRAME_BYTES;
+  const widest = Math.floor(bound / 4 / edge);       /* the tallest 4096-wide frame that fits the bound */
+  for (const [format, make] of [["PNG", pngOf], ["JPEG", jpegOf]]) {
+    for (const [label, wd, ht, refused] of [
+      [`${edge} x ${widest + 1}: one row over the bound`, edge, widest + 1, true],
+      [`${edge} x ${edge}`, edge, edge, true],
+      [`${edge} x ${widest}: the last row that fits`, edge, widest, false],
+      ["a small picture", 800, 600, false],
+    ]) {
+      const doc = make(wd, ht);
+      for (const via of ["R2", "bytes"]) {
+        const rp = stubRender(pngPage(GREY4x3, 4, 3, { route: "decoded-picture" }));
+        const m = makeMember(stubEngine({ regions: [{ text: "a line", rect: [0, 0, 2, 1], confidence: 0.9 }] }), { renderPicture: rp });
+        let out;
+        if (via === "bytes") out = await m.transcribeRequest(doc, [0], {});
+        else {
+          const bucket = recordingBucket(new Map([[`scratch/captures/${hex(doc)}`, doc]]));
+          out = (await post(m, { CAPTURES: bucket.proxy, VERSION: "v" }, { capture_sha: hex(doc), store: "scratch", pages: [0] })).body;
+        }
+        t(`R7.4 G125g a ${format} of ${label} (${via}): ${refused ? "refused before any render, naming its frame" : "reaches the renderer"}`,
+          [out.ok, out.reason, rp.calls.length, refused ? [out.refusal.width, out.refusal.height, out.refusal.frame_bytes, out.refusal.bound_bytes] : null],
+          refused ? [false, "FRAME_OVER_MEASURED_BOUND", 0, [wd, ht, wd * ht * 4, bound]] : [true, undefined, 1, null]);
+      }
+    }
+  }
+  /* the reduced frame is what the renderer makes: a 6000-wide picture is halved and fits */
+  const rp = stubRender(pngPage(GREY4x3, 4, 3, { route: "decoded-picture" }));
+  const big = makeMember(stubEngine({ regions: [{ text: "a line", rect: [0, 0, 2, 1], confidence: 0.9 }] }), { renderPicture: rp });
+  const wide = await big.transcribeRequest(pngOf(6000, 4000), [0], {});
+  t("R7.4 G125g a picture longer than the edge is judged as the renderer reduces it (6000 x 4000 becomes 3000 x 2000): it reaches the renderer",
+    [wide.ok, rp.calls.length], [true, 1]);
+  const none = await big.transcribeRequest(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]), [0], {});
+  t("R7.4 a picture whose header cannot be read here is not refused by it: the rendered frame is judged as before", [none.ok, rp.calls.length], [true, 2]);
+  const order = makeMember(stubEngine({ check: "no engine" }), { renderPicture: rp });
+  const o = await order.transcribeRequest(pngOf(edge, edge), [0], {});
+  t("R7.1 R7.4 the engine is checked first: ENGINE_ABSENT, even for a frame over the bound", o.reason, "ENGINE_ABSENT");
+  const p1 = await big.transcribeRequest(pngOf(edge, edge), [1], {});
+  t("R23 R7.4 a page a picture does not have is named NO_SUCH_PAGE before its frame is judged", p1.reason, "NO_SUCH_PAGE");
+  t("R7.4 the frame over the bound is the PDF page's, too, once rendered, as before (a 5000 x 3066 page)",
+    (await makeMember(stubEngine(), { render: stubRender(pngPage(new Uint8Array([1, 2, 3]), 5000, 3066)) }).transcribeRequest(DOC, [0], {})).reason, "FRAME_OVER_MEASURED_BOUND");
+  t("R7.4 declaredPictureFrame answers null for bytes that are no picture", await declaredPictureFrame(sourceOfBytes(new Uint8Array([1, 2, 3, 4]))), null);
+}
+
+console.log("\n--- A23 · R31: no ceiling this module keeps is a numeric literal; each quotes the table ---");
+{
+  const bounds = await import("../../bio-plane/src/read-bounds.mjs");
+  t("R31 R7.4 MAX_FRAME_BYTES is the table's ocr.frame_bytes row, as the active figure", [MAX_FRAME_BYTES, MAX_FRAME_BYTES === bounds.boundOf("ocr", "frame_bytes")], [61_300_000, true]);
+  t("R31 PICTURE_MAX_EDGE is the table's ocr.picture_edge row where the table has one (4096 as proposed until then; BOB records)",
+    PICTURE_MAX_EDGE, Object.hasOwn(bounds.READ_BOUNDS.ocr, "picture_edge") ? bounds.boundOf("ocr", "picture_edge") : 4096);
+  const SRC = fileURLToPath(new URL("../src/", import.meta.url));
+  const strip = (x) => x.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1").replace(/"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`|'(?:[^'\\\n]|\\.)*'/g, '""');
+  const own = readdirSync(SRC).filter((f) => f.endsWith(".mjs") && f !== "tesslib.mjs");
+  const literals = [];
+  for (const f of own) for (const line of strip(readFileSync(SRC + f, "utf8")).split("\n")) {
+    const big = [...line.matchAll(/(?<![\w.])(\d[\d_]{3,})(?![\w.])/g)].map((m) => m[1]);
+    if (big.length) literals.push([f, line.trim().slice(0, 100)]);
+  }
+  /* the module's numeric literals of four digits or more: the ceiling's own proposed fallback and the one read size are
+     what remain (a header read, a conversion factor); a literal ceiling anywhere else would be listed here */
+  t("R31 the module's source holds no numeric literal of four digits or more for a ceiling: only the picture edge's proposed figure, one read size and the two measured byte lengths of the engine's own parts (R19) remain",
+    literals.map(([f, l]) => `${f}: ${l.replace(/\s+/g, " ")}`).sort(),
+    ["contract.mjs: : 4096;", "contract.mjs: const HEADER_WINDOW = 65536;", "tessengine.mjs: export const MODEL_BYTES = 4113088;", "tessengine.mjs: export const WASM_BYTES = 1839004;"]);
+  const ceilings = [...own].flatMap((f) => [...readFileSync(SRC + f, "utf8").matchAll(/export const ([A-Z_]*(?:MAX|BOUND)[A-Z_]*) =\s*([^;]*);/g)].map((m) => [f, m[1], m[2]]));
+  t("R31 every exported ceiling constant is read through boundOf", ceilings.filter(([, , init]) => !/boundOf\(/.test(init)).map(([f, n]) => `${f}:${n}`), []);
+  t("R31 and the ceilings found are the two this module keeps", ceilings.map(([, n]) => n).sort(), ["MAX_FRAME_BYTES", "PICTURE_MAX_EDGE"]);
+}
+
+console.log("\n--- A24 · R27 SEAM: the member over the REAL renderers asked a source (pdf-pixels R47, job 14) ---");
+{
+  /* red by name until pdf-pixels' source reading merges: the member, its real page and picture renderers, a capture in a bucket */
+  const asked = async (doc) => {
+    const bucket = recordingBucket(new Map([[`scratch/captures/${hex(doc)}`, doc]]));
+    const m = makeMember(stubEngine({ regions: [{ text: "a line", rect: [0, 0, 2, 1], confidence: 0.9 }] }));
+    return { out: await post(m, { CAPTURES: bucket.proxy, VERSION: "v" }, { capture_sha: hex(doc), store: "scratch", pages: [0] }), bucket };
+  };
+  const pdfAsk = await asked(TWO_PAGE);
+  const wholeObject = pdfAsk.bucket.log.filter(([k]) => k === "get").reduce((n, [, , range]) => n + (range ? range.length : TWO_PAGE.length), 0);
+  t("R27 SEAM pdf-pixels R47: a scanned PDF page through the real page renderer is read from ranges of the object, fewer bytes than the file holds",
+    [pdfAsk.out.body.ok, pdfAsk.bucket.log.every(([k, , range]) => k !== "get" || range), wholeObject < TWO_PAGE.length], [true, true, true]);
+  const picAsk = await asked(PHOTO_JPG);
+  t("R27 SEAM pdf-pixels R47: a photograph through the real picture renderer is answered from a source", [picAsk.out.body.ok], [true]);
 }
 
 /* ============================================================================================================ *
@@ -930,7 +1437,7 @@ let real = null;
 {
   const { status, body } = await ask("scan");
   real = body;
-  t("R8 200 ok:true, with every named field", [status, body.ok, keys(body)],
+  t("R8 200 ok:true, with every named field", [status, body.ok, keys(body).filter((k) => k !== "legibility")],
     [200, true, ["cap", "confidence_floor", "deferred", "engine", "grain", "image", "measured_by", "model", "notes", "ok", "pages", "version"]]);
   t("R8 the engine named; cap C, a letter of the record's scale; measured_by the one citation",
     [body.engine, body.version, body.model, body.cap, BASIS_GRADES.includes(body.cap), body.measured_by === MEASURED_BY],
@@ -938,7 +1445,7 @@ let real = null;
   t("R8 the floor is a stated null (none configured); grain line; nothing deferred",
     [body.confidence_floor, body.grain, body.deferred], [null, "line", []]);
   t("R8 the image is the rendered frame's, by the independent decoder's digest",
-    body.image, { width: 2550, height: 3300, frame_bytes: 2550 * 3300 * 4, route: "decoded-ccitt-g4", upright: true,
+    settled(body.image), { width: 2550, height: 3300, frame_bytes: 2550 * 3300 * 4, route: "decoded-ccitt-g4", upright: true,
                   rotate_deg: 270, dpi: body.image.dpi, pixels_sha256: IND_UPRIGHT_SHA });
   t("R8 exactly one page, page 0", [body.pages.length, body.pages[0].page], [1, 0]);
 
@@ -1008,10 +1515,14 @@ console.log("\n--- B3 · R6: ONE page per invocation, on the real member ---");
 console.log("\n--- B4 · R7: the real renderer's refusals pass through verbatim; the real bound; the real controls ---");
 {
   for (const [name, page] of [["texty", 0], ["notpdf", 0], ["scan", 5]]) {
-    const direct = await renderPageToPixels(name === "texty" ? TEXTY : name === "notpdf" ? NOT_PDF : SCAN, page, { decodeDct: true });
+    const doc = name === "texty" ? TEXTY : name === "notpdf" ? NOT_PDF : SCAN;
+    /* the bundle of the round's start asks for decodeDct alone, the rebuilt one adds allowTextPage (R30): the renderer's
+       reason is that of the one that answered, and either way it is forwarded verbatim */
+    const direct = await renderPageToPixels(doc, page, { decodeDct: true });
+    const direct2 = await renderPageToPixels(doc, page, { decodeDct: true, allowTextPage: true });
     const r = await ask(name, [page]);
-    t(`R7.2 ${name} p${page}: 200 PAGE_NOT_RENDERABLE carrying the renderer's own reason (${direct.reason})`,
-      [r.status, r.body.ok, r.body.reason, r.body.refusal.render.reason], [200, false, "PAGE_NOT_RENDERABLE", direct.reason]);
+    t(`R7.2 ${name} p${page}: 200 PAGE_NOT_RENDERABLE carrying the renderer's own reason (${direct.reason}, or ${direct2.reason} for a page that shows text)`,
+      [r.status, r.body.ok, r.body.reason, [direct.reason, direct2.reason].includes(r.body.refusal.render.reason)], [200, false, "PAGE_NOT_RENDERABLE", true]);
   }
   const huge = await ask("huge");
   t("R7.4 a 5000 x 5000 page is refused FRAME_OVER_MEASURED_BOUND, 200, naming its frame",
@@ -1042,7 +1553,7 @@ console.log("\n--- B8 · R23: a photograph of a printed sentence, transcribed in
       [body.engine, body.version, body.model, body.cap, body.grain, body.deferred, body.measured_by === MEASURED_BY],
       ["tesseract-wasm", "0.11.0", "tessdata_fast/eng", "C", "line", [], true]);
     t(`R23 ${format}: the image is the picture renderer's own frame, by the renderer's digest`,
-      body.image, { width: direct.width, height: direct.height, frame_bytes: direct.width * direct.height * 4,
+      settled(body.image), { width: direct.width, height: direct.height, frame_bytes: direct.width * direct.height * 4,
                     route: "decoded-picture", upright: true, rotate_deg: null, dpi: null,
                     pixels_sha256: direct.pixels_sha256 });
     const regions = body.pages[0].regions;
@@ -1107,8 +1618,8 @@ console.log("\n--- B6 · R15: it wrote nothing, and cannot ---");
   const SRC = fileURLToPath(new URL("../src/", import.meta.url));
   const own = readdirSync(SRC).filter((f) => f.endsWith(".mjs") && f !== "tesslib.mjs");
   const code = own.map((f) => readFileSync(SRC + f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1")).join("\n");
-  t("R15 the sources read are this member's own (five modules, not an empty corpus)",
-    [own.sort(), code.length > 10000], [["contract.mjs", "index.mjs", "member.mjs", "pngsamples.mjs", "tessengine.mjs"], true]);
+  t("R15 the sources read are this member's own (six modules, not an empty corpus)",
+    [own.sort(), code.length > 10000], [["contract.mjs", "frame.mjs", "index.mjs", "member.mjs", "pngsamples.mjs", "tessengine.mjs"], true]);
   t("R15 no .put, .delete, .createMultipartUpload or .resumeMultipartUpload call in them",
     [...code.matchAll(/\.(put|delete|createMultipartUpload|resumeMultipartUpload)\s*\(/g)].map((m) => m[1]), []);
   /* The generated vendor glue is the vendor's code, accounted for rather than waved past: its only write-shaped
