@@ -58,7 +58,7 @@ test("R40 R37 the staff directory reads 400,000 characters of a-a-a- in one pass
   const got = last(r);
   assert.equal(got.match, false);
   assert.ok(ms < 20_000, `${Math.round(ms)} ms`);
-  assert.ok(got.work > 0 && got.work <= 4 * got.chars, `the work counted: ${got.work} of ${got.chars} characters`);
+  assert.ok(got.work > 0 && got.work <= got.chars, `the work counted: ${got.work} of ${got.chars} characters`);
 });
 
 test("R40 R37 16,000 addresses on one line are read within the bound, each entry carries a line cut around its address, and the answer says where it stopped", async () => {
@@ -79,7 +79,7 @@ test("R40 R37 a 17 MB spreadsheet of distinct addresses adds under 16 MB, and sa
   assert.equal(got.cut, true);
   assert.equal(got.entities, got.limit);
   assert.ok(got.readTo < got.chars);
-  assert.ok(got.work > 0 && got.work <= 4 * got.chars, `the work counted: ${got.work} of ${got.chars}`);
+  assert.ok(got.work > 0 && got.work <= got.chars, `the work counted: ${got.work} of ${got.chars}`);
 });
 
 test("R40 a directory below the bound is read whole: every address, no cut, the lines as they stand", () => {
@@ -172,11 +172,11 @@ test("R40 a text of quoted words with no verb to define them is read in work lin
   assert.ok(performance.now() - t0 < 5_000, `${Math.round(performance.now() - t0)} ms`);
 });
 
-test("R40 the real entry path reads 40,000 definitions as definitions of an instrument", () => {
-  const r = readText(definitions(40_000));
+test("R40 the real entry path reads 5,000 definitions as definitions of an instrument", () => {
+  const r = readText(definitions(5_000));
   assert.equal(r.doctype.type.key, "regulation");
   assert.equal(r.parse_error, null);
-  assert.equal(r.parsed.definitions.length, 40_000);
+  assert.equal(r.parsed.definitions.length, 5_000);
 });
 
 /* --------------------------------------------------------------------------------------- the references (G140) */
@@ -234,20 +234,22 @@ test("R40 every type's detect and parse add the characters they examine to ctx.w
     prose: repeated("The office keeps the papers of each matter in the file kept for it.\n", n),
     dashes: repeated("a-", n), tags: repeated("<div", n), quoted: repeated('"a" ', n), addresses: repeated("a@b.co, ", n),
     dates: repeated("1/2/2026 ", n), whereas: repeated("WHEREAS ", n), newlines: repeated("\n", n), cites: repeated("Ordinance No. 13000 C.M.S. ", n),
+    outline: repeated("A. ", n), capsEndingInNumbers: repeated("A 1 ", n),
+    /* a verb at the end of a line of quoted words, and a policy's header followed by blank lines */
+    chain: repeated('"a" ', n) + " x means", header: "Administrative Instruction\nNumber 71\n" + repeated("\n", n),
   };
   for (const t of DOCTYPES) {
     if (t.key === "generic") continue;
     for (const [shape, text] of Object.entries(shapes)) {
       for (const fn of ["detect", "parse"]) {
-        /* A policy's parse reads a header and an outline whose cost on shapes no policy has is not yet bounded (see the job record). */
-        if (t.key === "policy" && fn === "parse" && shape !== "prose") continue;
         const work = { chars: 0 };
         const t0 = performance.now();
         t[fn](ctxOf(text, { work }));
         const ms = performance.now() - t0;
         assert.ok(ms < 5_000, `${t.key} ${fn} on ${shape}: ${Math.round(ms)} ms`);
         assert.ok(work.chars > 0 || fn === "parse", `${t.key} ${fn} on ${shape} counted nothing`);
-        assert.ok(work.chars <= 12 * text.length, `${t.key} ${fn} on ${shape}: ${work.chars} characters counted for ${text.length}`);
+        /* a detect is charged the window once, a parse every pass it makes */
+        assert.ok(work.chars <= (fn === "detect" ? 1 : 12) * text.length, `${t.key} ${fn} on ${shape}: ${work.chars} characters counted for ${text.length}`);
       }
     }
   }

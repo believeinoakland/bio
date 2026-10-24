@@ -25,18 +25,24 @@ let WORK = null;
 export function spend(n) {
   if (WORK !== null && n > 0) WORK.chars += n;
 }
-/** `type` with its `detect` and `parse` counting into `ctx.work` (R40). */
+/** `type` with its `detect` and `parse` counting into `ctx.work` (R40). A `detect` is handed one window of the text and is
+ *  charged that window once however many passes it makes over it (docprofile's budget is a number of windows examined, one
+ *  for each type asked); a `parse` is charged every pass it makes. */
 export function counted(type) {
-  const run = (fn) => function (ctx, ...rest) {
+  const run = (fn, once) => function (ctx, ...rest) {
     const w = ctx && ctx.work;
     if (!w || typeof w !== "object" || typeof w.chars !== "number") return fn.call(this, ctx, ...rest);
     const prev = WORK;
-    WORK = w;
-    try { return fn.call(this, ctx, ...rest); } finally { WORK = prev; }
+    const mine = once ? { chars: 0 } : w;
+    WORK = mine;
+    try { return fn.call(this, ctx, ...rest); } finally {
+      WORK = prev;
+      if (once) w.chars += Math.min(mine.chars, String((ctx && ctx.text) || "").length);
+    }
   };
   const out = { ...type };
-  if (typeof type.detect === "function") out.detect = run(type.detect);
-  if (typeof type.parse === "function") out.parse = run(type.parse);
+  if (typeof type.detect === "function") out.detect = run(type.detect, true);
+  if (typeof type.parse === "function") out.parse = run(type.parse, false);
   return out;
 }
 
@@ -187,7 +193,7 @@ export function rawMergedHits(text, tagged, each, { chunk = WINDOW_CHARS, pad = 
 /* ------------------------------------------------------------------------------------------- the references */
 
 /* The most distinct references (instruments, file numbers, code sections) one reading keeps, and the most repeat
- * sightings of them it records (R40; proposed, BOB records): the memory a reading holds is then a number of references
+ * sightings of them it records (R40; protective, BOB's, K4868): the memory a reading holds is then a number of references
  * and sightings and never the number a text of any size cites. Past either, a sighting is counted and not kept, and the
  * answer says so (`references_cut`, `references_skipped`). */
 export const REFERENCES_MAX = 20_000;

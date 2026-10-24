@@ -347,15 +347,41 @@ function passageEnd(raw, from, lineOf) {
 const DEFINES_GATE = /shall[ \t]+mean|shall[ \t]+include|means|includes|is[ \t]+defined[ \t]+as|refers[ \t]+to/;
 const AS_USED_GATE = /as[ \t]+used[ \t]+in[ \t]+this/i;
 
+/* A line longer than this is read around the places its gate matches and not whole (R40, B13): the chain of quoted terms
+   a definition names is read again from each quote of a line that has a verb far from them, so a line of tens of
+   thousands of quoted words with a verb at its end would be read once for each word. What is read is the stretch before
+   the verb in which a chain stands (`before` characters; a chain of more than that many characters of quoted terms
+   before its verb reads from its later terms) and the stretch after the opener of the "as used in this" form. */
+const LONG_LINE = 3000;
+
 /** Calls `fn(m)` for each match of the global pattern `re` in `raw`, `m.index` an offset in `raw`. A match of the
- *  definitional voices never holds a line break, so the text is read a line at a time, and only the lines `gate` admits. */
-function eachLineMatch(raw, re, gate, fn) {
+ *  definitional voices never holds a line break, so the text is read a line at a time, and only the lines `gate` admits;
+ *  a long line only around the places the gate matches (`before` and `after` characters about each). */
+function eachLineMatch(raw, re, gate, fn, before = 1500, after = 80) {
+  const global = new RegExp(gate.source, gate.flags.includes("g") ? gate.flags : gate.flags + "g");
   for (let at = 0; ;) {
     const nl = raw.indexOf("\n", at);
-    const line = raw.slice(at, nl < 0 ? raw.length : nl);
-    if (line && gate.test(line)) {
-      re.lastIndex = 0;
-      for (const m of line.matchAll(re)) { m.index += at; fn(m); }
+    const end = nl < 0 ? raw.length : nl;
+    if (end - at <= LONG_LINE) {
+      const line = raw.slice(at, end);
+      if (line && gate.test(line)) {
+        re.lastIndex = 0;
+        for (const m of line.matchAll(re)) { m.index += at; fn(m); }
+      }
+    } else {
+      const line = raw.slice(at, end);
+      let done = 0;
+      for (const g of line.matchAll(global)) {
+        const from = Math.max(done, g.index - before), to = Math.min(line.length, g.index + g[0].length + after);
+        if (to <= done) continue;
+        re.lastIndex = 0;
+        for (const m of line.slice(from, to).matchAll(re)) {
+          if (from + m.index < done) continue;
+          m.index += at + from; fn(m);
+          done = m.index - at + m[0].length;
+        }
+        done = Math.max(done, to);
+      }
     }
     if (nl < 0) return;
     at = nl + 1;
@@ -367,13 +393,13 @@ function eachLineMatch(raw, re, gate, fn) {
 export function readDefinitions(raw, sections, locate) {
   spend(raw.length * 2);   // the two voices each read the text once
   const hits = [];
-  for (const [re, gate] of [[DEFINES, DEFINES_GATE], [AS_USED, AS_USED_GATE]]) {
+  for (const [re, gate, before, after] of [[DEFINES, DEFINES_GATE, 1500, 80], [AS_USED, AS_USED_GATE, 20, 500]]) {
     eachLineMatch(raw, re, gate, (m) => {
       TERMS.lastIndex = 0;
       const tail = AS_USED === re ? m[0].slice(m[0].search(new RegExp(Q_OPEN + "[^" + "\"“”‘’'" + "]*" + Q_CLOSE + "$"))) : m[0];
       const base = m.index + m[0].length - tail.length;
       for (const t of tail.matchAll(TERMS)) hits.push({ start: base + t.index, at: m.index, term: t[1].trim() });
-    });
+    }, before, after);
   }
   hits.sort((a, b) => a.start - b.start);
   /* The hits are in the order of their starts, so a start met twice is the last one kept. */

@@ -108,11 +108,11 @@ const SD_PHONE = /(?:\(\d{3}\)\s?|\b\d{3}[-.\s])?\b\d{3}[-.]\d{4}\b/g;
 const SD_DATE = /\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2}\b|\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/gi;
 const SD_SELF_NAMING = /\b(?:directory|staff|roster|contacts)\b/i;
 
-/* The most distinct addresses read from one document, in the order it lists them (R40; proposed, BOB records): a directory
+/* The most distinct addresses read from one document, in the order it lists them (R40; protective, BOB's, K4868): a directory
    of this many people is read to its end, a longer text is read as far as the address after this many, and the answer
    says where it stopped. The memory a reading holds is then a number of addresses and never the text's size. */
 export const ENTRIES_MAX = 10_000;
-/* The longest `line` an entry carries: a line longer than this is cut to this many characters around the address, and
+/* The longest `line` an entry carries (R40; protective, BOB's, K4868): a line longer than this is cut to this many characters around the address, and
    the entry says so (`line_cut`), so a text of 16,000 addresses on one line is not 16,000 copies of the line. */
 export const LINE_MAX = 600;
 

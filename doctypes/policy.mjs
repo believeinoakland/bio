@@ -35,7 +35,17 @@ const caps = (t) => { const letters = t.replace(/[^A-Za-z]/g, ""); return letter
 /* A line opening with an outline marker. */
 const OUTLINE_LINE = /^\s*(?:[IVX]{1,5}|[A-Z]|\d{1,2}|[a-z])[.)]\s+\S/;
 /* A table of contents' line: dot leaders, or a heading ending in its page number. */
-const TOC_LINE = /\.{4,}|^[^a-z]*[A-Z][^a-z]*\s\d{1,3}\s*$/;
+const DOT_LEADERS = /\.{4,}/;
+const PAGE_NUMBER_END = /\s\d{1,3}\s*$/;
+/** Is this line a contents entry: dot leaders, or a heading with no lower-case letter that ends in its page number? Read
+ *  in work linear in the line (R40): the heading is what stands before the page number, which is found from the line's end. */
+function isTocLine(t) {
+  if (DOT_LEADERS.test(t)) return true;
+  const m = PAGE_NUMBER_END.exec(t);
+  if (!m) return false;
+  const head = t.slice(0, m.index);
+  return !/[a-z]/.test(head) && /[A-Z]/.test(head);
+}
 
 /* ------------------------------------------------------------- the outline sections */
 
@@ -72,9 +82,9 @@ export function readOutline(raw, from, skip, locate) {
     const l = lines.at(li);
     if (l.start < from || FURNITURE.test(l.text) || skip.some((s) => l.start >= s.start && l.start < s.end)) continue;
     const t = l.text.trim();
-    if (TOC_LINE.test(t)) continue;
+    if (isTocLine(t)) continue;
     /* A contents entry wrapped onto a second line, which carries its page number. */
-    if (li + 1 < lines.length && TOC_LINE.test(lines.at(li + 1).text.trim()) && caps(t)) continue;
+    if (li + 1 < lines.length && isTocLine(lines.at(li + 1).text.trim()) && caps(t)) continue;
     const hits = [];
     for (const [rank, k] of KINDS.entries()) { const m = k.re.exec(t); if (m) hits.push({ rank, k, m }); }
     let placed = null;
