@@ -1,7 +1,7 @@
 /* docprofile — G48 control (fix round 6): `readText` over every fixture reading answers byte for byte what the tranche tip
  * answered (`fixtures/g48-answers.json`, recorded by `make-g48-answers.mjs` BEFORE the change), and `doctypeFor`'s `also`
  * is the independent pass's on every one of them. Nothing here is a text over the bound, so no answer carries
- * `classified_over` (R19, R38). Fix round 9 changes two fields by definition: `chars` (glyphs, R18) and `doctype.work` (R40). */
+ * `classified_over` (R19, R38). Fix round 9 changes by definition: the `shell` reading's `stack.shell: true` (site-profiles R2, K4860: a CERTAIN match answers it) and two fields: `chars` (glyphs, R18) and `doctype.work` (R40). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
