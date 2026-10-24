@@ -125,7 +125,7 @@ import {
 import { mceSkipper, withMetadata, activeContent, withActive, detectByContentType } from "./docx.mjs";
 import { boundOf } from "./read-bounds.mjs";
 import {
-  Scanner, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, collectElements, TAG_MAX, memberIdentities,
+  Scanner, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, collectElements, TAG_MAX, memberIdentities, addressParts,
 } from "./office-xml.mjs";
 
 /* R44: what the walk may retain, paragraphs, cells and links together (the table's figure, never a literal here). */
@@ -1019,7 +1019,7 @@ async function pptxText(parts, opts) {
   const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
   return {
     ok: true, container: "pptx", document, slides, speakerNotes,
-    parts: [...units.body, ...boxes, ...units.speaker_note, ...units.master_text],
+    parts: addressParts([...units.body, ...boxes, ...units.speaker_note, ...units.master_text]),
     deckLength: deckLengthOf(parts),
     undetermined,
     counts: { chars: document.length, notesChars, undetermined: undetermined.length, scanned_bytes: scanned },

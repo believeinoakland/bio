@@ -106,7 +106,7 @@ import { columnLetters } from "./formats-xlsx.mjs";
 import { localize } from "./setup-words/index.mjs";
 import { boundOf } from "./read-bounds.mjs";
 import {
-  Scanner, scanPart, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, jsonBytes, memberIdentities,
+  Scanner, scanPart, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, jsonBytes, memberIdentities, addressParts,
 } from "./office-xml.mjs";
 
 /* R44: what the walk may retain, paragraphs, cells and links together (the table's figure, never a literal here). */
@@ -1150,13 +1150,14 @@ async function docxText(parts, opts) {
       const text = r.units[0]?.text ?? "";
       if (!text) continue;
       const hr = walk.headerRefs.find((h) => h.rid != null && h.rid === x.rid);
-      kinds[x.kind].push({ kind: x.kind, ref: hr && hr.para != null ? docParaRef(hr.para, hr.run) : null, part: x.part, text });
+      kinds[x.kind].push({ kind: x.kind, ref: x.part, part: x.part, text, ...(hr && hr.para != null ? { anchor: docParaRef(hr.para, hr.run) } : {}) });
       continue;
     }
     const into = x.kind === "footnote" ? walk.footnoteRefs : walk.endnoteRefs;
     for (const u of r.units) {
       if (!u.text || /^(separator|continuationSeparator|continuationNotice)$/.test(u.attrs.type ?? "")) continue;
-      kinds[x.kind].push({ kind: x.kind, ref: refAt(u.attrs.id != null ? into.get(u.attrs.id) : null), part: x.part, text: u.text });
+      const anchor = refAt(u.attrs.id != null ? into.get(u.attrs.id) : null);
+      kinds[x.kind].push({ kind: x.kind, ref: u.attrs.id != null ? `${x.kind} ${u.attrs.id}` : null, part: x.part, text: u.text, ...(anchor ? { anchor } : {}) });
     }
   }
   if (parts.commentsXml != null) {
@@ -1166,7 +1167,8 @@ async function docxText(parts, opts) {
       scanned += parsed.scanned;
       undetermined.push(...scanNotes(COMMENTS_PART, parsed.scanner));
       for (const c of parsed.comments) {
-        if (c.text) kinds.comment.push({ kind: "comment", ref: refAt(c.id != null ? walk.commentRefs.get(c.id) : null), part: COMMENTS_PART, text: c.text });
+        const anchor = refAt(c.id != null ? walk.commentRefs.get(c.id) : null);
+        if (c.text) kinds.comment.push({ kind: "comment", ref: c.id != null ? `comment ${c.id}` : null, part: COMMENTS_PART, text: c.text, ...(anchor ? { anchor } : {}) });
       }
     }
   } else {
@@ -1185,7 +1187,7 @@ async function docxText(parts, opts) {
 
   return {
     ok: true, container: "docx", document, paragraphs, tables,
-    parts: [...kinds.header, ...kinds.body.map((b) => b.u), ...kinds.footnote, ...kinds.endnote, ...kinds.footer, ...kinds.comment],
+    parts: addressParts([...kinds.header, ...kinds.body.map((b) => b.u), ...kinds.footnote, ...kinds.endnote, ...kinds.footer, ...kinds.comment]),
     undetermined,
     counts: { chars: document.length, undetermined: undetermined.length, scanned_bytes: scanned },
     ...(parts.piecewise ? { piecewise: parts.piecewise } : {}),
