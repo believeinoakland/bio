@@ -1,6 +1,6 @@
 # site-profiles — requirements
 
-**Status** · In force: split from `docprofile` for size (K617, K653), meaning unchanged: R1–R4, R6–R9, R11 and R12 marked "was"; R16–R19 are `docprofile` R30–R32 and R35 as they apply to the moved code, holding in `docprofile` too. Every requirement met.
+**Status** · In force: split from `docprofile` for size (K617, K653), meaning unchanged: R1–R4, R6–R9, R11 and R12 marked "was"; R16–R19 are `docprofile` R30–R32 and R35 as they apply to the moved code, holding in `docprofile` too. Every requirement met, except fix round 9 (T51; G140, G131g; X22, X9; K4835 (4), K4837): R20-R22 new (a linear detect with a work count, a shell only when CERTAIN, the one decode) and R2 amended; marked not yet met (T51).
 
 **Size (P6).** About 905 lines copied. `docprofile` keeps about 3,150 after its deletion.
 
@@ -14,7 +14,7 @@ Recognises which host-technology stack served a captured document (`identify`) a
 
 **`identify(ctx) → {handler, confidence, signals, considered, kind?, why?}`** `ctx` carries whatever the caller knows about one fetch: `headers`, `locator` (the address), `content_type`, `text` (the bytes decoded, when read as text).
 - **R1** (was `docprofile` R1) Always returns a handler: the first registered stack recogniser to match at CERTAIN confidence, else the highest-confidence match among those that matched, else the always-present `conservative` handler at confidence NONE, with `why` stating that nothing was recognised.
-- **R2** (was `docprofile` R2) `kind` is the winning handler's own classification of the address (for example an index, a record, a shell) when the handler defines one; absent when it does not.
+- **R2** (was `docprofile` R2) `kind` is the winning handler's own classification of the address (for example an index, a record, a shell) when the handler defines one; absent when it does not. (Fix round 9, G140) The kind `shell` is given, and `identify`'s answer carries `shell: true`, exactly when the winning handler is `client_rendered` at CERTAIN confidence; a `client_rendered` match at LIKELY or POSSIBLE (a server-rendered page with one framework marker) still ranks by R1 but gives no `shell` kind and no `shell: true`. *(not yet met: T51)*
 - **R3** (was `docprofile` R3) Confidence is one of the ONE ladder's four values (R4) — CERTAIN, LIKELY, POSSIBLE, NONE — shared by every recogniser built on R5's registry, on every axis.
 - Errors: never throws, provided every registered handler's own `detect` does not.
 
@@ -49,9 +49,15 @@ Recognises which host-technology stack served a captured document (`identify`) a
 **`unescapeHtml(s) → string`**
 - **R15** Decodes `&amp;`, `&#39;`, `&quot;`, `&lt;`, `&gt;` and `&nbsp;` (to a space) in `String(s)`, nothing else, to read keys out of markup; never rewrites anything the record holds. Never throws.
 
+**Bounded work and the one decode (fix round 9, G140, G131g; X22, X9; ruled K4835 (4): `handlers/client-rendered.mjs` is included)**
+- **R20** Every stack recogniser's `detect` examines the `text` it is given in work linear in the characters it examines, over the window the caller hands it, whatever the shape of the text (240 KB of `<div` with no closing, a long run of one marker, a long line). When `ctx.work` is an object `{chars}`, each `detect` adds the characters it examined to `ctx.work.chars`; the count is at most 4 times the window, and a test asserts the count, not a time. No `detect` builds a copy of the text larger than its window. *(not yet met: T51)*
+- **R21** `identify`'s verdict never changes what is read: a recogniser's match, at any confidence, decides how a document is watched (`docprofile`'s `assess`) and never whether its text is read or what text is read. *(not yet met: T51)*
+- **R22** `digests(bytes, handler, ctx)` decodes a textual document's bytes through ooxml's `decodeText` (its R36), not as a fixed encoding: a page in windows-1252 or UTF-16 yields its text and not replacement characters. A document whose declared encoding `decodeText` answers `ENCODING_UNSUPPORTED` for is treated as not textual (R7: `rendition` and `evidentiary` equal `identity`), stated in the result, never decoded lossily. *(not yet met: T51)*
+
 ## Private
 
 ### Uses
+- `ooxml`: `decodeText` (its R36), for R22 (the edge `site-profiles -> ooxml` is new, fix round 9, G131g).
 - `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
@@ -66,6 +72,7 @@ Recognises which host-technology stack served a captured document (`identify`) a
 - `docs/architecture/BIO_Content_Framework_v0_10.md` §4, "One extension shape: the RECOGNISER" (the registry and ladder every axis shares), and §16, "How content is extracted today" (Identify).
 - `docs/development/DOCUMENT-PROFILES.md`: the stack axis, the three digests, fidelity.
 - `build/layers.md`, "No jurisdiction in the product".
+- K4835 (4) and K4837 (fix round 9, G140): the linear detect and the shell-only-when-CERTAIN rule are in force for `client-rendered.mjs` as for the other handlers (R20-R21); G131g: one decode for every text a module reads (R22).
 
 ### Suggestions
 
