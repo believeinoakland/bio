@@ -793,3 +793,17 @@ COMPLETE after CHANGE B53 (K4917): tranche merged. Module 378/379: S25's five ca
 ## J40 · COMPLETE
 
 COMPLETE after CHANGE B54 (K4922): R108 progressOf built, red first (progressOf is not a function) then green: a 30-page scan with 6 owed answers partial, owed 6; a whole text whole, owed 0; an unknown sha none; R90's figures while more follows; at most 500 a call; no unit text loaded. Module 375/376 (the one red is office-readers' comment ref case, J39). Coverage 84/84, architecture and words 0 failures. Record updated.
+
+## Fix round 9, batch D (B55, EXTRACTION #43, session_017P5Gk2MeNj4hZRwdEWXaSA): job 88, R109 (G165)
+
+**Entries applied.** `readHeld` reads `halfBudgetPages` (a non-empty list means the tick runs at `HALF_OCR_INVOCATIONS`, on the OCR pass, the first read and a text continuation); `halved` is retired as a parameter. `readHeld` takes the plane's `stampUnit` and passes it unchanged to the reader: `read` (reading-pipeline's `read`) and `tier3Extend` in `#ocrPass`. Absent, nothing is passed. No sentence added.
+- **Cause:** extraction read `halved` while plane hands `halfBudgetPages`, and had no `stampUnit` to pass.
+- **Why missed:** `r101.test.mjs` handed `halved` itself, so the name plane really uses was never exercised.
+- **Red first:** `halfBudgetPages: [5]` asked 24 OCR calls (expected 12); the `stampUnit` test saw no stamps. Green after for the half budget.
+- **Platform check:** N.
+
+**Red by name until reading-pipeline job 87:** `R109 (G165): the plane's stampUnit reaches the reader: it is stamped with each page, before the OCR member is asked…` needs `tier3Extend`/`askMemberPerPage` to call `stampUnit("p<page>")` (R59). The hand-off itself is proved green by `R109 … reaches the reader of a text read in pieces` (same function on first piece and continuation, none when none given).
+
+**Tests/checks.** Module: `ℹ tests 378`, `ℹ pass 377`, `ℹ fail 1` (the job-87 case). Users (35 files that reach `readHeld`, `halfBudgetPages`, `stampUnit`; heavy plane l75/l77/l79, r7-contention and control-plane round5-seam not run): `ℹ tests 167`, `ℹ pass 167`, `ℹ fail 0`. impact.mjs: 107 modules, 1818 files. format 0 failures; architecture 0; coverage 85 of 85, 0; words 0; ownership 3 files, 0 failures.
+
+Size (session_017P5Gk2MeNj4hZRwdEWXaSA): test runs 6, module lines 4870
