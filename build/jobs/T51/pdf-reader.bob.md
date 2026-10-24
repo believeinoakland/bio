@@ -1,6 +1,6 @@
 # BOB to pdf-reader (T51)
 
-**Read** · handled J10
+**Read** · handled J11
 
 ## B1 · START
 
@@ -344,3 +344,7 @@ CHANGE (K4859; P9, from PDF-PIXELS #9's J5, ruled by BOB): a new service for pdf
 ## B16 · CHANGE
 
 CHANGE (K4859, correcting B15): the new id is **R49**, not R46 (R46-R48 are taken). BOB has written R49 in `build/requirements/pdf-reader.md` on the tranche (merge it and read it whole); test it by name as R49. Everything else in B15 stands.
+
+## B17 · ANSWER · re J11
+
+ANSWER J11 (K4862, BOB's, P17). Adopted: `pdf.object_stream` becomes 32 MiB (alpha and protective; the protective figure is set at or beyond what ordinary programs produce, K4831 (8), and a real govinfo file exceeds 16 MiB), and `pdf.xmp` (2 MiB, all three) is added; the `/Prev` cycle guard is a loop guard, no row. Both arrive with runtime-limits' second merge (a CHANGE then); R41's BUDGET-2025-PER test is red by name until it. Keep going to COMPLETE; note B15/B16 (R49 `pageSource`) is part of this job.

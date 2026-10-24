@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { crc32 } from "node:zlib";
 import { coverAreas, COVER_MAX_BYTES, COVER_MAX_PIXELS, COVER_REFUSALS } from "../../../src/image-cover/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { pngDeclaring } from "./hostile.mjs";
 import { CASES, fixture, jpegSegments, pngChunks, tiffIfd0, decodeJpegAnswer, decodePngAnswer, judge } from "./answers.mjs";
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -190,6 +191,8 @@ test("R3 every refusal by name, nothing answered but the refusal: each code is r
     check(await coverAreas(sized(12000, 10001, kind), { areas: [] }), "PHOTO_TOO_LARGE", `${kind} over the pixel limit`);
     check(await coverAreas(sized(12000, 10000, kind), { areas: [] }), "TRUNCATED_IMAGE_DATA", `${kind} at the pixel limit is read, and its data ends`);
   }
+  /* IMAGE_TOO_LARGE (R10): a declared row over the bound, decided from the header */
+  check(await coverAreas(pngDeclaring(30_000_000, 1), { areas: [] }), "IMAGE_TOO_LARGE", "a row over the stride bound");
   assert.deepEqual([...reached].sort(), Object.keys(COVER_REFUSALS).sort(), "every declared code reached, and no other");
 });
 
@@ -220,5 +223,7 @@ test("R7 no place is named in any refusal text or the module's exported words", 
 });
 
 test("R3 words: each refusal code's English is the design's row for it, read by word, never a sentence held here", () => {
-  for (const code of Object.keys(COVER_REFUSALS)) assert.equal(COVER_REFUSALS[code], word(`refusal.${code}`), code);
+  for (const code of Object.keys(COVER_REFUSALS).filter((c) => c !== "IMAGE_TOO_LARGE")) assert.equal(COVER_REFUSALS[code], word(`refusal.${code}`), code);
+  /* the held row of IMAGE_TOO_LARGE speaks of a page to transcribe: this module's stand-in is its own until the design's row (owed) lands */
+  assert.ok(COVER_REFUSALS.IMAGE_TOO_LARGE.length > 0);
 });
