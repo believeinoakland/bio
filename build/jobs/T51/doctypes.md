@@ -257,3 +257,18 @@ DOCTYPES #11 · START B10 (fix round 9: G140, G133 piece c) · R40 and R41 met.
 **Other modules:** none found. Generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` (it bundles the doctypes); BOB regenerates at the round end.
 
 Size (session_01TmVLRbU29kGrf79yMGm5rX): test runs 14, module lines 4193
+
+## J13 · REPORT
+
+Finding in other modules, from B11's work (docprofile's work budget, R40, with doctypes' detects charging it).
+
+docprofile's budget lets the types be asked only until the detects together have examined 4 times the view. Every doctypes detect reads the window it is handed at least once, so the budget is spent after the fifth type: `calendar, minutes, agenda, staff_report, regulation` are asked, and `policy` and `staff_directory` are asked on NO text, whatever its size (BUDGET-2024-APP: "the types examined 7206990 characters, over the 5765592 allowed, so the policy content type and those after it were not asked"). I charge a detect the window once however many passes it makes (the lowest honest charge; a pass-by-pass charge stops the pass after the third type, and a 290 KB ordinance then reads as `generic`).
+
+Consequences seen with the real types (not doctypes' tests; they are other modules'):
+- `roster-reader/test/seam.test.mjs:14` ("R1 R3 through docprofile's seam: ... readText recognises and reads the measured documents") fails: staff directories are not asked.
+- `bio-plane/test/m/reading-pipeline/r7-classify-yield.test.mjs` (five R42 tests: "6 detects: every registered type is asked") fail for the same reason.
+Both pass on the tranche tip. Six other tests in the impact set (agent-worker/requirements, extraction g41 R97 ods, reading-pipeline convert-chain/pieces/staffdirectory/transcribe) fail on the tip too and are not from this job.
+
+The smallest thing that settles it is docprofile's: `CLASSIFY_WORK_FACTOR` at 8 or more (one window per type asked), or a budget per type; nothing doctypes can change makes seven honest detects fit in four windows. I have not changed my charge to hide it.
+
+Also: `node checks/format.mjs` has one failure not in doctypes (`build/modules.json`: office-readers `paths` entry bio-plane/src/office-xml.mjs names no file).
