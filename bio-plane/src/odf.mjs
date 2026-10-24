@@ -913,7 +913,8 @@ async function odfPartsUnguarded(row, bytes) {
     if (!read.ok) return { ok: false, why: read.why };
     const t = readXmlText(read.bytes, name);
     if (!t.ok) return t;
-    scanned += t.scanned;
+    /* The count is of the parts text() is made from (R52); meta.xml and the manifest answer other operations. */
+    if (name === CONTENT_PART || name === STYLES_PART) scanned += t.scanned;
     if (t.replacedRatio > PARTIAL_REPLACED_RATIO) statements.push({ part: name, why: "partial", replaced: t.replaced });
     if (t.tagOver) statements.push({ part: name, why: "tag_over_bound", count: t.tagOver });
     if (t.unterminated) statements.push({ part: name, why: "markup_unterminated", count: t.unterminated });
