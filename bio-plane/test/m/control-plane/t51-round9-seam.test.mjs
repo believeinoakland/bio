@@ -7,6 +7,7 @@ import { sections as reading } from "./r9-seam-reading.mjs";
 import { sections as documents } from "./r9-seam-documents.mjs";
 import { sections as limits } from "./r9-seam-limits.mjs";
 import { sections as parts } from "./r9-seam-parts.mjs";
+import { sections as safety } from "./r9-seam-safety.mjs";
 
 const kit = makeKit({ tag: "r9seam" });
 const counting = makeKit({ tag: "r9seamc", counting: true });
@@ -15,3 +16,4 @@ reading(kit, counting);
 documents(kit, counting);
 limits(kit, counting);
 parts(kit, counting);
+safety(kit, counting);
