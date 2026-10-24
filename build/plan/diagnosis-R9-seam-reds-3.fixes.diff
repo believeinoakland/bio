@@ -1,0 +1,30 @@
+--- bio-plane/src/file-safety/index.mjs	2026-10-24 20:16:11.951909187 +0000
++++ /tmp/claude-0/-home-user-bio/a6c1edf3-f10a-553b-b4ba-067ada11cc6f/scratchpad/d3/bio-plane/src/file-safety/index.mjs	2026-10-24 21:19:33.734339415 +0000
+@@ -1105,7 +1105,7 @@
+     const r = await this.#scanner("/render", { store: this.store, target: this.#target(sha), route }, { stream: true });
+     const bucket = this.#bucket();
+     const detail = r.body && r.body.detail ? String(r.body.detail).slice(0, 300) : r.body && r.body.message ? String(r.body.message).slice(0, 300) : null;
+-    if (r.unreachable || r.absent) return this.#renderRetry(sha, route, "SCANNER_UNREACHABLE", null);
++    if (r.unreachable || r.absent || (r.status >= 500 && !(r.body && r.body.code))) return this.#renderRetry(sha, route, "SCANNER_UNREACHABLE", null);   /* DIAG: a 5xx with no classed body is the renderer down */
+     if (r.stream && r.status === 200) {
+       const derived = r.headers.get("x-derived-sha256");
+       if (!derived || !HEX64.test(derived) || !bucket) {
+@@ -2168,6 +2168,7 @@
+       /* G136b: a view queued again after a transient failure is due at the end of its back-off */
+       const views = this.#one(`SELECT MIN(COALESCE(render_wait_at, '')) AS t FROM fs_files WHERE render_state = 'queued'`);
+       const copies = this.#one(`SELECT 1 AS x FROM fs_copies WHERE state = 'queued' LIMIT 1`);
++      if (views && views.t === "") return this.#answer("render", n);   /* DIAG: a queued view with no back-off is due now */
+       if (views && views.t !== null && !copies) {
+         const t = views.t === "" ? NaN : Date.parse(views.t);
+         return this.#answer("render", Number.isFinite(t) ? Math.max(poll, t) : poll);
+--- bio-plane/src/extraction/index.mjs	2026-10-24 20:16:15.640720248 +0000
++++ /tmp/claude-0/-home-user-bio/a6c1edf3-f10a-553b-b4ba-067ada11cc6f/scratchpad/d3/bio-plane/src/extraction/index.mjs	2026-10-24 21:19:16.231110975 +0000
+@@ -961,7 +961,8 @@
+     await wrote.afterRead;
+     /* (fix round 6, G41; R97) a reading too large to keep whole was stored as its small statement: final, owing nothing, and no piece follows */
+     if (wrote.stated) return { ok: true, read: true, bundle_id: home.bundleId, found: false, stated: true };
+-    const owed = failedTransiently(out.reading) || !!entry || (out.reading.tier3_candidate === true && !!e.OCR_WORKER);
++    const owed = failedTransiently(out.reading) || !!entry || (out.reading.tier3_candidate === true && !!e.OCR_WORKER && out.reading.failure !== "final");   /* DIAG fix: a reading that ended final (the member refused its page) owes nothing */
+     const ow = oweAnswer ? { registration: oweAnswer } : {};
+     /* (fix round 6, G13; R90) the first piece of a text that has more: the ledger goes on at once (plane R77: `more`) */
+     if (out.more === true) return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, more: true,
