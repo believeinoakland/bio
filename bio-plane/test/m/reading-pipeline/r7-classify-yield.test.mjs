@@ -58,7 +58,7 @@ for (const [name, why] of [["plain", "a text no type matches"], ["winner", "a CE
     assert.ok(counters && "next" in answer, "the contract's fields");
     /* fix round 9 (R52, job 40): a text judged from a view (above 2 MiB) states it: `classified_over` and the sentence after the basis, taken off by name */
     const reading = Object.fromEntries(Object.entries(rest.reading || {}).filter(([k]) => !["encoding", "encoding_assumed", "encoding_disagree", "encoding_replaced", "classified_over"].includes(k))
-      .map(([k, v]) => [k, k === "basis" && typeof v === "string" ? v.replace(/ — the kind of document was judged from a sample of its text.*$/, "") : v]));
+      .map(([k, v]) => [k, k === "basis" && typeof v === "string" ? v.replace(/ — What kind of document this is was judged from a sample of its text.*$/, "") : v]));
     const units = rest.text_units ? rest.text_units.map(({ kind, ...u }) => { assert.equal(kind, "body"); return u; }) : undefined;
     void final;
     assert.deepEqual({ ...rest, ...(rest.reading ? { reading } : {}), ...(units ? { text_units: units } : {}) }, recorded[name]);
