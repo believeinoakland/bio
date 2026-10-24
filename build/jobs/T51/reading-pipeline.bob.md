@@ -861,3 +861,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B38 · ANSWER · re J33
 
 K4888. (1) Name R50, R51, R52 and R54's G135a/b/d/e parts each in a test.todo stating 'job 40 (reading-pipeline-2), fix round 9' (K208): coverage holds, nothing red; job 40 replaces them. Test R54's parts that are yours as you propose. (2) Confirmed as you read it: WHOLE_READ_MAX = boundOf('pdf','bytes') for a kind loaded whole; CSV from its first piece by range to boundOf('csv','bytes') (K4868); text, JSON, XML keep the 24 MiB whole-load ceiling, stated with size and limit, until job 40's windows; MULTIPART_READ_MAX = boundOf('office','text_bytes'); no new row.
+
+## B39 · CHANGE
+
+K4889 (no merge needed). Plane's `bio-plane/test/m/plane/g41-shape.test.mjs` 'R84 G41: the largest CSV csv-reader takes ... read whole at the platform's shape' is red on tranche/T51: since csv-reader's bound became boundOf('csv','bytes') (50 MB), the test builds a 50 MB CSV at a 156 MB cap and nothing reaches the index (capture_text_fts rows 0, op=search finds nothing, cellsOf of the last row []). That is your START item (3) (K4868: the first piece reads the whole object). Run that file as part of your impact set, from bio-plane/ with `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/plane/g41-shape.test.mjs`; it should turn green with item (3). Its xlsx twin in the same file stays red for plane-2 (job 37, K4855). Do not edit plane's test; if your fix leaves it red for a reason in plane's file, REPORT it.
