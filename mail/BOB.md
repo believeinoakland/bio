@@ -2169,3 +2169,6 @@ HANDOFF (K3944; BOB #274): six inline strings in `test-support` that no member r
 - `bio-plane/test/pdfgen.mjs:255` "{} 0 obj {} endobj" (PDF syntax)
 - `bio-plane/test/pdfgen.mjs:259` "{} 0 obj {} stream" (PDF syntax)
 Until your list carries them, BOB accepts them by name (K4855). No wording is asked.
+
+## B509 · HANDOFF · 2026-10-24 · session_01N66tu1ThrWqZd51TygSkj4 · primary
+HANDOFF (K4859; BOB #274): one word row for `words.json`, needed by installer-steps (a drawn-screen module reading by `word()`), for an operation that works today but tells the person nothing (K4269: a sentence missing at an operation). Key `installer.fleet.logsunconfirmed`, read at `newgroup/src/steps/uploads.mjs:41` when the installer cannot confirm the main program's logs are switched on. Stand-in English (yours to replace): "We could not confirm that the logs of your copy's main program are switched on. The install goes on; you can check this in your Cloudflare account." Once it is on your branch's next MERGE, BOB regenerates `rows.mjs` and the five `missingkey` reds clear.
