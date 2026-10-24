@@ -68,3 +68,31 @@ test("R45 (K4904, item 9): a reading lists folio_pages, the pages whose only tex
     assert.equal(out.reading.folio_pages, undefined);
   });
 });
+
+test("R45 R50 (K4907, item 8): a CSV window that killed its reader is stepped to the next row boundary after its bytes, the skipped byte range stated, and the last row after it is read and searchable", async () => {
+  const rowText = (i) => `${i},name ${i},${"council minutes ".repeat(5).trim()},"quoted, with a comma ${i}"`;
+  const n = 330000;
+  const text = ["id,name,note,quoted", ...Array.from({ length: n }, (_, i) => rowText(i)), "999999999,LASTROW,end,\"x\""].join("\n");
+  const size = Buffer.byteLength(text);
+  assert.ok(size > 24 * 1024 * 1024 && size < 50 * 1024 * 1024, `${size}`);
+  const b = bucket();
+  const d = await hold(b, text);
+  const document = doc({ digest: d, bytes: size, ct: "text/csv", format: "csv", fromText: true });
+  const first = await readOf(b, document, { cursor: null, unitsBudget: 512 * 1024, maxUnits: 4096 });
+  assert.equal(first.more, true);
+  const step = await readOf(b, document, { cursor: first.cursor, skipKilled: true });
+  assert.equal(step.counters.skipped, 1);
+  assert.equal(step.stated.why, "UNIT_KILLED_READER");
+  const [from, to] = step.stated.bytes;
+  assert.ok(to > from && step.more === true);
+  assert.equal(text.slice(Buffer.from(text).subarray(0, to).length - 1, 0) ?? "", "");
+  assert.equal(Buffer.from(text).subarray(to - 1, to).toString(), "\n", "the next row begins at a row boundary");
+  let cursor = step.next, last = null, n2 = 0;
+  for (; n2 < 3000; n2++) {
+    const out = await readOf(b, document, { cursor, unitsBudget: 512 * 1024, maxUnits: 4096 });
+    if (out.text_units && out.text_units.length) last = out.text_units.at(-1);
+    if (!out.more) break;
+    cursor = out.cursor;
+  }
+  assert.match(last.text, /LASTROW/, "the last row is read");
+});

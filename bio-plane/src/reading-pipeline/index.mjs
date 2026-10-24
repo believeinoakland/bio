@@ -2537,7 +2537,7 @@ async function skipWindow(evidence, doc, cursor, windowBytes) {
   const c = unb64(cursor);
   const sha = doc && doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : null;
   if (!c || c.v !== 1 || !sha || c.s !== sha) return null;
-  let next = null, through = null, total = null;
+  let next = null, through = null, total = null, statedBytes = null;
   if (c.k === "u" && natural(c.n) && natural(c.i) && c.i < c.n) {
     if (c.i + 1 < c.n) next = b64({ v: 1, s: sha, k: "u", n: c.n, i: c.i + 1 });
     through = c.i + 1; total = c.n;
@@ -2553,12 +2553,34 @@ async function skipWindow(evidence, doc, cursor, windowBytes) {
     }
     if (ob < c.n) { const { v, k, s: ignored, ...rest } = c; next = windowCursor(sha, { ...rest, ob, md: 1, r: (c.r || 0) + 1, ld: 0 }); }
     through = ob - c.bm; total = c.n - c.bm;
+  } else if (c.k === "w" && c.m === "c" && natural(c.n) && natural(c.ob) && c.ob < c.n && natural(c.dl)) {
+    /* a CSV window: the next begins at the first row boundary at or after the window's bytes (the quote state scanned from the window's start, which is a row's), the dialect
+       kept in the cursor; the bytes that were not read are stated as a range, and the rows after it numbered on from the next row read */
+    const src = c.ro === 1 ? rangeSource(evidence, doc) : null;
+    const win = Number.isInteger(windowBytes) && windowBytes > 0 ? windowBytes : WINDOW_BYTES;
+    const want = Math.min(c.n, c.ob + win);
+    let ob = c.n;
+    if (want < c.n) {
+      const st = newScan(c.dl), bounds = [];
+      for (let take = win + CSV_SLACK_BYTES; ob === c.n; take *= 2) {
+        const len = Math.min(take, c.n - c.ob);
+        const got = src ? await src.readRange(c.ob, len) : (await rangeBytes(evidence, sha, c.ob, len))?.bytes;
+        if (!(got instanceof Uint8Array)) return null;
+        bounds.length = 0; Object.assign(st, newScan(c.dl)); scanBoundaries(got, c.ob, st, bounds);
+        const hit = bounds.find((x) => x >= want);
+        if (hit !== undefined) { ob = hit; break; }
+        if (c.ob + len >= c.n) break;
+      }
+    }
+    if (ob < c.n) { const { v, k, s: ignored, ...rest } = c; next = windowCursor(sha, { ...rest, ob }); }
+    through = ob; total = c.n;
+    statedBytes = [c.ob, ob];
   } else return null;
-  const stated = { cursor, why: UNIT_KILLED_READER };
+  const stated = { cursor, why: UNIT_KILLED_READER, ...(statedBytes ? { bytes: statedBytes } : {}) };
   return { text_units: [], more: next !== null, cursor: next, next, final: next === null ? true : undefined,
            read_through: through, total, piece: { units: 0, words: 0 }, stated,
            counters: { written: 0, skipped: 1, owed: 0, failed: 0 },
-           reading: { killed_windows: [{ cursor, why: UNIT_KILLED_READER }],
+           reading: { killed_windows: [{ cursor, why: UNIT_KILLED_READER, ...(statedBytes ? { bytes: statedBytes } : {}) }],
                       killed_window_note: localize("reading-pipeline.index.unit_killed_reader", "A part of this document could not be read after three tries, so it is skipped and the rest goes on.") } };
 }
 
