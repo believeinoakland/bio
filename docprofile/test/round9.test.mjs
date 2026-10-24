@@ -226,3 +226,15 @@ test("R40 a ctx whose text is an accessor is wrapped, not read ahead: each detec
   assert.equal(doctypeFor({}).type.key, "r9_fallback");
   assert.equal(doctypeFor(undefined).type.key, "r9_fallback");
 });
+
+test("R12 R41 markup-free text (a CSV, prose) is never unwatchable through the pipeline; a CERTAIN shell still is (through site-profiles R2: red by name until its merge)", async () => {
+  const csv = (n) => Array.from({ length: 400 }, (_, i) => `row ${i},${i * n},value`).join("\n");
+  const prose = (n) => `Minutes ${n}. ` + "The council heard the item and adjourned. ".repeat(80);
+  for (const mk of [csv, prose]) {
+    const r = await assess(enc(mk(1)), enc(mk(2)), { sha256 });
+    assert.notEqual(r.verdict, "unwatchable");
+    assert.notEqual(r.stopped_at, dp.LAYER.STACK);
+  }
+  const s = await assess(enc(shellHtml("1")), enc(shellHtml("2")), { sha256 });
+  assert.equal(s.verdict, "unwatchable", "needs site-profiles R2's identify().shell");
+});
