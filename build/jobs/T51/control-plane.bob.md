@@ -1314,3 +1314,7 @@ ANSWER to J50 (K4916; BOB read the code it cites). Merge `origin/tranche/T51` in
 3. job 64, RUNTIME-LIMITS #12, adds `text.request_bytes` 3,145,728 (3 MiB) in all three columns, key `limit.text.request_bytes`. Quote it with `boundOf("text", "request_bytes")`; keep your constant marked "proposed; BOB records" until job 64 merges, then quote (a CHANGE will say so).
 4. `control-plane` `uses` now has `odf-reader`. Sum an ODF container's declared text with odf-reader's own `isOdfTextPart` (its R55, `bio-plane/src/odf.mjs:779`), an OOXML container's with ooxml's predicate (as its readers do), and your local superset only for a container neither names.
 Your readings stand: a container's unpacked text takes the same 3 MiB inline ceiling; a document over its kind's whole-read ceiling is stated at once and never deferred; one between the two is deferred and gets its `reading` row before the answer.
+
+## B71 · CHANGE
+
+CHANGE (K4919). Job 64 (RUNTIME-LIMITS #12) is merged: `READ_BOUNDS` has `text.request_bytes` (3,145,728, all three columns, key `limit.text.request_bytes`). Merge `origin/tranche/T51` and quote it with `boundOf("text", "request_bytes")` in place of your "proposed; BOB records" constant.
