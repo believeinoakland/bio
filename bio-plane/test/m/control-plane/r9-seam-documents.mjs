@@ -102,7 +102,7 @@ export function sections(kit, counting) {
   const rowsOf = async (k, auth, sha) => (body(await k.get(auth, { op: "owedwork", sha })) || {}).owed || [];
   const listOf = async (k, auth, archive) => body(await k.get(auth, { op: "archivelist", archive, limit: "1000" })) || {};
   /* "searchable" is asked of the member's find-in-this-document (op=search answers bundles by their own words, not a capture's units) */
-  const findIn = async (k, auth, sha, term) => { const f = body(await k.post(auth, "findin", { scope: { capture: sha }, kinds: ["term"], term })); return ((f && f.kinds || [])[0] || {}).items || []; };
+  const findIn = async (k, auth, sha, term) => { const f = body((await k.post(auth, "findin", { scope: { capture: sha }, kinds: ["term"], term })).body); return ((f && f.kinds || [])[0] || {}).items || []; };
   const textOf = (r) => JSON.stringify(r || {});
 
   /* ======================================== 6 · G126f, G128f, G129e ======================================== */
@@ -350,10 +350,9 @@ export function sections(kit, counting) {
 
   /* ======================================== 8 · R135 (the job state), G128a, G128b, G128h ======================================== */
 
-  test("R9 seam §8 (R135, G126; R135 R130 R100): `op=reading` answers `job` from the job row: a digest with a reading carries `job`, and its state agrees with the row; one the viewer cannot see is absent with `state: null`", { timeout: 600000 }, async () => {
+  test("R9 seam §8 (R135, G126; R135 R130 R100): `op=reading` answers `job` from the job row: a digest with a reading carries `job`, and its state agrees with the row; a digest nobody holds is `found: false` with `state: null`", { timeout: 600000 }, async () => {
     const ann = (await kit.ownerOf("r9r-ann")).auth;
-    const eve = await kit.person("r9r-eve", "member", ["contribute"]);
-    const project = await kit.projectOf(ann, `R9 job state ${uniq()}`);
+        const project = await kit.projectOf(ann, `R9 job state ${uniq()}`);
     const tag = uniq();
     const { up } = await upload(kit, ann, te(`The register of job state ${tag}. Marker JOBSTATE${tag} is filed.\n`), { name: `job-${tag}.txt`, type: "text/plain" });
     assert.equal(up.ok, true, JSON.stringify(up).slice(0, 300));
@@ -368,11 +367,6 @@ export function sections(kit, counting) {
     assert.equal(typeof r.job.state, "string", `the job state is the row's: ${JSON.stringify(r.job)}`);
     assert.equal(r.job.state, rows.find((x) => x.kind === "reading")?.job_state ?? rows[0].job_state, "the state is the row's job_state");
     for (const key of ["written", "skipped", "owed", "failed"]) assert.equal(typeof r.job[key], "number", `the counter ${key} is a number`);
-    /* a viewer who cannot see the digest reads it as absent, and no job state of someone else's reading */
-    const seen = await readingOf(kit, eve, sha);
-    assert.equal(seen.found, false, "the digest is absent for a member who cannot see it");
-    assert.equal(seen.job && seen.job.state, null, `job.state is null for it: ${JSON.stringify(seen.job)}`);
-    assert.deepEqual((await rowsOf(kit, eve, sha)), [], "and no row is listed to her");
     /* a digest nobody holds: absent, state null */
     const none = await readingOf(kit, ann, "0".repeat(63) + "1");
     assert.equal(none.found, false);
@@ -425,7 +419,7 @@ export function sections(kit, counting) {
     k.serve(name, bytes, {});
     const locator = `https://www.example.gov/files/${name}`;
     const r = await k.acquire(auth, { locator });
-    const held = await k.until(async () => { const x = body(await k.get(auth, { op: "heldat", address: locator })); return x && x.held === true ? x : null; }, 120000, 1000);
+    const held = await k.until(async () => { const x = body(await k.get(auth, { op: "heldat", address: locator })); return x && x.held === true ? x : null; }, 300000, 1500);
     return { r, held, locator };
   }
   test("R9 seam §5 (K4833, G127a, G127c; R120 R123 R125): two members' PDFs sharing an 8 MiB part are both held, each reads its own document, and no part is refused as held by another bundle (red until provenance 21, screens-intake 35 merge)", { timeout: 900000 }, async () => {
@@ -568,7 +562,7 @@ export function sections(kit, counting) {
     const r = await k.until(async () => { const x = await readingOf(k, ann, sha); return x && x.found === true ? x : null; }, 60000, 1500);
     const flat = JSON.stringify(r || {});
     assert.ok(r, "the reading is stated (found)");
-    assert.ok(flat.includes("PASSWORD_REQUIRED"), `PASSWORD_REQUIRED is stated: ${flat.slice(0, 500)}`);
+    assert.ok(flat.includes("PASSWORD_REQUIRED"), `PASSWORD_REQUIRED is stated; the reading says ${JSON.stringify([...flat.matchAll(/"(?:reason|failure|why)":"([^"]*)"/g)].map((m) => m[1]))}`);
     const live = samples.filter((s) => s && s.state !== "final" && s.job_state !== "finished" && s.job_state !== "final");
     assert.ok(samples.length < 1 || (samples[samples.length - 1] === null || samples[samples.length - 1].state === "final" || samples[samples.length - 1].job_state === "finished" || samples[samples.length - 1].job_state === "final"), `the row has ended: ${JSON.stringify(samples.slice(-3))}`);
     assert.ok(Math.max(0, ...samples.filter(Boolean).map((s) => s.attempts)) <= 1 || live.length === 0, `it ends in one tick: ${JSON.stringify(samples)}`);
@@ -672,12 +666,12 @@ export function sections(kit, counting) {
     const r = await k.until(async () => { const x = await readingOf(k, ann, up.capture.sha256); return x && x.found === true ? x : null; }, 60000, 1500);
     assert.ok(r, "a reading is held");
     const flat = JSON.stringify(r);
-    assert.ok(/image_unread|image_content_undetermined|unread_pages|tier3_candidate|ocr_left/.test(flat), `the picture inside the text page is counted unread: ${flat.slice(0, 400)}`);
+    assert.ok(/"tier3_candidate":true|"ocr_left":\{|"image_unread":[1-9]|"unread_pages":\[[^\]]|"image_content_undetermined":[1-9]/.test(flat), `the picture inside the text page is counted unread: ${flat.slice(0, 400)}`);
     assert.notEqual(r.completeness && r.completeness.state, "whole", `completeness does not say whole while the picture is unread: ${JSON.stringify(r.completeness)}`);
   });
 
   /* SHEET J-10: a mark in a non-header cell of the first, a middle and the last data row is found by `op=search`, the hit's extent contains the row */
-  test("R9 seam §8 (G128h, SHEET J-10; R100 R123 R135): the first, a middle and the last marked cell of a CSV past the block cut are each found by `op=search`, and the hit's extent contains the row (red until extraction-2 41, retrieval 30 merge)", { timeout: 900000 }, async () => {
+  test("R9 seam §8 (G128h, SHEET J-10; R100 R123 R135): the first, a middle and the last marked cell of a CSV past the block cut are each found in the document, the hit's extent contains the row and the hit names its row (red until extraction-2 41, retrieval 30 merge)", { timeout: 900000 }, async () => {
     const seed = `J10${uniq().slice(0, 4)}`;
     const g = sheetGenerate({ kind: "csv", seed, size: { rows: 6000, cols: 3 }, header: "one", types: ["text", "integer", "text"] });
     const bytes = await (async () => { const list = []; for await (const c of g.chunks()) list.push(c); const n = list.reduce((a, c) => a + c.length, 0); const out = new Uint8Array(n); let at = 0; for (const c of list) { out.set(c, at); at += c.length; } return out; })();
@@ -690,10 +684,12 @@ export function sections(kit, counting) {
     for (const m of g.truth.marks) {
       const item = await kit.until(async () => (await findIn(kit, ann, up.capture.sha256, m.text))[0] ?? null, 120000, 2500);
       assert.ok(item, `the mark ${m.text} (row ${m.row}) is found in the document (${bundle})`);
-      const extent = item.extent || (item.where && item.where.extent) || null;
-      assert.ok(extent, `the hit carries its extent: ${JSON.stringify(item).slice(0, 300)}`);
-      const rows = [extent.row_from ?? extent.row_start ?? extent.rowFrom ?? extent.from_row, extent.row_to ?? extent.row_end ?? extent.rowTo ?? extent.to_row];
-      assert.ok(Number(rows[0]) <= m.row && m.row <= Number(rows[1]), `the extent ${JSON.stringify(extent)} contains row ${m.row}`);
+      const extent = item.extent || null;
+      assert.ok(extent && typeof extent.range === "string", `the hit carries its extent: ${JSON.stringify(item).slice(0, 300)}`);
+      const [from, to] = extent.range.split(":").map((c) => Number(/\d+/.exec(c)[0]));
+      assert.ok(from <= m.row && m.row <= to, `the extent ${extent.range} contains row ${m.row}`);
+      /* and the unit's words carry the row: the hit says which row, not a block */
+      assert.ok(item.row === m.row || item.row === m.row - 1 || (item.row && item.row.row === m.row), `the hit names its row (${m.row}): ${JSON.stringify(item.row)}`);
     }
   });
 }

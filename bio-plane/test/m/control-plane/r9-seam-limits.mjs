@@ -375,13 +375,17 @@ export function sections(kit, counting) {
     /* a call to the OCR member made inside a request (by the Worker or by the object serving it) is counted as `OCR_WORKER.fetch`; the alarm's ticks belong to no request and are not */
     script = must(script, "const wrappers = new WeakMap();",
       `const wrappers = new WeakMap();
-const countedService = (svc, sinkOf) => (svc && typeof svc.fetch === "function" ? new Proxy(svc, { get(t, k) { const v = t[k];
-  if (k === "fetch" && typeof v === "function") return (...a) => { const s = sinkOf(); if (s) add(s, "r2", "OCR_WORKER.fetch", 0); return v.apply(t, a); };
-  return typeof v === "function" ? v.bind(t) : v; } }) : svc);`, "the wrapper table");
+const serviceWrappers = new WeakMap();
+const countedService = (svc, sinkOf, kind) => { if (!svc || typeof svc.fetch !== "function") return svc;
+  const own = serviceWrappers.get(svc) ?? new Map(); serviceWrappers.set(svc, own);
+  if (!own.has(kind)) own.set(kind, new Proxy(svc, { get(t, k) { const v = t[k];
+    if (k === "fetch" && typeof v === "function") return (...a) => { const s = sinkOf(); if (s) add(s, "r2", "OCR_WORKER.fetch", 0); return v.apply(t, a); };
+    return typeof v === "function" ? v.bind(t) : v; } }));
+  return own.get(kind); };`, "the wrapper table");
     script = must(script, 'if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), sinkOf, "r2", true);',
-      'if (key === "OCR_WORKER") return countedService(target[key], sinkOf);\n        if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), sinkOf, "r2", true);', "the object's environment");
+      'if (key === "OCR_WORKER") return countedService(target[key], sinkOf, "object");\n        if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), sinkOf, "r2", true);', "the object's environment");
     script = must(script, 'if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), () => sink, "r2");',
-      'if (key === "OCR_WORKER") return countedService(target[key], () => sink);\n      if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), () => sink, "r2");', "the Worker's environment");
+      'if (key === "OCR_WORKER") return countedService(target[key], () => sink, "worker");\n      if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), () => sink, "r2");', "the Worker's environment");
     await press.mf.setOptions({ ...press.OPTIONS, scriptPath: entry.scriptPath, script });
   })();
   after(() => press.mf.dispose());
