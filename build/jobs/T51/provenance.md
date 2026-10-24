@@ -1,6 +1,6 @@
 # provenance (T51)
 
-**Status** · session_01PLcYEHrnJ6MSU2YWXJwvkm · depth 2 · WORKING · handled B9
+**Status** · session_01PLcYEHrnJ6MSU2YWXJwvkm · depth 2 · COMPLETE · handled B9
 
 ## J1 · REPORT
 
@@ -166,3 +166,22 @@ R72 applied (F3, D1) on job/T51/provenance (commit 9e5f6cf7f1, tranche/T51 merge
 
 Deferred: none. Open QUESTION: none.
 Size (session_01WPxSEtH41UFFdxzG3nBaLz): test runs 14, module lines 3193
+
+## J10 · COMPLETE
+
+Fix round 9 (B9): G127a, G127c, G127d (`partsOf`), G127e. Commits on job/T51/provenance (tranche/T51 merged first, never rebased). R74-R79 and edited R41, R72, R73 are met by the tests below (BOB drops the "not yet met" marks). No file created outside my paths.
+
+**(1) Root cause.** Before this change `screens-intake/capture.mjs` sent a part as a `register` row and `schema.mjs:13` made `register.capture_sha` the key of every row, so a part sat in a document's key space; the fence in `index.mjs` (`shas`, was :1719-1729) refused a part another bundle held, and `#project` (was :629-646) would have moved its row. **(2) Why tests missed it:** every fixture held one document per digest; none shared a part. Gap fixed by `parts-key.test.mjs` (two bundles sharing a part). **(4) Platform:** N (SQL only; one upsert per multipart document at promotion; the repair scans `files` once per wake, like R72's).
+
+**What changed.** `schema.mjs`: table `register_parts(bundle_id, whole_sha, idx, part_sha, bytes, path)` with indexes. `index.mjs`: `foldRegister` folds a promotion's `register` to wholes (R75 `parts`; R77 old shape: a row whose digest is a file's `blobSha` and whose path is `<name>.partNNN` joins the whole row `<name>`, ordered by number; a digest the package's own provenance.json states as a capture's is a whole); `#check` refuses a part with no whole `REGISTER_PART_WITHOUT_WHOLE`, a malformed part digest `REGISTER_PART_MALFORMED`, a bad part size `REGISTER_BYTES_UNSTATED` naming the part (the first two carry no catalogue row, like `NO_SUCH_BUNDLE`; their sentences go through `localize`); the one-home fence is over wholes and answers `kind: "whole"`; `#project` writes wholes and replaces only its own bundle's `register_parts`; `partsOf(sha)` (R78); `repairParts()` `{moved, left}` run by `migrate()` at every wake (R79, subsumes R72's back-fill); `registeredFor` answers wholes with `parts` (`part_of` retired); `capturesOf` over wholes; `register_parts` declared to purge; `PROVENANCE_TABLES` gains it.
+
+**Failing first.** `test/m/provenance/parts-key.test.mjs`, 9 tests (R74, R75 x2, R76, R77 x2, R78, R79 x2): first run `ℹ pass 0 ℹ fail 9`; after: `ℹ pass 9 ℹ fail 0`. Old tests rewritten to the new shape: whole-identity, whole-rows, register (R11, R41), seam (R41).
+
+**Tests/checks.** provenance folder plus the three listed files: 181 pass, 0 fail. format 0 failures; architecture 0; coverage 64 of 64; words 0; ownership 8 files, 0 failures; setup-words --check: stale-rows note on a doc-clean id only. Users run on my branch: acquisition 276/0, capture 294/0, case-carriage 100/0, extraction 323/5 (G40/G41 reading pins, no register), retrieval-browse 57/4, case-authoring 254/2, corpus-export 31/4, case-disclosures 111/4, file-safety 2 failures (size-bound tests); ratification and content runs stopped unfinished. The extraction and file-safety failures were not compared against the tranche tip.
+
+**Found in other modules (REPORT to BOB):** their fixtures build the old parts-only register, which R77 now refuses `REGISTER_PART_WITHOUT_WHOLE`, or read `part_of`: retrieval-browse `whole-rows.test.mjs` R19 (4), case-disclosures `whole-rows.test.mjs` R34 (4), case-authoring `whole-rows.test.mjs` R84 (2), corpus-export R13 (4). Each must send the whole row with `parts` (R75) and read `registeredFor`'s `parts`. extraction's `#wholeOfPart` and r81 (pins NO_HOME) and acquisition's `readRange` move to `partsOf`/`homeOf(whole)`. Control-plane's K4833 seam section turns green with screens-intake's change.
+
+**For BOB's requirement text:** R48: add `register_parts` to the read contract; `registeredFor` rows carry `parts` on a whole, no `part_of`. `migrate()` still answers `{ok:true}`; the counts are `repairParts()`'s.
+
+Deferred: none. Open QUESTION: none.
+Size (session_01PLcYEHrnJ6MSU2YWXJwvkm): test runs 12, module lines 3279
