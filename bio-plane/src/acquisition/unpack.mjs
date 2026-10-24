@@ -848,9 +848,11 @@ async function archiveProfile(inst, ev, sha, parts) {
   }
   /* R48 (fix round 4, P10 c; K4445): the opening bytes first. A capture that does not begin with the ZIP local-file magic is no ZIP archive
      (R17's `zip` needs the magic, `formats.mjs`), so it is answered at once from its first part's head, never profiled whole. */
+  let archiveHead = null;
   try {
     const first = await ev.get(parts[0].sha256, { range: { offset: 0, length: Math.min(1024, parts[0].bytes) } });
     const head = first ? new Uint8Array(await first.arrayBuffer()).subarray(0, 1024) : null;
+    archiveHead = head;   // R101: the profile that follows is served this head for the reads it makes inside it
     if (head && !hasZipMagic(head.subarray(0, 4))) {
       const f = detectFormat(head, null);
       return remembered(inst, sha, { format: f && f.format !== "zip" ? f.format : null });
@@ -859,10 +861,11 @@ async function archiveProfile(inst, ev, sha, parts) {
   const total = parts.reduce((n, x) => n + x.bytes, 0);
   let fmt = null, decided = false;
   try {
+    const unread = {};
     const prof = await profileOf({ ev, sha, ct: null, total, multipart: parts.length > 1, headers: {}, locator: null,
-      view: undefined, retrieved: stampSecond(), origin: null, parts });
+      view: undefined, retrieved: stampSecond(), origin: null, parts, unread, firstPart: archiveHead });
     fmt = prof && prof.format ? prof.format.format : null;
-    decided = true;
+    decided = !unread.reason;   // R101, R121: a store that could not be read is no decision
   } catch { fmt = null; }
   /* R107: a decision made from the bytes is remembered; one made because the profile could not be read is not (it may read next time) */
   return fmt === "zip" ? null : decided ? remembered(inst, sha, { format: fmt }) : notAnArchive(sha, { format: fmt });

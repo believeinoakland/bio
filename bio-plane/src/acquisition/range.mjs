@@ -19,6 +19,53 @@ export const wholeShaOf = (sha) => {
 
 const bytesOf = async (obj) => new Uint8Array(await obj.arrayBuffer());
 
+/** R113, R101: a range reader over an evidence store `ev` for the whole `s` (64 lowercase hex): the whole object when it is held (asked ONCE, the first read), else the
+ *  stated `parts` (`[{sha256, bytes}]` in order; null names none) read across the seam. The one reader behind `readRange` and `profileOf`'s judgement of a large
+ *  capture's format, which makes several reads of one capture and so asks whether it is held once. The reader answers the bytes, or `{ok: false, reason}`; it never
+ *  throws. */
+export function rangeReaderOf(ev, s, parts) {
+  let whole = undefined;   // the held whole's size, or null when it is not held whole
+  return async (offset, length) => {
+    try {
+      if (whole === undefined) {
+        const head = await ev.head(s);
+        whole = head && Number.isSafeInteger(Number(head.size)) ? Number(head.size) : null;
+      }
+      /* held whole: one ranged read of the object */
+      if (whole !== null) {
+        if (offset >= whole || length === 0) return new Uint8Array(0);
+        const take = Math.min(length, whole - offset);
+        const o = await ev.get(s, { range: { offset, length: take } });
+        if (!o) return { ok: false, reason: "NOT_HELD" };
+        return (await bytesOf(o)).subarray(0, take);
+      }
+      /* held in parts: the parts the register names, read across the seam */
+      if (!Array.isArray(parts) || !parts.length) return { ok: false, reason: "NOT_HELD" };
+      const size = parts.reduce((n, x) => n + x.bytes, 0);
+      if (offset >= size || length === 0) return new Uint8Array(0);
+      const take = Math.min(length, size - offset);
+      const out = new Uint8Array(take);
+      let at = 0, start = 0;
+      for (const part of parts) {
+        const end = start + part.bytes;
+        const from = Math.max(offset, start), to = Math.min(offset + take, end);
+        if (to > from) {
+          const o = await ev.get(part.sha256, { range: { offset: from - start, length: to - from } });
+          if (!o) return { ok: false, reason: "NOT_HELD" };
+          const b = (await bytesOf(o)).subarray(0, to - from);
+          if (b.length !== to - from) return { ok: false, reason: "PART_SHORT" };
+          out.set(b, at); at += b.length;
+        }
+        start = end;
+        if (start >= offset + take) break;
+      }
+      return out;
+    } catch (e) {
+      return { ok: false, reason: String(e && e.message || e).slice(0, 120) || "STORE_FAILED" };
+    }
+  };
+}
+
 export async function readRange(store, sha, offset, length) {
   try {
     const s = wholeShaOf(sha);
@@ -27,39 +74,11 @@ export async function readRange(store, sha, offset, length) {
     const core = store && store.core;
     const ev = core && typeof core.evidenceStore === "function" ? core.evidenceStore() : null;
     if (!ev) return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED" };
-    /* held whole: one ranged read of the object */
-    const head = await ev.head(s);
-    if (head && Number.isSafeInteger(Number(head.size))) {
-      const size = Number(head.size);
-      if (offset >= size || length === 0) return new Uint8Array(0);
-      const take = Math.min(length, size - offset);
-      const o = await ev.get(s, { range: { offset, length: take } });
-      if (!o) return { ok: false, reason: "NOT_HELD" };
-      return (await bytesOf(o)).subarray(0, take);
-    }
-    /* held in parts: the parts the register names, read across the seam */
+    /* the parts are asked of the register only when the whole is not held */
+    const held = await ev.head(s).catch(() => null);
     const p = store && store.provenance;
-    const parts = p && typeof p.partsOf === "function" ? p.partsOf(s) : null;
-    if (!Array.isArray(parts) || !parts.length) return { ok: false, reason: "NOT_HELD" };
-    const size = parts.reduce((n, x) => n + x.bytes, 0);
-    if (offset >= size || length === 0) return new Uint8Array(0);
-    const take = Math.min(length, size - offset);
-    const out = new Uint8Array(take);
-    let at = 0, start = 0;
-    for (const part of parts) {
-      const end = start + part.bytes;
-      const from = Math.max(offset, start), to = Math.min(offset + take, end);
-      if (to > from) {
-        const o = await ev.get(part.sha256, { range: { offset: from - start, length: to - from } });
-        if (!o) return { ok: false, reason: "NOT_HELD" };
-        const b = (await bytesOf(o)).subarray(0, to - from);
-        if (b.length !== to - from) return { ok: false, reason: "PART_SHORT" };
-        out.set(b, at); at += b.length;
-      }
-      start = end;
-      if (start >= offset + take) break;
-    }
-    return out;
+    const parts = !held && p && typeof p.partsOf === "function" ? p.partsOf(s) : null;
+    return await rangeReaderOf(ev, s, parts)(offset, length);
   } catch (e) {
     return { ok: false, reason: String(e && e.message || e).slice(0, 120) || "STORE_FAILED" };
   }

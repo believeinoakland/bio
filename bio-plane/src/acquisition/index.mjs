@@ -56,11 +56,11 @@ import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, keepRenderBodies
 import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-governor/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../provenance/index.mjs";
 import { attest } from "../attestation/index.mjs";
-import { hasZipMagic, listArchive, normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART, decodeText } from "../ooxml.mjs";
+import { decodeText } from "../ooxml.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { ARCHIVE_CHECKS } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
-import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
+import { unpack, coArchiveStateOf } from "./unpack.mjs";
 import { titleOfBytes, cleanedTitle, decodeAs, charsetOf } from "./title.mjs";
 import * as pdfReader from "../pdfstructure.mjs";
 import { baseViewer, viewerMember } from "../member-roster/index.mjs";
@@ -77,6 +77,7 @@ export { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, C
 export { ARCHIVE_CHECKS } from "./checks.mjs";
 /* R113 (fix round 9, G127d): a capture's bytes by its whole digest, the parts hidden. */
 export { readRange, wholeShaOf } from "./range.mjs";
+import { rangeReaderOf } from "./range.mjs";
 export { unpack, archiveList, memberOf, membersOf, openedAmong, notArchivesAmong, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
          UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES, UNPACK_LIMITS,
          ARCHIVE_CHECK_READS } from "./unpack.mjs";
@@ -1741,14 +1742,17 @@ async function acquireRun(cap, body0, opts0, t) {
     const sid = `rs_${sha.slice(0, 16)}_${Date.now().toString(36)}`;
     const carried = {};
     for (const k of ["subresources", "authority", "file", "coArchive"]) if (body[k] !== undefined) carried[k] = body[k];
+    let owedRow = false;
     try {
       const owe = oweOf(cap, opts);
       const saved = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base: renderDeferred.pageUrl,
         state: { queue: [{ render: true }], ...(actor ? { opened_by: actor } : {}), render_pending: { since: retrieved, body: carried } },
         ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}) });
       /* R100: the render still to be finished is owed work too */
-      if (owe && saved) await owe({ kind: "subresources", sha, session: sid });
+      if (owe && saved) owedRow = await owe({ kind: "subresources", sha, session: sid });
     } catch { /* the render still returns; the member captures again */ }
+    /* R117: the row is the render's home; when the run returns its kept reply is written to the session the row names, so an object that restarts after it still finds it */
+    renderDeferred.run.then((a) => persistRender(cap, sid, a, owedRow)).catch(() => {});
     PENDING_RENDERS.set(sid, { run: renderDeferred.run, since: Date.now() });
     const forget = setTimeout(() => PENDING_RENDERS.delete(sid), PENDING_RENDER_TTL_MS);
     if (forget && typeof forget.unref === "function") forget.unref();
@@ -1920,6 +1924,26 @@ async function acquireRun(cap, body0, opts0, t) {
   });
 }
 
+/* R117 (fix round 9, G126g): A PENDING RENDER SURVIVES A RESTART. What the run of a render this call did not wait for answers (`keepReply`'s small `{kept, rsha, existed,
+   digests, reply}`, or a failed render's `{ok: false, error, failure_class}`) is written into the capture session the render's job row names (`render_pending.answer`)
+   when it returns, so `finishRender` of an object that was restarted between the render's start and its delivery finds it and finishes it from the record, with no
+   second render, reservation or charge. A reply over `RENDER_ANSWER_MAX` bytes of JSON is not written (the render is then begun afresh, R99), and a session that is gone
+   or no longer pending is not written back. Never throws. */
+export const RENDER_ANSWER_MAX = 2 * 1024 * 1024;
+function persistRender(cap, sid, a, owed) {
+  try {
+    if (!a || typeof a !== "object" || !(a.kept === true || a.ok === false)) return;
+    const answer = a.kept === true ? a : { ok: false, error: String(a.error || "").slice(0, 500), ...(typeof a.failure_class === "string" ? { failure_class: a.failure_class } : {}),
+                                           ...(Number.isFinite(a.elapsed_ms) ? { elapsed_ms: a.elapsed_ms } : {}) };
+    if (JSON.stringify(answer).length > RENDER_ANSWER_MAX) return;
+    const ld = cap.loadCaptureSession({ session: sid });
+    const st = ld && ld.found && ld.state && typeof ld.state === "object" ? ld.state : null;
+    if (!st || !st.render_pending || st.render_pending.answer) return;
+    cap.saveCaptureSession({ session: sid, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
+      state: { ...st, render_pending: { ...st.render_pending, answer } }, ...(owed ? { ttlMs: OWED_SESSION_TTL_MS } : {}) });
+  } catch { /* the render is begun afresh when it is finished */ }
+}
+
 /** R5, R12 (fix round 6, G27): A RENDER THAT RETURNS AFTER ITS REQUEST HAS ENDED IS KEPT IN THE RECORD, NOT IN MEMORY. The renderer's reply is the
  *  page and every body the page loaded (up to `SUBRESOURCE_BUDGET`, 64 MiB, sent as base64 text): held by the pending render until the member's
  *  "Finish it" or the alarm takes it, an hour at most, it was the whole of the object's 128 MB. When the run returns, its page and each body are
@@ -2010,7 +2034,7 @@ async function addressReputation(address, given, scanner) {
  *  needs a member's own capture does not match. `firstPart` (R96), the first bytes of the first part when the caller holds them, is
  *  what the ZIP magic is read from, so a capture of several parts reads none back for it. */
 export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved,
-                                  origin = null, parts = null, firstPart = null }) {
+                                  origin = null, parts = null, firstPart = null, unread = null }) {
   const pv = view || { view: undefined, ids: null };
   let profileText = "", profileBytes = null, textEncoding = null;
   if (profilesAsText(ct, total, multipart)) {
@@ -2051,52 +2075,41 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
     jurisdiction_view: pv.ids,
     format: detectFormat(formatBytes, ct || null),
   };
-  /* R17 (N688; K1852 (2)): past the read's bound (a capture held in parts), `zip` only from the bytes: the ZIP magic, and
-     ooxml's listing over the stored parts as a range source answering whole with neither an OPC content-type map nor an
-     ODF `mimetype` in it, so an office or OpenDocument file is never profiled `zip`; a declared type never makes one. */
-  if (!formatBytes && Array.isArray(parts) && parts.length) {
-    /* R101 (fix round 5, E1): a capture held in parts is judged from the first KiB of its first part, as a single part is, so an
-       upload that declares no type (a PDF, an office file) is not `undetermined`; the head is the one the caller holds, else a
-       range read of the stored part (the head alone is transferred, never the part). */
-    const head = await headOf(ev, parts, firstPart);
-    if (head) profile.format = detectFormat(head, ct || null);
-    const z = await zipPastBound(ev, parts, head);
-    if (z) profile.format = z;
-    else if (profile.format && profile.format.format === "zip")
-      profile.format = { format: "undetermined", confidence: "none",
-        signals: [...(profile.format.signals || []), "the stored bytes were not read as a ZIP archive, so the declared type does not make one"] };
+  /* R101 (fix round 9, G130c; amends R17): a capture held in several parts, or whole past the bytes read back, is judged from RANGE READS of its head and of its
+     tail, never from a 1 KiB prefix alone: `format-registry.detectFormat` over a range source reads the head for the signatures (an image before a PDF or a web
+     page) and, for a container, the end record and the central directory, so an office or OpenDocument file of any size is its own format and a plain ZIP is
+     `zip` only from the bytes (a declared type never makes one). The reads are `readRangeOf`'s, the one reader behind `readRange` (R113); the caller's `firstPart`
+     serves a read inside it. Bytes of no known format keep the declared type with the absence stated, else `undetermined`; a part that is not there, or a store
+     that cannot read, is stated and `unread.reason` is set (the profile is never failed). */
+  if (!formatBytes && total > 0 && (multipart || total > ODF_DIGEST_MAX || (Array.isArray(parts) && parts.length))) {
+    let held = firstPart instanceof Uint8Array && firstPart.length ? firstPart : null;
+    const reader = rangeReaderOf(ev, sha, Array.isArray(parts) && parts.length ? parts : null);
+    const src = { size: total, readRange: async (o, n) => {
+      if (held && o + n <= held.length) return held.subarray(o, o + n);   // a read inside the head already held is not asked of the store again
+      const r = await reader(o, n);
+      if (r instanceof Uint8Array && o === 0 && r.length > (held ? held.length : 0)) held = r;
+      if (r instanceof Uint8Array) return r;
+      if (unread && r && r.reason && r.reason !== "NOT_HELD") unread.reason = String(r.reason).slice(0, 120);
+      return new Uint8Array(0);
+    } };
+    let byBytes = null;
+    try { byBytes = await detectFormat(src, null); } catch { byBytes = null; }
+    if (byBytes && byBytes.format !== "undetermined") profile.format = byBytes;
+    else {
+      /* no signature in the bytes: the declared type, as before, from the head that was read (a ZIP is never made by a declared type) */
+      let declared = null;
+      try { const head = await src.readRange(0, FORMAT_HEAD); declared = detectFormat(head.length ? head : null, ct || null); } catch { declared = null; }
+      profile.format = declared && declared.format === "zip"
+        ? { format: "undetermined", confidence: "none",
+            signals: [...(declared.signals || []), "the stored bytes were not read as a ZIP archive, so the declared type does not make one"] }
+        : declared || profile.format;
+    }
   }
   let containerBytes = null;
   const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
   if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) containerBytes = readWhole;
   profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
   return profile;
-}
-
-/** R17: whether bytes held in `parts` (`[{sha256, bytes}]`, in order) are a plain ZIP archive, read without holding them
- *  whole: the ZIP magic in the first part, then `ooxml.listArchive` over the parts as a range source. Answers the format
- *  registry's shape for `zip`, or null. Never throws. */
-/** R101: the first `FORMAT_HEAD` bytes of the first of `parts` (`[{sha256, bytes}]`), the caller's `firstPart` when it holds them, else a
- *  range read of the stored part; null when the part is not there or cannot be read. Never throws. */
-async function headOf(ev, parts, firstPart = null) {
-  if (firstPart instanceof Uint8Array && firstPart.length) return firstPart.subarray(0, FORMAT_HEAD);
-  try {
-    const first = await ev.get(parts[0].sha256, { range: { offset: 0, length: FORMAT_HEAD } });
-    const b = first ? new Uint8Array(await first.arrayBuffer()) : null;
-    return b && b.length ? b.subarray(0, FORMAT_HEAD) : null;
-  } catch { return null; }
-}
-async function zipPastBound(ev, parts, head = null) {
-  try {
-    if (!head || !hasZipMagic(head.subarray(0, 4))) return null;
-    const l = await listArchive(partsSource(ev, parts));
-    if (!l.ok) return null;
-    const names = new Set(l.entries.map((e) => normalizePartName(e.name || "")));
-    if (names.has(CONTENT_TYPES_PART) || names.has(ODF_MIMETYPE_PART)) return null;
-    return { format: "zip", confidence: "likely",
-             signals: ["magic: PK\\x03\\x04 in the stored bytes", localize("acquisition.index.listed_whole_over_the_stored", "listed whole over the stored parts"),
-                       `part: ${CONTENT_TYPES_PART} absent`, `part: ${ODF_MIMETYPE_PART} absent`, `entries: ${l.count}`] };
-  } catch { return null; }
 }
 
 /** R108 (fix round 6, G19; K4571 S10): WHAT OF A PAGE'S SUPPORTING FILES WAS KEPT, STATED. `supporting: {kept, skipped, total, reasons}` from the
@@ -2281,6 +2294,8 @@ async function finishRender(cap, { session, opts, t, inRequest = false }) {
   const { cls = null, storeName = "bio", renderWaitMs = undefined } = opts || {};
   const rp = session.state.render_pending;
   const held = PENDING_RENDERS.get(session.session);
+  /* R117: the answer the run wrote into the session's row when it returned, found by an object that restarted since */
+  const persisted = !held && rp && rp.answer && typeof rp.answer === "object" ? rp.answer : null;
   const pendingAnswer = () => ({ status: 200, body: { ok: true, existed: true,
     continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
                  note: word("acquisition.note.continuation_files_new") },
@@ -2295,7 +2310,7 @@ async function finishRender(cap, { session, opts, t, inRequest = false }) {
   if (inRequest) {
     const owe = oweOf(cap, opts);
     if (owe) {
-      const settled = held ? await timed(t, "render", () => within(held.run, 0)) : { done: false };
+      const settled = held ? await timed(t, "render", () => within(held.run, 0)) : persisted ? { done: true, value: persisted } : { done: false };
       if (!settled.done) {
         rearmed = await owe({ kind: "subresources", sha: session.primarySha, session: session.session });
         if (rearmed) return pendingAnswer();
@@ -2306,9 +2321,9 @@ async function finishRender(cap, { session, opts, t, inRequest = false }) {
      admission, plus the wait): one not settled after that was begun by a request that has ended, and is lost. */
   const staleMs = opts && Number.isFinite(opts.renderStaleMs) ? opts.renderStaleMs : renderReserveMs(RENDER_DEFAULTS) + RENDER_WAIT_MS;
   const stale = !!held && Date.now() - held.since >= staleMs;
-  let resume = null, lost = !held;
-  if (held) {
-    const got = await timed(t, "render", () => within(held.run, stale ? 0 : (renderWaitMs ?? RENDER_WAIT_MS)));
+  let resume = null, lost = !held && !persisted;
+  if (held || persisted) {
+    const got = held ? await timed(t, "render", () => within(held.run, stale ? 0 : (renderWaitMs ?? RENDER_WAIT_MS))) : { done: true, value: persisted };
     if (got.done) {
       resume = { answer: got.value };
       /* G27: a render kept in the record whose page the record no longer holds (another store's, or purged) is lost like one the object lost */
