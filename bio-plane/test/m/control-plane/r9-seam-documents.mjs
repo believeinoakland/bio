@@ -437,7 +437,7 @@ export function sections(kit, counting) {
     for (const [who, p] of [["first", p1], ["second", p2]]) {
       const session = p.r.body && p.r.body.fetch_pending && p.r.body.fetch_pending.session;
       const row = session ? (await rowsOf(k, admin, session)).find((x) => x.sha === session) : null;
-      assert.ok(p.held, `the ${who} member's PDF is held${row ? ` (its fetch row: ${row.state} ${row.why})` : ""}`);
+      assert.ok(p.held, `the ${who} member's PDF is held${row ? ` (its fetch row: ${JSON.stringify(row).slice(0, 600)})` : ""}`);
       assert.notEqual(row && row.why, HELD_ELSEWHERE, `the ${who} member's fetch is not refused as held by another bundle`);
     }
     /* each reads its own: the words of its own first page, and not the other's, by the ticks */
