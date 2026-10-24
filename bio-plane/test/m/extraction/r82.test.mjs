@@ -100,15 +100,16 @@ test("R82 R80 R45 (F4 control): a failed reading marked final, one with no mark,
   assert.equal(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading, stored);
 });
 
-test("R82 R80 seam (needs reading-pipeline R37): an entry that throws once leaves a transient reading, and the next call reads the document", async () => {
+test("R82 R80 R101 (fix round 9, K4896; reading-pipeline R37, G133c): an entry that throws on the file's own bytes is a deterministic failure: the reading is `final` with its reason, not `transient`, so it is not owed and a later call does not replace it", async () => {
   const { w, d } = await failedWith("transient");
   let n = 0;
-  const flaky = { format: "pdf", structure: async () => { if (n++ === 0) throw new Error("store read error"); return { ok: true, text: structuredClone(TEXT), pages: 1, notes: [] }; } };
+  const flaky = { format: "pdf", structure: async () => { if (n++ === 0) throw new Error("bad xref in the file"); return { ok: true, text: structuredClone(TEXT), pages: 1, notes: [] }; } };
   const first = await withEntry(flaky, () => w.x.readHeld({ sha: d }));
   assert.equal(first.read, true);
+  assert.equal(first.owed, undefined, "a deterministic failure owes nothing");
+  assert.equal(readingOf(w, d).failure, "final");
   const second = await withEntry(flaky, () => w.x.readHeld({ sha: d }));
-  assert.equal(second.read, true, "the alarm after reads it");
-  assert.match(w.x.readingFor(d, "class:admin").text_units.map((u) => u.text).join(" "), /alpha/);
+  assert.deepEqual([second.read, second.why], [false, "READING_HELD"], "a final reading is not read again");
 });
 
 /* R-SEAM: needs reading-pipeline R37 (cause-reading-4), which marks the failure. Red by name until it is merged. */

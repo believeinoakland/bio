@@ -29,6 +29,7 @@ import { EXTRACTION_SCHEMA } from "./schema.mjs";
 import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, TRANSCRIBE_WORDS, fillWords,
          pagesSaid, AGENT_WORKER_REASONS } from "./checks.mjs";
 import { evidenceAbsent } from "../capture/ops.mjs";
+import { readRange } from "../acquisition/index.mjs";
 import { say } from "./words.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
@@ -683,7 +684,7 @@ export class Extraction {
   async read(document, { storeName = "bio", env = null, budget = undefined, pieces = undefined } = {}) {
     const e = env || this.env || {};
     const out = await readDocument(document, {
-      evidence: this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null,
+      evidence: this.#evidenceOf(document && document.capture && document.capture.sha256),
       env: e, storeName, view: this.view(), planeVersion: e.VERSION || null,
       liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { unitsBudget: budget }),
       ...(pieces === undefined ? {} : { cursor: pieces.cursor ?? null, maxUnits: CAPTURE_TEXT_CAPTURE_UNIT_BOUND }) });
@@ -758,35 +759,25 @@ export class Extraction {
    *  re-read is written as a composed reading; a member that is down leaves the entry owed, pages it declines end it. */
   async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined, kind = null, defer = false } = {}) {
     const digest = typeof sha === "string" ? sha.trim().toLowerCase() : "";
+    /* (fix round 9, G127a; R104; K4833) the whole digest is the only key: the register names a capture by its whole, held whole or in parts
+       (provenance R74), so `homeOf` of the whole is its home and no part is resolved here. */
     let home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function"
       ? this.#provenance.homeOf(digest) : null;
-    /* (fix round 4, C5b; K4440) a multipart capture is registered by its parts, not its whole digest, so the register may
-       name no home for the whole; the bundle of the reading already held for it is its home. */
+    /* (fix round 4, C5b; K4440) a reading already held for the digest names its bundle, the home of a capture the register does not yet hold */
     if ((!home || typeof home.bundleId !== "string" || !home.bundleId) && /^[0-9a-f]{64}$/.test(digest)) {
       const mine = this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, digest);
       home = mine && typeof mine.bundle_id === "string" && mine.bundle_id ? { bundleId: mine.bundle_id } : null;
     }
-    /* (fix round 4, C5a/P8; K4481; R81) a capture promoted in parts is registered by its parts only (capture's
-       `promoteDocument`), and a deferred reading has none yet: the home is the bundle that states the whole and whose parts
-       the register names. */
-    if ((!home || typeof home.bundleId !== "string" || !home.bundleId) && /^[0-9a-f]{64}$/.test(digest))
-      home = this.#homeOfParts(digest);
     const left = (why, more = {}) => ({ ok: true, read: false, why, ...more });
     if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left("NO_HOME");
     if (viewer !== undefined && !this.#sees(home.bundleId, viewer)) return left("NO_HOME");
     const stored = this.#storedDocument(home.bundleId, digest);
-    /* (fix round 6, G6; R88) a digest that is a PART of a document the home holds is no document: it resolves to the whole it is
-       a part of and is read as that, so a bare part is never read alone as if it were a document, and nothing is written under it. */
-    if (!stored) {
-      const whole = this.#wholeOfPart(home.bundleId, digest);
-      if (whole) return this.readHeld({ sha: whole, storeName, env, viewer, kind, defer });
-    }
     let document = stored || { capture: { sha256: digest } };
     const held = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
     /* (fix round 6, G40; R95) only the stored reading's own facts are read, by SQL: a large stored reading is not parsed to ask whether it failed */
     const heldReading = held ? this.#readingFacts(digest) : null;
     const ocr = kind === "ocr";
-    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    const ev = this.#evidenceOf(digest);
     /* (fix round 5, E1; R-OLD: new data only, older records are repaired by the press) a `final` reading that says the
        document was not read as text is read again once the held bytes now say what they are. */
     const fmt0 = document.profile && document.profile.format && typeof document.profile.format.format === "string"
@@ -816,11 +807,9 @@ export class Extraction {
        whole is needed to write the statement; one at or under it still needs its whole. */
     const size = this.#sizeOf(document);
     const overCeiling = !ocr && size !== null && size > pipeline.WHOLE_READ_MAX;
-    let whole = null;
-    if (!overCeiling) {
-      try { whole = ev ? (typeof ev.head === "function" ? await ev.head(digest) : await ev.get(digest)) : null; } catch { whole = null; }
-      if (!whole) return left("NO_WHOLE_OBJECT");
-    }
+    /* (fix round 9, G127d; R104) a capture held in parts is read through `readRange` without waiting for its whole to be kept: `NO_WHOLE_OBJECT` is for
+       a capture held neither whole nor in parts (its first byte not readable by its whole digest). */
+    if (!overCeiling && !(await this.#heldByWhole(digest))) return left("NO_WHOLE_OBJECT");
     /* (fix round 5, E2/E6; B18) the door's `defer`: after every gate above, a read that will not fit the request is left to
        the ledger, which the door writes; nothing is read. */
     if (defer === true) return left("READING_PENDING");
@@ -926,12 +915,55 @@ export class Extraction {
   }
 
   /** The first KiB of the object held under `digest` (a range), or null when none is held or it is empty. */
-  async #heldHead(digest, ev) {
-    try {
-      const o = await ev.get(digest, { range: { offset: 0, length: 1024 } });
-      const head = o ? new Uint8Array(await o.arrayBuffer()).subarray(0, 1024) : null;
-      return head && head.length ? head : null;
-    } catch { return null; }
+  async #heldHead(digest) {
+    const head = await readRange(this.#rangeStore(), digest, 0, 1024);
+    return head instanceof Uint8Array && head.length ? head : null;
+  }
+
+  /** (fix round 9, G127d; R104) What `acquisition.readRange` is handed: this object's evidence store (record-core's) and its register (provenance's
+   *  `partsOf`), so a capture is read by its whole digest whether it is held whole or only in parts, and no part is resolved here. */
+  #rangeStore() { return { core: this.core, provenance: this.#provenance }; }
+
+  /** (fix round 9, G127d; R104) Whether the capture is held by its whole digest: the whole object (its `head`), else its first byte read through
+   *  `readRange` from the parts the register names. A store that fails is held by nothing now. */
+  async #heldByWhole(digest) {
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    try { if (ev && await ev.head(digest)) return true; } catch { return false; }
+    /* not held whole: held in parts when its first byte reads through `readRange` (the register's parts, in the store) */
+    const b = await readRange(this.#rangeStore(), digest, 0, 1);
+    return b instanceof Uint8Array && b.length > 0;
+  }
+
+  /** (fix round 9, G127d; R104; K4833) The evidence store a read of the capture `digest` is handed: record-core's own, except that the whole digest of a
+   *  capture held only in parts is answered through `acquisition.readRange` (its `head` the parts' total, its `get` the bytes asked, by range or whole),
+   *  so the reader is handed the capture by its whole and never resolves a part. Every other key is the store's own. Null with no store. */
+  #evidenceOf(digest) {
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    if (!ev || typeof digest !== "string" || !/^[0-9a-f]{64}$/.test(digest)) return ev;
+    const parts = () => (this.#provenance && typeof this.#provenance.partsOf === "function" ? this.#provenance.partsOf(digest) : null);
+    const total = (ps) => (Array.isArray(ps) && ps.length ? ps.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0) : null);
+    const store = this.#rangeStore();
+    const object = (bytes, size) => ({ size, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
+    const own = {
+      head: async (key, ...a) => {
+        const h = await ev.head(key, ...a);
+        if (h || key !== digest) return h;
+        const size = total(parts());
+        return size === null ? h : { key, size };
+      },
+      get: async (key, opts, ...a) => {
+        const o = await ev.get(key, opts, ...a);
+        if (o || key !== digest) return o;
+        const size = total(parts());
+        if (size === null) return o;
+        const r = opts && opts.range && typeof opts.range === "object" ? opts.range : null;
+        const offset = r && Number.isSafeInteger(r.offset) ? r.offset : 0;
+        const length = r && Number.isSafeInteger(r.length) ? r.length : size - offset;
+        const b = await readRange(store, digest, offset, Math.max(0, length));
+        return b instanceof Uint8Array ? object(b, size) : null;
+      },
+    };
+    return new Proxy(ev, { get: (t, k) => (Object.hasOwn(own, k) ? own[k] : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
   }
 
   /** (fix round 6, G41 follow-up; R98; K4664, K4669) The format key `cellsOf` hands `reading-pipeline.cellsInRange` for a held sheet. A named
@@ -946,7 +978,7 @@ export class Extraction {
     const slot = (key) => (typeof key === "string" && key && key !== "undetermined" && typeof (getFormat(key) || {}).cellsIn === "function" ? key : null);
     const named = slot(container);
     if (named) return named;
-    const head = await this.#heldHead(digest, ev);
+    const head = await this.#heldHead(digest);
     if (!head) return null;
     const profile = document && document.profile && typeof document.profile === "object" ? document.profile : {};
     const ct = profile.source_content_type || (document && document.capture && document.capture.content_type) || null;
@@ -959,7 +991,7 @@ export class Extraction {
    *  under a declared text type is not a format: that case is the pipeline's own (reading-pipeline R2), which the
    *  caller's read then tries, so it answers the profile's recorded format unchanged. */
   async #nowDetected(document, digest, ev) {
-    const head = await this.#heldHead(digest, ev);
+    const head = await this.#heldHead(digest);
     if (!head) return null;
     const f = detectFormat(head, null);
     if (f && f.format && f.format !== "undetermined") return f;
@@ -970,10 +1002,10 @@ export class Extraction {
     return document.profile.format ?? { format: "undetermined", confidence: "none", signals: [] };
   }
 
-  /** (fix round 6, G6; R88) The whole document a part digest belongs to, in the bundle `bundleId`: the digest of the document in
-   *  the bundle's own provenance document whose `parts` name `part`; null when no document there does (a document's own digest,
-   *  or a digest the bundle does not hold as a part). */
-  #wholeOfPart(bundleId, part) {
+  /** R92 (fix round 6, G33; R-OLD, a repair only): the whole a reading the old press stored against a part's digest stands for, in the bundle
+   *  `bundleId`: the digest of the document in that bundle's own provenance document whose `parts` name `part`; null when none does. Read by the R92
+   *  repair alone, over readings stored before the whole digest was the only key (R104): no read or lookup of a capture resolves a part. */
+  #oldPartOwner(bundleId, part) {
     let docText = null;
     try {
       const f = this.core && typeof this.core.readFile === "function" ? this.core.readFile(bundleId, "data/provenance.json") : null;
@@ -983,25 +1015,6 @@ export class Extraction {
     const hit = Array.isArray(docs) ? docs.find((d) => d && d.capture && typeof d.capture.sha256 === "string" && d.capture.sha256 !== part
       && Array.isArray(d.parts) && d.parts.some((p) => p && p.sha256 === part)) : null;
     return hit ? hit.capture.sha256 : null;
-  }
-
-  /** R81: the home of a capture held in parts, or null. The bundle whose `data/provenance.json` states `capture.sha256` =
-   *  `whole` with parts, every part of which the register names as that bundle's own (`provenance.homeOf`), so a bundle
-   *  that merely mentions the digest is no home. */
-  #homeOfParts(whole) {
-    if (!this.#provenance || typeof this.#provenance.homeOf !== "function") return null;
-    let rows = [];
-    try {
-      rows = this.#rows(`SELECT f.bundle_id AS bundle_id FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
-                          WHERE f.path = 'data/provenance.json' AND instr(f.content, ?) > 0 ORDER BY f.bundle_id LIMIT 8`, whole);
-    } catch { return null; }
-    for (const r of rows) {
-      const parts = (this.#storedDocument(r.bundle_id, whole) || {}).parts;
-      if (!Array.isArray(parts) || !parts.length) continue;
-      if (parts.every((p) => p && typeof p.sha256 === "string" && (this.#provenance.homeOf(p.sha256) || {}).bundleId === r.bundle_id))
-        return { bundleId: r.bundle_id };
-    }
-    return null;
   }
 
   /** (fix round 6, G40; R95) The facts of a stored reading that `readHeld` asks (`found`, `failure`, `basis`, `tier3_candidate`, and `entities` as a
@@ -1439,15 +1452,8 @@ export class Extraction {
       `SELECT capture_sha, bundle_id, content_type, reader_version, found, entity_count, at,
               origin, asserted_by, asserted_standing, justification, capture_format
          FROM readings WHERE capture_sha=?`, captureSha);
-    /* (fix round 6, G6; R88) a part's digest is no capture of its own: a reading asked for by the digest of a part of a held document
-       is the whole's reading, answered as the whole's (a failed reading stored against the part by the read before this fix is
-       not it). Only a digest with no reading, or a failed one, is looked up, so a read of a reading with text costs nothing more. */
-    if (!row || !row.found) {
-      const home = this.#provenance && typeof this.#provenance.homeOf === "function" ? this.#provenance.homeOf(captureSha) : null;
-      const whole = home && typeof home.bundleId === "string" && !this.#storedDocument(home.bundleId, captureSha)
-        ? this.#wholeOfPart(home.bundleId, captureSha) : null;
-      if (whole) return this.readingFor(whole, viewer, { after });
-    }
+    /* (fix round 9, G127a; R104, restating R88) a part's digest is no capture: it is answered as any digest whose reading is not held, and is never
+       resolved to a whole (a part shared by two wholes names neither). */
     if (!row) return { ok: true, found: false, capture_sha: captureSha, reading: null };
     /* (fix round 6, G38; R94) the stored reading is read through SQL's JSON, so a bulky key never enters the object: it is named in
        `reading_omitted` and left out of `reading`. */
@@ -2032,7 +2038,7 @@ export class Extraction {
                             st.after || "", cap + 1);
     for (const r of page.slice(0, cap)) {
       const whole = typeof r.bundle_id === "string" && r.bundle_id && !this.#storedDocument(r.bundle_id, r.capture_sha)
-        ? this.#wholeOfPart(r.bundle_id, r.capture_sha) : null;
+        ? this.#oldPartOwner(r.bundle_id, r.capture_sha) : null;
       if (whole) {
         if (!out.owed.includes(whole) && !this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, whole)) {
           let a = null;
@@ -2089,7 +2095,7 @@ export class Extraction {
       try { const h = await ev.head(sha); size = h && Number.isFinite(h.size) && h.size > 0 ? h.size : null; } catch { size = null; }
       doc = { capture: { sha256: sha, ...(size === null ? {} : { bytes: size }) } };
     }
-    const got = await bytesOf(ev, doc).catch(() => ({ bytes: null }));
+    const got = await bytesOf(this.#evidenceOf(sha), doc).catch(() => ({ bytes: null }));
     if (!got.bytes) return { waiting: "the capture's bytes are not held in the evidence store" };
     const entry = getFormat(m.format);
     if (!entry || typeof entry.parts !== "function" || typeof entry.text !== "function")

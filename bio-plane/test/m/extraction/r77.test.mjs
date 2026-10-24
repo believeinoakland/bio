@@ -28,8 +28,10 @@ test("R77 R27: a capture whose register row holds its size answers `bytes` equal
   rows.set(f.digest, { bundleId: "INFO-1", path: "a.html", encoding: "utf8", bytes: 4321, registered: "t", authored: false });
   const got = f.x.readingFor(f.digest, "class:admin");
   assert.equal(got.bytes, 4321);
+  /* each history row's `kept_at` is its own write's second, so two stores written a second apart differ there alone: compared without it */
+  const unstamped = (a) => ({ ...a, reading_history: { ...a.reading_history, readings: a.reading_history.readings.map(({ kept_at, ...r }) => r) } });
   const { bytes, ...rest } = got;
-  assert.deepEqual(rest, bare.x.readingFor(bare.digest, "class:admin"));
+  assert.deepEqual(unstamped(rest), unstamped(bare.x.readingFor(bare.digest, "class:admin")));
 });
 
 test("R77 R27 (control): a capture the register holds no row for answers no `bytes` key at all, never a guessed size", async () => {

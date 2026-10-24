@@ -66,13 +66,15 @@ test("R95 (G40 control): the row, the history, `reading_sha256`, the history's p
   const { w, d } = await home(csv4000());
   await w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} });
   const row = w.one(`SELECT reading, origin FROM readings WHERE capture_sha=?`, d);
-  /* taken from the tranche code before G40 after reading-pipeline R35 merged (extraction before and after G40 agree; deterministic: two runs agree) */
-  assert.deepEqual([row.reading.length, sha256HexSync(row.reading)], [447739, "b6abedf1b7665e0817c8b6ec3de6075ce71c6352eebef5eae5ba70675f9264ad"]);
+  /* taken from the tranche code before G40 after reading-pipeline R35 merged (extraction before and after G40 agree; deterministic: two runs agree); re-taken
+     in fix round 9, when the CSV entry's `dialect` gained `assumed` and `disagree` (reading-pipeline R49, G131g: 29 bytes, `,"assumed":true,"disagree":[]`), the
+     reading the pipeline composes and nothing of this module's writing */
+  assert.deepEqual([row.reading.length, sha256HexSync(row.reading)], [447768, "828d5b1aa33749b346e4c5a55fb0df1b92f52f0f6ea357c78d0c4945b04ed48c"]);
   const hist = w.rows(`SELECT reading_sha256, reading, provenance FROM reading_history WHERE capture_sha=?`, d);
   assert.equal(hist.length, 1);
   assert.deepEqual([hist[0].reading_sha256, hist[0].reading === row.reading, sha256HexSync(String(hist[0].provenance))],
-                   ["b6abedf1b7665e0817c8b6ec3de6075ce71c6352eebef5eae5ba70675f9264ad", true, "2b31336189092209c93a09728dfd8250aa3cd05a37751e405efee15de6f0be1f"]);
-  assert.deepEqual(w.rows(`SELECT reading_sha256 FROM composed_readings`).map((r) => r.reading_sha256), ["b6abedf1b7665e0817c8b6ec3de6075ce71c6352eebef5eae5ba70675f9264ad"]);
+                   ["828d5b1aa33749b346e4c5a55fb0df1b92f52f0f6ea357c78d0c4945b04ed48c", true, "2b31336189092209c93a09728dfd8250aa3cd05a37751e405efee15de6f0be1f"]);
+  assert.deepEqual(w.rows(`SELECT reading_sha256 FROM composed_readings`).map((r) => r.reading_sha256), ["828d5b1aa33749b346e4c5a55fb0df1b92f52f0f6ea357c78d0c4945b04ed48c"]);
   assert.equal(row.origin, "composed");
   assert.equal(JSON.stringify(JSON.parse(row.reading)), row.reading, "the stored text is JSON.stringify's own");
 });
@@ -99,7 +101,7 @@ test("R95 (G40 control): a hook that mutates its argument leaves the stored row 
   assert.deepEqual([done.ok, done.read], [true, true]);
   await new Promise((r) => setTimeout(r, 20));
   const row = w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading;
-  assert.equal(sha256HexSync(row), "b6abedf1b7665e0817c8b6ec3de6075ce71c6352eebef5eae5ba70675f9264ad", "the stored row is untouched by the first hook's changes");
+  assert.equal(sha256HexSync(row), "828d5b1aa33749b346e4c5a55fb0df1b92f52f0f6ea357c78d0c4945b04ed48c", "the stored row is untouched by the first hook's changes");
   assert.deepEqual(seen.map((x) => x[0]), [A, B], "both ran, in order");
   assert.equal(seen[0][1], row, "the first hook was handed the reading as written");
   assert.equal(seen[1][1], row, "the second hook is handed the same, not what the first left");
