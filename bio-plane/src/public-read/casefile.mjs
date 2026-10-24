@@ -28,8 +28,28 @@ import { CASE_FILE_FORMAT, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, 
 import * as grammar from "../case-grammar/index.mjs";
 import { CONTAINER_MAX_BYTES } from "../container.mjs";
 
-/** R44 (G121): the size of a group of concurrent R2 calls: the case file's reads of materials, and the `head` and `put` of its files. */
+/** R44 (G121): the most R2 calls of one kind in flight at once: the case file's reads of materials, and the writes of its files. */
 export const CASEFILE_GROUP = 8;
+
+/** R44 (G121b): a window of `CASEFILE_GROUP` calls that slides, so the next call starts the moment one ends and no call waits for a
+ *  group's slowest. Runs `fn(item)` over `items`, at most `width` at a time, in order of start; answers the settled results in the
+ *  items' order (`{status, value | reason}`), never throws, and starts no further call once one has failed (those in flight finish). */
+export async function inWindow(items, fn, width = CASEFILE_GROUP) {
+  const out = new Array(items.length);
+  let next = 0, failed = false;
+  const lane = async () => {
+    while (!failed && next < items.length) {
+      const i = next++;
+      try { out[i] = { status: "fulfilled", value: await fn(items[i], i) }; } catch (reason) { failed = true; out[i] = { status: "rejected", reason }; }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(width, items.length) }, lane));
+  return out;
+}
+
+/** R44 (G121b): an object this small is written without asking after it first (its key is its hash, so the same bytes again change
+ *  nothing); a larger one is asked after, so a big file already held is not sent again. Proposed; BOB records. */
+export const CASEFILE_BLIND_PUT_MAX = 256 * 1024;
 
 const enc = new TextEncoder();
 const utf8 = (s) => enc.encode(String(s));
@@ -112,10 +132,9 @@ export async function buildCaseFile({ facts, group = null, read: readStore, maxB
   for (const c of facts.calculations || []) for (const i of c.inputs || []) inline(i.sha, i.text);
   const fetched = new Map();
   const todo = [...new Set(wanted)].filter((sha) => /^[0-9a-f]{64}$/.test(String(sha ?? "")));
-  for (let i = 0; i < todo.length; i += CASEFILE_GROUP)
-    await Promise.all(todo.slice(i, i + CASEFILE_GROUP).map(async (sha) => {
-      try { fetched.set(sha, { bytes: await readStore(sha) }); } catch (error) { fetched.set(sha, { error }); }
-    }));
+  await inWindow(todo, async (sha) => {
+    try { fetched.set(sha, { bytes: await readStore(sha) }); } catch (error) { fetched.set(sha, { error }); }
+  });
   const read = async (sha) => {
     const got = fetched.get(sha);
     if (!got) return readStore(sha);

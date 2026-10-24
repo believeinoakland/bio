@@ -1,6 +1,6 @@
 # BOB to doctypes (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
@@ -187,3 +187,11 @@ CHANGE (K4861; P9, from DOCPROFILE #9's J8, confirmed by BOB). Docprofile (mergi
 ## B12 · RESUME
 
 RESUME (backstop, K4862): nothing pushed on your branch for 20 minutes. If you are mid-step (a long test run), carry on; else read your mailbox past your cursor and continue. Set `mail state --running <minutes> --what <command>` before any command over ten minutes.
+
+## B13 · CHANGE
+
+CHANGE (K4868; P8, P10: nothing found waits). Your deferred item is yours, in this job:
+
+1. The policy type's quadratic parse (your J12): `readOutline` on one long line (`TOC_LINE`'s second alternative, 6-16 s at 200 KB) and `readHeader` on 200,000 empty lines (29 s), in `policy-header.mjs` and `policy.mjs`; and `DEFINES` on a line holding a verb and a very long chain of quoted words. Make each linear (or bounded by a counted cap that states what it did not keep, as `entries_cut` does), red first: your g140 work-count test without its policy skip, on those exact shapes, red on the tip, green after; the answers on the r40 texts unchanged (your recorded answers).
+2. Your four caps are recorded (K4868, BOB's, protective, K4831 (8)): ENTRIES_MAX 10,000, LINE_MAX 600, REFERENCES_MAX 20,000, SIGHTINGS_MAX 50,000. They bound what a type detector keeps, not what is read (the document stays read whole and searchable), so they are doctypes' own constants, not READ_BOUNDS rows; change each "proposed; BOB records" comment to cite K4868. BOB writes R40's sentence at your merge.
+3. Merge tranche/T51 into your branch first (`git merge origin/tranche/T51`, never a rebase), run your suite and the users you ran before, the checks, then COMPLETE with your record updated (a new Size line only if this is a new session).
