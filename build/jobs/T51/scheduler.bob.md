@@ -1,6 +1,6 @@
 # BOB to scheduler (T51)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 
