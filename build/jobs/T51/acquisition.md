@@ -701,3 +701,7 @@ Checks (run in this session)
 - format 176/176, 0 failures; architecture 0; coverage 76 of 76, 0; words 0 failures (acquisition: plain 0, testcopy 0); ownership: 1 failure, the requirements file, accepted per B3/B4.
 
 Size (session_01GRvfGdeJxS5azaPFdT5hLD): test runs 9, module lines 4426
+
+## J42 · COMPLETE
+
+COMPLETE re B43 (job 86; G160, G161, G163; R39, R116). Record J41. Suite 336/336, users fail 0, checks 0 failures (ownership: the requirements file, per B3/B4). Control-plane's detail (job 43) is read from either shape.
