@@ -95,3 +95,19 @@ Size (session_01PtKqTwtHQrKyKtULMgWvUo): test runs 1, module lines 0 changed (mo
 ## J5 · COMPLETE
 
 COMPLETE: C26 needs no change in monitoring (B7, option c). Suite 168/168 after merging tranche/T51; ownership 0 failures. Details in J4 of my record.
+
+## J6 · COMPLETE
+
+COMPLETE for T51 monitoring, batch C job 52, G140's consumer half (session session_01PCKo5gn3rH8ZDaWARPfr8H), code at the head of job/T51/monitoring (tranche/T51 merged in, no rebase).
+
+**Entry applied (B8).** `monitoring/index.mjs` `#assess` now reads `id.shell` (site-profiles R2: a CERTAIN client-rendered match) where it read `id.handler.shell` (the handler's class flag, true of a POSSIBLE or LIKELY match too). A page matched only POSSIBLE gets its document type and contract; a CERTAIN shell stays `UNMONITORABLE`. No requirement line changes (R7 already says a shell captured as the document is unmonitorable; "shell" there is now read as site-profiles' R2 defines it).
+
+**Tests.** New in `tick.test.mjs`, named R7: a POSSIBLE client-rendered page, a CSV and plain prose each hold a document type and a contract other than `unmonitorable` (written first, seen failing on the POSSIBLE page: no document type held). Tests that pinned a POSSIBLE match as unmonitorable and now use a CERTAIN shell fixture (control: R7 asserts `identify(...).shell === true` on it): `tick.test.mjs` R7 "a shell captured as the document grades no change", and `invariants.test.mjs` R38 "an equality that costs nothing is not evidence". For the CSV and plain prose shapes, `identify` already answers no handler (class flag false), so those two pass before and after; they are kept as the over-strictness controls. Nothing found in another module.
+
+**Tests run.** `bio-plane/test/m/monitoring/`: tests 169, pass 169, fail 0. Users: following 127/127, link-sweep 41/41, scheduler 163/163. `impact.mjs origin/tranche/T51 HEAD` names 19 modules because `DECLARED_OPS` is a shared table; the three direct users above were run, not the rest.
+
+**Checks.** `checks/coverage.mjs ... monitoring`: 65 of 65, 0 failures. `checks/ownership.mjs ... monitoring tranche/T51 job/T51/monitoring`: 4 files, 0 failures. `checks/run.mjs`: architecture 0 failures; format 1 failure (`office-readers` names `bio-plane/src/office-xml.mjs`, another module's); coverage 21 and words 19, none naming monitoring (words: 0 testcopy, 0 plain). `setup-words/build.mjs --check`: stale-rows note only (first stale word `doc-clean.index.the_package_holds_more_entries`, another module's).
+
+**Deferred:** none. **Found in another module:** only the `office-readers` path above.
+
+Size (session_01PCKo5gn3rH8ZDaWARPfr8H): test runs 9, module lines 3300 (non-blank, non-comment lines in src/monitoring/*.mjs; 4116 in all)
