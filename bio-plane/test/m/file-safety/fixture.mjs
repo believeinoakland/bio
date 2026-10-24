@@ -23,10 +23,11 @@ export const DAY = 86_400_000;
 
 /* An R2 bucket stand-in: `head`, `get`, `put` by key, every call recorded. */
 export function bucket() {
-  const held = new Map(), calls = [];
+  const held = new Map(), sums = new Map(), calls = [];
   return {
     held, calls,
-    async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length } : null; },
+    /* R2 keeps the SHA-256 a `put` was given (record-core's evidence store passes it) and answers it in `checksums` */
+    async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length, ...(sums.has(k) ? { checksums: { sha256: sums.get(k) } } : {}) } : null; },
     /* `range` is R2's option: the object's `size` is the whole's, the body and `arrayBuffer` the range alone */
     async get(k, opts) {
       calls.push(["get", k]);
@@ -36,7 +37,11 @@ export function bucket() {
       const b = r ? all.subarray(r.offset, r.offset + r.length) : all;
       return { key: k, size: all.length, body: new Response(b).body, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) };
     },
-    async put(k, bytes, opts) { calls.push(["put", k, opts]); held.set(k, new Uint8Array(bytes)); return { key: k }; },
+    async put(k, bytes, opts) {
+      calls.push(["put", k, opts]); held.set(k, new Uint8Array(bytes));
+      if (opts && /^[0-9a-f]{64}$/.test(String(opts.sha256))) sums.set(k, Uint8Array.from(String(opts.sha256).match(/../g), (h) => parseInt(h, 16)).buffer); else sums.delete(k);
+      return { key: k };
+    },
   };
 }
 
@@ -190,7 +195,7 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50, home
     async capture(bytes, { address = null, via = "direct", locator = null, reputation = undefined, homed: filed = homed } = {}) {
       const data = typeof bytes === "string" ? enc(bytes) : bytes;
       const s = sha(data);
-      await b.put(`bio/captures/${s}`, data);
+      await b.put(`bio/captures/${s}`, data, { sha256: s }); /* as record-core's evidence store puts a capture (its R38) */
       const a = address || `https://files.example/${s.slice(0, 12)}`;
       prov.recordReceipt({ address: a, addressNorm: a, captureSha: s, retrieved: new Date(clock.now).toISOString().replace(/\.\d+Z$/, "Z"),
                            via, retrievalLocator: locator ?? a, ...(reputation !== undefined ? { reputation } : {}) });
