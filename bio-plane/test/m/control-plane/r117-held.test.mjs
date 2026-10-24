@@ -109,7 +109,13 @@ test("R117 (a registered home): a second upload of bytes the record holds under 
     /* R123: where the whole is not held yet the reading is owed (written down, `reading_pending`); every other answer is relayed as it was */
     const owed = held.why === "NO_WHOLE_OBJECT";
     assert.deepEqual(r.json.result, owed ? { ...landed, reading_pending: true } : landed, `${JSON.stringify(held)}: relayed as it was`);
-    assert.equal(asked(w.env, "pendingadd").length, owed ? 1 : 0, `${JSON.stringify(held)}: owed work is written down once`);
+    /* R130 (amends R123): the door registers the `reading` row of bytes it answers `existed: true` BEFORE `readHeld` is asked, whether or not the reading is then made
+       (the registrar's row is keyed by the digest, so a second write for an owed reading names the same row): the row is always for this digest and kind, once when
+       nothing is owed, and the answer says `reading_pending` exactly when the whole was missing */
+    const rows = asked(w.env, "pendingadd");
+    assert.ok(rows.length >= 1 && rows.every((x) => x.params.sha === SHA && x.params.kind === "reading"), `${JSON.stringify(held)}: the row is registered for the digest`);
+    if (!owed) assert.equal(rows.length, 1, `${JSON.stringify(held)}: nothing owed, one registration`);
+    assert.equal(r.json.result.reading_pending === true, owed, `${JSON.stringify(held)}: reading_pending exactly when owed`);
     assert.equal(asked(w.env, "readheldfor").length, 1);
     assert.equal(asked(w.env, "readheldfor")[0].params.sha, SHA);
     assert.equal(asked(w.env, "extractread").length, 0, "the door reads nothing: there is no document");
