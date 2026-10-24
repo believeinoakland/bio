@@ -1122,3 +1122,11 @@ CHANGE (K4904): plan section 2c item 8 (merge tranche/T51 and read "Section 2c i
 ## B83 · CHANGE
 
 CHANGE (K4905): SCHEDULER #43 (job 33) has merged: merge tranche/T51 into your branch. Its interface for you (scheduler R28-R33; its record `build/jobs/T51/scheduler.md`, "Fix round 9", "Interface for plane-2"): `tick(now, rank, started)` (the third argument the instant the consumer's own work began; your `last_ms`, G123g); `health()` and `watch()` answer `watchdog_ran`; the heartbeat `sched_beat` also holds `rotate_from`, `inflight` (`{name: started}`) and `slowest` (`{name, ms}`); the constructor takes `budgetMs` and `slowMs` (defaults 10 s, 1 s). Your through-the-real-scheduler `watchdog_ran` test (red by name, K4898 (2)) should now be green: run it.
+
+## B84 · CHANGE
+
+CHANGE (K4912): merged into tranche/T51 (with jobs 28, 40 and 60); three things before you are merged again. Merge the tranche branch first.
+1. `plane/transcribe.mjs:55` keeps `2 * 1048576` as a fallback when `boundOf("pdf", "request_bytes")` throws: the row exists since RUNTIME-LIMITS #11 (K4902), and G124 allows no literal for a kept ceiling. Remove the literal and the `try`; quote `boundOf` alone.
+2. `test/m/plane/g41-shape.test.mjs` "R84 G41 K4855: a 200,000-row xlsx ... refused" is red on the merged tree, alone: it looks for "42.66 MiB" and "32.00 MiB" in the statement, while reading-pipeline's R54 (job 40) now states bytes ("This file is 44732492 bytes, over the 33554432 bytes allowed ..."). The behaviour holds (final in one tick, size and bound stated, nothing owed). A test never copies a sentence (K3810): assert the refusal's `size` and `bound` fields (or the reading's `too_large`) against the generator's size and `boundOf`.
+3. `test/m/plane/r8-heal-door.test.mjs` failed once (2 pass, 1 fail, file-level) and passed 4/4 once, alone, on the merged tree. K4787: find which — a test that depends on timing (fix it to assert the work or a same-run control) or a race in the heal frame (a product defect, fix it) — show it in your record with evidence, then five runs alone green, and on one core (`taskset -c 0`).
+The other reds on the merged tree: `release` R24, `l77-size` R77 (accepted), `r8-headofline` R80 G91 (job 62, SCHEDULER #44): not yours. R102's mark is struck when (3) closes.
