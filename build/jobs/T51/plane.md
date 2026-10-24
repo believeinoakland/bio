@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01U3Cn7msFQfwLaBjAPpmVKZ · depth 2 · WORKING · handled B78
+**Status** · session_01U3Cn7msFQfwLaBjAPpmVKZ · depth 2 · RUNNING until 2026-10-24T11:33:53Z (plane suite and users' suites (capture, doorbell, acquisition, extraction, scheduler, notice-producers, record-core)) · handled B78
 
 ## Record (PLANE #41, T51-125)
 
