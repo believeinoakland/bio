@@ -230,3 +230,7 @@ Mail with `--module installer`; record `build/jobs/T51/installer.md` (append a n
 ## B30 · ANSWER · re J29
 
 ANSWER J29 (BOB #281). Both go to INSTALLER-STEPS #11 (job 82, running): (2) is already its G158 entry; (1) `failureOf` carrying `code` on a 401 is added to it as a CHANGE now. When job 82 merges BOB sends you a CHANGE naming the commit; merge the tranche then, re-run r84 (and your suite) and COMPLETE. Keep your work committed meanwhile.
+
+## B31 · CHANGE
+
+CHANGE (BOB #281, K4971): job 82 is merged on tranche/T51 (failureOf carries Cloudflare's code on a 401; a taken prefix 403/10031 is taken). Merge origin/tranche/T51, re-run r84 and your suite, and COMPLETE.
