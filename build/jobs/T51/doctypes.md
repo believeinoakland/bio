@@ -272,3 +272,21 @@ Both pass on the tranche tip. Six other tests in the impact set (agent-worker/re
 The smallest thing that settles it is docprofile's: `CLASSIFY_WORK_FACTOR` at 8 or more (one window per type asked), or a budget per type; nothing doctypes can change makes seven honest detects fit in four windows. I have not changed my charge to hide it.
 
 Also: `node checks/format.mjs` has one failure not in doctypes (`build/modules.json`: office-readers `paths` entry bio-plane/src/office-xml.mjs names no file).
+
+## J14 · COMPLETE
+
+DOCTYPES #11 · B11, B12, B13 handled (a second COMPLETE; J12 is the first).
+
+**B13 (1) the policy parse and header, red first then green.** Shapes at 200 KB measured on the tip: `readOutline` on one long line 5.6-15.5 s (`TOC_LINE`'s second alternative backtracks; now `isTocLine` in policy.mjs, equal to the regex on 200,000 seeded strings, 54,649 of them true); `readHeader` on 200,000 empty lines 29 s (a label pattern `^\s*...` read on through every blank line from each; now the first label is looked for in the first HEADER_SCAN = 16 KiB when no series anchors one, and a header block runs no further than HEADER_BLOCK = 64 KiB past its anchor, `block_cut: true` when cut; a longer text with no label in the window says so in its `why`); `DEFINES` on a line of quoted words with a verb at its end (quadratic): a line over 3,000 characters is now read around the places its verb stands (1,500 characters before it), the line stated in a comment as the one bound; lines under 3,000 are read as before. g140.test.mjs's work-count test no longer skips policy parse and now runs the shapes `outline`, `capsEndingInNumbers`, `chain` and `header` besides the old ones, 5 s per call at 60 KB; the answers on the r40 texts and every fixture are unchanged (78 of 78 module tests).
+**(2)** The four caps now cite K4868 in their comments (ENTRIES_MAX 10,000, LINE_MAX 600, REFERENCES_MAX 20,000, SIGHTINGS_MAX 50,000); HEADER_SCAN and HEADER_BLOCK are two more of the same kind, protective, mine; BOB to confirm.
+**(3)** tranche/T51 merged; suite and users rerun; checks below.
+
+**B11.** Detects are charged: `counted()` (windows.mjs) charges a detect the window once (`min(passes, ctx.text.length)`) into the shared `ctx.work`, a parse every pass it makes into the `ctx.work` it is given; nothing without one. Re-recorded in bounded.test.mjs: BUDGET-2025-BUD chars 3800 to 3235, BUDGET-2025-PER 21326 to 17408 (glyph counts), BUDGET-2024-APP chars 12319700 and now `regulation`, certain, over the view (signals digest 314659c0..., parsed digest af29de98...), memory under base+16 MB (that test no longer skips). Regulation's floors over a view: `regulation.detect` holds no rate floor, only counts (`recitals >= 2`, `heads.count >= 2`) that a view of 1.4 MB of a 13.6 MB text meets or does not as a whole text would not guarantee, and the verdict on APP is certain by the instrument caption and two code headings; I judge no scaling by `window.of` is needed and made none. The full REPORT on the budget (policy and staff_directory never asked) is J13.
+
+**Suites and checks:** doctypes 78 of 78. Impact users (75 files): 571 tests, 559 pass, 12 fail; on the tranche tip, the same files fail 6 (inherited); the other 6 are the budget finding in J13 (roster-reader seam, five R42 tests in reading-pipeline), none a doctypes test. Process checks: architecture 0 failures; coverage 41 of 41; ownership 0 (17 files); words 0 in doctypes; format 1 failure outside doctypes (office-readers path, in J13). setup-words build --check: stale rows only.
+
+**Words owed, unchanged:** `doctypes.staff-directory.addresses_cut`, `doctypes.staff-directory.entries_cut`, `doctypes.windows.references_cut`; new: `doctypes.policy-header.no_block_window`.
+
+**Deferred:** none in doctypes. Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs`.
+
+Size (session_01TmVLRbU29kGrf79yMGm5rX): test runs 22, module lines 4262
