@@ -545,7 +545,7 @@ export class Doorbell {
    *  one act with its promotion (control-plane R36) and the reason lands on the row inside it; the other arms ignore
    *  them. T50 (N1194, R13): it takes `viewer`, the control plane's stamp, and passes it to the pull, which names the holder of
    *  bytes the record already holds only to a viewer who may see it. */
-  inboxResolve({ knockId, status, by, reason, at = null, within = null, viewer = null } = {}) {
+  inboxResolve({ knockId, status, by, reason, at = null, within = null, viewer = null, registerJob = null, armJobs = null } = {}) {
     if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
       return this.#noSuchKnock(knockId);
@@ -556,7 +556,7 @@ export class Doorbell {
                knockId, status: 400, maxChars: REASON_MAX };
     }
     /* END DEC-49 REGION is-resolve-reasoned */
-    if (status === "pulled") return this.#pull({ knockId, by, at, within, viewer }, reason);
+    if (status === "pulled") return this.#pull({ knockId, by, at, within, viewer, registerJob, armJobs }, reason);
     this.#tx(() => this.#sql.exec(`UPDATE inbox SET status=?, resolved=?, resolved_by=?, resolve_reason=? WHERE knock_id=?`,
                                   status, new Date().toISOString(), by ?? null, reason, knockId));
     return { ok: true, knockId, status, resolve_reason: reason };
@@ -577,11 +577,11 @@ export class Doorbell {
    *  an answer that is not synchronous (a promise would outlive the transaction), rolls it back as `PULL_WITHIN_FAILED`.
    *  Any other answer is carried as `within`. A knock already pulled does not call it: its pull is not being made. The
    *  bytes put under their own digest before the transaction stay, content-addressed and already held as the knock's. */
-  pullKnock({ knockId, by, at = null, within = null, viewer = null } = {}) { return this.#pull({ knockId, by, at, within, viewer }, null); }
+  pullKnock({ knockId, by, at = null, within = null, viewer = null, registerJob = null, armJobs = null } = {}) { return this.#pull({ knockId, by, at, within, viewer, registerJob, armJobs }, null); }
 
   /* R13, and R3's `pulled` arm: the pull, with the resolve's admitted reason recorded on the row beside it (null for a
      pull asked directly, which takes no reason). */
-  async #pull({ knockId, by, at = null, within = null, viewer = null } = {}, reason) {
+  async #pull({ knockId, by, at = null, within = null, viewer = null, registerJob = null, armJobs = null } = {}, reason) {
     if (typeof by !== "string" || !by.trim())
       return { ok: false, reason: "NO_PULLER", status: 400,
                detail: localize("doorbell.index.no_puller_named", "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written") };
@@ -659,6 +659,20 @@ export class Doorbell {
     /* N409 (K609): one fixed sentence. A thrown message is the caller's internals (a store fault names a table, a
        stack names a file), so it never rides in the answer; the fault is a programming fault, found in the caller. */
     const withinFailed = () => ({ ok: false, reason: "PULL_WITHIN_FAILED", status: 500, knockId, detail: PULL_WITHIN_FAILED_DETAIL });
+    /* R28 (fix round 9; G126; K4835 (2)): the reading this pull owes is one job row, written through the registrar inside the pull's
+       transaction, read as `keepLater` is: capture's instance's `registerJob` when it is a function, else the call's, else none (the answer then
+       says so). A refusal, or a throw, of the registrar rolls the pull back and is answered with `knockId`, never swallowed. The alarm is armed
+       after the commit. */
+    const reg = typeof this.capture?.registerJob === "function" ? (e) => this.capture.registerJob(e) : typeof registerJob === "function" ? registerJob : null;
+    const armer = typeof this.capture?.armJobs === "function" ? () => this.capture.armJobs() : typeof armJobs === "function" ? armJobs : null;
+    const register = () => {
+      if (!reg) return { ok: true };
+      let r;
+      try { r = reg({ kind: "reading", sha, carrier: document.file }); } catch { r = null; }
+      return r && r.ok === true ? { ok: true }
+        : { ok: false, reason: "JOB_NOT_REGISTERED", status: 502, knockId, job: { kind: "reading", reason: String((r && r.reason) || "REGISTRAR_REFUSED").slice(0, 80) },
+            detail: localize("doorbell.index.job_not_registered", "the reading this knock owes could not be registered, so the knock stays as it was and nothing was filed") };
+    };
     let done;
     try {
       done = this.#tx(() => {
@@ -671,6 +685,8 @@ export class Doorbell {
                           pulled_document = ?, resolve_reason = ? WHERE knock_id = ?`,
                        when, by, sha, by, when, JSON.stringify(document), reason, knockId);
         this.capture.recordCaptureActor({ captureSha: sha, actor: by, at: when });
+        const job = register();
+        if (!job.ok) return job;
         if (typeof within !== "function") return { ok: true, receipt };
         const w = Doorbell.#callWithin(within, document);
         if (w && typeof w === "object" && w.ok === false) return { ...w, knockId: w.knockId ?? knockId };
@@ -681,9 +697,11 @@ export class Doorbell {
       throw e;
     }
     if (!done.ok) return done;
+    if (reg && armer) { try { await armer(); } catch { /* an alarm not armed is the backstop's, never the pull's */ } }
     return { ok: true, existed: false, knockId, capture: { sha256: sha, bytes: bytes.length }, pulled_by: by, pulled_at: when,
              receipt: { address, via: DOORBELL_VIA, retrieved: when, observation: done.receipt.observation ?? null }, document,
-             ...(typeof within === "function" ? { within: done.within } : {}) };
+             ...(typeof within === "function" ? { within: done.within } : {}),
+             ...(reg ? {} : { jobs: { not_registered: [{ kind: "reading", reason: "NO_REGISTRAR" }] } }) };
   }
 
   /* R13: the home of bytes the record holds, from provenance's register (its R4); null when none, or when it cannot be read. */
