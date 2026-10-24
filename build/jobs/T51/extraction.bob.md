@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J35
+**Read** · handled J37
 
 ## B1 · START
 
@@ -1034,3 +1034,11 @@ The PDF plan's I1-I14, re-cut for a sheet. Each is a sentence for the module nam
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
 
 **Added by BOB #278 (K4909; governs over any line above that differs).** (1) Job 28 (EXTRACTION #41) is merged: R71, R101-R104, R105 (a) and (c), R106 are met; **yours are R99, R100, R107 and R105 (b)** (K4901 (4)); `test/m/extraction/r99-r100-r107-todo.test.mjs` holds three `test.todo` lines for them: replace each with real tests and remove the file (K4888). Read job 28's record section "Fix round 9, first half" before you start: the registrar both ways (K4898: `readHeld`'s own `registerJob`/`armJobs`, else the `registerOwe` hook), `#evidenceOf` over `acquisition.readRange`, `ended_why` and `stated` (additive index-state columns), the K4904 killed window and folio pages (built: nothing more for you there). (2) Job 40 (reading-pipeline-2) is merged: `skipKilled` (text, list and CSV windows), `folio_pages`, the text, JSON and XML windows to 50 MB in every R49 encoding (K4906, K4907). (3) The reds once named for jobs 28 and 41 (`r82.test.mjs:103`, `n26.test.mjs:81`, `g40`, `g41`) are green since job 28: none is inherited. Reds in users, red on the tranche before you (accepted by name, not yours): plane `l77-size`, `system/fleetbundles` (stale bundles, round end), `screens-inquiry/fr6-seam` R96, `screens-intake/t51-seam-g43` R61 x2. (4) `uses` now names `runtime-limits` (K4909). (5) Model: the default model (four new provided ids, per the table).
+
+## B51 · ANSWER · re J36
+
+ANSWER (K4911): yes, the extraction half is yours in this job (P10). Interface: a later PDF range's answer will carry `reading.piece_chain`, the text chain of that range's own pages, shaped as the whole read's `text_source` restricted to them, absent when the range holds no page with text (reading-pipeline's half: CHANGE to READING-PIPELINE #33). Build: index a piece's units under `piece_chain` when given (else the stored chain, as today), and fold the piece's pages into the stored reading's `text_source`, so the whole read and the read in pieces store the same chain kinds. Test against the contract text with a stand-in reader until reading-pipeline's half merges; `s25-pieces-chain` mixed case green with the stand-in, and red by name against the real reader until then. Your reading set (about 406 KB, under the 600 KB limit) read whole within your window is fine: no split.
+
+## B52 · ANSWER · re J37
+
+ANSWER (K4913, K4914). J37: your best reading. Text-chain's change is placed as job 63 (TEXT-CHAIN #12): R97 now says `pdf-page`, `slide-shape` and `sheet-range` carry `run` when it is an integer (omitted otherwise, so no stored address moves) and gains a `doc-part` arm `{kind, part, ref}`; R98 its human form. Write the writer for it (each chunk and part under its own address), the multi-chunk and multi-part tests red by name until job 63 merges; do not carry `run` or `part` into the index key yourself. Also (K4914, CONTENT #20's J9): R107 now says `unitsOf` answers on each unit `kind` (null when stored before it) and, for a sheet unit, `lineRows` (the 1-based row of each line, as reading-pipeline R47 emits it; absent when not stored), and on its answer `read_through` and `total` (R90's figures) while more follows: build those names. Merge the tranche branch to read the texts.

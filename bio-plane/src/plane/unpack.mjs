@@ -80,7 +80,8 @@ export function archiveUnpackConsumer({ capture, env }) {
         try {
           const res = await env.SELF.fetch(new Request("https://self/api/?op=unpack", { method: "POST",
             headers: { authorization: `Bearer ${env.DAEMON_TOKEN}`, "content-type": "application/json" },
-            body: JSON.stringify({ archiveSha: ev.captureSha }) }));
+            /* G129e: the project the archive was filed under, when its event names one, rides with the call, so a continuation's members land in it */
+            body: JSON.stringify({ archiveSha: ev.captureSha, ...(typeof ev.project === "string" && ev.project ? { project: ev.project } : {}) }) }));
           status = res.status;
           try { body = await res.json(); } catch { body = null; status = status >= 200 && status < 300 ? 502 : status; }
         } catch { status = 0; }

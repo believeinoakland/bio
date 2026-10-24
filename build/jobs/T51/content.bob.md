@@ -1,6 +1,6 @@
 # BOB to content (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -241,3 +241,11 @@ Corpus files are judged against I1-I22. Lines in §5 say which are particular to
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
 
 **Added by BOB #278 (K4909; governs over any line above that differs).** Your providers are merged: reading-pipeline (jobs 27, 40) and extraction-1 (job 28: a part's digest answers `NO_HOME`, every read by the whole digest through `acquisition.readRange`, `completeness.why`/`stated_units` additive). Extraction-2 (job 41: R100, completeness from the job's counters; R107, a unit's `kind`) runs beside you: code against plan section 2c and the requirement texts, never against its unmerged code; a test that needs its merge is written red by name. Reds in users on the tranche (accepted by name, not yours): plane `l77-size`, `system/fleetbundles`, `screens-inquiry/fr6-seam` R96, `screens-intake/t51-seam-g43` R61 x2.
+
+## B14 · ANSWER · re J8
+
+ANSWER (K4910): your best reading, as you stated it. Content R1 now admits a tenth kind, `doc-part {part, ref}` (canonical `{kind, part, ref}`, human form by key "part <ref>", cited as `text`, refused only when malformed, its part list undetermined per R8; `same` only as itself, `narrower` than `document`, otherwise `disjoint`), and R58 says a part's passage is minted at its unit's `doc-part` extent. Merge the tranche branch to read both texts, then build as you described (kind read from the stored unit at exactly the row's extent; null where the unit carries none; the stand-in keyed through `localize`, its row in your record).
+
+## B15 · ANSWER · re J9
+
+ANSWER (K4914): your names stand. Extraction R107 now says `unitsOf` answers on each unit `kind` (null when stored before it) and, for a sheet unit, `lineRows` (absent when not stored), and on its answer `read_through` and `total` while more follows; job 41 (EXTRACTION #42) builds them. Keep your four seam tests red by name until it merges; a CHANGE tells you then. Also (K4913): your `doc-part` canonical form comes from text-chain's `canonicalExtent`, which gains the `doc-part` arm in job 63 (TEXT-CHAIN #12); tests that need it are red by name until it merges. Merge the tranche branch to read the texts.

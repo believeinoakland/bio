@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J40
+**Read** · handled J41
 
 ## B1 · START
 
@@ -1169,3 +1169,17 @@ Ruled (P17, no meaning of a provided service changes):
 3. Red first through the real entry path: a scan of 3 pages where the OCR stand-in answers page 2 with regions holding no glyph; today's sentence says 3 (or the count including page 2), after it says 2 transcribed and 1 not read. Words: any new sentence is a stand-in keyed through `localize`, its row named in your record.
 
 Merge the tranche branch first (your job 40 is merged into it, with extraction's job 28). Module suite, format, architecture, coverage, words, ownership; record the four fields; COMPLETE again.
+
+## B47 · CHANGE
+
+CHANGE (K4911): a later PDF range answers its own pages' chain.
+
+EXTRACTION #42 reproduced S25 (`build/plan/diagnosis-R9-pieces-chain.md`; `bio-plane/test/m/extraction/s25-pieces-chain.test.mjs` on `job/T51/extraction`): a PDF whose first range holds typed pages and later ranges hold scans, read in pieces with `rangePages` 2, stores its later OCR units as chain kind `layer` (the whole read: `ocr`), because a later range answers its units and OCR facts only (`index.mjs:3136-3141`, BOB read it) and extraction falls back to the first piece's stored chain.
+
+Ruled (P17): a later range's answer carries `reading.piece_chain`, the text chain of that range's own pages, shaped as the whole read's `text_source` restricted to those pages; absent when the range holds no page with text. Red first: the mixed file read in pieces through `read` with a scripted OCR member, the later range's answer carrying the chain the whole read gives for those pages. Extraction (job 41) indexes under it. Handle after B46; COMPLETE once for both.
+
+## B48 · CHANGE
+
+CHANGE (K4909, K4911): two things before COMPLETE.
+1. `bio-plane/test/d606-perpage-ocr.test.mjs` is in reading-pipeline's own `tests` paths (`modules.json`), so it is yours to restate (P8). State in your record why it is stale, with evidence: which merged change makes the inline pass make no OCR call (your R55, extraction R103's `ocrInvocations: 0` from job 28, K4909), and assert what the requirements say now (the pages owed and registered, never transcribed in the request), never weakening what it proves about per-page OCR in the ledger's pass. Run it alone.
+2. B47 (K4911, `reading.piece_chain`) is still unread: your cursor is at B46. Do it, then COMPLETE once for both.
