@@ -1,5 +1,5 @@
 /* G44 at the platform's shape (K4426 (4); plan G44 (4); K4662, K4665): a workbook added as a workbook and a file previewed in the safe view are asked of the REAL DOOR (the object's own `fetch`:
- * `/workbookadd`, `/safeview`, `/workbook`, `/workbooklint`, `/workbookinputs`) in a child under TEST-SUPPORT #9's value limit whose old space is the cap `capFor(N)` (the one convention, G123a; was `128 - N + 39`) for a file of N MB (
+ * `/workbookadd`, `/safeview`, `/workbook`, `/workbooklint`, `/workbookinputs`) in a child under TEST-SUPPORT #9's value limit whose old space is the cap `capFor(N)` (the one convention, G123a) for a file of N MB (
  * `diagnosis-R6-g40.md` section 1; 165 for the 1.44 MB workbook), the file HELD (its bytes put in the evidence store as the PDF's are; no reading ticks run, so the peaks are the ops'), a project and a member
  * set up (`spec.project`). Whether the door reaches both ops this way: it does (`harness.mjs` `spec.ops`, answers `{ok, result}` as the frame's). Pass, per case, is the contract of plan G44:
  *   add10    the 10 MiB-declared short-row workbook (73,843 rows, 221,529 cells, a 1.4 MB file): the add is refused WORKBOOK_TOO_LARGE with {cells, bound_cells}, nothing written, the child alive
