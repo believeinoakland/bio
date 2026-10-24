@@ -350,3 +350,32 @@ test("R107 (G134d; DOCS O4): two comments of one .docx, each anchored in the bod
   assert.equal(fts(w, "SECONDCOMMENT"), 1, "the second part is stored, not counted as an address already written");
   assert.deepEqual(w.rows(`SELECT kind FROM capture_text WHERE capture_sha=? AND kind='comment'`, d).length, 2);
 });
+
+/* ---------------------------------------------------------------------------------------------------- R108: how far each reading is read */
+
+test("R108 (G135f; K4922): `progressOf` answers each capture's state, R90's figures and what it owes, loading no unit: a scan with pages owed is `partial` with `owed > 0`, a whole text `whole` with `owed: 0`, an unknown sha `none`", { timeout: 120_000 }, async () => {
+  const { bytes } = await pdfOf({ size: { pages: 30, lines: 1 }, kinds: ["scan"] });
+  const scan = await home(bytes, { ct: "application/pdf", format: "pdf" });
+  const jobs = jobRegistrarStub();
+  await scan.w.x.readHeld({ sha: scan.d, kind: "reading", env: { OCR_WORKER: ocrOnePage() }, registerJob: jobs.registerJob, armJobs: jobs.armJobs });
+  const unknown = "4".repeat(64);
+  /* a capture's units are never read for it: a query of `capture_text`'s text would show here */
+  const seen = [];
+  const exec = scan.w.s.sql.exec.bind(scan.w.s.sql);
+  scan.w.s.sql.exec = (q, ...a) => { seen.push(q); return exec(q, ...a); };
+  const p = scan.w.x.progressOf([scan.d, unknown]);
+  scan.w.s.sql.exec = exec;
+  assert.deepEqual([p[scan.d].state, p[scan.d].owed], ["partial", 6]);
+  assert.deepEqual(p[unknown], { state: "none", read_through: null, total: null, owed: 0 });
+  assert.equal(seen.some((q) => /SELECT[^;]*\btext\b[^;]*FROM capture_text\b/i.test(q) && !/count|length/i.test(q)), false, "no unit's text is loaded");
+  const text = await home(textOf(20), { fromText: true });
+  await readAll(text.w, text.d);
+  assert.deepEqual(text.w.x.progressOf([text.d])[text.d], { state: "whole", read_through: null, total: null, owed: 0 });
+  /* while more follows, R90's figures */
+  const big = await home(textOf(32_000), { fromText: true });
+  const first = await big.w.x.readHeld({ sha: big.d, kind: "reading" });
+  const mid = big.w.x.progressOf([big.d])[big.d];
+  assert.deepEqual([mid.state, mid.read_through, mid.total], ["partial", first.detail.read_through, first.detail.total]);
+  /* at most 500 a call */
+  assert.equal(Object.keys(text.w.x.progressOf(Array.from({ length: 600 }, (_, i) => i.toString(16).padStart(64, "0")))).length, 500);
+});
