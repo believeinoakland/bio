@@ -33,6 +33,7 @@ import { archiveDocuments, promoteArchive } from "./archive.mjs";
 import { inlineVerdict, readingVerdict, sizeOfDocument } from "./reading-gate.mjs";
 import { jobRegistrar } from "./jobs.mjs";
 import { jobStateOf } from "./job-state.mjs";
+import { PLATFORM_FIGURES } from "../byte-ledger.mjs";
 import { acquireReadingOp } from "../extraction/ops.mjs";
 /* R124 (fix round 4b; K4493): the alarm's delivery of an owed render is this door's promotion, built by screens-intake's own builder */
 import { CAPTURE_SCREEN } from "../screens-intake/capture.mjs";
@@ -607,11 +608,11 @@ async function packOf(res) {
    to the `limits` of the plane's own configuration (`wrangler.jsonc`), which a test pins. The installer reads them from
    the verified plane bundle and holds no value of its own; the door carries them as `limits` on the function it makes,
    so a bundle of the door cannot leave them out. */
-const PLANE_LIMITS = Object.freeze({ subrequests: 10000 });
+const PLANE_LIMITS = Object.freeze({ subrequests: 10000, cpu_ms: PLATFORM_FIGURES.cpu_ms.value });   /* plane R99: stated once, runtime-limits' figure */
 /* The statement a release's verified bundle is read for (installer R20, K723, K724): the tag, then `key=<positive
    integer>` for each key of the limits, keys sorted, single spaces, no quotes or backslashes, so a reader of the bundle's
    text finds it whole. `PLANE_LIMITS` is its parsed form. */
-const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
+const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 cpu_ms=300000 subrequests=10000";
 /* R1 (fix round 6, G1; K4566): THE PLANE'S CRON, stated in its code beside its limits so the bundle a release signs carries it: the tag, then the one five-field cron
    the watchdog runs on (`bio-plane/wrangler.jsonc` `triggers.crons`, which plane's test pins equal). The installer sets the plane's schedules from this statement
    and holds no value of its own. */

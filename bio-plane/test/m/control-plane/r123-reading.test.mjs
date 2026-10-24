@@ -41,12 +41,12 @@ test("R123 (promote, F1): a document promoted with no reading is read at once wh
   assert.equal(r.json.result.ok, true);
   assert.equal(r.json.result.reading_pending, undefined);
   assert.deepEqual(asked(w.env, "readheldfor").map((c) => [c.params.sha, c.params.store]), [[SHA, "bio"]]);
-  assert.equal(asked(w.env, "pendingadd").length, 0);
+  assert.equal(asked(w.env, "pendingadd").length, 1, "R130: the row is registered before the read, and held until it is made");
   /* controls: a reading already held ends it; a document that carries its reading is not asked about */
   const held = world({ answer: answering(ok({ ok: true, read: false, why: "READING_HELD" })) });
   const h = await promote(held, promoteBody([provDoc()]));
   assert.equal(h.json.result.reading_pending, undefined);
-  assert.equal(asked(held.env, "pendingadd").length, 0);
+  assert.equal(asked(held.env, "pendingadd").length, 1, "R130: the row is registered before the read, and held until it is made");
   const read = world({ answer: answering(ok({ ok: true, read: true })) });
   await promote(read, promoteBody([provDoc({ reading: true })]));
   assert.equal(asked(read.env, "readheldfor").length, 0, "a document that carries its reading is left");
@@ -76,7 +76,7 @@ test("R123 (promote, F1): a 3 MB PDF deferred at its acquire and promoted ten mi
   const small = await promote(c, promoteBody([provDoc({ pdf: true, bytes: 2 * MB })]));
   assert.equal(small.json.result.reading_pending, undefined);
   assert.equal(asked(c.env, "readheldfor").length, 1);
-  assert.equal(asked(c.env, "pendingadd").length, 0);
+  assert.equal(asked(c.env, "pendingadd").length, 1, "R130: the row is registered before the read, and held until it is made");
 });
 
 test("R123 (promote): a reading the store could not make now (no whole object yet, no home, a refusal or a silence of the route) is written down and the answer says `reading_pending`; the promotion stands whatever the route says", async () => {
@@ -163,7 +163,7 @@ test("R123 (captureupload): bytes the record already holds (`existed: true`) who
     const c = world({ answer: uploading(bare, { held }) });
     const k = await upload(c);
     assert.equal(k.json.result.reading_pending, undefined, JSON.stringify(held));
-    assert.equal(asked(c.env, "pendingadd").length, 0);
+    assert.equal(asked(c.env, "pendingadd").length, 1, "R130: the row is registered before the read, and held until it is made");
   }
 });
 
@@ -189,7 +189,7 @@ test("R123 (inboxpull, F6): a knock brought into the record has its reading made
   /* controls: a reading already held asks nothing more; a refused pull asks none; an answer naming no capture asks none */
   const held = world({ answer: pulling(pulledAnswer(), { ok: true, read: false, why: "READING_HELD" }) });
   assert.equal((await pull(held)).json.result.reading_pending, undefined);
-  assert.equal(asked(held.env, "pendingadd").length, 0);
+  assert.equal(asked(held.env, "pendingadd").length, 1, "R130: the row is registered before the read, and held until it is made");
   const refused = world({ answer: (c) => (c.route === "inboxpullfile" ? ok({ ok: false, reason: "NO_SUCH_KNOCK", status: 404 }) : c.route === "readheldfor" ? ok({ ok: true, read: true }) : null) });
   await pull(refused);
   assert.equal(asked(refused.env, "readheldfor").length, 0);
