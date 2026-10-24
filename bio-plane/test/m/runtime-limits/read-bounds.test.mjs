@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { READ_BOUNDS, boundOf, statement } from "../../../src/read-bounds.mjs";
 
-const MiB = 1048576, GiB = 1073741824;
+const MiB = 1048576, GiB = 1073741824, MB50 = 52428800;
 const LIGHT = ["text", "csv", "tsv", "json", "xml"];
 const rows = () => Object.entries(READ_BOUNDS).flatMap(([kind, names]) => Object.entries(names).map(([name, row]) => [kind, name, row]));
 const deepFrozen = (o) => Object.isFrozen(o) && Object.values(o).every((v) => v === null || typeof v !== "object" || deepFrozen(v));
@@ -62,7 +62,7 @@ test("R30: the alpha figures of the heavy kinds the plan names", () => {
   assert.equal(boundOf("xlsx", "declared_text"), 32 * MiB);
   assert.equal(boundOf("ods", "content_xml"), 20 * MiB);
   assert.equal(boundOf("ods", "repeat_units"), 262144);
-  assert.equal(boundOf("workbook", "cells"), 50000);
+  assert.equal(boundOf("workbook", "cells"), 250000);
   assert.equal(boundOf("sheet_worker", "cells"), 250000);
   assert.equal(boundOf("sheet_worker", "bytes"), 9000000);
   assert.equal(boundOf("sheet_worker", "ms"), 120000);
@@ -217,4 +217,21 @@ test("R30: the rows calculations quotes (table bytes 20 MiB, table cells 1,000,0
     assert.deepEqual(statement("table", name, n + 1), { size: n + 1, bound: n, key: `limit.table.${name}` });
   }
   assert.deepEqual(Object.keys(READ_BOUNDS.table), ["bytes", "cells"]);
+});
+
+/* the rows workbooks quotes (K4936; K4831 (8) (10), K4845) */
+test("R30: the workbook rows (cells 250,000 in all columns, file bytes 20 MiB alpha and 50 MB elsewhere, cells JSON 64 MiB in all columns) are answered by boundOf and statement (R31)", () => {
+  const want = {
+    cells: { standard: 250000, alpha: 250000, protective: 250000 },
+    bytes: { standard: MB50, alpha: 20 * MiB, protective: MB50 },
+    cells_json_bytes: { standard: 64 * MiB, alpha: 64 * MiB, protective: 64 * MiB },
+  };
+  for (const [name, cols] of Object.entries(want)) {
+    const row = READ_BOUNDS.workbook[name];
+    assert.deepEqual({ standard: row.standard, alpha: row.alpha, protective: row.protective }, cols, `workbook/${name}`);
+    assert.equal(row.key, `limit.workbook.${name}`);
+    assert.equal(boundOf("workbook", name), cols.alpha, `workbook/${name} answers its active figure`);
+    assert.deepEqual(statement("workbook", name, cols.alpha + 1), { size: cols.alpha + 1, bound: cols.alpha, key: `limit.workbook.${name}` });
+  }
+  assert.deepEqual(Object.keys(READ_BOUNDS.workbook), ["cells", "bytes", "cells_json_bytes"]);
 });
