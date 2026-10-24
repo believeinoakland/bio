@@ -744,3 +744,13 @@ Also converted, per the entry's "every other shape string in the four `captureup
 **Deferred:** none. **Other modules:** none touched, none found.
 
 Size (session_01Wo2xMBoxbMVQCESiGbv5A2): test runs 6, module lines 4924
+
+## J33 · COMPLETE
+
+COMPLETE (CAPTURE #54, job 60, B33; K4909). Commit 91968cf197 on job/T51/capture, pushed.
+
+The seven bare shape strings the words check flagged in bio-plane/src/capture/index.mjs (lines 1066, 1116, 1118, 1129, 1200, 1203, 1264) are written through localize at their use, wording unchanged, plus the other shape strings of the four captureupload* ops (1064, 1120, and the fence's name/type shapes at 716/719). Ids written, rows owed to later-ux.md: capture.index.shape_bytes, shape_upload_name, shape_part_index, shape_part_index_last, shape_sha256_whole, shape_sha256_part, shape_parts_digests, shape_string_max.
+
+Checks: capture suite 336/336 pass; timings test 5 runs on one core, all pass; words check capture 0 failures (was 7); run.mjs 19 failures, all inherited, none naming capture; format, architecture, ownership 0; coverage 66/66. No behaviour, requirement or test changed. Nothing deferred; no generated artifact stale.
+
+Size (session_01Wo2xMBoxbMVQCESiGbv5A2): test runs 6, module lines 4924
