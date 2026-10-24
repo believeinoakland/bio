@@ -153,6 +153,8 @@ const ADDITIVE_COLUMNS = [
   /* R101 (fix round 9, G129b): why a read in pieces ended before its last piece (a deterministic failure, a refused cursor), so it is never `partial`
      without a reason; null for a read that ended at its last piece or was never in pieces. */
   ["capture_text_state", "ended_why", "TEXT"],
+  /* R101 (K4904 (1)): the windows stepped past because they killed their reader three times, `[{at, why}]` (JSON), stated by `completeness` */
+  ["capture_text_state", "stated", "TEXT"],
 ];
 
 /* ---- REC-36 / REC-40: the name terms (R19, R37), and the term fold (R59, N108): `reading_ref_terms.term` is exactly
@@ -466,7 +468,7 @@ const notReadAsText = (r) => !!r && r.found === false && r.failure === "final" &
    the next (its own object, kept as JSON), how far the text is read (`chars_through` of `chars_total`) and the piece's words; null for a read
    that is not in pieces (every other read). */
 const pieceOf = (out) => (out && typeof out.more === "boolean"
-  ? { more: out.more, cursor: typeof out.cursor === "string" ? out.cursor : null, read_through: out.read_through ?? null,
+  ? { more: out.more, cursor: typeof out.cursor === "string" ? out.cursor : typeof out.next === "string" ? out.next : null, read_through: out.read_through ?? null,
       total: out.total ?? null, words: out.piece && Number.isFinite(out.piece.words) ? out.piece.words : 0 } : null);
 /* (fix round 6, G13; R90) a reading whose units came from a text (reading-pipeline R32, R33): the only kind read in pieces. */
 const textReading = (r) => !!r && typeof r === "object";
@@ -501,10 +503,12 @@ export function extractionOf(ctx, opts = {}) {
 export class Extraction {
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
   #testified = false; #counted = false; #host = null; #provenance = null; #migrationRun = null; #readHooks = null; #transcriber = null; #serials = new WeakMap();
-  #owe = null; #repairRun = null;
+  #owe = null; #repairRun = null; #reader = readDocument;
 
   constructor(storage, { record, membership = null, calibration = null, promotion = null, provenance = null, host = null,
-                         env = {}, readHooks = null } = {}) {
+                         env = {}, readHooks = null, reader = null } = {}) {
+    /* the reader (reading-pipeline's `read`); a test hands a stand-in of its contract where the real one has not merged (R-SEAM) */
+    this.#reader = typeof reader === "function" ? reader : readDocument;
     this.#storage = storage;
     this.#sql = storage.sql;
     this.#host = host;
@@ -693,9 +697,12 @@ export class Extraction {
 
   /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
-  async read(document, { storeName = "bio", env = null, budget = undefined, pieces = undefined, ocrInvocations = 0, registrar = null, killedPages = null } = {}) {
+  async read(document, { storeName = "bio", env = null, budget = undefined, pieces = undefined, ocrInvocations = 0, registrar = null, killedPages = null,
+                         skipKilled = false } = {}) {
     const e = env || this.env || {};
-    const out = await readDocument(document, {
+    const out = await this.#reader(document, {
+      /* (fix round 9, K4904 (1); plan 2c item 8) the window at this cursor killed its reader three times: the reader steps past it, stated */
+      ...(skipKilled === true ? { skipKilled: true } : {}),
       /* (fix round 9, G126b; R103; reading-pipeline R55; K4811 (6)) a member's request makes no OCR call: the pages are left, owed below; only the
          ledger's tick (`readHeld` with a kind) hands `null`, the pipeline's own budget */
       ...(Number.isInteger(ocrInvocations) ? { ocrInvocations } : {}),
@@ -813,7 +820,7 @@ export class Extraction {
    *  `kind: "ocr"` the stored reading's unread pages are asked of the OCR member, those the stored units do not hold, and the
    *  re-read is written as a composed reading; a member that is down leaves the entry owed, pages it declines end it. */
   async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined, kind = null, defer = false, registerJob = null, armJobs = null,
-                   killedPages = null, detail = null, halved = false } = {}) {
+                   killedPages = null, killedCursor = null, detail = null, halved = false } = {}) {
     /* (fix round 9, G126b; R103; K4898) the ledger's tick names its job's kind (and hands the registrar); a call with neither is inside a member's
        request (`op=readheld`, the door's own read after a capture), which makes no OCR call */
     const call = typeof registerJob === "function" ? { registerJob, armJobs } : null;
@@ -847,7 +854,7 @@ export class Extraction {
     /* (fix round 6, G13; R90) a held reading of a text read in pieces that has more to read is not held: the next piece is read. */
     if (held && !ocr && stored && this.#moreOf(digest)) {
       if (defer === true) return left("READING_PENDING");
-      return this.#continueText({ digest, document, bundleId: home.bundleId, storeName, env: env || this.env || {}, left, call, ledger, killedPages });
+      return this.#continueText({ digest, document, bundleId: home.bundleId, storeName, env: env || this.env || {}, left, call, ledger, killedPages, killedCursor });
     }
     /* (fix round 6, G8; R89) a "not read as text" reading whose held bytes detect nothing is tried: it stops stating itself repairable. */
     if (held && !ocr && ev && !repair && notReadAsText(heldReading)) this.#markRepairTried(home.bundleId, digest, "undetected");
@@ -926,14 +933,17 @@ export class Extraction {
    *  `{ok: true, read: true, more: true, detail}` while more follows, which the ledger continues at once, one piece a tick;
    *  `{ok: true, read: true}` for the last; `{final: true, why}` when the reader refuses the cursor (the bytes it was made
    *  from are no longer the ones held), which states it and ends the entry. Nothing else about the capture's reading changes. */
-  async #continueText({ digest, document, bundleId, storeName, env, left, call = null, ledger = false, killedPages = null }) {
+  async #continueText({ digest, document, bundleId, storeName, env, left, call = null, ledger = false, killedPages = null, killedCursor = null }) {
     const st = this.#one(`SELECT cursor, read_through, total FROM capture_text_state WHERE capture_sha=? AND more=1`, digest);
     if (!st) return left("READING_HELD");
     /* a state with more to read and no cursor is a text read before pieces existed that the index holds only in part: it is read again
        from its start as the first piece, which replaces what the wire left (the reading itself stands) */
     const restart = st.cursor == null;
+    /* (fix round 9, G129c; K4904 (1); R101) the window at the stored cursor that killed its reader three times (the ledger's `killedCursor`) is stepped
+       past, stated, and the read goes on from the next */
+    const skip = !restart && typeof killedCursor === "string" && killedCursor === st.cursor;
     const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : st.cursor },
-                                            ocrInvocations: ledger ? null : 0, registrar: false });
+                                            ocrInvocations: ledger ? null : 0, registrar: false, skipKilled: skip });
     /* (fix round 9, G129b; R101) a piece that failed for a cause outside the document (the store, a member: `transient`) is no end: the state keeps its
        cursor, nothing is indexed, and the entry stays owed, to be retried by the ledger with its back-off; never `more` 0 with no reason */
     const rd = out.reading && typeof out.reading === "object" ? out.reading : null;
@@ -962,15 +972,28 @@ export class Extraction {
     const via = this.#oweVia(call);
     const entry = this.#ocrEntry(digest, out.reading);
     let owing = null;
+    const stated = skip && out.stated && typeof out.stated === "object" ? { at: st.read_through ?? null, why: String(out.stated.why || "UNIT_KILLED_READER").slice(0, 80) } : null;
     const wrote = this.core.transact(() => {
       const now = this.#one(`SELECT cursor FROM capture_text_state WHERE capture_sha=? AND more=1`, digest);
       if (!now || now.cursor !== st.cursor) return null;
       const w = this.indexUnits(bundleId, digest, units, (out.reading || safeJson((this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest) || {}).reading) || {}).text_source ?? null,
         { append: !restart, more: pieceOf(out) });
+      /* the stated window is kept with the index state (R-SILENT: `completeness` says it), counted skipped */
+      if (stated) {
+        const had = safeJson((this.#one(`SELECT stated FROM capture_text_state WHERE capture_sha=?`, digest) || {}).stated);
+        this.#sql.exec(`UPDATE capture_text_state SET stated=?, state='partial', skipped_named=skipped_named+1 WHERE capture_sha=?`,
+                       JSON.stringify([...(Array.isArray(had) ? had : []), stated]), digest);
+      }
       if (entry) owing = via.owe(entry);
       return w;
     });
     if (!wrote) return left("READING_HELD");
+    if (stated) {
+      const st2 = { stated };
+      if (out.more === true) return { ok: true, read: true, bundle_id: bundleId, found: true, more: true,
+                                      detail: { read_through: out.read_through ?? null, total: out.total ?? null }, ...st2 };
+      return { ok: true, read: true, bundle_id: bundleId, found: true, ...st2 };
+    }
     const ow = owing ? { owed: true, registration: owedAnswer(entry, await owing) } : {};
     await via.arm();
     if (out.more === true) return { ok: true, read: true, bundle_id: bundleId, found: true, more: true,
@@ -1016,10 +1039,19 @@ export class Extraction {
     const seed = tier3SeedFrom(stored, basis.units);
     const text = new Map(basis.units.map((u) => [u.page, u.text]));
     const refused = new Set((Array.isArray(stored.ocr_refused) ? stored.ocr_refused : []).map((r) => r && r.page).filter(Number.isInteger));
+    /* (fix round 9, K4904 (2); plan 2c item 9) a folio page (a page number's few glyphs over a picture, reading-pipeline's `folio_pages`) keeps its glyphs
+       and is routed `image_content_unread`, so tier 3 appends its OCR (D-635); absent, none (new data only) */
+    const folios = new Set((Array.isArray(stored.folio_pages) ? stored.folio_pages : []).filter(Number.isInteger));
     const pages = [], undetermined = [];
     for (let p = 0; p < n; p++) {
       const t = text.get(p) ?? "";
       const seeded = !!(seed && seed.text.has(p));
+      if (!seeded && folios.has(p) && !refused.has(p)) {
+        const mark = { page: p, reason: "image_content_unread", font: null, codes: null, count: 0 };
+        pages.push({ page: p, text: t, undetermined: [mark] });
+        undetermined.push(mark);
+        continue;
+      }
       if (!seeded && glyphCount(t) > 0) { pages.push({ page: p, text: t, undetermined: [] }); continue; }
       const mark = { page: p, reason: refused.has(p) && !seeded ? "ocr_refused" : "no_text_layer", font: null, codes: null, count: 1 };
       pages.push({ page: p, text: "", undetermined: [mark] });
@@ -1034,7 +1066,7 @@ export class Extraction {
     const fmt = (this.#one(`SELECT capture_format FROM readings WHERE capture_sha=?`, sha) || {}).capture_format || basis.reading.text_container || "pdf";
     const built = this.#storedPages(basis, fmt);
     const seeded = built && built.seed ? built.seed.text : new Map();
-    return built ? built.i2text.undetermined.filter((m) => m.reason === "no_text_layer" && !seeded.has(m.page)).map((m) => m.page) : [];
+    return built ? built.i2text.undetermined.filter((m) => (m.reason === "no_text_layer" || m.reason === "image_content_unread") && !seeded.has(m.page)).map((m) => m.page) : [];
   }
 
   /** The tier the stored reading's text layer was read at (its chain's first `layer` step), 1 when it names none. */
@@ -1103,6 +1135,11 @@ export class Extraction {
     /* reading-pipeline R28: what the entry emitted beside the text is the stored reading's (nothing is parsed here) */
     if (Object.prototype.hasOwnProperty.call(stored, "metadata")) reading.metadata = stored.metadata;
     if (t3 && t3.left) reading.ocr_left = { cursor: t3.left.cursor, pages: t3.left.pages.length };
+    /* (K4904 (2)) the folio pages a pass has not yet read stay listed */
+    if (Array.isArray(stored.folio_pages)) {
+      const still = stored.folio_pages.filter((pg) => Number.isInteger(pg) && !(t3 && Array.isArray(t3.filled) && t3.filled.includes(pg)));
+      if (still.length) reading.folio_pages = still;
+    }
     const refused = [...(Array.isArray(stored.ocr_refused) ? stored.ocr_refused : []), ...((t3 && Array.isArray(t3.refused)) ? t3.refused : [])]
       .filter((r) => r && Number.isInteger(r.page) && !(t3 && t3.filled.includes(r.page)));
     if (refused.length) reading.ocr_refused = [...new Map(refused.map((r) => [r.page, { page: r.page, reason: r.reason }])).values()].sort((x, y) => x.page - y.page);
@@ -1617,17 +1654,19 @@ export class Extraction {
     const [offeredAll, writtenAll, overAll, unaddrAll, truncAll, skippedAll] = [sum("offered", offered), sum("written", written),
       sum("over_bound", over), sum("unaddressable", unaddressable), sum("truncated", truncatedUnits), sum("skipped_named", skippedNamed)];
     const followed = !!(more && typeof more === "object" && more.more === true && more.cursor != null);
-    const state = !offeredAll ? "none" : (overAll || unaddrAll || followed) ? "partial" : "whole";
+    /* (R101, K4904 (1)) a window stepped past is kept across the pieces that follow, and the index is never whole while it stands */
+    const statedKept = append && before && typeof before.stated === "string" && Array.isArray(safeJson(before.stated)) && safeJson(before.stated).length ? before.stated : null;
+    const state = !offeredAll ? "none" : (overAll || unaddrAll || followed || statedKept) ? "partial" : "whole";
     const prog = more && typeof more === "object" ? more : null;
     const keptChain = before && before.chain_kind && before.chain_kind !== chainKind ? "mixed" : chainKind;
     this.#sql.exec(
       `INSERT OR REPLACE INTO capture_text_state (capture_sha,bundle_id,state,offered,written,over_bound,unaddressable,
-                                                  truncated,skipped_named,chain_kind,at,more,cursor,read_through,total,words_read)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                                                  truncated,skipped_named,chain_kind,at,more,cursor,read_through,total,words_read,stated)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       captureSha, bundleId, state, offeredAll, writtenAll, overAll, unaddrAll, truncAll, skippedAll, keptChain,
       stampInstant("second"), followed ? 1 : 0, followed ? String(prog.cursor) : null,
       prog && Number.isFinite(prog.read_through) ? prog.read_through : null, prog && Number.isFinite(prog.total) ? prog.total : null,
-      prog ? (before && Number.isFinite(before.words_read) ? before.words_read : 0) + (Number.isFinite(prog.words) ? prog.words : 0) : null);
+      prog ? (before && Number.isFinite(before.words_read) ? before.words_read : 0) + (Number.isFinite(prog.words) ? prog.words : 0) : null, statedKept);
     return { offered, written, bytes, truncated: truncatedUnits, over_bound: over, wire_over_bound: wire,
              unaddressable, unaddressed, chain_kind: chainKind, skipped, skipped_named: skippedNamed, state };
   }
@@ -1742,7 +1781,9 @@ export class Extraction {
     const state = failedFinal && !st.written ? "stated" : st.more || st.state === "partial" || st.truncated ? "partial" : st.state;
     return { state, counts, skipped, ...(state === "stated" ? { failure: "final", why: reading.basis ?? null } : {}),
              /* R101 (G129b): a read in pieces that ended before its last piece says why */
-             ...(state === "partial" && typeof st.ended_why === "string" && st.ended_why ? { why: st.ended_why } : {}) };
+             ...(state === "partial" && typeof st.ended_why === "string" && st.ended_why ? { why: st.ended_why } : {}),
+             /* R101 (K4904 (1)): each window stepped past, stated (R-SILENT) */
+             ...(Array.isArray(safeJson(st.stated)) && safeJson(st.stated).length ? { stated_units: safeJson(st.stated) } : {}) };
   }
 
   /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no

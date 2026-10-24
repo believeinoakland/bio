@@ -119,7 +119,7 @@ export function promotion() {
 /* A fresh store with record-core, membership and this module (its figures registered, R67, as `extractionOf` does).
    `provenance` is handed to the module as `extractionOf` hands it (R65). */
 export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom = promotion(), provenance = null,
-                        readHooks = null, host = null } = {}) {
+                        readHooks = null, host = null, reader = null } = {}) {
   const s = storage();
   const ctx = { storage: s };
   const core = recordOf(ctx, { evidence, evidencePrefix: "bio/captures/" });
@@ -131,7 +131,7 @@ export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom
     for (const t of CALIBRATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) s.db.exec(t);
     cal = calibrationOf(ctx, { record: core });
   }
-  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: prom, env, readHooks, host,
+  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: prom, env, readHooks, host, reader,
                                 provenance: typeof provenance === "function" ? provenance(ctx, core, membership) : provenance });
   x.registerFigures();
   x.migrate();

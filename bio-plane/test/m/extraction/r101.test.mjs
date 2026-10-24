@@ -112,3 +112,46 @@ test("R101 (G129c): the one retry after three kills runs at half the budget: a `
   await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: full } });
   assert.equal(full.calls.length, 2 * HALF_OCR_INVOCATIONS, "control: a tick's whole budget");
 });
+
+/* (K4904 (1); plan 2c item 8) reading-pipeline's `read` with `skipKilled` (job 40), a stand-in of its contract until it merges (R-SEAM): pieces of 3 units by
+   a cursor `c<n>`; asked with `skipKilled` it reads nothing at the cursor and answers the next, `counters.skipped` 1, `stated: {cursor, why}`. Everything
+   else is the real read. */
+import { read as realRead } from "../../../src/reading-pipeline/index.mjs";
+const WINDOWS = 4;
+const windowed = (asked) => async (doc, o = {}) => {
+  if (o.cursor === undefined) return realRead(doc, o);
+  asked.push([o.cursor, o.skipKilled === true]);
+  const i = o.cursor === null ? 0 : Number(String(o.cursor).slice(1));
+  const next = i + 1 < WINDOWS ? `c${i + 1}` : null;
+  const base = { more: next !== null, cursor: next, next, read_through: (i + 1) * 30, total: WINDOWS * 30, piece: { units: 0, words: 0 } };
+  if (o.skipKilled === true) return { ...base, counters: { written: 0, skipped: 1, owed: 0, failed: 0 }, stated: { cursor: o.cursor, why: "UNIT_KILLED_READER" } };
+  const units = [0, 1, 2].map((k) => ({ extent: { kind: "doc-para", para: i * 3 + k }, text: `window ${i} paragraph ${k} WIN${i}X`, seq: i * 3 + k }));
+  return { ...base, text_units: units, piece: { units: 3, words: 12 }, counters: { written: 3, skipped: 0, owed: 0, failed: 0 },
+           ...(o.cursor === null ? { reading: { content_type: "generic", found: false, entities: [], facts: {}, text_source: null, basis: "b", at: "t" } } : {}) };
+};
+
+test("R101 (G129c; K4904 (1); DOCS killAt): the window at the cursor the ledger states killed its reader three times (`killedCursor`) is stepped past with `skipKilled`, stated (`completeness.stated_units`, counted skipped) and the read goes on to the last window", async () => {
+  const asked = [];
+  const rows = new Map(), evidence = bucket();
+  const w = fresh({ evidence, provenance: register(rows), reader: windowed(asked) });
+  bundle(w.s, "INFO-1");
+  const bytes = new TextEncoder().encode("a document read in windows " + Math.random());
+  const d = sha(bytes);
+  rows.set(d, { bundleId: "INFO-1", path: "a.docx", encoding: "binary", bytes: bytes.length, registered: "t", authored: false });
+  await evidence.put(`bio/captures/${d}`, bytes);
+  const document = doc({ digest: d, bytes: bytes.length, ct: "text/plain", format: "text", fromText: true });
+  w.core.readFile = (b, p) => (p === "data/provenance.json" ? { text: JSON.stringify({ documents: [document] }) } : null);
+  const first = await tick(w, d);
+  assert.deepEqual([first.read, first.more], [true, true], JSON.stringify(first));
+  assert.equal((await tick(w, d)).more, true, "window c1 read");
+  const killed = await tick(w, d, { killedCursor: "c2" });
+  assert.deepEqual([killed.read, killed.more, killed.stated], [true, true, { at: 60, why: "UNIT_KILLED_READER" }], JSON.stringify(killed));
+  const last = await tick(w, d, { killedCursor: "c2" });
+  assert.deepEqual([last.read, last.more, last.stated], [true, undefined, undefined], "the next window is read as any other");
+  assert.deepEqual(asked.map(([c, s]) => [c, s]), [[null, false], ["c1", false], ["c2", true], ["c3", false]]);
+  assert.deepEqual([fts(w, "WIN1X"), fts(w, "WIN2X"), fts(w, "WIN3X")], [3, 0, 3], "the stated window holds no unit; the others are read");
+  const c = w.x.readingFor(d, "class:admin").completeness;
+  assert.equal(c.state, "partial");
+  assert.deepEqual(c.stated_units, [{ at: 60, why: "UNIT_KILLED_READER" }]);
+  assert.equal(c.counts.skipped_named, 1);
+});

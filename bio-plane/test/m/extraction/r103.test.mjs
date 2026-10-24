@@ -136,3 +136,18 @@ test("R106 (control): a photograph the OCR member declines ends stated with its 
   const a = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: member(() => ({ ok: false, reason: "PAGE_NOT_LEGIBLE" })) } });
   assert.deepEqual([a.read, a.owed, a.why], [false, undefined, "OCR_NO_PROGRESS"]);
 });
+
+test("R103 R35 (K4904 (2); plan 2c item 9): a page the reading lists in `folio_pages` keeps its folio and is OCRed by the pass, the OCR appended after it (D-635); a reading without the field rebuilds that page as text, unasked (control: old readings, new data only)", async () => {
+  const t = i2([{ page: 0, text: "7" }, { page: 1, text: "typed words of page 1" }]);
+  const { w, d } = await held(t, { bytes: 2048, extra: { folio_pages: [0] } });
+  const ocr = member((b) => ocrAnswer(b.pages));
+  const pass = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: ocr } });
+  assert.deepEqual([pass.read, pass.reextraction && pass.reextraction.pages], [true, [0]], JSON.stringify(pass));
+  assert.deepEqual(ocr.calls.flatMap((c) => c.body.pages), [0]);
+  assert.equal(w.one(`SELECT text FROM capture_text WHERE capture_sha=? AND seq=0`, d).text, "7\nocr text of page 0", "the folio kept, the OCR appended");
+  assert.equal(w.x.readingOf(d).reading.folio_pages, undefined, "a read folio page is no longer listed");
+  const old = await held(t, { bytes: 2048 });
+  const none = member((b) => ocrAnswer(b.pages));
+  const r = await old.w.x.readHeld({ sha: old.d, kind: "ocr", env: { OCR_WORKER: none } });
+  assert.deepEqual([r.read, r.why, none.calls.length], [false, "NO_PAGES_LEFT", 0]);
+});
