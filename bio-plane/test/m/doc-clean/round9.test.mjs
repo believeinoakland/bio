@@ -276,7 +276,7 @@ test("R12 every ceiling is read from READ_BOUNDS: CLEAN_MAX_BYTES, the entry bou
   assert.equal(CLEAN_MAX_BYTES, boundOf("document", "clean_bytes"));
   assert.equal(CLEAN_MAX_ENTRIES, boundOf("office", "entries"));
   assert.equal(TAG_MAX, boundOf("xml", "tag"));
-  assert.equal(CLEAN_MAX_PART_BYTES, 2 * boundOf("document", "clean_bytes"));
+  assert.equal(CLEAN_MAX_PART_BYTES, boundOf("document", "part_bytes"));
   const figures = [boundOf("document", "clean_bytes"), CLEAN_MAX_PART_BYTES, boundOf("office", "entries"), boundOf("xml", "tag"), boundOf("archive", "ratio")];
   const code = (text) => text
     .replace(/\/\*[\s\S]*?\*\//g, " ")
