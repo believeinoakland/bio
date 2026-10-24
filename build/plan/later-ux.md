@@ -153,3 +153,4 @@
 - Add · a document part named by its reference (`text-chain.textchain.part_ref`) · fix round 9, TEXT-CHAIN #12 (K4917) · 2026-10-24
 - Add · a spreadsheet preview's "show more" from the row it was cut at (G137b; screens-intake R5's cut preview, `next_row`): a new open-file act to draw, owed by SCREENS-INTAKE #23's J46 (K4922) · 2026-10-24
 - Add · a row asked outside the passage's range (`content.index.from_row_outside_extent`) · fix round 9, CONTENT #20 (K4926) · 2026-10-24
+- Add · a document part not kept with its reading for its size, its text kept whole and searchable (`extraction.index.part_omitted`) · fix round 9, EXTRACTION #42 (K4927) · 2026-10-24
