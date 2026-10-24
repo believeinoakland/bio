@@ -26,6 +26,7 @@ import { indexWorkbook, inputCells, lintFindings, LINT_KINDS } from "./lint.mjs"
 import { buildExport } from "./export.mjs";
 import { XLSX_CONTENT_TYPE } from "./xlsxwrite.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { boundOf, statement } from "../read-bounds.mjs";
 
 export { WORKBOOKS_SCHEMA, WORKBOOKS_TABLES } from "./schema.mjs";
 export { LINT_KINDS } from "./lint.mjs";
@@ -35,13 +36,13 @@ export { workbooksOps, WORKBOOKS_OPS } from "./ops.mjs";
 export const RECOMPUTE_STATUSES = Object.freeze(["agrees", "differs", "partial", word("workbooks.recomputed")]);
 export const CHECK_OUTCOMES = Object.freeze(["agrees", "disagrees", "could_not_check"]);
 export const NOT_RECOMPUTED = word("workbooks.recomputed");
-/** R1 (G44; K1881, K4662): the protective bounds of the add, BOB's, reported to Bob. A capture stored above
- *  `WORKBOOK_FILE_MAX_BYTES` is refused before any byte loads; a workbook's cells are listed only while their JSON is
- *  within `WORKBOOK_CELLS_MAX_BYTES`, and a workbook of more than `WORKBOOK_CELLS_MAX` cells is refused, so the
- *  whole lifecycle (add, read, lint, inputs, recompute) survives the Durable Object's memory (measured). */
-export const WORKBOOK_FILE_MAX_BYTES = 20 * 1024 * 1024;
-export const WORKBOOK_CELLS_MAX_BYTES = 9 * 1024 * 1024;
-export const WORKBOOK_CELLS_MAX = 50000;
+/** R1, R20 (G44, G137e; K1881, K4662, K4835 (1)): the add's bounds, each a `READ_BOUNDS` row (BOB's figures). A capture
+ *  stored above `WORKBOOK_FILE_MAX_BYTES` is refused before any byte loads; a workbook's cells are listed only while
+ *  their JSON is within `WORKBOOK_CELLS_MAX_BYTES`, and a workbook of more than `WORKBOOK_CELLS_MAX` cells is refused,
+ *  so the whole lifecycle (add, read, lint, inputs, recompute) survives the Durable Object's memory (measured). */
+export const WORKBOOK_FILE_MAX_BYTES = boundOf("workbook", "bytes");
+export const WORKBOOK_CELLS_MAX_BYTES = boundOf("workbook", "cells_json_bytes");
+export const WORKBOOK_CELLS_MAX = boundOf("workbook", "cells");
 /** R6: how many cells each recorded list keeps; the counts are always whole, and a cut list says how many it left. */
 export const LIST_MAX = 2000;
 /** R8: the meaning every recompute statement carries. */
@@ -70,12 +71,18 @@ const megabytes = (n) => (n / 1e6).toFixed(1);
 const fileTooLarge = (size, bound, condition) => refusal("WORKBOOK_FILE_TOO_LARGE",
   localize("refusal.WORKBOOK_FILE_TOO_LARGE", "This file is {size} MB, more than the {bound} MB that can be added as a workbook. The original is unchanged.",
            { size: megabytes(size), bound: megabytes(bound) }),
-  { size: megabytes(size), bound: megabytes(bound), size_bytes: size, bound_bytes: bound, condition });
+  { size: megabytes(size), bound: megabytes(bound), size_bytes: size, bound_bytes: bound, condition,
+    limit: condition === "declared_text" ? statement("office", "text_bytes", size) : statement("workbook", "bytes", size) });
 /* R1, R2: a workbook of more cells than can be held and read; `condition` is `cell_count` or `cell_bytes`. */
-const cellsTooLarge = (cells, condition) => refusal("WORKBOOK_TOO_LARGE",
+const cellsTooLarge = (cells, condition, bound = WORKBOOK_CELLS_MAX) => refusal("WORKBOOK_TOO_LARGE",
   localize("refusal.WORKBOOK_TOO_LARGE", "This workbook has {cells} cells, more than the {bound_cells} that can be held and read here.",
-           { cells: String(cells), bound_cells: String(WORKBOOK_CELLS_MAX) }),
-  { cells, bound_cells: WORKBOOK_CELLS_MAX, condition });
+           { cells: String(cells), bound_cells: String(bound) }),
+  { cells, bound_cells: bound, condition, limit: { ...statement("workbook", "cells", cells), bound } });
+/* R21: the cells the add did not keep, how many and why (a `<c>` with no reference, one whose reference cannot be read, a
+   repeat of an earlier cell's reference); present only when something was dropped. */
+const droppedStatement = (by, count) => ({ count, ...by,
+  statement: localize("workbooks.dropped_cells", "{count} cells were not kept: {no_reference} with no cell reference, {unreadable} with a reference that cannot be read, {repeated} repeating an earlier cell's reference.",
+                      { count: String(count), no_reference: String(by.no_reference), unreadable: String(by.unreadable), repeated: String(by.repeated) }) });
 const cut = (list) => (list.length > LIST_MAX ? { list: list.slice(0, LIST_MAX), left: list.length - LIST_MAX } : { list, left: 0 });
 
 /* The calculations contract, read through one adapter each (J1): a table `{sha, fields, rows, grade_facts}` or null;
@@ -186,14 +193,27 @@ export class Workbooks {
       capture_sha: typeof captureSha === "string" ? captureSha : null, project: typeof project === "string" ? project : null });
   }
 
-  #cells(wb) {
-    return this.#rows(`SELECT sheet, cell, r, c, type, value, formula, cached FROM workbook_cells
-                        WHERE capture_sha=? AND project=? ORDER BY sheet, r, c`, wb.capture_sha, wb.project);
+  /* R20: the workbook's cells are read from the store a cursor or a lookup at a time, never all at once: a workbook held
+     whole at 250,000 cells would not fit the object as 250,000 rows of objects beside its readers. */
+  #grid(wb) {
+    const key = [wb.capture_sha, wb.project];
+    const sql = this.sql;
+    return {
+      count: () => sql.exec(`SELECT COUNT(*) AS n FROM workbook_cells WHERE capture_sha=? AND project=?`, ...key).one().n,
+      formulaCount: () => sql.exec(`SELECT COUNT(*) AS n FROM workbook_cells WHERE capture_sha=? AND project=? AND formula IS NOT NULL`, ...key).one().n,
+      formulas: () => sql.exec(`SELECT sheet, cell, r, c, type, value, formula, cached FROM workbook_cells WHERE capture_sha=? AND project=? AND formula IS NOT NULL ORDER BY sheet, r, c`, ...key),
+      errors: () => sql.exec(`SELECT sheet, cell, r, c, type, value, formula, cached FROM workbook_cells WHERE capture_sha=? AND project=? AND type='error' ORDER BY sheet, r, c`, ...key),
+      at: (sheet, r, c) => { for (const x of sql.exec(`SELECT sheet, cell, r, c, type, value, formula, cached FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=? AND r=? AND c=?`, ...key, sheet, r, c)) return x; return null; },
+      named: (sheet, cell) => { for (const x of sql.exec(`SELECT sheet, cell, r, c, type, value, formula, cached FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=? AND cell=?`, ...key, sheet, cell)) return x; return null; },
+      extent: (sheet) => { for (const x of sql.exec(`SELECT MAX(r) AS rows, MAX(c) AS cols FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=?`, ...key, sheet)) return { rows: x.rows ?? 0, cols: x.cols ?? 0 }; return { rows: 0, cols: 0 }; },
+      constantsIn: (sheet, r1, c1, r2, c2) => sql.exec(`SELECT sheet, cell, r, c, type, value, formula, cached FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=? AND r BETWEEN ? AND ? AND c BETWEEN ? AND ?
+                                                          AND formula IS NULL AND value IS NOT NULL ORDER BY r, c`, ...key, sheet, r1, r2, c1, c2),
+    };
   }
 
-  /** R1 (R-OLD): the stored cells counted, not loaded; above the bound the read answers it stated, never a crash. */
+  /** R2 (R-OLD): the stored cells counted, not loaded; above the bound the read answers it stated, never a crash. */
   #tooLarge(wb) {
-    const n = this.#one(`SELECT COUNT(*) AS n FROM workbook_cells WHERE capture_sha=? AND project=?`, wb.capture_sha, wb.project).n;
+    const n = this.#grid(wb).count();
     return n > WORKBOOK_CELLS_MAX ? cellsTooLarge(n, "cell_count") : null;
   }
 
@@ -250,6 +270,10 @@ export class Workbooks {
     const pieces = text && text.piecewise;
     if (pieces && Number.isFinite(Number(pieces.declared)) && Number.isFinite(Number(pieces.bound)))
       return fileTooLarge(Number(pieces.declared), Number(pieces.bound), "declared_text");
+    /* the reader counts the cells it would hold and refuses a sheet past its own bound (`TOO_MANY_OBJECTS` {n, bound}):
+       to the member that is this module's refusal, stated with the count and the lower of the two bounds */
+    const many = marks.find((m) => m && typeof m === "object" && m.why === "TOO_MANY_OBJECTS" && Number.isFinite(Number(m.n)) && Number(m.n) > WORKBOOK_CELLS_MAX);
+    if (many) return cellsTooLarge(Number(many.n), "cell_count", Number.isFinite(Number(many.bound)) ? Math.min(Number(many.bound), WORKBOOK_CELLS_MAX) : WORKBOOK_CELLS_MAX);
     if (sheets && sheets.some((s) => s.cells === null && s.cells_held === true)) return cellsTooLarge(text.counts?.cells ?? 0, "cell_bytes");
     if (!sheets || !sheets.length || sheets.some((s) => !Array.isArray(s.cells))) {
       const why = !text || !text.ok ? text?.reason || "not an xlsx workbook"
@@ -273,18 +297,28 @@ export class Workbooks {
     try { origin.system = this.provenance.originOf(home.bundleId)?.system ?? null; } catch { /* stated as null */ }
     const facts = { sheets: sheets.map((s) => ({ name: s.name, hidden: !!s.hidden })), hidden_rows, hidden_cols, names };
     const at = this.now();
+    const dropped = { no_reference: 0, unreadable: 0, repeated: 0 };
     return this.record.transact(() => {
       this.sql.exec(`INSERT INTO workbooks (capture_sha, project, question, period, origin, author, at, facts) VALUES (?,?,?,?,?,?,?,?)`,
                     sha, p, str(question), json(period), json(origin), by, at, json(facts));
-      for (const s of sheets) for (const c of s.cells) {
-        const pos = cellAt(c.source.cell);
-        if (!pos) continue;
-        this.sql.exec(`INSERT OR IGNORE INTO workbook_cells (capture_sha, project, sheet, cell, r, c, type, value, formula, cached)
+      for (const s of sheets) {
+        const placed = new Set();
+        for (const c of s.cells) {
+          const ref = c && c.source && typeof c.source.cell === "string" ? c.source.cell : null;
+          const pos = ref ? cellAt(ref) : null;
+          if (!ref) { dropped.no_reference++; continue; }
+          if (!pos) { dropped.unreadable++; continue; }
+          const key = pos.row * 4294967296 + pos.col;
+          if (placed.has(key)) { dropped.repeated++; continue; }
+          placed.add(key);
+          this.sql.exec(`INSERT OR IGNORE INTO workbook_cells (capture_sha, project, sheet, cell, r, c, type, value, formula, cached)
                        VALUES (?,?,?,?,?,?,?,?,?,?)`, sha, p, s.name, c.source.cell, pos.row, pos.col, c.type ?? null,
                        c.value ?? null, c.formula ?? null, c.cached ?? null);
+        }
       }
+      const lost = dropped.no_reference + dropped.unreadable + dropped.repeated;
       return { ok: true, already: false, capture_sha: sha, project: p, question: str(question), period, origin, author: by, at,
-               sheets: facts.sheets };
+               sheets: facts.sheets, ...(lost ? { dropped: droppedStatement(dropped, lost) } : {}) };
     });
   }
 
@@ -399,8 +433,8 @@ export class Workbooks {
 
   /* ================================================================ R5 */
 
-  #inputs(wb, cells) {
-    const ix = indexWorkbook(cells, wb.facts);
+  #inputs(wb) {
+    const ix = indexWorkbook(this.#grid(wb), wb.facts);
     const active = this.#rows(`SELECT * FROM workbook_bindings WHERE capture_sha=? AND project=? AND unbound_at IS NULL ORDER BY binding_id`,
                               wb.capture_sha, wb.project).map((b) => {
       const [ra, rb] = b.range.split(":");
@@ -420,7 +454,7 @@ export class Workbooks {
     if (!wb) return this.#absent(captureSha, project);
     const big = this.#tooLarge(wb);
     if (big) return big;
-    const { list } = this.#inputs(wb, this.#cells(wb));
+    const { list } = this.#inputs(wb);
     return { ok: true, capture_sha: wb.capture_sha, project: wb.project, inputs: list,
              counts: { inputs: list.length, bound: list.filter((x) => x.bound).length, unbound: list.filter((x) => !x.bound).length } };
   }
@@ -446,7 +480,7 @@ export class Workbooks {
     if (!answer) rec = { status: NOT_RECOMPUTED, engine: null, engine_version: null, reason, why,
                          body: { counts: { compared: 0, agreed: 0, differed: 0, not_recomputed: 0, volatile: 0, cache_stale: 0 },
                                  differing: [], not_recomputed: [], volatile: [], cache_stale: [] } };
-    else rec = { ...pair(answer, this.#cells(wb)), engine: answer.engine ?? null, engine_version: answer.engine_version ?? null, reason: null, why: null };
+    else rec = { ...pair(answer, this.#grid(wb)), engine: answer.engine ?? null, engine_version: answer.engine_version ?? null, reason: null, why: null };
     return this.record.transact(() => {
       this.sql.exec(`INSERT INTO workbook_recomputes (capture_sha, project, status, engine, engine_version, at, by, reason, why, answer)
                      VALUES (?,?,?,?,?,?,?,?,?,?)`, wb.capture_sha, wb.project, rec.status, rec.engine, rec.engine_version, at, by,
@@ -464,8 +498,8 @@ export class Workbooks {
 
   /* ================================================================ R9 */
 
-  #lint(wb, cells, inputs) {
-    const ix = inputs ? inputs.ix : indexWorkbook(cells, wb.facts);
+  #lint(wb, inputs) {
+    const ix = inputs ? inputs.ix : indexWorkbook(this.#grid(wb), wb.facts);
     const inputList = inputCells(ix);
     const notes = this.#rows(`SELECT kind, cell, note, by, at FROM workbook_lint_notes WHERE capture_sha=? AND project=? ORDER BY note_id`,
                              wb.capture_sha, wb.project);
@@ -479,7 +513,7 @@ export class Workbooks {
     if (!wb) return this.#absent(captureSha, project);
     const big = this.#tooLarge(wb);
     if (big) return big;
-    const findings = this.#lint(wb, this.#cells(wb));
+    const findings = this.#lint(wb);
     return { ok: true, capture_sha: wb.capture_sha, project: wb.project, findings,
              counts: Object.fromEntries(LINT_KINDS.map((k) => [k, findings.filter((f) => f.kind === k).length])) };
   }
@@ -492,7 +526,7 @@ export class Workbooks {
     const big = this.#tooLarge(wb);
     if (big) return big;
     const f = finding && typeof finding === "object" ? finding : {};
-    const held = this.#lint(wb, this.#cells(wb)).find((x) => x.kind === f.kind && x.cell === f.cell);
+    const held = this.#lint(wb).find((x) => x.kind === f.kind && x.cell === f.cell);
     if (!held) return refusal("NO_SUCH_FINDING", "lint gives no such finding for this workbook", { kind: f.kind ?? null, cell: f.cell ?? null });
     const at = this.now();
     return this.record.transact(() => {
@@ -549,7 +583,7 @@ export class Workbooks {
   /* ================================================================ R2, R12 */
 
   /** R12: the grade facts (K1447 (ii)). */
-  async #gradeFacts(wb, cells, inputs, bindings, viewer) {
+  async #gradeFacts(wb, grid, inputs, bindings, viewer) {
     const byBinding = new Map();
     for (const b of bindings) {
       if (b.state !== "bound") continue;
@@ -574,8 +608,7 @@ export class Workbooks {
       inputs: inputs.map((x) => (x.bound
         ? { cell: x.cell, binding_id: x.binding_id, ...byBinding.get(x.binding_id) }
         : { cell: x.cell, grade: "D", basis: "testimony: an unbound input (K1447 (ii))" })),
-      results: cells.filter((c) => c.formula !== null && c.formula !== undefined)
-        .map((c) => ({ cell: `${c.sheet}!${c.cell}`, derivation_step: ENGINE_STEP.step, grade: ENGINE_STEP.grade })),
+      results: [...grid.formulas()].map((c) => ({ cell: `${c.sheet}!${c.cell}`, derivation_step: ENGINE_STEP.step, grade: ENGINE_STEP.grade })),
       method: { graded: false, disclosed: this.#methodNotes(wb).find((n) => n.current) || null },
       rule: localize("workbooks.index.k1447_grade_rule", "K1447 (ii): each bound input at its capture grade capped by its derivation; an unbound input is testimony (D); a third-party engine's value is a derivation step, undetermined until measured; the method is disclosed, not graded"),
     };
@@ -587,22 +620,22 @@ export class Workbooks {
     if (!wb) return this.#absent(captureSha, project);
     const big = this.#tooLarge(wb);
     if (big) return big;
-    const cells = this.#cells(wb);
-    const inputs = this.#inputs(wb, cells);
+    const grid = this.#grid(wb);
+    const inputs = this.#inputs(wb);
     const bindings = await this.#bindings(wb, viewer);
     const recompute = this.#latestRecompute(wb);
     return {
       ok: true,
       workbook: { capture_sha: wb.capture_sha, project: wb.project, question: wb.question, period: wb.period, origin: wb.origin,
                   author: wb.author, at: wb.at, sheets: wb.facts.sheets || [],
-                  counts: { cells: cells.length, formulas: cells.filter((c) => c.formula !== null).length } },
+                  counts: { cells: grid.count(), formulas: grid.formulaCount() } },
       bindings,
       inputs: inputs.list,
       recompute,
-      lint: this.#lint(wb, cells, inputs),
+      lint: this.#lint(wb, inputs),
       method_notes: this.#methodNotes(wb),
       checks: this.#checks(wb),
-      grade_facts: await this.#gradeFacts(wb, cells, inputs.list, bindings, viewer),
+      grade_facts: await this.#gradeFacts(wb, grid, inputs.list, bindings, viewer),
       disclosure: recompute ? recompute.disclosure : disclosure(null),
     };
   }
@@ -631,8 +664,8 @@ export class Workbooks {
 }
 
 /* R6, R7: the engine's cells paired with the file's cached values. */
-function pair(answer, cells) {
-  const held = new Map(cells.map((c) => [`${c.sheet}!${c.cell}`, c]));
+function pair(answer, grid) {
+  const held = { get: (ref) => { const i = ref.lastIndexOf("!"); return i > 0 ? grid.named(ref.slice(0, i), ref.slice(i + 1)) : null; } };
   const counts = { compared: 0, agreed: 0, differed: 0, not_recomputed: 0, volatile: 0, cache_stale: 0 };
   const differing = [], notRecomputed = [], volatile = [], cacheStale = [];
   const seen = new Set();
@@ -668,8 +701,8 @@ function pair(answer, cells) {
     if (same) counts.agreed++;
     else { counts.differed++; differing.push({ cell: ref, cached: c.cached, cached_type: c.type, engine_value: e.value ?? null, engine_type: e.type ?? null }); }
   }
-  for (const c of cells)
-    if (c.formula !== null && c.formula !== undefined && !seen.has(`${c.sheet}!${c.cell}`)) {
+  for (const c of grid.formulas())
+    if (!seen.has(`${c.sheet}!${c.cell}`)) {
       counts.not_recomputed++;
       notRecomputed.push({ cell: `${c.sheet}!${c.cell}`, error: null, cause: "no_engine_value", detail: "the engine answered no value for this formula" });
     }

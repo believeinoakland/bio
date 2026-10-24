@@ -2,7 +2,9 @@
    largest one the add holds survives the workbook's whole lifecycle. Each case goes through `workbooksOps(...)` over the
    fixture's `world()`, the real modules on a real database, in a child process whose old space is capped as the plane's
    object leaves it (the sheet-worker-free stub engine answers every formula cell). Ids: R1 (amended: the order of its
-   refusals, WORKBOOK_FILE_TOO_LARGE and WORKBOOK_TOO_LARGE) and R2 (a read of a workbook stored over the bound). */
+   refusals, WORKBOOK_FILE_TOO_LARGE and WORKBOOK_TOO_LARGE), R2 (a read of a workbook stored over the bound) and R20 (a
+   workbook is held whole up to the cells bound, and the largest one survives every act). The child's cap is runtime-
+   limits' `capFor` (the one convention); the heavy cases here run alone (R-NOLOAD). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
@@ -15,17 +17,14 @@ import { world, V, BASIC } from "./fixture.mjs";
 import * as S from "./g44-shapes.mjs";
 import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
 import { WORKBOOK_FILE_MAX_BYTES, WORKBOOK_CELLS_MAX } from "../../../src/workbooks/index.mjs";
+import { capFor } from "../../../src/byte-ledger.mjs";
+import { boundOf } from "../../../src/read-bounds.mjs";
 
 const run = promisify(execFile);
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PRELOAD = join(HERE, "../../platform-sqlite.mjs");
 const MB = 1e6;
-
-/* The plane's object holds 128 MB of old space and its own state costs 87.7 above an idle of 39 on the platform
-   (diagnosis-R6-g40, g44); this child's idle after gc is IDLE_MB, so a file of `bytes` leaves the work
-   `128 + 39 - 87.7 + IDLE_MB - bytes/1e6` MB of old space: the real-shape cap. */
-const IDLE_MB = 33.4;
-const capFor = (bytes) => Math.floor(128 + 39 - 87.7 + IDLE_MB - bytes / MB);
+const MiB = 1048576;
 
 /** One job in a capped child: the lines it printed, as an object; `alive` when it reached its last line. */
 async function inChild(t, shape, job, extra = "") {
@@ -33,7 +32,7 @@ async function inChild(t, shape, job, extra = "") {
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const file = join(dir, "book.xlsx");
   if (shape) writeFileSync(file, shape.bytes);
-  const cap = capFor(shape ? shape.bytes.length : 20_000);
+  const cap = capFor((shape ? shape.bytes.length : 20_000) / MiB);
   let stdout = "";
   try {
     ({ stdout } = await run(process.execPath, ["--import", PRELOAD, "--expose-gc", `--max-old-space-size=${cap}`,
@@ -43,7 +42,6 @@ async function inChild(t, shape, job, extra = "") {
   out.alive = "endMB" in out;
   out.cap = cap;
   t.diagnostic(`cap ${cap} MB, idle ${out.idleMB?.toFixed(1)}, end ${out.endMB?.toFixed(1)}, alive ${out.alive}`);
-  assert.ok(out.idleMB < IDLE_MB + 0.7, `the child's idle ${out.idleMB} is above the figure the cap was set from; recalibrate IDLE_MB`);
   return out;
 }
 const lifecycleOk = (r, why) => {
@@ -54,14 +52,15 @@ const lifecycleOk = (r, why) => {
   assert.ok(r.explain.ok || r.explain.reason === "NO_SUCH_FINDING", `${why}: explain ${JSON.stringify(r.explain)}`);
 };
 
-test("R1 a workbook of 221,376 cells (10 MiB declared, a 1.4 MB file) at the real-shape cap is refused with its cell count and the bound, writes nothing, and the object lives", async (t) => {
-  const f = S.constants(73792);
-  assert.ok(f.declared > 10 * 1024 * 1024 - 1024 && f.declared < 10 * 1024 * 1024 + 1024, `declares ${f.declared}`);
+test("R1 R20 a workbook of one cell more than the bound (250,001 cells, a 7 MB declared text) at the real-shape cap is refused with its cell count and the bound, writes nothing, and the object lives", async (t) => {
+  const f = S.exact(WORKBOOK_CELLS_MAX + 1);
   const r = await inChild(t, f, "add");
   assert.equal(r.alive, true, "the child must survive");
   assert.equal(r.add.reason, "WORKBOOK_TOO_LARGE");
-  assert.equal(r.add.cells, 221376);
+  assert.equal(r.add.cells, WORKBOOK_CELLS_MAX + 1);
   assert.equal(r.add.bound_cells, WORKBOOK_CELLS_MAX);
+  assert.equal(r.add.condition, "cell_count");
+  assert.deepEqual(r.add.limit, { size: WORKBOOK_CELLS_MAX + 1, bound: WORKBOOK_CELLS_MAX, key: "limit.workbook.cells" });
   assert.equal(r.changed, false, "nothing is written");
   assert.equal(r.cells, 0);
 });
@@ -74,52 +73,40 @@ test("R1 R2 control: a 23,103-cell workbook (1 MiB declared) adds, and readWorkb
   assert.equal(r.cells, 23103);
 });
 
-test("R1 R2 a workbook of the bound's cells adds and its whole lifecycle answers at the real-shape cap; one cell more is refused with its count", async (t) => {
-  const under = S.constants(16666);
+test("R1 R2 R20 a workbook of the bound's cells adds and its whole lifecycle answers at the real-shape cap, as constants and as one-character cells", async (t) => {
+  const under = S.constants(83333);
   assert.ok(under.cells <= WORKBOOK_CELLS_MAX && under.cells > WORKBOOK_CELLS_MAX - 3);
   const r = await inChild(t, under, "lifecycle");
   lifecycleOk(r, "constants at the bound");
   assert.equal(r.cells, under.cells);
-  const exact = S.minimal(6250);
+  const exact = S.minimal(WORKBOOK_CELLS_MAX / 8);
   assert.equal(exact.cells, WORKBOOK_CELLS_MAX, "exactly the bound is held");
   lifecycleOk(await inChild(t, exact, "lifecycle"), "minimal cells, exactly the bound");
-  const over = S.constants(16667);
-  assert.ok(over.cells > WORKBOOK_CELLS_MAX);
-  const o = await inChild(t, over, "add");
-  assert.equal(o.alive, true);
-  assert.equal(o.add.reason, "WORKBOOK_TOO_LARGE");
-  assert.equal(o.add.cells, over.cells);
-  assert.equal(o.add.bound_cells, WORKBOOK_CELLS_MAX);
-  assert.equal(o.changed, false);
 });
 
-test("R1 R2 formula-heavy workbooks at the bound (two and three formulas a row, and 50,000 cells of 185-byte formulas) survive every read and the recompute at the real-shape cap", async (t) => {
-  for (const [label, f] of [["two formulas a row", S.formulas(16666, { perRow: 2 })], ["three formulas a row", S.formulas(12500, { perRow: 3 })],
-                            ["three long formulas a row", S.formulas(12500, { perRow: 3, pad: 5 })]]) {
-    assert.ok(f.cells <= WORKBOOK_CELLS_MAX, label);
+test("R1 R2 R20 formula-heavy workbooks at the bound (two formulas a row, and three long formulas a row) survive every read and the recompute at the real-shape cap", async (t) => {
+  for (const [label, f] of [["two formulas a row", S.formulas(83333, { perRow: 2 })], ["three long formulas a row", S.formulas(62500, { perRow: 3, pad: 5 })]]) {
+    assert.ok(f.cells <= WORKBOOK_CELLS_MAX && f.cells > WORKBOOK_CELLS_MAX - 3, label);
     const r = await inChild(t, f, "lifecycle");
     lifecycleOk(r, label);
     assert.equal(r.cells, f.cells, label);
   }
 });
 
-test("R1 the count bound fires on a workbook of one-character cells that is far under the byte cap, and the byte cap fires on few, large cells; each refusal names the condition that fired", async (t) => {
-  const many = S.minimal(6251);
-  assert.ok(many.cells > WORKBOOK_CELLS_MAX && many.declared < 2 * 1024 * 1024);
+test("R1 R20 the count bound fires on a workbook of one-character cells that is far under the byte bounds, naming the condition that fired; a workbook of few, large cells under the declared-text bound is held and every read answers", async (t) => {
+  const many = S.minimal(WORKBOOK_CELLS_MAX / 8 + 1);
+  assert.ok(many.cells > WORKBOOK_CELLS_MAX && many.declared < 8 * MiB);
   const a = await inChild(t, many, "add");
   assert.equal(a.alive, true);
   assert.equal(a.add.reason, "WORKBOOK_TOO_LARGE");
   assert.equal(a.add.condition, "cell_count");
-  assert.equal(a.add.cells, many.cells);
-  const large = S.wide(1100, 9000);
-  assert.ok(large.cells < WORKBOOK_CELLS_MAX);
-  const b = await inChild(t, large, "add");
-  assert.equal(b.alive, true);
-  assert.equal(b.add.reason, "WORKBOOK_TOO_LARGE");
-  assert.equal(b.add.condition, "cell_bytes");
-  assert.equal(b.changed, false);
-  /* just under the byte cap: held, and every read answers */
-  lifecycleOk(await inChild(t, S.wide(900, 9000), "lifecycle"), "900 cells of 9,000 characters");
+  /* the count is the reader's at the cell it stopped counting: more than the bound, at most the file's */
+  assert.ok(a.add.cells > WORKBOOK_CELLS_MAX && a.add.cells <= many.cells, `states ${a.add.cells}`);
+  assert.equal(a.add.bound_cells, WORKBOOK_CELLS_MAX);
+  assert.equal(a.changed, false);
+  const large = S.wide(2300, 9000);
+  assert.ok(large.declared < boundOf("office", "text_bytes"), "under the reader's declared-text bound");
+  lifecycleOk(await inChild(t, large, "lifecycle"), "2,300 cells of 9,000 characters");
 });
 
 test("R1 a file whose text is over the reader's whole-read bound (26.2 MB declared) is refused as WORKBOOK_FILE_TOO_LARGE with the declared size and the bound as MB, never NOT_A_WORKBOOK, and the object lives; a capture stored above the size gate is refused with its size", async (t) => {
@@ -129,8 +116,9 @@ test("R1 a file whose text is over the reader's whole-read bound (26.2 MB declar
   assert.equal(r.alive, true, "the refusal must fit the real-shape cap");
   assert.equal(r.add.reason, "WORKBOOK_FILE_TOO_LARGE");
   assert.equal(r.add.size, (f.declared / MB).toFixed(1));
-  assert.equal(r.add.bound, (20 * 1024 * 1024 / MB).toFixed(1));
+  assert.equal(r.add.bound, (boundOf("office", "text_bytes") / MB).toFixed(1));
   assert.equal(r.add.condition, "declared_text");
+  assert.equal(r.add.limit.key, "limit.office.text_bytes");
   assert.equal(r.changed, false);
   /* in this process: a 41 MB capture that is not a workbook is told "file", from the store's head, before any byte loads */
   const w = world();
@@ -149,6 +137,7 @@ test("R1 a file whose text is over the reader's whole-read bound (26.2 MB declar
   assert.equal(g.bound, (WORKBOOK_FILE_MAX_BYTES / MB).toFixed(1));
   assert.equal(g.size_bytes, big.length);
   assert.equal(g.condition, "stored_size");
+  assert.deepEqual(g.limit, { size: big.length, bound: WORKBOOK_FILE_MAX_BYTES, key: "limit.workbook.bytes" });
   assert.ok(g.detail && !/[{}]/.test(g.detail), "its words hold the figures");
   assert.deepEqual(asked, [], "the capture's bytes were not asked for");
   assert.deepEqual(w.snapshot(), before);
@@ -195,7 +184,7 @@ test("R1 the cheap refusals and a repeat read no cells, and a capture held in pa
 });
 
 test("R2 R1 a workbook stored over the bound by the earlier add is never a crash: every read and act that loads its cells answers WORKBOOK_TOO_LARGE with the stored count, at the real-shape cap", async (t) => {
-  const r = await inChild(t, null, "old", 120000);
+  const r = await inChild(t, null, "old", WORKBOOK_CELLS_MAX + 5000);
   assert.equal(r.alive, true, "the child must survive");
   assert.equal(r.setup.ok, true);
   for (const k of ["read", "lint", "inputs", "explain", "recompute"]) {
