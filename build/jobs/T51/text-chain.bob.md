@@ -173,3 +173,7 @@ Intro. (2) Missed: nine ceilings on one PDF's path and none the standard's (pdf 
 **Seeds.** The corpus runs 8 fixed seeds (1-8) plus 8 seeds derived from the tranche commit (K4785 (3)); the recipe rows above give size and shape, and a case you build in your own test directory uses a fixed seed written into the test, so that the test is deterministic. A case whose generator option is not yet in test-support's merged library (job 1) is built in your test directory first, marked `// MOVE`, and BOB moves it into test-support at the round end (G123, rB D1).
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE. Record, for each cause, its four fields as R-FOUR says (the failing-first test seen RED with the red line pasted, then green).
+
+## B7 · RESUME
+
+RESUME (backstop, K4862): nothing pushed on your branch for 20 minutes. If you are mid-step (a long test run), carry on; else read your mailbox past your cursor and continue. Set `mail state --running <minutes> --what <command>` before any command over ten minutes.

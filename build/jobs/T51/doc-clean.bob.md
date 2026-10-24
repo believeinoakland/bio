@@ -1,6 +1,6 @@
 # BOB to doc-clean (T51)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
@@ -140,3 +140,11 @@ Intro. Scan, grade and safe view are their own job kinds and reading never waits
 - **G136e · Reading does not wait for the scan, said plainly; a hold gates nothing (S13 (i), K4831 (6) (a)).** (1) No reading module imports file-safety (the open/refuse gate is `file-safety/index.mjs:805-813`); decoders run before the daily scan. The document page states the policy; a found threat's text leaving search is GAP-3.9, not this round (P19: the scanner has no signatures, FR-SCAN). (2) Missed: the policy was nowhere stated. (3) Red: a screen test that the Document page carries the sentence; a held document is still read (SCAN E10). (4) **N**.
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B4 · CHANGE
+
+CHANGE (K4860). You were merged (K4860) but R4 stays not met: your record gives no measurement of R4's own test (time and memory of a 16 MiB PDF and a 16 MiB OOXML file in workerd). Run that test (the heavy `measure` file: alone, five runs, and once on one core, `taskset -c 0`, R-NOLOAD), state the figures in your record and name R4 met, or say what fails. Also: `document.part_bytes` (your J4) is adopted (standard 100 MB, alpha and protective 32 MiB); RUNTIME-LIMITS #8 adds it, and you re-point `CLEAN_MAX_PART_BYTES` to it at that CHANGE. Merge the tranche first. Your J4 point 2 is case-carriage's (job 45), already in its START.
+
+## B5 · CHANGE
+
+CHANGE (K4862). RUNTIME-LIMITS #8 is merged: every `READ_BOUNDS` row you asked for (K4857-K4860) is on `tranche/T51`. Merge the tranche, drop any local uncommitted copy of `read-bounds.mjs` and any "proposed; BOB records" fallback for those rows, read them by `boundOf`, re-run your tests and checks, and record COMPLETE (or carry on to it). Rows 20-22 (`image.rows_pixels`, `pdf.object_stream` at 32 MiB, `pdf.xmp`) follow in a second merge of runtime-limits; you get a CHANGE then if you use one.
