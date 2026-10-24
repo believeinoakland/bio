@@ -77,3 +77,7 @@ Merged `tranche/T51` first (no rebase) and read `build/requirements/image-cover.
 **Deferred / found in other modules:** none. The case-carriage and doc-clean consumers need no change: a refusal is `{ok:false, code:"IMAGE_TOO_LARGE"}` for them to carry (doc-clean job 16 and case-carriage read the new code).
 
 Size (session_01JwFMfy4ht6vi8HQYUy47Nm): test runs 8, module lines 1348
+
+## J3 · COMPLETE
+
+COMPLETE · round 9, B3 (G125c, G124 quotes): R10 and R11 met; R3 and R8 carry `IMAGE_TOO_LARGE`. Declared row stride and chunk/marker/box counts are judged before any buffer (PNG, JPEG, JP2, J2K; cover and strip); ceilings are `boundOf("image", ...)` with no literal. Failing-first seen RED (7 of 7), now green; module 23 pass; doc-clean, case-carriage, case-disclosures pass; format, architecture, coverage (11 of 11), ownership, words (image-cover) 0 failures. Stale for you to regenerate: `setup-words/rows.mjs` (id `image-cover.index.image_too_large`). Rows owed to the design: the IMAGE_TOO_LARGE sentence for a photo (the held `refusal.IMAGE_TOO_LARGE` speaks of a transcription page), and the two detail sentences. New files, all inside tests: hostile.mjs, limits.test.mjs. Record: build/jobs/T51/image-cover.md, "Round 9 completion record".
