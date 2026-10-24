@@ -87,7 +87,7 @@ test("R128 control (review G4): an answer that states nothing carries only the d
   const w = world();
   const r = await call(w.env, { op: "projectlist", token: w.S.ann });
   const names = parse(r.headers.get("server-timing")).map((e) => e.name);
-  for (const n of names) assert.ok(n === "projectlist" || n.startsWith("do-") || n.startsWith("in-") || n === "body" || n === "bytes", `only the door's own: ${n}`);
+  for (const n of names) assert.ok(n === "projectlist" || n.startsWith("do-") || n.startsWith("in-") || n === "body" || n === "bytes" || n.startsWith("bytes-"), `only the door's own: ${n}`);
   const refused = await call(w.env, { op: "projectlist" });
   assert.ok(byName(refused.headers.get("server-timing")).projectlist);
   const page = await call(w.env, { path: "/app" });

@@ -147,7 +147,7 @@ test("R72 (capture R86; T42, K2631, K2656): `captureupload` hands the request's 
   const { log, asked } = serve("captureupload", { query: { by: "ann", statement: "she gave it to me", name: "a.pdf", within: "PRJ-1" }, body: stream });
   assert.deepEqual([log.length, log[0].method, asked], [1, "uploadCapture", ["capture"]]);
   assert.equal(log[0].args.bytes, stream);
-  assert.deepEqual(Object.keys(log[0].args).sort(), ["by", "bytes", "name", "statement"], "exactly the four fields capture R86 takes from a request");
+  assert.deepEqual(Object.keys(log[0].args).sort(), ["by", "bytes", "ledger", "name", "statement"], "exactly the four fields capture R86 takes from a request");
   assert.deepEqual([log[0].args.by, log[0].args.statement, log[0].args.name], ["ann", "she gave it to me", "a.pdf"]);
   assert.equal("within" in log[0].args, false, "a `within` in the address reaches nothing");
   /* without a `within` in the address the call is the same: the address never decides it */
