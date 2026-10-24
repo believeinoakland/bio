@@ -111,6 +111,10 @@ const limitOf = (r) => r.bound ?? r.limit ?? r.maxBytes;
    reason. A constant is accepted only when it bounds something other than the size a file may be for a reading to be made, stated or owed. None is accepted to make the grep green: a
    reading ceiling with no `READ_BOUNDS` row is reported (to BOB, who carries it to runtime-limits: K4842 (1)), and the grep stays red until its module quotes the table. */
 export const ACCEPTED = Object.freeze({
+  /* B75 (e): accepted by BOB's ruling, each for what it bounds */
+  "bio-plane/src/extraction/index.mjs::CAPTURE_TEXT_CAPTURE_BOUND": "what one piece of a read asks of the reader and one page of `unitsOf` answers (a paging figure, R22); it bounds no write and no file's reading",
+  "bio-plane/src/calculations/index.mjs::INGEST_ROWS_MAX": "the ROWS one ingest act reads, set by the object's memory at the real shape (a count of rows, not a file's bytes)",
+  "bio-plane/src/content/index.mjs::RANGE_BYTES": "the bytes a crop reads from a capture at a time through `readRange` (R59), a read's chunk and never a size a file may be",
   "sheet-worker/src/enginelib.mjs::MAX_SAFARI_DECODE_BYTES": "wasm-bindgen's generated TextDecoder guard for Safari, a platform quirk of the engine glue, no file bound",
   "sheet-worker/src/contract.mjs::WASM_BYTES": "the byte length of the vendored engine asset, an integrity pin, not a limit",
   "ocr-worker/src/tessengine.mjs::WASM_BYTES": "the byte length of the vendored engine asset, an integrity pin, not a limit",
@@ -530,17 +534,22 @@ const countedService = (svc, sinkOf, kind) => { if (!svc || typeof svc.fetch !==
   });
 
   /* ---------------------------------------------------------------------------------------------------------------------------------------------------- 15 · G126h */
-  test("R9 seam §15 (G126h; R131, R123, R130; SHEET C-family) (red: reading-gate admits a CSV under the 3 MiB constant): a 2 MB CSV through the no-cursor door is not read inline: the `extractread` of the request is absent, the answer says `reading_pending`, and the row exists", { timeout: 900000 }, async () => {
+  test("R9 seam §15 (G126h; R131, R123, R130; SHEET C-family; B75 (d)): a 2 MB CSV through the no-cursor door is read inline, as `text.request_bytes` (3 MiB) governs: the `extractread` of the request is present and the answer owes no reading; control: a CSV over 3 MiB is deferred with its row", { timeout: 900000 }, async () => {
     await ready;
     const { auth } = await press.ownerOf("r9lim-s1");
     const csv = csvOf(46000, "a");
-    assert.ok(csv.length > 2 * MiB && csv.length < READING_DEFER_OTHER_BYTES, `the file is about 2 MB (${csv.length})`);
+    assert.ok(csv.length > 2 * MiB && csv.length < 3 * MiB, `the file is about 2 MB (${csv.length})`);
     const up = await uploadTo(auth, csv, { type: "text/csv", name: "sheet-a.csv" });
     assert.equal(up.status, 200, JSON.stringify(up.body).slice(0, 300));
-    assert.equal(up.calls.do.extractread, undefined, `no inline read inside the upload: ${JSON.stringify(up.calls.do)}`);
-    assert.equal(up.body.reading_pending, true, "the reading is owed");
-    assert.equal(up.body.document.reading, undefined, "and none was made at the door");
-    assert.ok((await owedOf(sha256(csv))).some((x) => x.kind === "reading"), "the row exists");
+    assert.ok(up.calls.do.extractread !== undefined, `read inline inside the upload: ${JSON.stringify(up.calls.do)}`);
+    assert.notEqual(up.body.reading_pending, true, "no reading is owed");
+    const big = csvOf(70000, "b");
+    assert.ok(big.length > READING_DEFER_OTHER_BYTES, `the control is over 3 MiB (${big.length})`);
+    const over = await uploadTo(auth, big, { type: "text/csv", name: "sheet-b.csv" });
+    assert.equal(over.status, 200, JSON.stringify(over.body).slice(0, 300));
+    assert.equal(over.calls.do.extractread, undefined, `no inline read of the larger file: ${JSON.stringify(over.calls.do)}`);
+    assert.equal(over.body.reading_pending, true, "its reading is owed");
+    assert.ok((await owedOf(sha256(big))).some((x) => x.kind === "reading"), "the row exists");
   });
 
   test("R9 seam §15 (G126h; R131, R123, R125; SHEET J-9, J-10): a 4 MiB CSV (over the inline ceiling) is not read at the door, its row exists, and after the ticks the first, a middle and the LAST row are found by `op=search`, the reading whole and cut nowhere", { timeout: 900000 }, async () => {

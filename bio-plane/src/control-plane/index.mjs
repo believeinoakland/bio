@@ -1351,7 +1351,7 @@ export function makeFetch(hooks = {}) {
     /* R130 (fix round 9, G126c; K4811, K4835 (2)): THE JOB ROW, registered through `jobs.mjs`'s registrar and its answer READ. A throw, a silence or a refusal is tried once
        more through a fresh stub; a row that cannot be written is told (`ok: false`), and the caller says no `reading_pending` and states the refusal. */
     const registerJob = jobRegistrar({ stub, env, storeName });
-    async function pendSha(sha, kind = "reading", name = null) { return registerJob(sha, kind, name); }
+    async function pendSha(sha, kind = "reading", name = null, project = null) { return registerJob(sha, kind, name, project); }
     /* R130: the stated refusal of a reading no row holds: no `reading_pending`, the reason and the member's sentence (a stand-in keyed through `localize`; its row is owed to later-ux.md) */
     const refusedReading = (reg) => ({ reason: "READING_NOT_REGISTERED", registrar: reg && reg.reason ? reg.reason : "PENDING_NOT_KEPT",
       detail: localize("control-plane.reading.not_registered", "the file is kept, but its reading could not be queued, so it is not being read: ask again.") });
@@ -2455,15 +2455,16 @@ export function makeFetch(hooks = {}) {
       } catch { archiveProject = null; }
     /* (fix round 6, G43; K4651) what an archive's promotion filed without its reading (too large to embed in the provenance file) is followed here, as
        a document stored with none is */
-    async function promoteFiled(docs, archiveSha) {
+    async function promoteFiled(docs, archiveSha, incomplete = false) {
       const dropped = [];
       const done = await promoteArchive({ stub, doAnswer, docs, project: archiveProject, archiveSha, who: archiveWho, onDropped: (e) => dropped.push(e) });
       if (dropped.length) await followEntries(dropped);
       /* R134 (fix round 9, G129e): a member whose put or promotion failed transiently stays owed: the archive's `unpack` job is registered (plane R97, whose retry offers the
          member again, acquisition R38's resume), and the answer says so; a member refused for its own bytes stays named in `not_promoted` and is not retried */
       const owed = done.not_promoted.filter((n) => n.transient === true);
-      if (owed.length && typeof archiveSha === "string") {
-        const reg = await pendSha(archiveSha, "unpack");
+      /* plane R108 (B75 (a)): the `unpack` row is held WITH the archive's project whenever the unpack is not complete, so the job offers the rest under it */
+      if ((owed.length || incomplete) && typeof archiveSha === "string") {
+        const reg = await pendSha(archiveSha, "unpack", null, archiveProject);
         return { ...done, ...(reg.ok ? { unpack_pending: true } : { unpack_refused: refusedReading(reg) }) };
       }
       return done;
@@ -2473,7 +2474,7 @@ export function makeFetch(hooks = {}) {
       try { b = await res.clone().json(); } catch { return res; }
       const docs = archiveDocuments("acquire", b);
       if (!docs.length) return res;
-      const done = await promoteFiled(docs, b.document?.capture?.sha256 ?? null);
+      const done = await promoteFiled(docs, b.document?.capture?.sha256 ?? null, b.unpack?.complete === false);
       return json({ ...b, ...done }, res.status);
     }
     /* R62 (rev. 2 conflict (c); K1888 (3), K1892; DEC-173; BOB's review (8), K2130): A MEMBER'S OPENING OF AN ORIGINAL GOES
@@ -4036,7 +4037,7 @@ export function makeFetch(hooks = {}) {
     if (op === "unpack" && body.result && body.result.ok === true) {
       const docs = archiveDocuments("unpack", body.result);
       if (docs.length || Array.isArray(body.result.documents)) {
-        const done = await promoteFiled(docs, body.result.archive?.sha256 ?? null);
+        const done = await promoteFiled(docs, body.result.archive?.sha256 ?? null, body.result.complete === false);
         return json({ ...body, result: { ...body.result, ...done }, store: storeName, tokenClass: cls }, status);
       }
     }

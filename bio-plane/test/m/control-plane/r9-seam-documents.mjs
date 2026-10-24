@@ -672,7 +672,7 @@ export function sections(kit, counting) {
   });
 
   /* SHEET J-10: a mark in a non-header cell of the first, a middle and the last data row is found by `op=search`, the hit's extent contains the row */
-  test("R9 seam §8 (G128h, SHEET J-10; R100 R123 R135): the first, a middle and the last marked cell of a CSV past the block cut are each found in the document, the hit's extent contains the row and the hit names its row (red until extraction-2 41, retrieval 30 merge)", { timeout: 900000 }, async () => {
+  test("R9 seam §8 (G128h, SHEET J-10; R100 R123 R135): the first, a middle and the last marked cell of a CSV past the block cut are each found in the document, the hit's extent contains the row and the hit names its row", { timeout: 900000 }, async () => {
     const seed = `J10${uniq().slice(0, 4)}`;
     const g = sheetGenerate({ kind: "csv", seed, size: { rows: 6000, cols: 3 }, header: "one", types: ["text", "integer", "text"] });
     const bytes = await (async () => { const list = []; for await (const c of g.chunks()) list.push(c); const n = list.reduce((a, c) => a + c.length, 0); const out = new Uint8Array(n); let at = 0; for (const c of list) { out.set(c, at); at += c.length; } return out; })();
@@ -689,8 +689,11 @@ export function sections(kit, counting) {
       assert.ok(extent && typeof extent.range === "string", `the hit carries its extent: ${JSON.stringify(item).slice(0, 300)}`);
       const [from, to] = extent.range.split(":").map((c) => Number(/\d+/.exec(c)[0]));
       assert.ok(from <= m.row && m.row <= to, `the extent ${extent.range} contains row ${m.row}`);
-      /* and the unit's words carry the row: the hit says which row, not a block */
-      assert.ok(item.row === m.row || item.row === m.row - 1 || (item.row && item.row.row === m.row), `the hit names its row (${m.row}): ${JSON.stringify(item.row)}`);
+      /* B75 (h; retrieval R96): a hit on a multi-row block may name no row (`row: null`); the extent then holds the mark's own cell: its row (above) and its column */
+      const letters = (c) => [...c.replace(/[^A-Za-z]/g, "").toUpperCase()].reduce((a, ch) => a * 26 + ch.charCodeAt(0) - 64, 0);
+      const [c0, c1] = extent.range.split(":").map(letters);
+      assert.ok(c0 <= m.col && m.col <= c1, `the extent ${extent.range} holds the mark's column ${m.col}`);
+      if (item.row !== null && item.row !== undefined) assert.ok(item.row === m.row || item.row === m.row - 1 || item.row.row === m.row, `a hit that names a row names the mark's (${m.row}): ${JSON.stringify(item.row)}`);
     }
   });
 }
