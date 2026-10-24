@@ -140,3 +140,4 @@
 - Add · a workbook refused with the count of its cells (G137e); a light-kind file refused over 50 MB or 1,048,576 rows with the figure (G131i) · fix round 9 §5 · 2026-10-24
 - Add · an upload whose job could not be registered (`capture.index.job_not_registered`); a body over the request ceiling, with size and limit (`capture.index.body_over_request_ceiling`, `capture.ops.body_over_request_ceiling`); a body over the capture ceiling (`capture.ops.body_over_capture_ceiling`) · fix round 9, CAPTURE #52 (K4891) · 2026-10-24
 - Add · a knock whose reading could not be registered (`doorbell.index.job_not_registered`) · fix round 9, DOORBELL #8 (K4893) · 2026-10-24
+- Add · a CSV being read in pieces (`reading-pipeline.index.csv_in_pieces`) · fix round 9, READING-PIPELINE #32 (K4896) · 2026-10-24
