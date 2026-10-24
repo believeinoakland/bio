@@ -198,7 +198,7 @@ test("R58 (G2 seam) capture's own declaration of acquire accepts `project` (capt
 /* ---- B31: a session whose owed fetch ended in a stated refusal ---- */
 
 test("R58 (B31) an entry kept with `failed` draws the failure in the refusal's words at once, from the poll and from the list, without waiting for three asks", async () => {
-  const failedEntry = { session: SESSION, locator: ADDRESS, started: "2026-10-22T10:00:00Z", outstanding: 1, fetch_pending: { since: "2026-10-22T10:00:00Z", declared_bytes: BYTES, why: "LARGE_DECLARED" }, failed: "TOO_LARGE" };
+  const failedEntry = { session: SESSION, locator: ADDRESS, started: "2026-10-22T10:00:00Z", outstanding: 1, fetch_pending: { since: "2026-10-22T10:00:00Z", declared_bytes: BYTES, why: "LARGE_DECLARED", failed: "TOO_LARGE" } };
   const state = { listed: true, held: false };
   const p = await open(`/app/capture/address/${PROJ}`, { acquire: PENDING, heldat: heldat(state),
     opencaptures: () => ok({ ok: true, truncated: false, captures: state.listed ? [failedEntry] : [] }) });
