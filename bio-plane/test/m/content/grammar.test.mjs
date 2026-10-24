@@ -15,9 +15,9 @@ const H = "a".repeat(64);
 const ctxOf = (o = {}) => ({ chain: [{ step: "layer", tier: 1 }], pageCount: null, container: {}, ...o });
 const code = (r) => (r ? r.code : null);
 
-test("R1: exactly the eight kinds and envelope are extents; dom is C-45.4; anything else, a missing field or a malformed value is C-45.3", () => {
+test("R1: exactly the eight kinds, envelope and doc-part are extents; dom is C-45.4; anything else, a missing field or a malformed value is C-45.3", () => {
   assert.deepEqual(Object.keys(CONTENT_EXTENT_KINDS).sort(),
-    ["doc-para", "doc-table", "document", "envelope", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"]);
+    ["doc-para", "doc-part", "doc-table", "document", "envelope", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"]);
   const dom = checkContentExtent({ kind: "dom", selector: "p" }, ctxOf());
   assert.equal(code(dom), "CONTENT_EXTENT_NO_PRODUCER"); assert.equal(dom.check, "C-45.4");
   for (const bad of [null, "document", {}, { kind: "chapter" }, { kind: "pdf-page" }, { kind: "pdf-page", page: -1 },
@@ -25,7 +25,8 @@ test("R1: exactly the eight kinds and envelope are extents; dom is C-45.4; anyth
                      { kind: "sheet-cell", sheet: "S", cell: "1A" }, { kind: "doc-para", para: 1.5 },
                      { kind: "slide-shape", slide: 0 }, { kind: "sheet-range", sheet: "S", range: "A1:" },
                      { kind: "doc-table", table: -1 }, { kind: "image" }, { kind: "image", part: "xyz" },
-                     { kind: "image", part: H, page: 0 }, { kind: "envelope", item: "comment", part: "p" }]) {
+                     { kind: "image", part: H, page: 0 }, { kind: "envelope", item: "comment", part: "p" },
+                     { kind: "doc-part" }, { kind: "doc-part", part: 7 }, { kind: "doc-part", part: "", ref: "" }, { kind: "doc-part", ref: ["fn"] }]) {
     const r = checkContentExtent(bad, ctxOf());
     assert.equal(code(r), "CONTENT_EXTENT_UNREADABLE", JSON.stringify(bad));
     assert.equal(r.check, "C-45.3");
@@ -36,7 +37,8 @@ test("R1: exactly the eight kinds and envelope are extents; dom is C-45.4; anyth
   for (const good of [{ kind: "document" }, { kind: "pdf-page", page: 0 }, { kind: "sheet-cell", sheet: "S", cell: "B2" },
                       { kind: "slide-shape", slide: 1 }, { kind: "doc-para", para: 0 }, { kind: "sheet-range", sheet: "S", range: "A1:B2" },
                       { kind: "doc-table", table: 0 }, { kind: "image", part: H, cited_as: "bytes" }, { kind: "image", page: 0 },
-                      { kind: "envelope", item: "comment", part: "word/comments.xml", n: 0 }])
+                      { kind: "envelope", item: "comment", part: "word/comments.xml", n: 0 },
+                      { kind: "doc-part", part: "word/footnotes.xml", ref: "fn:3" }, { kind: "doc-part", ref: "fn:3" }, { kind: "doc-part", part: "word/footnotes.xml" }])
     assert.equal(checkContentExtent(good, ctxOf()), null, JSON.stringify(good));
 });
 

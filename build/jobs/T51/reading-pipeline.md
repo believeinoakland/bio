@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_015XBRHPUV281zekgBFSdDuV · depth 2 · COMPLETE · handled B45
+**Status** · session_015XBRHPUV281zekgBFSdDuV · depth 2 · COMPLETE · handled B48
 
 ## J1 · COMPLETE
 
@@ -789,3 +789,32 @@ Size (session_015XBRHPUV281zekgBFSdDuV): test runs 76, module lines 4,230
 
 COMPLETE (again): B45 done. skipKilled steps a CSV window to the next row boundary (bytes stated, last row read, red first); the four job-40 todos removed from r9-reader.test.mjs. Module 386 pass, 0 fail, 1 todo (R57); format, architecture, coverage 57/57, words, ownership 0 failures. Record: section B45. Nothing open.
 Size (session_015XBRHPUV281zekgBFSdDuV): test runs 76, module lines 4,230
+
+### B46 (K4909) · the transcription sentence counts only pages that gained text (READING-PIPELINE #33)
+(1) Root cause: `tier3Note` (`index.mjs`) told the member `reading-pipeline.scanned_page_transcribed` with `m.filled.length`, and `filled` is the pages the OCR member answered, an answered page with no glyph included. Now `filled` is unchanged (R29's `tier4Pages` and extraction's guard read it); the note counts `gained` (the filled pages whose merged text holds a glyph) in `scanned_page_transcribed`, and says the answered-empty ones in a stand-in `reading-pipeline.index.pages_not_read_text_recognition` ("{count} page(s) ({pages}) could not be read by text recognition", pages numbered from 1; row owed to T52). (2) Missed: the OCR stubs always answered text. (3) `r10-skip.test.mjs` (+1), through `read` with a 3-page scan and an OCR stand-in answering page 2 with no glyph: RED before (`✖ R29 R6 (K4909): the transcription sentence counts only the pages that gained text ...`, the sentence said 3), GREEN after (2 transcribed, 1 (page 2) not read by text recognition). (4) L.
+Suites: module `tests 390, pass 388`, 0 fail in the directory, 1 todo; format, architecture, coverage (57/57), words, ownership 0 failures. **Red not mine, found after merging `tranche/T51`:** `test/d606-perpage-ocr.test.mjs` (a module test file; the real OCR member in Miniflare) fails, with and without this change: `agenda-p2 reads meeting_agenda ... got "generic"`, `both scanned pages transcribed ... want [2,0] got [0,0]`, `still wants OCR`. It passed before the merge; the inline pass now makes no OCR call (R55, with plane's callers), so the test's expectation of OCR inside `op=acquire`'s reading looks stale; BOB please say who restates it.
+Size (session_015XBRHPUV281zekgBFSdDuV): test runs 82, module lines 4,240
+
+## J41 · COMPLETE
+
+COMPLETE (again): B46 done. The transcription sentence counts only pages whose text gained a glyph; answered-empty pages are said as not read by text recognition (stand-in reading-pipeline.index.pages_not_read_text_recognition owed to T52); filled unchanged. Red first, green. Module 388 pass, 0 fail, 1 todo; format, architecture, coverage 57/57, words, ownership 0 failures.
+FOUND, not mine: test/d606-perpage-ocr.test.mjs (a module test file) fails after merging tranche/T51, with and without my change (agenda-p2 got generic, [0,0] transcribed, still wants OCR): the inline pass makes no OCR call (R55), so its expectation looks stale. Please say who restates it.
+Size (session_015XBRHPUV281zekgBFSdDuV): test runs 82, module lines 4,240
+
+### B47 (K4911) · a later PDF range answers its own pages' chain (READING-PIPELINE #33)
+(1) Root cause: a later range's answer carried its units and OCR facts only (`index.mjs`, the `pieceAsk.cursor !== null` return of the range branch), so extraction fell back to the first piece's stored chain. Now the facts carry `reading.piece_chain`: the chain the range composed for its own pages (`chain` from the tier merges and tier 3, else `layerChainFor` at the wired tier), shaped as the whole read's `text_source` restricted to those pages; absent when no page of the range holds text. (2) Missed: the ranges test asserted units and totals, never the chain. (3) `r10-skip.test.mjs` (+1): a PDF of 4 typed then 2 scanned pages read with `rangePages` 2 and a scripted OCR member: range 2 answers `["layer"]`, range 3 includes `ocr`. RED before (`✖ R40 R57 (K4911, B47) ...`: no `piece_chain`), GREEN after. `pdf-ranges.test.mjs` restated: a later piece is units and the facts its pages add (`piece_chain` among them). (4) L. Module 388 pass, 0 fail, 1 todo; pdf-pieces on one core 1/1; format, architecture, coverage 57/57, words, ownership 0 failures.
+Size (session_015XBRHPUV281zekgBFSdDuV): test runs 90, module lines 4,250
+
+## J42 · COMPLETE
+
+COMPLETE: B47 done (with B46). A later PDF range answers reading.piece_chain, the chain of its own pages (layer for typed, ocr for scanned), absent when no page has text; red first, green. pdf-ranges.test.mjs restated (a later piece is units and the facts its pages add). Module 388 pass, 0 fail, 1 todo; format, architecture, coverage 57/57, words, ownership 0 failures. Still open, not mine: test/d606-perpage-ocr.test.mjs (stale after R55; see J41).
+Size (session_015XBRHPUV281zekgBFSdDuV): test runs 90, module lines 4,250
+
+### B48 (K4909, K4911) · `test/d606-perpage-ocr.test.mjs` restated (READING-PIPELINE #33)
+Why it was stale, with evidence: it drove `op=acquire` and expected the OCR member to be called inside the request (agenda-p2 `meeting_agenda`, "both pages transcribed [2,0]", 24 calls of 30 pages). After the merge of `tranche/T51` it failed with and without my changes: `agenda-p2 reads meeting_agenda ... got "generic"`, `both scanned pages transcribed ... want [2,0] got [0,0]`, `still wants OCR ... want false got true`. The merged changes that make the inline pass call no member: reading-pipeline R55 (job 27: `read(..., {ocrInvocations: 0})` states every page `ocr_left` and owes it) and extraction R103 (job 28, K4909: `captureupload`, `acquire`'s reading op, the press call it with 0). Restated, nothing it proved weakened: at `op=acquire` it now asserts the member got NO call (the stub's log is empty) and the pages are owed and registered (`ocr_left.pages` 30 / 2) and none transcribed in the request; the per-page loop it proved (the first call asks all 30 pages, one call per deferred page in order, the budget of 24 with 6 left and the sentence about the limit, the throw, the refused pages, the other engine build, the stray page, the chain's one build) is proved on the ledger's pass: `read` of the acquired document with the member bound and the default `ocrInvocations`, as the continuation tick calls it. §1's real-member proof over D-460's fixture (agenda-p2 reads `meeting_agenda`) is `test/m/reading-pipeline/convert-ocr.test.mjs` "R4 R6 (d606 §1)" (the same committed member and fixture, bound as OCR_WORKER). Run alone: `d606-perpage-ocr: 26 passed, 0 failed`. B47 (`piece_chain`) was done before this CHANGE was read (J42); this answers both.
+Size (session_015XBRHPUV281zekgBFSdDuV): test runs 95, module lines 4,250
+
+## J43 · COMPLETE
+
+COMPLETE: B48 done. d606-perpage-ocr.test.mjs restated (why stale, evidence and the merged changes in the record, section B48): the inline pass is asserted to call no member and owe the pages; the per-page loop arms run on the ledger pass (read with the member bound); 26 passed, 0 failed, run alone. B47 (piece_chain) was J42. Module green; ownership, coverage 0 failures.
+Size (session_015XBRHPUV281zekgBFSdDuV): test runs 95, module lines 4,250

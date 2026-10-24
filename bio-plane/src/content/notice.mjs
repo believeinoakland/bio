@@ -16,6 +16,8 @@ import { canonicalExtent, describeExtent, containerBoundUndetermined } from "./e
 import { rangeCorners, a1ToRowCol } from "../textchain.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
+const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+
 /** R29: at most this many addresses one capture is asked about; past it the rest are not asked, and the answer says so. */
 export const VERSION_NOTICE_ADDRESSES_MAX = 20;
 
@@ -98,11 +100,118 @@ function dice(a, b) {
 
 const said = (s) => s || "never recorded";
 
+/** A unit's element address and its chunk number (R46; `reading-pipeline` R47): an element over the unit cap is carried as
+ *  consecutive units of one extent with `run` 0, 1, ..., and `canonicalExtent` keeps `run` for a paragraph only, so the
+ *  address is taken with the run removed and the run kept beside it. `extent` is an extent or its canonical JSON; the
+ *  address is its canonical form, `run` null for an element that is not a chunk. Pure. */
+export function splitRun(extent) {
+  let e = extent;
+  if (typeof e === "string") { try { e = JSON.parse(e); } catch { e = null; } }
+  /* an extent held as a string with no run is already its address, as stated */
+  if (typeof extent === "string" && !(isObj(e) && Number.isInteger(e.run))) return { extent, run: null };
+  if (!isObj(e)) return { extent: canonicalExtent(extent), run: null };
+  const { run, ...rest } = e;
+  return { extent: canonicalExtent(rest), run: Number.isInteger(run) && run >= 0 ? run : null };
+}
+
+/** A capture's units as `gradeAcross` and `heldTextAt` read them (extraction R36, answered by the caller's pages): each
+ *  unit's element address in its canonical form with its chunk number beside it, in `seq` order (a unit with no `seq`
+ *  keeps its place), the kind it names (R58; null where it names none) and a missing answer as none held. Carries the
+ *  index's own `state` and the counters `searchedOf` reads. Pure. */
+export function normUnits(u) {
+  const list = u && Array.isArray(u.units) ? u.units.filter((x) => x && typeof x === "object") : [];
+  const seq = (x) => (Number.isFinite(x.seq) ? x.seq : Infinity);
+  return { units: list.map((x, i) => ({ x, i })).sort((a, b) => (seq(a.x) - seq(b.x)) || (a.i - b.i))
+             .map(({ x }) => ({ ...x, ...splitRun(x.extent), truncated: !!x.truncated, kind: typeof x.kind === "string" ? x.kind : null })),
+           state: u ? u.state ?? null : null,
+           counts: u && isObj(u.counts) ? u.counts : null,
+           read_through: u && Number.isInteger(u.read_through) ? u.read_through : null,
+           total: u && Number.isInteger(u.total) ? u.total : null };
+}
+
+/** R60: how far a reading not held whole had got, `{through, total}` from its job row's counters as extraction answers
+ *  them (`read_through` and `total` of the index, else its written and offered counts; `total` null where none states
+ *  it), or null for a reading that is whole and for one never indexed (nothing was read, so nothing was searched so far). */
+export function searchedOf(held) {
+  if (!held || held.state === "whole") return null;
+  if (held.state == null && !held.counts && !(held.units && held.units.length)) return null;
+  const n = (v) => (Number.isInteger(v) && v >= 0 ? v : null);
+  const c = held.counts || {};
+  return { through: n(held.read_through) ?? n(c.written) ?? (held.units ? held.units.length : 0), total: n(held.total) ?? n(c.offered) };
+}
+
+/** R58: the kind of the unit stored at exactly `extent` (an element carried as chunks: its first chunk's), or null where the unit names none or none is held
+ *  there. `body` is a kind a unit names; a unit that names none is never read as `body`. Pure. */
+export function kindAt(held, extent) {
+  if (!extent || extent.kind === "document" || extent.kind === "pdf-page" || extent.kind === "image") return null;
+  const at = splitRun(extent);
+  const u = held.units.find((x) => x.extent === at.extent && (at.run === null ? x.run === null || x.run === 0 : x.run === at.run));
+  return u && typeof u.kind === "string" ? u.kind : null;
+}
+
+const LOGICAL = new WeakMap();
+/** An element carried as consecutive chunks (`run` 0, 1, ...) as ONE unit: its chunks' text in order, joined with nothing
+ *  (a seam's overlap is a field beside a chunk and never in its text, so it is counted once), `truncated` where a chunk is
+ *  or the run does not start at 0, has a gap, or is one chunk alone (an element is chunked only past the cap, into two at least). Any other unit as itself. Memoised on the units list. Pure. */
+export function logicalUnits(held) {
+  const units = held.units;
+  const had = LOGICAL.get(units);
+  if (had) return had;
+  const out = [];
+  for (let i = 0; i < units.length; i++) {
+    const u = units[i];
+    if (u.run === null || u.run === undefined) { out.push(u); continue; }
+    const group = [];
+    for (let j = i, want = u.run; j < units.length && units[j].extent === u.extent && units[j].run === want; j++, want++) group.push(units[j]);
+    out.push({ ...u, run: null, chunked: true, text: group.map((g) => g.text).join(""), truncated: u.run !== 0 || group.length < 2 || group.some((g) => g.truncated) });
+    i += group.length - 1;
+  }
+  LOGICAL.set(units, out);
+  return out;
+}
+
+/** The unit holding the passage at exactly `extent`: for a paragraph named with its run, that chunk; otherwise the
+ *  element whole (a run of chunks as one, `logicalUnits`). Undefined where none is held. */
+function unitAt(extent, held) {
+  const at = splitRun(extent);
+  return at.run !== null && extent.kind === "doc-para"
+    ? held.units.find((x) => x.extent === at.extent && x.run === at.run)
+    : logicalUnits(held).find((x) => x.extent === at.extent);
+}
+
+/** A document's units as the file's text, once each, in `seq` order joined by a line feed (R46, R61): the chunks of one
+ *  element joined with nothing, and a sheet block's repeated first line (the header a block repeats at its head, R41; its
+ *  `lineRows` naming the sheet's first row a second time) dropped, so the text of a CSV, an xlsx or an ods sheet is the
+ *  file's lines once each. A line a record's quoted line break adds carries the record's row and is kept: only a block's
+ *  first line can repeat. Pure. */
+function documentText(units) {
+  const first = new Map();
+  let out = "", prev = null;
+  for (const u of units) {
+    let text = u.text;
+    if (Array.isArray(u.lineRows) && u.lineRows.length) {
+      const e = safeParse(u.extent);
+      const sheet = e && (e.kind === "sheet-range" || e.kind === "sheet-cell") && typeof e.sheet === "string" ? e.sheet : null;
+      if (sheet !== null) {
+        if (!first.has(sheet)) first.set(sheet, u.lineRows[0]);
+        else if (u.lineRows[0] === first.get(sheet)) { const cut = text.indexOf("\n"); text = cut < 0 ? null : text.slice(cut + 1); }
+      }
+    }
+    if (text === null) continue;
+    const joined = u.run > 0 && prev && prev.extent === u.extent && prev.run === u.run - 1;
+    out += (prev === null ? "" : joined ? "" : "\n") + text;
+    prev = u;
+  }
+  return out;
+}
+const safeParse = (s) => { try { return JSON.parse(s); } catch { return null; } };
+
 /** THE TEXT THE RECORD HOLDS WHOLE AT EXACTLY `extent` of one capture (R31's cited passage, R46's `passageText`), from
- *  its held units `{units: [{extent (canonical JSON), ref, text, truncated}], state}` in `seq` order: for a `document`
- *  extent every unit joined by a line feed, only when the index reads `whole` and no unit is cut at the per-unit cap;
- *  otherwise the one unit whose canonical extent is `extent`'s, only when it is not cut. Returns `{text, extent}` (the
- *  canonical extent), or `{text: null, reason, why}` naming what is not held. ONE rule, so a passage graded across
+ *  its held units `normUnits` answers, in `seq` order: for a `document` extent the units' lines once each (`documentText`),
+ *  only when the index reads `whole` and no unit is cut at the per-unit cap; otherwise the one element whose canonical
+ *  extent is `extent`'s (the chunks of an element over the cap as one), only when it is not cut, and, for an element carried
+ *  as chunks, only when the index reads `whole` (a partial index may lack its last chunk). Returns `{text, extent}` (the
+ *  canonical extent), or `{text: null, reason, why}` naming what is not held. ONE rule (R61), so a passage graded across
  *  versions and a passage's text read by a later module are the same text. Pure. */
 export function heldTextAt(extent, held) {
   /* R46's sheet arm: where the capture's reading holds typed cells for the extent's sheet, a cell's text is its stored
@@ -120,11 +229,11 @@ export function heldTextAt(extent, held) {
   if (extent.kind === "document") {
     if (held.state !== "whole" || !held.units.length || held.units.some((u) => u.truncated))
       return { text: null, reason: "cited_text_partial", why: word("content.why.citation_whole_document_record", { state: String(said(held.state)) }) };
-    return { text: held.units.map((u) => u.text).join("\n"), extent: canonicalExtent(extent) };
+    return { text: documentText(held.units), extent: canonicalExtent(extent) };
   }
   const at = canonicalExtent(extent);
-  const u = held.units.find((x) => x.extent === at);
-  if (!u)
+  const u = unitAt(extent, held);
+  if (!u || (u.chunked && held.state !== "whole"))
     return { text: null, reason: "cited_text_not_held", why: word("content.why.record_holds_text", { extent: String(describeExtent(extent)) }) };
   if (u.truncated)
     return { text: null, reason: "cited_text_truncated", why: localize("content.notice.cited_passage_held_only", "the cited passage's text is held only to the per-unit cap, so the whole passage is not held") };
@@ -214,9 +323,9 @@ export function gradeAcross(row, extent, older, newer) {
       return U(newer.units.length ? "newer_text_partial" : "newer_text_not_held",
         localize("content.notice.the_record_does_not_hold", "the record does not hold the newer version's text whole (its index reads {said})", { said: String(said(newer.state)) }));
     const same = newer.units.length === older.units.length
-      && newer.units.every((u, i) => u.extent === older.units[i].extent && u.text === older.units[i].text);
+      && newer.units.every((u, i) => u.extent === older.units[i].extent && u.run === older.units[i].run && u.text === older.units[i].text);
     if (same) return out("A", "identical_at_extent", localize("content.notice.every_unit_identical", "every unit of the newer version's text is byte-identical at the same position"), { extent, ref: row.ref });
-    const text = newer.units.map((u) => u.text).join("\n");
+    const text = documentText(newer.units);
     if (text === cited.text) return out("B", "identical_elsewhere", localize("content.notice.newer_text_divided", "the newer version's text is byte-identical, divided into different units"), { extent, ref: row.ref });
     const sim = dice(bagOf(cited.text), bagOf(text));
     const r = Math.round(sim * 1000) / 1000;
@@ -224,18 +333,20 @@ export function gradeAcross(row, extent, older, newer) {
       ? out("C", "similar_text", word("content.out.document_text_changed", { r: String(r) }), { extent, ref: row.ref }, r)
       : out("NOT_FOUND", "text_not_found", word("content.out.document_text_changed_past", { version_notice_similar: String(VERSION_NOTICE_SIMILAR), r: String(r) }), null, r);
   }
-  const here = newer.units.find((x) => x.extent === cited.extent);
+  /* an element carried as chunks is one passage on both sides (R46) */
+  const theirs = logicalUnits(newer);
+  const here = unitAt(extent, newer);
   if (here && !here.truncated && here.text === cited.text)
     return out("A", "identical_at_extent", word("content.out.text_byte_identical", { extent: String(describeExtent(extent)) }),
       found(here));
-  const moved = newer.units.find((x) => !x.truncated && x.text === cited.text);
+  const moved = theirs.find((x) => !x.truncated && x.text === cited.text);
   if (moved)
     return out("B", "identical_elsewhere", word("content.out.passage_text_byte", { ref: String(moved.ref) }),
       found(moved));
   /* C: the best-scoring unit, the same extent winning a tie so an edited passage that stayed put is named where it stayed. */
   const bag = bagOf(cited.text);
   let best = null, bestSim = -1;
-  for (const x of here ? [here, ...newer.units.filter((y) => y !== here)] : newer.units) {
+  for (const x of here ? [here, ...theirs.filter((y) => y !== here)] : theirs) {
     const s = dice(bag, bagOf(x.text));
     if (s > bestSim) { best = x; bestSim = s; }
   }

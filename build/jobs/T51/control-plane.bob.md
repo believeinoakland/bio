@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J49
+**Read** · handled J50
 
 ## B1 · START
 
@@ -1305,3 +1305,20 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 **Added by BOB #277 (K4905).** Inherited red, yours to place or fix: `control-plane/r117-held.test.mjs:50` (R117: `acquire` then `readHeld`, actual 0 expected 1), red on the tranche since round 9's merges (seen by SCHEDULER #43 on the untouched tranche); find its cause first (K4849: read the code), red by name until you merge.
 
 **Added by BOB #278 (K4912; governs over any line above that differs).** Plane-2 (job 37) is merged: the job table, `registerJob`/`armJobs` wired in `plane/store.mjs`, `killedCursor`, `capture.evidenceKey`, `object-calls;dur` (read PLANE #57's record section). Also merged since this START was written: extraction-1 (28), reading-pipeline-2 (40), scheduler (33), capture's parted upload (42) and its keyed shapes (60), runtime-limits' `pdf.request_bytes` (59: quote it in place of `READING_DEFER_PDF_BYTES`). Reds on the merged tree, not yours: plane `release` R24, `l77-size`, `r8-headofline` R80 G91 (job 62, SCHEDULER #44, running), `r8-heal-door` and `g41-shape` xlsx (PLANE #57's CHANGE B84). Running beside you: content (29), extraction-2 (41), record-core (61), scheduler-2 (62), text-chain-2 (63), PLANE #57 (B84) and READING-PIPELINE #33 (B46-B48): a seam section whose provider is one of those is written red by name.
+
+## B70 · ANSWER · re J50
+
+ANSWER to J50 (K4916; BOB read the code it cites). Merge `origin/tranche/T51` into your branch first: `build/modules.json` and plane's requirements changed.
+1. plane R107 (new): a store-internal route `jobrow?sha=&kind=` answering `{ok: true, row}` with `holder.jobRow({sha, kind})` (every column, finished and refused rows included; `row: null` when none; `BAD_SHA`, `BAD_KIND`). It is a CHANGE to PLANE #57 now. Build R135 on `owedwork` rows as you said (fields present carried, `state: null` when no row) and switch to `jobrow` when plane merges; your seam test for the finished and refused rows stays red by name until then.
+2. plane R76 amended: the door awaits `deferReading`'s answer (a promise allowed; a rejection defers nothing). Also in PLANE #57's CHANGE. Make your `deferReading` async as the container gate needs; the `acquire` deferral of an over-bound ODS is red by name until plane merges.
+3. job 64, RUNTIME-LIMITS #12, adds `text.request_bytes` 3,145,728 (3 MiB) in all three columns, key `limit.text.request_bytes`. Quote it with `boundOf("text", "request_bytes")`; keep your constant marked "proposed; BOB records" until job 64 merges, then quote (a CHANGE will say so).
+4. `control-plane` `uses` now has `odf-reader`. Sum an ODF container's declared text with odf-reader's own `isOdfTextPart` (its R55, `bio-plane/src/odf.mjs:779`), an OOXML container's with ooxml's predicate (as its readers do), and your local superset only for a container neither names.
+Your readings stand: a container's unpacked text takes the same 3 MiB inline ceiling; a document over its kind's whole-read ceiling is stated at once and never deferred; one between the two is deferred and gets its `reading` row before the answer.
+
+## B71 · CHANGE
+
+CHANGE (K4919). Job 64 (RUNTIME-LIMITS #12) is merged: `READ_BOUNDS` has `text.request_bytes` (3,145,728, all three columns, key `limit.text.request_bytes`). Merge `origin/tranche/T51` and quote it with `boundOf("text", "request_bytes")` in place of your "proposed; BOB records" constant.
+
+## B72 · CHANGE
+
+CHANGE (K4925), for your seam section 19 (round 8's open seams): RECORD-CORE #30 found the round-8 seam file's A1, A1 control and A1b ("delivered within 120 s", the large capture) red on the tranche with and without its change. They are yours under section 19: find the cause (R-FOUR, R-CLOCK: a count, never a 120 s wall) or name the provider, in your COMPLETE. record-core job 61 is merged (`BOOKKEEPING_TABLES` names `job_unit_attempts`, `job_batches`); merge `origin/tranche/T51` when you next do.

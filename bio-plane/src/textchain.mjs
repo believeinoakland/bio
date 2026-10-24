@@ -1627,6 +1627,9 @@ const trimmedOrNull = (s) => (typeof s === "string" && s.trim() ? s.trim() : nul
 const canonicalCell = (c) => (typeof c === "string" && CONTENT_EXTENT_A1_RE.test(c.trim())
   ? c.trim().replace(/\$/g, "").toUpperCase() : null);
 const intOrNull = (n) => (Number.isInteger(n) ? n : null);
+/* A chunk's own address (R97, K4913): `run` joins a unit's address only when it is an integer, so an extent with none
+   keeps the bytes it always had and every content id already minted stays. */
+const runOf = (e) => (Number.isInteger(e.run) ? { run: e.run } : {});
 
 /** The CANONICAL form of an extent — the bytes the content address is taken over (R97). Two members who mean
  *  the same passage must produce the same string, or dedup-by-construction is a claim rather than a
@@ -1639,22 +1642,26 @@ export function canonicalExtent(extent) {
   const e = extent && typeof extent === "object" ? extent : {};
   if (e.kind === "document") return canonicalJson({ kind: "document" });
   if (e.kind === "pdf-page")
-    return canonicalJson({ kind: "pdf-page", page: intOrNull(e.page), rect: isFourFinite(e.rect) ? minMaxRect(e.rect) : null });
+    return canonicalJson({ kind: "pdf-page", page: intOrNull(e.page), rect: isFourFinite(e.rect) ? minMaxRect(e.rect) : null, ...runOf(e) });
   if (e.kind === "sheet-cell")
     return canonicalJson({ kind: "sheet-cell", sheet: trimmedOrNull(e.sheet), cell: canonicalCell(e.cell) });
   if (e.kind === "slide-shape")
-    return canonicalJson({ kind: "slide-shape", slide: intOrNull(e.slide), shape: intOrNull(e.shape) });
+    return canonicalJson({ kind: "slide-shape", slide: intOrNull(e.slide), shape: intOrNull(e.shape), ...runOf(e) });
   if (e.kind === "doc-para")
     return canonicalJson({ kind: "doc-para", para: intOrNull(e.para), run: intOrNull(e.run) });
   if (e.kind === "sheet-range")
     return canonicalJson({ kind: "sheet-range", sheet: trimmedOrNull(e.sheet),
-      range: typeof e.range === "string" ? canonicalRange(e.range) : null });
+      range: typeof e.range === "string" ? canonicalRange(e.range) : null, ...runOf(e) });
   if (e.kind === "doc-table")
     return canonicalJson({ kind: "doc-table", table: intOrNull(e.table), cell: canonicalCell(e.cell) });
   if (e.kind === "image")
     return canonicalJson({ kind: "image", cited_as: contentCitedAs(e),
       part: typeof e.part === "string" ? e.part.trim().toLowerCase() : null,
       page: intOrNull(e.page), rect: isFourFinite(e.rect) ? minMaxRect(e.rect) : null });
+  /* A non-body part of a document (a footnote, a header, a comment; `reading-pipeline` R47): the package part and the
+     element reference are its address, so every part has its own. */
+  if (e.kind === "doc-part")
+    return canonicalJson({ kind: "doc-part", part: trimmedOrNull(e.part), ref: trimmedOrNull(e.ref) });
   return canonicalJson({ kind: e.kind ?? null, fields: e.fields ?? null });
 }
 
@@ -1665,6 +1672,12 @@ export function canonicalExtent(extent) {
  *  describe alike and address apart — under-describing, never over-claiming. */
 export function describeExtent(extent) {
   const e = extent && typeof extent === "object" ? extent : {};
+  /* A part's `ref` is its element reference, an address field and no authored sentence (R97), so it is read before the
+     authored-`ref` rule. */
+  if (e.kind === "doc-part") {
+    const ref = trimmedOrNull(e.ref);
+    return ref ? localize("text-chain.textchain.part_ref", "part {ref}", { ref }) : word("textchain.text.part_document_record");
+  }
   if (typeof e.ref === "string" && e.ref.trim()) return e.ref.trim();
   if (e.kind === "document") return word("content.why.whole_document");
   if (e.kind === "pdf-page") {

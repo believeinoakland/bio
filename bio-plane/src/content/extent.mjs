@@ -13,6 +13,7 @@
  * Everything the grammar has gained since is written here, over them, never beside them:
  *
  *   - the ninth kind, `envelope` (R33, REC-204), with its own canonical form, human form and shape check;
+ *   - the tenth, `doc-part` (R1, R58; K4910), a non-body part of a document as `reading-pipeline` R47 emits it;
  *   - a rect's coordinate space (R10, D-670): `user` is the one space addressed, and any other is refused C-45.13
  *     (`CONTENT_EXTENT_NOT_USER_SPACE`) before any number in it is read;
  *   - a `pdf-page` rect bounded by its page's MediaBox (R9, D-374), refused C-45.1 naming the box, and admitted
@@ -49,6 +50,7 @@ export { CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_KIND_NO_PRODUCER, CONTENT_ID_RE, 
  *  document SAYS. `cited_as` keeps them apart on every row. */
 export const CONTENT_EXTENT_KINDS = Object.freeze({
   ...ALGEBRA_KINDS,
+  "doc-part": { landed: true, human: localize("content.extent.part_human", "a part of the document outside its body text (a footnote, endnote, header, footer, comment, tracked deletion, text box, speaker note, master text or cell note)") },
   envelope: { landed: true, human: localize("content.extent.envelope_item_human", "an item of the document's envelope (a tracked change, comment, core property or speaker notes), not its body") },
 });
 
@@ -120,13 +122,18 @@ export function canonicalExtent(extent) {
       name: typeof e.name === "string" && e.name.trim() ? e.name.trim() : null,
       n: Number.isInteger(e.n) ? e.n : null });
   }
-  return algebraCanonical(e);
+  return algebraCanonical(e);   /* a `doc-part` is text-chain's (its R97): {kind, part, ref} */
 }
 
 /** R2: the human form (IC-1's required `ref`), a caller's non-empty `ref` kept. An envelope item's form LEADS with the
  *  word `envelope`, so a surface showing nothing but this sentence still cannot present a comment as the body. */
 export function describeExtent(extent) {
   const e = isObj(extent) ? extent : {};
+  /* a `doc-part`'s `ref` is the reader's element reference and part of its address, not a human form a caller authored (R1) */
+  if (e.kind === "doc-part") {
+    const at = typeof e.ref === "string" && e.ref.trim() ? e.ref.trim() : typeof e.part === "string" && e.part.trim() ? e.part.trim() : "";
+    return localize("content.extent.part_ref", "part {at}", { at: String(at.slice(0, 120)) });
+  }
   if (typeof e.ref === "string" && e.ref.trim()) return e.ref.trim();
   if (e.kind === "envelope") {
     const what = ENVELOPE_ITEM_KINDS[typeof e.item === "string" ? e.item.trim() : ""] || "an item";
@@ -216,7 +223,7 @@ export function extentRelation(outer, inner) {
   const b = isObj(inner) ? inner : null;
   if (!a || !b) return "unreadable";
   if (rectSpace(a) !== RECT_USER_SPACE || rectSpace(b) !== RECT_USER_SPACE) return "unreadable";
-  if (a.kind === "envelope" || b.kind === "envelope") {
+  if (a.kind === "envelope" || b.kind === "envelope" || a.kind === "doc-part" || b.kind === "doc-part") {
     const known = (k) => Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, k);
     if (!known(a.kind) || !known(b.kind)) return "unreadable";
     if (canonicalExtent(a) === canonicalExtent(b)) return "same";
@@ -386,6 +393,9 @@ export function containerBoundUndetermined(extent, ctx = {}) {
         return u("table_grid", localize("content.extent.this_record_holds_no_row_2", "this record holds no row and column grid for table {table}", { table: String(e.table) }));
       return null;
     }
+    case "doc-part":
+      return { level: "part_list",
+        why: localize("content.extent.part_list_not_held", "this record persists no list of a capture's parts to bound one against (they arrive as text units), so whether this part exists rests on the index that found it: UNDETERMINED, admitted and stated") };
     case "envelope": {
       const at = isObj(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? containerBoundUndetermined(e.at, ctx) : null;
       return at || { level: "envelope_items",
@@ -431,12 +441,32 @@ export function checkContentExtent(extent, ctx = {}) {
         ? localize("content.extent.an_envelope_item_is_cited", "an envelope item is cited as the envelope and never as '{String}': a tracked change, comment, core property or speaker note is not the document's body", { String: String(String(citedAs).slice(0, 40)) })
         : localize("content.extent.only_an_envelope_item_is", "only an envelope item is cited as the envelope. A {kind} extent addresses the document's body, and reading it as an annotation would change what the citation claims", { kind: String(e.kind) }));
   if (e.kind === "envelope") return checkEnvelope(e, ctx);
+  if (e.kind === "doc-part") return checkPart(e, ctx);
   const bad = coreCheck(e, ctx);
   if (bad) return bad;
   if (e.kind === "pdf-page" && ctx && ctx.known !== false) {
     const off = rectOffPage(e, ctx.pageBoxes);
     if (off) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", off);
   }
+  return null;
+}
+
+/* R1 (K4910) — A `doc-part`'S SHAPE: the package part and the element reference a reader names for a non-body unit
+   (`reading-pipeline` R47), each a non-empty string or absent, one at least present. The record lists no parts of a capture
+   to bound one against (they arrive as text units), so a well-formed one is admitted and its existence rests on the index
+   that found it (R8: `part_list`, below); a capture nobody read holds no text to address (C-45.2), as for an envelope item. */
+function checkPart(e, ctx) {
+  const said = (v) => String(v).slice(0, 40);
+  for (const k of ["part", "ref"])
+    if (e[k] !== undefined && e[k] !== null && !(typeof e[k] === "string" && e[k].trim()))
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        localize("content.extent.a_part_extent_names_the", "a part extent names the package part and the element reference of the unit as the reader emitted them, each a non-empty string. This one names '{String}' as its {k}", { String: said(e[k]), k }));
+  if (!(typeof e.part === "string" && e.part.trim()) && !(typeof e.ref === "string" && e.ref.trim()))
+    return refusal("CONTENT_EXTENT_UNREADABLE",
+      localize("content.extent.a_part_extent_names_neither", "a part extent names the package part or the element reference of the unit as the reader emitted them, and this one names neither"));
+  if (ctx && ctx.known !== false && !(Array.isArray(ctx.chain) && ctx.chain.length))
+    return refusal("CONTENT_EXTENT_NO_CHAIN",
+      localize("content.extent.this_record_holds_no_extraction_2", "this record holds no extraction chain for the capture this citation names, so there is no transcription over {describeExtent} for the citation to point at", { describeExtent: String(describeExtent(e)) }));
   return null;
 }
 

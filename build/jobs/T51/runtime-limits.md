@@ -1,6 +1,6 @@
 # runtime-limits (T51)
 
-**Status** · session_01YC2QN7Jxms3WaivDnVr4Bf · depth 2 · COMPLETE · handled B8
+**Status** · session_01HB2uM2PSYhuqXKXfVqYh67 · depth 2 · COMPLETE · handled B8
 
 ## Completion (RUNTIME-LIMITS #6, fix round 7, G83)
 
@@ -132,3 +132,16 @@ Size (session_01YC2QN7Jxms3WaivDnVr4Bf): test runs 5, module lines 12
 ## J9 · COMPLETE
 
 COMPLETE B8: READ_BOUNDS row pdf/request_bytes (2 MiB x3, key limit.pdf.request_bytes) added and tested (R30, R31). Suite 55/55; importers 49 pass, 0 fail; format, architecture, coverage, ownership 0 failures. Bundles with read-bounds.mjs as input are stale; BOB regenerates at round end. Details in my record.
+
+## RUNTIME-LIMITS #12 · fix round 9, batch D: three rows for control-plane and content (B9, K4916)
+
+- **Entries applied.** In `bio-plane/src/read-bounds.mjs`: `text`, `request_bytes`: 3,145,728 (3 MiB) in all three columns, key `limit.text.request_bytes`, written in the `text` entry as `{ ...light("text", 24 * MiB), request_bytes: same(3 * MiB, k("text", "request_bytes")) }`; `content`, `held_text_chars`: 33,554,432 (32 Mi characters) x3, key `limit.content.held_text_chars`; `content`, `kind_scan_pages`: 16 x3, key `limit.content.kind_scan_pages` (a new `content` kind). `boundOf("text", "request_bytes")` answers 3 MiB although `text` is a light kind (R31: it takes the standard, equal to the alpha here); `text.bytes` is unmoved (standard 50 MB, alpha 24 MiB). No member-facing bound moves; no sentence added.
+- **Test.** `read-bounds.test.mjs`: one new test naming R30 and R31 checks the three rows' figures in each column, their keys, `boundOf` and `statement`, and that `text.bytes` is unmoved. Seen red before the rows (rows absent), then green.
+- **Deferred / found in another module.** None of mine. Generated bundles whose inputs include `read-bounds.mjs` are stale against these rows (as after B6-B8); BOB regenerates at the round end. On `tranche/T51` without my diff, `bio-plane/test/system/fleetbundles.test.mjs` already fails (agent-worker stale against acquisition, extraction and other sources) and `bio-plane/test/m/plane/g41-shape.test.mjs` "R84 G41 K4855: a 200,000-row xlsx" fails; both are not runtime-limits'.
+- **Ran.** Tranche merged first. runtime-limits suite: 56 tests, 56 pass, 0 fail. Test files importing `read-bounds`/`READ_BOUNDS` (23 files): 249 tests, 246 pass, 2 fail (the two above, identical on `origin/tranche/T51`). `impact.mjs origin/tranche/T51 HEAD` lists 138 modules / 2181 test files (the table is global); I ran the direct importers, not that whole set. Checks: format 0 failures; architecture 0 failures; coverage 32 of 32 ids named, 0 failures; ownership 3 files changed, 0 failures; words 19 failures, none in runtime-limits (installer-steps etc., as before my diff).
+
+Size (session_01HB2uM2PSYhuqXKXfVqYh67): test runs 5, module lines 11
+
+## J10 · COMPLETE · re B9
+
+COMPLETE B9: READ_BOUNDS rows text/request_bytes (3 MiB x3), content/held_text_chars (32 Mi x3), content/kind_scan_pages (16 x3) added and tested (R30, R31); boundOf(text, request_bytes) answers 3 MiB. Suite 56/56; importers 246/249, the 2 failures (fleetbundles stale bundles, g41-shape xlsx) identical on tranche/T51 without my diff; format, architecture, coverage, ownership 0 failures; words 19 failures none in my module. Bundles with read-bounds.mjs as input are stale; BOB regenerates at round end. Details in my record.

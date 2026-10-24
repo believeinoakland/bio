@@ -255,6 +255,8 @@ export class Scheduler {
   #alarmFor;
   /* R30: the firing's budget and the threshold past which a consumer's call is logged before it ends (injected by tests). */
   #budgetMs; #slowMs;
+  /* R30: the instant the running firing can no longer outlast (its start, its budget and the grace). */
+  #firingEnds = 0;
   /* R31: the consumers whose call outlasted a firing's budget, by name: `{started, settled, result, error, ended}`. A call
      is a promise of this isolate, so a restart empties the set (the call died with the isolate; R33). */
   #inflight = new Map();
@@ -595,24 +597,28 @@ export class Scheduler {
 
   async onAlarm(now = Date.now()) {
     const t0 = Date.now();   /* R30: the budget is the real clock's, whatever instant the runtime hands in */
+    /* R1, R30 (G91, K4912): the firing is marked running first, so an `arm` a request path makes while it runs (where `getAlarm()`
+       answers none) is told apart (`#reconcile`); the reconcile at the end sets the next alarm outright. */
+    this.#firing = true;
+    this.#firingEnds = t0 + this.#budgetMs + SCHED_GRACE_MS;
+    let probe, before, scheduledFor, previousEnd, reg;
+    const answers = {};
+    const probes = [];
+    let stoppedAt = null, slowest = null;
+    try {
     this.#beat = null;   /* R33: the heartbeat is read from storage at the start of every run, never trusted from memory */
-    const probe = await this.#probeState(now, true);
-    const before = await this.#beatRead();
-    const scheduledFor = this.#alarmFor !== undefined ? this.#alarmFor : before.next_set_for ?? null;   /* G70 */
-    const previousEnd = Number.isFinite(before.ended) ? before.ended : null;
+    probe = await this.#probeState(now, true);
+    before = await this.#beatRead();
+    scheduledFor = this.#alarmFor !== undefined ? this.#alarmFor : before.next_set_for ?? null;   /* G70 */
+    previousEnd = Number.isFinite(before.ended) ? before.ended : null;
     await this.#beatWrite({ running_since: now, inflight: this.#inflightRecord() });   /* R29: getAlarm() is null while this runs; R33: a cut run's in-flight calls died with it */
     await this.#loadDaily();
     const full = this.registry(probe);
     /* R30: the firing begins at the consumer the last budget-limited firing stopped before, wrapping, so none is always last */
     const from = typeof before.rotate_from === "string" ? full.findIndex((c) => c.name === before.rotate_from) : -1;
-    const reg = from > 0 ? [...full.slice(from), ...full.slice(0, from)] : full;
-    const answers = {};
-    const probes = [];
+    reg = from > 0 ? [...full.slice(from), ...full.slice(0, from)] : full;
     const rank = (items, at = now) => this.rank(items, at);
-    let stoppedAt = null, slowest = null;
     const took = (c, v) => { if (v !== null && v !== undefined) answers[c.key] = v; };
-    this.#firing = true;
-    try {
     for (let i = 0; i < reg.length; i++) {
       const c = reg[i];
       if (i > 0 && Date.now() - t0 >= this.#budgetMs) { stoppedAt = c.name; break; }   /* R30: the budget is spent */
@@ -724,6 +730,18 @@ export class Scheduler {
    *  afresh to `max(want, now)`. A consumer whose wake throws wants nothing and, when `errors` is given, is answered
    *  under its key (R3). */
   async #reconcile(now, reg, exact, errors = null, force = false) {
+    /* R1, R30 (G91, K4912): while the handler runs the platform answers no alarm, so an arm made then (a producer's notice on the
+       request path) would set a due row's own wake, already past, which the administrator reads for as long as the firing lasts.
+       Inside a firing an arm weighs nothing: it leaves the alarm as it stands, or, when there is none, sets the instant the firing
+       can no longer outlast (its budget and the grace), readable and ahead. The reconcile the firing makes at its end weighs every
+       consumer's wake, the work that arm announced included, and sets the next alarm outright. */
+    if (this.#firing && !exact && !force) {
+      const at = await this.#storage.getAlarm();
+      if (at !== null && at !== undefined) return at;
+      const lease = Math.max(this.#firingEnds, Date.now() + SCHED_GRACE_MS);
+      await this.#storage.setAlarm(lease);
+      return lease;
+    }
     const wants = [];
     for (const c of reg) {
       if (this.#running(c)) continue;   /* R31: a call in flight wants no wake; its settling arms the alarm */
