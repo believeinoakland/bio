@@ -329,6 +329,8 @@ const DECISIONS = [
   ["plane", "plane/ask.mjs", "^the reply named is not an entry", dev("badtask")],
   ["plane", "plane/ask.mjs", "^an infraction draft names", dev("badtask")],
   ["plane", "plane/ask.mjs", "^the reply's text is not held", dev("assistantinput")],
+  // DEC-431: capture R113's begin act, its default saying "group" (DEC-281: team): the design's word is the key's
+  ["affordances", "affordances/act-help.mjs", "^Starts sending a large document to the group's store", "act.captureuploadbegin.does"],
   ...[["The queue", "screen.queue.name"], ["Everything the record is asking of somebody", "screen.queue.purpose"],
       ["The evidence finder", "screen.finder.name"], ["One query surface over the record", "screen.finder.purpose"],
       ["What the record knows about a person, office or thing", "screen.people.purpose"],
