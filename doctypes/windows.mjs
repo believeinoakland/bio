@@ -10,10 +10,41 @@
  * boolean are the whole-text ones. A pattern here never matches more than `pad` characters (the types' phrases are
  * tens to hundreds). Offsets named `abs` are offsets into the flattened text; `scanFlat*` give them, and a reader that
  * needs an offset into the RAW text (for `ctx.locate`) reads raw lines (`eachLine`, `lineTable`), as it always did. */
-import { allMatches } from "../docprofile/doctypes/index.mjs";
+import { allMatches, entity, readAgain } from "../docprofile/doctypes/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 export const WINDOW_CHARS = 1 << 18;
 export const WINDOW_PAD = 4096;
+
+/* THE WORK COUNT (R40). docprofile hands a type's `detect` and `parse` a counter, `ctx.work = {chars}`; a type adds to it
+ * the characters it examines. `counted(type)` makes that so for a type: while its `detect` or `parse` runs, every
+ * primitive here that walks a text adds the characters it walks to the counter, and `spend` adds a pass a type makes
+ * by hand (a `test` or a `match` over the text). With no `ctx.work` nothing is counted and nothing changes. */
+let WORK = null;
+/** Adds `n` characters to the work counter now running, if one is. */
+export function spend(n) {
+  if (WORK !== null && n > 0) WORK.chars += n;
+}
+/** `type` with its `detect` and `parse` counting into `ctx.work` (R40). A `detect` is handed one window of the text and is
+ *  charged that window once however many passes it makes over it (docprofile's budget is a number of windows examined, one
+ *  for each type asked); a `parse` is charged every pass it makes. */
+export function counted(type) {
+  const run = (fn, once) => function (ctx, ...rest) {
+    const w = ctx && ctx.work;
+    if (!w || typeof w !== "object" || typeof w.chars !== "number") return fn.call(this, ctx, ...rest);
+    const prev = WORK;
+    const mine = once ? { chars: 0 } : w;
+    WORK = mine;
+    try { return fn.call(this, ctx, ...rest); } finally {
+      WORK = prev;
+      if (once) w.chars += Math.min(mine.chars, String((ctx && ctx.text) || "").length);
+    }
+  };
+  const out = { ...type };
+  if (typeof type.detect === "function") out.detect = run(type.detect, true);
+  if (typeof type.parse === "function") out.parse = run(type.parse, false);
+  return out;
+}
 
 const WS = /\s/;
 
@@ -41,6 +72,7 @@ export function* flatWindows(text, { chunk = WINDOW_CHARS, pad = WINDOW_PAD } = 
   while (ahead.length) {
     const cur = ahead.shift();
     aheadLen -= cur.length;
+    spend(cur.length);
     while (aheadLen < pad && pull());
     const last = ahead.length === 0;
     let head = "";
@@ -110,6 +142,7 @@ export function flatPrefix(text, n) {
   let out = "";
   for (const piece of flatPieces(String(text || ""), Math.max(n, 1024))) {
     out += piece;
+    spend(piece.length);
     if (out.length >= n) break;
   }
   return out.slice(0, n);
@@ -132,6 +165,66 @@ export function mergedHits(text, tagged, each, opts) {
   return false;
 }
 
+/** The matches `allMatches` would keep over all of the RAW text for these tagged global patterns, in order, one at a
+ *  time, without the list of them (R40): `each(hit)` with `hit = {m, tag}` and `m.index` the offset in `text` (what
+ *  `ctx.locate` is given). The text is read in windows of `chunk` characters with `pad` characters of what comes before
+ *  and after, so a match that crosses a cut is seen whole; a match belongs to the window its first character is in. A
+ *  pattern here never matches more than `pad` characters. Returns true from `each` to stop. */
+export function rawMergedHits(text, tagged, each, { chunk = WINDOW_CHARS, pad = WINDOW_PAD } = {}) {
+  text = String(text || "");
+  let carry = 0;
+  for (let from = 0; from < text.length; from += chunk) {
+    const to = Math.min(text.length, from + chunk);
+    const base = Math.max(0, from - pad);
+    const buf = text.slice(base, Math.min(text.length, to + pad));
+    spend(to - from);
+    for (const hit of allMatches(tagged, buf)) {
+      const abs = base + hit.m.index;
+      if (abs < carry || abs < from) continue;
+      if (abs >= to) break;
+      hit.m.index = abs;
+      carry = abs + hit.m[0].length;
+      if (each(hit) === true) return true;
+    }
+  }
+  return false;
+}
+
+/* ------------------------------------------------------------------------------------------- the references */
+
+/* The most distinct references (instruments, file numbers, code sections) one reading keeps, and the most repeat
+ * sightings of them it records (R40; protective, BOB's, K4868): the memory a reading holds is then a number of references
+ * and sightings and never the number a text of any size cites. Past either, a sighting is counted and not kept, and the
+ * answer says so (`references_cut`, `references_skipped`). */
+export const REFERENCES_MAX = 20_000;
+export const SIGHTINGS_MAX = 50_000;
+
+/** The entities of a reading that cites references, one per key, kept in the order they are first met (D-454: a repeat
+ *  is another occurrence of the one reference, `readAgain`). `take(key, kind, label, facts, offset)`; `locate(offset)` is
+ *  asked only for a sighting that is kept. `state()` is what a cut reading adds to its answer, or `{}`. */
+export function referenceBook(locate) {
+  const entities = [], seen = new Map();
+  let sightings = 0, skipped = 0;
+  return {
+    entities,
+    take(key, kind, label, facts, offset) {
+      const known = seen.get(key);
+      if (known) {
+        if (sightings >= SIGHTINGS_MAX) { skipped++; return; }
+        sightings++;
+        readAgain(known, locate(offset));
+        return;
+      }
+      if (seen.size >= REFERENCES_MAX) { skipped++; return; }
+      const e = entity(key, kind, label, facts, locate(offset));
+      seen.set(key, e);
+      entities.push(e);
+    },
+    state: () => (skipped ? { references_cut: true, references_skipped: skipped, references_limit: REFERENCES_MAX, sightings_limit: SIGHTINGS_MAX,
+      references_why: localize("doctypes.windows.references_cut", "this text cites more than the {references} different references, or the {sightings} repeat citations, a reading keeps: {skipped} citation(s) were counted and not kept", { references: String(REFERENCES_MAX), sightings: String(SIGHTINGS_MAX), skipped: String(skipped) }) } : {}),
+  };
+}
+
 /* ------------------------------------------------------------------------------------------------ the lines */
 
 /** Calls `fn(line, offset, index)` for each line of `text` as `text.split(/\r?\n/)` gives them (a CR before the LF
@@ -143,6 +236,7 @@ export function eachLine(text, fn, from = 0) {
   for (;;) {
     const nl = text.indexOf("\n", start);
     const end = nl < 0 ? text.length : (nl > start && text.charCodeAt(nl - 1) === 13 ? nl - 1 : nl);
+    spend((nl < 0 ? text.length : nl + 1) - start);
     if (fn(text.slice(start, end), start, index++) === true) return true;
     if (nl < 0) return false;
     start = nl + 1;
@@ -189,6 +283,7 @@ export function lineTable(text) {
  *  end is at or after it (-1 past the text). */
 export function lineIndex(text) {
   text = String(text || "");
+  spend(text.length);
   let starts = new Uint32Array(1024), n = 0;
   for (let at = 0; ;) {
     if (n === starts.length) { const s = new Uint32Array(n * 2); s.set(starts); starts = s; }

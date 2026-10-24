@@ -153,11 +153,11 @@ test("R37 every type's detect, and the parse of those that read lines, over 14 m
 /* The answers of docprofile's readText over the three govinfo volumes, as the tranche tip gave them. */
 const REAL = [
   { name: "BUDGET-2025-BUD", sha: "3f1df41cfa3cebfd675b2a6ed673b6f665e0848c293d8d3bb5ab1815a0bae36b",
-    answer: { determined: false, chars: 3800, also: [], signals: "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", parsed: "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", parse_error: null } },
+    answer: { determined: false, chars: 3235, also: [], signals: "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", parsed: "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", parse_error: null } },
   { name: "BUDGET-2025-PER", sha: "067ad707534788e9011d4b6abdb686f1c3505888218e2ca5327c04e0ad58ae7f",
-    answer: { determined: false, chars: 21326, also: [], signals: "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", parsed: "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", parse_error: null } },
+    answer: { determined: false, chars: 17408, also: [], signals: "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", parsed: "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b", parse_error: null } },
   { name: "BUDGET-2024-APP", sha: "6e0b3dc5f2f3f5bbab8ae5032bbc29207a8dbb290ba25ebafe3feb20dfe13c1e",
-    answer: { determined: true, chars: 13598363, type: "generic", confidence: "none", also: [], signals: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945", parsed: "7a998222246a3b8ba858155fc2e39780e9b95ee60732ae149fe4a0a418438067", parse_error: null } },
+    answer: { determined: true, chars: 12319700, type: "regulation", confidence: "certain", also: [], signals: "314659c00571926403e38ff4d24f05939e4294d066e4390b5cf2f697a7ac2503", parsed: "af29de986f0ef6df1a529091a2d5c6e629cec25d655a0020823cc5c1fb764251", parse_error: null } },
 ];
 
 test("R37 readText over the three govinfo volumes, every type registered, answers as the tranche tip did", async () => {

@@ -249,6 +249,10 @@ function linesBetween(raw, lo, hi) {
   return { lines: out, full: nl < 0 };
 }
 const REGION = 1 << 16;
+/* How far into a text a header's first label is looked for when no series anchors one, and how far past its anchor a
+   header block runs (R40; protective, K4868): a header stands on the first page. */
+const HEADER_SCAN = 1 << 14;
+const HEADER_BLOCK = 1 << 16;
 
 /** The header block read from one anchor (or, with none, from the first label). R37: a header is read from the lines
  *  around its anchor (14 above it, and as far below as the block and its title run), widened until the reading stays
@@ -271,20 +275,29 @@ function readAtLines(raw, labels, a, locate, given, full) {
   const from = a ? blockStart(lines, a.start) : 0;
   /* The block's end: the first line after the anchor (or, with none, after the first label)
      that is page furniture, an outline heading or body text. */
-  const firstLabel = (() => {
+  /* R40: with no anchor the first label is looked for in the first HEADER_SCAN characters and no further, so a text of
+     blank lines is not tried for a label from each of them (the labels' patterns may begin with `^\s*`, which reads on
+     through every blank line it meets). */
+  const firstLabel = a ? null : (() => {
     let best = null;
-    for (const l of labels) { l.re.lastIndex = from; const m = l.re.exec(raw); if (m && (!best || m.index < best)) best = m.index; }
+    const head = raw.length > HEADER_SCAN ? raw.slice(0, HEADER_SCAN) : raw;
+    for (const l of labels) { l.re.lastIndex = from; const m = l.re.exec(head); if (m && (!best || m.index < best)) best = m.index; }
     return best;
   })();
   const after = a ? (a.number ? a.number.end : a.end) : firstLabel;
   if (after === null || after === undefined)
-    return { result: { header: null, why: localize("doctypes.policy-header.no_block", "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in it") } };
+    return { result: { header: null, why: raw.length > HEADER_SCAN
+      ? localize("doctypes.policy-header.no_block_window", "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in its first {chars} characters, where a header stands", { chars: String(HEADER_SCAN) })
+      : localize("doctypes.policy-header.no_block", "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in it") } };
   if (!lines) lines = linesOf(raw);
   let end = raw.length, endLine = lines.length;
-  let stopped = false;
+  let stopped = false, blockCut = false;
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
     if (l.start <= after) continue;
+    /* R40: a header block runs no further than HEADER_BLOCK characters past its anchor (a page holds a header, not a
+       hundred thousand lines of blanks), and the answer says when the block was cut there. */
+    if (l.start - after > HEADER_BLOCK) { end = l.start; endLine = i; stopped = true; blockCut = true; break; }
     if (FURNITURE.test(l.text) || OUTLINE.test(l.text) || (isBody(l.text) && !labels.some((x) => { x.re.lastIndex = 0; const m = x.re.exec(l.text); return m && m.index <= l.text.length - l.text.trimStart().length; }))) {
       end = l.start; endLine = i; stopped = true; break;
     }
@@ -430,7 +443,7 @@ function readAtLines(raw, labels, a, locate, given, full) {
   for (const f of missing) if (!why[f]) why[f] = f === "type"
     ? localize("doctypes.policy-header.no_series_type", "no line of this text opens with a policy series the active jurisdiction profiles name")
     : localize("doctypes.policy-header.no_label", "no label the active jurisdiction profiles give for this field is printed in the header block");
-  return { exhausted, result: { header: { ...header, missing, missing_why: why, start: from, end }, why: null } };
+  return { exhausted, result: { header: { ...header, missing, missing_why: why, start: from, end, ...(blockCut ? { block_cut: true } : {}) }, why: null } };
 }
 
 /** Does any line of `raw` open with a policy series' label of the view's, with the header labels near it (R26)? The

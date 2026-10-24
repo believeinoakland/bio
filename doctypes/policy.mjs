@@ -20,7 +20,7 @@ import { CONFIDENCE, CONTRACT, alsoSatisfies } from "../docprofile/doctypes/inde
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
 import { readDefinitions, textDigest } from "./sections.mjs";
 import { readHeader, headerAnchored, policySeries, headerLabels, HEADER_FIELDS } from "./policy-header.mjs";
-import { lineIndex } from "./windows.mjs";
+import { lineIndex, counted, spend } from "./windows.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* ------------------------------------------------------------------------ lines */
@@ -35,7 +35,17 @@ const caps = (t) => { const letters = t.replace(/[^A-Za-z]/g, ""); return letter
 /* A line opening with an outline marker. */
 const OUTLINE_LINE = /^\s*(?:[IVX]{1,5}|[A-Z]|\d{1,2}|[a-z])[.)]\s+\S/;
 /* A table of contents' line: dot leaders, or a heading ending in its page number. */
-const TOC_LINE = /\.{4,}|^[^a-z]*[A-Z][^a-z]*\s\d{1,3}\s*$/;
+const DOT_LEADERS = /\.{4,}/;
+const PAGE_NUMBER_END = /\s\d{1,3}\s*$/;
+/** Is this line a contents entry: dot leaders, or a heading with no lower-case letter that ends in its page number? Read
+ *  in work linear in the line (R40): the heading is what stands before the page number, which is found from the line's end. */
+function isTocLine(t) {
+  if (DOT_LEADERS.test(t)) return true;
+  const m = PAGE_NUMBER_END.exec(t);
+  if (!m) return false;
+  const head = t.slice(0, m.index);
+  return !/[a-z]/.test(head) && /[A-Z]/.test(head);
+}
 
 /* ------------------------------------------------------------- the outline sections */
 
@@ -72,9 +82,9 @@ export function readOutline(raw, from, skip, locate) {
     const l = lines.at(li);
     if (l.start < from || FURNITURE.test(l.text) || skip.some((s) => l.start >= s.start && l.start < s.end)) continue;
     const t = l.text.trim();
-    if (TOC_LINE.test(t)) continue;
+    if (isTocLine(t)) continue;
     /* A contents entry wrapped onto a second line, which carries its page number. */
-    if (li + 1 < lines.length && TOC_LINE.test(lines.at(li + 1).text.trim()) && caps(t)) continue;
+    if (li + 1 < lines.length && isTocLine(lines.at(li + 1).text.trim()) && caps(t)) continue;
     const hits = [];
     for (const [rank, k] of KINDS.entries()) { const m = k.re.exec(t); if (m) hits.push({ rank, k, m }); }
     let placed = null;
@@ -369,7 +379,7 @@ export function readPolicy(ctx, raw, locate = () => null) {
   };
 }
 
-export default {
+export default counted({
   key: "policy",
   label: localize("doctypes.policy.label", "a policy of a numbered series"),
   version: 1,
@@ -385,6 +395,7 @@ export default {
                why: localize("doctypes.policy.no_series_supplied", "the active jurisdiction profiles supply no policy series or no policy header labels, so no document is read as a policy") };
     /* R37: a header's type is read only from an anchor, so a text with none is refused without being cut into lines. */
     const text = String(ctx.text || "");
+    spend(text.length * series.length);   // the search for an anchor reads the text once for each series
     const hd = headerAnchored(ctx, text) ? readHeader(ctx, text).header : null;
     if (!hd || !hd.type)
       return { match: false, confidence: CONFIDENCE.NONE,
@@ -460,4 +471,4 @@ export default {
         : localize("doctypes.policy.unchanged", "this policy reads as it read: the same header and the same sections"),
     };
   },
-};
+});
