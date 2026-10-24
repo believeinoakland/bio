@@ -25,13 +25,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { decodeJpx, JPX_REFUSES, JpxRefusal, MEMORY_FEATURE } from "../../src/jpxdecode.mjs";
+import { decodeJpx, JPX_REFUSES, JpxRefusal } from "../../src/jpxdecode.mjs";
+import { READ_BOUNDS, boundOf } from "../../../bio-plane/src/read-bounds.mjs";
 
 const FIX = JSON.parse(readFileSync(new URL("../fixtures/jpx-variants.json", import.meta.url), "utf8"));
 const V = FIX.variants;
 const bytesOf = (v) => new Uint8Array(Buffer.from(v.data_b64, "base64"));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
-const MEMORY = MEMORY_FEATURE;
+const WORKING_ROW = Object.hasOwn(READ_BOUNDS.image, "working_set") ? ["image", "working_set"] : ["ocr", "frame_bytes"];   // K4858
+const WORKING = boundOf(...WORKING_ROW);
 
 function refusal(fn) {
   try { fn(); } catch (e) {
@@ -98,14 +100,13 @@ test("R4 what it cannot decode is a JpxRefusal; an UNSUPPORTED one names its fea
     const e = refusal(() => decodeJpx(bytesOf(v)));
     assert.ok(e, `${v.name}: refused`);
     assert.equal(e.code, v.expect, v.name);
-    assert.ok(["UNSUPPORTED", "UNSUPPORTED_SAMPLES", "TRUNCATED", "CORRUPT"].includes(e.code), v.name);
+    assert.ok(["UNSUPPORTED", "UNSUPPORTED_SAMPLES", "TRUNCATED", "CORRUPT"].includes(e.code), v.name);   // IMAGE_TOO_LARGE is driven in bounds.test.mjs and below
     if (e.code === "UNSUPPORTED") {
       assert.ok(e.detail.feature in JPX_REFUSES, `${v.name}: '${e.detail.feature}' is declared`);
       assert.equal(e.detail.feature, v.name.slice("UNSUPPORTED:".length), v.name);
       driven.add(e.detail.feature);
     }
   }
-  driven.add(refusal(() => decodeJpx(withSiz(bare(3), { X: 5000, Y: 5000 }))).detail.feature);
   assert.deepEqual([...driven].sort(), Object.keys(JPX_REFUSES).sort(), "every declared refusal is driven");
 });
 
@@ -121,25 +122,28 @@ test("R4 R6 N75 pages past the whole-plane working set decode, to OpenJPEG's bit
   assert.deepEqual([...new Set(PAGES.pages.map((pg) => `${pg.comps}:${pg.args.includes("-I") ? "9/7" : "5/3"}`))].sort(), ["1:9/7", "3:5/3", "3:9/7"]);
 });
 
-test("R4 N34 a decode past the memory bound is refused by name, from the header, before any sample", () => {
+test("R4 R12 N34 a decode past the memory bound is refused IMAGE_TOO_LARGE, from the header, before any sample", () => {
   const e = refusal(() => decodeJpx(withSiz(bare(3), { X: 5000, Y: 5000 })));
-  assert.equal(e.code, "UNSUPPORTED");
-  assert.equal(e.detail.feature, MEMORY);
+  assert.equal(e.code, "IMAGE_TOO_LARGE");
+  assert.equal(e.detail.bound_name, "working_set");
   assert.deepEqual([e.detail.width, e.detail.height, e.detail.components], [5000, 5000, 3]);
   assert.ok(e.detail.working_set_bytes > 5000 * 5000 * 3, "the output, and the decode's buffers beside it");
-  assert.equal(e.detail.bound_bytes, 61_300_000);
-  assert.ok(e.message.includes(MEMORY));
+  assert.equal(e.detail.bound_bytes, WORKING);
+  assert.deepEqual([e.detail.size, e.detail.bound, e.detail.key], [e.detail.working_set_bytes, WORKING, `limit.${WORKING_ROW.join(".")}`]);
+  assert.ok(e.detail.transient === undefined && e.transient === undefined, "final, never retried");
+  assert.ok(!("image-past-memory-bound" in JPX_REFUSES), "the UNSUPPORTED key is retired by IMAGE_TOO_LARGE (R4, R7)");
   /* A declaration far past any memory is refused just as fast: nothing is allocated. */
   const t0 = performance.now();
   const huge = refusal(() => decodeJpx(withSiz(bare(1), { X: 60000, Y: 60000 })));
-  assert.equal(huge.detail.feature, MEMORY);
-  assert.ok(huge.detail.working_set_bytes > 60000 * 60000);
+  assert.equal(huge.code, "IMAGE_TOO_LARGE");
+  assert.equal(huge.detail.bound_name, "pixels");
+  assert.equal(huge.detail.size, 60000 * 60000);
   assert.ok(performance.now() - t0 < 200);
 });
 
 test("N34 N75 the working set is what the bound counts: the output, and one code-block row of every band beside it", () => {
-  const bound = 61_300_000;
-  const memory = (d) => { const e = refusal(() => decodeJpx(d)); return e && e.detail.feature === MEMORY ? e.detail.working_set_bytes : 0; };
+  const bound = WORKING;
+  const memory = (d) => { const e = refusal(() => decodeJpx(d)); return e && e.code === "IMAGE_TOO_LARGE" && e.detail.bound_name === "working_set" ? e.detail.working_set_bytes : 0; };
   const grey = () => withSiz(named("9-7-levels-5-grey"), { X: 7800, Y: 7850 });
   /* Grey, one tile, 64x64 code-blocks. The output alone decides the far side. */
   assert.ok(memory(withSiz(named("9-7-levels-5-grey"), { X: 7900, Y: 7800 })) > 7900 * 7800, "61.6 MB of output: refused");

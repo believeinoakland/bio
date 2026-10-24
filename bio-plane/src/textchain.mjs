@@ -346,9 +346,10 @@ function partKeyOf(step) {
   return Number.isInteger(e && e.part) ? `#${e.part}` : extentOf(step).join(",");
 }
 
-/** "page 3" / "pages 0-2" / "pages 0-1, 4" — contiguous runs collapsed, because
+/** "page 4" / "pages 1-3" / "pages 1-2, 5" — contiguous runs collapsed, because
  *  a scanned exhibit is a RUN of pages and a chain sentence listing forty of
- *  them individually is one nobody reads. */
+ *  them individually is one nobody reads. The stored numbers are 0-based; the
+ *  SENTENCE spells them as a reader counts (R39, G141): stored 0 reads "page 1". */
 function pageList(pages) {
   const runs = [];
   for (const p of pages) {
@@ -356,7 +357,7 @@ function pageList(pages) {
     if (last && p === last[1] + 1) last[1] = p; else runs.push([p, p]);
   }
   return `${pages.length === 1 ? "page" : "pages"} `
-       + runs.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`)).join(", ");
+       + runs.map(([a, b]) => (a === b ? `${a + 1}` : `${a + 1}-${b + 1}`)).join(", ");
 }
 
 /** Does this step cover this page? An unscoped step covers every page; an
@@ -397,8 +398,8 @@ export function stepCovers(step, page) {
 export function mergedChain(parts) {
   if (!Array.isArray(parts) || parts.length === 0) return null;
   if (parts.length === 1) {
-    const bad = checkChain(parts[0] && parts[0].chain);
-    return bad || parts[0].chain;
+    const bad = checkedChain(parts[0] && parts[0].chain);
+    return bad || remember(parts[0].chain);
   }
   const out = [];
   const pagesOf = (part) => (part && Array.isArray(part.pages)
@@ -410,7 +411,7 @@ export function mergedChain(parts) {
   for (const part of parts)
     for (const p of pagesOf(part)) { if (seen.has(p)) overlap = true; seen.add(p); }
   for (const [index, part] of parts.entries()) {
-    const bad = checkChain(part && part.chain);
+    const bad = checkedChain(part && part.chain);
     if (bad) return bad;
     const pages = pagesOf(part);
     for (const step of part.chain) {
@@ -422,7 +423,7 @@ export function mergedChain(parts) {
         : { ...step });
     }
   }
-  return out;
+  return remember(out);
 }
 
 /* =========================================================================
@@ -650,17 +651,45 @@ export function checkChain(chain) {
   return null;
 }
 
+/* R106 — A CHAIN THIS MODULE RETURNED IS KNOWN WELL-FORMED, and what is known of it is remembered, so that
+   appending to it does work in the new step alone. `KNOWN` maps a returned array to `{len, last, acc}`: its length
+   and last step (an array pushed to or truncated since it was returned is no longer the array that was checked, and
+   is checked whole again), and `acc`, the running state of `derivationCap`'s whole-document question
+   (`foldCap`/`capOf`) over its first `acc.len` steps, built on the first append that needs it. One `acc` is shared
+   down a line of appends, each advancing it in place; a chain that is no longer the tip of its line (a second append
+   to an older chain) finds `acc.len` differs from its own length and rebuilds, so a branch is answered exactly as a
+   whole check would answer it. A chain built by hand is in no map and is checked whole, as before. */
+const KNOWN = new WeakMap();
+function known(chain) {
+  const k = Array.isArray(chain) ? KNOWN.get(chain) : undefined;
+  return k && k.len === chain.length && k.last === chain[chain.length - 1] ? k : undefined;
+}
+function remember(chain, acc = null) {
+  KNOWN.set(chain, { len: chain.length, last: chain[chain.length - 1], acc });
+  return chain;
+}
+/* `checkChain`, except that a chain this module returned is not walked again. */
+function checkedChain(chain) {
+  return known(chain) ? null : checkChain(chain);
+}
+
 /** Append a step, enforcing rule 2. Returns the NEW chain, or a refusal.
  *
  *  THE INPUT CHAIN IS NEVER MUTATED. A caller holding the pre-append chain is
  *  holding what it held; this is the shape a reading assembly wants and it also
- *  means a refused append leaves nothing half-extended. */
+ *  means a refused append leaves nothing half-extended.
+ *
+ *  LINEAR OVER A CHAIN'S LIFE (R106): see `KNOWN`. A chain this module returned is not re-checked and its cap
+ *  is not re-derived from every earlier step; the refusals and results are the whole check's. */
 export function appendStep(chain, step) {
-  const bad = checkChain(chain);
+  const bad = checkedChain(chain);
   if (bad) return bad;
   const one = checkChain([step]);
   if (one) return one;
   const role = STEP_KINDS[step.step].role;
+  const k = known(chain);
+  let acc = k && k.acc && k.acc.len === chain.length ? k.acc : null;
+  if (!acc) { acc = newCapAcc(); for (const s of chain) foldCap(acc, s); if (k) k.acc = acc; }
   if (role === "derivation") {
     /* DEC-49 REGION is-text-chain-monotone
        RULE 2, and it is computed rather than trusted. The incoming step's cap
@@ -669,13 +698,16 @@ export function appendStep(chain, step) {
        plausible mistake here is not malice — it is an author who genuinely
        believes their clean-up improved the text. It did. It improved the
        READABILITY. Reliability is bounded by the worst thing that touched it. */
-    const have = derivationCap(chain);
+    const have = capOf(acc);
     if (step.cap != null && have != null && rank(step.cap) != null && rank(step.cap) < rank(have))
       return refusal("TEXT_CHAIN_STRENGTHENS",
         localize("text-chain.textchain.this_step_step_claims_fidelity", "this {step} step claims fidelity {cap}, stronger than the {have} the chain already carries. A derivation can only weaken what it received: text that was cleaned is more READABLE, not more RELIABLE, and the hazard of this whole capability is output that looks better than its input", { step: String(step.step), cap: String(step.cap), have: String(have) }));
     /* END DEC-49 REGION is-text-chain-monotone */
   }
-  return [...chain, { ...step }];
+  const copy = { ...step };
+  const out = [...chain, copy];
+  foldCap(acc, copy);
+  return remember(out, acc);
 }
 
 /** The chain a document's OWN text layer produces (FW-15's case, restated as a
@@ -685,7 +717,7 @@ export function layerChain(args) {
   /* Never throws (R83): a `null` or non-object argument is every default, not a TypeError. */
   const { tier = null, container = null, cap = null, measured_by = null, calibration = null } =
     args && typeof args === "object" ? args : {};
-  return [{ step: "layer", tier, container, cap, measured_by, calibration }];
+  return remember([{ step: "layer", tier, container, cap, measured_by, calibration }]);
 }
 
 /** CAP-10 / DEC-75 / IC-122 — PUT A CONVERSION AT THE HEAD OF A CHAIN.
@@ -710,14 +742,14 @@ export function layerChain(args) {
 export function convertedChain(step, chain) {
   const one = checkChain([step]);
   if (one) return one;
-  const bad = checkChain(chain);
+  const bad = checkedChain(chain);
   if (bad) return bad;
   for (const s of chain) {
     if (STEP_KINDS[s.step].role !== "derivation") continue;
     const r = appendStep([step], s);
     if (!Array.isArray(r)) return r;
   }
-  return [{ ...step }, ...chain.map((s) => ({ ...s }))];
+  return remember([{ ...step }, ...chain.map((s) => ({ ...s }))]);
 }
 
 /* ------------------------------------------------------------------ *
@@ -756,6 +788,45 @@ export function calibrationsOf(chain) {
  * Reading a chain
  * ------------------------------------------------------------------ */
 
+/* `derivationCap`'s measured letter of a step, or null. */
+const measuredCap = (s) => (s.cap != null && rank(s.cap) != null ? s.cap : null);
+
+/* The whole-document question of `derivationCap`, as a running state a step is folded into once (R106). `cap` is
+   the weakest measured letter of the unscoped steps; `parts` each scoped part's own weakest (null while it has
+   none), `nullParts` the parts still at null and `weakest` the weakest letter over the parts; `unreadable` an extent
+   nobody could read or an unmeasured head conversion; `len` the number of steps folded. */
+function newCapAcc() {
+  return { cap: null, unreadable: false, parts: new Map(), nullParts: 0, weakest: null, len: 0 };
+}
+function foldCap(acc, step) {
+  acc.len++;
+  if (STEP_KINDS[step.step].role !== "derivation") return;
+  const ext = extentOf(step);
+  if (ext === "unreadable") { acc.unreadable = true; return; }
+  const m = measuredCap(step);
+  /* CAP-10 / DEC-75: the kind that declares `unmeasured: "undetermined"` — see `derivationCap`. */
+  if (STEP_KINDS[step.step].unmeasured === "undetermined" && m == null) acc.unreadable = true;
+  if (ext === "all") {
+    if (m) acc.cap = acc.cap == null ? m : weaker(acc.cap, m);
+    return;
+  }
+  const key = partKeyOf(step);
+  if (!acc.parts.has(key)) { acc.parts.set(key, null); acc.nullParts++; }
+  if (m) {
+    const was = acc.parts.get(key);
+    const now = was == null ? m : weaker(was, m);
+    acc.parts.set(key, now);
+    if (was == null) acc.nullParts--;
+    acc.weakest = acc.weakest == null ? now : weaker(acc.weakest, now);
+  }
+}
+/* The answer for the whole document: an unreadable extent, or a part with no measured cap, is undetermined. */
+function capOf(acc) {
+  if (acc.unreadable || acc.nullParts) return null;
+  if (acc.weakest == null) return acc.cap;
+  return acc.cap == null ? acc.weakest : weaker(acc.cap, acc.weakest);
+}
+
 /** The strongest transcription fidelity the DERIVATION steps support: the
  *  weakest link, computed here. Returns null when NO derivation step carries a
  *  measured cap — and null means UNDETERMINED, stated, never "fine".
@@ -763,19 +834,25 @@ export function calibrationsOf(chain) {
  *  A verification step is skipped deliberately and that is rule 2 holding: see
  *  the header. `gradeCeiling` is where an attestation is allowed to matter. */
 export function derivationCap(chain, target = null) {
-  if (checkChain(chain)) return null;
+  if (checkedChain(chain)) return null;
   const page = target && Number.isInteger(target.page) && target.page >= 0 ? target.page : null;
-  const measured = (s) => (s.cap != null && rank(s.cap) != null ? s.cap : null);
+  if (page == null) {
+    /* THE WHOLE DOCUMENT: the weakest over the unscoped steps and the parts, and a part with NO measured cap
+       makes the whole undetermined — a text layer's `null` is never resolved into an OCR pass's letter (see the
+       header of D-252). An extent this module could not read covers nothing it can name, so it could be a stretch
+       nothing else measured; and CAP-10: an unmeasured head conversion, whose later steps measured only its
+       output, bounds nothing — the flag is shared because the answer is the same sentence. */
+    const acc = newCapAcc();
+    for (const step of chain) foldCap(acc, step);
+    return capOf(acc);
+  }
   let cap = null, unreadable = false;
-  /* D-252: the parts, collected by the pages they cover. A document whose steps
-     are all unscoped has none of these and takes the original path exactly. */
-  const parts = new Map();
   for (const step of chain) {
     if (STEP_KINDS[step.step].role !== "derivation") continue;
     const ext = extentOf(step);
     if (ext === "unreadable") { unreadable = true; continue; }
     /* CAP-10 / DEC-75 — A KIND THAT DECLARES `unmeasured: "undetermined"`, and
-       the one place the sequence rule below does NOT hold. That rule says an
+       the one place the sequence rule does NOT hold. That rule says an
        unmeasured step neither raises nor lowers, because the text it touched
        is still bounded by a step that WAS measured. A conversion at the head
        of the chain breaks the premise: every step after it measured the
@@ -786,48 +863,18 @@ export function derivationCap(chain, target = null) {
        measurement lets a calibration row raise it. Today the `layer` step's
        own cap is null too, so this changes no value the record holds; it is
        what keeps the answer honest the day a text-layer letter is measured. */
-    if (STEP_KINDS[step.step].unmeasured === "undetermined" && measured(step) == null
-        && (page == null || ext === "all" || ext.includes(page)))
+    if (STEP_KINDS[step.step].unmeasured === "undetermined" && measuredCap(step) == null
+        && (ext === "all" || ext.includes(page)))
       unreadable = true;
-    if (page != null) {
-      /* ASKING ABOUT ONE PAGE. Only a step that covers it bounds it — which is
-         the read a basis leg citing that page needs, and the reason a mixed
-         document is still usable: the OCR'd exhibit answers C and the text-layer
-         report answers undetermined, each about itself. */
-      if (ext !== "all" && !ext.includes(page)) continue;
-      const m = measured(step);
-      if (m) cap = cap == null ? m : weaker(cap, m);
-      continue;
-    }
-    if (ext === "all") {
-      const m = measured(step);
-      if (m) cap = cap == null ? m : weaker(cap, m);
-      continue;
-    }
-    /* WITHIN a part the steps are sequential, so the landed rule holds
-       unchanged: an unmeasured step neither raises nor lowers, and the part's
-       cap is the weakest MEASURED step in it. A part with no measured step at
-       all is the undetermined one. */
-    const key = partKeyOf(step);
-    const m = measured(step);
-    if (!parts.has(key)) parts.set(key, null);
-    if (m) parts.set(key, parts.get(key) == null ? m : weaker(parts.get(key), m));
+    /* ASKING ABOUT ONE PAGE. Only a step that covers it bounds it — which is
+       the read a basis leg citing that page needs, and the reason a mixed
+       document is still usable: the OCR'd exhibit answers C and the text-layer
+       report answers undetermined, each about itself. */
+    if (ext !== "all" && !ext.includes(page)) continue;
+    const m = measuredCap(step);
+    if (m) cap = cap == null ? m : weaker(cap, m);
   }
-  /* An extent this module could not read covers nothing it can name, so it could
-     be covering the page in hand or a stretch of the document nothing else
-     measured. Either way the answer is UNDETERMINED, stated. (CAP-10: so does an
-     unmeasured head conversion, above — the flag is shared because the answer is
-     the same sentence.) */
-  if (unreadable) return null;
-  if (page != null) return cap;
-  /* THE MIXED DOCUMENT'S CAP: the weakest over the parts, and a part with NO
-     measured cap makes the whole undetermined — see the header. This is the step
-     that refuses to resolve a text layer's `null` into an OCR pass's letter. */
-  for (const partCap of parts.values()) {
-    if (partCap == null) return null;
-    cap = cap == null ? partCap : weaker(cap, partCap);
-  }
-  return cap;
+  return unreadable ? null : cap;
 }
 
 /** Does this chain contain a derivation this record did not author — i.e. is
@@ -1828,7 +1875,8 @@ const isWideSpace = (c) =>
   c === 0xa0 || c === 0x1680 || (c >= 0x2000 && c <= 0x200a) || c === 0x2028 || c === 0x2029 ||
   c === 0x202f || c === 0x205f || c === 0x3000 || c === 0xfeff;
 /**
- * The glyphs a string holds: non-whitespace CODE POINTS, D-501's unit and the
+ * The glyphs a string holds: non-whitespace CODE POINTS other than NUL and U+FFFD (a decode's failures, G131g),
+ * D-501's unit and the
  * one counter every reader that judges "is there decoded text here" must read
  * (D-514). Exported for those readers; the award's own counter, `decodedChars`
  * below, stays unexported, and this module's suite states the award's cases
@@ -1850,6 +1898,8 @@ export function glyphCount(s) {
   for (let i = 0; i < len; i++) {
     const c = s.charCodeAt(i);
     if (c === 0x20 || (c >= 0x9 && c <= 0xd)) continue;
+    /* R73 (G131g): a decode's failures are not glyphs — NUL and the replacement character U+FFFD. */
+    if (c === 0 || c === 0xfffd) continue;
     if (c >= 0xa0 && isWideSpace(c)) continue;
     n++;
     /* A high surrogate followed by a low one is one code point: step over the low. */
@@ -1936,7 +1986,13 @@ export function mergeTier2Text(base, t2) {
   const byPage = new Map();
   for (const p of t2Pages) if (p && Number.isInteger(p.page)) byPage.set(p.page, p);
 
-  const pages = [], undetermined = [], replaced = [], kept = [];
+  /* D-633 / D-665 / D-697: what tier 2 says of a page it wins, and what is carried onto it. */
+  const isImage = (u) => u && typeof u.reason === "string" && u.reason.startsWith("image_content_");
+  const sameMark = (x, y) => x && y && x.reason === y.reason
+    && JSON.stringify(x.rect ?? null) === JSON.stringify(y.rect ?? null);
+  const textOf = (c) => (typeof c.text === "string" ? c.text : "");
+
+  const pages = [], replaced = [], kept = [];
   for (const b of usable) {
     const cand = byPage.get(b.page) || null;
     const winner = perPageTierWinner(b, cand);
@@ -1950,28 +2006,46 @@ export function mergeTier2Text(base, t2) {
          A field so named on the page itself is carried too. */
       const own = Array.isArray(cand.undetermined) ? cand.undetermined : [];
       const had = Array.isArray(b.undetermined) ? b.undetermined : [];
-      const isImage = (u) => u && typeof u.reason === "string" && u.reason.startsWith("image_content_");
       /* D-665 / D-697 (N102) — AND WHAT IT SAID ABOUT EACH IMAGE IT COULD NOT READ. `image_unread`
          (one marker per painted image, `pdf-reader`) is as true after tier 2 as before, since tier 2
          reads no image. Each is carried after tier 2's own markers unless tier 2 states the same
          one (same reason and rect); it counts 0 undetermined characters, so no award moves. */
-      const sameMark = (x, y) => x && y && x.reason === y.reason
-        && JSON.stringify(x.rect ?? null) === JSON.stringify(y.rect ?? null);
       const tier2Images = own.some(isImage);
       const images = had.filter((u) => (isImage(u) && !tier2Images)
         || (u && u.reason === "image_unread" && !own.some((o) => sameMark(o, u))));
       const fields = Object.fromEntries(Object.entries(b).filter(([k]) => k.startsWith("image_content_")));
-      pages.push({ ...fields, page: b.page,
-                   text: typeof cand.text === "string" ? cand.text : "",
+      pages.push({ ...fields, page: b.page, text: textOf(cand),
                    undetermined: images.length ? [...own, ...images] : own,
                    tier: 2 });
     } else {
       kept.push(b.page);
       pages.push({ ...b, tier: 1 });
     }
-    for (const u of pages[pages.length - 1].undetermined || []) undetermined.push(u);
   }
 
+  /* R105 — NO PAGE IS DROPPED. A base page with no integer `page` is not one this merge can compare, and it is
+     not one it may lose: it is kept as tier 1, after the numbered pages and in its own order, listed in `kept`
+     as `null` (it has no number to list). A tier-2 page the base lacks is adopted as tier 2 at its page number
+     (listed in `replaced`); tier 2 reads what tier 1 did not, so nothing is owed to compare it with. Of two
+     tier-2 pages with one number the later is the page (the map above). A tier-2 page with no integer `page`
+     is adopted after the numbered pages, in its own order, listed in `replaced` as `null`. */
+  const adopt = (c) => ({ page: c.page, text: textOf(c), undetermined: Array.isArray(c.undetermined) ? c.undetermined : [], tier: 2 });
+  const held = new Set(usable.map((b) => b.page));
+  for (const [number, c] of [...byPage].sort((x, y) => x[0] - y[0])) {
+    if (held.has(number)) continue;
+    const at = pages.findIndex((q) => q.page > number);
+    pages.splice(at < 0 ? pages.length : at, 0, adopt(c));
+    replaced.push(number);
+  }
+  for (const b of basePages) if (b && typeof b === "object" && !Number.isInteger(b.page)) {
+    pages.push({ ...b, tier: 1 }); kept.push(null);
+  }
+  for (const c of t2Pages) if (c && typeof c === "object" && !Number.isInteger(c.page)) {
+    pages.push(adopt(c)); replaced.push(null);
+  }
+
+  const undetermined = [];
+  for (const p of pages) for (const u of p.undetermined || []) undetermined.push(u);
   const document = pages.map((p) => p.text).filter((t) => typeof t === "string" && t.length).join("\n");
   const text = { ...base, document, pages, undetermined,
                  counts: { chars: document.length, undetermined: undetermined.length } };

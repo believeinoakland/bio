@@ -93,7 +93,7 @@ console.log("\n--- R20, R25, R26, R40: the scanned page, a symbol dictionary in 
   const want = variant("ordinance-page-2");
   const r = await render(SCAN, 0);
   t("R20 the success shape", Object.keys(r).sort(), ["bytes", "height", "jbig2", "mediaType", "ok", "page", "page_geometry",
-    "page_marks", "pixels_sha256", "rotate_deg", "route", "source", "upright", "width"]);
+    "page_marks", "pixels_sha256", "rotate_deg", "route", "source", "turned_deg", "upright", "width"]);
   t("R20 R25 route, media type, size", fields(r, "ok", "route", "mediaType", "width", "height", "upright", "rotate_deg"),
     [true, "decoded-jbig2", "image/png", 2560, 3360, true, 0]);
   t("R20 source", r.source, { filters: ["JBIG2Decode"], colorSpace: "DeviceGray", bitsPerComponent: 1, imageMask: false });

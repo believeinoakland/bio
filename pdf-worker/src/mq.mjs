@@ -17,7 +17,22 @@
  * read beyond the segment's data as fatal, and a stream cut short would
  * otherwise decode to a plausible picture made of the 1-bits the coder invents.
  * `overrun` counts the bytes the decoder needed and did not have.
+ *
+ * AS THE BYTES ARE CONSUMED (fix round 9, G132l (d)). A caller that may not read past
+ * its data passes `onShort`, which is called, with the decoder, each time the decode
+ * finds the data short; it throws the codec's own short-data refusal, so a region
+ * taller than its data stops where the data runs out and not after every row has
+ * been invented from 1-bits. The data ending in its 0xFFAC marker (T.88 E.2.9's
+ * FLUSH) is the usual end, and the coder reads that marker for the 1-bits it
+ * still owes its look-ahead: INITDEC reads two bytes ahead, and a whole stream
+ * measured over 148 reference decodes feeds on the marker once or twice. Feeding
+ * on it more than `MARKER_FEEDS` times (the look-ahead and slack for an encoder
+ * that drops its trailing 0xFF bytes) is data the stream does not hold, and counts
+ * as the bytes missing, exactly as a byte past a stream with no marker does.
  */
+
+/* The marker byte-ins a whole stream may need beyond its data; see above. */
+const MARKER_FEEDS = 4;
 
 /* [Qe, NMPS, NLPS, SWITCH] — T.88 Table E.1 / T.800 Table C.2. */
 const QE = [
@@ -44,12 +59,14 @@ const Q_SWITCH = Uint8Array.from(QE, (r) => r[3]);
 export const mqContexts = (n) => new Uint8Array(n);
 
 export class MqDecoder {
-  /** Decode `data[start, end)`. */
-  constructor(data, start = 0, end = data.length) {
+  /** Decode `data[start, end)`. `onShort(decoder)`, if given, is called each time the data is found short. */
+  constructor(data, start = 0, end = data.length, { onShort = null } = {}) {
     this.d = data;
     this.bp = start;
     this.end = end;
     this.overrun = 0;
+    this.fed = 0;
+    this.onShort = onShort;
     this.C = (start < end ? data[start] : 0xff) * 65536;
     this.byteIn();
     this.C = (this.C << 7) >>> 0;
@@ -65,7 +82,7 @@ export class MqDecoder {
       if (b1 > 0x8f) {                 // a marker: 1-bits, and the pointer stays
         this.C += 0xff00;
         this.ct = 8;
-        if (bp + 1 >= this.end) this.overrun++;
+        if (bp + 1 >= this.end || ++this.fed > MARKER_FEEDS) this.short();
       } else {
         this.bp = bp + 1;
         this.C += b1 << 9;
@@ -74,9 +91,15 @@ export class MqDecoder {
     } else {
       this.bp = bp + 1;
       if (bp + 1 < this.end) this.C += d[bp + 1] << 8;
-      else { this.C += 0xff00; this.overrun++; }
+      else { this.C += 0xff00; this.short(); }
       this.ct = 8;
     }
+  }
+
+  /** The data is short by a byte: count it, and let the caller stop the decode here. */
+  short() {
+    this.overrun++;
+    if (this.onShort) this.onShort(this);
   }
 
   /** One binary decision in context `cx` of `ctx` (a `mqContexts` array). */

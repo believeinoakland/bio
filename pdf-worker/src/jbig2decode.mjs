@@ -39,6 +39,7 @@
 
 import { MqDecoder, mqContexts } from "./mq.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { READ_BOUNDS, boundOf, statement } from "../../bio-plane/src/read-bounds.mjs";
 
 export class Jbig2Refusal extends Error {
   constructor(code, detail = {}) {
@@ -64,11 +65,28 @@ export const JBIG2_REFUSES = Object.freeze({
   "no page": localize("image-codecs.jbig2decode.the_stream_holds_no_page", "the stream holds no page information segment"),
 });
 
+/* THE DECLARED SIZES (R12, fix round 9, G125a): a page, region, symbol or pattern bitmap is judged against the table
+ * before any of it is allocated. The decode holds a bitmap a byte a pixel, so the pixel bound is also the byte bound. */
+const PIXELS_MAX = boundOf("image", "pixels");
+const EDGE_MAX = boundOf("image", "edge");
+/* the symbols of a dictionary and the patterns of a pattern dictionary are retained objects, one bitmap each: the table's
+ * retained-objects bound (250,000; `image.retained_objects`, the row JPX counts its precincts against, see jpxdecode.mjs; K4858) */
+const OBJECTS_ROW = Object.hasOwn(READ_BOUNDS.image, "retained_objects") ? ["image", "retained_objects"] : ["office", "retained_objects"];
+const OBJECTS_MAX = boundOf(...OBJECTS_ROW);
+/** IMAGE_TOO_LARGE: final and deterministic, with the declared size, the bound it was judged against and the sentence's key. */
+const tooLarge = (kind, name, size, note, extra) => new Jbig2Refusal("IMAGE_TOO_LARGE", { note, bound_name: name, ...statement(kind, name, size), ...extra });
+const tooWide = (w, h) => tooLarge("image", "edge", Math.max(w, h),
+  localize("image-codecs.jbig2decode.the_bitmap_is_w_by_h", "the bitmap is {w} by {h}, and the decoder reads an edge of at most {bound}", { w: String(w), h: String(h), bound: String(EDGE_MAX) }), { width: w, height: h });
+const tooManyObjects = (n, note) => tooLarge(...OBJECTS_ROW, n, note, { bound_name: "objects" });
+const tooMany = (w, h) => tooLarge("image", "pixels", w * h,
+  localize("image-codecs.jbig2decode.the_bitmap_is_w_by_h_2", "the bitmap is {w} by {h}, past the {bound} pixels the decoder reads", { w: String(w), h: String(h), bound: String(PIXELS_MAX) }), { width: w, height: h });
+
 /* ── bitmaps ──────────────────────────────────────────────────────────────── */
 
 const bitmap = (w, h, fill = 0) => {
   if (!(Number.isInteger(w) && Number.isInteger(h)) || w < 0 || h < 0) throw corrupt(`bitmap size ${w}x${h}`);
-  if (w * h > 1 << 28) throw corrupt(localize("image-codecs.jbig2decode.bitmap_of_w_x_h", "bitmap of {w}x{h} pixels is beyond any page", { w: String(w), h: String(h) }));
+  if (Math.max(w, h) > EDGE_MAX) throw tooWide(w, h);
+  if (w * h > PIXELS_MAX) throw tooMany(w, h);
   const d = new Uint8Array(w * h);
   if (fill) d.fill(1);
   return { w, h, d };
@@ -810,9 +828,9 @@ function decodeGenericSegment(seg, r, info, used) {
   used.add(localize("image-codecs.jbig2decode.generic_region_arithmetic_template_template", "generic region, arithmetic, template {template}{v1}", { template: String(template), v1: String(tpgdon ? ", TPGDON" : "") }));
   let end = seg.data.length;
   /* An unknown-length region carries its row count after the data. */
-  const mq = new MqDecoder(seg.data, r.p, end);
+  /* the data running out stops the decode where it runs out (R5), not after every row has been invented */
+  const mq = new MqDecoder(seg.data, r.p, end, { onShort: (m) => { throw truncated(localize("image-codecs.jbig2decode.the_generic_regions_arithmetic_data", "the generic region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(m.overrun) })); } });
   const bm = decodeGenericArith(mq, mqContexts(1 << 16), info.w, info.h, template, tpgdon, at);
-  if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_generic_regions_arithmetic_data", "the generic region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return bm;
 }
 
@@ -833,9 +851,8 @@ function decodeRefinementSegment(seg, r, info, results, page, used) {
     compose(ref, page, -info.x, -info.y, 4);
   }
   used.add(localize("image-codecs.jbig2decode.generic_refinement_region_template_template", "generic refinement region, template {template}{v1}", { template: String(template), v1: String(tpgron ? ", TPGRON" : "") }));
-  const mq = new MqDecoder(seg.data, r.p, seg.data.length);
+  const mq = new MqDecoder(seg.data, r.p, seg.data.length, { onShort: (m) => { throw truncated(localize("image-codecs.jbig2decode.the_refinement_regions_arithmetic_data", "the refinement region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(m.overrun) })); } });
   const bm = decodeRefinement(mq, mqContexts(1 << 13), info.w, info.h, template, ref, 0, 0, tpgron, at);
-  if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_refinement_regions_arithmetic_data", "the refinement region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return bm;
 }
 
@@ -868,6 +885,7 @@ function decodeSymbolDict(seg, r, results, tables, used) {
   }
   used.add(`symbol dictionary, ${huff ? "Huffman" : "arithmetic"}${refagg ? ", refinement/aggregate" : ""}`);
   const total = inSyms.length + numNew;
+  if (total > OBJECTS_MAX) throw tooManyObjects(total, localize("image-codecs.jbig2decode.the_symbol_dictionary_declares_n", "the symbol dictionary declares {n} symbols, past the {bound} the decoder holds", { n: String(total), bound: String(OBJECTS_MAX) }));
   let idLen = 0;
   while (2 ** idLen < total) idLen++;
   const newSyms = [];
@@ -877,7 +895,7 @@ function decodeSymbolDict(seg, r, results, tables, used) {
   const ia = { DH: iaCtx(), DW: iaCtx(), EX: iaCtx(), AI: iaCtx(), DT: iaCtx(), FS: iaCtx(), DS: iaCtx(), IT: iaCtx(),
                RI: iaCtx(), RDW: iaCtx(), RDH: iaCtx(), RDX: iaCtx(), RDY: iaCtx(), ID: mqContexts(1 << (idLen + 1)) };
   if (huff) bits = new Bits(d, r.p, d.length);
-  else mq = new MqDecoder(d, r.p, d.length);
+  else mq = new MqDecoder(d, r.p, d.length, { onShort: (m) => { throw truncated(localize("image-codecs.jbig2decode.the_symbol_dictionarys_arithmetic_data", "the symbol dictionary's arithmetic data ran out ({overrun} bytes short)", { overrun: String(m.overrun) })); } });
   const num = (name, tbl) => (huff ? bits.huff(tbl) : iaDecode(mq, ia[name]));
   let hcHeight = 0;
   while (newSyms.length < numNew) {
@@ -949,7 +967,6 @@ function decodeSymbolDict(seg, r, results, tables, used) {
     exFlag ^= 1;
   }
   if (exported.length !== numEx) throw corrupt(localize("image-codecs.jbig2decode.length_symbols_exported_where_sdnumexsyms", "{length} symbols exported where SDNUMEXSYMS is {numEx}", { length: String(exported.length), numEx: String(numEx) }));
-  if (mq && mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_symbol_dictionarys_arithmetic_data", "the symbol dictionary's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return { exported };
 }
 
@@ -992,11 +1009,10 @@ function decodeTextSegment(seg, r, info, results, tables, used) {
   }
   let idLen = 0;
   while (2 ** idLen < syms.length) idLen++;
-  const mq = new MqDecoder(d, r.p, d.length);
+  const mq = new MqDecoder(d, r.p, d.length, { onShort: (m) => { throw truncated(localize("image-codecs.jbig2decode.the_text_regions_arithmetic_data", "the text region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(m.overrun) })); } });
   const ia = { DT: iaCtx(), FS: iaCtx(), DS: iaCtx(), IT: iaCtx(), RI: iaCtx(), RDW: iaCtx(), RDH: iaCtx(),
                RDX: iaCtx(), RDY: iaCtx(), ID: mqContexts(1 << (idLen + 1)) };
   const reg = decodeTextRegion(p, syms, { mq, ia, idLen, gr: mqContexts(1 << 13) });
-  if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_text_regions_arithmetic_data", "the text region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return reg;
 }
 
@@ -1005,15 +1021,15 @@ function decodePatternDict(seg, r, used) {
   const mmr = flags & 1, template = (flags >> 1) & 3;
   const pw = r.u8("HDPW"), ph = r.u8("HDPH"), grayMax = r.u32("GRAYMAX");
   if (!pw || !ph) throw corrupt(localize("image-codecs.jbig2decode.a_pattern_of_no_size", "a pattern of no size"));
+  if (grayMax + 1 > OBJECTS_MAX) throw tooManyObjects(grayMax + 1, localize("image-codecs.jbig2decode.the_pattern_dictionary_declares_n", "the pattern dictionary declares {n} patterns, past the {bound} the decoder holds", { n: String(grayMax + 1), bound: String(OBJECTS_MAX) }));
   const w = (grayMax + 1) * pw;
   used.add(`pattern dictionary, ${mmr ? "MMR" : `arithmetic, template ${template}`}`);
   let coll;
   if (mmr) coll = decodeMmr(seg.data, r.p, seg.data.length, w, ph).bm;
   else {
     const at = template === 0 ? [-pw, 0, -3, -1, 2, -2, -2, -2] : [-pw, 0];
-    const mq = new MqDecoder(seg.data, r.p, seg.data.length);
+    const mq = new MqDecoder(seg.data, r.p, seg.data.length, { onShort: () => { throw truncated(localize("image-codecs.jbig2decode.the_pattern_dictionary_s_arithmetic", "the pattern dictionary's arithmetic data ran out")); } });
     coll = decodeGenericArith(mq, mqContexts(1 << 16), w, ph, template, 0, at);
-    if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_pattern_dictionary_s_arithmetic", "the pattern dictionary's arithmetic data ran out"));
   }
   const pats = [];
   for (let g = 0; g <= grayMax; g++) {
@@ -1052,13 +1068,12 @@ function decodeHalftoneSegment(seg, r, info, results, used) {
   const at = [template <= 1 ? 3 : 2, -1, -3, -1, 2, -2, -2, -2];
   const d = seg.data;
   let mq = null, gb = null, p = r.p;
-  if (!mmr) { mq = new MqDecoder(d, p, d.length); gb = mqContexts(1 << 16); }
+  if (!mmr) { mq = new MqDecoder(d, p, d.length, { onShort: () => { throw truncated(localize("image-codecs.jbig2decode.the_halftone_region_s_arithmetic", "the halftone region's arithmetic data ran out")); } }); gb = mqContexts(1 << 16); }
   for (let j = bpp - 1; j >= 0; j--) {
     if (mmr) { const o = decodeMmr(d, p, d.length, gw, gh); planes[j] = o.bm; p = o.end; }
     else planes[j] = decodeGenericArith(mq, gb, gw, gh, template, 0, at, skip);
     if (j < bpp - 1) for (let i = 0; i < planes[j].d.length; i++) planes[j].d[i] ^= planes[j + 1].d[i];
   }
-  if (mq && mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_halftone_region_s_arithmetic", "the halftone region's arithmetic data ran out"));
   for (let m = 0; m < gh; m++) for (let n = 0; n < gw; n++) {
     let g = 0;
     for (let j = bpp - 1; j >= 0; j--) g = (g << 1) | planes[j].d[m * gw + n];
