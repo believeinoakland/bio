@@ -839,3 +839,7 @@ COMPLETE job 94, R80 (G168): READING_HELD now carries counters {written, skipped
 **Tests/checks.** Module: `ℹ tests 381`, `ℹ pass 381`, `ℹ fail 0`. Users (23 files naming `readHeld` outside extraction; heavy l75/l77/l79, r7-contention, round5-seam not run): `ℹ tests 174`, `ℹ pass 174`, `ℹ fail 0`. checks/run.mjs: format 0 failures, architecture 0, coverage 0 (6927 of 6927), channels 0, words 0; ownership 0 failures (3 files); setup-words `--check`: stale-rows note only. impact.mjs: 107 of 176 modules affected (the tranche is wide); only the users above were run.
 
 Size (session_01YX5e8Td46Lgn5yQ3k9x68C): test runs 9, module lines 4876
+
+## J43 · COMPLETE
+
+COMPLETE job 100, R82 (G172): readHeld no longer answers owed for a reading that ended final (the OCR member refused its page from the header), a member bound or not. Red first (owed true), then green; control: a transient member still owed. Module 381/381; users 174/174. Checks: format, architecture, coverage, words, ownership 0 failures. NOT RUN: control-plane 'R9 seam §18' dies of heap out of memory in this container at ~40 s, identically without my change; needs a platform run (platform check L). Size (session_01YX5e8Td46Lgn5yQ3k9x68C): test runs 9, module lines 4876.
