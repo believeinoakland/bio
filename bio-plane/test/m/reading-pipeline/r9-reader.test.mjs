@@ -431,8 +431,4 @@ test("R47 R28 (G128e, DOCS O3 shape): a .docx whose table cells weigh over INLIN
 
 /* ---- K4888: the second half's ids, named until their job replaces them ---- */
 
-test.todo("R50 (G131i, G131h): text, JSON and XML read in byte windows with a carry, to the standard: job 40 (reading-pipeline-2), fix round 9");
-test.todo("R51 (G131f): HTML read by one streaming pass, linear in its bytes: job 40 (reading-pipeline-2), fix round 9");
-test.todo("R52 (G133f): classification a budgeted step: job 40 (reading-pipeline-2), fix round 9");
-test.todo("R54 (G135a, G135b, G135d, G135e): the named refusals and the kinds with no reader: job 40 (reading-pipeline-2), fix round 9");
 test.todo("R57 (G128c): a PDF read in ranges completes its reading: pdf-reader (job 7) and extraction-2 (job 41), fix round 9");

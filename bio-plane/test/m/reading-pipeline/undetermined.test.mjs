@@ -71,8 +71,11 @@ test("R2 R37 (control): a PDF over the whole-read ceiling, recorded `undetermine
   const d = doc({ digest: "e".repeat(64), bytes: total, ct: "", format: "undetermined", headers: [], parts });
   const out = await w.read(d);
   assert.equal(out.reading.failure, "final");
-  assert.equal(out.reading.basis, word("reading-pipeline.why.capture_bytes_parts",
-    { total: String(total), parts: "4", multipart_read_max: String(WHOLE_READ_MAX) }));
+  /* R54 (fix round 9): the refusal names its cause and its two figures: the size and the limit, in a sentence that says neither "read" nor "parts" */
+  assert.equal(out.reading.reason, "TOO_LARGE");
+  assert.equal(out.reading.size, total);
+  assert.equal(out.reading.bound, WHOLE_READ_MAX);
+  assert.ok(out.reading.basis.includes(String(total)) && out.reading.basis.includes(String(WHOLE_READ_MAX)), out.reading.basis);
   assert.equal(out.text_units, undefined);
 });
 

@@ -22,6 +22,9 @@ import { readingProvenance, describePages, yieldNow } from "./readingprov.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { boundOf, statement } from "../read-bounds.mjs";
 import { decodeText } from "../ooxml.mjs";
+import { decodeReferences, visibleTextOfHtml, visibleTextOfHtmlYielding } from "./html.mjs";
+
+export { visibleTextOfHtml };
 
 export { readingProvenance, compareProvenance, describePages, PROVENANCE_SCHEME } from "./readingprov.mjs";
 export { ReadHooks, readHooksOf } from "./hooks.mjs";
@@ -506,7 +509,7 @@ function withKeptPages(text, kept, seed) {
 export function ocrTextFromMember(res, { calibration = null } = {}) {
   const r = res && typeof res === "object" ? res : {};
   if (r.ok !== true)
-    return { ok: false, why: word("reading-pipeline.why.ocr_member_declined", { reason: typeof r.reason === "string" ? ` (${r.reason})` : "" }) };
+    return { ok: false, why: word("reading-pipeline.why.ocr_member_declined", { reason: refusalReasonOf(r) !== "DECLINED" || typeof r.reason === "string" ? ` (${refusalReasonOf(r)})` : "" }) };
   if (!(typeof r.engine === "string" && r.engine) || !(typeof r.version === "string" && r.version))
     return { ok: false, why: word("reading-pipeline.why.ocr_member_name") };
   if (!(typeof r.cap === "string" && r.cap) || !(typeof r.measured_by === "string" && r.measured_by))
@@ -756,6 +759,12 @@ function stateOcr(target, left, t3, i2text) {
       pictures += images || (own.some((u) => u && u.reason === "image_content_undetermined") ? 1 : 0);
     }
   }
+  /* K4904 (2c item 9): the pages whose only text is a folio's glyphs over a picture (D-635's `image_content_unread`), still unread: a pass that rebuilds pages from
+     stored units asks OCR for them as pages with no text layer. Absent means none. */
+  const folio = [];
+  for (const pg of (i2text && Array.isArray(i2text.pages) ? i2text.pages : []))
+    if (pg && Number.isInteger(pg.page) && (Array.isArray(pg.undetermined) ? pg.undetermined : []).some((u) => u && u.reason === "image_content_unread") && !owedAt.has(pg.page)) folio.push(pg.page);
+  if (folio.length) target.folio_pages = [...new Set(folio)].sort((x, y) => x - y);
   if (skipped) target.units_skipped = (target.units_skipped || 0) + skipped;
   if (pictures) target.pictures_unread = pictures;
   return target;
@@ -1117,235 +1126,13 @@ export function textWordsFor(i2text, keptUnits = undefined, { budget, all: held 
    drawn here from the decoded text: one `doc-para` per paragraph, a paragraph being a run of text between blank lines,
    numbered from 0 over all paragraphs in the text's order (`textUnitsFor` skips the ones with no glyph and keeps
    `seq` as the position, R15). Nothing is added to the format registry: this is the one site. */
-const HTML_ENTITIES = { amp: "&", lt: "<", gt: ">", quot: "\"", apos: "'", nbsp: " ", copy: "©", reg: "®",
-  trade: "™", mdash: "—", ndash: "–", hellip: "…", lsquo: "‘", rsquo: "’", ldquo: "“",
-  rdquo: "”", bull: "•", middot: "·", sect: "§", para: "¶", deg: "°", times: "×",
-  laquo: "«", raquo: "»", eacute: "é", egrave: "è", aacute: "á", iacute: "í",
-  oacute: "ó", uacute: "ú", ntilde: "ñ", uuml: "ü", ouml: "ö", auml: "ä", ccedil: "ç" };
-const decodeReferences = (s) => s.replace(/&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|([A-Za-z][A-Za-z0-9]{1,8}));/g,
-  (whole, dec, hex, name) => {
-    if (name) return Object.prototype.hasOwnProperty.call(HTML_ENTITIES, name) ? HTML_ENTITIES[name] : whole;
-    const cp = dec !== undefined ? Number(dec) : parseInt(hex, 16);
-    if (!(cp > 0 && cp <= 0x10ffff) || (cp >= 0xd800 && cp <= 0xdfff)) return whole;
-    const ch = String.fromCodePoint(cp);
-    return /^\s$/.test(ch) ? " " : ch;   /* a referenced space or newline is a space, never a paragraph break */
-  });
-const BLOCK_TAG = "address|article|aside|blockquote|body|caption|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form"
-  + "|h[1-6]|header|hr|html|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul";
-
-/* R32 (T51; K4194; fix round 2, K4303; fix round 3, K4356): a captured page's reading is its evidentiary region, never
-   its furniture. An element `nav`, or any element whose `role` is `navigation`, goes with its contents, counted by its
-   own name so a nested one of the same name does not end it early; an element with no end tag is not guessed at (its
-   tag goes, its words stay). When the page has a `main` element (else an `article` element), only its contents give
-   passages (subresources R8's body regions); with neither, an element `header`, `footer` or `aside`, and any element
-   whose `role` is `banner`, `contentinfo`, `complementary` or `search`, goes the same way: inside a main or an article
-   they are kept. Fix round 3: the rest of the furniture goes wherever it sits, inside the region as well (`moreFurniture`):
-   a dialog, a government-site banner or cookie or consent notice, a share bar (each by its role, class or id), a block
-   of only controls or only links, and a notice that only says to skip ahead or that the reader is leaving the site. A
-   skip link (an `a` whose `href` begins `#` and whose text begins "Skip to") goes. An unresolved template token goes. A
-   page with none of this keeps all its text. */
-const TAG_ATTRS = "(?:\"[^\"]*\"|'[^']*'|[^'\">])*";
-const VOID_TAG = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
-const attrOf = (attrs, name) => {
-  const m = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i").exec(attrs);
-  return m ? (m[1] ?? m[2] ?? m[3]) : null;
-};
-const roleOf = (attrs) => (attrOf(attrs, "role") ?? "").trim().split(/\s+/)[0].toLowerCase();
-const isNavigation = (name, attrs) => name.toLowerCase() === "nav" || roleOf(attrs) === "navigation";
-const FURNITURE_NAME = new Set(["header", "footer", "aside"]);
-const FURNITURE_ROLE = new Set(["banner", "contentinfo", "complementary", "search"]);
-const isFurniture = (name, attrs) => FURNITURE_NAME.has(name.toLowerCase()) || FURNITURE_ROLE.has(roleOf(attrs));
-const openTag = () => new RegExp(`<([A-Za-z][A-Za-z0-9:-]*)(${TAG_ATTRS})>`, "g");
-/* The end of the element a start tag opened, counted by its own name: where its contents end and where it does. Null
-   when it is never closed. `after` is the index just past the start tag. */
-function endOfElement(markup, name, after) {
-  const same = new RegExp(`<(/?)${name}(?=[\\s>/])(${TAG_ATTRS})>`, "gi");
-  same.lastIndex = after;
-  for (let depth = 1, t = same.exec(markup); t; t = same.exec(markup)) {
-    if (t[1]) depth--;
-    else if (!t[2].endsWith("/")) depth++;
-    if (depth === 0) return { inner: t.index, end: same.lastIndex };
-  }
-  return null;
-}
-function dropElements(markup, isDropped) {
-  const open = openTag();
-  let out = "", from = 0;
-  for (let m = open.exec(markup); m; m = open.exec(markup)) {
-    if (!isDropped(m[1], m[2], markup, open.lastIndex)) continue;
-    const name = m[1].toLowerCase(), after = m.index + m[0].length;
-    let end = after;   /* a void or self-closing tag, or one never closed, is only itself */
-    if (!VOID_TAG.has(name) && !m[2].endsWith("/")) end = endOfElement(markup, name, after)?.end ?? after;
-    out += markup.slice(from, m.index) + " ";
-    from = open.lastIndex = end;
-  }
-  return out + markup.slice(from);
-}
-/* The contents of every outermost closed element `name` in the page, in its order, a block break between them; null
-   when the page has none. */
-function contentsOf(markup, name) {
-  const open = openTag(), parts = [];
-  for (let m = open.exec(markup); m; m = open.exec(markup)) {
-    if (m[1].toLowerCase() !== name || m[2].endsWith("/")) continue;
-    const e = endOfElement(markup, name, open.lastIndex);
-    if (!e) continue;
-    parts.push(markup.slice(open.lastIndex, e.inner));
-    open.lastIndex = e.end;
-  }
-  return parts.length ? parts.join("<hr>") : null;
-}
-/* Fix round 3: the furniture that goes wherever it sits. By name and attribute (`html`, `head`, `body`, `main` and
-   `article` are never dropped by their class: a page's own class names are no judgement of the page). */
-const NEVER_BY_ATTRIBUTE = new Set(["html", "head", "body", "main", "article"]);
-const wordsOfToken = (t) => t.toLowerCase().split(/[-_]+/).filter(Boolean);
-const classTokens = (attrs) => (attrOf(attrs, "class") ?? "").split(/\s+/).filter(Boolean).concat(attrOf(attrs, "id") ?? []);
-const isDialogToken = (t) => /^(?:modal|modal-dialog|dialog)$/i.test(t);
-const isBannerToken = (t) => /(?:usa|gov|government|govt|official)[-_]?banner/i.test(t)
-  || wordsOfToken(t).some((w) => w === "cookie" || w === "cookies" || w === "consent" || w === "gdpr" || w === "ccpa");
-const isShareToken = (t) => wordsOfToken(t).some((w) => w === "share" || w === "shares" || w === "sharing" || w === "sharer")
-  || /^(?:addthis|sharethis|a2a)/i.test(t)
-  || /^social(?:[-_](?:share|sharing|links|media|icons|buttons|bar|nav|follow|networks|menu))?$/i.test(t);
-const DIALOG_ROLE = new Set(["dialog", "alertdialog"]);
-const isFurnitureByAttribute = (name, attrs) => {
-  const n = name.toLowerCase();
-  if (NEVER_BY_ATTRIBUTE.has(n)) return false;
-  if (n === "dialog" || DIALOG_ROLE.has(roleOf(attrs)) || (attrOf(attrs, "aria-modal") ?? "").trim().toLowerCase() === "true") return true;
-  return classTokens(attrs).some((t) => isDialogToken(t) || isBannerToken(t) || isShareToken(t));
-};
-/* A block of only controls or only links, or a short notice that only says to skip ahead or that the reader is leaving
-   the site, is told by walking the element's own contents from its start tag, stopping at once when it cannot be one. */
-const BLOCK_CANDIDATE = new Set(["div", "section", "ul", "ol", "li", "p", "form", "fieldset", "menu", "dl", "dd", "dt",
-  "span", "figure"]);
-/* A heading, a caption or a quotation is a notice's candidate only: a heading that is a link is the page's own words. */
-const NOTICE_CANDIDATE = new Set([...BLOCK_CANDIDATE, "h1", "h2", "h3", "h4", "h5", "h6", "figcaption", "blockquote"]);
-const CONTROL_TAG = new Set(["button", "select", "textarea", "option", "optgroup", "label", "datalist", "output"]);
-/* A link that wraps a heading or a paragraph is a card, the page's own words under a link, not a menu entry. */
-const CARD_PART = new Set(["p", "h1", "h2", "h3", "h4", "h5", "h6", "div", "ul", "ol", "li", "section", "article", "figure", "blockquote", "table"]);
-const NOTICE_TEXT_MAX = 400;
-const NOTICE_TEXT = [/^skip (?:to|ahead|navigation|the|past)\b/i, /^jump to\b/i, /^exiting\s+[\w.-]+\.[a-z]{2,}\b/i,
-  /^you (?:are|'re) (?:now )?(?:leaving|exiting)\b/i, /^you (?:are|'re) about to (?:leave|exit)\b/i, /^leaving (?:this|the|our)\b.*\b(?:site|website)\b/i];
-const tagWalk = () => new RegExp(`<(/?)([A-Za-z][A-Za-z0-9:-]*)(?=[\\s>/])(${TAG_ATTRS})>`, "g");
-function probeBlock(markup, name, after) {
-  const walk = tagWalk(), own = name.toLowerCase();
-  walk.lastIndex = after;
-  let depth = 1, at = after, inLink = 0, inControl = 0, inCard = 0, loose = false, seen = false, said = "";
-  for (let t = walk.exec(markup); t; t = walk.exec(markup)) {
-    const seg = decodeReferences(markup.slice(at, t.index).replace(/\s+/g, " "));
-    at = walk.lastIndex;
-    if (glyphCount(seg) > 0) {
-      said += seg;
-      if ((!inLink && !inControl) || inCard) loose = true;
-      if (loose && said.length > NOTICE_TEXT_MAX) return null;
-    }
-    const tag = t[2].toLowerCase(), closing = t[1] === "/", selfClosed = t[3].endsWith("/");
-    if (tag === own) {
-      if (closing) depth--; else if (!selfClosed) depth++;
-      if (depth === 0) return { loose, seen, text: said.replace(/\s+/g, " ").trim(), long: said.length > NOTICE_TEXT_MAX };
-    }
-    if (inLink && CARD_PART.has(tag)) inCard = Math.max(0, inCard + (closing ? -1 : selfClosed ? 0 : 1));
-    if (tag === "a") { inLink = Math.max(0, inLink + (closing ? -1 : selfClosed ? 0 : 1)); if (!closing) seen = true; }
-    else if (tag === "input") { if (!closing) seen = true; }
-    else if (CONTROL_TAG.has(tag)) { inControl = Math.max(0, inControl + (closing ? -1 : selfClosed ? 0 : 1)); if (!closing && tag !== "label") seen = true; }
-  }
-  return null;   /* never closed: not guessed at */
-}
-const isFurnitureBlock = (name, attrs, markup, after) => {
-  const n = name.toLowerCase();
-  if (!NOTICE_CANDIDATE.has(n) || attrs.endsWith("/")) return false;
-  const p = probeBlock(markup, name, after);
-  if (!p) return false;
-  if (!p.loose && p.seen && BLOCK_CANDIDATE.has(n)) return true;
-  return !p.long && p.text !== "" && NOTICE_TEXT.some((re) => re.test(p.text));
-};
-const moreFurniture = (name, attrs, markup, after) => isFurnitureByAttribute(name, attrs) || isFurnitureBlock(name, attrs, markup, after);
-/* Fix round 4 (C19; K4429; RC-R11): furniture by name. A block that is no landmark but names itself furniture by a word
-   of its `class` or `id` (split at `-`, `_` and camel-case humps) and holds no sentence of body prose goes, when the
-   page has a region: a `main` element, else an `article`, else an element whose `role` is `main`. A sentence is a run of
-   three or more words ending in a full stop, `!` or `?`, outside a heading, a label, a link and a control. */
-const NAME_WORDS = new Set(["footer", "contact", "search", "breadcrumb", "breadcrumbs", "share", "social", "sidebar", "related", "explore", "promo", "promos", "gallery", "carousel"]);
-const nameWords = (t) => t.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase().split(/[\s_-]+/).filter(Boolean);
-const isNamedFurniture = (attrs) => classTokens(attrs).some((t) => nameWords(t).some((w) => NAME_WORDS.has(w)));
-const NON_PROSE = /<(a|h[1-6]|label|button|select|option|textarea|script|style)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?<\/\1\s*>/gi;
-const SENTENCE = /(?:[\p{L}\p{N}'’-]+\s+){2,}[\p{L}\p{N}'’-]+[.!?](?=\s|$)/u;
-const holdsProse = (inner) => SENTENCE.test(decodeReferences(inner.replace(NON_PROSE, " ").replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, " ")).replace(/\s+/g, " "));
-const hasRegion = (markup) => contentsOf(markup, "main") !== null || contentsOf(markup, "article") !== null
-  || new RegExp(`<[A-Za-z][A-Za-z0-9:-]*(?:"[^"]*"|'[^']*'|[^'">])*?\\srole\\s*=\\s*["']?main\\b`, "i").test(markup);
-const namedFurniture = (markup) => {
-  if (!hasRegion(markup)) return () => false;
-  return (name, attrs, whole, after) => {
-    const n = name.toLowerCase();
-    if (NEVER_BY_ATTRIBUTE.has(n) || roleOf(attrs) === "main" || VOID_TAG.has(n) || attrs.endsWith("/") || !isNamedFurniture(attrs)) return false;
-    const e = endOfElement(whole, n, after);
-    return e !== null && !holdsProse(whole.slice(after, e.inner));
-  };
-};
-const SKIP_LINK = new RegExp(`<a\\b(${TAG_ATTRS})>([\\s\\S]*?)</a\\s*>`, "gi");
-const dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner) => {
-  const href = attrOf(attrs, "href");
-  const said = decodeReferences(inner.replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, "")).replace(/\s+/g, " ").trim();
-  return href !== null && href.trim().startsWith("#") && /^skip to/i.test(said) ? " " : whole;
-});
-const TEMPLATE_TOKEN = /\{[0-9]+\}|\{[A-Za-z_][A-Za-z0-9_]*\}|##LOC\[[^\]]*\]##/g;
-
-/* The page's visible text: comments, `head`, `script`, `style` and `template` contents are dropped (an unclosed one
-   drops to the end), then navigation, then the page's main or article contents or else its landmark furniture, then the rest of the furniture wherever it sits, as above, every tag is removed (a block tag ends its paragraph, `br` its line),
-   and character references are decoded, so a decoded `&lt;` is text, never a tag. Template tokens go last, so one
-   written as references goes too. */
-/* G14: `<head>` may be left unclosed (HTML ends it implicitly at the first thing that cannot be in a head): a closed head is
-   dropped whole; an unclosed one is dropped up to the first element that is no head content, or the first text, and what
-   follows is the body's. `script`, `style` and `template` left unclosed are raw text to the end of the document (the parsing
-   rules' script data state), so they drop to the end as before. */
-const HEAD_CONTENT = new Set(["title", "meta", "link", "base", "style", "script", "noscript", "template"]);
-function dropHead(html) {
-  const open = /<head\b(?:"[^"]*"|'[^']*'|[^'">])*>/i.exec(html);
-  if (!open) return html;
-  const closed = /<\/head\s*>/i.exec(html.slice(open.index));
-  const tag = new RegExp(`<(/?)([A-Za-z][A-Za-z0-9:-]*)(?:"[^"]*"|'[^']*'|[^'">])*>`, "y");
-  let at = open.index + open[0].length;
-  for (;;) {
-    const ws = /^\s*/.exec(html.slice(at, at + 1024))[0].length;
-    at += ws;
-    if (at >= html.length) break;
-    if (html.startsWith("<!--", at)) { const e = html.indexOf("-->", at + 4); at = e < 0 ? html.length : e + 3; continue; }
-    if (html[at] !== "<") break;   /* text: the body has begun */
-    tag.lastIndex = at;
-    const m = tag.exec(html);
-    if (!m) break;
-    const name = m[2].toLowerCase();
-    if (m[1] && name === "head") { at = tag.lastIndex; break; }
-    if (m[1] || !HEAD_CONTENT.has(name)) break;
-    at = tag.lastIndex;
-    if (["title", "style", "script", "noscript", "template"].includes(name) && !m[0].endsWith("/>")) {
-      const end = new RegExp(`</${name}\\s*>`, "i").exec(html.slice(at));
-      at = end ? at + end.index + end[0].length : html.length;
-    }
-  }
-  return html.slice(0, open.index) + " " + html.slice(at);
-}
-export function visibleTextOfHtml(html0) {
-  const html = dropHead(html0);
-  const live = dropElements(html
-    .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
-    .replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ")
-    .replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ")
-    .replace(/<![^>]*>|<\?[^>]*>/g, " "), isNavigation);
-  const named = namedFurniture(live);
-  const region = dropElements(contentsOf(live, "main") ?? contentsOf(live, "article") ?? dropElements(live, isFurniture),
-                              (name, attrs, whole, after) => moreFurniture(name, attrs, whole, after) || named(name, attrs, whole, after));
-  const dropped = dropSkipLinks(region)
-    .replace(/\s+/g, " ");   /* the source's own line breaks and blank lines are no paragraph break in a page */
-  const bare = dropped
-    .replace(new RegExp(`</?(?:${BLOCK_TAG})\\b(?:"[^"]*"|'[^']*'|[^'">])*>`, "gi"), "\n\n")
-    .replace(/<br\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi, "\n")
-    .replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, "");
-  return decodeReferences(bare).replace(TEMPLATE_TOKEN, " ");
-}
-
 /* R32: the units of text read as text. `html` is true for a capture whose detected format is `html`.
    R33 (T50; N1191 (a)): a text that is not HTML and holds no blank line but at least two non-empty lines is split at
    its line breaks: one unit per non-empty line (the line trimmed), `para` counting the non-empty lines from 0. A text
    with a blank line anywhere keeps its paragraphs (a wrapped paragraph is never split), a one-line text is one unit,
    and an HTML page is read by R32's rule. */
+/* R51: a paragraph of an HTML page is its words with the runs of white space one space; the tab that tells a row's cells apart (html.mjs) stays, so a table keeps its columns */
+const squashHtmlRun = (p) => p.replace(/[ \f\v\u00a0\r\n]+/g, " ").replace(/^[ ]+|[ ]+$/g, "");
 const BLANK_LINE_RUN = /\r?\n[ \t\f\v\u00a0 ]*(?:\r?\n[ \t\f\v\u00a0 ]*)+/;
 function paragraphsOfText(text, html) {
   const visible = html ? visibleTextOfHtml(text) : text;
@@ -1354,7 +1141,7 @@ function paragraphsOfText(text, html) {
   const runs = visible.split(BLANK_LINE_RUN);
   const lines = !html && runs.length === 1 ? runs[0].split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length) : [];
   const paragraphs = (lines.length >= 2 ? lines : runs
-    .map((p) => (html ? p.replace(/[ \t\f\v\u00a0 \r\n]+/g, " ") : p).trim())
+    .map((p) => (html ? squashHtmlRun(p) : p.trim()))
     .filter((p) => p.length))
     .map((p, para) => ({ para, text: p }));
   return { paragraphs };
@@ -1466,7 +1253,7 @@ function runWalker(visible, grain, html, offset) {
       }
       at = next;
       const raw = visible.slice(from, end);
-      const text = html ? raw.replace(/[ \t\f\v  \r\n]+/g, " ").trim() : raw.trim();
+      const text = html ? squashHtmlRun(raw) : raw.trim();
       if (text.length) return { text, from };
     }
     return null;
@@ -1474,6 +1261,12 @@ function runWalker(visible, grain, html, offset) {
 }
 
 const visibleOf = (text, html) => (html ? visibleTextOfHtml(text) : text);
+/* G131f, G82: in pieces, the visible text of a page over BREATHE_AT is made by the streaming pass that gives the turn back every HTML_STRETCH tokens */
+const visibleOfYielding = async (text, html, on) => (html && on && text.length > BREATHE_AT ? visibleTextOfHtmlYielding(text, { yieldNow }) : visibleOf(text, html));
+/* G131h (R51): the visible text of the HTML page whose pieces are being read, kept for the next tick of the object that made it (one page at a time,
+   as the open PDF is): a later tick of that digest reads nothing from the store and parses nothing. A tick that does not find it (the object was
+   restarted, another page replaced it) makes it again from the page, the same text. */
+let heldHtml = null;   /* {sha, visible} */
 const unitOf = (para, run, seq, text) => ({ extent: { kind: "doc-para", para, run }, seq, text, kind: "body" });
 const fits = (units, size, room, maxUnits) => !units.length || (units.length < maxUnits && size <= room);
 
@@ -1502,7 +1295,7 @@ function textPiece(visible, { html, at, budget, maxUnits, grain: given }) {
     if (more) break;
     para++;
   }
-  return { units, grain, more, at: resume };
+  return { units, grain, more, at: resume, para, seq };
 }
 
 /* R35 over the whole text, for a first piece: the units the text has and the words of them. */
@@ -1903,46 +1696,140 @@ async function textWindowCursorOf(evidence, { sha, bytes, text, whole, at, throu
   return windowCursor(sha, { m: "t", n: bytes.length, ob: through + bom, bm: bom, g: grain === "lines" ? 1 : 0, p: at.p, q: at.q, r: at.r });
 }
 
-/* A later piece of a text read as text, from the window the cursor names. */
-async function textWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }) {
-  if (![c.n, c.ob, c.bm, c.p, c.q, c.r].every(natural) || !(c.g === 0 || c.g === 1) || c.ob < c.bm || c.ob >= c.n || (c.bm !== 0 && c.bm !== 3)) return mismatch();
+/* R50, R49 (job 40, B44 (1)): a window of a text in any encoding R49 reads. The head's encoding (ooxml's `decodeText`) is kept in the cursor (`en`, absent for UTF-8 and
+   US-ASCII) and each window is decoded by it: UTF-8 as before; a single-byte charset (windows-125x, ISO-8859-x) one byte a character; UTF-16 in even offsets, a surrogate pair
+   kept whole. `pre` the bytes of context read before a window, `startOk` whether the offset begins a character, `end` the bytes of a window that end at a character, `bytes`
+   the bytes of a decoded string. */
+const SINGLE_BYTE = /^(?:windows-125\d|iso-8859-\d+|ibm\d+|cp\d+|macintosh|koi8-[ru]|x-mac-cyrillic)$/;
+const A_UTF8 = { pre: 4, startOk: (b, pre) => (b[pre] & 0xc0) !== 0x80, lenient: (x) => LENIENT_UTF8.decode(x), decode: (x) => FATAL_UTF8.decode(x),
+  end: (b, pre, len) => { let i = len - 1; while (i > 0 && (b[pre + i] & 0xc0) === 0x80) i--; const lead = b[pre + i], need = lead < 0x80 ? 1 : lead >= 0xf0 ? 4 : lead >= 0xe0 ? 3 : lead >= 0xc0 ? 2 : 1; return i + need > len ? i : len; },
+  bytes: (str) => utf8Length(str) };
+export const windowEncodable = (en) => !en || en === "utf-8" || en === "us-ascii" || en === "utf-16le" || en === "utf-16be" || SINGLE_BYTE.test(en);
+function adapterFor(en) {
+  if (!en || en === "utf-8" || en === "us-ascii") return A_UTF8;
+  const td = new TextDecoder(en, { ignoreBOM: true });
+  if (en === "utf-16le" || en === "utf-16be") {
+    const le = en === "utf-16le";
+    return { pre: 2, startOk: (b, pre, c) => (c.ob - c.bm) % 2 === 0, lenient: (x) => td.decode(x), decode: (x) => td.decode(x),
+      end: (b, pre, len) => { let e = len - (len % 2); if (e >= 2 && ((le ? b[pre + e - 1] : b[pre + e - 2]) & 0xfc) === 0xd8) e -= 2; return e; }, bytes: (str) => str.length * 2 };
+  }
+  return { pre: 1, startOk: () => true, lenient: (x) => td.decode(x), decode: (x) => td.decode(x), end: (b, pre, len) => len, bytes: (str) => str.length };
+}
+
+/* R50 (G131i; K4834): the start and end of the first separator of a text's runs in `vis` (a blank line for paragraphs, a line break for lines), or null. */
+function firstSeparator(vis, grain) {
+  if (grain === "lines") { const i = vis.indexOf("\n"); return i < 0 ? null : [i, i + 1]; }
+  const m = new RegExp(BLANK_LINE_RUN.source).exec(vis);
+  return m ? [m.index, m.index + m[0].length] : null;
+}
+/* R50: the units of a run begun in an earlier window (`md`) or not ended in this one: `region` is the run's text in the window (to its separator, or to
+   the window's end), cut as `chunksOf` cuts a run over the cap (R47), the same chunks the whole run would give since the cut is greedy from the run's
+   start. A run still open keeps its last chunk for the next window (its end is not known); a complete run gives all. `{units, used, done, runs}`: the
+   characters of `region` the units took, whether the run ended in them, and the run index the next chunk takes. */
+function openRunPiece(region, { c, complete, room, maxUnits, room0 }) {
+  const body = complete ? region.trimEnd() : region;
+  const lead = c.md ? 0 : body.length - body.trimStart().length;
+  const text = body.slice(lead);
+  const chunks = text.length > CAPTURE_TEXT_UNIT_CAP ? chunksOf(text) : [text];
+  const usable = complete ? chunks : chunks.slice(0, -1);
+  const units = [];
+  /* a cursor of a run's start that names a chunk already given (`r`) skips those chunks; one inside a run (`md`) begins at its chunk and numbers on from `r` */
+  const skip = c.md ? 0 : Math.min(c.r || 0, usable.length), base = c.md ? c.r : 0;
+  let used = lead, k = skip, ld = c.md ? c.ld === 1 : false;
+  for (let i = 0; i < skip; i++) used += usable[i].length;
+  for (; k < usable.length; k++) {
+    const size = utf8Length(usable[k]) + ACQUIRE_TEXT_UNIT_ENVELOPE;
+    if (!fits(units, size, room, maxUnits)) break;
+    room -= size;
+    const lead1 = (k === 0 ? ld : continuesWord(usable[k - 1], usable[k])) ? 1 : 0;
+    units.push(withOwnWords(unitOf(c.p, chunks.length > 1 || c.md ? base + k : null, c.q + units.length, usable[k]), lead1));
+    used += usable[k].length;
+  }
+  const done = complete && k === usable.length;
+  const next = chunks[k];
+  const carry = k > 0 && next !== undefined ? continuesWord(usable[k - 1], next) : ld;
+  return { units, used: done ? region.length : used, done, runs: base + k, ld: carry, room };
+}
+/* A later piece of a text read as text, from the window the cursor names. R50 (fix round 9, G131i): a run with no separator in the window is read in
+   chunks from the window (`openRunPiece`), its cursor marked `md`, so a text of one 50 MB line is read as a text of many lines is: neither holds the file
+   whole. `src` is the range source of a capture read by range from its first piece (`ro`): its parts first, never the whole (R45). */
+async function textWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }, src = null) {
+  if (![c.n, c.ob, c.bm, c.p, c.q, c.r].every(natural) || !(c.g === 0 || c.g === 1) || c.ob < c.bm || c.ob >= c.n || (c.bm !== 0 && c.bm !== 2 && c.bm !== 3) || (c.en !== undefined && !(typeof c.en === "string" && windowEncodable(c.en)))) return mismatch();
+  const A = adapterFor(c.en);
+  const enc = c.en ? { en: c.en } : {};
   const grain = c.g === 1 ? "lines" : "paragraphs";
-  const pre = Math.min(4, c.ob);
-  for (let want = windowBytes; ; want *= 2) {
+  const pre = Math.min(A.pre, c.ob);
+  const mid = c.md === 1;
+  const ro = c.ro === 1;
+  const get = async (o, l) => {
+    if (!src) return rangeBytes(evidence, sha, o, l);
+    const b = await src.readRange(o, l);
+    return b instanceof Uint8Array ? { bytes: b, size: src.size } : null;
+  };
+  /* a window is what the piece can use: a piece holds at most `budget` bytes of units, each charged its envelope too, so a larger window is bytes pulled for nothing (R50: at most twice the file) */
+  let want = Math.min(windowBytes, Math.max(32768, Math.ceil((Number.isFinite(budget) ? budget : windowBytes) / 2)));
+  /* a window that holds no whole run is made longer: doubled, or for a run with no separator at once to what a piece can take of it (its budget and the chunk kept back) */
+  const chunksFit = Math.max(1, Math.floor(Math.min(Number.isFinite(budget) ? budget : 4 * 1048576, 4 * 1048576) / (CAPTURE_TEXT_UNIT_CAP + ACQUIRE_TEXT_UNIT_ENVELOPE)));
+  const openTarget = (chunksFit + 1) * CAPTURE_TEXT_UNIT_CAP + 4096;
+  if (mid) want = Math.max(want, openTarget);   /* inside a run: the window the chunks a piece takes need, at once */
+  const grow = (open) => { want = open ? Math.max(want * 2, openTarget) : want * 2; };
+  for (;;) {
     const len = Math.min(want, c.n - c.ob);
-    const got = await rangeBytes(evidence, sha, c.ob - pre, pre + len);
+    const got = await get(c.ob - pre, pre + len);
     if (!got) return { gone: true };
     if (got.size !== null && got.size !== c.n) return mismatch();
     const b = got.bytes;
     if (b.length !== pre + len) return mismatch();
-    /* the offset begins a character, and the character before it is white space (or it is the text's first): the start of a run */
-    if ((b[pre] & 0xc0) === 0x80) return mismatch();
-    if (c.ob > c.bm) {
-      const before = LENIENT_UTF8.decode(b.subarray(0, pre));
+    /* the offset begins a character, and (but inside a run) the character before it is white space (or it is the text's first): the start of a run */
+    if (!A.startOk(b, pre, c)) return mismatch();
+    if (c.ob > c.bm && !mid) {
+      const before = A.lenient(b.subarray(0, pre));
       if (!before.length || !/\s/.test(before[before.length - 1])) return mismatch();
     }
     const eof = c.ob + len >= c.n;
     let end = len;   /* a window not at the end of the object may cut a character: it ends at the one before */
-    if (!eof) {
-      let i = len - 1;
-      while (i > 0 && (b[pre + i] & 0xc0) === 0x80) i--;
-      const lead = b[pre + i], need = lead < 0x80 ? 1 : lead >= 0xf0 ? 4 : lead >= 0xe0 ? 3 : lead >= 0xc0 ? 2 : 1;
-      if (i + need > len) end = i;
-    }
+    if (!eof) end = A.end(b, pre, len);
     let vis;
-    try { vis = FATAL_UTF8.decode(b.subarray(pre, pre + end)); } catch { return mismatch(); }
+    try { vis = A.decode(b.subarray(pre, pre + end)); } catch { return mismatch(); }
+    const sep = firstSeparator(vis, grain);
     const upto = eof ? vis.length : completeRunsEnd(vis, grain);
-    if (!eof && upto === 0) continue;   /* not one whole run yet: a longer window */
-    const text = vis.slice(0, upto);
-    const p = textPiece(text, { html: false, at: { o: 0, p: c.p, q: c.q, r: c.r }, budget, maxUnits, grain });
-    if (!p.more && !eof) continue;      /* every whole run in the window was taken and the piece is not full: a longer window */
-    let words = 0;
-    for (const u of p.units) words += wordsOfUnit(u);
-    const more = p.more, ob = more ? c.ob + utf8Length(text.slice(0, p.at.o)) : c.n;
-    return { units: p.units,
-             fields: { more, cursor: more ? windowCursor(sha, { m: "t", n: c.n, bm: c.bm, g: c.g, ob, p: p.at.p, q: p.at.q, r: p.at.r }) : null,
-                       read_through: ob - c.bm, total: c.n - c.bm },
-             piece: { units: p.units.length, words } };
+    const openStart = mid || (!eof && upto === 0);   /* the window begins inside a run, or holds no whole run */
+    /* an open run is cut into chunks only from a window longer than two units; shorter, a longer window is asked for */
+    if (openStart && !eof && !sep && vis.length <= 2 * CAPTURE_TEXT_UNIT_CAP) { grow(true); continue; }
+    let units = [], room = budget, p = c.p, q = c.q, pos = 0, stopped = false;
+    if (openStart) {
+      const complete = !!sep || eof;
+      const region = vis.slice(0, sep ? sep[0] : vis.length);
+      const o = openRunPiece(region, { c: { ...c, md: mid ? 1 : 0 }, complete, room, maxUnits });
+      units = o.units;
+      if (!o.done) {   /* more of this run follows: the next window takes it up at the chunk after the last given */
+        if (!units.length) { if (!eof) { grow(true); continue; } return mismatch(); }
+        const ob = c.ob + A.bytes(vis.slice(0, o.used));
+        let words = 0; for (const u of units) words += wordsOfUnit(u);
+        const cursor = windowCursor(sha, { m: "t", n: c.n, bm: c.bm, g: c.g, ...enc, ob, p, q: q + units.length, r: o.runs, md: 1, ld: o.ld ? 1 : 0, ...(ro ? { ro: 1, wr: (c.wr || 0) + words } : {}) });
+        return { units, fields: { more: true, cursor, read_through: ob - c.bm, total: c.n - c.bm }, piece: { units: units.length, words } };
+      }
+      pos = sep ? sep[1] : vis.length; p += 1; q += units.length;
+      for (const u of units) room -= utf8Length(u.text) + ACQUIRE_TEXT_UNIT_ENVELOPE;
+      stopped = units.length >= maxUnits || room <= 0;
+    }
+    const text = vis.slice(pos, Math.max(pos, upto));
+    let pc = null;
+    if (!stopped && text.length) {
+      pc = textPiece(text, { html: false, at: { o: 0, p, q, r: openStart ? 0 : c.r }, budget: room, maxUnits: maxUnits - units.length, grain });
+      if (!pc.more && !eof && !units.length) { grow(false); continue; }   /* every whole run in the window was taken and the piece is not full: a longer window */
+    }
+    const all = pc ? [...units, ...pc.units] : units;
+    let words = 0; for (const u of all) words += wordsOfUnit(u);
+    /* where the next piece begins: inside the text the piece stopped in, else after the last whole run (the tail run begins it), else the end */
+    const at = pc && pc.more ? { c: pos + pc.at.o, p: pc.at.p, q: pc.at.q, r: pc.at.r }
+      : { c: stopped && !pc ? pos : Math.max(pos, upto), p: pc ? pc.para : p, q: pc ? pc.seq : q, r: 0 };
+    const more = stopped || (pc && pc.more) || !eof;
+    const ob = more ? c.ob + A.bytes(vis.slice(0, at.c)) : c.n;
+    if (more && !all.length && ob === c.ob) { if (!eof) { grow(false); continue; } return mismatch(); }
+    const cursor = more ? windowCursor(sha, { m: "t", n: c.n, bm: c.bm, g: c.g, ...enc, ob, p: at.p, q: at.q, r: at.r, ...(ro ? { ro: 1, wr: (c.wr || 0) + words } : {}) }) : null;
+    return { units: all, fields: { more, cursor, read_through: ob - c.bm, total: c.n - c.bm }, piece: { units: all.length, words },
+             ...(!more && ro ? { facts: { words_total: (c.wr || 0) + words } } : {}) };
   }
 }
 
@@ -2158,7 +2045,7 @@ function letterOf(n) { let s = ""; for (let k = Math.max(1, n); k > 0; k = Math.
 /* A later piece by a window cursor (R40): `{refused}` or `{gone}` (the object is not held) or the piece's units and fields. */
 async function windowTick(evidence, sha, c, ask, doc) {
   if (c.s !== sha || !natural(c.n) || c.n < 1) return mismatch();
-  if (c.m === "t") return textWindowTick(evidence, sha, c, ask);
+  if (c.m === "t") return textWindowTick(evidence, sha, c, ask, c.ro === 1 ? rangeSource(evidence, doc) : null);
   if (c.m === "c") return csvWindowTick(evidence, sha, c, ask, c.ro === 1 ? rangeSource(evidence, doc) : null);
   return mismatch();
 }
@@ -2187,6 +2074,30 @@ async function csvRangedHead(evidence, doc, { recorded, declared }) {
   if (i < 0 || bounds[i] >= src.size || bounds[i] + CSV_SLACK_BYTES > probe.length) return null;
   const cached = { size: src.size, readRange: async (o, n) => (natural(o) && natural(n) && o + n <= probe.length ? probe.subarray(o, o + n) : src.readRange(o, n)) };
   return { src: cached, size: src.size, he: bounds[i], hr: i + 1, dl, head: probe.subarray(0, bounds[i]) };
+}
+
+/* R50 (fix round 9, G131i; K4834): a text, JSON or XML larger than a whole read holds (`WHOLE_READ_MAX`) and within the text bound (`READ_BOUNDS` text, the standard's
+   50 MB) is read from its first piece by range, as a CSV is: the head (the first window) gives the reading's facts and the grain, and each piece is a byte window with
+   a carry (`textWindowTick`), so neither the object nor its text is held whole. UTF-8 and US-ASCII only; another encoding of such a size is stated against the whole-read
+   ceiling. `null` when the capture is not one: it is read, or refused, as before. */
+async function textRangedHead(evidence, doc, { recorded, declared, textual, charset }) {
+  const src = rangeSource(evidence, doc);
+  if (!(Number.isInteger(src.size) && src.size > WHOLE_READ_MAX && src.size <= boundOf("text", "bytes"))) return null;
+  if (!textual || !(recorded === null || recorded === "undetermined" || recorded === "text" || recorded === "json" || recorded === "xml")) return null;
+  const want = Math.min(src.size, WINDOW_BYTES + 4);
+  const probe = await src.readRange(0, want);
+  if (!(probe instanceof Uint8Array) || probe.length < want) return null;
+  const bom16 = probe.length >= 2 && ((probe[0] === 0xff && probe[1] === 0xfe) || (probe[0] === 0xfe && probe[1] === 0xff));
+  if (!bom16 && probe.includes(0) && !/^utf-16/i.test(charset || "")) {
+    /* a NUL in the head: UTF-16 without a BOM, only if the decode says so below; a binary file is no text */
+  }
+  const d = decodeText(probe.subarray(0, probe.length - (probe.length % 2)), { declared: charset, name: charset, kind: "text" });
+  if (!d.ok || d.replaced_ratio > REPLACED_TOLERANCE || !windowEncodable(d.encoding)) return null;
+  const en = d.encoding === "us-ascii" ? "utf-8" : d.encoding;
+  if (!/^utf-16/.test(en) && probe.includes(0)) return null;
+  if (!/^utf-16/.test(en) && detectFormat(probe, declared).format !== "undetermined") return null;
+  const bm = en === "utf-8" ? (probe.length >= 3 && probe[0] === 0xef && probe[1] === 0xbb && probe[2] === 0xbf ? 3 : 0) : /^utf-16/.test(en) ? (bom16 ? 2 : 0) : 0;
+  return { src, size: src.size, head: probe, bm, text: d.text, decoded: d, en: en === "utf-8" ? undefined : en, grain: grainOf(d.text, false) };
 }
 
 /* --- a PDF -------------------------------------------------------------------------------------------------------------- */
@@ -2528,13 +2439,149 @@ const failed = (doc, docType, basis, extra = {}) => ({
   read_from_text: false, found: false, entities: [], facts: {}, at: doc && typeof doc.retrieved === "string" ? doc.retrieved : null,
   basis, ...extra });
 
-/* R38: what an entry's final refusal states of itself: its `reason` and the size figures it measured. Nothing else of it
-   is the reading's; an answer that is not final or names no reason carries none. */
+/* R38, R54: what an entry's final refusal states of itself: its `reason` and the figures it measured (`pages`, `bytes`, `need_mb`,
+   `limit_mb`; and a statement's own: `size`, `bound`, `key`, `part`, `kind`, `name`, `n`). Nothing else of it is the reading's; an
+   answer that is not final or names no reason carries none. */
 function refusalOf(a) {
   if (!a || a.ok !== false || a.failure !== FAILURE_FINAL || typeof a.reason !== "string" || !a.reason) return null;
   const out = { reason: a.reason };
-  for (const k of ["pages", "bytes", "need_mb", "limit_mb"]) if (Number.isFinite(a[k])) out[k] = a[k];
+  for (const k of ["pages", "bytes", "need_mb", "limit_mb", "size", "bound", "n"]) if (Number.isFinite(a[k])) out[k] = a[k];
+  for (const k of ["key", "part", "kind", "name"]) if (typeof a[k] === "string" && a[k]) out[k] = a[k].slice(0, 200);
   return out;
+}
+
+/* R54 (fix round 9, G135d): a size marker an entry left in its text (`undetermined[].guard`, ooxml's `textPlan` and csv-reader's
+   `sizeMarker`: `{why, size, bound, ...}`, final) is the file's own refusal by a bound: it is stated as `TOO_LARGE {size, bound}`
+   (a size over its bound) or `STRUCTURE_OVER_BOUND {part, bound}` (a count or structure over its bound), with the part it names, and
+   never as "undecodable regions". Null when the text holds none. */
+function guardRefusalOf(i2text) {
+  const marks = i2text && Array.isArray(i2text.undetermined) ? i2text.undetermined : [];
+  for (const m of marks) {
+    const g = m && typeof m === "object" ? (m.guard && typeof m.guard === "object" ? m.guard : m.final === true ? m : null) : null;
+    if (!g || !Number.isFinite(g.bound)) continue;
+    const part = typeof m.part === "string" ? m.part : typeof g.part === "string" ? g.part : null;
+    const named = part ? { part: part.slice(0, 200) } : {};
+    if (Number.isFinite(g.size) && (g.why === "over_size_bound" || g.metric !== undefined || g.boundName !== undefined))
+      return { reason: "TOO_LARGE", size: g.size, bound: g.bound, ...named, ...(typeof g.boundName === "string" ? { name: g.boundName } : {}) };
+    if (typeof g.why === "string")
+      return { reason: "STRUCTURE_OVER_BOUND", bound: g.bound, ...(Number.isFinite(g.n) ? { n: g.n } : {}), ...named, name: g.why };
+  }
+  return null;
+}
+
+/* R54 (G135a, G135d, G135e): the sentence of a refusal that names its own cause and figures. Stand-ins until T52 (K4269); owed:
+   `reading-pipeline.index.too_large`, `.structure_over_bound`, `.unsupported_<kind>`. A size sentence holds the file's size and the limit
+   and never says "read" of a file that is not. */
+function refusalSentence(r) {
+  if (r.reason === "TOO_LARGE" && Number.isInteger(r.parts) && r.parts > 1)
+    return localize("reading-pipeline.index.too_large_in_parts", "This file is {size} bytes in {parts} parts, over the {bound} bytes allowed for this kind of file.", { size: String(r.size), parts: String(r.parts), bound: String(r.bound) });
+  if (r.reason === "TOO_LARGE")
+    return localize("reading-pipeline.index.too_large", "This file is {size} bytes, over the {bound} bytes allowed for this kind of file.", { size: String(r.size), bound: String(r.bound) });
+  if (r.reason === "STRUCTURE_OVER_BOUND")
+    return localize("reading-pipeline.index.structure_over_bound", "{part} is over the {bound} allowed for this kind of file.", { part: String(r.part || r.name || ""), bound: String(r.bound) });
+  return null;
+}
+
+/* R54 (G135a, G135e; K4831 (3)): a kind with no reader is named, by its bytes and the types it is declared as, and its reading is
+   stated `final` with `UNSUPPORTED_FORMAT {kind}`: no "non-textual or too large", and nothing for "Read it" to repair. */
+const sig = (b, o, s) => b.length >= o + s.length && [...s].every((c, i) => b[o + i] === (typeof c === "number" ? c : c.charCodeAt(0)));
+function unreadKindOf(b, types) {
+  if (!(b instanceof Uint8Array) || !b.length) return null;
+  const t = types.filter((x) => typeof x === "string").join(" ").toLowerCase();
+  if (sig(b, 0, "GIF87a") || sig(b, 0, "GIF89a")) return "gif";
+  if (sig(b, 0, [0x49, 0x49, 0x2a, 0]) || sig(b, 0, [0x4d, 0x4d, 0, 0x2a])) return "tiff";
+  if (sig(b, 0, "RIFF") && sig(b, 8, "WEBP")) return "webp";
+  if (sig(b, 4, "ftyp")) {
+    const brand = String.fromCharCode(...b.subarray(8, 12));
+    if (/^(?:heic|heix|hevc|hevx|heim|heis|mif1|msf1)$/.test(brand)) return "heic";
+    if (/^avi[fs]$/.test(brand)) return "avif";
+  }
+  if (sig(b, 0, [0, 0, 0, 0x0c, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a])) return "jp2";
+  if (sig(b, 0, "BM") && b.length >= 30 && [12, 40, 52, 56, 64, 108, 124].includes(b[14] | (b[15] << 8)) && b[16] === 0) return "bmp";
+  if (sig(b, 0, [0, 0, 1, 0]) && /image\/(?:x-icon|vnd\.microsoft\.icon)/.test(t)) return "ico";
+  if (sig(b, 0, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]))
+    return /msword|\.doc\b/.test(t) ? "legacy_word" : /ms-excel|\.xls\b/.test(t) ? "legacy_excel" : /ms-powerpoint|\.ppt\b/.test(t) ? "legacy_powerpoint" : "legacy_office";
+  const head = String.fromCharCode(...b.subarray(0, Math.min(b.length, 2048)));
+  if (/^\s*\{\\rtf/.test(head) || /\b(?:text|application)\/rtf\b/.test(t)) return "rtf";
+  if (/message\/rfc822/.test(t)) return "email";
+  const lines = head.split(/\r?\n/).slice(0, 16);
+  const hdr = lines.filter((l) => /^(?:Received|Return-Path|Delivered-To|MIME-Version|Message-ID|Date|From|To|Subject|Content-Type):\s/i.test(l)).length;
+  return hdr >= 4 && lines.some((l) => /^(?:From|Subject|To|MIME-Version):/i.test(l)) && /^[\w-]+:\s/.test(lines[0] || "") ? "email" : null;
+}
+function unreadSentence(kind) {
+  switch (kind) {
+    case "rtf": return localize("reading-pipeline.index.unsupported_rtf", "RTF is not read yet.");
+    case "email": return localize("reading-pipeline.index.unsupported_email", "Email is not read yet.");
+    case "legacy_word": return localize("reading-pipeline.index.unsupported_legacy_word", "Legacy Word is not read yet.");
+    case "legacy_excel": return localize("reading-pipeline.index.unsupported_legacy_excel", "Legacy Excel is not read yet.");
+    case "legacy_powerpoint": return localize("reading-pipeline.index.unsupported_legacy_powerpoint", "Legacy PowerPoint is not read yet.");
+    case "legacy_office": return localize("reading-pipeline.index.unsupported_legacy_office", "This older Office file is not read yet.");
+    case "tiff": return localize("reading-pipeline.index.unsupported_tiff", "TIFF is not read yet.");
+    case "gif": return localize("reading-pipeline.index.unsupported_gif", "GIF is not read yet.");
+    case "webp": return localize("reading-pipeline.index.unsupported_webp", "WebP is not read yet.");
+    case "heic": return localize("reading-pipeline.index.unsupported_heic", "HEIC is not read yet.");
+    case "avif": return localize("reading-pipeline.index.unsupported_avif", "AVIF is not read yet.");
+    case "bmp": return localize("reading-pipeline.index.unsupported_bmp", "BMP is not read yet.");
+    case "jp2": return localize("reading-pipeline.index.unsupported_jp2", "JPEG 2000 is not read yet.");
+    case "ico": return localize("reading-pipeline.index.unsupported_ico", "ICO is not read yet.");
+    default: return localize("reading-pipeline.index.unsupported_kind", "{kind} is not read yet.", { kind: String(kind) });
+  }
+}
+
+/* K4904 (2c item 8): `read(..., {skipKilled: true})` steps past the window `cursor` names, one that killed its reader three times: it reads nothing of it and answers
+   `{units: [], next, more, counters: {written: 0, skipped: 1, owed: 0, failed: 0}, stated: {cursor, why: "UNIT_KILLED_READER"}}`, `next` the cursor of the following window
+   (a list's next unit - a slide, a sheet block - or a text's next window), so the read goes on; the window is stated on the reading (`reading.killed_windows`) and said
+   in a sentence (R-SILENT). A page keeps PAGE_KILLED_READER (the PDF's unit is a page). Null when the cursor is not one this steps (it is read as it is). */
+export const UNIT_KILLED_READER = "UNIT_KILLED_READER";
+async function skipWindow(evidence, doc, cursor, windowBytes) {
+  const c = unb64(cursor);
+  const sha = doc && doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : null;
+  if (!c || c.v !== 1 || !sha || c.s !== sha) return null;
+  let next = null, through = null, total = null, statedBytes = null;
+  if (c.k === "u" && natural(c.n) && natural(c.i) && c.i < c.n) {
+    if (c.i + 1 < c.n) next = b64({ v: 1, s: sha, k: "u", n: c.n, i: c.i + 1 });
+    through = c.i + 1; total = c.n;
+  } else if (c.k === "w" && c.m === "t" && natural(c.n) && natural(c.ob) && c.ob < c.n && natural(c.bm)) {
+    /* a text's window: the next begins at the character after this window's bytes, inside a run (`md`), so its lines are not numbered on from here */
+    let ob = Math.min(c.n, c.ob + (Number.isInteger(windowBytes) && windowBytes > 0 ? windowBytes : WINDOW_BYTES));
+    if (ob < c.n) {
+      const src = c.ro === 1 ? rangeSource(evidence, doc) : null;
+      const got = src ? await src.readRange(ob, 4) : (await rangeBytes(evidence, sha, ob, 4))?.bytes;
+      if (!(got instanceof Uint8Array)) return null;
+      let i = 0; while (i < got.length && (got[i] & 0xc0) === 0x80) i++;
+      ob += i;
+    }
+    if (ob < c.n) { const { v, k, s: ignored, ...rest } = c; next = windowCursor(sha, { ...rest, ob, md: 1, r: (c.r || 0) + 1, ld: 0 }); }
+    through = ob - c.bm; total = c.n - c.bm;
+  } else if (c.k === "w" && c.m === "c" && natural(c.n) && natural(c.ob) && c.ob < c.n && natural(c.dl)) {
+    /* a CSV window: the next begins at the first row boundary at or after the window's bytes (the quote state scanned from the window's start, which is a row's), the dialect
+       kept in the cursor; the bytes that were not read are stated as a range, and the rows after it numbered on from the next row read */
+    const src = c.ro === 1 ? rangeSource(evidence, doc) : null;
+    const win = Number.isInteger(windowBytes) && windowBytes > 0 ? windowBytes : WINDOW_BYTES;
+    const want = Math.min(c.n, c.ob + win);
+    let ob = c.n;
+    if (want < c.n) {
+      const st = newScan(c.dl), bounds = [];
+      for (let take = win + CSV_SLACK_BYTES; ob === c.n; take *= 2) {
+        const len = Math.min(take, c.n - c.ob);
+        const got = src ? await src.readRange(c.ob, len) : (await rangeBytes(evidence, sha, c.ob, len))?.bytes;
+        if (!(got instanceof Uint8Array)) return null;
+        bounds.length = 0; Object.assign(st, newScan(c.dl)); scanBoundaries(got, c.ob, st, bounds);
+        const hit = bounds.find((x) => x >= want);
+        if (hit !== undefined) { ob = hit; break; }
+        if (c.ob + len >= c.n) break;
+      }
+    }
+    if (ob < c.n) { const { v, k, s: ignored, ...rest } = c; next = windowCursor(sha, { ...rest, ob }); }
+    through = ob; total = c.n;
+    statedBytes = [c.ob, ob];
+  } else return null;
+  const stated = { cursor, why: UNIT_KILLED_READER, ...(statedBytes ? { bytes: statedBytes } : {}) };
+  return { text_units: [], more: next !== null, cursor: next, next, final: next === null ? true : undefined,
+           read_through: through, total, piece: { units: 0, words: 0 }, stated,
+           counters: { written: 0, skipped: 1, owed: 0, failed: 0 },
+           reading: { killed_windows: [{ cursor, why: UNIT_KILLED_READER, ...(statedBytes ? { bytes: statedBytes } : {}) }],
+                      killed_window_note: localize("reading-pipeline.index.unit_killed_reader", "A part of this document could not be read after three tries, so it is skipped and the rest goes on.") } };
 }
 
 /** R24 (R1–R17): reads a stored capture. `document` is capture's acquire answer's document. The rest is what the
@@ -2551,9 +2598,13 @@ function refusalOf(a) {
  *  reading). Never throws; every failure is a failed reading, and says whether it is `transient` or `final`. */
 export async function read(document, { evidence = null, env = {}, storeName = "bio", view, planeVersion = null,
                                         liveCalibration = null, transcription = null, unitsBudget, ocrInvocations,
-                                        killedPages, cursor, maxUnits, rangePages, windowBytes } = {}) {
+                                        killedPages, skipKilled, cursor, maxUnits, rangePages, windowBytes } = {}) {
   /* R39: a digest alone is no document; it is refused before anything is loaded, and no reading is composed. */
   if (isBareStub(document)) return refusal(BARE_DIGEST, "reading-pipeline.index.bytes_not_held");
+  if (skipKilled === true && typeof cursor === "string") {
+    const stepped = await skipWindow(evidence, document, cursor, windowBytes).catch(() => null);
+    if (stepped) return stepped;
+  }
   let out;
   try { out = await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
                                           unitsBudget, ocrInvocations, killedPages,
@@ -2621,7 +2672,7 @@ async function sizeHeld(evidence, digest) {
 /* `{bytes, why?, failure?}`. A failure is `transient` (R37: the object, or a part, is not held yet, or the parts cannot
    be assembled within MULTIPART_READ_MAX while no whole is held: it can be) or `final` (the capture is over WHOLE_READ_MAX
    and is never loaded: nothing later changes that). It throws only when the store does, which the caller marks transient. */
-export async function bytesOf(evidence, doc, { kind = null } = {}) {
+export async function bytesOf(evidence, doc, { kind = null, textual = false } = {}) {
   const whole = async (digest) => {
     const o = await evidence.get(digest);
     return o ? new Uint8Array(await o.arrayBuffer()) : null;
@@ -2635,10 +2686,12 @@ export async function bytesOf(evidence, doc, { kind = null } = {}) {
   /* R54 (G124a): the refusal names its cause and its two figures, the size and the limit, from the table (`statement`) */
   /* a CSV over its own bound is stated against that row (K4868), every other kind against the whole-load ceiling's */
   const tooBig = (size) => {
-    const st = statement(...(kind === "csv" && size > boundOf("csv", "bytes") ? ["csv", "bytes"] : WHOLE_READ_ROW), size);
+    /* a text, JSON or XML over its own bound is stated against that row (R50), a CSV against its (K4868), every other kind against the whole-load ceiling's */
+    const row = kind === "csv" && size > boundOf("csv", "bytes") ? ["csv", "bytes"]
+      : textual && size > boundOf("text", "bytes") ? ["text", "bytes"] : WHOLE_READ_ROW;
+    const st = statement(...row, size);
     return { bytes: null, failure: FAILURE_FINAL, stated: { reason: "TOO_LARGE", ...st },
-             why: word("reading-pipeline.why.capture_bytes_parts", { total: String(size), parts: String(parts ? parts.length : 1),
-                                                                       multipart_read_max: String(st.bound) }) };
+             why: refusalSentence({ reason: "TOO_LARGE", size, bound: st.bound, parts: parts ? parts.length : 1 }) };
   };
   if (total !== null && total > WHOLE_READ_MAX) return tooBig(total);
   /* the store is asked only when the document states no size */
@@ -2732,6 +2785,16 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       return { ...(w.units.length ? { text_units: w.units } : {}), ...w.fields, piece: w.piece, ...(w.facts ? { reading: w.facts } : {}) };
     }
   }
+  /* G131h: the page whose visible text the last piece of this digest held is not read again: its next piece is cut from that text */
+  if (piecesOn && pieceAsk.cursor !== null && heldHtml !== null && heldHtml.sha === sha) {
+    const hc = unb64(pieceAsk.cursor);
+    if (hc && hc.v === 1 && hc.k === "t" && hc.s === sha && hc.c === heldHtml.visible.length) {
+      const p = textPieceAnswer(heldHtml.visible, { html: true, sha, ...pieceAsk });
+      if (p.refused) return p;
+      if (!p.fields.more) heldHtml = null;
+      return { ...(p.units.length ? { text_units: p.units } : {}), ...p.fields, piece: p.piece };
+    }
+  }
   /* G68: the PDF the last piece of this digest opened is read again from its open document, not from the store */
   const heldCursor = piecesOn && openedPdf !== null && openedPdf.sha === sha && (pieceAsk.cursor === null || (unb64(pieceAsk.cursor) || {}).k === "p");
   const held = heldCursor ? openedPdf : null;
@@ -2743,7 +2806,14 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   if (rangedCsv && !piecesOn)
     return early(failed(doc, null, localize("reading-pipeline.index.csv_in_pieces", "this CSV is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet", { size: String(rangedCsv.size), limit: String(WHOLE_READ_MAX) }), { failure: FAILURE_TRANSIENT }));
   if (rangedCsv) fmt = "csv";
-  const got = held ? { bytes: HELD_OPEN } : rangedCsv ? { bytes: rangedCsv.head } : await bytesOf(evidence, doc, { kind: fmt }).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
+  /* R50: a text, JSON or XML past a whole read's bound and within the text bound is read by range from its first piece too */
+  const textual = profile.profiled_from_text === true || TEXT_TYPE.test(profile.source_content_type || ct || "");
+  const rangedTxt = !rangedCsv && (!piecesOn || pieceAsk.cursor === null) && !held
+    ? await textRangedHead(evidence, doc, { recorded: fmt, declared: profile.source_content_type || ct || null, textual,
+        charset: charsetOf([headers["content-type"], ct, profile.source_content_type].find((t) => charsetOf(t)) || "") }).catch(() => null) : null;
+  if (rangedTxt && !piecesOn)
+    return early(failed(doc, null, localize("reading-pipeline.index.text_in_pieces", "this file is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet", { size: String(rangedTxt.size), limit: String(WHOLE_READ_MAX) }), { failure: FAILURE_TRANSIENT }));
+  const got = held ? { bytes: HELD_OPEN } : rangedCsv ? { bytes: rangedCsv.head } : rangedTxt ? { bytes: rangedTxt.head } : await bytesOf(evidence, doc, { kind: fmt, textual }).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
   let bytes = got.bytes;
   const objLen = bytes ? bytes.length : 0;
   got.bytes = null;
@@ -2757,6 +2827,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   /* the charset declared by the transport first (the header wins over the markup's own, H5), then the capture's and the profile's type */
   const declaredType = [headers["content-type"], ct, profile.source_content_type].find((t) => charsetOf(t)) || null;
   let decoded = textRead ? decodedTextOf(bytes, declaredType, fmt === "xml" ? "xml" : fmt === "html" ? "html" : "text") : null;
+  if (rangedTxt) { textRead = true; decoded = rangedTxt.decoded; }
   /* R49, R54: an encoding the rule cannot decode is stated by its name, never read as replacement characters */
   if (decoded && !decoded.ok)
     return early(failed(doc, null, localize("reading-pipeline.index.encoding_unsupported", "the text declares the encoding {name}, which is not read here, so nothing was read", { name: String(decoded.name) }),
@@ -2772,8 +2843,10 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   if (piecesOn && pieceAsk.cursor !== null && bytes && textRead) {
     const e0 = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
     if (!(e0 && (typeof e0.text === "function" || typeof e0.structure === "function"))) {
-      const p = textPieceAnswer(visibleOf(text, fmt === "html"), { html: fmt === "html", sha, ...pieceAsk });
+      const visible = await visibleOfYielding(text, fmt === "html", true);
+      const p = textPieceAnswer(visible, { html: fmt === "html", sha, ...pieceAsk });
       if (p.refused) return p;
+      if (fmt === "html") heldHtml = p.fields.more ? { sha, visible } : null;
       /* G68: the pieces after this one are read by a window when the capture can be (a cursor of the old kind is moved on to one) */
       if (p.fields.more && fmt !== "html")
         p.fields.cursor = (await textWindowCursorOf(evidence, { sha, bytes, text, whole: got.whole === true, at: p.at, through: p.fields.read_through, grain: p.grain })) ?? p.fields.cursor;
@@ -2812,6 +2885,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
 
   const entry = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
+  /* R54 (G135a, G135e): a kind with no reader is named, final, and offers nothing to repair (no "Read it") */
+  if (!wireable && bytes && !held) {
+    const unread = unreadKindOf(bytes, [ct, profile.source_content_type, headers["content-type"]]);
+    if (unread) return early(failed(doc, null, unreadSentence(unread), { failure: FAILURE_FINAL, reason: "UNSUPPORTED_FORMAT", kind: unread }));
+  }
   let reading, classifiedText = null, member = null;
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null, heldCounts = null, joinedDropped = false;
   let pieceInfo = null, pieceWords = null, rangeScope = null, pieceBase = null;
@@ -2827,9 +2905,20 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     if (piecesOn) {
       /* R40: the first piece; the totals are of the whole
          text, so the reading says how much of it the piece holds. */
-      const html = fmt === "html", visible = visibleOf(text, html);
+      if (rangedTxt) {
+        /* R50: the first piece of a text read by range: its units are the windows' from the start; the head gave the reading's facts and the grain, and what only
+           the whole could give (the document's words) is stated by the last piece or not at all */
+        const w = await textWindowTick(evidence, sha, { m: "t", s: sha, n: rangedTxt.size, ob: rangedTxt.bm, bm: rangedTxt.bm, g: rangedTxt.grain === "lines" ? 1 : 0, p: 0, q: 0, r: 0, ro: 1, wr: 0, ...(rangedTxt.en ? { en: rangedTxt.en } : {}) }, pieceAsk, rangedTxt.src);
+        if (w.refused) return w;
+        if (w.gone) return early(failed(doc, null, localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"), { failure: FAILURE_TRANSIENT }));
+        textUnits = w.units.length ? w.units : null;
+        pieceInfo = { ...w.fields, piece: w.piece };
+        pieceWords = { words_total: null, words_read: w.piece.words };
+      } else {
+      const html = fmt === "html", visible = await visibleOfYielding(text, html, true);
       const p = textPieceAnswer(visible, { html, sha, ...pieceAsk });
       if (p.refused) return p;
+      if (html) heldHtml = p.fields.more ? { sha, visible } : null;
       if (p.fields.more && !html)
         p.fields.cursor = (await textWindowCursorOf(evidence, { sha, bytes, text, whole: got.whole === true, at: p.at, through: p.fields.read_through, grain: p.grain })) ?? p.fields.cursor;
       if (piecesOn) await breathe(visible.length);
@@ -2837,6 +2926,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       textUnits = p.units.length ? p.units : null;
       pieceInfo = { ...p.fields, piece: { ...p.piece, units_total: tot.units } };
       pieceWords = { words_total: tot.words, words_read: p.piece.words };
+      }
     } else ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsOfText(text, { html: fmt === "html", budget: unitsBudget }));
     /* R34: the title, read from the markup R32's units drop; null for any text that is not HTML. A reader that throws
        gives a failed reading, which carries none. */
@@ -2883,6 +2973,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
        true), so `extraction` stores it and `content`'s extent gate finds one. A reading with no unit list has none. */
     /* R49: the encoding the text was decoded in, whether it was assumed, the windows that disagree, and a replacement past the
        tolerance counted as a part not read (partial) */
+    /* R52 (G133f): a text judged from a view (docprofile R19, R40: above 2 MiB, whatever its kind) says so, as the entry path's reading does (R11) */
+    { const sampled = docType.classified_over && typeof docType.classified_over === "object" ? docType.classified_over : null;
+      if (sampled) { reading.classified_over = sampled; reading.basis = reading.basis ? `${reading.basis} — ${classifiedOverSentence(sampled)}` : classifiedOverSentence(sampled); } }
     Object.assign(reading, encodingFacts(decoded));
     if (decoded && decoded.ok && decoded.replaced_ratio > REPLACED_TOLERANCE) reading.units_skipped = (reading.units_skipped || 0) + 1;
     if (textUnits) {
@@ -3000,6 +3093,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
                       : marks.some((m) => m && m.reason === "encrypted") ? ENCRYPTED : NO_PROGRESS };
         }
       }
+      /* R54 (G135d): a size or structure bound an entry left as a marker in its text is the file's refusal, stated with its figures */
+      if (!refusal && i2text && wiredTier === 1) refusal = guardRefusalOf(i2text);
       /* R4–R6: tier 3. */
       const t3 = await tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt, liveCalibration,
                                           ...(Number.isInteger(ocrInvocations) && ocrInvocations >= 0 ? { invocations: ocrInvocations } : {}),
@@ -3108,7 +3203,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
          the document, anything else is the document's own. */
       if (!wired || !wired.determined) reading.failure = memberDown || ocrLeft ? FAILURE_TRANSIENT : FAILURE_FINAL;   /* R55: pages owed are read later */
       /* R38: the entry's own final refusal (a PDF too large to read, pdf-reader R42) is carried as data the page can state. */
-      if (refusal && !(wired && wired.determined)) Object.assign(reading, refusal, { failure: FAILURE_FINAL });
+      if (refusal && !(wired && wired.determined)) {
+        Object.assign(reading, refusal, { failure: FAILURE_FINAL });
+        const said = refusalSentence(refusal);
+        if (said) reading.basis = said;   /* R54: the sentence names the cause and its two figures */
+      }
       /* R37 (F9): the OCR pages this request did not reach, the first of them (the cursor) and how many, stated on the
          reading and owed to the caller's ledger. */
       stateOcr(reading, ocrLeft, ocrFacts, i2text);
@@ -3148,6 +3247,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   /* G26: a PDF read in ranges digests the pages of the first range only; the provenance says so. */
   if (rangeScope && reading.provenance && typeof reading.provenance === "object")
     reading.provenance.text_scope = { pages: [rangeScope.from, rangeScope.to ?? rangeScope.from + rangeScope.count] };
+  /* R50: a text read by range digests and counts its head, the bytes to the end of the first window; the provenance says so */
+  if (rangedTxt && reading.provenance && typeof reading.provenance === "object")
+    reading.provenance.text_scope = { bytes: [0, rangedTxt.head.length], of: rangedTxt.size };
   /* K4868: a CSV read by range digests and counts its head (to the first record boundary at or past the signature window); the provenance says so */
   if (rangedCsv && reading.provenance && typeof reading.provenance === "object")
     reading.provenance.text_scope = { bytes: [0, rangedCsv.he], of: rangedCsv.size };
