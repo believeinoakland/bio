@@ -22,12 +22,11 @@ import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_S
   from "../observation-log/index.mjs";
 import * as QL from "../query.mjs";
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX,
-         meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "../query.mjs";
+         meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP, MEANING_LIMIT_MAX } from "../query.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { routeFinding } from "../provenance-routes/index.mjs";
-import { provenanceOf } from "../provenance/index.mjs";
 import { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
 import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX } from "./projection.mjs";
 import { meaningLevels } from "./levels.mjs";
@@ -36,6 +35,7 @@ import { PROJECTION_COLUMNS, PROJECTION_INDEXED, PROJECTION_TABLE, PROJECTION_RE
 import { Frontier, FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE } from "./frontier.mjs";
 import { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERMS_SCHEMA, TERM_FIELDS, fieldRelation, termRows } from "./fields.mjs";
 import { retrievalBrowseOf, BROWSE_SCOPES } from "../retrieval-browse/index.mjs";
+import { kindsOf, partialReads, unitKey, unitBefore, HIT_UNIT_PAGES_MAX, PARTIAL_LISTED_MAX } from "./units.mjs";
 import { say } from "./words.mjs";
 import { localize } from "../setup-words/index.mjs";
 
@@ -44,6 +44,7 @@ export { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIM
 export { meaningLevels } from "./levels.mjs";
 export { SELECTION_ID_CHUNK, PROJECTION_TABLE, PROJECTION_RELATION } from "./schema.mjs";
 export { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERM_FIELDS } from "./fields.mjs";
+export { PART_KINDS, HIT_UNIT_PAGES_MAX, PARTIAL_LISTED_MAX } from "./units.mjs";
 /* R90: the names retrieval exported from `findin.mjs` and `browse.mjs`, now `retrieval-browse`'s (its R14). */
 export { retrievalBrowseOf, FIND_KINDS, FIND_MATCHERS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT,
          FIND_ITEMS_MAX, FIND_WORDS_MAX, FIND_TERM_MAX, FIND_EVENT_TYPES, FIND_PEOPLE_KINDS, FIND_ORIGIN, FIND_ROW_CELLS_MAX,
@@ -213,17 +214,6 @@ export class Retrieval {
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
-  /** R94: the digests that are parts of a capture held in parts among the register rows of `bundleIds`, as provenance marks
-   *  them (its R73: `part_of` on a part's row). A part is a file of its bundle, never a capture of its own. Empty with no
-   *  host or no provenance to ask. */
-  partsHeldIn(bundleIds) {
-    const parts = new Set();
-    let prov = null;
-    try { prov = this.#host ? provenanceOf(this.#host) : null; } catch { prov = null; }
-    if (!prov || typeof prov.registeredFor !== "function") return parts;
-    for (const id of bundleIds) for (const row of prov.registeredFor(id)) if (row.part_of) parts.add(row.capture_sha);
-    return parts;
-  }
   /* The frontier's reads (`frontier.mjs`), which is this module's own file. */
   rowsOf(q, ...a) { return this.#rows(q, ...a); }
   oneOf(q, ...a) { return this.#one(q, ...a); }
@@ -845,15 +835,42 @@ export class Retrieval {
     return (from > 0 ? "\u2026 " : "") + part.join(" ") + (from + n < words.length ? " \u2026" : "");
   }
 
+  /* R95, R96: the unit a passage hit's snippet is cut from, by bundle: the least of the hit's matching units by capture,
+     reading order and extent (`query-language` R33's order), read through the compiler's own gated `rows=passage` statement
+     over the page's hit ids, so the unit is one the viewer's gate passed. A hit whose matching units pass
+     `HIT_UNIT_PAGES_MAX` pages of rows has no unit named (undetermined), never the first one read. */
+  #snippetUnits(hits, input, tally) {
+    const ids = [...new Set(hits.filter((h) => h.snippet_from === "passage").map((h) => h.bundle_id))];
+    const best = new Map();
+    if (!ids.length) return best;
+    for (let page = 0; ; page++) {
+      if (page >= HIT_UNIT_PAGES_MAX) return new Map();
+      const plan = this.#compile({ q: String(input.q ?? ""), viewer: input.viewer ?? null, ids, rows: "passage",
+                                   rowLimit: MEANING_LIMIT_MAX, rowOffset: page * MEANING_LIMIT_MAX });
+      const got = this.runQuery(plan.statements.meaning(), tally);
+      for (const r of got) { const at = best.get(r.bundle_id); if (!at || unitBefore(r, at)) best.set(r.bundle_id, r); }
+      if (got.length < MEANING_LIMIT_MAX) break;
+    }
+    const kinds = kindsOf((q, ...a) => this.#rows(q, ...a), [...best.values()]);
+    return new Map([...best].map(([id, u]) => [id, { capture_sha: u.capture_sha, extent_kind: u.extent_kind,
+                                                      extent: u.extent, ref: u.ref, kind: kinds.get(unitKey(u)) ?? null }]));
+  }
+
   /* R92: each hit names its document (`document {bundle_id, title}`), and a question's text excerpt is built from its
-     title and conclusion. Added before R78's decorations, which therefore cannot replace either. */
-  #namedHits(hits, plan, input) {
+     title and conclusion. R95, R96: each hit also names the part it was found in (`kind`, null where undetermined) and
+     where (`capture_sha`, `extent_kind`, `extent`, `ref`), all null for a hit that is not a passage's. Added before R78's
+     decorations, which therefore cannot replace any of it. */
+  #namedHits(hits, plan, input, tally) {
     if (!hits.length) return hits;
     const asks = hits.some((h) => normalizeType(h.object_type) === "inquiry" && h.snippet_from === "text" && h.snippet != null);
     const docs = this.#documentsOf(hits.map((h) => h.bundle_id), asks);
+    const units = this.#snippetUnits(hits, input, tally);
     return hits.map((h) => {
       const d = docs.get(h.bundle_id) || { title: h.title ?? null, conclusion: null };
-      const out = { ...h, document: { bundle_id: h.bundle_id, title: d.title } };
+      const u = h.snippet_from === "passage" ? units.get(h.bundle_id) : null;
+      const out = { ...h, document: { bundle_id: h.bundle_id, title: d.title },
+                    kind: u ? u.kind : null, capture_sha: u ? u.capture_sha : null,
+                    extent_kind: u ? u.extent_kind : null, extent: u ? u.extent : null, ref: u ? u.ref : null };
       if (normalizeType(h.object_type) === "inquiry" && h.snippet_from === "text" && h.snippet != null)
         out.snippet = Retrieval.#questionExcerpt(d.title, d.conclusion, plan.terms, input.snippetChars) ?? h.snippet;
       return out;
@@ -880,7 +897,7 @@ export class Retrieval {
     };
     if (mode === "page") {
       /* R78: the registered decorations add keys to the page's hits, and to nothing else in the answer. */
-      out.hits = this.#decorateHits(this.#namedHits(this.runQuery(plan.statements.page(), tally), plan, input), input.viewer ?? null);
+      out.hits = this.#decorateHits(this.#namedHits(this.runQuery(plan.statements.page(), tally), plan, input, tally), input.viewer ?? null);
     } else if (mode === "ids") {
       /* Select-all: every id in the set, ordered identically to the page so the set an operator selected is the set
          they were looking at. */
@@ -996,11 +1013,14 @@ export class Retrieval {
     };
   }
 
-  /* R92: a passage row names the document holding its unit, `document {bundle_id, title}`. */
+  /* R92: a passage row names the document holding its unit, `document {bundle_id, title}`. R95: and the part's `kind`, read
+     by the unit's address (null where the unit was stored before the kind: undetermined, never `body`). */
   #namedRows(arm, rows) {
     if (arm !== "passage" || !Array.isArray(rows) || !rows.length) return rows;
     const docs = this.#documentsOf(rows.map((r) => r && r.bundle_id), false);
-    return rows.map((r) => (r && docs.has(r.bundle_id) ? { ...r, document: { bundle_id: r.bundle_id, title: docs.get(r.bundle_id).title } } : r));
+    const kinds = kindsOf((q, ...a) => this.#rows(q, ...a), rows.filter((r) => r && r.capture_sha != null));
+    return rows.map((r) => (r ? { ...r, ...(docs.has(r.bundle_id) ? { document: { bundle_id: r.bundle_id, title: docs.get(r.bundle_id).title } } : {}),
+                                  kind: kinds.get(unitKey(r)) ?? null } : r));
   }
 
   /* R89: R13's `scope` also names the projects the viewer's sight of is existence only (`membership` R44), each
@@ -1081,10 +1101,14 @@ export class Retrieval {
       if (Object.prototype.hasOwnProperty.call(counts, axis.state)) counts[axis.state] += 1;
       else counts[V.CONTENT_AXIS_UNDETERMINED] += 1;
     }
+    /* R97: the captures in scope whose reading is not whole are counted apart, with how far each had got. */
+    const partial = partialReads((q, ...a) => this.#rows(q, ...a), page.map((r) => r.capture_sha));
     return {
       captures_counted: page.length, truncated, bound: MEANING_AXIS_CAP,
       ...counts,
       not_read: notRead,
+      partial: partial.length, partial_reads: partial.slice(0, PARTIAL_LISTED_MAX),
+      partial_truncated: partial.length > PARTIAL_LISTED_MAX,
       /* THE VOCABULARY TRAVELS WITH THE TALLY, PL-17's rule. */
       vocabulary: V.CONTENT_AXIS_STATES, undetermined_value: V.CONTENT_AXIS_UNDETERMINED,
     };

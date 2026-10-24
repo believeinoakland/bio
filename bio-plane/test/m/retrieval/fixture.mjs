@@ -233,10 +233,21 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
       st.sql.exec(`INSERT INTO readings (capture_sha, bundle_id, reading, at) VALUES (?,?,?,?)`, capSha, bundleId, "{}", T0);
     },
     /** One indexed unit of a capture's text, as extraction's index writes it. */
-    unit(capSha, bundleId, seq, text, extent = { kind: "pdf-page", page: seq }) {
+    unit(capSha, bundleId, seq, text, extent = { kind: "pdf-page", page: seq }, kind = undefined) {
       const ex = JSON.stringify(extent);
       st.sql.exec(`INSERT INTO capture_text (capture_sha, bundle_id, extent_kind, extent, ref, seq, text, truncated, chain_kind)
                    VALUES (?,?,?,?,?,?,?,0,'layer')`, capSha, bundleId, extent.kind, ex, `p${seq}`, seq, text);
+      if (kind !== undefined) st.sql.exec(`UPDATE capture_text SET kind = ? WHERE capture_sha = ? AND extent_kind = ? AND extent = ?`,
+        kind, capSha, extent.kind, ex);
+    },
+    /** extraction-2's unit `kind` column (its R107): the stand-in for a store the provider has migrated. A store without it
+     *  is the one that holds only units stored before the kind. */
+    withKindColumn() { st.sql.exec(`ALTER TABLE capture_text ADD COLUMN kind TEXT`); },
+    /** One capture's index state as extraction's index writes it (its R36, R90): `more` while pieces follow. */
+    indexState(capSha, bundleId, { state = "whole", more = 0, through = null, total = null } = {}) {
+      st.sql.exec(`INSERT OR REPLACE INTO capture_text_state (capture_sha, bundle_id, state, offered, written, over_bound, unaddressable,
+                   truncated, skipped_named, at, more, read_through, total) VALUES (?,?,?,1,1,0,0,0,0,?,?,?,?)`,
+        capSha, bundleId, state, T0, more, through, total);
     },
   });
   return w;
