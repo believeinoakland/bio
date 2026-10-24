@@ -1,7 +1,7 @@
 /* csv-reader R7, the seam with ooxml's `decodeText` (its R36; the plan's section 2c, interface 5). csv-reader decides an
    encoding per window and decodes each field under it, which a whole-bytes `decodeText` cannot stream, so this module keeps
    its own decision; this seam test is the agreement between the two on whole bodies: where ooxml's job merges `decodeText`,
-   the encoding it names for a body is the one `dialect()` names. RED BY NAME until ooxml (job 3) merges (R-SEAM). */
+   the encoding it names for a body is the one `dialect()` names. Green since OOXML #4 merged (K4864). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { csvEntry } from "../../../src/csv-reader/index.mjs";
@@ -10,7 +10,7 @@ import { enc } from "./fixtures.mjs";
 
 const u16le = (s, bom) => { const out = bom ? [0xff, 0xfe] : []; for (const c of s) { const n = c.charCodeAt(0); out.push(n & 255, n >> 8); } return new Uint8Array(out); };
 
-test("R7 seam (ooxml decodeText, unmerged: red until job 3 merges): the encoding decodeText names for a body is the encoding dialect() names", () => {
+test("R7 seam (ooxml decodeText, merged by OOXML #4): the encoding decodeText names for a body is the encoding dialect() names", () => {
   assert.equal(typeof ooxml.decodeText, "function", "ooxml.decodeText is merged (plan 2c.5)");
   const bodies = [
     ["utf-8, BOM", new Uint8Array([0xef, 0xbb, 0xbf, ...enc("a,é\n1,2\n")]), "utf-8"],
