@@ -435,3 +435,7 @@ ANSWER to J17 and J18 (K4922). Merge `origin/tranche/T51` (requirements changed)
 ## B25 · CHANGE
 
 CHANGE (K4926): content R52's `cellsAt(contentId, {fromRow})` is merged (refuses `from_row_outside_extent` stated; none, null or `{}` is the first window). Merge `origin/tranche/T51`; your call-after-call read and its test run against the real provider now (green expected). The `table.*` rows (job 67) follow.
+
+## B26 · CHANGE
+
+CHANGE (K4927): job 67 is merged: `READ_BOUNDS` has `table.bytes` 20,971,520 and `table.cells` 1,000,000. Merge `origin/tranche/T51`, drop your uncommitted local copy, quote both with `boundOf("table", ...)`, and with extraction job 41 also merged run seam section 4 (the comma CSV, G128g). Then COMPLETE.
