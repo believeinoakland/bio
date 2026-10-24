@@ -215,3 +215,7 @@ REPORT (found while running checks/run.mjs; not test-support's, not changed). wo
 - REPORT J9 answered by B8 (both already placed: job 46, and round 9's own ids); nothing open.
 
 Size (session_01EuoP4BVxYVJN8Zit2i4p66): test runs 52, module lines 2682
+
+## J10 · COMPLETE
+
+COMPLETE (B7). G123c first half (alarmDouble, R26), 2c.1 (jobRegistrarStub, R27), G123d (pdfgen, imggen, sheetgen, docgen with truths R19-R22; zipChunks64/zipChunks64Sized R23; truthOf and oracles R24; loopbackOrigin R25), G123e (sheetgen marks + truth.checkUnits), R28, R9 amended. Commits c01417486e + record. NEW FILES for test-support paths (K4842 (2)): bio-plane/test/pdfgen.mjs, imggen.mjs, sheetgen.mjs, docgen.mjs, alarm-double.mjs, job-registrar-stub.mjs, corpus.mjs, seeded.mjs (corpus = shared entry/oracles/loopback; seeded = shared draw, split to avoid an import cycle). Until added: architecture and ownership name exactly these 8. Tests: module 129/129; impact 341/343 pass, 1 fail = file-safety rows.test.mjs R24 words (accepted), 1 skip; R-NOLOAD x5 + one core all green. Checks: format 0, coverage test-support 28/28, words test-support 0, channels 0. R-FOUR per cause, rulings to record (pdf.js via bio-plane pdfjs-dist not the pdf-worker bundle, R-LAYER; BIO_FIXTURE_CACHE default inside sandbox; LibreOffice omissions measured) and proposed wording for R9, R24, R26, R27 are in my record. Size (session_01EuoP4BVxYVJN8Zit2i4p66): test runs 52, module lines 2682.
