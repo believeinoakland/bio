@@ -163,3 +163,11 @@ Checks unchanged from J9 except the five reds above. Size (session_01PUj465a1Wdq
 
 COMPLETE again, CHANGE B8 (K4864): merged tranche/T51 (pushed). I kept nothing red by name for ooxml: docprofile has no ooxml dependency (the size-refusal test builds the marker `formats-xlsx.mjs:882` makes). The only reds are the five that wait on SITE-PROFILES #4 (K4860): R11, R12 (x2), R13, and the CERTAIN control of "R12 R41 markup-free text"; `site-profiles/index.mjs` on the tranche still returns no `identify().shell`, so site-profiles is not merged yet. Docprofile suite: 73 tests, 68 pass, 5 fail (those five). Checks: format 0 failures, architecture 0, coverage 30/30, ownership 0. Send a CHANGE when site-profiles merges and I turn them green.
 Size (session_01PUj465a1Wdq4EoDMWhQ3Ga): test runs 19, module lines 1420
+
+## J12 · COMPLETE
+
+COMPLETE again, CHANGE B9 (K4865): merged tranche/T51 (site-profiles, text-chain, pdf-pixels). Docprofile suite 73 tests, 73 pass, 0 fail, so the five tests I kept red by name for site-profiles R2 (R11, R12 x2, R13, the CERTAIN control) are green.
+
+**The one that moved:** `g48-answers.test.mjs` "R38 R19 readText of every fixture reading equals the answer recorded on the tip" failed on the reading `shell` only. Cause: site-profiles R2's new `identify(...).shell` field: the CERTAIN client-rendered stack answer now carries `stack.shell: true` (the diff is that one key). Not text-chain R73: my `glyphs` already skipped NUL and U+FFFD and every other reading is unchanged. The new answer is the requirement's (R2: `shell` true only for a CERTAIN match; the fixture is a CERTAIN shell). Re-recorded `fixtures/g48-answers.json` (`readings.shell.stack.shell: true`, one added line), the comment in the test names the cause.
+
+Checks: format 0 failures, architecture 0, coverage 30/30, ownership 0. Size (session_01PUj465a1Wdq4EoDMWhQ3Ga): test runs 21, module lines 1420
