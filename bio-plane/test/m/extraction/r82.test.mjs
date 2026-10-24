@@ -138,16 +138,19 @@ const perPage = (log = []) => member((b) => {
 const SCAN = (n) => i2(Array.from({ length: n }, (_, p) => ({ page: p, text: "", undetermined: [noText(p)] })));
 const unread = (w, d) => w.x.readingFor(d, "class:admin").unread_pages.length;
 
-test("R82 R35 (F9): a 60-page scan is read 24 pages a pass; `readHeld` with kind ocr continues from the pages read until none are left", async () => {
+test("R82 R35 R103 (F9; fix round 9, G126b): a 60-page scan read inside a member's request makes no OCR call and owes every page; `readHeld` with kind ocr (the ledger) then reads 24 pages a pass from the pages read until none are left", async () => {
   const log = [];
   const { w, d } = await held({ env: { OCR_WORKER: perPage(log) } });
   const run = (opts = {}) => withEntry(pdf(SCAN(60)), () => w.x.readHeld({ sha: d, env: w.env, ...opts }));
   const first = await run();
-  assert.deepEqual([first.read, first.owed], [true, true], "24 read, the rest owed");
-  assert.equal(unread(w, d), 36);
-  const second = await run({ kind: "ocr" });
-  assert.deepEqual([second.read, second.owed], [true, true]);
-  assert.equal(unread(w, d), 12);
+  assert.deepEqual([first.read, first.owed], [true, true], "nothing OCR'd in the request, every page owed");
+  assert.equal(log.length, 0, "no call to the OCR member inside the request");
+  assert.equal(unread(w, d), 60);
+  for (const left of [36, 12]) {
+    const pass = await run({ kind: "ocr" });
+    assert.deepEqual([pass.read, pass.owed], [true, true]);
+    assert.equal(unread(w, d), left);
+  }
   const third = await run({ kind: "ocr" });
   assert.deepEqual([third.read, third.owed === true], [true, false], "the last pass ends the entry");
   assert.equal(unread(w, d), 0);
