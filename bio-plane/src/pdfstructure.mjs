@@ -55,6 +55,9 @@ import { boundOf } from "./read-bounds.mjs";
 /* R48 (fix round 9, G124): every ceiling this module keeps is a row of READ_BOUNDS, quoted here and used by name below; none
  * is a number of this file's own. */
 const BFRANGE_CODES_MAX = boundOf("pdf", "bfrange_codes");
+const OBJECTS_MAX = boundOf("pdf", "objects");
+const DIRECT_OBJECT_MAX = boundOf("pdf", "direct_object");
+const TREE_DEPTH_MAX = boundOf("pdf", "tree_depth");
 
 /* E11 (fix round 5) — ASCII85Decode AND ASCIIHexDecode, BEFORE FlateDecode.
  *
@@ -504,6 +507,21 @@ const LARGE_RAW_BYTES = 128 * 1024;
 
 /** JavaScript's `\s` for one byte read as one code unit (the first reader scanned a string with it). */
 const isJsSpaceByte = (c) => (c >= 0x09 && c <= 0x0d) || c === 0x20 || c === 0xa0;
+/** The `N G obj` that opens at `off` of `b` (white space first allowed): `{ num, gen, bodyStart }`, or null. */
+function objHeaderAt(b, off) {
+  let p = off;
+  if (!Number.isInteger(p) || p < 0 || p >= b.length) return null;
+  while (p < b.length && isJsSpaceByte(b[p])) p++;
+  const digits = () => { const at = p; let v = 0; while (p < b.length && b[p] >= 0x30 && b[p] <= 0x39) { v = v * 10 + b[p] - 0x30; p++; } return p === at ? null : v; };
+  const num = digits();
+  if (num === null || !(p < b.length && isJsSpaceByte(b[p]))) return null;
+  while (p < b.length && isJsSpaceByte(b[p])) p++;
+  const gen = digits();
+  if (gen === null || !(p < b.length && isJsSpaceByte(b[p]))) return null;
+  while (p < b.length && isJsSpaceByte(b[p])) p++;
+  if (!(b[p] === 0x6f && b[p + 1] === 0x62 && b[p + 2] === 0x6a) || isWordByte(b[p + 3])) return null;
+  return { num, gen, bodyStart: p + 3 };
+}
 const isWordByte = (c) => (c >= 0x30 && c <= 0x39) || (c >= 0x41 && c <= 0x5a) || (c >= 0x61 && c <= 0x7a) || c === 0x5f;
 
 /** One value parsed at `pos` of `bytes`, from a window that grows (eightfold) while the parse ends within 16 bytes of
@@ -516,7 +534,8 @@ function parseWindow(bytes, pos, first = 512) {
     const hi = Math.min(bytes.length, pos + size);
     const s = binaryString(bytes.subarray(pos, hi));
     const r = parseValueSafe(s, 0, pos);
-    const more = hi < bytes.length;
+    /* R47: an object is never read past the bound; a value still unfinished at it is absent, as an unparseable one is */
+    const more = hi < bytes.length && size < DIRECT_OBJECT_MAX;
     if (!r) {
       if (more && skipWs(s, 0) + 16 > s.length) continue;
       return null;
@@ -736,10 +755,77 @@ export class PdfDoc {
       if (numStart === numEnd) continue;
       const num = parseInt(binaryString(b.subarray(numStart, numEnd)), 10);
       const bodyStart = j + 1;
+      /* R47: past the objects bound the scan stops, and says so */
+      if (this._objs.size >= OBJECTS_MAX && !this._objs.has(num)) { this.note(`over_bound:objects:${OBJECTS_MAX + 1}:${OBJECTS_MAX}`); break; }
       const r = parseWindow(b, bodyStart);
-      if (r) this._objs.put(num, bodyStart, r.len + 64, -1, parseInt(binaryString(b.subarray(genStart, genEnd)), 10), r.value);
+      if (r) {
+        this._objs.put(num, bodyStart, r.len + 64, -1, parseInt(binaryString(b.subarray(genStart, genEnd)), 10), r.value);
+        /* R8 (b): what a stream holds is its data and not objects: the scan resumes after it */
+        if (r.value && r.value.t === "stream") { const end = this._streamBodyEnd(r.value); if (end > j) j = end - 1; }
+      }
       objects++;
     }
+    yield* this._xrefSteps();
+  }
+
+  /** Where the data of a stream whose dictionary has just been read ends, for the scan to step over: by a direct /Length
+   *  that an `endstream` follows, else at the next `endstream`; -1 when neither is found (nothing is skipped). */
+  _streamBodyEnd(st) {
+    const b = this._b, start = st.start, len = st.dict.Length;
+    if (typeof len === "number" && len >= 0 && start + len <= b.length && startsAscii(b, skipWsBytes(b, start + len), "endstream")) return start + len;
+    return firstAscii(b, "endstream", start);
+  }
+
+  /* R8 (a) — THE CROSS-REFERENCE CHAIN NAMES EACH OBJECT'S CURRENT DEFINITION.
+   *
+   * The scan above reads every `N G obj` and the later wins; that is right for a file written once and wrong for an
+   * incremental update that was cut short, or a definition the newest revision does not name. So the chain from the last
+   * `startxref` (tables, `/Prev`, cross-reference streams, a hybrid `/XRefStm`) is read as well (the reader `pdfTitle` uses),
+   * and where it names an object's definition at an offset that is not the one the scan kept, that definition is the one
+   * used. An object the chain does not name keeps what the scan found. A chain that does not validate (no `startxref`, a
+   * link that does not read, a named object that is not where it is named) is not used at all: `xref_reconstructed`. */
+  *_xrefSteps() {
+    const b = this._b;
+    const xr = new XrefReader(b);
+    let secs;
+    try { secs = xr.sections(); } catch { secs = []; }
+    if (!(xr.complete && secs.some((sec) => sec.trailer && sec.trailer.Root))) { this._xrefLost(); return; }
+    const fixes = [];
+    let bad = false, count = 0;
+    try {
+      const entries = [];
+      xr.eachEntry((n, e, si) => {
+        if (bad || e.type !== 1) return;
+        if (si > 0 && !sameEntry(xr.lookup(n), e)) return; // a newer section names it
+        const h = objHeaderAt(b, e.off);
+        if (!h || h.num !== n) { bad = true; return; }
+        const row = this._objs.row(n);
+        if (row < 0) { bad = true; return; }
+        if (this._objs.stm[row] !== -1 || this._objs.p[row] !== h.bodyStart) entries.push([n, h]);
+      });
+      for (const [n, h] of entries) {
+        if (++count % SLICE_OBJECTS === 0) yield;
+        const r = parseWindow(b, h.bodyStart);
+        if (!r) { bad = true; break; }
+        fixes.push([n, h, r]);
+      }
+    } catch { bad = true; }
+    if (bad) { this._xrefLost(); return; }
+    for (const [n, h, r] of fixes) this._objs.put(n, h.bodyStart, r.len + 64, -1, h.gen, r.value);
+    this._xr = xr;
+  }
+
+  _xrefLost() {
+    this._xr = null;
+    if (!this.notes.includes("xref_reconstructed")) this.note("xref_reconstructed");
+  }
+
+  /** The newest trailer's entry `key`: through the chain when it validated, else the last trailer in the file that has it. */
+  _trailerValue(key) {
+    if (this._xr) return this._xr.trailerValue(key);
+    const ts = this._trailers();
+    for (let i = ts.length - 1; i >= 0; i--) if (ts[i][key] !== undefined) return ts[i][key];
+    return undefined;
   }
 
   resolve(v, seen = 0) {
@@ -903,7 +989,28 @@ export class PdfDoc {
    *  uncompressed one is the safer read). Each is parsed once here, to know it
    *  parses and what it is, and read again from the decoded stream when asked for (R41). */
   async loadObjectStreams(tick = null) {
+    await this._loadStreams(tick, null);
+    const xr = this._xr;
+    if (!xr) return;
+    /* R8 (a): every compressed object the chain names must be in the object stream it names, or the chain is not used and
+       the objects that are missing are read the lenient way (a later definition wins) */
+    const missing = new Set();
+    xr.eachEntry((n, e, si) => {
+      if (e.type !== 2) return;
+      if (si > 0 && !sameEntry(xr.lookup(n), e)) return;
+      const row = this._objs.row(n);
+      if (row < 0 || this._objs.stm[row] !== e.stm) missing.add(n);
+    });
+    if (missing.size) { this._xrefLost(); await this._loadStreams(tick, missing); }
+  }
+
+  /** The body of `loadObjectStreams`: every object stream, in file order, folded into the table. `only` (a Set of object
+   *  numbers) restricts it to those objects and ignores the chain. */
+  async _loadStreams(tick, only) {
     const streams = this._objs.nums(2, "ObjStm");
+    const at = (n) => this._objs.p[this._objs.row(n)];
+    streams.sort((a, b) => at(a) - at(b));
+    const xr = only ? null : this._xr;
     let sinceTick = 0;
     for (const stm of streams) {
       if (tick && ++sinceTick >= SLICE_STREAMS) { sinceTick = 0; await tick(); }
@@ -935,7 +1042,12 @@ export class PdfDoc {
           const objNum = header[i * 2];
           const off = header[i * 2 + 1];
           if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
-          if (this._objs.has(objNum)) continue;
+          if (only && !only.has(objNum)) continue;
+          const row = this._objs.row(objNum);
+          const ent = xr ? xr.lookup(objNum) : null;
+          /* the chain places the object, or nothing does and the file's own order decides: a top-level definition stands, and
+             of two object streams' the later one's */
+          if (ent ? !(ent.type === 2 && ent.stm === stm) : row >= 0 && this._objs.stm[row] < 0) continue;
           const at = first + off;
           const r = parseWindow(data, at, nextAbove(at) - at + 16);
           if (r) { this._objs.put(objNum, Math.trunc(at), r.len + 64, stm, 0, r.value); added++; }
@@ -971,28 +1083,47 @@ export class PdfDoc {
 
   /** `buildPageIndex` as steps (R45): the tree walk yields every SLICE_OBJECTS nodes it visits. */
   *_pageIndexSteps() {
+    /* R8 (c): the catalog is the one the newest trailer's /Root names; the first `/Type /Catalog` in the file only when no
+       trailer names one */
     let root = null;
-    const cat = this._objs.nums(1, "Catalog")[0];
-    if (cat !== undefined) { this._objs.pin(cat); root = this._objs.get(cat).map; }
+    const named = this._trailerValue("Root");
+    if (named && named.t === "ref") {
+      this._objs.pin(named.n);
+      const v = this._objs.get(named.n);
+      if (v && (v.t === "dict" || v.t === "stream")) root = v.t === "dict" ? v.map : v.dict;
+    }
+    if (!root) {
+      const cat = this._objs.nums(1, "Catalog")[0];
+      if (cat !== undefined) { this._objs.pin(cat); root = this._objs.get(cat).map; }
+    }
     this.root = root;
     let visited = 0;
-    const walkRef = function* (self, num, seen) {
+    const walkRef = function* (self, num, seen, depth) {
       if (++visited % SLICE_OBJECTS === 0) yield;
       const map = self.dictOf({ t: "ref", n: num });
       if (!map) return;
-      const type = map.Type;
-      if (type && type.t === "name" && type.v === "Page") { self._registerPage(num); return; }
+      const type = map.Type && map.Type.t === "name" ? map.Type.v : null;
+      if (type === "Page") { self._registerPage(num); return; }
       const kids = self.resolve(map.Kids);
       if (kids && kids.t === "arr") {
-        for (const kid of kids.items) {
-          if (kid && kid.t === "ref" && !seen.has(kid.n)) { seen.add(kid.n); yield* walkRef(self, kid.n, seen); }
+        /* R47: a tree deeper than the bound is not walked further, and says so */
+        if (depth >= TREE_DEPTH_MAX) {
+          if (!self.notes.some((n) => n.startsWith("over_bound:tree_depth"))) self.note(`over_bound:tree_depth:${depth + 1}:${TREE_DEPTH_MAX}`);
+          return;
         }
+        for (const kid of kids.items) {
+          if (kid && kid.t === "ref" && !seen.has(kid.n)) { seen.add(kid.n); yield* walkRef(self, kid.n, seen, depth + 1); }
+        }
+      } else if (type !== "Pages") {
+        /* a /Kids entry with no /Kids of its own is a page, whether or not it states /Type /Page (R8 (c)) */
+        self._registerPage(num);
       }
     };
 
     if (root && root.Pages && root.Pages.t === "ref") {
-      yield* walkRef(this, root.Pages.n, new Set([root.Pages.n]));
+      yield* walkRef(this, root.Pages.n, new Set([root.Pages.n]), 0);
     }
+    let fallback = false;
     if (this.pageIndexByObj.size === 0) {
       // Fallback: every /Type /Page, by object number.
       const pages = this._objs.nums(3, "Page");
@@ -1000,7 +1131,17 @@ export class PdfDoc {
       pages.forEach((num, i) => this.pageIndexByObj.set(num, i));
       this.pageCount = pages.length;
       this._pageOrder = pages;
-      if (pages.length) this.note("page_order_by_object_number_fallback");
+      if (pages.length) { this.note("page_order_by_object_number_fallback"); fallback = true; }
+    }
+    /* R8 (d): what the file declares and what could be read */
+    const tree = root ? this.dictOf(root.Pages) : null;
+    const declared = tree ? this.resolve(tree.Count) : null;
+    const missing = typeof declared === "number" && Number.isInteger(declared) && declared > this.pageCount ? declared - this.pageCount : 0;
+    if (missing > 0) {
+      this.note("structure_reconstructed");
+      this.note(`pages_missing:${missing}/${declared}`);
+    } else if (fallback && this.notes.includes("xref_reconstructed")) {
+      this.note("structure_reconstructed");
     }
   }
 
@@ -1033,6 +1174,8 @@ export class PdfDoc {
       // name array, never the bare name "Standard" with a numeric /R beside it.
       if (map && typeof this.resolve(map.R) === "number") { enc = true; break; }
     }
+    /* R9, R23: an /Encrypt entry in the newest trailer, direct or by reference, is the same fact */
+    if (!enc) { const e = this._trailerValue("Encrypt"); if (e !== undefined && e !== null) enc = true; }
     return (this._encrypted = enc);
   }
 
@@ -3850,6 +3993,8 @@ function lastAscii(b, needle, from = b.length - needle.length) {
 const skipWsBytes = (b, p) => { while (p < b.length && isWhitespace(b[p])) p++; return p; };
 const startsAscii = (b, p, s) => { for (let k = 0; k < s.length; k++) if (b[p + k] !== s.charCodeAt(k)) return false; return true; };
 
+const sameEntry = (a, b) => !!a && !!b && a.type === b.type && a.off === b.off && a.stm === b.stm && a.idx === b.idx;
+
 /** One file read through its cross-reference sections. See the block above. */
 class XrefReader {
   constructor(bytes) {
@@ -3876,6 +4021,8 @@ class XrefReader {
     const secs = (this._secs = []);
     const seen = new Set();
     let off = this.startxref();
+    /* `complete`: the chain from `startxref` ended at a section with no /Prev, every link read (R8 (a)) */
+    this.complete = false;
     while (off != null && secs.length < XREF_CHAIN_MAX && !seen.has(off)) {
       seen.add(off);
       let sec = null;
@@ -3889,9 +4036,15 @@ class XrefReader {
         if (hy) secs.push(hy);
       }
       off = Number.isInteger(sec.prev) ? sec.prev : null;
+      if (off == null) this.complete = true;
     }
     if (!secs.some((s) => s.trailer.Root)) this.lenient(secs);
     return secs;
+  }
+
+  /** `fn(n, entry, i)` for every entry of every section, newest section (index 0) first. */
+  eachEntry(fn) {
+    this.sections().forEach((sec, i) => { if (sec.each) sec.each((n, e) => fn(n, e, i)); });
   }
 
   /** No usable xref: the last `trailer`, and the last cross-reference stream's own dictionary. */
@@ -3959,8 +4112,16 @@ class XrefReader {
       }
       return null;
     };
+    const each = (fn) => {
+      for (const sub of subs) {
+        for (let i = 0; i < sub.count; i++) {
+          const e = /^(\d{10}) (\d{5}) ([nf])/.exec(binaryString(b.subarray(sub.at + i * 20, sub.at + i * 20 + 20)));
+          if (e) fn(sub.start + i, e[3] === "n" ? { type: 1, off: Number(e[1]) } : { type: 0 });
+        }
+      }
+    };
     return { trailer, prev: typeof trailer.Prev === "number" ? trailer.Prev : null,
-      xrefStm: typeof trailer.XRefStm === "number" ? trailer.XRefStm : null, find: entry };
+      xrefStm: typeof trailer.XRefStm === "number" ? trailer.XRefStm : null, find: entry, each };
   }
 
   /** A cross-reference stream: its dictionary is the trailer, its rows the entries. */
@@ -4003,7 +4164,19 @@ class XrefReader {
       }
       return null;
     };
-    return { trailer: dict, prev: this.num(dict.Prev) ?? null, xrefStm: null, find: entry };
+    const each = (fn) => {
+      let row = 0;
+      for (const [start, count] of ranges) {
+        for (let i = 0; i < count; i++, row++) {
+          const at = row * cols;
+          if (at + cols > data.length) return;
+          const t = widths[0] ? field(at, widths[0]) : 1;
+          const a = field(at + widths[0], widths[1]), c = field(at + widths[0] + widths[1], widths[2]);
+          fn(start + i, t === 1 ? { type: 1, off: a } : t === 2 ? { type: 2, stm: a, idx: c } : { type: 0 });
+        }
+      }
+    };
+    return { trailer: dict, prev: this.num(dict.Prev) ?? null, xrefStm: null, find: entry, each };
   }
 
   /** The newest section's entry for object `n`, or null when no section names it. */
@@ -4594,7 +4767,7 @@ async function readRange(doc, bytes, range) {
   if (doc.isEncrypted()) {
     doc.note("encrypted");
     const marker = { page: null, reason: "encrypted", font: null, codes: "", count: 0 };
-    return { ...out([], [marker], 0), count: 0 };
+    return { ...out([], [marker], 0), count: 0, final: true };
   }
   const fontCache = new FontCache();
   const pages = [], undetermined = [];
