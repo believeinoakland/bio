@@ -2,6 +2,10 @@
  * Run by memory.test.mjs as `node --expose-gc memory-child.mjs <idle|measure> [pages] [chars-per-page]`.
  *   idle:    nothing read; prints {baseMB}.
  *   twin:    as measure, with `doctypeForYielding` (R39) in place of `readText`: the same text, a real yield before each type.
+ *   sheet:   (R38, a text over the classification bound) a CSV-shaped sheet of `pages` bytes (`document` and `sheets[0].text` the one
+ *            string, as csv-reader emits it) read by `readText` under a 2 MB young generation, as the plane's isolate runs, with
+ *            stand-in types that read the text and its `window` they are handed; no collection runs in the measured stretch.
+ *            Prints {baseMB, peakMB, ...} with `answers` holding what the type was handed.
  *   measure: the text of the size given (I2's `document` and `pages[]`, the two-byte text a PDF with one character past
  *            U+00FF yields) is built and held in a worker thread, as the caller holds it; after a collection the worker
  *            runs `readText` (synchronously, with a type that scans `ctx.pages` and a fallback) while this thread polls
@@ -14,7 +18,8 @@ import { fileURLToPath } from "node:url";
 const MB = 1048576;
 if (isMainThread) {
   const [mode, pages, per] = process.argv.slice(2);
-  const w = new Worker(fileURLToPath(import.meta.url), { workerData: { mode, pages: Number(pages), per: Number(per) } });
+  const w = new Worker(fileURLToPath(import.meta.url), { workerData: { mode, pages: Number(pages), per: Number(per) },
+                                                      ...(mode === "sheet" ? { resourceLimits: { maxYoungGenerationSizeMb: 2 } } : {}) });
   let base = null, peak = 0, samples = 0, stop = false;
   const heap = async () => { const h = await w.getHeapStatistics(); return h.used_heap_size + h.external_memory; };
   w.on("message", async (m) => {
@@ -36,7 +41,37 @@ if (isMainThread) {
   const used = () => { const m = process.memoryUsage(); return m.heapUsed + m.arrayBuffers; };
   const { mode, pages: N, per: PER } = workerData;
   if (mode === "idle") { global.gc(); global.gc(); parentPort.postMessage({ idle: true }); }
+  else if (mode === "sheet") await measureSheet();
   else await measure(mode === "twin");
+  async function measureSheet() {
+    const rows = ["id,name,amount,note"];
+    for (let n = 20, i = 0; n < N; i++) { const r = `${i},"name ${i}",${(i * 37) % 9973}.${i % 100},"council note ${i} budget line"`; rows.push(r); n += r.length + 1; }
+    const text = rows.join("\n"); rows.length = 0;
+    const supplied = { document: text, sheets: [{ sheet: 0, name: "table", text }], undetermined: [], counts: { chars: text.length, undetermined: 0 } };
+    const seen = { text: 0, window: null, calls: 0 };
+    registerDoctype({
+      key: "reads_view", label: "stand-in: reads what it is handed", version: 1, contract: CONTRACT.SUBSTANCE,
+      detect(ctx) {
+        seen.calls++; seen.text = ctx.text.length; seen.window = ctx.window;
+        for (let at = ctx.text.indexOf("\n"); at >= 0; at = ctx.text.indexOf("\n", at + 1)) { /* a pass over every line of what it is handed */ }
+        ctx.work.chars += ctx.text.length;
+        return { match: false };
+      },
+      parse: () => ({ entities: [], facts: {} }),
+    });
+    registerDoctype({ key: "generic", label: "stand-in fallback", version: 1, fallback: true, contract: CONTRACT.SUBSTANCE,
+      detect: () => ({ match: false }), parse: () => ({ entities: [], facts: {} }) });
+    global.gc(); global.gc();
+    const base = used();
+    parentPort.postMessage({ base: true });
+    await new Promise((go) => parentPort.once("message", go));
+    const t0 = performance.now();
+    const r = readText(supplied, {});
+    const ms = performance.now() - t0;
+    parentPort.postMessage({ endMB: Math.max(0, used() - base) / MB, ms, chars: text.length,
+      answers: { determined: r.determined, type: r.doctype.type.key, calls: seen.calls, sawText: seen.text, window: seen.window,
+                 classifiedOver: r.doctype.classified_over || null, work: r.doctype.work } });
+  }
   async function measure(twin) {
   const line = "Council Resolution 2024-001 \u2014 the fiscal year budget, Section 4.2, adopted by the Board.\n";
   const pages = [];
