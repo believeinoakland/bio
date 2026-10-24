@@ -2495,21 +2495,17 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
         + ` FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid = p._fid)`
       : `NULL`;
     const tsArgs = rank ? [snip, snip, rank] : [];
-    const ps = passageMatch
-      ? `(SELECT snippet(${pm.ftsTable}, ${pm.ftsColumn}, '[', ']', '\u2026', ?) FROM ${pm.table} ct`
+    /* One selection of the first matching unit serves both columns (R33's snippet, R34's unit): the same rows in the same
+       order, so the unit named is the unit cut. R34 (fix round 9; K4922): the caller reads its kind and extent by key. */
+    const firstUnit = (select) => passageMatch
+      ? `(SELECT ${select} FROM ${pm.table} ct`
         + ` JOIN ${pm.ftsTable} ON ${pm.ftsTable}.rowid = ct.rowid`
         + ` WHERE ct.${pm.key} = p.bundle_id AND ${pm.ftsTable} MATCH ?`
         + ` ORDER BY ct.capture_sha ASC, ct.seq ASC, ct.extent_kind ASC, ct.extent ASC LIMIT 1)`
       : `NULL`;
+    const ps = firstUnit(`snippet(${pm.ftsTable}, ${pm.ftsColumn}, '[', ']', '\u2026', ?)`);
     const psArgs = passageMatch ? [snip, passageMatch] : [];
-    /* R34 (fix round 9; K4922): the unit the passage snippet was cut from, by the very ordering `ps` uses, so the caller
-       reads its kind and extent by key and compiles nothing a second time. */
-    const pu = passageMatch
-      ? `(SELECT ct.rowid FROM ${pm.table} ct`
-        + ` JOIN ${pm.ftsTable} ON ${pm.ftsTable}.rowid = ct.rowid`
-        + ` WHERE ct.${pm.key} = p.bundle_id AND ${pm.ftsTable} MATCH ?`
-        + ` ORDER BY ct.capture_sha ASC, ct.seq ASC, ct.extent_kind ASC, ct.extent ASC LIMIT 1)`
-      : `NULL`;
+    const pu = firstUnit(`ct.rowid`);
     const puArgs = passageMatch ? [passageMatch] : [];
     return { sql: `${c.sql}\nSELECT ${qcols}, COALESCE(q.ts, q.ps) AS snippet,`
                 + ` CASE WHEN q.ts IS NOT NULL THEN 'text' WHEN q.ps IS NOT NULL THEN 'passage' END AS snippet_from,`
