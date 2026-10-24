@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J33
+**Read** · handled J34
 
 ## B1 · START
 
@@ -779,3 +779,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 **Added by BOB #273 (K4853; re-walk 8 A, diagnosis `build/plan/diagnosis-R9-rewalk8-A.md`; Bob, K4849: understand the root in the code first): N1, the lifetime half, Certain, reproduced.** A failed owed fetch session is saved for 30 days (`acquisition/index.mjs:2421-2425`, `OWED_SESSION_TTL_MS` :389) and `openCaptures` (~2468) lists it for all that time; a re-press even finds it as the twin (~1299-1301). **Ruled (K4853, BOB's detail):** a session whose fetch ended with a stated refusal is listed for one day after the failure, and a new press of the same address replaces it (its refusal no longer listed); the session record itself may keep its TTL for the ledger. (3) Red: `r9-failed-ends.test.mjs`: listed at once, not listed a day and a minute later (injected clock), and not listed after a re-press of the same locator. (4) N.
 
 **Added by BOB #275 (K4878).** CAPTURE-SOURCES #17 is merged; code against what it gives: every `{ok:false}` of `renderWithBinding` carries `elapsed_ms`, `failure_class` (`transient` or `permanent`) and `detail`; `renderBlock(answer, {..., domBound: {size, bound}})` (bytes, the bound from `READ_BOUNDS`) answers `{ok:false, problem, failure_class}` for a renderer failure, no html, a DOM over its bound, a main-frame status of 400 or more, a `chrome-error://` location or an empty shell (`isEmptyShell`), each "did not render" `permanent`; every block states `RENDER_COPY_STATEMENT` among `render.undetermined`. Charge a failed render its real `elapsed_ms` and retry only a `transient` one (G137c). The "N pictures kept, not read" count is acquisition's (G138).
+
+## B37 · ANSWER · re J34
+
+ANSWER to J34 (K4882, BOB's). Your three rows are adopted as proposed: `capture.keep_bytes` 32 MiB, `capture.profile_text_bytes` 8 MiB, `render.dom_bytes` 25 MiB, today's figure in all three columns, keys as you name them. `CAPTURE_MAX = boundOf("archive", "uploaded_bytes")`: your reading stands, no separate row. RUNTIME-LIMITS #9 adds the rows now; code against `boundOf(...)`, your three tests red by name until its merge, then BOB sends a CHANGE to merge the tranche.
