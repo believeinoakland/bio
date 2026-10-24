@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_01URrv3YW1ZfSL7VBw6RGXev · depth 2 · COMPLETE · handled B28
+**Status** · session_01QW9dGrckaFUQkzrTTUCWLY · depth 2 · COMPLETE · handled B30
 
 ## Completion record (T51, B1 START)
 
@@ -504,3 +504,31 @@ COMPLETE for G112 (B29 START). Record: build/jobs/T51/case-authoring.md, 'Fix ro
 Changed: index.mjs publishPreflight hands its rolled-back publishCase tieAttested true when the call sends none and the case's unsigned preparation holds this author's attestation row (new #tieAttestedInPreparation; reads only, never reaches op=publish). First, blockers and the sign step's publish_at then answer as for the confirmed call.
 Tests: new r8-prepared-preflight.test.mjs (5 tests, R34/R75/R76/R78): red on the old source (first TIE_ATTESTATION_MISSING, publish_at null), green now; controls (unprepared, publishCase without tieAttested, published-only) green before and after. signing.test.mjs R75's literal updated for ratification R58's source/why fields (red on the tranche before my change). Module suite 249/249 under the preload; 27 user files that name the pre-flight: 359 tests, 0 fail. format 0, architecture 0, coverage 58/58, ownership 0; words 13 failures, none in this module.
 Reds remaining: none of mine. No new words, no census-op change, no generated artifact made stale. Proposed R34/R76 lines are in the record. Seam section F (control-plane) should now confirm through the door.
+
+## Fix round 9, G112b: completion record (B30 START, job 48; session_01QW9dGrckaFUQkzrTTUCWLY)
+
+**Cause (1), certain; my reading agrees with the diagnosis.** `publishPreflight` (`index.mjs` ~1591) took the draft's stored fields (`#withDraft`) and round 8's `#tieAttestedInPreparation` restored only `tieAttested`. The bias acknowledgement is typed in the ceremony's `publish` body and the draft never holds it, so the reload's `{draft, project}` call met `if (!back)` (`#publishCase` ~709, `NO_BIAS_ACKNOWLEDGEMENT`); no document text, `publish_at` null. The stored unsigned document holds it as the frontmatter `bias_acknowledgement` (`document.mjs:112`). **A sibling the diagnosis asked me to check, found real:** the other answers only the act's body carries, `selfAttested` (reasons) and `tensionsDisclosed` (words), are lost the same way: a reload of a case with a self-attested capture answered `first` = `CO_ATTESTATION_UNACKNOWLEDGED`, `publish_at` null (probe, below); a case with a disclosed tension answers `TENSION_NOT_DISCLOSED` (red line below).
+
+**Cause (2), why the tests missed it.** Round 8's tests built every call from `AUTHORED` (which carries the bias) or kept the bias in the draft; none prepared with the bias only in the `publish` call and then pre-flighted `{draft, project}`. Gap fixed: the new tests do exactly that, for the bias, the self-attested reasons and the tension words.
+
+**Fix.** `index.mjs`: `#tieAttestedInPreparation` becomes `#fromPreparation(a)`, answering the additions the unsigned preparation holds for the call's own signer (her `member_ties:` attestation row, as before): `tieAttested: true`, `biasAcknowledgement` (the document's `bias_acknowledgement`), `selfAttested` (`case-grammar.caseDocumentBlocks` rows with `self_attested_only` and her acknowledgement's reason) and `tensionsDisclosed` (`case-grammar.caseTensionsOf` rows she acknowledged, with their words), each only when the call (after its draft) sends none; a field the call sends wins (an empty list is sent). It is used by `publishPreflight` alone, in its rolled-back run, and is never handed to `op=publish` (R76; DEC-46 stands: the act asks them fresh). Imports `caseDocumentBlocks` and `caseTensionsOf` (as `tensionsOfDocument`) from `case-grammar`, an existing edge.
+
+**Cause (3), failing-first, seen red.** On the old source (`r8-prepared-preflight.test.mjs`, new tests naming R34, R75, R76):
+- bias: `AssertionError ... actual: { ok: false, reason: 'NO_BIAS_ACKNOWLEDGEMENT', ... } expected: null` (the reload's `first`; `publish_at` null);
+- self-attested reasons (scratch probe over the real ops, before the change): `RELOAD CO_ATTESTATION_UNACKNOWLEDGED [] null`;
+- tension words (`g112b-tensions.test.mjs`, with the restore of tensions switched off): `reason: 'TENSION_NOT_DISCLOSED'`.
+Green now. Controls (green): an unprepared draft without bias still `NO_BIAS_ACKNOWLEDGEMENT`/`CO_ATTESTATION_UNACKNOWLEDGED`/`TENSION_NOT_DISCLOSED` with `publish_at` null; `publishCase` for the reload (the act) is still refused for each and writes nothing; a bias typed again wins over the stored one, and ties retyped alone still read the stored bias; a sent `selfAttested: []` or `tensionsDisclosed: []` wins; another signer's reload reads none.
+
+**Platform check (4).** N (pure record read, no platform dependence); P at BOB's next re-walk. Seam section F of control-plane (`ceremonyPreflight(e, {tied: false})` over an edition prepared with the bias typed in the ceremony) should now confirm through the door; the screen half (the Bias box drawn from the stored bias) is screens-publish's and needs nothing from this module beyond `first: null` and `publish_at`.
+
+**Proposed requirement lines (BOB writes).** R34's last sentence (fix round 8, G112) to read: "A call that sends no `tieAttested`, no `biasAcknowledgement` (after its draft), no `selfAttested` or no `tensionsDisclosed`, for a case whose unsigned preparation holds this author's `attestation` row (`member_ties:`), is pre-flighted with the preparation's own: her ties' confirmation, her bias acknowledgement, the reasons she gave for self-attested captures and the words she gave for the tensions she disclosed, in its rolled-back run only; `first`, `blockers` and the sign step's `publish_at` are those of that call. A field the call sends is used as sent, and none is ever handed to `op=publish` (R76). Test: `r8-prepared-preflight.test.mjs`, `g112b-tensions.test.mjs`. Controls: an unprepared draft, a published-only case, a preparation without her row and another signer still answer the refusals."
+
+**Words.** No new sentence. Census ops: no accepted key changes. Generated artifacts made stale: none.
+
+**Suite and checks.** `bio-plane/test/m/case-authoring/` under the preload: 256 tests, 256 pass (after merging `tranche/T51`). Users: review 95/95; screens-publish 286 tests, 284 pass, 0 fail. Checks (`checks/run.mjs`): architecture 0 failures; coverage and words show no failure naming case-authoring; format has one failure, `office-readers` `paths` entry `bio-plane/src/office-xml.mjs` (not mine, also on the tranche tip). Ownership (`case-authoring tranche/T51 job/T51/case-authoring`): 4 files, 0 failures.
+
+**Size (session_01QW9dGrckaFUQkzrTTUCWLY): test runs 12, module lines 3101** (`bio-plane/src/case-authoring/*.mjs`).
+
+## J26 · COMPLETE
+
+COMPLETE for G112b (B30 START). Record: build/jobs/T51/case-authoring.md, 'Fix round 9, G112b', pushed. Changed: index.mjs #tieAttestedInPreparation becomes #fromPreparation: the pre-flight (rolled-back run only, never op=publish) also reads back from the signer's own prepared edition her bias acknowledgement, and, found by the sibling check the diagnosis asked for, her self-attested reasons and tension words (a reload of such a case answered CO_ATTESTATION_UNACKNOWLEDGED / TENSION_NOT_DISCLOSED, publish_at null). A field the call sends wins. Tests (red first, green now): r8-prepared-preflight.test.mjs (6 new, R34/R75/R76) and g112b-tensions.test.mjs, with controls. Suites: case-authoring 256/256, review 95/95, screens-publish 0 fail. Checks: architecture 0, ownership 0; format has one failure not mine (office-readers paths). No new words, no census change, no stale artifact. Proposed R34 wording is in the record. Platform P is yours at the re-walk.
