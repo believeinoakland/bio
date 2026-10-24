@@ -776,12 +776,13 @@ async function csvParts(bytes, opts) {
   if (!ctx.ok) return ctx;
   const { bodyBytes } = ctx;
   const unit = ctx.utf16 ? 2 : 1;
+  const encodingOf = ctx.utf16 ? { encoding: ctx.utf16 } : {};
 
   /* THE BOUNDS (R6, R22), on the body's own length and on what the walk counts: over the bytes bound the body is refused
      whole, its dialect read from the head; over the records bound or a record's columns it is refused at the record that
      passes it. A body within them is read in windows and keeps no record list unless it fits one window's first 64 KiB. */
   let guard = bodyBytes > MEASURED_CSV_TEXT_BOUND_BYTES
-    ? sizeMarker("body_bytes", bodyBytes, MEASURED_CSV_TEXT_BOUND_BYTES, "MEASURED_CSV_TEXT_BOUND_BYTES", ctx.utf16 ? { encoding: ctx.utf16 } : {})
+    ? sizeMarker("body_bytes", bodyBytes, MEASURED_CSV_TEXT_BOUND_BYTES, "MEASURED_CSV_TEXT_BOUND_BYTES", encodingOf)
     : null;
   const windowed = !guard && bodyBytes > SHEET_WINDOW_MIN_BYTES;
   const records = !guard && !windowed ? [] : null;
@@ -793,8 +794,8 @@ async function csvParts(bytes, opts) {
   const onRecord = (record, info) => {
     if (guard) return;
     rows++;
-    if (info.cols > CSV_COLUMNS_MAX) { guard = sizeMarker("columns", info.cols, CSV_COLUMNS_MAX, "SHEET_COLUMNS_MAX"); return; }
-    if (rows > CSV_ROWS_MAX) { guard = sizeMarker("rows", rows, CSV_ROWS_MAX, "MEASURED_CSV_ROWS_BOUND"); return; }
+    if (info.cols > CSV_COLUMNS_MAX) { guard = sizeMarker("columns", info.cols, CSV_COLUMNS_MAX, "SHEET_COLUMNS_MAX", encodingOf); return; }
+    if (rows > CSV_ROWS_MAX) { guard = sizeMarker("rows", rows, CSV_ROWS_MAX, "MEASURED_CSV_ROWS_BOUND", encodingOf); return; }
     if (records) {
       if (info.over || info.open) recInfo.set(records.length, info);
       records.push(record);

@@ -186,6 +186,15 @@ test("R6 the records bound: 1,048,576 records are read, one more is refused whol
   assert.deepEqual(s.dialect, csvEntry.dialect(over), "the dialect of a refused body is the one dialect() states");
 });
 
+test("R6 the records and columns markers of a UTF-16 body carry its encoding", async () => {
+  const t = await csvEntry.text(u16le("a\n".repeat(F.ROWS_BOUND + 1)));
+  assert.deepEqual(t.undetermined, [{ ok: false, text: "undetermined", why: "over_size_bound", size: F.ROWS_BOUND + 1, bound: F.ROWS_BOUND,
+    boundName: "MEASURED_CSV_ROWS_BOUND", metric: "rows", final: true, encoding: "utf-16le" }]);
+  const wide = await csvEntry.text(u16le(`${",".repeat(F.COLUMNS_BOUND)}\n${",".repeat(F.COLUMNS_BOUND)}\n`));
+  assert.equal(wide.undetermined[0].metric, "columns");
+  assert.equal(wide.undetermined[0].encoding, "utf-16le");
+});
+
 test("R22 a record of more than 16,384 columns refuses the body whole, stated with the count and the limit; 16,384 columns are read", async () => {
   const wide = (n) => F.enc(`${Array.from({ length: n }, (_, i) => `c${i}`).join(",")}\n${Array.from({ length: n }, (_, i) => i).join(",")}\n`);
   const ok = await csvEntry.text(wide(F.COLUMNS_BOUND));
