@@ -51,3 +51,22 @@ export function wide(n, len) {
   const { xml, declared } = pack(body);
   return { bytes: F.xlsx({ sheets: [{ name: "Big", xml }] }), cells: n, formulas: 0, declared };
 }
+
+/** exactly `n` cells, eight a row: the first three of column A constants `1`, every tenth cell after them a formula
+ *  (`A$1*2`, cached 2) and the rest one-character constants. The count is the point (SHEET X20). */
+export function exact(n, cols = 8) {
+  const body = [];
+  let formulas = 0;
+  for (let i = 0; i < n; i += cols) {
+    const r = i / cols + 1;
+    let cs = "";
+    for (let c = 0; c < cols && i + c < n; c++) {
+      const k = i + c, ref = `${"ABCDEFGHIJKLMNOP"[c]}${r}`;
+      if (k >= 3 && k % 10 === 9) { cs += `<c r="${ref}"><f>A$1*2</f><v>2</v></c>`; formulas++; }
+      else cs += `<c r="${ref}"><v>1</v></c>`;
+    }
+    body.push(`<row r="${r}">${cs}</row>`);
+  }
+  const { xml, declared } = pack(body);
+  return { bytes: F.xlsx({ sheets: [{ name: "Big", xml }] }), cells: n, formulas, declared };
+}
