@@ -233,3 +233,7 @@ Suite: `test/m/content/` tests 177, pass 177, fail 0 (the four R61 seam tests no
 **Words owed** (ids renamed from `content.extent.*` to the core's stem, same English): `content.extent-core.{part_ref,a_part_extent_names_the,a_part_extent_names_neither,this_record_holds_no_extraction_2}`; the old `content.extent.{part_ref,a_part_extent_names_the,a_part_extent_names_neither,this_record_holds_no_extraction_2}` rows are stale for setup-words to drop at regeneration. **Stale generated artifact:** case-checker `program.mjs` (BOB regenerates). **Deferred:** none. **Found in other modules:** none. inquiry-grammar's job 92 re-points its import after this merges.
 Users: `inquiry-grammar` (reads the core directly) 85 of 85 pass.
 Size (session_01HdQfURvp34yuaTWEDLHzDP): test runs 3, module lines 3944
+
+## J16 · COMPLETE
+
+COMPLETE (re B19, job 91, R48 amended, G167). The core's legExtent now reads extent_part for a doc-part leg and its checkContentExtent takes doc-part (checkPart moved into the core; describePart exported and read by the face). Red first: legExtent dropped the part. Content suite 177/177 (the four R61 seam tests now pass too); inquiry-grammar 85/85; format, architecture, coverage, words, ownership 0 failures. One behaviour change: a doc-part cited as bytes is now refused C-45.3 (the face admitted it). Words owed: content.extent-core.{part_ref,a_part_extent_names_the,a_part_extent_names_neither,this_record_holds_no_extraction_2} (renamed from content.extent.*, same English). Stale: case-checker program.mjs. Details in my record J15.
