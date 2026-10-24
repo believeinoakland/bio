@@ -445,7 +445,9 @@ async function child(spec) {
     const got = extractionOf(ctx).readingFor(sha, "class:admin");
     const answerBytes = JSON.stringify(got).length; sample();
     emit({ ev: "reading", ms: Date.now() - tr, peakMB: mb(peak), answerBytes, unitsInAnswer: (got.text_units || []).length, next: got.next ?? null, more: got.more, read_through: got.read_through, total: got.total,
-           completeness: got.completeness, basis: got.reading && got.reading.basis, unread_pages: got.unread_pages ?? null });
+           completeness: got.completeness, basis: got.reading && got.reading.basis, unread_pages: got.unread_pages ?? null,
+           /* the reading's own refusal, as data (reading-pipeline R54: `reason`, `size`, `bound`), so a test judges the figures, never the sentence (K3810) */
+           refusal: got.reading && got.reading.reason ? { reason: got.reading.reason, size: got.reading.size ?? null, bound: got.reading.bound ?? null } : null });
     /* then the rest of the reading, page by page by `next`, as the Document screen reads it (G38, EXTRACTION #36 J22; K4617):
        pass = every unit seen, every page under 2 MB, the child alive */
     if (spec.pageAll !== false && got.next != null) {

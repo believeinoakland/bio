@@ -66,3 +66,18 @@ test("R75 (control): a hook that throws leaves the reading to be made, as before
   assert.equal(body.reading_pending, undefined);
   assert.ok(body.document.reading);
 });
+
+test("R76 (amended, K4916): the door awaits `deferReading`'s answer: a promise of `true` defers the acquire (`reading_pending: true`, no reading); a promise of `false` and a rejection read as before", async () => {
+  const x = await store({ env: { CAPTURES: bucketStandIn() } });
+  const deferred = await press(x, "https://example.org/notice-2026-118.html", { deferReading: async () => true });
+  assert.equal(deferred.ok, true, JSON.stringify(deferred).slice(0, 300));
+  assert.equal(deferred.reading_pending, true, "a promise of true defers");
+  assert.equal(deferred.document.reading, undefined, "no reading made");
+  for (const [what, deferReading] of [["a promise of false", async () => false], ["a rejection", () => Promise.reject(new Error("no answer"))]]) {
+    const y = await store({ env: { CAPTURES: bucketStandIn() } });
+    const body = await press(y, "https://example.org/notice-2026-118.html", { deferReading });
+    assert.equal(body.ok, true, what);
+    assert.equal(body.reading_pending, undefined, `${what}: not deferred`);
+    assert.ok(body.document.reading, `${what}: read as before`);
+  }
+});

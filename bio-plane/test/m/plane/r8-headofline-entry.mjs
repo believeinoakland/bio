@@ -35,14 +35,31 @@ export class Headline extends Store {
     }
     return (this.#counted = c);
   }
+  /* R102: the heal frame's own work, counted at the frame: each call, and whether it looked at the platform's alarm (`getAlarm`) and armed it
+     (`setAlarm`) inside that call, so a test judges the frame and not a firing that re-arms beside it */
+  #heals = null;
+  #countHeals() {
+    if (this.#heals) return this.#heals;
+    const h = { calls: 0, looks: 0, arms: 0 }, sch = schedulerOf(this.ctx, this.env), real = sch.heal.bind(sch), c = this.#count();
+    sch.heal = async (...a) => {
+      h.calls++;
+      const g = c.getAlarm, s = c.setAlarm;
+      const r = await real(...a);
+      if (c.getAlarm > g) h.looks++;
+      if (c.setAlarm > s) h.arms++;
+      return r;
+    };
+    return (this.#heals = h);
+  }
   async fetch(req) {
     this.#count();
+    this.#countHeals();
     const url = new URL(req.url);
     if (!url.pathname.startsWith("/r8/")) { this.#wrap(); return super.fetch(req); }
     this.#wrap();
     const step = url.pathname.slice(4);
     if (step === "state") return json({ passes: this.#passes, results: this.#results });
-    if (step === "counters") { const alarm = await this.ctx.storage.getAlarm(); this.#counted.getAlarm--; return json({ ...this.#counted, alarm }); }   /* this read is not counted */
+    if (step === "counters") { const alarm = await this.ctx.storage.getAlarm(); this.#counted.getAlarm--; return json({ ...this.#counted, alarm, heals: { ...this.#heals } }); }   /* this read is not counted */
     if (step === "rows") {
       let health = null; try { health = await schedulerOf(this.ctx, this.env).health(Date.now()); } catch (e) { health = { error: String(e && e.message || e) }; }
       return json({ passes: this.#passes, pending: pendingOf(this.ctx).list(), health, alarm: await this.ctx.storage.getAlarm() });
