@@ -59,3 +59,9 @@ Size (session_01Bbx2ng6oqCwJyEKMZdPRg2): test runs 3, module lines 205
 ## J3 · COMPLETE
 
 R29-R34 met in bio-plane/src/read-bounds.mjs and byte-ledger.mjs (new: add both to runtime-limits paths). 51 module tests pass; format, architecture, coverage 0 failures; ownership lists only those two files. B3 applied. Re-points owed: plane shape/harness.mjs capFor and the two g44-large tests' capFor to byte-ledger capFor. No open question. Record: build/jobs/T51/runtime-limits.md
+
+## Round 9, batch B (RUNTIME-LIMITS #8): the READ_BOUNDS rows the quoting jobs reported
+
+**Entries applied (B4: K4857, K4858, K4859, K4860).** The 19 rows added to `bio-plane/src/read-bounds.mjs` exactly as BOB gave them, keys `limit.<kind>.<name>`: `office` text_bytes, streamed_text_bytes, decoded_chars, structural_part_bytes, piece_chars; `archive` member_bytes; `image` working_set, retained_objects, picture_source; `ocr` picture_edge; `document` part_bytes; and the new kind `scan` (max_bytes, time_ms, embedded_pe, html_normalize, script_normalize, zip_type_rcg, partitions, icons_pe). No figure chosen by me; no new file, no `paths` change. Test: `read-bounds.test.mjs`, one test (R30, with R31's `boundOf` and `statement`) pins each row's three figures, key, the alpha answered by `boundOf` and `statement`'s `{size, bound, key}`; the shape test (R29) covers the new rows by invariants and stays green. Seen: rows absent before the edit (the new test is a lookup of the 19).
+
+**Deferred.** None. **Found in another module.** None. **Words.** None. **Generated artifacts made stale.** None.
