@@ -828,3 +828,7 @@ Rows owed: none (no new sentence; the refusal sentence is the existing R38 one).
 Ran: module suite (47 test files + d606-perpage-ocr + tier2-wire) 404 pass, 0 fail of 405 (one not a pass/fail: reported as such by the runner, not skipped); extraction (user, 376 pass, 0 fail); impact names 108 modules, only extraction reads `reading` reasons directly. Checks: format 0 failures; architecture 0 failures; coverage 57 of 57 ids named, 0 failures; ownership 0 failures.
 FOUND, not mine: `node bio-plane/src/setup-words/build.mjs --check` says `rows.mjs` is stale at word 18552 (`acquisition.index.no_renderer_is_bound_to` / `listed_whole_over_the_stored`): acquisition's change, not mine, owed to setup-words' regeneration.
 Size (session_014igErSz97aUKTLk1N4yExr): test runs 6, module lines 4,262
+
+## J44 · COMPLETE · re B49
+
+COMPLETE: B49 done. An encrypted PDF read whole now ends final with PASSWORD_REQUIRED (or ENCRYPTED when tier 2 could not open it), never docprofile prose; the mapping is one helper used by the range branch and the whole read. Red first (r46-whole.test.mjs, 2 red), green. Module 404 pass, 0 fail; extraction 376 pass; format, architecture, coverage, ownership 0 failures. FOUND, not mine: setup-words rows.mjs --check stale at acquisition's words (no_renderer_is_bound_to). Size (session_014igErSz97aUKTLk1N4yExr): test runs 6, module lines 4,262
