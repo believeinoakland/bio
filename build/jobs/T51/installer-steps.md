@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_012TFpuR6hxXes7JUpRFtJKB · depth 2 · WAITING ON BOB (J23) · handled B23
+**Status** · session_012TFpuR6hxXes7JUpRFtJKB · depth 2 · COMPLETE · handled B23
 
 ## J1 · QUESTION
 
