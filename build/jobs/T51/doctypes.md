@@ -306,3 +306,7 @@ DOCTYPES #12 · B14 handled (fix round 9, batch C: the types' garbage over the c
 
 M-T51-1 (P6): module raw source lines (doctypes/*.mjs, never tests): 4,291.
 Size (session_01GqWuZtosurKW3WXEWPZzn5): test runs 26, module lines 4291
+
+## J16 · COMPLETE · re B14
+
+COMPLETE (K4892). Record J15. Each type's detect now flattens the text it is handed once, and the flatten is a hand copy (V8's global replace over 147,000 white-space runs left 12.7 MB by itself). Left uncollected per detect over a 3 MiB sheet's view, 2 MB young generation, no collection after: regulation 37.0 -> 3.8 MB, meeting_minutes 12.6 -> 3.4 MB, others under 1.1. Red first: doctypes/test/r37-view.test.mjs (names R37). Proposed bar 6 MB per detect (BOB records); proposed R37 wording is in J15. Plane shape-harness control: 12 of 12 green alone. doctypes 80 of 80; impact set: the 25 failures left are the same 25 on the tip (inherited). Checks: format, architecture, coverage 41 of 41, ownership 0; words none in doctypes. Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs. Size (session_01GqWuZtosurKW3WXEWPZzn5): test runs 26, module lines 4291.
