@@ -345,3 +345,7 @@ Found in another module (reported, not touched): `reading-pipeline` job 27's fou
 Stale generated artifacts my change makes (BOB regenerates at the round end): `pdf-worker`, `ocr-worker` and `agent-worker` bundles, `bio-plane/dist/bio-plane.bundled.mjs`.
 
 Size (session_01VR2yTKx57ew9DXwWoxnBaf): test runs 24, module lines 4964
+
+## J12 · BLOCKED
+
+BLOCKED (cause: context). PDF-READER #14 is past half its window. Done and pushed: R8, R9, R12, R22, R41 (page_over_bound), R43, R46, R47, R48 coded and tested (checks: format, architecture, coverage 48/48, ownership all 0 failures). NOT done: R49 `pageSource` (B15/B16), the embedded-file streaming hash, a 40/60 MiB page measure, the last bounds test run, and swapping `XMP_MAX` for `boundOf("pdf","xmp")` after runtime-limits' second merge. All listed under "Next" and "Also owed" in my record. Restart a PDF-READER #15 from the record.
