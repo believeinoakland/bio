@@ -641,3 +641,37 @@ Size (session_018XJZd3Y6SC5rJeKSargNwt): test runs 10, module lines 4358
 ## J39 · COMPLETE · re B41
 
 COMPLETE re B41: option (a). No join: a body with no declared length or overrunning its declared length holds nothing past its first part; the whole is made by reading the stored parts back one at a time (ledger: whole + one part). Red first (undeclared test asserts the read-back; red on the join commit). Two older tests encoding R96's no-read-back for such bodies amended (fix3-t51 C5, fix5-t51 R101), R115 text says so. Suite 325/325, capture users 243/243, checks 0 failures (ownership lists the requirements file, per B3/B4). Record: 'after B41'.
+
+## J40 · COMPLETE
+
+COMPLETE re B42 (ACQUISITION #35; job 76; R122; head 1530040dbc). Requirement lines written by me in build/requirements/acquisition.md (R122 amended to what is built, "not yet met" removed; ownership lists that one file, accepted per B3/B4).
+
+Applied
+- (1) `listingRefusal` adds `declared_total` to ARCHIVE_TOTAL_MAX's row (unpack.mjs). Reaches `op=unpack`'s refusal and `archiveList`'s `archive.refused`.
+- (2) The daemon's `op=unpack` run (cls `daemon`, not `acquire`'s own automatic call, not a member's run) offers again each entry `filed` whose document `homeOf` finds no home: the member is cut again (parts already held, nothing rewritten), verified against the entry's digest, and its document returned in `documents`; the offer is counted on the entry (new column `offers`, added to existing tables by `PRAGMA table_info` + `ALTER TABLE`; the first filing is offer 1; `REOFFER_MAX` = 3, CHOSEN per BOB's ruling). A run that offered anything answers `waiting` > 0 / `complete: false`, so the plane's job comes back and sees whether the document found its home. Still homeless at 3 offers: stated final once in the answer's new `not_promoted: [{index, sha256, code: "NOT_PROMOTED", detail}]` (always present), stored on the entry (`code`, `detail`; state stays `filed`, the bytes are kept and receipted), shown by `archiveList` as `not_promoted: {code, detail}` on that entry, never offered again. Offers count towards the call's share, not the tree's or the day's. Detail sentence is `localize("acquisition.unpack.its_document_was_offered", …)`.
+- (3) `ODF_DIGEST_MAX` and `LARGE_FETCH_BYTES` are `boundOf("acquisition", "odf_digest_bytes" | "large_fetch_bytes")`.
+
+Choices for BOB to confirm
+- The re-offer is keyed on `cls === "daemon"` (what the plane's `unpack` job sends through the door), so control-plane needs no change to pass a flag; the diagnosis' door-passed `reoffer` is not needed. A member's own `op=unpack` does not re-offer.
+- Final state: the entry stays `filed` with `code NOT_PROMOTED`, not `not_filed`: a `not_filed` would need a new catalogue row (C-139.22) that the gate census and control-plane list; no row was added. If BOB wants the row, it is a CHANGE (and `filed` then reads `not_filed`).
+- The answer says the final reason is "found no home in 3 offers"; acquisition cannot know the door's own refusal code (control-plane's `not_promoted[].code`), so the detail does not quote it.
+- Control-plane note (P9, not changed): the job finishes when `complete: true`; with this change the daemon answers `complete: false` after an offer, so the plane's job retries by its back-off until the entry has a home or is stated final. The door promotes `documents` as for any `op=unpack`; nothing in control-plane has to change for it.
+
+Existing tests changed (not weakened): four tests (budgets.test.mjs ×3, archivelist.test.mjs, fix4b-owed.test.mjs) run the daemon over an archive filed by an earlier call with no door between, so their members had no home; they now state the door's promotion through the new fixture helper `promoteFiled(w)` before the daemon's run.
+
+Rows owed (words): `acquisition.unpack.its_document_was_offered`. Read through `localize` at its use; no `word()` key added. No generated artifact touched.
+
+Uncommitted stand-in (per START): `bio-plane/src/read-bounds.mjs` carries local `acquisition.odf_digest_bytes` and `acquisition.large_fetch_bytes` rows (8 MiB each) that are NOT in this branch. Until runtime-limits job 78 (R35) merges, this branch's `acquisition/index.mjs` throws at import (`READ_BOUNDS has no row`): merge job 78 first.
+
+The four fields
+- cause: unpack.mjs:535 built the ARCHIVE_TOTAL_MAX row from `rowed(code)` alone, dropping `listing.declared_total`; :619 and :660 looked only at `waiting` entries, and an entry settled `filed` is settled for good while its promotion happens afterwards at the door; index.mjs:143, :432 were literals.
+- why missed: R121 covered a store failure inside `unpack`; a promotion failure falls after the entry is `filed`, between R121 and control-plane R134; the ceilings were not on the G124 quote list.
+- red first: r122.test.mjs run before the change: (1) `declared_total` undefined, (2) a daemon run answered `documents: []` and `complete: true` for homeless entries, (3) the export lines were literals. Green after.
+- platform check: the new column is added with `PRAGMA table_info` and `ALTER TABLE ADD COLUMN`, statements Durable Object SQLite supports; I ran it on node:sqlite only, not on workerd (no probe exists for this table).
+
+Checks (run in this session)
+- acquisition suite: `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/acquisition/*.test.mjs`: tests 330, pass 330, fail 0.
+- impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`): 112 modules affected (index.mjs is imported widely); the users that touch `unpack`/`archive_entries`/the two ceilings run: tasks inbox, case-carriage, public-read archives and obscured, plane unpack, capture t43 and r9-t51, control-plane t35-door: tests 176, pass 176, fail 0. file-safety (rows, r56-structure, intake, grade): 24 tests, 1 fail: `rows.test.mjs` R24 finds the word key `refusal.SIGNATURES_RUN_RECENT` in its code and not in its expected list: file-safety's own, not touched by this job.
+- `checks/format.mjs`: 176 modules, 176 requirements files; 0 failures. `checks/architecture.mjs … acquisition`: 0 failures. `checks/coverage.mjs … acquisition`: 76 of 76 live requirement ids named by a test; 0 failures. `checks/words.mjs`: 33 failures, none naming acquisition. `checks/ownership.mjs … acquisition tranche/T51 job/T51/acquisition`: 9 files, 1 failure: build/requirements/acquisition.md, accepted per B3/B4.
+
+Size (session_01XzAj5EuQc3hnH5xNiPDvpB): test runs 14, module lines 4417
