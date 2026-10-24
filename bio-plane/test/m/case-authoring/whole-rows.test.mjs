@@ -26,7 +26,8 @@ function setup(label) {
   const r = w.promotion.promote({ bundleId: BIG, base: null, snapKey: `mp-${label}`, author: V("alice"), meta: { object_type: "information" },
     files: [{ path: "bundle.md", text: infoMd(BIG) }, { path: "data/provenance.json", text: JSON.stringify({ documents: [m.doc] }, null, 1) },
             ...m.held.map((p) => ({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes }))],
-    register: m.held.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes })) });
+    register: [{ sha256: m.whole, path: m.doc.file, encoding: "binary", bytes: m.doc.capture.bytes },      /* the whole first, then its parts: capture.mjs's own register */
+               ...m.held.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes }))] });
   if (!r.ok) throw new Error(`fixture multipart refused: ${JSON.stringify(r).slice(0, 400)}`);
   w.documentCopy(m.whole, "clean"); w.indexText(m.whole, BIG);
   return { w, m };

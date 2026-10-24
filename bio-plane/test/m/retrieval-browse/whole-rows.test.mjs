@@ -1,8 +1,8 @@
 /* retrieval-browse R19 (fix round 4b, F3 verification; K4509; provenance R72, R73), at the module's interface: a capture
  * held in parts is one capture. `findIn`'s bundle, id and project scopes count and search it once, by its whole (provenance
- * marks each part's row `part_of`; the part's row is skipped), so it spends one of `FIND_CAPTURES_PER_CALL` and the scope
+ * keys its register by the whole and carries the parts on it, R73, R74; a part is no row), so it spends one of `FIND_CAPTURES_PER_CALL` and the scope
  * reports one capture. The fixture is a capture of three parts promoted by the real chain, as `screens-intake` promotes
- * one: the parts alone in the `register` list, the whole's row written by provenance (R72). */
+ * one: the whole's row first and then its parts in the `register` list (R75, R77). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -32,18 +32,21 @@ function heldInParts(w, id, label) {
     files: [{ path: "bundle.md", text: infoMd(id) },
             { path: "data/provenance.json", text: JSON.stringify({ documents: [m.doc] }, null, 1) },
             ...m.held.map((p) => ({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes }))],
-    register: m.held.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes })) });
+    register: [{ sha256: m.whole, path: m.doc.file, encoding: "binary", bytes: m.doc.capture.bytes },      /* the whole first, then its parts: capture.mjs's own register */
+               ...m.held.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes }))] });
   assert.equal(r.ok, true, `the real chain promotes the multipart capture: ${JSON.stringify(r).slice(0, 300)}`);
   w.unit(m.whole, id, 0, "The budget line is set.");
   return m;
 }
 
-test("R19: the register holds the capture's parts and its whole, each part's row marked for the whole (the fixture is the case)", () => {
+test("R19: the register holds the capture's whole, carrying its parts in order, and no row of a part (the fixture is the case)", () => {
   const w = world();
   const m = heldInParts(w, "INFO-2026-0001-big", "a");
-  assert.equal(w.rows(`SELECT capture_sha FROM register WHERE bundle_id = ?`, "INFO-2026-0001-big").length, 4, "three parts and the whole");
+  assert.equal(w.rows(`SELECT capture_sha FROM register WHERE bundle_id = ?`, "INFO-2026-0001-big").length, 1, "the whole alone: a part is no register row (provenance R74)");
   const marks = w.prov.registeredFor("INFO-2026-0001-big");
-  assert.deepEqual(marks.filter((r) => r.part_of === m.whole).map((r) => r.capture_sha).sort(), m.held.map((p) => p.sha256).sort());
+  assert.deepEqual(marks.map((r) => r.capture_sha), [m.whole]);
+  assert.equal("part_of" in marks[0], false, "part_of is retired (provenance R73)");
+  assert.deepEqual(marks[0].parts.map((p) => p.sha256), m.held.map((p) => p.sha256), "its parts, in order");
   assert.deepEqual(marks.filter((r) => r.whole === 1).map((r) => r.capture_sha), [m.whole]);
 });
 
