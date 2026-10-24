@@ -78,6 +78,7 @@ const CSS_URL_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)/gi;
 const CSS_IMPORT_RE = /@import\s+(?:url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)|"([^"]*)"|'([^']*)')/gi;
 const STYLE_EL_RE = /<style\b([^>]*)>([\s\S]*?)<\/style\s*>/gi;
 const COMMENT_RE = /<!--[\s\S]*?-->/g;
+const LONE_SURROGATE_RE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
 
 /** The placeholder a rewritten reference becomes. */
 export const placeholderFor = (sha) => `about:capture#${sha}`;
@@ -387,7 +388,8 @@ export function classifyRef(ref, base, isPublic) {
   }
   let abs;
   try { abs = new URL(ref, base).toString(); }
-  catch { return { ok: false, reason: "UNRESOLVABLE", url: ref }; }
+  /* R36: the same bytes fail the same way on every call, so the record says it is final. */
+  catch { return { ok: false, reason: "UNRESOLVABLE", final: true, url: ref }; }
   const clean = abs.split("#")[0];
   if (!isPublic(clean)) return { ok: false, reason: "REFUSED_LOCATOR", url: clean };
   return { ok: true, url: clean };
@@ -807,7 +809,8 @@ export const LINK_TYPES = ["anchor", "intra", "deferred", "refused"];
 export const linkWrapper = {
   anchor: (frag) => frag,
   intra: (sha) => `about:capture#${sha}`,
-  deferred: (url) => `about:link#${encodeURIComponent(url)}`,
+  /* R24: a lone surrogate would make encodeURIComponent throw; it is U+FFFD, as a URL makes it. */
+  deferred: (url) => `about:link#${encodeURIComponent(String(url).replace(LONE_SURROGATE_RE, "\uFFFD"))}`,
   refused: () => "about:link#refused",
 };
 
@@ -990,6 +993,7 @@ export async function captureSubresources({
 
     if (!cls.ok) {
       settle(item, { ...stem, ok: false, status: null, reason: cls.reason,
+        ...(cls.final ? { final: true } : {}),
         ...(cls.scheme ? { scheme: cls.scheme } : {}),
         detail: cls.reason === "REFUSED_SCHEME"
           ? localize("subresources.subresources.a_scheme_reference_is_not", "a {scheme} reference is not something this surface fetches", { scheme: String(cls.scheme) })

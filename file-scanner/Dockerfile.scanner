@@ -22,7 +22,6 @@ RUN mkdir -p /etc/ssl/certs \
 ENV NODE_ENV=production PORT=8080 FILE_SCANNER_SIGS=/var/lib/file-scanner/sigs
 WORKDIR /app
 COPY container/common.mjs container/scanner.mjs ./container/
-COPY src/limits.mjs ./src/
 USER node
 EXPOSE 8080
 CMD ["node", "container/scanner.mjs"]

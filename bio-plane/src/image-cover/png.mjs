@@ -10,7 +10,7 @@
  * is covered too. An indexed image covers with a palette entry that is opaque black, added when the palette has
  * room, else its darkest opaque entry. A colour key (`tRNS` on grey or RGB) equal to black would make the cover
  * transparent, so the cover is then the nearest grey, 1. */
-import { CoverRefusal, checkPixels, storedRects, displayedSize, mergeSpans, orientationOf, orientationTiff } from "./geometry.mjs";
+import { CoverRefusal, checkPixels, checkStride, checkCount, storedRects, displayedSize, mergeSpans, orientationOf, orientationTiff } from "./geometry.mjs";
 import { localize } from "../setup-words/index.mjs";
 
 const SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -39,8 +39,9 @@ function put32(d, p, v) { d[p] = v >>> 24; d[p + 1] = (v >>> 16) & 255; d[p + 2]
 /** The chunks the cover reads, up to IEND; everything else is passed over and not carried. */
 function readChunks(d) {
   const got = { idat: [], plte: null, trns: null, exif: null, ihdr: null };
-  let p = 8, end = false;
+  let p = 8, end = false, count = 0;
   while (!end) {
+    checkCount(++count, "chunks");
     if (p + 12 > d.length) throw truncated("a chunk runs past the end of the file");
     const len = u32(d, p), type = String.fromCharCode(d[p + 4], d[p + 5], d[p + 6], d[p + 7]);
     if (p + 12 + len > d.length) throw truncated(`chunk ${type} runs past the end of the file`);
@@ -152,10 +153,11 @@ export async function coverPng(d, areas, maxPixels) {
   if (depth !== 8) throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", localize("image-cover.png.png_bit_depth_depth_only", "PNG bit depth {depth}; only 8-bit PNGs are covered", { depth: String(depth) }));
   if (ih[10] !== 0 || ih[11] !== 0) throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", "PNG compression or filter method is not the standard's");
   if (ih[12] !== 0) throw new CoverRefusal("PNG_INTERLACED", "an interlaced (Adam7) PNG is not covered");
+  const bpp = CHANNELS[ct], stride = W * bpp;
+  checkStride(stride);
   if (ct === 3 && (!c.plte || c.plte.length % 3 || !c.plte.length)) throw corrupt("an indexed PNG without a palette");
   const orientation = c.exif ? orientationOf(c.exif) : 1;
   const rects = storedRects(areas, W, H, orientation);
-  const bpp = CHANNELS[ct], stride = W * bpp;
   const { px, plte, trns } = coverColour(ct, ct === 3 ? c.plte : null, c.trns);
 
   /* inflate → unfilter → cover → filter → deflate, a row at a time */

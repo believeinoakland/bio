@@ -32,15 +32,19 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * High-throughput coding (Part 15), packed packet headers, sub-sampled
  * components, a palette, sYCC,
- * signed samples and any precision but 8 bits, more than three components, and
- * an image whose decode would pass the memory bound (below), refused from its
- * headers before a sample is allocated.
+ * signed samples and any precision but 8 bits, more than three components.
+ * A size the decoder will not allocate for (an image past the pixel or edge bound,
+ * past the memory bound below, or a codestream whose precincts and code-blocks
+ * would pass the retained-objects bound) is refused from its headers before a
+ * sample or an object is allocated: IMAGE_TOO_LARGE, final and never retried,
+ * its `detail` the declared size, the bound and the sentence's key (R4, R12).
  * Every error thrown is a `JpxRefusal` carrying a code: UNSUPPORTED (with the
- * feature), UNSUPPORTED_SAMPLES, TRUNCATED or CORRUPT.
+ * feature), UNSUPPORTED_SAMPLES, IMAGE_TOO_LARGE, TRUNCATED or CORRUPT.
  */
 
 import { MqDecoder, mqContexts } from "./mq.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { READ_BOUNDS, boundOf, statement } from "../../bio-plane/src/read-bounds.mjs";
 
 export class JpxRefusal extends Error {
   constructor(code, detail = {}) {
@@ -54,7 +58,8 @@ const samples = (note, extra = {}) => new JpxRefusal("UNSUPPORTED_SAMPLES", { no
 const corrupt = (note, extra = {}) => new JpxRefusal("CORRUPT", { note, ...extra });
 const truncated = (note, extra = {}) => new JpxRefusal("TRUNCATED", { note, ...extra });
 
-/** The `feature` of the memory refusal: an identifier read by code (pdf-pixels maps it), never localized. */
+/** The old `feature` of the memory refusal, an identifier read by code. The refusal is `IMAGE_TOO_LARGE` now (R4, R12) and no
+ *  longer a key of `JPX_REFUSES`; the name stays exported so `pdf-pixels`' import of it still loads until it maps the code. */
 export const MEMORY_FEATURE = "image-past-memory-bound";
 
 /** Every `feature` an UNSUPPORTED refusal can carry. */
@@ -64,10 +69,12 @@ export const JPX_REFUSES = Object.freeze({
   "sYCC colour": localize("image-codecs.jpxdecode.the_jp2_colour_specification_is", "the JP2 colour specification is sYCC, whose conversion is not bit-defined"),
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
   "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
-  [MEMORY_FEATURE]: localize("image-codecs.jpxdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile"),
 });
 
-/* THE MEMORY BOUND (N34), a workload size and never a share of 128 MB (D-312).
+/* THE BOUNDS (R4, R12, fix round 9, G125b), all read from the table. The image is judged by its pixels and its edge, the
+ * decode by its working set, and the codestream by the objects its precincts and code-blocks would build.
+ *
+ * THE MEMORY BOUND (N34), a workload size and never a share of 128 MB (D-312).
  * The working set is what a decode must hold at once. Since N75 the decode is
  * line-based ("THE LINE-BASED DECODE", below): no component is ever held whole,
  * so the working set is the 8-bit output and, beside it, the buffers the tiles
@@ -81,8 +88,23 @@ export const JPX_REFUSES = Object.freeze({
  * set plus 11-23 MB of its own (code-blocks, tag trees, input, garbage not yet
  * collected), as the whole-plane decode's was plus 12-18 MB: a 2550x3300 colour
  * page in one tile (31.5 MB, refused at 101 MB before N75) peaks 54 MB above
- * the idle isolate, where the whole-plane decode peaked at 119 MB. */
-const MEMORY_BOUND = 61_300_000;
+ * the idle isolate, where the whole-plane decode peaked at 119 MB.
+ *
+ * THE OBJECT BOUND (G125b). Tier 2 builds an object for every precinct of every band and one for every code-block, and
+ * two tag trees per precinct, before a packet byte is read: a codestream of about 170 bytes with 2 x 2 precincts cost
+ * 629 MB at SIZ 500, 2 GB at 1000 and 7.7 GB at 2000. They are counted from the headers, in closed form per band, and
+ * judged against the table's retained-objects bound before the first is built (the bound is the table's: 250,000,
+ * proposed, BOB confirming for JPX). */
+const PIXELS_MAX = boundOf("image", "pixels");
+const EDGE_MAX = boundOf("image", "edge");
+/* the two rows BOB ruled for this module (K4858): `image.working_set` and `image.retained_objects`. Until runtime-limits has added them
+ * the same figures are read from the rows that hold them today, `ocr.frame_bytes` and `office.retained_objects`; the guard needs no
+ * edit when the rows land. */
+const WORKING_ROW = Object.hasOwn(READ_BOUNDS.image, "working_set") ? ["image", "working_set"] : ["ocr", "frame_bytes"];
+const OBJECTS_ROW = Object.hasOwn(READ_BOUNDS.image, "retained_objects") ? ["image", "retained_objects"] : ["office", "retained_objects"];
+const WORKING_SET_MAX = boundOf(...WORKING_ROW);
+const OBJECTS_MAX = boundOf(...OBJECTS_ROW);
+const tooLarge = (kind, name, size, note, extra) => new JpxRefusal("IMAGE_TOO_LARGE", { note, bound_name: name, ...statement(kind, name, size), ...extra });
 
 /** What decoding this codestream must hold at once, from its headers alone:
  *  the 8-bit output, and the buffers the tiles share (`Pool`), each slot as
@@ -95,6 +117,31 @@ function workingSet(cs, nTiles) {
     tileSlots(tileLayout(cs, t, no)).forEach((n, i) => { slots[i] = Math.max(slots[i] ?? 0, n); });
   }
   return (siz.X - siz.XO) * (siz.Y - siz.YO) * siz.comps.length + slots.reduce((a, n) => a + n, 0);
+}
+
+/** The objects tier 2 would build for the tiles present, counted from the headers alone: per band, one per precinct and one
+ *  per code-block; per tile, one, and one entry of the packet order for every layer of every precinct of every component
+ *  and resolution (`packetOrder` lists them all before a packet byte is read). Stops at the bound, so a hostile count is
+ *  not summed past it. */
+function retainedObjects(cs, nTiles) {
+  let n = 0;
+  for (const [no, t] of cs.tiles) {
+    if (no >= nTiles) continue;
+    n++;
+    let precincts = 0;
+    const { tc, cod } = tileLayout(cs, t, no);
+    for (const x of tc) for (const R0 of x.res) {
+      precincts += R0.npw * R0.nph;
+      for (const B of R0.bands) {
+        const bw = Math.max(0, B.x1 - B.x0), bh = Math.max(0, B.y1 - B.y0);
+        n += R0.npw * R0.nph + ceilDiv(bw, 2 ** B.xcb) * ceilDiv(bh, 2 ** B.ycb);
+      }
+      if (n > OBJECTS_MAX) return n;
+    }
+    n += cod.layers * precincts;
+    if (n > OBJECTS_MAX) return n;
+  }
+  return n;
 }
 
 const f32 = Math.fround;
@@ -943,10 +990,17 @@ export function decodeJpx(d) {
   }
   const W = siz.X - siz.XO, H = siz.Y - siz.YO;
   const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
+  if (Math.max(W, H) > EDGE_MAX)
+    throw tooLarge("image", "edge", Math.max(W, H), localize("image-codecs.jpxdecode.the_image_is_w_by_h", "the image is {W} by {H}, and the decoder reads an edge of at most {bound}", { W: String(W), H: String(H), bound: String(EDGE_MAX) }), { width: W, height: H, components: nc });
+  if (W * H > PIXELS_MAX)
+    throw tooLarge("image", "pixels", W * H, localize("image-codecs.jpxdecode.the_image_is_w_by_h_2", "the image is {W} by {H}, past the {bound} pixels the decoder reads", { W: String(W), H: String(H), bound: String(PIXELS_MAX) }), { width: W, height: H, components: nc });
   const need = workingSet(cs, nTiles);
-  if (need > MEMORY_BOUND) {
-    throw unsupported(MEMORY_FEATURE, { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: nc });
-  }
+  if (need > WORKING_SET_MAX)
+    throw tooLarge(...WORKING_ROW, need, localize("image-codecs.jpxdecode.the_decode_would_hold_bytes_at", "the decode would hold {bytes} bytes at once, past the {bound} the memory bound allows: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile", { bytes: String(need), bound: String(WORKING_SET_MAX) }),
+      { bound_name: "working_set", working_set_bytes: need, bound_bytes: WORKING_SET_MAX, width: W, height: H, components: nc });
+  const objects = retainedObjects(cs, nTiles);
+  if (objects > OBJECTS_MAX)
+    throw tooLarge(...OBJECTS_ROW, objects, localize("image-codecs.jpxdecode.the_codestream_s_precincts_and_code", "the codestream's precincts and code-blocks would be {objects} objects, past the {bound} the decoder builds", { objects: String(objects), bound: String(OBJECTS_MAX) }), { bound_name: "objects", width: W, height: H, components: nc });
   if (cs.tiles.size < nTiles) throw truncated(localize("image-codecs.jpxdecode.size_of_ntiles_tiles_are", "{size} of {nTiles} tiles are present", { size: String(cs.tiles.size), nTiles: String(nTiles) }));
   let out = null;
   const t1 = { tmp: new Int32Array(4096), flags: new Uint16Array(1026 * 6) };

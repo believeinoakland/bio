@@ -74,7 +74,7 @@ test("R30: the protective figures, each as proposed", () => {
   const want = {
     sheet: { columns: 16384, cell_chars: 32767, cell_kept_chars: MiB, sheets: 1000 },
     archive: { members: 10000, depth: 3, ratio: 1100, directory: 16 * MiB, name: 4096 },
-    pdf: { page_content: 64 * MiB, object_stream: 16 * MiB, cmap: MiB, embedded_file: 64 * MiB, objects: 2000000, direct_object: 4 * MiB, operands: 65536, tree_depth: 256, bfrange_codes: 65536 },
+    pdf: { page_content: 64 * MiB, object_stream: 32 * MiB, cmap: MiB, embedded_file: 64 * MiB, objects: 2000000, direct_object: 4 * MiB, operands: 65536, tree_depth: 256, bfrange_codes: 65536 },
     image: { edge: 65535, chunks: 65536, row_stride: 8 * MiB, pixels: 120000000 },
     xml: { tag: 64 * 1024 },
     office: { entries: 100000, retained_objects: 250000 },
@@ -111,4 +111,42 @@ test("R30 (K4845): the heavy kinds' standards are K4628's per kind: documents 10
   for (const [k, n] of [["xlsx", "declared_text"], ["ods", "content_xml"], ["sheet_worker", "bytes"], ["image", "cover_bytes"]]) assert.equal(std(k, n), 52428800, `${k}/${n}`);
   assert.equal(std("ocr", "frame_bytes"), 61300000);
   assert.equal(boundOf("pdf", "bytes"), 24 * MiB);
+});
+
+/* the rows the quoting jobs of batch B reported (K4857, K4858, K4859, K4860; R30: a quoting job's row, added by this module, K4842 (1)) */
+const ADDED = [
+  ["office", "text_bytes", 104857600, 20 * MiB, 104857600],
+  ["office", "streamed_text_bytes", 104857600, 32 * MiB, 104857600],
+  ["archive", "member_bytes", 2 * GiB, 256 * MiB, 2 * GiB],
+  ["office", "decoded_chars", 67108864, 67108864, 67108864],
+  ["image", "working_set", 61300000, 61300000, 61300000],
+  ["image", "retained_objects", 250000, 250000, 250000],
+  ["scan", "max_bytes", 524288000, 268435456, 524288000],
+  ["scan", "time_ms", 900000, 900000, 900000],
+  ["scan", "embedded_pe", 41943040, 41943040, 41943040],
+  ["scan", "html_normalize", 41943040, 41943040, 41943040],
+  ["scan", "script_normalize", 20971520, 20971520, 20971520],
+  ["scan", "zip_type_rcg", 1048576, 1048576, 1048576],
+  ["scan", "partitions", 50, 50, 50],
+  ["scan", "icons_pe", 100, 100, 100],
+  ["office", "structural_part_bytes", 8388608, 8388608, 8388608],
+  ["office", "piece_chars", 8388608, 8388608, 8388608],
+  ["image", "picture_source", 603979776, 603979776, 603979776],
+  ["ocr", "picture_edge", 4096, 4096, 4096],
+  ["document", "part_bytes", 104857600, 33554432, 33554432],
+  ["image", "rows_pixels", 201326592, 201326592, 201326592],
+  ["pdf", "object_stream", 33554432, 33554432, 33554432],
+  ["pdf", "xmp", 2097152, 2097152, 2097152],
+];
+
+test("R30: the rows quoting jobs reported (19, then K4862's 22) hold exactly the figures BOB gave, and boundOf and statement answer them (R31)", () => {
+  assert.equal(ADDED.length, 22);
+  for (const [kind, name, standard, alpha, protective] of ADDED) {
+    const row = READ_BOUNDS[kind]?.[name];
+    assert.ok(row, `${kind}/${name}`);
+    assert.deepEqual({ standard: row.standard, alpha: row.alpha, protective: row.protective }, { standard, alpha, protective }, `${kind}/${name}`);
+    assert.equal(row.key, `limit.${kind}.${name}`);
+    assert.equal(boundOf(kind, name), alpha, `${kind}/${name} answers the alpha`);
+    assert.deepEqual(statement(kind, name, alpha + 1), { size: alpha + 1, bound: alpha, key: `limit.${kind}.${name}` });
+  }
 });

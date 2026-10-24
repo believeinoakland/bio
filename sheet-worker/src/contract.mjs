@@ -5,6 +5,7 @@
 
 /* ---- the engine (R13) --------------------------------------------------------------------------------------- */
 
+import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
 import { localize, word } from "../../bio-plane/src/setup-words/index.mjs";
 
 export const ENGINE_NAME = "ironcalc";
@@ -27,16 +28,17 @@ export const ENGINE_EXPORTS = Object.freeze(["memory", "book_load", "book_evalua
  * 3 to 7 times a workbook's unzipped size. Under these bounds the largest memory measured was 59.2 MB (8.85 MB
  * unzipped, 17,823 formulas; the largest frame ocr-worker measured completing in an isolate is 61.3 MB) and the
  * longest load plus evaluation 13.3 s. Above them sit the 10.3 MB Annual Progress Reports (74-75 MB, about 57 s) and
- * five workbooks of 14-30 MB that did not finish in 600 s. The job's record holds the full figures. */
+ * five workbooks of 14-30 MB that did not finish in 600 s. The job's record holds the full figures. The three values are
+ * the `sheet_worker` rows of runtime-limits' `READ_BOUNDS` (R14), read through `boundOf` and typed nowhere else. */
 
 /** Unzipped bytes of every part of the package, counted as they decompress. */
-export const MAX_UNZIPPED_BYTES = 9_000_000;
+export const MAX_UNZIPPED_BYTES = boundOf("sheet_worker", "bytes");
 /** `<c>` elements across the worksheets. */
-export const MAX_CELLS = 250_000;
+export const MAX_CELLS = boundOf("sheet_worker", "cells");
 /** Milliseconds the engine may spend loading before evaluation is not started: a backstop, since every load under the
  *  bounds took at most 6.3 s, and evaluation took at most 1.1 times its load, so a load within this leaves evaluation
  *  inside the CPU ceiling. Read after a turn boundary (workerd advances its clock only between turns). */
-export const TIME_BUDGET_MS = 120_000;
+export const TIME_BUDGET_MS = boundOf("sheet_worker", "ms");
 
 /* ---- the switch (R2) ------------------------------------------------------------------------------------------ */
 
