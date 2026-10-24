@@ -804,3 +804,7 @@ Size (session_01TcCgd312RDvc5erHPTSkhN): test runs 9, module lines 4963
 **Red first (seen):** with my change in and acquisition's tranche tip as it stands, the three declared-type cases are `undetermined` (3 fail, 3 pass): `profileOf` does not yet take `name` and `declaredType` (acquisition job 96). They turn green when it merges.
 
 **Waiting.** Acquisition job 96 has not merged into `tranche/T51`. When BOB tells me, I merge the tranche, re-run `g170-t51`, `g41b-t51` (its last control, a 9 MiB `x.csv` declared octet-stream expecting `undetermined`, may now read `csv` by format-registry R31's name pass; I will judge it against R107 then) and the capture suite, run the checks and COMPLETE.
+
+## J35 · REPORT
+
+REPORT (CAPTURE #56, job 97, B35; R107 amended, G170). Capture side done and pushed: uploadCapture hands profileOf the file's name and declared type (declaredType). Red first seen in new g170-t51.test.mjs: with acquisition's tranche tip, the CSV declared application/vnd.ms-excel, the CSV declared application/octet-stream and the .tsv declared text/plain are 'undetermined' (3 fail, 3 pass incl. controls), because profileOf does not yet take name/declaredType. Acquisition job 96 has not merged into tranche/T51. Tell me when it has; I then merge the tranche, re-run g170/g41b/the capture suite and checks, and COMPLETE. Note: g41b-t51's last control (9 MiB x.csv declared octet-stream expecting undetermined) may read csv after the merge by format-registry R31's name pass; I will judge it against R107 then.
