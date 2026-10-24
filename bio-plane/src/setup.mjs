@@ -3248,22 +3248,23 @@ export async function groupLogoAsset(env, storeName, io) {
 export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer, storeRefusal, caller = null, stateTiming = null, now = () => Date.now() }) {
   /* R104: `stateTiming(name, ms)`, when the door hands one, is told `fleet` (the time of the parts' ask, 0 when kept) and `facts` (the
      time of this report's hops to the store), which the door states in `Server-Timing` (`fleet;dur`, `facts;dur`). G118b (R-LOG): and
-     `isolate`, this isolate's age, with its id as the third argument (`desc`), and the same age as `isolate-<id>`, which the clock
-     carries as a plain entry: so a deploy shows how many isolates answer. */
+     `isolate`, this isolate's age, with its id as the third argument (`desc`), so a deploy shows how many isolates answer. */
   const tell = (name, ms, desc) => { try { if (typeof stateTiming === "function") stateTiming(name, Math.max(0, Math.round(ms)), desc); } catch { /* a sink never fails the report */ } };
-  const tellIsolate = () => { const iso = isolateOf(now); tell("isolate", now() - iso.at, iso.id); tell(`isolate-${iso.id}`, now() - iso.at); };
+  const tellIsolate = () => { const iso = isolateOf(now); tell("isolate", now() - iso.at, iso.id); };
   let storeMs = 0;
   const hop = async (f) => { const t = now(); try { return await f(); } finally { storeMs += now() - t; } };
-  /* The first look at the parts is made before the hops, so a call that must ask the fleet reads the object's keep in the one visit
-     it makes for the facts (beside the `bootstrap` visit, never after it), and a call that finds this isolate's entry reads none. */
+  /* The first look at the parts is made before the hops. A signed-in caller's call that must ask the fleet reads the object's keep in the
+     one visit it already makes for the facts, and tells the object once after an ask (K4870); a stranger's keeps to this isolate and makes
+     no visit of its own for it, and a call that finds this isolate's entry reads none. */
   const since = now();
   const claim = !members && claimable(env, null) ? claimParts(env, now) : null;
   const owner = !!claim && claim.owner;
+  const signedIn = credentialedCaller(caller) || !!signedInViewer(caller);
   const outHop = hop(() => doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`))));
-  const factsHop = hop(() => bootstrapFactsOf(stub, doAnswer, { facts: credentialedCaller(caller), viewer: signedInViewer(caller), parts: owner }));
+  const factsHop = hop(() => bootstrapFactsOf(stub, doAnswer, { facts: credentialedCaller(caller), viewer: signedInViewer(caller), parts: owner && signedIn }));
   if (owner) runOwner(claim.entry, env, now, {
-    readKept: async () => (await factsHop).kept,
-    writeKept: (parts) => hop(() => keepPartsOf(stub, doAnswer, parts)),
+    readKept: async () => (signedIn ? (await factsHop).kept : null),
+    writeKept: async (parts) => { if (signedIn) await hop(() => keepPartsOf(stub, doAnswer, parts)); },
   });
   const out = await outHop;
   if (!out.answered) { await factsHop; tell("facts", storeMs); tellIsolate(); return notAnswered(out, "bootstrap", { json, storeSilent, storeRefusal }); }

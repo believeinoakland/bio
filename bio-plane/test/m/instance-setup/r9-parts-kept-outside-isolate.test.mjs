@@ -43,21 +43,22 @@ test("R104 two different environments (two isolates) over one object within a mi
   const now = clockAt(Date.parse("2026-10-24T10:00:00Z"));
   const { stub } = await theObject(now);
   const f = fleet();
-  const first = await ask(f.env(), stub, { now });
+  const member = { caller: { viewer: "ada" } };
+  const first = await ask(f.env(), stub, { now, ...member });
   now.advance(2.5 * SECOND);
-  const second = await ask(f.env(), stub, { now });
+  const second = await ask(f.env(), stub, { now, ...member });
   assert.deepEqual(f.calls, { AGENT_WORKER: 1, FILE_SCANNER: 1 }, "red before the fix: 2 each, one ask for each isolate");
   assert.deepEqual([first.part_signin, first.part_scanner, first.part_safe_view], [true, true, true]);
   for (const k of PARTS) assert.equal(second[k], first[k], `${k}: the second isolate states the first's`);
   /* a third and a fourth isolate, still inside the minute counted from the ask, ask nothing */
   now.advance(50 * SECOND);
-  await ask(f.env(), stub, { now });
+  await ask(f.env(), stub, { now, ...member });
   assert.deepEqual(f.calls, { AGENT_WORKER: 1, FILE_SCANNER: 1 }, "52.5 s after the ask");
   now.advance(10 * SECOND);
-  await ask(f.env(), stub, { now });
+  await ask(f.env(), stub, { now, ...member });
   assert.deepEqual(f.calls, { AGENT_WORKER: 2, FILE_SCANNER: 2 }, "past 60 s after the ask: once more, in all");
   now.advance(5 * SECOND);
-  await ask(f.env(), stub, { now });
+  await ask(f.env(), stub, { now, ...member });
   assert.deepEqual(f.calls, { AGENT_WORKER: 2, FILE_SCANNER: 2 }, "and the new ask is kept for the next isolate");
   assert.equal(PARTS_KEPT_MS, 60_000);
 });
@@ -83,7 +84,7 @@ test("R104 an isolate that finds the object's keep does not wait for the fleet (
   for (const k of BOOTSTRAP_FACT_KEYS) assert.ok(k in second, k);
 });
 
-test("R104 the object keeps three flat values with the object's own time: refused if anything else; past the minute by the object's clock it keeps none; a stranger's visit is answered the parts only", async () => {
+test("R104 the object keeps three flat values with the object's own time: refused if anything else; past the minute by the object's clock it keeps none; the route answers the parts alone when asked", async () => {
   const now = clockAt(Date.parse("2026-10-24T10:00:00Z"));
   const w = await boot({ now });
   assert.equal(w.m.keptFleetParts(), null, "none kept yet");
@@ -100,32 +101,34 @@ test("R104 the object keeps three flat values with the object's own time: refuse
   assert.deepEqual(Object.keys(w.m.keptFleetParts()).sort(), [...PARTS, "age_ms"].sort());
   now.advance(PARTS_KEPT_MS);
   assert.equal(w.m.keptFleetParts(), null, "past the minute");
-  /* the route: the default answer is unchanged; the parts are asked for; a stranger's visit holds none of the seven */
+  /* the route: the default answer is unchanged; the parts are asked for, and then none of the seven is answered */
   w.m.keepFleetParts({ part_signin: true, part_scanner: true, part_safe_view: true });
   const stub = stubOver(w.m, { bootstrap: () => storeAnswer });
   const plain = (await read(await stub.fetch("http://do/bootstrapfacts"))).body.result;
   assert.equal("kept_parts" in plain, false);
   assert.deepEqual(Object.keys(plain).sort(), [...BOOTSTRAP_FACT_KEYS].sort());
-  const stranger = (await read(await stub.fetch("http://do/bootstrapfacts?facts=0&parts=1"))).body.result;
-  assert.deepEqual(Object.keys(stranger), ["kept_parts"]);
-  assert.deepEqual(stranger.kept_parts, { part_signin: true, part_scanner: true, part_safe_view: true, age_ms: 0 });
+  const only = (await read(await stub.fetch("http://do/bootstrapfacts?facts=0&parts=1"))).body.result;
+  assert.deepEqual(Object.keys(only), ["kept_parts"]);
+  assert.deepEqual(only.kept_parts, { part_signin: true, part_scanner: true, part_safe_view: true, age_ms: 0 });
   /* a write that is no keep is read as the facts: a body with no `keep` writes nothing */
   const post = await stub.fetch(new Request("http://do/bootstrapfacts?facts=0&parts=1", { method: "POST", body: JSON.stringify({ keep: { part_signin: "x" } }) }));
   assert.equal((await read(post)).body.result.ok, false);
 });
 
-test("R104 a stranger on a second isolate is told the parts and none of the seven; a fleet bound to nothing is not told to the object; an object that does not answer the keep costs only a later ask", async () => {
+test("R104 (K4870) a stranger keeps per isolate and makes no visit to the object for it, told none of the seven; a fleet bound to nothing is not told to the object; an object that does not answer the keep costs only a later ask", async () => {
   const now = clockAt(Date.parse("2026-10-24T10:00:00Z"));
   const { stub, paths } = await theObject(now);
   const f = fleet();
-  await ask(f.env(), stub, { now });
+  const member = { caller: { viewer: "ada" } };
+  await ask(f.env(), stub, { now, ...member });
+  paths.length = 0;
   const stranger = await ask(f.env(), stub, { now });
   for (const k of BOOTSTRAP_FACT_KEYS) assert.equal(k in stranger, false, k);
-  assert.deepEqual(f.calls, { AGENT_WORKER: 1, FILE_SCANNER: 1 });
+  assert.deepEqual(paths, ["bootstrap"], "a stranger's one visit is the one the call always made");
+  assert.deepEqual(f.calls, { AGENT_WORKER: 2, FILE_SCANNER: 2 }, "a stranger's isolate asks for itself, and tells the object nothing");
   /* no member bound: the ask is answered at once, UNBOUND, and the object is not written */
   const bare = await theObject(now);
-  paths.length = 0;
-  const none = await ask({ VERSION: "plane-9" }, bare.stub, { now });
+  const none = await ask({ VERSION: "plane-9" }, bare.stub, { now, ...member });
   assert.deepEqual([none.part_signin, none.part_scanner, none.part_safe_view], [false, false, false]);
   assert.equal(bare.paths.some((p) => p.endsWith("POST")), false, "nothing to keep");
   /* an object that does not answer the keep: the answer is whole, and the next isolate asks again */
@@ -133,21 +136,21 @@ test("R104 a stranger on a second isolate is told the parts and none of the seve
   const dumbStub = { fetch: (input, init) => { const req = input instanceof Request ? input : new Request(input, init);
     return req.method === "POST" ? Promise.resolve(new Response("boom", { status: 500 })) : deaf.stub.fetch(req); } };
   const g = fleet();
-  const a = await ask(g.env(), dumbStub, { now });
+  const a = await ask(g.env(), dumbStub, { now, ...member });
   assert.equal(a.part_scanner, true);
-  const b = await ask(g.env(), dumbStub, { now });
+  const b = await ask(g.env(), dumbStub, { now, ...member });
   assert.equal(b.part_scanner, true);
   assert.deepEqual(g.calls, { AGENT_WORKER: 2, FILE_SCANNER: 2 }, "the keep was not written, so the second isolate asked");
 });
 
-test("R104 the same environment keeps its first look: ten calls 2.5 s apart on one isolate ask once; the first look is not read from the object", async () => {
+test("R104 the same environment keeps its first look: ten calls 2.5 s apart on one isolate ask once and tell the object once", async () => {
   const now = clockAt(Date.parse("2026-10-24T10:00:00Z"));
   const { stub, paths } = await theObject(now);
   const f = fleet();
   const env = f.env();
-  for (let i = 0; i < 10; i += 1) { await ask(env, stub, { now }); now.advance(2.5 * SECOND); }
+  for (let i = 0; i < 10; i += 1) { await ask(env, stub, { now, caller: { viewer: "ada" } }); now.advance(2.5 * SECOND); }
   assert.deepEqual(f.calls, { AGENT_WORKER: 1, FILE_SCANNER: 1 });
-  assert.equal(paths.filter((p) => p === "bootstrapfacts").length, 1, "the object's keep is read once, by the call that had no entry");
+  assert.equal(paths.filter((p) => p === "bootstrapfacts").length, 10, "a signed-in call's one visit for the viewer's keys, as before: the keep adds no read of its own");
   assert.equal(paths.filter((p) => p === "bootstrapfacts POST").length, 1, "and written once");
 });
 
@@ -162,7 +165,7 @@ test("R104 R-LOG the isolate entry: an id made once per isolate, present on ever
   assert.equal(iso.length, 1, "one isolate entry");
   assert.match(iso[0].desc, /^[0-9a-f]{8}$/);
   assert.ok(Number.isInteger(iso[0].ms) && iso[0].ms >= 0);
-  assert.ok(seen.some((e) => e.name === `isolate-${iso[0].desc}` && e.ms === iso[0].ms), "the same age, named for the isolate, which the door's clock carries as it is");
+  assert.equal(seen.some((e) => e.name.startsWith("isolate-")), false, "one entry for it, not one named for each isolate (K4870)");
   /* a later answer, on another environment of the same isolate, states the same id and a larger age */
   now.advance(30 * SECOND);
   seen.length = 0;
