@@ -2364,10 +2364,10 @@ class FontCache {
 /** Extract Tier 1 text from one page. Returns { text, undetermined:[markers] }.
  *  `fontCache` is keyed by font object so a font shared across pages is parsed
  *  once. Every undecodable region is recorded, never rendered. */
-async function extractPageText(doc, pageIdx, pageMap, fontCache, wantPlaced = true) {
+async function extractPageText(doc, pageIdx, pageMap, fontCache, wantPlaced = true, given = null) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
-  const content = await pageContent(doc, pageMap);
+  const content = given ?? await pageContent(doc, pageMap);
   if (content.over) {
     /* R41: stated with its figures, nothing of the page held */
     return { text: "", undetermined: [{ page: pageIdx, reason: "page_over_bound", font: null, codes: "", count: 0, size: content.over.size, bound: content.over.bound }],
@@ -4846,13 +4846,12 @@ async function readRange(doc, bytes, range) {
   doc.notes.length = 0;
   const total = doc.pageCount;
   const from = Math.max(0, Math.floor(Number(range && range.from)) || 0);
-  let asked = range && range.count !== undefined ? Math.floor(Number(range.count)) : total;
-  /* An optional `maxBytes` (fix round 6, G56) bounds the call by work as well as by pages: the pages that many file bytes
-     carry at the document's own bytes per page, at least one so a cursor always moves. It only shrinks the ask. */
+  const asked = range && range.count !== undefined ? Math.floor(Number(range.count)) : total;
+  /* An optional `maxBytes` (G56) bounds the call by work as well as by pages. Fix round 9 (G124d): it is judged against each
+     page's own decoded size as the page is built, not the document's average, so the range stops before the page that would
+     pass it (after at least one page) and a heavy page among light ones is a range of its own. */
   const maxBytes = range && range.maxBytes;
-  if (typeof maxBytes === "number" && Number.isFinite(maxBytes) && maxBytes > 0 && total > 0) {
-    asked = Math.min(Number.isFinite(asked) ? asked : total, Math.max(1, Math.floor(maxBytes / (bytes.length / total))));
-  }
+  const limited = typeof maxBytes === "number" && Number.isFinite(maxBytes) && maxBytes > 0 && total > 0;
   const count = Math.max(0, Math.min(Number.isFinite(asked) ? asked : total, total - from));
   const out = (pages, undetermined, chars) => ({
     ok: true, container: "pdf", pages: total, from, count: pages.length,
@@ -4866,7 +4865,7 @@ async function readRange(doc, bytes, range) {
   }
   const fontCache = new FontCache();
   const pages = [], undetermined = [];
-  let chars = 0;
+  let chars = 0, spent = 0;
   for (let idx = from; idx < from + count; idx++) {
     const pageMap = doc.pageDict(idx);
     let res;
@@ -4874,7 +4873,16 @@ async function readRange(doc, bytes, range) {
       res = { text: "", undetermined: [{ page: idx, reason: "page_unreadable", font: null, codes: "", count: 0 }] };
     } else {
       try {
-        res = await extractPageText(doc, idx, pageMap, fontCache, false);
+        /* the page's decoded content is known before it is built when `maxBytes` asks; the next call reuses it */
+        let given = null;
+        if (limited) {
+          given = doc._peek && doc._peek.idx === idx ? doc._peek.content : await pageContent(doc, pageMap);
+          doc._peek = null;
+          const size = given.over ? given.over.size : given.text.length;
+          if (pages.length > 0 && spent + size > maxBytes) { doc._peek = { idx, content: given }; break; }
+          spent += size;
+        }
+        res = await extractPageText(doc, idx, pageMap, fontCache, false, given);
       } catch {
         doc.note("text_extraction_error");
         res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
@@ -4889,13 +4897,26 @@ async function readRange(doc, bytes, range) {
      walked says nothing for the range (as a page anywhere in the whole reading says nothing for it), and the markers
      are those the whole reading puts on these pages. */
   const painted = [];
-  let walked = true;
-  for (let idx = from; idx < from + count && walked; idx++) {
+  let walked = true, why = null;
+  for (let idx = from; idx < from + pages.length && walked; idx++) {
     let got;
     try { got = await pdfPageImages(doc, idx); } catch { got = null; }
-    if (!got || !got.images) walked = false; else for (const im of got.images) painted.push(im);
+    if (!got || !got.images) { walked = false; why = got ? got.why : `page_unreadable:${idx}`; } else for (const im of got.images) painted.push(im);
   }
   if (walked) { markImageContent(doc, result.text, painted); markImagesUnread(doc, result.text, painted); }
+  /* R46: what a reading stores of the document and not of its text, so that the union of the ranges loses none of it */
+  const level = doc._level ||= { metadata: extractMetadata(doc), pageBoxes: extractPageBoxes(doc) };
+  result.metadata = level.metadata;
+  result.pageBoxes = level.pageBoxes;
+  result.images = walked ? painted : null;
+  if (!walked) result.imagesWhy = why;
+  let glyphs = 0, words = 0;
+  for (const pg of pages) {
+    for (const ch of pg.text) if (!/\s/u.test(ch)) glyphs++;
+    words += (pg.text.match(/\S+/gu) || []).length;
+  }
+  result.text_glyphs = glyphs;
+  result.words_total = words;
   return result;
 }
 
