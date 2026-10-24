@@ -289,7 +289,13 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
       scripts.delete(name); classes.delete(name); sources.delete(name); state.removed.push(name);
       return cfok({});
     } },
-    { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => cfok({ buckets: [...buckets].map((name) => ({ name })) }) },
+    { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => {
+      /* Documented shapes (R2's error table); BOB measures them on the rehearsal account (K4942). */
+      if (r2 === "refused") return cferr("Account not entitled to this feature.", 403, 10042);
+      if (r2 === "permission") return cferr("Authentication error", 403, 10000);
+      if (r2 === "unknown") return cferr("The fake could not say", 400, 10001);
+      return cfok({ buckets: [...buckets].map((name) => ({ name })) });
+    } },
     { m: (u, mth) => /\/r2\/buckets\/[^/]+\/usage$/.test(u) && mth === "GET", f: (u) => {
       const b = u.split("/r2/buckets/")[1].split("/")[0];
       return buckets.has(b) ? cfok({ objectCount: (bucketObjects.get(b) || []).length }) : cferr("The specified bucket does not exist.", 404, 10006);
@@ -348,14 +354,15 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
     } },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: async (u, init) => {
       const { name } = JSON.parse(init.body);
-      if (r2 === "refused") return cferr("Please enable R2 by adding a payment method", 403);
-      if (buckets.has(name)) return cferr("The bucket you tried to create already exists", 409);
+      if (r2 === "refused") return cferr("Account not entitled to this feature.", 403, 10042);
+      if (buckets.has(name)) return cferr("The bucket you tried to create already exists", 409, 10073);
       buckets.add(name); return cfok({ name });
     } },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => prefix ? cfok({ subdomain: prefix }) : cferr("no subdomain", 404) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "PUT", f: (u, init) => {
       const want = JSON.parse(init.body).subdomain;
       if (subdomainPut === "fail") return cferr("not permitted", 403);
+      /* Documented shape; the taken answer's code is not measured yet, so it is read as HTTP 409 (K4942). */
       if (taken.includes(want)) return cferr("That subdomain is taken", 409);
       prefix = want; return cfok({ subdomain: want });
     } },
