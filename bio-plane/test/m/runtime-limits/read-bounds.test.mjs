@@ -179,3 +179,14 @@ test("R30: the row file-safety quotes (file_safety ods_declared, 8 MiB) holds on
   assert.deepEqual(statement("file_safety", "ods_declared", n + 1), { size: n + 1, bound: n, key: "limit.file_safety.ods_declared" });
   assert.equal(READ_BOUNDS.file_safety.grade_read.alpha, 20 * MiB);
 });
+
+/* the row extraction keeps and control-plane quotes (K4901; K4842 (1)): today's figure in all three columns, so no member-facing bound moves (K1881) */
+test("R30: the row extraction and control-plane quote (pdf request_bytes, 2 MiB) holds one figure in all three columns, and boundOf and statement answer it (R31)", () => {
+  const n = 2 * MiB, row = READ_BOUNDS.pdf?.request_bytes;
+  assert.ok(row);
+  assert.deepEqual({ standard: row.standard, alpha: row.alpha, protective: row.protective }, { standard: n, alpha: n, protective: n });
+  assert.equal(row.key, "limit.pdf.request_bytes");
+  assert.equal(boundOf("pdf", "request_bytes"), n);
+  assert.deepEqual(statement("pdf", "request_bytes", n + 1), { size: n + 1, bound: n, key: "limit.pdf.request_bytes" });
+  assert.equal(READ_BOUNDS.pdf.bytes.alpha, 24 * MiB);
+});

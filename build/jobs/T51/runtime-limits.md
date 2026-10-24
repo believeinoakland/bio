@@ -119,3 +119,12 @@ COMPLETE B7: READ_BOUNDS row file_safety/ods_declared (8 MiB x3, key limit.file_
 ## J8 · REPORT
 
 Stale generated artifacts: bundles whose inputs include bio-plane/src/read-bounds.mjs (grep of dist manifests above in my record) are stale against this row; not regenerated, BOB regenerates at round end.
+
+## RUNTIME-LIMITS #11 · fix round 9, batch D: one row for extraction and control-plane (B8, K4901)
+
+- **Entry applied.** `pdf`, `request_bytes`: 2,097,152 (2 MiB) in standard, alpha and protective (`same(2 * MiB, k("pdf", "request_bytes"))`), key `limit.pdf.request_bytes`, beside the other `pdf` rows in `bio-plane/src/read-bounds.mjs`. No member-facing bound moves; no sentence added.
+- **Test.** `read-bounds.test.mjs`: new test naming R30 and R31: the three figures, the key, `boundOf` and `statement`; the invariants test (R29) covers the new row.
+- **Deferred / found in another module.** None. Generated bundles whose inputs include `read-bounds.mjs` are stale against this row (as after B6, B7); BOB regenerates at the round end.
+- **Ran.** Tranche merged first. runtime-limits suite: 55 tests, 55 pass, 0 fail. Importers (pdf-reader bounds and cmap, reading-pipeline r9-reader, file-safety r57-bounds, acquisition r9-ceilings, byte-ledger): 54 tests, 49 pass, 0 fail (5 not counted pass, none failing). `impact.mjs` reported 0 affected modules on the staged diff. Checks: format 0 failures; architecture 0 failures; coverage 32 of 32 ids, 0 failures; ownership 3 files, 0 failures. words not run (it fails on other modules' files, same as the earlier rounds).
+
+Size (session_01YC2QN7Jxms3WaivDnVr4Bf): test runs 5, module lines 12
