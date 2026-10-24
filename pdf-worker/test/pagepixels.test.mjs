@@ -21,8 +21,8 @@ import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
-import { renderPictureToPixels, PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX, PNG_REFUSAL_REASONS, PREPARE_TILT_MAX, PREPARE_TILT_FLOOR, PREPARE_LINE_PX, PREPARE_SCALE_MAX } from "../src/picturepixels.mjs";
-import { PNG_REFUSES, MEMORY_FEATURE } from "../src/pngdecode.mjs";
+import { renderPictureToPixels, PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX, PNG_REFUSAL_REASONS, PNG_CODE_REASONS, PREPARE_TILT_MAX, PREPARE_TILT_FLOOR, PREPARE_LINE_PX, PREPARE_SCALE_MAX } from "../src/picturepixels.mjs";
+import { PNG_REFUSES } from "../src/pngdecode.mjs";
 import { CROP_REFUSALS } from "../src/imagecrop.mjs";
 import { openPdf, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
@@ -664,8 +664,8 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
     const r = await picture(bytes, 0, { maxEdge: 64, grey: true });
     t(`R42 the PNG codec's refusal, mapped: ${label} is ${reason}, no bytes`, fields(r, "ok", "reason", "page", "bytes"), [false, reason, 0, undefined]);
   }
-  t("R42 the mapping is total over PNG_REFUSES: every feature has a declared reason, the memory bound IMAGE_TOO_LARGE",
-    [Object.keys(PNG_REFUSAL_REASONS).sort(), Object.values(PNG_REFUSAL_REASONS).every((x) => x in REFUSALS), PNG_REFUSAL_REASONS[MEMORY_FEATURE]],
+  t("R42 the mapping is total over PNG_REFUSES: every feature has a declared reason, and the codec's IMAGE_TOO_LARGE code maps to IMAGE_TOO_LARGE",
+    [Object.keys(PNG_REFUSAL_REASONS).sort(), Object.values(PNG_REFUSAL_REASONS).every((x) => x in REFUSALS), PNG_CODE_REASONS.IMAGE_TOO_LARGE],
     [Object.keys(PNG_REFUSES).sort(), true, "IMAGE_TOO_LARGE"]);
   const withText = await picture(afterIhdr(chunk("tEXt", Buffer.from("Comment\0a member's note"))), 0, { maxEdge: 64, grey: true });
   t("R42 never the file's own bytes: a PNG's text chunk does not reach the answer",

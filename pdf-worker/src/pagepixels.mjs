@@ -82,7 +82,7 @@ import { openPdf, pageShowsText, pdfPageImages, imagePlacementSource } from "../
 import * as reader from "../../bio-plane/src/pdfstructure.mjs";
 import { decodeBaselineJpeg, DctRefusal } from "./dctdecode.mjs";
 import { decodeJbig2, Jbig2Refusal, JBIG2_REFUSES } from "./jbig2decode.mjs";
-import { decodeJpx, JpxRefusal, JPX_REFUSES, MEMORY_FEATURE } from "./jpxdecode.mjs";
+import { decodeJpx, JpxRefusal, JPX_REFUSES } from "./jpxdecode.mjs";
 import { ccittDecode } from "./ccittdecode.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
@@ -128,7 +128,7 @@ export const REFUSALS = {
 export const featureReasons = (declared, named) =>
   Object.freeze(Object.fromEntries(Object.keys(declared).map((k) => [k, named[k] ?? "UNSUPPORTED_FILTER"])));
 const JBIG2_FEATURE_REASONS = featureReasons(JBIG2_REFUSES, {});
-const JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { [MEMORY_FEATURE]: "IMAGE_TOO_LARGE" });
+const JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, {});
 
 const refuse = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
