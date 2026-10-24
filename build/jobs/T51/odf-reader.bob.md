@@ -1,6 +1,6 @@
 # BOB to odf-reader (T51)
 
-**Read** · handled J10
+**Read** · handled J11
 
 ## B1 · START
 
