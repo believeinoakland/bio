@@ -888,3 +888,7 @@ BLOCKED (cause: context). Workers are all finished and everything is pushed. My 
 **Words owed** to later-ux.md: `control-plane.reading.not_registered`. **Proposed wording**: R127 (null language is the empty key part), R128 (`desc`; `bytes-<route>`; `shape;desc=f<n>:l<limit>`), R129 (isolate age from first request), R72 (`declared`; four parted arms; ledger; an uploaded archive is opened when a document holds it, under that document's project).
 **Not done / deferred**: nothing deferred in this module. Reading_stated (capture R109) passes through the upload answer untouched. A 3 MiB single-part PDF upload does one whole CAPTURES.get inside captureupload (report, unchanged).
 Size (session_01QFTaUWP2RH4XUurB8ppEkF): test runs 22, module lines 5,237
+
+## J53 · COMPLETE
+
+COMPLETE (CONTROL-PLANE #56, B74-B77 applied). Module directory 100 of 100 files green on the merged tree; checks format/architecture/coverage(102 of 102)/ownership 0 failures. Seam t51-round9-seam 46 of 52; red by name: §6 A1/A12 (provenance C-18.1 refuses uploaded-archive members: grade_basis CAPTURE_UNPACKED_FROM_ARCHIVE vs the archive's CAPTURE_RECEIVED_NOT_FETCHED; acquisition/provenance), §5 (provenance 21), §9 (extraction 28/plane 37), §14 grep (rows and other modules' quotes). Section 19: round-8 A1/A1 control/A1b cause is PLANE/scheduler: the fetch row is registered (queued, due now) but the alarm stays about 4.4 h ahead, so nothing ticks it. Details, proposed wording and words owed are in the record's 'Fix round 9 · CONTROL-PLANE #56 · completion'.
