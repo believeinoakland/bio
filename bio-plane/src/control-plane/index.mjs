@@ -3981,13 +3981,18 @@ export function makeFetch(hooks = {}) {
       return json({ ...body, result: reg.ok ? { ...body.result, reading_pending: true } : { ...body.result, reading_refused: refusedReading(reg) }, store: storeName, tokenClass: cls }, status);
     }
     /* R135 (fix round 9, G135f; plane R97): `op=reading` answers the reading's job state from the job row, beside the stored reading; `owedwork` shows a digest's rows only to a
-       viewer who may see the digest (answered as absent otherwise, DEC-36). The owner of a reading is never asked what its state is: the rows are plane's `owedwork` */
+       viewer who may see the digest (answered as absent otherwise, DEC-36). The owner of a reading is never asked what its state is: the rows are plane's `jobrow` (R107) */
     if ((op === "reading" || op === "owedwork") && body.result && body.result.ok === true) {
       const sha = String(url.searchParams.get("sha256") ?? url.searchParams.get("sha") ?? "").toLowerCase();
       if (/^[0-9a-f]{64}$/.test(sha)) {
+        /* plane R107: the job row of each reading kind, whole (a finished or refused row too), asked once per kind */
         const rows = async () => {
-          const asked = await doAnswer(stub.fetch(new Request(`http://do/owedwork?sha=${sha}&viewer=${encodeURIComponent(stampOf.viewer ?? "")}`)));
-          return asked.answered && asked.result && Array.isArray(asked.result.owed) ? asked.result : null;
+          const owed = [];
+          for (const kind of ["reading", "ocr"]) {
+            const asked = await doAnswer(stub.fetch(new Request(`http://do/jobrow?sha=${sha}&kind=${kind}`)));
+            if (asked.answered && asked.result && asked.result.ok === true && asked.result.row && typeof asked.result.row === "object") owed.push(asked.result.row);
+          }
+          return { owed };
         };
         try {
           if (op === "reading") {

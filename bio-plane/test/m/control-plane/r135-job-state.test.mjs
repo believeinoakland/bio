@@ -107,29 +107,29 @@ const readingAnswer = (found) => ({ ok: true, found, capture_sha: SHA, reading: 
 
 test("R135: `op=reading` of a digest the viewer sees answers the stored reading beside `job`, from the job row the plane lists, asking the owner of the reading nothing of its state", async () => {
   const rows = [row({ kind: "reading", job_state: "partial", written: 40, owed: 60, failed: 2, failed_why: { transient: 2 }, cursor: { page: 40, pages: 100 }, last_progress_at: 1792845527045, priority: "raised" })];
-  const w = world({ answer: (c) => (c.route === "reading" ? ok(readingAnswer(true)) : c.route === "owedwork" ? ok({ ok: true, sha: SHA, owed: rows, last: [] }) : null) });
+  const w = world({ answer: (c) => (c.route === "reading" ? ok(readingAnswer(true)) : c.route === "jobrow" ? ok({ ok: true, row: c.params.kind === "reading" ? rows[0] : null }) : null) });
   const r = await call(w.env, { op: "reading", token: w.S.ann, params: { sha256: SHA } });
   assert.equal(r.status, 200, r.text);
   assert.equal(r.json.result.found, true, "the stored reading is answered as it was");
   assert.deepEqual(r.json.result.job, { state: "partial", kind: "reading", written: 40, skipped: 0, owed: 60, failed: 2, failed_why: { transient: 2 }, cursor: { at: 40, of: 100 },
     last_progress_at: 1792845527045, priority: "raised" });
-  const asks = asked(w.env, "owedwork");
-  assert.equal(asks.length, 1, "the rows are asked once");
-  assert.equal(asks[0].params.sha, SHA);
+  const asks = asked(w.env, "jobrow");
+  assert.deepEqual(asks.map((a) => a.params.kind), ["reading", "ocr"], "the row of each reading kind is asked once");
+  assert.ok(asks.every((a) => a.params.sha === SHA));
   assert.deepEqual(asked(w.env, "readheldfor"), [], "and the owner of the reading is not asked to read or to say its state");
 });
 
 test("R135 (control): a digest with a reading and no row answers `state: null` and the reading as before; a digest with no reading asks the rows nothing", async () => {
-  const none = world({ answer: (c) => (c.route === "reading" ? ok(readingAnswer(true)) : c.route === "owedwork" ? ok({ ok: true, sha: SHA, owed: [], last: [] }) : null) });
+  const none = world({ answer: (c) => (c.route === "reading" ? ok(readingAnswer(true)) : c.route === "jobrow" ? ok({ ok: true, row: null }) : null) });
   const r = await call(none.env, { op: "reading", token: none.S.ann, params: { sha256: SHA } });
   assert.deepEqual(r.json.result.job, { state: null });
   assert.equal(r.json.result.reading.found, true);
-  const absent = world({ answer: (c) => (c.route === "reading" ? ok(readingAnswer(false)) : c.route === "owedwork" ? ok({ ok: true, sha: SHA, owed: [row()], last: [] }) : null) });
+  const absent = world({ answer: (c) => (c.route === "reading" ? ok(readingAnswer(false)) : c.route === "jobrow" ? ok({ ok: true, row: row() }) : null) });
   const a = await call(absent.env, { op: "reading", token: absent.S.ann, params: { sha256: SHA } });
   assert.deepEqual(a.json.result.job, { state: null }, "a digest the viewer sees no reading of shows no job");
-  assert.equal(asked(absent.env, "owedwork").length, 0, "the rows are not even asked");
+  assert.equal(asked(absent.env, "jobrow").length, 0, "the rows are not even asked");
   /* a silent plane never turns a reading into a failure: the state is status, not a gate */
-  const silent = world({ answer: (c) => (c.route === "reading" ? ok(readingAnswer(true)) : c.route === "owedwork" ? new Response("x", { status: 500 }) : null) });
+  const silent = world({ answer: (c) => (c.route === "reading" ? ok(readingAnswer(true)) : c.route === "jobrow" ? new Response("x", { status: 500 }) : null) });
   const s = await call(silent.env, { op: "reading", token: silent.S.ann, params: { sha256: SHA } });
   assert.equal(s.status, 200);
   assert.deepEqual(s.json.result.job, { state: null });
@@ -155,7 +155,7 @@ test("R135: `owedwork` shows a digest's rows to a viewer who can see the digest 
 
 /* ---- the plane's own rows, through plane's `owedwork` ---- */
 
-test("R135 (plane R97, R80) (red until plane's `owedwork` row view carries `cursor`, `verdict` and `last_progress_at`: plane/pending.mjs `view`): the rows the plane really lists for a digest give `jobStateOf` its cursor position, its refusal's verdict and its last progress", async () => {
+test("R135 (plane R97, R80) (plane R107): the row the plane really answers for a digest by `jobrow` give `jobStateOf` its cursor position, its refusal's verdict and its last progress", async () => {
   /* the plane's own job table over a node:sqlite database answering as workerd's `sql.exec` does (the plane suites' shape, without the whole object) */
   const { DatabaseSync } = await import("node:sqlite");
   const { pendingOf, pendingOps } = await import("../../../src/plane/pending.mjs");
@@ -167,7 +167,7 @@ test("R135 (plane R97, R80) (red until plane's `owedwork` row view carries `curs
   const ctx = { storage: { sql, transactionSync: (fn) => fn(), getAlarm: async () => null, setAlarm: async () => {}, deleteAlarm: async () => {} }, id: { toString: () => "do" }, waitUntil() {} };
   const jobs = pendingOf(ctx);
   jobs.migrate();
-  const ask = (sha) => pendingOps(jobs, new URL(`http://do/owedwork?sha=${sha}&viewer=class:admin`), { health: async () => ({}), administers: () => true }).owedwork();
+  const ask = async (sha) => { const a = pendingOps(jobs, new URL(`http://do/jobrow?sha=${sha}&kind=reading`), { health: async () => ({}), administers: () => true }).jobrow(); return { owed: a.row ? [a.row] : [] }; };
   const A = "a1".repeat(32), B = "b2".repeat(32);
   /* a reading with a cursor and a count owed */
   assert.equal(jobs.registerJob({ kind: "reading", sha: A, cursor: { page: 24, pages: 130 }, owed: 106 }).ok, true);
