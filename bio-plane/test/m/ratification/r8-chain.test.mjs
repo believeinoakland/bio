@@ -129,3 +129,24 @@ test("R60: the phases gate, commit, copy, assemble and reuse are stated once eac
   const res = await caseRatifyOp(bare.p.request(body), bare.p.stub, bare.p.ctx);
   assert.equal(res.status === 200 || res.body.existed, true, "no hook, no change to the act");
 });
+
+test("R60: copyFinding copies a finding's parts in groups of 8 (peak at least 6, at most 8), counting as one at a time did; a capture gone between gate and copy is stated INCOMPLETE", async () => {
+  const { copyFinding } = await import("../../../src/ratification/finding.mjs");
+  const caps = new Map(), pub = new Map();
+  let live = 0, peak = 0;
+  const slow = (b) => Object.fromEntries(["head", "get", "put"].map((k) => [k, async (...a) => { live++; peak = Math.max(peak, live); try { await nap(); return await b[k](...a); } finally { live--; } }]));
+  const env = { CAPTURES: slow(bucketOver(caps)), PUBLISHED: slow(bucketOver(pub)) };
+  const texts = SHAS.slice(0, 8).map((sha, i) => ({ sha256: sha, path: `f${i}`, kind: "file", bytes: 3, text: `t${i}` }));
+  const blobs = SHAS.slice(8).map((sha, i) => ({ sha256: sha, path: `c${i}`, kind: "capture", bytes: 3 }));
+  for (const b of blobs) caps.set(`s/captures/${b.sha256}`, new Uint8Array([1]));
+  pub.set(`s/published/${SHAS[0]}`, new Uint8Array([9]));
+  const out = await copyFinding(env, "s", { shas: [...texts, ...blobs], partShaSet: new Set(), partedRows: new Map() });
+  assert.deepEqual([out.copied, out.present, out.r2state], [11, 1, "ok"]);
+  assert.ok(peak >= 6 && peak <= 8, `peak ${peak}`);
+  for (const x of [...texts, ...blobs]) assert.ok(pub.has(`s/published/${x.sha256}`));
+  caps.delete(`s/captures/${blobs[0].sha256}`); pub.delete(`s/published/${blobs[0].sha256}`);
+  const gone = await copyFinding(env, "s", { shas: [...texts, ...blobs], partShaSet: new Set(), partedRows: new Map() });
+  assert.match(gone.r2state, /^INCOMPLETE: capture vanished/);
+  assert.equal(gone.copied, 0);
+  assert.equal(gone.present, 11);
+});

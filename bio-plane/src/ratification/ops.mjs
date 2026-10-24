@@ -197,13 +197,13 @@ async function caseCeremony(req, stub, ctx, later) {
     /* R52: EACH MEMBER OF THE SITTING, verified as op=ratify verifies it (R4) before anything commits: under the session's
        sight, against the one key the case's signature verified against (the same signer), C-92.12 counting the
        statements of the document being signed. The first refusal is answered naming its member; nothing is written. */
-    const members = [];
-    for (const m of sitting) {
-      const prep = await prepareFinding({ bundleId: m.id, expectedSha: m.sha, sig: m.signature }, stub, ctx,
-        { viewer: sessViewer, keys: [sv.keyB64], statedInSitting: statedIn(attr), tag: { member: m.id } });
-      if (prep.response) return prep.response;
-      members.push(prep.prepared);
-    }
+    /* R60 (G120): the members are prepared together (reads only); the first refusal in the sitting's order is the one answered. */
+    const preps = await Promise.all(sitting.map((m) =>
+      prepareFinding({ bundleId: m.id, expectedSha: m.sha, sig: m.signature }, stub, ctx,
+        { viewer: sessViewer, keys: [sv.keyB64], statedInSitting: statedIn(attr), tag: { member: m.id } })));
+    const refused = preps.find((prep) => prep.response);
+    if (refused) return refused.response;
+    const members = preps.map((prep) => prep.prepared);
 
     /* REC-128 (R12): the SIGNATURE says who authorised (`attestor`, the verified key's member, null when absent and
        never the session); the SESSION ROW says who delivered (a member, or the founder, DEC-33), never the signature
@@ -253,18 +253,20 @@ async function caseCeremony(req, stub, ctx, later) {
        assembled here, by the one function op=ratify uses. `completedCase` is the store's internal
        state and is destructured OFF the answer above, never spread into it (REC-58's pick). */
     const tCopy = Date.now();
-    const { absent: materialsAbsent, ...materialsCopied } = await copyMaterialsDetailed(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []);
-    /* R52: each member committed with the case is copied and re-checked as op=ratify does after its commit (R6), and
-       the editions complete now (the case's own, or one its members completed) are assembled once, after every copy. */
+    /* R60 (G120): the materials' copy and each member's copy touch different keys and run together. */
     const commits = Array.isArray(memberCommits) ? memberCommits : [];
-    /* R6, R57 (G54): the act has committed, so a member's copy that throws is stated in its answer and handed to the
-       assembly (`prior`, with the materials not copied), which records the attempt; it never changes the act's answer. */
-    const copies = [];
     let copyError = null;
-    for (const [i] of commits.entries()) {
-      try { copies.push(await copyFinding(env, storeName, members[i])); }
-      catch (e) { copyError ??= e; copies.push(failedCopy(e)); }
-    }
+    const [{ absent: materialsAbsent, ...materialsCopied }, copies] = await Promise.all([
+      copyMaterialsDetailed(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []),
+      /* R52: each member committed with the case is copied and re-checked as op=ratify does after its commit (R6), and
+         the editions complete now (the case's own, or one its members completed) are assembled once, after every copy.
+         R6, R57 (G54): the act has committed, so a member's copy that throws is stated in its answer and handed to the
+         assembly (`prior`, with the materials not copied), which records the attempt; it never changes the act's answer. */
+      Promise.all(commits.map(async (_, i) => {
+        try { return await copyFinding(env, storeName, members[i]); }
+        catch (e) { copyError ??= e; return failedCopy(e); }
+      })),
+    ]);
     stated("copy", tCopy);
     const tAssemble = Date.now();
     let container = null;
@@ -534,13 +536,16 @@ export async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx,
   const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
 
   /* REC-53: `runGate` does `Object.entries(image || {})`, so a silence here once handed the gate an EMPTY BUNDLE. */
-  const imgOut = await doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
+  /* R60 (G120): the image and the list of known ids are independent reads, asked together; their answers are weighed in the old order. */
+  const [imgOut, listOut] = await Promise.all([
+    doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${v}`)),
+    doAnswer(stub.fetch(`http://do/list?viewer=${v}`)),
+  ]);
   if (imgOut.refused) return { response: storeRefused(imgOut, relay) };
   if (!imgOut.answered) return { response: storeSilent("ratify/image", imgOut.correlation) };
   const image = imgOut.result;
   /* The catalog resolves references against the whole store, so it reads which identifiers exist, once. REC-53: a
      silence is refused, never handed to the gate as an empty set; once `answered`, an empty list is a real answer. */
-  const listOut = await doAnswer(stub.fetch(`http://do/list?viewer=${v}`));
   if (listOut.refused) return { response: storeRefused(listOut, relay) };
   if (!listOut.answered) return { response: storeSilent("ratify/list", listOut.correlation) };
   const known = new Set((listOut.result || []).map((b) => b.bundle_id));

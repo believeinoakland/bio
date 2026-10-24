@@ -1,6 +1,6 @@
 # ratification (T51)
 
-**Status** · session_01Aitu5ptyoRC1Hw82dyhsuk · depth 2 · COMPLETE · handled B14
+**Status** · session_01Aitu5ptyoRC1Hw82dyhsuk · depth 2 · COMPLETE · handled B15
 
 ## J1 · REPORT
 
@@ -269,3 +269,15 @@ Size (session_01Aitu5ptyoRC1Hw82dyhsuk): test runs 9, module lines 3711
 ## J15 · COMPLETE
 
 COMPLETE · G120 done, record section 'Fix round 8' pushed on job/T51/ratification. R60 amended by me in build/requirements/ratification.md (the one file ownership lists). ratification tests 324/324; format, architecture, coverage (59/59), words 0 failures; ownership: only the requirements file listed. The three independent reads are together, the material copy in groups of 8, phases via ctx.stateTiming (B14). Call budget 25 re-derived in the record. Two existing tests (R49 approvals, R17 relays) pinned the old call order and now assert the invariant (commit not asked, nothing written, same bytes). Needs from others: the door count test and the stateTiming forwarding (PLANE #55, control-plane).
+
+## CHANGE B15 (G120, the door's chain)
+
+Cause: through control-plane's counting door the chain was 38, not from `copyMaterials` (already in groups of 8 and merged) but from the sitting's member work: each member's `prepareFinding` ran one after another (gatefacts, image, list, ratifygate), the members' `copyFinding` copied part by part, and the materials' copy and the members' copies ran one after another. Applied: `prepareFinding` asks image and list together; the members are prepared together, the first refusal in the sitting's order answered; `copyFinding` copies in groups of 8; the materials' copy and the members' copies run together. Failing-first, seen red: `sitting.test.mjs` "R60, R52: the members of a sitting are read together…" (`gatefacts of the members in flight together: 1`), `r8-chain.test.mjs` copyFinding (`peak 1`). Green after. Control-plane's `r8-caseratify-calls.test.mjs`, run here from its branch against this code (files removed after): was 38, now `longest chain 24`, case file heads/puts in flight 8, 2 of 2 pass. relays.test.mjs R17 now also allows image and list asked together.
+Tests: ratification 326 of 326. Requirements: R60 reworded in `build/requirements/ratification.md`.
+Size (session_01Aitu5ptyoRC1Hw82dyhsuk): test runs 14, module lines 3745
+
+## J16 · COMPLETE
+
+COMPLETE (CHANGE B15). copyMaterials was already concurrent (merged); the 38 came from the sitting's members: prepared one after another, copyFinding part by part, and the materials' copy then the members' copies in sequence. Now: image+list together, members prepared together (first refusal in sitting order), copyFinding in groups of 8, materials and member copies together. Red first (sitting.test.mjs: gatefacts in flight 1; r8-chain copyFinding: peak 1), green. Control-plane's r8-caseratify-calls.test.mjs run against this code from its branch: longest chain 24 (was 38), 2/2 pass. ratification 326/326; 198 tests of users naming caseratify pass; format, architecture, coverage 59/59, words, ownership 0 failures. R60 reworded in the requirements file; record section pushed.
+
+Ring failed: BOB session_017crmqx6Y4AZnxrNGEDoExR is archived, so J16 (COMPLETE) is the message; BOB's backstop reads it (mechanics §13).
