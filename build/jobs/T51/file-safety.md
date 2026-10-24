@@ -452,3 +452,7 @@ Module tests: pass 132, fail 2 (`rows.test.mjs` R24 words, inherited, named in t
 No new files outside my paths; no generated artifact made stale beyond the member's bundle (`file-safety` is inside the plane's bundle; BOB regenerates). No new words.
 
 Size (session_015APyFqZNBSsmXdhzGxAkgD): test runs 9, module lines 3374
+
+## J18 · COMPLETE
+
+COMPLETE: job 54 applied (R39 render wake is now while renderBatch left a view or safe copy queued; completion section of my record). Red/green shown; module tests 132 pass, 2 fail (rows.test R24 inherited, X19 flaked once). checks: format, architecture, coverage, words, ownership 0. FOR SCHEDULER (job 33): scheduler files.test.mjs:279 assumes the old wake (nextAt > at) and now fails; passes on the tranche base. Details in my record.
