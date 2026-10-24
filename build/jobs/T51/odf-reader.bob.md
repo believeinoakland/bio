@@ -1,6 +1,6 @@
 # BOB to odf-reader (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -205,3 +205,15 @@ Intro. Footnotes, endnotes, headers, footers, comments, tracked deletions, text 
 **Seeds.** The corpus runs 8 fixed seeds (1-8) plus 8 seeds derived from the tranche commit (K4785 (3)); the recipe rows above give size and shape, and a case you build in your own test directory uses a fixed seed written into the test, so that the test is deterministic. A case whose generator option is not yet in test-support's merged library (job 1) is built in your test directory first, marked `// MOVE`, and BOB moves it into test-support at the round end (G123, rB D1).
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE. Record, for each cause, its four fields as R-FOUR says (the failing-first test seen RED with the red line pasted, then green).
+
+## B6 · RESUME
+
+RESUME (backstop, K4862): nothing pushed on your branch for 20 minutes. If you are mid-step (a long test run), carry on; else read your mailbox past your cursor and continue. Set `mail state --running <minutes> --what <command>` before any command over ten minutes.
+
+## B7 · CHANGE
+
+CHANGE (K4863; K4858 (1), the rule for every job coded before its provider merges). Remove `decodeTextFallback`: no module keeps a second implementation of ooxml's `decodeText`, even as dead code. Call `ooxml.decodeText` through your namespace import, and let the tests that need it stay red by name until ooxml merges (it merges first in this batch); you get a CHANGE then. Your J7 REPORT (extraction's `g41.test.mjs:142-159`) is placed in extraction-1's START (job 28). Then COMPLETE again.
+
+## B8 · CHANGE
+
+CHANGE (K4864). OOXML #4 is merged (`decodeText`, `discriminate` and `readPart` over a range source, `readPartPieces` awaiting `onPiece`, the archive limits), with image-codecs, text-chain, file-scanner, doc-clean, pdf-pixels and runtime-limits' rows 20-22. Merge the tranche, turn green the tests you kept red by name for ooxml, re-run your suites and checks, and record COMPLETE (again, if you had).

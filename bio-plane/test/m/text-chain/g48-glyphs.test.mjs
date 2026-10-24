@@ -8,7 +8,8 @@ import { glyphCount } from "../../../src/textchain.mjs";
 const spelled = (s) => {
   if (typeof s !== "string") return 0;
   let n = 0;
-  for (const ch of s) if (!/\s/u.test(ch)) n++;
+  /* R73: NUL and U+FFFD are a decode's failures, not glyphs. */
+  for (const ch of s) if (!/\s/u.test(ch) && ch !== "\u0000" && ch !== "\ufffd") n++;
   return n;
 };
 
@@ -64,7 +65,8 @@ test("R73 G48 (b): whitespace is exactly what the Unicode-aware \\s matches and 
   for (let c = 0x2000; c <= 0x200a; c++) space.push(c);
   for (const c of space) assert.equal(glyphCount(String.fromCharCode(c)), 0, `U+${c.toString(16)}`);
   for (const c of [0x0, 0x1, 0x8, 0xe, 0x1f, 0x7f, 0x200b, 0x180e]) assert.equal(glyphCount(String.fromCharCode(c)), spelled(String.fromCharCode(c)));
-  for (const c of [0x0, 0x8, 0xe, 0x1f, 0x7f]) assert.equal(glyphCount(String.fromCharCode(c)), 1);
+  for (const c of [0x8, 0xe, 0x1f, 0x7f]) assert.equal(glyphCount(String.fromCharCode(c)), 1);
+  for (const c of [0x0, 0xfffd]) assert.equal(glyphCount(String.fromCharCode(c)), 0, `U+${c.toString(16)} is no glyph`);
 });
 
 test("R73 G48 (b): a 1 MiB CSV-shaped text with accented and astral cells counts as the old definition", () => {
