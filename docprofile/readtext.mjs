@@ -70,6 +70,13 @@
 import { identify } from "../site-profiles/index.mjs";
 import { doctypeFor } from "./doctypes/registry.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
+import { segmentsOver, classifiedWhy } from "./classify-view.mjs";
+
+/* The classification view moved to `classify-view.mjs` so the registry's walk bounds every caller (R40); the names stay here. */
+export {
+  CLASSIFY_WHOLE_MAX_CHARS, CLASSIFY_VIEW_MAX_CHARS, CLASSIFY_HEAD_CHARS, CLASSIFY_LINE_SLACK_CHARS, CLASSIFY_WINDOWS,
+  CLASSIFY_WINDOW_CHARS, CLASSIFY_SHEET_HEADS_MAX_CHARS, CLASSIFY_SHEET_HEAD_CHARS, classificationView, classifiedWhy,
+} from "./classify-view.mjs";
 
 /* FW-17 / IC-86 — THE SEGMENT MAP: where in the CONTAINER each stretch of the
    flat string came from.
@@ -130,28 +137,40 @@ function joinItemised(items, textOf, sourceOf) {
   return { text, segments };
 }
 
-/** The segment map of an itemised array over a `document` string it is compared with,
- *  or null when the array's own join (joinItemised's) is not that string byte for byte.
- *  The comparison walks the document in place and builds no joined copy (R38): the
- *  answer is the one `joinItemised(...).text === document` gives, at no whole-text cost. */
-function segmentsOver(document, items, textOf, sourceOf) {
-  const segments = [];
-  let pos = 0;
-  for (let i = 0; i < items.length; i++) {
-    const t = textOf(items[i]);
-    if (!t || !t.length) continue;
-    if (pos) {
-      if (document.charCodeAt(pos) !== 10) return null;
-      pos++;
-    }
-    if (!document.startsWith(t, pos)) return null;
-    const start = pos;
-    pos += t.length;
-    const source = sourceOf(items[i], i);
-    if (source) segments.push({ start, end: pos, source });
+
+/* R18 (fix round 9, G141; X27): a decoded character is a GLYPH, counted as `text-chain` R73 counts one. A code point that is
+   white space (`\s`, Unicode), U+FFFD or NUL is not (a decode's failures and a page's blank are not text). One linear pass
+   that builds no copy; a surrogate pair counts once. */
+const isSpace = (c) => c === 0x20 || (c >= 0x9 && c <= 0xd) || c === 0xa0 || c === 0x1680 || (c >= 0x2000 && c <= 0x200a)
+  || c === 0x2028 || c === 0x2029 || c === 0x202f || c === 0x205f || c === 0x3000 || c === 0xfeff;
+export function glyphs(text) {
+  const len = text.length;
+  let n = 0;
+  for (let i = 0; i < len; i++) {
+    const c = text.charCodeAt(i);
+    if (c === 0x20 || (c >= 0x9 && c <= 0xd)) continue;
+    if (c >= 0xa0 && isSpace(c)) continue;
+    if (c === 0xfffd || c === 0) continue;
+    n++;
+    if (c >= 0xd800 && c <= 0xdbff && i + 1 < len) { const d = text.charCodeAt(i + 1); if (d >= 0xdc00 && d <= 0xdfff) i++; }
   }
-  return pos === document.length ? segments : null;
+  return n;
 }
+
+/* The size refusals among a producer's markers (G141; PLANE #56 J53): a marker saying `why: "over_size_bound"` (ooxml's
+   `sizeGuard`, as the marker itself or inside its `guard`) states the file's size and the limit, and it is a size refusal,
+   never an undecodable region. */
+function sizeRefusal(markers) {
+  for (const m of markers) {
+    if (!m || typeof m !== "object" || m.why !== "over_size_bound") continue;
+    const g = m.guard && typeof m.guard === "object" ? m.guard : m;
+    const size = Number(g.size ?? m.size), bound = Number(g.bound ?? m.bound);
+    if (Number.isFinite(size) && Number.isFinite(bound)) return { size, bound };
+  }
+  return null;
+}
+const MIB = 1024 * 1024;
+const mib = (b) => (b / MIB).toFixed(2);
 
 /** Flatten a producer's text field to the one string the recognisers read.
  *  Exported for the suite; callers use readText().
@@ -162,11 +181,11 @@ function segmentsOver(document, items, textOf, sourceOf) {
  *  exactly what it saw before. */
 export function flattenText(supplied) {
   if (typeof supplied === "string")
-    return { text: supplied, source: "string", chars: supplied.trim().length, undetermined: 0, reasons: [],
+    return { text: supplied, source: "string", chars: glyphs(supplied), undetermined: 0, reasons: [], size_refusal: null,
              segments: [],
              position_why: localize("docprofile.readtext.the_text_arrived_as_a", "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said") };
   if (!supplied || typeof supplied !== "object")
-    return { text: "", source: null, chars: 0, undetermined: 0, reasons: [], segments: [],
+    return { text: "", source: null, chars: 0, undetermined: 0, reasons: [], size_refusal: null, segments: [],
              position_why: "no text was supplied" };
   let text = "", source = null, segments = [], position_why = null;
   if (typeof supplied.document === "string" && supplied.document.length) {
@@ -222,8 +241,9 @@ export function flattenText(supplied) {
   const undetermined = c && typeof c.undetermined === "number"
     ? c.undetermined
     : markers.reduce((n, m) => n + (m && typeof m.count === "number" ? m.count : 1), 0);
-  const reasons = [...new Set(markers.map((m) => m && m.reason).filter(Boolean))];
-  return { text, source, chars: text.trim().length, undetermined, reasons,
+  /* A marker names its cause as `reason` (the PDF tiers) or as `why` (ooxml's, office-readers'): both are read. */
+  const reasons = [...new Set(markers.map((m) => m && (m.reason || m.why)).filter((r) => typeof r === "string" && r))];
+  return { text, source, chars: glyphs(text), undetermined, reasons, size_refusal: sizeRefusal(markers),
            segments, position_why: segments.length ? null : position_why };
 }
 
@@ -256,109 +276,6 @@ export function makeLocator(segments) {
   };
 }
 
-/* G48 (fix round 6; K4673, K4571) — A SHEET OVER A BOUND IS CLASSIFIED FROM A STATED VIEW.
-   `doctypeFor` asks every registered type's `detect` about the text, and the types read what they are handed whole: over a
-   17 MiB CSV's 15.6 M characters that was most of the first reading tick. A sheet's body is rows of one shape, so a type
-   that recognises a table recognises it from the head and a spread of windows; a type that recognises a document by a
-   phrase can still be missed by a sample, which is why the view is STATED on the answer (`classified_over`) and in `why`,
-   never silent (K4571). Only a sheet container (`supplied.sheets`) is sampled; a PDF's text, a page, a paragraph shape and
-   a bare string are classified whole, of any size, because their type may rest on any page. `identify` (the stack) and the
-   type's `parse` keep the whole text: the stack answer never changes and a matched type reads the whole sheet.
-
-   The numbers are protective bounds (BOB reports them, K1881), set by measure: the view is at most 1.5 MiB so that every
-   `detect` is handed under the 2 MiB where the text is classified whole. */
-export const CLASSIFY_WHOLE_MAX_CHARS = 2 * 1024 * 1024;
-export const CLASSIFY_VIEW_MAX_CHARS = 1536 * 1024;
-export const CLASSIFY_HEAD_CHARS = 256 * 1024;
-export const CLASSIFY_LINE_SLACK_CHARS = 16 * 1024;
-export const CLASSIFY_WINDOWS = 12;
-export const CLASSIFY_WINDOW_CHARS = 96 * 1024;
-export const CLASSIFY_SHEET_HEADS_MAX_CHARS = 64 * 1024;
-export const CLASSIFY_SHEET_HEAD_CHARS = 16 * 1024;
-const LIMITS = {
-  view: CLASSIFY_VIEW_MAX_CHARS, head: CLASSIFY_HEAD_CHARS, slack: CLASSIFY_LINE_SLACK_CHARS, windows: CLASSIFY_WINDOWS,
-  window: CLASSIFY_WINDOW_CHARS, sheetHeads: CLASSIFY_SHEET_HEADS_MAX_CHARS, sheetHead: CLASSIFY_SHEET_HEAD_CHARS,
-};
-
-const isHigh = (c) => c >= 0xD800 && c <= 0xDBFF;
-const isLow = (c) => c >= 0xDC00 && c <= 0xDFFF;
-/* A cut at `at` (the boundary between at-1 and at) that does not split a surrogate pair: an END moves back, a START forward. */
-const endCut = (t, at) => (at > 0 && at < t.length && isHigh(t.charCodeAt(at - 1)) && isLow(t.charCodeAt(at)) ? at - 1 : at);
-const startCut = (t, at) => (at > 0 && at < t.length && isHigh(t.charCodeAt(at - 1)) && isLow(t.charCodeAt(at)) ? at + 1 : at);
-/* The end (exclusive) of the whole lines of t[from, to): at the last newline in the range, else `to` itself (a line longer
-   than the range is cut at its size). */
-function lineEndBefore(t, from, to) {
-  if (to >= t.length || t.charCodeAt(to) === 10) return to;
-  const nl = t.lastIndexOf("\n", to - 1);
-  return nl > from ? nl : endCut(t, to);
-}
-
-/** The view a sheet over the bound is classified from, and what it holds (offsets are into `text`): the sheets' first lines
- *  (`sheet_heads`, under one budget), the first `head` characters cut forward to a line end, then `windows` windows of whole
- *  lines spread evenly over the rest, the last ending at the text's end; the pieces joined by one newline and never over
- *  `view` characters. `sheets` is the supplied `sheets` array: its boundaries are used only when its non-empty texts joined
- *  by a newline are `text` (as `segmentsOver` checks), else `heads_used` is false. When the pieces would pass `view`, the
- *  sheet heads are dropped first (`heads_used` false), then the earliest windows, never the last, then the head is cut back. */
-export function classificationView(text, sheets = null, limits = LIMITS) {
-  const n = text.length;
-  let headEnd = Math.min(n, limits.head);
-  if (headEnd < n && text.charCodeAt(headEnd) !== 10) {
-    const nl = text.indexOf("\n", headEnd);
-    headEnd = nl >= 0 && nl - headEnd <= limits.slack ? nl : endCut(text, headEnd);
-  }
-  const windows = [];
-  const S = limits.window, W = Math.max(1, limits.windows), rest = n - headEnd;
-  let prev = headEnd;
-  for (let i = 0; i < W && rest > 0; i++) {
-    const last = i === W - 1;
-    const floor = text.charCodeAt(prev) === 10 ? prev + 1 : prev;
-    const ideal = W === 1 ? n - S : headEnd + Math.floor(((rest - S) * i) / (W - 1 || 1));
-    let from = Math.max(last ? n - S : ideal, floor);
-    if (from > floor && text.charCodeAt(from - 1) !== 10) {
-      const nl = text.indexOf("\n", from);
-      from = nl >= 0 && nl - from < S ? nl + 1 : startCut(text, from);
-    }
-    const to = last ? n : lineEndBefore(text, from, Math.min(n, from + S));
-    if (to <= from) continue;
-    windows.push({ from, to });
-    prev = to;
-  }
-  const segs = Array.isArray(sheets) && sheets.length
-    ? segmentsOver(text, sheets, (x) => (x && typeof x.text === "string" ? x.text : ""), (x, i) => ({ i })) : null;
-  let headsUsed = segs !== null, heads = [];
-  if (segs) {
-    const covered = [{ from: 0, to: headEnd }, ...windows];
-    let budget = limits.sheetHeads;
-    for (const sg of segs) {
-      if (budget <= 0) break;
-      let a = sg.start, b = Math.min(sg.end, a + Math.min(limits.sheetHead, budget));
-      if (b < sg.end) b = lineEndBefore(text, a, b);
-      for (const c of covered) {
-        if (a >= c.from && a <= c.to) a = c.to + (text.charCodeAt(c.to) === 10 ? 1 : 0);
-        else if (c.from > a && c.from < b) b = text.charCodeAt(c.from - 1) === 10 ? c.from - 1 : c.from;
-      }
-      if (a >= b) continue;
-      heads.push({ from: a, to: b });
-      budget -= b - a;
-    }
-  }
-  const size = () => heads.concat([{ from: 0, to: headEnd }], windows).reduce((m, x) => m + x.to - x.from + 1, -1);
-  if (size() > limits.view && heads.length) { heads = []; headsUsed = false; }
-  while (size() > limits.view && windows.length > 1) windows.shift();
-  if (size() > limits.view) {
-    const room = limits.view - (size() - headEnd);
-    headEnd = Math.max(0, lineEndBefore(text, 0, Math.max(0, room)));
-  }
-  const view = [...heads.map((x) => text.slice(x.from, x.to)), text.slice(0, headEnd), ...windows.map((x) => text.slice(x.from, x.to))].join("\n");
-  return { view, of: n, chars: view.length, head_chars: headEnd, windows, sheet_heads: heads, heads_used: headsUsed };
-}
-
-/** The sentence `readText` appends to `why` when it classified a sheet from a view; code-origin words (K3930). */
-export function classifiedWhy(co) {
-  return localize("docprofile.readtext.the_sheet_is_over_the_bound_so_its_type_was_judged_from_a_view",
-    "the sheet is over {bound} characters, so its type was judged from {chars} of its {of} characters, the first {head} and {n} windows spread across it; the stack and the reading of it are from all of it",
-    { bound: String(CLASSIFY_WHOLE_MAX_CHARS), chars: String(co.chars), of: String(co.of), head: String(co.head_chars), n: String(co.windows.length) });
-}
 
 /** Run identify()/doctypeFor()/parse() over text from anywhere.
  *
@@ -377,25 +294,29 @@ export function classifiedWhy(co) {
 export function readText(supplied, ctx = {}) {
   const flat = flattenText(supplied);
   const named = flat.reasons.length ? `: ${flat.reasons.join(", ")}` : "";
+  /* A size refusal is worded as one (G141): the file's size and the limit, never "undecodable". */
+  const sized = flat.size_refusal && localize("docprofile.readtext.the_text_of_this_document_was_not_read_over_the_size_limit",
+    "the text of this document was not read: it is {size} MiB of text against the {bound} MiB that is read",
+    { size: mib(flat.size_refusal.size), bound: mib(flat.size_refusal.bound) });
   if (!flat.chars) {
     return {
       determined: false, partial: false,
       chars: 0, undetermined: flat.undetermined, reasons: flat.reasons,
-      why: flat.undetermined > 0
+      why: sized || (flat.undetermined > 0
         ? localize("docprofile.readtext.the_text_of_this_document", "the text of this document is undetermined ({undetermined} undecodable region(s){named}); a reading over text nobody decoded would be an invented one", { undetermined: String(flat.undetermined), named: String(named) })
-        : localize("docprofile.readtext.no_text_was_supplied_so_no", "no text was supplied, so no reading was attempted"),
+        : localize("docprofile.readtext.no_text_was_supplied_so_no", "no text was supplied, so no reading was attempted")),
     };
   }
   /* The plane's measured essentially-nothing line (needsTier2's predicate, the
      CPDF-5 buckets): more undetermined than decoded chars. Below it a document
      with a stated residue still reads (a budget book at ~88% is usable and the
      residue is stated); above it a reading would be built on a fragment and
-     silently misrepresent the document. */
+     silently misrepresent the document. A decoded character is a glyph (R18). */
   if (flat.undetermined > flat.chars) {
     return {
       determined: false, partial: true,
       chars: flat.chars, undetermined: flat.undetermined, reasons: flat.reasons,
-      why: localize("docprofile.readtext.the_tier_that_produced_this", "the tier that produced this text could not decode most of it ({undetermined} undetermined against {chars} decoded{named}); a reading over the fragment would silently misrepresent the document", { undetermined: String(flat.undetermined), chars: String(flat.chars), named: String(named) }),
+      why: sized || localize("docprofile.readtext.the_tier_that_produced_this", "the tier that produced this text could not decode most of it ({undetermined} undetermined against {chars} decoded{named}); a reading over the fragment would silently misrepresent the document", { undetermined: String(flat.undetermined), chars: String(flat.chars), named: String(named) }),
     };
   }
   /* R38: `pages` is the supplied pages, the very array the caller gave (as `ctx.supplied`
@@ -404,10 +325,11 @@ export function readText(supplied, ctx = {}) {
   const pages = supplied && typeof supplied === "object" && Array.isArray(supplied.pages) ? supplied.pages : [];
   const dctx = { ...ctx, text: flat.text, pages };
   const stack = identify(dctx);
-  /* G48: a sheet over the bound is classified from a stated view; the stack and `parse` below keep the whole text. */
+  /* R40 (G133f): `doctypeFor` bounds the classification of a text of any kind over `CLASSIFY_WHOLE_MAX_CHARS` to a stated view
+     (the sheets' heads where the supplied text is a sheet container); the stack above and `parse` below keep the whole text. */
   const sheets = supplied && typeof supplied === "object" && Array.isArray(supplied.sheets) ? supplied.sheets : null;
-  const sampled = sheets && flat.text.length > CLASSIFY_WHOLE_MAX_CHARS ? classificationView(flat.text, sheets) : null;
-  const doctype = doctypeFor({ ...dctx, text: sampled ? sampled.view : flat.text, handler: stack.handler, kind: stack.kind });
+  const doctype = doctypeFor({ ...dctx, ...(sheets ? { sheets } : {}), handler: stack.handler, kind: stack.kind });
+  const sampled = doctype.classified_over || null;
   let parsed = null, parse_error = null;
   /* FW-17 / IC-86 (2): the reader is GIVEN the locator, on the SAME ctx it
      already reads `text` off. It is on the doctype ctx only — `identify()` and
@@ -446,9 +368,10 @@ export function readText(supplied, ctx = {}) {
   const partial = flat.undetermined > 0;
   const classified_over = sampled && { chars: sampled.chars, of: sampled.of, head_chars: sampled.head_chars,
     windows: sampled.windows, sheet_heads: sampled.sheet_heads, heads_used: sampled.heads_used };
-  const why = partial
+  const why = (partial
     ? localize("docprofile.readtext.read_over_a_partial_decode", "read over a PARTIAL decode, stated: {undetermined} undetermined region(s)/code point(s){named} beside {chars} decoded characters", { undetermined: String(flat.undetermined), named: String(named), chars: String(flat.chars) })
-    : localize("docprofile.readtext.read_over_a_full_decode", "read over a full decode ({chars} characters)", { chars: String(flat.chars) });
+    : localize("docprofile.readtext.read_over_a_full_decode", "read over a full decode ({chars} characters)", { chars: String(flat.chars) }))
+    + (sized ? `; ${sized}` : "");
   return {
     determined: true, partial,
     chars: flat.chars, undetermined: flat.undetermined, reasons: flat.reasons,
