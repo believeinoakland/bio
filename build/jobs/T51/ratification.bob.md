@@ -1,6 +1,6 @@
 # BOB to ratification (T51)
 
-**Read** · handled J16
+**Read** · handled J17
 
 ## B1 · START
 
@@ -239,3 +239,21 @@ ANSWER J14 (K4822): confirmed exactly as you build it: ctx.stateTiming(name, ms)
 ## B15 · CHANGE
 
 CHANGE (K4833; control-plane J48, G120, your R60): through the counting door (r8-caseratify-calls) the act's sequential chain is 38 against the plan's 25: copyMaterials is still sequential (PUBLISHED.head / CAPTURES.get / PUBLISHED.put six times one after another before recordcasefile). R60 says the copy runs in groups of 8. Merge tranche/T51 into job/T51/ratification, make copyMaterials concurrent in groups of 8, with your r8-chain test asserting peak concurrency >= 6 through the copy (red first), the answer byte for byte as today; run your suite and impact set, then COMPLETE again.
+
+## B16 · START
+
+START · RATIFICATION #35 · tranche T51 · product believeinoakland/bio · fix round 9, job 49 (K4850; re-walk 8 area B, diagnosis `build/plan/diagnosis-R9-rewalk8-B.md`) · depth 2 (BOB #275 at depth 1)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/ratification tranche/T51 && git branch -m job/T51/ratification stale/ratification-local && git checkout -b job/T51/ratification origin/job/T51/ratification`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module ratification`; record `build/jobs/T51/ratification.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); tests run as `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. Your diff touches only this module's `paths`, its `tests` and your record (ownership). Never edit a generated artifact; name any you make stale. Never contact a live deployment (P checks are BOB's). A job never writes a requirement and never strikes a "not yet met" mark; propose wording in your record. Words: a new sentence a member reads is a stand-in keyed through `localize` at its use (K3930), tests never copy it (K3810), its row owed to `later-ux.md`.
+
+**Bob's direction (K4849):** "Don't guess when looking at open issues. Really understand the roots of the problem. Look in the code when you need to." Re-read the code before relying on any line below; if your reading differs from the diagnosis, say so in your record with the lines, and fix the cause you find.
+
+**Rules (plan section 0, binding):** R-FOUR (cause with file:line; why the tests missed it and that gap fixed; a failing-first test on the walker's exact case through the real entry path, seen RED then green, the red line pasted; the platform check L/P/N), R-SEAM, R-PATH, R-CLOCK (counts, never wall bars), R-NOLOAD, R-LOG, R-WORDS, R-NOTMET (no "not met", deferral or open QUESTION at COMPLETE). Read `build/plan/fix-round-9-T51.md` section 0 whole.
+
+**Reading rule (K3678).** Read whole: this START, `build/requirements/ratification.md` (both parts), your section of `build/plan/diagnosis-R9-rewalk8-B.md`, the walker's rows in `build/plan/walk-T51-rewalk8/B.md` for your cause, the source files named below, and the tests you edit. Your other tests are run, not read. A document you would read only in part: stop, post BLOCKED with cause `reading`.
+
+**Before COMPLETE:** your module's tests, `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership (civicos-process `checks/`), each read by its failure count. Record completion (mechanics section 6 step 7) with `Size (<session id>): test runs <n>, module lines <n>` and each cause's four fields; state COMPLETE; post COMPLETE.
+
+**G120b · One `caseratify` still takes 4.1-4.6 s on `Server-Timing` against K4354's 2 s act bar** (re-walk 8 B: STILL; was 13.1 s; diagnosis item 2, structure Certain). (1) The counting door shows 61 calls, chain 25. The gate phase is 5 object levels deep; with a sitting of 2 members `gatefacts`, `image`, `list` and `ratifygate` run once per member and `list` (every bundle id) is read twice; the `reusedparts` check runs member after member (`ratification/ops.mjs` ~282-291). Gate, copy, assemble and reuse are 3.9 s of the 4.1 s. (2) Missed: round 8's `r8-caseratify-calls` asserted the count fell, not the chain length per phase or the per-member repetition. (3) Red, by counts (R-CLOCK), through the counting door (`wrap-entry.mjs`) on a 2-member sitting with one finding: each read the sitting needs is made ONCE per act, not once per member (`list`, `gatefacts`, `image`, `ratifygate` counted); the reuse check's member calls run concurrently (its chain depth counted); report the chain length of each phase before and after. (4) **L** (the counting door); **P** the re-walk's `caseratify;dur` (BOB's). Public-read's assembly (G121b) is job 50; what remains over 2 s after both is measured by BOB and planned from the measurement, never assumed.

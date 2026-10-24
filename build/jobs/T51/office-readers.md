@@ -1,6 +1,6 @@
 # office-readers (T51)
 
-**Status** · session_01SnAPnyyGhWqgR6sG1fMBdv · depth 2 · COMPLETE · handled B12
+**Status** · session_01Pv6M4ffDmqfEt4kYWWRrfK · depth 2 · COMPLETE · handled B17
 
 ## Completion
 
@@ -72,3 +72,74 @@ G41 applied (office-readers): xlsx text(parts, {inlineCellsMax}) lists a workboo
 ## J6 · COMPLETE
 
 B9-B11 applied: no exported cap constant (option is a number of bytes; measure 161.6 B/cell, 512 KiB = about 3,240 cells); cellsIn numbering per K4647 asserted at row 1 and last row; next_row absent when answered whole. office-readers 115 pass under the shim; checks and ownership 0 failures. Everything else as J5. Size (session_01SnAPnyyGhWqgR6sG1fMBdv): test runs 16, module lines 3484.
+
+## J7 · QUESTION
+
+START read; branch merged with tranche/T51. Three things from the merged tree, none blocks me yet; I carry on with the rest.
+
+1. `decodeText` is NOT in `bio-plane/src/ooxml.mjs` on tranche/T51 (ooxml #job 3 has only just started: its branch has the START mail and no code). Best reading: I code against the plan 2c.5 text. In a new file `bio-plane/src/office-xml.mjs` (outside my paths; listed in COMPLETE for you to add, K1043) I put one function `decodePart(bytes, part)` that calls `ooxml.decodeText` when ooxml exports it (namespace import) and otherwise a small local decode to the same contract (UTF-8/UTF-16 by BOM or prolog, windows-1252/ISO-8859-x labels). When ooxml merges, the local arm is dead and I remove it on a CHANGE. If you would rather I wait for ooxml, say so (BLOCKED otherwise not needed).
+2. `ooxml.readPartPieces` calls `onPiece` without awaiting it, so a reader cannot yield between pieces. R42's `yieldNow` every 65,536 tokens is met in whole-part reads (I window the part and await between windows). In piece mode (parts over 20 MiB) I can only return the promise of `yieldNow()` from the handler as a hint. Ask for ooxml (job 3): await the handler's returned promise in `readPartPieces`.
+3. `READ_BOUNDS` has `office.retained_objects` (250,000) but no decoded-characters row (R44). Until runtime-limits adds one I keep a local constant `OFFICE_DECODED_CHARS_MAX` with the comment "proposed; BOB records". Proposed row: kind `office`, name `decoded_chars`, standard/alpha/protective 64 MiB characters (67,108,864), key `limit.office.decoded_chars`; I will state what my capped child shows in my COMPLETE.
+
+## T51 fix round 9 (B13 START, session_01Pv6M4ffDmqfEt4kYWWRrfK, depth 2)
+
+Causes: G134a, G134c, G134d (emits), G133c, G133d, G125d, G124c, G128e (docx/pptx), G131e (xlsx half), G131g (docx/pptx/xlsx sites), G124 quotes. Requirement ids: R12, R30, R36, R37, R38-R45. Platform check **L** for the scan and bound shapes: run here in node under the shim (the capped-heap memory tests of `large-text.test.mjs` pass unchanged; a 100 MiB embedding hashed with ArrayBuffer growth under 48 MiB).
+
+**Code.** New file `bio-plane/src/office-xml.mjs` (outside `paths`; BOB adds it, K1043): the one scanner (`Scanner`: a tag at most 64 KiB, an unterminated or longer one is text, counts `scanned`, `tokens`, `overBound`, `unterminated`, `badRef`; offsets `at`), `parseAttrs`, `unescape`, `collectElements`, `decodePart`/`readText`, `scanPart`, `memberIdentities` (listArchive + streamMember). `docx.mjs`, `pptx.mjs`, `formats-xlsx.mjs` read every part through it; `csv.mjs` unchanged.
+
+**Per cause (root cause, why missed, red-first, check).**
+- G133d (R42): `TOKEN_RE` (`(?:[^>"']|"[^"]*"|'[^']*')*?`) and the `elements()` regexes backtracked on an unterminated tag. Missed: no work count. Test `scan-bounds.test.mjs` (R42, six shapes in docx, pptx, xlsx: `counts.scanned_bytes` at most 4 times the part; `tag_over_bound`; `yieldNow` awaited at least every 65,536 tokens in windows of 64 KiB, answer identical without it, a throwing or non-function `yieldNow` ignored). The docx body walk and tables walk are now ONE scan. Red before: the module had no such count; green after. L.
+- G133c (R40): invalid numeric references stayed as written (no throw in these three files) but the part was read as if sound and ooxml threw on the same inputs; rule now: the part holding one is stated `{part, why:"char_ref_invalid", final:true}`, the rest read (workbook: `workbook_unreadable:char_ref_invalid`). Test `chars-decode.test.mjs` (7 invalid forms, same on every call, structure too). The old R21 assertion ("stays as written") followed the requirement in `builders-invariants.test.mjs`.
+- G131g (R41): UTF-16 parts read empty and CDATA dropped. All text parts go through `decodePart` (ooxml `decodeText` when exported; local fallback of the same contract until then); CDATA read in `w:t`, `a:t`, `t`, `f`, `v`; over 0.5 % replaced is `{part, why:"partial", replaced}`; unsupported charset `{part, why:"ENCODING_UNSUPPORTED", name, final:true}`.
+- G134a/G134d (R38, R39): `text()` carries `parts:[{kind, ref, part, text, hidden?}]`: docx footnote, endnote, header, footer, comment, tracked_deletion, text_box; pptx speaker_note, master_text (masters and layouts), text_box, a hidden slide's text as `body` with `hidden:true`; xlsx cell_note (legacy comments through each sheet's rels). `document` and the R11 lists unchanged. Text no unit reads (diagrams, charts, drawings, glossary) is `{part, why:"part_unread"}`. R39: `{part, why:"image_unread", ref}` for a docx paragraph or pptx slide whose only content is a picture. Test `parts-kinds.test.mjs`. Declared sum of R12 now includes the new docx and pptx parts.
+- G134c (R30): XLSX styles were never read. `xl/styles.xml` read once; a number whose format (built-in 14-17, 22, 27-31, 36, 50-58, or a custom code with date tokens) is a date gets `type:"date"`, ISO `value` (`THH:MM:SS` when there is a time part), `serial` the stored lexical value, `declared` unchanged; 1904 system from `workbookPr`; time-only, 0, serial 60, negative, past 9999 stay numbers; `text`/`document` show the ISO date; `t="d"` unchanged without `serial`. Test `dates-typed.test.mjs`.
+- G125d (R43): embeddings were `readPart` + `sha256` whole. Now `listArchive` + `streamMember` (`memberIdentities`): refused before inflation by the listing's verdict name (`ARCHIVE_RATIO_MAX`, `MEMBER_MAX`, `ARCHIVE_TOTAL_MAX`, ambiguity) with `limit`; test includes a 100 MiB zero-filled embedding in a 100 KB package. Images' identity is ooxml's `withContainerImages` (not this module's).
+- G124c (R44): docx retains 10 times its decoded text in objects. The walk counts paragraphs, cells (`tc`) and hyperlinks against `boundOf("office","retained_objects")` (250,000), refused `{why:"TOO_MANY_OBJECTS", n, bound, final:true}` with `document:null`, in text() and structure(); pptx the same (p, tc, hlinkClick); xlsx counts the typed cells a read holds (so an unopted read of more than 250,000 cells is refused; an opted-in read holds them and is not) and cells in one row. The check runs as the scan counts (the walk stops at the first object past the bound), not as a separate pre-pass. Decoded characters: local constant `OFFICE_DECODED_CHARS_MAX` 33,554,432 (the ceiling of a read in pieces), **proposed; BOB records**, see REPORT.
+- G128e (R45): `opts.inlineCellsMax` on the docx entry: past it every table's `cells:null`, `cells_omitted:true`, and `{part, why:"cells_omitted", size, bound}`; paragraphs and document keep every cell's text (test: 1,500-row table, ENDMARKER found). pptx lists no table cells today, so nothing there is omitted (stated, vacuous).
+- G131e (R37, XLSX half): a point read inflated and walked the whole sheet part per call. Now a sheet over a 1 MiB block leaves access points (blocks of whole rows: offsets into the held text, or deflated blocks for a sheet read in pieces) on `parts.access` when `text()` is given a cap, else the first point read leaves them; a call parses only blocks holding the rows asked, stops when the answer is full; answer carries `served:{bytes,blocks}` (an added field; BOB: add to R37 if wanted). Test: 80,000-row sheet, row 79,990 served at most 2 MiB (about 8 MB sheet).
+- G124 quotes: `boundOf("office","retained_objects")` is the only ceiling this module takes from the table; `MEASURED_OOXML_TEXT_BOUND_BYTES` and `STREAMED_TEXT_BOUND_BYTES` stay ooxml's (R35/ooxml); the two other numbers are pieces sizes (`ACCESS_BLOCK_CHARS`, 1 MiB, an internal block, not a member-facing ceiling) and the proposed decoded-characters figure above. No sentence is added: refusals are reason codes, no new `localize` key, no words row owed (the member sentences for `TOO_MANY_OBJECTS`, `cells_omitted`, `image_unread`, `partial`, `char_ref_invalid`, `ENCODING_UNSUPPORTED`, `part_unread` are the rows of plan section 5, already owed).
+
+**Declared census ops:** none. **Stored data:** new reads only (R-OLD); a reading made before carries no `parts`.
+
+**Ran.** office-readers (119 tests, 0 fail; `g41-held` x5 and `large-text` x2 on one core, 0 fail); odf-reader + format-registry + extraction + content + workbooks + file-safety + reading-pipeline as users. Checks: format 0 failures; architecture 0; coverage 39 of 39 ids named; words 0; ownership 1 failure, `bio-plane/src/office-xml.mjs` (new file, BOB adds it to `paths`).
+
+**Found in other modules (also in the REPORT).**
+1. doc-clean `oracles.test.mjs` R5 ("office-readers and odf-reader answer the same text for a package copy"): compares the whole `text()` answer, which now has `counts.scanned_bytes` (a work count that differs with the copy's bytes: 2190 against 2323). That test should leave `counts.scanned_bytes` out of the comparison.
+2. extraction `g41.test.mjs` R97 "a docx whose tables hold more than 1 MiB of cells is stated": asserts the old cliff (G128e); with `inlineCellsMax` passed to the docx entry the cells are omitted, so reading-pipeline-1 (27) passes it and extraction-2 (41) rewrites that test. Red now on `more:true`.
+3. ooxml (3): `decodeText` is not exported yet (my fallback in `office-xml.mjs` goes dead when it is; a CHANGE removes it); `readPartPieces` should await its handler's result so a reader can yield between pieces (R42 in pieces mode yields only between windows of a part read whole).
+4. runtime-limits (2): add `office.decoded_chars` (standard/alpha/protective 33,554,432, key `limit.office.decoded_chars`), then this module takes it through `boundOf`.
+5. file-safety `rows.test.mjs` R24 and the reading-pipeline PDF test `R40 R36 (G26)` (45 s, a PDF test, not touched by this module) were red in the run; the first is on the START's list.
+
+**Deferred:** none. **Size (session_01Pv6M4ffDmqfEt4kYWWRrfK): test runs 18, module lines 4,430** (docx 1,362 + pptx 1,077 + formats-xlsx 1,558 + office-xml 432 = 4,429, csv 1; `wc -l`).
+
+## J8 · COMPLETE
+
+COMPLETE · OFFICE-READERS #16 · fix round 9: G134a, G134c, G134d (emits), G133c, G133d, G125d, G124c, G128e (docx), G131e (xlsx), G131g, G124 quotes. R12, R30, R36-R45 applied, each named by its own test; office-readers 119 pass, 0 fail; format, architecture, coverage (39 of 39), words 0 failures. Ownership: one file to add to `paths`: `bio-plane/src/office-xml.mjs` (new, the shared scanner and decode).
+
+REPORT items (details in my record):
+1. ooxml (3): `decodeText` not yet exported (my fallback in office-xml.mjs goes dead when it is; send a CHANGE to remove it); `readPartPieces` should await its handler so a reader can yield between pieces.
+2. runtime-limits (2): add row kind `office`, name `decoded_chars`, standard/alpha/protective 33,554,432, key `limit.office.decoded_chars`; I keep `OFFICE_DECODED_CHARS_MAX` (docx.mjs, pptx.mjs) "proposed; BOB records" until then. It cannot bind below the 32 MiB ceiling of a read in pieces; it is a backstop.
+3. doc-clean `oracles.test.mjs` R5 compares the whole text() answer, now with `counts.scanned_bytes` (a work count that differs with the copy's bytes): it must leave that field out. Red now.
+4. extraction `g41.test.mjs` R97 (docx over 1 MiB of cells) asserts the old G128e cliff: reading-pipeline-1 passes `inlineCellsMax` to the docx entry and extraction-2 rewrites it. Red now on `more:true`.
+5. Added answer field `served:{bytes,blocks}` on xlsx `cellsIn` (R37); add to the requirement if wanted. pptx lists no table cells, so R45 omits nothing there.
+6. xlsx R44 reading: the retained objects of a workbook are the typed cells a read holds (so an unopted read of more than 250,000 cells is refused `TOO_MANY_OBJECTS`; with `inlineCellsMax` they are held and the read is not). The shared-strings list is not counted (R12/32 MiB bound it). Say if you want it otherwise.
+Reds seen that are not mine: file-safety `rows.test.mjs` R24 (on the START's list) and reading-pipeline `R40 R36 (G26)` PDF test.
+Replaces nothing: J7 stands (decodeText fallback in office-xml.mjs until ooxml merges); no answer needed to complete.
+
+**B14/B15 applied.** Local decoder removed (no `localDecode`); `office-xml.mjs` keeps only the scanner, `decodePart` (ooxml `decodeText` by namespace import; until ooxml merges it, the plain UTF-8 reading every part had, no second decode) and the rest, which BOB adds to `paths`. The decoded-characters constant is gone: `boundOf("office","decoded_chars")` (67,108,864) in docx.mjs and pptx.mjs, test reads the row. Piece handler returns `yieldNow()`'s promise (already). Capped-child note: a docx of 30 MiB declared text reads inside a 128 MB old space (`large-text.test.mjs`, passes), so the row does not bind below the 32 MiB ceiling. **Red by name until ooxml merges:** the two R41 tests in `chars-decode.test.mjs` (UTF-16, legacy charset, partial, ENCODING_UNSUPPORTED); a CHANGE turns them green. office-readers 117 pass, 2 red by name.
+
+## J9 · COMPLETE
+
+COMPLETE (B14, B15 applied): local decoder removed, office.decoded_chars read by boundOf, no uncommitted fallback. office-readers 117 pass; the two R41 tests (chars-decode.test.mjs) are red by name until ooxml's decodeText merges; send a CHANGE then. Checks as J8; office-xml.mjs still to be added to paths.
+
+**B16 applied.** Tranche merged (ooxml #4: decodeText, readPartPieces awaiting onPiece). The two R41 tests are green; the partial test now declares utf-8 in the prolog (the real decode reads undeclared bad bytes as windows-1252, with no replacement). office-readers 129 pass incl. g41 (large-text passes); format, architecture, coverage 39/39, words 0 failures.
+
+## J10 · COMPLETE
+
+COMPLETE (B16 applied): tranche merged, R41 tests green on ooxml's decodeText; office-readers 129 pass (incl. g41, large-text); format, architecture, coverage 39/39, words 0 failures. office-xml.mjs still to add to paths.
+
+**B17 applied.** `decodePart` is `ooxml.decodeText` alone; `countReplaced` removed. Tranche merged. R38-R45 each named by its own test (coverage 39 of 39 on this branch). New file to add to paths: `bio-plane/src/office-xml.mjs`. office-readers 129 pass.
+
+## J11 · COMPLETE
+
+COMPLETE (B17 applied): decodePart is ooxml.decodeText alone, no local arm. office-readers 129 pass; coverage 39 of 39 (R38-R45 each named by its own test: parts-kinds, chars-decode, scan-bounds, dates-typed); format, architecture, words 0 failures. NEW FILE to add to paths: bio-plane/src/office-xml.mjs (ownership names it until then).

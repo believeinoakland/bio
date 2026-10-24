@@ -110,3 +110,116 @@ test("R34, R75, R76, R78: the same, for a draft named by the ceremony: prepared 
   assert.equal(un.first.reason, "TIE_ATTESTATION_MISSING");
   assert.equal(sign(un).publish_at, null);
 });
+
+/* G112b (fix round 9; diagnosis-R9-rewalk8-B.md item 1): the ceremony types the bias acknowledgement in `publish`'s own body and
+   the draft never holds it, so after a reload the pre-flight is only {draft, project} and met NO_BIAS_ACKNOWLEDGEMENT. The
+   prepared edition's own bias is read back as the ties are, for the pre-flight alone. */
+const bias = (pre) => pre.steps.find((s) => s.bias).bias.acknowledgement;
+function drafted(x) {
+  /* the draft as the ceremony leaves it: every authored field but the bias, which only the act's body carries */
+  const { tieAttested, viewer, author, project, biasAcknowledgement, ...kept } = args(x);
+  x.w.draft("DRAFT-2026-0001", x.P, kept, { statementBy: "alice" });
+  return (over = {}) => ({ draft: "DRAFT-2026-0001", project: x.P, viewer: V("alice"), author: "alice", ...over });
+}
+
+test("R34, R75, R76 (G112b): an edition prepared with the bias typed in the ceremony, pre-flighted as a reload sends it ({draft, project} only), reads the stored bias: first is null, publish_at is offered, the answer is the confirmed call's, nothing is written", () => {
+  const x = setup();
+  const call = drafted(x);
+  const typed = AUTHORED.biasAcknowledgement;
+  const done = x.w.ca.publishCase(call({ tieAttested: true, biasAcknowledgement: typed }));
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
+  /* the zone read creates local-facts' empty tables once; the snapshot is taken after that */
+  const tied = x.w.ca.publishPreflight(call({ tieAttested: true, biasAcknowledgement: typed }));
+  const before = x.w.snapshot();
+  const pre = x.w.ca.publishPreflight(call());
+  assert.deepEqual(x.w.snapshot(), before, "nothing written");
+  assert.equal(pre.first, null, JSON.stringify(pre.first).slice(0, 300));
+  assert.equal(pre.editions.prepared, 1);
+  assert.equal(sign(pre).ratification.reached, true);
+  assert.equal(sign(pre).publish_at.offered, true);
+  assert.deepEqual(sign(pre).publish_at, sign(tied).publish_at);
+  assert.equal(bias(pre), typed);
+  assert.deepEqual([pre.first, pre.blockers, pre.ready], [tied.first, tied.blockers, tied.ready]);
+});
+
+test("R34, R75, R76 (G112b control): the bias read back is the pre-flight's alone: publishCase for the same reload is still refused NO_BIAS_ACKNOWLEDGEMENT, and a draft never prepared still answers it with publish_at null", () => {
+  const x = setup();
+  const call = drafted(x);
+  x.w.ca.publishCase(call({ tieAttested: true, biasAcknowledgement: AUTHORED.biasAcknowledgement }));
+  const docs = x.w.count("case_documents");
+  const act = x.w.ca.publishCase(call({ tieAttested: true }));
+  assert.equal(act.reason, "NO_BIAS_ACKNOWLEDGEMENT");
+  assert.equal(x.w.count("case_documents"), docs, "nothing written");
+  const fresh = setup();
+  const un = fresh.w.ca.publishPreflight(drafted(fresh)({ tieAttested: true }));
+  assert.equal(un.first.reason, "NO_BIAS_ACKNOWLEDGEMENT");
+  assert.equal(sign(un).publish_at, null);
+});
+
+test("R34, R75, R76 (G112b control): a bias typed again after the reload wins over the stored one, and the ties retyped without a bias still read the stored bias", () => {
+  const x = setup();
+  const call = drafted(x);
+  x.w.ca.publishCase(call({ tieAttested: true, biasAcknowledgement: AUTHORED.biasAcknowledgement }));
+  const again = "We read the minutes as the account of the meeting, and we have not read the audio.";
+  const retyped = x.w.ca.publishPreflight(call({ biasAcknowledgement: again }));
+  assert.equal(bias(retyped), again);
+  assert.equal(retyped.first, null, JSON.stringify(retyped.first).slice(0, 300));
+  const tiedOnly = x.w.ca.publishPreflight(call({ tieAttested: true }));
+  assert.equal(tiedOnly.first, null, JSON.stringify(tiedOnly.first).slice(0, 300));
+  assert.equal(bias(tiedOnly), AUTHORED.biasAcknowledgement);
+});
+
+test("R34, R76 (G112b control): another signer's prepared edition gives her no bias: a second member's reload is still refused", () => {
+  const x = setup();
+  x.w.member("carol");
+  const call = drafted(x);
+  x.w.ca.publishCase(call({ tieAttested: true, biasAcknowledgement: AUTHORED.biasAcknowledgement }));
+  const pre = x.w.ca.publishPreflight(call({ author: "carol", viewer: V("carol") }));
+  assert.notEqual(pre.first, null);
+  assert.notEqual(pre.first.reason, undefined);
+  assert.equal(sign(pre).publish_at, null);
+});
+
+/* G112b, the same defect for the other two answers only the act's body carries (diagnosis-R9-rewalk8-B.md item 1, last
+   paragraph): the reasons for self-attested captures. The draft holds none, so a reload met CO_ATTESTATION_UNACKNOWLEDGED. */
+function selfDrafted(x) {
+  const { tieAttested, viewer, author, project, biasAcknowledgement, selfAttested, ...kept } = args(x);
+  x.w.draft("DRAFT-2026-0001", x.P, kept, { statementBy: "alice" });
+  return (over = {}) => ({ draft: "DRAFT-2026-0001", project: x.P, viewer: V("alice"), author: "alice", ...over });
+}
+const typed = (x) => ({ tieAttested: true, biasAcknowledgement: AUTHORED.biasAcknowledgement,
+                        selfAttested: [{ capture: x.capture, reason: REASON }] });
+
+test("R34, R75, R76 (G112b): a reload's pre-flight ({draft, project} only) reads the reasons given for self-attested captures from the prepared edition: first is null, publish_at is offered, the answer is the confirmed call's", () => {
+  const x = setup();
+  const call = selfDrafted(x);
+  const done = x.w.ca.publishCase(call(typed(x)));
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
+  const tied = x.w.ca.publishPreflight(call(typed(x)));
+  const before = x.w.snapshot();
+  const pre = x.w.ca.publishPreflight(call());
+  assert.deepEqual(x.w.snapshot(), before, "nothing written");
+  assert.equal(pre.first, null, JSON.stringify(pre.first).slice(0, 300));
+  assert.equal(sign(pre).publish_at.offered, true);
+  assert.deepEqual([pre.first, pre.blockers, pre.ready, sign(pre).publish_at], [tied.first, tied.blockers, tied.ready, sign(tied).publish_at]);
+});
+
+test("R34, R76 (G112b control): a list the call sends wins (an empty one still asks for the reasons), the carry never reaches op=publish's act, a draft never prepared reads none, and another signer reads none", () => {
+  const x = setup();
+  const call = selfDrafted(x);
+  x.w.ca.publishCase(call(typed(x)));
+  const sent = x.w.ca.publishPreflight(call({ selfAttested: [] }));
+  assert.equal(sent.first.reason, "CO_ATTESTATION_UNACKNOWLEDGED");
+  assert.equal(sign(sent).publish_at, null);
+  const docs = x.w.count("case_documents");
+  const act = x.w.ca.publishCase(call({ tieAttested: true, biasAcknowledgement: AUTHORED.biasAcknowledgement }));
+  assert.equal(act.reason, "CO_ATTESTATION_UNACKNOWLEDGED");
+  assert.equal(x.w.count("case_documents"), docs, "nothing written");
+  const fresh = setup();
+  const un = fresh.w.ca.publishPreflight(selfDrafted(fresh)({ tieAttested: true, biasAcknowledgement: AUTHORED.biasAcknowledgement }));
+  assert.equal(un.first.reason, "CO_ATTESTATION_UNACKNOWLEDGED");
+  x.w.member("carol");
+  const other = x.w.ca.publishPreflight(call({ author: "carol", viewer: V("carol") }));
+  assert.notEqual(other.first, null);
+  assert.equal(sign(other).publish_at, null);
+});

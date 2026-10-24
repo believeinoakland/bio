@@ -136,6 +136,9 @@ async function caseCeremony(req, stub, ctx, later) {
        issued together, and their answers weighed below in the order the refusals have always had: R35 (C-58.5), CASE_RATIFY_STALE, R49
        (APPROVAL_MISSING), NO_SIGNERS, the signature, and then the gate. Each is a read; nothing is written by any of them, so a refusal
        that comes before another's answer leaves nothing behind. */
+    /* R60 (G120b): the list of known ids depends only on the viewer, so a sitting reads it once, here, beside those three, and every member's
+       gate weighs that one answer. */
+    const sittingList = sitting.length ? doAnswer(stub.fetch(`http://do/list?viewer=${encodeURIComponent(sessViewer)}`)) : null;
     const [anonOut, apprOut, gateOut] = await Promise.all([
       doAnswer(stub.fetch("http://do/casetestimony", { method: "POST",
         body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition) }) })),
@@ -200,7 +203,7 @@ async function caseCeremony(req, stub, ctx, later) {
     /* R60 (G120): the members are prepared together (reads only); the first refusal in the sitting's order is the one answered. */
     const preps = await Promise.all(sitting.map((m) =>
       prepareFinding({ bundleId: m.id, expectedSha: m.sha, sig: m.signature }, stub, ctx,
-        { viewer: sessViewer, keys: [sv.keyB64], statedInSitting: statedIn(attr), tag: { member: m.id } })));
+        { viewer: sessViewer, keys: [sv.keyB64], statedInSitting: statedIn(attr), tag: { member: m.id }, list: sittingList })));
     const refused = preps.find((prep) => prep.response);
     if (refused) return refused.response;
     const members = preps.map((prep) => prep.prepared);
@@ -279,15 +282,15 @@ async function caseCeremony(req, stub, ctx, later) {
     }
     stated("assemble", tAssemble);
     const tReuse = Date.now();
-    const memberAnswers = [];
-    for (const [i, c] of commits.entries()) {
-      const reuseReport = await reuseCheck({ env, ask: askOf(stub, doAnswer), bundleId: c.bundleId,
-                                             silentReason: ctx.STORE_SILENT_REASON, silentDetail: ctx.STORE_SILENT_DETAIL });
+    /* R60 (G120b): the members' reuse checks are reads of different bundles, asked together; the answers stay in the sitting's order. */
+    const reuseReports = await Promise.all(commits.map((c) => reuseCheck({ env, ask: askOf(stub, doAnswer), bundleId: c.bundleId,
+                                             silentReason: ctx.STORE_SILENT_REASON, silentDetail: ctx.STORE_SILENT_DETAIL })));
+    const memberAnswers = commits.map((c, i) => {
       const own = c.pub.case ? containers.get(`${c.pub.case.case_id ?? c.pub.caseId ?? ""}#${c.pub.case.edition}`) : null;
-      memberAnswers.push(findingAnswer({ bundleId: c.bundleId, expectedSha: members[i].expectedSha, pub: c.pub,
+      return findingAnswer({ bundleId: c.bundleId, expectedSha: members[i].expectedSha, pub: c.pub,
         container: own ?? null, attestorMember: members[i].attestorMember, gateVersion: members[i].gateVersion,
-        deliveredBy: delivererOf(deliveredBy), copy: copies[i], reuseReport, shaCount: members[i].shas.length }));
-    }
+        deliveredBy: delivererOf(deliveredBy), copy: copies[i], reuseReport: reuseReports[i], shaCount: members[i].shas.length });
+    });
     stated("reuse", tReuse);
     /* what still awaits is the last state the commits read (a member's commit completes the edition) */
     const lastState = [...commits].reverse().find((c) => Array.isArray(c.pub?.case?.awaiting));
@@ -511,12 +514,19 @@ function publishRefusalStatus(pub) {
  *  relay or a silence, `tag` added to a refusal of the finding's own) or `{prepared}` for `findingPublishArgs`,
  *  `copyFinding` and `findingAnswer`. Writes nothing. */
 export async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx,
-                                     { viewer, keys = null, statedInSitting = null, tag = {} } = {}) {
+                                     { viewer, keys = null, statedInSitting = null, tag = {}, list = null } = {}) {
   const { json, doAnswer, storeSilent, storeRefusal, storeName, cls, withBiasChecks } = ctx;
   const relay = { json, storeRefusal };
   const refuse = (b, status) => ({ response: json({ ...b, ...tag, store: storeName, tokenClass: cls }, status) });
   const v = encodeURIComponent(viewer);
-  const factsOut = await doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
+  /* R60 (G120b): the gate facts, the image and the list of known ids are three independent reads of the store, asked together and weighed
+     below in the old order (facts, signature, image, list); `list` is a sitting's one shared read (`caseCeremony` starts it), else asked here.
+     A read still in flight when the act stops at an earlier refusal is left to finish: it writes nothing. */
+  const factsAsk = doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
+  const imgAsk = doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
+  const listAsk = list || doAnswer(stub.fetch(`http://do/list?viewer=${v}`));
+  for (const pending of [factsAsk, imgAsk, listAsk]) pending.catch(() => {});
+  const factsOut = await factsAsk;
   /* A silence here once threw a TypeError on `facts.ok`; what this read answers is the GATE'S OWN FACTS, and a gate
      that cannot see the record cannot confirm anything. */
   if (factsOut.refused) return { response: storeRefused(factsOut, relay) };
@@ -536,11 +546,7 @@ export async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx,
   const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
 
   /* REC-53: `runGate` does `Object.entries(image || {})`, so a silence here once handed the gate an EMPTY BUNDLE. */
-  /* R60 (G120): the image and the list of known ids are independent reads, asked together; their answers are weighed in the old order. */
-  const [imgOut, listOut] = await Promise.all([
-    doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${v}`)),
-    doAnswer(stub.fetch(`http://do/list?viewer=${v}`)),
-  ]);
+  const [imgOut, listOut] = await Promise.all([imgAsk, listAsk]);
   if (imgOut.refused) return { response: storeRefused(imgOut, relay) };
   if (!imgOut.answered) return { response: storeSilent("ratify/image", imgOut.correlation) };
   const image = imgOut.result;

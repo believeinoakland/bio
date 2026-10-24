@@ -1,6 +1,6 @@
 # ratification (T51)
 
-**Status** · session_01Aitu5ptyoRC1Hw82dyhsuk · depth 2 · COMPLETE · handled B15
+**Status** · session_01V7rHxcZteb1q3kLiGE9C2N · depth 2 · COMPLETE · handled B16
 
 ## J1 · REPORT
 
@@ -281,3 +281,24 @@ Size (session_01Aitu5ptyoRC1Hw82dyhsuk): test runs 14, module lines 3745
 COMPLETE (CHANGE B15). copyMaterials was already concurrent (merged); the 38 came from the sitting's members: prepared one after another, copyFinding part by part, and the materials' copy then the members' copies in sequence. Now: image+list together, members prepared together (first refusal in sitting order), copyFinding in groups of 8, materials and member copies together. Red first (sitting.test.mjs: gatefacts in flight 1; r8-chain copyFinding: peak 1), green. Control-plane's r8-caseratify-calls.test.mjs run against this code from its branch: longest chain 24 (was 38), 2/2 pass. ratification 326/326; 198 tests of users naming caseratify pass; format, architecture, coverage 59/59, words, ownership 0 failures. R60 reworded in the requirements file; record section pushed.
 
 Ring failed: BOB session_017crmqx6Y4AZnxrNGEDoExR is archived, so J16 (COMPLETE) is the message; BOB's backstop reads it (mechanics §13).
+
+## Fix round 9 (RATIFICATION #35, session_01V7rHxcZteb1q3kLiGE9C2N): G120b
+
+Entry applied: G120b (START B16, K4850). Re-read of `ops.mjs` (whole) agrees with the diagnosis: members were already prepared together (round 8), so what remained was (a) `list` (every bundle id, a read of the viewer alone) asked once per member, (b) each member's `gatefacts` then `image` one after the other (`image` does not depend on the facts), (c) the members' `reusedparts` checks in a `for` with `await` (`ops.mjs` reuse loop).
+
+(1) **Cause, file:line (before the change).** `ops.mjs` `prepareFinding`: `gatefacts` awaited, then `image` + `list` together, then `ratifygate`: five object levels (`casedocfacts` -> three reads -> `gatefacts` -> `image`+`list` -> `ratifygate`), and `list` once for each of the sitting's members. `caseCeremony`'s reuse loop awaited `reuseCheck` member after member.
+**Fix.** `gatefacts`, `image` and `list` are issued together and weighed in the old order (facts, signature, image, list), so the refusals' order and bytes are as before; a sitting asks `list` once, beside `casetestimony`/`caseapproval`/`casegate`, and every member's gate weighs that one answer (`prepareFinding`'s `list` option); the members' reuse checks run together (`Promise.all`), answered in the sitting's order. Gate phase: four object levels (`casedocfacts` -> four reads -> `gatefacts`+`image` -> `ratifygate`), was five.
+**Not done, and why.** `gatefacts`, `image` and `ratifygate` are reads of *different* bundles (a different id, a different image per member): they are asked once per member, not once per act. Folding the members' reads into one object call is a batch route in plane/control-plane (their module, not this one); I have not changed it. Reported to BOB below.
+(2) **Why the tests missed it.** Round 8's tests asserted the chain at most 25 and the independent reads together; none counted the sitting's calls per route or the gate's depth or the reuse checks' concurrency.
+(3) **Failing-first, seen red** (`sitting.test.mjs`, a sitting of 7 through `caseRatifyOp` with a recording store whose every call waits): `list asked 7 times (red: 7)`; `the gate phase is 5 object levels deep (red: 5)`; `reusedparts of the members in flight together: 1 (red: 1)`. Green after. Counts, never a time (R-CLOCK).
+Two tests pinned the old call order and now assert the invariant that stays (nothing committed or copied, the store's answer verbatim, the three reads asked together): `relays.test.mjs` R17 (`ratify/gatefacts`, `image`, `list` stop with all three asked) and `sitting.test.mjs` R60 (`image` of the members in flight together, `list` one read).
+(4) **L (done), through the counting door** (`control-plane/r8-caseratify-calls.test.mjs`, run here, unchanged): longest chain **25 -> 23**, awaited calls 61 -> 60 (20 to the object, 40 to R2), case-file heads/puts in flight 8, 2 of 2 pass. The chain per phase (object levels): gate 5 -> 4; commit 1; copy and reuse unchanged in depth (reuse now one level for all members, was one per member). **P:** BOB's re-walk reads `caseratify;dur` and the phase entries; what remains over 2 s after this and public-read's assembly (G121b) is BOB's to measure.
+
+**Finding in another module (for BOB).** A sitting still makes one `gatefacts`, one `image` and one `ratifygate` per member (3 object calls a member, concurrent but each carrying the whole record's image/registries). One batch route returning those for all members would cut the object's work; it belongs to plane/control-plane (`gatefacts`, `image`, `ratifygate` routes), not to ratification.
+
+Tests: ratification 329/329; 41 files of users naming caseratify/ratification ops 389/389; `impact.mjs origin/tranche/T51 HEAD` (45 modules affected; users touched are those 41). Checks: format 1 failure not mine (`build/modules.json` office-readers path `bio-plane/src/office-xml.mjs`, unchanged by this job; same on the commit before); architecture 0; coverage 59 of 59, 0; words 0 (ratification); ownership 0 (4 files).
+Size (session_01V7rHxcZteb1q3kLiGE9C2N): test runs 9, module lines 4040
+
+## J17 · COMPLETE
+
+COMPLETE (START B16, G120b). A sitting now reads the list of known ids once (not once a member); each member's gatefacts, image and list are asked together (gate phase 5 -> 4 object levels, refusal order unchanged); the members' reuse checks run together. Red first on a sitting of 7 (list 7 times, depth 5, reusedparts in flight 1), green after. Counting door (r8-caseratify-calls, unchanged): chain 25 -> 23, 61 -> 60 calls. ratification 329/329, 41 user files 389/389; architecture, coverage 59/59, words, ownership 0; format has one failure not mine (modules.json office-readers path office-xml.mjs, same before my change). Finding for BOB: gatefacts, image and ratifygate remain per member (different bundles); a batch route is plane/control-plane's. Two tests pinning the old call order restated as invariants. Record section 'Fix round 9' pushed.

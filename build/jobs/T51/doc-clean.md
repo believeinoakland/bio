@@ -1,6 +1,6 @@
 # doc-clean (T51)
 
-**Status** · session_01WbxrGGnsckmJi79PwS3pyv · depth 2 · COMPLETE · handled B5
+**Status** · session_01GLQmY1ex7pDodDcbS94kDg · depth 2 · COMPLETE · handled B6
 
 ## J1 · REPORT
 
@@ -90,3 +90,21 @@ Checks: format 0; architecture doc-clean 0; coverage doc-clean 12 of 12, 0; owne
 R4 figures are in J6. Entry-cap mapping from ooxml's refusal name (J5) still waits on ooxml's merge; I use no rows 20-22.
 
 Size (session_01WbxrGGnsckmJi79PwS3pyv): test runs 2, module lines 1139
+
+## Completion notes · START B6
+
+DOC-CLEAN #5, START B6 (batch C): the entry cap now refused by ooxml (K4866).
+
+**Cause.** Since OOXML #4 `ooxml.readContainer` (and `discriminate`, which `index.mjs` calls first) answers `{ok:false, why:"OFFICE_ENTRIES_MAX", limit, final:true}` for a package whose end record declares more than `boundOf("office","entries")` entries; it carries the limit, not the count. doc-clean's own `c.entries.length` check was therefore unreachable and the refusal came out as `DOCUMENT_UNREADABLE`.
+
+**Applied.** `package.mjs`: `tooManyEntries(d)` (exported) builds R3's `TOO_MANY_ENTRIES` with the count read from the end record (`declaredEntries`, ZIP64 record when the 16-bit field is the sentinel); `cleanPackage` throws it on ooxml's `OFFICE_ENTRIES_MAX`; the dead length check is removed. `index.mjs` `packageFormat` maps the same `why` through it, since discriminate meets the cap first. Nothing is written; a package of exactly the bound is still copied (id `doc-clean.package.the_package_holds_count_entries` unchanged).
+
+**Test.** `round9.test.mjs` "R3 R12 TOO_MANY_ENTRIES…" was the red (`AssertionError: OFFICE_ENTRIES_MAX`, actual false; then `DOCUMENT_UNREADABLE` where `TOO_MANY_ENTRIES` was expected). The test itself counted the over-bound fixture with `readContainer`, which now refuses it (ooxml R3/R31); it now counts it with the test's own `endCounts`. Green after: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/doc-clean/`: tests 66, pass 65, fail 0, skipped 1 (the oracle absent by name).
+
+**Deferred / found in other modules.** None. Words: no new sentence.
+
+Size (session_01GLQmY1ex7pDodDcbS94kDg): test runs 4, module lines 1157
+
+## J8 · COMPLETE
+
+COMPLETE (START B6). ooxml's OFFICE_ENTRIES_MAX refusal (readContainer and discriminate) now maps to TOO_MANY_ENTRIES with the declared count, nothing written; the package of exactly the bound is still copied (package.mjs tooManyEntries, index.mjs packageFormat). Red: round9 'R3 R12 TOO_MANY_ENTRIES' (AssertionError OFFICE_ENTRIES_MAX, then DOCUMENT_UNREADABLE); green after. The test's own count of the over-bound fixture used readContainer, which ooxml now refuses; it uses endCounts. doc-clean tests 66 (65 pass, 1 skipped oracle absent), case-carriage 98/98, case-disclosures 115/115. Checks: format 0, architecture 0, coverage 0, ownership 0 failures; words: no finding in doc-clean (the 19 failures are pdfgen.mjs inline x2 and installer-steps missingkey x5 etc., not mine). Details in build/jobs/T51/doc-clean.md 'Completion notes'.

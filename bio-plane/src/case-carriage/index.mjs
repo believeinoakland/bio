@@ -1352,6 +1352,9 @@ export class CaseCarriage {
     if (!bytes || createSha256().update(bytes).hex() !== sha) return { failed: true };
     if (bytes.length > maxBytes) return { skipped: true };
     if (bytes.length > CLEAN_MAX_BYTES) return tooLarge(bytes.length);
+    /* G136c (X21): the attempt is stamped BEFORE the clean, so a cleaner that dies mid-clean is not re-run on every wake;
+       the back-off (DOCUMENT_COPY_RETRY_MS) then applies to it as to a failed read. */
+    try { this.sql.exec(`UPDATE document_copy_queue SET tried=? WHERE capture=?`, this.#when(null), sha); } catch { return { failed: true }; }
     const c = await this.clean(bytes);
     if (!c || typeof c !== "object") return { failed: true };
     if (c.ok === false)

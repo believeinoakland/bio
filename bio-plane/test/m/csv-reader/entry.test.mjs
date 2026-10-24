@@ -25,15 +25,16 @@ test("R2 csv detect(bytes, _) is null for every bytes value, whatever the conten
   }
 });
 
-test("R2 csv detect(null, contentType): likely for text/csv and its two older synonyms, case-folded; null otherwise", () => {
-  for (const ct of ["text/csv", "TEXT/CSV", "Text/Csv", "application/csv", "APPLICATION/CSV", "text/comma-separated-values", "Text/Comma-Separated-Values"]) {
+test("R2 csv detect(null, contentType): likely for text/csv, its two older synonyms and text/tab-separated-values, case-folded; null otherwise (text/plain, ms-excel and octet-stream are R21's)", () => {
+  for (const ct of ["text/csv", "TEXT/CSV", "Text/Csv", "application/csv", "APPLICATION/CSV", "text/comma-separated-values", "Text/Comma-Separated-Values",
+    "text/tab-separated-values", "TEXT/TAB-SEPARATED-VALUES"]) {
     const d = csvEntry.detect(null, ct);
     assert.equal(d.format, "csv", ct);
     assert.equal(d.confidence, "likely");
     assert.ok(d.signals.length > 0);
     assert.deepEqual(csvEntry.detect(undefined, ct), d);
   }
-  for (const ct of ["text/plain", "text/tab-separated-values", "application/vnd.ms-excel", XLSX_CONTENT_TYPE, "text/csvx", "csv", "", null, undefined, 42, {}]) {
+  for (const ct of ["text/plain", "application/vnd.ms-excel", "application/octet-stream", XLSX_CONTENT_TYPE, "text/csvx", "csv", "", null, undefined, 42, {}]) {
     assert.equal(csvEntry.detect(null, ct), null, String(ct));
   }
 });
@@ -68,7 +69,11 @@ test("R3 csv parts: ok:true for every non-empty decodable body, whatever the dia
     const p = await csvEntry.parts(bytes);
     assert.equal(p.ok, true, JSON.stringify(s));
   }
-  const undetermined = await csvEntry.parts(new Uint8Array([0x61, 0x96, 0x2c, 0x62, 0x0a]));
+  /* a byte no legacy charset defines (0x81) leaves the encoding undetermined; 0x96 is windows-1252's en dash, assumed (R7) */
+  const undetermined = await csvEntry.parts(new Uint8Array([0x61, 0x81, 0x2c, 0x62, 0x0a]));
   assert.equal(undetermined.ok, true);
   assert.equal(undetermined.encoding.encoding, null);
+  const assumed = await csvEntry.parts(new Uint8Array([0x61, 0x96, 0x2c, 0x62, 0x0a]));
+  assert.equal(assumed.encoding.encoding, "windows-1252");
+  assert.equal(assumed.encoding.assumed, true);
 });

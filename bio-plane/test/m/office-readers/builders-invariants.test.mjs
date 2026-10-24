@@ -78,13 +78,17 @@ test("R21 never throws: odd arguments to every slot of every entry, and to the b
 });
 
 test("R21 never throws: character references past U+10FFFF, and randomly corrupted packages", async () => {
+  /* R40 (fix round 9): a reference that names no character makes only its part unreadable, stated, and never throws */
   const big = "&#x110000;&#99999999;";
   const d = await docxEntry.text(F.docx({ body: F.wp(F.wr(big)) }));
-  assert.equal(d.document, big, "a reference that is no character stays as written");
+  assert.equal(d.document, null, "the part holding a reference that is no character is unreadable");
+  assert.ok(d.undetermined.some((u) => u.part === "word/document.xml" && u.why === "char_ref_invalid" && u.final === true));
   const p = await pptxEntry.text(F.pptx({ slides: [{ file: "slide1.xml", texts: [big] }] }));
-  assert.equal(p.document, big);
+  assert.deepEqual(p.slides, []);
+  assert.ok(p.undetermined.some((u) => u.why === "char_ref_invalid"));
   const x = await xlsxEntry.text(F.xlsx({ sheets: [{ name: "S", data: { rows: [{ r: 1, cells: [{ r: "A1", t: "inlineStr", is: big }] }] } }] }));
-  assert.equal(x.document, big);
+  assert.equal(x.sheets[0].text, "");
+  assert.ok(x.undetermined.some((u) => u.reason === "char_ref_invalid"));
   let seed = 7;
   const rnd = () => (seed = (seed * 1103515245 + 12345) >>> 0) / 2 ** 32;
   const packages = [[docxEntry, F.docx({ comments: "<w:comments/>" })], [pptxEntry, F.pptx({ slides: [{ file: "slide1.xml", texts: ["a"], notes: "n" }] })], [xlsxEntry, F.xlsx({ sharedStrings: F.sst(["a"]) })]];

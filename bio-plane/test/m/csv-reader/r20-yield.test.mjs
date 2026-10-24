@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { performance } from "node:perf_hooks";
 import { csvEntry } from "../../../src/csv-reader/index.mjs";
 import { bigCsv, csvField, randomText, prng, MIB } from "./large.mjs";
-import { enc } from "./fixtures.mjs";
+import { enc, overBytes } from "./fixtures.mjs";
 
 const counter = () => { const c = { n: 0, fn: async () => { c.n++; } }; return c; };
 
@@ -23,7 +23,7 @@ test("R20 text() awaits yieldNow between its 1 MiB windows (3.5 MiB: at least 3 
   const parts = await csvEntry.parts(big.bytes);
   const again = counter();
   await csvEntry.text(parts, { yieldNow: again.fn });
-  assert.equal(again.n, c.n, "parts() given: the same gaps");
+  assert.ok(again.n >= 3 && again.n <= c.n, `parts() given: the walk's own gaps (${again.n} of ${c.n}; bytes also yields in parts())`);
 });
 
 test("R20 yieldNow is awaited: the next window is not walked until it settles; a non-function, a throw and a rejection change nothing", async () => {
@@ -84,7 +84,7 @@ test("R20 the answer with yieldNow deep-equals the answer without, over awkward 
 });
 
 test("R20 the answer is the same over the size guard, an empty body, and a body that is not bytes", async () => {
-  const over = new Uint8Array(18 * MIB).fill(0x61);
+  const over = overBytes();
   for (const body of [over, new Uint8Array(0), null, "text"]) {
     const c = counter();
     assert.deepEqual(await csvEntry.text(body, { yieldNow: c.fn }), await csvEntry.text(body));

@@ -1,6 +1,6 @@
 # BOB to doc-clean (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -148,3 +148,13 @@ CHANGE (K4860). You were merged (K4860) but R4 stays not met: your record gives 
 ## B5 · CHANGE
 
 CHANGE (K4862). RUNTIME-LIMITS #8 is merged: every `READ_BOUNDS` row you asked for (K4857-K4860) is on `tranche/T51`. Merge the tranche, drop any local uncommitted copy of `read-bounds.mjs` and any "proposed; BOB records" fallback for those rows, read them by `boundOf`, re-run your tests and checks, and record COMPLETE (or carry on to it). Rows 20-22 (`image.rows_pixels`, `pdf.object_stream` at 32 MiB, `pdf.xmp`) follow in a second merge of runtime-limits; you get a CHANGE then if you use one.
+
+## B6 · START
+
+START · DOC-CLEAN #5 · tranche T51 · product believeinoakland/bio · fix round 9, batch C: the entry cap now refused by ooxml (K4866) · depth 2 (BOB #274 at depth 1)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/doc-clean tranche/T51 && git branch -m job/T51/doc-clean stale/doc-clean-local && git checkout -b job/T51/doc-clean origin/job/T51/doc-clean`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module doc-clean`; record `build/jobs/T51/doc-clean.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/doc-clean/` from the repository root. Your diff touches only this module's `paths`, its `tests` and your record. Never contact any live deployment.
+
+**The entry (BOB ran the test, K4849).** Since OOXML #4 merged (K4864), `ooxml.readContainer` itself refuses a package of more than `boundOf("office", "entries")` entries (`OFFICE_ENTRIES_MAX`, its R3/R31), before doc-clean's own count at `package.mjs` (the `c.entries.length` check). So `bio-plane/test/m/doc-clean/round9.test.mjs` "R3 R12 TOO_MANY_ENTRIES: a package of more entries than boundOf(office, entries) is refused with its count, nothing written; one of exactly that many is copied" fails on the tranche (`AssertionError: OFFICE_ENTRIES_MAX`, actual false). DOC-CLEAN #4 foresaw it (its J5): map ooxml's `OFFICE_ENTRIES_MAX` refusal (read its name and fields from `bio-plane/src/ooxml.mjs` as merged) to `TOO_MANY_ENTRIES` with the count, at the same place, nothing written; the package of exactly the bound is still copied. (2) Missed: ooxml's cap and doc-clean's were tested apart. (3) The failing test above is the red; green after. (4) **N**. Read whole: this START, `build/requirements/doc-clean.md` (both parts), ooxml's public part (R3, R31), `bio-plane/src/doc-clean/package.mjs`, and the test. Plan section 0 (`build/plan/fix-round-9-T51.md`) binds. Before COMPLETE: your tests, the users' (case-carriage, case-disclosures), the six checks by failure count; record with your `Size` line.

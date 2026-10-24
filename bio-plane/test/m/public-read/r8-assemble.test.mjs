@@ -24,11 +24,12 @@ const enc = (s) => new TextEncoder().encode(s);
 const hex = (b) => createHash("sha256").update(b).digest("hex");
 const CASE = "CASE-2026-0001", F = "INQ-2026-0001", DOC = "INFO-2026-0001-minutes";
 const MATERIALS = 10;   // with the case's own files, well over 12 files
+const NONE = 0;         // the walker's one-finding case: no material but the one document
 const row = (ref, sha) => ({ ref, kind: "document", sha, text_sha: null, origin: null, archived_copy: null, included: true,
                              rests_under: "load_bearing" });
 
 /* A complete edition over F with MATERIALS more included materials, each held in the bucket under its own hash. */
-function scene() {
+function scene(MATERIALS = 10) {
   const w = world(), env = { PUBLISHED: bucket() };
   w.doc(DOC);
   w.member("olive");
@@ -53,27 +54,30 @@ function scene() {
    of its kind in flight at its start. `heldAt` is the in-flight count at the peak. */
 function recorded(env, { absent = false } = {}) {
   const real = env.PUBLISHED, log = { get: [], head: [], put: [] }, flight = { get: 0, head: 0, put: 0 }, peak = { get: 0, head: 0, put: 0 };
+  /* `levels`: a call's level is one more than the deepest call that had ended when it started, so a call that waited for
+     another to end sits below it and calls issued together share a level: the longest awaited chain of R2 calls is the top level. */
+  let ended = 0, depth = 0;
   const wrap = (kind, answer = null) => async (k, v) => {
     flight[kind] += 1; peak[kind] = Math.max(peak[kind], flight[kind]); log[kind].push(k);
-    try { await new Promise((r) => setTimeout(r, 4)); const r = await real[kind](k, v); return answer ? answer(r) : r; } finally { flight[kind] -= 1; }
+    const level = ended + 1; depth = Math.max(depth, level);
+    try { await new Promise((r) => setTimeout(r, 4)); const r = await real[kind](k, v); return answer ? answer(r) : r; } finally { flight[kind] -= 1; ended = Math.max(ended, level); }
   };
   env.PUBLISHED = { m: real.m, get: wrap("get"), head: absent ? wrap("head", () => null) : wrap("head"), put: wrap("put") };
-  return { log, peak };
+  return { log, peak, depth: () => depth };
 }
 
 /* `fresh`: the bucket holds none of the files under the case's keys yet (every `head` answers absent), so every file is put; else
    the objects the commit already copied are found by their `head` and not put again. */
 for (const fresh of [true, false]) test(`R44 G121 the case file's reads of materials and its head and put of every file run in groups of 8, and the same objects are written (${fresh ? "every file new" : "copied objects found by head"})`, async () => {
   const { w, env } = scene();
-  const seeded = new Set(fresh ? [] : env.PUBLISHED.m.keys());
+  const seeded = new Set(fresh ? [] : env.PUBLISHED.m.keys()), initial = new Set(env.PUBLISHED.m.keys());
   const rec = recorded(env, { absent: fresh });
   const cs = w.p.caseEditionState(CASE, 1, "parks-group");
   const out = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio", cs, via: "test" });
   assert.equal(out.case_file, "built", JSON.stringify(out).slice(0, 300));
   assert.ok(out.files >= 12, `a case file of at least 12 files (${out.files})`);
 
-  assert.ok(rec.peak.head >= 6, `head: peak concurrency at least 6 (${rec.peak.head})`);
-  assert.ok(fresh ? rec.peak.put >= 6 : rec.peak.put >= 1, `put: peak concurrency at least 6 where 8 are owed (${rec.peak.put})`);
+  assert.ok(rec.peak.put >= 1, `put: the files owed are put (${rec.peak.put})`);
   assert.ok(rec.peak.get >= 6, `get: peak concurrency at least 6 (${rec.peak.get})`);
   for (const k of ["head", "put", "get"]) assert.ok(rec.peak[k] <= CASEFILE_GROUP, `${k}: groups of ${CASEFILE_GROUP}, never more (${rec.peak[k]})`);
 
@@ -82,9 +86,66 @@ for (const fresh of [true, false]) test(`R44 G121 the case file's reads of mater
   const expected = new Set([...manifest.files.map((f) => `bio/published/${f.sha256}`), `bio/published/${out.manifest_sha}`]);
   const written = rec.log.put;
   assert.equal(new Set(written).size, written.length, "no object is put twice");
-  assert.deepEqual([...new Set(written)].sort(), [...expected].filter((k) => !seeded.has(k)).sort(), "the golden set of keys");
-  assert.deepEqual([...env.PUBLISHED.m.keys()].filter((k) => !seeded.has(k)).sort(), [...new Set(written)].sort());
-  if (!fresh) assert.ok(rec.log.head.length >= written.length, "every object put was asked after by its head");
+  /* an object read from the bucket at its hash is held there (G121b), whatever a `head` would say; every other small file is put
+     by its hash, the bytes under a held key being the same bytes (G121b: no `head` before the put) */
+  const read = new Set(rec.log.get);
+  assert.deepEqual([...new Set(written)].sort(), [...expected].filter((k) => !read.has(k)).sort(), "the golden set of keys");
+  assert.deepEqual([...env.PUBLISHED.m.keys()].filter((k) => !initial.has(k)).sort(), [...new Set(written)].filter((k) => !initial.has(k)).sort());
+  assert.ok(manifest.files.every((f) => env.PUBLISHED.m.has(`bio/published/${f.sha256}`)), "every file the manifest lists is held");
+});
+
+/* G121b (K4850; re-walk 8 B, `assemble;dur` 1.7-2.3 s): the awaited chain of R2 calls. Counted, never timed (R-CLOCK): the
+   level of a call is one more than the deepest call that had ended when it started. Today: reads in groups, then a `head`
+   and a `put` of each group of files, then the manifest's `head` and `put` after it is recorded, 7 levels on this case. */
+for (const [name, materials] of [["the walker's one-finding case", NONE], ["a case of twelve files and more", 10]]) test(`R44 G121b the case file's awaited chain of R2 calls is what its data dependencies require, ${name}`, async () => {
+  const { w, env } = scene(materials);
+  const rec = recorded(env, { absent: true });
+  const cs = w.p.caseEditionState(CASE, 1, "parks-group");
+  const out = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio", cs, via: "test" });
+  assert.equal(out.case_file, "built", JSON.stringify(out).slice(0, 300));
+  /* one level to read what the case holds, one to write what it derives and its manifest together */
+  assert.ok(rec.depth() <= 3, `at most 3 levels of awaited R2 calls (${rec.depth()})`);
+  const manifest = JSON.parse(new TextDecoder().decode(env.PUBLISHED.m.get(`bio/published/${out.manifest_sha}`)));
+  assert.ok(manifest.files.every((f) => env.PUBLISHED.m.has(`bio/published/${f.sha256}`)), "every file the manifest lists is held");
+  for (const k of ["head", "put", "get"]) assert.ok(rec.peak[k] <= CASEFILE_GROUP, `${k}: never more than ${CASEFILE_GROUP} at once (${rec.peak[k]})`);
+});
+
+test("R44 G121b an object the assembly read from the bucket at its hash is neither asked after nor written again", async () => {
+  const { w, env } = scene(10);
+  const rec = recorded(env, { absent: true });
+  const cs = w.p.caseEditionState(CASE, 1, "parks-group");
+  const before = new Set(env.PUBLISHED.m.keys());
+  const out = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio", cs, via: "test" });
+  assert.equal(out.case_file, "built");
+  for (const k of rec.log.get) {
+    assert.ok(!rec.log.put.includes(k), `${k} was read and is not written`);
+    assert.ok(!rec.log.head.includes(k), `${k} was read and is not asked after`);
+  }
+  assert.ok(rec.log.get.length >= 11, "the materials were read");
+  assert.deepEqual([...env.PUBLISHED.m.keys()].filter((k) => !before.has(k)).sort(), [...new Set(rec.log.put)].filter((k) => !before.has(k)).sort());
+});
+
+test("R44 G121b a file put that fails stops the case file before anything is recorded, at the bucket_put step; a manifest put that fails, at manifest_put, after the record", async () => {
+  for (const [which, step] of [["file", "bucket_put"], ["manifest", "manifest_put"]]) {
+    const { w, env } = scene(0);
+    const real = env.PUBLISHED.put.bind(env.PUBLISHED);
+    const cs = w.p.caseEditionState(CASE, 1, "parks-group");
+    let recorded = false;
+    const stub = stubOf(w), fetch = stub.fetch.bind(stub);
+    stub.fetch = (req, init) => { if (String(typeof req === "string" ? req : req.url).includes("recordcasemanifest")) recorded = true; return fetch(req, init); };
+    env.PUBLISHED.put = async (k, v) => {
+      const text = new TextDecoder().decode(v);
+      let isManifest = false;
+      try { const m = JSON.parse(text); isManifest = Array.isArray(m.files) && Array.isArray(m.parts); } catch { /* not JSON: a file */ }
+      if ((which === "manifest") === !!isManifest) throw new Error("bucket write refused");
+      return real(k, v);
+    };
+    const out = await assembleCaseContainer({ env, stub, storeName: "bio", cs, via: "test" });
+    assert.equal(out.ok, false, which);
+    assert.equal(out.step, step, which);
+    assert.equal(out.code, "BUCKET_FAILED", which);
+    if (which === "file") assert.equal(recorded, false, "nothing is recorded over files that were not put");
+  }
 });
 
 test("R44 G121 buildCaseFile reads its materials in groups of 8 and answers what the one-at-a-time read answered", async () => {
@@ -115,4 +176,20 @@ test("R44 G121 a read that throws still stops the assembly at the build step, as
   assert.equal(out.case_file, undefined);
   assert.equal(out.step, "build");
   assert.equal(out.code, "UNKNOWN");
+});
+
+test("R44 G121b a sliding window runs at most 8 at once, starts the next as one ends, answers in the items' order, and starts nothing after a failure", async () => {
+  const { inWindow } = await import("../../../src/public-read/casefile.mjs");
+  let flight = 0, peak = 0;
+  const started = [];
+  const out = await inWindow(Array.from({ length: 20 }, (_, i) => i), async (i) => {
+    started.push(i); flight += 1; peak = Math.max(peak, flight);
+    try { await new Promise((r) => setTimeout(r, i % 3 === 0 ? 8 : 2)); return i * 2; } finally { flight -= 1; }
+  });
+  assert.equal(peak, CASEFILE_GROUP);
+  assert.deepEqual(out.map((r) => r.value), Array.from({ length: 20 }, (_, i) => i * 2));
+  assert.deepEqual(started, [...started].sort((a, b) => a - b), "in order of start");
+  const failed = await inWindow(Array.from({ length: 30 }, (_, i) => i), async (i) => { await new Promise((r) => setTimeout(r, 2)); if (i === 3) throw new Error("no"); });
+  assert.equal(failed[3].status, "rejected");
+  assert.ok(failed.filter((r) => r).length < 30, "no call is started after one failed");
 });

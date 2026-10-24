@@ -632,8 +632,10 @@ export class Monitoring {
     const v = view ? { view } : {};
     const id = identify({ ...ctx, text, ...v });
     const dt = doctypeFor({ ...ctx, text, handler: id.handler, kind: id.kind, ...v });
-    const content = { type: id.handler.shell ? null : dt.type.key, confidence: dt.confidence,
-                      contract: id.handler.shell ? CONTRACT.UNMONITORABLE : dt.type.contract };
+    /* `id.shell` is whether THIS document is an empty frame (a CERTAIN client-rendered match, site-profiles R2, G140);
+       `id.handler.shell` is only the handler's class, true of a POSSIBLE or LIKELY match too. */
+    const content = { type: id.shell ? null : dt.type.key, confidence: dt.confidence,
+                      contract: id.shell ? CONTRACT.UNMONITORABLE : dt.type.contract };
     if (!baseline) return { assessment: null, content, basis: localize("monitoring.why.captured_baseline_compare", "no captured baseline to compare against") };
     const store = typeof this.record.evidenceStore === "function" ? this.record.evidenceStore() : null;
     if (!store)

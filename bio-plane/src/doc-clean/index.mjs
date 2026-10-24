@@ -9,7 +9,7 @@
 import { hasZipMagic, discriminate } from "../ooxml.mjs";
 import { CleanRefusal, latin1 } from "./images.mjs";
 import { cleanPdf } from "./pdf.mjs";
-import { cleanPackage, CLEAN_MAX_PART_BYTES, CLEAN_MAX_ENTRIES } from "./package.mjs";
+import { cleanPackage, tooManyEntries, CLEAN_MAX_PART_BYTES, CLEAN_MAX_ENTRIES } from "./package.mjs";
 import { newScan } from "./xml.mjs";
 import { boundOf } from "../read-bounds.mjs";
 import { localize } from "../setup-words/index.mjs";
@@ -69,6 +69,7 @@ export async function cleanDocument(bytes, { yieldNow, scan = newScan(yieldNow) 
  *  a refusal. */
 async function packageFormat(d) {
   const r = await discriminate(d);
+  if (!r.ok && r.why === "OFFICE_ENTRIES_MAX") throw tooManyEntries(d);
   if (!r.ok) throw new CleanRefusal("DOCUMENT_UNREADABLE", localize("doc-clean.index.the_zip_directory_cannot_be", "the ZIP directory cannot be read ({why})", { why: String(r.why) }));
   if (r.format === "zip") throw new CleanRefusal("ARCHIVE", localize("doc-clean.index.a_zip_archive_that_is_neither", "a ZIP archive that is neither an OOXML nor an ODF package"));
   if (FAMILY[r.format]) return r.format;

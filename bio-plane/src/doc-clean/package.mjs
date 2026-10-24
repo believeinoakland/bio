@@ -194,12 +194,30 @@ const resolvePath = (dir, target) => {
   return parts.join("/");
 };
 
+/** The entry count a ZIP's end record declares (ZIP64's record when the 16-bit field is the sentinel), for the refusal
+ *  `ooxml.readContainer` answers on `OFFICE_ENTRIES_MAX` (R3): that refusal names the limit, not the count. */
+function declaredEntries(d) {
+  let e = d.length - 22;
+  for (; e >= 0 && e >= d.length - 22 - FIELD16; e--) if (u32(d, e) === 0x06054b50) break;
+  if (e < 0 || u32(d, e) !== 0x06054b50) return 0;
+  const n = u16(d, e + 10);
+  const loc = e - 20;
+  if (n !== FIELD16 || loc < 0 || u32(d, loc) !== 0x07064b50) return n;
+  const at = u32(d, loc + 8) + u32(d, loc + 12) * 4294967296;
+  return at + 56 <= loc ? u32(d, at + 32) + u32(d, at + 36) * 4294967296 : n;
+}
+
+/** R3's `TOO_MANY_ENTRIES` for a package whose end record declares more entries than `ooxml` reads (`OFFICE_ENTRIES_MAX`). */
+export function tooManyEntries(d) {
+  const count = String(declaredEntries(d));
+  return refusal("TOO_MANY_ENTRIES", localize("doc-clean.package.the_package_holds_count_entries", "the package holds {count} entries, over the {CLEAN_MAX_ENTRIES} this module copies", { count, CLEAN_MAX_ENTRIES: String(CLEAN_MAX_ENTRIES) }));
+}
+
 /** Clean an OOXML (`family` "ooxml") or ODF ("odf") package. Answers `{clean:true}` or `{clean:false, bytes, images}`. */
 export async function cleanPackage(d, family, scan = newScan()) {
   const c = readContainer(d);
+  if (!c.ok && c.why === "OFFICE_ENTRIES_MAX") throw tooManyEntries(d);
   if (!c.ok) throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.package.the_packages_zip_directory_cannot", "the package's ZIP directory cannot be read ({why})", { why: String(c.why) }));
-  if (c.entries.length > CLEAN_MAX_ENTRIES)
-    throw refusal("TOO_MANY_ENTRIES", localize("doc-clean.package.the_package_holds_count_entries", "the package holds {count} entries, over the {CLEAN_MAX_ENTRIES} this module copies", { count: String(c.entries.length), CLEAN_MAX_ENTRIES: String(CLEAN_MAX_ENTRIES) }));
   const names = new Set();
   for (const e of c.entries) {
     const n = normalizePartName(e.name);

@@ -114,3 +114,10 @@ test("site-profiles.index.no_handler_recognised_this_document is read through lo
     localize("site-profiles.index.no_handler_recognised_this_document",
       "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"));
 });
+
+test("site-profiles.index.the_document_is_written_in is read through localize", async () => {
+  const { digests } = await import("../index.mjs");
+  const d = await digests(enc("x"), conservative, { sha256, charset: "x-no-such-encoding-9" });
+  assert.equal(d.why, localize("site-profiles.index.the_document_is_written_in",
+    "the document is written in an encoding this system cannot read, so it is compared byte for byte"));
+});
