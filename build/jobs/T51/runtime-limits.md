@@ -82,3 +82,7 @@ Size (session_01XfNoWiwyETDV2uHxVRHPQy): test runs 3, module lines 241
 Checks (civicos-process): format 0 failures; architecture 0 failures; coverage 32 of 32 ids named, 0 failures; ownership 0 failures; words 17 failures, all in other modules as before, none mine.
 
 Size (session_01XfNoWiwyETDV2uHxVRHPQy): test runs 4, module lines 244
+
+## J5 · COMPLETE
+
+B5 applied (K4862): image/rows_pixels, pdf/xmp added; pdf/object_stream now 32 MiB for all three (its protective-figure test updated). Module 52/52; format, architecture, coverage, ownership 0 failures; words failures are other modules'. Nothing deferred or open.
