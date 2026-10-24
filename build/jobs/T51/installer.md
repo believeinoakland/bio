@@ -426,3 +426,10 @@ Size (session_0133bNMzhnXsy441ZfjLU6xR): test runs 62, module lines 3262
 With both applied locally (then reverted, not committed) `newgroup/test/r84.test.mjs`: 8 pass, 0 fail. Without them: R84 (2) and R84 (4) fail on these two points alone.
 
 **Checks run (before the steps fix).** format 0 failures; architecture 0 failures; coverage 0 failures (75 of 75). Not yet run: words, ownership, impact, the full suite (waiting on the installer-steps change, which changes the suite's outcome).
+
+## J29 · BLOCKED
+
+BLOCKED (cause: needs BOB, another module). G157 is built in installer (ready.mjs, fixtures at the measured shapes, controls) but two measured answers are lost in installer-steps, which I may not change:
+1. api.mjs failureOf: a 401 becomes ApproveAgain with status and apiMessage but no code, so the Free account's 401/1000 on /containers/applications cannot be told from an expired permission. One line: add `code: e.code` to that object.
+2. probes.mjs registerSubdomain: a taken prefix is read as HTTP 409; measured is 403/10031. One line: accept `e.code === 10031` too.
+With both applied locally (reverted, uncommitted) r84.test.mjs is 8 pass 0 fail; without them R84 (2) and (4) fail on exactly these. Please have installer-steps change them (or tell me to proceed otherwise), then CHANGE me to merge and finish. Details in my record, Job 83.
