@@ -43,7 +43,9 @@ async function answerOf(res) {
   return { status: res.status, bytes: new Uint8Array(await res.arrayBuffer()), type };
 }
 /* Every op the door declares, answered by the plane: the booted page's whole world is the real one. */
-const real = Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => answerOf(await toPlane(req.url, req.init))]));
+/* (K4826, K4787) the requests the plane has not yet answered are counted, so "the page has gone quiet" is a statement about work, never about how long a busy machine took */
+let inflight = 0;
+const real = Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => { inflight += 1; try { return await answerOf(await toPlane(req.url, req.init)); } finally { inflight -= 1; } }]));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
 /* The instance claimed, as an installer leaves it, and the founder signed in through the real `login` (R83). */
@@ -78,14 +80,15 @@ async function until(p, ok, ms = 15000) {
   while (Date.now() < end) { if (ok()) return true; await p.settle(20); await new Promise((r) => setTimeout(r, 10)); }
   return ok();
 }
-/* Runs the page until it has gone quiet: no new request for several rounds (the merged screens ask many reads, so a fixed
-   number of rounds is a race); bounded. */
+/* Runs the page until it has gone quiet: no request unanswered and no new request for several rounds (the merged screens ask many reads, so a fixed
+   number of rounds is a race, and a busy machine answers late: a round counts as quiet only when the plane owes the page no answer); bounded. */
 async function run(p) {
   let last = -1, stable = 0;
-  for (let i = 0; i < 600 && stable < 10; i++) {
+  for (let i = 0; i < 6000 && stable < 10; i++) {
     await p.settle(20); await new Promise((r) => setTimeout(r, 10));
-    stable = p.requests.length === last ? stable + 1 : 0; last = p.requests.length;
+    stable = inflight === 0 && p.requests.length === last ? stable + 1 : 0; last = p.requests.length;
   }
+  assert.equal(inflight, 0, "the plane owes the page no answer when the load is judged");
 }
 const main = (p) => p.doc.getElementById("cs-main");
 const text = (el) => (el ? el.textContent : "").replace(/\s+/g, " ").trim();

@@ -158,7 +158,9 @@ test("R46 R19: a member session's walk that parks a session lists it for that me
                                       updated: "2026-05-06T07:08:09Z", expires: "2026-05-06T08:08:09Z", outstanding: r.body.snapshot.outstanding }]);
   assert.equal(mine.captures[0].outstanding, saved.state.queue.length, "the files left");
   assert.deepEqual(openCaptures(w.store, { by: "m2", now }).captures, [], "no other member sees it");
-  assert.deepEqual(openCaptures(w.store, { by: "member:m1", now }).captures, [], "a different spelling of a member is a different stamp");
+  /* R110 (fix round 8, G103): this line asserted that the door's form `member:m1` lists nothing for a session stored under `m1`, which was the defect: one member, two spellings */
+  assert.deepEqual(openCaptures(w.store, { by: "member:m1", now }).captures, mine.captures, "the door's form names the same member as her bare id");
+  assert.deepEqual(openCaptures(w.store, { by: "member:m2", now }).captures, [], "another member's form lists nothing of hers");
   /* it lists nothing of another member's and writes nothing */
   const before = JSON.stringify([...w.store.state.sessions]);
   openCaptures(w.store, { by: "m1", now });

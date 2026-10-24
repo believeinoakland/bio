@@ -189,6 +189,9 @@ function withoutStatement(rec, c) {
   return { ...rec, reading: { ...rest, basis: basis.replace(` — ${sentence}`, "") } };
 }
 
+/* A cursor is opaque (R40): the record keeps which pieces had one, not its text, which G68 changed for a CSV and a text (a window
+   cursor in place of the offset's); what the cursor must still do is tested in `r7-window.test.mjs` and `text-pieces.test.mjs`. */
+const opaque = (rec) => (rec && typeof rec.cursor === "string" ? { ...rec, cursor: "<a cursor>" } : rec);
 for (const c of CASES) {
   test(`R40/R41 (G48) control: ${c.name} - the first tick, every later piece and the units are as recorded before the change`, async () => {
     const want = RECORD.cases[c.name];
@@ -196,15 +199,15 @@ for (const c of CASES) {
     const { asks } = await readCase(c);
     assert.equal(asks.length, want.pieces.length, "the same number of pieces");
     asks.forEach((a, k) => {
-      assert.equal(a.ask, want.pieces[k].ask, `piece ${k}: the cursor it was asked by`);
-      assert.deepEqual(withoutStatement(a.record, c), want.pieces[k].answer, `piece ${k}`);
+      assert.equal(a.ask === null, want.pieces[k].ask === null, `piece ${k}: asked by a cursor or not`);
+      assert.deepEqual(opaque(withoutStatement(a.record, c)), opaque(want.pieces[k].answer), `piece ${k}`);
     });
   });
   test(`R-OLD (G48) control: ${c.name} - each piece asked by the cursor the old code made answers as recorded`, async () => {
     const want = RECORD.cases[c.name];
     for (let k = 1; k < want.pieces.length; k++) {
       const out = await readAsk(c, want.pieces[k].ask);
-      assert.deepEqual(recordOf(out, false), want.pieces[k].answer, `piece ${k}`);
+      assert.deepEqual(opaque(recordOf(out, false)), opaque(want.pieces[k].answer), `piece ${k}`);
     }
   });
 }

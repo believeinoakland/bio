@@ -1,6 +1,6 @@
 # ratification (T51)
 
-**Status** · session_01M5oCcG2xs2ePLykgVfVCvq · depth 2 · COMPLETE · handled B11
+**Status** · session_01Aitu5ptyoRC1Hw82dyhsuk · depth 2 · COMPLETE · handled B15
 
 ## J1 · REPORT
 
@@ -216,3 +216,68 @@ Uses: record-core's `textAtSha` now also R57; remove the parenthesis "*(`textAtS
 **Deferred / found elsewhere.** None. The plane's G57 test is a CHANGE to PLANE after this merges, as the START says.
 
 Size (session_01M5oCcG2xs2ePLykgVfVCvq): test runs 14, module lines 3964
+
+## J13 · COMPLETE
+
+COMPLETE · fix round 7, G62 (ratification side) and G59 (parity test), B12. Reading: B12, my requirements whole, `#publishAtOffer`/`caseRatifyPreflight`, publish-schedule's zone read (`schedule.mjs:48-75`), `retrieval.zone()` (`index.mjs:486-518`), `RecordCore.snapPath`, record-grammar `bundle.mjs:570-660`.
+
+**What changed**
+- `bio-plane/src/ratification/index.mjs` `#publishAtOffer` (R44, R58): asks `retrieval.zone({why: true})` (a plain answer is read as before); `publish_at` gains `source` (retrieval's `local-facts`/`profiles`; `profiles` when retrieval threw and the profiles answered; `none` when no zone) and, when not offered, `why` (retrieval's, or `UNREADABLE`); one `console.log` line `{event:"publish_at", offered, source, why}` per pre-flight (no zone text, no name, no secret).
+- `build/requirements/ratification.md`: R44 amended, R58 and R59 new, each marked *(not yet met: T51)* (B4: written in the requirements file; the ownership check lists that one file, accepted at the merge).
+- Tests: `r7-publish-at.test.mjs` (new, R58), `r7-snappath-parity.test.mjs` (new, R59); R44/R18 tests in `schedule.test.mjs` and `preflight.test.mjs` compare the offer without `source`/`why` (those two keys are R58's, asked in its own file).
+
+**Decision for BOB (a detail of mine, P17): the plan's "best-reading fix" (fall back to the profiles when `retrieval.zone()` answers null) is NOT built.** Reading the code, it cannot help and could mislead: retrieval's null is (a) no `jurisdiction_profiles` setting, where the fallback reads the same empty setting; (b) two profiles governing different zones, a deliberate null (`retrieval/index.mjs:497-499`) that `publish-schedule` R1 also answers (`schedule.mjs:67-68`) and refuses `PUBLISH_AT_NO_ZONE`, so a fallback would offer "Publish at…" that the very next act refuses; (c) `combine` null, the fallback's own answer. R44's test "no zone there offers nothing, even with a profile zone" (T50, N1203) states this, and I did not change a stated meaning. Control test: `R58 control`. The cause of the live "isn't set" is still unknown (the plan says so); the new `source`/`why` and the log line are what names it on the redeploy (K4428). The screen's three-case change is screens-publish's.
+
+**Tests, red then green**
+- R58, five cases through the real `caseRatifyPreflight` over stand-in retrieval answers (offer with source; no zone with why; control: null stays final with a profile set; unreadable retrieval falls back to profiles; unreadable and none): each seen red on the tranche, green now.
+- R58 real retrieval case (`R58 the real retrieval ...`): RED BY NAME until retrieval's G62 job merges `zone({why: true})` (the tranche's `zone()` ignores the argument, so `source` is null and `why` absent). Provider: RETRIEVAL.
+- R59 parity (8 names + the all-together/control case): red now for the five dotless/subfolder/dotted-directory names (`snapshots/upload-<sha>`, `a/b/c`, `a.b/c`, `noext`, and the combined case) and green for dotted names; RED BY NAME until record-grammar's G59 job merges. Provider: RECORD-GRAMMAR. The test runs at `checkBundle`'s interface and needs no helper name.
+- Suite: `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/ratification/` from `bio-plane/`: 309 pass, 1 fail before the parity file (the real-retrieval R58 case); with the parity file, the 6 red are the two providers' only. Both providers' branches have no code on the tranche yet (`git diff origin/tranche/T51...origin/job/T51/<m> -- bio-plane/src` empty at my start).
+
+**Checks** (`checks/run.mjs /home/user/bio`): format 0 failures; architecture 0; coverage 1 failure (record-core R89, R90, not mine); words 11 (case-checker spec.mjs inline 6 and newgroup missingkey 5, both inherited by name, none in ratification). `checks/ownership.mjs`: 1 failure, `build/requirements/ratification.md`, accepted per B4.
+
+**Census ops:** none change (`caseratify`'s accepted keys are unchanged; only the pre-flight's answer gains two keys). **Rows owed to UX-DESIGN:** none from this module (no new sentence; `source`/`why` are codes the screen maps).
+
+**For BOB:** when retrieval's and record-grammar's G62/G59 are merged on the tranche, merge it into this branch and the six red tests turn green with no further change of mine; send a CHANGE if any stays red. Also: screens-publish should read `publish_at.source`/`why` (and `publish_at_stated` for the not-reached case, which is case-authoring's).
+
+Size (session_011tm6afKMQNi7iG6sqa1TmS): test runs 8, module lines 3987
+
+## J14 · QUESTION
+
+QUESTION (G120, the phase entries `gate;dur`, `commit;dur`, `copy;dur`, `assemble;dur`, `reuse;dur`). The Worker half gets its `ctx` from `plane/door.mjs:116`, which hands no clock, and `phase-clock.mjs` accepts no module-stated entries yet (control-plane's job). My best reading, which I build now: `caseCeremony` calls an optional `ctx.stateTiming(name, ms)` once per phase, a no-op when absent (so nothing breaks before control-plane merges), and my r8-chain test asserts the five calls with a stub. For the entries to reach `Server-Timing`, plane/door.mjs must pass `stateTiming` into this ctx and the clock must take them. Please give control-plane (or plane) that provider with exactly this name and signature, or tell me the name you chose and I rename. I carry on meanwhile.
+
+## Fix round 8 (RATIFICATION #34, session_01Aitu5ptyoRC1Hw82dyhsuk): G120
+
+**(1) Cause.** `ratification/ops.mjs` `caseCeremony` awaited `casetestimony`, `caseapproval` and `casegate` one after the other (the store reads depend only on the document `casedocfacts` answered), and `copyMaterialsDetailed` copied one material at a time (head, get, put each awaited). **(2) Why missed:** no test counted depth or concurrency; Miniflare answers in ms. **(3) Failing-first** `r8-chain.test.mjs`, seen RED before the change: `AssertionError: peak concurrency of the bucket calls is 1`; `all three in flight at once` failed; the phases test failed (no stated phases). Green after: 5 of 5. **(4) Platform check:** L (counts, in the tests); P after the redeploy is BOB's: `caseratify;dur` with `gate;dur`, `commit;dur`, `copy;dur`, `assemble;dur`, `reuse;dur`.
+
+Applied: the three reads issued together with `Promise.all`, their answers weighed in the old refusal order (R35 testimony, CASE_RATIFY_STALE, R49 approval, NO_SIGNERS, signature, then the gate); the gate read is now speculative before the signature check, a read only (nothing written by a refused act, tested). `copyMaterialsDetailed` copies in groups of `COPY_GROUP = 8`, counting outcomes in item order (answer unchanged). Each phase stated once through the optional `ctx.stateTiming(name, ms)` (no-op without it).
+
+**Call budget (re-derived):** object chain today 21 calls; the three reads together save 2 → 19 sequential; case file (G121): 12 files in groups of 8 = 2 x (head, put) = 4; 2 `PUBLISHED.get` = 6 → 25; the material copy adds no depth beyond its group (one group of at most 8 beside the case file's). My module's part of the 21 is 15 → 13 sequential; the rest (session, reauthdue, recordcasefile, casefilefacts, recordcasemanifest, reusedparts x2) is the door's, public-read's and mine after the commit, unchanged. A figure below 25 at the door is explained by the member commits and reuse loops running sequentially only when a sitting has members.
+
+**Edits to existing tests (declared, not weakened):** `approvals.test.mjs` R49 and `relays.test.mjs` R17 pinned "the gate was not asked after the approval refusal" / "the act's last fetch is the refusing op". With the three reads together the gate read is asked too; both now assert the true invariant (the commit and everything after is not asked, nothing written, the same refusal bytes). 
+
+**Requirements:** R60 is amended in `build/requirements/ratification.md` by me (B4); the ownership check lists that one file.
+
+**Provider owed (QUESTION J14):** `plane/door.mjs:116` must pass `stateTiming` into the ctx and `phase-clock.mjs` must carry module-stated entries (control-plane's). Until then the phases are not on `Server-Timing`; nothing breaks. The door count test (`r8-caseratify-calls`, depth at most 25) is control-plane's.
+
+Nothing deferred. Nothing found in another module beyond the provider above.
+
+Tests and checks: `node --test` ratification: tests 324, pass 324, fail 0. Plane/public-read/case-authoring/mk6 tests naming caseratify: 50 of 50. impact.mjs: 45 modules affected (transitive); the direct users run above. format 0 failures; architecture 0; coverage 59 of 59, 0; words 0 failures; ownership: 6 files, 1 failure = the requirements file B4 accepts.
+
+Size (session_01Aitu5ptyoRC1Hw82dyhsuk): test runs 9, module lines 3711
+
+## J15 · COMPLETE
+
+COMPLETE · G120 done, record section 'Fix round 8' pushed on job/T51/ratification. R60 amended by me in build/requirements/ratification.md (the one file ownership lists). ratification tests 324/324; format, architecture, coverage (59/59), words 0 failures; ownership: only the requirements file listed. The three independent reads are together, the material copy in groups of 8, phases via ctx.stateTiming (B14). Call budget 25 re-derived in the record. Two existing tests (R49 approvals, R17 relays) pinned the old call order and now assert the invariant (commit not asked, nothing written, same bytes). Needs from others: the door count test and the stateTiming forwarding (PLANE #55, control-plane).
+
+## CHANGE B15 (G120, the door's chain)
+
+Cause: through control-plane's counting door the chain was 38, not from `copyMaterials` (already in groups of 8 and merged) but from the sitting's member work: each member's `prepareFinding` ran one after another (gatefacts, image, list, ratifygate), the members' `copyFinding` copied part by part, and the materials' copy and the members' copies ran one after another. Applied: `prepareFinding` asks image and list together; the members are prepared together, the first refusal in the sitting's order answered; `copyFinding` copies in groups of 8; the materials' copy and the members' copies run together. Failing-first, seen red: `sitting.test.mjs` "R60, R52: the members of a sitting are read together…" (`gatefacts of the members in flight together: 1`), `r8-chain.test.mjs` copyFinding (`peak 1`). Green after. Control-plane's `r8-caseratify-calls.test.mjs`, run here from its branch against this code (files removed after): was 38, now `longest chain 24`, case file heads/puts in flight 8, 2 of 2 pass. relays.test.mjs R17 now also allows image and list asked together.
+Tests: ratification 326 of 326. Requirements: R60 reworded in `build/requirements/ratification.md`.
+Size (session_01Aitu5ptyoRC1Hw82dyhsuk): test runs 14, module lines 3745
+
+## J16 · COMPLETE
+
+COMPLETE (CHANGE B15). copyMaterials was already concurrent (merged); the 38 came from the sitting's members: prepared one after another, copyFinding part by part, and the materials' copy then the members' copies in sequence. Now: image+list together, members prepared together (first refusal in sitting order), copyFinding in groups of 8, materials and member copies together. Red first (sitting.test.mjs: gatefacts in flight 1; r8-chain copyFinding: peak 1), green. Control-plane's r8-caseratify-calls.test.mjs run against this code from its branch: longest chain 24 (was 38), 2/2 pass. ratification 326/326; 198 tests of users naming caseratify pass; format, architecture, coverage 59/59, words, ownership 0 failures. R60 reworded in the requirements file; record section pushed.
+
+Ring failed: BOB session_017crmqx6Y4AZnxrNGEDoExR is archived, so J16 (COMPLETE) is the message; BOB's backstop reads it (mechanics §13).

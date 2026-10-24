@@ -105,7 +105,7 @@ before(async () => {
   W.VERA = await enrol("vera", "member");  // sole owner of PR, deactivated
   W.NELL = await enrol("nell", "member");  // on no roster; sees no hidden project
   let seq = 0;
-  const promote = async (id, text, type, state, register = []) => must(`promote ${id ?? type}`, await POST(`op=promote&token=${type === "project" ? ADM : W.RUTH}`, {
+  const promote = async (id, text, type, state, register = [], as = W.RUTH) => must(`promote ${id ?? type}`, await POST(`op=promote&token=${type === "project" ? ADM : as}`, {
     ...(id ? { bundleId: id } : {}), base: null, snapKey: `aff-${++seq}-${sha(text).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register,
     meta: { object_type: type, group: "aff-plane", current_state: state, created: NOW, last_updated: LATER } }));
@@ -482,8 +482,9 @@ test("R55 R14 R16 R18: on an information target, sever is offered where a visibl
   await W.promote(D, W.infoMd(D), "information", "collected", W.reg(D));
   await W.promote(DH, W.infoMd(DH), "information", "collected", W.reg(DH));
   await W.promote(QL, W.inquiryMd(QL, D, false), "inquiry", "open");
-  await W.promote(QH, inPB(W.inquiryMd(QH, D, false)), "inquiry", "open");
-  await W.promote(QH2, inPB(W.inquiryMd(QH2, DH, false)), "inquiry", "open");
+  /* promotion R53 (G74): a document stating a project is filed by a member of it; iris joined PB */
+  await W.promote(QH, inPB(W.inquiryMd(QH, D, false)), "inquiry", "open", [], W.IRIS);
+  await W.promote(QH2, inPB(W.inquiryMd(QH2, DH, false)), "inquiry", "open", [], W.IRIS);
   const who = { iris: [W.IRIS, "member:iris"], nell: [W.NELL, "member:nell"] };
   const at = async (target, m) => {
     const [tok, viewer] = who[m];

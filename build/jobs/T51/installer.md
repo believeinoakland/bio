@@ -1,6 +1,6 @@
 # installer (T51)
 
-**Status** · session_01Vk7s17rF6Xh1AySjTxhLSy · depth 2 · COMPLETE · handled B20
+**Status** · session_01Ts5kJbmZvJNjCoP5V2FiQE · depth 2 · COMPLETE · handled B24
 
 ## J1 · QUESTION
 
@@ -267,3 +267,41 @@ Checks: format, architecture 0 failures; coverage 72 of 72; words installer: no 
 ## J21 · COMPLETE
 
 COMPLETE (B20). opts.note passed in all five plane upload calls; notes shown on the install's final panel and the update's page; test through the real install and update (page gains exactly one notice vs the control; red without wiring). Words: I did NOT write localize('installer.fleet.logsunconfirmed') — the words check rejects localize in installer as a drawn-screen module (marker, words.mjs:11 / held.mjs:51), so the sentence and its row stay installer-steps'; my test holds no sentence. Order caution: job/T51/installer-steps is not yet on tranche/T51 (uploads.mjs there has no observability), so on my branch alone both G54 tests are red by name; on a scratch merge of both, t51 11/11 green, other reds only inherited. Checks: format, architecture, ownership 0 failures; coverage 72/72; words 0 failures. Record J20. Size (session_01Vk7s17rF6Xh1AySjTxhLSy): test runs 14, module lines 2931.
+
+## J22 · QUESTION
+
+Names between R83 and installer-steps R41/R42 are not written, and installer-steps (job branch tip) has none of them yet. Best reading, which I build on: the barrel `newgroup/src/steps/index.mjs` exports `locationHintFor(cf)` (answers a hint string or null); `uploadInstall(token, acct, slug, secrets, release, opts)` takes `opts.storeLocation` (a hint string or null/undefined) beside `opts.profiles` and appends `storeLocationBinding(opts.storeLocation)`; `uploadUpdate` takes no option (it restates the held value, R42). The installer passes the hint at the two uploadInstall sites only (index.mjs:813, :829); its step-3 and own-hosts re-uploads go through bindMembers/uploadUpdate and restate the held value without my help. The cookie field is `sl` (hint string, written only when non-null), so a cookie without it is today's cookie. Please confirm the option name `storeLocation` to INSTALLER-STEPS #8 or tell me another. Until installer-steps merges, my T5 stays red by name and the module cannot import `locationHintFor`; I will carry on and verify the rest with an uncommitted stub that I remove before every commit.
+
+## J23 · REPORT
+
+R83 built, waiting on installer-steps R41/R42 (no COMPLETE while red on the provider, B21).
+
+DONE (newgroup/src/index.mjs, newgroup/test/g83-begin.test.mjs, newgroup/package.json): `POST /begin` in install mode reads `req.cf` (an object only), takes `locationHintFor(req.cf)` from the steps barrel and writes a non-null string as cookie field `sl`; `/callback`'s install run reads `saved.sl` and passes it as `storeLocation` to `uploadInstall` at both creating sites (the first upload and the no-SELF retry). An update writes no `sl` and passes nothing: uploadUpdate restates the held value (installer-steps R42). No cf, a non-object cf, or a null hint writes nothing: the install is as today. No page, word or dialog changed (words check: 0 failures).
+
+TESTS: T5 `newgroup/test/g83-begin.test.mjs` (R83 x3): wnam for NA/-122.4, weur for Frankfurt, enam, sam; six no-hint cases (no cf, empty, AN, no longitude, bad longitude, non-object) install with no STORE_LOCATION in any plane upload and complete; an update with a Frankfurt cf restates the held wnam, and a script holding none gets none. Seen red before the change (binding null). Added to `npm test`. With an UNCOMMITTED stand-in for installer-steps R41/R42 (saved, not committed: scratchpad stub.patch), T5 is 3/3 green and every other newgroup suite has exactly the failure set it has without my change (20 inherited reds: R8, R11, R20, R33 real-size x5, R44, R55, R61, R71, G54, the wizard). The steps suite 105/109 with the stand-in. RED NOW BY NAME, until installer-steps merges and exports `locationHintFor`: the module does not import (SyntaxError: no export `locationHintFor`), so every installer suite is red for that one reason.
+
+OPTION NAME (J22's question, unanswered): I used `storeLocation` on uploadInstall's opts. If installer-steps names it otherwise, tell me and it is a one-word change at two sites.
+
+CHECKS: format 0 failures; architecture 0; coverage 73 of 73 ids named; ownership 0; words 0 failures; impact (origin/tranche/T51..HEAD): 0 other modules affected. STALE ARTIFACT: `newgroup/dist/newgroup.bundled.mjs` (BOB regenerates, and the bundle-fresh test goes red until then).
+
+Next: on BOB's CHANGE (installer-steps merged), merge tranche/T51, run the suites, check, COMPLETE.
+
+Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 9, module lines 2166
+
+## J24 · REPORT
+
+B23 done on my side. `runUpdate` now stops right after reading the copy's held bindings when they are unreadable: `installer.update.stopped.lookup` with `{said}` = `word("installer.keys.unread")`, before any release is chosen or upload made (the page's stop says the copy runs as before). requirements.test.mjs's R17 (K1541) test now asserts that refusal (failed.said, planePuts 0, no done panel) in place of "proceeds"; its title says so. With the uncommitted stand-in for installer-steps, that test and g83-begin are green; the remaining reds are the inherited set (G54, R11, R20, R44, R8) as before.
+PROPOSAL (BOB writes): a dedicated key for this stop would read better than reusing `installer.keys.unread` as the `{said}` fill (it carries a sentence about member keys); the design lane could add one.
+STILL WAITING on installer-steps R41/R42 being merged (no `locationHintFor` export on tranche/T51 yet). Post a CHANGE when it is; I then merge, run suites and checks, and COMPLETE.
+Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 12, module lines 2172
+
+## J25 · COMPLETE
+
+B24 done: tranche/T51 merged (installer-steps R41/R42 in), stub dropped (working tree clean of it), nothing else of another module touched.
+
+ENTRIES APPLIED: R83 (index.mjs: /begin writes cookie `sl` from `locationHintFor(req.cf)` for an install only; the install run hands it as `storeLocation` to both uploadInstall sites) and K4758's R17 (runUpdate stops with `installer.update.stopped.lookup` before any release choice or upload when the copy's held settings cannot be read; the K1541 test now asserts the refusal). No page, word or dialog changed.
+
+TESTS (real provider): g83-begin 3/3 green (T5; was red first); requirements.test.mjs R17 green; newgroup suites 13 reds + wizard, all in the set inherited before my change (R8, R11, R20, R33 x5, R44, R55, R61, R71, wizard; G54 now green); steps suite 115/117, the two reds R36/R40 are K4731's accepted list (row installer.fleet.logsunconfirmed owed to the design). journey-check (the one user of installer): its account-installer and journey tests fail on the same fleet/container-member installs as R44/R61 above (environment/accepted family), not on anything R83 or R17 touches.
+CHECKS: format 0, architecture 0, coverage 73/73, ownership 0 (5 files), words 0 failures. Impact lists 64 modules, only journey-check uses installer.
+DEFERRED: none. FOR BOB: (1) `newgroup/dist/newgroup.bundled.mjs` is stale (regenerate; its freshness test is red until then). (2) A dedicated design key for the unreadable-settings stop would replace reusing `installer.keys.unread` as the {said} fill (J24). (3) R83 and R17's "not yet met" marks can be struck.
+Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 16, module lines 2172

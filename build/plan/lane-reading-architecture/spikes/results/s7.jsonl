@@ -1,0 +1,16 @@
+{"op":"take","mib":8,"got":8388608,"ms":23,"rssPeakMB":84}
+{"op":"take","mib":31,"got":32505856,"ms":98,"rssPeakMB":168}
+{"op":"take","mib":32,"error":"Serialized RPC arguments or return values are limited to 32MiB, but the size of this value was: 33554452 bytes.","name":"Error","ms":27,"rssPeakMB":172}
+{"op":"take","mib":33,"error":"Serialized RPC arguments or return values are limited to 32MiB, but the size of this value was: 34603028 bytes.","name":"Error","ms":34,"rssPeakMB":204}
+{"op":"take","mib":40,"error":"Serialized RPC arguments or return values are limited to 32MiB, but the size of this value was: 41943060 bytes.","name":"Error","ms":34,"rssPeakMB":241}
+{"op":"take","mib":100,"error":"Serialized RPC arguments or return values are limited to 32MiB, but the size of this value was: 104857620 bytes.","name":"Error","ms":1218,"rssPeakMB":438}
+{"op":"give","mib":8,"got":8388608,"ms":13,"rssPeakMB":351}
+{"op":"give","mib":31,"got":32505856,"ms":44,"rssPeakMB":259}
+{"op":"give","mib":32,"error":"Serialized RPC arguments or return values are limited to 32MiB, but the size of this value was: 33554447 bytes.","name":"Error","ms":9,"rssPeakMB":259}
+{"op":"give","mib":33,"error":"Serialized RPC arguments or return values are limited to 32MiB, but the size of this value was: 34603023 bytes.","name":"Error","ms":32,"rssPeakMB":261}
+{"op":"give","mib":40,"error":"Serialized RPC arguments or return values are limited to 32MiB, but the size of this value was: 41943055 bytes.","name":"Error","ms":24,"rssPeakMB":294}
+{"op":"give","mib":100,"error":"Serialized RPC arguments or return values are limited to 32MiB, but the size of this value was: 104857615 bytes.","name":"Error","ms":932,"rssPeakMB":482}
+{"op":"stream","mib":40,"got":41943040,"chunks":10240,"ms":229,"rssPeakMB":484}
+{"op":"stream","mib":200,"got":209715200,"chunks":51200,"ms":880,"rssPeakMB":356}
+{"op":"takeStream","mib":40,"got":41943040,"ms":174,"rssPeakMB":362}
+{"op":"takeStream","mib":200,"got":209715200,"ms":815,"rssPeakMB":354}

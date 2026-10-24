@@ -39,6 +39,19 @@ test("R38 readText over a 13.6 M character text adds under 16 MB, hands the type
                    ["scans_pages", "certain", [], { entities: [], facts: { pages: 1354 } }, 1354, "document"]);
 });
 
+test("R38 R39 doctypeForYielding over a 13.6 M character text holds no second copy of it: under 16 MB, the type handed the pages, the answer doctypeFor's", { timeout: 300_000 }, async () => {
+  const m = await child(["twin", "1354", "10042"]);
+  assert.equal(m.code, 0, m.err.slice(0, 300));
+  const r = JSON.parse(m.out);
+  console.log(`R39: ${r.chars} characters, ${Math.round(r.ms)} ms, peak heap + array buffers above what the caller holds ${r.peakMB.toFixed(1)} MB`);
+  assert.ok(r.chars > 13_000_000, `${r.chars} characters`);
+  assert.ok(r.peakMB < 16, `peak ${r.peakMB.toFixed(1)} MB above what the caller holds`);
+  const a = r.answers;
+  assert.equal(a.typeSawPages, true, "the type's detect was handed the supplied pages array itself");
+  assert.equal(a.sawText, 1354 * 10042 + 1353);
+  assert.deepEqual([a.type, a.confidence, a.also], ["scans_pages", "certain", []]);
+});
+
 /* The map `segmentsOver` earns over `document` is the one the joined comparison earned: the oracle below is the
  * specification of R22 and R23 stated as the join, and every shape here must agree with it. */
 const oracle = (document, pages) => {

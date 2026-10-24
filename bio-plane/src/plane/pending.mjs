@@ -25,6 +25,12 @@
    runs the light kinds (`subresources`, `unpack`) and at most one heavy row (`keep`, `reading`, `ocr`), so one document's read
    never holds the object that answers every screen for the length of three.
 
+   A ROW'S TIME IS ITS OWN (fix round 7, G67, G69; R91, R92). A row is stamped started at its OWN start (`now()` when it begins, never the
+   alarm's instant, which every consumer and row of the tick shares), so `last_ms` is that row's elapsed time and no earlier row's. It is
+   split: `wait_ms` the part spent awaiting a worker (a service binding, measured by the plane around the binding the owner is handed, the
+   union of overlapping calls), `own_ms` the rest; the 10 s bar is `own_ms`'s. `last_mem` is NULL where the platform reports no memory
+   (workerd answers zeros). The last run of each `(sha, kind)` is kept beyond the row in `keeps_last`: a good tick deletes its row.
+
    Lower modules cannot import this one (it is last in the order), so they are handed the registration at composition, as they
    are handed `cap.waitUntil`: `captureOf(ctx).keepLater({sha, parts})` and `.owedLater({kind, sha, session?, parts?, detail?})`, async, writing
    the entry and arming the alarm in one step and never throwing. The door's deferred reading arrives by the store-internal
@@ -38,11 +44,17 @@ import * as acquisitionModule from "../acquisition/index.mjs";   /* `owedFetch` 
 import { captureOf } from "../capture/index.mjs";
 import { schedulerOf } from "../scheduler/index.mjs";
 import { localize } from "../setup-words/index.mjs";
+import { ROOT_ADMIN, baseViewer, viewerMember } from "../member-roster/index.mjs";
 
 export const KEEPS_PENDING_DDL = `CREATE TABLE IF NOT EXISTS keeps_pending (
   sha TEXT NOT NULL, kind TEXT NOT NULL, parts TEXT NOT NULL DEFAULT '[]', detail TEXT NOT NULL DEFAULT '{}',
   attempts INTEGER NOT NULL DEFAULT 0, registered_at INTEGER NOT NULL, due_at INTEGER NOT NULL, last_try INTEGER, last_why TEXT,
-  final_why TEXT, started_at INTEGER, interrupted INTEGER NOT NULL DEFAULT 0, last_ms INTEGER, last_mem INTEGER, PRIMARY KEY (sha, kind))`;
+  final_why TEXT, started_at INTEGER, interrupted INTEGER NOT NULL DEFAULT 0, last_ms INTEGER, last_mem INTEGER, own_ms INTEGER, wait_ms INTEGER,
+  PRIMARY KEY (sha, kind))`;
+/** R92: the last run of each (digest or session, kind), kept after the row has ended. */
+export const KEEPS_LAST_DDL = `CREATE TABLE IF NOT EXISTS keeps_last (
+  sha TEXT NOT NULL, kind TEXT NOT NULL, last_ms INTEGER, own_ms INTEGER, wait_ms INTEGER, last_mem INTEGER, outcome TEXT NOT NULL, at INTEGER NOT NULL,
+  PRIMARY KEY (sha, kind))`;
 export const PENDING_NAME = "pending-work";
 export const PENDING_KINDS = Object.freeze(["keep", "reading", "ocr", "subresources", "unpack", "fetch"]);
 export const PENDING_RETRY_MS = 15_000;
@@ -57,7 +69,10 @@ const DIGEST = /^[0-9a-f]{64}$/;
 const HOLDERS = new WeakMap();
 const why = (e) => String(e && e.message || e).slice(0, 160);
 const interruptedWhy = () => localize("plane.pending.interrupted", "the reading did not finish; the object stopped");
-const memory = () => { try { const m = globalThis.process && typeof globalThis.process.memoryUsage === "function" ? globalThis.process.memoryUsage() : null; return m ? Math.round(m.rss || m.heapUsed || 0) : null; } catch { return null; } };
+/* the platform's memory marker, or null where it measures none: workerd answers all zeros, which is no reading (R92) */
+const memory = () => { try { const m = globalThis.process && typeof globalThis.process.memoryUsage === "function" ? globalThis.process.memoryUsage() : null; const n = m ? Math.round(m.rss || m.heapUsed || 0) : 0; return n > 0 ? n : null; } catch { return null; } };
+/* the service bindings a row's owner awaits: a call through one is `wait_ms` (the worker's time, not the object's thread) */
+const WORKER_BINDINGS = Object.freeze(["PDF_WORKER", "OCR_WORKER", "SHEET_WORKER", "AGENT_WORKER", "FILE_SCANNER", "SELF"]);
 const RANK = { keep: 0, reading: 1, ocr: 2, subresources: 3, unpack: 4, fetch: 5 };
 const json = (v, otherwise) => { try { const o = JSON.parse(v); return o && typeof o === "object" ? o : otherwise; } catch { return otherwise; } };
 
@@ -85,15 +100,52 @@ export function pendingOf(ctx, deps = {}) {
                      attempts=0, due_at=?, final_why=NULL WHERE sha=? AND kind=?`,
                   JSON.stringify(parts), JSON.stringify(parts), JSON.stringify(detail), JSON.stringify(detail), at, sha, kind);
   };
-  /* `row.attempts` already holds this run's try (`stamp`); the run's end clears `started_at` and notes how long it took and the memory marker */
-  const ended = (row) => `started_at=NULL, last_ms=${Math.max(0, Math.round(now() - (row.started_at ?? now())))}, last_mem=${memory() ?? "NULL"}`;
+  /* R91: what a row spent awaiting the workers it was handed, the union of overlapping calls: `ms()` is the time at least one was in flight */
+  const meters = new Map();
+  const meterOf = (row) => {
+    const k = keyOf(row);
+    let m = meters.get(k);
+    if (!m) { m = { open: 0, since: 0, total: 0, ms() { return m.total + (m.open > 0 ? now() - m.since : 0); } }; meters.set(k, m); }
+    return m;
+  };
+  /* the env an owner is handed: the same, its worker bindings' `fetch` timed. Without the bindings (a test's) the env is the owner's own. */
+  const timed = (row) => {
+    if (!env || typeof env !== "object") return env;
+    const m = meterOf(row);
+    const span = async (fn) => { if (m.open++ === 0) m.since = now(); try { return await fn(); } finally { if (--m.open === 0) m.total += Math.max(0, now() - m.since); } };
+    return new Proxy(env, { get(target, key) {
+      const v = target[key];
+      if (!WORKER_BINDINGS.includes(key) || !v || typeof v.fetch !== "function") return v;
+      return new Proxy(v, { get(b, p) { const f = b[p]; return p === "fetch" ? (...a) => span(() => b.fetch(...a)) : typeof f === "function" ? f.bind(b) : f; } });
+    } });
+  };
+  /* a row's run, measured at its end: the elapsed time, the part awaiting workers, the rest, and the memory marker (null where none is measured) */
+  const measure = (row) => {
+    const last_ms = Math.max(0, Math.round(now() - (row.started_at ?? now())));
+    const wait_ms = Math.min(last_ms, Math.max(0, Math.round(meterOf(row).ms())));
+    return { last_ms, wait_ms, own_ms: last_ms - wait_ms, last_mem: memory() };
+  };
+  /* R92: the last run of this (digest or session, kind), kept after the row ends */
+  const noteLast = (row, m, outcome) => {
+    sql.exec(`INSERT INTO keeps_last (sha, kind, last_ms, own_ms, wait_ms, last_mem, outcome, at) VALUES (?,?,?,?,?,?,?,?)
+              ON CONFLICT (sha, kind) DO UPDATE SET last_ms=excluded.last_ms, own_ms=excluded.own_ms, wait_ms=excluded.wait_ms, last_mem=excluded.last_mem, outcome=excluded.outcome, at=excluded.at`,
+             row.sha, row.kind, m.last_ms, m.own_ms, m.wait_ms, m.last_mem, outcome, now());
+    meters.delete(keyOf(row));
+  };
+  const num = (v) => (v === null || v === undefined ? "NULL" : String(Math.round(v)));
+  /* `row.attempts` already holds this run's try (`stamp`); the run's end clears `started_at` and notes how long it took (the row's own time and the part awaiting workers) and the memory marker */
+  const ended = (row, outcome) => {
+    const m = measure(row);
+    noteLast(row, m, outcome);
+    return `started_at=NULL, last_ms=${num(m.last_ms)}, own_ms=${num(m.own_ms)}, wait_ms=${num(m.wait_ms)}, last_mem=${num(m.last_mem)}`;
+  };
   const attempt = (row, at, because) => {
-    sql.exec(`UPDATE keeps_pending SET ${ended(row)}, last_try=?, due_at=?, last_why=? WHERE sha=? AND kind=?`, at, at + backoff(row.attempts), because, row.sha, row.kind);
+    sql.exec(`UPDATE keeps_pending SET ${ended(row, "retried")}, last_try=?, due_at=?, last_why=? WHERE sha=? AND kind=?`, at, at + backoff(row.attempts), because, row.sha, row.kind);
     return "retried";
   };
-  const end = (row) => { sql.exec(`DELETE FROM keeps_pending WHERE sha=? AND kind=?`, row.sha, row.kind); return "finished"; };
+  const end = (row) => { noteLast(row, measure(row), "finished"); sql.exec(`DELETE FROM keeps_pending WHERE sha=? AND kind=?`, row.sha, row.kind); return "finished"; };
   const stop = (row, at, because) => {
-    sql.exec(`UPDATE keeps_pending SET ${ended(row)}, final_why=?, last_try=?, last_why=? WHERE sha=? AND kind=?`, because, at, because, row.sha, row.kind);
+    sql.exec(`UPDATE keeps_pending SET ${ended(row, "final")}, final_why=?, last_try=?, last_why=? WHERE sha=? AND kind=?`, because, at, because, row.sha, row.kind);
     return "final";
   };
   const live = () => all(`SELECT * FROM keeps_pending WHERE final_why IS NULL`)
@@ -109,7 +161,7 @@ export function pendingOf(ctx, deps = {}) {
       const next = JSON.stringify(r.detail && typeof r.detail === "object" ? r.detail : json(row.detail, {}));
       /* due one millisecond on: a pass that went on moves its due instant (B38), so the scheduler's hold against a spin (its R27) reads a changed
          wake even where the tick began with a row found stopped, whose wake it read as "now" */
-      sql.exec(`UPDATE keeps_pending SET ${ended(row)}, detail=?, attempts=0, due_at=?, last_try=?, last_why=NULL${next !== row.detail ? ", interrupted=0" : ""} WHERE sha=? AND kind=?`,
+      sql.exec(`UPDATE keeps_pending SET ${ended(row, "more")}, detail=?, attempts=0, due_at=?, last_try=?, last_why=NULL${next !== row.detail ? ", interrupted=0" : ""} WHERE sha=? AND kind=?`,
                next, at + 1, at, row.sha, row.kind);
       return "retried";
     }
@@ -118,7 +170,7 @@ export function pendingOf(ctx, deps = {}) {
          down) and a reading whose own failure was transient wait their back-off. A reading that left pages of a scan unread owes an `ocr`
          entry besides, and keeps its own until the next call finds the reading held. */
       if (row.kind === "ocr" && r.read === true) {
-        sql.exec(`UPDATE keeps_pending SET ${ended(row)}, attempts=0, due_at=?, last_try=?, last_why=NULL WHERE sha=? AND kind=?`, at, at, row.sha, row.kind);
+        sql.exec(`UPDATE keeps_pending SET ${ended(row, "more")}, attempts=0, due_at=?, last_try=?, last_why=NULL WHERE sha=? AND kind=?`, at, at, row.sha, row.kind);
         return "retried";
       }
       if (row.kind !== "ocr" && r.read === true) put(row.sha, "ocr", [], {});
@@ -130,11 +182,13 @@ export function pendingOf(ctx, deps = {}) {
   /* the rows this isolate is running now: a row stamped started that is not among them was started by an isolate that is gone */
   const running = new Set();
   const keyOf = (row) => `${row.kind}\u0000${row.sha}`;
-  /* the run is counted before it happens: started, one more try, and the back-off it will be first again after */
+  /* the run is counted before it happens: started (at the row's OWN start, `now()`, not the alarm's `at` which every row of the tick shares; R91),
+     one more try, and the back-off it will be first again after */
   const stamp = (row, at) => {
-    const n = row.attempts + 1;
-    sql.exec(`UPDATE keeps_pending SET started_at=?, attempts=?, last_try=?, due_at=? WHERE sha=? AND kind=?`, at, n, at, at + backoff(n), row.sha, row.kind);
-    return { ...row, attempts: n, started_at: at, last_try: at };
+    const n = row.attempts + 1, began = now();
+    sql.exec(`UPDATE keeps_pending SET started_at=?, attempts=?, last_try=?, due_at=? WHERE sha=? AND kind=?`, began, n, at, at + backoff(n), row.sha, row.kind);
+    meters.delete(keyOf(row));
+    return { ...row, attempts: n, started_at: began, last_try: at };
   };
   /* a row found started by an isolate that is gone: an interrupted run, counted; the third ends it, stated */
   const startedRows = () => all(`SELECT * FROM keeps_pending WHERE final_why IS NULL AND started_at IS NOT NULL`).filter((r) => !running.has(keyOf(r)));
@@ -149,7 +203,7 @@ export function pendingOf(ctx, deps = {}) {
   const call = async (fn) => { try { return await fn(); } catch (e) { return { ok: false, reason: why(e) }; } };
 
   /* `detail` is what the owner's last answer left for it (a cursor over a text, `{}` at first), handed back as it was kept (R82) */
-  const readNow = (row, at) => call(() => extractionOf(ctx).readHeld({ sha: row.sha, kind: row.kind, detail: json(row.detail, {}), storeName: store(), env }))
+  const readNow = (row, at) => call(() => extractionOf(ctx).readHeld({ sha: row.sha, kind: row.kind, detail: json(row.detail, {}), storeName: store(), env: timed(row) }))
     .then((r) => row.kind === "ocr" && r && r.ok === true && r.owed !== true && r.final !== true ? end(row) : settle(row, at, r));
   const owner = {
     reading: readNow,
@@ -164,14 +218,22 @@ export function pendingOf(ctx, deps = {}) {
       end(row);
       put(row.sha, "reading", [], {});
       const reading = stamp(all(`SELECT * FROM keeps_pending WHERE sha=? AND kind='reading'`, row.sha)[0], at);
-      return await readNow(reading, at);
+      /* G79: a keep handed to the ledger at once can end before the screen has filed the document: no home yet (`NO_HOME`) owes nothing, the filing's
+         promotion owes the reading through control-plane's `unreadDocuments`. A filed document's keep still owes its reading. */
+      const asked = await call(() => extractionOf(ctx).readHeld({ sha: reading.sha, kind: reading.kind, detail: json(reading.detail, {}), storeName: store(), env: timed(reading) }));
+      if (asked && asked.ok === true && asked.read === false && asked.why === "NO_HOME") {
+        sql.exec(`DELETE FROM keeps_pending WHERE sha=? AND kind='reading'`, reading.sha);
+        meters.delete(keyOf(reading));
+        return "finished";
+      }
+      return settle(reading, at, asked);
     },
     subresources: async (row, at) => {
       const acq = acquisitionOf(ctx);
       const run = acq && typeof acq.owedRun === "function" ? acq.owedRun.bind(acq) : owedRun;   /* acquisition's export; an instance's own is a test's */
       /* a rendered document is promoted beside its shell by the door's own function (control-plane, B29), handed in by the composition; without it a pending render stays the member's "Finish it" */
       const deliver = typeof deps.deliver === "function" ? (a) => deps.deliver({ ctx, env, storeName: store(), ...a }) : undefined;
-      const r = await call(() => run(captureOf(ctx), { kind: "subresources", session: row.sha }, { storeName: store(), env, ...(deliver ? { deliver } : {}) }));
+      const r = await call(() => run(captureOf(ctx), { kind: "subresources", session: row.sha }, { storeName: store(), env: timed(row), ...(deliver ? { deliver } : {}) }));
       if (r && r.final === true && r.reason) return stop(row, at, String(r.reason).slice(0, 160));
       if (r && r.ok === true && r.done === true) return end(row);
       return attempt(row, at, String(r && (r.reason || r.code || r.why) || (r && r.outstanding ? "OUTSTANDING" : "NOT_DONE")));
@@ -183,7 +245,7 @@ export function pendingOf(ctx, deps = {}) {
       const run = acq && typeof acq.owedFetch === "function" ? acq.owedFetch.bind(acq) : acquisitionModule.owedFetch;
       if (typeof run !== "function") return attempt(row, at, "NO_OWNER");
       const deliver = typeof deps.deliver === "function" ? (a) => deps.deliver({ ctx, env, storeName: store(), ...a }) : undefined;
-      const r = await call(() => run(captureOf(ctx), { kind: "fetch", session: row.sha }, { storeName: store(), env, ...(deliver ? { deliver } : {}) }));
+      const r = await call(() => run(captureOf(ctx), { kind: "fetch", session: row.sha }, { storeName: store(), env: timed(row), ...(deliver ? { deliver } : {}) }));
       if (r && r.final === true) return stop(row, at, String(r.reason || r.why || r.code || "FINAL").slice(0, 160));
       if (r && r.ok === true && r.done === true) return end(row);
       if (r && r.ok === true && r.more === true) return settle(row, at, r);   /* the fetch goes on at the next tick, from where it stopped */
@@ -195,7 +257,7 @@ export function pendingOf(ctx, deps = {}) {
         return attempt(row, at, "NOT_CONFIGURED");
       let status = 0, body = null;
       try {
-        const res = await env.SELF.fetch(new Request("https://self/api/?op=unpack", { method: "POST",
+        const res = await timed(row).SELF.fetch(new Request("https://self/api/?op=unpack", { method: "POST",
           headers: { authorization: `Bearer ${env.DAEMON_TOKEN}`, "content-type": "application/json" }, body: JSON.stringify({ archiveSha: row.sha }) }));
         status = res.status;
         body = await res.json();
@@ -236,8 +298,10 @@ export function pendingOf(ctx, deps = {}) {
       } else sql.exec(KEEPS_PENDING_DDL);
       /* fix round 5: the run's accounting; a ledger of the round before gains the columns and its rows start with none */
       const have = all(`PRAGMA table_info(keeps_pending)`).map((c) => c.name);
-      for (const [col, def] of [["started_at", "INTEGER"], ["interrupted", "INTEGER NOT NULL DEFAULT 0"], ["last_ms", "INTEGER"], ["last_mem", "INTEGER"]])
+      for (const [col, def] of [["started_at", "INTEGER"], ["interrupted", "INTEGER NOT NULL DEFAULT 0"], ["last_ms", "INTEGER"], ["last_mem", "INTEGER"],
+                                ["own_ms", "INTEGER"], ["wait_ms", "INTEGER"]])
         if (!have.includes(col)) sql.exec(`ALTER TABLE keeps_pending ADD COLUMN ${col} ${def}`);
+      sql.exec(KEEPS_LAST_DDL);
     },
     /** R77: owed work, whatever its kind. `parts` (a keep) and `detail` (a cursor, a session's key) are the owner's. */
     async owe({ kind, sha, session, parts, detail } = {}) {
@@ -268,7 +332,13 @@ export function pendingOf(ctx, deps = {}) {
       return rows.sort((a, b) => a.registered_at - b.registered_at || (a.sha < b.sha ? -1 : a.sha > b.sha ? 1 : RANK[a.kind] - RANK[b.kind]))
         .map((r) => ({ sha: r.sha, kind: r.kind, state: r.final_why === null ? "owed" : "final", attempts: r.attempts, registered_at: r.registered_at,
                        next_try: r.final_why === null ? r.due_at : null, last_try: r.last_try, why: r.final_why ?? r.last_why, detail: json(r.detail, {}),
-                       interrupted: r.interrupted, running: r.started_at !== null && running.has(keyOf(r)), last_ms: r.last_ms, last_mem: r.last_mem }));
+                       interrupted: r.interrupted, running: r.started_at !== null && running.has(keyOf(r)), last_ms: r.last_ms, own_ms: r.own_ms, wait_ms: r.wait_ms,
+                       last_mem: r.last_mem }));
+    },
+    /** R92: the last run of each kind held for a digest or session, after its row has ended or while it is owed: `{kind, outcome, last_ms, own_ms, wait_ms, last_mem, at}` */
+    ledgerLast({ sha } = {}) {
+      return all(`SELECT kind, outcome, last_ms, own_ms, wait_ms, last_mem, at FROM keeps_last WHERE sha=?`, sha)
+        .sort((a, b) => RANK[a.kind] - RANK[b.kind]).map((r) => ({ ...r }));
     },
     /** counts for each kind and state, with no digest: what a member's diagnosis may see */
     summary() {
@@ -312,28 +382,46 @@ export function pendingOf(ctx, deps = {}) {
  *  `owedwork` (R77): the entries owed on one digest (`sha`), else the counts for each kind; the plane's own arm, declared. An
  *  administrator's answer also carries what the watchdog sees (R80): `last_run`, `alarm_at`, `stale`, `oldest_overdue` and
  *  `watchdog_seen`, from `health` (the scheduler's, read-only: it re-arms nothing). Who asks is the door's `viewer` stamp, judged by
- *  `administers(viewer)` (membership's rule, handed by the composition), never a `cls` the caller wrote: a member's screen never
- *  shows a stall. */
+ *  `administers(viewer)` (`administersOf`, below, handed by the composition), never a `cls` the caller wrote: a member's screen never
+ *  shows a stall. An administrator whose `health` throws or answers no object is shown the five fields as null and a `watchdog_why`
+ *  (K4566): a stall is never hidden by silence. */
 const WATCHDOG_FIELDS = Object.freeze(["last_run", "alarm_at", "stale", "oldest_overdue", "watchdog_seen"]);
+
+/** R90 (G58): who is an administrator, by the spellings the door stamps as `viewer`: the machine credential `class:admin`, the founder's
+ *  bare `admin` (`member-roster` R73's root spelling, which the door stamps for the founder's session: admission `resolveSession`), and
+ *  `member:<id>` naming an active administrator, which `isAdministrator(id)` (membership's) judges. Any other spelling, and no
+ *  viewer, is not one. */
+export function administersOf(isAdministrator) {
+  return (viewer) => {
+    if (typeof viewer !== "string") return false;
+    if (viewer === "class:admin") return true;
+    if (baseViewer(viewer) === ROOT_ADMIN) return true;
+    const id = viewerMember(viewer);
+    return id !== null && typeof isAdministrator === "function" && isAdministrator(id) === true;
+  };
+}
+
+const lastOf = (holder, sha) => (typeof holder.ledgerLast === "function" ? holder.ledgerLast({ sha }) : []);
 export function pendingOps(holder, url, { health, administers } = {}) {
   const stalled = async (answer) => {
     if (typeof health !== "function" || typeof administers !== "function" || answer.ok !== true) return answer;
     let admin = false;
     try { admin = administers(url.searchParams.get("viewer")) === true; } catch { admin = false; }
     if (!admin) return answer;
-    let seen = null;
-    try { seen = await health(); } catch { /* the stall is not the read's to fail on */ }
-    return seen && typeof seen === "object" ? { ...answer, ...Object.fromEntries(WATCHDOG_FIELDS.map((k) => [k, seen[k] ?? null])) } : answer;
+    let seen = null, because = null;
+    try { seen = await health(); } catch (e) { because = why(e); }
+    if (seen && typeof seen === "object") return { ...answer, ...Object.fromEntries(WATCHDOG_FIELDS.map((k) => [k, seen[k] ?? null])) };
+    return { ...answer, ...Object.fromEntries(WATCHDOG_FIELDS.map((k) => [k, null])), watchdog_why: because || "WATCHDOG_UNREADABLE" };
   };
   return {
     pendingadd: () => holder.add({ kind: url.searchParams.get("kind"), sha: url.searchParams.get("sha") }),
     owedwork: () => {
       const sha = url.searchParams.get("sha");
       if (sha === null) return stalled({ ok: true, owed: holder.summary() });
-      if (DIGEST.test(sha)) return stalled({ ok: true, sha, owed: holder.list({ sha }) });
+      if (DIGEST.test(sha)) return stalled({ ok: true, sha, owed: holder.list({ sha }), last: lastOf(holder, sha) });
       /* a `subresources` or `fetch` row is keyed by its capture session (R77, R81): the key is read when a row of those kinds holds it */
       const owed = holder.list({ sha }).filter((e) => SESSION_KEYED.includes(e.kind));
-      return owed.length ? stalled({ ok: true, sha, owed }) : { ok: false, reason: "BAD_SHA" };
+      return owed.length ? stalled({ ok: true, sha, owed, last: lastOf(holder, sha) }) : { ok: false, reason: "BAD_SHA" };
     },
   };
 }

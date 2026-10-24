@@ -200,3 +200,15 @@ test("R18 R19 (T36; N711) a shared member key left bound, even a published value
   assert.deepEqual([lf.status, lf.j.verdict, lf.j.failing], [200, "pass", []]);
   assert.equal(lf.text.includes("MEMBER_TOKEN"), false);
 });
+
+/* R102 (fix round 7 G83; L): on the real binding under workerd, a hint is configured and op=selftest answers it as configuration;
+   the room is created through the helper and the instance is healthy. Workerd places nothing, so only the configuration and the
+   health are claimed here; where the room runs is the platform's, read by BOB after the redeploy. */
+test("R102 op=selftest on the real binding with STORE_LOCATION set answers store_location and store_generation as configured, healthy and with no secret; with none set, null and 1", { timeout: 120000 }, async () => {
+  const mf = await planeWith({ ADMIN_TOKEN: ADM, PROBE_TOKEN: PRB, STORE_LOCATION: "wnam" });
+  const s = await call(mf, `op=selftest&token=${PRB}`);
+  assert.deepEqual([s.status, s.j.ok, s.j.store_location, s.j.store_generation], [200, true, "wnam", 1]);
+  for (const v of [ADM, PRB]) assert.equal(s.text.includes(v), false, "never returns a secret");
+  const bare = await call(await plane(), `op=selftest&token=${PRB}`);
+  assert.deepEqual([bare.status, bare.j.store_location, bare.j.store_generation], [200, null, 1]);
+});

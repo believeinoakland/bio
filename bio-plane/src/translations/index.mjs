@@ -3,7 +3,7 @@
  * with every earlier text still readable; the grants that let named members translate; the assistant's drafts, stored as
  * labeled machine work that no member outside the workspace sees; the second check a protected word waits for; the undo;
  * the marks "this translation looks wrong"; the words in a member's language, never blank; and which language a passage
- * is read in. Requirements: build/requirements/translations.md (R1–R16). Built by copy from `instance-setup` (R67–R75,
+ * is read in. Requirements: build/requirements/translations.md (R1–R20). Built by copy from `instance-setup` (R67–R75,
  * R87; K624, N1084, P6; `build/extraction/translations.md`), its SQL unchanged; `instance-setup`'s copy is deleted in its
  * own job (T50-23).
  *
@@ -33,10 +33,13 @@ export { TRANSLATION_TABLES, TRANSLATION_TABLE_DECLARATIONS, TRANSLATIONS_SCHEMA
  * R2 (DEC-179; K2200 (4); N807): THE INTERFACE'S WORD LIST, setup-words' `WORD_ROWS` in its order, each exported as a
  * frozen `{key, en, note, means, protected}`; this module holds no copy of the list.
  * ===================================================================== */
-export const INTERFACE_WORDS = Object.freeze(WORD_ROWS.map(([key, en, note, means, prot]) =>
-  Object.freeze({ key, en, note, means, protected: prot })));
+/* Built once, at the first call, never at import (fix round 7 G84, K4753: the plane's top level is budgeted). */
+let wordList = null;
+export const interfaceWords = () => (wordList ??= Object.freeze(WORD_ROWS.map(([key, en, note, means, prot]) =>
+  Object.freeze({ key, en, note, means, protected: prot }))));
 export const INTERFACE_WORDS_COMMIT = WORDS_COMMIT;
-const WORD_BY_KEY = new Map(INTERFACE_WORDS.map((w) => [w.key, w]));
+let byKey = null;
+const wordByKey = () => (byKey ??= new Map(interfaceWords().map((w) => [w.key, w])));
 /* R1 (K2201): at most this many words a draft; R4: a kept word's bounds; R7: a mark's note. */
 export const TRANSLATION_DRAFT_MAX = 100;
 export const TRANSLATION_TEXT_MAX = 2000;
@@ -229,7 +232,7 @@ export class Translations {
   /* R2: a word of the list by its key, or NO_SUCH_WORD. */
   #translationWord(key) {
     const k = typeof key === "string" ? key.trim() : "";
-    const w = WORD_BY_KEY.get(k);
+    const w = wordByKey().get(k);
     /* DEC-49 REGION is-translation-word */
     if (!w)
       return { refused: refusal("NO_SUCH_WORD", k
@@ -398,7 +401,7 @@ export class Translations {
         asked.push(w.word);
       }
     } else {
-      asked = INTERFACE_WORDS.filter((w) => !shown.has(w.key));
+      asked = interfaceWords().filter((w) => !shown.has(w.key));
     }
     const names = this.#localNames(tag);
     const offered_official = [], words = [];
@@ -679,7 +682,7 @@ export class Translations {
       if (speaker) return speaker;
       const hist = new Map(this.#languageHistories(tag).map((h) => [h.key, h]));
       const counts = { missing: 0, shown: 0, awaiting: 0 };
-      const words = INTERFACE_WORDS.map((w) => {
+      const words = interfaceWords().map((w) => {
         const g = hist.get(w.key) || { adoptions: [], undos: [], confirmations: [], drafts: [], marks: [] };
         const c = Translations.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
         counts[c.state] += 1;
@@ -707,13 +710,16 @@ export class Translations {
     }
   }
 
-  /** R8, op=interfacewords: every word for `language` (by default the viewer's own, `instance-setup` R64, read through
-   *  R11), the team's shown translation where one is held and the English otherwise (`fallback: true`), never blank, with
-   *  `en` beside it. An awaiting word answers the English. Writes nothing; never throws. */
+  /** R8, R19, op=interfacewords: the words for `language` (by default the viewer's own, `instance-setup` R64, read through
+   *  R11). With no `language` named, only the words the team shows in the viewer's language (`fallback: false`), so with
+   *  none held the answer holds no word; with a `language` named (the settings screen's translation read), every word, the
+   *  team's shown translation where one is held and the English otherwise (`fallback: true`), never blank, `en` beside it.
+   *  An awaiting word is the English. Writes nothing; never throws. */
   interfaceWords({ language = undefined, viewer = null } = {}) {
+    const named = language !== undefined && language !== null && language !== "";
     try {
       let tag = null;
-      if (language !== undefined && language !== null && language !== "") {
+      if (named) {
         const lang = this.#translationLanguage(language);
         if (lang.refused) return lang.refused;
         tag = lang.tag;
@@ -727,13 +733,25 @@ export class Translations {
           const c = Translations.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
           if (c.state === "shown") shown.set(g.key, c.adoption.text);
         }
-      return { ok: true, language: tag, words: INTERFACE_WORDS.map((w) => (shown.has(w.key)
+      const word = (w) => (shown.has(w.key)
         ? { key: w.key, text: shown.get(w.key), en: w.en, fallback: false }
-        : { key: w.key, text: w.en, en: w.en, fallback: true })) };
+        : { key: w.key, text: w.en, en: w.en, fallback: true });
+      return { ok: true, language: tag, words_version: this.wordsVersion(), words: named ? interfaceWords().map(word)
+        : interfaceWords().filter((w) => shown.has(w.key)).map(word) };
     } catch {
-      return { ok: true, language: null, words: INTERFACE_WORDS.map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })),
+      return { ok: true, language: null, words_version: this.wordsVersion(), words: named ? interfaceWords().map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })) : [],
                detail: localize("translations.index.the_teams_translations_could_not", "the team's translations could not be read, so every word is shown in English.") };
     }
+  }
+
+  /** R20, in-process: `words_version`, a short string that names no member and no word and changes whenever a translation
+   *  of the team is adopted, confirmed or undone (the three tables are append-only, so the highest row number of each
+   *  only grows); otherwise the same across requests and isolates, being read from the storage alone. Never throws. */
+  wordsVersion() {
+    try {
+      const top = (t) => this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM ${t}`).n;
+      return `${top("translation_adoptions")}.${top("translation_confirmations")}.${top("translation_undos")}`;
+    } catch { return "0.0.0"; }
   }
 
   /* =====================================================================

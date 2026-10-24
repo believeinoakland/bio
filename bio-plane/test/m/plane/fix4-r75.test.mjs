@@ -116,8 +116,8 @@ test("R75 (control-plane R120): a deferred reading is registered by the store-in
   assert.deepEqual(rows(x), []);
 });
 
-test("R75 R77 (C5c): after a keep, a digest with no home yet stays owed as a reading (nothing reads it at promotion but the alarm until the door does), one already read ends, and a failed read leaves the entry as a reading", async () => {
-  for (const [why, left] of [["NO_HOME", 1], ["READING_HELD", 0], ["NO_WHOLE_OBJECT", 1]]) {
+test("R75 R77 (C5c): after a keep, a digest with no home yet owes nothing (G79: the filing's promotion owes the reading through control-plane), one already read ends, and a failed read leaves the entry as a reading", async () => {
+  for (const [why, left] of [["NO_HOME", 0], ["READING_HELD", 0], ["NO_WHOLE_OBJECT", 1]]) {
     const x = await pendingStore({ answer: { ok: true, read: false, why } });
     const { digest, parts } = threeParts(x.bucket, [6 * MiB, 6 * MiB, 3 * MiB]);
     await captureOf(x.ctx).keepLater({ sha: digest, parts });

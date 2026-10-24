@@ -56,6 +56,11 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 
 - **R28** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; its keys as R31 lists them), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. The 35 strings that list marks `unkeyed` (none read by a member, each with its reason) stay in source. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English.
 
+
+#### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
+
+- **R32** (fix round 8, G119; K4814 (4), K4817) **One session read per request.** One request through `gate`, `readerOf` and `liveSessionDigest` reads its session once (a memo for that request only); `doorwindow` stays (a protective limit, K1881). Test: one session read per request (red: three); through the door `groupidentity` makes three object calls.
+
 ## Private
 
 ### Uses
@@ -71,7 +76,7 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 ### Invariants
 
 - **R14** (the admission share of `control-plane` R32) Each check moves here as an invariant with its test (K6): C-38.1–C-38.8, C-78.1–C-78.3, C-29.6–C-29.10, C-32.17 and C-64.4. (T35) It also holds `DOOR_RATE_LIMITED` (R21; C-38.9) and `AI_CREDENTIAL_EXPIRED` (R10; the next free C-29 number after `credentials`' T35 rows), each with its test, awaiting promotion's stamp (T36; plan accepted red 2). (T36; F1, K2111) It also holds `CREDENTIAL_IN_ADDRESS` (R20; C-38.10, the next free C-38 number), with its test, awaiting promotion's stamp; its translation BOB's draft (`plan/draft-T36-L8-L10-reqs.md`, with K2129's added sentence), its member words the UX stream's to revise. (T36; N711) It also holds `MEMBER_TOKEN_RETIRED` (R5; C-38.11), with its test, awaiting promotion's stamp (T37).
-- **R15** No credential, session token or secret appears in any refusal this module answers, and no place is named in its behaviour or outward text (the door's own rule, applied to this module's share).
+- **R15** No credential, session token or secret appears in any refusal this module answers, and no place is named in its behaviour or outward text (the door's own rule, applied to this module's share). A Cloudflare location hint is where the hosting platform runs the team's room, not a jurisdiction and not a place the product acts on (fix round 7, G3; K4752).
 - **R16** (K723; was control-plane's `caseReader`) `readerOf` answers who is asking for a public op that answers working material only to some (op=instancegroup's whole row, op=groupidentity's claim, an unsigned case document, a review copy without a secret), and never refuses: a binding class stands as `class:<cls>` exactly when `OPS.index` admits that class and R4 lands it in the store the op reads; a live session as its viewer (the founder's `admin`, else `member:<id>`); an agent credential as its principal when R10 admits it to `index`; anyone else, an unknown or expired credential included, as no one (`""`). A store that does not answer a lookup is a silence (R6), never a statement about the caller.
 
 #### T47's L11 fold (K3100)

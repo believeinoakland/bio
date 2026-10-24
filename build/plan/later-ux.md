@@ -108,3 +108,33 @@
 - Add · the refusal row for filing into a project the member is not in (G74: DEC-83's sentence, then the remedy: only the project's members can add to it, ask to join; stand-in in code); the other project's name under "Filed here as well" is unchanged (G73) · A G15/G41, G7 · fix round 7 §5 · 2026-10-23
 - Timeline · the event-kind box still mixes plain words with raw vocabulary words ("adoption", "enactment", "issuance", "discretion", "waiver") · B E14 STILL MINOR (carried from round 6 §5) · fix round 7 §5 · 2026-10-23
 - Action · "Show the routes" changes nothing on screen when the team holds no route for that kind: say so in the press's own result and drop the needless re-read · B C66 STILL MINOR (carried from round 6 §5) · fix round 7 §5 · 2026-10-23
+- Case ceremony · G60's refusal draws each finding with the bare check id `C-12.2`, in developer words (file paths, "manifest entry"), three findings under one heading: a plain name for each check and a grouping · B G60 MINOR (carried from round 7 §5) · fix round 8 §5 · 2026-10-23
+- Add · the no-project variant of `screen.capture.fetch.done` (G108): stand-in "Fetched. {document} waits in Held captures" · A G85 MINOR · fix round 8 §5 · 2026-10-23
+- Add · the sentence for "some of the page's files could not be kept" that replaces the renderer's words (G110): a key by reason code, stand-in in code · A G72 MINOR · fix round 8 §5 · 2026-10-23
+- Add · the sentence for a project the member cannot name (D4): how to ask to join a project she cannot see, replacing "this project" · A G74 MINOR · fix round 8 §5 · 2026-10-23
+- Add · the held-elsewhere result of a large capture (G105): the existing refusal's words stand; a gentler sentence if UX wants one · A G73 member · fix round 8 §5 · 2026-10-23
+- Add · "the capture is 41502904 bytes in 5 parts, over the 25165824 B a format entry is handed here, so it was not read": raw bytes in a sentence a member reads (the behaviour is the PDF envelope's) · A G73 MINOR · fix round 8 §5 · 2026-10-23
+- Add, Held · the profile label "an unrecognised document" for a CSV and a text file · A G76 MINOR (carried from round 7 §2b) · fix round 8 §5 · 2026-10-23
+- Document · "Partial: pages 25-30 have no text" for a scan whose remaining pages are being read in the background (G96): say they are being read and when to look · A G67/G68 scan · fix round 8 §5 · 2026-10-23
+- Add · the line for an upload read in the background because its unpacked size is large (G122): "being read; searching covers what is read so far", stand-in in code · A plan 2b ODS · fix round 8 §5 · 2026-10-23
+- Add · the stated refusal when a reading's registration could not be written (G98, held; stand-in in code) · review N12 · fix round 8 §5 · 2026-10-23
+- Document · two controls both read "Next page" on a paged document (`document-read-more-0` reads more passages of the answer, `document-read-page-1` is the page radio, `screens-inquiry/document.mjs:403, 507`; the first changes nothing a member sees when the pages are numbered): one control or two words · B G77 MINOR · fix round 8 §5 · 2026-10-23
+- Document / Add · the alpha-limit sentence naming the file's size and the limit and never saying "read" (G124a, G135d) · K4831 (3) · fix round 9 §5 · 2026-10-24
+- Document · the states: queued, being fetched, being read N of M, read in part and why, refused with its limit, finished; an "about" estimate once measurable; "searched so far"; a notice at finish or stop (G135f) · K4831 (5) · fix round 9 §5 · 2026-10-24
+- Document · "RTF is not read yet", "email is not read yet", "legacy Word is not read yet", "(type) is not read yet" with no "Read it now" (G135a, G135e) · fix round 9 §5 · 2026-10-24
+- Document · the reason a picture was refused, in the member's words (G135b); "read as English" (SCAN C6, with the language rows) · fix round 9 §5 · 2026-10-24
+- Document · "needs a password" for an encrypted document (G129a, G136a); "the file is damaged; N of M pages could be read" (G132f); a page over the bound listed unread (G124d) · fix round 9 §5 · 2026-10-24
+- Document · "every part is read: footnotes, headers, comments, notes shown with their kind" and a citation naming the kind (G134a); dates typed in a workbook (G134c) · fix round 9 §5 · 2026-10-24
+- Document · the assumed encoding shown, and a disagreeing window stated (G131g) · fix round 9 §5 · 2026-10-24
+- Document / Add · "reading does not wait for the scan; a found threat's text leaves search once the scanner has signatures" (G136e) · fix round 9 §5 · 2026-10-24
+- Safe view · "the first 500 pages" (G137a); a spreadsheet preview's "show more" (G137b: a UX-DESIGN screen, first) · fix round 9 §5 · 2026-10-24
+- Visitor copy · "as a first-time visitor saw it: first load, not scrolled, banners not dismissed, no frames"; "the page did not render"; the day's render account (G137c) · fix round 9 §5 · 2026-10-24
+- Illegible page · "this page is sideways or too faint to read" and "only partly legible" (G137d); DEC-417's "three interruptions" sentence retired (G129c) · fix round 9 §5 · 2026-10-24
+- Add · the stated refusal when a reading's registration could not be written (G126c, carried from round 8) · fix round 9 §5 · 2026-10-24
+- Archive · "archive of 3 members, read separately" (G126f) · fix round 9 §5 · 2026-10-24
+- Add / Document · "N pictures kept, not read" with the count and the size (G138); "this picture could not be read: the pixels are not decoded reliably" with the reason (G132l) · fix round 9 §5 · 2026-10-24
+- Add / Document · the refusals with their figures: "too large" with size and limit, the picture over the bound (`IMAGE_TOO_LARGE`), "too many objects" with the count (`TOO_MANY_OBJECTS {n}`), a cell over the bound (`over_cell_bound`), a column count over the bound, an archive over either limit with the reason (G124a, G124c, G124e, G124g, G125a-h, G135d) · fix round 9 §5 · 2026-10-24
+- Document · "a quote was never closed at row N (size)"; "the dialect differs between windows" (G131b, G131c); "this file's characters could not all be read: N replaced" and `ENCODING_UNSUPPORTED {name}` (G131g) · fix round 9 §5 · 2026-10-24
+- Document · a deterministic failure on the file's own bytes, final with its reason, not "try again" (G133c); "omitted with a statement": a reading over 1 MiB keeps its units and states the omitted part (G128e) · fix round 9 §5 · 2026-10-24
+- Document · "encrypted" and "could not be scanned" as their own states, "the scanner stopped at its limit" with the limit (G136a, G136b) · fix round 9 §5 · 2026-10-24
+- Add · a workbook refused with the count of its cells (G137e); a light-kind file refused over 50 MB or 1,048,576 rows with the figure (G131i) · fix round 9 §5 · 2026-10-24

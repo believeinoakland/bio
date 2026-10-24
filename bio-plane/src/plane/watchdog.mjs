@@ -7,9 +7,11 @@
    objects always tried. Any failure is one structured `console.error` line and then a THROW, so Cloudflare's Cron Events record a
    failed run: the one record that outlives a dead object. It does no `waitUntil` work and writes to no bucket or key-value store. */
 
+import { storeStub } from "../store-place.mjs";
+
 /** The bound on one object's answer, milliseconds. */
 export const WATCHDOG_BOUND_MS = 10_000;
-/** The two objects the door addresses (`idFromName`), each with its own scheduler and alarm. */
+/** The two objects the door addresses (`storeStub`, R95), each with its own scheduler and alarm. */
 export const WATCHDOG_OBJECTS = Object.freeze(["bio", "scratch"]);
 
 const BUSY = Symbol("busy");
@@ -19,7 +21,7 @@ const messageOf = (e) => String((e && e.message) || e).slice(0, 200);
 async function ask(env, object, at, bound) {
   let timer;
   try {
-    const stub = env.STORE.get(env.STORE.idFromName(object));
+    const stub = storeStub(env, object);
     const call = Promise.resolve().then(() => stub.watchdog(at));
     call.catch(() => {});   /* a call that outlasts the bound may reject later: that is caught here, never unhandled */
     const said = await Promise.race([call, new Promise((resolve) => { timer = setTimeout(() => resolve(BUSY), bound); })]);

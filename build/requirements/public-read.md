@@ -109,6 +109,11 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 
 - **R43** (fix round 4, C47 seam; K4511; amends R41; case-grammar R17, case-disclosures R7) **A signed extent is read in its canonical form.** R41's `place` is read from the passage's signed `extent` whether it crosses as an object or as `content`'s canonical JSON text (the form case-grammar R17 signs and case-disclosures carries); text that does not parse to an extent gives `place: null`, never a throw. Test: `screens-publish/c47-seam.test.mjs` (the whole chain: the published page names "Paragraph 4" and "Paragraph 2"), and public-read's own fixture handing the string.
 
+
+#### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
+
+- **R44** (fix round 8, G121; K4817) **The case file is assembled in groups.** `buildCaseFile` first reads every object it will need (findings' bytes, materials, extracted texts, registered archives, copies, attestation tokens, calculation inputs; each sha once, only well-formed ones, only those the facts do not carry inline) in groups of 8 (`CASEFILE_GROUP`), before the file list is built, and hands each answer back where the assembly asks, so the files, `unheld`, statements and their order are those of a one-at-a-time read; a read that throws throws where it was asked (step `build`, code `UNKNOWN`). So an edition with a missing finding reads its materials before it is refused, bounded by `CASEFILE_FILES_MAX`. The assembly's `head` and `put` of the files run in groups of 8 over the distinct objects (two paths of one file are one object); the manifest's own `head` and `put` are unchanged. The same objects are written and the answers are byte for byte as before. Test: `r8-assemble.test.mjs`: over 19 files, peak concurrency of `head`, `put` and `get` at least 6 and never over 8, and the same keys written once each.
+
 ## Private
 
 ### Uses

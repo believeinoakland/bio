@@ -41,14 +41,17 @@ import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
 import { acquireHandlerParts, acquireTimingsOps, traceStamped, ACQUIRE_STAGES_DDL } from "./acquire-timings.mjs";
-import { pendingOf, pendingOps } from "./pending.mjs";
+import { pendingOf, pendingOps, administersOf } from "./pending.mjs";
+import { storeId } from "../store-place.mjs";
 
 /** R78 (K4530, B34; fix round 6, G12e): the response header `server-timing: object;dur=<ms>`, the milliseconds of I/O time the object spent on a
  *  route; control-plane reads it and adds `in-<route>` beside its `do-<route>`. It is I/O time and nothing more: workerd freezes `Date.now()` during
  *  synchronous work (runtime-limits' `cpu.mjs`), so no clock in the object counts compute. Compute is `do-<route>` minus `in-<route>` minus the hop
  *  to the object (about 115 to 160 ms); a heavy read whose `in-` is small beside its `do-` was computing, not waiting. */
 export const OBJECT_TIMING_HEADER = "server-timing";
-const objectTiming = (t0) => `object;dur=${Math.max(0, Date.now() - t0)}`;
+/** R96 (fix round 8, G106, G120; control-plane R129): beside it, `object-age;dur=<ms>`, the milliseconds since this object instance started (an instant taken
+ *  when the Store is constructed), so the door can say a request met a cold object (`cold.object_ms`). It is read at the answer, from the same clock. */
+const objectTiming = (t0, startedAt) => `object;dur=${Math.max(0, Date.now() - t0)}, object-age;dur=${Math.max(0, Date.now() - startedAt)}`;
 import { deliverOwedRender } from "../control-plane/index.mjs";
 import { doorbellOf, doorbellOps } from "../doorbell/index.mjs";
 import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
@@ -157,12 +160,23 @@ export const STEP_ORDER = stepOrderFrom(MODULE_ORDER);
    R40). The CASE rows are ratification's and publication's registered seeds (record-core R70). */
 const MINT_LEDGER_LIVE = Object.freeze([["PROJ", "bundles", "bundle_id"]]);
 
+/* R95: what a retired room says to a caller: a refusal naming it (no sentence: the reason is the code), status 410 */
+const retiredBody = () => ({ ok: false, reason: "ROOM_RETIRED", code: "ROOM_RETIRED", retired: true });
+const retiredAnswer = () => new Response(JSON.stringify(retiredBody()), { status: 410, headers: { "content-type": "application/json" } });
+
 export class Store extends DurableObject {
+  /* R95: a room of another generation is inert (set at construction) */
+  #retired = false;
+  /* R96: the instant this instance started, for `object-age;dur` */
+  #startedAt = Date.now();
   constructor(ctx, env) {
     super(ctx, env);
     this.ctx = ctx;
     this.env = env;
     this.sql = ctx.storage.sql;
+    /* R95 (fix round 7, G83; review2 D4): a retired room registers no consumers, migrates nothing and writes nothing; its alarm is deleted when it
+       fires and every request is refused, its data left as it is (removing the generation makes it the current room again). */
+    if (this.#isRetired()) { this.#retired = true; return; }
     /* R2. record-core: the evidence bucket and its key prefix, handed over at its first construction. */
     recordOf(ctx, { evidence: env.CAPTURES ?? null, evidencePrefix: () => `${this.#ownNamespace() || "bio"}/captures/` });
     /* R21 (K1541; credentials R23, R29): credentials holds the Worker secret its seal is derived from, built here before
@@ -420,7 +434,7 @@ export class Store extends DurableObject {
        clear (record-core K23). Acquisition reads `cap.keepLater` as it reads `cap.waitUntil`: a keep that will not end inside the
        door's bound is written down here and put by the alarm, never left to a promise nothing keeps alive. */
     const pending = pendingOf(ctx, { env, store: () => this.#ownNamespace() || "bio", deliver: deliverOwedRender });
-    recordOf(ctx).declarePurge("plane", ["keeps_pending", "acquire_stages"]);
+    recordOf(ctx).declarePurge("plane", ["keeps_pending", "keeps_last", "acquire_stages"]);
     capture.keepLater = (a) => pending.keepLater(a);
     capture.owedLater = (a) => pending.owedLater(a);   /* R77, acquisition R100: the ledger's `subresources` and `unpack` entries, registered the same way */
     /* R83 (fix round 6, G8, G13; extraction R89): the same ledger handed to extraction, which owes it the repair of an old reading and the restart of a partial text at start; guarded, as extraction's own merge is later than this line */
@@ -675,16 +689,17 @@ export class Store extends DurableObject {
 
   /* B2 (K1674, K1684): `op=ask`'s work on the `bio` object, reached over the object's RPC from the door's arm (no route:
      R5). */
-  async ask(args) { return askOnObject(this.ctx, this.env, args || {}); }
+  async ask(args) { if (this.#retired) return retiredAnswer(); return askOnObject(this.ctx, this.env, args || {}); }
   /* R19 (N686; K2038; control-plane R57): a draft's account and grant on the `bio` object, reached over the object's
      RPC by control-plane's door (no route: R5). */
-  async draft(args) { return draftOnObject(this.ctx, this.env, args || {}, { read: (op, params) => this.#read(op, params) }); }
+  async draft(args) { if (this.#retired) return retiredAnswer(); return draftOnObject(this.ctx, this.env, args || {}, { read: (op, params) => this.#read(op, params) }); }
 
   /* R40 (T46; K2999; control-plane R77), R46 (T47; N955; ai-runs R18, credentials R63): a member's own run's segment
      dispatched by ai-runs in the object addressed (`dispatchMemberRun`, its R18), reached over the object's RPC by
      control-plane's door. It takes no credential: only `run`, `by`, `viewer` and `at` are passed, so a `credential` in
      `args` is neither read nor handed on; the segment's credential is minted here, in the plane, by ai-runs. */
   async dispatchMemberRun(args) {
+    if (this.#retired) return retiredBody();
     const a = args && typeof args === "object" ? args : {};
     const asked = {};
     for (const k of ["run", "by", "viewer", "at"]) if (a[k] !== undefined) asked[k] = a[k];
@@ -696,6 +711,7 @@ export class Store extends DurableObject {
      of this object (the door asks the `bio` object's); `project`, when named, is passed on so the answer carries that
      matter's `matter_stake` (null with none). */
   async groupFields(args) {
+    if (this.#retired) return retiredBody();
     const project = args && typeof args === "object" && typeof args.project === "string" && args.project !== "" ? args.project : null;
     return publicReadOf(this.ctx).groupFields(project ? { project } : {});
   }
@@ -711,25 +727,26 @@ export class Store extends DurableObject {
   }
 
   /* R4: scheduler's. */
-  async alarm() { await schedulerOf(this.ctx, this.env).alarm(); }
-  async onAlarm(now) { return await schedulerOf(this.ctx, this.env).onAlarm(now); }
+  async alarm() { if (this.#retired) { await this.ctx.storage.deleteAlarm(); return; } await schedulerOf(this.ctx, this.env).alarm(); }
+  async onAlarm(now) { if (this.#retired) { await this.ctx.storage.deleteAlarm(); return retiredBody(); } return await schedulerOf(this.ctx, this.env).onAlarm(now); }
   /* R79 (fix round 6, G1; scheduler R29): the Worker's cron asks this once a cycle, over the object's RPC (`watchdog.mjs`): the scheduler's `watch(at)`. */
-  async watchdog(at) { return await schedulerOf(this.ctx, this.env).watch(at); }
+  async watchdog(at) { if (this.#retired) { await this.ctx.storage.deleteAlarm(); return retiredBody(); } return await schedulerOf(this.ctx, this.env).watch(at); }
   /* scheduler's alarm read (its R13), reached over the object's RPC by scheduler's plane test. */
-  async schedAlarmAt() { return await schedulerOf(this.ctx, this.env).alarmAt(); }
+  async schedAlarmAt() { if (this.#retired) return null; return await schedulerOf(this.ctx, this.env).alarmAt(); }
 
   /* R1, R5: every store request passes store-door's one frame (K2043). R14 (DEC-113; control-plane R46): it is handed the
      object's namespace, R2's own name (`bio` or `scratch`, else `bio`, so an object whose name is unknown is the real
      record's and fails closed), and `action-holds`' `purgeHeld` (its R9, was `actions` R60; T45, K2781 (1)) on the one
      instance R39 builds, each asked at the purge only. */
   async fetch(req0) {
+    if (this.#retired) return retiredAnswer();
     const t0 = Date.now();
     const req = await traceStamped(req0);   /* R73: `acquire`'s trace, from the header capture sends */
     const res = await this.#dispatch(req);
     /* R78 (fix round 5, E10; K4530; fix round 6, G12e): the I/O time this object spent on the route, to its response (a stream's, to its first
        byte), whole milliseconds, as `server-timing: object;dur=<ms>`, which the door reads; compute is not in it. The object sets it; a value carried in is replaced. */
-    try { res.headers.set(OBJECT_TIMING_HEADER, objectTiming(t0)); return res; }
-    catch { const headers = new Headers(res.headers); headers.set(OBJECT_TIMING_HEADER, objectTiming(t0)); return new Response(res.body, { status: res.status, statusText: res.statusText, headers }); }
+    try { res.headers.set(OBJECT_TIMING_HEADER, objectTiming(t0, this.#startedAt)); return res; }
+    catch { const headers = new Headers(res.headers); headers.set(OBJECT_TIMING_HEADER, objectTiming(t0, this.#startedAt)); return new Response(res.body, { status: res.status, statusText: res.statusText, headers }); }
   }
   #dispatch(req) {
     return dispatch(req, { routes: (url, body, grant) => this.routes(url, body, grant), membership: () => membershipOf(this.ctx),
@@ -756,15 +773,24 @@ export class Store extends DurableObject {
   }
 
   /** The namespace this Durable Object IS, asked of the runtime rather than remembered: the door routes every call to
-   *  `idFromName("bio")` or `idFromName("scratch")`, and a Durable Object's id equals the one it was named by. Null for
-   *  any other object (a suite's private instance), never a guess: a default here would let a resumed run touch the
-   *  real record while the run lived in scratch. */
+   *  the room `storeId(env, "bio")` or `storeId(env, "scratch")` (runtime-limits R28: the generation is on the room's name only),
+   *  and a Durable Object's id equals the one it was named by. It answers the LOGICAL name (`"bio"` inside `bio~g2`), so every
+   *  `store=`, evidence prefix and published prefix is unchanged. Null for any other object (a suite's private instance), never
+   *  a guess: a default here would let a resumed run touch the real record while the run lived in scratch. */
   #ownNamespace() {
     const ns = this.env && this.env.STORE;
     if (!ns || typeof ns.idFromName !== "function" || !this.ctx.id || typeof this.ctx.id.equals !== "function")
       return null;
-    for (const name of ["bio", "scratch"]) if (this.ctx.id.equals(ns.idFromName(name))) return name;
+    for (const name of ["bio", "scratch"]) if (this.ctx.id.equals(storeId(this.env, name))) return name;
     return null;
+  }
+
+  /** R95: a RETIRED room is a team's room of another generation: an object that is a room by its name (`bio`, `scratch`, or either
+   *  with a `~g<n>` suffix) and is neither current room. A suite's private instance is no room, and is never retired. */
+  #isRetired() {
+    if (this.#ownNamespace() !== null) return false;
+    const name = this.ctx && this.ctx.id ? this.ctx.id.name : undefined;
+    return typeof name === "string" && /^(bio|scratch)(~g[1-9][0-9]*)?$/.test(name);
   }
 
   /* R5: the one route map, every module's own ops map (the `membershipOps` pattern), then instance-setup's, then
@@ -805,8 +831,8 @@ export class Store extends DurableObject {
       ...acquireTimingsOps(ctx, url),
       /* R75: the door's deferred reading (control-plane R120), registered for the alarm; store-internal, no caller's own */
       ...pendingOps(pendingOf(ctx), url, { health: () => schedulerOf(ctx, env).health(),
-        /* R80: an administrator is the root of trust's credential (`class:admin`) or a member membership R64 names (the founder, an active member of role `admin`) */
-        administers: (v) => v === "class:admin" || (typeof v === "string" && v.startsWith("member:") && membershipOf(ctx).isAdministrator(v.slice(7))) }),
+        /* R80, R90: an administrator is the root of trust's credential (`class:admin`), the founder's session (the door stamps the bare `admin`) or a member membership R64 names (an active member of role `admin`) */
+        administers: administersOf((id) => membershipOf(ctx).isAdministrator(id)) }),
       ...captureOps(captureOf(ctx), url, body, env, acquireHandlerParts(ctx, url)),
       /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, each answered by doorbell's instance
          (capture's copy deleted in T43, N849). */

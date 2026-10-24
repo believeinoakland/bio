@@ -1,6 +1,26 @@
 # bundler (T51)
 
-**Status** · session_01K1jpKWZpajq2vS4ukUMM4m · depth 2 · COMPLETE · handled B14
+**Status** · session_01SGNnL5vz8PKJ45aKQbLD7g · depth 2 · COMPLETE · handled B17
+
+## Record (BUNDLER #30, B15/B16: G83 R41, G84 R42)
+
+**Entries applied**
+- **R41 (`--store-location`, `--store-generation`).** `derive-bindings.mjs` `deriveStorePlace({location, generation}, hints)` (pure): the hint must be in the list passed in, the generation must match `/^[1-9][0-9]*$/`; refusals `[BAD_STORE_LOCATION]`, `[BAD_STORE_GENERATION]`; `1` sends no binding and names `STORE_GENERATION` for removal. `deploy.mjs`: a flag's value is parsed so it is never taken as a positional argument (a flag with no value is refused by name); validation runs before the first request; the bindings are `plain_text` appended to the derived ones, so a held `STORE_LOCATION`/`STORE_GENERATION` without a flag is kept by R34's rule, and a flag that differs from the held value is a metadata deploy; a held `STORE_GENERATION` that `--store-generation 1` removes is a difference (metadata deploy) and is not kept. The hint list is runtime-limits' `STORE_HINTS` (R27), read with a dynamic `import("../src/store-place.mjs")` only when `--store-location` is given, so no other deploy depends on the provider's file.
+- **R42 (start-up figure).** `deploy.mjs` `startupOf(answer)` reads `result.startup_time_ms` of the upload's JSON answer (Cloudflare API reference, Workers > Scripts > "Upload Worker Module", `PUT /accounts/{id}/workers/scripts/{name}`, response `result.startup_time_ms: number`, read 2026-10-23; wrangler 4.114 reads the same field in `deploy` and prints "Worker Startup Time"). It prints `test deploy: startup <ms> ms`, or `test deploy: startup unreported` for an answer without a finite non-negative number, on its own line after the upload is verified (after the upload's answer), only printed, never believed for state, never failing. **Reading to confirm:** the line is printed only in a test deploy (`--test-instance`), because R40's control says a deploy without the flag prints no `test deploy:` line (`release.test.mjs` R40 went red when I printed it always; the workflow deploys with the flag). Proposed R42 wording: add "in a test deploy (R40)".
+- **Answer shape (R-SEAM):** the stub's answer shape is the documentation's (with and without the field), not a recorded real answer; the real figure is BOB's read of the workflow log at the redeploy. Not this round: workerd measure, data modules, hard stop (K4753).
+- Test files: `bio-plane/test/m/bundler/g83-g84.test.mjs` (9 tests; R41 and R42 named), `stubfetch.mjs` (`startupTimeMs` scenario; the upload answers `result`), `repo.mjs` (copies `src/store-place.mjs` into the fixture when present).
+
+**Failing first:** with `deploy.mjs` as it was: `g83-g84.test.mjs` 9 tests, 2 pass, 7 fail. With the change and a temporary stand-in for the provider's file (removed, never committed): 9 pass; `bio-plane/test/m/bundler/` plus `deploybindings.test.mjs`: tests 166, pass 166, fail 0.
+
+**Completion (B17, runtime-limits merged, K4757):** merged `tranche/T51`; with the real `store-place.mjs`, `bio-plane/test/m/bundler/` + `deploybindings` + `resolveversion` + `bundle` + `m/runtime-limits/`: tests 200, pass 200, fail 0 (the three provider-dependent tests green). Impact set (`impact.mjs origin/tranche/T51 HEAD`): bundler 5/10 files (all in the run above), plane `limits.test.mjs` 3 of 3 pass. Checks: format 0, architecture (bundler) 0, coverage 42 of 42, ownership 0; `checks/run.mjs`: no finding in bundler's files (others' words/inline/architecture findings are not mine).
+
+**Red by name until runtime-limits merges (R-SEAM):** three tests need the real `bio-plane/src/store-place.mjs` (runtime-limits R27): "R41: runtime-limits' STORE_HINTS exists…", "R41: --store-location and --store-generation are sent…", "R41: every hint of runtime-limits' list is accepted…". On this branch without it: tests 168, pass 165, fail 3, exactly those. When BOB's CHANGE says it has merged: merge `tranche/T51`, rerun.
+
+**Platform check (R-FOUR 4):** L: the stub account only (no deploy is run by a session). P: BOB reads the `test deploy: startup` line in the workflow log at the redeploy. `unreported` means the real answer lacked the field (the plan's G2 rule applies).
+**Why the tests missed it (R-FOUR 2):** neither flag nor start-up figure existed; the tests are the new ones. **R-CLOCK / R-OLD / census ops:** none (no stored data, no op, no timing assertion).
+**Stale generated artifacts:** none. **Deferred:** none. **Found in other modules:** none. `deploy-test.yml` dispatch inputs are BOB's (K4754).
+
+Size (session_01SGNnL5vz8PKJ45aKQbLD7g): test runs 6, module lines 4580
 
 ## Record (BUNDLER #27, B12: G39, pure-ASCII fleet bundles)
 
@@ -345,3 +365,11 @@ Failing-first `test/m/bundler/g54-observability.test.mjs`: red (the file cannot 
 Facts: `newgroup/src/steps/uploads.mjs` sends no `observability` (:32 and :98) and its `limits` ride the release (`release.limits`, :37, :103); `release-assemble.mjs` has no `limits` and needs no change, so the installer (merge 173) takes it with the control-plane statement. Census ops: none. Words: none. Requirement lines proposed (R15, R18, R34, R40) are in my record. Pre-step: I ran `npm ci` in agent-runner, sheet-worker and file-scanner (K4113); without it two real-fleet bundler tests fail identically with or without my change.
 
 Size (session_01K1jpKWZpajq2vS4ukUMM4m): test runs 7, module lines 4461
+
+## J16 · REPORT
+
+R41 and R42 are applied and pushed (record: BUNDLER #30). R42: `result.startup_time_ms` of the upload answer (Cloudflare API ref "Upload Worker Module"; wrangler reads the same) is printed as `test deploy: startup <ms> ms` / `unreported` after the upload, in a test deploy only (R40's control forbids a `test deploy:` line without the flag; propose R42 wording "in a test deploy"). R41: `deriveStorePlace`, flags validated before any request, held values kept, `--store-generation 1` removes the held generation. Tests: g83-g84.test.mjs 9 tests (red first 2 pass/7 fail); with a temporary stand-in for runtime-limits' store-place.mjs the module + deploybindings run is 166/166. Without the provider on this branch, 3 tests are red by name (they read the real STORE_HINTS, R27). Checks: format 0, architecture 0 for bundler (one failure is queue-producers', not mine), coverage 42/42, ownership 0. I am not COMPLETE until runtime-limits merges: post CHANGE then; I merge tranche/T51, rerun, and COMPLETE.
+
+## J17 · COMPLETE
+
+R41 and R42 complete on job/T51/bundler. With runtime-limits merged: bundler + deploybindings + resolveversion + bundle + runtime-limits tests 200/200; impact set (plane limits.test.mjs) 3/3. format 0, architecture 0, coverage 42/42, ownership 0. R42 wording proposal: print only in a test deploy (R40 control). Record updated.

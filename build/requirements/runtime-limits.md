@@ -1,6 +1,6 @@
 # runtime-limits — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); the group's copy binds no Claude credential in its environment (K1502, K1755): R14 and R15 retired. Last changed T35 (T35-4: R13, R23; K1916); every requirement met.
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); the group's copy binds no Claude credential in its environment (K1502, K1755): R14 and R15 retired. Last changed T35 (T35-4: R13, R23; K1916); every requirement met. Fix round 9 (T51; G123a, G124; K4831 (3) (8), K4834, K4835 (1)): R29-R34 new, the reading ceilings' one table, the byte ledger, the cap convention and the platform's figures; R22 amended; marked not yet met (T51).
 
 ## Public
 
@@ -15,7 +15,7 @@ a value that has ever been published in this repository, and the status of the t
 credentials an instance may hold as deploy secrets (BIO's own `ai` credential that resumes a run; the
 group's copy binds no Claude account as a deploy secret, K1502, K1755: the group's API key, when held, is in `credentials`' sealed table, never a binding, so the instance-level Claude status always answers none), and which bound credential the instance's unattended work spends.
 Neither half holds a store, reads the network, or has any way to
-set a credential.
+set a credential. A third part, for the reading modules, is the one table of every ceiling a reader keeps (`read-bounds.mjs`), a count of the bytes a reader holds (`byte-ledger.mjs`) and the platform's measured figures with the source of each; it too holds no store and reads no network.
 
 ### Provides
 
@@ -108,18 +108,30 @@ set a credential.
   `"NO_INSTANCE_AI_CREDENTIAL"`, `"INSTANCE_AI_CREDENTIAL_REVOKED_BY_PUBLICATION"`), stable across calls.
   They are the only values `reason` ever takes, besides `null`.
 
+**Where the platform keeps the team's room (fix round 7 G83; K4746, K4747, K4752)** (`bio-plane/src/store-place.mjs`)
+- **R27** `STORE_HINTS` is the frozen list of Cloudflare's location hints, exactly `wnam`, `enam`, `sam`, `weur`, `eeur`, `apac`, `apac-ne`, `apac-se`, `oc`, `afr`, `me`; `storeHint(env)` answers `env.STORE_LOCATION` when it is exactly one of them, else `null` (an absent, empty, padded or differently cased value is no hint). `storeGeneration(env)` answers `env.STORE_GENERATION` as a whole number when it matches `/^[1-9][0-9]*$/` and is 2 or more, else `1` (so `"02"`, `"2.0"`, `" 2"` are `1`).
+- **R28** `storeId(env, name)` answers `env.STORE.idFromName(n)` and `storeStub(env, name)` answers `env.STORE.get(storeId(env, name), {locationHint: h})` when `storeHint(env)` is `h`, else `env.STORE.get(storeId(env, name))` with no second argument; `n` is `name` when `storeGeneration(env)` is `1`, else `` `${name}~g${generation}` ``. The suffix is on the object's name only: the logical names `bio` and `scratch` (a `store=` value, an R2 key prefix such as `bio/captures/`, `bio/published/`, `bio/inbox/`) never change with the generation. These are the only way product code names or obtains the team's room (`bio`, `scratch`): no other file calls `idFromName` on `env.STORE`. A hint is where the hosting platform runs the room, never a jurisdiction (R25).
+
+**The reading ceilings, the byte ledger and the platform's figures (fix round 9, G123a, G124; K4831 (3) (8), K4834, K4835 (1); `bio-plane/src/read-bounds.mjs`, `bio-plane/src/byte-ledger.mjs`)**
+- **R29** `READ_BOUNDS` is a deeply frozen map `kind -> name -> {standard, alpha, protective, key}`: one row for every ceiling a reading module keeps (the bytes, rows, columns, cells, entries, depth, ratio, objects, pixels and the rest it refuses above), each with three figures and `key`, the `localize` key of the member sentence that states a refusal on it (the key belongs to the quoting module; this module holds no sentence). `standard` is the figure the standard sets (K4628); `alpha` is the figure the alpha keeps (K4831 (3)): the kind's own figure at the start of fix round 9 where it is lower than the standard; `protective` is a limit inside the standard against a file no ordinary program produces (K4831 (8)). A row's `alpha` is never above its `standard`.
+- **R30** The figures the table holds are these, and a quoting module's job adds a row, with its three figures and `key`, for any other ceiling it keeps, the `alpha` being the figure it holds at the start of the round. A figure in MB or GB counts 2^20 or 2^30 bytes, the platform's own unit (K4838 (6)). **Light kinds** (`text`, `csv`, `tsv`, `json`, `xml`): standard 50 MB (52,428,800 bytes) and 1,048,576 rows (K4628). **Archives:** standard 500 MB (524,288,000 bytes) as uploaded and 2 GB (2,147,483,648 bytes) unpacked, alpha 256 MiB for each (K4837), depth 3, ratio 1,100 to 1, 10,000 members, each member within its kind's figure. **Alpha figures of the heavy kinds** the plan names: PDF bytes read 24 MiB; XLSX declared text 32 MiB; ODS `content.xml` 20 MiB and 262,144 expanded repeat units; the analysis workbook's cells 50,000 (250,000 once the workbook-add job merges, K4831 (10)); the sheet worker's 250,000 cells, 9,000,000 bytes and 120,000 ms; office retained objects 250,000. **Protective figures** (each is the plan's proposal, recorded by BOB when the capped child has shown it): columns 16,384; a cell 32,767 characters (longer kept to 1 MiB and stated per cell); sheets 1,000; members 10,000; nesting depth 3; ratio 1,100; a page's decoded content 64 MiB; an object stream 16 MiB; a CMap 1 MiB; an embedded file 64 MiB; objects 2,000,000; a direct object 4 MiB and 65,536 operands; tree depth 256; `bfrange` 65,536 codes; a picture edge 65,535 and chunks 65,536; a row stride 8 MiB; an XML tag 64 KiB; a zip directory 16 MiB; a name 4,096 bytes; office package entries 100,000 and archive entries 10,000; retained objects 250,000; pixels a page 120,000,000 (`COVER_MAX_PIXELS`); the render DOM (the figure the capture-sources job proposes).
+- **R31** `boundOf(kind, name) -> number` answers the ACTIVE figure of a row: its `alpha`, except for the light kinds (R30), which answer their `standard` (K4834). `statement(kind, name, size) -> {size, bound, key}` answers the size the caller measured, the active figure and the row's `key`, so a refusal is stated with the file's size and the limit and never says a file was read that was not. Both throw an `Error` naming the kind and name when no such row exists (a defect in the quoting module, found by its test); neither throws otherwise. A module that keeps a ceiling quotes `boundOf` and holds no numeric literal for it.
+- **R32** `byteLedger() -> {hold(n, tag), release(n, tag), peak(), held()}` makes one ledger, independent of every other, that counts the bytes of the backing stores (buffers, ranges, decoded copies) a reader holds. `hold` adds `n` bytes (a non-negative integer, else it throws a `TypeError`) under `tag`; `release` takes `n` bytes off that tag and never below zero; `held()` is the bytes held now, over all tags; `peak()` is the largest `held()` the ledger has reached. A buffer not released shows in `held()` after its work ends.
+- **R33** `capFor(N) -> integer` is the one cap convention for a capped child process: the old-space cap in whole megabytes for a child that holds `N` MB of backing bytes, computed from the memory entries of `PLATFORM_FIGURES` (R34: the isolate's memory, shared by the objects of a class, and the platform's idle figure), the same answer for a PDF run and a sheet run. No other formula for it exists.
+- **R34** `PLATFORM_FIGURES` is a deeply frozen map `name -> {value, source}`, one entry for each figure a gated job depends on (the memory idle figure; the landing batch size `LAND_BATCH_BYTES`; the plane's `cpu_ms`; the zone's request body cap). The entries start at Stage 0's measured figures (K4838): `isolate_memory_bytes` 268,435,456 (about 256 MiB of buffers per isolate, shared by up to five objects of a class; one buffer at most 134,217,728), `idle_bytes` 52,428,800 (K4616, not yet measured: P-M2 (c)), `cpu_ms` 300,000, `LAND_BATCH_BYTES` 1,048,576, `request_body_max` 104,857,600 (including framing), each with `source` `K4838 (<n>)` or `K4616`. `source` is the ruling the value rests on until BOB records the measured row in `PLATFORM.md`; the same commit then changes the entry's `value` and sets `source` to `PLATFORM.md P-M<n>` naming that row. An entry whose `source` is a ruling holds that ruling's figure; no entry changes its value without a `source` naming a row. No code reads the Markdown.
+
 ## Private
 
 ### Uses
 
-- None. `runtime-limits` is Layer 1 with no `uses` entry in `modules.json`. `unattendedCredential` (R26) calls
+- None. `runtime-limits` is Layer 1 with no `uses` entry in `modules.json`; every reading module takes a `uses` edge to it for R29-R34 (K4835 (1)). `unattendedCredential` (R26) calls
   this module's own `liveToken`.
 
 ### Invariants
 
 - **R22** Pure: no store, no network fetch, and (outside `cpuProbe`'s own injectable `now`) no clock.
   Every service gives the same answer for the same inputs; `cpuProbe`'s `elapsed_ms` is the one exception,
-  since it depends on when it runs.
+  since it depends on when it runs. (Fix round 9: a byte ledger, R32, keeps counters inside the object its caller made and nowhere else; `READ_BOUNDS` and `PLATFORM_FIGURES` are frozen constants.)
 - **R23** No function here accepts or sets a credential. `env.INSTANCE_AI_TOKEN` reaches this module
   only by already being present on the `env` object the caller passes at each call; nothing exported here
   can create, change or clear it (DS-3, D-260 §6: minting and setting an account credential is a member act
@@ -128,7 +140,7 @@ set a credential.
 - **R24** `report()` never states a duration for synchronous work: `measured_ms` is always `null`, and
   `note` says why, rather than reporting a zero that would read as a measurement.
 - **R25** No place is named in this module (`build/layers.md`, "No jurisdiction in the product"). It holds
-  no local fact of any jurisdiction, and none of its behaviour depends on one.
+  no local fact of any jurisdiction, and none of its behaviour depends on one. A Cloudflare location hint is where the hosting platform runs the team's room, not a jurisdiction and not a place the product acts on (fix round 7, G3; K4752).
 
 No check in `bio-plane/checks/bio-checks.mjs` names `cpu.mjs`, `tokens.mjs`, or any function or constant
 of either file — this module owns no C-numbered check today.
@@ -147,6 +159,8 @@ of either file — this module owns no C-numbered check today.
   runtime instrumentation the code itself records discovering (2026-07-29: a Worker cannot time its own
   synchronous compute, so consumption is counted in work and the ceiling is found by a checkpointed
   probe instead).
+
+- K4831 (3) and (8), K4834 and K4835 (1) (fix round 9): the alpha's limits stated to members with the file's size and the limit, the protective class of limits, the light kinds at the standard in Stage 1, and the table's home in this module (R29-R31); `build/plan/fix-round-9-T51.md` G123a and G124, R-GATE (R34).
 
 ### Suggestions
 

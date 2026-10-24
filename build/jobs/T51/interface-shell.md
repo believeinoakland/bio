@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_011BwEvapbBvrGVu6SVZhniz · depth 2 · COMPLETE · handled B39
+**Status** · session_01FNJXyii9ZX1WYQ6je365RX · depth 2 · COMPLETE · handled B43
 
 ## J1 · BLOCKED
 
@@ -459,3 +459,52 @@ Size (session_01GuYhDBuwX3wYXyAxnpXWHF): test runs 20, module lines 3347
 **journey-check (the 24 files, scratch tree, re-taken registry, `npm ci` run in `bio-plane/src/journey-check`).** 17 files pass, 5 fail: `account-installer` 3, `group` 1, `journey` 13 (the live step "connect an assistant by her own Claude subscription"), `live` 4, `plane-cron` 2. Those are environment reds (a Docker image, an external subscription, the live plane). Run once with my change and once with the four files put back to `4004df1ff0`: the same counts both times, so none is from G53. Not run: a fix of those environment reds (not this module's).
 
 Size (session_011BwEvapbBvrGVu6SVZhniz): test runs 122, module lines 3346
+
+## Fix round 7 (INTERFACE-SHELL #20, session_01Up6JyxDqREE6g4kR9CVELS) · G77, G81
+
+**G77 · applied (file:line `bio-plane/src/interface-shell/browser.mjs`, `restore` in `draw`).** `restore` returns for any box inside `fieldset[data-redraw]`: a group that redraws on a change is drawn from the screen's own state, so what the member had checked is never put back. Root cause as the plan states it (a checked "Next" restored onto the next page's "Next"; a checked radio fires no `change`). Test gap fixed: the harness now models the browser's radio group (`fire` unchecks same-name siblings; new `choose` = a click that fires nothing on a checked box). Failing-first (seen red, then green): `fixround7.test.mjs` "G77 R80 R90 R109 ..." (8 pages, and first page with text 4; five presses, no box checked after each redraw); harness test; control: a plain checkbox group keeps ticks. **Platform check L done**: real Chromium on the served shell, five mouse presses: red without the fix (page stuck at 3, `[2,3,3,3,3]`), green with it (`[2,3,4,5,6]`).
+**Deviation, to BOB (REPORT):** the plan's fix shape also said "id the radio by its value". I built it and withdrew it: ids by value break about 58 tests of five other modules that name boxes by place (`question-aside-0`, `ob-tr-do-0`, `project-notice-collab-0`, ... in screens-inquiry, -investigate, -intake, -settings, -daily), which I may not change. The restore rule alone fixes the walker's case (the L run). Ids by place remain for non-redraw groups; if BOB wants ids by value, it needs a CHANGE to those screen modules' tests first. Walkers' re-walk of w10.pdf/0111 to the last page is P (BOB's).
+**G81 · applied (`browser.mjs`, `FRAME_CONSTANT`, `FRAME_AT`, `frameBoot`, `frameSave`, `frameKept`, `frameTake`).** A kept `groupidentity` or `infolevel` answered less than a day ago (page clock, kept as `at` beside `reads` in the one `bio-session:frame` key) is drawn from the tab and never asked; a kept one with no time, a non-number, or from the future, or a day old, is asked once after the screen settles as before; the member's own level change drops the level and its time. The other four are asked once per load, never kept past it. Failing-first: `fixround7.test.mjs` G81 tests (red on the old code); four named CHARACTERIZATION tests (`assistantstate`, `accountreference`, `subscriptionsignin`, `groupkeystate`) green on the old code and the new. `g12b.test.mjs` updated for the rule (four tests, the constants no longer asked on a second load; the name-follows test ages the stored time). Platform check N (a count). The saving: two requests a second load.
+**Suites and checks.** `test/m/interface-shell/` 364/364. Users: screens-entry 96/96, -wizards 75/75, -daily 292/292, -inquiry 521/521, -settings 266/266, -publish 273/273 (run alone), -intake and -investigate: failures seen when two suites ran at once were load timeouts, and pass alone on this branch and the tranche tip (capture, t51-fix5, fix4-seam, t51-seam-e7, t51-seam-g43); -action ran to 151 of 165 with 0 failed before the run was cut at the time limit; control-plane `t46-app` 6/6. `checks/format` 0 failures; `architecture` 0; `coverage interface-shell` 122/122; `ownership` 0; `words interface-shell` 0 failures (the full run's 11 failures are record-core R89 R90, case-checker, installer-steps: not mine); `setup-words build --check` matches.
+**Requirement lines proposed (BOB writes):** R80/R109: "A redraw puts back no check into a group of boxes that redraws on a change (`data-redraw`); the screen's own state is what is drawn." R124: "Of the six, `groupidentity` and `infolevel` kept for the tab are not asked again while the tab's copy was answered less than a day ago on the page clock (kept beside the answer); the other four are asked once per load and never kept past it."
+**Census ops:** none. **Rows owed to UX-DESIGN:** none. **Deferred:** none. **Found in other modules:** none.
+Size (session_01Up6JyxDqREE6g4kR9CVELS): test runs 24, module lines 3355
+
+## J27 · COMPLETE
+
+COMPLETE, fix round 7 (G77, G81); record section 'Fix round 7'. G77: no restore into a data-redraw group; red then green, and real Chromium (L) red/green. G81: groupidentity and infolevel kept for a day, the other four asked once per load, four characterization tests. Module suite 364/364; users' suites pass (intake/investigate/publish pass alone; two-at-once runs timed out). REPORT: the plan's 'id the radio by its value' was built and withdrawn because it breaks ~58 tests of five screen modules that name boxes by place; the restore rule alone fixes the case. Say if you want ids by value, with a CHANGE to those modules' tests first.
+
+## J28 · QUESTION
+
+QUESTION for `interface-shell` (G114, R128): the shape of `v`, which control-plane must parse. My best reading, built on unless you say otherwise.
+
+**Order found (K4817).** `loadWords` is sent at `whoami`'s answer; `bootstrap` goes after the screen's first reads and the marks request (R122). So `loadWords` runs first and cannot read `bootstrap`'s `language`/`words_version` on a first load.
+
+**My build.**
+1. `v` is ONE string, three parts joined by `~`: `<release>~<language>~<stamp>`. Release is `cs-version` verbatim (the release may hold dots or dashes, never `~`); `language` is `bootstrap`'s `language` verbatim, empty when it is `null`; `stamp` is `words_version` verbatim. The request never names `language` (a `language` field asks translations for every word, G113). control-plane splits on `~` and compares each part with the current release, the viewer's language and the current stamp. Please pass this form to CONTROL-PLANE and INSTANCE-SETUP, or give me the one you want.
+2. Before `bootstrap` has answered, the load names the release alone (`v=<release>`, today's form; answered `private, no-cache`, one round trip). When `bootstrap` answers with a `words_version`, the shell keeps `{language, stamp}` in the device's `localStorage` under `cs-words:<member>` (a device convenience like `cs-group`; `sessionStorage` still holds R124's one key only, R24) and, if the load it made named something else, asks `interfacewords` once more with the full `v`, so that fetch is the one the browser keeps for the year. Every later load in that browser (a second sign-in, a new page) names the full `v` from the note at once. A stale note is harmless: the door answers a `v` that is not current without the year, with the viewer's current words.
+3. Known bound, no extra request built: a sign-in made at `front` in a page opened with no session record has no stamp until a page load that holds the record asks `bootstrap`; that first sign-in names the release alone (no-cache). If you want the stamp learned at that sign-in instead, it costs one authenticated `bootstrap` per sign-in and touches R122/R127's counts: say so and I build it.
+
+## Fix round 8 (INTERFACE-SHELL #21, G114, R128; B41–B43)
+
+**Order found (K4817).** `loadWords` is sent at `whoami`'s answer; `bootstrap` goes after the screen's first reads and the marks request (R122, `show` → `startBoot`). So `loadWords` runs first and cannot read `bootstrap`'s language or stamp on a first load.
+
+**G114 (1) Cause.** `loadWords` named the release alone (`browser.mjs`, old lines 2641–2648), so the browser's cache key could not carry the language or the team's adoptions. **(2) Missed:** no test drove the request's `v` against the language and the stamp. **(3) Failing-first, seen RED** (`r8-words-version.test.mjs`): `AssertionError: the release alone first, then all three; actual: [ '0.86.0' ], expected: [ '0.86.0', '0.86.0~es~st1' ]`; then GREEN, 5 of 5. **(4) Platform check:** N for the shell's share (P, a second sign-in served from the cache on biosmoke8, is BOB's after the deploy).
+
+**As built (ruled B42).** `v` = `<release>~<language>~<words_version>`, language an empty part when null; never a `language` field. Before `bootstrap` answers, and with no note, `v` is the release alone. When `bootstrap` answers a `words_version`, the shell keeps `{l, s}` in `localStorage` `cs-words:<member>` (a device convenience; the tab's one key, R24, is untouched) and, if the last load named something else, asks `interfacewords` once more with the full `v`, so that fetch is the one the browser keeps; later loads name the full `v` at once from the note. A stale note is answered by the door without the year. A page naming no release sends no `v`.
+
+**Bound named (B42 (3)).** A sign-in made at `front` in a page opened with no session record has no stamp until a page load that holds the record has asked `bootstrap`; that sign-in's words request names the release alone (no-cache). No extra bootstrap is built.
+
+**Flaw fixed in my module.** `frame.test.mjs` R26 failed about one run in six on one core: its "never sent" check searched each request's whole JSON, including its timing stamp `at`, for "250". It now searches what the request carries (address, query, body, headers); 12 runs on one core pass.
+
+**Proposed wording for BOB (R128, R24).** R128: "…and the viewer's language and `words_version` as `<release>~<language>~<stamp>`, kept per member on the device (`cs-words:<member>`); a load before `bootstrap` has answered names the release alone, and when it answers with another the words are asked once more with the full `v`." R24 names the tab's `sessionStorage` only; `cs-words:<member>` is a device convenience beside `cs-group`.
+
+**Generated artifacts made stale:** none. **Found in other modules:** none.
+
+**Ran.** Module suite (merged with the tranche at B43): 369 of 369 pass (one R26 flake before the fix above). `impact.mjs`: the nine screen modules' suites: screens-inquiry 1 fail (R96 G13, "red by name until extraction's `more` merges") and screens-intake 2–3 fail (R26/R31 E8) are identical with the tranche's browser.mjs; the others 0 fail; control-plane's five page files 33 of 33. Checks: format 0 failures; architecture 0 failures; coverage 123 of 123 ids named; ownership 0 failures; words 0 failures.
+
+Size (session_01FNJXyii9ZX1WYQ6je365RX): test runs 16, module lines 3387
+
+## J29 · COMPLETE
+
+COMPLETE for interface-shell, fix round 8, G114 (R128). `loadWords` names `<release>~<language>~<words_version>` as ruled in B42 (release alone before bootstrap answers; per-member device note `cs-words:<member>`; one re-ask with the full v). Failing-first `r8-words-version.test.mjs` seen red then green (5/5); module suite 369/369 after merging tranche (B43); users' suites and control-plane page files unchanged from the tranche tip; format, architecture, coverage (123/123), ownership, words: 0 failures. Fixed a fragile R26 assertion in my module. Bound named in the record (first sign-in at front without a record names the release alone). Proposed R128/R24 wording and Size line are in the record. Deferred: none. Nothing for BOB to do but the platform check P after the deploy.

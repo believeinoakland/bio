@@ -1,0 +1,81 @@
+pdftotext 100 pages (101-200):
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.13 Maximum resident set size (kbytes): 17488 
+pdftotext all 300:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.37 Maximum resident set size (kbytes): 17704 
+pdftotext page 1:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.01 Maximum resident set size (kbytes): 16916 
+mutool draw -F txt 100 pages:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.18 Maximum resident set size (kbytes): 9952 
+pdftoppm 300dpi page 5:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.31 Maximum resident set size (kbytes): 50212 
+pdftoppm 300dpi pages 1-20 gray:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.84 Maximum resident set size (kbytes): 33940 
+tesseract native default threads pg-005.png:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.36 Maximum resident set size (kbytes): 146168 
+tesseract native OMP_THREAD_LIMIT=1 pg-005.png:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.91 Maximum resident set size (kbytes): 146332 
+tesseract native default threads scan5.png:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.97 Maximum resident set size (kbytes): 86536 
+tesseract native OMP_THREAD_LIMIT=1 scan5.png:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.06 Maximum resident set size (kbytes): 86504 
+node:internal/modules/esm/resolve:241
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/user/bio/ocr-worker/node_modules/sharp/lib/index.js' imported from /tmp/claude-0/-home-user-bio/ace00fc7-30a5-5161-8a63-7cfeb7cb24c6/scratchpad/options/spikes/src/n-wasm.mjs
+    at finalizeResolution (node:internal/modules/esm/resolve:241:11)
+    at moduleResolve (node:internal/modules/esm/resolve:846:10)
+    at defaultResolve (node:internal/modules/esm/resolve:973:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at node:internal/modules/esm/loader:639:32
+    at TracingChannel.tracePromise (node:diagnostics_channel:551:22) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///home/user/bio/ocr-worker/node_modules/sharp/lib/index.js'
+}
+
+Node.js v26.10.0
+init ms 57 rss 102
+Estimating resolution as 340
+pg-005.png 2550x3300 run 0 sec 7.94 chars 6753 rss MB 236
+Estimating resolution as 340
+pg-005.png 2550x3300 run 1 sec 6.74 chars 6753 rss MB 260
+Estimating resolution as 342
+scan5.png 2586x3328 run 0 sec 6.01 chars 6753 rss MB 327
+Estimating resolution as 342
+scan5.png 2586x3328 run 1 sec 6.12 chars 6753 rss MB 295
+native tesseract tessdata_fast (same model as wasm) OMP_THREAD_LIMIT=1 pg-005.png:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.01 Maximum resident set size (kbytes): 146444 
+native tesseract tessdata_fast (same model as wasm) OMP_THREAD_LIMIT=4 pg-005.png:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.75 Maximum resident set size (kbytes): 146400 
+native tesseract tessdata_fast (same model as wasm) OMP_THREAD_LIMIT=1 third.png:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.45 Maximum resident set size (kbytes): 55500 
+native tesseract tessdata_fast (same model as wasm) OMP_THREAD_LIMIT=4 third.png:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.59 Maximum resident set size (kbytes): 55080 
+wasm third.png:
+init ms 53 rss 104
+Estimating resolution as 341
+third.png 2550x1100 run 0 sec 2.51 chars 2202 rss MB 175
+Estimating resolution as 341
+third.png 2550x1100 run 1 sec 2.04 chars 2202 rss MB 179
+4 parallel native tesseract, 4 pages: wall 5.496409027 s
+soffice docx->txt cold:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.85 Maximum resident set size (kbytes): 219412 
+soffice docx->txt warm profile:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.22 Maximum resident set size (kbytes): 220692 
+soffice xlsx(20k rows)->csv:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.00 Maximum resident set size (kbytes): 220988 
+7z l (88M zip, 300 members):
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.00 Maximum resident set size (kbytes): 5972 
+7z x -so one member:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.00 Maximum resident set size (kbytes): 6200 
+bsdtar absent; vips:
+vips-8.15.1
+-rw-r--r-- 1 root root 657615 Oct 23 22:30 big.jpg
+convert 48MP jpeg -> png:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:09.34 Maximum resident set size (kbytes): 387968 
+vips thumbnail 48MP:
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.16 Maximum resident set size (kbytes): 43120 

@@ -86,6 +86,9 @@ const clampLimit = (limit, dflt, max) => {
 
 export class Queue {
   #host; #deps; #env; #clock;
+  /* R94 (fix round 8, G116): the derivations made, by (member, viewer), each with the signature it was made under, and this
+     module's own writes (its mutes, snoozes and decisions), which the record's write counter does not see. */
+  #derived = new Map(); #ownWrites = 0;
   constructor({ host, storage, deps = {} } = {}) {
     this.#host = host;
     this.sql = storage.sql;
@@ -170,6 +173,58 @@ export class Queue {
    *  that supplies one; `queueOf` refuses a different one before calling this. */
   get clock() { return this.#clock; }
   adoptClock(fn) { if (this.#clock === null && typeof fn === "function") this.#clock = fn; }
+
+  /** R93 (G80), R94: the number of writes this module made itself (a mute, a snooze, a decision), which the record's write counter
+   *  does not see: they are kept in this module's own tables. Part of the derivation's signature beside record-core's counter. */
+  #wrote() { this.#ownWrites += 1; }
+  /** R94: the tasks the derivation asks `tasks` for: the largest a list's limit could reach (500, R6) twice over, so the one
+   *  derivation serves every limit and the count, which is the length of the list with no cut. */
+  static QUEUE_TASKS_READ_MAX = 1000;
+  /** R94: a copy of a derivation, or of a part of one, that an answer may hand out and its caller change. */
+  static #copyOf(v) { return structuredClone(v); }
+  /** R94, R-LOG (K4428): runs the derivation `fn` and states what it cost in rows: the sum of the `rowsRead` and `rowsWritten`
+   *  of every cursor the storage's SQL handed out meanwhile (the platform's own counters, so no clock in it, R-CLOCK), each
+   *  null when the runtime states none, never a made-up number. The storage's `exec` is wrapped only for the call, and put
+   *  back whatever it does; a storage that cannot be wrapped states null. One log line carries the figures. */
+  #measured(fn) {
+    const cursors = [];
+    const sql = this.sql;
+    let restore = null;
+    try {
+      const real = sql.exec;
+      if (typeof real === "function") {
+        const had = Object.prototype.hasOwnProperty.call(sql, "exec");
+        sql.exec = function (...a) { const c = real.apply(sql, a); cursors.push(c); return c; };
+        restore = () => { if (had) sql.exec = real; else delete sql.exec; };
+      }
+    } catch { restore = null; }
+    let out;
+    try { out = fn(); } finally { if (restore) { try { restore(); } catch { /* left as wrapped is harmless: it passes through */ } } }
+    if (out && out.ok === true) {
+      const sum = (key) => {
+        let n = 0, any = false;
+        for (const c of cursors) { const v = c ? c[key] : undefined; if (typeof v === "number" && Number.isFinite(v)) { n += v; any = true; } }
+        return any ? n : null;
+      };
+      out.measure = { rows_read: sum("rowsRead"), rows_written: sum("rowsWritten"), ...out.measure };
+      try { console.log(JSON.stringify({ event: "queue_derive", module: "queue", ...out.measure, items: out.items.length })); } catch { /* logged where it can be */ }
+    }
+    return out;
+  }
+  /** R93, R94: a derivation is reused for the same viewer while the record's write counter, this module's own writes and the
+   *  clock's bucket are all unchanged; the bucket bounds how stale a feed that depends on the clock (a date that passed, an
+   *  item's age) can be. A snooze is read at each ask's own instant. */
+  static QUEUE_COUNT_BUCKET_MS = 5000;
+  /** R93, R94: viewers whose derivation is kept; past it the kept ones are dropped whole (a cache, never a record). */
+  static QUEUE_COUNT_VIEWERS_MAX = 256;
+  /** R93, R94: the signature a derivation was made under, or null when the record states no write counter (record-core R90):
+   *  with none, nothing is reused, never guessed. */
+  #countSignature(now) {
+    let w;
+    try { w = typeof this.#record.writeCount === "function" ? this.#record.writeCount() : null; } catch { w = null; }
+    if (!Number.isInteger(w) || w < 0) return null;
+    return `${w}|${this.#ownWrites}|${Math.floor(now / Queue.QUEUE_COUNT_BUCKET_MS)}`;
+  }
 
   /** The instant this read or act is at: an in-plane caller's (ms), else this module's clock (R53: the clock a caller of
    *  `queueOf` gave, else the instance binding `BIO_NOW_MS`, else the wall clock). A request never supplies the first:
@@ -1057,56 +1112,11 @@ export class Queue {
     return { items: r && Array.isArray(r.items) ? r.items : [], facts, failed };
   }
 
-  /** op=queue: the member's ONE feed.
-   *
-   *  `member` and `viewer` are BOTH stamped server-side by the control plane and are
-   *  never taken from the caller — whose queue this is, and whose view its
-   *  case names are compiled for, are server decisions or they are not
-   *  decisions at all.
-   *
-   *  WHOSE OBLIGATIONS. Tasks assigned to the caller, PLUS tasks honestly
-   *  `unassigned`. D-98 intends an unassigned task to stay claimable and
-   *  routable by hand, and DEC-7 keeps it claimable rather than stranded, so
-   *  hiding it from every queue would strand exactly the work routing could
-   *  find nobody for. A machine credential has no member behind it and gets
-   *  the whole live set, which is the operator view the token exists for.
-   *
-   *  `refers_to` POINTS AT THE SUBJECT, NOT AT THE CASE. They are different
-   *  columns and the contract carries both: `subject` is what the item is
-   *  about, `case` is where it is filed. Collapsing them is how a queue
-   *  invents a home. */
-  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200, sort = null, muted = false, answered = false,
-              aside = false, after = null, count = false } = {}) {
-    const flag = (v) => v === true || v === "true" || v === "1";
-    /* R55 (N1094; DEC-240 (D3)): the muted list, in place of the feed: asked for by `muted: true` (or the query's "true" or
-       "1"), it answers what this member has muted and takes neither `sort` nor `limit`. */
-    if (flag(muted))
-      return this.#mutedList(typeof member === "string" && member.trim() ? member.trim() : null, viewer);
-    /* R59 (T51; DEC-330 A61): what left this member's queue because of her, or because another did it for everyone, in place
-       of the feed, as the muted list is (it takes neither `sort` nor `limit`). */
-    if (flag(answered))
-      return this.#answeredList(typeof member === "string" && member.trim() ? member.trim() : null, viewer, this.#nowMs(nowMs));
-    /* R61 (T51; DEC-330 A63): the set-aside findings of both scopes, in place of the feed, paged by `after` and `limit`. */
-    if (flag(aside))
-      return this.#asideList(viewer, this.#nowMs(nowMs), limit, after);
-    /* R49 (DEC-110 (1)): the order asked for is checked FIRST, before anything is read, so a refusal costs no read and
-       a caller learns the four orders this feed keeps. Absent or blank is DEC-110 (3)'s default. */
-    const order = typeof sort === "string" ? sort.trim() : (sort === null || sort === undefined ? "" : null);
-    /* DEC-49 REGION is-queue-sort — R49/C-33.51. The code is a STRING LITERAL at its site; the check and the translation
-       come off its row (R49's test compares them). */
-    if (order === null || (order !== "" && !QUEUE_SORTS.includes(order)))
-      return queueRefusal("QUEUE_SORT_UNKNOWN", QUEUE_ACT_CHECKS.QUEUE_SORT_UNKNOWN, {
-        sort: typeof sort === "string" ? sort.slice(0, 40) : null, sorts: [...QUEUE_SORTS],
-        detail: localize("queue.index.the_feed_keeps_four_orders", "the feed keeps four orders besides its default (grouped by case): {QUEUE_SORTS}. Send one of them as `sort`, or none for the default. Nothing was read.", { QUEUE_SORTS: String(QUEUE_SORTS.join(", ")) }) });
-    /* END DEC-49 REGION is-queue-sort */
-    const cap = clampLimit(limit, 200, 500);
-    const now = this.#nowMs(nowMs);
-    const me = typeof member === "string" && member.trim() ? member.trim() : null;
-    /* REC-132 / D-422: the queue's act options ask D-310's owner fact of the POSITIONAL
-       identity, which is `member` — already the control plane's stamp of who asks —
-       spelled in the viewer grammar. A machine credential stamps no member and keeps
-       the fallback to its viewer, byte-unchanged. */
-    const identity = me ? `member:${me}` : null;
+  /** R94 (fix round 8, G116): the one derivation of a viewer's feed at one instant: the tasks' OBLIGATIONs and the producers'
+   *  and notices' items, minted (R11), with the project decisions (R13) and the member's mutes (R14) applied, and the figures
+   *  every answer made from it needs (the disposed block's rows, the feeds' rows, the all-clear). It reads and writes nothing
+   *  else; the list, the count and the bridge's reads are made from it. A refusal of the mint is returned as it is. */
+  #derive({ me, viewer, now, identity }) {
     const items = [];
     /* R91 (L13): what this ask has already read, for its walks and its option derivations (nothing is written in an ask). */
     const memo = { edges: new Map(), rows: new Map(), homes: new Map(), acts: new Map() };
@@ -1131,7 +1141,7 @@ export class Queue {
     /* N410 (tasks R6's `assignees`): a member's read asks for their own and the unassigned tasks itself, so other
        members' live tasks never take a place theirs need; a machine credential (no member) reads every assignee. */
     const tTasks = clock.start();
-    for (const row of this.#tasks.recentTasks({ viewer, limit: cap * 2, statuses: Queue.TASK_LIVE_STATUSES,
+    for (const row of this.#tasks.recentTasks({ viewer, limit: Queue.QUEUE_TASKS_READ_MAX, statuses: Queue.TASK_LIVE_STATUSES,
                                                 ...(me ? { assignees: [me, "unassigned"] } : {}) })) {
       if (me && row.assignee !== me && row.assignee !== "unassigned") continue;
       const subject = row.refers_to;
@@ -1169,6 +1179,7 @@ export class Queue {
     }
 
     const tasksMs = clock.since(tTasks);
+    const fromTasks = items.length;
 
     /* ------------------------------------------- the producers (queue-producers R8; N363)
        Every item that is not a task comes from the producers' one read, handed this module's R7 walk and R12
@@ -1180,6 +1191,7 @@ export class Queue {
       optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity, memo) });
     const feedsMs = clock.since(tFeeds);
     const facts = produced && produced.facts && typeof produced.facts === "object" ? produced.facts : {};
+    const fromProducers = produced && Array.isArray(produced.items) ? produced.items.length : 0;
     items.push(...(produced && Array.isArray(produced.items) ? produced.items : []));
     /* R51 (T33-83): `notice-producers`' one read, beside them, handed the same walk and options, its items treated
        exactly as theirs (minted, homed, muted, decided and sorted below). It writes nothing and never throws (its R1),
@@ -1412,10 +1424,117 @@ export class Queue {
     items.length = 0;
     items.push(...admitted);
 
+
+    /* D-266 / IC-60. ONE LIST, TWO SCOPES, AND `scope` SAYS WHICH — never two
+       arrays. What a member wants from this block is *what did I set aside and
+       why*, which is one question; splitting it by the act's key shape would
+       make a surface join two lists to answer it and would put the plane's
+       internal distinction where a reader has to care about it. What the reader
+       DOES have to be able to tell is whose feed each decision governs, and
+       `scope` (with `project` beside it) says exactly that on every row. */
+    const dispAll = [
+      ...(Array.isArray(facts.dispositions) ? facts.dispositions : []).map((d) => ({
+        /* THE ITEM ID THIS DECISION AGED, in the feed's own spelling, so a
+           surface ties a decision to the thing it removed without rebuilding
+           the identity from two columns — the drift class IC-53 closed one
+           field over. */
+        id: `FINDING::${d.key}`, scope: "instance", project: null,
+        key: d.key, progression_key: d.progression_key, stage_key: d.stage_key,
+        state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
+        /* REC-184: the definition version the decision judged, and whether it still ages the
+           finding — false once the definition is revised, when the finding is an OPEN item again. */
+        definition_version: d.definition_version,
+        definition_version_state: d.definition_version_state,
+        applies: d.applies, applies_because: d.applies_because,
+      })),
+      ...scopedDisposed,
+    ];
+    /* R60 (T51; DEC-330 A62): which feeds answered, and the per-class all-clear: a class is clear only when every feed that can
+       raise it answered and the unsuppressed feed (before the limit's cut) holds no item of it. A muted item is not a failure. */
+    const feeds = this.#feedRows(facts, noticed, { tasks: tasksMs, "notice-producers": noticesMs });
+    const classesAnswered = Object.fromEntries(Queue.QUEUE_CLASSES.map((c) => [c, feeds.filter((f) => f.classes.includes(c)).every((f) => f.answered)]));
+    const allClear = Object.fromEntries(Queue.QUEUE_CLASSES.map((c) => [c, classesAnswered[c] && !items.some((i) => i.class === c)]));
+    return { ok: true, items, suppressed, mutes, itemMutes, facts, noticed, feeds, feedsMs, dispAll, classesAnswered, allClear, resolved: null,
+             measure: { items_by_producer: { tasks: fromTasks, "queue-producers": fromProducers, "notice-producers": noticed.items.length } } };
+  }
+
+  /** op=queue: the member's ONE feed.
+   *
+   *  `member` and `viewer` are BOTH stamped server-side by the control plane and are
+   *  never taken from the caller — whose queue this is, and whose view its
+   *  case names are compiled for, are server decisions or they are not
+   *  decisions at all.
+   *
+   *  WHOSE OBLIGATIONS. Tasks assigned to the caller, PLUS tasks honestly
+   *  `unassigned`. D-98 intends an unassigned task to stay claimable and
+   *  routable by hand, and DEC-7 keeps it claimable rather than stranded, so
+   *  hiding it from every queue would strand exactly the work routing could
+   *  find nobody for. A machine credential has no member behind it and gets
+   *  the whole live set, which is the operator view the token exists for.
+   *
+   *  `refers_to` POINTS AT THE SUBJECT, NOT AT THE CASE. They are different
+   *  columns and the contract carries both: `subject` is what the item is
+   *  about, `case` is where it is filed. Collapsing them is how a queue
+   *  invents a home. */
+  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200, sort = null, muted = false, answered = false,
+              aside = false, after = null, count = false } = {}) {
+    const flag = (v) => v === true || v === "true" || v === "1";
+    /* R55 (N1094; DEC-240 (D3)): the muted list, in place of the feed: asked for by `muted: true` (or the query's "true" or
+       "1"), it answers what this member has muted and takes neither `sort` nor `limit`. */
+    if (flag(muted))
+      return this.#mutedList(typeof member === "string" && member.trim() ? member.trim() : null, viewer);
+    /* R59 (T51; DEC-330 A61): what left this member's queue because of her, or because another did it for everyone, in place
+       of the feed, as the muted list is (it takes neither `sort` nor `limit`). */
+    if (flag(answered))
+      return this.#answeredList(typeof member === "string" && member.trim() ? member.trim() : null, viewer, this.#nowMs(nowMs));
+    /* R61 (T51; DEC-330 A63): the set-aside findings of both scopes, in place of the feed, paged by `after` and `limit`. */
+    if (flag(aside))
+      return this.#asideList(viewer, this.#nowMs(nowMs), limit, after);
+    /* R49 (DEC-110 (1)): the order asked for is checked FIRST, before anything is read, so a refusal costs no read and
+       a caller learns the four orders this feed keeps. Absent or blank is DEC-110 (3)'s default. */
+    const order = typeof sort === "string" ? sort.trim() : (sort === null || sort === undefined ? "" : null);
+    /* DEC-49 REGION is-queue-sort — R49/C-33.51. The code is a STRING LITERAL at its site; the check and the translation
+       come off its row (R49's test compares them). */
+    if (order === null || (order !== "" && !QUEUE_SORTS.includes(order)))
+      return queueRefusal("QUEUE_SORT_UNKNOWN", QUEUE_ACT_CHECKS.QUEUE_SORT_UNKNOWN, {
+        sort: typeof sort === "string" ? sort.slice(0, 40) : null, sorts: [...QUEUE_SORTS],
+        detail: localize("queue.index.the_feed_keeps_four_orders", "the feed keeps four orders besides its default (grouped by case): {QUEUE_SORTS}. Send one of them as `sort`, or none for the default. Nothing was read.", { QUEUE_SORTS: String(QUEUE_SORTS.join(", ")) }) });
+    /* END DEC-49 REGION is-queue-sort */
+    const cap = clampLimit(limit, 200, 500);
+    const now = this.#nowMs(nowMs);
+    const me = typeof member === "string" && member.trim() ? member.trim() : null;
+    /* REC-132 / D-422: the queue's act options ask D-310's owner fact of the POSITIONAL
+       identity, which is `member` — already the control plane's stamp of who asks —
+       spelled in the viewer grammar. A machine credential stamps no member and keeps
+       the fallback to its viewer, byte-unchanged. */
+    const identity = me ? `member:${me}` : null;
+    /* R94 (fix round 8, G116): the list, the count and what they are made from are ONE derivation for a viewer at one signature
+       (the record's write counter, this module's own writes, the clock's 5-second bucket), kept for the bucket; a hit is served
+       by copying it, a miss makes it once. Nothing is kept when the record states no counter, nor for a refusal. */
+    const derivedKey = JSON.stringify([me, viewer ?? null]);
+    const derivedSig = this.#countSignature(now);
+    let d = null, served = "miss";
+    if (derivedSig !== null) {
+      const kept = this.#derived.get(derivedKey);
+      if (kept && kept.sig === derivedSig) { d = kept.d; served = "hit"; }
+    }
+    if (d === null) {
+      d = this.#measured(() => this.#derive({ me, viewer, now, identity }));
+      if (d.ok !== true) return d;
+      if (derivedSig !== null) {
+        if (!this.#derived.has(derivedKey) && this.#derived.size >= Queue.QUEUE_COUNT_VIEWERS_MAX) this.#derived.clear();
+        this.#derived.set(derivedKey, { sig: derivedSig, d });
+      }
+    }
+    /* R94: what the Server-Timing marks carry (control-plane's phase clock): `queue-count` is `served`, and `rows-queue` the
+       derivation's own figures, stated for a miss only. */
+    const derivation = served === "hit" ? { served } : { served, ...d.measure };
     /* R93 (T51 fix round 4, P9; K4429): the number of open items the list would hold (after the mutes and the project
        decisions, before the limit's cut), without the list, so the frame's bell and sidebar do not read the whole feed. */
-    if (flag(count)) return { ok: true, member: me, count: items.length };
-
+    if (flag(count)) return { ok: true, member: me, count: d.items.length, derivation };
+    /* the answer is made from a copy: a caller changing what it was handed changes no other answer made from the derivation */
+    const kept = Queue.#copyOf(d);
+    const { items, suppressed, mutes, itemMutes, facts, noticed, feeds, feedsMs, dispAll, classesAnswered, allClear } = kept;
     /* R40 (DEC-10 (a)): a snoozed case's items are MARKED, never withheld: a surface may hold them back until the
        instant, and the plane keeps reporting them (a snooze defers re-notification; it removes nothing). */
     const snoozes = this.#queueSnoozes(me, now);
@@ -1483,36 +1602,7 @@ export class Queue {
      * RECORD ACT carrying its author and reason and clears the finding under
      * every case it appears in. */
     const dispCap = Queue.QUEUE_DISPOSED_MAX;
-    /* D-266 / IC-60. ONE LIST, TWO SCOPES, AND `scope` SAYS WHICH — never two
-       arrays. What a member wants from this block is *what did I set aside and
-       why*, which is one question; splitting it by the act's key shape would
-       make a surface join two lists to answer it and would put the plane's
-       internal distinction where a reader has to care about it. What the reader
-       DOES have to be able to tell is whose feed each decision governs, and
-       `scope` (with `project` beside it) says exactly that on every row. */
-    const dispAll = [
-      ...(Array.isArray(facts.dispositions) ? facts.dispositions : []).map((d) => ({
-        /* THE ITEM ID THIS DECISION AGED, in the feed's own spelling, so a
-           surface ties a decision to the thing it removed without rebuilding
-           the identity from two columns — the drift class IC-53 closed one
-           field over. */
-        id: `FINDING::${d.key}`, scope: "instance", project: null,
-        key: d.key, progression_key: d.progression_key, stage_key: d.stage_key,
-        state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
-        /* REC-184: the definition version the decision judged, and whether it still ages the
-           finding — false once the definition is revised, when the finding is an OPEN item again. */
-        definition_version: d.definition_version,
-        definition_version_state: d.definition_version_state,
-        applies: d.applies, applies_because: d.applies_because,
-      })),
-      ...scopedDisposed,
-    ];
     const disposedOut = dispAll.slice(0, dispCap);
-    /* R60 (T51; DEC-330 A62): which feeds answered, and the per-class all-clear: a class is clear only when every feed that can
-       raise it answered and the unsuppressed feed (before the limit's cut) holds no item of it. A muted item is not a failure. */
-    const feeds = this.#feedRows(facts, noticed, { tasks: tasksMs, "notice-producers": noticesMs });
-    const classesAnswered = Object.fromEntries(Queue.QUEUE_CLASSES.map((c) => [c, feeds.filter((f) => f.classes.includes(c)).every((f) => f.answered)]));
-    const allClear = Object.fromEntries(Queue.QUEUE_CLASSES.map((c) => [c, classesAnswered[c] && !items.some((i) => i.class === c)]));
     return {
       ok: true, member: me, items: out,
       /* REC-57: `truncated` was already here and is UNTOUCHED — this op is the
@@ -1581,7 +1671,9 @@ export class Queue {
       },
       /* R39 (DEC-16): the obligations resolved lately on subjects this viewer sees, each with who resolved it and
          when, so a member who did not resolve one reads "resolved by X on this date" rather than a gap. */
-      resolved: this.#resolvedLately(viewer, now),
+      resolved: Queue.#copyOf(d.resolved ??= this.#resolvedLately(viewer, now)),
+      /* R94: how this answer was served: `hit` (the derivation kept) or `miss` (made now, with its figures). */
+      derivation,
       /* N172: the bound on the projects `objective-gap` asks about, published beside whether it cut. */
       objective_gap_projects_bound: facts.objective_gap ? facts.objective_gap.bound ?? null : null,
       objective_gap_projects_truncated: !!(facts.objective_gap && facts.objective_gap.truncated === true),
@@ -2043,6 +2135,7 @@ export class Queue {
       const cls = subjects[0].cls;
       const had = !!this.#one(
         `SELECT item_id FROM queue_item_mutes WHERE member_id=? AND item_id=?`, me, itemId);
+      this.#wrote();
       if (unmute) this.sql.exec(
         `DELETE FROM queue_item_mutes WHERE member_id=? AND item_id=?`, me, itemId);
       else {
@@ -2058,6 +2151,9 @@ export class Queue {
              item_subject=COALESCE(excluded.item_subject, item_subject)`,
           me, itemId, cls, stamp, live.kind, live.title, live.subject);
       }
+      /* R94: the feed was derived (for the live item above) before this write, so the write is counted again: nothing made
+         from that derivation outlives the mute. */
+      this.#wrote();
       return {
         ok: true, member: me, form: "item", item: itemId, item_class: cls,
         muted_items: [...this.#queueItemMutes(me)].sort(),
@@ -2081,6 +2177,7 @@ export class Queue {
     const ats = parseMutedAt(row ? row.muted_at : null);
     const keptAt = Object.fromEntries(next.map((k) => [k, ats[k] ?? (had.includes(k) ? undefined : stamp)])
       .filter(([, v]) => v !== undefined));
+    this.#wrote();
     this.sql.exec(
       `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen, muted_at)
        VALUES (?, ?, ?, ?, ?, ?)
@@ -2166,6 +2263,7 @@ export class Queue {
     }
     const row = this.#one(
       `SELECT muted_kinds FROM queue_state WHERE member_id=? AND case_id=?`, me, c.id);
+    this.#wrote();
     this.sql.exec(
       `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen, snoozed_at)
        VALUES (?, ?, ?, ?, ?, ?)
@@ -2414,6 +2512,7 @@ export class Queue {
       if (denied) return denied;
       const atS = stampInstant("millisecond", this.#nowMs(null));
       const kd = typeof kind === "string" && kind.trim() ? kind.trim().slice(0, 120) : null;
+      this.#wrote();
       this.sql.exec(
         `INSERT INTO finding_dispositions (project_id,finding_id,kind,state,reason,decided_by,at)
          VALUES (?,?,?,?,?,?,?)

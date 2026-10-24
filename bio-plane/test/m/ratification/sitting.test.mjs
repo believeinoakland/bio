@@ -224,3 +224,36 @@ test("R52 (control): op=publishat answers a member's commit refusal at signing (
   assert.equal(s.w.count("scheduled_editions"), 0, "nothing waits");
   s.nothing("probe");
 });
+
+/* R60 (fix round 8, G120; CHANGE B15): a sitting's members are prepared together and their copies run together. */
+test("R60, R52: the members of a sitting are read together (gatefacts of the seven in flight at once, image and list together), their bytes copied together, and the answer is the sitting's as before", async () => {
+  const s = await sitting();
+  const nap = () => new Promise((r) => setTimeout(r, 6));
+  const p = plane(s.w, as("iris"));
+  const calls = [], bucket = [];
+  let live = 0, peak = 0;
+  const real = p.stub.fetch.bind(p.stub);
+  p.stub.fetch = async (u, init) => {
+    const op = new URL(u instanceof Request ? u.url : u).pathname.slice(1);
+    const c = { op, start: performance.now(), end: null }; calls.push(c);
+    await nap();
+    try { return await real(u, init); } finally { c.end = performance.now(); }
+  };
+  for (const k of ["PUBLISHED", "CAPTURES"]) {
+    const b = p.ctx.env[k], o = {};
+    for (const m of ["head", "get", "put"]) o[m] = async (...a) => {
+      live++; peak = Math.max(peak, live); bucket.push(m);
+      try { await nap(); return await b[m](...a); } finally { live--; }
+    };
+    p.ctx.env[k] = o;
+  }
+  const r = await caseRatifyOp(p.request(s.body()), p.stub, p.ctx);
+  assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 400));
+  assert.deepEqual(r.body.sitting.map((m) => [m.bundleId, m.ok]), s.ids.map((id) => [id, true]), "answered in the sitting's order");
+  const inFlight = (op) => { const xs = calls.filter((c) => c.op === op); return Math.max(...xs.map((a) => xs.filter((b) => b.start <= a.start && b.end > a.start).length)); };
+  assert.ok(inFlight("gatefacts") >= 6, `gatefacts of the members in flight together: ${inFlight("gatefacts")}`);
+  const img = calls.filter((c) => c.op === "image"), lst = calls.filter((c) => c.op === "list");
+  assert.ok(img.every((i) => lst.some((l) => l.start < i.end && i.start < l.end)), "each member's image and list are asked together");
+  assert.ok(peak >= 6, `the members' copies in flight together: ${peak}`);
+  for (const m of s.members) assert.equal(p.published.has(`s/published/${m.sha}`), true, m.id);
+});

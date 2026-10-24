@@ -18,6 +18,8 @@
 
 import { PUBLISHED_TOKEN_HASHES } from "./tokens.mjs";
 import { localize } from "./setup-words/index.mjs";
+/* R102 (runtime-limits R28): the room is obtained through the one helper. */
+import { storeStub } from "./store-place.mjs";
 
 const sha256 = async (s) => {
   const b = await crypto.subtle.digest("SHA-256", typeof s === "string" ? new TextEncoder().encode(s) : s);
@@ -26,7 +28,7 @@ const sha256 = async (s) => {
 
 export async function livefire(env, storeName, { capacity = false, viewer = null } = {}) {
   const t0 = Date.now();
-  const stub = env.STORE.get(env.STORE.idFromName(storeName));
+  const stub = storeStub(env, storeName);
   const post = async (op, body) => {
     const r = await stub.fetch(new Request("http://x/" + op, { method: "POST", body: JSON.stringify(body) }));
     return (await r.json()).result;
