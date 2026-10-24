@@ -151,12 +151,16 @@ test("R5 a package copy opens in LibreOffice and shows its original's text", { s
 });
 
 test("R5 office-readers and odf-reader answer the same text for a package copy as for its original, with none of R6's metadata in the copy", async () => {
-  const strip = (t) => JSON.parse(JSON.stringify({ ...t, metadata: undefined, images: t.images?.map(({ mime, name }) => ({ mime, name })) }));
+  /* `counts.scanned_bytes` (office-readers R40) is the XML the reader walked: a copy without R6's metadata walks less, so it is not text and is left out of the comparison (K4872). */
+  const strip = (t) => JSON.parse(JSON.stringify({ ...t, metadata: undefined, counts: t.counts && { ...t.counts, scanned_bytes: undefined }, images: t.images?.map(({ mime, name }) => ({ mime, name })) }));
   for (const [k, { original, copy }] of Object.entries(await copies(PACKAGES))) {
     const entry = PACKAGES[k][1];
     const a = await entry.text(original), b = await entry.text(copy);
     assert.equal(b.ok, true, k);
-    assert.deepEqual(strip(b), strip(a), k);
+    /* A comment's author run (`COMMENTERSECRET:` in an xlsx comment, which office-readers R38 now reads as a comment part)
+       is R6's metadata: the copy drops it, so the original is compared without it (K4872). */
+    const unauthored = JSON.parse(JSON.stringify(strip(a), (_, v) => typeof v === "string" ? SECRETS.reduce((t, s) => t.split(`${s}:`).join("").split(s).join(""), v) : v));
+    assert.deepEqual(strip(b), unauthored, k);
     if (b.metadata) assert.deepEqual([b.metadata.author, b.metadata.lastModifiedBy, b.metadata.created, b.metadata.modified], [null, null, null, null], k);
     const s = await entry.structure(copy);
     const items = s.evidentiary?.items ?? [];
