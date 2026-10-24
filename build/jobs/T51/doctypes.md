@@ -226,3 +226,34 @@ Size (session_01R1JrGsT5LqDnscK29WqKJU): test runs 12, module lines 3881
 **Deferred:** none. **Other modules:** none. **Row owed to the design:** none (no new sentence).
 
 Size (session_01Gno8ZS6JAy2orDZ8uFsPJF): test runs 9, module lines 3896
+
+## J12 · COMPLETE
+
+DOCTYPES #11 · START B10 (fix round 9: G140, G133 piece c) · R40 and R41 met.
+
+**Changed (all under doctypes/)**
+- `staff-directory.mjs`: addresses found from their `@` (`sdEmailAt`, `sdAddresses`), linear; the 400 KB `a-a-a-` case no longer scans per start. Bounds ENTRIES_MAX 10,000 distinct addresses and LINE_MAX 600 characters per entry `line` (both *proposed; BOB records*): past them the answer says so (`entries_cut`, `entries_limit`, `read_to`, `chars`, `entries_why`; `line_cut`, `line_length`), and detect reads the text to that point.
+- `sections.mjs`: `readDefinitions` (dedupe against the last kept, line-by-line gated matching, line cache; holder by nesting `holderOf`), `readExceptions` (`sentenceReader`: stops met once by a cursor, ends cached, no slice of the line per passage).
+- `windows.mjs`: `counted`/`spend` (the ctx.work count), `rawMergedHits` (raw-text windows), `referenceBook` (REFERENCES_MAX 20,000, SIGHTINGS_MAX 50,000, proposed; BOB records; past them `references_cut`, `references_skipped`, `references_why`).
+- `staff-report.mjs`, `regulation.mjs`: citations read through `rawMergedHits` and `referenceBook`; counted.
+- `meeting-calendar.mjs`: window from/to by a loop, never `Math.min(...dates)` (R41); `insideMain` and `rowsOf` replace two unbounded regexes (a page of unclosed `<tr>` took 4.4 s at 200 KB, now ms).
+- `meeting-minutes.mjs`, `meeting-agenda.mjs`, `policy.mjs`: counted only.
+
+**Failing-first** (`doctypes/test/g140.test.mjs`, 18 tests; `g140-child.mjs`, `r40-texts.mjs`, `make-r40-answers.mjs`, `fixtures/r40-answers.json` taken from the tranche tip): on the tip, 12 of 18 fail (a-a-a- 101 s; one line of 16,000 addresses and the 17 MB CSV die at base+16 MB; 80,000 definitions 25 s; exceptions 7 s; quoted words with no verb 13 s; 400,000 citations die at base+16 MB, both types; the ctx.work count absent; 150,000 dates throws). Now 18 of 18 pass. The 6 that pass on the tip are controls (small cases, answers equal the tip's, the real-entry-path definitions read).
+
+**Measurements** (mine, this container): a-a-a- 400 KB 3 s at 100 KB before, 0 ms after; 16,000 addresses on one line out of memory before, 86 ms; 17 MB CSV +240 MB before, 32 ms and under 16 MB; 40,000 definitions 1790 ms to 65 ms; 40,000 exceptions 8683 ms to 157 ms; 400,000 citations +370 MB to under 16 MB retained; 150,000 dates RangeError to 64 ms. A seeded differential of the old and the new sections code over 12,000 text/form pairs was equal (not kept: the old code is the tip).
+
+**Suites and checks**
+- `node --test --test-force-exit doctypes/test/`: 78 tests (60 + 18 new), 0 fail.
+- impact users (reading-pipeline, extraction, reading-guides, roster-reader, pdf-worker, agent-worker, content, calculations, retrieval-browse; 75 files): tests 571, pass 571, fail 0.
+- format 0 failures (176 modules); architecture 0 (52 files, 142 imports); coverage 41 of 41 ids, 0 failures; ownership 0 failures (15 files); words: 0 findings in doctypes. `setup-words/build.mjs --check`: stale rows only (expected).
+
+**Words owed (stand-ins, K3930):** `doctypes.staff-directory.addresses_cut`, `doctypes.staff-directory.entries_cut`, `doctypes.windows.references_cut`.
+
+**Proposed requirement lines (BOB writes them):** R40: add that a detect or parse over a text past ENTRIES_MAX distinct addresses, REFERENCES_MAX references or SIGHTINGS_MAX repeat sightings states what it did not keep; the three figures and LINE_MAX are Bob's to confirm (K1881). R37's "not yet met" notes can be removed.
+
+**Deferred, with the smallest thing needed:** the *policy* type's parse is still quadratic on shapes no policy has (200 KB: `readOutline` on one long line 6-16 s from `TOC_LINE`'s second alternative; `readHeader` on 200,000 empty lines 29 s). Not in G140 or G133c. Needed: BOB's word to add it to an entry (policy-header.mjs and policy.mjs); the g140 work-count test skips policy parse on those shapes for that reason. Also: `DEFINES` on a line that holds a verb and a very long chain of quoted words is still quadratic within that one line (lines without a verb are skipped).
+
+**Other modules:** none found. Generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` (it bundles the doctypes); BOB regenerates at the round end.
+
+Size (session_01TmVLRbU29kGrf79yMGm5rX): test runs 14, module lines 4193
