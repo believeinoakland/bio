@@ -75,3 +75,7 @@ The sentences reach the caller as the refusal's `detail` and `why`, so none is t
 **Checks** (process repo, product `/home/user/bio`): `node --test` as above; `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 46 of 176, workbooks 9/9, sheet-worker 3/3 (control-plane 83/96 and plane 65/81 are the round's carried reds); `format`: 0 failures; `architecture sheet-worker`: 0 failures; `coverage sheet-worker`: 17 of 17, 0 failures; `ownership sheet-worker tranche/T51`: 3 files changed, 0 failures; `checks/run.mjs`: no finding names `sheet-worker` (the failures are other modules'); `setup-words build.mjs --check`: stale-rows note only.
 
 Size (session_015vsvGpKy672zBH3KSU5T3u): test runs 3, module lines 1930
+
+## J4 · COMPLETE
+
+R14 applied: the three bounds are boundOf('sheet_worker','bytes'|'cells'|'ms') in contract.mjs, no literal left. Red seen then green (38/38). Impact: workbooks 9/9. format, architecture, coverage, ownership 0 failures. Stale for BOB to regenerate: sheet-worker bundle (now inlines bio-plane/src/read-bounds.mjs; check bundler's input list) and the plane bundle. No new files outside paths. Record: build/jobs/T51/sheet-worker.md.
