@@ -471,8 +471,8 @@ function renderCapture(cs, view) {
     /* R50 (A1, A2): the working line from the press until the answer; the result is a status line under the button */
     const working = U.working ? `<p class="mk-note" role="status" data-working><b>${cs.w("screen.capture.address.working.head")}</b> ${cs.w("screen.capture.address.working")}</p>` : "";
     /* G72 (fix round 7): "Finish it" on a capture the plane no longer holds (`NO_SUCH_SESSION`: finished, closed or expired) says so in a status line and the
-       Unfinished line leaves; the nearest held row (`acquisition.index.no_such_session`) stands in until `refusal.NO_SUCH_SESSION` has its own row (K4269) */
-    const closedLine = U.closed ? `<p class="mk-note" role="status" data-closed>${cs.w("acquisition.index.no_such_session")}</p>` : "";
+       Unfinished line leaves; the design's row `refusal.NO_SUCH_SESSION` (DEC-425) is the sentence */
+    const closedLine = U.closed ? `<p class="mk-note" role="status" data-closed>${cs.w("refusal.NO_SUCH_SESSION")}</p>` : "";
     /* R31 (fix round 5, E8; K4530): "Finish it" says what the continuation answered: the visitor copy still being made, its supporting files fetched
        with nothing new filed (each in the nearest held row's words, K4269), or the visitor copy filed (a new document, below) */
     const finishLine = (g) => `<p class="mk-note" role="status" data-finish="${g.finish}">${cs.w(g.finish === "pending" ? "acquisition.index.render_pending_note" : "acquisition.note.continuation_files_new")}</p>`;
