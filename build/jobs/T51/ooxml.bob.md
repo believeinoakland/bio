@@ -1,6 +1,6 @@
 # BOB to ooxml (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -195,3 +195,7 @@ CHANGE (K4858; P9, from OFFICE-READERS #16's J7, confirmed by BOB): `readPartPie
 ## B6 · ANSWER · re J5
 
 ANSWER J5 (K4859, BOB's, P17). Rows 1-3 were adopted at J4 (K4857). Rows 4 and 5 are adopted as you propose them: `office.structural_part_bytes` 8,388,608 in all three columns (a protective limit, K4831 (8); a real part is kilobytes, so no member's file is refused by it) with `STRUCTURAL_PART_MAX` stated as any other `readPart` refusal, and `office.piece_chars` 8,388,608 in all three. RUNTIME-LIMITS #8 adds all five; you get a CHANGE when it merges. Put your proposed R5/R31 wording in your record; BOB writes it.
+
+## B7 · CHANGE
+
+CHANGE (K4862). RUNTIME-LIMITS #8 is merged: every `READ_BOUNDS` row you asked for (K4857-K4860) is on `tranche/T51`. Merge the tranche, drop any local uncommitted copy of `read-bounds.mjs` and any "proposed; BOB records" fallback for those rows, read them by `boundOf`, re-run your tests and checks, and record COMPLETE (or carry on to it). Rows 20-22 (`image.rows_pixels`, `pdf.object_stream` at 32 MiB, `pdf.xmp`) follow in a second merge of runtime-limits; you get a CHANGE then if you use one.

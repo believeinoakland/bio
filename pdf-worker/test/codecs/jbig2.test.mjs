@@ -20,6 +20,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { decodeJbig2, JBIG2_REFUSES, Jbig2Refusal } from "../../src/jbig2decode.mjs";
 import { localize } from "../../../bio-plane/src/setup-words/index.mjs";
+import { MqDecoder } from "../../src/mq.mjs";
 
 const FIX = JSON.parse(readFileSync(new URL("../fixtures/jbig2-variants.json", import.meta.url), "utf8"));
 const V = FIX.variants;
@@ -120,5 +121,45 @@ test("R3 a stream cut short is refused TRUNCATED, never padded into a picture", 
     let e;
     try { decodeJbig2(s.subarray(0, cut), b64(page.globals_b64)); } catch (x) { e = x; }
     assert.ok(e instanceof Jbig2Refusal && e.code === "TRUNCATED", `cut at ${cut}: ${e && e.code}`);
+  }
+});
+
+/** A fixture's stream with its page information and its first generic region declaring `h` rows, the data unchanged. */
+function declaringRows(v, h) {
+  const d = Uint8Array.from(b64(v.stream_b64));
+  const u32 = (p) => ((d[p] << 24) | (d[p + 1] << 16) | (d[p + 2] << 8) | d[p + 3]) >>> 0;
+  const put = (p, n) => { d[p] = n >>> 24; d[p + 1] = (n >>> 16) & 255; d[p + 2] = (n >>> 8) & 255; d[p + 3] = n & 255; };
+  for (let p = 0; p < d.length;) {
+    const flags = d[p + 4], count = d[p + 5] >> 5, at = p + 6 + count + (flags & 64 ? 4 : 1), len = u32(at), data = at + 4;
+    if ((flags & 63) === 48) put(data + 4, h);
+    if ((flags & 63) === 38) put(data + 4, h);
+    p = data + len;
+  }
+  return d;
+}
+
+test("R3 R5 (fix round 9, G132l (d)) a region taller than its data, which ends in FF AC, is refused TRUNCATED as the data runs out and no row is invented", () => {
+  /* A region's invented rows are found once the coder has fed on the marker past its look-ahead. Twelve of the sixteen
+   * generic fixtures draw noise from the 1-bits at 400 rows too many and are refused; the other four (t0-moved,
+   * t2-nominal, t3-nominal, t3-moved) draw WHITE from them, which no count of bytes can tell from a whole stream's blank
+   * tail (a page that ends in white costs the coder nothing), so they are not asserted: R5 detects what is detectable. */
+  const WHITE_TAIL = new Set(["generic-t0-moved", "generic-t2-nominal", "generic-t3-nominal", "generic-t3-moved"]);
+  const fixtures = V.filter((v) => /^generic-t[0-3]-(nominal|moved)(-tpgdon)?$/.test(v.name));
+  assert.equal(fixtures.length, 16);
+  const callsOf = (fn) => {
+    const orig = MqDecoder.prototype.decode;
+    let calls = 0;
+    MqDecoder.prototype.decode = function (...a) { calls++; return orig.apply(this, a); };
+    try { fn(); } catch (e) { return { calls, error: e }; } finally { MqDecoder.prototype.decode = orig; }
+    return { calls, error: null };
+  };
+  for (const v of fixtures) {
+    const whole = callsOf(() => decodeJbig2(declaringRows(v, v.height), null));
+    assert.equal(whole.error, null, `${v.name}: the stream as it is decodes`);
+    const { calls, error } = callsOf(() => decodeJbig2(declaringRows(v, v.height + 400), null));
+    if (WHITE_TAIL.has(v.name)) { assert.equal(error, null, `${v.name}: a white tail decodes (the limit above)`); continue; }
+    assert.ok(error instanceof Jbig2Refusal && error.code === "TRUNCATED", `${v.name} +400 rows: ${error && error.code}`);
+    assert.equal(error.detail.segmentType, 38, `${v.name}: the generic region`);
+    assert.ok(calls < whole.calls + 100 * v.width, `${v.name} +400 rows: stopped after ${calls} decisions (the whole stream takes ${whole.calls}; 400 rows more would be ${whole.calls + 400 * v.width}): within 100 rows of the data running out`);
   }
 });

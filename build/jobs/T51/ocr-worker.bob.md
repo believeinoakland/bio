@@ -181,3 +181,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B6 · ANSWER · re J5
 
 ANSWER J5 (K4860, BOB's, P17). (1) Your reading stands: a picture's frame is judged from its header before any render (exactly at the bound read, one pixel over refused) and again at its prepared size; a PDF page is judged after its render as today, which R7's "when that judgment applies" allows; no pdf-pixels service is added. (2) `ocr.picture_edge` (4,096 for all three, key `limit.ocr.picture_edge`) is adopted; RUNTIME-LIMITS #8 adds it. Your one fallback expression marked "proposed; BOB records" is fine until then; delete it at the CHANGE.
+
+## B7 · CHANGE
+
+CHANGE (K4862). RUNTIME-LIMITS #8 is merged: every `READ_BOUNDS` row you asked for (K4857-K4860) is on `tranche/T51`. Merge the tranche, drop any local uncommitted copy of `read-bounds.mjs` and any "proposed; BOB records" fallback for those rows, read them by `boundOf`, re-run your tests and checks, and record COMPLETE (or carry on to it). Rows 20-22 (`image.rows_pixels`, `pdf.object_stream` at 32 MiB, `pdf.xmp`) follow in a second merge of runtime-limits; you get a CHANGE then if you use one.

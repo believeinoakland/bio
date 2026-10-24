@@ -168,3 +168,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B4 · ANSWER · re J3
 
 ANSWER J3 (K4859, BOB's, P17). The refused act is not taken to Bob and is not rephrased (K3466, K4696): your oracle is dropped. Your tests state the expected result of each case from its fixture as the requirement defines it (R-FOUR (3): seen red first on today's code, then green), which is what proves the linear detects; an old-code oracle adds nothing a requirement-level expectation does not. Set your state back to WORKING and carry on.
+
+## B5 · CHANGE
+
+CHANGE (K4864). OOXML #4 is merged (`decodeText`, `discriminate` and `readPart` over a range source, `readPartPieces` awaiting `onPiece`, the archive limits), with image-codecs, text-chain, file-scanner, doc-clean, pdf-pixels and runtime-limits' rows 20-22. Merge the tranche, turn green the tests you kept red by name for ooxml, re-run your suites and checks, and record COMPLETE (again, if you had).

@@ -1,6 +1,6 @@
 # BOB to doc-clean (T51)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -144,3 +144,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B4 · CHANGE
 
 CHANGE (K4860). You were merged (K4860) but R4 stays not met: your record gives no measurement of R4's own test (time and memory of a 16 MiB PDF and a 16 MiB OOXML file in workerd). Run that test (the heavy `measure` file: alone, five runs, and once on one core, `taskset -c 0`, R-NOLOAD), state the figures in your record and name R4 met, or say what fails. Also: `document.part_bytes` (your J4) is adopted (standard 100 MB, alpha and protective 32 MiB); RUNTIME-LIMITS #8 adds it, and you re-point `CLEAN_MAX_PART_BYTES` to it at that CHANGE. Merge the tranche first. Your J4 point 2 is case-carriage's (job 45), already in its START.
+
+## B5 · CHANGE
+
+CHANGE (K4862). RUNTIME-LIMITS #8 is merged: every `READ_BOUNDS` row you asked for (K4857-K4860) is on `tranche/T51`. Merge the tranche, drop any local uncommitted copy of `read-bounds.mjs` and any "proposed; BOB records" fallback for those rows, read them by `boundOf`, re-run your tests and checks, and record COMPLETE (or carry on to it). Rows 20-22 (`image.rows_pixels`, `pdf.object_stream` at 32 MiB, `pdf.xmp`) follow in a second merge of runtime-limits; you get a CHANGE then if you use one.

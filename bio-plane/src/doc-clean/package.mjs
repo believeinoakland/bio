@@ -15,9 +15,8 @@ export const CLEAN_MAX_ENTRIES = boundOf("office", "entries");
 /** The most one part may inflate to, over what it holds (R3 `DOCUMENT_UNREADABLE`; the archive table's ratio). */
 const RATIO_MAX = boundOf("archive", "ratio");
 /** The most uncompressed bytes one part may declare: the largest the plane's isolate holds with its working copies
- *  (R4; measured in workerd, the job's record): twice the largest document, which no part of a document can pass
- *  (proposed as its own row, `document.part_bytes`; the job's REPORT). */
-export const CLEAN_MAX_PART_BYTES = 2 * boundOf("document", "clean_bytes");
+ *  (R4; measured in workerd, the job's record). Quoted from `READ_BOUNDS` (R12). */
+export const CLEAN_MAX_PART_BYTES = boundOf("document", "part_bytes");
 
 const CUSTOM_PART = "docProps/custom.xml";
 /** The OOXML parts R6 removes (K2334, K2351): custom properties, custom XML data (which can carry a document

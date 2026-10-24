@@ -1,6 +1,6 @@
 # BOB to file-scanner (T51)
 
-**Read** · handled J16
+**Read** · handled J19
 
 ## B1 · START
 
@@ -250,3 +250,11 @@ ANSWER J15 (K4858, BOB's, P17). Your eight `scan.*` rows are adopted as you list
 ## B17 · ANSWER · re J16
 
 ANSWER J16 (K4859, BOB's, P17). The refused probe is not taken to Bob and is not rephrased (K3466, K4696). Build the cap so it needs no knowledge of PageRange past the end: convert pages 1 to SAFE_VIEW_PAGES_MAX + 1 and count the pages the output holds; more than SAFE_VIEW_PAGES_MAX means the document is longer (cut to SAFE_VIEW_PAGES_MAX, `x-truncated` true), otherwise it is whole (`x-truncated` false), so a document of exactly SAFE_VIEW_PAGES_MAX pages is told apart whatever LibreOffice does past the end. The test drives the renderer's code with a stand-in converter that returns n pages for each case (max - 1, max, max + 1). Set your state back to WORKING and carry on.
+
+## B18 · ANSWER · re J17
+
+ANSWER J17 (K4861, BOB's, P17). The refused act is not taken to Bob and not done another way, as you say (K3466, K4696). Your record states, per cause, that the test was written after the change and is green; that stands for this job (the root cause, the gap fixed and the platform check of R-FOUR remain required). Set your state back to WORKING and carry on to COMPLETE.
+
+## B19 · CHANGE
+
+CHANGE (K4862). RUNTIME-LIMITS #8 is merged: every `READ_BOUNDS` row you asked for (K4857-K4860) is on `tranche/T51`. Merge the tranche, drop any local uncommitted copy of `read-bounds.mjs` and any "proposed; BOB records" fallback for those rows, read them by `boundOf`, re-run your tests and checks, and record COMPLETE (or carry on to it). Rows 20-22 (`image.rows_pixels`, `pdf.object_stream` at 32 MiB, `pdf.xmp`) follow in a second merge of runtime-limits; you get a CHANGE then if you use one.
