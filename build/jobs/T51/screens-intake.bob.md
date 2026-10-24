@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J45
+**Read** · handled J48
 
 ## B1 · START
 
@@ -901,3 +901,11 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 **Added by BOB #277 (K4899).** Job 42 has merged: capture R113 states the parted upload. Read capture's record `build/jobs/T51/capture.md` section "Fix round 9 · job 42" whole for the ops' inputs, answers and refusals and the wiring owed to you (screens-intake: the page). Control-plane: four arms for `captureuploadbegin`, `captureuploadpart`, `captureuploadcomplete`, `captureuploadabort` (member session, `contribute`, `by` the door's stamp), the part's raw body as `bytes`, `declared` only when Content-Length is present, the byte `ledger`. Screens-intake: the page hashes the whole file first (an incremental hasher; SubtleCrypto cannot stream), cuts by `part_bytes`, sends parts in order showing progress, begins again on `UPLOAD_LOST` or `UPLOAD_EXPIRED`, aborts on cancel, and takes `in_parts: true` from a `TOO_LARGE` as its cue to begin.
 
 **Added by BOB #279 (K4918; P9, P10; depth 2, BOB #279 at depth 1).** Merged since: content (job 29, K4917): `searched` (`{through, total}`, content R60) on a notice's candidates, `contentContextFor`, `markStale` rows and `passageHeld`, absent for a whole reading; G135f's provider half is in. Not merged (code against section 2c and the text, R-SEAM): plane's job row and its new store-internal route `jobrow?sha=&kind=` (plane R107, K4916: every column of R97's row, finished and refused included, `row: null` when none; PLANE #57 open) and control-plane's `op=reading` (R135, job 38, building on `owedwork` then `jobrow`). Read content R60 whole.
+
+## B46 · ANSWER · re J46
+
+ANSWER to J46 (K4922). (1) Yes: build nothing for G137b; record "owed to UX-DESIGN, screen first" (it is in `later-ux.md` and the round's HANDOFF); open-file keeps the cut preview, its cut stated (R-SILENT). (2) Yes: delete `t51-seam-g43.test.mjs` and replace it with `t51-seam-g126h.test.mjs` as you describe (real plane, the 2 MB sheet through the no-cursor door, no inline read, a `reading` row in `op=owedwork`, the last row found by `op=search` after the ticks), written first and red by name until control-plane R131 (job 38) and plane's job table (job 37, open with B84/B85) merge; your interface tests beside it.
+
+## B47 · ANSWER · re J48
+
+ANSWER to J47 and J48 (K4930). J47 (1): yes, decide by size before the first request AND take the `in_parts: true` cue; `PARTS_FROM` 64 MiB is the act's own threshold (when to send in parts, not a read ceiling: G124 does not apply), it stays your constant, no row, its comment saying why it sits under the edge's 104,857,600 B. (2): yes, no Cancel button (a new act is the design's; owed to UX-DESIGN in `later-ux.md`); the page aborts when it stops the upload itself, begins again on `UPLOAD_LOST`/`UPLOAD_EXPIRED`, and leaving the screen ends its loop. J48: `provenance` is now in screens-intake's `uses` (order 44 < 164; `modules.json` on the tranche): merge `origin/tranche/T51`; keep both register tests.

@@ -554,7 +554,7 @@ test("R11 (K2574; plane R33): the door adds no `use` to a read's entry — which
 });
 
 test("R11 (K2585; control-plane R72; capture R86): `captureupload`'s POST body is handed to the route map unread, as the request's own stream — never JSON-parsed or refused BAD_JSON — and its bytes reach the route unchanged (negative control: the same bytes on any other op are BAD_JSON)", async () => {
-  assert.deepEqual(D.STREAMED_BODY_OPS, ["captureupload"]);
+  assert.ok(D.STREAMED_BODY_OPS.includes("captureupload"));
   const BYTES = new Uint8Array([0x7b, 0x00, 0xff, 0x25, 0x50, 0x44, 0x46, 0x0a]);
   const got = [];
   const store = { membership: () => null,
@@ -565,6 +565,29 @@ test("R11 (K2585; control-plane R72; capture R86): `captureupload`'s POST body i
   const r = await go(store, "captureupload?by=member:ann&statement=s", { method: "POST", body: BYTES });
   assert.deepEqual([r.status, r.json], [200, { ok: true, result: { ok: true, bytes: [...BYTES] } }]);
   assert.deepEqual(got, [{ stream: true, locked: false, by: "member:ann" }]);
+  const n = await go(store, "other", { method: "POST", body: BYTES });
+  assert.deepEqual([n.status, n.json.reason], [400, "BAD_JSON"]);
+});
+
+test("R19 (fix round 9, G127f; K4928; capture R113, control-plane R72): every op of STREAMED_BODY_OPS — `captureupload` and `captureuploadpart` — is handed its POST body as the request's own stream, unread, so binary bytes that are not JSON reach the arm as its `bytes` and are never refused BAD_JSON (negative control: a JSON op's body is parsed as before, and the same bytes on any op outside the list are BAD_JSON)", async () => {
+  assert.deepEqual([...D.STREAMED_BODY_OPS].sort(), ["captureupload", "captureuploadpart"]);
+  const BYTES = new Uint8Array([0x7b, 0x00, 0xff, 0x25, 0x50, 0x44, 0x46, 0x0a]);
+  const got = [];
+  const arm = (name) => async (url, body) => {
+    got.push({ name, stream: body instanceof ReadableStream, locked: body.locked, part: url.searchParams.get("part") });
+    return { ok: true, bytes: [...new Uint8Array(await new Response(body).arrayBuffer())] };
+  };
+  const store = { membership: () => null,
+    routes: (url, body) => ({ captureupload: () => arm("captureupload")(url, body),
+      captureuploadpart: () => arm("captureuploadpart")(url, body),
+      json: () => ({ ok: true, echoed: body }), other: () => ({ ok: true }) }) };
+  for (const op of D.STREAMED_BODY_OPS) {
+    const r = await go(store, op + "?by=member:ann&part=2", { method: "POST", body: BYTES });
+    assert.deepEqual([r.status, r.json], [200, { ok: true, result: { ok: true, bytes: [...BYTES] } }], op);
+  }
+  assert.deepEqual(got.map((g) => [g.name, g.stream, g.locked]), [["captureupload", true, false], ["captureuploadpart", true, false]]);
+  const j = await go(store, "json", { method: "POST", body: JSON.stringify({ a: 1 }) });
+  assert.deepEqual([j.status, j.json], [200, { ok: true, result: { ok: true, echoed: { a: 1 } } }]);
   const n = await go(store, "other", { method: "POST", body: BYTES });
   assert.deepEqual([n.status, n.json.reason], [400, "BAD_JSON"]);
 });

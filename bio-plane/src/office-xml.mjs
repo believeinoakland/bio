@@ -399,3 +399,25 @@ export async function memberIdentities(bytes, names) {
   }
   return out;
 }
+
+/** R38 (K4924): the units of `parts` addressed. Each unit's `ref` becomes a non-empty STRING that addresses it alone
+ *  within its `part`: an id the caller already wrote as a string stays; an anchor's element reference (R15-R19) is
+ *  written as its `ref` text with its run or shape where it has one, and kept beside as `anchor`; a unit with no anchor
+ *  is addressed by its part. Where two units of one part still share a string, the later ones take ` #<k>` (k from 2),
+ *  in the units' own order. These strings are addresses, never sentences. */
+export function addressParts(units) {
+  const seen = new Map();
+  return units.map((u) => {
+    const a = u.ref != null && typeof u.ref === "object" ? u.ref : null;
+    let ref = typeof u.ref === "string" && u.ref !== "" ? u.ref : a ? String(a.ref ?? "") : "";
+    if (a && Number.isInteger(a.run)) ref += ` run ${a.run + 1}`;
+    else if (a && Number.isInteger(a.shape)) ref += ` shape ${a.shape + 1}`;
+    if (ref === "") ref = u.part;
+    const key = `${u.part}\u0000${ref}`;
+    const n = (seen.get(key) ?? 0) + 1;
+    seen.set(key, n);
+    const out = n === 1 ? ref : `${ref} #${n}`;
+    const { ref: _drop, ...rest } = u;
+    return { ...rest, ref: out, ...(a ? { anchor: a } : {}) };
+  });
+}

@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01CAeRS3pRKYW3YBwY2Fp8nC · depth 2 · COMPLETE · handled B39
+**Status** · session_018XJZd3Y6SC5rJeKSargNwt · depth 2 · COMPLETE · handled B41
 
 ## J1 · REPORT
 
@@ -611,3 +611,33 @@ Fix round 9 complete for acquisition (R113-R121, N1, B39 answer applied). Head: 
 - format: 176 modules; 0 failures. architecture (acquisition): 55 files, 223 imports; 0 failures. coverage: 75 of 75 live ids named; 0 failures. words: 0 failures. ownership (against tranche/T51): 22 files changed by acquisition; 0 failures.
 
 Size (session_01CAeRS3pRKYW3YBwY2Fp8nC): test runs 14, module lines 4342
+
+## Job 65 (acquisition-2; ACQUISITION #34; B40 · G124b, R-PATH) · R115 on the sibling paths
+
+Red first, on the tip: `r9-multipart-memory.test.mjs` with the same 20 MiB capture served with no length, with a shorter declared length (12 MiB) and a longer one (22 MiB): peak 30 MiB and over, against the kept bytes plus one part. The R115 test was vacuous before job 23: shown red against `git show 879a7ce60f:bio-plane/src/acquisition/index.mjs` copied in place (3 reds: "the ledger counted the kept bytes (peak 0)"; the first test now asserts `peak() >= kept` too), green on the fix.
+
+Fix (`bio-plane/src/acquisition/index.mjs`): (1) the whole0 join for the PDF title is gone: the title is read only where the whole is in one buffer (a single part, or the buffer a declared length asked for); a several-part capture received otherwise answers `title: null` at capture, named by its reading (R98 states it; test "named by its reading"). Choice, as BOB allowed: title left to the reading, stated in R115. Detection already reads `firstHead`. (2) A body with no declared length keeps its parts singly and `keepWhole` hands them to the one buffer part by part (it nulls each as copied; the shared array drops the reference), counted by the ledger as the bytes they become, with no read-back and no compose, as R96's tests require. (3) A body that overruns the length it declared holds no bytes (`dropKept`): the whole is made from the stored parts (`putFromParts`, else read back one at a time, the ledger counting the whole and one part). (4) A declared-longer body fills the front of its buffer (a `subarray` view is put). (5) The kept bytes are released at the end of the keep. `keepWhole` takes an optional `ledger`.
+
+Claim to read with care: in (2) the join allocates the whole while the parts are still referenced, then drops them as they are copied; the ledger counts it as a handover, and the resident peak depends on the engine committing a zero-filled buffer lazily. Not measured here.
+
+Requirement: R115 amended in `build/requirements/acquisition.md` (my own file, K4210); ownership lists that one file, accepted at the merge.
+Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/acquisition/*.test.mjs`: tests 325, pass 325, fail 0. Users named by impact (capture, doorbell, screens-intake, control-plane): capture tests that name acquisition: 243/243.
+Checks: format 0 failures; architecture (acquisition) 0 failures; coverage (acquisition) 75 of 75, 0 failures; `checks/run.mjs`: no finding names acquisition (words 19 failures, none mine, none in my files); ownership: 1 failure, the requirements file, as B3/B4 accept.
+Deferred: none. Words: no new sentence.
+Size (session_018XJZd3Y6SC5rJeKSargNwt): test runs 6, module lines 4358
+
+## J38 · COMPLETE
+
+COMPLETE job 65 (G124b): R115 met on the undeclared, overrunning and short-declared paths; title read only from a one-buffer whole (else null, stated in R115); R115 test non-vacuous (red on 879a7ce60f, 3 reds). Details, tests (325/325), checks and Size in the record's Job 65 section. Requirement R115 amended in build/requirements/acquisition.md (ownership lists that one file, per B3/B4). One claim not measured: the undeclared join's resident peak depends on lazy zero-fill commit.
+
+### Job 65, after B41 (CHANGE, K4926): option (a)
+
+Chosen (a): no join, no whole beside held parts. Only a body received into the one buffer its declared length asked for (or a single part) holds bytes. A body with no declared length, or one that overruns its declared length, drops what it holds when a second part shows it is several (`dropKept`); the parts are already stored, and `keepWhole` (no `compose`, so the store's `putFromParts` is not asked, as R96's control requires) reads them back one at a time into the one buffer of the whole, the ledger counting the whole and one part (peak = kept + one part, by the ledger and in fact: no held part beside it). `keepWhole`'s held-parts join stays for other callers; acquire no longer passes it parts it joined.
+Red first: the undeclared test now asserts the stored parts are read back once each; it fails against the previous commit's join and passes on (a).
+Superseded tests, amended (R115 amends R96's "no read-back" for such a body only; R115's text says so): `fix3-t51.test.mjs` (16 MiB capture: each stored part read back once, no whole get) and `fix5-t51.test.mjs` R101 (the fixture now declares its length, so the head is judged without any read-back).
+Suite: tests 325, pass 325, fail 0. capture tests naming acquisition: 243/243. format, architecture, coverage (75 of 75): 0 failures; words: none in my files; ownership: 1 failure, the requirements file (accepted per B3/B4).
+Size (session_018XJZd3Y6SC5rJeKSargNwt): test runs 10, module lines 4358
+
+## J39 · COMPLETE · re B41
+
+COMPLETE re B41: option (a). No join: a body with no declared length or overrunning its declared length holds nothing past its first part; the whole is made by reading the stored parts back one at a time (ledger: whole + one part). Red first (undeclared test asserts the read-back; red on the join commit). Two older tests encoding R96's no-read-back for such bodies amended (fix3-t51 C5, fix5-t51 R101), R115 text says so. Suite 325/325, capture users 243/243, checks 0 failures (ownership lists the requirements file, per B3/B4). Record: 'after B41'.

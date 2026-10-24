@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J37
+**Read** · handled J40
 
 ## B1 · START
 
@@ -1046,3 +1046,7 @@ ANSWER (K4913, K4914). J37: your best reading. Text-chain's change is placed as 
 ## B53 · CHANGE
 
 CHANGE (K4917). Merge `origin/tranche/T51` into your branch: text-chain's job 63 (R97 `run` kept for `pdf-page`, `slide-shape`, `sheet-range`; the `doc-part` arm) and READING-PIPELINE #33's B47 (`reading.piece_chain` on a later PDF range's answer, K4911 (1)) are merged, with content's job 29 (coded against your R107 fields `kind`, `lineRows`, `read_through`, `total`, K4914). So: your multi-chunk and multi-part tests run against the real `canonicalExtent` now; `s25-pieces-chain` gets its real reader (the merged reading-pipeline in place of the stand-in), red first if it is not green; content's `r9-sheet-real.test.mjs` (R61 ×4) turns green only when your `unitsOf` answers `lineRows` per sheet unit: run it before COMPLETE and name its result.
+
+## B54 · CHANGE
+
+CHANGE (K4922). Extraction R108 (new; RETRIEVAL #27's J12): `progressOf(shas)` answers `{[sha]: {state, read_through, total, owed}}` for each capture asked (at most 500 a call; an absent index `state: "none"`): `state` the index's, `read_through` and `total` R90's figures, `owed` the pages or windows still owed to the ledger (R100's counters, 0 when none); a reading with anything owed is never `whole` here; it loads no unit. Merge `origin/tranche/T51` (your requirements changed). Red first (a scan with owed pages answers owed > 0, not whole; a whole text whole, owed 0; an unknown sha none), then green; COMPLETE with the rest of job 41.

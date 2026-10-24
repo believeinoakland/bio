@@ -861,3 +861,17 @@ session_01Wo2xMBoxbMVQCESiGbv5A2,job,capture,3730495,88585,72,23914,,6,4924
 session_015XBRHPUV281zekgBFSdDuV,job,reading-pipeline,84193237,532819,1455,245756,,95,4250
 session_017axPWY6DHbvZpqTGuJogoE,job,text-chain,4324272,94492,1107,15085,,6,2090
 session_017yBV9xWBLct2WNZvFNpVhc,BOB-final,,128589401,1111342,8117,295143,,,
+session_01HB2uM2PSYhuqXKXfVqYh67,job,runtime-limits,1810232,50725,40,7300,,5,11
+session_0113Q34uGoEBKcg4P8s4Pabg,job,scheduler,9825847,183927,1122,36065,,14,1045
+session_01G8uVdUQZSoht46TsaZdEWE,job,record-core,5433818,80834,1147,12558,,9,2507
+session_01K9HMgas2XJZzhRzt7oMHQn,job,content,47215087,418154,794,137032,,34,3925
+session_0199QuHbCg4jYiyYnZT5rvKP,job,extraction,91017031,579297,1471,168169,,44,4843
+session_01Ra4BjLK2eQyeYJ4TDpTTos,job,runtime-limits,1960681,48604,44,7280,,4,169
+session_01T37wSdFRnLukbbpoR2cJDD,job,office-readers,4183920,111579,66,17570,,8,3342
+session_018XJZd3Y6SC5rJeKSargNwt,job,acquisition,6324260,113843,602,37801,,10,4358
+session_01E8rJsiNPGQhSTzqHve1gec,job,retrieval,23167723,282883,692,68779,,19,3097
+session_01XYo1jnZD8HdF9dcUsohXyr,job,calculations,27291670,326291,1201,65544,,9,4240
+session_01QLTzPedPAoRQP9VWrUzxYJ,job,store-door,2380220,61964,48,8560,,5,706
+session_01Uv26d4DQG2M8TmwzaWeGkF,job,query-language,3983198,73787,74,14237,,9,3006
+session_017Wibc4JnfRvixfP2PQLgcC,BOB-final,,85023994,696417,3290,218981,,,
+session_01EzbeHquecfUvWe3Ss9yqdi,job,notice-producers,5033311,128929,72,18999,,9,1699

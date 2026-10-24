@@ -1,6 +1,6 @@
 # record-core (T51)
 
-**Status** · session_01JW6vYMw9VE4YLAc84eswpM · depth 2 · COMPLETE · handled B7
+**Status** · session_01G8uVdUQZSoht46TsaZdEWE · depth 2 · COMPLETE · handled B9
 
 ## Completion (T51-177)
 
@@ -166,3 +166,19 @@ My branch job/T51/record-core is pushed with the code, the tests and the record'
 ## J7 · COMPLETE
 
 COMPLETE (G115, R91). Per B7: the key-value heartbeat moving the counter once per firing is accepted; R91's wording is BOB's at the merge (my proposed lines, R91 and new R92, R21's own-table list gaining bookkeeping_tally, R90 "no row written", are in my record's Completion section). Code, tests and the record are pushed on job/T51/record-core. Tests: record-core's 13 files 0 failures each, r8-bookkeeping 10/10 (seen RED first), workerd R91 test green. Checks: format, architecture, ownership 0 failures; coverage and words show nothing for record-core. Stale generated artifacts: setup-words words-unreviewed.json, case-checker program.mjs, bundles including record-core (BOB regenerates). Reds not mine are listed in the record. Size (session_01JW6vYMw9VE4YLAc84eswpM): test runs 21, module lines 2505.
+
+## Fix round 9, job 61 (K4912): the job table's two stamp tables are bookkeeping
+
+**Entry applied.** `job_unit_attempts` and `job_batches` are on `BOOKKEEPING_TABLES` (`bio-plane/src/record-core/index.mjs:307`), watched as the others are (triggers once the table exists). Nothing deferred; nothing found in another module.
+
+**R-FOUR.** (1) Cause: the list of R91 predated plane's job table, whose every ledger tick writes the two stamp tables (`pending.mjs`: `stamp`, `countKills`, `landBatch`), so `writeCount()` moved on a tick that changed no record. (2) Why missed: R91's test listed the tables of its day and no test ran a ledger tick that touched only the new tables. (3) Red first through the real path (`test/m/record-core/r9-bookkeeping.test.mjs`, plane's real ledger on this module's storage): on the code before, 4 of 4 failed (list lacks both names; `landBatch` moved the count by 1; a tick that stamped a unit moved it by 2); after, 4 of 4 pass. One test reads every `*_DDL` the plane exports, makes those tables, and requires each, other than the record's own, to be on the list (no hand list of another module's tables, K3268). (4) N: none.
+
+**Tests and checks.** From `bio-plane/`: `test/m/record-core/` 222 pass, 0 fail; plane `r9-jobs.test.mjs` 29 pass, 0 fail; control-plane `t51-round8-seam.test.mjs` run with `--test-name-pattern G115` (the counting tests) 6 pass, 0 fail. The same file's three A1 capture tests (`A1`, `A1 control`, `A1b`) fail ("the document is delivered within 120 s"); `A1 control` fails identically with my change stashed, so it is inherited, not mine (the capture path; `agent-runner`, `file-scanner`, `sheet-worker`, `site`, `journey-check` have no `node_modules` in this container). Checks: format 0 failures; architecture 0 failures; coverage 91 of 91 ids named, 0 failures; ownership 0 failures.
+
+**Generated artifacts stale by my change.** None (the module has no bundle input in the manifest's table).
+
+Size (session_01G8uVdUQZSoht46TsaZdEWE): test runs 9, module lines 2507
+
+## J8 · COMPLETE
+
+COMPLETE (job 61, K4912). job_unit_attempts and job_batches are on BOOKKEEPING_TABLES (record-core/index.mjs:307). Red first through plane's real ledger (r9-bookkeeping.test.mjs): 4 of 4 failed before, pass after; one test reads every *_DDL plane exports and requires each non-record table on the list. record-core suite 222/222; plane r9-jobs 29/29; seam G115 counting tests 6/6. Seam file's A1, A1 control, A1b (large capture, 'delivered within 120 s') fail, A1 control identically with my change stashed: inherited. Checks: format, architecture, coverage (91/91), ownership: 0 failures. Files created outside paths: none. Stale generated artifacts: none. Record: build/jobs/T51/record-core.md.

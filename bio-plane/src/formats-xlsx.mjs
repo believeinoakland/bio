@@ -105,7 +105,7 @@ import { withMetadata, activeContent, withActive, detectByContentType } from "./
 import { localize } from "./setup-words/index.mjs";
 import { boundOf } from "./read-bounds.mjs";
 import {
-  Scanner, scanPart, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, collectElements, memberIdentities,
+  Scanner, scanPart, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, collectElements, memberIdentities, addressParts,
 } from "./office-xml.mjs";
 
 /* R44: what the walk may retain, cells and links together (the table's figure, never a literal here). */
@@ -1363,7 +1363,7 @@ async function xlsxText(parts, opts) {
     container: "xlsx",
     document,
     sheets: outSheets,
-    parts: cellNotes,
+    parts: addressParts(cellNotes),
     /* R9 / D-415: the defined names and tables as `sheet-range` units,
        beside each sheet's whole-sheet `range`. */
     ...xlsxRangeUnits(parts),

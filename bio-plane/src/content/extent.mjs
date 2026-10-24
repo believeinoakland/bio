@@ -122,10 +122,7 @@ export function canonicalExtent(extent) {
       name: typeof e.name === "string" && e.name.trim() ? e.name.trim() : null,
       n: Number.isInteger(e.n) ? e.n : null });
   }
-  if (e.kind === "doc-part")
-    return canonicalJson({ kind: "doc-part", part: typeof e.part === "string" && e.part.trim() ? e.part.trim() : null,
-                           ref: typeof e.ref === "string" && e.ref.trim() ? e.ref.trim() : null });
-  return algebraCanonical(e);
+  return algebraCanonical(e);   /* a `doc-part` is text-chain's (its R97): {kind, part, ref} */
 }
 
 /** R2: the human form (IC-1's required `ref`), a caller's non-empty `ref` kept. An envelope item's form LEADS with the

@@ -1,6 +1,6 @@
 # scheduler (T51)
 
-**Status** · session_01YK5oJDSuoRHrdsfRWfQ9cd · depth 2 · COMPLETE · handled B9
+**Status** · session_0113Q34uGoEBKcg4P8s4Pabg · depth 2 · COMPLETE · handled B10
 
 ## J1 · REPORT
 
@@ -206,3 +206,35 @@ Size (session_01YK5oJDSuoRHrdsfRWfQ9cd): test runs 17, module lines 1027
 ## J10 · COMPLETE
 
 CHANGE B9 done: no scheduler code change; files.test.mjs now asserts file-safety R39 (queued-view wake is the firing instant, one render a tick, bounded, ends null). Scheduler suite 180/180; ownership 0 failures. Size (session_01YK5oJDSuoRHrdsfRWfQ9cd): test runs 17, module lines 1027
+
+## J11 · REPORT
+
+Job 62 diagnosis (build/plan/diagnosis-R9-headofline.md, reproduced twice on workerd, red). CAUSE: the past alarm is not the end-of-firing reconcile. While a firing runs, getAlarm() is null (workerd); a request path in the same object (promotion.onCommitted notice, tasks armDrain, plane/pending.mjs:203 arm) calls Scheduler.arm(); #reconcile (index.mjs:740) finds at===null and sets the alarm to the earliest consumer wake, pending-work's own due row, which is already past (setAlarm(698716) at wall 698772, firing started 698722). The firing lasts 8.7 s (file-scan 8 s at file-safety's own bound, then file-render, document-copy, pending-work), so that past instant is all getAlarm() answers for 8.7 s (13 polls more than 2 s past). The end reconcile (setAlarm 698723) is set 8.7 s late but the next firing starts 7 ms after, so it is never visible. Ruled out: a following firing finding consumers in flight (none was in flight: the scan ended at its 8 s bound, before the 10 s budget), the platform withholding the next alarm (gap_ms 6 to 44), file-render's wake. The fix belongs to the scheduler, not file-safety or plane. FIX I WILL BUILD: the firing sets an alarm at start + budget + grace before it reads anything (never absent, never past mid-firing; also the recovery for a cut run); an arm made inside a firing sets nothing (the end reconcile, exact, weighs every wake). Proposed R1 / R4 wording follows in COMPLETE. No QUESTION: I carry on.
+
+## Fix round 9 · job 62 · G91's past alarm (SCHEDULER #44, session_0113Q34uGoEBKcg4P8s4Pabg, depth 2)
+
+Tranche/T51 as of `b143f59c86`; my branch was behind origin, so I recovered it as the START says (renamed, checked out origin's), then `mail start`.
+
+**Cause** (`build/plan/diagnosis-R9-headofline.md`, reproduced twice on workerd): not the end-of-firing reconcile. While a firing runs `getAlarm()` answers none; a request path in the same object (promotion's notice, tasks' `armDrain`, the ledger's `arm`) calls `arm()`, whose `#reconcile` found `at === null` and set the alarm to the earliest consumer wake, `pending-work`'s own due row, already past. The firing lasts as long as `file-scan` (8 s, file-safety's bound) plus the rest, so that past instant was all the administrator read for 8.7 s. The next firing begins within ms of the end reconcile, so that one is never visible. Ruled out: consumers in flight (none was), the platform withholding the next alarm, file-render's wake. The fix is the scheduler's.
+
+**What changed** (`bio-plane/src/scheduler/index.mjs`): `onAlarm` marks itself firing first (`#firing`, `#firingEnds` = start + budget + grace; the pre-loop reads moved inside the existing try so the flag always clears); `#reconcile`, for a non-exact, non-forced call inside a firing, weighs nothing: it returns the alarm as it stands, or, when there is none, sets `max(#firingEnds, now + grace)` (readable and ahead). The end reconcile still sets the next alarm outright, weighing every wake including the work the arm announced. Outside a firing nothing changed (R4, R11, R29). A firing in which no arm is made writes the alarm once, as before.
+
+**Tests**: new `test/m/scheduler/r9-visible.test.mjs` (4, names R30 and R1). Red on `tranche/T51`'s `index.mjs`: the arm-inside-a-firing readings (2 of 4: alarm read none; past alarm set); the end-reconcile and outside-firing controls pass both ways. Green with the change. Through the door: `r8-headofline` red before (R80 test), 3 of 3 after.
+
+**Results**
+- `r8-headofline` alone, five runs: 3 of 3 each; on one core (`taskset -c 0`): 3 of 3.
+- scheduler suite: ℹ tests 184, ℹ pass 184, ℹ fail 0 (was 180; +4).
+- plane `r8-wave` 3 of 3, `r8-heal-door` 4 of 4, alone.
+- format 176 modules, 176 requirements files, 0 failures; architecture (scheduler) 22 product files, 87 imports, 0 failures; coverage (scheduler) 33 of 33 live ids named, 0 failures; ownership: 1 failure, `build/plan/diagnosis-R9-headofline.md` outside my paths (the file BOB's START told me to write; BOB adds it to my paths, ruling (2)).
+
+**New file outside my paths**: `build/plan/diagnosis-R9-headofline.md`. **Deferred**: none. **Other modules**: none. **Generated artifacts made stale**: `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker`'s bundle carry scheduler source; BOB regenerates. **Census ops / rows owed to UX-DESIGN**: none.
+
+**Proposed requirement wording (BOB writes).** R30, append: "(job 62, G91; K4912) While a firing runs, the alarm is never read in the past: an `arm` made inside a firing weighs no wake and sets nothing past; it leaves the alarm as it stands or, when the platform answers none, sets the instant the firing can no longer outlast (its start, the budget and the grace). The reconcile at the firing's end weighs every wake, the work such an arm announced included, and sets the next alarm outright. Test: `r9-visible.test.mjs`; through the door `plane/r8-headofline.test.mjs` (R80)." **Not covered, stated:** a firing in which no arm is made leaves `getAlarm()` none, as the platform does; only an arm makes the alarm readable.
+
+Size (session_0113Q34uGoEBKcg4P8s4Pabg): test runs 14, module lines 1045
+
+## J12 · COMPLETE
+
+Job 62 done (G91, K4912). Cause: an arm made inside a firing (getAlarm() none) set a due row's past wake, readable for the firing's 8.7 s (diagnosis-R9-headofline.md). Fix in scheduler index.mjs: an arm inside a firing weighs nothing, leaves the alarm or sets start+budget+grace; the end reconcile sets the next outright. r8-headofline 3/3 alone x5 and on one core; scheduler suite 184/184 (+4, r9-visible); r8-wave 3/3, r8-heal-door 4/4; format, architecture, coverage 0 failures; ownership 1 failure: the new file build/plan/diagnosis-R9-headofline.md (outside my paths, as your START told me: please add it to my paths). Stale: plane bundle and agent-worker. Proposed R30 wording and Size line are in my record. Size (session_0113Q34uGoEBKcg4P8s4Pabg): test runs 14, module lines 1045
+
+Ring failed (J12): BOB's session session_017yBV9xWBLct2WNZvFNpVhc is archived, so no doorbell could be bound; the pushed COMPLETE (J12) is the message, for BOB's backstop (mechanics §13).

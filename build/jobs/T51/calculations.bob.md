@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J16
+**Read** · handled J19
 
 ## B1 · START
 
@@ -427,3 +427,15 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 **Added by BOB #273 (K4850; re-walk 8 B, diagnosis `build/plan/diagnosis-R9-rewalk8-B.md` item 5, code path Certain).** `tabledeclare` answered `SOURCE_NOT_READ` in 2 of 6 calls on a CSV already read, the next call succeeding. (1) `calculations/index.mjs` ~515-527: for a CSV document `text` comes only from `ev.get(row.capture_sha)` inside `try { ... } catch { text = null; }`, so a thrown or null read of a file that IS held is answered as the permanent fact "the CSV file's own bytes are not held": a transient failure stated as absence. (2) Missed: no test gave the store a failing `get`. (3) Red: a store whose `get` throws once (and one that answers null once) on the 18,098-row comma CSV: call 1 today answers SOURCE_NOT_READ; after the fix a thrown read is a stated transient refusal (try again), distinct from a file that is not held (null after a held row is checked), and the outcome is logged (R-LOG: the sha, which of null or thrown, the error name; never the bytes). (4) **L**; the log line rides the next deploy, which names why `get` failed live.
 
 **Added by BOB #279 (K4918; P9, P10; depth 2, BOB #279 at depth 1).** Merged since: content (job 29, K4917): `heldTextAt` is one rule (content R61): a `document` extent's text is the units' lines once each (a later sheet block's repeated header dropped by its `lineRows[0]`), chunks of one element joined with nothing; `passageHeld` (R46) and `searched` (R60). Seam section 4 (the comma CSV of 18,098 rows, G128g) turns green only when extraction's job 41 merges (`unitsOf` answering `lineRows`, extraction R107, K4914): write your half against content's merged rule and keep any test needing job 41's units red by name. Read content R46, R60, R61 whole.
+
+## B24 · ANSWER · re J18
+
+ANSWER to J17 and J18 (K4922). Merge `origin/tranche/T51` (requirements changed). J17: content R52 now gives `cellsAt(contentId, {fromRow})` (a CHANGE to CONTENT #20); build the call-after-call read exactly as you proposed (a window not advancing refused `SOURCE_NOT_READ` naming the range, nothing written); the test reading a range over the window to its end is red by name until content merges it. J18: job 67, RUNTIME-LIMITS #13 (opened now), adds `table.bytes` 20,971,520 and `table.cells` 1,000,000 in all three columns; build against your local copy and do not commit it; you go COMPLETE after job 67 merges (a CHANGE will say so). The other bounds you list are acts' own and stay yours.
+
+## B25 · CHANGE
+
+CHANGE (K4926): content R52's `cellsAt(contentId, {fromRow})` is merged (refuses `from_row_outside_extent` stated; none, null or `{}` is the first window). Merge `origin/tranche/T51`; your call-after-call read and its test run against the real provider now (green expected). The `table.*` rows (job 67) follow.
+
+## B26 · CHANGE
+
+CHANGE (K4927): job 67 is merged: `READ_BOUNDS` has `table.bytes` 20,971,520 and `table.cells` 1,000,000. Merge `origin/tranche/T51`, drop your uncommitted local copy, quote both with `boundOf("table", ...)`, and with extraction job 41 also merged run seam section 4 (the comma CSV, G128g). Then COMPLETE.

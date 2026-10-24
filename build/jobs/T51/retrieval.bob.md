@@ -1,6 +1,6 @@
 # BOB to retrieval (T51)
 
-**Read** · handled J11
+**Read** · handled J14
 
 ## B1 · START
 
@@ -313,3 +313,11 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 **Added by BOB #276 (K4896; P8, P10).** `bio-plane/test/m/retrieval/whole-rows.test.mjs` R94 is red on the tranche (3 tests) since provenance's whole-keyed register merged (PROVENANCE #28, K4880): "before any row a capture held in three parts is one capture missing at the content and meaning levels, never four" answers the three PART digests missing, not the whole (`b4b32e6a…`); "once the whole has its content and meaning rows nothing of the document stays in never_looked or missing_unexplained" leaves the three parts missing. Find whether the fixture still builds the register parts-first (the K4880 class: build it as `screens-intake/capture.mjs` does, the whole then its parts; a part is no register row, provenance R74) or retrieval's coverage still keys on parts (then it is G127d's consumer half, yours: count wholes, by `partsOf`/`readRange` where it needs the parts). State which, with file:line, red first as it is, green after.
 
 **Added by BOB #279 (K4918; P9, P10; depth 2, BOB #279 at depth 1).** Merged since this START was written: content (job 29, K4917): a citation's `part_kind` (content R58: the closed list, `null` where a unit names none) and `searched` (`{through, total}`, content R60) on candidates, `contentContextFor`, `markStale` rows and `passageHeld`, absent for a whole or never-indexed reading; text-chain (job 63, K4917): R97's `doc-part` extent `{kind, part, ref}` and `run` kept for `pdf-page`, `slide-shape`, `sheet-range`. Not merged, code against the text (R-SEAM): extraction R107 (job 41, K4914): `unitsOf` answers each unit's `kind` (null when stored before it) and, for a sheet unit, `lineRows`, and on the answer `read_through` and `total` while more follows. Your G134d hits carry the unit's `kind`; your G135f "searched so far" takes `read_through`/`total`; a test needing job 41's fields is red by name until it merges. Read content's requirements R58 and R60 and extraction's R107 whole (`build/requirements/content.md`, `extraction.md`).
+
+## B13 · ANSWER · re J12
+
+ANSWER to J12 (K4922; BOB read `query.mjs:2498-2502`). Merge `origin/tranche/T51` (requirements changed). (1) Not your second compile: query-language R34 (new, job 66 QUERY-LANGUAGE #13, opened now): every `page` hit carries `snippet_unit`, the `rowid` of the unit row its passage snippet came from (the same ORDER BY), else `null`. Read that unit by key (as R92's `#documentsOf` reads) for its `kind`, `extent_kind`, `extent`, `ref`, `seq`, `capture_sha`; code against R34 now, the test needing it red by name until job 66 merges; every other hit says `kind: null`. (2) A reading with pages owed must never be counted whole (K4571): extraction R108 (new; a CHANGE to job 41) `progressOf(shas) -> {[sha]: {state, read_through, total, owed}}`, at most 500 a call, no units loaded, never `whole` while anything is owed. Use it; until job 41 merges read `capture_text_state` as you proposed, and keep the test of a scan with owed pages counted partial red by name.
+
+## B14 · CHANGE
+
+CHANGE (K4927): extraction job 41 is merged: `progressOf(shas)` (R108: `{state, read_through, total, owed}`, never whole while anything is owed) and R107's unit `kind` and `read_through`/`total`. Merge `origin/tranche/T51`, switch your tally to `progressOf`, and turn the tests red by name for job 41 green. `snippet_unit` (query-language R34, job 66) is not merged yet.

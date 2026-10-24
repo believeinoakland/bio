@@ -27,7 +27,8 @@ const light = (kind, alphaBytes) => ({
 });
 
 const TABLE = {
-  text: light("text", 24 * MiB),
+  /* request_bytes: the most of a stored text, office or HTML document (any kind but a PDF) a member's request reads inline; above it the reading is deferred to the ledger, never refused (K4916) */
+  text: { ...light("text", 24 * MiB), request_bytes: same(3 * MiB, k("text", "request_bytes")) },
   csv: light("csv", 17 * MiB),
   tsv: light("tsv", 24 * MiB),
   json: light("json", 24 * MiB),
@@ -99,6 +100,16 @@ const TABLE = {
     grade_read: bytes(20 * MiB, k("file_safety", "grade_read"), MB100),
     /* the declared size of an OpenDocument sheet's content.xml above which no preview is drawn: file-safety's SAFE_VIEW_ODS_DECLARED_MAX, today's figure (K4893) */
     ods_declared: same(8 * MiB, k("file_safety", "ods_declared")),
+  },
+  /* the content module's ceilings, today's figures (K4916): `held_text_chars` a count of characters, `kind_scan_pages` a count of pages of units */
+  content: {
+    held_text_chars: same(32 * MiB, k("content", "held_text_chars")),
+    kind_scan_pages: same(16, k("content", "kind_scan_pages")),
+  },
+  /* the calculations module's read ceilings, today's figures (K4922): `TABLE_MAX_BYTES` (20 MiB of canonical CSV) and `TABLE_MAX_CELLS` (a count) */
+  table: {
+    bytes: same(20 * MiB, k("table", "bytes")),
+    cells: same(1000000, k("table", "cells")),
   },
   office: {
     entries: same(100000, k("office", "entries")),

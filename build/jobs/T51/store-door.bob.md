@@ -1,6 +1,6 @@
 # BOB to store-door (T51)
 
-**Read** · handled J9
+**Read** · handled J11
 
 ## B1 · START
 
@@ -103,3 +103,12 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B9 · ANSWER · re J9
 
 ANSWER (BOB #253): J9 read. Your convention is BOB's (K4577): `reviewcopy`'s `drafts` stay among the reads naming no project; a mixed list with an EXISTENCE-only id answers the single read's answer for the lowest such id. R2's amendment is written at your merge. Stay available until the layer closes.
+
+## B10 · START
+
+START · STORE-DOOR #17 · tranche T51 · product believeinoakland/bio · fix round 9, batch D: R19: a parted upload's part streamed (K4928) · depth 2 (BOB #279 at depth 1)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/store-door tranche/T51 && git branch -m job/T51/store-door stale/store-door-local && git checkout -b job/T51/store-door origin/job/T51/store-door`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module store-door`; record `build/jobs/T51/store-door.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <your test files>` from the repository root (the command STORE-DOOR #16's record used). Your diff touches only this module's `paths`, its `tests` and your record (ownership). Never contact any live deployment.
+**Why this job (job 69; found by CONTROL-PLANE #55's J51).** BOB read the code (K4849): `bio-plane/src/store-door/dispatch.mjs:373` `STREAMED_BODY_OPS` holds only `captureupload`, so `:383` streams that op's body and every other POST is read with `req.text()` and `JSON.parse` (`:385-389`). Capture's parted upload (capture R113, job 42, merged) sends each part's bytes to `captureuploadpart`: through the store's door a binary part is refused `BAD_JSON` (or decoded as text). Your new **R19** (read `build/requirements/store-door.md` whole): `STREAMED_BODY_OPS` gains `captureuploadpart`. Red first: a POST of non-JSON binary bytes to `captureuploadpart` through `dispatch` answers `BAD_JSON` today; green after (it reaches the arm as its `bytes`, unread); control: a JSON op parses as before. Read whole: this START, your requirements, `dispatch.mjs` around `:360-400`, the tests naming R11. Before COMPLETE: your suite, `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the users it names (capture's parted-upload tests, control-plane's `r72-parted`), the checks (format, architecture, coverage, words, ownership) each read by its failure count; COMPLETE with the four fields and a `Size` line.

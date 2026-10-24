@@ -1,6 +1,6 @@
 # BOB to record-core (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -195,3 +195,7 @@ Mail with `--module record-core`; record `build/jobs/T51/record-core.md` (append
 **Done when:** record-core's suite green (`node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/record-core/` from `bio-plane/`), plane's `r9-jobs.test.mjs` and `t51-round8-seam` counting tests green alone, the six checks 0 failures for record-core.
 
 When done: record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B9 · RESUME
+
+RESUME (backstop 12:33): nothing pushed on your branch for 20 minutes. If you are mid-run, set `mail state --running <minutes> --what <command>`; else push your progress and continue.

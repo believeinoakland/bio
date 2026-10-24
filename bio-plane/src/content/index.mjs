@@ -34,7 +34,7 @@ import { normalizeType, OBJECT_TYPES } from "../record-grammar/types.mjs";
 import { CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES, contentMintState } from "../record-grammar/labels.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { TRANSCRIBE_CHECKS, VERSION_NOTICE_CHECKS } from "./checks.mjs";
-import { checkChain, checkAttestation, derivationCap, gradeCeiling, extentCovers, describeChain }
+import { checkChain, checkAttestation, derivationCap, gradeCeiling, extentCovers, describeChain, a1ToRowCol }
   from "../textchain.mjs";
 import { getFormat } from "../formats.mjs";
 import { cropImage } from "../../../pdf-worker/src/imagecrop.mjs";
@@ -52,6 +52,7 @@ import { VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_STATES, VERSION_NOTICE_GRA
          affectsOf, heldTextAt, typedCellsAt, extentBox, normUnits, searchedOf, splitRun, kindAt } from "./notice.mjs";
 import { readRange as acquisitionReadRange } from "../acquisition/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 
 export * from "./extent.mjs";
 export { CONTENT_SCHEMA, CONTENT_TABLES } from "./schema.mjs";
@@ -83,12 +84,12 @@ export const TRANSCRIPTIONS_LIMIT_MAX = 200;
 /** R46, R60: one page of a capture's units is read at most this many characters of text (extraction R93's page, about 1 MiB), the pages
  *  followed by `next` until the reading's last unit, so a reading of more than 4,096 units is read whole and never from its first page alone. */
 export const UNITS_PAGE_CHARS = 1048576;
-/** R46, R60: the most unit text one capture's held units are read to (32 MiB of characters; proposed, BOB records). Past it the reading is held as
+/** R46, R60: the most unit text one capture's held units are read to (32 MiB of characters, `READ_BOUNDS` content.held_text_chars). Past it the reading is held as
  *  `partial` with `searched` naming how far it was read, never as `whole`, so a document too large to hold in one object is stated and not graded
  *  as if it were all read. */
-export const HELD_TEXT_CHARS_MAX = 32 * 1048576;
+export const HELD_TEXT_CHARS_MAX = boundOf("content", "held_text_chars");
 /** R58: how many pages of units a lookup of a unit's kind scans (one capture, 16 MiB of unit text) before it answers that the reading names none. */
-export const KIND_SCAN_PAGES_MAX = 16;
+export const KIND_SCAN_PAGES_MAX = boundOf("content", "kind_scan_pages");
 /** R59: the bytes a crop reads from a capture at a time through `readRange`. */
 const RANGE_BYTES = 8 * 1048576;
 /** R51: the figures this module reports for `op=stats` and purge's proof, through record-core's `registerCounts`. */
@@ -1408,7 +1409,8 @@ export class Content {
    *  call's bound adds `cells_truncated: true` and `next_row`, never a silently shorter list; a failure to make them is
    *  `reason: "not_read"`. No viewer (R46's terms): a caller that shows them asks sight first (R37). Writes nothing in
    *  the record; never throws. */
-  async cellsAt(contentId) {
+  async cellsAt(contentId, opts = null) {
+    const fromRow = opts && typeof opts === "object" ? opts.fromRow : null;
     const no = (reason, why) => ({ cells: null, reason, why });
     try {
       const id = typeof contentId === "string" ? contentId.trim() : "";
@@ -1421,12 +1423,21 @@ export class Content {
       if (r.extent_kind !== "sheet-cell" && r.extent_kind !== "sheet-range")
         return no("not_a_sheet_extent", localize("content.index.the_row_cites_a_extent", "the row cites a {extent_kind} extent, which names no cells of a sheet", { extent_kind: String(r.extent_kind) }));
       const extent = { ...(isObj(e) ? e : {}), kind: r.extent_kind };
+      /* K4922: a window of a range over the call's bound is read call after call, each from the row the last named `next_row`; the row is inside the extent */
+      let from = null;
+      if (fromRow !== null && fromRow !== undefined) {
+        const box = extentBox(extent);
+        if (!Number.isInteger(fromRow) || fromRow < 1 || !box || fromRow < box.r0 || fromRow > box.r1)
+          return no("from_row_outside_extent", localize("content.index.from_row_outside_extent", "row {fromRow} is not a row of the cited cells, so there is nothing to read from it", { fromRow: String(typeof fromRow === "number" || typeof fromRow === "string" ? String(fromRow).slice(0, 20) : typeof fromRow) }));
+        from = fromRow;
+      }
       const office = this.#officeOf(r.capture_sha);
       const sheet = typeof extent.sheet === "string" ? extent.sheet.trim() : "";
       if (office.held.includes(sheet) && !(office.cells && Array.isArray(office.cells[sheet])))
-        return await this.#heldCellsAt(r, e, extent, sheet);
+        return await this.#heldCellsAt(r, e, extent, sheet, from);
       const got = typedCellsAt(extent, office.cells);
       if (!got.cells) return no(got.reason, got.why);
+      if (from !== null) got.cells = got.cells.filter((c) => (a1ToRowCol(c.source.cell) || { row: 0 }).row >= from);
       return { content_id: r.content_id, capture_sha: r.capture_sha, extent_kind: r.extent_kind, extent: e, cells: got.cells };
     } catch {
       return no("not_read", localize("content.index.row_cells_could_not", "the row's cells could not be read"));
@@ -1436,14 +1447,14 @@ export class Content {
   /** R52's held arm: the extent's rows and columns asked of `extraction.cellsOf` (its ranged read of the held file),
    *  its rows passed through `typedCellsAt` so the column box and reversed corners are honoured exactly as for a listed
    *  sheet. Never throws: a read that fails is `not_read`. */
-  async #heldCellsAt(r, e, extent, sheet) {
+  async #heldCellsAt(r, e, extent, sheet, from = null) {
     const no = (reason, why) => ({ cells: null, reason, why });
     const notRead = () => no("not_read", localize("content.index.row_cells_could_not", "the row's cells could not be read"));
     const box = extentBox(extent);
     if (!box) { const bad = typedCellsAt(extent, { [sheet]: [] }); return no(bad.reason, bad.why); }
     if (typeof this.extraction.cellsOf !== "function") return notRead();
     let got = null;
-    try { got = await this.extraction.cellsOf(r.capture_sha, sheet, { fromRow: box.r0, toRow: box.r1, fromCol: box.c0, toCol: box.c1 }); }
+    try { got = await this.extraction.cellsOf(r.capture_sha, sheet, { fromRow: from ?? box.r0, toRow: box.r1, fromCol: box.c0, toCol: box.c1 }); }
     catch { return notRead(); }
     if (!got || !Array.isArray(got.cells))
       return got && typeof got.reason === "string" && got.reason !== "bytes_not_held"
@@ -1452,7 +1463,7 @@ export class Content {
     const inside = typedCellsAt(extent, { [sheet]: got.cells });
     if (!inside.cells) return no(inside.reason, inside.why);
     const next = Number.isInteger(got.next_row) ? got.next_row : null;
-    const rows = isObj(got.interpreted) ? got.interpreted : { sheet, from_row: box.r0, to_row: next === null ? box.r1 : next - 1 };
+    const rows = isObj(got.interpreted) ? got.interpreted : { sheet, from_row: from ?? box.r0, to_row: next === null ? box.r1 : next - 1 };
     return { content_id: r.content_id, capture_sha: r.capture_sha, extent_kind: r.extent_kind, extent: e, cells: inside.cells,
              interpreted: { sheet: rows.sheet ?? sheet, from_row: rows.from_row, to_row: rows.to_row },
              ...(next === null ? {} : { cells_truncated: true, next_row: next }) };

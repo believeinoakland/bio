@@ -1,4 +1,4 @@
-/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R28).
+/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R29).
  * A new seam after `queue-producers` with no copy (plan T33-82; Choices 8 and 23): each producer derives, on read and
  * writing nothing, the items one provider's facts earn for a viewer, naming each item's subjects and homes for `queue`
  * to home, offer, mint and publish, exactly as `queue-producers` does for the rest.
@@ -44,6 +44,7 @@
  *                                watcher's mark, told to her alone, once per change (T50; N1204, DEC-238)
  *   R27 fetch-done              FINDING, capture.fetchesDone           a large capture's fetch delivered, to the member who began it (G2)
  *   R28 ingest-done, ingest-stopped  FINDING, calculations.ingestNotices   a background money ingest finished or stopped, to who ingested (G55)
+ *   R29 reading-ended            FINDING, deps.readingsEnded (plane's job table)  a reading that finished, ended in part or was refused, to the member it was made for (G135f)
  *
  * REACHED as `noticeProducersOf(host, deps)` (K1563 (1)): one instance per Durable Object storage. It registers nothing
  * and holds no check row: it refuses nothing. `deps` (each defaults to its module's instance on the same host, reached
@@ -161,7 +162,16 @@ export const NOTICE_KINDS = Object.freeze({
   /* R28 (G55, K4562): a money ingest run in the background finished, or was stopped */
   "ingest-done": "FINDING",
   "ingest-stopped": "FINDING",
+  /* R29 (fix round 9, G135f): a reading ended, in part or refused */
+  "reading-ended": "FINDING",
 });
+/** R29: the window of ended readings read, by the row's end, and the rows one read follows (`plane` R98: at most 500 a page). */
+export const READING_ENDED_DAYS = 90;
+export const READING_ENDED_MAX = 1000;
+export const READING_ENDED_PAGE = 200;
+/** R29: the states of a job row that are told (plane R97: a row still queued, fetching, reading or partial is never told), and the one job kind that is a reading. */
+export const READING_ENDED_STATES = Object.freeze(["finished", "final", "refused"]);
+export const READING_JOB_KIND = "reading";
 /** R28: the window of finished or stopped ingests read, by the ingest's age (as R27's), and the ingests one read follows. */
 export const INGEST_NOTICE_DAYS = 90;
 export const INGEST_NOTICE_MAX = 1000;
@@ -300,6 +310,7 @@ export class NoticeProducers {
       watched_changed: { bound: WATCHED_ITEMS_MAX, truncated: false },
       fetch_done: { bound: FETCH_DONE_MAX, days: FETCH_DONE_DAYS, truncated: false },
       ingest: { bound: INGEST_NOTICE_MAX, days: INGEST_NOTICE_DAYS, truncated: false },
+      reading_ended: { bound: READING_ENDED_MAX, days: READING_ENDED_DAYS, truncated: false },
       failed,
     };
     const run = (provider, fn) => {
@@ -334,6 +345,7 @@ export class NoticeProducers {
       run("retrieval", () => ({ fact: "watched_changed", ...this.#watchedChanged(me, viewer, at) }));
       run("capture", () => ({ fact: "fetch_done", ...this.#fetchDone(me, viewer, at) }));
       run("calculations", () => ({ fact: "ingest", ...this.#ingestNotices(me, viewer, at) }));
+      run("readings", () => ({ fact: "reading_ended", ...this.#readingsEnded(me, viewer, at) }));
       return { items, facts };
     } catch {
       return { items: [], facts: { ...facts, failed: [...new Set([...failed, "notice-producers"])] } };
@@ -1496,6 +1508,71 @@ export class NoticeProducers {
         assignee: null, assignee_role: null,
         recipients: [me],
         options: this.#optionsOf([]),
+      });
+    }
+    return { items, facts: { truncated } };
+  }
+
+  /* ================================================================== R29 · a reading ended or stopped
+   * (plane's job table through `deps.readingsEnded({after, limit})`, a callback the composition root injects, R-LAYER; G135f, K4831 (5):
+   * the member "is told at finish or stop"). One FINDING per row of the `reading` kind that finished, ended in part (`final`, with its
+   * reason) or was refused (with its limit), to the member the row names as its opener alone while active, keyed
+   * `FINDING::reading-ended::<sha>::<state>`: a row that goes on after a stop and ends again earns a fresh key. Each cycle reads from the
+   * start and pages by `next` to at most the bound; the window is 90 days of `ended_at`. A row still being read has no ended state and
+   * is never told. Its subject is the document (its home as provenance gives it), its door "Open the document"; the words are stand-ins
+   * keyed through `localize`, the rows owed named in the job record. With no `deps.readingsEnded` it contributes none and names none. */
+  #readingsEnded(me, viewer, now) {
+    const ended = this.#deps.readingsEnded;
+    if (typeof ended !== "function") return { items: [], facts: {} };
+    if (!this.#active(me)) return { items: [], facts: {} };
+    const since = now - READING_ENDED_DAYS * DAY_MS;
+    const rows = [];
+    let after = null, truncated = false;
+    for (;;) {
+      if (rows.length >= READING_ENDED_MAX) { truncated = true; break; }
+      const r = ended({ after, limit: Math.min(READING_ENDED_PAGE, READING_ENDED_MAX - rows.length) });
+      if (!r || r.ok !== true || !Array.isArray(r.rows)) throw failure("readings");
+      rows.push(...r.rows);
+      if (r.next === null || r.next === undefined || r.next === after || r.rows.length === 0) break;
+      after = r.next;
+    }
+    const items = [];
+    const seen = new Set();
+    const count = (v) => (Number.isSafeInteger(v) && v >= 0 ? v : 0);
+    for (const g of rows) {
+      if (!g || g.kind !== READING_JOB_KIND || !filled(g.sha) || !READING_ENDED_STATES.includes(g.state) || bare(g.member) !== me) continue;
+      const when = typeof g.ended_at === "number" ? g.ended_at : Date.parse(g.ended_at);
+      if (!(Number.isFinite(when) && when >= since)) continue;      /* the window is the item's life, as R27's */
+      const id = `FINDING::reading-ended::${g.sha}::${g.state}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      let home = null, path = null;
+      try { const h = this.#provenance.homeOf(g.sha); home = h && filled(h.bundleId) ? h.bundleId : null; path = h && filled(h.path) ? h.path : null; }
+      catch { throw failure("provenance"); }
+      const read = count(g.written), total = read + count(g.skipped) + count(g.owed) + count(g.failed);
+      const counted = total > 0;
+      const fills = { document: (home && this.#titleOf(home, viewer)) || (path && path.split("/").filter(filled).at(-1)) || g.sha,
+                      read: String(read), total: String(total), why: filled(g.why) ? g.why.trim() : "" };
+      const sentence = g.state === "finished"
+        ? (counted ? localize("notice-producers.reading.finished.counted", "{document} has been read: {read} of {total}.", fills)
+                   : localize("notice-producers.reading.finished", "{document} has been read.", fills))
+        : g.state === "final"
+          ? (counted ? localize("notice-producers.reading.partial.counted", "{document} was read in part: {read} of {total}. {why}", fills)
+                     : localize("notice-producers.reading.partial", "{document} was read in part. {why}", fills))
+          : localize("notice-producers.reading.refused", "{document} was not taken in: {why}", fills);
+      items.push({
+        id, class: "FINDING", kind: "reading-ended",
+        label: NOTICED_LABEL, by: localize("notice-producers.group_civicsmith", "the team's Civicsmith"),
+        case: home ? this.#homesAt([home], viewer) : this.#homesOf([]),
+        subject: { kind: "document", id: home, sha: g.sha, state: g.state },
+        summary: sentence.trim(), detail: sentence.trim(), fills, door: DOOR_OPEN_DOCUMENT,
+        basis: { source: "plane.readingsEnded", sha: g.sha, state: g.state, why: g.why ?? null, written: g.written ?? null, skipped: g.skipped ?? null,
+                 owed: g.owed ?? null, failed: g.failed ?? null, ended_at: g.ended_at ?? null,
+                 detail: localize("notice-producers.index.a_readings_end_is_the", "a reading's end is the job table's (plane R98): told once for each state, to the member it was made for, and to nobody else.") },
+        age: ageFrom(typeof g.ended_at === "number" ? new Date(g.ended_at).toISOString() : g.ended_at, now, "no_reading_instant"),
+        assignee: null, assignee_role: null,
+        recipients: [me],
+        options: [...this.#optionsOf(home ? [home] : [])],
       });
     }
     return { items, facts: { truncated } };

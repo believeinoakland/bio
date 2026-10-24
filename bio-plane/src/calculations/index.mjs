@@ -44,6 +44,7 @@ import { TABLE_MAX_BYTES, TABLE_MAX_CELLS, MONEY_ROLES, scanCsv, shaOf, schemaFa
 import { PATTERNS, GATE_MAX_RATE, runPattern } from "./patterns.mjs";
 import { defaultRegistry } from "../connection-grammar/index.mjs";
 import { delimiterSignature } from "../csv-reader/index.mjs";
+import { statement } from "../read-bounds.mjs";
 import { USES_FIELDS, USES_HEADER, NONE_HELD, tieOf, foldReason, APPLICATION_RECIPES, APPLICATION_KINDS, composeApplication,
   answerApplication } from "./application.mjs";
 import { word, localize } from "../setup-words/index.mjs";
@@ -121,6 +122,7 @@ export const INGEST_SLICE_FACTS = 2000;
 export const INGEST_MAX_ATTEMPTS = 3;
 const INGEST_PART_ITEMS = 1000;   /* items in one stored piece of a background ingest's lists */
 const DELIMITER_WINDOW_CHARS = 1 << 20;   /* G64: the head of a CSV source its delimiter is judged from, as the document's own reader judges (csv-reader's window) */
+const READ_ON_MAX = 10000;   /* R1 (G123f): the most windows one range is read in (every one advances `next_row`, so a range ends long before it) */
 const TEXT_CHUNK = 512 * 1024;   /* characters per row of calc_table_bytes, under a Durable Object row's 2 MB */
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -306,6 +308,24 @@ function visitRecipe(name) {
     { op: "share", part: "yes_items", whole: "judged_items", as: "share_judged" }, ...apart], output: "share_judged" };
 }
 
+/* R1, R45: where a typed cell sits: its row and column (1-based), from its address (`source.cell`, or `source`), else its own `row` and `col`. */
+function cellPosition(c) {
+  const m = /^([A-Z]+)(\d+)$/.exec(String((plain(c) ? (plain(c.source) ? c.source.cell : c.source) : null) ?? "").replace(/\$/g, "").toUpperCase());
+  return { r: m ? Number(m[2]) : (plain(c) ? c.row ?? 0 : 0), col: m ? [...m[1]].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) : (plain(c) ? c.col ?? 0 : 0) };
+}
+
+/* R45: the box a range or cell extent names, `{r0, r1, c0, c1}` (1-based, inclusive, corners in either order), or null when it names none. */
+function extentBox(row) {
+  let e = row && row.extent;
+  if (typeof e === "string") { try { e = JSON.parse(e); } catch { e = null; } }
+  const ref = plain(e) ? (typeof e.range === "string" ? e.range : typeof e.cell === "string" ? e.cell : null) : null;
+  const m = ref && /^\$?([A-Za-z]{1,3})\$?(\d+)(?::\$?([A-Za-z]{1,3})\$?(\d+))?$/.exec(ref.trim());
+  if (!m) return null;
+  const col = (l) => [...l.toUpperCase()].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+  const [ca, ra, cb, rb] = [col(m[1]), Number(m[2]), m[3] ? col(m[3]) : col(m[1]), m[4] ? Number(m[4]) : Number(m[2])];
+  return { r0: Math.min(ra, rb), r1: Math.max(ra, rb), c0: Math.min(ca, cb), c1: Math.max(ca, cb) };
+}
+
 /* G64: the head of a CSV source's text the delimiter is judged from: the BOM dropped, a source that ends without a line end given one (the
    signature counts complete lines only), a longer one cut at the window. */
 function delimiterWindow(text) {
@@ -381,17 +401,42 @@ export class Calculations {
      cells is a formula, its value the file's cached result (content R52). `{name, version}` or null. */
   async #engineFor(row) {
     if (!row || (row.extent_kind !== "sheet-range" && row.extent_kind !== "sheet-cell")) return null;
-    let engine;
-    try {
-      const got = await this.content.cellsAt(row.content_id);
-      if (got && (got.cells_truncated === true || got.reason === "cells_truncated")) engine = UNDETERMINED_ENGINE;
-      else {
-        const cells = got && Array.isArray(got.cells) ? got.cells : [];
-        engine = cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "") ? { name: FILE_ENGINE, version: null } : null;
-      }
-    } catch { engine = UNDETERMINED_ENGINE; }
+    let formula = false;
+    const read = await this.#readCells(row.content_id, (cells) => {
+      if (!formula && cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "")) formula = true;
+    });
+    /* R9: a read that failed, or stopped at `cells_truncated` that it could not follow to the range's end by `next_row` (R1), is undetermined;
+       an answer that holds no cells states no engine */
+    const engine = !read.ok && read.kind !== "answer" ? UNDETERMINED_ENGINE : !read.ok || !formula ? null : { name: FILE_ENGINE, version: null };
     this.#engines.set(row.content_id, engine);
     return engine;
+  }
+
+  /* R1 (G123f): the cells of a held sheet's range as `content.cellsAt` answers them, window after window: each window's cells are handed to
+     `onCells`; an answer `cells_truncated` with a `next_row` is followed by asking again from that row (`cellsAt(id, {fromRow})`), until the
+     provider answers the range whole. `{ok: true}`, or `{ok: false, kind, got}`: `kind` "answer" for a first answer that holds no cells (`got` its
+     reason), "thrown" for a call that failed, "truncated" for a range the provider could not finish (no `next_row`, a `next_row` that does
+     not advance, a window that starts before it, a later window that holds no answer). Never loops: every continuation advances `next_row`. */
+  async #readCells(contentId, onCells) {
+    let from = null, last = null;
+    for (let calls = 0; calls < READ_ON_MAX; calls++) {
+      let got = null;
+      try { got = from === null ? await this.content.cellsAt(contentId) : await this.content.cellsAt(contentId, { fromRow: from }); }
+      catch { return { ok: false, kind: "thrown", got: "unread" }; }
+      const truncated = !!got && (got.cells_truncated === true || got.reason === "cells_truncated");
+      const next = got && Number.isInteger(got.next_row) ? got.next_row : null;
+      const cells = got && Array.isArray(got.cells) ? got.cells : null;
+      if (!truncated && !cells) return { ok: false, kind: from === null ? "answer" : "truncated", got: got && typeof got.reason === "string" ? got.reason : "unread" };
+      if (truncated && (!cells || next === null || (last !== null && next <= last) || (from !== null && next <= from))) return { ok: false, kind: "truncated", got: "cells_truncated" };
+      if (cells) {
+        /* a window that starts before the row it was asked from is the provider ignoring the argument, not a continuation */
+        if (from !== null && cells.some((c) => cellPosition(c).r < from)) return { ok: false, kind: "truncated", got: "cells_truncated" };
+        onCells(cells);
+      }
+      if (!truncated) return { ok: true };
+      last = next; from = next;
+    }
+    return { ok: false, kind: "truncated", got: "cells_truncated" };
   }
 
   /* The same mark for the synchronous reads (R19, R30), which cannot wait on `content.cellsAt`: what the last
@@ -493,23 +538,41 @@ export class Calculations {
   /* R1: the source's rows: a sheet range's typed cells, a passage's text read as CSV, or a whole document's bytes. */
   async #sourceRows(row) {
     if (row.extent_kind === "sheet-range" || row.extent_kind === "sheet-cell") {
-      let got = null;
-      try { got = await this.content.cellsAt(row.content_id); } catch { got = null; }
-      if (got && (got.cells_truncated === true || got.reason === "cells_truncated")) return { fault: word("calculations.range_cells_held", { got: "cells_truncated" }) };
-      if (!got || !Array.isArray(got.cells)) return { fault: word("calculations.range_cells_held", { got: String(got && got.reason ? got.reason : "unread") }) };
+      /* R1 (G123f): the range is read window after window to its end (`#readCells`); a range that cannot be finished is refused, never a short table.
+         R45 (G131d): the cells are folded as they arrive into rows by their address, then the rows are made over the whole box the range names
+         (its first row and column to the last cell held), so a column or a row that holds no cell keeps its place and nothing closes up. */
       const byRow = new Map();
-      for (const c of got.cells) {
-        const m = /^([A-Z]+)(\d+)$/.exec(String((plain(c.source) ? c.source.cell : c.source) ?? "").replace(/\$/g, "").toUpperCase());
-        const r = m ? Number(m[2]) : (c.row ?? 0);
-        const col = m ? [...m[1]].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) : (c.col ?? 0);
-        if (!byRow.has(r)) byRow.set(r, new Map());
-        byRow.get(r).set(col, c.value === null || c.value === undefined ? "" : String(c.value));
+      let formula = false, held = 0, minRow = Infinity, maxRow = 0, minCol = Infinity, maxCol = 0, tooMany = false;
+      const read = await this.#readCells(row.content_id, (cells) => {
+        for (const c of cells) {
+          const { r, col } = cellPosition(c);
+          if (!byRow.has(r)) byRow.set(r, new Map());
+          byRow.get(r).set(col, c.value === null || c.value === undefined ? "" : String(c.value));
+          if (r < minRow) minRow = r;
+          if (r > maxRow) maxRow = r;
+          if (col < minCol) minCol = col;
+          if (col > maxCol) maxCol = col;
+          if (plain(c) && typeof c.formula === "string" && c.formula !== "") formula = true;
+        }
+        held += cells.length;
+        if (held > TABLE_MAX_CELLS) tooMany = true;
+      });
+      if (tooMany) return { tooLarge: { bound: "cells", max: TABLE_MAX_CELLS, got: held } };
+      if (!read.ok) return { fault: read.kind === "truncated" && held > 0
+        ? localize("calculations.index.the_range_could_not_be_read_whole", "the range's cells were read to row {row} and the rest could not be read, and a table is never made from part of a range", { row: String(maxRow) })
+        : word("calculations.range_cells_held", { got: String(read.got) }) };
+      const box = extentBox(row);
+      const r0 = Math.min(box ? box.r0 : Infinity, minRow), c0 = Math.min(box ? box.c0 : Infinity, minCol);
+      function* rows() {
+        for (let r = r0; r <= maxRow; r++) {
+          const m = byRow.get(r);
+          const out = new Array(maxCol - c0 + 1);
+          for (let k = 0; k < out.length; k++) out[k] = m ? m.get(c0 + k) ?? "" : "";
+          yield out;
+        }
       }
-      const cols = [...new Set([...byRow.values()].flatMap((m) => [...m.keys()]))].sort((a, b) => a - b);
-      const rows = [...byRow.keys()].sort((a, b) => a - b).map((r) => cols.map((c) => byRow.get(r).get(c) ?? ""));
       /* R9: a range any of whose cells is a formula holds values a third-party engine computed */
-      const engine = got.cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "") ? { name: FILE_ENGINE, version: null } : null;
-      return { rows, bytes: null, engine };
+      return { rows: held ? rows() : [], bytes: null, engine: formula ? { name: FILE_ENGINE, version: null } : null };
     }
     /* G101 (R44): a CSV document is the file's own stored bytes, never the reading's index (blocks that repeat the header, caps), so the
        table's sha is the file's: a CSV whose bytes are not held is refused, stated, never made from the index. */
@@ -517,16 +580,41 @@ export class Calculations {
     let text = null;
     if (!csv) { try { text = this.content.passageText(row.content_id); } catch { text = null; } }
     if (typeof text !== "string" && row.extent_kind === "document") {
-      const ev = this.record.evidenceStore();
-      try {
-        const obj = ev ? await ev.get(row.capture_sha) : null;
-        if (obj) text = typeof obj.text === "function" ? await obj.text() : new TextDecoder().decode(await obj.arrayBuffer());
-      } catch { text = null; }
+      const stored = await this.#storedText(row.capture_sha);
+      if (stored.transient)
+        return { transient: true, fault: localize("calculations.index.the_files_own_bytes_could", "the file's own bytes could not be read just now, and the file is held; ask again in a moment") };
+      text = stored.text;
     }
     if (typeof text !== "string")
       return { fault: csv ? localize("calculations.index.the_csv_files_own_bytes", "the CSV file's own bytes are not held, and a table is made from the file, never from the index of its reading") : word("calculations.source_text_held") };
-    if (text.length > TABLE_MAX_BYTES * 2) return { tooLarge: true };
+    if (text.length > TABLE_MAX_BYTES * 2) return { tooLarge: { bound: "bytes", max: TABLE_MAX_BYTES, got: text.length } };
     return { text };
+  }
+
+  /* R1 (R44; fix round 9, G131d follow-up, K4850): a document's stored bytes as text. `{text}`; `{text: null}` for a file that is not held (the store
+     answers none and its head names none); `{transient: true}` for a read that threw, or answered none for a file whose head says it is held: a
+     transient failure is never stated as absence. R-LOG: a line before the read and one after, carrying the sha, which of the two it was
+     and the error's name, never the bytes. */
+  async #storedText(captureSha) {
+    const ev = this.record.evidenceStore();
+    if (!ev) return { text: null };
+    const log = (line) => { try { console.log(JSON.stringify({ event: "table_source_read", module: "calculations", sha: captureSha, ...line })); } catch { /* a log changes nothing */ } };
+    log({ phase: "start" });
+    let obj = null;
+    try { obj = await ev.get(captureSha); }
+    catch (e) { log({ phase: "end", outcome: "thrown", error: String((e && e.name) || "Error").slice(0, 80) }); return { text: null, transient: true }; }
+    if (!obj) {
+      let head = null, headFailed = false;
+      try { head = typeof ev.head === "function" ? await ev.head(captureSha) : null; } catch { headFailed = true; }
+      const held = !!head || headFailed;
+      log({ phase: "end", outcome: held ? "null_but_held" : "null_not_held" });
+      return held ? { text: null, transient: true } : { text: null };
+    }
+    try {
+      const text = typeof obj.text === "function" ? await obj.text() : new TextDecoder().decode(await obj.arrayBuffer());
+      log({ phase: "end", outcome: "read", chars: text.length });
+      return { text };
+    } catch (e) { log({ phase: "end", outcome: "thrown", error: String((e && e.name) || "Error").slice(0, 80) }); return { text: null, transient: true }; }
   }
 
   /** R1–R3: `declareTable({source, schema, header, roles?, vintage?, by})`. `source` is a content id (a CSV
@@ -559,8 +647,8 @@ export class Calculations {
         return no("BAD_SCHEMA", `the crosswalk "${col}" names is not a declared crosswalk with those two ends. Nothing was written.`, { field: col });
     }
     const src = await this.#sourceRows(row);
-    if (src.tooLarge) return no("TABLE_TOO_LARGE", `the source is over the bound of ${TABLE_MAX_BYTES} bytes (20 MiB). Nothing was written.`, { bound: "bytes", max: TABLE_MAX_BYTES });
-    if (src.fault) return no("SOURCE_NOT_READ", `${src.fault}. Nothing was written.`, { content_id: contentId });
+    if (src.tooLarge) return this.#tooLarge(src.tooLarge);
+    if (src.fault) return no("SOURCE_NOT_READ", `${src.fault}. Nothing was written.`, { content_id: contentId, ...(src.transient ? { transient: true } : {}) });
     const tb = tableBuilder(names, schema.fields);
     if (src.rows) for (const r of src.rows) tb.push(r);
     else {
@@ -580,9 +668,7 @@ export class Calculations {
     }
     const built = tb.finish();
     if (built.fault) return no("BAD_SCHEMA", `the source does not fit the declared header: ${built.fault.why}. Nothing was written.`, { field: built.fault.field });
-    if (built.tooLarge) return no("TABLE_TOO_LARGE", built.tooLarge.bound === "cells"
-      ? `the table holds over ${TABLE_MAX_CELLS} cells, the bound. Nothing was written.`
-      : `the canonical table is over ${TABLE_MAX_BYTES} bytes (20 MiB), the bound. Nothing was written.`, { bound: built.tooLarge.bound, max: built.tooLarge.max });
+    if (built.tooLarge) return this.#tooLarge(built.tooLarge);
     const bytes = built.bytes;
     const tableSha = built.sha;
     const held = this.#one(`SELECT sha FROM calc_tables WHERE sha=?`, tableSha);
@@ -610,6 +696,16 @@ export class Calculations {
     });
     if (!out.ok) return out;
     return { ok: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
+  }
+
+  /* R1, R46: `TABLE_TOO_LARGE` stating the size and the bound as `READ_BOUNDS` quotes them (`statement`): the cells bound names the cells, the bytes
+     bound the bytes. `{bound, max, got}`: which bound the table broke, its figure and the size measured. */
+  #tooLarge({ bound, got }) {
+    const st = statement("table", bound === "cells" ? "cells" : "bytes", got);
+    const text = bound === "cells"
+      ? localize("calculations.index.table_over_cells_bound", "the table holds {size} cells, over the bound of {bound} cells. Nothing was written.", { size: String(st.size), bound: String(st.bound) })
+      : localize("calculations.index.table_over_bytes_bound", "the table is {size} bytes, over the bound of {bound} bytes. Nothing was written.", { size: String(st.size), bound: String(st.bound) });
+    return no("TABLE_TOO_LARGE", text, { bound: bound === "cells" ? "cells" : "bytes", max: st.bound, size: st.size, bound_key: st.key });
   }
 
   #tableAnswer(r) {

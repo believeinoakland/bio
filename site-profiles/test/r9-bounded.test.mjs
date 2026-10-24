@@ -74,12 +74,15 @@ test("R20 each stack detect adds at most 4 times its window to ctx.work.chars, w
       const work = { chars: 0 };
       const d = h.detect({ text, work });
       assert.ok(work.chars <= 4 * text.length, `${h.key} on ${what}: ${work.chars} of ${text.length}`);
+      /* K4920: the count is the work done, not a ceiling met by counting nothing: a detect that reads the text counts it at least once */
+      if (text.length) assert.ok(work.chars >= text.length, `${h.key} on ${what} counted ${work.chars} of ${text.length}: the reading is not metered`);
       assert.ok(["certain", "likely", "possible", "none"].includes(d.confidence));
     }
     // the four recognisers of one identify share one reading of the text
     const work = { chars: 0 };
     identify({ text, work });
     assert.ok(work.chars <= 4 * text.length, `identify on ${what}: ${work.chars} of ${text.length}`);
+    if (text.length) assert.ok(work.chars >= text.length, `identify on ${what} counted ${work.chars} of ${text.length}`);
   }
   // the count grows with the window and not faster: doubling the text at most doubles it (plus a constant)
   const count = (t) => { const w = { chars: 0 }; clientRendered.detect({ text: t, work: w }); return w.chars; };

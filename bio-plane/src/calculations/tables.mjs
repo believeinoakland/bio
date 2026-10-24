@@ -8,11 +8,13 @@ import { FIELD_TYPES, parseFigure } from "../calc-grammar/index.mjs";
 import { isCalendarDate } from "../civil-time/index.mjs";
 import { sha256HexSync, createSha256 } from "../record-grammar/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 
-/** R1: the bounds of a table, in bytes of canonical CSV and in cells (N571: a held table is evaluated as calc-grammar's
- *  streamed table, its R22, read row by row from its canonical text, so 1,000,000 cells fit a Worker's heap). */
-export const TABLE_MAX_BYTES = 20 * 1024 * 1024;
-export const TABLE_MAX_CELLS = 1_000_000;
+/** R1, R46 (fix round 9, G124): the bounds of a table, in bytes of canonical CSV and in cells, quoted from `READ_BOUNDS` (N571: a held
+ *  table is evaluated as calc-grammar's streamed table, its R22, read row by row from its canonical text, so 1,000,000 cells fit a
+ *  Worker's heap). */
+export const TABLE_MAX_BYTES = boundOf("table", "bytes");
+export const TABLE_MAX_CELLS = boundOf("table", "cells");
 /** R1: how many undetermined cells a declaration lists by place (the count is always whole). */
 export const UNDETERMINED_LISTED = 200;
 

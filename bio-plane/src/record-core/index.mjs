@@ -302,10 +302,10 @@ function jsonText(value) {
 
 /** R91 (fix round 8, G115; K4811 (1)): THE BOOKKEEPING LIST, the tables a request writes whatever it asks, none of them part of
  *  the record: the sessions (`last_active`), the door window (the source and session windows), the owed-work ledger (its pending
- *  and last-run tables) and the doorbell's and the acquisition's tallies and stage timings. A row changed in one does not move
+ *  and last-run tables) the job table's per-unit attempt stamps and batch landings (K4912), and the doorbell's and the acquisition's tallies and stage timings. A row changed in one does not move
  *  `writeCount()`. The list is this module's; a module whose table belongs here is added by a requirement change. */
 export const BOOKKEEPING_TABLES = Object.freeze(["sessions", "admission_door_window", "admission_session_window", "keeps_pending",
-  "keeps_last", "knock_rate", "doorbell_tally", "doorbell_limit_last", "acquire_stages"]);
+  "keeps_last", "knock_rate", "doorbell_tally", "doorbell_limit_last", "acquire_stages", "job_unit_attempts", "job_batches"]);
 /* R91: the tally of the connection's start, per storage connection (a second instance over the same storage shares it): the
    bookkeeping rows tallied before this object began are not this object's to subtract. */
 const BASELINES = new WeakMap();

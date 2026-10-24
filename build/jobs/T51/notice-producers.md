@@ -1,6 +1,6 @@
 # notice-producers (T51)
 
-**Status** · session_01CVXguWMv2q1pfSMTRFJZDM · depth 2 · COMPLETE · handled B4
+**Status** · session_01EzbeHquecfUvWe3Ss9yqdi · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -94,3 +94,25 @@ Size (session_01CVXguWMv2q1pfSMTRFJZDM): test runs 8, module lines 1561
 
 COMPLETE (G55, R28 proposed): ingest-done and ingest-stopped notices built to calculations' published ingestNotices shape (B6). Module 143 tests, 142 pass; the one red is the seam over the real calculations, red by name until CALCULATIONS #9 merges, and queue/noticed.test.mjs:288 for the same cause (facts.failed gains calculations). format, architecture, coverage 27/27, words, ownership: 0 failures. Rows owed to the design: notice-producers.ingest.done, notice-producers.ingest.stopped (localize). CHANGE me at calculations' merge and I re-run both. Details in my record.
 Size (session_01CVXguWMv2q1pfSMTRFJZDM): test runs 8, module lines 1561
+
+## Fix round 9 · NOTICE-PRODUCERS #17 (session_01EzbeHquecfUvWe3Ss9yqdi) · G135f · R29
+
+Merged `tranche/T51`. R29 applied: `#readingsEnded` in `bio-plane/src/notice-producers/index.mjs` (new kind `reading-ended`; consts `READING_ENDED_*`, `READING_JOB_KIND`; `facts.reading_ended`; failures named `readings`; wired in `noticeItems`). Coded against `deps.readingsEnded({after, limit})` as plane merged it (`plane/pending.mjs` `readingsEnded`: `{ok, rows:[{sha, kind, state, why, written, skipped, owed, failed, ended_at, member}], next}`); I read the real contract, so the local implementation in the test is that shape.
+
+**Choices (all inside R29's text).** Only rows of kind `reading` are told; states `finished`, `final` (ended in part, with its `why`), `refused`; `{read}` = `written`, `{total}` = written+skipped+owed+failed (the counted sentence only when total > 0); the document is `provenance.homeOf(sha)` (title as the viewer sees it, else the path's last part, else the sha); a row for another member, a machine or nobody makes none; the 90-day window reads `ended_at`; every cycle reads from the start.
+
+**Failing-first.** `reading-ended.test.mjs` (R29, 8 tests): with the source stashed, red: `SyntaxError: ... does not provide an export named 'READING_ENDED_DAYS'` (0 pass, 1 fail file); with R29, green 8/8. `read.test.mjs` R1's facts line gained `reading_ended` (red 150/151 before, green after).
+
+**Words owed (stand-ins by `localize`, rows for `later-ux.md`):** `notice-producers.reading.finished` ("{document} has been read."), `.finished.counted` ("{document} has been read: {read} of {total}."), `.partial` / `.partial.counted` ("{document} was read in part[: {read} of {total}]. {why}"), `.refused` ("{document} was not taken in: {why}"); the door reuses `notice-producers.index.open_the_document` (design row `notice.fetch.done.door` family). `{why}` is plane's `final_why` as given (a code such as PASSWORD_REQUIRED, or the refusal's limit text): the design should supply the member's words for it.
+
+**Found in another module.** `queue`'s catalogue (`bio-plane/src/queuestate.mjs`, near the `fetch-done` / `ingest-done` entries, G61) does not name `reading-ended`: `test/m/queue/catalogue.test.mjs:242` (R1 G61) is red by name, and without the entry the opener's whole Queue is refused `NO_SUCH_KIND` (the text above those entries). Queue's job adds `"reading-ended"` there, class FINDING, "— LIVE: notice-producers R29".
+
+**Tests.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/notice-producers/`: 151 tests, 151 pass, 0 fail. Impact users (`impact.mjs origin/tranche/T51 HEAD`: queue, store-door, control-plane, plane): queue + store-door 286 tests, 285 pass, 1 fail (the catalogue line above). control-plane's seam section 11 is job 43's. Checks: format 0 failures; architecture 0; coverage 29 of 29 ids named, 0; words inline 0, 0 failures; ownership 0 failures (4 files).
+
+Generated artifacts made stale: none.
+
+Size (session_01EzbeHquecfUvWe3Ss9yqdi): test runs 9, module lines 1699
+
+## J8 · COMPLETE
+
+COMPLETE (NOTICE-PRODUCERS #17, fix round 9, G135f, R29). Details in my record's 'Fix round 9' section. R29 applied (#readingsEnded, kind reading-ended, facts.reading_ended, failures named 'readings'), coded against plane's merged readingsEnded shape. Failing-first reading-ended.test.mjs red (missing export) then 8/8 green; module 151/151; format/architecture/coverage/words/ownership 0 failures. NEEDS FROM YOU (smallest thing): queue's catalogue (queuestate.mjs, beside fetch-done/ingest-done) must name 'reading-ended' (FINDING, LIVE: notice-producers R29) or queue's catalogue.test.mjs:242 (R1 G61) stays red and the opener's whole Queue is refused NO_SUCH_KIND; queue's job adds it, I cannot. Words owed (localize stand-ins notice-producers.reading.finished/.finished.counted/.partial/.partial.counted/.refused) are in the record. Size (session_01EzbeHquecfUvWe3Ss9yqdi): test runs 9, module lines 1699
