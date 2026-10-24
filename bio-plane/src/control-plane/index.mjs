@@ -2807,8 +2807,9 @@ export function makeFetch(hooks = {}) {
       const logEnd = (extra) => { try { console.log(JSON.stringify({ event: "upload_read", sha, pending: extra.pending === true, more: extra.more === true,
         ocr_left: extra.ocr_left ?? null, tier3_candidate: extra.tier3_candidate === true })); } catch { /* a log is status */ } };
       /* R123 (F2), R130: a reading owed is written down (the row, its answer read) and the answer says so only if the row is held; the upload stands as it was answered */
+      let upfront = null;   /* the up-front registration's answer, so the row is written once */
       const owed = async (extra = {}) => {
-        const reg = await pendSha(sha);
+        const reg = upfront && upfront.ok ? upfront : await pendSha(sha);
         logEnd({ ...extra, pending: reg.ok });
         return reg.ok ? { body: { ...got.body, result: { ...r, reading_pending: true } }, status: got.status }
                       : { body: { ...got.body, result: { ...r, reading_refused: refusedReading(reg) } }, status: got.status };
@@ -2816,7 +2817,7 @@ export function makeFetch(hooks = {}) {
       /* R130: capture registers the row inside its filing transaction (capture R109); when it says it could not (no registrar), or the bytes were held before this upload
          (`existed`), the door's own registration stands before any read starts */
       if (r.existed === true || (r.jobs && Array.isArray(r.jobs.not_registered) && r.jobs.not_registered.length)) {
-        const reg = await pendSha(sha);
+        const reg = upfront = await pendSha(sha);
         if (!reg.ok && await readingWontFitHere(hasDocument ? r.document : { capture: r.capture })) return owed();
       }
       if (r.existed === true) {

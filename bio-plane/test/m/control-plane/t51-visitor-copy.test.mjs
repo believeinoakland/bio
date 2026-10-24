@@ -65,9 +65,12 @@ test("R104 R100 R99 (E8): a capture with the visitor view, the object restarted,
   try { cont = await fresh.acquire(c.cap, { continue: c.sid }, { cls: "member", member: true, sessMember: "member:ann", storeName: "bio", renderWaitMs: 5000 }); }
   finally { net.restore(); }
   assert.equal(cont.status, 200, JSON.stringify(cont.body).slice(0, 300));
-  /* acquisition R106 (fix round 6, G3): with the ledger, "Finish it" answers at once, the render pending, and the alarm files the copy */
-  assert.deepEqual([cont.body.ok, cont.body.render && cont.body.render.state, cont.body.document], [true, "pending", undefined], "\"Finish it\" answers at once");
+  /* acquisition R117 (fix round 9, G126g; amends R106): the run's answer was kept in the session when it returned, so the restarted object finishes the copy in this
+     request from it (no second render, reservation or charge): "Finish it" answers the finished copy, not `pending`; with the ledger the session stays, owing the
+     document, until the alarm has seen it filed or delivered it (R104) */
   const copySha = hex(RENDERED);
+  assert.deepEqual([cont.body.ok, cont.body.render && cont.body.render.state, cont.body.document && cont.body.document.capture.sha256],
+                   [true, undefined, copySha], "\"Finish it\" answers the finished copy from the answer kept in the session");
   /* that answer is never filed. Before the alarm: the held list holds the page as served alone */
   const before = await heldBundles(c.cap);
   assert.equal(before.held.filter((x) => x.capture && x.capture.sha256 === copySha).length, 0, "the visitor copy is not yet a document");
