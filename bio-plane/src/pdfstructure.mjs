@@ -906,6 +906,36 @@ export class PdfDoc {
     }
   }
 
+  /** R22: an embedded file's SHA-256 and length, computed as the stream is read and never held: `{ sha, bytes }`; `{ over }` for a
+   *  stream that passes the embedded-file cap (stated `stream_over_bound:embedded_file`, as `_decode` states it); `undefined` for
+   *  a stream this does not take (an ASCII stage, a predictor, a filter other than one Flate, a decoder that refuses it), which the
+   *  caller decodes whole and hashes. Never throws. */
+  async streamDigest(streamObj) {
+    try {
+      const raw = this.streamRawBytes(streamObj);
+      if (!raw) return undefined;
+      const bound = STREAM_CAPS.embedded_file;
+      const filter = this.resolve(streamObj.dict.Filter);
+      const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f) => (f && f.t === "name" ? f.v : null)) : [null];
+      let parms = this.resolve(streamObj.dict.DecodeParms) || this.resolve(streamObj.dict.DP);
+      if (parms && parms.t === "arr") parms = this.resolve(parms.items[parms.items.length - 1]);
+      if (parms && parms.t === "dict" && this.resolve(parms.map.Predictor) != null) return undefined;
+      const hash = new Sha256();
+      if (names.length === 0) {
+        if (raw.length > bound) { this._overBound("embedded_file"); return { over: raw.length }; }
+        hash.update(raw);
+        return { sha: hash.hex(), bytes: raw.length };
+      }
+      if (names.length !== 1 || (names[0] !== "FlateDecode" && names[0] !== "Fl")) return undefined;
+      const got = await streamInflated(raw, bound, (chunk) => hash.update(chunk));
+      if (!got) return undefined;
+      if (got.over !== undefined) { this._overBound("embedded_file"); return { over: got.over }; }
+      return { sha: hash.hex(), bytes: got.total };
+    } catch {
+      return undefined;
+    }
+  }
+
   /** `streamDecoded` that says why it has no bytes: `{ data }`, or `{ data: null, over: { kind, size, bound } }` for a stream
    *  that passed the cap of its kind (R22), or `{ data: null }` for any other failure. `cap` replaces the kind's cap (a page's
    *  streams share one). */
@@ -1593,6 +1623,93 @@ async function sha256Hex(u8) {
   return toHex(new Uint8Array(d));
 }
 
+/* R22 — an embedded file is hashed AS IT STREAMS, never held. The platform's digest takes the whole input, so a file of the
+ * cap's size (64 MiB) would be held, decoded, beside the copy the digest makes; SHA-256 (FIPS 180-4) is a block function
+ * and is run here over each chunk the decoder gives, 64 bytes at a time, so memory is one chunk and one block. */
+const SHA256_K = new Uint32Array([
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be,
+  0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa,
+  0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85,
+  0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
+  0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,
+  0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]);
+class Sha256 {
+  constructor() {
+    this.h = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+    this.w = new Uint32Array(64);
+    this.block = new Uint8Array(64);
+    this.fill = 0;
+    this.length = 0;
+  }
+  _compress(b, at) {
+    const w = this.w, h = this.h;
+    for (let i = 0; i < 16; i++) { const j = at + i * 4; w[i] = (b[j] << 24) | (b[j + 1] << 16) | (b[j + 2] << 8) | b[j + 3]; }
+    for (let i = 16; i < 64; i++) {
+      const a = w[i - 15], c = w[i - 2];
+      const s0 = ((a >>> 7) | (a << 25)) ^ ((a >>> 18) | (a << 14)) ^ (a >>> 3);
+      const s1 = ((c >>> 17) | (c << 15)) ^ ((c >>> 19) | (c << 13)) ^ (c >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+    }
+    let a = h[0], b1 = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+    for (let i = 0; i < 64; i++) {
+      const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+      const t1 = (hh + S1 + ((e & f) ^ (~e & g)) + SHA256_K[i] + w[i]) | 0;
+      const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+      const t2 = (S0 + ((a & b1) ^ (a & c) ^ (b1 & c))) | 0;
+      hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b1; b1 = a; a = (t1 + t2) | 0;
+    }
+    h[0] = (h[0] + a) | 0; h[1] = (h[1] + b1) | 0; h[2] = (h[2] + c) | 0; h[3] = (h[3] + d) | 0;
+    h[4] = (h[4] + e) | 0; h[5] = (h[5] + f) | 0; h[6] = (h[6] + g) | 0; h[7] = (h[7] + hh) | 0;
+  }
+  update(u8) {
+    this.length += u8.length;
+    let i = 0;
+    if (this.fill) {
+      const take = Math.min(64 - this.fill, u8.length);
+      this.block.set(u8.subarray(0, take), this.fill);
+      this.fill += take; i = take;
+      if (this.fill < 64) return;
+      this._compress(this.block, 0); this.fill = 0;
+    }
+    for (; i + 64 <= u8.length; i += 64) this._compress(u8, i);
+    if (i < u8.length) { this.block.set(u8.subarray(i), 0); this.fill = u8.length - i; }
+  }
+  hex() {
+    const bits = this.length * 8;
+    const pad = new Uint8Array(((this.fill < 56 ? 56 : 120) - this.fill) + 8);
+    pad[0] = 0x80;
+    const dv = new DataView(pad.buffer);
+    dv.setUint32(pad.length - 8, Math.floor(bits / 4294967296));
+    dv.setUint32(pad.length - 4, bits >>> 0);
+    const len = this.length;
+    this.update(pad);
+    this.length = len;
+    let out = "";
+    for (const x of this.h) out += (x >>> 0).toString(16).padStart(8, "0");
+    return out;
+  }
+}
+
+/** Flate `u8` (zlib) through the platform's decoder, each chunk given to `sink` and none kept: `{ total }` for a clean decode,
+ *  `{ over }` as soon as the output passes `cap`, `null` when the decoder refuses the stream (anything `sink` has taken is then
+ *  not to be used). */
+async function streamInflated(u8, cap, sink) {
+  const reader = new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate")).getReader();
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.length;
+      if (total > cap) { await reader.cancel().catch(() => {}); return { over: total }; }
+      sink(value);
+    }
+  } catch {
+    return null;
+  }
+  return { total };
+}
+
 /** An embedded file's bytes are content-addressed exactly as a bundle
  *  companion is, so an embedded file that we can resolve to bytes is `intra`
  *  under the same wrapper. If the stream cannot be decoded this phase, it is
@@ -1606,14 +1723,23 @@ async function embeddedFileRecord(doc, filespec, sourcePage, rect, name) {
   const label = embeddedName(doc, fs, name);
   if (!stream || stream.t !== "stream")
     return undeterminedRecord({ page: sourcePage, rect }, "embedded_stream_absent", { name: label });
-  const bytes = await doc.streamDecoded(stream, "embedded_file");
-  if (!bytes)
-    return undeterminedRecord({ page: sourcePage, rect }, "embedded_stream_undecodable", { name: label });
-  const sha = await sha256Hex(bytes);
+  /* R22: hashed as it streams where the stream allows it (unfiltered, or one Flate stage with no predictor); anything else is
+   * decoded whole, up to the same cap, as before */
+  let sha, size;
+  const streamed = await doc.streamDigest(stream);
+  if (streamed && streamed.sha) ({ sha, bytes: size } = streamed);
+  else if (streamed && streamed.over) return undeterminedRecord({ page: sourcePage, rect }, "embedded_stream_undecodable", { name: label });
+  else {
+    const bytes = await doc.streamDecoded(stream, "embedded_file");
+    if (!bytes)
+      return undeterminedRecord({ page: sourcePage, rect }, "embedded_stream_undecodable", { name: label });
+    sha = await sha256Hex(bytes);
+    size = bytes.length;
+  }
   return {
     partition: "intra",
     wrapper: linkWrapper.intra(sha),
-    target: { sha256: sha, name: label, bytes: bytes.length },
+    target: { sha256: sha, name: label, bytes: size },
     source: sourcePage == null ? null : { page: sourcePage, rect: rect || null },
   };
 }
@@ -1852,6 +1978,155 @@ function readContentNumber(s, pos) {
     else break;
   }
   const v = parseFloat(s.slice(start, pos));
+  return { v: Number.isNaN(v) ? 0 : v, pos };
+}
+
+/* R41 — THE SAME LEXER OVER BYTES. `tokenizeContent` reads a string with one unit a byte; a page of 60 MiB made a string of
+ * 60 MiB beside its bytes, and with the text the walk builds the heap of a 128 MB object was gone before the bound
+ * (a 40 MiB page of text needed 79 MB live, a 60 MiB page did not fit). `tokenizeContentBytes` yields the same tokens, read
+ * from the bytes themselves; `content-lexer` tests it token for token against `tokenizeContent` on random streams. */
+function* tokenizeContentBytes(b, opts = {}) {
+  const skipInline = opts.inlineImages === true;
+  let i = 0;
+  const n = b.length;
+  while (i < n) {
+    const c = b[i];
+    if (isWhitespace(c)) { i++; continue; }
+    if (c === 0x25) { while (i < n && b[i] !== 0x0a && b[i] !== 0x0d) i++; continue; }
+    if (c === 0x28) { const r = readLiteralBytesU8(b, i); yield { t: "str", bytes: r.bytes }; i = r.pos; continue; }
+    if (c === 0x3c) {
+      if (b[i + 1] === 0x3c) { yield { t: "dict_open" }; i += 2; continue; }
+      const r = readHexBytesU8(b, i); yield { t: "str", bytes: r.bytes }; i = r.pos; continue;
+    }
+    if (c === 0x3e && b[i + 1] === 0x3e) { yield { t: "dict_close" }; i += 2; continue; }
+    if (c === 0x5b) { yield { t: "arr_open" }; i++; continue; }
+    if (c === 0x5d) { yield { t: "arr_close" }; i++; continue; }
+    if (c === 0x2f) { const r = readContentNameU8(b, i); yield { t: "name", v: r.v }; i = r.pos; continue; }
+    if (c === 0x2b || c === 0x2d || c === 0x2e || (c >= 0x30 && c <= 0x39)) {
+      const r = readContentNumberU8(b, i); yield { t: "num", v: r.v }; i = r.pos; continue;
+    }
+    const start = i;
+    while (i < n) {
+      const cc = b[i];
+      if (isWhitespace(cc) || isDelimiter(cc)) break;
+      i++;
+    }
+    if (i > start) {
+      let op = "";
+      for (let k = start; k < i; k++) op += String.fromCharCode(b[k]);
+      yield { t: "op", v: op };
+      if (skipInline && op === "ID") {
+        /* the first `EI` that stands alone after white space (as JavaScript reads `\s`) and before white space, a
+           delimiter of `/[<(`, or the end */
+        let j = i + 1, found = -1;
+        for (; j + 2 < n; j++) {
+          if (isJsSpaceByte(b[j]) && b[j + 1] === 0x45 && b[j + 2] === 0x49) {
+            const a = b[j + 3];
+            if (j + 3 >= n || isJsSpaceByte(a) || a === 0x2f || a === 0x5b || a === 0x3c || a === 0x28) { found = j; break; }
+          }
+        }
+        i = found >= 0 ? found + 1 : n;
+      }
+    }
+    else i++; // never stall
+  }
+}
+
+function readLiteralBytesU8(b, pos) {
+  pos++; // (
+  let q = pos;
+  while (q < b.length) {
+    const c = b[q];
+    if (c === 0x29 || c === 0x28 || c === 0x5c || c === 0x0d) break;
+    q++;
+  }
+  if (q < b.length && b[q] === 0x29) {
+    const out = newBytes(q - pos);
+    out.set(b.subarray(pos, q));
+    return { bytes: out, pos: q + 1 };
+  }
+  const bytes = [];
+  let depth = 1;
+  while (pos < b.length) {
+    const c = b[pos];
+    if (c === 0x5c) {
+      if (pos + 1 >= b.length) { pos++; break; }
+      const nc = b[pos + 1];
+      if (nc >= 0x30 && nc <= 0x37) {
+        let v = nc - 0x30, p = pos + 2;
+        for (let k = 1; k < 3 && p < b.length; k++, p++) {
+          const d = b[p];
+          if (d < 0x30 || d > 0x37) break;
+          v = v * 8 + d - 0x30;
+        }
+        bytes.push(v & 0xff); pos = p; continue;
+      }
+      switch (nc) {
+        case 110: bytes.push(0x0a); pos += 2; continue;
+        case 114: bytes.push(0x0d); pos += 2; continue;
+        case 116: bytes.push(0x09); pos += 2; continue;
+        case 98: bytes.push(0x08); pos += 2; continue;
+        case 102: bytes.push(0x0c); pos += 2; continue;
+        case 40: bytes.push(0x28); pos += 2; continue;
+        case 41: bytes.push(0x29); pos += 2; continue;
+        case 92: bytes.push(0x5c); pos += 2; continue;
+        case 0x0a: pos += 2; continue;
+        case 0x0d: pos += b[pos + 2] === 0x0a ? 3 : 2; continue;
+        default: bytes.push(nc); pos += 2; continue;
+      }
+    }
+    if (c === 0x0d) { bytes.push(0x0a); pos += b[pos + 1] === 0x0a ? 2 : 1; continue; }
+    if (c === 0x28) { depth++; bytes.push(0x28); pos++; continue; }
+    if (c === 0x29) { depth--; if (depth === 0) { pos++; break; } bytes.push(0x29); pos++; continue; }
+    bytes.push(c); pos++;
+  }
+  const out = newBytes(bytes.length);
+  out.set(bytes);
+  return { bytes: out, pos };
+}
+
+function readHexBytesU8(b, pos) {
+  pos++; // <
+  const digits = [];
+  while (pos < b.length && b[pos] !== 0x3e) {
+    const c = b[pos];
+    const d = c >= 0x30 && c <= 0x39 ? c - 0x30 : c >= 0x41 && c <= 0x46 ? c - 0x37 : c >= 0x61 && c <= 0x66 ? c - 0x57 : -1;
+    if (d >= 0) digits.push(d);
+    pos++;
+  }
+  pos++; // >
+  if (digits.length % 2) digits.push(0);
+  const bytes = newBytes(digits.length / 2);
+  for (let k = 0; k < digits.length; k += 2) bytes[k / 2] = (digits[k] << 4) | digits[k + 1];
+  return { bytes, pos };
+}
+
+function readContentNameU8(b, pos) {
+  pos++; // /
+  let out = "";
+  while (pos < b.length) {
+    const c = b[pos];
+    if (isWhitespace(c) || isDelimiter(c)) break;
+    if (c === 0x23 && pos + 2 < b.length) {
+      const h = parseInt(String.fromCharCode(b[pos + 1], b[pos + 2]), 16);
+      if (!Number.isNaN(h)) { out += String.fromCharCode(h); pos += 3; continue; }
+    }
+    out += String.fromCharCode(c); pos++;
+  }
+  return { v: out, pos };
+}
+
+function readContentNumberU8(b, pos) {
+  const start = pos;
+  if (b[pos] === 0x2b || b[pos] === 0x2d) pos++;
+  while (pos < b.length) {
+    const c = b[pos];
+    if ((c >= 0x30 && c <= 0x39) || c === 0x2e) pos++;
+    else break;
+  }
+  let t = "";
+  for (let k = start; k < pos; k++) t += String.fromCharCode(b[k]);
+  const v = parseFloat(t);
   return { v: Number.isNaN(v) ? 0 : v, pos };
 }
 
@@ -2202,9 +2477,9 @@ function pageResources(doc, pageMap) {
  *  is genuinely blank and names nothing. */
 async function pageContent(doc, pageMap) {
   const unread = [];
-  if (pageMap.Contents == null) return { text: "", unread };
+  if (pageMap.Contents == null) return { data: new Uint8Array(0), unread };
   const c = doc.resolve(pageMap.Contents);
-  if (!c) return { text: "", unread: ["content_stream_unresolvable"] };
+  if (!c) return { data: new Uint8Array(0), unread: ["content_stream_unresolvable"] };
   const streams = c.t === "arr" ? c.items.map((x) => doc.resolve(x)) : [c];
   const parts = [];
   /* R41, R22: the page's streams share one cap; a page whose decoded content passes it is stated, not held */
@@ -2213,17 +2488,23 @@ async function pageContent(doc, pageMap) {
   for (const st of streams) {
     if (st && st.t === "stream") {
       const got = await doc._decode(st, "page_content", bound - total);
-      if (got.over) return { text: "", unread: [], over: { size: total + got.over.size, bound } };
+      if (got.over) return { data: new Uint8Array(0), unread: [], over: { size: total + got.over.size, bound } };
       if (got.data) {
         total += got.data.length;
-        if (total > bound) return { text: "", unread: [], over: { size: total, bound } };
-        parts.push(binaryString(got.data));
+        if (total > bound) return { data: new Uint8Array(0), unread: [], over: { size: total, bound } };
+        parts.push(got.data);
       } else { doc.note("content_stream_undecodable"); unread.push("content_stream_undecodable"); }
     } else {
       unread.push("content_stream_unresolvable");
     }
   }
-  return { text: parts.join("\n"), unread };
+  /* the streams are one content stream, a line feed between them; the bytes are lexed as bytes (a 60 MiB page is not made a
+     60 MiB string beside them, R41) */
+  if (parts.length === 1) return { data: parts[0], unread };
+  const data = new Uint8Array(total + Math.max(0, parts.length - 1));
+  let at = 0;
+  parts.forEach((part, i) => { if (i) data[at++] = 0x0a; data.set(part, at); at += part.length; });
+  return { data, unread };
 }
 
 /* D-481 — THE TEXT MATRIX, ENOUGH OF IT TO KNOW WHERE A LINE IS.
@@ -2368,6 +2649,31 @@ class FontCache {
   }
 }
 
+/* R41, R22 — A PAGE'S TEXT IS BUILT AS TEXT, NOT AS AN ARRAY OF ITS CHARACTERS.
+ *
+ * The walk pushes one piece per decoded code and may take back only the LAST piece (a separator it inserted that the
+ * document then supplies itself) or read it (`softSpace`). Held as an array that is a pointer per character: 40 MB for
+ * the five million characters of an 8 MB page of text, copied again each time the array doubled, and the heap of a
+ * 128 MB object was gone at a page of 8 MB where the page bound allows 64. A `PieceList` keeps the pieces still
+ * takeable (the last two) and joins everything older into flat chunks, a byte or two a character. A page with a link
+ * (R35) is asked for the glyph boxes, which pair with pieces one to one, and keeps the array. */
+class PieceList {
+  constructor() { this.chunks = []; this.block = []; this.count = 0; }
+  get length() { return this.count; }
+  push(p) {
+    this.block.push(p);
+    this.count++;
+    if (this.block.length >= 4096) {
+      const keep = this.block.splice(this.block.length - 2);
+      this.chunks.push(this.block.join(""));
+      this.block = keep;
+    }
+  }
+  pop() { this.count--; return this.block.pop(); }
+  at(i) { return i === -1 ? this.block[this.block.length - 1] : undefined; }
+  join() { return this.chunks.join("") + this.block.join(""); }
+}
+
 /** Extract Tier 1 text from one page. Returns { text, undetermined:[markers] }.
  *  `fontCache` is keyed by font object so a font shared across pages is parsed
  *  once. Every undecodable region is recorded, never rendered. */
@@ -2380,9 +2686,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache, wantPlaced = tr
     return { text: "", undetermined: [{ page: pageIdx, reason: "page_over_bound", font: null, codes: "", count: 0, size: content.over.size, bound: content.over.bound }],
              placed: { pieces: [], boxes: [], undecodedCenters: [], unpositioned: 0 } };
   }
-  const toks = tokenizeContent(content.text);
+  const toks = tokenizeContentBytes(content.data);
 
-  const pieces = [];
+  const pieces = wantPlaced ? [] : new PieceList();
   /* R35 (REC-206) — WHERE EACH PIECE'S INK IS, PARALLEL TO `pieces` (see
      `glyphBox`). A separator this reader inserts has no ink and holds null; a
      glyph shown while the pen was unknown holds null too and is COUNTED in
@@ -2633,7 +2939,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache, wantPlaced = tr
   /** Push a separator unless one is already there. Never opens a line. */
   const softSpace = () => {
     if (!pieces.length) return;
-    const last = pieces[pieces.length - 1];
+    const last = pieces.at(-1);
     if (last.endsWith(" ") || last.endsWith("\n")) return;
     pieces.push(" "); boxes.push(null);
     softAt = pieces.length;
@@ -4886,7 +5192,7 @@ async function readRange(doc, bytes, range) {
         if (limited) {
           given = doc._peek && doc._peek.idx === idx ? doc._peek.content : await pageContent(doc, pageMap);
           doc._peek = null;
-          const size = given.over ? given.over.size : given.text.length;
+          const size = given.over ? given.over.size : given.data.length;
           if (pages.length > 0 && spent + size > maxBytes) { doc._peek = { idx, content: given }; break; }
           spent += size;
         }
@@ -4961,4 +5267,443 @@ function collectNameTreePairs(doc, node, depth = 0, acc = []) {
   const kids = doc.resolve(map.Kids);
   if (kids && kids.t === "arr") for (const kid of kids.items) collectNameTreePairs(doc, kid, depth + 1, acc);
   return acc;
+}
+
+/* ------------------------------------------------------------------ *
+ * R49 — ONE PAGE FROM A RANGE SOURCE
+ *
+ * `pageSource(source, pageIndex)` reads the trailer, the cross-reference chain (tables, streams, object streams) and the
+ * page tree through `source.readRange(offset, length)` alone, and writes the page as a small PDF of its own: the page
+ * dictionary with its inherited MediaBox, CropBox, Rotate and Resources written into it, its content streams, and every
+ * object they reference (fonts, images, forms), renumbered. What it reads is the cross-reference data, the objects
+ * on the path to the page and those objects: not the file. It never scans (a scan reads the file), so anything the chain
+ * does not name, or names wrongly, is an irregularity: `{ ok: false, fallback: true, why }`, and the caller reads the whole.
+ * ------------------------------------------------------------------ */
+
+/** Raised inside the reading to answer `fallback` with a reason; never leaves `pageSource`. */
+class PageFallback extends Error {
+  constructor(why) { super(why); this.why = why; }
+}
+const fallbackNote = (why) => ({ ok: false, fallback: true, why });
+const need = (cond, why) => { if (!cond) throw new PageFallback(why); };
+
+/** The page-dictionary keys that are not carried into a page's own file: its place in the tree, and what points
+ *  away from the page (annotations and their destinations, threads, structure, metadata). */
+const PAGE_DROPPED_KEYS = new Set(["Parent", "Annots", "B", "Thumb", "AA", "StructParents", "PieceInfo", "Metadata", "Tabs", "ID", "PZ"]);
+const PAGE_INHERITED_KEYS = ["MediaBox", "CropBox", "Rotate", "Resources"];
+
+class RangeXref {
+  constructor(source) {
+    this.source = source;
+    this.size = source.size;
+    this.objs = new Map();
+    this.inner = new Map();
+    this.secs = null;
+    this.bytesRead = 0;
+  }
+
+  /** `length` bytes from `offset` (fewer at the end of the source), counted. */
+  async read(offset, length) {
+    need(Number.isInteger(offset) && offset >= 0 && offset < this.size && Number.isInteger(length) && length > 0, "range_outside_source");
+    const len = Math.min(length, this.size - offset);
+    const got = await this.source.readRange(offset, len);
+    need(got instanceof Uint8Array, "range_unreadable");
+    this.bytesRead += got.length;
+    return got;
+  }
+
+  /** The value of an object opening at `off` (`N G obj`, N being `n` when given), from windows that grow while its
+   *  dictionary runs past them: `{ num, value }`, a stream's `start` absolute. */
+  async parseAt(off, n) {
+    for (let size = 512; ; size *= 8) {
+      const b = await this.read(off, size);
+      const s = binaryString(b);
+      const m = /^\s*(\d+)\s+(\d+)\s+obj\b/.exec(s);
+      need(m && (n == null || Number(m[1]) === n), "object_not_at_offset");
+      const r = parseValueSafe(s, m[0].length);
+      need(r && r.value, "object_unparseable");
+      if (r.pos >= s.length - 16 && off + b.length < this.size) {
+        need(size < OBJ_WINDOW_MAX, "object_over_bound");
+        continue;
+      }
+      return { num: Number(m[1]), value: r.value.t === "stream" ? { ...r.value, start: off + r.value.start } : r.value };
+    }
+  }
+
+  async sections() {
+    if (this.secs) return this.secs;
+    const tail = await this.read(Math.max(0, this.size - 2048), 2048);
+    const ts = binaryString(tail);
+    const at = ts.lastIndexOf("startxref");
+    const m = at < 0 ? null : /^startxref\s+(\d+)/.exec(ts.slice(at, at + 40));
+    need(m && Number(m[1]) < this.size, "no_startxref");
+    const secs = [];
+    const seen = new Set();
+    let off = Number(m[1]);
+    while (off != null) {
+      need(!seen.has(off) && secs.length < XREF_CHAIN_MAX, "xref_chain");
+      seen.add(off);
+      const sec = await this.readSection(off);
+      secs.push(sec);
+      if (Number.isInteger(sec.xrefStm)) {
+        need(!seen.has(sec.xrefStm), "xref_chain");
+        seen.add(sec.xrefStm);
+        secs.push(await this.readSection(sec.xrefStm));
+      }
+      off = Number.isInteger(sec.prev) ? sec.prev : null;
+    }
+    return (this.secs = secs);
+  }
+
+  async readSection(off) {
+    const head = binaryString(await this.read(off, 64));
+    const lead = head.length - head.trimStart().length;
+    return head.slice(lead, lead + 4) === "xref" ? this.readTable(off + lead) : this.readXrefStream(off + lead);
+  }
+
+  /** A classic table: its subsection headers are read in turn, an entry only when asked for (20 bytes each). */
+  async readTable(p) {
+    const subs = [];
+    p += 4;
+    for (;;) {
+      const s = binaryString(await this.read(p, 64));
+      const lead = s.length - s.trimStart().length;
+      const m = /^(\d+)\s+(\d+)[ \t]*(?:\r\n|\r|\n)?/.exec(s.slice(lead));
+      if (!m) { p += lead; break; }
+      const start = Number(m[1]), count = Number(m[2]);
+      const at = p + lead + m[0].length;
+      need(at + count * 20 <= this.size && subs.length < 100000, "xref_table");
+      subs.push({ start, count, at });
+      p = at + count * 20;
+    }
+    const tb = binaryString(await this.read(p, OBJ_WINDOW));
+    const ti = tb.indexOf("trailer");
+    need(ti >= 0 && tb.slice(0, ti).trim() === "", "xref_trailer");
+    const r = parseValueSafe(tb, ti + 7);
+    need(r && r.value && r.value.t === "dict", "xref_trailer");
+    const trailer = r.value.map;
+    const find = async (n) => {
+      for (const s of subs) {
+        if (n < s.start || n >= s.start + s.count) continue;
+        const e = /^(\d{10}) (\d{5}) ([nf])/.exec(binaryString(await this.read(s.at + (n - s.start) * 20, 20)));
+        need(e, "xref_entry");
+        return e[3] === "n" && Number(e[1]) > 0 ? { type: 1, off: Number(e[1]) } : { type: 0 };
+      }
+      return null;
+    };
+    return { trailer, prev: typeof trailer.Prev === "number" ? trailer.Prev : null,
+      xrefStm: typeof trailer.XRefStm === "number" ? trailer.XRefStm : null, find };
+  }
+
+  /** A cross-reference stream: held whole (its rows are the file's objects, a few bytes each). */
+  async readXrefStream(p) {
+    const o = await this.parseAt(p, null);
+    need(o.value.t === "stream", "xref_stream");
+    const dict = o.value.dict;
+    need(dict.Type && dict.Type.t === "name" && dict.Type.v === "XRef", "xref_stream");
+    const w = await this.deref(dict.W);
+    need(w && w.t === "arr" && w.items.length === 3 && w.items.every((x) => Number.isInteger(x) && x >= 0 && x <= 8), "xref_stream");
+    const widths = w.items;
+    const cols = widths[0] + widths[1] + widths[2];
+    need(cols > 0, "xref_stream");
+    const size = await this.num(dict.Size);
+    const idx = await this.deref(dict.Index);
+    const ranges = [];
+    if (idx && idx.t === "arr") {
+      for (let i = 0; i + 1 < idx.items.length; i += 2) {
+        need(Number.isInteger(idx.items[i]) && Number.isInteger(idx.items[i + 1]) && idx.items[i + 1] >= 0, "xref_stream");
+        ranges.push([idx.items[i], idx.items[i + 1]]);
+      }
+    } else { need(Number.isInteger(size), "xref_stream"); ranges.push([0, size]); }
+    const got = await this.streamData(o.value, STREAM_MAX);
+    need(got && got.full, "xref_stream_undecodable");
+    const data = got.data;
+    const field = (at, n) => { let v = 0; for (let k = 0; k < n; k++) v = v * 256 + data[at + k]; return v; };
+    const find = async (n) => {
+      let row = 0;
+      for (const [start, count] of ranges) {
+        if (n >= start && n < start + count) {
+          const at = (row + (n - start)) * cols;
+          need(at + cols <= data.length, "xref_entry");
+          const t = widths[0] ? field(at, widths[0]) : 1;
+          const a = field(at + widths[0], widths[1]), c = field(at + widths[0] + widths[1], widths[2]);
+          return t === 1 && a > 0 ? { type: 1, off: a } : t === 2 ? { type: 2, stm: a, idx: c } : { type: 0 };
+        }
+        row += count;
+      }
+      return null;
+    };
+    return { trailer: dict, prev: (await this.num(dict.Prev)) ?? null, xrefStm: null, find };
+  }
+
+  /** The newest section's entry for object `n`, or null when no section names it. */
+  async lookup(n) {
+    for (const sec of await this.sections()) {
+      const e = await sec.find(n);
+      if (e) return e;
+    }
+    return null;
+  }
+
+  async trailerValue(key) {
+    for (const sec of await this.sections()) if (sec.trailer[key] !== undefined) return sec.trailer[key];
+    return undefined;
+  }
+
+  /** Object `n`'s value through the cross-reference chain: undefined for an object the chain does not hold (free, or no
+   *  section names it: a reference to nothing, which reads as null as in a whole file); a damaged one is a fallback. */
+  async get(n) {
+    if (!Number.isInteger(n) || n < 0) return undefined;
+    if (this.objs.has(n)) return this.objs.get(n);
+    need(this.objs.size < OBJECTS_MAX, "over_bound:objects");
+    const e = await this.lookup(n);
+    let v;
+    if (!e || e.type === 0) v = undefined;
+    else if (e.type === 1) v = (await this.parseAt(e.off, n)).value;
+    else v = await this.packed(e.stm, e.idx, n);
+    this.objs.set(n, v);
+    return v;
+  }
+
+  /** Object `n` out of object stream `stm`: decoded once for the call. */
+  async packed(stm, idx, n) {
+    let pack = this.inner.get(stm);
+    if (!pack) {
+      const so = await this.get(stm);
+      need(so && so.t === "stream", "object_stream_missing");
+      const first = await this.num(so.dict.First), count = await this.num(so.dict.N);
+      need(Number.isInteger(first) && Number.isInteger(count) && first >= 0 && count >= 0 && count <= 1e6, "object_stream_header");
+      const got = await this.streamData(so, STREAM_MAX);
+      need(got && got.full, "object_stream_undecodable");
+      const text = binaryString(got.data);
+      pack = { text, first, pairs: text.slice(0, first).trim().split(/\s+/).map(Number) };
+      this.inner.set(stm, pack);
+    }
+    let at = -1;
+    if (pack.pairs[idx * 2] === n) at = idx * 2;
+    else for (let i = 0; i + 1 < pack.pairs.length; i += 2) if (pack.pairs[i] === n) { at = i; break; }
+    need(at >= 0 && Number.isFinite(pack.pairs[at + 1]), "object_stream_entry");
+    const r = parseValueSafe(pack.text, pack.first + pack.pairs[at + 1]);
+    need(r && r.value !== undefined, "object_stream_entry");
+    return r.value;
+  }
+
+  async deref(v) {
+    for (let hops = 0; v && v.t === "ref"; hops++) {
+      need(hops < 64, "reference_chain");
+      v = await this.get(v.n);
+    }
+    return v ?? null;
+  }
+  async num(v) {
+    v = await this.deref(v);
+    return typeof v === "number" ? v : null;
+  }
+
+  /** A stream's raw bytes, by its `/Length` (the reader never scans for `endstream`, which would read on) and checked
+   *  to be followed by `endstream`: a fallback otherwise. */
+  async rawStream(st) {
+    const len = await this.num(st.dict.Length);
+    need(Number.isInteger(len) && len >= 0 && st.start >= 0 && st.start + len <= this.size, "stream_length");
+    need(len <= STREAM_CAPS.embedded_file, "over_bound:stream");
+    const raw = len ? await this.read(st.start, len) : new Uint8Array(0);
+    need(raw.length === len, "stream_length");
+    const after = binaryString(await this.read(st.start + len, Math.min(24, this.size - st.start - len) || 1));
+    need(/^\s*endstream/.test(after), "stream_length");
+    return raw;
+  }
+
+  /** A stream's decoded bytes `{ data, full }` (Flate, with ASCII stages before it, PNG-predicted as `/DecodeParms` says). */
+  async streamData(st, max) {
+    const raw = await this.rawStream(st);
+    const f = await this.deref(st.dict.Filter);
+    const names = f == null ? [] : f.t === "name" ? [f.v] : f.t === "arr" ? f.items.map((x) => (x && x.t === "name" ? x.v : null)) : [null];
+    const un = undoAscii(names, raw);
+    need(un && un.rest.every((x) => x === "FlateDecode" || x === "Fl"), "stream_filter");
+    let data = un.data, full = true;
+    if (!names.length && raw.length > max) { data = raw.subarray(0, max); full = false; }
+    for (let i = 0; i < un.rest.length; i++) {
+      const r = inflateSync(data, max);
+      need(r, "stream_undecodable");
+      data = r.data; full = full && r.full;
+    }
+    let parms = await this.deref(st.dict.DecodeParms) || await this.deref(st.dict.DP);
+    if (parms && parms.t === "arr") parms = await this.deref(parms.items[parms.items.length - 1]);
+    if (parms && parms.t === "dict") {
+      const predictor = await this.num(parms.map.Predictor);
+      need(predictor !== 2, "stream_predictor");
+      if (predictor && predictor >= 2) {
+        data = unpredict(data, { predictor, colors: (await this.num(parms.map.Colors)) ?? 1, columns: (await this.num(parms.map.Columns)) ?? 1,
+          bpc: (await this.num(parms.map.BitsPerComponent)) ?? 8 });
+      }
+    }
+    return { data, full };
+  }
+}
+
+/** A value written as PDF syntax into `out` (strings), with references renumbered through `renum` (a reference to nothing the
+ *  page keeps is `null`). A string is written by its `raw` bytes in hex, so no byte changes. */
+function writeValue(v, renum) {
+  if (v === null || v === undefined) return "null";
+  if (typeof v === "boolean") return v ? "true" : "false";
+  if (typeof v === "number") {
+    if (!Number.isFinite(v)) return "0";
+    return Number.isInteger(v) ? String(v) : String(Number(v.toFixed(6)));
+  }
+  switch (v.t) {
+    case "name": return writeName(v.v);
+    case "str": return "<" + toHex(v.raw) + ">";
+    case "ref": { const n = renum.get(v.n); return n === undefined ? "null" : `${n} 0 R`; }
+    case "arr": return "[" + v.items.map((x) => writeValue(x, renum)).join(" ") + "]";
+    case "dict": return writeDict(v.map, renum);
+    default: return "null";
+  }
+}
+function writeName(s) {
+  let out = "/";
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    out += c <= 0x20 || c >= 0x7f || c === 0x23 || isDelimiter(c) ? "#" + (c & 0xff).toString(16).padStart(2, "0") : s[i];
+  }
+  return out;
+}
+function writeDict(map, renum, skip = null, extra = "") {
+  let out = "<<";
+  for (const k in map) if (!skip || !skip.has(k)) out += " " + writeName(k) + " " + writeValue(map[k], renum);
+  return out + extra + " >>";
+}
+/** Every reference inside `v`, in order. */
+function refsIn(v, into) {
+  if (!v || typeof v !== "object") return into;
+  if (v.t === "ref") into.push(v.n);
+  else if (v.t === "arr") for (const x of v.items) refsIn(x, into);
+  else if (v.t === "dict") for (const k in v.map) refsIn(v.map[k], into);
+  else if (v.t === "stream") for (const k in v.dict) refsIn(v.dict[k], into);
+  return into;
+}
+
+/** R49: the page at `pageIndex` (0-based) of the document `source` holds, as a PDF of its own. See the block above. */
+export async function pageSource(source, pageIndex) {
+  try {
+    need(source && typeof source.readRange === "function" && Number.isInteger(source.size) && source.size > 0, "no_source");
+    need(Number.isInteger(pageIndex) && pageIndex >= 0, "page_out_of_range");
+    return await pageOf(source, pageIndex);
+  } catch (e) {
+    return fallbackNote(e instanceof PageFallback ? e.why : "unreadable");
+  }
+}
+
+async function pageOf(source, pageIndex) {
+  const x = new RangeXref(source);
+  const head = binaryString(await x.read(0, Math.min(1024, source.size)));
+  const ver = /%PDF-(\d+\.\d+)/.exec(head);
+  need(ver, "not_a_pdf");
+  need((await x.trailerValue("Encrypt")) === undefined, "encrypted");
+  const root = await x.deref(await x.trailerValue("Root"));
+  need(root && root.t === "dict", "no_catalog");
+  const top = await x.deref(root.map.Pages);
+  need(top && top.t === "dict", "no_page_tree");
+  const total = await x.num(top.map.Count);
+  need(Number.isInteger(total) && total >= 0, "no_page_count");
+  need(pageIndex < total, "page_out_of_range");
+
+  /* the walk: a subtree whose /Count lies wholly before the page is skipped unread */
+  const inherited = {};
+  let node = top, rest = pageIndex, page = null;
+  const onPath = new Set();
+  for (let depth = 0; page === null; depth++) {
+    need(depth <= TREE_DEPTH_MAX, "over_bound:tree_depth");
+    for (const k of PAGE_INHERITED_KEYS) if (node.map[k] !== undefined) inherited[k] = node.map[k];
+    const kids = await x.deref(node.map.Kids);
+    need(kids && kids.t === "arr", "page_tree_damaged");
+    let next = null;
+    /* a node whose /Count is the number of its kids holds only leaves: the page is the kid at `rest`, and the kids before it
+     * are not read (a table of a thousand pages of one flat node costs the page, not the thousand); a kid that is not a leaf
+     * after all is an irregularity */
+    const flat = (await x.num(node.map.Count)) === kids.items.length;
+    if (flat) {
+      need(rest < kids.items.length, "page_tree_damaged");
+      const kidRef = kids.items[rest];
+      need(kidRef && kidRef.t === "ref", "page_tree_damaged");
+      const kid = await x.deref(kidRef);
+      need(kid && kid.t === "dict" && kid.map.Kids === undefined && !(kid.map.Type && kid.map.Type.t === "name" && kid.map.Type.v === "Pages"), "page_tree_count");
+      page = kid;
+      break;
+    }
+    for (const kidRef of kids.items) {
+      need(kidRef && kidRef.t === "ref" && !onPath.has(kidRef.n), "page_tree_damaged");
+      const kid = await x.deref(kidRef);
+      need(kid && kid.t === "dict", "page_tree_damaged");
+      const isNode = kid.map.Kids !== undefined || (kid.map.Type && kid.map.Type.t === "name" && kid.map.Type.v === "Pages");
+      if (!isNode) {
+        if (rest === 0) { page = kid; break; }
+        rest--;
+        continue;
+      }
+      const count = await x.num(kid.map.Count);
+      need(Number.isInteger(count) && count >= 0, "page_tree_damaged");
+      if (rest < count) { next = kid; onPath.add(kidRef.n); break; }
+      rest -= count;
+    }
+    if (page === null) { need(next, "page_tree_damaged"); node = next; }
+  }
+
+  /* the page's own dictionary, the inherited keys written into it, then the objects it points to */
+  const own = page.map;
+  const pageMap = new Dict();
+  for (const k in own) if (!PAGE_DROPPED_KEYS.has(k)) pageMap[k] = own[k];
+  for (const k of PAGE_INHERITED_KEYS) if (pageMap[k] === undefined && inherited[k] !== undefined) pageMap[k] = inherited[k];
+  need(pageMap.MediaBox !== undefined, "no_media_box");
+  need(pageMap.Contents !== undefined || pageMap.Resources !== undefined, "page_without_content");
+
+  const order = [];            // old object numbers, in the order they are written (new numbers from 4)
+  const renum = new Map();
+  const values = new Map();
+  const queue = refsIn({ t: "dict", map: pageMap }, []);
+  for (let qi = 0; qi < queue.length; qi++) {
+    const n = queue[qi];
+    if (renum.has(n)) continue;
+    const v = await x.get(n);
+    if (v === undefined) continue;                                     // a reference to nothing reads as null
+    const d = v && v.t === "dict" ? v.map : v && v.t === "stream" ? v.dict : null;
+    const type = d && d.Type && d.Type.t === "name" ? d.Type.v : null;
+    if (type === "Page" || type === "Pages" || type === "Catalog") continue; // away from the page: null
+    need(order.length < OBJECTS_MAX, "over_bound:objects");
+    renum.set(n, 4 + order.length);
+    order.push(n);
+    values.set(n, v);
+    for (const m of refsIn(v, [])) queue.push(m);
+  }
+
+  /* write the file */
+  const enc = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0) & 0xff);
+  const parts = [], offsets = [];
+  let pos = 0, kept = 0;
+  const add = (b) => { parts.push(b); pos += b.length; };
+  const object = (num, body) => { offsets[num] = pos; add(enc(`${num} 0 obj\n${body}\nendobj\n`)); };
+  add(enc(`%PDF-${ver[1]}\n%\xe2\xe3\xcf\xd3\n`));
+  object(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  object(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+  object(3, writeDict(pageMap, renum, new Set(["Type"]), " /Type /Page /Parent 2 0 R"));
+  for (const n of order) {
+    const v = values.get(n), num = renum.get(n);
+    if (v && v.t === "stream") {
+      const raw = await x.rawStream(v);
+      kept += raw.length;
+      need(kept <= STREAM_CAPS.embedded_file, "over_bound:page");
+      offsets[num] = pos;
+      add(enc(`${num} 0 obj\n` + writeDict(v.dict, renum, new Set(["Length"]), ` /Length ${raw.length}`) + "\nstream\n"));
+      add(raw);
+      add(enc("\nendstream\nendobj\n"));
+    } else object(num, writeValue(v, renum));
+  }
+  const count = 4 + order.length;
+  const xrefAt = pos;
+  let table = `xref\n0 ${count}\n0000000000 65535 f \n`;
+  for (let n = 1; n < count; n++) table += String(offsets[n]).padStart(10, "0") + " 00000 n \n";
+  add(enc(table + `trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF\n`));
+  const bytes = new Uint8Array(pos);
+  let at = 0;
+  for (const p of parts) { bytes.set(p, at); at += p.length; }
+  return { ok: true, pages: total, bytes };
 }
