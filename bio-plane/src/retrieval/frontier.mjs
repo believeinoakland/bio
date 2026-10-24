@@ -57,23 +57,6 @@ export class Frontier {
     return { page: gated.slice(0, cap), truncated: gated.length > cap || full };
   }
 
-  /** R94 (K4512): a bounded supply of the captures the register holds, in capture-sha order, as a capture held in parts
-   *  has them: by its whole, the rows of its parts (provenance R73's `part_of`) left out. `query(n, after)` answers up to `n`
-   *  register rows after `after`, each with `subject`, `bundle_id` and `multipart` (the row's bundle holds a whole's row,
-   *  provenance R48's `whole`); only such a bundle is asked for its parts. The supply is read on until `n` captures are
-   *  held or the register is exhausted, so a part never spends the bound and `full` stays the claim D-389 wrote. */
-  #wholes(query, n) {
-    const out = [];
-    for (let after = ""; ;) {
-      const rows = query(n, after);
-      const parts = this.r.partsHeldIn([...new Set(rows.filter((x) => x.multipart).map((x) => x.bundle_id))]);
-      for (const x of rows) if (!parts.has(x.subject)) out.push(x);
-      if (out.length >= n || rows.length < n) break;
-      after = rows[rows.length - 1].subject;
-    }
-    return out.slice(0, n);
-  }
-
   /** R39: the level's tally, rows per state over the WHOLE level, naming nothing, less the run rows the viewer may not
    *  see (D-486, `retrieval.hiddenRunTail`). */
   #tally(level, viewer) {
@@ -276,15 +259,14 @@ export class Frontier {
        The level's evidence is `readings`, which holds a row for every capture the extractor ran over, whatever it
        produced (two-sided). */
     const firstAt = this.obs.firstRowAt("content");
-    const missingFetch = this.#fetch((cap + 1) * 2, (n) => this.#wholes((k, after) => this.#rows(
-      `SELECT DISTINCT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS registered,
-              EXISTS (SELECT 1 FROM register w WHERE w.bundle_id = g.bundle_id AND w.whole = 1) AS multipart
+    const missingFetch = this.#fetch((cap + 1) * 2, (n) => this.#rows(
+      `SELECT DISTINCT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS registered
          FROM register g
-        WHERE g.capture_sha > ? AND NOT EXISTS (SELECT 1 FROM observation_log o
+        WHERE NOT EXISTS (SELECT 1 FROM observation_log o
                            WHERE o.level = 'content' AND o.subject_kind = 'capture'
                              AND o.subject = g.capture_sha)
         ORDER BY g.capture_sha
-        LIMIT ?`, after, k), n), (r) => visible(r.bundle_id));
+        LIMIT ?`, n), (r) => visible(r.bundle_id));
     const missing = missingFetch.rows.map((r) => ({ ...r,
       missing_cause: this.obs.missingCause({
         hasArtifact: !!this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, r.subject),
@@ -380,15 +362,14 @@ export class Frontier {
        decided on, then split by cause (observation-log's rule for this level, K80). A REFERENCE'S "ENTERED" INSTANT IS
        THE EARLIEST REGISTRATION OF A CAPTURE WHOSE READING CARRIES IT: a name is as old as the oldest document that
        used it. */
-    const captureFetch = this.#fetch((cap + 1) * 2, (n) => this.#wholes((k, after) => this.#rows(
-      `SELECT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS entered,
-              EXISTS (SELECT 1 FROM register w WHERE w.bundle_id = g.bundle_id AND w.whole = 1) AS multipart
+    const captureFetch = this.#fetch((cap + 1) * 2, (n) => this.#rows(
+      `SELECT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS entered
          FROM register g
-        WHERE g.capture_sha > ? AND NOT EXISTS (SELECT 1 FROM observation_log o
+        WHERE NOT EXISTS (SELECT 1 FROM observation_log o
                            WHERE o.level = 'meaning' AND o.subject_kind = 'capture'
                              AND o.subject = g.capture_sha)
         ORDER BY g.capture_sha
-        LIMIT ?`, after, k), n), (r) => visible(r.bundle_id));
+        LIMIT ?`, n), (r) => visible(r.bundle_id));
     const referenceFetch = this.#fetch((cap + 1) * 2, (n) => this.#rows(
       `SELECT rr.ref AS subject, MIN(g.registered) AS entered, MIN(rr.bundle_id) AS bundle_id
          FROM reading_refs rr LEFT JOIN register g ON g.capture_sha = rr.capture_sha

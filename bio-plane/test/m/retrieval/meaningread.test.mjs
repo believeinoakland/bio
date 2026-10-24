@@ -71,7 +71,7 @@ test("R11, R14: the envelope is an object carrying exactly its keys and no other
     const scopeKeys = ["documents", "documents_with_rows", "documents_without_rows", "existence_only_projects", "existence_only_count"];   /* R89 */
     if (arm === "passage")
       scopeKeys.push("captures_counted", "captures_truncated", "captures_bound", ...Object.keys(r.content_axis.vocabulary),
-                     r.content_axis.undetermined_value, "not_read");
+                     r.content_axis.undetermined_value, "not_read", "partial", "partial_reads", "partial_truncated");   /* R97 */
     assert.deepEqual(Object.keys(r.scope).sort(), scopeKeys.sort(), arm);
   }
   /* Two names over one table: each answer says which was asked. */
