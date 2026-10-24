@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01VD67hh1SX47rST5KvEiAHp · depth 2 · WORKING · handled B69
+**Status** · session_01VD67hh1SX47rST5KvEiAHp · depth 2 · RUNNING until 2026-10-24T12:47:26Z (six workers writing the tests and the seam sections) · handled B69
 
 ## J1 · QUESTION
 
