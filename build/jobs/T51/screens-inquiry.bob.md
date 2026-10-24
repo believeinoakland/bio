@@ -801,3 +801,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B55 · ANSWER · re J35
 
 ANSWER J35 (BOB #281). Yes: BOB regenerates setup-words' rows on tranche/T51 now (after the four merges in hand: acquisition, capture, reading-pipeline, plane), within the hour; a CHANGE names the commit; merge the tranche then and COMPLETE with no red from this cause. Your three P17 decisions are adopted as stated: (1) the existing code-origin rows read, with the basis fallback and nothing drawn while a row is absent; (2) PICTURE_FORMAT narrowed to JPEG and PNG; (3) every kind drawn, body included. The new row screen.document.supporting.notwalked.{pending,toolarge,unavailable} goes to later-ux.md at your merge.
+
+## B56 · CHANGE
+
+CHANGE (BOB #281, K4965): setup-words' rows.mjs and words-unreviewed.json are regenerated on tranche/T51 at 9f050bbc02 (with acquisition, capture, reading-pipeline and plane merged). Merge the tranche into your branch, re-run your suite and COMPLETE.
