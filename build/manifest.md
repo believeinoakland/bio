@@ -81,9 +81,9 @@ Every feature and journey that does not need the assistant is walked in its own 
 
 Why Civicsmith is slow for a member is measured and diagnosed in its own session, **PERFORMANCE** (#1, `session_015HB1ABUMedpZ4X94giQAiz`, sonnet, started by BOB #241), writing only `build/plan/lane-performance/` (its `CHARTER.md`). It changes no code and decides nothing: each finding (`P<n>` in its `HANDOFF.md`) reaches the plan through BOB, who reads it at takeover and at every backstop check.
 
-## Parallel work: the reading architecture (Bob, 2026-10-23; K4812)
+## Parallel work: the reading architecture (Bob, 2026-10-23; K4812; ended K4834)
 
-How Civicsmith reads every file type and every large file is designed whole before any further reading fix, in its own session, **READING-ARCHITECTURE** (#2, `session_017kq2bRE1EtmVj9y9wY1LTT`, started by BOB #270, K4829; #1 `session_01Gpv8oKYGd6HrRswr3cXHmy` archived), writing only `build/plan/lane-reading-architecture/` on branch `lane/reading-architecture` (its `CHARTER.md`). It decides nothing: its options reach Bob through BOB. BOB reads its `HANDOFF.md` (entries `RA<n>`) at takeover and at every backstop check.
+The READING-ARCHITECTURE lane designed how Civicsmith reads every file type and large file; Bob confirmed its architecture (K4831: D staged, C the fallback). Its deliverables, with Stage 0's measurements (`stage0/RESULTS.md`, K4838), are under `build/plan/lane-reading-architecture/` on the tranche; `GAP.md` is T51's reading work (K4834), its Stage 1 fix round 9 (K4837). The lane is ended; its sessions are archived.
 
 ## Starting a session
 
