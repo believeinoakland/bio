@@ -48,7 +48,7 @@ test("R8: an existing bucket is named in the answer, a refused creation throws w
   assert.deepEqual(posts, [NAMES.captures, NAMES.published], "the captures bucket and then the published one");
   w.restore();
   w = account({ r2: "refused" });
-  await assert.rejects(ensureBuckets(session(), "A1", NAMES), /not entitled/);
+  await assert.rejects(ensureBuckets(session(), "A1", NAMES), (e) => e.status === 403 && e.code === 10042, "the measured not-entitled answer (403, 10042) is thrown as it is");
   w.restore();
   w = account({ pre: { there: [] }, lookupFail: ["bad"], preClasses: {} });
   assert.equal(await scriptExists(session(), "A1", "there"), true);
@@ -409,8 +409,17 @@ test("R44: addressState proposes the slug and registers nothing; registerSubdoma
   assert.deepEqual(puts, ["mine", "chosen"], "no other name is tried");
   w.restore();
   w = account({ subdomain: "", subdomainPut: "fail" });
-  await assert.rejects(registerSubdomain(session(), "A1", "x"), /not permitted/, "any other refusal is thrown with Cloudflare's message");
+  await assert.rejects(registerSubdomain(session(), "A1", "x"), /not permitted/, "any other refusal is thrown with Cloudflare's message: a 403 without code 10031 is not taken");
   w.restore();
+  w = account({ subdomain: "", taken: ["mine"] });
+  const fetch0 = globalThis.fetch;
+  globalThis.fetch = async (u, init) => {
+    const r = await fetch0(u, init);
+    if (init?.method !== "PUT" || !String(u).endsWith("/workers/subdomain") || r.ok) return r;
+    return new Response(JSON.stringify({ success: false, errors: [{ code: 0, message: "conflict" }] }), { status: 409 });
+  };
+  try { assert.deepEqual(await registerSubdomain(session(), "A1", "mine"), { ok: false, taken: true }, "HTTP 409 stays taken"); }
+  finally { globalThis.fetch = fetch0; w.restore(); }
 });
 
 test("R14 (R1): the read-back waits out a 429 and a 503 as every call does, and a 401 asks for approval again", async () => {

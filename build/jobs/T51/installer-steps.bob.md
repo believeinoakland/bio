@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J25
+**Read** · handled J27
 
 ## B1 · START
 
@@ -220,3 +220,7 @@ FIRST, if `mail start` cannot push because your container's copy of your branch 
 
 Mail with `--module installer-steps`; record `build/jobs/T51/installer-steps.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113; a symlink there is deleted first, K4939). Tests: `cd newgroup && node --test --test-force-exit test/` (your module's files). Your diff touches only this module's `paths`, its `tests` and your record (ownership); never a `node_modules` entry. Never contact any live deployment or Cloudflare. Read whole: this START, your requirements R9, R43-R45 (R44 amended), `newgroup/src/steps/probes.mjs`, `build/plan/measure-R9-account-shapes.md` (the measured answers, whole), and the tests naming R43-R45. Before COMPLETE: your suite, `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the users it names, the checks (format, architecture, coverage, words, ownership) each by its failure count; COMPLETE with the four fields and a `Size` line.
 **Why this job (job 82, G158).** Merge `origin/tranche/T51` first. Cause: `registerSubdomain` (`probes.mjs:79-82`) treats only HTTP 409 as "taken"; Cloudflare answers a taken prefix with HTTP 403, code 10031, "Subdomain 'test' is unavailable. Please try a different one." (measured), so the founder gets a thrown error. Why missed: the shape was undocumented and read as 409 (K4946). Red first: a fixture carrying the measured answer (403, `errors:[{code:10031,...}]`) must give `{ok:false, taken:true}`; decide by the code (10031), and keep 409 as taken too. Also bring the step fixtures to the measured shapes: R2 not entitled 403/10042 (both the list and the create), no prefix 404/10007, plan probe 400/100328. Platform check: P (measured by ACCOUNT-MEASURE #5). Report any measured shape that disagrees with another reading of yours. Add no sentence.
+
+## B26 · CHANGE
+
+CHANGE (BOB #281, P9; from INSTALLER #27's J29). Add to job 82: in `newgroup/src/steps/api.mjs` `failureOf`, the ApproveAgain object made for a 401 also carries Cloudflare's `code` (e.g. `code: e.code`), so a caller can tell a Free account's Containers answer (401, code 1000, measured) from an expired permission. Test it with the measured 401/1000 answer (code present) and a plain 401 (code as given). Your 403/10031 taken fix (G158) is the other half INSTALLER #27 needs. Nothing else changes.

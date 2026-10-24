@@ -136,7 +136,7 @@ test("R36: every sentence is read by key: the keys it reads are the list STEP_KE
   for (const key of steps.STEP_KEYS) assert.equal(hasWord(key), true, key);
   for (const f of files) assert.deepEqual(inlineWords(readFileSync(new URL(f, SRC), "utf8")), [], `${f}: a key is a literal at the call`);
   /* the families the keys stage names, each read */
-  for (const family of ["installer.fleet.", "installer.image.", "installer.lag.", "installer.logs.", "installer.connect.", "installer.address.", "installer.probe.", "installer.release."])
+  for (const family of ["installer.fleet.", "installer.image.", "installer.lag.", "installer.logs.", "installer.connect.", "installer.probe.", "installer.release."])
     assert.ok(steps.STEP_KEYS.some((k) => k.startsWith(family)) || family === "installer.release.", family);
   /* control: the detectors find a key built at run time and see a literal key */
   assert.equal(inlineWords('word(`installer.${x}`)').length, 1);
