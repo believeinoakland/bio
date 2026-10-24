@@ -84,3 +84,10 @@ R1/R2/R20 read three bounds through `boundOf`; only the first has a row, and its
 2. NEW kind `workbook`, name `bytes` (the capture's stored size the add refuses above, today `WORKBOOK_FILE_MAX_BYTES`): standard 50 MB (K4845), alpha 20 MiB (20971520, today's), protective 50 MB, key `limit.workbook.bytes`.
 3. NEW kind `workbook`, name `cells_json_bytes` (the cells' JSON the add lists, today `WORKBOOK_CELLS_MAX_BYTES`): 9437184 (9 MiB, today's) in all three columns, key `limit.workbook.cells_json_bytes`. I will report what the capped child shows at 250,000 cells and may ask to change it.
 Until these merge I test with a local, uncommitted copy of those rows; nothing of read-bounds.mjs is in my diff.
+
+## J5 · REPORT
+
+REPORT · WORKBOOKS #6 · replaces the figure in my J4 for `workbook.cells_json_bytes` (the other two lines of J4 stand).
+Measured in a capped child (capFor(N), 204 MB for a 2 MB file; fixture cursors lazy, as a Durable Object's): a 250,000-cell workbook is 36.8 to 44.9 MiB of cell JSON (40 B to 190 B a cell; the 250,000-cell shape of 17.2 MB declared text, the largest the 20 MiB declared-text bound lets in, is 44.9 MiB). With 9 MiB the bound refuses even a 130,000-cell workbook, so 250,000 cells can never be reached. The add, read, lint, inputs, explain and recompute of every 250,000-cell shape I built (constants, 1-character cells, 2 formulas a row, 3 long formulas a row) survive down to a cap of 140-180 MB, so the object has room for the JSON figure below.
+Row asked: kind `workbook`, name `cells_json_bytes`, standard = alpha = protective = 67108864 (64 MiB), key `limit.workbook.cells_json_bytes`. The other two rows as in J4 (`workbook.cells` alpha 250000; `workbook.bytes` standard 50 MB, alpha and protective as the table's `bytes()` helper gives with 20 MiB).
+Also learned: the reads of a held workbook now go by cursor and by position (a new index `workbook_cells_position`), so nothing loads every cell at once; I tell it in my record.
