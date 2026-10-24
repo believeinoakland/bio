@@ -402,3 +402,37 @@ test("R41 R40 (G131b, SHEET C14 scaled): a CSV with a stray `12\" pipe` at row 1
   const size = Buffer.byteLength(text);
   assert.ok(served.slice(1).every((n) => n < size / 2), `every later tick reads a window, not the object: ${served.slice(1, 4)} of ${size}`);
 });
+
+/* ---- G128e (DOCS O3 at the interface): an optional part past the stored bound is omitted with a statement; the units stay ---- */
+
+test("R47 R28 (G128e, DOCS O3 shape): a .docx whose table cells weigh over INLINE_CELLS_MAX_BYTES keeps every text unit (the ENDMARKER found) and omits the cells with a statement of their size and the bound; control: a small table keeps its cells", async () => {
+  const mk = (rows) => ({ format: "x9docx", text: async () => {
+    const cells = Array.from({ length: rows * 4 }, (_, i) => ({ row: Math.floor(i / 4), col: i % 4, text: `cell ${i} with a little text` }));
+    const paragraphs = [{ para: 0, text: "INTRO" }, ...Array.from({ length: rows }, (_, r) => ({ para: r + 1, text: `row ${r} a b c d` })), { para: rows + 1, text: "ENDMARKER" }];
+    return { container: "docx", document: paragraphs.map((p) => p.text).join("\n"), paragraphs, tables: [{ ref: "table 1", rows, cols: 4, cells }],
+             counts: { chars: 1, undetermined: 0 } };
+  } });
+  await withEntry(mk(3200), async () => {
+    const { w, document } = await heldDoc("x", "x9docx");
+    const out = await read(document, { evidence: ev(w), env: {}, unitsBudget: Infinity });
+    assert.ok(out.text_units.some((u) => u.text === "ENDMARKER"));
+    assert.ok(out.reading.cells === null, "the cells are omitted");
+    assert.equal(out.reading.cells_omitted.bound, rp.INLINE_CELLS_MAX_BYTES);
+    assert.ok(out.reading.cells_omitted.size > rp.INLINE_CELLS_MAX_BYTES);
+    assert.ok(JSON.stringify(out.reading).length < 1024 * 1024, "the reading stays under the stored bound");
+  });
+  await withEntry(mk(5), async () => {
+    const { w, document } = await heldDoc("y", "x9docx");
+    const out = await read(document, { evidence: ev(w), env: {}, unitsBudget: Infinity });
+    assert.equal(out.reading.cells["table 1"].length, 20);
+    assert.equal(out.reading.cells_omitted, undefined);
+  });
+});
+
+/* ---- K4888: the second half's ids, named until their job replaces them ---- */
+
+test.todo("R50 (G131i, G131h): text, JSON and XML read in byte windows with a carry, to the standard: job 40 (reading-pipeline-2), fix round 9");
+test.todo("R51 (G131f): HTML read by one streaming pass, linear in its bytes: job 40 (reading-pipeline-2), fix round 9");
+test.todo("R52 (G133f): classification a budgeted step: job 40 (reading-pipeline-2), fix round 9");
+test.todo("R54 (G135a, G135b, G135d, G135e): the named refusals and the kinds with no reader: job 40 (reading-pipeline-2), fix round 9");
+test.todo("R57 (G128c): a PDF read in ranges completes its reading: pdf-reader (job 7) and extraction-2 (job 41), fix round 9");

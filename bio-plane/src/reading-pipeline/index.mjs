@@ -2421,6 +2421,11 @@ export function emittedFieldsOf(i2text) {
       for (const t of i2text.tables)
         if (isObj(t) && typeof t.ref === "string" && t.ref) cells[t.ref] = Array.isArray(t.cells) ? t.cells : null;
       out.cells = cells;
+      /* R47 (fix round 9, G128e; docs A9): an optional part that would take the reading past the stored bound is omitted with a
+         statement of its size and the bound, and the units stay: a `.docx`'s table cells over INLINE_CELLS_MAX_BYTES (as JSON, the
+         bound a workbook's entry holds its cells by) are `null` here, `cells_omitted` saying so; their held form is Stage 3's */
+      const size = utf8Length(JSON.stringify(cells));
+      if (size > INLINE_CELLS_MAX_BYTES) { out.cells = null; out.cells_omitted = { size, bound: INLINE_CELLS_MAX_BYTES }; }
     }
   }
   return out;
