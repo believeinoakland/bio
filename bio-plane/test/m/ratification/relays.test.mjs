@@ -127,8 +127,8 @@ test("R17 (N339, N354): each of the nine relays answers the store's own refusal 
            siblings asked (reads); nothing past them (the commit) is asked. */
         if (PARALLEL.includes(relay.op))
           assert.deepEqual(p.fetched.slice(1).sort(), [...PARALLEL].sort(), `${relay.name}: the act stopped at the refusal`);
-        else if (["image", "list"].includes(relay.op))
-          assert.deepEqual(p.fetched.slice(-2).sort(), ["image", "list"], `${relay.name}: the act stopped at the refusal (image and list asked together)`);
+        else if (["gatefacts", "image", "list"].includes(relay.op) && relay.run === ratifyOp)
+          assert.deepEqual(p.fetched.slice(-3).sort(), ["gatefacts", "image", "list"], `${relay.name}: the act stopped at the refusal (gate facts, image and list asked together, R60 G120b)`);
         else assert.equal(p.fetched[p.fetched.length - 1], relay.op, `${relay.name}: the act stopped at the refusal`);
         assert.deepEqual([res.status, res.body], [status, body], `${relay.name} ${label}: the store's answer, as it gave it`);
         assert.equal(committed(w), 0, `${relay.name} ${label}: nothing committed`);
