@@ -1156,3 +1156,16 @@ CHANGE (K4907), before your COMPLETE stands (R-NOTMET: nothing open at COMPLETE)
 1. Your J38/J39 "open for extraction": a CSV window cursor (`c`) must be stepped by `skipKilled` too. Item 8 covers every window (text window, slide, sheet block, and so a CSV window): a CSV window that kills its reader three times is stepped past to the next row boundary after its window's bytes (aligned as your text windows are, the dialect kept in the cursor), stated `UNIT_KILLED_READER`, and the rows after it read; the row numbering continues from the next row read, the skipped span stated with its byte range. Red first: a CSV over the whole-read ceiling (injected, scaled) stepped at one window, its last row read and searchable (R-STOP). PDF pages stay `PAGE_KILLED_READER` (extraction's), as you built.
 2. Remove the four `test.todo` lines in `r9-reader.test.mjs:434-437` that name "job 40 (reading-pipeline-2)": your tests now name R50, R51, R52, R54 (K4888 said job 40 replaces each). Keep the R57 one (job 41's).
 Then COMPLETE again.
+
+## B46 · CHANGE
+
+CHANGE (K4909): the transcription sentence counts only pages that gained text.
+
+Found by EXTRACTION #41 (J35, "Found in other modules"), confirmed by BOB in the code (K4849): `index.mjs:315` pushes a page into `filled` whenever the OCR member answered it, also when `said` holds no glyph (every region below its floor), and `:346-347` tells the member `reading-pipeline.scanned_page_transcribed` with `filled.length`. So a page that text recognition could not read is counted to the member as transcribed (R-SILENT, K4571: never say "read" of what is not).
+
+Ruled (P17, no meaning of a provided service changes):
+1. `filled` keeps its meaning (the pages OCR answered): R29's `tier4Pages` and extraction's `NO_PROGRESS` guard read it. Do not change it.
+2. The member's sentence (`scanned_page_transcribed` and any other sentence or count a member reads that is built from `filled`) counts only pages whose text gained at least one glyph; a page answered with no glyph is said as not read by text recognition (it is already a tier-4 page by R29), with its count, never folded into "transcribed".
+3. Red first through the real entry path: a scan of 3 pages where the OCR stand-in answers page 2 with regions holding no glyph; today's sentence says 3 (or the count including page 2), after it says 2 transcribed and 1 not read. Words: any new sentence is a stand-in keyed through `localize`, its row named in your record.
+
+Merge the tranche branch first (your job 40 is merged into it, with extraction's job 28). Module suite, format, architecture, coverage, words, ownership; record the four fields; COMPLETE again.
