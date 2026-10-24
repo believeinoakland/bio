@@ -751,3 +751,7 @@ Checks (this session)
 - format 0 failures; architecture 0; coverage 0 (6927 of 6927); words 0 (acquisition: inline 0, plain 0, testcopy 0); ownership 0. No sentence added; no word row owed.
 
 Size (session_01Lv37K3RbyQhtwcLT3uXGvx): test runs 4, module lines 2658
+
+## J44 · COMPLETE
+
+G174 done: fetch no longer reads a declared text type over non-text bytes as text (profiled_from_text was true, now false, as the same bytes declared octet-stream); format and content_type were already unchanged. Test r17-fetch-declared.test.mjs, red first. Acquisition 342/342, capture+doorbell 441/441; format, architecture, coverage, words, ownership 0 failures. Record: build/jobs/T51/acquisition.md (Round 9 batch D).
