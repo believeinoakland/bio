@@ -196,3 +196,9 @@ Size (session_01YK5oJDSuoRHrdsfRWfQ9cd): test runs 14, module lines 1027
 ## J8 · COMPLETE
 
 Fix round 9 done (G91, G95, G94, G92, G123g; R28-R33). Scheduler suite 180/180 (+17: r8-budget, r8-stale), each failing-first red then green; format, architecture, coverage (33 of 33), words, ownership 0 failures; plane watchdog/watch and other users green. Interface for plane-2, proposed wording, stale bundle note and Size line are in my record. Size (session_01YK5oJDSuoRHrdsfRWfQ9cd): test runs 14, module lines 1027
+
+## J9 · COMPLETE (CHANGE B9, K4902)
+
+Tranche/T51 merged (file-safety #21). No scheduler code change was needed: a consumer due `now` is already re-armed by the firing's reconcile for the next firing and never looped inside one (each onAlarm ticks a consumer once). Test only: `files.test.mjs` "R24, R9 ... against the real file-safety" now asserts R39 as amended: while views are queued the wake is the firing instant (`nextAt === at`, the alarm set for the next firing), each onAlarm renders one, the run is bounded (at most four firings for three views) and ends with a wake of null or later; the later "a week on" step reads the last firing's wake. Scheduler suite: ℹ tests 180, pass 180, fail 0.
+
+Size (session_01YK5oJDSuoRHrdsfRWfQ9cd): test runs 17, module lines 1027
