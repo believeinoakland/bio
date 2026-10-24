@@ -118,3 +118,28 @@ test("R48: every ceiling this module keeps is read from READ_BOUNDS by name, and
     assert.ok(!gone.test(src), String(gone));
   }
 });
+
+test("R47: a direct object past the bound is absent and stated, and an input of more objects than the bound leaves the process alive and the answer within it", async () => {
+  const dmax = boundOf("pdf", "direct_object");
+  const huge = `[ ${"1 ".repeat(Math.ceil(dmax / 2) + 10)}]`;
+  const r = await extractPdfStructure(build({ 1: "<< /Type /Catalog /Pages 2 0 R >>", 2: "<< /Type /Pages /Kids [] /Count 0 >>", 7: huge, 8: "[ 1 2 3 ]" }));
+  assert.equal(r.ok, true);
+  assert.ok(r.notes.includes(`over_bound:direct_object:${dmax + 1}:${dmax}`), JSON.stringify(r.notes));
+  const d = await openPdf(build({ 1: "<< /Type /Catalog /Pages 2 0 R >>", 2: "<< /Type /Pages /Kids [] /Count 0 >>", 7: huge, 8: "[ 1 2 3 ]" }));
+  assert.equal(d.resolve({ t: "ref", n: 7 }), null, "the object past the bound is absent");
+  assert.equal(d.resolve({ t: "ref", n: 8 }).items.length, 3, "its neighbours are read");
+  /* objects: a file of 2,000,100 small objects */
+  const omax = boundOf("pdf", "objects");
+  const head = Buffer.from("%PDF-1.7\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [] /Count 0 >>\nendobj\n", "latin1");
+  const parts = [head];
+  const chunk = [];
+  for (let n = 3; n < omax + 100; n++) { chunk.push(`${n} 0 obj\n1\nendobj\n`); if (chunk.length === 100000) { parts.push(Buffer.from(chunk.join(""), "latin1")); chunk.length = 0; } }
+  parts.push(Buffer.from(chunk.join("") + "trailer\n<< /Root 1 0 R >>\n%%EOF\n", "latin1"));
+  const big = new Uint8Array(Buffer.concat(parts));
+  const res = await extractPdfStructure(big);
+  assert.equal(res.ok, true);
+  const note = res.notes.find((n) => n.startsWith("over_bound:objects:"));
+  assert.equal(note, `over_bound:objects:${omax + 1}:${omax}`);
+  const od = await openPdf(big);
+  assert.ok(od._objs.size <= omax, "no more objects are held than the bound");
+});

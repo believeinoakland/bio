@@ -536,19 +536,22 @@ const isWordByte = (c) => (c >= 0x30 && c <= 0x39) || (c >= 0x41 && c <= 0x5a) |
  *  its end, so a value, a stream keyword or a reference cut by the window is never taken for what is left of it.
  *  `{ value, len }` (`len` the bytes it spans, a stream's `start` absolute), or null. `first` is the first window. */
 function parseWindow(bytes, pos, first = 512) {
+  parseWindow.over = false;
   if (!Number.isFinite(pos) || pos < 0 || pos >= bytes.length) return null;
   pos = Math.trunc(pos);
-  for (let size = Math.max(32, first); ; size *= 8) {
+  for (let size = Math.min(Math.max(32, first), DIRECT_OBJECT_MAX); ; size = Math.min(size * 8, DIRECT_OBJECT_MAX)) {
     const hi = Math.min(bytes.length, pos + size);
     const s = binaryString(bytes.subarray(pos, hi));
     const r = parseValueSafe(s, 0, pos);
-    /* R47: an object is never read past the bound; a value still unfinished at it is absent, as an unparseable one is */
-    const more = hi < bytes.length && size < DIRECT_OBJECT_MAX;
+    const more = hi < bytes.length;
+    const unfinished = more && (r ? skipWs(s, r.pos) + 16 > s.length : skipWs(s, 0) + 16 > s.length);
+    /* R47: a direct object is never read past the bound; one still unfinished at it is absent, as an unparseable one is, and says so */
+    if (unfinished && size >= DIRECT_OBJECT_MAX) { parseWindow.over = true; return null; }
     if (!r) {
-      if (more && skipWs(s, 0) + 16 > s.length) continue;
+      if (unfinished) continue;
       return null;
     }
-    if (more && skipWs(s, r.pos) + 16 > s.length) continue;
+    if (unfinished) continue;
     return { value: r.value, len: r.pos };
   }
 }
@@ -767,6 +770,7 @@ export class PdfDoc {
       /* R47: past the objects bound the scan stops, and says so */
       if (this._objs.size >= OBJECTS_MAX && !this._objs.has(num)) { this.note(`over_bound:objects:${OBJECTS_MAX + 1}:${OBJECTS_MAX}`); break; }
       const r = parseWindow(b, bodyStart);
+      if (parseWindow.over && !this.notes.some((n) => n.startsWith("over_bound:direct_object"))) this.note(`over_bound:direct_object:${DIRECT_OBJECT_MAX + 1}:${DIRECT_OBJECT_MAX}`);
       if (r) {
         this._objs.put(num, bodyStart, r.len + 64, -1, parseInt(binaryString(b.subarray(genStart, genEnd)), 10), r.value);
         /* R8 (b): what a stream holds is its data and not objects: the scan resumes after it */
