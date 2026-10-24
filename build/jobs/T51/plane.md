@@ -952,3 +952,7 @@ COMPLETE (PLANE #57, job 37, B79-B83): the job table and its one registrar (R97,
 - Checks: format 0, architecture 0, coverage 107 of 107, words 0, ownership 0 failures.
 
 Size (session_01U3Cn7msFQfwLaBjAPpmVKZ): test runs 62, module lines 3741
+
+## J58 · COMPLETE
+
+COMPLETE (PLANE #57, B84 K4912 and B85 K4916). (1) transcribe.mjs quotes boundOf("pdf", "request_bytes") alone. (2) g41-shape's refused workbook is judged by the refusal's size (the generator's declared sheet text, 44,732,492 B) and bound (boundOf xlsx.declared_text) as data, never the sentence. (3) r8-heal-door: a timing-dependent test, not a heal race: a traced setAlarm showed a firing in flight at the delete re-arming before any request; the test now counts the frame's own looks and arms and waits for a quiet stretch; 5/5 alone and 5/5 on one core, 4/4 each. R107 jobrow route and R76's awaited deferReading, each red first then green. Plane suite 500/502 on the merged tree (R24, R77 accepted; r8-headofline green). Checks 0 failures, coverage 107/107. Record: build/jobs/T51/plane.md, 'PLANE #57, CHANGEs B84 and B85'. Size (session_01U3Cn7msFQfwLaBjAPpmVKZ): test runs 62, module lines 3741
