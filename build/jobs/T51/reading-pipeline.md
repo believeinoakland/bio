@@ -718,3 +718,11 @@ What it costs, and why I did not apply it from 1 MiB: a ranged first piece canno
 **Report to BOB:** extraction's `r82.test.mjs:103` and `n26.test.mjs:81` (above) and the five `g40`/`g41` reds red on the tranche (not this job's). **Files made outside `paths`:** none. **Generated artifacts made stale:** the plane's and the others' bundles that include `reading-pipeline` (BOB regenerates at the round end).
 
 Size (session_01AbxdEFuxSqVBpz5Bascgjh): test runs 40, module lines 3,297
+
+## J36 · COMPLETE
+
+COMPLETE: fix round 9, #32's four items (B40) and K4868; record section "Fix round 9 · READING-PIPELINE #32" in build/jobs/T51/reading-pipeline.md has the figures and the proposed wording of R14, R18, R35, R45, R54, R57 (B41 (3)).
+(a) K4868: a CSV past 24 MiB and within 50 MiB is read from its first piece by range (B41 confirmed): csv-range.test.mjs 7/7 (48 MiB in three shapes at 128 MB; red before), plane g41-shape CSV 5/5 (largest red before). (b) pdf-pieces by counts, 5/5 on one core. (c) memory 4/4 x5 (digests re-recorded, cause named), r7-contention 6/6 x5. (d) tier2-recorded.json: 0 drift, tier2-wire passes, no change.
+Module suite 353 (348 pass, 0 fail, 5 todo). Checks: format, architecture, coverage (57/57), ownership, channels 0; words 19, the accepted 19. Stand-in owed to T52: reading-pipeline.index.csv_in_pieces.
+REPORT for extraction (not editable by me): r82.test.mjs:103 pins a throw on the file's own bytes as transient (R37 G133c: final); n26.test.mjs:81 lists docx units by para and meets the text box's doc-part unit (R47 G134d). Red on the tranche too, not this job's: extraction g40 (2) and g41 (3), retrieval whole-rows (3). Files outside paths: none. Stale bundles: those including reading-pipeline (BOB's at the round end).
+Size (session_01AbxdEFuxSqVBpz5Bascgjh): test runs 40, module lines 3297
