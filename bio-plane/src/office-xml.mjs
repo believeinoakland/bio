@@ -299,21 +299,10 @@ export function scanNotes(part, sc) {
 /** A text with more replacement characters than this share of its characters is `partial` (ooxml R36). */
 export const REPLACED_RATIO_MAX = 0.005;
 
-function countReplaced(text) {
-  let n = 0, i = text.indexOf("�");
-  while (i >= 0) { n++; i = text.indexOf("�", i + 1); }
-  return n;
-}
-
 /** A text part's bytes as text: ooxml's `decodeText` when it is there, else the local one of the same contract. */
 export function decodePart(bytes, part, declared = null) {
   try {
-    if (typeof OOXML.decodeText === "function") return OOXML.decodeText(bytes, { declared, name: part, kind: "xml" });
-    /* ooxml has not merged `decodeText` (its R36) yet: until it does, the reading every part had before this round
-       (UTF-8), and no second decode; R41's tests stay red by name until then. */
-    const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-    const replaced = countReplaced(text);
-    return { ok: true, text, encoding: "utf-8", assumed: true, replaced, replaced_ratio: text.length ? replaced / text.length : 0, disagree: [] };
+    return OOXML.decodeText(bytes, { declared, name: part, kind: "xml" });
   } catch {
     return { ok: false, why: "ENCODING_UNSUPPORTED", name: part };
   }
