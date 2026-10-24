@@ -515,7 +515,7 @@ None stops a member completing an operation; stand-in sentences are in code, key
 5. **Rulings** of section 2b recorded in `build/rulings.md`; the Stage 0 figures in `PLATFORM.md` as they are measured, with the `PLATFORM_FIGURES` edit in the same commit (R-GATE).
 6. Commit the PDF recipe `red.mjs` of `pdf-architecture-T51.md` 3.3 (G132's red step).
 7. **Words:** ring the HANDOFF of section 5 (one, to UX-DESIGN); edit the `setup-words/rows.mjs` row of G135d and regenerate setup-words and the other generated artifacts in the manifest's order.
-8. **Between batches:** rebuild the pdf-worker and ocr-worker bundles after batch B and before batch C (section 3); open job 42 only if `PLATFORM.md` records P-M1 as capped (G127f); schedule the live runs of the two migrations (G127e, G128j) at the redeploy.
+8. **Between batches:** rebuild the pdf-worker and ocr-worker bundles after batch B and before batch C (section 3); open job 42 only if `PLATFORM.md` records P-M1 as capped (G127f); schedule the live runs of the two migrations (G127e, G128j) at the redeploy. (K4855) Before plane-2 (job 37) starts: record-core's test stand-in `multipartBucket.get` (`bio-plane/test/m/record-core/storage.mjs:83-89`) honours `range`, a test-only fix by BOB (K4297 (2)), record-core's suite and impact set green. P24's logging, P25 (jobs 38, 35), the xlsx size sentence (job 11) and R84's split (job 37) are in those STARTs.
 9. Write the STARTs (`build/plan/starts-T51-F9/<module>.txt`) from this plan, each with its walker rows, its corpus recipes, its changed requirement ids, its files to read and, where it provides or uses one, the text of section 2c.
 
 ## 7. After the round
