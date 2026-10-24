@@ -5,6 +5,7 @@
 import { join, dirname, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { readdir } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import http from "node:http";
 import https from "node:https";
 import { planeScheduleProblem } from "./account.mjs";
@@ -31,12 +32,22 @@ export const OUT = join(dirname(fileURLToPath(import.meta.url)), "out");
    ignores `--no-proxy-server` alone and follows an environment proxy; `--proxy-server=direct://`, last, holds in both. */
 export const DIRECT_ARGS = Object.freeze(["--no-proxy-server", "--proxy-server=direct://"]);
 
+/* R1: the Chromium the walk launches. `CHROMIUM` names one; else the build `playwright-core` pins; where that build is not on
+   disk (a container whose browsers are another version), the Chromium the environment installs at `FALLBACK_CHROMIUM`, when
+   it exists; else none, and the launch fails as the pinned build's absence says. */
+export const FALLBACK_CHROMIUM = "/opt/pw-browsers/chromium";
+export function chromiumPath({ env = process.env, pinned, exists = existsSync, fallback = FALLBACK_CHROMIUM } = {}) {
+  if (env.CHROMIUM) return env.CHROMIUM;
+  if (pinned && exists(pinned)) return undefined;
+  return exists(fallback) ? fallback : undefined;
+}
+
 export async function browser({ direct = false, args = [] } = {}) {
   let chromium;
   try { ({ chromium } = await import("playwright-core")); }
   catch (e) { throw new Error(`playwright-core cannot be loaded (run \`npm ci\` in ${dirname(fileURLToPath(import.meta.url))}): ${e.message}`); }
-  return chromium.launch({ ...(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}),
-    args: [...args, ...(direct ? DIRECT_ARGS : [])] });
+  const executablePath = chromiumPath({ pinned: chromium.executablePath() });
+  return chromium.launch({ ...(executablePath ? { executablePath } : {}), args: [...args, ...(direct ? DIRECT_ARGS : [])] });
 }
 
 /* R5: a fetch that reaches the instance directly. Node's own fetch follows the environment's proxy (NODE_USE_ENV_PROXY);
