@@ -79,7 +79,7 @@ Every feature and journey that does not need the assistant is walked in its own 
 
 ## Parallel work: the performance lane (Bob, 2026-10-21; K4351)
 
-Why Civicsmith is slow for a member is measured and diagnosed in its own session, **PERFORMANCE** (#1, `session_015HB1ABUMedpZ4X94giQAiz`, sonnet, started by BOB #241), writing only `build/plan/lane-performance/` (its `CHARTER.md`). It changes no code and decides nothing: each finding (`P<n>` in its `HANDOFF.md`) reaches the plan through BOB, who reads it at takeover and at every backstop check.
+Why Civicsmith is slow for a member is measured and diagnosed in its own session, **PERFORMANCE** (#3, `session_01Vp7GZTN9bpooZud5Wd2CuC`, sonnet, started by BOB #273 on the third account, K4851; #1 `session_015HB1ABUMedpZ4X94giQAiz` started by BOB #241; #2 on another account, unreachable), writing only `build/plan/lane-performance/` (its `CHARTER.md`). It changes no code and decides nothing: each finding (`P<n>` in its `HANDOFF.md`) reaches the plan through BOB, who reads it at takeover and at every backstop check.
 
 ## Parallel work: the reading architecture (Bob, 2026-10-23; K4812; ended K4834)
 

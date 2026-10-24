@@ -384,6 +384,11 @@ Every job: medium effort; its suites, then `build/plan/impact.mjs tranche/T51 HE
 | 19 | B | file-scanner (L1, 35) | A | G136a, G136b (page cap before conversion, byte budget), G124 quotes; image rebuilt by the `container-images` workflow | sonnet | 500 |
 | 39 | B | subresources (L1, 13) | A | G133c (`subresources.mjs:810`, the `URIError`: rA D7); a deterministic throw is final | sonnet | 180 |
 | 44 | B | sheet-worker (L1, order per `modules.json`) | A, 2 | R14: the 250,000 cells, 9,000,000 B and 120,000 ms quoted from `READ_BOUNDS` (`boundOf`), no literal of its own (G124 quotes; found by BOB's requirement edit, K4840) | sonnet | 150 |
+| 46 | B | installer-steps (newgroup, its own order) | A | `installer.fleet.logsunconfirmed` written at its use with `localize` (K4846); turns `invariants` R36 and `observability` R40 green | sonnet | 60 |
+| 47 | B | journey-check (L11) | A | the browser launch falls back to `/opt/pw-browsers/chromium` when the pinned build is absent (K4847; eleven files red at launch) | sonnet | 80 |
+| 48 | C | case-authoring (L8, 122) | B | G112b: a prepared edition's own bias acknowledgement read back for the pre-flight after a reload, as `tieAttested` (K4850) | sonnet | 250 |
+| 49 | C | ratification (L8, 116) | B | G120b: each read a sitting needs made once per act, the reuse check concurrent; chain counted per phase (K4850) | sonnet | 300 |
+| 50 | C | public-read (L8, 112) | B | G121b: the assembly's awaited R2 chain cut to its data dependencies (K4850) | sonnet | 250 |
 | 45 | C | case-carriage (L8, 107) | 16 | G136c (`tried` stamped before the work, `case-carriage/index.mjs:1270-1282`; K4842) | sonnet | 120 |
 | 21 | C | provenance (L3, 44) | B, 3 | G127a (OWNER: whole the only key, `register_parts`), G127c (the fix, G127a's), G127e (migration), `partsOf` and the `promote` register shape (section 2c, G127d) | sonnet | 460 |
 | 22 | C | capture-sources (L3, 47) | B | G138 (owner), G142 (owner), G137c (owner: charge, content test, retry class, words) | sonnet | 390 |

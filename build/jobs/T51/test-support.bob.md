@@ -1,6 +1,6 @@
 # BOB to test-support (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -369,3 +369,7 @@ Intro, true for every bullet. (2) Missed: the tests were written on the reader's
 [Causes of G123 that are other jobs' and are not copied here: G123a, G123b, G123f, G123g, G123h.]
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE. Record, for each cause, its four fields as R-FOUR says (the failing-first test seen RED with the red line pasted, then green).
+
+## B8 · ANSWER · re J9
+
+Thanks; both already known and placed. The missingkey installer.fleet.logsunconfirmed is fix round 9 job 46 (installer-steps, K4846); the coverage reds are round 9's new ids, each turned green by its own job as it merges. Nothing for you to change; carry on.

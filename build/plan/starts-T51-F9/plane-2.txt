@@ -301,3 +301,5 @@ The PDF plan's I1-I14, re-cut for a sheet. Each is a sentence for the module nam
 - Archive · "archive of 3 members, read separately" (G126f)
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+**Added by BOB #273 (K4848, answering plane-1 J52):** the tick figures surface in each entry of `last` of `owedwork&sha=` as `max_stretch_ms`, `rows_read`, `rows_written`, `units` (non-negative or null when unmeasured, never 0); the object-call count is the Server-Timing entry `object-calls;dur=<n>` on every route, equal to the counting door's `x-wrap-calls`, absent when unmeasured. plane-1's `r8-lag` and `r8-wave` reds assert exactly these.

@@ -1,6 +1,6 @@
 # runtime-limits (T51)
 
-**Status** · session_01Ha6MYafmZ1NtDAwR8FeQEx · depth 2 · COMPLETE · handled B1
+**Status** · session_01Bbx2ng6oqCwJyEKMZdPRg2 · depth 2 · COMPLETE · handled B3
 
 ## Completion (RUNTIME-LIMITS #6, fix round 7, G83)
 
@@ -26,3 +26,36 @@ Size (session_01Ha6MYafmZ1NtDAwR8FeQEx): test runs 4, module lines 36
 ## J1 · COMPLETE
 
 R27 and R28 met in bio-plane/src/store-place.mjs (new; add to runtime-limits paths in modules.json). 32 module tests pass, format/architecture/coverage/ownership 0 failures, impact 0 of 176. Notes in my record: setup-words build --check is stale from calculations' new word (not mine).
+
+## J2 · QUESTION
+
+QUESTION (best reading given; I carry on with it, none of it blocks the files). Three things the R30/R33/R34 text leaves to a figure I must not guess (R-GATE):
+1. capFor(N): I read R33 as capFor(N) = max(0, floor(isolate_memory_bytes/2^20 - idle_bytes/2^20 - N)), i.e. 256 - 50 - N = 206 - N with today's entries, one formula for PDF and sheet runs (it replaces plane's 128-N and the sheet 128+39-N; those are test-support's and plane's to repoint, I only report). Tell me if a share per object of a class (the isolate is shared by up to five) must enter the formula.
+2. standard column of the heavy-kind rows R30 gives no standard for (pdf bytes, xlsx declared, ods content, worker bytes, need_mb, cover_bytes, clean_bytes, grade_read, ocr frame...): I set standard = max(alpha, 50 MB = 52,428,800) for byte rows, standard = alpha for count/protective rows with no separate figure (so alpha never above standard holds), and protective = the figure R30 names, else = standard. Wrong figures are one-line edits of one file; say which.
+3. PLATFORM_FIGURES `source` strings: R34 says `K4838 (<n>)` but gives no n; I write `K4838` for the four Stage-0 figures and `K4616` for idle_bytes, and the test pins the shape /^(K[0-9]+( \([0-9]+\))?|PLATFORM\.md P-M[0-9]+)$/.
+Also: the render DOM row is "the figure the capture-sources job proposes"; I add no row for it (that job adds it, R30).
+
+## Round 9 (RUNTIME-LIMITS #7, causes G124, G123a)
+
+**Built.** `bio-plane/src/read-bounds.mjs` (`READ_BOUNDS`, `boundOf`, `statement`: R29-R31) and `bio-plane/src/byte-ledger.mjs` (`byteLedger`, `capFor`, `PLATFORM_FIGURES`: R32-R34). Both are new files outside `paths`: BOB adds them (the ownership run lists exactly these two). Tests: `test/m/runtime-limits/read-bounds.test.mjs` (R29, R30, R31) and `byte-ledger.test.mjs` (R32, R33, R34, R22), each id named by a test of its own.
+
+**R-FOUR.** (1) New code, no earlier root cause. (2) Missed because nine ceilings were stated each in one requirement and no test compared them, and two cap formulas (128-N, 128+39-N) never met in one test; the new tests pin the table's shape and every row's invariants (three figures, alpha never above standard, a key) so a row added later changes none of them, and one test asserts one `capFor` answers a PDF and a sheet run. (3) Red seen first: both new test files failed with `ERR_MODULE_NOT_FOUND` for the two files; green after: 50 of 50 in the module. The G123a leak test runs a child capped at `capFor(100)` (106 MB): the read releases and `held()` is 0, the leak leaves `held()` at 100 MiB. (4) **L** only (a capped child); no live probe.
+
+**Rules I applied (for BOB to confirm, J2).** (a) `capFor(N) = max(0, floor((isolate_memory_bytes - idle_bytes)/2^20 - N))` = 206 - N today. (b) Rows R30 gives no standard for: K4628 per kind as BOB ruled (B3, K4845): documents 100 MB, spreadsheets and images 50 MB, the alpha where above; protective = the R30 figure else the standard. (c) `source` strings `K4838` and `K4616`. (d) Row `render/dom` not added (the capture-sources job proposes the figure, R30). (e) `release` also throws a `TypeError` for a bad count (R32 only says it of `hold`). (f) Light kinds' alpha columns hold today's figures (csv 17 MiB, the others 24 MiB) though `boundOf` answers their standard.
+
+**Rows (kind/name):** the 19 quoted pairs, the pdf names quoted in prose (`object_stream`, `cmap`, `embedded_file`), and `text|csv|tsv|json|xml` bytes+rows, `xml/tag`, `archive` uploaded_bytes/unpacked_bytes/depth/ratio/members/directory/name, `pdf` bytes/worker_bytes/need_mb/page_content/objects/direct_object/operands/tree_depth, `image` picture_frame/cover_bytes, `office` retained_objects, `sheet` columns/cell_chars/cell_kept_chars/sheets, `xlsx/declared_text`, `ods` content_xml/repeat_units, `workbook/cells`, `sheet_worker` cells/bytes/ms. Keys are `limit.<kind>.<name>`; the quoting module owns the sentence.
+
+**Census ops owned (K4208).** None. **Words.** None (no sentence). **Generated artifacts made stale.** None now; bundles that include the plane change once a user imports these files.
+
+**Found in another module.** plane `shape/harness.mjs:42-44` (`OBJECT_MB`, `capFor`) and `shape/g*.probe.mjs`, `m/workbooks/g44-large.test.mjs:28`, `m/file-safety/g44-large.test.mjs:28` still hold their own `capFor` formulas: to repoint to `capFor` of `byte-ledger.mjs` (test-support and plane jobs; R33 says no other formula exists).
+
+**Checks (civicos-process, product path /home/user/bio).** format: 0 failures. architecture: 0 failures. coverage: 32 of 32 ids named, 0 failures. ownership: 2 failures, the two new files (BOB's `paths` edit). `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/runtime-limits/`: 50 tests, 50 pass, 0 fail. impact: affected modules 1 of 176 (runtime-limits itself), 2 test files.
+
+**BOB's answer B3 applied.** capFor, source strings and the render DOM row as I had them; the standard column changed to K4845's per kind (a test of its own pins it). 51 module tests, all pass. Open questions: none. Re-points owed (above): plane and test-support `capFor` formulas.
+
+Ownership (civicos-process): the only failures are bio-plane/src/read-bounds.mjs and byte-ledger.mjs, new files BOB adds to paths.
+Size (session_01Bbx2ng6oqCwJyEKMZdPRg2): test runs 3, module lines 205
+
+## J3 · COMPLETE
+
+R29-R34 met in bio-plane/src/read-bounds.mjs and byte-ledger.mjs (new: add both to runtime-limits paths). 51 module tests pass; format, architecture, coverage 0 failures; ownership lists only those two files. B3 applied. Re-points owed: plane shape/harness.mjs capFor and the two g44-large tests' capFor to byte-ledger capFor. No open question. Record: build/jobs/T51/runtime-limits.md
