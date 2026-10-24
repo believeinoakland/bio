@@ -91,7 +91,9 @@ B5 applied (K4862): image/rows_pixels, pdf/xmp added; pdf/object_stream now 32 M
 
 **Entries applied.** Tranche merged first. `capture`/`keep_bytes` 33,554,432 (32 MiB), `capture`/`profile_text_bytes` 8,388,608 (8 MiB), `render`/`dom_bytes` 26,214,400 (25 MiB), each one figure in standard, alpha and protective, keys `limit.<kind>.<name>`; `capture` is a new kind, `render` gains a row. No sentence added. One test (R30, with R31's `boundOf` and `statement`) pins the three rows beside the table's existing ones.
 
-**Run.** Module tests: 53 tests, 53 pass, 0 fail. Importers: see the impact line below.
+**Run.** Module tests: 53 tests, 53 pass, 0 fail. Importers: the 18 test files that import `read-bounds` (impact lists 138 modules, 2140 files; the table gained rows only, no figure moved): 188 of 190 pass; the 2 failures are stale generated bundles, below.
 Checks (civicos-process): format 0 failures; architecture 0 failures; coverage 32 of 32 ids named, 0 failures; ownership 0 failures; words 19 failures, all in case-checker, installer-steps, pdf-reader and test-support, none in this module.
 
 Size (session_01Hw98qUCFYLUAekavfPLPJZ): test runs 3, module lines 261
+
+**Found in another module (generated artifacts, §14; not regenerated).** `ocr-worker/dist/ocr-worker.bundled.mjs` is now stale against `bio-plane/src/read-bounds.mjs` (this change; its test `ocr-worker/test/ocr-worker.test.mjs` passed on `tranche/T51` and fails on this branch for that reason alone). `agent-worker/dist/agent-worker.bundled.mjs` was already stale on `tranche/T51` (browserrender, formats, provenance, read-bounds, render, doctypes registry), so `bio-plane/test/system/fleetbundles.test.mjs` fails before and after. Both are regenerated at the layer close (manifest, Generated artifacts); `pdf-worker` takes `runtime-limits` files too and should be checked then.
