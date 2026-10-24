@@ -173,7 +173,7 @@ test("R14 the bundle-grain shapes: page, count, ids, snapshot, facets and facetS
   w.bundle("B", { body: "water", current_state: "open", criticality: null, bundle_sha: "s2" });
   w.bundle("C", { body: "dry", current_state: "closed", criticality: "low", bundle_sha: "s3" });
   const page = w.run({ q: "", viewer: V }).rows;
-  assert.deepEqual(Object.keys(page[0]), [...PROVENANCE_COLS, "snippet", "snippet_from"], "R33 adds snippet_from, always a column");
+  assert.deepEqual(Object.keys(page[0]), [...PROVENANCE_COLS, "snippet", "snippet_from", "snippet_unit"], "R33 adds snippet_from and R34 snippet_unit, always columns");
   assert.ok(page.every((r) => r.snippet === null && r.snippet_from === null), "null when there is no term");
   const hit = w.run({ q: "water", viewer: V }).rows;
   assert.ok(hit.every((r) => /\[water\]/.test(r.snippet)));
