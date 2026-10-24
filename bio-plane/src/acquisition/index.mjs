@@ -475,7 +475,7 @@ export async function keepPast(cap, ev, { sha, parts, boundMs = ACQUIRE_BOUND_MS
  *  digest given; with `compose: true` the store is asked to make the whole from its parts first (see below). Answers `{ok: true, kept}` (`kept` false for one part or past `MULTIPART_KEEP_MAX`, where nothing is done)
  *  or `{ok: false, why}`, a sentence for the member: a part gone, a part that is not what was stored, bytes that do not add
  *  up to the digest, or a store that will not take the whole. Never throws. */
-export async function keepWhole(ev, { sha, parts, total, bytes = null, compose = false }) {
+export async function keepWhole(ev, { sha, parts, total, bytes = null, compose = false, whole: given = null }) {
   if (!Array.isArray(parts) || parts.length < 2 || total > MULTIPART_KEEP_MAX) return { ok: true, kept: false };
   const fail = (why) => ({ ok: false, why });
   const held = Array.isArray(bytes) && bytes.length === parts.length && bytes.every((b) => b instanceof Uint8Array) ? bytes : null;
@@ -491,6 +491,8 @@ export async function keepWhole(ev, { sha, parts, total, bytes = null, compose =
         if (r && r.ok === true) return { ok: true, kept: true };
         /* a store that would not compose it (no multipart upload offered, a refusal) leaves the parts to be read back below, which says which part is wrong if one is */
       }
+      /* R115: the whole was received into one buffer; it is put as it is, no second copy */
+      if (given instanceof Uint8Array && given.length === total) { await ev.put(sha, given); return { ok: true, kept: true }; }
       const whole = new Uint8Array(total);
       let at = 0;
       for (const [i, p] of parts.entries()) {
@@ -1357,8 +1359,16 @@ async function acquireRun(cap, body0, opts, t) {
   /* R96: each part's bytes are kept in memory while the capture stays within `MULTIPART_KEEP_MAX`, so the whole is put once when
      the stream ends with no part read back; past it they are let go and the capture is held in its parts alone. */
   let keptParts = [], keptSize = 0, firstHead = null;
+  /* R115 (fix round 9, G124b): THE WHOLE IS NEVER HELD TWICE. A body whose declared length is a multipart capture within `MULTIPART_KEEP_MAX` is
+     received straight into ONE buffer of that length (`keptWhole`), each part copied in as it is stored and its own buffer let go, so the
+     call holds the kept bytes once plus the one part being read, and the whole is put from that buffer with no second copy made. Every byte
+     held is counted by the byte ledger (`opts.ledger`, runtime-limits). A body that does not match its declared length is held as separate
+     parts and joined as before. */
+  const ledger = opts && opts.ledger && typeof opts.ledger.hold === "function" ? opts.ledger : { hold() {}, release() {} };
+  let keptWhole = declared !== null && declared > PART && declared <= MULTIPART_KEEP_MAX && !renderAsked ? new Uint8Array(declared) : null;
+  if (keptWhole) ledger.hold(keptWhole.length, "kept");
   /* R10: a part is exactly 8 MiB (the last one the remainder), whatever sizes the stream's chunks arrive in. */
-  const part = async (buf) => {
+  const part = async (buf, inPlace = false) => {
     const psha = await splitTimed(t, "hash", async () => hex(await crypto.subtle.digest("SHA-256", buf)));
     const heldBefore = await splitTimed(t, "store", async () => {
       const had = !!(await ev.head(psha));
@@ -1368,20 +1378,33 @@ async function acquireRun(cap, body0, opts, t) {
     if (!parts.length) firstHead = buf.slice(0, FORMAT_HEAD);   // R17's format and ZIP magic are read from it, so the first part is not read back
     parts.push({ sha256: psha, bytes: buf.length });
     partHeldBefore.push(heldBefore);
-    if (keptParts) { keptSize += buf.length; if (keptSize > MULTIPART_KEEP_MAX) keptParts = null; else keptParts.push(buf); }
+    if (keptParts) {
+      if (keptWhole && keptSize + buf.length <= keptWhole.length) {
+        if (!inPlace) keptWhole.set(buf, keptSize);
+        keptParts.push(keptWhole.subarray(keptSize, keptSize + buf.length)); keptSize += buf.length;
+      } else {
+        keptSize += buf.length;
+        if (keptSize > MULTIPART_KEEP_MAX) { if (keptWhole) ledger.release(keptWhole.length, "kept"); keptWhole = null; keptParts = null; }
+        else { keptWhole = null; keptParts.push(buf); ledger.hold(buf.length, "kept"); }
+      }
+    }
+    if (!inPlace) ledger.release(buf.length, "part");
   };
   const flush = async (all = true) => {
     while (heldBytes >= PART || (all && heldBytes > 0)) {
       const n = Math.min(PART, heldBytes);
-      const buf = new Uint8Array(n);
+      /* R115: a part of a capture received into `keptWhole` is assembled in its place there, not in a buffer of its own beside it */
+      const inPlace = !!keptWhole && !!keptParts && keptSize + n <= keptWhole.length;
+      const buf = inPlace ? keptWhole.subarray(keptSize, keptSize + n) : new Uint8Array(n);
+      if (!inPlace) ledger.hold(n, "part");
       let at = 0;
       while (at < n) {
         const c = held[0], take = Math.min(c.length, n - at);
         buf.set(c.subarray(0, take), at); at += take;
-        if (take === c.length) held.shift(); else held[0] = c.subarray(take);
+        if (take === c.length) { held.shift(); ledger.release(c.length, "chunk"); } else { held[0] = c.subarray(take); ledger.release(take, "chunk"); }
       }
       heldBytes -= n;
-      await part(buf);
+      await part(buf, inPlace);
     }
   };
   /* CAP-8: the first KiB of a DRIVE export, kept so the shell can be recognised from the BYTES. */
@@ -1421,7 +1444,7 @@ async function acquireRun(cap, body0, opts, t) {
       driveHead.set(value.subarray(0, take), driveHeadBytes);
       driveHeadBytes += take;
     }
-    held.push(value); heldBytes += value.length;
+    held.push(value); heldBytes += value.length; ledger.hold(value.length, "chunk");
     if (heldBytes >= PART) await flush(false);
   }
   /* DEC-49 REGION is-drive-bytes — C-48.7: Google said it was a document and it was a web page. Detection is
@@ -1600,7 +1623,7 @@ async function acquireRun(cap, body0, opts, t) {
      call holds without reading any page, cleaned as a page's is; a PDF with neither, or one past what is held in memory, answers null. */
   let pdfTitled = null;
   if (!renderRecorded && keptParts && keptParts.length && typeof pdfReader.pdfTitle === "function") {
-    const whole0 = keptParts.length === 1 ? keptParts[0] : (() => { const b = new Uint8Array(keptSize); let at = 0; for (const k of keptParts) { b.set(k, at); at += k.length; } return b; })();
+    const whole0 = keptParts.length === 1 ? keptParts[0] : keptWhole && keptSize === keptWhole.length ? keptWhole : (() => { const b = new Uint8Array(keptSize); let at = 0; for (const k of keptParts) { b.set(k, at); at += k.length; } return b; })();
     if (detectFormat(whole0.subarray(0, 1024), ct || null).format === "pdf") {
       try { pdfTitled = cleanedTitle(await pdfReader.pdfTitle(whole0)); } catch { pdfTitled = null; }
     }
@@ -1612,7 +1635,7 @@ async function acquireRun(cap, body0, opts, t) {
   /* R10, R96 (T51; C5): a capture held in parts is kept whole too, under its own fingerprint, put once from the parts held in
      memory (stage `keep`, apart from `read`), or refused in words with nothing filed. */
   if (multipart && !renderRecorded && total <= MULTIPART_KEEP_MAX) {
-    const kept = await timed(t, "keep", () => keepWhole(ev, { sha, parts, total, bytes: keptParts }));
+    const kept = await timed(t, "keep", () => keepWhole(ev, { sha, parts, total, bytes: keptParts, whole: keptWhole && keptSize === total && keptWhole.length === total ? keptWhole : null }));
     if (!kept.ok) return answer(502, notKept(parts.length, kept.why));
   }
 
