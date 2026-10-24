@@ -506,7 +506,7 @@ function withKeptPages(text, kept, seed) {
 export function ocrTextFromMember(res, { calibration = null } = {}) {
   const r = res && typeof res === "object" ? res : {};
   if (r.ok !== true)
-    return { ok: false, why: word("reading-pipeline.why.ocr_member_declined", { reason: typeof r.reason === "string" ? ` (${r.reason})` : "" }) };
+    return { ok: false, why: word("reading-pipeline.why.ocr_member_declined", { reason: refusalReasonOf(r) !== "DECLINED" || typeof r.reason === "string" ? ` (${refusalReasonOf(r)})` : "" }) };
   if (!(typeof r.engine === "string" && r.engine) || !(typeof r.version === "string" && r.version))
     return { ok: false, why: word("reading-pipeline.why.ocr_member_name") };
   if (!(typeof r.cap === "string" && r.cap) || !(typeof r.measured_by === "string" && r.measured_by))
@@ -2528,13 +2528,91 @@ const failed = (doc, docType, basis, extra = {}) => ({
   read_from_text: false, found: false, entities: [], facts: {}, at: doc && typeof doc.retrieved === "string" ? doc.retrieved : null,
   basis, ...extra });
 
-/* R38: what an entry's final refusal states of itself: its `reason` and the size figures it measured. Nothing else of it
-   is the reading's; an answer that is not final or names no reason carries none. */
+/* R38, R54: what an entry's final refusal states of itself: its `reason` and the figures it measured (`pages`, `bytes`, `need_mb`,
+   `limit_mb`; and a statement's own: `size`, `bound`, `key`, `part`, `kind`, `name`, `n`). Nothing else of it is the reading's; an
+   answer that is not final or names no reason carries none. */
 function refusalOf(a) {
   if (!a || a.ok !== false || a.failure !== FAILURE_FINAL || typeof a.reason !== "string" || !a.reason) return null;
   const out = { reason: a.reason };
-  for (const k of ["pages", "bytes", "need_mb", "limit_mb"]) if (Number.isFinite(a[k])) out[k] = a[k];
+  for (const k of ["pages", "bytes", "need_mb", "limit_mb", "size", "bound", "n"]) if (Number.isFinite(a[k])) out[k] = a[k];
+  for (const k of ["key", "part", "kind", "name"]) if (typeof a[k] === "string" && a[k]) out[k] = a[k].slice(0, 200);
   return out;
+}
+
+/* R54 (fix round 9, G135d): a size marker an entry left in its text (`undetermined[].guard`, ooxml's `textPlan` and csv-reader's
+   `sizeMarker`: `{why, size, bound, ...}`, final) is the file's own refusal by a bound: it is stated as `TOO_LARGE {size, bound}`
+   (a size over its bound) or `STRUCTURE_OVER_BOUND {part, bound}` (a count or structure over its bound), with the part it names, and
+   never as "undecodable regions". Null when the text holds none. */
+function guardRefusalOf(i2text) {
+  const marks = i2text && Array.isArray(i2text.undetermined) ? i2text.undetermined : [];
+  for (const m of marks) {
+    const g = m && typeof m === "object" ? (m.guard && typeof m.guard === "object" ? m.guard : m.final === true ? m : null) : null;
+    if (!g || !Number.isFinite(g.bound)) continue;
+    const part = typeof m.part === "string" ? m.part : typeof g.part === "string" ? g.part : null;
+    const named = part ? { part: part.slice(0, 200) } : {};
+    if (Number.isFinite(g.size) && (g.why === "over_size_bound" || g.metric !== undefined || g.boundName !== undefined))
+      return { reason: "TOO_LARGE", size: g.size, bound: g.bound, ...named, ...(typeof g.boundName === "string" ? { name: g.boundName } : {}) };
+    if (typeof g.why === "string")
+      return { reason: "STRUCTURE_OVER_BOUND", bound: g.bound, ...(Number.isFinite(g.n) ? { n: g.n } : {}), ...named, name: g.why };
+  }
+  return null;
+}
+
+/* R54 (G135a, G135d, G135e): the sentence of a refusal that names its own cause and figures. Stand-ins until T52 (K4269); owed:
+   `reading-pipeline.index.too_large`, `.structure_over_bound`, `.unsupported_<kind>`. A size sentence holds the file's size and the limit
+   and never says "read" of a file that is not. */
+function refusalSentence(r) {
+  if (r.reason === "TOO_LARGE")
+    return localize("reading-pipeline.index.too_large", "This file is {size} bytes, over the {bound} bytes allowed for this kind of file.", { size: String(r.size), bound: String(r.bound) });
+  if (r.reason === "STRUCTURE_OVER_BOUND")
+    return localize("reading-pipeline.index.structure_over_bound", "{part} is over the {bound} allowed for this kind of file.", { part: String(r.part || r.name || ""), bound: String(r.bound) });
+  return null;
+}
+
+/* R54 (G135a, G135e; K4831 (3)): a kind with no reader is named, by its bytes and the types it is declared as, and its reading is
+   stated `final` with `UNSUPPORTED_FORMAT {kind}`: no "non-textual or too large", and nothing for "Read it" to repair. */
+const sig = (b, o, s) => b.length >= o + s.length && [...s].every((c, i) => b[o + i] === (typeof c === "number" ? c : c.charCodeAt(0)));
+function unreadKindOf(b, types) {
+  if (!(b instanceof Uint8Array) || !b.length) return null;
+  const t = types.filter((x) => typeof x === "string").join(" ").toLowerCase();
+  if (sig(b, 0, "GIF87a") || sig(b, 0, "GIF89a")) return "gif";
+  if (sig(b, 0, [0x49, 0x49, 0x2a, 0]) || sig(b, 0, [0x4d, 0x4d, 0, 0x2a])) return "tiff";
+  if (sig(b, 0, "RIFF") && sig(b, 8, "WEBP")) return "webp";
+  if (sig(b, 4, "ftyp")) {
+    const brand = String.fromCharCode(...b.subarray(8, 12));
+    if (/^(?:heic|heix|hevc|hevx|heim|heis|mif1|msf1)$/.test(brand)) return "heic";
+    if (/^avi[fs]$/.test(brand)) return "avif";
+  }
+  if (sig(b, 0, [0, 0, 0, 0x0c, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a])) return "jp2";
+  if (sig(b, 0, "BM") && b.length >= 30 && [12, 40, 52, 56, 64, 108, 124].includes(b[14] | (b[15] << 8)) && b[16] === 0) return "bmp";
+  if (sig(b, 0, [0, 0, 1, 0]) && /image\/(?:x-icon|vnd\.microsoft\.icon)/.test(t)) return "ico";
+  if (sig(b, 0, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]))
+    return /msword|\.doc\b/.test(t) ? "legacy_word" : /ms-excel|\.xls\b/.test(t) ? "legacy_excel" : /ms-powerpoint|\.ppt\b/.test(t) ? "legacy_powerpoint" : "legacy_office";
+  const head = String.fromCharCode(...b.subarray(0, Math.min(b.length, 2048)));
+  if (/^\s*\{\\rtf/.test(head) || /\b(?:text|application)\/rtf\b/.test(t)) return "rtf";
+  if (/message\/rfc822/.test(t)) return "email";
+  const lines = head.split(/\r?\n/).slice(0, 16);
+  const hdr = lines.filter((l) => /^(?:Received|Return-Path|Delivered-To|MIME-Version|Message-ID|Date|From|To|Subject|Content-Type):\s/i.test(l)).length;
+  return hdr >= 4 && lines.some((l) => /^(?:From|Subject|To|MIME-Version):/i.test(l)) && /^[\w-]+:\s/.test(lines[0] || "") ? "email" : null;
+}
+function unreadSentence(kind) {
+  switch (kind) {
+    case "rtf": return localize("reading-pipeline.index.unsupported_rtf", "RTF is not read yet.");
+    case "email": return localize("reading-pipeline.index.unsupported_email", "Email is not read yet.");
+    case "legacy_word": return localize("reading-pipeline.index.unsupported_legacy_word", "Legacy Word is not read yet.");
+    case "legacy_excel": return localize("reading-pipeline.index.unsupported_legacy_excel", "Legacy Excel is not read yet.");
+    case "legacy_powerpoint": return localize("reading-pipeline.index.unsupported_legacy_powerpoint", "Legacy PowerPoint is not read yet.");
+    case "legacy_office": return localize("reading-pipeline.index.unsupported_legacy_office", "This older Office file is not read yet.");
+    case "tiff": return localize("reading-pipeline.index.unsupported_tiff", "TIFF is not read yet.");
+    case "gif": return localize("reading-pipeline.index.unsupported_gif", "GIF is not read yet.");
+    case "webp": return localize("reading-pipeline.index.unsupported_webp", "WebP is not read yet.");
+    case "heic": return localize("reading-pipeline.index.unsupported_heic", "HEIC is not read yet.");
+    case "avif": return localize("reading-pipeline.index.unsupported_avif", "AVIF is not read yet.");
+    case "bmp": return localize("reading-pipeline.index.unsupported_bmp", "BMP is not read yet.");
+    case "jp2": return localize("reading-pipeline.index.unsupported_jp2", "JPEG 2000 is not read yet.");
+    case "ico": return localize("reading-pipeline.index.unsupported_ico", "ICO is not read yet.");
+    default: return localize("reading-pipeline.index.unsupported_kind", "{kind} is not read yet.", { kind: String(kind) });
+  }
 }
 
 /** R24 (R1–R17): reads a stored capture. `document` is capture's acquire answer's document. The rest is what the
@@ -2637,8 +2715,7 @@ export async function bytesOf(evidence, doc, { kind = null } = {}) {
   const tooBig = (size) => {
     const st = statement(...(kind === "csv" && size > boundOf("csv", "bytes") ? ["csv", "bytes"] : WHOLE_READ_ROW), size);
     return { bytes: null, failure: FAILURE_FINAL, stated: { reason: "TOO_LARGE", ...st },
-             why: word("reading-pipeline.why.capture_bytes_parts", { total: String(size), parts: String(parts ? parts.length : 1),
-                                                                       multipart_read_max: String(st.bound) }) };
+             why: refusalSentence({ reason: "TOO_LARGE", size, bound: st.bound }) };
   };
   if (total !== null && total > WHOLE_READ_MAX) return tooBig(total);
   /* the store is asked only when the document states no size */
@@ -2812,6 +2889,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
 
   const entry = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
+  /* R54 (G135a, G135e): a kind with no reader is named, final, and offers nothing to repair (no "Read it") */
+  if (!wireable && bytes && !held) {
+    const unread = unreadKindOf(bytes, [ct, profile.source_content_type, headers["content-type"]]);
+    if (unread) return early(failed(doc, null, unreadSentence(unread), { failure: FAILURE_FINAL, reason: "UNSUPPORTED_FORMAT", kind: unread }));
+  }
   let reading, classifiedText = null, member = null;
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null, heldCounts = null, joinedDropped = false;
   let pieceInfo = null, pieceWords = null, rangeScope = null, pieceBase = null;
@@ -3000,6 +3082,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
                       : marks.some((m) => m && m.reason === "encrypted") ? ENCRYPTED : NO_PROGRESS };
         }
       }
+      /* R54 (G135d): a size or structure bound an entry left as a marker in its text is the file's refusal, stated with its figures */
+      if (!refusal && i2text && wiredTier === 1) refusal = guardRefusalOf(i2text);
       /* R4–R6: tier 3. */
       const t3 = await tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt, liveCalibration,
                                           ...(Number.isInteger(ocrInvocations) && ocrInvocations >= 0 ? { invocations: ocrInvocations } : {}),
@@ -3108,7 +3192,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
          the document, anything else is the document's own. */
       if (!wired || !wired.determined) reading.failure = memberDown || ocrLeft ? FAILURE_TRANSIENT : FAILURE_FINAL;   /* R55: pages owed are read later */
       /* R38: the entry's own final refusal (a PDF too large to read, pdf-reader R42) is carried as data the page can state. */
-      if (refusal && !(wired && wired.determined)) Object.assign(reading, refusal, { failure: FAILURE_FINAL });
+      if (refusal && !(wired && wired.determined)) {
+        Object.assign(reading, refusal, { failure: FAILURE_FINAL });
+        const said = refusalSentence(refusal);
+        if (said) reading.basis = said;   /* R54: the sentence names the cause and its two figures */
+      }
       /* R37 (F9): the OCR pages this request did not reach, the first of them (the cursor) and how many, stated on the
          reading and owed to the caller's ledger. */
       stateOcr(reading, ocrLeft, ocrFacts, i2text);
