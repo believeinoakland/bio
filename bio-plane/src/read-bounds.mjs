@@ -48,7 +48,8 @@ const TABLE = {
     worker_bytes: bytes(64 * MiB, k("pdf", "worker_bytes"), MB100),
     need_mb: same(100, k("pdf", "need_mb")),
     page_content: same(64 * MiB, k("pdf", "page_content")),
-    object_stream: same(16 * MiB, k("pdf", "object_stream")),
+    /* 32 MiB: 16 MiB refused a real govinfo file's 18.55 MiB object stream (K4862) */
+    object_stream: same(32 * MiB, k("pdf", "object_stream")),
     cmap: same(MiB, k("pdf", "cmap")),
     embedded_file: same(64 * MiB, k("pdf", "embedded_file")),
     objects: same(2000000, k("pdf", "objects")),
@@ -56,6 +57,7 @@ const TABLE = {
     operands: same(65536, k("pdf", "operands")),
     tree_depth: same(256, k("pdf", "tree_depth")),
     bfrange_codes: same(65536, k("pdf", "bfrange_codes")),
+    xmp: same(2 * MiB, k("pdf", "xmp")),
   },
   image: {
     pixels: same(120000000, k("image", "pixels")),
@@ -68,6 +70,8 @@ const TABLE = {
     working_set: same(61300000, k("image", "working_set")),
     retained_objects: same(250000, k("image", "retained_objects")),
     picture_source: same(603979776, k("image", "picture_source")),
+    /* pixels of the rows route: 16384 x 12288, today's photo ceiling (K4862) */
+    rows_pixels: same(201326592, k("image", "rows_pixels")),
   },
   ocr: {
     frame_bytes: bytes(61300000, k("ocr", "frame_bytes"), MB50),

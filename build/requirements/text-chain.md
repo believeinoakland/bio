@@ -151,7 +151,7 @@ of a document with its own provenance, each `chain` already built by `appendStep
 - **R39** Otherwise, one sentence per step joined by `" -> "`: the kind's label, `(engine version)` or
   `(engine to format)` when the step names an engine (and, for `convert`, a format), `(member[, at])`
   for `attested` and `typed`, and, for a SCOPED derivation step (extent not "all"), the pages it covers
-  or `(over an extent this record cannot read)` for an unreadable one. (Fix round 9, G141; ruling (6) of the plan's section 2b) The sentence spells a page 1-BASED, as a reader counts: the stored page number 0 is read "page 1", and a page list is spelled the same way; the stored numbers (R22's extents, R27, R47) stay 0-based and are not changed *(not yet met: T51)*.
+  or `(over an extent this record cannot read)` for an unreadable one. (Fix round 9, G141; ruling (6) of the plan's section 2b) The sentence spells a page 1-BASED, as a reader counts: the stored page number 0 is read "page 1", and a page list is spelled the same way; the stored numbers (R22's extents, R27, R47) stay 0-based and are not changed.
 - Errors: never throws.
 
 **`checkConfidence(confidence) → refusal | null`**
@@ -280,7 +280,7 @@ contain the place a reference was read? The default is NO.
 
 **`glyphCount(s) → integer`** (D-501/D-514) The number of non-whitespace Unicode CODE POINTS in `s`.
 - **R73** `0` for a non-string. Otherwise counts code points (a surrogate pair counts once) that do
-  not match `\s` (Unicode-aware) and are neither U+FFFD (the replacement character) nor U+0000 (NUL): a decode's failures are not glyphs (fix round 9, G141, G131g; X27) *(not yet met: T51)*.
+  not match `\s` (Unicode-aware) and are neither U+FFFD (the replacement character) nor U+0000 (NUL): a decode's failures are not glyphs (fix round 9, G141, G131g; X27).
 - Errors: never throws.
 
 **`mergeTier2Text(base, t2) → {ok, text?, wholesale?, perPageTier, replaced, kept, why?}`** (D-283)
@@ -364,8 +364,8 @@ new refusal condition in this module mints the next one in the family and is add
 - **R104** (D21) Step kind `ai_transcription` with a derivation cap undetermined until its accuracy is measured (`calibration`), so `captureBound` answers undetermined for text it produced.
 
 **Fix round 9's additions** (G141; X27)
-- **R105** `mergeTier2Text` drops no page. On the page-wise path (R76) the merged `pages` hold every page of `base` and every page of `t2` exactly once: a `base` page with no integer `.page` is kept as tier 1 (R76's tier-1 shape, `tier:1`), after the numbered pages and in its own order, and is listed in `kept`; a `t2` page that `base` lacks is adopted as tier 2 (`tier:2`) at its page number and is listed in `replaced`; `document`, `counts` and `perPageTier` follow the pages as R78 states, and `tier2Note` (R79, R80) counts them. A `t2` page with no integer `.page` is adopted as tier 2 after the numbered pages, in its own order. *(not yet met: T51)*
-- **R106** `appendStep` does work linear in the number of steps appended over a chain's life, not quadratic: a chain this module returned (from `layerChain`, `appendStep`, `convertedChain` or `mergedChain`) is known well-formed, so appending to it checks the new step against the chain's cap and extents without re-checking every earlier step; the refusals and results of R12-R14 are unchanged, and a chain built by hand is still checked whole. 5,000 `appendStep` calls inspect at most 4 times 5,000 steps in all (a count of steps inspected, not a time). *(not yet met: T51)*
+- **R105** `mergeTier2Text` drops no page. On the page-wise path (R76) the merged `pages` hold every page of `base` and every page of `t2` exactly once: a `base` page with no integer `.page` is kept as tier 1 (R76's tier-1 shape, `tier:1`), after the numbered pages and in its own order, and is listed in `kept`; a `t2` page that `base` lacks is adopted as tier 2 (`tier:2`) at its page number and is listed in `replaced`; `document`, `counts` and `perPageTier` follow the pages as R78 states, and `tier2Note` (R79, R80) counts them. A `t2` page with no integer `.page` is adopted as tier 2 after the numbered pages, in its own order. (K4864) The `kept` or `replaced` entry of a page with no integer number is `null`.
+- **R106** `appendStep` does work linear in the number of steps appended over a chain's life, not quadratic: a chain this module returned (from `layerChain`, `appendStep`, `convertedChain` or `mergedChain`) is known well-formed, so appending to it checks the new step against the chain's cap and extents without re-checking every earlier step; the refusals and results of R12-R14 are unchanged, and a chain built by hand is still checked whole. 5,000 `appendStep` calls inspect at most 4 times 5,000 steps in all (a count of steps inspected, not a time).
 
 ## Private
 

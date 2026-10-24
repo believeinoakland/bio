@@ -11,9 +11,9 @@ import { createHash } from "node:crypto";
 import { decodeBaselineJpeg, decodeBaselineJpegRows, DctRefusal } from "../../src/dctdecode.mjs";
 import { ccittDecode } from "../../src/ccittdecode.mjs";
 import { decodeJbig2, JBIG2_REFUSES, Jbig2Refusal } from "../../src/jbig2decode.mjs";
-import { decodeJpx, JPX_REFUSES, JpxRefusal, MEMORY_FEATURE as JPX_MEMORY } from "../../src/jpxdecode.mjs";
+import { decodeJpx, JPX_REFUSES, JpxRefusal } from "../../src/jpxdecode.mjs";
 import { MqDecoder, mqContexts } from "../../src/mq.mjs";
-import { decodePng, PNG_REFUSES, PngRefusal, MEMORY_FEATURE as PNG_MEMORY } from "../../src/pngdecode.mjs";
+import { decodePng, PNG_REFUSES, PngRefusal } from "../../src/pngdecode.mjs";
 
 const load = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), "utf8"));
 const DCT = load("../fixtures/dct-variants.json"), JB = load("../fixtures/jbig2-variants.json");
@@ -70,8 +70,8 @@ test("R7 the declared refusal sets, exactly: renaming or removing a key is a cha
   assert.deepEqual(Object.keys(JBIG2_REFUSES), ["colour extension", "12 adaptive-template pixels", "reused bitmap coding contexts",
     "Huffman-coded refinement", "a necessary extension segment", "segment type", "several pages", "no page"]);
   assert.deepEqual(Object.keys(JPX_REFUSES), ["high-throughput coding", "a JP2 palette", "sYCC colour", "an extended capability",
-    "packed packet headers", JPX_MEMORY]);
-  assert.deepEqual(Object.keys(PNG_REFUSES), ["interlaced", "an unknown critical chunk", PNG_MEMORY]);
+    "packed packet headers"]);
+  assert.deepEqual(Object.keys(PNG_REFUSES), ["interlaced", "an unknown critical chunk"]);
   for (const set of [JBIG2_REFUSES, JPX_REFUSES, PNG_REFUSES]) {
     assert.ok(Object.isFrozen(set));
     for (const [k, why] of Object.entries(set)) assert.ok(typeof why === "string" && why.length > 20, k);
@@ -80,10 +80,10 @@ test("R7 the declared refusal sets, exactly: renaming or removing a key is a cha
 
 test("R7 every refusal any fixture draws is one of its codec's codes, an UNSUPPORTED one naming a declared key", () => {
   const CLASSES = {
-    dct: ["NOT_A_JPEG", "TRUNCATED", "UNSUPPORTED_PROCESS", "UNSUPPORTED_PRECISION", "UNSUPPORTED_FRAME", "CORRUPT_DATA",
+    dct: ["NOT_A_JPEG", "TRUNCATED", "IMAGE_TOO_LARGE", "UNSUPPORTED_PROCESS", "UNSUPPORTED_PRECISION", "UNSUPPORTED_FRAME", "CORRUPT_DATA",
       "UNSUPPORTED_COMPONENTS", "COMPONENT_MISMATCH", "COLOR_TRANSFORM_CONFLICT", "UNSUPPORTED_SAMPLING", "UNSUPPORTED_ROTATION"],
-    jbig2: ["UNSUPPORTED", "TRUNCATED", "CORRUPT"],
-    jpx: ["UNSUPPORTED", "UNSUPPORTED_SAMPLES", "TRUNCATED", "CORRUPT"],
+    jbig2: ["UNSUPPORTED", "TRUNCATED", "CORRUPT", "IMAGE_TOO_LARGE"],
+    jpx: ["UNSUPPORTED", "UNSUPPORTED_SAMPLES", "TRUNCATED", "CORRUPT", "IMAGE_TOO_LARGE"],
   };
   const KIND = { dct: DctRefusal, jbig2: Jbig2Refusal, jpx: JpxRefusal };
   const SET = { jbig2: JBIG2_REFUSES, jpx: JPX_REFUSES };
@@ -101,8 +101,10 @@ test("R7 every refusal any fixture draws is one of its codec's codes, an UNSUPPO
   assert.equal(refusals, 4 + 14 + 13);
   /* The codes are part of R7 too: JBIG2's and JPX's are all reached by the corpus
    * (DCT's eleven are all driven in dct.test.mjs). */
-  assert.deepEqual([...codes.jbig2].sort(), [...CLASSES.jbig2].sort());
-  assert.deepEqual([...codes.jpx].sort(), [...CLASSES.jpx].sort());
+  /* ... but for IMAGE_TOO_LARGE, which no fixture draws and bounds.test.mjs drives (R12). */
+  const fixtureCodes = (list) => list.filter((c) => c !== "IMAGE_TOO_LARGE").sort();
+  assert.deepEqual([...codes.jbig2].sort(), fixtureCodes(CLASSES.jbig2));
+  assert.deepEqual([...codes.jpx].sort(), fixtureCodes(CLASSES.jpx));
 });
 
 test("R7 every refusal a PNG fixture draws is a PngRefusal under one of R10's codes, an UNSUPPORTED one naming a declared key", async () => {

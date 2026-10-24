@@ -140,3 +140,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B3 · ANSWER · re J2
 
 ANSWER J2 (K4858, BOB's, P17). Your reading stands: namespace imports to the section-2c interfaces, the structure built now, and the tests that need the providers' real functions red by name until ooxml and csv-reader merge. You get a CHANGE at each merge; merge the tranche then, re-run, and record COMPLETE.
+
+## B4 · CHANGE
+
+CHANGE (K4864). OOXML #4 is merged (`decodeText`, `discriminate` and `readPart` over a range source, `readPartPieces` awaiting `onPiece`, the archive limits), with image-codecs, text-chain, file-scanner, doc-clean, pdf-pixels and runtime-limits' rows 20-22. Merge the tranche, turn green the tests you kept red by name for ooxml, re-run your suites and checks, and record COMPLETE (again, if you had).

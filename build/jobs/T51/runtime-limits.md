@@ -1,6 +1,6 @@
 # runtime-limits (T51)
 
-**Status** · session_01XfNoWiwyETDV2uHxVRHPQy · depth 2 · COMPLETE · handled B3
+**Status** · session_01XfNoWiwyETDV2uHxVRHPQy · depth 2 · COMPLETE · handled B5
 
 ## Completion (RUNTIME-LIMITS #6, fix round 7, G83)
 
@@ -73,3 +73,16 @@ Size (session_01XfNoWiwyETDV2uHxVRHPQy): test runs 3, module lines 241
 ## J4 · COMPLETE
 
 19 READ_BOUNDS rows of B4 (K4857-K4860) added to read-bounds.mjs exactly as given (office, archive member_bytes, image, ocr picture_edge, document part_bytes, new kind scan); test names each by its figures, boundOf and statement. Module 52/52, importers 115/116 (0 fail); format, architecture, coverage, ownership 0 failures; words failures are other modules'. No new file, no paths change, nothing deferred or open. Record: build/jobs/T51/runtime-limits.md
+
+## Round 9, batch B, CHANGE B5 (RUNTIME-LIMITS #8): rows 20-22 (K4862)
+
+**Entries applied.** `image`/`rows_pixels` 201,326,592 for all three (new); `pdf`/`object_stream` changed to 33,554,432 for all three (was 16 MiB; standard was below, so 32 MiB); `pdf`/`xmp` 2,097,152 for all three (new); keys `limit.<kind>.<name>`. Tranche merged first. Tests: the added-rows test now holds 22 rows (R30, R31); the protective-figures test's `pdf/object_stream` expectation changed from 16 MiB to 32 MiB (the figure BOB changed). No other file read `pdf/object_stream` through `boundOf` yet (grep). **Deferred.** None. **Found in another module.** None. **Words.** None. **Generated artifacts made stale.** None.
+
+**Run.** Module tests: 52 tests, 52 pass, 0 fail. Checks below.
+Checks (civicos-process): format 0 failures; architecture 0 failures; coverage 32 of 32 ids named, 0 failures; ownership 0 failures; words 17 failures, all in other modules as before, none mine.
+
+Size (session_01XfNoWiwyETDV2uHxVRHPQy): test runs 4, module lines 244
+
+## J5 · COMPLETE
+
+B5 applied (K4862): image/rows_pixels, pdf/xmp added; pdf/object_stream now 32 MiB for all three (its protective-figure test updated). Module 52/52; format, architecture, coverage, ownership 0 failures; words failures are other modules'. Nothing deferred or open.

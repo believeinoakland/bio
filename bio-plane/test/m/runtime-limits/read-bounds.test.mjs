@@ -74,7 +74,7 @@ test("R30: the protective figures, each as proposed", () => {
   const want = {
     sheet: { columns: 16384, cell_chars: 32767, cell_kept_chars: MiB, sheets: 1000 },
     archive: { members: 10000, depth: 3, ratio: 1100, directory: 16 * MiB, name: 4096 },
-    pdf: { page_content: 64 * MiB, object_stream: 16 * MiB, cmap: MiB, embedded_file: 64 * MiB, objects: 2000000, direct_object: 4 * MiB, operands: 65536, tree_depth: 256, bfrange_codes: 65536 },
+    pdf: { page_content: 64 * MiB, object_stream: 32 * MiB, cmap: MiB, embedded_file: 64 * MiB, objects: 2000000, direct_object: 4 * MiB, operands: 65536, tree_depth: 256, bfrange_codes: 65536 },
     image: { edge: 65535, chunks: 65536, row_stride: 8 * MiB, pixels: 120000000 },
     xml: { tag: 64 * 1024 },
     office: { entries: 100000, retained_objects: 250000 },
@@ -134,10 +134,13 @@ const ADDED = [
   ["image", "picture_source", 603979776, 603979776, 603979776],
   ["ocr", "picture_edge", 4096, 4096, 4096],
   ["document", "part_bytes", 104857600, 33554432, 33554432],
+  ["image", "rows_pixels", 201326592, 201326592, 201326592],
+  ["pdf", "object_stream", 33554432, 33554432, 33554432],
+  ["pdf", "xmp", 2097152, 2097152, 2097152],
 ];
 
-test("R30: the 19 rows quoting jobs reported hold exactly the figures BOB gave, and boundOf and statement answer them (R31)", () => {
-  assert.equal(ADDED.length, 19);
+test("R30: the rows quoting jobs reported (19, then K4862's 22) hold exactly the figures BOB gave, and boundOf and statement answer them (R31)", () => {
+  assert.equal(ADDED.length, 22);
   for (const [kind, name, standard, alpha, protective] of ADDED) {
     const row = READ_BOUNDS[kind]?.[name];
     assert.ok(row, `${kind}/${name}`);
