@@ -5,7 +5,7 @@
    module keeps (`archive_entries`' outermost row, `unpack_days`), as a store that has run that long would hold it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, run, sha } from "./fixture.mjs";
+import { world, run, sha, promoteFiled } from "./fixture.mjs";
 import { makeZip, nestedZip } from "../../make-zip.mjs";
 import { unpack, ARCHIVE_CHECKS, UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES,
          UNPACK_LIMITS } from "../../../src/acquisition/index.mjs";
@@ -62,6 +62,7 @@ test("R40: the whole tree under the outermost archive is held to ARCHIVE_TREE_EN
     await capture(w, z);
     /* the tree has already spent all but one entry, or all but one byte, of its share */
     w.rows(`UPDATE archive_entries SET ${col}=? WHERE archive_sha=? AND idx=-1`, figure - 1, sha(z));
+    promoteFiled(w);
     const d = await unpack(w.store, { archiveSha: sha(z), ...DAEMON });
     assert.equal(d.ok, true);
     assert.ok(d.documents.length <= 1, `${name}: at most what fits`);
@@ -84,6 +85,7 @@ test("R40: a file that is itself an archive counts towards the archive it was cu
   assert.equal(w.rows("SELECT tree_entries FROM archive_entries WHERE archive_sha=? AND idx=-1", sha(outer))[0].tree_entries, 2, "the outer archive's own two cuts");
   /* three entries of room left in the outermost tree: the nested archive's cuts spend it, then wait */
   w.rows("UPDATE archive_entries SET tree_entries=? WHERE archive_sha=? AND idx=-1", ARCHIVE_TREE_ENTRIES_MAX - 3, sha(outer));
+  promoteFiled(w);
   const d = await unpack(w.store, { archiveSha: sha(inner), ...DAEMON });
   assert.deepEqual([d.documents.length, d.waiting, d.waiting_on.code], [3, 2, "ARCHIVE_TREE_ENTRIES_MAX"]);
   assert.equal(w.rows("SELECT tree_entries FROM archive_entries WHERE archive_sha=? AND idx=-1", sha(outer))[0].tree_entries,
@@ -92,6 +94,7 @@ test("R40: a file that is itself an archive counts towards the archive it was cu
                "never on the nested one");
   /* negative control: with room in the outermost tree, the nested archive opens whole */
   w.rows("UPDATE archive_entries SET tree_entries=0 WHERE archive_sha=? AND idx=-1", sha(outer));
+  promoteFiled(w);
   const again = await unpack(w.store, { archiveSha: sha(inner), ...DAEMON });
   assert.deepEqual([again.documents.length, again.complete], [2, true]);
   assert.equal(again.documents[0].locator, `${URL1}#zip:0#zip:3`, "a nested file's address is under its archive's");

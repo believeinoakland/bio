@@ -87,6 +87,11 @@ const LIST_DEFAULT = 200, LIST_MAX = 1000;
 /* R38: a symlink's target is the archive's claim, read only when it is small; never followed. */
 const LINK_TARGET_MAX = 4096;
 
+/* R122 (2): the most times a filed member's document is offered to its caller to find a home (the first filing's included), then it is stated final.
+   CHOSEN: BOB's ruling (P17), fix round 9. */
+export const REOFFER_MAX = 3;
+const NOT_PROMOTED = "NOT_PROMOTED";
+
 const HEX64 = /^[0-9a-f]{64}$/;
 const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -227,7 +232,7 @@ CREATE TABLE IF NOT EXISTS archive_entries (
   uncompressed INTEGER, verdict TEXT,
   state TEXT NOT NULL, code TEXT, detail TEXT, limit_name TEXT, sha256 TEXT, target TEXT, at TEXT,
   depth INTEGER, root_sha TEXT, address TEXT, address_norm TEXT, origin TEXT, parts TEXT, entries INTEGER,
-  declared_total INTEGER, bytes INTEGER, tree_entries INTEGER, tree_bytes INTEGER,
+  declared_total INTEGER, bytes INTEGER, tree_entries INTEGER, tree_bytes INTEGER, offers INTEGER,
   PRIMARY KEY (archive_sha, idx));
 CREATE INDEX IF NOT EXISTS archive_entries_sha ON archive_entries(sha256);
 CREATE TABLE IF NOT EXISTS unpack_days (day TEXT PRIMARY KEY, entries INTEGER NOT NULL, bytes INTEGER NOT NULL)`;
@@ -254,6 +259,8 @@ export class Acquisition {
 
   migrate() {
     for (const t of SCHEMA.split(";")) if (t.trim()) this.#sql.exec(t);
+    /* R122: a table made before the count of offers has no such column */
+    if (!this.#rows(`PRAGMA table_info(archive_entries)`).some((c) => c.name === "offers")) this.#sql.exec(`ALTER TABLE archive_entries ADD COLUMN offers INTEGER`);
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -288,8 +295,9 @@ export class Acquisition {
   /** R38, R40: one entry's outcome, with the call's, the tree's and the day's counts it costs, in one transaction. */
   settle(archiveSha, index, { state, code = null, detail = null, sha256 = null, target = null, at, cost = null, root = null, day = null }) {
     return this.#tx(() => {
-      this.#sql.exec(`UPDATE archive_entries SET state=?, code=?, detail=?, sha256=?, target=?, at=?, limit_name=NULL
-                       WHERE archive_sha=? AND idx=?`, state, code, detail, sha256, target, at, archiveSha, index);
+      /* R122: a file filed is offered to its caller once by this settling */
+      this.#sql.exec(`UPDATE archive_entries SET state=?, code=?, detail=?, sha256=?, target=?, at=?, limit_name=NULL, offers=?
+                       WHERE archive_sha=? AND idx=?`, state, code, detail, sha256, target, at, state === "filed" ? 1 : null, archiveSha, index);
       if (cost && root)
         this.#sql.exec(`UPDATE archive_entries SET tree_entries=tree_entries+1, tree_bytes=tree_bytes+? WHERE archive_sha=? AND idx=-1`,
                        cost.bytes, root);
@@ -306,6 +314,16 @@ export class Acquisition {
       this.#sql.exec(`UPDATE archive_entries SET limit_name=? WHERE archive_sha=? AND idx>=0 AND state='waiting'`, limitName, archiveSha);
       return { ok: true };
     });
+  }
+
+  /** R122 (2): the entries filed whose reason is not yet stated final, in index order, each with the offers made of its document. */
+  filedRows(archiveSha) { return this.#rows(`SELECT * FROM archive_entries WHERE archive_sha=? AND idx>=0 AND state='filed' AND sha256 IS NOT NULL AND code IS NULL ORDER BY idx`, archiveSha); }
+  /** R122 (2): one more offer of a filed entry's document. */
+  offered(archiveSha, index) { this.#sql.exec(`UPDATE archive_entries SET offers=COALESCE(offers,1)+1 WHERE archive_sha=? AND idx=?`, archiveSha, index); return { ok: true }; }
+  /** R122 (2): a filed entry whose document found no home in `REOFFER_MAX` offers, stated final with its reason on the entry. */
+  final(archiveSha, index, { code, detail }) {
+    this.#sql.exec(`UPDATE archive_entries SET code=?, detail=? WHERE archive_sha=? AND idx=? AND state='filed'`, code, detail, archiveSha, index);
+    return { ok: true };
   }
 
   dayCount(day) { return this.#one(`SELECT entries, bytes FROM unpack_days WHERE day=?`, day) || { entries: 0, bytes: 0 }; }
@@ -532,7 +550,8 @@ function listingRefusal(listing) {
       return rowed("ARCHIVE_UNREADABLE", { why: "ARCHIVE_ENTRIES_MAX", limit: ARCHIVE_LIMITS.ARCHIVE_ENTRIES_MAX });
     return rowed("ARCHIVE_UNREADABLE", { why: listing.why ?? "source_unreadable" });
   }
-  if (listing.verdict === "ARCHIVE_TOTAL_MAX") return rowed("ARCHIVE_TOTAL_MAX");
+  /* R122 (1): the refusal names the total the listing declared, beside its limit */
+  if (listing.verdict === "ARCHIVE_TOTAL_MAX") return rowed("ARCHIVE_TOTAL_MAX", { declared_total: listing.declared_total ?? null });
   return null;
 }
 
@@ -614,7 +633,7 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
     if (opened && opened.ok === false) return opened;
     h = inst.header(sha);
   }
-  const out = { documents: [], already_held: [], not_filed: [], nested: [] };
+  const out = { documents: [], already_held: [], not_filed: [], nested: [], not_promoted: [] };
   const rowsByIndex = new Map(listing.entries.map((e) => [e.index, e]));
   const waitingRows = inst.entryRows(sha).filter((r) => r.state === "waiting");
   /* R40 (N998): the day the cuts count towards is the day of the instant they record, from the one clock read above */
@@ -626,6 +645,29 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
 
   /* R40: an archive deeper than the published depth is filed as a file and never opened, whoever asks. */
   if (h.depth > ARCHIVE_DEPTH_MAX) stoppedOn = "ARCHIVE_DEPTH_MAX";
+  /* R122 (2): the daemon's run (the plane's `unpack` job, not `acquire`'s own call) offers again each entry filed whose document has no home, its
+     promotion having failed; the third offer without a home is the last, and the entry is then stated final with its reason. The run is not
+     complete while an offer is unanswered: the next run sees whether the document found its home. An offer is a re-cut of the member (its
+     parts are already held, so nothing is written twice) and counts towards the call's share, but not towards the tree's or the day's. */
+  let owedAgain = 0;
+  if (cls === "daemon" && !(internal && internal.automatic) && !stoppedOn) {
+    const p = st.provenance || inst.provenance;
+    const homeless = (s) => { try { return !!(p && typeof p.homeOf === "function") && !p.homeOf(s); } catch { return false; } };
+    for (const r of inst.filedRows(sha)) {
+      const row = rowsByIndex.get(r.idx);
+      if (!row || !homeless(r.sha256)) continue;
+      if ((r.offers ?? 1) >= REOFFER_MAX) {
+        const detail = localize("acquisition.unpack.its_document_was_offered", "its document was offered {n} times and found no home in a project, so it is kept in the record and is not offered again", { n: String(r.offers ?? 1) });
+        inst.final(sha, r.idx, { code: NOT_PROMOTED, detail });
+        out.not_promoted.push({ index: r.idx, sha256: r.sha256, code: NOT_PROMOTED, detail });
+        continue;
+      }
+      owedAgain++;
+      if (call.entries >= UNPACK_CALL_ENTRIES || (call.entries > 0 && call.bytes + row.uncompressed > UNPACK_CALL_BYTES)) { stoppedForCall = true; continue; }
+      call.entries++; call.bytes += row.uncompressed;
+      await reofferOne(ctx, row, r);
+    }
+  }
   for (const r of stoppedOn ? [] : waitingRows) {
     const row = rowsByIndex.get(r.idx);
     if (!row) continue;
@@ -659,6 +701,7 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
   }
   const left = inst.entryRows(sha).filter((r) => r.state === "waiting").length;
   inst.markWaiting(sha, left ? stoppedOn : null);
+  const unanswered = left + owedAgain;
   /* The driver (Suggestions): an automatic run that stopped only for the call's share, or that filed a nested archive
      it may open, asks the queue handed in to continue as `op=unpack` (capture R15's `archive-unpack`).
      R100 (fix round 4b, F11; plane R77): with the plane's owed-work ledger handed in (`internal.owedLater`, else the store's
@@ -684,7 +727,7 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
   }
   return {
     ok: true, archive, documents: out.documents, already_held: out.already_held, not_filed: out.not_filed, nested: out.nested,
-    waiting: left, complete: left === 0,
+    not_promoted: out.not_promoted, waiting: unanswered, complete: unanswered === 0,
     ...(left && stoppedOn ? { waiting_on: rowed(stoppedOn) } : {}),
   };
 }
@@ -703,6 +746,22 @@ async function linkTarget(source, row) {
     for (const c of got) { all.set(c, at); at += c.length; }
     return new TextDecoder("utf-8", { fatal: true }).decode(all);
   } catch { return null; }
+}
+
+/** R122 (2): one more offer of an entry already filed: the member is cut again, verified to be the file the entry recorded, and its document answered for the
+ *  caller to promote. A cut that fails, or yields other bytes, answers no document; the offer is spent either way. */
+async function reofferOne(ctx, row, rec) {
+  const { inst, ev, sha, h, at, out } = ctx;
+  inst.offered(sha, row.index);
+  const { chunks, done } = streamMember(ctx.source, row);
+  let stored = null;
+  try { stored = await storeChunks(ev, chunks); } catch { stored = null; }
+  const verdict = await done;
+  if (!stored || !verdict.ok || stored.sha256 !== rec.sha256 || verdict.sha256 !== rec.sha256) return;
+  const address = h.address ? `${h.address}#zip:${row.index}` : null;
+  const receipt = { address, addressNorm: h.address_norm ? `${h.address_norm}#zip:${row.index}` : null, captureSha: rec.sha256,
+                    retrieved: at, via: UNPACKED_VIA, retrievalLocator: `zip:${sha}!${row.index}` };
+  out.documents.push(await fileDocument(ctx, row, stored, receipt));
 }
 
 /** R38, R39: cut one `ok` entry, store it, and record its outcome: not filed (the cut refused), already held (a second
@@ -820,7 +879,8 @@ function entryOf(r, { limit, refused, sees, heldOf }) {
   const verdict = r.verdict;
   const state = r.state || (verdict === "directory" ? "folder" : verdict === "symlink" ? "link"
     : NOT_CUT.includes(verdict) ? "not_filed" : "waiting");
-  if (state === "filed") return { ...base, state, sha256: r.sha256, bundle: sees(r.sha256) };
+  /* R122: a filed entry whose document found no home in its offers states it, with the reason */
+  if (state === "filed") return { ...base, state, sha256: r.sha256, bundle: sees(r.sha256), ...(r.code ? { not_promoted: { code: r.code, detail: r.detail ?? null } } : {}) };
   /* R41 (T50; N1126): an `already_held` entry also states when, and under which document's title, the record first held the
      same bytes (null when the earlier holding is no document the viewer may see, or has no document yet) */
   if (state === "already_held") { const bundle = sees(r.sha256); return { ...base, state, sha256: r.sha256, bundle, ...heldOf(r.sha256, bundle) }; }
