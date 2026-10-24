@@ -32100,112 +32100,112 @@
       "en": "setting: the group's declared stake in its own words, carried beside its public identity on what it sends or publishes from then; an administrator's act, every earlier value kept; moves no bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3046
+      "line": 3126
     },
     {
       "id": "instance-setup.declared.disclosureshown",
       "en": "personal state, keyed by member: the assistant's disclosure shown to them, with its version",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3049
+      "line": 3129
     },
     {
       "id": "instance-setup.declared.groupdomainset",
       "en": "the group's claimed domain — the subject is the instance's identity, not a bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3052
+      "line": 3132
     },
     {
       "id": "instance-setup.declared.grouplanguagesset",
       "en": "setting: the languages the group works in; an administrator's act, a later one replacing it; moves no bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3055
+      "line": 3135
     },
     {
       "id": "instance-setup.declared.grouplogoset",
       "en": "setting: the group's logo, PNG or JPEG, or none; an administrator's act, a later one replacing it; moves no bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3058
+      "line": 3138
     },
     {
       "id": "instance-setup.declared.groupnameset",
       "en": "the group's public display name — the subject is the instance's identity, not a bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3061
+      "line": 3141
     },
     {
       "id": "instance-setup.declared.infolevelset",
       "en": "personal state, keyed by member: how quickly explanations open, promptly or after a longer pause; nothing is hidden",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3064
+      "line": 3144
     },
     {
       "id": "instance-setup.declared.memberlanguageset",
       "en": "personal state, keyed by member: the language the interface speaks to them",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3067
+      "line": 3147
     },
     {
       "id": "instance-setup.declared.officesseed",
       "en": "the instance's configuration: seeds the active profiles' offices and bodies as entities; an administrator's",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3070
+      "line": 3150
     },
     {
       "id": "instance-setup.declared.placewanted",
       "en": "the instance's configuration: the place the group wants its profile for; an administrator's",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3073
+      "line": 3153
     },
     {
       "id": "instance-setup.declared.profilesset",
       "en": "the instance's active jurisdiction profiles — the subject is the instance's configuration, not a bundle; refused PROFILES_NOT_ADMIN to a caller who is not an administrator",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3076
+      "line": 3156
     },
     {
       "id": "instance-setup.declared.runtime",
       "en": "read: what the instance was measured to cost and where its limits lie (the runtime's measurements, the CPU probe's trail, the subrequest ceiling)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3079
+      "line": 3159
     },
     {
       "id": "instance-setup.declared.selftest",
       "en": "read: whether the deployment is healthy (its bindings, the store's stats and a storage round trip); it never returns a secret",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3082
+      "line": 3162
     },
     {
       "id": "instance-setup.declared.updatelater",
       "en": "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3085
+      "line": 3165
     },
     {
       "id": "instance-setup.declared.updateskip",
       "en": "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3088
+      "line": 3168
     },
     {
       "id": "instance-setup.declared.updatestart",
       "en": "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3091
+      "line": 3171
     },
     {
       "id": "instance-setup.livefire.confined_to_the_scratch_namespace",
@@ -32226,14 +32226,14 @@
       "en": "store_location and store_generation are what this copy is configured with for where its team's room is first created and which room it uses. They do not say where the room runs.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3263
+      "line": 3363
     },
     {
       "id": "instance-setup.setup.a_draft_carries_no_project",
       "en": "a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 369
+      "line": 428
     },
     {
       "id": "instance-setup.setup.answered_http_status_without_a",
@@ -32247,245 +32247,245 @@
       "en": "capture {sha} is not a Legistar {endpoint} list. Nothing was seeded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1953
+      "line": 2012
     },
     {
       "id": "instance-setup.setup.capture_not_legistar_other",
       "en": "capture {sha} is not a Legistar {endpoint} list (it is {found}). Nothing was seeded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1952
+      "line": 2011
     },
     {
       "id": "instance-setup.setup.capture_not_legistar_why",
       "en": "capture {sha} is not a Legistar {endpoint} list ({why}). Nothing was seeded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1950
+      "line": 2009
     },
     {
       "id": "instance-setup.setup.check_did_not_complete",
       "en": "The check did not complete ({why}).",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2532
+      "line": 2591
     },
     {
       "id": "instance-setup.setup.choosing_the_jurisdiction_profiles_is",
       "en": "choosing the jurisdiction profiles is an administrator's act, and your team's Civicsmith stamps who is asking from the signed-in session. This caller is not one of the active administrators.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1584
+      "line": 1643
     },
     {
       "id": "instance-setup.setup.cite_forum",
       "en": "jurisdiction profile {id}, forum {label}",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1824
+      "line": 1883
     },
     {
       "id": "instance-setup.setup.cite_forum_basis",
       "en": "jurisdiction profile {id}, forum {label} (basis: {basis})",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1823
+      "line": 1882
     },
     {
       "id": "instance-setup.setup.cite_office",
       "en": "jurisdiction profile {profile}, {entry}",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1732
+      "line": 1791
     },
     {
       "id": "instance-setup.setup.cite_office_basis",
       "en": "jurisdiction profile {profile}, {entry} (basis: {basis})",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1731
+      "line": 1790
     },
     {
       "id": "instance-setup.setup.disclosure_no_member",
       "en": "The request names no member. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2119
+      "line": 2178
     },
     {
       "id": "instance-setup.setup.disclosure_no_version",
       "en": "The request names no version of the disclosure's words. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2120
+      "line": 2179
     },
     {
       "id": "instance-setup.setup.domain_none_given",
       "en": "The request names no domain. A domain is claimed as a bare host name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1195
+      "line": 1254
     },
     {
       "id": "instance-setup.setup.domain_not_bare_host",
       "en": "'{domain}' is not a bare host name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1194
+      "line": 1253
     },
     {
       "id": "instance-setup.setup.draft_answers_malformed",
       "en": "The answers are a list of at most {max_answers} {question, text}, each text at most {max_text} characters. Nothing was saved.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2417
+      "line": 2476
     },
     {
       "id": "instance-setup.setup.each_metric_is_stated_in",
       "en": "each metric is stated in its own unit. A metric in ms is measured wall time across synchronous compute segments, not billed CPU time; a metric in bytes is a count of the work a run handled, not a time. peak is the run that would die first if a ceiling were near; a mean would hide it.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2867
+      "line": 2945
     },
     {
       "id": "instance-setup.setup.every_answer_is_empty_so",
       "en": "every answer is empty, so there is nothing to draft from. Nothing was saved.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2419
+      "line": 2478
     },
     {
       "id": "instance-setup.setup.fields_as_they_were",
       "en": "the fields are as they were",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2412
+      "line": 2471
     },
     {
       "id": "instance-setup.setup.how_quickly_explanations_open_is",
       "en": "how quickly explanations open is set by the member, from their own signed-in session. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2322
+      "line": 2381
     },
     {
       "id": "instance-setup.setup.language_none_given",
       "en": "The request names no language. A language is chosen as one well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2284
+      "line": 2343
     },
     {
       "id": "instance-setup.setup.language_not_a_tag",
       "en": "'{tag}' is not a well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2283
+      "line": 2342
     },
     {
       "id": "instance-setup.setup.languages_bad_tag",
       "en": "'{tag}' is not a well-formed BCP 47 language tag (en, es, zh-Hant). The languages are 1 to {max} of them. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1457
+      "line": 1516
     },
     {
       "id": "instance-setup.setup.languages_empty_list",
       "en": "An empty list names no language. The languages are 1 to {max} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1454
+      "line": 1513
     },
     {
       "id": "instance-setup.setup.languages_not_a_list",
       "en": "The languages are sent as a list of 1 to {max} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1452
+      "line": 1511
     },
     {
       "id": "instance-setup.setup.languages_too_many",
       "en": "A list of {count} names is too many. The languages are 1 to {max} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1456
+      "line": 1515
     },
     {
       "id": "instance-setup.setup.level_none_given",
       "en": "The request names no level. A level is chosen as one of {levels}. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2326
+      "line": 2385
     },
     {
       "id": "instance-setup.setup.level_not_one_of",
       "en": "'{level}' is not one of {levels}. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2325
+      "line": 2384
     },
     {
       "id": "instance-setup.setup.name_none_given",
       "en": "The request names no display name. A display name is one line of 1 to {max} characters with no control characters. Nothing was set.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1175
+      "line": 1234
     },
     {
       "id": "instance-setup.setup.name_not_one_line",
       "en": "A name of {chars} characters is not one line of 1 to {max} characters with no control characters. Nothing was set.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1174
+      "line": 1233
     },
     {
       "id": "instance-setup.setup.no_producing_team_is_recorded",
       "en": "no producing team is recorded for this store. A store records it once: at its first boot, from the slug its installer bound, or — on a store that already held documents when the value arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must name its producing team is given no default: a caller's own statement of its team is kept as the caller's, and a write stating none is refused.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 836
+      "line": 895
     },
     {
       "id": "instance-setup.setup.place_none_given",
       "en": "The request names no place. A place is named in one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2197
+      "line": 2256
     },
     {
       "id": "instance-setup.setup.place_not_one_line",
       "en": "A name of {chars} characters is not one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2196
+      "line": 2255
     },
     {
       "id": "instance-setup.setup.probe_cut_off",
       "en": "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. A run with no recorded end was cut off: the ceiling lies within its bracket, above its last completed step's elapsed time and below what its next step would have cost.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2930
+      "line": 3008
     },
     {
       "id": "instance-setup.setup.probe_none_cut_off",
       "en": "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. No run has been cut off yet, so the ceiling is above everything tried.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2931
+      "line": 3009
     },
     {
       "id": "instance-setup.setup.profile_made_up_for_testing",
       "en": "{tests} is a profile made up for testing. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1595
+      "line": 1654
     },
     {
       "id": "instance-setup.setup.profiles_made_up_for_testing",
       "en": "{tests} are profiles made up for testing. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1594
+      "line": 1653
     },
     {
       "id": "instance-setup.setup.runner_host_answered_its_version",
@@ -32499,294 +32499,294 @@
       "en": "setting the team's display name or claiming its domain is an administrator's act (Publication §7), and your team's Civicsmith stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1146
+      "line": 1205
     },
     {
       "id": "instance-setup.setup.skip_no_reason",
       "en": "No reason was given. A release is skipped with a reason of one line of 1 to {max} characters. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2819
+      "line": 2897
     },
     {
       "id": "instance-setup.setup.skip_reason_many_lines",
       "en": "A reason of {chars} characters over more than one line is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2821
+      "line": 2899
     },
     {
       "id": "instance-setup.setup.skip_reason_too_long",
       "en": "A reason of {chars} characters is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2820
+      "line": 2898
     },
     {
       "id": "instance-setup.setup.slug_none_given",
       "en": "The request names no slug. A team is recorded under a slug in the installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1105
+      "line": 1164
     },
     {
       "id": "instance-setup.setup.slug_not_in_grammar",
       "en": "'{slug}' is not a slug in the installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1104
+      "line": 1163
     },
     {
       "id": "instance-setup.setup.stake_empty",
       "en": "An empty stake is not a stake. A stake is one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1364
+      "line": 1423
     },
     {
       "id": "instance-setup.setup.stake_many_lines",
       "en": "A stake of {chars} characters over more than one line is not one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1366
+      "line": 1425
     },
     {
       "id": "instance-setup.setup.stake_none_given",
       "en": "The request names no stake. A stake is one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1363
+      "line": 1422
     },
     {
       "id": "instance-setup.setup.stake_too_long",
       "en": "A stake of {chars} characters is not one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1365
+      "line": 1424
     },
     {
       "id": "instance-setup.setup.the_assistant_could_not_serve",
       "en": "the assistant could not serve a draft of the team's description, so nothing was drafted and the fields are as they were.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2421
+      "line": 2480
     },
     {
       "id": "instance-setup.setup.the_assistant_was_not_on",
       "en": "the assistant was not on when this request was resolved, so nothing was drafted and the fields are as they were.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2410
+      "line": 2469
     },
     {
       "id": "instance-setup.setup.the_disclosure_is_recorded_by",
       "en": "the disclosure is recorded by the member it was shown to, from their own signed-in session. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2122
+      "line": 2181
     },
     {
       "id": "instance-setup.setup.the_draft_could_not_be",
       "en": "the draft could not be checked, so nothing is offered.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 357
+      "line": 416
     },
     {
       "id": "instance-setup.setup.the_draft_did_not_pass",
       "en": "the draft did not pass the check that it adds no fact, so nothing is offered.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 356
+      "line": 415
     },
     {
       "id": "instance-setup.setup.the_forum_kind_label_a",
       "en": "The {forum_kind} {label}, a forum as the active {cite} names it; seeded at setup.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1826
+      "line": 1885
     },
     {
       "id": "instance-setup.setup.the_language_of_the_screens",
       "en": "the language of the screens is set by the member, from their own signed-in session. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2277
+      "line": 2336
     },
     {
       "id": "instance-setup.setup.the_profiles_are_sent_as",
       "en": "the profiles are sent as a list of profile ids, in the order they are read; an empty list chooses none. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1588
+      "line": 1647
     },
     {
       "id": "instance-setup.setup.the_record_holds_no_readable",
       "en": "the record holds no readable capture {sha}. Nothing was seeded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1941
+      "line": 2000
     },
     {
       "id": "instance-setup.setup.the_request_names_no_capture",
       "en": "the request names no capture of Legistar's {endpoint}. Nothing was seeded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1935
+      "line": 1994
     },
     {
       "id": "instance-setup.setup.this_run_returned_so_the",
       "en": "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3360
+      "line": 3460
     },
     {
       "id": "instance-setup.setup.this_store_has_recorded_its",
       "en": "this store has recorded its producing team since {recorded_at} ({source}), and it is recorded once. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1109
+      "line": 1168
     },
     {
       "id": "instance-setup.setup.update_no_version",
       "en": "The request names no version, and a release is decided by its version. The release ready to install is {ready}. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2755
+      "line": 2833
     },
     {
       "id": "instance-setup.setup.update_none_ready",
       "en": "No release is ready to install. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2753
+      "line": 2831
     },
     {
       "id": "instance-setup.setup.update_not_the_ready_one",
       "en": "'{version}' is not the release ready to install, which is {ready}. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2754
+      "line": 2832
     },
     {
       "id": "instance-setup.setup.what_asking_draft",
       "en": "asking the assistant to draft your team's description",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2404
+      "line": 2463
     },
     {
       "id": "instance-setup.setup.what_choosing_update",
       "en": "choosing to update your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2770
+      "line": 2848
     },
     {
       "id": "instance-setup.setup.what_declaring_stake",
       "en": "declaring what your team has at stake",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1355
+      "line": 1414
     },
     {
       "id": "instance-setup.setup.what_naming_place",
       "en": "naming the place your team works in",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2188
+      "line": 2247
     },
     {
       "id": "instance-setup.setup.what_reading_place",
       "en": "reading the place your team named",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2219
+      "line": 2278
     },
     {
       "id": "instance-setup.setup.what_reading_recovery_step",
       "en": "reading the step of two administrators holding recovery codes",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2370
+      "line": 2429
     },
     {
       "id": "instance-setup.setup.what_reading_updates",
       "en": "reading the updates of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2685
+      "line": 2763
     },
     {
       "id": "instance-setup.setup.what_seeding_offices",
       "en": "seeding the offices the jurisdiction profiles name",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1713
+      "line": 1772
     },
     {
       "id": "instance-setup.setup.what_seeding_seats",
       "en": "seeding the seats Legistar records",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1927
+      "line": 1986
     },
     {
       "id": "instance-setup.setup.what_setting_aside_update",
       "en": "setting aside an update of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2783
+      "line": 2861
     },
     {
       "id": "instance-setup.setup.what_setting_languages",
       "en": "setting the languages your team's members use",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1447
+      "line": 1506
     },
     {
       "id": "instance-setup.setup.what_setting_logo",
       "en": "setting your team's logo",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1400
+      "line": 1459
     },
     {
       "id": "instance-setup.setup.what_skipping_update",
       "en": "skipping an update of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2811
+      "line": 2889
     },
     {
       "id": "instance-setup.setup.what_the_updates",
       "en": "the updates of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2716
+      "line": 2794
     },
     {
       "id": "instance-setup.setup.whether_this_set_answers_the",
       "en": "whether this set answers the first-month question is said as true or false, or not at all. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2329
+      "line": 2388
     },
     {
       "id": "instance-setup.setup.why_nothing_was_changed",
       "en": "{why}. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1405
+      "line": 1464
     },
     {
       "id": "instance-setup.setup.your_teams_civicsmith_holds_no",
       "en": "your team's Civicsmith holds no profile {map}. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1591
+      "line": 1650
     },
     {
       "id": "intent.declared.aspirationdeadend",
