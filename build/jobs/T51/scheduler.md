@@ -255,8 +255,10 @@ Tranche/T51 merged first (`ff2f3368b4`).
 
 **Results**
 - scheduler suite: ℹ tests 185, ℹ pass 185, ℹ fail 0 (was 184; +1).
-- `impact.mjs origin/tranche/T51 HEAD`: 11 modules, 250 files. Run: tasks 120/121, queue 222/223, instance-setup 234/234, op-declarations 23/23, answer-envelope 43/43, store-door 57/57, signin-door 15/15, screens-action 4/4; plane and control-plane, see below. The tasks failure (R25 K4488 `authority event`) and the queue failure (R55 `queue.kind.<kind>`) are red on `origin/tranche/T51`'s `index.mjs` too (checked), not this change's.
+- `impact.mjs origin/tranche/T51 HEAD`: 11 modules, 250 files. Run: tasks 120/121, queue 222/223, instance-setup 234/234, op-declarations 23/23, answer-envelope 43/43, store-door 57/57, signin-door 15/15, screens-action 4/4; plane 66 files and control-plane 78 files, each file run alone: 0 failures. The tasks failure (R25 K4488 `authority event`) and the queue failure (R55 `queue.kind.<kind>`) are red on `origin/tranche/T51`'s `index.mjs` too (checked), not this change's.
 - format 176 modules, 176 requirements files, 0 failures; architecture (scheduler) 22 product files, 87 imports, 0 failures; coverage (scheduler) 33 of 33 live ids, 0 failures; words (scheduler) 3526 literals, 0 failures; ownership 3 files, 0 failures.
 - No sentence added; no key owed.
 
 **Deferred**: none. **Other modules**: none new. **Generated artifacts made stale**: `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker`'s bundle carry scheduler source; BOB regenerates.
+
+Size (session_01D72GnkQD2sSzFN9m6WNunZ): test runs 12, module lines 1048
