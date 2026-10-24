@@ -928,3 +928,11 @@ PLANE #57 (job 37), three readings; I carry on with each, none blocks me.
 - Checks: format 0, architecture 0, coverage 106 of 106, words (plane) 0, ownership 0 failures; `run.mjs` whole product: no failure names plane.
 
 Size (session_01U3Cn7msFQfwLaBjAPpmVKZ): test runs 38, module lines 3733
+
+## J56 · REPORT
+
+PLANE #57 (job 37), four findings outside my module (each in my record, "Found in other modules"):
+1. **READ_BOUNDS (runtime-limits), a ceiling with no row (K4842 (1)).** G126e's inline ceiling ("none loads a PDF over 2 MB in a request"), which the transcriber now keeps: kind `pdf`, name `request_bytes`, standard 2 MiB, alpha 2 MiB, protective 2 MiB, key `limit.pdf.request_bytes`. `plane/transcribe.mjs` quotes it by `boundOf("pdf", "request_bytes")` and falls back to 2 MiB marked "proposed; BOB records" until the row exists (control-plane's unexported `READING_DEFER_PDF_BYTES` holds the same figure).
+2. **record-core R91's `BOOKKEEPING_TABLES`** lacks the job table's `job_unit_attempts` and `job_batches`, which every ledger tick writes: `writeCount()` moves on a tick. A requirement change of record-core's.
+3. **`r8-headofline` "R80 G91 L: ... never answers an alarm_at in the past"** is red on the tip before and after this job, with scheduler 33 and file-safety merged: during a 12 s scan held past the firing's budget, `getAlarm()` answers one past wake for many seconds (e.g. alarm 1792841480751 against polls at +2.1 s ... +6 s). Not a plane arm: the heal frame does not look during a firing and the ledger arms only on registration. The scheduler's reconcile at the budget's end with a consumer in flight looks like the setter; scheduler's to place. The other two tests of the file are green.
+4. **extraction**: 7 reds (g40 2, g41 3, n26 1, r82 1), identical on the merged tip without this job (job 28 open).
