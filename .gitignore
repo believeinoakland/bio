@@ -341,3 +341,7 @@ bio-plane/.nc-d507/
 # `src/affordances.mjs` here per arm; a run killed between arm and restore must not leave a second plane source.
 .rec186-harness/
 bio-plane/src/setup-words/rows.pseudo.mjs
+
+# A worktree links each member's node_modules to the main checkout's (K4113); a link is a file, which a
+# `node_modules/` pattern misses, so they were once committed (K4939). Ignore the name as a file too.
+node_modules

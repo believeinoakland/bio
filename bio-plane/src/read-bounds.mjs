@@ -145,8 +145,13 @@ const TABLE = {
     content_xml: bytes(20 * MiB, k("ods", "content_xml"), MB50),
     repeat_units: same(262144, k("ods", "repeat_units")),
   },
-  /* the analysis workbook's add: 50,000 cells today, 250,000 once the workbook-add job merges (K4831 (10)) */
-  workbook: { cells: row(250000, 50000, 250000, k("workbook", "cells")) },
+  /* the analysis workbook: its add holds up to 250,000 cells once the workbook-add job merges (K4831 (10)); the file 20 MiB;
+   * the cells' JSON 64 MiB, a protective figure from the capped-child measure (K4831 (8)) */
+  workbook: {
+    cells: same(250000, k("workbook", "cells")),
+    bytes: bytes(20 * MiB, k("workbook", "bytes"), MB50),
+    cells_json_bytes: same(64 * MiB, k("workbook", "cells_json_bytes")),
+  },
   sheet_worker: {
     cells: same(250000, k("sheet_worker", "cells")),
     bytes: bytes(9000000, k("sheet_worker", "bytes"), MB50),
