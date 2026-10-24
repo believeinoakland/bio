@@ -56,12 +56,12 @@ import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, keepRenderBodies
 import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-governor/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../provenance/index.mjs";
 import { attest } from "../attestation/index.mjs";
-import { hasZipMagic, listArchive, normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART } from "../ooxml.mjs";
+import { hasZipMagic, listArchive, normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART, decodeText } from "../ooxml.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { ARCHIVE_CHECKS } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
-import { titleOfBytes, cleanedTitle } from "./title.mjs";
+import { titleOfBytes, cleanedTitle, decodeAs, charsetOf } from "./title.mjs";
 import * as pdfReader from "../pdfstructure.mjs";
 import { baseViewer, viewerMember } from "../member-roster/index.mjs";
 
@@ -156,8 +156,10 @@ export function textTypeOf({ bytes = null, type = null, name = null } = {}) {
     const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name === "string" ? name : "") : null;
     const readAs = named ? NAME_TEXT_TYPES[named[1].toLowerCase()] : type;
     if (typeof readAs !== "string" || readAs === "" || !profilesAsText(readAs, bytes.length, false)) return null;
-    if (bytes.includes(0)) return null;
-    new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    /* R120: the one decode; UTF-16 carries NULs by its nature, any other NUL is a binary file; replacement over 0.5 % is not text */
+    const d = decodeText(bytes, { declared: charsetOf(readAs) ?? undefined, kind: /html|xml/i.test(readAs) ? (/html/i.test(readAs) ? "html" : "xml") : undefined, name: charsetOf(readAs) ?? undefined });
+    if (!d.ok || d.replaced_ratio > 0.005) return null;
+    if (bytes.includes(0) && !(d.encoding.startsWith("utf-16") && (bytes.length >= 16 || d.assumed === false))) return null;
     return readAs;
   } catch { return null; }
 }
@@ -244,7 +246,7 @@ export async function servedSubstance({ bytes, headers = {}, locator = null, con
     const sha = await sha256Hex(bytes);
     const asText = profilesAsText(contentType, bytes.length, false);
     const profCtx = { headers, locator, content_type: contentType || null,
-                      text: asText ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "", ...(view ? { view } : {}) };
+                      text: asText ? (decodeAs(bytes, contentType).text ?? "") : "", ...(view ? { view } : {}) };
     const stackId = identify(profCtx);
     const digests = await substanceDigests(asText ? bytes : null, stackId, profCtx, sha, false,
                                            asText || bytes.length > ODF_DIGEST_MAX ? null : bytes);
@@ -1927,11 +1929,17 @@ async function addressReputation(address, given, scanner) {
 export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved,
                                   origin = null, parts = null, firstPart = null }) {
   const pv = view || { view: undefined, ids: null };
-  let profileText = "", profileBytes = null;
+  let profileText = "", profileBytes = null, textEncoding = null;
   if (profilesAsText(ct, total, multipart)) {
     try {
       const pobj = await ev.get(sha);
-      if (pobj) { profileBytes = new Uint8Array(await pobj.arrayBuffer()); profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes); }
+      if (pobj) {
+        profileBytes = new Uint8Array(await pobj.arrayBuffer());
+        /* R120: one decode for an upload, a fetch and a part; a text it cannot decode is stated, never replacement characters with no failure */
+        const d = decodeAs(profileBytes, (headers && typeof headers["content-type"] === "string" && headers["content-type"]) || ct, { kind: /html/i.test(ct || "") ? "html" : /xml/i.test(ct || "") ? "xml" : undefined });
+        if (d.ok) { profileText = d.text; textEncoding = { encoding: d.encoding, assumed: d.assumed, replaced: d.replaced, replaced_ratio: d.replaced_ratio }; }
+        else { profileBytes = null; textEncoding = { failure: "ENCODING_UNSUPPORTED", name: d.name ?? null }; }
+      }
     } catch { /* an unreadable primary is not a failed capture */ }
   }
   /* COFF-1, R17 (K659): magic bytes first, from the stored bytes read back WHOLE up to ODF_DIGEST_MAX when not already
@@ -1955,6 +1963,7 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
     boundary: !!(typeof stackId.handler.boundary === "function" && stackId.handler.boundary(profCtx)),
     source_content_type: ct || null,
     profiled_from_text: !!profileText,
+    ...(textEncoding ? { text_encoding: textEncoding } : {}),
     /* R17 (N3, N10): which jurisdiction view the content type was judged under. */
     jurisdiction_view: pv.ids,
     format: detectFormat(formatBytes, ct || null),
@@ -2016,27 +2025,34 @@ async function zipPastBound(ev, parts, head = null) {
  *  supporting files to speak of (`NOT_HTML`). Pure; never throws. */
 export function supportingOf({ subs = null, render = null, notWalked = null } = {}) {
   try {
-    let kept = 0, total = 0;
+    let kept = 0, total = 0, pictures = 0, pictureBytes = 0;
     const why = new Map();
+    /* R119 (G138, S15): a picture kept as bytes is never read; the count and size are stated so the document says "N pictures kept, not read" */
+    const picture = (r, type, ct) => {
+      if (!(/^image$/i.test(String(type || "")) || /^image\//i.test(String(ct || "")))) return;
+      if (!Number.isFinite(r && r.bytes)) return;
+      pictures++; pictureBytes += r.bytes;
+    };
     const note = (reason, extra = {}) => { const g = why.get(reason) || { reason, count: 0, ...extra }; g.count++; why.set(reason, g); };
     if (subs && Array.isArray(subs.subresources))
       for (const r of subs.subresources) {
         total++;
-        if (r && r.ok) { kept++; continue; }
+        if (r && r.ok) { kept++; picture(r, r.kind, r.content_type); continue; }
         const limit = r && Number.isFinite(r.cap) ? r.cap : r && Number.isFinite(r.budgetBytes) ? r.budgetBytes : undefined;
         note(String(r && r.reason || "NOT_KEPT"), limit !== undefined ? { limit } : {});
       }
     if (render && Array.isArray(render.subresources))
       for (const r of render.subresources) {
         total++;
-        if (r && r.sha256 && r.sha256 !== "undetermined") { kept++; continue; }
+        if (r && r.sha256 && r.sha256 !== "undetermined") { kept++; picture(r, r.type, null); continue; }
         note("BODY_NOT_KEPT", typeof (r && r.digest_reason) === "string" ? { detail: r.digest_reason } : {});
       }
     const stopped = notWalked && notWalked.reason && notWalked.reason !== "NOT_HTML" ? String(notWalked.reason) : null;
     if (!total && !stopped) return null;
     return { kept, skipped: total - kept, total,
              reasons: [...why.values()].sort((a, b) => b.count - a.count || (a.reason < b.reason ? -1 : 1)),
-             ...(stopped ? { not_walked: stopped } : {}) };
+             ...(stopped ? { not_walked: stopped } : {}),
+             ...(pictures ? { pictures_unread: { count: pictures, bytes: pictureBytes } } : {}) };
   } catch { return null; }
 }
 
@@ -2095,7 +2111,7 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
     platformCeiling: useCeiling, resume,
     siteLookup: baseHost ? async (norm) => siteKnown[norm] || null : null,
     readBack: async (sh) => { const o = await ev.get(sh); return o ? new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(await o.arrayBuffer())) : null; },
-    html: new TextDecoder("utf-8", { fatal: false }).decode(primaryBytes),
+    html: (decodeAs(primaryBytes, ct, { kind: "html" }).text ?? ""),
     base, primarySha: sha, primaryFile: `snapshots/${name}`,
     isPublic: isPublicHttpsLocator, sha256: sha256Hex,
     put: async (s, b) => { if (await ev.head(s)) return { existed: true }; await ev.put(s, b); return { existed: false }; },
