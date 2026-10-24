@@ -126,6 +126,29 @@ test("R38 pptx: speaker notes, master and layout text, text boxes and a hidden s
   assert.ok(!t.document.includes("Speaker says") && !t.document.includes("Master title"), "document stays the slides' text");
 });
 
+test("R38 pptx (K4987): a text box's words are the text_box part's; the slide names them (bodyText leaves them out, the box part names its shapes); a slide with no box has neither", async () => {
+  const sp = (id, box, words) => `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="S${id}"/><p:cNvSpPr${box ? ' txBox="1"' : ""}/></p:nvSpPr><p:txBody><a:p><a:r><a:t>${words}</a:t></a:r></a:p></p:txBody></p:sp>`;
+  const sld = (...shapes) => `<?xml version="1.0"?><p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree>${shapes.join("")}</p:spTree></p:cSld></p:sld>`;
+  const t = await pptxEntry.text(F.pptx({ slides: [
+    { file: "slide1.xml", xml: sld(sp(2, false, "Plain words"), sp(3, true, "Boxed words")) },
+    { file: "slide2.xml", xml: sld(sp(2, true, "Only box")) },
+    { file: "slide3.xml", xml: sld(sp(2, false, "No box here")) },
+  ] }));
+  assert.equal(t.ok, true);
+  const [s1, s2, s3] = t.slides;
+  /* R11 stays: the slide's text and the document hold every word */
+  assert.equal(s1.text, "Plain words\nBoxed words");
+  assert.ok(t.document.includes("Boxed words"));
+  assert.equal(s1.bodyText, "Plain words");
+  assert.equal(s2.bodyText, "");
+  assert.equal("bodyText" in s3, false);
+  const boxes = byKind(t.parts, "text_box");
+  assert.deepEqual(boxes.map((b) => b.text), ["Boxed words", "Only box"]);
+  assert.deepEqual(boxes[0].shapes, [boxes[0].anchor.shape]);
+  assert.equal(boxes[0].anchor.shape, 1);
+  for (const p of t.parts.filter((x) => x.kind !== "text_box")) assert.equal("shapes" in p, false, p.kind);
+});
+
 test("R38 xlsx: a cell comment is a cell_note unit citing its cell; a part that can hold other text is stated unread", async () => {
   const S = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"';
   const bytes = F.xlsx({

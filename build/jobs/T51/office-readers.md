@@ -170,3 +170,11 @@ R38 met (K4924, B18): every part's ref is a non-empty string unique within its p
 ## J13 · COMPLETE
 
 COMPLETE (B19, job 89): R38 amended (G166). The docx text_box part now carries paras, the indices in paragraphs of the paragraphs the box holds (docx.mjs, one line; the piecewise path shares the loop). The paragraphs keep their numbers and stay in paragraphs, document and cell text (R11); no other kind carries paras. Cause: box words were a body unit and a text_box unit with nothing joining them; module tests pinned the duplicate. Red first: parts-kinds.test.mjs 'R38 docx (G166)' failed (paras undefined), green after. Platform check: none (pure). Tests: office-readers + csv-reader 240 pass, odf-reader + format-registry 179 pass, 0 fail. Not run: users of the docx answer (reading-pipeline, extraction); the change adds one field. Checks: format 0, architecture 0, coverage 6927/6927, words 0, ownership 0. impact: 117 of 176 modules (tranche merge). FLAG: pptx (pptx.mjs ~946) and odt (odf.mjs ~1680) text boxes may duplicate the same way; R38 names docx only. Size (session_01WgnDmQT1Lke6quo5wARVeK): test runs 3, module lines 4422 incl. office-xml.mjs.
+
+## T51 fix round 9, job 89 continued: pptx text boxes (B20 CHANGE, K4987)
+
+- **Reproduced:** a slide with a plain shape and a text box: the slide's `text` (and so the slide unit reading-pipeline makes) held the box words, and a `text_box` part held them again. Duplicated.
+- **Applied (`pptx.mjs`):** the slide walk also gives `bodyText`, the slide's text outside the text boxes; a slide entry in `slides` carries `bodyText` only when a text box holds words (a box-only slide has `""`), `text` and `document` unchanged (R11); a `text_box` part carries `shapes: [<shape index>]`. A hidden slide's body unit now holds `bodyText`, so its box words are the box part's only. reading-pipeline's job should use `slide.bodyText ?? slide.text` for the slide unit.
+- **Tests:** `parts-kinds.test.mjs` "R38 pptx (K4987)", red first (bodyText undefined), green after. office-readers + csv-reader 241 pass, odf-reader + format-registry 179 pass, 0 fail. Checks: format, architecture, coverage, words 0 failures; ownership run after commit.
+- **Deferred:** none. ODT is odf-reader's job 98.
+- Size (session_01WgnDmQT1Lke6quo5wARVeK): test runs 6, module lines 4437
