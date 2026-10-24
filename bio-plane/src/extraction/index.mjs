@@ -961,7 +961,8 @@ export class Extraction {
     await wrote.afterRead;
     /* (fix round 6, G41; R97) a reading too large to keep whole was stored as its small statement: final, owing nothing, and no piece follows */
     if (wrote.stated) return { ok: true, read: true, bundle_id: home.bundleId, found: false, stated: true };
-    const owed = failedTransiently(out.reading) || !!entry || (out.reading.tier3_candidate === true && !!e.OCR_WORKER);
+    /* (fix round 9, G172; R82) a reading that ended final (the member refused its page from the header) owes nothing, an OCR member bound or not */
+    const owed = failedTransiently(out.reading) || !!entry || (out.reading.tier3_candidate === true && !!e.OCR_WORKER && out.reading.failure !== "final");
     const ow = oweAnswer ? { registration: oweAnswer } : {};
     /* (fix round 6, G13; R90) the first piece of a text that has more: the ledger goes on at once (plane R77: `more`) */
     if (out.more === true) return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, more: true,
