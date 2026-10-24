@@ -175,3 +175,7 @@ Size (session_01UqB6MGJZC34pq9fKcsf621): test runs 34, module lines 2870
 Cause: the walker took a text box as a unit only when inside a paragraph. Why missed: R53's tests built the frame inside a paragraph. Platform check: none needed (pure module).
 
 Size (session_01ADqp4HKjkPA6rcj1FoXALV): test runs 7, module lines 2900
+
+## J11 · COMPLETE
+
+Batch D (B9, G166/K4987) done: R53 amended. An ODT text_box part now carries paras; a box outside a paragraph (page-anchored or alone in a cell) was before body-only with no text_box part, so it is now a text_box unit and its paragraph slots keep their indices with text empty (paras lists them); a box inside a paragraph has paras []. Links in a box stay the body's. Red first: 2 tests red on the old module. odf-reader 122/122; callers 46/47 pass, 0 fail; format, architecture, coverage, words, ownership 0 failures. Detail and the note for reading-pipeline (job 90) in my record.
