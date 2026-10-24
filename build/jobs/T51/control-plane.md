@@ -951,3 +951,11 @@ REPORT (seam §16 and §18, reds outside control-plane; each stays red by name, 
 
 **Checks.** After the last code change: format 0 failures, architecture 0, coverage 102 of 102, words 0 failures (0 testcopy), ownership 0 (the test file `r9-seam-hostile.mjs` imports `ocr-worker/test/memberworker.mjs`, a file outside the module: the architecture check lists it as an import naming no tracked file in its module's set, not judged). Module directory: 105 files run one at a time on the tree after the merge; red then: `t51-g43-embed`, `t51-round5-seam`, `t51-round6-seam` (all brought to green above); `t51-round7-seam` 18 of 18; `t51-round8-seam` one red (A2), brought to green; the round 9 seam file is red by name only in the five tests of REPORT J55 (two §16 safe-view, three §18 hostile; the §18 JPEG/PNG pair is one test).
 Size (session_01E6jhERf6qDX22iHdkNSdkv): test runs 40, module lines 5,247
+
+## J56 · COMPLETE
+
+COMPLETE (CONTROL-PLANE #58, job 43; B79-B84 applied; pushed). Detail and the K4426 four fields for each cause are in the record's 'Fix round 9 · CONTROL-PLANE #58 · job 43 · completion'.
+Applied: G162 promoteFiled follows every member filed; G160 delivery refusal carries capture_sha, kind, holder (top level and detail); seam §5 test 3 reads failed_why (holder null to the second member, D-15); G164 counts owed+last; R72 test that the door replaces a caller's `declared` with Content-Length; seam §16 render half, §17 (4 of 4 green), §18 written. Red to green after the tranche merge: §5, §6 A1/A12, §9, round 8 §19 A1/A1 control/A1b all green; round 7 seam 18 of 18; round 8 seam green after A2's assertion allowed the screen's address prefix.
+Red by name (REPORT J55, outside control-plane): §16 G137a and G136b safe view stays queued/pending (file-safety #ensureQueued index.mjs:988 / plane arming, suspected); §18 G125a CCITT, JPEG, PNG bombs: reading ends but its row is retried (reading-pipeline G129c, renderer bundles rB D10).
+Tests brought to the merged tree (mine): t51-g43-embed (G162), t51-round5 E3 and t51-round6 G7 (52 MB: a 40 MB text is deferred, not stated; red before the merge).
+Checks: format 0, architecture 0, coverage 102/102, words 0, ownership 0. Size (session_01E6jhERf6qDX22iHdkNSdkv): test runs 40, module lines 5,247.
