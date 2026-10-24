@@ -10,7 +10,7 @@ import {
   RENDER_TICK_UNDETERMINED, RENDER_INCOMPLETE_READING, RENDER_DAILY_ALLOWANCE_MS_DEFAULT,
   RENDER_CONCURRENCY_CAP_DEFAULT, renderLocaleFor, waitFiredClass, completenessReading,
   renderAllowanceMs, renderConcurrencyCap, renderReserveMs, keepRenderBodies, originKey,
-  renderBlock, renderedAuthority, rendererFor,
+  renderBlock, renderedAuthority, rendererFor, isEmptyShell, RENDER_COPY_STATEMENT, KEEP_LANES,
 } from "../../../src/render.mjs";
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET } from "../../../src/subresources.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
@@ -18,6 +18,7 @@ import { word, localize } from "../../../src/setup-words/index.mjs";
 const HOST = "portal.example.gov";
 const PAGE = `https://${HOST}/agenda`;
 const SHELL_SHA = "a".repeat(64);
+const DOC = "<html><body><p>Agenda</p></body></html>";
 const AT = "2026-09-27T02:00:00Z";
 const hex = (b) => createHash("sha256").update(b).digest("hex");
 const enc = (s) => new TextEncoder().encode(s);
@@ -292,15 +293,33 @@ test("R10: originKey is scheme//host, or null when unparseable", () => {
   for (const v of ["not a url", "", null, undefined, 5]) assert.equal(originKey(v), null);
 });
 
-test("R11: renderBlock refuses only an answer that is not ok or has no document", () => {
+test("R11: renderBlock refuses an answer that is not ok, has no document, answered a status of 400 or more, ended on a chrome-error:// page or holds an empty shell; anything short of that is recorded", () => {
   assert.match(block({ ok: false, error: "browser crashed" }).problem, /did not answer ok \(browser crashed\)/);
   assert.match(block(null).problem, /no answer/);
   assert.equal(block(answer({ html: "" })).ok, false);
   assert.match(block(answer({ html: 5 })).problem, /no rendered document/);
+  /* the page did not render (R69: permanent), each for its own reason, none of them a document */
+  const notRendered = (a, re) => { const r = block(a); assert.equal(r.ok, false); assert.match(r.problem, /^the page did not render/); assert.match(r.problem, re); assert.equal(r.failure_class, "permanent"); };
+  for (const status of [400, 403, 404, 429, 500, 503]) notRendered(answer({ status }), new RegExp(`status ${status}`));
+  notRendered(answer({ navigated_to: "chrome-error://chromewebdata/" }), /error page/);
+  notRendered(answer({ navigated_to: " CHROME-ERROR://chromewebdata/" }), /error page/);
+  notRendered(answer({ html: "<html><head><title>x</title></head><body><div id=\"root\"></div></body></html>" }), /empty shell/);
   /* Anything short of that is recorded with its gaps named. */
-  const r = block({ ok: true, html: "<html></html>" });
+  for (const status of [200, 204, 301, 399, null]) assert.equal(block(answer({ status })).ok, true, String(status));
+  assert.equal(block(answer({ navigated_to: "https://portal.example.gov/chrome-error://" })).ok, true);
+  const r = block({ ok: true, html: DOC });
   assert.equal(r.ok, true);
   assert.ok(r.render.undetermined.length >= 8);
+  /* a renderer's own failure keeps its class, an unclassed one is permanent */
+  assert.equal(block({ ok: false, error: "no session", failure_class: "transient" }).failure_class, "transient");
+  assert.equal(block({ ok: false, error: "no" }).failure_class, "permanent");
+  /* the empty shell: a body that holds no content */
+  for (const html of ["", "<html></html>", "<html><body></body></html>", "<body>\n  <div id=root></div>\n</body>", "<html><body><!-- x --><script>render()</script><style>a{}</style><noscript>You need JavaScript.</noscript></body></html>",
+    "<html><body><div><span>&nbsp;</span></div></body></html>", "<div id=app></div>", 5])
+    assert.equal(isEmptyShell(html), true, String(html));
+  for (const html of ["<html><body><p>Agenda</p></body></html>", "<body>text</body>", "<body><img src=\"/big.jpg\"></body>", "<body><svg></svg></body>", "<body><iframe src=\"/a\"></iframe></body>",
+    "<body><div id=root><ul><li>Item</li></ul></div></body>", "just words, no tags", "<body><video src=x></video></body>", "<body><table><tr><td></td></tr></table></body>"])
+    assert.equal(isEmptyShell(html), false, html);
 });
 
 test("R12: requests counted by outcome; subresources and data carry the plane's digests and origins", async () => {
@@ -401,7 +420,7 @@ test("R15: the render's facts are the renderer's or null with their absence stat
   assert.deepEqual([r.engine, r.engine_version, r.viewport, r.dpr, r.locale, r.timezone, r.elapsed_ms, r.navigated_to, r.status, r.at],
     ["HeadlessChrome", "124.0.6367.207", { width: 1280, height: 800 }, 1, "en-US", "UTC", 2345, PAGE, 200, AT]);
   assert.deepEqual(r.asked, { viewport: RENDER_DEFAULTS.viewport, dpr: 1, locale: "fr-CA", timezone: "UTC" });
-  const bare = block({ ok: true, html: "<html></html>", viewport: { width: "1280", height: 800 }, dpr: "1", elapsed_ms: NaN }, { at: undefined }).render;
+  const bare = block({ ok: true, html: DOC, viewport: { width: "1280", height: 800 }, dpr: "1", elapsed_ms: NaN }, { at: undefined }).render;
   for (const k of ["engine", "engine_version", "viewport", "dpr", "locale", "timezone", "elapsed_ms"]) {
     assert.equal(bare[k], null, k);
     assert.ok(bare.undetermined.includes(word("render.reported_renderer", { key: String(k) })), k);
@@ -503,7 +522,7 @@ test("R48: every hex digest on a rendered capture is the plane's over bytes it k
 });
 
 test("R49: what could not be observed is undetermined or null with its reason, never [] or a default", () => {
-  const r = block({ ok: true, html: "<html></html>" }).render;
+  const r = block({ ok: true, html: DOC }).render;
   assert.deepEqual([r.requests, r.data, r.subresources], [null, null, null]);
   assert.deepEqual([r.scripts_executed, r.third_party_executed], ["undetermined", "undetermined"]);
   assert.deepEqual([r.locale, r.viewport, r.engine], [null, null, null]);
@@ -522,4 +541,92 @@ test("R50: completeness and authority are separate axes: a timed-out same-host r
   /* The record never carries a grade or method of its own to lower. */
   assert.ok(!("grade" in to) && !("method" in to));
   assert.ok(to.undetermined.some((u) => /keeps its grade and its method/.test(u)));
+});
+
+test("R69: the render block states what the copy is among its gaps (the first load, not scrolled, banners and dialogs not dismissed, no frames or shadow content), once", () => {
+  assert.ok(RENDER_COPY_STATEMENT.includes("first load") && RENDER_COPY_STATEMENT.includes("not scrolled"));
+  for (const a of [answer(), answer({ wait: { fired: "timeout" } }), answer({ requests: null, scripts: null })]) {
+    const r = block(a).render;
+    assert.equal(r.undetermined.filter((u) => u === RENDER_COPY_STATEMENT).length, 1);
+  }
+  /* control: nothing else about a complete render's gaps changed */
+  const met = block(answer(), { asked: { ...RENDER_DEFAULTS, wait: { until: "networkidle", timeout_ms: 15000 } } }).render;
+  assert.ok(!met.undetermined.some((u) => u.startsWith("completeness")));
+});
+
+test("R71: a page whose document is over the render-DOM bound the caller gives is not rendered, stated with the size and the bound; a page under it is recorded as R12 states", () => {
+  const bound = 25 * 1024 * 1024;
+  const over = block(answer(), { domBound: { size: bound + 1, bound } });
+  assert.equal(over.ok, false);
+  assert.match(over.problem, /^the page did not render/);
+  assert.ok(over.problem.includes(String(bound + 1)) && over.problem.includes(String(bound)), over.problem);
+  assert.equal(over.failure_class, "permanent");
+  /* at the bound, and under it, and with no bound given: recorded */
+  for (const domBound of [{ size: bound, bound }, { size: 10, bound }, null, undefined, { size: 10 }, {}])
+    assert.equal(block(answer(), { domBound }).ok, true, JSON.stringify(domBound));
+  assert.deepEqual(block(answer(), { domBound: { size: 10, bound } }).render.requests, block(answer()).render.requests);
+  /* the stated limits are not claimed as features: the copy's statement is among the gaps of the block that is recorded */
+  assert.ok(block(answer(), { domBound: { size: 10, bound } }).render.undetermined.includes(RENDER_COPY_STATEMENT));
+});
+
+test("R70 (G138, S15; SCAN E8, DOCS V4): 40 bodies are decoded one turn at a time: the decoded bytes resident at any instant are those of the bodies in flight, never all of them, and the same bodies are kept", async () => {
+  /* The test counts the bytes decoded and not yet released, not the process's size: a body is resident from the moment it is
+     decoded (base64 by atob, text by TextEncoder) until the store has taken it. */
+  const SIZE = 150_000, N = 40;
+  const reqs = Array.from({ length: N }, (_, i) => {
+    const raw = Buffer.alloc(SIZE - i, i + 1);                                  /* each body a distinct length, so none is the same bytes twice */
+    return i % 2 ? { url: `https://${HOST}/p${i}.png`, outcome: "completed", body_base64: raw.toString("base64") }
+                 : { url: `https://${HOST}/t${i}.js`, outcome: "completed", body_text: String.fromCharCode(97 + (i % 26)).repeat(SIZE - i) };
+  });
+  const realAtob = globalThis.atob, realEncode = TextEncoder.prototype.encode;
+  let resident = 0, peak = 0, decoded = 0;
+  const grow = (n) => { resident += n; decoded += n; peak = Math.max(peak, resident); };
+  globalThis.atob = (x) => { const out = realAtob(x); grow(out.length); return out; };
+  TextEncoder.prototype.encode = function (x) { const out = realEncode.call(this, x); grow(out.length); return out; };
+  let out, kept = new Map();
+  try {
+    out = await keepRenderBodies({ requests: reqs }, {
+      sha256: async (b) => { await pause(2); return hex(b); },
+      put: async (d, b) => { await pause(5); kept.set(d, b.length); resident -= b.length; } });
+  } finally { globalThis.atob = realAtob; TextEncoder.prototype.encode = realEncode; }
+  /* the same bodies are kept, each in its request's place */
+  assert.equal(out.length, N);
+  reqs.forEach((r, i) => {
+    const b = r.body_base64 !== undefined ? Buffer.from(r.body_base64, "base64") : enc(r.body_text);
+    assert.deepEqual(out[i], { sha256: hex(b), bytes: b.length, body_as: r.body_base64 !== undefined ? "bytes" : "decoded_text", kept: true }, `request ${i}`);
+    assert.equal(kept.get(out[i].sha256), b.length);
+  });
+  assert.equal(resident, 0, "every decoded body was let go");
+  assert.ok(decoded >= N * (SIZE - N), "every body was decoded");
+  /* never more than the bodies in flight at the keep's concurrency */
+  assert.ok(peak <= KEEP_LANES * SIZE, `peak ${peak} bytes resident against ${KEEP_LANES} x ${SIZE}`);
+  assert.ok(peak < decoded / 3, `peak ${peak} against ${decoded} decoded in all`);
+  /* control: a page with one body keeps it as before */
+  const s = store();
+  const one = await keepRenderBodies({ requests: [{ url: `https://${HOST}/one.js`, outcome: "completed", body_base64: b64("only") }] }, s);
+  assert.deepEqual(one, [{ sha256: hex(enc("only")), bytes: 4, body_as: "bytes", kept: true }]);
+  assert.deepEqual([...s.kept.keys()], [hex(enc("only"))]);
+});
+
+test("R70: the ceilings are read off the string and not the decoded bytes: the size ceiling, the budget and a body that is not base64 are answered as before, with nothing decoded", async () => {
+  const realAtob = globalThis.atob, realEncode = TextEncoder.prototype.encode;
+  let decodes = 0;
+  globalThis.atob = (x) => { decodes++; return realAtob(x); };
+  TextEncoder.prototype.encode = function (x) { decodes++; return realEncode.call(this, x); };
+  try {
+    const big = "A".repeat(Math.ceil((SUBRESOURCE_MAX + 3) / 3) * 4);
+    const out = await keepRenderBodies({ requests: [
+      { url: "https://x.example/1", outcome: "completed", body_base64: "not*base64" },
+      { url: "https://x.example/2", outcome: "completed", body_base64: big },
+      { url: "https://x.example/3", outcome: "completed", body_base64: "QUJD=" },
+      { url: "https://x.example/4", outcome: "completed", body_text: "x".repeat(SUBRESOURCE_MAX + 1) },
+      { url: "https://x.example/5", outcome: "completed", body_text: "é".repeat(SUBRESOURCE_MAX / 2 + 1) },
+    ] }, store());
+    assert.deepEqual(out.map((o) => o.sha256), Array(5).fill("undetermined"));
+    assert.match(out[0].digest_reason, /not valid base64/);
+    assert.equal(out[1].digest_reason, word("render.body_bytes_byte", { bytes: String(Math.ceil((SUBRESOURCE_MAX + 3) / 3) * 3), subresource_max: String(SUBRESOURCE_MAX) }));
+    assert.equal(out[3].digest_reason, word("render.body_bytes_byte", { bytes: String(SUBRESOURCE_MAX + 1), subresource_max: String(SUBRESOURCE_MAX) }));
+    assert.equal(out[4].digest_reason, word("render.body_bytes_byte", { bytes: String(SUBRESOURCE_MAX + 2), subresource_max: String(SUBRESOURCE_MAX) }));
+    assert.equal(decodes, 0, "nothing past a ceiling was decoded");
+  } finally { globalThis.atob = realAtob; TextEncoder.prototype.encode = realEncode; }
 });

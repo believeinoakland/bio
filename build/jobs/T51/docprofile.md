@@ -1,6 +1,6 @@
 # docprofile (T51)
 
-**Status** · session_01PUj465a1Wdq4EoDMWhQ3Ga · depth 2 · COMPLETE · handled B9
+**Status** · session_01PjjwjYeen8EHmXtzr7Hcr8 · depth 2 · COMPLETE · handled B10
 
 ## J1 · REPORT
 
@@ -171,3 +171,21 @@ COMPLETE again, CHANGE B9 (K4865): merged tranche/T51 (site-profiles, text-chain
 **The one that moved:** `g48-answers.test.mjs` "R38 R19 readText of every fixture reading equals the answer recorded on the tip" failed on the reading `shell` only. Cause: site-profiles R2's new `identify(...).shell` field: the CERTAIN client-rendered stack answer now carries `stack.shell: true` (the diff is that one key). Not text-chain R73: my `glyphs` already skipped NUL and U+FFFD and every other reading is unchanged. The new answer is the requirement's (R2: `shell` true only for a CERTAIN match; the fixture is a CERTAIN shell). Re-recorded `fixtures/g48-answers.json` (`readings.shell.stack.shell: true`, one added line), the comment in the test names the cause.
 
 Checks: format 0 failures, architecture 0, coverage 30/30, ownership 0. Size (session_01PUj465a1Wdq4EoDMWhQ3Ga): test runs 21, module lines 1420
+
+## J13 · COMPLETE
+
+COMPLETE, B10 (R40 amended, K4876). Merged `origin/tranche/T51` first (merge commit, no rebase); my branch was 542 commits behind origin, fast-forwarded (no reset).
+
+**Entry applied.** `docprofile/doctypes/registry.mjs`: `work.limit` is `CLASSIFY_WORK_FACTOR` (4) times the view's characters times the number of registered types (`bounded(ctx, all.length)`); the walk and the `also` pass still stop between detects once `chars > limit`, naming `work.stopped_before` and `why`. Nothing else changed: no `pipeline.mjs`/`readtext.mjs` edit.
+
+**Met ids (BOB strikes the mark):** R40 (limit scaled by types; every type asked on an ordinary text; a runaway stops those after it, named). Also exercised and unchanged: R4, R5, R19, R38, R39.
+
+**Red first, then green.** Before the change: `round9.test.mjs` "R40 seven honest detects are all asked over a view, and a runaway first detect still stops those after it" was red (asked 5 of 11). My R40 tests in `docprofile/test/round9.test.mjs`: the shape test now asserts `limit === 4 * view * registered` over six shapes with every type asked; the new test asks seven honest detects (all asked, `stopped_before` null) and then replaces `r9_s1` with a runaway detect (stops before `r9_s2`, with the figures in `why`, in the main walk and the `also` pass). The six BOB named, `roster-reader/test/seam.test.mjs` "R1 R3 through docprofile's seam..." and the five R42 (G88) tests of `bio-plane/test/m/reading-pipeline/r7-classify-yield.test.mjs`, are green.
+
+**Tests run.** `docprofile/test/`: 73 tests, 73 pass. `doctypes/test/`, `roster-reader/test/`, the r7-classify-yield file: 110 tests, 110 pass. The two named heavy files (r7-classify-yield with roster-reader's seam): five runs, on one core (`taskset -c 0`), 6 pass 0 fail each. Users the impact tool lists (reading-pipeline, extraction, capture directories): 41 reds with my change, 53 without it on the tranche tip; none is new (the 12 that went green are the six above, each counted twice, plus N391's staff-directory test); the 41 remaining fail identically without my change and are not docprofile's (for example the G40/G41 held-read and PDF memory tests, G48 first-tick controls, G56 range tests). I did not chase them.
+
+**Checks (process repo):** format 0 failures (176 modules); architecture 0 failures; coverage 30 of 30 live requirement ids named; ownership 0 failures (3 files changed).
+
+**Deferred:** none. **Found in another module:** nothing new.
+
+Size (session_01PjjwjYeen8EHmXtzr7Hcr8): test runs 12, module lines 1421
