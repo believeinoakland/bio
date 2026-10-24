@@ -74,6 +74,8 @@ export { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, C
 /* R38–R41, R43 (T35-21, N688, K1888): archives opened on capture, the read behind the archive screen, and the group's
    co-archive setting; the instance holding this module's tables is `acquisitionOf`'s. */
 export { ARCHIVE_CHECKS } from "./checks.mjs";
+/* R113 (fix round 9, G127d): a capture's bytes by its whole digest, the parts hidden. */
+export { readRange, wholeShaOf } from "./range.mjs";
 export { unpack, archiveList, memberOf, membersOf, openedAmong, notArchivesAmong, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
          UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES, UNPACK_LIMITS,
          ARCHIVE_CHECK_READS } from "./unpack.mjs";

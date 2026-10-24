@@ -72,6 +72,8 @@ export function readThrough(ev) {
     },
     /* a write goes straight through, and what was asked about the key before it is asked again */
     async put(key, bytes, opts) { heads.delete(key); return ev.put(key, bytes, opts); },
+    /* R121: the store's own way to make a whole from stored parts, when it offers one */
+    ...(typeof ev.putFromParts === "function" ? { putFromParts: (...a) => { heads.delete(a[0]); return ev.putFromParts(...a); } } : {}),
   };
 }
 
@@ -157,8 +159,13 @@ export function partsSource(ev, parts) {
   };
 }
 
-/** R38: a file's bytes, as `streamMember` yields them, hashed as they pass and stored in parts of 8 MiB, each under its
- *  own SHA-256 (R10's form). Answers `{sha256, bytes, parts}`; a part already held is not written again. */
+/* R121: a store failure that may pass (a put, a head, the making of the whole) is thrown tagged, so the caller leaves the entry with no outcome */
+const storeFailed = (e) => { const x = e instanceof Error ? e : new Error(String(e)); x.storeFailure = true; return x; };
+
+/** R38, R121: a file's bytes, as `streamMember` yields them, hashed as they pass and stored in parts of 8 MiB, each under its
+ *  own SHA-256 (R10's form). Answers `{sha256, bytes, parts}`; a part already held is not written again. A file of more than
+ *  one part is also kept whole under its own digest (`putFromParts`, as R96 keeps a capture) when the store offers it. A store
+ *  failure is thrown tagged `storeFailure`. */
 async function storeChunks(ev, chunks) {
   const whole = createSha256();
   const parts = [];
@@ -175,7 +182,7 @@ async function storeChunks(ev, chunks) {
       }
       heldBytes -= n;
       const psha = hex(await crypto.subtle.digest("SHA-256", buf));
-      if (!(await ev.head(psha))) await ev.put(psha, buf);
+      try { if (!(await ev.head(psha))) await ev.put(psha, buf); } catch (e) { throw storeFailed(e); }
       parts.push({ sha256: psha, bytes: n });
     }
   };
@@ -188,10 +195,16 @@ async function storeChunks(ev, chunks) {
   /* an empty file is held under the empty digest, as any capture would be */
   if (!parts.length) {
     const e = new Uint8Array(0), esha = hex(await crypto.subtle.digest("SHA-256", e));
-    if (!(await ev.head(esha))) await ev.put(esha, e);
+    try { if (!(await ev.head(esha))) await ev.put(esha, e); } catch (x) { throw storeFailed(x); }
     parts.push({ sha256: esha, bytes: 0 });
   }
-  return { sha256: whole.hex(), bytes: total, parts };
+  const sha256 = whole.hex();
+  if (parts.length > 1 && typeof ev.putFromParts === "function") {
+    let kept = null;
+    try { if (!(await ev.head(sha256))) kept = await ev.putFromParts(sha256, parts.map((p) => p.sha256)); else kept = { ok: true }; } catch (e) { throw storeFailed(e); }
+    if (!(kept && kept.ok === true)) throw storeFailed(new Error("the store would not make the whole from its parts"));
+  }
+  return { sha256, bytes: total, parts };
 }
 
 /* ======================================================================= *
@@ -698,9 +711,12 @@ async function cutOne(ctx, row, cost) {
   const { st, inst, ev, sha, h, at, out } = ctx;
   const counted = { cost: { bytes: cost.bytes }, root: h.root_sha, day: cost.day };
   const { chunks, done } = streamMember(ctx.source, row);
-  let stored = null;
-  try { stored = await storeChunks(ev, chunks); } catch { stored = null; }
+  let stored = null, passing = false;
+  try { stored = await storeChunks(ev, chunks); } catch (e) { stored = null; passing = !!(e && e.storeFailure); }
   const verdict = await done;
+  /* R121: a store failure that may pass leaves the entry with NO outcome, so the next call cuts it again (R38's resume) and the
+     answer counts it in `waiting`; only a deterministic verdict of the listing or the cut files an entry `not_filed`. */
+  if (passing && !(verdict && verdict.ok === false && verdict.why === "MEMBER_CORRUPT")) return;
   /* DEC-49 REGION is-entry-cut
      Only a cut `done` answers whole is the file; any byte stored on the way stays content-addressed and unnamed. */
   if (!verdict.ok || !stored || stored.sha256 !== verdict.sha256) {
