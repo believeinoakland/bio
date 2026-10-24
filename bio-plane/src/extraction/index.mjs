@@ -21,7 +21,7 @@ import { combine } from "../../../jurisdictions/index.mjs";
 import { getFormat, detectFormat } from "../formats.mjs";
 import { readText } from "../../../docprofile/registry.mjs";
 import { checkChain, calibrationsOf, isTranscribed, terminalStep, derivationCap, describeChain, glyphCount,
-         readingSource, readingSourceJson, readingOccurrenceKey, readingSourceFromColumns, chainKindFor,
+         readingSource, readingSourceJson, readingOccurrenceKey, readingSourceFromColumns, chainKindFor, mergedChain,
          STEP_KINDS, canonicalExtent, describeExtent } from "../textchain.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { contentMintState } from "../record-grammar/labels.mjs";
@@ -998,9 +998,22 @@ export class Extraction {
        resumes from the next; the state moves to the piece's cursor last, only while it still stands at the one this piece was read from */
     const cursorStands = () => { const now = this.#one(`SELECT cursor FROM capture_text_state WHERE capture_sha=? AND more=1`, digest); return !!now && now.cursor === st.cursor; };
     if (!cursorStands()) return left("READING_HELD");
-    const wrote = this.indexUnits(bundleId, digest, units, (out.reading || safeJson((this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest) || {}).reading) || {}).text_source ?? null,
+    /* (fix round 9, S25; K4911) a later page range's units are indexed under the chain of its own pages (`reading.piece_chain`, reading-pipeline's half),
+       else under the stored reading's chain (a facts-only piece reading carries none), and the piece's pages are folded into the stored chain below */
+    const storedChain = (() => { const r = this.#one(`SELECT CASE WHEN json_valid(reading) THEN json_extract(reading, '$.text_source') END AS ts FROM readings WHERE capture_sha=?`, digest);
+                                 return r ? safeJson(r.ts) : null; })();
+    const pieceChain = rd && Array.isArray(rd.piece_chain) && !checkChain(rd.piece_chain) ? rd.piece_chain : null;
+    const unitChain = pieceChain || (rd && Array.isArray(rd.text_source) ? rd.text_source : storedChain);
+    const folded = pieceChain && !restart ? foldPieceChain(storedChain, pieceChain, piecePagesOf(out, units)) : null;
+    const wrote = this.indexUnits(bundleId, digest, units, unitChain ?? null,
       { append: !restart, more: pieceOf(out), batchKey: `p:${restart ? "start" : st.cursor}`, guard: cursorStands,
         after: () => {
+          /* (S25) the stored reading's chain names every page as a whole read's does: the piece's pages folded in, its projection rewritten with it */
+          if (folded) {
+            this.#sql.exec(`UPDATE readings SET reading=json_set(reading, '$.text_source', json(?)) WHERE capture_sha=? AND json_valid(reading)`, JSON.stringify(folded), digest);
+            this.#sql.exec(`DELETE FROM reading_text_source WHERE capture_sha=?`, digest);
+            this.#writeTextSource(bundleId, digest, folded);
+          }
           /* the stated window is kept with the index state (R-SILENT: `completeness` says it), counted skipped */
           if (stated) {
             const had = safeJson((this.#one(`SELECT stated FROM capture_text_state WHERE capture_sha=?`, digest) || {}).stated);
@@ -3020,6 +3033,55 @@ export class Extraction {
     const out = this.driftFor(e.supersedes);
     return { obligations: [...out], truncated: !!out.truncated };
   }
+}
+
+/* (fix round 9, S25; K4911) The pages a later piece carries: its `piece.pages` range `[from, to)` (reading-pipeline R40), else the pages of its units. */
+function piecePagesOf(out, units) {
+  const r = out && out.piece && Array.isArray(out.piece.pages) && out.piece.pages.length === 2 && out.piece.pages.every(Number.isInteger) ? out.piece.pages : null;
+  if (r) return Array.from({ length: Math.max(0, r[1] - r[0]) }, (_, i) => r[0] + i);
+  return [...new Set((units || []).map((u) => u && u.extent && u.extent.page).filter(Number.isInteger))].sort((a, b) => a - b);
+}
+
+/* (S25) A chain as page-scoped parts `[{pages, chain}]` (the steps without their stamp): an unscoped chain is one part over `pages`; a scoped one its parts
+   as `text-chain.mergedChain` stamped them. Null when a part cannot be read back. */
+function chainParts(chain, pages) {
+  if (!Array.isArray(chain) || checkChain(chain)) return null;
+  if (!chain.some((x) => x && x.extent != null)) return pages.length ? [{ pages: [...pages], chain }] : [];
+  const parts = new Map();
+  for (const step of chain) {
+    const e = step.extent;
+    if (e == null) { for (const p of parts.values()) p.chain.push(step); continue; }
+    if (!(e && e.kind === "pages" && Array.isArray(e.pages))) return null;
+    const key = Number.isInteger(e.part) ? `#${e.part}` : e.pages.join(",");
+    const { extent, ...bare } = step;
+    if (!parts.has(key)) parts.set(key, { pages: e.pages.slice(), chain: [] });
+    parts.get(key).chain.push(bare);
+  }
+  return [...parts.values()];
+}
+
+/* (S25; K4911) The stored chain with a later piece's pages folded in: the stored parts lose the piece's pages, the piece's own parts (over its pages) are
+   added, parts with the same steps are joined, and a chain whose parts all have the same steps stays unscoped, as a whole read's of one kind is. The
+   stored chain's parts are taken over the pages before the piece (the pages earlier pieces carried). Null when either chain cannot be read back. */
+function foldPieceChain(stored, piece, piecePages) {
+  if (!piecePages.length) return null;
+  const from = Math.min(...piecePages);
+  const earlier = Array.from({ length: from }, (_, i) => i);
+  const sp = chainParts(stored, earlier), pp = chainParts(piece, piecePages);
+  if (!sp || !pp) return null;
+  const inPiece = new Set(piecePages);
+  const joined = new Map();
+  for (const part of [...sp.map((x) => ({ ...x, pages: x.pages.filter((p) => !inPiece.has(p)) })), ...pp]) {
+    if (!part.pages.length) continue;
+    const key = JSON.stringify(part.chain);
+    if (!joined.has(key)) joined.set(key, { pages: [], chain: part.chain });
+    joined.get(key).pages.push(...part.pages);
+  }
+  const parts = [...joined.values()].map((x) => ({ ...x, pages: [...new Set(x.pages)].sort((a, b) => a - b) }));
+  if (!parts.length) return null;
+  if (parts.length === 1) return parts[0].chain;
+  const merged = mergedChain(parts);
+  return Array.isArray(merged) ? merged : null;
 }
 
 /* (fix round 9, G129c; R101) The pages whose OCR call died this tick (5xx or a throw, reading-pipeline R54's `ocr_killed`), answered for the ledger's
