@@ -1,6 +1,6 @@
 # runtime-limits (T51)
 
-**Status** · session_01Bbx2ng6oqCwJyEKMZdPRg2 · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01Bbx2ng6oqCwJyEKMZdPRg2 · depth 2 · WAITING ON BOB (J2) · handled B3
 
 ## Completion (RUNTIME-LIMITS #6, fix round 7, G83)
 
@@ -41,7 +41,7 @@ Also: the render DOM row is "the figure the capture-sources job proposes"; I add
 
 **R-FOUR.** (1) New code, no earlier root cause. (2) Missed because nine ceilings were stated each in one requirement and no test compared them, and two cap formulas (128-N, 128+39-N) never met in one test; the new tests pin the table's shape and every row's invariants (three figures, alpha never above standard, a key) so a row added later changes none of them, and one test asserts one `capFor` answers a PDF and a sheet run. (3) Red seen first: both new test files failed with `ERR_MODULE_NOT_FOUND` for the two files; green after: 50 of 50 in the module. The G123a leak test runs a child capped at `capFor(100)` (106 MB): the read releases and `held()` is 0, the leak leaves `held()` at 100 MiB. (4) **L** only (a capped child); no live probe.
 
-**Rules I applied (for BOB to confirm, J2).** (a) `capFor(N) = max(0, floor((isolate_memory_bytes - idle_bytes)/2^20 - N))` = 206 - N today. (b) Rows R30 gives no standard for: standard = max(alpha, 50 MB), protective = the R30 figure else the standard. (c) `source` strings `K4838` and `K4616`. (d) Row `render/dom` not added (the capture-sources job proposes the figure, R30). (e) `release` also throws a `TypeError` for a bad count (R32 only says it of `hold`). (f) Light kinds' alpha columns hold today's figures (csv 17 MiB, the others 24 MiB) though `boundOf` answers their standard.
+**Rules I applied (for BOB to confirm, J2).** (a) `capFor(N) = max(0, floor((isolate_memory_bytes - idle_bytes)/2^20 - N))` = 206 - N today. (b) Rows R30 gives no standard for: K4628 per kind as BOB ruled (B3, K4845): documents 100 MB, spreadsheets and images 50 MB, the alpha where above; protective = the R30 figure else the standard. (c) `source` strings `K4838` and `K4616`. (d) Row `render/dom` not added (the capture-sources job proposes the figure, R30). (e) `release` also throws a `TypeError` for a bad count (R32 only says it of `hold`). (f) Light kinds' alpha columns hold today's figures (csv 17 MiB, the others 24 MiB) though `boundOf` answers their standard.
 
 **Rows (kind/name):** the 19 quoted pairs, the pdf names quoted in prose (`object_stream`, `cmap`, `embedded_file`), and `text|csv|tsv|json|xml` bytes+rows, `xml/tag`, `archive` uploaded_bytes/unpacked_bytes/depth/ratio/members/directory/name, `pdf` bytes/worker_bytes/need_mb/page_content/objects/direct_object/operands/tree_depth, `image` picture_frame/cover_bytes, `office` retained_objects, `sheet` columns/cell_chars/cell_kept_chars/sheets, `xlsx/declared_text`, `ods` content_xml/repeat_units, `workbook/cells`, `sheet_worker` cells/bytes/ms. Keys are `limit.<kind>.<name>`; the quoting module owns the sentence.
 
@@ -50,3 +50,8 @@ Also: the render DOM row is "the figure the capture-sources job proposes"; I add
 **Found in another module.** plane `shape/harness.mjs:42-44` (`OBJECT_MB`, `capFor`) and `shape/g*.probe.mjs`, `m/workbooks/g44-large.test.mjs:28`, `m/file-safety/g44-large.test.mjs:28` still hold their own `capFor` formulas: to repoint to `capFor` of `byte-ledger.mjs` (test-support and plane jobs; R33 says no other formula exists).
 
 **Checks (civicos-process, product path /home/user/bio).** format: 0 failures. architecture: 0 failures. coverage: 32 of 32 ids named, 0 failures. ownership: 2 failures, the two new files (BOB's `paths` edit). `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/runtime-limits/`: 50 tests, 50 pass, 0 fail. impact: affected modules 1 of 176 (runtime-limits itself), 2 test files.
+
+**BOB's answer B3 applied.** capFor, source strings and the render DOM row as I had them; the standard column changed to K4845's per kind (a test of its own pins it). 51 module tests, all pass. Open questions: none. Re-points owed (above): plane and test-support `capFor` formulas.
+
+Ownership (civicos-process): the only failures are bio-plane/src/read-bounds.mjs and byte-ledger.mjs, new files BOB adds to paths.
+Size (session_01Bbx2ng6oqCwJyEKMZdPRg2): test runs 3, module lines 205
