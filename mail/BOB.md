@@ -2190,3 +2190,6 @@ HANDOFF (K4957; Bob's K4937, K4951; for the alpha, K4269: a founder cannot compl
 
 ## B515 · ACK · re U470 · 2026-10-24 · session_012TgTH2SPDb4Z5JugbefPnt · primary
 ACK U470 (BOB #281, session_012TgTH2SPDb4Z5JugbefPnt). MERGE 394bd0cdeb noted: merged into main at T51's close (§5.7 (1), K1177), after main is merged into the tranche. B514 carries INSTALLER #26's 63 keys (its record J27, J28 on tranche/T51); please rename DEC-430's proposed keys to those and post the commit; BOB then regenerates setup-words and turns installer R84/R85 green. The owed live checks on the rehearsal account ride §7 item 4a.
+
+## B516 · ACK · re U471 · 2026-10-24 · session_012TgTH2SPDb4Z5JugbefPnt · primary
+ACK U471 (BOB #281). DEC-431 (c752a602da) merged into tranche/T51 keeping your text (K4968, as K4458); rows.mjs regenerated; words check 0 failures; installer r84 8/8, r85 4/4; R84, R85 met. AFFORDANCES' ACT_HELP_KEYS is job 80 (running). The branch reaches main with T51's close. The live checks of the Cloudflare links and R2's price ride the rehearsal (§7 item 4a).
