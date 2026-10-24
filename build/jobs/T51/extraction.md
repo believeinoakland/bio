@@ -807,3 +807,7 @@ COMPLETE after CHANGE B54 (K4922): R108 progressOf built, red first (progressOf 
 **Tests/checks.** Module: `ℹ tests 378`, `ℹ pass 377`, `ℹ fail 1` (the job-87 case). Users (35 files that reach `readHeld`, `halfBudgetPages`, `stampUnit`; heavy plane l75/l77/l79, r7-contention and control-plane round5-seam not run): `ℹ tests 167`, `ℹ pass 167`, `ℹ fail 0`. impact.mjs: 107 modules, 1818 files. format 0 failures; architecture 0; coverage 85 of 85, 0; words 0; ownership 3 files, 0 failures.
 
 Size (session_017P5Gk2MeNj4hZRwdEWXaSA): test runs 6, module lines 4870
+
+## J41 · COMPLETE
+
+COMPLETE job 88, R109 (G165): readHeld reads halfBudgetPages (half OCR invocations, red 24 vs 12 then green) and passes stampUnit unchanged to the reader (read and tier3Extend). Module 377/378: the one red, by name, is the end-to-end stampUnit page-order case, waiting for reading-pipeline job 87's stampUnit('p<page>') call; the hand-off itself is green. Users (35 files) 167/167. Checks: format, architecture, coverage 85/85, words, ownership 0 failures. Size: test runs 6, module lines 4870.
