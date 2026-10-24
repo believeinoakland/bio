@@ -119,6 +119,7 @@ export function fakeBinding(pages, mode = {}, on = {}) {
               timers.push(later(page.churn.startAfterMs || 0, tick));
             }
             for (const s of page.scripts || []) ev("Debugger.scriptParsed", { url: s.url, scriptId: "s" });
+            if (page.dialog) ev("Page.javascriptDialogOpening", { url: m.params.url, message: "hello", type: "alert" });
             if (!page.noLoad) timers.push(later(page.loadAfterMs || 0, () => ev("Page.loadEventFired", { timestamp: 1 })));
           })();
           case "Network.getResponseBody": {
@@ -141,6 +142,7 @@ export function fakeBinding(pages, mode = {}, on = {}) {
             // eslint-disable-next-line no-new-func
             return ok({ result: { value: new Function("document", "location", `return ${m.params.expression}`)(document, location) } });
           }
+          case "Page.handleJavaScriptDialog": stats.asked.dialog = m.params; return ok({});
           case "Target.closeTarget": stats.closeTargets++; return ok({});
           case "Browser.close": stats.browserCloses++; return ok({});
           default: return err("unknown method " + m.method);
@@ -164,7 +166,7 @@ export function fakeBinding(pages, mode = {}, on = {}) {
       }
       if (init.method === "POST" && u.pathname === "/v1/devtools/browser") {
         stats.acquires++;
-        if (mode.noacquire) return { status: 503, text: async () => "no capacity", json: async () => ({}) };
+        if (mode.noacquire) return { status: mode.acquireStatus || 503, text: async () => "no capacity", json: async () => ({}) };
         return { status: 200, json: async () => (mode.nosessionid ? { ok: true } : { sessionId: "sess-" + stats.acquires }), text: async () => "" };
       }
       return { status: 404, text: async () => "unexpected" };
