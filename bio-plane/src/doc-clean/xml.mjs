@@ -1,7 +1,13 @@
 /* doc-clean: R6's edits to one XML part, made in one pass over its bytes (R4: a part is never held as a string, and
  * the copy is never larger than the part, so a 32 MiB `document.xml` costs twice its size and no more).
  *
- * `editXml(bytes, rules)` answers the part's bytes with the rules applied, or the same `bytes` when nothing changed.
+ * The pass is linear (R11): every search is bounded by the tag limit (`boundOf("xml", "tag")`) or runs forward from where
+ * the last one ended, so the bytes scanned are at most 4n for a part of n bytes, however the markup is built. They are
+ * counted in `scan.scanned`, a count and not a time (R-CLOCK); every 2^16 tokens the pass awaits `scan.yieldNow()`. A
+ * tag longer than the limit refuses the document `DOCUMENT_UNREADABLE`, naming the part.
+ *
+ * `await editXml(bytes, rules, {inPlace, where, scan})` answers the part's bytes with the rules applied, or the same
+ * `bytes` when nothing changed. `where` names the part in a refusal; `scan` is `newScan()`'s counters.
  * `rules` names elements and attributes as `[ns, local]`, `ns` a key of `NS` (resolved through the prefixes the part
  * declares, never assumed) or `""` for an unqualified attribute:
  *   remove: elements removed, content and all;     empty: elements whose content is removed;
@@ -11,6 +17,9 @@
  *   removeNs: namespaces whose every element (content and all) and attribute is removed.
  * Every byte outside an edited tag or a removed content is copied as it was. A part in UTF-16 is edited as UTF-8 and
  * written back as UTF-16. Edits only shorten, so a part can be edited in its own buffer. */
+import { boundOf } from "../read-bounds.mjs";
+import { CleanRefusal } from "./refusal.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const OOXML = (s) => [`http://schemas.openxmlformats.org/${s}`];
 export const NS = {
@@ -37,42 +46,50 @@ export const NS = {
 };
 const URI_NS = new Map(Object.entries(NS).flatMap(([k, uris]) => uris.map((u) => [u, k])));
 
-const LT = 0x3c, GT = 0x3e, SLASH = 0x2f, EQ = 0x3d, Q1 = 0x22, Q2 = 0x27;
+const LT = 0x3c, GT = 0x3e, SLASH = 0x2f, EQ = 0x3d, Q1 = 0x22, Q2 = 0x27, LBRACKET = 0x5b;
 const isWs = (c) => c === 0x20 || c === 0x0a || c === 0x0d || c === 0x09;
 const str = (d, a, b) => String.fromCharCode.apply(null, d.subarray(a, b));
 
-function find(d, pat, from) {
-  for (let i = d.indexOf(pat.charCodeAt(0), from); i >= 0; i = d.indexOf(pat.charCodeAt(0), i + 1)) {
-    let k = 1;
-    while (k < pat.length && d[i + k] === pat.charCodeAt(k)) k++;
-    if (k === pat.length) return i;
-  }
-  return -1;
-}
+/** The longest a tag may be (R11). */
+export const TAG_MAX = boundOf("xml", "tag");
+/** The pass yields after this many tokens (R11). */
+const YIELD_TOKENS = 1 << 16;
+
+/** The counters of one clean: bytes scanned, tokens walked, yields made; `yieldNow` is what the caller lets the pass
+ *  await (default: a turn of the microtask queue). */
+export const newScan = (yieldNow = () => Promise.resolve()) => ({ scanned: 0, tokens: 0, yields: 0, yieldNow });
+
+const tooLong = (where) => new CleanRefusal("DOCUMENT_UNREADABLE",
+  localize("doc-clean.xml.where_has_a_tag_of_more", "{where} has a tag of more than {max} bytes", { where: String(where), max: String(TAG_MAX) }));
 
 /** A start tag at `lt`: its name, its attributes (`{ns, name, q, vs, ve}`: where the name starts, the name, the quote,
- *  where the value starts and ends),
- *  where it ends, whether it closes itself. `null` when it does not end. */
-function startTag(d, lt) {
+ *  where the value starts and ends), where it ends, whether it closes itself. `null` when it does not end. `stop` is
+ *  where the tag must have ended by; running past it with bytes to spare throws `over`. */
+function startTag(d, lt, stop, over) {
+  const cap = stop < d.length ? over : null; // past `stop` the tag is too long only when the part goes on
+  const end = Math.min(d.length, stop);
+  const fail = () => { if (cap) throw cap(); return null; };
   let i = lt + 1;
-  while (i < d.length && !isWs(d[i]) && d[i] !== GT && d[i] !== SLASH) i++;
+  while (i < end && !isWs(d[i]) && d[i] !== GT && d[i] !== SLASH) i++;
   const name = str(d, lt + 1, i), attrs = [];
   for (;;) {
-    while (i < d.length && isWs(d[i])) i++;
-    if (i >= d.length) return null;
+    while (i < end && isWs(d[i])) i++;
+    if (i >= end) return fail();
     if (d[i] === GT) return { name, attrs, end: i + 1, self: false };
-    if (d[i] === SLASH && d[i + 1] === GT) return { name, attrs, end: i + 2, self: true };
+    if (d[i] === SLASH && i + 1 < end && d[i + 1] === GT) return { name, attrs, end: i + 2, self: true };
     const ns = i;
-    while (i < d.length && d[i] !== EQ && !isWs(d[i]) && d[i] !== GT) i++;
+    while (i < end && d[i] !== EQ && !isWs(d[i]) && d[i] !== GT) i++;
     const an = str(d, ns, i);
-    while (i < d.length && isWs(d[i])) i++;
+    while (i < end && isWs(d[i])) i++;
+    if (i >= end) return fail();
     if (d[i] !== EQ) return null;
     i++;
-    while (i < d.length && isWs(d[i])) i++;
+    while (i < end && isWs(d[i])) i++;
+    if (i >= end) return fail();
     const q = d[i];
     if (q !== Q1 && q !== Q2) return null;
-    const ve = d.indexOf(q, i + 1);
-    if (ve < 0) return null;
+    const ve = d.subarray(0, end).indexOf(q, i + 1);
+    if (ve < 0) return fail();
     attrs.push({ ns, name: an, q, vs: i + 1, ve });
     i = ve + 1;
   }
@@ -83,11 +100,11 @@ const key = ([ns, local]) => `${ns} ${local}`;
 
 /** Apply `rules` to an XML part's bytes; with `inPlace`, into the same buffer (the copy is never longer than what it
  *  has read, so it never overtakes it). */
-export function editXml(bytes, rules, inPlace = false) {
+export async function editXml(bytes, rules, { inPlace = false, where = "?", scan = newScan() } = {}) {
   const le = bytes[0] === 0xff && bytes[1] === 0xfe, be = bytes[0] === 0xfe && bytes[1] === 0xff;
   if (le || be) {
     const utf8 = new TextEncoder().encode(new TextDecoder(le ? "utf-16le" : "utf-16be").decode(bytes.subarray(2)));
-    const out = edit(utf8, rules, true);
+    const out = await edit(utf8, rules, true, where, scan);
     if (out === utf8) return bytes;
     const s = new TextDecoder().decode(out), w = new Uint8Array(2 + 2 * s.length);
     w.set(bytes.subarray(0, 2));
@@ -98,10 +115,10 @@ export function editXml(bytes, rules, inPlace = false) {
     }
     return w;
   }
-  return edit(bytes, rules, inPlace);
+  return edit(bytes, rules, inPlace, where, scan);
 }
 
-function edit(d, { remove = [], empty = [], attrs = [], drop = [], removeNs = [] }, inPlace) {
+async function edit(d, { remove = [], empty = [], attrs = [], drop = [], removeNs = [] }, inPlace, where, scan) {
   const wholeNs = new Set(removeNs);
   const removeSet = new Set(remove.map(key)), emptySet = new Set(empty.map(key));
   const dropBy = new Map(drop.map((r) => [key(r.el), r.when]));
@@ -111,25 +128,49 @@ function edit(d, { remove = [], empty = [], attrs = [], drop = [], removeNs = []
   const nsOf = (prefix) => URI_NS.get(prefixes.get(prefix)) ?? null;
   const out = inPlace ? d : new Uint8Array(d.length);
   let w = 0, i = 0, changed = false, skip = null;
+  const over = () => tooLong(where);
   const copy = (a, b) => {
     if (skip || b <= a) return;
     if (inPlace) { if (w !== a) d.copyWithin(w, a, b); } else out.set(d.subarray(a, b), w);
     w += b - a;
   };
   const put = (s) => { for (let k = 0; k < s.length; k++) out[w++] = s.charCodeAt(k); };
-  const until = (pat, from) => { const at = find(d, pat, from); return at < 0 ? -1 : at + pat.length; };
+  /* every search below is counted: `from` to where it stopped */
+  const idx = (byte, from, to = d.length) => {
+    const at = d.subarray(from, to).indexOf(byte);
+    scan.scanned += at < 0 ? to - from : at + 1;
+    return at < 0 ? -1 : from + at;
+  };
+  /* the end of the first `pat` at or after `from`, or -1 */
+  const until = (pat, from) => {
+    const first = pat.charCodeAt(0);
+    for (let at = idx(first, from); at >= 0; at = idx(first, at + 1)) {
+      let k = 1;
+      while (k < pat.length && d[at + k] === pat.charCodeAt(k)) k++;
+      if (k === pat.length) return at + pat.length;
+    }
+    return -1;
+  };
   while (i < d.length) {
-    const lt = d.indexOf(LT, i);
+    const lt = idx(LT, i);
     if (lt < 0) { copy(i, d.length); break; }
     copy(i, lt);
+    if (++scan.tokens % YIELD_TOKENS === 0) { scan.yields++; await scan.yieldNow(); }
+    const stop = lt + TAG_MAX; // a tag that has not ended by here is too long
     const c1 = d[lt + 1];
     let end = 0;
     if (c1 === 0x21 && d[lt + 2] === 0x2d && d[lt + 3] === 0x2d) end = until("-->", lt + 4);
-    else if (c1 === 0x21 && d[lt + 2] === 0x5b) end = until("]]>", lt + 3);
+    else if (c1 === 0x21 && d[lt + 2] === LBRACKET) end = until("]]>", lt + 3);
     else if (c1 === 0x3f) end = until("?>", lt + 2);
-    else if (c1 === 0x21) { const sub = d.indexOf(0x5b, lt), gt = d.indexOf(GT, lt); end = sub >= 0 && sub < gt ? until("]>", sub) : gt < 0 ? -1 : gt + 1; }
-    else if (c1 === SLASH) {
-      const gt = d.indexOf(GT, lt);
+    else if (c1 === 0x21) {
+      const room = Math.min(d.length, stop), gt = idx(GT, lt, room), sub = idx(LBRACKET, lt, gt >= 0 ? gt : room);
+      if (sub >= 0) end = until("]>", sub);
+      else if (gt >= 0) end = gt + 1;
+      else if (room < d.length) throw over();
+      else end = -1;
+    } else if (c1 === SLASH) {
+      const room = Math.min(d.length, stop), gt = idx(GT, lt, room);
+      if (gt < 0 && room < d.length) throw over();
       end = gt < 0 ? -1 : gt + 1;
       if (end > 0 && skip && str(d, lt + 2, gt).trim() === skip.name && --skip.depth === 0) {
         const keep = skip.keepEnd;
@@ -137,8 +178,9 @@ function edit(d, { remove = [], empty = [], attrs = [], drop = [], removeNs = []
         if (!keep) { i = end; continue; }
       }
     } else {
-      const t = startTag(d, lt);
+      const t = startTag(d, lt, stop, over);
       if (!t) { copy(lt, d.length); break; }
+      scan.scanned += t.end - lt;
       i = t.end;
       if (skip) { if (t.name === skip.name && !t.self) skip.depth++; continue; }
       for (const a of t.attrs) if (a.name === "xmlns" || a.name.startsWith("xmlns:")) prefixes.set(a.name === "xmlns" ? "" : a.name.slice(6), str(d, a.vs, a.ve));
@@ -172,8 +214,8 @@ function edit(d, { remove = [], empty = [], attrs = [], drop = [], removeNs = []
         put(t.self ? "/>" : ">");
       }
       if (el && emptySet.has(el) && !t.self) {
-        const next = d.indexOf(LT, t.end);
-        if (next !== t.end || d[next + 1] !== SLASH || str(d, next + 2, d.indexOf(GT, next)).trim() !== t.name) {
+        const next = idx(LT, t.end), room = next < 0 ? 0 : Math.min(d.length, next + TAG_MAX), gt = next < 0 ? -1 : idx(GT, next, room);
+        if (next !== t.end || d[next + 1] !== SLASH || gt < 0 || str(d, next + 2, gt).trim() !== t.name) {
           changed = true;
           skip = { name: t.name, depth: 1, keepEnd: true };
         }

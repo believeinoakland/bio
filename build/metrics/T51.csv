@@ -802,3 +802,9 @@ session_01Bbx2ng6oqCwJyEKMZdPRg2,job,runtime-limits,5199197,106391,588,29497,,3,
 session_01EuoP4BVxYVJN8Zit2i4p66,job,test-support,36958425,405110,1450,252558,,52,2682
 session_01R3wcNbrsgTobyffa2HU1Sf,BOB-final,,90643688,1150878,8155,280826,,,
 session_011em5NMVJqsV8WDNmpEHRAd,job,plane,55526051,418094,1369,148165,,16,1629
+session_015vsvGpKy672zBH3KSU5T3u,job,sheet-worker,2605244,71756,50,9669,,3,1930
+session_019jzP674bQQxG4CVu7SZEUt,job,subresources,2610603,96532,44,9182,,6,1403
+session_012TFpuR6hxXes7JUpRFtJKB,job,installer-steps,3411545,88171,60,10428,,4,2160
+session_01JwFMfy4ht6vi8HQYUy47Nm,job,image-cover,3763643,119954,58,28226,,8,1348
+session_01PhBb7MkFDrjvHxjEN19MtM,job,pdf-worker,10747966,184488,120,50622,,22,264
+session_01VR2yTKx57ew9DXwWoxnBaf,job,pdf-reader,38846500,398584,236,144067,,,
