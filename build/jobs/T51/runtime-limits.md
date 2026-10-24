@@ -209,3 +209,7 @@ COMPLETE · RUNTIME-LIMITS #15 · B12 (K4958): R35's six READ_BOUNDS rows added 
 **Deferred.** Nothing. **Found in another module.** Nothing new. Requirements text R36 still reads `(not yet met: T51)`: BOB's file, to update.
 **Ran.** runtime-limits suite (`test/m/runtime-limits/*.test.mjs`): 60 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 176 (no user imports the new export yet). Checks: architecture 0 failures; coverage 34 of 34 ids named, 0 failures; ownership 0 failures; words 33 failures, none in runtime-limits, same count without my change; format 1 failure, `build/rulings.md:4959` K4964 (BOB's file; no standing-list decision stated), same without my change. Sentences added: none, so no rows owed.
 Size (session_01QmrRSjKFkRXYrPwjisNpp2): test runs 4, module lines 3
+
+## J14 · COMPLETE
+
+R36 met: wholeReadRow(kind) exported from read-bounds.mjs (csv, text, else pdf.bytes); test red first, then green; suite 60 pass; architecture, coverage, ownership 0 failures; words 33 and format 1 (rulings.md:4959 K4964) fail identically without my change, none in my module. Record: Completion (RUNTIME-LIMITS #16).
