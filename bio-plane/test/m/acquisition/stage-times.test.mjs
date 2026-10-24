@@ -100,7 +100,12 @@ test("R95 (fix round 4, C5a): a call that throws in `read` answers a refusal wit
   assert.equal(t.running, "read", "the stage the throw cut is reported as running");
   assert.ok(whole(t.stages.read));
   assert.equal(Object.values(t.stages).reduce((a, b) => a + b, 0) <= t.total_ms, true);
-  assert.deepEqual(stageTimes(handed).stages, t.stages, "the caller's own timings object reads the same");
+  /* the stage the throw cut is read at two moments (the answer's, then the caller's): it may differ by a millisecond, no other stage may */
+  const later = stageTimes(handed);
+  for (const [stage, ms] of Object.entries(t.stages)) {
+    if (stage === "read") assert.ok(Math.abs(later.stages.read - ms) <= 1, "the cut stage reads the same to the millisecond");
+    else assert.equal(later.stages[stage], ms, `${stage}: the caller's own timings object reads the same`);
+  }
   const ok = await run(world(), { [url]: pdf }, { locator: url });
   assert.equal(ok.status, 200);
   assert.equal(ok.body.timings.running, undefined);
