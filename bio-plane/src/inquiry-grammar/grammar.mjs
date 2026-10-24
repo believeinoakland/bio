@@ -12,8 +12,8 @@
  *
  * WHAT IS READ FROM ELSEWHERE, and from where (the module's Uses):
  *   - `record-grammar`: the id, type, actor and grade vocabularies;
- *   - `content`: the extent core the leg's part is judged by (`checkContentExtent`, `legExtent`,
- *     `legHasAuthoredExtent`, `CONTENT_ID_RE`, `CONTENT_EXTENT_DOCUMENT_ONLY`; its R48: the catalogue's copy, unchanged);
+ *   - `content`: the extent face the leg's part is judged by (`checkContentExtent`, `legExtent`,
+ *     `legHasAuthoredExtent`, `CONTENT_ID_RE`, `CONTENT_EXTENT_DOCUMENT_ONLY`; its R1, R48: all ten kinds, `doc-part` among them);
  *   - `text-chain`: the extent kinds the repair sentence lists (`CONTENT_EXTENT_KINDS`, its R92);
  *   - `connections`: `themeLegFindings` (C-81.1, its R46), asked of each leg before any other complaint about it;
  *   - `observation-log`: `LEAD_ID_RE`, a lead id's shape (its R14);
@@ -32,7 +32,7 @@ import { BUNDLE_ID_RE, ISO_TS_RE, OBJECT_TYPES, normalizeType, isMachineIdentity
   TESTIMONY_GRADE, GRADE_SOURCES, EARNED_GRADE_SOURCES, idPattern } from "../record-grammar/index.mjs";
 import { isCalendarDate } from "../civil-time/index.mjs";
 import { checkContentExtent, legExtent, legHasAuthoredExtent, CONTENT_ID_RE, CONTENT_EXTENT_DOCUMENT_ONLY }
-  from "../content/extent-core.mjs";
+  from "../content/extent.mjs";
 import { CONTENT_EXTENT_KINDS } from "../textchain.mjs";
 import { themeLegFindings } from "../connections/checks.mjs";
 import { LEAD_ID_RE } from "../observation-log/checks.mjs";
