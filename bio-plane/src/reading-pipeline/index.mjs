@@ -2448,6 +2448,8 @@ function guardRefusalOf(i2text) {
    `reading-pipeline.index.too_large`, `.structure_over_bound`, `.unsupported_<kind>`. A size sentence holds the file's size and the limit
    and never says "read" of a file that is not. */
 function refusalSentence(r) {
+  if (r.reason === "TOO_LARGE" && Number.isInteger(r.parts) && r.parts > 1)
+    return localize("reading-pipeline.index.too_large_in_parts", "This file is {size} bytes in {parts} parts, over the {bound} bytes allowed for this kind of file.", { size: String(r.size), parts: String(r.parts), bound: String(r.bound) });
   if (r.reason === "TOO_LARGE")
     return localize("reading-pipeline.index.too_large", "This file is {size} bytes, over the {bound} bytes allowed for this kind of file.", { size: String(r.size), bound: String(r.bound) });
   if (r.reason === "STRUCTURE_OVER_BOUND")
@@ -2604,7 +2606,7 @@ export async function bytesOf(evidence, doc, { kind = null, textual = false } = 
       : textual && size > boundOf("text", "bytes") ? ["text", "bytes"] : WHOLE_READ_ROW;
     const st = statement(...row, size);
     return { bytes: null, failure: FAILURE_FINAL, stated: { reason: "TOO_LARGE", ...st },
-             why: refusalSentence({ reason: "TOO_LARGE", size, bound: st.bound }) };
+             why: refusalSentence({ reason: "TOO_LARGE", size, bound: st.bound, parts: parts ? parts.length : 1 }) };
   };
   if (total !== null && total > WHOLE_READ_MAX) return tooBig(total);
   /* the store is asked only when the document states no size */

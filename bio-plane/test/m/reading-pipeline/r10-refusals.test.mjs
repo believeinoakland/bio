@@ -76,7 +76,7 @@ test("R54 R37 (G124a, G135d): a capture over the whole-read bound is stated at o
   assert.doesNotMatch(r.basis, /\bread\b|multipart|parts|non-textual/i);
   const parts = await readOf(b, doc({ digest: d, bytes: size, ct: "application/pdf", format: "pdf", parts: [{ sha256: "a".repeat(64), bytes: size }] }));
   assert.equal(parts.reading.reason, "TOO_LARGE");
-  assert.doesNotMatch(parts.reading.basis, /\bread\b|multipart|parts/i, "the multipart door states the cause the same way");
+  assert.doesNotMatch(parts.reading.basis, /\bread\b|multipart/i, "the multipart door states the cause the same way (a capture of several parts says how many)");
 });
 
 test("R54 (G135d): a size marker an entry leaves in its text is TOO_LARGE {size, bound}; a count past its bound is STRUCTURE_OVER_BOUND {part, bound}; neither is 'undecodable regions'", async () => {
