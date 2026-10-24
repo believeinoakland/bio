@@ -629,3 +629,11 @@ Size (session_018XJZd3Y6SC5rJeKSargNwt): test runs 6, module lines 4358
 ## J38 · COMPLETE
 
 COMPLETE job 65 (G124b): R115 met on the undeclared, overrunning and short-declared paths; title read only from a one-buffer whole (else null, stated in R115); R115 test non-vacuous (red on 879a7ce60f, 3 reds). Details, tests (325/325), checks and Size in the record's Job 65 section. Requirement R115 amended in build/requirements/acquisition.md (ownership lists that one file, per B3/B4). One claim not measured: the undeclared join's resident peak depends on lazy zero-fill commit.
+
+### Job 65, after B41 (CHANGE, K4926): option (a)
+
+Chosen (a): no join, no whole beside held parts. Only a body received into the one buffer its declared length asked for (or a single part) holds bytes. A body with no declared length, or one that overruns its declared length, drops what it holds when a second part shows it is several (`dropKept`); the parts are already stored, and `keepWhole` (no `compose`, so the store's `putFromParts` is not asked, as R96's control requires) reads them back one at a time into the one buffer of the whole, the ledger counting the whole and one part (peak = kept + one part, by the ledger and in fact: no held part beside it). `keepWhole`'s held-parts join stays for other callers; acquire no longer passes it parts it joined.
+Red first: the undeclared test now asserts the stored parts are read back once each; it fails against the previous commit's join and passes on (a).
+Superseded tests, amended (R115 amends R96's "no read-back" for such a body only; R115's text says so): `fix3-t51.test.mjs` (16 MiB capture: each stored part read back once, no whole get) and `fix5-t51.test.mjs` R101 (the fixture now declares its length, so the head is judged without any read-back).
+Suite: tests 325, pass 325, fail 0. capture tests naming acquisition: 243/243. format, architecture, coverage (75 of 75): 0 failures; words: none in my files; ownership: 1 failure, the requirements file (accepted per B3/B4).
+Size (session_018XJZd3Y6SC5rJeKSargNwt): test runs 10, module lines 4358
