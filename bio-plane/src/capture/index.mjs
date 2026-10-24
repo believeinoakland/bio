@@ -746,9 +746,11 @@ export class Capture {
 
   /* R111: the 413 an over-large body is refused with: its size and the figure it was judged against (`size`, `bound`; `bytes`, `maxBytes` as R86 always
      said them) and the key of the sentence. The capture ceiling is the archive row of `READ_BOUNDS`; the request ceiling is the platform's. */
-  static #tooLarge(size, which, bound) {
+  static #tooLarge(size, which, bound, keepable = null) {
     const request = which === "request";
+    /* R113: a file refused for the request-body ceiling that the capture ceiling still admits is to be sent in parts (`in_parts`), the screen's cue to begin one */
     return { ok: false, reason: "TOO_LARGE", status: 413, bytes: size, maxBytes: bound, size, bound,
+             ...(request && Number.isSafeInteger(keepable) ? { in_parts: size <= keepable } : {}),
              key: request ? "capture.index.body_over_request_ceiling" : boundStatement("archive", "uploaded_bytes", size).key,
              detail: request
                ? localize("capture.index.body_over_request_ceiling", "the file is larger than the {bound} bytes one request may carry, so it was refused whole; nothing was written", { bound: String(bound) })
@@ -771,7 +773,7 @@ export class Capture {
     const ceiling = Math.min(capMax, reqMax), ceilingIs = reqMax <= capMax ? "request" : "capture";
     if (Number.isSafeInteger(declared) && declared > ceiling) {
       await reader.cancel();
-      return Capture.#tooLarge(declared, ceilingIs, ceiling);
+      return Capture.#tooLarge(declared, ceilingIs, ceiling, capMax);
     }
     /* `acquisition` R10's form: the whole hashed as it arrives by record-grammar's incremental hasher, the bytes held in
        parts of exactly 8 MiB (the last the remainder), each under its own digest; whether each was held before. */
@@ -812,7 +814,7 @@ export class Capture {
         total += value.length;
         if (total > ceiling) {
           await reader.cancel();
-          return Capture.#tooLarge(total, ceilingIs, ceiling);
+          return Capture.#tooLarge(total, ceilingIs, ceiling, capMax);
         }
         whole.update(value);
         if (partBytes && total > MULTIPART_KEEP_MAX) { partBytes = null; tally.release(keptBytes); keptBytes = 0; }

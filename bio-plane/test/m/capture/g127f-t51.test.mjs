@@ -119,7 +119,7 @@ test("R113 (G127f): a file of three parts over the injected cap is begun, its pa
   const file = varied(2500, 3);
   /* the control that makes it a file over the cap: one request is refused, with the size and the bound (R111) */
   const one = await w.c.uploadCapture({ bytes: file, statement: STATEMENT, by: "m1", bounds: SCALE });
-  assert.deepEqual([one.ok, one.reason, one.size, one.bound], [false, "TOO_LARGE", 2500, 1000]);
+  assert.deepEqual([one.ok, one.reason, one.size, one.bound, one.in_parts], [false, "TOO_LARGE", 2500, 1000, true], "and the refusal says the file can be sent in parts");
   const { b, puts, done } = await send(w, file);
   assert.deepEqual([b.ok, b.parts, b.part_bytes, b.held, b.next], [true, 3, 1000, false, 0]);
   assert.deepEqual(puts.map((p) => [p.ok, p.existed, p.next]), [[true, false, 1], [true, false, 2], [true, false, 3]]);
@@ -473,7 +473,10 @@ test("R113 (L: R2's own rules at the real part size): a 105 MiB file, past the r
   const file = varied(total, 17);
   /* the control: a one-request upload of it is refused at the platform's figure */
   const one = await w.c.uploadCapture({ bytes: streamOf(file, MiB).stream, statement: STATEMENT, by: "m1", declared: total });
-  assert.deepEqual([one.ok, one.reason, one.status, one.size, one.bound], [false, "TOO_LARGE", 413, total, bodyMax]);
+  assert.deepEqual([one.ok, one.reason, one.status, one.size, one.bound, one.in_parts], [false, "TOO_LARGE", 413, total, bodyMax, true]);
+  /* a file past the capture ceiling cannot be sent in parts either, and the refusal does not say it can */
+  const huge = await w.c.uploadCapture({ bytes: streamOf(file, MiB).stream, statement: STATEMENT, by: "m1", declared: CAPTURE_MAX + 1 });
+  assert.deepEqual([huge.reason, huge.size, huge.in_parts], ["TOO_LARGE", CAPTURE_MAX + 1, false]);
   const sum = sha(file);
   const b = await w.c.beginPartedUpload({ sha256: sum, bytes: total, statement: STATEMENT, by: "m1" });
   assert.deepEqual([b.ok, b.part_bytes, b.parts], [true, PARTED_PART_BYTES, Math.ceil(total / PARTED_PART_BYTES)]);
