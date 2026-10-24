@@ -188,7 +188,7 @@ async function handleStructure(req, env) {
 
   /* R42: the range asked, checked after R4 and before R5. */
   if ((body.from !== undefined && !wholeNumber(body.from)) || (body.count !== undefined && !wholeNumber(body.count)))
-    return json({ ok: false, reason: "BAD_RANGE", detail: "from and count must be non-negative whole numbers" }, 400);
+    return json({ ok: false, reason: "BAD_RANGE", detail: localize("pdf-worker.index.from_and_count_are_whole", "the range asked is two whole numbers, the page to start at and how many pages, neither below zero.") }, 400);
   const from = body.from ?? 0;
 
   // I1 §2: the R2 key shape, promoted here from documentation to a load-bearing
