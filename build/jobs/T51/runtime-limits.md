@@ -1,6 +1,6 @@
 # runtime-limits (T51)
 
-**Status** · session_01Bbx2ng6oqCwJyEKMZdPRg2 · depth 2 · WORKING · handled B2
+**Status** · session_01Bbx2ng6oqCwJyEKMZdPRg2 · depth 2 · WAITING ON BOB (J2) · handled B2
 
 ## Completion (RUNTIME-LIMITS #6, fix round 7, G83)
 
