@@ -95,7 +95,7 @@ test("R41 a UTF-16 document.xml (with or without a BOM) is read and not found em
 });
 
 test("R41 a part decoded with more than 0.5 % replacement characters is stated partial with the count; an unsupported declared charset states ENCODING_UNSUPPORTED", async () => {
-  const bad = new Uint8Array(Buffer.concat([Buffer.from(`<w:document ${W}><w:body><w:p><w:r><w:t>`), Buffer.from([0xff, 0xfe, 0xfd, 0xff, 0xff, 0xfe]), Buffer.from("tail</w:t></w:r></w:p></w:body></w:document>")]));
+  const bad = new Uint8Array(Buffer.concat([Buffer.from(`<?xml version="1.0" encoding="utf-8"?><w:document ${W}><w:body><w:p><w:r><w:t>`), Buffer.from([0xff, 0xfe, 0xfd, 0xff, 0xff, 0xfe]), Buffer.from("tail</w:t></w:r></w:p></w:body></w:document>")]));
   const t = await docxEntry.text(F.docx({ document: bad }));
   const partial = t.undetermined.find((u) => u.why === "partial");
   assert.ok(partial);

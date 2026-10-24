@@ -131,3 +131,5 @@ Replaces nothing: J7 stands (decodeText fallback in office-xml.mjs until ooxml m
 ## J9 · COMPLETE
 
 COMPLETE (B14, B15 applied): local decoder removed, office.decoded_chars read by boundOf, no uncommitted fallback. office-readers 117 pass; the two R41 tests (chars-decode.test.mjs) are red by name until ooxml's decodeText merges; send a CHANGE then. Checks as J8; office-xml.mjs still to be added to paths.
+
+**B16 applied.** Tranche merged (ooxml #4: decodeText, readPartPieces awaiting onPiece). The two R41 tests are green; the partial test now declares utf-8 in the prolog (the real decode reads undeclared bad bytes as windows-1252, with no replacement). office-readers 129 pass incl. g41 (large-text passes); format, architecture, coverage 39/39, words 0 failures.
