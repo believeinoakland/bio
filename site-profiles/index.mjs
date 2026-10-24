@@ -168,7 +168,8 @@ export async function digests(bytes, handler, ctx) {
      `charset` of the content type) or the document's own declaration or BOM. A declared
      encoding it cannot decode makes the document not textual here: both digests equal the
      identity and the result says why, so nothing is ever compared on replacement characters. */
-  const dec = ooxml.decodeText(bytes, { declared: declaredCharset(ctx), name: ctx.name || ctx.locator, kind: "html" });
+  const declared = declaredCharset(ctx);
+  const dec = ooxml.decodeText(bytes, { declared, name: ctx.name || ctx.locator || declared, kind: "html" });
   if (!dec.ok)
     return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false,
              undecodable: { why: dec.why, name: dec.name },
