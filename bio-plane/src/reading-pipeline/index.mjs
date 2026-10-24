@@ -1289,7 +1289,7 @@ function textPiece(visible, { html, at, budget, maxUnits, grain: given }) {
     if (more) break;
     para++;
   }
-  return { units, grain, more, at: resume };
+  return { units, grain, more, at: resume, para, seq };
 }
 
 /* R35 over the whole text, for a first piece: the units the text has and the words of them. */
@@ -1690,21 +1690,71 @@ async function textWindowCursorOf(evidence, { sha, bytes, text, whole, at, throu
   return windowCursor(sha, { m: "t", n: bytes.length, ob: through + bom, bm: bom, g: grain === "lines" ? 1 : 0, p: at.p, q: at.q, r: at.r });
 }
 
-/* A later piece of a text read as text, from the window the cursor names. */
-async function textWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }) {
+/* R50 (G131i; K4834): the start and end of the first separator of a text's runs in `vis` (a blank line for paragraphs, a line break for lines), or null. */
+function firstSeparator(vis, grain) {
+  if (grain === "lines") { const i = vis.indexOf("\n"); return i < 0 ? null : [i, i + 1]; }
+  const m = new RegExp(BLANK_LINE_RUN.source).exec(vis);
+  return m ? [m.index, m.index + m[0].length] : null;
+}
+/* R50: the units of a run begun in an earlier window (`md`) or not ended in this one: `region` is the run's text in the window (to its separator, or to
+   the window's end), cut as `chunksOf` cuts a run over the cap (R47), the same chunks the whole run would give since the cut is greedy from the run's
+   start. A run still open keeps its last chunk for the next window (its end is not known); a complete run gives all. `{units, used, done, runs}`: the
+   characters of `region` the units took, whether the run ended in them, and the run index the next chunk takes. */
+function openRunPiece(region, { c, complete, room, maxUnits, room0 }) {
+  const body = complete ? region.trimEnd() : region;
+  const lead = c.md ? 0 : body.length - body.trimStart().length;
+  const text = body.slice(lead);
+  const chunks = text.length > CAPTURE_TEXT_UNIT_CAP ? chunksOf(text) : [text];
+  const usable = complete ? chunks : chunks.slice(0, -1);
+  const units = [];
+  /* a cursor of a run's start that names a chunk already given (`r`) skips those chunks; one inside a run (`md`) begins at its chunk and numbers on from `r` */
+  const skip = c.md ? 0 : Math.min(c.r || 0, usable.length), base = c.md ? c.r : 0;
+  let used = lead, k = skip, ld = c.md ? c.ld === 1 : false;
+  for (let i = 0; i < skip; i++) used += usable[i].length;
+  for (; k < usable.length; k++) {
+    const size = utf8Length(usable[k]) + ACQUIRE_TEXT_UNIT_ENVELOPE;
+    if (!fits(units, size, room, maxUnits)) break;
+    room -= size;
+    const lead1 = (k === 0 ? ld : continuesWord(usable[k - 1], usable[k])) ? 1 : 0;
+    units.push(withOwnWords(unitOf(c.p, chunks.length > 1 || c.md ? base + k : null, c.q + units.length, usable[k]), lead1));
+    used += usable[k].length;
+  }
+  const done = complete && k === usable.length;
+  const next = chunks[k];
+  const carry = k > 0 && next !== undefined ? continuesWord(usable[k - 1], next) : ld;
+  return { units, used: done ? region.length : used, done, runs: base + k, ld: carry, room };
+}
+/* A later piece of a text read as text, from the window the cursor names. R50 (fix round 9, G131i): a run with no separator in the window is read in
+   chunks from the window (`openRunPiece`), its cursor marked `md`, so a text of one 50 MB line is read as a text of many lines is: neither holds the file
+   whole. `src` is the range source of a capture read by range from its first piece (`ro`): its parts first, never the whole (R45). */
+async function textWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }, src = null) {
   if (![c.n, c.ob, c.bm, c.p, c.q, c.r].every(natural) || !(c.g === 0 || c.g === 1) || c.ob < c.bm || c.ob >= c.n || (c.bm !== 0 && c.bm !== 3)) return mismatch();
   const grain = c.g === 1 ? "lines" : "paragraphs";
   const pre = Math.min(4, c.ob);
-  for (let want = windowBytes; ; want *= 2) {
+  const mid = c.md === 1;
+  const ro = c.ro === 1;
+  const get = async (o, l) => {
+    if (!src) return rangeBytes(evidence, sha, o, l);
+    const b = await src.readRange(o, l);
+    return b instanceof Uint8Array ? { bytes: b, size: src.size } : null;
+  };
+  /* a window is what the piece can use: a piece holds at most `budget` bytes of units, each charged its envelope too, so a larger window is bytes pulled for nothing (R50: at most twice the file) */
+  let want = Math.min(windowBytes, Math.max(32768, Math.ceil((Number.isFinite(budget) ? budget : windowBytes) / 2)));
+  /* a window that holds no whole run is made longer: doubled, or for a run with no separator at once to what a piece can take of it (its budget and the chunk kept back) */
+  const chunksFit = Math.max(1, Math.floor(Math.min(Number.isFinite(budget) ? budget : 4 * 1048576, 4 * 1048576) / (CAPTURE_TEXT_UNIT_CAP + ACQUIRE_TEXT_UNIT_ENVELOPE)));
+  const openTarget = (chunksFit + 1) * CAPTURE_TEXT_UNIT_CAP + 4096;
+  if (mid) want = Math.max(want, openTarget);   /* inside a run: the window the chunks a piece takes need, at once */
+  const grow = (open) => { want = open ? Math.max(want * 2, openTarget) : want * 2; };
+  for (;;) {
     const len = Math.min(want, c.n - c.ob);
-    const got = await rangeBytes(evidence, sha, c.ob - pre, pre + len);
+    const got = await get(c.ob - pre, pre + len);
     if (!got) return { gone: true };
     if (got.size !== null && got.size !== c.n) return mismatch();
     const b = got.bytes;
     if (b.length !== pre + len) return mismatch();
-    /* the offset begins a character, and the character before it is white space (or it is the text's first): the start of a run */
+    /* the offset begins a character, and (but inside a run) the character before it is white space (or it is the text's first): the start of a run */
     if ((b[pre] & 0xc0) === 0x80) return mismatch();
-    if (c.ob > c.bm) {
+    if (c.ob > c.bm && !mid) {
       const before = LENIENT_UTF8.decode(b.subarray(0, pre));
       if (!before.length || !/\s/.test(before[before.length - 1])) return mismatch();
     }
@@ -1718,18 +1768,45 @@ async function textWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes 
     }
     let vis;
     try { vis = FATAL_UTF8.decode(b.subarray(pre, pre + end)); } catch { return mismatch(); }
+    const sep = firstSeparator(vis, grain);
     const upto = eof ? vis.length : completeRunsEnd(vis, grain);
-    if (!eof && upto === 0) continue;   /* not one whole run yet: a longer window */
-    const text = vis.slice(0, upto);
-    const p = textPiece(text, { html: false, at: { o: 0, p: c.p, q: c.q, r: c.r }, budget, maxUnits, grain });
-    if (!p.more && !eof) continue;      /* every whole run in the window was taken and the piece is not full: a longer window */
-    let words = 0;
-    for (const u of p.units) words += wordsOfUnit(u);
-    const more = p.more, ob = more ? c.ob + utf8Length(text.slice(0, p.at.o)) : c.n;
-    return { units: p.units,
-             fields: { more, cursor: more ? windowCursor(sha, { m: "t", n: c.n, bm: c.bm, g: c.g, ob, p: p.at.p, q: p.at.q, r: p.at.r }) : null,
-                       read_through: ob - c.bm, total: c.n - c.bm },
-             piece: { units: p.units.length, words } };
+    const openStart = mid || (!eof && upto === 0);   /* the window begins inside a run, or holds no whole run */
+    /* an open run is cut into chunks only from a window longer than two units; shorter, a longer window is asked for */
+    if (openStart && !eof && !sep && vis.length <= 2 * CAPTURE_TEXT_UNIT_CAP) { grow(true); continue; }
+    let units = [], room = budget, p = c.p, q = c.q, pos = 0, stopped = false;
+    if (openStart) {
+      const complete = !!sep || eof;
+      const region = vis.slice(0, sep ? sep[0] : vis.length);
+      const o = openRunPiece(region, { c: { ...c, md: mid ? 1 : 0 }, complete, room, maxUnits });
+      units = o.units;
+      if (!o.done) {   /* more of this run follows: the next window takes it up at the chunk after the last given */
+        if (!units.length) { if (!eof) { grow(true); continue; } return mismatch(); }
+        const ob = c.ob + utf8Length(vis.slice(0, o.used));
+        let words = 0; for (const u of units) words += wordsOfUnit(u);
+        const cursor = windowCursor(sha, { m: "t", n: c.n, bm: c.bm, g: c.g, ob, p, q: q + units.length, r: o.runs, md: 1, ld: o.ld ? 1 : 0, ...(ro ? { ro: 1, wr: (c.wr || 0) + words } : {}) });
+        return { units, fields: { more: true, cursor, read_through: ob - c.bm, total: c.n - c.bm }, piece: { units: units.length, words } };
+      }
+      pos = sep ? sep[1] : vis.length; p += 1; q += units.length;
+      for (const u of units) room -= utf8Length(u.text) + ACQUIRE_TEXT_UNIT_ENVELOPE;
+      stopped = units.length >= maxUnits || room <= 0;
+    }
+    const text = vis.slice(pos, Math.max(pos, upto));
+    let pc = null;
+    if (!stopped && text.length) {
+      pc = textPiece(text, { html: false, at: { o: 0, p, q, r: openStart ? 0 : c.r }, budget: room, maxUnits: maxUnits - units.length, grain });
+      if (!pc.more && !eof && !units.length) { grow(false); continue; }   /* every whole run in the window was taken and the piece is not full: a longer window */
+    }
+    const all = pc ? [...units, ...pc.units] : units;
+    let words = 0; for (const u of all) words += wordsOfUnit(u);
+    /* where the next piece begins: inside the text the piece stopped in, else after the last whole run (the tail run begins it), else the end */
+    const at = pc && pc.more ? { c: pos + pc.at.o, p: pc.at.p, q: pc.at.q, r: pc.at.r }
+      : { c: stopped && !pc ? pos : Math.max(pos, upto), p: pc ? pc.para : p, q: pc ? pc.seq : q, r: 0 };
+    const more = stopped || (pc && pc.more) || !eof;
+    const ob = more ? c.ob + utf8Length(vis.slice(0, at.c)) : c.n;
+    if (more && !all.length && ob === c.ob) { if (!eof) { grow(false); continue; } return mismatch(); }
+    const cursor = more ? windowCursor(sha, { m: "t", n: c.n, bm: c.bm, g: c.g, ob, p: at.p, q: at.q, r: at.r, ...(ro ? { ro: 1, wr: (c.wr || 0) + words } : {}) }) : null;
+    return { units: all, fields: { more, cursor, read_through: ob - c.bm, total: c.n - c.bm }, piece: { units: all.length, words },
+             ...(!more && ro ? { facts: { words_total: (c.wr || 0) + words } } : {}) };
   }
 }
 
@@ -1945,7 +2022,7 @@ function letterOf(n) { let s = ""; for (let k = Math.max(1, n); k > 0; k = Math.
 /* A later piece by a window cursor (R40): `{refused}` or `{gone}` (the object is not held) or the piece's units and fields. */
 async function windowTick(evidence, sha, c, ask, doc) {
   if (c.s !== sha || !natural(c.n) || c.n < 1) return mismatch();
-  if (c.m === "t") return textWindowTick(evidence, sha, c, ask);
+  if (c.m === "t") return textWindowTick(evidence, sha, c, ask, c.ro === 1 ? rangeSource(evidence, doc) : null);
   if (c.m === "c") return csvWindowTick(evidence, sha, c, ask, c.ro === 1 ? rangeSource(evidence, doc) : null);
   return mismatch();
 }
@@ -1974,6 +2051,28 @@ async function csvRangedHead(evidence, doc, { recorded, declared }) {
   if (i < 0 || bounds[i] >= src.size || bounds[i] + CSV_SLACK_BYTES > probe.length) return null;
   const cached = { size: src.size, readRange: async (o, n) => (natural(o) && natural(n) && o + n <= probe.length ? probe.subarray(o, o + n) : src.readRange(o, n)) };
   return { src: cached, size: src.size, he: bounds[i], hr: i + 1, dl, head: probe.subarray(0, bounds[i]) };
+}
+
+/* R50 (fix round 9, G131i; K4834): a text, JSON or XML larger than a whole read holds (`WHOLE_READ_MAX`) and within the text bound (`READ_BOUNDS` text, the standard's
+   50 MB) is read from its first piece by range, as a CSV is: the head (the first window) gives the reading's facts and the grain, and each piece is a byte window with
+   a carry (`textWindowTick`), so neither the object nor its text is held whole. UTF-8 and US-ASCII only; another encoding of such a size is stated against the whole-read
+   ceiling. `null` when the capture is not one: it is read, or refused, as before. */
+async function textRangedHead(evidence, doc, { recorded, declared, textual, charset }) {
+  const src = rangeSource(evidence, doc);
+  if (!(Number.isInteger(src.size) && src.size > WHOLE_READ_MAX && src.size <= boundOf("text", "bytes"))) return null;
+  if (!textual || !(recorded === null || recorded === "undetermined" || recorded === "text" || recorded === "json" || recorded === "xml")) return null;
+  if (charset && !/^(?:utf-?8|us-ascii|ascii)$/i.test(charset)) return null;
+  const want = Math.min(src.size, WINDOW_BYTES + 4);
+  const probe = await src.readRange(0, want);
+  if (!(probe instanceof Uint8Array) || probe.length < want || probe.includes(0)) return null;
+  if (detectFormat(probe, declared).format !== "undetermined") return null;
+  const bm = probe.length >= 3 && probe[0] === 0xef && probe[1] === 0xbb && probe[2] === 0xbf ? 3 : 0;
+  let end = probe.length;
+  while (end > bm && (probe[end - 1] & 0xc0) === 0x80) end--;   /* the head ends at a character */
+  if (end > bm) { const lead = probe[end - 1], need = lead < 0x80 ? 1 : lead >= 0xf0 ? 4 : lead >= 0xe0 ? 3 : lead >= 0xc0 ? 2 : 1; if (need > 1 || lead >= 0xc0) end--; }
+  let text;
+  try { text = FATAL_UTF8.decode(probe.subarray(bm, end)); } catch { return null; }
+  return { src, size: src.size, head: probe.subarray(0, end), bm, text, grain: grainOf(text, false) };
 }
 
 /* --- a PDF -------------------------------------------------------------------------------------------------------------- */
@@ -2486,7 +2585,7 @@ async function sizeHeld(evidence, digest) {
 /* `{bytes, why?, failure?}`. A failure is `transient` (R37: the object, or a part, is not held yet, or the parts cannot
    be assembled within MULTIPART_READ_MAX while no whole is held: it can be) or `final` (the capture is over WHOLE_READ_MAX
    and is never loaded: nothing later changes that). It throws only when the store does, which the caller marks transient. */
-export async function bytesOf(evidence, doc, { kind = null } = {}) {
+export async function bytesOf(evidence, doc, { kind = null, textual = false } = {}) {
   const whole = async (digest) => {
     const o = await evidence.get(digest);
     return o ? new Uint8Array(await o.arrayBuffer()) : null;
@@ -2500,7 +2599,10 @@ export async function bytesOf(evidence, doc, { kind = null } = {}) {
   /* R54 (G124a): the refusal names its cause and its two figures, the size and the limit, from the table (`statement`) */
   /* a CSV over its own bound is stated against that row (K4868), every other kind against the whole-load ceiling's */
   const tooBig = (size) => {
-    const st = statement(...(kind === "csv" && size > boundOf("csv", "bytes") ? ["csv", "bytes"] : WHOLE_READ_ROW), size);
+    /* a text, JSON or XML over its own bound is stated against that row (R50), a CSV against its (K4868), every other kind against the whole-load ceiling's */
+    const row = kind === "csv" && size > boundOf("csv", "bytes") ? ["csv", "bytes"]
+      : textual && size > boundOf("text", "bytes") ? ["text", "bytes"] : WHOLE_READ_ROW;
+    const st = statement(...row, size);
     return { bytes: null, failure: FAILURE_FINAL, stated: { reason: "TOO_LARGE", ...st },
              why: refusalSentence({ reason: "TOO_LARGE", size, bound: st.bound }) };
   };
@@ -2617,7 +2719,14 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   if (rangedCsv && !piecesOn)
     return early(failed(doc, null, localize("reading-pipeline.index.csv_in_pieces", "this CSV is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet", { size: String(rangedCsv.size), limit: String(WHOLE_READ_MAX) }), { failure: FAILURE_TRANSIENT }));
   if (rangedCsv) fmt = "csv";
-  const got = held ? { bytes: HELD_OPEN } : rangedCsv ? { bytes: rangedCsv.head } : await bytesOf(evidence, doc, { kind: fmt }).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
+  /* R50: a text, JSON or XML past a whole read's bound and within the text bound is read by range from its first piece too */
+  const textual = profile.profiled_from_text === true || TEXT_TYPE.test(profile.source_content_type || ct || "");
+  const rangedTxt = !rangedCsv && (!piecesOn || pieceAsk.cursor === null) && !held
+    ? await textRangedHead(evidence, doc, { recorded: fmt, declared: profile.source_content_type || ct || null, textual,
+        charset: charsetOf([headers["content-type"], ct, profile.source_content_type].find((t) => charsetOf(t)) || "") }).catch(() => null) : null;
+  if (rangedTxt && !piecesOn)
+    return early(failed(doc, null, localize("reading-pipeline.index.text_in_pieces", "this file is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet", { size: String(rangedTxt.size), limit: String(WHOLE_READ_MAX) }), { failure: FAILURE_TRANSIENT }));
+  const got = held ? { bytes: HELD_OPEN } : rangedCsv ? { bytes: rangedCsv.head } : rangedTxt ? { bytes: rangedTxt.head } : await bytesOf(evidence, doc, { kind: fmt, textual }).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
   let bytes = got.bytes;
   const objLen = bytes ? bytes.length : 0;
   got.bytes = null;
@@ -2631,6 +2740,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   /* the charset declared by the transport first (the header wins over the markup's own, H5), then the capture's and the profile's type */
   const declaredType = [headers["content-type"], ct, profile.source_content_type].find((t) => charsetOf(t)) || null;
   let decoded = textRead ? decodedTextOf(bytes, declaredType, fmt === "xml" ? "xml" : fmt === "html" ? "html" : "text") : null;
+  if (rangedTxt) { textRead = true; decoded = { ok: true, text: rangedTxt.text, encoding: "utf-8", assumed: true, replaced: 0, replaced_ratio: 0, disagree: [] }; }
   /* R49, R54: an encoding the rule cannot decode is stated by its name, never read as replacement characters */
   if (decoded && !decoded.ok)
     return early(failed(doc, null, localize("reading-pipeline.index.encoding_unsupported", "the text declares the encoding {name}, which is not read here, so nothing was read", { name: String(decoded.name) }),
@@ -2708,6 +2818,16 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     if (piecesOn) {
       /* R40: the first piece; the totals are of the whole
          text, so the reading says how much of it the piece holds. */
+      if (rangedTxt) {
+        /* R50: the first piece of a text read by range: its units are the windows' from the start; the head gave the reading's facts and the grain, and what only
+           the whole could give (the document's words) is stated by the last piece or not at all */
+        const w = await textWindowTick(evidence, sha, { m: "t", s: sha, n: rangedTxt.size, ob: rangedTxt.bm, bm: rangedTxt.bm, g: rangedTxt.grain === "lines" ? 1 : 0, p: 0, q: 0, r: 0, ro: 1, wr: 0 }, pieceAsk, rangedTxt.src);
+        if (w.refused) return w;
+        if (w.gone) return early(failed(doc, null, localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"), { failure: FAILURE_TRANSIENT }));
+        textUnits = w.units.length ? w.units : null;
+        pieceInfo = { ...w.fields, piece: w.piece };
+        pieceWords = { words_total: null, words_read: w.piece.words };
+      } else {
       const html = fmt === "html", visible = await visibleOfYielding(text, html, true);
       const p = textPieceAnswer(visible, { html, sha, ...pieceAsk });
       if (p.refused) return p;
@@ -2719,6 +2839,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       textUnits = p.units.length ? p.units : null;
       pieceInfo = { ...p.fields, piece: { ...p.piece, units_total: tot.units } };
       pieceWords = { words_total: tot.words, words_read: p.piece.words };
+      }
     } else ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsOfText(text, { html: fmt === "html", budget: unitsBudget }));
     /* R34: the title, read from the markup R32's units drop; null for any text that is not HTML. A reader that throws
        gives a failed reading, which carries none. */
@@ -3036,6 +3157,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   /* G26: a PDF read in ranges digests the pages of the first range only; the provenance says so. */
   if (rangeScope && reading.provenance && typeof reading.provenance === "object")
     reading.provenance.text_scope = { pages: [rangeScope.from, rangeScope.to ?? rangeScope.from + rangeScope.count] };
+  /* R50: a text read by range digests and counts its head, the bytes to the end of the first window; the provenance says so */
+  if (rangedTxt && reading.provenance && typeof reading.provenance === "object")
+    reading.provenance.text_scope = { bytes: [0, rangedTxt.head.length], of: rangedTxt.size };
   /* K4868: a CSV read by range digests and counts its head (to the first record boundary at or past the signature window); the provenance says so */
   if (rangedCsv && reading.provenance && typeof reading.provenance === "object")
     reading.provenance.text_scope = { bytes: [0, rangedCsv.he], of: rangedCsv.size };
