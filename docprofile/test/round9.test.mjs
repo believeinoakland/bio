@@ -227,7 +227,7 @@ test("R40 a ctx whose text is an accessor is wrapped, not read ahead: each detec
   assert.equal(doctypeFor(undefined).type.key, "r9_fallback");
 });
 
-test("R12 R41 markup-free text (a CSV, prose) is never unwatchable through the pipeline; a CERTAIN shell still is (through site-profiles R2: red by name until its merge)", async () => {
+test("R12 R41 markup-free text (a CSV, prose) is never unwatchable through the pipeline; a CERTAIN shell still is", async () => {
   const csv = (n) => Array.from({ length: 400 }, (_, i) => `row ${i},${i * n},value`).join("\n");
   const prose = (n) => `Minutes ${n}. ` + "The council heard the item and adjourned. ".repeat(80);
   for (const mk of [csv, prose]) {
