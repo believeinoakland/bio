@@ -163,3 +163,14 @@ QUESTION (re R61, R60, R58; what I need from `extraction.unitsOf` once job 41 me
 3. `searched: {through, total}` is read from the `unitsOf` answer's `read_through` and `total` (the job row's counters, extraction R90's names) when it carries them, else from `counts.written` and `counts.offered`. It is absent for `state` `whole`, and for a capture never indexed (`state` null with no counts).
 
 **What I need from you:** have job 41 answer `lineRows` and `kind` on each unit and `read_through`/`total` on the answer of `unitsOf` (or tell me the names it will use and I change `normUnits` and `searchedOf`, nothing else). After job 41 merges, a CHANGE to me turns the four red tests green; I have not weakened them.
+
+## J10 · REPORT
+
+REPORT (re BOB's ruling (1): ceilings content keeps that have no `READ_BOUNDS` row; BOB carries them to runtime-limits; I use them as local constants with the comment "proposed; BOB records" until then).
+
+| kind | name | standard | alpha | protective | where |
+|---|---|---|---|---|---|
+| `content` | `held_text_chars` | 33,554,432 (32 MiB of unit text, in characters) | 33,554,432 | 33,554,432 | `HELD_TEXT_CHARS_MAX`, `content/index.mjs`: the most unit text one capture's held units are read to for a grade, a passage text or a notice (R46, R60). Past it the reading is held `partial`, with `searched` naming how far it was read, never `whole` and never graded `NOT_FOUND`. A reading of more than 4,096 units is read page by page to its last (it was read from its first page alone before). |
+| `content` | `kind_scan_pages` | 16 | 16 | 16 | `KIND_SCAN_PAGES_MAX`, `content/index.mjs`: the pages of units (about 1 MiB each, extraction R93) a lookup of a unit's kind scans before it answers that the reading names none for that extent (R58: null, undetermined, never `body`). |
+
+Neither lowers what a member could do before (a reading over 4,096 units was graded from its first page, which was wrong, not a larger reach). The page size, 1 MiB of unit text, is extraction's own (`READING_PAGE_BYTES`, its R93), and the 8 MiB range the crop reads at a time is a read size, not a ceiling.
