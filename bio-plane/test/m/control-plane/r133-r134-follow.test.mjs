@@ -12,7 +12,7 @@
    code alone and a transient failure was `not_filed` for good). The controls (3 documents, a refusal of the file's own bytes) are green before and after. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { M, world, call, opCalls, sha, FORGED } from "./harness.mjs";
+import { M, world, call, opCalls, sha, FORGED, defaultHooks } from "./harness.mjs";
 import { promoteArchive } from "../../../src/control-plane/archive.mjs";
 
 const MB = 1024 * 1024;
@@ -183,6 +183,7 @@ function unpackWorld(members, { behave, refuseRows = [] }) {
     return null;
   } });
 }
+const unpackRows = (env) => asked(env, "pendingadd").filter((c) => c.params.kind === "unpack");
 const unpackOp = (w, body = {}) => call(w.env, { op: "unpack", token: w.S.ann, method: "POST", body: { archiveSha: shaOf(99), ...body } });
 
 test("R134 (DOCS A11): `op=unpack` filing members of which one failed transiently registers the archive's `unpack` job and says `unpack_pending`: the member is owed, never `not_filed` for good; a member refused for its own bytes is named with its code and not retried", async () => {
@@ -194,8 +195,7 @@ test("R134 (DOCS A11): `op=unpack` filing members of which one failed transientl
   assert.deepEqual(res.promoted.map((p) => p.sha256), [shaOf(1)]);
   assert.deepEqual(res.not_promoted, [{ sha256: shaOf(2), code: "STORE_DID_NOT_ANSWER", transient: true }, { sha256: shaOf(3), code: "FILE_DIGEST_MISMATCH" }]);
   assert.equal(res.unpack_pending, true, "the plane's unpack job offers the stranded member again");
-  const adds = asked(w.env, "pendingadd");
-  assert.deepEqual(adds.map((c) => [c.params.kind, c.params.sha]), [["unpack", shaOf(99)]], "one `unpack` row, keyed by the archive's whole digest");
+  assert.deepEqual(unpackRows(w.env).map((c) => [c.params.kind, c.params.sha]), [["unpack", shaOf(99)]], "one `unpack` row, keyed by the archive's whole digest");
   assert.equal(res.unpack_refused, undefined);
 });
 
@@ -203,11 +203,11 @@ test("R134 (control): members refused only for their own bytes leave no `unpack`
   const members = [1, 2].map((i) => archiveDoc(shaOf(i)));
   const own = unpackWorld(members, { behave: (sha, c) => (sha === shaOf(2) ? ok({ ok: false, reason: "FILE_DIGEST_MISMATCH" }) : ok({ ok: true, bundleId: c.body.bundleId })) });
   const a = await unpackOp(own);
-  assert.deepEqual([a.json.result.unpack_pending, a.json.result.unpack_refused, asked(own.env, "pendingadd").length], [undefined, undefined, 0]);
+  assert.deepEqual([a.json.result.unpack_pending, a.json.result.unpack_refused, unpackRows(own.env).length], [undefined, undefined, 0]);
   assert.deepEqual(a.json.result.not_promoted, [{ sha256: shaOf(2), code: "FILE_DIGEST_MISMATCH" }]);
   const clean = unpackWorld(members, { behave: (sha, c) => ok({ ok: true, bundleId: c.body.bundleId }) });
   const c = await unpackOp(clean);
-  assert.deepEqual([c.json.result.promoted.length, c.json.result.not_promoted, c.json.result.unpack_pending, asked(clean.env, "pendingadd").length], [2, [], undefined, 0]);
+  assert.deepEqual([c.json.result.promoted.length, c.json.result.not_promoted, c.json.result.unpack_pending, unpackRows(clean.env).length], [2, [], undefined, 0]);
   const noRow = unpackWorld(members, { behave: () => new Response("down", { status: 500 }), refuseRows: [shaOf(99)] });
   const n = await unpackOp(noRow);
   assert.equal(n.json.result.unpack_pending, undefined, "no row, no promise");
@@ -234,4 +234,35 @@ test("R134 (DOCS A10, A11, X20): the members of a continuation and of a nested a
   const big = promotes[2].body;
   assert.deepEqual(big.register.map((x) => [x.sha256, x.bytes]), [[shaOf(3), 50 * MB]], "the whole is registered under its own digest");
   assert.ok(big.files.some((f) => f.blobSha === shaOf(3) && f.bytes === 50 * MB), "and referenced as one blob, not cut into parts here");
+});
+
+test("R134 (fix round 9, G162; K4980): `op=unpack` follows EVERY member it filed, not only those whose reading was dropped: a member that carries no reading has its `reading` row registered once, before any read, in the order filed; a member refused for its own bytes is not followed; the archive's own digest is no member", async () => {
+  const members = [1, 2, 3].map((i) => archiveDoc(shaOf(i), { container: { archive_sha256: shaOf(99), index: i, path: `m${i}.txt` } }));
+  const w = unpackWorld(members, { behave: (sha, c) => (sha === shaOf(3) ? ok({ ok: false, reason: "FILE_DIGEST_MISMATCH" }) : ok({ ok: true, bundleId: c.body.bundleId })) });
+  const r = await unpackOp(w);
+  assert.equal(r.status, 200, r.text);
+  assert.deepEqual(r.json.result.promoted.map((p) => p.sha256), [shaOf(1), shaOf(2)]);
+  const rows = asked(w.env, "pendingadd").filter((c) => c.params.kind === "reading").map((c) => c.params.sha);
+  assert.deepEqual(rows, [shaOf(1), shaOf(2)], "a reading row for each member filed, in the order filed, once, and none for the refused member or the archive");
+  const order = opCalls(w.env).map((c) => c.route).filter((x) => x === "pendingadd" || x === "readheldfor");
+  assert.equal(order[0], "pendingadd", "R130: the row is written before the first inline read");
+});
+
+test("R134 (fix round 9, G162; K4980): an acquire's archive is followed alike: the members its unpack filed are each followed; the archive document itself, whose reading was not dropped, is not", async () => {
+  const members = [1, 2].map((i) => archiveDoc(shaOf(i), { container: { archive_sha256: shaOf(99), index: i, path: `m${i}.txt` } }));
+  let n = 0;
+  const w = world({ answer: (c) => {
+    if (c.route === "allocid") return ok({ id: `INFO-2026-${String(++n).padStart(4, "0")}` });
+    if (c.route === "promote") return ok({ ok: true, bundleId: c.body.bundleId });
+    if (c.route === "pendingadd") return ok({ ok: true });
+    return null;
+  } });
+  const hooks = { ...defaultHooks(), async gatedOp(ctx) {
+    if (ctx.op !== "acquire") return undefined;
+    return M.json({ ok: true, document: archiveDoc(shaOf(99), { reading: { found: true }, text_units: [] }), unpack: { ok: true, archive: { sha256: shaOf(99) }, documents: members, complete: true } });
+  } };
+  const r = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks, body: { locator: "https://example.org/a.zip", unpack: true } });
+  assert.equal(r.status, 200, r.text);
+  const rows = asked(w.env, "pendingadd").filter((c) => c.params.kind === "reading").map((c) => c.params.sha);
+  assert.deepEqual(rows, [shaOf(1), shaOf(2)], "each member of the fetched archive is followed; the archive's own document is not");
 });

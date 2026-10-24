@@ -225,4 +225,8 @@ test("R124 (P25 control): `existed: true` with no document the opener sees promo
   assert.equal(refused.reason, "CAPTURE_HELD_BY_ANOTHER_BUNDLE");
   assert.ok("holder" in refused, "the holder field is stated (a name where the record names it, else null)");
   assert.ok(holder);
+  /* G160 (K4980): the refusal carries the facts as provenance answered them: the digest, its `kind` and the holder (null where provenance does not name it to this caller, D-15:
+     the opener shares no project with the holder's), at the top and in `detail`, the form the plane's job row reads (plane R97) */
+  assert.deepEqual([refused.capture_sha, refused.kind, refused.holder], [other.capture.sha256, "whole", null], JSON.stringify(refused));
+  assert.deepEqual(refused.detail, { capture_sha: other.capture.sha256, kind: "whole", holder: null }, "and the plane's row finds them in `detail`");
 });

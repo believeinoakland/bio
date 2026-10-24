@@ -819,7 +819,12 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
       const refused = made.refused && typeof made.refused === "object" ? made.refused : {};
       const reason = refused.reason || refused.code || "PROMOTE_REFUSED";
       /* R124 (P25): the holder, where the record names it, beside the code; never a bare `PROMOTE_REFUSED` for the one-home rule */
-      return { ok: false, reason, ...(reason === "CAPTURE_HELD_BY_ANOTHER_BUNDLE" ? { holder: typeof refused.holder === "string" ? refused.holder : null } : {}) };
+      if (reason !== "CAPTURE_HELD_BY_ANOTHER_BUNDLE") return { ok: false, reason };
+      /* R124 (fix round 9, G160; K4980): and the refusal's facts as provenance answered them, beside the code and in `detail` (the form the plane's job row reads, plane R97):
+         the digest refused, its `kind` (whole or part) and the holder, null where provenance does not name it to this caller (D-15) */
+      const facts = { capture_sha: typeof refused.capture_sha === "string" ? refused.capture_sha : sha, kind: typeof refused.kind === "string" ? refused.kind : null,
+                      holder: typeof refused.holder === "string" ? refused.holder : null };
+      return { ok: false, reason, ...facts, detail: { ...facts } };
     }
     /* R123: the reading follows the filing */
     let pending = false;
@@ -2459,7 +2464,12 @@ export function makeFetch(hooks = {}) {
     async function promoteFiled(docs, archiveSha, incomplete = false) {
       const dropped = [];
       const done = await promoteArchive({ stub, doAnswer, docs, project: archiveProject, archiveSha, who: archiveWho, onDropped: (e) => dropped.push(e) });
-      if (dropped.length) await followEntries(dropped);
+      /* R134 (fix round 9, G162; K4980): EVERY member it filed is followed, not only those filed without their reading: each one's reading is registered as R130 says
+         (a stated one has no row), uploaded and fetched archives alike. The archive's own document is followed only when its reading was dropped. */
+      const filed = new Map(docs.map((d) => [d.capture.sha256, d.capture.sha256 === archiveSha ? null : d]));
+      const entries = done.promoted.map((p) => ({ sha: p.sha256, document: filed.get(p.sha256) })).filter((e) => e.document);
+      for (const d of dropped) if (!entries.some((e) => e.sha === d.sha)) entries.push(d);
+      if (entries.length) await followEntries(entries);
       /* R134 (fix round 9, G129e): a member whose put or promotion failed transiently stays owed: the archive's `unpack` job is registered (plane R97, whose retry offers the
          member again, acquisition R38's resume), and the answer says so; a member refused for its own bytes stays named in `not_promoted` and is not retried */
       const owed = done.not_promoted.filter((n) => n.transient === true);
