@@ -17,7 +17,7 @@
 import { CAPTURE_SCREEN } from "./capture.mjs";
 
 /* R42 (C55): the one drawing of what a check found, for `screens-inquiry`'s document page to import (K4164) */
-export { checkOutcome } from "./capture.mjs";
+export { checkOutcome, supportingReasons } from "./capture.mjs";
 import { HELD_SCREEN } from "./held.mjs";
 import { OPEN_FILE_SCREEN } from "./open-file.mjs";
 import { INBOX_SCREEN } from "./inbox.mjs";

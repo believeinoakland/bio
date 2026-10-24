@@ -406,15 +406,8 @@ function renderCapture(cs, view) {
       const x = g && g.supporting;
       if (!x || !(x.skipped > 0)) return "";
       const total = x.kept + x.skipped;
-      const why = {};
-      for (const r of Array.isArray(x.reasons) ? x.reasons : []) {
-        if (!r || typeof r !== "object") continue;
-        const code = String(r.reason || r.code || ""), n = Number.isFinite(r.count) && r.count > 0 ? r.count : 1;
-        const kind = code === "CAP_REACHED" && Number.isFinite(r.limit) ? "cap" : code === "TOO_LARGE" || code === "BUDGET_EXHAUSTED" ? "toolarge" : "unavailable";
-        why[kind] = why[kind] || { n: 0, cap: kind === "cap" ? r.limit : 0 };
-        why[kind].n += n;
-      }
-      const lines = ["cap", "toolarge", "unavailable"].filter((k) => why[k]).map((k) => `<p class="mk-small muted" data-supporting-why="${k}">${cs.w("screen.capture.supporting." + k, { n: String(why[k].n), cap: String(why[k].cap) })}</p>`).join("");
+      const why = view.parts.supportingReasons(x.reasons);
+      const lines = ["cap", "toolarge", "unavailable"].filter((k) => why[k]).map((k) => `<p class="mk-small muted" data-supporting-why="${k}">${cs.w("screen.capture.supporting." + k, { n: String(why[k].n), cap: String(why[k].cap || 0) })}</p>`).join("");
       return `<div role="status" data-supporting><p class="mk-small">${cs.w("screen.capture.supporting.kept", { kept: String(x.kept), total: String(total) })}</p>${lines}</div>`;
     };
     /* R31 (N1094; DEC-240 D3): the member's own unfinished captures, each titled from the held document that holds its
@@ -982,7 +975,21 @@ function checkOutcome(cs, answer, title) {
   const t = String(title || "");
   return cs.w("screen.capture.address.checked." + st, st === "unknown" ? { title: t, note: typeof a.note === "string" ? a.note : "" } : { title: t });
 }
-export { checkOutcome, heldTitle };
+/* R67 (fix round 9; K4969): the one classification of a capture's `supporting.reasons`, for every screen that states why supporting files were not kept
+   (the Add screen's line, screens-inquiry's Document page): by code, `CAP_REACHED` with a `limit` the cap, `TOO_LARGE` and `BUDGET_EXHAUSTED` too large, any other
+   code unavailable; a reason's `count` summed (else 1); a non-object skipped. A kind with no reason is absent. */
+function supportingReasons(reasons) {
+  const why = {};
+  for (const r of Array.isArray(reasons) ? reasons : []) {
+    if (!r || typeof r !== "object") continue;
+    const code = String(r.reason || r.code || ""), n = Number.isFinite(r.count) && r.count > 0 ? r.count : 1;
+    const kind = code === "CAP_REACHED" && Number.isFinite(r.limit) ? "cap" : code === "TOO_LARGE" || code === "BUDGET_EXHAUSTED" ? "toolarge" : "unavailable";
+    why[kind] = why[kind] || (kind === "cap" ? { n: 0, cap: r.limit } : { n: 0 });
+    why[kind].n += n;
+  }
+  return why;
+}
+export { checkOutcome, heldTitle, supportingReasons };
 
 /* R2: the upload. `statement` composed from the three answers in order, each with its label, at most 2,000 characters;
  * nothing is sent while one is empty, and the screen says which. The file's bytes are the raw body (control-plane R72),
@@ -1369,7 +1376,7 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, doneUpload, estimateOf, filedFor, filedHeld, forOf, heldTitle, homeOf, jobStateOf, notMemberWords, pictureOf, projectOf, promoteDocument, readProjectQuestions, readRefusalHtml, readingOf, refusalHtml, refusedHtml, repairedReading, sendInParts, sha256Hasher, titleOf, watchFetch, watchReading }),
+  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, doneUpload, estimateOf, filedFor, filedHeld, forOf, heldTitle, homeOf, jobStateOf, notMemberWords, pictureOf, projectOf, promoteDocument, readProjectQuestions, readRefusalHtml, readingOf, refusalHtml, refusedHtml, repairedReading, sendInParts, sha256Hasher, supportingReasons, titleOf, watchFetch, watchReading }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
                     /* G72: a session the plane no longer holds is the end of that capture, not a failure: `done` draws it (its line is the screen's own, so the note beside the act is empty) */
