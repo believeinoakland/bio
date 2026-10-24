@@ -134,7 +134,7 @@ test("R23 R10 R11 R12 R13 R14 R15 R17: layerChainFor, readingFromWire, textCount
   assert.equal(textCountsOf(null), null);
   /* textUnitsFor: one unit per page with a glyph; none is null, never an empty list */
   const u = textUnitsFor(i2([{ page: 2, text: "two" }, { page: 3, text: " " }]));
-  assert.deepEqual(u.textUnits, [{ extent: { kind: "pdf-page", page: 2, rect: null }, seq: 0, text: "two" }]);
+  assert.deepEqual(u.textUnits, [{ extent: { kind: "pdf-page", page: 2, rect: null }, seq: 0, text: "two", kind: "body" }]);   /* R47: kind */
   assert.deepEqual(textUnitsFor(i2([{ page: 0, text: "" }])), { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null });
   assert.deepEqual(textUnitsFor(null), { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null });
 });
@@ -242,8 +242,11 @@ const PDF = new Uint8Array(readFileSync(new URL("../../fixtures/legistar-agenda-
    pdf-reader as it was before that merge (9b9fc8e3f7^) this module's answer still digests to the old pin, 3f4eb430...051f;
    with it, every difference is those 45 characters: the counts, the page digests and lengths that hold them, the units'
    text, one entity's label ("Code Enforcement’s"), and the basis's full-decode statement. The docx pin is unchanged. */
+/* Fix round 9 (K4861 (2), K4872): the PDF pin re-taken on the tranche before this job's change, the providers merged: docprofile R18
+   counts glyphs (K4865: `text_glyphs` 51,105 of the 60,842 characters) and pdf-reader's range carries its pages' boxes and image
+   placements (PDF-READER #15, K4866); this job's own additions are taken off by name below (`withoutRound9`). */
 const PINNED = {
-  pdf: "5b1437e6bb0062322d648ad10b22df16aba636dab1b342fecb9f42646199f17a",
+  pdf: "11d6e0b8f98ee9b1b010bc201ad9dbbba11066f0ec6b353d87d790beee69fbba",
   docx: "d9fed8a2df2b60d328a087abe6ef8a28a0cd830af64396e7b51dc1f3676da01d",
 };
 /* T51-190 (K3930: the list wins): the docx pin was re-taken once. The no-page-grain sentence on `provenance.pages_why`
@@ -272,6 +275,13 @@ test("R2 R15 (over-strictness): a real PDF and an office capture are read throug
     if (name === "docx") assert.deepEqual(cells, {}, "docx: a body with no tables reads cells {}");
     else assert.equal(cells, undefined, `${name}: no cells for a document that is neither a workbook nor a .docx`);
     if (name === "pdf") assert.deepEqual([before.text_chars, before.text_undetermined], [60842, 0], "pdf: decoded whole since K2399");
-    assert.equal(hex(JSON.stringify({ ...out, reading: before })), PINNED[name], name);
+    /* fix round 9 (R45, R47, R48) adds the contract's counters, next and final, a unit's kind (`body` here) and an unread picture
+       inside a text page (the PDF's one) on purpose; every other byte stays pinned */
+    const { pictures_unread, ...pinned } = before;
+    assert.equal(pictures_unread, name === "pdf" ? 1 : undefined, `${name}: R48's unread picture`);
+    const { counters, next, final, ...rest } = out;
+    assert.ok(counters && final === true && next === null, `${name}: the contract's fields`);
+    const units = rest.text_units.map(({ kind, ...u }) => { assert.equal(kind, "body"); return u; });
+    assert.equal(hex(JSON.stringify({ ...rest, text_units: units, reading: pinned })), PINNED[name], name);
   }
 });

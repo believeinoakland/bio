@@ -1952,19 +1952,29 @@ async function textWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes 
    The delimiter takes no part. `b` begins at the object offset `base`; each offset where a record ends and the next begins is
    pushed to `out`, in order. `st` carries the scan between pieces of one run ({inQ, cr, crAt}); `finishScan` settles a CR that
    ended the last piece. An offset at the end of the object begins no record and is for the caller to drop. */
-function newScan() { return { inQ: false, cr: false, crAt: 0 }; }
+/* G131b (fix round 9; csv-reader's rule, its G131b): a double quote opens quotes only at the start of a field (a record's first byte,
+   or the byte after the delimiter `d`); anywhere else it is a character of the field, so a stray `12" pipe` swallows nothing. Inside
+   quotes a quote closes them, and a quote right after the closing one is an escaped quote that reopens them. */
+function newScan(d = 0x2c) { return { inQ: false, cr: false, crAt: 0, start: true, closed: false, d }; }
 function scanBoundaries(b, base, st, out) {
-  let inQ = st.inQ, cr = st.cr, crAt = st.crAt;
+  let inQ = st.inQ, cr = st.cr, crAt = st.crAt, start = st.start, closed = st.closed;
+  const d = st.d;
   for (let i = 0; i < b.length; i++) {
     const c = b[i];
-    if (cr) { cr = false; if (c === 0x0a) { out.push(base + i + 1); continue; } out.push(crAt); }
-    if (inQ) { if (c === 0x22) inQ = false; continue; }
-    if (c === 0x22) inQ = true;
-    else if (c === 0x0a) out.push(base + i + 1);
+    if (cr) { cr = false; start = true; if (c === 0x0a) { out.push(base + i + 1); continue; } out.push(crAt); }
+    if (inQ) { if (c === 0x22) { inQ = false; closed = true; } continue; }
+    if (closed && c === 0x22) { inQ = true; closed = false; continue; }
+    closed = false;
+    if (c === 0x22 && start) { inQ = true; start = false; }
+    else if (c === 0x0a) { out.push(base + i + 1); start = true; }
     else if (c === 0x0d) { cr = true; crAt = base + i + 1; }
+    else start = c === d;
   }
-  st.inQ = inQ; st.cr = cr; st.crAt = crAt;
+  Object.assign(st, { inQ, cr, crAt, start, closed });
 }
+/* the delimiter's byte from the dialect's name or character (a comma when it names none) */
+const DELIMITER_BYTE = { comma: 0x2c, semicolon: 0x3b, tab: 0x09, pipe: 0x7c, ",": 0x2c, ";": 0x3b, "\t": 0x09, "|": 0x7c };
+const delimiterByteOf = (i2text) => DELIMITER_BYTE[i2text && i2text.dialect && i2text.dialect.delimiter] ?? 0x2c;
 function finishScan(st, out) { if (st.cr) { st.cr = false; out.push(st.crAt); } }
 
 /* From a first (or `u`) piece of a CSV whose next block is the one at line `L`: the cursor that reads the next piece by a window,
@@ -1989,7 +1999,8 @@ async function csvWindowCursorIn(evidence, { sha, whole, size, i2text, meta, nex
   while (f > 0 && sheet.lineRows[f - 1] === row) f--;
   const corner = /:\$?([A-Za-z]{1,3})\$?\d+$/.exec(u.extent.range);
   /* the object, from its start, as far as the first record at or past the head and the block's own record */
-  const st = newScan(), seen = [];
+  const dl = delimiterByteOf(i2text);
+  const st = newScan(dl), seen = [];
   let target = row === 1 ? 0 : null, he = null, hr = null, count = 0;
   for (let at = 0; at < size && (target === null || he === null); at += WINDOW_BYTES) {
     const got = await rangeBytes(evidence, sha, at, Math.min(WINDOW_BYTES, size - at));
@@ -2005,7 +2016,7 @@ async function csvWindowCursorIn(evidence, { sha, whole, size, i2text, meta, nex
     }
   }
   if (target === null || he === null) return null;
-  return windowCursor(sha, { m: "c", n: size, ob: target, rw: row, li: L, sk: L - f, bi: next, rt: read, tt: total, he, hr,
+  return windowCursor(sha, { m: "c", n: size, ob: target, rw: row, li: L, sk: L - f, bi: next, rt: read, tt: total, he, hr, dl,
                              lr: meta.plan.longRow ? 1 : 0, lc: corner ? corner[1].toUpperCase() : "", rg: u.extent.range, sh: u.extent.sheet });
 }
 
@@ -2064,7 +2075,7 @@ async function csvWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }
       if (!got) return { gone: true };
       if (got.size !== null && got.size !== c.n) return mismatch();
       if (got.bytes.length !== len) return mismatch();
-      const st = newScan(), bounds = [];
+      const st = newScan(natural(c.dl) ? c.dl : 0x2c), bounds = [];
       scanBoundaries(got.bytes, start, st, bounds);
       const atEnd = start + len >= c.n;
       if (atEnd) finishScan(st, bounds);
@@ -2115,7 +2126,7 @@ async function csvWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }
   return { units,
            fields: { more,
                      cursor: more ? windowCursor(sha, { m: "c", n: c.n, ob: stop.offset, rw: stop.row, li: stop.line, sk: stop.inRec, bi: seq, rt: read,
-                                                        tt: c.tt, he: c.he, hr: c.hr, lr: c.lr, lc: c.lc, rg: c.rg, sh: c.sh }) : null,
+                                                        tt: c.tt, he: c.he, hr: c.hr, lr: c.lr, lc: c.lc, rg: c.rg, sh: c.sh, ...(natural(c.dl) ? { dl: c.dl } : {}) }) : null,
                      read_through: more ? read : c.tt, total: c.tt },
            piece: { units: units.length, words } };
 }

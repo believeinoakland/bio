@@ -3,6 +3,7 @@
    members and format entries standing in for the tiers. Moved from `extraction`'s read.test.mjs (N513), its
    assertions unchanged; `extraction` keeps the arms that are its own (R1's store binding, R18's view, the acquire
    wire). Each test names the requirement ids it checks in its title. */
+import { readingDialect as readingDialectOf } from "../../../src/formats.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, hold, doc, member, withEntry, i2, noText, folio, unreadImage, ocrAnswer, calibration, sha, EVIDENCE_PREFIX } from "./fixture.mjs";
@@ -374,7 +375,9 @@ test("R13: dialect absent when no entry answered a decoding choice, null when it
   const mk = (dialect) => withEntry({ format: "t14", text: async () => ({ ok: true, document: "a", paragraphs: [{ para: 0, text: "a" }], counts: { chars: 1, undetermined: 0 }, undetermined: [], dialect }) },
     async () => { const d = await hold(w.evidence, "t14 " + Math.random()); return (await w.read(doc({ digest: d, format: "t14" }))).reading; });
   assert.equal((await mk(null)).dialect, null);
-  assert.deepEqual(Object.keys((await mk({ delimiter: ",", encoding: "utf-8" })).dialect).sort(), ["confidence", "delimiter", "encoding", "signals", "undetermined"]);
+  /* K4877: the shape is format-registry's own projection (its R15 as amended), asked of it, never a hand copy of its keys (K3268) */
+  const emittedDialect = { delimiter: ",", encoding: "utf-8" };
+  assert.deepEqual((await mk(emittedDialect)).dialect, readingDialectOf(emittedDialect));
   /* text read at intake: the entry's dialect signature over the same bytes; a throwing one leaves the key absent */
   const txt = "a;b\n1;2\n";
   const d = await hold(w.evidence, txt);
@@ -401,7 +404,7 @@ test("R14: the reading's provenance is composed at one site over exactly the tex
   assert.equal(failed.provenance.text_sha256, null);
 });
 
-test("R15 R21: text units one per page, paragraph or slide holding a glyph, the producer's numbering; the wire's budget with each unit charged its bytes plus the envelope; a unit that does not fit carried as its capped prefix marked truncated; every unit left out named; absent and empty differ", async () => {
+test("R15 R21 R47: text units one per page, paragraph or slide holding a glyph, the producer's numbering; the wire's budget with each unit charged its bytes plus the envelope; a unit over the cap carried as its chunks, never cut; every unit left out named; absent and empty differ", async () => {
   const w = fresh();
   const out = await readPdf(w, i2([{ page: 3, text: "three" }, { page: 4, text: "   " }, { page: 5, text: "five" }]));
   assert.deepEqual(out.text_units.map((u) => [u.extent.kind, u.extent.page, u.seq]), [["pdf-page", 3, 0], ["pdf-page", 5, 2]]);
@@ -410,13 +413,12 @@ test("R15 R21: text units one per page, paragraph or slide holding a glyph, the 
   const para = (n) => ({ para: n, text: big });
   const many = await withEntry({ format: "t16", text: async () => ({ ok: true, document: "d", paragraphs: [0, 1, 2, 3, 4].map(para), counts: { chars: 1, undetermined: 0 }, undetermined: [] }) },
     async () => { const d = await hold(w.evidence, "t16"); return w.read(doc({ digest: d, format: "t16" })); });
-  const per = CAPTURE_TEXT_UNIT_CAP + ACQUIRE_TEXT_UNIT_ENVELOPE;
-  const fit = Math.floor(ACQUIRE_TEXT_UNITS_BUDGET / per);
-  assert.equal(many.text_units.length, fit);
-  assert.ok(many.text_units.every((u) => u.truncated === true && u.text.length === CAPTURE_TEXT_UNIT_CAP));
-  assert.equal(many.text_units_over_bound, 5 - fit);
-  assert.deepEqual(many.text_units_skipped, [{ first: { kind: "doc-para", para: fit, run: null }, first_seq: fit,
-    last: { kind: "doc-para", para: 4, run: null }, last_seq: 4, units: 5 - fit }]);
+  /* fix round 9 (R15 amended, R47; G128d): a unit over the cap is carried as its chunks, never cut; a chunk past the budget is
+     left out and named */
+  assert.ok(many.text_units.every((u) => !u.truncated && u.text.length <= CAPTURE_TEXT_UNIT_CAP && Number.isInteger(u.extent.run)));
+  assert.equal(many.text_units.length + many.text_units_over_bound, 10, "five paragraphs, two chunks each");
+  assert.ok(many.text_units_over_bound > 0);
+  assert.equal(many.text_units_skipped.reduce((n, r) => n + r.units, 0), many.text_units_over_bound);
   const noUnits = await readPdf(w, i2([{ page: 0, text: " " }]));
   assert.equal("text_units" in noUnits, false, "no unit list is absent, never an empty list");
   const slides = await withEntry({ format: "t16s", text: async () => ({ ok: true, document: "s", slides: [{ slide: 1, text: "one" }], counts: { chars: 3, undetermined: 0 }, undetermined: [] }) },
@@ -435,8 +437,8 @@ test("R15 R21: a workbook's unit is its sheet, a sheet-range at the used range i
       counts: { chars: 3, undetermined: 0 }, undetermined: [] }) },
     async () => { const d = await hold(w.evidence, "t16x bytes"); return w.read(doc({ digest: d, format: "t16x", ct: "application/x" })); });
   assert.deepEqual(out.text_units, [
-    { extent: { kind: "sheet-range", sheet: "Budget", range: "A1:B3" }, seq: 0, text: "a\tb" },
-    { extent: { kind: "sheet-range", sheet: "Notes", range: "A1:A9" }, seq: 3, text: "c" }]);
+    { extent: { kind: "sheet-range", sheet: "Budget", range: "A1:B3" }, seq: 0, text: "a\tb", kind: "body" },
+    { extent: { kind: "sheet-range", sheet: "Notes", range: "A1:A9" }, seq: 3, text: "c", kind: "body" }]);   /* R47: kind */
   /* a sheet list whose reader named no range at all: no unit, and the list is absent */
   const unnamed = await withEntry({ format: "t16y", text: async () => ({ ok: true, document: "x", sheets: [{ name: "S", text: "x", range: null }],
       counts: { chars: 1, undetermined: 0 }, undetermined: [] }) },

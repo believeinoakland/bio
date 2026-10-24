@@ -172,8 +172,10 @@ test("R41 (G48): the first tick builds the blocks of its own piece and counts th
     reads.n = 0;
     const second = await firstTick(b, document, { maxUnits: 1, cursor: first.cursor });
     assert.equal(second.piece.units, 1);
-    assert.equal(firstReads, reads.n, "the first tick built one block, as the later tick did; it did not build them all");
-    assert.ok(firstReads < SHEET_LINES.length + 2 * first.piece.units_total, "the rows of the blocks not asked for are not read");
+    /* fix round 9 (R41, R47; G128g): each block states its rows, one read of the sheet's lineRows a line of the block it builds */
+    const own = (t) => t.text_units[0].lineRows.length;
+    assert.equal(firstReads - own(first), reads.n - own(second), "the first tick built one block, as the later tick did; it did not build them all");
+    assert.ok(firstReads - own(first) < SHEET_LINES.length + 2 * first.piece.units_total, "the rows of the blocks not asked for are not read");
   });
 });
 

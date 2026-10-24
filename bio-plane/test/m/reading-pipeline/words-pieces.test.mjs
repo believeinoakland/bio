@@ -98,7 +98,7 @@ test("R35: a text whose one word is cut by R41's chunking answers equal counts: 
   assert.equal(sum, total);
 });
 
-test("R35 (control): a text read whole by one piece answers the first piece's words as the total; a part not read leaves fewer read than total", async () => {
+test("R35 (control): a text read whole by one piece answers the first piece's words as the total; a unit over the cap read whole as its chunks reads every word (R47)", async () => {
   const b = bucket();
   const small = "alpha beta\ngamma delta epsilon\nzeta";
   const d = await hold(b, small);
@@ -106,9 +106,9 @@ test("R35 (control): a text read whole by one piece answers the first piece's wo
   const out = await readOf(b, document, { unitsBudget: BUDGET, cursor: null });
   assert.equal(out.more, false);
   assert.deepEqual([out.reading.words_total, out.reading.words_read, out.piece.words], [6, 6, 6]);
-  /* a read at the wire's bound, no cursor: a unit over the cap is cut, so fewer are read than the total */
+  /* a read at the wire's bound, no cursor: a unit over the cap is carried as its chunks (R47), so every word is read */
   const long = "lorem ".repeat(Math.ceil(CAPTURE_TEXT_UNIT_CAP / 6) + 1000).trim();
   const d2 = await hold(b, long);
   const cut = await readOf(b, doc({ digest: d2, bytes: long.length, ct: "text/plain", format: "text", fromText: true }));
-  assert.ok(cut.reading.words_read < cut.reading.words_total);
+  assert.equal(cut.reading.words_read, cut.reading.words_total);
 });

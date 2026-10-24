@@ -37,7 +37,7 @@ test("R32 R1: an HTML capture read as text with no format entry answers one doc-
     ["doc-para", 2, null, 2, "Second line"],
     ["doc-para", 3, null, 3, "One"],
     ["doc-para", 4, null, 4, "Two"]]);
-  assert.deepEqual(Object.keys(out.text_units[0]), ["extent", "seq", "text"]);
+  assert.deepEqual(Object.keys(out.text_units[0]), ["extent", "seq", "text", "kind"]);   /* R47: a unit names its kind */
   assert.deepEqual(Object.keys(out.text_units[0].extent), ["kind", "para", "run"]);
   const said = out.text_units.map((u) => u.text).join("\n");
   for (const gone of [/<\/?[a-z!]/i, /class=|data-note|lead/, /secret|script words/, /color: red|late style/, /comment words/, /Hidden Title/, /&amp;|&#|&nbsp;/])
@@ -58,24 +58,25 @@ test("R32 R1: a plain-text capture answers one doc-para unit per run of text bet
     ["doc-para", 0, null, 0, "First line\nstill the first"],
     ["doc-para", 1, null, 1, "Second"],
     ["doc-para", 2, null, 2, "Third"]]);
-  /* a capture whose bytes are not UTF-8 is read as the intake decoded it */
+  /* fix round 9 (R49; G131g): a capture whose bytes are not UTF-8 is decoded by ooxml's one rule (here detected windows-1252), never
+     read as replacement characters */
   const bytes = Uint8Array.from([...Buffer.from("caf"), 0xe9, ...Buffer.from(" au lait\n\nsecond")]);
   const w = fresh();
   const d = await hold(w.evidence, bytes);
   const lat = await w.read(doc({ digest: d, bytes: bytes.length, ct: "text/plain", format: "undetermined", fromText: true, headers: [] }));
-  assert.deepEqual(lat.text_units.map((u) => u.text), ["caf� au lait", "second"]);
+  assert.deepEqual(lat.text_units.map((u) => u.text), ["café au lait", "second"]);
+  assert.equal(lat.reading.encoding, "windows-1252");
 });
 
-test("R32 R15: the wire's rules apply unchanged to these units: a paragraph over the per-unit cap is carried as its capped prefix marked truncated, units past the byte budget are left out and named", async () => {
+test("R32 R15 R47: the wire's rules apply to these units: a paragraph over the per-unit cap is carried as its chunks, never cut, units past the byte budget are left out and named", async () => {
   const big = "x".repeat(CAPTURE_TEXT_UNIT_CAP + 10);
-  const per = CAPTURE_TEXT_UNIT_CAP + ACQUIRE_TEXT_UNIT_ENVELOPE;
-  const fit = Math.floor(ACQUIRE_TEXT_UNITS_BUDGET / per);
   const out = await plain([big, big, big, big, big].join("\n\n"));
-  assert.equal(out.text_units.length, fit);
-  assert.ok(out.text_units.every((u) => u.truncated === true && u.text.length === CAPTURE_TEXT_UNIT_CAP));
-  assert.equal(out.text_units_over_bound, 5 - fit);
-  assert.deepEqual(out.text_units_skipped, [{ first: { kind: "doc-para", para: fit, run: null }, first_seq: fit,
-    last: { kind: "doc-para", para: 4, run: null }, last_seq: 4, units: 5 - fit }]);
+  /* fix round 9 (R15 amended, R47; G128d): a unit over the cap is carried as its chunks, never cut; a chunk past the budget is
+     left out and named */
+  assert.ok(out.text_units.every((u) => !u.truncated && u.text.length <= CAPTURE_TEXT_UNIT_CAP && Number.isInteger(u.extent.run)));
+  assert.equal(out.text_units.length + out.text_units_over_bound, 10, "five paragraphs, two chunks each");
+  assert.ok(out.text_units_over_bound > 0);
+  assert.equal(out.text_units_skipped.reduce((n, r) => n + r.units, 0), out.text_units_over_bound);
 });
 
 test("R32 (control) R1 R21: a capture read as text whose text holds no glyph answers no text_units, absent and never an empty list, and its reading is as R1 states it; so does an HTML page with markup and no words", async () => {
@@ -113,8 +114,8 @@ test("R32 R2: a PDF and an office capture, and delimited text, answer their unit
   const docx = await withEntry({ format: "r32docx", text: async () => ({ ok: true, container: "docx", document: "p1\np2",
       paragraphs: [{ para: 0, text: "p1" }, { para: 1, text: "p2" }], counts: { chars: 4, undetermined: 0 }, undetermined: [] }) },
     async () => { const d = await hold(w.evidence, "r32 office bytes"); return w.read(doc({ digest: d, ct: "application/x", format: "r32docx", fromText: true })); });
-  assert.deepEqual(docx.text_units, [{ extent: { kind: "doc-para", para: 0, run: null }, seq: 0, text: "p1" },
-                                     { extent: { kind: "doc-para", para: 1, run: null }, seq: 1, text: "p2" }]);
+  assert.deepEqual(docx.text_units, [{ extent: { kind: "doc-para", para: 0, run: null }, seq: 0, text: "p1", kind: "body" },
+                                     { extent: { kind: "doc-para", para: 1, run: null }, seq: 1, text: "p2", kind: "body" }]);   /* R47: kind */
   const csv = "name,place\nAna,Hall\n";
   const c = await readAs(w, csv, { ct: "text/csv", format: "csv" });
   assert.deepEqual(c.text_units.map((u) => u.extent.kind), ["sheet-range"]);
@@ -199,7 +200,7 @@ test("R33 R32 (T50; N1191 (a)): a plain-text capture of a title line and four se
   assert.deepEqual(shape(await plain(ORDER.join("\r\n"))), want);
   const padded = await plain(`  ${ORDER[0]}  \n\t${ORDER[1]}\t\n${ORDER[2]}`);
   assert.deepEqual(shape(padded), ORDER.slice(0, 3).map((t, i) => ["doc-para", i, null, i, t]));
-  assert.deepEqual(Object.keys(padded.text_units[0]), ["extent", "seq", "text"]);
+  assert.deepEqual(Object.keys(padded.text_units[0]), ["extent", "seq", "text", "kind"]);
   assert.deepEqual(Object.keys(padded.text_units[0].extent), ["kind", "para", "run"]);
   /* R33's chain, R14's provenance and R17's counts stay as for any text read as text */
   const body = ORDER.join("\n");
@@ -223,16 +224,15 @@ test("R33 (control) R32: the same text with a blank line after the title answers
   for (const none of [await plain(" \n \t"), await plain("\n"), await html("<div>\n</div>\n<div> </div>")]) assert.equal("text_units" in none, false);
 });
 
-test("R33 R15: the wire's bound, cap, truncated and named gaps apply unchanged to line units", async () => {
+test("R33 R15 R47: the wire's bound, chunks and named gaps apply to line units", async () => {
   const big = "x".repeat(CAPTURE_TEXT_UNIT_CAP + 10);
-  const per = CAPTURE_TEXT_UNIT_CAP + ACQUIRE_TEXT_UNIT_ENVELOPE;
-  const fit = Math.floor(ACQUIRE_TEXT_UNITS_BUDGET / per);
   const out = await plain([big, big, big, big, big].join("\n"));
-  assert.equal(out.text_units.length, fit);
-  assert.ok(out.text_units.every((u) => u.truncated === true && u.text.length === CAPTURE_TEXT_UNIT_CAP));
-  assert.equal(out.text_units_over_bound, 5 - fit);
-  assert.deepEqual(out.text_units_skipped, [{ first: { kind: "doc-para", para: fit, run: null }, first_seq: fit,
-    last: { kind: "doc-para", para: 4, run: null }, last_seq: 4, units: 5 - fit }]);
+  /* fix round 9 (R15 amended, R47; G128d): a unit over the cap is carried as its chunks, never cut; a chunk past the budget is
+     left out and named */
+  assert.ok(out.text_units.every((u) => !u.truncated && u.text.length <= CAPTURE_TEXT_UNIT_CAP && Number.isInteger(u.extent.run)));
+  assert.equal(out.text_units.length + out.text_units_over_bound, 10, "five paragraphs, two chunks each");
+  assert.ok(out.text_units_over_bound > 0);
+  assert.equal(out.text_units_skipped.reduce((n, r) => n + r.units, 0), out.text_units_over_bound);
 });
 
 test("R33 R32 (the measure, M-T50-4): textUnitsOfText gives V4's order shape one unit before this rule and one unit per non-empty line after", () => {

@@ -56,12 +56,12 @@ test("R35: a captured page and a plain-text capture read whole answer equal coun
   assert.deepEqual([plain.reading.words_total, plain.reading.words_read], [9, 9]);
 });
 
-test("R35: a unit cut to its cap holds fewer words than the text had", async () => {
+test("R35 R47: a unit over its cap is carried as chunks holding every word of the text once (fix round 9: nothing is cut)", async () => {
   const word = "lorem ";
   const big = word.repeat(Math.ceil(CAPTURE_TEXT_UNIT_CAP / word.length) + 1000).trim();
   const { reading, text_units } = await readText(big, { format: "text", ct: "text/plain" });
-  assert.equal(text_units[0].truncated, true);
-  assert.ok(reading.words_read < reading.words_total);
+  assert.ok(text_units.length > 1 && text_units.every((u) => !u.truncated));
+  assert.equal(reading.words_read, reading.words_total);
   assert.equal(reading.words_total, big.split(" ").length);
 });
 

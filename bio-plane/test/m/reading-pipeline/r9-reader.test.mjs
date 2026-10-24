@@ -353,3 +353,52 @@ test("R58: no reading step imports file-safety or reads a scan, grade or safe vi
   assert.doesNotMatch(src, /from\s+["'][^"']*file-safety/);
   assert.doesNotMatch(src, /\b(?:safe_view|scan_state|gradeOf)\b/);
 });
+
+/* ---- K4861 (pdf-worker R42): tier 2 is asked for the range the reading is on ---- */
+
+test("R3 R40 (K4861, R-PATH): every piece of a PDF read in ranges that escalates asks tier 2 for its own range (from, count), the first piece and a later one; a whole read asks the document", async () => {
+  const { generate } = await import("../../../test/pdfgen.mjs");
+  const f = generate({ kind: "pdf", seed: "K4861", size: { pages: 5, lines: 3 } });   /* winansi with no ToUnicode: tier 1 reads nothing, so it escalates */
+  const bytes = await f.bytes();
+  const asked = [];
+  const pdfWorker = member((body) => { asked.push({ from: body.from, count: body.count });
+    return { ok: false, reason: "OVER_ENVELOPE" }; });
+  const w = fresh({ env: { PDF_WORKER: pdfWorker } });
+  const d = await hold(w.evidence, bytes);
+  const document = docOf(d, bytes.length, "pdf", "application/pdf");
+  let cursor = null;
+  for (let i = 0; i < 5; i++) {
+    const out = await read(document, { evidence: ev(w), env: w.env, cursor, rangePages: 2 });
+    if (!out.more) break;
+    cursor = out.cursor;
+  }
+  assert.deepEqual(asked, [{ from: 0, count: 2 }, { from: 2, count: 2 }, { from: 4, count: 1 }]);
+  asked.length = 0;
+  await read(document, { evidence: ev(w), env: w.env });
+  assert.deepEqual(asked, [{ from: undefined, count: undefined }], "a whole read asks the whole document");
+});
+
+/* ---- G131b (SHEET C14 at a scaled size): a stray quote inside a field opens nothing ---- */
+
+test("R41 R40 (G131b, SHEET C14 scaled): a CSV with a stray `12\" pipe` at row 100 read through the real csv entry in window pieces gives every row once; the window scan opens a quote only at the start of a field", async () => {
+  const rows = ["item,qty", ...Array.from({ length: 200000 }, (_, i) => (i === 99 ? `12" pipe,${i}` : `part ${i} of the order,${i}`))];
+  const text = rows.join("\n") + "\n";
+  const { w, document } = await heldDoc(text, "csv", "text/csv", {});
+  document.profile.profiled_from_text = true;
+  const seen = [];
+  let cursor = null;
+  const served = [];
+  for (let i = 0; i < 400; i++) {
+    const before = w.evidence.served;
+    const out = await read(document, { evidence: ev(w), env: {}, cursor, unitsBudget: 256 * 1024, windowBytes: 64 * 1024 });
+    served.push(w.evidence.served - before);
+    for (const u of out.text_units || []) u.text.split("\n").forEach((l, k) => { if (!(k === 0 && u.lineRows && u.lineRows[0] === 1 && seen.length)) seen.push(l); });
+    if (!out.more) break;
+    cursor = out.cursor;
+  }
+  assert.equal(seen.length, rows.length, "every row once");
+  assert.deepEqual(seen.map((l) => l.replace(/\t/g, ",")), rows, "every row once, its cells in place (the sheet's text joins cells with a tab)");
+  assert.ok(served.length > 2);
+  const size = Buffer.byteLength(text);
+  assert.ok(served.slice(1).every((n) => n < size / 2), `every later tick reads a window, not the object: ${served.slice(1, 4)} of ${size}`);
+});

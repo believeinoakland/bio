@@ -136,7 +136,7 @@ test("R37 (F8): a 400-page text PDF: the acquire answer carries the wire's units
 
 /* ---- 3. OCR past its per-request pages owes the rest, from a stated cursor ---- */
 
-test("R37 (F9): a 60-page scan: 24 pages read, the reading states the cursor (24) and the 36 pages left, and the caller's `owe` hook is called once with them", async () => {
+test("R37 (F9; fix round 9, G126j): a 60-page scan: 24 pages read, the reading states the cursor (24) and the 36 pages left, counted owed 36; the retired owe hook is never called", async () => {
   const bytes = scanPdf(60);
   const m = chunked();
   const w = fresh({ env: { OCR_WORKER: m } });
@@ -147,7 +147,8 @@ test("R37 (F9): a 60-page scan: 24 pages read, the reading states the cursor (24
   assert.equal(m.calls.length, 24, "the request's OCR calls");
   assert.equal(numOf(/(\d+) scanned page\(s\) were transcribed/, rd.basis), 24);
   assert.deepEqual(rd.ocr_left, { cursor: 24, pages: 36 });
-  assert.deepEqual(owed, [{ kind: "ocr", sha: d, cursor: 24, pages_left: 36 }]);
+  assert.deepEqual(owed, [], "nothing here registers owed work (R55)");
+  assert.equal(out.counters.owed, 36);
   assert.equal(rd.tier3_candidate, true);
   assert.equal(rd.failure, undefined, "a reading with 24 pages read is no failed reading");
 });
@@ -191,7 +192,7 @@ test("R37 (F9): a call that fails (a 5xx for one page) leaves that page and the 
   const rd = (await read(pdfDoc(d, bytes.length), { evidence: evidenceStore(w.evidence), env: w.env, owe: async (o) => { owed.push(o); } })).reading;
   assert.equal(numOf(/(\d+) scanned page\(s\) were transcribed/, rd.basis), 5, rd.basis);
   assert.deepEqual(rd.ocr_left, { cursor: 3, pages: 1 });
-  assert.deepEqual(owed, [{ kind: "ocr", sha: d, cursor: 3, pages_left: 1 }]);
+  assert.deepEqual(owed, [], "the retired owe hook is never called (R55)");
 });
 
 /* ---- 4. a whole too large for the object's memory is never loaded ---- */

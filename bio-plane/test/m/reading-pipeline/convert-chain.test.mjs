@@ -314,15 +314,16 @@ const PARTIAL = partialPage(agendaLines("Grand Performance Mural", "26-9911", "2
 
 /* Re-measured at T41-9 (K2399): pdf-reader R38 reads strings as bytes, so the packet's 45 codes 0x80–0x9F, the residue
    this test pinned as a partial decode before, now decode (60,797 -> 60,842 characters). The partial-decode statement is
-   checked on a document that still has a residue. */
-test("R2 R10 R11 (reading-wire): the real Legistar packet read through the real pdf entry at tier 1 is a determined reading over [layer], decoded whole (60,842 characters since K2399) and stated as a full decode; a text with an undecoded residue is stated on the basis as a PARTIAL decode, naming its marker", async () => {
+   checked on a document that still has a residue. Re-recorded at fix round 9 (K4861 (4), K4865): docprofile R18 states the decode in
+   glyphs, so the statement reads the packet's 51,105 glyphs; its 60,842 characters are unchanged (R17's `text_chars`). */
+test("R2 R10 R11 (reading-wire): the real Legistar packet read through the real pdf entry at tier 1 is a determined reading over [layer], decoded whole (60,842 characters since K2399, 51,105 glyphs since K4865) and stated as a full decode; a text with an undecoded residue is stated on the basis as a PARTIAL decode, naming its marker", async () => {
   assert.equal(sha(REAL), "16cb1adf6d35116dbc475ae39ac1757f28cd549e7ff5b7f6d5bb7c660503570c", "the packet's bytes are the measured ones");
   const w = instance();
   const { r } = await readPdf(w, REAL, "https://oakland.legistar.com/View.ashx?M=A&ID=1425405");
   assert.deepEqual(r.text_source, [layerStep("pdf")]);
   assert.deepEqual([r.read_from_text, r.found, r.text_tier, r.text_container, r.content_type], [true, true, 1, "pdf", "meeting_agenda"]);
   assert.match(r.basis, /^read by the meeting_agenda reader v1 over pdf the document's own text layer \(tier 1\)/, "the reader, the chain and the tier");
-  assert.match(r.basis, /read over a full decode \(60842 characters\)/);
+  assert.match(r.basis, /read over a full decode \(51105 characters\)/);
   assert.doesNotMatch(r.basis, /PARTIAL/);
   assert.deepEqual([r.text_chars, r.text_undetermined], [60842, 0], "R17: the counts agree with the statement");
   assert.match(r.basis, /every reference carries where it was read \(41 of 41\)/, "where references were read");

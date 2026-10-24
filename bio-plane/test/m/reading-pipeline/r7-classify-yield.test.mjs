@@ -52,7 +52,14 @@ for (const [name, why] of [["plain", "a text no type matches"], ["winner", "a CE
     const { detects, bare } = gaps(events);
     assert.ok(detects >= 8, `${detects} detects: every registered type is asked`);
     assert.deepEqual(bare, [], "a detect with no yield before it since the one before");
-    assert.deepEqual(answer, recorded[name]);
+    /* fix round 9 (R45, R47, R49) adds the contract's counters, next and final, each unit's kind (`body`) and the decode's encoding
+       facts on purpose; they are taken off by name, every other byte as recorded */
+    const { counters, next, final, ...rest } = answer;
+    assert.ok(counters && "next" in answer, "the contract's fields");
+    const reading = Object.fromEntries(Object.entries(rest.reading || {}).filter(([k]) => !["encoding", "encoding_assumed", "encoding_disagree", "encoding_replaced"].includes(k)));
+    const units = rest.text_units ? rest.text_units.map(({ kind, ...u }) => { assert.equal(kind, "body"); return u; }) : undefined;
+    void final;
+    assert.deepEqual({ ...rest, ...(rest.reading ? { reading } : {}), ...(units ? { text_units: units } : {}) }, recorded[name]);
   });
 }
 
