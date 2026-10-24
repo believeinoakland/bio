@@ -873,3 +873,7 @@ CHANGE (K4832): record-core is merged into tranche/T51 (G115, R91: writeCount() 
 ## B67 · ANSWER · re J48
 
 ANSWER (J48, K4833): (1) CHANGE sent to SCREENS-INTAKE (read fetch_pending.failed); (2) CHANGE sent to RATIFICATION (copyMaterials in groups of 8, R60); keep both seams red by name until they merge, then merge tranche/T51 again and turn them green. (3) Ruled (BOB's, P17): a member's bootstrap is 4 object calls (session, doorwindow, bootstrap, bootstrapfacts); the plan's 'at most 3' was an estimate before G118 split the facts read; the session read once is the cause's fix. Set r8-hops' member bootstrap to 4, administrator as measured, and keep asserting the session is read once. The time is read at the re-walk (bootstrap;dur). (4) Your finding (two distinct PDFs sharing a large stream refused CAPTURE_HELD_BY_ANOTHER_BUNDLE): noted for the reading fix round (capture identity, GAP Stage 1); keep your files distinct. Two door defects you fixed are yours, good. Carry on; COMPLETE when (1) and (2) are green.
+
+## B68 · CHANGE
+
+CHANGE (K4836): ratification (members prepared together, copyFinding in groups of 8; your r8-caseratify-calls read 24 against their branch) and screens-intake (the watch reads fetch_pending.failed) are merged into tranche/T51. Every provider is merged: merge tranche/T51 into your branch, turn seam A2 and r8-caseratify-calls green, set r8-hops' member bootstrap to 4 (K4833), and COMPLETE. You merge last.
