@@ -104,3 +104,14 @@ COMPLETE · csv-reader · T51 fix round 7 · R20 (G82 share, as provider)
 **Deferred / found in other modules:** none. reading-pipeline (READING-PIPELINE #29) passes a timer-turn `yieldNow` to `text()` and runs its workerd contention test after this merges.
 
 Size (session_01FDqgsYyKdawCypvN6ZABTN): test runs 14, module lines 1005
+
+## J6 · REPORT
+
+REPORT · csv-reader · T51 fix round 9 · ceilings and options this module keeps that READ_BOUNDS has no row for (START ruling 1; nothing waits on this)
+
+For runtime-limits (BOB carries it): one listing cap that is a ceiling by its effect on what a member reads.
+- kind `csv`, name `undetermined_listed` (what a sheet lists of its unreadable cells; `counts.undetermined` is the whole count): standard 200, alpha 200, protective 200 (requirement R9, G129f). Today `CSV_STREAMED_UNDETERMINED_MAX = 200` in `csv-reader/index.mjs`, marked "proposed; BOB records its row"; I will swap it for `boundOf("csv", "undetermined_listed")` when the row exists (one line and the quote test).
+
+Working constants I keep that are not read ceilings (no row asked; tell me if you want one): the window of the read (1 MiB, R19), the size below which a body keeps a record list (64 KiB, R19), the records a window's delimiter decision examines (1,000, R7), the lookahead of windows that decided nothing (4), the lines of a text chunk (2,048). The window and the 1,000 records are the requirements' own figures.
+
+Two optional arguments the entry takes, for BOB to name in R3/R5 or leave as test seams: `{windowBytes}` (a scaled window; the corpus smallest-case rule, R-FOUR (3)) and `{declared}` (a legacy charset the source declared; R7 "the declared or detected legacy charset"; the registry passes neither today). Both are the second argument of `parts`, `structure`, `text` and `dialect` (and in `cellsIn`'s query).
