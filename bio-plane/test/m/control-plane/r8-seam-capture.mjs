@@ -247,7 +247,8 @@ export function sections(kit) {
     const words = CAPTURE_SCREEN.parts.refusalHtml(w.cs, { code: HELD_ELSEWHERE });
     assert.ok(words, "the refusal has words");
     assert.ok(w.state.promoteRefused, "the watch ended in a refusal");
-    assert.equal(w.state.promoteRefused.html, words, "the refusal is the held-elsewhere words");
+    /* the screen names the address the fetch was of before the words (screens-intake R49): the words are what ends it */
+    assert.ok(w.state.promoteRefused.html === words || w.state.promoteRefused.html.endsWith(` · ${words}`), "the refusal is the held-elsewhere words");
     assert.notEqual(w.state.promoteRefused.html, word("refusal.FETCH_FAILED"), "not the fetch-failed words");
   });
 
