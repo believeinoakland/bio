@@ -204,6 +204,11 @@ test("R107 (control): a unit stored with no kind (an old unit, or a producer tha
   const S = "6".repeat(64);
   w.x.indexUnits("B-1", S, [{ extent: { kind: "document" }, text: "no kind named", seq: 0 }], null);
   assert.equal(w.x.unitsOf(S).units[0].kind, null);
+  /* (G128h) a sheet block's per-cell `undetermined` list is stored with its unit and answered with it */
+  const und = [{ cell: "B7", reason: "undecodable" }];
+  w.x.indexUnits("B-1", S, [{ extent: { kind: "sheet-range", sheet: "S", range: "A1:B9" }, text: "a\tb", seq: 0, kind: "body", lineRows: [1], undetermined: und }], null);
+  const u = w.x.unitsOf(S).units[0];
+  assert.deepEqual([u.kind, u.lineRows, u.undetermined], ["body", [1], und]);
 });
 
 /* ---------------------------------------------------------------------------------------------------- R24: the whole old set */
