@@ -968,3 +968,7 @@ COMPLETE (PLANE #57, B84 K4912 and B85 K4916). (1) transcribe.mjs quotes boundOf
 - Found in other modules: the continuation's own registration by acquisition (`unpack.mjs`:671, no project) is registered before the door's; `registerJob` keeps the later `detail.project`, so control-plane's `promoteFiled` must register with the project (diagnosis item (a)); nothing for me to change.
 
 Size (session_01Di3H5CJCeTUBedG79gEybu): test runs 4, module lines 3752
+
+## J59 · COMPLETE
+
+COMPLETE (PLANE #58, job 74, B87): R108 met. pendingadd takes project and writes detail.project (pending.mjs add and route); absent, empty or over 200 chars: none. Red first, 3 new tests green (r108-project). Affected suite (66 files, plane only): 445 tests, 444 pass, 1 fail: release R24 screen.objective.purpose (accepted red, words.json lacks the key). Checks: format 0, architecture 0, coverage 108/108, words 0, ownership 0. Control-plane's promoteFiled must pass project for the continuation case (diagnosis a). Record updated.
