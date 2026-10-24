@@ -1008,9 +1008,9 @@ async function sendUpload(view, el, cs) {
   const sent = { name: file.name, type: typeof file.type === "string" ? file.type : "", file, query };
   cs.set("sent", sent);
   /* capture R113 (fix round 9; G127f; K4891, K4899): a file past the request-body ceiling goes in parts through the Worker. The page decides by size before the first
-     request, for a file above `PARTS_FROM` (the platform's edge refuses a body over its cap before the Worker runs, so no cue could come back from it: "proposed;
-     BOB records", J47), and takes the cue from a `TOO_LARGE` that carries `in_parts: true` (`failedUpload`). It sends nothing here: the parted upload is the
-     page's own loop, and draws its progress under the act row. */
+     request, for a file above `PARTS_FROM` (the platform's edge refuses a body over its cap before the Worker runs, so no cue could come back from it; K4930), and takes the cue from a `TOO_LARGE` that carries `in_parts: true` (`failedUpload`). It sends nothing here: the parted upload is the
+     page's own loop, and draws its progress under the act row. `PARTS_FROM` is this act's own threshold, when to send in parts, and not a read ceiling; it sits
+     under the edge's 104,857,600 B request-body cap so that no one-request upload ever nears it (BOB, K4930: no row, it stays here). */
   const PARTS_FROM = 64 * 1048576;
   if (file.size > PARTS_FROM) { view.parts.sendInParts(view, cs); return null; }
   return { query, raw: file };
