@@ -21,11 +21,14 @@ import { FAULT_SCRIPT } from "./r9-seam-documents.mjs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
+import zlib from "node:zlib";
+import { makeZip } from "../../make-zip.mjs";
 import { after } from "node:test";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");
 const ENDED = ["finished", "final", "refused"];
+const MiB = 1024 * 1024;
 
 const enc = encodeURIComponent;
 let counter = 0;
@@ -302,4 +305,78 @@ export function sections(kit, counting) {
       assert.deepEqual(judgeDecode(g, got.units, got.reading), []);
     });
   }
+
+  /* ======================================== §13 · G130a-d · detection polyglots through the upload ======================================== */
+
+  const cat = (...a) => Buffer.concat(a.map((x) => Buffer.from(x)));
+  const u32 = (n) => { const b = Buffer.alloc(4); b.writeUInt32BE(n); return b; };
+  const chunk = (t, d) => cat(u32(d.length), Buffer.from(t), d, u32(zlib.crc32(cat(Buffer.from(t), d))));
+  /* a 1 x 1 PNG, with a tEXt chunk holding `text` when given; a JPEG shell (SOI, a COM segment holding `text`, EOI) -- // MOVE: imggen makes neither a polyglot nor a JPEG */
+  const pngWith = (text) => cat([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], chunk("IHDR", cat(u32(1), u32(1), [8, 0, 0, 0, 0])), text ? chunk("tEXt", Buffer.from("Comment\0" + text)) : "", chunk("IDAT", zlib.deflateSync(Buffer.from([0, 200]))), chunk("IEND", Buffer.alloc(0)));
+  const jpegWith = (text) => cat([0xFF, 0xD8, 0xFF, 0xFE, 0, text.length + 2], Buffer.from(text), [0xFF, 0xD9]);
+  const formatOf = (up) => (up.document && up.document.profile && up.document.profile.format && up.document.profile.format.format) || null;
+  const shapeOf = (up) => { const r = up.document.reading || {}; return { failure: r.failure ?? null, reason: r.reason ?? null, container: r.text_container ?? null, tier: r.text_tier ?? null }; };
+
+  test("R9 seam §13 (G130a, SCAN A12; R100 R123): a JPEG with `%PDF-1.4` in a COM segment, a JPEG with `<html` in one, and a PNG with `%PDF-` in a tEXt chunk are profiled and read as the image each is, exactly as the same image with nothing in the comment is", { timeout: 900000 }, async () => {
+    const auth = await owner("r9p-poly");
+    const t = uniq();
+    const cases = [["jpg", "image/jpeg", (x) => jpegWith(x), `%PDF-1.4 ${t}`], ["jpg", "image/jpeg", (x) => jpegWith(x), `<html><body>${t}`], ["png", "image/png", (x) => pngWith(x), `%PDF-1.4 ${t}`]];
+    const bad = [];
+    for (const [ext, type, make, hostile] of cases) {
+      const control = (await put(k, auth, make(`plain ${t} ${hostile.length}`), { name: `plain.${ext}`, type })).up;
+      const poly = (await put(k, auth, make(hostile), { name: `poly.${ext}`, type })).up;
+      if (formatOf(poly) !== formatOf(control)) bad.push(`${ext} with ${hostile.slice(0, 8)}: profiled ${formatOf(poly)}, the plain image ${formatOf(control)}`);
+      if (JSON.stringify(shapeOf(poly)) !== JSON.stringify(shapeOf(control))) bad.push(`${ext} with ${hostile.slice(0, 8)}: read as ${JSON.stringify(shapeOf(poly))}, the plain image ${JSON.stringify(shapeOf(control))}`);
+    }
+    assert.deepEqual(bad, []);
+  });
+
+  test("R9 seam §13 (G130b, SHEET C23/C24/C32/C33; R100 R123 R135) (red until csv-reader's `isDelimitedText` is the one decision: the C01 bytes declared `application/vnd.ms-excel` or `application/octet-stream` end `final`, not read, and a `.tsv` declared `text/plain` is read as prose): delimited text declared by any of the types the plane accepts is read as a sheet with cells", { timeout: 900000 }, async () => {
+    const auth = await owner("r9p-types");
+    const t = uniq();
+    const csv = (n) => Buffer.from(["h1,h2,h3", ...Array.from({ length: 50 }, (_, i) => `x${n}${t}${i},y${i},z${i}`)].join("\n") + "\n");
+    const tsv = (n) => Buffer.from(Array.from({ length: 50 }, (_, i) => `a${n}${t}${i}\tb${i}\tc${i}`).join("\n") + "\n");
+    const cases = [["csv", "text/csv", csv(0), "c.csv"], ["csv", "application/vnd.ms-excel", csv(1), "c.csv"], ["csv", "application/octet-stream", csv(2), "c.csv"],
+      ["tsv", "text/tab-separated-values", tsv(3), "t.tsv"], ["tsv", "text/plain", tsv(4), "t.tsv"]];
+    const bad = [];
+    for (const [kind, type, bytes, name] of cases) {
+      const { up } = await put(k, auth, bytes, { name, type });
+      await fileIt(k, auth, up, { title: `${name} ${type}` });
+      const r = await k.until(async () => { const x = (await k.get(auth, { op: "reading", sha256: up.capture.sha256 })).result; return x && x.found && x.completeness ? x : null; }, 90000, 1500);
+      const first = r && r.text_units && r.text_units[0];
+      if (!(first && first.extent && first.extent.kind === "sheet-range")) bad.push(`${kind} declared ${type}: not read as a sheet (${r ? JSON.stringify({ comp: r.completeness.state, failure: r.completeness.failure ?? null, extent: first && first.extent }) : "no reading"})`);
+    }
+    assert.deepEqual(bad, []);
+  });
+
+  test("R9 seam §13 (G130c, DOCS O9; R100 R123): a DOCX of 8 MiB - 1, 8 MiB and 8 MiB + 1 bytes is stored with `profile.format` docx, never undetermined", { timeout: 1200000 }, async () => {
+    const auth = await owner("r9p-big");
+    const bad = [];
+    for (const [i, bytes] of [8 * MiB - 1, 8 * MiB, 8 * MiB + 1].entries()) {
+      const g = docGenerate({ kind: "docx", seed: 9700 + i, size: { units: 6, bytes } });
+      const body = await bytesOf(g);
+      if (Math.abs(body.length - bytes) > 4096) { bad.push(`the generator made ${body.length} B for ${bytes}`); continue; }
+      const { up } = await put(k, auth, body, { name: `big${i}.docx`, type: g.type });
+      if (up.ok !== true) { bad.push(`${bytes}: ${textOf(up).slice(0, 200)}`); continue; }
+      if (formatOf(up) !== "docx") bad.push(`${body.length} B: profile.format is ${formatOf(up)}, not docx`);
+    }
+    assert.deepEqual(bad, []);
+  });
+
+  test("R9 seam §13 (G130d, DOCS O11; R100 R123): a macro-enabled DOCX with `%PDF-1.7` in its first KiB is profiled as the Word package it is, not a PDF, and is read: its paragraph is found", { timeout: 900000 }, async () => {
+    const auth = await owner("r9p-docm");
+    const t = uniq();
+    const te = (x) => Buffer.from(x);
+    const docm = (lead) => makeZip([{ name: "[Content_Types].xml", method: 0, data: te(`${lead}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.ms-word.document.macroEnabled.main+xml"/></Types>`) },
+      { name: "_rels/.rels", data: te('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="r1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>') },
+      { name: "word/document.xml", data: te(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>polyglot paragraph ${t}</w:t></w:r></w:p></w:body></w:document>`) },
+      { name: "word/vbaProject.bin", data: Buffer.alloc(300, 1) }]);
+    const type = "application/vnd.ms-word.document.macroEnabled.12";
+    const control = (await put(k, auth, docm(`<!-- ${t} plain -->`), { name: "plain.docm", type })).up;
+    const { up } = await put(k, auth, docm(`%PDF-1.7 <!-- ${t} -->`), { name: "poly.docm", type });
+    assert.equal(formatOf(up), formatOf(control), `profiled ${formatOf(up)}, the plain package ${formatOf(control)}`);
+    await fileIt(k, auth, up, { title: "poly" });
+    const r = await readEnded(k, auth, up.capture.sha256);
+    assert.ok((await allUnits(k, auth, up.capture.sha256)).some((u) => String(u.text).includes(`polyglot paragraph ${t}`)), "the paragraph is found: " + textOf(r.completeness).slice(0, 200));
+  });
 }
