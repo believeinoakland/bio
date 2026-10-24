@@ -2438,6 +2438,15 @@ export function makeFetch(hooks = {}) {
         const b = JSON.parse((await req.clone().text()) || "null");
         archiveProject = b && typeof b.project === "string" ? b.project : null;
         captureStep = b && typeof b.step === "string" ? b.step : null;   /* R71: the step a member's fetch is a product of */
+        /* R72 (fix round 9, DOCS A1, §6): an uploaded archive is opened by the plane's `unpack` job, which names no project. The archive's members are filed under the
+           project of the document that holds the archive (the record, asked by its digest as the administrator sees it, nothing fetched), as a fetched one's are */
+        if (op === "unpack" && !archiveProject && b && typeof b.archiveSha === "string" && /^[0-9a-f]{64}$/.test(b.archiveSha)) {
+          try {
+            const held = await doAnswer(stub.fetch(new Request(`http://do/heldat?sha256=${b.archiveSha}&viewer=${encodeURIComponent("class:admin")}`)));
+            const home = held.answered && held.result && held.result.held === true && held.result.copy && typeof held.result.copy.project === "string" ? held.result.copy.project.trim() : "";
+            archiveProject = home || null;
+          } catch { archiveProject = null; }
+        }
       } catch { archiveProject = null; }
     /* (fix round 6, G43; K4651) what an archive's promotion filed without its reading (too large to embed in the provenance file) is followed here, as
        a document stored with none is */
