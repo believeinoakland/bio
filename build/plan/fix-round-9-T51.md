@@ -337,6 +337,19 @@ Providers merge in `modules.json` order, so a user coded before its provider mer
 6. **`alarmDouble(opts)`** (test-support, job 1; no plane import) `-> {storage, getAlarm(), setAlarm(t), deleteAlarm(), run(fn), retries}`: `getAlarm()` answers null while a `run` is in flight, a spent alarm stays set until deleted, a failed `run` retries up to 6 times. Used by scheduler's `r8-budget` and `r8-stale` and by plane's harness; scheduler takes `uses: test-support` (section 6).
 7. **The reader contract** (reading-pipeline-1, job 27; GAP-1.8): `plan(source) -> {kind, pages|rows, verdict, mode}` and `read(source, cursor, budget) -> {units, next, more, final?, counters:{written, skipped, owed, failed}}` over `source = {size, readRange(offset, length)}`; a whole read is a one-piece range; `next > cursor || final` is asserted by the wrapper (G129).
 
+
+### 2e. The account made ready (Bob, K4937; added by BOB #280, K4943; `diagnosis-R9-account-ready.md`)
+
+Each cause: (1) root, (2) why the tests missed it, (3) the red, (4) platform check. The tests missed every one for one reason: the fixtures' Cloudflare answers were invented (`fixture.mjs:408`, `:505`), not Cloudflare's, and no fixture began from a fresh account. Fixed by fixtures from Cloudflare's documented shapes, each measured once on the rehearsal account (K4942) before the redeploy (**P**: BOB's measurement, then the rehearsal of §7 item 4a).
+- **G144** storage: `index.mjs:776-783`, `probes.mjs:44-51`: R2 off found only by a write, after the release is fetched; a dead-end stop blaming a payment method for any refusal. (3) a not-entitled fixture writes nothing and offers "Check again". Jobs 72, 73.
+- **G145** Containers: `index.mjs:541-552`: "off" by a regex from the fixture; "permission" not stopped; `:519` an unreadable count is zero. (3) the measured shapes, the scope-missing case stopping before any write. Job 73.
+- **G146** limits: `index.mjs:511-516`: stale ceilings (buckets 1000 vs 1,000,000; containers 100 unsourced; cron triggers uncounted); the limit stop has no "Check again". Job 73.
+- **G147** the address: `probes.mjs:64-87`, `index.mjs:852-875`: the workers.dev prefix registered after the copy is created, with no click; a taken pair leaves a copy with no address. Jobs 72, 73.
+- **G148** the scopes granted: only `containers.write` is compared (`containers.mjs:131`). Jobs 72, 73.
+- **G149** the account: `index.mjs:648-650`: the first account used, no choice. Job 73.
+- **G150** size: no member compared with Cloudflare's 64 MiB before upload. Job 73.
+- Not placed, with reason: email verification (no documented read; measured on the rehearsal account, then placed if Cloudflare refuses an unverified account); a first install beside other tools' Workers (BOB's ruling: told and counted against the limits by G146, never a stop); provisioning the plan or R2 for the founder (Cloudflare's OAuth scope list, read 2026-10-24, holds no billing scope: walk-through only).
+
 ## 2d. Not applied, and why (answers to review findings)
 
 - **rA G1 (S25), partly.** S25 is not a cause until reproduced (GAP 7.2 calls it a diagnosis on corpus E3): it is a diagnosis item of G128 for extraction-2, not a cause bullet with four fields; applied as a diagnosis, not as a planned fix.
@@ -549,6 +562,8 @@ None stops a member completing an operation; stand-in sentences are in code, key
 | 69 | D | store-door (its order) | now | R19 (K4928): `STREAMED_BODY_OPS` (`store-door/dispatch.mjs:373`) gains `captureuploadpart`; a part's bytes are parsed as JSON today (CONTROL-PLANE #55's J51) | sonnet | 80 |
 | 70 | D | queue (L11, 150) | 34 merged | R1 (K4933): `classOfKind` names `reading-ended` (FINDING; notice-producers R29), whose absence refuses the opener's whole Queue `NO_SUCH_KIND` (`queuestate.mjs:394-406`, G61's list; NOTICE-PRODUCERS #17's J8) | sonnet | 80 |
 | 71 | D | runtime-limits (L1, 8) | now | `READ_BOUNDS` `workbook` rows (K4936): `cells` alpha 250,000 (K4831 (10)), `bytes` 20 MiB alpha / 50 MB, `cells_json_bytes` 64 MiB protective (WORKBOOKS #6's J4, J5) | sonnet | 30 |
+| 72 | D | installer-steps (newgroup) | now | R43, R44, R45 (K4943): the R2 entitlement read, the address chosen by the founder, the scopes granted (G144, G147, G148) | sonnet | 120 |
+| 73 | D | installer (newgroup) | now (codes against 72's interface) | R84 (K4943): the account made ready before anything is created, seven conditions with walk-throughs and "Check again" (G144-G150) | sonnet | 300 |
 
 **Section 2c items added by BOB #277 (K4904).**
 8. **A killed window stepped past** (reading-pipeline, job 40; caller extraction, job 28; the stamp plane-2, job 37). `read(source, cursor, budget, {skipKilled: true})` reads nothing at `cursor` and answers `{units: [], next, more, counters: {written: 0, skipped: 1, owed: 0, failed: 0}, stated: {cursor, why: "UNIT_KILLED_READER"}}`, `next` the cursor of the following window (slide, sheet block), so the read goes on; the stated window is kept on the reading and said to the member (R-SILENT, a stand-in sentence). Plane-2 hands `readHeld` `killedCursor` (a cursor `job_unit_attempts` stamps three times) beside `killedPages`; extraction calls `read` with `skipKilled` when the cursor it would read is `killedCursor`. Pages keep `PAGE_KILLED_READER` as built (a page is the PDF's unit).
