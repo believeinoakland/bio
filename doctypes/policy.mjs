@@ -20,7 +20,7 @@ import { CONFIDENCE, CONTRACT, alsoSatisfies } from "../docprofile/doctypes/inde
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
 import { readDefinitions, textDigest } from "./sections.mjs";
 import { readHeader, headerAnchored, policySeries, headerLabels, HEADER_FIELDS } from "./policy-header.mjs";
-import { lineIndex } from "./windows.mjs";
+import { lineIndex, counted, spend } from "./windows.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* ------------------------------------------------------------------------ lines */
@@ -369,7 +369,7 @@ export function readPolicy(ctx, raw, locate = () => null) {
   };
 }
 
-export default {
+export default counted({
   key: "policy",
   label: localize("doctypes.policy.label", "a policy of a numbered series"),
   version: 1,
@@ -385,6 +385,7 @@ export default {
                why: localize("doctypes.policy.no_series_supplied", "the active jurisdiction profiles supply no policy series or no policy header labels, so no document is read as a policy") };
     /* R37: a header's type is read only from an anchor, so a text with none is refused without being cut into lines. */
     const text = String(ctx.text || "");
+    spend(text.length * series.length);   // the search for an anchor reads the text once for each series
     const hd = headerAnchored(ctx, text) ? readHeader(ctx, text).header : null;
     if (!hd || !hd.type)
       return { match: false, confidence: CONFIDENCE.NONE,
@@ -460,4 +461,4 @@ export default {
         : localize("doctypes.policy.unchanged", "this policy reads as it read: the same header and the same sections"),
     };
   },
-};
+});

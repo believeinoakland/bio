@@ -52,12 +52,12 @@
  * `R\nESOLUTION \nN\nO\n.` from a drop cap and splits its own enacting formula across a
  * line break. Line-anchored phrase tests find neither. See `flatten` in ./index.mjs.
  */
-import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, alsoSatisfies,
-         vocabPatterns, anyMatch, allMatches, enactmentPatterns, enactmentNumber, codePatterns } from "../docprofile/doctypes/index.mjs";
+import { CONFIDENCE, CONTRACT, diffEntities, alsoSatisfies,
+         vocabPatterns, anyMatch, enactmentPatterns, enactmentNumber, codePatterns } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
 import { codeHeadingsIn, readSections, readDefinitions, readExceptions, textDigest } from "./sections.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
-import { scanFlatMany, mergedHits } from "./windows.mjs";
+import { scanFlatMany, mergedHits, rawMergedHits, referenceBook, counted, spend } from "./windows.mjs";
 
 /* THE OPERATIVE VOICE — a body enacting, in the forms the measured instruments use plus
    the general shapes. It is the language of enactment, the same in every jurisdiction
@@ -134,6 +134,7 @@ function ownCaption(text, captions, bodies, afterChars = 0) {
 /** How many matches of a global pattern the text holds. The patterns it is used for bridge words with `\s` only, so the
  *  count is the same over the text as it stands as over its flattened form (R37: no flattened copy). */
 function countIn(text, re) {
+  spend(text.length);
   const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
   let n = 0;
   while (g.exec(text) !== null) n++;
@@ -207,7 +208,7 @@ function structure(ctx, raw, form, locate) {
   };
 }
 
-export default {
+export default counted({
   key: "regulation",
   label: "an ordinance or resolution",
   version: 1,
@@ -327,31 +328,30 @@ export default {
 
     const recitals = countIn(raw, RECITAL);
 
-    const entities = [];
-    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped. */
-    const seen = new Map();
-    const take = (key, kind, label, facts, offset) => {
-      if (seen.has(key)) { readAgain(seen.get(key), locate(offset)); return; }
-      const e = entity(key, kind, label, facts, locate(offset));
-      seen.set(key, e);
-      entities.push(e);
-    };
+    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped; R40: up to the bounds
+       ./windows.mjs `referenceBook` states, past which the answer says what it did not keep. */
+    const book = referenceBook(locate);
+    const { entities, take } = book;
     /* The instruments this one acts on or cites. Its OWN number, when it has one, is a
        document fact rather than an entity — an instrument is not a reference to
        itself, and emitting it as one would make every instrument appear to cite one
        more thing than it does. */
     const ownKey = number ? `${instrument}:${number}` : null;
-    for (const { m, tag } of allMatches(enactmentPatterns(ctx), raw)) {
+    /* R40: each kind of reference is met a window of the text at a time (./windows.mjs `rawMergedHits`), in the order
+       and with the overlap rule `allMatches` gives over all of it, so 400,000 citations are never a list of 400,000
+       matches. */
+    rawMergedHits(raw, enactmentPatterns(ctx), ({ m, tag }) => {
       const n = enactmentNumber(tag.forms, m.groups && m.groups.num);
-      if (!n) continue;
+      if (!n) return;
       const key = `${tag.kind}:${n}`;
-      if (key === ownKey) continue;
+      if (key === ownKey) return;
       take(key, "instrument", `${tag.kind[0].toUpperCase()}${tag.kind.slice(1)} No. ${n}`,
            { instrument: tag.kind, number: n }, m.index);
-    }
-    for (const { m, tag } of allMatches(codePatterns(ctx), raw))
+    });
+    rawMergedHits(raw, codePatterns(ctx), ({ m, tag }) => {
       take(`${tag.key}:${m.groups.sec}`, "code_section", `${tag.label} ${m.groups.sec}`,
            { code: tag.key, section: m.groups.sec }, m.index);
+    });
 
     /* T33-13 (R9): WHICH FORM OF LAW this is. An instrument enacts (its operative voice, or
        its own caption under a body); a code section is a codifier's page of a code, read
@@ -362,6 +362,7 @@ export default {
 
     return {
       entities,
+      ...book.state(),
       form,
       form_why: form ? null
         : localize("doctypes.regulation.no_form", "this text carries no enacting formula, no instrument caption under a body, and no section heading of a code the active jurisdiction profiles name, so it is read as neither an instrument nor a code section"),
@@ -428,4 +429,4 @@ export default {
         : localize("doctypes.regulation.unchanged", "this instrument says what it said, and acts on the same things"),
     };
   },
-};
+});
