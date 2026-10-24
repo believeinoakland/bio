@@ -12,6 +12,11 @@ import { fresh, hold, doc } from "./fixture.mjs";
 
 registerDoctypes(registerDoctype);
 const [mode, file] = process.argv.slice(2);
+/* A text judged from a sample says so after the basis (R52); the sentence is the sentence-owner's wording and tests never hold its text (K3810), so it is
+   taken off by name before hashing and every other byte stays pinned (B52). The figures in it are the sample's and are cut with it. */
+const SAMPLE = / — (?:the kind of document|What kind of document this is) was judged from a sample of its text.*$/;
+const withoutSampleSentence = (made) => (made && made.reading && typeof made.reading.basis === "string" && SAMPLE.test(made.reading.basis)
+  ? { ...made, reading: { ...made.reading, basis: made.reading.basis.replace(SAMPLE, "") } } : made);
 const used = () => { const m = process.memoryUsage(); return m.heapUsed + m.arrayBuffers; };
 const gc = () => { global.gc(); global.gc(); };
 if (mode === "idle") {
@@ -41,6 +46,6 @@ if (mode === "idle") {
     console.log(JSON.stringify({ baseMB: base / 1048576, peakMB: peak / 1048576, bytesMB: size / 1048576, ms, units: (made.text_units || []).length,
                                  pages: made.reading.page_count }));
   else
-    console.log(JSON.stringify({ digest: createHash("sha256").update(JSON.stringify(made)).digest("hex"),
+    console.log(JSON.stringify({ digest: createHash("sha256").update(JSON.stringify(withoutSampleSentence(made))).digest("hex"),
                                  units: (made.text_units || []).length, pages: made.reading.page_count }));
 }

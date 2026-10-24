@@ -2433,7 +2433,7 @@ export async function owedRun(cap, entry, opts = {}) {
           if (!(given && given.ok === true)) {
             /* R111 (G105): a refusal no later try changes ends the copy's entry, stated; any other goes again */
             const why = refusalOf(given);
-            if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return { ok: true, done: true, final: true, reason: why }; }
+            if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return withFacts({ ok: true, done: true, final: true, reason: why }, given); }
             return { ok: true, done: false, outstanding: 1, reason: why };
           }
         }
@@ -2459,7 +2459,7 @@ export async function owedRun(cap, entry, opts = {}) {
         if (!(given && given.ok === true)) {
           /* R111 (G105): as for a finished copy above */
           const why = refusalOf(given);
-          if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return { ok: true, done: true, final: true, reason: why }; }
+          if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return withFacts({ ok: true, done: true, final: true, reason: why }, given); }
           return { ok: true, done: false, outstanding: 1, reason: why };
         }
         try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
@@ -2506,6 +2506,16 @@ const refusalOf = (given) => {
   const c = given && typeof given === "object" ? given.reason ?? given.code : null;
   return typeof c === "string" && c !== "" ? c.slice(0, 80) : "DELIVERY_REFUSED";
 };
+/* R116 (G160): the facts a refusal carried (`kind`, `capture_sha`, `holder`), as the refusing module gave them: from its `detail` when that is a plain object, else from its top level
+   (provenance's own shape). `{}` when it named none, and then no `detail` is added. Pure; never throws. */
+const refusalFacts = (given) => {
+  const out = {};
+  if (!given || typeof given !== "object") return out;
+  const src = given.detail && typeof given.detail === "object" && !Array.isArray(given.detail) ? given.detail : given;
+  for (const k of ["kind", "capture_sha", "holder"]) if (k in src) out[k] = src[k];
+  return out;
+};
+const withFacts = (answer, given) => { const f = refusalFacts(given); return Object.keys(f).length ? { ...answer, detail: f } : answer; };
 const FETCH_RETRY = Object.freeze(["HOST_COOLING_OFF", "FETCH_FAILED", "ACQUIRE_FAILED", "CAPTURE_NOT_KEPT", "ARCHIVE_UNREACHABLE", "EVIDENCE_STORAGE_NOT_CONFIGURED"]);
 export async function owedFetch(cap, entry, opts = {}) {
   try {
@@ -2515,7 +2525,7 @@ export async function owedFetch(cap, entry, opts = {}) {
     const st = ld.state && typeof ld.state === "object" ? ld.state : {};
     if (typeof opts.deliver !== "function") return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_NOT_HANDED" };
     const opener = typeof st.opened_by === "string" ? st.opened_by : "";
-    const final = (reason) => ({ ok: true, done: true, final: true, reason });
+    const final = (reason, given = null) => withFacts({ ok: true, done: true, final: true, reason }, given);
     if (!opener) return final("NO_OPENER");
     let made = st.fetch_done && typeof st.fetch_done === "object" ? st.fetch_done : null;
     if (!made) {
@@ -2558,7 +2568,7 @@ export async function owedFetch(cap, entry, opts = {}) {
                      fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why, failed_at: stampSecond() } },
             ttlMs: OWED_SESSION_TTL_MS });
         } catch { /* the entry still ends, stated */ }
-        return final(why);
+        return final(why, given);
       }
       return { ok: true, done: false, outstanding: 1, reason: why };
     }

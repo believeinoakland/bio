@@ -764,24 +764,27 @@ export class Scheduler {
 
   /** The producers' door: reconciles without firing, never pushing a set alarm later. Runs no tick and writes no
    *  work; answers the alarm as it stands. */
-  async arm(now = Date.now()) {
+  async arm(now = Date.now(), bringForward = false) {
     if (!this.#firing) this.#held.clear();   /* R27 */
     const probe = await this.#probeState(now, true);
     await this.#loadDaily();
-    const at = await this.#reconcile(now, this.registry(probe), false);
+    const at = await this.#reconcile(now, this.registry(probe), false, null, bringForward);
     if (probe) await this.#storage.put(PROBE_KEY, probe);
     return at;
   }
 
   /** R28, the request paths' door: a cheap check that the alarm is armed. When none is set or the one set is spent
-   *  (R4) it arms as `arm` does; otherwise it asks nothing of any consumer. At most one look every few seconds per
-   *  instance. Answers the alarm as it stands, or null. Runs no tick and writes no work (R17). */
+   *  (R4) it arms as `arm` does. When the one set is still ahead it asks each consumer only its wake: one that has
+   *  already come (G159, K4980; a row registered behind a daily alarm) brings the alarm to now. Otherwise it asks
+   *  nothing of any consumer. At most one look every few seconds per instance. Answers the alarm as it stands, or null.
+   *  Runs no tick and writes no work (R17). */
   async heal(now = Date.now()) {
     if (this.#firing || now - this.#healedAt < HEAL_EVERY_MS) return null;
     this.#healedAt = now;
     const at = await this.#storage.getAlarm();
-    if (at !== null && at !== undefined && at >= now - SPENT_ALARM_MS) return at;
-    return await this.arm(now);
+    if (at === null || at === undefined || at < now - SPENT_ALARM_MS) return await this.arm(now);
+    if (at <= now || await this.#oldestOverdue(now) === null) return at;
+    return await this.arm(now, true);
   }
 
   /** The earliest wake any consumer has that has already come, or null (read only: each owner answers its own wake). */
