@@ -51,7 +51,7 @@ import { acquire, archiveLookup, profileOf, profileView, governedFetch, governed
          firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX, LARGE_FETCH_BYTES, textTypeOf, profilesAsText } from "../acquisition/index.mjs";
 /* R111 (fix round 9; G124, G124b): the figures a body is bounded by are quoted, never written here: the capture ceiling is `acquisition`'s `CAPTURE_MAX` (the
    archive row of `READ_BOUNDS`, `runtime-limits`), the platform's request-body ceiling an entry of `PLATFORM_FIGURES`. */
-import { statement as boundStatement, boundOf } from "../read-bounds.mjs";
+import { statement as boundStatement, boundOf, wholeReadRow } from "../read-bounds.mjs";
 import { PLATFORM_FIGURES } from "../byte-ledger.mjs";
 import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
 /* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
@@ -110,12 +110,12 @@ const UPLOAD_PART = 8 * 1024 * 1024;
    inline gate judges a stated document by (`wholeRowOf` of its `kindOf`): a PDF `pdf.bytes`, a CSV `csv.bytes`, a text kind `text.bytes`, every other kind the
    whole-load row `pdf.bytes`. */
 const TEXT_TYPE = /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i;
-const wholeReadRow = (profile) => {
+const wholeReadKind = (profile) => {
   const format = String(profile?.format?.format ?? "").toLowerCase(), declared = String(profile?.source_content_type ?? "").toLowerCase();
-  if (format === "pdf" || declared.startsWith("application/pdf")) return ["pdf", "bytes"];
-  if (format === "csv" || declared.startsWith("text/csv")) return ["csv", "bytes"];
-  if (TEXT_TYPE.test(declared) || ["text", "tsv", "json", "xml", "html"].includes(format)) return ["text", "bytes"];
-  return ["pdf", "bytes"];
+  if (format === "pdf" || declared.startsWith("application/pdf")) return "pdf";
+  if (format === "csv" || declared.startsWith("text/csv")) return "csv";
+  if (TEXT_TYPE.test(declared) || ["text", "tsv", "json", "xml", "html"].includes(format)) return "text";
+  return undefined;
 };
 /** R107: the bytes of a file held in parts that are read as its head when judging it as text: 64 KiB, chosen, not measured. */
 const UPLOAD_HEAD = 64 * 1024;
@@ -930,7 +930,7 @@ export class Capture {
     /* R109 (fix round 9, G152; K4958): an upload stated over the whole-read ceiling of its kind is never read, so it owes no `reading`; the reader states it
        at once from the sizes (`control-plane` R132). The kind's row is the one the inline gate judges by: a PDF `pdf.bytes`, a CSV `csv.bytes`, a text `text.bytes`,
        every other kind the whole-load row `pdf.bytes`. */
-    const stated = (profile) => !!profile && total > boundOf(...wholeReadRow(profile));
+    const stated = (profile) => !!profile && total > boundOf(...wholeReadRow(wholeReadKind(profile)));
     const register = (profile) => {
       if (!reg) return { ok: true };
       const entries = [...(stated(profile) ? [] : [{ kind: "reading", sha, carrier, ...(partsOwed && partShas.length ? { parts: partShas } : {}) }]),

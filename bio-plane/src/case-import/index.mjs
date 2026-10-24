@@ -79,6 +79,7 @@ import { verifySshsig, NS_DOCKET, docketStatement, normalizeKey } from "../sshsi
 import { DOCKET_UNREADABLE, ENTRY_FORMATS } from "../docket/index.mjs";
 import { CASE_IMPORT_CHECKS, rowOf } from "./checks.mjs";
 import { say } from "./words.mjs";
+import { boundOf } from "../read-bounds.mjs";
 import { CASE_IMPORT_TABLES, BLOB_CHUNK, migrateCaseImport } from "./schema.mjs";
 import * as caseChecker from "../case-checker/index.mjs";
 import { biasOf } from "../bias/index.mjs";
@@ -312,7 +313,7 @@ export const CALC_RESULTS = Object.freeze(["recreated", "differs", "not_recreate
 /* `case-checker` R20's answers, read against R21's. */
 const CHECKER_CALC = { agrees: "recreated", differs: "differs", not_recomputed: "not_recreated" };
 /* The most bytes one carried input is read as (a table within a Worker's heap, as `calculations` R1 bounds a table). */
-export const CALC_INPUT_MAX = 20 * 1024 * 1024;
+export const CALC_INPUT_MAX = boundOf("table", "bytes");
 
 /* R21: a row's inputs as `[{name, sha}]` (a list of `{name, sha256}` or a `{name: sha}` map), or null. */
 function inputsOfRow(v) {

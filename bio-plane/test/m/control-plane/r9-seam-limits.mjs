@@ -119,6 +119,7 @@ export const ACCEPTED = Object.freeze({
   "sheet-worker/src/contract.mjs::WASM_BYTES": "the byte length of the vendored engine asset, an integrity pin, not a limit",
   "ocr-worker/src/tessengine.mjs::WASM_BYTES": "the byte length of the vendored engine asset, an integrity pin, not a limit",
   "ocr-worker/src/tessengine.mjs::MODEL_BYTES": "the byte length of the vendored language model, an integrity pin, not a limit",
+  "newgroup/src/ready.mjs::WORKER_SIZE_LIMIT": "Cloudflare's uncompressed Worker size limit, checked against the release before an install (installer R6); a deploy limit, no file's reading (K5000)",
   "ocr-worker/scripts/embed-tesslib.mjs::VENDOR_BYTES": "a build script's expected size of a vendored library, an integrity pin",
   "agent-model/src/model.mjs::DEFAULT_MAX_SEGMENT_BYTES": "how much agent transcript one re-serialising segment holds (a CPU pacing figure), no file's reading",
   "agent-runner/src/ws.mjs::MAX_MESSAGE": "the largest websocket frame the agent runner accepts, a transport bound",

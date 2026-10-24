@@ -74,6 +74,7 @@
  * `captured_locators` (R48); extraction's `readings` (R58); observation-log's `observation_log` (R29). */
 
 import { recordOf, stampInstant, mintExhausted } from "../record-core/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
@@ -170,7 +171,7 @@ const PUBLISHED_TARGETS_CHUNK = 200;
 
 /** R85 (fix round 6, G9; K4573): the largest member document `op=publish` makes the copy of in the act itself, in bytes;
  *  a larger one keeps the scheduler's alarm path. */
-export const COPY_NOW_MAX_BYTES = 2 * 1024 * 1024;
+export const COPY_NOW_MAX_BYTES = boundOf("case", "copy_now_bytes");
 const HEX64 = /^[0-9a-f]{64}$/;
 
 /** R65 (D57, D63): the authored fields of `op=publish`, exactly: the four statements, the scope, the bias acknowledgement

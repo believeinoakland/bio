@@ -74,6 +74,7 @@ import { materialsOf, extractedTextOf, acceptedWorkOf as acceptedWorkBlocksOf, c
 import { CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES, CASE_CARRIAGE_DOCUMENT_TABLES, migrateCaseCarriage } from "./schema.mjs";
 import { CASE_CARRIAGE_CHECKS, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 
 export { CASE_CARRIAGE_SCHEMA, CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES, CASE_CARRIAGE_DOCUMENT_TABLES } from "./schema.mjs";
 export { CASE_CARRIAGE_CHECKS, CASE_CARRIAGE_WORDS, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
@@ -98,7 +99,7 @@ export const obscuredKey = (store, sha) => `${store}/obscured/${sha}`;
 /** R15: the most queued documents one `copyBatch` derives: its default and its bound. */
 export const DOCUMENT_COPY_BATCH_MAX = 10;
 /** R15 (T51; K4570 G9): the most `copyNow` reads of one document, 2 MiB; a larger one is the alarm's. */
-export const COPY_NOW_MAX_BYTES = 2 * 1024 * 1024;
+export const COPY_NOW_MAX_BYTES = boundOf("case", "copy_now_bytes");
 /** R15: how long after a failed read of the evidence store a queued document is tried again. */
 export const DOCUMENT_COPY_RETRY_MS = 300000;
 

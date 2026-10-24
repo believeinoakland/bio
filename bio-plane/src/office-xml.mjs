@@ -12,9 +12,10 @@
  * Pure: no store, no network, no clock. Never throws. */
 
 import * as OOXML from "./ooxml.mjs";
+import { boundOf } from "./read-bounds.mjs";
 
 /** A tag longer than this is not a tag (R42): its bytes are text and the part states `tag_over_bound`. */
-export const TAG_MAX = 65536;
+export const TAG_MAX = boundOf("xml", "tag");
 /* The window a part is fed in; two windows hold far fewer than 65,536 tokens, so a yield between windows is never
    more than that many tokens apart (R42). */
 const WINDOW = 65536;

@@ -11,7 +11,7 @@
        assembles from parts, or a container whose declared unpacked text is over the inline ceiling. Not read in the request: its `reading` row is registered
        (R130) and the answer says `reading_pending`.
      - `inline`: read in the request, when R131 (3)'s clock allows (the door's, per request). */
-import { boundOf, statement } from "../read-bounds.mjs";
+import { boundOf, statement, wholeReadRow } from "../read-bounds.mjs";
 import { readContainer, declaredTextBytes } from "../ooxml.mjs";
 import { isOdfTextPart } from "../odf.mjs";
 
@@ -50,15 +50,15 @@ export function kindOf(document) {
   return "other";
 }
 
-/** The `READ_BOUNDS` row that is the whole-read ceiling of a kind. */
-export const wholeRowOf = (kind) => (kind === "csv" ? ["csv", "bytes"] : kind === "text" ? ["text", "bytes"] : ["pdf", "bytes"]);
+/** The `READ_BOUNDS` row that is the whole-read ceiling of a kind: runtime-limits' `wholeReadRow`, kept under this name for its importers. */
+export const wholeRowOf = wholeReadRow;
 
 /** R131 (1), R132: `{verdict: "stated"|"deferred"|"inline", kind, size, ...}` by size and kind alone (synchronous). `stated` carries `statement`'s `{size, bound, key}`;
  *  `deferred` the inline `limit` it was over. */
 export function inlineVerdict(document) {
   const size = sizeOfDocument(document);
   const kind = kindOf(document);
-  const row = wholeRowOf(kind);
+  const row = wholeReadRow(kind);
   if (size > boundOf(...row)) return { verdict: "stated", kind, size, ...statement(...row, size) };
   const limit = kind === "pdf" ? READING_DEFER_PDF_BYTES : READING_DEFER_OTHER_BYTES;
   if (size > limit || size > READING_PARTS_MAX) return { verdict: "deferred", why: "size", kind, size, limit };

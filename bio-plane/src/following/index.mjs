@@ -57,6 +57,7 @@ import { isMachineIdentity, isPublicHttpsLocator } from "../record-grammar/index
 import { isCalendarDate, validAt, localDay, dayRange } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { parse as parseLegistar, KEY as LEGISTAR_KEY } from "../../../legistar-reader/index.mjs";
 import { FOLLOWING_TABLES, migrateFollowing } from "./schema.mjs";
@@ -82,7 +83,7 @@ export const BODY_READ_FETCHES = 200;
  *  text, the parsed rows and their JSON at once, and the diff two snapshots' rows, in one object. The snapshot is written with
  *  no rows and a stated reason; the capture is held whole and cited. Set by measure: a 4 MiB capture of 62-byte rows ticks and diffs
  *  at a node cap of 134 MB (x1.2 = 161, under the object's 163 at that size); 5 MiB needs 184 and 8 MiB 246. */
-export const PORTAL_PARSE_MAX_BYTES = 4 * 1024 * 1024;
+export const PORTAL_PARSE_MAX_BYTES = boundOf("following", "portal_parse_bytes");
 /** R12: the cadences a follow may name: daily (the default) or longer, from monitoring's intervals (its R14). */
 export const FOLLOW_CADENCES = Object.freeze(["daily", "weekly", "monthly"]);
 export const FOLLOW_KINDS = Object.freeze(["body", "register", "person-query", "portal", "policy"]);
