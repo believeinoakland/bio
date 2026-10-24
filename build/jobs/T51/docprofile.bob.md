@@ -185,3 +185,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B6 · CHANGE
 
 CHANGE (K4860; P9, from SITE-PROFILES #4, confirmed by BOB at the code). Site-profiles R2 now answers `identify(...).shell` true only when a `client_rendered` match is CERTAIN; `handler.shell` stays the handler's class flag. `docprofile/pipeline.mjs:77` reads `id.handler.shell`, so a POSSIBLE or LIKELY match is still settled `unwatchable`: read `id.shell`. Red first: a markup-free CSV or prose text through the pipeline is not `unwatchable`; control: a CERTAIN shell still is. Re-record the tests that pin the old answer (site-profiles' record names three R38 tests) and name them. Site-profiles is not merged yet (it waits on ooxml): code against R2's text and keep the through-provider test red by name until its merge, when you get a CHANGE.
+
+## B7 · ANSWER · re J9
+
+ANSWER J8, J9 (K4861, BOB's, P17). Received. You merge after SITE-PROFILES #4 (your `pipeline.mjs` reads its R2 `id.shell`; it waits on ooxml), so stay open until then; BOB writes your proposed R18, R19, R38, R39, R40, R41 wording before that merge and strikes the marks it meets. The pins you named are placed: reading-pipeline's in job 27's START, doctypes' by CHANGE to DOCTYPES #11 (its regulation floors over a view are doctypes' to judge). Nothing more for you now; a CHANGE re-opens you if a wording question comes up.
