@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { filedWorld as world, pdf, sha, enc, T0 } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
-import { FILE_SAFETY_CHECKS, FILE_SAFETY_POLL_MS, derivedKey, fileSafetyOps } from "../../../src/file-safety/index.mjs";
+import { FILE_SAFETY_CHECKS, FILE_SAFETY_POLL_MS, derivedKey, fileSafetyOps, readingStatement } from "../../../src/file-safety/index.mjs";
 
 const row = (code) => ({ check: FILE_SAFETY_CHECKS[code].check, translation: FILE_SAFETY_CHECKS[code].translation });
 const refused = (r, code) => {
@@ -32,7 +32,8 @@ test("R11: `safeView` by route: PDFs and office documents answer the image-only 
   assert.equal(r.headers.get("content-type"), "application/pdf");
   const d = JSON.parse(r.headers.get("x-file-safety"));
   assert.deepEqual(d, { kind: "pdf", derived: true, of: p, sha256: sha(body), pages: 2, source_pages: 3, truncated: true,
-                        original: { may_open: true, path: "warned", why: null } });
+                        statement: { key: "file-safety.index.safe_view_first_pages", pages: 2, source_pages: 3, words: d.statement.words },
+                        original: { may_open: true, path: "warned", why: null, reading: readingStatement() } });
   assert.deepEqual(d.original, (({ ok, captureSha, ...x }) => x)(await w.fs.originalState({ captureSha: p, viewer: "member:m1" })));
   assert.deepEqual(w.calls("/render").map((c) => c.body.route), ["pdf"]);
   /* an office document renders by the office route; the renderer's refusal is stated */
@@ -49,7 +50,7 @@ test("R11: `safeView` by route: PDFs and office documents answer the image-only 
   assert.deepEqual(v.sheets, [{ name: "Budget", cells: [{ ref: "A1", value: "0.1", type: "number" }, { ref: "B1", value: "99", type: "number" }, { ref: "C1", value: "label", type: "text" }],
                                 rows: { from: 1, to: 1 }, total_rows: 1, truncated: false, next_row: null }]);
   assert.deepEqual([v.sheets_total, v.sheets_truncated], [1, false]);
-  assert.deepEqual(v.original, { may_open: true, path: "warned", why: null }, "the external link makes it high; nothing was followed");
+  assert.deepEqual(v.original, { may_open: true, path: "warned", why: null, reading: readingStatement() }, "the external link makes it high; nothing was followed");
   assert.equal(w.calls("/render").filter((c) => c.body.target.capture_sha === x).length, 0, "no render is asked for data");
   const c = await w.capture(enc("year,amount\n2025,310000\n"));
   assert.deepEqual((await w.fs.safeView({ captureSha: c, viewer: "member:m1" })).sheets, [{ name: "csv", cells: [
@@ -98,12 +99,16 @@ test("R12: `renderBatch` renders queued files after their capture, never inside 
   for (const bytes of [pdf(false, "k1"), pdf(false, "k2"), pdf(false, "k3"), enc("a,b\n1,2\n"), new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 7])]) {
     await k.capture(bytes); k.tick(1000);
   }
+  /* R12 (G136b): one render is begun per tick; a file that takes no renderer (cells, no route) does not use the tick */
   const first = await k.fs.renderBatch({ limit: 2 });
   assert.deepEqual(Object.keys(first).sort(), ["copies", "data", "failed", "none", "ok", "remaining", "rendered"]);
-  assert.deepEqual({ ...first, rendered: undefined }, { ok: true, rendered: undefined, failed: 0, none: 0, data: 0, copies: { made: 2, failed: 0, queued: 3 }, remaining: 3 });
-  assert.equal(first.rendered, 2);
+  assert.deepEqual(first, { ok: true, rendered: 1, failed: 0, none: 0, data: 0, copies: { made: 2, failed: 0, queued: 3 }, remaining: 4 });
   const second = await k.fs.renderBatch({ limit: 10 });
-  assert.deepEqual(second, { ok: true, rendered: 0, failed: 1, none: 1, data: 1, copies: { made: 3, failed: 0, queued: 0 }, remaining: 0 });
+  assert.deepEqual(second, { ok: true, rendered: 1, failed: 0, none: 0, data: 0, copies: { made: 3, failed: 0, queued: 0 }, remaining: 3 });
+  const third = await k.fs.renderBatch({ limit: 10 });
+  assert.deepEqual(third, { ok: true, rendered: 0, failed: 1, none: 0, data: 0, copies: { made: 0, failed: 0, queued: 0 }, remaining: 2 });
+  const fourth = await k.fs.renderBatch({ limit: 10 });
+  assert.deepEqual(fourth, { ok: true, rendered: 0, failed: 0, none: 1, data: 1, copies: { made: 0, failed: 0, queued: 0 }, remaining: 0 });
   assert.deepEqual(await k.fs.renderBatch({}), { ok: true, rendered: 0, failed: 0, none: 0, data: 0, copies: { made: 0, failed: 0, queued: 0 }, remaining: 0 });
 });
 
@@ -123,7 +128,7 @@ test("R33 (K1929 (4); N753): `requestSafeCopy` asks the first on CDR tool for a 
   assert.deepEqual(bytes, enc(`rebuilt ${s}`));
   const d = JSON.parse(r.headers.get("x-file-safety"));
   assert.deepEqual(d, { kind: "copy", derived: true, of: s, sha256: sha(bytes), content_type: "application/pdf", removed: ["javascript", "open-action"],
-                        tool: "glasswall-halo", original: { may_open: true, path: "warned", why: null } });
+                        tool: "glasswall-halo", original: { may_open: true, path: "warned", why: null, reading: readingStatement() } });
   const put = w.bucket.calls.find((c) => c[0] === "put" && c[1] === derivedKey("bio", sha(bytes)));
   assert.deepEqual(put[2].customMetadata, { derived: "true", of: s, kind: "safe-copy", tool: "glasswall-halo" });
   /* scanned by ClamAV where it is stored, the derived area (file-scanner R2): the copy note, beside the original's notes */
@@ -247,9 +252,10 @@ test("R43 (T47; N941, K231): with a renderer bound, a render queue that cannot b
   const put = f.bucket.put.bind(f.bucket);
   let puts = 0;
   f.bucket.put = async (k, ...rest) => { if (k.includes("/derived/") && ++puts > 1) throw new Error("bucket refused"); return put(k, ...rest); };
+  assert.equal((await f.fs.renderBatch({})).rendered, 1, "one render is begun per tick");
   const g = await f.fs.renderBatch({});
   unreadable(g, "after some were rendered");
-  assert.deepEqual([g.rendered, g.copies_made], [1, 0]);
+  assert.deepEqual([g.rendered, g.copies_made], [0, 0]);
   assert.equal(f.row("SELECT render_state FROM fs_files WHERE capture_sha = ?", one).render_state, "done");
   assert.equal(f.row("SELECT COUNT(*) AS n FROM fs_files WHERE render_state = 'queued'").n, 1, "the rest wait for the next round");
   /* control: with no renderer bound, RENDERER_ABSENT as before, its row unmoved */

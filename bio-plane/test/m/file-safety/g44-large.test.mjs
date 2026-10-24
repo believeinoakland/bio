@@ -86,7 +86,8 @@ test("R11: a 4 MB and a 17.7 MB CSV at the platform object's old space answer th
 });
 
 test("R11: a row of 200,000 fields is cut to SAFE_VIEW_CELLS_MAX cells and the sheet says it is truncated; the answer stays small", async (t) => {
-  const row = `${Array.from({ length: 200_000 }, () => "a").join(",")}\n`;
+  /* 16,000 fields: under the reader's column bound (16,384, G124e), over the cut */
+  const row = `${Array.from({ length: 16_000 }, () => "a").join(",")}\n`;
   const a = await inChild(t, "wide.csv", enc(row + row));
   assert.deepEqual([a.ok, a.kind], [true, "data"]);
   const s = a.sheets[0];
@@ -150,8 +151,8 @@ test("R11 R51: a file above what a preview can show is stated with its size and 
   /* a workbook of 26.2 MB declared (read in pieces past 20 MiB): stated, size and bound */
   const { xml } = genSheetXml(26.2 * MIB);
   stated(await view(w, await w.capture(xlsxOf([{ name: "Big", xml }]))), "PREVIEW_NOT_DRAWN", { format: "xlsx" });
-  /* a CSV of 18.5 MB (over the entry's 17 MiB, under GRADE_READ_MAX) and one of 20,971,571 B (over GRADE_READ_MAX) */
-  stated(await view(w, await w.capture(csvOf(18_500_000).bytes)), "PREVIEW_NOT_DRAWN", { format: "csv" });
+  /* a CSV of 18.5 MB is drawn (the light kinds take the standard's figure, K4834: the reader's old 17 MiB is gone) and one of 20,971,571 B (over GRADE_READ_MAX) is stated */
+  assert.equal((await view(w, await w.capture(csvOf(18_500_000).bytes))).kind, "data");
   stated(await view(w, await w.capture(csvOf(20_971_571).bytes)), "TOO_LARGE", { format: "csv", bound: GRADE_READ_MAX });
   /* an xlsx file above GRADE_READ_MAX (the package, not its text): the zip is never loaded, and says why */
   const pad = new Uint8Array(21 * MIB);

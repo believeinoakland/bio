@@ -27,11 +27,14 @@ export function bucket() {
   return {
     held, calls,
     async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length } : null; },
-    async get(k) {
+    /* `range` is R2's option: the object's `size` is the whole's, the body and `arrayBuffer` the range alone */
+    async get(k, opts) {
       calls.push(["get", k]);
       if (!held.has(k)) return null;
-      const b = held.get(k);
-      return { key: k, size: b.length, body: new Response(b).body, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) };
+      const all = held.get(k);
+      const r = opts && opts.range;
+      const b = r ? all.subarray(r.offset, r.offset + r.length) : all;
+      return { key: k, size: all.length, body: new Response(b).body, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) };
     },
     async put(k, bytes, opts) { calls.push(["put", k, opts]); held.set(k, new Uint8Array(bytes)); return { key: k }; },
   };

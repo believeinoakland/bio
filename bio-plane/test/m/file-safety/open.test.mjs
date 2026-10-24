@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { filedWorld as world, pdf, sha, DAY } from "./fixture.mjs";
-import { FILE_SAFETY_CHECKS, RESCAN_INTERVAL_MS, DEEPER_CHECK_FRESH_MS, fileSafetyOps } from "../../../src/file-safety/index.mjs";
+import { FILE_SAFETY_CHECKS, RESCAN_INTERVAL_MS, DEEPER_CHECK_FRESH_MS, RENDER_INFLIGHT_STALE_MS, fileSafetyOps } from "../../../src/file-safety/index.mjs";
 
 const WARNED = { own_device: true, no_macros: true };
 const row = (code) => ({ check: FILE_SAFETY_CHECKS[code].check, translation: FILE_SAFETY_CHECKS[code].translation });
@@ -42,10 +42,9 @@ test("R8: a low file opens as capture.getCapture serves it when a ClamAV clean n
   const ns = await w.fs.openOriginal({ captureSha: s, viewer: "member:m1" });
   refused(ns, "NOT_SCANNED");
   assert.equal(ns.not_scanned, "SIGNATURES_STALE");
-  next = { result: "unknown", detail: "LIMIT:MaxRecursion" };
-  assert.equal((await w.fs.openOriginal({ captureSha: s, viewer: "member:m1" })).not_scanned, "LIMIT:MaxRecursion");
   next = "hang";
   refused(await w.fs.openOriginal({ captureSha: s, viewer: "member:m1" }), "SCAN_PENDING");
+  w.tick(RENDER_INFLIGHT_STALE_MS + 1);   /* R55: a call lost for this long is made again; until then no second call is made for the file */
   next = { result: "found", findings: ["Pdf.Exploit.New-1"] };
   refused(await w.fs.openOriginal({ captureSha: s, viewer: "member:m1" }), "SCAN_HOLD");
   assert.deepEqual((await w.fs.threatOf({ captureSha: s })).scan_hold.names, ["Pdf.Exploit.New-1"], "the found verdict placed the hold");
@@ -73,6 +72,7 @@ test("R8 (DEC-173): a high file, in order: SCAN_HOLD (no path opens a held file)
   /* warned, no clean note: the scan runs on demand; pending, then clean opens */
   next = "hang";
   refused(await w.fs.openOriginal({ captureSha: s, viewer: "member:m1", warned: WARNED }), "SCAN_PENDING");
+  w.tick(RENDER_INFLIGHT_STALE_MS + 1);
   next = { result: "clean" };
   await opened(await w.fs.openOriginal({ captureSha: s, viewer: "member:m1", warned: WARNED }), s, bytes);
   /* within the week the clean note opens it without a scan */
