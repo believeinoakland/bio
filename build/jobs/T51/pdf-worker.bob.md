@@ -1,6 +1,6 @@
 # BOB to pdf-worker (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -149,3 +149,7 @@ Owner **pdf-worker** (job 17; ruled K4835 (3): the line is `pdf-worker/package.j
 (4) Platform check **N**.
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B3 · ANSWER · re J2
+
+ANSWER J2 (K4858, BOB's, P17). Your reading stands: `/structure` decodes no JPX, so G125b has no code or test of yours; say so in your record. BOB rebuilds `dist/` after batch B, and the bundle then carries image-codecs' fix.

@@ -462,6 +462,43 @@ test("R24: linkWrapper.deferred wraps the encoded url as about:link#", () => {
   assert.equal(linkWrapper.deferred(u), "about:link#" + encodeURIComponent(u));
 });
 
+test("R24: a lone surrogate in the url is U+FFFD in the wrapper, never a URIError, the same every call", () => {
+  const forms = ["\uD800", "\uDFFF", "a\uD800b", "a\uDC00\uD800b", "https://e.org/\uD83D", "https://e.org/\uDE00?q=\uD800#\uDC00"];
+  for (const u of forms) {
+    const w = linkWrapper.deferred(u);
+    assert.equal(w, linkWrapper.deferred(u));
+    assert.ok(w.startsWith("about:link#"));
+    assert.ok(w.includes("%EF%BF%BD"));
+    assert.equal(w, "about:link#" + encodeURIComponent(u.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "\uFFFD")));
+  }
+  /* A well-formed pair is not a lone surrogate. */
+  assert.equal(linkWrapper.deferred("x\uD83D\uDE00"), "about:link#" + encodeURIComponent("x\uD83D\uDE00"));
+});
+
+test("R36: a failure that comes of an address's own bytes is a final record and never a throw", async () => {
+  const bad = ["\uD800", "http://\uD800/", "https://exa mple.org/u.png", "https://[::1/x"];
+  for (const u of bad) {
+    assert.doesNotThrow(() => normalizeAddress(u));
+    assert.doesNotThrow(() => normalizeCitation(u + "#\uDC00"));
+    assert.doesNotThrow(() => linkWrapper.deferred(u));
+  }
+  const html = "<main>" + bad.map((u) => `<img src="${u}"><a href="${u}">l</a>`).join("")
+    + `<a href="https://example.org/p?q=\uD800#\uDC00">x</a><img src="/ok\uD800.png"></main>`;
+  const first = await run(html);
+  const second = await run(html);
+  for (const u of ["https://exa mple.org/u.png", "https://[::1/x"]) {
+    const r = first.out.subresources.find((x) => x.url === u);
+    assert.deepEqual([r.ok, r.reason, r.final], [false, "UNRESOLVABLE", true]);
+  }
+  assert.equal(first.out.companionSha, second.out.companionSha);
+  assert.equal(first.out.manifestSha, second.out.manifestSha);
+  /* Every link is classified and wrapped like any other. */
+  assert.ok(first.out.links.some((l) => l.type === "deferred" && l.address.includes("%EF%BF%BD")));
+  const total = ["fetched", "failed", "refused", "skipped"].reduce((n, k) => n + first.out.manifest.counts[k], 0)
+    + first.out.manifest.counts.platform_limited * 0;
+  assert.equal(total, first.out.subresources.length);
+});
+
 test("R25: linkWrapper.refused is about:link#refused", () => {
   assert.equal(linkWrapper.refused(), "about:link#refused");
 });
