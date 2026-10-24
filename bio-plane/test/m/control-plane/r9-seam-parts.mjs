@@ -229,4 +229,77 @@ export function sections(kit, counting) {
     }
     assert.deepEqual(bad, []);
   });
+
+  /* ======================================== §12 · G131a, G131g · the encoding matrix, upload and fetch ======================================== */
+
+  const ENCODINGS = ["latin-1", "windows-1252", "utf-16le-bom", "utf-16be-bom", "utf-8-bom", "bad-byte"];
+  /* a decode is judged by its units: every truth unit checked (the first, a middle and the last) is in a unit's text, and no unit holds U+FFFD or NUL unless the reading says it is not whole */
+  function judgeDecode(g, units, reading) {
+    const bad = [], truth = g.truth, n = truth.units, spot = [1, Math.ceil(n / 2), n];
+    const stated = reading.reading && reading.reading.reason === "ENCODING_UNSUPPORTED";
+    const whole = reading.completeness && reading.completeness.state === "whole";
+    if (stated) return bad;   /* ENCODING_UNSUPPORTED {name} is an allowed answer: the truth was named, never guessed */
+    const torn = units.filter((u) => /[\uFFFD\u0000]/.test(String(u.text)));
+    const counted = (reading.reading && reading.reading.encoding_replaced) || 0;   /* the tolerance: a replacement is allowed when the reading counts it (G131g) */
+    if (torn.length && whole && counted < torn.length) bad.push(`U+FFFD or NUL in ${torn.length} unit(s) of a whole reading that counts ${counted} replaced`);
+    const damaged = truth.badByte ? truth.badByte.n : null;
+    for (const i of spot) if (i !== damaged && !units.some((u) => String(u.text).includes(truth.unit(i).text))) bad.push(`unit ${i} (${truth.unit(i).text}) is not in the reading`);
+    return bad;
+  }
+  async function decodeOnce(kk, auth, g, { name, type, path, project }) {
+    const bytes = await bytesOf(g);
+    let up;
+    if (path === "upload") up = (await put(kk, auth, bytes, { name, type })).up;
+    else {
+      kk.serve(name, bytes, { type });
+      const got = await kk.acquire(auth, { locator: `https://www.example.gov/files/${name}`, project });
+      up = { document: (got.body.result || got.body).document, capture: { sha256: sha256(bytes) } };
+    }
+    assert.ok(up.document, `${path}: a document is answered`);
+    await fileIt(kk, auth, up, { title: name, project });
+    const sha = sha256(bytes);
+    const reading = await readEnded(kk, auth, sha);
+    return { reading, units: await allUnits(kk, auth, sha) };
+  }
+  for (const path of ["upload", "fetch"]) {
+    test(`R9 seam §12 (G131g, DOCS T7, ${path}; R100 R123 R135): each encoding of a text, declared in the type or not: the text equals the truth, or the reading says \`ENCODING_UNSUPPORTED\`; never U+FFFD or NUL in a whole reading`, { timeout: 1200000 }, async () => {
+      const auth = await owner(`r9p-enc-${path}`);
+      const project = await k.projectOf(auth, `R9 §12 ${path} ${uniq()}`);
+      const wrong = [];
+      let seed = path === "upload" ? 9300 : 9400;
+      for (const encoding of ENCODINGS) for (const declared of [true, false]) {
+        if (encoding === "bad-byte" && !declared) continue;   /* its own test below */
+        const g = docGenerate({ kind: "text", seed: seed++, size: { units: 60 }, encoding, charset: declared ? "header" : "none" });
+        const name = `enc-${encoding}-${declared ? "d" : "u"}-${path}.txt`;
+        const got = await decodeOnce(k, auth, g, { name, type: declared ? g.type : "text/plain", path, project });
+        for (const w of judgeDecode(g, got.units, got.reading)) wrong.push(`${encoding} ${declared ? "declared" : "undeclared"}: ${w}`);
+      }
+      assert.deepEqual(wrong, []);
+    });
+  }
+
+  test("R9 seam §12 (G131a, SHEET C27/J-17; R100 R123 R135): a UTF-8 CSV with a curly quote, accented letters, CJK and an emoji in every row, past the block cut, is read without a lost character: the first, a middle and the last row hold their characters and no unit holds U+FFFD", { timeout: 900000 }, async () => {
+    const auth = await owner("r9p-csv");
+    const tag = uniq();
+    const rows = Array.from({ length: 6000 }, (_, i) => `${i + 1},Cr\u00e9dit \u00c9 \u00d1 \u2019 \u6f22\u5b57 \ud83d\ude00 ${tag}r${i + 1},note ${i + 1}`);
+    const bytes = Buffer.from(["id,name,note", ...rows].join("\n") + "\n", "utf8");
+    assert.ok(bytes.length > 128 * 1024, `past the block cut (${bytes.length} B)`);
+    const { up } = await put(k, auth, bytes, { name: `c27-${tag}.csv`, type: "text/csv" });
+    await fileIt(k, auth, up, { title: "c27" });
+    await readEnded(k, auth, up.capture.sha256);
+    const text = (await allUnits(k, auth, up.capture.sha256)).map((u) => String(u.text)).join("\n");
+    const lost = [1, 3000, 6000].filter((i) => !text.includes(`Cr\u00e9dit \u00c9 \u00d1 \u2019 \u6f22\u5b57 \ud83d\ude00 ${tag}r${i}`));
+    assert.deepEqual(lost, [], "rows whose characters were lost");
+    assert.ok(!/[\uFFFD\u0000]/.test(text), "no replacement character or NUL in any unit");
+  });
+
+  for (const path of ["upload", "fetch"]) {
+    test(`R9 seam §12 (G131g, DOCS T7, ${path}) (red until the detection decodes an undeclared UTF-8 text with one invalid byte as UTF-8 with the replacement counted, or names it: it is decoded wholly as windows-1252, \`encoding_assumed\`, \`œuvre\` read as mojibake): the text with a bad byte and no declared charset equals the truth or is named \`ENCODING_UNSUPPORTED\``, { timeout: 900000 }, async () => {
+      const auth = await owner(`r9p-bb-${path}`);
+      const project = await k.projectOf(auth, `R9 §12 bb ${path} ${uniq()}`);
+      const g = docGenerate({ kind: "text", seed: path === "upload" ? 9501 : 9601, size: { units: 60 }, encoding: "bad-byte", charset: "none" });
+      const got = await decodeOnce(k, auth, g, { name: `bb-${path}.txt`, type: "text/plain", path, project });
+      assert.deepEqual(judgeDecode(g, got.units, got.reading), []);
+    });
+  }
 }
