@@ -353,3 +353,7 @@ The member sentences are mine (`localize` keys `calculations.index.table_over_by
 **Deferred:** none. **Found in other modules:** workbooks' IDLE_MB calibration (above). New files outside paths: none.
 
 Size (session_01XYo1jnZD8HdF9dcUsohXyr): test runs 9, module lines 4240
+
+## J19 · COMPLETE
+
+COMPLETE · CALCULATIONS #12 · answers B23-B26 · R45 (empty cells keep their column, sheet ranges), R1/G123f (range read on by next_row via content's fromRow, real-content seam green), K4850 (transient source read, logged), R46 (table bounds via boundOf, rows from job 67). Module 128/128, strength 182/182, workbooks 30/37 (7 idle-heap failures identical without my change, workbooks'), format/architecture/coverage/ownership 0, no words finding. Please remove the not-yet-met marks of R45, R46 and R1/R9's amendments. Seam section 4 (t51-round9-seam.test.mjs) does not exist in the tranche yet: I could not run it; the same data is proven in my own tests. Record: build/jobs/T51/calculations.md (Round 9).
