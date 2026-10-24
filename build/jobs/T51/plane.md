@@ -830,3 +830,28 @@ QUESTION (plane-1, PLANE #56). Three names the plane-2 instruments need, and two
 3. **The one cap convention (G123a).** `runtime-limits` is not merged, so `shape/cap.mjs` holds a local copy of R33's contract and takes `runtime-limits`' `capFor` and `PLATFORM_FIGURES` the moment a file of `src/` exports them (it tries `byte-ledger.mjs`, `read-bounds.mjs`, `cpu.mjs`). My reading of R33: `capFor(N) = 128 + (node child idle 89 - platform idle_bytes 50 MiB) - N` = `167 - N`, the convention the sheet runs passed under; so the PDF runs' `128 - N` is retired and their cap grows by 39 MB. If runtime-limits' formula differs, the harness follows it with no edit of mine, and a sheet or PDF case that then dies is a finding for its owner, not a harness change.
 4. **`r8-headofline` size.** The plan says "a ~1 MB text"; a 1 MB text is read INSIDE the request (the door's own reading), so the ledger makes no pass and the head of the line has nothing to hold. The smallest size seen deferred is 4 MB; the test uses 4,000,060 B (R-FOUR (3), smallest size that shows the cause). A pass is a `readHeld` that read (not one that answers `NO_HOME`).
 5. **`r8-wave` and the derivations.** The wave's derivations (1 per viewer) and hops (queue 2, bootstrap 4, ...) already hold on the merged tranche (G116, G119); the red of `r8-wave` is the Server-Timing count of point 2 only.
+
+## Record: fix round 9, PLANE #56 (plane-1, test-only; session_011em5NMVJqsV8WDNmpEHRAd)
+
+**Entries applied** (test-only plus `bio-plane/package.json`:6; no product code)
+- G123h: `npm test` runs `node --import ./test/platform-sqlite.mjs --test ...`; `g123h-preload.test.mjs` (seen red first) pins that npm test and the module runner apply the same preload and that a 2,100,000 B row is refused under both; `worker.test.mjs` R7/R64 pin re-pointed to the new script.
+- G123a (harness side): one cap convention. `shape/cap.mjs` re-exports `capFor`/`PLATFORM_FIGURES` from `byte-ledger.mjs` (runtime-limits R33, 206 - N); `harness.mjs`, `g41.probe` (`D_MB` and `g41Cap`'s 39 retired), `g44.probe` (`+ D_MB` retired), `g26.probe` all take it. Re-pointed files: `shape/harness.mjs`, `shape/g41.probe.mjs`, `shape/g44.probe.mjs`, `shape/g26.probe.mjs`, `g41-shape.test.mjs`, `g44-shape.test.mjs` (comment). `g15/g13/keep40/fault` probes already called `capFor`. g41 (4 MB, 12 MiB, 17 MiB CSV, 200k xlsx) and g44 pass at the new caps.
+- G123b: sampler stays on and has in-tick sampling points (every evidence read served, every 64th statement); per-tick COUNTS (`counts`: evidence reads, bytes served, statements, rows out, units written); `shape/bars.mjs` replaces the wall bars (`TICK_MS_MAX`, `FIRST_TICK_MS_MAX`, `loadFactor`, `referenceMs`, g26's) with count bars; search judged by extent (`markExtents` against the generator's `markRows`). Tests in `g41-shape.test.mjs` and `shape-harness.test.mjs` (leak inside one tick shows in `peakMB`; seen red with the sampler off).
+- K4843: g41's wall bar replaced by counts; `g41-shape` 9/9 alone and 2/2 (12 MiB CSV, xlsx) with every core busy.
+- G123c: fault injectors in `harness.mjs` (`faults`: `leakAt`, `storeFailAt`, `entryThrowsAt`, `objectGoneAt`, `killAt`+`killAfterSql`, `restartAt`, `pokeAfterRestart`) and `shimApplied()`; `shape-harness.test.mjs` 7/7.
+- G123f: `cellRanges` and `opsAfter` in the harness: last row, a range crossing a block edge, an over-bound range read by `next_row`, the same two CITED (`contentMint`, `cellsAt`), then `tabledeclare` and `workbookadd`; `g123f-cells.test.mjs` 3/3 (CSV and xlsx hold today; the other formats arrive with test-support's `sheetgen`; the P-list walk row is BOB's).
+- Reds by name (right reason, seen): `r8-headofline.test.mjs` (40 s scanner: 0 passes at the first scan-end; founder's `owedwork` `alarm_at` null in 24 answers while a firing runs; 3 s control green) with `r8-headofline-entry.mjs`; `r8-heal-door.test.mjs` (alarm stays lost after an ordinary read; control green); `r8-lag.test.mjs` (no `max_stretch_ms`/`rows_read`/`rows_written`/`units`); `r8-wave.test.mjs` (`object-calls;dur` absent; derivations and hops already hold). Shared `r8-wave-kit.mjs`. Names per BOB's B77.
+
+**Deferred:** none. R100's harness-side bound (heap + backing stores inside `capFor(N)`) is not asserted: today's csv12 peaks 167 MB (heap + buffers) against cap 194 and the product ledger is not wired; printed in the report, waits for the product's use of `byteLedger` (plane-2 / owners).
+
+**For BOB (other modules)**
+- `bio-plane/src/setup-words/rows.mjs`, `case-checker/program.mjs` etc. stale as ever (generated). Reading re-serves the whole file several times a tick (csv12: 4 evidence reads of 12 MiB each per tick; 5x the file): inside the count bar of 8x, worth a look by reading-pipeline.
+- Files created outside `paths`: none.
+
+**Tests and checks**
+- Whole plane suite before the merge of runtime-limits: tests 464, pass 444, fail 20: 11 intended reds (3 heal-door, 1 wave, 1 lag, 1 headofline 40 s, 1 founder owedwork... listed above), inherited `release` R24, `l77-size` R77 L (2), plus 9 R85 G44 and the R7/R64 pin that my own harness refactor/script change broke and I then fixed (re-run green: g44-shape, worker).
+- Re-run after the fix and the merge: g41-shape 9/9, g44-shape + shape-harness + g123f + g123h 21/21.
+- format 0; architecture 0; ownership 20 files 0 failures; words (plane) 0; coverage: R97 R98 R100 R101 R104 R106 named by no test (plane-2's, expected).
+- Five alone-runs of the heavy reds: not made (red by name; they run five times when they go green).
+
+Size (session_011em5NMVJqsV8WDNmpEHRAd): test runs 16, module lines 1629 (test files written or changed)
