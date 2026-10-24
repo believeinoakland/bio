@@ -1757,31 +1757,32 @@ export function rangeSource(evidence, doc) {
   const size = parts && parts.length ? parts.reduce((n, p) => n + p.bytes, 0)
     : Number.isFinite(doc && doc.capture && doc.capture.bytes) ? doc.capture.bytes : null;
   const reads = [];
-  let whole;   /* undefined until asked; then whether the store holds the whole under the digest */
+  /* the parts the document states are read first, each by a ranged get across the seam, and no question is asked of the store for the whole;
+     a part not held, or short, leaves the range to the whole */
+  const fromParts = async (offset, take) => {
+    const out = new Uint8Array(take);
+    let at = 0, start = 0;
+    for (const p of parts) {
+      const end = start + p.bytes, from = Math.max(offset, start), to = Math.min(offset + take, end);
+      if (to > from) {
+        const got = await rangeBytes(evidence, p.sha256, from - start, to - from);
+        if (!got || got.bytes.length < to - from) return null;
+        out.set(got.bytes.subarray(0, to - from), at); at += to - from;
+      }
+      start = end;
+      if (start >= offset + take) break;
+    }
+    return out;
+  };
   const readRange = async (offset, length) => {
     reads.push([offset, length]);
     try {
       if (!evidence || !sha || !natural(offset) || !natural(length)) return { ok: false, reason: "NOT_HELD" };
       if (size !== null && (offset >= size || length === 0)) return new Uint8Array(0);
       const take = size !== null ? Math.min(length, size - offset) : length;
-      if (whole === undefined) whole = !parts || !parts.length || !!(await sizeHeld(evidence, sha));
-      if (whole) {
-        const got = await rangeBytes(evidence, sha, offset, take);
-        return got ? got.bytes.subarray(0, take) : { ok: false, reason: "NOT_HELD" };
-      }
-      const out = new Uint8Array(take);
-      let at = 0, start = 0;
-      for (const p of parts) {
-        const end = start + p.bytes, from = Math.max(offset, start), to = Math.min(offset + take, end);
-        if (to > from) {
-          const got = await rangeBytes(evidence, p.sha256, from - start, to - from);
-          if (!got || got.bytes.length < to - from) return { ok: false, reason: "NOT_HELD" };
-          out.set(got.bytes.subarray(0, to - from), at); at += to - from;
-        }
-        start = end;
-        if (start >= offset + take) break;
-      }
-      return out;
+      if (parts && parts.length) { const got = await fromParts(offset, take); if (got) return got; }
+      const got = await rangeBytes(evidence, sha, offset, take);
+      return got && got.bytes.length >= take ? got.bytes.subarray(0, take) : { ok: false, reason: "NOT_HELD" };
     } catch (e) {
       return { ok: false, reason: String(e && e.message || e).slice(0, 120) || "STORE_FAILED" };
     }
@@ -2023,7 +2024,7 @@ async function csvWindowCursorIn(evidence, { sha, whole, size, i2text, meta, nex
 /* A later piece of a CSV, from the window the cursor names: the blocks R41 makes of the sheet's lines, built from the lines of the
    records in a window, and the head the entry's signatures need before it. The lines are the entry's own (its text of the head
    and the window together), so a line, its row and its words are what the whole read gives. */
-async function csvWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }, src = null) {
+async function csvWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }, src = null, first0 = null) {
   const nums = [c.n, c.ob, c.rw, c.li, c.sk, c.bi, c.rt, c.tt, c.he, c.hr];
   if (!nums.every(natural) || !(c.lr === 0 || c.lr === 1) || typeof c.lc !== "string" || typeof c.rg !== "string" || typeof c.sh !== "string") return mismatch();
   if (c.ob >= c.n || c.he >= c.n || c.he < CSV_HEAD_BYTES || c.rw < 1 || c.sk > c.li || !c.sh) return mismatch();
@@ -2101,7 +2102,8 @@ async function csvWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }
     let input = region;
     if (withHead) { input = new Uint8Array(head.length + region.length); input.set(head, 0); input.set(region, head.length); }
     await yieldNow();   /* G82: the turn is given back before the entry's compute over the head and the chunk, and after it */
-    const res = await entry.text(input, { inlineCellsMax: 0, yieldNow });
+    /* K4868: the first piece of a read by range is handed the entry's answer over the head, which is the first chunk's bytes */
+    const res = first0 && start === 0 && !withHead && region.length === first0.len ? first0.res : await entry.text(input, { inlineCellsMax: 0, yieldNow });
     await yieldNow();
     const sheet = res && res.ok !== false && Array.isArray(res.sheets) ? res.sheets[0] : null;
     if (!sheet || typeof sheet.text !== "string" || !Array.isArray(sheet.lineRows)) throw new Error("the csv entry gave no sheet for a window");
@@ -2128,6 +2130,12 @@ async function csvWindowTick(evidence, sha, c, { budget, maxUnits, windowBytes }
     }
     rowBase += starts.length;
     start = end;
+    /* K4868: the first piece of a read by range ends with the head, whose bytes are already in hand: the rest is the next pieces' */
+    if (first0 && stop === null && !eofSeen) {
+      const nextAt = { offset: end, row: rowBase, line: lineIdx, inRec: 0 };
+      if (cur.length ? emit(nextAt) : true) stop = stop ?? nextAt;
+      break;
+    }
   }
   if (stop === null && cur.length) emit(null);   /* the end of the sheet: its last block */
   let words = 0;
@@ -2163,8 +2171,8 @@ async function csvRangedHead(evidence, doc, { recorded, declared }) {
   const src = rangeSource(evidence, doc);
   if (!(Number.isInteger(src.size) && src.size > WHOLE_READ_MAX && src.size <= boundOf("csv", "bytes"))) return null;
   if (!(recorded === null || recorded === "csv" || recorded === "undetermined")) return null;
-  const probe = await src.readRange(0, Math.min(src.size, CSV_HEAD_BYTES + CSV_SLACK_BYTES));
-  if (!(probe instanceof Uint8Array) || probe.length <= CSV_HEAD_BYTES) return null;
+  const probe = await src.readRange(0, Math.min(src.size, CSV_HEAD_BYTES + 2 * CSV_SLACK_BYTES));
+  if (!(probe instanceof Uint8Array) || probe.length < CSV_HEAD_BYTES + 2 * CSV_SLACK_BYTES) return null;
   if (recorded !== "csv" && detectFormat(probe, declared).format !== "csv") return null;
   const entry = getFormat("csv");
   const dialect = entry && typeof entry.dialect === "function" ? await entry.dialect(probe) : null;
@@ -2175,8 +2183,10 @@ async function csvRangedHead(evidence, doc, { recorded, declared }) {
   const bounds = [], st = newScan(dl);
   scanBoundaries(probe, 0, st, bounds);
   const i = bounds.findIndex((b) => b >= CSV_HEAD_BYTES);
-  if (i < 0 || bounds[i] >= src.size) return null;
-  return { src, size: src.size, he: bounds[i], hr: i + 1, dl, head: probe.subarray(0, bounds[i]) };
+  /* the first window (to the record boundary, and the slack beyond it that finds one) lies inside the probe, so the first piece reads nothing more */
+  if (i < 0 || bounds[i] >= src.size || bounds[i] + CSV_SLACK_BYTES > probe.length) return null;
+  const cached = { size: src.size, readRange: async (o, n) => (natural(o) && natural(n) && o + n <= probe.length ? probe.subarray(o, o + n) : src.readRange(o, n)) };
+  return { src: cached, size: src.size, he: bounds[i], hr: i + 1, dl, head: probe.subarray(0, bounds[i]) };
 }
 
 /* --- a PDF -------------------------------------------------------------------------------------------------------------- */
@@ -2724,8 +2734,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const held = heldCursor ? openedPdf : null;
   if (held) fmt = "pdf";
   /* K4868: the first piece of a CSV past a whole read's bound is read by range: its head stands for the bytes, its windows give the units */
-  const rangedCsv = piecesOn && pieceAsk.cursor === null && !held
+  const rangedCsv = (!piecesOn || pieceAsk.cursor === null) && !held
     ? await csvRangedHead(evidence, doc, { recorded: fmt, declared: profile.source_content_type || ct || null }).catch(() => null) : null;
+  /* a read that is not in pieces cannot hold it: it says so and is tried again, in pieces, by the ledger (R37 `transient`) */
+  if (rangedCsv && !piecesOn)
+    return early(failed(doc, null, localize("reading-pipeline.index.csv_in_pieces", "this CSV is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet", { size: String(rangedCsv.size), limit: String(WHOLE_READ_MAX) }), { failure: FAILURE_TRANSIENT }));
   if (rangedCsv) fmt = "csv";
   const got = held ? { bytes: HELD_OPEN } : rangedCsv ? { bytes: rangedCsv.head } : await bytesOf(evidence, doc).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
   let bytes = got.bytes;
@@ -3036,7 +3049,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         const c0 = { m: "c", s: sha, n: rangedCsv.size, ob: 0, rw: 1, li: 0, sk: 0, bi: 0, rt: 0, tt: rangedCsv.size, he: rangedCsv.he, hr: rangedCsv.hr,
                      dl: rangedCsv.dl, lr: 0, lc: "", rg: "", sh: sheet0 && typeof sheet0.name === "string" && sheet0.name ? sheet0.name : "csv",
                      ro: 1, cn: sheet0 && sheet0.usedCols > 0 ? sheet0.usedCols : 1, wr: 0 };
-        const w = await csvWindowTick(evidence, sha, c0, pieceAsk, rangedCsv.src);
+        const w = await csvWindowTick(evidence, sha, c0, pieceAsk, rangedCsv.src, { len: rangedCsv.he, res: i2text });
         if (w.refused) return w;
         if (w.gone) return early(failed(doc, null, localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"), { failure: FAILURE_TRANSIENT }));
         textUnits = w.units.length ? w.units : null;
