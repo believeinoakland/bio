@@ -433,3 +433,7 @@ Existing tests updated to the new rules (one render per tick, ranged store reads
 **Tests and checks.** Module: tests 130+, one fail = inherited rows.test R24 (words). Impact set (141 files): tests 1005, pass 1001, fail 4, all four fail on the base code too. format 0 failures; architecture 0; coverage 57 of 57; words 0 failures; ownership 0 failures.
 
 **Size (session_015kbzetYAMCNEmG4ma5vT3W): test runs 20, module lines 3369**
+
+## J17 · COMPLETE
+
+COMPLETE: fix round 9 applied (see the completion section of my record); checks clean; impact set has only failures that also fail on the base.
