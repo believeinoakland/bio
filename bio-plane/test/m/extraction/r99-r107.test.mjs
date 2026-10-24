@@ -89,11 +89,15 @@ test("R99 (G128): a batch landed a second time changes nothing: each unit once, 
   assert.equal(w.one(`SELECT count(*) n FROM capture_text WHERE capture_sha=?`, S).n, 7, "each unit once");
 });
 
-test("R99 (G128): a kill between two batches of a piece resumes from the next: the retried tick lands the rest, each unit once, and the read goes on to its end", { timeout: 120_000 }, async () => {
+test("R99 R107 (G128; K4914): a kill between two batches of a piece resumes from the next: the retried tick lands the rest, each unit once, and the read goes on to its end", { timeout: 120_000 }, async () => {
   /* 3 MiB of text: the second piece's units pass one batch (the piece is 2 MiB, the batch 1 MiB) */
   const { w, d } = await home(textOf(32_000), { fromText: true });
   const first = await w.x.readHeld({ sha: d, kind: "reading" });
   assert.equal(first.more, true);
+  /* R107 (K4914): while more follows, unitsOf answers how far the text has been read */
+  const mid = w.x.unitsOf(d);
+  assert.deepEqual([mid.read_through, mid.total], [first.detail.read_through, first.detail.total]);
+  assert.ok(mid.read_through > 0 && mid.read_through < mid.total);
   const before = w.one(`SELECT count(*) n FROM capture_text WHERE capture_sha=?`, d).n;
   const cursor = w.one(`SELECT cursor FROM capture_text_state WHERE capture_sha=?`, d).cursor;
   const transact = w.core.transact.bind(w.core);
@@ -109,6 +113,7 @@ test("R99 (G128): a kill between two batches of a piece resumes from the next: t
   assert.ok(unitsOnce(w, d), "each unit once after the resumed tick");
   assert.equal(fts(w, "ENDMARKER"), 1);
   assert.equal(w.x.unitsOf(d).state, "whole");
+  assert.equal("read_through" in w.x.unitsOf(d), false, "absent once nothing more follows");
 });
 
 test("R99 (control): a reading under one batch lands in one", async () => {
@@ -323,7 +328,7 @@ test("R22 R99 (G128d; DOCS T5): a 300,009-character single line, chunked by the 
   assert.equal(w.one(`SELECT sum(length(text)) n FROM capture_text WHERE capture_sha=?`, d).n >= line.length, true);
 });
 
-test("R22 R99 (G128d; PDF A10, red.mjs N15): a PDF page of 300,000 characters is stored in its chunks and its last line is found; red by name until text-chain's canonicalExtent carries a chunk's `run` (J37)", { timeout: 120_000 }, async () => {
+test("R22 R99 (G128d; PDF A10, red.mjs N15): a PDF page of 300,000 characters is stored in its chunks and its last line is found; red by name until text-chain's canonicalExtent carries a chunk's `run` (job 63, K4913)", { timeout: 120_000 }, async () => {
   const { g, bytes } = await pdfOf({ size: { pages: 3, lines: 2 }, kinds: ["text"], heavy: { page: 2, lines: 9000 } });
   const { w, d } = await home(bytes, { ct: "application/pdf", format: "pdf" });
   await readAll(w, d);
@@ -334,7 +339,7 @@ test("R22 R99 (G128d; PDF A10, red.mjs N15): a PDF page of 300,000 characters is
   assert.equal(fts(w, heavy[heavy.length - 1].split(" ")[0]), 1, "the heavy page's last line is found");
 });
 
-test("R107 (G134d; DOCS O4): two comments of one .docx are each stored with `kind` `comment`; red by name until text-chain's canonicalExtent carries a part's `part` and `ref` (J37)", async () => {
+test("R107 (G134d; DOCS O4): two comments of one .docx are each stored with `kind` `comment`; red by name until text-chain's canonicalExtent carries a part's `part` and `ref` (job 63, K4913)", async () => {
   const comments = '<w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
     + '<w:comment w:id="1"><w:p><w:r><w:t>FIRSTCOMMENT one</w:t></w:r></w:p></w:comment><w:comment w:id="2"><w:p><w:r><w:t>SECONDCOMMENT two</w:t></w:r></w:p></w:comment></w:comments>';
   const { w, d } = await home(F.docx({ body: F.wp(F.wr("Body")), comments }), { ct: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", format: "docx" });
