@@ -427,7 +427,7 @@ export function sections(kit, counting) {
 
   /* ======================================== §2 · G96-G98 · the cancelled promote ======================================== */
 
-  test("R9 seam §2 (G126a, G126b, G126d): the COUNTING-DOOR WALK: every op that can run a reading in a member's request (captureupload, acquire, readheld, pdfstructure&ocr=1, pagetranscribe, the promote follow) makes zero OCR calls in the request and owes a reading or ocr row instead (R130 R131 R134 R133)", { timeout: 900000 }, async () => {
+  test("R9 seam §2 (G126a, G126b, G126d): the COUNTING-DOOR WALK: every op that can run a reading in a member's request (captureupload, acquire, readheld, pdfstructure&ocr=1, pagetranscribe, the promote follow) makes zero OCR calls in the request and owes a reading or ocr row instead (R130 R131 R134 R133 R125 R100)", { timeout: 900000 }, async () => {
     const w = W();
     w.ocr.down = true;   /* the member is down for the whole walk: nothing finishes, so a row stands wherever one is owed, and any call made inside a request is the finding */
     const ann = await w.person("r9-walk");
@@ -574,7 +574,7 @@ export function sections(kit, counting) {
     assert.ok(upS.result.document && upS.result.document.reading, "its reading is in the answer");
   });
 
-  test("R9 seam §3 (G133a, B2): the deferred ODS is read whole by the ticks once filed: completeness whole and its last row in the text units (R130 R133 R135) (provider: odf-reader 6's held-cells read; red by name if it does not hold)", { timeout: 900000 }, async () => {
+  test("R9 seam §3 (G133a, B2): the deferred ODS is read whole by the ticks once filed: completeness whole and its last row in the text units (R130 R133 R135) (odf-reader 6's held-cells read, merged)", { timeout: 900000 }, async () => {
     const w = W();
     const ann = await w.person("r9-ods");
     const ods = await odsOf(12000, "r9whole"), sha = w.sha(ods.bytes);

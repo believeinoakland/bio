@@ -349,6 +349,223 @@ export function sections(kit, counting) {
     assert.equal(sizeOf(o), bound + 1, `the size the directory declares (the refusal's fields: ${Object.keys(o).join(", ")})`);
   });
 
+  /* ======================================================================================================================================================== 15 */
+
+  /* THE PRESS KIT: the counting door (`wrap-entry`) with R2 gets told apart, the OCR member bound as a service that counts its calls, and the AI part admitted on the test-instance
+     exception. // MOVE: the ranged/whole split of `CAPTURES.get` belongs in `wrap-entry.worker.txt` (test-support's); here the worker's text is patched where it names an R2 call. */
+  const ocr = { down: true, calls: [], pages: [] };
+  const OCR_WORKER = async (req) => {
+    const b = await req.json();
+    const pages = (b.pages || []).slice(0, 24);
+    ocr.calls.push(pages.length);
+    ocr.pages.push(...pages);
+    if (ocr.down) return new Response("down", { status: 503 });
+    return new Response(JSON.stringify({ ok: true, engine: "tess", version: "5.3", cap: "C", measured_by: "M-1", confidence_floor: null,
+      pages: pages.map((p) => ({ page: p, regions: [{ text: `ocr scan page ${p} words`, source: { kind: "pdf-page", ref: `p${p}`, page: p, rect: [0, 0, 10, 10] }, confidence: "none" }] })) }),
+      { headers: { "content-type": "application/json" } });
+  };
+  const TAGP = "r9limp";
+  const press = makeKit({ tag: TAGP, counting: true, serviceBindings: { OCR_WORKER }, bindings: { CIVICSMITH_TEST_INSTANCE: `${TAGP}-town` } });
+  const ready = (async () => {
+    const entry = wrapScript();
+    const token = "`${name}.${String(key)}`";
+    if (entry.script.split(token).length - 1 < 2) throw new Error("wrap-entry.worker.txt no longer names an R2 call as the press kit expects; update r9-seam-limits.mjs");
+    const script = entry.script.split(token).join("`${name}.${String(key)}${key === \"get\" && args[1] && args[1].range ? \".ranged\" : \"\"}`");
+    await press.mf.setOptions({ ...press.OPTIONS, scriptPath: entry.scriptPath, script });
+  })();
+  after(() => press.mf.dispose());
+
+  /* the whole objects an answer's request loaded: the R2 gets with no range, by the Worker and inside the object (a ranged get is `CAPTURES.get.ranged` and a head is `.head`) */
+  const wholeGets = (calls) => (calls.r2["CAPTURES.get"]?.n ?? 0) + (calls.object["CAPTURES.get"]?.n ?? 0);
+  const writesOf = (calls) => Object.keys({ ...calls.r2, ...calls.object }).filter((k) => /\.(?:put|delete)$/.test(k));
+  const owedOf = async (sha) => { const q = await press.get(await press.founder(), { op: "owedwork", sha }); return R(q).owed ?? []; };
+  const readingOf = async (auth, sha) => R(await press.get(auth, { op: "reading", sha256: sha }));
+  const uploadTo = async (auth, bytes, { type, name }) => {
+    const res = await press.plane(`/api/?${new URLSearchParams({ op: "captureupload", statement: "a file the clerk handed me", name, type })}`, { method: "POST", headers: auth, body: bytes });
+    return { res, status: res.status, body: R(await res.json()), calls: readCalls(res) };
+  };
+  const fileIt = async (auth, up, title) => {
+    const made = await CAPTURE_SCREEN.parts.promoteDocument(press.screenCall(auth), { doc: up.document, title, locator: up.document.locator, project: "" });
+    assert.equal(made.refused, undefined, "filed: " + JSON.stringify(made).slice(0, 300));
+    return made.bundleId;
+  };
+  const MARK = (n) => `zzmark${n}`;
+  const csvOf = (rows, tag) => {
+    const lines = ["id,payee,amount,note"];
+    for (let i = 1; i <= rows; i++) {
+      const mark = i === 1 ? MARK(`first${tag}`) : i === Math.floor(rows / 2) ? MARK(`mid${tag}`) : i === rows ? MARK(`last${tag}`) : `n${i}`;
+      lines.push(`R${String(i).padStart(6, "0")},payee ${i % 97},${i % 1000}.${i % 100},note ${mark} for row ${i}`);
+    }
+    return te(lines.join("\n") + "\n");
+  };
+  const hitsFor = async (auth, q) => (R(await press.get(auth, { op: "search", q: `passage:${q}`, limit: "5" })).hits ?? []);
+
+  /* one PDF over 2 MiB filed with its reading made by the ticks, and one scan over 2 MiB whose OCR member is down (its pages stay owed), each made once */
+  let textDoc = null, scanDoc = null;
+  const textPdf = () => (textDoc ??= (async () => {
+    await ready;
+    const { auth } = await press.ownerOf("r9lim-p1");
+    const words = `R131 the council adopted the budget resolution ${Date.now()}`;
+    const bytes = press.pdfOf(words, 3 * MiB);
+    const up = await uploadTo(auth, bytes, { type: "application/pdf", name: "text.pdf" });
+    assert.equal(up.status, 200, JSON.stringify(up.body).slice(0, 300));
+    await fileIt(auth, up.body, "text.pdf");
+    const sha = sha256(bytes);
+    const read = await press.until(async () => { const r = await readingOf(auth, sha); return r.found && r.reading && JSON.stringify(r.text_units ?? []).includes("the council adopted") ? r : null; }, 240000, 3000);
+    assert.ok(read, "the text PDF over 2 MiB is read by the ticks");
+    return { auth, sha, up, size: bytes.length };
+  })());
+  const scanPdf = () => (scanDoc ??= (async () => {
+    await ready;
+    const { auth } = await press.ownerOf("r9lim-p2");
+    const bytes = await generate({ kind: "pdf", seed: "r9lim", size: { pages: 3, lines: 6, bytes: 3 * MiB }, kinds: ["scan"] }).bytes();
+    const before = ocr.calls.length;
+    const up = await uploadTo(auth, bytes, { type: "application/pdf", name: "scan.pdf" });
+    assert.equal(up.status, 200, JSON.stringify(up.body).slice(0, 300));
+    const inRequest = ocr.calls.length - before;
+    await fileIt(auth, up.body, "scan.pdf");
+    const sha = sha256(bytes);
+    const read = await press.until(async () => { const r = await readingOf(auth, sha); return r.found && r.reading && r.reading.tier3_candidate === true ? r : null; }, 240000, 3000);
+    assert.ok(read, "the scan is read by the ticks and its pages stay owed while the OCR member is down");
+    return { auth, sha, up, inRequest, size: bytes.length };
+  })());
+
+  test("R9 seam §15 (G126e, G126b; R131, R125, R130; SCAN E4): the OCR press `pdfstructure&ocr=1` on a scan over 2 MiB loads no byte of it in the request and makes no OCR call there; the pages left are an `ocr` row, `owedwork` lists them", { timeout: 900000 }, async () => {
+    const d = await scanPdf();
+    assert.equal(d.inRequest, 0, "R131: the upload of the scan made no OCR call");
+    assert.equal(d.up.body.reading_pending, true, "and owed its reading to the job table");
+    const before = ocr.calls.length;
+    const res = await press.plane(`/api/?op=pdfstructure&ocr=1&sha256=${d.sha}`, { headers: d.auth });
+    const body = R(await res.json());
+    const calls = readCalls(res);
+    assert.equal(res.status, 200, JSON.stringify(body).slice(0, 300));
+    assert.equal(wholeGets(calls), 0, `the object was not loaded in the request: ${JSON.stringify({ r2: calls.r2, object: calls.object })}`);
+    assert.deepEqual(writesOf(calls), [], "and nothing was written to R2");
+    assert.equal(ocr.calls.length - before, 0, "no OCR call was made inside the press");
+    assert.equal(body.ocr_pending, true, "the press answers at once, the pages owed");
+    assert.equal(body.reading_pending, true);
+    const rows = await owedOf(d.sha);
+    const row = rows.find((x) => x.kind === "ocr");
+    assert.ok(row, `owedwork lists the ocr row: ${JSON.stringify(rows.map((x) => [x.kind, x.state])).slice(0, 300)}`);
+    assert.notEqual(row.state, "final", "and it is not ended");
+  });
+
+  test("R9 seam §15 (G126e; R131, R125; K4901 (2)): the plain `op=pdfstructure` of that scan (over the request bound) reads nothing in the request: it states the file's size and the bound and owes a raised `reading` job; no OCR call, no whole get", { timeout: 900000 }, async () => {
+    const d = await scanPdf();
+    const before = ocr.calls.length;
+    const res = await press.plane(`/api/?op=pdfstructure&sha256=${d.sha}`, { headers: d.auth });
+    const body = await res.json();
+    const calls = readCalls(res);
+    assert.equal(res.status, 200, JSON.stringify(body).slice(0, 300));
+    assert.equal(wholeGets(calls), 0, `no whole get: ${JSON.stringify(calls.object)}`);
+    assert.equal(ocr.calls.length - before, 0);
+    assert.deepEqual([body.size, body.limit], [d.size, boundOf("pdf", "request_bytes")], "the size and the bound it was over");
+    assert.equal(body.reextraction.owed, true);
+    assert.equal(body.reextraction.performed, false);
+    assert.equal(body.reextraction.registration.registered, true, "the row is held");
+  });
+
+  test("R9 seam §15 (G126e, R103; R131, R125; SCAN E4): `op=pagetranscribe` on that scan is answered without loading the object (no whole get; the first KiB by a ranged get at most), makes no OCR call, writes nothing to R2, and leaves its `ocr` row standing", { timeout: 900000 }, async () => {
+    const d = await scanPdf();
+    const before = ocr.calls.length;
+    const res = await press.plane(`/api/?op=pagetranscribe&sha256=${d.sha}`, { method: "POST", headers: { ...d.auth, "content-type": "application/json" }, body: "{}" });
+    const body = await res.json();
+    const calls = readCalls(res);
+    assert.ok(res.status < 500, `stated, never a failure of the door: ${res.status} ${JSON.stringify(body).slice(0, 300)}`);
+    assert.equal(wholeGets(calls), 0, `the object was not loaded in the request: ${JSON.stringify(calls.object)}`);
+    assert.deepEqual(writesOf(calls), []);
+    assert.equal(ocr.calls.length - before, 0, "no OCR call inside the request");
+    assert.ok(body.ok === true || typeof body.reason === "string", "an answer or a refusal by name");
+    if (body.ok === true && body.transcription && body.transcription.performed === true)
+      assert.equal(typeof body.says, "string", "what was filled is said (the pages filled, never the pages asked: extraction's R103 pins the words)");
+    assert.ok((await owedOf(d.sha)).some((x) => x.kind === "ocr" && x.state !== "final"), "the pages the act did not fill stay owed");
+  });
+
+  test("R9 seam §15 (G126e; R131, R125; PDF E11): the press, the plain read and `pagetranscribe` on a TEXT PDF over 2 MiB load no byte of it in the request: no whole get, no OCR call; the press owes nothing (no page lacks a text layer) and the plain read owes a raised `reading`", { timeout: 900000 }, async () => {
+    const d = await textPdf();
+    const before = ocr.calls.length;
+    const pressed = await press.plane(`/api/?op=pdfstructure&ocr=1&sha256=${d.sha}`, { headers: d.auth });
+    const pb = await pressed.json();
+    assert.equal(pressed.status, 200, JSON.stringify(pb).slice(0, 300));
+    assert.equal(wholeGets(readCalls(pressed)), 0, `press: ${JSON.stringify(readCalls(pressed).object)}`);
+    assert.notEqual(R(pb).reextraction?.performed, true, "the press performs nothing in the request");
+    assert.deepEqual(R(pb).reextraction?.candidate ?? [], [], "no page is left for OCR");
+    const plain = await press.plane(`/api/?op=pdfstructure&sha256=${d.sha}`, { headers: d.auth });
+    const lb = await plain.json();
+    assert.equal(wholeGets(readCalls(plain)), 0, `plain: ${JSON.stringify(readCalls(plain).object)}`);
+    assert.deepEqual([lb.size, lb.limit, lb.reextraction.owed, lb.reextraction.registration.registered], [d.size, boundOf("pdf", "request_bytes"), true, true]);
+    const tr = await press.plane(`/api/?op=pagetranscribe&sha256=${d.sha}`, { method: "POST", headers: { ...d.auth, "content-type": "application/json" }, body: "{}" });
+    const tb = await tr.json();
+    assert.ok(tr.status < 500, `pagetranscribe: ${tr.status} ${JSON.stringify(tb).slice(0, 200)}`);
+    assert.equal(wholeGets(readCalls(tr)), 0, `pagetranscribe: ${JSON.stringify(readCalls(tr).object)}`);
+    assert.equal(ocr.calls.length - before, 0, "and no OCR call inside any of the three");
+  });
+
+  test("R9 seam §15 (G126a, G126e; R130, R125; SCAN C1, E3): with the OCR member back, the ticks fill the pages the press owed: their words are in `text_units` and no `ocr` row stands", { timeout: 900000 }, async () => {
+    const d = await scanPdf();
+    ocr.down = false;
+    const done = await press.until(async () => {
+      const r = await readingOf(d.auth, d.sha);
+      const rows = await owedOf(d.sha);
+      return r.found && r.reading && r.reading.tier3_candidate !== true && !rows.some((x) => x.kind === "ocr") ? r : null;
+    }, 420000, 3000);
+    assert.ok(done, "the pages are read and the ocr row ended");
+    const text = JSON.stringify(done.text_units ?? []);
+    const asked = [...new Set(ocr.pages)];
+    assert.ok(asked.length >= 1);
+    for (const p of asked) assert.ok(text.includes(`ocr scan page ${p} words`), `page ${p}'s words are in text_units (R-STOP)`);
+    assert.equal(done.reading.ocr_left ?? null, null, "and none is left");
+  });
+
+  /* ---------------------------------------------------------------------------------------------------------------------------------------------------- 15 · G126h */
+  test("R9 seam §15 (G126h; R131, R123, R130; SHEET C-family) (red: reading-gate admits a CSV under the 3 MiB constant): a 2 MB CSV through the no-cursor door is not read inline: the `extractread` of the request is absent, the answer says `reading_pending`, and the row exists", { timeout: 900000 }, async () => {
+    await ready;
+    const { auth } = await press.ownerOf("r9lim-s1");
+    const csv = csvOf(46000, "a");
+    assert.ok(csv.length > 2 * MiB && csv.length < READING_DEFER_OTHER_BYTES, `the file is about 2 MB (${csv.length})`);
+    const up = await uploadTo(auth, csv, { type: "text/csv", name: "sheet-a.csv" });
+    assert.equal(up.status, 200, JSON.stringify(up.body).slice(0, 300));
+    assert.equal(up.calls.do.extractread, undefined, `no inline read inside the upload: ${JSON.stringify(up.calls.do)}`);
+    assert.equal(up.body.reading_pending, true, "the reading is owed");
+    assert.equal(up.body.document.reading, undefined, "and none was made at the door");
+    assert.ok((await owedOf(sha256(csv))).some((x) => x.kind === "reading"), "the row exists");
+  });
+
+  test("R9 seam §15 (G126h; R131, R123, R125; SHEET J-9, J-10): a 4 MiB CSV (over the inline ceiling) is not read at the door, its row exists, and after the ticks the first, a middle and the LAST row are found by `op=search`, the reading whole and cut nowhere", { timeout: 900000 }, async () => {
+    await ready;
+    const { auth } = await press.ownerOf("r9lim-s2");
+    const csv = csvOf(96000, "b");
+    assert.ok(csv.length > READING_DEFER_OTHER_BYTES, `over the inline ceiling (${csv.length})`);
+    const up = await uploadTo(auth, csv, { type: "text/csv", name: "sheet-b.csv" });
+    assert.equal(up.status, 200, JSON.stringify(up.body).slice(0, 300));
+    assert.equal(up.calls.do.extractread, undefined, "no inline read inside the upload");
+    assert.equal(up.body.reading_pending, true);
+    assert.ok((await owedOf(sha256(csv))).some((x) => x.kind === "reading"), "the row exists before any filing");
+    const bundle = await fileIt(auth, up.body, "sheet-b.csv");
+    const sha = sha256(csv);
+    const whole = await press.until(async () => { const r = await readingOf(auth, sha); return r.found && r.completeness?.state === "whole" ? r : null; }, 360000, 3000);
+    assert.ok(whole, "the ticks read the whole file");
+    assert.deepEqual([whole.completeness.counts.truncated, whole.completeness.counts.over_bound, whole.completeness.counts.skipped_named], [0, 0, 0], "no unit cut, none left out of the index");
+    for (const m of ["firstb", "midb", "lastb"]) {
+      const hits = await hitsFor(auth, MARK(m));
+      assert.ok(hits.some((h) => h.bundle_id === bundle), `the ${m} row's mark is found by op=search`);
+    }
+  });
+
+  test("R9 seam §15 (G126h, S-23; R100, R123; SHEET J-9, J-10): the 2 MB CSV that the door reads at once is whole after the ticks and its last row is found by `op=search`, never indexed `whole` with a cut", { timeout: 900000 }, async () => {
+    await ready;
+    const { auth } = await press.ownerOf("r9lim-s3");
+    const csv = csvOf(46000, "c");
+    const up = await uploadTo(auth, csv, { type: "text/csv", name: "sheet-c.csv" });
+    assert.equal(up.status, 200, JSON.stringify(up.body).slice(0, 300));
+    const bundle = await fileIt(auth, up.body, "sheet-c.csv");
+    const sha = sha256(csv);
+    const whole = await press.until(async () => { const r = await readingOf(auth, sha); return r.found && r.completeness?.state === "whole" && (r.job?.state ?? null) !== "reading" ? r : null; }, 360000, 3000);
+    assert.ok(whole, "the read is whole once the ticks are done");
+    assert.deepEqual([whole.completeness.counts.truncated, whole.completeness.counts.over_bound, whole.completeness.counts.skipped_named], [0, 0, 0]);
+    for (const m of ["firstc", "midc", "lastc"]) assert.ok((await hitsFor(auth, MARK(m))).some((h) => h.bundle_id === bundle), `the ${m} mark is found`);
+  });
+
   /* ---------------------------------------------------------------------------------------------------------------------------------------------------- G124 */
   test("R9 seam §14 (G124, R132; K3268) (red until each quoting job below merges and runtime-limits records the rows its constants need): THE ALL-MODULES GREP: no module declares a reading ceiling as a number that `READ_BOUNDS` does not hold: every ceiling constant of every module resolves to the table through boundOf/statement or is an accepted non-ceiling", () => {
     const { found, scanned, modules, declared } = ceilingConstantsOfModules();

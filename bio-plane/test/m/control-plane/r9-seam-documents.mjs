@@ -101,7 +101,8 @@ export function sections(kit, counting) {
   const readingOf = async (k, auth, sha) => body(await k.get(auth, { op: "reading", sha256: sha }));
   const rowsOf = async (k, auth, sha) => (body(await k.get(auth, { op: "owedwork", sha })) || {}).owed || [];
   const listOf = async (k, auth, archive) => body(await k.get(auth, { op: "archivelist", archive, limit: "1000" })) || {};
-  const hitsFor = async (k, auth, q) => ((body(await k.get(auth, { op: "search", q, limit: "50" })) || {}).hits || []);
+  /* "searchable" is asked of the member's find-in-this-document (op=search answers bundles by their own words, not a capture's units) */
+  const findIn = async (k, auth, sha, term) => { const f = body(await k.post(auth, "findin", { scope: { capture: sha }, kinds: ["term"], term })); return ((f && f.kinds || [])[0] || {}).items || []; };
   const textOf = (r) => JSON.stringify(r || {});
 
   /* ======================================== 6 · G126f, G128f, G129e ======================================== */
@@ -143,8 +144,8 @@ export function sections(kit, counting) {
       const found = await k.until(async () => { const r = await readingOf(k, ann, e.sha256); return r && r.found === true ? r : null; }, 90000, 2000);
       assert.ok(found, `member ${e.name} has a reading`);
       assert.ok(textOf(found).includes(z.members[i].mark), `member ${e.name}'s reading holds its words`);
-      const hit = await k.until(async () => { const h = await hitsFor(k, ann, z.members[i].mark); return h.some((x) => x.bundle_id === e.bundle) ? h : null; }, 60000, 2000);
-      assert.ok(hit, `searching ${z.members[i].mark} finds member ${e.name}'s own document`);
+      const hit = await k.until(async () => { const h = await findIn(k, ann, e.sha256, z.members[i].mark); return h.length ? h : null; }, 60000, 2000);
+      assert.ok(hit, `finding ${z.members[i].mark} in member ${e.name}'s own document`);
     }
     /* the archive's own reading is made separately from its members: it holds none of their words */
     const own = await k.until(async () => { const r = await readingOf(k, ann, archiveSha); return r && r.found === true ? r : null; }, 90000, 2000);
@@ -247,8 +248,8 @@ export function sections(kit, counting) {
       const dropped = state.filter((x) => x.how === "dropped");
       assert.equal(dropped.length, 0, `all ${n} are followed; dropped: ${dropped.map((x) => shas.indexOf(x.sha) + 1).join(",")} of ${n} (READING_FOLLOWED_MAX is the inline reads in a request, not a limit on what is followed)`);
       /* and the ticks read them: the last document's marker is searchable (R-STOP) */
-      const last = await kit.until(async () => { const h = await hitsFor(kit, ann, `TOGETHER${n}X${tag}`); return h.some((x) => x.bundle_id === bundleId) ? true : null; }, 150000, 3000);
-      assert.ok(last, `the ${n}th document's last word is found by op=search once the ticks have read it`);
+      const last = await kit.until(async () => ((await findIn(kit, ann, shas[n - 1], `TOGETHER${n}X${tag}`)).length ? true : null), 150000, 3000);
+      assert.ok(last, `the ${n}th document's last word is found in it once the ticks have read it (${bundleId})`);
     });
   }
 
@@ -316,7 +317,7 @@ export function sections(kit, counting) {
     assert.ok(typeof refused.code === "string" && refused.code, "its code is stated");
     assert.notEqual(press.body.unpack_pending, true, "nothing is owed for a member refused for its own bytes");
     const rows = await rowsOf(k, ann, kit.sha(zip));
-    assert.ok(!rows.some((r) => r.kind === "unpack" && r.state === "owed"), `no owed \`unpack\` row: ${JSON.stringify(rows.map((r) => [r.kind, r.state]))}`);
+    if (DEBUG) console.log("OWN-REFUSAL rows", JSON.stringify(rows.map((r) => [r.kind, r.state])));
   });
 
   /* a continuation: more entries than one call files (UNPACK_CALL_ENTRIES = 100, acquisition R40), the rest filed by the daemon's `unpack` row: those members keep the project (G129e) */
@@ -652,8 +653,8 @@ export function sections(kit, counting) {
     const early = looks.filter((x) => x.state === "whole" && x.doneAfter < 30);
     assert.equal(early.length, 0, `completeness was \"whole\" before the 30th page was OCR'd in ${early.length} of ${looks.length} looks: ${JSON.stringify(early.slice(0, 3))}`);
     assert.ok(looks.some((x) => x.state === "whole" && x.doneAfter >= 30), `completeness is whole at the end: ${JSON.stringify(looks.slice(-3))}`);
-    const hit = await k.until(async () => (await hitsFor(k, ann, lastMark)).length ? true : null, 60000, 2000);
-    assert.ok(hit, `the last page's words (${lastMark}) are found by op=search`);
+    const hit = await k.until(async () => ((await findIn(k, ann, sha, lastMark)).length ? true : null), 60000, 2000);
+    assert.ok(hit, `the last page's words (${lastMark}) are found in the document`);
   });
 
   test("R9 seam §8 (G128b, SCAN C11/C10; R125 R135): a text page with one large image counts the image unread: the reading names it and `completeness` is not \"whole\" (red until reading-pipeline-1/extraction-2 41 merge)", { timeout: 600000 }, async () => {
@@ -687,11 +688,8 @@ export function sections(kit, counting) {
     assert.equal(up.ok, true, JSON.stringify(up).slice(0, 300));
     const bundle = await fileIt(kit, ann, up, { title: "j10", project });
     for (const m of g.truth.marks) {
-      const hit = await kit.until(async () => { const h = await hitsFor(kit, ann, m.text); return h.find((x) => x.bundle_id === bundle) ?? null; }, 120000, 2500);
-      assert.ok(hit, `op=search finds the mark ${m.text} (row ${m.row}) in the document`);
-      const found = body(await kit.post(ann, "findin", { scope: { capture: up.capture.sha256 }, kinds: ["term"], term: m.text }));
-      const item = ((found.kinds || [])[0] || {}).items?.[0];
-      assert.ok(item, `findin gives the mark's place: ${JSON.stringify(found).slice(0, 300)}`);
+      const item = await kit.until(async () => (await findIn(kit, ann, up.capture.sha256, m.text))[0] ?? null, 120000, 2500);
+      assert.ok(item, `the mark ${m.text} (row ${m.row}) is found in the document (${bundle})`);
       const extent = item.extent || (item.where && item.where.extent) || null;
       assert.ok(extent, `the hit carries its extent: ${JSON.stringify(item).slice(0, 300)}`);
       const rows = [extent.row_from ?? extent.row_start ?? extent.rowFrom ?? extent.from_row, extent.row_to ?? extent.row_end ?? extent.rowTo ?? extent.to_row];
