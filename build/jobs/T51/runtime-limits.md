@@ -177,3 +177,7 @@ COMPLETE · RUNTIME-LIMITS #13 · B10 (K4922): `table`/`bytes` 20 MiB and `table
 **Checks.** format 0 failures; architecture 0 failures; coverage 32 of 32 live ids named; 0 failures; ownership 3 files changed by runtime-limits; 0 failures; words 0 failures.
 
 Size (session_019ez6rv297h5VQHkQeN93zR): test runs 7, module lines 187
+
+## J12 · COMPLETE · re B11
+
+COMPLETE · RUNTIME-LIMITS #14 · B11 (K4936): READ_BOUNDS workbook rows: cells 250,000 in all columns (comment rewritten), NEW bytes 20 MiB alpha / 50 MB standard and protective, NEW cells_json_bytes 64 MiB x3; tested through boundOf and statement (R30, R31). Suite 58/58; format, architecture, coverage, words, ownership 0 failures. R30's text in the requirements still says 50,000 for the workbook's cells (yours to update). Not mine: g41-shape and 7 workbooks real-shape-cap tests fail identically on tranche/T51 without my diff. Bundles with read-bounds.mjs as input are stale. Details in my record.
