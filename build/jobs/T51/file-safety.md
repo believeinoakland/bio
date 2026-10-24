@@ -409,3 +409,27 @@ R52 (fix round 7 G84) done at commit b3364426e0 (pushed to job/T51/file-safety; 
 
 REPORT (ruling 1, READ_BOUNDS): a ceiling file-safety keeps that has no row.
 kind `file_safety`, name `ods_declared` (the declared size of an OpenDocument sheet's content.xml above which no preview is drawn; today `SAFE_VIEW_ODS_DECLARED_MAX`, formats.mjs). Proposed figures: standard 8 MiB (8,388,608), alpha 8 MiB, protective 8 MiB (`same(8 * MiB, k("file_safety","ods_declared"))`, as the file_safety row beside `grade_read`). My code quotes `boundOf("file_safety", "ods_declared")` (R21, R57), which throws at import until the row exists, so every test that imports file-safety is red on my branch until runtime-limits' file carries it. I run locally with an uncommitted copy of that one row and do not commit it (ownership). Please carry the row to runtime-limits' file on tranche/T51.
+
+## Completion (fix round 9, B17: R1, R3, R4, R6, R11, R12, R16, R21, R51, R53-R57; FILE-SAFETY #20, session_015kbzetYAMCNEmG4ma5vT3W)
+
+Causes, each seen RED on the pre-change code (worktree at 254bc3365c with the new tests overlaid), then green:
+- **G92 / R55 / R4 / R12 / R21** (unbounded scanner and renderer awaits): `r55-bounded.test.mjs`, red: "does not provide an export named 'SCANNER_CALL_BOUND_MS'", green 6/6. Fix: `#bounded`/`#clamavOnce` share one in-flight call per file, return at `callBoundMs`, record on arrival, per-call start/end log lines; one render per tick with a `rendering` mark (stale after 20 min); L/P are BOB's.
+- **G136a, G136d / R3, R54** (encrypted, unscannable never clean; due rule per signature set): `r54-encrypted.test.mjs`, red "zip: archive_entry_not_filed,archive_not_opened,archive_waiting" and "nor does it want a wake", green 4/4.
+- **G130c, G130d, G136d, G127d / R56, R6, R51** (structure, any size, by `readRange`/`partsOf`): `r56-structure.test.mjs`, red "1048577 B", "20971521", green 7/7 (zipdir.mjs is new, inside my paths).
+- **G136b / R12 (classes, stream bound), X19**: `r12-render-classes.test.mjs` red (no `RENDER_RETRY_MS`), green 3/3; the X19 peak test (byte ledger) is in r56.
+- **G137a, G137b / R11**: `r11-paging.test.mjs` red (no `SAFE_VIEW_PAGES_MAX` export), green 2/2 (12,000 rows here; the corpus takes 100,000).
+- **G136e / R16, R53**: `r53-reading.test.mjs` red (no `READING_KEY`), green 2/2.
+- **G124 / R57, R21**: `r57-bounds.test.mjs` red, green 2/2. Row `file_safety.ods_declared` came from runtime-limits (B18/B19).
+- **Registrar / R1**: `r1-registrar.test.mjs` red, green 2/2.
+
+Existing tests updated to the new rules (one render per tick, ranged store reads, new register shape, `reading`, `statement`, wide-CSV and CSV bounds lifted, g44-large uses `capFor`).
+
+**Decisions of mine, for the record.** A receipt cannot read bytes in its synchronous act, so `safe_view` is registered unless the address names a picture, page, archive or text. Oversize office files: grade from the directory by range; structure check of anything above GRADE_READ_MAX stays `not_scanned TOO_LARGE` (R51). A latin-1 or UTF-16 file is `text`; the safe view still draws UTF-8 only.
+**Proposal (not a deferral):** R39's render wake is last batch + 5 min, so one render per tick is about 12 renders an hour; BOB may want R39 to say `now` while views remain queued.
+**New words, rows owed (stand-ins keyed through localize):** file-safety.index.reading_is_not_gated, .safe_view_first_pages, .safe_view_is_a_view, .the_file_is_encrypted_so_no_safe_view, file-safety.checks.the_file_scanner_could_not_read.
+**Ops (K4208):** safeview now accepts `sheet`, `fromRow` (DECLARED_OPS updated). **Stale generated artifacts:** setup-words rows (new keys), fleet bundles.
+**Found elsewhere, same on the base code:** plane `release` R24, plane `g41-shape` ×2 and control-plane `t51-visitor-copy` fail identically at 254bc3365c.
+
+**Tests and checks.** Module: tests 130+, one fail = inherited rows.test R24 (words). Impact set (141 files): tests 1005, pass 1001, fail 4, all four fail on the base code too. format 0 failures; architecture 0; coverage 57 of 57; words 0 failures; ownership 0 failures.
+
+**Size (session_015kbzetYAMCNEmG4ma5vT3W): test runs 20, module lines 3369**
