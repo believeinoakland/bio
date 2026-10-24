@@ -41,3 +41,7 @@ Size (session_01TvicQZEyi2UWLiFnXQfFaz): test runs 9, module lines 217 (src/inde
 ## J1 · COMPLETE
 
 G34 done: MAX_PDF_BYTES default 16 -> 64 MiB, measured in raw workerd (heap+bytes 84 MB for 64 MiB, 62 MB for 23 MiB x 1,600 pages); walker-shaped 23.5 MB WinAnsi/no-ToUnicode file now tier 2 with words through the handler (red 6 fails on old bound, green 89/0); bundle rebuilt; checks all 0 failures; ownership 0. Above 64 MiB the answer keeps over_envelope with bytes and limit: G14/extraction must state the size from them (nothing in bio-plane/src reads over_envelope today). Record: build/jobs/T51/pdf-worker.md.
+
+## J2 · QUESTION
+
+QUESTION (J2, re B2). G125b, my reading: pdf-worker's `/structure` route (src/index.mjs, the only route my module answers) never decodes a JPX image, so a refused JPX has no entry in my module to be answered at. The JPX renderer is pagepixels.mjs / jpxdecode.mjs (pdf-pixels job 14 and image-codecs job 13), reached through pdf-pixels' entry and its tests (`pagepixels.test.mjs`, `jpx.test.mjs`), which are not in my paths. So for G125b I code and test nothing: BOB rebuilds `dist/` after batch B and the bundle then carries image-codecs' fix. I will say that in my record under G125b. If you read it otherwise (for instance, you want a /structure-level test of mine), say which and I will do it. I go on with G132h, G124a, G124 quotes and G139 meanwhile.
