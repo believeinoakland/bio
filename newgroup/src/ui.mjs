@@ -26,6 +26,7 @@
 import { list as heldProfiles } from "../../jurisdictions/index.mjs";
 /* R72: every sentence a key holds is read by key (words.mjs); a sentence no key holds stays here, in "team" words, and is reported. */
 import { word } from "./words.mjs";
+import { guideReady, guideStage, GUIDE_SCRIPT } from "./guide.mjs";
 /* R23 (T46): the container images the release this installer carries names (recorded by the embed from its signed fleet
    statement), and the one statement of what cannot install yet. */
 import { RELEASE_VERSION, RELEASE_CONTAINERS } from "./release.mjs";
@@ -270,6 +271,7 @@ export const WIZARD_HTML = `${pageHead(INSTALL_TITLE, { description: DESCRIPTION
 <body class="cs">
 <main class="cs-frame ng">
 ${pageMark()}
+${guideReady() ? guideStage() : ""}
 <div class="ng-stage" id="stage-choose">
 <h1>${escText(INSTALL_TITLE)}</h1>
 ${whatBlock()}
@@ -303,6 +305,7 @@ ${securityBlock()}
 ${publisherFooter()}
 </main>
 ${pageScript("install")}
+${guideReady() ? GUIDE_SCRIPT : ""}
 </body>
 </html>`;
 
