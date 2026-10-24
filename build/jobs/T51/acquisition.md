@@ -534,3 +534,17 @@ Fix round 8 (G103, G104, G105, G107) applied; no cause is open, deferred or repo
 - format: 176 modules, 176 requirements files; 0 failures. architecture (acquisition): 43 product files, 188 relative imports; 0 failures. coverage: 66 of 66 live requirement ids named by a test; 0 failures (R110, R111, R112 each named). words: 1 module, plain 0, missingkey 0; 0 failures. ownership (against origin/tranche/T51): 6 files changed by acquisition; 0 failures.
 
 Size (session_01BkyFtsj1q4JTZZqSeoTmNT): test runs 14, module lines 4102
+
+## J34 · QUESTION
+
+QUESTION (R114, READ_BOUNDS rows). Best reading and what I need; I carry on with everything else meanwhile.
+
+`bio-plane/src/read-bounds.mjs` has no row for three ceilings acquisition keeps, and none for the render-DOM bound R118 needs. R114 forbids a numeric literal for them, so I need the rows (runtime-limits' file; ruling (1)). My proposed rows, each with today's figure in all three columns (nothing lowered or raised):
+
+- kind `capture`, name `keep_bytes` (MULTIPART_KEEP_MAX): standard 33554432 (32 MiB), alpha 33554432, protective 33554432, key `limit.capture.keep_bytes`
+- kind `capture`, name `profile_text_bytes` (PROFILE_TEXT_MAX): 8388608 (8 MiB) x3, key `limit.capture.profile_text_bytes`
+- kind `render`, name `dom_bytes` (the serialised-DOM bound handed to capture-sources' renderBlock as domBound.bound): 26214400 (25 MiB, the plan's proposed figure "proposed; BOB records") x3, key `limit.render.dom_bytes`
+
+CAPTURE_MAX (256 MiB today): I read it as the existing row `archive.uploaded_bytes` (alpha 268435456 = 256 MiB, standard 524288000; G124b says "the standard's 500 MB archive file is the upload limit"), so `CAPTURE_MAX = boundOf("archive","uploaded_bytes")` and I add no row for it. If you want a separate `capture.bytes` row instead, say so.
+
+Until the rows merge I code `boundOf("capture","keep_bytes")` etc.; my tests for those three will stay red by name (R-SEAM) and nothing else waits on them.
