@@ -275,13 +275,12 @@ test("R90 R22 (G13): the index's bound is each piece's, not the capture's: a tex
   assert.equal(w.rows(`SELECT count(*) c FROM capture_text WHERE capture_sha=?`, d)[0].c, 9000);
 });
 
-test("R90 (G13): a piece that is over its own bound is counted and named, never lost unseen; the reading is then not whole", async () => {
+test("R90 R22 R99 (G13; fix round 9, G128f): a piece over the old 4,096-unit bound lands whole, in batches: every unit written, none over bound, and the text whole at its last piece", async () => {
   const { w, d } = await pieces({ pieceUnits: [4100, 5], perUnit: 20 });
   for (let i = 0; i < 2; i++) await w.x.readHeld({ sha: d, kind: "reading" });
   const st = w.x.unitsOf(d);
-  assert.equal(st.state, "partial");
-  assert.equal(st.counts.over_bound, 4);
-  assert.deepEqual(st.skipped.map((k) => [k.units, k.side]), [[4, "store"]]);
+  assert.deepEqual([st.counts.written, st.counts.over_bound, st.skipped.length], [4105, 0, 0]);
+  assert.equal(st.state, "whole");
 });
 
 test("R90 (control): a read that is not in pieces is stated as it was: no `more` key, complete at once; and `defer=1` leaves the next piece to the ledger, reading nothing", async () => {
