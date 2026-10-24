@@ -14,3 +14,16 @@ Mail with `--module runtime-limits`; record `build/jobs/T51/runtime-limits.md` (
 3. `archive`, `member_bytes`: alpha 268,435,456 (256 MiB; ooxml R30 `MEMBER_MAX`), standard 2,147,483,648, protective 2,147,483,648, key `limit.archive.member_bytes`.
 
 **Rules.** Plan section 0 (`build/plan/fix-round-9-T51.md`) binds, R-SILENT and R-GATE above all: a row records a figure the module already holds, never a new bound on what a member may do (K1881). Before COMPLETE: your tests, `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names, then format, architecture, coverage, words and ownership (civicos-process `checks/`), each read by its failure count. Record completion as mechanics section 6 step 7 says, with your `Size` line.
+
+**More rows (K4858), from OFFICE-READERS #16's J7, IMAGE-CODECS #7's J4 and FILE-SCANNER #12's J15:**
+4. `office`, `decoded_chars`: 67,108,864 characters for standard, alpha and protective (a count, not bytes), key `limit.office.decoded_chars`.
+5. `image`, `working_set`: 61,300,000 bytes for all three, key `limit.image.working_set`.
+6. `image`, `retained_objects`: 250,000 for all three (a count), key `limit.image.retained_objects`.
+7. `scan`, `max_bytes`: standard 524,288,000, alpha 268,435,456, protective 524,288,000, key `limit.scan.max_bytes`.
+8. `scan`, `time_ms`: 900,000 for all three (milliseconds), key `limit.scan.time_ms`.
+9. `scan`, `embedded_pe`: 41,943,040 for all three, key `limit.scan.embedded_pe`.
+10. `scan`, `html_normalize`: 41,943,040 for all three, key `limit.scan.html_normalize`.
+11. `scan`, `script_normalize`: 20,971,520 for all three, key `limit.scan.script_normalize`.
+12. `scan`, `zip_type_rcg`: 1,048,576 for all three, key `limit.scan.zip_type_rcg`.
+13. `scan`, `partitions`: 50 for all three (a count), key `limit.scan.partitions`.
+14. `scan`, `icons_pe`: 100 for all three (a count), key `limit.scan.icons_pe`.
