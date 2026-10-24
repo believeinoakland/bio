@@ -392,10 +392,33 @@ const KEEPING = new Map();
    an async `owedLater(entry) -> {ok: true}` that never throws. Acquisition cannot import the plane (it is earlier in the
    order); with no hook handed in the session expires as before and a member's "Finish it" is the only way on. */
 export const OWED_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+/* R116 (fix round 9, G126; K4835 (2); 2c item 1): THE JOB TABLE IS WRITTEN THROUGH THE REGISTRAR. Work this module owes (`keep`, `fetch`, `subresources`,
+   `unpack`) is one job row, registered by `registerJob(entry) -> {ok, existed, state}` (synchronous, never throws), read as `keepLater` is: the store handed
+   in's, else `opts.registerJob`, else none; acquisition imports nothing of a later module. A registrar that answers `{ok: false}` is stated in the answer
+   (`jobs`), never swallowed; with no registrar the older hooks (`owedLater`, `keepLater`) serve as before and a piece of work owed to no one is stated too. */
+const registrarOf = (cap, opts) => (cap && typeof cap.registerJob === "function" ? (e) => cap.registerJob(e)
+  : opts && typeof opts.registerJob === "function" ? opts.registerJob : null);
+/* what a call could not register, for the answer: `[{kind, reason}]`, one per kind */
+const noteJob = (opts, kind, reason) => { const n = opts && opts.jobNotes; if (Array.isArray(n) && !n.some((x) => x.kind === kind)) n.push({ kind, reason: String(reason).slice(0, 80) }); };
 const oweOf = (cap, opts) => {
+  const reg = registrarOf(cap, opts);
+  if (reg) return async (entry) => {
+    let r;
+    try { r = reg(entry); } catch (e) { r = { ok: false, reason: "REGISTRAR_THREW" }; }
+    if (r && r.ok === true) return true;
+    noteJob(opts, entry && entry.kind, (r && r.reason) || "REGISTRAR_REFUSED");
+    return false;
+  };
   const f = opts && typeof opts.owedLater === "function" ? opts.owedLater : cap && typeof cap.owedLater === "function" ? (e) => cap.owedLater(e) : null;
   if (!f) return null;
   return async (entry) => { try { const r = await f(entry); return !!(r && r.ok === true); } catch { return false; } };
+};
+/* R116: the `keep` hand-off, `keepLater({sha, parts}) -> {ok}`: the registrar's row of kind `keep` keyed by the whole's digest, else the older hook */
+const keepLaterOf = (cap, opts) => {
+  const reg = registrarOf(cap, opts);
+  if (reg) return (k) => { let r; try { r = reg({ kind: "keep", sha: k.sha, parts: k.parts }); } catch { r = { ok: false, reason: "REGISTRAR_THREW" }; }
+    if (!(r && r.ok === true)) noteJob(opts, "keep", (r && r.reason) || "REGISTRAR_REFUSED"); return { ok: !!(r && r.ok === true) }; };
+  return opts && typeof opts.keepLater === "function" ? opts.keepLater : undefined;
 };
 
 /* R105 (fix round 6, G2; K4562): A LARGE WEB CAPTURE IS OWED WORK, NOT THE MEMBER'S WAIT. The door answers in 25 s and a source's
@@ -947,7 +970,8 @@ export async function acquire(cap, body0, opts = {}) {
   return out && out.body && typeof out.body === "object" && !Array.isArray(out.body)
     ? { ...out, body: { ...out.body, timings: stageTimes(t) } } : out;
 }
-async function acquireRun(cap, body0, opts, t) {
+async function acquireRun(cap, body0, opts0, t) {
+  const opts = { ...opts0, jobNotes: [] };
   const { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null, ownHosts = null,
           reputation: reputationTool = undefined, fileScanner = null, renderWaitMs = undefined,
           renderResume = null, heldSha: givenHeldSha = null, acquireBarMs = undefined, promoteReserveMs = undefined } = opts || {};
@@ -1112,6 +1136,14 @@ async function acquireRun(cap, body0, opts, t) {
   if (session && session.state && session.state.render_pending) return finishRender(cap, { session, opts, t, inRequest: true });
   if (session) return continueCapture(cap, { body, session, cls, storeName, ev, own, t, owe: oweOf(cap, opts) });
 
+  /* R46 (K4853): a new press of an address whose parked fetch ended in a stated refusal replaces that session: its refusal is no longer listed */
+  if (askingMember && typeof cap.liveCaptureSessions === "function") {
+    try {
+      for (const x of cap.liveCaptureSessions(stampSecond()) || [])
+        if (x && x.locator === locator && x.state && x.state.fetch_pending && x.state.fetch_pending.failed && x.state.opened_by === askingMember)
+          cap.dropCaptureSession({ session: x.session });
+    } catch { /* a session that cannot be dropped stays listed until its day passes */ }
+  }
   /* R15, D-97: authority is THREE-VALUED and undetermined is a task, not a blocker. */
   const authorityAsserted = typeof body.authority === "string" && body.authority.trim() ? body.authority.trim() : null;
   const retrieved = stampSecond();
@@ -1840,10 +1872,12 @@ async function acquireRun(cap, body0, opts, t) {
      fails the capture. */
   let unpacked = null;
   if (profile && profile.format && profile.format.format === "zip") {
+    /* R116: the open of an archive is one job row, registered with the archive's whole digest BEFORE the answer (an `acquire` of a continuation returned long before) */
+    { const owe = oweOf(cap, opts); if (owe) await owe({ kind: "unpack", sha }); else noteJob(opts, "unpack", "NO_REGISTRAR"); }
     try {
       unpacked = await timed(t, "unpack", () => unpack(cap, { archiveSha: sha, by: actor, cls, member }, { automatic: true,
         parts: parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })), origin: document.origin,
-        ...(typeof opts.owedLater === "function" ? { owedLater: opts.owedLater } : {}),
+        ...(oweOf(cap, opts) ? { owedLater: oweOf(cap, opts) } : {}),
         address: addressIsDerived ? documentAddress : (resolvedUrl || locator),
         addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator) }));
     } catch (e) {
@@ -1859,8 +1893,9 @@ async function acquireRun(cap, body0, opts, t) {
   let keepPending = false;
   if (multipart && !renderRecorded && total > MULTIPART_KEEP_MAX && ev && typeof ev.putFromParts === "function") {
     const elapsedMs = clockNow() - t.start;
-    const k = await timed(t, "keep", () => keepPast(cap, ev, { sha, parts, boundMs: opts.boundMs ?? ACQUIRE_BOUND_MS, elapsedMs, keepLater: opts.keepLater }));
+    const k = await timed(t, "keep", () => keepPast(cap, ev, { sha, parts, boundMs: opts.boundMs ?? ACQUIRE_BOUND_MS, elapsedMs, keepLater: keepLaterOf(cap, opts) }));
     keepPending = k.keep_pending;
+    if (!k.keep_pending && !registrarOf(cap, opts) && !(typeof opts.keepLater === "function" || typeof cap.keepLater === "function") && !(await ev.head(sha).catch(() => null))) noteJob(opts, "keep", "NO_REGISTRAR");
   }
   return answer(200, {
     ok: true, existed,
@@ -1877,6 +1912,8 @@ async function acquireRun(cap, body0, opts, t) {
     ...(supporting ? { supporting } : {}),
     ...(receiptSignature ? { receipt_signature: receiptSignature } : {}),
     ...(unpacked ? { unpack: unpacked } : {}),
+    /* R116: work this call owed and could not register, stated */
+    ...(opts.jobNotes.length ? { jobs: { not_registered: opts.jobNotes } } : {}),
     /* R44: what the scanner said of the address, stated to the caller as the receipt records it */
     reputation,
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE,
@@ -2464,7 +2501,7 @@ export async function owedFetch(cap, entry, opts = {}) {
           return { ok: true, done: false, outstanding: 1, reason };
         try {
           cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
-            state: { ...st, fetch_pending: { ...st.fetch_pending, failed: reason } }, ttlMs: OWED_SESSION_TTL_MS });
+            state: { ...st, fetch_pending: { ...st.fetch_pending, failed: reason, failed_at: stampSecond() } }, ttlMs: OWED_SESSION_TTL_MS });
         } catch { /* the entry still ends, stated */ }
         return final(reason);
       }
@@ -2488,7 +2525,7 @@ export async function owedFetch(cap, entry, opts = {}) {
         try {
           cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
             state: { queue: [{ fetch: true }], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: st.store,
-                     fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why } },
+                     fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why, failed_at: stampSecond() } },
             ttlMs: OWED_SESSION_TTL_MS });
         } catch { /* the entry still ends, stated */ }
         return final(why);
@@ -2502,6 +2539,8 @@ export async function owedFetch(cap, entry, opts = {}) {
 
 /* R46 (T50; N1094; DEC-240 (D3); K3317): A MEMBER'S OPEN CAPTURES, for Add's "Unfinished". */
 export const OPEN_CAPTURES_MAX = 50;
+/* R46 (fix round 9, re-walk 8 A, N1; K4853): a session whose fetch ended with a stated refusal is listed for one day after the failure; the session record itself keeps its TTL (the ledger). */
+export const FAILED_LISTED_MS = 24 * 60 * 60 * 1000;
 
 /** R46: `openCaptures(store, {by, now}) → {ok: true, captures, truncated}` lists, newest started first, at most
  *  `OPEN_CAPTURES_MAX`, each capture session (capture R22) that has not expired at `now` and was begun by `by`:
@@ -2539,6 +2578,11 @@ export function openCaptures(store, { by = null, now = undefined } = {}) {
       const delivering = queued < 1 && !!st.fetch_done && typeof st.fetch_done === "object";
       const outstanding = delivering ? 1 : queued;
       const expires = Date.parse(s.expires);
+      /* a refused fetch is listed for a day after it failed (its own stamp, else the session's last save) */
+      if (st.fetch_pending && st.fetch_pending.failed) {
+        const failedAt = Date.parse(st.fetch_pending.failed_at ?? s.updated);
+        if (Number.isFinite(failedAt) && nowMs - failedAt > FAILED_LISTED_MS) continue;
+      }
       if (outstanding < 1 || !(Number.isFinite(expires) && expires > nowMs) || typeof s.session !== "string") continue;
       /* R105: a capture parked as an owed fetch is listed as such (`fetch_pending`: when it began, its declared size, why it is owed, and
          `failed` once the owed fetch ended with a stated refusal), and has no primary yet: its screen words it, and offers no "Finish it" */
