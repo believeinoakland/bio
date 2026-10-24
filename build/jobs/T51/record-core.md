@@ -178,3 +178,7 @@ COMPLETE (G115, R91). Per B7: the key-value heartbeat moving the counter once pe
 **Generated artifacts stale by my change.** None (the module has no bundle input in the manifest's table).
 
 Size (session_01G8uVdUQZSoht46TsaZdEWE): test runs 9, module lines 2507
+
+## J8 · COMPLETE
+
+COMPLETE (job 61, K4912). job_unit_attempts and job_batches are on BOOKKEEPING_TABLES (record-core/index.mjs:307). Red first through plane's real ledger (r9-bookkeeping.test.mjs): 4 of 4 failed before, pass after; one test reads every *_DDL plane exports and requires each non-record table on the list. record-core suite 222/222; plane r9-jobs 29/29; seam G115 counting tests 6/6. Seam file's A1, A1 control, A1b (large capture, 'delivered within 120 s') fail, A1 control identically with my change stashed: inherited. Checks: format, architecture, coverage (91/91), ownership: 0 failures. Files created outside paths: none. Stale generated artifacts: none. Record: build/jobs/T51/record-core.md.
