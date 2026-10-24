@@ -744,3 +744,7 @@ Merged `origin/tranche/T51`. The R31 R58 (G72) red was mine, as BOB read it: the
 Module suite: tests 372, pass 371, fail 1: `R61 (G126h…)`, red by name for job 38. Users: screens-daily and screens-inquiry 828/828. Checks: format 0, architecture 0, coverage 66/66 0, words 0, ownership 0. R67 work unchanged.
 
 Size (session_0173SFnSQmQvKknpr8osxVr5): test runs 13, module lines 3041
+
+## J52 · COMPLETE · re B50
+
+COMPLETE · B50 applied. closedLine draws refusal.NO_SUCH_SESSION; index.mjs key list updated (stand-in retired). Module suite 371/372, the one red R61 G126h by name (job 38). Users screens-daily + screens-inquiry 828/828. Checks: format 0, architecture 0, coverage 66/66 0, words 0, ownership 0. R67 unchanged. Four fields in the record's 'B50 · CHANGE applied'. Size (session_0173SFnSQmQvKknpr8osxVr5): test runs 13, module lines 3041
