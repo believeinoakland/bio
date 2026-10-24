@@ -124,3 +124,9 @@ Size (session_01VnDyAygN6JtYE78XMij9Xr): test runs 22, module lines 1730
 B11 applied: `tranche/T51` merged, the local `read-bounds.mjs` copy dropped; `image.picture_source` is the table's row and `picturepixels.mjs` loads. Tests: `pagepixels` 538 passed, 3 failed; `imagecrop` 55; `jbig2` 179; `jpx` 203 passed, 2 failed. The five reds are the ones in J6, unchanged: three R47 bytes-read tests (until pdf-reader exports `pageSource`) and two jpx codec memory tests (until image-codecs' `IMAGE_TOO_LARGE` code merges). Checks: format, architecture, coverage (33 of 33), words and ownership, 0 failures each. I use none of rows 20-22.
 
 Size (session_01VnDyAygN6JtYE78XMij9Xr): test runs 26, module lines 1730
+
+## J8 · COMPLETE
+
+B12 applied: tranche merged; the PNG mapping test now asserts totality over `PNG_REFUSES` plus the codec's `IMAGE_TOO_LARGE` code (exported `PNG_CODE_REASONS`), and the JPX/PNG `MEMORY_FEATURE` entries are dropped from my maps. Tests: `pagepixels` 538 passed, 3 failed (the three R47 bytes-read tests, red by name until PDF-READER #15 merges R49); `imagecrop` 55; `jbig2` 179; `jpx` 205 passed, 0 failed (the two memory tests are green on the merged codec). Checks: format, architecture, coverage, words, ownership: 0 failures.
+
+Size (session_01VnDyAygN6JtYE78XMij9Xr): test runs 30, module lines 1730
