@@ -331,3 +331,15 @@ QUESTION (replaces nothing). Fix round 9, job 46 (K4846): the START tells me to 
 3. BOB removes `installer-steps` from `DRAWN_MODULES` (a check change in the process repository, BOB's).
 
 I carry on with nothing else: the answer decides what I build. If you choose 1 or 2, there is nothing for me to change; I will re-run R36/R40 on the regenerated rows and COMPLETE.
+
+## J24 · COMPLETE
+
+COMPLETE, no code change (answers B23, K4859: option 1; the START's `localize` instruction was BOB's to correct). The module is as at the tranche tip; the row `installer.fleet.logsunconfirmed` is owed by the design stream through BOB's HANDOFF.
+
+**Scratch run (reverted, not committed):** with `localize` written and rows regenerated, `node --test newgroup/test/steps/`: 119 tests, 117 pass, 0 fail (R36, R40 green). `build.mjs --check` showed the row: `["installer.fleet.logsunconfirmed","We could not confirm that the logs of your copy's main program are switched on. The install goes on; you can check this in your Cloudflare account.",null,null,false,"code"]` (offered as the stand-in English). With the localize call the words check read marker 1, which is why it was not kept.
+
+**Red lines at the tip (before):** 2 failing: R36 "every sentence is read by key…" and R40 "settings that cannot be read do not stop the act…", both UNKNOWN_WORD installer.fleet.logsunconfirmed. They stay red, accepted by name, until the design row lands and BOB regenerates.
+
+**Checks at the tip (unchanged code):** format 176 modules, 0 failures; architecture 0 failures; coverage 42 of 42 live ids named; ownership 0 failures; words: missingkey 3 for this key, marker 0 at the tip. Generated artifacts made stale: none.
+
+Size (session_012TFpuR6hxXes7JUpRFtJKB): test runs 4, module lines 2160
