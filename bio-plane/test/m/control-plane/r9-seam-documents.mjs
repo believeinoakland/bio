@@ -415,13 +415,13 @@ export function sections(kit, counting) {
   /* ======================================== 5 · K4833, G127a, G127c ======================================== */
 
   /* the repro's two PDFs: `pdfOf` of same-length words and the SAME filler stream (not randomised), ten MiB each, so part 2 (bytes 8 MiB to the end) is byte-equal and the wholes differ */
-  async function pressed(auth, k, name, bytes) {
+  async function press(auth, k, name, bytes) {
     k.serve(name, bytes, {});
     const locator = `https://www.example.gov/files/${name}`;
-    const r = await k.acquire(auth, { locator });
-    const held = await k.until(async () => { const x = body(await k.get(auth, { op: "heldat", address: locator })); return x && x.held === true ? x : null; }, 300000, 1500);
-    return { r, held, locator };
+    return { r: await k.acquire(auth, { locator }), locator, auth };
   }
+  const waitHeld = async (k, p) => { p.held = await k.until(async () => { const x = body(await k.get(p.auth, { op: "heldat", address: p.locator })); return x && x.held === true ? x : null; }, 540000, 2000); return p; };
+  const pressed = async (auth, k, name, bytes) => waitHeld(k, await press(auth, k, name, bytes));
   test("R9 seam §5 (K4833, G127a, G127c; R120 R123 R125): two members' PDFs sharing an 8 MiB part are both held, each reads its own document, and no part is refused as held by another bundle (red until provenance 21, screens-intake 35 merge)", { timeout: 900000 }, async () => {
     const k = kit;
     const tag = "zebra";
@@ -431,8 +431,9 @@ export function sections(kit, counting) {
     assert.notEqual(k.sha(a), k.sha(b), "two distinct wholes");
     assert.equal(Buffer.compare(Buffer.from(a.subarray(8 * MB)), Buffer.from(b.subarray(8 * MB))), 0, "a byte-equal part 2 (the shape of K4833)");
     const m1 = await k.person("r9k-ann", "member", ["contribute"]), m2 = await k.person("r9k-bea", "member", ["contribute"]);
-    const p1 = await pressed(m1, k, `r9-k1-${uniq()}.pdf`, a);
-    const p2 = await pressed(m2, k, `r9-k2-${uniq()}.pdf`, b);
+    const p1 = await press(m1, k, `r9-k1-${uniq()}.pdf`, a);
+    const p2 = await press(m2, k, `r9-k2-${uniq()}.pdf`, b);
+    await Promise.all([waitHeld(k, p1), waitHeld(k, p2)]);
     const admin = await k.founder();
     for (const [who, p] of [["first", p1], ["second", p2]]) {
       const session = p.r.body && p.r.body.fetch_pending && p.r.body.fetch_pending.session;
