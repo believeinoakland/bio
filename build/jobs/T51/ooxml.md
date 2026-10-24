@@ -1,6 +1,6 @@
 # ooxml (T51)
 
-**Status** · session_01DQhDYhUjhzaGm67YZSpeDZ · depth 2 · COMPLETE · handled B2
+**Status** · session_0189TCqWsfgZ58Dcm8TZihQh · depth 2 · COMPLETE · handled B7
 
 ## J1 · REPORT
 
@@ -46,3 +46,44 @@ Checks (civicos-process ebcc1a3, against /home/user/bio):
 Tests: none run (no module code changed).
 
 Size (session_01DQhDYhUjhzaGm67YZSpeDZ): test runs 0, module lines 0
+
+## J4 · QUESTION
+
+QUESTION (R-NOTMET: the smallest thing I need). R6, R30, R31 and R35 take every ceiling through `boundOf`, but `read-bounds.mjs` (runtime-limits' alone, START ruling 1) has no row for three ceilings this module keeps, so `boundOf` would throw at import. I need these three rows added to the table before I can commit the import; I carry on with everything else meanwhile, on a local uncommitted copy of the rows, and will not commit it.
+
+Rows (kind, name, standard, alpha, protective, key), all as `bytes(alpha, key, MB100)` in the table's own helper (K4845: documents 100 MB, the alpha where it is above):
+1. `office`, `text_bytes`: alpha 20,971,520 (20 MiB; R6 `MEASURED_OOXML_TEXT_BOUND_BYTES`), standard 104,857,600, protective 104,857,600, key `limit.office.text_bytes`.
+2. `office`, `streamed_text_bytes`: alpha 33,554,432 (32 MiB; R35 `STREAMED_TEXT_BOUND_BYTES`), standard 104,857,600, protective 104,857,600, key `limit.office.streamed_text_bytes`.
+3. `archive`, `member_bytes`: alpha 268,435,456 (256 MiB; R30 `MEMBER_MAX`), standard 2,147,483,648 (the archive unpacked standard, one member cannot exceed the archive), protective 2,147,483,648, key `limit.archive.member_bytes`.
+
+The other nine ceilings I keep have rows already: archive.members, unpacked_bytes, ratio, directory, name, depth; office.entries. ARCHIVE_TREE_TOTAL_MAX and ARCHIVE_TREE_ENTRIES_MAX I take from archive.unpacked_bytes and archive.members (same figures). If you prefer other names or figures, tell me; I will use what you add.
+
+## J5 · QUESTION · re J4
+
+QUESTION (replaces J4; R-NOTMET: the smallest thing I need). R6, R30, R31 and R35 take every ceiling through `boundOf`, but `read-bounds.mjs` (runtime-limits' alone, START ruling 1) has no row for five ceilings this module keeps, so `boundOf` would throw at import. I need these five rows added to the table before I can commit the import. I carry on meanwhile on a local, uncommitted copy of the rows and never commit it.
+
+Rows (kind, name: standard / alpha / protective; key `limit.<kind>.<name>`), the byte rows as the table's own `bytes(alpha, key, MB100)` helper (K4845):
+1. `office`, `text_bytes`: 104,857,600 / 20,971,520 / 104,857,600. R6 `MEASURED_OOXML_TEXT_BOUND_BYTES` (20 MiB).
+2. `office`, `streamed_text_bytes`: 104,857,600 / 33,554,432 / 104,857,600. R35 `STREAMED_TEXT_BOUND_BYTES` (32 MiB).
+3. `archive`, `member_bytes`: 2,147,483,648 / 268,435,456 / 2,147,483,648. R30 `MEMBER_MAX` (256 MiB alpha; a member cannot exceed the archive's unpacked standard).
+4. `office`, `structural_part_bytes`: 8,388,608 in all three columns. NEW, my own, for DOCS O6 (G125d: a 100 MiB `.rels`, a 20 MiB `[Content_Types].xml`, which a ratio check alone passes at about 1,000:1): the XML parts this module itself decodes (`[Content_Types].xml`, `*.rels`, `docProps/core.xml`, `mimetype`) are refused by declared size, before inflation, above it. A real one is kilobytes (a 5,000-slide deck's `[Content_Types].xml` is about 1 MB). The refusal is `STRUCTURAL_PART_MAX` with name, declared, limit, `final: true`, stated by each caller as any other `readPart` refusal. I will propose the wording for R5/R31 in my record.
+5. `office`, `piece_chars`: 8,388,608 in all three columns. R35's "carrying at most 8 MiB" before `piece_unbounded` (today the literal `TEXT_PIECE_MAX_CHARS`).
+
+The other ceilings have rows already: archive.members (ARCHIVE_ENTRIES_MAX and ARCHIVE_TREE_ENTRIES_MAX), archive.unpacked_bytes (ARCHIVE_TOTAL_MAX and ARCHIVE_TREE_TOTAL_MAX), archive.ratio, archive.depth, archive.directory, archive.name, office.entries. If you prefer other names or figures, tell me; I use what you add.
+
+## J6 · COMPLETE
+
+COMPLETE · round 9 (B3, B5, B7). Causes, each with its failing-first test (round9.test.mjs, seen RED on the old source: 24 of 26 failed, e.g. `RangeError: Invalid code point 1114112` at String.fromCodePoint; `decodeText is not a function`; `1972 against 69` fetches for the shuffled listing; the unterminated-tag part 9.4 s) then green (99 of 99 in the module):
+- G131g (R36): `decodeText` exported, owner; every part this module decodes goes through it; `readPartPieces` decodes by BOM/layout/prolog (ENCODING_UNSUPPORTED named).
+- G133c (R37): bad numeric references and lone surrogates make core/rels/content-types unparseable, final, never a throw; tag scan is linear.
+- G125d, G125h (R3, R5, R31): OFFICE_ENTRIES_MAX, ARCHIVE_DIRECTORY_MAX, ARCHIVE_NAME_MAX in `readContainer`; ratio check in `readPart`; MEMBER_ENCRYPTED; new STRUCTURAL_PART_MAX (8 MiB, K4859) for the XML parts the module decodes itself.
+- G124c part, G124g, G124 quotes (R6, R30, R35): every ceiling through `boundOf`, no literal; `final: true` on every refusal carrying `limit`.
+- G130e (R10): dotx, potx, ppsx rows. G130c (R11): `discriminate` and `readPart` take a range source; same answer as whole bytes, reads only structures.
+- G133e (R38): local headers read in physical order; 10,001 entries refused.
+- G126d: audit test per container kind (R7), already holding.
+- B5: `readPartPieces` awaits the promise `onPiece` returns (test).
+Proposed wording for BOB (R5/R31): readPart also answers MEMBER_ENCRYPTED, ARCHIVE_RATIO_MAX and, for the structural XML parts, STRUCTURAL_PART_MAX {name, declared, limit}; every refusal that carries `limit` also carries `final: true` (R31's literal shape lacks it). R23: the one import is `./read-bounds.mjs` (`boundOf`). R11: a range source that cannot be read answers `source_unreadable`. R3: entries carry a non-enumerable `flags`. ARCHIVE_LIMITS gains OFFICE_ENTRIES_MAX, ARCHIVE_DIRECTORY_MAX, ARCHIVE_NAME_MAX; STRUCTURAL_PART_MAX exported. Uppercase `&#X` is not an XML reference and is refused. xltx is not in R10 and is not read.
+Deferred: none. Other modules: none. New files outside paths: none. Stale generated artifacts: none known.
+Tests: module 99/99; users green: office-readers 115, odf-reader+format-registry 117, csv-reader+doc-clean+provenance+attestation 301 (1 skipped), capture-sources+site-profiles 117; file-safety R24 words and reading-pipeline BUDGET-2024-APP memory (2) are the named inherited/PDF reds; acquisition R95 passes alone.
+Checks: format 0, architecture 0, coverage 38/38, ownership 0, words: no ooxml finding.
+Size (session_0189TCqWsfgZ58Dcm8TZihQh): test runs 14, module lines 2480
