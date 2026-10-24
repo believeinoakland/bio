@@ -7,6 +7,7 @@
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { shapeRun, csvDoc, xlsxRowsDoc, report, capFor, STORED_VALUE_BOUND } from "./harness.mjs";
+import { generate as sheetGenerate } from "../../../sheetgen.mjs";
 import { tickCountFailures, markExtentFailures } from "./bars.mjs";
 import { MEASURED_CSV_TEXT_BOUND_BYTES } from "../../../../src/csv-reader/index.mjs";
 
@@ -32,8 +33,24 @@ export const REFUSED_CASES = {
   xlsx200: async () => ({ label: `G41 ${XLSX_REFUSED_ROWS}-row xlsx (over the alpha's declared-text bound)`, doc: await xlsxRowsDoc(XLSX_REFUSED_ROWS) }),
 };
 
-/** K4855: one refused case: the run, and what failed (empty: the refusal is final, stated with the file's declared size and the bound, the child alive) */
-export async function runRefused(name, { bound, declaredMiB }) {
+/** K4855: the sheet text a generated workbook declares, from its own central directory (the worksheets' uncompressed sizes): the generator's figure, not the reader's */
+export async function declaredSheetBytes(recipe) {
+  const parts = []; for await (const c of sheetGenerate(recipe).chunks()) parts.push(Buffer.from(c));
+  const b = Buffer.concat(parts);
+  const z64 = b.lastIndexOf(Buffer.from([0x50, 0x4b, 0x06, 0x06])), eocd = b.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+  let off = z64 >= 0 ? Number(b.readBigUInt64LE(z64 + 48)) : b.readUInt32LE(eocd + 16), total = 0;
+  while (off + 46 <= b.length && b.readUInt32LE(off) === 0x02014b50) {
+    const nl = b.readUInt16LE(off + 28), xl = b.readUInt16LE(off + 30), cl = b.readUInt16LE(off + 32), name = b.toString("utf8", off + 46, off + 46 + nl);
+    let size = b.readUInt32LE(off + 24);
+    if (size === 0xffffffff) size = Number(b.readBigUInt64LE(off + 46 + nl + 4));
+    if (name.startsWith("xl/worksheets/")) total += size;
+    off += 46 + nl + xl + cl;
+  }
+  return total;
+}
+
+/** K4855: one refused case: the run, and what failed (empty: the refusal is final, its size and bound the generator's declared sheet text and the bound, the child alive) */
+export async function runRefused(name, { bound }) {
   const { label, doc } = await REFUSED_CASES[name]();
   const cap = g41Cap(doc.bytes);
   const r = await shapeRun({ doc, search: doc.marks, readingEachTick: true, cellsOf: false, maxTicks: 50 }, { capMB: cap });
@@ -45,9 +62,11 @@ export async function runRefused(name, { bound, declaredMiB }) {
     const last = r.ticks[r.ticks.length - 1];
     if (!last || !last.readingFor || last.readingFor.failure !== "final") f.push(`the reading is not final: ${JSON.stringify(last && last.readingFor)}`);
     const c = r.reading && r.reading.completeness;
-    const why = c && typeof c.why === "string" ? c.why : "";
-    if (!c || c.state !== "stated") f.push(`completeness is not stated: ${JSON.stringify(c)}`);
-    for (const fig of [declaredMiB.toFixed(2), (bound / 1048576).toFixed(2)]) if (!why.includes(fig)) f.push(`the statement does not name ${fig} MiB: ${why}`);
+    if (!c || c.state !== "stated" || !(typeof c.why === "string" && c.why)) f.push(`completeness is not stated: ${JSON.stringify(c)}`);
+    /* the figures as data (K3810: a test never copies a sentence): the refusal's size is the generator's declared sheet text, its bound the table's */
+    const declared = await declaredSheetBytes(doc.recipe), got = r.reading && r.reading.refusal;
+    if (!got || got.size !== declared || got.bound !== bound) f.push(`the refusal states ${JSON.stringify(got)}, not size ${declared} and bound ${bound}`);
+    if (!(declared > bound)) f.push(`the case is not over its bound: ${declared} <= ${bound}`);
     if (r.overBound) f.push(`a stored value of ${r.largestStored} B is over ${STORED_VALUE_BOUND} B`);
   }
   return { name, label, cap, r, failed: f };

@@ -66,11 +66,18 @@ async function settled(w) {
   for (let i = 0; i < 120; i++) { const s = await w.get("rows"); if (s.health && s.health.last_run && !s.health.running_since && s.pending.length) return s; await sleep(250); }
   assert.fail("the first firing did not end with a row owed");
 }
-async function lose(w) {   /* the alarm is lost: deleted, a row owed */
+async function lose(w) {   /* the alarm is lost: deleted, a row owed, and no firing in flight that re-arms it (K4787: a firing begun before the delete
+                              sets the alarm again when it ends, so the delete is repeated until a quiet stretch shows the alarm stays lost) */
   const s = await settled(w);
   assert.ok(s.pending.length >= 1, "a row is owed");
-  await w.get("kill-alarm");
-  assert.equal((await w.get("counters")).alarm, null, "the alarm is deleted");
+  for (let i = 0; ; i++) {
+    await w.get("kill-alarm");
+    const before = await w.get("counters");
+    await sleep(1_000);
+    const after = await w.get("counters");
+    if (after.alarm === null && after.setAlarm === before.setAlarm) break;
+    assert.ok(i < 20, "the firings came to rest");
+  }
   /* the setup's own requests (the upload) had the frame's one look of these five seconds: the test's clock, outside the object, lets them pass */
   await sleep(5_500);
   assert.equal((await w.get("counters")).alarm, null, "and nothing armed it meanwhile");
@@ -95,25 +102,24 @@ test("R102 G93 L: a member's ordinary read (op=whoami) re-arms a lost alarm as w
   assert.ok(typeof (await w.get("counters")).alarm === "number", "the member's read armed the alarm");
 });
 
-test("R102 G93 L: a second read within five seconds makes no second look (the object's calls on the platform's alarm do not move); a read after the five seconds looks again", { timeout: 180_000 }, async () => {
+test("R102 G93 L: a second read within five seconds makes no second look (the frame's calls on the platform's alarm do not move); a read after the five seconds looks again", { timeout: 180_000 }, async () => {
   const w = await world();
   await lose(w);
+  const h0 = (await w.get("counters")).heals;
   await w.door(w.member, "whoami");                        /* the first look: re-armed */
   const first = await w.get("counters");
-  assert.ok(typeof first.alarm === "number", "the first read looked and armed");
-  await w.get("kill-alarm");                               /* lose it again, inside the five seconds */
-  const lost = await w.get("counters");
+  assert.deepEqual([first.heals.looks - h0.looks, first.heals.arms - h0.arms], [1, 1], "the first read looked and armed");
   await w.door(w.member, "whoami");
   await w.door(w.founder, "whoami");
   const second = await w.get("counters");
-  assert.equal(second.getAlarm, lost.getAlarm, "no second look inside five seconds: getAlarm was not asked again");
-  assert.equal(second.setAlarm, lost.setAlarm, "and nothing was armed");
-  assert.equal(second.alarm, null, "the alarm is still lost");
+  /* the frame is judged by its own calls: firings that the armed alarm now runs set the alarm beside it, which is no look of the frame's (K4787) */
+  assert.equal(second.heals.calls - first.heals.calls, 2, "both requests passed the frame");
+  assert.equal(second.heals.looks, first.heals.looks, "no second look inside five seconds: the frame asked getAlarm no more");
+  assert.equal(second.heals.arms, first.heals.arms, "and armed nothing");
   await sleep(5_500);                                      /* the test's own clock, outside the object: the requirement's five seconds */
   await w.door(w.member, "whoami");
   const third = await w.get("counters");
-  assert.ok(typeof third.alarm === "number", "a read after the five seconds looks again and arms");
-  assert.ok(third.getAlarm > second.getAlarm);
+  assert.equal(third.heals.looks - second.heals.looks, 1, "a read after the five seconds looks again");
 });
 
 test("R102 G93 L (control): a request during a firing in progress changes nothing: no arm, no look of its own", { timeout: 180_000 }, async () => {

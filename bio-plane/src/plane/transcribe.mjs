@@ -49,11 +49,9 @@ function base64(bytes) {
 }
 
 /** R106 (fix round 9, G126e; K4835): the largest capture the transcriber loads into a request, the inline ceiling G126e names ("none loads a
- *  PDF over 2 MB in a request"), quoted from `READ_BOUNDS`' row `pdf.request_bytes`; a capture over it is not loaded, and the pages asked are
- *  owed as a job row. Until that row is recorded (REPORTED to BOB with its three figures, K4842 (1)) the figure is the one the door already
- *  defers a PDF's reading above (control-plane's `READING_DEFER_PDF_BYTES`): proposed; BOB records. */
-const requestBytes = () => { try { return boundOf("pdf", "request_bytes"); } catch { return 2 * 1048576; /* proposed; BOB records */ } };
-export const TRANSCRIBE_LOAD_MAX = requestBytes();
+ *  PDF over 2 MB in a request"), `READ_BOUNDS`' row `pdf.request_bytes` (RUNTIME-LIMITS #11, K4902), quoted; a capture over it is not loaded,
+ *  and the pages asked are owed as a job row. */
+export const TRANSCRIBE_LOAD_MAX = boundOf("pdf", "request_bytes");
 /** R106: why an asked page was not sent beyond the renderer's own refusals. */
 export const PAGES_MAX = "TRANSCRIBE_PAGES_MAX";
 export const OWED = "OWED";

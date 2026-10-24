@@ -25,9 +25,9 @@ for (const name of Object.keys(CASES)) {
 }
 /* K4855 (P17): the 200,000-row workbook declares 42.66 MiB of sheet text, over the alpha's `xlsx.declared_text` bound: it is refused, final, in one tick, its declared size and the bound stated
    (docprofile's statement), the child alive. The standard's 50 MB is Stage 3's. */
-test(`R84 G41 K4855: a ${XLSX_REFUSED_ROWS.toLocaleString("en-US")}-row xlsx, over the alpha's declared-text bound, is refused at the platform's shape: final in one tick, its size and the bound stated, nothing owed, the child alive`,
+test(`R84 G41 K4855: a ${XLSX_REFUSED_ROWS.toLocaleString("en-US")}-row xlsx, over the alpha's declared-text bound, is refused at the platform's shape: final in one tick, its size (the generator's declared sheet text) and the bound stated as data, nothing owed, the child alive`,
   { timeout: 3_600_000 }, async () => {
-    const out = await runRefused("xlsx200", { bound: boundOf("xlsx", "declared_text"), declaredMiB: 42.66 });
+    const out = await runRefused("xlsx200", { bound: boundOf("xlsx", "declared_text") });
     console.log(report(out.label, out.r));
     assert.deepEqual(out.failed, [], `${out.label} at cap ${out.cap} MB`);
   });
