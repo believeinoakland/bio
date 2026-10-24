@@ -62,7 +62,8 @@ test("R37 detecting change is mechanical: a tick writes only monitor-tick's fiel
 test("R38 an equality that costs nothing is not evidence: a shell's match never reads unchanged; a rendered capture's content is undetermined on every tick; a plain document still reads unchanged", async () => {
   const w = world();
   const loc = "https://spa.example.org/a";
-  const shell = `<!DOCTYPE html><html><head><title>A</title><script src="/static/js/main.1.js"></script></head><body><div id="root"></div><noscript>You need to enable JavaScript to run this app.</noscript></body></html>`;
+  /* a CERTAIN empty frame (site-profiles R2): a mount point, a framework state and no readable text */
+  const shell = `<html><head><script src="/app.1.js"></script></head><body><div id="root"></div><script>window.__INITIAL_STATE__={}</script><!--${"x".repeat(2400)}--></body></html>`;
   w.monitored("INFO-2026-0820-shell", loc, shell);
   w.net.routes[loc] = serve(shell, "text/html");
   const s = await tick(w, "INFO-2026-0820-shell");
