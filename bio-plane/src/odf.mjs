@@ -1477,6 +1477,8 @@ function paragraphsText(xml) {
 }
 
 const hasWords = (text) => /\S/.test(text);
+/** A master page is mostly empty paragraphs and field placeholders: its unit keeps the lines that hold something. */
+const nonEmptyLines = (text) => text.split("\n").filter(hasWords).join("\n");
 
 /** The inserted text of every change region, taken from the BODY between
  *  its `<text:change-start>` and `<text:change-end>` marks: `Map(id → text)`.
@@ -1725,11 +1727,11 @@ function masterUnits(stylesXml, flavour) {
     const label = page.attrs.name ?? "master";
     if (flavour === "odt") {
       for (const hf of iterNested(page.inner, HEADER_FOOTER)) {
-        const text = paragraphsText(hf.inner);
+        const text = nonEmptyLines(paragraphsText(hf.inner));
         if (hasWords(text)) out.push({ kind: hf.name.startsWith("header") ? "header" : "footer", ref: `${label} (${hf.name})`, part: STYLES_PART, text });
       }
     } else {
-      const text = paragraphsText(page.inner);
+      const text = nonEmptyLines(paragraphsText(page.inner));
       if (hasWords(text)) out.push({ kind: "master_text", ref: `${label} (master)`, part: STYLES_PART, text });
     }
   }
