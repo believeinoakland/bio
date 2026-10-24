@@ -793,3 +793,14 @@ Checks: capture suite 338/338; impact users that drive the real upload 97/98, th
 REPORT items for you: (a) acquisition.profileOf could take `bytes` itself and replace my wrapper; (b) the kind-to-row map now exists in control-plane and capture: one exported map (runtime-limits or acquisition) is the fix; (c) the door may pass `reading_stated` through. No new words. Nothing deferred.
 
 Size (session_01TcCgd312RDvc5erHPTSkhN): test runs 9, module lines 4963
+
+## Fix round 9 · job 97 (CAPTURE #56, B35; R107 amended, G170, K4985)
+
+**Entries applied**
+1. `uploadCapture` hands `profileOf` the file's `name` (when a non-empty string) and its declared `type` as `declaredType` (when a non-empty string), at `capture/index.mjs` `profileThe` (one call site; a one-part and a multipart upload alike, and a second sighting). No other line changed. A call with neither passes `null` for both, so an upload with no name is profiled from its bytes as before.
+
+**Tests** (R107): new `bio-plane/test/m/capture/g170-t51.test.mjs`, six tests through the real `uploadCapture`: a CSV named `c.csv` declared `application/vnd.ms-excel`, the same declared `application/octet-stream`, and a `.tsv` declared `text/plain` are profiled `csv`; `text/csv` and `text/tab-separated-values` stay `csv`; controls: the same bytes with no name are not `csv`, and a ZIP named `c.csv` declared octet-stream is not `csv` and equals the same ZIP uploaded bare.
+
+**Red first (seen):** with my change in and acquisition's tranche tip as it stands, the three declared-type cases are `undetermined` (3 fail, 3 pass): `profileOf` does not yet take `name` and `declaredType` (acquisition job 96). They turn green when it merges.
+
+**Waiting.** Acquisition job 96 has not merged into `tranche/T51`. When BOB tells me, I merge the tranche, re-run `g170-t51`, `g41b-t51` (its last control, a 9 MiB `x.csv` declared octet-stream expecting `undetermined`, may now read `csv` by format-registry R31's name pass; I will judge it against R107 then) and the capture suite, run the checks and COMPLETE.

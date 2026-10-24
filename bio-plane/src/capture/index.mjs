@@ -953,7 +953,9 @@ export class Capture {
     /* the profile of the bytes: from the bytes the upload holds when it holds them, else as `profileOf` reads the store */
     const profileThe = async (ct) => {
       const profile = await profileOf({ ev: held ? Capture.#holding(ev, sha, held) : ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
-                                        retrieved: when, origin: "member", parts: multipart && parts.length ? parts : null, firstPart });
+                                        retrieved: when, origin: "member", parts: multipart && parts.length ? parts : null, firstPart,
+                                        /* R107 (fix round 9, G170): the file's name and the declared type reach the format, as for a fetched file (acquisition R17) */
+                                        name: typeof name === "string" && name !== "" ? name : null, declaredType: typeof type === "string" && type !== "" ? type : null });
       if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
       else if (ct) profile.source_content_type = null;
       return profile;
