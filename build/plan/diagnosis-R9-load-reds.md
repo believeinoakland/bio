@@ -63,6 +63,45 @@ Not run: any module's whole suite once (only the five files themselves). Not com
 - Test left as is (it asserts the work and is correct; making it arm the alarm itself would hide the defect). Failing-first test for the owning job: in this file's test, immediately after `acquire` answers `fetch_pending`, `owedwork` (founder) must show `oldest_overdue === null` or `alarm_at` at most 60 s after it; red now by name in 1 s instead of after 600 s.
 - Owner: acquisition (job to be named by BOB).
 
+## 8. PRODUCT findings, K4426's four fields each (no product code was changed by this session)
+Each entry: (1) root cause with file:line, (2) why the tests missed it, (3) the failing-first test the owning job adds, (4) the platform check. Owner named; BOB places the jobs.
+
+**P1. g41's OOM margin: 199.3 MB peak against the 202 MB cap. Owner: extraction (with formats-xlsx and csv-reader, which it calls).**
+1. `src/extraction/index.mjs:859` `readHeld` takes a 150,000-row sheet through `src/formats-xlsx.mjs` `xlsxEntry` (:1507), which builds every sheet's whole text (`lines.join("\n")` :1315, then the document `outSheets.map(...).join("\n")` :1360) while the unpacked parts and the strings are still held; the peak is the sum, 199.3 MB quiet, measured by the shape harness against `capFor(128)` = 202 MB (`src/byte-ledger.mjs:48`). Under CPU starvation V8's GC threads run late and the heap overshoots: 3 of 7 L-PIN runs died `heap out of memory` (SIGABRT).
+2. The shape case was only run quiet and alone, where 3 MB of headroom looks like a pass; the harness reports the peak but no test asserts a margin, and no test runs it under starvation.
+3. In `test/m/plane/shape/g41-shape.test.mjs`: the 150,000-row xlsx case asserts `peak <= 0.85 * capFor(N)` (red now: 98.7%), and a second run of the same case with the GC held back (`--max-semi-space-size` small, or the test process pinned with burners, L-PIN) must not die.
+4. L-PIN run of the shape file, five times, at the real object size: 5/5 without `heap out of memory` and peak under 85% of the cap; a deploy-side check that the measured object memory on the real plane (workerd's 128 MB isolate) for the same sheet is below the stated limit.
+
+**P2. capture's `putUploadPart` answers before it drains the body. Owner: capture.**
+1. `src/capture/index.mjs:1148` (`putUploadPart`): the idempotent re-put (`existed`, :1170) and the unknown upload (`UPLOAD_UNKNOWN`, from `#partedRow`, :1160) return through `stop()` (:1151), which cancels the reader. workerd answers early and closes the connection on an unread request body, so a client still writing 8-16 MiB gets `fetch failed / write ECONNRESET` instead of the answer: 10 of 30 micro-runs alone, 5 of 30 under load; the same request with a one-byte body 0 of 90.
+2. `g127f-plane` sent the body in full for the re-put and the late part and was run quiet, where the client has finished writing before the answer lands; no test asked what a direct-to-workerd client sees on an answer given before the body is read.
+3. In `test/m/capture/g127f-plane.test.mjs`: the idempotent re-put and the late part after abort send the FULL 16 MiB part and assert the JSON answer, 20 of 20, under L-PAR4 (four copies at once beside 3 burners; the unfixed form is 12 of 20 red). Either capture reads (drains, discarding) the body before answering these two, or the contract says the answer can be a closed connection and the client library retries.
+4. The platform check is the one above at its real shape (Miniflare over real workerd R2/DO) plus, on the deployed plane, one re-put of a 16 MiB part from a real client on a slow link.
+
+**P3. The PDF tick holds the thread 0.3-0.45 s at idle. Owner: reading-pipeline (calling pdf-reader's `src/pdfstructure.mjs` text entry).**
+1. `src/reading-pipeline/index.mjs:2004-2007`: the tick yields before and after `entry.text(input, { inlineCellsMax: 0, yieldNow })` (:2006), but the entry's compute over a PDF region does not yield inside; one tick runs 260-435 ms of CPU quiet. A cheap request arriving in that stretch waits for it (p50 wait 260 ms, p95 406 ms quiet against the bar of 500: 100 ms of headroom; under L-4B 534-1037 ms).
+2. r7-contention measured a quiet p95 beside one other suite and passed; its bar is wall time on a machine whose speed it never measured.
+3. In `test/m/reading-pipeline/r7-contention.test.mjs`: with the same-run control (`slow`) the bar is `150 ms * slow` for the PDF tick (red now at 260-435 ms: the product must yield inside the entry's walk), 5 of 5 under L-4B.
+4. A deployed measure of a cheap request's wait beside a PDF tick of the 21 MB file on the plane (the figures here are workerd under Miniflare on a shared 4-core machine).
+
+**P4. acquisition reads the clock twice for the cut and the close of a throwing call. Owner: acquisition.**
+1. `src/acquisition/index.mjs:969-976`: `stageTimes(t)` (clock read A) for the answer's `timings`, `t.end = clockNow()` (B), then `finally { stageEnd(t) }` (C) closes the cut stage with a third reading; the answer's `read` is A's, the object's is C's. Gaps 23 us and 48 us; a millisecond edge between them makes them differ by 1 (4 of 20 red alone).
+2. The C5a test compared two readings of one clock at two instants floored to the millisecond; it never moved the clock between them.
+3. In `test/m/acquisition/stage-times.test.mjs` (already there as the fixed form): a performance.now wrapper adds 1.5 ms at the third read; the answer's `timings.stages` must equal the object's stages exactly (red now, every run).
+4. None needed beyond that (a pure clock-discipline defect); the injection stands for the platform.
+
+**P5. acquisition registers owed fetches but never arms the alarm. Owner: acquisition. (New; section 7.)**
+1. `src/acquisition/index.mjs:404-413` `oweOf`: `reg(entry)` answers ok and the function returns true without `cap.armJobs()` (`src/plane/store.mjs:443`; `src/plane/pending.mjs:624`), though R98 says the alarm is armed by `armJobs` after the commit. Used by `parkFetch` (:1354-1371) and at :1144, :1747, :1762, :1895, :2326. A parked large fetch is overdue (`oldest_overdue` = now) while `alarm_at` is hours ahead.
+2. `t51-round7-seam` "G61 twin" passed in the file's order only because an earlier test's alarm happened to fall inside the 600 s wait; no test of the owed-fetch row looked at the alarm.
+3. In the G61 twin (or acquisition's own test with a registrar double): right after `acquire` answers `fetch_pending`, `owedwork` shows `oldest_overdue === null` or `alarm_at` within 60 s of it; red now in 1 s. Alone the twin is red 5/5 today.
+4. The twin itself at its real shape (Miniflare: real alarm, real R2, throttled outbound), alone, 5/5 green after the fix (shown with the one-line change: 5/5 green beside four copies).
+
+**P6. capture holds the running digest of a parted upload only in the object's memory. Owner: capture. (New; section 2, second mode.)**
+1. `src/capture/index.mjs:1175-1182` (`#parted.get(row.upload)`, the `UPLOAD_LOST` answer): the hasher of the parts so far lives in `#parted`; workerd takes the object out of memory after about 10 s with no event (reproduced quiet: pause 9 s keeps it, 12 s loses it), and the next part is `UPLOAD_LOST`: the member begins a 105 MiB upload again. A part whose object time exceeds 10 s (0.9 s quiet; 12 s at 13x CPU stretch) loses the upload on its own end.
+2. The test's parts were always sent back to back on an idle machine; none paused, none ran the object under starvation.
+3. In `g127f-plane.test.mjs`: begin, part 0, a 12 s pause, part 1 must be accepted (red now: `UPLOAD_LOST`); the product persists the hasher state (the SHA-256 midstate) with the part row, or recomputes it from the parts held, so an eviction costs nothing.
+4. The same case on the deployed plane with a real eviction (an idle gap over the platform's window).
+
 ## Files changed (uncommitted, all test files)
 bio-plane/test/m/acquisition/stage-times.test.mjs
 bio-plane/test/m/capture/g127f-plane.test.mjs
