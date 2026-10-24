@@ -212,3 +212,8 @@ COMPLETE (re B16, item 1). Merged `origin/tranche/T51` (text-chain job 63 in). C
 Suite: tests 174, pass 170, fail 4 (the same four R61 seam tests, red by name until job 41, B15/B16 item 2). format, architecture, coverage (61 of 61), words, ownership: 0 failures.
 Ceilings: job 64 (runtime-limits) has not merged to `origin/tranche/T51` (no `content` rows in `read-bounds.mjs`); `HELD_TEXT_CHARS_MAX` and `KIND_SCAN_PAGES_MAX` stay local constants. I need a CHANGE when it merges to switch them to `boundOf("content", "held_text_chars")` and `("content", "kind_scan_pages")`.
 Size (session_01K9HMgas2XJZzhRzt7oMHQn): test runs 28, module lines 3913
+
+## J13 · COMPLETE
+
+COMPLETE (re B17). Merged `origin/tranche/T51` (job 64 in). `HELD_TEXT_CHARS_MAX = boundOf("content", "held_text_chars")` and `KIND_SCAN_PAGES_MAX = boundOf("content", "kind_scan_pages")`, no literal; `runtime-limits` was already in content's `uses`, so no edge is owed. Suite: tests 174, pass 170, fail 4 (the R61 seam tests, red by name until job 41). format, architecture, coverage (61 of 61), words, ownership: 0 failures. Pushed.
+Size (session_01K9HMgas2XJZzhRzt7oMHQn): test runs 30, module lines 3914
