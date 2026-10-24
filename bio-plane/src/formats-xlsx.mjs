@@ -1209,7 +1209,7 @@ async function xlsxText(parts, opts) {
   }
 
   const outSheets = [];
-  const allUndetermined = [...parts.partials];
+  const allUndetermined = [...parts.partials, ...parts.undetermined.filter((u) => u.part === STYLES_PART)];
   let cellCount = 0, formulaCount = 0, scanned = 0;
   /* G41: with the caller's cap, the workbook's cells are listed while all of them together, as JSON, are within it;
      once they are not, every sheet's list is dropped and none is made (`held`). Over the whole-read bound none is

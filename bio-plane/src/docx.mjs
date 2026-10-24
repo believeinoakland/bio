@@ -388,6 +388,9 @@ function bodyWalk({ paragraphText, meter, count, over, charsMax }) {
             type: attrs.type ?? null, para: inPara ? para : null, run: inPara && run >= 0 ? run : null });
           noteRid(attrs);
           break;
+        case "tc":
+          count();
+          break;
         case "txbxContent":
           if (!selfClosed) boxStack.push({ paras: [] });
           break;
@@ -416,7 +419,7 @@ export function createDocWalk({ paragraphText = true, tables = true, retainedMax
   };
   const count = () => { if (++meter.objects > retainedMax) over("TOO_MANY_OBJECTS", meter.objects, retainedMax); };
   const body = bodyWalk({ paragraphText, meter, count, over, charsMax });
-  const tab = tables ? tablesWalk(count) : null;
+  const tab = tables ? tablesWalk() : null;
   Object.assign(handler, {
     text: body.handler.text,
     cdata: body.handler.cdata,
@@ -717,8 +720,8 @@ async function runBody(parts, w, yieldNow) {
  *  each bringing its paragraphs (in practice empty) so no text is dropped; a
  *  continuation with nothing to join stands as its own cell. */
 /** The tables walk as a scanner handler (the tables of N724 and their cells, as `walkDocumentTables` made them): fed by
- *  the same scan as the body walk, so the part is read once. `count` is the meter's object count (a cell is one). */
-function tablesWalk(count) {
+ *  the same scan as the body walk, so the part is read once. `count` is the meter's object count */
+function tablesWalk() {
   const done = [];
   const stack = [];
   let next = 0;
@@ -773,7 +776,6 @@ function tablesWalk(count) {
         if (top.tc === 0 && Number.isInteger(n) && n > 0) top.nextCol = 1 + n;
       }
       else if (name === "tc") {
-        count();
         closeCell(top);
         top.tc++;
         top.cell = { row: top.rows, col: top.nextCol, span: 1, vMerge: null, hMerge: null, paras: [] };
