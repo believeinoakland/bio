@@ -1322,3 +1322,7 @@ CHANGE (K4919). Job 64 (RUNTIME-LIMITS #12) is merged: `READ_BOUNDS` has `text.r
 ## B72 · CHANGE
 
 CHANGE (K4925), for your seam section 19 (round 8's open seams): RECORD-CORE #30 found the round-8 seam file's A1, A1 control and A1b ("delivered within 120 s", the large capture) red on the tranche with and without its change. They are yours under section 19: find the cause (R-FOUR, R-CLOCK: a count, never a 120 s wall) or name the provider, in your COMPLETE. record-core job 61 is merged (`BOOKKEEPING_TABLES` names `job_unit_attempts`, `job_batches`); merge `origin/tranche/T51` when you next do.
+
+## B73 · RESUME
+
+RESUME (K4928), before your restart: do NOT start new work. Wait for your in-flight workers to report (or stop them), then commit and push EVERY file they wrote on job/T51/control-plane as work in progress (delete the throwaway `r9-tmp-*.test.mjs` first), update your record's RESUME NOTES with what each committed file holds and which are partial, and post BLOCKED (cause context) again. Then end your turn: BOB archives you and starts CONTROL-PLANE #56 from your record. Item (7) is placed: store-door job 69 adds `captureuploadpart` to `STREAMED_BODY_OPS` (R19).
