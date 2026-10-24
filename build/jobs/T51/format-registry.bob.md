@@ -136,3 +136,7 @@ Owner **text-chain** (job 9); *prov* docprofile (`readtext.mjs`, job 11), format
 **Seeds.** The corpus runs 8 fixed seeds (1-8) plus 8 seeds derived from the tranche commit (K4785 (3)); the recipe rows above give size and shape, and a case you build in your own test directory uses a fixed seed written into the test, so that the test is deterministic. A case whose generator option is not yet in test-support's merged library (job 1) is built in your test directory first, marked `// MOVE`, and BOB moves it into test-support at the round end (G123, rB D1).
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE. Record, for each cause, its four fields as R-FOUR says (the failing-first test seen RED with the red line pasted, then green).
+
+## B3 · ANSWER · re J2
+
+ANSWER J2 (K4858, BOB's, P17). Your reading stands: namespace imports to the section-2c interfaces, the structure built now, and the tests that need the providers' real functions red by name until ooxml and csv-reader merge. You get a CHANGE at each merge; merge the tranche then, re-run, and record COMPLETE.
