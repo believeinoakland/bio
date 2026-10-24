@@ -158,6 +158,11 @@ test("R84 (6) the account: when the sign-in lists more than one, the founder cho
   assert.ok(chosen.calls.every((c) => !c.u.includes("/accounts/first")), "only the chosen account");
   const done = await run({ slug: "ac-two", accounts, choose: { account: "second" } });
   assert.ok(done.calls.some((c) => c.u.includes("/accounts/second/workers/scripts/ac-two")));
+  /* The update and the removal choose the account the same way, so they never act on the first by default. */
+  const up = await run({ slug: "ac-up", mode: "update", accounts });
+  assert.equal(up.page.status("acct"), "no");
+  assert.ok(up.page.done.includes("The First") && up.page.done.includes("The Second"));
+  assert.deepEqual(up.calls.filter((c) => c.u.startsWith(CFG.API) && c.u !== CFG.API + "/accounts").map((c) => c.u), []);
   /* A choice that names none of them is asked again; one account is used without asking. */
   const stale = await run({ slug: "ac-two", accounts, choose: { account: "third" } });
   assert.equal(stale.page.status("acct"), "no");
