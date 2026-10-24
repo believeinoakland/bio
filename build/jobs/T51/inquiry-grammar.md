@@ -1,6 +1,6 @@
 # inquiry-grammar (T51)
 
-**Status** · session_01B4tHNxMTJamTy5UFQiCoZy · depth 2 · WORKING · handled B2
+**Status** · session_01B4tHNxMTJamTy5UFQiCoZy · depth 2 · WAITING ON BOB (J4) · handled B2
 
 ## Completion (CR-8)
 
