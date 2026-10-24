@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01XzAj5EuQc3hnH5xNiPDvpB · depth 2 · COMPLETE · handled B42
+**Status** · session_01GRvfGdeJxS5azaPFdT5hLD · depth 2 · COMPLETE · handled B42
 
 ## J1 · REPORT
 
@@ -675,3 +675,33 @@ Checks (run in this session)
 - `checks/format.mjs`: 176 modules, 176 requirements files; 0 failures. `checks/architecture.mjs … acquisition`: 0 failures. `checks/coverage.mjs … acquisition`: 76 of 76 live requirement ids named by a test; 0 failures. `checks/words.mjs`: 33 failures, none naming acquisition. `checks/ownership.mjs … acquisition tranche/T51 job/T51/acquisition`: 9 files, 1 failure: build/requirements/acquisition.md, accepted per B3/B4.
 
 Size (session_01XzAj5EuQc3hnH5xNiPDvpB): test runs 14, module lines 4417
+
+## J41 · COMPLETE · re B43
+
+COMPLETE re B43 (ACQUISITION #36; job 86; R39 and R116 amended; head below). Requirement lines: I removed the `not yet met` marks of R39's and R116's amendments in `build/requirements/acquisition.md` and named the test (ownership lists that one file, accepted per B3/B4).
+
+Applied
+- G161 (`unpack.mjs` `fileDocument`): with no letter the member's `grade_basis` is the ARCHIVE's (`g.archive.basis` when `g.archive` is an object, else `g.basis`), so an uploaded archive's members pass provenance C-18.1.
+- G163 (`unpack.mjs` `fileDocument`): bytes with no magic are typed by `textTypeOf({bytes, name: row.name})` (R102) when the member is held in one part; a `.txt`, `.md`, `.csv` member is text, a NUL-bearing `.txt` and a `.bin` stay untyped.
+- G160 (`index.mjs` `owedFetch`, and the two render-delivery paths of `owedRun`): the three final answers carry `detail: {kind, capture_sha, holder}` from the refusal, taken from its `detail` when that is a plain object, else from its top level (provenance's shape); a refusal with none adds no `detail`. Control-plane's side (its answer carrying `detail`) is job 43's; this works with either shape.
+- One existing assertion changed, not weakened: `unpack.test.mjs` (R38 R39 R26) asserted a `notes.txt` member untyped; R39 now types it `text/plain`. Absence for a member neither bytes nor name type is held by the new test's `x.bin` and NUL controls.
+- No sentence added; no word row owed.
+
+Tests: `r123-batch-d.test.mjs` (6 tests; red first on the 3 reds, controls green): uploaded ZIP of three `.txt` members (receipt, no letter) carries `CAPTURE_RECEIVED_NOT_FETCHED`, no grade, `text/plain`, `profiled_from_text`; fetched letter-graded archive's members carry its letter; `.txt/.md/.csv` typed, NUL and `.bin` not; `owedFetch` final answer carries kind, capture_sha, holder (both shapes), bare refusal adds none, `DELIVERY_FAILED` goes again, accepted delivery ends done.
+
+The four fields
+- cause: `unpack.mjs:849` stated `g.basis`, which provenance R59 always answers `CAPTURE_UNPACKED_FROM_ARCHIVE` for a member, not the archive's; `:821-826` typed a member by `detectFormat(head, null)` alone; `owedFetch`'s three final answers built `{reason}` only.
+- why missed: acquisition's fixtures unpacked only letter-graded archives (the no-letter branch never ran) and only formats with magic bytes; no test joined `owedFetch` to a refusal carrying facts.
+- red first: `r123-batch-d.test.mjs` run before the change: basis `CAPTURE_UNPACKED_FROM_ARCHIVE`, content types undefined, `detail` undefined (5 of 6 red; the controls green).
+- platform check: L, as the START says; nothing here is platform-specific (no new SQL, no new storage call); run on node:sqlite only.
+
+Checks (run in this session)
+- acquisition suite: tests 336, pass 336, fail 0 (after the one amended assertion).
+- impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`): 112 modules affected; the users that touch `unpack`, `archiveList` or `owedFetch` (capture, doorbell, control-plane, plane, file-safety, screens-intake, tasks, monitoring, capture-requests, instance-setup test files): every file fail 0.
+- format 176/176, 0 failures; architecture 0; coverage 76 of 76, 0; words 0 failures (acquisition: plain 0, testcopy 0); ownership: 1 failure, the requirements file, accepted per B3/B4.
+
+Size (session_01GRvfGdeJxS5azaPFdT5hLD): test runs 9, module lines 4426
+
+## J42 · COMPLETE
+
+COMPLETE re B43 (job 86; G160, G161, G163; R39, R116). Record J41. Suite 336/336, users fail 0, checks 0 failures (ownership: the requirements file, per B3/B4). Control-plane's detail (job 43) is read from either shape.
