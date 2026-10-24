@@ -58,6 +58,7 @@ import { xlsxEntry } from "./formats-xlsx.mjs";
 import { pptxEntry } from "./pptx.mjs";
 import { odtEntry, odsEntry, odpEntry } from "./odf.mjs";
 import { csvEntry } from "./csv.mjs";
+import * as csv from "./csv.mjs";
 import * as ooxml from "./ooxml.mjs";
 import { localize } from "./setup-words/index.mjs";
 
@@ -98,10 +99,16 @@ export function listFormats() {
   return [...REGISTRY.keys()];
 }
 
-/* The registry-level recogniser. TWO passes, and the order is the doctrine:
+/* The registry-level recogniser. THREE passes, and the order is the doctrine:
  *
  *   pass 1 — bytes only.        Every entry is asked detect(bytes, null).
  *   pass 2 — content type only. Every entry is asked detect(null, contentType).
+ *   pass 3 — name and head.     Only when bytes and a name were given: csv-reader's
+ *            `isDelimitedText(name, contentType, head)` (its R21). A sheet has no
+ *            magic bytes and its declared type is often a general one
+ *            (`application/vnd.ms-excel`, `octet-stream`, `text/plain`), so the
+ *            name and the shape of the head decide, and only when no entry above
+ *            claimed the bytes: bytes never override a binary format (G130b; S-10).
  *
  * So a byte signature ALWAYS outranks a declared content type, whatever any
  * individual entry does — a renamed plain ZIP is not a .docx, and a PDF served
@@ -111,22 +118,19 @@ export function listFormats() {
  * Either argument may be absent (null): the acquire-time subresource guard
  * consults with the content type only, because at that seam the primary has
  * deliberately not been read back yet; the profile stamp consults with both.
- */
-export function detectFormat(bytes, contentType) {
-  const b = bytes instanceof Uint8Array && bytes.length ? bytes : null;
-  const ct = typeof contentType === "string" && contentType ? contentType : null;
-  if (b) {
-    for (const entry of REGISTRY.values()) {
-      const r = entry.detect(b, null);
-      if (r && r.format) return r;
-    }
-  }
-  if (ct) {
-    for (const entry of REGISTRY.values()) {
-      const r = entry.detect(null, ct);
-      if (r && r.format) return r;
-    }
-  }
+ *
+ * `bytes` may be a RANGE SOURCE `{size, readRange(offset, length) -> Promise<
+ * Uint8Array>}` instead (G130c; X5, R32): the answer is then a Promise, judged from
+ * the head for the signatures and, for a container, from the end record and the
+ * central directory through `readRange` (ooxml's `discriminate`), so an office file
+ * of any size is recognised and never taken for undetermined from its first KiB. */
+const HEAD_MAX = 1 << 20;
+/* The confidence the entries give the same bytes whole: an OpenDocument file is `certain` (its stored mimetype is read
+   from the directory), an OPC package or a plain ZIP `likely` (the content-type map is deflated). */
+const ODF_FORMATS = new Set(["odt", "ods", "odp"]);
+const CONTAINER_FORMATS = new Set(["docx", "xlsx", "pptx", "odt", "ods", "odp", "zip"]);
+
+function undetermined(b, ct) {
   return {
     format: "undetermined",
     confidence: "none",
@@ -137,10 +141,121 @@ export function detectFormat(bytes, contentType) {
   };
 }
 
+/* Passes 2 and 3 and the stated undetermined, once pass 1 has missed. `b` is the
+   bytes (or, for a range source, its head) or null. */
+function afterBytes(b, ct, nm) {
+  if (ct) {
+    for (const entry of REGISTRY.values()) {
+      const r = entry.detect(null, ct);
+      if (r && r.format) return r;
+    }
+  }
+  if (b && nm && REGISTRY.has("csv") && csv.isDelimitedText(nm, ct, b.subarray(0, HEAD_MAX))) {
+    return { format: "csv", confidence: "likely",
+             signals: [localize("format-registry.formats.name_and_delimited_head", "name \"{name}\" and a head of delimited text", { name: String(nm) })] };
+  }
+  return undetermined(b, ct);
+}
+
+function isRangeSource(x) {
+  try {
+    return !!x && typeof x === "object" && !(x instanceof Uint8Array) && typeof x.readRange === "function"
+      && Number.isFinite(x.size);
+  } catch { return false; }
+}
+
+async function detectRange(src, ct, nm) {
+  const size = src.size;
+  if (size <= 0) return afterBytes(null, ct, nm);
+  const got = await src.readRange(0, Math.min(size, HEAD_MAX));
+  const head = got instanceof Uint8Array && got.length ? got : null;
+  if (!head) return afterBytes(null, ct, nm);
+  if (size <= HEAD_MAX) return detectFormat(head, ct, nm);
+  let container = null;
+  for (const entry of REGISTRY.values()) {
+    let r;
+    if (CONTAINER_FORMATS.has(entry.format)) {
+      container ??= await ooxml.discriminate({ size, read: (o, n) => src.readRange(o, n) }, null);
+      r = container && container.ok === true && container.format === entry.format
+        ? { format: entry.format, confidence: ODF_FORMATS.has(entry.format) ? "certain" : "likely",
+            signals: [localize("format-registry.formats.container_judged_from_end", "judged from the end record and the central directory of {size} bytes", { size: String(size) }),
+                      ...(Array.isArray(container.signals) ? container.signals.filter((x) => typeof x === "string") : [])] }
+        : null;
+    } else r = entry.detect(head, null);
+    if (r && r.format) return r;
+  }
+  return afterBytes(head, ct, nm);
+}
+
+export function detectFormat(bytes, contentType, name) {
+  if (isRangeSource(bytes)) {
+    const ct = typeof contentType === "string" && contentType ? contentType : null;
+    const nm = typeof name === "string" && name ? name : null;
+    return detectRange(bytes, ct, nm);
+  }
+  const b = bytes instanceof Uint8Array && bytes.length ? bytes : null;
+  const ct = typeof contentType === "string" && contentType ? contentType : null;
+  const nm = typeof name === "string" && name ? name : null;
+  if (b) {
+    for (const entry of REGISTRY.values()) {
+      const r = entry.detect(b, null);
+      if (r && r.format) return r;
+    }
+  }
+  return afterBytes(b, ct, nm);
+}
+
 /* ------------------------------------------------------------------ *
  * The entries. HTML and PDF — the two formats the plane already spoke,
  * moved onto the registry by COFF-1 with NO new capability.
  * ------------------------------------------------------------------ */
+
+/* THE PICTURE ENTRIES (T43; N853b, K2611, K2691) — a JPEG or PNG file, such as
+   a photographed page, read as ONE picture page with no text layer: the same
+   `no_text_layer` marker a scanned PDF page carries, so the reading path treats
+   a photo exactly as an un-OCR'd scan, with no format branch outside this
+   registry. They DECODE NOTHING: a picture's pixels are `pdf-pixels`' to make
+   (its `renderPictureToPixels`), never this registry's. Detected by the
+   format's own signature at offset 0, `certain`; with no bytes, by the exact
+   content type, `likely`. REGISTERED FIRST (G130a; S14): a picture's signature
+   is at offset 0 and decides, so a JPEG whose comment segment holds `%PDF-1.4`
+   or whose EXIF holds `<html`, and a PNG with `%PDF-` in a tEXt chunk, are
+   pictures and never taken for the PDF or the web page that the 1 KiB scans of
+   those two entries would otherwise find in them. No other entry's signature
+   can begin with either of theirs. HEIC and TIFF are not registered (N853b §2
+   (a)): they stay `undetermined`. */
+function pictureEntry(format, signature, contentType, refusal) {
+  const signed = (bytes) => bytes instanceof Uint8Array && bytes.length >= signature.length
+    && signature.every((b, i) => bytes[i] === b);
+  const hex = signature.map((b) => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
+  return {
+    format,
+    detect(bytes, ct) {
+      if (bytes) {
+        return signed(bytes)
+          ? { format, confidence: "certain", signals: [localize("format-registry.formats.magic_hex_at_offset_0", "magic: {hex} at offset 0", { hex: String(hex) })] }
+          : null;
+      }
+      if (ct === contentType)
+        return { format, confidence: "likely", signals: [`content type "${contentType}"`] };
+      return null;
+    },
+    parts: null,
+    /* One page, page 0, unread: the shape pdf-reader's Tier-1 text gives a
+       page with no text layer (its R14), fresh on every call. */
+    structure: async (bytes) => {
+      if (!signed(bytes)) return { ok: false, container: format, reason: refusal };
+      const m = { page: 0, reason: "no_text_layer", font: null, codes: "", count: 0 };
+      return { ok: true, pages: 1,
+               text: { document: "", pages: [{ page: 0, text: "", undetermined: [m] }],
+                       undetermined: [m], counts: { chars: 0, undetermined: 1 } } };
+    },
+    text: null,
+  };
+}
+
+registerFormat(pictureEntry("jpeg", [0xff, 0xd8, 0xff], "image/jpeg", "NOT_A_JPEG"));
+registerFormat(pictureEntry("png", [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], "image/png", "NOT_A_PNG"));
 
 const LATIN1 = new TextDecoder("latin1");
 
@@ -149,17 +264,42 @@ const LATIN1 = new TextDecoder("latin1");
    case-folded, so the guard's behaviour is byte-identically what it was. */
 const HTML_CONTENT_TYPES = ["text/html", "application/xhtml+xml"];
 
+/* Does the text of `bytes`' first KiB open with an HTML root? The decode is
+   ooxml's one `decodeText` (G131g; its R36): UTF-8 or UTF-16 by BOM, else the
+   legacy charset. Leading comments and an XML declaration are skipped; one
+   that does not end inside the KiB leaves the root unseen, so the answer is no. */
+const HTML_HEAD_BYTES = 1024;
+function startsAsHtml(bytes) {
+  const d = ooxml.decodeText(bytes.subarray(0, HTML_HEAD_BYTES), { kind: "html" });
+  if (!d || d.ok !== true || typeof d.text !== "string") return false;
+  let t = d.text.toLowerCase();
+  for (;;) {
+    t = t.replace(/^[\s\uFEFF]+/, "");
+    if (t.startsWith("<!--")) {
+      const e = t.indexOf("-->", 4);
+      if (e < 0) return false;
+      t = t.slice(e + 3);
+    } else if (t.startsWith("<?xml")) {
+      const e = t.indexOf("?>");
+      if (e < 0) return false;
+      t = t.slice(e + 2);
+    } else break;
+  }
+  return /^<!doctype html(?=[\s>]|$)/.test(t) || /^<html(?=[\s>/]|$)/.test(t);
+}
+
 registerFormat({
   format: "html",
   detect(bytes, contentType) {
     if (bytes) {
-      /* The WHATWG-ish sniff, conservative: a doctype or an <html> tag inside
-         the first KiB. Case-insensitive because doctype case is free in HTML. */
-      const head = LATIN1.decode(bytes.subarray(0, 1024)).toLowerCase();
-      if (head.includes("<!doctype html") || head.includes("<html"))
-        return { format: "html", confidence: "certain",
-                 signals: [localize("format-registry.formats.magic_doctype_root_tag", "magic: doctype/root tag in the first 1024 bytes")] };
-      return null;
+      /* The root decides (G141; X27): the first KiB, decoded as text, must BEGIN
+         with a doctype or an <html> tag, after a BOM, white space and any
+         comments or XML declaration. A note, an e-mail or a code sample that
+         merely MENTIONS `<html>` is text and is read as text. */
+      return startsAsHtml(bytes)
+        ? { format: "html", confidence: "certain",
+            signals: [localize("format-registry.formats.magic_doctype_root_tag", "magic: doctype/root tag in the first 1024 bytes")] }
+        : null;
     }
     if (contentType && HTML_CONTENT_TYPES.includes(contentType))
       return { format: "html", confidence: "likely",
@@ -260,49 +400,6 @@ registerFormat(odpEntry);
    registered entry claims `text/csv`. */
 registerFormat(csvEntry);
 
-/* THE PICTURE ENTRIES (T43; N853b, K2611, K2691) — a JPEG or PNG file, such as
-   a photographed page, read as ONE picture page with no text layer: the same
-   `no_text_layer` marker a scanned PDF page carries, so the reading path treats
-   a photo exactly as an un-OCR'd scan, with no format branch outside this
-   registry. They DECODE NOTHING: a picture's pixels are `pdf-pixels`' to make
-   (its `renderPictureToPixels`), never this registry's. Detected by the
-   format's own signature at offset 0, `certain`; with no bytes, by the exact
-   content type, `likely`. Registered after `csv` and before `zip`; no other
-   entry's signature can begin with either of theirs. HEIC and TIFF are not
-   registered (N853b §2 (a)): they stay `undetermined`. */
-function pictureEntry(format, signature, contentType, refusal) {
-  const signed = (bytes) => bytes instanceof Uint8Array && bytes.length >= signature.length
-    && signature.every((b, i) => bytes[i] === b);
-  const hex = signature.map((b) => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
-  return {
-    format,
-    detect(bytes, ct) {
-      if (bytes) {
-        return signed(bytes)
-          ? { format, confidence: "certain", signals: [localize("format-registry.formats.magic_hex_at_offset_0", "magic: {hex} at offset 0", { hex: String(hex) })] }
-          : null;
-      }
-      if (ct === contentType)
-        return { format, confidence: "likely", signals: [`content type "${contentType}"`] };
-      return null;
-    },
-    parts: null,
-    /* One page, page 0, unread: the shape pdf-reader's Tier-1 text gives a
-       page with no text layer (its R14), fresh on every call. */
-    structure: async (bytes) => {
-      if (!signed(bytes)) return { ok: false, container: format, reason: refusal };
-      const m = { page: 0, reason: "no_text_layer", font: null, codes: "", count: 0 };
-      return { ok: true, pages: 1,
-               text: { document: "", pages: [{ page: 0, text: "", undetermined: [m] }],
-                       undetermined: [m], counts: { chars: 0, undetermined: 1 } } };
-    },
-    text: null,
-  };
-}
-
-registerFormat(pictureEntry("jpeg", [0xff, 0xd8, 0xff], "image/jpeg", "NOT_A_JPEG"));
-registerFormat(pictureEntry("png", [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], "image/png", "NOT_A_PNG"));
-
 /* THE ZIP ENTRY (T35-11; N688, K1844, K1852) — a plain ZIP archive, recognised
    so that it can be opened on capture: `acquisition` cuts its members, each a
    capture of its own (Intake §3). It is the twelfth entry and registered LAST,
@@ -384,11 +481,22 @@ export function readingDialect(emitted) {
       return Array.isArray(v) ? Array.prototype.filter.call(v, (s) => typeof s === "string") : [];
     } catch { return []; }
   };
+  /* G131c, G131g: whether the encoding was assumed (a boolean or null) and the offsets of
+     the windows whose encoding or delimiter differ from the file's (finite numbers only). */
+  const assumed = get("assumed");
+  const nums = () => {
+    try {
+      const v = get("disagree");
+      return Array.isArray(v) ? Array.prototype.filter.call(v, (n) => typeof n === "number" && Number.isFinite(n)) : [];
+    } catch { return []; }
+  };
   return {
     delimiter: str("delimiter"),
     encoding: str("encoding"),
     confidence: { delimiter: str("delimiterConfidence"), encoding: str("encodingConfidence") },
     signals: { delimiter: strs("delimiterSignals"), encoding: strs("encodingSignals") },
     undetermined: strs("undetermined"),
+    assumed: typeof assumed === "boolean" ? assumed : null,
+    disagree: nums(),
   };
 }

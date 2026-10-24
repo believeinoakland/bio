@@ -55,15 +55,17 @@ const onePage = () => {
     counts: { chars: 0, undetermined: 1 } } };
 };
 
-test("R23: twelve entries, jpeg and png after csv and before zip; detection follows that order", () => {
+test("R23: twelve entries, jpeg and png first; a picture is read as a picture whatever its first KiB carries (G130a; S14)", () => {
   const order = listFormats();
-  assert.deepEqual(order, ["html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "jpeg", "png", "zip"]);
-  assert.equal(order.indexOf("jpeg"), order.indexOf("csv") + 1);
-  assert.equal(order.indexOf("png"), order.indexOf("jpeg") + 1);
-  assert.equal(order.indexOf("zip"), order.indexOf("png") + 1);
-  // pass 1 asks html and pdf first: a JPEG whose first KiB carries a %PDF- or <html marker is read as they claim it
-  assert.equal(detectFormat(cat(JPEG_SIG, "%PDF-1.7"), null).format, "pdf");
-  assert.equal(detectFormat(cat(PNG_SIG, "<html>"), null).format, "html");
+  assert.deepEqual(order, ["jpeg", "png", "html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "zip"]);
+  assert.equal(order.indexOf("jpeg"), 0);
+  assert.equal(order.indexOf("png"), 1);
+  assert.equal(order.indexOf("zip"), order.length - 1);
+  // pass 1 asks the pictures before html and pdf: a marker inside a picture does not make it a PDF or a page
+  assert.equal(detectFormat(cat(JPEG_SIG, [0xfe, 0, 12], "%PDF-1.4"), null).format, "jpeg");
+  assert.equal(detectFormat(cat(JPEG_SIG, [0xe1, 0, 20], "Exif\0\0<html><body>"), null).format, "jpeg");
+  assert.equal(detectFormat(cat(PNG_SIG, "tEXt%PDF-1.7"), null).format, "png");
+  assert.equal(detectFormat(cat(PNG_SIG, "<!doctype html><html>"), null).format, "png");
   // the picture entries answer before zip in pass 2 too: a declared picture type is never a zip
   assert.equal(detectFormat(null, "image/jpeg").format, "jpeg");
   assert.equal(detectFormat(null, "image/png").format, "png");
