@@ -178,3 +178,7 @@ COMPLETE (B19, job 89): R38 amended (G166). The docx text_box part now carries p
 - **Tests:** `parts-kinds.test.mjs` "R38 pptx (K4987)", red first (bodyText undefined), green after. office-readers + csv-reader 241 pass, odf-reader + format-registry 179 pass, 0 fail. Checks: format, architecture, coverage, words 0 failures; ownership run after commit.
 - **Deferred:** none. ODT is odf-reader's job 98.
 - Size (session_01WgnDmQT1Lke6quo5wARVeK): test runs 6, module lines 4437
+
+## J14 · COMPLETE
+
+COMPLETE (B20): pptx text boxes DUPLICATED (reproduced: slide text held the box words and a text_box part held them again). Fixed in pptx.mjs: a slide entry carries bodyText (slide text outside text boxes) when a box holds words ('' for a box-only slide); text and document unchanged (R11); each text_box part carries shapes:[shape index]; a hidden slide's body unit uses bodyText. reading-pipeline should use slide.bodyText ?? slide.text for the slide unit. Red first, then green (parts-kinds R38 pptx K4987). office-readers+csv-reader 241 pass, odf-reader+format-registry 179 pass. format, architecture, coverage, words, ownership 0 failures. ODT left to job 98. Size (session_01WgnDmQT1Lke6quo5wARVeK): test runs 6, module lines 4437.
