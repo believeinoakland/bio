@@ -76,3 +76,20 @@ Still red (1 test, by design, not weakened): a doc-part leg that names only `ext
 
 For BOB (not mine to change, byte-identity of R4 pins it): the unknown-kind repair sentence still lists the eight text-chain kinds (grammar.mjs ~565, from textchain.CONTENT_EXTENT_KINDS), so it does not offer doc-part/envelope. Using content's ten changes that sentence in 7 pinned tests/golden; say if you want it as a separate entry.
 Checks so far (this module): format 0, architecture 0, coverage 0 (20 of 20), words 0, ownership 0 failures. impact.mjs names 86 modules / 1478 test files (content face is widely used); I'll run the direct users after the merge.
+
+## Completion (fix round 9, batch D: R4 amended, G167; K4985, K4986)
+
+**Cause**: `grammar.mjs` imported `checkContentExtent` and `legExtent` from content's core (`extent-core.mjs`, the eight text-chain kinds), so `checkLegExtentGrammar` refused a `doc-part` (footnote) citation C-2.8. **Why missed**: no inquiry-grammar test or corpus leg held a `doc-part`; content's tests exercised its own public face only. **Red first**: `checkLegExtentGrammar` on a footnote leg gave "extent kind 'doc-part' is not one of: document, pdf-page, …". **Platform check**: pure grammar, no platform; seam §10 footnote citation is control-plane's to re-run.
+
+**Entries applied**: (1) the import is from `content/extent.mjs`, the public face (ten kinds); with content's job 91 merged, a part-only `doc-part` leg passes too. (2) The unknown-kind repair sentence lists content's landed kinds (`CONTENT_EXTENT_KINDS` from content, not text-chain's eight): 13 golden strings and the pinned test (`grammar.test.mjs` 173) follow by replacing that one sentence; I did not regenerate the golden (no script exists), every other golden entry is byte-identical.
+**Tests**: `t51.test.mjs`, two added (R4 footnote/header/comment/part-only pass; controls: neither part nor ref refused, `doc-prt` refused as before); red seen before the change.
+**Requirement lines**: R4 is BOB's (K4986); the *(not yet met: T51)* marker is BOB's to lift, my tests name R4.
+**Deferred**: none. **Found in other modules**: case-checker `program.mjs` embeds the grammar and is stale (BOB regenerates); `rows.mjs` / `words-unreviewed.json` hold the old repair sentence's key text only in the stale form: no new localize id, the sentence is the same key with a new variable value.
+
+**Tests and checks run**
+- `node --test bio-plane/test/m/inquiry-grammar/*.test.mjs`: tests 87, pass 87, fail 0.
+- Users of the service, each fail 0: accepted-work 28, basis-version-grammar 33, basis-versions 182, leg-earning 57, citation 132, strength 182, reevaluation 163, and all 33 `inquiry` files.
+- `impact.mjs origin/tranche/T51 HEAD`: 87 modules, 1480 of 2686 test files (content's face); I ran the direct users above, not all.
+- format, architecture, coverage, words: 0 failures each (see output of this run); ownership: 0 failures.
+
+Size (session_01B4tHNxMTJamTy5UFQiCoZy): test runs 14, module lines 2050
