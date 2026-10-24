@@ -1,4 +1,4 @@
-START · INSTANCE-SETUP #30 · tranche T51 · product believeinoakland/bio · fix round 9, job 51 (K4853; re-walk 8 area A, diagnosis `build/plan/diagnosis-R9-rewalk8-A.md`) · depth 2 (BOB #273 at depth 1)
+START · INSTANCE-SETUP #30 · tranche T51 · product believeinoakland/bio · fix round 9, job 51 (K4853; re-walk 8 area A, diagnosis `build/plan/diagnosis-R9-rewalk8-A.md`) · depth 2 (BOB #275 at depth 1)
 
 FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/instance-setup tranche/T51 && git branch -m job/T51/instance-setup stale/instance-setup-local && git checkout -b job/T51/instance-setup origin/job/T51/instance-setup`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
 
