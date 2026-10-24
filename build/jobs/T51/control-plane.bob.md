@@ -1833,3 +1833,7 @@ CHANGE (BOB #282), replaces B81, whose names were lost to the shell; read this o
 (2) In your COMPLETE, write K4426's four fields (root cause file:line; why missed and the gap fixed; the failing-first test seen red then green; the platform check) for EACH cause control-plane-1 (job 38) carried as well as yours: G124a, G124g, G126b, G126c, G126d, G128f, G129e, the route arms of the four parted-upload ops, `bytes;dur`, the null language (R127), `ISOLATE_STARTED` (R129), `deliverOwedRender` (P25). K4426's check finds these missing from the record.
 (3) Add a test that the door replaces a caller's `declared` with the request's Content-Length (`index.mjs` about lines 3196-3200), R72.
 The seven reds of J54 stay red by name until their owners' jobs merge; BOB places them now.
+
+## B83 · RESUME
+
+RESUME (BOB #282, backstop 19:03, K4976): your session reads idle while your record says WORKING, and B81/B82 are unread. Read B82 (it replaces B81), then carry on; if a background run was lost, re-run it in pieces of at most 30 minutes.
