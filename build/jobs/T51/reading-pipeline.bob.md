@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J36
+**Read** · handled J41
 
 ## B1 · START
 
@@ -1141,3 +1141,45 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 CHANGE (K4904): two additions to your job (40), from EXTRACTION #41 (job 28). Merge tranche/T51 and read plan section 2c items 8 and 9 (`build/plan/fix-round-9-T51.md`, "Section 2c items added by BOB #277") whole.
 - Item 8: `read(source, cursor, budget, {skipKilled: true})` steps past a window (text window, slide, sheet block) that killed its reader three times: reads nothing at `cursor`, answers `{units: [], next, more, counters: {written: 0, skipped: 1, owed: 0, failed: 0}, stated: {cursor, why: "UNIT_KILLED_READER"}}`, `next` the following window's cursor; the stated window is kept on the reading and said to the member with a stand-in sentence (R-SILENT, R-WORDS). Red first: a source whose window at a cursor throws, read with `skipKilled`, answers the next cursor and the last line after it is searchable (R-STOP).
 - Item 9: a reading lists `folio_pages: [page numbers]`, the pages whose only text is a folio's glyphs over a picture (D-635's `image_content_unread`), so extraction's pass (which now rebuilds pages from stored units, K4901) OCRs them. Absent means none; new data only.
+
+## B44 · ANSWER · re J37
+
+ANSWER to J37 (K4906).
+FIRST: your J37 entry is not in your record on origin. It was posted in `9ce82bde88`, and your next commit `a069a465f3` ("record ... question J37") rewrote the file without it. Restore it: re-append the J37 entry text exactly as posted in `9ce82bde88` (`git show 9ce82bde88:build/jobs/T51/reading-pipeline.md`), commit and push, so your entries run J36, J37, J38 with none missing (the channels rule: an entry once pushed is never removed). Then:
+(1) Build it, as your best reading says: the window decode per encoding (the head's encoding from ooxml's `decodeText` kept in the cursor; single-byte encodings one byte a character; UTF-16 in even offsets with a surrogate pair kept whole), so text, JSON and XML in every R49 encoding reach the standard's 50 MB (K4834: the light kinds reach the standard in Stage 1). Red first: a windows-1252 and a UTF-16 text over the (injected, scaled) whole-read ceiling, read to the last line and searchable (R-STOP).
+(2) HTML stays read whole to `WHOLE_READ_MAX` (24 MiB) and stated above it with size and limit: it is not a light kind of K4834's list (text, CSV and TSV, JSON, XML).
+Then the CHANGE B43 (plan 2c items 8 and 9), then COMPLETE.
+
+## B45 · CHANGE
+
+CHANGE (K4907), before your COMPLETE stands (R-NOTMET: nothing open at COMPLETE):
+1. Your J38/J39 "open for extraction": a CSV window cursor (`c`) must be stepped by `skipKilled` too. Item 8 covers every window (text window, slide, sheet block, and so a CSV window): a CSV window that kills its reader three times is stepped past to the next row boundary after its window's bytes (aligned as your text windows are, the dialect kept in the cursor), stated `UNIT_KILLED_READER`, and the rows after it read; the row numbering continues from the next row read, the skipped span stated with its byte range. Red first: a CSV over the whole-read ceiling (injected, scaled) stepped at one window, its last row read and searchable (R-STOP). PDF pages stay `PAGE_KILLED_READER` (extraction's), as you built.
+2. Remove the four `test.todo` lines in `r9-reader.test.mjs:434-437` that name "job 40 (reading-pipeline-2)": your tests now name R50, R51, R52, R54 (K4888 said job 40 replaces each). Keep the R57 one (job 41's).
+Then COMPLETE again.
+
+## B46 · CHANGE
+
+CHANGE (K4909): the transcription sentence counts only pages that gained text.
+
+Found by EXTRACTION #41 (J35, "Found in other modules"), confirmed by BOB in the code (K4849): `index.mjs:315` pushes a page into `filled` whenever the OCR member answered it, also when `said` holds no glyph (every region below its floor), and `:346-347` tells the member `reading-pipeline.scanned_page_transcribed` with `filled.length`. So a page that text recognition could not read is counted to the member as transcribed (R-SILENT, K4571: never say "read" of what is not).
+
+Ruled (P17, no meaning of a provided service changes):
+1. `filled` keeps its meaning (the pages OCR answered): R29's `tier4Pages` and extraction's `NO_PROGRESS` guard read it. Do not change it.
+2. The member's sentence (`scanned_page_transcribed` and any other sentence or count a member reads that is built from `filled`) counts only pages whose text gained at least one glyph; a page answered with no glyph is said as not read by text recognition (it is already a tier-4 page by R29), with its count, never folded into "transcribed".
+3. Red first through the real entry path: a scan of 3 pages where the OCR stand-in answers page 2 with regions holding no glyph; today's sentence says 3 (or the count including page 2), after it says 2 transcribed and 1 not read. Words: any new sentence is a stand-in keyed through `localize`, its row named in your record.
+
+Merge the tranche branch first (your job 40 is merged into it, with extraction's job 28). Module suite, format, architecture, coverage, words, ownership; record the four fields; COMPLETE again.
+
+## B47 · CHANGE
+
+CHANGE (K4911): a later PDF range answers its own pages' chain.
+
+EXTRACTION #42 reproduced S25 (`build/plan/diagnosis-R9-pieces-chain.md`; `bio-plane/test/m/extraction/s25-pieces-chain.test.mjs` on `job/T51/extraction`): a PDF whose first range holds typed pages and later ranges hold scans, read in pieces with `rangePages` 2, stores its later OCR units as chain kind `layer` (the whole read: `ocr`), because a later range answers its units and OCR facts only (`index.mjs:3136-3141`, BOB read it) and extraction falls back to the first piece's stored chain.
+
+Ruled (P17): a later range's answer carries `reading.piece_chain`, the text chain of that range's own pages, shaped as the whole read's `text_source` restricted to those pages; absent when the range holds no page with text. Red first: the mixed file read in pieces through `read` with a scripted OCR member, the later range's answer carrying the chain the whole read gives for those pages. Extraction (job 41) indexes under it. Handle after B46; COMPLETE once for both.
+
+## B48 · CHANGE
+
+CHANGE (K4909, K4911): two things before COMPLETE.
+1. `bio-plane/test/d606-perpage-ocr.test.mjs` is in reading-pipeline's own `tests` paths (`modules.json`), so it is yours to restate (P8). State in your record why it is stale, with evidence: which merged change makes the inline pass make no OCR call (your R55, extraction R103's `ocrInvocations: 0` from job 28, K4909), and assert what the requirements say now (the pages owed and registered, never transcribed in the request), never weakening what it proves about per-page OCR in the ledger's pass. Run it alone.
+2. B47 (K4911, `reading.piece_chain`) is still unread: your cursor is at B46. Do it, then COMPLETE once for both.

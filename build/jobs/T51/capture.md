@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_012VVtWyCVJLdMrVBcsCC1Jb · depth 2 · COMPLETE · handled B32
+**Status** · session_01Wo2xMBoxbMVQCESiGbv5A2 · depth 2 · COMPLETE · handled B32
 
 ## J1 · COMPLETE
 
@@ -719,3 +719,38 @@ Size (session_012VVtWyCVJLdMrVBcsCC1Jb): test runs 14, module lines 4924
 
 COMPLETE (CAPTURE #53, B32): G127f built and pushed (job branch job/T51/capture). A file past the request-body ceiling is sent in parts through the Worker and written with R2's own multipart upload: beginPartedUpload, putUploadPart, completePartedUpload, abortPartedUpload, expireUploads; ops captureuploadbegin/part/complete/abort declared in DECLARED_OPS; table parted_uploads; no secret, no presigned URL. Filing is the one-request upload's own code (same answer, one job row, whole digest). Ops, inputs, answers, proposed R113 and R111 wording, choices (digest declared at begin so the page hashes the file first; 16 MiB parts, in order; 24 h expiry; UPLOAD_LOST on a restart) and the words keys are in my record, section "Fix round 9 · job 42". Capture suite 336/336; format, architecture, coverage, ownership 0 failures; platform L under Miniflare (real R2, 105 MiB) passes. Red not mine: op-declarations R34 (affordances needs ACT_HELP for the 4 ops), setup-words R10/R16/R17 (regenerate rows), plane R24, control-plane t51-visitor-copy (red on tranche too). Wiring owed: plane-2 evidenceKey, control-plane arms (job 38), screens-intake page (35). New files outside paths: none.
 Size (session_012VVtWyCVJLdMrVBcsCC1Jb): test runs 14, module lines 4924
+
+## Fix round 9 · job 60 · CAPTURE #54 (B33: K4909, the parted upload's argument shapes keyed)
+
+**Entry applied (job 60).** The seven bare shape strings the words check read as `inline` in `bio-plane/src/capture/index.mjs` now go through `localize(id, en, vars)` at their use, wording unchanged: line 1066 (`capture.index.shape_bytes`); lines 1116, 1200, 1264 (`capture.index.shape_upload_name`, one id for the three identical uses); line 1118 (`capture.index.shape_part_index`); line 1129 (`capture.index.shape_part_index_last`, the `{last}` named variable in place of the template); line 1203 (`capture.index.shape_parts_digests`).
+
+Also converted, per the entry's "every other shape string in the four `captureupload*` ops": line 1064 (`capture.index.shape_sha256_whole`), line 1120 (`capture.index.shape_sha256_part`), and the name and type length shapes in `#fence` at lines 716 and 719 (`capture.index.shape_string_max`, `{max}`), which the four ops reach through the fence. Same-id uses share one sentence, so no id has two `en`.
+
+**Ids written** (BOB owes their rows to `later-ux.md`; BOB regenerates the `setup-words` rows): `capture.index.shape_bytes`, `shape_upload_name`, `shape_part_index`, `shape_part_index_last`, `shape_sha256_whole`, `shape_sha256_part`, `shape_parts_digests`, `shape_string_max`.
+
+**Left alone.** The shape strings of `captureseenin`, `captureaccount` and `capturegrade` (lines 1412, 1451, 1670): other ops, outside this entry, and the words check does not flag them.
+
+**Behaviour.** None changed: each refusal's `argument`, `shape`, `status` and `reason` are the same strings and values as before (`localize` returns the `en` when no word row exists). No requirement id changed. No test copies these sentences (the capture tests assert keys or the `shape` of other refusals), so no test changed.
+
+**Tests and checks.**
+- Module suite, from `bio-plane/`: `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/capture/`: tests 336, pass 336, fail 0.
+- `timings.test.mjs` (time-sensitive), alone, on one core (`taskset -c 0`), five runs: pass 2, fail 0 each.
+- `checks/words.mjs /home/user/bio capture`: 0 failures (was 7: the `inline` findings at lines 1066, 1116, 1118, 1129, 1200, 1203, 1264).
+- `checks/run.mjs /home/user/bio`: 19 failures in all, every one inherited and none naming `capture` (`missingkey` 5 and `inline` 14 in `installer-steps`, case-checker, test-support and pdf-reader); before this job the total was 26.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs ... capture`: 0 failures. `checks/coverage.mjs ... capture`: 66 of 66 live requirement ids named by a test. `checks/ownership.mjs ... capture tranche/T51`: 0 failures (1 file changed: `bio-plane/src/capture/index.mjs`).
+
+**Generated artifacts made stale:** none that I know of; no generated file was edited.
+
+**Deferred:** none. **Other modules:** none touched, none found.
+
+Size (session_01Wo2xMBoxbMVQCESiGbv5A2): test runs 6, module lines 4924
+
+## J33 · COMPLETE
+
+COMPLETE (CAPTURE #54, job 60, B33; K4909). Commit 91968cf197 on job/T51/capture, pushed.
+
+The seven bare shape strings the words check flagged in bio-plane/src/capture/index.mjs (lines 1066, 1116, 1118, 1129, 1200, 1203, 1264) are written through localize at their use, wording unchanged, plus the other shape strings of the four captureupload* ops (1064, 1120, and the fence's name/type shapes at 716/719). Ids written, rows owed to later-ux.md: capture.index.shape_bytes, shape_upload_name, shape_part_index, shape_part_index_last, shape_sha256_whole, shape_sha256_part, shape_parts_digests, shape_string_max.
+
+Checks: capture suite 336/336 pass; timings test 5 runs on one core, all pass; words check capture 0 failures (was 7); run.mjs 19 failures, all inherited, none naming capture; format, architecture, ownership 0; coverage 66/66. No behaviour, requirement or test changed. Nothing deferred; no generated artifact stale.
+
+Size (session_01Wo2xMBoxbMVQCESiGbv5A2): test runs 6, module lines 4924

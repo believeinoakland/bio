@@ -2,7 +2,7 @@
    a transient failure is read again; nothing read is cut short. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, doc, sha } from "./fixture.mjs";
+import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, doc, sha, pressThenPass } from "./fixture.mjs";
 import { wp, wr, wtbl, box, docx, bucket as _b } from "./fixture.mjs";
 import { textUnitsFor, layerChainFor, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
 import { glyphCount } from "../../../src/textchain.mjs";
@@ -53,8 +53,8 @@ test("R82 R22 seam (needs reading-pipeline R37's `budget` option) (F8): the re-r
   const { w, d } = await held();
   await withEntry(pdf(t), () => w.x.readHeld({ sha: d }));
   const ocr = member((b) => ocrAnswer(b.pages));
-  const out = await withEntry(pdf(t), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", session: false, env: { OCR_WORKER: ocr } }));
-  assert.equal(out.body.reextraction.written, true);
+  const { x } = await pressThenPass(w, d, { OCR_WORKER: ocr });
+  assert.equal(x.written, true);
   assert.equal(w.x.unitsOf(d).units.length, PAGES, "every page of the re-read is indexed");
 });
 
@@ -100,15 +100,16 @@ test("R82 R80 R45 (F4 control): a failed reading marked final, one with no mark,
   assert.equal(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading, stored);
 });
 
-test("R82 R80 seam (needs reading-pipeline R37): an entry that throws once leaves a transient reading, and the next call reads the document", async () => {
+test("R82 R80 R101 (fix round 9, K4896; reading-pipeline R37, G133c): an entry that throws on the file's own bytes is a deterministic failure: the reading is `final` with its reason, not `transient`, so it is not owed and a later call does not replace it", async () => {
   const { w, d } = await failedWith("transient");
   let n = 0;
-  const flaky = { format: "pdf", structure: async () => { if (n++ === 0) throw new Error("store read error"); return { ok: true, text: structuredClone(TEXT), pages: 1, notes: [] }; } };
+  const flaky = { format: "pdf", structure: async () => { if (n++ === 0) throw new Error("bad xref in the file"); return { ok: true, text: structuredClone(TEXT), pages: 1, notes: [] }; } };
   const first = await withEntry(flaky, () => w.x.readHeld({ sha: d }));
   assert.equal(first.read, true);
+  assert.equal(first.owed, undefined, "a deterministic failure owes nothing");
+  assert.equal(readingOf(w, d).failure, "final");
   const second = await withEntry(flaky, () => w.x.readHeld({ sha: d }));
-  assert.equal(second.read, true, "the alarm after reads it");
-  assert.match(w.x.readingFor(d, "class:admin").text_units.map((u) => u.text).join(" "), /alpha/);
+  assert.deepEqual([second.read, second.why], [false, "READING_HELD"], "a final reading is not read again");
 });
 
 /* R-SEAM: needs reading-pipeline R37 (cause-reading-4), which marks the failure. Red by name until it is merged. */
@@ -137,16 +138,19 @@ const perPage = (log = []) => member((b) => {
 const SCAN = (n) => i2(Array.from({ length: n }, (_, p) => ({ page: p, text: "", undetermined: [noText(p)] })));
 const unread = (w, d) => w.x.readingFor(d, "class:admin").unread_pages.length;
 
-test("R82 R35 (F9): a 60-page scan is read 24 pages a pass; `readHeld` with kind ocr continues from the pages read until none are left", async () => {
+test("R82 R35 R103 (F9; fix round 9, G126b): a 60-page scan read inside a member's request makes no OCR call and owes every page; `readHeld` with kind ocr (the ledger) then reads 24 pages a pass from the pages read until none are left", async () => {
   const log = [];
   const { w, d } = await held({ env: { OCR_WORKER: perPage(log) } });
   const run = (opts = {}) => withEntry(pdf(SCAN(60)), () => w.x.readHeld({ sha: d, env: w.env, ...opts }));
   const first = await run();
-  assert.deepEqual([first.read, first.owed], [true, true], "24 read, the rest owed");
-  assert.equal(unread(w, d), 36);
-  const second = await run({ kind: "ocr" });
-  assert.deepEqual([second.read, second.owed], [true, true]);
-  assert.equal(unread(w, d), 12);
+  assert.deepEqual([first.read, first.owed], [true, true], "nothing OCR'd in the request, every page owed");
+  assert.equal(log.length, 0, "no call to the OCR member inside the request");
+  assert.equal(unread(w, d), 60);
+  for (const left of [36, 12]) {
+    const pass = await run({ kind: "ocr" });
+    assert.deepEqual([pass.read, pass.owed], [true, true]);
+    assert.equal(unread(w, d), left);
+  }
   const third = await run({ kind: "ocr" });
   assert.deepEqual([third.read, third.owed === true], [true, false], "the last pass ends the entry");
   assert.equal(unread(w, d), 0);

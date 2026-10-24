@@ -3,27 +3,27 @@
    `op=reading`. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer } from "./fixture.mjs";
+import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, pressThenPass } from "./fixture.mjs";
 
 const pdf = (text) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: (text.pages || []).length, notes: [] }) });
 
 /* A capture read once with no word counts (a reading made before R35), then re-read through `op=pdfstructure&ocr=1`. */
-async function held() {
+async function held(text) {
   const w = fresh();
   bundle(w.s, "B-1");
   const d = await hold(w.evidence, "%PDF-1.7 " + Math.random());
   const reading = { content_type: "generic", reader_version: 1, read_from_text: false, found: false, entities: [], facts: {},
-                    at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 2,
+                    at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 2, tier3_candidate: true,
                     container_extent: { container: "pdf", levels: ["images"], images: [] } };
-  w.x.writeReading({ bundleId: "B-1", captureSha: d, reading });
+  w.x.writeReading({ bundleId: "B-1", captureSha: d, reading, textUnits: pageUnits(text) });
   return { w, d };
 }
 
 test("R34 R35 (reading-pipeline R35, C17): a re-read states, stores and answers words_total and words_read, equal when every page was read", async () => {
   const t = i2([{ page: 0, text: "alpha beta gamma" }, { page: 1, text: "", undetermined: [noText(1)] }]);
-  const { w, d } = await held();
-  const r = await withEntry(pdf(t), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env: { OCR_WORKER: member(() => ocrAnswer([1])) } }));
-  assert.equal(r.body.reextraction.written, true);
+  const { w, d } = await held(t);
+  const { x } = await pressThenPass(w, d, { OCR_WORKER: member(() => ocrAnswer([1])) });
+  assert.equal(x.written, true);
   const stored = JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
   assert.deepEqual([stored.words_total, stored.words_read], [8, 8], "three typed words and the five the OCR read");
   const got = w.x.readingFor(d, "class:admin").reading;
@@ -32,12 +32,12 @@ test("R34 R35 (reading-pipeline R35, C17): a re-read states, stores and answers 
 
 test("R34 R35 (reading-pipeline R35, C17): a re-read of a page the OCR member read below its floor answers fewer words read than total", async () => {
   const t = i2([{ page: 0, text: "alpha beta gamma" }, { page: 1, text: "", undetermined: [noText(1)] }]);
-  const { w, d } = await held();
+  const { w, d } = await held(t);
   const src = (rect) => ({ kind: "pdf-page", ref: "p1", page: 1, rect });
   const ans = ocrAnswer([1], { floor: 0.5 });
   ans.pages[0].regions = [{ text: "good words here", source: src([0, 0, 10, 10]), confidence: { value: 0.9, basis: "engine" } },
                           { text: "faint smudge text", source: src([0, 20, 10, 30]), confidence: { value: 0.1, basis: "engine" } }];
-  await withEntry(pdf(t), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env: { OCR_WORKER: member(() => ans) } }));
+  await pressThenPass(w, d, { OCR_WORKER: member(() => ans) });
   const got = w.x.readingFor(d, "class:admin").reading;
   assert.ok(Number.isInteger(got.words_total) && Number.isInteger(got.words_read), "both counts are stated");
   assert.deepEqual([got.words_total, got.words_read], [9, 6], "three typed, three read, three below the floor");
@@ -58,7 +58,7 @@ test("R71 R35 (reading-pipeline R35, C17): a transcription states, stores and an
   const d = await hold(w.evidence, "%PDF-1.7 " + Math.random());
   w.x.writeReading({ bundleId: "B-1", captureSha: d, reading: { content_type: "generic", reader_version: 1, read_from_text: false, found: false,
     entities: [], facts: {}, at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 2,
-    container_extent: { container: "pdf", levels: ["images"], images: [] } } });
+    container_extent: { container: "pdf", levels: ["images"], images: [] } }, textUnits: [{ extent: { kind: "pdf-page", page: 0 }, text: "Minutes of the meeting", seq: 0 }] });
   const t = i2([{ page: 0, text: "Minutes of the meeting" }, { page: 1, text: "", undetermined: [noText(1)] }]);
   w.x.registerTranscriber("plane", {
     deployable: () => true, keptAway: () => null,

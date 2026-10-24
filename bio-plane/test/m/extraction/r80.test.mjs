@@ -3,7 +3,7 @@
    reading. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, sha, doc } from "./fixture.mjs";
+import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, sha, doc, pressThenPass } from "./fixture.mjs";
 
 const pdf = (text) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: (text.pages || []).length, notes: [] }) });
 
@@ -72,9 +72,10 @@ test("R80 R31 R32: after the repair the OCR re-read of the capture runs; before 
   assert.equal(before.body.reason, "REEXTRACT_NOT_READ");
   const r = await withEntry(pdf(t), () => w.x.readHeld({ sha: d }));
   assert.equal(r.read, true);
-  const after = await ask();
-  assert.equal(after.status, 200);
-  assert.equal(after.body.reextraction.written, true);
+  /* (fix round 9, R103) the press owes the page; the ledger's pass writes the re-read */
+  const { press, x } = await pressThenPass(w, d, { OCR_WORKER: member(() => ocrAnswer([1])) });
+  assert.deepEqual([press.status, press.body.reextraction.owed], [200, true]);
+  assert.equal(x.written, true);
 });
 
 test("R80 (control): a digest that already has a reading is left as it is", async () => {

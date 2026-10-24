@@ -9,7 +9,7 @@ import { localize } from "../../../src/setup-words/index.mjs";
 import { WHOLE_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
 import { fresh, bundle, bucket, doc, sha } from "./fixture.mjs";
 
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows, parts = new Map()) => ({ homeOf: (s) => rows.get(s) ?? null, partsOf: (s) => parts.get(s) ?? null, onTestimony: () => ({ ok: true }) });
 const row = (bundleId, bytes = 20) => ({ bundleId, path: "a.pdf", encoding: "binary", bytes, registered: "t", authored: false });
 const count = (w, table, d) => w.one(`SELECT count(*) c FROM ${table} WHERE capture_sha=?`, d).c;
 const held = (w) => w.s.sql.exec(`SELECT capture_sha FROM readings ORDER BY capture_sha`).toArray().map((r) => r.capture_sha);
@@ -19,16 +19,18 @@ const stub = () => ({ found: false, entities: [], failure: "final", content_type
   basis: localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted",
     { why: localize("reading-pipeline.index.non_textual_large", "non-textual or too large") }) });
 
-/* 0115's shape: the register names the five parts (not the whole), the bundle's provenance document names the whole and its parts, the
-   capture is over the reading ceiling, the whole's bytes are not held. */
+/* 0115's shape, the readings as the old press left them (a reading stored against a part); the register as provenance keeps it now (R74, fix round 9,
+   K4880): the whole is its one row and `partsOf` names its five parts; the bundle's provenance document names the whole and its parts, the capture is
+   over the reading ceiling, the whole's bytes are not held. */
 function walker({ n = 5, total = 41_502_904, bundleId = "INFO-1", host = null } = {}) {
-  const rows = new Map(), evidence = bucket();
-  const w = fresh({ evidence, provenance: register(rows), host });
+  const rows = new Map(), evidence = bucket(), wholes = new Map();
+  const w = fresh({ evidence, provenance: register(rows, wholes), host });
   bundle(w.s, bundleId);
   const d = sha("the whole of a packet kept in parts " + Math.random());
   const parts = Array.from({ length: n }, (_, i) => ({ file: `p${i}.bin`, sha256: sha(`part ${i} ${Math.random()}`),
     bytes: i < n - 1 ? Math.floor(total / n) : total - Math.floor(total / n) * (n - 1) }));
-  for (const p of parts) rows.set(p.sha256, row(bundleId, p.bytes));
+  rows.set(d, row(bundleId, total));
+  wholes.set(d, parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })));
   const document = doc({ digest: d, bytes: total, ct: "application/pdf", format: "undetermined", parts });
   const text = JSON.stringify({ documents: [document] });
   w.s.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?,?,?,?,?,?)`, bundleId, "data/provenance.json", text, null, 1, "x");
@@ -58,7 +60,7 @@ test("R92 (G33): a `final` reading stored against part 4 of five is superseded: 
   assert.equal(got.reading.failure, "final");
   assert.ok(got.reading.basis.includes("41502904") && got.reading.basis.includes("5 parts"), "the sized statement: " + got.reading.basis);
   assert.ok(got.at !== undefined);
-  assert.equal(w.x.readingFor(parts[3].sha256, "class:admin").capture_sha, d, "R88: the part's digest answers the whole's statement");
+  assert.equal(w.x.readingFor(parts[3].sha256, "class:admin").found, false, "R104: a part's digest is no capture, and holds no reading of its own any more");
 });
 
 test("R92 (G33): a part reading is superseded when the whole already holds its reading: nothing is owed; two parts of one whole owe it once", async () => {

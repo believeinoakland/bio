@@ -122,24 +122,24 @@ test("R96 (G41): a reading that is stated replaces the capture's earlier reading
   assert.deepEqual(w.rows(`SELECT seq FROM reading_history WHERE capture_sha=? ORDER BY seq`, d).map((r) => r.seq), [1, 2]);
 });
 
-test("R97 (G41): through `readHeld`, a docx whose tables hold more than 1 MiB of cells is stated, not thrown; `readHeld` answers read with no `more`, and does not loop", async () => {
+test("R97 (G41; fix round 9, K4863): through `readHeld`, a docx whose tables hold more than 1 MiB of cell text is read whole in pieces and stored whole: the entry keeps the cells out of the reading, so nothing passes the bound and nothing is stated", async () => {
   const cellsRow = (r) => `<w:tr>${Array.from({ length: 6 }, (_, c) => `<w:tc>${F.wp(F.wr(`r${r}c${c} some words in a cell`))}</w:tc>`).join("")}</w:tr>`;
   const body = `<w:tbl><w:tblGrid>${"<w:gridCol/>".repeat(6)}</w:tblGrid>${Array.from({ length: 1500 }, (_, r) => cellsRow(r)).join("")}</w:tbl>`;
   const bytes = F.docx({ body });
   const { w, d } = await home(bytes, { ct: DOCX_CT, format: "docx" });
-  const first = await w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} });
-  assert.deepEqual([first.ok, first.read, first.found, first.more], [true, true, false, undefined], JSON.stringify(first));
+  const last = await readAll(w, d);
+  assert.deepEqual([last.ok, last.read, last.more, last.stated], [true, true, undefined, undefined], JSON.stringify(last));
   const stored = JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
-  assert.equal(stored.failure, "final");
-  assert.equal(stored.too_large.key, "cells", "the largest part is the tables' cells");
-  assert.ok(stored.too_large.bytes > MiB);
+  assert.equal(stored.failure, undefined, "stored whole, not stated");
+  assert.equal(stored.too_large, undefined);
   assert.ok(largestStored(w) < MiB);
+  assert.equal(w.one(`SELECT count(*) c FROM capture_text WHERE capture_sha=?`, d).c, 9000, "every cell's paragraph is a unit");
+  assert.ok(found(w, "r1499c5"), "the last cell is searchable");
   assert.equal((await w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} })).why, "READING_HELD", "a second call reads nothing more");
-  const a = viaOp(w, d);
-  assert.equal(a.completeness.state, "stated");
+  assert.equal(viaOp(w, d).completeness.state, "whole");
 });
 
-test("R97 (G41): the same for an ods workbook whose cells pass 1 MiB (the entry keeps whole cells)", async () => {
+test("R97 (G41; fix round 9, K4863): an ods workbook whose cells pass 1 MiB is stored whole with its cells held (`cells: null` for the sheet, `cells_held` naming it), and `cellsOf` answers its rows through `cellsIn`, as the xlsx case (R96 b) is", async () => {
   const cell = (t) => `<table:table-cell office:value-type="string"><text:p>${t}</text:p></table:table-cell>`;
   const rows = Array.from({ length: 1500 }, (_, r) => `<table:table-row>${Array.from({ length: 6 }, (_, c) => cell(`r${r}c${c} some words in a cell`)).join("")}</table:table-row>`).join("");
   const NS = 'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"';
@@ -150,12 +150,15 @@ test("R97 (G41): the same for an ods workbook whose cells pass 1 MiB (the entry 
     { name: "content.xml", data: `<?xml version="1.0" encoding="UTF-8"?><office:document-content ${NS} office:version="1.3"><office:body><office:spreadsheet><table:table table:name="Budget">${rows}</table:table></office:spreadsheet></office:body></office:document-content>` },
   ]);
   const { w, d } = await home(bytes, { ct: "application/vnd.oasis.opendocument.spreadsheet", format: "ods" });
-  const first = await w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} });
-  assert.deepEqual([first.ok, first.read, first.found, first.more], [true, true, false, undefined], JSON.stringify(first));
+  const last = await readAll(w, d);
+  assert.deepEqual([last.ok, last.read, last.more, last.stated], [true, true, undefined, undefined], JSON.stringify(last));
   const stored = JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
-  assert.equal(stored.failure, "final");
-  assert.equal(stored.too_large.key, "cells");
+  assert.equal(stored.failure, undefined, "stored whole, not stated");
+  assert.ok(Array.isArray(stored.cells_held) && stored.cells_held.includes("Budget"), JSON.stringify(stored.cells_held));
   assert.ok(largestStored(w) < MiB);
+  const got = await w.x.cellsOf(d, "Budget", { fromRow: 1500, toRow: 1500 });
+  assert.deepEqual(got.cells.map((c) => c.value), Array.from({ length: 6 }, (_, c) => `r1499c${c} some words in a cell`), JSON.stringify(got).slice(0, 400));
+  assert.equal(got.next_row, null);
 });
 
 test("R97 (G41): a pptx reading is stated when it passes 1 MiB, as the others are; the real pptx entry lists no cells, so a 6,000-slide deck read by `readHeld` is far under the bound and stored whole (control)", async () => {
@@ -201,7 +204,8 @@ test("R96 (G41 control): a reading under 1 MiB is stored exactly as before: row,
   assert.equal(JSON.stringify(w.x.readingOf(d).reading), row, "readingOf answers the stored reading whole");
   assert.deepEqual([row.length, digest], PINNED_SMALL_CSV, "the row's length and digest, taken on the code before G41");
 });
-const PINNED_SMALL_CSV = [230882, "ee9361bca9d63273eaf3799522f9f1a6f056ca17fb4cf993fcedbda2f49f4712"];
+/* re-taken in fix round 9: the CSV entry's `dialect` gained `assumed` and `disagree` (reading-pipeline R49, G131g; 29 bytes), the reading the pipeline composes */
+const PINNED_SMALL_CSV = [230911, "b69b3df47d35d8908bbcc61d07d1efe7cc8d06c4ffbdc9891ab637774894ed13"];
 
 test("R96 (G41 control): a second read of the same bytes adds no history row, and a fresh `Extraction` over the same database answers the same `readingOf`", async () => {
   const { w, d } = await home(csvText(csvRows(30_000)), { ct: "text/csv", format: "csv", fromText: true });
