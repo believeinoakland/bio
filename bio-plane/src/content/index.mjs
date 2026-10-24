@@ -49,7 +49,8 @@ import {
   unitChainKind,
 } from "./extent.mjs";
 import { VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES, extentBoundUnheld, gradeAcross,
-         affectsOf, heldTextAt, typedCellsAt, extentBox } from "./notice.mjs";
+         affectsOf, heldTextAt, typedCellsAt, extentBox, normUnits, searchedOf, splitRun, kindAt } from "./notice.mjs";
+import { readRange as acquisitionReadRange } from "../acquisition/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
 export * from "./extent.mjs";
@@ -79,6 +80,17 @@ export const STALE_GRADED_MAX = 200;
 /** R57: how many typings one `transcriptions` read lists by default, and at most. */
 export const TRANSCRIPTIONS_LIMIT_DEFAULT = 50;
 export const TRANSCRIPTIONS_LIMIT_MAX = 200;
+/** R46, R60: one page of a capture's units is read at most this many characters of text (extraction R93's page, about 1 MiB), the pages
+ *  followed by `next` until the reading's last unit, so a reading of more than 4,096 units is read whole and never from its first page alone. */
+export const UNITS_PAGE_CHARS = 1048576;
+/** R46, R60: the most unit text one capture's held units are read to (32 MiB of characters; proposed, BOB records). Past it the reading is held as
+ *  `partial` with `searched` naming how far it was read, never as `whole`, so a document too large to hold in one object is stated and not graded
+ *  as if it were all read. */
+export const HELD_TEXT_CHARS_MAX = 32 * 1048576;
+/** R58: how many pages of units a lookup of a unit's kind scans (one capture, 16 MiB of unit text) before it answers that the reading names none. */
+export const KIND_SCAN_PAGES_MAX = 16;
+/** R59: the bytes a crop reads from a capture at a time through `readRange`. */
+const RANGE_BYTES = 8 * 1048576;
 /** R51: the figures this module reports for `op=stats` and purge's proof, through record-core's `registerCounts`. */
 export const CONTENT_COUNT_KEYS = Object.freeze(["content", "contentStale"]);
 
@@ -149,20 +161,26 @@ function transcriptionCovering(tx, kind, extent) {
 const staleSays = (extent) =>
   word("content.text.passage_cited_stood", { extent: String(describeExtent(extent)) });
 
-/** A capture's units as `gradeAcross` and `heldTextAt` read them: each extent in its canonical form (extraction R36
- *  answers it parsed), in `seq` order (R36 answers them so; a unit with no `seq` keeps its place), and a missing answer
- *  as none held. */
-function normUnits(u) {
-  const units = u && Array.isArray(u.units) ? u.units.filter((x) => x && typeof x === "object") : [];
-  const seq = (x) => (Number.isFinite(x.seq) ? x.seq : Infinity);
-  return { units: units.map((x, i) => ({ x, i })).sort((a, b) => (seq(a.x) - seq(b.x)) || (a.i - b.i))
-             .map(({ x }) => ({ ...x, extent: typeof x.extent === "string" ? x.extent : canonicalExtent(x.extent),
-                                truncated: !!x.truncated })),
-           state: u ? u.state ?? null : null };
-}
+/** R58 (`extraction` R107): the closed list of the kinds a unit names and the word a member reads for each; `body` is the unmarked one. */
+export const PART_KIND_WORDS = Object.freeze({
+  body: localize("content.part_kind.body", "body"),
+  footnote: localize("content.part_kind.footnote", "footnote"),
+  endnote: localize("content.part_kind.endnote", "endnote"),
+  header: localize("content.part_kind.header", "header"),
+  footer: localize("content.part_kind.footer", "footer"),
+  comment: localize("content.part_kind.comment", "comment"),
+  tracked_deletion: localize("content.part_kind.tracked_deletion", "tracked deletion"),
+  text_box: localize("content.part_kind.text_box", "text box"),
+  speaker_note: localize("content.part_kind.speaker_note", "speaker note"),
+  master_text: localize("content.part_kind.master_text", "master text"),
+  cell_note: localize("content.part_kind.cell_note", "cell note"),
+});
+/** R58: a row's human form with its part's kind beside the extent, for a kind other than `body`. */
+const refWithKind = (ref, kind) => (kind && kind !== "body" && PART_KIND_WORDS[kind]
+  ? localize("content.ref.with_part_kind", "{ref} ({kind})", { ref: String(ref), kind: String(PART_KIND_WORDS[kind]) }) : ref);
 
 export class Content {
-  constructor({ storage, record, membership, provenance, extraction = null, now = null }) {
+  constructor({ storage, record, membership, provenance, extraction = null, now = null, readRange = null }) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -170,6 +188,8 @@ export class Content {
     this.provenance = provenance;
     this.extraction = extraction;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
+    /* R59: `acquisition.readRange` (its R113), handed in as `deps.readRange` (a test's own, or acquisition's): a capture's bytes by its whole digest */
+    this.readRange = typeof readRange === "function" ? readRange : acquisitionReadRange;
     this.staleListeners = [];
   }
 
@@ -229,11 +249,77 @@ export class Content {
   }
 
   /* ===================================================================== *
+   * A CAPTURE'S HELD UNITS (R46, R60; extraction R36, R93, R107).
+   * ===================================================================== */
+
+  /** Every unit of a capture, read page by page (extraction's `unitsOf` answers at most a page and `next` when more follows; a reading of more
+   *  than 4,096 units is read whole by following it), with the index's own state and counters from the first page. Followed no further than
+   *  `HELD_TEXT_CHARS_MAX` characters of text, or while a page makes progress: a reading stopped there is held `partial` (never `whole`) with
+   *  `read_through` the units read and `total` the units written, so the answer says how far it was read. Throws what `unitsOf` throws. */
+  #rawUnits(captureSha) {
+    let page = this.extraction.unitsOf(captureSha, { maxBytes: UNITS_PAGE_CHARS });
+    const head = page && typeof page === "object" ? page : { units: [], state: null };
+    const units = [];
+    let chars = 0, cut = false;
+    for (;;) {
+      const us = page && Array.isArray(page.units) ? page.units : [];
+      for (const u of us) { units.push(u); chars += u && typeof u.text === "string" ? u.text.length : 0; }
+      const next = page && Number.isInteger(page.next) ? page.next : null;
+      if (next === null) break;
+      if (chars > HELD_TEXT_CHARS_MAX) { cut = true; break; }
+      page = this.extraction.unitsOf(captureSha, { after: next, maxBytes: UNITS_PAGE_CHARS });
+      if (!page || !Array.isArray(page.units) || !page.units.length) { cut = true; break; }
+    }
+    return { ...head, units,
+             ...(cut ? { state: "partial", read_through: units.length,
+                         total: Number.isInteger(head.counts && head.counts.written) ? head.counts.written : null } : {}) };
+  }
+
+  /** R58: the kind of the unit stored at exactly each of `rows`' extents (`{capture_sha, extent_kind, extent}`, `extent` JSON or object), read through
+   *  `unitsOf` page by page until every one is found or `KIND_SCAN_PAGES_MAX` pages are read: a Map keyed `<sha>\u0000<canonical extent>` to the
+   *  kind in the closed list, or `null` where the unit names none or none is held there (a reading stored before the kind: undetermined, never `body`).
+   *  A document, a PDF page and an image carry no kind and are not looked up. An element carried as chunks is its first chunk's. Never throws. */
+  #partKinds(rows, memo = null) {
+    const out = new Map();
+    const want = new Map();
+    for (const r of rows) {
+      if (!r || r.extent_kind === "document" || r.extent_kind === "pdf-page" || r.extent_kind === "image") continue;
+      const ext = typeof r.extent === "string" ? safeJson(r.extent) : r.extent;
+      if (!isObj(ext)) continue;
+      const full = { ...ext, kind: r.extent_kind };
+      const key = `${r.capture_sha}\u0000${canonicalExtent(full)}`;
+      if (memo && memo.has(`kind\u0000${key}`)) { out.set(key, memo.get(`kind\u0000${key}`)); continue; }
+      if (!want.has(r.capture_sha)) want.set(r.capture_sha, new Map());
+      want.get(r.capture_sha).set(key, splitRun(full));
+      out.set(key, null);
+    }
+    for (const [sha, wanted] of want) {
+      try {
+        let after = null;
+        for (let pages = 0; pages < KIND_SCAN_PAGES_MAX && wanted.size; pages++) {
+          const page = this.extraction.unitsOf(sha, after === null ? { maxBytes: UNITS_PAGE_CHARS } : { after, maxBytes: UNITS_PAGE_CHARS });
+          for (const u of page && Array.isArray(page.units) ? page.units : []) {
+            if (!u || typeof u !== "object") continue;
+            const at = splitRun(u.extent);
+            const named = typeof u.kind === "string" && PART_KIND_WORDS[u.kind] ? u.kind : null;
+            for (const [key, w] of wanted)
+              if (w.extent === at.extent && (w.run === null ? at.run === null || at.run === 0 : at.run === w.run)) { out.set(key, named); wanted.delete(key); }
+          }
+          after = page && Number.isInteger(page.next) ? page.next : null;
+          if (after === null) break;
+        }
+      } catch { /* a reading that cannot be read names no kind */ }
+    }
+    if (memo) for (const [key, kind] of out) memo.set(`kind\u0000${key}`, kind);
+    return out;
+  }
+
+  /* ===================================================================== *
    * THE CAPTURE'S CONTEXT (K73 (1); R7, R12, R30): everything the checker needs about a capture, from ONE read of the
    * persisted reading (extraction R30), so the write path and every later caller ask the same question the same way.
    * ===================================================================== */
 
-  contentContextFor(captureSha) {
+  contentContextFor(captureSha, { searched: withSearched = true } = {}) {
     const r = this.extraction.readingOf(captureSha);
     const held = !!r;
     const reading = r ? { text_source: r.chain ?? null, page_count: r.pageCount ?? null,
@@ -242,8 +328,15 @@ export class Content {
                           page_boxes: r.pageBoxes ?? (isObj(r.reading) ? r.reading.page_boxes ?? null : null) } : null;
     const container = this.#containerExtentFor(captureSha, reading);
     Object.assign(container, containerKindOf(reading, r ? r.captureFormat ?? null : null, held));
+    const searched = held && withSearched ? this.#searchedFor(captureSha) : null;
     return { chain: chainOfReading(reading), pageCount: this.#pageSetFor(captureSha, reading),
-             pageBoxes: reading ? reading.page_boxes ?? null : null, container };
+             pageBoxes: reading ? reading.page_boxes ?? null : null, container, ...(searched ? { searched } : {}) };
+  }
+
+  /** R60: `{through, total}` for a capture whose reading is not whole (`searchedOf`), asked of the index's state alone (a page past every unit, so no
+   *  text is read), else null. Never throws. */
+  #searchedFor(captureSha) {
+    try { return searchedOf(normUnits(this.extraction.unitsOf(captureSha, { after: Number.MAX_SAFE_INTEGER }))); } catch { return null; }
   }
 
   /** THE CAPTURE'S PAGE SET (CAP-9 / D-345): the reading's own page count wins outright where it exists. Where there
@@ -411,7 +504,7 @@ export class Content {
    * ===================================================================== */
 
   mint({ bundleId, captureSha, extent, mintedBy = CONTENT_MINTED_BY_PLANE, at = null, context = null, ctx = null }) {
-    const c = context || ctx || this.contentContextFor(captureSha);
+    const c = context || ctx || this.contentContextFor(captureSha, { searched: false });
     const bad = checkContentExtent(extent, c);
     if (bad) return bad;
     /* FW-19 / IC-125: a `bytes` row has no chain and no cap, both written NULL with `cited_as` saying why; the chain
@@ -484,7 +577,7 @@ export class Content {
       const key = `${cit.target}\u0000${authored || ""}`;
       if (!byTarget.has(key)) byTarget.set(key, isInfo ? this.captureFor(cit.target, authored) : null);
       const sha = byTarget.get(key);
-      if (sha != null && !byCapture.has(sha)) byCapture.set(sha, this.contentContextFor(sha));
+      if (sha != null && !byCapture.has(sha)) byCapture.set(sha, this.contentContextFor(sha, { searched: false }));
       plan.set(i, { target: cit.target, isInfo, authored, captureSha: sha,
                     ctx: sha == null ? { chain: null, pageCount: null, container: null } : byCapture.get(sha),
                     extent: citationExtent(cit) });
@@ -591,7 +684,7 @@ export class Content {
   /** R49, the check: the `document` extent over the path's capture, against the context the mint will see (R7, R42).
    *  A refusal refuses the promotion as it came; nothing is written. */
   testimonyCheck({ captureSha } = {}) {
-    return checkContentExtent({ kind: "document" }, this.contentContextFor(captureSha));
+    return checkContentExtent({ kind: "document" }, this.contentContextFor(captureSha, { searched: false }));
   }
 
   /** R49, the projection: the row at the `document` extent over the path's capture, under the same (null) chain as the
@@ -699,8 +792,10 @@ export class Content {
    *  never saw did not check the text it points at); a TYPING is raised only by attestations of that typing, by
    *  members other than the typist (REC-87). `connectionByBundle`, when a caller hands it, adds the earned read's
    *  connection axis (see `standings`). */
-  #standing(r, atts, txs = null, connectionByBundle = null) {
+  #standing(r, atts, txs = null, connectionByBundle = null, kinds = null) {
     const extent = { kind: r.extent_kind, ...(safeJson(r.extent) || {}) };
+    /* R58: where a caller asked the units' kinds, the part's kind beside the extent (`null`: the unit names none) and in the row's human form */
+    const partKind = kinds ? kinds.get(`${r.capture_sha}\u0000${canonicalExtent(extent)}`) ?? null : null;
     const chain = safeJson(r.chain);
     const target = contentTarget(r.extent_kind, extent);
     const tx = txs && txs.by ? txs.by.get(r.content_id) : null;
@@ -717,7 +812,8 @@ export class Content {
       : gradeCeiling(chain, target, covering);
     const out = {
       content_id: r.content_id, bundle_id: r.bundle_id, capture_sha: r.capture_sha,
-      extent_kind: r.extent_kind, extent, ref: r.ref, chain,
+      extent_kind: r.extent_kind, extent, ref: kinds ? refWithKind(r.ref, partKind) : r.ref, chain,
+      ...(kinds ? { part_kind: partKind } : {}),
       derivation_cap: r.derivation_cap, page_count: r.page_count,
       minted_by: r.minted_by, at: r.at, stale: !!r.stale,
       cited_as: r.cited_as ?? "text",
@@ -747,7 +843,8 @@ export class Content {
     if (!rows.length) return out;
     const atts = this.#attestationsOver(rows.map((r) => r.capture_sha));
     const txs = this.#transcriptionsOver(rows.map((r) => r.content_id));
-    for (const r of rows) out[r.content_id] = this.#standing(r, atts, txs, connectionByBundle);
+    const kinds = this.#partKinds(rows);
+    for (const r of rows) out[r.content_id] = this.#standing(r, atts, txs, connectionByBundle, kinds);
     return out;
   }
 
@@ -768,7 +865,7 @@ export class Content {
     const txs = this.#transcriptionsOver([r.content_id]);
     const tx = txs.by.get(r.content_id) || null;
     const atts = tx ? { by: new Map(), truncated: false } : this.#attestationsOver([r.capture_sha]);
-    const standing = this.#standing(r, atts, txs);
+    const standing = this.#standing(r, atts, txs, null, this.#partKinds([r]));
     const target = contentTarget(r.extent_kind, standing.extent);
     const txScope = tx ? transcriptionAttestExtent(r.extent_kind, standing.extent) : null;
     const all = tx
@@ -842,7 +939,8 @@ export class Content {
     this.sql.exec(`UPDATE content SET stale=1 WHERE ${where}`, captureSha, live, captureSha);
     if (!this.staleListeners.length) return n;
     const before = normUnits(unitsBefore);
-    const after = normUnits(unitsAfter && Array.isArray(unitsAfter.units) ? unitsAfter : this.extraction.unitsOf(captureSha));
+    const after = normUnits(unitsAfter && Array.isArray(unitsAfter.units) ? unitsAfter : this.#rawUnits(captureSha));
+    const searched = searchedOf(after);
     const rows = [];
     for (const row of hit) {
       const extent = safeJson(row.extent) ? { kind: row.extent_kind, ...safeJson(row.extent) } : null;
@@ -852,7 +950,8 @@ export class Content {
       if (g.affects === "unaffected") continue;
       rows.push({ content_id: row.content_id, bundle_id: row.bundle_id, capture_sha: row.capture_sha, ref: row.ref,
                   grade: g.grade, affects: g.affects, reason: g.reason, why: g.why,
-                  found_at: g.found_at ?? null, similarity: g.similarity ?? null, stale: true });
+                  found_at: g.found_at ?? null, similarity: g.similarity ?? null, stale: true,
+                  ...(searched ? { searched } : {}) });
     }
     const ungraded = n - hit.length;
     if (!rows.length && !ungraded) return n;
@@ -913,7 +1012,7 @@ export class Content {
     const chain = [{ step: "typed", member: who, text_sha256: digest }];
     /* THE EXTENT GRAMMAR IS ASKED UNDER THE TYPING'S OWN CHAIN, NOT THE CAPTURE'S: a scanned title no engine could
        read is a capture with no chain, and the member's typing IS the transcription over the portion. */
-    const ctx = { ...this.contentContextFor(sha), chain };
+    const ctx = { ...this.contentContextFor(sha, { searched: false }), chain };
     const bad = checkContentExtent(isObj(extent) ? extent : null, ctx);
     if (bad) return bad;
     const ekind = extent.kind;
@@ -1089,7 +1188,7 @@ export class Content {
     if (extent.kind === "document")
       return { holds: true, reason: "whole_document", existing_content_id: existing(extent),
                why: word("content.why.citation_whole_document") };
-    const ctx = this.contentContextFor(newerSha);
+    const ctx = this.contentContextFor(newerSha, { searched: false });
     const bad = checkContentExtent(extent, ctx);
     const said = bad ? String(bad.detail || bad.code).slice(0, 240) : "";
     if (bad && bad.code === "CONTENT_EXTENT_OUT_OF_RANGE")
@@ -1111,7 +1210,7 @@ export class Content {
 
   #unitsOf(captureSha, memo) {
     if (!memo.has(captureSha))
-      memo.set(captureSha, { ...normUnits(this.extraction.unitsOf(captureSha)), cells: this.#officeOf(captureSha).cells });
+      memo.set(captureSha, { ...normUnits(this.#rawUnits(captureSha)), cells: this.#officeOf(captureSha).cells });
     return memo.get(captureSha);
   }
 
@@ -1169,9 +1268,12 @@ export class Content {
       : addrRows.length > cap
         ? word("content.text.capture_seen_addresses", { cap: String(cap) })
         : word("content.text.least_address_version");
+    /* R58: the kind of the passage's own part, read from the unit at exactly the row's extent */
+    const own = fullExtent ? kindAt(this.#unitsOf(row.capture_sha, memo), fullExtent) : null;
+    const partKind = own && PART_KIND_WORDS[own] ? own : null;
     return {
       content_id: row.content_id, capture_sha: row.capture_sha, bundle_id: row.bundle_id,
-      extent_kind: row.extent_kind, ref: row.ref,
+      extent_kind: row.extent_kind, ref: refWithKind(row.ref, partKind), part_kind: partKind,
       state, newer, chain_read: newer === false ? true : read.length > 0, affects: affectsOf(state, candidates),
       chains, addresses_asked: addresses.length, addresses_truncated: addrRows.length > cap,
       candidates,
@@ -1187,12 +1289,15 @@ export class Content {
    *  is the sentence a candidate whose extent holds says. */
   #candidateAt(row, fullExtent, sha, memo, held) {
     const test = this.#extentTestAcross(fullExtent, sha);
-    const g = gradeAcross(row, fullExtent, this.#unitsOf(row.capture_sha, memo), this.#unitsOf(sha, memo));
+    const older = this.#unitsOf(row.capture_sha, memo), newer = this.#unitsOf(sha, memo);
+    const g = gradeAcross(row, fullExtent, older, newer);
+    /* R60: a reading not held whole says how far it was searched, the newer capture's first (its text is what the passage is looked for in) */
+    const searched = searchedOf(newer) || searchedOf(older);
     return { capture_sha: sha,
              extent: test.holds ? fullExtent : null, matched: test.holds, reason: test.reason, why: test.why,
              existing_content_id: test.existing_content_id,
              grade: g.grade, affects: g.affects, grade_reason: g.reason, grade_why: g.why,
-             found_at: g.found_at, similarity: g.similarity,
+             found_at: g.found_at, similarity: g.similarity, ...(searched ? { searched } : {}),
              candidate_only: true, identity: "not_established",
              says: test.holds ? held : "UNDETERMINED: " + test.why };
   }
@@ -1245,19 +1350,33 @@ export class Content {
    *  caller reads null as the passage held in a form not read, never as empty text. No viewer: a caller that shows the
    *  text asks sight first (R37). Writes nothing; never throws. */
   passageText(contentId) {
+    const held = this.passageHeld(contentId);
+    return held && typeof held.text === "string" ? held.text : null;
+  }
+
+  /** R46, R60: `passageText` with what it could not say. `{text}` for a passage held (a typing's text, or the text at its extent; `searched` too where
+   *  the reading it is read from is not whole), `{text: null, reason, why}` otherwise (`not_held`, `stale`, `cited_as_bytes`, or `heldTextAt`'s own
+   *  reason), and `searched: {through, total}` beside a text read from a reading that is not whole or a null owed to one. Never throws. */
+  passageHeld(contentId) {
+    const no = (reason, why, more = {}) => ({ text: null, reason, why, ...more });
     try {
       const id = typeof contentId === "string" ? contentId.trim() : "";
       const r = id ? this.#one(`SELECT content_id, capture_sha, extent_kind, extent, cited_as, stale FROM content
                                   WHERE content_id=?`, id) : null;
-      if (!r || r.stale || r.cited_as === "bytes") return null;
+      if (!r) return no("not_held", localize("content.index.no_content_row_by_that", "this record holds no content row by that id"));
+      if (r.stale)
+        return no("stale", localize("content.index.passage_cited_under_earlier", "the row was cited under an earlier reading of its document, and the text held now is the newer reading's, which may not be the text cited"));
+      if (r.cited_as === "bytes") return no("cited_as_bytes", localize("content.index.image_cited_as_bytes", "the passage is an image cited as its bytes, so it has no text"));
       const typed = this.#one(`SELECT text FROM transcriptions WHERE content_id=?`, r.content_id);
-      if (typed) return typeof typed.text === "string" ? typed.text : null;
+      if (typed) return typeof typed.text === "string" ? { text: typed.text } : no("not_held", localize("content.index.no_content_row_by_that", "this record holds no content row by that id"));
       const e = safeJson(r.extent);
-      if (!isObj(e)) return null;
-      const held = heldTextAt({ ...e, kind: r.extent_kind },
-        { ...normUnits(this.extraction.unitsOf(r.capture_sha)), cells: this.#officeOf(r.capture_sha).cells });
-      return typeof held.text === "string" ? held.text : null;
-    } catch { return null; }
+      if (!isObj(e)) return no("extent_unreadable", localize("content.notice.cited_extent_unreadable", "the cited passage's extent could not be read back from its row"));
+      const units = normUnits(this.#rawUnits(r.capture_sha));
+      const searched = searchedOf(units);
+      const held = heldTextAt({ ...e, kind: r.extent_kind }, { ...units, cells: this.#officeOf(r.capture_sha).cells });
+      return typeof held.text === "string" ? { text: held.text, ...(searched ? { searched } : {}) }
+        : no(held.reason, held.why, searched ? { searched } : {});
+    } catch { return no("not_read", localize("content.index.passage_could_not_be_read", "the row's text could not be read")); }
   }
 
   /* ===================================================================== *
@@ -1355,7 +1474,7 @@ export class Content {
         return { capture_sha: sha, metadata: { author: v("author"), lastModifiedBy: v("lastModifiedBy"),
                                                created: v("created"), modified: v("modified"), source: v("source") } };
       }
-      const kind = this.contentContextFor(sha).container;
+      const kind = this.contentContextFor(sha, { searched: false }).container;
       if (kind && kind.office === false)
         return no("not_office", localize("content.index.v1_so_it_states_no", "{v1}, so it states no office metadata", { v1: String(kind.kind_why || localize("content.index.capture_not_office_document", "the capture is not an office document")) }));
       return no("none_held", localize("content.index.reading_holds_no_office", "the capture's reading holds no office metadata (its file has no readable core-properties part, or it was read before readings carried it)"));
@@ -1367,6 +1486,28 @@ export class Content {
   /* ===================================================================== *
    * THE CROP (R32; D-419, K70).
    * ===================================================================== */
+
+  /** R59: the whole bytes of a capture by its whole digest, read through `readRange` in ranges of `RANGE_BYTES` to the end, or null when the record holds
+   *  none (the first range refused) or a range fails. Never throws. */
+  async #capturedBytes(captureSha) {
+    const store = { core: this.record, provenance: this.provenance };
+    const chunks = [];
+    let total = 0;
+    try {
+      for (;;) {
+        const got = await this.readRange(store, captureSha, total, RANGE_BYTES);
+        if (!(got instanceof Uint8Array)) return null;
+        if (got.length) { chunks.push(got); total += got.length; }
+        if (got.length < RANGE_BYTES) break;
+      }
+    } catch { return null; }
+    if (!total) return null;
+    if (chunks.length === 1) return chunks[0];
+    const all = new Uint8Array(total);
+    let at = 0;
+    for (const c of chunks) { all.set(c, at); at += c.length; }
+    return all;
+  }
 
   /** R32: the crop of an image cited by page and rectangle, cut through `pdf-pixels` from the capture's own bytes in
    *  the evidence store, its file as `bytes_base64` (N119), and served as a DERIVED RENDITION that says so
@@ -1389,11 +1530,12 @@ export class Content {
     if (!store)
       return { ok: false, reason: "CROP_NO_EVIDENCE_STORE", content_id: r.content_id,
                detail: localize("content.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no crop was made. That is a fact about how your team's Civicsmith is set up, not about the image") };
-    const obj = await store.get(r.capture_sha);
-    if (!obj)
+    /* R59: the capture's bytes by its WHOLE digest through `acquisition.readRange` (its R113), whether it is held whole or in parts: a range at a time
+       to the end (a range reaching past it answers the bytes that exist, one at or past it an empty array), never by resolving a part */
+    const bytes = await this.#capturedBytes(r.capture_sha);
+    if (!bytes)
       return { ok: false, reason: "CROP_CAPTURE_NOT_HELD", content_id: r.content_id, capture_sha: r.capture_sha,
                detail: localize("content.index.evidence_store_holds_no", "the evidence store holds no object under this row's capture, so no crop was made") };
-    const bytes = new Uint8Array(await obj.arrayBuffer());
     const out = await cropImage(bytes, { kind: "image", page: e.page, rect: Array.isArray(e.rect) ? e.rect : null });
     if (!out || out.ok !== true)
       return { ok: false, reason: "CROP_NOT_DERIVABLE", content_id: r.content_id, derived: true,

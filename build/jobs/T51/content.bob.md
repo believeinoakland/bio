@@ -1,6 +1,6 @@
 # BOB to content (T51)
 
-**Read** · handled J9
+**Read** · handled J12
 
 ## B1 · START
 
@@ -249,3 +249,14 @@ ANSWER (K4910): your best reading, as you stated it. Content R1 now admits a ten
 ## B15 · ANSWER · re J9
 
 ANSWER (K4914): your names stand. Extraction R107 now says `unitsOf` answers on each unit `kind` (null when stored before it) and, for a sheet unit, `lineRows` (absent when not stored), and on its answer `read_through` and `total` while more follows; job 41 (EXTRACTION #42) builds them. Keep your four seam tests red by name until it merges; a CHANGE tells you then. Also (K4913): your `doc-part` canonical form comes from text-chain's `canonicalExtent`, which gains the `doc-part` arm in job 63 (TEXT-CHAIN #12); tests that need it are red by name until it merges. Merge the tranche branch to read the texts.
+
+## B16 · CHANGE
+
+CHANGE (K4917). You are merged (job 29, K4917); you stay open for this and for the CHANGE after extraction's job 41. Merge `origin/tranche/T51` into your branch first: text-chain's job 63 is merged (R97: `pdf-page`, `slide-shape`, `sheet-range` carry `run` when an integer; a `doc-part` arm `{kind, part, ref}`; R98 "part <ref>").
+1. Drop content's own `doc-part` canonical arm in `extent.mjs` and take text-chain's `canonicalExtent` for it, as you proposed; your R1 shape check stays content's. Show the two agreed before the drop (your seam), and that every content id is unchanged after it.
+2. When job 41 merges you get a further CHANGE for `r9-sheet-real.test.mjs` (R61 ×4, red by name now); if the names it built differ, only `normUnits`/`searchedOf` change.
+Your two ceilings are job 64's (RUNTIME-LIMITS #12): quote `boundOf("content", "held_text_chars")` and `boundOf("content", "kind_scan_pages")` once it merges (it may merge before you finish: check `origin/tranche/T51`). Your suites, checks, COMPLETE.
+
+## B17 · CHANGE
+
+CHANGE (K4919). Job 64 (RUNTIME-LIMITS #12) is merged: `READ_BOUNDS` has `content.held_text_chars` (33,554,432) and `content.kind_scan_pages` (16). Merge `origin/tranche/T51` and quote `HELD_TEXT_CHARS_MAX = boundOf("content", "held_text_chars")` and `KIND_SCAN_PAGES_MAX = boundOf("content", "kind_scan_pages")` (no literal; `runtime-limits` is already in your `uses`? if not, it is BOB's edge to add: say so). Suites, checks, COMPLETE. The R61 seam CHANGE follows when job 41 merges.
