@@ -295,7 +295,7 @@ function renderCapture(cs, view) {
     if (c && c.state === "stated") return `<p class="mk-note" role="status" data-reading="stated">${cs.w("screen.document.text.label")}: ${c.why ? statedWhy(c.why) : cs.w("screen.document.text.none")}</p>`;
     /* R63 (G135c): a reading that holds no words says why it does not: it failed (the nearest held row, `shell.unread`), or it is owed (it follows); the "no page
        has text" of `none` is for a reading that was made, whole, and found none */
-    if (!r.words && r.failure === "final") return `<p class="cs-state" data-state="failed" role="status" data-reading="failed">${cs.w("shell.unread")}</p>`;
+    if (!r.words && r.failure === "final") return `<p class="cs-state" data-state="failed" role="status" data-reading="failed">${cs.w("screen.document.text.label")}: ${r.basis ? cs.esc(r.basis) : cs.w("shell.unread")}</p>`;
     if (!r.words && (r.owed || r.failure)) return `<p class="mk-note" role="status" data-reading="pending">${cs.w("screen.document.text.unread.next")}</p>`;
     const state = r.wordsRead !== null && r.wordsTotal !== null ? cs.w("screen.document.text.read", { read: String(r.wordsRead), total: String(r.wordsTotal) })
       : cs.w(r.words ? "screen.document.text.full" : "screen.document.text.none");
@@ -1194,7 +1194,8 @@ function readingOf(a, doc) {
   const txt = (k) => (typeof r[k] === "string" && r[k] ? { [k]: r[k].slice(0, 200) } : {});
   const refusal = failure === "final" && typeof r.reason === "string" && r.reason ? { reason: r.reason, ...fig("size"), ...fig("bound"), ...fig("n"), ...txt("part"), ...txt("kind"), ...txt("name") } : null;
   const cstate = cmp && typeof cmp === "object" && ["partial", "stated"].includes(cmp.state);
-  return { read: words > 0, present: true, own: words > 0 || failure === "final" || !!refusal || !!cstate || n("words_total") !== null, words, wordsRead: n("words_read"), wordsTotal: n("words_total"),
+  const basis = typeof r.basis === "string" && r.basis.trim() ? { basis: r.basis.replace(/\s+/g, " ").trim().slice(0, 300) } : {};
+  return { read: words > 0, present: true, ...basis, own: words > 0 || failure === "final" || !!refusal || !!cstate || n("words_total") !== null, words, wordsRead: n("words_read"), wordsTotal: n("words_total"),
            ...(cmp && typeof cmp === "object" && ["whole", "partial", "stated"].includes(cmp.state) ? { completeness: { state: cmp.state, ...(typeof cmp.why === "string" ? { why: cmp.why } : {}) } } : {}),
            ...(failure ? { failure } : {}), ...(owed ? { owed: true } : {}), ...(refusal ? { refusal } : {}) };
 }

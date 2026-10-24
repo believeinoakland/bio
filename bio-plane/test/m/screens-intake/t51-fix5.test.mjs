@@ -8,7 +8,7 @@
  * store would change it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, main, fill, press, btn, ok, refused, says, DOCUMENT_STUB, MEMBER } from "./page.mjs";
+import { open as openPage, main, text, fill, press, btn, ok, refused, says, DOCUMENT_STUB, MEMBER } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { fresh, network, receipt, register, sha } from "../capture/fixture.mjs";
@@ -79,8 +79,10 @@ test("R38 (E7) a held copy whose reading failed final with no text is read again
     const p = await open(pl);
     await pressCapture(p);
     assert.equal(p.byOp("readheld").length, 1, "a failed reading is not a reading");
-    assert.equal(marks(p, "read"), 1);
-    assert.ok(says(p, "screen.document.text.none"), "the copy still holds no text, and says so");
+    /* R63 (G135c; fix round 9): a reading that failed is said as failed, with the reading's own account, never "None: no page has text" */
+    assert.equal(marks(p, "failed"), 1);
+    assert.ok(text(p).includes("no text could be found"), "the reading's own account of why it holds no text");
+    assert.ok(!says(p, "screen.document.text.none"), "and not 'None: no page has text'");
   } finally { net.restore(); }
 });
 

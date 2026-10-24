@@ -36,7 +36,11 @@ test("R63 (SCAN E9) a project-less upload whose reading failed says it could not
   const p = await drawn(upload({ reading: { content_type: null, found: false, failure: "final", basis: "x" } }));
   assert.ok(!none(p), "red before: the failed reading was drawn as 'Text: None: no page has text'");
   assert.equal(marks(p, "failed"), 1);
-  assert.ok(says(p, "shell.unread"));
+  assert.ok(text(p).includes("x"), "the reading's own account of why it holds no text");
+  const bare = await drawn(upload({ reading: { found: false, failure: "final" } }));
+  assert.equal(marks(bare, "failed"), 1);
+  assert.ok(says(bare, "shell.unread"), "a failed reading that states no account says it could not be read");
+  assert.ok(!none(bare));
 });
 
 test("R63 (SCAN E9) an owed scan (pages the OCR has not reached) says its reading follows, never 'no page has text'", async () => {
