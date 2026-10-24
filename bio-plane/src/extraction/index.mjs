@@ -434,6 +434,8 @@ export const PART_MIGRATION = "g33-part-readings";
 /* R105 (a), (c) (fix round 9, G126a, G133a; K4811 (2)): stored readings that owe OCR pages or are an ODS stated too large, re-registered through the
    registrar; its own row, so a store whose R89 repair finished is scanned. */
 export const OWED_MIGRATION = "r105-owed-work";
+/* R105 (b) (fix round 9, G128j): stored readings in the old shapes, re-registered as reading jobs; its own row. */
+export const SHAPE_MIGRATION = "r105-reading-shapes";
 
 /* R92: every table that keeps a reading against a capture, for the repair that takes a part's reading away. */
 const PART_KEPT_IN = Object.freeze(["readings", "reading_history", "reading_refs", "reading_ref_terms", "reading_text_source", "capture_text",
@@ -733,6 +735,9 @@ export class Extraction {
       env: e, storeName, view: this.view(), planeVersion: e.VERSION || null,
       liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { unitsBudget: budget }),
       ...(pieces === undefined ? {} : { cursor: pieces.cursor ?? null, maxUnits: CAPTURE_TEXT_CAPTURE_UNIT_BOUND }) });
+    /* (fix round 9, G128c; reading-pipeline R57) the first piece of a PDF read in ranges states what the whole file's reading states, so far as its pieces
+       can: the glyphs of the text it carries, and, when it is also the last, the document's words; a later piece completes them (`#continueText`) */
+    if (pieces !== undefined && out && out.reading && typeof out.reading === "object") completeFirstPiece(out);
     this.recordComposed(out.reading, document && document.capture && document.capture.sha256);
     /* (fix round 9, G126a; R102) the OCR pages this read left are owed before it answers, through the registrar (`registrar` false: the caller owes
        them in its own write, as `readHeld` does) */
@@ -880,7 +885,7 @@ export class Extraction {
     /* (fix round 6, G8; R89) a "not read as text" reading whose held bytes detect nothing is tried: it stops stating itself repairable. */
     if (held && !ocr && ev && !repair && notReadAsText(heldReading)) this.#markRepairTried(home.bundleId, digest, "undetected");
     if (held && !ocr && !(repair && notReadAsText(heldReading)) && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading)
-        && !(heldReading && heldReading.odsTooLarge === true))
+        && !(heldReading && heldReading.odsTooLarge === true) && !this.#oldShapeOf(digest))
       return left("READING_HELD");
     /* (fix round 6, G6; R88) a digest that no stored document names (a bare stub) is read as no document: it has no parts, size or
        capture instant to read it by, and the reading it would write is stored against a digest that is no document. */
@@ -940,6 +945,28 @@ export class Extraction {
     if (out.more === true) return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, more: true,
       detail: { read_through: out.read_through ?? null, total: out.total ?? null }, ...(entry ? { owed: true } : {}), ...ow, ...killedOf(out.reading) };
     return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, ...(owed ? { owed: true } : {}), ...ow, ...killedOf(out.reading) };
+  }
+
+  /** (fix round 9, G128c; reading-pipeline R57) A later piece's completion of the stored reading of a PDF read in ranges, by SQL (the stored reading is never
+   *  parsed whole): `text_glyphs` gains the glyphs of the piece's units; `container_extent.images` gains the placements the piece's answer carries
+   *  (`reading.container_extent.images`), `images_why` cleared once one is added; at the last piece `words_total`, when the reading states none, is the
+   *  words the pieces read (the index state's `words_read`). A reading that is not a PDF's, or not an object, is left as it is. */
+  #completeStored(digest, units, pieceReading, last) {
+    const f = this.#one(`SELECT json_extract(reading, '$.text_container') AS tc, json_type(reading, '$.text_glyphs') AS gt, json_type(reading, '$.words_total') AS wt
+                           FROM readings WHERE capture_sha=? AND json_valid(reading) AND json_type(reading)='object'`, digest);
+    if (!f || f.tc !== "pdf") return;
+    const glyphs = (units || []).reduce((n, u) => n + (u && typeof u.text === "string" ? glyphCount(u.text) : 0), 0);
+    if (glyphs) this.#sql.exec(`UPDATE readings SET reading=json_set(reading, '$.text_glyphs', COALESCE(json_extract(reading, '$.text_glyphs'), 0) + ?) WHERE capture_sha=?`, glyphs, digest);
+    const imgs = pieceReading && pieceReading.container_extent && Array.isArray(pieceReading.container_extent.images) ? pieceReading.container_extent.images : null;
+    if (imgs && imgs.length) {
+      const had = safeJson((this.#one(`SELECT json_extract(reading, '$.container_extent.images') AS i FROM readings WHERE capture_sha=?`, digest) || {}).i);
+      this.#sql.exec(`UPDATE readings SET reading=json_remove(json_set(reading, '$.container_extent.images', json(?)), '$.container_extent.images_why') WHERE capture_sha=?`,
+                     JSON.stringify([...(Array.isArray(had) ? had : []), ...imgs]), digest);
+    }
+    if (last && f.wt !== "integer") {
+      const st = this.#one(`SELECT words_read FROM capture_text_state WHERE capture_sha=?`, digest);
+      if (st && Number.isInteger(st.words_read)) this.#sql.exec(`UPDATE readings SET reading=json_set(reading, '$.words_total', ?) WHERE capture_sha=?`, st.words_read, digest);
+    }
   }
 
   /** (fix round 6, G13; R90) Whether the capture's text is read in pieces and has more to read: its index state says so. */
@@ -1008,6 +1035,9 @@ export class Extraction {
     const wrote = this.indexUnits(bundleId, digest, units, unitChain ?? null,
       { append: !restart, more: pieceOf(out), batchKey: `p:${restart ? "start" : st.cursor}`, guard: cursorStands,
         after: () => {
+          /* (fix round 9, G128c; reading-pipeline R57) the stored reading is completed, never rewritten, by what the piece adds: its glyphs, the image placements
+             its pages hold (when its answer carries them), and at the last piece the document's words (the words the pieces read) */
+          this.#completeStored(digest, units, rd, out.more !== true);
           /* (S25) the stored reading's chain names every page as a whole read's does: the piece's pages folded in, its projection rewritten with it */
           if (folded) {
             this.#sql.exec(`UPDATE readings SET reading=json_set(reading, '$.text_source', json(?)) WHERE capture_sha=? AND json_valid(reading)`, JSON.stringify(folded), digest);
@@ -1442,8 +1472,8 @@ export class Extraction {
         ? (typeof justification === "string" ? justification : JSON.stringify(justification)) : null;
       this.#sql.exec(
         `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at,
-                                          capture_format,origin,asserted_by,asserted_standing,justification)
-         VALUES (?,?,?,?,?,?,?,?,COALESCE(?, (SELECT capture_format FROM readings WHERE capture_sha=?)),?,?,?,?)`,
+                                          capture_format,origin,asserted_by,asserted_standing,justification,reading_shape)
+         VALUES (?,?,?,?,?,?,?,?,COALESCE(?, (SELECT capture_format FROM readings WHERE capture_sha=?)),?,?,?,?,${READING_SHAPE})`,
         sha, bundleId,
         typeof reading.content_type === "string" ? reading.content_type : null,
         Number.isInteger(reading.reader_version) ? reading.reader_version : null,
@@ -2420,7 +2450,10 @@ export class Extraction {
     /* (fix round 9, R105) the old shapes' step runs once R89's has finished, in the same call; the repair is done when both are */
     if (st.done) {
       const more = await this.#migrateOwedWork(limit);
-      return { ...out, done: more.done, examined: more.examined, r105: more };
+      if (!more.done) return { ...out, done: false, examined: more.examined, r105: more };
+      /* (fix round 9, R105 (b)) then the readings in old shapes, re-registered as reading jobs */
+      const shapes = await this.migrateReadings({ limit });
+      return { ...out, done: shapes.done, examined: more.examined + shapes.examined, r105: more, r105b: shapes };
     }
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || REPAIR_BATCH), 5000));
     /* what may need owing: a failed reading (R89), a text read in pieces with more to read, and a text whose index holds only part of it
@@ -2456,6 +2489,60 @@ export class Extraction {
       out.done = more.done;
     }
     return out;
+  }
+
+  /** R105 (b) (fix round 9, G128j; R-OLD, a repair; BOB schedules the live run): once per store, in digest order from its cursor and in batches, each stored
+   *  reading written by an older reader (its `reading_shape` null or under READING_SHAPE) that is in one of the old shapes (`#oldShapeOf`: the first range
+   *  only, N3; cut units, N15; `whole` with pages unread, S2; a statement without units, N22) is re-registered as a `reading` job through the registrar,
+   *  so the ledger re-reads it (`readHeld` reads an old shape again, once) to the new shape, units and completeness of a fresh read. Counted by shape
+   *  (`first_range`, `cut_units`, `pages_unread`, `stated_bare`; `existed`: rows the registrar already held), idempotent (its own `reading_migrations` row;
+   *  a second run changes nothing), stopped where it was when the registrar refuses (`refused`). With no registrar handed in it owes nothing and stays
+   *  undone. */
+  async migrateReadings({ limit = REPAIR_BATCH } = {}) {
+    const st = this.#migrationState(SHAPE_MIGRATION);
+    const out = { migration: SHAPE_MIGRATION, done: !!st.done, examined: 0, registered: 0, existed: 0, refused: null,
+                  shapes: { first_range: 0, cut_units: 0, pages_unread: 0, stated_bare: 0 } };
+    if (st.done || !this.#owe) return out;
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || REPAIR_BATCH), 5000));
+    const page = this.#rows(`SELECT capture_sha FROM readings WHERE capture_sha > ? AND (reading_shape IS NULL OR reading_shape < ?) ORDER BY capture_sha LIMIT ?`,
+                            st.after || "", READING_SHAPE, cap + 1);
+    for (const r of page.slice(0, cap)) {
+      const shape = this.#oldShapeOf(r.capture_sha);
+      if (shape) {
+        const a = await this.#oweVia(null).owe({ kind: "reading", sha: r.capture_sha });
+        if (!a || a.ok !== true) { out.refused = (a && a.reason) || "REGISTRAR_REFUSED"; return out; }
+        out.registered++; out.shapes[shape]++;
+        if (a.existed === true) out.existed++;
+      }
+      this.#sql.exec(`UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
+                     r.capture_sha, shape ? 1 : 0, stampInstant("second"), SHAPE_MIGRATION);
+      out.examined++;
+    }
+    if (page.length <= cap) {
+      this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), SHAPE_MIGRATION);
+      out.done = true;
+    }
+    return out;
+  }
+
+  /** R105 (b): the old shape a stored reading is in, when an older reader wrote it (its `reading_shape` null or under READING_SHAPE), else null: `stated_bare`
+   *  (a statement too large to keep, R97, standing without units: N22), `cut_units` (a unit the old writer cut: N15), `first_range` (a PDF read in ranges whose
+   *  stored reading lacks the whole file's glyphs or words: N3), `pages_unread` (a reading still owing OCR, stated `whole` by the old completeness: S2). Read
+   *  by SQL. */
+  #oldShapeOf(sha) {
+    const r = this.#one(
+      `SELECT reading_shape AS v, json_type(reading, '$.too_large') AS tl, json_extract(reading, '$.text_container') AS tc,
+              json_type(reading, '$.provenance.text_scope.pages') AS ts, json_type(reading, '$.text_glyphs') AS gt, json_type(reading, '$.words_total') AS wt,
+              json_type(reading, '$.tier3_candidate') AS t3, json_type(reading, '$.ocr_left') AS ol,
+              EXISTS (SELECT 1 FROM capture_text t WHERE t.capture_sha = r.capture_sha) AS units,
+              EXISTS (SELECT 1 FROM capture_text t WHERE t.capture_sha = r.capture_sha AND t.truncated = 1) AS cut
+         FROM readings r WHERE capture_sha=? AND json_valid(reading) AND json_type(reading)='object'`, sha);
+    if (!r || (Number.isInteger(r.v) && r.v >= READING_SHAPE)) return null;
+    if (r.tl === "object" && !r.units) return "stated_bare";
+    if (r.cut) return "cut_units";
+    if (r.tc === "pdf" && r.ts === "array" && (r.gt !== "integer" || r.wt !== "integer")) return "first_range";
+    if (r.t3 === "true" || r.ol === "object") return "pages_unread";
+    return null;
   }
 
   /** R105 (a), (c) (fix round 9, G126a, G133a; R-OLD, a repair; K4811 (2)): once per store, in digest order from its cursor, (a) each stored reading
@@ -3033,6 +3120,16 @@ export class Extraction {
     const out = this.driftFor(e.supersedes);
     return { obligations: [...out], truncated: !!out.truncated };
   }
+}
+
+/* (fix round 9, G128c; reading-pipeline R57) The first piece of a PDF read in ranges, completed so far as it can be: `text_glyphs` (null in a ranged reading)
+   the glyphs of the units it carries, and, when it is also the last piece, `words_total` the words it read. Every other reading is left as it is. */
+function completeFirstPiece(out) {
+  const r = out.reading;
+  if (r.text_container !== "pdf" || !out.piece || typeof out.more !== "boolean") return;
+  const units = Array.isArray(out.text_units) ? out.text_units : [];
+  if (r.text_glyphs == null && units.length) r.text_glyphs = units.reduce((n, u) => n + (u && typeof u.text === "string" ? glyphCount(u.text) : 0), 0);
+  if (out.more === false && r.words_total == null && Number.isInteger(r.words_read)) r.words_total = r.words_read;
 }
 
 /* (fix round 9, S25; K4911) The pages a later piece carries: its `piece.pages` range `[from, to)` (reading-pipeline R40), else the pages of its units. */
