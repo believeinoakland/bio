@@ -755,6 +755,17 @@ Size (session_015XBRHPUV281zekgBFSdDuV): test runs 60, module lines 4,086
 - Tests `r10-skip.test.mjs` (3), RED on the code before (`✖ R45 R46 R54 (K4904, item 8) ...`, `✖ ... item 9 ...`, all three), GREEN after: a 30,000-line text stepped at a 64 KiB window (8 bytes read to step), the last line read after it; a list stepped, the control reads the unit; folio pages [1, 2] and absent. Module 381 pass, 0 fail; format, architecture, coverage (57 of 57), words, ownership (12 files) 0 failures.
 Size (session_015XBRHPUV281zekgBFSdDuV): test runs 66, module lines 4,160
 
-## J37 · REPORT
+## J37 · QUESTION
+
+QUESTION (R50, K4834; with my best reading; I carry on with the rest).
+
+Built and green: R54 (named refusals, G135a/b/d/e), R51 (HTML in one linear pass, tables keep rows and columns, link lists kept, later ticks read nothing; G131f/h), R50 (text, JSON and XML in byte windows with a carry; 24-50 MiB read by range from the first piece; a run with no separator in chunks; 50 MB + 1 stated with the figure; bytes pulled <= 2 x the file), R52 (G133f: the view is stated on a text's reading; the rest was docprofile's).
+
+The one thing R50 does not yet cover: a text, JSON or XML between 24 MiB (WHOLE_READ_MAX) and 50 MB in an encoding other than UTF-8/US-ASCII (UTF-16, windows-1252, ISO-8859-x; R49's encodings). The byte windows decode UTF-8 only. Today such a file is stated against the whole-read ceiling (TOO_LARGE, 24 MiB), which is true of what is built but is not the standard's 50 MB for these kinds.
+(1) Best reading: build the window decode per encoding in this job (the head's encoding from ooxml.decodeText kept in the cursor; single-byte encodings are one byte a character, UTF-16 is read in even offsets with a surrogate pair kept whole), so every encoding reaches 50 MB. Cost: one more session-sized piece in textWindowTick and its tests; I would do it after your answer.
+(2) Or: accept the statement against 24 MiB for non-UTF-8 text over 24 MiB in the alpha, and tell me so; then I COMPLETE now (the statement already holds size and bound).
+HTML over 24 MiB is not in R50's list (html is read whole to 24 MiB, as before); say if it is meant to reach 50 MB too.
+
+## J38 · REPORT
 
 REPORT: B43 items 8 and 9 are built, tested and recorded (record section 'B43 · CHANGE'); module 381 pass; checks 0 failures. Still waiting on J37 before COMPLETE. Open for extraction: CSV window cursors are not stepped by skipKilled.
