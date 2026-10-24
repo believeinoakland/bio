@@ -196,18 +196,17 @@ export class Workbooks {
   /* R20: the workbook's cells are read from the store a cursor or a lookup at a time, never all at once: a workbook held
      whole at 250,000 cells would not fit the object as 250,000 rows of objects beside its readers. */
   #grid(wb) {
-    const COLS = "sheet, cell, r, c, type, value, formula, cached";
     const key = [wb.capture_sha, wb.project];
     const sql = this.sql;
     return {
       count: () => sql.exec(`SELECT COUNT(*) AS n FROM workbook_cells WHERE capture_sha=? AND project=?`, ...key).one().n,
       formulaCount: () => sql.exec(`SELECT COUNT(*) AS n FROM workbook_cells WHERE capture_sha=? AND project=? AND formula IS NOT NULL`, ...key).one().n,
-      formulas: () => sql.exec(`SELECT ${COLS} FROM workbook_cells WHERE capture_sha=? AND project=? AND formula IS NOT NULL ORDER BY sheet, r, c`, ...key),
-      errors: () => sql.exec(`SELECT ${COLS} FROM workbook_cells WHERE capture_sha=? AND project=? AND type='error' ORDER BY sheet, r, c`, ...key),
-      at: (sheet, r, c) => { for (const x of sql.exec(`SELECT ${COLS} FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=? AND r=? AND c=?`, ...key, sheet, r, c)) return x; return null; },
-      named: (sheet, cell) => { for (const x of sql.exec(`SELECT ${COLS} FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=? AND cell=?`, ...key, sheet, cell)) return x; return null; },
+      formulas: () => sql.exec(`SELECT sheet, cell, r, c, type, value, formula, cached FROM workbook_cells WHERE capture_sha=? AND project=? AND formula IS NOT NULL ORDER BY sheet, r, c`, ...key),
+      errors: () => sql.exec(`SELECT sheet, cell, r, c, type, value, formula, cached FROM workbook_cells WHERE capture_sha=? AND project=? AND type='error' ORDER BY sheet, r, c`, ...key),
+      at: (sheet, r, c) => { for (const x of sql.exec(`SELECT sheet, cell, r, c, type, value, formula, cached FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=? AND r=? AND c=?`, ...key, sheet, r, c)) return x; return null; },
+      named: (sheet, cell) => { for (const x of sql.exec(`SELECT sheet, cell, r, c, type, value, formula, cached FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=? AND cell=?`, ...key, sheet, cell)) return x; return null; },
       extent: (sheet) => { for (const x of sql.exec(`SELECT MAX(r) AS rows, MAX(c) AS cols FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=?`, ...key, sheet)) return { rows: x.rows ?? 0, cols: x.cols ?? 0 }; return { rows: 0, cols: 0 }; },
-      constantsIn: (sheet, r1, c1, r2, c2) => sql.exec(`SELECT ${COLS} FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=? AND r BETWEEN ? AND ? AND c BETWEEN ? AND ?
+      constantsIn: (sheet, r1, c1, r2, c2) => sql.exec(`SELECT sheet, cell, r, c, type, value, formula, cached FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=? AND r BETWEEN ? AND ? AND c BETWEEN ? AND ?
                                                           AND formula IS NULL AND value IS NOT NULL ORDER BY r, c`, ...key, sheet, r1, r2, c1, c2),
     };
   }
