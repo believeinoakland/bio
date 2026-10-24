@@ -246,3 +246,7 @@ COMPLETE · retrieval T51 fix round 9 (G134d, G128h, G135f; R25, R94-R97). B13 a
 Merged `origin/tranche/T51`. The tally already asks `extraction.progressOf` when present, so no code change; the fixture's extraction stand-in now forwards `progressOf` to the real `extractionOf` over the same store (and `reading()` takes a body), and the red-by-name R108 test is now green through the real provider (`R97, R108: through the real extraction's progressOf ...`, a 30-page scan with `ocr_left` 6 counted partial, `owed` 6). One test claim changed: a capture indexed to `none` is not "not partial" under the real R108 (anything not whole is `partial`), so that claim is dropped.
 
 Retrieval suite 191 of 197; the 6 reds are the hit-side tests waiting on `snippet_unit` (query-language R34, job 66), green with R34 emulated. format, architecture, coverage 86/86, words, ownership: 0 failures. Size (session_01E8rJsiNPGQhSTzqHve1gec): test runs 19, module lines 3097
+
+## J14 · COMPLETE
+
+COMPLETE · B14 applied: progressOf is read through the real extraction (job 41); R108 test green. Retrieval suite 191 of 197; the 6 reds are the hit-side R95/R96 tests waiting on query-language R34 snippet_unit (job 66), green with R34 emulated. Checks: 0 failures. Record: build/jobs/T51/retrieval.md.
