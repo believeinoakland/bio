@@ -250,3 +250,22 @@ Red then green: the assertion at the account's interface (3 tests) is green, wit
 Suite: 128 tests, 116 pass; the 4 seam tests above, plus R20-local and R1(a)-aggregate red only through that one failure. Red on unmodified tranche/T51 too (checked in a scratch worktree), not mine: live arm R9 step 2 "start a project" locator.check timeout (R12 x2, R20 live x2), and R17 (group for a team). Checks: format (my files) 0, architecture 0, coverage 30/30, ownership 0, words 0 and count not raised.
 
 Proposed requirement line R31 is in the record. Size (session_018cVQsZb9faqV2gGpjCfs1B): test runs 4, module lines 3496.
+
+## Fix round 9, job 47 (K4847) · JOURNEY-CHECK #13 (session_01USyGMZHTJG6V897tNLHTHH)
+
+**Entry applied.** `browser()` in `run.mjs` now launches `CHROMIUM` if set; else the pinned build when `chromium.executablePath()` exists; else `/opt/pw-browsers/chromium` when it exists; else today's behaviour (`chromiumPath`, exported, takes injected `exists`). Test: `chromium-path.test.mjs` (2 tests, titled R1, plus a launch with `CHROMIUM` unset). **No requirement names the Chromium choice** (R1 says only "Playwright (Chromium)"); BOB writes one, and the tests would then take its id.
+
+**Failing first.** `walker.test.mjs`, `CHROMIUM` unset: `browserType.launch: Executable doesn't exist at /opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell`. After: 17/0.
+
+**The eleven files, `CHROMIUM` unset, one at a time (pass/fail):** dec340 10/0, design29 6/0, frames 4/0, names 4/0, own-reading 2/0, pseudo 7/0, walker 17/0, words 3/0 — green. **Not green, and not caused by the launch:**
+- `group` 4/1: R17 finds "group" in rows of other modules (`ai-accounts`, `citation`, ...): words belong to K3811's pass and those modules' jobs (R26), not this one.
+- `journey` 11/13: the browser launches; the local arm stops at "journey 28 · install: each step finishes, the checks pass" with `locator.textContent: Timeout 30000ms`. The same 11/13 with `CHROMIUM=/opt/pw-browsers/chromium`, so the launch is not the cause. Cause not found; I made no attempts to fix it (outside this entry).
+- `live` 11/4 unset: R9 step 2 "start a project": `locator.check: Timeout 30000ms`. A re-run with `CHROMIUM` set printed 5/0 but was cut by my 500 s timeout, so it is not comparable. Cause not found.
+Other module tests were not run separately (the eleven files are the module's browser tests; `impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 176, test files 13 of 2565, not run beyond the above).
+
+**Checks:** format 0 failures; architecture 0; coverage 31 of 31 ids, 0; words 0 failures; ownership 0 (3 files).
+
+**Found in other modules:** none beyond the "group" rows above.
+**Deferred:** `journey` and `live` reds above: BOB to say whether they predate this entry.
+
+Size (session_01USyGMZHTJG6V897tNLHTHH): test runs 7, module lines 13
