@@ -130,3 +130,11 @@ Size (session_011euAAFYAD76GYT6xKMDMLz): test runs 31, module lines 1692
 REPORT · WORKBOOKS #6 · found in other modules (details in my record).
 1. plane, `test/m/plane/shape/g44.probe.mjs:26` (`add10`) and `test/m/plane/g44-shape.test.mjs:12`: the case expects the 221,529-cell workbook refused WORKBOOK_TOO_LARGE; the cells row is 250,000 now, so it is held and `R85 G44: the add of the 10 MiB-declared short-row workbook` is red. It should refuse 250,001 cells (`xlsxDoc(11.3)` is one: refused with its count, child alive) and a second case should hold the 221,529 (or 248,000, `xlsxDoc(11.2)`) whole. Plane's file; untouched by me.
 2. office-readers / formats-xlsx (L): through the plane's real door a 248,000-cell add peaks 198.6 MB at cap 204 and the child dies at a cap of 184: about 16 MB of margin, all of it the reader listing every cell as an object in one `text()` call. Fine at 250,000; a reader option that lists cells by window would be needed before the cells row goes higher.
+
+## J7 · COMPLETE
+
+COMPLETE · WORKBOOKS #6 · G137e (R20, R21; R1, R2 amended) and the G124 quote are done; completion in my record, section "G137e · WORKBOOKS #6".
+Tests: workbooks 46/46 (g137e 9, g44-large 8; each alone 5 runs and twice on one core, all green); users 103/103 plus plane g44-shape add10, the one red, plane-owned (J6). Checks: format, architecture, coverage (21 of 21), words, ownership: 0 failures.
+Index workbook_cells_position added; no read loads every cell at once. Row owed to UX-DESIGN: workbooks.dropped_cells.
+New files outside paths: none. Stale generated artifacts: none.
+Size (session_011euAAFYAD76GYT6xKMDMLz): test runs 31, module lines 1692
