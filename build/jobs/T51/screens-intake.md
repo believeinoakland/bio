@@ -650,3 +650,7 @@ Failing-first seen red (new r8-*.test.mjs, 12 tests: 6 red on the old code, 6 co
 Merged `tranche/T51`. Cause: the Unfinished line and the watch (`watchFetch`) read a top-level `failed` on an `opencaptures` entry; acquisition R111 lists the refusal as `fetch_pending.failed` (`openCaptures`, `acquisition/index.mjs` ~2476). Fix in `capture.mjs`: both read `fetch_pending.failed`, the top-level `failed` kept as a fallback for older entries. Failing-first `r8-failed-listing.test.mjs` (R58): the listing is acquisition's real `openCaptures` output over a store holding such a session (R-SEAM); red on the old code (watch polled on, Unfinished line did not state the refusal; 3 red incl. the B31 test once its fixture used the real shape), green now. `t51-fix6` B31 fixture changed from the top-level shape to the real nested one. Suite `tests 334, pass 334, fail 0`; users (screens-inquiry fr4/g41, control-plane round5/round7/held-failed): 45 pass; format, architecture, coverage (61/61), words and ownership 0 failures.
 
 Size (session_01QPy1qnaMGUmmaXHxup64Ha): test runs 15, module lines 2741
+
+## J45 · COMPLETE
+
+COMPLETE · B44 applied: the Add screen's watch and Unfinished line read fetch_pending.failed (acquisition R111), top-level failed kept as fallback. Failing-first r8-failed-listing.test.mjs over acquisition's real openCaptures output, red on old code, green now. Suite 334/334; users 45 pass; format/architecture/coverage/words/ownership 0 failures. Record section 'B44 · CHANGE applied'.
