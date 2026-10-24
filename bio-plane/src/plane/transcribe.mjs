@@ -155,7 +155,9 @@ function aiPath(ctx, env, { member, at, act, onSha, trace = null, memberRef = nu
         calls: answer.calls, at, act: act() };
       try { recordOf(ctx).transact(() => aiUseOf(ctx).countUsage(entry)); } catch { /* refused: rolled back, nothing counted */ }
     }
-    if (answer.ok === true) return { ...answer, ...stated(rendered.map((p) => p.page), refused), owed: owedBeyond };
+    /* R106: a posted answer names the pages asked, sent and left unread (`unread`: the renderer's refusals and those beyond the cap), and
+       the pages owed; it carries no `refused`, which is the NO_PAGE_RENDERED answer's (T44) */
+    if (answer.ok === true) return { ...answer, asked: wanted, sent: rendered.map((p) => p.page), ...(refused.length ? { unread: refused } : {}), owed: owedBeyond };
     /* R36 (T46; N886; extraction R75): a refusal agent-worker answers is relayed with its own HTTP status, never read from
        the body alone, so extraction answers it as that refusal at that status. */
     return { ...answer, ok: false, reason: answer.reason ?? answer.code ?? null,

@@ -553,7 +553,8 @@ test("R106 (control): a 3-page file under the ceiling is read in the request by 
   assert.deepEqual(r.asked, pages);
   assert.deepEqual(r.sent, worker.seen[0][1].pages.map((p) => p.page), "the pages filled are the pages sent, stated");
   const beyond = pages.slice(TRANSCRIBE_PAGES_MAX);
-  assert.deepEqual(r.refused.filter((f) => f.reason === PAGES_MAX).map((f) => f.page), beyond, "named unread, never dropped");
+  assert.deepEqual(r.unread.filter((f) => f.reason === PAGES_MAX).map((f) => f.page), beyond, "named unread, never dropped");
+  assert.equal(Object.hasOwn(r, "refused"), false, "a posted answer carries no `refused` (T44)");
   assert.deepEqual(r.owed, beyond);
   assert.deepEqual(pendingOf(x.ctx).jobRow({ sha: d, kind: "ocr" }).detail.pages, beyond, "and owed as a job row");
   assert.ok(x.evidence.calls.some((c) => c[0] === "head"), "the size is asked of the store's record, never by loading the object first");
