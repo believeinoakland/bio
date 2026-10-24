@@ -64,3 +64,17 @@ Fix round 9, START B3 (G136c, G133d, G124 quotes, G125c). Commit on job/T51/doc-
 **Checks** (civicos-process): format 0 failures; architecture doc-clean 0; coverage doc-clean 12 of 12 ids named, 0; ownership doc-clean tranche/T51: 0 failures; words doc-clean: 0 failures (unkeyed 0, missingkey 0).
 
 Size (session_01WbxrGGnsckmJi79PwS3pyv): test runs 9, module lines 1189
+
+## J6 · COMPLETE
+
+Answering B4 (CHANGE, K4860); tranche/T51 merged in (no conflict). No source change: R4 is measured.
+
+R4's own test (`measure.test.mjs`, workerd, run alone): 5 runs plus 1 more, and once on one core (`taskset -c 0`); all 7 pass (1 test each, 0 fail). Figures (time ms / peak growth MB; isolate 128 MB):
+- 16 MiB PDF (copy 16.1 MB): 180-390 ms; peak growth 17.6-31.9 MB (one core: 390 ms, 17.8 MB).
+- 16 MiB PDF of small objects (15.4 MB, copy 12.6 MB): 2565-2985 ms; peak growth 92.9-118.4 MB (one core: 2985 ms, 94.1 MB). This is the one near the isolate's 128 MB; the worst of 7 runs was 118.4 MB.
+- 16 MiB .docx (copy 16 MB): 1406-1808 ms; peak growth 15.6-80.5 MB (one core: 1808 ms, 65.1 MB).
+All answers whole copies. R4 is met, with the small-object PDF's margin (about 10 MB at worst) stated.
+
+`document.part_bytes` is not yet in `READ_BOUNDS` (RUNTIME-LIMITS #8 not merged); I re-point `CLEAN_MAX_PART_BYTES` to `boundOf("document", "part_bytes")` at that CHANGE.
+
+Size (session_01WbxrGGnsckmJi79PwS3pyv): test runs 16, module lines 1139
