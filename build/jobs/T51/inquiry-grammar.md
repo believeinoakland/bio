@@ -93,3 +93,7 @@ Checks so far (this module): format 0, architecture 0, coverage 0 (20 of 20), wo
 - format, architecture, coverage, words: 0 failures each (see output of this run); ownership: 0 failures.
 
 Size (session_01B4tHNxMTJamTy5UFQiCoZy): test runs 14, module lines 2050
+
+## J5 · COMPLETE
+
+R4 amended: leg extent judged through content's public face (ten kinds, doc-part admitted, part-only too after job 91); unknown-kind repair lists content's kinds, golden/test follow. Suite 87/87; users (accepted-work, basis-version-grammar, basis-versions, leg-earning, citation, strength, reevaluation, inquiry) all green; format, architecture, coverage, words, ownership 0 failures. Details in my record. Case-checker program.mjs stale (BOB regenerates); R4 marker BOB's to lift.
