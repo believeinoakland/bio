@@ -74,3 +74,7 @@ Deferred: none. New file outside paths: none. Found in another module: none. No 
 Tests and checks: format-registry suite 59 pass, 0 fail. Users: acquisition 321 pass, 0 fail; file-safety + capture 466 pass, 1 fail (`file-safety/rows.test.mjs:85`, the R24 words red the START carries round-wide). `impact.mjs origin/tranche/T51 HEAD`: 114 of 176 modules, 1971 of 2634 test files (every user of the registry); the named users above were run. Checks: format 0 failures; architecture 0 failures; coverage 32 of 32 live ids, 0 failures; words 0 failures; ownership 0 failures.
 
 Size (session_0147VzMb43eV1VmXi1y6293X): test runs 8, module lines 507
+
+## J6 · COMPLETE
+
+COMPLETE (job 52, R20, K4900): a ZIP whose first member is a stored PDF is now detected as zip (or its office kind), not pdf; real PDFs unchanged. Failing-first zip-pdf.test.mjs seen red then green; file-safety X19 green; acquisition 321/321; checks 0 failures; record section 'Fix round 9, job 52'. Only red among users: file-safety rows.test.mjs R24 words (carried). Platform N. Generated artifact stale: plane bundle (formats.mjs).
