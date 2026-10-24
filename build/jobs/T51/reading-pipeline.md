@@ -784,3 +784,8 @@ Size (session_015XBRHPUV281zekgBFSdDuV): test runs 72, module lines 4,200
 ### B45 (K4907) · CSV windows stepped; the four todos removed (READING-PIPELINE #33)
 1. `skipKilled` steps a CSV window cursor (`c`) too: from the window's start (a row's) the quote state is scanned over the window's bytes plus slack (the dialect's delimiter byte `dl` kept in the cursor, as `csvWindowTick` keeps it) to the first row boundary at or after the window's end; the next cursor is the same with `ob` there; `stated.bytes = [from, to]` names the skipped span (also on `reading.killed_windows`); rows after it are numbered on from the next row read. (It reads the window's bytes to find the boundary, not through the entry that killed.) Test `r10-skip.test.mjs` (+1): a 28 MiB CSV (past the whole-read ceiling, read by range) stepped at its first window: `skipped` 1, `UNIT_KILLED_READER`, the boundary a `\n`, the last row `LASTROW` read after it. RED before (`✖ R45 R50 (K4907, item 8): a CSV window ...`, the cursor was read as it was), GREEN after. 2. The four `test.todo` lines naming job 40 are removed from `r9-reader.test.mjs` (R57's stays). Module 386 pass, 0 fail, 1 todo; format, architecture, coverage (57/57), words, ownership 0 failures.
 Size (session_015XBRHPUV281zekgBFSdDuV): test runs 76, module lines 4,230
+
+## J40 · COMPLETE
+
+COMPLETE (again): B45 done. skipKilled steps a CSV window to the next row boundary (bytes stated, last row read, red first); the four job-40 todos removed from r9-reader.test.mjs. Module 386 pass, 0 fail, 1 todo (R57); format, architecture, coverage 57/57, words, ownership 0 failures. Record: section B45. Nothing open.
+Size (session_015XBRHPUV281zekgBFSdDuV): test runs 76, module lines 4,230
