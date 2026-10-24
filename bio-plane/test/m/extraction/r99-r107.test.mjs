@@ -328,7 +328,7 @@ test("R22 R99 (G128d; DOCS T5): a 300,009-character single line, chunked by the 
   assert.equal(w.one(`SELECT sum(length(text)) n FROM capture_text WHERE capture_sha=?`, d).n >= line.length, true);
 });
 
-test("R22 R99 (G128d; PDF A10, red.mjs N15): a PDF page of 300,000 characters is stored in its chunks and its last line is found; red by name until text-chain's canonicalExtent carries a chunk's `run` (job 63, K4913)", { timeout: 120_000 }, async () => {
+test("R22 R99 (G128d; PDF A10, red.mjs N15): a PDF page of 300,000 characters is stored in its chunks and its last line is found (text-chain's `run` in the address, job 63, K4913)", { timeout: 120_000 }, async () => {
   const { g, bytes } = await pdfOf({ size: { pages: 3, lines: 2 }, kinds: ["text"], heavy: { page: 2, lines: 9000 } });
   const { w, d } = await home(bytes, { ct: "application/pdf", format: "pdf" });
   await readAll(w, d);
@@ -339,10 +339,12 @@ test("R22 R99 (G128d; PDF A10, red.mjs N15): a PDF page of 300,000 characters is
   assert.equal(fts(w, heavy[heavy.length - 1].split(" ")[0]), 1, "the heavy page's last line is found");
 });
 
-test("R107 (G134d; DOCS O4): two comments of one .docx are each stored with `kind` `comment`; red by name until text-chain's canonicalExtent carries a part's `part` and `ref` (job 63, K4913)", async () => {
+test("R107 (G134d; DOCS O4): two comments of one .docx, each anchored in the body, are each stored under its own address with `kind` `comment`; red by name until office-readers names each comment part's `ref` (it emits `ref: null` for every comment, so two share one `doc-part` address; text-chain's arm, job 63, is merged)", async () => {
   const comments = '<w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
     + '<w:comment w:id="1"><w:p><w:r><w:t>FIRSTCOMMENT one</w:t></w:r></w:p></w:comment><w:comment w:id="2"><w:p><w:r><w:t>SECONDCOMMENT two</w:t></w:r></w:p></w:comment></w:comments>';
-  const { w, d } = await home(F.docx({ body: F.wp(F.wr("Body")), comments }), { ct: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", format: "docx" });
+  /* each comment anchored in the body (`w:commentReference`), as a document that has comments holds them, so each part has its own reference */
+  const anchored = F.wp(F.wr("Body one"), '<w:r><w:commentReference w:id="1"/></w:r>') + F.wp(F.wr("Body two"), '<w:r><w:commentReference w:id="2"/></w:r>');
+  const { w, d } = await home(F.docx({ body: anchored, comments }), { ct: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", format: "docx" });
   await readAll(w, d);
   assert.equal(fts(w, "FIRSTCOMMENT"), 1);
   assert.equal(fts(w, "SECONDCOMMENT"), 1, "the second part is stored, not counted as an address already written");
