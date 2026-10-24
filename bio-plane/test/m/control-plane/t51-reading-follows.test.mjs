@@ -106,7 +106,7 @@ test("R123 F6 (inboxpull): a 3 MB text-layer PDF knocked at the doorbell and bro
 test("R123 F2 (captureupload; fix round 5, E3): a 40 MB file uploaded in five parts is over reading-pipeline R37's whole ceiling, so its reading is the statement of its size, made at the door (no whole is needed) and stored when the capture screen files it", { timeout: 600000 }, async () => {
   const auth = await founder();
   const line = new TextEncoder().encode(`The commission approved the long minutes ${Date.now()}\n`);
-  const bytes = new Uint8Array(40 * MB);
+  const bytes = new Uint8Array(55 * MB);
   for (let at = 0; at < bytes.length; at += line.length) bytes.set(line.subarray(0, Math.min(line.length, bytes.length - at)), at);
   const up = await (await plane("/api/?op=captureupload&statement=long-minutes&name=minutes.txt&type=text%2Fplain", { method: "POST", headers: auth, body: bytes })).json();
   const a = up.result;
@@ -114,12 +114,12 @@ test("R123 F2 (captureupload; fix round 5, E3): a 40 MB file uploaded in five pa
   assert.equal(a.document.capture.sha256, sha(bytes));
   assert.equal(a.reading_pending, undefined, "a statement needs no whole: nothing is owed");
   assert.equal(a.document.reading.failure, "final");
-  assert.ok(JSON.stringify(a.document.reading).includes(String(40 * MB)), "the reading states the whole's size");
+  assert.ok(JSON.stringify(a.document.reading).includes(String(55 * MB)), "the reading states the whole's size");
   const made = await CAPTURE_SCREEN.parts.promoteDocument(screenCall(auth), { doc: a.document, title: "minutes.txt", locator: a.document.locator, project: "" });
   assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 400));
   const r = await readingOf(auth, sha(bytes));
   assert.equal(r.found, true);
-  assert.ok(JSON.stringify(r).includes('"failure":"final"') && JSON.stringify(r).includes(String(40 * MB)), `the stored reading is the statement: ${JSON.stringify(r).slice(0, 300)}`);
+  assert.ok(JSON.stringify(r).includes('"failure":"final"') && JSON.stringify(r).includes(String(55 * MB)), `the stored reading is the statement: ${JSON.stringify(r).slice(0, 300)}`);
 });
 
 test("R123 F1 (promote): a 3 MB PDF captured, left unfiled until the alarm has given up on it, and filed then is read within one more alarm", { timeout: 900000 }, async () => {

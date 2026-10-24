@@ -2767,6 +2767,8 @@ export function makeFetch(hooks = {}) {
       let inline = 0;
       for (const e of entries) {
         if (e.ocrOnly && !env.OCR_WORKER) continue;
+        /* R132: a document over its kind's whole-read ceiling is stated from its sizes by the reader: no row is registered for it, and it is never deferred */
+        if (!e.ocrOnly && (await readingVerdict(e.document, { env, storeName })).verdict === "stated") { try { await readHeld(e.sha, e.document); } catch { /* the statement is made by the next read */ } continue; }
         const reg = await pendSha(e.sha, e.ocrOnly ? "ocr" : "reading");   /* R130: the row first */
         const owe = () => { if (reg.ok) pending = true; else refused.push(e.sha); };
         if (e.ocrOnly) { owe(); continue; }
