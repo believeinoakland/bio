@@ -50,6 +50,11 @@
 
 import { LINK_TYPES, linkWrapper } from "./subresources.mjs";
 import { word } from "./setup-words/index.mjs";
+import { boundOf } from "./read-bounds.mjs";
+
+/* R48 (fix round 9, G124): every ceiling this module keeps is a row of READ_BOUNDS, quoted here and used by name below; none
+ * is a number of this file's own. */
+const BFRANGE_CODES_MAX = boundOf("pdf", "bfrange_codes");
 
 /* E11 (fix round 5) — ASCII85Decode AND ASCIIHexDecode, BEFORE FlateDecode.
  *
@@ -1664,14 +1669,41 @@ function unicodeIncr(hex, off) {
   return units.map((u) => String.fromCharCode(u)).join("");
 }
 
-function parseToUnicodeCMap(text) {
-  const map = new Map();
-  let width = null;
+/** A /ToUnicode map (R12): single codes in a Map, a `bfrange` of at most BFRANGE_CODES_MAX codes expanded into it, a larger
+ *  one kept as the arithmetic it is. `get(code)` answers what full expansion of every section, in the order the CMap states
+ *  them, would answer. */
+class ToUnicodeMap {
+  constructor() { this.map = new Map(); this.ranges = []; }
+  get size() { return this.map.size + this.ranges.length; }
+  get(code) {
+    const u = this.map.get(code);
+    if (u !== undefined) return u;
+    for (let i = this.ranges.length - 1; i >= 0; i--) {
+      const r = this.ranges[i];
+      if (code >= r.lo && code <= r.hi) return unicodeIncr(r.dst, code - r.lo);
+    }
+    return undefined;
+  }
+  /** A range too large to expand: it replaces whatever earlier entries sit inside it, as expansion would. */
+  addRange(lo, hi, dst) {
+    for (const k of [...this.map.keys()]) if (k >= lo && k <= hi) this.map.delete(k);
+    this.ranges.push({ lo, hi, dst });
+  }
+}
 
-  const csr = /begincodespacerange([\s\S]*?)endcodespacerange/.exec(text);
-  if (csr) {
-    const first = /<([0-9a-fA-F]+)>/.exec(csr[1]);
-    if (first) width = Math.max(1, Math.round(first[1].length / 2));
+function parseToUnicodeCMap(text) {
+  const map = new ToUnicodeMap();
+  let width = null;
+  /* every codespace range, not the first (R12): codes of different widths in one CMap are each read at the width their range gives */
+  const spaces = [];
+  for (const blk of text.matchAll(/begincodespacerange([\s\S]*?)endcodespacerange/g)) {
+    const toks = blk[1].match(/<([0-9a-fA-F]+)>/g) || [];
+    for (let i = 0; i + 1 < toks.length; i += 2) {
+      const lo = toks[i].slice(1, -1), hi = toks[i + 1].slice(1, -1);
+      const n = Math.max(1, Math.round(lo.length / 2)), l = parseInt(lo, 16), h = parseInt(hi, 16);
+      if (Number.isFinite(l) && Number.isFinite(h)) spaces.push({ n, lo: l, hi: h });
+    }
+    if (width == null && toks.length) width = Math.max(1, Math.round((toks[0].length - 2) / 2));
   }
 
   for (const m of text.matchAll(/beginbfchar([\s\S]*?)endbfchar/g)) {
@@ -1680,7 +1712,7 @@ function parseToUnicodeCMap(text) {
       const src = toks[i].replace(/[<>]/g, "");
       const dst = toks[i + 1].replace(/[<>]/g, "");
       if (!src) continue;
-      map.set(parseInt(src, 16), hexToUnicode(dst));
+      map.map.set(parseInt(src, 16), hexToUnicode(dst));
       if (width == null) width = Math.max(1, Math.round(src.length / 2));
     }
   }
@@ -1689,13 +1721,15 @@ function parseToUnicodeCMap(text) {
     parseBfrange(m[1], map, (w) => { if (width == null) width = w; });
   }
 
-  return { map, width: width ?? 1 };
+  const widths = [...new Set(spaces.map((s) => s.n))].sort((a, b) => a - b);
+  return { map, width: width ?? 1, spaces: widths.length > 1 ? { list: spaces, widths } : null };
 }
 
 /** bfrange has two target forms: an incrementing hex target, and an explicit
  *  [ <..> <..> … ] array (one target per code in the range). Tokenise the block
  *  into hex atoms and arrays, then consume triples. */
-function parseBfrange(blk, map, seenWidth) {
+function parseBfrange(blk, cmap, seenWidth) {
+  const map = cmap.map;
   const tokens = [];
   let i = 0;
   while (i < blk.length) {
@@ -1720,6 +1754,9 @@ function parseBfrange(blk, map, seenWidth) {
     seenWidth(Math.max(1, Math.round(lo.v.length / 2)));
     if (dst.t === "arr") {
       for (let code = loN, idx = 0; code <= hiN && idx < dst.v.length; code++, idx++) map.set(code, hexToUnicode(dst.v[idx]));
+    } else if (hiN - loN >= BFRANGE_CODES_MAX) {
+      /* R12 (G125f): a range of more codes than the bound is looked up arithmetically, never expanded */
+      cmap.addRange(loN, hiN, dst.v);
     } else {
       for (let code = loN, off = 0; code <= hiN && off <= hiN - loN; code++, off++) map.set(code, unicodeIncr(dst.v, off));
     }
@@ -1747,18 +1784,18 @@ async function loadFont(doc, fontVal) {
     const desc = doc.resolve(map.DescendantFonts);
     if (desc && desc.t === "arr" && desc.items.length) baseFont = nameOf(doc, doc.dictOf(desc.items[0])?.BaseFont);
   }
-  let toUni = null, width = null;
+  let toUni = null, width = null, spaces = null;
   const tu = doc.resolve(map.ToUnicode);
   if (tu && tu.t === "stream") {
     const data = await doc.streamDecoded(tu);
     if (data) {
       const parsed = parseToUnicodeCMap(binaryString(data));
-      if (parsed.map.size) { toUni = parsed.map; width = parsed.width; }
+      if (parsed.map.size) { toUni = parsed.map; width = parsed.width; spaces = parsed.spaces; }
     }
   }
   if (width == null) width = isType0 ? 2 : 1; // composite codes are ≥2 bytes in practice; simple fonts are 1
   const w = fontWidths(doc, map, subtype, isType0);
-  return { subtype, isType0, baseFont, toUni, width, widths: w.widths, widthsWhy: w.why };
+  return { subtype, isType0, baseFont, toUni, width, spaces, widths: w.widths, widthsWhy: w.why };
 }
 
 /* D-502 — GLYPH ADVANCE WIDTHS, SO THE PEN HAS A POSITION.
@@ -1891,15 +1928,46 @@ function bytesToHex(bytes, cap = HEX_CAP) {
   return out;
 }
 
-function bytesToCodes(bytes, width) {
-  const codes = [];
-  const w = Math.max(1, width);
-  for (let i = 0; i + w <= bytes.length; i += w) {
-    let code = 0;
-    for (let k = 0; k < w; k++) code = (code << 8) | bytes[i + k];
-    codes.push(code);
+/** The character codes a shown byte run carries (R12). Codes are unsigned whatever their width. With one code width (the
+ *  CMap's one codespace width, or its default) the run is cut every `width` bytes; when the CMap states codespace ranges of
+ *  several widths, each code is the shortest prefix that lies in a range of its own width, and a prefix in none is taken
+ *  at the shortest width (the CMap will not map it). `lens[i]` is code i's width in bytes; `leftover` the bytes of a final
+ *  code that does not fit. */
+function bytesToCodes(bytes, width, spaces = null) {
+  const codes = [], lens = [];
+  if (!spaces) {
+    const w = Math.max(1, width);
+    for (let i = 0; i + w <= bytes.length; i += w) {
+      let code = 0;
+      for (let k = 0; k < w; k++) code = code * 256 + bytes[i + k];
+      codes.push(code); lens.push(w);
+    }
+    return { codes, lens, leftover: bytes.length % w };
   }
-  return { codes, leftover: bytes.length % w };
+  let i = 0;
+  while (i < bytes.length) {
+    let took = 0, code = 0;
+    for (const n of spaces.widths) {
+      if (i + n > bytes.length) break;
+      code = 0;
+      for (let k = 0; k < n; k++) code = code * 256 + bytes[i + k];
+      if (spaces.list.some((r) => r.n === n && code >= r.lo && code <= r.hi)) { took = n; break; }
+    }
+    if (!took) {
+      /* the bytes left are the start of a longer code that does not fit: misaligned, as a short final code is */
+      const rem = bytes.length - i;
+      let prefix = 0;
+      for (let k = 0; k < rem; k++) prefix = prefix * 256 + bytes[i + k];
+      if (spaces.list.some((r) => r.n > rem && prefix >= Math.floor(r.lo / 256 ** (r.n - rem)) && prefix <= Math.floor(r.hi / 256 ** (r.n - rem)))) break;
+      const n = spaces.widths[0];
+      if (i + n > bytes.length) break;
+      code = 0;
+      for (let k = 0; k < n; k++) code = code * 256 + bytes[i + k];
+      took = n;
+    }
+    codes.push(code); lens.push(took); i += took;
+  }
+  return { codes, lens, leftover: bytes.length - i };
 }
 
 /** Walk one page's Resources up the page tree — Resources is an inheritable
@@ -2166,8 +2234,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         bytesToHex(bytes), Math.ceil(bytes.length / (curFont.width || 1)));
       return;
     }
-    const { codes, leftover } = bytesToCodes(bytes, curFont.width);
-    for (const code of codes) {
+    const { codes, lens, leftover } = bytesToCodes(bytes, curFont.width, curFont.spaces);
+    for (let ci = 0; ci < codes.length; ci++) {
+      const code = codes[ci];
       const before = penKnown ? tmat.slice() : null;
       advanceOne(code);
       const box = before && penKnown ? glyphBox(before, tmat) : null;
@@ -2176,7 +2245,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       if (u == null) {
         if (box) undecodedCenters.push(box.c);
         mark("unmapped_code", curFont.baseFont ?? curFontName ?? null,
-          code.toString(16).padStart((curFont.width || 1) * 2, "0"), 1);
+          code.toString(16).padStart(lens[ci] * 2, "0"), 1);
       } else {
         /* D-502: withdraw an inserted separator the DOCUMENT then supplies
            itself. `softSpace` cannot see what is coming, so the symmetric half
@@ -2372,7 +2441,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const advanceOver = (bytes) => {
     if (!penKnown) return;
     if (!curFont || !curFont.widths) { penKnown = false; return; }
-    const { codes, leftover } = bytesToCodes(bytes, curFont.width);
+    const { codes, leftover } = bytesToCodes(bytes, curFont.width, curFont.spaces);
     for (const code of codes) advanceOne(code);
     if (leftover) penKnown = false;
   };
