@@ -434,7 +434,7 @@ test("R103 watchdogRan G94: `watchdog_ran` and `running_since` join R80's fields
   assert.deepEqual([WATCHDOG_FIELDS.map((k) => broken[k]), broken.watchdog_why], [WATCHDOG_FIELDS.map(() => null), "no beat"]);
 });
 
-test("R103 watchdogRan G94 (R-SEAM: RED BY NAME until scheduler's job 33 merges its `watch` recording `ran`, scheduler R29): the handler called with the cron's slot 26 minutes before now answers `watchdog_seen` equal to the slot and a `watchdog_ran` within the test's own bracket of now", async () => {
+test("R103 watchdogRan G94 (R-SEAM: through the real scheduler, whose `watch` records `ran`, scheduler R29; job 33 merged, K4905): the handler called with the cron's slot 26 minutes before now answers `watchdog_seen` equal to the slot and a `watchdog_ran` within the test's own bracket of now", async () => {
   const x = await world();
   const slot = Date.now() - 26 * 60_000;
   const before = Date.now();
