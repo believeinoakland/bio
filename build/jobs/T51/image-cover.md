@@ -1,6 +1,6 @@
 # image-cover (T51)
 
-**Status** · session_01CSjPbRFbq35fHhD3md1yuV · depth 2 · COMPLETE · handled B2
+**Status** · session_01JwFMfy4ht6vi8HQYUy47Nm · depth 2 · WORKING · handled B2
 
 ## Completion record (T51-258, K3957)
 
