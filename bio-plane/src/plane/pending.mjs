@@ -342,13 +342,27 @@ export function pendingOf(ctx, deps = {}) {
                 WHERE sha=? AND kind=?`, now(), row.sha, row.kind);
     return "finished";
   };
-  const stop = (row, at, because, units = null, state = "final") => {
-    sql.exec(`UPDATE keeps_pending SET ${ended(row, "final", units)}, final_why=?, last_try=?, last_why=?, state=?, ended_at=? WHERE sha=? AND kind=?`,
-             because, at, because, state, now(), row.sha, row.kind);
+  /* G127c: what a stated end carries beside its reason: a refusal for a held capture names the refused digest, its holder, and whether the digest
+     is a whole or a part, so the row says what was refused and by whom (never `detail {}`) */
+  const heldOf = (r) => {
+    const d = r && (plain(r.detail) ? r.detail : plain(r.refusal) && plain(r.refusal.detail) ? r.refusal.detail : null);
+    if (!d) return null;
+    const sha = typeof d.capture_sha === "string" ? d.capture_sha : typeof d.sha === "string" ? d.sha : null;
+    const out = { ...(sha ? { sha } : {}), ...(d.holder !== undefined ? { holder: d.holder } : {}), ...(d.kind === "whole" || d.kind === "part" ? { kind: d.kind } : {}) };
+    return Object.keys(out).length ? out : null;
+  };
+  const stop = (row, at, because, units = null, state = "final", r = null) => {
+    const held = heldOf(r);
+    const w = json(row.failed_why, {});
+    if (held) w[String(because).slice(0, 60)] = held;
+    sql.exec(`UPDATE keeps_pending SET ${ended(row, "final", units)}, final_why=?, last_try=?, last_why=?, state=?, ended_at=?, failed_why=? WHERE sha=? AND kind=?`,
+             because, at, because, state, now(), JSON.stringify(w), row.sha, row.kind);
     return "final";
   };
   const live = () => all(`SELECT * FROM keeps_pending WHERE final_why IS NULL AND state NOT IN ('refused','finished','final')`)
+    /* a keep goes before any other row due with it: it makes the whole its digest's reading then reads in the same tick */
     .sort((a, b) => a.due_at - b.due_at || (a.priority === "raised" ? 0 : 1) - (b.priority === "raised" ? 0 : 1)
+                    || (a.kind === "keep" ? 0 : 1) - (b.kind === "keep" ? 0 : 1)
                     || a.registered_at - b.registered_at || RANK[a.kind] - RANK[b.kind] || (a.sha < b.sha ? -1 : 1));
   const next = () => { const r = live()[0]; return r ? r.due_at : null; };
 
@@ -375,8 +389,8 @@ export function pendingOf(ctx, deps = {}) {
 
   /* what an owner answered, read: the entry's outcome */
   const settle = (row, at, r) => {
-    if (r && r.final === true && r.refused === true) return stop(row, at, String(r.why || r.reason || r.code || "REFUSED").slice(0, 160), countersIn(r).written, "refused");
-    if (r && (r.final === true || r.failure === "final")) return stop(row, at, String(r.why || r.reason || r.code || "FINAL").slice(0, 160), countersIn(r).written);
+    if (r && r.final === true && r.refused === true) return stop(row, at, String(r.why || r.reason || r.code || "REFUSED").slice(0, 160), countersIn(r).written, "refused", r);
+    if (r && (r.final === true || r.failure === "final")) return stop(row, at, String(r.why || r.reason || r.code || "FINAL").slice(0, 160), countersIn(r).written, "final", r);
     countKills(row, r);
     /* R101 (3): a transient failure (the store, the member, the network) is tried again, never written as the end, at any tick */
     if (transientIn(r)) return attempt(row, at, String((r && (r.why || r.reason || r.code)) || "TRANSIENT").slice(0, 160), countersIn(r).written);
@@ -515,7 +529,7 @@ export function pendingOf(ctx, deps = {}) {
       if (typeof run !== "function") return attempt(row, at, "NO_OWNER");
       const deliver = typeof deps.deliver === "function" ? (a) => deps.deliver({ ctx, env, storeName: store(), ...a }) : undefined;
       const r = await call(() => run(captureOf(ctx), { kind: "fetch", session: row.sha }, { storeName: store(), env: timed(row), ...(deliver ? { deliver } : {}), ...handed() }));
-      if (r && r.final === true) return stop(row, at, String(r.reason || r.why || r.code || "FINAL").slice(0, 160));
+      if (r && r.final === true) return stop(row, at, String(r.reason || r.why || r.code || "FINAL").slice(0, 160), null, "final", r);
       if (r && r.ok === true && r.done === true) return finish(row);
       if (r && r.ok === true && r.more === true) return settle(row, at, r);   /* the fetch goes on at the next tick, from where it stopped */
       return attempt(row, at, String(r && (r.reason || r.code || r.why) || "NOT_DONE"));

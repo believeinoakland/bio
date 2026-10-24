@@ -10,7 +10,10 @@ import { shapeRun, csvDoc, xlsxRowsDoc, report, capFor, STORED_VALUE_BOUND } fro
 import { tickCountFailures, markExtentFailures } from "./bars.mjs";
 import { MEASURED_CSV_TEXT_BOUND_BYTES } from "../../../../src/csv-reader/index.mjs";
 
-export const XLSX_ROWS = 200_000;
+/* K4855 (P17): the 200,000-row workbook declares 42.66 MiB of sheet text, over the alpha's `xlsx.declared_text` (32 MiB), so its refusal is correct (K4831 (3)): the case is two,
+   the largest sheetgen workbook under the bound (150,000 rows of 3 cells declare 31.84 MiB) read whole, and the 200,000-row one refused with its size and the limit stated */
+export const XLSX_ROWS = 150_000;
+export const XLSX_REFUSED_ROWS = 200_000;
 /** the marks of a document: the CSV generator's three, or sheetgen's `<seed>-R<row>-C<col>` (G123e) */
 export const marksOf = (doc) => doc.marks;
 /** the cap for a file of `bytes` (N MB = MiB the bytes take in the object): the one convention, `capFor` (G123a) */
@@ -24,6 +27,31 @@ export const CASES = {
   csvmax: async () => ({ label: `G41 ${csvMax / 1048576} MB CSV (csv-reader's MEASURED_CSV_TEXT_BOUND_BYTES)`, doc: csvDoc(csvMax - 8192) }),
   xlsx: async () => ({ label: `G41 ${XLSX_ROWS}-row xlsx`, doc: await xlsxRowsDoc(XLSX_ROWS) }),
 };
+/** K4855: the cases that are refused at the alpha's bound, their refusal stated */
+export const REFUSED_CASES = {
+  xlsx200: async () => ({ label: `G41 ${XLSX_REFUSED_ROWS}-row xlsx (over the alpha's declared-text bound)`, doc: await xlsxRowsDoc(XLSX_REFUSED_ROWS) }),
+};
+
+/** K4855: one refused case: the run, and what failed (empty: the refusal is final, stated with the file's declared size and the bound, the child alive) */
+export async function runRefused(name, { bound, declaredMiB }) {
+  const { label, doc } = await REFUSED_CASES[name]();
+  const cap = g41Cap(doc.bytes);
+  const r = await shapeRun({ doc, search: doc.marks, readingEachTick: true, cellsOf: false, maxTicks: 50 }, { capMB: cap });
+  const f = [];
+  if (r.died) f.push(`the child died: ${r.error || r.stderr || r.signal || "exit " + r.code}`);
+  else {
+    if (r.done.left.length) f.push(`the ledger still owes ${r.done.left} after ${r.done.ticks} ticks: a refusal is final, never owed`);
+    if (r.ticks.length > 2) f.push(`the refusal took ${r.ticks.length} ticks; it is stated in one`);
+    const last = r.ticks[r.ticks.length - 1];
+    if (!last || !last.readingFor || last.readingFor.failure !== "final") f.push(`the reading is not final: ${JSON.stringify(last && last.readingFor)}`);
+    const c = r.reading && r.reading.completeness;
+    const why = c && typeof c.why === "string" ? c.why : "";
+    if (!c || c.state !== "stated") f.push(`completeness is not stated: ${JSON.stringify(c)}`);
+    for (const fig of [declaredMiB.toFixed(2), (bound / 1048576).toFixed(2)]) if (!why.includes(fig)) f.push(`the statement does not name ${fig} MiB: ${why}`);
+    if (r.overBound) f.push(`a stored value of ${r.largestStored} B is over ${STORED_VALUE_BOUND} B`);
+  }
+  return { name, label, cap, r, failed: f };
+}
 
 /** one case: the run, and the list of what failed (empty: pass) */
 export async function runCase(name, capOverride = null) {

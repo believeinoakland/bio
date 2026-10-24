@@ -437,7 +437,7 @@ export class Store extends DurableObject {
        clear (record-core K23). Acquisition reads `cap.keepLater` as it reads `cap.waitUntil`: a keep that will not end inside the
        door's bound is written down here and put by the alarm, never left to a promise nothing keeps alive. */
     const pending = pendingOf(ctx, { env, store: () => this.#ownNamespace() || "bio", deliver: deliverOwedRender });
-    recordOf(ctx).declarePurge("plane", ["keeps_pending", "keeps_last", "acquire_stages"]);
+    recordOf(ctx).declarePurge("plane", ["keeps_pending", "keeps_last", "acquire_stages", "job_unit_attempts", "job_batches"]);   /* R9, R97 */
     capture.keepLater = (a) => pending.keepLater(a);
     capture.owedLater = (a) => pending.owedLater(a);   /* R77, acquisition R100: the ledger's `subresources` and `unpack` entries, registered the same way */
     /* R98 (fix round 9, G126; K4835 (2); 2c item 1): THE ONE REGISTRAR. Acquisition, capture and doorbell read it as they read `keepLater`: a
