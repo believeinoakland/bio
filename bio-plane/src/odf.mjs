@@ -2580,7 +2580,7 @@ async function odpText(parts, ctx) {
         hidden: page.hidden, shapes: walked.count, text });
       const hide = page.hidden ? { hidden: true } : {};
       for (const sh of walked.shapes) {
-        if (sh.textBox && hasWords(sh.text)) units.push({ kind: "text_box", ref: `slide ${page.slide}, shape ${sh.shape}`, part: CONTENT_PART, text: sh.text, ...hide });
+        if (sh.textBox && hasWords(sh.text)) units.push({ kind: "text_box", ref: `slide ${page.slide} shape ${sh.shape}`, part: CONTENT_PART, text: sh.text, ...hide });
       }
       const nt = notesTextOf(page.xml);
       if (nt != null && nt.length) {
