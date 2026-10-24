@@ -20,13 +20,15 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { crc32, deflateSync, inflateSync } from "node:zlib";
-import { decodePng, PNG_REFUSES, PngRefusal, MEMORY_FEATURE } from "../../src/pngdecode.mjs";
+import { decodePng, PNG_REFUSES, PngRefusal } from "../../src/pngdecode.mjs";
+import { boundOf } from "../../../bio-plane/src/read-bounds.mjs";
+import { peakAllocationAsync } from "./alloc-spy.mjs";
 
 const FIX = JSON.parse(readFileSync(new URL("fixtures/png-variants.json", import.meta.url), "utf8"));
 const SUITE = FIX.suite, VARIANTS = FIX.variants;
 const file = (name) => new Uint8Array(readFileSync(new URL(`fixtures/pngsuite/${name}`, import.meta.url)));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
-const CODES = ["NOT_A_PNG", "UNSUPPORTED", "TRUNCATED", "CORRUPT"];
+const CODES = ["NOT_A_PNG", "UNSUPPORTED", "TRUNCATED", "CORRUPT", "IMAGE_TOO_LARGE"];
 const LEGAL = { 0: [1, 2, 4, 8, 16], 2: [8, 16], 3: [1, 2, 4, 8], 4: [8, 16], 6: [8, 16] };
 
 /** The refusal `decodePng(d)` rejects with: always a PngRefusal, its code one of R10's. */
@@ -225,7 +227,7 @@ test("R10 R7 every other refusal, each as the bytes require; every code and ever
     ["a damaged Adler-32", edited("basn0g08.png", (cs) => { const z = Uint8Array.from(deflateSync(rowsOf(file("basn0g08.png")))); z[z.length - 1] ^= 1; return withIdat(cs, z); }), "CORRUPT"],
     ["image data past the frame", edited("basn0g08.png", (cs) => withIdat(cs, deflateSync(Buffer.concat([rowsOf(file("basn0g08.png")), Buffer.alloc(33)])))), "CORRUPT"],
     ["interlaced", file("basi6a08.png"), "UNSUPPORTED"],
-    ["a frame past the memory bound", edited("basn0g08.png", (cs) => withIhdr(cs, [[0, be32(9000)], [4, be32(9000)]])), "UNSUPPORTED"],
+    ["a frame past the memory bound", edited("basn0g08.png", (cs) => withIhdr(cs, [[0, be32(9000)], [4, be32(9000)]])), "IMAGE_TOO_LARGE"],
     ["a damaged PLTE CRC", (() => { const d = file("basn3p08.png"); let p = 8; while (String.fromCharCode(...d.subarray(p + 4, p + 8)) !== "PLTE") p += 12 + ((d[p] << 24 | d[p + 1] << 16 | d[p + 2] << 8 | d[p + 3]) >>> 0); d[p + 8] ^= 1; return d; })(), "CORRUPT"],
   ];
   const seen = new Set(["TRUNCATED"]), features = new Set();
@@ -247,23 +249,55 @@ test("R10 R7 every other refusal, each as the bytes require; every code and ever
   assert.equal(sha((await decodePng(plus)).samples), e.pillow_sha256);
 });
 
-test("R10 R7 a frame past the memory bound is refused from its header, before any sample, and the bound counts the output", async () => {
+test("R10 R12 a frame past the memory bound is refused IMAGE_TOO_LARGE from its header, before any sample, and the bound counts the output", async () => {
+  const WORKING = boundOf("ocr", "frame_bytes");
   const sized = (name, w, h) => edited(name, (cs) => withIhdr(cs, [[0, be32(w)], [4, be32(h)]]));
-  const memory = async (d) => { const r = await refusal(d); return r.detail.feature === MEMORY_FEATURE ? r : null; };
+  const memory = async (d) => { const r = await refusal(d); return r.code === "IMAGE_TOO_LARGE" && r.detail.bound_name === "working_set" ? r : null; };
   const r = await memory(sized("basn2c08.png", 6000, 6000));
   assert.ok(r, "a 6000x6000 colour frame");
-  assert.deepEqual([r.code, r.detail.width, r.detail.height, r.detail.components, r.detail.bound_bytes], ["UNSUPPORTED", 6000, 6000, 3, 61_300_000]);
+  assert.deepEqual([r.code, r.detail.width, r.detail.height, r.detail.components, r.detail.bound_bytes, r.detail.bound], ["IMAGE_TOO_LARGE", 6000, 6000, 3, WORKING, WORKING]);
   assert.equal(r.detail.working_set_bytes, 6000 * 6000 * 3 + 2 * (6000 * 3 + 1), "the output, and two stored rows");
-  /* A declaration far past any memory is refused just as fast: nothing is allocated. */
-  const t0 = performance.now();
-  const huge = await memory(sized("basn6a16.png", 0x7fffffff, 0x7fffffff));
-  assert.ok(huge && huge.detail.working_set_bytes > 2 ** 62);
-  assert.ok(performance.now() - t0 < 200);
+  assert.equal(r.detail.size, r.detail.working_set_bytes);
+  assert.equal(r.detail.key, "limit.ocr.frame_bytes");
+  assert.ok(r.detail.transient === undefined && r.transient === undefined, "final, never retried");
   /* The output is 8-bit, one component for grey and three for the rest, alpha and 16 bits included. */
   assert.equal((await memory(sized("basn6a16.png", 4400, 4643))).detail.components, 3, "RGBA 16-bit: 61.29 MB of output, its two 35 KB rows past the bound");
   assert.equal(await memory(sized("basn6a16.png", 4400, 4500)), null, "59.4 MB of output: not refused for memory (refused for its data)");
   assert.ok(await memory(sized("basn0g08.png", 7900, 7800)), "grey, 61.6 MB of output");
   assert.equal(await memory(sized("basn4a16.png", 7800, 7850)), null, "grey and alpha at 16 bits, 61.2 MB of output and 62 KB of rows: within it");
+});
+
+test("R10 R12 the header's own bounds: pixels, the edge and the chunk count, each refused before an allocation, either side", async () => {
+  const PIXELS = boundOf("image", "pixels"), EDGE = boundOf("image", "edge"), CHUNKS = boundOf("image", "chunks");
+  const sized = (name, w, h) => edited(name, (cs) => withIhdr(cs, [[0, be32(w)], [4, be32(h)]]));
+  /* a header declaring 60,000 x 60,000 (and 2^31 - 1 square): nothing sized by the frame is asked for */
+  for (const [w, h, name, size] of [[60000, 60000, "pixels", 60000 * 60000], [12000, PIXELS / 12000 + 1, "pixels", 12000 * (PIXELS / 12000 + 1)],
+    [EDGE + 1, 1, "edge", EDGE + 1], [1, EDGE + 1, "edge", EDGE + 1], [0x7fffffff, 0x7fffffff, "edge", 0x7fffffff]]) {
+    const d = sized("basn0g08.png", w, h);
+    const { error, peak } = await peakAllocationAsync(() => decodePng(d));
+    assert.ok(error instanceof PngRefusal && error.code === "IMAGE_TOO_LARGE", `${w}x${h}: ${error && error.code}`);
+    assert.deepEqual([error.detail.bound_name, error.detail.size, error.detail.key], [name, size, `limit.image.${name}`], `${w}x${h}`);
+    assert.equal(error.detail.bound, name === "edge" ? EDGE : PIXELS);
+    assert.deepEqual([error.detail.width, error.detail.height], [w, h]);
+    assert.ok(peak < 1 << 20, `${w}x${h}: no allocation sized by the frame (${peak} bytes)`);
+  }
+  /* the edge itself, and a frame the pixels bound would admit, are refused for the data, not the size */
+  assert.notEqual((await refusal(sized("basn0g08.png", EDGE, 1))).code, "IMAGE_TOO_LARGE");
+  /* chunks: filler tEXt chunks to exactly the bound, and one more */
+  const fill = (n) => edited("basn0g08.png", (cs) => [cs[0], ...Array.from({ length: n - cs.length }, () => ({ type: "tEXt", data: Uint8Array.of(65) })), ...cs.slice(1)]);
+  assert.equal(chunksOf(fill(CHUNKS)).length, CHUNKS);
+  const ok = await decodePng(fill(CHUNKS));
+  assert.equal(sha(ok.samples), SUITE.find((x) => x.name === "basn0g08.png").pillow_sha256, "a file of exactly the bound's chunks decodes as before");
+  const { error, peak } = await peakAllocationAsync(() => decodePng(fill(CHUNKS + 1)));
+  assert.ok(error instanceof PngRefusal && error.code === "IMAGE_TOO_LARGE", `${error && error.code}`);
+  assert.deepEqual([error.detail.bound_name, error.detail.bound, error.detail.key], ["chunks", CHUNKS, "limit.image.chunks"]);
+  assert.ok(error.detail.size > CHUNKS);
+  assert.ok(peak < 1 << 20);
+  /* and 1,000,000 empty IDAT chunks are stopped at the bound, not walked */
+  const empties = png([chunksOf(file("basn0g08.png"))[0], ...Array.from({ length: 1_000_000 }, () => ({ type: "IDAT", data: new Uint8Array(0) })), { type: "IEND", data: new Uint8Array(0) }]);
+  const e = await refusal(empties);
+  assert.deepEqual([e.code, e.detail.bound_name], ["IMAGE_TOO_LARGE", "chunks"]);
+  assert.ok(e.detail.size <= CHUNKS + 1, `stopped at ${e.detail.size} chunks`);
 });
 
 test("R10 decodePng answers a Promise: a picture resolves, every refusal rejects and none is thrown at the call", async () => {

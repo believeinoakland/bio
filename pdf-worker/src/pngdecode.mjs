@@ -28,14 +28,17 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * WHAT IT REFUSES, BY NAME (PNG_REFUSES) — never a picture it guessed at
  * ─────────────────────────────────────────────────────────────────────────────
- * An interlaced (Adam7) image, a critical chunk the standard does not define,
- * and a frame whose decode would pass the memory bound, refused from its header
- * before a sample is allocated. Every error thrown is a `PngRefusal` carrying a
- * code:
- *   NOT_A_PNG    the bytes do not begin with the PNG signature
- *   UNSUPPORTED  a feature this decoder does not decode, named in `feature`
- *   TRUNCATED    the data ends before the picture does
- *   CORRUPT      the data contradicts itself or the standard
+ * An interlaced (Adam7) image and a critical chunk the standard does not define.
+ * A size the decoder will not allocate for (a frame past the pixel or edge bound,
+ * past the memory bound, or a file of more chunks than the bound) is refused from
+ * the header, before a sample is allocated: `IMAGE_TOO_LARGE`, final and never
+ * retried, its `detail` the declared size, the bound and the sentence's key (R12).
+ * Every error thrown is a `PngRefusal` carrying a code:
+ *   NOT_A_PNG       the bytes do not begin with the PNG signature
+ *   UNSUPPORTED     a feature this decoder does not decode, named in `feature`
+ *   IMAGE_TOO_LARGE a size past a bound, named in `bound_name`
+ *   TRUNCATED       the data ends before the picture does
+ *   CORRUPT         the data contradicts itself or the standard
  *
  * The image data is inflated by the platform's `DecompressionStream("deflate")`
  * and unfiltered row by row as it arrives, so only the output and two rows are
@@ -43,6 +46,7 @@
  */
 
 import { localize } from "../../bio-plane/src/setup-words/index.mjs"
+import { boundOf, statement } from "../../bio-plane/src/read-bounds.mjs"
 
 export class PngRefusal extends Error {
   constructor(code, detail = {}) {
@@ -55,22 +59,27 @@ const unsupported = (feature, extra = {}) => new PngRefusal("UNSUPPORTED", { fea
 const corrupt = (note, extra = {}) => new PngRefusal("CORRUPT", { note, ...extra });
 const truncated = (note, extra = {}) => new PngRefusal("TRUNCATED", { note, ...extra });
 
-/** The `feature` of the memory refusal: an identifier read by code (picture-pixels maps it), never localized. */
+/** The old `feature` of the memory refusal, an identifier read by code. The refusal is `IMAGE_TOO_LARGE` now (R10, R12) and no
+ *  longer a key of `PNG_REFUSES`; the name stays exported so `pdf-pixels`' import of it still loads until it maps the code. */
 export const MEMORY_FEATURE = "image-past-memory-bound";
 
 /** Every `feature` an UNSUPPORTED refusal can carry. */
 export const PNG_REFUSES = Object.freeze({
   "interlaced": "the image is stored Adam7-interlaced (IHDR interlace method 1), whose seven passes are not reassembled here",
   "an unknown critical chunk": localize("image-codecs.pngdecode.a_chunk_the_decoder_must", "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines"),
-  [MEMORY_FEATURE]: localize("image-codecs.pngdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image"),
 });
 
-/* THE MEMORY BOUND, a workload size (N34, D-312), the same figure as the JPEG
- * 2000 decoder's: 61.3 MB is the largest working set measured to complete in a
- * member's isolate (CPDF-15). A decode holds the 8-bit output and two stored
- * rows (the row being unfiltered and the one above it); the compressed input is
- * the caller's, and the inflater's window is a fixed 32 KB. */
-const MEMORY_BOUND = 61_300_000;
+/* THE BOUNDS (R12, fix round 9, G125a), all read from the table. The frame is judged by its pixels and its edge, the
+ * file by its chunks, and the decode by its working set (N34, D-312), the same figure as the JPEG 2000 decoder's: the
+ * largest working set measured to complete in a member's isolate (CPDF-15). A decode holds the 8-bit output and two
+ * stored rows (the row being unfiltered and the one above it); the compressed input is the caller's, and the
+ * inflater's window is a fixed 32 KB. A row's bytes cannot pass the table's row stride below the edge, so the stride
+ * is not judged apart. */
+const PIXELS_MAX = boundOf("image", "pixels");
+const EDGE_MAX = boundOf("image", "edge");
+const CHUNKS_MAX = boundOf("image", "chunks");
+const WORKING_SET_MAX = boundOf("ocr", "frame_bytes");
+const tooLarge = (kind, name, size, note, extra) => new PngRefusal("IMAGE_TOO_LARGE", { note, bound_name: name, ...statement(kind, name, size), ...extra });
 
 const SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
@@ -107,9 +116,10 @@ const USED_ANCILLARY = new Set(["tRNS"]);
  * skips does not (the standard lets a decoder ignore one).
  */
 function readChunks(d) {
-  let p = 8, ihdr = null, plte = null, trns = null, ended = false;
+  let p = 8, ihdr = null, plte = null, trns = null, ended = false, chunks = 0;
   const idat = [];
   while (!ended) {
+    if (++chunks > CHUNKS_MAX) throw tooLarge("image", "chunks", chunks, localize("image-codecs.pngdecode.the_file_holds_more_than_chunks", "the file holds more than {bound} chunks", { bound: String(CHUNKS_MAX) }));
     if (p + 8 > d.length) throw truncated(localize("image-codecs.pngdecode.the_data_ends_at_byte", "the data ends at byte {p}, before an IEND chunk", { p: String(p) }));
     const len = u32(d, p);
     const type = String.fromCharCode(d[p + 4], d[p + 5], d[p + 6], d[p + 7]);
@@ -193,10 +203,15 @@ export async function decodePng(bytes) {
 
   const ch = CHANNELS[colourType];
   const comps = colourType === 0 || colourType === 4 ? 1 : 3;
+  if (Math.max(W, H) > EDGE_MAX)
+    throw tooLarge("image", "edge", Math.max(W, H), localize("image-codecs.pngdecode.the_image_is_w_by_h", "the image is {W} by {H}, and the decoder reads an edge of at most {bound}", { W: String(W), H: String(H), bound: String(EDGE_MAX) }), { width: W, height: H, components: comps });
+  if (W * H > PIXELS_MAX)
+    throw tooLarge("image", "pixels", W * H, localize("image-codecs.pngdecode.the_image_is_w_by_h_2", "the image is {W} by {H}, past the {bound} pixels the decoder reads", { W: String(W), H: String(H), bound: String(PIXELS_MAX) }), { width: W, height: H, components: comps });
   const rowBytes = Math.ceil((W * ch * depth) / 8);
   const need = W * H * comps + 2 * (rowBytes + 1);
-  if (need > MEMORY_BOUND)
-    throw unsupported(MEMORY_FEATURE, { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: comps });
+  if (need > WORKING_SET_MAX)
+    throw tooLarge("ocr", "frame_bytes", need, localize("image-codecs.pngdecode.the_decode_would_hold_bytes_at", "the decode would hold {bytes} bytes at once, past the {bound} the memory bound allows: the 8-bit output, and beside it two rows of the stored image", { bytes: String(need), bound: String(WORKING_SET_MAX) }),
+      { bound_name: "working_set", working_set_bytes: need, bound_bytes: WORKING_SET_MAX, width: W, height: H, components: comps });
 
   /* The palette and transparency, as the colour type reads them. */
   let palette = null, alphaOf = null, key = null, transparency = colourType === 4 || colourType === 6 ? "alpha channel" : null;

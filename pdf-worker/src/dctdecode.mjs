@@ -53,6 +53,12 @@
  */
 
 import { localize } from "../../bio-plane/src/setup-words/index.mjs"
+import { boundOf, statement } from "../../bio-plane/src/read-bounds.mjs"
+
+/* THE DECLARED FRAME (R12, fix round 9, G125a): a frame's width and height are judged against the table once its
+ * header is read, before a plane, a strip or the output is allocated. A JPEG's own fields are 16 bits wide, so its
+ * edge never passes the table's; the pixels bound is what a hostile frame meets. */
+const PIXELS_MAX = boundOf("image", "pixels");
 
 export class DctRefusal extends Error {
   constructor(code, detail = {}) {
@@ -498,6 +504,10 @@ function decodeStrips(d, expectComps, colorTransform, emit) {
     if (!qt[c.tq]) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.quantisation_table_tq_missing", "quantisation table {tq} missing", { tq: String(c.tq) }) });
   }
   const W = frame.width, H = frame.height;
+  if (W * H > PIXELS_MAX)
+    throw new DctRefusal("IMAGE_TOO_LARGE", {
+      note: localize("image-codecs.dctdecode.the_picture_is_width_by_height", "the picture is {width} by {height}, past the {bound} pixels the decoder reads", { width: String(W), height: String(H), bound: String(PIXELS_MAX) }),
+      bound_name: "pixels", ...statement("image", "pixels", W * H), width: W, height: H, components: nc });
   /* A single-component scan is non-interleaved and walks its OWN block grid (for
    * a grey file, the same grid): its strip is one block row, and it is upsampled
    * by nothing. */
