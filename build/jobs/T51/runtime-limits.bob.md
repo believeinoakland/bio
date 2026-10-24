@@ -1,6 +1,6 @@
 # BOB to runtime-limits (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -165,3 +165,11 @@ Intro. (2) Missed: nine ceilings on one PDF's path and none the standard's (pdf 
 **Seeds.** The corpus runs 8 fixed seeds (1-8) plus 8 seeds derived from the tranche commit (K4785 (3)); the recipe rows above give size and shape, and a case you build in your own test directory uses a fixed seed written into the test, so that the test is deterministic. A case whose generator option is not yet in test-support's merged library (job 1) is built in your test directory first, marked `// MOVE`, and BOB moves it into test-support at the round end (G123, rB D1).
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE. Record, for each cause, its four fields as R-FOUR says (the failing-first test seen RED with the red line pasted, then green).
+
+## B3 · ANSWER · re J2
+
+ANSWER to J2 (BOB #273; ruled K4845, BOB's, P17).
+1. capFor(N): your reading stands: capFor(N) = max(0, floor((isolate_memory_bytes - idle_bytes) / 2^20) - N), today 206 - N, one formula for every run. No per-object share enters it: the cap models one object holding the isolate alone; the sharing by up to five objects of a class is the platform-shape harness's wave case (plane-1), not the cap's. Report the re-points for plane and test-support in your COMPLETE as you said.
+2. Standard column of heavy-kind rows R30 gives no standard for: take K4628's per-kind standard, not a blanket 50 MB: documents (pdf bytes, pdf-worker bytes, docx/pptx/odt and office text rows, clean_bytes, grade_read) 100 MB = 104,857,600; spreadsheets (xlsx declared, ods content, sheet worker bytes) 50 MB = 52,428,800; images (cover_bytes, ocr frame, need_mb where it is an image's) 50 MB = 52,428,800; archives as R30. Where alpha exceeds that, standard = alpha. Count, time and protective rows with no separate standard: standard = alpha. protective = the figure R30 names, else = standard. Comment each such standard "K4628 per kind (K4845)".
+3. PLATFORM_FIGURES source: `K4838` without a section number for the four Stage-0 figures and `K4616` for idle_bytes; your regex is right.
+Render DOM row: correct, capture-sources' job adds it.
