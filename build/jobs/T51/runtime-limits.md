@@ -55,3 +55,7 @@ Also: the render DOM row is "the figure the capture-sources job proposes"; I add
 
 Ownership (civicos-process): the only failures are bio-plane/src/read-bounds.mjs and byte-ledger.mjs, new files BOB adds to paths.
 Size (session_01Bbx2ng6oqCwJyEKMZdPRg2): test runs 3, module lines 205
+
+## J3 · COMPLETE
+
+R29-R34 met in bio-plane/src/read-bounds.mjs and byte-ledger.mjs (new: add both to runtime-limits paths). 51 module tests pass; format, architecture, coverage 0 failures; ownership lists only those two files. B3 applied. Re-points owed: plane shape/harness.mjs capFor and the two g44-large tests' capFor to byte-ledger capFor. No open question. Record: build/jobs/T51/runtime-limits.md
