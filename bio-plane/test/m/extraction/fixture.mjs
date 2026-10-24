@@ -3,6 +3,7 @@
    (PDF_WORKER, OCR_WORKER), a calibration provider behaving as calibration's Provides state (R10–R12), a promotion
    registry recording the step this module registers, a hook registry stand-in (`readHooks`) when a test hands one (R69), and helpers that build capture documents in the shape
    capture's acquire answer carries. */
+import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { deflateRawSync, crc32 } from "node:zlib";
@@ -72,12 +73,14 @@ export function storage() {
 /* An evidence bucket stand-in (the R2 binding's shape), recording every call. */
 export function bucket() {
   const held = new Map(), calls = [];
-  const obj = (k) => { const b = held.get(k); return { key: k, size: b.length,
-    arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) }; };
+  /* a ranged get answers the range, as R2 does (record-core R88 passes `{range: {offset, length}}`); the call records its options */
+  const obj = (k, o) => { const whole = held.get(k); const r = o && o.range;
+    const b = r ? whole.subarray(Math.min(r.offset, whole.length), Math.min(whole.length, r.offset + r.length)) : whole;
+    return { key: k, size: whole.length, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) }; };
   return {
     calls, held,
     async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length } : null; },
-    async get(k) { calls.push(["get", k]); return held.has(k) ? obj(k) : null; },
+    async get(k, o) { calls.push(o ? ["get", k, o] : ["get", k]); return held.has(k) ? obj(k, o) : null; },
     async put(k, bytes) { calls.push(["put", k]); held.set(k, new Uint8Array(bytes)); return { key: k }; },
   };
 }
@@ -116,7 +119,7 @@ export function promotion() {
 /* A fresh store with record-core, membership and this module (its figures registered, R67, as `extractionOf` does).
    `provenance` is handed to the module as `extractionOf` hands it (R65). */
 export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom = promotion(), provenance = null,
-                        readHooks = null, host = null } = {}) {
+                        readHooks = null, host = null, reader = null } = {}) {
   const s = storage();
   const ctx = { storage: s };
   const core = recordOf(ctx, { evidence, evidencePrefix: "bio/captures/" });
@@ -128,7 +131,7 @@ export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom
     for (const t of CALIBRATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) s.db.exec(t);
     cal = calibrationOf(ctx, { record: core });
   }
-  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: prom, env, readHooks, host,
+  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: prom, env, readHooks, host, reader,
                                 provenance: typeof provenance === "function" ? provenance(ctx, core, membership) : provenance });
   x.registerFigures();
   x.migrate();
@@ -181,6 +184,23 @@ export async function withEntry(entry, fn) {
   registerFormat({ detect: () => null, parts: null, structure: null, text: null, ...entry });
   try { return await fn(); }
   finally { unregisterFormat(entry.format); if (had) registerFormat(had); }
+}
+
+/* (fix round 9, G126e; R103) the `pdf-page` units a reader stores for an I2 text: one per page holding text, in page order. The press and
+   `op=pagetranscribe` read a capture's pages from these, never from the file. */
+export const pageUnits = (text) => (text && Array.isArray(text.pages) ? text.pages : [])
+  .filter((p) => p && Number.isInteger(p.page) && typeof p.text === "string" && /\S/.test(p.text))
+  .map((p) => ({ extent: { kind: "pdf-page", page: p.page }, text: p.text, seq: p.page }));
+
+/* (fix round 9, G126b, G126e; R103) the press, `op=pdfstructure&ocr=1`, which makes no OCR call and owes the pages left as one raised `ocr` job, then the
+   ledger's pass that job asks for (`readHeld({kind: "ocr", detail})`, as the plane's ledger calls it), which writes by R34's rule. The registrar is
+   test-support's `jobRegistrarStub`, handed in as the `registerOwe` hook once per store. Answers `{press, job, pass, x}`, `x` the pass's `reextraction`. */
+export async function pressThenPass(w, d, env, { author = "member:m1", viewer = "class:admin" } = {}) {
+  if (!w.jobs) { w.jobs = jobRegistrarStub(); w.x.registerOwe(w.jobs.registerJob); }
+  const press = await w.x.pdfStructure({ ocr: "1", sha: d, viewer, author, env });
+  const job = w.jobs.rows().find((r) => r.sha === d && r.kind === "ocr");
+  const pass = job ? await w.x.readHeld({ sha: d, kind: "ocr", env, detail: job.detail }) : null;
+  return { press, job, pass, x: pass && pass.reextraction };
 }
 
 /* I2 text with per-page grain: `pages` is `[{page, text, undetermined?}]`. */

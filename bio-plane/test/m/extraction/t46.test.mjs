@@ -6,7 +6,7 @@
    K2872). Each test names its ids. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer } from "./fixture.mjs";
+import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, pressThenPass } from "./fixture.mjs";
 import { TRANSCRIBE_WORDS } from "../../../src/extraction/index.mjs";
 import { WORD } from "./words.mjs";
 
@@ -43,7 +43,7 @@ async function heldScan(opts) {
   bundle(w.s, "PROJ-1", { type: "project" });
   const d = await hold(w.evidence, "%PDF-1.7 " + Math.random());
   w.x.writeReading({ bundleId: "PROJ-1", captureSha: d, profileFormat: "pdf", reading: { content_type: "generic", reader_version: 1,
-    found: false, entities: [], facts: {}, at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 3 } });
+    found: false, entities: [], facts: {}, at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 3 }, textUnits: pageUnits(SCAN) });
   const tr = transcriber(opts);
   w.x.registerTranscriber("plane", tr.t);
   const run = (env) => withEntry(pdfEntry(SCAN, 3), () => w.x.pageTranscribe({ captureSha: d, ...member1, ...(env ? { env } : {}) }));
@@ -97,15 +97,13 @@ test("R74: a later unlabelled transcription of the remaining pages keeps the ear
   assert.deepEqual(w.x.readingOf(d).reading.untested, LABEL);
   /* R34: a re-read over the labelled reading keeps the label */
   w.rows(`DELETE FROM capture_text WHERE capture_sha=? AND seq=2`, d);
-  const re = await withEntry(pdfEntry(SCAN, 3), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author: "member:m1",
-    env: { OCR_WORKER: member(() => ocrAnswer([2])) } }));
-  assert.equal(re.body.reextraction.written, true);
+  const re = await pressThenPass(w, d, { OCR_WORKER: member(() => ocrAnswer([2])) });
+  assert.equal(re.x.written, true);
   assert.deepEqual(w.x.readingOf(d).reading.untested, LABEL);
   /* control: a re-read over a reading no labelled act wrote adds none */
   const v = await heldScan({});
-  const plain = await withEntry(pdfEntry(SCAN, 3), () => v.w.x.pdfStructure({ ocr: "1", sha: v.d, viewer: "class:admin", author: "member:m1",
-    env: { OCR_WORKER: member(() => ocrAnswer([1, 2])) } }));
-  assert.equal(plain.body.reextraction.written, true);
+  const plain = await pressThenPass(v.w, v.d, { OCR_WORKER: member(() => ocrAnswer([1, 2])) });
+  assert.equal(plain.x.written, true);
   assert.equal("untested" in v.w.x.readingOf(v.d).reading, false);
 });
 

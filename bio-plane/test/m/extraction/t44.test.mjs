@@ -6,7 +6,7 @@
    Each test names its ids. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, withEntry, i2, noText } from "./fixture.mjs";
+import { fresh, bundle, hold, withEntry, i2, noText, pageUnits } from "./fixture.mjs";
 import { WORD } from "./words.mjs";
 
 const member1 = { cls: "member", session: true, caps: ["contribute"], viewer: "class:admin", by: "member:m1" };
@@ -75,7 +75,7 @@ async function act(opts, { photo = false } = {}) {
   const d = await hold(w.evidence, photo ? JPEG : "%PDF-1.7 " + Math.random());
   w.x.writeReading({ bundleId: "B-1", captureSha: d, profileFormat: photo ? "jpeg" : "pdf", reading: { content_type: "generic",
     reader_version: 1, found: false, entities: [], facts: {}, at: "2026-09-01T00:00:00Z", basis: "b", text_source: null,
-    page_count: photo ? 1 : 3, text_container: photo ? "jpeg" : "pdf" } });
+    page_count: photo ? 1 : 3, text_container: photo ? "jpeg" : "pdf" }, textUnits: photo ? null : pageUnits(SCAN) });
   const tr = transcriber(opts);
   w.x.registerTranscriber("plane", tr.t);
   const before = writes(w);

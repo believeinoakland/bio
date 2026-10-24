@@ -3,7 +3,9 @@
    scripted fleet members and a scripted pdf entry. Each test names the requirement ids it checks in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, member, withEntry, i2, noText, folio, unreadImage, ocrAnswer, calibration } from "./fixture.mjs";
+import { fresh, bundle, hold, member, withEntry, i2, noText, folio, unreadImage, ocrAnswer, calibration, pageUnits } from "./fixture.mjs";
+import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
+import { needsTier3 } from "../../../src/reading-pipeline/index.mjs";
 import { REEXTRACT_CHECKS } from "../../../src/extraction/index.mjs";
 import { pdfStructureOp, extractionOp, EXTRACTION_OPS } from "../../../src/extraction/ops.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
@@ -16,15 +18,28 @@ const pdf = (text, pages) => ({ format: "pdf", structure: async (b) => (new Text
   ? { ok: true, text: structuredClone(text), pages: pages ?? (text.pages || []).length, notes: [] }
   : { ok: false, reason: "NOT_A_PDF" }) });
 
-/* A store holding a capture of `text` in bundle B-1, read once (its reading and whole-page units written). */
-async function held(text, { env = {}, cal } = {}) {
+/* A store holding a capture of `text` in bundle B-1, read once (its reading and whole-page units written, as the reader stores them: one unit per page
+   holding text; `tier3_candidate` when a page wants OCR), with test-support's job registrar as the composition's `registerOwe` hook. */
+async function held(text, { env = {}, cal, extra = {} } = {}) {
   const w = fresh({ env, ...(cal ? { cal } : {}) });
   bundle(w.s, "B-1");
   const d = await hold(w.evidence, "%PDF-1.7 " + Math.random());
   const reading = { content_type: "generic", reader_version: 1, read_from_text: false, found: false, entities: [], facts: {},
-                    at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 3, container_extent: { container: "pdf", levels: ["images"], images: [] } };
-  w.x.writeReading({ bundleId: "B-1", captureSha: d, reading });
-  return { w, d };
+                    at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: Math.max(1, (text.pages || []).length),
+                    container_extent: { container: "pdf", levels: ["images"], images: [] },
+                    ...(needsTier3(text) ? { tier3_candidate: true } : {}), ...extra };
+  w.x.writeReading({ bundleId: "B-1", captureSha: d, reading, textUnits: pageUnits(text) });
+  const jobs = jobRegistrarStub();
+  w.x.registerOwe(jobs.registerJob);
+  return { w, d, jobs };
+}
+/* (fix round 9, G126b, G126e; R103) the press, `op=pdfstructure&ocr=1`: no OCR call, the pages left owed as one raised `ocr` job; then the ledger's pass
+   that job asks for (`readHeld({kind: "ocr", detail})`, as the plane's ledger calls it), which writes by R34's rule. */
+async function pressThenPass({ w, d, jobs }, env, { author = "member:m1" } = {}) {
+  const press = await w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author, env });
+  const job = jobs.rows().find((r) => r.sha === d && r.kind === "ocr");
+  const pass = job ? await w.x.readHeld({ sha: d, kind: "ocr", env, detail: job.detail }) : null;
+  return { press, job, pass, x: pass && pass.reextraction };
 }
 const writes = (w) => JSON.stringify([w.rows(`SELECT * FROM readings`), w.rows(`SELECT * FROM capture_text`), w.rows(`SELECT * FROM reading_history`)]);
 
@@ -151,30 +166,34 @@ test("R32 R47: with ocr, before any byte is read or engine called: malformed fla
   assert.deepEqual(Object.keys(REEXTRACT_CHECKS).map((k) => REEXTRACT_CHECKS[k].check), ["C-51.1", "C-51.2", "C-51.3", "C-51.4", "C-51.5", "C-51.7"]);
 });
 
-test("R33: with no page filled the answer's reextraction is performed false, written false, the cost, candidacy and why, and nothing is written", async () => {
-  const { w, d } = await held(i2([{ page: 0, text: "all text" }]));
-  const before = writes(w);
-  const r = await withEntry(pdf(i2([{ page: 0, text: "all text" }])),
-    () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env: { OCR_WORKER: member(() => ocrAnswer([0])) } }));
-  assert.deepEqual([r.body.reextraction.performed, r.body.reextraction.written, r.body.reextraction.candidate], [false, false, false]);
+test("R33 R103: the press reads nothing and calls no engine: a reading with no page left owes nothing (performed false, written false, cost, why); one with pages left owes them, and a pass the member declines writes nothing and ends the job", async () => {
+  const f = await held(i2([{ page: 0, text: "all text" }]));
+  const before = writes(f.w);
+  const ocr = member(() => ocrAnswer([0]));
+  const r = await withEntry(pdf(i2([{ page: 0, text: "all text" }])), () => f.w.x.pdfStructure({ ocr: "1", sha: f.d, viewer: "class:admin", env: { OCR_WORKER: ocr } }));
+  assert.deepEqual([r.body.reextraction.performed, r.body.reextraction.written, r.body.reextraction.candidate, r.body.reextraction.owed], [false, false, [], undefined]);
   assert.match(r.body.reextraction.cost, /per image-only page/);
   assert.match(r.body.reextraction.why, /no page of this document lacks a text layer/);
-  const declined = await withEntry(pdf(i2([{ page: 0, text: "", undetermined: [noText(0)] }])),
-    () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env: { OCR_WORKER: member(() => ({ ok: false, reason: "busy" })) } }));
-  assert.equal(declined.body.reextraction.performed, false);
-  assert.equal(declined.body.reextraction.candidate, true);
-  assert.match(declined.body.reextraction.why, /declined/);
-  assert.equal(writes(w), before);
+  assert.deepEqual([ocr.calls.length, f.jobs.rows().length], [0, 0]);
+  const g = await held(i2([{ page: 0, text: "", undetermined: [noText(0)] }]));
+  const before2 = writes(g.w);
+  const declines = member(() => ({ ok: false, reason: "busy" }));
+  const { press, job, pass } = await pressThenPass(g, { OCR_WORKER: declines });
+  assert.deepEqual([press.status, press.body.reextraction.performed, press.body.reextraction.written, press.body.reextraction.owed, press.body.reextraction.candidate],
+                   [200, false, false, true, [0]]);
+  assert.deepEqual([job.priority, job.cursor], ["raised", 0], "the press is \"Read it\"");
+  assert.deepEqual([pass.read, pass.owed, pass.why], [false, undefined, "OCR_NO_PROGRESS"], "a page the member declines is the document's own: the job ends, stated");
+  assert.equal(writes(g.w), before2);
+  assert.equal(writes(f.w), before);
 });
 
 test("R34 R24 (reading-pipeline R5, R11): with pages filled, the reading by reading-pipeline R11's rule with the stored type, at kept, page count and extent carried, provenance and reextracted; written by R19 with no bundle version; the answer reports the listeners and the index", async () => {
   const cal = calibration({ live: [{ calibration_id: "CAL-3", engine: "tess", version: "5.3" }] });
-  const { w, d } = await held(i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]), { cal });
+  const held34 = await held(i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]), { cal });
+  const { w, d } = held34;
   w.x.onReading("content", () => ({ staled: 4 }));
   w.x.onReading("observation-log", () => ({ observed: { written: 2 } }));
-  const r = await withEntry(pdf(i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]), 2),
-    () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author: "member:m1", env: { OCR_WORKER: member(() => ocrAnswer([1])) } }));
-  const x = r.body.reextraction;
+  const { x } = await pressThenPass(held34, { OCR_WORKER: member(() => ocrAnswer([1])) });
   assert.deepEqual([x.performed, x.written, x.pages, x.engine.engine, x.engine.calibration, x.staled, x.observed.written],
                    [true, true, [1], "tess", "CAL-3", 4, 2]);
   assert.ok(x.units && x.units.written === 2);
@@ -187,7 +206,7 @@ test("R34 R24 (reading-pipeline R5, R11): with pages filled, the reading by read
   assert.equal(stored.provenance.scheme, "reading-provenance/1");
   assert.deepEqual(Object.keys(stored.reextracted).sort(), ["at", "by", "calibration", "engine", "pages", "version", "via"]);
   assert.deepEqual([stored.reextracted.by, stored.reextracted.via, stored.reextracted.calibration], ["member:m1", "op=pdfstructure&ocr=1", "CAL-3"]);
-  assert.equal(r.body.tier, 3);
+  assert.equal(stored.text_tier, 3);
   assert.equal(w.x.readingFor(d).origin.state, "composed");
   assert.equal(w.rows(`SELECT * FROM manifest`).length, 0, "no bundle version is minted");
   assert.equal(x.compared.state, "undetermined");
@@ -195,55 +214,54 @@ test("R34 R24 (reading-pipeline R5, R11): with pages filled, the reading by read
 
 test("R34 R24: a re-read whose write a listener refuses is rolled back whole and says so, never as the capture having left the caller's sight; the same re-read with the listener quiet is written (control)", async () => {
   const text = i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]);
-  const { w, d } = await held(text);
+  const f = await held(text);
+  const { w } = f;
   let refuse = true;
   w.x.onReading("content", () => { if (refuse) throw new Error("refused"); return { staled: 0 }; });
   const before = writes(w);
-  const run = () => withEntry(pdf(text, 2),
-    () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author: "member:m1", env: { OCR_WORKER: member(() => ocrAnswer([1])) } }));
-  const x = (await run()).body.reextraction;
+  const run = async () => (await pressThenPass(f, { OCR_WORKER: member(() => ocrAnswer([1])) })).x;
+  const x = await run();
   assert.deepEqual([x.performed, x.written], [true, false]);
   assert.match(x.why, /rolled back whole/);
   assert.doesNotMatch(x.why, /no longer held/);
   assert.equal(writes(w), before, "nothing of the refused write is kept");
   refuse = false;
-  const ok = (await run()).body.reextraction;
+  const ok = await run();
   assert.deepEqual([ok.performed, ok.written, ok.why], [true, true, undefined]);
 });
 
-test("R35 (reading-pipeline R7): a re-read asks only for the pages the stored reading still leaves unread, so repeated re-reads reach a long scan's tail, and a folio page is never appended twice", async () => {
-  const pages = Array.from({ length: 30 }, (_, i) => ({ page: i, text: i === 0 ? "7" : "", undetermined: [i === 0 ? folio(0) : noText(i)] }));
-  const { w, d } = await held(i2(pages));
+test("R35 R103 G132k (reading-pipeline R7): each pass asks only for the pages the stored reading still leaves unread, so repeated passes reach a long scan's tail; the pass loads no object and parses nothing", async () => {
+  const pages = Array.from({ length: 30 }, (_, i) => ({ page: i, text: "", undetermined: [noText(i)] }));
+  const f = await held(i2(pages));
   const ocr = () => member((body, n) => (n === 1 ? { ...ocrAnswer([body.pages[0]]), deferred: body.pages.slice(1) } : ocrAnswer(body.pages)));
   const first = ocr();
-  const r1 = await withEntry(pdf(i2(pages)), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env: { OCR_WORKER: first } }));
-  assert.equal(first.calls.length, OCR_CALLS_PER_REQUEST);
-  assert.equal(r1.body.reextraction.pages.length, OCR_CALLS_PER_REQUEST);
+  const g0 = f.w.evidence.calls.filter(([op]) => op === "get").length;
+  const one = await pressThenPass(f, { OCR_WORKER: first });
+  assert.equal(first.calls.length, OCR_CALLS_PER_REQUEST, "the pass's budget");
+  assert.equal(one.x.pages.length, OCR_CALLS_PER_REQUEST);
+  assert.equal(f.w.evidence.calls.filter(([op]) => op === "get").length, g0, "no byte of the object is read by the press or the pass (the member reads its pages)");
+  assert.deepEqual([one.pass.owed, one.pass.registration.pages_left], [true, 6], "the pages left are re-registered");
   const second = ocr();
-  const r2 = await withEntry(pdf(i2(pages)), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env: { OCR_WORKER: second } }));
+  const two = await f.w.x.readHeld({ sha: f.d, kind: "ocr", env: { OCR_WORKER: second } });
   const asked2 = second.calls.flatMap((c) => c.body.pages);
   assert.deepEqual([...new Set(asked2)].sort((a, b) => a - b), [24, 25, 26, 27, 28, 29], "only the tail is asked");
-  assert.deepEqual(r2.body.reextraction.pages, [24, 25, 26, 27, 28, 29]);
-  const p0 = w.one(`SELECT text FROM capture_text WHERE capture_sha=? AND seq=0`, d).text;
-  assert.equal(p0, "7\nocr text of page 0", "the folio page keeps one copy of its folio");
+  assert.deepEqual(two.reextraction.pages, [24, 25, 26, 27, 28, 29]);
   const third = ocr();
-  const r3 = await withEntry(pdf(i2(pages)), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env: { OCR_WORKER: third } }));
+  const r3 = await withEntry(pdf(i2(pages)), () => f.w.x.pdfStructure({ ocr: "1", sha: f.d, viewer: "class:admin", env: { OCR_WORKER: third } }));
   assert.equal(third.calls.length, 0, "every page read: the member is not asked again");
-  assert.equal(r3.body.reextraction.performed, false);
-  assert.equal(r3.body.reextraction.candidate, false);
+  assert.deepEqual([r3.body.reextraction.performed, r3.body.reextraction.candidate], [false, []]);
+  assert.equal(f.w.x.readingFor(f.d, "class:admin").unread_pages.length, 0);
 });
 
-test("R33 R34 (reading-pipeline R8): through a re-read, a page tier 2 wins keeps a still-true image_unread marker; a page OCR fills discharges it", async () => {
-  const bad = { page: 0, reason: "no_tounicode", count: 1 };
-  const t1 = i2([{ page: 0, text: "", undetermined: [bad, bad, bad, unreadImage(0)] }, { page: 1, text: "", undetermined: [noText(1), unreadImage(1)] }]);
-  const { w, d } = await held(t1);
-  const env = { PDF_WORKER: member(() => ({ ok: true, text: i2([{ page: 0, text: "decoded by tier two" }, { page: 1, text: "" }]) })),
-                OCR_WORKER: member(() => ocrAnswer([1])) };
-  const r = await withEntry(pdf(t1), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env }));
-  const p0 = r.body.text.pages.find((p) => p.page === 0), p1 = r.body.text.pages.find((p) => p.page === 1);
-  assert.equal(p0.tier, 2);
-  assert.ok(p0.undetermined.some((u) => u.reason === "image_unread"), "kept on the page tier 2 won");
-  assert.ok(!p1.undetermined.some((u) => u.reason === "image_unread" || u.reason === "no_text_layer"), "discharged where OCR filled");
+test("R33 R34 (reading-pipeline R8): through the pass, a page whose stored text tier 2 decoded keeps it, unasked; a page OCR fills is read and indexed", async () => {
+  const t = i2([{ page: 0, text: "decoded by tier two" }, { page: 1, text: "", undetermined: [noText(1)] }]);
+  const f = await held(t);
+  const ocr = member(() => ocrAnswer([1]));
+  const { x } = await pressThenPass(f, { OCR_WORKER: ocr });
+  assert.deepEqual(ocr.calls.flatMap((c) => c.body.pages), [1]);
+  assert.deepEqual(x.pages, [1]);
+  const units = f.w.rows(`SELECT extent, text FROM capture_text WHERE capture_sha=? ORDER BY seq`, f.d).map((u) => [JSON.parse(u.extent).page, u.text]);
+  assert.deepEqual(units, [[0, "decoded by tier two"], [1, "ocr text of page 1"]]);
 });
 
 test("R52: an agenda item's membership in a file is derived from containment under the link shapes the active profiles state, labelled machine work graded C, beside links[] and never inside them; none stated, null with the reason", async () => {
@@ -279,25 +297,17 @@ test("R52: an agenda item's membership in a file is derived from containment und
   assert.equal(r.body.membershipWhy, "no_active_profile_states_item_and_file_link_shapes");
 });
 
-test("R34 (reading-pipeline R12, R17; N100, N139): a re-read carries the structure's page boxes, else the stored reading's, else none; and its own text counts by the acquire path's rule", async () => {
-  const pb = { boxes: [{ media_box: [0, 0, 612, 792], w: 612, h: 792, rotate: 0 }], of_page: [0, 0] };
+test("R34 (reading-pipeline R12, R17; N100, N139; fix round 9, G128c: the boxes are the stored rows'): the pass carries the stored reading's page boxes, else none; and its own text counts by the acquire path's rule", async () => {
   const t = i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]);
-  const withBoxes = (boxes) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(t), pages: 2, notes: [],
-                                                                            ...(boxes !== undefined ? { pageBoxes: boxes } : {}) }) });
-  const reread = async (storedExtra, boxes) => {
-    const { w, d } = await held(t);
-    if (storedExtra) {
-      const r = JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
-      w.x.writeReading({ bundleId: "B-1", captureSha: d, reading: { ...r, ...storedExtra } });
-    }
-    await withEntry(withBoxes(boxes), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env: { OCR_WORKER: member(() => ocrAnswer([1])) } }));
-    return JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
+  const reread = async (extra) => {
+    const f = await held(t, { extra: extra || {} });
+    await pressThenPass(f, { OCR_WORKER: member(() => ocrAnswer([1])) });
+    return JSON.parse(f.w.one(`SELECT reading FROM readings WHERE capture_sha=?`, f.d).reading);
   };
   const stored = { boxes: [{ media_box: [0, 0, 100, 100], w: 100, h: 100, rotate: 0 }], of_page: [0, 0] };
-  assert.deepEqual((await reread({ page_boxes: stored }, pb)).page_boxes, pb, "the structure's own");
-  assert.deepEqual((await reread({ page_boxes: stored }, undefined)).page_boxes, stored, "else the stored reading's");
-  assert.equal((await reread({ page_boxes: null }, undefined)).page_boxes, null);
-  const none = await reread(null, undefined);
+  assert.deepEqual((await reread({ page_boxes: stored })).page_boxes, stored, "the stored reading's");
+  assert.equal((await reread({ page_boxes: null })).page_boxes, null);
+  const none = await reread(null);
   assert.equal("page_boxes" in none, false, "else absent");
   const merged = "Text\nocr text of page 1";
   assert.deepEqual([none.text_chars, none.text_glyphs, none.text_undetermined], [merged.length, merged.replace(/\s/g, "").length, 0]);
@@ -314,14 +324,14 @@ test("R31 (N100): the plain read carries pdf-reader's own pageBoxes beside membe
   assert.equal(writes(w), before);
 });
 
-test("R34 (reading-pipeline R28; K1557): a re-read's reading carries what the pdf entry emitted beside the text, unaltered: its metadata, or null when it emitted none, and no workbook cells", async () => {
+test("R34 (reading-pipeline R28; K1557): a re-read's reading carries what the pdf entry emitted beside the text, as the stored reading holds it: its metadata, or null when it emitted none, and no workbook cells", async () => {
   const meta = { title: "Council minutes", author: "Clerk", created: "2026-09-01T00:00:00Z", custom: [{ name: "k", value: "v" }] };
   for (const [emitted, want] of [[meta, meta], [undefined, null]]) {
     const text = i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }], emitted ? { metadata: structuredClone(emitted) } : {});
-    const { w, d } = await held(text);
-    const r = await withEntry(pdf(text, 2),
-      () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author: "member:m1", env: { OCR_WORKER: member(() => ocrAnswer([1])) } }));
-    assert.equal(r.body.reextraction.written, true);
+    const f = await held(text, { extra: { metadata: emitted ? structuredClone(emitted) : null } });
+    const { w, d } = f;
+    const { x } = await pressThenPass(f, { OCR_WORKER: member(() => ocrAnswer([1])) });
+    assert.equal(x.written, true);
     const stored = JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
     assert.deepEqual(stored.metadata, want);
     assert.equal(Object.prototype.hasOwnProperty.call(stored, "cells"), false, "cells are a workbook's only");

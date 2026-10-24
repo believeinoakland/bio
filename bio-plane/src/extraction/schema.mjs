@@ -389,7 +389,11 @@ CREATE TABLE IF NOT EXISTS capture_text_state (
   cursor         TEXT,
   read_through   INTEGER,
   total          INTEGER,
-  words_read     INTEGER
+  words_read     INTEGER,
+  -- R101 (fix round 9, G129b): why a read in pieces ended before its last piece, so it is never partial without a reason; null otherwise.
+  ended_why      TEXT,
+  -- R101 (K4904 (1)): the windows stepped past because they killed their reader three times, [{at, why}] as JSON; null when none.
+  stated         TEXT
 );
 CREATE INDEX IF NOT EXISTS capture_text_state_bundle ON capture_text_state(bundle_id);
 
