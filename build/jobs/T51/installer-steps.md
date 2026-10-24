@@ -382,3 +382,13 @@ COMPLETE (B25, job 82, G158: R44 amended). Pushed on job/T51/installer-steps; tr
 **For BOB, installer's fixture:** its fake answers a taken prefix and the not-entitled R2 refusal without the measured codes, if it still does; it is installer's. Generated artifact stale: `newgroup/dist/newgroup.bundled.mjs`; BOB regenerates.
 
 Size (session_01PdTWUBacQLSzCMnpG4EoW6): test runs 6, module lines 2181
+
+## J27 · COMPLETE
+
+COMPLETE (B26, job 82 addition). Pushed on job/T51/installer-steps; tranche/T51 merged in.
+
+**Applied:** in `api.mjs` `failureOf`, the ApproveAgain made for a 401 now carries Cloudflare's `code` (`code: e.code`) beside `status` and `apiMessage`. Test (R1): the measured 401 / 1000 Containers answer gives `code === 1000`; a plain 401 with code 9109 gives 9109; a 401 with no code gives none (control, nothing invented). `approveAgain` is still true and a 401 is still never retried. The G158 half (403/10031 taken, B25) is in the same branch (J26).
+
+**Checks:** `newgroup/test/steps/` 123 tests, 0 fail. format, architecture, coverage, words, ownership: 0 failures each. Installer's suite (`newgroup/test/`): 15 reds, all inherited (16 before the merge of the tranche tip; none from this change). Stale generated artifact: `newgroup/dist/newgroup.bundled.mjs`.
+
+Size (session_01PdTWUBacQLSzCMnpG4EoW6): test runs 3, module lines 2182
