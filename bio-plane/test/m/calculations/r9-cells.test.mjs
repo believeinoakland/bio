@@ -165,3 +165,25 @@ test("R9 (G123f): a formula in a later window of a range makes the table's engin
   assert.equal(read.table.grade_facts.engine, FILE_ENGINE);
   assert.equal(read.table.grade_facts.grade, null, "a third-party engine's value is undetermined until measured (R9)");
 });
+
+/* the seam (red by name until content R52's `cellsAt(contentId, {fromRow})` merges, K4922): the REAL content over an extraction that answers a window
+   of rows a call, a range over the window is read on to its end and is the CSV file's table */
+test("R1 (G123f, seam: waits for CONTENT's cellsAt fromRow): the real content over a held sheet answered in windows is read to its last row, and equals the CSV file's table", async () => {
+  const w = seeded();
+  const rows = data(10);
+  const d = w.document("held workbook");
+  w.ex.readings[d.capSha] = { pageCount: 1, chain: [{ step: "layer", tier: 1, container: "xlsx", cap: null, measured_by: null, calibration: null }],
+    textContainer: { sheets: ["S"] }, reading: { cells_held: ["S"] } };
+  w.ex.cellsOf = (_sha, _sheet, { fromRow, toRow }) => {
+    const last = Math.min(toRow, fromRow + WINDOW - 1);
+    const next = last < toRow ? last + 1 : null;
+    return { cells: cellsOf(rows.slice(fromRow - 2, last - 1), fromRow), interpreted: { sheet: "S", from_row: fromRow, to_row: last }, next_row: next };
+  };
+  const m = w.content.mint({ bundleId: d.bundleId, captureSha: d.capSha, extent: { kind: "sheet-range", sheet: "S", range: "A2:C11" }, mintedBy: V("bob") });
+  assert.equal(m.ok, true, JSON.stringify(m).slice(0, 300));
+  const r = await declare(w, m.content_id);
+  assert.equal(code(r), "ok", JSON.stringify(r).slice(0, 300));
+  assert.equal(r.rows, 10);
+  const file = await declare(w, w.csv(csvText([HEADER, ...rows])));
+  assert.equal(r.sha, file.sha);
+});
