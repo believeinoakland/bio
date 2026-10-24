@@ -910,7 +910,7 @@ PLANE #57 (job 37), three readings; I carry on with each, none blocks me.
 
 **Deferred:** none.
 
-**Found in other modules (REPORT J57)**
+**Found in other modules (REPORT J56)**
 - `READ_BOUNDS` has no row for the inline ceiling G126e names ("none loads a PDF over 2 MB in a request"): proposed row `pdf.request_bytes` {standard 2 MiB, alpha 2 MiB, protective 2 MiB}, key `limit.pdf.request_bytes`; `transcribe.mjs` quotes it by `boundOf` and falls back to 2 MiB marked "proposed; BOB records" until it exists (control-plane's `READING_DEFER_PDF_BYTES` holds the same figure unexported).
 - record-core's `BOOKKEEPING_TABLES` (its R91) lacks `job_unit_attempts` and `job_batches`, which a tick writes: `writeCount()` moves on a ledger tick.
 - `r8-headofline` "R80 G91 L: ... never answers an alarm_at in the past" is red on the tip before and after this job, with scheduler 33 and file-safety merged: during a 12 s scan held past the firing's budget, `getAlarm()` answers a past wake for many seconds (the firing's reconcile, not a plane arm: the heal frame does not look during a firing). Scheduler's to place.
