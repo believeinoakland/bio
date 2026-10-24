@@ -71,3 +71,15 @@ If you would rather keep the English value and accept the words-check failure fo
 - `node bio-plane/src/setup-words/build.mjs --check` exits 1: `rows.mjs` is stale for `image-codecs.jpxdecode.marker_0x_m_where_sot` (the generated row list). It is generated; I have not regenerated it, as BOB does that at layer close.
 
 Size (session_01YPCgAZ8Ga6MXdTiGufjUD7): test runs 36, module lines 3423.
+
+## J4 · QUESTION
+
+QUESTION (best reading given; I carry on with it). Fix round 9, image-codecs R4, R10, R12, R13.
+
+My ceilings and the rows I read (no numeric literal of mine, R13):
+- `boundOf("image","pixels")` 120,000,000, `"edge"` 65,535, `"row_stride"` 8 MiB, `"chunks"` 65,536: all four exist.
+- R4/R10 keep a working-set ("memory") bound, today `61_300_000` in jpxdecode.mjs and pngdecode.mjs (the measured OCR-isolate figure). No `image` row holds it. I read `boundOf("ocr","frame_bytes")` (61,300,000, the same figure and source) so the behaviour is unchanged and no member limit moves. If you want a row of its own, it is `image.working_set` {standard 61300000, alpha 61300000, protective 61300000} for runtime-limits to add; I change one import line.
+- R4 says the JPX precinct/tile objects are counted against "the table's retained-objects bound": I read `boundOf("office","retained_objects")` (250,000 proposed, BOB confirming for JPX). I count precinct objects plus code-block objects per band, from the header, closed form. If you want an `image.retained_objects` row instead, same one-line change.
+
+Needed from you: nothing if both readings stand; say so only if you want the two rows added and the import re-pointed.
+Also noted for later: I keep exporting `MEMORY_FEATURE` (an identifier, no longer a key of JPX_REFUSES/PNG_REFUSES) so pdf-pixels' imports in pagepixels.mjs and picturepixels.mjs still load; the memory refusal is now code `IMAGE_TOO_LARGE`, which pdf-pixels (job 14) must map (today it falls to DECODE_FAILED).
