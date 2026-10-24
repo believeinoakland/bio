@@ -84,4 +84,4 @@ BLOCKED (cause: needs Bob). NEEDS BOB: approve, in this session, the one refused
 
 **Checks** (from the process repository, after the commit): format 176 modules, 0 failures; architecture 0; coverage 22 of 22 live ids, 0; words 0 (plain 0, testcopy 0, missingkey 0, inline 0); ownership 0 failures (9 files). `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit site-profiles/test/`: 46 pass with the stand-in, 27 pass and 19 fail as committed (see above). Impact set not run: `build/plan/impact.mjs` errored on this checkout and its users (docprofile, doctypes) are red on `digests` until ooxml merges.
 
-Size (session_015KRmXt7cbEfmR33Lj1GWYb): test runs 6, module lines 2218
+Size (session_015KRmXt7cbEfmR33Lj1GWYb): test runs 6, module lines 2094
