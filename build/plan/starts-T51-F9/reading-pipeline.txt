@@ -437,3 +437,5 @@ const cases = {
 ```
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+**Added by BOB #273 (K4847): a fragile test is yours (K4787).** `bio-plane/test/m/reading-pipeline/pdf-pieces.test.mjs` (R40 R36 G26, line ~43) asserts a wall bar, "the pieces took N ms, over 1.7 parses of the whole": red on one core (55,648 ms against 12,088). Replace the time bar with counts (the piece count, each piece's byte range, every page read once) or a same-run control that does not depend on load; then run it five times on one core (`taskset -c 0`) green.

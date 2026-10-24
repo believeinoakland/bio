@@ -231,3 +231,5 @@ The PDF plan's I1-I14, re-cut for a sheet. Each is a sentence for the module nam
 - Document · "encrypted" and "could not be scanned" as their own states, "the scanner stopped at its limit" with the limit (G136a, G136b)
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+**Added by BOB #273 (K4847): a fragile test is yours (K4787).** `bio-plane/test/m/screens-inquiry/fr6-seam.test.mjs` (R96 G13, line ~131) boots the Document page straight after promotion, before the plane holds a reading, so the page rightly draws `unread` (`document.mjs:240`) and the test expects `reading` (the reading window is about 4 s). Test-only fix: before `boot(...)`, poll the plane's `op=reading` for the capture until `more === true` (as the G38 test of the same file does), then boot and assert `reading`. The title's "12 MB" is 3.46 MB in fact: name the real size.
