@@ -35,3 +35,11 @@ setup-words build.mjs --check: exits 1 on one item in jurisdictions (index.amoun
 Judgment for BOB: NAMES in images.mjs were fragments used inside sentences; I localized each one separately, so a translator sees whole words, not a fragment.
 
 Size (session_01BeVLdPhs7muyDKyKa7EQFX): test runs 4, module lines 1063
+
+## J4 · REPORT
+
+T51 fix round 9 (doc-clean #4), two items for BOB; nothing here blocks the job.
+
+1. A ceiling I keep that has no READ_BOUNDS row (ruling K4842 (1)): `CLEAN_MAX_PART_BYTES`, the most uncompressed bytes one part of a package may declare. Kind `document`, name `part_bytes`; figures standard 104,857,600 (K4628: documents 100 MB), alpha 33,554,432 (32 MiB, today's), protective 33,554,432. Key `limit.document.part_bytes` (the sentence is mine: `doc-clean.package.part_n_declares_uncompressedsize_bytes`). Until runtime-limits carries the row, the constant is `2 * boundOf("document", "clean_bytes")`, which is 33,554,432 today, so the module holds no literal for it; when the row exists it becomes `boundOf("document", "part_bytes")`.
+
+2. G136c's cleaner-crash half is case-carriage's (ruling K4842 (4); I do not ask for a CHANGE). For case-carriage's job, the exact change: at `case-carriage/index.mjs:1270-1282` stamp `tried` before `cleanDocument` is called, not after it returns. doc-clean's side is done and tested: `cleanDocument` keeps nothing between calls, so a call after a crash (a thrown `yieldNow`, an isolate kill) answers exactly what a first call would.
