@@ -1,6 +1,6 @@
 # queue (T51)
 
-**Status** · session_011pqGr91RHciRQowMDqiftF · depth 2 · COMPLETE · handled B16
+**Status** · session_01MHgZjvBKiaDWFEhDJRUvf3 · depth 2 · COMPLETE · handled B18
 
 ## J1 · QUESTION
 
@@ -259,3 +259,25 @@ QUEUE #34 (session_011pqGr91RHciRQowMDqiftF), T51 fix round 8, G116 (R94). Compl
 **Failing-first:** `r8-derive-once.test.mjs` RED `3 !== 1` against the previous code (6 of 7 red), green after; `r7-count-cache.test.mjs` rewritten to R94 with the stale-list control. Queue suite 229 of 229 (also on one core); format, architecture, coverage, words, ownership 0 failures.
 
 **For you:** (1) `plane` `test/m/plane/compose.test.mjs:105` (R11) swaps three providers' answers between two reads with no row written, so its second read is now the kept derivation: a plane test fix (write a row between), not mine. `plane/release.test.mjs` R24 fails on the tranche tip too. (2) record-core's `writeCount()` on `tranche/T51` is still the total_changes version; G115's exclusion is unmerged, so case 3 holds and cases 1-2 wait, as the START states. (3) Behaviour notes and the proposed R94 wording are in the record (tasks read fixed at 1000; a hit's ages are at most one bucket old).
+
+## Completion (QUEUE #35, job 70, fix round 9 batch D: R1 `reading-ended`, G135f, K4933)
+
+**Entries applied.** `classOfKind("reading-ended")` answers `FINDING` (`bio-plane/src/queuestate.mjs`, `QUEUE_FINDING_KINDS`), with one code-origin sentence ending "— LIVE: notice-producers R29". R1's wording was already on the tranche.
+
+**Failing first.** `catalogue.test.mjs` "R1 (G61)" was red on `reading-ended` (`AssertionError: reading-ended`); green after. It now also names `reading-ended` as FINDING with a sentence. Two hand lists in my own tests that must equal the catalogue's kinds gained the kind and went red until then: `catalogue.test.mjs` R1 (the FINDING list) and `t50.test.mjs` R55 (the kinds with no `queue.kind.<kind>` row yet, OWED). Control: every other kind's class unchanged (the same R1 test over all kinds).
+
+**Words.** No words row is needed by the check (words queue: 0 failures). The plain name `queue.kind.reading-ended` is owed to the design stream, as for `fetch-done`; it is in R55's OWED list in `t50.test.mjs` and that assertion fails when the row arrives, until the kind leaves the list.
+
+**Not mine, seen on the impact set** (`build/plan/impact.mjs origin/tranche/T51 HEAD`: queue 34, store-door 6, control-plane 17, plane 64 files; 599 tests, 596 pass, 3 fail). The same three fail on `tranche/T51` without my change: `control-plane/t51-visitor-copy.test.mjs` (R104 R100 R99 E8), `plane/release.test.mjs` R24 (known since J12), `plane/g41-shape.test.mjs` (R84 G41, the 200,000-row xlsx).
+
+**Checks** (each read by its failure count): queue suite 229 of 229; format 176 modules, 0 failures; architecture 41 product files, 0 failures; coverage queue 55 of 55 ids, 0 failures; words queue, 0 failures; ownership 4 files, 0 failures.
+
+Size (session_01MHgZjvBKiaDWFEhDJRUvf3): test runs 7, module lines 2956
+
+## J14 · COMPLETE
+
+QUEUE #35 (session_01MHgZjvBKiaDWFEhDJRUvf3), job 70, R1 reading-ended (G135f, K4933). Complete on job/T51/queue; the record's last section has the fields. classOfKind('reading-ended') is FINDING with a code-origin sentence (notice-producers R29). Red first: catalogue.test.mjs R1 (G61), then green; two hand lists in my tests (R1's FINDING list, R55's OWED list) gained the kind. Queue suite 229/229; format, architecture, coverage, words, ownership 0 failures. Impact set 599 tests, 3 red, the same 3 on tranche/T51 without my change (control-plane t51-visitor-copy, plane release R24, plane g41-shape). Owed to the design stream: the plain name queue.kind.reading-ended.
+
+## J15 · COMPLETE
+
+B18 applied: merged origin/tranche/T51 (no node_modules entry tracked in my branch; diff vs tranche is 4 files: queuestate.mjs, two queue tests, my record). Queue suite 229/229. COMPLETE stands.
