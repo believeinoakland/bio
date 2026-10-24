@@ -65,7 +65,7 @@ test("R17 R10: a ZIP held in parts (past the read's bound) is profiled `zip` fro
   const r = await capture(w, z);
   assert.equal(r.body.parts, 2, "the archive is held in two parts");
   assert.equal(r.body.document.profile.format.format, "zip");
-  assert.match(r.body.document.profile.format.signals.join(" "), /listed whole over the stored parts/);
+  assert.match(r.body.document.profile.format.signals.join(" "), /judged from the end record and the central directory/);
   const [bigDoc, smallDoc] = r.body.unpack.documents;
   assert.equal(bigDoc.capture.sha256, sha(big), "cut exactly across the archive's parts");
   assert.equal(bigDoc.parts.length, 2, "a file over 8 MiB is stored in parts of 8 MiB (R10's form)");

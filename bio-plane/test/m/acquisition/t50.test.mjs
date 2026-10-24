@@ -337,7 +337,9 @@ test("R48: the same decision on a capture held in parts reads each part once (on
     w.rows("DELETE FROM archive_entries");
     w.b.calls.length = 0;
     const r = await w.acq.archiveList({ archiveSha: sha(bytes), viewer: ADMIN });
-    assert.ok(reads(w) <= 1 + 2 * 2, `${what}: ${reads(w)} reads`);
+    /* R101 (G130c): a capture past the bytes read back is judged from range reads of its head and its tail (the head, the end record, the central directory),
+       which the one-KiB look at the head and the listing's own read come to in addition to the key's head: six at most, none of them a part read whole */
+    assert.ok(reads(w) <= 6, `${what}: ${reads(w)} reads`);
     if (isZip) assert.deepEqual([r.ok, r.archive.refused, r.archive.entries], [true, null, 2], what);
     else assert.deepEqual([r.ok, r.reason], [false, "NOT_AN_ARCHIVE"], what);
   }

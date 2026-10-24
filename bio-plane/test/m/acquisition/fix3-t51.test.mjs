@@ -44,7 +44,8 @@ test("R96 R10 R11 R95 (C5): a 16 MiB capture in three parts, against a store who
   for (const p of r.body.document.parts) assert.ok(w.held(p.sha256));
   assert.equal(sha(w.bytesOf(sha(big))), sha(big));
   /* no part is read back from the object store */
-  assert.deepEqual(w.b.calls.filter((c) => c[0] === "get"), [], "no get: no part is read back");
+  /* R101: the format is judged from range reads of the head and the tail (a part is never read whole) */
+  assert.deepEqual(w.b.calls.filter((c) => c[0] === "get" && !(c[2] && c[2].range)), [], "no whole get: no part is read back");
   /* the stages: the parts' writes are `read`, keeping the whole is `keep` */
   const st = r.body.timings.stages;
   assert.ok(st.keep >= 1400 && st.keep < 3500, `keep is the whole's put (${st.keep} ms)`);
@@ -128,7 +129,7 @@ test("R96 (C5 e): a capture too large for memory keeps its parts, and the store 
   assert.ok(answeredAt - calls[0].at >= 380 && r.body.timings.stages.keep >= 380, "R96 (C5c): the answer awaited it, as stage keep");
   assert.equal(r.body.keep_pending, undefined, "kept within the bound: no keep_pending");
   await r.settled();
-  assert.deepEqual(w.b.calls.filter((c) => c[0] === "get"), [], "no part is read back by this module");
+  assert.deepEqual(w.b.calls.filter((c) => c[0] === "get" && !(c[2] && c[2].range)), [], "no part is read back by this module (R101: only range reads of the head and tail)");
   assert.equal(w.b.calls.filter((c) => c[0] === "put" && c[1] === wholeKey(w, big)).length, 0, "the whole is not put by this module: the store makes it");
   assert.ok(Date.now() - t0 >= 400);
 });

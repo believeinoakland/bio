@@ -33,6 +33,9 @@ const bigRoutes = (n, fetched = []) => {
   };
 };
 
+/* R116 (fix round 9): an `acquire` of a ZIP registers its `unpack` row before it answers; the plane's table is idempotent on (sha, kind), so the ledger reads one row */
+const oneRow = (log) => [...new Map(log.map((e) => [JSON.stringify(e), e])).values()];
+
 test("R100 (F5): 120 supporting files with 30 deferred, 61 minutes later the alarm fetches them: the session is parked past its hour, owed in the ledger, finished by owedRun and dropped", async () => {
   const w = world();
   const L = ledger();
@@ -187,7 +190,7 @@ test("R100 (F11): an automatic unpack that stops on a daily budget, or for the c
   const z = many(3, "daily");
   const r = await zipAt(w, z);
   assert.equal(r.body.unpack.waiting_on.code, "UNPACK_DAILY_ENTRIES");
-  assert.deepEqual(L.log, [{ kind: "unpack", sha: sha(z) }], "owed until the day's figures start again");
+  assert.deepEqual(oneRow(L.log), [{ kind: "unpack", sha: sha(z) }], "owed until the day's figures start again");
   assert.deepEqual(w.store.state.events.filter((e) => e.kind === "archive-unpack"), [], "and no event beside it");
   /* the call's share */
   const w2 = world();
@@ -196,24 +199,24 @@ test("R100 (F11): an automatic unpack that stops on a daily budget, or for the c
   const big = many(UNPACK_CALL_ENTRIES + 50, "share");
   const r2 = await zipAt(w2, big);
   assert.equal(r2.body.unpack.waiting, 50);
-  assert.deepEqual(L2.log, [{ kind: "unpack", sha: sha(big) }]);
+  assert.deepEqual(oneRow(L2.log), [{ kind: "unpack", sha: sha(big) }]);
   /* the handed hook of the call is the one used, over the store's */
   const w3 = world();
   const L3 = ledger();
   const r3 = await zipAt(w3, many(UNPACK_CALL_ENTRIES + 50, "opt"), "https://files.example/opt.zip", { owedLater: L3.owedLater });
   assert.equal(r3.body.unpack.waiting, 50);
-  assert.equal(L3.log.length, 1);
+  assert.equal(oneRow(L3.log).length, 1);
   /* a stop on the tree's figure is not owed: it never shrinks, only a member goes past it (R40), and the archive's page states it */
   const w4 = world();
   const L4 = ledger();
   w4.store.owedLater = L4.owedLater;
   const tz = many(150, "tree");
   await zipAt(w4, tz);
-  assert.deepEqual(L4.log, [{ kind: "unpack", sha: sha(tz) }], "the share's stop of the first run");
+  assert.deepEqual(oneRow(L4.log), [{ kind: "unpack", sha: sha(tz) }], "the share's stop of the first run");
   w4.rows("UPDATE archive_entries SET tree_entries=? WHERE archive_sha=? AND idx=-1", ARCHIVE_TREE_ENTRIES_MAX - 1, sha(tz));
   const d4 = await unpack(w4.store, { archiveSha: sha(tz), cls: "daemon" });
   assert.equal(d4.waiting_on.code, "ARCHIVE_TREE_ENTRIES_MAX");
-  assert.equal(L4.log.length, 1, "nothing new is owed for the tree's stop");
+  assert.equal(oneRow(L4.log).length, 1, "nothing new is owed for the tree's stop");
   /* controls: no ledger, the event as before; a complete unpack owes nothing */
   const c = world();
   const rc = await zipAt(c, many(UNPACK_CALL_ENTRIES + 50, "ev"));
@@ -222,8 +225,11 @@ test("R100 (F11): an automatic unpack that stops on a daily budget, or for the c
   const d = world();
   const Ld = ledger();
   d.store.owedLater = Ld.owedLater;
-  await zipAt(d, many(3, "done"));
-  assert.deepEqual(Ld.log, []);
+  const zd = many(3, "done");
+  await zipAt(d, zd);
+  /* R116 (fix round 9) reverses the old `[]`: an `acquire` of a ZIP registers its `unpack` row before it answers, the open being the job; no continuation row is added beyond it */
+  assert.deepEqual(oneRow(Ld.log), [{ kind: "unpack", sha: sha(zd) }]);
+  assert.equal(Ld.log.length, 1);
 });
 
 /* ---------- the acquire arm's keep, exported for capture ---------- */

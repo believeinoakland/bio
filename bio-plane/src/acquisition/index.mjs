@@ -56,14 +56,15 @@ import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, keepRenderBodies
 import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-governor/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../provenance/index.mjs";
 import { attest } from "../attestation/index.mjs";
-import { hasZipMagic, listArchive, normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART } from "../ooxml.mjs";
+import { decodeText } from "../ooxml.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { ARCHIVE_CHECKS } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
-import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
-import { titleOfBytes, cleanedTitle } from "./title.mjs";
+import { unpack, coArchiveStateOf } from "./unpack.mjs";
+import { titleOfBytes, cleanedTitle, decodeAs, charsetOf } from "./title.mjs";
 import * as pdfReader from "../pdfstructure.mjs";
 import { baseViewer, viewerMember } from "../member-roster/index.mjs";
+import { boundOf, statement } from "../read-bounds.mjs";
 
 /* R24, R29, R33: the one user agent, the one first hop's `who`, and this module's rows, for every module that sends,
    writes or judges them. The pre-rename aliases are gone (R34, N539). */
@@ -74,6 +75,9 @@ export { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, C
 /* R38–R41, R43 (T35-21, N688, K1888): archives opened on capture, the read behind the archive screen, and the group's
    co-archive setting; the instance holding this module's tables is `acquisitionOf`'s. */
 export { ARCHIVE_CHECKS } from "./checks.mjs";
+/* R113 (fix round 9, G127d): a capture's bytes by its whole digest, the parts hidden. */
+export { readRange, wholeShaOf } from "./range.mjs";
+import { rangeReaderOf } from "./range.mjs";
 export { unpack, archiveList, memberOf, membersOf, openedAmong, notArchivesAmong, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
          UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES, UNPACK_LIMITS,
          ARCHIVE_CHECK_READS } from "./unpack.mjs";
@@ -132,7 +136,7 @@ export function userAgent(env, purpose = "acquire", delegated = null) {
 
 /* Whether a primary is read back as TEXT for the recognisers and FW-4's digests: single-part, bounded, and a textual
    declared type. One rule, read by acquire when it records a capture and by op=monitor when it compares one (D-60). */
-export const PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+export const PROFILE_TEXT_MAX = boundOf("capture", "profile_text_bytes");
 /* R17, R101: the bytes of a capture's head its format is judged from when the capture is held in parts: the first KiB of the first part. */
 export const FORMAT_HEAD = 1024;
 /* D-351: the bound on reading an OpenDocument capture back whole for its container digest. Chosen, not measured. */
@@ -154,8 +158,10 @@ export function textTypeOf({ bytes = null, type = null, name = null } = {}) {
     const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name === "string" ? name : "") : null;
     const readAs = named ? NAME_TEXT_TYPES[named[1].toLowerCase()] : type;
     if (typeof readAs !== "string" || readAs === "" || !profilesAsText(readAs, bytes.length, false)) return null;
-    if (bytes.includes(0)) return null;
-    new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    /* R120: the one decode; UTF-16 carries NULs by its nature, any other NUL is a binary file; replacement over 0.5 % is not text */
+    const d = decodeText(bytes, { declared: charsetOf(readAs) ?? undefined, kind: /html|xml/i.test(readAs) ? (/html/i.test(readAs) ? "html" : "xml") : undefined, name: charsetOf(readAs) ?? undefined });
+    if (!d.ok || d.replaced_ratio > 0.005) return null;
+    if (bytes.includes(0) && !(d.encoding.startsWith("utf-16") && (bytes.length >= 16 || d.assumed === false))) return null;
     return readAs;
   } catch { return null; }
 }
@@ -242,7 +248,7 @@ export async function servedSubstance({ bytes, headers = {}, locator = null, con
     const sha = await sha256Hex(bytes);
     const asText = profilesAsText(contentType, bytes.length, false);
     const profCtx = { headers, locator, content_type: contentType || null,
-                      text: asText ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "", ...(view ? { view } : {}) };
+                      text: asText ? (decodeAs(bytes, contentType).text ?? "") : "", ...(view ? { view } : {}) };
     const stackId = identify(profCtx);
     const digests = await substanceDigests(asText ? bytes : null, stackId, profCtx, sha, false,
                                            asText || bytes.length > ODF_DIGEST_MAX ? null : bytes);
@@ -361,7 +367,7 @@ export const FOR_MAX = 200;
 
 /* R10: the most this surface will take from one source, in parts or not; exported once, so every other reader of the
    limit imports it (K231; N825, K2453). */
-export const CAPTURE_MAX = 256 * 1024 * 1024;
+export const CAPTURE_MAX = boundOf("archive", "uploaded_bytes");   // R114: quoted from READ_BOUNDS
 
 /* R10, R11, R96 (T51; the walk's C5): a capture held in several parts is also kept WHOLE, under the whole document's own
    fingerprint, up to this many bytes, so every reader that asks the evidence store for a capture by its digest (the reading,
@@ -370,7 +376,7 @@ export const CAPTURE_MAX = 256 * 1024 * 1024;
    alone, as before (provenance R7 reads such a capture by its parts), until the object store offers a way to make the whole
    from parts without reading them (R96's past-memory arm). CHOSEN, not measured: four parts, the most the object holds in
    memory beside the whole it assembles; recorded by BOB. */
-export const MULTIPART_KEEP_MAX = 32 * 1024 * 1024;
+export const MULTIPART_KEEP_MAX = boundOf("capture", "keep_bytes");
 /* R96 (fix round 4, C5c): the door's bound for an `acquire` (control-plane R105: 25 s) and what `acquire` leaves of it for the rest of the call
    after awaiting a keep. CHOSEN, not measured; the plane may hand its own as `opts.boundMs`. */
 const ACQUIRE_BOUND_MS = 25000;
@@ -387,10 +393,33 @@ const KEEPING = new Map();
    an async `owedLater(entry) -> {ok: true}` that never throws. Acquisition cannot import the plane (it is earlier in the
    order); with no hook handed in the session expires as before and a member's "Finish it" is the only way on. */
 export const OWED_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+/* R116 (fix round 9, G126; K4835 (2); 2c item 1): THE JOB TABLE IS WRITTEN THROUGH THE REGISTRAR. Work this module owes (`keep`, `fetch`, `subresources`,
+   `unpack`) is one job row, registered by `registerJob(entry) -> {ok, existed, state}` (synchronous, never throws), read as `keepLater` is: the store handed
+   in's, else `opts.registerJob`, else none; acquisition imports nothing of a later module. A registrar that answers `{ok: false}` is stated in the answer
+   (`jobs`), never swallowed; with no registrar the older hooks (`owedLater`, `keepLater`) serve as before and a piece of work owed to no one is stated too. */
+const registrarOf = (cap, opts) => (cap && typeof cap.registerJob === "function" ? (e) => cap.registerJob(e)
+  : opts && typeof opts.registerJob === "function" ? opts.registerJob : null);
+/* what a call could not register, for the answer: `[{kind, reason}]`, one per kind */
+const noteJob = (opts, kind, reason) => { const n = opts && opts.jobNotes; if (Array.isArray(n) && !n.some((x) => x.kind === kind)) n.push({ kind, reason: String(reason).slice(0, 80) }); };
 const oweOf = (cap, opts) => {
+  const reg = registrarOf(cap, opts);
+  if (reg) return async (entry) => {
+    let r;
+    try { r = reg(entry); } catch (e) { r = { ok: false, reason: "REGISTRAR_THREW" }; }
+    if (r && r.ok === true) return true;
+    noteJob(opts, entry && entry.kind, (r && r.reason) || "REGISTRAR_REFUSED");
+    return false;
+  };
   const f = opts && typeof opts.owedLater === "function" ? opts.owedLater : cap && typeof cap.owedLater === "function" ? (e) => cap.owedLater(e) : null;
   if (!f) return null;
   return async (entry) => { try { const r = await f(entry); return !!(r && r.ok === true); } catch { return false; } };
+};
+/* R116: the `keep` hand-off, `keepLater({sha, parts}) -> {ok}`: the registrar's row of kind `keep` keyed by the whole's digest, else the older hook */
+const keepLaterOf = (cap, opts) => {
+  const reg = registrarOf(cap, opts);
+  if (reg) return (k) => { let r; try { r = reg({ kind: "keep", sha: k.sha, parts: k.parts }); } catch { r = { ok: false, reason: "REGISTRAR_THREW" }; }
+    if (!(r && r.ok === true)) noteJob(opts, "keep", (r && r.reason) || "REGISTRAR_REFUSED"); return { ok: !!(r && r.ok === true) }; };
+  return opts && typeof opts.keepLater === "function" ? opts.keepLater : undefined;
 };
 
 /* R105 (fix round 6, G2; K4562): A LARGE WEB CAPTURE IS OWED WORK, NOT THE MEMBER'S WAIT. The door answers in 25 s and a source's
@@ -470,7 +499,7 @@ export async function keepPast(cap, ev, { sha, parts, boundMs = ACQUIRE_BOUND_MS
  *  digest given; with `compose: true` the store is asked to make the whole from its parts first (see below). Answers `{ok: true, kept}` (`kept` false for one part or past `MULTIPART_KEEP_MAX`, where nothing is done)
  *  or `{ok: false, why}`, a sentence for the member: a part gone, a part that is not what was stored, bytes that do not add
  *  up to the digest, or a store that will not take the whole. Never throws. */
-export async function keepWhole(ev, { sha, parts, total, bytes = null, compose = false }) {
+export async function keepWhole(ev, { sha, parts, total, bytes = null, compose = false, whole: given = null }) {
   if (!Array.isArray(parts) || parts.length < 2 || total > MULTIPART_KEEP_MAX) return { ok: true, kept: false };
   const fail = (why) => ({ ok: false, why });
   const held = Array.isArray(bytes) && bytes.length === parts.length && bytes.every((b) => b instanceof Uint8Array) ? bytes : null;
@@ -486,6 +515,8 @@ export async function keepWhole(ev, { sha, parts, total, bytes = null, compose =
         if (r && r.ok === true) return { ok: true, kept: true };
         /* a store that would not compose it (no multipart upload offered, a refusal) leaves the parts to be read back below, which says which part is wrong if one is */
       }
+      /* R115: the whole was received into one buffer; it is put as it is, no second copy */
+      if (given instanceof Uint8Array && given.length === total) { await ev.put(sha, given); return { ok: true, kept: true }; }
       const whole = new Uint8Array(total);
       let at = 0;
       for (const [i, p] of parts.entries()) {
@@ -542,6 +573,9 @@ export const PROMOTE_RESERVE_MS = 3500;
    those stages need, `KEEP_FOLLOWING_MS` (a profile reads the page back, a receipt is written: a trip or two). Bodies the keep has not reached in it leave the render
    pending (R5), the keep going on from the record. A caller may hand its own as `opts.postKeepMs`. CHOSEN, not measured (the live copy's trip is ~0.27 s); recorded by BOB. */
 export const KEEP_FOLLOWING_MS = 1000;
+/* R118 (G137c): a `transient` render failure is tried up to this many times, waiting these milliseconds before the second and the third. CHOSEN, not measured; recorded by BOB. */
+export const RENDER_TRIES = 3;
+export const RENDER_BACKOFF_MS = Object.freeze([1000, 3000]);
 /** R112: the milliseconds the keep of the bodies a render loaded is awaited, `elapsedMs` into the call: what the bar leaves for the render (`renderWaitFor`) less the room the
  *  stages after the keep need, `followingMs` else `KEEP_FOLLOWING_MS` at most a quarter of the share (so a smaller bar is a proportionally smaller room); 0 with nothing left,
  *  never negative. Pure; never throws. */
@@ -556,6 +590,14 @@ export function renderWaitFor(elapsedMs, { barMs = ACQUIRE_BAR_MS, reserveMs = P
   if (!Number.isFinite(elapsedMs)) return RENDER_WAIT_MS;
   const bar = Number.isFinite(barMs) ? barMs : ACQUIRE_BAR_MS, room = Number.isFinite(reserveMs) ? reserveMs : PROMOTE_RESERVE_MS;
   return Math.max(0, Math.min(RENDER_WAIT_MS, Math.floor(bar - room - elapsedMs)));
+}
+/** R118: the size of the page a render answered against the render-DOM bound (`READ_BOUNDS`, `render.dom_bytes`), as capture-sources' `renderBlock`
+ *  takes it; null (no judgement) when the page is not text or the row is not in the table. Never throws. */
+function domBoundOf(a) {
+  try {
+    if (!a || typeof a.html !== "string") return null;
+    return { size: new TextEncoder().encode(a.html).length, bound: boundOf("render", "dom_bytes") };
+  } catch { return null; }
 }
 const LATE = Symbol("late");
 /** `{done: true, value}` when `p` settled within `ms`, else `{done: false}`; no wait at all for a non-finite `ms`. */
@@ -813,7 +855,7 @@ export async function archiveLookup(cap, { address, at } = {}) {
     const h = await hashBody(res);
     if (h.failed) return { fail: archiveBroke(h.failed) };
     if (h.oversize)
-      return { fail: { ok: false, status: 413, payload: { ok: false, reason: "TOO_LARGE", bytes: h.bytes, maxBytes: CAPTURE_MAX,
+      return { fail: { ok: false, status: 413, payload: { ok: false, reason: "TOO_LARGE", bytes: h.bytes, maxBytes: CAPTURE_MAX, ...statement("archive", "uploaded_bytes", h.bytes),
         retrieval_locator: locator, detail: localize("acquisition.index.the_memento_exceeds_what_this", "the memento exceeds what this surface will capture even in parts") } } };
     const row = mementoRow(answer, { sha256: h.sha, bytes: h.bytes });
     return selectCapture([row]).ok ? { sha: h.sha, bytes: h.bytes } : { row };
@@ -929,7 +971,8 @@ export async function acquire(cap, body0, opts = {}) {
   return out && out.body && typeof out.body === "object" && !Array.isArray(out.body)
     ? { ...out, body: { ...out.body, timings: stageTimes(t) } } : out;
 }
-async function acquireRun(cap, body0, opts, t) {
+async function acquireRun(cap, body0, opts0, t) {
+  const opts = { ...opts0, jobNotes: [] };
   const { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null, ownHosts = null,
           reputation: reputationTool = undefined, fileScanner = null, renderWaitMs = undefined,
           renderResume = null, heldSha: givenHeldSha = null, acquireBarMs = undefined, promoteReserveMs = undefined } = opts || {};
@@ -1094,6 +1137,14 @@ async function acquireRun(cap, body0, opts, t) {
   if (session && session.state && session.state.render_pending) return finishRender(cap, { session, opts, t, inRequest: true });
   if (session) return continueCapture(cap, { body, session, cls, storeName, ev, own, t, owe: oweOf(cap, opts) });
 
+  /* R46 (K4853): a new press of an address whose parked fetch ended in a stated refusal replaces that session: its refusal is no longer listed */
+  if (askingMember && typeof cap.liveCaptureSessions === "function") {
+    try {
+      for (const x of cap.liveCaptureSessions(stampSecond()) || [])
+        if (x && x.locator === locator && x.state && x.state.fetch_pending && x.state.fetch_pending.failed && x.state.opened_by === askingMember)
+          cap.dropCaptureSession({ session: x.session });
+    } catch { /* a session that cannot be dropped stays listed until its day passes */ }
+  }
   /* R15, D-97: authority is THREE-VALUED and undetermined is a task, not a blocker. */
   const authorityAsserted = typeof body.authority === "string" && body.authority.trim() ? body.authority.trim() : null;
   const retrieved = stampSecond();
@@ -1319,7 +1370,7 @@ async function acquireRun(cap, body0, opts, t) {
   const declared = declaredLength(res.headers);
   if (mayPark && declared !== null && declared > CAPTURE_MAX) {
     cancelBody(res);
-    return answer(413, { ok: false, reason: "TOO_LARGE", bytes: declared, maxBytes: CAPTURE_MAX,
+    return answer(413, { ok: false, reason: "TOO_LARGE", bytes: declared, maxBytes: CAPTURE_MAX, ...statement("archive", "uploaded_bytes", declared),
                          detail: localize("acquisition.index.the_document_exceeds_what_this", "the document exceeds what this surface will capture even in parts") });
   }
   if (mayPark && declared !== null && declared > LARGE_FETCH_BYTES) {
@@ -1341,8 +1392,16 @@ async function acquireRun(cap, body0, opts, t) {
   /* R96: each part's bytes are kept in memory while the capture stays within `MULTIPART_KEEP_MAX`, so the whole is put once when
      the stream ends with no part read back; past it they are let go and the capture is held in its parts alone. */
   let keptParts = [], keptSize = 0, firstHead = null;
+  /* R115 (fix round 9, G124b): THE WHOLE IS NEVER HELD TWICE. A body whose declared length is a multipart capture within `MULTIPART_KEEP_MAX` is
+     received straight into ONE buffer of that length (`keptWhole`), each part copied in as it is stored and its own buffer let go, so the
+     call holds the kept bytes once plus the one part being read, and the whole is put from that buffer with no second copy made. Every byte
+     held is counted by the byte ledger (`opts.ledger`, runtime-limits). A body that does not match its declared length is held as separate
+     parts and joined as before. */
+  const ledger = opts && opts.ledger && typeof opts.ledger.hold === "function" ? opts.ledger : { hold() {}, release() {} };
+  let keptWhole = declared !== null && declared > PART && declared <= MULTIPART_KEEP_MAX && !renderAsked ? new Uint8Array(declared) : null;
+  if (keptWhole) ledger.hold(keptWhole.length, "kept");
   /* R10: a part is exactly 8 MiB (the last one the remainder), whatever sizes the stream's chunks arrive in. */
-  const part = async (buf) => {
+  const part = async (buf, inPlace = false) => {
     const psha = await splitTimed(t, "hash", async () => hex(await crypto.subtle.digest("SHA-256", buf)));
     const heldBefore = await splitTimed(t, "store", async () => {
       const had = !!(await ev.head(psha));
@@ -1352,20 +1411,33 @@ async function acquireRun(cap, body0, opts, t) {
     if (!parts.length) firstHead = buf.slice(0, FORMAT_HEAD);   // R17's format and ZIP magic are read from it, so the first part is not read back
     parts.push({ sha256: psha, bytes: buf.length });
     partHeldBefore.push(heldBefore);
-    if (keptParts) { keptSize += buf.length; if (keptSize > MULTIPART_KEEP_MAX) keptParts = null; else keptParts.push(buf); }
+    if (keptParts) {
+      if (keptWhole && keptSize + buf.length <= keptWhole.length) {
+        if (!inPlace) keptWhole.set(buf, keptSize);
+        keptParts.push(keptWhole.subarray(keptSize, keptSize + buf.length)); keptSize += buf.length;
+      } else {
+        keptSize += buf.length;
+        if (keptSize > MULTIPART_KEEP_MAX) { if (keptWhole) ledger.release(keptWhole.length, "kept"); keptWhole = null; keptParts = null; }
+        else { keptWhole = null; keptParts.push(buf); ledger.hold(buf.length, "kept"); }
+      }
+    }
+    if (!inPlace) ledger.release(buf.length, "part");
   };
   const flush = async (all = true) => {
     while (heldBytes >= PART || (all && heldBytes > 0)) {
       const n = Math.min(PART, heldBytes);
-      const buf = new Uint8Array(n);
+      /* R115: a part of a capture received into `keptWhole` is assembled in its place there, not in a buffer of its own beside it */
+      const inPlace = !!keptWhole && !!keptParts && keptSize + n <= keptWhole.length;
+      const buf = inPlace ? keptWhole.subarray(keptSize, keptSize + n) : new Uint8Array(n);
+      if (!inPlace) ledger.hold(n, "part");
       let at = 0;
       while (at < n) {
         const c = held[0], take = Math.min(c.length, n - at);
         buf.set(c.subarray(0, take), at); at += take;
-        if (take === c.length) held.shift(); else held[0] = c.subarray(take);
+        if (take === c.length) { held.shift(); ledger.release(c.length, "chunk"); } else { held[0] = c.subarray(take); ledger.release(take, "chunk"); }
       }
       heldBytes -= n;
-      await part(buf);
+      await part(buf, inPlace);
     }
   };
   /* CAP-8: the first KiB of a DRIVE export, kept so the shell can be recognised from the BYTES. */
@@ -1405,7 +1477,7 @@ async function acquireRun(cap, body0, opts, t) {
       driveHead.set(value.subarray(0, take), driveHeadBytes);
       driveHeadBytes += take;
     }
-    held.push(value); heldBytes += value.length;
+    held.push(value); heldBytes += value.length; ledger.hold(value.length, "chunk");
     if (heldBytes >= PART) await flush(false);
   }
   /* DEC-49 REGION is-drive-bytes — C-48.7: Google said it was a document and it was a web page. Detection is
@@ -1425,7 +1497,7 @@ async function acquireRun(cap, body0, opts, t) {
   /* END DEC-49 REGION is-drive-bytes */
   if (oversize) {
     try { await reader.cancel(); } catch { /* the source may already be gone */ }
-    return answer(413, { ok: false, reason: "TOO_LARGE", bytes: total, maxBytes: MAX,
+    return answer(413, { ok: false, reason: "TOO_LARGE", bytes: total, maxBytes: MAX, ...statement("archive", "uploaded_bytes", total),
                          detail: localize("acquisition.index.the_document_exceeds_what_this", "the document exceeds what this surface will capture even in parts") });
   }
   await flush();
@@ -1496,11 +1568,21 @@ async function acquireRun(cap, body0, opts, t) {
     else {
       /* R7: the locale R17's view names, the default only as capture-sources' own fallback. */
       /* R42: the render is handed the group's own hosts, which its driver never lets a page reach (capture-sources R64). */
+      /* R118 (G137c, X23): a failed render is charged the time it really took (its own `elapsed_ms`, else the wall this call measured), every
+         attempt added, and is retried by its class: `transient` (a session refused, three a second, the open bound) up to `RENDER_TRIES`
+         times with back-off, `permanent` once and final. The reservation is released once, with the sum. */
       const run = (async () => {
-        let a;
-        try { a = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view), ...(own ? { own_hosts: own } : {}) }); }
-        catch (e) { a = { ok: false, error: String(e && e.message || e) }; }
-        try { cap.renderSpend({ ms: a && a.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved }); }
+        let a, spent = 0;
+        for (let attempt = 1; ; attempt++) {
+          const began = clockNow();
+          try { a = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view), ...(own ? { own_hosts: own } : {}) }); }
+          catch (e) { a = { ok: false, error: String(e && e.message || e), failure_class: "transient" }; }
+          spent += a && Number.isFinite(a.elapsed_ms) ? a.elapsed_ms : Math.max(0, Math.round(clockNow() - began));
+          if (!(a && a.ok === false && a.failure_class === "transient") || attempt >= RENDER_TRIES) break;
+          const back = Array.isArray(opts.renderBackoffMs) ? opts.renderBackoffMs[attempt - 1] ?? 0 : RENDER_BACKOFF_MS[attempt - 1] ?? 0;
+          if (back > 0) await new Promise((r) => setTimeout(r, back));
+        }
+        try { cap.renderSpend({ ms: spent, releaseMs: renderReserved, slot: renderSlot, at: retrieved }); }
         catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
         return a;
       })();
@@ -1529,7 +1611,7 @@ async function acquireRun(cap, body0, opts, t) {
        bodies are the digests it recorded, and it is filed as a render waited for is. */
     const kept = answerR && answerR.kept === true ? answerR : keptNow;
     if (kept && answerR.kept === true) answerR = await replyOfKept(ev, kept);   // R112: a keep made in this call leaves the page in memory, not read back
-    rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved });
+    rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved, domBound: domBoundOf(answerR) });
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
     if (!rb.ok || rbytes.length > MAX) {
       /* R100 (fix round 7, G72): why a render fails is named on the log, one structured line with the problem (the renderer's own words, never the page) and the
@@ -1538,6 +1620,7 @@ async function acquireRun(cap, body0, opts, t) {
                                          ms: stageTimes(t).stages.render ?? 0, ...(Number.isFinite(answerR && answerR.elapsed_ms) ? { renderer_ms: answerR.elapsed_ms } : {}) })); }
       catch { /* a line that cannot be written never changes the answer */ }
       return answer(502, { ok: false, reason: "RENDER_FAILED", ...renderRow("RENDER_FAILED"), op, shell_sha256: sha, filed: false,
+        failure_class: rb.ok ? "permanent" : rb.failure_class === "transient" ? "transient" : "permanent",
         detail: rb.ok ? localize("acquisition.index.the_rendered_document_is_length", "the rendered document is {length} bytes, over this surface's {MAX}.", { length: String(rbytes.length), MAX: String(MAX) }) : rb.problem });
     }
     /* END DEC-49 REGION is-render-result */
@@ -1573,7 +1656,7 @@ async function acquireRun(cap, body0, opts, t) {
      call holds without reading any page, cleaned as a page's is; a PDF with neither, or one past what is held in memory, answers null. */
   let pdfTitled = null;
   if (!renderRecorded && keptParts && keptParts.length && typeof pdfReader.pdfTitle === "function") {
-    const whole0 = keptParts.length === 1 ? keptParts[0] : (() => { const b = new Uint8Array(keptSize); let at = 0; for (const k of keptParts) { b.set(k, at); at += k.length; } return b; })();
+    const whole0 = keptParts.length === 1 ? keptParts[0] : keptWhole && keptSize === keptWhole.length ? keptWhole : (() => { const b = new Uint8Array(keptSize); let at = 0; for (const k of keptParts) { b.set(k, at); at += k.length; } return b; })();
     if (detectFormat(whole0.subarray(0, 1024), ct || null).format === "pdf") {
       try { pdfTitled = cleanedTitle(await pdfReader.pdfTitle(whole0)); } catch { pdfTitled = null; }
     }
@@ -1585,7 +1668,7 @@ async function acquireRun(cap, body0, opts, t) {
   /* R10, R96 (T51; C5): a capture held in parts is kept whole too, under its own fingerprint, put once from the parts held in
      memory (stage `keep`, apart from `read`), or refused in words with nothing filed. */
   if (multipart && !renderRecorded && total <= MULTIPART_KEEP_MAX) {
-    const kept = await timed(t, "keep", () => keepWhole(ev, { sha, parts, total, bytes: keptParts }));
+    const kept = await timed(t, "keep", () => keepWhole(ev, { sha, parts, total, bytes: keptParts, whole: keptWhole && keptSize === total && keptWhole.length === total ? keptWhole : null }));
     if (!kept.ok) return answer(502, notKept(parts.length, kept.why));
   }
 
@@ -1659,14 +1742,17 @@ async function acquireRun(cap, body0, opts, t) {
     const sid = `rs_${sha.slice(0, 16)}_${Date.now().toString(36)}`;
     const carried = {};
     for (const k of ["subresources", "authority", "file", "coArchive"]) if (body[k] !== undefined) carried[k] = body[k];
+    let owedRow = false;
     try {
       const owe = oweOf(cap, opts);
       const saved = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base: renderDeferred.pageUrl,
         state: { queue: [{ render: true }], ...(actor ? { opened_by: actor } : {}), render_pending: { since: retrieved, body: carried } },
         ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}) });
       /* R100: the render still to be finished is owed work too */
-      if (owe && saved) await owe({ kind: "subresources", sha, session: sid });
+      if (owe && saved) owedRow = await owe({ kind: "subresources", sha, session: sid });
     } catch { /* the render still returns; the member captures again */ }
+    /* R117: the row is the render's home; when the run returns its kept reply is written to the session the row names, so an object that restarts after it still finds it */
+    renderDeferred.run.then((a) => persistRender(cap, sid, a, owedRow)).catch(() => {});
     PENDING_RENDERS.set(sid, { run: renderDeferred.run, since: Date.now() });
     const forget = setTimeout(() => PENDING_RENDERS.delete(sid), PENDING_RENDER_TTL_MS);
     if (forget && typeof forget.unref === "function") forget.unref();
@@ -1790,10 +1876,12 @@ async function acquireRun(cap, body0, opts, t) {
      fails the capture. */
   let unpacked = null;
   if (profile && profile.format && profile.format.format === "zip") {
+    /* R116: the open of an archive is one job row, registered with the archive's whole digest BEFORE the answer (an `acquire` of a continuation returned long before) */
+    { const owe = oweOf(cap, opts); if (owe) await owe({ kind: "unpack", sha }); else noteJob(opts, "unpack", "NO_REGISTRAR"); }
     try {
       unpacked = await timed(t, "unpack", () => unpack(cap, { archiveSha: sha, by: actor, cls, member }, { automatic: true,
         parts: parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })), origin: document.origin,
-        ...(typeof opts.owedLater === "function" ? { owedLater: opts.owedLater } : {}),
+        ...(oweOf(cap, opts) ? { owedLater: oweOf(cap, opts) } : {}),
         address: addressIsDerived ? documentAddress : (resolvedUrl || locator),
         addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator) }));
     } catch (e) {
@@ -1809,8 +1897,9 @@ async function acquireRun(cap, body0, opts, t) {
   let keepPending = false;
   if (multipart && !renderRecorded && total > MULTIPART_KEEP_MAX && ev && typeof ev.putFromParts === "function") {
     const elapsedMs = clockNow() - t.start;
-    const k = await timed(t, "keep", () => keepPast(cap, ev, { sha, parts, boundMs: opts.boundMs ?? ACQUIRE_BOUND_MS, elapsedMs, keepLater: opts.keepLater }));
+    const k = await timed(t, "keep", () => keepPast(cap, ev, { sha, parts, boundMs: opts.boundMs ?? ACQUIRE_BOUND_MS, elapsedMs, keepLater: keepLaterOf(cap, opts) }));
     keepPending = k.keep_pending;
+    if (!k.keep_pending && !registrarOf(cap, opts) && !(typeof opts.keepLater === "function" || typeof cap.keepLater === "function") && !(await ev.head(sha).catch(() => null))) noteJob(opts, "keep", "NO_REGISTRAR");
   }
   return answer(200, {
     ok: true, existed,
@@ -1827,10 +1916,32 @@ async function acquireRun(cap, body0, opts, t) {
     ...(supporting ? { supporting } : {}),
     ...(receiptSignature ? { receipt_signature: receiptSignature } : {}),
     ...(unpacked ? { unpack: unpacked } : {}),
+    /* R116: work this call owed and could not register, stated */
+    ...(opts.jobNotes.length ? { jobs: { not_registered: opts.jobNotes } } : {}),
     /* R44: what the scanner said of the address, stated to the caller as the receipt records it */
     reputation,
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE,
   });
+}
+
+/* R117 (fix round 9, G126g): A PENDING RENDER SURVIVES A RESTART. What the run of a render this call did not wait for answers (`keepReply`'s small `{kept, rsha, existed,
+   digests, reply}`, or a failed render's `{ok: false, error, failure_class}`) is written into the capture session the render's job row names (`render_pending.answer`)
+   when it returns, so `finishRender` of an object that was restarted between the render's start and its delivery finds it and finishes it from the record, with no
+   second render, reservation or charge. A reply over `RENDER_ANSWER_MAX` bytes of JSON is not written (the render is then begun afresh, R99), and a session that is gone
+   or no longer pending is not written back. Never throws. */
+export const RENDER_ANSWER_MAX = 2 * 1024 * 1024;
+function persistRender(cap, sid, a, owed) {
+  try {
+    if (!a || typeof a !== "object" || !(a.kept === true || a.ok === false)) return;
+    const answer = a.kept === true ? a : { ok: false, error: String(a.error || "").slice(0, 500), ...(typeof a.failure_class === "string" ? { failure_class: a.failure_class } : {}),
+                                           ...(Number.isFinite(a.elapsed_ms) ? { elapsed_ms: a.elapsed_ms } : {}) };
+    if (JSON.stringify(answer).length > RENDER_ANSWER_MAX) return;
+    const ld = cap.loadCaptureSession({ session: sid });
+    const st = ld && ld.found && ld.state && typeof ld.state === "object" ? ld.state : null;
+    if (!st || !st.render_pending || st.render_pending.answer) return;
+    cap.saveCaptureSession({ session: sid, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
+      state: { ...st, render_pending: { ...st.render_pending, answer } }, ...(owed ? { ttlMs: OWED_SESSION_TTL_MS } : {}) });
+  } catch { /* the render is begun afresh when it is finished */ }
 }
 
 /** R5, R12 (fix round 6, G27): A RENDER THAT RETURNS AFTER ITS REQUEST HAS ENDED IS KEPT IN THE RECORD, NOT IN MEMORY. The renderer's reply is the
@@ -1923,13 +2034,19 @@ async function addressReputation(address, given, scanner) {
  *  needs a member's own capture does not match. `firstPart` (R96), the first bytes of the first part when the caller holds them, is
  *  what the ZIP magic is read from, so a capture of several parts reads none back for it. */
 export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved,
-                                  origin = null, parts = null, firstPart = null }) {
+                                  origin = null, parts = null, firstPart = null, unread = null }) {
   const pv = view || { view: undefined, ids: null };
-  let profileText = "", profileBytes = null;
+  let profileText = "", profileBytes = null, textEncoding = null;
   if (profilesAsText(ct, total, multipart)) {
     try {
       const pobj = await ev.get(sha);
-      if (pobj) { profileBytes = new Uint8Array(await pobj.arrayBuffer()); profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes); }
+      if (pobj) {
+        profileBytes = new Uint8Array(await pobj.arrayBuffer());
+        /* R120: one decode for an upload, a fetch and a part; a text it cannot decode is stated, never replacement characters with no failure */
+        const d = decodeAs(profileBytes, (headers && typeof headers["content-type"] === "string" && headers["content-type"]) || ct, { kind: /html/i.test(ct || "") ? "html" : /xml/i.test(ct || "") ? "xml" : undefined });
+        if (d.ok) { profileText = d.text; textEncoding = { encoding: d.encoding, assumed: d.assumed, replaced: d.replaced, replaced_ratio: d.replaced_ratio }; }
+        else { profileBytes = null; textEncoding = { failure: "ENCODING_UNSUPPORTED", name: d.name ?? null }; }
+      }
     } catch { /* an unreadable primary is not a failed capture */ }
   }
   /* COFF-1, R17 (K659): magic bytes first, from the stored bytes read back WHOLE up to ODF_DIGEST_MAX when not already
@@ -1953,56 +2070,46 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
     boundary: !!(typeof stackId.handler.boundary === "function" && stackId.handler.boundary(profCtx)),
     source_content_type: ct || null,
     profiled_from_text: !!profileText,
+    ...(textEncoding ? { text_encoding: textEncoding } : {}),
     /* R17 (N3, N10): which jurisdiction view the content type was judged under. */
     jurisdiction_view: pv.ids,
     format: detectFormat(formatBytes, ct || null),
   };
-  /* R17 (N688; K1852 (2)): past the read's bound (a capture held in parts), `zip` only from the bytes: the ZIP magic, and
-     ooxml's listing over the stored parts as a range source answering whole with neither an OPC content-type map nor an
-     ODF `mimetype` in it, so an office or OpenDocument file is never profiled `zip`; a declared type never makes one. */
-  if (!formatBytes && Array.isArray(parts) && parts.length) {
-    /* R101 (fix round 5, E1): a capture held in parts is judged from the first KiB of its first part, as a single part is, so an
-       upload that declares no type (a PDF, an office file) is not `undetermined`; the head is the one the caller holds, else a
-       range read of the stored part (the head alone is transferred, never the part). */
-    const head = await headOf(ev, parts, firstPart);
-    if (head) profile.format = detectFormat(head, ct || null);
-    const z = await zipPastBound(ev, parts, head);
-    if (z) profile.format = z;
-    else if (profile.format && profile.format.format === "zip")
-      profile.format = { format: "undetermined", confidence: "none",
-        signals: [...(profile.format.signals || []), "the stored bytes were not read as a ZIP archive, so the declared type does not make one"] };
+  /* R101 (fix round 9, G130c; amends R17): a capture held in several parts, or whole past the bytes read back, is judged from RANGE READS of its head and of its
+     tail, never from a 1 KiB prefix alone: `format-registry.detectFormat` over a range source reads the head for the signatures (an image before a PDF or a web
+     page) and, for a container, the end record and the central directory, so an office or OpenDocument file of any size is its own format and a plain ZIP is
+     `zip` only from the bytes (a declared type never makes one). The reads are `readRangeOf`'s, the one reader behind `readRange` (R113); the caller's `firstPart`
+     serves a read inside it. Bytes of no known format keep the declared type with the absence stated, else `undetermined`; a part that is not there, or a store
+     that cannot read, is stated and `unread.reason` is set (the profile is never failed). */
+  if (!formatBytes && total > 0 && (multipart || total > ODF_DIGEST_MAX || (Array.isArray(parts) && parts.length))) {
+    let held = firstPart instanceof Uint8Array && firstPart.length ? firstPart : null;
+    const reader = rangeReaderOf(ev, sha, Array.isArray(parts) && parts.length ? parts : null);
+    const src = { size: total, readRange: async (o, n) => {
+      if (held && o + n <= held.length) return held.subarray(o, o + n);   // a read inside the head already held is not asked of the store again
+      const r = await reader(o, n);
+      if (r instanceof Uint8Array && o === 0 && r.length > (held ? held.length : 0)) held = r;
+      if (r instanceof Uint8Array) return r;
+      if (unread && r && r.reason && r.reason !== "NOT_HELD") unread.reason = String(r.reason).slice(0, 120);
+      return new Uint8Array(0);
+    } };
+    let byBytes = null;
+    try { byBytes = await detectFormat(src, null); } catch { byBytes = null; }
+    if (byBytes && byBytes.format !== "undetermined") profile.format = byBytes;
+    else {
+      /* no signature in the bytes: the declared type, as before, from the head that was read (a ZIP is never made by a declared type) */
+      let declared = null;
+      try { const head = await src.readRange(0, FORMAT_HEAD); declared = detectFormat(head.length ? head : null, ct || null); } catch { declared = null; }
+      profile.format = declared && declared.format === "zip"
+        ? { format: "undetermined", confidence: "none",
+            signals: [...(declared.signals || []), "the stored bytes were not read as a ZIP archive, so the declared type does not make one"] }
+        : declared || profile.format;
+    }
   }
   let containerBytes = null;
   const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
   if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) containerBytes = readWhole;
   profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
   return profile;
-}
-
-/** R17: whether bytes held in `parts` (`[{sha256, bytes}]`, in order) are a plain ZIP archive, read without holding them
- *  whole: the ZIP magic in the first part, then `ooxml.listArchive` over the parts as a range source. Answers the format
- *  registry's shape for `zip`, or null. Never throws. */
-/** R101: the first `FORMAT_HEAD` bytes of the first of `parts` (`[{sha256, bytes}]`), the caller's `firstPart` when it holds them, else a
- *  range read of the stored part; null when the part is not there or cannot be read. Never throws. */
-async function headOf(ev, parts, firstPart = null) {
-  if (firstPart instanceof Uint8Array && firstPart.length) return firstPart.subarray(0, FORMAT_HEAD);
-  try {
-    const first = await ev.get(parts[0].sha256, { range: { offset: 0, length: FORMAT_HEAD } });
-    const b = first ? new Uint8Array(await first.arrayBuffer()) : null;
-    return b && b.length ? b.subarray(0, FORMAT_HEAD) : null;
-  } catch { return null; }
-}
-async function zipPastBound(ev, parts, head = null) {
-  try {
-    if (!head || !hasZipMagic(head.subarray(0, 4))) return null;
-    const l = await listArchive(partsSource(ev, parts));
-    if (!l.ok) return null;
-    const names = new Set(l.entries.map((e) => normalizePartName(e.name || "")));
-    if (names.has(CONTENT_TYPES_PART) || names.has(ODF_MIMETYPE_PART)) return null;
-    return { format: "zip", confidence: "likely",
-             signals: ["magic: PK\\x03\\x04 in the stored bytes", localize("acquisition.index.listed_whole_over_the_stored", "listed whole over the stored parts"),
-                       `part: ${CONTENT_TYPES_PART} absent`, `part: ${ODF_MIMETYPE_PART} absent`, `entries: ${l.count}`] };
-  } catch { return null; }
 }
 
 /** R108 (fix round 6, G19; K4571 S10): WHAT OF A PAGE'S SUPPORTING FILES WAS KEPT, STATED. `supporting: {kept, skipped, total, reasons}` from the
@@ -2014,27 +2121,34 @@ async function zipPastBound(ev, parts, head = null) {
  *  supporting files to speak of (`NOT_HTML`). Pure; never throws. */
 export function supportingOf({ subs = null, render = null, notWalked = null } = {}) {
   try {
-    let kept = 0, total = 0;
+    let kept = 0, total = 0, pictures = 0, pictureBytes = 0;
     const why = new Map();
+    /* R119 (G138, S15): a picture kept as bytes is never read; the count and size are stated so the document says "N pictures kept, not read" */
+    const picture = (r, type, ct) => {
+      if (!(/^image$/i.test(String(type || "")) || /^image\//i.test(String(ct || "")))) return;
+      if (!Number.isFinite(r && r.bytes)) return;
+      pictures++; pictureBytes += r.bytes;
+    };
     const note = (reason, extra = {}) => { const g = why.get(reason) || { reason, count: 0, ...extra }; g.count++; why.set(reason, g); };
     if (subs && Array.isArray(subs.subresources))
       for (const r of subs.subresources) {
         total++;
-        if (r && r.ok) { kept++; continue; }
+        if (r && r.ok) { kept++; picture(r, r.kind, r.content_type); continue; }
         const limit = r && Number.isFinite(r.cap) ? r.cap : r && Number.isFinite(r.budgetBytes) ? r.budgetBytes : undefined;
         note(String(r && r.reason || "NOT_KEPT"), limit !== undefined ? { limit } : {});
       }
     if (render && Array.isArray(render.subresources))
       for (const r of render.subresources) {
         total++;
-        if (r && r.sha256 && r.sha256 !== "undetermined") { kept++; continue; }
+        if (r && r.sha256 && r.sha256 !== "undetermined") { kept++; picture(r, r.type, null); continue; }
         note("BODY_NOT_KEPT", typeof (r && r.digest_reason) === "string" ? { detail: r.digest_reason } : {});
       }
     const stopped = notWalked && notWalked.reason && notWalked.reason !== "NOT_HTML" ? String(notWalked.reason) : null;
     if (!total && !stopped) return null;
     return { kept, skipped: total - kept, total,
              reasons: [...why.values()].sort((a, b) => b.count - a.count || (a.reason < b.reason ? -1 : 1)),
-             ...(stopped ? { not_walked: stopped } : {}) };
+             ...(stopped ? { not_walked: stopped } : {}),
+             ...(pictures ? { pictures_unread: { count: pictures, bytes: pictureBytes } } : {}) };
   } catch { return null; }
 }
 
@@ -2093,7 +2207,7 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
     platformCeiling: useCeiling, resume,
     siteLookup: baseHost ? async (norm) => siteKnown[norm] || null : null,
     readBack: async (sh) => { const o = await ev.get(sh); return o ? new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(await o.arrayBuffer())) : null; },
-    html: new TextDecoder("utf-8", { fatal: false }).decode(primaryBytes),
+    html: (decodeAs(primaryBytes, ct, { kind: "html" }).text ?? ""),
     base, primarySha: sha, primaryFile: `snapshots/${name}`,
     isPublic: isPublicHttpsLocator, sha256: sha256Hex,
     put: async (s, b) => { if (await ev.head(s)) return { existed: true }; await ev.put(s, b); return { existed: false }; },
@@ -2180,6 +2294,8 @@ async function finishRender(cap, { session, opts, t, inRequest = false }) {
   const { cls = null, storeName = "bio", renderWaitMs = undefined } = opts || {};
   const rp = session.state.render_pending;
   const held = PENDING_RENDERS.get(session.session);
+  /* R117: the answer the run wrote into the session's row when it returned, found by an object that restarted since */
+  const persisted = !held && rp && rp.answer && typeof rp.answer === "object" ? rp.answer : null;
   const pendingAnswer = () => ({ status: 200, body: { ok: true, existed: true,
     continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
                  note: word("acquisition.note.continuation_files_new") },
@@ -2194,7 +2310,7 @@ async function finishRender(cap, { session, opts, t, inRequest = false }) {
   if (inRequest) {
     const owe = oweOf(cap, opts);
     if (owe) {
-      const settled = held ? await timed(t, "render", () => within(held.run, 0)) : { done: false };
+      const settled = held ? await timed(t, "render", () => within(held.run, 0)) : persisted ? { done: true, value: persisted } : { done: false };
       if (!settled.done) {
         rearmed = await owe({ kind: "subresources", sha: session.primarySha, session: session.session });
         if (rearmed) return pendingAnswer();
@@ -2205,9 +2321,9 @@ async function finishRender(cap, { session, opts, t, inRequest = false }) {
      admission, plus the wait): one not settled after that was begun by a request that has ended, and is lost. */
   const staleMs = opts && Number.isFinite(opts.renderStaleMs) ? opts.renderStaleMs : renderReserveMs(RENDER_DEFAULTS) + RENDER_WAIT_MS;
   const stale = !!held && Date.now() - held.since >= staleMs;
-  let resume = null, lost = !held;
-  if (held) {
-    const got = await timed(t, "render", () => within(held.run, stale ? 0 : (renderWaitMs ?? RENDER_WAIT_MS)));
+  let resume = null, lost = !held && !persisted;
+  if (held || persisted) {
+    const got = held ? await timed(t, "render", () => within(held.run, stale ? 0 : (renderWaitMs ?? RENDER_WAIT_MS))) : { done: true, value: persisted };
     if (got.done) {
       resume = { answer: got.value };
       /* G27: a render kept in the record whose page the record no longer holds (another store's, or purged) is lost like one the object lost */
@@ -2314,6 +2430,9 @@ export async function owedRun(cap, entry, opts = {}) {
         const out = await finishRender(cap, { session: ld, opts: { ...run, keepSession: true }, t });
         const b = out && out.body ? out.body : {};
         if (b.ok === false) {
+          /* R118: a render that failed for a cause that may pass (`transient`, after its tries in the call) goes again with the ledger's back-off; a permanent one is final */
+          if (b.reason === "RENDER_FAILED" && b.failure_class === "transient")
+            return { ok: true, done: false, outstanding: 1, reason: "RENDER_FAILED", ...(typeof b.detail === "string" && b.detail ? { detail: b.detail.slice(0, 200) } : {}) };
           const stated = b.reason === "RENDER_FAILED" || b.reason === "RENDER_NOT_A_PAGE";
           if (stated) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } }
           /* R100 (fix round 7, G72): the entry ends with the reason AND the detail the refusal carried (the render's problem, cut to a bound; the renderer's words, no page) */
@@ -2397,7 +2516,7 @@ export async function owedFetch(cap, entry, opts = {}) {
           return { ok: true, done: false, outstanding: 1, reason };
         try {
           cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
-            state: { ...st, fetch_pending: { ...st.fetch_pending, failed: reason } }, ttlMs: OWED_SESSION_TTL_MS });
+            state: { ...st, fetch_pending: { ...st.fetch_pending, failed: reason, failed_at: stampSecond() } }, ttlMs: OWED_SESSION_TTL_MS });
         } catch { /* the entry still ends, stated */ }
         return final(reason);
       }
@@ -2421,7 +2540,7 @@ export async function owedFetch(cap, entry, opts = {}) {
         try {
           cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
             state: { queue: [{ fetch: true }], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: st.store,
-                     fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why } },
+                     fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why, failed_at: stampSecond() } },
             ttlMs: OWED_SESSION_TTL_MS });
         } catch { /* the entry still ends, stated */ }
         return final(why);
@@ -2435,6 +2554,8 @@ export async function owedFetch(cap, entry, opts = {}) {
 
 /* R46 (T50; N1094; DEC-240 (D3); K3317): A MEMBER'S OPEN CAPTURES, for Add's "Unfinished". */
 export const OPEN_CAPTURES_MAX = 50;
+/* R46 (fix round 9, re-walk 8 A, N1; K4853): a session whose fetch ended with a stated refusal is listed for one day after the failure; the session record itself keeps its TTL (the ledger). */
+export const FAILED_LISTED_MS = 24 * 60 * 60 * 1000;
 
 /** R46: `openCaptures(store, {by, now}) → {ok: true, captures, truncated}` lists, newest started first, at most
  *  `OPEN_CAPTURES_MAX`, each capture session (capture R22) that has not expired at `now` and was begun by `by`:
@@ -2472,6 +2593,11 @@ export function openCaptures(store, { by = null, now = undefined } = {}) {
       const delivering = queued < 1 && !!st.fetch_done && typeof st.fetch_done === "object";
       const outstanding = delivering ? 1 : queued;
       const expires = Date.parse(s.expires);
+      /* a refused fetch is listed for a day after it failed (its own stamp, else the session's last save) */
+      if (st.fetch_pending && st.fetch_pending.failed) {
+        const failedAt = Date.parse(st.fetch_pending.failed_at ?? s.updated);
+        if (Number.isFinite(failedAt) && nowMs - failedAt > FAILED_LISTED_MS) continue;
+      }
       if (outstanding < 1 || !(Number.isFinite(expires) && expires > nowMs) || typeof s.session !== "string") continue;
       /* R105: a capture parked as an owed fetch is listed as such (`fetch_pending`: when it began, its declared size, why it is owed, and
          `failed` once the owed fetch ended with a stated refusal), and has no primary yet: its screen words it, and offers no "Finish it" */
