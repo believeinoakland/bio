@@ -161,3 +161,15 @@ Users re-run: format-registry + doc-clean + acquisition 385 tests, 384 pass; cap
 Checks: format 0 failures; architecture 22 files, 0; coverage 55 of 55, 0; ownership 16 files, 0; run.mjs: no odf finding, words 18,524 unchanged (inline 12, missingkey 5, none mine).
 
 Size (session_01UqB6MGJZC34pq9fKcsf621): test runs 34, module lines 2870
+
+## Fix round 9, batch D: R53 amended, the ODT text box (G166; K4987; START B9)
+
+**Red first.** On the unchanged module, a text box (`draw:text-box`) not inside a paragraph (a frame anchored to the page, or alone in a table cell) answered its words only as body paragraphs: no `text_box` part at all. A box inside a paragraph answered the `text_box` part with no `paras` and left the host text clean. So the duplicate the START names did not exist as "both"; the kind was wrong for two of three shapes and `paras` was absent in all three. Two new tests red, one existing assertion (`by.text_box`) updated for `paras`.
+
+**Change (`odf.mjs`, `walkTextBodyG`).** A text box is a unit wherever it sits. Outside a paragraph its paragraphs keep their slots in `paragraphs` (the file's order, so `¶n` numbering and R6's count are unchanged) with empty `text`, so `document` and the paragraph texts hold none of its words; the `text_box` part's `paras` lists those indices and its `ref` is the first. Inside a paragraph it holds no slot (as before) and `paras` is `[]`. Links in a box now stay the body's (R7; they were lost before in an in-paragraph box). Decision (mine, not Bob's): empty-text slots rather than removing the paragraphs, so reading-pipeline can drop exactly `paras` and every other `¶n` stays addressed as before.
+
+**For reading-pipeline (job 90):** `paras` is present on every ODT `text_box` part; entries of `paragraphs` named in it have `text: ""`.
+
+**Tests and checks.** `test/m/odf-reader/`: 122 tests, 122 pass (2 new, named R53; one existing updated). Users (`acquisition` grades, `doc-clean` oracles, `format-registry` builtins, `reading-pipeline` read): see line below. format 0 failures; architecture 22 files, 0; coverage 55 of 55, 0; ownership below. Words: no new sentence; no rows owed. Generated artifacts made stale: none. Found in another module: none.
+
+Cause: the walker took a text box as a unit only when inside a paragraph. Why missed: R53's tests built the frame inside a paragraph. Platform check: none needed (pure module).
