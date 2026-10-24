@@ -31,3 +31,7 @@ T51-251 (the words check's four `plain` findings, K3957) is applied and pushed a
 - `checks/run.mjs /home/user/bio`: format 0 failures, architecture 0 failures, channels 0 failures. Repo-wide coverage shows 33 failures and repo-wide words shows 4840 failures, both in other modules. This module's own coverage and words are clean.
 
 Size (session_01GtJpPC5eXPwseWqdbYXLRA): test runs 3, module lines 394
+
+## J2 · QUESTION
+
+START says ooxml (3) and csv-reader (4) are merged before me. They are not: tranche/T51 holds neither decodeText (ooxml R36), ooxml.discriminate over a range source (ooxml R11) nor isDelimitedText (csv-reader R21); both jobs (OOXML #4, CSV-READER #5) have only posted their start. My best reading: I code to the section-2c interfaces through namespace imports (import * as ooxml / csv-reader), so the module loads before and after their merge; G130a (picture order) and the structure of R31/R32/R17 are built now; tests that need a provider's real function stay red by name (R-SEAM) until it merges, then I re-run and go COMPLETE. Say if you would rather I wait or stub differently. I do not need an answer to carry on.
