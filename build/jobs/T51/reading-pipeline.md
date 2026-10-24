@@ -684,3 +684,4 @@ Per cause, (1) root cause / (2) why missed / (3) failing-first test / (4) platfo
 ## J34 · BLOCKED
 
 BLOCKED, cause: context. Past half my window. Built and green: every entry of B37 except the four under 'Next' in my record's 'Fix round 9 · READING-PIPELINE #31' section (module tests without the heavy files: 344, 339 pass, 0 fail, 5 todo per K4888). Next step for my restart: (a) K4868, the CSV's first piece by range; then (b) K4847 pdf-pieces counts, (c) the heavy files alone (memory.test digests re-recorded), (d) tier2-recorded.json; then impact, checks, COMPLETE.
+**B39 (K4889), taken into Next (a):** `bio-plane/test/m/plane/g41-shape.test.mjs` "R84 G41: the largest CSV csv-reader takes ..." is red for K4868's cause; it runs in the impact set after (a) and should turn green; its xlsx twin stays red for plane-2 (job 37, K4855). Plane's test is not edited; a red left for a reason in plane's file is a REPORT.
