@@ -59,3 +59,26 @@ CHANGE B3 handled: merged `tranche/T51` (with DEC-343's unkeyed list) into `job/
 Tests: `node --test bio-plane/test/m/subresources/subresources.test.mjs`: 36 pass, 0 fail. `checks/run.mjs`: format 0 failures, architecture 0 failures.
 
 Size (session_016S5EWxLud6RnWPVBD4mLr4): test runs 36, module lines 1400
+
+## J7 · COMPLETE
+
+Round 9, G133c piece (`subresources.mjs`, B4 START). Merged tranche/T51 first; read the requirement whole (R24 amended, R36 new).
+
+Root cause (1): `linkWrapper.deferred` called `encodeURIComponent` on a string holding a lone surrogate, which throws `URIError` (was line 810). An unparseable address was already `UNRESOLVABLE` but not marked final.
+Fix: `linkWrapper.deferred` turns a lone surrogate into U+FFFD before encoding (a well-formed pair is untouched), so it never throws and gives the same wrapper every call (R24). `classifyRef` marks an unparseable address `final: true`, and `captureSubresources` carries `final: true` onto the `UNRESOLVABLE` record (R36). `normalizeAddress`, `normalizeCitation` and the link records were checked with lone-surrogate and unparseable forms: none throws.
+(2) Why the tests missed it: no test passed a lone surrogate or checked the record for finality. Gap fixed by the two tests below.
+(3) Failing-first, seen RED then green, both through the public interface: 
+- `R24: a lone surrogate in the url is U+FFFD in the wrapper, never a URIError, the same every call`: red line `✖ R24: a lone surrogate ... (0.63ms)` with `URIError: URI malformed`.
+- `R36: a failure that comes of an address's own bytes is a final record and never a throw`: red line `✖ R36: a failure that comes of an address's own bytes is a final record and never a throw (4.78ms)`.
+Both green after the fix.
+(4) Platform check: N (pure string code, no platform limit involved).
+
+Tests: `node --test --test-force-exit bio-plane/test/m/subresources/ bio-plane/test/m/acquisition/subresources-walk.test.mjs`: 51 pass, 0 fail. Users of `linkWrapper`: office-readers 115 pass, odf-reader 74 pass, pdf-reader 145 pass, 0 fail. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 122 of 176 modules (the module's callers span the plane); the three direct users above were run.
+Checks: format 0 failures; architecture 0 failures; coverage 36 of 36 ids named, 0 failures; ownership 3 files changed by subresources, 0 failures; words: no finding names subresources (the run's 17 failures are other modules').
+
+Words owed: none new (no new sentence).
+Stale generated artifacts (BOB regenerates at the round end): `bio-plane/dist/bio-plane.bundled.mjs`, `pdf-worker/dist/pdf-worker.bundled.mjs`, `ocr-worker/dist/ocr-worker.bundled.mjs`.
+Deferred: nothing. Found in other modules: nothing new beyond the plan's other G133c pieces (ooxml, meeting-calendar, reading-pipeline), which are other jobs'.
+Files created outside paths: none.
+
+Size (session_019jzP674bQQxG4CVu7SZEUt): test runs 6, module lines 1403
