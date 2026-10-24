@@ -369,3 +369,7 @@ Merged `tranche/T51` (runtime-limits' rows 20-22 are in). All code in `bio-plane
 **Questions.** None. **Deferred.** None.
 
 Size (session_016yJWxBnqwtLKmTKCGHKJiL): test runs 30, module lines 5860
+
+## J13 · COMPLETE
+
+COMPLETE · PDF-READER #15 · R49 pageSource (fallback on any irregularity; real APP volume pages read from <1 MB), embedded-file streaming SHA-256 (60 MiB: 3.9 MB live vs 60.3), 40/60 MiB text pages read in a 128 MB heap (PieceList + byte lexer; fuzz equal to tip), XMP_MAX via boundOf(pdf,xmp); R41 PER test green. Suite 190 tests all green after merge; format/architecture/coverage 49 of 49/ownership 0 failures. Users: doc-clean R3 R12 entries and file-safety R24 reds not mine. Stale bundles: pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. Record: build/jobs/T51/pdf-reader.md. Size (session_016yJWxBnqwtLKmTKCGHKJiL): test runs 30, module lines 5860
