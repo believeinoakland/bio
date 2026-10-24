@@ -759,6 +759,12 @@ function stateOcr(target, left, t3, i2text) {
       pictures += images || (own.some((u) => u && u.reason === "image_content_undetermined") ? 1 : 0);
     }
   }
+  /* K4904 (2c item 9): the pages whose only text is a folio's glyphs over a picture (D-635's `image_content_unread`), still unread: a pass that rebuilds pages from
+     stored units asks OCR for them as pages with no text layer. Absent means none. */
+  const folio = [];
+  for (const pg of (i2text && Array.isArray(i2text.pages) ? i2text.pages : []))
+    if (pg && Number.isInteger(pg.page) && (Array.isArray(pg.undetermined) ? pg.undetermined : []).some((u) => u && u.reason === "image_content_unread") && !owedAt.has(pg.page)) folio.push(pg.page);
+  if (folio.length) target.folio_pages = [...new Set(folio)].sort((x, y) => x - y);
   if (skipped) target.units_skipped = (target.units_skipped || 0) + skipped;
   if (pictures) target.pictures_unread = pictures;
   return target;
@@ -2503,6 +2509,40 @@ function unreadSentence(kind) {
   }
 }
 
+/* K4904 (2c item 8): `read(..., {skipKilled: true})` steps past the window `cursor` names, one that killed its reader three times: it reads nothing of it and answers
+   `{units: [], next, more, counters: {written: 0, skipped: 1, owed: 0, failed: 0}, stated: {cursor, why: "UNIT_KILLED_READER"}}`, `next` the cursor of the following window
+   (a list's next unit - a slide, a sheet block - or a text's next window), so the read goes on; the window is stated on the reading (`reading.killed_windows`) and said
+   in a sentence (R-SILENT). A page keeps PAGE_KILLED_READER (the PDF's unit is a page). Null when the cursor is not one this steps (it is read as it is). */
+export const UNIT_KILLED_READER = "UNIT_KILLED_READER";
+async function skipWindow(evidence, doc, cursor, windowBytes) {
+  const c = unb64(cursor);
+  const sha = doc && doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : null;
+  if (!c || c.v !== 1 || !sha || c.s !== sha) return null;
+  let next = null, through = null, total = null;
+  if (c.k === "u" && natural(c.n) && natural(c.i) && c.i < c.n) {
+    if (c.i + 1 < c.n) next = b64({ v: 1, s: sha, k: "u", n: c.n, i: c.i + 1 });
+    through = c.i + 1; total = c.n;
+  } else if (c.k === "w" && c.m === "t" && natural(c.n) && natural(c.ob) && c.ob < c.n && natural(c.bm)) {
+    /* a text's window: the next begins at the character after this window's bytes, inside a run (`md`), so its lines are not numbered on from here */
+    let ob = Math.min(c.n, c.ob + (Number.isInteger(windowBytes) && windowBytes > 0 ? windowBytes : WINDOW_BYTES));
+    if (ob < c.n) {
+      const src = c.ro === 1 ? rangeSource(evidence, doc) : null;
+      const got = src ? await src.readRange(ob, 4) : (await rangeBytes(evidence, sha, ob, 4))?.bytes;
+      if (!(got instanceof Uint8Array)) return null;
+      let i = 0; while (i < got.length && (got[i] & 0xc0) === 0x80) i++;
+      ob += i;
+    }
+    if (ob < c.n) { const { v, k, s: ignored, ...rest } = c; next = windowCursor(sha, { ...rest, ob, md: 1, r: (c.r || 0) + 1, ld: 0 }); }
+    through = ob - c.bm; total = c.n - c.bm;
+  } else return null;
+  const stated = { cursor, why: UNIT_KILLED_READER };
+  return { text_units: [], more: next !== null, cursor: next, next, final: next === null ? true : undefined,
+           read_through: through, total, piece: { units: 0, words: 0 }, stated,
+           counters: { written: 0, skipped: 1, owed: 0, failed: 0 },
+           reading: { killed_windows: [{ cursor, why: UNIT_KILLED_READER }],
+                      killed_window_note: localize("reading-pipeline.index.unit_killed_reader", "A part of this document could not be read after three tries, so it is skipped and the rest goes on.") } };
+}
+
 /** R24 (R1–R17): reads a stored capture. `document` is capture's acquire answer's document. The rest is what the
  *  caller (`extraction`, its R1 and R18) hands in: `evidence` (record-core's `evidenceStore()`, or null), `env` (the
  *  fleet bindings PDF_WORKER and OCR_WORKER), `storeName` (the namespace the members read the capture under), `view` (`jurisdictions.combine`'s
@@ -2517,9 +2557,13 @@ function unreadSentence(kind) {
  *  reading). Never throws; every failure is a failed reading, and says whether it is `transient` or `final`. */
 export async function read(document, { evidence = null, env = {}, storeName = "bio", view, planeVersion = null,
                                         liveCalibration = null, transcription = null, unitsBudget, ocrInvocations,
-                                        killedPages, cursor, maxUnits, rangePages, windowBytes } = {}) {
+                                        killedPages, skipKilled, cursor, maxUnits, rangePages, windowBytes } = {}) {
   /* R39: a digest alone is no document; it is refused before anything is loaded, and no reading is composed. */
   if (isBareStub(document)) return refusal(BARE_DIGEST, "reading-pipeline.index.bytes_not_held");
+  if (skipKilled === true && typeof cursor === "string") {
+    const stepped = await skipWindow(evidence, document, cursor, windowBytes).catch(() => null);
+    if (stepped) return stepped;
+  }
   let out;
   try { out = await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
                                           unitsBudget, ocrInvocations, killedPages,
