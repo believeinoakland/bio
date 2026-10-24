@@ -84,14 +84,19 @@ test("R13 never throws: randomly corrupted bodies, and every failure is a return
 });
 
 test("R13 never invents: a dialect, character or cell it cannot establish is stated undetermined, never dropped or guessed", async () => {
-  const d = csvEntry.dialect(new Uint8Array([0x61, 0x96, 0x0a]));
+  const d = csvEntry.dialect(new Uint8Array([0x61, 0x81, 0x0a]));
   assert.equal(d.encoding, null);
   assert.ok(d.undetermined.includes("encoding_undetermined"));
   assert.equal(csvEntry.dialect(F.enc("a,b;c\n1,2;3\n")).delimiter, null);
-  const t = await csvEntry.text(Uint8Array.from([0x78, 0x2c, 0x63, 0x61, 0x66, 0xe9, 0x0a, 0x79, 0x2c, 0x7a, 0x0a]));
+  const t = await csvEntry.text(Uint8Array.from([0x78, 0x2c, 0x63, 0x61, 0x66, 0x81, 0x0a, 0x79, 0x2c, 0x7a, 0x0a]));
   assert.deepEqual(t.undetermined, [{ sheet: 0, cell: "B1", reason: "encoding_undetermined" }]);
   assert.ok(!t.document.includes("�") && !t.document.includes("é"));
-  const g = await csvEntry.text(new Uint8Array(32 * 1024 * 1024 + 1).fill(0x61));
+  /* a legacy charset the bytes only suggest is ASSUMED and stated as such, never silent */
+  const l = await csvEntry.text(Uint8Array.from([0x78, 0x2c, 0x63, 0x61, 0x66, 0xe9, 0x0a, 0x79, 0x2c, 0x7a, 0x0a]));
+  assert.equal(l.dialect.encoding, "windows-1252");
+  assert.equal(l.dialect.assumed, true);
+  assert.deepEqual(l.undetermined, []);
+  const g = await csvEntry.text(new Uint8Array(51 * 1024 * 1024).fill(0x61));
   assert.equal(g.undetermined.length, 1, "over the ceiling the refusal is a marker, not a silent truncation");
 });
 
