@@ -476,3 +476,7 @@ COMPLETE: job 54 applied (R39 render wake is now while renderBatch left a view o
 **Tests and checks.** `test/m/file-safety/*.test.mjs`: tests 137, pass 137, fail 0 (R24 and X19 now green). `impact.mjs origin/tranche/T51 HEAD`: affected modules 11 of 176. format 176 modules, 0 failures; architecture 0 failures; coverage 57 of 57 ids named, 0 failures; ownership 3 files, 0 failures; words 0 failures.
 
 Size (session_01DQq5SUCuskyyd5iwgeuLR7): test runs 8, module lines 3376
+
+## J19 · COMPLETE
+
+COMPLETE · FILE-SAFETY #22 · job 99, batch D (G171): R39 renderWake now for a view queued with no back-off; R12 5xx with no class is SCANNER_UNREACHABLE; R4 sibling fixed (queued_at to the millisecond). Red first seen for all three; file-safety 137/137; control-plane seam §16 5/5 alone; format, architecture, coverage, words, ownership 0 failures. Platform check L is yours. Plane bundle stale (regenerate). Details in my record.
