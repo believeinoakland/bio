@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (18524 design words, 1112 protected; SHA-256
-   24f0ffdeb236000f948540c221752da2e833674406dba6c952a7a2a67abe2c5b) followed by 7284 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   24f0ffdeb236000f948540c221752da2e833674406dba6c952a7a2a67abe2c5b) followed by 7285 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19792,6 +19792,7 @@ export const WORD_ROWS = Object.freeze([
   ["calculations.index.taking_every_row_of_a","taking every row of a table is the rare case; state the reason (K1468). Nothing was written.",null,null,false,"code"],
   ["calculations.index.the_change_is_a_held","the change is a held standard's version or a date (YYYY-MM-DD). Nothing was written.",null,null,false,"code"],
   ["calculations.index.the_column_v_is_not","the column \"{v}\" is not declared with the role {role}; the table's declaration is the member's (R2). Nothing was written.",null,null,false,"code"],
+  ["calculations.index.the_csv_files_own_bytes","the CSV file's own bytes are not held, and a table is made from the file, never from the index of its reading",null,null,false,"code"],
   ["calculations.index.the_input_name_holds_facts","the input \"{name}\" holds facts of phase {v1}; it holds only {phase} facts (each total within one phase, R12). Nothing was written.",null,null,false,"code"],
   ["calculations.index.the_join_as_is_not","the join \"{as}\" is not keyed through an id space ({SPACES}) or a captured crosswalk declared as one (its crosswalk_from and crosswalk_to columns); a join on a name alone is refused (K1452). Nothing was written.",null,null,false,"code"],
   ["calculations.index.the_provisions_standard_is_held","the provision's standard is held {v1}, not as its own words, so it is not a measure an act is held against (standards R34). Nothing was written.",null,null,false,"code"],
