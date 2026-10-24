@@ -2445,6 +2445,10 @@ export function makeFetch(hooks = {}) {
             const held = await doAnswer(stub.fetch(new Request(`http://do/heldat?sha256=${b.archiveSha}&viewer=${encodeURIComponent("class:admin")}`)));
             const home = held.answered && held.result && held.result.held === true && held.result.copy && typeof held.result.copy.project === "string" ? held.result.copy.project.trim() : "";
             archiveProject = home || null;
+            /* the plane's own `unpack` job reaches an uploaded archive before any document holds it: its members would be filed under no project and never move. The archive is
+               opened when a document holds it (the job is offered again), not before */
+            if (!archiveProject && cls === "daemon" && !viaSession && held.answered && held.result && held.result.held !== true)
+              return json({ ok: true, result: { ok: true, complete: false, waiting_on: { code: "ARCHIVE_NOT_FILED" } }, store: storeName, tokenClass: cls }, 200);
           } catch { archiveProject = null; }
         }
       } catch { archiveProject = null; }
