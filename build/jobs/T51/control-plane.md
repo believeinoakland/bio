@@ -887,4 +887,4 @@ BLOCKED (cause: context). Workers are all finished and everything is pushed. My 
 **Checks**: format 0 failures; architecture 0; coverage 102 of 102 ids named; ownership 0 (36 files changed).
 **Words owed** to later-ux.md: `control-plane.reading.not_registered`. **Proposed wording**: R127 (null language is the empty key part), R128 (`desc`; `bytes-<route>`; `shape;desc=f<n>:l<limit>`), R129 (isolate age from first request), R72 (`declared`; four parted arms; ledger; an uploaded archive is opened when a document holds it, under that document's project).
 **Not done / deferred**: nothing deferred in this module. Reading_stated (capture R109) passes through the upload answer untouched. A 3 MiB single-part PDF upload does one whole CAPTURES.get inside captureupload (report, unchanged).
-Size (session_01QFTaUWP2RH4XUurB8ppEkF): test runs 22, module lines 12,000
+Size (session_01QFTaUWP2RH4XUurB8ppEkF): test runs 22, module lines 5,237
