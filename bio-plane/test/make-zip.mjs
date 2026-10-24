@@ -336,3 +336,203 @@ export function nestedZip({ depth, fanout, leaf, method = 8 } = {}) {
   }
   return level;
 }
+
+/* ---- The lazy ZIP64 writer (R23; fix round 9, G123d) ----
+ *
+ * `zipChunks64` writes an archive as an async stream of chunks, so a member of
+ * hundreds of megabytes, or 65,536 members and more, is never held whole: a
+ * member given as `chunks` is deflated as it goes, its CRC and sizes written in
+ * a data descriptor after it (bit 3), and only the central directory's records
+ * are kept until the end. Every entry carries the ZIP64 extra field and the
+ * archive ends with the ZIP64 end record and its locator, so no declared size,
+ * offset or count is bounded by 32 bits. `makeZip` (R10-R14) stays the
+ * whole-archive writer. */
+
+const MAX64 = Number.MAX_SAFE_INTEGER;
+const le = (width, v) => {
+  const b = new Uint8Array(width);
+  for (let i = 0, x = v; i < width; i++, x = Math.floor(x / 256)) b[i] = x % 256;
+  return b;
+};
+const cat = (...list) => concat(list);
+
+/** A running CRC-32 over chunks (the same table as `crc32`). */
+function crcUpdate(c, bytes) {
+  c = (c ^ MAX32) >>> 0;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ MAX32) >>> 0;
+}
+
+async function* asChunks(source) {
+  if (typeof source === "function") source = source();
+  for await (const c of source) yield typeof c === "string" ? utf8(c) : c;
+}
+
+/** Deflates an async source of chunks as it goes (raw deflate, as method 8 stores it). */
+async function* deflateStream(source, onRaw) {
+  const { createDeflateRaw } = await import("node:zlib");
+  const z = createDeflateRaw();
+  const out = [];
+  let wake = null, ended = false, failed = null;
+  z.on("data", (d) => { out.push(new Uint8Array(d)); wake?.(); });
+  z.on("end", () => { ended = true; wake?.(); });
+  z.on("error", (e) => { failed = e; wake?.(); });
+  const feed = (async () => {
+    for await (const c of source) {
+      onRaw(c);
+      if (!z.write(c)) await new Promise((r) => z.once("drain", r));
+    }
+    z.end();
+  })().catch((e) => { failed = e; wake?.(); });
+  while (true) {
+    while (out.length) yield out.shift();
+    if (failed) throw failed;
+    if (ended) break;
+    await new Promise((r) => { wake = r; });
+    wake = null;
+  }
+  await feed;
+}
+
+/**
+ * A ZIP written lazily (R23). `entries` is an array or an (async) iterable of
+ * `{name, data}` (bytes or a string, compressed whole) or `{name, chunks}` (an
+ * iterable, an async iterable or a function answering one, deflated as it
+ * goes), with `method` 8 (default) or 0. An entry's `central: {crc32,
+ * compressedSize, uncompressedSize}` (any subset) is what its central record
+ * states in place of the truth, so a member can declare more than it holds.
+ * `options.comment` is the archive comment. Answers an async iterable of
+ * Uint8Array chunks.
+ */
+export async function* zipChunks64(entries, options = {}) {
+  if (options === null || typeof options !== "object") throw new Error("zipChunks64: options must be an object");
+  const central = [];
+  let offset = 0, i = 0;
+  for await (const e of entries) {
+    const at = `zipChunks64: entries[${i++}]`;
+    if (e === null || typeof e !== "object") throw new Error(`${at} must be an object`);
+    if (e.name === undefined) throw new Error(`${at}.name is missing`);
+    if (e.data === undefined && e.chunks === undefined) throw new Error(`${at}.data or chunks is missing`);
+    const name = bytesOf(e.name, `${at}.name`);
+    const method = e.method ?? 8;
+    if (method !== 0 && method !== 8) throw new Error(`${at}.method must be 0 or 8`);
+    const own = checkOverride("central", e.central, `${at}.central`);
+    let flags = typeof e.name === "string" && !isAscii(e.name) ? 0x0800 : 0;
+    const start = offset;
+    let crc, csize, usize;
+    if (e.data !== undefined) {
+      /* Known bytes: sizes in the ZIP64 extra field of the local header, no descriptor. */
+      const raw = bytesOf(e.data, `${at}.data`);
+      const payload = method === 8 ? new Uint8Array(deflateRawSync(raw)) : raw;
+      crc = crc32(raw); csize = payload.length; usize = raw.length;
+      if (e.zip64 === false) {
+        /* A classic member (an ODF package's stored `mimetype` must sit at offset 38 with no extra field). */
+        if (usize >= MAX32 || offset >= MAX32) throw new Error(`${at} is too large for zip64: false`);
+        const head = cat(le(4, SIG.local), le(2, 20), le(2, flags), le(2, method), le(2, DOS_TIME), le(2, DOS_DATE),
+          le(4, crc), le(4, csize), le(4, usize), le(2, name.length), le(2, 0), name);
+        offset += head.length + payload.length;
+        yield head;
+        if (payload.length) yield payload;
+        const c = { crc32: crc, compressedSize: csize, uncompressedSize: usize, ...own };
+        central.push(cat(le(4, SIG.central), le(2, 20), le(2, 20), le(2, flags), le(2, method), le(2, DOS_TIME), le(2, DOS_DATE),
+          le(4, c.crc32), le(4, c.compressedSize), le(4, c.uncompressedSize), le(2, name.length), le(2, 0), le(2, 0), le(2, 0), le(2, 0), le(4, 0), le(4, start), name));
+        continue;
+      }
+      const head = cat(le(4, SIG.local), le(2, 45), le(2, flags), le(2, method), le(2, DOS_TIME), le(2, DOS_DATE),
+        le(4, crc), le(4, MAX32), le(4, MAX32), le(2, name.length), le(2, 20), name,
+        le(2, 0x0001), le(2, 16), le(8, usize), le(8, csize));
+      offset += head.length + payload.length;
+      yield head;
+      if (payload.length) yield payload;
+    } else if (method === 0 && e.size !== undefined && e.crc32 !== undefined) {
+      /* Streamed, stored, its size and CRC known before: written in the local header's ZIP64 extra field, no descriptor
+         (a reader that cannot take a stored member with bit 3, LibreOffice's, still opens it). */
+      crc = e.crc32; csize = usize = e.size;
+      const head = cat(le(4, SIG.local), le(2, 45), le(2, flags), le(2, 0), le(2, DOS_TIME), le(2, DOS_DATE),
+        le(4, crc), le(4, MAX32), le(4, MAX32), le(2, name.length), le(2, 20), name,
+        le(2, 0x0001), le(2, 16), le(8, usize), le(8, csize));
+      offset += head.length;
+      yield head;
+      let n = 0, c2 = 0;
+      for await (const c of asChunks(e.chunks)) { n += c.length; c2 = crcUpdate(c2, c); offset += c.length; yield c; }
+      if (n !== e.size || c2 !== e.crc32) throw new Error(`${at} holds ${n} bytes of CRC ${c2}, not the size and crc32 it gave`);
+    } else {
+      /* Streamed: bit 3, the truth after the data in a 64-bit descriptor. */
+      flags |= 0x0008;
+      const head = cat(le(4, SIG.local), le(2, 45), le(2, flags), le(2, method), le(2, DOS_TIME), le(2, DOS_DATE),
+        le(4, 0), le(4, MAX32), le(4, MAX32), le(2, name.length), le(2, 20), name,
+        le(2, 0x0001), le(2, 16), le(8, 0), le(8, 0));
+      offset += head.length;
+      yield head;
+      crc = 0; csize = 0; usize = 0;
+      const onRaw = (c) => { crc = crcUpdate(crc, c); usize += c.length; };
+      if (method === 8) {
+        for await (const z of deflateStream(asChunks(e.chunks), onRaw)) { csize += z.length; offset += z.length; yield z; }
+      } else {
+        for await (const c of asChunks(e.chunks)) { onRaw(c); csize += c.length; offset += c.length; yield c; }
+      }
+      const tail = cat(le(4, SIG.descriptor), le(4, crc), le(8, csize), le(8, usize));
+      offset += tail.length;
+      yield tail;
+    }
+    const c = { crc32: crc, compressedSize: csize, uncompressedSize: usize, ...own };
+    for (const f of ["crc32", "compressedSize", "uncompressedSize"]) {
+      const max = f === "crc32" ? MAX32 : MAX64;
+      if (!Number.isInteger(c[f]) || c[f] < 0 || c[f] > max) throw new Error(`${at}.central.${f} must be an integer from 0 to ${max}`);
+    }
+    central.push(cat(le(4, SIG.central), le(2, 45), le(2, 45), le(2, flags), le(2, method), le(2, DOS_TIME), le(2, DOS_DATE),
+      le(4, c.crc32), le(4, MAX32), le(4, MAX32), le(2, name.length), le(2, 28), le(2, 0), le(2, 0), le(2, 0), le(4, 0), le(4, MAX32), name,
+      le(2, 0x0001), le(2, 24), le(8, c.uncompressedSize), le(8, c.compressedSize), le(8, start)));
+  }
+  const cdOffset = offset;
+  let cdSize = 0;
+  for (const r of central) { cdSize += r.length; yield r; }
+  const n = central.length;
+  const comment = options.comment === undefined ? new Uint8Array(0) : bytesOf(options.comment, "zipChunks64: options.comment");
+  if (comment.length > MAX16) throw new Error(`zipChunks64: options.comment must be at most ${MAX16} bytes`);
+  const recordOffset = cdOffset + cdSize;
+  const fit16 = (v) => (v > MAX16 - 1 ? MAX16 : v), fit32 = (v) => (v > MAX32 - 1 ? MAX32 : v);
+  yield cat(
+    le(4, SIG.zip64Eocd), le(8, 44), le(2, 45), le(2, 45), le(4, 0), le(4, 0), le(8, n), le(8, n), le(8, cdSize), le(8, cdOffset),
+    le(4, SIG.zip64Locator), le(4, 0), le(8, recordOffset), le(4, 1),
+    le(4, SIG.eocd), le(2, 0), le(2, 0), le(2, fit16(n)), le(2, fit16(n)), le(4, fit32(cdSize)), le(4, fit32(cdOffset)), le(2, comment.length), comment);
+}
+
+/** A running CRC-32: `crc32Update(crc32Update(0, a), b)` is the CRC of a then b. */
+export const crc32Update = (c, bytes) => crcUpdate(c, bytes);
+
+/** The longest archive comment `zipChunks64Sized` writes: LibreOffice finds no end record behind a comment of 600
+ *  bytes (measured, LibreOffice 24.2; 400 opened). */
+const SIZED_COMMENT_MAX = 256;
+
+/**
+ * `zipChunks64` padded to exactly `size` bytes (R19's boundary sizes): the archive comment takes up to 256 bytes of
+ * padding and a stored member `bio-pad.bin` of zeros (size and CRC known, no descriptor) the rest. `entries` is an
+ * array whose `chunks` are functions, since the archive is counted by a pass that holds nothing before it is written.
+ * `member: true` always writes the padding member (named `padName`), for a package that lists its members (an ODF
+ * manifest must name it).
+ */
+export async function* zipChunks64Sized(entries, size, { padName = "bio-pad.bin", member = false } = {}) {
+  if (!Array.isArray(entries)) throw new Error("zipChunks64Sized: entries must be an array");
+  for (const e of entries) if (e.chunks !== undefined && typeof e.chunks !== "function") throw new Error(`zipChunks64Sized: ${e.name}'s chunks must be a function`);
+  let natural = 0;
+  for await (const c of zipChunks64(entries)) natural += c.length;
+  let left = size - natural;
+  if (left < 0) throw new Error(`zipChunks64Sized: the archive is ${natural} bytes, over size ${size}`);
+  const list = entries.slice();
+  if (left > SIZED_COMMENT_MAX || member) {
+    const name = padName, fill = left - ZIP64_OVERHEAD.local - ZIP64_OVERHEAD.central - 2 * name.length;
+    const zeros = new Uint8Array(1 << 20);
+    let crc = 0;
+    for (let i = 0; i < fill; i += zeros.length) crc = crcUpdate(crc, zeros.subarray(0, Math.min(zeros.length, fill - i)));
+    list.push({ name, method: 0, size: fill, crc32: crc, chunks: function* () { for (let i = 0; i < fill; i += zeros.length) yield zeros.subarray(0, Math.min(zeros.length, fill - i)); } });
+    if (fill < 0) throw new Error(`zipChunks64Sized: size ${size} is ${left} bytes over the archive, too few for the padding member`);
+    left = 0;
+  }
+  yield* zipChunks64(list, { comment: new Uint8Array(left).fill(0x20) });
+}
+
+/** The fixed bytes `zipChunks64` adds around an archive's members: per member
+ *  its local header (30 + name + 20) and central record (46 + name + 28), plus
+ *  a descriptor of 24 for a streamed member, and 98 bytes of end records. */
+export const ZIP64_OVERHEAD = { local: 50, central: 74, descriptor: 24, end: 98, classicLocal: 30, classicCentral: 46 };
