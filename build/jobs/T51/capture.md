@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01Jx17YoKtyusq7GHL5JmPG7 · depth 2 · WAITING ON BOB (J35) · handled B34
+**Status** · session_01Jx17YoKtyusq7GHL5JmPG7 · depth 2 · COMPLETE · handled B34
 
 ## J1 · COMPLETE
 
