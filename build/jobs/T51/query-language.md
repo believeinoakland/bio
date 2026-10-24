@@ -92,3 +92,22 @@ Tests and checks:
 
 Deferred: none. Found in other modules: none from this job.
 Size (session_01ViKHjERep3ZC62ov1p3v8e): test runs 2, module lines 3000
+
+## Completion · fix round 9, batch D (B6): R34 a passage snippet names its unit (K4922)
+
+Session session_01Uv26d4DQG2M8TmwzaWeGkF (QUERY-LANGUAGE #13). Tranche T51 merged into the branch first.
+
+**Applied.** `query.mjs` `page()`: every hit carries `snippet_unit` (always a column, after `snippet_from`): the `rowid` of the unit row the passage snippet was cut from when `snippet_from` is `"passage"`, else `null`. One `firstUnit(select)` selection (same `ORDER BY capture_sha, seq, extent_kind, extent LIMIT 1`) now serves both the snippet and the unit, so the unit named is the unit cut. No sentence a member reads was added. Tests (`snippets.test.mjs`): two naming R34 (unit holds the snippet's words, first of several by the order, extent breaks a tie; controls: text hit, text-over-passage hit, unmatched hit carry `null`, key always present); red first (both failed without the change), green after. `statements.test.mjs` R14's key list now includes `snippet_unit`.
+
+**Tests and checks.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/query-language/`: 59 pass, 0 fail.
+- format 0 failures; architecture (query-language) 0 failures; coverage (query-language) 34 of 34 live ids named, 0 failures; ownership 0 failures; `checks/run.mjs`: no finding naming query-language (words inline 14, all other modules).
+- `impact.mjs origin/tranche/T51 HEAD`: 82 of 176 modules affected. Users run: retrieval, agent-steps, agent-worker.
+
+**Found in other modules (for BOB).**
+1. retrieval, `bio-plane/test/m/retrieval/search.test.mjs:30` (R6) lists the hit keys exactly and fails on the new `snippet_unit` (it passes the row through). Retrieval's job 30 (R95/R96) must add `snippet_unit` to that list; it is not mine to edit.
+2. retrieval's three R94 tests fail on the unchanged tranche too (inherited; not from this change).
+3. agent-worker bundles `query.mjs` (manifest §14): its bundle is stale for this change, to be regenerated at the layer close. Its `requirements.test.mjs` R45 byte-identity and static-check tests already fail on the unchanged tranche (no lockfile or `node_modules` in `agent-worker/` and `agent-steps/`, so `npm ci` could not run there). agent-steps: all its tests pass.
+
+**Deferred:** none.
+Size (session_01Uv26d4DQG2M8TmwzaWeGkF): test runs 9, module lines 3015

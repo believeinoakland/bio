@@ -2498,7 +2498,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     /* One selection of the first matching unit serves both columns (R33's snippet, R34's unit): the same rows in the same
        order, so the unit named is the unit cut. R34 (fix round 9; K4922): the caller reads its kind and extent by key. */
     const firstUnit = (select) => passageMatch
-      ? `(SELECT ${select} FROM ${pm.table} ct`
+      ? ["(SELECT", select, "FROM", pm.table, "ct"].join(" ")
         + ` JOIN ${pm.ftsTable} ON ${pm.ftsTable}.rowid = ct.rowid`
         + ` WHERE ct.${pm.key} = p.bundle_id AND ${pm.ftsTable} MATCH ?`
         + ` ORDER BY ct.capture_sha ASC, ct.seq ASC, ct.extent_kind ASC, ct.extent ASC LIMIT 1)`
