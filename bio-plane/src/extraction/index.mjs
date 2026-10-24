@@ -38,7 +38,7 @@ import * as pipeline from "../reading-pipeline/index.mjs";
 import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor,
          readingFromWire, decodeView, textCountsOf, textWordsFor, emittedFieldsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP,
          compareProvenance, readingProvenance, PROVENANCE_SCHEME, tier4Extend, tier4Pages,
-         AI_TRANSCRIPTION_SOURCE, TRANSCRIBE_USE } from "../reading-pipeline/index.mjs";
+         AI_TRANSCRIPTION_SOURCE, TRANSCRIBE_USE, PAGE_KILLED_READER, OCR_INVOCATIONS_PER_REQUEST } from "../reading-pipeline/index.mjs";
 import { localize, word } from "../setup-words/index.mjs";
 import { SCREEN_WORDS } from "./screen-words.mjs";
 
@@ -109,6 +109,8 @@ export const CELLS_RANGE_MAX = 20000;
 /** (fix round 9, G126e; R103; R-SILENT; K4901) The most of a capture a member's request loads whole: the `READ_BOUNDS` row `pdf.request_bytes` (2 MiB in
  *  all three columns, the figure the plan states and control-plane's inline gate holds). */
 export const REQUEST_READ_MAX = boundOf("pdf", "request_bytes");
+/** (fix round 9, G129c; R101) The one retry of a unit that killed its reader three times runs at half the budget: half the OCR calls a tick may make. */
+export const HALF_OCR_INVOCATIONS = Math.floor(OCR_INVOCATIONS_PER_REQUEST / 2);
 /* R29, R39, R48: the one pair of bounds for the text-source rows (REC-60/REC-70's ratchet). */
 export const TEXT_SOURCE_LIMIT_DEFAULT = 200;
 export const TEXT_SOURCE_LIMIT_MAX = 5000;
@@ -148,6 +150,9 @@ const ADDITIVE_COLUMNS = [
   ["capture_text_state", "more", "INTEGER NOT NULL DEFAULT 0"], ["capture_text_state", "cursor", "TEXT"],
   ["capture_text_state", "read_through", "INTEGER"], ["capture_text_state", "total", "INTEGER"],
   ["capture_text_state", "words_read", "INTEGER"],
+  /* R101 (fix round 9, G129b): why a read in pieces ended before its last piece (a deterministic failure, a refused cursor), so it is never `partial`
+     without a reason; null for a read that ended at its last piece or was never in pieces. */
+  ["capture_text_state", "ended_why", "TEXT"],
 ];
 
 /* ---- REC-36 / REC-40: the name terms (R19, R37), and the term fold (R59, N108): `reading_ref_terms.term` is exactly
@@ -688,12 +693,14 @@ export class Extraction {
 
   /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
-  async read(document, { storeName = "bio", env = null, budget = undefined, pieces = undefined, ocrInvocations = 0, registrar = null } = {}) {
+  async read(document, { storeName = "bio", env = null, budget = undefined, pieces = undefined, ocrInvocations = 0, registrar = null, killedPages = null } = {}) {
     const e = env || this.env || {};
     const out = await readDocument(document, {
       /* (fix round 9, G126b; R103; reading-pipeline R55; K4811 (6)) a member's request makes no OCR call: the pages are left, owed below; only the
          ledger's tick (`readHeld` with a kind) hands `null`, the pipeline's own budget */
       ...(Number.isInteger(ocrInvocations) ? { ocrInvocations } : {}),
+      /* (fix round 9, G129c; R101) the pages the ledger states killed their reader three times: not asked, stated `PAGE_KILLED_READER` */
+      ...(Array.isArray(killedPages) && killedPages.length ? { killedPages } : {}),
       evidence: this.#evidenceOf(document && document.capture && document.capture.sha256),
       env: e, storeName, view: this.view(), planeVersion: e.VERSION || null,
       liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { unitsBudget: budget }),
@@ -806,7 +813,7 @@ export class Extraction {
    *  `kind: "ocr"` the stored reading's unread pages are asked of the OCR member, those the stored units do not hold, and the
    *  re-read is written as a composed reading; a member that is down leaves the entry owed, pages it declines end it. */
   async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined, kind = null, defer = false, registerJob = null, armJobs = null,
-                   killedPages = null, detail = null } = {}) {
+                   killedPages = null, detail = null, halved = false } = {}) {
     /* (fix round 9, G126b; R103; K4898) the ledger's tick names its job's kind (and hands the registrar); a call with neither is inside a member's
        request (`op=readheld`, the door's own read after a capture), which makes no OCR call */
     const call = typeof registerJob === "function" ? { registerJob, armJobs } : null;
@@ -868,11 +875,11 @@ export class Extraction {
        the ledger, which the door writes; nothing is read. */
     if (defer === true) return left("READING_PENDING");
     const e = env || this.env || {};
-    if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages, detail });
+    if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages, detail, halved });
     /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
     const reader = repair ? { ...document, profile: { ...(document.profile || {}), format: repair } } : document;
     const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: null },
-                                          ocrInvocations: ledger ? null : 0, registrar: false });
+                                          ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, killedPages });
     if (out.refused) return left(out.refused.code);
     if (repair && held && notReadAsText(out.reading)) { this.#markRepairTried(home.bundleId, digest, "still"); return left("READING_HELD"); }
     const prof = reader.profile && typeof reader.profile === "object" ? reader.profile : null;
@@ -903,8 +910,8 @@ export class Extraction {
     const ow = oweAnswer ? { registration: oweAnswer } : {};
     /* (fix round 6, G13; R90) the first piece of a text that has more: the ledger goes on at once (plane R77: `more`) */
     if (out.more === true) return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, more: true,
-      detail: { read_through: out.read_through ?? null, total: out.total ?? null }, ...(entry ? { owed: true } : {}), ...ow };
-    return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, ...(owed ? { owed: true } : {}), ...ow };
+      detail: { read_through: out.read_through ?? null, total: out.total ?? null }, ...(entry ? { owed: true } : {}), ...ow, ...killedOf(out.reading) };
+    return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, ...(owed ? { owed: true } : {}), ...ow, ...killedOf(out.reading) };
   }
 
   /** (fix round 6, G13; R90) Whether the capture's text is read in pieces and has more to read: its index state says so. */
@@ -927,16 +934,28 @@ export class Extraction {
     const restart = st.cursor == null;
     const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : st.cursor },
                                             ocrInvocations: ledger ? null : 0, registrar: false });
+    /* (fix round 9, G129b; R101) a piece that failed for a cause outside the document (the store, a member: `transient`) is no end: the state keeps its
+       cursor, nothing is indexed, and the entry stays owed, to be retried by the ledger with its back-off; never `more` 0 with no reason */
+    const rd = out.reading && typeof out.reading === "object" ? out.reading : null;
+    if (!out.refused && rd && rd.failure === "transient")
+      return { ok: true, read: false, owed: true, why: "TRANSIENT", detail: { read_through: st.read_through ?? null, total: st.total ?? null,
+               reason: String(rd.basis || "transient").slice(0, 160) } };
+    /* a read that ends before its last piece ends stated, with its reason (`ended_why`): a refused cursor, a format not read by cursor, a failure on
+       the document's own bytes (`final`) */
+    const endStated = (why) => {
+      this.#sql.exec(`UPDATE capture_text_state SET more=0, cursor=NULL, state='partial', ended_why=? WHERE capture_sha=?`, String(why).slice(0, 160), digest);
+    };
     if (out.refused && out.refused.code === "NOT_PIECEWISE") {
       /* (G14) a format the reader cannot continue by a cursor: its index is stated as partial, with the runs it skipped named, once */
-      this.#sql.exec(`UPDATE capture_text_state SET more=0, cursor=NULL WHERE capture_sha=?`, digest);
+      endStated("NOT_PIECEWISE");
       return left("READING_HELD");
     }
-    if (out.refused) return { ok: true, read: false, final: true, why: String(out.refused.why || out.refused.code).slice(0, 160) };
-    if (typeof out.more !== "boolean") {
-      /* not a text the reader reads in pieces (a PDF over the index's bound): its partial index is stated as it is, once */
-      this.#sql.exec(`UPDATE capture_text_state SET more=0, cursor=NULL WHERE capture_sha=?`, digest);
-      return left("READING_HELD");
+    if (out.refused) { endStated(out.refused.code || "REFUSED"); return { ok: true, read: false, final: true, why: String(out.refused.why || out.refused.code).slice(0, 160) }; }
+    if (typeof out.more !== "boolean" || (rd && rd.failure === "final" && !(Array.isArray(out.text_units) && out.text_units.length))) {
+      /* not a text the reader reads in pieces (a PDF over the index's bound), or a piece the document's own bytes failed: stated as it is, once */
+      const why = rd && rd.failure === "final" ? (rd.reason || rd.basis || "FINAL") : "NOT_PIECEWISE";
+      endStated(why);
+      return rd && rd.failure === "final" ? { ok: true, read: false, final: true, why: String(why).slice(0, 160) } : left("READING_HELD");
     }
     const units = Array.isArray(out.text_units) ? out.text_units : [];
     /* (fix round 9, G126a; R102) a continuation piece that leaves OCR pages owes them, in the piece's own transaction */
@@ -966,7 +985,7 @@ export class Extraction {
    *  member was down or answered an error (the row stands: never `UNREADABLE`, never finished while the page stays unread). Pages the member declines
    *  in a 200 answer are the document's own, so that ends the entry (`OCR_NO_PROGRESS`). A stored reading that changed while the pass ran is not
    *  written over: the entry stays owed and is read again. */
-  async #continueOcr({ digest, heldReading, bundleId, storeName, env, left, call = null, killedPages = null, detail = null }) {
+  async #continueOcr({ digest, heldReading, bundleId, storeName, env, left, call = null, killedPages = null, detail = null, halved = false }) {
     if (!heldReading) return left("NO_READING");
     const basis = this.reextractBasis({ captureSha: digest, ungated: true });
     if (!basis.held) return left("NO_READING");
@@ -977,11 +996,12 @@ export class Extraction {
     const d = detail && typeof detail === "object" ? detail : {};
     const author = typeof d.by === "string" && d.by ? d.by : PLANE_AUTHOR;
     const via = d.via === "op=pdfstructure&ocr=1" ? d.via : "ledger";
-    const pass = await this.#ocrPass({ digest, basis, env, storeName, author, via, killedPages, call });
+    const pass = await this.#ocrPass({ digest, basis, env, storeName, author, via, killedPages, call, halved });
+    const killed = pass.killed && pass.killed.length ? { killed: pass.killed } : {};
     if (pass.changed) return left("BASIS_CHANGED", { owed: true });
-    if (!pass.filled.length) return left(pass.why || "OCR_NO_PROGRESS", pass.transient ? { owed: true } : {});
+    if (!pass.filled.length && !pass.stated) return left(pass.why || "OCR_NO_PROGRESS", { ...(pass.transient ? { owed: true } : {}), ...killed });
     return { ok: true, read: true, bundle_id: bundleId, found: true, reextraction: pass.summary,
-             ...(pass.entry ? { owed: true, registration: pass.registration } : {}) };
+             ...(pass.stated ? { stated: pass.stated } : {}), ...(pass.entry ? { owed: true, registration: pass.registration } : {}), ...killed };
   }
 
   /** (fix round 9, G126e, G132k pass half) The stored reading's pages as the I2 text tier 3 and tier 4 take (`{document, pages, undetermined}`), built
@@ -1028,15 +1048,23 @@ export class Extraction {
    *  `#storedPages` (the OCR member asked for the pages left, within the call's budget), the reading composed as the press composed it, written by
    *  `#writeReread` only while the stored reading is still `basis` (R103), and the pages still left re-registered. Answers `{filled, transient, why,
    *  changed?, entry?, registration?}`. */
-  async #ocrPass({ digest, basis, env, storeName, author, via, killedPages = null, call = null }) {
+  async #ocrPass({ digest, basis, env, storeName, author, via, killedPages = null, call = null, halved = false }) {
     const stored = basis.reading || {};
     const fmt = (this.#one(`SELECT capture_format FROM readings WHERE capture_sha=?`, digest) || {}).capture_format || stored.text_container || "pdf";
     const built = this.#storedPages(basis, fmt);
     if (!built) return { filled: [], transient: false, why: "NO_PAGES" };
     const baseTier = Extraction.#layerTier(stored);
     const t3 = await tier3Extend(env, { sha: digest, storeName, i2text: built.i2text, wiredTier: baseTier, tier2PerPage: null, fmt,
-      seed: built.seed, liveCalibration: (q) => this.#liveCalibration(q), ...(Array.isArray(killedPages) ? { killedPages } : {}) });
-    if (!t3.filled.length) return { filled: [], transient: t3.transient === true, why: t3.transient ? "OCR_MEMBER_DOWN" : "OCR_NO_PROGRESS" };
+      seed: built.seed, liveCalibration: (q) => this.#liveCalibration(q), ...(Array.isArray(killedPages) ? { killedPages } : {}),
+      /* (G129c; R101) the one retry after three kills, at half the budget */
+      ...(halved === true ? { invocations: HALF_OCR_INVOCATIONS } : {}) });
+    /* (G129c; R101) a page killed three times is stated for that page alone (`PAGE_KILLED_READER`, written so it is never asked again) and the read
+       goes on; the pages whose call died this pass are answered (`killed`) for the ledger's attempt stamps */
+    const statedNow = (Array.isArray(t3.refused) ? t3.refused : []).filter((r) => r && r.reason === PAGE_KILLED_READER).map((r) => r.page);
+    const alreadyStated = new Set((Array.isArray(stored.ocr_refused) ? stored.ocr_refused : []).map((r) => r && r.page));
+    const newlyStated = statedNow.filter((pg) => !alreadyStated.has(pg));
+    if (!t3.filled.length && !newlyStated.length)
+      return { filled: [], transient: t3.transient === true, why: t3.transient ? "OCR_MEMBER_DOWN" : "OCR_NO_PROGRESS", killed: t3.killed };
     const chain = (t3.chainSet ? t3.chain : null) || layerChainFor(t3.i2text, { tier: t3.wiredTier, container: fmt });
     const reading = await this.#composedReread({ stored, basis, i2text: t3.i2text, chain, wiredTier: t3.wiredTier, fmt, pages: built.pages, env,
       ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting, t3 });
@@ -1044,7 +1072,7 @@ export class Extraction {
       calibration: t3.engine ? t3.engine.calibration ?? null : null, pages: t3.filled, via };
     const entry = t3.left ? { kind: "ocr", sha: digest, cursor: t3.left.cursor, pages_left: t3.left.pages.length } : null;
     const w = await this.#writeReread({ basis, sha: digest, reading, text: t3.i2text, author, ungated: true, job: entry, call });
-    if (w.changed) return { filled: [], transient: true, changed: true };
+    if (w.changed) return { filled: [], transient: true, changed: true, killed: t3.killed };
     /* R34: what the pass did and what the listeners and the index reported, as the press answered it */
     const summary = { performed: true, written: w.ok === true, ...unwrittenWhy(w, "re-read"), pages: t3.filled, engine: t3.engine,
       text_source: chain, chain: describeChain(chain), via,
@@ -1052,7 +1080,8 @@ export class Extraction {
                  entities: Array.isArray(reading.entities) ? reading.entities.length : 0, text_tier: reading.text_tier },
       staled: w.staled ?? 0, units: w.indexed ?? null, observed: w.observed ?? null, compared: w.compared ?? null, after_read: w.afterRead ?? null,
       candidates: localize("extraction.index.reread_candidates_frontier", "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now") };
-    return { filled: t3.filled, transient: false, w, summary, ...(entry ? { entry, registration: w.registration } : {}) };
+    return { filled: t3.filled, transient: false, w, summary, killed: t3.killed, ...(newlyStated.length ? { stated: newlyStated } : {}),
+             ...(entry ? { entry, registration: w.registration } : {}) };
   }
 
   /** R34, R71 (fix round 9: from the stored pages, no structure): the reading a re-read or a transcription writes, by reading-pipeline R11's rule with
@@ -1711,7 +1740,9 @@ export class Extraction {
     const counts = { offered: st.offered, written: st.written, over_bound: st.over_bound, unaddressable: st.unaddressable,
                      truncated: st.truncated, skipped_named: st.skipped_named };
     const state = failedFinal && !st.written ? "stated" : st.more || st.state === "partial" || st.truncated ? "partial" : st.state;
-    return { state, counts, skipped, ...(state === "stated" ? { failure: "final", why: reading.basis ?? null } : {}) };
+    return { state, counts, skipped, ...(state === "stated" ? { failure: "final", why: reading.basis ?? null } : {}),
+             /* R101 (G129b): a read in pieces that ended before its last piece says why */
+             ...(state === "partial" && typeof st.ended_why === "string" && st.ended_why ? { why: st.ended_why } : {}) };
   }
 
   /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no
@@ -2784,6 +2815,13 @@ export class Extraction {
     const out = this.driftFor(e.supersedes);
     return { obligations: [...out], truncated: !!out.truncated };
   }
+}
+
+/* (fix round 9, G129c; R101) The pages whose OCR call died this tick (5xx or a throw, reading-pipeline R54's `ocr_killed`), answered for the ledger's
+   attempt stamps; nothing when none died. */
+function killedOf(reading) {
+  const k = reading && Array.isArray(reading.ocr_killed) ? reading.ocr_killed.filter(Number.isInteger) : [];
+  return k.length ? { killed: k } : {};
 }
 
 /* (fix round 9, G126a; R102) What an answer says of work it owed: the kind, the pages left, and whether the registrar holds it (`registered`), with its
