@@ -212,7 +212,7 @@ test("R32: DOCS O9 — a file above the head is recognised from its end record a
     assert.equal((await detectFormat(source(bytes), "application/octet-stream", "file.csv")).format, format);
     assert.equal((await detectFormat(source(bytes), "text/html", "file.csv")).format, format);
     // what was pulled is a head, an end record, a directory and small parts: never the file
-    assert.ok(src.log.bytes < bytes.length / 2, `${format}: pulled ${src.log.bytes} of ${bytes.length}`);
+    assert.ok(src.log.bytes <= MIB + 256 * 1024 && src.log.bytes < bytes.length, `${format}: pulled ${src.log.bytes} of ${bytes.length}`);
     assert.deepEqual(src.log.spans[0], [0, MIB], "the first read is the 1 MiB head");
     assert.ok(src.log.spans.every(([, n]) => n <= MIB), "no read is larger than the head");
   }

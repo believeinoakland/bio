@@ -125,6 +125,9 @@ export function listFormats() {
  * central directory through `readRange` (ooxml's `discriminate`), so an office file
  * of any size is recognised and never taken for undetermined from its first KiB. */
 const HEAD_MAX = 1 << 20;
+/* The confidence the entries give the same bytes whole: an OpenDocument file is `certain` (its stored mimetype is read
+   from the directory), an OPC package or a plain ZIP `likely` (the content-type map is deflated). */
+const ODF_FORMATS = new Set(["odt", "ods", "odp"]);
 const CONTAINER_FORMATS = new Set(["docx", "xlsx", "pptx", "odt", "ods", "odp", "zip"]);
 
 function undetermined(b, ct) {
@@ -174,7 +177,7 @@ async function detectRange(src, ct, nm) {
     if (CONTAINER_FORMATS.has(entry.format)) {
       container ??= await ooxml.discriminate({ size, read: (o, n) => src.readRange(o, n) }, null);
       r = container && container.ok === true && container.format === entry.format
-        ? { format: entry.format, confidence: "likely",
+        ? { format: entry.format, confidence: ODF_FORMATS.has(entry.format) ? "certain" : "likely",
             signals: [localize("format-registry.formats.container_judged_from_end", "judged from the end record and the central directory of {size} bytes", { size: String(size) }),
                       ...(Array.isArray(container.signals) ? container.signals.filter((x) => typeof x === "string") : [])] }
         : null;
