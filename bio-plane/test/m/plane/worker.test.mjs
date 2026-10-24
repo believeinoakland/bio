@@ -115,7 +115,7 @@ test("R6 (T51; instance-setup R95, K4076): the public hook hands `op=bootstrap` 
 
 test("R7, R64: `package.json`'s `test` runs the module tests and `test:system` the old system suites; no other `test:*` entry; the build holds no render step", () => {
   const pkg = JSON.parse(readFileSync(join(PLANE, "package.json"), "utf8"));
-  assert.equal(pkg.scripts.test, 'node --test "test/m/**/*.test.mjs"');
+  assert.equal(pkg.scripts.test, 'node --import ./test/platform-sqlite.mjs --test "test/m/**/*.test.mjs"');   /* G123h: the module runner's preload too */
   assert.equal(pkg.scripts["test:system"], 'node --test "test/system/**/*.test.mjs"');
   assert.deepEqual(Object.keys(pkg.scripts).filter((k) => k.startsWith("test")), ["test", "test:system"]);
   /* R64 (T51-125; K3832): the build holds no render step: `build` is the bundle alone and `embed:sign` is gone; the others stay */
