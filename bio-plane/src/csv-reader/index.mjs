@@ -403,7 +403,9 @@ function decideDelimiter(text, first) {
   if (consistent.length === 1) {
     const d = consistent[0];
     return { delimiter: d.ch, name: d.name, confidence: "certain", lines,
-      signals: [localize("office-readers.csv.delimiter_in_the_majority_of_the_records", "{name} occurs {v1} time(s) outside quotes on {times} of the {length} complete lines read, a majority", { name: String(d.name), v1: String(modal[d.name]), times: String(d.times), length: String(lines) })],
+      signals: [d.times === lines
+        ? localize("office-readers.csv.name_occurs_v1_time_s", "{name} occurs {v1} time(s) outside quotes on every one of the first {length} complete lines", { name: String(d.name), v1: String(modal[d.name]), length: String(lines) })
+        : localize("office-readers.csv.delimiter_in_the_majority_of_the_records", "{name} occurs {v1} time(s) outside quotes on {times} of the {length} complete lines read, a majority", { name: String(d.name), v1: String(modal[d.name]), times: String(d.times), length: String(lines) })],
       undetermined: null, tied: [] };
   }
   if (consistent.length > 1) {
@@ -633,9 +635,8 @@ function fileDialect(ctx) {
     if (!tally.size) {
       const total = windows.reduce((n, w) => n + (w.end - w.at), 0);
       enc = { encoding: "us-ascii", confidence: "likely", bomBytes: 0, assumed: true,
-        signals: [`no byte >= 0x80 in the ${total} bytes read`,
-          localize("office-readers.csv.us_ascii_not_utf_8_every_8_bit_superset", "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"),
-          localize("office-readers.csv.likely_not_certain_a_later_window_may_differ", "likely, not certain: a later window may differ")], undetermined: null };
+        signals: [`no byte >= 0x80 in the first ${total} bytes`,
+          localize("office-readers.csv.us_ascii_not_utf_8_every_8_bit_superset", "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically")], undetermined: null };
     } else {
       let best = null, bestN = -1;
       for (const e of ["utf-8", ctx.legacy, null]) if ((tally.get(e) ?? 0) > bestN) { best = e; bestN = tally.get(e) ?? 0; }
