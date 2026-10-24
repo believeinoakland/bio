@@ -112,3 +112,7 @@ Merged `tranche/T51`. R29 applied: `#readingsEnded` in `bio-plane/src/notice-pro
 Generated artifacts made stale: none.
 
 Size (session_01EzbeHquecfUvWe3Ss9yqdi): test runs 9, module lines 1699
+
+## J8 · COMPLETE
+
+COMPLETE (NOTICE-PRODUCERS #17, fix round 9, G135f, R29). Details in my record's 'Fix round 9' section. R29 applied (#readingsEnded, kind reading-ended, facts.reading_ended, failures named 'readings'), coded against plane's merged readingsEnded shape. Failing-first reading-ended.test.mjs red (missing export) then 8/8 green; module 151/151; format/architecture/coverage/words/ownership 0 failures. NEEDS FROM YOU (smallest thing): queue's catalogue (queuestate.mjs, beside fetch-done/ingest-done) must name 'reading-ended' (FINDING, LIVE: notice-producers R29) or queue's catalogue.test.mjs:242 (R1 G61) stays red and the opener's whole Queue is refused NO_SUCH_KIND; queue's job adds it, I cannot. Words owed (localize stand-ins notice-producers.reading.finished/.finished.counted/.partial/.partial.counted/.refused) are in the record. Size (session_01EzbeHquecfUvWe3Ss9yqdi): test runs 9, module lines 1699
