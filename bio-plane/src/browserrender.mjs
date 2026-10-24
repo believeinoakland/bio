@@ -163,13 +163,19 @@ function requestRefusal(url, ownHosts) {
 }
 const refusedSentence = (url, reason) => word("browserrender.text.refused_sent", { url: String(url), reason: String(reason), render_blocked_reasons: String(RENDER_BLOCKED_REASONS[reason]) });
 
+/* R69 (fix round 9, G137c, X23): a failed render is `transient` (the render may be asked again) when no session could be had: the
+   binding refused one, it was rate-limited (three new browsers a second), or the open bound was spent; every other failure is
+   `permanent`. The mark rides on the error the opening throws. */
+const transientFailure = (e) => { e.transient = true; return e; };
+const DETAIL_CHARS = 200;
+
 /** Open a CDP socket on a fresh browser session. Throws with a sentence naming
  *  which of the two calls failed and what it answered — never a bare `undefined`. */
 async function openSession(binding) {
   const acq = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser`, { method: "POST" });
   if (acq.status !== 200) {
     const text = await acq.text().catch(() => "");
-    throw new Error(`the Browser Rendering binding refused a session: HTTP ${acq.status} ${text.slice(0, 200)}`);
+    throw transientFailure(new Error(`the Browser Rendering binding refused a session: HTTP ${acq.status} ${text.slice(0, 200)}`));
   }
   let sessionId = null;
   try { sessionId = (await acq.json()).sessionId; } catch { sessionId = null; }
@@ -177,8 +183,10 @@ async function openSession(binding) {
     throw new Error("the Browser Rendering binding acquired a session with no sessionId");
   const up = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser/${sessionId}`, {
     headers: { Upgrade: "websocket", "cf-brapi-client": CLIENT_HEADER } });
-  if (!up.webSocket)
-    throw new Error(`the Browser Rendering binding did not upgrade session ${sessionId} to a websocket (HTTP ${up.status})`);
+  if (!up.webSocket) {
+    const refused = new Error(`the Browser Rendering binding did not upgrade session ${sessionId} to a websocket (HTTP ${up.status})`);
+    throw up.status === 429 || up.status >= 500 ? transientFailure(refused) : refused;
+  }
   up.webSocket.accept();
   return { sessionId, ws: up.webSocket };
 }
@@ -280,7 +288,7 @@ export async function collectBodies(conn, sessionId, entries, { now = () => Date
 async function boundedOpen(binding, ms) {
   let timer = null;
   const expire = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error(`the Browser Rendering binding gave no session within the ${ms} ms navigation bound`)), ms);
+    timer = setTimeout(() => reject(transientFailure(new Error(`the Browser Rendering binding gave no session within the ${ms} ms navigation bound`))), ms);
   });
   const opening = openSession(binding);
   try { return await Promise.race([opening, expire]); }
@@ -374,11 +382,16 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
   const until = typeof asked.wait?.until === "string" ? asked.wait.until : "networkidle";
   /* R64, R65: the group's own hosts, handed in by the caller; none refuses nothing on that arm (F16 low, K1940). */
   const ownHosts = Array.isArray(asked.own_hosts) ? asked.own_hosts : [];
+  const started = now();
+  /* R69: every failed answer states the whole milliseconds from the session's opening to its close (the close included), its
+     class and the renderer's own words, so the caller charges what the render took and knows whether to ask again. */
+  const failed = (error, transient) => ({ ok: false, error, elapsed_ms: Math.max(0, Math.round(now() - started)),
+    failure_class: transient ? "transient" : "permanent", detail: String(error).slice(0, DETAIL_CHARS) });
   /* R64: an address the hold would refuse is refused before a browser is spent on it. */
   const refusedAddress = requestRefusal(String(asked.url || ""), ownHosts);
-  if (refusedAddress) return { ok: false, error: localize("capture-sources.browserrender.the_browser_could_not_navigate", "the browser could not navigate to {String}: {refusedSentence}", { String: String(String(asked.url || "")), refusedSentence: String(refusedSentence(String(asked.url || ""), refusedAddress)) }) };
+  if (refusedAddress) return failed(localize("capture-sources.browserrender.the_browser_could_not_navigate", "the browser could not navigate to {String}: {refusedSentence}", { String: String(String(asked.url || "")), refusedSentence: String(refusedSentence(String(asked.url || ""), refusedAddress)) }), false);
   let sess = null, conn = null, targetId = null, collector = null;
-  const started = now();
+  let result = null, failure = null, threw = false;
   const navDeadline = started + navMs;
   /* The whole render ends inside this, the figure reserved (R20). */
   const overall = started + navMs + timeoutMs;
@@ -460,6 +473,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
     collector = bodyCollector(conn, sessionId, { now, until: overall });
     let loadAt = null;
     let inflight = 0, lastQuietAt = null, loadFired = false, mainFrameId = null, mainStatus = null;
+    const documentStatus = new Map();
     let quietYoungSince = null;
     /* R64: requests the hold refused before the network ledger met them, by network id; and the documents refused, so
        a refused navigation names the address that was refused. */
@@ -541,8 +555,13 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
              item's over-strictness arm before it was ever run against a browser —
              with the literal, the main document's status read `null` on a correct
              render, which is the record losing a fact for a spelling. */
-          if (resourceType(p.type) === "document" && p.frameId && p.frameId === mainFrameId)
-            mainStatus = Number(p.response?.status) || mainStatus;
+          /* A real browser can send the document's response BEFORE `Page.navigate` has answered with the frame's id, so the main
+             frame is not yet known: the status of every frame's document is kept as it arrives and the main frame's is read off
+             when its id is (R24, found by the real-Chromium test, whose pages all answered a `null` status before this). */
+          if (resourceType(p.type) === "document" && p.frameId) {
+            documentStatus.set(p.frameId, Number(p.response?.status) || null);
+            if (p.frameId === mainFrameId) mainStatus = Number(p.response?.status) || mainStatus;
+          }
           break;
         }
         case "Network.loadingFinished": {
@@ -559,6 +578,11 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
           break;
         }
         case "Page.loadEventFired": loadFired = true; loadAt = now(); break;
+        /* A dialog the page opens (alert, confirm, prompt, beforeunload) stops the page until it is answered, and nobody is there
+           to answer it: it is dismissed, so the render goes on to its wait and its document instead of to its bound (V6). */
+        case "Page.javascriptDialogOpening":
+          conn.send("Page.handleJavaScriptDialog", { accept: false }, m.sessionId, GUARD_CALL_MS).catch(() => {});
+          break;
         case "Debugger.scriptParsed":
           /* An INLINE script has no url. It is the page's own bytes, already in
              the shell we hold, and naming it would invent an origin; the set
@@ -583,6 +607,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
       throw new Error(`the browser could not navigate to ${asked.url}: ${nav.errorText}${doc ? `; ${refusedSentence(doc.url, doc.reason)}` : ""}`);
     }
     mainFrameId = nav.frameId || null;
+    if (mainFrameId && documentStatus.get(mainFrameId)) mainStatus = documentStatus.get(mainFrameId);
 
     /* THE WAIT, BOUNDED, AND IT SAYS WHICH CONDITION FIRED (WORKER.md: a wait ends
        when the WORLD says done). Three outcomes and the record carries the one
@@ -649,7 +674,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
     const bodiesMs = now() - bodiesFrom;
 
     const elapsed = now() - started;
-    return {
+    result = {
       ok: true, html,
       engine, engine_version: engineVersion,
       /* WHAT WAS ASKED, reported as USED only where the override was accepted.
@@ -695,7 +720,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
       scripts: sawDebugger ? scripts : null,
     };
   } catch (e) {
-    return { ok: false, error: String((e && e.message) || e) };
+    failure = e; threw = true;
   } finally {
     collector?.stop();
     /* THE SESSION IS CLOSED ON EVERY PATH, INCLUDING THE FAILING ONE. A browser
@@ -707,6 +732,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
       conn.close();
     }
   }
+  return !threw ? result : failed(String((failure && failure.message) || failure), !!(failure && failure.transient === true));
 }
 
 /** The renderer a Browser Rendering binding gives, in `rendererFor`'s shape. */
