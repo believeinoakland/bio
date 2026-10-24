@@ -5,6 +5,9 @@
 import { Store } from "../../../src/plane/store.mjs";
 import { pendingOf } from "../../../src/plane/pending.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
+import { createHash } from "node:crypto";
+import { recordOf } from "../../../src/record-core/index.mjs";
+import { promotionOf } from "../../../src/promotion/index.mjs";
 import { sha256HexSync } from "../../../src/record-grammar/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 export { default } from "../../../src/plane/index.mjs";
@@ -13,12 +16,13 @@ const json = (v, status = 200) => new Response(JSON.stringify(v), { status, head
 
 export class Headline extends Store {
   #passes = 0;
+  #results = [];   /* what each completed `readHeld` answered (a ring of the last ten, trimmed): a pass is a call that read, not one that found no home */
   #wrapped = false;
   #counted = null;   /* the platform's alarm calls the object made, counted (G93: "storage reads counted") */
   #wrap() {
     if (this.#wrapped) return;
     const ex = extractionOf(this.ctx), real = ex.readHeld.bind(ex);
-    ex.readHeld = async (...a) => { const r = await real(...a); if (r && r.ok !== false) this.#passes++; return r; };
+    ex.readHeld = async (...a) => { const r = await real(...a); this.#results.push(JSON.stringify(r).slice(0, 160)); if (this.#results.length > 10) this.#results.shift(); if (r && r.ok !== false && r.reason !== "NO_HOME") this.#passes++; return r; };
     this.#wrapped = true;
   }
   /* counts the object's calls on the platform's alarm: `getAlarm` (a look), `setAlarm` (an arm), `deleteAlarm` */
@@ -37,13 +41,27 @@ export class Headline extends Store {
     if (!url.pathname.startsWith("/r8/")) { this.#wrap(); return super.fetch(req); }
     this.#wrap();
     const step = url.pathname.slice(4);
-    if (step === "state") return json({ passes: this.#passes });
+    if (step === "state") return json({ passes: this.#passes, results: this.#results });
     if (step === "counters") { const alarm = await this.ctx.storage.getAlarm(); this.#counted.getAlarm--; return json({ ...this.#counted, alarm }); }   /* this read is not counted */
     if (step === "rows") {
       let health = null; try { health = await schedulerOf(this.ctx, this.env).health(Date.now()); } catch (e) { health = { error: String(e && e.message || e) }; }
       return json({ passes: this.#passes, pending: pendingOf(this.ctx).list(), health, alarm: await this.ctx.storage.getAlarm() });
     }
     if (step === "notes") return json({ notes: [...this.ctx.storage.sql.exec("SELECT COUNT(*) AS n FROM fs_notes")][0].n, files: [...this.ctx.storage.sql.exec("SELECT COUNT(*) AS n FROM fs_files")][0].n });
+    if (step === "file") {   /* what the capture screen does after an upload: the document is filed (promoted) with the capture as its file, so the reading has a home (harness.mjs's feed) */
+      const { document, sha, bytes } = await req.json(), ctx = this.ctx, hex = (b) => createHash("sha256").update(b).digest("hex"), len = (t) => new TextEncoder().encode(t).length;
+      const now = "2026-10-22T00:00:00Z", title = document.file, id = recordOf(ctx).allocId("INFO", "2026").id;
+      const text = ["---", "id: " + id, "object_type: information", "schema: information@2", "title: " + JSON.stringify(title), "current_state: collected", "prior_state: null", "created: " + now, "last_updated: " + now,
+        "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+        "criticality: supporting", "source_status: unchanged", "content_hash: sha256:" + hex(title), "source:", "  locator: " + JSON.stringify(document.locator), "  authority: member-entered", "  retrieved: " + now,
+        "monitoring:", "  enabled: false", "  frequency: none", "---", "", "## Summary", "", title, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+      const prov = JSON.stringify({ documents: [document] }, null, 1), dataset = JSON.stringify({ documents: [{ bytes, locator: document.locator, sha256: sha }] });
+      const files = [{ path: "bundle.md", text, bytes: len(text), sha256: hex(text) }, { path: "data/provenance.json", text: prov, bytes: len(prov), sha256: hex(prov) },
+        { path: "data/dataset.json", text: dataset, bytes: len(dataset), sha256: hex(dataset) }, { path: document.file, blobSha: sha, sha256: sha, bytes }];
+      const pr = promotionOf(ctx).promote({ bundleId: id, base: null, snapKey: "20261022T000000_" + hex(id).slice(0, 8), meta: { object_type: "information", title, current_state: "collected", created: now, last_updated: now },
+        files, register: [{ sha256: sha, path: document.file, encoding: "binary", bytes }], author: "ann", actorMemberId: "ann", actorIdentity: "member:ann", actorViewer: "member:ann" });
+      return json({ ok: pr && pr.ok === true, pr: pr && pr.ok === true ? undefined : pr, id });
+    }
     if (step === "session") {   /* a signed-in member who may contribute, as the walker is: a session row, so the test goes through the real door with a bearer token (g55-alarm-l-entry.mjs) */
       const sql = this.ctx.storage.sql, now = Date.now(), founder = new URL(req.url).searchParams.get("as") === "founder", ANN = founder ? "admin" : "member:ann";   /* the founder's session is the bare `admin` (R90) */
       const token = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, "0")).join("");

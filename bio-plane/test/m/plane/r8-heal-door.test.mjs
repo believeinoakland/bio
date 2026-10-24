@@ -55,7 +55,10 @@ async function world({ scanMs = 0 } = {}) {
   const member = await token("member"), founder = await token("founder");
   const up = await mf.dispatchFetch(`http://plane/api?op=captureupload&statement=${encodeURIComponent("the clerk's minutes")}&name=minutes.txt&type=text%2Fplain`,
     { method: "POST", headers: { authorization: `Bearer ${member}`, "content-type": "application/octet-stream" }, body: textBody() });
-  assert.equal(up.status, 200, (await up.text()).slice(0, 300));
+  const uj = await up.json(); assert.equal(up.status, 200, JSON.stringify(uj).slice(0, 300));
+  const doc = uj.result ?? uj;
+  const filed = await (await stub.fetch("http://do/r8/file", { method: "POST", body: JSON.stringify({ document: doc.document, sha: doc.capture.sha256, bytes: doc.capture.bytes }) })).json();
+  assert.equal(filed.ok, true, JSON.stringify(filed).slice(0, 300));
   return { mf, flight, get, door, member, founder, stub };
 }
 /** the first firing has ended (a row is owed and the alarm stands armed or spent): the starting position of a lost alarm */

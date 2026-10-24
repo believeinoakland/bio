@@ -64,7 +64,12 @@ async function upload(mf, stub) {
   const token = await sessionOf(stub);
   const r = await mf.dispatchFetch(`http://plane/api?op=captureupload&statement=${encodeURIComponent("the clerk's minutes")}&name=minutes.txt&type=text%2Fplain`,
     { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/octet-stream" }, body: textBody() });
-  const j = await r.json(); assert.equal(r.status, 200, JSON.stringify(j).slice(0, 300)); return j.result ?? j;
+  const j = await r.json(); assert.equal(r.status, 200, JSON.stringify(j).slice(0, 300));
+  const up = j.result ?? j;
+  /* the capture screen then files the document, so the reading has a home */
+  const filed = await (await stub.fetch("http://do/r8/file", { method: "POST", body: JSON.stringify({ document: up.document, sha: up.capture.sha256, bytes: up.capture.bytes }) })).json();
+  assert.equal(filed.ok, true, JSON.stringify(filed).slice(0, 300));
+  return up;
 }
 const owedwork = async (mf, token) => { const r = await mf.dispatchFetch("http://plane/api/?op=owedwork", { headers: { authorization: `Bearer ${token}` } }); const j = await r.json(); return { at: Date.now(), body: j.result ?? j }; };
 
@@ -78,7 +83,7 @@ async function runWorld(scanMs, { maxPolls = 400, wantPasses = 2 } = {}) {
   for (let polls = 0; polls < maxPolls; polls++) {
     asks.push(await owedwork(w.mf, founder));
     last = await (await stub.fetch("http://do/r8/rows")).json();
-    if (process.env.R8_DEBUG && polls % 10 === 0) console.log("# poll", polls, JSON.stringify({ passes: last.passes, pending: last.pending.map((p) => [p.kind, p.attempts, p.final_why, p.last_why]), events: w.events, alarm: last.alarm, health: last.health }));
+    if (process.env.R8_DEBUG && polls % 10 === 0) console.log("# poll", polls, JSON.stringify({ results: (await (await stub.fetch("http://do/r8/state")).json()).results, passes: last.passes, pending: last.pending.map((p) => [p.kind, p.attempts, p.final_why, p.last_why]), events: w.events, alarm: last.alarm, health: last.health }));
     const read = last.pending.length === 0 || last.passes >= wantPasses;
     const scanned = w.events.some((e) => e.kind === "scan-end");
     if (read && scanned) break;
