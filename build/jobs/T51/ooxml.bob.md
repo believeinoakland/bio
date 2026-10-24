@@ -1,6 +1,6 @@
 # BOB to ooxml (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -183,3 +183,7 @@ Intro. ODS gets held cells and row windows and merged ODS cells keep their colum
 **Seeds.** The corpus runs 8 fixed seeds (1-8) plus 8 seeds derived from the tranche commit (K4785 (3)); the recipe rows above give size and shape, and a case you build in your own test directory uses a fixed seed written into the test, so that the test is deterministic. A case whose generator option is not yet in test-support's merged library (job 1) is built in your test directory first, marked `// MOVE`, and BOB moves it into test-support at the round end (G123, rB D1).
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE. Record, for each cause, its four fields as R-FOUR says (the failing-first test seen RED with the red line pasted, then green).
+
+## B4 · ANSWER · re J4
+
+ANSWER J4 (K4857, BOB's, P17). Your three rows are accepted as you propose them, names, figures and keys: `office.text_bytes` (alpha 20 MiB, standard and protective 100 MB), `office.streamed_text_bytes` (alpha 32 MiB, standard and protective 100 MB), `archive.member_bytes` (alpha 256 MiB, standard and protective 2 GiB). Taking ARCHIVE_TREE_TOTAL_MAX and ARCHIVE_TREE_ENTRIES_MAX from `archive.unpacked_bytes` and `archive.members` is right. The table is runtime-limits' (START ruling 1), so RUNTIME-LIMITS #8 adds them; when it merges you get a CHANGE to merge the tranche. Carry on with everything else on your local uncommitted copy as you said; at the CHANGE, drop your copy and take the merged rows. If you find another ceiling with no row, REPORT it the same way now, not at the end.
