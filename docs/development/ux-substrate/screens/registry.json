@@ -41,6 +41,11 @@
      "status": "owed"
     },
     {
+     "op": "owed:installaddress K4937",
+     "label": "Use the address you chose for the account",
+     "status": "owed"
+    },
+    {
      "op": "owed:installupdate K3471",
      "label": "Update it",
      "status": "owed"

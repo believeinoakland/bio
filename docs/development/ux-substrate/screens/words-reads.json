@@ -5159,6 +5159,7 @@
     "act.owed_founderhandleset.does",
     "act.owed_hashcopy.does",
     "act.owed_importregrade.does",
+    "act.owed_installaddress.does",
     "act.owed_installalongside.does",
     "act.owed_installcheck.does",
     "act.owed_installregion.does",
@@ -5563,14 +5564,14 @@
     "refusal.uncatalogued"
    ],
    "counts": {
-    "reads": 736,
+    "reads": 737,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 42,
     "inline": 1,
     "inlineKeyed": 0,
     "inlineUnkeyed": 1,
-    "computedKeys": 597,
+    "computedKeys": 598,
     "actHelp": 457,
     "vocabulary": 144
    },
@@ -6613,6 +6614,7 @@
     "act.owed_founderhandleset.does",
     "act.owed_hashcopy.does",
     "act.owed_importregrade.does",
+    "act.owed_installaddress.does",
     "act.owed_installalongside.does",
     "act.owed_installcheck.does",
     "act.owed_installregion.does",
@@ -8076,14 +8078,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 1819,
+    "reads": 1820,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 1051,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 768
+    "computedKeys": 769
    },
    "unkeyed": []
   },
@@ -8419,6 +8421,7 @@
     "act.owed_founderhandleset.does",
     "act.owed_hashcopy.does",
     "act.owed_importregrade.does",
+    "act.owed_installaddress.does",
     "act.owed_installalongside.does",
     "act.owed_installcheck.does",
     "act.owed_installregion.does",
@@ -9687,14 +9690,14 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 1596,
+    "reads": 1597,
     "minted": 3,
     "keyedRows": 0,
     "literalKeys": 657,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 939
+    "computedKeys": 940
    },
    "unkeyed": [
     {
@@ -10034,6 +10037,7 @@
     "act.owed_founderhandleset.does",
     "act.owed_hashcopy.does",
     "act.owed_importregrade.does",
+    "act.owed_installaddress.does",
     "act.owed_installalongside.does",
     "act.owed_installcheck.does",
     "act.owed_installregion.does",
@@ -10600,14 +10604,14 @@
     "state.undetermined"
    ],
    "counts": {
-    "reads": 885,
+    "reads": 886,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 123,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 763
+    "computedKeys": 764
    },
    "unkeyed": [],
    "retired": [
@@ -15388,6 +15392,7 @@
     "act.owed_founderhandleset.does",
     "act.owed_hashcopy.does",
     "act.owed_importregrade.does",
+    "act.owed_installaddress.does",
     "act.owed_installalongside.does",
     "act.owed_installcheck.does",
     "act.owed_installregion.does",
@@ -17113,14 +17118,14 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 2090,
+    "reads": 2091,
     "minted": 2,
     "keyedRows": 0,
     "literalKeys": 2031,
     "inline": 1,
     "inlineKeyed": 0,
     "inlineUnkeyed": 1,
-    "computedKeys": 64
+    "computedKeys": 65
    },
    "unkeyed": [
     {

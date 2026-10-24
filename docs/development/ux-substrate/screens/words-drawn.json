@@ -39037,126 +39037,6 @@
    "note": "DEC-414: B474 screens-daily (C70): the vouch band's own number, drawn apart from the bell and sidebar count, which count queue items only"
   },
   {
-   "key": "screen.install.getready.first",
-   "en": "Get your Cloudflare account ready first",
-   "protected": false,
-   "note": "DEC-416: the button on the installer's first page and its needs list, opening the Get ready guide"
-  },
-  {
-   "key": "screen.install.getready.title",
-   "en": "Get your Cloudflare account ready",
-   "protected": false,
-   "note": "DEC-416: the Get ready guide's heading"
-  },
-  {
-   "key": "screen.install.getready.sub",
-   "en": "Five steps, each done on Cloudflare's own page. Each button below opens that exact page.",
-   "protected": false,
-   "note": "DEC-416: the guide's first line"
-  },
-  {
-   "key": "screen.install.getready.step1",
-   "en": "Open a Cloudflare account in your team's name, with an email your team shares, not one person's.",
-   "protected": false,
-   "note": "DEC-416: step 1"
-  },
-  {
-   "key": "screen.install.getready.step1.see",
-   "en": "You will see Cloudflare's sign-up form: an email, a password and a button to create the account.",
-   "protected": false,
-   "note": "DEC-416: step 1: what the founder will see"
-  },
-  {
-   "key": "screen.install.getready.step1.open",
-   "en": "Open Cloudflare sign-up",
-   "protected": false,
-   "note": "DEC-416: step 1's button (https://dash.cloudflare.com/sign-up)"
-  },
-  {
-   "key": "screen.install.getready.step2",
-   "en": "Verify the email: Cloudflare sends a message; open it and press its link.",
-   "protected": false,
-   "note": "DEC-416: step 2"
-  },
-  {
-   "key": "screen.install.getready.step2.see",
-   "en": "You will see a message from Cloudflare in your team's inbox, with a button to verify the address.",
-   "protected": false,
-   "note": "DEC-416: step 2: what the founder will see"
-  },
-  {
-   "key": "screen.install.getready.step2.open",
-   "en": "Open Cloudflare",
-   "protected": false,
-   "note": "DEC-416: step 2's button (https://dash.cloudflare.com/)"
-  },
-  {
-   "key": "screen.install.getready.step3",
-   "en": "Add a payment card. Cloudflare charges your team, never Civicsmith's makers.",
-   "protected": false,
-   "note": "DEC-416: step 3"
-  },
-  {
-   "key": "screen.install.getready.step3.see",
-   "en": "You will see Cloudflare's billing page, with a place to enter a card.",
-   "protected": false,
-   "note": "DEC-416: step 3: what the founder will see"
-  },
-  {
-   "key": "screen.install.getready.step3.open",
-   "en": "Open Cloudflare billing",
-   "protected": false,
-   "note": "DEC-416: step 3's button"
-  },
-  {
-   "key": "screen.install.getready.step4",
-   "en": "Switch to Workers Paid, $5 a month.",
-   "protected": false,
-   "note": "DEC-416: step 4"
-  },
-  {
-   "key": "screen.install.getready.step4.see",
-   "en": "You will see Cloudflare's plans page: choose Workers Paid and confirm.",
-   "protected": false,
-   "note": "DEC-416: step 4: what the founder will see"
-  },
-  {
-   "key": "screen.install.getready.step4.open",
-   "en": "Open Cloudflare plans",
-   "protected": false,
-   "note": "DEC-416: step 4's button"
-  },
-  {
-   "key": "screen.install.getready.step5",
-   "en": "Turn containers on.",
-   "protected": false,
-   "note": "DEC-416: step 5"
-  },
-  {
-   "key": "screen.install.getready.step5.see",
-   "en": "You will see Cloudflare's containers page, with a button to turn them on.",
-   "protected": false,
-   "note": "DEC-416: step 5: what the founder will see"
-  },
-  {
-   "key": "screen.install.getready.step5.open",
-   "en": "Open Cloudflare containers",
-   "protected": false,
-   "note": "DEC-416: step 5's button"
-  },
-  {
-   "key": "screen.install.getready.newtab",
-   "en": "Each button opens Cloudflare's own page in a new tab, and this page stays here.",
-   "protected": false,
-   "note": "DEC-416: under the five steps"
-  },
-  {
-   "key": "screen.install.getready.done",
-   "en": "When these are done, check your account",
-   "protected": false,
-   "note": "DEC-416: the guide's last button, leading to Cloudflare's permission step"
-  },
-  {
    "key": "screen.install.check.title",
    "en": "Check my account",
    "protected": false,
@@ -42497,6 +42377,486 @@
    "en": "Stopped: the installer couldn't read the settings of your team's Civicsmith, which say what it holds and where its record is kept, so it changed nothing rather than guess. Your team's Civicsmith runs as before. Run the update again in a minute; this is usually temporary.",
    "protected": false,
    "note": "DEC-428: B503 INSTALLER #25 (J24/J25; K4758): newgroup/src/index.mjs:1140 and :478, the update refused before uploading when held settings do not answer; replaces installer.update.stopped.lookup with installer.keys.unread as {said}; no fills"
+  },
+  {
+   "key": "screen.install.walk.has.title",
+   "en": "Do you already have a Cloudflare account?",
+   "protected": false,
+   "note": "DEC-430: B513 R85: the question asked before the sign-in, after the installer's first page"
+  },
+  {
+   "key": "screen.install.walk.has.sub",
+   "en": "Cloudflare is the company whose computers will run your team's Civicsmith. The installer needs an account there that your team controls.",
+   "protected": false,
+   "note": "DEC-430: B513 R85: under the question"
+  },
+  {
+   "key": "screen.install.walk.has.yes",
+   "en": "Yes, on Workers Paid, with R2 storage turned on",
+   "protected": false,
+   "note": "DEC-430: B513 R85: the answer that goes straight to the sign-in"
+  },
+  {
+   "key": "screen.install.walk.has.partly",
+   "en": "Yes, but I'm not sure it's set up for this",
+   "protected": false,
+   "note": "DEC-430: B513 R85: the answer that starts the walk at step 2"
+  },
+  {
+   "key": "screen.install.walk.has.no",
+   "en": "No, not yet",
+   "protected": false,
+   "note": "DEC-430: B513 R85: the answer that starts the walk at step 1"
+  },
+  {
+   "key": "screen.install.walk.has.help",
+   "en": "Not sure? Choose the second. Each step says how to tell whether it's already done, so you can skip what is.",
+   "protected": false,
+   "note": "DEC-430: B513 R85: under the three answers"
+  },
+  {
+   "key": "screen.install.walk.step",
+   "en": "Step {n} of 4",
+   "protected": false,
+   "note": "DEC-430: B513 R85: above each step's heading; {n} 1 to 4"
+  },
+  {
+   "key": "screen.install.walk.resume",
+   "en": "You can leave at any step. When you come back to the installer, it opens where you left off.",
+   "protected": false,
+   "note": "DEC-430: B513 R85: each step's resume point"
+  },
+  {
+   "key": "screen.install.walk.next",
+   "en": "Done: next step",
+   "protected": false,
+   "note": "DEC-430: B513 R85: each step's forward button (also taken when the step was already done)"
+  },
+  {
+   "key": "screen.install.walk.cost",
+   "en": "What it costs",
+   "protected": false,
+   "note": "DEC-430: B513 R85: the label before each step's cost line"
+  },
+  {
+   "key": "screen.install.walk.s1.title",
+   "en": "Open a Cloudflare account and confirm its email",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 1"
+  },
+  {
+   "key": "screen.install.walk.s1.why",
+   "en": "Your team's Civicsmith runs in this account, so open it for your team: use an email your team shares, not one person's own.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 1: why it is needed"
+  },
+  {
+   "key": "screen.install.walk.s1.cost",
+   "en": "Nothing: opening the account is free.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 1: its cost"
+  },
+  {
+   "key": "screen.install.walk.s1.do",
+   "en": "On Cloudflare's sign-up page, enter the email and a password, and create the account. Cloudflare then emails that address: open the message and press its link to confirm it.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 1: what to do"
+  },
+  {
+   "key": "screen.install.walk.s1.done",
+   "en": "It's done when Cloudflare's dashboard opens without asking you to confirm your email.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 1: how to tell it is done"
+  },
+  {
+   "key": "screen.install.walk.s1.open",
+   "en": "Open Cloudflare's sign-up page",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 1: the outside link (https://dash.cloudflare.com/sign-up)"
+  },
+  {
+   "key": "screen.install.walk.s2.title",
+   "en": "Choose Workers Paid and add a payment method",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 2"
+  },
+  {
+   "key": "screen.install.walk.s2.why",
+   "en": "Workers Paid is the Cloudflare plan that can run every part of your team's Civicsmith, the file scanner and the safe view for risky files included. The free plan can't.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 2: why it is needed"
+  },
+  {
+   "key": "screen.install.walk.s2.cost",
+   "en": "About $5 a month, paid to Cloudflare from your payment method. Nothing is paid to the people who make Civicsmith.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 2: its cost"
+  },
+  {
+   "key": "screen.install.walk.s2.do",
+   "en": "In Cloudflare, open Workers & Pages, then Plans, and choose Workers Paid. Add a card or another payment method when Cloudflare asks for one.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 2: what to do"
+  },
+  {
+   "key": "screen.install.walk.s2.done",
+   "en": "It's done when the Plans page shows Workers Paid as your plan.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 2: how to tell it is done"
+  },
+  {
+   "key": "screen.install.walk.s2.open",
+   "en": "Open Cloudflare's plans",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 2: the outside link (https://dash.cloudflare.com/?to=/:account/workers/plans)"
+  },
+  {
+   "key": "screen.install.walk.s3.title",
+   "en": "Turn on R2 storage",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 3"
+  },
+  {
+   "key": "screen.install.walk.s3.why",
+   "en": "R2 is where your team's Civicsmith keeps the documents and evidence your members collect, each exactly as it was captured.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 3: why it is needed"
+  },
+  {
+   "key": "screen.install.walk.s3.cost",
+   "en": "Cloudflare includes 10 GB of R2 storage each month at no charge, and charges about 1.5 cents a month for each GB beyond that. Cloudflare shows the price before you agree.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 3: its cost (Cloudflare's R2 pricing, standard storage, read 2026-10-24)"
+  },
+  {
+   "key": "screen.install.walk.s3.do",
+   "en": "In Cloudflare, open Storage & databases, then R2, then Overview, and follow Cloudflare's steps to turn R2 on.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 3 and R84 (1): what to do (the path R84 names)"
+  },
+  {
+   "key": "screen.install.walk.s3.done",
+   "en": "It's done when R2's Overview page lists your storage, or offers to create some, instead of asking you to turn R2 on.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 3: how to tell it is done"
+  },
+  {
+   "key": "screen.install.walk.s3.open",
+   "en": "Open R2 in Cloudflare",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 3 and the storage line: the outside link (https://dash.cloudflare.com/?to=/:account/r2/overview)"
+  },
+  {
+   "key": "screen.install.allow.never.head",
+   "en": "What the installer never does",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 4: on the page before Cloudflare's sign-in and \"Allow\" page, after what it asks to do"
+  },
+  {
+   "key": "screen.install.allow.never.password",
+   "en": "It never sees your Cloudflare password: you type it on Cloudflare's own page.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 4"
+  },
+  {
+   "key": "screen.install.allow.never.card",
+   "en": "It never sees or uses your payment method, and it can't change your plan: Cloudflare's permission has no way to allow that.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 4 (R84: no billing scope)"
+  },
+  {
+   "key": "screen.install.allow.never.other",
+   "en": "It creates and changes only the parts of your team's Civicsmith, each named for your team, and leaves everything else in your account alone.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 step 4"
+  },
+  {
+   "key": "screen.install.allow.never.token",
+   "en": "It never asks you for a token, a key or an account number: allowing it on Cloudflare's page is all it needs.",
+   "protected": false,
+   "note": "DEC-430: B513 R85 (R2): never asked of a founder"
+  },
+  {
+   "key": "screen.install.q.head",
+   "en": "Questions people ask",
+   "protected": false,
+   "note": "DEC-430: B513 R85: the folds beside every step, the same answers on each"
+  },
+  {
+   "key": "screen.install.q.own.q",
+   "en": "Why does my team need its own Cloudflare account?",
+   "protected": false,
+   "note": "DEC-430: B513 R85: a question"
+  },
+  {
+   "key": "screen.install.q.own.a",
+   "en": "So that nobody else holds your team's work, the people who make Civicsmith included. Your team's Civicsmith runs in an account your team controls, and whoever can sign in to that account controls your team's Civicsmith. Use an account that belongs to your team, and add a second trusted person to it.",
+   "protected": false,
+   "note": "DEC-430: B513 R85: its answer"
+  },
+  {
+   "key": "screen.install.q.cost.q",
+   "en": "What does it cost, who is paid, and how do we stop paying?",
+   "protected": false,
+   "note": "DEC-430: B513 R85: a question"
+  },
+  {
+   "key": "screen.install.q.cost.a",
+   "en": "About $5 a month for Workers Paid, and R2 storage beyond the 10 GB Cloudflare includes, all paid to Cloudflare. Nothing is paid to the people who make Civicsmith. To stop paying, cancel Workers Paid in Cloudflare's billing settings. Your team's Civicsmith stops working when the plan ends, so agree on it as a team first.",
+   "protected": false,
+   "note": "DEC-430: B513 R85: its answer"
+  },
+  {
+   "key": "screen.install.q.see.q",
+   "en": "What can Civicsmith see and do in our account, and how do we remove it?",
+   "protected": false,
+   "note": "DEC-430: B513 R85: a question"
+  },
+  {
+   "key": "screen.install.q.see.a",
+   "en": "Only what you allow on Cloudflare's page: put your team's Civicsmith's programs and storage in the account, run its containers, join its parts together, and read the account's plan and log settings. It creates and changes only its own parts. To remove it, withdraw the permission in your Cloudflare profile, where Cloudflare lists the apps you have allowed, then delete your team's Civicsmith's parts in Workers & Pages and in R2.",
+   "protected": false,
+   "note": "DEC-430: B513 R85: its answer"
+  },
+  {
+   "key": "screen.install.q.card.q",
+   "en": "Is our card shared with Civicsmith?",
+   "protected": false,
+   "note": "DEC-430: B513 R85: a question"
+  },
+  {
+   "key": "screen.install.q.card.a",
+   "en": "No. Your payment method stays with Cloudflare. The installer never sees it, and the permission you give can't reach billing.",
+   "protected": false,
+   "note": "DEC-430: B513 R85: its answer"
+  },
+  {
+   "key": "screen.install.q.already.q",
+   "en": "What if we already use Cloudflare?",
+   "protected": false,
+   "note": "DEC-430: B513 R85: a question"
+  },
+  {
+   "key": "screen.install.q.already.a",
+   "en": "Use that account if it belongs to your team: your team's Civicsmith is added beside what's already there, and nothing else is changed. If the account is one person's, open a separate one for the team, because whoever signs in to it controls your team's Civicsmith. If the account already holds a Civicsmith, the installer says so and asks what you'd like to do.",
+   "protected": false,
+   "note": "DEC-430: B513 R85: its answer (K4937: a copy already installed, the existing screen)"
+  },
+  {
+   "key": "screen.install.q.stuck.q",
+   "en": "What if we get stuck?",
+   "protected": false,
+   "note": "DEC-430: B513 R85: a question"
+  },
+  {
+   "key": "screen.install.q.stuck.a",
+   "en": "Leave the installer at any step: it opens where you left off when you come back. After you change something in Cloudflare, press Check again. If a step still won't go, write to the people who make Civicsmith at {address}.",
+   "protected": false,
+   "note": "DEC-430: B513 R85: its answer; {address} the stewards' address"
+  },
+  {
+   "key": "screen.install.check.nothing",
+   "en": "Nothing was created in your account.",
+   "protected": false,
+   "note": "DEC-430: B513 R84: on the check whenever a line is not ready"
+  },
+  {
+   "key": "screen.install.check.againhelp",
+   "en": "Check again looks at everything again from the start and keeps the choices you've made.",
+   "protected": false,
+   "note": "DEC-430: B513 R84: beside Check again"
+  },
+  {
+   "key": "screen.install.check.account.name",
+   "en": "The account",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (6): the account line"
+  },
+  {
+   "key": "screen.install.check.account.ok",
+   "en": "Installing in the Cloudflare account {account}.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (6): the account line, ready; {account} the name Cloudflare shows"
+  },
+  {
+   "key": "screen.install.check.storage.name",
+   "en": "R2 storage",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (1): the storage line"
+  },
+  {
+   "key": "screen.install.check.storage.ok",
+   "en": "R2 storage is on in your account.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (1): ready"
+  },
+  {
+   "key": "screen.install.check.storage.fix",
+   "en": "R2 storage isn't turned on in your account yet. In Cloudflare, open Storage & databases, then R2, then Overview, and follow Cloudflare's steps to turn R2 on.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (1): refused as not entitled; button walk.s3.open; never called a payment method unless Cloudflare says so"
+  },
+  {
+   "key": "screen.install.check.storage.said",
+   "en": "Cloudflare didn't let the installer check R2 storage. It said: {said}",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (1): any other refusal, told as itself; {said} Cloudflare's own words"
+  },
+  {
+   "key": "screen.install.check.containers.cannot",
+   "en": "Cloudflare didn't say whether containers can run in your account, so this couldn't be checked.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (2): an answer that is neither yes, the plan nor permission"
+  },
+  {
+   "key": "screen.install.check.limits.unknown",
+   "en": "Cloudflare didn't say how many {kind} your account already has, so whether there is room couldn't be told.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (2), (3): a count that cannot be read, never zero; {kind} e.g. \"Workers\""
+  },
+  {
+   "key": "screen.install.check.address.name",
+   "en": "Your account's address",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4): the address line"
+  },
+  {
+   "key": "screen.install.check.address.ok",
+   "en": "Your account's address is {prefix}.workers.dev.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4): ready"
+  },
+  {
+   "key": "screen.install.check.address.fix",
+   "en": "Your account has no address on Cloudflare yet. Choose one before installing.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4): not ready; button check.address.choose (opens the cfaddress choice)"
+  },
+  {
+   "key": "screen.install.check.address.choose",
+   "en": "Choose the address",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4): opens the address choice"
+  },
+  {
+   "key": "screen.install.check.permission.name",
+   "en": "Permission",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (5): the permission line"
+  },
+  {
+   "key": "screen.install.check.permission.ok",
+   "en": "You allowed everything the installer needs.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (5): ready"
+  },
+  {
+   "key": "screen.install.check.permission.fix",
+   "en": "The permission you gave doesn't include {what}. Approve again on Cloudflare's page: it lists what is needed.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (5), (2): a missing scope; {what} what it is for, in plain words"
+  },
+  {
+   "key": "screen.install.check.permission.again",
+   "en": "Approve again",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (5): back to Cloudflare's \"Allow\" page (R71)"
+  },
+  {
+   "key": "screen.install.check.size.name",
+   "en": "Size of each part",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (7): the size line"
+  },
+  {
+   "key": "screen.install.check.size.ok",
+   "en": "Every part fits within the 64 MB Cloudflare allows a program.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (7): ready"
+  },
+  {
+   "key": "screen.install.check.size.left",
+   "en": "{part} is larger than the 64 MB Cloudflare allows a program, so it will be left out. Everything else is installed.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (7): a part over the limit, left out by name (R38); not a stop"
+  },
+  {
+   "key": "screen.install.account.title",
+   "en": "Choose your team's Cloudflare account",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (6): when the sign-in lists more than one account"
+  },
+  {
+   "key": "screen.install.account.sub",
+   "en": "Your sign-in reaches more than one Cloudflare account. Choose the one that belongs to your team: your team's Civicsmith is installed there.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (6)"
+  },
+  {
+   "key": "screen.install.account.use",
+   "en": "Use this account",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (6): beside each account by name"
+  },
+  {
+   "key": "screen.install.cfaddress.title",
+   "en": "Choose your account's address on Cloudflare",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4): when the account has no workers.dev prefix"
+  },
+  {
+   "key": "screen.install.cfaddress.sub",
+   "en": "Every program in a Cloudflare account answers at an address ending in workers.dev, which starts with a name chosen for the whole account. Your account has none yet, so choose it now.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4)"
+  },
+  {
+   "key": "screen.install.cfaddress.field",
+   "en": "The account's name in addresses",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4): the field, filled with the proposed name"
+  },
+  {
+   "key": "screen.install.cfaddress.help",
+   "en": "Lowercase letters, digits and hyphens. Everything in this account shares it, so your team's name or the account's name fits best.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4): the field's help"
+  },
+  {
+   "key": "screen.install.cfaddress.shows",
+   "en": "Your team's Civicsmith will be at {address}.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4): the address the choice gives"
+  },
+  {
+   "key": "screen.install.cfaddress.permanent",
+   "en": "Treat it as permanent. Changing it later changes the address of everything in this account, your team's Civicsmith included, and breaks every link to it.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4): told it is permanent for the account (Cloudflare allows a change, which moves every address)"
+  },
+  {
+   "key": "screen.install.cfaddress.use",
+   "en": "Use {prefix}",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4): the button that registers it; nothing is registered without it"
+  },
+  {
+   "key": "screen.install.cfaddress.nothing",
+   "en": "Nothing is registered until you press the button.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4)"
+  },
+  {
+   "key": "screen.install.cfaddress.taken",
+   "en": "{prefix} is already used by another Cloudflare account. Choose another.",
+   "protected": false,
+   "note": "DEC-430: B513 R84 (4): a taken name"
+  },
+  {
+   "key": "screen.site.start.noaccount",
+   "en": "No Cloudflare account yet? The installer walks you through opening one, step by step.",
+   "protected": false,
+   "note": "DEC-430: B513 (K4951, B511 K4935): civicsmith.org's Start a team page, under What you need"
   }
  ],
  "rewrite": {
