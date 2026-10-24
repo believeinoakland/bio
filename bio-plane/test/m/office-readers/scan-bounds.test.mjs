@@ -138,7 +138,7 @@ test("R44 docx: a body that would retain more than 250,000 paragraphs, cells and
 
 test("R44 decoded characters: the figure is stated by name when a body would hold more text than the proposed row", async () => {
   const { OFFICE_DECODED_CHARS_MAX } = await import("../../../src/docx.mjs");
-  assert.equal(OFFICE_DECODED_CHARS_MAX, 64 * 1048576, "proposed; BOB records");
+  assert.equal(OFFICE_DECODED_CHARS_MAX, 32 * 1048576, "proposed; BOB records");
 });
 
 test("R44 pptx and xlsx: a deck past the figure is refused by name; a workbook whose typed cells would pass it is refused unless the caller asks for them held", async () => {

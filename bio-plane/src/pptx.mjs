@@ -131,7 +131,7 @@ import {
 /* R44: what the walk may retain, paragraphs, cells and links together (the table's figure, never a literal here). */
 const OFFICE_RETAINED_MAX = boundOf("office", "retained_objects");
 /* R44: the decoded characters a walk may hold at once. proposed; BOB records (runtime-limits' row `office.decoded_chars`). */
-const OFFICE_DECODED_CHARS_MAX = 64 * 1048576;
+const OFFICE_DECODED_CHARS_MAX = 32 * 1048576;
 const stripOk = ({ ok, ...rest }) => rest;
 
 /* Bytes as a Uint8Array, an ArrayBuffer, any typed-array view or an array of

@@ -113,7 +113,7 @@ import {
 const OFFICE_RETAINED_MAX = boundOf("office", "retained_objects");
 /* R44: the decoded characters a walk may hold at once. proposed; BOB records (runtime-limits' row `office.decoded_chars`
    once it exists; until then this figure, reported in the job record). */
-export const OFFICE_DECODED_CHARS_MAX = 64 * 1048576;
+export const OFFICE_DECODED_CHARS_MAX = 32 * 1048576;
 
 /* Bytes as a Uint8Array, an ArrayBuffer, any typed-array view or an array of
  * byte values; anything else reads as no bytes, so a wrong argument is a
