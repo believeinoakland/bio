@@ -8,7 +8,6 @@ import assert from "node:assert/strict";
 import { world, caseFm, makePng, sha, NOW } from "./fixture.mjs";
 import { pdf, has, SECRETS } from "../doc-clean/fixtures.mjs";
 import { makeZip, zipChunks64 } from "../../make-zip.mjs";
-import { readContainer } from "../../../src/ooxml.mjs";
 import { docx, unzipCopy, enc } from "../doc-clean/fixtures.mjs";
 import { CLEAN_MAX_BYTES } from "../../../src/doc-clean/index.mjs";
 import { DOCUMENT_COPY_BATCH_MAX, DOCUMENT_COPY_RETRY_MS, COPY_NOW_MAX_BYTES, COPY_CLEANED_LABEL, OBSCURED_LABEL, CASE_CARRIAGE_CHECKS,
@@ -561,14 +560,24 @@ test("R15 (T51; G136c) the attempt is stamped (tried) before the clean runs, so 
   assert.equal(sawNow, NOW, "copyNow stamps before the clean");
 });
 
+/* The entry count a ZIP's end record states: the 16-bit field, or ZIP64's 64-bit one when that is 0xffff. */
+function endCount(z) {
+  const b = Buffer.from(z), e = b.length - 22;
+  assert.equal(b.readUInt32LE(e), 0x06054b50, "an end record at the end");
+  const c16 = b.readUInt16LE(e + 10);
+  if (c16 !== 0xffff) return c16;
+  assert.equal(b.readUInt32LE(e - 20), 0x07064b50, "ZIP64's locator precedes the end record");
+  return Number(b.readBigUInt64LE(Number(b.readBigUInt64LE(e - 20 + 8)) + 32));
+}
+
 test("R15 (T51; G136c, DOCS C1) a 70,009-entry DOCX through the real doc-clean: a cleaner that crashes after its work is attempted once and not re-run on the next wake; after the back-off the copy is made with its written count equal to the read count", async () => {
   const entries = unzipCopy(docx({ meta: false })).parts.map((p) => ({ name: p.name, data: p.data, method: p.method }));
   for (let i = 0; i < 70000; i++) entries.push({ name: `x/${i}`, data: enc("p"), method: 0, zip64: false });
   const chunks = [];
   for await (const c of zipChunks64(entries)) chunks.push(c);
   const big = new Uint8Array(Buffer.concat(chunks));
-  const read = readContainer(big);
-  assert.equal(read.ok, true);
+  const read = endCount(big);
+  assert.equal(read, entries.length, "the fixture states its entries all");
   const w = world();
   const s = supplied(w, "INFO-2026-0101-big", big, { name: "file.docx", type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
   const real = w.cc.clean;
@@ -590,5 +599,5 @@ test("R15 (T51; G136c, DOCS C1) a 70,009-entry DOCX through the real doc-clean: 
   assert.equal(made.ok, true, made.detail);
   assert.equal(again.copied + again.clean, 1, "the copy is made after the back-off");
   assert.equal(again.remaining, 0);
-  if (made.bytes) assert.equal(readContainer(made.bytes).entries.length, read.entries.length, "written count == read count");
+  if (made.bytes) assert.equal(endCount(made.bytes), read, "written count == read count");
 });
