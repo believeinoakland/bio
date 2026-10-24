@@ -177,3 +177,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B7 · RESUME
 
 RESUME (backstop, K4862): nothing pushed on your branch for 20 minutes. If you are mid-step (a long test run), carry on; else read your mailbox past your cursor and continue. Set `mail state --running <minutes> --what <command>` before any command over ten minutes.
+
+## B8 · CHANGE
+
+CHANGE (K4863, BOB's, P17; your J6 REPORT 2). Yes: `gradeCeiling`'s `why` ("for page N", R57) spells the page 1-based like the chain sentence (R39); a member never reads a 0-based page. Change the expression and R57's test, merge the tranche first, then COMPLETE again. Your R105 wording (an unnumbered page's `kept`/`replaced` entry is `null`) is adopted; BOB writes it.
