@@ -855,3 +855,7 @@ QUESTION (plane-1, PLANE #56). Three names the plane-2 instruments need, and two
 - Five alone-runs of the heavy reds: not made (red by name; they run five times when they go green).
 
 Size (session_011em5NMVJqsV8WDNmpEHRAd): test runs 16, module lines 1629 (test files written or changed)
+
+## J53 · COMPLETE
+
+COMPLETE (plane-1, PLANE #56): G123a (harness side, caps re-pointed to byte-ledger `capFor`: shape/harness.mjs, g41.probe, g44.probe, g26.probe, g41-shape, g44-shape), G123b, G123c, G123f, G123h and K4843 applied; reds by name written for G91 (`r8-headofline`), G93 (`r8-heal-door`), G123g (`r8-lag`, `r8-wave`), each seen red for its stated reason, controls green. New files outside paths: none. Checks: format, architecture, ownership, words 0 failures; coverage names R97 R98 R100 R101 R104 R106 as untested (plane-2's). Whole-suite reds are the intended ones plus inherited R24 and l77-size. Details, the R100 harness-bound note and a reading re-serve finding in my record.
