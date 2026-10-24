@@ -1952,7 +1952,9 @@ export class Extraction {
     const counters = { written: st.written,
       /* stated unread: over the wire's bound, unaddressable, cut by the wire, a window stepped past, an OCR page refused or killed, the rest of a read
          that ended before its last piece */
-      skipped: st.over_bound + st.unaddressable + st.truncated + statedUnits.length + (f ? f.refusedPages : 0) + (st.ended_why ? 1 : 0),
+      skipped: (() => { const n = st.over_bound + st.unaddressable + st.truncated + statedUnits.length + (f ? f.refusedPages : 0) + (st.ended_why ? 1 : 0);
+        /* an index its writer stated partial with no cause counted (an older store's row) is never read as whole */
+        return n || (st.state === "partial" && !st.more ? 1 : 0); })(),
       owed: owed.count, failed: f && f.found === false && f.failure === "transient" && !f.entities ? 1 : 0 };
     const state = pipeline.completenessOf(counters, { more: !!st.more, final: failedFinal, refused: !!(f && f.tooLarge), reading: f });
     const counts = { offered: st.offered, written: st.written, over_bound: st.over_bound, unaddressable: st.unaddressable,
