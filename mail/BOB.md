@@ -2136,3 +2136,26 @@ HANDOFF (K4269, K4821): fix round 8 of T51 adds eleven words lines for T52 to `b
 
 ## B506 · NOTICE · 2026-10-23 · session_01Abyi5UTodP7H2CDXSYM4Zo · primary
 K4831 (Bob, 2026-10-23): the reading architecture confirmed, all ten of the lane's questions as recommended. For the design stream: members are told each reading limit with the file's size and the limit, never shown as read; progress 'read 1,200 of 5,000 pages' with an 'about' estimate, no promised time; each search result marked with its kind (footnote, comment, deleted wording); a large spreadsheet preview gets a 'show more' that pages through the rest (a screen owed to you, HANDOFF follows once GAP.md places it); the safe view stays 500 pages, stated; 'as a visitor saw it' says exactly what was captured; illegible pages stated. Folded in rulings-active.md §1 (the K4812 line) on tranche/T51.
+
+## B507 · HANDOFF · 2026-10-24 · session_01R3wcNbrsgTobyffa2HU1Sf · primary
+HANDOFF (K4269; BOB #273): fix round 9 (T51, the reading architecture's Stage 1) adds the member-facing statements below. Each is a stand-in keyed through localize in the module that says it; none stops a member completing an operation, so they enter T52 unless you judge one does (K4269). The reading screens' states and sentences are your rows (DEC-98, DEC-417-419). They are appended to build/plan/later-ux.md on tranche/T51 (19 lines, dated 2026-10-24). Nothing needs an answer before your next MERGE; an ACK when read.
+
+- Document / Add · the alpha-limit sentence naming the file's size and the limit and never saying "read" (G124a, G135d) · K4831 (3) · fix round 9 §5 · 2026-10-24
+- Document · the states: queued, being fetched, being read N of M, read in part and why, refused with its limit, finished; an "about" estimate once measurable; "searched so far"; a notice at finish or stop (G135f) · K4831 (5) · fix round 9 §5 · 2026-10-24
+- Document · "RTF is not read yet", "email is not read yet", "legacy Word is not read yet", "(type) is not read yet" with no "Read it now" (G135a, G135e) · fix round 9 §5 · 2026-10-24
+- Document · the reason a picture was refused, in the member's words (G135b); "read as English" (SCAN C6, with the language rows) · fix round 9 §5 · 2026-10-24
+- Document · "needs a password" for an encrypted document (G129a, G136a); "the file is damaged; N of M pages could be read" (G132f); a page over the bound listed unread (G124d) · fix round 9 §5 · 2026-10-24
+- Document · "every part is read: footnotes, headers, comments, notes shown with their kind" and a citation naming the kind (G134a); dates typed in a workbook (G134c) · fix round 9 §5 · 2026-10-24
+- Document · the assumed encoding shown, and a disagreeing window stated (G131g) · fix round 9 §5 · 2026-10-24
+- Document / Add · "reading does not wait for the scan; a found threat's text leaves search once the scanner has signatures" (G136e) · fix round 9 §5 · 2026-10-24
+- Safe view · "the first 500 pages" (G137a); a spreadsheet preview's "show more" (G137b: a UX-DESIGN screen, first) · fix round 9 §5 · 2026-10-24
+- Visitor copy · "as a first-time visitor saw it: first load, not scrolled, banners not dismissed, no frames"; "the page did not render"; the day's render account (G137c) · fix round 9 §5 · 2026-10-24
+- Illegible page · "this page is sideways or too faint to read" and "only partly legible" (G137d); DEC-417's "three interruptions" sentence retired (G129c) · fix round 9 §5 · 2026-10-24
+- Add · the stated refusal when a reading's registration could not be written (G126c, carried from round 8) · fix round 9 §5 · 2026-10-24
+- Archive · "archive of 3 members, read separately" (G126f) · fix round 9 §5 · 2026-10-24
+- Add / Document · "N pictures kept, not read" with the count and the size (G138); "this picture could not be read: the pixels are not decoded reliably" with the reason (G132l) · fix round 9 §5 · 2026-10-24
+- Add / Document · the refusals with their figures: "too large" with size and limit, the picture over the bound (`IMAGE_TOO_LARGE`), "too many objects" with the count (`TOO_MANY_OBJECTS {n}`), a cell over the bound (`over_cell_bound`), a column count over the bound, an archive over either limit with the reason (G124a, G124c, G124e, G124g, G125a-h, G135d) · fix round 9 §5 · 2026-10-24
+- Document · "a quote was never closed at row N (size)"; "the dialect differs between windows" (G131b, G131c); "this file's characters could not all be read: N replaced" and `ENCODING_UNSUPPORTED {name}` (G131g) · fix round 9 §5 · 2026-10-24
+- Document · a deterministic failure on the file's own bytes, final with its reason, not "try again" (G133c); "omitted with a statement": a reading over 1 MiB keeps its units and states the omitted part (G128e) · fix round 9 §5 · 2026-10-24
+- Document · "encrypted" and "could not be scanned" as their own states, "the scanner stopped at its limit" with the limit (G136a, G136b) · fix round 9 §5 · 2026-10-24
+- Add · a workbook refused with the count of its cells (G137e); a light-kind file refused over 50 MB or 1,048,576 rows with the figure (G131i) · fix round 9 §5 · 2026-10-24
