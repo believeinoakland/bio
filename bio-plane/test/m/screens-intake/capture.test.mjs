@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { open as openPage, untitled, html, text, main, btn, fill, press, ok, refused, refusedIn, rawKeys, word, hasWord, says, saysIn, DOCUMENT_STUB } from "./page.mjs";
+import { open as openPage, untitled, html, text, main, btn, fill, press, idle, ok, refused, refusedIn, rawKeys, word, hasWord, says, saysIn, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
 /* a document named on the page is a link only where the `document` screen is served: the stand-in serves it */
@@ -81,6 +81,7 @@ test("R1 R25 each of acquire's five refusals is drawn by its key beside the addr
     const p = await open("/app/capture", { plane: { acquire: refused(code, "the owner's words") } });
     fill(p, { "ci-address": ADDRESS });
     const r = await press(p, "acquire");
+    await idle(p);
     assert.ok(saysIn(r.slot(), own[code]), code);
     assert.ok(!r.slot().textContent.includes("the owner's words"), code);
     seen.add(r.slot().textContent);
@@ -278,6 +279,7 @@ test("R14 \"Ask for this later\" sends capturerequest with the address and no ru
   const q = await open("/app/capture", { plane: { capturerequest: ok({ ok: true, id: "CR-2", drains: true }) } });
   fill(q, { "ci-address": ADDRESS });
   await press(q, "capturerequest");
+  await idle(q);
   assert.ok(says(q, "screen.capture.address.requested", { address: ADDRESS }));
   assert.ok(!says(q, "screen.capture.address.requested.waits", { address: ADDRESS }));
   /* nothing is sent with no address */
@@ -391,6 +393,7 @@ test("R2 R21 R24 the answer: existed says the record already held the bytes and 
   const p = await open("/app/capture/file", { plane: { ...UPLOAD_PLANE, captureupload: ok({ ok: true, existed: true }) } });
   fill(p, filled);
   await press(p, "captureupload");
+  await idle(p);
   assert.ok(says(p, "screen.capture.file.existed"));
   assert.equal(p.byOp("allocid").length, 0, "existed: true promotes nothing new");
   assert.equal(p.byOp("promote").length, 0);
@@ -421,6 +424,35 @@ test("R2 R21 R24 the answer: existed says the record already held the bytes and 
   assert.equal(main(r).querySelector('a[href*="INFO-2026-0011"]'), null);
 });
 
+/* R66 (G143; K4836, K4787): a screen's text is read only once the screen has drawn what the act answered. The plane double's `captureupload` answer is held
+   behind a gate the test releases after the first read: a read made straight after the press (the old test's) finds nothing drawn and is red; the
+   test waits for the drawn state (`idle`, which counts answers and requests, never a time) and is green however the machine is loaded. */
+test("R66 the existed answer is drawn only after the plane answers, and a test reads it once the screen has drawn it", async () => {
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  const p = await open("/app/capture/file", { plane: { ...UPLOAD_PLANE, captureupload: async () => { await gate; return ok({ ok: true, existed: true }); } } });
+  fill(p, filled);
+  await press(p, "captureupload");
+  assert.ok(!says(p, "screen.capture.file.existed"), "R66: the old test's read, straight after the press, finds nothing drawn: the answer is still held"); // R66 gate
+  release();
+  await idle(p);
+  assert.ok(says(p, "screen.capture.file.existed"), "R66: after the drawn state, the sentence is there");
+  assert.equal(p.byOp("allocid").length, 0, "existed: true promotes nothing new");
+});
+
+test("R66 control: no test of this module's capture file reads what a screen drew straight after an act, with no wait for the drawn state", async () => {
+  const { readFileSync } = await import("node:fs");
+  const lines = readFileSync(new URL("./capture.test.mjs", import.meta.url), "utf8").split("\n");
+  const bad = [];
+  lines.forEach((l, i) => {
+    if (!/await press\(/.test(l)) return;
+    let j = i + 1;
+    while (j < lines.length && !lines[j].trim()) j++;
+    if (/\b(says|saysIn|text|html)\(|\.textContent|\.innerHTML|querySelector/.test(lines[j] || "") && !/settle\(|idle\(|R66 gate/.test(lines[j])) bad.push(i + 1);
+  });
+  assert.deepEqual(bad, [], "a read after a press with no settle or idle between");
+});
+
 test("R2 UPLOAD_NO_STATEMENT, EMPTY, TOO_LARGE and MEMBER_SESSION_REQUIRED are each drawn in its own sentence", async () => {
   const keys = { UPLOAD_NO_STATEMENT: "screen.capture.refusal.UPLOAD_NO_STATEMENT", EMPTY: "screen.capture.refusal.upload.EMPTY",
                  TOO_LARGE: "screen.capture.refusal.upload.TOO_LARGE", MEMBER_SESSION_REQUIRED: "screen.capture.refusal.MEMBER_SESSION_REQUIRED" };
@@ -429,6 +461,7 @@ test("R2 UPLOAD_NO_STATEMENT, EMPTY, TOO_LARGE and MEMBER_SESSION_REQUIRED are e
     const p = await open("/app/capture/file", { plane: { captureupload: refused(code, "the owner's words") } });
     fill(p, filled);
     const r = await press(p, "captureupload");
+    await idle(p);
     assert.ok(saysIn(r.slot(), key), code);
     assert.ok(!r.slot().textContent.includes("the owner's words"), code);
     texts.add(r.slot().textContent);
@@ -520,12 +553,14 @@ test("R3 (K3171) the recorded testimony is named by the bundle_id provenance's t
   const p = await open("/app/capture/saw", { plane: { testify: ok(TESTIFIED) } });
   fill(p, { "ci-words": "The pothole is still open.", "ci-where": "6012 Seminary Ave", "ci-when": "2026-10-04T09:10:00Z" });
   await press(p, "testify");
+  await idle(p);
   assert.ok(main(p).querySelector('a[href*="INFO-2026-0009-observation"]') && text(p).includes(word("screen.capture.saw.done", { id: "\u0000" }).split("\u0000")[0]), "C29: the result links the document it made");
   assert.doesNotMatch(text(p), new RegExp("f".repeat(16)), "never the capture's digest");
   /* control: an answer naming no bundle draws no testimony id */
   const q = await open("/app/capture/saw", { plane: { testify: ok({ ok: true, id: "INFO-2026-0010-x" }) } });
   fill(q, { "ci-words": "x", "ci-where": "y", "ci-when": "2026-10-04T09:10:00Z" });
   await press(q, "testify");
+  await idle(q);
   assert.doesNotMatch(text(q), /INFO-2026-0010-x/);
 });
 
@@ -577,6 +612,7 @@ test("R3 R10 (K2816 (2); wizard-scripts R34) a writing-help draft carries the te
     const p = await open("/app/capture/saw", { reachable: true, plane: { writinghelp: ok(answer) } });
     fill(p, { "ci-words": "x" });
     await press(p, "writinghelp");
+    await idle(p);
     assert.equal(!!main(p).querySelector('[data-label="untested"]'), labelled, JSON.stringify(answer));
     if (labelled) assert.ok(says(p, "ai.label.untested"));
   }
@@ -651,6 +687,7 @@ test("R29 BAD_FOR is drawn by refusal.BAD_FOR beside the field in a fold titled 
   const p = await open(`/app/capture/address/${Q}`, { plane: { ...FOR_QUESTION(), search: QS, opencaptures: OPEN0, acquire: refused("BAD_FOR", "the owner's words") } });
   fill(p, { "ci-address": ADDRESS });
   const r = await press(p, "acquire");
+  await idle(p);
   assert.ok(saysIn(r.slot(), "refusal.BAD_FOR"));
   assert.ok(!r.slot().textContent.includes("the owner's words"));
   const fold = r.slot().querySelector("details");
@@ -761,6 +798,7 @@ test("R34 an acquire that gets no answer is drawn beside the address as a failur
   const p = await open("/app/capture", { plane: { opencaptures: OPEN0, acquire: silent } });
   fill(p, { "ci-address": ADDRESS });
   const r = await press(p, "acquire");
+  await idle(p);
   assert.ok(saysIn(r.slot(), "shell.unread") || saysIn(r.slot(), "shell.noanswer"), "a failure is said: " + r.slot().textContent);
   const b = btn(p, "acquire");
   assert.ok(!b.hasAttribute("disabled") && b.getAttribute("aria-busy") !== "true", "the act is usable again");
@@ -887,12 +925,14 @@ test("R38 R54 (G75) control: an address not held sends acquire once as R1 says, 
   const q = await open("/app/capture/address", { plane: { opencaptures: OPEN0, heldcaptures: ok({ ok: true, held: [] }), memberlist: ROSTER, heldat: HELD_AT("unchanged") } });
   fill(q, { "ci-address": ADDRESS });
   await press(q, "acquire");
+  await idle(q);
   assert.ok(says(q, "document.untitled.web", { site: new URL(ADDRESS).hostname, date: dayOf(COPY.retrieved) }), "the chain a delivery names a document by, not Untitled capture");
   assert.ok(!says(q, "screen.held.untitled"));
   assert.ok(!text(q).includes(COPY_DOC), "never the record id as a title");
   const r = await open("/app/capture/address", { plane: { opencaptures: OPEN0, heldcaptures: ok({ ok: true, held: [] }), memberlist: ROSTER, heldat: HELD_AT("unchanged", { copy: { ...COPY, address: undefined, retrieved: undefined } }) } });
   fill(r, { "ci-address": "upload:abc" });
   await press(r, "acquire");
+  await idle(r);
   assert.ok(says(r, "screen.held.untitled"), "neither a host nor a day is known: the word");
   assert.ok(!text(r).includes(COPY_DOC), "never the record id as a title");
 });
@@ -948,5 +988,6 @@ test("R38 while heldat is out the screen says it is loading, and once an address
   const q = await open("/app/capture/address", { plane: { ...A64, ...CAPTURED } });
   fill(q, { "ci-address": ADDRESS });
   await press(q, "acquire");
+  await idle(q);
   assert.equal(main(q).querySelector('[data-state="loading"]'), null, "nothing is left saying it is loading");
 });

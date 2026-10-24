@@ -168,7 +168,7 @@ test("R57 (G7) an upload answered with its reading draws no 'reading follows' be
 
 /* ---- G6: the upload's register ---- */
 
-test("R21 (G6) a multipart upload is registered with its whole first, then its parts; a single-part upload registers its one file", async () => {
+test("R21 (G6; G127a, G127c) a multipart upload is registered as its whole, one row carrying its parts in order and no part as a row; a single-part upload registers its one file", async () => {
   const WHOLE = "e".repeat(64), P1 = "1".repeat(64), P2 = "9".repeat(64);
   const FILE = new File(["x"], "w40.pdf", { type: "application/pdf" });
   const multi = ok({ ok: true, existed: false, capture: { sha256: WHOLE, bytes: 41502904 },
@@ -178,8 +178,9 @@ test("R21 (G6) a multipart upload is registered with its whole first, then its p
   fill(p, { "ci-file": FILE, "ci-how-made": true, "ci-where": "City hall", "ci-what": "The packet." });
   await press(p, "captureupload");
   const reg = p.byOp("promote")[0].body.register;
-  assert.deepEqual(reg.map((r) => r.sha256), [WHOLE, P1, P2], "the whole first, then the parts in order");
+  assert.deepEqual(reg.map((r) => r.sha256), [WHOLE], "the register is the whole alone: a part's digest is no row (K4833)");
   assert.equal(reg[0].bytes, 41502904, "with its total size");
+  assert.deepEqual(reg[0].parts, [{ sha256: P1, path: "snapshots/upload-part-1", bytes: 8388608 }, { sha256: P2, path: "snapshots/upload-part-2", bytes: 8388608 }], "the parts, in order, on the whole's row");
   const single = await open("/app/capture/file", { captureupload: ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 9 }, document: { file: `snapshots/upload-${SHA}`, locator: `upload:${SHA}`, capture: { method: "uploaded", sha256: SHA, encoding: "binary", bytes: 9 }, source: { kind: "uploader" } } }) });
   fill(single, { "ci-file": FILE, "ci-how-made": true, "ci-where": "City hall", "ci-what": "The packet." });
   await press(single, "captureupload");
