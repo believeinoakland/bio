@@ -1,6 +1,6 @@
 # pdf-pixels (T51)
 
-**Status** · session_01EpDRQfdEuiWiTfK47byiUx · depth 2 · COMPLETE · handled B3
+**Status** · session_01VnDyAygN6JtYE78XMij9Xr · depth 2 · COMPLETE · handled B11
 
 ## J1 · REPORT
 
@@ -79,3 +79,48 @@ Size (session_01CDmjLZR4AnXcUoKjGVUyEk): test runs 15, module lines 1400
 **Deferred:** none. **Found in another module:** none beyond the above.
 
 Size (session_01EpDRQfdEuiWiTfK47byiUx): test runs 9, module lines 1594
+
+## J5 · QUESTION
+
+Three things I need before COMPLETE; I carry on with the rest on my best readings.
+
+1. **A READ_BOUNDS row (REPORT, B8 ruling 1).** `picturepixels.mjs` must read `PICTURE_SOURCE_MAX` as `boundOf("image", "picture_source")` (R42, R49), and `bio-plane/src/read-bounds.mjs` has no such row (`image` has `pixels`, `edge`, `chunks`, `row_stride`, `cover_bytes`, `picture_frame`). Row to add, kind `image`, name `picture_source`: standard 603979776, alpha 603979776, protective 603979776 (16384 x 12288 x 3, today's figure, measured at T44), key `limit.image.picture_source`. Until it is on `tranche/T51`, `picturepixels.mjs` cannot load; tell me when and I merge. Nothing else in my files needs a new row (`pixels` 120000000, `edge` 65535, `picture_frame`, and `pdf.tree_depth` for the /Parent walk are all there).
+
+2. **R47 has no provider, and needs one new file.** `pdf-reader` offers `openPdf(bytes)` only (whole lenient read); no ranged open. My reading: I read through `readRange` the tail (`startxref`), the cross-reference chain (tables and streams, object streams), the page tree down to the page, and that page's objects (contents, resources, images), assemble them into a small PDF in memory (inherited MediaBox/Rotate/Resources written into the page) and run the existing page path on it; the answer equals the whole-bytes one. Any irregularity (no usable xref, encryption in the trailer, a page index out of range) falls back to reading the whole file, so the refusals stay identical. The code is about 250 lines; I propose a new file `pdf-worker/src/pagesource.mjs`. **Please add it to pdf-pixels' `paths` in `build/modules.json`** (K1043) and tell me; if you would rather it live inside `pagepixels.mjs` (47 KB now), say so and I do that instead.
+
+3. **R48 on the DCT pass-through.** The publisher's JPEG bytes cannot be turned without decoding. My reading: with `opts.turn` other than 0 the default DCT route decodes (route `decoded-dct`, as with `decodeDct`), so `upright` is true after the turn as R48 says; with turn 0 or absent nothing changes. The alternative is to refuse it. Tell me if you want the refusal.
+
+## J6 · COMPLETE
+
+**Fix round 9 (B8, B9, B10) applied, with three tests red by name and one row/CHANGE pending, as B9 and B10 allow.**
+
+**Entries applied** (code `pdf-worker/src/pagepixels.mjs`, `picturepixels.mjs`; tests `pagepixels.test.mjs`, `jbig2.test.mjs`, `jpx.test.mjs`):
+- G132l (b) R45: new refusal `PIXELS_UNDETERMINED` (stand-in keyed `pdf-pixels.pagepixels.this_reader_cannot_give_the`; row owed to later-ux), `detail` one of `dct_unexamined` (the pass-through's own JPEG frame, any process, must agree with the dictionary's width, height and component count), `ccitt_columns` (`/Columns`, 1728 when absent, not `/Width`), `decode_array` (raw route, any `/Decode` that is not the default for its components), `smask`, `mask`, `tiff_predictor`. The raw route's check runs before the stream is inflated.
+- G125a R46: `decodeImage` judges `/Width`, `/Height` and their product first, against `boundOf("image","edge")` and `("image","pixels")`, for every route and the crop: `IMAGE_TOO_LARGE` with `declared` and `bound` in the answer, nothing decoded. R42's pictures also check each side against the edge before decode.
+- G132m R48: `opts.turn` (90/180/270, anything else 0) on pages (after `/Rotate`; a turn on the DCT pass-through decodes it, B10 (3)) and pictures (composed with the EXIF orientation, so a PNG turns too and the reduction's partial boxes stay Pillow-exact on the turned picture); `turned_deg` in both answers (R20).
+- G124/R49: `PICTURE_FRAME_MAX`, `PICTURE_SOURCE_MAX`, the pixel and edge bounds and the `/Parent` walk depth (`pdf.tree_depth`) are read from `boundOf`; a test finds no literal of those figures in the four files.
+- G132k R47: `renderPageToPixels(source, ...)` and `renderPictureToPixels(source, ...)` accept `{size, readRange}`; the page path calls pdf-reader's `pageSource(source, pageIndex)` (B10 (2)) and runs on its `bytes`, the answer's `page` restored; on `fallback`, or while `pageSource` is not exported, it reads the whole file, so every refusal is the whole file's. A picture is read whole.
+- G132i: a test renders a scan with a text line (pdfgen `mixed`) with and without `allowTextPage` through the real render.
+- B9: the codec code `IMAGE_TOO_LARGE` is mapped to the `IMAGE_TOO_LARGE` refusal for JBIG2, JPX, DCT and PNG.
+- R25 (JBIG2 region taller than its data): already mapped to `TRUNCATED_IMAGE_DATA`; the codec half is image-codecs'.
+
+**Red by name (provider unmerged):**
+1. `R47 page 20 / page 1 / the last page ... through pdf-reader's pageSource` (three bytes-read tests in `pagepixels.test.mjs`): red line `FAIL  R47 page 20: the bytes read are the page's, under a quarter of the 60432-byte file (read 60432)`; green when pdf-reader exports `pageSource`. The equality tests of R47 (the source answers what the bytes answer, six cases, and a picture) are green through the fallback and stay green.
+2. `jpx.test.mjs` `R25 (the codec refuses the 5000x5000 colour ... / 8000x8000 grey image for memory ...)`: expects the codec's `IMAGE_TOO_LARGE` code (B9); red until image-codecs merges. The pdf-pixels answers beside them are green on both sides.
+3. Pending BOB: `bio-plane/src/read-bounds.mjs` lacks `image.picture_source` (B10 (1): RUNTIME-LIMITS #8 adds it). Without it `picturepixels.mjs` does not load, so `pagepixels.test.mjs` and the others that import it fail at import on this branch until the CHANGE; I ran every test below with that one row added locally and uncommitted.
+
+**R-FOUR red then green.** The new tests run against the untouched `src` (stashed): `FAIL  R45 8-bit grey with /Decode [1 0]: PIXELS_UNDETERMINED, decode_array, no bytes`, the same for `smask`, `mask`, `tiff_predictor`, `ccitt_columns`, the four `dct_unexamined` cases and `FAIL  R46 an 8 KB CCITT stream declaring 60,000 x 60,000: IMAGE_TOO_LARGE ...` (the run then ended in the old code); with the change, 0 failures in them. Platform check: L (local node); no P check is mine.
+
+**Tests run** (with the local row): `pagepixels.test.mjs` 538 passed, 3 failed (the R47 three); `imagecrop.test.mjs` 55 passed; `jbig2.test.mjs` 179 passed; `jpx.test.mjs` 203 passed, 2 failed (item 2). Users: `ocr-worker/test/ocr-worker.test.mjs` 293 passed, 1 failed (`R19 the committed manifest's input and asset hashes match the tree`: the generated manifest hashes my source files, which I changed, so it is stale: BOB regenerates it, mechanics §14); `bio-plane/test/m/content/crop.test.mjs` 0 fail; `plane` t42, t43, t44 pass. `build/plan/impact.mjs origin/tranche/T51 HEAD` names 106 modules; the ones that import these files are ocr-worker, content (crop), plane (the three tests) and pdf-worker's own. The two corpus probes were not run (the corpus is not in the container).
+
+**Checks** (civicos-process): `format` 176 modules, 0 failures; `architecture pdf-pixels` 16 product files, 42 relative imports, 0 failures; `coverage pdf-pixels` 33 of 33 live ids named, 0 failures; `words pdf-pixels` inline 0, plain 0, testcopy 0, missingkey 0, marker 0, 0 failures; `ownership pdf-pixels tranche/T51 job/T51/pdf-pixels` 6 files changed, 0 failures.
+
+**For BOB, not mine:** (a) strike the "not yet met" marks of R20, R22-R25, R42, R43, R45-R49 when the reds above turn green; (b) regenerate the ocr-worker manifest; (c) the word row for `PIXELS_UNDETERMINED`; (d) `ocr-worker` must now pass `turn`/`allowTextPage` (jobs 18). I deferred nothing; `pagesource.mjs`, which I had drafted before B10, is removed (about 250 lines that read the xref chain, tables, streams and object streams, the page tree and the page's objects, and gave identical answers on classic, xref-stream, object-stream and linearized pdfgen files for all 12 pages each; pdf-reader's job can ask for it in my git history, commit 9cc44f65d6's parent branch tip, if useful: it was not committed, so it is gone).
+
+Size (session_01VnDyAygN6JtYE78XMij9Xr): test runs 22, module lines 1730
+
+## J7 · COMPLETE
+
+B11 applied: `tranche/T51` merged, the local `read-bounds.mjs` copy dropped; `image.picture_source` is the table's row and `picturepixels.mjs` loads. Tests: `pagepixels` 538 passed, 3 failed; `imagecrop` 55; `jbig2` 179; `jpx` 203 passed, 2 failed. The five reds are the ones in J6, unchanged: three R47 bytes-read tests (until pdf-reader exports `pageSource`) and two jpx codec memory tests (until image-codecs' `IMAGE_TOO_LARGE` code merges). Checks: format, architecture, coverage (33 of 33), words and ownership, 0 failures each. I use none of rows 20-22.
+
+Size (session_01VnDyAygN6JtYE78XMij9Xr): test runs 26, module lines 1730
