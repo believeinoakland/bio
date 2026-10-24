@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_0151nwFcvAu3ohYr5sDUGqb9 · depth 2 · COMPLETE · handled B24
+**Status** · session_01PdTWUBacQLSzCMnpG4EoW6 · depth 2 · COMPLETE · handled B26
 
 ## J1 · QUESTION
 
@@ -364,3 +364,31 @@ COMPLETE (B24, job 72: R43, R44, R45). Pushed on job/T51/installer-steps; tranch
 **Checks (civicos-process):** format 176 modules, 0 failures; architecture 0 failures; coverage 45 of 45 live ids named, 0 failures; ownership 0 failures; words missingkey 5 (all `installer.fleet.logsunconfirmed`, inherited), marker 0, no new failure from this job (the two `pdfgen.mjs` inline are others'). `impact.mjs origin/tranche/T51 HEAD`: installer-steps, installer 19/21, journey-check 2/25; `node --test newgroup/test/` (installer): 241 tests, 211 pass, 23 fail = the tip's 16 plus the 7 above; journey-check not run beyond the impact listing. Generated artifacts made stale: `newgroup/dist/newgroup.bundled.mjs` (installer-steps is its input); BOB regenerates.
 
 Size (session_0151nwFcvAu3ohYr5sDUGqb9): test runs 8, module lines 2180
+
+## J26 · COMPLETE
+
+COMPLETE (B25, job 82, G158: R44 amended). Pushed on job/T51/installer-steps; tranche/T51 merged in.
+
+**Entries applied:** `registerSubdomain` (probes.mjs) decides "taken" by Cloudflare's code 10031 (the measured 403 answer, K4970), and still by HTTP 409; a 403 without that code is thrown with Cloudflare's message like any other refusal. No sentence added. Fixtures (`newgroup/test/steps/world.mjs`) brought to the measured shapes: R2 not entitled 403/10042 with the measured message (list and create), no prefix 404/10007 with the measured message, plan probe 400/100328 with the measured message, taken prefix 403/10031. The comments that said "documented, BOB measures" now cite the measurement.
+
+**Red first:** R44 failed on the old code against the 403/10031 fixture. Green after: R44 holds the taken case (403/10031), a control that a 403 without the code is thrown, and a control that 409 stays taken. R8's regular expression on the not-entitled sentence (a test holding a sentence's text, K3810) now asserts status 403 and code 10042.
+
+**Own earlier flaw fixed:** R36's family list in `invariants.test.mjs` still required an `installer.address.` key, which J25 stopped reading; red at the tranche tip since then; the family left the list (the module reads no address sentence).
+
+**Measured shapes that disagree with my readings:** none.
+
+**Checks (civicos-process):** format 176 modules, 0 failures; architecture 0 failures; coverage 45 of 45, 0 failures; words inline 0, plain 0, testcopy 0, missingkey 0, 0 failures; ownership 0 failures. `node --test newgroup/test/steps/`: 122 tests, 120 pass, 0 fail... (see Tests line).
+**Tests:** `newgroup/test/steps/` 122 tests, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: installer-steps 8/9, installer 21/23, journey-check 2/25. installer (`newgroup/test/`): 16 reds before and 16 after my change by name (the R36 one is mine, now fixed, so installer-steps' count is 0): inherited, not from this change. journey-check (`bio-plane/test/m/journey-check/`): 102 reds, identical by name before and after (R1(a) install-over-fake-account, browser needing CHROMIUM, R28 screens): inherited.
+**For BOB, installer's fixture:** its fake answers a taken prefix and the not-entitled R2 refusal without the measured codes, if it still does; it is installer's. Generated artifact stale: `newgroup/dist/newgroup.bundled.mjs`; BOB regenerates.
+
+Size (session_01PdTWUBacQLSzCMnpG4EoW6): test runs 6, module lines 2181
+
+## J27 · COMPLETE
+
+COMPLETE (B26, job 82 addition). Pushed on job/T51/installer-steps; tranche/T51 merged in.
+
+**Applied:** in `api.mjs` `failureOf`, the ApproveAgain made for a 401 now carries Cloudflare's `code` (`code: e.code`) beside `status` and `apiMessage`. Test (R1): the measured 401 / 1000 Containers answer gives `code === 1000`; a plain 401 with code 9109 gives 9109; a 401 with no code gives none (control, nothing invented). `approveAgain` is still true and a 401 is still never retried. The G158 half (403/10031 taken, B25) is in the same branch (J26).
+
+**Checks:** `newgroup/test/steps/` 123 tests, 0 fail. format, architecture, coverage, words, ownership: 0 failures each. Installer's suite (`newgroup/test/`): 15 reds, all inherited (16 before the merge of the tranche tip; none from this change). Stale generated artifact: `newgroup/dist/newgroup.bundled.mjs`.
+
+Size (session_01PdTWUBacQLSzCMnpG4EoW6): test runs 3, module lines 2182

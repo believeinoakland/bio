@@ -37,8 +37,8 @@ async function establishPlan(token, acct) {
 }
 
 /* R43: whether the account may use R2 at all, asked by a read that creates nothing. Cloudflare's R2 error table gives 10042 for an
-   account not entitled to the feature (403) and 10073 for a bucket that already exists. Documented shape; BOB measures on the
-   rehearsal account (K4942). Codes are matched, never words. */
+   account not entitled to the feature (403; measured on the rehearsal account, K4970) and 10073 for a bucket that already
+   exists. Codes are matched, never words. */
 const R2_NOT_ENTITLED = 10042, R2_BUCKET_CONFLICT = 10073;
 async function storageEntitlement(token, acct) {
   try { await cf(token, `/accounts/${acct}/r2/buckets`); return { state: "on" }; }
@@ -73,12 +73,13 @@ async function addressState(token, acct, slug) {
   return sub ? { sub, proposed: null } : { sub: null, proposed: slug };
 }
 
-/* Registers exactly the name the founder chose. Cloudflare offers no availability check, and the taken answer's code is not
-   documented: it is read as HTTP 409 (Conflict); BOB measures it on the rehearsal account (K4942). Any other refusal is thrown
-   with Cloudflare's message. */
+/* Registers exactly the name the founder chose. Cloudflare offers no availability check; a taken prefix is HTTP 403 with code
+   10031, measured on the rehearsal account (K4970), decided by the code and never the words. HTTP 409 stays taken too. A 403
+   without that code is a refusal like any other: thrown with Cloudflare's message. */
+const SUBDOMAIN_UNAVAILABLE = 10031;
 async function registerSubdomain(token, acct, name) {
   try { await cf(token, `/accounts/${acct}/workers/subdomain`, { method: "PUT", body: JSON.stringify({ subdomain: name }) }); }
-  catch (e) { if (e.status === 409 && !special(e)) return { ok: false, taken: true }; throw e; }
+  catch (e) { if ((e.code === SUBDOMAIN_UNAVAILABLE || e.status === 409) && !special(e)) return { ok: false, taken: true }; throw e; }
   return { ok: true };
 }
 
