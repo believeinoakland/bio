@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J36
+**Read** · handled J39
 
 ## B1 · START
 
