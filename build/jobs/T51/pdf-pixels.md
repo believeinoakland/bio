@@ -118,3 +118,9 @@ Three things I need before COMPLETE; I carry on with the rest on my best reading
 **For BOB, not mine:** (a) strike the "not yet met" marks of R20, R22-R25, R42, R43, R45-R49 when the reds above turn green; (b) regenerate the ocr-worker manifest; (c) the word row for `PIXELS_UNDETERMINED`; (d) `ocr-worker` must now pass `turn`/`allowTextPage` (jobs 18). I deferred nothing; `pagesource.mjs`, which I had drafted before B10, is removed (about 250 lines that read the xref chain, tables, streams and object streams, the page tree and the page's objects, and gave identical answers on classic, xref-stream, object-stream and linearized pdfgen files for all 12 pages each; pdf-reader's job can ask for it in my git history, commit 9cc44f65d6's parent branch tip, if useful: it was not committed, so it is gone).
 
 Size (session_01VnDyAygN6JtYE78XMij9Xr): test runs 22, module lines 1730
+
+## J7 · COMPLETE
+
+B11 applied: `tranche/T51` merged, the local `read-bounds.mjs` copy dropped; `image.picture_source` is the table's row and `picturepixels.mjs` loads. Tests: `pagepixels` 538 passed, 3 failed; `imagecrop` 55; `jbig2` 179; `jpx` 203 passed, 2 failed. The five reds are the ones in J6, unchanged: three R47 bytes-read tests (until pdf-reader exports `pageSource`) and two jpx codec memory tests (until image-codecs' `IMAGE_TOO_LARGE` code merges). Checks: format, architecture, coverage (33 of 33), words and ownership, 0 failures each. I use none of rows 20-22.
+
+Size (session_01VnDyAygN6JtYE78XMij9Xr): test runs 26, module lines 1730
