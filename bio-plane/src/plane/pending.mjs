@@ -74,7 +74,7 @@ export const KEEPS_PENDING_DDL = `CREATE TABLE IF NOT EXISTS keeps_pending (
 export const JOB_COLUMNS = Object.freeze([
   ["state", "TEXT NOT NULL DEFAULT 'queued'"], ["verdict", "TEXT"], ["cursor", "TEXT"],
   ["written", "INTEGER NOT NULL DEFAULT 0"], ["skipped", "INTEGER NOT NULL DEFAULT 0"], ["owed", "INTEGER NOT NULL DEFAULT 0"],
-  ["failed", "INTEGER NOT NULL DEFAULT 0"], ["failed_why", "TEXT NOT NULL DEFAULT '{}'"], ["last_progress_at", "INTEGER"],
+  ["failed", "INTEGER NOT NULL DEFAULT 0"], ["failed_why", "TEXT NOT NULL DEFAULT '{ }'"], ["last_progress_at", "INTEGER"],
   ["rate_per_s", "REAL"], ["carrier", "TEXT"], ["reader_version", "TEXT"], ["priority", "TEXT"], ["ended_at", "INTEGER"], ["member", "TEXT"],
 ]);
 /** R92: the last run of each (digest or session, kind), kept after the row has ended. */

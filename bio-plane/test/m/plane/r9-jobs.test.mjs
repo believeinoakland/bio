@@ -158,6 +158,13 @@ test("R97 G127c: a fetch refused for a capture another bundle holds ends `final`
   assert.deepEqual(x.jobs.list({ sha: "s-held" }).map((e) => [e.state, e.why, e.failed_why.CAPTURE_HELD_BY_ANOTHER_BUNDLE.kind]), [["final", "CAPTURE_HELD_BY_ANOTHER_BUNDLE", "part"]]);
 });
 
+test("R9 R97: the plane's own tables, the job table with `job_unit_attempts` and `job_batches` beside `keeps_last` and `acquire_stages`, are declared to record-core's purge by the plane, and no other row is the plane's", async () => {
+  const x = await world();
+  const { recordOf } = await import("../../../src/record-core/index.mjs");
+  for (const t of ["keeps_pending", "keeps_last", "acquire_stages", "job_unit_attempts", "job_batches"])
+    assert.equal(recordOf(x.ctx).declarePurge("zz-probe", [t]).declaredBy, "plane", t);
+});
+
 /* ---- R98: the one registrar ---- */
 
 test("R98 registerJob: synchronous, never throws; a malformed entry is refused with its reason; a second registration re-arms, keeps every counter, changes cursor, owed, detail and parts only when given; `raised` is never lowered", async () => {

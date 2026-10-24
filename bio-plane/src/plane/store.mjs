@@ -213,10 +213,7 @@ export class Store extends DurableObject {
     /* extraction: its projection joins every promotion. content: created on extraction's instance here, so its stale
        mark (REC-82, its R22) is registered before observation-log's rows (its R6–R8), in the modules' total order
        (extraction R24). */
-    /* R98 (fix round 9, G126; 2c item 1): extraction is handed the one registrar as `registerJob` (and `armJobs`), asked of the ledger at each
-       call (the ledger is built below, before any request), so its `owe` is `registerJob` bound to a kind. */
-    const jobs = { registerJob: (e) => pendingOf(ctx).registerJob(e), armJobs: () => pendingOf(ctx).armJobs() };
-    observationLogOf(ctx).listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx), ...jobs }) }).extraction);
+    observationLogOf(ctx).listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction);
     /* entities (R13): observation-log records each resolution attempt on entities' notice (its R8). */
     observationLogOf(ctx).attachMeaning({ entities: entitiesOf(ctx) });
     /* R21 (T33-90; K1563): layer 5's new modules, in the modules' order, each built here with the instances it reads
@@ -444,9 +441,12 @@ export class Store extends DurableObject {
        synchronous write of the job row, made inside the caller's filing transaction; the alarm is armed by `armJobs` after the commit. */
     capture.registerJob = (e) => pending.registerJob(e);
     capture.armJobs = () => pending.armJobs();
-    /* R83 (fix round 6, G8, G13; extraction R89): the same ledger handed to extraction, which owes it the repair of an old reading and the restart of a partial text at start; guarded, as extraction's own merge is later than this line */
+    /* R83 (fix round 6, G8, G13; extraction R89), R98 (fix round 9; K4898 (1)): extraction's `owe` IS the registrar: its hook is handed `registerJob`
+       (synchronous, so a reader may owe inside its own transaction), the alarm armed beside each row kept; every `readHeld` the ledger makes also
+       carries `registerJob` and `armJobs` (pending.mjs). Guarded, as extraction's own merge is later than this line. */
     const extraction = extractionOf(ctx);
-    if (typeof extraction.registerOwe === "function") extraction.registerOwe((a) => pending.owedLater(a));
+    if (typeof extraction.registerOwe === "function")
+      extraction.registerOwe((a) => { const r = pending.registerJob(a); if (r && r.ok === true) void pending.armJobs(); return r; });
     /* R37 (T42; N826; K2607 rule 3, K2629, K2630; doorbell R25): doorbell, directly after capture in the modules' order,
        the one instance per host (actions' factory may have reached it first for its hold reader, actions R55); it takes no
        `env` of its own and reads capture's at each use, the instance above. */

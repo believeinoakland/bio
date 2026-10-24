@@ -213,7 +213,8 @@ test("R83 (G8, G13): the plane hands extraction the ledger's `owedLater` at cons
   const d = sha("a reading extraction owes at start");
   const x = await store({ before: (ctx) => { extractionOf(ctx).registerOwe = (fn) => given.push(fn); } });
   assert.equal(given.length, 1, "handed once, at construction");
-  assert.deepEqual(await given[0]({ kind: "reading", sha: d }), { ok: true });
+  /* R98 (fix round 9; K4898 (1)): the hook IS the registrar, synchronous, answering the row's state */
+  assert.deepEqual(given[0]({ kind: "reading", sha: d }), { ok: true, existed: false, state: "queued" });
   assert.deepEqual(pendingOf(x.ctx).list().map((r) => [r.sha, r.kind, r.state]), [[d, "reading", "owed"]]);
   /* control: where extraction has no `registerOwe` the object is built and owes nothing */
   const y = await store({});
