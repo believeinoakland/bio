@@ -477,7 +477,32 @@ CREATE TABLE IF NOT EXISTS seen_in (
   at          TEXT NOT NULL,
   PRIMARY KEY (capture_sha, project)
 );
-CREATE INDEX IF NOT EXISTS seen_in_project ON seen_in (project)`;
+CREATE INDEX IF NOT EXISTS seen_in_project ON seen_in (project);
+-- R113 (fix round 9; G127f; K4891): a file sent in parts through the Worker is one upload session until it is completed or abandoned. One row per
+-- upload: upload the id handed to the member's browser (this module's, never R2's); sha256 the whole file's digest as the member declared it at
+-- the begin (the key of the object, verified at the completion against the digest of all the bytes hashed in order); bytes the declared size;
+-- part_bytes the size of every part but the last; by the member's stamp, the only one who may put, complete or abort it; statement, name and
+-- type what the begin was given, kept for the filing; r2 the id of R2's own multipart upload (null when the whole was already held); state
+-- 'open' until R2's upload is completed, then 'completed' until the filing is done (a retry of the completion then files, and completes nothing
+-- twice); parts the JSON list of the parts put so far, in order, each {sha256, etag, bytes}; created and expires whole-second UTC instants. The
+-- row is removed when the upload is filed, aborted or expired; it holds no byte of the file.
+CREATE TABLE IF NOT EXISTS parted_uploads (
+  upload     TEXT PRIMARY KEY,
+  sha256     TEXT NOT NULL,
+  bytes      INTEGER NOT NULL,
+  part_bytes INTEGER NOT NULL,
+  by         TEXT NOT NULL,
+  statement  TEXT NOT NULL,
+  name       TEXT,
+  type       TEXT,
+  r2         TEXT,
+  state      TEXT NOT NULL DEFAULT 'open',
+  parts      TEXT NOT NULL DEFAULT '[]',
+  created    TEXT NOT NULL,
+  expires    TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS parted_uploads_expires ON parted_uploads (expires);
+CREATE INDEX IF NOT EXISTS parted_uploads_by_sha ON parted_uploads (by, sha256)`;
 
 /* Columns an older store's tables gained after they were first written, added at boot (never back-filled; each
    reason is where the column is read). Moved from the legacy store's additive list. */
@@ -498,5 +523,5 @@ export const CAPTURE_RESHAPE = [["links", "citation_norm"]];
    corpus-derived. The doorbell's tables are `doorbell`'s to declare (T43; N849, N864). */
 export const CAPTURE_PURGED_TABLES = ["task_queue", "source_reachability", "link_verdicts", "links", "site_asset_refs",
   "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators",
-  "capture_actors", "capture_accounts", "late_attestations", "held_acts", "held_act_questions", "captured_for", "seen_in", "fetch_done"];
+  "capture_actors", "capture_accounts", "late_attestations", "held_acts", "held_act_questions", "captured_for", "seen_in", "fetch_done", "parted_uploads"];
 export const CAPTURE_EXEMPT_TABLES = ["capture_limits", "render_allowance", "render_slots"];

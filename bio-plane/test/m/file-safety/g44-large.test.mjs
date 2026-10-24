@@ -2,7 +2,7 @@
    cut stated, never every cell and never an empty view. R11 (the data answer, amended), R51 (a file above what a preview can
    show is stated with its size and bound, amended), R21 (the new bounds are exported). Every case goes through the
    real op (`fileSafetyOps(...).safeview`) over `filedWorld()`; the large ones run in a child whose old space is the platform
-   object's (`capFor`, the plane's shape: 128 + 39 - the file's MB, less the plane's idle 87.7, plus the fixture's own idle),
+   object's (`capFor` of the byte ledger, runtime-limits R33, the one cap convention),
    so a child that dies of memory fails the test. Not asserted: any compute time (R-CLOCK). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -17,6 +17,7 @@ import * as FS from "../../../src/file-safety/index.mjs";
 import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { makeZip } from "../../make-zip.mjs";
+import { capFor } from "../../../src/byte-ledger.mjs";
 import { genSheetXml, smallSheetXml, xlsxOf, csvOf, odsOf, MIB } from "./g44-fixtures.mjs";
 
 const run = promisify(execFile);
@@ -24,8 +25,6 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const { GRADE_READ_MAX, fileSafetyOps } = FS;
 const CELLS = FS.SAFE_VIEW_CELLS_MAX, SHEETS = FS.SAFE_VIEW_SHEETS_MAX, TOTAL = FS.SAFE_VIEW_TOTAL_CELLS_MAX;
 
-/* The platform object's old space for a file of `mb` MB, the plane's idle taken out and the fixture's own put in (diagnosis-R6-g44 §2). */
-const capFor = (mb, idle) => Math.max(40, Math.round(128 + 39 - mb - 87.7 + idle));
 const seen = [];
 async function inChild(t, name, bytes) {
   const dir = mkdtempSync(join(tmpdir(), "g44-"));
@@ -34,8 +33,7 @@ async function inChild(t, name, bytes) {
   writeFileSync(file, bytes);
   const child = async (cap, job) => JSON.parse((await run(process.execPath, ["--expose-gc", `--max-old-space-size=${cap}`, join(HERE, "g44-child.mjs"), file, job],
     { maxBuffer: 1 << 26 })).stdout);
-  const idle = await child(512, "idle");
-  const cap = capFor(bytes.length / 1e6, idle.idleMB);
+  const cap = capFor(bytes.length / MIB);   /* runtime-limits R33: the one cap convention */
   const out = await child(cap, "view");
   seen.push(`${name}: ${bytes.length} B, idle ${out.idleMB.toFixed(1)} MB, cap ${cap} MB, peak ${(out.peakMB - out.idleMB).toFixed(1)} MB above idle`);
   t.diagnostic(seen[seen.length - 1]);
@@ -86,7 +84,8 @@ test("R11: a 4 MB and a 17.7 MB CSV at the platform object's old space answer th
 });
 
 test("R11: a row of 200,000 fields is cut to SAFE_VIEW_CELLS_MAX cells and the sheet says it is truncated; the answer stays small", async (t) => {
-  const row = `${Array.from({ length: 200_000 }, () => "a").join(",")}\n`;
+  /* 16,000 fields: under the reader's column bound (16,384, G124e), over the cut */
+  const row = `${Array.from({ length: 16_000 }, () => "a").join(",")}\n`;
   const a = await inChild(t, "wide.csv", enc(row + row));
   assert.deepEqual([a.ok, a.kind], [true, "data"]);
   const s = a.sheets[0];
@@ -150,8 +149,8 @@ test("R11 R51: a file above what a preview can show is stated with its size and 
   /* a workbook of 26.2 MB declared (read in pieces past 20 MiB): stated, size and bound */
   const { xml } = genSheetXml(26.2 * MIB);
   stated(await view(w, await w.capture(xlsxOf([{ name: "Big", xml }]))), "PREVIEW_NOT_DRAWN", { format: "xlsx" });
-  /* a CSV of 18.5 MB (over the entry's 17 MiB, under GRADE_READ_MAX) and one of 20,971,571 B (over GRADE_READ_MAX) */
-  stated(await view(w, await w.capture(csvOf(18_500_000).bytes)), "PREVIEW_NOT_DRAWN", { format: "csv" });
+  /* a CSV of 18.5 MB is drawn (the light kinds take the standard's figure, K4834: the reader's old 17 MiB is gone) and one of 20,971,571 B (over GRADE_READ_MAX) is stated */
+  assert.equal((await view(w, await w.capture(csvOf(18_500_000).bytes))).kind, "data");
   stated(await view(w, await w.capture(csvOf(20_971_571).bytes)), "TOO_LARGE", { format: "csv", bound: GRADE_READ_MAX });
   /* an xlsx file above GRADE_READ_MAX (the package, not its text): the zip is never loaded, and says why */
   const pad = new Uint8Array(21 * MIB);

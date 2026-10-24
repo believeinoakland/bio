@@ -68,7 +68,7 @@ test("R39: scanWake answers null with no scanner bound or no file held; now whil
   assert.ok(a && b && c && big && lastRun);
 });
 
-test("R39: renderWake answers null while no file's view and no safe copy is queued, else the later of now and the last renderBatch plus FILE_SAFETY_POLL_MS (now before any); deeperWake null while no check is queued or running, else the earliest of the last deeperBatch plus the poll for a queued check and each running sandbox's next poll, never before now, and the last deeperBatch plus the poll while its checks cannot be read; each kept across a restart, writes nothing and never throws", async () => {
+test("R39: renderWake answers null while no file's view and no safe copy is queued, else now (a view or safe copy left queued by the last renderBatch, K4900); deeperWake null while no check is queued or running, else the earliest of the last deeperBatch plus the poll for a queued check and each running sandbox's next poll, never before now, and the last deeperBatch plus the poll while its checks cannot be read; each kept across a restart, writes nothing and never throws", async () => {
   const w = world({ scan: { polls: 3 } });
   /* render */
   assert.equal(w.fs.renderWake(T0), null);
@@ -77,10 +77,8 @@ test("R39: renderWake answers null while no file's view and no safe copy is queu
   assert.equal(w.fs.renderWake(w.clock.now), w.clock.now, "queued, never rendered: now");
   await w.fs.renderBatch({ limit: 1 });
   const rendered = w.clock.now;
-  assert.equal(w.fs.renderWake(rendered), rendered + POLL);
-  assert.equal(w.fs.renderWake(rendered + 2 * POLL), rendered + 2 * POLL, "the later of now and the poll");
-  assert.equal(restarted(w).renderWake(rendered), rendered + POLL, "kept across a restart");
-  w.tick(POLL);
+  assert.equal(w.fs.renderWake(rendered), rendered, "a view left queued by the batch: now (K4900)");
+  assert.equal(restarted(w).renderWake(rendered), rendered, "kept across a restart");
   await w.fs.renderBatch({});
   assert.equal(w.fs.renderWake(w.clock.now), null, "nothing queued");
   /* a safe copy queued alone keeps it */
@@ -245,7 +243,7 @@ test("R40: onFileWork(module, fn) registers once (a second by one module LISTENE
   heard.length = 0;
   const ct = await w.tool("glasswall-halo", { config: { host: "halo.example.org" } });
   w.exec("UPDATE fs_tools SET use = 'routine' WHERE tool_id = ?", ct);
-  await w.fs.renderBatch({});
+  for (let i = 0; i < 6; i++) await w.fs.renderBatch({});   /* one render is begun per tick (R12) */
   /* nothing is queued: only the views waiting for bytes the store never held (R51) are left, at their own instant */
   assert.equal(w.fs.renderWake(w.clock.now), Date.parse(w.row("SELECT MIN(render_wait_at) AS t FROM fs_files WHERE render_state = 'waiting'").t), "as the scheduler asks after a tick");
   w.tick(POLL + 1);

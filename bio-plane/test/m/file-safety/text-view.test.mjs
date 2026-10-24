@@ -13,8 +13,8 @@ const CHUNK = 16384;
 function counted(w) {
   const read = { bytes: 0 };
   const orig = w.bucket.get.bind(w.bucket);
-  w.bucket.get = async (k) => {
-    const o = await orig(k);
+  w.bucket.get = async (k, opts) => {
+    const o = await orig(k, opts);
     if (!o || !k.startsWith("bio/captures/")) return o;
     const b = new Uint8Array(await o.arrayBuffer());
     let off = 0;
@@ -22,7 +22,7 @@ function counted(w) {
       if (off >= b.length) { c.close(); return; }
       const part = b.subarray(off, off + CHUNK); off += part.length; read.bytes += part.length; c.enqueue(part);
     } }, { highWaterMark: 0 });
-    return { key: k, size: b.length, body, arrayBuffer: async () => { read.bytes += b.length; return b.buffer.slice(b.byteOffset, b.byteOffset + b.length); } };
+    return { key: k, size: o.size, body, arrayBuffer: async () => { read.bytes += b.length; return b.buffer.slice(b.byteOffset, b.byteOffset + b.length); } };
   };
   return read;
 }
@@ -161,8 +161,12 @@ test("R45 (B2): a file longer than 4 x SAFE_VIEW_TEXT_MAX bytes whose rest was n
   assert.ok(!lg.reasons.some((x) => x.code === "unread"));
   assert.ok(read.bytes >= longPdf.length, "read whole");
   /* a file within the start is judged as it always was, the whole of it: a bad byte late in it is not text */
-  const bad = await w.capture(new Uint8Array([...enc("fine text\n".repeat(1000)), 0xff, 0xfe, 0x0a]));
+  const bad = await w.capture(new Uint8Array([...enc("fine text\n".repeat(1000)), ...Array.from({ length: 300 }, (_, i) => (i % 2 ? 0xff : 1 + (i % 6))), 0x0a]));
   assert.equal((await w.fs.threatOf({ captureSha: bad })).format, "unknown");
   assert.equal((await w.fs.safeView({ captureSha: bad, ...V })).code, "NO_SAFE_VIEW");
+  /* R56: Latin-1 text is text (its characters are not UTF-8, so no safe view of them is drawn here) */
+  const latin = await w.capture(new Uint8Array([...enc("fine text\n".repeat(1000)), 0xe9, 0xff, 0xfe, 0x0a]));
+  assert.equal((await w.fs.threatOf({ captureSha: latin })).format, "text");
+  assert.equal((await w.fs.safeView({ captureSha: latin, ...V })).code, "NO_SAFE_VIEW");
   assert.ok(T0);
 });

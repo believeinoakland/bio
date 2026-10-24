@@ -322,7 +322,10 @@ registerFormat({
       /* %PDF- within the first 1024 bytes — the same window extractPdfStructure
          itself accepts, so detect and structure cannot disagree about what a
          PDF is. */
-      if (LATIN1.decode(bytes.subarray(0, 1024)).includes("%PDF-"))
+      /* Not a file that begins with the ZIP local-file magic (K4900; R20): a ZIP archive whose first
+         member is a PDF stored uncompressed carries `%PDF-` inside that window and is the ZIP of
+         R28 (or the office or ODF kind its entries make it), never a PDF. */
+      if (!ooxml.hasZipMagic(bytes) && LATIN1.decode(bytes.subarray(0, 1024)).includes("%PDF-"))
         return { format: "pdf", confidence: "certain",
                  signals: ["magic: %PDF- header in the first 1024 bytes"] };
       return null;

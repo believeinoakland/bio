@@ -12,6 +12,7 @@
  * needs an offset into the RAW text (for `ctx.locate`) reads raw lines (`eachLine`, `lineTable`), as it always did. */
 import { allMatches, entity, readAgain } from "../docprofile/doctypes/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
+import { CLASSIFY_WHOLE_MAX_CHARS } from "../docprofile/classify-view.mjs";
 
 export const WINDOW_CHARS = 1 << 18;
 export const WINDOW_PAD = 4096;
@@ -21,6 +22,14 @@ export const WINDOW_PAD = 4096;
  * primitive here that walks a text adds the characters it walks to the counter, and `spend` adds a pass a type makes
  * by hand (a `test` or a `match` over the text). With no `ctx.work` nothing is counted and nothing changes. */
 let WORK = null;
+/* THE FLAT VIEW (R37, K4892). A text no longer than `CLASSIFY_WHOLE_MAX_CHARS` is what docprofile hands a `detect` (the whole
+ * text, or the classification view of a longer one), and a type scans it in several passes. A pass that cut it into windows
+ * made, per window, a flattened piece and a third string with the padding, and a type of six passes left 38 MB of large-object
+ * strings that only a major collection frees (found over a 1.5 M-character view in one tick of the plane's isolate). So while a
+ * `detect` or `parse` runs on a text of that size, it flattens the text ONCE, here, and every pass is one window over the one
+ * flat string; the string is dropped when the call ends. A longer text (a `parse` of a whole reading) is still read a window
+ * at a time. The answers are the same: a window is a piece of the flatten and one window holds it all. */
+let FLAT = null;
 /** Adds `n` characters to the work counter now running, if one is. */
 export function spend(n) {
   if (WORK !== null && n > 0) WORK.chars += n;
@@ -31,13 +40,15 @@ export function spend(n) {
 export function counted(type) {
   const run = (fn, once) => function (ctx, ...rest) {
     const w = ctx && ctx.work;
-    if (!w || typeof w !== "object" || typeof w.chars !== "number") return fn.call(this, ctx, ...rest);
-    const prev = WORK;
+    const counting = !!w && typeof w === "object" && typeof w.chars === "number";
+    const prev = WORK, prevFlat = FLAT;
     const mine = once ? { chars: 0 } : w;
-    WORK = mine;
+    if (counting) WORK = mine;
+    FLAT = { text: ctx && ctx.text, flat: null };
     try { return fn.call(this, ctx, ...rest); } finally {
       WORK = prev;
-      if (once) w.chars += Math.min(mine.chars, String((ctx && ctx.text) || "").length);
+      FLAT = prevFlat;
+      if (counting && once) w.chars += Math.min(mine.chars, String((ctx && ctx.text) || "").length);
     }
   };
   const out = { ...type };
@@ -48,6 +59,27 @@ export function counted(type) {
 
 const WS = /\s/;
 
+/* `text.slice(a, b).replace(/\s+/g, " ")` without the replace: a global replace over a text of 150,000 white-space runs leaves
+   about 13 MB of garbage (V8 holds every match while it builds the result, and a collection frees it late), so the characters
+   are copied by hand, a run of white space (the characters `\s` matches) as one space, through one small scratch array. */
+const SCRATCH = new Uint16Array(8192);
+function isSpace(c) {
+  return c === 32 || (c >= 9 && c <= 13) || c === 160 || c === 0x1680 || (c >= 0x2000 && c <= 0x200a) || c === 0x2028 || c === 0x2029
+    || c === 0x202f || c === 0x205f || c === 0x3000 || c === 0xfeff;
+}
+function flatSlice(text, a, b) {
+  const parts = [];
+  let k = 0, space = false;
+  for (let i = a; i < b; i++) {
+    const c = text.charCodeAt(i);
+    if (isSpace(c)) { if (space) continue; space = true; SCRATCH[k++] = 32; }
+    else { space = false; SCRATCH[k++] = c; }
+    if (k === SCRATCH.length) { parts.push(String.fromCharCode.apply(null, SCRATCH)); k = 0; }
+  }
+  if (k) parts.push(String.fromCharCode.apply(null, SCRATCH.subarray(0, k)));
+  return parts.length === 1 ? parts[0] : parts.join("");
+}
+
 /* The pieces of flatten(text), each cut at the end of a white-space run so that no run is split between two pieces. */
 function* flatPieces(text, chunk) {
   const n = text.length;
@@ -55,14 +87,25 @@ function* flatPieces(text, chunk) {
   while (at < n) {
     let cut = Math.min(n, at + chunk);
     if (cut < n && WS.test(text[cut - 1])) while (cut < n && WS.test(text[cut])) cut++;
-    yield text.slice(at, cut).replace(/\s+/g, " ");
+    yield flatSlice(text, at, cut);
     at = cut;
   }
+}
+
+/* flatten(text), made once for the `detect` or `parse` now running when `text` is the text it was handed and is no longer
+   than `CLASSIFY_WHOLE_MAX_CHARS`; else null. Only the default cut asks (a caller that sets `chunk` or `pad` is testing the cut). */
+function flatOnce(text, chunk, pad) {
+  if (FLAT === null || chunk !== WINDOW_CHARS || pad !== WINDOW_PAD) return null;
+  if (typeof text !== "string" || text !== FLAT.text || text.length > CLASSIFY_WHOLE_MAX_CHARS) return null;
+  if (FLAT.flat === null) FLAT.flat = flatSlice(text, 0, text.length);
+  return FLAT.flat;
 }
 
 /** The windows of flatten(text): `{buf, from, to, base, last}`; `buf` holds the piece between `from` and `to` with
  *  the flattened characters before and after it, and `base` is the offset of `buf[0]` in the whole flatten. */
 export function* flatWindows(text, { chunk = WINDOW_CHARS, pad = WINDOW_PAD } = {}) {
+  const whole = flatOnce(text, chunk, pad);
+  if (whole !== null) { spend(whole.length); yield { buf: whole, from: 0, to: whole.length, base: 0, last: true }; return; }
   const pieces = flatPieces(String(text || ""), chunk);
   const ahead = [];
   let aheadLen = 0;

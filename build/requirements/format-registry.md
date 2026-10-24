@@ -49,7 +49,7 @@ that entry's own account.
 - **R19** `parts`, `structure` and `text` are all `null`: HTML's structure is produced at acquire time by the subresource walk, outside this module's reach — this entry answers detection only.
 
 **The built-in `pdf` entry**, registered under `"pdf"`:
-- **R20** `detect(bytes, contentType)`: when `bytes` is truthy, decodes its first 1024 bytes as latin1 (no case change) and returns `{ format: "pdf", confidence: "certain", signals: [...] }` when it includes the literal `"%PDF-"`; otherwise `null`. `contentType` is not consulted while `bytes` is truthy.
+- **R20** `detect(bytes, contentType)`: when `bytes` is truthy, decodes its first 1024 bytes as latin1 (no case change) and returns `{ format: "pdf", confidence: "certain", signals: [...] }` when it includes the literal `"%PDF-"` and its first four bytes are not the ZIP local-file magic `PK\x03\x04` (fix round 9, K4900: a ZIP archive whose first member is a PDF stored uncompressed is the ZIP of R25, never a PDF, whole or through a range source, R32); otherwise `null`. `contentType` is not consulted while `bytes` is truthy.
 - **R21** When `bytes` is falsy: returns `{ format: "pdf", confidence: "likely", signals: [...] }` when `contentType` is exactly `"application/pdf"`; otherwise `null`.
 - **R22** `parts` and `text` are `null` (a PDF is its own container, and its Tier-1 text rides `structure()`'s own output object). `structure(bytes)` delegates to `pdf-reader`'s `extractPdfStructure(bytes)` and returns its result unchanged.
 
