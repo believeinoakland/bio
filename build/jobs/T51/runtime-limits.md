@@ -1,6 +1,6 @@
 # runtime-limits (T51)
 
-**Status** · session_01HB2uM2PSYhuqXKXfVqYh67 · depth 2 · COMPLETE · handled B8
+**Status** · session_019ez6rv297h5VQHkQeN93zR · depth 2 · COMPLETE · handled B11
 
 ## Completion (RUNTIME-LIMITS #6, fix round 7, G83)
 
@@ -145,3 +145,39 @@ Size (session_01HB2uM2PSYhuqXKXfVqYh67): test runs 5, module lines 11
 ## J10 · COMPLETE · re B9
 
 COMPLETE B9: READ_BOUNDS rows text/request_bytes (3 MiB x3), content/held_text_chars (32 Mi x3), content/kind_scan_pages (16 x3) added and tested (R30, R31); boundOf(text, request_bytes) answers 3 MiB. Suite 56/56; importers 246/249, the 2 failures (fleetbundles stale bundles, g41-shape xlsx) identical on tranche/T51 without my diff; format, architecture, coverage, ownership 0 failures; words 19 failures none in my module. Bundles with read-bounds.mjs as input are stale; BOB regenerates at round end. Details in my record.
+
+## Completion (RUNTIME-LIMITS #13, fix round 9, batch D, B10, K4922)
+
+**Entries applied.** Two rows in a new `table` entry of `READ_BOUNDS` (`bio-plane/src/read-bounds.mjs`), today's figure in all three columns, each `same(n, k(...))`: `table`/`bytes` 20,971,520 (20 MiB of canonical CSV), key `limit.table.bytes`; `table`/`cells` 1,000,000, key `limit.table.cells`. No sentence added. Test: `read-bounds.test.mjs`, "R30: the rows calculations quotes ...", through `boundOf` and `statement` (R31), and the entry's keys are exactly those two.
+
+**Deferred.** None.
+
+**Found in another module.** `bio-plane/test/m/plane/g41-shape.test.mjs` ("R84 G41 K4855: a 200,000-row xlsx ... at cap 201 MB") fails identically on `origin/tranche/T51` without my change (checked), so it is not caused by this job; it belongs to plane.
+
+**Tests.** runtime-limits suite: 57 tests, 57 pass. Importers run (g41-shape, r9-memory, acquisition r9-ceilings, reading-pipeline r9-reader, file-safety r57-bounds, pdf-reader bounds, csv-reader bounds, ooxml round9, capture r9-t51): 98 tests, 97 pass, 1 fail (the plane one above, pre-existing). The full `impact.mjs` set (2185 files) was not run: the change adds a key to a frozen table and moves no existing figure.
+**Checks.** format: 176 modules, 176 requirements files; 0 failures. architecture: 0 failures. coverage: 32 of 32 live requirement ids named by a test; 0 failures. ownership: 3 files changed by runtime-limits; 0 failures. (words not run: not in the process repository's checks.)
+
+Size (session_01Ra4BjLK2eQyeYJ4TDpTTos): test runs 4, module lines 169
+
+## J11 · COMPLETE
+
+COMPLETE · RUNTIME-LIMITS #13 · B10 (K4922): `table`/`bytes` 20 MiB and `table`/`cells` 1,000,000 added to READ_BOUNDS, all three columns equal, keys limit.table.bytes / limit.table.cells; tested through boundOf and statement (R30, R31). Suite 57/57; checks format, architecture, coverage, ownership 0 failures. Found in plane (not mine): g41-shape 'R84 G41 K4855 ... 200,000-row xlsx' fails identically on origin/tranche/T51 without my change. Details in my record.
+
+## Completion (RUNTIME-LIMITS #14, fix round 9, batch D, B11, K4936)
+
+**Entries applied.** The `workbook` entry of `READ_BOUNDS` (`bio-plane/src/read-bounds.mjs`): `cells` is now `same(250000, ...)` (alpha 250,000 in all three columns, K4831 (10); the comment rewritten to the ruling); NEW `bytes`: `bytes(20 * MiB, ..., MB50)` (alpha 20 MiB, standard and protective 50 MB, K4845), key `limit.workbook.bytes`; NEW `cells_json_bytes`: `same(64 * MiB, ...)`, key `limit.workbook.cells_json_bytes` (K4831 (8)). No sentence added. Tests (`read-bounds.test.mjs`): a new "R30: the workbook rows ..." test checks each row's three columns, its key, `boundOf` and `statement` (R31) and that the entry's keys are exactly the three; the existing heavy-kinds test now expects `boundOf("workbook", "cells")` = 250,000.
+
+**Note for BOB.** `build/requirements/runtime-limits.md` R30 still says the workbook's cells are "50,000 (250,000 once the workbook-add job merges)"; the table now holds 250,000 per K4831 (10). The requirements are BOB's; I did not edit them.
+
+**Deferred.** None.
+
+**Found in another module.** (1) plane: `g41-shape.test.mjs` "R84 G41 K4855 ... 200,000-row xlsx" fails the same on `origin/tranche/T51` without my diff. (2) workbooks: 7 of 37 tests under `bio-plane/test/m/workbooks/` fail (the real-shape cap cases in add/lifecycle: "R1 R2 a workbook of the bound's cells adds ...", the 23,103-cell control, formula-heavy, 26.2 MB, 221,376 cells, one-character cells, stored-over-the-bound); the same 7 fail with `read-bounds.mjs` restored from `origin/tranche/T51`, so my change did not cause them. No workbooks code calls `boundOf("workbook", ...)` yet. Generated artifacts with `read-bounds.mjs` as input are stale; BOB regenerates them.
+
+**Tests.** runtime-limits suite: 58 tests, 58 pass. `build/plan/impact.mjs origin/tranche/T51 HEAD`: 138 of 176 modules and 2192 of 2658 test files affected and run; the failures I inspected (g41-shape; workbooks above; control-plane, plane and journey-check in the impact listing, the last with `node_modules` missing in five directories) are not in this module; I confirmed the first two against the baseline.
+**Checks.** format 0 failures; architecture 0 failures; coverage 32 of 32 live ids named; 0 failures; ownership 3 files changed by runtime-limits; 0 failures; words 0 failures.
+
+Size (session_019ez6rv297h5VQHkQeN93zR): test runs 7, module lines 187
+
+## J12 · COMPLETE · re B11
+
+COMPLETE · RUNTIME-LIMITS #14 · B11 (K4936): READ_BOUNDS workbook rows: cells 250,000 in all columns (comment rewritten), NEW bytes 20 MiB alpha / 50 MB standard and protective, NEW cells_json_bytes 64 MiB x3; tested through boundOf and statement (R30, R31). Suite 58/58; format, architecture, coverage, words, ownership 0 failures. R30's text in the requirements still says 50,000 for the workbook's cells (yours to update). Not mine: g41-shape and 7 workbooks real-shape-cap tests fail identically on tranche/T51 without my diff. Bundles with read-bounds.mjs as input are stale. Details in my record.

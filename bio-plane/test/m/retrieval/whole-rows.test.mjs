@@ -1,8 +1,8 @@
 /* retrieval R94 (fix round 4b, F3 verification 2; K4512; provenance R72, R73), at the frontier's interface: a capture held in
-   parts is one capture. The content and meaning levels list a capture the record holds with no row at that level by its whole
-   (provenance marks each part's row `part_of`, and a part is skipped), so before any row one capture is missing, and once the
-   whole has its rows nothing of it stays in `never_looked` or `missing_unexplained`. The fixture is a capture of three parts
-   promoted by the real chain, as screens-intake promotes one. */
+   parts is one capture. The register lists wholes alone (provenance R74: the parts are rows of `register_parts`, never of
+   `register`), so the content and meaning levels list a capture the record holds with no row at that level by its whole: before
+   any row one capture is missing, and once the whole has its rows nothing of it stays in `never_looked` or
+   `missing_unexplained`. The fixture is a capture of three parts promoted by the real chain, as screens-intake promotes one. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -23,7 +23,8 @@ function heldInParts(w, id, label) {
   const r = w.promotion.promote({ bundleId: id, base: null, snapKey: `mp-${label}`, author: "member:ann", meta: { object_type: "information" },
     files: [{ path: "bundle.md", text: infoMd(id) }, { path: "data/provenance.json", text: JSON.stringify({ documents: [doc] }, null, 1) },
             ...held.map((p) => ({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes }))],
-    register: held.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes })) });
+    register: [{ sha256: whole, path: doc.file, encoding: "binary", bytes: doc.capture.bytes,
+                 parts: held.map((p) => ({ sha256: p.sha256, path: p.file, bytes: p.bytes })) }] });
   assert.equal(r.ok, true, `the real chain promotes the multipart capture: ${JSON.stringify(r).slice(0, 300)}`);
   return { whole, parts: held.map((p) => p.sha256) };
 }

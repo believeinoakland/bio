@@ -145,3 +145,51 @@ test("R31: the version notice of a passage in a held sheet grades by the units, 
   /* A cell: no unit carries it, so it is undetermined, as a sheet with no list answers. */
   assert.equal(notice(a.cite({ kind: "sheet-cell", sheet: SHEET, cell: "B2" })).grade, "UNDETERMINED");
 });
+
+test("R52 (K4922): cellsAt(id, {fromRow}) answers the extent's cells from that row, with cells_truncated and next_row as for the first window, so a range is read over the window call after call", async () => {
+  const { w, cite, sha } = held();
+  w.ex.cellsRangeMax = 20;   /* five rows of four cells a call */
+  const id = cite(range("A1:D400"));
+  const first = await w.content.cellsAt(id);
+  assert.equal(first.cells_truncated, true);
+  const seen = [...first.cells];
+  let next = first.next_row, calls = 1;
+  while (next) {
+    const part = await w.content.cellsAt(id, { fromRow: next });
+    assert.deepEqual(part.cells.slice(0, 4), cellsOfRows([next]), "begins at the row asked for");
+    assert.equal(part.interpreted.from_row, next);
+    seen.push(...part.cells);
+    next = part.cells_truncated ? part.next_row : null;
+    calls++;
+  }
+  assert.deepEqual(seen, cellsOfRows(Array.from({ length: 400 }, (_, i) => i + 1)), "every row once, in order");
+  assert.equal(calls, 100, "four whole rows a call of 20 cells");
+  assert.equal(w.ex.cellsOfCalls.at(-1).fromRow, 397);
+  /* the first row of the extent is a fromRow like any other; a column subset is kept */
+  const sub = await w.content.cellsAt(cite(range("B10:C12")), { fromRow: 11 });
+  assert.deepEqual(sub.cells, cellsOfRows([11, 12], [2, 3]));
+  /* a listed sheet is answered from row fromRow too (no interpreted, nothing truncated) */
+  const l = held({ listed: true, id: NEW });
+  const lid = l.cite(range("A1:D400"));
+  assert.deepEqual((await l.w.content.cellsAt(lid, { fromRow: 399 })).cells, cellsOfRows([399, 400]));
+  assert.equal((await l.w.content.cellsAt(lid, { fromRow: 1 })).cells.length, 1600);
+  assert.equal(sha.length, 64);
+});
+
+test("R52 (K4922): a fromRow outside the extent, or not a whole number from 1, is refused and stated, nothing read", async () => {
+  const { w, cite } = held();
+  const id = cite(range("A10:D20"));
+  const calls = w.ex.cellsOfCalls.length;
+  for (const bad of [9, 21, 0, -1, 10.5, "11", NaN, Infinity, {}])
+    no(await w.content.cellsAt(id, { fromRow: bad }), "from_row_outside_extent");
+  assert.equal(w.ex.cellsOfCalls.length, calls, "the file is not asked");
+  no(await w.content.cellsAt(cite({ kind: "sheet-cell", sheet: SHEET, cell: "B7" }), { fromRow: 8 }), "from_row_outside_extent");
+  assert.equal((await w.content.cellsAt(cite({ kind: "sheet-cell", sheet: SHEET, cell: "B7" }), { fromRow: 7 })).cells.length, 1);
+  const l = held({ listed: true, id: NEW });
+  no(await l.w.content.cellsAt(l.cite(range("A10:D20")), { fromRow: 21 }), "from_row_outside_extent");
+  /* control: none, null and an empty options object are the first window as before */
+  for (const o of [undefined, null, {}, { fromRow: null }, { fromRow: undefined }])
+    assert.equal((await w.content.cellsAt(id, o)).cells.length, 44);
+  /* the other refusals come first */
+  no(await w.content.cellsAt("0".repeat(64), { fromRow: 5 }), "not_held");
+});

@@ -45,7 +45,8 @@ test("R96 R10 R11 R95 (C5): a 16 MiB capture in three parts, against a store who
   assert.equal(sha(w.bytesOf(sha(big))), sha(big));
   /* no part is read back from the object store */
   /* R101: the format is judged from range reads of the head and the tail (a part is never read whole) */
-  assert.deepEqual(w.b.calls.filter((c) => c[0] === "get" && !(c[2] && c[2].range)), [], "no whole get: no part is read back");
+  /* R115 (K4926) amends this for a body with no length declared: nothing is held beside the whole, so the parts are read back, one at a time, each once, never the whole */
+  assert.deepEqual(w.b.calls.filter((c) => c[0] === "get" && !(c[2] && c[2].range)).map((c) => c[1]).sort(), r.body.document.parts.map((p) => `bio/captures/${p.sha256}`).sort(), "each stored part is read back once, and no whole");
   /* the stages: the parts' writes are `read`, keeping the whole is `keep` */
   const st = r.body.timings.stages;
   assert.ok(st.keep >= 1400 && st.keep < 3500, `keep is the whole's put (${st.keep} ms)`);

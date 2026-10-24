@@ -68,7 +68,7 @@ test("R1 declareTable's refusals in order, each with a negative control: NO_SOUR
 test("R1 a table of 1,000,000 cells, the bound, is declared and evaluated as calc-grammar's streamed table within a Worker's heap: every act runs in a heap capped at 128 MB, and each calculation grows the heap over the held table by a few MB", (t) => {
   const run = execFileSync(process.execPath, ["--expose-gc", "--max-old-space-size=128", fileURLToPath(new URL("./fixtures/heap.mjs", import.meta.url))],
     { encoding: "utf8", maxBuffer: 1 << 20, env: { ...process.env, CALC_HEAP_CHILD: "1" } });
-  const out = JSON.parse(run);
+  const out = JSON.parse(run.trim().split("\n").at(-1));
   assert.deepEqual(out.declared, { rows: 100000, cells: 1000000 }, "the bound's own size, declared");
   t.diagnostic(`held after declaring: ${out.held_mb.toFixed(1)} MB`);
   for (const [name, a] of Object.entries(out.acts)) {

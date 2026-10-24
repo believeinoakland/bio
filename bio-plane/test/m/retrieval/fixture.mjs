@@ -15,6 +15,7 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { provenanceRoutesOf } from "../../../src/provenance-routes/index.mjs";
 import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
+import { extractionOf } from "../../../src/extraction/index.mjs";
 import { CAPTURE_SCHEMA } from "../../../src/capture/schema.mjs";
 import { CONTENT_SCHEMA } from "../../../src/content/index.mjs";
 import { ENTITIES_SCHEMA } from "../../../src/entities/index.mjs";
@@ -174,7 +175,9 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
                  VALUES (?,?,?,?, 'active', ?, ?, ?)`,
       m, `cover ${m}`, m, admins.includes(m) ? "admin" : "member", JSON.stringify(["contribute", "create_projects"]), T0, T0);
   const w = { st, host, record, membership, promotion, prov, routes, clock, runs: {}, drift: [],
-              extraction: { driftFor: () => w.drift } };
+              extraction: { driftFor: () => w.drift,
+                            /* R108: the real extraction's own `progressOf`, over this store (made when first asked) */
+                            progressOf: (shas) => (w.realExtraction ??= extractionOf(host, { record, membership })).progressOf(shas) } };
   const log = OL.observationLogOf(host, { record, membership, provenance: null, extraction: null });
   /* The run authority's resolver ai-runs registers (observation-log R13): the runs each viewer may read. */
   log.registerAuthority("run", (run, viewer) => (w.runs[run] || []).includes(viewer));
@@ -229,14 +232,25 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
       return [...st.sql.exec(`SELECT MAX(seq) AS s FROM observation_log`)][0].s;
     },
     /** A reading row for a capture (its existence is the content level's pre-log evidence). */
-    reading(capSha, bundleId) {
-      st.sql.exec(`INSERT INTO readings (capture_sha, bundle_id, reading, at) VALUES (?,?,?,?)`, capSha, bundleId, "{}", T0);
+    reading(capSha, bundleId, body = {}) {
+      st.sql.exec(`INSERT INTO readings (capture_sha, bundle_id, reading, at) VALUES (?,?,?,?)`, capSha, bundleId, JSON.stringify(body), T0);
     },
     /** One indexed unit of a capture's text, as extraction's index writes it. */
-    unit(capSha, bundleId, seq, text, extent = { kind: "pdf-page", page: seq }) {
+    unit(capSha, bundleId, seq, text, extent = { kind: "pdf-page", page: seq }, kind = undefined) {
       const ex = JSON.stringify(extent);
       st.sql.exec(`INSERT INTO capture_text (capture_sha, bundle_id, extent_kind, extent, ref, seq, text, truncated, chain_kind)
                    VALUES (?,?,?,?,?,?,?,0,'layer')`, capSha, bundleId, extent.kind, ex, `p${seq}`, seq, text);
+      if (kind !== undefined) st.sql.exec(`UPDATE capture_text SET kind = ? WHERE capture_sha = ? AND extent_kind = ? AND extent = ?`,
+        kind, capSha, extent.kind, ex);
+    },
+    /** extraction-2's unit `kind` column (its R107): the stand-in for a store the provider has migrated. A store without it
+     *  is the one that holds only units stored before the kind. */
+    withKindColumn() { st.sql.exec(`ALTER TABLE capture_text ADD COLUMN kind TEXT`); },
+    /** One capture's index state as extraction's index writes it (its R36, R90): `more` while pieces follow. */
+    indexState(capSha, bundleId, { state = "whole", more = 0, through = null, total = null } = {}) {
+      st.sql.exec(`INSERT OR REPLACE INTO capture_text_state (capture_sha, bundle_id, state, offered, written, over_bound, unaddressable,
+                   truncated, skipped_named, at, more, read_through, total) VALUES (?,?,?,1,1,0,0,0,0,?,?,?,?)`,
+        capSha, bundleId, state, T0, more, through, total);
     },
   });
   return w;

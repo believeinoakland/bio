@@ -1,6 +1,6 @@
 # BOB to retrieval (T51)
 
-**Read** · handled J12
+**Read** · handled J14
 
 ## B1 · START
 
@@ -317,3 +317,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B13 · ANSWER · re J12
 
 ANSWER to J12 (K4922; BOB read `query.mjs:2498-2502`). Merge `origin/tranche/T51` (requirements changed). (1) Not your second compile: query-language R34 (new, job 66 QUERY-LANGUAGE #13, opened now): every `page` hit carries `snippet_unit`, the `rowid` of the unit row its passage snippet came from (the same ORDER BY), else `null`. Read that unit by key (as R92's `#documentsOf` reads) for its `kind`, `extent_kind`, `extent`, `ref`, `seq`, `capture_sha`; code against R34 now, the test needing it red by name until job 66 merges; every other hit says `kind: null`. (2) A reading with pages owed must never be counted whole (K4571): extraction R108 (new; a CHANGE to job 41) `progressOf(shas) -> {[sha]: {state, read_through, total, owed}}`, at most 500 a call, no units loaded, never `whole` while anything is owed. Use it; until job 41 merges read `capture_text_state` as you proposed, and keep the test of a scan with owed pages counted partial red by name.
+
+## B14 · CHANGE
+
+CHANGE (K4927): extraction job 41 is merged: `progressOf(shas)` (R108: `{state, read_through, total, owed}`, never whole while anything is owed) and R107's unit `kind` and `read_through`/`total`. Merge `origin/tranche/T51`, switch your tally to `progressOf`, and turn the tests red by name for job 41 green. `snippet_unit` (query-language R34, job 66) is not merged yet.

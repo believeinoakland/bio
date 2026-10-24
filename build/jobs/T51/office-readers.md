@@ -1,6 +1,6 @@
 # office-readers (T51)
 
-**Status** · session_01Pv6M4ffDmqfEt4kYWWRrfK · depth 2 · COMPLETE · handled B17
+**Status** · session_01T37wSdFRnLukbbpoR2cJDD · depth 2 · COMPLETE · handled B17
 
 ## Completion
 
@@ -143,3 +143,16 @@ COMPLETE (B16 applied): tranche merged, R41 tests green on ooxml's decodeText; o
 ## J11 · COMPLETE
 
 COMPLETE (B17 applied): decodePart is ooxml.decodeText alone, no local arm. office-readers 129 pass; coverage 39 of 39 (R38-R45 each named by its own test: parts-kinds, chars-decode, scan-bounds, dates-typed); format, architecture, words 0 failures. NEW FILE to add to paths: bio-plane/src/office-xml.mjs (ownership names it until then).
+
+## T51 fix round 9, batch D: R38 refs (B18 START, session_01T37wSdFRnLukbbpoR2cJDD, depth 2)
+
+- **Entry applied:** R38 as amended by K4924: each part's `ref` is a non-empty string addressing that piece alone within its `part`, the element reference kept beside it as `anchor`; no two pieces share (`part`, `ref`). New `addressParts` (`office-xml.mjs`) applied to the unit list of docx, pptx and xlsx. docx: `footnote <id>`, `endnote <id>`, `comment <id>` (anchor = the reference's paragraph/run), a header or footer by its part (anchor kept), a tracked deletion by `¶<n>` plus ` run <k>`, a text box by `¶<n>`. pptx: a speaker note and a hidden slide `slide <n>`, a text box `slide <n> shape <k>`, a master or layout and an orphan note by their part. xlsx: a cell note `Sheet1!B2` (confirmed a string; anchor the `sheet-cell` object). Where two pieces of one part still share a string (two notes on one cell, two boxes in one paragraph) the later take ` #<k>`, in unit order. No `localize` (addresses, not sentences). `document`, `paragraphs` and the other lists are unchanged.
+- **Tests:** `parts-kinds.test.mjs`: the three R38 tests' `ref` assertions moved to the string plus `anchor`; two new R38 (K4924) tests (docx: two comments in one paragraph, two footnotes, two deletions, two text boxes, header/footer by part; pptx: two boxes on one slide, a note, masters; xlsx: two notes on one cell). Red before (5 fail on the old source), green after. No test weakened.
+- **Ran:** office-readers + csv-reader 239 pass, 0 fail; odf-reader + format-registry 179 pass, 0 fail; reading-pipeline 399 pass; text-chain 149 pass; doc-clean 65 pass. Checks: format 0, architecture 0, coverage 39 of 39, ownership 0, words 0 failures. `impact.mjs`: 118 of 176 modules affected (the tranche merge brings the rest).
+- **Found in other modules (REPORT):** (1) **extraction** `bio-plane/test/m/extraction/n26.test.mjs:122` ("R66: a pre-N26 docx reading is migrated once") passes on `tranche/T51` and fails with this change: its fixture has two text boxes ("boxed", and "t in box" holding a table) and expects only `[doc-part, boxed]`, because the second used to be dropped as a duplicate of `{part, ref: null}` (the very G134d defect); both are now units, as R38 says. The expectation needs the second `doc-part` unit. (2) extraction's "R107 (G134d; DOCS O4): two comments of one .docx" is a `test.todo` (`r99-r100-r107-todo.test.mjs`) on this tree, so I could not run it green. (3) `file-safety` rows.test.mjs R24 is red on `tranche/T51` itself, not from this change.
+- **Deferred:** none.
+- Size (session_01T37wSdFRnLukbbpoR2cJDD): test runs 8, module lines 3342
+
+## J12 · COMPLETE
+
+R38 met (K4924, B18): every part's ref is a non-empty string unique within its part, the element reference beside it as anchor (addressParts in office-xml.mjs; docx footnote/endnote/comment <id>, header/footer by part, deletions and boxes by ¶n with run or #k; pptx slide <n>, slide <n> shape <k>, masters by part; xlsx cell note Sheet1!B2). Tests red first (5 fail on old source), now green: office-readers+csv-reader 239, odf-reader+format-registry 179, reading-pipeline 399, text-chain 149, doc-clean 65, 0 fail. Checks: format 0, architecture 0, coverage 39/39, ownership 0, words 0. FOUND: (1) extraction n26.test.mjs:122 'R66 a pre-N26 docx reading is migrated once' now fails (passed on tranche): its fixture has two text boxes and expected only [doc-part, boxed] because the second was dropped as a duplicate of ref null; both are now units, so the expectation needs the second doc-part 't in box'. (2) extraction's 'R107 (G134d; DOCS O4): two comments of one .docx' is a test.todo on this tree, I could not run it green. (3) file-safety R24 (rows.test.mjs) is red on tranche/T51 itself. Deferred none. Size (session_01T37wSdFRnLukbbpoR2cJDD): test runs 8, module lines 3342.

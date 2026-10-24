@@ -152,3 +152,11 @@
 - Add · a passage's part kind named beside its place (`content.part_kind.body`, `.footnote`, `.endnote`, `.header`, `.footer`, `.comment`, `.tracked_deletion`, `.text_box`, `.speaker_note`, `.master_text`, `.cell_note`; `content.ref.with_part_kind`), a part's place and its refusals (`content.extent.part_human`, `part_ref`, `a_part_extent_names_the`, `a_part_extent_names_neither`, `this_record_holds_no_extraction_2`, `part_list_not_held`), a passage cited under an earlier capture, not read, or an image cited as its bytes (`content.index.passage_cited_under_earlier`, `passage_could_not_be_read`, `image_cited_as_bytes`) · fix round 9, CONTENT #20 (K4917) · 2026-10-24
 - Add · a document part named by its reference (`text-chain.textchain.part_ref`) · fix round 9, TEXT-CHAIN #12 (K4917) · 2026-10-24
 - Add · a spreadsheet preview's "show more" from the row it was cut at (G137b; screens-intake R5's cut preview, `next_row`): a new open-file act to draw, owed by SCREENS-INTAKE #23's J46 (K4922) · 2026-10-24
+- Add · a row asked outside the passage's range (`content.index.from_row_outside_extent`) · fix round 9, CONTENT #20 (K4926) · 2026-10-24
+- Add · a document part not kept with its reading for its size, its text kept whole and searchable (`extraction.index.part_omitted`) · fix round 9, EXTRACTION #42 (K4927) · 2026-10-24
+- Add · a Cancel act for a file being sent in parts (screens-intake's parted upload page; `captureuploadabort`): a new act to draw, owed by SCREENS-INTAKE #23's J47 (K4930) · 2026-10-24
+- Add · a reading finished (`notice-producers.reading.finished`, `.finished.counted`) · fix round 9, NOTICE-PRODUCERS #17 (K4933) · 2026-10-24
+- Add · a reading ended in part, with its reason (`notice-producers.reading.partial`, `.partial.counted`; `{why}` is a code today: the member's words for each reason are the design's) · fix round 9, NOTICE-PRODUCERS #17 (K4933) · 2026-10-24
+- Add · a document not taken in, with its reason (`notice-producers.reading.refused`) · fix round 9, NOTICE-PRODUCERS #17 (K4933) · 2026-10-24
+- Add · the plain name of a reading that ended (`queue.kind.reading-ended`) · fix round 9, QUEUE #35 (K4944) · 2026-10-24
+- Add · cells a workbook's add dropped, with their count (`workbooks.dropped_cells`) · fix round 9, WORKBOOKS #6 (K4945) · 2026-10-24

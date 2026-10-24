@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J18
+**Read** · handled J19
 
 ## B1 · START
 
@@ -431,3 +431,11 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B24 · ANSWER · re J18
 
 ANSWER to J17 and J18 (K4922). Merge `origin/tranche/T51` (requirements changed). J17: content R52 now gives `cellsAt(contentId, {fromRow})` (a CHANGE to CONTENT #20); build the call-after-call read exactly as you proposed (a window not advancing refused `SOURCE_NOT_READ` naming the range, nothing written); the test reading a range over the window to its end is red by name until content merges it. J18: job 67, RUNTIME-LIMITS #13 (opened now), adds `table.bytes` 20,971,520 and `table.cells` 1,000,000 in all three columns; build against your local copy and do not commit it; you go COMPLETE after job 67 merges (a CHANGE will say so). The other bounds you list are acts' own and stay yours.
+
+## B25 · CHANGE
+
+CHANGE (K4926): content R52's `cellsAt(contentId, {fromRow})` is merged (refuses `from_row_outside_extent` stated; none, null or `{}` is the first window). Merge `origin/tranche/T51`; your call-after-call read and its test run against the real provider now (green expected). The `table.*` rows (job 67) follow.
+
+## B26 · CHANGE
+
+CHANGE (K4927): job 67 is merged: `READ_BOUNDS` has `table.bytes` 20,971,520 and `table.cells` 1,000,000. Merge `origin/tranche/T51`, drop your uncommitted local copy, quote both with `boundOf("table", ...)`, and with extraction job 41 also merged run seam section 4 (the comma CSV, G128g). Then COMPLETE.

@@ -109,16 +109,18 @@ test("R96 (G41): the bound is on the UTF-8 bytes: a reading at exactly 1 MiB is 
   assert.ok(largestStored(w) <= READING_ROW_MAX_BYTES);
 });
 
-test("R96 (G41): a reading that is stated replaces the capture's earlier reading, its references and its text index, in one write; the history keeps the earlier one", () => {
+test("R96 R97 (G41; fix round 9, G128e): a reading that is stated replaces the capture's earlier reading and its references in one write, and its own units are indexed (a statement never stands without its units); the history keeps the earlier one", () => {
   const w = fresh({}); bundle(w.s, "INFO-1");
   const d = sha("replaced");
   write(w, d, { found: true, entities: [{ kind: "person", key: "ann", label: "Ann" }], content_type: "text/plain", text_source: null, basis: "t", at: "2026-10-01T00:00:00Z" },
     { textUnits: [{ extent: { kind: "document" }, text: "ann was here", seq: 0 }] });
   assert.equal(w.rows(`SELECT 1 FROM capture_text WHERE capture_sha=?`, d).length, 1);
-  write(w, d, keyed(12, 200_000, { at: "2026-10-02T00:00:00Z" }), { textUnits: [{ extent: { kind: "document" }, text: "never indexed", seq: 0 }] });
+  write(w, d, keyed(12, 200_000, { at: "2026-10-02T00:00:00Z" }), { textUnits: [{ extent: { kind: "document" }, text: "still indexed", seq: 0 }] });
   assert.equal(JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading).failure, "final");
   assert.equal(w.rows(`SELECT 1 FROM reading_refs WHERE capture_sha=?`, d).length, 0);
-  assert.equal(w.rows(`SELECT 1 FROM capture_text WHERE capture_sha=?`, d).length, 0, "a statement owns no units");
+  assert.deepEqual(w.rows(`SELECT text FROM capture_text WHERE capture_sha=?`, d).map((r) => r.text), ["still indexed"], "the statement keeps the units it was read with");
+  assert.equal(found(w, "still"), true);
+  assert.equal(viaOp(w, d).completeness.state, "stated", "and states itself");
   assert.deepEqual(w.rows(`SELECT seq FROM reading_history WHERE capture_sha=? ORDER BY seq`, d).map((r) => r.seq), [1, 2]);
 });
 
@@ -161,7 +163,7 @@ test("R97 (G41; fix round 9, K4863): an ods workbook whose cells pass 1 MiB is s
   assert.equal(got.next_row, null);
 });
 
-test("R97 (G41): a pptx reading is stated when it passes 1 MiB, as the others are; the real pptx entry lists no cells, so a 6,000-slide deck read by `readHeld` is far under the bound and stored whole (control)", async () => {
+test("R97 (G41; fix round 9, G128e): a pptx-shaped reading whose tables' cells pass 1 MiB is stored with its cells omitted and stated, its entities and units kept, never stated whole; the real pptx entry lists no cells, so a 6,000-slide deck read by `readHeld` is far under the bound and stored whole (control)", async () => {
   const deck = F.pptx({ slides: Array.from({ length: 6000 }, (_, i) => ({ file: `slide${i + 1}.xml`, texts: [`slide ${i} words that make a text shape`, `second shape ${i}`] })) });
   const { w, d } = await home(deck, { ct: "application/vnd.openxmlformats-officedocument.presentationml.presentation", format: "pptx" });
   const first = await w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} });
@@ -172,9 +174,14 @@ test("R97 (G41): a pptx reading is stated when it passes 1 MiB, as the others ar
   const reading = { found: true, entities: [], content_type: "text/plain", text_container: "pptx", text_source: null, basis: "t", at: "2026-10-22T00:00:00Z", cells };
   assert.ok(bytesOf(JSON.stringify(reading)) > MiB);
   const d2 = sha("a pptx with tables");
-  const out = write(w, d2, reading);
-  assert.equal(out.stated.key, "cells");
-  assert.equal(JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d2).reading).failure, "final");
+  const out = write(w, d2, { ...reading, entities: [{ kind: "item", key: "7", label: "Item 7" }] }, { textUnits: [{ extent: { kind: "slide-shape", slide: 1, shape: null }, text: "TABLESLIDE words", seq: 0 }] });
+  assert.equal(out.stated, undefined, "not stated: an optional part is omitted first");
+  assert.deepEqual(out.omitted.map((o) => [o.key, o.limit]), [["cells", READING_ROW_MAX_BYTES]]);
+  const kept = JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d2).reading);
+  assert.deepEqual([kept.failure, kept.found, kept.entities.length, Object.values(kept.cells).every((v) => v === null)], [undefined, true, 1, true]);
+  assert.match(kept.omitted[0].why, new RegExp(`cells \\(${out.omitted[0].bytes} bytes\\)`), "the omission is stated with its size and the bound");
+  assert.equal(found(w, "TABLESLIDE"), true, "its units stay");
+  assert.equal(w.rows(`SELECT 1 FROM reading_refs WHERE capture_sha=?`, d2).length, 1, "and its references");
   assert.ok(largestStored(w) < MiB);
 });
 

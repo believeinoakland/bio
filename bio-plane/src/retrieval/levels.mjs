@@ -2,6 +2,7 @@
  * the statement out, so every branch is testable without a corpus. Every sentence it answers is read by key from
  * setup-words (plan rule 6), the numbers filling the placeholders. */
 import { say } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** REC-90 — WHICH LEVEL WAS EMPTY, SAID RATHER THAN LEFT TO BE INFERRED.
  *
@@ -108,12 +109,28 @@ export function meaningLevels(level, documents, withRows, total,
      COVERAGE (R14): `withRows === 0` on a text index does NOT mean "these documents hold no passages"; it means not one
      document in scope has been read at passage grain, which is a statement about this record's coverage and never
      about the documents. */
+  /* R97 (G135f, DEC-418): a capture in scope whose reading is not whole is searched only so far. The sentence states how far
+     (the position and the extent of the read, summed over the partial readings when they all state one) and that nothing
+     found is "not found so far", never "not in the document". A whole reading says nothing of the kind. */
+  const soFar = () => {
+    const n = axis && Number.isInteger(axis.partial) ? axis.partial : 0;
+    if (n <= 0) return null;
+    const listed = Array.isArray(axis.partial_reads) ? axis.partial_reads : [];
+    const known = listed.length === n && listed.every((r) => Number.isFinite(r.through) && Number.isFinite(r.total));
+    return known
+      ? localize("retrieval.levels.searched_so_far", "Searched so far: {count} capture(s) in scope are read to {through} of {total}. Nothing found here is \"not found so far\", never \"not in the document\".",
+          { count: n, through: listed.reduce((a, r) => a + r.through, 0), total: listed.reduce((a, r) => a + r.total, 0) })
+      : localize("retrieval.levels.searched_so_far_unmeasured", "Searched so far: {count} capture(s) in scope are only partly read. Nothing found here is \"not found so far\", never \"not in the document\".", { count: n });
+  };
   const axisSays = () => {
     if (documents === 0) return say("retrieval.text.matched_document_scope");
     const lead = `${say("retrieval.lead", { coverage })} `;
+    const so = soFar();
     if (total > 0)
       return lead + say("retrieval.text.passage_matched_over", { passages: total, documents,
-        rest: `, ${cov.gap > 0 ? say("retrieval.text.capture_scope_read", { gap: cov.gap }) : say("retrieval.text.over_scope_capture")}` });
+        rest: `, ${cov.gap > 0 ? say("retrieval.text.capture_scope_read", { gap: cov.gap }) : say("retrieval.text.over_scope_capture")}` })
+        + (so ? ` ${so}` : "");
+    if (so) return lead + so;
     if (cov.searchable === 0) return lead + say("retrieval.text.matched_scope_searchable");
     return lead + say("retrieval.text.matched_over_searchable", { count: cov.searchable,
       rest: `, ${cov.gap > 0 ? say("retrieval.text.further_capture_scope", { gap: cov.gap }) : say("retrieval.text.capture_scope_searched")}` });

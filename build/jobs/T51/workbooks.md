@@ -1,6 +1,6 @@
 # workbooks (T51)
 
-**Status** · session_01BnkTWoC5GF8VJe3V4sMRF5 · depth 2 · COMPLETE · handled B2
+**Status** · session_011euAAFYAD76GYT6xKMDMLz · depth 2 · COMPLETE · handled B6
 
 ## J1 · REPORT
 
@@ -75,3 +75,66 @@ Bounds to report to Bob (K1881): stored file 20 MiB; cell JSON 9 MiB; 50,000 cel
 Corpus (270 .xlsx of bucket cao-94612): 44 of 269 readable refused (16%); of 118 with formulas, 13 (11%); the refused are the large data sheets.
 Tests: workbooks 37/37; g44-large 8 tests (6 red on the earlier source, 8 green). Users: 282 of 283; the one red is case-authoring R17 under the platform-sqlite preload, same on the earlier source. Checks: format, architecture, coverage, ownership 0 failures.
 Proposed requirement lines, rows owed to UX-DESIGN (refusal.WORKBOOK_TOO_LARGE, refusal.WORKBOOK_FILE_TOO_LARGE) and the R1 order amendment are in the record. Decision of mine: a file whose text is over the reader's whole-read bound is WORKBOOK_FILE_TOO_LARGE (condition declared_text). Plane job proves the refusal's variables reach the member's words through the door.
+
+## J4 · REPORT
+
+REPORT · WORKBOOKS #6 · rows I need in runtime-limits' `READ_BOUNDS` (R-FOUR rule 1; I do not edit read-bounds.mjs).
+R1/R2/R20 read three bounds through `boundOf`; only the first has a row, and its alpha is still 50,000:
+1. kind `workbook`, name `cells`: the alpha must be 250,000 (G137e merges with this job; K4831 (10)). Today `workbook.cells = row(250000, 50000, 250000)`, so `boundOf` answers 50,000.
+2. NEW kind `workbook`, name `bytes` (the capture's stored size the add refuses above, today `WORKBOOK_FILE_MAX_BYTES`): standard 50 MB (K4845), alpha 20 MiB (20971520, today's), protective 50 MB, key `limit.workbook.bytes`.
+3. NEW kind `workbook`, name `cells_json_bytes` (the cells' JSON the add lists, today `WORKBOOK_CELLS_MAX_BYTES`): 9437184 (9 MiB, today's) in all three columns, key `limit.workbook.cells_json_bytes`. I will report what the capped child shows at 250,000 cells and may ask to change it.
+Until these merge I test with a local, uncommitted copy of those rows; nothing of read-bounds.mjs is in my diff.
+
+## J5 · REPORT
+
+REPORT · WORKBOOKS #6 · replaces the figure in my J4 for `workbook.cells_json_bytes` (the other two lines of J4 stand).
+Measured in a capped child (capFor(N), 204 MB for a 2 MB file; fixture cursors lazy, as a Durable Object's): a 250,000-cell workbook is 36.8 to 44.9 MiB of cell JSON (40 B to 190 B a cell; the 250,000-cell shape of 17.2 MB declared text, the largest the 20 MiB declared-text bound lets in, is 44.9 MiB). With 9 MiB the bound refuses even a 130,000-cell workbook, so 250,000 cells can never be reached. The add, read, lint, inputs, explain and recompute of every 250,000-cell shape I built (constants, 1-character cells, 2 formulas a row, 3 long formulas a row) survive down to a cap of 140-180 MB, so the object has room for the JSON figure below.
+Row asked: kind `workbook`, name `cells_json_bytes`, standard = alpha = protective = 67108864 (64 MiB), key `limit.workbook.cells_json_bytes`. The other two rows as in J4 (`workbook.cells` alpha 250000; `workbook.bytes` standard 50 MB, alpha and protective as the table's `bytes()` helper gives with 20 MiB).
+Also learned: the reads of a held workbook now go by cursor and by position (a new index `workbook_cells_position`), so nothing loads every cell at once; I tell it in my record.
+
+## G137e · WORKBOOKS #6 (session_011euAAFYAD76GYT6xKMDMLz) · fix round 9, B3 START
+
+**Entries applied.** G137e (owner: R20, R21 new; R1, R2 amended) and the G124 quote (`workbooks/index.mjs:42-44`).
+
+**What changed.**
+- `src/workbooks/index.mjs`: `WORKBOOK_FILE_MAX_BYTES`, `WORKBOOK_CELLS_MAX_BYTES`, `WORKBOOK_CELLS_MAX` are `boundOf("workbook", "bytes" | "cells_json_bytes" | "cells")` (runtime-limits rows, merged by job 71: 250,000 cells, 20 MiB, 64 MiB); no numeric literal for a ceiling is left. Every size and cell refusal carries `limit: statement(...)` beside its old fields (`cells`, `bound_cells`, `size`, `bound`, `condition`). The reader's own cell stop (`TOO_MANY_OBJECTS {n, bound}` from the xlsx reader, which answered `NOT_A_WORKBOOK` for a workbook of 250,001 cells) is now the add's `WORKBOOK_TOO_LARGE` with that count and the lower of the two bounds. The count stated for a file past the bound is the reader's at the cell where it stopped counting (more than the bound, at most the file's), not the file's whole count.
+- R21: `addWorkbook` no longer throws on a `<c>` with no `r` (cause: `c.source` is null there, `index.mjs:280` in the earlier source); it drops that cell, a cell whose reference cannot be read, and the repeats of an earlier cell's reference (the first is kept), and answers `dropped: {count, no_reference, unreadable, repeated, statement}`, present only when something was dropped. `statement` is `localize("workbooks.dropped_cells", ...)`. **Row owed to later-ux.md / UX-DESIGN:** `workbooks.dropped_cells` ({count}, {no_reference}, {unreadable}, {repeated}); the sentence is a stand-in in `index.mjs`.
+- R20, memory: a workbook held whole at 250,000 cells did not survive its own reads (with the bounds lifted, `read` died at the cap: "Ineffective mark-compacts near heap limit", because `#cells` loaded every cell as an object and `indexWorkbook` built a map of them again). **No read loads every cell at once now:** `readWorkbook`, `inputsOf`, `lint`, `explainLint` and `recompute` read the store by cursor (the formula cells, the error cells) and by position (a cell, a sheet's extent, the constants of a rectangle), and only the cells a formula's text names, a lint finding or a recompute touches are interpreted (`lint.mjs` `indexWorkbook` takes a `grid` of those reads; `pair` in `index.mjs` looks the file's cell up by `Sheet!A1`). A new index `workbook_cells_position (capture_sha, project, sheet, r, c)` in `schema.mjs` (`CREATE INDEX IF NOT EXISTS`, so a held workbook gets it at the next start) serves the rectangle and the cell lookups.
+- Tests: `g137e.test.mjs` is new; `g44-large.test.mjs` takes its cap from runtime-limits' `capFor` (the formula and `IDLE_MB` are gone, K4846, K4872) and its cases move to the new bound; `fixture.mjs` hands out cursors that step a row at a time, as a Durable Object's `sql.exec` cursor does (a materialised answer hid the memory this cause is about); `g44-child.mjs` gains the `x20` job; `g44-shapes.mjs` gains `exact(n)`.
+
+**R-FOUR, per cause.**
+1. Root cause. R21: `index.mjs:280` (`c.source.cell` of a cell whose `source` is null: the reader gives `source: null` for a `<c>` with no `r`); unreadable and repeated references were dropped by `continue` and `INSERT OR IGNORE`, never counted. R20: the bounds were literals (`index.mjs:42-44`) below the engine's own (`sheet-worker` `MAX_CELLS` 250,000), and every read materialised the workbook (`#cells`, `indexWorkbook`).
+2. Why the tests missed it, gap fixed. The one large-workbook test file stopped at the 50,000-cell bound and its fixture's cursor was a full array; no test compared the add's bound with the engine's, and no fixture had a cell without `r`. Now: X20 at 50,000, 130,000, 250,000 and 250,001 cells in a child capped by `capFor`; X12; a cursor that steps; `exact(n)` makes any count.
+3. Failing-first, seen RED on the earlier source (the tests stayed, the module files were put back): `R20 the add's three bounds are READ_BOUNDS rows ...` red; `R20 SHEET X20: ... 130000 cells ...` red; `... 250000 cells ...` red; `R20 R1 SHEET X20: ... 250,001 cells is refused WORKBOOK_TOO_LARGE ...` red (answered `NOT_A_WORKBOOK`); `R20 R1 R2 a workbook whose cells' JSON the reader will not list ...` red; `R21 SHEET X12: rows and cells with no r are not thrown on ...` red (`TypeError: Cannot read properties of null (reading 'cell')` at `index.mjs:280`); `R21 a cell whose reference cannot be read, and a repeat ...` red. (The 50,000-cell case and the R21 control read green on both, as they should.) Green on the new source: g137e 9/9, g44-large 8/8, the whole module 46/46.
+4. Platform check **L** (capped child at `capFor`, 204 MB for a 2 MB file; the child's idle is 35 MB): every 250,000-cell shape built (constants, one-character cells, two formulas a row, three long formulas a row; 36.8 to 44.9 MiB of cell JSON) adds, reads, lints, reads its inputs, explains and recomputes, and survives down to a cap of 140 to 180 MB. Through the plane's own door (`test/m/plane/shape/harness.mjs`, `xlsxDoc(11.2)`, 248,000 cells, cap 204) the add, read, lint and inputs all answer, add peak 198.6 MB; the child dies at a cap of 184, lives at 192: **the margin through the real door is about 16 MB, and what fills it is the xlsx reader listing 250,000 cell objects in one `text()` call (office-readers / formats-xlsx), not this module.** `xlsxDoc(11.3)` (250,001 cells) is refused with its count, the child alive.
+
+**Heavy runs (R-NOLOAD).** `g44-large` and `g137e`, each alone: 5 runs, 8/8 and 9/9 every time; each again on one core (`taskset -c 0`), twice: all green. Whole module on 4 cores about 100 s.
+
+**Deferred.** None.
+
+**Found in other modules (also posted as REPORT J6).**
+- plane (`test/m/plane/shape/g44.probe.mjs:26` `add10` and `test/m/plane/g44-shape.test.mjs:12`): the case expects the add of the 221,529-cell workbook refused WORKBOOK_TOO_LARGE; it is held now (the cells row is 250,000), so `R85 G44: the add of the 10 MiB-declared short-row workbook ...` is red ("the add answered {ok:true}, not WORKBOOK_TOO_LARGE"; "the refused add wrote {workbooks:1, cells:221529}"). The case should refuse a workbook of 250,001 cells (`xlsxDoc(11.3)` is one) and a second should hold 221,529 whole. It is plane's file; I did not touch it.
+- office-readers / formats-xlsx: `text()` lists every cell of a sheet as one array of objects (about 100 MB at 250,000 cells); the real-door margin above is the reason a second reading option (cells by window or a count-only first pass) would let the cells row go higher without the object dying. Not needed for 250,000.
+- The `case-grammar/words.mjs` finding of J1 stands.
+
+**Stale generated artifacts I make:** none (no op, no word row in `setup-words/rows.mjs`; the one new sentence is keyed through `localize` in the module).
+
+**Checks (from the process repository, after merging tranche/T51 at k4939 and dropping the local rows).** format 176 modules, 0 failures; architecture 0 failures; coverage 21 of 21 live ids named, 0 failures; words 2658 literals, inline 0, missingkey 0, 0 failures; ownership 9 files, 0 failures. Users: `node build/plan/impact.mjs origin/tranche/T51 HEAD` names 114 modules; the ones that read this module's service are affordances t33, plane t33 and g123f-cells, op-grades owners and runtime-limits: all 103 green; plane `g44-shape` has the one red above.
+
+**Not mine, new files:** none outside `paths`.
+
+Size (session_011euAAFYAD76GYT6xKMDMLz): test runs 31, module lines 1692
+
+## J6 · REPORT
+
+REPORT · WORKBOOKS #6 · found in other modules (details in my record).
+1. plane, `test/m/plane/shape/g44.probe.mjs:26` (`add10`) and `test/m/plane/g44-shape.test.mjs:12`: the case expects the 221,529-cell workbook refused WORKBOOK_TOO_LARGE; the cells row is 250,000 now, so it is held and `R85 G44: the add of the 10 MiB-declared short-row workbook` is red. It should refuse 250,001 cells (`xlsxDoc(11.3)` is one: refused with its count, child alive) and a second case should hold the 221,529 (or 248,000, `xlsxDoc(11.2)`) whole. Plane's file; untouched by me.
+2. office-readers / formats-xlsx (L): through the plane's real door a 248,000-cell add peaks 198.6 MB at cap 204 and the child dies at a cap of 184: about 16 MB of margin, all of it the reader listing every cell as an object in one `text()` call. Fine at 250,000; a reader option that lists cells by window would be needed before the cells row goes higher.
+
+## J7 · COMPLETE
+
+COMPLETE · WORKBOOKS #6 · G137e (R20, R21; R1, R2 amended) and the G124 quote are done; completion in my record, section "G137e · WORKBOOKS #6".
+Tests: workbooks 46/46 (g137e 9, g44-large 8; each alone 5 runs and twice on one core, all green); users 103/103 plus plane g44-shape add10, the one red, plane-owned (J6). Checks: format, architecture, coverage (21 of 21), words, ownership: 0 failures.
+Index workbook_cells_position added; no read loads every cell at once. Row owed to UX-DESIGN: workbooks.dropped_cells.
+New files outside paths: none. Stale generated artifacts: none.
+Size (session_011euAAFYAD76GYT6xKMDMLz): test runs 31, module lines 1692

@@ -18,7 +18,22 @@ import { zipStored } from "../../../src/workbooks/xlsxwrite.mjs";
 export const sha = (s) => createHash("sha256").update(s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
-function cursor(rows) {
+/* A cursor over a statement's rows that reads them as they are asked for, as a Durable Object's `sql.exec` cursor does:
+   a statement is stepped a row at a time, never answered whole (R20: the module under test must not depend on a
+   materialised answer). Statements are kept by their text; one still being stepped is not reused. */
+function lazyCursor(it, release) {
+  let done = false;
+  const step = () => { if (done) return { done: true, value: undefined }; const n = it.next(); if (n.done) { done = true; release(); return { done: true, value: undefined }; } return { done: false, value: { ...n.value } }; };
+  const c = {
+    next: step,
+    return() { if (!done) { done = true; it.return?.(); release(); } return { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = []; for (let n = step(); !n.done; n = step()) out.push(n.value); return out; },
+    one() { const r = c.toArray(); if (r.length !== 1) throw new Error(`Expected exactly one result, got ${r.length}`); return r[0]; },
+  };
+  return c;
+}
+function eager(rows) {
   let i = 0;
   const c = {
     next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
@@ -32,10 +47,16 @@ function cursor(rows) {
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
+  const pool = new Map();
   const sql = {
     exec(q, ...args) {
-      const st = db.prepare(q);
-      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
+      const slots = pool.get(q) ?? pool.set(q, []).get(q);
+      let slot = slots.find((s) => !s.busy);
+      if (!slot) { slot = { st: db.prepare(q), busy: false }; slots.push(slot); }
+      const { st } = slot, bound = args.map(bind);
+      if (!st.columns().length) { st.run(...bound); return eager([]); }
+      slot.busy = true;
+      return lazyCursor(st.iterate(...bound)[Symbol.iterator](), () => { slot.busy = false; });
     },
   };
   return {

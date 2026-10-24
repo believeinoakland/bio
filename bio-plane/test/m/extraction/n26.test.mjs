@@ -119,7 +119,8 @@ test("R66: a pre-N26 docx reading is migrated once: re-read from its bytes, ever
   const units = f.rows(`SELECT extent_kind, extent, text FROM capture_text WHERE capture_sha=? ORDER BY seq`, f.digest);
   assert.deepEqual(units.filter((u) => u.extent_kind === "doc-para").map((u) => [JSON.parse(u.extent).para, u.text]),
                    NEW_PARAS.map((t, i) => [i, t]).filter(([, t]) => t.length));
-  assert.deepEqual(units.filter((u) => u.extent_kind !== "doc-para").map((u) => [u.extent_kind, u.text]), [["doc-part", "boxed"]]);
+  assert.deepEqual(units.filter((u) => u.extent_kind !== "doc-para").map((u) => [u.extent_kind, u.text]), [["doc-part", "boxed"], ["doc-part", "t in box"]]);
+  /* K4929: both text boxes are their own units since office-readers R38 gives each its own `ref` (before, the second shared `ref: null` and was dropped as already written) */
   assert.deepEqual(f.rows(`SELECT occurrence FROM reading_refs WHERE ref='item:1' ORDER BY seq`).map((r) => r.occurrence),
                    [2, 1, 0, 5].map((p) => `doc-para:${JSON.stringify({ para: p, run: null })}`));
   /* R19's listeners ran once, the plane's act, with the chain before and after differing (content R22 stales on it). */

@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS workbook_cells (
   cached      TEXT,
   PRIMARY KEY (capture_sha, project, sheet, cell)
 );
+-- R20: a rectangle of a sheet is read by position, never by loading the sheet
+CREATE INDEX IF NOT EXISTS workbook_cells_position ON workbook_cells (capture_sha, project, sheet, r, c);
 -- R3: a binding of one rectangle of input cells to a source. Never deleted: unbinding stamps who, when and why.
 CREATE TABLE IF NOT EXISTS workbook_bindings (
   binding_id    INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -1,6 +1,6 @@
 # retrieval (T51)
 
-**Status** · session_01FoEGtPsn2WnLGd9CYBxrwS · depth 2 · COMPLETE · handled B11
+**Status** · session_01E8rJsiNPGQhSTzqHve1gec · depth 2 · COMPLETE · handled B14
 
 ## Work notes (RETRIEVAL #20)
 
@@ -200,3 +200,53 @@ Size (session_01FoEGtPsn2WnLGd9CYBxrwS): test runs 6, module lines 3043
 ## J11 · COMPLETE
 
 G62 retrieval part (fix round 7) complete: zone({why: true}) answers {zone, source, why} (source local-facts|profiles, null with none; why no_profiles|profiles_disagree|no_zone_stated, null with a zone); plain zone() unchanged. Test first, seen red then green: t51-round7.test.mjs (2 tests, R69, with controls). Retrieval suite 185/185; ratification and case-authoring signing 308/308. Checks: format 0, architecture 0, ownership 0; coverage and words reds are other modules' (record-core R89/R90, case-checker, installer-steps). Proposed line for you to write: zone({why:true}) as above. Nothing deferred, no census op, no UX rows. Record: Completion (fix round 7, G62). Size (session_01FoEGtPsn2WnLGd9CYBxrwS): test runs 6, module lines 3043
+
+## J12 · QUESTION
+
+QUESTION · retrieval T51 round 9 · two reads I need and do not own; best reading below, I proceed on it.
+
+(1) R95/R96: a `search` page hit is a bundle, and the passage snippet's unit (its kind, its extent) is chosen inside query-language's SQL (`query.mjs` page(), the `ps` subquery) with no column naming it; `rows=passage` rows carry capture_sha/extent_kind/extent but no `kind`. Query-language has no job this round. BEST READING (I build this in retrieval, no CHANGE needed): a row's `kind` is a keyed read of `capture_text` by the row's identity (like R92's `#documentsOf`), null when the column is absent (extraction-2 not merged) or the unit predates it; a hit whose `snippet_from` is `passage` gets the snippet unit's `kind`, `extent_kind`, `extent`, `ref`, `seq`, `capture_sha` from a second, gated `rows=passage` compile of the same `q` over the page's hit ids (picking the unit the snippet uses: least capture_sha, seq, extent_kind, extent), paged to a named bound `HIT_UNIT_PAGES_MAX`; a hit past that bound says kind null (undetermined). Every other hit says kind null. If you prefer, the cheaper fix is a CHANGE to query-language (expose the snippet unit and `kind` in its page/row columns); say so and I will read those instead.
+
+(2) R97: I need, per capture in the tally, whether its reading is whole and its `read_through`/`total`. Today only `capture_text_state` (extraction's table: state, more, read_through, total) answers that without loading units; `unitsOf` loads a page of units per call and the job row is plane's. BEST READING: retrieval reads `capture_text_state` for the tally's captures (extraction's index-state read contract, R36) and counts `partial` when `more=1` or state is not `whole`. This misses a scan's owed pages (extraction R100, job row counters) until extraction-2 exposes a cheap `progressOf(shas)`; if you want that, ask extraction-2 (job 41) for `progressOf(shas) -> {sha: {state, through, total}}` and I will prefer it when present.
+
+## Work notes and completion (fix round 9, G134d, G128h, G135f, R25, R94-R97, RETRIEVAL #27)
+
+**First record, retrieval-browse:** no change found; `retrieval-browse` keeps its own `partsHeldIn` (`index.mjs:59`), so no CHANGE is asked for it. **Providers not merged** (extraction-2 job 41, reading-pipeline-1): tested against a stand-in, `fixture.mjs`'s `withKindColumn()` (extraction R107's `kind` column on `capture_text`) and `indexState()` (a row of `capture_text_state`, extraction R36/R90); both are in my tests dir.
+
+**G134d (R95), the four fields.** (1) Root cause: `capture_text` carried no kind and neither a hit nor a row named one; the hit's snippet unit is chosen inside `query.mjs` `page()` (the `ps` subquery) with no column naming it. Fixed in my module: `#namedRows` reads `kind` by the row's address (`units.mjs` `kindsOf`, a keyed read like R92's `#documentsOf`); `#namedHits` names, for a hit whose `snippet_from` is `passage`, the unit the snippet uses (the least of the hit's matching units by capture, `seq`, extent, from a second gated `rows=passage` compile over the page's hit ids, `#snippetUnits`), as `kind`, `capture_sha`, `extent_kind`, `extent`, `ref`; every other hit says null for all five. A unit stored before the kind (no column, empty, or outside `PART_KINDS`) says null, never `body`. Search returns every kind (nothing here filters by kind). (2) Why the tests missed it: no requirement said which parts are text and no test followed a part from the reader to a hit; now `t51-round9.test.mjs` does for all eleven kinds. (3) Test first, seen RED against the unchanged source (5 R95 tests, `t51-round9.test.mjs`): `✖ R95: a passage search returns every kind of part by default ...` (hit `kind` undefined); then 195 of 195 green. (4) **L**: not run here (the seam section 10 and the corpus are control-plane's and BOB's).
+
+**G128h (R96).** (1) Root cause: a search hit carried no extent at all (only `rows=passage` rows did), and the unit text's row numbers and empty cells are reading-pipeline/extraction's (R47/R107, unmerged). Retrieval's part: a passage hit answers the `sheet-range` extent of the block holding the match (`extent_kind`, `extent`, `capture_sha`), as the rows do. (2) Missed: searches asserted a hit, not the hit's extent. (3) RED then green: `R96: SHEET J-10 ...` (first, middle and last mark; each hit's extent contains the row and the mark's column; the unit keeps its row numbers and empty cells; the meaning row names the same extent) and the control `R96 control`. `cellsOf` of the extent is the seam's (extraction), not run here. (4) **L** as above.
+
+**G135f (R97).** (1) Root cause: the tally and `says` (`levels.mjs`) knew only the observation-log's axis, so a text read to half read as searchable and an absence as an absence. Now `#contentAxisTally` counts the captures in scope whose index is not whole (`units.mjs` `partialReads`: `capture_text_state` `partial`, `more`, or `truncated`) as `partial` with `partial_reads [{capture_sha, through, total}]` (listed to `PARTIAL_LISTED_MAX` 20, `partial_truncated`), published under `scope`; `says` states "searched so far" with the summed `through` and `total` when every partial reading states them, else "only partly read", in place of an absence and after a hit; a whole reading says nothing of the kind. The sentences are stand-ins keyed `retrieval.levels.searched_so_far` and `retrieval.levels.searched_so_far_unmeasured` through `localize`; **rows owed to `later-ux.md`:** those two (plan section 5, "searched so far"). (2) Missed: no test of a half-read text. (3) RED then green: `R97: a search over a text read to half ...`, the unmeasured-extent test, the bound test. (4) **L** and **P** are BOB's.
+
+**R25, R94 (amended).** R25 is met by the same hit/row extent (R96's test names the `sheet-range` block). R94: `provenance` R74 (merged) keeps a capture's parts in `register_parts`, so the register lists wholes alone; the frontier's part filtering (`#wholes`, `partsHeldIn`, the `multipart` column) was dead code and the R94 fixture (parts as register rows) the old shape. Seen RED before any change of mine (3 tests, `whole-rows.test.mjs`: `✖ R94: once the whole has its content and meaning rows nothing of the document stays ... expected [] actual [3 part shas]`); fixed by deleting the filter (`frontier.mjs`, `index.mjs`) and registering the fixture's capture as a whole with `parts` (R75); 4 of 4 green.
+
+**Tests changed for the new keys** (not weakened): `search.test.mjs` R6 (the hit's keys now end `kind, capture_sha, extent_kind, extent, ref`), `meaningread.test.mjs` R11/R14 (the scope's keys gain `partial`, `partial_reads`, `partial_truncated`).
+
+**Tests and checks** (from `bio-plane/`): `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/retrieval/`: 195 of 195 pass. Users run (retrieval-browse, citation, inquiry, content, filings, calculations, consequences, attestation, connections, query-language, screens-daily, action-clocks, civil-time, odf-reader, pdf-reader): 613 of 613 pass. `impact.mjs origin/tranche/T51 HEAD`: 80 of 176 modules affected; the ones that read a search hit or a meaning row were run as above, the rest read neither. Checks (civicos-process): format 0 failures, architecture 0, coverage 86 of 86 ids named, 0, words 0 (inline 0, testcopy 0, missingkey 0), ownership 0 (10 files).
+
+**Census ops** I own: none new. **Generated artifacts made stale:** none by me (`dist/bio-plane.bundled.mjs` is regenerated by BOB at the round end; it contains retrieval). **Found in other modules:** query-language could expose the snippet's unit and `kind` in its page and row columns (cheaper than my second compile; J12 asks). **Deferred:** none.
+
+Size (session_01E8rJsiNPGQhSTzqHve1gec): test runs 12, module lines 3127
+
+## Completion after B13 (answer to J12; RETRIEVAL #27)
+
+Applied B13. (1) The second compile is gone: `#namedHits` reads the unit by the `rowid` a hit names in `snippet_unit` (`query-language` R34, job 66; `units.mjs` `unitsByRowid`: `kind`, `capture_sha`, `extent_kind`, `extent`, `ref`), every other hit null. (2) `partialReads` asks `extraction.progressOf(shas)` (R108, job 41; calls of at most 500) when it exists, else `capture_text_state`; a reading with `owed > 0` is partial whatever its index says; `partial_reads` entries gain `owed`.
+
+**Reds by name, accepted in B13 until the providers merge** (7 of 197): the six hit-side tests (`R95` x4, `R96`, `R96 control`) need `snippet_unit` from job 66; `R97, R108 (red until extraction job 41 merges)` needs `progressOf` on the real extraction. Verified green (195 of 197, the R6 key test aside) with `query.mjs` temporarily patched to emit `snippet_unit` as R34 words it, then reverted (`query.mjs` untouched in this branch). The scan-with-pages-owed case is green against a stand-in of R108's interface text.
+
+Tests/checks: retrieval suite 190 of 197 (the 7 above); users run earlier unchanged by this step. format, architecture, coverage (86 of 86), words, ownership: 0 failures. Size (session_01E8rJsiNPGQhSTzqHve1gec): test runs 16, module lines 3097
+
+## J13 · COMPLETE
+
+COMPLETE · retrieval T51 fix round 9 (G134d, G128h, G135f; R25, R94-R97). B13 applied: hits read their unit by snippet_unit (query-language R34), partial readings by extraction progressOf (R108) else capture_text_state. Retrieval suite 190 of 197; the 7 reds are named in the record and wait on providers: six hit tests on job 66 (snippet_unit), one on job 41 (progressOf); all verified green with R34 emulated locally (reverted). R94 fixed (provenance R74 made the frontier's part filter dead; deleted, fixture re-shaped). Checks format, architecture, coverage 86/86, words, ownership: 0 failures. New file outside nothing: units.mjs is in paths. Rows owed to later-ux: retrieval.levels.searched_so_far, retrieval.levels.searched_so_far_unmeasured. Stale generated: dist bundle (BOB regenerates). Details and RED lines in build/jobs/T51/retrieval.md.
+
+## Completion after B14 (job 41 merged; RETRIEVAL #27)
+
+Merged `origin/tranche/T51`. The tally already asks `extraction.progressOf` when present, so no code change; the fixture's extraction stand-in now forwards `progressOf` to the real `extractionOf` over the same store (and `reading()` takes a body), and the red-by-name R108 test is now green through the real provider (`R97, R108: through the real extraction's progressOf ...`, a 30-page scan with `ocr_left` 6 counted partial, `owed` 6). One test claim changed: a capture indexed to `none` is not "not partial" under the real R108 (anything not whole is `partial`), so that claim is dropped.
+
+Retrieval suite 191 of 197; the 6 reds are the hit-side tests waiting on `snippet_unit` (query-language R34, job 66), green with R34 emulated. format, architecture, coverage 86/86, words, ownership: 0 failures. Size (session_01E8rJsiNPGQhSTzqHve1gec): test runs 19, module lines 3097
+
+## J14 · COMPLETE
+
+COMPLETE · B14 applied: progressOf is read through the real extraction (job 41); R108 test green. Retrieval suite 191 of 197; the 6 reds are the hit-side R95/R96 tests waiting on query-language R34 snippet_unit (job 66), green with R34 emulated. Checks: 0 failures. Record: build/jobs/T51/retrieval.md.
