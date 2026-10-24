@@ -83,3 +83,14 @@ My ceilings and the rows I read (no numeric literal of mine, R13):
 
 Needed from you: nothing if both readings stand; say so only if you want the two rows added and the import re-pointed.
 Also noted for later: I keep exporting `MEMORY_FEATURE` (an identifier, no longer a key of JPX_REFUSES/PNG_REFUSES) so pdf-pixels' imports in pagepixels.mjs and picturepixels.mjs still load; the memory refusal is now code `IMAGE_TOO_LARGE`, which pdf-pixels (job 14) must map (today it falls to DECODE_FAILED).
+
+## J5 · QUESTION
+
+QUESTION (best reading given; I carry on with it). Fix round 9, image-codecs R12 against pdf-pixels' picture route.
+
+R12 judges every JPEG entry point against `image.pixels` (120,000,000). The picture route of pdf-pixels decodes a member's photo with `decodeBaselineJpegRows` (my R11, which holds no full-size plane: its live set is one MCU row) and admits frames up to its own `PICTURE_SOURCE_MAX` = 16384 x 12288 x 3 (a 201-megapixel frame; its R42 tests drive 16320 x 12240). With R12 as written the rows decoder refuses a JPEG over 120 megapixels `IMAGE_TOO_LARGE` from its header, so a 120-200 MP phone photo that reads today would be refused: that changes what a member may do, which is Bob's (R-SILENT, K1881).
+
+My reading, implemented now: follow R12 literally for both entry points (`decodeBaselineJpeg` and `decodeBaselineJpegRows`): the table's figure, no second figure of mine. The hostile case R12 names (a 330-byte JPEG declaring 60,000 x 60,000) needs the rows route judged too, since its cost there is time, not memory.
+
+Choices, for you to rule: (a) keep as implemented: photos over 120 MP are refused, and pdf-pixels' R42 tests that drive 16320 x 12240 change with it (pdf-pixels, job 14); (b) judge the rows route against a row of its own, e.g. `image.rows_pixels` = 201,326,592 (16384 x 12288) alpha, standard and protective, key `limit.image.rows_pixels`, for runtime-limits to add, and I re-point one line; the 120 MP stays for the whole-frame `decodeBaselineJpeg`.
+I recommend (b) if the 200 MP phone frames are meant to keep reading; (a) if 120 MP is the intended ceiling of every picture.
