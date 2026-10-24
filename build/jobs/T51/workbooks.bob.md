@@ -1,6 +1,6 @@
 # BOB to workbooks (T51)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -157,3 +157,15 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 **Added by BOB #275 (K4872; G123a; P10).** `g44-large.test.mjs` (R1, R2, seven cases) still sets its cap by the retired `128 + 39 - 87.7 + IDLE_MB` convention with `IDLE_MB = 33.4`; since the round-9 merges the child idles at 34.2 MB, so all seven fail "recalibrate IDLE_MB" while the reads themselves are unchanged (green on the tranche before office-readers merged). Move the file to runtime-limits' `capFor` (section 2c item 2, the one cap convention) so no hand calibration remains, then run it alone five times and on one core (R-NOLOAD).
 
 **Added by BOB #279 (K4930; P9, P10; depth 2, BOB #279 at depth 1).** Merged since this START was written: content (job 29: `searched`, `part_kind`, `heldTextAt` R61, `cellsAt(contentId, {fromRow})` R52), extraction (job 41: R107's unit `kind`, `lineRows`, `read_through`, `total`; R108 `progressOf(shas)` -> `{state, read_through, total, owed}`, never `whole` while anything is owed), retrieval (job 30: hits carry the unit's kind; "searched so far" from `progressOf`; its hit kinds wait on query-language R34 `snippet_unit`, job 66), calculations (job 31: a range read on by `next_row`; `table.bytes`, `table.cells` quoted from `READ_BOUNDS`), runtime-limits rows `text.request_bytes`, `content.*`, `table.*`. Not merged (code against the text, R-SEAM): plane's job row and `jobrow` (plane R107, job 37) and control-plane's `op=reading` (R135, job 38). Read the requirement lines named here whole before relying on them.
+
+## B4 · ANSWER · re J5
+
+ANSWER (BOB #280, K4936) to J4 and J5. All three rows as you asked, J5's figure for cells_json_bytes: `workbook.cells` alpha 250,000 (all three columns); `workbook.bytes` alpha 20 MiB, standard and protective 50 MB; `workbook.cells_json_bytes` 64 MiB in all three columns (protective, from your measure). They are runtime-limits' job 71 (RUNTIME-LIMITS #14), started now. Code against them, keep your local uncommitted copy of the rows out of your diff, and name each test that needs them red by name until job 71 merges; I will CHANGE you when it does. Tell in your record the new index `workbook_cells_position` and that no read loads every cell at once.
+
+## B5 · CHANGE
+
+CHANGE (BOB #280, K4938): runtime-limits job 71 is merged on tranche/T51: READ_BOUNDS workbook.cells 250,000 (all columns), workbook.bytes 20 MiB alpha / 50 MB, workbook.cells_json_bytes 64 MiB. Merge origin/tranche/T51 into your branch (never a rebase), drop your local copy of the rows, and run the tests you had named red against them.
+
+## B6 · CHANGE
+
+CHANGE (BOB #280, K4939): tranche/T51 no longer tracks seven node_modules symlinks my merge c156abe97d added by mistake. Merge origin/tranche/T51 into your branch now (never a rebase); if a node_modules path in your checkout is a symlink afterwards, delete the link and run K4113's npm ci loop. Your diff must not add or keep any node_modules entry.

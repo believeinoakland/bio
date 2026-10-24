@@ -155,3 +155,6 @@
 - Add · a row asked outside the passage's range (`content.index.from_row_outside_extent`) · fix round 9, CONTENT #20 (K4926) · 2026-10-24
 - Add · a document part not kept with its reading for its size, its text kept whole and searchable (`extraction.index.part_omitted`) · fix round 9, EXTRACTION #42 (K4927) · 2026-10-24
 - Add · a Cancel act for a file being sent in parts (screens-intake's parted upload page; `captureuploadabort`): a new act to draw, owed by SCREENS-INTAKE #23's J47 (K4930) · 2026-10-24
+- Add · a reading finished (`notice-producers.reading.finished`, `.finished.counted`) · fix round 9, NOTICE-PRODUCERS #17 (K4933) · 2026-10-24
+- Add · a reading ended in part, with its reason (`notice-producers.reading.partial`, `.partial.counted`; `{why}` is a code today: the member's words for each reason are the design's) · fix round 9, NOTICE-PRODUCERS #17 (K4933) · 2026-10-24
+- Add · a document not taken in, with its reason (`notice-producers.reading.refused`) · fix round 9, NOTICE-PRODUCERS #17 (K4933) · 2026-10-24
