@@ -86,3 +86,12 @@ Size (session_01XfNoWiwyETDV2uHxVRHPQy): test runs 4, module lines 244
 ## J5 · COMPLETE
 
 B5 applied (K4862): image/rows_pixels, pdf/xmp added; pdf/object_stream now 32 MiB for all three (its protective-figure test updated). Module 52/52; format, architecture, coverage, ownership 0 failures; words failures are other modules'. Nothing deferred or open.
+
+## Round 9, batch C, START B6 (RUNTIME-LIMITS #9): three rows for acquisition (K4882)
+
+**Entries applied.** Tranche merged first. `capture`/`keep_bytes` 33,554,432 (32 MiB), `capture`/`profile_text_bytes` 8,388,608 (8 MiB), `render`/`dom_bytes` 26,214,400 (25 MiB), each one figure in standard, alpha and protective, keys `limit.<kind>.<name>`; `capture` is a new kind, `render` gains a row. No sentence added. One test (R30, with R31's `boundOf` and `statement`) pins the three rows beside the table's existing ones.
+
+**Run.** Module tests: 53 tests, 53 pass, 0 fail. Importers: see the impact line below.
+Checks (civicos-process): format 0 failures; architecture 0 failures; coverage 32 of 32 ids named, 0 failures; ownership 0 failures; words 19 failures, all in case-checker, installer-steps, pdf-reader and test-support, none in this module.
+
+Size (session_01Hw98qUCFYLUAekavfPLPJZ): test runs 3, module lines 261
