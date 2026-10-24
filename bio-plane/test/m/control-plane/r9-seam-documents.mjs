@@ -343,9 +343,12 @@ export function sections(kit, counting) {
     }, 300000, 4000);
     const tally = memberEntries(list).reduce((m, e) => { const key = `${e.state}${e.bundle ? "+home" : ""}`; m[key] = (m[key] || 0) + 1; return m; }, {});
     assert.ok(done, `all ${COUNT} members are filed with a home (the continuation's included): ${JSON.stringify(tally)}`);
-    const held = JSON.stringify(body(await k.get(ann, { op: "heldcaptures", project })));
+    /* a member shows beside its archive in `heldcaptures` (rows are archives), so each is asked for its own copy: the project it is filed under */
     const last = memberEntries(list).slice(-3);
-    for (const e of last) assert.ok(held.includes(e.sha256), `continuation member ${e.name} is held under the archive's project`);
+    for (const e of last) {
+      const h = body(await k.get(ann, { op: "heldat", sha256: e.sha256 }));
+      assert.ok(h && h.held === true && h.copy && h.copy.project === project, `continuation member ${e.name} is held under the archive's project: ${JSON.stringify(h && h.copy && h.copy.project)}`);
+    }
   });
 
   /* ======================================== 8 · R135 (the job state), G128a, G128b, G128h ======================================== */
