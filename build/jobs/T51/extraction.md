@@ -823,3 +823,7 @@ COMPLETE job 88, R109 (G165): readHeld reads halfBudgetPages (half OCR invocatio
 **Tests/checks.** Module: `ℹ tests 380`, `ℹ pass 380`, `ℹ fail 0`. Users (28 files naming `readHeld`/`READING_HELD`; heavy plane l75/l77/l79, r7-contention and control-plane round5-seam not run, except the one below): `ℹ tests 203`, `ℹ pass 202`, `ℹ fail 1`: control-plane `t51-round5-seam.test.mjs` "E3 (a 40 MB five-part upload)" (`reading.failure` undefined, expected `final`), which fails identically with my change reverted, so not caused here; control-plane's or reading-pipeline's to look at. impact.mjs: 107 modules, 1819 files. format 0 failures; architecture 0; coverage 85 of 85, 0; words 0; ownership 3 files, 0 failures.
 
 Size (session_018hma5T31jiQyk2xrc5Nbiy): test runs 5, module lines 4875
+
+## J42 · COMPLETE
+
+COMPLETE job 94, R80 (G168): READING_HELD now carries counters {written, skipped}, never owed. Red first (no counters on a held reading of 8 units), then green. Module 380/380. Users 202/203: the one red, control-plane t51-round5-seam 'E3 (a 40 MB five-part upload)', fails identically with my change reverted. format, architecture, coverage 85/85, words, ownership: 0 failures. Record updated. Cause, why missed, red first, platform check (N) and Size are in it.
