@@ -209,3 +209,18 @@ REPORT, K4889 (1)-(4): the cause is in `doctypes`' types, not in docprofile's vi
 - `doctypes`: flatten the view once per `detect` call (or once per classification, handed on `ctx`) instead of once per pattern pass in `regulation`/`meeting_minutes`/`meeting_agenda`; or let `windows.mjs` reuse one buffer per pass. That cuts the 38 MB at its cause. I can hand a pre-flattened `ctx.flat` of the view (computed once in `bounded`) the moment doctypes asks for it; it is a new field on ctx, so it needs R40 or R38 worded for it first.
 - plane: the control bar (`shape-harness.test.mjs:28`, `LEAK_MB / 2`) is a sample with no collection, so it moves with GC timing; a control that forces a collection before its peak, or a bar for the sampler's variance, is plane's to decide. I did not touch it.
 - R38 wording for a text over the bound (BOB writes it): "Over `CLASSIFY_WHOLE_MAX_CHARS` `readText` and `doctypeFor` copy no more of the text than its classification view (at most `CLASSIFY_VIEW_MAX_CHARS` characters), handed once to each type with `ctx.window`; their own work adds under 6 MB at 3 MiB and at 12 MiB of text, measured above what the caller holds. The garbage a type makes over the view is that type's (`doctypes` R37)."
+
+## J15 · COMPLETE
+
+COMPLETE, fix round 9 batch C (K4889). The finding is J14's REPORT: the garbage is the real types' (`doctypes/windows.mjs` re-flattening per pass, `regulation` +38 MB, `meeting_minutes` +13 MB over a 1.5 M-character view); docprofile's own work over a text above the bound is 1.5-1.8 MB at 3 MiB and at 12 MiB. **No source file of the module changed**; every answer of the view (`type`, `classified_over`, `why`) is unchanged.
+
+**Changed (tests only).** `docprofile/test/memory.test.mjs` (two tests, 3 and 12 MiB, naming R38; peak under 6 MB above what the caller holds, one `detect` handed the view and `window`, `classified_over.of` the text) and `docprofile/test/memory-child.mjs` (mode `sheet`: a 2 MB young generation as the plane's isolate, no collection in the stretch). Failing-first: not possible, docprofile's share was under the bar before; instead a temporary mutation (`bounded` splitting the whole text on newlines, not committed) turned the 12 MiB test red at 9.6 MB, restored. **Not met / deferred:** the plane control `shape-harness.test.mjs:28` can still fail about 1 run in 12 (one tick of 12 was 75.9 MB, bar 75); the smallest thing it needs is a `doctypes` change (one flatten per `detect`, REPORT) or a collection before the control's peak in plane's harness. Neither is docprofile's; I did not edit either.
+
+**Platform check L:** a capped worker (2 MB young generation, `maxOldGenerationSizeMb` 128, 64, 48, 40; real types, 3 MiB sheet, three runs each) completes every time.
+
+**Tests.** `docprofile/test/`: 75 tests, 75 pass, 0 fail. Plane's `g48-classify.test.mjs` 3 runs 13/13 each; `shape-harness.test.mjs` 5 runs 7/7 each. Not run: the rest of the impact set (no source changed).
+**Checks (process repo, from `civicos-process`):** format 0 failures (176 modules); architecture docprofile 0 failures; coverage docprofile 30 of 30 live ids named, 0 failures; ownership docprofile (tranche/T51 against my pushed branch): 0 failures; `run.mjs` shows no finding in docprofile (words: plain 0; its 19 failures name `installer-steps` and others, not this module).
+
+**Proposed R38 wording for a text over the bound:** in J14's REPORT. **Found in another module:** `doctypes` (the re-flatten per pass) and plane's control bar, both in J14.
+
+Size (session_01W1qFDLihyPDuY1fytvKzdh): test runs 14, module lines 1420
