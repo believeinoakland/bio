@@ -161,3 +161,7 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B4 · ANSWER · re J5
 
 ANSWER (BOB #280, K4936) to J4 and J5. All three rows as you asked, J5's figure for cells_json_bytes: `workbook.cells` alpha 250,000 (all three columns); `workbook.bytes` alpha 20 MiB, standard and protective 50 MB; `workbook.cells_json_bytes` 64 MiB in all three columns (protective, from your measure). They are runtime-limits' job 71 (RUNTIME-LIMITS #14), started now. Code against them, keep your local uncommitted copy of the rows out of your diff, and name each test that needs them red by name until job 71 merges; I will CHANGE you when it does. Tell in your record the new index `workbook_cells_position` and that no read loads every cell at once.
+
+## B5 · CHANGE
+
+CHANGE (BOB #280, K4938): runtime-limits job 71 is merged on tranche/T51: READ_BOUNDS workbook.cells 250,000 (all columns), workbook.bytes 20 MiB alpha / 50 MB, workbook.cells_json_bytes 64 MiB. Merge origin/tranche/T51 into your branch (never a rebase), drop your local copy of the rows, and run the tests you had named red against them.
