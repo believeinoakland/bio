@@ -80,6 +80,13 @@ const TABLE = {
   render: {
     safe_view_bytes: same(32 * MiB, k("render", "safe_view_bytes")),
     safe_view_pages: same(500, k("render", "safe_view_pages")),
+    /* the serialised-DOM bound capture-sources' `renderBlock` takes as `domBound.bound`: 25 MiB, BOB's protective figure (K4831 (8)) */
+    dom_bytes: same(25 * MiB, k("render", "dom_bytes")),
+  },
+  /* the acquisition module's ceilings (K4882): `MULTIPART_KEEP_MAX` and `PROFILE_TEXT_MAX`, today's figures in all three columns */
+  capture: {
+    keep_bytes: same(32 * MiB, k("capture", "keep_bytes")),
+    profile_text_bytes: same(8 * MiB, k("capture", "profile_text_bytes")),
   },
   document: {
     clean_bytes: bytes(16 * MiB, k("document", "clean_bytes"), MB100),
