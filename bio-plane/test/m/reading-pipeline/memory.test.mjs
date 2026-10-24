@@ -27,15 +27,18 @@ const BOUND_MB = 64, WHOLE_MB = 96;
    reading was bounded, on the tranche tip. R37 (fix round 4b) moved two: BUD and PER are readings that did not determine
    (the text is undetermined), and a failed reading now carries `failure: "final"`; that one field is the whole difference
    (diffed key by key against the answer before), and APP and the synthetic, which determine, carry none and keep theirs. */
+/* Fix round 9 (K4861 (2), K4890): the four digests are re-recorded. The cause is the reader contract's additions to every answer (R45: `counters`,
+   `next`, `final`); the reading and units are the answer before (diffed key by key on the synthetic against the answer of the job's earlier commit: no other
+   key moved). */
 const FILES = [
   { name: "BUDGET-2025-BUD", pages: 188, sha: "3f1df41cfa3cebfd675b2a6ed673b6f665e0848c293d8d3bb5ab1815a0bae36b",
-    digest: "7bb5da9a5e8c5f610c6f160840f36c9936da43f8af097159e8144583816b137c" },
+    digest: "7578e1416a2d53aa382244b85636cdd2600dfc3f6559a64269600a69b017a848" },
   { name: "BUDGET-2025-PER", pages: 295, sha: "067ad707534788e9011d4b6abdb686f1c3505888218e2ca5327c04e0ad58ae7f",
-    digest: "8f0cfb0125781159e611635c26a2f2f3224291f02812174e8611bcb179a935b1" },
+    digest: "4b2f73e1cdef8f8dc383c94aa784d75f0eee646cef51d563ee1d163f499e0f84" },
   { name: "BUDGET-2024-APP", pages: 1354, sha: "6e0b3dc5f2f3f5bbab8ae5032bbc29207a8dbb290ba25ebafe3feb20dfe13c1e",
-    digest: "6a2425b85762bba034046913218f13ddd30647a1f06efe98165a7aa98466b10d" },
+    digest: "350e029e02656ba69ee1e54f7a7e0610326428c7d3b16b03c65934246af55695" },
   { name: "the 20 MB synthetic", synth: true, pages: 1300,
-    digest: "a9a2a0f1956959eadb226839738501353eea186494e993058a83d9f67516f5d7" },
+    digest: "7ad8c097bf22cd0379eda1c9a0b169d474638f65e66458a70fda739cf8b2119c" },
 ];
 
 const sha256 = (b) => createHash("sha256").update(b).digest("hex");

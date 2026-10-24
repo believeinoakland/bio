@@ -70,18 +70,20 @@
         "encoding": "us-ascii",
         "confidence": {
          "delimiter": "certain",
-         "encoding": "certain"
+         "encoding": "likely"
         },
         "signals": {
          "delimiter": [
-          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+          "comma occurs 3 time(s) outside quotes on every one of the first 1000 complete lines"
          ],
          "encoding": [
           "no byte >= 0x80 in the first 100000 bytes",
           "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
          ]
         },
-        "undetermined": []
+        "undetermined": [],
+        "assumed": true,
+        "disagree": []
        }
       },
       "more": false,
@@ -169,18 +171,20 @@
         "encoding": "us-ascii",
         "confidence": {
          "delimiter": "certain",
-         "encoding": "certain"
+         "encoding": "likely"
         },
         "signals": {
          "delimiter": [
-          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+          "comma occurs 3 time(s) outside quotes on every one of the first 1000 complete lines"
          ],
          "encoding": [
-          "no byte >= 0x80 in the first 1048576 bytes",
+          "no byte >= 0x80 in the first 2097152 bytes",
           "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
          ]
         },
-        "undetermined": []
+        "undetermined": [],
+        "assumed": true,
+        "disagree": []
        }
       },
       "more": true,
@@ -353,18 +357,20 @@
         "encoding": "us-ascii",
         "confidence": {
          "delimiter": "certain",
-         "encoding": "certain"
+         "encoding": "likely"
         },
         "signals": {
          "delimiter": [
-          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+          "comma occurs 3 time(s) outside quotes on every one of the first 1000 complete lines"
          ],
          "encoding": [
-          "no byte >= 0x80 in the first 1048576 bytes",
+          "no byte >= 0x80 in the first 3000000 bytes",
           "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
          ]
         },
-        "undetermined": []
+        "undetermined": [],
+        "assumed": true,
+        "disagree": []
        }
       },
       "more": true,
@@ -572,18 +578,20 @@
         "encoding": "us-ascii",
         "confidence": {
          "delimiter": "certain",
-         "encoding": "certain"
+         "encoding": "likely"
         },
         "signals": {
          "delimiter": [
-          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+          "comma occurs 3 time(s) outside quotes on every one of the first 1000 complete lines"
          ],
          "encoding": [
-          "no byte >= 0x80 in the first 1048576 bytes",
+          "no byte >= 0x80 in the first 3000000 bytes",
           "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
          ]
         },
-        "undetermined": []
+        "undetermined": [],
+        "assumed": true,
+        "disagree": []
        }
       },
       "more": true,
@@ -1094,14 +1102,35 @@
        "words_read": 4320,
        "title": null,
        "page_count": 6,
-       "page_boxes": null,
+       "page_boxes": {
+        "boxes": [
+         {
+          "media_box": [
+           0,
+           0,
+           612,
+           792
+          ],
+          "w": 612,
+          "h": 792,
+          "rotate": 0
+         }
+        ],
+        "of_page": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
        "container_extent": {
         "container": "pdf",
         "levels": [
          "images"
         ],
-        "images": null,
-        "images_why": "a placement the structure op reported could not be read as {page, rect}"
+        "images": []
        },
        "text_chars": 31187,
        "text_glyphs": null,
@@ -2579,5 +2608,6 @@
     }
    ]
   }
- }
+ },
+ "rerecorded": "fix round 9 (K4872, K4877): reading.dialect, page_boxes and container_extent as the merged providers answer them"
 }

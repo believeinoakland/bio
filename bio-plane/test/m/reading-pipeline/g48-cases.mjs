@@ -97,12 +97,20 @@ CASES.push(edge("sheet-long-rows", "g48long", longRowText()),
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
+/* Fix round 9 (K4837) adds to every answer what the record, made before it, cannot hold: the reader contract's `counters`, `next`
+   and `final` (R45), a unit's `kind` (`body` for every unit here) and a sheet block's `lineRows` (R47, R41), and the decode's
+   `encoding` facts (R49). They are taken off before an answer is compared with the record, and nothing else is: a unit of any other
+   kind, or any other key, still differs. Each is tested where it is made (`r9-reader.test.mjs`). */
+const ROUND9_ANSWER = ["counters", "next", "final"];
+const ROUND9_READING = ["encoding", "encoding_assumed", "encoding_disagree", "encoding_replaced"];
+const withoutRound9Unit = (u) => { if (u.kind !== "body") return u; const { kind, lineRows, ...rest } = u; return rest; };
 /* One answer as the record keeps it: everything but the units, which are kept as a count and a digest of their JSON. */
 export function recordOf(out, first) {
-  const { text_units, reading, ...rest } = out;
-  const r = reading ? (({ provenance, at, ...more }) => more)(reading) : undefined;
+  const { text_units, reading, ...rest0 } = out;
+  const rest = Object.fromEntries(Object.entries(rest0).filter(([k]) => !ROUND9_ANSWER.includes(k)));
+  const r = reading ? (({ provenance, at, ...more }) => Object.fromEntries(Object.entries(more).filter(([k]) => !ROUND9_READING.includes(k))))(reading) : undefined;
   return { ...(first ? { reading: r } : {}), ...rest,
-           units: { n: text_units ? text_units.length : 0, sha: sha(JSON.stringify(text_units || [])) } };
+           units: { n: text_units ? text_units.length : 0, sha: sha(JSON.stringify((text_units || []).map(withoutRound9Unit))) } };
 }
 
 /* A case read to the end: the first tick, then every later piece by the cursor of the one before. */

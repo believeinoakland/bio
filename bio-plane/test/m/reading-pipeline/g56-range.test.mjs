@@ -14,6 +14,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as pipeline from "../../../src/reading-pipeline/index.mjs";   /* by namespace: the base has no PDF_RANGE_BYTES, and a missing name must fail one test, not the file */
 import { LIGHT, HEAVY, PAGES, worldOf, inPieces, readOf, summary } from "./g56-cases.mjs";
+import { extractPdfRange } from "../../../src/pdfstructure.mjs";
 
 const { PDF_RANGE_PAGES, PDF_RANGE_BYTES } = pipeline;
 const recorded = JSON.parse(readFileSync(new URL("./fixtures/g56-answers.json", import.meta.url), "utf8"));
@@ -37,29 +38,36 @@ test("R40 (G56 a2): the light 450-page PDF read in pieces with the default range
   assert.ok(widest(pieces) <= PDF_RANGE_PAGES, "control: no piece above PDF_RANGE_PAGES");
 });
 
-test("R40 (G56 a3, seam: waits for PDF-READER #12's maxBytes): the heavy synth, 16.9 times the light's bytes a page: every piece at most floor(PDF_RANGE_BYTES / bytes a page) pages, fewer than the light's", async () => {
-  const light = await world("light", LIGHT), heavy = await world("heavy", HEAVY);
-  const lightPer = light.bytes.length / PAGES, heavyPer = heavy.bytes.length / PAGES;
-  assert.ok(heavyPer >= 6 * lightPer, `heavy ${Math.round(heavyPer)} B a page against light ${Math.round(lightPer)}`);
-  const bound = Math.max(1, Math.floor(PDF_RANGE_BYTES / heavyPer));
-  const hp = await inPieces(heavy), lp = await inPieces(light);
-  assert.ok(widest(hp) <= bound, `the widest heavy piece is ${widest(hp)} pages, the bound ${bound}`);
-  assert.ok(widest(hp) < widest(lp), `heavy ${widest(hp)} pages against light ${widest(lp)}`);
+/* Fix round 9 (K4872): pdf-reader's `maxBytes` is judged against each page's own decoded size as the page is built (its R43 as amended,
+   G124d), no longer the document's average bytes a page, so the heavy synth (its weight is image padding, not page content) is no
+   longer cut by its file bytes. What the plane owes is that `maxBytes` is PDF_RANGE_BYTES on every tick: each piece is exactly the
+   range pdf-reader answers for that ask. */
+const providerRange = (bytes, from, count) => extractPdfRange(bytes, { from, count, maxBytes: PDF_RANGE_BYTES }).then((r) => r.count);
+test("R40 (G56 a3, seam): every piece of the heavy and the light synth is the range pdf-reader answers for its ask with maxBytes PDF_RANGE_BYTES, at most PDF_RANGE_PAGES pages", async () => {
+  for (const w of [await world("light", LIGHT), await world("heavy", HEAVY)]) {
+    const ps = await inPieces(w);
+    for (const p of ps) {
+      const [from, to] = p.piece.pages;
+      assert.ok(to - from <= PDF_RANGE_PAGES);
+      assert.equal(to - from, await providerRange(w.bytes, from, Math.min(PDF_RANGE_PAGES, PAGES - from)), `the piece at ${from}`);
+    }
+  }
 });
 
 test("R40 (G56 c): a caller's rangePages replaces the default page cap; the byte bound only shrinks it, and an ask of 5 stays 5", async () => {
   const light = await world("light", LIGHT);
   const big = await readOf(light, { cursor: null, unitsBudget: Infinity, rangePages: 400 });
-  assert.equal(big.piece.pages[1] - big.piece.pages[0], 400, "the light synth is under the byte bound at 400 pages: the ask stands");
+  const cut = await providerRange(light.bytes, 0, 400);
+  assert.ok(cut > PDF_RANGE_PAGES, `${cut}: the ask of 400 replaces the default cap`);
+  assert.equal(big.piece.pages[1] - big.piece.pages[0], cut, "the ask stands where the decoded bytes allow it, as pdf-reader cuts it (K4872)");
   const small = await readOf(light, { cursor: null, unitsBudget: Infinity, rangePages: 5 });
   assert.equal(small.piece.pages[1] - small.piece.pages[0], 5);
 });
 
-test("R40 (G56 c, seam: waits for PDF-READER #12's maxBytes): an ask of 400 on the heavy synth is cut to the byte figure, like the default", async () => {
+test("R40 (G56 c, seam): an ask of 400 on the heavy synth is cut to the byte figure pdf-reader judges, like the default", async () => {
   const heavy = await world("heavy", HEAVY);
-  const bound = Math.max(1, Math.floor(PDF_RANGE_BYTES / (heavy.bytes.length / PAGES)));
   const out = await readOf(heavy, { cursor: null, unitsBudget: Infinity, rangePages: 400 });
-  assert.equal(out.piece.pages[1] - out.piece.pages[0], bound);
+  assert.equal(out.piece.pages[1] - out.piece.pages[0], await providerRange(heavy.bytes, 0, 400));
 });
 
 test("R40 (G56 b): a range whose units do not fit the units budget still moves the cursor to the first page not carried, no page lost or doubled", async () => {

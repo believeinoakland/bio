@@ -129,7 +129,8 @@ test("R29 R23: a member's act on her own account, within its limits: the pages C
   /* labelled: the basis says it, the chain's sentence says it */
   assert.match(r.basis, /pages 2-3 that Civicsmith's own text recognition could not read were transcribed by the AI \(vision-model 3\) at a member's request, on the account that pays for it: this text is the AI's reading, not yet determined/);
   assert.match(r.basis, /page 3 already held a little text of its own \(a folio\), which was kept, and the AI's reading was appended after it/);
-  assert.match(describeChain(c0), /the AI's reading of the page \(vision-model 3\) \(pages 1-2\)/, "the chain's own sentence (text-chain's 0-based pages)");
+  /* re-recorded at fix round 9 (K4861 (3), K4863): text-chain R39 spells the pages 1-based, as a reader counts */
+  assert.match(describeChain(c0), /the AI's reading of the page \(vision-model 3\) \(pages 2-3\)/, "the chain's own sentence (text-chain's 1-based pages)");
   assert.doesNotMatch(r.basis, /\binstance\b|\bthe plane\b/i, "DEC-149's words");
   /* R18: pages the AI read are tier 4, named by the model; the folio page has both producers */
   const pg = Object.fromEntries(r.provenance.pages.map((p) => [p.page, p]));
