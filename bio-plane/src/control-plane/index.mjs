@@ -3173,6 +3173,19 @@ export function makeFetch(hooks = {}) {
     /* R72 (K2458; capture R86): the upload's bytes are the request's raw body, streamed to capture as `bytes`, never read,
        decoded or kept here; its words (`statement`, `name`, `within`) and a `step` it is a product of travel in the
        address. Capture's answer is relayed as given, and a step named is tied after the capture lands (R71). */
+    /* R72 (fix round 9; capture R111, R113): `declared` is the door's word alone: a caller's is deleted for every op, and for the one-request upload and a part it is the
+       request's Content-Length when that is a whole number */
+    inner.searchParams.delete("declared");
+    if ((op === "captureupload" || op === "captureuploadpart") && /^\d+$/.test(req.headers.get("content-length") || ""))
+      inner.searchParams.set("declared", req.headers.get("content-length"));
+    if (op === "captureuploadpart") {
+      const part = await stub.fetch(new Request(inner, withGrant({ method: "POST", body: req.body,
+        headers: { "content-type": "application/octet-stream",
+                   ...(req.headers.get("content-length") ? { "content-length": req.headers.get("content-length") } : {}) },
+        ...(req.body ? { duplex: "half" } : {}) })));
+      const got = await forwarded(part);
+      return got.early ?? json({ ...got.body, store: storeName, tokenClass: cls }, got.status);
+    }
     if (op === "captureupload") {
       requestStart(seen, op);   /* R129: before the object is asked */
       const uploaded = await stub.fetch(new Request(inner, withGrant({ method: "POST", body: req.body,
