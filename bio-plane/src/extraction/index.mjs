@@ -1102,7 +1102,13 @@ export class Extraction {
       ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting, t3 });
     reading.reextracted = { at: stampInstant("second"), by: author, engine: t3.engine ? t3.engine.engine : null, version: t3.engine ? t3.engine.version : null,
       calibration: t3.engine ? t3.engine.calibration ?? null : null, pages: t3.filled, via };
-    const entry = t3.left ? { kind: "ocr", sha: digest, cursor: t3.left.cursor, pages_left: t3.left.pages.length } : null;
+    /* the pages still owed after this pass: those left before it, less the pages it filled with text and the pages now stated (a member that answers
+       some pages and names no rest leaves the others owed, as one that defers them does) */
+    const doneNow = new Set([...t3.filled.filter((pg) => { const x = (t3.i2text && Array.isArray(t3.i2text.pages) ? t3.i2text.pages : []).find((q) => q && q.page === pg); return !!x && glyphCount(x.text || "") > 0; }),
+                             ...(Array.isArray(t3.refused) ? t3.refused.map((r) => r && r.page) : [])]);
+    const stillLeft = this.#pagesLeft(digest, basis).filter((pg) => !doneNow.has(pg));
+    const entry = stillLeft.length ? { kind: "ocr", sha: digest, cursor: stillLeft[0], pages_left: stillLeft.length } : null;
+    if (entry) reading.ocr_left = { cursor: entry.cursor, pages: entry.pages_left }; else delete reading.ocr_left;
     /* (R101: progress only forward) a pass whose filled pages hold no glyph has read nothing: it ends, stated, and re-registers nothing, so a member
        answer that merges to empty pages never loops the job */
     const glyphsIn = (pg) => { const x = (t3.i2text && Array.isArray(t3.i2text.pages) ? t3.i2text.pages : []).find((q) => q && q.page === pg); return !!x && glyphCount(x.text || "") > 0; };

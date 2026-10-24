@@ -151,3 +151,15 @@ test("R103 R35 (K4904 (2); plan 2c item 9): a page the reading lists in `folio_p
   const r = await old.w.x.readHeld({ sha: old.d, kind: "ocr", env: { OCR_WORKER: none } });
   assert.deepEqual([r.read, r.why, none.calls.length], [false, "NO_PAGES_LEFT", 0]);
 });
+
+test("R102 R103 (E6's member): a pass whose OCR member answers some of the pages asked and names no rest leaves the others owed, re-registered from the first of them, and the next pass reads on to the end", async () => {
+  const { w, d } = await held(scan(60, [0]), { bytes: 2048 });
+  const ocr = member((b) => ocrAnswer(b.pages.slice(0, 24)));
+  const one = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: ocr } });
+  assert.deepEqual([one.read, one.owed, one.registration && one.registration.pages_left], [true, true, 35], JSON.stringify(one));
+  const two = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: ocr } });
+  const three = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: ocr } });
+  assert.deepEqual([two.owed, three.owed], [true, undefined]);
+  assert.deepEqual(w.x.readingFor(d, "class:admin").unread_pages, []);
+  assert.equal(w.x.readingOf(d).reading.ocr_left, undefined);
+});
