@@ -269,3 +269,7 @@ Other module tests were not run separately (the eleven files are the module's br
 **Deferred:** `journey` and `live` reds above: BOB to say whether they predate this entry.
 
 Size (session_01USyGMZHTJG6V897tNLHTHH): test runs 7, module lines 13
+
+## J12 · COMPLETE
+
+K4847 applied: browser() falls back to /opt/pw-browsers/chromium when the pinned build is absent (walker 17/0 with CHROMIUM unset, was red at launch). Checks: format, architecture, coverage, words, ownership all 0 failures. NOT green, and not caused by the launch: group 4/1 (R17, 'group' in other modules' rows), journey 11/13 (install step timeout; identical with CHROMIUM set), live 11/4 (R9 step 2 timeout). Details in my record. No requirement names the Chromium choice: please write one.
