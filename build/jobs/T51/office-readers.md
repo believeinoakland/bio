@@ -139,3 +139,7 @@ COMPLETE (B14, B15 applied): local decoder removed, office.decoded_chars read by
 COMPLETE (B16 applied): tranche merged, R41 tests green on ooxml's decodeText; office-readers 129 pass (incl. g41, large-text); format, architecture, coverage 39/39, words 0 failures. office-xml.mjs still to add to paths.
 
 **B17 applied.** `decodePart` is `ooxml.decodeText` alone; `countReplaced` removed. Tranche merged. R38-R45 each named by its own test (coverage 39 of 39 on this branch). New file to add to paths: `bio-plane/src/office-xml.mjs`. office-readers 129 pass.
+
+## J11 · COMPLETE
+
+COMPLETE (B17 applied): decodePart is ooxml.decodeText alone, no local arm. office-readers 129 pass; coverage 39 of 39 (R38-R45 each named by its own test: parts-kinds, chars-decode, scan-bounds, dates-typed); format, architecture, words 0 failures. NEW FILE to add to paths: bio-plane/src/office-xml.mjs (ownership names it until then).
