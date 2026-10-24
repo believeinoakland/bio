@@ -179,6 +179,20 @@ test("R47 (G166): a paragraph a text_box part names in paras is no body unit, so
   assert.equal(bad.filter((u) => u.kind === "body").length, 5, "control: indices that name no paragraph leave every paragraph a body unit");
 });
 
+test("R47 (G166, pptx): a slide's body unit is its bodyText when it states one, so a text box's words are one unit of kind text_box; a box-only slide has no body unit; without bodyText the slide's text stays", async () => {
+  const slides = [{ slide: 0, text: "Title\nbox words", bodyText: "Title" }, { slide: 1, text: "only box words", bodyText: "" }, { slide: 2, text: "plain slide" }];
+  const entry = { format: "x9pptx", text: async () => ({ container: "pptx", document: slides.map((s) => s.text).join("\n\n"), slides,
+    parts: [{ kind: "text_box", ref: "slide 1 shape 2", part: "ppt/slides/slide1.xml", text: "box words", shapes: [1] },
+            { kind: "text_box", ref: "slide 2 shape 1", part: "ppt/slides/slide2.xml", text: "only box words", shapes: [0] }],
+    counts: { chars: 50, undetermined: 0 } }) };
+  await withEntry(entry, async () => {
+    const { w, document } = await heldDoc("x", "x9pptx");
+    const out = await read(document, { evidence: ev(w), env: {}, unitsBudget: Infinity });
+    assert.deepEqual(out.text_units.filter((u) => u.kind === "body").map((u) => [u.extent.slide, u.text]), [[0, "Title"], [2, "plain slide"]]);
+    assert.deepEqual(out.text_units.filter((u) => u.kind === "text_box").map((u) => u.text), ["box words", "only box words"]);
+  });
+});
+
 test("R47 R41 (G128g, G128h): a sheet's units carry lineRows, every block naming its rows, the repeated header line naming row 1, so a join that drops a repeated first line gives each row once", async () => {
   const lines = ["payer,payee,amount", ...Array.from({ length: 9000 }, (_, i) => `PBs${String(i).padStart(6, "0")},P002,${i + 1}`)];
   const entry = { format: "x9sheet", text: async () => ({ container: "csv", document: lines.join("\n"),

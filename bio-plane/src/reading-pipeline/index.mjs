@@ -996,16 +996,18 @@ function allUnitsOf(i2text) {
   const named = new Set();
   for (const p of Array.isArray(i2text.parts) ? i2text.parts : [])
     if (p && typeof p === "object" && Array.isArray(p.paras)) for (const n of p.paras) if (Number.isInteger(n) && n >= 0) named.add(n);
-  const arm = (list, kind, fields, skip = null) => (Array.isArray(list) ? list : [])
-    .map((u, i) => (u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0 && !(skip && skip.has(i))
-      ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text, kind: "body" } : null))
+  /* R47 (G166; K4987): a slide's body unit is its `bodyText` (the text outside its text boxes, '' for a box-only slide) when the entry
+     states one, else its `text`. */
+  const arm = (list, kind, fields, skip = null, textOf = (u) => u.text) => (Array.isArray(list) ? list : [])
+    .map((u, i) => (u && typeof u === "object" && typeof textOf(u) === "string" && glyphCount(textOf(u)) > 0 && !(skip && skip.has(i))
+      ? { extent: { kind, ...fields(u, i) }, seq: i, text: textOf(u), kind: "body" } : null))
     .filter(Boolean);
   const body = Array.isArray(i2text.pages)      ? arm(i2text.pages, "pdf-page",
         (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null }))
     : Array.isArray(i2text.paragraphs) ? arm(i2text.paragraphs, "doc-para",
         (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }), named)
     : Array.isArray(i2text.slides)     ? arm(i2text.slides, "slide-shape",
-        (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }))
+        (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }), null, (u) => (typeof u.bodyText === "string" ? u.bodyText : u.text))
     : Array.isArray(i2text.sheets)     ? arm(i2text.sheets, "sheet-range", sheetRangeOf)
         .filter((u) => u.extent.sheet !== null)
         /* R47 (G128h): a sheet's unit carries the row of each of its lines, so a hit names its row */
