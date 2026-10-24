@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J33
+**Read** · handled J34
 
 ## B1 · START
 
@@ -699,3 +699,12 @@ Mail with `--module capture`; record `build/jobs/T51/capture.md` (append a new s
 **Done when:** capture's module suite green (`node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/capture/` from `bio-plane/`), `node checks/run.mjs` from the civicos-process checkout showing no `inline` finding naming `capture` (its total failures fall by 7 or more), coverage, format, architecture and ownership 0 for capture. Record the ids written (BOB owes their rows to `later-ux.md`).
 
 When done: record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B34 · START
+
+START · CAPTURE #55 · tranche T51 · product believeinoakland/bio · fix round 9, batch D: R109 amended: no reading row for a stated upload; the profile reads the held bytes (G152, K4958) · depth 2 (BOB #280 at depth 1)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/capture tranche/T51 && git branch -m job/T51/capture stale/capture-local && git checkout -b job/T51/capture origin/job/T51/capture`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module capture`; record `build/jobs/T51/capture.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`; a symlink there is deleted first, K4939). Tests from `bio-plane/`: `node --import ./test/platform-sqlite.mjs --test --test-force-exit <files>`, heavy files alone. Your diff touches only this module's `paths`, its `tests` and your record (ownership); never a `node_modules` entry. Never contact any live deployment. Read whole: this START, your requirements (both parts), the code lines named, the tests naming the ids named. Before COMPLETE: your suite, `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the users it names, the checks (format, architecture, coverage, words, ownership) each by its failure count; sentences a member reads keyed through `localize` at their use (or by `word(key)` in a drawn-screen module) and listed in your record as rows owed; COMPLETE with the four fields (cause, why missed, red first, platform check) and a `Size` line.
+**Why this job (job 75; CONTROL-PLANE #55's seam §14a and its report (i)).** Diagnosis: `build/plan/diagnosis-R9-cp-reports.md` (read your item whole); BOB re-read every cited line (K4849, K4958). Items (b) and (i): `capture/index.mjs:908` registers `reading` always, also for an upload already stated over its kind's ceiling (never read); `:949` calls `profileOf` with no bytes, so `acquisition/index.mjs:2070-2073` reads the stored object back whole (`ev.get`) though the upload held it. Read your **R109** (its new last sentence). Red first: (1) an over-ceiling PDF upload registers a `reading` row today; (2) a counting `ev` (count `get` calls) sees one whole read in a single-part upload's profile today. Then pass the held bytes as `profileBytes` (acquisition already takes them) and register no `reading` row for a stated upload.

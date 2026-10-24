@@ -1,6 +1,6 @@
 # installer (T51)
 
-**Status** · session_01Ts5kJbmZvJNjCoP5V2FiQE · depth 2 · COMPLETE · handled B24
+**Status** · session_0133bNMzhnXsy441ZfjLU6xR · depth 2 · COMPLETE · handled B28
 
 ## J1 · QUESTION
 
@@ -305,3 +305,113 @@ TESTS (real provider): g83-begin 3/3 green (T5; was red first); requirements.tes
 CHECKS: format 0, architecture 0, coverage 73/73, ownership 0 (5 files), words 0 failures. Impact lists 64 modules, only journey-check uses installer.
 DEFERRED: none. FOR BOB: (1) `newgroup/dist/newgroup.bundled.mjs` is stale (regenerate; its freshness test is red until then). (2) A dedicated design key for the unreadable-settings stop would replace reusing `installer.keys.unread` as the {said} fill (J24). (3) R83 and R17's "not yet met" marks can be struck.
 Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 16, module lines 2172
+
+## J26 · QUESTION
+
+Two readings I code on, until you correct them (I carry on meanwhile).
+
+(1) installer-steps R43-R45 interface, as I read it (job 72 has pushed no code yet): `storageEntitlement(token, acctId)` -> `{state: "on"|"not_entitled"|"permission"|"unknown", said?}` (R43); `addressState(token, acctId, slug)` -> `{sub: <prefix>|null, proposed: <slug>|null}` (R44; `proposed` is null when the account has a prefix); `registerSubdomain(token, acctId, name)` -> `{ok: true}` | `{ok: false, taken: true}`, other refusals thrown with Cloudflare's message; `ensureSubdomain(token, acctId, slug)` still answers `{sub, registered}` with `registered` null and registers nothing (I pass no `offer`); `missingScopes(granted, needed)` -> array of the `needed` names absent from `granted` (the token response's scope string, or null when it states none; I skip the comparison for null). `needed` is the installer's own list: SCOPES less `account-logs.read` and `connectivity-directory.bind`. If job 72 shapes any of these otherwise, tell me and I follow; in my tests a temporary stand-in of exactly this, not committed.
+
+(2) Containers: Cloudflare's measured answer codes are not in hand (the diagnosis says "not documented"; K4942's measurement is owed). I decide by `e.code` against one exported table in `newgroup/src/ready.mjs` (permission: 10000, 9109; plan: 100328, the one plan refusal code measured so far; anything else is "could not tell", stated), each marked "documented shape; BOB measures on the rehearsal account (K4942)". There is no "off" state any more (no documented switch): the old words-regex arm goes. Replace the plan code (and add any "off" code) in that one table when you measure.
+
+(3) Words: B25 says each new sentence is `localize`d at its use; `checks/words.mjs` reports a `marker` finding for every `localize` call in a drawn-screen module and `installer` is one (DRAWN_MODULES). My previous job refused for that reason (J25). I follow B25 and will list the marker findings (one per new key) in my record as expected, not as defects. Say if you want otherwise.
+
+## J27 · COMPLETE
+
+COMPLETE (B25 R84, B26, B27). Merged tranche/T51 (installer-steps R43-R45 real; my stand-in dropped, never committed).
+
+**Entries applied.** R84's seven conditions, all in the room before anything is created (`newgroup/src/ready.mjs`, new; `index.mjs`, `ui.mjs`): (1) storage: a step `ready` right after the lock, before `fresh` (the look at what the account holds lists its buckets, which an account without R2 refuses), reads `storageEntitlement`; not entitled shows the R2 checkout walk-through + Check again, permission asks to approve again, any other answer is told as itself (a 500 is the lasting stop); (2) Containers by `e.code` through one exported table `CONTAINERS_CODES` (permission 10000, 9109; plan 100328), marked "documented shape; BOB measures on the rehearsal account (K4942)"; plan shows the plan's own stop, permission asks to approve again, anything else is "could not tell" stated with Cloudflare's words; the words regex and the "off" state are gone; (3) ceilings Workers 500, classes 500, buckets 1,000,000, cron triggers 250 (each with its source in a comment; the container-count ceiling removed, none is documented; crons counted per Worker, an unreadable schedule not counted); the limit stop offers Check again; the update's limit check uses the same table; (4) the workers.dev prefix: with none, a panel with the proposed name (editable), the permanence sentence and a button (`data-sub-from`); `/begin` takes `subdomain` (validated) into the cookie (`sd`); `registerSubdomain` runs last of the room checks, before any upload; taken asks again; nothing is registered without the click; `ensureSubdomain` then only enables the address; (5) `missingScopes` against SCOPES less `account-logs.read` and `connectivity-directory.bind`, compared right after the token exchange (install only; null = not compared); a missing scope throws approveAgain with its sentence (streamPage draws `e.said` then R71's panel); (6) `GET /accounts` with several: a panel by name (install, update, removal view and run), `account` in `/begin` (`ac` in the cookie), kept in the Check again body, the exists panel and the remove panel; (7) the plane's Blob over 64 MiB stops before anything is created; a member whose manifest `bytes` is over it is left out by name (its entry carries the reason, the fleet step names it). B26: the seven tests (R7, R14, R47, R67, R69, R70, R78) are green; fixture answers 10073 (exists), 10042 (not entitled), 10000/403 (permission), 409 (taken).
+
+**Words (B27 (3)).** No `localize`. Each new sentence is `word(key)` on a stop or choice path only; the happy path draws no new key (the step `ready` reads the existing `installer.step.storage`), so a team installs with no new row; a stop needs its row. KEYS lists them; `words-reads.json` (design's file) not touched. New keys with stand-in English, for the HANDOFF to UX-DESIGN (23):
+- `installer.begin.account`: That Cloudflare account could not be used. Start again from the first page.
+- `installer.begin.subdomain`: That address name cannot be used. Use letters, digits and dashes, not starting or ending with a dash.
+- `installer.limit.crons.other`: {n} scheduled jobs
+- `installer.ready.account.head`: Which Cloudflare account?
+- `installer.ready.account.use`: Use {name}
+- `installer.ready.account.which`: Your Cloudflare sign-in can reach more than one account. Choose the one your team's Civicsmith is for. Nothing has been created.
+- `installer.ready.address.head`: Choose your account's address
+- `installer.ready.address.label`: Address name
+- `installer.ready.address.none`: Your Cloudflare account has no workers.dev address yet. Choose the name your team's Civicsmith will be reached at. Nothing has been created.
+- `installer.ready.address.permanent`: This name is permanent for the whole Cloudflare account: every address in it ends with the name, and changing it later breaks every address already given out.
+- `installer.ready.address.taken`: The name {name} is already taken on Cloudflare. Choose another. Nothing has been created.
+- `installer.ready.address.use`: Use this address
+- `installer.ready.checkagain`: Check again
+- `installer.ready.containers.permission`: Stopped: the permission you gave does not let the installer look at your account's Containers. Nothing was created. Approve again, and keep every permission Cloudflare lists switched on.
+- `installer.ready.containers.unknown`: Stopped: the installer could not tell whether your Cloudflare account can run Containers ({said}). Nothing was created.
+- `installer.ready.scopes`: Stopped: the permission you gave Cloudflare does not include everything the installer needs ({missing}). Nothing was created. Approve again, and keep every permission Cloudflare lists switched on.
+- `installer.ready.size.member`: its program is larger than the 64 MiB Cloudflare allows for one Worker
+- `installer.ready.size.plane`: Stopped: the Civicsmith program of this release is larger than the 64 MiB Cloudflare allows for one Worker, so it cannot be installed. Nothing was created.
+- `installer.ready.storage.do`: In the Cloudflare dashboard open Storage & databases, then R2, then Overview, and complete the checkout that adds an R2 subscription to the account. Then come back and choose Check again.
+- `installer.ready.storage.off`: Stopped: your Cloudflare account has not turned on R2, the storage your team's Civicsmith keeps its evidence in. Nothing was created.
+- `installer.ready.storage.permission`: Stopped: the permission you gave does not let the installer look at your account's storage. Nothing was created. Approve again, and keep every permission Cloudflare lists switched on.
+- `installer.ready.storage.unknown`: Stopped: Cloudflare would not say whether your account's storage is turned on ({said}). Nothing was created.
+- `installer.ready.unknown.do`: Choose Check again in a moment. If it keeps happening, the message above is what to give whoever helps you with Cloudflare.
+
+**Accepted reds until the rows land** (words check: missingkey 12 (the other keys sit on multi-line calls the check does not read); tests that draw those stops): R84 (1)-(7) in `r84.test.mjs`, R38 (its "unasked" arm), R70, R72 (hasWord on the new keys). With the 23 stand-in rows appended to a scratch copy of `rows.mjs` (reverted, never committed) all of these are green: r84 8/8, requirements 50/54, t50 17/19, corpus 3/3, the rest as below; the reds left are the inherited ones.
+
+**Deferred.** None of R84's. Not placed (per the diagnosis): email verification; the first install beside other tools' Workers (told by the limit counts only). words-reads.json entry for the 23 keys (design's). The R84 steps and `ready.mjs` list no "off" code: BOB replaces the plan code and adds any measured one in `CONTAINERS_CODES`.
+
+**Found in other modules.** (a) `installer-steps` `storageEntitlement` reads any 403 as permission, so a 403 that is not an authentication one is told as permission: fine for now, measure at K4942. (b) Generated: `newgroup/dist/newgroup.bundled.mjs` is stale (source changed; `newgroup-bundle-fresh` red by name until BOB regenerates). (c) journey-check (the one user, impact 2/25) not run: no `playwright-core` in its directory in this container (K4066).
+
+**Tests (this tree, no stand-in rows, i.e. as it ships).** r84 1/8 (7 red: need rows), requirements 49/54, t47 5/5, t48 9/10, t50 15/19, t51 11/11, g83-begin 3/3, corpus 3/3, embed 1/1, t51-ascii 1/1, wizard (whole file, inherited), realsize 0/6 (inherited, identical on the untouched tranche). Reds that are not R84's, all inherited on the tranche: R8, R11, R20, R44, R55, R61, R71, t48's one, wizard, realsize x6. Red-first for R84: the seven conditions' tests all red with `index.mjs`/`ui.mjs` reverted, green after.
+**Checks:** format 0 failures; architecture 0; coverage 74 of 74, 0; ownership 0; words: inline 0, plain 0, testcopy 0, missingkey 12, marker 0, 12 failures (all missingkey, accepted above). Impact: installer 11/22 test files run here, journey-check not run (above).
+
+Size (session_0133bNMzhnXsy441ZfjLU6xR): test runs 45, module lines 3154
+
+## J28 · COMPLETE
+
+COMPLETE (B28, R85). Merged tranche/T51 first.
+
+**Built.** `newgroup/src/guide.mjs` (new) and `ui.mjs`: the first page's first stage asks "do you already have a Cloudflare account?". Yes leaves for the short name and the sign-in as before; No shows four steps, one a screen, in order (account and email; Workers Paid and a payment method; R2; sign-in and "Allow", naming what Civicsmith asks and never does), each with why, what to do and what it costs, the six likely questions answered beside it (own account; cost, who is paid, how to stop; what Civicsmith can see and do and how to remove it; is my card shared; already use Cloudflare; stuck), a resume note, Back and Next. The step is the page's fragment (`#guide-2`), so the installer keeps nothing (R27). The confirming check is R84's (Check again at the run). No field in the guide at all: no token, no account id. The stage is drawn only when the word list holds all 40 keys (`GUIDE_KEYS`); without the rows the first page is exactly as it was (a control test), so nothing breaks before the design's rows land. Keys added to `KEYS`.
+
+**Red first.** With the 40 stand-in rows in a scratch copy of `rows.mjs` (reverted) and `ui.mjs` reverted, the R85 order/answers/resume test was red; green with the change. `r85.test.mjs`: rows held; order, answers, resume, costs, no input; the guide's script run against a stand-in DOM (no, next, back, last, fragment resume, yes); control.
+
+**Accepted reds until the rows land:** r85 (rows held, order test, script test) and R84's as in J27. R40 keeps green (my stand-in for `installer.guide.q.own.a` first said "copy"; reworded).
+
+**Tests:** with all 63 stand-in rows (R84's 23 and these 40) in a scratch rows.mjs: requirements 50/54, r84 8/8, r85 4/4, t50 17/19, corpus 3/3, t47, t51, g83, embed, ascii green; reds are the inherited ones only (R8, R11, R20, R44, R55, R61, R71, t48 one, wizard, realsize x6). Without rows: as J27 plus r85's three. Checks: format 0; architecture 0; coverage see line below; ownership see below; words: missingkey 12 (the R84 ones; the guide's keys are held in `GUIDE_KEYS`, not literal `word(...)` calls, so the check does not list them), inline 0, marker 0.
+
+**The 40 new keys, stand-in English (for the HANDOFF to UX-DESIGN):**
+- `installer.guide.account.cost`: An account is free.
+- `installer.guide.account.do`: Go to dash.cloudflare.com/sign-up, enter an email and a password, then open the email Cloudflare sends and follow its link to confirm the address.
+- `installer.guide.account.title`: Create your Cloudflare account and confirm your email
+- `installer.guide.account.why`: Everything of your team's lives in an account you own, so nobody else holds it.
+- `installer.guide.allow.asks`: On Cloudflare's Allow page, Civicsmith asks to put its programs and storage in your account, to read the account's name, to set up its helper programs, and to check that no log keeps a record of who opens which file.
+- `installer.guide.allow.never`: Civicsmith never asks for your password, your card, an API token or an account id, and it keeps nothing you allow after the install is done.
+- `installer.guide.ask.no`: No, or I am not sure it is ready
+- `installer.guide.ask.sub`: Your team's Civicsmith lives in your own Cloudflare account, so you need one before you start. If you have none, or you are not sure it is ready, we will go through it step by step.
+- `installer.guide.ask.title`: Do you already have a Cloudflare account?
+- `installer.guide.ask.yes`: Yes, I have one
+- `installer.guide.back`: Back
+- `installer.guide.checknote`: When you go on, the installer checks that this step is done. If it is not, it stops before creating anything and offers Check again.
+- `installer.guide.faq`: Questions people ask at this step
+- `installer.guide.next`: I have done this, go on
+- `installer.guide.plan.cost`: About $5 a month, paid to Cloudflare and never to Civicsmith. You can cancel it in the same place.
+- `installer.guide.plan.do`: In the Cloudflare dashboard open Workers & Pages, then Plans, choose Workers Paid, and enter a card when it asks.
+- `installer.guide.plan.title`: Choose Workers Paid and add a payment method
+- `installer.guide.plan.why`: Civicsmith's programs need Cloudflare's Workers Paid plan to run for a team.
+- `installer.guide.q.access.a`: The installer can create and update your team's programs and storage, and nothing else. It keeps no access afterwards. You can remove everything from the installer's page or in the Cloudflare dashboard.
+- `installer.guide.q.access.q`: What can Civicsmith see and do in my account, and how do I remove it?
+- `installer.guide.q.card.a`: No. You give your card to Cloudflare only. Civicsmith never sees it.
+- `installer.guide.q.card.q`: Is my card shared?
+- `installer.guide.q.cost.a`: Cloudflare charges about $5 a month for Workers Paid, plus a little for storage beyond its free allowance. You pay Cloudflare only. To stop, cancel the plan in the Cloudflare dashboard.
+- `installer.guide.q.cost.q`: What does it cost, who is paid, and how do I stop paying?
+- `installer.guide.q.existing.a`: Use that account. Civicsmith adds its own parts under its own names and leaves what you already have alone, and the installer checks there is room.
+- `installer.guide.q.existing.q`: What if I already use Cloudflare?
+- `installer.guide.q.own.a`: So your team's records are yours alone. Civicsmith's publisher keeps none of them and cannot open your account.
+- `installer.guide.q.own.q`: Why my own account?
+- `installer.guide.q.stuck.a`: Stop at any step and come back; nothing is lost. If Cloudflare's own page confuses you, its help pages explain each step, and the installer will say exactly what is missing.
+- `installer.guide.q.stuck.q`: What if I get stuck?
+- `installer.guide.resume`: You can close this page at any step. Come back to this address and it opens at the step you were on.
+- `installer.guide.signin.cost`: This step costs nothing.
+- `installer.guide.signin.do`: Choose your team's short name on the next page, then continue to Cloudflare, sign in, and choose Allow.
+- `installer.guide.signin.title`: Sign in and choose Allow
+- `installer.guide.signin.why`: Signing in lets Cloudflare ask you, on its own page, whether Civicsmith may set things up. You stay in control of that permission.
+- `installer.guide.step`: Step {n} of {total}
+- `installer.guide.storage.cost`: R2 has a free allowance; Cloudflare charges only for use beyond it, and shows the price at the checkout.
+- `installer.guide.storage.do`: In the dashboard open Storage & databases, then R2, then Overview, and complete the checkout that adds an R2 subscription.
+- `installer.guide.storage.title`: Turn on R2 storage
+- `installer.guide.storage.why`: Your team's documents and evidence are kept in R2, Cloudflare's storage.
+
+**Deferred / other modules.** `words-reads.json` (design's) lacks the 63 keys. The generated bundle and `invite-page.mjs` are untouched; the bundle is stale (BOB regenerates).
+
+Size (session_0133bNMzhnXsy441ZfjLU6xR): test runs 62, module lines 3262

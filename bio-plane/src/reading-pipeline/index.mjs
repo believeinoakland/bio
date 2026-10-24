@@ -780,6 +780,12 @@ function stateOcr(target, left, t3, i2text) {
 export const NO_PROGRESS = "NO_PROGRESS";
 export const PASSWORD_REQUIRED = "PASSWORD_REQUIRED";
 export const ENCRYPTED = "ENCRYPTED";
+/* R46: the code pdf-worker's marker in a text's `undetermined` states (password_required before encrypted), or null */
+const encryptedReasonOf = (text) => {
+  const marks = text && Array.isArray(text.undetermined) ? text.undetermined : [];
+  return marks.some((m) => m && m.reason === "password_required") ? PASSWORD_REQUIRED
+    : marks.some((m) => m && m.reason === "encrypted") ? ENCRYPTED : null;
+};
 
 /* ===================================================================== *
  * Tier 4: the AI's reading of a page (R29).
@@ -3094,11 +3100,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         const carried = new Set((i2text && Array.isArray(i2text.pages) ? i2text.pages : []).map((x) => x && x.page)
           .filter((pg) => Number.isInteger(pg) && pg >= rangeScope.from && pg < rangeScope.total));
         rangeScope.count = Math.max(rangeScope.count, carried.size ? Math.max(...carried) + 1 - rangeScope.from : 0);
-        if (rangeScope.count === 0 && !memberDown) {
-          const marks = i2text && Array.isArray(i2text.undetermined) ? i2text.undetermined : [];
-          refusal = { reason: marks.some((m) => m && m.reason === "password_required") ? PASSWORD_REQUIRED
-                      : marks.some((m) => m && m.reason === "encrypted") ? ENCRYPTED : NO_PROGRESS };
-        }
+        if (rangeScope.count === 0 && !memberDown) refusal = { reason: encryptedReasonOf(i2text) || NO_PROGRESS };
+      } else if (!refusal && !memberDown && fmt === "pdf") {
+        /* R46 (G155): a whole read states it as a range does: no page carried and the text marked locked is the file's refusal */
+        const why = encryptedReasonOf(i2text);
+        if (why && !(i2text && Array.isArray(i2text.pages) && i2text.pages.length)) refusal = { reason: why };
       }
       /* R54 (G135d): a size or structure bound an entry left as a marker in its text is the file's refusal, stated with its figures */
       if (!refusal && i2text && wiredTier === 1) refusal = guardRefusalOf(i2text);

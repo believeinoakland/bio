@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J26
+**Read** · handled J28
 
 ## B1 · START
 

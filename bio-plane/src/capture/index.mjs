@@ -51,7 +51,7 @@ import { acquire, archiveLookup, profileOf, profileView, governedFetch, governed
          firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX, LARGE_FETCH_BYTES, textTypeOf } from "../acquisition/index.mjs";
 /* R111 (fix round 9; G124, G124b): the figures a body is bounded by are quoted, never written here: the capture ceiling is `acquisition`'s `CAPTURE_MAX` (the
    archive row of `READ_BOUNDS`, `runtime-limits`), the platform's request-body ceiling an entry of `PLATFORM_FIGURES`. */
-import { statement as boundStatement } from "../read-bounds.mjs";
+import { statement as boundStatement, boundOf } from "../read-bounds.mjs";
 import { PLATFORM_FIGURES } from "../byte-ledger.mjs";
 import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
 /* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
@@ -106,6 +106,17 @@ const NO_DECLARATION_SEAM = Object.freeze({ ok: false, module: "capture", declar
 const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 /* R86: the parts an upload is held in, `acquisition` R10's form. */
 const UPLOAD_PART = 8 * 1024 * 1024;
+/* R109 (fix round 9, G152): the `READ_BOUNDS` row that is the whole-read ceiling of an upload's kind, by what its profile states of it: the row the control-plane's
+   inline gate judges a stated document by (`wholeRowOf` of its `kindOf`): a PDF `pdf.bytes`, a CSV `csv.bytes`, a text kind `text.bytes`, every other kind the
+   whole-load row `pdf.bytes`. */
+const TEXT_TYPE = /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i;
+const wholeReadRow = (profile) => {
+  const format = String(profile?.format?.format ?? "").toLowerCase(), declared = String(profile?.source_content_type ?? "").toLowerCase();
+  if (format === "pdf" || declared.startsWith("application/pdf")) return ["pdf", "bytes"];
+  if (format === "csv" || declared.startsWith("text/csv")) return ["csv", "bytes"];
+  if (TEXT_TYPE.test(declared) || ["text", "tsv", "json", "xml", "html"].includes(format)) return ["text", "bytes"];
+  return ["pdf", "bytes"];
+};
 /** R107: the bytes of a file held in parts that are read as its head when judging it as text: 64 KiB, chosen, not measured. */
 const UPLOAD_HEAD = 64 * 1024;
 /** R107: `bytes` less a UTF-8 code point cut at their end (a lead byte and too few continuation bytes), so a head that ends inside a
@@ -741,6 +752,18 @@ export class Capture {
     return t;
   }
 
+  /* R109 (fix round 9, G152): the evidence store as `profileOf` meets it for a file the upload holds whole: `get` of the file's digest answers the held bytes (a
+     range of them for a ranged read), every other call is the store's own. So the profile of a one-part upload reads the object back from nowhere. */
+  static #holding(ev, sha, bytes) {
+    const slice = (b) => (b.byteOffset === 0 && b.length === b.buffer.byteLength ? b.buffer : b.buffer.slice(b.byteOffset, b.byteOffset + b.length));
+    const get = async (k, o) => {
+      if (k !== sha) return ev.get(k, o);
+      const b = o && o.range ? bytes.subarray(o.range.offset, o.range.offset + o.range.length) : bytes;
+      return { key: k, size: bytes.length, body: b, arrayBuffer: async () => slice(b) };
+    };
+    return new Proxy(ev, { get(t, p) { if (p === "get") return get; const v = Reflect.get(t, p, t); return typeof v === "function" ? v.bind(t) : v; } });
+  }
+
   /* R111: a ceiling a caller may only LOWER (a scaled figure for a test, K4840): the real figure, or the given one when it is a whole number below it. */
   static #lowered(real, given) { return Number.isSafeInteger(given) && given >= 0 && given < real ? given : real; }
 
@@ -871,14 +894,14 @@ export class Capture {
           const raw = onlyPart ?? await (async () => { const obj = await ev.get(sha); return obj ? new Uint8Array(await obj.arrayBuffer()) : null; })();
           if (raw && raw.length === total) ct = textTypeOf({ bytes: raw, type, name });
         } catch { ct = null; }
-        tally.release(keptBytes); keptBytes = 0;
       } else {
         ct = textTypeOf({ bytes: withoutCutCodePoint(head.subarray(0, headLen)), type, name });
       }
       return ct;
     };
     return this.#file({ ev, sha, total, parts, multipart, partsOwed: multipart, keepRow, pending, reg, arm, by, statement, name, type, at, within,
-                        judge, firstPart: multipart ? head.subarray(0, headLen) : null });
+                        judge, firstPart: multipart ? head.subarray(0, headLen) : null,
+                        held: onlyPart, settle: () => { tally.release(keptBytes); keptBytes = 0; } });
   }
 
   /* R109 (fix round 9; G126; K4835 (2)): the work an upload owes is one job row each, written through the registrar, read as `keepLater` is: the store's
@@ -897,15 +920,20 @@ export class Capture {
      in one transaction, and the answer. `parts` are the stored parts of a file held in parts (none for a file held as one object, a parted upload's
      included); `partsOwed` says the job rows name them; `judge()` answers the content type the bytes are profiled with; `firstPart` is the head `profileOf`
      sniffs; `multipart` says the file is held in parts, as against one object (past `PROFILE_TEXT_MAX` and `ODF_DIGEST_MAX` `profileOf` reads one object by
-     ranges of its head and tail, whatever way it came). */
-  async #file({ ev, sha, total, parts, multipart, partsOwed, keepRow, pending, reg, arm, by, statement, name, type, at, within, judge, firstPart }) {
+     ranges of its head and tail, whatever way it came). `held` is the bytes of a file held as one part, which the upload holds already (the profile reads
+     them, never the stored object back, R109); `settle` releases them from the byte ledger once the profile is taken. */
+  async #file({ ev, sha, total, parts, multipart, partsOwed, keepRow, pending, reg, arm, by, statement, name, type, at, within, judge, firstPart, held = null, settle = null }) {
     /* R109: the rows this upload owes: `reading` always, `unpack` when the profile names `zip` (R110), `keep` when the handover is the row. Called inside the
        filing transaction; a refusal (or a throw) of the registrar rolls the upload back and is answered, never swallowed. */
     const isZip = (profile) => !!(profile && profile.format && profile.format.format === "zip");
     const carrier = `snapshots/upload-${sha}`, partShas = parts.map((p) => p.sha256);
+    /* R109 (fix round 9, G152; K4958): an upload stated over the whole-read ceiling of its kind is never read, so it owes no `reading`; the reader states it
+       at once from the sizes (`control-plane` R132). The kind's row is the one the inline gate judges by: a PDF `pdf.bytes`, a CSV `csv.bytes`, a text `text.bytes`,
+       every other kind the whole-load row `pdf.bytes`. */
+    const stated = (profile) => !!profile && total > boundOf(...wholeReadRow(profile));
     const register = (profile) => {
       if (!reg) return { ok: true };
-      const entries = [{ kind: "reading", sha, carrier, ...(partsOwed && partShas.length ? { parts: partShas } : {}) },
+      const entries = [...(stated(profile) ? [] : [{ kind: "reading", sha, carrier, ...(partsOwed && partShas.length ? { parts: partShas } : {}) }]),
                        ...(isZip(profile) ? [{ kind: "unpack", sha, carrier, ...(partsOwed && partShas.length ? { parts: partShas } : {}) }] : []),
                        ...(keepRow ? [{ kind: "keep", sha, carrier, parts: partShas }] : [])];
       for (const e of entries) {
@@ -918,7 +946,18 @@ export class Capture {
       return { ok: true };
     };
     /* R109: with no registrar the answer says which rows it could not register */
-    const jobsNote = (profile) => (reg ? {} : { jobs: { not_registered: [{ kind: "reading", reason: "NO_REGISTRAR" }, ...(isZip(profile) ? [{ kind: "unpack", reason: "NO_REGISTRAR" }] : [])] } });
+    const jobsNote = (profile) => ({
+      ...(stated(profile) ? { reading_stated: true } : {}),
+      ...(reg ? {} : { jobs: { not_registered: [...(stated(profile) ? [] : [{ kind: "reading", reason: "NO_REGISTRAR" }]), ...(isZip(profile) ? [{ kind: "unpack", reason: "NO_REGISTRAR" }] : [])] } }),
+    });
+    /* the profile of the bytes: from the bytes the upload holds when it holds them, else as `profileOf` reads the store */
+    const profileThe = async (ct) => {
+      const profile = await profileOf({ ev: held ? Capture.#holding(ev, sha, held) : ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
+                                        retrieved: when, origin: "member", parts: multipart && parts.length ? parts : null, firstPart });
+      if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
+      else if (ct) profile.source_content_type = null;
+      return profile;
+    };
     let holds = null;
     try { holds = await this.provenance?.registerHolds?.({ sha }); } catch { holds = null; }
     /* The record holds the bytes when its register files them or a receipt names them (provenance R5). Bytes merely in
@@ -941,18 +980,18 @@ export class Capture {
     /* a second sighting: the receipt and the rows it owes (one each, by the whole sha, so a second upload leaves the one), in one transaction */
     const sighting = (profile) => this.#tx(() => { const r = writeReceipt(); if (!r) return notWritten; const j = register(profile); return j.ok === false ? j : { ok: true, receipt: r }; });
     if (registered) {
-      /* a second sighting of bytes the record holds: the receipt only, no document, no actor, `within` not called */
-      const r = sighting(null);
+      /* a second sighting of bytes the record holds: the receipt only, no document, no actor, `within` not called. Its kind is asked of the bytes only when the
+         file is over the lowest whole-read row, where it may be stated (a smaller one owes its reading whatever it is). */
+      const profile = total > boundOf("pdf", "bytes") ? await profileThe(await judge()) : null;
+      settle?.();
+      const r = sighting(profile);
       if (!r.ok) return r;
       await arm();
-      return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), ...pending, ...jobsNote(null) };
+      return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), ...pending, ...jobsNote(profile) };
     }
     const ct = await judge();
-    const profile = await profileOf({ ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
-                                      retrieved: when, origin: "member", parts: multipart && parts.length ? parts : null,
-                                      firstPart });
-    if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
-    else if (ct) profile.source_content_type = null;
+    const profile = await profileThe(ct);
+    settle?.();
     const document = this.#uploadedDocument({ sha, total, parts, by, at: when, statement, name, profile });
     if (existed) {
       /* R86 (T51 fix round 2; C10): a receipt names the bytes but the register files them under no document (an upload

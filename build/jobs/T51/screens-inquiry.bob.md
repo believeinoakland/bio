@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J34
+**Read** · handled J35
 
 ## B1 · START
 
@@ -797,3 +797,11 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 **Added by BOB #273 (K4853; re-walk 8 A, diagnosis `build/plan/diagnosis-R9-rewalk8-A.md`; Bob, K4849: understand the root in the code first): G110b, Certain, reproduced.** Round 8 fixed the Add screen's `supportingLine`, but the Document page draws a capture's renderer reasons verbatim: `screens-inquiry/document.mjs:314` (`String(r.detail || r.reason || "")` with `" ×" + count`) and `not_walked` pushed raw (:313, 315), so INFO-2026-0497 printed "the renderer did not deliver this response's bytes (... CDP No resource with given identifier found) ×152". (2) `fr6-document.test.mjs:198-207` pins the defect (it asserts the detail is drawn): correct that test. (3) Red: a new `r9-supporting.test.mjs` through the real screen with the walker's reasons: no machine words; each reason drawn by its code's sentence (a stand-in keyed through the word table where none exists, R-WORDS), the count kept. (4) N.
 
 **Added by BOB #280 (K4955; depth 2, BOB #280 at depth 1).** Merged since this START was written, read each line named before relying on it: content (job 29: `part_kind`, `searched`, `heldTextAt`, `passageHeld`, R52 `cellsAt(…, {fromRow})`), extraction (job 41: units carry `kind`; R108 `progressOf(shas)` -> `{state, read_through, total, owed}`, never `whole` while anything is owed), retrieval (job 30: hits carry the unit's kind; "searched so far" from `progressOf`), query-language (job 66: R34 `snippet_unit`), plane (job 37: the job table; R107 `jobrow?sha=&kind=`), notice-producers (job 34: R29 `reading-ended`), screens-intake (job 35: R63-R65 a read's states from the job row, `op=reading`, polled 20 s then 30 s). Not merged (code against the text, R-SEAM): control-plane R135 `op=reading` `job` (job 38, running). **Words:** `screens-inquiry` is a drawn-screen module: it holds NO `localize` (the words check's `marker`); every new sentence is read by key (`word`/`cs.w`), its stand-in English listed in your record for BOB's HANDOFF to UX-DESIGN, and a test needing the row is red by name until it lands (K4640, K4702, K4947). If a `node_modules` path in your checkout is a symlink, delete it before K4113's loop (K4939).
+
+## B55 · ANSWER · re J35
+
+ANSWER J35 (BOB #281). Yes: BOB regenerates setup-words' rows on tranche/T51 now (after the four merges in hand: acquisition, capture, reading-pipeline, plane), within the hour; a CHANGE names the commit; merge the tranche then and COMPLETE with no red from this cause. Your three P17 decisions are adopted as stated: (1) the existing code-origin rows read, with the basis fallback and nothing drawn while a row is absent; (2) PICTURE_FORMAT narrowed to JPEG and PNG; (3) every kind drawn, body included. The new row screen.document.supporting.notwalked.{pending,toolarge,unavailable} goes to later-ux.md at your merge.
+
+## B56 · CHANGE
+
+CHANGE (BOB #281, K4965): setup-words' rows.mjs and words-unreviewed.json are regenerated on tranche/T51 at 9f050bbc02 (with acquisition, capture, reading-pipeline and plane merged). Merge the tranche into your branch, re-run your suite and COMPLETE.

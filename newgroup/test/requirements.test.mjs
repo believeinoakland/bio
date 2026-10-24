@@ -201,10 +201,12 @@ test("R4 a refusal at any step before `install` says nothing was created, and no
   assert.equal(left.page.label("plan"), word("screen.install.progress.plan") + ". " + word("installer.probe.leftover", { name: "bio-plan-probe" }));
   const clean = seen(await run({ slug: "probe-clean" }));
   assert.ok(!clean.acct.has("bio-plan-probe"), "the probe was deleted");
-  const two = seen(await run({ slug: "two-accounts", accounts: [{ id: "first", name: "The First" }, { id: "second", name: "The Second" }] }));
-  assert.equal(two.page.label("acct"), word("installer.account.using", { account: "The First" }));
-  assert.ok(two.calls.every((c) => !c.u.includes("/accounts/second")), "only the first account is touched");
-  assert.ok(two.calls.some((c) => c.u.includes("/accounts/first/workers/scripts/two-accounts")));
+  /* R84 (6): with several accounts the founder chooses one by name, and only the chosen one is touched. */
+  const accounts = [{ id: "first", name: "The First" }, { id: "second", name: "The Second" }];
+  const two = seen(await run({ slug: "two-accounts", accounts, choose: { account: "second" } }));
+  assert.equal(two.page.label("acct"), word("installer.account.using", { account: "The Second" }));
+  assert.ok(two.calls.every((c) => !c.u.includes("/accounts/first")), "only the chosen account is touched");
+  assert.ok(two.calls.some((c) => c.u.includes("/accounts/second/workers/scripts/two-accounts")));
 });
 
 test("R5 `fresh`: an existing script named for the slug is refused and nothing is changed; a failed lookup is refused", async () => {
@@ -232,6 +234,8 @@ test("R6 `plan` is found by upload: a probe with limits.cpu_ms refused 100328 is
   const before = paid.calls.slice(0, paid.calls.indexOf(probe)).filter((c) => !c.u.startsWith(CFG.RELEASE_LATEST))
     .map((c) => `${c.method} ${c.u.replace(CFG.API, "")}`);
   assert.deepEqual(before, [`POST ${CFG.TOKEN}`, "GET /accounts",
+    /* R84 (1): the account's storage entitlement, read without writing, before the account is looked at. */
+    "GET /accounts/A1/r2/buckets",
     /* R62's look for a copy already held (the account's workers, buckets and Durable Object classes, listed), then the new
        slug's own name (R64's `fresh`), never a plan field. */
     "GET /accounts/A1/workers/scripts", "GET /accounts/A1/r2/buckets",
@@ -475,15 +479,26 @@ test("R14 `addr`: the account's workers.dev prefix is used; with none, one is re
   assert.equal(has.page.events.find((e) => e.k === "ok" && e.id === "addr").label, word("screen.install.progress.address"), "only the design's line");
   assert.ok(has.calls.some((c) => c.u === "https://addr-has.grp.workers.dev/api/?op=selftest"
     && c.init.headers?.authorization === "Bearer " + bindingOf(has.planePuts[0], "PROBE_TOKEN").text), "the address enabled is the one verified");
-  const none = seen(await run({ slug: "addr-none", subdomain: null }));
+  /* R84 (4): the name the founder chose with a click is registered before any upload, and said. */
+  const none = seen(await run({ slug: "addr-none", subdomain: null, choose: { subdomain: "addr-none" } }));
   assert.equal(none.prefix(), "addr-none");
   assert.equal(none.page.label("addr"), word("installer.address.prefix", { prefix: "addr-none" }));
-  const taken = seen(await run({ slug: "addr-taken", subdomain: null, taken: ["addr-taken"] }));
-  assert.match(taken.prefix(), /^addr-taken-[a-z0-9x]{1,4}$/);
-  assert.equal(taken.page.label("addr"), word("installer.address.prefix", { prefix: taken.prefix() }));
-  assert.match(taken.page.done, new RegExp(`https://addr-taken\\.${taken.prefix()}\\.workers\\.dev`));
-  /* A refused or failed write is not retried (R66 retries only an answer that was lost or slow). */
-  for (const opts of [{ subdomain: null, subdomainPut: "fail" }, { enableFail: true }]) {
+  const chosenFirst = none.calls.findIndex((c) => c.method === "PUT" && c.u.endsWith("/workers/subdomain"));
+  const firstUpload = none.calls.findIndex((c) => c.method === "PUT" && c.u.includes("/workers/scripts/addr-none"));
+  assert.ok(chosenFirst >= 0 && chosenFirst < firstUpload, "registered before the first upload");
+  const taken = seen(await run({ slug: "addr-taken", subdomain: null, taken: ["addr-taken"], choose: { subdomain: "addr-taken" } }));
+  assert.equal(taken.prefix(), null, "a taken name registers nothing");
+  assert.ok(!taken.acct.has("addr-taken"), "and nothing was created");
+  const other = seen(await run({ slug: "addr-taken", subdomain: null, taken: ["addr-taken"], choose: { subdomain: "addr-taken-two" } }));
+  assert.equal(other.prefix(), "addr-taken-two");
+  assert.match(other.page.done, /https:\/\/addr-taken\.addr-taken-two\.workers\.dev/);
+  /* A name Cloudflare refuses otherwise stops before anything is created; an enable that fails is the copy installed without an address
+     (R66 retries only an answer that was lost or slow). */
+  const refusedName = seen(await run({ slug: "addr-fails", subdomain: null, subdomainPut: "fail", choose: { subdomain: "addr-fails" } }));
+  assert.equal(refusedName.page.status("room"), "no");
+  assert.ok(stoppedWith(refusedName, "installer.install.stopped.lookup"));
+  assert.deepEqual(created(refusedName), { scripts: [], buckets: [] });
+  for (const opts of [{ enableFail: true }]) {
     const w = seen(await run({ slug: "addr-fails", ...opts }));
     assert.equal(w.page.status("addr"), "no");
     assert.ok(stoppedWith(w, "installer.install.stopped.noaddress"), "installed, but no address yet");
@@ -492,11 +507,11 @@ test("R14 `addr`: the account's workers.dev prefix is used; with none, one is re
   }
   /* R66 (F4): a Cloudflare that keeps answering with a server error is waited on within the bound, then ends the named lasting
      stop rather than a refusal; the copy stays installed. */
-  for (const opts of [{ subdomain: null, subdomainPut: "down" }]) {
+  for (const opts of [{ subdomain: null, subdomainPut: "down", choose: { subdomain: "addr-down" } }]) {
     const w = seen(await run({ slug: "addr-down", ...opts }));
     assert.equal(w.page.failed.said, word("screen.install.stopped.lasting"));
-    assert.equal(w.page.failed.s, word("installer.stopped.at", { step: word("installer.step.address.install") }));
-    assert.ok(w.acct.has("addr-down"), "the copy stays installed");
+    assert.equal(w.page.failed.s, word("installer.stopped.at", { step: word("installer.step.room") }));
+    assert.ok(!w.acct.has("addr-down"), "the address is settled before anything is created");
     assert.ok(w.page.waits.length >= 1, "the wait was drawn");
   }
 });
@@ -1021,11 +1036,16 @@ test("R38 a container member installs only with the Containers scope granted, Wo
     assert.ok(w.page.done, `${why}: the install finished`);
     return w;
   };
-  await leftOut("noscope", { grantedScope: "workers-scripts.write workers-r2.write account-settings.read" }, like("installer.fleet.why.nopermission"));
+  /* R84 (5): a permission without the Containers scope no longer reaches here: the install asks to approve again before its first
+     call (the update still installs the rest and names the member, below). */
   /* A token response stating no scope: one read of the Containers API decides. */
   const asked = seen(await run({ slug: "box-asked", rel, grantedScope: null }));
   assert.equal(asked.apps.length, 1, "a read that answers means the scope is held");
-  await leftOut("unasked", { grantedScope: null, containers: "read" }, like("installer.fleet.why.permissionunknown"));
+  /* R84 (2): and an answer to that read for want of permission asks to approve again, before anything is created. */
+  const unasked = seen(await run({ slug: "box-unasked", rel, grantedScope: null, containers: "read" }));
+  assert.ok(unasked.page.failed.said.length > 0, "it says why");
+  assert.ok(unasked.page.done.includes("data-begin"), "the page offers the approval again");
+  assert.deepEqual([...unasked.buckets], []);
   for (const [why, d, says] of [
       ["unpinned", { ...DESCRIPTOR, image: "docker.io/civicos/agent-runner:latest" }, like("installer.fleet.why.unpinned")],
       ["private", { ...DESCRIPTOR, image: "registry.cloudflare.com/acct/agent-runner@sha256:" + "b".repeat(64) }, like("installer.fleet.why.unpullable")],
@@ -1150,7 +1170,6 @@ test("R38 (T36) a container member with two or more classes (file-scanner) is de
   await out("unpathed", { scannerParts: { "container/SafeViewRenderer.json": null, "renderer.json": SCANNER_CLASSES[1] } }, like("installer.fleet.why.container.path"));
   await out("ghcr", { scannerParts: { "container/SafeViewRenderer.json": { ...SCANNER_CLASSES[1], image: "ghcr.io/believeinoakland/file-scanner-renderer@sha256:" + "e".repeat(64) } } },
     like("installer.fleet.why.unpullable"));
-  await out("noscope", {}, like("installer.fleet.why.nopermission"), { grantedScope: "workers-scripts.write workers-r2.write account-settings.read" });
   /* An update rolls each class's application out to its own image. */
   const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
   const up = seen(await run({ slug: "two-upd", mode: "update", rel, pre: { "two-upd": planeBase("two-upd"), [SCANNER]: old },
@@ -1362,7 +1381,9 @@ test("R45 the final panel and the update's last screen say the organization's ow
   assert.match(no.page.label("fleet"), like("installer.fleet.note.vpc.refused", { member: SCANNER }));
   assert.ok(!no.raw.includes("<b>by the fake</b>"));
   /* Named, but file-scanner not installed this time: said, never dropped. */
-  const gone = seen(await run({ slug: "r45-gone", rel, vpc: VPC_ID, grantedScope: "workers-scripts.write workers-r2.write account-settings.read" }));
+  const goneRel = await release({ version: NEXT, scanner: true });
+  goneRel.assets[`${SCANNER}/container/FileScanner.json`] = JSON.stringify({ ...SCANNER_CLASSES[0], image: "docker.io/evil/x@sha256:" + "f".repeat(64) });
+  const gone = seen(await run({ slug: "r45-gone", rel: goneRel, vpc: VPC_ID }));
   assert.match(gone.page.label("fleet"), /the Workers VPC service you named was not connected: file-scanner was not installed this time/i);
   restoreSigners();
 });
@@ -1418,10 +1439,10 @@ test("R47 the install binds OWN_HOSTS, the copy's own host names (its workers.de
   assert.ok(w.calls.indexOf(w.calls.filter((c) => c.method === "PUT" && c.u.endsWith("/scripts/hosts")).at(-1)) > at("enable"), "written after the address is enabled");
   assert.match(w.page.label("bind"), /now knows its own address \(hosts\.grp\.workers\.dev\)/);
   /* A prefix registered by the install: the host is the one it registered. */
-  const reg = seen(await run({ slug: "hosts-new", subdomain: null }));
+  const reg = seen(await run({ slug: "hosts-new", subdomain: null, choose: { subdomain: "hosts-new" } }));
   assert.equal(hostsOf(reg.planePuts.at(-1)).text, `hosts-new.${reg.prefix()}.workers.dev`);
   /* No address: never written, and said. */
-  for (const opts of [{ enableFail: true }, { subdomain: null, subdomainPut: "fail" }]) {
+  for (const opts of [{ enableFail: true }]) {
     const n = seen(await run({ slug: "hosts-none", ...opts }));
     assert.ok(n.planePuts.every((p) => hostsOf(p) === null), JSON.stringify(opts));
     assert.ok(stoppedWith(n, "installer.install.stopped.noaddress"), "the copy is not told an address of its own");

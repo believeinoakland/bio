@@ -134,6 +134,7 @@ const rules = [
   } },
   { m: (u) => u === CFG.TOKEN, f: () => new Response(JSON.stringify({ access_token: "TOKEN-REALSIZE", scope: CFG.SCOPES.join(" ") })) },
   { m: (u) => u.endsWith("/logpush/jobs"), f: () => ok([]) },
+  { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "GET", f: () => ok({ schedules: [] }) },
   { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "PUT", f: () => ok({}) },
   { m: (u) => u === `${CFG.API}/accounts`, f: () => ok([{ id: "A1", name: "Group Account" }]) },
   { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "PUT", f: () => ok({}) },
