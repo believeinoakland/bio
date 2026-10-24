@@ -1015,3 +1015,7 @@ Job 84 done: R109 (registerJob arms after the commit), R110 (stampUnit; kill cha
 - format 0 failures; architecture 0; coverage 110 of 110, 0; words (plane) 0; ownership 0.
 
 Size (session_01MuMF5vhSWNsf1HhrqP9yuH): test runs 9, module lines 3769
+
+## J61 · COMPLETE · re B90
+
+Job 93 done: R97 amended (G168). A reading row answered NO_HOME waits uncounted (no failure); READING_HELD with counters keeps written/skipped as MAX(row, answer), then finishes. Red first (2 new tests failed on the tranche's pending.mjs), green after. Light suite 467/469 (release R24 words, l77 R77 L: inherited); heavy alone green except g54-l R87 publishedcase, which fails identically on the tranche's own pending.mjs (inherited). Impact: plane only. format, architecture, coverage 110/110, words, ownership: 0 failures. Cause: settle sent reading NO_HOME to attempt and never read READING_HELD counters; missed: tests asserted [kind, attempts], not counters. Platform check L: seam section 11 once extraction job 94 merges. Record has Size.
