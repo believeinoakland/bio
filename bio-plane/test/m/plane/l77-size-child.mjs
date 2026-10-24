@@ -64,7 +64,7 @@ promotionOf(x.ctx).promote({ bundleId: id, base: null, snapKey: "20261022T000000
   register: [{ sha256: d, path: doc.file, encoding: "binary", bytes: bytes.length }], ...WHO });
 const direct = process.argv[2] === "direct";
 if (!direct) await x.call(`/pendingadd?kind=reading&sha=${d}`);
-const rows = () => [...x.ctx.storage.sql.exec(`SELECT kind, attempts, interrupted, final_why, last_why, last_ms FROM keeps_pending`)];
+const rows = () => [...x.ctx.storage.sql.exec(`SELECT kind, attempts, interrupted, final_why, last_why, last_ms FROM keeps_pending WHERE state <> 'finished'`)];
 const v8 = await import("node:v8");
 const heapMb = () => +(v8.getHeapStatistics().used_heap_size / 1048576).toFixed(1);
 global.gc(); global.gc();

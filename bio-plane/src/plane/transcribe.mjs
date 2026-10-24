@@ -13,6 +13,10 @@ import { aiRunsOf } from "../ai-runs/index.mjs";
 import { tokenRefusal, doorHeaders } from "./ask.mjs";
 import { renderPageToPixels } from "../../../pdf-worker/src/pagepixels.mjs";
 import { renderPictureToPixels } from "../../../pdf-worker/src/picturepixels.mjs";
+import { readRange } from "../acquisition/index.mjs";
+import { captureOf } from "../capture/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
+import { pendingOf } from "./pending.mjs";
 
 /** R36: at most this many pages are rendered and sent for one act, `agent-worker`'s `TRANSCRIBE_PAGES_MAX` (its R72;
  *  K2611), held equal to it by this module's test (the plane does not bundle agent-worker). */
@@ -44,9 +48,20 @@ function base64(bytes) {
   return btoa(s);
 }
 
-/* R36: the asked pages, whole numbers of zero or more, each once, in ascending order, at most TRANSCRIBE_PAGES_MAX. */
-const pagesAsked = (pages) => [...new Set((Array.isArray(pages) ? pages : []).filter((p) => Number.isInteger(p) && p >= 0))]
-  .sort((a, b) => a - b).slice(0, TRANSCRIBE_PAGES_MAX);
+/** R106 (fix round 9, G126e; K4835): the largest capture the transcriber loads into a request, the inline ceiling G126e names ("none loads a
+ *  PDF over 2 MB in a request"), quoted from `READ_BOUNDS`' row `pdf.request_bytes`; a capture over it is not loaded, and the pages asked are
+ *  owed as a job row. Until that row is recorded (REPORTED to BOB with its three figures, K4842 (1)) the figure is the one the door already
+ *  defers a PDF's reading above (control-plane's `READING_DEFER_PDF_BYTES`): proposed; BOB records. */
+const requestBytes = () => { try { return boundOf("pdf", "request_bytes"); } catch { return 2 * 1048576; /* proposed; BOB records */ } };
+export const TRANSCRIBE_LOAD_MAX = requestBytes();
+/** R106: why an asked page was not sent beyond the renderer's own refusals. */
+export const PAGES_MAX = "TRANSCRIBE_PAGES_MAX";
+export const OWED = "OWED";
+
+/* R36: the asked pages, whole numbers of zero or more, each once, in ascending order. */
+const pagesWanted = (pages) => [...new Set((Array.isArray(pages) ? pages : []).filter((p) => Number.isInteger(p) && p >= 0))].sort((a, b) => a - b);
+/* R36: at most TRANSCRIBE_PAGES_MAX of them are rendered; R106: the rest are named, never dropped. */
+const pagesAsked = (pages) => pagesWanted(pages).slice(0, TRANSCRIBE_PAGES_MAX);
 
 /* R36 (T44; N869; DEC-191 (4), (5); K2719): an asked page not sent, as `refused` names it: the renderer's refusal key
    (`pdf-pixels` R39) and, when its detail names one, the JPEG process. */
@@ -91,14 +106,31 @@ function aiPath(ctx, env, { member, at, act, onSha, trace = null, memberRef = nu
     if (!w || typeof w.fetch !== "function") return { ok: false, reason: "AGENT_WORKER_UNBOUND" };
     const sha = typeof capture_sha === "string" ? capture_sha : "";
     onSha(sha);
-    const ev = recordOf(ctx).evidenceStore();
-    let bytes = null;
-    try { const obj = ev && sha ? await ev.get(sha) : null; bytes = obj ? new Uint8Array(await obj.arrayBuffer()) : null; }
-    catch { bytes = null; }
+    /* R106: the pages asked, those beyond TRANSCRIBE_PAGES_MAX named and owed, never dropped */
+    const wanted = pagesWanted(pages), beyond = wanted.slice(TRANSCRIBE_PAGES_MAX);
+    const owe = (left) => {
+      if (!left.length || !/^[0-9a-f]{64}$/.test(sha)) return null;
+      try { const r = pendingOf(ctx).registerJob({ kind: "ocr", sha, detail: { pages: left, next_page: left[0] }, owed: left.length }); return r && r.ok === true; }
+      catch { return false; }
+    };
+    const stated = (sent, refused) => ({ asked: wanted, sent, ...(refused.length ? { refused } : {}) });
+    const size = await sizeOf(ctx, sha);
+    if (size === null) return { ok: false, reason: "EVIDENCE_ABSENT" };
+    /* R106: a capture over the ceiling is not loaded into the request: every asked page is owed as a job row, and named */
+    if (size > TRANSCRIBE_LOAD_MAX) {
+      const owed = owe(wanted);
+      return { ok: false, reason: "NO_PAGE_RENDERED", asked: wanted, sent: [], size, limit: TRANSCRIBE_LOAD_MAX,
+               refused: wanted.map((page) => ({ page, reason: OWED })), owed: owed === true ? wanted : [] };
+    }
+    /* R106: the bytes by ranges of the capture, by its whole digest, whether it is held whole or in parts (acquisition's `readRange`) */
+    const got = await readRange(captureOf(ctx), sha, 0, size).catch(() => null);
+    const bytes = got instanceof Uint8Array && got.length ? got : null;
     if (!bytes) return { ok: false, reason: "EVIDENCE_ABSENT" };
-    const { sent: rendered, refused } = await renderAsked(bytes, pages);
+    const { sent: rendered, refused: unrendered } = await renderAsked(bytes, pages);
+    const refused = [...unrendered, ...beyond.map((page) => ({ page, reason: PAGES_MAX }))];
+    const owedBeyond = owe(beyond) === true ? beyond : [];
     /* Nothing rendered: nothing is sent, and no account leaves the object; (T44) each asked page says why. */
-    if (!rendered.length) return { ok: false, reason: "NO_PAGE_RENDERED", refused };
+    if (!rendered.length) return { ok: false, reason: "NO_PAGE_RENDERED", ...stated([], refused), owed: owedBeyond };
     const a = account && typeof account === "object" ? account : {};
     /* agent-worker R6's wire shape: `accountFor`'s `key` named `secret` (R47, T47: a sign-in's held token as an API
        key's), the acting member, no suggestions; a project's account names its project. */
@@ -123,12 +155,26 @@ function aiPath(ctx, env, { member, at, act, onSha, trace = null, memberRef = nu
         calls: answer.calls, at, act: act() };
       try { recordOf(ctx).transact(() => aiUseOf(ctx).countUsage(entry)); } catch { /* refused: rolled back, nothing counted */ }
     }
-    if (answer.ok === true) return answer;
+    if (answer.ok === true) return { ...answer, ...stated(rendered.map((p) => p.page), refused), owed: owedBeyond };
     /* R36 (T46; N886; extraction R75): a refusal agent-worker answers is relayed with its own HTTP status, never read from
        the body alone, so extraction answers it as that refusal at that status. */
     return { ...answer, ok: false, reason: answer.reason ?? answer.code ?? null,
              ...(status !== null && status >= 400 ? { status } : {}) };
   };
+}
+
+/* R106: the capture's size, from the store's own record (held whole: its head; held in parts: the parts the register names), or null when
+   none is held; nothing of its bytes is read */
+async function sizeOf(ctx, sha) {
+  if (!/^[0-9a-f]{64}$/.test(sha)) return null;
+  try {
+    const ev = recordOf(ctx).evidenceStore();
+    const head = ev && typeof ev.head === "function" ? await ev.head(sha) : null;
+    if (head && Number.isSafeInteger(Number(head.size))) return Number(head.size);
+    const prov = captureOf(ctx).provenance;
+    const parts = prov && typeof prov.partsOf === "function" ? prov.partsOf(sha) : null;
+    return Array.isArray(parts) && parts.length ? parts.reduce((n, p) => n + (Number(p.bytes) || 0), 0) : null;
+  } catch { return null; }
 }
 
 /** R36: the transcriber, `{deployable(), keptAway({project, use}), transcription({member, project, at})}`. */

@@ -184,7 +184,7 @@ async function child(spec) {
       if (faults.failWrites && /^\s*(INSERT|UPDATE|DELETE|REPLACE)/i.test(q)) throw Object.assign(new Error("the store did not answer"), { transient: true });
       if (++ct.sql % 64 === 0) hook.sample(); const rows = raw(q, ...a).toArray(); ct.rowsOut += rows.length; return cur(rows); }; };
   instrument(ctx);
-  const rows = () => [...ctx.storage.sql.exec(`SELECT kind, attempts, interrupted, final_why, last_why, last_ms, last_mem, started_at FROM keeps_pending`)];
+  const rows = () => [...ctx.storage.sql.exec(`SELECT kind, attempts, interrupted, final_why, last_why, last_ms, last_mem, started_at FROM keeps_pending WHERE state <> 'finished'`)];
   const open = () => rows().filter((r) => r.final_why == null);
 
   /* the member's bytes, as a stream (lazy: no whole copy in the child) */

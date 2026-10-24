@@ -172,5 +172,11 @@
   // CARRIED BY THE RELEASE PATH: scripts/deploy.mjs sends it through
   // derive-bindings.mjs's deriveLimits (which REFUSES a config without it)
   // and reads the deployed script's /settings back after the upload.
-  "limits": { "subrequests": 10000 }
+  //
+  // cpu_ms (plane R99; fix round 9, G126i): the CPU time an invocation (an alarm
+  // above all) may take, stated once: runtime-limits' PLATFORM_FIGURES.cpu_ms,
+  // source K4838 (the default of about 30 s cut the alarm 7 of 7; 300,000 ran
+  // 70-150 s of CPU). When BOB records the P-M5 row the entry and this figure
+  // change together; a test holds them equal.
+  "limits": { "subrequests": 10000, "cpu_ms": 300000 }
 }

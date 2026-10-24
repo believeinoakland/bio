@@ -14,11 +14,13 @@ import { extractionOf } from "../../../src/extraction/index.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
 import { pendingOf, PENDING_KINDS } from "../../../src/plane/pending.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
-const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending ORDER BY registered_at, sha, kind`)];
-const stopped = localize("plane.pending.interrupted", "the reading did not finish; the object stopped");
+/* R97: the rows still held as work (owed, or ended for a stated reason); a finished row stays in the job table for its readers */
+const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending WHERE state <> 'finished' ORDER BY registered_at, sha, kind`)];
+/* R101 (fix round 9, G129c): "three interruptions end the whole read" is retired; a run that dies three times on the unit it was on (here the
+   whole: no page or piece) states that unit, which ends the row */
+const stopped = "PAGE_KILLED_READER";
 let began = () => {};
 const NEVER = () => { began(); return new Promise(() => {}); };
 const alarm = (x, at) => Promise.race([x.s.onAlarm(at), new Promise((r) => { began = () => r("killed"); })]);
@@ -137,12 +139,14 @@ test("R82 (G13): a reading answered `more` with a cursor is asked again at the n
   for (let i = 0; i < 3; i++) { await x.s.onAlarm(at); at += 1000; }
   assert.deepEqual(x.read.map((a) => a.detail), [{}, { cursor: "c1" }, { cursor: "c2" }], "each piece is asked with the cursor the last left");
   assert.equal(rows(x).length, 0, "ended with the last piece");
-  /* between pieces the row is owed and due, its tries cleared, its cursor kept */
-  const y = await world(undefined, { readAnswer: () => ({ ok: true, more: true, detail: { cursor: "c9" } }) });
+  /* between pieces the row is owed and due, its tries cleared, its cursor kept; each piece moves the cursor (R101's control: a row that
+     advances each tick is never ended by the no-progress rule) */
+  let n = 0;
+  const y = await world(undefined, { readAnswer: () => ({ ok: true, more: true, detail: { cursor: `c${++n}` } }) });
   await y.call(`/pendingadd?kind=reading&sha=${d}`);
   for (let i = 0, t = Date.now() + 1000; i < 40; i++, t += 1000) await y.s.onAlarm(t);
   const [r] = rows(y);
-  assert.deepEqual([r.attempts, r.final_why, JSON.parse(r.detail)], [0, null, { cursor: "c9" }], "forty pieces and it is still owed: no count or clock ends it");
+  assert.deepEqual([r.attempts, r.final_why, JSON.parse(r.detail)], [0, null, { cursor: "c40" }], "forty pieces and it is still owed: no count or clock ends it");
   assert.equal(y.read.length, 40);
 });
 

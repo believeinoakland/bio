@@ -213,7 +213,10 @@ export class Store extends DurableObject {
     /* extraction: its projection joins every promotion. content: created on extraction's instance here, so its stale
        mark (REC-82, its R22) is registered before observation-log's rows (its R6–R8), in the modules' total order
        (extraction R24). */
-    observationLogOf(ctx).listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction);
+    /* R98 (fix round 9, G126; 2c item 1): extraction is handed the one registrar as `registerJob` (and `armJobs`), asked of the ledger at each
+       call (the ledger is built below, before any request), so its `owe` is `registerJob` bound to a kind. */
+    const jobs = { registerJob: (e) => pendingOf(ctx).registerJob(e), armJobs: () => pendingOf(ctx).armJobs() };
+    observationLogOf(ctx).listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx), ...jobs }) }).extraction);
     /* entities (R13): observation-log records each resolution attempt on entities' notice (its R8). */
     observationLogOf(ctx).attachMeaning({ entities: entitiesOf(ctx) });
     /* R21 (T33-90; K1563): layer 5's new modules, in the modules' order, each built here with the instances it reads
@@ -437,6 +440,10 @@ export class Store extends DurableObject {
     recordOf(ctx).declarePurge("plane", ["keeps_pending", "keeps_last", "acquire_stages"]);
     capture.keepLater = (a) => pending.keepLater(a);
     capture.owedLater = (a) => pending.owedLater(a);   /* R77, acquisition R100: the ledger's `subresources` and `unpack` entries, registered the same way */
+    /* R98 (fix round 9, G126; K4835 (2); 2c item 1): THE ONE REGISTRAR. Acquisition, capture and doorbell read it as they read `keepLater`: a
+       synchronous write of the job row, made inside the caller's filing transaction; the alarm is armed by `armJobs` after the commit. */
+    capture.registerJob = (e) => pending.registerJob(e);
+    capture.armJobs = () => pending.armJobs();
     /* R83 (fix round 6, G8, G13; extraction R89): the same ledger handed to extraction, which owes it the repair of an old reading and the restart of a partial text at start; guarded, as extraction's own merge is later than this line */
     const extraction = extractionOf(ctx);
     if (typeof extraction.registerOwe === "function") extraction.registerOwe((a) => pending.owedLater(a));
@@ -521,7 +528,9 @@ export class Store extends DurableObject {
     const noticeProducers = noticeProducersOf(ctx, { membership: membershipOf(ctx), people, moneyChecks: moneyChecksOf(ctx), duties,
       answers: answersOf(ctx), inquiry: inquiryOf(ctx), credentials: credentialsOf(ctx), following: followingOf(ctx), standards,
       fileSafety, provenance, aiUse: aiUseOf(ctx), steps: stepsOf(ctx), questionExplorer, investigation: investigationOf(ctx),
-      review: reviewOf(ctx) });
+      review: reviewOf(ctx),
+      /* R98 (fix round 9): the job table's ended rows, a callback (a lower module reaches a higher one only so, as `updateNotice`, R52) */
+      readingsEnded: (q) => pending.readingsEnded(q) });
     /* K1868 (2): queue-producers' one instance per storage, built here with the providers queue would hand it
        (`Queue.PRODUCER_DEPS`), since its factory reads its deps on the first call only; handed to queue as its producers
        and to instance-setup, whose start registers `placeArrivals` through it (instance-setup R62, queue-producers R38),
@@ -741,6 +750,9 @@ export class Store extends DurableObject {
   async fetch(req0) {
     if (this.#retired) return retiredAnswer();
     const t0 = Date.now();
+    /* R102 (fix round 9, G93; K4565; scheduler R28): ANY REQUEST RE-ARMS. The scheduler's `heal` looks at the alarm at most once in five
+       seconds for the instance and never during a firing, arming a lost or spent one; it never raises the request's answer. */
+    try { await schedulerOf(this.ctx, this.env).heal(Date.now()); } catch { /* the watchdog's cron is the backstop */ }
     const req = await traceStamped(req0);   /* R73: `acquire`'s trace, from the header capture sends */
     const res = await this.#dispatch(req);
     /* R78 (fix round 5, E10; K4530; fix round 6, G12e): the I/O time this object spent on the route, to its response (a stream's, to its first

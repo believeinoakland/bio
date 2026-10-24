@@ -177,10 +177,13 @@ test("R80: `owedwork` gives an administrator `last_run`, `alarm_at`, `stale`, `o
   const due = Date.now() - 20 * 60_000;
   oldRow(x, due);
   const ask = async (q) => (await (await x.fetch(`/owedwork?${q}`)).json()).result;
-  const FIELDS = ["alarm_at", "last_run", "oldest_overdue", "stale", "watchdog_seen"];
+  /* R103 (fix round 9, G94): `watchdog_ran` and `running_since` beside R80's five, an administrator's only */
+  const FIELDS = ["alarm_at", "last_run", "oldest_overdue", "running_since", "stale", "watchdog_ran", "watchdog_seen"];
   const admin = await ask("viewer=class:admin");
   assert.deepEqual(Object.keys(admin).filter((k) => FIELDS.includes(k)).sort(), FIELDS);
-  assert.deepEqual([admin.alarm_at, admin.last_run, admin.watchdog_seen], [null, null, null]);
+  assert.deepEqual([admin.last_run, admin.watchdog_seen, admin.running_since], [null, null, null]);
+  /* R102: the request's frame looked at the lost alarm once and armed it, before the read answered */
+  assert.equal(typeof admin.alarm_at, "number", "the frame's heal armed the lost alarm (R102)");
   assert.ok(admin.oldest_overdue !== null && admin.oldest_overdue <= due, "the earliest wake that has come: the ledger's row or an earlier consumer's");
   assert.equal(admin.stale, true, "work owed for over two cycles and no run");
   assert.deepEqual(admin.owed, { reading: { owed: 1, final: 0 } });
@@ -198,7 +201,7 @@ test("R80: `owedwork` gives an administrator `last_run`, `alarm_at`, `stale`, `o
     const m = await ask(q);
     assert.deepEqual(Object.keys(m).filter((k) => FIELDS.includes(k)), [], q);
   }
-  assert.equal(await x.ctx.storage.getAlarm(), null, "read-only: nothing armed");
-  assert.equal(x.sets(), 0);
+  /* the reads themselves arm nothing: the one alarm set is the frame's single look in five seconds (R102), whatever the number of reads */
+  assert.equal(x.sets(), 1, "one look in five seconds, by the frame; the reads are read-only");
   assert.deepEqual(x.asked, []);
 });
