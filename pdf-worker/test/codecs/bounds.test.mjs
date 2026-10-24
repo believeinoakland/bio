@@ -82,9 +82,10 @@ test("R12 DCT: a ~330-byte JPEG declaring 60,000 x 60,000 and one declaring 30,0
       const { error, peak } = peakAllocation(() => run(d));
       assert.ok(error instanceof DctRefusal, `${name} ${w}x${h}: a DctRefusal, not ${error && error.constructor.name}: ${error && error.message}`);
       assert.equal(error.code, "IMAGE_TOO_LARGE", `${name} ${w}x${h}`);
-      assert.equal(error.detail.bound_name, "pixels");
+      const rowsRoute = name === "decodeBaselineJpegRows" && Object.hasOwn(READ_BOUNDS.image, "rows_pixels");   // K4862
+      assert.equal(error.detail.bound_name, rowsRoute ? "rows_pixels" : "pixels");
       assert.equal(error.detail.size, w * h);
-      assert.equal(error.detail.bound, PIXELS);
+      assert.equal(error.detail.bound, rowsRoute ? boundOf("image", "rows_pixels") : PIXELS);
       assert.deepEqual([error.detail.width, error.detail.height], [w, h]);
       assert.ok(error.detail.transient === undefined && error.transient === undefined);
       assert.ok(peak < 1 << 20, `${name} ${w}x${h}: no allocation sized by the frame (${peak} bytes)`);
@@ -263,4 +264,22 @@ test("R13 the module's source holds no numeric literal for a ceiling it keeps: e
   assert.match(code(text.jpxdecode), /boundOf\("image", "pixels"\)/);
   assert.match(code(text.pngdecode), /boundOf\("image", "chunks"\)/);
   for (const name of ["ccittdecode", "jbig2decode", "jpxdecode", "pngdecode"]) assert.match(code(text[name]), /boundOf\("image", "edge"\)/, `${name}: the edge`);
+});
+
+test("R12 R11 DCT: the row-by-row decoder is judged against its own row (K4862), the whole-frame decode against image.pixels", () => {
+  const ROWS_NAME = Object.hasOwn(READ_BOUNDS.image, "rows_pixels") ? "rows_pixels" : "pixels";
+  const ROWS = boundOf("image", ROWS_NAME);
+  const of = (run, d) => { try { run(d); } catch (e) { return e; } return null; };
+  const whole = (d) => decodeBaselineJpeg(d), rows = (d) => decodeBaselineJpegRows(d, { onRows() {} });
+  const mid = jpegDeclaring(10000, 12500, 1);   // 125 million pixels: past image.pixels
+  const w = of(whole, mid);
+  assert.ok(w instanceof DctRefusal && w.code === "IMAGE_TOO_LARGE" && w.detail.bound_name === "pixels" && w.detail.bound === PIXELS);
+  const r = of(rows, mid);
+  if (ROWS >= 125000000) assert.equal(r.code, "CORRUPT_DATA", "within the rows route's ceiling: goes on to its (absent) tables");
+  else assert.ok(r.code === "IMAGE_TOO_LARGE" && r.detail.bound_name === ROWS_NAME);
+  /* the hostile header is refused by the rows route from the header, whatever its row */
+  const hostile = of(rows, jpegDeclaring(60000, 60000, 3));
+  assert.ok(hostile.code === "IMAGE_TOO_LARGE" && hostile.detail.bound_name === ROWS_NAME && hostile.detail.bound === ROWS && hostile.detail.key === `limit.image.${ROWS_NAME}`);
+  const over = of(rows, jpegDeclaring(ROWS_NAME === "pixels" ? 12000 : 16384, Math.floor(ROWS / (ROWS_NAME === "pixels" ? 12000 : 16384)) + 1, 1));
+  assert.equal(over.code, "IMAGE_TOO_LARGE", "one row past the ceiling");
 });
