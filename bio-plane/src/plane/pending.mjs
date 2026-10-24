@@ -643,8 +643,13 @@ export function pendingOf(ctx, deps = {}) {
     owedLater(entry) { return h.owe(entry || {}); },
     /** acquisition R96: a keep that will not end inside the bound. `parts` are the part digests in order. */
     keepLater({ sha, parts } = {}) { return h.owe({ kind: "keep", sha, parts }); },
-    /** control-plane R120, R123: work the door deferred; a keep names its parts, which only acquisition has. */
-    add({ kind, sha } = {}) { return kind === "keep" ? Promise.resolve({ ok: false, reason: "PENDING_MALFORMED" }) : h.owe({ kind, sha }); },
+    /** control-plane R120, R123: work the door deferred; a keep names its parts, which only acquisition has. R108: a `project` (a non-empty string
+     *  of at most 200 characters) is kept as the row's `detail.project`, so the unpack drain sends it; absent or any other, the row carries none. */
+    add({ kind, sha, project } = {}) {
+      if (kind === "keep") return Promise.resolve({ ok: false, reason: "PENDING_MALFORMED" });
+      const kept = typeof project === "string" && project !== "" && project.length <= 200;
+      return h.owe({ kind, sha, ...(kept ? { detail: { project } } : {}) });
+    },
     /** R104 (G128): a batch of a job lands once: true the first time `(sha, kind, batch)` is landed, false after. Synchronous. */
     landBatch({ sha, kind, batch } = {}) {
       if (typeof sha !== "string" || !JOB_KINDS.includes(kind) || (typeof batch !== "string" && !Number.isInteger(batch))) return false;
@@ -766,7 +771,7 @@ export function pendingOps(holder, url, { health, administers } = {}) {
     return { ...answer, ...Object.fromEntries(WATCHDOG_FIELDS.map((k) => [k, null])), watchdog_why: because || "WATCHDOG_UNREADABLE" };
   };
   return {
-    pendingadd: () => holder.add({ kind: url.searchParams.get("kind"), sha: url.searchParams.get("sha") }),
+    pendingadd: () => holder.add({ kind: url.searchParams.get("kind"), sha: url.searchParams.get("sha"), project: url.searchParams.get("project") ?? undefined }),
     /* R107 (K4916; control-plane R135): one job row, every column, ended rows included, `row: null` when none; store-internal (the door
        applies the sight check), a read */
     jobrow: () => {
