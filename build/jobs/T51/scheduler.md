@@ -202,3 +202,7 @@ Fix round 9 done (G91, G95, G94, G92, G123g; R28-R33). Scheduler suite 180/180 (
 Tranche/T51 merged (file-safety #21). No scheduler code change was needed: a consumer due `now` is already re-armed by the firing's reconcile for the next firing and never looped inside one (each onAlarm ticks a consumer once). Test only: `files.test.mjs` "R24, R9 ... against the real file-safety" now asserts R39 as amended: while views are queued the wake is the firing instant (`nextAt === at`, the alarm set for the next firing), each onAlarm renders one, the run is bounded (at most four firings for three views) and ends with a wake of null or later; the later "a week on" step reads the last firing's wake. Scheduler suite: ℹ tests 180, pass 180, fail 0.
 
 Size (session_01YK5oJDSuoRHrdsfRWfQ9cd): test runs 17, module lines 1027
+
+## J10 · COMPLETE
+
+CHANGE B9 done: no scheduler code change; files.test.mjs now asserts file-safety R39 (queued-view wake is the firing instant, one render a tick, bounded, ends null). Scheduler suite 180/180; ownership 0 failures. Size (session_01YK5oJDSuoRHrdsfRWfQ9cd): test runs 17, module lines 1027
