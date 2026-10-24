@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J40
+**Read** · handled J42
 
 ## B1 · START
 
