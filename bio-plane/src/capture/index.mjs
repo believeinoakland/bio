@@ -127,6 +127,14 @@ export const SEEN_IN_PROJECT_MAX = 200;
 export const UPLOAD_STATEMENT_MAX = 2000;
 export const UPLOAD_NAME_MAX = 300;
 export const UPLOAD_TYPE_MAX = 255;
+/** R113 (fix round 9; G127f): the size of every part but the last of a file sent in parts: 16 MiB, three times R2's own minimum for a part (5 MiB) and far under the
+ *  request-body ceiling, so a request carries one part and the object holds one part in memory; chosen, not measured. A scaled figure for a test lowers it (`bounds`). */
+export const PARTED_PART_BYTES = 16 * 1024 * 1024;
+/** R113: how long an upload sent in parts may stay open before it is aborted and holds nothing: 24 hours from its begin; chosen. The platform's own cleanup of an
+ *  incomplete multipart upload (seven days) is the backstop under it. */
+export const PARTED_UPLOAD_TTL_MS = 24 * 60 * 60 * 1000;
+/** R113: the most expired sessions one begin (or `expireUploads`) aborts; the rest wait for the next. */
+export const PARTED_SWEEP_MAX = 20;
 /** R86: the one sentence `UPLOAD_WITHIN_FAILED` answers, whatever `within` threw or answered (N409's pattern). */
 export const UPLOAD_WITHIN_FAILED_DETAIL =
   "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
@@ -370,6 +378,8 @@ function registerFigures(c) {
 export class Capture {
   #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false; #acquisition = null; #acquisitionHost = null;
   #reputationReader = null; #fileScanner = null; #hasWhole = null; #provenHeld = new Set();
+  /* R113: the live state of the uploads sent in parts that this instance is receiving: the hasher of the bytes so far, in order, and the part it expects next. */
+  #parted = new Map();
 
   constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null,
                          acquisition = null, acquisitionHost = null, ownHosts = [], reputation = null, fileScanner = null,
@@ -689,6 +699,35 @@ export class Capture {
     try { return await this.#upload(args ?? {}, tally); } finally { tally.end(); }
   }
 
+  /* R86, R113: the refusals that come before any byte is looked at, in their order: the member-session fence, the statement of origin (C-118.10), the name
+     and the declared type. The one place they are made, for the upload in one request and the upload in parts. Null when none applies. */
+  static #fence({ by, statement, name, type, op }) {
+    if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
+      return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
+               detail: localize("capture.index.refusal_member_brings_file", "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written") };
+    /* DEC-49 REGION is-upload-stated */
+    if (typeof statement !== "string" || !statement.trim() || [...statement].length > UPLOAD_STATEMENT_MAX) {
+      const row = CAPTURE_CHECKS.UPLOAD_NO_STATEMENT;
+      return { ok: false, reason: "UPLOAD_NO_STATEMENT", code: "UPLOAD_NO_STATEMENT", check: row.check, translation: row.translation,
+               status: 400, maxChars: UPLOAD_STATEMENT_MAX };
+    }
+    /* END DEC-49 REGION is-upload-stated */
+    if (name != null && (typeof name !== "string" || [...name].length > UPLOAD_NAME_MAX))
+      return Capture.#missingArgument(op, "name", `a string of at most ${UPLOAD_NAME_MAX} characters`, name);
+    /* R92: the media type the member's browser declared, a string of at most 255 characters when given. */
+    if (type != null && (typeof type !== "string" || [...type].length > UPLOAD_TYPE_MAX))
+      return Capture.#missingArgument(op, "type", `a string of at most ${UPLOAD_TYPE_MAX} characters`, type);
+    return null;
+  }
+
+  /* R86: no evidence store is bound (the installation's storage-absent refusal, `acquisition`'s C-68.1). */
+  static #storageAbsent() {
+    const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+    return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
+             translation: row.translation, status: 503,
+             detail: localize("capture.index.say_so_the_file_cannot", "{say}, so the file cannot be held under its own digest; nothing was written", { say: String(say("capture.response.group_civicsmith_evidence")) }) };
+  }
+
   /* R111: the byte ledger as one upload counts what it holds (`runtime-limits`' `byteLedger`: `hold(n, tag)`, `release(n, tag)`); no ledger handed, or one that
      cannot count, is no fault of the upload's. `end` releases whatever the call still holds, on every path out of it. */
   static #tally(ledger) {
@@ -719,28 +758,10 @@ export class Capture {
   async #upload({ bytes, statement, name = null, type = null, by, at = null, within = null, boundMs = null, keepLater = null,
                   registerJob = null, armJobs = null, declared = null, bounds = null } = {}, tally) {
     const startedAt = Date.now();
-    if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
-      return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
-               detail: localize("capture.index.refusal_member_brings_file", "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written") };
-    /* DEC-49 REGION is-upload-stated */
-    if (typeof statement !== "string" || !statement.trim() || [...statement].length > UPLOAD_STATEMENT_MAX) {
-      const row = CAPTURE_CHECKS.UPLOAD_NO_STATEMENT;
-      return { ok: false, reason: "UPLOAD_NO_STATEMENT", code: "UPLOAD_NO_STATEMENT", check: row.check, translation: row.translation,
-               status: 400, maxChars: UPLOAD_STATEMENT_MAX };
-    }
-    /* END DEC-49 REGION is-upload-stated */
-    if (name != null && (typeof name !== "string" || [...name].length > UPLOAD_NAME_MAX))
-      return Capture.#missingArgument("captureupload", "name", `a string of at most ${UPLOAD_NAME_MAX} characters`, name);
-    /* R92: the media type the member's browser declared, a string of at most 255 characters when given. */
-    if (type != null && (typeof type !== "string" || [...type].length > UPLOAD_TYPE_MAX))
-      return Capture.#missingArgument("captureupload", "type", `a string of at most ${UPLOAD_TYPE_MAX} characters`, type);
+    const fenced = Capture.#fence({ by, statement, name, type, op: "captureupload" });
+    if (fenced) return fenced;
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
-    if (!ev) {
-      const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
-      return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
-               translation: row.translation, status: 503,
-               detail: localize("capture.index.say_so_the_file_cannot", "{say}, so the file cannot be held under its own digest; nothing was written", { say: String(say("capture.response.group_civicsmith_evidence")) }) };
-    }
+    if (!ev) return Capture.#storageAbsent();
     const reader = uploadReader(bytes);
     if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: localize("capture.index.upload_no_bytes", "the upload carried no bytes; nothing was written") };
     /* R111: a body is bounded before it is held. The two ceilings are quoted (`CAPTURE_MAX`, the request-body entry of `PLATFORM_FIGURES`); the lower is the one
@@ -821,14 +842,7 @@ export class Capture {
     const onlyPart = !multipart && partBytes && partBytes.length === 1 ? partBytes[0] : null;
     partBytes = null;
     if (!onlyPart) { tally.release(keptBytes); keptBytes = 0; }
-    /* R109 (fix round 9; G126; K4835 (2)): the work this upload owes is one job row each, written through the registrar, read as `keepLater` is: the store's
-       `registerJob` when it is a function, else the call's, else none (the answer then says so). The rows are written inside the filing transaction below, and the
-       alarm is armed after its commit. */
-    const reg = typeof this.registerJob === "function" ? (e) => this.registerJob(e) : typeof registerJob === "function" ? registerJob : null;
-    const arm = async () => {
-      const f = typeof this.armJobs === "function" ? () => this.armJobs() : typeof armJobs === "function" ? armJobs : null;
-      if (reg && f) { try { await f(); } catch { /* an alarm not armed is the backstop's, never the upload's */ } }
-    };
+    const { reg, arm } = this.#registrar(registerJob, armJobs);
     /* R103 (fix round 4b, F2; fix round 7, G79): past `MULTIPART_KEEP_MAX` the whole is made from the stored parts by the store itself
        (`putFromParts`). The plane's owed-work ledger keeps it alive after the answer, so the answer is not held for it: the keep is handed
        over at once and the answer says `keep_pending`. R109: with the registrar the handover IS the `keep` row, registered in the filing
@@ -848,14 +862,49 @@ export class Capture {
       }
     }
     const pending = keepPending ? { keep_pending: true } : {};
+    const judge = async () => {
+      let ct = null;
+      if (!multipart) {
+        try {
+          const raw = onlyPart ?? await (async () => { const obj = await ev.get(sha); return obj ? new Uint8Array(await obj.arrayBuffer()) : null; })();
+          if (raw && raw.length === total) ct = textTypeOf({ bytes: raw, type, name });
+        } catch { ct = null; }
+        tally.release(keptBytes); keptBytes = 0;
+      } else {
+        ct = textTypeOf({ bytes: withoutCutCodePoint(head.subarray(0, headLen)), type, name });
+      }
+      return ct;
+    };
+    return this.#file({ ev, sha, total, parts, multipart, partsOwed: multipart, keepRow, pending, reg, arm, by, statement, name, type, at, within,
+                        judge, firstPart: multipart ? head.subarray(0, headLen) : null });
+  }
+
+  /* R109 (fix round 9; G126; K4835 (2)): the work an upload owes is one job row each, written through the registrar, read as `keepLater` is: the store's
+     `registerJob` when it is a function, else the call's, else none (the answer then says so). The rows are written inside the filing transaction, and the
+     alarm is armed after its commit. */
+  #registrar(registerJob, armJobs) {
+    const reg = typeof this.registerJob === "function" ? (e) => this.registerJob(e) : typeof registerJob === "function" ? registerJob : null;
+    const arm = async () => {
+      const f = typeof this.armJobs === "function" ? () => this.armJobs() : typeof armJobs === "function" ? armJobs : null;
+      if (reg && f) { try { await f(); } catch { /* an alarm not armed is the backstop's, never the upload's */ } }
+    };
+    return { reg, arm };
+  }
+
+  /* R86, R108, R109: the filing of an upload, whether it came in one request or in parts (R113): the receipt, the capturing member, the job rows and `within`,
+     in one transaction, and the answer. `parts` are the stored parts of a file held in parts (none for a file held as one object, a parted upload's
+     included); `partsOwed` says the job rows name them; `judge()` answers the content type the bytes are profiled with; `firstPart` is the head `profileOf`
+     sniffs; `multipart` says the file is held in parts, as against one object (past `PROFILE_TEXT_MAX` and `ODF_DIGEST_MAX` `profileOf` reads one object by
+     ranges of its head and tail, whatever way it came). */
+  async #file({ ev, sha, total, parts, multipart, partsOwed, keepRow, pending, reg, arm, by, statement, name, type, at, within, judge, firstPart }) {
     /* R109: the rows this upload owes: `reading` always, `unpack` when the profile names `zip` (R110), `keep` when the handover is the row. Called inside the
        filing transaction; a refusal (or a throw) of the registrar rolls the upload back and is answered, never swallowed. */
     const isZip = (profile) => !!(profile && profile.format && profile.format.format === "zip");
     const carrier = `snapshots/upload-${sha}`, partShas = parts.map((p) => p.sha256);
     const register = (profile) => {
       if (!reg) return { ok: true };
-      const entries = [{ kind: "reading", sha, carrier, ...(multipart ? { parts: partShas } : {}) },
-                       ...(isZip(profile) ? [{ kind: "unpack", sha, carrier, ...(multipart ? { parts: partShas } : {}) }] : []),
+      const entries = [{ kind: "reading", sha, carrier, ...(partsOwed && partShas.length ? { parts: partShas } : {}) },
+                       ...(isZip(profile) ? [{ kind: "unpack", sha, carrier, ...(partsOwed && partShas.length ? { parts: partShas } : {}) }] : []),
                        ...(keepRow ? [{ kind: "keep", sha, carrier, parts: partShas }] : [])];
       for (const e of entries) {
         let r;
@@ -896,24 +945,10 @@ export class Capture {
       await arm();
       return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), ...pending, ...jobsNote(null) };
     }
-    /* R92, R93: the one rule, `acquisition`'s `textTypeOf` (E5): a declared text type, or with none a `.txt`, `.md` or `.csv` name,
-       reads the bytes as text when they are text (valid UTF-8, no NUL). R107: a file held in parts is judged from its head, the first
-       `UPLOAD_HEAD` bytes less a code point cut at their end, and `profileOf` then judges its format from the first part's sniff and, where
-       that names none, from this type. Either way a declared type is recorded as the uploader's declaration below, never a measured
-       header; a name is not a declaration. */
-    let ct = null;
-    if (!multipart) {
-      try {
-        const raw = onlyPart ?? await (async () => { const obj = await ev.get(sha); return obj ? new Uint8Array(await obj.arrayBuffer()) : null; })();
-        if (raw && raw.length === total) ct = textTypeOf({ bytes: raw, type, name });
-      } catch { ct = null; }
-      tally.release(keptBytes); keptBytes = 0;
-    } else {
-      ct = textTypeOf({ bytes: withoutCutCodePoint(head.subarray(0, headLen)), type, name });
-    }
+    const ct = await judge();
     const profile = await profileOf({ ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
-                                      retrieved: when, origin: "member", parts: multipart ? parts : null,
-                                      firstPart: multipart ? head.subarray(0, headLen) : null });
+                                      retrieved: when, origin: "member", parts: multipart && parts.length ? parts : null,
+                                      firstPart });
     if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
     else if (ct) profile.source_content_type = null;
     const document = this.#uploadedDocument({ sha, total, parts, by, at: when, statement, name, profile });
@@ -948,6 +983,289 @@ export class Capture {
     await arm();
     return { ok: true, existed: false, capture: { sha256: sha, bytes: total }, receipt: receiptOf(done.receipt), document, ...pending, ...jobsNote(profile),
              ...(typeof within === "function" ? { within: done.within } : {}) };
+  }
+
+
+  /* ==================================================================== *
+   * A file sent in parts (R113; G127f; K4838 (6), K4891)
+   * ==================================================================== */
+
+  /* R113: the bucket binding when it offers R2's own multipart upload, else null. The parts of a file past the request-body ceiling are written with it
+     directly, so the whole is one object under its digest and no part is stored as an object of its own. */
+  #partedBucket() {
+    const b = this.env && this.env.CAPTURES;
+    return b && typeof b.createMultipartUpload === "function" && typeof b.resumeMultipartUpload === "function" ? b : null;
+  }
+
+  /* R113: the object key of a digest in the evidence bucket, which record-core fixes (its R38) and the composition root knows: handed by the caller as `key`
+     (the function the door hands `op=capture`), else the store's `evidenceKey`, assigned as `keepLater` is. Null when neither is given. */
+  #partedKey(key) {
+    return typeof key === "function" ? key : typeof this.evidenceKey === "function" ? (d) => this.evidenceKey(d) : null;
+  }
+
+  /* R113: the session a member may use: refused when unknown to this instance or another member's (an unseen session and an unknown one read alike), or past
+     its expiry (then aborted here, its row removed). Answers `{row}` or `{refusal}`. */
+  async #partedRow(upload, by, bucket, key) {
+    const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureupload" });
+    if (fenced) return { refusal: fenced };
+    const row = typeof upload === "string" && upload ? this.#one(`SELECT * FROM parted_uploads WHERE upload = ?`, upload) : null;
+    if (!row || memberIdOf(row.by) !== memberIdOf(by))
+      return { refusal: { ok: false, reason: "UPLOAD_UNKNOWN", status: 404,
+                          detail: localize("capture.index.upload_unknown", "this instance holds no upload in parts under that name for you; begin it again") } };
+    if (row.expires <= stampSecond(this.#instant())) {
+      await this.#partedDrop(row, bucket, key);
+      return { refusal: { ok: false, reason: "UPLOAD_EXPIRED", status: 410,
+                          detail: localize("capture.index.upload_expired", "this upload was left open too long, so it was aborted and holds nothing; begin it again") } };
+    }
+    let parts = [];
+    try { parts = JSON.parse(row.parts); } catch { parts = []; }
+    return { row: { ...row, parts } };
+  }
+
+  /* R113: abort what a session holds in R2 (when its upload is still open) and remove its row and its live state. True when it is gone; false when the bucket
+     would not abort, the row then staying for the next sweep. */
+  async #partedDrop(row, bucket, key) {
+    if (row.state === "open" && row.r2 && bucket) {
+      try { await bucket.resumeMultipartUpload(key ? key(row.sha256) : row.sha256, row.r2).abort(); }
+      catch { return false; }
+    }
+    this.#tx(() => this.#sql.exec(`DELETE FROM parted_uploads WHERE upload = ?`, row.upload));
+    this.#parted.delete(row.upload);
+    return true;
+  }
+
+  /** R113: aborts the sessions of uploads in parts that were left open past their expiry (`PARTED_UPLOAD_TTL_MS` after their begin), at most `PARTED_SWEEP_MAX`
+   *  at a time, oldest first; each one's multipart upload is aborted in R2 and its row removed, so an abandoned upload holds nothing. A session whose abort the
+   *  bucket refuses is left for the next call. Run at each begin; a caller may run it too. Never throws. */
+  async expireUploads({ key = null } = {}) {
+    try {
+      const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
+      const due = this.#rows(`SELECT * FROM parted_uploads WHERE expires <= ? ORDER BY expires, upload LIMIT ?`, stampSecond(this.#instant()), PARTED_SWEEP_MAX);
+      let aborted = 0;
+      for (const row of due) if (await this.#partedDrop(row, bucket, keyOf)) aborted++;
+      return { ok: true, aborted };
+    } catch { return { ok: false, aborted: 0 }; }
+  }
+
+  /** R113 (fix round 9; G127f; K4838 (6), K4891): begins an upload of a file past the request-body ceiling, which the browser then sends in parts through the
+   *  Worker. `{sha256, bytes, statement, name, type, by}`: the whole file's digest and its size as the member's browser declares them, and what R86 asks of an
+   *  upload. Refused as `uploadCapture` refuses before a byte is read (the member-session fence, `UPLOAD_NO_STATEMENT`, `name`, `type`), then a size over the
+   *  capture ceiling (`TOO_LARGE`, 413, with `size` and `bound`, judged before any part). Otherwise R2's multipart upload is begun under the object key of
+   *  `sha256` and the answer is `{ok: true, upload, sha256, bytes, part_bytes, parts, next: 0, held: false, expires}`: the browser cuts the file into `parts`
+   *  parts of `part_bytes` bytes (the last the remainder) and sends them in order. When the evidence store already holds an object of that digest and size
+   *  the answer is `held: true` with no parts to send, and the completion files it. A second begin of the same file by the same member abandons the first.
+   *  Session state is this module's table `parted_uploads` (it holds no byte); a session left open past `PARTED_UPLOAD_TTL_MS` is aborted. */
+  async beginPartedUpload({ sha256 = null, bytes = null, statement, name = null, type = null, by, bounds = null, key = null } = {}) {
+    const fenced = Capture.#fence({ by, statement, name, type, op: "captureuploadbegin" });
+    if (fenced) return fenced;
+    if (typeof sha256 !== "string" || !HEX64.test(sha256))
+      return Capture.#missingArgument("captureuploadbegin", "sha256", "64 lowercase hex characters, the digest of the whole file", sha256);
+    if (!Number.isSafeInteger(bytes) || bytes < 1)
+      return Capture.#missingArgument("captureuploadbegin", "bytes", "the file's size in bytes, a whole number from 1", bytes);
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    if (!ev) return Capture.#storageAbsent();
+    /* R111: the size is judged before any part is accepted. A whole may be larger than one request may carry, so only the capture ceiling binds it. */
+    const capMax = Capture.#lowered(CAPTURE_MAX, bounds && bounds.capture);
+    if (bytes > capMax) return Capture.#tooLarge(bytes, "capture", capMax);
+    const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
+    if (!bucket || !keyOf)
+      return { ok: false, reason: "PARTED_UPLOAD_UNAVAILABLE", status: 503,
+               detail: localize("capture.index.parted_unavailable", "this instance cannot take a file in parts (its evidence bucket offers no multipart upload, or its key is not known), so nothing was written") };
+    await this.expireUploads({ key });
+    /* the same member's earlier session for this file is abandoned: a restarted upload begins clean */
+    for (const old of this.#rows(`SELECT * FROM parted_uploads WHERE by = ? AND sha256 = ?`, by, sha256)) await this.#partedDrop(old, bucket, keyOf);
+    const reqMax = Capture.#lowered(PLATFORM_FIGURES.request_body_max.value, bounds && bounds.request);
+    const partBytes = Math.max(1, Math.min(Capture.#lowered(PARTED_PART_BYTES, bounds && bounds.part), reqMax));
+    const count = Math.ceil(bytes / partBytes);
+    let held = false;
+    try { const h = await ev.head(sha256); held = !!(h && h.size === bytes); } catch { held = false; }
+    let r2 = null;
+    if (!held) {
+      try { r2 = (await bucket.createMultipartUpload(keyOf(sha256))).uploadId; }
+      catch {
+        return { ok: false, reason: "UPLOAD_NOT_BEGUN", status: 502,
+                 detail: localize("capture.index.parted_not_begun", "the evidence store would not begin an upload in parts, so nothing was written") };
+      }
+    }
+    const now = this.#instant(), upload = crypto.randomUUID().replace(/-/g, "");
+    const created = stampSecond(now), expires = stampSecond(now + PARTED_UPLOAD_TTL_MS);
+    this.#tx(() => this.#sql.exec(
+      `INSERT INTO parted_uploads (upload, sha256, bytes, part_bytes, by, statement, name, type, r2, state, parts, created, expires)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', ?, ?)`,
+      upload, sha256, bytes, partBytes, by, statement, name ?? null, type ?? null, r2, held ? "completed" : "open", created, expires));
+    if (!held) this.#parted.set(upload, { hasher: createSha256(), next: 0, busy: false, whole: null });
+    return { ok: true, upload, sha256, bytes, part_bytes: partBytes, parts: held ? 0 : count, next: 0, held, created, expires };
+  }
+
+  /** R113: puts one part of an upload begun with `beginPartedUpload`. `{upload, index, bytes, sha256, by, declared, bounds, ledger}`: `index` counts from 0,
+   *  `bytes` the part (a stream, bytes or an async iterable, as R86 takes a file), `sha256` the part's own digest as the browser computed it, checked as the part
+   *  arrives. A part is exactly `part_bytes` bytes, the last the remainder, so a length that differs (`declared` is judged before one byte is read) is
+   *  `PART_SIZE` and the stream is cancelled. Parts go in order, because the whole file's digest is hashed in order across them: a part past the next one is
+   *  `PART_OUT_OF_ORDER` (answering `next`); a part already put, put again, is idempotent, answered `existed: true` and stored once, and one put again with other
+   *  bytes is `PART_CONFLICT`. The part is held once in memory (the byte `ledger` counts it) and written to R2's upload before it is recorded. If this instance
+   *  has lost the hash of the parts so far (it was restarted between parts) the upload is aborted and answered `UPLOAD_LOST`: begin again. */
+  async putUploadPart({ upload = null, index = null, bytes, sha256 = null, by, declared = null, ledger = null, key = null } = {}) {
+    const tally = Capture.#tally(ledger);
+    const reader = uploadReader(bytes);
+    const stop = async (answer) => { if (reader) await reader.cancel(); return answer; };
+    try {
+      const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureuploadpart" });
+      if (fenced) return await stop(fenced);
+      if (typeof upload !== "string" || !upload) return await stop(Capture.#missingArgument("captureuploadpart", "upload", "the upload's name, as the begin answered it", upload));
+      if (!Number.isSafeInteger(index) || index < 0)
+        return await stop(Capture.#missingArgument("captureuploadpart", "index", "a whole number from 0, the part's place in the file", index));
+      if (typeof sha256 !== "string" || !HEX64.test(sha256))
+        return await stop(Capture.#missingArgument("captureuploadpart", "sha256", "64 lowercase hex characters, the digest of this part", sha256));
+      const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
+      const got = await this.#partedRow(upload, by, bucket, keyOf);
+      if (got.refusal) return await stop(got.refusal);
+      const row = got.row, count = Math.ceil(row.bytes / row.part_bytes);
+      if (row.state !== "open")
+        return await stop({ ok: false, reason: "UPLOAD_NOT_OPEN", status: 409,
+                            detail: localize("capture.index.upload_not_open", "this upload has no part left to put; complete it") });
+      if (index >= count)
+        return await stop(Capture.#missingArgument("captureuploadpart", "index", `a whole number from 0 to ${count - 1}`, index));
+      if (index < row.parts.length) {
+        if (row.parts[index].sha256 === sha256) return await stop({ ok: true, existed: true, index, next: row.parts.length, parts: count });
+        return await stop({ ok: false, reason: "PART_CONFLICT", status: 409, index, next: row.parts.length,
+                            detail: localize("capture.index.part_conflict", "that part was already put with other bytes, so this one was refused") });
+      }
+      if (index > row.parts.length)
+        return await stop({ ok: false, reason: "PART_OUT_OF_ORDER", status: 409, index, next: row.parts.length,
+                            detail: localize("capture.index.part_out_of_order", "the parts go in order, because the file's digest is taken across them in order; send the part named next") });
+      let live = this.#parted.get(row.upload);
+      if (row.parts.length > 0 && (!live || live.next !== row.parts.length)) {
+        await this.#partedDrop(row, bucket, keyOf);
+        return await stop({ ok: false, reason: "UPLOAD_LOST", status: 409,
+                            detail: localize("capture.index.upload_lost", "this instance lost the digest of the parts so far, so the upload was aborted and holds nothing; begin it again") });
+      }
+      if (!live) { live = { hasher: createSha256(), next: 0, busy: false, whole: null }; this.#parted.set(row.upload, live); }
+      if (live.busy)
+        return await stop({ ok: false, reason: "PART_IN_PROGRESS", status: 409, index,
+                            detail: localize("capture.index.part_in_progress", "a part of this upload is still arriving; send the next one when it is answered") });
+      const expected = index === count - 1 ? row.bytes - index * row.part_bytes : row.part_bytes;
+      const wrongSize = (size) => ({ ok: false, reason: "PART_SIZE", status: size > expected ? 413 : 400, index, size, bound: expected,
+                                     detail: localize("capture.index.part_size", "a part must be exactly {bound} bytes (the last one the rest of the file), and this one is not; nothing was stored", { bound: String(expected) }) });
+      if (Number.isSafeInteger(declared) && declared !== expected) return await stop(wrongSize(declared));
+      if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: localize("capture.index.upload_no_bytes", "the upload carried no bytes; nothing was written") };
+      live.busy = true;
+      try {
+        const buf = new Uint8Array(expected);
+        tally.hold(expected);
+        let filled = 0;
+        try {
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (!value) throw new Error("not bytes");
+            if (filled + value.length > expected) return await stop(wrongSize(filled + value.length));
+            buf.set(value, filled); filled += value.length;
+          }
+        } catch {
+          return await stop({ ok: false, reason: "PART_NOT_READ", status: 502, index,
+                              detail: localize("capture.index.part_not_read", "the part's bytes could not be read, so nothing was stored; send it again") });
+        }
+        if (filled !== expected) return wrongSize(filled);
+        const partDigest = hexOf(await crypto.subtle.digest("SHA-256", buf));
+        if (partDigest !== sha256)
+          return { ok: false, reason: "PART_DIGEST_MISMATCH", status: 400, index, expected: sha256, got: partDigest,
+                   detail: localize("capture.index.part_digest_mismatch", "the part does not hash to the digest given for it, so nothing was stored; send it again") };
+        let etag;
+        try { etag = (await bucket.resumeMultipartUpload(keyOf(row.sha256), row.r2).uploadPart(index + 1, buf)).etag ?? null; }
+        catch {
+          return { ok: false, reason: "PART_NOT_STORED", status: 502, index,
+                   detail: localize("capture.index.part_not_stored", "the evidence store would not take the part, so nothing was recorded; send it again") };
+        }
+        live.hasher.update(buf);
+        live.next = index + 1;
+        const parts = [...row.parts, { sha256, etag, bytes: expected }];
+        this.#tx(() => this.#sql.exec(`UPDATE parted_uploads SET parts = ? WHERE upload = ?`, JSON.stringify(parts), row.upload));
+        return { ok: true, existed: false, index, next: parts.length, parts: count, bytes: expected };
+      } finally { live.busy = false; }
+    } finally { tally.end(); }
+  }
+
+  /** R113: completes an upload sent in parts. `{upload, parts, by, within, at, registerJob, armJobs}`: `parts` the digests of the parts in order, which must be
+   *  the ones put: a part not put is `PARTS_MISSING` (naming them) and any other difference `PARTS_OUT_OF_ORDER`, each refusing with nothing written and the upload
+   *  left open. The digest of all the bytes, hashed in order across the parts (never a part's), must be the one declared at the begin, else the upload is aborted,
+   *  nothing is held and the answer is `WHOLE_DIGEST_MISMATCH`. Then R2's upload is completed, making one object under the whole's digest, and the file is
+   *  filed exactly as `uploadCapture` files one that came in a request (R86, R108, R109): one receipt, the actor, one job row through the registrar and `within`
+   *  in one transaction, and the same answer, the document carrying no `parts` (the whole is one object). A retry after a refusal in the filing files the
+   *  object already complete. */
+  async completePartedUpload({ upload = null, parts = null, by, within = null, at = null, registerJob = null, armJobs = null, key = null } = {}) {
+    const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureuploadcomplete" });
+    if (fenced) return fenced;
+    if (typeof upload !== "string" || !upload) return Capture.#missingArgument("captureuploadcomplete", "upload", "the upload's name, as the begin answered it", upload);
+    const named = Array.isArray(parts) ? parts.map((p) => (p && typeof p === "object" ? p.sha256 : p)) : null;
+    if (!named || !named.every((d) => typeof d === "string" && HEX64.test(d)))
+      return Capture.#missingArgument("captureuploadcomplete", "parts", "the list of the parts' digests, in order, each 64 lowercase hex characters", parts);
+    const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
+    const got = await this.#partedRow(upload, by, bucket, keyOf);
+    if (got.refusal) return got.refusal;
+    const row = got.row, count = Math.ceil(row.bytes / row.part_bytes);
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    if (!ev) return Capture.#storageAbsent();
+    if (row.state === "open") {
+      const missing = []; for (let i = 0; i < count; i++) if (!row.parts[i]) missing.push(i);
+      if (missing.length)
+        return { ok: false, reason: "PARTS_MISSING", status: 409, missing, next: row.parts.length,
+                 detail: localize("capture.index.parts_missing", "the upload lacks parts, so it was not completed and nothing was written; send the parts named in missing") };
+      const differs = row.parts.findIndex((p, i) => named[i] !== p.sha256);
+      if (differs >= 0 || named.length !== row.parts.length)
+        return { ok: false, reason: "PARTS_OUT_OF_ORDER", status: 409, index: differs >= 0 ? differs : row.parts.length,
+                 detail: localize("capture.index.parts_out_of_order", "the parts named are not the ones put, in the order they were put, so the upload was not completed and nothing was written") };
+      const live = this.#parted.get(row.upload);
+      if (!live || live.next !== count) {
+        await this.#partedDrop(row, bucket, keyOf);
+        return { ok: false, reason: "UPLOAD_LOST", status: 409,
+                 detail: localize("capture.index.upload_lost", "this instance lost the digest of the parts so far, so the upload was aborted and holds nothing; begin it again") };
+      }
+      if (live.whole === null) live.whole = live.hasher.hex();
+      if (live.whole !== row.sha256) {
+        const claimed = row.sha256, got64 = live.whole;
+        await this.#partedDrop(row, bucket, keyOf);
+        return { ok: false, reason: "WHOLE_DIGEST_MISMATCH", status: 400, expected: claimed, got: got64,
+                 detail: localize("capture.index.whole_digest_mismatch", "the parts, taken in order, do not hash to the digest declared for the file, so the upload was aborted and nothing was held") };
+      }
+      try { await bucket.resumeMultipartUpload(keyOf(row.sha256), row.r2).complete(row.parts.map((p, i) => ({ partNumber: i + 1, etag: p.etag }))); }
+      catch {
+        await this.#partedDrop(row, bucket, keyOf);
+        return { ok: false, reason: "UPLOAD_NOT_COMPLETED", status: 502,
+                 detail: localize("capture.index.parted_not_completed", "the evidence store would not complete the upload, so it was aborted and holds nothing; begin it again") };
+      }
+      this.#tx(() => this.#sql.exec(`UPDATE parted_uploads SET state = 'completed' WHERE upload = ?`, row.upload));
+      this.#parted.delete(row.upload);
+    }
+    /* the object is whole under its digest: file it. Its head is read as a range, which is all the profile asks of a file past one part. */
+    let head = null;
+    try {
+      const o = await ev.get(row.sha256, { range: { offset: 0, length: UPLOAD_HEAD } });
+      head = o ? new Uint8Array(await o.arrayBuffer()) : null;
+    } catch { head = null; }
+    if (!head)
+      return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
+               detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
+    const { reg, arm } = this.#registrar(registerJob, armJobs);
+    const judge = async () => textTypeOf({ bytes: withoutCutCodePoint(head), type: row.type, name: row.name });
+    const filed = await this.#file({ ev, sha: row.sha256, total: row.bytes, parts: [], multipart: false, partsOwed: false, keepRow: false, pending: {}, reg, arm,
+                                     by: row.by, statement: row.statement, name: row.name, type: row.type, at, within, judge, firstPart: head });
+    if (filed.ok === true) await this.#partedDrop({ ...row, state: "completed" }, bucket, keyOf);
+    return filed;
+  }
+
+  /** R113: abandons an upload sent in parts: R2's upload is aborted and the session removed, so it holds nothing. `{upload, by}`. Idempotent: a session this
+   *  member does not hold answers `{ok: true, aborted: false}`. A bucket that will not abort answers `UPLOAD_NOT_ABORTED` (502) and the session stays, to be
+   *  swept at its expiry. */
+  async abortPartedUpload({ upload = null, by, key = null } = {}) {
+    const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureuploadabort" });
+    if (fenced) return fenced;
+    if (typeof upload !== "string" || !upload) return Capture.#missingArgument("captureuploadabort", "upload", "the upload's name, as the begin answered it", upload);
+    const row = typeof upload === "string" && upload ? this.#one(`SELECT * FROM parted_uploads WHERE upload = ?`, upload) : null;
+    if (!row || memberIdOf(row.by) !== memberIdOf(by)) return { ok: true, aborted: false };
+    if (!(await this.#partedDrop(row, this.#partedBucket(), this.#partedKey(key))))
+      return { ok: false, reason: "UPLOAD_NOT_ABORTED", status: 502,
+               detail: localize("capture.index.parted_not_aborted", "the evidence store would not abort the upload; it stays open and is aborted at its expiry") };
+    return { ok: true, aborted: true };
   }
 
   /* R86: the provenance document of an upload, built as a pulled knock's is (doorbell R13): received from the member, never
@@ -3433,6 +3751,14 @@ export function captureOps(c, url, body, env, h = {}) {
     captureaccount: () => c.recordCaptureAccount({ ...(body || {}), at: undefined, by: q("by") ?? (body && body.by) }),
     /* N388: the accounts answer by the caller's sight; an unstamped call sees nothing (REC-30's fail-closed posture). */
     captureaccounts: () => c.captureAccountsOf(q("capture") ?? (body && body.captureSha), { viewer: q("viewer") ?? "" }),
+    /* R113 (fix round 9; G127f): a file past the request-body ceiling sent in parts. `by` is the control plane's stamp, never the body's; `captureuploadpart`'s body is the
+       part's raw bytes (as `captureupload`'s is the file's), its fields in the address; the whole's digest, the size and the member's words travel in the begin alone. */
+    captureuploadbegin: () => c.beginPartedUpload({ sha256: body && body.sha256, bytes: body && body.bytes, statement: body && body.statement, name: body && body.name,
+                                                    type: body && body.type, by: q("by") ?? undefined, bounds: h.bounds ?? null, key: h.key ?? null }),
+    captureuploadpart: () => c.putUploadPart({ upload: q("upload"), index: q("index") === null || q("index") === "" ? null : Number(q("index")), sha256: q("sha256"), bytes: body,
+                                              by: q("by") ?? undefined, declared: q("declared") ? Number(q("declared")) : null, ledger: h.ledger ?? null, key: h.key ?? null }),
+    captureuploadcomplete: () => c.completePartedUpload({ upload: body && body.upload, parts: body && body.parts, by: q("by") ?? undefined, key: h.key ?? null }),
+    captureuploadabort: () => c.abortPartedUpload({ upload: (body && body.upload) ?? q("upload"), by: q("by") ?? undefined, key: h.key ?? null }),
     /* K72 (11): the Worker's op forwards here with the control plane's stamps in the query. */
     /* R106 (fix round 6, G32): a fetch of an address the record already holds from a plain fetch is made conditional on that copy (the
        digest handed to `acquisition` as `heldSha`), so an unchanged source is not downloaded again; the caller's sight decides which copy. */
@@ -3490,6 +3816,17 @@ export const DECLARED_OPS = Object.freeze({
      membership's `projectAuthority`, asked in `fileSeenIn`. */
   captureseenin: { classes: ["admin","member","probe"], mutating: true, stamps: ["by","viewer"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureseenin", "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)"),
     fields: { accepts: ["captureSha","project"], requires: ["captureSha","project"] } },
+  /* R113 (fix round 9; G127f; K4891): a file past the request-body ceiling is sent in parts through the Worker: begin (the file's digest and size, and what R86 asks of an
+     upload), each part in order (its raw bytes the body, its index and digest in the address), complete (the parts' digests in order) and abort. `by` is a stamp; each
+     is a member's own act in her own name and needs `contribute` as `captureupload` does. */
+  captureuploadbegin: { classes: ["member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadbegin", "upload-directed: a member begins sending a file too large for one request in parts, naming its digest, its size and where it came from; nothing is held until its parts arrive (capture R113)"),
+    fields: { accepts: ["sha256","bytes","statement","name","type"], requires: ["sha256","bytes","statement"] } },
+  captureuploadpart: { classes: ["member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadpart", "upload-directed: a member sends one part of a file begun in parts, in order, its raw bytes the request's body (capture R113)"),
+    fields: { accepts: ["upload","index","sha256"], requires: ["upload","index","sha256"] } },
+  captureuploadcomplete: { classes: ["member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadcomplete", "upload-directed: a member completes a file sent in parts, naming the parts' digests in order; the file is then held under its own digest as an upload is (capture R113)"),
+    fields: { accepts: ["upload","parts"], requires: ["upload","parts"] } },
+  captureuploadabort: { classes: ["member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "reversible", description: localize("capture.declared.captureuploadabort", "upload-directed: a member abandons a file begun in parts; what was sent is discarded and nothing is held (capture R113)"),
+    fields: { accepts: ["upload"], requires: ["upload"] } },
   /* K4206 (T51 FR-52; R98): `text` is read, and an empty one is C-118.6 by its row's words (R69), so it is accepted and not
      required; a missing captureSha names itself (R98), a missing signature is refused naming the signature. The instant is
      the server's (R98), so `at` is not declared. */
