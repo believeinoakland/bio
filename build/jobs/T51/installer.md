@@ -357,3 +357,61 @@ COMPLETE (B25 R84, B26, B27). Merged tranche/T51 (installer-steps R43-R45 real; 
 **Checks:** format 0 failures; architecture 0; coverage 74 of 74, 0; ownership 0; words: inline 0, plain 0, testcopy 0, missingkey 12, marker 0, 12 failures (all missingkey, accepted above). Impact: installer 11/22 test files run here, journey-check not run (above).
 
 Size (session_0133bNMzhnXsy441ZfjLU6xR): test runs 45, module lines 3154
+
+## J28 · COMPLETE
+
+COMPLETE (B28, R85). Merged tranche/T51 first.
+
+**Built.** `newgroup/src/guide.mjs` (new) and `ui.mjs`: the first page's first stage asks "do you already have a Cloudflare account?". Yes leaves for the short name and the sign-in as before; No shows four steps, one a screen, in order (account and email; Workers Paid and a payment method; R2; sign-in and "Allow", naming what Civicsmith asks and never does), each with why, what to do and what it costs, the six likely questions answered beside it (own account; cost, who is paid, how to stop; what Civicsmith can see and do and how to remove it; is my card shared; already use Cloudflare; stuck), a resume note, Back and Next. The step is the page's fragment (`#guide-2`), so the installer keeps nothing (R27). The confirming check is R84's (Check again at the run). No field in the guide at all: no token, no account id. The stage is drawn only when the word list holds all 40 keys (`GUIDE_KEYS`); without the rows the first page is exactly as it was (a control test), so nothing breaks before the design's rows land. Keys added to `KEYS`.
+
+**Red first.** With the 40 stand-in rows in a scratch copy of `rows.mjs` (reverted) and `ui.mjs` reverted, the R85 order/answers/resume test was red; green with the change. `r85.test.mjs`: rows held; order, answers, resume, costs, no input; the guide's script run against a stand-in DOM (no, next, back, last, fragment resume, yes); control.
+
+**Accepted reds until the rows land:** r85 (rows held, order test, script test) and R84's as in J27. R40 keeps green (my stand-in for `installer.guide.q.own.a` first said "copy"; reworded).
+
+**Tests:** with all 63 stand-in rows (R84's 23 and these 40) in a scratch rows.mjs: requirements 50/54, r84 8/8, r85 4/4, t50 17/19, corpus 3/3, t47, t51, g83, embed, ascii green; reds are the inherited ones only (R8, R11, R20, R44, R55, R61, R71, t48 one, wizard, realsize x6). Without rows: as J27 plus r85's three. Checks: format 0; architecture 0; coverage see line below; ownership see below; words: missingkey 12 (the R84 ones; the guide's keys are held in `GUIDE_KEYS`, not literal `word(...)` calls, so the check does not list them), inline 0, marker 0.
+
+**The 40 new keys, stand-in English (for the HANDOFF to UX-DESIGN):**
+- `installer.guide.account.cost`: An account is free.
+- `installer.guide.account.do`: Go to dash.cloudflare.com/sign-up, enter an email and a password, then open the email Cloudflare sends and follow its link to confirm the address.
+- `installer.guide.account.title`: Create your Cloudflare account and confirm your email
+- `installer.guide.account.why`: Everything of your team's lives in an account you own, so nobody else holds it.
+- `installer.guide.allow.asks`: On Cloudflare's Allow page, Civicsmith asks to put its programs and storage in your account, to read the account's name, to set up its helper programs, and to check that no log keeps a record of who opens which file.
+- `installer.guide.allow.never`: Civicsmith never asks for your password, your card, an API token or an account id, and it keeps nothing you allow after the install is done.
+- `installer.guide.ask.no`: No, or I am not sure it is ready
+- `installer.guide.ask.sub`: Your team's Civicsmith lives in your own Cloudflare account, so you need one before you start. If you have none, or you are not sure it is ready, we will go through it step by step.
+- `installer.guide.ask.title`: Do you already have a Cloudflare account?
+- `installer.guide.ask.yes`: Yes, I have one
+- `installer.guide.back`: Back
+- `installer.guide.checknote`: When you go on, the installer checks that this step is done. If it is not, it stops before creating anything and offers Check again.
+- `installer.guide.faq`: Questions people ask at this step
+- `installer.guide.next`: I have done this, go on
+- `installer.guide.plan.cost`: About $5 a month, paid to Cloudflare and never to Civicsmith. You can cancel it in the same place.
+- `installer.guide.plan.do`: In the Cloudflare dashboard open Workers & Pages, then Plans, choose Workers Paid, and enter a card when it asks.
+- `installer.guide.plan.title`: Choose Workers Paid and add a payment method
+- `installer.guide.plan.why`: Civicsmith's programs need Cloudflare's Workers Paid plan to run for a team.
+- `installer.guide.q.access.a`: The installer can create and update your team's programs and storage, and nothing else. It keeps no access afterwards. You can remove everything from the installer's page or in the Cloudflare dashboard.
+- `installer.guide.q.access.q`: What can Civicsmith see and do in my account, and how do I remove it?
+- `installer.guide.q.card.a`: No. You give your card to Cloudflare only. Civicsmith never sees it.
+- `installer.guide.q.card.q`: Is my card shared?
+- `installer.guide.q.cost.a`: Cloudflare charges about $5 a month for Workers Paid, plus a little for storage beyond its free allowance. You pay Cloudflare only. To stop, cancel the plan in the Cloudflare dashboard.
+- `installer.guide.q.cost.q`: What does it cost, who is paid, and how do I stop paying?
+- `installer.guide.q.existing.a`: Use that account. Civicsmith adds its own parts under its own names and leaves what you already have alone, and the installer checks there is room.
+- `installer.guide.q.existing.q`: What if I already use Cloudflare?
+- `installer.guide.q.own.a`: So your team's records are yours alone. Civicsmith's publisher keeps none of them and cannot open your account.
+- `installer.guide.q.own.q`: Why my own account?
+- `installer.guide.q.stuck.a`: Stop at any step and come back; nothing is lost. If Cloudflare's own page confuses you, its help pages explain each step, and the installer will say exactly what is missing.
+- `installer.guide.q.stuck.q`: What if I get stuck?
+- `installer.guide.resume`: You can close this page at any step. Come back to this address and it opens at the step you were on.
+- `installer.guide.signin.cost`: This step costs nothing.
+- `installer.guide.signin.do`: Choose your team's short name on the next page, then continue to Cloudflare, sign in, and choose Allow.
+- `installer.guide.signin.title`: Sign in and choose Allow
+- `installer.guide.signin.why`: Signing in lets Cloudflare ask you, on its own page, whether Civicsmith may set things up. You stay in control of that permission.
+- `installer.guide.step`: Step {n} of {total}
+- `installer.guide.storage.cost`: R2 has a free allowance; Cloudflare charges only for use beyond it, and shows the price at the checkout.
+- `installer.guide.storage.do`: In the dashboard open Storage & databases, then R2, then Overview, and complete the checkout that adds an R2 subscription.
+- `installer.guide.storage.title`: Turn on R2 storage
+- `installer.guide.storage.why`: Your team's documents and evidence are kept in R2, Cloudflare's storage.
+
+**Deferred / other modules.** `words-reads.json` (design's) lacks the 63 keys. The generated bundle and `invite-page.mjs` are untouched; the bundle is stale (BOB regenerates).
+
+Size (session_0133bNMzhnXsy441ZfjLU6xR): test runs 62, module lines 3262
