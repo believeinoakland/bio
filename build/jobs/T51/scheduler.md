@@ -158,3 +158,37 @@ Size (session_01Avk4ZxytfuErZjqjRYMN2B): test runs 7, module lines 941
 ## J7 · COMPLETE
 
 G70 applied: per-alarm logging (scheduled_for, started, ended, next_set_for, gap_ms) in the sched_beat heartbeat and one structured line; no pace or rule changed. r7-pace.test.mjs red then green; scheduler suite 163/163; plane watchdog 10/10; format, architecture, coverage, ownership 0 failures. Platform read (P) is yours after the redeploy. Proposed R28 line, stale bundle note and size are in my record (de70118258).
+
+## Fix round 9 · G91, G95, G94, G92, G123g (SCHEDULER #43, session_01YK5oJDSuoRHrdsfRWfQ9cd, depth 2)
+
+Tranche/T51 merged first; the suite was green there (163) before any edit. Providers read: test-support's `alarmDouble` (`bio-plane/test/alarm-double.mjs`, merged).
+
+**What changed** (`bio-plane/src/scheduler/index.mjs`):
+- R30 (G91) `onAlarm` (about :590-:665): the consumers share a budget (`FIRING_BUDGET_MS` 10 s, private; the constructor takes `budgetMs`, tests inject 50 ms). Each tick is raced against what is left of the budget; when it is spent no further consumer starts, the firing reconciles and ends, and the heartbeat's `rotate_from` names the consumer the next firing begins at (wrapping; null when a firing reached every consumer). `pending-work` takes its turn like any other. Each consumer's call is one line `{"scheduler_consumer": {name, started, ended, outcome}}` (`#call`): written at the slow threshold (`slowMs`, default 1 s, outcome `running`, `ended` null) while the call is still going, and when it ends. The heartbeat carries `slowest: {name, ms}` of the firing.
+- R31 (G92, scheduler's share) a call that outlasts the budget goes into `#inflight` (not abandoned): later firings neither ask its `due` nor start it; `#reconcile` and `#oldestOverdue` skip it (no spin, not "owed"); on settling it arms the alarm; its result (or `{error}`) is taken at the next firing. The in-flight names are in the heartbeat (`inflight`).
+- R32 (G123g) `tick(now, rank, started)`: the third argument is the instant the consumer's own work began (`max(Date.now(), now)`), forwarded through the R27 holding wrapper; plane-2 reads it for `last_ms`. `last_mem` is not the scheduler's (NULL unmeasured is plane's instrument).
+- R33 re-entry: the heartbeat is read from storage at the start of every run (`#beat = null`); `inflight` is rewritten from the live set (a cut run's calls died with it); `start()` clears a `running_since` a cut run left.
+- R28 (G95) `health()`: `stale` per K4807 (2)/K4811 (5); it reads the firing's END, `ended` (a new instant already stored by G70), falling back to `last_run` when absent. Returns `watchdog_ran` too. R29 (G94) `watch` records `watchdog_ran` (its own clock, the `now` argument defaulting to `Date.now()`) and answers it.
+
+**Per cause, the four fields.**
+- G91 (1) cause as the plan: the unbounded sequential await (`onAlarm` :589-600 before); the part not yet known (which consumer is slow) is named by the per-consumer line, platform check P is BOB's. (2) gap: the old storage double answered `getAlarm()` at all times and its consumers answered at once; fixed by `alarmDouble` and gated consumers. (3) failing-first `r8-budget.test.mjs`, RED on tranche/T51's `index.mjs` (run with a 2 s test timeout, since the old firing awaits the gate for ever): `✖ R30: a firing whose first consumer outlasts the budget starts no further consumer ... (2003ms)`, `✖ R30: rotation ... (2002ms)`, `✖ R30: every consumer a firing runs is one structured line ... (2001ms)`, `✖ R31: a consumer whose call outlasts the budget is in flight ... (2002ms)`, `✖ R31: a call that is rejected after its firing ... (2002ms)`, `✖ R32 ... AssertionError`, `✖ R33 (a start clears the cut run's running_since)`; GREEN: 11 of 11. (4) L at the unit level only; the real-alarm Miniflare run with the 40 s scanner is plane-1's `r8-headofline` and the seam file's section G91.
+- G95 (1) cause as the plan (`health` :709-716 before: a completed firing reset the clock). (2) gap: `spent.test.mjs` asserted the definition on a double; `r8-stale.test.mjs` confronts it with the walker's numbers. (3) RED on the old code: `✖ stale is true for the walker's numbers` (691 s), `✖ ... one firing has run 400 s`, `✖ ... reads the firing's end`, `✖ a real firing ... a stall of completed firings`; GREEN 6 of 6; the five controls pass both ways. (4) N, arithmetic on instants; the seam section G95 is control-plane's. **Reads `ended`** (the end), as the requirement says; `last_run` stays the start instant.
+- G94 (scheduler's share) `watch` records `watchdog_ran`; RED `✖ R29: watch records the cron's slot as watchdog_seen and the instant it ran as watchdog_ran` (no field), GREEN. The route (`WATCHDOG_FIELDS`) is plane's.
+- G123g (scheduler's share) R32: consumer told its own start; `R32` test red then green as above.
+- G92: the in-flight set is this job's share; file-safety's bound is its own.
+
+**Tests amended to the new rule** (`spent.test.mjs`, not weakened): the R28 health test now means five minutes, not two cycles (K4811 (5)): "owed for one cycle (300 s) is not stale" became "owed 299 s" and "a firing a cycle ago" became "a firing two and a half minutes ago"; its two heartbeat deep-equals read the new keys (`rotate_from`, `inflight`, `slowest`) beside the G70 ones.
+
+**Tests and checks.**
+- scheduler suite (`node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/scheduler/`): ℹ tests 180, ℹ pass 180, ℹ fail 0 (was 163; +17: r8-budget 11, r8-stale 6).
+- users (impact.mjs reports 0 modules: no committed diff before this commit; run by hand): plane `watchdog.test.mjs` + `watch.test.mjs` 13 of 13; `fix6-pending` 10, `store` 12, `fix5-r77` 7, `fix4-r75` 7, `sweep` 5, `t33` 16 and tasks `inbox` 30, all green.
+- format 0 failures; architecture (scheduler) 21 product files, 85 imports, 0 failures; coverage (scheduler) 33 of 33 live ids named, 0 failures; words (scheduler) 0 failures (0 inline, 0 plain); ownership (scheduler) 0 failures. `checks/run.mjs`: 26 words failures, none in scheduler (case-checker, pdf-reader, test-support, installer-steps).
+- The new ids are each named by a test of their own: R30 (4 tests), R31 (3), R32 (1), R33 (3).
+
+**Interface for plane-2 (job 37).** `tick(now, rank, started)`; `health()` also answers `watchdog_ran`; `watch()` answers `watchdog_ran`; the heartbeat (`sched_beat`) now also holds `rotate_from`, `inflight` (`{name: started}`) and `slowest` (`{name, ms}`); the scheduler constructor takes `budgetMs` and `slowMs` (defaults 10 s, 1 s).
+
+**Proposed requirement wording (BOB writes).** R28: add "`ended` is the instant the firing ended, stored with the heartbeat"; R30: "the heartbeat holds `rotate_from` (the consumer the next firing begins at, null when the last reached every consumer), `inflight` and `slowest`"; R32: "the instant is the third argument of `tick`".
+
+**Deferred:** none. **Other modules:** none. **Generated artifacts made stale:** `bio-plane/dist/bio-plane.bundled.mjs` carries scheduler source; BOB regenerates. **Census ops:** none. **Rows owed to UX-DESIGN:** none (no sentence). **New files outside my paths:** none.
+
+Size (session_01YK5oJDSuoRHrdsfRWfQ9cd): test runs 14, module lines 1027

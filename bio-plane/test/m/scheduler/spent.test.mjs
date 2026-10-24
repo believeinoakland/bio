@@ -100,26 +100,26 @@ test("R28: a request that finds owed work with no alarm, or a spent one, arms it
   assert.deepEqual(sets(st), []);
 });
 
-test("R28: health is stale when work has been owed for two cycles with no firing, false otherwise, and records the last firing", async () => {
+test("R28: health is stale when work has been owed five minutes with no firing completed in them, false otherwise, and records the last firing", async () => {
   const cycle = HEALTH_CYCLE_MS;
   const mk = (wake) => { const { c } = owed(wake); const w = world(); w.s.register("scheduler-test", c); return w; };
   let { s, st } = mk(NOW - 3 * cycle);
   let h = await s.health(NOW);
   assert.deepEqual([h.last_run, h.oldest_overdue, h.stale], [null, NOW - 3 * cycle, true], "owed for three cycles, never run");
-  ({ s } = mk(NOW - cycle));
-  assert.equal((await s.health(NOW)).stale, false, "owed for one cycle");
+  ({ s } = mk(NOW - cycle + 1000));
+  assert.equal((await s.health(NOW)).stale, false, "owed under five minutes");
   ({ s } = mk(NOW + cycle));
   h = await s.health(NOW);
   assert.deepEqual([h.oldest_overdue, h.stale], [null, false], "nothing owed");
   ({ s, st } = mk(NOW - 3 * cycle));
   await s.onAlarm(NOW - 3 * cycle + 1);              // a firing records its instant, durably
-  const { scheduled_for, started, ended, next_set_for, gap_ms, ...beat } = st.beat.get("sched_beat");   // G70's per-firing fields are r7-pace.test.mjs's
+  const { scheduled_for, started, ended, next_set_for, gap_ms, rotate_from, inflight, slowest, ...beat } = st.beat.get("sched_beat");   // G70's per-firing fields are r7-pace.test.mjs's, G91's are r8-budget.test.mjs's
   assert.deepEqual(beat, { last_run: NOW - 3 * cycle + 1, running_since: null, watchdog_seen: null });
   assert.equal(started, NOW - 3 * cycle + 1);
   ({ s, st } = mk(NOW - 3 * cycle));
-  st.beat.set("sched_beat", { last_run: NOW - cycle });        // the last firing was a cycle ago, work has been owed longer
+  st.beat.set("sched_beat", { last_run: NOW - cycle / 2 });    // the last firing was two and a half minutes ago, work has been owed longer
   h = await s.health(NOW);
-  assert.deepEqual([h.last_run, h.stale], [NOW - cycle, false], "a firing within two cycles");
+  assert.deepEqual([h.last_run, h.stale], [NOW - cycle / 2, false], "a firing completed within five minutes");
   ({ s, st } = mk(NOW - 3 * cycle));
   st.beat.set("sched_beat", { last_run: NOW - 5 * cycle / 2 });
   assert.equal((await s.health(NOW)).stale, true, "owed, and no firing for two cycles");
@@ -191,7 +191,7 @@ test("R29: a firing sets running_since when it starts and clears it when it ends
   s.register("scheduler-test", consumer("ledger", { key: "ledger", due: NOW, wake: NOW + 90e3, tick: () => { during = { ...st.beat.get("sched_beat") }; return {}; } }));
   await s.onAlarm(NOW);
   assert.equal(during.running_since, NOW, "set before any tick");
-  const { scheduled_for, started, ended, next_set_for, gap_ms, ...beat } = st.beat.get("sched_beat");   // G70's per-firing fields are r7-pace.test.mjs's
+  const { scheduled_for, started, ended, next_set_for, gap_ms, rotate_from, inflight, slowest, ...beat } = st.beat.get("sched_beat");   // G70's per-firing fields are r7-pace.test.mjs's, G91's are r8-budget.test.mjs's
   assert.deepEqual(beat, { last_run: NOW, running_since: null, watchdog_seen: null });
   assert.equal(started, NOW);
   const bad = world();
