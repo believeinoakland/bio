@@ -1,6 +1,6 @@
 # inquiry-grammar (T51)
 
-**Status** · session_01B4tHNxMTJamTy5UFQiCoZy · depth 2 · WORKING · handled B7
+**Status** · session_01B4tHNxMTJamTy5UFQiCoZy · depth 2 · COMPLETE · handled B7
 
 ## Completion (CR-8)
 
