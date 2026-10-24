@@ -279,3 +279,5 @@ Size (session_01Aitu5ptyoRC1Hw82dyhsuk): test runs 14, module lines 3745
 ## J16 · COMPLETE
 
 COMPLETE (CHANGE B15). copyMaterials was already concurrent (merged); the 38 came from the sitting's members: prepared one after another, copyFinding part by part, and the materials' copy then the members' copies in sequence. Now: image+list together, members prepared together (first refusal in sitting order), copyFinding in groups of 8, materials and member copies together. Red first (sitting.test.mjs: gatefacts in flight 1; r8-chain copyFinding: peak 1), green. Control-plane's r8-caseratify-calls.test.mjs run against this code from its branch: longest chain 24 (was 38), 2/2 pass. ratification 326/326; 198 tests of users naming caseratify pass; format, architecture, coverage 59/59, words, ownership 0 failures. R60 reworded in the requirements file; record section pushed.
+
+Ring failed: BOB session_017crmqx6Y4AZnxrNGEDoExR is archived, so J16 (COMPLETE) is the message; BOB's backstop reads it (mechanics §13).
