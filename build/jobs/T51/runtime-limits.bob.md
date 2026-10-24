@@ -210,3 +210,10 @@ Mail with `--module runtime-limits`; record `build/jobs/T51/runtime-limits.md` (
 17. `image`, `picture_source`: 603,979,776 bytes for all three, key `limit.image.picture_source` (K4859, PDF-PIXELS #9's J5).
 18. `ocr`, `picture_edge`: 4,096 pixels for all three (a count), key `limit.ocr.picture_edge` (K4860, OCR-WORKER #10's J5).
 19. `document`, `part_bytes`: standard 104,857,600, alpha 33,554,432, protective 33,554,432, key `limit.document.part_bytes` (K4860, DOC-CLEAN #4's J4).
+
+## B5 · CHANGE
+
+CHANGE (K4862). You are merged (rows 1-19). Three more rows, each exactly as given, then test, check and COMPLETE again (merge the tranche first):
+20. `image`, `rows_pixels`: 201,326,592 pixels for standard, alpha and protective (a count; 16384 x 12288, today's photo ceiling of the rows route), key `limit.image.rows_pixels`.
+21. `pdf`, `object_stream`: change its alpha and protective figures to 33,554,432 (32 MiB; standard as it is if higher, else 33,554,432): the 16 MiB protective figure refused a real govinfo file's 18.55 MiB object stream.
+22. `pdf`, `xmp`: 2,097,152 bytes for all three, key `limit.pdf.xmp`.
