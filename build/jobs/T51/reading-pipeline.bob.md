@@ -1135,3 +1135,9 @@ The PDF plan's I1-I14, re-cut for a sheet. Each is a sentence for the module nam
 - Add · a workbook refused with the count of its cells (G137e); a light-kind file refused over 50 MB or 1,048,576 rows with the figure (G131i)
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+## B43 · CHANGE
+
+CHANGE (K4904): two additions to your job (40), from EXTRACTION #41 (job 28). Merge tranche/T51 and read plan section 2c items 8 and 9 (`build/plan/fix-round-9-T51.md`, "Section 2c items added by BOB #277") whole.
+- Item 8: `read(source, cursor, budget, {skipKilled: true})` steps past a window (text window, slide, sheet block) that killed its reader three times: reads nothing at `cursor`, answers `{units: [], next, more, counters: {written: 0, skipped: 1, owed: 0, failed: 0}, stated: {cursor, why: "UNIT_KILLED_READER"}}`, `next` the following window's cursor; the stated window is kept on the reading and said to the member with a stand-in sentence (R-SILENT, R-WORDS). Red first: a source whose window at a cursor throws, read with `skipKilled`, answers the next cursor and the last line after it is searchable (R-STOP).
+- Item 9: a reading lists `folio_pages: [page numbers]`, the pages whose only text is a folio's glyphs over a picture (D-635's `image_content_unread`), so extraction's pass (which now rebuilds pages from stored units, K4901) OCRs them. Absent means none; new data only.
