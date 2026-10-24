@@ -18,10 +18,8 @@ import { isOdfTextPart } from "../odf.mjs";
 const MiB = 1048576;
 /* R131 (1): the most of a PDF one member request reads (runtime-limits' row, K4901) */
 export const READING_DEFER_PDF_BYTES = boundOf("pdf", "request_bytes");
-/* R131 (1): the most of any other kind one member request reads, stored, and of a container's declared unpacked text: 3 MiB, text and office files being read at
-   about 1.5 s a MiB in the object (fix round 6, G5). PROPOSED; BOB RECORDS the row (kind `text`, name `request_bytes`, standard, alpha and protective 3 MiB,
-   key `limit.text.request_bytes`; control-plane J50): no `READ_BOUNDS` row holds it yet. */
-export const READING_DEFER_OTHER_BYTES = 3 * MiB;
+/* R131 (1): the most of any other kind one member request reads, stored, and of a container's declared unpacked text (runtime-limits' row `text.request_bytes`, K4919) */
+export const READING_DEFER_OTHER_BYTES = boundOf("text", "request_bytes");
 /* R131 (1): the most a reading assembles from parts (reading-pipeline's `MULTIPART_READ_MAX`, the office text row), so a capture held in more is never read at the door */
 export const READING_PARTS_MAX = boundOf("office", "text_bytes");
 
