@@ -2477,7 +2477,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   const page = () => {
     const c = cte(true);
     if (!rank && !passageMatch)
-      return { sql: `${c.sql}\nSELECT ${cols}, NULL AS snippet, NULL AS snippet_from FROM scope s ${rowJoin}${joinRanked}\n`
+      return { sql: `${c.sql}\nSELECT ${cols}, NULL AS snippet, NULL AS snippet_from, NULL AS snippet_unit FROM scope s ${rowJoin}${joinRanked}\n`
                   + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, ...gate.args, lim, off] };
     /* D-447: the snippet and NOT the score — the answer publishes the ORDER relevance produced, never its number.
        The snippet is cut for the PAGE's rows only, after the order and the LIMIT: `snippet()` re-reads a row's text,
@@ -2495,20 +2495,26 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
         + ` FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid = p._fid)`
       : `NULL`;
     const tsArgs = rank ? [snip, snip, rank] : [];
-    const ps = passageMatch
-      ? `(SELECT snippet(${pm.ftsTable}, ${pm.ftsColumn}, '[', ']', '\u2026', ?) FROM ${pm.table} ct`
+    /* One selection of the first matching unit serves both columns (R33's snippet, R34's unit): the same rows in the same
+       order, so the unit named is the unit cut. R34 (fix round 9; K4922): the caller reads its kind and extent by key. */
+    const firstUnit = (select) => passageMatch
+      ? ["(SELECT", select, "FROM", pm.table, "ct"].join(" ")
         + ` JOIN ${pm.ftsTable} ON ${pm.ftsTable}.rowid = ct.rowid`
         + ` WHERE ct.${pm.key} = p.bundle_id AND ${pm.ftsTable} MATCH ?`
         + ` ORDER BY ct.capture_sha ASC, ct.seq ASC, ct.extent_kind ASC, ct.extent ASC LIMIT 1)`
       : `NULL`;
+    const ps = firstUnit(`snippet(${pm.ftsTable}, ${pm.ftsColumn}, '[', ']', '\u2026', ?)`);
     const psArgs = passageMatch ? [snip, passageMatch] : [];
+    const pu = firstUnit(`ct.rowid`);
+    const puArgs = passageMatch ? [passageMatch] : [];
     return { sql: `${c.sql}\nSELECT ${qcols}, COALESCE(q.ts, q.ps) AS snippet,`
-                + ` CASE WHEN q.ts IS NOT NULL THEN 'text' WHEN q.ps IS NOT NULL THEN 'passage' END AS snippet_from\n`
-                + `FROM (SELECT ${pcols}, p._pos AS _pos, ${ts} AS ts, ${ps} AS ps\n`
+                + ` CASE WHEN q.ts IS NOT NULL THEN 'text' WHEN q.ps IS NOT NULL THEN 'passage' END AS snippet_from,`
+                + ` CASE WHEN q.ts IS NULL AND q.ps IS NOT NULL THEN q.pu END AS snippet_unit\n`
+                + `FROM (SELECT ${pcols}, p._pos AS _pos, ${ts} AS ts, ${ps} AS ps, ${pu} AS pu\n`
                 + `FROM (SELECT ${cols}, s.fid AS _fid, ROW_NUMBER() OVER (ORDER BY ${order}) AS _pos `
                 + `FROM scope s ${rowJoin}${joinRanked}\n`
                 + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?) p) q\nORDER BY q._pos`,
-             args: [...c.args, ...tsArgs, ...psArgs, ...gate.args, lim, off] };
+             args: [...c.args, ...tsArgs, ...psArgs, ...puArgs, ...gate.args, lim, off] };
   };
   const count = () => {
     const c = cte(false);
