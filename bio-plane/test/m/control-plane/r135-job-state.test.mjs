@@ -153,33 +153,19 @@ test("R135: `owedwork` shows a digest's rows to a viewer who can see the digest 
   assert.equal(f.json.result.owed.length, 1, "the administrator sees the rows");
 });
 
-/* ---- the plane's own rows, through plane's `owedwork` ---- */
+/* ---- finished and refused rows, through plane's `jobrow` (R107) ---- */
 
-test("R135 (plane R97, R80) (plane R107): the row the plane really answers for a digest by `jobrow` give `jobStateOf` its cursor position, its refusal's verdict and its last progress", async () => {
-  /* the plane's own job table over a node:sqlite database answering as workerd's `sql.exec` does (the plane suites' shape, without the whole object) */
-  const { DatabaseSync } = await import("node:sqlite");
-  const { pendingOf, pendingOps } = await import("../../../src/plane/pending.mjs");
-  const db = new DatabaseSync(":memory:");
-  const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
-  const cursor = (rows) => { let i = 0; const c = { next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; }, [Symbol.iterator]() { return c; },
-    toArray() { const out = rows.slice(i); i = rows.length; return out; } }; return c; };
-  const sql = { exec(q, ...args) { const st = db.prepare(q); return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), [])); }, get databaseSize() { return 0; } };
-  const ctx = { storage: { sql, transactionSync: (fn) => fn(), getAlarm: async () => null, setAlarm: async () => {}, deleteAlarm: async () => {} }, id: { toString: () => "do" }, waitUntil() {} };
-  const jobs = pendingOf(ctx);
-  jobs.migrate();
-  const ask = async (sha) => { const a = pendingOps(jobs, new URL(`http://do/jobrow?sha=${sha}&kind=reading`), { health: async () => ({}), administers: () => true }).jobrow(); return { owed: a.row ? [a.row] : [] }; };
-  const A = "a1".repeat(32), B = "b2".repeat(32);
-  /* a reading with a cursor and a count owed */
-  assert.equal(jobs.registerJob({ kind: "reading", sha: A, cursor: { page: 24, pages: 130 }, owed: 106 }).ok, true);
-  const listed = await ask(A);
-  const j = jobStateOf(listed.owed);
-  assert.equal(j.state, "queued", "the state is the plane's own");
-  assert.equal(j.owed, 106, "and its counter");
-  assert.deepEqual(j.cursor, { at: 24, of: 130 }, `the cursor as a position (the row the plane lists carries: ${Object.keys(listed.owed[0] ?? {}).join(", ")})`);
-  /* a reading refused by a bound: listed, final, with the verdict the plan step stated */
+test("R135 (plane R107): a finished row and a refused row are answered whole by `jobrow` and the door states them: the cursor, the last progress and the refusal's verdict; control: an absent row is `state: null`", async () => {
   const verdict = { ok: false, size: 30000000, limit: 25165824, bound_key: "limit.pdf.bytes" };
-  assert.equal(jobs.registerJob({ kind: "reading", sha: B, verdict }).ok, true);
-  const refused = jobStateOf((await ask(B)).owed);
-  assert.equal(refused.state, "refused");
-  assert.deepEqual(refused.verdict, { size: 30000000, limit: 25165824, bound_key: "limit.pdf.bytes" }, "the refusal's verdict reaches the member");
+  const rowsBy = { finished: row({ job_state: "finished", state: "finished", written: 130, cursor: { page: 130, pages: 130 }, last_progress_at: 1792845527045 }),
+                   refused: row({ job_state: "refused", state: "refused", verdict }), none: null };
+  for (const [name, expected] of Object.entries({
+    finished: { state: "finished", cursor: { at: 130, of: 130 }, last_progress_at: 1792845527045 },
+    refused: { state: "refused", verdict: { size: 30000000, limit: 25165824, bound_key: "limit.pdf.bytes" } },
+    none: { state: null } })) {
+    const w = world({ answer: (c) => (c.route === "reading" ? ok(readingAnswer(true)) : c.route === "jobrow" ? ok({ ok: true, row: c.params.kind === "reading" ? rowsBy[name] : null }) : null) });
+    const r = await call(w.env, { op: "reading", token: w.S.ann, params: { sha256: SHA } });
+    assert.equal(r.status, 200, r.text);
+    for (const [k, v] of Object.entries(expected)) assert.deepEqual(r.json.result.job[k], v, `${name}: ${k}`);
+  }
 });
