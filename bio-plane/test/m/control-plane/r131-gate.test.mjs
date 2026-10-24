@@ -4,7 +4,7 @@
    ceiling and the standard's a deferral); `readingVerdict`/`containerUnpacked` look into a stored container through the evidence bucket (`env.CAPTURES.get(key, {range})`, a
    fake here) at its declared unpacked text (one fixture per container kind, small stored and over the bound unpacked, deferred with `unpacked_estimate`; a small ODS inline; a
    lying or corrupt directory deferred as `lying`; a file that is no ZIP `container: false`), and the grep of R132: no numeric literal for a ceiling in `src/control-plane/*.mjs`
-   but the one marked "proposed; BOB records". Counts and values only (R-CLOCK). Controls beside every case (K874).
+   (the 3 MiB is now the `text.request_bytes` row). Counts and values only (R-CLOCK). Controls beside every case (K874).
 
    Red against the tree before round 9's change (`tooBigToReadInline`, which counted a container's STORED bytes and kept `READING_DEFER_PDF_BYTES` a literal): the R131 container
    cases (a 1 MB ODS unpacking to 4 MiB was read inline), the `stated` cases' `{size, bound, key}` (the old gate answered a boolean), and the R132 grep (the literals 2 MiB, 3 MiB,
@@ -30,10 +30,11 @@ const inPartsOf = (total) => { const n = Math.ceil(total / (8 * MiB)); return Ar
 
 /* ---- the bounds the gate quotes ---- */
 
-test("R132 (G124a): the gate's ceilings are READ_BOUNDS rows read through boundOf: the PDF defer is `pdf.request_bytes`, the parts ceiling is `office.text_bytes`, and the one ceiling with no row yet is the proposed 3 MiB", () => {
+test("R132 (G124a): the gate's ceilings are READ_BOUNDS rows read through boundOf: the PDF defer is `pdf.request_bytes`, the parts ceiling is `office.text_bytes`, and the inline ceiling of every other kind is `text.request_bytes` (3 MiB)", () => {
   assert.equal(READING_DEFER_PDF_BYTES, boundOf("pdf", "request_bytes"));
   assert.equal(READING_PARTS_MAX, boundOf("office", "text_bytes"));
-  assert.equal(READING_DEFER_OTHER_BYTES, 3 * MiB, "proposed; BOB records (control-plane J50): the one figure the gate holds that no row holds yet");
+  assert.equal(READING_DEFER_OTHER_BYTES, boundOf("text", "request_bytes"));
+  assert.equal(READING_DEFER_OTHER_BYTES, 3 * MiB, "the figure BOB recorded (K4919)");
   assert.deepEqual([wholeRowOf("pdf"), wholeRowOf("csv"), wholeRowOf("text"), wholeRowOf("other")], [["pdf", "bytes"], ["csv", "bytes"], ["text", "bytes"], ["pdf", "bytes"]]);
 });
 
@@ -228,17 +229,13 @@ test("R131 (G126d): the gate looks into a container only for a document its size
 
 const SRC = fileURLToPath(new URL("../../../src/control-plane/", import.meta.url));
 
-test("R132 (G124a): no numeric literal for a ceiling stands in `src/control-plane/*.mjs` but the one marked \"proposed; BOB records\" (the 3 MiB), which sits in reading-gate.mjs beside that mark", () => {
+test("R132 (G124a): no numeric literal for a ceiling stands in `src/control-plane/*.mjs`: every ceiling is a READ_BOUNDS row read through boundOf", () => {
   const found = [];
   for (const f of readdirSync(SRC).filter((n) => n.endsWith(".mjs")).sort()) {
     const text = readFileSync(join(SRC, f), "utf8");
     for (const c of ceilingConstantsIn(text)) found.push({ file: f, ...c });
   }
-  assert.deepEqual(found.map((c) => `${c.file}:${c.name}`), ["reading-gate.mjs:READING_DEFER_OTHER_BYTES"],
-    `ceiling constants written as numbers in the module: ${found.map((c) => `${c.file}:${c.line} ${c.name} = ${c.rhs}`).join("; ")}`);
-  const gate = readFileSync(join(SRC, "reading-gate.mjs"), "utf8");
-  const at = gate.indexOf("export const READING_DEFER_OTHER_BYTES");
-  assert.ok(at > 0 && /PROPOSED; BOB RECORDS/i.test(gate.slice(Math.max(0, at - 600), at)), "the figure carries the mark that BOB records the row");
+  assert.deepEqual(found.map((c) => `${c.file}:${c.line} ${c.name} = ${c.rhs}`), [], "ceiling constants written as numbers in the module");
   /* the old literals are gone from the door: the PDF defer, the whole-read and the parts ceilings and the 20/24 MiB figures are not written as numbers in index.mjs */
   const index = readFileSync(join(SRC, "index.mjs"), "utf8").split("\n").filter((l) => !/^\s*(?:\/\/|\/\*|\*)/.test(l)).join("\n");
   for (const lit of [/\b2097152\b/, /\b3145728\b/, /\b20971520\b/, /\b25165824\b/, /\b24\s*\*\s*(?:1024|MiB)\b/, /\b20\s*\*\s*(?:1024|MiB)\b/, /\b3\s*\*\s*(?:1024\s*\*\s*1024|MiB)\b/, /\b2\s*\*\s*(?:1024\s*\*\s*1024|MiB)\b/])

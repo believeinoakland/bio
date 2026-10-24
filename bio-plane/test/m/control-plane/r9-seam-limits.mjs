@@ -368,15 +368,28 @@ export function sections(kit, counting) {
   const press = makeKit({ tag: TAGP, counting: true, serviceBindings: { OCR_WORKER }, bindings: { CIVICSMITH_TEST_INSTANCE: `${TAGP}-town` } });
   const ready = (async () => {
     const entry = wrapScript();
-    const token = "`${name}.${String(key)}`";
-    if (entry.script.split(token).length - 1 < 2) throw new Error("wrap-entry.worker.txt no longer names an R2 call as the press kit expects; update r9-seam-limits.mjs");
-    const script = entry.script.split(token).join("`${name}.${String(key)}${key === \"get\" && args[1] && args[1].range ? \".ranged\" : \"\"}`");
+    const must = (text, from, to, what) => { if (!text.includes(from)) throw new Error(`wrap-entry.worker.txt no longer has ${what} as the press kit expects; update r9-seam-limits.mjs`); return text.split(from).join(to); };
+    let script = entry.script;
+    /* a ranged get is told from a whole one */
+    script = must(script, "`${name}.${String(key)}`", "`${name}.${String(key)}${key === \"get\" && args[1] && args[1].range ? \".ranged\" : \"\"}`", "the R2 call's key");
+    /* a call to the OCR member made inside a request (by the Worker or by the object serving it) is counted as `OCR_WORKER.fetch`; the alarm's ticks belong to no request and are not */
+    script = must(script, "const wrappers = new WeakMap();",
+      `const wrappers = new WeakMap();
+const countedService = (svc, sinkOf) => (svc && typeof svc.fetch === "function" ? new Proxy(svc, { get(t, k) { const v = t[k];
+  if (k === "fetch" && typeof v === "function") return (...a) => { const s = sinkOf(); if (s) add(s, "r2", "OCR_WORKER.fetch", 0); return v.apply(t, a); };
+  return typeof v === "function" ? v.bind(t) : v; } }) : svc);`, "the wrapper table");
+    script = must(script, 'if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), sinkOf, "r2", true);',
+      'if (key === "OCR_WORKER") return countedService(target[key], sinkOf);\n        if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), sinkOf, "r2", true);', "the object's environment");
+    script = must(script, 'if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), () => sink, "r2");',
+      'if (key === "OCR_WORKER") return countedService(target[key], () => sink);\n      if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), () => sink, "r2");', "the Worker's environment");
     await press.mf.setOptions({ ...press.OPTIONS, scriptPath: entry.scriptPath, script });
   })();
   after(() => press.mf.dispose());
 
   /* the whole objects an answer's request loaded: the R2 gets with no range, by the Worker and inside the object (a ranged get is `CAPTURES.get.ranged` and a head is `.head`) */
   const wholeGets = (calls) => (calls.r2["CAPTURES.get"]?.n ?? 0) + (calls.object["CAPTURES.get"]?.n ?? 0);
+  /* the calls to the OCR member made INSIDE the request (the alarm's own ticks are no request's) */
+  const ocrIn = (calls) => (calls.r2["OCR_WORKER.fetch"]?.n ?? 0) + (calls.object["OCR_WORKER.fetch"]?.n ?? 0);
   const writesOf = (calls) => Object.keys({ ...calls.r2, ...calls.object }).filter((k) => /\.(?:put|delete)$/.test(k));
   const owedOf = async (sha) => { const q = await press.get(await press.founder(), { op: "owedwork", sha }); return R(q).owed ?? []; };
   const readingOf = async (auth, sha) => R(await press.get(auth, { op: "reading", sha256: sha }));
@@ -419,10 +432,9 @@ export function sections(kit, counting) {
     await ready;
     const { auth } = await press.ownerOf("r9lim-p2");
     const bytes = await generate({ kind: "pdf", seed: "r9lim", size: { pages: 3, lines: 6, bytes: 3 * MiB }, kinds: ["scan"] }).bytes();
-    const before = ocr.calls.length;
     const up = await uploadTo(auth, bytes, { type: "application/pdf", name: "scan.pdf" });
     assert.equal(up.status, 200, JSON.stringify(up.body).slice(0, 300));
-    const inRequest = ocr.calls.length - before;
+    const inRequest = ocrIn(up.calls);
     await fileIt(auth, up.body, "scan.pdf");
     const sha = sha256(bytes);
     const read = await press.until(async () => { const r = await readingOf(auth, sha); return r.found && r.reading && r.reading.tier3_candidate === true ? r : null; }, 240000, 3000);
@@ -434,14 +446,13 @@ export function sections(kit, counting) {
     const d = await scanPdf();
     assert.equal(d.inRequest, 0, "R131: the upload of the scan made no OCR call");
     assert.equal(d.up.body.reading_pending, true, "and owed its reading to the job table");
-    const before = ocr.calls.length;
     const res = await press.plane(`/api/?op=pdfstructure&ocr=1&sha256=${d.sha}`, { headers: d.auth });
     const body = R(await res.json());
     const calls = readCalls(res);
     assert.equal(res.status, 200, JSON.stringify(body).slice(0, 300));
     assert.equal(wholeGets(calls), 0, `the object was not loaded in the request: ${JSON.stringify({ r2: calls.r2, object: calls.object })}`);
     assert.deepEqual(writesOf(calls), [], "and nothing was written to R2");
-    assert.equal(ocr.calls.length - before, 0, "no OCR call was made inside the press");
+    assert.equal(ocrIn(calls), 0, "no OCR call was made inside the press");
     assert.equal(body.ocr_pending, true, "the press answers at once, the pages owed");
     assert.equal(body.reading_pending, true);
     const rows = await owedOf(d.sha);
@@ -452,13 +463,12 @@ export function sections(kit, counting) {
 
   test("R9 seam §15 (G126e; R131, R125; K4901 (2)): the plain `op=pdfstructure` of that scan (over the request bound) reads nothing in the request: it states the file's size and the bound and owes a raised `reading` job; no OCR call, no whole get", { timeout: 900000 }, async () => {
     const d = await scanPdf();
-    const before = ocr.calls.length;
     const res = await press.plane(`/api/?op=pdfstructure&sha256=${d.sha}`, { headers: d.auth });
     const body = await res.json();
     const calls = readCalls(res);
     assert.equal(res.status, 200, JSON.stringify(body).slice(0, 300));
     assert.equal(wholeGets(calls), 0, `no whole get: ${JSON.stringify(calls.object)}`);
-    assert.equal(ocr.calls.length - before, 0);
+    assert.equal(ocrIn(calls), 0);
     assert.deepEqual([body.size, body.limit], [d.size, boundOf("pdf", "request_bytes")], "the size and the bound it was over");
     assert.equal(body.reextraction.owed, true);
     assert.equal(body.reextraction.performed, false);
@@ -467,14 +477,13 @@ export function sections(kit, counting) {
 
   test("R9 seam §15 (G126e, R103; R131, R125; SCAN E4): `op=pagetranscribe` on that scan is answered without loading the object (no whole get; the first KiB by a ranged get at most), makes no OCR call, writes nothing to R2, and leaves its `ocr` row standing", { timeout: 900000 }, async () => {
     const d = await scanPdf();
-    const before = ocr.calls.length;
     const res = await press.plane(`/api/?op=pagetranscribe&sha256=${d.sha}`, { method: "POST", headers: { ...d.auth, "content-type": "application/json" }, body: "{}" });
     const body = await res.json();
     const calls = readCalls(res);
     assert.ok(res.status < 500, `stated, never a failure of the door: ${res.status} ${JSON.stringify(body).slice(0, 300)}`);
     assert.equal(wholeGets(calls), 0, `the object was not loaded in the request: ${JSON.stringify(calls.object)}`);
     assert.deepEqual(writesOf(calls), []);
-    assert.equal(ocr.calls.length - before, 0, "no OCR call inside the request");
+    assert.equal(ocrIn(calls), 0, "no OCR call inside the request");
     assert.ok(body.ok === true || typeof body.reason === "string", "an answer or a refusal by name");
     if (body.ok === true && body.transcription && body.transcription.performed === true)
       assert.equal(typeof body.says, "string", "what was filled is said (the pages filled, never the pages asked: extraction's R103 pins the words)");
@@ -483,7 +492,6 @@ export function sections(kit, counting) {
 
   test("R9 seam §15 (G126e; R131, R125; PDF E11): the press, the plain read and `pagetranscribe` on a TEXT PDF over 2 MiB load no byte of it in the request: no whole get, no OCR call; the press owes nothing (no page lacks a text layer) and the plain read owes a raised `reading`", { timeout: 900000 }, async () => {
     const d = await textPdf();
-    const before = ocr.calls.length;
     const pressed = await press.plane(`/api/?op=pdfstructure&ocr=1&sha256=${d.sha}`, { headers: d.auth });
     const pb = await pressed.json();
     assert.equal(pressed.status, 200, JSON.stringify(pb).slice(0, 300));
@@ -498,7 +506,7 @@ export function sections(kit, counting) {
     const tb = await tr.json();
     assert.ok(tr.status < 500, `pagetranscribe: ${tr.status} ${JSON.stringify(tb).slice(0, 200)}`);
     assert.equal(wholeGets(readCalls(tr)), 0, `pagetranscribe: ${JSON.stringify(readCalls(tr).object)}`);
-    assert.equal(ocr.calls.length - before, 0, "and no OCR call inside any of the three");
+    assert.equal(ocrIn(readCalls(pressed)) + ocrIn(readCalls(plain)) + ocrIn(readCalls(tr)), 0, "and no OCR call inside any of the three");
   });
 
   test("R9 seam §15 (G126a, G126e; R130, R125; SCAN C1, E3): with the OCR member back, the ticks fill the pages the press owed: their words are in `text_units` and no `ocr` row stands", { timeout: 900000 }, async () => {
