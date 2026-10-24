@@ -204,3 +204,14 @@ Size (session_01SPUpVJsJxBhU7hbLvsUMXD): test runs 9, module lines 3700
 ## J17 · COMPLETE
 
 COMPLETE (re B11, B12): R103 and R104 built, record J16. 228 pass; checks 0. Door must pass caller.viewer and stateTiming to bootstrapOp. Re-run on the merged translations R20 at your CHANGE.
+
+## J18 · QUESTION
+
+QUESTION (G118b; best reading below; I carry on with it).
+
+I read the code before relying on the diagnosis: `keptParts` is a `WeakMap` by `env` (setup.mjs:160-186); it can only make "once a minute per isolate". I keep it as the first look and add the shared keep.
+
+1. **Where the shared value lives and how it is read without an extra call.** The object visit `bootstrap` already makes is `/bootstrap` (credentials' route, not mine) and, for a signed-in caller, `/bootstrapfacts` (mine). I put the kept parts in the object's memory (a value with the object's own clock time; the age is answered by the object, so isolates' clocks never meet) and read them in the `/bootstrapfacts` visit a signed-in caller already makes, so a signed-in screen's hop count stays 4 (control-plane r8-hops) on a hit. Two consequences, tell me if you want otherwise:
+   - (a) A stranger (the pre-sign-in poll) makes no `/bootstrapfacts` visit today (my R103 test says "a stranger costs no second hop"). To share for them too, `bootstrap` now makes that one visit for a stranger as well, beside the `/bootstrap` visit, not after it (wall time unchanged), answering the kept parts only, none of the seven. That is one more parallel hop for a stranger. The alternative that adds none is credentials' `/bootstrap` route carrying the kept value; that is another module's change, so I did not take it. If you prefer it, tell me and I make the stranger keep per-isolate only.
+   - (b) On a miss (the isolate that asked the fleet) one write visit follows the ask, once a minute at most, to the same route (a POST of the three flat values; no new route, so plane's route-count test door.test.mjs:140 is not touched by this).
+2. **`isolate;desc=<id>`.** The door's clock states a module's entry as `stateTiming(name, ms)`, a `dur` only (`control-plane/phase-clock.mjs:78`); a `desc` cannot be stated through it. I call `stateTiming("isolate", ageMs, id)` (a third argument the clock ignores today) and also state `isolate-<id>;dur=<age>`, which the clock carries as it is, so the next deploy shows the isolates with no other module's change. For the exact entry you asked for, control-plane's `stateTiming(name, ms, desc)` needs a one-line extension (I will REPORT it); nothing of mine waits on it.
