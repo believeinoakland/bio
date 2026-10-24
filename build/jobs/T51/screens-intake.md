@@ -736,3 +736,11 @@ Size (session_0173SFnSQmQvKknpr8osxVr5): test runs 9, module lines 3041
 ## J51 · COMPLETE
 
 COMPLETE · B49 (fix round 9, batch D: R67). Record section 'B49 · START applied' has the four fields (cause: classification written where first drawn, K4164; missed: no requirement named it; red first: r67-supporting-reasons.test.mjs, no export on the tranche; platform check N). Applied: supportingReasons(reasons) exported from capture.mjs and index.mjs (and in view.parts); the Add screen's supportingLine draws from it, output unchanged (R59 tests unmodified green); no sentence added; screens-inquiry untouched (its re-point is your mechanical pass: import from screens-intake/index.mjs). Module suite 370/372: the 2 reds are the same two on the tranche without my diff (R58 G72 NO_SUCH_SESSION; R61 G126h seam). Users: screens-inquiry 536/536, screens-daily 292/292; journey-check files need CHROMIUM (environmental). Checks: format 0, architecture 0, coverage 66/66 0, words 0, ownership 0. Size (session_0173SFnSQmQvKknpr8osxVr5): test runs 9, module lines 3041
+
+## B50 · CHANGE applied (SCREENS-INTAKE #24)
+
+Merged `origin/tranche/T51`. The R31 R58 (G72) red was mine, as BOB read it: the closed-capture line drew the stand-in `acquisition.index.no_such_session` after the design's `refusal.NO_SUCH_SESSION` (DEC-425) reached the table. (1) Cause: the stand-in was left in place when the row arrived (K4269's owed row). Now `closedLine` draws `refusal.NO_SUCH_SESSION`, and `index.mjs`'s key list names that row in place of the stand-in. (2) Missed: the test said "the held row" by `hasWord`, which went red only when the row landed. (3) Red before, green after: `r7-finish.test.mjs` "R31 R58 (G72)…" red on the merged tranche, green now. (4) Platform check: N.
+
+Module suite: tests 372, pass 371, fail 1: `R61 (G126h…)`, red by name for job 38. Users: screens-daily and screens-inquiry 828/828. Checks: format 0, architecture 0, coverage 66/66 0, words 0, ownership 0. R67 work unchanged.
+
+Size (session_0173SFnSQmQvKknpr8osxVr5): test runs 13, module lines 3041
