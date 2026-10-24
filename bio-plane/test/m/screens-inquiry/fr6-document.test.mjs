@@ -195,13 +195,16 @@ test("R56 G17 25 themes: 20 are drawn and the list says it is cut; the more cont
 
 /* ------------------------------------------------------------------------------------------------------------------ G19 (supporting files) */
 
-test("R3 G19 a web capture that skipped supporting files says how many were kept of all, with the reason; control: none skipped says nothing", async () => {
+test("R3 G19 a web capture that skipped supporting files says how many were kept of all, with the reason by its code's sentence; control: none skipped says nothing (G110b: the plane's detail and the codes are not drawn)", async () => {
   const doc = (sup) => ({ [D]: { "bundle.md": DOCUMENT_MD, "data/provenance.json": JSON.stringify({ documents: [{ capture: { sha256: SHA, supporting: sup } }] }) } });
-  const p = await open(at, { images: doc({ kept: 400, skipped: 50, total: 450, reasons: [{ reason: "TOO_LARGE", count: 50, limit: 8388608, detail: "50 files were over the 8 MiB a file may be" }] }) });
+  const DETAIL = "fixture detail the plane gave";
+  const p = await open(at, { images: doc({ kept: 400, skipped: 50, total: 450, reasons: [{ reason: "TOO_LARGE", count: 50, limit: 8388608, detail: DETAIL }] }) });
   const line = main(p).querySelector("[data-supporting]");
-  assert.ok(line && text(line).includes("400 / 450") && text(line).includes("50 files were over the 8 MiB a file may be"));
+  assert.ok(line && text(line).includes(word("screen.capture.supporting.kept", { kept: "400", total: "450" })) && text(line).includes(word("screen.capture.supporting.toolarge", { n: "50" })));
+  assert.ok(!text(line).includes(DETAIL), "the plane's own words (`detail`) are never drawn (G110b)");
   const nw = await open(at, { images: doc({ kept: 0, skipped: 0, total: 0, reasons: [], not_walked: "PRIMARY_TOO_LARGE" }) });
-  assert.ok(text(main(nw).querySelector("[data-supporting]")).includes("PRIMARY_TOO_LARGE"), "a page not walked at all says so");
+  assert.ok(main(nw).querySelector('[data-supporting-notwalked="toolarge"]'), "a page not walked at all says so, by the sentence of its kind");
+  assert.ok(!text(main(nw).querySelector("[data-supporting]")).includes("PRIMARY_TOO_LARGE"), "and never draws the code");
   const none = await open(at, { images: doc({ kept: 12, skipped: 0, total: 12, reasons: [] }) });
   assert.ok(!main(none).querySelector("[data-supporting]"));
 });

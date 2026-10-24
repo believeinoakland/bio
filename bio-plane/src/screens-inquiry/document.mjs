@@ -282,6 +282,39 @@ function render(cs, view) {
   const frontTitle = clean(doc.title);
   const docTitle = readTitle || clean(reg0.title) || (frontTitle && frontTitle !== id && (frontTitle !== slug || frontTitle === statedFile) ? frontTitle : "");
   const named = docTitle || statedFile;
+  /* R130 (fix round 9, G135a, G135e; X10, Ob9, S3; K4831 (3)): a kind no reader opens is named, and nothing is offered that would do nothing. The reading itself
+     says it (`reason: UNSUPPORTED_FORMAT` with its `kind`, final: reading-pipeline R54), and that is the whole of the page's knowledge once a reading is held. A copy
+     with no reading yet, or one an earlier release stated "not read as text" and `repairable`, is told apart by what the record states of its kind (its profiled
+     format, the content type its source declared, the name of its file): a type listed here is one reading-pipeline has no reader for, so "Read it" would only
+     state the same sentence. The list is the pipeline's own (its `unreadKindOf`); a kind it adds is drawn by `reading-pipeline.index.unsupported_kind`. */
+  /* R131: the closed list of the kinds a unit names (reading-pipeline R47); `content.part_kind.<kind>` is the word of each */
+  const PART_KINDS = ["body", "footnote", "endnote", "header", "footer", "comment", "tracked_deletion", "text_box", "speaker_note", "master_text", "cell_note"];
+  const UNREAD_KINDS = ["rtf", "email", "legacy_word", "legacy_excel", "legacy_powerpoint", "legacy_office", "tiff", "gif", "webp", "heic", "avif", "bmp", "jp2", "ico"];
+  const KIND_OF_TYPE = { "text/rtf": "rtf", "application/rtf": "rtf", "message/rfc822": "email", "application/msword": "legacy_word", "application/vnd.ms-excel": "legacy_excel",
+    "application/vnd.ms-powerpoint": "legacy_powerpoint", "image/tiff": "tiff", "image/gif": "gif", "image/webp": "webp", "image/heic": "heic", "image/heif": "heic",
+    "image/avif": "avif", "image/bmp": "bmp", "image/x-ms-bmp": "bmp", "image/jp2": "jp2", "image/x-icon": "ico", "image/vnd.microsoft.icon": "ico" };
+  const KIND_OF_EXT = { rtf: "rtf", eml: "email", msg: "email", doc: "legacy_word", xls: "legacy_excel", ppt: "legacy_powerpoint", tif: "tiff", tiff: "tiff", gif: "gif",
+    webp: "webp", heic: "heic", heif: "heic", avif: "avif", bmp: "bmp", jp2: "jp2", ico: "ico" };
+  const recordKind = (() => {
+    const prof = reg0.profile && typeof reg0.profile === "object" ? reg0.profile : {};
+    const fmt = String((prof.format && typeof prof.format === "object" ? prof.format.format : prof.format) || "").toLowerCase();
+    const type = String(prof.source_content_type || prof.content_type || "").toLowerCase().split(";")[0].trim();
+    const ext = (/\.([a-z0-9]+)$/.exec(String(reg0.file || (reg0.capture && reg0.capture.file_name) || "").toLowerCase()) || [])[1] || "";
+    if (KIND_OF_TYPE[type]) return KIND_OF_TYPE[type];
+    if (UNREAD_KINDS.includes(fmt)) return fmt;
+    return !type || type === "application/octet-stream" ? KIND_OF_EXT[ext] || "" : "";
+  })();
+  const readerKind = rv0 && (rdObj && rdObj.reason === "UNSUPPORTED_FORMAT" ? rdObj : rv0.reason === "UNSUPPORTED_FORMAT" ? rv0 : null);
+  const noReader = readerKind ? String(readerKind.kind || "") || "undetermined" : textState === "unread" || textState === "repairable" ? recordKind : "";
+  const basisOf = rdObj && typeof rdObj.basis === "string" ? rdObj.basis.trim() : "";
+  /* "RTF is not read yet", "email is not read yet", "legacy Word is not read yet", "(type) is not read yet": the key of the kind when the words list holds it, else the
+     sentence the reading itself states (the same words, the plane's), else nothing: never a raw key and never a sentence of this module's own */
+  const unreadSaid = (k) => {
+    if (k === "undetermined") return basisOf ? cs.esc(basisOf) : "";
+    const key = UNREAD_KINDS.includes(k) ? "reading-pipeline.index.unsupported_" + k : "reading-pipeline.index.unsupported_kind";
+    return heldWord(key) ? cs.w(key, { kind: k }) : basisOf ? cs.esc(basisOf) : "";
+  };
+  const unreadNote = noReader && unreadSaid(noReader) ? `<p class="mk-note" data-reading="unsupported" data-unsupported-kind="${cs.esc(noReader)}">${unreadSaid(noReader)}</p>` : "";
   let site = ""; if (outside) { try { site = new URL(locator).hostname; } catch { site = ""; } }
   out[0] = cs.title(named ? named : site ? T("document.untitled.web", { site, date: doc.source.retrieved ? cs.date(String(doc.source.retrieved), { year: true }) : "" }) : T("state.undetermined", { reason: "" }), { thing: "document" });
   /* R66: the head's fingerprint is the first one shortened, with its tip */
@@ -298,22 +331,39 @@ function render(cs, view) {
       + (wRead !== null && wTotal !== null && textState !== "reading" ? ` <span class="mk-small" data-words-read="1">${cs.w("screen.document.text.read", { read: String(wRead), total: String(wTotal) })}</span>` : "") + "</span></div>" : "")
     + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w("screen.document.fingerprint.means"))}">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
     + (sha ? `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(sha)}">${cs.w("screen.document.open")}</a></div>` : "") + "</div>");
+  /* R132 (fix round 9, G136e; S13 (i); K4831 (6) (a)): reading does not wait for the scan, said plainly on the page of a copy that was filed (file-safety's own row: the sentence
+     claims nothing of what a scan will find, and does not say that a found threat's text has left search, which waits on the scanner having signatures). A testimony is
+     no file and is scanned by no one, so it carries none. */
+  if (sha && !testimony && heldWord("file-safety.index.reading_is_not_gated")) out.push(`<p class="mk-small" data-scan-policy="1">${cs.w("file-safety.index.reading_is_not_gated")}</p>`);
   /* G41 (D5; K4636): a sheet whose cells the reading does not list (`cells_held`, the names of the sheets) says what is interpreted: its text is read whole and
      searchable, its cells are made for a range when it is opened or cited. One quiet line, read by key; never while the text is still being read (the sentence
      says the text is whole), and never for a reading that names no held sheet. */
   if (cellsHeld && textState !== "reading") out.push(`<p class="mk-small" data-cells-held="1">${cs.w("screen.document.cells_held")}</p>`);
-  /* G19 (fix round 6; acquisition): the supporting files a web capture kept and skipped, with the reasons the capture recorded (`supporting: {kept, skipped, reasons}`
-     on the register document); drawn only when something was skipped, as the sizes kept of all and each reason in the plane's own words (the sentence is owed: stand-in) */
+  /* G19 (fix round 6; acquisition), G110b (fix round 9; K4853): the supporting files a web capture kept and skipped (`supporting: {kept, skipped, total, reasons,
+     not_walked}` on the register document): "N of M supporting files kept" (`screen.capture.supporting.kept`, the Add screen's own row) and, for each kind of
+     reason, one sentence by its key with the count of the codes sharing it (`CAP_REACHED` the cap, `TOO_LARGE` and `BUDGET_EXHAUSTED` too large, any other code
+     unavailable). The answer's `detail` (the renderer's or the browser's own words) and the bare `not_walked` code are never drawn: a page that was not walked at all
+     says so by the sentence of its code's kind (`screen.document.supporting.notwalked.<kind>`, the row owed, stood in as its key). Nothing is drawn when none was
+     skipped and the page was walked. */
   {
     const sup = reg0.capture && reg0.capture.supporting && typeof reg0.capture.supporting === "object" ? reg0.capture.supporting : reg0.supporting && typeof reg0.supporting === "object" ? reg0.supporting : null;
     const kept = sup ? Number(sup.kept) : NaN, skipped = sup ? Number(sup.skipped) : NaN;
     const notWalked = sup && typeof sup.not_walked === "string" ? sup.not_walked : "";
     if (Number.isFinite(kept) && (skipped > 0 || notWalked)) {
       const total = Number.isFinite(Number(sup.total)) ? Number(sup.total) : kept + (Number.isFinite(skipped) ? skipped : 0);
-      /* acquisition R108: each reason `{reason, count, limit?, detail?}`; the renderer's words (`detail`) where it gave them, else the code (the worded sentence is owed) */
-      const why = (Array.isArray(sup.reasons) ? sup.reasons : []).map((r) => (typeof r === "string" ? r : r && typeof r === "object" ? (String(r.detail || r.reason || "") + (r.count ? " \u00d7" + r.count : "")) : "")).filter(Boolean);
-      if (notWalked) why.push(notWalked);
-      out.push(`<p class="mk-note" data-supporting="1">${kept} / ${total}${why.length ? " \u00b7 " + why.map((w) => cs.esc(w)).join("; ") : ""}</p>`);
+      const why = {};
+      for (const r of Array.isArray(sup.reasons) ? sup.reasons : []) {
+        if (!r || typeof r !== "object") continue;
+        const code = String(r.reason || r.code || ""), n = Number.isFinite(r.count) && r.count > 0 ? r.count : 1;
+        const kind = code === "CAP_REACHED" && Number.isFinite(r.limit) ? "cap" : code === "TOO_LARGE" || code === "BUDGET_EXHAUSTED" ? "toolarge" : "unavailable";
+        why[kind] = why[kind] || { n: 0, cap: kind === "cap" ? r.limit : 0 };
+        why[kind].n += n;
+      }
+      const lines = ["cap", "toolarge", "unavailable"].filter((k) => why[k])
+        .map((k) => `<p class="mk-small muted" data-supporting-why="${k}">${cs.w("screen.capture.supporting." + k, { n: String(why[k].n), cap: String(why[k].cap) })}</p>`).join("");
+      const stopped = notWalked ? (/^(TOO_LARGE_TO_PARSE|PRIMARY_TOO_LARGE)$/.test(notWalked) ? "toolarge" : notWalked === "RENDER_PENDING" ? "pending" : "unavailable") : "";
+      out.push(`<div class="mk-note" role="status" data-supporting="1">${skipped > 0 ? `<p>${cs.w("screen.capture.supporting.kept", { kept: String(kept), total: String(total) })}</p>` : ""}${lines}`
+        + (stopped ? `<p class="mk-small muted" data-supporting-notwalked="${stopped}">${cs.w("screen.document.supporting.notwalked." + stopped)}</p>` : "") + "</div>");
     }
   }
   if (ui.gradenote) {
@@ -391,7 +441,7 @@ function render(cs, view) {
       : textState === "repairable" && heldWord("screen.document.reading.repairable") ? cs.w("screen.document.reading.repairable")
       : textState === "stated" && heldWord("screen.document.reading.stated") && Number.isInteger(rv0 && rv0.bytes) ? cs.w("screen.document.reading.stated", { size: sizeWord(rv0.bytes) })
       : comp && typeof comp.why === "string" && comp.why.trim() ? cs.esc(comp.why.trim()) : basisWords ? cs.esc(basisWords) : undetermined("");
-    const statedHtml = textState === "stated" || textState === "repairable" ? `<p class="mk-note" data-reading="stated">${statedSaid}</p>` : "";
+    const statedHtml = noReader && unreadNote ? unreadNote : textState === "stated" || textState === "repairable" ? `<p class="mk-note" data-reading="stated">${statedSaid}</p>` : "";
     /* G13 (R96): a text still being read says how far it has come (R90), and what is drawn of it is never stated as the whole: the passages drawn so far
        ("Passages: N of M", the nearest held words; the row owed is `screen.document.reading.firstn`), with the more act the page bar's own control (the
        choice redraws the page and the next page is read: `op=reading` with `after`). Search and Cite cover what is read, which is what is drawn and stored. */
@@ -439,6 +489,12 @@ function render(cs, view) {
       return keys.every((k) => String(leg[k] === undefined ? "" : leg[k]) === bag[k]);
     };
     const citedHere = (e) => !!chosenFront && (chosenFront.lists.basis || []).some((l) => l && String(l.target) === id && legAt(l, e));
+    /* R131 (fix round 9, G134d): the kind of part a passage came from, in the member's words by key, for a unit that carries one of the closed list; a unit stored
+       without a kind (a reading made before the kind existed) draws none and is never given `body` by guess */
+    const partKind = (u) => {
+      const k = u && typeof u.kind === "string" ? u.kind : "";
+      return PART_KINDS.includes(k) && heldWord("content.part_kind." + k) ? `<span class="mk-small" data-part-kind="${k}">${cs.w("content.part_kind." + k)}</span>` : "";
+    };
     const citedMark = (e) => {
       if (!citedHere(e)) return "";
       const named = askable.find((o) => o.value === chosenQ);
@@ -512,7 +568,7 @@ function render(cs, view) {
       /* R78: the record's page 0 is drawn "Page 1"; the extent a citation sends keeps the record's own number */
       const page = extent && Number.isInteger(extent.page) ? pg(extent.page) : null;
       return `<blockquote class="mk-passage rec" data-passage="${i}">“${cs.esc(String(p.text).trim())}”`
-        + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + citedMark(extent) + "</blockquote>"
+        + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + partKind(p) + citedMark(extent) + "</blockquote>"
         + (extent && askable.length ? cs.act("cite", { label: "document.read.cite",
             data: { found: JSON.stringify({ capture_sha: sha, extent, kind: "passage" }) } }) : "");
     }).join("") + pick + pickHelp + none + repairBlock() + citeDoneHtml() + own("cite");
@@ -538,13 +594,15 @@ function render(cs, view) {
      reads PDFs only: a photograph or other picture is never offered it. The re-read the plane has for a picture is the assistant's reading of its
      page (`pagetranscribe`, extraction R71), offered once while the assistant is reachable and not at all when it is not (the page can still be
      typed). */
-  const PICTURE_FORMAT = /^(jpe?g|png|gif|webp|tiff?|bmp|heic)$/i;
+  /* R130 (G135a): the assistant's reading of a picture's page is for the pictures the plane can open (JPEG and PNG); a GIF, TIFF, WebP, HEIC or BMP is a kind with no
+     reader, named above, and is offered no act */
+  const PICTURE_FORMAT = /^(jpe?g|png)$/i;
   const isPicture = (() => {
     const prof = reg0.profile && typeof reg0.profile === "object" ? reg0.profile : {};
     const recFormat = String((prof.format && typeof prof.format === "object" ? prof.format.format : prof.format) || "");
     const recType = String(prof.source_content_type || prof.content_type || "");
     const recName = String(reg0.file || (reg0.capture && reg0.capture.file_name) || "");
-    if (/^image\//i.test(recType) || PICTURE_FORMAT.test(recFormat) || /\.(jpe?g|png|gif|webp|tiff?|bmp|heic)$/i.test(recName)) return true;
+    if (/^image\//i.test(recType) || PICTURE_FORMAT.test(recFormat) || /\.(jpe?g|png)$/i.test(recName)) return true;
     if (recType || recFormat) return false;
     const rd = rv0 && rv0.reading && typeof rv0.reading === "object" ? rv0.reading : null;
     const ct = String((rd && rd.content_type) || (rv0 && rv0.content_type) || "");
@@ -555,14 +613,16 @@ function render(cs, view) {
      facts above, and draws no act that re-reads it */
   /* R129 (N5): a copy stored with no reading says so and offers to read it now (`readheld`); the sentence and the act are drawn together or not at all */
   /* G8 (fix round 6): "Read it" is also drawn for a statement extraction states `repairable` (an old "(multipart)" final whose bytes now detect), beside the statement */
-  if ((textState === "unread" || textState === "repairable") && sha) {
+  /* R130: a kind with no reader is named and offered no read act; the sentence stands where the act would */
+  if (noReader && textState === "unread" && unreadNote) out.push(unreadNote);
+  if ((textState === "unread" || textState === "repairable") && sha && !noReader) {
     /* its label, `act.readheld.label.document` ("Read it now"), is a row the design owes (K4269); "Read it" (`document.read.title`) stands in */
     const readNow = cs.act("readheld", { label: textState === "repairable" && heldWord("screen.document.reading.repairable.door") ? "screen.document.reading.repairable.door" : "document.read.title", data: { sha } });
     if (readNow) out.push(`<div class="mk-acts" data-readnow="1">${readNow}${own("readheld")}</div>`);
   }
   /* G6, G13: no OCR re-read after a statement that stands (`stated`), beside one "Read it" repairs, or while the text is still being read; the assistant's
      reading of a picture's page (`pagetranscribe`) stays for a picture whose reading states it did not read it */
-  if (rv0 && textState && !["full", "unread", "repairable", "reading", "cut"].includes(textState) && sha && !incomplete) {
+  if (rv0 && textState && !["full", "unread", "repairable", "reading", "cut"].includes(textState) && sha && !incomplete && !noReader) {
     if (isPicture) {
       if (view.reachable && !drewTranscribe) out.push(`<div class="mk-acts">${cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } })}</div>`);
     } else if (textState !== "stated") {
@@ -593,7 +653,7 @@ function render(cs, view) {
   /* R55: a picture whose text the reading could not make out, and a table read flat, say so */
   if (reading.state === "ok" && reading.value && reading.value.reading) {
     const rd0 = reading.value.reading;
-    if (rd0.content_type && /^image\//.test(String(rd0.content_type)) && !(Array.isArray(reading.value.text_units) && reading.value.text_units.length))
+    if (!noReader && rd0.content_type && /^image\//.test(String(rd0.content_type)) && !(Array.isArray(reading.value.text_units) && reading.value.text_units.length))
       out.push(`<details class="mk-details" data-fold="image" open><summary>${cs.w("document.image.unread.summary")}</summary><p class="mk-small">${cs.w("document.image.unread")}</p></details>`);
     if (rd0.tables_flattened === true || rd0.table_flattened === true) out.push(`<p class="mk-note" data-note="table">${cs.w("document.table.flattened")}</p>`);
   }
@@ -1754,6 +1814,11 @@ const words = Object.freeze([
   ...["heading", "help", "says", "other", "other.help", "basis", "basis.help", "again", "refused.basis", "refused.other"].map((k) => "screen.document.connect." + k),
   ...["standing", "says", "shown", "notshown", "same", "refused"].map((k) => "screen.document.route." + k),
   ...["head", "field", "eg", "second1", "second2", "tip", "ref.machine1", "ref.machine2", "ref.empty", "ref.notdoc"].map((k) => "screen.document.origin." + k),
+  /* fix round 9 (R130–R132, G110b): the supporting files' rows (screens-intake's), the unsupported kinds' sentences (reading-pipeline's), a part's kind (content's), the scan policy (file-safety's) */
+  "screen.capture.supporting.kept", "screen.capture.supporting.cap", "screen.capture.supporting.toolarge", "screen.capture.supporting.unavailable",
+  ...["rtf", "email", "legacy_word", "legacy_excel", "legacy_powerpoint", "legacy_office", "tiff", "gif", "webp", "heic", "avif", "bmp", "jp2", "ico", "kind"].map((k) => "reading-pipeline.index.unsupported_" + k),
+  ...["body", "footnote", "endnote", "header", "footer", "comment", "tracked_deletion", "text_box", "speaker_note", "master_text", "cell_note"].map((k) => "content.part_kind." + k),
+  "file-safety.index.reading_is_not_gated",
   "document.read.title", "document.read.help", "document.read.tab.page", "document.read.page", "document.read.prev", "document.read.next", "document.read.select", "document.read.cite.help",
   /* T51 (R81, R82, CR-19): the compare tab, the original-file card, its size and kind */
   "document.read.tab.compare", "document.read.original.card", "size.small", "size.kb", "size.mb", "size.gb",

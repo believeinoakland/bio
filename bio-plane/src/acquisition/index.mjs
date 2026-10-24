@@ -140,7 +140,7 @@ export const PROFILE_TEXT_MAX = boundOf("capture", "profile_text_bytes");
 /* R17, R101: the bytes of a capture's head its format is judged from when the capture is held in parts: the first KiB of the first part. */
 export const FORMAT_HEAD = 1024;
 /* D-351: the bound on reading an OpenDocument capture back whole for its container digest. Chosen, not measured. */
-export const ODF_DIGEST_MAX = 8 * 1024 * 1024;
+export const ODF_DIGEST_MAX = boundOf("acquisition", "odf_digest_bytes");   // R122: quoted from READ_BOUNDS
 export function profilesAsText(ct, total, multipart) {
   return !multipart && total <= PROFILE_TEXT_MAX
     && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
@@ -429,7 +429,7 @@ const keepLaterOf = (cap, opts) => {
    `LARGE_FETCH_BYTES` is the most a request reads (a declared length over it is parked before one byte is read; with no length, the
    body read past it is parked); `FETCH_WAIT_MS` the longest a request reads a body (~10 s, as `RENDER_WAIT_MS` bounds the render).
    CHOSEN by the plan (K4562), not measured. */
-export const LARGE_FETCH_BYTES = 8 * 1024 * 1024;
+export const LARGE_FETCH_BYTES = boundOf("acquisition", "large_fetch_bytes");   // R122: quoted from READ_BOUNDS
 export const FETCH_WAIT_MS = 10000;
 /* the digest a parked fetch's session names as its primary: there is none yet, and the column is not null */
 const NO_PRIMARY = "0".repeat(64);

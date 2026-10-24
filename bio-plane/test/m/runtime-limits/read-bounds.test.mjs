@@ -3,7 +3,7 @@
  * row changes none of these expectations (a row is checked by its invariants, never by counting the table). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { READ_BOUNDS, boundOf, statement } from "../../../src/read-bounds.mjs";
+import { READ_BOUNDS, boundOf, statement, wholeReadRow } from "../../../src/read-bounds.mjs";
 
 const MiB = 1048576, GiB = 1073741824, MB50 = 52428800;
 const LIGHT = ["text", "csv", "tsv", "json", "xml"];
@@ -234,4 +234,33 @@ test("R30: the workbook rows (cells 250,000 in all columns, file bytes 20 MiB al
     assert.deepEqual(statement("workbook", name, cols.alpha + 1), { size: cols.alpha + 1, bound: cols.alpha, key: `limit.workbook.${name}` });
   }
   assert.deepEqual(Object.keys(READ_BOUNDS.workbook), ["cells", "bytes", "cells_json_bytes"]);
+});
+
+/* the six rows provenance, acquisition, case-authoring, case-carriage, monitoring and following quote (K4958; R35): today's figures in all three columns, so no bound moves (K1881) */
+test("R35: the six rows (provenance part_verify_bytes 8 MiB, acquisition odf_digest_bytes 8 MiB, acquisition large_fetch_bytes 8 MiB, case copy_now_bytes 2 MiB, monitoring docket_read_bytes 8 MiB, following portal_parse_bytes 4 MiB) hold one figure in all three columns, and boundOf and statement answer them (R31)", () => {
+  const want = [["provenance", "part_verify_bytes", 8 * MiB], ["acquisition", "odf_digest_bytes", 8 * MiB], ["acquisition", "large_fetch_bytes", 8 * MiB],
+    ["case", "copy_now_bytes", 2 * MiB], ["monitoring", "docket_read_bytes", 8 * MiB], ["following", "portal_parse_bytes", 4 * MiB]];
+  for (const [kind, name, n] of want) {
+    const row = READ_BOUNDS[kind]?.[name];
+    assert.ok(row, `${kind}/${name}`);
+    assert.deepEqual({ standard: row.standard, alpha: row.alpha, protective: row.protective }, { standard: n, alpha: n, protective: n }, `${kind}/${name}`);
+    assert.equal(row.key, `limit.${kind}.${name}`);
+    assert.equal(boundOf(kind, name), n, `${kind}/${name} answers the figure`);
+    assert.deepEqual(statement(kind, name, n + 1), { size: n + 1, bound: n, key: `limit.${kind}.${name}` });
+  }
+});
+
+/* the one declaration of the whole-read row by a document's kind (K4965; R36) */
+test("R36: wholeReadRow(kind) gives pdf, csv and text their own bytes row, every other kind or none the whole-load row pdf.bytes, and boundOf of the row is its active figure", () => {
+  const want = [["pdf", ["pdf", "bytes"]], ["csv", ["csv", "bytes"]], ["text", ["text", "bytes"]],
+    ["docx", ["pdf", "bytes"]], ["json", ["pdf", "bytes"]], ["PDF", ["pdf", "bytes"]], ["", ["pdf", "bytes"]], ["constructor", ["pdf", "bytes"]],
+    [null, ["pdf", "bytes"]], [undefined, ["pdf", "bytes"]], [42, ["pdf", "bytes"]]];
+  for (const [kind, row] of want) {
+    assert.deepEqual(wholeReadRow(kind), row, `kind ${String(kind)}`);
+    assert.equal(boundOf(...wholeReadRow(kind)), boundOf(row[0], row[1]), `kind ${String(kind)} bound`);
+  }
+  assert.deepEqual(wholeReadRow(), ["pdf", "bytes"]);
+  assert.equal(boundOf(...wholeReadRow("pdf")), READ_BOUNDS.pdf.bytes.alpha);
+  assert.equal(boundOf(...wholeReadRow("csv")), READ_BOUNDS.csv.bytes.standard);
+  assert.equal(boundOf(...wholeReadRow("text")), READ_BOUNDS.text.bytes.standard);
 });

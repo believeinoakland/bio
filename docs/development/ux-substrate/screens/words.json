@@ -11,9 +11,9 @@
   "handle": 7,
   "ai": 174,
   "date": 14,
-  "queue": 494,
+  "queue": 497,
   "transcribe": 19,
-  "capture": 71,
+  "capture": 74,
   "document": 77,
   "question": 82,
   "connection": 34,
@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2586,
+  "refusal": 2588,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -49,11 +49,11 @@
   "session": 11,
   "updates": 37,
   "home": 19,
-  "installer": 421,
+  "installer": 486,
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7236,
+  "screen": 7654,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -78,7 +78,7 @@
   "progression": 38,
   "dock": 8,
   "count": 6,
-  "translations": 7,
+  "translations": 8,
   "due": 2,
   "reading": 4,
   "held": 5,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1183,
+  "act": 1273,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -108,23 +108,23 @@
   "page": 2,
   "person": 1,
   "findin": 9,
-  "money": 35,
+  "money": 50,
   "passage": 2,
   "period": 1,
   "timeline": 2,
   "caseimport": 4,
-  "acquisition": 45,
+  "acquisition": 47,
   "file-safety": 57,
   "extraction": 25,
   "events": 86,
   "entities": 30,
   "retrieval": 71,
   "case-account": 12,
-  "instance-setup": 42,
+  "instance-setup": 43,
   "list": 1,
   "glossary": 9,
   "people": 42,
-  "reading-pipeline": 80,
+  "reading-pipeline": 86,
   "public-read": 27,
   "odf-reader": 1,
   "roster-reader": 1,
@@ -132,10 +132,10 @@
   "observation-log": 75,
   "lines": 72,
   "local-facts": 54,
-  "case-grammar": 79,
+  "case-grammar": 85,
   "skills": 28,
   "wizard-scripts": 66,
-  "notice-producers": 20,
+  "notice-producers": 26,
   "network-notices": 20,
   "strength": 83,
   "file-scanner": 7,
@@ -147,6 +147,10 @@
   "case-disclosures": 99,
   "plane": 1,
   "notice": 2,
+  "calculations": 155,
+  "case-authoring": 95,
+  "docprofile": 1,
+  "installer-steps": 1,
   "duties": 79,
   "basis-versions": 23,
   "filing-templates": 29,
@@ -187,7 +191,6 @@
   "pdfstructure": 1,
   "contradiction": 114,
   "content": 122,
-  "case-authoring": 92,
   "queue-producers": 89,
   "case-checker": 59,
   "membership": 10,
@@ -208,7 +211,6 @@
   "queuestate": 4,
   "csv": 2,
   "setup-fleet": 2,
-  "calculations": 144,
   "standards": 104,
   "action-plans": 55,
   "connections": 74,
@@ -233,8 +235,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18524,
-  "protected": 1112
+  "total": 19158,
+  "protected": 1158
  },
  "words": [
   {
@@ -77122,146 +77124,6 @@
    "note": "DEC-414: B474 screens-daily (C70): the vouch band's own number, drawn apart from the bell and sidebar count, which count queue items only"
   },
   {
-   "key": "screen.install.getready.first",
-   "en": "Get your Cloudflare account ready first",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: the button on the installer's first page and its needs list, opening the Get ready guide"
-  },
-  {
-   "key": "screen.install.getready.title",
-   "en": "Get your Cloudflare account ready",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: the Get ready guide's heading"
-  },
-  {
-   "key": "screen.install.getready.sub",
-   "en": "Five steps, each done on Cloudflare's own page. Each button below opens that exact page.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: the guide's first line"
-  },
-  {
-   "key": "screen.install.getready.step1",
-   "en": "Open a Cloudflare account in your team's name, with an email your team shares, not one person's.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 1"
-  },
-  {
-   "key": "screen.install.getready.step1.see",
-   "en": "You will see Cloudflare's sign-up form: an email, a password and a button to create the account.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 1: what the founder will see"
-  },
-  {
-   "key": "screen.install.getready.step1.open",
-   "en": "Open Cloudflare sign-up",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 1's button (https://dash.cloudflare.com/sign-up)"
-  },
-  {
-   "key": "screen.install.getready.step2",
-   "en": "Verify the email: Cloudflare sends a message; open it and press its link.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 2"
-  },
-  {
-   "key": "screen.install.getready.step2.see",
-   "en": "You will see a message from Cloudflare in your team's inbox, with a button to verify the address.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 2: what the founder will see"
-  },
-  {
-   "key": "screen.install.getready.step2.open",
-   "en": "Open Cloudflare",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 2's button (https://dash.cloudflare.com/)"
-  },
-  {
-   "key": "screen.install.getready.step3",
-   "en": "Add a payment card. Cloudflare charges your team, never Civicsmith's makers.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 3"
-  },
-  {
-   "key": "screen.install.getready.step3.see",
-   "en": "You will see Cloudflare's billing page, with a place to enter a card.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 3: what the founder will see"
-  },
-  {
-   "key": "screen.install.getready.step3.open",
-   "en": "Open Cloudflare billing",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 3's button"
-  },
-  {
-   "key": "screen.install.getready.step4",
-   "en": "Switch to Workers Paid, $5 a month.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 4"
-  },
-  {
-   "key": "screen.install.getready.step4.see",
-   "en": "You will see Cloudflare's plans page: choose Workers Paid and confirm.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 4: what the founder will see"
-  },
-  {
-   "key": "screen.install.getready.step4.open",
-   "en": "Open Cloudflare plans",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 4's button"
-  },
-  {
-   "key": "screen.install.getready.step5",
-   "en": "Turn containers on.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 5"
-  },
-  {
-   "key": "screen.install.getready.step5.see",
-   "en": "You will see Cloudflare's containers page, with a button to turn them on.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 5: what the founder will see"
-  },
-  {
-   "key": "screen.install.getready.step5.open",
-   "en": "Open Cloudflare containers",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: step 5's button"
-  },
-  {
-   "key": "screen.install.getready.newtab",
-   "en": "Each button opens Cloudflare's own page in a new tab, and this page stays here.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: under the five steps"
-  },
-  {
-   "key": "screen.install.getready.done",
-   "en": "When these are done, check your account",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-416: the guide's last button, leading to Cloudflare's permission step"
-  },
-  {
    "key": "screen.install.check.title",
    "en": "Check my account",
    "protected": false,
@@ -77757,6 +77619,3884 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-419: B485 (wave 2) G24 (S14) calculations: a pattern's denominator when it is a sample"
+  },
+  {
+   "key": "screen.aichecks.notrain.name",
+   "en": "Does not train on your material",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: notrain name"
+  },
+  {
+   "key": "screen.aichecks.notrain.line",
+   "en": "The provider's terms say it does not use what it is sent to train its models.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: notrain line"
+  },
+  {
+   "key": "screen.aichecks.noread.name",
+   "en": "No person reads it by default",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: noread name"
+  },
+  {
+   "key": "screen.aichecks.noread.line",
+   "en": "People at the provider do not read what is sent unless your team asks them to.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: noread line"
+  },
+  {
+   "key": "screen.aichecks.keeps.name",
+   "en": "Says how long it keeps material",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: keeps name"
+  },
+  {
+   "key": "screen.aichecks.keeps.line",
+   "en": "It states how long it keeps what it is sent, and keeps none where it offers that.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: keeps line"
+  },
+  {
+   "key": "screen.aichecks.where.name",
+   "en": "Says where it runs and under which country's law",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: where name"
+  },
+  {
+   "key": "screen.aichecks.where.line",
+   "en": "It names the country where it handles what it is sent and the law that applies there.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: where line"
+  },
+  {
+   "key": "screen.aichecks.onward.name",
+   "en": "Shares it only with companies it names",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: onward name"
+  },
+  {
+   "key": "screen.aichecks.onward.line",
+   "en": "Any other company it shares material with is named in its terms.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: onward line"
+  },
+  {
+   "key": "screen.aichecks.keepaway.name",
+   "en": "Works with keeping material away from AI",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: keepaway name"
+  },
+  {
+   "key": "screen.aichecks.keepaway.line",
+   "en": "It honors your team's and projects' limits on which material may go to AI, and shows the notice that says so.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: keepaway line"
+  },
+  {
+   "key": "screen.aichecks.origin.name",
+   "en": "Not made by an organization based in China",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: origin name"
+  },
+  {
+   "key": "screen.aichecks.origin.line",
+   "en": "The organization that makes the AI is not based in China.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: origin line"
+  },
+  {
+   "key": "screen.aichecks.terms.name",
+   "en": "Its terms allow this use",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: terms name"
+  },
+  {
+   "key": "screen.aichecks.terms.line",
+   "en": "The provider's terms permit work like your team's.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: terms line"
+  },
+  {
+   "key": "screen.aichecks.breach.name",
+   "en": "Says what it does if material leaks",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: breach name"
+  },
+  {
+   "key": "screen.aichecks.breach.line",
+   "en": "It states what it will do, and how soon, if material it holds is exposed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: breach line"
+  },
+  {
+   "key": "screen.aiparts.ask",
+   "en": "Asking",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiparts: ask"
+  },
+  {
+   "key": "screen.aiparts.letters",
+   "en": "Drafting letters",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiparts: letters"
+  },
+  {
+   "key": "screen.aiparts.read",
+   "en": "Reading inside documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiparts: read"
+  },
+  {
+   "key": "screen.aiparts.unclear",
+   "en": "Reading unclear pages",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiparts: unclear"
+  },
+  {
+   "key": "screen.aiparts.plans",
+   "en": "Working through checks and plans",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiparts: plans"
+  },
+  {
+   "key": "screen.aiparts.account",
+   "en": "Drafting a case's account",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiparts: account"
+  },
+  {
+   "key": "screen.aiplan.passed",
+   "en": "Passed: {parts}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: passed"
+  },
+  {
+   "key": "screen.aiplan.limits",
+   "en": "Passed with limits: {parts}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: limits"
+  },
+  {
+   "key": "screen.aiplan.notsuited",
+   "en": "Not suitable: {parts}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: notsuited"
+  },
+  {
+   "key": "screen.aiproviders.stands.on",
+   "en": "{n} accounts are on, in order: {order}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: stands on"
+  },
+  {
+   "key": "screen.aiproviders.status.on",
+   "en": "On",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: status on"
+  },
+  {
+   "key": "screen.aiproviders.stands.none",
+   "en": "No account is on yet. The assistant is off for everyone until an administrator switches one on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: stands none"
+  },
+  {
+   "key": "screen.aiproviders.status.off",
+   "en": "Off",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: status off"
+  },
+  {
+   "key": "screen.aiproviders.mock",
+   "en": "In this mockup, show the card for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mock"
+  },
+  {
+   "key": "screen.aiproviders.mock.a",
+   "en": "three accounts on, one of them slow",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mock a"
+  },
+  {
+   "key": "screen.aiproviders.mock.b",
+   "en": "all accounts available",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mock b"
+  },
+  {
+   "key": "screen.aiproviders.mock.c",
+   "en": "no account on yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mock c"
+  },
+  {
+   "key": "screen.aiproviders.mock.d",
+   "en": "before {provider} is added",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mock d"
+  },
+  {
+   "key": "screen.aiproviders.title",
+   "en": "AI providers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: title"
+  },
+  {
+   "key": "screen.aiproviders.intro",
+   "en": "Only administrators set this up. Members choose among what is allowed here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: intro"
+  },
+  {
+   "key": "screen.aiproviders.stands.meter",
+   "en": "This month, all accounts",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: stands meter"
+  },
+  {
+   "key": "screen.aiproviders.stands.slow",
+   "en": "{provider} is slow right now. The other accounts are available.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: stands slow"
+  },
+  {
+   "key": "screen.aiproviders.stands.allok",
+   "en": "All accounts are available.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: stands allok"
+  },
+  {
+   "key": "screen.aiproviders.use.head",
+   "en": "In use, in order",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: use head"
+  },
+  {
+   "key": "screen.aiproviders.use.line",
+   "en": "Sends {sent} to {where}. Keeps it {keep}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: use line"
+  },
+  {
+   "key": "screen.aiproviders.use.down",
+   "en": "Move down",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: use down"
+  },
+  {
+   "key": "screen.aiproviders.use.switchoff",
+   "en": "Switch off",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: use switchoff"
+  },
+  {
+   "key": "screen.aiproviders.use.remove",
+   "en": "Remove",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: use remove"
+  },
+  {
+   "key": "screen.aiproviders.health.available",
+   "en": "available",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: health available"
+  },
+  {
+   "key": "screen.aiproviders.health.slow",
+   "en": "slow",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: health slow"
+  },
+  {
+   "key": "screen.aiproviders.health.down",
+   "en": "down",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: health down"
+  },
+  {
+   "key": "screen.aiproviders.use.up",
+   "en": "Move up",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: use up"
+  },
+  {
+   "key": "screen.aiproviders.listed.watch",
+   "en": "watch",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: listed watch"
+  },
+  {
+   "key": "screen.aiproviders.listed.lapsed",
+   "en": "lapsed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: listed lapsed"
+  },
+  {
+   "key": "screen.aiproviders.listed.retired",
+   "en": "retired",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: listed retired"
+  },
+  {
+   "key": "screen.aiproviders.use.switchon",
+   "en": "Switch on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: use switchon"
+  },
+  {
+   "key": "screen.aiproviders.use.note",
+   "en": "Work goes to the first account that is on, is allowed for that work and is within its limit. When it continues on a later account, the member is shown the switch and may decline it. A use that is switched off is refused, and is never moved to another account.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: use note"
+  },
+  {
+   "key": "screen.aiproviders.add.head",
+   "en": "Add an AI",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: add head"
+  },
+  {
+   "key": "screen.aiproviders.add.intro",
+   "en": "Providers are listed alphabetically, each with the ways to pay for it: a developer account (an API key), a subscription, a reseller that offers several providers, a gateway, one built into Civicsmith, or an AI you run yourself. Pick the one your team pays for.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: add intro"
+  },
+  {
+   "key": "screen.aiproviders.add.grades",
+   "en": "Each answer carries its grade. Reproduced: Civicsmith or another team repeated it. Reported: a team reported it. Stated: only the provider says so.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: add grades"
+  },
+  {
+   "key": "screen.aiplan.who.team",
+   "en": "a team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: who team"
+  },
+  {
+   "key": "screen.aiplan.serves",
+   "en": "Serves {who}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: serves"
+  },
+  {
+   "key": "screen.aiplan.price",
+   "en": "Price: {basis}. Typical work: {estimate}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: price"
+  },
+  {
+   "key": "screen.aiplan.th.check",
+   "en": "Check",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: th check"
+  },
+  {
+   "key": "screen.aiplan.th.answer",
+   "en": "Answer",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: th answer"
+  },
+  {
+   "key": "screen.aiplan.th.source",
+   "en": "Source and date",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: th source"
+  },
+  {
+   "key": "screen.aiplan.met",
+   "en": "Met",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: met"
+  },
+  {
+   "key": "screen.aiplan.grade.reproduced",
+   "en": "Reproduced",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: grade reproduced"
+  },
+  {
+   "key": "screen.aiplan.grade.reported",
+   "en": "Reported",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: grade reported"
+  },
+  {
+   "key": "screen.aiplan.grade.stated",
+   "en": "Stated",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: grade stated"
+  },
+  {
+   "key": "screen.aiplan.confirmed",
+   "en": "Last confirmed {date}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: confirmed"
+  },
+  {
+   "key": "screen.aiplan.connect",
+   "en": "Connect",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: connect"
+  },
+  {
+   "key": "screen.aiplan.unconfirmed",
+   "en": "unconfirmed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: unconfirmed"
+  },
+  {
+   "key": "screen.aiplan.who.one",
+   "en": "one person",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: who one"
+  },
+  {
+   "key": "screen.aiplan.warn.chip",
+   "en": "Warning.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: warn chip"
+  },
+  {
+   "key": "screen.aiplan.warn",
+   "en": "Free tier: it reads your material for training.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: warn"
+  },
+  {
+   "key": "screen.aiplan.notmet",
+   "en": "Not met",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: notmet"
+  },
+  {
+   "key": "screen.aiplan.who.app",
+   "en": "an application",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: who app"
+  },
+  {
+   "key": "screen.aiplan.pending",
+   "en": "Its terms change on {date}: {what}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: pending"
+  },
+  {
+   "key": "screen.aiplan.nosrc",
+   "en": "not stated",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: nosrc"
+  },
+  {
+   "key": "screen.aiplan.testfirst",
+   "en": "Test it first",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiplan: testfirst"
+  },
+  {
+   "key": "screen.aiproviders.refused.head",
+   "en": "Not offered",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: refused head"
+  },
+  {
+   "key": "screen.aiproviders.refused.personal",
+   "en": "Not offered as the team's account: its terms bar use by a team for work like this. A member may still use it for their own work.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: refused personal"
+  },
+  {
+   "key": "screen.aiproviders.refused.origin",
+   "en": "Not offered while the team requires the check “Not made by an organization based in China”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: refused origin"
+  },
+  {
+   "key": "screen.aiproviders.held.head",
+   "en": "Held until confirmed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: held head"
+  },
+  {
+   "key": "screen.aiproviders.held.region",
+   "en": "Held until it says where it runs and which country's law applies. It is offered once the provider says so.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: held region"
+  },
+  {
+   "key": "screen.aiproviders.add.test",
+   "en": "Test an AI that isn't listed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: add test"
+  },
+  {
+   "key": "screen.aiproviders.add.results",
+   "en": "Results other teams sent",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: add results"
+  },
+  {
+   "key": "screen.aiproviders.bud.head",
+   "en": "Limits and alerts",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud head"
+  },
+  {
+   "key": "screen.aiproviders.bud.why",
+   "en": "{limit} a month overall; {spent} spent so far.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud why"
+  },
+  {
+   "key": "screen.aiproviders.bud.th.acc",
+   "en": "Account",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud th acc"
+  },
+  {
+   "key": "screen.aiproviders.bud.th.bud",
+   "en": "Monthly limit",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud th bud"
+  },
+  {
+   "key": "screen.aiproviders.bud.th.spent",
+   "en": "Spent this month",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud th spent"
+  },
+  {
+   "key": "screen.aiproviders.bud.all",
+   "en": "All accounts together",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud all"
+  },
+  {
+   "key": "screen.aiproviders.bud.for",
+   "en": "Set a limit for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud for"
+  },
+  {
+   "key": "screen.aiproviders.bud.amount",
+   "en": "Monthly limit",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud amount"
+  },
+  {
+   "key": "screen.aiproviders.bud.alert",
+   "en": "Tell administrators at",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud alert"
+  },
+  {
+   "key": "screen.aiproviders.bud.set",
+   "en": "Set the limit and the alert",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud set"
+  },
+  {
+   "key": "screen.aiproviders.bud.th.proj",
+   "en": "Cost this month, by project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud th proj"
+  },
+  {
+   "key": "screen.aiproviders.bud.th.cost",
+   "en": "Cost",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud th cost"
+  },
+  {
+   "key": "screen.aiproviders.bud.norecord",
+   "en": "Work in the record, outside any project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud norecord"
+  },
+  {
+   "key": "screen.aiproviders.bud.note",
+   "en": "Each cost sums everyone's use and names no member. A member sees their own cost on Your AI.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: bud note"
+  },
+  {
+   "key": "screen.aiproviders.chk.head",
+   "en": "Privacy and origin checks",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: chk head"
+  },
+  {
+   "key": "screen.aiproviders.chk.why",
+   "en": "Seven checks, all required to start with.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: chk why"
+  },
+  {
+   "key": "screen.aiproviders.chk.mock",
+   "en": "In this mockup, show the checks",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: chk mock"
+  },
+  {
+   "key": "screen.aiproviders.chk.mock.a",
+   "en": "as they start: all seven required",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: chk mock a"
+  },
+  {
+   "key": "screen.aiproviders.chk.mock.b",
+   "en": "after Rosa left two unchecked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: chk mock b"
+  },
+  {
+   "key": "screen.aichecks.required",
+   "en": "Required for the whole team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: required"
+  },
+  {
+   "key": "screen.aichecks.locked",
+   "en": "Locked by the team. Project owners and members can't change it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: locked"
+  },
+  {
+   "key": "screen.aichecks.open",
+   "en": "Not required by the team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: open"
+  },
+  {
+   "key": "screen.aiproviders.chk.extra",
+   "en": "Shown for every AI, never required",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: chk extra"
+  },
+  {
+   "key": "screen.aiproviders.chk.save",
+   "en": "Save the checks",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: chk save"
+  },
+  {
+   "key": "screen.aiproviders.chk.note",
+   "en": "An AI that fails a required check is not offered. A check you leave unchecked, project owners and members may require for their own work.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: chk note"
+  },
+  {
+   "key": "screen.aiproviders.mem.head",
+   "en": "What members may use",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mem head"
+  },
+  {
+   "key": "screen.aiproviders.mem.why",
+   "en": "Members can pick only from what you check here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mem why"
+  },
+  {
+   "key": "screen.aiproviders.mem.legend",
+   "en": "Providers, plans and models",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mem legend"
+  },
+  {
+   "key": "screen.aiproviders.mem.models",
+   "en": "Models: {models}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mem models"
+  },
+  {
+   "key": "screen.aiproviders.mem.modelnote",
+   "en": "Model choices are listed exactly as each provider offers them. Members choose among the ones you check.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mem modelnote"
+  },
+  {
+   "key": "screen.aiproviders.mem.own",
+   "en": "Members and their own accounts",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mem own"
+  },
+  {
+   "key": "screen.aiproviders.mem.ownacc",
+   "en": "Members may add their own accounts",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mem ownacc"
+  },
+  {
+   "key": "screen.aiproviders.mem.personal",
+   "en": "Members may use a personal subscription, for their own work only",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mem personal"
+  },
+  {
+   "key": "screen.aiproviders.mem.save",
+   "en": "Save what members may use",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: mem save"
+  },
+  {
+   "key": "screen.aiproviders.chg.head",
+   "en": "Changes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: chg head"
+  },
+  {
+   "key": "screen.aiproviders.chg.why",
+   "en": "Every change, newest first, with who made it, when, and at which level.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: chg why"
+  },
+  {
+   "key": "screen.aiproviders.chg.row",
+   "en": "{who} {what} · {date} · {level}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproviders: chg row"
+  },
+  {
+   "key": "screen.aiconnect.mock",
+   "en": "In this mockup, show the connection for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: mock"
+  },
+  {
+   "key": "screen.aiconnect.mock.a",
+   "en": "a plan that gives a key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: mock a"
+  },
+  {
+   "key": "screen.aiconnect.mock.b",
+   "en": "a plan whose provider signs in",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: mock b"
+  },
+  {
+   "key": "screen.aiconnect.mock.c",
+   "en": "a free tier that reads material for training",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: mock c"
+  },
+  {
+   "key": "screen.aiconnect.mock.d",
+   "en": "a member's own subscription",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: mock d"
+  },
+  {
+   "key": "screen.aiconnect.title",
+   "en": "Connect an AI",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: title"
+  },
+  {
+   "key": "screen.aiconnect.intro",
+   "en": "Six steps for one account. Nothing is switched on until its test passes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: intro"
+  },
+  {
+   "key": "screen.aiconnect.what",
+   "en": "Connecting: {account}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: what"
+  },
+  {
+   "key": "screen.aiconnect.s1.head",
+   "en": "What you are connecting",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s1 head"
+  },
+  {
+   "key": "screen.aiconnect.s1.why",
+   "en": "What it is sent, who keeps it and for how long, and the terms that bind your use.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s1 why"
+  },
+  {
+   "key": "screen.aiconnect.th.answer",
+   "en": "The answer",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: th answer"
+  },
+  {
+   "key": "screen.aiconnect.th.source",
+   "en": "Source and date",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: th source"
+  },
+  {
+   "key": "screen.aiconnect.t.sent",
+   "en": "What it is sent",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: t sent"
+  },
+  {
+   "key": "screen.aiconnect.t.who",
+   "en": "Who receives it, and where it runs",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: t who"
+  },
+  {
+   "key": "screen.aiconnect.t.keeps",
+   "en": "How long it keeps material",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: t keeps"
+  },
+  {
+   "key": "screen.aiconnect.t.reads",
+   "en": "Whether a person reads it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: t reads"
+  },
+  {
+   "key": "screen.aiconnect.t.trains",
+   "en": "Whether it trains on it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: t trains"
+  },
+  {
+   "key": "screen.aiconnect.t.passes",
+   "en": "Whom it shares it with",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: t passes"
+  },
+  {
+   "key": "screen.aiconnect.terms.head",
+   "en": "The terms that bind civic use",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: terms head"
+  },
+  {
+   "key": "screen.aiconnect.terms.political",
+   "en": "Political content",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: terms political"
+  },
+  {
+   "key": "screen.aiconnect.terms.legal",
+   "en": "Legal advice",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: terms legal"
+  },
+  {
+   "key": "screen.aiconnect.terms.disclose",
+   "en": "Saying that AI was used",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: terms disclose"
+  },
+  {
+   "key": "screen.aiconnect.s1.note",
+   "en": "Each answer shows where it was read and when. An answer the provider does not state says “not stated”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s1 note"
+  },
+  {
+   "key": "screen.aiconnect.s2.head",
+   "en": "Sign up with the provider",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s2 head"
+  },
+  {
+   "key": "screen.aiconnect.s2.why",
+   "en": "Done on the provider's own page, not here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s2 why"
+  },
+  {
+   "key": "screen.aiconnect.s2.where",
+   "en": "Where to sign up",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s2 where"
+  },
+  {
+   "key": "screen.aiconnect.s2.link",
+   "en": "Open {provider}'s sign-up page",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s2 link"
+  },
+  {
+   "key": "screen.aiconnect.s2.choose",
+   "en": "What to choose there",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s2 choose"
+  },
+  {
+   "key": "screen.aiconnect.s2.copy",
+   "en": "What to copy or approve",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s2 copy"
+  },
+  {
+   "key": "screen.aiconnect.s2.never",
+   "en": "Civicsmith never signs anyone up and never handles payment. The provider bills your team directly.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s2 never"
+  },
+  {
+   "key": "screen.aiconnect.s2.prog",
+   "en": "If this plan needs a program on a member's own computer",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s2 prog"
+  },
+  {
+   "key": "screen.aiconnect.s2.prog.1",
+   "en": "Install the provider's program on the computer that will run it, from the provider's own page.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s2 prog 1"
+  },
+  {
+   "key": "screen.aiconnect.s2.prog.2",
+   "en": "Sign in to the program once, and leave it running.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s2 prog 2"
+  },
+  {
+   "key": "screen.aiconnect.s2.prog.3",
+   "en": "Come back to this page. Civicsmith checks that the program answers.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s2 prog 3"
+  },
+  {
+   "key": "screen.aiconnect.s3.head",
+   "en": "Give Civicsmith the key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 head"
+  },
+  {
+   "key": "screen.aiconnect.s3.why",
+   "en": "Four ways. Choose one.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 why"
+  },
+  {
+   "key": "screen.aiconnect.s3.legend",
+   "en": "Where the key is kept",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 legend"
+  },
+  {
+   "key": "screen.aiconnect.s3.here",
+   "en": "Enter it here",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 here"
+  },
+  {
+   "key": "screen.aiconnect.s3.here.help",
+   "en": "The key goes straight to a protected store in your team's own Cloudflare account. Civicsmith keeps no copy, and the key is never shown again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 here help"
+  },
+  {
+   "key": "screen.aiconnect.s3.cf",
+   "en": "Enter it yourself in Cloudflare",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 cf"
+  },
+  {
+   "key": "screen.aiconnect.s3.cf.help",
+   "en": "For a team that wants the key never to touch Civicsmith.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 cf help"
+  },
+  {
+   "key": "screen.aiconnect.s3.signin",
+   "en": "Sign in with {provider}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 signin"
+  },
+  {
+   "key": "screen.aiconnect.s3.signin.help",
+   "en": "Only for a plan whose provider signs in instead of giving a key.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 signin help"
+  },
+  {
+   "key": "screen.aiconnect.s3.ref",
+   "en": "Point to a key kept elsewhere",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 ref"
+  },
+  {
+   "key": "screen.aiconnect.s3.ref.help",
+   "en": "The key stays where it is kept. Civicsmith holds only where to find it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 ref help"
+  },
+  {
+   "key": "screen.aiconnect.s3.keyfield",
+   "en": "The key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 keyfield"
+  },
+  {
+   "key": "screen.aiconnect.s3.keyhelp",
+   "en": "It goes to Cloudflare as you press the button, and is never shown again, to you or to anyone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 keyhelp"
+  },
+  {
+   "key": "screen.aiconnect.s3.store",
+   "en": "Store the key in Cloudflare",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 store"
+  },
+  {
+   "key": "screen.aiconnect.s3.cfsteps",
+   "en": "Ten steps in Cloudflare",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 cfsteps"
+  },
+  {
+   "key": "screen.aiconnect.cf.1",
+   "en": "Open Cloudflare's dashboard at dash.cloudflare.com and sign in to your team's account.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: cf 1"
+  },
+  {
+   "key": "screen.aiconnect.cf.2",
+   "en": "In the menu on the left, click “AI”, then click “AI Gateway”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: cf 2"
+  },
+  {
+   "key": "screen.aiconnect.cf.3",
+   "en": "Click “Create Gateway”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: cf 3"
+  },
+  {
+   "key": "screen.aiconnect.cf.4",
+   "en": "Name the gateway civicsmith-ai, exactly like that, and click “Create”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: cf 4"
+  },
+  {
+   "key": "screen.aiconnect.cf.5",
+   "en": "Open the gateway you just made, and click “Settings”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: cf 5"
+  },
+  {
+   "key": "screen.aiconnect.cf.6",
+   "en": "Find “Provider Keys” and click “Add API Key”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: cf 6"
+  },
+  {
+   "key": "screen.aiconnect.cf.7",
+   "en": "Choose {provider} from the list of providers.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: cf 7"
+  },
+  {
+   "key": "screen.aiconnect.cf.8",
+   "en": "Paste the key you copied from {provider} into the box named “API Key”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: cf 8"
+  },
+  {
+   "key": "screen.aiconnect.cf.9",
+   "en": "In the box named “Alias”, type civicsmith-{alias}, exactly like that.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: cf 9"
+  },
+  {
+   "key": "screen.aiconnect.cf.10",
+   "en": "Click “Save”. Then come back to this page and press “I've entered it”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: cf 10"
+  },
+  {
+   "key": "screen.aiconnect.s3.entered",
+   "en": "I've entered it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 entered"
+  },
+  {
+   "key": "screen.aiconnect.s3.opencf",
+   "en": "Open Cloudflare's dashboard",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 opencf"
+  },
+  {
+   "key": "screen.aiconnect.s3.nosignin",
+   "en": "{provider} gives a key for this plan. It does not sign in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 nosignin"
+  },
+  {
+   "key": "screen.aiconnect.s3.reffield",
+   "en": "Where the key is kept (its name or address)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 reffield"
+  },
+  {
+   "key": "screen.aiconnect.s3.refgo",
+   "en": "Use this reference",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 refgo"
+  },
+  {
+   "key": "screen.aiconnect.s4.head",
+   "en": "Before you switch it on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s4 head"
+  },
+  {
+   "key": "screen.aiconnect.s4.why",
+   "en": "What you accept, recorded once.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s4 why"
+  },
+  {
+   "key": "screen.aiconnect.s4.legend",
+   "en": "Your acceptance",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s4 legend"
+  },
+  {
+   "key": "screen.aiconnect.s4.termsbox",
+   "en": "I accept the terms above that bind our use of this plan.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s4 termsbox"
+  },
+  {
+   "key": "screen.aiconnect.s4.go",
+   "en": "Record my acceptance",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s4 go"
+  },
+  {
+   "key": "screen.aiconnect.s4.recorded",
+   "en": "Your acceptance is recorded with your name and the date. The terms are accepted once for this account, and shown again if they change.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s4 recorded"
+  },
+  {
+   "key": "screen.aiconnect.s5.head",
+   "en": "Test it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s5 head"
+  },
+  {
+   "key": "screen.aiconnect.s5.why",
+   "en": "A harmless test that sends none of your team's material.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s5 why"
+  },
+  {
+   "key": "screen.aiconnect.s5.go",
+   "en": "Test the connection",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s5 go"
+  },
+  {
+   "key": "screen.aiconnect.s5.pass",
+   "en": "Passed in {seconds} seconds.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s5 pass"
+  },
+  {
+   "key": "screen.aiconnect.s5.failhead",
+   "en": "If the test fails",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s5 failhead"
+  },
+  {
+   "key": "screen.aiconnect.s5.fail",
+   "en": "{provider} did not accept the test. It said: “{words}”. {who} can fix this.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s5 fail"
+  },
+  {
+   "key": "screen.aiconnect.s5.note",
+   "en": "It stays off until the test passes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s5 note"
+  },
+  {
+   "key": "screen.aiconnect.s6.head",
+   "en": "Switch it on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s6 head"
+  },
+  {
+   "key": "screen.aiconnect.s6.why",
+   "en": "Choose where it comes in the order of accounts.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s6 why"
+  },
+  {
+   "key": "screen.aiconnect.s6.pos",
+   "en": "Where it goes in the order",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s6 pos"
+  },
+  {
+   "key": "screen.aiconnect.s6.first",
+   "en": "First",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s6 first"
+  },
+  {
+   "key": "screen.aiconnect.s6.second",
+   "en": "Second",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s6 second"
+  },
+  {
+   "key": "screen.aiconnect.s6.third",
+   "en": "Third",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s6 third"
+  },
+  {
+   "key": "screen.aiconnect.s6.last",
+   "en": "Last",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s6 last"
+  },
+  {
+   "key": "screen.aiconnect.s6.go",
+   "en": "Switch it on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s6 go"
+  },
+  {
+   "key": "screen.aiconnect.s6.note",
+   "en": "You can change its place later on AI providers.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s6 note"
+  },
+  {
+   "key": "screen.aiconnect.s3.signinnote",
+   "en": "You sign in on {provider}'s own page. Civicsmith never sees your password.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s3 signinnote"
+  },
+  {
+   "key": "screen.aiconnect.s4.warn",
+   "en": "On the free tier, {provider} reads what is sent and uses it to train its models. Do not send anything your team wants kept private.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s4 warn"
+  },
+  {
+   "key": "screen.aiconnect.s4.freebox",
+   "en": "I understand that {provider} reads our material and uses it for training on this free tier, and I accept that for this account.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: s4 freebox"
+  },
+  {
+   "key": "screen.aiconnect.p.head",
+   "en": "Your own subscription",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: p head"
+  },
+  {
+   "key": "screen.aiconnect.p.restr",
+   "en": "What {provider} says about using it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: p restr"
+  },
+  {
+   "key": "screen.aiconnect.p.again",
+   "en": "If {provider} changes these restrictions, you are shown them again before your next use.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: p again"
+  },
+  {
+   "key": "screen.aiconnect.p.legend",
+   "en": "Your choice",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: p legend"
+  },
+  {
+   "key": "screen.aiconnect.p.box",
+   "en": "I will use my own subscription for my own work, within these restrictions.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: p box"
+  },
+  {
+   "key": "screen.aiconnect.p.go",
+   "en": "Use my subscription",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: p go"
+  },
+  {
+   "key": "screen.aiconnect.p.recorded",
+   "en": "Your choice is recorded with your name and the date. Nothing more is asked of you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiconnect: p recorded"
+  },
+  {
+   "key": "screen.aichecks.personalfails",
+   "en": "Where the team or a project requires a check that your subscription's AI fails, it is not used for that work, and you are told why.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: personalfails"
+  },
+  {
+   "key": "screen.aimine.mock",
+   "en": "In this mockup, show the checks for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: mock"
+  },
+  {
+   "key": "screen.aimine.mock.a",
+   "en": "a team that requires all seven",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: mock a"
+  },
+  {
+   "key": "screen.aimine.mock.b",
+   "en": "a team that left two unchecked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: mock b"
+  },
+  {
+   "key": "screen.aimine.title",
+   "en": "Your AI",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: title"
+  },
+  {
+   "key": "screen.aimine.intro",
+   "en": "Which AI serves your work, what you may choose, and what it costs. Your team's administrators decide what is offered.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: intro"
+  },
+  {
+   "key": "screen.aimine.now.head",
+   "en": "What serves you now",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: now head"
+  },
+  {
+   "key": "screen.aimine.now.team",
+   "en": "The team's account",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: now team"
+  },
+  {
+   "key": "screen.aimine.now.own",
+   "en": "Your own account",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: now own"
+  },
+  {
+   "key": "screen.aimine.now.note",
+   "en": "Work goes to them in this order.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: now note"
+  },
+  {
+   "key": "screen.aimine.choose.head",
+   "en": "Choose among what the team allows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: choose head"
+  },
+  {
+   "key": "screen.aimine.choose.prov",
+   "en": "Provider and plan",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: choose prov"
+  },
+  {
+   "key": "screen.aimine.choose.model",
+   "en": "Model",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: choose model"
+  },
+  {
+   "key": "screen.aimine.choose.model.help",
+   "en": "Which version of the AI answers.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine.choose.model: help"
+  },
+  {
+   "key": "screen.aimine.choose.effort",
+   "en": "How much effort it spends",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: choose effort"
+  },
+  {
+   "key": "screen.aimine.choose.effort.help",
+   "en": "More effort is slower and costs more.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine.choose.effort: help"
+  },
+  {
+   "key": "screen.aimine.choose.note",
+   "en": "Models and effort levels are listed exactly as the provider offers them. Your choice applies to work you start, and an administrator or a project can narrow it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: choose note"
+  },
+  {
+   "key": "screen.aimine.choose.go",
+   "en": "Use this for my work",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: choose go"
+  },
+  {
+   "key": "screen.aimine.own.head",
+   "en": "Your own accounts",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: own head"
+  },
+  {
+   "key": "screen.aimine.own.team",
+   "en": "Your team allows members to add their own accounts.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: own team"
+  },
+  {
+   "key": "screen.aimine.own.add",
+   "en": "Add an account of my own",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: own add"
+  },
+  {
+   "key": "screen.aimine.own.personal",
+   "en": "A personal subscription is yours alone: it is never the team's or a project's account, and it is used only for your own work.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: own personal"
+  },
+  {
+   "key": "screen.aimine.own.fails",
+   "en": "Not used for work in {project}: that project requires “{check}”, which this subscription's AI does not meet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: own fails"
+  },
+  {
+   "key": "screen.aimine.chk.head",
+   "en": "Checks in force for you",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: chk head"
+  },
+  {
+   "key": "screen.aichecks.byteam",
+   "en": "Required by the team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: byteam"
+  },
+  {
+   "key": "screen.aichecks.byteam.help",
+   "en": "The team's administrators require this. You can't change it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: byteam help"
+  },
+  {
+   "key": "screen.aichecks.mytick",
+   "en": "Require this for my own work",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: mytick"
+  },
+  {
+   "key": "screen.aimine.chk.save",
+   "en": "Save my checks",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: chk save"
+  },
+  {
+   "key": "screen.aimine.chk.proj",
+   "en": "When you work in a project, that project's checks also apply to the work done directly in it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: chk proj"
+  },
+  {
+   "key": "screen.aimine.chk.rule",
+   "en": "You can require any check the team does not. An AI that fails one you require is not used for your work, and you are told why.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: chk rule"
+  },
+  {
+   "key": "screen.aimine.use.head",
+   "en": "Your use and cost",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: use head"
+  },
+  {
+   "key": "screen.aimine.use.th",
+   "en": "Last 30 days",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: use th"
+  },
+  {
+   "key": "screen.aimine.use.calls",
+   "en": "Requests",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: use calls"
+  },
+  {
+   "key": "screen.aimine.use.cost",
+   "en": "Cost",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: use cost"
+  },
+  {
+   "key": "screen.aimine.use.nomoney",
+   "en": "not measurable in money",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: use nomoney"
+  },
+  {
+   "key": "screen.aimine.use.note",
+   "en": "Only you see this: your own use across every account that served you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: use note"
+  },
+  {
+   "key": "screen.aimine.first.head",
+   "en": "The first time material goes to a provider",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: first head"
+  },
+  {
+   "key": "screen.aimine.first.note",
+   "en": "The assistant names the provider and waits for you before material first goes to it, and after any switch to another provider.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: first note"
+  },
+  {
+   "key": "screen.aimine.first.see",
+   "en": "You can see this notice, and the others like it, on When the AI can't go on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: first see"
+  },
+  {
+   "key": "screen.aimine.first.link",
+   "en": "When the AI can't go on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimine: first link"
+  },
+  {
+   "key": "screen.aiproject.mock",
+   "en": "In this mockup, show the screen for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: mock"
+  },
+  {
+   "key": "screen.aiproject.mock.a",
+   "en": "the project's owner",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: mock a"
+  },
+  {
+   "key": "screen.aiproject.mock.b",
+   "en": "a member",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: mock b"
+  },
+  {
+   "key": "screen.aiproject.title",
+   "en": "AI for this project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: title"
+  },
+  {
+   "key": "screen.aiproject.intro",
+   "en": "Which of the team's AIs {project} uses, its own limit and its order.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: intro"
+  },
+  {
+   "key": "screen.aiproject.member",
+   "en": "{owner}, the project's owner, decides this. You can ask them to change it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: member"
+  },
+  {
+   "key": "screen.aiproject.use.head",
+   "en": "Which AIs this project uses",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: use head"
+  },
+  {
+   "key": "screen.aiproject.use.legend",
+   "en": "The team's allowed AIs",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: use legend"
+  },
+  {
+   "key": "screen.aiproject.use.note",
+   "en": "A project can use fewer of the team's AIs, never more.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: use note"
+  },
+  {
+   "key": "screen.aiproject.use.save",
+   "en": "Save which AIs this project uses",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: use save"
+  },
+  {
+   "key": "screen.aiproject.bud.head",
+   "en": "This project's limit",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: bud head"
+  },
+  {
+   "key": "screen.aiproject.bud.field",
+   "en": "Monthly limit for this project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: bud field"
+  },
+  {
+   "key": "screen.aiproject.bud.save",
+   "en": "Set the limit",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: bud save"
+  },
+  {
+   "key": "screen.aiproject.order.head",
+   "en": "Its order",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: order head"
+  },
+  {
+   "key": "screen.aiproject.order.note",
+   "en": "Within the team's order.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: order note"
+  },
+  {
+   "key": "screen.aiproject.chk.head",
+   "en": "Checks for this project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: chk head"
+  },
+  {
+   "key": "screen.aichecks.projtick",
+   "en": "Require this for this project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aichecks: projtick"
+  },
+  {
+   "key": "screen.aiproject.chk.line",
+   "en": "These apply to all work done directly in {project}, not to work in the record or other areas that belong to no project.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: chk line"
+  },
+  {
+   "key": "screen.aiproject.chk.save",
+   "en": "Save the checks for this project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: chk save"
+  },
+  {
+   "key": "screen.aiproject.chg.head",
+   "en": "Changes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: chg head"
+  },
+  {
+   "key": "screen.aiproject.order.up",
+   "en": "Move up",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: order up"
+  },
+  {
+   "key": "screen.aiproject.order.down",
+   "en": "Move down",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aiproject: order down"
+  },
+  {
+   "key": "screen.aimoments.mock",
+   "en": "In this mockup, show the moment",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: mock"
+  },
+  {
+   "key": "screen.aimoments.mock.a",
+   "en": "an answer continues on another account",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: mock a"
+  },
+  {
+   "key": "screen.aimoments.mock.b",
+   "en": "before material first goes to a new provider",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: mock b"
+  },
+  {
+   "key": "screen.aimoments.mock.c",
+   "en": "the limit is reached and no account is left",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: mock c"
+  },
+  {
+   "key": "screen.aimoments.mock.d",
+   "en": "the provider is down or slow",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: mock d"
+  },
+  {
+   "key": "screen.aimoments.mock.e",
+   "en": "the model was retired",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: mock e"
+  },
+  {
+   "key": "screen.aimoments.mock.f",
+   "en": "the AI is not suited for this part",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: mock f"
+  },
+  {
+   "key": "screen.aimoments.mock.g",
+   "en": "a use was switched off",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: mock g"
+  },
+  {
+   "key": "screen.aimoments.mock.h",
+   "en": "the cost before and after a run",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: mock h"
+  },
+  {
+   "key": "screen.aimoments.title",
+   "en": "When the AI can't go on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: title"
+  },
+  {
+   "key": "screen.aimoments.intro",
+   "en": "What the assistant panel shows, one moment at a time. It never changes account, model or provider without telling you, and it waits for your choice.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: intro"
+  },
+  {
+   "key": "screen.aimoments.panel",
+   "en": "The assistant",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: panel"
+  },
+  {
+   "key": "screen.aimoments.a.what",
+   "en": "The team's {from} account reached its monthly limit at {time}, so this answer continues on {to}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: a what"
+  },
+  {
+   "key": "screen.aimoments.a.note",
+   "en": "The order is set by the team's administrators. You may decline the switch, and the answer waits until you choose.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: a note"
+  },
+  {
+   "key": "screen.aimoments.a.keep",
+   "en": "Keep going on {provider}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: a keep"
+  },
+  {
+   "key": "screen.aimoments.a.stop",
+   "en": "Stop here",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: a stop"
+  },
+  {
+   "key": "screen.aimoments.b.what",
+   "en": "{provider} would receive {sent}. It runs in {where}, keeps it {keep}, does not train on it and shares it only with companies it names.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: b what"
+  },
+  {
+   "key": "screen.aimoments.b.note",
+   "en": "This is the first time material goes to this provider from your team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: b note"
+  },
+  {
+   "key": "screen.aimoments.b.send",
+   "en": "Send it to {provider}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: b send"
+  },
+  {
+   "key": "screen.aimoments.b.nosend",
+   "en": "Don't send",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: b nosend"
+  },
+  {
+   "key": "screen.aimoments.c.what",
+   "en": "The team's {from} account reached its monthly limit at {time}, and no later account is on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: c what"
+  },
+  {
+   "key": "screen.aimoments.c.who",
+   "en": "Only an administrator can raise the limit: {admins}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: c who"
+  },
+  {
+   "key": "screen.aimoments.c.wait",
+   "en": "Wait until {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: c wait"
+  },
+  {
+   "key": "screen.aimoments.without",
+   "en": "Continue without AI",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: without"
+  },
+  {
+   "key": "screen.aimoments.d.what",
+   "en": "{provider} is not answering.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: d what"
+  },
+  {
+   "key": "screen.aimoments.d.note",
+   "en": "Your question is kept. Nothing goes to another provider unless you choose it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: d note"
+  },
+  {
+   "key": "screen.aimoments.d.wait",
+   "en": "Wait a little longer",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: d wait"
+  },
+  {
+   "key": "screen.aimoments.d.switch",
+   "en": "Switch to {account}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: d switch"
+  },
+  {
+   "key": "screen.aimoments.e.what",
+   "en": "{provider} retired {old}. It says {new} replaces it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: e what"
+  },
+  {
+   "key": "screen.aimoments.e.choose",
+   "en": "Use this model instead",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: e choose"
+  },
+  {
+   "key": "screen.aimoments.e.go",
+   "en": "Use this model",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: e go"
+  },
+  {
+   "key": "screen.aimoments.e.none",
+   "en": "If the provider names no replacement, you choose another model from the ones it offers.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: e none"
+  },
+  {
+   "key": "screen.aimoments.f.what",
+   "en": "The AI you chose has not passed drafting letters. Choose another for this, or continue without AI.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: f what"
+  },
+  {
+   "key": "screen.aimoments.f.choose",
+   "en": "Choose another AI",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: f choose"
+  },
+  {
+   "key": "screen.aimoments.g.what",
+   "en": "{use} is switched off on {account}, so the assistant stopped. It was not moved to another account.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: g what"
+  },
+  {
+   "key": "screen.aimoments.g.who",
+   "en": "Switched off by {who} on {date}. They can switch it back on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: g who"
+  },
+  {
+   "key": "screen.aimoments.g.ask",
+   "en": "Ask {who} to switch it on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: g ask"
+  },
+  {
+   "key": "screen.aimoments.h.before",
+   "en": "Estimated: about {cost} on {account}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: h before"
+  },
+  {
+   "key": "screen.aimoments.h.start",
+   "en": "Start the run",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: h start"
+  },
+  {
+   "key": "screen.aimoments.h.pick",
+   "en": "Choose another account",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: h pick"
+  },
+  {
+   "key": "screen.aimoments.h.after",
+   "en": "Cost: {cost}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: h after"
+  },
+  {
+   "key": "screen.aimoments.h.note",
+   "en": "The estimate comes from the provider's published prices. The provider's own bill is what counts. A plan that reports no cost says “not measurable in money”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aimoments: h note"
+  },
+  {
+   "key": "screen.aitest.mock",
+   "en": "In this mockup, show",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: mock"
+  },
+  {
+   "key": "screen.aitest.mock.a",
+   "en": "before the test",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: mock a"
+  },
+  {
+   "key": "screen.aitest.mock.b",
+   "en": "the test running",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: mock b"
+  },
+  {
+   "key": "screen.aitest.mock.c",
+   "en": "the result by part",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: mock c"
+  },
+  {
+   "key": "screen.aitest.mock.d",
+   "en": "what would be sent",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: mock d"
+  },
+  {
+   "key": "screen.aitest.title",
+   "en": "Test an AI that isn't listed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: title"
+  },
+  {
+   "key": "screen.aitest.intro",
+   "en": "Only administrators run this. Until a release lists an AI, it can be used only after this test.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: intro"
+  },
+  {
+   "key": "screen.aitest.what.head",
+   "en": "The AI to test",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: what head"
+  },
+  {
+   "key": "screen.aitest.what.kind",
+   "en": "What kind of AI",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: what kind"
+  },
+  {
+   "key": "screen.aitest.what.custom",
+   "en": "An AI you run yourself, or one from a smaller provider",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: what custom"
+  },
+  {
+   "key": "screen.aitest.what.plan",
+   "en": "A plan that is not listed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: what plan"
+  },
+  {
+   "key": "screen.aitest.what.endpoint",
+   "en": "Web address of the AI",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: what endpoint"
+  },
+  {
+   "key": "screen.aitest.what.key",
+   "en": "Key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: what key"
+  },
+  {
+   "key": "screen.aitest.what.keyhelp",
+   "en": "It is stored safely when you give it and is never shown again, to you or to anyone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: what keyhelp"
+  },
+  {
+   "key": "screen.aitest.what.save",
+   "en": "Save the address and key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: what save"
+  },
+  {
+   "key": "screen.aitest.cost.head",
+   "en": "What the test costs",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: cost head"
+  },
+  {
+   "key": "screen.aitest.cost.est",
+   "en": "Civicsmith's standard test is estimated at about {cost}, from {n} requests sent to the AI.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: cost est"
+  },
+  {
+   "key": "screen.aitest.cost.ceiling",
+   "en": "Spend ceiling",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: cost ceiling"
+  },
+  {
+   "key": "screen.aitest.cost.ceilinghelp",
+   "en": "The test stops before it spends more than this.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: cost ceilinghelp"
+  },
+  {
+   "key": "screen.aitest.cost.run",
+   "en": "Run the test",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: cost run"
+  },
+  {
+   "key": "screen.aitest.cost.note",
+   "en": "The cost is shown before the test runs. The test sends none of your team's material.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: cost note"
+  },
+  {
+   "key": "screen.aitest.prog.head",
+   "en": "The test is running",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: prog head"
+  },
+  {
+   "key": "screen.aitest.prog.done",
+   "en": "Done",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: prog done"
+  },
+  {
+   "key": "screen.aitest.prog.now",
+   "en": "Running",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: prog now"
+  },
+  {
+   "key": "screen.aitest.prog.wait",
+   "en": "Waiting",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: prog wait"
+  },
+  {
+   "key": "screen.aitest.prog.note",
+   "en": "The test is at {spent} of the {ceiling} ceiling so far. Leave this page open.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: prog note"
+  },
+  {
+   "key": "screen.aitest.res.head",
+   "en": "The result, part by part",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: res head"
+  },
+  {
+   "key": "screen.aitest.res.pass",
+   "en": "Passed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: res pass"
+  },
+  {
+   "key": "screen.aitest.res.lim",
+   "en": "Passed with limits",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: res lim"
+  },
+  {
+   "key": "screen.aitest.res.no",
+   "en": "Not suitable",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: res no"
+  },
+  {
+   "key": "screen.aitest.res.grade",
+   "en": "It becomes Reproduced when another team's test agrees.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: res grade"
+  },
+  {
+   "key": "screen.aitest.send.head",
+   "en": "What would be sent",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: send head"
+  },
+  {
+   "key": "screen.aitest.send.about",
+   "en": "This is exactly what will be sent, in plain text. Nothing is sent until you press Send the results.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: send about"
+  },
+  {
+   "key": "screen.aitest.send.not",
+   "en": "Not in it: the test conversations, your key, the AI's address, or anything your team holds.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: send not"
+  },
+  {
+   "key": "screen.aitest.send.legend",
+   "en": "Your team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: send legend"
+  },
+  {
+   "key": "screen.aitest.send.name",
+   "en": "Include our team's name, so others can see who tested it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: send name"
+  },
+  {
+   "key": "screen.aitest.send.go",
+   "en": "Send the results",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: send go"
+  },
+  {
+   "key": "screen.aitest.send.no",
+   "en": "Don't send",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 aitest: send no"
+  },
+  {
+   "key": "screen.airesults.title",
+   "en": "Results other teams sent",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 airesults: title"
+  },
+  {
+   "key": "screen.airesults.intro",
+   "en": "Every member may read these. They hold the parts each AI passed and its limits, never a test conversation.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 airesults: intro"
+  },
+  {
+   "key": "screen.airesults.show",
+   "en": "Show the results for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 airesults: show"
+  },
+  {
+   "key": "screen.airesults.all",
+   "en": "Every AI",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 airesults: all"
+  },
+  {
+   "key": "screen.airesults.speed",
+   "en": "Standard jobs: {speed}, {cost}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 airesults: speed"
+  },
+  {
+   "key": "screen.airesults.by",
+   "en": "Tested by {who} on {date}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 airesults: by"
+  },
+  {
+   "key": "screen.airesults.note",
+   "en": "A team is named only when it agreed to be. Otherwise it is “a team”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-420: B488 airesults: note"
+  },
+  {
+   "key": "screen.settings.storage.head",
+   "en": "How full your team's record is",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42 (K4635): the section on Settings, above the team's settings, administrators only"
+  },
+  {
+   "key": "screen.settings.storage.used",
+   "en": "{used} of {limit} ({pct}%)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: the gauge; {used}, {limit} sizes such as 8.1 GB and 10 GB; {pct} a whole number"
+  },
+  {
+   "key": "screen.settings.storage.what",
+   "en": "The record holds everything your team keeps: documents, notes, findings and their history. Only administrators see this.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: beneath the gauge"
+  },
+  {
+   "key": "screen.settings.storage.unknown",
+   "en": "The record's size hasn't been measured yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: the size not stated"
+  },
+  {
+   "key": "screen.settings.storage.warn70",
+   "en": "The record has passed 70% of what it can hold. Nothing has stopped yet. Plan now, with the four things below.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: the 70% warning"
+  },
+  {
+   "key": "screen.settings.storage.warn90",
+   "en": "The record has passed 90% of what it can hold. When it is full, nothing new can be saved: no document, note or change. Act now.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: the 90% warning (writes fail at the limit)"
+  },
+  {
+   "key": "screen.settings.storage.factors",
+   "en": "How large a record can grow depends on four things: your team's Cloudflare plan; paring the record down to what your investigations and searches use; how long searches in the background take as it grows; and Cloudflare's own limits.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: Bob's four factors (K4635), shown with the gauge and with each warning"
+  },
+  {
+   "key": "screen.settings.storage.more",
+   "en": "When it passes 90%, or its size isn't known",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (1) G42: the drawing's fold only (mockup)"
+  },
+  {
+   "key": "screen.document.sheet.read",
+   "en": "Every line of this sheet is read, and can be searched and cited. Its cells are read as figures and dates only for the rows a member opens or cites.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (2) G41 (K4636): on the Document page of a sheet"
+  },
+  {
+   "key": "screen.document.sheet.rows",
+   "en": "Cells read as figures and dates for rows {from} to {to}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (2) G41: what is interpreted, stated; BOB's 'cells interpreted for rows {from}-{to}'; more than one range joins them: rows 2 to 140 and 300 to 310"
+  },
+  {
+   "key": "screen.document.sheet.none",
+   "en": "No cells read as figures and dates yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (2) G41: before any row is opened or cited"
+  },
+  {
+   "key": "screen.document.sheet.fold",
+   "en": "When the document is a spreadsheet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-422: B491 (2) G41: the drawing's fold only (mockup)"
+  },
+  {
+   "key": "screen.document.reading.too_large",
+   "en": "Civicsmith read this document, but what it read is too large to keep: {size}, most of it in {key}. The document itself is kept whole, and you can open it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-423: B492 screens-inquiry (G41; extraction R97): a reading over 1 MiB stated with its size and its largest part; replaces the code-origin stand-in. {size} as extraction.index.reading_size gives it; {key} must reach the member as a plain name (its text, its pages, its cells, the names and dates found in it), never a field name: owed by BOB, the keys that can occur. Not screen.document.reading.toolarge (DEC-419: a file too large to read at all)"
+  },
+  {
+   "key": "screen.document.reading.part.text_units",
+   "en": "its text",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-423: B492 G41 (B493): the {key} fill of screen.document.reading.too_large when the largest part is text_units"
+  },
+  {
+   "key": "screen.document.reading.part.pages",
+   "en": "its pages",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-423: B492 G41: the {key} fill when the largest part is the pages"
+  },
+  {
+   "key": "screen.document.reading.part.cells",
+   "en": "its cells",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-423: B492 G41: the {key} fill when the largest part is the cells"
+  },
+  {
+   "key": "screen.document.reading.part.entities",
+   "en": "the names and dates found in it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-423: B492 G41: the {key} fill when the largest part is the entities"
+  },
+  {
+   "key": "screen.document.reading.part.other",
+   "en": "one part of what was read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-423: B492 G41: the {key} fill for any other key"
+  },
+  {
+   "key": "screen.document.reading.part.facts",
+   "en": "the names and dates found in it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-423: B492 G41 (B493): the {key} fill when the largest part is facts"
+  },
+  {
+   "key": "screen.document.reading.part.references",
+   "en": "the references found in it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-423: B492 G41 (B493): the {key} fill when the largest part is references"
+  },
+  {
+   "key": "screen.document.reading.part.tables",
+   "en": "its tables",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-423: B492 G41 (B493): the {key} fill when the largest part is tables (an office reader lists them)"
+  },
+  {
+   "key": "screen.document.reading.too_large.lost",
+   "en": "Until it is read again in smaller pieces, its words can't be searched or cited.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-423: B492 G41 (B493; extraction R97): drawn after screen.document.reading.too_large; such a reading keeps no text, names or cells"
+  },
+  {
+   "key": "screen.published.casefile.being_prepared",
+   "en": "This edition is complete and signed. Its case file is being prepared and will be offered here when it is ready.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 screens-publish (G54; public-read/casefile-words.mjs): a complete edition whose case file is not built yet and is still being tried"
+  },
+  {
+   "key": "screen.published.casefile.retrying",
+   "en": "This edition is complete and signed, but its case file couldn't be built yet. Civicsmith will try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: a complete edition whose last build failed for a reason that may pass; a reason line (screen.published.casefile.code.*) may follow"
+  },
+  {
+   "key": "screen.published.casefile.stopped",
+   "en": "This edition is complete and signed, but its case file can't be built, because a material it lists is no longer held. Civicsmith has stopped trying. The team that published this case can say more.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: a complete edition whose case file cannot be built because a material is no longer held (a stop, not a wait); BOB: say plainly it is complete and signed"
+  },
+  {
+   "key": "screen.published.casefile.waiting_on_members",
+   "en": "This edition isn't complete yet, so it has no case file. It is waiting for the rest of its signatures.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: an edition still short of its signatures; no build is attempted"
+  },
+  {
+   "key": "screen.published.casefile.code.NO_BUCKET",
+   "en": "The place where published files are kept wasn't available.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: the reason line for the stable code NO_BUCKET, a sentence on its own after the state's"
+  },
+  {
+   "key": "screen.published.casefile.code.STORE_SILENT",
+   "en": "The record didn't answer.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: the reason line for STORE_SILENT"
+  },
+  {
+   "key": "screen.published.casefile.code.MATERIAL_MISSING",
+   "en": "A material the case file lists is no longer held.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: the reason line for MATERIAL_MISSING, the code behind the 'stopped' state"
+  },
+  {
+   "key": "screen.published.casefile.code.FINDING_MISSING",
+   "en": "The text of a finding couldn't be found.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: the reason line for FINDING_MISSING"
+  },
+  {
+   "key": "screen.published.casefile.code.BUCKET_FAILED",
+   "en": "A file of the case file couldn't be stored.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: the reason line for BUCKET_FAILED"
+  },
+  {
+   "key": "screen.published.casefile.code.NOT_RECORDED",
+   "en": "The list of the case file's files couldn't be recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: the reason line for NOT_RECORDED"
+  },
+  {
+   "key": "screen.published.casefile.code.INTERRUPTED",
+   "en": "An earlier attempt to build it was interrupted.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: the reason line for INTERRUPTED"
+  },
+  {
+   "key": "screen.published.casefile.code.TOO_LARGE",
+   "en": "The case file is too large to build in one piece.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: the reason line for TOO_LARGE"
+  },
+  {
+   "key": "screen.published.casefile.code.UNKNOWN",
+   "en": "It couldn't be built, for a reason Civicsmith doesn't know yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G54: the reason line for any code the closed set does not name"
+  },
+  {
+   "key": "calculations.ingest.started",
+   "en": "{rows} rows are being read into money facts in the background. You will be told when it is done. Until then the facts it writes are marked as not complete.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 calculations R14 (G55): the answer that starts a large ingest; {rows} the count asked for"
+  },
+  {
+   "key": "calculations.ingest.already",
+   "en": "This table is already being read into money facts in the background. Wait until it is done (you will be told), then ask again. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G55: a second ingest of a table whose first is still running; refused"
+  },
+  {
+   "key": "calculations.ingest.stopped_attempts",
+   "en": "Reading this table failed three times in a row, so it was stopped. The money facts already written stay, marked as not complete. Look at which rows were written before you ask for more.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G55: the stop reason after three failed attempts; also the 'says' of the stopped notice's state"
+  },
+  {
+   "key": "calculations.ingest.stopped_table",
+   "en": "The table changed while it was being read, so the reading was stopped. The money facts already written stay, marked as not complete.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G55: the stop reason when the bound table changed under a running ingest"
+  },
+  {
+   "key": "calculations.ingest.no_ingest",
+   "en": "Choose which background reading you mean.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G55: an ingest read asked with no ingest named"
+  },
+  {
+   "key": "calculations.ingest.bad_kind",
+   "en": "Choose what to see of a background reading: where it stands, the rows that were written, or the rows that were not.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G55: an ingest read with a kind that is none of state, written, not_written"
+  },
+  {
+   "key": "calculations.index.a_reason_is_at_most",
+   "en": "A reason can be at most {max} characters. Shorten it and ask again. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G55: a reason for taking every row of a table that is over its bound; {max} the bound"
+  },
+  {
+   "key": "calculations.index.one_act_reads_at_most",
+   "en": "One request can read at most {bound_rows} rows, and this asks for {rows}. Ask for the rows in batches of {bound_rows} or fewer. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G55: an ingest naming more rows than one act takes; {rows} the count asked for, {bound_rows} the bound"
+  },
+  {
+   "key": "calculations.declared.moneyingestread",
+   "en": "Reads what a money ingest has stored, a page at a time, with the true counts and whether the ingest is complete. Changes nothing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G55: the declared op's description (a builders' line like the other declared ops'; written because BOB asked for the row)"
+  },
+  {
+   "key": "notice-producers.ingest.done",
+   "en": "Your table has been read: {written} of {rows} rows were written as money facts, and {not_written} were not.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G55: the Queue item to the member who asked, when a background ingest is done; {written} {rows} {not_written} counts"
+  },
+  {
+   "key": "notice-producers.ingest.stopped",
+   "en": "Reading your table stopped after {written} of {rows} rows were written as money facts; the rest were not. The facts already written stay, marked as not complete.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G55: the Queue item when a background ingest was stopped; {written} {rows} counts; the stop's own reason follows from calculations.ingest.stopped_*"
+  },
+  {
+   "key": "money.ingest.partial",
+   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Background reading: {ingest}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G55: beside any money fact written by an open or stopped ingest; {ingest} the ingest's key"
+  },
+  {
+   "key": "case-authoring.index.case_document_too_large",
+   "en": "This case document is {size} MB, over the {bound} MB a case document may be. It names {materials} materials and {members} findings. Nothing was prepared and nothing was changed. Leave out some of the materials or findings and prepare the case again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 case-authoring R14 (G47): preparing a case whose document is over its bound; {size} {bound} in MB, {materials} {members} counts"
+  },
+  {
+   "key": "case-authoring.checks.case_document_too_large",
+   "en": "This case document is {size} MB, over the {bound} MB a case document may be. It names {materials} materials and {members} findings. Nothing was prepared and nothing was changed. Leave out some of the materials or findings and prepare the case again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G47: the same sentence as the check's translation (C-136.9); same fills"
+  },
+  {
+   "key": "case-authoring.index.case_document_not_stored",
+   "en": "The case document couldn't be stored, so nothing was prepared and nothing was changed. Prepare the case again. If it fails again, tell an administrator.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G47: the store refused the document for a reason other than its size"
+  },
+  {
+   "key": "case-grammar.casefile.capture-missing",
+   "en": "{path} is the one path for {ref}, which {count} rows of the case document's materials state, so each of their files must be under its own row's capture",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 case-grammar R13 (G50): a checker's finding on a case file; a plain path for a reference stated on several rows; {path} {ref} {count}"
+  },
+  {
+   "key": "case-grammar.casefile.capture-needless",
+   "en": "{path} is under a capture, but the case document's materials state {ref} on one row only, so its files must not be under a capture",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G50: a checker's finding; a capture path for a reference stated on one row; {path} {ref}"
+  },
+  {
+   "key": "case-grammar.casefile.capture-unnamed",
+   "en": "{path} is under the capture {capture}, but no row of the case document's materials states that capture for {ref}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G50: a checker's finding; a capture no row of that reference names; {path} {capture} {ref}"
+  },
+  {
+   "key": "case-grammar.casefile.format-accepted",
+   "en": "the format must be one of {accepted}, each read as written, and this manifest states {value}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G50: a checker's finding; {accepted} the formats read, {value} what the manifest states"
+  },
+  {
+   "key": "case-grammar.casefile.format-unused",
+   "en": "a {format} case file has at least one file under a row's capture, and this one lists none",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G50: a checker's finding; {format} the format that needs a capture-path file"
+  },
+  {
+   "key": "case-grammar.casefile.path-format",
+   "en": "{path} puts a capture in its path, which only {v4} does, and this manifest is {format}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 G50: a checker's finding; {path} {v4} the format that spells captures, {format} the manifest's"
+  },
+  {
+   "key": "reading-pipeline.index.classified_over_sample",
+   "en": "What kind of document this is was judged from a sample of its text: {chars} of its {of} characters, taken from its opening, {windows} stretches spread through it, and its end. The whole text is still read, in pieces.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 reading-pipeline R11 (G48): the basis of a reading whose sheet was classified over a bounded view; {chars} {of} {windows} counts"
+  },
+  {
+   "key": "docprofile.readtext.the_sheet_is_over_the_bound_so_its_type_was_judged_from_a_view",
+   "en": "This sheet is over {bound} characters, so what kind of document it is was judged from {chars} of its {of} characters: the first {head} and {n} stretches spread across it. Where it came from and what it holds are read from all of it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 docprofile (G48): the same fact in the profile's own reason; 'the stack' is the software that made the file; {bound} {chars} {of} {head} {n} counts"
+  },
+  {
+   "key": "installer.fleet.logsunconfirmed",
+   "en": "Cloudflare didn't say whether the logs of your team's Civicsmith are switched on, so that couldn't be confirmed. The install went on. The next update checks again; you can also look at Workers Logs for it in your Cloudflare account.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 newgroup steps/uploads.mjs R40: after an install or update, the program's logs setting could not be read back; the run continues (a note, not a stop)"
+  },
+  {
+   "key": "installer-steps.plane.observability",
+   "en": "The new version of your team's Civicsmith is in place, but your Cloudflare account did not switch on its logs (Workers Logs), so the update stopped before it finished. Without logs a problem could go unseen. Switch on Workers Logs for it in your Cloudflare account, then run the update again to finish it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 newgroup steps/uploads.mjs R40: the refusal when the program's settings were read back and its logs are off; replaces the stand-in installer.fleet.why.program; the new script is already uploaded and runs, the steps after it are not taken (B496), so never 'Nothing was changed.'"
+  },
+  {
+   "key": "money.index.a_fiscal_key_is_a",
+   "en": "A fiscal period needs a name, such as the label your team's profile gives a fiscal year.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29: the detail the money screen draws beside refusal.MONEY_BAD_PERIOD (screens-investigate/money.mjs)"
+  },
+  {
+   "key": "money.index.a_period_has_no_field",
+   "en": "A period can't have a field called {extra}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; {extra} the field named"
+  },
+  {
+   "key": "money.index.a_period_is_from_to",
+   "en": "A period is a start (with an end if one is stated), a precision and a time zone, or a fiscal year with the body it belongs to.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; the shape of a period, said without field names"
+  },
+  {
+   "key": "money.index.a_period_states_its_start",
+   "en": "A period needs a start.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
+  },
+  {
+   "key": "money.index.a_periods_end_is_a",
+   "en": "A period's end must be written to the same precision as its start, or left out when it isn't stated.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
+  },
+  {
+   "key": "money.index.a_periods_precision_is_day",
+   "en": "A period's precision must be day, minute or second.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
+  },
+  {
+   "key": "money.index.the_active_profiles_hold_no",
+   "en": "Your team's profiles hold no fiscal year for {body}, so {fiscal} can't be turned into dates.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; {body} {fiscal}"
+  },
+  {
+   "key": "money.index.the_period_ends_before_it",
+   "en": "The period ends before it starts.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
+  },
+  {
+   "key": "money.index.the_period_states_no_zone",
+   "en": "The period names no time zone, and your team's profiles give none.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
+  },
+  {
+   "key": "money.index.the_periods_end_why",
+   "en": "The end of the period: {why}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; {why} the reason the date was refused, as the code gives it"
+  },
+  {
+   "key": "money.index.the_periods_start_why",
+   "en": "The start of the period: {why}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; {why} the reason the date was refused, as the code gives it"
+  },
+  {
+   "key": "money.index.the_profiles_fiscal_year_for",
+   "en": "Your team's profile for {body} has no fiscal year {fiscal}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD; {body} {fiscal}"
+  },
+  {
+   "key": "money.index.events_is_not_wired_here",
+   "en": "Events aren't connected here yet, so the contract's award and its change orders can't be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money: the reason the money screen's committed-against-paid line gives when no figure can be shown (screens-investigate/money.mjs, cap.difference.why)"
+  },
+  {
+   "key": "money.index.more_than_one",
+   "en": "more than one",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 money: a fill of money.undetermined.fact_concerns_events, drawn in a trail's 'where it moved' reason"
+  },
+  {
+   "key": "notice-producers.index.fetch_done_summary",
+   "en": "{document} has been fetched",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 notice-producers R27: the Queue item's title (fetch-done); {document} its title. Beside notice.fetch.done (DEC-418), which the Queue draws only where it holds a queue.<kind> row"
+  },
+  {
+   "key": "notice-producers.index.fetch_done_detail",
+   "en": "The large page you asked for is fetched and filed. Open it to read it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 notice-producers R27: the Queue item's line (fetch-done)"
+  },
+  {
+   "key": "notice-producers.index.machine_work_from_your_standing",
+   "en": "The assistant worked from your standing question: {v1}{v2}. You are told about this once.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 notice-producers: the standing-answer item's line; {v1} 'N new finds' or 'New finds are held', {v2} empty or '; the assistant did not answer, because ...'"
+  },
+  {
+   "key": "notice-producers.index.open_the_document",
+   "en": "Open the document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-424: B495 notice-producers R27: the fetch-done item's door; the same words as notice.fetch.done.door (DEC-418)"
+  },
+  {
+   "key": "refusal.NO_SUCH_SESSION",
+   "en": "This capture has ended, so there is nothing left to finish. Start it again from Add. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G72 screens-intake: \"Finish it\" on a capture whose session the ledger closed; the screen also reads its open captures again so the Unfinished line leaves"
+  },
+  {
+   "key": "queue.kind.ingest-done",
+   "en": "Tables you asked to be read into money facts, now read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G61 queue: the kind's one-line meaning (the style of queue.kind.capture-completed-unattended)"
+  },
+  {
+   "key": "queue.kind.ingest-stopped",
+   "en": "Tables whose reading into money facts was stopped",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G61 queue: the kind's one-line meaning"
+  },
+  {
+   "key": "queue.kind.fetch-done",
+   "en": "Large files you captured, now fetched and filed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G61 queue: the kind's one-line meaning"
+  },
+  {
+   "key": "screen.ceremony.gate.check",
+   "en": "Check: {check}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G60: the line naming a finding's check under its message; {check} the check's plain name where the record holds one, else its number"
+  },
+  {
+   "key": "screen.ceremony.publishat.nozone",
+   "en": "Your team's Civicsmith holds no time zone to count a publishing time in, so only \"Sign and publish now\" is offered.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G62 screens-publish: reason (i), no zone held; replaces refusal.PUBLISH_AT_NO_ZONE's \"isn't set … under Settings\" on the Sign step. Proposed key"
+  },
+  {
+   "key": "screen.ceremony.publishat.notreached",
+   "en": "Publishing at a set time isn't offered for this edition yet: {reason} Only \"Sign and publish now\" is offered for now.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G62: reason (ii), the ratification check not reached; {reason} the sentence publish_at_stated gives. Proposed key"
+  },
+  {
+   "key": "screen.ceremony.publishat.nooffer",
+   "en": "Publishing at a set time came without a time zone, so it can't be scheduled safely, and only \"Sign and publish now\" is offered. This is a fault in Civicsmith: tell an administrator.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G62: reason (iii), an offer with an empty zone. Proposed key"
+  },
+  {
+   "key": "refusal.PROMOTE_NOT_A_PARTICIPANT",
+   "en": "Only the members of {project}, and those invited to it, can file documents into it. Nothing was filed. Ask an owner of the project to invite you, or file it into a project you are in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G74 promotion: BOB's P17 decision after K4557; DEC-83's pattern, the sentence then the remedy; {project} the project's name, never its id. Proposed key: the job names its own if it differs"
+  },
+  {
+   "key": "screen.install.region.head",
+   "en": "Where your team's record is kept",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer (K4746 (2)): the section after the team's places; the region SHOWN on the install screen"
+  },
+  {
+   "key": "screen.install.region.near",
+   "en": "Near you: {region}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: the region chosen from the founder's location; {region} one of the .region.* names below, in lower case after the colon"
+  },
+  {
+   "key": "screen.install.region.why",
+   "en": "Your team's record is created in Cloudflare's data centers nearest to where you are installing from, so it answers quickly. It is chosen once, when your team's Civicsmith is installed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: under the region shown"
+  },
+  {
+   "key": "screen.install.region.legal",
+   "en": "Our team must keep its record in a particular region",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer (K4746 (2)): the fold for a team with a legal requirement"
+  },
+  {
+   "key": "screen.install.region.field",
+   "en": "Keep the record in",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: the region picker's label"
+  },
+  {
+   "key": "screen.install.region.help",
+   "en": "Choose a region only if a law or an agreement your team is bound by says where its record must be kept. Only the European Union choice is a guarantee; the other regions are where Cloudflare places it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: the picker's help; the EU choice is Cloudflare's jurisdiction restriction, the others its location hints"
+  },
+  {
+   "key": "screen.install.region.wnam",
+   "en": "Western North America",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (wnam)"
+  },
+  {
+   "key": "screen.install.region.enam",
+   "en": "Eastern North America",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (enam)"
+  },
+  {
+   "key": "screen.install.region.sam",
+   "en": "South America",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (sam)"
+  },
+  {
+   "key": "screen.install.region.weur",
+   "en": "Western Europe",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (weur)"
+  },
+  {
+   "key": "screen.install.region.eeur",
+   "en": "Eastern Europe",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (eeur)"
+  },
+  {
+   "key": "screen.install.region.apac",
+   "en": "Asia and the Pacific",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (apac)"
+  },
+  {
+   "key": "screen.install.region.oc",
+   "en": "Oceania",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (oc)"
+  },
+  {
+   "key": "screen.install.region.afr",
+   "en": "Africa",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (afr)"
+  },
+  {
+   "key": "screen.install.region.me",
+   "en": "The Middle East",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (me)"
+  },
+  {
+   "key": "screen.install.region.eu",
+   "en": "Only inside the European Union (a legal requirement)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: the jurisdiction choice (eu)"
+  },
+  {
+   "key": "acquisition.index.render_did_not_return",
+   "en": "the page as a visitor saw it did not come back in time",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 acquisition/index.mjs:1492: a final render's failure detail"
+  },
+  {
+   "key": "acquisition.index.the_rendered_document_is_length",
+   "en": "the rendered document is {length} bytes, over this surface's {MAX}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 acquisition/index.mjs:1511 (G72): {length} and {MAX} byte counts"
+  },
+  {
+   "key": "calculations.index.taking_every_row_of_a",
+   "en": "Taking every row of a table is the rare case, so say why you need them all. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 calculations/index.mjs:1762 (G63): an all-rows read with no reason given (K1468)"
+  },
+  {
+   "key": "calculations.index.the_source_reads_as_one",
+   "en": "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 calculations/index.mjs:566 (G64)"
+  },
+  {
+   "key": "capture.index.vouched_basis",
+   "en": "this document is already vouched for, so whether it could be vouched for in a batch is not asked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 capture/index.mjs:259 (G78): the batch-vouch basis of a document already vouched for"
+  },
+  {
+   "key": "capture.index.file_too_large",
+   "en": "the file exceeds what this surface will capture even in parts; nothing was written",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 capture/index.mjs:745"
+  },
+  {
+   "key": "capture.index.file_bytes_unreadable",
+   "en": "the file's bytes could not be read whole or held under their own digest, so nothing was written",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 capture/index.mjs:757, :770"
+  },
+  {
+   "key": "reading-pipeline.index.bytes_not_held",
+   "en": "the capture's bytes are not held in the evidence store, so nothing was read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 reading-pipeline/index.mjs:2369, :2434 (G68)"
+  },
+  {
+   "key": "reading-pipeline.index.no_capture_digest",
+   "en": "the document names no capture digest, so there are no bytes to read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 reading-pipeline/index.mjs:2349"
+  },
+  {
+   "key": "reading-pipeline.index.reading_not_composed",
+   "en": "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 reading-pipeline/index.mjs:2264: {detail} the cause"
+  },
+  {
+   "key": "reading-pipeline.index.entry_no_text",
+   "en": "the {fmt} entry produced no text from these bytes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 reading-pipeline/index.mjs:2693: {fmt} the format's reader"
+  },
+  {
+   "key": "reading-pipeline.index.entry_not_read_bytes",
+   "en": "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 reading-pipeline/index.mjs:2722: {fmt} the format's reader, {detail} the cause"
+  },
+  {
+   "key": "translations.index.the_teams_translations_could_not",
+   "en": "the team's translations could not be read, so every word is shown in English.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 translations/index.mjs:738"
+  },
+  {
+   "key": "instance-setup.selftest.store_place_note",
+   "en": "store_location and store_generation are what this copy is configured with for where its team's room is first created and which room it uses. They do not say where the room runs.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 setup.mjs:3201: the self-test's note beside the two settings (operator-facing; the setting names stay literal)"
+  },
+  {
+   "key": "installer.update.stopped.lookup.unread",
+   "en": "Stopped: the installer couldn't read the settings of your team's Civicsmith, which say what it holds and where its record is kept, so it changed nothing rather than guess. Your team's Civicsmith runs as before. Run the update again in a minute; this is usually temporary.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-428: B503 INSTALLER #25 (J24/J25; K4758): newgroup/src/index.mjs:1140 and :478, the update refused before uploading when held settings do not answer; replaces installer.update.stopped.lookup with installer.keys.unread as {said}; no fills"
+  },
+  {
+   "key": "screen.site.start.noaccount",
+   "en": "No Cloudflare account yet? The installer walks you through opening one, step by step.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-430: B513 (K4951, B511 K4935): civicsmith.org's Start a team page, under What you need"
+  },
+  {
+   "key": "installer.begin.account",
+   "en": "That Cloudflare account couldn't be used. Start again from the first page; nothing was created.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (6): an account choice the sign-in did not list"
+  },
+  {
+   "key": "installer.begin.subdomain",
+   "en": "That name can't be used. Use lowercase letters, digits and hyphens, not starting or ending with a hyphen.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (4): an address name refused before registering"
+  },
+  {
+   "key": "installer.limit.crons.other",
+   "en": "{n} scheduled jobs",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (3): the cron-trigger count in the limit stop; {n} a number"
+  },
+  {
+   "key": "act.captureuploadabort.does",
+   "en": "Stops sending a large document in parts. Nothing of it is kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: affordances act-help.mjs:153 (T51 K4900, capture R113), word for word its default, so the reads list regenerates"
+  },
+  {
+   "key": "act.captureuploadbegin.does",
+   "en": "Starts sending a large document in parts. Nothing is kept until the last part has arrived.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: affordances act-help.mjs (T51), its default without \"to the group's store\" (DEC-281: team, never group), so the reads list regenerates"
+  },
+  {
+   "key": "act.captureuploadpart.does",
+   "en": "Sends one part of a large document that is being sent in parts. The part is checked as it arrives.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: affordances act-help.mjs (T51), word for word its default, so the reads list regenerates"
+  },
+  {
+   "key": "act.captureuploadcomplete.does",
+   "en": "Finishes sending a large document once every part has arrived, and files it as one document.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: affordances act-help.mjs (T51), word for word its default, so the reads list regenerates"
+  },
+  {
+   "key": "installer.ready.account.head",
+   "en": "Choose your team's Cloudflare account",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (6)"
+  },
+  {
+   "key": "installer.ready.account.use",
+   "en": "Use {name}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (6): beside each account; {name} the account's name"
+  },
+  {
+   "key": "installer.ready.account.which",
+   "en": "Your Cloudflare sign-in reaches more than one account. Choose the one that belongs to your team: your team's Civicsmith is installed there. Nothing has been created.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (6)"
+  },
+  {
+   "key": "installer.ready.address.head",
+   "en": "Choose your account's address on Cloudflare",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (4)"
+  },
+  {
+   "key": "installer.ready.address.label",
+   "en": "The account's name in addresses",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (4): the field, filled with the proposed name"
+  },
+  {
+   "key": "installer.ready.address.none",
+   "en": "Your Cloudflare account has no workers.dev address yet. Every program in the account, your team's Civicsmith included, answers at an address ending in workers.dev that starts with one name chosen for the whole account. Choose that name now. Nothing has been created.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (4)"
+  },
+  {
+   "key": "installer.ready.address.permanent",
+   "en": "Treat it as permanent. Everything in this Cloudflare account shares it, and changing it later changes every address in the account and breaks every link already given out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (4): told it is permanent for the account (Cloudflare allows a change, which moves every address)"
+  },
+  {
+   "key": "installer.ready.address.taken",
+   "en": "The name {name} is already used by another Cloudflare account. Choose another. Nothing has been created.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (4): a taken name"
+  },
+  {
+   "key": "installer.ready.address.use",
+   "en": "Use this name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (4): the button that registers it; nothing is registered without it"
+  },
+  {
+   "key": "installer.ready.checkagain",
+   "en": "Check again",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84: on every stop; starts over, keeping the choices made"
+  },
+  {
+   "key": "installer.ready.containers.permission",
+   "en": "Stopped: the permission you gave doesn't let the installer look at your account's containers. Nothing was created. Approve again, and keep every permission Cloudflare lists switched on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (2)"
+  },
+  {
+   "key": "installer.ready.containers.unknown",
+   "en": "Stopped: the installer couldn't tell whether your Cloudflare account can run containers ({said}). Nothing was created.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (2): {said} Cloudflare's own words"
+  },
+  {
+   "key": "installer.ready.scopes",
+   "en": "Stopped: the permission you gave Cloudflare doesn't include everything the installer needs ({missing}). Nothing was created. Approve again, and keep every permission Cloudflare lists switched on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (5): {missing} what is missing"
+  },
+  {
+   "key": "installer.ready.size.member",
+   "en": "its program is larger than the 64 MB Cloudflare allows a program",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (7): why a part is left out, after its name (R38)"
+  },
+  {
+   "key": "installer.ready.size.plane",
+   "en": "Stopped: the main Civicsmith program in this release is larger than the 64 MB Cloudflare allows a program, so it can't be installed. Nothing was created.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (7)"
+  },
+  {
+   "key": "installer.ready.storage.do",
+   "en": "In Cloudflare, open Storage & databases, then R2, then Overview, and complete the checkout that turns R2 on for the account. Then come back and press Check again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (1): the walk-through"
+  },
+  {
+   "key": "installer.ready.storage.off",
+   "en": "Stopped: R2 isn't turned on in your Cloudflare account. R2 is the storage where your team's Civicsmith keeps its documents and evidence. Nothing was created.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (1): not entitled"
+  },
+  {
+   "key": "installer.ready.storage.permission",
+   "en": "Stopped: the permission you gave doesn't let the installer look at your account's storage. Nothing was created. Approve again, and keep every permission Cloudflare lists switched on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (1)"
+  },
+  {
+   "key": "installer.ready.storage.unknown",
+   "en": "Stopped: Cloudflare wouldn't say whether your account's storage is turned on ({said}). Nothing was created.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84 (1): any other answer, told as itself; {said} Cloudflare's own words"
+  },
+  {
+   "key": "installer.ready.unknown.do",
+   "en": "Press Check again in a moment. If it keeps happening, give the message above to whoever helps you with Cloudflare.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J27 R84: under a stop the installer could not explain"
+  },
+  {
+   "key": "installer.guide.ask.title",
+   "en": "Do you already have a Cloudflare account?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85: the first page's first stage"
+  },
+  {
+   "key": "installer.guide.ask.sub",
+   "en": "Cloudflare is the company whose computers will run your team's Civicsmith, in an account your team controls. If you don't have one, or aren't sure it's ready, the installer walks you through it step by step.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.ask.yes",
+   "en": "Yes, I have one",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85: to the short name and the sign-in"
+  },
+  {
+   "key": "installer.guide.ask.no",
+   "en": "No, or I'm not sure it's ready",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85: to step 1"
+  },
+  {
+   "key": "installer.guide.step",
+   "en": "Step {n} of {total}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85: above each step"
+  },
+  {
+   "key": "installer.guide.account.title",
+   "en": "Open a Cloudflare account and confirm its email",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 1"
+  },
+  {
+   "key": "installer.guide.account.why",
+   "en": "Your team's Civicsmith runs in this account, so open it for your team: use an email your team shares, not one person's own.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 1"
+  },
+  {
+   "key": "installer.guide.account.do",
+   "en": "Go to dash.cloudflare.com/sign-up, enter the email and a password, and create the account. Cloudflare then emails that address: open the message and press its link to confirm it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 1"
+  },
+  {
+   "key": "installer.guide.account.cost",
+   "en": "Nothing: opening the account is free.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 1"
+  },
+  {
+   "key": "installer.guide.plan.title",
+   "en": "Choose Workers Paid and add a payment method",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 2"
+  },
+  {
+   "key": "installer.guide.plan.why",
+   "en": "Workers Paid is the Cloudflare plan that can run every part of your team's Civicsmith, the file scanner and the safe view for risky files included. The free plan can't.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 2"
+  },
+  {
+   "key": "installer.guide.plan.do",
+   "en": "In Cloudflare, open Workers & Pages, then Plans, and choose Workers Paid. Add a card or another payment method when Cloudflare asks for one.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 2"
+  },
+  {
+   "key": "installer.guide.plan.cost",
+   "en": "About $5 a month, paid to Cloudflare from your payment method, never to the people who make Civicsmith. You can cancel it in the same place.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 2"
+  },
+  {
+   "key": "installer.guide.storage.title",
+   "en": "Turn on R2 storage",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 3"
+  },
+  {
+   "key": "installer.guide.storage.why",
+   "en": "R2 is where your team's Civicsmith keeps the documents and evidence your members collect, each exactly as it was captured.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 3"
+  },
+  {
+   "key": "installer.guide.storage.do",
+   "en": "In Cloudflare, open Storage & databases, then R2, then Overview, and complete the checkout that turns R2 on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 3 (R84 (1)'s path)"
+  },
+  {
+   "key": "installer.guide.storage.cost",
+   "en": "Cloudflare includes 10 GB of R2 storage each month at no charge, and charges about 1.5 cents a month for each GB beyond that. Cloudflare shows the price at the checkout.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 3 (Cloudflare's R2 pricing, standard storage, read 2026-10-24)"
+  },
+  {
+   "key": "installer.guide.signin.title",
+   "en": "Sign in to Cloudflare and choose Allow",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 4"
+  },
+  {
+   "key": "installer.guide.signin.why",
+   "en": "Cloudflare asks you, on its own page, whether the installer may set up your team's Civicsmith in your account. You stay in control of that permission.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 4"
+  },
+  {
+   "key": "installer.guide.signin.do",
+   "en": "On the next page, choose your team's short name, then continue to Cloudflare, sign in, and choose Allow.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 4"
+  },
+  {
+   "key": "installer.guide.signin.cost",
+   "en": "Nothing: this step is free.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 4"
+  },
+  {
+   "key": "installer.guide.allow.asks",
+   "en": "On Cloudflare's Allow page, the installer asks to put your team's Civicsmith's programs and storage in your account, read the account's name, set up its helper programs, and check that no log records who opens which file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 4: what it asks"
+  },
+  {
+   "key": "installer.guide.allow.never",
+   "en": "It never asks for your password, your payment method, a token or an account number, and it keeps nothing you allow once the install is done.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 step 4: what it never does"
+  },
+  {
+   "key": "installer.guide.back",
+   "en": "Back",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.next",
+   "en": "I've done this: next step",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.checknote",
+   "en": "When you go on, the installer checks that each step is done. If one isn't, it stops before creating anything and offers Check again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85: on each step (R84 confirms)"
+  },
+  {
+   "key": "installer.guide.resume",
+   "en": "You can close this page at any step. Come back to this address and it opens at the step you were on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85: each step's resume point"
+  },
+  {
+   "key": "installer.guide.faq",
+   "en": "Questions people ask",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85: the folds beside every step, the same answers on each"
+  },
+  {
+   "key": "installer.guide.q.own.q",
+   "en": "Why does my team need its own Cloudflare account?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.q.own.a",
+   "en": "So that nobody else holds your team's work: the people who make Civicsmith keep none of it and can't open your account. Whoever can sign in to the account controls your team's Civicsmith, so use an account that belongs to your team, and add a second trusted person to it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.q.cost.q",
+   "en": "What does it cost, who is paid, and how do we stop paying?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.q.cost.a",
+   "en": "About $5 a month for Workers Paid, and R2 storage beyond the 10 GB Cloudflare includes, all paid to Cloudflare only. Nothing is paid to the people who make Civicsmith. To stop paying, cancel Workers Paid in Cloudflare's dashboard. Your team's Civicsmith stops working when the plan ends, so agree on it as a team first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.q.access.q",
+   "en": "What can Civicsmith see and do in our account, and how do we remove it?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.q.access.a",
+   "en": "The installer can create and update your team's Civicsmith's own programs and storage, and nothing else, and it keeps no access afterward. To remove your team's Civicsmith, use the installer's page, or delete its parts in Cloudflare's dashboard, in Workers & Pages and in R2.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.q.card.q",
+   "en": "Is our card shared with Civicsmith?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.q.card.a",
+   "en": "No. Your payment method stays with Cloudflare. The installer never sees it, and the permission you give can't reach billing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.q.existing.q",
+   "en": "What if we already use Cloudflare?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.q.existing.a",
+   "en": "Use that account if it belongs to your team: your team's Civicsmith is added beside what's already there under its own names, nothing else is changed, and the installer checks there is room. If the account is one person's, open a separate one for the team. If it already holds a Civicsmith, the installer says so and asks what you'd like to do.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85 (K4937: a copy already installed)"
+  },
+  {
+   "key": "installer.guide.q.stuck.q",
+   "en": "What if we get stuck?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
+  },
+  {
+   "key": "installer.guide.q.stuck.a",
+   "en": "Close the installer at any step and come back: it opens where you left off, and nothing is lost. Cloudflare's own help pages explain each of its steps, and when something is missing, the installer says exactly what.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-431: B514 J28 R85"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -116848,6 +120588,90 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.aiproviders.name",
+   "en": "AI providers",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.aiproviders.purpose",
+   "en": "The team's AI: the accounts in use in order, budgets and alerts, the seven privacy and origin checks, what members may use, and the catalogue of providers and their plans.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.aiconnect.name",
+   "en": "Connect an AI",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.aiconnect.purpose",
+   "en": "One plan, connected step by step: what it is sent and which terms bind your use, signing up, giving the key, what you accept, a test, and turning it on.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.aimine.name",
+   "en": "Your AI",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.aimine.purpose",
+   "en": "Your own AI: what serves you now, your choices among what the team allows, your own accounts, the checks in force for you and what you have used.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.aiproject.name",
+   "en": "AI for this project",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.aiproject.purpose",
+   "en": "The AIs this project uses, its budget and order, and the checks that apply to the work done directly in it.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.aimoments.name",
+   "en": "When the AI can't go on",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.aimoments.purpose",
+   "en": "What the assistant shows when an account reaches its limit, a provider stops answering, a model is retired or material is about to go to a new provider.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.aitest.name",
+   "en": "Test an AI that isn't listed",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.aitest.purpose",
+   "en": "Test a custom endpoint or an unlisted plan before it is used: the cost first, the result by part, and exactly what would be sent.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.airesults.name",
+   "en": "Results other teams sent",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.airesults.purpose",
+   "en": "What other teams' tests found for each AI: the parts it passed, its limits, its speed and cost, and the grade.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "act.bootstrap.label.install",
    "en": "Continue to Cloudflare",
    "protected": true,
@@ -116856,6 +120680,18 @@
   {
    "key": "act.owed_installcheck.label.install",
    "en": "Check my account",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_installregion.label.install",
+   "en": "Keep the record in a region you choose",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_installaddress.label.install",
+   "en": "Use the address you chose for the account",
    "protected": true,
    "source": "registry.json"
   },
@@ -120490,6 +124326,252 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_aiplanconnect.label.aiproviders",
+   "en": "Connect a plan",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aitestopen.label.aiproviders",
+   "en": "Test an AI that isn't listed",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_airesultsopen.label.aiproviders",
+   "en": "Read results other teams sent",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiorderset.label.aiproviders",
+   "en": "Move an account up or down",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiaccountswitch.label.aiproviders",
+   "en": "Switch an account on or off",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiaccountremove.label.aiproviders",
+   "en": "Remove an account",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aibudgetset.label.aiproviders",
+   "en": "Set a budget or an alert",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aicheckset.label.aiproviders",
+   "en": "Choose the checks the whole team requires",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aimemberallow.label.aiproviders",
+   "en": "Choose what members may use",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aikeyenter.label.aiconnect",
+   "en": "Enter the key here",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aikeycloudflare.label.aiconnect",
+   "en": "Say the key is entered in Cloudflare",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aisignin.label.aiconnect",
+   "en": "Sign in with the provider",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aikeyreference.label.aiconnect",
+   "en": "Use a reference instead of the key",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aitermsaccept.label.aiconnect",
+   "en": "Accept the terms that bind our use",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiconnecttest.label.aiconnect",
+   "en": "Test the connection",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiaccountadd.label.aiconnect",
+   "en": "Turn the account on",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aipersonalchoose.label.aiconnect",
+   "en": "Use my own subscription",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aimineuse.label.aimine",
+   "en": "Choose the AI that serves my work",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiownadd.label.aimine",
+   "en": "Add an account of my own",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aimycheckset.label.aimine",
+   "en": "Require a check for my own work",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiprojectuse.label.aiproject",
+   "en": "Choose which AIs the project uses",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiprojectbudget.label.aiproject",
+   "en": "Set the project's budget",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiprojectorder.label.aiproject",
+   "en": "Move an AI up or down in the project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiprojectcheckset.label.aiproject",
+   "en": "Require a check for the project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aicontinue.label.aimoments",
+   "en": "Keep going on the next account",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aistop.label.aimoments",
+   "en": "Stop here",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aisend.label.aimoments",
+   "en": "Send it to the provider",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aisendrefuse.label.aimoments",
+   "en": "Don't send",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiwait.label.aimoments",
+   "en": "Wait",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiwithout.label.aimoments",
+   "en": "Continue without AI",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiswitchaccount.label.aimoments",
+   "en": "Switch to another account",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aimodelchoose.label.aimoments",
+   "en": "Use another model",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aichooseother.label.aimoments",
+   "en": "Choose another AI",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiaskadmin.label.aimoments",
+   "en": "Ask an administrator",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_airunstart.label.aimoments",
+   "en": "Start the run",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiaccountpick.label.aimoments",
+   "en": "Choose another account",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aitestsetup.label.aitest",
+   "en": "Save the endpoint and key",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aitestrun.label.aitest",
+   "en": "Run the test",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_airesultsend.label.aitest",
+   "en": "Send the results",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_airesultsdecline.label.aitest",
+   "en": "Don't send the results",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_airesultsread.label.airesults",
+   "en": "Read the results for an AI",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.owed_casedetailsset.does",
    "en": "Records one of the case's four details: the area of government, a point of contact, related work or relationships. It sits beside the case, the signature does not cover it, and you can change or clear it later.",
    "protected": false,
@@ -120730,8 +124812,20 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
+   "key": "act.owed_installaddress.does",
+   "en": "Registers the address you chose for your Cloudflare account: the name every program in the account answers under, your team's Civicsmith included.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_installregion.does",
+   "en": "Keeps your team's record in the region you choose instead of near you, for a team bound by a law or an agreement on where its record is kept.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
    "key": "act.owed_installcheck.does",
-   "en": "Looks at your Cloudflare account and tells you, line by line, what is ready and what is not: the plan, containers, room under your account's limits, the short name, and a payment card. It creates nothing that stays in your account, and you can run it as often as you like.",
+   "en": "Looks at your Cloudflare account and tells you, line by line, what is ready and what is not: the account, the plan, R2 storage, containers, room under your account's limits, the account's address, the permission you gave, the short name, a payment card and the size of each part. It creates nothing that stays in your account, and you can run it as often as you like.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -121640,6 +125734,252 @@
   {
    "key": "act.owed_registerwatchpropose.does",
    "en": "Proposes filers, licenses or dockets worth watching, for a member to accept or decline. It comes after the alpha, with the assistant.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiplanconnect.does",
+   "en": "Opens the guided connection for this plan: what it is sent, how to sign up, how to give the key, a test and then turning it on. Nothing is connected until you finish.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aitestopen.does",
+   "en": "Opens the test for an AI no release lists yet. It shows what the test costs before it runs and what would be sent afterward.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_airesultsopen.does",
+   "en": "Opens the results other teams sent about the AIs they tested: the parts each passed, its limits, and how fast and costly it was.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiorderset.does",
+   "en": "Moves this account one place up or down in the order. Work goes to the first account that is on, allowed for that work and within its limits.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiaccountswitch.does",
+   "en": "Switches this account off or on. Work stays refused on a use that is off; it is never moved to another account.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiaccountremove.does",
+   "en": "Removes this account from your team's list. Its key is deleted from Cloudflare's store, and what it cost stays in the history.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aibudgetset.does",
+   "en": "Sets a monthly budget for one account or for all of them, and the percentage at which administrators are told.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aicheckset.does",
+   "en": "Chooses which of the seven privacy and origin checks the whole team requires. A required check is locked for project owners and members.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aimemberallow.does",
+   "en": "Chooses which providers, plans and models members may use, and whether they may add accounts of their own.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aikeyenter.does",
+   "en": "Sends the key straight to Cloudflare's AI Gateway store in your team's own account. Civicsmith keeps no copy, and the key is never shown again.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aikeycloudflare.does",
+   "en": "Records that you entered the key yourself in Cloudflare's dashboard. Civicsmith then checks that it works, without ever holding the key.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aisignin.does",
+   "en": "Takes you to the provider's own page to sign in and approve the connection. Civicsmith never sees your password.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aikeyreference.does",
+   "en": "Saves where the key is kept, not the key. Civicsmith asks for it from there each time it is needed.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aitermsaccept.does",
+   "en": "Records, with your name and the date, that you accepted the terms that bind your team's use of this plan, and any warning it carried.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiconnecttest.does",
+   "en": "Sends a harmless test message that holds none of your team's material, and reports whether the connection works. The account stays off until the test passes.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiaccountadd.does",
+   "en": "Turns the connected account on and puts it in the place you chose in the order. It cannot be turned on before its test passes.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aipersonalchoose.does",
+   "en": "Records your choice to use your own subscription for your own work, within the provider's stated restrictions. It is never the team's or a project's account.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aimineuse.does",
+   "en": "Chooses which provider, plan, model and effort serve the work you start, among what your team allows.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiownadd.does",
+   "en": "Opens the guided connection so you can add an account of your own, where your team allows it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aimycheckset.does",
+   "en": "Requires, for your own work, a check your team has left open. An AI that fails it is not used for your work, and you are told why.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiprojectuse.does",
+   "en": "Narrows which of the team's AIs this project uses. A project can use fewer, never more.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiprojectbudget.does",
+   "en": "Sets a monthly budget for this project's AI use.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiprojectorder.does",
+   "en": "Moves an AI up or down in this project's order, within the team's.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiprojectcheckset.does",
+   "en": "Requires a check, a project owner's choice, for all work done directly in this project. The checks the team requires stay locked.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aicontinue.does",
+   "en": "Lets this answer continue on the next account in the order. Nothing continues on another account until you say so.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aistop.does",
+   "en": "Stops the answer where it is. Nothing more is sent to any provider.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aisend.does",
+   "en": "Sends the material to this provider for the first time, as the notice described. The step waited for you.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aisendrefuse.does",
+   "en": "Keeps the material here and sends nothing to this provider.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiwait.does",
+   "en": "Waits until the limit resets or the provider answers again. Nothing is sent meanwhile.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiwithout.does",
+   "en": "Carries on without the assistant. Your question and your work are kept.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiswitchaccount.does",
+   "en": "Sends this answer to another account that is allowed for this work. The switch is shown and recorded.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aimodelchoose.does",
+   "en": "Uses the model you choose in place of the retired one for this work.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aichooseother.does",
+   "en": "Opens the choice of another AI that has passed this part of the assistant's work.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiaskadmin.does",
+   "en": "Asks the administrator who switched this use off to switch it back on. It is sent to their queue; nothing else changes.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_airunstart.does",
+   "en": "Starts the run on the account named, at about the cost shown. The cost afterward is shown when it ends.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiaccountpick.does",
+   "en": "Chooses another allowed account for this run before it starts.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aitestsetup.does",
+   "en": "Saves the endpoint and key for the test. The key is sealed and never shown again.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aitestrun.does",
+   "en": "Runs Civicsmith's standard test against the endpoint, part by part, and stops before it passes the spend ceiling you set.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_airesultsend.does",
+   "en": "Sends the sealed results bundle shown above to the library of results other teams read. It holds no test conversation, and your team's name only if you ticked it.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_airesultsdecline.does",
+   "en": "Keeps the results here and sends nothing.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_airesultsread.does",
+   "en": "Shows the results other teams sent for one AI, or for every AI.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

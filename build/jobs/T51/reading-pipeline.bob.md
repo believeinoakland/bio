@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J43
+**Read** · handled J44
 
 ## B1 · START
 
@@ -1183,3 +1183,12 @@ Ruled (P17): a later range's answer carries `reading.piece_chain`, the text chai
 CHANGE (K4909, K4911): two things before COMPLETE.
 1. `bio-plane/test/d606-perpage-ocr.test.mjs` is in reading-pipeline's own `tests` paths (`modules.json`), so it is yours to restate (P8). State in your record why it is stale, with evidence: which merged change makes the inline pass make no OCR call (your R55, extraction R103's `ocrInvocations: 0` from job 28, K4909), and assert what the requirements say now (the pages owed and registered, never transcribed in the request), never weakening what it proves about per-page OCR in the ledger's pass. Run it alone.
 2. B47 (K4911, `reading.piece_chain`) is still unread: your cursor is at B46. Do it, then COMPLETE once for both.
+
+## B49 · START
+
+START · READING-PIPELINE #34 · tranche T51 · product believeinoakland/bio · fix round 9, batch D: R46 amended: the encrypted statement on a whole read (G155, K4958) · depth 2 (BOB #280 at depth 1)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/reading-pipeline tranche/T51 && git branch -m job/T51/reading-pipeline stale/reading-pipeline-local && git checkout -b job/T51/reading-pipeline origin/job/T51/reading-pipeline`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module reading-pipeline`; record `build/jobs/T51/reading-pipeline.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`; a symlink there is deleted first, K4939). Tests from `bio-plane/`: `node --import ./test/platform-sqlite.mjs --test --test-force-exit <files>`, heavy files alone. Your diff touches only this module's `paths`, its `tests` and your record (ownership); never a `node_modules` entry. Never contact any live deployment. Read whole: this START, your requirements (both parts), the code lines named, the tests naming the ids named. Before COMPLETE: your suite, `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the users it names, the checks (format, architecture, coverage, words, ownership) each by its failure count; sentences a member reads keyed through `localize` at their use (or by `word(key)` in a drawn-screen module) and listed in your record as rows owed; COMPLETE with the four fields (cause, why missed, red first, platform check) and a `Size` line.
+**Why this job (job 77; CONTROL-PLANE #55's seam §7).** Diagnosis: `build/plan/diagnosis-R9-cp-reports.md` (read your item whole); BOB re-read every cited line (K4849, K4958). Item (g): `reading-pipeline/index.mjs:3091` maps a user-password PDF to `PASSWORD_REQUIRED` (and tier-2-unopened to `ENCRYPTED`) only inside `if (rangeScope)`; a whole read falls through to `docprofile/readtext.mjs:306`'s lowercase prose. Read your **R46** (its new last sentence). First establish which call stores the reading for an uploaded AES PDF (log `ranged` and `rangeScope` in a test, never in product code), then red first: an encrypted PDF read whole ends with prose today; green: the code, stated. Use test-support's `pdfgen` for the encrypted file.

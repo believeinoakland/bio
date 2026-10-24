@@ -1,6 +1,6 @@
 # runtime-limits (T51)
 
-**Status** · session_019ez6rv297h5VQHkQeN93zR · depth 2 · COMPLETE · handled B11
+**Status** · session_01QmrRSjKFkRXYrPwjisNpp2 · depth 2 · COMPLETE · handled B13
 
 ## Completion (RUNTIME-LIMITS #6, fix round 7, G83)
 
@@ -181,3 +181,35 @@ Size (session_019ez6rv297h5VQHkQeN93zR): test runs 7, module lines 187
 ## J12 · COMPLETE · re B11
 
 COMPLETE · RUNTIME-LIMITS #14 · B11 (K4936): READ_BOUNDS workbook rows: cells 250,000 in all columns (comment rewritten), NEW bytes 20 MiB alpha / 50 MB standard and protective, NEW cells_json_bytes 64 MiB x3; tested through boundOf and statement (R30, R31). Suite 58/58; format, architecture, coverage, words, ownership 0 failures. R30's text in the requirements still says 50,000 for the workbook's cells (yours to update). Not mine: g41-shape and 7 workbooks real-shape-cap tests fail identically on tranche/T51 without my diff. Bundles with read-bounds.mjs as input are stale. Details in my record.
+
+## Completion (RUNTIME-LIMITS #15, fix round 9, batch D, B12, K4958)
+
+**Entries applied.** R35's six rows added to `READ_BOUNDS` (`bio-plane/src/read-bounds.mjs`), each `same(n, k(...))`, today's figures in all three columns: `provenance.part_verify_bytes` 8 MiB; `acquisition.odf_digest_bytes` 8 MiB; `acquisition.large_fetch_bytes` 8 MiB; `case.copy_now_bytes` 2 MiB; `monitoring.docket_read_bytes` 8 MiB; `following.portal_parse_bytes` 4 MiB. Keys `limit.<kind>.<name>`. No sentence added; nothing else changed. Test (`read-bounds.test.mjs`): one new "R35" test checks each row's three columns, its key, `boundOf` and `statement` (R31). Red first: before the rows the test fails at `assert.ok(row)`.
+
+**Deferred.** None. **Found in another module.** Nothing new. Bundles with `read-bounds.mjs` as input are stale; BOB regenerates them.
+
+**Rows owed (sentences).** The six keys `limit.provenance.part_verify_bytes`, `limit.acquisition.odf_digest_bytes`, `limit.acquisition.large_fetch_bytes`, `limit.case.copy_now_bytes`, `limit.monitoring.docket_read_bytes`, `limit.following.portal_parse_bytes` name sentences the quoting modules own; none is added here.
+
+**Tests.** runtime-limits suite: 59 tests, 59 pass.
+**Impact.** `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 138 of 176 modules, 2197 of 2665 test files affected (every user of the table). The change only adds six rows; a grep of `bio-plane/src` and `bio-plane/test` finds no code that iterates the whole table (`Object.entries/values/keys(READ_BOUNDS)`) except this module's own test, which checks rows by invariants, so I did not run the users' suites.
+**Checks.** format 0 failures; architecture 0 failures; coverage 33 of 33 live ids named, 0 failures; ownership 3 files changed by runtime-limits, 0 failures; words 0 failures.
+**Cause / why missed / red first / platform check.** Cause: six reading ceilings in provenance, acquisition, case-authoring, case-carriage, monitoring and following were literals with no row in the table (control-plane's all-modules grep, seam §14). Why missed: they were added before R29 made the table the one home, and no earlier job quoted them. Red first: the R35 test fails at `assert.ok(row)` before the rows exist, passes after. Platform check: pure frozen data, no platform call; the runtime-limits suite includes its workerd test (R28) and passes.
+
+Size (session_01KNBHkxJ8mc4TazP5cEK4wj): test runs 3, module lines 175
+
+## J13 · COMPLETE · re B12
+
+COMPLETE · RUNTIME-LIMITS #15 · B12 (K4958): R35's six READ_BOUNDS rows added (provenance.part_verify_bytes 8 MiB, acquisition.odf_digest_bytes 8 MiB, acquisition.large_fetch_bytes 8 MiB, case.copy_now_bytes 2 MiB, monitoring.docket_read_bytes 8 MiB, following.portal_parse_bytes 4 MiB), each same(), keys limit.<kind>.<name>; tested through boundOf and statement (R35, R31). Suite 59/59; format, architecture, coverage, words, ownership 0 failures. No sentence added. Bundles with read-bounds.mjs as input are stale. Details in my record.
+
+## Completion (RUNTIME-LIMITS #16, fix round 9, batch D, B13, K4965)
+
+**Entries applied.** R36: `wholeReadRow(kind) -> [kind, name]` exported from `bio-plane/src/read-bounds.mjs` beside `boundOf`: `"csv"` gives `["csv","bytes"]`, `"text"` `["text","bytes"]`, any other kind or none `["pdf","bytes"]`. No sentence, nothing else. Capture and control-plane untouched (BOB's round-end re-points).
+**Test.** `bio-plane/test/m/runtime-limits/read-bounds.test.mjs`, `R36:` — pdf, csv, text, other kinds (docx, json, `PDF`, empty, `constructor`, null, undefined, a number, no argument); `boundOf(...wholeReadRow(k))` equals the row's active figure.
+**Cause.** Two declarations of one rule (K4164). **Why missed.** No requirement named the map. **Red first.** The import failed (`does not provide an export named 'wholeReadRow'`) before the function was added. **Platform check.** N.
+**Deferred.** Nothing. **Found in another module.** Nothing new. Requirements text R36 still reads `(not yet met: T51)`: BOB's file, to update.
+**Ran.** runtime-limits suite (`test/m/runtime-limits/*.test.mjs`): 60 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 176 (no user imports the new export yet). Checks: architecture 0 failures; coverage 34 of 34 ids named, 0 failures; ownership 0 failures; words 33 failures, none in runtime-limits, same count without my change; format 1 failure, `build/rulings.md:4959` K4964 (BOB's file; no standing-list decision stated), same without my change. Sentences added: none, so no rows owed.
+Size (session_01QmrRSjKFkRXYrPwjisNpp2): test runs 4, module lines 3
+
+## J14 · COMPLETE
+
+R36 met: wholeReadRow(kind) exported from read-bounds.mjs (csv, text, else pdf.bytes); test red first, then green; suite 60 pass; architecture, coverage, ownership 0 failures; words 33 and format 1 (rulings.md:4959 K4964) fail identically without my change, none in my module. Record: Completion (RUNTIME-LIMITS #16).

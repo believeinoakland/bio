@@ -123,18 +123,18 @@ test("R61 (G43) control: a document whose reading fits is filed with it by the a
   assert.deepEqual(JSON.parse(provOfPage(p).text).documents[0].text_units, [{ n: 1, text: "a,b" }]);
 });
 
-/* B39 (K4657): a reading whose text units the door cut is no whole reading, however small its file: embedded, promotion's projection would store it as the document's reading
-   and the rest of the text would never be read (a silent partial read, K4571) */
+/* G126h (fix round 9; R61; K4835): the two arms that judged a reading the door had cut (a unit `truncated`, units over the bound or skipped) are gone: a reading's
+   units are chunked and never cut, a sheet is not read at the door past the gate (the job row reads the rest), so the size of the file is the only test of
+   a reading that arrives. A small reading is filed as it arrives, whatever those fields say, and not dropped. */
 const small = (more) => ({ ...docWith("a,b"), ...more });
 for (const [why, more] of [["a unit marked truncated", { text_units: [{ extent: "x", seq: 1, text: "a,b", truncated: true }] }],
                            ["text_units_over_bound", { text_units_over_bound: true }], ["text_units_skipped above zero", { text_units_skipped: 3 }]]) {
-  test(`R61 (G43, B39) a small reading with ${why} is filed without it and answers readingDropped, so the follow reads the whole`, async () => {
+  test(`R61 (G126h) a small reading with ${why} is filed as it arrives: the dead arm that dropped it is gone, nothing is marked readingDropped`, async () => {
     const cs = stub(), doc = small(more);
     assert.ok(fits(doc) < BOUND);
     const made = await promoteDocument(cs, { doc, title: "Sheet", locator: "", project: "" });
-    assert.equal(made.readingDropped, true);
-    const got = JSON.parse(provOf(cs).text).documents[0];
-    for (const k of ["reading", "text_units", "text_units_over_bound", "text_units_skipped"]) assert.ok(!(k in got), `${k} is gone`);
+    assert.equal(made.readingDropped, undefined);
+    assert.equal(provOf(cs).text, JSON.stringify({ documents: [doc] }, null, 1), "the document is filed whole, reading and units as they came");
   });
 }
 

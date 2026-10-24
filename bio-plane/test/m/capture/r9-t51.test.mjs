@@ -14,7 +14,7 @@ import { byteLedger, PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
 import { acquisitionOf, CAPTURE_MAX, MULTIPART_KEEP_MAX } from "../../../src/acquisition/index.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { captureObjectOp } from "../../../src/capture/ops.mjs";
-import { statement as boundStatement } from "../../../src/read-bounds.mjs";
+import { statement as boundStatement, boundOf } from "../../../src/read-bounds.mjs";
 import { HELD_AT_CHECK_MAX } from "../../../src/capture/index.mjs";
 import { LARGE_FETCH_BYTES } from "../../../src/acquisition/index.mjs";
 
@@ -186,9 +186,10 @@ test("R109 (keep): past MULTIPART_KEEP_MAX the keep handed to the plane is the `
   const real = w.core.evidenceStore();
   let asked = 0;
   w.core.evidenceStore = () => ({ ...real, putFromParts: async (d, p) => { asked++; return real.putFromParts(d, p); } });
-  const big = varied(33 * MiB, 11);
+  /* a text, whose whole-read row (50 MB) lies above the file: it is read, so it owes its reading beside the keep (R109 as amended, G152) */
+  const big = new Uint8Array(33 * MiB).map((_, i) => (i % 61 === 60 ? 10 : 97 + (i % 26)));
   assert.ok(big.length > MULTIPART_KEEP_MAX);
-  const r = await up(w.c, big);
+  const r = await up(w.c, big, { type: "text/plain" });
   assert.equal(r.ok, true);
   assert.equal(r.keep_pending, true);
   assert.equal(asked, 0);
@@ -196,6 +197,10 @@ test("R109 (keep): past MULTIPART_KEEP_MAX the keep handed to the plane is the `
   assert.deepEqual(rows.map((x) => x.kind).sort(), ["keep", "reading"]);
   const keep = rows.find((x) => x.kind === "keep");
   assert.deepEqual([keep.sha, keep.parts], [sha(big), r.document.parts.map((p) => p.sha256)]);
+  /* a file of no known kind this size is stated over the whole-load row, never read: the keep row alone is owed */
+  const w3 = setup(); const j3 = registrar(w3);
+  assert.equal((await up(w3.c, varied(33 * MiB, 11))).ok, true);
+  assert.deepEqual(j3.rows().map((x) => x.kind), ["keep"]);
   /* control: within the keep bound no keep row */
   const w2 = setup(); const j2 = registrar(w2);
   assert.equal((await up(w2.c, varied(20 * MiB, 12))).ok, true);
@@ -448,4 +453,59 @@ test("R111 (G124 quotes): the ceilings this module keeps are quoted, not written
   assert.equal(CAPTURE_MAX, boundStatement("archive", "uploaded_bytes", 0).bound);
   assert.deepEqual(Object.keys(PLATFORM_FIGURES.request_body_max).sort(), ["source", "value"]);
   assert.equal(PLATFORM_FIGURES.request_body_max.value, bodyMax);
+});
+
+/* R109 (fix round 9, G152; K4958): no `reading` row for an upload stated over its kind's whole-read ceiling, and the profile reads the bytes the upload holds */
+const wholeGets = (b) => b.calls.filter(([op, key, range]) => op === "get" && !range && /[0-9a-f]{64}/.test(String(key))).length;
+const pdfBytes = (n, seed) => varied(n, seed, [0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a]);
+
+test("R109 (G152, K4958; control-plane R125 (a), R132): a PDF stated over the whole-read ceiling of its kind registers no `reading` row and says so; the same bytes under it, and a kind with a higher row, still register theirs", async () => {
+  const pdfMax = boundOf("pdf", "bytes"), csvMax = boundOf("csv", "bytes");
+  assert.ok(pdfMax < csvMax, "the text kinds' rows lie above the PDF's, so the kind decides");
+  const w = setup();
+  const j = registrar(w);
+  const over = pdfBytes(pdfMax + MiB, 11);
+  const r = await up(w.c, over);
+  assert.equal(r.ok, true);
+  assert.equal(r.document.profile.format.format, "pdf");
+  assert.deepEqual(j.rows().map((x) => x.kind), [], "an upload stated over its ceiling is never read, so no reading is owed");
+  assert.equal(r.reading_stated, true, "the answer says it was stated, never silently");
+  assert.equal("jobs" in r, false);
+  /* the same upload again (bytes the record holds) registers none either */
+  w.c.provenance.registerHolds = ({ sha: x }) => ({ ok: true, sha: x, asked: true, registered: true, acquired: true });
+  const again = await up(w.c, over, { by: "m2", statement: "forwarded to me" });
+  assert.equal(again.existed, true);
+  assert.deepEqual(j.rows().map((x) => x.kind), [], "a second sighting of a stated upload owes no reading either");
+  assert.equal(again.reading_stated, true);
+  /* controls: a PDF at its ceiling registers its row, and a CSV over the PDF's figure but under its own does too */
+  const v = setup(); const jv = registrar(v);
+  const at = await up(v.c, pdfBytes(pdfMax, 12));
+  assert.equal(at.ok, true);
+  assert.deepEqual(jv.rows().map((x) => x.kind), ["reading"]);
+  assert.equal("reading_stated" in at, false);
+  const csv = new Uint8Array(pdfMax + MiB).map((_, i) => (i % 8 === 7 ? 10 : i % 8 === 1 ? 44 : 48 + (i % 10)));
+  const c = setup(); const jc = registrar(c);
+  const rc = await up(c.c, csv, { type: "text/csv", name: "rows.csv" });
+  assert.ok(rc.ok === true && pdfMax + MiB <= csvMax);
+  assert.deepEqual(jc.rows().map((x) => x.kind), ["reading"], "a CSV under the CSV row is read");
+  assert.equal("reading_stated" in rc, false);
+});
+
+test("R109 (G152, K4958): a single-part upload hands the bytes it holds to the profile: the evidence store is asked for no whole object, for a PDF or a text, and the profile is what a read-back would give", async () => {
+  for (const [name, bytes, extra] of [["pdf", pdfBytes(3 * MiB, 21), {}], ["text", new Uint8Array(3 * MiB).map((_, i) => (i % 61 === 60 ? 10 : 97 + (i % 26))), { type: "text/plain" }]]) {
+    const w = setup();
+    const ledger = byteLedger();
+    const r = await up(w.c, bytes, { ledger, ...extra });
+    assert.equal(r.ok, true);
+    assert.equal(wholeGets(w.b), 0, `${name}: the upload held the bytes, so none was read back whole`);
+    if (name === "pdf") assert.equal(r.document.profile.format.format, "pdf");
+    assert.equal(ledger.held(), 0, `${name}: nothing is held once it is answered`);
+    assert.ok(ledger.peak() <= 2 * 3 * MiB + PART, `${name}: counted, not doubled by a read-back`);
+    assert.equal(r.document.profile.profiled_from_text, name === "text", `${name}: profiled from the held text as a read-back would`);
+  }
+  /* control: a file in parts is still profiled from its head and tail ranges, never read whole */
+  const m = setup();
+  const r = await up(m.c, pdfBytes(9 * MiB, 22));
+  assert.equal(r.ok, true);
+  assert.equal(wholeGets(m.b), 0);
 });

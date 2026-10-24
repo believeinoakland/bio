@@ -1457,7 +1457,7 @@
    {
     "file": "bio-plane/src/case-checker/spec.mjs",
     "line": 11,
-    "text": "# The case file, format bio-case-file/1\n\nThis document specifies version 1 of the case file: the one file (or set of parts) that carries a published case whole, so that anybody can check it and recreate its findings without a copy of Civicsmith. It states every field, kind and rule a checker needs. A checker built from this text alone, given the same case file, answers the same as the checker Civicsmith runs.\n\nRecreating a case shows that what it carries is intact and consistent with what it states. It does not show that the case is true, and it is not an endorsement of it.\n\n## 1. Parts\n\nA case file is one or more parts. Each part is a ZIP archive whose every entry is stored, not compressed, with fixed timestamps (1980-01-01 00:00:00), names in UTF-8, and no encryption. A case file too large for one part (64 MiB) is split into several; nothing is left out for size.\n\nEvery part carries the same manifest, byte for byte, as the entry `manifest.json` at the archive's root. Every other entry is a file the manifest lists in that part, at its `path` from the archive's root. A part carries no entry the manifest does not list.\n\n## 2. The manifest\n\nThe manifest is a JSON object with exactly these fields:\n\n- `format`: `bio-case-file/1`.\n- `group`: the slug of the team that published the case.\n- `case`, `edition`: the case's id and its edition (a whole number from 1).\n- `case_document_sha`: the SHA-256 (64 lowercase hex) of the case document's bytes.\n- `keys`: the signing keys, at least one, each `{key, fingerprint}`. `key` is an OpenSSH `ssh-ed25519` public key on one line; `fingerprint` is its OpenSSH fingerprint, `SHA256:` followed by the unpadded base64 of the SHA-256 of the key's wire bytes.\n- `parts`: each part, `{index, sha256, bytes}`, numbered from 1 in order. A part's `sha256` is the SHA-256 of one line per file of the part, in path order, each `<path> <sha256> <bytes>` and a newline (UTF-8), and its `bytes` the sum of those files' sizes. (The manifest sits inside every part, so it cannot list a digest of a whole part's archive.)\n- `files`: every file, in path order, each `{path, sha256, bytes, part, kind}`: its path, the SHA-256 and size of its bytes, the part that carries it, and its kind.\n\n## 3. The kinds of file, and their paths\n\nEach kind is carried at one path, so a file's path says which finding or material it belongs to:\n\n- `case_document` at `case.md`: the signed case document (section 4). Exactly one.\n- `case_signature` at `case.md.sig`: the case document's signature, an armored SSH signature (section 5). Exactly one.\n- `complete_edition` at `complete-edition.html`: the complete edition (section 6). Exactly one.\n- `finding` at `findings/<finding>/finding.md`: one finding's published bytes.\n- `finding_signature` at `findings/<finding>/finding.md.sig`: a member finding's signature.\n- `grading_facts` at `findings/<finding>/grading-facts.json`: one finding's grading facts as recorded at the act, JSON `{legs}`. Each leg is `{target, kind, role, grade, grade_axis, grade_source, ground, target_edition?, answer?, origins?, origins_complete?, captures?, author_key?, undetermined?}`: `kind` is `document`, `observation`, `inquiry` (another finding), `imported` (another team's finding), or a leg counted on the capture axis only (`calculation`, whose `target` names a `calculations:` row by its `calc`, a held `standard`, or an `occurrence`); `undetermined`, on such a leg, the reason its capture grade is undetermined, or null (a row written before the field reads it null); `grade_axis` one of `capture`, `connection`, `testimony`; `answer`, for an `inquiry` leg, the pair the finding it rests on answered, per axis `{state, grade}`; `captures` the SHA-256 of each capture a document leg rests on.\n- `passages` at `findings/<finding>/passages.json`: one finding's relied-on passages, a JSON list of `{content_id, capture_sha, extent, chain, quoted}`: `extent` in the extent grammar's canonical form (section 7), `chain` the text chain the passage was read through, or null.\n- `document` at `materials/<ref>/document`: a captured document's bytes, whole.\n- `extracted_text` at `materials/<ref>/extracted.txt`: a document's extracted text, the canonical JSON of its reading's units in order, each `{extent, ref, text}`. Its SHA-256 is the material's `text_sha`.\n- `observation` at `materials/<ref>/observation.md`: an observation's text, whole.\n- `attestation` at `attestations/<ref>/<name>`: a signed account, a timestamp token or a co-archive record.\n- `calculation`, at three paths, one kind: `calculations/<calc>/calculation.json`, one calculation a member's chain reaches, its `calculations:` row (section 4) as canonical JSON, which must be what the signed row states; `calculations/<calc>/inputs/<sha256>`, each input the row names, as the canonical JSON the calculation engine evaluates (a table `{fields, rows}` or a figure), named by its SHA-256 (the manifest lists it with that SHA-256, or it departs: the input_sha rule); and `calculations/prov.jsonld`, once, the calculations rendered as W3C PROV-O in JSON-LD, which must be the rendering of the signed rows.\n\n`<finding>` is a finding's id, `<ref>` a material's `ref` and `<calc>` a calculation's `calc` (section 4).\n\n## 4. The case document\n\nThe case document is text: a front matter between two lines `---`, in the record's restricted grammar (top-level keys; a key whose value is a block holds a map or a list of flat maps; scalars are `null`, `true`, `false`, integers, decimals, double- or single-quoted strings, or bare words), then a Markdown body. Its format is `bio-case-document/8`, `bio-case-document/7` or `bio-case-document/6`, which are identical in fields (`/5` to `/1` are older). They differ only in the words the complete edition renders (section 6). A checker reads these fields:\n\n- `case_id`, `case_edition`, `case_findings` (the members), `case_roles` (per member `{target, role, version_sha, edition}`, `role` `load_bearing` or `supporting`, `version_sha` the SHA-256 of the member's published bytes).\n- `case_strength`: each member's frozen pair, one row per member and axis `{target, axis, state, grade, …}`. A case has no strength of its own.\n- `required_strength`: the bar, `{declared, capture, connection, …}`; an axis with a grade is declared.\n- `method:` `{grading, checks}`: the grading method's version and the catalogue version the document was checked under.\n- `materials:` one row per document or observation any member's chain reaches, `{ref, kind, sha, text_sha, origin, archived_copy, included, rests_under}`. `included` is true when the material travels whole. Material whose source's identity is withheld is listed like any other.\n- `material_attestations:` one row per attestation, `{ref, by_kind, by, level, at, signature, recorded_in}`. `by_kind` is `member` (a capturing member's signed account, or an observation's author; at `group` or `project` level it carries no handle, key or signature), `co_attestation` (a trusted timestamp or a co-archive), `project` (the project's record holds the material) or `group` (`signature` is the literal `case`: the case document's signature covers it).\n- `capture_accounts:` each signed account `{capture, by, at, text_b64, signature_b64}`: the account's text and its signature, each base64.\n- `observation_attributions:` per observation (or attested capture, by its SHA-256 as `capture`) the attribution `level` in force, which the grading method reads.\n- `grading_facts:` one row per leg of each finding a member's chain reaches, `{finding, ord}` and the leg's fields (section 3), and `passages:` one row per relied-on passage, `{finding, ord, content_id, capture_sha, extent, chain, quoted}`. Each value that is not null, a number or a boolean is its canonical JSON in one single-quoted value. These blocks are what a grade is recomputed from and where a passage is said to be: the manifest is not signed, so a finding's `grading_facts` and `passages` files must say the same, row for row in `ord` order.\n- `calculations:` one row per calculation any member's chain reaches, `{calc, recipe, inputs, method_version, results, result_key, recompute, disclosed}`: `recipe` the recipe in the closed grammar `bio-calc/1` (its canonical JSON in one single-quoted value); `inputs` each input's name and SHA-256; `method_version` the engine's version; `results` the stored results by key; `result_key` the SHA-256 of the canonical JSON of `{recipe, inputs, method_version}`; `recompute` the status recorded at the act (`agrees`, `differs` or `unbound`; a workbook row, whose `calc` is its capture's SHA-256, with no recipe, no inputs and a null `result_key`, may state `not_recomputed`); `disclosed` the publisher's disclosure of a differing or unbound calculation, or null. A grading leg of kind `calculation` names its row by `calc`.\n- `timeline:` the published timeline, one row per item, `{lane, ord, when, label, ref, source}`: `lane` `they_did` (the world's events concerning the case's findings) or `we_did` (the team's own acts), every `they_did` row first, the two lanes never mixed; `ord` its place in its lane; `when` the item's when as held; `source` what it rests on (an item without one is not an item). The complete edition prints it.\n- `accepted_work:` one row per member and leg resting on another team's finding, `{member, leg_of, ref, team, case, edition, finding, manifest_sha, pair, result, gaps, accepted_by, accepted_at, reason}`.\n\n## 5. Signatures\n\nEvery signature is an armored SSH signature (SSHSIG) by an `ssh-ed25519` key, in the namespace `bio-ratify`, over the exact bytes of one statement:\n\n- the case document: `bio-ratify-case <case_id> <case_edition> <case_document_sha>` and a newline;\n- a member finding: `bio-ratify <finding id> <version_sha>` and a newline;\n- a member's account of a capture: `bio-capture-account <capture sha>`, a newline, then the account's text.\n\nThe key a signature embeds must be among the manifest's `keys`. A checker given the team's published keys also says whether each signing key is among them; a checker given none says the keys were not checked against that list.\n\n## 6. The complete edition\n\nThe complete edition is one HTML file rendered from the case file's other files, with every style inline, no script and no external reference. The same case file always renders the same bytes, so a checker renders it and compares. The product's name in its words (the credit at its foot, the line saying the case can be checked without the product, and the grading method's text) follows the case document's format: a `bio-case-document/6` document, or an earlier one, renders `CivicOS`, and a `bio-case-document/7` document renders `Civicsmith`. A `bio-case-document/8` document renders `Civicsmith` too, and says `team` where the earlier formats say `group` in the sentences of the edition that name the body publishing the case; identifiers (a manifest's `group` slug, a row's `group` value) stay as they are. A checker renders each document in its own format's words. So a case file published before `/7` still renders its own carried edition byte for byte.\n\n## 7. Canonical JSON, and the canonical extent\n\nCanonical JSON is JSON with every object's keys sorted by code unit, no whitespace, a member that JSON cannot hold left out, and strings and numbers as `JSON.stringify` writes them.\n\nAn extent names a place in one document. Its canonical form is an object with fixed fields per `kind`, an absent field written null: an integer field that is not an integer is null; a string field is trimmed, and null when empty; a rectangle `rect` is four finite numbers reordered to `[min x, min y, max x, max y]`, else null; a cell is A1 notation (up to three letters and seven digits) with `$` removed and in upper case, else null; a range is two such cells, the top-left first, always written `A1:B2` (one cell `B3` is `B3:B3`), else null.\n\n- `document` (the whole document): `{kind}`.\n- `pdf-page`: `{kind, page, rect}` (`page` from 0).\n- `sheet-cell`: `{kind, sheet, cell}` (the sheet's name as written, trimmed).\n- `sheet-range`: `{kind, sheet, range}`.\n- `slide-shape`: `{kind, slide, shape}`.\n- `doc-para`: `{kind, para, run}`.\n- `doc-table`: `{kind, table, cell}`.\n- `image`: `{kind, cited_as, part, page, rect}`: `cited_as` as written, else `bytes`; `part` trimmed and in lower case.\n- `envelope`: `{kind, cited_as, item, part, at, name, n}`: `cited_as` as written, else `envelope`; `at` the canonical form of the anchoring extent, or null; `n` an integer or null.\n- any other kind: `{kind, fields}`.\n\nTwo extents of one document overlap when they are the same place, or one lies inside the other: anything lies inside `document`; otherwise the kinds are equal and the coarse field is equal (`page`, `para`, `slide`, `sheet`), and the fine field (`rect`, `run`, `shape`, `cell`) is absent on the outer one, equal, or (a rectangle) contained in the outer one.\n\n## 8. Checking a case file\n\nA checker answers, for each finding (a member, or a finding a member's chain reaches through its `inquiry` legs), one result: `recreated` (nothing missing, nothing differs), `recreated_in_part` (something is missing and nothing differs) or `did_not_recreate` (something differs). A check of the whole case that finds something missing or differing counts for every finding. Each entry names what is missing or what differs in words a reader can act on, such as a document to fetch with its fingerprint and origin.\n\n1. Integrity. The manifest follows section 2. Every file's SHA-256 and length match its row; every part's files recompute its `sha256`. Since only the case document is signed, each material's carried bytes must also match the signed `materials:` row (`sha` for a document or an observation, `text_sha` for extracted text), a member's published bytes its `version_sha`, and each finding's grading facts and passages files the signed blocks. An absent file is missing for each finding that needs it; one that does not match differs.\n2. Signatures. Each signature is verified as section 5 says; one that fails differs, for the case and every finding it covers. Each `material_attestations:` row is checked by its kind: a `member` row with a signature is verified over its account; a `group` row is the case document's signature; a `project` or `co_attestation` row must name a material the manifest lists. A failed row differs for each finding whose chain reaches that material.\n3. Passages. Each passage's quoted text occurs (whitespace compared as single spaces) in its document's extracted text at its extent (the text of every unit whose extent overlaps the passage's, in order, joined by newlines; for an observation, its text), and its `content_id` is the SHA-256 (of the UTF-8 bytes) of the canonical JSON of `{v: 1, capture_sha, extent, chain}`, where `extent` is a string holding the canonical JSON of the extent in its canonical form, and `chain` a string holding the canonical JSON of the chain, or null. Not found differs; extracted text not carried is missing.\n4. Grades. Each finding's pair is recomputed from its grading facts by the grading method the case states (`method.grading`), whose text is published with the case's complete edition. A recomputed grade unlike the recorded one differs; a method version the checker does not hold is missing.\n5. The bar. A load-bearing member reaches the recorded bar on every declared axis, or differs naming each axis. A supporting member is not asked; a case with no bar has none to meet.\n6. Publication checks. The case document passes the publication checks of the catalogue; a check that needs the publishing copy's record is named as not asked. When the case states another catalogue version than the checker's, the answer says the checks ran at the checker's version.\n7. Presentability. Every material a load-bearing member's chain reaches is listed in `materials:` as `included: true` and carried whole (its bytes and extracted text, or an observation's text). Not carried is missing; not listed, or listed as not included, differs.\n8. Completion. Bytes supplied later whose SHA-256 is a missing file's fingerprint fill that gap. Bytes whose SHA-256 is a calculation input's stated SHA-256, where the case file lacks that input (absent, or carried with other bytes), fill that input: the calculation is recomputed with them (rule 11), and every finding resting on it takes its new entries. Other bytes are named and never used.\n9. The complete edition. The carried complete edition equals the one rendered from the rest of the case file, or differs.\n10. Another team's work. A leg on another team's finding (`imported`) is recreated up to that leg: its grade is the `accepted_work:` row's `pair`, passages and material are not followed past it, it adds nothing missing, and the answer names that team's case file (team, case, edition, finding and manifest SHA-256) as the place to check it.\n11. Calculations. Each `calculations:` row is recomputed by the `bio-calc/1` engine over the inputs the case file carries, each first checked against its SHA-256, at the method version the row states, and answered `agrees`, `differs` or `not_recomputed`. A result or result key that recomputes differently differs, naming the result, the stated and the recomputed value; an input absent or unlike its hash, or a method version the checker does not hold, is missing. A row the document discloses as differing or unbound is answered with that disclosure, and is not counted as differing for being so. A workbook, or a value from another engine, is answered `not_recomputed`, recomputed by the publishing copy's engine, never as agreeing. A finding whose chain rests on a calculation takes its entries.\n",
+    "text": "# The case file, format bio-case-file/1\n\nThis document specifies version 1 of the case file: the one file (or set of parts) that carries a published case whole, so that anybody can check it and recreate its findings without a copy of Civicsmith. It states every field, kind and rule a checker needs. A checker built from this text alone, given the same case file, answers the same as the checker Civicsmith runs.\n\nRecreating a case shows that what it carries is intact and consistent with what it states. It does not show that the case is true, and it is not an endorsement of it.\n\n## 1. Parts\n\nA case file is one or more parts. Each part is a ZIP archive whose every entry is stored, not compressed, with fixed timestamps (1980-01-01 00:00:00), names in UTF-8, and no encryption. A case file too large for one part (64 MiB) is split into several; nothing is left out for size.\n\nEvery part carries the same manifest, byte for byte, as the entry `manifest.json` at the archive's root. Every other entry is a file the manifest lists in that part, at its `path` from the archive's root. A part carries no entry the manifest does not list.\n\n## 2. The manifest\n\nThe manifest is a JSON object with exactly these fields:\n\n- `format`: `bio-case-file/1`.\n- `group`: the slug of the team that published the case.\n- `case`, `edition`: the case's id and its edition (a whole number from 1).\n- `case_document_sha`: the SHA-256 (64 lowercase hex) of the case document's bytes.\n- `keys`: the signing keys, at least one, each `{key, fingerprint}`. `key` is an OpenSSH `ssh-ed25519` public key on one line; `fingerprint` is its OpenSSH fingerprint, `SHA256:` followed by the unpadded base64 of the SHA-256 of the key's wire bytes.\n- `parts`: each part, `{index, sha256, bytes}`, numbered from 1 in order. A part's `sha256` is the SHA-256 of one line per file of the part, in path order, each `<path> <sha256> <bytes>` and a newline (UTF-8), and its `bytes` the sum of those files' sizes. (The manifest sits inside every part, so it cannot list a digest of a whole part's archive.)\n- `files`: every file, in path order, each `{path, sha256, bytes, part, kind}`: its path, the SHA-256 and size of its bytes, the part that carries it, and its kind.\n\n## 3. The kinds of file, and their paths\n\nEach kind is carried at one path, so a file's path says which finding or material it belongs to:\n\n- `case_document` at `case.md`: the signed case document (section 4). Exactly one.\n- `case_signature` at `case.md.sig`: the case document's signature, an armored SSH signature (section 5). Exactly one.\n- `complete_edition` at `complete-edition.html`: the complete edition (section 6). Exactly one.\n- `finding` at `findings/<finding>/finding.md`: one finding's published bytes.\n- `finding_signature` at `findings/<finding>/finding.md.sig`: a member finding's signature.\n- `grading_facts` at `findings/<finding>/grading-facts.json`: one finding's grading facts as recorded at the act, JSON `{legs}`. Each leg is `{target, kind, role, grade, grade_axis, grade_source, ground, target_edition?, answer?, origins?, origins_complete?, captures?, author_key?, undetermined?}`: `kind` is `document`, `observation`, `inquiry` (another finding), `imported` (another team's finding), or a leg counted on the capture axis only (`calculation`, whose `target` names a `calculations:` row by its `calc`, a held `standard`, or an `occurrence`); `undetermined`, on such a leg, the reason its capture grade is undetermined, or null (a row written before the field reads it null); `grade_axis` one of `capture`, `connection`, `testimony`; `answer`, for an `inquiry` leg, the pair the finding it rests on answered, per axis `{state, grade}`; `captures` the SHA-256 of each capture a document leg rests on.\n- `passages` at `findings/<finding>/passages.json`: one finding's relied-on passages, a JSON list of `{content_id, capture_sha, extent, chain, quoted}`: `extent` in the extent grammar's canonical form (section 7), `chain` the text chain the passage was read through, or null.\n- `document` at `materials/<ref>/document`: a captured document's bytes, whole.\n- `extracted_text` at `materials/<ref>/extracted.txt`: a document's extracted text, the canonical JSON of its reading's units in order, each `{extent, ref, text}`. Its SHA-256 is the material's `text_sha`.\n- `observation` at `materials/<ref>/observation.md`: an observation's text, whole.\n- `attestation` at `attestations/<ref>/<name>`: a signed account, a timestamp token or a co-archive record.\n- `calculation`, at three paths, one kind: `calculations/<calc>/calculation.json`, one calculation a member's chain reaches, its `calculations:` row (section 4) as canonical JSON, which must be what the signed row states; `calculations/<calc>/inputs/<sha256>`, each input the row names, as the canonical JSON the calculation engine evaluates (a table `{fields, rows}` or a figure), named by its SHA-256 (the manifest lists it with that SHA-256, or it departs: the input_sha rule); and `calculations/prov.jsonld`, once, the calculations rendered as W3C PROV-O in JSON-LD, which must be the rendering of the signed rows.\n\n`<finding>` is a finding's id, `<ref>` a material's `ref` and `<calc>` a calculation's `calc` (section 4).\n\n## 4. The case document\n\nThe case document is text: a front matter between two lines `---`, in the record's restricted grammar (top-level keys; a key whose value is a block holds a map or a list of flat maps; scalars are `null`, `true`, `false`, integers, decimals, double- or single-quoted strings, or bare words), then a Markdown body. Its format is `bio-case-document/9`, `bio-case-document/8`, `bio-case-document/7` or `bio-case-document/6`, which are identical in fields except the optional attestation `sha` that `/9` declares (`/5` to `/1` are older). They differ otherwise only in the words the complete edition renders (section 6). A document is `/9` when any of its attestation rows carries a `sha`; a document without one keeps `/8`. A checker reads these fields:\n\n- `case_id`, `case_edition`, `case_findings` (the members), `case_roles` (per member `{target, role, version_sha, edition}`, `role` `load_bearing` or `supporting`, `version_sha` the SHA-256 of the member's published bytes).\n- `case_strength`: each member's frozen pair, one row per member and axis `{target, axis, state, grade, …}`. A case has no strength of its own.\n- `required_strength`: the bar, `{declared, capture, connection, …}`; an axis with a grade is declared.\n- `method:` `{grading, checks}`: the grading method's version and the catalogue version the document was checked under.\n- `materials:` one row per document or observation any member's chain reaches, `{ref, kind, sha, text_sha, origin, archived_copy, included, rests_under}`. `included` is true when the material travels whole. Material whose source's identity is withheld is listed like any other.\n- `material_attestations:` one row per attestation, `{ref, by_kind, by, level, at, signature, recorded_in}`, and, in a `bio-case-document/9` document, an optional `sha`: the SHA-256 of the one capture of `ref` the row attests. A source captured more than once has one material row for each capture, all with the same `ref`; a row with a `sha` belongs to the material whose `ref` and `sha` it names, and a row without one (every earlier document) belongs to the materials of its `ref`. `by_kind` is `member` (a capturing member's signed account, or an observation's author; at `group` or `project` level it carries no handle, key or signature), `co_attestation` (a trusted timestamp or a co-archive), `project` (the project's record holds the material) or `group` (`signature` is the literal `case`: the case document's signature covers it).\n- `capture_accounts:` each signed account `{capture, by, at, text_b64, signature_b64}`: the account's text and its signature, each base64.\n- `observation_attributions:` per observation (or attested capture, by its SHA-256 as `capture`) the attribution `level` in force, which the grading method reads.\n- `grading_facts:` one row per leg of each finding a member's chain reaches, `{finding, ord}` and the leg's fields (section 3), and `passages:` one row per relied-on passage, `{finding, ord, content_id, capture_sha, extent, chain, quoted}`. Each value that is not null, a number or a boolean is its canonical JSON in one single-quoted value. These blocks are what a grade is recomputed from and where a passage is said to be: the manifest is not signed, so a finding's `grading_facts` and `passages` files must say the same, row for row in `ord` order.\n- `calculations:` one row per calculation any member's chain reaches, `{calc, recipe, inputs, method_version, results, result_key, recompute, disclosed}`: `recipe` the recipe in the closed grammar `bio-calc/1` (its canonical JSON in one single-quoted value); `inputs` each input's name and SHA-256; `method_version` the engine's version; `results` the stored results by key; `result_key` the SHA-256 of the canonical JSON of `{recipe, inputs, method_version}`; `recompute` the status recorded at the act (`agrees`, `differs` or `unbound`; a workbook row, whose `calc` is its capture's SHA-256, with no recipe, no inputs and a null `result_key`, may state `not_recomputed`); `disclosed` the publisher's disclosure of a differing or unbound calculation, or null. A grading leg of kind `calculation` names its row by `calc`.\n- `timeline:` the published timeline, one row per item, `{lane, ord, when, label, ref, source}`: `lane` `they_did` (the world's events concerning the case's findings) or `we_did` (the team's own acts), every `they_did` row first, the two lanes never mixed; `ord` its place in its lane; `when` the item's when as held; `source` what it rests on (an item without one is not an item). The complete edition prints it.\n- `accepted_work:` one row per member and leg resting on another team's finding, `{member, leg_of, ref, team, case, edition, finding, manifest_sha, pair, result, gaps, accepted_by, accepted_at, reason}`.\n\n## 5. Signatures\n\nEvery signature is an armored SSH signature (SSHSIG) by an `ssh-ed25519` key, in the namespace `bio-ratify`, over the exact bytes of one statement:\n\n- the case document: `bio-ratify-case <case_id> <case_edition> <case_document_sha>` and a newline;\n- a member finding: `bio-ratify <finding id> <version_sha>` and a newline;\n- a member's account of a capture: `bio-capture-account <capture sha>`, a newline, then the account's text.\n\nThe key a signature embeds must be among the manifest's `keys`. A checker given the team's published keys also says whether each signing key is among them; a checker given none says the keys were not checked against that list.\n\n## 6. The complete edition\n\nThe complete edition is one HTML file rendered from the case file's other files, with every style inline, no script and no external reference. The same case file always renders the same bytes, so a checker renders it and compares. The product's name in its words (the credit at its foot, the line saying the case can be checked without the product, and the grading method's text) follows the case document's format: a `bio-case-document/6` document, or an earlier one, renders `CivicOS`, and a `bio-case-document/7` document renders `Civicsmith`. A `bio-case-document/8` document renders `Civicsmith` too, and says `team` where the earlier formats say `group` in the sentences of the edition that name the body publishing the case; identifiers (a manifest's `group` slug, a row's `group` value) stay as they are. A checker renders each document in its own format's words. So a case file published before `/7` still renders its own carried edition byte for byte.\n\n## 7. Canonical JSON, and the canonical extent\n\nCanonical JSON is JSON with every object's keys sorted by code unit, no whitespace, a member that JSON cannot hold left out, and strings and numbers as `JSON.stringify` writes them.\n\nAn extent names a place in one document. Its canonical form is an object with fixed fields per `kind`, an absent field written null: an integer field that is not an integer is null; a string field is trimmed, and null when empty; a rectangle `rect` is four finite numbers reordered to `[min x, min y, max x, max y]`, else null; a cell is A1 notation (up to three letters and seven digits) with `$` removed and in upper case, else null; a range is two such cells, the top-left first, always written `A1:B2` (one cell `B3` is `B3:B3`), else null.\n\n- `document` (the whole document): `{kind}`.\n- `pdf-page`: `{kind, page, rect}` (`page` from 0).\n- `sheet-cell`: `{kind, sheet, cell}` (the sheet's name as written, trimmed).\n- `sheet-range`: `{kind, sheet, range}`.\n- `slide-shape`: `{kind, slide, shape}`.\n- `doc-para`: `{kind, para, run}`.\n- `doc-table`: `{kind, table, cell}`.\n- `image`: `{kind, cited_as, part, page, rect}`: `cited_as` as written, else `bytes`; `part` trimmed and in lower case.\n- `envelope`: `{kind, cited_as, item, part, at, name, n}`: `cited_as` as written, else `envelope`; `at` the canonical form of the anchoring extent, or null; `n` an integer or null.\n- any other kind: `{kind, fields}`.\n\nTwo extents of one document overlap when they are the same place, or one lies inside the other: anything lies inside `document`; otherwise the kinds are equal and the coarse field is equal (`page`, `para`, `slide`, `sheet`), and the fine field (`rect`, `run`, `shape`, `cell`) is absent on the outer one, equal, or (a rectangle) contained in the outer one.\n\n## 8. Checking a case file\n\nA checker answers, for each finding (a member, or a finding a member's chain reaches through its `inquiry` legs), one result: `recreated` (nothing missing, nothing differs), `recreated_in_part` (something is missing and nothing differs) or `did_not_recreate` (something differs). A check of the whole case that finds something missing or differing counts for every finding. Each entry names what is missing or what differs in words a reader can act on, such as a document to fetch with its fingerprint and origin.\n\n1. Integrity. The manifest follows section 2. Every file's SHA-256 and length match its row; every part's files recompute its `sha256`. Since only the case document is signed, each material's carried bytes must also match the signed `materials:` row (`sha` for a document or an observation, `text_sha` for extracted text), a member's published bytes its `version_sha`, and each finding's grading facts and passages files the signed blocks. An absent file is missing for each finding that needs it; one that does not match differs.\n2. Signatures. Each signature is verified as section 5 says; one that fails differs, for the case and every finding it covers. Each `material_attestations:` row is checked by its kind: a `member` row with a signature is verified over its account; a `group` row is the case document's signature; a `project` or `co_attestation` row must name a material the manifest lists. A failed row differs for each finding whose chain reaches that material; a failed row with a `sha` differs only for the finding whose chain reaches that capture, and its entry names the `sha`.\n3. Passages. Each passage's quoted text occurs (whitespace compared as single spaces) in its document's extracted text at its extent (the text of every unit whose extent overlaps the passage's, in order, joined by newlines; for an observation, its text), and its `content_id` is the SHA-256 (of the UTF-8 bytes) of the canonical JSON of `{v: 1, capture_sha, extent, chain}`, where `extent` is a string holding the canonical JSON of the extent in its canonical form, and `chain` a string holding the canonical JSON of the chain, or null. Not found differs; extracted text not carried is missing.\n4. Grades. Each finding's pair is recomputed from its grading facts by the grading method the case states (`method.grading`), whose text is published with the case's complete edition. A recomputed grade unlike the recorded one differs; a method version the checker does not hold is missing.\n5. The bar. A load-bearing member reaches the recorded bar on every declared axis, or differs naming each axis. A supporting member is not asked; a case with no bar has none to meet.\n6. Publication checks. The case document passes the publication checks of the catalogue; a check that needs the publishing copy's record is named as not asked. When the case states another catalogue version than the checker's, the answer says the checks ran at the checker's version.\n7. Presentability. Every material a load-bearing member's chain reaches is listed in `materials:` as `included: true` and carried whole (its bytes and extracted text, or an observation's text). Not carried is missing; not listed, or listed as not included, differs.\n8. Completion. Bytes supplied later whose SHA-256 is a missing file's fingerprint fill that gap. Bytes whose SHA-256 is a calculation input's stated SHA-256, where the case file lacks that input (absent, or carried with other bytes), fill that input: the calculation is recomputed with them (rule 11), and every finding resting on it takes its new entries. Other bytes are named and never used.\n9. The complete edition. The carried complete edition equals the one rendered from the rest of the case file, or differs.\n10. Another team's work. A leg on another team's finding (`imported`) is recreated up to that leg: its grade is the `accepted_work:` row's `pair`, passages and material are not followed past it, it adds nothing missing, and the answer names that team's case file (team, case, edition, finding and manifest SHA-256) as the place to check it.\n11. Calculations. Each `calculations:` row is recomputed by the `bio-calc/1` engine over the inputs the case file carries, each first checked against its SHA-256, at the method version the row states, and answered `agrees`, `differs` or `not_recomputed`. A result or result key that recomputes differently differs, naming the result, the stated and the recomputed value; an input absent or unlike its hash, or a method version the checker does not hold, is missing. A row the document discloses as differing or unbound is answered with that disclosure, and is not counted as differing for being so. A workbook, or a value from another engine, is answered `not_recomputed`, recomputed by the publishing copy's engine, never as agreeing. A finding whose chain rests on a calculation takes its entries.\n",
     "why": "the readable specification of the case-file formats, pinned to format versions: wire grammar (B354, CASE-CHECKER #15 J2)"
    },
    {
@@ -1614,6 +1614,36 @@
     "file": "bio-plane/src/case-checker/spec.mjs",
     "line": 238,
     "text": "one of its row's `passages` whose `content` is the `content_id` of no `passages:` row, or a `passages:` row whose `capture_sha` is one of its row's `captures` and on which no finding relies (every `passages:` row a case file carries is a finding's, so offline only the first can depart).\n",
+    "why": "the readable specification of the case-file formats, pinned to format versions: wire grammar (B354, CASE-CHECKER #15 J2)"
+   },
+   {
+    "file": "bio-plane/src/case-checker/spec.mjs",
+    "line": 251,
+    "text": "\nVersion 2 added three kinds of file to version 1 (`archive`, `container` and `criteria`, section 3) and one check (rule 12, section 8). Version 3 added one kind of file to version 2 (`obscured`, section 3), the `obscured` fields of a `materials:` row (section 4) and their checks (rules 1 and 7), and the criteria rows' `captures` (section 3, rule 12). Version 4 adds no kind and no field: it spells the path of a material's files differently when one `ref` is on several rows of the `materials:` block, a source captured more than once (section 3), and adds the departures that keep that spelling and the format together (rule 1). A case file is `bio-case-file/4` when at least one of its paths states a capture, and keeps `bio-case-file/3` otherwise. A `bio-case-file/3`, `/2` or `/1` case file is read as written, by its own specification, each held beside this one, and never by this one's spelling of a path: a `/3` manifest with a path that states a capture departs from its format, and a checker meeting a format it does not hold departs at `format`.\n",
+    "why": "the readable specification of the case-file formats, pinned to format versions: wire grammar (B354, CASE-CHECKER #15 J2)"
+   },
+   {
+    "file": "bio-plane/src/case-checker/spec.mjs",
+    "line": 262,
+    "text": "`<finding>` is a finding's id, `<ref>` a material's `ref` and `<calc>` a calculation's `calc` (section 4).\n\n**One `ref` on several rows.** A source captured more than once is several rows of the `materials:` block with one `ref` (section 4), counted over all its rows, carried or not. For such a `ref`, each file of the kinds `document`, `extracted_text`, `observation` and `obscured` takes its row's capture as a segment of its path: `materials/<ref>/<sha>/<leaf>`, where `<sha>` is the row's `sha`, in lower case, 64 hex (for a row carried as its copy, the original's), and `<leaf>` is that kind's leaf in the paths above (`document`, `extracted.txt`, `observation.md`, `obscured`). A `ref` on one row keeps its path as above, and so does every case file whose `ref`s are each on one row. The `archive` and `container` kinds are already named by a digest and keep their paths (`materials/<ref>/archives/<sha256>`, `materials/<ref>/containers/<sha256>.json`); a path of four segments is read as such a file when its third segment is `archives` or `containers`, and as a file of a capture when its third segment is 64 lower-case hex and its fourth is a material leaf. An `attestation` keeps its path. A checker decides the spelling from the manifest's format, never from the rows alone: the spelling is `bio-case-file/4`'s alone.\n",
+    "why": "the readable specification of the case-file formats, pinned to format versions: wire grammar (B354, CASE-CHECKER #15 J2)"
+   },
+   {
+    "file": "bio-plane/src/case-checker/spec.mjs",
+    "line": 278,
+    "text": "under its `ref` at the original's fingerprints (the original never travels) each depart (rule 1); for a `ref` on several rows the departure is judged for the row whose capture the path states, and for `archive` and `container` only when every row of that `ref` is a copy.",
+    "why": "the readable specification of the case-file formats, pinned to format versions: wire grammar (B354, CASE-CHECKER #15 J2)"
+   },
+   {
+    "file": "bio-plane/src/case-checker/spec.mjs",
+    "line": 282,
+    "text": "Every file's SHA-256 and length match its row; every part's files recompute its `sha256`. A `bio-case-file/4` manifest departs when: a path states a capture and the manifest's format is not `/4` (`path_format`); its format is `/4` and no path states a capture (`format_unused`); given the case document's rows, a plain path of a material's file stands under a `ref` on several rows (`capture_missing`), a path stating a capture stands under a `ref` on one row (`capture_needless`), or a path states a capture that no row of that `ref` names, `sha` compared in lower case (`capture_unnamed`). No path repeats in any format (`path_twice`).",
+    "why": "the readable specification of the case-file formats, pinned to format versions: wire grammar (B354, CASE-CHECKER #15 J2)"
+   },
+   {
+    "file": "bio-plane/src/case-checker/spec.mjs",
+    "line": 292,
+    "text": "Not carried is missing; not listed, or listed as not included, differs. For a `ref` on several rows, each row is asked for the files of its own capture, and a passage in a capture is found in that capture's text. A row stating",
     "why": "the readable specification of the case-file formats, pinned to format versions: wire grammar (B354, CASE-CHECKER #15 J2)"
    }
   ],
@@ -3027,6 +3057,794 @@
     "line": 30,
     "text": "other things the record follows",
     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   }
+  ],
+  "money": [
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 404,
+    "text": "a balance class is read against a fund a party names, and none is named",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 518,
+    "text": "a calculation is never a money fact's source: its result is a calculation, and the facts it read are the sources (K1468)",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1327,
+    "text": "a calculation is never a money fact's source",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 483,
+    "text": "a canonical table row read through a binding a member adopted (source {table, row, binding})",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1151,
+    "text": "a chain of authority is read for one money fact (MNY-...)",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 387,
+    "text": "a code names one of the active profiles' classification schemes{v1} and its code",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1333,
+    "text": "a duty is never named in a money fact",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 472,
+    "text": "a figure states how it was read: {list}{v1}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 525,
+    "text": "a found table's amount column is declared and counted through calculations, never read into money facts row by row; record a figure from one passage of the table instead",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1242,
+    "text": "a fund's type is {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1243,
+    "text": "a fund's type names its basis: the source that states it",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1329,
+    "text": "a hypothesis is never named in a money fact ({k})",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1338,
+    "text": "a hypothesis is never named in a money fact",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 378,
+    "text": "a {kind} takes a stage of {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 496,
+    "text": "a machine records a money fact only with {list}; anything else is proposed to a member, never written",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 476,
+    "text": "a machine's reading is one of {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 435,
+    "text": "a money fact concerns an entity of kind {list}; {id} is a {k}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 445,
+    "text": "a money fact concerns events, entities of kind contract, fund, program or proceeding, or lines; {id} is none of them",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 330,
+    "text": "a money fact is an object of its fields",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 690,
+    "text": "a money fact is read by its id (MNY-...)",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 359,
+    "text": "a money fact keeps the figure exactly as its source printed it (as_read)",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 360,
+    "text": "a money fact names its currency",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1337,
+    "text": "a money fact never concerns a duty",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 449,
+    "text": "a money fact never names a duty; the duty names the fact it cites",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 513,
+    "text": "a money fact rests on exactly one source: a content extent or another money fact",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 514,
+    "text": "a money fact rests on exactly one source",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 348,
+    "text": "a money fact states its amount",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 270,
+    "text": "a money fact states the accounting period it covers",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 361,
+    "text": "a money fact's sign is explicit: + or -",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 892,
+    "text": "a money set has a label a person can read",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 943,
+    "text": "a money set is read by its id (MSR-...)",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 891,
+    "text": "a money set's purpose is {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 968,
+    "text": "a money set's purpose is {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 932,
+    "text": "a proposal names the method that proposed it",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 365,
+    "text": "a range carries its low and high as {low, high}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 353,
+    "text": "a range's amount is {low, high}, each an exact decimal written as a string",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 367,
+    "text": "a range's low is above its high",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 763,
+    "text": "a read names the member reading; an absent viewer is neither an administrator nor the public",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 529,
+    "text": "a source has no field {k}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 533,
+    "text": "a source's ingest is the key of the ingest that read a table row, a non-empty string of at most {max} characters, and only a table row source has one",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 519,
+    "text": "a source is {capture_sha, extent}, {content_id} or {fact}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 536,
+    "text": "a source is {capture_sha, extent}, {content_id}, {table, row, binding} or {fact}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 537,
+    "text": "a source is one of a content extent or a money fact, never both",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 549,
+    "text": "a table row source names its table, its row and the binding it was read through",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1330,
+    "text": "a total is a calculation, never stored as a money fact",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 900,
+    "text": "a trail concerns one id, or none",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 406,
+    "text": "a {type} fund's classes are {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 474,
+    "text": "a typed transcription is a member's act; a machine's reading names its method",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 672,
+    "text": "a withdrawal states why",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 980,
+    "text": "after names no set in this list; start again without it",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 374,
+    "text": "an actual amount names its stage: one of {list} for {kind}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 357,
+    "text": "an amount is an exact decimal written as a string of digits (thousands separators and one point allowed), unsigned and unscaled; never a number with a binary fraction. The sign is its own field",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 897,
+    "text": "an attribution set concerns one registered entity of kind contract",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 792,
+    "text": "an entity's money is read by the entity's id (moneyof&entity=ENT-...)",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 767,
+    "text": "an extent is one of content's kinds ({list})",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 245,
+    "text": "an ingest is marked by its key, a non-empty string of at most {max} characters",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 247,
+    "text": "an ingest is marked open (true) or closed (false)",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 371,
+    "text": "basis is one of {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 502,
+    "text": "buys is {quantity, unit, what}, the quantity an exact decimal",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 384,
+    "text": "codes are a list of {scheme, code}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 421,
+    "text": "concerns is a list of ids",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1080,
+    "text": "{contract} is not a registered contract",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 424,
+    "text": "each id concerned is a string",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 418,
+    "text": "{end}.as_written is the party's name as the source writes it",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 415,
+    "text": "{end}.fund names {v1}, which is not registered as a fund",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1156,
+    "text": "events is not wired here",
+    "why": "a chain read's `why` when events are not wired: the money screen draws only the chains it holds, never this (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 853,
+    "text": "{fact_id} is withdrawn and is never counted",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1246,
+    "text": "{fund} is not registered as a fund",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 442,
+    "text": "{id} is not a line the record holds that the writer can see",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 369,
+    "text": "kind is one of {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 796,
+    "text": "kind is one of {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 638,
+    "text": "{module}'s listener failed on {change} of {factId}: {String}. Nothing was written.",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 966,
+    "text": "money sets are listed by what they concern: name the id (moneysets&concerns=...)",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 848,
+    "text": "name the money facts by their ids",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1182,
+    "text": "no authorising event is held for this event",
+    "why": "the authorising chain's `says`, for builders: the money screen draws the chain's hop count (screen.money.auth.chain), never this sentence (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 582,
+    "text": "no money fact id could be drawn",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 89,
+    "text": "no money fact with that id is held here, or it is not visible to the asker; a money fact is recorded with op=moneyrecord before anything can name it",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 916,
+    "text": "no money set {String} is held",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 934,
+    "text": "no money set {String} is held",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 405,
+    "text": "no type is held for the fund {fund}, so its balance-class family is not known (setFundType)",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 403,
+    "text": "only a balance carries a balance class",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 366,
+    "text": "only a fact of precision range carries {low, high}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 376,
+    "text": "only an actual amount has a stage; this one is {phase}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 370,
+    "text": "phase is one of {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 797,
+    "text": "phase is one of {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 363,
+    "text": "precision is one of {list}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 1182,
+    "text": "the authorising events held toward this event",
+    "why": "the authorising chain's `says`, for builders: the money screen draws the chain's hop count (screen.money.auth.chain), never this sentence (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 565,
+    "text": "the capture named",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 457,
+    "text": "the fact an adjustment names ({String}) is not held",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 394,
+    "text": "the party {end} is {entity?, fund?, account?, as_written}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 465,
+    "text": "the question {String} is not an inquiry held here, or not visible to the writer",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 568,
+    "text": "the source's extent: {detail}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 837,
+    "text": "these facts differ in {v1}: {fact_id} and {fact_id_2}; a sum is taken only over one kind, phase and stage, basis, currency and period",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 913,
+    "text": "to {act} a fact is a member's act; a machine proposes (proposeInclusion)",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 914,
+    "text": "to {act} a fact states why",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 538,
+    "text": "{what} is not held here, or not visible to the writer",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 334,
+    "text": "{where} has no field {String}; a money fact holds only {list}. Nothing was written.",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 764,
+    "text": "who recorded from a passage is read for one capture, by its sha256",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   },
+   {
+    "file": "bio-plane/src/money/index.mjs",
+    "line": 785,
+    "text": "who recorded from this capture could not be read: {String}",
+    "why": "a refusal's or a validation's `detail` beside its code, for builders: the shell draws the refusal's own sentence (refusal.<CODE>, or the answer's translation), never this detail; no screen draws it (B495)"
+   }
+  ],
+  "notice-producers": [
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1262,
+    "text": "a cost message is steps' (its R15): relayed once to the owners of each other sharing project, with its writer's handle, naming no project unless its writer did.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 747,
+    "text": "a dated wait is inquiry's (its R54–R57), due from the start of its local day; it goes to the member who set it and to nobody else, and leaves when they look, re-date or remove it, or the question concludes.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 491,
+    "text": "a detector's result is money-checks' (its R6–R10): shown only for a version gated at or under 20% and switched on for the project, to a viewer who may see every input.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 898,
+    "text": "a difference between two captures of a policy's published copy (following R21), never a finding of the record and never what the change means; it leaves when an amendment is held for it or its recipient disposes of it.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1440,
+    "text": "a fetch-done record is capture's: written once when a large capture's background fetch is filed; told once, to the member who asked, and to nobody else.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1187,
+    "text": "a find is the system's work (question-explorer R5), offered once to each of the question's recipients who may see it; it is not evidence until a member takes it in.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1208,
+    "text": "a later arrival is steps' (its R23): told once to each recipient of a referring question who may see the step and what arrived, and to the member who did the step; no outcome moves by itself.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1093,
+    "text": "a limit first reached in its current period is ai-use's (its R5), answered to that account's owners; it is told once a period, and names no member.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1280,
+    "text": "a milestone overdue is investigation's (its R3): told once to each joined participant; a reminder to the member who asked, on its day, and to nobody else.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1118,
+    "text": "a project's sign-in account serves only while the project has one member (ai-accounts R13); answered to the project's owners, naming no member.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1301,
+    "text": "a quiet spell is investigation's (its R18): told once per spell to the project's joined participants; no member act declares the objective met.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1316,
+    "text": "a reviewer's comments left out are review's (its R33): told once to each member reviewer, who may file a response in the case's docket.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 961,
+    "text": "a scanner's `found` note (file-safety R15) places a scan hold (its R16): the original does not open, the safe view stays; two members' releases (its R17) or a second engine's clean check of a hold the built-in scanner alone placed (its R18) open it again.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1246,
+    "text": "a shared cost is steps' (its R14): answered to each owner of each sharing project only, never when any of them is hidden; told once per step, totals and project set.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 535,
+    "text": "a standing question's run is answers' (its R17–R20), seen only by its author; one entry per run that found something new, so each new find is told once (DEC-94).",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1226,
+    "text": "a step's date and a reminder are steps' (its R12): told once, to the member who set the date or asked for the reminder, and to nobody else.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1014,
+    "text": "a tool answering PRIVATE_MODE_NOT_HONOURED is switched off (file-safety R31) and is used again only once an administrator's test passes (its R29).",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1393,
+    "text": "a watched item's last change is retrieval's (its R85), later than the instant this member's own watch mark was set (following R35); told once per change, to her alone, and it says nothing of what changed.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1050,
+    "text": "an account's Ask is ai-use's (its R9): at most one a local day, answered to that account's owners; silence means no.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 1494,
+    "text": "an ingest's end is calculations' (its R14): told once, to the member who ingested, when a background run is done or was stopped, and to nobody else.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 443,
+    "text": "an interest check's result is people's (its R23–R25): shown only once its version's gate is recorded open, switched on for the project, and to a viewer who may see every input.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 705,
+    "text": "an occurrence's state is duties' (its R9–R11), derived on read as of this read's instant; a body is overdue only after the latest candidate due date, possibly overdue between (K1444 (i)).",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   },
+   {
+    "file": "bio-plane/src/notice-producers/index.mjs",
+    "line": 787,
+    "text": "the level is credentials' (its R45), over counts only (its R44); an episode is an unbroken run of hours at whose end the level was High, told once to each administrator, and a later one is told again.",
+    "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
+   }
+  ],
+  "test-support": [
+   {
+    "file": "bio-plane/test/corpus.mjs",
+    "line": 239,
+    "text": "LibreOffice is not installed",
+    "why": "a test's skip reason: test-library text, never shown in Civicsmith (B508, K4855)"
+   },
+   {
+    "file": "bio-plane/test/corpus.mjs",
+    "line": 256,
+    "text": "Playwright is not installed",
+    "why": "a test's skip reason: test-library text, never shown in Civicsmith (B508, K4855)"
+   },
+   {
+    "file": "bio-plane/test/corpus.mjs",
+    "line": 260,
+    "text": "Chromium cannot start ({})",
+    "why": "a test's skip reason: test-library text, never shown in Civicsmith (B508, K4855)"
+   },
+   {
+    "file": "bio-plane/test/pdfgen.mjs",
+    "line": 130,
+    "text": "CMapName currentdict /CMap defineresource pop",
+    "why": "PDF syntax the test PDF generator writes: test-library text, never shown in Civicsmith (B508, K4855)"
+   },
+   {
+    "file": "bio-plane/test/pdfgen.mjs",
+    "line": 255,
+    "text": "{} 0 obj\n{}\nendobj\n",
+    "why": "PDF syntax the test PDF generator writes: test-library text, never shown in Civicsmith (B508, K4855)"
+   },
+   {
+    "file": "bio-plane/test/pdfgen.mjs",
+    "line": 259,
+    "text": "{} 0 obj\n{}\nstream\n",
+    "why": "PDF syntax the test PDF generator writes: test-library text, never shown in Civicsmith (B508, K4855)"
+   }
+  ],
+  "pdf-reader": [
+   {
+    "file": "bio-plane/src/pdfstructure.mjs",
+    "line": 5683,
+    "text": "{} 0 obj\n{}\nendobj\n",
+    "why": "PDF file syntax pdf-reader writes into an extracted page's bytes, never shown to a member (B510, K4872)"
+   },
+   {
+    "file": "bio-plane/src/pdfstructure.mjs",
+    "line": 5695,
+    "text": "{} 0 obj\n{}\nstream\n",
+    "why": "PDF file syntax pdf-reader writes into an extracted page's bytes, never shown to a member (B510, K4872)"
    }
   ]
  }

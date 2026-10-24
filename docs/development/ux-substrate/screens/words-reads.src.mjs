@@ -329,6 +329,8 @@ const DECISIONS = [
   ["plane", "plane/ask.mjs", "^the reply named is not an entry", dev("badtask")],
   ["plane", "plane/ask.mjs", "^an infraction draft names", dev("badtask")],
   ["plane", "plane/ask.mjs", "^the reply's text is not held", dev("assistantinput")],
+  // DEC-431: capture R113's begin act, its default saying "group" (DEC-281: team): the design's word is the key's
+  ["affordances", "affordances/act-help.mjs", "^Starts sending a large document to the group's store", "act.captureuploadbegin.does"],
   ...[["The queue", "screen.queue.name"], ["Everything the record is asking of somebody", "screen.queue.purpose"],
       ["The evidence finder", "screen.finder.name"], ["One query surface over the record", "screen.finder.purpose"],
       ["What the record knows about a person, office or thing", "screen.people.purpose"],
@@ -354,6 +356,10 @@ for (const [key, was] of Object.entries(JSON.parse(fs.readFileSync(path.join(HER
 for (const pre of ["upload-directed: ", "read: a case's drafts of its account", "case-directed: ", "action-directed: ", "credential: a member's own sign-in", "read: every interface word"])
   DECISIONS.push(["control-plane", "control-plane/owner-ops.mjs", "^" + pre, dev("grade")]);
 DECISIONS.push(["plane", "plane/declared.mjs", "^member-directed: a member's own question", dev("grade")]);
+/* DEC-424 (B495): on T51 after fix round 6, the plane's owedwork op description is builders' grading text like the other declared ops'; the
+   interrupted reading's reason is the design's own word (DEC-417 plane.pending.interrupted, whose English the code's stand-in no longer matches). */
+DECISIONS.push(["plane", "plane/declared.mjs", "^what the object still owes one document", dev("grade")]);
+DECISIONS.push(["plane", "plane/pending.mjs", "=the reading did not finish; the object stopped", "plane.pending.interrupted"]);
 DECISIONS.push(["screens-settings", "screens-settings/bias.mjs", "=## What This Does Not Enforce", dev("filegrammar")]);
 /* What a module's remaining inline strings are, when no decision or word names them. */
 const DEFAULTS = {

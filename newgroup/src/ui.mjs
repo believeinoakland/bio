@@ -26,6 +26,7 @@
 import { list as heldProfiles } from "../../jurisdictions/index.mjs";
 /* R72: every sentence a key holds is read by key (words.mjs); a sentence no key holds stays here, in "team" words, and is reported. */
 import { word } from "./words.mjs";
+import { guideReady, guideStage, GUIDE_SCRIPT } from "./guide.mjs";
 /* R23 (T46): the container images the release this installer carries names (recorded by the embed from its signed fleet
    statement), and the one statement of what cannot install yet. */
 import { RELEASE_VERSION, RELEASE_CONTAINERS } from "./release.mjs";
@@ -270,6 +271,7 @@ export const WIZARD_HTML = `${pageHead(INSTALL_TITLE, { description: DESCRIPTION
 <body class="cs">
 <main class="cs-frame ng">
 ${pageMark()}
+${guideReady() ? guideStage() : ""}
 <div class="ng-stage" id="stage-choose">
 <h1>${escText(INSTALL_TITLE)}</h1>
 ${whatBlock()}
@@ -303,6 +305,7 @@ ${securityBlock()}
 ${publisherFooter()}
 </main>
 ${pageScript("install")}
+${guideReady() ? GUIDE_SCRIPT : ""}
 </body>
 </html>`;
 
@@ -416,7 +419,7 @@ ${c.unknown.map((u) => `<p class="small exists-unknown">${escText(u)}</p>`).join
 /* R62 (DEC-282): the page drawn when `fresh` finds a copy, after nothing was created or changed: what is already here
    (R63), then the three ways on. Each is a new `POST /begin` carrying the choice, after a new consent on Cloudflare's own page
    (the installer keeps no token). `copies` are describeCopy's answers (account.mjs); `version` the release an update installs. */
-export const existsPanel = ({ copies, version }) => `<section id="exists"><h2>${escText(word("screen.install.exists.title"))}</h2>
+export const existsPanel = ({ copies, version, account = null }) => `<section id="exists"><h2>${escText(word("screen.install.exists.title"))}</h2>
 <p>${escText(word("screen.install.exists.sub"))}</p>
 <h2>${escText(word("screen.install.exists.here.heading"))}</h2>
 ${copies.map(copyCard).join("\n")}
@@ -424,15 +427,15 @@ ${copies.map(copyCard).join("\n")}
 <h2>${escText(word("screen.install.exists.choose.heading"))}</h2>
 ${copies.filter((c) => c.plane && c.finished).map((c) => `<div class="cs-sheet ng-block exists-update" data-slug="${escText(c.slug)}"><h3>${escText(word("screen.install.exists.update.name"))}</h3>
 <p>${escText(word("screen.install.exists.update.what"))}</p>
-<div class="ng-acts"><button type="button" class="cs-btn" data-tone="primary" data-begin="${attr({ mode: "update", slug: c.slug, version })}">${escText(word("act.owed_installupdate.label.install"))}</button></div></div>`).join("\n")}
+<div class="ng-acts"><button type="button" class="cs-btn" data-tone="primary" data-begin="${attr({ mode: "update", slug: c.slug, version, ...(account ? { account } : {}) })}">${escText(word("act.owed_installupdate.label.install"))}</button></div></div>`).join("\n")}
 <div class="cs-sheet ng-block" id="exists-alongside"><h3>${escText(word("screen.install.exists.alongside.name"))}</h3>
 <p>${escText(word("screen.install.exists.alongside.what"))}</p>
 <div class="cs-field"><label for="alongside-slug">${escText(word("installer.shortname.label"))}</label>
 <input id="alongside-slug" class="cs-input id" type="text" autocomplete="off" spellcheck="false" placeholder="${EXAMPLE_SLUG}"></div>
-<div class="ng-acts"><button type="button" class="cs-btn" data-tone="primary" data-slug-from="alongside-slug" data-begin="${attr({ mode: "install", alongside: true })}">${escText(word("act.owed_installalongside.label.install"))}${IRREVERSIBLE}</button></div></div>
+<div class="ng-acts"><button type="button" class="cs-btn" data-tone="primary" data-slug-from="alongside-slug" data-begin="${attr({ mode: "install", alongside: true, ...(account ? { account } : {}) })}">${escText(word("act.owed_installalongside.label.install"))}${IRREVERSIBLE}</button></div></div>
 ${copies.map((c) => `<div class="cs-sheet ng-block exists-remove" data-slug="${escText(c.slug)}"><h3>${escText(word("screen.install.exists.remove.name"))}</h3>
 <p>${escText(word("screen.install.exists.remove.what"))}</p>
-<div class="ng-acts"><button type="button" class="cs-btn" data-tone="quiet" data-begin="${attr({ mode: "remove", slug: c.slug })}">${escText(word("act.owed_installremove.label.install"))}</button></div></div>`).join("\n")}
+<div class="ng-acts"><button type="button" class="cs-btn" data-tone="quiet" data-begin="${attr({ mode: "remove", slug: c.slug, ...(account ? { account } : {}) })}">${escText(word("act.owed_installremove.label.install"))}</button></div></div>`).join("\n")}
 <p class="err" id="begin-err" role="alert"></p>
 <dialog id="alongside-dialog" class="cs-dialog" aria-labelledby="alongside-h"><h2 id="alongside-h">${around(word("installer.permanent.heading", { name: SLOT }), `<span class="id" id="alongside-name"></span>`)}</h2>
 <p class="ends">${escText(PERMANENCE)}</p>
@@ -442,7 +445,7 @@ ${copies.map((c) => `<div class="cs-sheet ng-block exists-remove" data-slug="${e
 
 /* R65 (DEC-282): what removing the copy would delete, drawn and not done; only the short name typed exactly enables the one act
    that deletes (`installremoveconfirm`), which is a new consent on Cloudflare's page. */
-export const removePanel = ({ copy, slug }) => `<section id="remove"><h2>${escText(word("screen.install.remove.title"))}</h2>
+export const removePanel = ({ copy, slug, account = null }) => `<section id="remove"><h2>${escText(word("screen.install.remove.title"))}</h2>
 <p>${escText(word("screen.install.remove.sub"))}</p>
 <h2>${escText(word("screen.install.remove.lost.heading"))}</h2>
 <ul class="ng-list">
@@ -456,7 +459,7 @@ ${copy.unknown.map((u) => `<p class="small">${escText(u)}</p>`).join("")}
 <div class="cs-field"><label for="typed">${escText(word("screen.install.remove.type.label"))}</label>
 <input id="typed" class="cs-input id" type="text" autocomplete="off" spellcheck="false">
 <p class="help">${escText(word("screen.install.remove.type.help", { slug }))}</p></div>
-<div class="ng-acts"><button type="button" id="confirm-remove" class="cs-btn" data-tone="primary" data-slug="${escText(slug)}" data-typed-from="typed" data-begin="${attr({ mode: "removeconfirm", slug })}" disabled>${escText(word("act.owed_installremoveconfirm.label.install"))}</button></div>
+<div class="ng-acts"><button type="button" id="confirm-remove" class="cs-btn" data-tone="primary" data-slug="${escText(slug)}" data-typed-from="typed" data-begin="${attr({ mode: "removeconfirm", slug, ...(account ? { account } : {}) })}" disabled>${escText(word("act.owed_installremoveconfirm.label.install"))}</button></div>
 <p class="err" id="begin-err" role="alert"></p>
 </section>`;
 

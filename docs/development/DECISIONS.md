@@ -6473,3 +6473,187 @@ decided: 2026-10-22 · the design session (P17)
 the design: 25 rows (block "DEC-419" in `screens/words-drawn.src.py`). (1) Reading: `screen.document.reading.inpart` ("Read in part. Not yet searchable or citable: {where}."), `.inpart.going`, `.notext` (pages with no readable words), `.toolarge` ("This file is {size}, more than the {limit} your team's Civicsmith can read whole. …"; DEC-418's `.stated` serves when no limit is answered). (2) Search: `screen.finder.showmore` "Show more results"; `screen.finder.unread` (and `.one`): "{n} documents in what you searched are not read yet or can be searched only in part, so they may hold more than is found here."; `screen.finder.partial` drawn instead of "looked everywhere" when a look was partial. (3) Find in: `screen.findin.searched` "Searched {read} of {total} documents.", `.continue` "Keep searching", `.more`, `.cells.more`, `.cells.showall`. (4)(6) Every cut list (the Document's links, names, connections, themes; pickers, the inbox, the question choosers): `screen.list.showing` "Showing {shown} of {total}.", `.showing.unknown`, `screen.list.showmore` "Show more", `screen.list.narrow` "Type part of a name to narrow the list." (5) `screen.capture.supporting.kept` "{kept} of {total} supporting files kept. …" with reasons `.cap`, `.toolarge`, `.unavailable`. Wave 2: `screen.follow.meetings.read`/`.done`, `screen.export.cut`, `screen.pattern.sample`.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-419").
 owed: BOB: the keys read in their modules with these placeholders ({where}, {pages}, {size}, {limit}, {n}, {read}, {total}, {shown}, {kept}, {cap}, {body}, {source}), or a QUESTION naming any fill that differs (B485).
+
+### DEC-420 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B488, K4623: Bob's "A" on AI provider support; the AI-DESIGN lane's needs, `build/plan/lane-ai-design/UX-REQUIREMENTS.md` on `lane/ai-design` @ 4855b7d28d)
+for: design (first beta; nothing of it enters a tranche before the alpha is deployed, Bob's condition, AI-DESIGN A41)
+question: How the needs for many AI providers look and flow: connections by provider then plan and type, what each shows, the seven privacy and origin checks and who may change which, guided connection, leaders' configuration, budgets and ordered accounts, cost, failure and outage moments, test and send, and the results others sent.
+why it is Bob's: it is not (P17): the design beneath his rulings (AIR29 provider first, AIR30, AIR41-AIR45, failover allowed, a switched-off use refused).
+provisional: as below.
+alternative: rewriting the alpha's `connect`, `teamai` and `projectai` in place; not taken: they stay the alpha's truth (one provider) until the beta, and each now says which beta screen takes its place, so no two explanations compete within a release.
+recommendation: as below.
+reversal cost: low (drawings and words only).
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: seven new screens, each purpose beginning "First beta (DEC-420)", borrowing `security`'s order (how it stands, what is in use, the catalogue folded, refused and held lists, test then turn on). `aiproviders` (administrators): the card (accounts on in order, spend against the budget, health); "In use, in order", one row per account (provider · plan · type, what it sends where and keeps how long, On/Off, health, listing word with its reason, Move up/down, Switch off, Remove); budgets and alerts; the seven checks, each "Required for the whole team" (locked for project owners and members) or left to them; what members may use; "Add an AI", folded, provider first, then plans and types, each with scope, price and estimate, the checks' answers with grade, source and date, roles passed; Not offered and Held until confirmed; changes with who, when and at which level. `aiconnect`: six steps (what you are connecting with its sources; sign up with the provider, Civicsmith never signs up or pays; the key entered here and passed straight to Cloudflare AI Gateway's store, or entered by an administrator in the Cloudflare dashboard by numbered steps, or the provider's sign-in, or a reference; "I understand" for a free tier that reads or trains and for binding terms, recorded; test; turn on and place in order), with a member's personal-subscription variant. `aimine` (every member): what serves you, choices among what is allowed, your own accounts, the checks in force (locked ones marked), your cost. `aiproject`: the owner narrows; the project's checks apply to work done directly in the project only. `aimoments` (the assistant panel): continued on a later account (shown, declinable), disclosure before material first goes to a provider (the step waits), limit reached, provider down, model retired, not suited for this part, a use switched off (refused, never moved), cost before and after a run. `aitest`: estimate and ceiling, progress, results by part, exactly what the sealed bundle sends, Send / Don't send. `airesults`: per AI, parts passed and limits, speed and cost, who tested (a team named only with consent) and when, grade. 41 owed ops (`owed:ai…`), journey 32, 369 rows (block "DEC-420"; the texts live with the drawing in `mock-screens.js`'s `AIW` table and the block is generated from it).
+reasoning recorded in: this entry; `screens/mock-screens.js` (block "DEC-420"); `screens/words-drawn.src.py` (block "DEC-420").
+owed: the AI-DESIGN lane (through BOB): the Cloudflare dashboard steps in `aiconnect` are drawn from the dashboard's labels as remembered (AI, AI Gateway, Provider Keys, Alias) and must be checked against a live dashboard (the lane's live test L1); the "through a gateway" type has no catalogue entry yet (named only); provider facts on the page are sample data. At T52 or later (after the alpha is deployed): the ops and keys read by the modules that carry them.
+
+### DEC-421 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (the standing consistency read after DEC-420's 369 rows)
+for: design (first beta; as DEC-420)
+question: DEC-420's words against each other and against the alpha's AI words: one thing named two ways, rules explained more than once, jargon, British spellings, one provider special-cased.
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: 24 findings applied (about 85 texts reworded; 368 rows): "limit", never "budget", as the alpha says; "account" is what is on and ordered, "plan" only what a provider sells; "Switch on"/"Switch off" everywhere; the order rule stated once (`aiproviders.use.note`), the personal-subscription rule once (`aimine.own.personal`), the grades once (`aiproviders.add.grades`), the lock rule once for each reader; "check/uncheck", not "tick"; plain words for endpoint, aggregator, reference, sealed bundle, effort, calls; the free-tier box names {provider}, never one provider; values inside sentences are placeholders; the origin check (Bob's AIR43) keeps its meaning, worded "Not made by an organization based in China".
+reasoning recorded in: this entry; `screens/mock-screens.js` and `screens/words-drawn.src.py` (blocks "DEC-420").
+owed: as DEC-420.
+
+### DEC-422 · answered
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B491, beneath Bob's K4635 and K4636; B489, B490 read)
+for: design (T51, fix round 6 G41, G42)
+question: The words and placement of the record's storage gauge for administrators, and the Document page's statement of what a sheet's cells are interpreted for.
+why it is Bob's: it is not (P17): words and placement beneath his rulings.
+provisional: as below.
+alternative: the gauge on Your team (`group`); not taken: Settings is the page every administrator passes, and the gauge leads the team's section there.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: 12 rows (block "DEC-422" in `screens/words-drawn.src.py`). Settings, above the team's section, administrators only: "How full your team's record is", "{used} of {limit} ({pct}%)", what the record holds, the 70% warning ("Nothing has stopped yet. Plan now, with the four things below."), the 90% warning ("When it is full, nothing new can be saved: no document, note or change. Act now."), the size not measured, and Bob's four factors in one sentence, shown with the gauge and each warning. Document page of a sheet: "Every line of this sheet is read, and can be searched and cited. Its cells are read as figures and dates only for the rows a member opens or cites.", "Cells read as figures and dates for rows {from} to {to}." (BOB's "interpreted" said plainly), and none yet.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-422").
+owed: BOB: the keys read with these fills ({used}, {limit}, {pct}, {from}, {to}), or a QUESTION naming any that differ.
+
+### DEC-423 · answered
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B492: the row owed for the stated too-large reading, fix round 6 G41, K4645, extraction R97)
+for: design (T51)
+question: The sentence for a document whose reading is over 1 MiB and is stated with its size and its largest part.
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: the code's stand-in ("This document's reading is too large to keep whole: {size}; the largest part is {key}."); not taken: it shows a field name to a member and does not say the document itself is kept and can be opened.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: `screen.document.reading.too_large` "Civicsmith read this document, but what it read is too large to keep: {size}, most of it in {key}. The document itself is kept whole, and you can open it."; {key} filled by a plain name, `screen.document.reading.part.text` "its text", `.pages` "its pages", `.cells` "its cells", `.entities` "the names and dates found in it", `.other` "one part of what was read". Distinct from DEC-419's `screen.document.reading.toolarge` (a file too large to read at all).
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-423").
+owed: BOB: the reading's keys that can be largest, so each has a plain name (any not listed takes `.other`); whether this document's words stay searchable and citable when its reading is stated so, so a second sentence can say so.
+amended: 2026-10-23 (B493, K4675): the fills keyed by the reading's own keys, `.part.text_units` "its text", `.pages`, `.cells`, `.entities`, `.facts` "the names and dates found in it", `.references` "the references found in it", `.tables` "its tables", `.other`; and the second sentence `screen.document.reading.too_large.lost` "Until it is read again in smaller pieces, its words can't be searched or cited." (such a reading keeps no text, names or cells, extraction R97). Owed answered. The plain-name fills and the second sentence are T52's (later-ux.md); the stand-in serves T51.
+
+### DEC-424 · answered
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B495: fix round 6's stand-ins, K4685, K4687, K4702, K4710 (5), K4716, K4717, K4721, K4728; tranche/T51 @ 583d8072dd)
+for: design (T51)
+question: Design rows for the round's code-origin stand-ins (the case file's state on a published case, money read in the background, a case document too large, the case-file format checks, a large sheet's reading), two keys with no row, the reads and unkeyed lists, and which internal descriptions a member reads.
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: 56 rows (block "DEC-424" in `screens/words-drawn.src.py`), same keys and fills as the stand-ins: `screen.published.casefile.{being_prepared, retrying, stopped, waiting_on_members}` and `.code.*` (nine causes in plain words; "stopped": "This edition is complete and signed, but its case file can't be built, because a material it lists is no longer held. …"); `calculations.ingest.*`, `notice-producers.ingest.*`, `money.ingest.partial` ("being read in the background", never "ingest", to a member); the case document too large and not stored; the seven case-file format checks; the large sheet's reading; `installer.fleet.logsunconfirmed` and `installer-steps.plane.observability`; 14 money period and trail details and 4 notice rows a member reads. Of the 140 internal descriptions, 122 are judged unread (refusal details and notice bases never drawn), recorded in `words-reads-handoffs.json` (DEC-344's way), with two `DECISIONS` in `words-reads.src.mjs`. `words-reads.json` regenerated from 583d8072dd: the case-checker spec strings (line 11 and the five bio-case-file/4 lines) and screens-action's Join keys kept (now carried in `words-reads-handoffs.json`); on the tranche the words check reads 0 failures (missingkey and inline cleared).
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-424"); `screens/words-reads-handoffs.json`.
+owed: BOB: the keys read with these fills, or a QUESTION naming any that differ; whether an update stopped by `installer-steps.plane.observability` leaves anything changed (the row says no "Nothing was changed." until it is known).
+amended: 2026-10-23 (B496): an update stopped by `installer-steps.plane.observability` has already put the new version in place (the upload precedes the check) and has not finished; the row says so: "The new version of your team's Civicsmith is in place, but your Cloudflare account did not switch on its logs (Workers Logs), so the update stopped before it finished. … then run the update again to finish it."
+
+### DEC-425 · answered
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B498: fix round 7's wording, K4736; B497 read)
+for: design (T51 for the five rows the round's code needs; the other wording lines stay T52's in later-ux.md, none stops an operation)
+question: The rows fix round 7's jobs draw as stand-ins, written before the round ends so the jobs can use them.
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: waiting for the round's end HANDOFF with the exact keys; not taken: writing now lets the jobs key the sentences directly, and any key that differs is renamed in one line.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: 10 rows (block "DEC-425"): `refusal.NO_SUCH_SESSION` (G72, "This capture has ended, so there is nothing left to finish. Start it again from Add. Nothing was changed."); `queue.kind.ingest-done`, `.ingest-stopped`, `.fetch-done` (G61, one line each); `screen.ceremony.gate.head` "What Civicsmith's checks found" and `.gate.check` (G60); the Sign step's three reasons (G62) `screen.ceremony.publishat.nozone`, `.notreached` ({reason} as `publish_at_stated` gives it), `.nooffer` (a fault: tell an administrator), never "isn't set … under Settings" where that is not the cause; `refusal.PROMOTE_NOT_A_PARTICIPANT` (G74, BOB's P17 decision after K4557, DEC-83's pattern, {project} by name). Keys not yet named by the code are proposed.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-425").
+owed: BOB: the jobs' keys where they differ from the proposed ones (renamed here in one line); each check's plain name for G60, if the record holds none; the wording-only lines of round 7 at T52 (later-ux.md).
+
+### DEC-426 · answered
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B499: Bob's K4746 (2), a team's record created near the team, shown on the install screen, a region for a legal requirement; round 7 cause G83)
+for: design (T51, G83; drawn ahead of BOB's HANDOFF)
+question: How the install screen shows where the team's record is kept, and the picker for a team with a legal requirement.
+why it is Bob's: it is not (P17): the drawing and words beneath his ruling.
+provisional: as below.
+alternative: a picker always open; not taken: Bob's default is near the team, and the picker is for the few teams a law binds, so it is folded.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: on `install`, after "Your team's places", a section "Where your team's record is kept": "Near you: {region}", with why (created in Cloudflare's data centers nearest to where you install from, so it answers quickly; chosen once, at install); a fold "Our team must keep its record in a particular region" with "Keep the record in": the nine regions by plain name and "Only inside the European Union (a legal requirement)", and help saying only the European Union choice is a guarantee, the others are where Cloudflare places it. Owed op `owed:installregion K4746`. 16 rows (block "DEC-426"). K4746 (1), the three service levels, has no screen asked yet.
+reasoning recorded in: this entry; `screens/mock-screens.js` (install); `screens/words-drawn.src.py` (block "DEC-426").
+owed: BOB: the keys and fills as G83's job names them, or a QUESTION; whether "chosen once" is exact (a record's place cannot change after install) and whether a FedRAMP choice is wanted.
+amended: 2026-10-23 (B500): "chosen once" is exact (Cloudflare places a record object at its first request and never moves it); in the alpha the record is placed in the founder's region with no screen (K4747); this drawing is N1273, straight after the alpha, with these keys; which legal choices sit beside the EU is brought to Bob with N1273; the three service levels have no screen in the alpha (N1271's study). Owed answered.
+
+### DEC-427 · decided
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01VWoaFstEKg7YtQS2K41x6s) (the standing consistency read of DEC-418, DEC-419 and DEC-422 to DEC-426's rows, 144 rows)
+for: design (T51 words; findings beyond T51's bar parked for T52)
+question: What the consistency read of the newest rows changes now, and what waits for T52.
+why it is Bob's: it is not (P17): member words beneath his rulings.
+provisional: as below.
+alternative: change every finding now; not taken: the plural forms need new `.one` keys and code choosing them, and merging two rows changes what the code reads, both beyond T51's bar (K4269, K4270).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: one text changed, same key and fills: `notice-producers.index.machine_work_from_your_standing` now reads "The assistant worked from your standing question: {v1}{v2}. You are told about this once." (the house word, never "machine"). The published case file's bare "Civicsmith" stays: its reader may be outside the team. Parked in `screens/parked-T52.md`: five counts that read wrongly at 1; `money.ingest.partial` showing the reading's internal key; three pairs of rows that tell one fact two ways; `money.index.events_is_not_wired_here` naming no events.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-424", the one row); `screens/parked-T52.md`.
+owed: BOB: nothing in T51 (the key and fills are unchanged; it lands with the branch's next MERGE); the parked lines at T52.
+
+### DEC-428 · decided
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01VWoaFstEKg7YtQS2K41x6s) (BOB's B503: T51 fix round 7's end HANDOFF)
+for: design (T51 words; DEC-425's keys)
+question: Rows for the round's new keys in code, a dedicated key for the update's unreadable-settings stop, whether `screen.ceremony.gate.head` replaces `ceremony.gate.heading`, and the reads list.
+why it is Bob's: it is not (P17): member words and keys beneath his rulings.
+provisional: as below.
+alternative: the 14 keys reworded in house style now; not taken: the jobs' tests assert the code's English (capture's batch-vouch basis, reading-pipeline's bytes-not-held), so a reword turns tranche tests red; it waits for T52 with their tests (`parked-T52.md`). Two gate headings, one per moment; not taken: one list, one heading (no two explanations compete).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: (1) 14 rows, the keys and fills as the code names them, each word for word the code's English except `calculations.index.taking_every_row_of_a`, which drops "(K1468)" (no internal code in member words): "Taking every row of a table is the rare case, so say why you need them all. Nothing was written." (its module's tests pass with it). (2) `installer.update.stopped.lookup.unread`, no fills: "Stopped: the installer couldn't read the settings of your team's Civicsmith, which say what it holds and where its record is kept, so it changed nothing rather than guess. Your team's Civicsmith runs as before. Run the update again in a minute; this is usually temporary." (3) `ceremony.gate.heading` ("Put these right before you sign") stays on both the GATE_REFUSED refusal and the Sign step; DEC-425's `screen.ceremony.gate.head` is withdrawn (never read); `screen.ceremony.gate.check` stands for T52. (4) DEC-425's other keys stand as BOB reads them (G62's `.nooffer` for an offer naming no zone; G61's queue kinds; G72, G74 read). (5) `words-reads.json` regenerated from tranche/T51 f6d69273f2, with `refusal.SIGNATURES_RUN_RECENT` added to file-safety's hand-kept reads (`words-reads-mod-2.json`; its key is built by `rowWord`, which the extractor cannot see) and `installer.fleet.logsunconfirmed` to installer-steps' (`words-reads-mod-5.json`). Verified on a tranche worktree with these files and rows.mjs regenerated: checks format 0, coverage 0, words 0; file-safety 103/103 and installer-steps 117/117 (the two accepted reds clear); capture, calculations, translations, acquisition, instance-setup as on the tranche; reading-pipeline as on the tranche but for one of its large-document timing tests, a different one on each run.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-428"; DEC-425's gate.head row removed); `screens/words-reads-mod-2.json`, `screens/words-reads-mod-5.json`; `screens/parked-T52.md`.
+owed: BOB: merge this commit (MERGE); re-point `newgroup/src/index.mjs`:1140 and :478 to `installer.update.stopped.lookup.unread` in T52; the 14 rewordings at T52 with their tests (`parked-T52.md`).
+
+### DEC-429 · decided
+raised: 2026-10-24 · the UX design session with Bob, on his secondary account with BOB (session_01VWoaFstEKg7YtQS2K41x6s) (BOB's B508, B509, B510: K4855, K4859, K4872)
+for: design (T51 words; the reads list)
+question: Eight inline strings no member reads, for the unkeyed list; and the row `installer.fleet.logsunconfirmed` for installer-steps.
+why it is Bob's: it is not (P17): the design's lists beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-24 · the design session (P17)
+the design: (1) `words-reads-handoffs.json` carries test-support's six (`bio-plane/test/corpus.mjs` 239, 256, 260, a test's skip reasons; `bio-plane/test/pdfgen.mjs` 130, 255, 259, the test PDF generator's syntax) and pdf-reader's two (`bio-plane/src/pdfstructure.mjs` 5683, 5695, the extracted page's object and stream headers), each with why; `words-reads.json` regenerated from tranche/T51 at this date. (2) B509's row needs nothing new: `installer.fleet.logsunconfirmed` has been on this branch since DEC-424 and was in U467's MERGE (1dc64ce916); the five missingkey reds clear when that MERGE reaches the tranche. Its words stay DEC-424's ("Cloudflare didn't say whether the logs of your team's Civicsmith are switched on…"), not the stand-in. Verified on a tranche/T51 worktree with this branch's words files and rows.mjs regenerated: the words check 0 failures (inline 0, missingkey 0).
+reasoning recorded in: this entry; `screens/words-reads-handoffs.json`; `screens/words-reads.json`.
+owed: BOB: merge this commit (MERGE).
+
+### DEC-430 · decided
+raised: 2026-10-24 · the UX design session with Bob, on his secondary account with BOB (session_01VWoaFstEKg7YtQS2K41x6s) (BOB's B513: Bob's K4951, with K4937 (B512) and K4935 (B511); installer R84, R85)
+for: design (T51, for the alpha: an operation a founder cannot complete without it, K4269)
+question: How the installer walks a founder with no Cloudflare account, or one not ready, through every step, answers their likely questions in place, and states each account condition that is not met.
+why it is Bob's: it is not (P17): the drawing and words beneath his rulings K4951 and K4937.
+provisional: as below.
+alternative: DEC-416's one-page guide of five steps kept; not taken: R85 asks one step a screen, each with why and cost, resumable, with the founder's questions beside it. A separate help page for the questions; not taken: nothing a founder needs is found by scrolling elsewhere.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-24 · the design session (P17)
+the design: on `install`. (1) After the first page's Continue, "Do you already have a Cloudflare account?" with three answers: yes, on Workers Paid with R2 turned on (to the sign-in); yes but not sure it is set up (step 2); no (step 1); each step says how to tell it is already done, so a set-up account skips it. (2) Four steps, one a screen, each with "Step n of 4", why it is needed, what it costs, what to do, Cloudflare's own page as an outside link, how to tell it is done, "Done: next step", Back, and the resume point: 1 open the account and confirm its email (free); 2 Workers Paid and a payment method (about $5 a month, to Cloudflare, never to Civicsmith's makers); 3 R2 storage (10 GB a month included, about 1.5 cents per further GB, Cloudflare's price shown before agreeing; the path R84 names); 4 the existing permission page, now with "What the installer never does" (sees the password, sees or uses the payment method or changes the plan, touches anything not its own, asks for a token, key or account number). (3) "Questions people ask", the same six answers on every step: why our own account; cost, who is paid, how to stop; what Civicsmith can see and do and how to remove it; is our card shared; already using Cloudflare; stuck. (4) The check (DEC-416's gate) gains R84's lines: the account, R2 storage (walked to R2's Overview; any other refusal told as itself), containers that could not be checked, a count that could not be read (never zero), the account's workers.dev address, the permission (Approve again), the size of each part (a part over 64 MB left out by name, not a stop); "Nothing was created in your account." whenever a line is not ready; Check again starts over keeping the choices; the limits sample now 500 Workers (Cloudflare's published ceiling). (5) Choosing among several accounts by name; choosing the account's address, proposed from the team's name, registered only by the founder's button, a taken name asking for another, and "Treat it as permanent" (Cloudflare allows a change, which moves every address in the account, so the words say what a change does rather than that it cannot happen). (6) civicsmith.org's Start a team page: "No Cloudflare account yet? The installer walks you through opening one, step by step." DEC-416's one-page guide rows (20) are retired; no code read them. The act `owed:installaddress K4937` (registering the address) joins the registry, with its help, as an act that asks no reason; the page's state rule now shows states m to p. About 80 rows, keys proposed under `screen.install.` (block "DEC-430").
+reasoning recorded in: this entry; `screens/mock-screens.js` (install, site); `screens/words-drawn.src.py` (block "DEC-430").
+owed: BOB: INSTALLER #26's keys where they differ (renamed here in one line); checked live on the rehearsal account (K4942): the four Cloudflare links, R2's path and price, where a profile lists allowed apps (the removal answer), and that the installer's permission reaches no billing; the stewards' address for "stuck" (with civicsmith.org's email); the screens and rows ride the MERGE at T51's close (B511).
+amended: 2026-10-24 (B514): INSTALLER #26 built R84 and R85 with its own keys and flow (the question before the short name, two answers, each unready condition a stop with Check again); DEC-431 writes the 63 rows under its keys and redraws to it; DEC-430's proposed install rows are withdrawn, its civicsmith.org line stands.
+
+### DEC-431 · decided
+raised: 2026-10-24 · the UX design session with Bob, on his secondary account with BOB (session_01VWoaFstEKg7YtQS2K41x6s) (BOB's B514: K4957; INSTALLER #26's J27 and J28 on tranche/T51)
+for: design (T51, for the alpha, K4269)
+question: The 63 rows INSTALLER #26 built on stand-ins (R84's 23, R85's 40), and the install screens drawn to the code's flow.
+why it is Bob's: it is not (P17): words and drawing beneath his rulings K4951 and K4937.
+provisional: as below.
+alternative: keep DEC-430's drawing and proposed keys, the code renamed to them; not taken: the code is built and tested (r84 8/8, r85 4/4 with rows), and its flow serves the founder as well.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-24 · the design session (P17)
+the design: (1) 63 rows under the code's keys and fills (`installer.ready.*`, `installer.guide.*`, `installer.begin.account`, `installer.begin.subdomain`, `installer.limit.crons.other`), worded from DEC-430's where the meaning is the same: the question with two answers (yes; no or not sure it is ready); four steps, each with why, what to do, what it costs, "I've done this: next step", Back, the check note and the resume point; step 4 says what the installer asks on Cloudflare's Allow page and what it never asks or keeps; the same six questions on every step; each R84 stop says "Stopped: …", that nothing was created, and offers Check again; the address and account choices. Changed from the stand-ins: "Approve again" lines and costs kept; "64 MB" for a non-technical reader; R2's cost stated (10 GB a month included, about 1.5 cents per further GB); "afterward"; the removal answer names the installer's page or Cloudflare's dashboard (no claim about where Cloudflare lists allowed apps); "stuck" names no address. (2) `install` redrawn: the first stage (i) before the first page; steps 1-4 (l, m, n, q); the account choice (o); the address choice (p, the act `owed:installaddress K4937`); a storage stop (r); the permission page (b) and the gate (j, k) as before DEC-430, the limits sample 500 Workers. (3) Four act rows the tranche's affordances holds with no word (`act.captureuploadbegin/part/complete/abort.does`, capture R113), so the reads list regenerates: word for word, but begin's "to the group's store" dropped (DEC-281: team, never group; a reads decision maps the code's sentence to the key). (4) The 63 keys on installer's reads (`words-reads-mod-5.json`); `words-reads.json` regenerated from tranche/T51 46770ed30b. Verified on a tranche worktree with these files and rows.mjs regenerated: checks format 0, words 0; newgroup r84 8/8, r85 4/4 (requirements.test.mjs needs esbuild, absent in the worktree); affordances t36's R48 arithmetic goes red by 4 (460 against 464): ACT_HELP holds the four upload ops but ACT_HELP_KEYS does not, seen only once their rows exist.
+reasoning recorded in: this entry; `screens/mock-screens.js` (install); `screens/words-drawn.src.py` (block "DEC-431"); `screens/words-reads-mod-5.json`; `screens/words-reads.src.mjs` (one decision).
+owed: BOB: merge this commit (MERGE) and regenerate rows.mjs before the redeploy; AFFORDANCES: the four `captureupload*` ops in ACT_HELP_KEYS (t36 R48); checked live on the rehearsal account (K4942): the Cloudflare paths named in the steps and R2's price.

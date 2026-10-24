@@ -7,7 +7,7 @@
    participant; a project `project_sight` does not hold reads hidden. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, run, sha } from "./fixture.mjs";
+import { world, run, sha, promoteFiled } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { unpack, archiveList, memberOf, ARCHIVE_CHECKS } from "../../../src/acquisition/index.mjs";
 import { ARCHIVE_DEPTH_MAX, ARCHIVE_LIMITS } from "../../../src/ooxml.mjs";
@@ -130,6 +130,7 @@ test("R41: a waiting entry names the limit or budget it waits on with its figure
   let l = await w.acq.archiveList({ archiveSha: sha(z), viewer: ADMIN, state: "waiting" });
   assert.deepEqual(l.entries.map((e) => [e.index, e.waiting_on, e.limit]), [[100, null, undefined], [101, null, undefined], [102, null, undefined]]);
   w.rows("INSERT INTO unpack_days (day, entries, bytes) VALUES (?, 40000, 0) ON CONFLICT(day) DO UPDATE SET entries=40000", new Date().toISOString().slice(0, 10));
+  promoteFiled(w);
   await unpack(w.store, { archiveSha: sha(z), cls: "daemon" });
   l = await w.acq.archiveList({ archiveSha: sha(z), viewer: ADMIN, state: "waiting" });
   assert.deepEqual(l.entries.map((e) => [e.waiting_on, e.limit]), Array(3).fill(["UNPACK_DAILY_ENTRIES", 40000]));

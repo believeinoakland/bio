@@ -111,6 +111,15 @@ const TABLE = {
     bytes: same(20 * MiB, k("table", "bytes")),
     cells: same(1000000, k("table", "cells")),
   },
+  /* the ceilings the reading modules keep beside acquisition's, today's figures in all three columns (R35; K4958): no bound moves (K1881) */
+  provenance: { part_verify_bytes: same(8 * MiB, k("provenance", "part_verify_bytes")) },
+  acquisition: {
+    odf_digest_bytes: same(8 * MiB, k("acquisition", "odf_digest_bytes")),
+    large_fetch_bytes: same(8 * MiB, k("acquisition", "large_fetch_bytes")),
+  },
+  case: { copy_now_bytes: same(2 * MiB, k("case", "copy_now_bytes")) },
+  monitoring: { docket_read_bytes: same(8 * MiB, k("monitoring", "docket_read_bytes")) },
+  following: { portal_parse_bytes: same(4 * MiB, k("following", "portal_parse_bytes")) },
   office: {
     entries: same(100000, k("office", "entries")),
     retained_objects: same(250000, k("office", "retained_objects")),
@@ -177,3 +186,6 @@ export const boundOf = (kind, name) => {
 
 /* the size the caller measured, the figure it was judged against and the member sentence's key */
 export const statement = (kind, name, size) => ({ size, bound: boundOf(kind, name), key: rowOf(kind, name).key });
+
+/* the row that is a document's whole-read ceiling by its kind (K4965): pdf, csv and text each their own `bytes`, any other kind or none the whole-load row `pdf.bytes` */
+export const wholeReadRow = (kind) => (kind === "csv" || kind === "text" ? [kind, "bytes"] : ["pdf", "bytes"]);
