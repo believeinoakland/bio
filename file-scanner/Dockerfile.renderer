@@ -21,7 +21,6 @@ RUN mkdir -p /etc/ssl/certs \
 ENV NODE_ENV=production PORT=8080
 WORKDIR /app
 COPY container/common.mjs container/renderer.mjs ./container/
-COPY src/limits.mjs ./src/
 USER node
 EXPOSE 8080
 CMD ["node", "container/renderer.mjs"]
