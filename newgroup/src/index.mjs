@@ -36,8 +36,11 @@ import { CF_API, RELEASE_LATEST, RELEASE_TAGGED, Session, patiently, WAIT_BOUND_
   relHeaders, Sha256, hex, vcmp, b64url, rand, cf, special, approve, apiOf, scriptExists, PLAN_PROBE, establishPlan, ensureBuckets, readBack,
   BINDING_OF, membersPresent, instanceAiOk, SEAL_BINDING, heldBindings, hostOf, planeLimits, reportsBuilds, vpcServiceOk,
   uploadInstall, uploadUpdate, planeInSync, putSecret, rotateSecrets, loadFleet, installFleet, bindMembers, ensureSubdomain,
-  verifyInstall, failedLags, verifyServing, confirmContainers, offerSubdomain, waitForAnswer, currentDeployment, rollBack, withByteLags, logsStep, copyWorkers,
+  verifyInstall, failedLags, verifyServing, confirmContainers, waitForAnswer, currentDeployment, rollBack, withByteLags, logsStep, copyWorkers,
   locationHintFor, ARMED_SIGNERS } from "./steps/index.mjs";
+/* R84: the account made ready before anything is created. */
+import { scopesStop, pickAccount, accountPanel, accountSentence, storageReady, containersState, containersStop, limitReached, updateNeeds,
+  addressReady, addressPanel, addressSentence, planeTooBig, leaveOutOversize, SUBDOMAIN_RE, CHECK_AGAIN } from "./ready.mjs";
 /* R63: the words of what a copy already holds. */
 import { describeCopy } from "./held.mjs";
 /* R53 (DEC-122 (3); K3100): interface-assets' stylesheet and faces, carried in this bundle and served at ASSET_PREFIX. */
@@ -381,6 +384,7 @@ function wire(){
    if(body.slug.length<3){err.textContent="";return;}
    if(d){E("alongside-name").textContent=body.slug;d.dataset.body=JSON.stringify(body);d.showModal();return;}}
   if(b.dataset.typedFrom)body.typed=E(b.dataset.typedFrom).value.trim();
+  if(b.dataset.subFrom)body.subdomain=E(b.dataset.subFrom).value.trim().toLowerCase();
   go(body,err);}));
  const y=E("alongside-yes");if(y)y.addEventListener("click",()=>{const d=E("alongside-dialog");d.close();go(JSON.parse(d.dataset.body),E("begin-err"));});
  const n=E("alongside-no");if(n)n.addEventListener("click",()=>E("alongside-dialog").close());
@@ -430,6 +434,8 @@ function streamPage(headers, shell, run, again = null) {
     done: (inner)     => write(`<script>done(${jsLit(inner)})</script>\n`),
     /* R70: after a stop that waits for the founder to turn something on, the one act that begins the run again (as R71's). */
     retry: (label)    => again ? write(`<script>again(${jsStr(label)},${jsLit(again)})</script>\n`) : undefined,
+    /* R84: the body a choice begins the run again with: what the run held, and the one thing chosen. */
+    body: (extra = {}) => ({ ...(again || {}), ...extra }),
   };
   (async () => {
     await write(shell);
@@ -438,7 +444,7 @@ function streamPage(headers, shell, run, again = null) {
       /* R71 (F6): a permission that expired or was revoked asks for approval again, and the run continues from where it
          stopped (R69). R66: what waiting did not mend is a lasting failure, named, with one action. */
       if (e && e.approveAgain && again) {
-        await emit.fail(word("screen.install.approveagain"));
+        await emit.fail(e.said || word("screen.install.approveagain"));
         await emit.done(approvePanel(again));
       } else if (e && e.lasting) {
         await emit.fail(word("screen.install.stopped.lasting"), word("screen.install.stopped.lasting.do"));
@@ -458,6 +464,24 @@ function streamPage(headers, shell, run, again = null) {
 function approvePanel(body) {
   const label = body.mode === "update" ? word("act.bootstrap.label.update") : word("act.bootstrap.label.install");
   return `<div class="ng-acts"><button class="cs-btn" data-tone="primary" data-begin="${esc(JSON.stringify(body))}">${esc(label)}</button></div><p class="err" id="begin-err" role="alert"></p>`;
+}
+
+/* R84 (6): the account of this run. One account is used; with several the founder chooses one by name (a new `POST /begin`
+   carrying the choice, as every choice is) and nothing is touched meanwhile. Answers the account, or null after drawing the choice. */
+async function accountOf(emit, accts, chosen) {
+  const pick = pickAccount(accts, chosen);
+  if (pick.acct) { emit.ok("acct", word("installer.account.using", { account: pick.acct.name })); return pick.acct; }
+  emit.no("acct", accountSentence());
+  await emit.done(accountPanel(pick.choose, emit.body()));
+  return null;
+}
+/* R84: a readiness stop, drawn as the install's stops are: one sentence and the way on; an unmet permission asks to approve again
+   (R71); every other ends with "Check again", which begins the run again with the choices kept (`emit.retry`). */
+async function halt(emit, step, stop) {
+  emit.no(step);
+  if (stop.approveAgain) throw Object.assign(new Error(stop.said), { approveAgain: true, said: stop.said });
+  await emit.fail(stop.said, stop.d || "");
+  if (stop.retry) await emit.retry(stop.retry);
 }
 
 /* ---------------------------------------------------------- provisioning */
@@ -505,51 +529,6 @@ async function assistantNotice(emit) {
 }
 
 /* ----------------------------------------------------------- what is missing is found first (R70; F2, F3, F7) */
-
-/* F3: the account limits the install could run into, with the number of each the install needs. The ceilings are Cloudflare's
-   published defaults for a Workers Paid account; they are stated here once, with what the install needs of each. */
-const ACCOUNT_LIMITS = Object.freeze({
-  workers: { ceiling: 500, need: 1 + RELEASE_MANIFEST.fleet.length + 2 },
-  classes: { ceiling: 500, need: 1 + 2 + RELEASE_CONTAINERS.length },
-  buckets: { ceiling: 1000, need: 2 },
-  containers: { ceiling: 100, need: RELEASE_CONTAINERS.length },
-});
-/* `needs` is what the act adds to each count: the install's table above, or (an update) what the chosen release adds to the copy. */
-async function limitReached(api, needs = null) {
-  const [scripts, spaces, buckets, apps] = await Promise.all([listScripts(api), listNamespaces(api), listBuckets(api), listApps(api).catch((e) => { if (special(e)) throw e; return []; })]);
-  const have = { workers: scripts.size, classes: spaces.length, buckets: buckets.length, containers: apps.length };
-  const add = needs ? needs({ scripts, spaces, buckets }) : null;
-  for (const [k, l] of Object.entries(ACCOUNT_LIMITS)) {
-    const need = add ? add[k] : l.need;
-    if (need > 0 && have[k] + need > l.ceiling) return word(`installer.limit.${k}.${l.ceiling === 1 ? "one" : "other"}`, { n: l.ceiling });
-  }
-  return null;
-}
-/* F3 (R70): what an update adds to the account. Only the members and container classes the copy does not hold already, and the
-   storage buckets it lacks, count: an update that adds nothing needs no room. The ceilings stay Cloudflare's published defaults
-   (no endpoint states an account's own). */
-const updateNeeds = (names, loaded) => ({ scripts, spaces, buckets }) => {
-  const inFleet = (loaded?.members || []).filter((L) => !L.error);
-  const newClasses = inFleet.flatMap((L) => (L.classes || []).filter((c) => !spaces.some((s) => s && s.script === names.member(L.m.member) && s.class === c.class_name)));
-  return { workers: inFleet.filter((L) => !scripts.has(names.member(L.m.member))).length, classes: newClasses.length,
-    buckets: [names.captures, names.published].filter((n) => !buckets.includes(n)).length, containers: newClasses.length };
-};
-/* F2 (R70): whether Containers are turned on for the account, decided positively. An answer that lists applications shows it on;
-   a refusal naming the setting shows it off; a refusal for want of permission leaves it to the container member's own check (R38
-   leaves that member out and the install continues); any other answer is "could not tell", and the install stops saying so,
-   never reading it as on. */
-const CONTAINERS_OFF = /(containers?\b.*\b(not|isn'?t|aren'?t)\b.*\benabled|\benable\b.*\bcontainers?|containers?\b.*\bdisabled)/i;
-const NO_PERMISSION = /(authentication|permission|not authori[sz]ed|forbidden|unauthori[sz]ed|scope)/i;
-async function containersState(api) {
-  try { await api("/containers/applications"); return { state: "on" }; }
-  catch (e) {
-    if (special(e)) throw e;
-    const said = e && e.message || String(e);
-    if (CONTAINERS_OFF.test(said)) return { state: "off" };
-    if (NO_PERMISSION.test(said)) return { state: "permission" };
-    return { state: "unknown", said };
-  }
-}
 
 /* The release version an update from the "already holds a copy" page installs: the repository's newest when it is newer than
    the built-in, else the built-in (the update itself verifies it, R55). */
@@ -645,14 +624,17 @@ async function installRun(emit0, code, saved, guard) {
     if (special(e)) throw e;
     return emit.fail(word("installer.install.stopped.permission", { said: e.message }));
   }
+  /* R84 (5): before the first call, the permission granted is compared with what every install needs. */
+  const lacking = scopesStop(scope, CFG.SCOPES);
+  if (lacking) throw Object.assign(new Error(lacking.said), { approveAgain: true, said: lacking.said });
 
   await emit.step("acct", word("installer.step.acct"));
   let acct;
   try {
     const accts = await cf(token, "/accounts");
     if (!accts?.length) throw new Error(word("installer.account.none"));
-    acct = accts[0];
-    emit.ok("acct", word("installer.account.using", { account: acct.name }));
+    acct = await accountOf(emit, accts, saved.ac);
+    if (!acct) return;
   } catch (e) {
     if (special(e)) throw e;
     emit.no("acct");
@@ -665,6 +647,19 @@ async function installRun(emit0, code, saved, guard) {
     if (!(await takeLock(api, saved.lock))) return emit.fail(word("installer.stopped.running"));
     guard.drop = () => dropLock(api);
   } catch (e) { if (special(e)) throw e; /* a lock that cannot be taken is not a reason to refuse the install */ }
+
+  /* R84 (1): the account's storage, read without writing, before anything else reads the account (the look at what it holds lists
+     its buckets, which an account without R2 refuses). */
+  await emit.step("ready", word("installer.step.storage"));
+  try {
+    const stop = await storageReady(token, acct.id);
+    if (stop) return await halt(emit, "ready", stop);
+    emit.ok("ready");
+  } catch (e) {
+    if (special(e)) throw e;
+    emit.no("ready");
+    return emit.fail(word("installer.install.stopped.lookup", { said: e.message }));
+  }
 
   /* R62, R64, R69, R70 (F7): what the account already holds, read before anything is created. */
   await emit.step("fresh", word("installer.step.fresh"));
@@ -687,7 +682,7 @@ async function installRun(emit0, code, saved, guard) {
       /* R62: nothing is created or changed; the page offers the three ways on. */
       emit.no("fresh", word("screen.install.stopped.exists"));
       const held = await describeHeld(token, acct.id, inv, memberNames, null, onWait);
-      return emit.done(existsPanel({ copies: held, version: await newestVersion(), slug }));
+      return emit.done(existsPanel({ copies: held, version: await newestVersion(), slug, account: saved.ac }));
     }
     emit.ok("fresh", alongside ? word("installer.install.fresh.alongside") : word("screen.install.progress.single"));
   } catch (e) {
@@ -716,29 +711,26 @@ async function installRun(emit0, code, saved, guard) {
   }
   emit.ok("plan", word("screen.install.progress.plan") + (planAnswer.leftover ? ". " + word("installer.probe.leftover", { name: PLAN_PROBE }) : ""));
 
-  /* R70 (F2, F3): Containers on, and no account limit in the way, before anything is created. */
+  /* R84, R70 (F2, F3): the account ready before anything is created: its storage, its Containers, its limits, then its address,
+     each unmet condition a walk-through that says nothing was created and offers "Check again". */
   await emit.step("room", word("installer.step.room"));
-  let offer = null;
+  let registered = null;
   try {
-    const containers = await containersState(api);
-    if (containers.state === "off") {
-      emit.no("room");
-      await emit.fail(word("screen.install.stopped.containers"), word("screen.install.stopped.containers.do"));
-      /* R70: the stop waits to be told it is on, and then begins again, the choices kept. */
-      return emit.retry(word("screen.install.stopped.containers.done"));
+    const stops = [
+      async () => containersStop(await containersState(api), {
+        said: word("screen.install.stopped.plan") + " " + word("installer.install.stopped.plan.why"),
+        d: word("screen.install.stopped.plan.do"), retry: word("screen.install.stopped.plan.done") }),
+      async () => { const limit = await limitReached(api);
+        return limit ? { said: word("screen.install.stopped.limit", { limit }), d: word("screen.install.stopped.limit.do"), retry: CHECK_AGAIN() } : null; },
+    ];
+    for (const check of stops) { const stop = await check(); if (stop) return await halt(emit, "room", stop); }
+    /* (4) last, because it is the one check that writes: the name the founder chose with a click is registered before any upload. */
+    const address = await addressReady(token, acct.id, slug, saved.sd);
+    if (address.ask) {
+      emit.no("room", addressSentence(address.ask.taken, address.ask.name));
+      return await emit.done(addressPanel(address.ask, emit.body()));
     }
-    if (containers.state === "unknown") {
-      emit.no("room");
-      return emit.fail(word("installer.install.stopped.lookup", { said: containers.said }), word("screen.install.stopped.containers.do"));
-    }
-    const limit = await limitReached(api);
-    if (limit) {
-      emit.no("room");
-      return emit.fail(word("screen.install.stopped.limit", { limit }), word("screen.install.stopped.limit.do"));
-    }
-    /* F7: the address names that would be tried, fixed now and used as they are (nothing is registered here). */
-    offer = await offerSubdomain(token, acct.id, slug).catch((e) => { if (approve(e)) throw e; return null; });
-    if (offer?.candidates?.length) await emit.says(word("installer.address.offer", { prefix: offer.candidates[0] }));
+    registered = address.registered || null;
     emit.ok("room");
   } catch (e) {
     if (special(e)) throw e;
@@ -753,9 +745,12 @@ async function installRun(emit0, code, saved, guard) {
   if (release.refused) {
     return emit.fail(word("installer.install.stopped.nolimits", { refusal: release.refused }));
   }
+  /* R84 (7): the plane itself, against Cloudflare's size limit for one Worker, before anything is created. */
+  const tooBig = planeTooBig(release);
+  if (tooBig) return emit.fail(tooBig.said);
   /* R71 (F5), R61: the whole fleet of this release verified and fetched now; a source that stays down ends the run here. */
   let loaded;
-  try { loaded = await loadFleet(release, onWait); }
+  try { loaded = leaveOutOversize(await loadFleet(release, onWait)); }
   catch (e) {
     if (e && e.source) return emit.fail(word("screen.install.stopped.source"), word("screen.install.stopped.source.do"));
     throw e;
@@ -854,9 +849,9 @@ async function installRun(emit0, code, saved, guard) {
   await emit.step("addr", word("installer.step.address.install"));
   let base = null, addrError = null;
   try {
-    const { sub, registered } = await ensureSubdomain(token, acct.id, slug, offer);
+    const { sub, registered: made } = await ensureSubdomain(token, acct.id, slug);
     base = `https://${slug}.${sub}.workers.dev`;
-    emit.ok("addr", registered ? word("installer.address.prefix", { prefix: registered }) : word("screen.install.progress.address"));
+    emit.ok("addr", registered || made ? word("installer.address.prefix", { prefix: registered || made }) : word("screen.install.progress.address"));
   } catch (e) { if (special(e)) throw e; addrError = e; emit.no("addr"); }
   const ownHosts = base ? [hostOf(base)] : null;
 
@@ -1105,8 +1100,8 @@ async function updateRun(emit00, code, saved, guard) {
   try {
     const accts = await cf(token, "/accounts");
     if (!accts?.length) throw new Error(word("installer.account.none"));
-    acct = accts[0];
-    emit.ok("acct", word("installer.account.using", { account: acct.name }));
+    acct = await accountOf(emit, accts, saved.ac);
+    if (!acct) return;
   } catch (e) {
     if (special(e)) throw e;
     emit.no("acct");
@@ -1158,7 +1153,7 @@ async function updateRun(emit00, code, saved, guard) {
   /* R71 (F5), R61: the whole fleet of this release fetched and verified before the upload; a source that stays down stops the
      update with nothing changed. */
   let loaded;
-  try { loaded = await loadFleet(release, onWait); }
+  try { loaded = leaveOutOversize(await loadFleet(release, onWait)); }
   catch (e) {
     if (e && e.source) return stopped(word("screen.install.stopped.source"), word("screen.install.stopped.source.do"));
     throw e;
@@ -1322,7 +1317,7 @@ async function runRemoveView(emit, code, saved) {
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token); emit.ok("auth"); }
   catch (e) { emit.no("auth"); if (special(e)) throw e; return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
   await emit.step("acct", word("installer.step.acct"));
-  try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error(word("installer.account.none")); acct = accts[0]; emit.ok("acct", word("installer.account.using", { account: acct.name })); }
+  try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error(word("installer.account.none")); acct = await accountOf(emit, accts, saved.ac); if (!acct) return; }
   catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail(word("installer.remove.refused.account", { said: e.message })); }
   await emit.step("read", word("installer.step.remove.read"));
   let held;
@@ -1337,7 +1332,7 @@ async function runRemoveView(emit, code, saved) {
     return emit.fail(word("installer.remove.refused.lookup", { said: e.message }));
   }
   emit.ok("read");
-  emit.done(removePanel({ copy: held, slug }));
+  emit.done(removePanel({ copy: held, slug, account: saved.ac }));
 }
 
 /* `installremoveconfirm`: deletes every resource the copy holds in the account, each named as it goes, and, when the account is
@@ -1355,7 +1350,7 @@ async function runRemove(emit0, code, saved, guard) {
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token); emit.ok("auth"); }
   catch (e) { emit.no("auth"); if (special(e)) throw e; return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
   await emit.step("acct", word("installer.step.acct"));
-  try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error(word("installer.account.none")); acct = accts[0]; emit.ok("acct", word("installer.account.using", { account: acct.name })); }
+  try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error(word("installer.account.none")); acct = await accountOf(emit, accts, saved.ac); if (!acct) return; }
   catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail(word("installer.remove.refused.account", { said: e.message })); }
   api = apiOf(token, acct.id);
   if (saved.ty !== slug) return emit.fail(word("installer.remove.refused.typed", { slug }));
@@ -1465,6 +1460,14 @@ export default {
       const vpc = typeof body.securityVpc === "string" ? body.securityVpc.trim().toLowerCase() : "";
       if (vpc && !vpcServiceOk(vpc))
         return json({ ok: false, error: word("installer.begin.vpc") }, 400);
+      /* R84 (4), (6): the account and the workers.dev name the founder chose, kept with the other choices; a value that is
+         neither an account id nor a name Cloudflare could register is refused by name, never dropped. */
+      const ac = typeof body.account === "string" ? body.account.trim() : "";
+      if (ac && !/^[0-9A-Za-z_-]{1,64}$/.test(ac))
+        return json({ ok: false, error: word("installer.begin.account") }, 400);
+      const sd = typeof body.subdomain === "string" ? body.subdomain.trim().toLowerCase() : "";
+      if (typeof body.subdomain === "string" && body.subdomain.trim() && !SUBDOMAIN_RE.test(sd))
+        return json({ ok: false, error: word("installer.begin.subdomain") }, 400);
       /* R36, R37 (T36): nothing else /begin is sent is kept: no field carries a Claude credential, and the install takes no
          choice about the assistant (an `assistant` field is taken nowhere). */
       /* R83 (G83; K4746, K4752): the founder's own request says where on the edge they are (`cf`, set by the platform); the hint
@@ -1473,7 +1476,7 @@ export default {
          `cf` or no hint writes nothing, and the install is then the install it was. */
       const sl = mode === "install" && req.cf && typeof req.cf === "object" ? locationHintFor(req.cf) : null;
       const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...(ai ? { ai } : {}), ...(p ? { p } : {}),
-        ...(typeof sl === "string" && sl ? { sl } : {}),
+        ...(typeof sl === "string" && sl ? { sl } : {}), ...(ac ? { ac } : {}), ...(sd ? { sd } : {}),
         ...(vpc ? { vpc } : {}), ...(mode === "update" ? { r: chosen } : {}),
         ...(mode === "install" && body.alongside === true ? { al: 1 } : {}), ...(mode === "removeconfirm" ? { ty: body.typed } : {}),
         ...(typeof body.lock === "string" && /^[0-9A-Za-z_-]{6,64}$/.test(body.lock) ? { lk: body.lock } : {}) })));
@@ -1516,7 +1519,7 @@ export default {
       /* R69, R71: this run's own place on the account's lock, and the run it continues when the founder approved again. */
       saved.lock = { id: rand(8), again: typeof saved.lk === "string" && /^[0-9A-Za-z_-]{6,64}$/.test(saved.lk) ? saved.lk : null };
       /* R71 (F6): what a new approval begins again, never a credential. */
-      const again = { slug: saved.slug, mode: saved.mode, lock: saved.lock.id, ...(saved.mode === "update" ? { version: saved.r } : {}),
+      const again = { slug: saved.slug, mode: saved.mode, lock: saved.lock.id, ...(saved.ac ? { account: saved.ac } : {}), ...(saved.sd ? { subdomain: saved.sd } : {}), ...(saved.mode === "update" ? { version: saved.r } : {}),
         ...(saved.al === 1 ? { alongside: true } : {}), ...(saved.p ? { profiles: saved.p } : {}), ...(saved.vpc ? { securityVpc: saved.vpc } : {}),
         ...(saved.mode === "removeconfirm" ? { typed: saved.ty } : {}) };
       return streamPage(clear, progressShell(title, saved.slug, saved.mode === "update" ? `/update?version=${saved.r}` : null),
