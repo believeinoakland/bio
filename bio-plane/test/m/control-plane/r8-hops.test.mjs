@@ -1,7 +1,7 @@
 /* control-plane (fix round 8, G119; K4814 (4), K4817; review2 D2; R-SEAM, R-ONE): HOW MANY CALLS TO THE OBJECT A FRAME OP COSTS, through the counting door (`wrap-entry.mjs`: every call of the Worker to the object,
    by route, on the answer's `x-wrap-calls`). Each call is a hop of 110-135 ms live whatever it does, and every one queues behind the object's synchronous work (P19), so the count is the floor of
    a frame read. The table is the plan's: `whoami` 1, `queue` 2, `groupidentity` 3 (the session read once; `doorwindow`, the protective limit of K1881, kept: `session`, `doorwindow`,
-   `groupidentity`), `bootstrap` at most 3 (the administrator's 4, unchanged by this cause), and `infolevel`, `assistantstate`, `accountreference`, `groupkeystate`, `wizardsat` and
+   `groupidentity`), `bootstrap` 4 for a member and for the administrator (session, doorwindow, bootstrap, bootstrapfacts: BOB ruled K4833 that the estimate of 3 preceded G118's split of the facts read), and `infolevel`, `assistantstate`, `accountreference`, `groupkeystate`, `wizardsat` and
    `projectlist` 2. A signed-in member and the administrator. Red by name until `admission` (G119: one session read per request) has merged: today `groupidentity` makes 4 and `bootstrap` 4-5.
    `t51-hops.test.mjs` holds today's ceilings so no op gets worse; this file holds the targets. Counts only; no clock (R-CLOCK). */
 import { test, after } from "node:test";
@@ -17,7 +17,7 @@ const TARGET = {
   whoami: { member: 1, admin: 1 },
   queue: { member: 2, admin: 2 },
   groupidentity: { member: 3, admin: 3 },
-  bootstrap: { member: 3, admin: 4 },
+  bootstrap: { member: 4, admin: 4 },
   infolevel: { member: 2, admin: 2 },
   assistantstate: { member: 2, admin: 2 },
   accountreference: { member: 2, admin: 2 },
