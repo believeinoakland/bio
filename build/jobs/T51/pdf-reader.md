@@ -1,6 +1,6 @@
 # pdf-reader (T51)
 
-**Status** · session_01HsSRN6atp6a4mqkSVXsNjM · depth 2 · COMPLETE · handled B13
+**Status** · session_016yJWxBnqwtLKmTKCGHKJiL · depth 2 · COMPLETE · handled B18
 
 ## Completion (T51-7, R39)
 
@@ -293,3 +293,83 @@ G68 provider half, R44 met. New export openPdfRange(bytes) in bio-plane/src/pdfs
 ## J10 · COMPLETE
 
 R45 met (CHANGE B13). openPdfRange(bytes, {yieldNow}) awaits yieldNow after each phase and between slices (scan: 2000 objects or 1 MiB; object streams: 16 streams / 2000 entries; page-tree walk: 2000 nodes); throwing/rejecting/non-function yieldNow = R44 behaviour; answers identical (every range of a 13-page object-stream file x 4 yieldNow kinds, plus 700-page, no-page, refusal). Real BUDGET-2024-APP: open without yieldNow is one 179-293 ms stretch; with it 103 yields, longest stretch 15.4-16.5 ms by the test's own clock outside the call (bar 60). Red first: 0 yields on the unchanged code. All pdf-reader tests and reading-pipeline pdf-ranges/g56-range pass; format/architecture/ownership 0 failures; coverage reds are csv-reader R20 and record-core R89 R90 (not mine); words reds not mine. Stale bundles: pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. Record: build/jobs/T51/pdf-reader.md.
+
+## J11 · QUESTION
+
+**QUESTION (pdf-reader, T51 round 9): the protective bound `pdf.object_stream` (16 MiB proposed) refuses an ordinary file.**
+
+Finding: BUDGET-2025-PER.pdf (govinfo, 8.8 MB, the file R41's own test reads) has one object stream of 19,446,595 bytes decoded (18.55 MiB). The largest in BUDGET-2025-BUD.pdf is 3.76 MiB and in BUDGET-2024-APP.pdf 0.02 MiB. At 16 MiB my reader states `stream_over_bound:object_stream` for that stream and its objects are unread, so R41's test "BUDGET-2025-PER: the answer is unchanged" is red (the digest differs; nothing in the text changes, only the unread objects of the structure tree). I tried 32 MiB locally in `read-bounds.mjs` (file restored, not committed): all 12 `memory.test.mjs` tests pass and the answer is the answer before.
+
+Recommendation: record `pdf.object_stream` as 32 MiB for the alpha and protective columns (runtime-limits' row; I do not edit it). My code quotes it by name, so nothing of mine changes when you do. Until then that one test is red by name.
+
+Also, for R48: one ceiling of mine has no row, `pdfTitle`'s XMP packet read (kind `pdf`, name `xmp`, standard 2 MiB, alpha 2 MiB, protective 2 MiB). I keep it as a named constant with a comment until you carry a row to runtime-limits. The cross-reference chain length (64 sections) is a loop guard on a `/Prev` cycle, not a limit on a file, so I propose no row for it.
+
+Status: R8, R9, R12, R22, R41 (page_over_bound), R43 (maxBytes by each page's own size), R46, R47 (depth, objects, operands), R48 are coded and tested; I am running the users' tests and the six checks, and will post COMPLETE or a context BLOCKED.
+
+## Completion (fix round 9, job 14: PDF-READER #14, session_01VR2yTKx57ew9DXwWoxnBaf) — PARTIAL: stopped at half the context window; the rest is listed under "Next"
+
+Merged `tranche/T51` first (the Status line kept as the mail tool wrote it). Requirements read whole (R8, R9, R12, R22, R23, R41-R43, R46-R48 as BOB changed them). All code in `bio-plane/src/pdfstructure.mjs` (4,598 → 4,964 lines); tests under `bio-plane/test/m/pdf-reader/`: new `cmap.test.mjs` (R12), `revisions.test.mjs` (R8, R9, R23, R47 depth), `bounds.test.mjs` (R22, R41, R47, R48), `rangebound.test.mjs` (R43, R46); `range.test.mjs` (the G56 test follows R43's new rule) and `memory.test.mjs` (one test follows R8) edited. No other module's file is touched. New files outside my `paths`: none.
+
+### Causes, each with its four fields (red = the line on the unchanged code, `cd bio-plane && node ../build/plan/red-pdf-T51.mjs N<n>`; green = after)
+- **G132b N5** (1) `loadObjectStreams` skipped a number already defined, in file order, so the first object stream won. Now the cross-reference chain from the last `startxref` (tables, `/Prev`, xref streams, hybrid `/XRefStm`; the reader `pdfTitle` uses) names each object, object streams are read in file order, a later one wins where nothing names the object, and `xref_reconstructed` is noted when the chain does not validate (no `startxref`, a link that does not read, a named object not where it is named). (2) Missed: no revision fixture with an object stream; `revisions.test.mjs` has table and stream forms, three revisions, the top-level variant. (3) RED `revision 2 in a new object stream reads ["OLDTEXT"] (want NEWTEXT)` → GREEN `["NEWTEXT"]`. (4) L (Node; pure bytes).
+- **G132c N6** catalog is the trailer's `/Root` (newest trailer, through the chain; the last trailer in the file when the chain is lost), the first `/Type /Catalog` only as the fallback. RED `trailer /Root 3 0 R reads ["FIRST"]` → GREEN `["SECOND-A","SECOND-B"]`.
+- **G132d N7** the scan stepped into stream data: it now resumes after a stream's data (a direct `/Length` an `endstream` follows, else the next `endstream`). RED `... reads [""] (want REALTEXT)` → GREEN `["REALTEXT"]`; tests also cover an indirect and a wrong `/Length`.
+- **G132e N8** a `/Kids` entry with no `/Kids` is a page unless it states `/Type /Pages`. RED `["ALPHA","CHARLIE"]` → GREEN all three. (A leaf stating `/Type /Pages` with no `/Kids` is not made a page: an empty node, not a page. R8 says "whether or not it states /Type /Page"; I read it so. Tell me if you want it a page too.)
+- **G132f N21** the walk's pages are compared with the root's `/Count`: fewer read gives `structure_reconstructed` and `pages_missing:<not read>/<declared>` (format mine: propose it in R8's wording or give me yours); the fallback after a lost chain gives `structure_reconstructed`. RED `ok=true, pages=20 of 30, notes=[]` → GREEN `notes=["xref_reconstructed","structure_reconstructed","pages_missing:10/30"]`.
+- **G132a N9 / G129a** `isEncrypted` also asks the newest trailer's `/Encrypt` (direct, by reference, or dangling); `extractPdfRange`/`openPdfRange().range` over an encrypted document answer the marker with `final: true`, `count: 0`. RED `direct /Encrypt false, indirect (control) true` → GREEN `true, true`.
+- **G132g / G125f N10** every codespace range is honoured (codes of several widths in one CMap, the shortest range that matches, a prefix in none taken at the shortest width, a short tail `code_width_misaligned`), codes unsigned, a `bfrange` of more codes than `boundOf("pdf","bfrange_codes")` looked up arithmetically (a count: no expansion; the later section wins exactly as expansion gave). RED `(a) 11821 ms ; (b) "XX" ... ; (c) unmapped_code:-7fffffff` → GREEN `6 ms ; "XYX" ; no markers`.
+- **G125e N4 / G124d / R41** a Flate stream is read against the cap of its kind (page content 64 MiB shared by a page's streams, object stream 16 MiB, CMap 1 MiB, embedded file 64 MiB), the native path included, a stream under 128 KiB compressed included; past the cap it is `null`, noted `stream_over_bound:<kind>`, and a page states `{page, reason:"page_over_bound", size, bound}` with the other pages read. RED `201 KB file inflated 200 MB, RSS +900 MB, no marker []` → GREEN `RSS +10 MB, [{"page":1,"reason":"page_over_bound","size":67108865,"bound":67108864}]`. Memory: tokens are streamed (a generator), glyph boxes are built only for a page with a link; `node --max-old-space-size=128 ... N11 3` and `... N11 10` now complete (3 MB: 436,904 characters; 10 MB: 1,456,354), where the 3 MB one aborted.
+- **G125a (raw route) / G132l (a)** an image stream's declared width × height and row stride are judged against `boundOf("image","pixels")` and `("image","row_stride")` before anything is allocated (null + `stream_over_bound:image`); `/Predictor 2` answers null. (The 97 KB / 10000 × 10000 grey stream is inside both bounds: 10^8 < 1.2 × 10^8 pixels. It is stopped by the cap on what it inflates to; pdf-pixels' arithmetic check is its own.)
+- **G128c R46 / G124d R43** `range(...)` answers carry `metadata`, `pageBoxes` (whole document), `images` (the range's pages; `null` + `imagesWhy` when a page cannot be walked), `text_glyphs`, `words_total` (mine: non-space code points, and maximal non-space runs, of the range's pages; text-chain's `glyphCount`/`wordsIn` may classify a space differently, I cannot import them). `maxBytes` is judged against each page's own decoded size; the page that would pass it starts the next range (its decoded content is kept for that call).
+- **R47** page-tree depth (stops, `over_bound:tree_depth:<found>:<bound>`, then the numbered fallback finds the pages), objects (the scan stops at 2,000,000, `over_bound:objects:2000001:2000000`), a direct object past 4 MiB (absent, `over_bound:direct_object:...`), operands past 65,536 (dropped, `over_bound:operands:...`). **R48** every ceiling above is `boundOf(kind, name)`; `INNER_DECODE_MAX`, `STREAM_MAX`, `OBJ_WINDOW_MAX`, `READ_LIMIT_MB` are quoted, and `bounds.test.mjs` reads the source and finds none of the old numbers.
+
+### Asked of BOB (QUESTION J11, rung)
+`pdf.object_stream` at 16 MiB refuses an ordinary file: BUDGET-2025-PER.pdf has an object stream of 19,446,595 bytes decoded. At 32 MiB (tried locally, file restored) all 12 `memory.test.mjs` tests pass with the answer unchanged. Until BOB records the row, `memory.test.mjs` "BUDGET-2025-PER ... its answer is unchanged" is red by name. One ceiling without a row: `pdfTitle`'s XMP read, kind `pdf`, name `xmp`, 2 MiB / 2 MiB / 2 MiB.
+
+### Next (what I did not reach before the window's half; the next PDF-READER starts here)
+1. Run `bounds.test.mjs` (its last test, the direct-object and 2,000,100-object cases, was written after the last run) and fix what it shows; run alone.
+2. The embedded file is capped at 64 MiB but still held and then hashed; R22 says "hashed as it streams, never held" (needs an incremental SHA-256 in JS).
+3. Measure a 40 MiB and a 60 MiB decoded page at `--max-old-space-size=128` (A6/A7): the content is still turned into one string per page (`binaryString`), so a page near the bound may not fit; a byte-based lexer is the fix if it does not. No yield inside a page yet (the work budget is `maxBytes` per page).
+4. The users' tests (below) and `workerd` platform check L for the new caps (a capped child at the real limit) were not run.
+5. A through-the-door test that file-safety grades the A8 bomb file (`file-safety` is another job's; report only).
+
+### Also owed (B15, B16, B17 read)
+- **B15/B16 CHANGE, R49 `pageSource(source, pageIndex)`** (a page's own small PDF through `readRange` only, `{ok:false, fallback:true, why}` on any irregularity; test by name R49): NOT STARTED. Needs the trailer/`startxref`/xref-chain reading over a range source (the `XrefReader` in `pdfstructure.mjs` reads whole bytes today and is the model), the page tree, inherited MediaBox/Rotate/Resources, and a generated multi-page PDF from `test/pdfgen.mjs`. Read R49 whole in the requirements first.
+- **B17 ANSWER**: `pdf.object_stream` becomes 32 MiB and `pdf.xmp` (2 MiB) is added by runtime-limits' second merge; then replace `XMP_MAX` with `boundOf("pdf","xmp")` and rerun `memory.test.mjs` (the PER test turns green).
+
+### Tests and checks run so far
+Module (`test/m/pdf-reader/` + `test/pdfstructure.test.mjs`), last full run before the final edits: 171 tests, 168 pass, 3 fail (two followed the new R8/offset-0 rule and are fixed; the PER one is the object-stream row above). `format` 0, `architecture` 0, `coverage` 48 of 48 ids named (R46-R48 included), `ownership` 8 files, 0 failures. Users: `format-registry`, `doc-clean`, `file-safety`: 188 tests, 186 pass, 1 red that is carried (file-safety R24 `rows.test.mjs` words); `reading-pipeline`: 319 tests, 315 pass, 4 red (reported above, job 27's to adopt); `acquisition`: 276 of 276; `doctypes` + `budget-doctypes`: 87 of 87; `pdf-worker/test/`: result not read (stale bundle expected).
+
+Found in another module (reported, not touched): `reading-pipeline` job 27's four reds are the seam to my new provider and are its job to adopt: `R40/R41 (G48) control: pdf` records a range answer with `images: null, images_why: "a placement the structure op reported could not be read ..."` and now gets `images: []` (R46: a range carries the images of its pages); `R40 (G56 a3)`, `(G56 c)` and `(G56 c, seam)` assert the old document-average sizing of `maxBytes` and now meet R43's rule (each page's own decoded size).
+
+Stale generated artifacts my change makes (BOB regenerates at the round end): `pdf-worker`, `ocr-worker` and `agent-worker` bundles, `bio-plane/dist/bio-plane.bundled.mjs`.
+
+Size (session_01VR2yTKx57ew9DXwWoxnBaf): test runs 24, module lines 4964
+
+## J12 · BLOCKED
+
+BLOCKED (cause: context). PDF-READER #14 is past half its window. Done and pushed: R8, R9, R12, R22, R41 (page_over_bound), R43, R46, R47, R48 coded and tested (checks: format, architecture, coverage 48/48, ownership all 0 failures). NOT done: R49 `pageSource` (B15/B16), the embedded-file streaming hash, a 40/60 MiB page measure, the last bounds test run, and swapping `XMP_MAX` for `boundOf("pdf","xmp")` after runtime-limits' second merge. All listed under "Next" and "Also owed" in my record. Restart a PDF-READER #15 from the record.
+
+## Completion (fix round 9, job 14, finished by PDF-READER #15, session_016yJWxBnqwtLKmTKCGHKJiL)
+
+Merged `tranche/T51` (runtime-limits' rows 20-22 are in). All code in `bio-plane/src/pdfstructure.mjs` (4,964 -> 5,860 lines); new tests `pagesource.test.mjs` (9, R49), `embedded.test.mjs` (3, R22), `bigpage.test.mjs` (2, R41/R22), `lexer.test.mjs` (4, R41); `memory-child.mjs` gains modes `embedded` and `bigpage`. No other module touched.
+
+- **R49 `pageSource(source, pageIndex)`**: reads the trailer, xref chain (tables, streams, hybrid, object streams) and page tree through `readRange` alone, never scans; a node whose `/Count` equals its kids is flat (the kid at the index is read, the others not); other nodes are skipped by `/Count`. Writes a small PDF (renumbered objects, MediaBox/CropBox/Rotate/Resources inherited into the page, Annots/Parent/Thumb etc. dropped, Page/Pages/Catalog references nulled, streams copied raw with checked `/Length`). Any irregularity (no startxref, `/Encrypt`, bad index, damaged object, lying length or count, tree loop, no MediaBox, failing source) answers `{ok:false, fallback:true, why}`, never throws. Red first (missing export); three mutations each red. Real BUDGET-2024-APP pages 0/700/1353: under 1 MB read of 15.2 MB, text/images/box equal the whole's. Said plainly: an xref stream is read whole, and a compressed object stream holding the page's objects is read whole.
+- **R22 embedded file hashed as it streams**: incremental SHA-256 over the decoder's chunks (unfiltered or one Flate stage, no predictor); other streams keep the held path to the same cap. 60 MiB embedded file: live peak 3.9 MB above baseline (tranche code 60.3 MB), same hash. Exact at every block boundary.
+- **R41/R22 large page**: text pieces kept as flat chunks (`PieceList`, the array stays for a page with a link) and page content lexed from bytes (`tokenizeContentBytes`). A 40 MiB and a 60 MiB page of dense text read in `--max-old-space-size=128` (tranche code dies at 8 MB of such text). 600-case fuzz of random content: answers (whole and range) identical to the tranche's. A page with a link still holds per-glyph boxes (heavier).
+- **R48**: `XMP_MAX` is `boundOf("pdf","xmp")`. R41's BUDGET-2025-PER test is green with the 32 MiB row.
+- Platform check: L not run for R49 (pure bytes; Node with counted `readRange`); the 128 MB heap runs are Node.
+
+**Tests and checks.** `test/m/pdf-reader/` + `pdfstructure.test.mjs`: 190 tests, 189 pass, the one red (PER) green after the merge (memory, title, bounds re-run: 35/35). Users: format-registry 43/43; doc-clean 64/65 (R3 R12 TOO_MANY_ENTRIES, `entries` bound, not mine); file-safety 102/103 (R24, `TOO_LARGE_TO_READ` row, known). format 0, architecture 0, coverage 49 of 49, ownership 0 failures.
+
+**Found elsewhere.** Stale bundles (manifest 14): pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. reading-pipeline job 27's four reds (R46/R43 seam) stand as in the earlier section.
+
+**Proposed requirement lines (BOB writes).** R49 as written is met; add "a node whose /Count equals its kid count is read flat". R41: "a 40 MiB and a 60 MiB page of text read in a 128 MB heap".
+
+**Questions.** None. **Deferred.** None.
+
+Size (session_016yJWxBnqwtLKmTKCGHKJiL): test runs 30, module lines 5860
+
+## J13 · COMPLETE
+
+COMPLETE · PDF-READER #15 · R49 pageSource (fallback on any irregularity; real APP volume pages read from <1 MB), embedded-file streaming SHA-256 (60 MiB: 3.9 MB live vs 60.3), 40/60 MiB text pages read in a 128 MB heap (PieceList + byte lexer; fuzz equal to tip), XMP_MAX via boundOf(pdf,xmp); R41 PER test green. Suite 190 tests all green after merge; format/architecture/coverage 49 of 49/ownership 0 failures. Users: doc-clean R3 R12 entries and file-safety R24 reds not mine. Stale bundles: pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. Record: build/jobs/T51/pdf-reader.md. Size (session_016yJWxBnqwtLKmTKCGHKJiL): test runs 30, module lines 5860
