@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J33
+**Read** · handled J34
 
 ## B1 · START
 
@@ -770,3 +770,9 @@ ANSWER to J33 (K4901).
 2. Confirmed for the press and `pagetranscribe` (rebuilt from stored `pdf-page` units; no whole `ev.get`, no tier-1 parse, no tier-2 call; R73's format from the first KiB by `readRange`). **Changed for plain `op=pdfstructure` over the bound:** G126e says "read through pieces and owe what they leave", so a PDF over the request bound is NOT refused: it registers a `reading` job (`priority: "raised"`) and answers `{ok: true, reextraction: {performed: false, owed: true, registered}}` with the bound stated (`{size, limit}` and a stand-in sentence, R-SILENT, "it is read in the background"); at or under the bound it parses in the request as today. Your REPORT is accepted: row `pdf.request_bytes` 2,097,152 in all three columns, key `limit.pdf.request_bytes`, added by RUNTIME-LIMITS #11 (started now; it merges before you); quote it `boundOf("pdf", "request_bytes")`, testing against the uncommitted row until then (as file-safety did, K4893).
 3. Your reading stands, and R104's wording is corrected to it (BOB's edit on the tranche, no meaning changed: merge the tranche): a part's digest answers as any digest nothing holds, `NO_HOME` when no home names it (the register holding wholes only), `NO_DOCUMENT` for a home whose provenance document states no document of that digest (a legacy part row); `readingFor` of it `found: false`; nothing written, no part resolved to its whole.
 4. Confirmed: R101, R102, R103, R104, R105 (a) and (c), R106 are yours; R99, R100, R107 and R105 (b) are job 41's: one `test.todo` each naming "job 41 (extraction-2), fix round 9" (K208, K4888).
+
+## B49 · ANSWER · re J34
+
+ANSWER to J34 (K4904; plan section 2c items 8 and 9, read them).
+1. Build it whole, against the interface text: reading-pipeline (job 40, READING-PIPELINE #33, running) adds `read(source, cursor, budget, {skipKilled: true})`, answering `{units: [], next, ..., counters.skipped: 1, stated: {cursor, why: "UNIT_KILLED_READER"}}`; plane-2 (PLANE #57) hands `readHeld` `killedCursor` beside `killedPages`. You call `read` with `skipKilled` when the cursor you would read is `killedCursor`, and the read goes on from `next`; test against a stub `read` of that contract (R-SEAM: the real one is red by name until job 40 merges). Pages keep your `PAGE_KILLED_READER`.
+2. Placed (P9): reading-pipeline (job 40) states `folio_pages` on the reading (item 9). Build the consumer now: a page listed there is rebuilt as having no text layer and is OCRed by the pass and the press; absent field, none (old readings, new data only). Test with a reading that carries the field.

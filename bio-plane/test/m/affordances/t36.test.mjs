@@ -220,6 +220,22 @@ test("R61 R62 (T51, B14; K4376): the ops op-declarations' registration leaves wi
   for (const op of [...T51_OWED_OPS, ...T51_LIST_ONLY_OPS, ...T51_STANDIN_OPS]) assert.equal(meetsR48(without(op)), false, op);
 });
 
+test("R48 R62 (T51, K4900; capture R113): the four steps of a file sent in parts are member ops this table explains under their own names, "
+   + "each a sentence read from its own stand-in key and none shared; a table dropping any of them, or giving two the one sentence, departs", () => {
+  const parts = ["captureuploadbegin", "captureuploadpart", "captureuploadcomplete", "captureuploadabort"];
+  assert.deepEqual([...T51_STANDIN_OPS].sort(), [...parts].sort());
+  for (const op of parts) {
+    assert.ok(Object.hasOwn(ACT_HELP, op), `${op} is held under its own name`);
+    assert.equal(ACT_HELP_KEYS[op], `act.${op}.does`, op);
+    assert.equal(ACT_HELP[op], T51_STANDIN_HELP[op], op);
+    assert.ok(typeof ACT_HELP[op] === "string" && ACT_HELP[op].trim().length > 0, op);
+    const without = Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== op));
+    assert.equal(meetsR48(without), false, `${op}: a table without it is seen`);
+  }
+  assert.equal(new Set(parts.map((op) => ACT_HELP[op])).size, parts.length, "no two share a sentence");
+  assert.equal(meetsR48({ ...ACT_HELP, captureuploadpart: ACT_HELP.captureuploadbegin }), false, "a shared sentence is seen");
+});
+
 test("R61: the 13 ops op-declarations' ACT_HELP_ABSENT named for want of text have it, each answering its own word; `founderhandleset` is held "
    + "and `projectownervotes` is not", () => {
   for (const op of ["readtranslate", "planask", "stepsource", "stepsourcewithdraw", "actionreplyquoting", "lookedsince", "proceedingdates",

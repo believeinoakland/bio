@@ -258,7 +258,7 @@ test("R24 (K1892, K1929): nothing the five pass or answer names who opened a fil
 /* the earliest of the real file-safety's own R39 wakes at `now` */
 const earliest = (fs, now) => { const ws = WAKES.map((m) => fs[m](now)).filter((x) => x !== null); return ws.length ? Math.min(...ws) : null; };
 
-test("R24, R9: against the real file-safety, a capture received tells onFileWork, which arms the alarm at once; the firing scans and renders it and the alarm is then R39's earliest wake, never the firing instant", async () => {
+test("R24, R9: against the real file-safety, a capture received tells onFileWork, which arms the alarm at once; the firing scans it and renders one view; while views stay queued the alarm is R39's wake, the firing instant, for the next firing, and the wake ends after the last view", async () => {
   const w = fsWorld();
   const st = storage();
   const s = new Scheduler({ storage: st, owners: {} });
@@ -276,11 +276,21 @@ test("R24, R9: against the real file-safety, a capture received tells onFileWork
   assert.equal(w.calls("/scan").length, 1, "one batch to the scanner");
   assert.equal(r.filerender.ok, true, JSON.stringify(r.filerender));
   assert.equal(r.nextAt, earliest(w.fs, at), "R39's earliest wake");
-  assert.ok(r.nextAt === null || r.nextAt > at, `no spin: ${r.nextAt} after ${at}`);
+  /* R39 (K4902): while a view or safe copy stays queued the render wake is `now`, one render a tick; the alarm is re-armed for the next
+     firing, never a loop inside this one (this onAlarm returned after one render), and the run is bounded: the wake ends after the last view */
+  let last = r, firings = 1;
+  while (last.nextAt !== null && last.nextAt <= at && firings < 10) {
+    assert.equal(last.nextAt, at, "while views are queued the wake is the firing instant");
+    assert.equal(st.alarm, last.nextAt, "the alarm is set for the next firing");
+    last = await s.onAlarm(at);
+    firings++;
+  }
+  assert.ok(firings <= 4, `bounded: ${firings} firings for three views`);
+  assert.ok(last.nextAt === null || last.nextAt > at, `no spin: ${last.nextAt} after ${at}`);
   assert.equal("fileforward" in r, false, "no log tool on: forward wants no wake (R39)");
   assert.equal("filereputation" in r, false, "no reputation tool on: none (R39)");
   /* a week on, the re-scan falls due (file-safety R4, R39) */
-  const next = r.nextAt ?? at + 7 * 86_400_000;
+  const next = last.nextAt ?? at + 7 * 86_400_000;
   w.clock.now = next;
   const again = await s.onAlarm(next);
   assert.ok("filescan" in again || "filerender" in again, JSON.stringify(again));

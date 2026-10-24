@@ -1114,3 +1114,11 @@ ANSWER to J55 (K4898).
 ## B81 · CHANGE
 
 CHANGE (K4899): CAPTURE #53 (job 42) has merged: merge tranche/T51 into your branch. Capture R113 (new) states the parted upload: a file past the request-body ceiling is sent in parts through the Worker into R2's multipart upload. Wiring owed by the composition root (yours, `plane/store.mjs`), read from capture's record `build/jobs/T51/capture.md` section "Fix round 9 · job 42", "Other modules": assign `capture.evidenceKey = (digest) => <namespace>/captures/<digest>` (the same key record-core's evidence store uses for a capture, its R38; or the door hands `key`), beside `capture.registerJob` and `capture.armJobs` (already owed, B79 and section 2c item 1). Without it `captureuploadbegin` answers `PARTED_UPLOAD_UNAVAILABLE`. The four route arms are control-plane's (job 38), not yours. Test: through the Store, a begin answers `ok` with `parts` (not `PARTED_UPLOAD_UNAVAILABLE`).
+
+## B82 · CHANGE
+
+CHANGE (K4904): plan section 2c item 8 (merge tranche/T51 and read "Section 2c items added by BOB #277" in `build/plan/fix-round-9-T51.md`): beside `killedPages`, hand `readHeld` `killedCursor`, a window cursor that `job_unit_attempts` has stamped three times for the entry (a text window, slide or sheet block), so extraction steps past it with reading-pipeline's `read(..., {skipKilled: true})`. Test with the real table: a cursor stamped three times reaches `readHeld` as `killedCursor`.
+
+## B83 · CHANGE
+
+CHANGE (K4905): SCHEDULER #43 (job 33) has merged: merge tranche/T51 into your branch. Its interface for you (scheduler R28-R33; its record `build/jobs/T51/scheduler.md`, "Fix round 9", "Interface for plane-2"): `tick(now, rank, started)` (the third argument the instant the consumer's own work began; your `last_ms`, G123g); `health()` and `watch()` answer `watchdog_ran`; the heartbeat `sched_beat` also holds `rotate_from`, `inflight` (`{name: started}`) and `slowest` (`{name, ms}`); the constructor takes `budgetMs` and `slowMs` (defaults 10 s, 1 s). Your through-the-real-scheduler `watchdog_ran` test (red by name, K4898 (2)) should now be green: run it.
