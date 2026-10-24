@@ -1,6 +1,6 @@
 # BOB to record-grammar (T51)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -88,3 +88,7 @@ Owner **record-grammar**; *prov* none; the generated `case-checker/program.mjs` 
 **Run:** your suites, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio record-grammar tranche/T51 job/T51/record-grammar`.
 
 **Record and COMPLETE:** what changed (file:line), each failing-first test red then green, the platform figures, suites and checks, the requirement lines you propose (BOB writes `build/requirements/`), census ops, the rows owed to UX-DESIGN, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B7 · ANSWER · re J5
+
+ANSWER J5 (G59): the parity test is placed already: RATIFICATION #33 wrote it as bio-plane/test/m/ratification/r7-snappath-parity.test.mjs (its J13: red now for the dotless, subfolder and dotted-directory names, red by name until your G59 merges). Add nothing outside your paths; record that (a2) is ratification's, and post COMPLETE.

@@ -43,6 +43,7 @@ import { TABLE_MAX_BYTES, TABLE_MAX_CELLS, MONEY_ROLES, scanCsv, shaOf, schemaFa
   vintageFault, tableBuilder, textTable } from "./tables.mjs";
 import { PATTERNS, GATE_MAX_RATE, runPattern } from "./patterns.mjs";
 import { defaultRegistry } from "../connection-grammar/index.mjs";
+import { delimiterSignature } from "../csv-reader/index.mjs";
 import { USES_FIELDS, USES_HEADER, NONE_HELD, tieOf, foldReason, APPLICATION_RECIPES, APPLICATION_KINDS, composeApplication,
   answerApplication } from "./application.mjs";
 import { word, localize } from "../setup-words/index.mjs";
@@ -119,6 +120,7 @@ export const INGEST_SLICE_FACTS = 2000;
 /** R14 (G55): consecutive failed slices after which the ingest is stopped. */
 export const INGEST_MAX_ATTEMPTS = 3;
 const INGEST_PART_ITEMS = 1000;   /* items in one stored piece of a background ingest's lists */
+const DELIMITER_WINDOW_CHARS = 1 << 20;   /* G64: the head of a CSV source its delimiter is judged from, as the document's own reader judges (csv-reader's window) */
 const TEXT_CHUNK = 512 * 1024;   /* characters per row of calc_table_bytes, under a Durable Object row's 2 MB */
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -304,6 +306,13 @@ function visitRecipe(name) {
     { op: "share", part: "yes_items", whole: "judged_items", as: "share_judged" }, ...apart], output: "share_judged" };
 }
 
+/* G64: the head of a CSV source's text the delimiter is judged from: the BOM dropped, a source that ends without a line end given one (the
+   signature counts complete lines only), a longer one cut at the window. */
+function delimiterWindow(text) {
+  const s = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+  return s.length > DELIMITER_WINDOW_CHARS ? s.slice(0, DELIMITER_WINDOW_CHARS) : s.endsWith("\n") ? s : `${s}\n`;
+}
+
 export class Calculations {
   #inputListeners = [];     // R11: {module, fn}
   #patternListeners = [];   // R23: {module, fn}
@@ -473,6 +482,14 @@ export class Calculations {
    * TABLES (R1–R3)
    * ===================================================================== */
 
+  /* R44: whether a capture is a CSV file, as its provenance profile or its reading records (content's container format). */
+  #isCsv(captureSha) {
+    try {
+      const c = this.content.contentContextFor(captureSha);
+      return !!c && !!c.container && c.container.format === "csv";
+    } catch { return false; }
+  }
+
   /* R1: the source's rows: a sheet range's typed cells, a passage's text read as CSV, or a whole document's bytes. */
   async #sourceRows(row) {
     if (row.extent_kind === "sheet-range" || row.extent_kind === "sheet-cell") {
@@ -494,8 +511,11 @@ export class Calculations {
       const engine = got.cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "") ? { name: FILE_ENGINE, version: null } : null;
       return { rows, bytes: null, engine };
     }
+    /* G101 (R44): a CSV document is the file's own stored bytes, never the reading's index (blocks that repeat the header, caps), so the
+       table's sha is the file's: a CSV whose bytes are not held is refused, stated, never made from the index. */
+    const csv = row.extent_kind === "document" && this.#isCsv(row.capture_sha);
     let text = null;
-    try { text = this.content.passageText(row.content_id); } catch { text = null; }
+    if (!csv) { try { text = this.content.passageText(row.content_id); } catch { text = null; } }
     if (typeof text !== "string" && row.extent_kind === "document") {
       const ev = this.record.evidenceStore();
       try {
@@ -503,7 +523,8 @@ export class Calculations {
         if (obj) text = typeof obj.text === "function" ? await obj.text() : new TextDecoder().decode(await obj.arrayBuffer());
       } catch { text = null; }
     }
-    if (typeof text !== "string") return { fault: word("calculations.source_text_held") };
+    if (typeof text !== "string")
+      return { fault: csv ? localize("calculations.index.the_csv_files_own_bytes", "the CSV file's own bytes are not held, and a table is made from the file, never from the index of its reading") : word("calculations.source_text_held") };
     if (text.length > TABLE_MAX_BYTES * 2) return { tooLarge: true };
     return { text };
   }
@@ -543,9 +564,19 @@ export class Calculations {
     const tb = tableBuilder(names, schema.fields);
     if (src.rows) for (const r of src.rows) tb.push(r);
     else {
-      const sc = scanCsv(src.text, (r) => tb.push(r));
+      /* G64 (R1): the delimiter is the document's own reader's (csv-reader's signature over the head of the text): a comma, semicolon, tab
+         or pipe; none found reads as a comma, as before. The canonical bytes stay comma RFC 4180, so one table has one sha. */
+      const sig = delimiterSignature(delimiterWindow(src.text));
+      const delimiter = sig.delimiter || ",";
+      let widest = 0;
+      const sc = scanCsv(src.text, (r) => { if (r.length > widest) widest = r.length; tb.push(r); }, delimiter);
       src.text = null;
       if (sc.error) return no("SOURCE_NOT_READ", `the source does not read as CSV: ${sc.error}. Nothing was written.`, { content_id: contentId });
+      /* a source that is one cell per line against a wider header does not split into the declared columns under any delimiter found:
+         held as a table of whole lines, every value the whole line, it would be accepted silently; it is refused instead */
+      if (names.length > 1 && widest === 1)
+        return no("SOURCE_NOT_READ", localize("calculations.index.the_source_reads_as_one", "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.", { delimiter: String(sig.name || "none"), columns: String(names.length) }),
+          { content_id: contentId, delimiter: sig.name ?? null, columns_expected: names.length });
     }
     const built = tb.finish();
     if (built.fault) return no("BAD_SCHEMA", `the source does not fit the declared header: ${built.fault.why}. Nothing was written.`, { field: built.fault.field });
@@ -1728,19 +1759,32 @@ export class Calculations {
     const running = this.#one(`SELECT ingest_key FROM calc_ingests WHERE binding_key=? AND state='ingesting'`, b.binding_key);
     if (running)
       return no("ALREADY_INGESTING", localize("calculations.ingest.already", "this table is already being ingested in the background; wait for it to finish (you will be told), then ask again. Nothing was written."), { ingest: running.ingest_key });
-    const t = await this.#heldTable(b.table_sha);
-    if (!t) return no("NO_SUCH_TABLE", "the binding's table bytes are not held. Nothing was written.");
-    let picked;
+    /* G63: the act that only starts a background ingest reads and hashes none of the table's bytes: the count of "all" is the table's record's
+       (`calc_tables.rows`, what `textTable` calls its size), and the slices on the alarm leg read the table. Bytes at hand: in the cache or in
+       the record's chunked copy; any other table is fetched from the evidence store here, as before. */
+    const tableRow = this.#one(`SELECT rows FROM calc_tables WHERE sha=?`, b.table_sha);
+    const atHand = !!tableRow && (this.#tableCache.has(b.table_sha) || !!this.#one(`SELECT 1 AS x FROM calc_table_bytes WHERE sha=? LIMIT 1`, b.table_sha));
+    let t = null;
+    if (!atHand) {
+      t = await this.#heldTable(b.table_sha);
+      if (!t) return no("NO_SUCH_TABLE", "the binding's table bytes are not held. Nothing was written.");
+    }
+    let picked = null, total;
     if (rows === "all") {
       if (!str(reason)) return no("NO_REASON", localize("calculations.index.taking_every_row_of_a", "taking every row of a table is the rare case; state the reason (K1468). Nothing was written."));
-      picked = Array.from({ length: t.size }, (_, i) => i);
-    } else if (Array.isArray(rows) && rows.length && rows.every((n) => Number.isSafeInteger(n) && n >= 0)) picked = [...new Set(rows)].sort((x, y) => x - y);
+      total = t ? t.size : tableRow.rows;
+    } else if (Array.isArray(rows) && rows.length && rows.every((n) => Number.isSafeInteger(n) && n >= 0)) { picked = [...new Set(rows)].sort((x, y) => x - y); total = picked.length; }
     else return no("NO_ROWS", "name the rows to read into money facts, by number, or every row with rows: \"all\" and a reason. Nothing was written.");
-    if (picked.length > INGEST_ROWS_MAX)
-      return no("INGEST_TOO_LARGE", localize("calculations.index.one_act_reads_at_most", "one act reads at most {bound_rows} rows and this asks for {rows}; list the rows in windows of at most {bound_rows} (rows: [..]). Nothing was written.", { rows: String(picked.length), bound_rows: String(INGEST_ROWS_MAX) }), { rows: picked.length, bound_rows: INGEST_ROWS_MAX });
+    if (total > INGEST_ROWS_MAX)
+      return no("INGEST_TOO_LARGE", localize("calculations.index.one_act_reads_at_most", "one act reads at most {bound_rows} rows and this asks for {rows}; list the rows in windows of at most {bound_rows} (rows: [..]). Nothing was written.", { rows: String(total), bound_rows: String(INGEST_ROWS_MAX) }), { rows: total, bound_rows: INGEST_ROWS_MAX });
     const money = this.dep("money");
     if (!money || typeof money.recordFact !== "function") return no("MONEY_NOT_REACHABLE", "the money module is not reachable here. Nothing was written.");
-    if (picked.length > INGEST_INLINE_ROWS) return this.#startIngest({ b, picked, rows, reason, by, money });
+    if (total > INGEST_INLINE_ROWS) return this.#startIngest({ b, picked, total, rows, reason, by, money });
+    if (!t) {
+      t = await this.#heldTable(b.table_sha);
+      if (!t) return no("NO_SUCH_TABLE", "the binding's table bytes are not held. Nothing was written.");
+    }
+    if (!picked) picked = Array.from({ length: total }, (_, i) => i);
     const ctx = this.#ingestCtx(b);
     const written = [], notWritten = [];
     /* the picked rows, read in one pass over the held table (ascending, as picked is) */
@@ -1777,15 +1821,15 @@ export class Calculations {
   }
 
   /* R14 (G55): store the record of an ingest over INGEST_INLINE_ROWS rows, open money's marker for it, and answer started; no fact is written here. */
-  #startIngest({ b, picked, rows, reason, by, money }) {
+  #startIngest({ b, picked, total, rows, reason, by, money }) {
     const at = this.now();
-    const key = sha({ binding: b.binding_key, rows: picked, by, at });
-    const stored = ingestStored("rows", rows === "all" ? "all" : picked);
+    const key = sha({ binding: b.binding_key, rows: picked ?? "all", by, at });
+    const stored = ingestStored("rows", picked ?? "all");
     const out = this.record.transact(() => {
       this.sql.exec(`INSERT OR IGNORE INTO calc_ingests (ingest_key, binding_key, bundle_id, rows_json, reason, written_json, not_written_json, asked_by, at,
                        state, next_row, attempts, rows_total, written_count, not_written_count, table_sha)
                      VALUES (?,?,?,?,?,'[]','[]',?,?,'ingesting',0,0,?,0,0,?)`, key, b.binding_key, b.bundle_id ?? null, stored.column,
-        str(reason) || null, by, at, picked.length, b.table_sha);
+        str(reason) || null, by, at, total, b.table_sha);
       stored.chunks.forEach((chunk, seq) => this.sql.exec(`INSERT OR IGNORE INTO calc_ingest_parts (ingest_key, kind, seq, bundle_id, chunk) VALUES (?,?,?,?,?)`,
         key, "rows", seq, b.bundle_id ?? null, chunk));
       if (typeof money.markIngest === "function") money.markIngest(key, true);
@@ -1795,9 +1839,9 @@ export class Calculations {
       return { ok: true };
     });
     if (!out.ok) return out;
-    return { ok: true, ingest: key, binding: b.binding_key, state: "ingesting", complete: false, rows_total: picked.length, rows_done: 0,
+    return { ok: true, ingest: key, binding: b.binding_key, state: "ingesting", complete: false, rows_total: total, rows_done: 0,
       written_count: 0, not_written_count: 0, by: INGEST_STAMP, asked_by: by,
-      says: localize("calculations.ingest.started", "{rows} rows are being ingested in the background; you will be told when it is done, and the facts it writes are marked as not yet complete until then.", { rows: String(picked.length) }) };
+      says: localize("calculations.ingest.started", "{rows} rows are being ingested in the background; you will be told when it is done, and the facts it writes are marked as not yet complete until then.", { rows: String(total) }) };
   }
 
   /** R14 (G55): `onIngestWork(module, fn)`, one registration per module (membership's `listenerRefusal`): told `{at}` after the commit of an act that

@@ -76,5 +76,5 @@ test("R41, N516: the copies held through T25 are gone: no route marker, statemen
   for (const m of ["provenanceChainRebuild", "provenanceRouteAssess", "provenanceRoutesMarked", "routeOf", "routeTally"])
     assert.equal(typeof w.prov[m], "undefined", `${m} is provenance-routes'`);
   /* Nor are the moved tables this module's (R41). */
-  assert.deepEqual(P.PROVENANCE_TABLES, ["register", "captured_locators", "origin_declarations", "authority_decisions"]);
+  assert.deepEqual(P.PROVENANCE_TABLES, ["register", "register_parts", "captured_locators", "origin_declarations", "authority_decisions"]);
 });

@@ -1,6 +1,6 @@
 # docprofile (T51)
 
-**Status** · session_0175TpeWdCZgsPcC8Xw3BtqV · depth 2 · COMPLETE · handled B3
+**Status** · session_01PjjwjYeen8EHmXtzr7Hcr8 · depth 2 · COMPLETE · handled B10
 
 ## J1 · REPORT
 
@@ -72,3 +72,120 @@ COMPLETE, docprofile G48 (fix round 6; K4673). Pushed on job/T51/docprofile (tra
 **Deferred:** none. **Found in other modules:** none. **Not done:** nothing in the entry; the shape proof is PLANE #52's CHANGE and the basis statement is reading-pipeline's.
 
 Size (session_0175TpeWdCZgsPcC8Xw3BtqV): test runs 14, module lines 1269
+
+## J6 · REPORT
+
+REPORT (G88, for `doctypes`; nothing changed there). The residual G5 states: `doctypeForYielding` puts a yield between types, never inside one `detect`. Regulation's `detect` alone (`doctypes/regulation.mjs`, windowed, never yielding) is about 0.5-0.7 s on a 24 MiB text (`WHOLE_READ_MAX`), 0.23-0.29 s at 12 MB in node (the plan's and the review's figures; I did not re-measure, R-CLOCK forbids a timing test). I found nothing that makes it matter beyond G5's ruling; it is filed here as G5 asks. Meeting-minutes (97-169 ms at 12 MB) and meeting-agenda (56-113 ms) are the next longest single stretches. A `detect` taking an optional async `yield`, or a sampled first pass, would be doctypes' interface change, BOB's call.
+
+## J7 · COMPLETE
+
+COMPLETE, docprofile R39 (fix round 7, G88; K4768), pushed on job/T51/docprofile. Nothing in `site-profiles` or `doctypes` changed.
+
+**What changed.**
+- `docprofile/doctypes/registry.mjs`: one generator `walk(ctx)` holds the whole classification (the engine's `recognise` spelled out with site-profiles' exported `CONFIDENCE`/`confidenceRank`, then the `also` pass as `alsoWalk`), yielding a marker before every `detect`, in the main walk and in the `also` pass (a skipped fallback or self key yields nothing). `doctypeFor` drives it straight through, still synchronous; new `doctypeForYielding(ctx, {yieldNow})` awaits `yieldNow()` per marker only when `ctx.text` is a string over `CLASSIFY_YIELD_AT_CHARS` (256 * 1024 characters, exported) and `yieldNow` is a function; one that throws or rejects is ignored; otherwise it awaits nothing. A throwing `detect` in the main walk rejects the twin as it throws from `doctypeFor`; in the `also` pass it is recorded `{confidence: null, signals: [], error}`. `alsoFor`/`askAll` are untouched (the independent spelling the suite compares to). Exported beside `doctypeFor` through `docprofile/registry.mjs`'s `export *`. No new `t()`/`localize` call.
+- Tests: `docprofile/test/g88-yield.test.mjs` (10 tests, own stubs only: `g48-readings.mjs` `registerCorpusTypes` plus two marker stubs, every `detect` re-registered wrapped under its key; never imports `doctypes`). `memory.test.mjs` + `memory-child.mjs`: new R38/R39 test, mode `twin`: the twin over the 13.6 M character text in the child process, peak 0.2 MB above what the caller holds (limit 16), the type handed `ctx.pages`.
+
+**Failing-first.** First I wrote `doctypeForYielding = async (ctx) => doctypeFor(ctx)` (the stub the plan names). Red: 5 of 10 — no-match yields, also-pass yields after a CERTAIN winner, the 256 KiB threshold, the answer-equality test's LIKELY-winner interleaving, and the "at or under 256 KiB / over yields" test. The other 5 (NO_TYPE, throw in main walk and in `also`, a missing/throwing/rejecting `yieldNow`, ctx unchanged) are equality-with-`doctypeFor` assertions, and a stub that returns `doctypeFor`'s answer meets them by construction; they are the guard on the real twin sharing the walk. Then the real twin: 10/10 green. Order, never time: each yield is logged at its start and end, so a `detect` between the two would fail the test.
+
+**Why missed (R-FOUR 2).** G48's tests were sheet shapes only; nothing fed a long non-sheet text to the classification and nothing counted yields.
+
+**Tests and checks** (from /home/user/bio unless noted).
+- `node --test docprofile/test/`: 63 pass, 0 fail, 0 skipped. R38's memory test alone: `memory.test.mjs` 4 pass (R38 readText 0.5 MB; the twin 0.2 MB).
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 119 of 176 modules affected (1920 of 2509 test files; docprofile 8/8). Users' suites run, whole directories: doctypes 60/60, legistar-reader 18/18, roster-reader 27/27, court-doctypes 24/24, budget-doctypes 27/27, acquisition 261/261, monitoring 168/168, capture 294/294, doorbell 92/92, reading-pipeline 311/312. The one failure, `reading-pipeline/memory.test.mjs` BUDGET-2024-APP ("did not complete in a 87 MB heap (SIGABRT)"), passed when I ran that file alone with my change (4/4) and on the tip's registry.mjs (4/4): it died near its heap limit while the whole directory ran in one process beside other tests; I take it as load, not this change. I did not run the other ~110 affected modules' suites (impact is transitive through `plane` imports; this change adds one export and moves the walk behind unchanged answers, checked by G48's recorded answers and the equality tests).
+- `node checks/format.mjs /home/user/bio`: 0 failures. `architecture docprofile`: 0 failures. `coverage docprofile`: 28 of 28 live ids named, 0 failures. `ownership docprofile tranche/T51`: 5 files, 0 failures.
+- Words (`node bio-plane/src/setup-words/build.mjs --check`): reports `rows.mjs` stale at `calculations.index.the_source_reads_as_one` (the rows file carries `calculations.index.the_standard_holds_no_target` there). Not docprofile's (I added no sentence); BOB regenerates at the round end, or setup-words' / calculations' job.
+
+**Proposed requirement wording (BOB writes it).** R39: drop "*(not yet met: T51)*"; add "The threshold is the exported constant `CLASSIFY_YIELD_AT_CHARS` (256 KiB of characters)." The test line stays `docprofile/test/g88-yield.test.mjs`; add "and `docprofile/test/memory.test.mjs` (the twin holds no second copy, R38)".
+
+**Stale generated artifacts (BOB regenerates at the round end).** The bundles that import `doctypeFor`: `bio-plane/dist/bio-plane.bundled.mjs`, `agent-worker/dist/agent-worker.bundled.mjs` (and `release/*.bundled.mjs` copies). I did not touch them.
+
+**For READING-PIPELINE #30.** Import `doctypeForYielding` from `docprofile/registry.mjs`; call `await doctypeForYielding(ctx, {yieldNow})` with the ctx `classify()` builds today. The answer is deep-equal to `doctypeFor`'s on every shape tested. Note `identify` is not part of it and needs no yield (G6).
+
+**Found in other modules.** G5's residual, filed as J6 (REPORT) naming `doctypes`. N1 (acquisition `profileOf`, 8 MiB, one synchronous stretch) is the sibling G88 names; the twin would serve it, not built here. Census ops: none owned. Deferred: none.
+
+Size (session_011RwpSSvSEy7a1VmwRpqYF6): test runs 14, module lines 1322
+
+## J8 · REPORT
+
+REPORT (found in other modules; nothing changed there). Every item below is a recorded answer that moves because R18 (a glyph count, text-chain R73) and R39/R40 (every kind classified from the view) are amended; I verified the attribution by running the same suites with `chars` temporarily restored to `trim().length` and everything in (2) passed.
+
+1. **doctypes (job 12)**, `doctypes/test/bounded.test.mjs:163` and `:183` (they pass on the tip, fail on this branch):
+   - `:163` BUDGET-2025-BUD `chars` 3800 recorded, 3235 now (glyphs: white space no longer counts). Its recorded answers update by R18.
+   - `:183` BUDGET-2024-APP (13.6 M characters, over the 2 MiB bound): recorded `type: generic, confidence: none, chars: 13598363`; now `type: regulation, confidence: certain, chars: 12319700`. The type changes because the real eight types are now asked about the 1.5 MiB view (head + 12 windows) and no longer the whole text: `regulation`'s detect says CERTAIN on the view where it said no on the whole. That is R39's design (head and sample for every kind, stated in `classified_over`), but it is a classification that differs from the whole-text one, on a real file. Whether `regulation`'s recurrence floors are meant to hold over a sample is doctypes' to decide.
+   - The interface doctypes codes against (docprofile is merged first): each `detect` is handed `ctx.text` (the view above 2 MiB, else the very string), `ctx.window = {from, to, of}` (the part of the text it holds and the whole text's length) and `ctx.work = {chars, limit}` shared by every detect of one classification (limit = 4 x the characters of `ctx.text`). A detect adds the characters it examines to `ctx.work.chars` (a pass of a pattern over a window counts the window). The registry asks no further type once `chars > limit` (checked between detects, so the total passes the limit by at most the one detect that crossed it) and says so in `why` and in `work.stopped_before`. Until a type charges, nothing changes for it.
+2. **reading-pipeline (jobs 27, 40)**: recorded pins that carry `chars` or the `why` count of the reading: `reading-pipeline/convert-chain.test.mjs:325` (the Legistar packet: 60,842 recorded, 51,105 glyphs), `memory.test.mjs:85` (answer digests: BUDGET-2025-BUD, BUDGET-2025-PER, the 20 MB synthetic), `pieces.test.mjs:275` (the pdf answer digest), and the "over-strictness" pin. `memory.test.mjs:77` (BUDGET-2024-APP, SIGABRT at 87 MB) and `pdf-pieces.test.mjs:62` (38.5 s against 1.7 parses of 22.7 s) failed in a run of the whole directory beside the acquisition suite; I did not separate load from cause (J7 recorded the same SIGABRT as load) and did not rerun them alone.
+3. **Stale generated artifacts** (BOB regenerates at the round end): the bundles that import `docprofile` (`bio-plane/dist/bio-plane.bundled.mjs`, `agent-worker/dist/agent-worker.bundled.mjs`, `release/*.bundled.mjs`), and `bio-plane/src/setup-words/rows.mjs` / `words-unreviewed.json` (the sentence at `docprofile.readtext.the_sheet_is_over_the_bound_so_its_type_was_judged_from_a_view` is no longer used; three new ids, below).
+
+## J9 · COMPLETE
+
+COMPLETE, docprofile fix round 9 (T51): G140 (`pipeline.mjs`, `doctypes/registry.mjs`), G133f (head and sample), G141 (`readtext.mjs`), and BOB #274's K4855 item (the size refusal worded as one). Pushed on job/T51/docprofile. New file outside the pre-round list, inside `docprofile/`: `docprofile/classify-view.mjs`.
+
+**What changed.**
+- `docprofile/classify-view.mjs` (new): the classification view code moved out of `readtext.mjs` (`classificationView`, `classifiedWhy`, `segmentsOver`, the `CLASSIFY_*` constants), so the registry can bound every caller; `readtext.mjs` re-exports the same names. `classifiedWhy` now says "the text is over..." under a new id (the sheet-worded row would have won over any new English).
+- `docprofile/doctypes/registry.mjs`: the walk bounds its text first (`bounded`): above `CLASSIFY_WHOLE_MAX_CHARS` of ANY kind the types are handed the view (R39); every detect gets `ctx.window {from, to, of}` and one shared `ctx.work {chars, limit}` (limit = `CLASSIFY_WORK_FACTOR` (4) x the view); the answer carries `work {chars, limit, stopped_before}` and, when sampled, `classified_over`. The walk and the `also` pass ask no further type once `chars > limit` and `why` says which (R40). A ctx whose `text` is an accessor is wrapped, not read ahead. `doctypeForYielding` is the same walk, so its answer is still deep-equal to `doctypeFor`'s.
+- `docprofile/pipeline.mjs:77`: `unwatchable` only for a shell at CERTAIN (R12, R41); a POSSIBLE or LIKELY client-rendered match goes on through the layers.
+- `docprofile/readtext.mjs`: `chars` is a glyph count (`glyphs`: no white space, U+FFFD or NUL; a pair counts once; linear, no copy) for a string and a supplied text alike (R18); a marker's `why` is read as its reason beside `reason`; a marker `why: "over_size_bound"` (itself or in its `guard`) is a size refusal worded with the size and the limit in MiB, never as undecodable, in the no-text, the mostly-undetermined and the partial reading (K4855); `readText` no longer samples on its own: it hands `sheets` to `doctypeFor` and states the view the answer carries (R19, R39).
+
+**R-FOUR, per cause.**
+- **G140, my pieces (`pipeline.mjs:77`, `doctypes/registry.mjs`).** (1) `pipeline.mjs:77` `if (id.handler.shell)` took any confidence: a page with ONE framework marker is `client_rendered` POSSIBLE and that handler is `shell: true`, so `assess` ended at L1 "unwatchable"; the old `doctypeFor` (`registry.mjs:85-112`) handed every detect the whole text with no window or count. Not mine, by the START: the quadratic patterns (`staff-directory.mjs`, `client-rendered.mjs`, `readDefinitions`), which are doctypes' and site-profiles'. (2) Missed: the `assess` tests used only a CERTAIN shell; no test had a marker plus server text. (3) Red first on the tip's sources (stash of the three source files): `R12 ... AssertionError: a possibility gates nothing`; green after. R41's reading half (`readText` never gated on the stack) already held on the tip, so its test is green on both; its red is the R12 test, the gate in `assess`. (4) **N** for the verdict rule. The **L** for the quadratic patterns is doctypes' and site-profiles'.
+- **G133f.** (1) `readtext.mjs:409` sampled only `supplied.sheets` ("sheets && flat.text.length > ..."); every other kind, and every direct `doctypeFor` caller (`reading-pipeline`, `acquisition`, `assess`), handed the types the whole text. (2) Missed: G88 yielded only between detects and only for plain text; nothing counted what a detect was handed. (3) Red: `R39 every kind of text over the bound ... AssertionError: string: a stated view`; `R40 each detect is handed the view's window ... AssertionError: a long run of one pattern` (`window` and `work` undefined); `R40 a classification whose detects pass the work limit ... TypeError: Cannot read properties of undefined (reading 'chars')`; `R40 a ctx whose text is an accessor ...` red. Green after. Shapes covered by count: 400,000 characters of `a-`, 16,000 addresses on one line, 40,000 definitions, 150,000 dates, a 240 KB `<div` run, a 5 MiB text; with the stand-in types (the real eight are doctypes'), each detect is handed the view, the count is what the detects charged and is at most 4 views. Memory: the 13.6 M character child (R38/R39) adds 3.6 MB (readText) and 2.9 MB (twin), limit 16, five runs alone and one pass on one core (`taskset -c 0`), all green. (4) **L**: I ran the measured child (uncapped, peak above the caller) and not a capped workerd or heap-capped child; the corpus R set (DOCS T1, T4, Q1 by count) runs on the merged providers and is BOB's.
+- **G141, my piece (`readtext.mjs:165, 226`).** (1) `chars = text.trim().length` counted white space inside a text, so 2 glyphs + 1000 spaces + 600 undetermined was `determined`. (2) Missed: no whitespace-heavy page. (3) Red: `R18 a decoded character is a glyph ... AssertionError 4 !== 3` (the glyph count of the pair/white-space cases), `R18 a marker's why is read as its reason ... deepEqual [] vs ["over_size_bound"]`; green after. (4) **N**.
+- **K4855 (size refusal as unreadable bytes).** (1) `flattenText` read `m.reason` only, ooxml's markers carry `why`/`size`/`bound` (`ooxml.mjs:218`, `formats-xlsx.mjs:882`); `readText` said "1 undecodable region(s)". (3) Red then green as above, on the exact marker `formats-xlsx.mjs:882` builds for the 200,000 x 3 workbook (size 44,732,492, bound 33,554,432): the reading names 42.66 and 32.00 MiB. The `sheetgen` workbook itself needs `office-readers` (a higher layer than this module), so the through-the-real-entry test on it is reading-pipeline's/plane's (`plane` R84 is red by name on the ceiling ruling). (4) **N**.
+
+**Words owed to `later-ux.md` (stand-ins, code-origin, BOB regenerates rows).**
+- `docprofile.readtext.the_text_of_this_document_was_not_read_over_the_size_limit`: "the text of this document was not read: it is {size} MiB of text against the {bound} MiB that is read".
+- `docprofile.readtext.the_text_is_over_the_bound_so_its_type_was_judged_from_a_view`: "the text is over {bound} characters, so its type was judged from {chars} of its {of} characters, the first {head} and {n} windows spread across it; the stack and the reading of it are from all of it" (replaces `...the_sheet_is_over_the_bound...`, now unused).
+- `docprofile.registry.the_work_budget_ran_out_before_every_type_was_asked`: "the types examined {chars} characters of this text, over the {limit} allowed, so the {key} content type and those after it were not asked".
+
+**Proposed requirement wording (BOB writes it).** R18: add that `chars` and `why` count glyphs and that a marker's `why` is read as its reason, with the size-refusal sentence (K4855). R19/R39: `classified_over` is answered for a text of any kind and `doctypeFor` itself (not only `readText`) classifies from the view, the answer carrying `classified_over`. R38: "every answer unchanged on every fixture and on the three govinfo files" holds below the bound only; BUDGET-2024-APP is over it and is classified from the view (see the REPORT, doctypes). R40: the contract in the REPORT's interface paragraph (`ctx.window`, `ctx.work`, the charge, the stop between detects with its overshoot of one detect, `work.stopped_before`); the exported `CLASSIFY_WORK_FACTOR` (4). R41: its reading half held already; its gate is `pipeline.mjs` (R12).
+
+**Tests and checks** (from /home/user/bio; checks from civicos-process).
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit docprofile/test/`: tests 72, pass 72, fail 0 (also on one core, `taskset -c 0`: 72/72); `memory.test.mjs` alone five runs: 4/4 each. New file `docprofile/test/round9.test.mjs` (8 tests: R12, R41, R18 x2, R39, R40 x3); edited: `g48-answers.test.mjs`, `g48-sheet-view.test.mjs`, `memory.test.mjs`, `memory-child.mjs` (the sampled kinds, glyph `chars`, `work`).
+- Users' suites, whole directories: doctypes 58/60 (the two in the REPORT), legistar-reader 18/18, roster-reader 27/27, court-doctypes 24/24, budget-doctypes 27/27, acquisition 276/276, reading-pipeline 312/319 (the seven in the REPORT). I did not run the other ~110 affected modules' suites; `build/plan/impact.mjs origin/tranche/T51 HEAD`: 119 of 176 modules, 1958 of 2563 test files affected.
+- `format`: 176 modules, 0 failures. `architecture docprofile`: 0 failures. `coverage docprofile`: 30 of 30 live ids named, 0 failures. `ownership docprofile tranche/T51`: 10 files, 0 failures. `words`: no failure names docprofile.
+- Not done: `npm ci` for the five directories whose `node_modules` are absent (agent-runner, journey-check, file-scanner, sheet-worker, site): no test I ran needs them.
+
+**Deferred:** none. Census ops: none owned.
+
+Size (session_01PUj465a1Wdq4EoDMWhQ3Ga): test runs 16, module lines 1419
+
+## J10 · COMPLETE
+
+COMPLETE, CHANGE B6 (K4860) applied: `docprofile/pipeline.mjs:79` now reads `id.shell` (site-profiles R2's answer) instead of the handler flag with my own CERTAIN test. Merged tranche/T51 first. Pushed.
+
+**Red by name until site-profiles merges (the provider is not in tranche/T51 yet: `identify` returns no `shell`):** 5 of 73 docprofile tests fail, all of them because a CERTAIN shell is no longer settled `unwatchable` without the provider: R11 (assess runs L1 to L6), R12 (the verdict is one of the seven), R13 (meaningful null for unwatchable), R12 "an unwatchable verdict only for a CERTAIN shell", and the new "R12 R41 markup-free text ... a CERTAIN shell still is" (its CSV and prose halves pass; only its CERTAIN control is red). They turn green on the CHANGE that follows the merge; I will re-run then.
+
+Markup-free CSV and prose through `assess` are not `unwatchable` (green now, and already were via site-profiles' G76). The three R38 tests site-profiles named (g48-answers, g48-sheet-view, memory) were re-recorded in my first COMPLETE (J9) for R18/R39 and pass; none pins a shell answer for markup-free text in this module.
+
+Checks unchanged from J9 except the five reds above. Size (session_01PUj465a1Wdq4EoDMWhQ3Ga): test runs 18, module lines 1420
+
+## J11 · COMPLETE
+
+COMPLETE again, CHANGE B8 (K4864): merged tranche/T51 (pushed). I kept nothing red by name for ooxml: docprofile has no ooxml dependency (the size-refusal test builds the marker `formats-xlsx.mjs:882` makes). The only reds are the five that wait on SITE-PROFILES #4 (K4860): R11, R12 (x2), R13, and the CERTAIN control of "R12 R41 markup-free text"; `site-profiles/index.mjs` on the tranche still returns no `identify().shell`, so site-profiles is not merged yet. Docprofile suite: 73 tests, 68 pass, 5 fail (those five). Checks: format 0 failures, architecture 0, coverage 30/30, ownership 0. Send a CHANGE when site-profiles merges and I turn them green.
+Size (session_01PUj465a1Wdq4EoDMWhQ3Ga): test runs 19, module lines 1420
+
+## J12 · COMPLETE
+
+COMPLETE again, CHANGE B9 (K4865): merged tranche/T51 (site-profiles, text-chain, pdf-pixels). Docprofile suite 73 tests, 73 pass, 0 fail, so the five tests I kept red by name for site-profiles R2 (R11, R12 x2, R13, the CERTAIN control) are green.
+
+**The one that moved:** `g48-answers.test.mjs` "R38 R19 readText of every fixture reading equals the answer recorded on the tip" failed on the reading `shell` only. Cause: site-profiles R2's new `identify(...).shell` field: the CERTAIN client-rendered stack answer now carries `stack.shell: true` (the diff is that one key). Not text-chain R73: my `glyphs` already skipped NUL and U+FFFD and every other reading is unchanged. The new answer is the requirement's (R2: `shell` true only for a CERTAIN match; the fixture is a CERTAIN shell). Re-recorded `fixtures/g48-answers.json` (`readings.shell.stack.shell: true`, one added line), the comment in the test names the cause.
+
+Checks: format 0 failures, architecture 0, coverage 30/30, ownership 0. Size (session_01PUj465a1Wdq4EoDMWhQ3Ga): test runs 21, module lines 1420
+
+## J13 · COMPLETE
+
+COMPLETE, B10 (R40 amended, K4876). Merged `origin/tranche/T51` first (merge commit, no rebase); my branch was 542 commits behind origin, fast-forwarded (no reset).
+
+**Entry applied.** `docprofile/doctypes/registry.mjs`: `work.limit` is `CLASSIFY_WORK_FACTOR` (4) times the view's characters times the number of registered types (`bounded(ctx, all.length)`); the walk and the `also` pass still stop between detects once `chars > limit`, naming `work.stopped_before` and `why`. Nothing else changed: no `pipeline.mjs`/`readtext.mjs` edit.
+
+**Met ids (BOB strikes the mark):** R40 (limit scaled by types; every type asked on an ordinary text; a runaway stops those after it, named). Also exercised and unchanged: R4, R5, R19, R38, R39.
+
+**Red first, then green.** Before the change: `round9.test.mjs` "R40 seven honest detects are all asked over a view, and a runaway first detect still stops those after it" was red (asked 5 of 11). My R40 tests in `docprofile/test/round9.test.mjs`: the shape test now asserts `limit === 4 * view * registered` over six shapes with every type asked; the new test asks seven honest detects (all asked, `stopped_before` null) and then replaces `r9_s1` with a runaway detect (stops before `r9_s2`, with the figures in `why`, in the main walk and the `also` pass). The six BOB named, `roster-reader/test/seam.test.mjs` "R1 R3 through docprofile's seam..." and the five R42 (G88) tests of `bio-plane/test/m/reading-pipeline/r7-classify-yield.test.mjs`, are green.
+
+**Tests run.** `docprofile/test/`: 73 tests, 73 pass. `doctypes/test/`, `roster-reader/test/`, the r7-classify-yield file: 110 tests, 110 pass. The two named heavy files (r7-classify-yield with roster-reader's seam): five runs, on one core (`taskset -c 0`), 6 pass 0 fail each. Users the impact tool lists (reading-pipeline, extraction, capture directories): 41 reds with my change, 53 without it on the tranche tip; none is new (the 12 that went green are the six above, each counted twice, plus N391's staff-directory test); the 41 remaining fail identically without my change and are not docprofile's (for example the G40/G41 held-read and PDF memory tests, G48 first-tick controls, G56 range tests). I did not chase them.
+
+**Checks (process repo):** format 0 failures (176 modules); architecture 0 failures; coverage 30 of 30 live requirement ids named; ownership 0 failures (3 files changed).
+
+**Deferred:** none. **Found in another module:** nothing new.
+
+Size (session_01PjjwjYeen8EHmXtzr7Hcr8): test runs 12, module lines 1421

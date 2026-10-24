@@ -1,0 +1,1 @@
+bogus key accepted too (unknown keys silently stripped)

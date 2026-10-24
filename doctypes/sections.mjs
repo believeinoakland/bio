@@ -23,7 +23,7 @@
  * means, in `standards` (R15). */
 import { vocabulary } from "../docprofile/doctypes/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
-import { lineIndex } from "./windows.mjs";
+import { lineIndex, spend } from "./windows.mjs";
 
 /* ---------------------------------------------------------------- the view's forms */
 
@@ -207,6 +207,7 @@ export function codeHeadingsIn(raw, ctx) {
   /* R37: the same reading as `codeHeadings`, a line at a time, so a large text is never split into a list of all its
      lines. */
   raw = String(raw || "");
+  spend(raw.length);
   const forms = codeForms(ctx);
   let count = 0, firstForm = null, lastPath = null, firstHeadAt = -1, firstLineAt = -1;
   for (let start = 0; ;) {
@@ -258,12 +259,33 @@ export function readSections(raw, form, ctx, locate) {
   return { sections, sections_why: null };
 }
 
-/** The deepest section whose extent holds `offset`, or null. */
+/** The deepest section whose extent holds `offset`, or null (found by looking through every section). */
 function holder(sections, offset) {
   let best = null;
   for (const s of sections)
     if (offset >= s.start && offset < s.end && (!best || s.path.length > best.path.length)) best = s;
   return best;
+}
+/** `holder` for many offsets over the same sections, in work that does not grow with the number of sections each time
+ *  (R40): sections nest, so the deepest one holding an offset is the nearest of the last section to start at or before it
+ *  and the sections that hold that one's start. Sections not in the order of their starts are looked through, as `holder`
+ *  does. */
+function holderOf(sections) {
+  const n = sections.length;
+  const parent = new Int32Array(n);
+  const open = [];
+  for (let i = 0; i < n; i++) {
+    if (i && sections[i].start < sections[i - 1].start) return (offset) => holder(sections, offset);
+    while (open.length && sections[open[open.length - 1]].end <= sections[i].start) open.pop();
+    parent[i] = open.length ? open[open.length - 1] : -1;
+    open.push(i);
+  }
+  return (offset) => {
+    let lo = 0, hi = n - 1, at = -1;
+    while (lo <= hi) { const mid = (lo + hi) >> 1; if (sections[mid].start <= offset) { at = mid; lo = mid + 1; } else hi = mid - 1; }
+    while (at >= 0 && !(offset < sections[at].end)) at = parent[at];
+    return at >= 0 ? sections[at] : null;
+  };
 }
 const unplacedWhy = (sections) => (sections.length
   ? localize("doctypes.sections.unplaced", "no section read from this text holds this passage (it stands before the first heading)")
@@ -283,14 +305,31 @@ const TERMS = new RegExp(`${Q_OPEN}([^"“”‘’'\\n]{1,120}?)${Q_CLOSE}`, "g
 /* A line that is only a list or subsection marker (`1.`, `(a)`, `ii.`). */
 const MARKER_LINE = /^\s*\(?[A-Za-z0-9]{1,4}[.)]\s*$/;
 
+/** The bounds of the line that holds `at`, found again only when `at` leaves the line last found (R40: many passages on
+ *  one long line do not each look for its ends). */
+function lineFinder(raw) {
+  let from = -1, to = -1;
+  return (at) => {
+    if (at < from || at > to) {
+      from = at > 0 ? raw.lastIndexOf("\n", at - 1) + 1 : 0;
+      const nl = raw.indexOf("\n", from);
+      to = nl < 0 ? raw.length : nl;
+    }
+    return [from, to];
+  };
+}
+
 /** Where a definitional passage ends: its paragraph's end, or, for a paragraph ending in a colon, past the list it
  *  introduces (marker lines and the paragraph after each). R38: read from the text a line at a time. */
-function passageEnd(raw, from) {
+function passageEnd(raw, from, lineOf) {
   if (from > raw.length) return raw.length;
   const lineEnd = (at) => { const nl = raw.indexOf("\n", at); return nl < 0 ? raw.length : nl; };
-  const lineStart = from > 0 ? raw.lastIndexOf("\n", from - 1) + 1 : 0;
-  let end = lineEnd(lineStart);
-  if (!/:\s*$/.test(raw.slice(lineStart, end))) return end;
+  const [lineStart, first] = lineOf(from);
+  let end = first;
+  /* A line ends in a colon when its last character that is not white space is one. */
+  let last = end;
+  while (last > lineStart && /\s/.test(raw[last - 1])) last--;
+  if (!(last > lineStart && raw[last - 1] === ":")) return end;
   let afterMarker = false;
   while (end < raw.length) {
     const next = lineEnd(end + 1);
@@ -302,22 +341,70 @@ function passageEnd(raw, from) {
   return end;
 }
 
+/* What a line must hold for either voice to match in it (R40): the verb that closes a definition, or the opener of the
+   "as used in this" form. A line without it is not run through the voice's pattern, whose chain of terms is read again
+   from each quote of a line that has none. */
+const DEFINES_GATE = /shall[ \t]+mean|shall[ \t]+include|means|includes|is[ \t]+defined[ \t]+as|refers[ \t]+to/;
+const AS_USED_GATE = /as[ \t]+used[ \t]+in[ \t]+this/i;
+
+/* A line longer than this is read around the places its gate matches and not whole (R40, B13): the chain of quoted terms
+   a definition names is read again from each quote of a line that has a verb far from them, so a line of tens of
+   thousands of quoted words with a verb at its end would be read once for each word. What is read is the stretch before
+   the verb in which a chain stands (`before` characters; a chain of more than that many characters of quoted terms
+   before its verb reads from its later terms) and the stretch after the opener of the "as used in this" form. */
+const LONG_LINE = 3000;
+
+/** Calls `fn(m)` for each match of the global pattern `re` in `raw`, `m.index` an offset in `raw`. A match of the
+ *  definitional voices never holds a line break, so the text is read a line at a time, and only the lines `gate` admits;
+ *  a long line only around the places the gate matches (`before` and `after` characters about each). */
+function eachLineMatch(raw, re, gate, fn, before = 1500, after = 80) {
+  const global = new RegExp(gate.source, gate.flags.includes("g") ? gate.flags : gate.flags + "g");
+  for (let at = 0; ;) {
+    const nl = raw.indexOf("\n", at);
+    const end = nl < 0 ? raw.length : nl;
+    if (end - at <= LONG_LINE) {
+      const line = raw.slice(at, end);
+      if (line && gate.test(line)) {
+        re.lastIndex = 0;
+        for (const m of line.matchAll(re)) { m.index += at; fn(m); }
+      }
+    } else {
+      const line = raw.slice(at, end);
+      let done = 0;
+      for (const g of line.matchAll(global)) {
+        const from = Math.max(done, g.index - before), to = Math.min(line.length, g.index + g[0].length + after);
+        if (to <= done) continue;
+        re.lastIndex = 0;
+        for (const m of line.slice(from, to).matchAll(re)) {
+          if (from + m.index < done) continue;
+          m.index += at + from; fn(m);
+          done = m.index - at + m[0].length;
+        }
+        done = Math.max(done, to);
+      }
+    }
+    if (nl < 0) return;
+    at = nl + 1;
+  }
+}
+
 /** Every passage defining a term (R13), in reading order: `{term, start, end, source,
  *  section}`, `end` the end of its paragraph or the start of the next definition in it. */
 export function readDefinitions(raw, sections, locate) {
+  spend(raw.length * 2);   // the two voices each read the text once
   const hits = [];
-  for (const re of [DEFINES, AS_USED]) {
-    re.lastIndex = 0;
-    for (const m of raw.matchAll(re)) {
+  for (const [re, gate, before, after] of [[DEFINES, DEFINES_GATE, 1500, 80], [AS_USED, AS_USED_GATE, 20, 500]]) {
+    eachLineMatch(raw, re, gate, (m) => {
       TERMS.lastIndex = 0;
       const tail = AS_USED === re ? m[0].slice(m[0].search(new RegExp(Q_OPEN + "[^" + "\"“”‘’'" + "]*" + Q_CLOSE + "$"))) : m[0];
       const base = m.index + m[0].length - tail.length;
       for (const t of tail.matchAll(TERMS)) hits.push({ start: base + t.index, at: m.index, term: t[1].trim() });
-    }
+    }, before, after);
   }
   hits.sort((a, b) => a.start - b.start);
+  /* The hits are in the order of their starts, so a start met twice is the last one kept. */
   const kept = [];
-  for (const h of hits) if (!kept.some((k) => k.start === h.start)) kept.push(h);
+  for (const h of hits) if (!kept.length || kept[kept.length - 1].start !== h.start) kept.push(h);
   /* A passage's terms share its extent: from its first term to its end. */
   const passages = [];
   for (const h of kept) {
@@ -325,10 +412,11 @@ export function readDefinitions(raw, sections, locate) {
     if (p && p.at === h.at) p.terms.push(h); else passages.push({ at: h.at, start: h.start, terms: [h] });
   }
   const out = [];
+  const holderAt = holderOf(sections), lineOf = lineFinder(raw);
   passages.forEach((p, i) => {
-    let end = passageEnd(raw, p.start);
+    let end = passageEnd(raw, p.start, lineOf);
     if (i + 1 < passages.length && passages[i + 1].start < end && passages[i + 1].start > p.start) end = passages[i + 1].start;
-    const s = holder(sections, p.start);
+    const s = holderAt(p.start);
     for (const t of p.terms) {
       const d = { term: t.term, start: t.start, end, source: locate(t.start) || null, section: s ? s.path : null };
       if (!s) d.why = unplacedWhy(sections);
@@ -346,37 +434,68 @@ const EXCEPTS = /\b(?:except[ \t]+as[ \t]+(?:otherwise[ \t]+)?(?:provided|set[ \
    abbreviations legal text cites by. */
 const ABBREV = /(?:\b(?:Sec|Secs|No|Nos|Gov|Govt|Ord|Res|Stat|Stats|Cal|Civ|Pen|Proc|Ch|Art|Subd|seq|al|etc|Inc|St|Code|U\.S|i\.e|e\.g|v|vs|Mr|Ms|Dr)|\b[A-Z])$/;
 
-function sentenceOf(raw, at, endAt) {
-  const lineStart = raw.lastIndexOf("\n", at - 1) + 1;
-  const lineEndRaw = raw.indexOf("\n", endAt);
-  const lineEnd = lineEndRaw < 0 ? raw.length : lineEndRaw;
-  let start = lineStart;
-  const before = raw.slice(lineStart, endAt);
-  const stopRe = /[.;](?=\s+["“(]?[A-Z])/g;
-  for (const m of before.matchAll(stopRe))
-    if (lineStart + m.index < at && !ABBREV.test(before.slice(0, m.index))) start = lineStart + m.index + 1;
-  while (start < at && /\s/.test(raw[start])) start++;
-  let end = lineEnd;
-  const after = raw.slice(endAt, lineEnd);
-  for (const m of after.matchAll(/[.;](?=\s|$)/g)) {
-    if (ABBREV.test(raw.slice(lineStart, endAt + m.index))) continue;
-    end = endAt + m.index + 1;
-    break;
-  }
-  return { start, end };
+const SPACE = /\s/;
+/** The sentence around each exceptive passage, one passage after another in the order of the text (R14): `(at, endAt)`
+ *  gives `{start, end}`. A sentence starts after the last stop before the passage on its line (a stop is a `.` or `;`
+ *  and white space and a capital, and not the end of an abbreviation) and ends at the first stop after it, or at the end
+ *  of the line. R40: the stops are met once, by a cursor along the line, and the end found for one passage is the end of
+ *  every passage before it, so a line of 40,000 passages is read once and not 40,000 times. */
+function sentenceReader(raw) {
+  let ls = -1, le = -1;                  // the line being read
+  let cursor = 0, stopStart = 0;         // stops met up to `cursor`; the start after the last of them
+  let tFrom = -1, tTo = -1, tEnd = -1;   // the last end found: for any passage ending in [tFrom, tTo] it is tEnd
+  const tail = (j) => ABBREV.test(raw.slice(Math.max(ls, j - 8), j));
+  return (at, endAt) => {
+    if (at < ls || at > le || at < cursor) {
+      ls = raw.lastIndexOf("\n", at - 1) + 1;
+      const nl = raw.indexOf("\n", endAt);
+      le = nl < 0 ? raw.length : nl;
+      cursor = ls; stopStart = ls; tFrom = -1;
+    }
+    for (let j = cursor; j < at; j++) {
+      const c = raw.charCodeAt(j);
+      if (c !== 46 && c !== 59) continue;
+      let k = j + 1;
+      if (!(k < raw.length && SPACE.test(raw[k]))) continue;
+      while (k < raw.length && SPACE.test(raw[k])) k++;
+      if (k < raw.length && "\"“(".includes(raw[k])) k++;
+      if (!(k < raw.length && raw.charCodeAt(k) >= 65 && raw.charCodeAt(k) <= 90)) continue;
+      if (tail(j)) continue;
+      stopStart = j + 1;
+    }
+    cursor = at;
+    let start = stopStart;
+    while (start < at && SPACE.test(raw[start])) start++;
+    if (!(tFrom >= 0 && endAt >= tFrom && endAt <= tTo)) {
+      let stop = le, end = le;
+      for (let i = endAt; i < le; i++) {
+        const c = raw.charCodeAt(i);
+        if (c !== 46 && c !== 59) continue;
+        if (!(i + 1 === le || SPACE.test(raw[i + 1]))) continue;
+        if (tail(i)) continue;
+        stop = i; end = i + 1;
+        break;
+      }
+      tFrom = endAt; tTo = stop; tEnd = end;
+    }
+    return { start, end: tEnd };
+  };
 }
 
 /** Every passage that excepts (R14), one per sentence, in reading order: `{start, end,
  *  source, section, cites}`, `cites` the section numbers it names in the view's forms, and
  *  for an instrument its own `Section n` references to its own sections. */
 export function readExceptions(raw, sections, form, ctx, locate) {
+  spend(raw.length);
   const forms = codeForms(ctx);
   const own = new Set(form === "instrument" ? sections.filter((s) => s.path.length === 1).map((s) => s.number) : []);
   const out = [];
+  const holderAt = holderOf(sections), sentenceOf = sentenceReader(raw), starts = new Set();
   EXCEPTS.lastIndex = 0;
   for (const m of raw.matchAll(EXCEPTS)) {
-    const { start, end } = sentenceOf(raw, m.index, m.index + m[0].length);
-    if (out.some((x) => x.start === start)) continue;
+    const { start, end } = sentenceOf(m.index, m.index + m[0].length);
+    if (starts.has(start)) continue;
+    starts.add(start);
     const text = raw.slice(start, end);
     const cites = [];
     const hits = [];
@@ -384,7 +503,7 @@ export function readExceptions(raw, sections, form, ctx, locate) {
     if (own.size) for (const c of text.matchAll(/\bSections?[ \t]+(\d{1,3})\b/g)) if (own.has(c[1])) hits.push({ at: c.index, n: c[1] });
     hits.sort((a, b) => a.at - b.at);
     for (const h of hits) if (!cites.includes(h.n)) cites.push(h.n);
-    const s = holder(sections, start);
+    const s = holderAt(start);
     const e = { start, end, source: locate(start) || null, section: s ? s.path : null, cites };
     if (!s) e.why = unplacedWhy(sections);
     out.push(e);

@@ -1,6 +1,6 @@
 # doctypes (T51)
 
-**Status** · session_01Gno8ZS6JAy2orDZ8uFsPJF · depth 2 · COMPLETE · handled B7
+**Status** · session_01TmVLRbU29kGrf79yMGm5rX · depth 2 · COMPLETE · handled B13
 
 ## J1 · REPORT
 
@@ -226,3 +226,67 @@ Size (session_01R1JrGsT5LqDnscK29WqKJU): test runs 12, module lines 3881
 **Deferred:** none. **Other modules:** none. **Row owed to the design:** none (no new sentence).
 
 Size (session_01Gno8ZS6JAy2orDZ8uFsPJF): test runs 9, module lines 3896
+
+## J12 · COMPLETE
+
+DOCTYPES #11 · START B10 (fix round 9: G140, G133 piece c) · R40 and R41 met.
+
+**Changed (all under doctypes/)**
+- `staff-directory.mjs`: addresses found from their `@` (`sdEmailAt`, `sdAddresses`), linear; the 400 KB `a-a-a-` case no longer scans per start. Bounds ENTRIES_MAX 10,000 distinct addresses and LINE_MAX 600 characters per entry `line` (both *proposed; BOB records*): past them the answer says so (`entries_cut`, `entries_limit`, `read_to`, `chars`, `entries_why`; `line_cut`, `line_length`), and detect reads the text to that point.
+- `sections.mjs`: `readDefinitions` (dedupe against the last kept, line-by-line gated matching, line cache; holder by nesting `holderOf`), `readExceptions` (`sentenceReader`: stops met once by a cursor, ends cached, no slice of the line per passage).
+- `windows.mjs`: `counted`/`spend` (the ctx.work count), `rawMergedHits` (raw-text windows), `referenceBook` (REFERENCES_MAX 20,000, SIGHTINGS_MAX 50,000, proposed; BOB records; past them `references_cut`, `references_skipped`, `references_why`).
+- `staff-report.mjs`, `regulation.mjs`: citations read through `rawMergedHits` and `referenceBook`; counted.
+- `meeting-calendar.mjs`: window from/to by a loop, never `Math.min(...dates)` (R41); `insideMain` and `rowsOf` replace two unbounded regexes (a page of unclosed `<tr>` took 4.4 s at 200 KB, now ms).
+- `meeting-minutes.mjs`, `meeting-agenda.mjs`, `policy.mjs`: counted only.
+
+**Failing-first** (`doctypes/test/g140.test.mjs`, 18 tests; `g140-child.mjs`, `r40-texts.mjs`, `make-r40-answers.mjs`, `fixtures/r40-answers.json` taken from the tranche tip): on the tip, 12 of 18 fail (a-a-a- 101 s; one line of 16,000 addresses and the 17 MB CSV die at base+16 MB; 80,000 definitions 25 s; exceptions 7 s; quoted words with no verb 13 s; 400,000 citations die at base+16 MB, both types; the ctx.work count absent; 150,000 dates throws). Now 18 of 18 pass. The 6 that pass on the tip are controls (small cases, answers equal the tip's, the real-entry-path definitions read).
+
+**Measurements** (mine, this container): a-a-a- 400 KB 3 s at 100 KB before, 0 ms after; 16,000 addresses on one line out of memory before, 86 ms; 17 MB CSV +240 MB before, 32 ms and under 16 MB; 40,000 definitions 1790 ms to 65 ms; 40,000 exceptions 8683 ms to 157 ms; 400,000 citations +370 MB to under 16 MB retained; 150,000 dates RangeError to 64 ms. A seeded differential of the old and the new sections code over 12,000 text/form pairs was equal (not kept: the old code is the tip).
+
+**Suites and checks**
+- `node --test --test-force-exit doctypes/test/`: 78 tests (60 + 18 new), 0 fail.
+- impact users (reading-pipeline, extraction, reading-guides, roster-reader, pdf-worker, agent-worker, content, calculations, retrieval-browse; 75 files): tests 571, pass 571, fail 0.
+- format 0 failures (176 modules); architecture 0 (52 files, 142 imports); coverage 41 of 41 ids, 0 failures; ownership 0 failures (15 files); words: 0 findings in doctypes. `setup-words/build.mjs --check`: stale rows only (expected).
+
+**Words owed (stand-ins, K3930):** `doctypes.staff-directory.addresses_cut`, `doctypes.staff-directory.entries_cut`, `doctypes.windows.references_cut`.
+
+**Proposed requirement lines (BOB writes them):** R40: add that a detect or parse over a text past ENTRIES_MAX distinct addresses, REFERENCES_MAX references or SIGHTINGS_MAX repeat sightings states what it did not keep; the three figures and LINE_MAX are Bob's to confirm (K1881). R37's "not yet met" notes can be removed.
+
+**Deferred, with the smallest thing needed:** the *policy* type's parse is still quadratic on shapes no policy has (200 KB: `readOutline` on one long line 6-16 s from `TOC_LINE`'s second alternative; `readHeader` on 200,000 empty lines 29 s). Not in G140 or G133c. Needed: BOB's word to add it to an entry (policy-header.mjs and policy.mjs); the g140 work-count test skips policy parse on those shapes for that reason. Also: `DEFINES` on a line that holds a verb and a very long chain of quoted words is still quadratic within that one line (lines without a verb are skipped).
+
+**Other modules:** none found. Generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` (it bundles the doctypes); BOB regenerates at the round end.
+
+Size (session_01TmVLRbU29kGrf79yMGm5rX): test runs 14, module lines 4193
+
+## J13 · REPORT
+
+Finding in other modules, from B11's work (docprofile's work budget, R40, with doctypes' detects charging it).
+
+docprofile's budget lets the types be asked only until the detects together have examined 4 times the view. Every doctypes detect reads the window it is handed at least once, so the budget is spent after the fifth type: `calendar, minutes, agenda, staff_report, regulation` are asked, and `policy` and `staff_directory` are asked on NO text, whatever its size (BUDGET-2024-APP: "the types examined 7206990 characters, over the 5765592 allowed, so the policy content type and those after it were not asked"). I charge a detect the window once however many passes it makes (the lowest honest charge; a pass-by-pass charge stops the pass after the third type, and a 290 KB ordinance then reads as `generic`).
+
+Consequences seen with the real types (not doctypes' tests; they are other modules'):
+- `roster-reader/test/seam.test.mjs:14` ("R1 R3 through docprofile's seam: ... readText recognises and reads the measured documents") fails: staff directories are not asked.
+- `bio-plane/test/m/reading-pipeline/r7-classify-yield.test.mjs` (five R42 tests: "6 detects: every registered type is asked") fail for the same reason.
+Both pass on the tranche tip. Six other tests in the impact set (agent-worker/requirements, extraction g41 R97 ods, reading-pipeline convert-chain/pieces/staffdirectory/transcribe) fail on the tip too and are not from this job.
+
+The smallest thing that settles it is docprofile's: `CLASSIFY_WORK_FACTOR` at 8 or more (one window per type asked), or a budget per type; nothing doctypes can change makes seven honest detects fit in four windows. I have not changed my charge to hide it.
+
+Also: `node checks/format.mjs` has one failure not in doctypes (`build/modules.json`: office-readers `paths` entry bio-plane/src/office-xml.mjs names no file).
+
+## J14 · COMPLETE
+
+DOCTYPES #11 · B11, B12, B13 handled (a second COMPLETE; J12 is the first).
+
+**B13 (1) the policy parse and header, red first then green.** Shapes at 200 KB measured on the tip: `readOutline` on one long line 5.6-15.5 s (`TOC_LINE`'s second alternative backtracks; now `isTocLine` in policy.mjs, equal to the regex on 200,000 seeded strings, 54,649 of them true); `readHeader` on 200,000 empty lines 29 s (a label pattern `^\s*...` read on through every blank line from each; now the first label is looked for in the first HEADER_SCAN = 16 KiB when no series anchors one, and a header block runs no further than HEADER_BLOCK = 64 KiB past its anchor, `block_cut: true` when cut; a longer text with no label in the window says so in its `why`); `DEFINES` on a line of quoted words with a verb at its end (quadratic): a line over 3,000 characters is now read around the places its verb stands (1,500 characters before it), the line stated in a comment as the one bound; lines under 3,000 are read as before. g140.test.mjs's work-count test no longer skips policy parse and now runs the shapes `outline`, `capsEndingInNumbers`, `chain` and `header` besides the old ones, 5 s per call at 60 KB; the answers on the r40 texts and every fixture are unchanged (78 of 78 module tests).
+**(2)** The four caps now cite K4868 in their comments (ENTRIES_MAX 10,000, LINE_MAX 600, REFERENCES_MAX 20,000, SIGHTINGS_MAX 50,000); HEADER_SCAN and HEADER_BLOCK are two more of the same kind, protective, mine; BOB to confirm.
+**(3)** tranche/T51 merged; suite and users rerun; checks below.
+
+**B11.** Detects are charged: `counted()` (windows.mjs) charges a detect the window once (`min(passes, ctx.text.length)`) into the shared `ctx.work`, a parse every pass it makes into the `ctx.work` it is given; nothing without one. Re-recorded in bounded.test.mjs: BUDGET-2025-BUD chars 3800 to 3235, BUDGET-2025-PER 21326 to 17408 (glyph counts), BUDGET-2024-APP chars 12319700 and now `regulation`, certain, over the view (signals digest 314659c0..., parsed digest af29de98...), memory under base+16 MB (that test no longer skips). Regulation's floors over a view: `regulation.detect` holds no rate floor, only counts (`recitals >= 2`, `heads.count >= 2`) that a view of 1.4 MB of a 13.6 MB text meets or does not as a whole text would not guarantee, and the verdict on APP is certain by the instrument caption and two code headings; I judge no scaling by `window.of` is needed and made none. The full REPORT on the budget (policy and staff_directory never asked) is J13.
+
+**Suites and checks:** doctypes 78 of 78. Impact users (75 files): 571 tests, 559 pass, 12 fail; on the tranche tip, the same files fail 6 (inherited); the other 6 are the budget finding in J13 (roster-reader seam, five R42 tests in reading-pipeline), none a doctypes test. Process checks: architecture 0 failures; coverage 41 of 41; ownership 0 (17 files); words 0 in doctypes; format 1 failure outside doctypes (office-readers path, in J13). setup-words build --check: stale rows only.
+
+**Words owed, unchanged:** `doctypes.staff-directory.addresses_cut`, `doctypes.staff-directory.entries_cut`, `doctypes.windows.references_cut`; new: `doctypes.policy-header.no_block_window`.
+
+**Deferred:** none in doctypes. Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs`.
+
+Size (session_01TmVLRbU29kGrf79yMGm5rX): test runs 22, module lines 4262

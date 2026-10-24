@@ -118,13 +118,21 @@
 
 import { linkWrapper } from "./subresources.mjs";
 import {
-  hasZipMagic, readContainer, readPart, normalizePartName,
+  hasZipMagic, readContainer, normalizePartName,
   discriminate, walkRels, relsPartFor, textPlan, MEASURED_OOXML_TEXT_BOUND_BYTES,
   CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
 } from "./ooxml.mjs";
 import { mceSkipper, withMetadata, activeContent, withActive, detectByContentType } from "./docx.mjs";
+import { boundOf } from "./read-bounds.mjs";
+import {
+  Scanner, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, collectElements, TAG_MAX, memberIdentities,
+} from "./office-xml.mjs";
 
-const UTF8 = new TextDecoder("utf-8", { fatal: false });
+/* R44: what the walk may retain, paragraphs, cells and links together (the table's figure, never a literal here). */
+const OFFICE_RETAINED_MAX = boundOf("office", "retained_objects");
+/* R44: the decoded characters a walk may hold at once (the table's row). */
+const OFFICE_DECODED_CHARS_MAX = boundOf("office", "decoded_chars");
+const stripOk = ({ ok, ...rest }) => rest;
 
 /* Bytes as a Uint8Array, an ArrayBuffer, any typed-array view or an array of
  * byte values; anything else reads as no bytes, so a wrong argument is a
@@ -151,6 +159,7 @@ const MAIN_PART = "ppt/presentation.xml";
 const EMBEDDINGS_DIR = "ppt/embeddings/";
 const SLIDE_PART_RE = /^ppt\/slides\/[^/]+\.xml$/;
 const NOTES_PART_RE = /^ppt\/notesSlides\/[^/]+\.xml$/;
+const MASTER_PART_RE = /^ppt\/(slideMasters|slideLayouts)\/[^/]+\.xml$/;
 
 /* ------------------------------------------------------------------ *
  * The IC-1 element reference
@@ -166,36 +175,7 @@ export function slideShapeRef(slide, shape = null) {
   return ref;
 }
 
-/* ------------------------------------------------------------------ *
- * Minimal XML plumbing (local: ooxml.mjs's helpers are private, and the
- * slide walk needs shape-sequence tracking its flat matchers avoid —
- * the same duplication docx.mjs recorded for the same reason)
- * ------------------------------------------------------------------ */
-
-function decodeEntities(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
-    if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      /* Past U+10FFFF fromCodePoint THROWS; such a reference is not a
-       * character, so it stays as written (R21). */
-      return Number.isFinite(code) && code <= 0x10ffff ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
-  });
-}
-
-/* Attributes by LOCAL name (prefix-agnostic, entity-decoded). */
-function attrsOf(raw) {
-  const attrs = {};
-  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeEntities(a[3] ?? a[4] ?? "");
-  }
-  return attrs;
-}
-
-const TOKEN_RE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
-const localOf = (name) => (name.includes(":") ? name.split(":").pop() : name);
+const attrsOf = parseAttrs;
 
 /* The DrawingML shape elements whose opens advance the 0-based shape index —
  * <p:spTree> children and their nested kin, one sequence per slide. */
@@ -211,47 +191,36 @@ const SHAPE_TAGS = new Set(["sp", "pic", "graphicFrame", "cxnSp", "grpSp"]);
  * absent attribute means shown — never guessed. */
 const declaresNotShown = (v) => v === "0" || v === "false";
 
-/* The slide part's root open tag — `sld` must be followed by whitespace,
- * `/` or `>` so sldId/sldLayoutId never match. */
-const SLD_ROOT_RE = /<(?:[\w.-]+:)?sld(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/;
-const SHOW_ATTR_RE = /(?:^|\s)(?:[\w.-]+:)?show\s*=\s*(?:"([^"]*)"|'([^']*)')/;
-
-const showAttrOf = (rawAttrs) => {
-  const m = (rawAttrs || "").match(SHOW_ATTR_RE);
-  return m ? (m[1] ?? m[2]) : null;
-};
+/* The slide part's root `show` flag (ECMA-376's CT_Slide@show on the part's <p:sld> root), read from the head of the
+   part only: the scan stops at the root tag. */
+function rootShow(xml) {
+  let show = null;
+  const h = { stopped: false, text() {}, cdata() {}, close() {},
+    open(name, raw) { if (name === "sld") { show = parseAttrs(raw).show ?? null; h.stopped = true; } } };
+  scanSync(new Scanner(h), xml.length > TAG_MAX + 4096 ? xml.slice(0, TAG_MAX + 4096) : xml);
+  return show;
+}
 
 /* ------------------------------------------------------------------ *
- * The slide walk — ONE pass over a slide (or notesSlide) part collecting
+ * The slide walk — ONE pass over a slide (or notesSlide, or master or layout) part collecting
  * everything structure(), text() and the envelope need, in document order
  * ------------------------------------------------------------------ */
 
-/** Walk a PresentationML slide or notesSlide part. Returns
- *  { paragraphs:[string...], text, shapes:<int>,
- *    hlinks:[{rid,shape}], ridUsage:Map(rid -> shape|null) }.
- *
- *  Text: `<a:t>` runs concatenated per `<a:p>` paragraph; `<a:br>` is a
- *  newline within its paragraph; `text` is the non-empty paragraphs
- *  newline-joined. An `<a:fld>`'s cached literal is included — it IS in the
- *  bytes. Shape index: every SHAPE_TAGS open, 0-based, in document order
- *  (nested group members included) — one sequence per slide, so a shape
- *  index means the same thing to every reference into that slide.
- *
- *  N439 (R11's pptx arm; K747, K863): in each `mc:AlternateContent` ONE
- *  branch is read — the first `mc:Choice`, else the `mc:Fallback` — by the
- *  same `mceSkipper` docx.mjs reads with (PowerPoint wraps p14/a14 graphic
- *  frames, math and ink this way, the Fallback a picture of the Choice). A
- *  branch not read adds no paragraph, text, shape index or hlink. Before
- *  N439 both were walked: the text doubled and every later shape index on
- *  the slide was off by the fallback's shapes (`pptxRenumbering` maps the
- *  old numbers). A relationship used only inside a branch not read still
- *  locates its part, at the shape that HOLDS the `mc:AlternateContent`
- *  (null at the slide's top level) — where the branch sits, never a shape
- *  the branch was not in. */
-export function walkSlide(xml) {
+/** What a deck's walks retain, paragraphs, cells and links, and the characters they hold (R44): one meter for the
+ *  deck. `exceeded` is the first bound the walks went past. */
+function createMeter({ retainedMax = OFFICE_RETAINED_MAX, charsMax = OFFICE_DECODED_CHARS_MAX } = {}) {
+  const m = { objects: 0, chars: 0, exceeded: null, retainedMax, charsMax };
+  m.count = () => { if (++m.objects > retainedMax && !m.exceeded) m.exceeded = { why: "TOO_MANY_OBJECTS", n: m.objects, bound: retainedMax, final: true }; };
+  m.add = (n) => { m.chars += n; if (m.chars > charsMax && !m.exceeded) m.exceeded = { why: "TOO_MANY_CHARACTERS", n: m.chars, bound: charsMax, final: true }; };
+  return m;
+}
+
+function slideHandler(meter) {
   const paragraphs = [];
   const hlinks = [];
   const ridUsage = new Map();
+  const pics = [];
+  const boxText = new Map(); // shape index -> its paragraphs, for the shapes that are text boxes
   let shape = -1;
   const open = [];      // the shapes open here, innermost last
   let cur = null;       // current <a:p> text, when inside one
@@ -265,55 +234,99 @@ export function walkSlide(xml) {
     }
   };
   const skipped = mceSkipper();
-
-  TOKEN_RE.lastIndex = 0;
-  let m, prev = 0;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    if (inText && cur != null && m.index > prev) cur += decodeEntities(xml.slice(prev, m.index));
-    prev = TOKEN_RE.lastIndex;
-    if (m[1] === undefined) continue; // comment / CDATA / PI
-    const name = localOf(m[1]);
-    const selfClosed = m[3] === "/";
-    const closing = m[0][1] === "/";
-
-    if (skipped(name, closing, selfClosed)) {
-      if (!closing && m[2] && m[2].includes("=")) noteRid(attrsOf(m[2]), open.length ? open[open.length - 1] : null);
-      continue;
-    }
-
-    if (closing) {
+  const add = (d) => { if (inText && cur != null) { cur += d; meter.add(d.length); } };
+  const handler = {
+    stopped: false,
+    text(s) { add(unescape(s)); },
+    cdata(s) { add(s); },
+    close(name) {
+      if (skipped(name, true, false)) return;
       if (name === "t") inText = false;
-      else if (name === "p") { if (cur != null) { paragraphs.push(cur); cur = null; } }
+      else if (name === "p") {
+        if (cur != null) {
+          paragraphs.push(cur);
+          const top = open.length ? open[open.length - 1] : null;
+          if (top != null && boxText.has(top)) boxText.get(top).push(cur);
+          cur = null;
+        }
+      }
       else if (SHAPE_TAGS.has(name)) open.pop();
-      continue;
-    }
-
-    if (SHAPE_TAGS.has(name)) { shape++; if (!selfClosed) open.push(shape); }
-    const attrs = m[2] && m[2].includes("=") ? attrsOf(m[2]) : {};
-    switch (name) {
-      case "p":
-        if (!selfClosed) cur = "";
-        break;
-      case "t":
-        if (!selfClosed) inText = true;
-        break;
-      case "br":
-        if (cur != null) cur += "\n";
-        break;
-      case "hlinkClick":
-        noteRid(attrs);
-        /* Any non-empty r:id is a relationship id (xsd:ID; the `rId` prefix
-         * is a producer's habit, not the format's rule). An empty one is an
-         * action (next slide, end show) and names no relationship. */
-        if (attrs.id) hlinks.push({ rid: attrs.id, shape: shape >= 0 ? shape : null });
-        break;
-      default:
-        noteRid(attrs);
-    }
-  }
-  const text = paragraphs.filter((t) => t.length).join("\n");
-  return { paragraphs, text, shapes: shape + 1, hlinks, ridUsage };
+    },
+    open(name, raw, selfClosed) {
+      /* N439: a relationship used only inside a branch not read still locates its part, at the shape that HOLDS the
+         `mc:AlternateContent` (null at the slide's top level) — where the branch sits. */
+      if (skipped(name, false, selfClosed)) {
+        if (raw && raw.includes("=")) noteRid(attrsOf(raw), open.length ? open[open.length - 1] : null);
+        return;
+      }
+      if (SHAPE_TAGS.has(name)) {
+        shape++;
+        if (!selfClosed) open.push(shape);
+        if (name === "pic") pics.push(shape);
+      }
+      const attrs = raw && raw.includes("=") ? attrsOf(raw) : {};
+      switch (name) {
+        case "p":
+          meter.count();
+          if (!selfClosed) cur = "";
+          break;
+        case "tc":
+          meter.count();
+          break;
+        case "t":
+          if (!selfClosed) inText = true;
+          break;
+        case "br":
+          if (cur != null) cur += "\n";
+          break;
+        case "cNvSpPr":
+          if ((attrs.txBox === "1" || attrs.txBox === "true") && open.length) boxText.set(open[open.length - 1], []);
+          break;
+        case "hlinkClick":
+          meter.count();
+          noteRid(attrs);
+          /* Any non-empty r:id is a relationship id (xsd:ID; the `rId` prefix
+           * is a producer's habit, not the format's rule). An empty one is an
+           * action (next slide, end show) and names no relationship. */
+          if (attrs.id) hlinks.push({ rid: attrs.id, shape: shape >= 0 ? shape : null });
+          break;
+        default:
+          noteRid(attrs);
+      }
+      if (meter.exceeded) handler.stopped = true;
+    },
+  };
+  const result = () => {
+    const text = paragraphs.filter((t) => t.length).join("\n");
+    return { paragraphs, text, shapes: shape + 1, hlinks, ridUsage, pics,
+      boxes: [...boxText].map(([s, ps]) => ({ shape: s, text: ps.filter((t) => t.length).join("\n") })) };
+  };
+  return { handler, result };
 }
+
+/** Walk a PresentationML slide, notesSlide, master or layout part held as a string. Answers
+ *  `{ok:true, paragraphs:[string...], text, shapes:<int>, hlinks:[{rid,shape}], ridUsage:Map(rid -> shape|null), pics,
+ *  boxes:[{shape,text}], scanner}`, or `{ok:false, why:"char_ref_invalid", final:true}` for a part holding a character
+ *  reference that names no character (R40).
+ *
+ *  Text: `<a:t>` runs concatenated per `<a:p>` paragraph (CDATA included, R41); `<a:br>` is a
+ *  newline within its paragraph; `text` is the non-empty paragraphs
+ *  newline-joined. An `<a:fld>`'s cached literal is included — it IS in the
+ *  bytes. Shape index: every SHAPE_TAGS open, 0-based, in document order
+ *  (nested group members included) — one sequence per slide, so a shape
+ *  index means the same thing to every reference into that slide.
+ *
+ *  N439 (R11's pptx arm; K747, K863): in each `mc:AlternateContent` ONE
+ *  branch is read — the first `mc:Choice`, else the `mc:Fallback` — by the
+ *  same `mceSkipper` docx.mjs reads with. A branch not read adds no paragraph, text, shape index or hlink. */
+async function walkSlide(xml, meter, yieldNow) {
+  const w = slideHandler(meter);
+  const sc = new Scanner(w.handler);
+  await scanWhole(sc, xml, yieldNow);
+  if (sc.badRef) return { ok: false, why: "char_ref_invalid", final: true };
+  return { ok: true, ...w.result(), scanner: sc };
+}
+
 
 /* ------------------------------------------------------------------ *
  * Link classification — the same partition rule pdfstructure and docx
@@ -342,14 +355,6 @@ function undeterminedRecord(source, why, extra = {}) {
   return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
 }
 
-const HEX = "0123456789abcdef";
-async function sha256Hex(u8) {
-  const d = await crypto.subtle.digest("SHA-256", u8);
-  const b = new Uint8Array(d);
-  let out = "";
-  for (let i = 0; i < b.length; i++) out += HEX[b[i] >> 4] + HEX[b[i] & 15];
-  return out;
-}
 
 /* Resolve a rels Target against the source part's directory ("slide3.xml"
  * relative to "ppt/slides/" -> "ppt/slides/slide3.xml"; a leading "/" is
@@ -402,22 +407,25 @@ async function pptxParts(bytes) {
   if (!container.ok) return { ok: false, why: container.why, signals: d.signals };
 
   const undetermined = [];
+  const partials = [];
   const mainPart = normalizePartName(d.mainPart || MAIN_PART);
 
   /* The inventories, central-directory order. */
   const slideParts = [];
   const notesParts = [];
+  const masterParts = [];
   for (const e of container.entries) {
     const n = normalizePartName(e.name);
     if (SLIDE_PART_RE.test(n)) slideParts.push(n);
     else if (NOTES_PART_RE.test(n)) notesParts.push(n);
+    else if (MASTER_PART_RE.test(n)) masterParts.push(n);
   }
 
   /* The COFF-6 metric: DECLARED UNCOMPRESSED bytes of the text parts we would
-   * inflate (slides + speaker notes), summed from the central directory
+   * inflate (slides, speaker notes, masters and layouts), summed from the central directory
    * BEFORE any inflation. */
   let declaredTextBytes = 0;
-  for (const n of [...slideParts, ...notesParts]) {
+  for (const n of [...slideParts, ...notesParts, ...masterParts]) {
     const e = container.byName.get(n);
     if (e) declaredTextBytes += e.uncompressedSize;
   }
@@ -430,9 +438,9 @@ async function pptxParts(bytes) {
   /* ppt/presentation.xml is STRUCTURAL (the deck-order declaration), tiny,
    * and read regardless of the text guard — as docx reads rels over-bound. */
   let presentationXml = null;
-  const main = await readPart(b, container, mainPart);
-  if (main.ok) presentationXml = UTF8.decode(main.bytes);
-  else undetermined.push({ part: mainPart, why: main.why });
+  const main = await readText(b, container, mainPart);
+  if (main.ok) { presentationXml = main.text; if (main.partial) partials.push(main.partial); }
+  else undetermined.push({ part: mainPart, ...stripOk(main) });
 
   /* Deck order: <p:sldIdLst>'s sldId sequence, each resolved through the
    * presentation part's .rels. The r:id is the PREFIXED :id attribute —
@@ -442,16 +450,18 @@ async function pptxParts(bytes) {
   if (presentationXml != null) {
     const presRelsPart = relsPartFor(mainPart);
     const presRels = rels.byPart.find((p) => p.part === presRelsPart);
-    if (!presRels) {
+    const listed = collectElements(presentationXml, ["sldId"]);
+    if (listed.badRef) {
+      undetermined.push({ part: mainPart, why: "char_ref_invalid", final: true });
+    } else if (!presRels) {
       const stated = rels.undetermined.find((u) => u.part === presRelsPart);
       undetermined.push({ part: presRelsPart, why: stated?.why ?? "part_absent" });
     } else {
       const byId = new Map(presRels.relationships.map((r) => [r.id, r]));
       order = [];
-      const sldIdRe = /<(?:[\w.-]+:)?sldId\b((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/g;
-      for (const m of presentationXml.matchAll(sldIdRe)) {
-        const rid = m[1].match(/[\w.-]+:id\s*=\s*(?:"([^"]*)"|'([^']*)')/);
-        const id = rid ? (rid[1] ?? rid[2]) : null;
+      for (const el of listed.elements) {
+        const key = Object.keys(el.attrs).find((k) => k.includes(":") && k.endsWith(":id"));
+        const id = key ? el.attrs[key] : null;
         const rel = id != null ? byId.get(id) : null;
         if (!rel || rel.external || !rel.target) {
           order.push(null); // the slot counts; the slide it named is unresolvable
@@ -462,7 +472,7 @@ async function pptxParts(bytes) {
         order.push(resolved);
         /* The queue-item location: show="0" carried on the sldIdLst entry
          * itself, honored when the bytes carry it there. */
-        if (declaresNotShown(showAttrOf(m[1]))) hiddenParts.add(resolved);
+        if (declaresNotShown(el.attrs.show)) hiddenParts.add(resolved);
       }
     }
   }
@@ -473,26 +483,25 @@ async function pptxParts(bytes) {
    * stated now, with its size. */
   const slideXml = new Map();
   const notesXml = new Map();
+  const masterXml = new Map();
   const readHere = async (n, into, root) => {
     const e = container.byName.get(n);
     if (plan.read === "pieces" && e && e.uncompressedSize > MEASURED_OOXML_TEXT_BOUND_BYTES) {
       undetermined.push({ part: n, why: "over_size_bound", size: e.uncompressedSize, final: true });
       return;
     }
-    const r = await readPart(b, container, n);
-    if (!r.ok) { undetermined.push({ part: n, why: r.why }); return; }
-    const xml = UTF8.decode(r.bytes);
-    if (plan.read === "whole") into.set(n, xml);
-    if (root) {
-      /* ECMA-376's location: CT_Slide@show on the part's <p:sld> root —
-       * where PowerPoint's "Hide Slide" writes it. */
-      const m = xml.match(SLD_ROOT_RE);
-      if (m && declaresNotShown(showAttrOf(m[1]))) hiddenParts.add(n);
-    }
+    const r = await readText(b, container, n);
+    if (!r.ok) { undetermined.push({ part: n, ...stripOk(r) }); return; }
+    if (r.partial) partials.push(r.partial);
+    if (plan.read === "whole") into.set(n, r.text);
+    if (root && declaresNotShown(rootShow(r.text))) hiddenParts.add(n);
   };
   if (plan.read !== "none") {
     for (const n of slideParts) await readHere(n, slideXml, true);
-    if (plan.read === "whole") for (const n of notesParts) await readHere(n, notesXml, false);
+    if (plan.read === "whole") {
+      for (const n of notesParts) await readHere(n, notesXml, false);
+      for (const n of masterParts) await readHere(n, masterXml, false);
+    }
   }
 
   /* slide -> its notesSlide, through each slide's own .rels (the declaration
@@ -522,8 +531,8 @@ async function pptxParts(bytes) {
 
   return {
     ok: true, format: "pptx", variant: d.variant ?? null, bytes: b, container, mainPart, presentationXml,
-    order, slideParts, notesParts, slideXml, notesXml, notesOf, hiddenParts,
-    rels, core, active, guard, piecewise, stream: plan.read === "pieces", undetermined,
+    order, slideParts, notesParts, masterParts, slideXml, notesXml, masterXml, notesOf, hiddenParts,
+    rels, core, active, guard, piecewise, stream: plan.read === "pieces", partials, undetermined,
   };
 }
 
@@ -570,15 +579,15 @@ export function pptxRenumbering(parts) {
     const skipped = mceSkipper();
     const shapes = [];
     let now = 0;
-    TOKEN_RE.lastIndex = 0;
-    let m;
-    while ((m = TOKEN_RE.exec(xml)) !== null) {
-      if (m[1] === undefined) continue;
-      const name = localOf(m[1]);
-      const closing = m[0][1] === "/";
-      const skip = skipped(name, closing, m[3] === "/");
-      if (!closing && SHAPE_TAGS.has(name)) shapes.push({ old: shapes.length, new: skip ? null : now++ });
-    }
+    scanSync(new Scanner({
+      text() {},
+      cdata() {},
+      close(name) { skipped(name, true, false); },
+      open(name, raw, self) {
+        const skip = skipped(name, false, self);
+        if (SHAPE_TAGS.has(name)) shapes.push({ old: shapes.length, new: skip ? null : now++ });
+      },
+    }), xml);
     slides.push({ slide, shapes });
   }
   return { slides };
@@ -603,18 +612,21 @@ async function partXml(parts, part, held) {
   if (e && e.uncompressedSize > MEASURED_OOXML_TEXT_BOUND_BYTES) {
     return { why: "over_size_bound", size: e.uncompressedSize, final: true };
   }
-  const r = await readPart(parts.bytes, parts.container, part);
-  return r.ok ? { xml: UTF8.decode(r.bytes) } : { why: r.why };
+  const r = await readText(parts.bytes, parts.container, part);
+  return r.ok ? { xml: r.text, ...(r.partial ? { partial: r.partial } : {}) }
+    : { why: r.why, ...(r.final ? { final: true } : {}), ...(r.size != null ? { size: r.size } : {}) };
 }
 
 /* ------------------------------------------------------------------ *
  * structure() — I2 links + the evidentiary envelope (I7 slot 3)
  * ------------------------------------------------------------------ */
 
-async function pptxStructure(parts) {
+async function pptxStructure(parts, opts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
   }
+  const yieldNow = opts?.yieldNow;
+  const meter = createMeter();
   const notes = [];
   const links = [];
   const deck = deckOf(parts);
@@ -641,7 +653,10 @@ async function pptxStructure(parts) {
   for (const { part } of deck) {
     const got = await partXml(parts, part, parts.slideXml);
     if (got.xml == null) { unreadNow(part, got); continue; }
-    const w = walkSlide(got.xml);
+    if (got.partial) evUndeterminedNow.push(got.partial);
+    const w = await walkSlide(got.xml, meter, yieldNow);
+    if (!w.ok) { evUndeterminedNow.push({ part, why: w.why, final: true }); continue; }
+    if (meter.exceeded) break;
     walks.set(part, { hlinks: w.hlinks, ridUsage: w.ridUsage });
   }
   const relsPartToSlide = new Map();
@@ -726,9 +741,13 @@ async function pptxStructure(parts) {
         embeddingRefs.set(resolved, { slidePart, rid: r.id });
     }
   }
+  const embedded = [];
   for (const entry of parts.container.entries) {
     const name = normalizePartName(entry.name);
-    if (!name.startsWith(EMBEDDINGS_DIR) || name === EMBEDDINGS_DIR) continue;
+    if (name.startsWith(EMBEDDINGS_DIR) && name !== EMBEDDINGS_DIR) embedded.push(name);
+  }
+  const identities = await memberIdentities(parts.bytes, embedded);
+  for (const name of embedded) {
     const refd = embeddingRefs.get(name) ?? null;
     let source = null;
     if (refd && refd.slidePart) {
@@ -739,16 +758,17 @@ async function pptxStructure(parts) {
         source = slideShapeRef(slideNo, shape);
       }
     }
-    const read = await readPart(parts.bytes, parts.container, name);
-    if (!read.ok) {
-      links.push(undeterminedRecord(source, "embedded_part_unreadable", { part: name, detail: read.why }));
+    /* R43: the identity is taken as the member streams, never from the member held whole. */
+    const read = identities.get(name);
+    if (!read?.ok) {
+      links.push(undeterminedRecord(source, "embedded_part_unreadable", { part: name, detail: read?.why ?? "unreadable",
+        ...(read?.limit != null ? { limit: read.limit } : {}) }));
       continue;
     }
-    const sha = await sha256Hex(read.bytes);
     links.push({
       partition: "intra",
-      wrapper: linkWrapper.intra(sha),
-      target: { sha256: sha, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.bytes.length },
+      wrapper: linkWrapper.intra(read.sha256),
+      target: { sha256: read.sha256, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.size },
       source,
     });
   }
@@ -758,7 +778,8 @@ async function pptxStructure(parts) {
 
   /* ---- the evidentiary envelope (DEC-5; IC-2 CONFIRMED, no variant) ---- */
   const items = [];
-  const evUndetermined = [...parts.undetermined, ...evUndeterminedNow];
+  const evUndetermined = [...parts.undetermined, ...parts.partials, ...evUndeterminedNow];
+  if (meter.exceeded) evUndetermined.push({ part: GUARDED_PARTS, ...meter.exceeded });
   if (parts.guard) evUndetermined.push({ part: GUARDED_PARTS, why: "over_size_bound", guard: parts.guard });
   if (parts.piecewise) notes.push("text_read_in_pieces");
 
@@ -795,11 +816,13 @@ async function pptxStructure(parts) {
         evUndetermined.push({ part: notesPart, why: got.why, ...(got.final ? { size: got.size, final: true } : {}) });
       continue;
     }
+    const nw = await walkSlide(got.xml, meter, yieldNow);
+    if (!nw.ok) { evUndetermined.push({ part: notesPart, why: nw.why, final: true }); continue; }
     items.push({
       kind: "speaker-notes",
       slide,
       part: notesPart,
-      text: walkSlide(got.xml).text,
+      text: nw.text,
       source: slide != null ? slideShapeRef(slide) : null,
     });
   }
@@ -813,7 +836,9 @@ async function pptxStructure(parts) {
         evUndetermined.push({ part: np, why: got.why, ...(got.final ? { size: got.size, final: true } : {}) });
       continue;
     }
-    items.push({ kind: "speaker-notes", slide: null, part: np, text: walkSlide(got.xml).text, source: null });
+    const ow = await walkSlide(got.xml, meter, yieldNow);
+    if (!ow.ok) { evUndetermined.push({ part: np, why: ow.why, final: true }); continue; }
+    items.push({ kind: "speaker-notes", slide: null, part: np, text: ow.text, source: null });
   }
 
   if (parts.core) {
@@ -868,7 +893,7 @@ function deckLengthOf(parts) {
  * never merged (I7 slot 4)
  * ------------------------------------------------------------------ */
 
-async function pptxText(parts) {
+async function pptxText(parts, opts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
   }
@@ -879,13 +904,27 @@ async function pptxText(parts) {
       ok: true, container: "pptx", document: null, slides: [], speakerNotes: [],
       deckLength: deckLengthOf(parts),
       undetermined: [parts.guard],
-      counts: { chars: 0, notesChars: 0, undetermined: 1 },
+      counts: { chars: 0, notesChars: 0, undetermined: 1, scanned_bytes: 0 },
     };
   }
+  const yieldNow = opts?.yieldNow;
+  const meter = createMeter();
   const deck = deckOf(parts);
   const slides = [];
   const speakerNotes = [];
-  const undetermined = [];
+  const undetermined = [...parts.partials];
+  const units = { body: [], speaker_note: [], master_text: [] };
+  const boxes = [];
+  let scanned = 0;
+  /* One part walked: its walk, or the statement of why it was not (R40, R44). */
+  const walkPart = async (got, stated) => {
+    if (got.partial) undetermined.push(got.partial);
+    const w = await walkSlide(got.xml, meter, yieldNow);
+    if (!w.ok) { undetermined.push({ ...stated, why: w.why, final: true }); return null; }
+    scanned += w.scanner.scanned;
+    undetermined.push(...scanNotes(stated.part, w.scanner));
+    return w;
+  };
   for (const { part, slide } of deck) {
     /* The COFF-7 mark: `hidden` on EVERY unit — true when the slide's bytes
      * declare show="0", false otherwise (the xlsx sheets[] precedent) — so a
@@ -897,27 +936,17 @@ async function pptxText(parts) {
       undetermined.push({ reason: "slide_unreadable", part, why: got.why,
         ...(got.final ? { size: got.size, final: true } : {}) });
     } else {
-      /* COFF-11 / IC-100 / D-359 — THE SLIDE'S SHAPE COUNT, which `walkSlide`
-         has always returned and this entry has always discarded. ONE walk,
-         bound to a local: the figure and the text are two readings of one
-         parse, and calling `walkSlide` twice would be two answers to one
-         question waiting to disagree.
-
-         THERE IS NO USED-RANGE-VERSUS-CAPACITY DECISION HERE, AND SAYING WHY
-         IS THE POINT. A sheet needed one because a cell EXISTS in the grid
-         whether or not it holds a value, so the walked extent is not the
-         addressable extent. A slide's shape list is EXHAUSTIVE: there is no
-         empty shape that exists, so shape 9,999 of a four-shape slide is not
-         an empty shape, it is no shape — impossible, and refusing it refuses
-         only the impossible. The two figures coincide and the count is both.
-
-         IT CANNOT DISTURB THE SLIDE-GRAIN UNIT BOB RULED ON 2026-09-15 (M0-31,
-         `CONTENT-SEARCH-DESIGN.md` §4.1): that unit is a `slide-shape` extent
-         with the SHAPE OMITTED, and `coversSlideShape` bounds the shape only
-         when one is present. A deck-grain unit is untouched by this figure. */
-      const walked = walkSlide(got.xml);
-      slides.push({ slide, ref: slide != null ? `slide ${slide}` : null, part, hidden,
-        shapes: walked.shapes, text: walked.text });
+      const walked = await walkPart(got, { reason: "slide_unreadable", part });
+      if (walked) {
+        slides.push({ slide, ref: slide != null ? `slide ${slide}` : null, part, hidden,
+          shapes: walked.shapes, text: walked.text });
+        const at = (shape) => (slide != null ? slideShapeRef(slide, shape) : null);
+        /* R38: a hidden slide's text is a unit marked hidden; a text box is its own unit. */
+        if (hidden && walked.text) units.body.push({ kind: "body", ref: at(null), part, text: walked.text, hidden: true });
+        for (const b of walked.boxes) if (b.text) boxes.push({ kind: "text_box", ref: at(b.shape), part, text: b.text, ...(hidden ? { hidden: true } : {}) });
+        /* R39: a slide whose only content is a picture lists it (`images`) and states it unread; no OCR is called. */
+        if (!walked.text) for (const shape of walked.pics) undetermined.push({ part, why: "image_unread", ref: at(shape) });
+      }
     }
     const notesPart = parts.notesOf.get(part) ?? null;
     if (!notesPart) continue;
@@ -929,14 +958,20 @@ async function pptxText(parts) {
       /* THE DISTINCTION (DEC-5): a speaker-notes unit is its OWN unit with
        * its own ref form — never appended to the slide's text, never in
        * `document`. */
-      speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, hidden, text: walkSlide(ngot.xml).text });
+      const nw = await walkPart(ngot, { reason: "notes_unreadable", part: notesPart });
+      if (nw) {
+        speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, hidden, text: nw.text });
+        if (nw.text) units.speaker_note.push({ kind: "speaker_note", ref: slide != null ? slideShapeRef(slide) : null, part: notesPart, text: nw.text, ...(hidden ? { hidden: true } : {}) });
+      }
     }
+    if (meter.exceeded) break;
   }
   /* Orphan notesSlides: their text is still evidence, honestly unnumbered —
    * and with `hidden` NULL, because the slide attachment that would carry
    * the flag is lost; stated, never guessed either way. */
   const mapped = new Set([...parts.notesOf.values()]);
   for (const np of parts.notesParts) {
+    if (meter.exceeded) break;
     if (mapped.has(np)) continue;
     const got = await partXml(parts, np, parts.notesXml);
     if (got.xml == null) {
@@ -947,7 +982,31 @@ async function pptxText(parts) {
           ...(got.final ? { size: got.size, final: true } : {}) });
       continue;
     }
-    speakerNotes.push({ slide: null, ref: null, part: np, hidden: null, text: walkSlide(got.xml).text });
+    const ow = await walkPart(got, { reason: "notes_unreadable", part: np });
+    if (!ow) continue;
+    speakerNotes.push({ slide: null, ref: null, part: np, hidden: null, text: ow.text });
+    if (ow.text) units.speaker_note.push({ kind: "speaker_note", ref: null, part: np, text: ow.text });
+  }
+  /* R38: the text of the slide masters and layouts is read as units too. */
+  for (const part of parts.masterParts) {
+    if (meter.exceeded) break;
+    const got = await partXml(parts, part, parts.masterXml);
+    if (got.xml == null) {
+      if (parts.stream && !parts.undetermined.some((u) => u.part === part))
+        undetermined.push({ reason: "master_unreadable", part, why: got.why, ...(got.final ? { size: got.size, final: true } : {}) });
+      continue;
+    }
+    const mw = await walkPart(got, { reason: "master_unreadable", part });
+    if (mw?.text) units.master_text.push({ kind: "master_text", ref: null, part, text: mw.text });
+  }
+  /* R44: the deck would retain more than the table's figures: refused, by name and with its figure. */
+  if (meter.exceeded) {
+    return {
+      ok: true, container: "pptx", document: null, slides: [], speakerNotes: [],
+      deckLength: deckLengthOf(parts),
+      undetermined: [{ part: GUARDED_PARTS, ...meter.exceeded }],
+      counts: { chars: 0, notesChars: 0, undetermined: 1, scanned_bytes: scanned },
+    };
   }
 
   /* `document` is the deck's slide text, speaker notes NEVER in it. A HIDDEN
@@ -960,9 +1019,10 @@ async function pptxText(parts) {
   const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
   return {
     ok: true, container: "pptx", document, slides, speakerNotes,
+    parts: [...units.body, ...boxes, ...units.speaker_note, ...units.master_text],
     deckLength: deckLengthOf(parts),
     undetermined,
-    counts: { chars: document.length, notesChars, undetermined: undetermined.length },
+    counts: { chars: document.length, notesChars, undetermined: undetermined.length, scanned_bytes: scanned },
     ...(parts.piecewise ? { piecewise: parts.piecewise } : {}),
   };
 }
@@ -997,20 +1057,21 @@ export const pptxEntry = {
     return detectByContentType("pptx", PPTX_CONTENT_TYPE, PPTX_TWIN_CONTENT_TYPES, contentType);
   },
   parts: (bytes) => pptxParts(bytes),
-  structure: async (partsOrBytes) => {
+  structure: async (partsOrBytes, opts) => {
     /* Accept either parts() output or raw bytes, so detect→structure works
      * uniformly at the registry seam while a caller that already paid for
      * parts() does not pay twice (the docx.mjs pattern). */
     const parts = isBytes(partsOrBytes)
       ? await pptxParts(partsOrBytes)
       : partsOrBytes;
-    return withActive(await pptxStructure(parts), parts);
+    return withActive(await pptxStructure(parts, opts), parts);
   },
-  text: async (partsOrBytes) => {
+  /* `opts.yieldNow` (R42), `opts.inlineCellsMax` (R45: a pptx lists no table cells, so none are omitted) */
+  text: async (partsOrBytes, opts) => {
     const parts = isBytes(partsOrBytes)
       ? await pptxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` under ppt/media/, exhaustive or NULL. */
-    return withContainerImages(withActive(withMetadata(await pptxText(parts), parts, true), parts), parts, "ppt/media/");
+    return withContainerImages(withActive(withMetadata(await pptxText(parts, opts), parts, true), parts), parts, "ppt/media/");
   },
 };

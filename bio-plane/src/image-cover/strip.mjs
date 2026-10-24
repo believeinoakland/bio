@@ -20,8 +20,8 @@
  *                       removed; the packet data copied whole.
  *
  * The walk is pure (R6): it reads the bytes once and writes the answer once; nothing is decoded. */
-import { CoverRefusal, orientationOf, orientationTiff } from "./geometry.mjs";
-import { exifOrientation } from "./jpeg.mjs";
+import { CoverRefusal, orientationOf, orientationTiff, checkCount, checkStride } from "./geometry.mjs";
+import { exifOrientation, checkMarkers } from "./jpeg.mjs";
 import { crc32 } from "./png.mjs";
 import { localize } from "../setup-words/index.mjs";
 
@@ -58,6 +58,7 @@ const JFIF_FRESH = Uint8Array.from([0x4a, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1, 0,
 function segment(marker, body) { return Uint8Array.from([0xff, marker, ...be16(body.length + 2), ...body]); }
 
 function stripJpeg(d) {
+  checkMarkers(d);
   const kept = [];
   let p = 2, frame = false, hierarchical = false, scans = 0, jfif = false, adobe = null;
   for (;;) {
@@ -123,12 +124,14 @@ function stripJpeg(d) {
 
 /* ── PNG ──────────────────────────────────────────────────────────────────── */
 
+const PNG_CHANNELS = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
 const PNG_KEEP = new Set(["IHDR", "PLTE", "tRNS", "IDAT", "IEND"]);
 
 function stripPng(d) {
   const kept = [];
-  let p = 8, first = true, idat = false, orientation = 0, exifAt = -1;
+  let p = 8, first = true, idat = false, orientation = 0, exifAt = -1, count = 0;
   for (;;) {
+    checkCount(++count, "chunks");
     if (p + 12 > d.length) throw truncated("PNG", localize("image-cover.strip.a_chunk_runs_past_the_end_of_the_file", "a chunk runs past the end of the file"));
     const len = u32(d, p), type = ascii(d, p + 4, 4);
     if (!/^[A-Za-z]{4}$/.test(type)) throw corrupt("PNG", localize("image-cover.strip.a_chunk_type_that_is", "a chunk type that is not four letters at byte {p}", { p: String(p) }));
@@ -141,6 +144,10 @@ function stripPng(d) {
     if (PNG_KEEP.has(type)) {
       if (crc32(d.subarray(p + 4, p + 8 + len)) !== u32(d, p + 8 + len)) throw corrupt("PNG", `chunk ${type} fails its CRC`);
       if (type === "IHDR" && len !== 13) throw corrupt("PNG", "IHDR is not 13 bytes");
+      if (type === "IHDR") {
+        const channels = PNG_CHANNELS[d[p + 17]];
+        if (channels) checkStride(Math.ceil((u32(d, p + 8) * channels * d[p + 16]) / 8));
+      }
       if (type === "IDAT") {
         if (idat === "done") throw corrupt("PNG", "IDAT chunks are not consecutive");
         idat = true;
@@ -278,8 +285,9 @@ function stripCodestream(d, fmt) {
   const out = [d.subarray(0, 2)];
   const tlms = [];                 // {piece index, body offset in that piece} of each TLM segment
   const parts = [];                // each tile-part: {sot piece index, old Psot, removed bytes}
-  let p = 2, removed = 0;
+  let p = 2, removed = 0, markers = 0;
   const marker = (at) => {
+    checkCount(++markers, "markers");
     if (at + 4 > d.length) throw truncated(fmt, localize("image-cover.strip.a_marker_runs_past_the_end_of_the_codestream", "a marker runs past the end of the codestream"));
     if (d[at] !== 0xff) throw corrupt(fmt, localize("image-cover.strip.no_marker_at_byte_at", "no marker at byte {at}", { at: String(at) }));
     const len = u16(d, at + 2);
@@ -363,6 +371,7 @@ const JP2H_KEEP = new Set(["ihdr", "bpcc", "pclr", "cmap", "cdef"]);
 function boxes(d, p, end) {
   const out = [];
   while (p < end) {
+    checkCount(out.length + 1, "boxes");
     if (p + 8 > end) throw truncated("JP2", localize("image-cover.strip.a_box_header_runs_past_its_container", "a box header runs past its container"));
     let len = u32(d, p), head = 8;
     const type = ascii(d, p + 4, 4), xl = len === 1, zero = len === 0;

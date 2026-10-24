@@ -12,20 +12,32 @@ import { combine } from "../../../../jurisdictions/index.mjs";
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 export const EVIDENCE_PREFIX = "bio/captures/";
 
-/* An evidence bucket stand-in (the R2 binding's shape), recording every call. */
+/* An evidence bucket stand-in (the R2 binding's shape), recording every call. A `get` with a `range` answers those bytes alone,
+   as the R2 binding does (the object's `size` is still the whole object's, its `range` the bytes given), and `served` counts the
+   bytes every `get` handed out (G68: what a tick transfers). */
 export function bucket() {
   const held = new Map(), calls = [];
-  const obj = (k) => { const b = held.get(k); return { key: k, size: b.length,
-    arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) }; };
-  return {
-    calls, held,
-    async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length } : null; },
-    async get(k) { calls.push(["get", k]); return held.has(k) ? obj(k) : null; },
-    async put(k, bytes) { calls.push(["put", k]); held.set(k, new Uint8Array(bytes)); return { key: k }; },
+  const self = { calls, held, served: 0 };
+  const obj = (k, range) => {
+    const b = held.get(k);
+    const at = range ? Math.min(range.offset, b.length) : 0, end = range ? Math.min(b.length, range.offset + range.length) : b.length;
+    self.served += end - at;
+    return { key: k, size: b.length, ...(range ? { range: { offset: at, length: end - at } } : {}),
+      arrayBuffer: async () => b.buffer.slice(b.byteOffset + at, b.byteOffset + end) };
   };
+  Object.assign(self, {
+    async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length } : null; },
+    async get(k, options) {
+      const range = options && options.range ? options.range : null;
+      calls.push(range ? ["get", k, range] : ["get", k]);
+      return held.has(k) ? obj(k, range) : null;
+    },
+    async put(k, bytes) { calls.push(["put", k]); held.set(k, new Uint8Array(bytes)); return { key: k }; },
+  });
+  return self;
 }
 /* The store `read` is handed: record-core's `evidenceStore()` over the bucket, keyed by digest under the prefix. */
-export const evidenceStore = (b) => (b ? { head: (d) => b.head(`${EVIDENCE_PREFIX}${d}`), get: (d) => b.get(`${EVIDENCE_PREFIX}${d}`),
+export const evidenceStore = (b) => (b ? { head: (d) => b.head(`${EVIDENCE_PREFIX}${d}`), get: (d, options) => b.get(`${EVIDENCE_PREFIX}${d}`, options),
                                           put: (d, bytes) => b.put(`${EVIDENCE_PREFIX}${d}`, bytes) } : null);
 
 /* calibration's R10 (`liveCalibration`) over an in-memory list, every question recorded. */

@@ -132,7 +132,9 @@ test("R41: an object is the object it was after its parsed value and its object 
 
 test("R41: a later definition wins, an unparseable one changes nothing, and a top-level definition beats a packed one", async () => {
   const objs = { 1: "<< /Type /Catalog /Pages 2 0 R >>", 2: "<< /Type /Pages /Kids [] /Count 0 >>", 5: "(packed five)", 6: "(packed six)", 7: "(packed seven)" };
-  const base = indexed(objs, { xref: "stream", packed: [5, 6, 7], trailer: "/Root 1 0 R" });
+  /* the cross-reference chain would name 5, 6 and 7 as packed and win (R8 (a)); this is the lenient read, where nothing names them */
+  const chained = indexed(objs, { xref: "stream", packed: [5, 6, 7], trailer: "/Root 1 0 R" });
+  const base = new Uint8Array(Buffer.from(Buffer.from(chained).toString("latin1").replace("startxref", "startxxxx"), "latin1"));
   const tail = bytesOf("\n6 0 obj\n(top-level six)\nendobj\n7 0 obj\n(first seven)\nendobj\n7 0 obj\n@@@ not a value @@@\nendobj\n8 0 obj\n(one)\nendobj\n8 0 obj\n(two)\nendobj\n");
   const file = new Uint8Array(base.length + tail.length);
   file.set(base); file.set(tail, base.length);
@@ -144,6 +146,13 @@ test("R41: a later definition wins, an unparseable one changes nothing, and a to
   assert.equal(v(8), "two", "the later of two wins");
   const gens = (d.objects() ?? { objects: [] }).objects.length;
   assert.ok(gens >= 0);
+  assert.ok(d.notes.includes("xref_reconstructed"));
+  /* with the chain intact the same appended objects are not part of any revision it names: the chain's definitions stand (R8 (a)) */
+  const kept = new Uint8Array(chained.length + tail.length);
+  kept.set(chained); kept.set(tail, chained.length);
+  const c = await openPdf(kept);
+  assert.equal(c.resolve({ t: "ref", n: 6 }).v, "packed six");
+  assert.ok(!c.notes.includes("xref_reconstructed"));
 });
 
 test("R41: an object stream the second decode cannot reproduce is kept as first decoded: raw deflate that passes for a zlib header", async () => {

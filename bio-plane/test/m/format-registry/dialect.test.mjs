@@ -6,7 +6,7 @@ import { readingDialect } from "../../../src/formats.mjs";
 import { csvEntry } from "../../../src/csv.mjs";
 
 const EMPTY = { delimiter: null, encoding: null, confidence: { delimiter: null, encoding: null },
-  signals: { delimiter: [], encoding: [] }, undetermined: [] };
+  signals: { delimiter: [], encoding: [] }, undetermined: [], assumed: null, disagree: [] };
 
 test("R14: null for anything that is not a non-array object", () => {
   for (const v of [null, undefined, 0, 1, NaN, "", "utf-8", true, false, 5n, Symbol("d"), [], ["utf-8"], [{ delimiter: "," }], () => ({})]) {
@@ -21,11 +21,11 @@ test("R15: a projection of the named keys only, each string key a non-empty stri
   };
   const r = readingDialect(emitted);
   assert.deepEqual(r, { delimiter: ";", encoding: "utf-8", confidence: { delimiter: "certain", encoding: "likely" },
-    signals: { delimiter: ["s1", "s2"], encoding: ["e1"] }, undetermined: ["u1", "u2"] });
+    signals: { delimiter: ["s1", "s2"], encoding: ["e1"] }, undetermined: ["u1", "u2"], assumed: null, disagree: [] });
   assert.notEqual(r, emitted);
   assert.notEqual(r.signals.encoding, emitted.encodingSignals, "a list is a new filtered array, never the entry's own");
   assert.notEqual(r.undetermined, emitted.undetermined);
-  assert.deepEqual(Object.keys(r), ["delimiter", "encoding", "confidence", "signals", "undetermined"]);
+  assert.deepEqual(Object.keys(r), ["delimiter", "encoding", "confidence", "signals", "undetermined", "assumed", "disagree"]);
   assert.deepEqual(readingDialect({}), EMPTY);
   // every non-string or empty value of a string key is null; every non-array value of a list key is []
   for (const bad of ["", 0, 1, true, null, undefined, {}, [","], new String(","), Symbol("s")]) {
@@ -52,13 +52,30 @@ test("R15: a projection of the named keys only, each string key a non-empty stri
     delimiter: d.delimiter, encoding: d.encoding,
     confidence: { delimiter: d.delimiterConfidence, encoding: d.encodingConfidence },
     signals: { delimiter: d.delimiterSignals, encoding: d.encodingSignals }, undetermined: d.undetermined,
+    assumed: typeof d.assumed === "boolean" ? d.assumed : null,
+    disagree: Array.isArray(d.disagree) ? d.disagree.filter((n) => Number.isFinite(n)) : [],
   });
   assert.equal(readingDialect(d).delimiter, "semicolon");
 });
 
+test("R15: assumed is the emitted boolean else null, and disagree is the emitted finite numbers else [] (G131c, G131g)", () => {
+  assert.equal(readingDialect({ assumed: true }).assumed, true);
+  assert.equal(readingDialect({ assumed: false }).assumed, false);
+  for (const bad of ["true", 1, 0, null, undefined, {}, [], new Boolean(true)]) assert.equal(readingDialect({ assumed: bad }).assumed, null, String(bad));
+  const offsets = [0, 1048576, 2.5, -3, NaN, Infinity, "7", null, undefined, {}, [4]];
+  const r = readingDialect({ disagree: offsets });
+  assert.deepEqual(r.disagree, [0, 1048576, 2.5, -3]);
+  assert.notEqual(r.disagree, offsets, "a new filtered array, never the entry's own");
+  for (const bad of ["12", 5, null, undefined, {}, { length: 1, 0: 1 }, new Set([1]), true]) assert.deepEqual(readingDialect({ disagree: bad }).disagree, [], String(bad));
+  const hostile = { get assumed() { throw new Error("x"); }, get disagree() { throw new Error("y"); } };
+  assert.deepEqual(readingDialect(hostile), EMPTY);
+  const arr = [1, 2]; arr.filter = () => { throw new Error("trap"); };
+  assert.deepEqual(readingDialect({ disagree: arr }).disagree, [1, 2]);
+});
+
 test("R16: never throws, and any key it does not name is dropped", () => {
   const withExtra = readingDialect({ delimiter: ",", encoding: "us-ascii", later: "not projected", container_extent: {}, dialect: {} });
-  assert.deepEqual(Object.keys(withExtra), ["delimiter", "encoding", "confidence", "signals", "undetermined"]);
+  assert.deepEqual(Object.keys(withExtra), ["delimiter", "encoding", "confidence", "signals", "undetermined", "assumed", "disagree"]);
   assert.deepEqual(Object.keys(withExtra.confidence), ["delimiter", "encoding"]);
   assert.deepEqual(Object.keys(withExtra.signals), ["delimiter", "encoding"]);
   // hostile objects: throwing getters, a revoked proxy, a throwing proxy, an array whose filter is replaced

@@ -73,6 +73,7 @@ import aspnetWebforms from "./handlers/aspnet-webforms.mjs";
 import wordpress from "./handlers/wordpress.mjs";
 import clientRendered from "./handlers/client-rendered.mjs";
 import conservative from "./handlers/conservative.mjs";
+import * as ooxml from "../bio-plane/src/ooxml.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The module's whole interface is reachable from this file: the ladder and the
@@ -145,6 +146,15 @@ export function applyBoundary(text, boundary) {
            bytes: outside };
 }
 
+/* The encoding the caller knows: an explicit `ctx.charset`, else the `charset` of the content
+   type the caller passed or of the response's `content-type` header. */
+function declaredCharset(ctx) {
+  if (typeof ctx.charset === "string" && ctx.charset) return ctx.charset;
+  const ct = String(ctx.content_type || (ctx.headers && ctx.headers["content-type"]) || "");
+  const m = /;\s*charset\s*=\s*"?([^";\s]+)/i.exec(ct);
+  return m ? m[1] : undefined;
+}
+
 /** The three digests for one document, under one handler. */
 export async function digests(bytes, handler, ctx) {
   const sha256 = ctx && ctx.sha256;
@@ -154,8 +164,17 @@ export async function digests(bytes, handler, ctx) {
   const h = handler || {};
   const identity = await sha256(bytes);
   if (!h.textual) return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false };
-  let text = "";
-  try { text = new TextDecoder("utf-8", { fatal: false }).decode(bytes); } catch { text = ""; }
+  /* The one decode (R22, G131g): ooxml's `decodeText`, by the encoding the caller knows (a
+     `charset` of the content type) or the document's own declaration or BOM. A declared
+     encoding it cannot decode makes the document not textual here: both digests equal the
+     identity and the result says why, so nothing is ever compared on replacement characters. */
+  const declared = declaredCharset(ctx);
+  const dec = ooxml.decodeText(bytes, { declared, name: ctx.name || ctx.locator || declared, kind: "html" });
+  if (!dec.ok)
+    return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false,
+             undecodable: { why: dec.why, name: dec.name },
+             why: localize("site-profiles.index.the_document_is_written_in", "the document is written in an encoding this system cannot read, so it is compared byte for byte") };
+  const text = dec.text;
   let rules = [];
   try { rules = (typeof h.rules === "function" ? h.rules(ctx) : null) || []; } catch { rules = []; }
   if (!Array.isArray(rules)) rules = [];
@@ -183,6 +202,8 @@ export async function digests(bytes, handler, ctx) {
     boundary_missed: !!b.missed,
     mechanical_bytes: r1.bytes, presentational_bytes: r2.bytes,
     textual: true,
+    encoding: { name: dec.encoding, assumed: dec.assumed, replaced: dec.replaced,
+                replaced_ratio: dec.replaced_ratio, disagree: dec.disagree },
   };
 }
 
@@ -298,8 +319,16 @@ export function identify(ctx) {
     return { handler, confidence: CONFIDENCE.NONE, signals: [], considered: r.considered,
              why: localize("site-profiles.index.no_handler_recognised_this_document", "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported") };
   const out = { handler, confidence: r.confidence, signals: r.signals, considered: r.considered };
-  /* `kind` is the handler's own classification; a handler that defines none has none. */
-  if (typeof handler.kind === "function") out.kind = handler.kind(ctx);
+  /* `kind` is the handler's own classification, given the confidence it matched at; a
+     handler that defines none, or answers none, has none. */
+  if (typeof handler.kind === "function") {
+    const kind = handler.kind(ctx, r.confidence);
+    if (kind !== undefined) out.kind = kind;
+  }
+  /* A shell is a `client_rendered` match at CERTAIN and nothing less (R2, G140): the
+     handler's class is `shell`, this answer's `shell` is whether THIS document is one. The
+     answer decides how a document is watched and never what is read from it (R21). */
+  if (handler.shell && r.confidence === CONFIDENCE.CERTAIN) out.shell = true;
   return out;
 }
 

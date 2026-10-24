@@ -43,7 +43,7 @@ import { appRouteOf, appPage, appAsset, appScript, logoAsked, addressPageOf } fr
 /* R116 (fix round 2; C15): the interface words kept for the release and compressed */
 import { interfaceWordsCache } from "./words-cache.mjs";
 /* R121 (fix round 4, C5a, P9): the door's clock, in its own isolate */
-import { makeClock, clockedEnv, withServerTiming } from "./phase-clock.mjs";
+import { makeClock, clockedEnv, withClock, withServerTiming } from "./phase-clock.mjs";
 import { interfacePage, interfaceScript, interfaceScriptHash, pageWork } from "../interface-shell/index.mjs";
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { SCREENS as ENTRY_SCREENS } from "../screens-entry/index.mjs";
@@ -69,6 +69,7 @@ import { AiRuns } from "../ai-runs/index.mjs";
 import { word, hasWord } from "../setup-words/index.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
+import { storeStub } from "../store-place.mjs";
 import { instanceGroupOp, groupIdentityOp, groupLogoAsset } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 /* R45 (DEC-111, K1170): a registered public read is served by public-read's door read (its R18). */
@@ -151,6 +152,18 @@ async function tallySessionRefusal(res, session) {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ op: session.op, code }) })));
   } catch { /* the tally is status, never a gate */ }
+}
+
+/* R128 (fix round 8, G116; queue R94): the Queue runs in the object and cannot hand the door a hook, so its answer states what its marks carry (`derivation`: `served`, and for a
+   miss the rows read); the door states them: `queue-count;desc=hit|miss`, and `rows-queue;dur=<rows read>` for a miss. The answer is returned as it came. */
+async function liftDerivation(res, clock) {
+  try {
+    if (!res || !/application\/json/i.test(res.headers.get("content-type") || "")) return res;
+    const d = (await res.clone().json())?.result?.derivation;
+    if (!d || (d.served !== "hit" && d.served !== "miss")) return res;
+    clock.state([{ name: "queue-count", desc: d.served }, ...(d.served === "miss" && Number.isFinite(d.rows_read) ? [{ name: "rows-queue", dur: String(Math.round(d.rows_read)) }] : [])]);
+  } catch { /* a measure is status, never a gate */ }
+  return res;
 }
 
 /* R59 (admission R20, R22; F1, N703; K2044): ON THE WAY OUT. A refusal the door gives or relays, at either of the two
@@ -419,7 +432,7 @@ function storageAbsent(op, error) {
    so a probe naming nothing still reads `scratch`), and for every other caller `store=scratch` when named and `bio`
    otherwise, the invitation ops' rule. A silence is a silence (REC-52): never "no group is recorded". Moved from
    legacy-index at T19 (its door share). */
-async function groupRead(op, url, env, presentedAi, credential) {
+async function groupRead(op, url, env, presentedAi, credential, stateTiming = undefined) {
   const held = credential.token;
   const heldCls = held ? await classify(held, env) : null;
   const heldScope = heldCls ? scopeFor(heldCls, url) : null;
@@ -427,7 +440,7 @@ async function groupRead(op, url, env, presentedAi, credential) {
     : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
   const reader = await caseReader(url, env, store, presentedAi.cred, credential);
   if (reader.silent) return storeSilent(reader.silent, reader.correlation);
-  const io = { json, storeSilent, storeRefusal, doAnswer };
+  const io = { json, storeSilent, storeRefusal, doAnswer, ...(stateTiming ? { stateTiming } : {}) };
   return op === "instancegroup" ? instanceGroupOp(env, store, reader, io) : groupIdentityOp(env, store, reader, io);
 }
 
@@ -622,7 +635,7 @@ const SESSION_HEADER = "x-bio-session";
 async function grantAdmit(env, url, op, spec, token) {
   const own = GRANT_OWN_OPS.includes(op);
   if (!own && !AI_GRANT_OPS.includes(op)) return {};
-  const out = await doAnswer(env.STORE.get(env.STORE.idFromName("bio")).fetch(new Request("http://do/aigrantadmit", {
+  const out = await doAnswer(storeStub(env, "bio").fetch(new Request("http://do/aigrantadmit", {
     method: "POST", body: JSON.stringify({ token, op: own ? AI_GRANT_OPS[0] : op, write: own ? false : spec.mutating }) })));
   if (!out.answered) return { silent: { op: "aigrantadmit", correlation: out.correlation } };
   const g = out.result || {};
@@ -793,7 +806,8 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
       } catch { project = ""; }
     }
     const record = recordOf(ctx), promotion = promotionOf(ctx);
-    const cs = { now: () => Date.now(), digest: async (t) => sha256Hex(t), w: (k, v) => word(k, v), date: (d) => d,
+    const cs = { now: () => Date.now(), digest: async (t) => sha256Hex(t), w: (k, v) => word(k, v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([n, x]) => [n, x && typeof x === "object" && "html" in x ? x.html : x])) : v),
+      date: (d) => { const t = new Date(d); return Number.isNaN(t.getTime()) ? String(d) : t.toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "long", day: "numeric" }); },
       call: async (op, { query = {}, body } = {}) => {
         if (op === "allocid") return { ok: true, ...record.allocId(query.prefix, query.year) };
         if (op === "promote") return promotion.promote({ ...body, ...who });
@@ -816,7 +830,7 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
       if (!(held && (held.read === true || held.why === "READING_HELD")) || held.more === true) {
         pending = true;
         try {
-          const stub = env.STORE.get(env.STORE.idFromName(storeName));
+          const stub = storeStub(env, storeName);
           await doAnswer(stub.fetch(new Request(`http://do/pendingadd?kind=reading&sha=${sha}&store=${encodeURIComponent(storeName)}`, { method: "POST" })));
         } catch { /* the alarm's ledger is the reading's second chance, never the delivery's gate */ }
       }
@@ -861,6 +875,22 @@ function pulledEntries(result) {
   return [{ sha, document: result.document && typeof result.document === "object" ? result.document : { capture: result.capture ?? { sha256: sha } } }];
 }
 
+/* R129 (fix round 8, G106; K4428; R-LOG): ONE LINE WHEN AN `acquire` OR A `captureupload` BEGINS AND ONE WHEN IT ENDS. `request_start` is written before the object is asked, `request_done`
+   after: `{event, op, total_ms, stages, door, queued_ms, isolate_ms, object_ms}`, the ages of the isolate and of the object (null until the object states its own, R128), the object
+   route's `do-` less its `in-` as `queued_ms`, the door's phases, and the stages the object stated when the answer carried them. Counts and instants only: no credential, member,
+   address or name, and nothing of the caller's. */
+function requestStart(seen, op) {
+  seen.began = true;
+  const { isolate_ms, object_ms } = seen.clock.cold();
+  console.log(JSON.stringify({ event: "request_start", op, isolate_ms, object_ms }));
+}
+function requestDone(seen) {
+  if (!seen.began) return;
+  const { isolate_ms, object_ms } = seen.clock.cold();
+  console.log(JSON.stringify({ event: "request_done", op: seen.op, total_ms: Math.round(seen.clock.elapsed()), stages: seen.stages ?? {}, door: seen.clock.door(),
+                               queued_ms: seen.clock.queued(seen.op), isolate_ms, object_ms }));
+}
+
 export function makeFetch(hooks = {}) {
   /* R25: the door's one outermost catch. */
   /* R50: `seen.session` is set once admission has admitted a member's session, so a refusal answered to it is tallied;
@@ -870,17 +900,20 @@ export function makeFetch(hooks = {}) {
     const seen = { session: null, credential: null, cred: null, op: null, trace: null, scriptHashes: undefined, clock };
     let res;
     /* R121: the object is reached through the clocked environment, so each call to it is timed and the phases of an `acquire` are told */
-    try { res = await fetch(req, clockedEnv(env, clock), seen); } catch (e) { res = planeInternalError(e, req); }
+    try { res = await withClock(clock, () => fetch(req, clockedEnv(env, clock), seen)); } catch (e) { res = planeInternalError(e, req); }
     res = await withTrace(res, seen.trace);
-    await tallySessionRefusal(res, seen.session);
-    res = await tallyOnTheWayOut(res, seen, req, env);
+    /* R116, R127 (fix round 8, G114): the words answer is read once, for its key, before the tallies; an answer that is the words holds no refusal, so
+       the tallies, which look for one, do not read it again (a refusal this op gives is read and tallied as every answer's is) */
+    if (seen.op === "interfacewords") { const kept = await interfaceWordsCache(res, req, env); res = kept.res; seen.table = kept.table; }
+    if (seen.op === "queue") res = await liftDerivation(res, clock);
+    if (!seen.table) await tallySessionRefusal(res, seen.session);
+    if (!seen.table) res = await tallyOnTheWayOut(res, seen, req, env);
     /* R75 (fix round 3, C15): a page of the interface leaves with the policy that names its script by hash, in place of a nonce */
     res = await withPagePolicy(res, { scriptHashes: seen.scriptHashes });
-    /* R116: last, so the tallies above read the answer as it was made and a refusal is never kept */
-    if (seen.op === "interfacewords") res = await interfaceWordsCache(res, req, env);
     /* R121: every answer of the door states the time it took; the op is the metric when the table declares it, `page` for a page, else `door` */
     const metric = seen.op !== null && Object.hasOwn(OPS, seen.op) ? seen.op : seen.op !== null ? "unknown"
       : /text\/html/i.test(res?.headers?.get?.("content-type") || "") ? "page" : "door";
+    requestDone(seen);
     return withServerTiming(res, clock.header(metric));
   };
   planeDoor.limits = PLANE_LIMITS;
@@ -907,6 +940,8 @@ export function makeFetch(hooks = {}) {
       try { reqBody = JSON.parse((await req.clone().text()) || "null"); } catch { reqBody = null; }
     const credential = presentedCredential({ req, url, body: reqBody });
     seen.credential = credential;
+    /* R128 (K4822): the one name a module in the Worker states its own measure by, handed to the plane's door context and to instance-setup's `io`; the clock keeps it for `Server-Timing` */
+    const stateTiming = (name, ms) => { try { seen.clock?.stateTiming(name, ms); } catch { /* a measure is status, never a gate */ } };
     /* R83 (T47; K3144): the page's mark of a background request, read once */
     const background = url.searchParams.get("background") === "1";
     if (req.method === "OPTIONS")
@@ -1042,7 +1077,7 @@ export function makeFetch(hooks = {}) {
       const country = countryOf(req);
       const doorStamps = new URLSearchParams({ ...(source ? { source } : {}), ...(country ? { country } : {}) }).toString();
       const fp = await fingerprint(env.ADMIN_TOKEN);
-      const stub = env.STORE.get(env.STORE.idFromName("bio"));
+      const stub = storeStub(env, "bio");
       /* Claiming and logging in are pinned to `bio` above, because an instance
          has ONE identity and there is nothing to claim in a scratch namespace.
          The INVITATION ops are different: the token IS the authority and it
@@ -1054,7 +1089,7 @@ export function makeFetch(hooks = {}) {
          rehearsing the member surface. Found against the deployed plane while
          closing D-41, not by the suite. */
       const invStub = url.searchParams.get("store") === SCRATCH
-        ? env.STORE.get(env.STORE.idFromName(SCRATCH)) : stub;
+        ? storeStub(env, SCRATCH) : stub;
       if (op === "claim") {
         const body = await req.json().catch(() => ({}));
         /* DEC-49 REGION is-bootstrap-claim
@@ -1220,7 +1255,7 @@ export function makeFetch(hooks = {}) {
       }
       /* R44 (K921): the template grant's four doors, a recipient's secret or a member's session (above). */
       if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, credential });
-      if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi, credential);
+      if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi, credential, stateTiming);
       if (op === "knockerconsent") return knockerConsent(req, stub);
       /* R45 (DEC-111, K1170; public-read R18, R10): network-notices' public reads, each asked by its own name, served by
          public-read's door read from the published store (`stub`, `bio`; a `store=scratch` was refused above), with no
@@ -1235,7 +1270,7 @@ export function makeFetch(hooks = {}) {
         return publicReadDoorRead(op, clean, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
       }
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
-      return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi, credential, source, country });
+      return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi, credential, source, country, stateTiming });
     }
 
     /* R28: admission R5–R11 in their order (`admit`): the binding class, the agent credential, the session (its export
@@ -1311,7 +1346,7 @@ export function makeFetch(hooks = {}) {
       }, store: storeName, tokenClass: cls }, 200);
     }
 
-    const stub = env.STORE.get(env.STORE.idFromName(storeName));
+    const stub = storeStub(env, storeName);
     /* R50: from here on, a refusal answered to a member's session is counted (`tallySessionRefusal`, in its namespace). */
     if (viaSession) seen.session = { op: askedOp, stub };
 
@@ -2544,9 +2579,11 @@ export function makeFetch(hooks = {}) {
     /* R121 (fix round 4, C5a; amends R115): the timings of an `acquire` that failed or was stopped: the object's stage record as it states it (R95; its
        `stages` are `{}` when it states none) beside `door`, the three phases as the door's own clock saw them. The clock is the door's, so
        it stands though the object was stopped or restarted and lost its stages. */
-    const failedTimings = (stages) => ({ ...(stages && typeof stages === "object" && !Array.isArray(stages) ? stages : {}),
-      stages: stages && typeof stages === "object" && stages.stages && typeof stages.stages === "object" ? stages.stages : {},
-      door: seen.clock.door() });
+    const failedTimings = (stages) => {
+      const given = stages && typeof stages === "object" && stages.stages && typeof stages.stages === "object" ? stages.stages : {};
+      seen.stages = given;
+      return { ...(stages && typeof stages === "object" && !Array.isArray(stages) ? stages : {}), stages: given, door: seen.clock.door() };
+    };
     const bounded = (work) => {
       if (op !== "acquire") return work;
       let timer;
@@ -2585,7 +2622,9 @@ export function makeFetch(hooks = {}) {
       }
     }
     const deferReading = (document) => op === "acquire" && readingWontFit(document);
-    const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, deferReading: op === "acquire" ? deferReading : undefined, sessMember, sessViewer,
+    /* R129 (fix round 8, G106): the line that says this request began is out BEFORE the object is asked, for Workers Logs lost the tail of a long firing */
+    if (op === "acquire") requestStart(seen, op);
+    const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, stateTiming, deferReading: op === "acquire" ? deferReading : undefined, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub, memberRef,   /* R93: the plane's ask and transcribe; R106: the `ai` caller's viewer */
       trace: trace ?? acquireTrace,   /* K4234: `acquire`'s trace, the key its stages are kept under */
       grantMember: aiCred?.grant ? aiCred.principal : undefined, timings })) : undefined;   /* R53 (K1684): an ask's grant's member; R115: `acquire`'s timings */
@@ -3071,6 +3110,7 @@ export function makeFetch(hooks = {}) {
        decoded or kept here; its words (`statement`, `name`, `within`) and a `step` it is a product of travel in the
        address. Capture's answer is relayed as given, and a step named is tied after the capture lands (R71). */
     if (op === "captureupload") {
+      requestStart(seen, op);   /* R129: before the object is asked */
       const uploaded = await stub.fetch(new Request(inner, withGrant({ method: "POST", body: req.body,
         headers: { "content-type": "application/octet-stream",
                    ...(req.headers.get("content-length") ? { "content-length": req.headers.get("content-length") } : {}) },

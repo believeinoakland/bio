@@ -444,3 +444,70 @@ test("R68 R8 (C13a, P7): a page of 33 bodies rendered by the real driver and kep
     assert.ok(held.has(out[i].sha256));
   });
 });
+
+/* R69 (fix round 9, G137c, X23): a failed render states what it took and whether it may be asked again. */
+test("R69: every failed answer carries elapsed_ms (the close included), failure_class and detail; a session refused, rate-limited or not opened in time is transient, the rest permanent", async () => {
+  const failed = async (url, binding, over = {}, opts = {}) => {
+    const a = await render(url, over, { binding, ...opts });
+    assert.equal(a.ok, false);
+    assert.equal(Number.isInteger(a.elapsed_ms) && a.elapsed_ms >= 0, true, JSON.stringify(a));
+    assert.equal(typeof a.detail, "string");
+    assert.ok(a.detail.length <= 200 && a.detail === a.error.slice(0, 200));
+    return a;
+  };
+  /* transient: the binding refused a session, three a second, the open bound spent, an upgrade refused for load */
+  for (const mode of [{ noacquire: true }, { noacquire: true, acquireStatus: 429 }])
+    assert.equal((await failed("/same", fakeBinding(PAGES, mode))).failure_class, "transient", JSON.stringify(mode));
+  const slow = await failed("/same", fakeBinding(PAGES, { slowUpgradeMs: 1500 }), { navigation_timeout_ms: 1000 }, { now: () => Date.now() });
+  assert.equal(slow.failure_class, "transient");
+  assert.match(slow.detail, /gave no session within the 1000 ms navigation bound/);
+  /* permanent: a session with no id, no websocket, a throwing binding, a page crash, an unreachable host, no document, the hold refused */
+  for (const [url, mode] of [["/same", { nosessionid: true }], ["/same", { noupgrade: true }], ["/same", { throws: true }],
+    ["/navfail", {}], ["/noserialise", {}], ["/same", { refuse: ["Network.enable"] }], ["/hostile", { refuse: ["Fetch.enable"] }]])
+    assert.equal((await failed(url, fakeBinding({ ...PAGES, ...HOSTILE }, mode), { own_hosts: OWN })).failure_class, "permanent", url + JSON.stringify(mode));
+  /* an address the hold refuses is refused before a browser is spent: nothing to charge */
+  const refused = await renderWithBinding(fakeBinding(PAGES), { url: "https://plane.grp.example/doc", own_hosts: OWN }, { now: scaled() });
+  assert.deepEqual([refused.ok, refused.failure_class, refused.elapsed_ms], [false, "permanent", 0]);
+  /* the binding is nothing at all */
+  const none = await renderWithBinding(null, { url: "https://x.example/" });
+  assert.deepEqual([none.ok, none.failure_class, typeof none.elapsed_ms], [false, "permanent", "number"]);
+  /* the real time: whole milliseconds from the session's opening to its close, the close included (the close takes 1,500 ms of the test's clock) */
+  const now = jumping();
+  const closing = fakeBinding(PAGES, {}, { "Target.closeTarget": () => now.jump(1500) });
+  const nav = await render("/navfail", {}, { binding: closing, now });
+  assert.equal(nav.ok, false);
+  assert.ok(nav.elapsed_ms >= 1500 && nav.elapsed_ms < 1500 + 4000, String(nav.elapsed_ms));
+  assert.equal(closing.stats.closeTargets, 1);
+  /* control: a render that succeeds is answered as R19 states, with none of the failure's fields */
+  const ok = await render("/same");
+  assert.equal(ok.ok, true);
+  assert.ok(!("failure_class" in ok) && !("detail" in ok) && !("error" in ok));
+});
+
+test("R69: a dialog the page opens is dismissed, so the render goes on to its document and not to its bound", async () => {
+  const b = fakeBinding({ "/dialog": { requests: [], dialog: true } });
+  const a = await render("/dialog", {}, { binding: b });
+  assert.equal(a.ok, true);
+  assert.deepEqual(b.stats.asked.dialog, { accept: false });
+});
+
+test("R26 (G142, X33): a render of a page that holds one long-lived request open waits the quiet window, 4 s of the test's own clock counted as settle polls, and answers quiet_excluding_long_lived; a page with none ends on networkidle", async () => {
+  /* The test's clock: it moves 20 ms each time the driver reads it, so the time the driver spends is a count of its reads (its settle
+     polls and the checks inside them), and a 4 s window is about 200 reads whatever the machine does. */
+  const counting = () => { let t = 1_000_000, reads = 0; const now = () => { reads++; return (t += 20); }; now.reads = () => reads; return now; };
+  const stream = counting();
+  const a = await render("/stream", {}, { now: stream });
+  assert.equal(a.ok, true);
+  assert.equal(a.wait.fired, "quiet_excluding_long_lived");
+  assert.equal(a.wait.long_lived.older_than_s, 4);
+  assert.deepEqual([a.wait.long_lived.count, a.wait.long_lived.urls], [1, ["https://events.vendor.example/stream"]]);
+  /* it did not end before the stream was 4 s old, and it waited the 500 ms of quiet after that */
+  assert.ok(a.elapsed_ms >= 4000 + 500 - 100, `${a.elapsed_ms} ms of the test's clock`);
+  assert.ok(stream.reads() >= (4000 + 500 - 100) / 20, `${stream.reads()} reads`);
+  /* control: nothing open ends on networkidle (R23) long before the window */
+  const quiet = counting();
+  const idle = await render("/same", {}, { now: quiet });
+  assert.equal(idle.wait.fired, "networkidle");
+  assert.ok(idle.elapsed_ms < 4000, String(idle.elapsed_ms));
+  assert.ok(quiet.reads() < stream.reads() / 4, `${quiet.reads()} reads against ${stream.reads()}`);
+});

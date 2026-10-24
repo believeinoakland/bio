@@ -1,4 +1,4 @@
-/* Large-file fixtures for the csv-reader suite (fix round 4b, F7; R9): a real body over the 20 MiB bound, built
+/* Large-file fixtures for the csv-reader suite (fix round 4b, F7; R9): a real body of many MiB, built
  * from a seeded generator so a run draws nothing from a clock or the system's randomness, and returned with the
  * document text its reader must give back, computed here by a route that shares no code with the reader. */
 import { enc } from "./fixtures.mjs";
@@ -43,7 +43,7 @@ export function bigCsv({ rows, strLen = 400, seed = 17 }) {
     if (r > 60 && r % 7 === 0) fields[2] = `a,b "quoted"\nsecond line ${fields[2].slice(0, 20)}`;
     if (r % 11 === 0) fields[3] = "";
     out.push(fields.map(csvField).join(","));
-    lines.push(fields.filter((f) => f !== "").join("\t"));
+    lines.push(fields.join("\t"));   // an empty field keeps its column (G131d); the last field is never empty
   }
   const bytes = enc(out.join("\r\n") + "\r\n");
   return { bytes, expected: lines.join("\n"), declared: bytes.length, rows };

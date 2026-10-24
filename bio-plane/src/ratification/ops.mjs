@@ -68,6 +68,10 @@ async function caseCeremony(req, stub, ctx, later) {
   const assembleCaseContainer = ctx.assembleCaseContainer || casefile.assembleCaseContainer;
   const recordFailure = ctx.recordCaseFileFailure || casefile.recordCaseFileFailure;
   const relay = { json, storeRefusal };
+  /* R60 (G120): a phase of the act, stated to the door's clock when the door hands one (`stateTiming(name, ms)`); a wait here is an
+     await, so the time is real. */
+  const stated = (name, since) => { if (typeof ctx.stateTiming === "function") ctx.stateTiming(name, Math.max(0, Date.now() - since)); };
+  const tGate = Date.now();
     /* REC-123 / C-32.13: the machine fence alone, FIRST and before the payload is read (`./refusals.mjs` holds the
        refusal and its region; R18's pre-flight answers the same one). THE GUARD'S SHAPE IS REC-46's AND NOT STYLE:
        `aiCred` is resolved only for a minted agent credential (it is what makes the caller the `ai` class), and
@@ -128,10 +132,25 @@ async function caseCeremony(req, stub, ctx, later) {
                            attributionUnchosenRefusal(facts.doc.case_id, facts.doc.edition, attr),
                            attributionStaleRefusal(facts.doc.case_id, facts.doc.edition, attr)])
       if (refusal) return json({ ...refusal, store: storeName, tokenClass: cls }, 409);
+    /* R60 (G120): the three reads that depend only on the document the facts answered (`casetestimony`, `caseapproval`, `casegate`) are
+       issued together, and their answers weighed below in the order the refusals have always had: R35 (C-58.5), CASE_RATIFY_STALE, R49
+       (APPROVAL_MISSING), NO_SIGNERS, the signature, and then the gate. Each is a read; nothing is written by any of them, so a refusal
+       that comes before another's answer leaves nothing behind. */
+    /* R60 (G120b): the list of known ids depends only on the viewer, so a sitting reads it once, here, beside those three, and every member's
+       gate weighs that one answer. */
+    const sittingList = sitting.length ? doAnswer(stub.fetch(`http://do/list?viewer=${encodeURIComponent(sessViewer)}`)) : null;
+    const [anonOut, apprOut, gateOut] = await Promise.all([
+      doAnswer(stub.fetch("http://do/casetestimony", { method: "POST",
+        body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition) }) })),
+      doAnswer(stub.fetch("http://do/caseapproval", { method: "POST",
+        body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition), docSha: facts.doc.doc_sha }) })),
+      doAnswer(stub.fetch(
+        `http://do/casegate?viewer=${encodeURIComponent(sessViewer)}`,
+        { method: "POST", body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition),
+                                                 docSha: facts.doc.doc_sha }) })),
+    ]);
     /* R35 (DEC-102): C-58.5, after C-92.11 and before the signature is weighed, asked of the store half, where strength's
        corroboration read is (`casetestimony`); the refusal is the pre-flight's own. A silence refuses: nothing is written. */
-    const anonOut = await doAnswer(stub.fetch("http://do/casetestimony", { method: "POST",
-      body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition) }) }));
     if (anonOut.refused) return storeRefused(anonOut, relay);
     if (!anonOut.answered) return storeSilent("caseratify/testimony", anonOut.correlation);
     if (anonOut.result && anonOut.result.refusal)
@@ -145,8 +164,6 @@ async function caseCeremony(req, stub, ctx, later) {
     /* R49 (T41; D60): APPROVAL_MISSING (C-58.11), after CASE_RATIFY_STALE and before the signature is weighed, asked of
        the store half, where R50's reader is registered (`caseapproval`), over the stored document's `doc_sha`. With no
        rule in force nothing is refused. A silence refuses: nothing is written. */
-    const apprOut = await doAnswer(stub.fetch("http://do/caseapproval", { method: "POST",
-      body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition), docSha: facts.doc.doc_sha }) }));
     if (apprOut.refused) return storeRefused(apprOut, relay);
     if (!apprOut.answered) return storeSilent("caseratify/approval", apprOut.correlation);
     if (apprOut.result && apprOut.result.refusal)
@@ -171,10 +188,6 @@ async function caseCeremony(req, stub, ctx, later) {
        where this module's catalogue is registered (R8, K233): the store half re-reads the document at the
        `doc_sha` the signature was verified over and runs `runCaseGate` there (`casegate`). A silence here refuses
        the act: nothing has been written. */
-    const gateOut = await doAnswer(stub.fetch(
-      `http://do/casegate?viewer=${encodeURIComponent(sessViewer)}`,
-      { method: "POST", body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition),
-                                               docSha: facts.doc.doc_sha }) }));
     if (gateOut.refused) return storeRefused(gateOut, relay);
     if (!gateOut.answered) return storeSilent("caseratify/gate", gateOut.correlation);
     const gate = gateOut.result || {};
@@ -187,18 +200,19 @@ async function caseCeremony(req, stub, ctx, later) {
     /* R52: EACH MEMBER OF THE SITTING, verified as op=ratify verifies it (R4) before anything commits: under the session's
        sight, against the one key the case's signature verified against (the same signer), C-92.12 counting the
        statements of the document being signed. The first refusal is answered naming its member; nothing is written. */
-    const members = [];
-    for (const m of sitting) {
-      const prep = await prepareFinding({ bundleId: m.id, expectedSha: m.sha, sig: m.signature }, stub, ctx,
-        { viewer: sessViewer, keys: [sv.keyB64], statedInSitting: statedIn(attr), tag: { member: m.id } });
-      if (prep.response) return prep.response;
-      members.push(prep.prepared);
-    }
+    /* R60 (G120): the members are prepared together (reads only); the first refusal in the sitting's order is the one answered. */
+    const preps = await Promise.all(sitting.map((m) =>
+      prepareFinding({ bundleId: m.id, expectedSha: m.sha, sig: m.signature }, stub, ctx,
+        { viewer: sessViewer, keys: [sv.keyB64], statedInSitting: statedIn(attr), tag: { member: m.id }, list: sittingList })));
+    const refused = preps.find((prep) => prep.response);
+    if (refused) return refused.response;
+    const members = preps.map((prep) => prep.prepared);
 
     /* REC-128 (R12): the SIGNATURE says who authorised (`attestor`, the verified key's member, null when absent and
        never the session); the SESSION ROW says who delivered (a member, or the founder, DEC-33), never the signature
        and never `sessMember`. REC-125's fence above guarantees a session here, so `sessRights` is the row. */
     const deliveredBy = deliveringPrincipal(sessRights); /* REC-128: op=caseratify */
+    stated("gate", tGate);
     if (later) {
       /* R40: the store half runs R3's refusals before its commit, publication's commit's own (made and rolled back), R41
          (C-58.6), and then `publish-schedule` R1 in place of the commit; its answer is relayed as given. A silence refuses:
@@ -219,6 +233,7 @@ async function caseCeremony(req, stub, ctx, later) {
                     attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
                     deliveredBy: delivererOf(deliveredBy), store: storeName, tokenClass: cls });
     }
+    const tCommit = Date.now();
     const out = await doAnswer(stub.fetch("http://do/caseratify", {
       method: "POST", body: JSON.stringify({
         caseId: facts.doc.case_id, edition: Number(facts.doc.edition), docSha: facts.doc.doc_sha,
@@ -231,6 +246,7 @@ async function caseCeremony(req, stub, ctx, later) {
     if (out.refused) return storeRefused(out, relay);
     if (!out.answered) return storeSilent("caseratify/commit", out.correlation);
     const answered = out.result;
+    stated("commit", tCommit);
     const { completedCase, evidenceMaterials, memberCommits, ...r } = answered || {};
     if (!answered || !r.ok)
       return json({ ok: false, ...(r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: answered }),
@@ -239,18 +255,23 @@ async function caseCeremony(req, stub, ctx, later) {
        its pin is COMPLETE at this act, and no op=ratify will come to assemble it — so it is
        assembled here, by the one function op=ratify uses. `completedCase` is the store's internal
        state and is destructured OFF the answer above, never spread into it (REC-58's pick). */
-    const { absent: materialsAbsent, ...materialsCopied } = await copyMaterialsDetailed(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []);
-    /* R52: each member committed with the case is copied and re-checked as op=ratify does after its commit (R6), and
-       the editions complete now (the case's own, or one its members completed) are assembled once, after every copy. */
+    const tCopy = Date.now();
+    /* R60 (G120): the materials' copy and each member's copy touch different keys and run together. */
     const commits = Array.isArray(memberCommits) ? memberCommits : [];
-    /* R6, R57 (G54): the act has committed, so a member's copy that throws is stated in its answer and handed to the
-       assembly (`prior`, with the materials not copied), which records the attempt; it never changes the act's answer. */
-    const copies = [];
     let copyError = null;
-    for (const [i] of commits.entries()) {
-      try { copies.push(await copyFinding(env, storeName, members[i])); }
-      catch (e) { copyError ??= e; copies.push(failedCopy(e)); }
-    }
+    const [{ absent: materialsAbsent, ...materialsCopied }, copies] = await Promise.all([
+      copyMaterialsDetailed(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []),
+      /* R52: each member committed with the case is copied and re-checked as op=ratify does after its commit (R6), and
+         the editions complete now (the case's own, or one its members completed) are assembled once, after every copy.
+         R6, R57 (G54): the act has committed, so a member's copy that throws is stated in its answer and handed to the
+         assembly (`prior`, with the materials not copied), which records the attempt; it never changes the act's answer. */
+      Promise.all(commits.map(async (_, i) => {
+        try { return await copyFinding(env, storeName, members[i]); }
+        catch (e) { copyError ??= e; return failedCopy(e); }
+      })),
+    ]);
+    stated("copy", tCopy);
+    const tAssemble = Date.now();
     let container = null;
     const containers = new Map();
     const prior = priorOf({ missing: materialsCopied.missing, absent: materialsAbsent, copyError });
@@ -259,15 +280,18 @@ async function caseCeremony(req, stub, ctx, later) {
                                           via: "caseratify", prior });
       containers.set(`${cs.case_id ?? cs.caseId ?? ""}#${cs.edition}`, container);
     }
-    const memberAnswers = [];
-    for (const [i, c] of commits.entries()) {
-      const reuseReport = await reuseCheck({ env, ask: askOf(stub, doAnswer), bundleId: c.bundleId,
-                                             silentReason: ctx.STORE_SILENT_REASON, silentDetail: ctx.STORE_SILENT_DETAIL });
+    stated("assemble", tAssemble);
+    const tReuse = Date.now();
+    /* R60 (G120b): the members' reuse checks are reads of different bundles, asked together; the answers stay in the sitting's order. */
+    const reuseReports = await Promise.all(commits.map((c) => reuseCheck({ env, ask: askOf(stub, doAnswer), bundleId: c.bundleId,
+                                             silentReason: ctx.STORE_SILENT_REASON, silentDetail: ctx.STORE_SILENT_DETAIL })));
+    const memberAnswers = commits.map((c, i) => {
       const own = c.pub.case ? containers.get(`${c.pub.case.case_id ?? c.pub.caseId ?? ""}#${c.pub.case.edition}`) : null;
-      memberAnswers.push(findingAnswer({ bundleId: c.bundleId, expectedSha: members[i].expectedSha, pub: c.pub,
+      return findingAnswer({ bundleId: c.bundleId, expectedSha: members[i].expectedSha, pub: c.pub,
         container: own ?? null, attestorMember: members[i].attestorMember, gateVersion: members[i].gateVersion,
-        deliveredBy: delivererOf(deliveredBy), copy: copies[i], reuseReport, shaCount: members[i].shas.length }));
-    }
+        deliveredBy: delivererOf(deliveredBy), copy: copies[i], reuseReport: reuseReports[i], shaCount: members[i].shas.length });
+    });
+    stated("reuse", tReuse);
     /* what still awaits is the last state the commits read (a member's commit completes the edition) */
     const lastState = [...commits].reverse().find((c) => Array.isArray(c.pub?.case?.awaiting));
     if (lastState) r.awaiting = lastState.pub.case.awaiting;
@@ -302,6 +326,9 @@ async function caseCeremony(req, stub, ctx, later) {
 export const obscuredCopyKey = (store, sha) => `${store}/obscured/${sha}`;
 const sourceKey = (store, sha, held) => (held === "derived" ? obscuredCopyKey(store, sha) : `${store}/captures/${sha}`);
 
+/** R60 (G120): how many materials are copied together. */
+const COPY_GROUP = 8;
+
 export async function copyMaterials(env, storeName, items) {
   const { absent, ...out } = await copyMaterialsDetailed(env, storeName, items);
   return out;
@@ -313,17 +340,25 @@ export async function copyMaterials(env, storeName, items) {
  *  material confirmed absent, never for one whose copy failed); the act's answer is `copyMaterials`'. */
 export async function copyMaterialsDetailed(env, storeName, items) {
   const out = { copied: 0, present: 0, missing: [], absent: [] };
-  for (const item of items) {
+  /* R60 (G120): the materials are copied in groups of COPY_GROUP, each group's copies together; the outcomes are counted in the
+     items' order, so the answer is the one a copy one at a time gave. */
+  const one = async (item) => {
     const { sha, held } = typeof item === "string" ? { sha: item, held: "evidence" } : item;
     const key = `${storeName}/published/${sha}`;
     try {
-      if (await env.PUBLISHED.head(key)) { out.present++; continue; }
+      if (await env.PUBLISHED.head(key)) return { sha, state: "present" };
       const obj = await env.CAPTURES.get(sourceKey(storeName, sha, held));
-      if (!obj) { out.missing.push(sha); out.absent.push(sha); continue; }
+      if (!obj) return { sha, state: "absent" };
       await env.PUBLISHED.put(key, obj.body, { sha256: sha });
-      out.copied++;
-    } catch { out.missing.push(sha); }
-  }
+      return { sha, state: "copied" };
+    } catch { return { sha, state: "failed" }; }
+  };
+  for (let i = 0; i < items.length; i += COPY_GROUP)
+    for (const { sha, state } of await Promise.all(items.slice(i, i + COPY_GROUP).map(one))) {
+      if (state === "present") out.present++;
+      else if (state === "copied") out.copied++;
+      else { out.missing.push(sha); if (state === "absent") out.absent.push(sha); }
+    }
   return out;
 }
 
@@ -479,12 +514,19 @@ function publishRefusalStatus(pub) {
  *  relay or a silence, `tag` added to a refusal of the finding's own) or `{prepared}` for `findingPublishArgs`,
  *  `copyFinding` and `findingAnswer`. Writes nothing. */
 export async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx,
-                                     { viewer, keys = null, statedInSitting = null, tag = {} } = {}) {
+                                     { viewer, keys = null, statedInSitting = null, tag = {}, list = null } = {}) {
   const { json, doAnswer, storeSilent, storeRefusal, storeName, cls, withBiasChecks } = ctx;
   const relay = { json, storeRefusal };
   const refuse = (b, status) => ({ response: json({ ...b, ...tag, store: storeName, tokenClass: cls }, status) });
   const v = encodeURIComponent(viewer);
-  const factsOut = await doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
+  /* R60 (G120b): the gate facts, the image and the list of known ids are three independent reads of the store, asked together and weighed
+     below in the old order (facts, signature, image, list); `list` is a sitting's one shared read (`caseCeremony` starts it), else asked here.
+     A read still in flight when the act stops at an earlier refusal is left to finish: it writes nothing. */
+  const factsAsk = doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
+  const imgAsk = doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
+  const listAsk = list || doAnswer(stub.fetch(`http://do/list?viewer=${v}`));
+  for (const pending of [factsAsk, imgAsk, listAsk]) pending.catch(() => {});
+  const factsOut = await factsAsk;
   /* A silence here once threw a TypeError on `facts.ok`; what this read answers is the GATE'S OWN FACTS, and a gate
      that cannot see the record cannot confirm anything. */
   if (factsOut.refused) return { response: storeRefused(factsOut, relay) };
@@ -504,13 +546,12 @@ export async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx,
   const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
 
   /* REC-53: `runGate` does `Object.entries(image || {})`, so a silence here once handed the gate an EMPTY BUNDLE. */
-  const imgOut = await doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
+  const [imgOut, listOut] = await Promise.all([imgAsk, listAsk]);
   if (imgOut.refused) return { response: storeRefused(imgOut, relay) };
   if (!imgOut.answered) return { response: storeSilent("ratify/image", imgOut.correlation) };
   const image = imgOut.result;
   /* The catalog resolves references against the whole store, so it reads which identifiers exist, once. REC-53: a
      silence is refused, never handed to the gate as an empty set; once `answered`, an empty list is a real answer. */
-  const listOut = await doAnswer(stub.fetch(`http://do/list?viewer=${v}`));
   if (listOut.refused) return { response: storeRefused(listOut, relay) };
   if (!listOut.answered) return { response: storeSilent("ratify/list", listOut.correlation) };
   const known = new Set((listOut.result || []).map((b) => b.bundle_id));

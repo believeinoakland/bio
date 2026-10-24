@@ -38,7 +38,7 @@
  */
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, FURNITURE_RECURS, alsoSatisfies,
          vocabPatterns, anyMatch, LINE_END } from "../docprofile/doctypes/index.mjs";
-import { eachLine, countLines, lineTable } from "./windows.mjs";
+import { eachLine, countLines, lineTable, counted, spend } from "./windows.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
@@ -92,7 +92,7 @@ const parseLongDate = (s) => {
   return new Date(Date.UTC(+m[3], mo, +m[2])).toISOString().slice(0, 10);
 };
 
-export default {
+export default counted({
   key: "meeting_agenda",
   label: "a meeting agenda",
   version: 1,
@@ -140,6 +140,7 @@ export default {
     let files = 0;
     eachLine(t, (l) => { if (agendaFileKey(filePats, l) != null) files++; });
     if (files) signals.push(localize("doctypes.meeting-agenda.file_lines", "{count} legislation file number line(s)", { count: String(files) }));
+    spend(t.length * 3);   // the tests of the text below ("Subject:", "Recommendation:", "Roll Call") each read it once at most
     if (/\bSubject:/.test(t) && /\bRecommendation:/.test(t))
       signals.push("Subject:/Recommendation: item blocks");
     const named = countLines(t, AGENDA_MASTHEAD);
@@ -317,4 +318,4 @@ export default {
         : localize("doctypes.meeting-agenda.unchanged", "all {count} items on this agenda are unchanged", { count: String(b.entities.length) }),
     };
   },
-};
+});

@@ -1,6 +1,6 @@
 # admission (T51)
 
-**Status** · session_015HDWbHmEnfNhPztiBbgnVw · depth 2 · COMPLETE · handled B2
+**Status** · session_017HGmsDoJ43QYVkTR8QtABy · depth 2 · COMPLETE · handled B2
 
 ## Completion (T51-108)
 
@@ -43,3 +43,55 @@ T51-108 (words pass) is done and pushed (f71da31fdc). The one words finding, the
 ## J2 · COMPLETE
 
 B2 (K4245) applied and pushed. export is admitted to the ADMIN_TOKEN bearer (R9) and the founder's session (kind admin); every other session, an enrolled administrator's included, is refused ROOT_OF_TRUST_REQUIRED before R9/R11. Tests re-pinned (admission.test.mjs R8, order test; invariants.test.mjs) with controls for the founder's session, administrator session, member session, capability-less session, retired member key, probe and daemon bindings. 58/58 pass; format, architecture, coverage (31/31), ownership, words clean. R8 amended line, and a note that words row refusal.ROOT_OF_TRUST_REQUIRED may still say the founder is refused, are in my record (build/jobs/T51/admission.md). CONTROL-PLANE re-pins its R28 test after merge.
+
+## J3 · BLOCKED
+
+BLOCKED, cause: tests (the provider is not merged; not a fault of this job).
+
+**Done:** `bioStore` (`bio-plane/src/admission/index.mjs:310`) now obtains the room by `storeStub(env, "bio")` (runtime-limits R28), with the import from `../store-place.mjs` (`dc0fdb53a1`, comment `9ed8e0dc0b`). No other change; no requirement id is new. The reading is whole: my code (all 1140 lines), `admission.md`, the fix-round-7 plan §0, §3, §8, and the added plan's Adopted revisions and G83 sections. The new test `bio-plane/test/m/admission/g83-location.test.mjs` (five tests: the hint on `sourceOf`, the hint on `securityTally`, the `bio~g2` name, the control with neither binding, and the allow-list refusals) is written first.
+
+**Checks run now:** format 0 failures; architecture 0 failures (the `store-place.mjs` import is not judged while it is untracked); coverage 31 of 31 live requirement ids named; ownership 0 failures.
+
+**Tests, red by name:** the admission folder fails at import, 19 files, `ERR_MODULE_NOT_FOUND: Cannot find module 'bio-plane/src/store-place.mjs' imported from bio-plane/src/admission/index.mjs`. `store-place.mjs` is runtime-limits' third file (R27, R28); it is not on `origin/tranche/T51` yet (runtime-limits is merge position 7, `build/plan/starts-T51-F7/runtime-limits.txt`). Until it merges, no admission test can run.
+
+**Needs:** BOB merges `tranche/T51` into this branch after runtime-limits merges and posts the CHANGE, or tells me to merge the tranche branch now. Then I run the folder and `g83-location.test.mjs`, and COMPLETE. I will not COMPLETE red on it.
+
+**Deferred:** none. **Found in another module:** none.
+
+## J4 · COMPLETE
+
+COMPLETE, commit 6ed48b0707 (branch job/T51/admission, merged with tranche/T51 after CHANGE K4757).
+
+**Entries applied:** G83. `bioStore` (bio-plane/src/admission/index.mjs:310) obtains the room by `storeStub(env, "bio")` (runtime-limits R28). Its four store paths (lookup, storeSource, doorWindowGate, securityTally) all go through it. No requirement id is new. Test `bio-plane/test/m/admission/g83-location.test.mjs` (five tests, failing first, red at import until the helper merged, now green).
+
+**Deferred:** none.
+
+**Found in another module (pre-existing on the clean tranche, not caused by this change):**
+- control-plane: `R123, R125 (G7)` in `t51-round6-seam.test.mjs` fails deterministically (2 of 2 reruns, and on a clean origin/tranche/T51 worktree).
+- plane: 11 failures (R24 words, R77 L gate x2, R86 G48 (c1), and the L-entry scripts g54, g55, g57, l75, l77, l79, r42). The same 11 fail on the clean tranche (compared by name).
+- plane's test run rewrites `bio-plane/test/m/plane/fixtures/g48-plane-answers.json`. I restored it; not committed. Worth a look by the plane owner.
+
+**Tests and checks:**
+- admission folder: 64 of 64 pass (includes the 5 G83 tests).
+- control-plane folder: 451 of 452 (the R123/R125 failure above).
+- plane folder: 401 of 412 (the 11 above).
+- format 0 failures; architecture 0 failures; coverage 31 of 31 live ids named; ownership 0 failures; words 0 failures.
+- impact set: admission 19/19, control-plane 69/85 and plane 54/66 as named users; both run as above.
+
+Size (session_01Ubr53UtKq7fm4Lcgq9Dr6r): test runs 9, module lines 1141
+
+## J5 · COMPLETE
+
+COMPLETE, fix round 8, cause G119 (R32, one session read per request), session ADMISSION #17.
+
+**G119, the four fields.**
+1. Cause: three places read the same session for one request: `admit` (`admission/index.mjs`, the gated path), `readerOf` and `liveSessionDigest` (the window's), each calling `sessionPresented` and so the store's `session` route. Fix: `sessionRead`, a memo keyed (weakly) on the door's one `presentedCredential` answer for the request, holding the first read's promise (a silence too) and reused only for the same token, `background` mark, `env` and `doAnswer`; a credential with no door object is read each time. No door change. `doorwindow` is kept (K1881). New data: none; old records: none.
+2. Why missed: no test counted the store's session reads of a request; op tests called each gate on its own.
+3. Failing-first `bio-plane/test/m/admission/r8-session-reads.test.mjs` (9 tests, R32 named in each), seen RED before the change: `AssertionError: the session is read once for the request (red before G119: two)` (window + reader, and reader + admit), `AssertionError: red before G119: three` (all three), `request 1: one read for that request`; GREEN after (admission folder 73 of 73). Controls: second request reads again; background and foreground are separate reads (a background read stays no activity); unknown session and a store silence are one read answered the same to each gate; no door object reads each time; another token is its own read; a locked session is read once and still counted by source.
+4. Platform check **L** (the count) is the test above; the door confirmation `control-plane/r8-hops.test.mjs` is control-plane's and is not on the tranche yet. **P** is BOB's.
+
+**Applied entries:** G119 only. **Deferred:** none. **Found in another module:** none. **Stale generated artifacts:** none made. **Requirement wording:** R32's "(not yet met: T51)" mark is met; no wording change proposed.
+
+**Tests and checks:** admission 73 of 73. Impact set (origin/tranche/T51..HEAD): admission 20/20, control-plane 70/87, plane 59/73, pdf-worker 1/12 as named users. control-plane folder 477 of 478: `R122 (the page's bootstrap is read once per load)` failed once under a concurrent plane run (54 s) and passes alone (clean tranche: pass; this branch: pass). plane folder 430 of 434: `R24` words and the two `R77 L` child-capped PDF tests fail as on the clean tranche (named in J4); `R84 G41` failed under load, passes alone on this branch and on the clean tranche. format 0 failures; architecture 0 failures; coverage 32 of 32 live ids named; words 0 failures; ownership 0 failures.
+
+Size (session_017HGmsDoJ43QYVkTR8QtABy): test runs 8, module lines 1590

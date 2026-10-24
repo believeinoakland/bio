@@ -39,6 +39,9 @@ import { checkDraft, WIZARD_SCRIPTS_CHECKS } from "./wizard-scripts/index.mjs";
 import { word, localize } from "./setup-words/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
+/* R102 (fix round 7 G83; runtime-limits R27, R28): the team's room is obtained only through the one helper, which passes the
+   configured location hint and names the room by its generation. */
+import { storeStub, storeHint, storeGeneration } from "./store-place.mjs";
 import { livefire } from "./livefire.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "./setup-fleet.mjs";
 /* A machine is told apart by record-grammar's one predicate, never by a reading of this module's own. */
@@ -58,7 +61,7 @@ import { AiRuns } from "./ai-runs/index.mjs";
 /* R47, R83: the words on who controls the group's Civicsmith, held once in the leaf the installer imports, re-exported for
    the screens that show them (`screens-entry`). */
 export { HOSTING_CONTROL, hostingControlBlock };
-export { INTERFACE_WORDS } from "./translations/index.mjs";
+export { interfaceWords } from "./translations/index.mjs";
 
 /* ============================================================================================================
  * THE INSTANCE: WHAT A GROUP'S CIVICSMITH IS AND WHOSE IT IS (instance-setup R1–R42). The module's own store-side and
@@ -148,8 +151,19 @@ export async function memberVersions(env) {
    `SERVING` true, `UNBOUND` false, otherwise null. No reason beyond the part. */
 export const PARTS = Object.freeze([["part_signin", RUNNER_MEMBER], ["part_scanner", "file-scanner"], ["part_safe_view", "file-scanner"]]);
 const presentOf = (report) => (report && report.state === "SERVING" ? true : report && report.state === "UNBOUND" ? false : null);
-export async function partsReport(env, versions = null) {
-  const v = versions || {};
+/* R104 (fix round 8, G118; fix round 9, G118b; K4817, K4853: 60 s, BOB's figure): the fleet's versions are asked at most once a minute
+   for the whole copy. `op=bootstrap` is every screen's frame, and its two asks of the fleet (agent-worker and file-scanner, each
+   bounded at 4 s) were awaited on every call. A Worker is served from many isolates, so an isolate's memory alone could keep them
+   only once a minute per isolate: the answer is also kept in the team's object, which every isolate visits, as a value with the
+   object's own time (the object answers its age, so no two isolates' clocks are compared). The isolate's `WeakMap` stays as the
+   first look; a call that finds neither asks the fleet itself, and then tells the object, once. A call that finds the ask still
+   running shares it, never starts a second. The first after a cold object waits as before. A read given its `versions`
+   (`members=1`, which asks the whole fleet itself) is not kept: it asks nothing here. */
+export const PARTS_KEPT_MS = 60_000;
+const keptParts = new WeakMap();
+const PART_KEYS = Object.freeze(PARTS.map(([key]) => key));
+const NO_PARTS = Object.freeze(Object.fromEntries(PART_KEYS.map((k) => [k, null])));
+const askParts = async (env, v) => {
   const need = [...new Set(PARTS.map(([, m]) => m))].filter((m) => !v[m]);
   if (need.length) {
     const host = need.includes(RUNNER_MEMBER) ? FLEET_BINDINGS.find(([m]) => m === RUNNER_HOST) : null;
@@ -161,7 +175,78 @@ export async function partsReport(env, versions = null) {
     }));
   }
   return Object.fromEntries(PARTS.map(([key, m]) => [key, presentOf(v[m])]));
+};
+/* The parts as the object keeps them: exactly the three flat keys, each `true`, `false` or `null`; anything else is no parts. */
+const flatParts = (v) => (v && typeof v === "object" && !Array.isArray(v) && PART_KEYS.every((k) => v[k] === true || v[k] === false || v[k] === null)
+  ? Object.fromEntries(PART_KEYS.map((k) => [k, v[k]])) : null);
+/* Whether asking the fleet cost anything here: with neither member bound the ask is answered at once, `UNBOUND`, and the object is not told. */
+const fleetBound = (env) => !!env && [RUNNER_HOST, "file-scanner"].some((m) => {
+  const b = env[(FLEET_BINDINGS.find(([x]) => x === m) || [])[1]];
+  return !!b && typeof b.fetch === "function";
+});
+/* The first look: this isolate's entry for `env` when it is live (`owner` false), else a new entry this call owns (`owner` true). */
+function claimParts(env, now) {
+  const at = now();
+  const held = keptParts.get(env);
+  if (held && at - held.at < PARTS_KEPT_MS && at >= held.at) return { entry: held, owner: false };
+  const entry = { at, parts: null, asking: null, how: null, askMs: 0 };
+  keptParts.set(env, entry);
+  return { entry, owner: true };
 }
+/* The owner's work: the object's kept parts first (`readKept` answers `{parts, age_ms}` or null), else the fleet, told to the
+   object afterwards (`writeKept`). It never rejects: a failure leaves no entry and answers every part `null`. */
+function runOwner(entry, env, now, { readKept, writeKept }) {
+  entry.asking = (async () => {
+    try {
+      let kept = null;
+      try { kept = await readKept(); } catch { kept = null; }
+      const shared = kept ? flatParts(kept.parts) : null;
+      if (shared && Number.isFinite(kept.age_ms) && kept.age_ms >= 0 && kept.age_ms < PARTS_KEPT_MS) {
+        entry.at -= kept.age_ms; entry.how = "shared"; entry.parts = shared;
+        return shared;
+      }
+      const t = now();
+      const parts = await askParts(env, {});
+      entry.askMs = Math.max(0, now() - t); entry.how = "asked"; entry.parts = parts;
+      if (fleetBound(env)) { try { await writeKept(parts); } catch { /* the object not told is only a later isolate asking again */ } }
+      return parts;
+    } catch {
+      if (keptParts.get(env) === entry) keptParts.delete(env);
+      return { ...NO_PARTS };
+    }
+  })();
+}
+/* `{parts, kept, ms}`: `kept` is true when no ask of the fleet was made or awaited by this call (the answer was already held, here or in the
+   object); `ms` the time this call spent on the fleet. */
+async function partsResult(claim, env, versions, now, since) {
+  if (!claim) return { parts: await askParts(env, versions ? { ...versions } : {}), kept: false, ms: Math.max(0, now() - since) };
+  const e = claim.entry;
+  if (claim.owner) { const parts = await e.asking; return { parts: { ...parts }, kept: e.how === "shared", ms: e.how === "asked" ? e.askMs : 0 }; }
+  if (e.parts) return { parts: { ...e.parts }, kept: true, ms: 0 };
+  const parts = await e.asking;
+  return { parts: { ...parts }, kept: false, ms: Math.max(0, now() - since) };
+}
+const claimable = (env, versions) => !versions && !!env && typeof env === "object";
+/* `partsReport(env, versions, {now, stub, doAnswer})`: the parts alone. With the object (`stub`, `doAnswer`) the keep is shared with every
+   isolate as `bootstrap` shares it; without, it is this isolate's. */
+export async function partsReport(env, versions = null, { now = () => Date.now(), stub = null, doAnswer = null } = {}) {
+  const since = now();
+  const claim = claimable(env, versions) ? claimParts(env, now) : null;
+  if (claim && claim.owner) {
+    const shared = stub && typeof doAnswer === "function";
+    runOwner(claim.entry, env, now, {
+      readKept: async () => (shared ? (await bootstrapFactsOf(stub, doAnswer, { facts: false, viewer: null, parts: true })).kept : null),
+      writeKept: async (parts) => { if (shared) await keepPartsOf(stub, doAnswer, parts); },
+    });
+  }
+  return (await partsResult(claim, env, versions, now, since)).parts;
+}
+/* G118b (R-LOG): which isolate answered. The id is made once per isolate, at its first use; the age is its own. */
+let isolateMark = null;
+const isolateOf = (now) => {
+  if (!isolateMark) isolateMark = { id: Array.from(globalThis.crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, "0")).join(""), at: now() };
+  return isolateMark;
+};
 
 /* R80 (T46; N897 (2); ai-runs R78): whether this is a test instance, asked of `ai-runs`' own `testInstance` over this
    isolate's environment (the one computation, never a copy of its condition); a read that throws is `false`. */
@@ -916,7 +1001,7 @@ function cmpVersion(a, b) {
  * `sleep`; each defaults to the module's own factory on the same `ctx`.
  * ===================================================================== */
 export class InstanceSetup {
-  #ctx; #env; #deps; #sql; #started = false; #languageRegistered = null;
+  #ctx; #env; #deps; #sql; #started = false; #languageRegistered = null; #fleetKept = null;
 
   constructor(ctx, env = {}, deps = {}) {
     this.#ctx = ctx;
@@ -2436,13 +2521,16 @@ export class InstanceSetup {
 
   /* R94, R64: `memberLanguage` registered once with `translations` (its R11), at start, so the translations read the member's
      own language through it; a second registration is only `PROVIDER_DECLARED`, harmless. Answered in the start's report. */
+  #translationsSvc() {
+    const me = this;
+    /* `aiAccounts` is a getter: `translations` asks for it only when a draft reaches the keep-away gate. */
+    return this.#deps.translations ?? translationsOf(this.#ctx, { record: this.#record(), membership: this.#membership(),
+      get aiAccounts() { return me.#aiAccounts(); }, jurisdictions: this.#deps.jurisdictions, now: this.#deps.now });
+  }
   #registerLanguage() {
     if (this.#languageRegistered) return this.#languageRegistered;
-    const me = this;
     try {
-      /* `aiAccounts` is a getter: `translations` asks for it only when a draft reaches the keep-away gate. */
-      const t = this.#deps.translations ?? translationsOf(this.#ctx, { record: this.#record(), membership: this.#membership(),
-        get aiAccounts() { return me.#aiAccounts(); }, jurisdictions: this.#deps.jurisdictions, now: this.#deps.now });
+      const t = this.#translationsSvc();
       this.#languageRegistered = t.registerMemberLanguageRead(({ viewer = null } = {}) => this.memberLanguage({ viewer }));
     } catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
     return this.#languageRegistered;
@@ -2607,11 +2695,20 @@ export class InstanceSetup {
    *  copy's own projects, documents, published case editions and active members, each taken whole, never through a
    *  viewer's sight. A fact that cannot be read now is `null`, never omitted and never `0`; no value names a member,
    *  handle or role, and none is nested. Writes nothing; never throws. */
-  bootstrapFacts() {
+  bootstrapFacts({ facts = true, viewer = null, parts = false } = {}) {
     const read = (f) => { try { return f(); } catch { return null; } };
     const text = (f) => { const v = read(f); return typeof v === "string" && v ? v : null; };
     const count = (f) => { const n = read(f); return Number.isInteger(n) && n >= 0 ? n : null; };
+    /* R103: a signed-in viewer's own screen language (R64) and the stamp of the team's adoptions (`translations` R20), in the
+       same answer so `bootstrap` makes one hop for both; a stamp that cannot be read is `null`, never guessed. */
+    const viewerOut = viewer ? { language: text(() => this.memberLanguage({ viewer }).language),
+                                 words_version: text(() => this.#translationsSvc().wordsVersion()) } : {};
+    /* R104 (G118b): the fleet's parts the object keeps, in the same visit, only when asked; the default answer is unchanged. */
+    const keptOut = parts ? { kept_parts: this.keptFleetParts() } : {};
+    if (!facts) return { ...viewerOut, ...keptOut };
     return {
+      ...viewerOut,
+      ...keptOut,
       team_name: text(() => this.groupIdentityPublic().display_name),
       installed_at: text(() => this.#runningOut().installed_at),
       last_used_at: text(() => this.#credentials().lastActivity()),
@@ -2621,6 +2718,22 @@ export class InstanceSetup {
       count_members: count(() => { const l = this.#membership().memberList({ administer: false });
         return Array.isArray(l && l.members) ? l.members.filter((x) => x && x.status === "active").length : null; }),
     };
+  }
+  /** R104 (fix round 9, G118b; K4853): the fleet's parts, kept for every isolate. The isolate that asked the fleet tells the object
+   *  (`keepFleetParts`), by the three flat keys; the object keeps them with its own time, in memory (a restart loses them, and the
+   *  next call asks the fleet once). `keptFleetParts` answers them with their age by the object's clock, or `null` when none is
+   *  kept or they are past `PARTS_KEPT_MS`. Neither writes the record, throws, or answers any key but the three and the age. */
+  keptFleetParts() {
+    const k = this.#fleetKept;
+    if (!k) return null;
+    const age = this.#now() - k.at;
+    return age >= 0 && age < PARTS_KEPT_MS ? { ...k.parts, age_ms: age } : null;
+  }
+  keepFleetParts(parts) {
+    const flat = flatParts(parts);
+    if (!flat) return { ok: false, reason: "PARTS_NOT_KEPT" };
+    this.#fleetKept = { at: this.#now(), parts: flat };
+    return { ok: true };
   }
   /* R95: every project the record holds, paged whole through record-core's `listByType`. */
   #countProjects() {
@@ -2976,7 +3089,9 @@ export function instanceSetupOps(m, url, body) {
     adminrecoverystep: () => m.adminRecoveryStep({ viewer: q("viewer") }),
     /* R95 (T51): the seven facts `op=bootstrap` states to a credentialed caller; a store-internal route (no spec), asked
        by `bootstrapReport` only for such a caller. */
-    bootstrapfacts: () => m.bootstrapFacts(),
+    bootstrapfacts: () => (body && typeof body === "object" && !Array.isArray(body) && body.keep !== undefined
+      ? m.keepFleetParts(body.keep)
+      : m.bootstrapFacts({ facts: q("facts") !== "0", viewer: q("viewer"), parts: q("parts") === "1" })),
     /* R84, R85 (T47; DEC-205): the group's logo and languages; `grouplogo` is the read control-plane serves. */
     /* R86: the logo's bytes are the request's body (a stream or bytes as the door hands them on, with `rawType` its
        content-type stamped in the query), or a JSON `{raw, rawType}` (`raw` base64, or null to clear). */
@@ -3082,7 +3197,7 @@ export const PUBLIC_GROUP_PROJECTIONS = Object.freeze(["instancegrouppublic", "g
 export async function publicInstanceGroup(env, storeName, projection = "instancegrouppublic", doAnswer) {
   if (!PUBLIC_GROUP_PROJECTIONS.includes(projection)) return { answered: false, result: undefined };
   let stub = null;
-  try { stub = env.STORE.get(env.STORE.idFromName(storeName)); } catch { stub = null; }
+  try { stub = storeStub(env, storeName); } catch { stub = null; }
   if (!stub) return { answered: false, result: undefined };
   return doAnswer(stub.fetch(`http://do/${projection}`));
 }
@@ -3092,7 +3207,7 @@ export async function publicInstanceGroup(env, storeName, projection = "instance
 export async function instanceGroupOp(env, storeName, { viewer = null, cls = null } = {}, io) {
   const { json, doAnswer } = io;
   if (viewer) {
-    const out = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/instancegroup"));
+    const out = await doAnswer(storeStub(env, storeName).fetch("http://do/instancegroup"));
     if (!out.answered) return notAnswered(out, "instancegroup", io);
     return json({ ok: true, result: out.result, store: storeName, tokenClass: cls }, 200);
   }
@@ -3104,7 +3219,7 @@ export async function instanceGroupOp(env, storeName, { viewer = null, cls = nul
 /** R10, R11 over the wire: the credentialed read (R11) or the public projection (R10). */
 export async function groupIdentityOp(env, storeName, { viewer = null, cls = null } = {}, io) {
   const { json, doAnswer } = io;
-  const out = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
+  const out = await doAnswer(storeStub(env, storeName)
     .fetch(viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
   if (!out.answered) return notAnswered(out, "groupidentity", io);
   return json({ ok: true, result: out.result, store: storeName, ...(viewer ? { tokenClass: cls } : {}) }, 200);
@@ -3115,7 +3230,7 @@ export async function groupIdentityOp(env, storeName, { viewer = null, cls = nul
  *  is a silence (R43). */
 export async function groupLogoAsset(env, storeName, io) {
   let res = null;
-  try { res = await env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/grouplogo"); } catch { res = null; }
+  try { res = await storeStub(env, storeName).fetch("http://do/grouplogo"); } catch { res = null; }
   const type = res ? String(res.headers.get("content-type") || "").split(";")[0].trim() : "";
   if (res && res.status === 200 && GROUP_LOGO_TYPES.some((t) => t.type === type))
     return new Response(res.body, { status: 200, headers: { "content-type": type, "cache-control": "no-store",
@@ -3130,20 +3245,43 @@ export async function groupLogoAsset(env, storeName, io) {
  *  R95 (T51): to a credentialed `caller` only (`{cls: "admin"}` for an admin-class token, `{administrator: true}` for an
  *  administrator's signed-in session, as the control plane resolved it) it adds the seven flat facts of the copy, read from
  *  the store's own `bootstrapfacts` route; a caller with none, or of another class, is answered exactly R132's key set. */
-export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer, storeRefusal, caller = null }) {
-  const out = await doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
-  if (!out.answered) return notAnswered(out, "bootstrap", { json, storeSilent, storeRefusal });
+export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer, storeRefusal, caller = null, stateTiming = null, now = () => Date.now() }) {
+  /* R104: `stateTiming(name, ms)`, when the door hands one, is told `fleet` (the time of the parts' ask, 0 when kept) and `facts` (the
+     time of this report's hops to the store), which the door states in `Server-Timing` (`fleet;dur`, `facts;dur`). G118b (R-LOG): and
+     `isolate`, this isolate's age, with its id as the third argument (`desc`), so a deploy shows how many isolates answer. */
+  const tell = (name, ms, desc) => { try { if (typeof stateTiming === "function") stateTiming(name, Math.max(0, Math.round(ms)), desc); } catch { /* a sink never fails the report */ } };
+  const tellIsolate = () => { const iso = isolateOf(now); tell("isolate", now() - iso.at, iso.id); };
+  let storeMs = 0;
+  const hop = async (f) => { const t = now(); try { return await f(); } finally { storeMs += now() - t; } };
+  /* The first look at the parts is made before the hops. A signed-in caller's call that must ask the fleet reads the object's keep in the
+     one visit it already makes for the facts, and tells the object once after an ask (K4870); a stranger's keeps to this isolate and makes
+     no visit of its own for it, and a call that finds this isolate's entry reads none. */
+  const since = now();
+  const claim = !members && claimable(env, null) ? claimParts(env, now) : null;
+  const owner = !!claim && claim.owner;
+  const signedIn = credentialedCaller(caller) || !!signedInViewer(caller);
+  const outHop = hop(() => doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`))));
+  const factsHop = hop(() => bootstrapFactsOf(stub, doAnswer, { facts: credentialedCaller(caller), viewer: signedInViewer(caller), parts: owner && signedIn }));
+  if (owner) runOwner(claim.entry, env, now, {
+    readKept: async () => (signedIn ? (await factsHop).kept : null),
+    writeKept: async (parts) => { if (signedIn) await hop(() => keepPartsOf(stub, doAnswer, parts)); },
+  });
+  const out = await outHop;
+  if (!out.answered) { await factsHop; tell("facts", storeMs); tellIsolate(); return notAnswered(out, "bootstrap", { json, storeSilent, storeRefusal }); }
   const versions = members ? await memberVersions(env) : null;
   /* R80, R82: the deployment's facts are this isolate's alone, so a store answer naming any of them sets nothing, and
      the retired nested `parts` (R81) is never relayed. R95: nor does it set any of the seven facts, which only a
-     credentialed caller is told, from the store's own route for them. */
+     credentialed caller is told, from the store's own route for them; R103: nor `language` or `words_version`. */
   const { parts: _retired, test_instance: _t, part_signin: _s, part_scanner: _c, part_safe_view: _v, ...held } =
     out.result && typeof out.result === "object" ? out.result : {};
-  const store = Object.fromEntries(Object.entries(held).filter(([k]) => !BOOTSTRAP_FACT_KEYS.includes(k)));
-  const facts = credentialedCaller(caller) ? await bootstrapFactsOf(stub, doAnswer) : {};
+  const store = Object.fromEntries(Object.entries(held).filter(([k]) => !BOOTSTRAP_FACT_KEYS.includes(k) && !BOOTSTRAP_VIEWER_KEYS.includes(k)));
+  const [parts, facts] = await Promise.all([partsResult(claim, env, versions, now, since), factsHop]);
+  tell("fleet", parts.ms);
+  tell("facts", storeMs);
+  tellIsolate();
   return json({ ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
                 bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...store,
-                test_instance: testInstanceOf(env), ...(await partsReport(env, versions ? { ...versions } : null)), ...facts,
+                test_instance: testInstanceOf(env), ...parts.parts, ...facts.out,
                 ...(members ? { memberVersions: versions } : {}) }, 200);
 }
 
@@ -3154,17 +3292,44 @@ export const BOOTSTRAP_FACT_KEYS = Object.freeze(["team_name", "installed_at", "
    administrator's signed-in session (`administrator`). The control plane hands both in as it resolved them; a caller that
    presented no credential, or one of another class, is told none of the seven. */
 const credentialedCaller = (caller) => !!caller && typeof caller === "object" && (caller.cls === "admin" || caller.administrator === true);
-/* R95: the store's answer for the seven, each key a non-empty string or a non-negative integer, else `null`; a read that
-   does not answer states all seven `null`, never leaving a key out and never inventing a count. */
-async function bootstrapFactsOf(stub, doAnswer) {
+/* R103 (fix round 8, G114): the keys of a signed-in caller, the viewer's screen language (R64) and the words stamp
+   (`translations` R20); never in a stranger's answer. */
+export const BOOTSTRAP_VIEWER_KEYS = Object.freeze(["language", "words_version"]);
+/* R103: a caller the door signed in as a member: the control plane's `viewer` stamp, a member's id (never a machine identity). */
+const signedInViewer = (caller) => {
+  const v = caller && typeof caller === "object" && typeof caller.viewer === "string" ? caller.viewer.trim() : "";
+  return v && !isMachineIdentity(v) ? v : null;
+};
+/* R95, R103: the store's answer, in one hop. With `facts` the seven, each key a non-empty string or a non-negative integer,
+   else `null`; with a `viewer` the viewer's `language` and the `words_version`, each a non-empty string or `null`. A read
+   that does not answer states every key asked `null`, never leaving a key out and never inventing a count; nothing asked,
+   no hop. R104 (G118b): with `parts` the same visit also asks the fleet's parts the object keeps for every isolate, answered
+   as `kept`: `{parts, age_ms}` (the three flat keys and the age by the object's own clock), or `null` when none is kept, they
+   are past the minute, or the visit was not answered. `{out, kept}`: `out` is what the answer states, `kept` is read by the owner of the ask. */
+async function bootstrapFactsOf(stub, doAnswer, { facts = true, viewer = null, parts = false } = {}) {
+  if (!facts && !viewer && !parts) return { out: {}, kept: null };
   let got = null;
-  try { const a = await doAnswer(stub.fetch(new Request("http://do/bootstrapfacts"))); got = a.answered && a.result && typeof a.result === "object" ? a.result : null; }
-  catch { got = null; }
-  return Object.fromEntries(BOOTSTRAP_FACT_KEYS.map((k) => {
+  try {
+    const q = new URLSearchParams({ facts: facts ? "1" : "0", ...(viewer ? { viewer } : {}), ...(parts ? { parts: "1" } : {}) });
+    const a = await doAnswer(stub.fetch(new Request(`http://do/bootstrapfacts?${q}`)));
+    got = a.answered && a.result && typeof a.result === "object" ? a.result : null;
+  } catch { got = null; }
+  const text = (v) => (typeof v === "string" && v !== "" ? v : null);
+  const out = {};
+  if (facts) for (const k of BOOTSTRAP_FACT_KEYS) {
     const v = got ? got[k] : null;
     const ok = k === "team_name" || k === "installed_at" || k === "last_used_at" ? typeof v === "string" && v !== "" : Number.isInteger(v) && v >= 0;
-    return [k, ok ? v : null];
-  }));
+    out[k] = ok ? v : null;
+  }
+  if (viewer) for (const k of BOOTSTRAP_VIEWER_KEYS) out[k] = text(got ? got[k] : null);
+  const k = parts && got && got.kept_parts && typeof got.kept_parts === "object" ? got.kept_parts : null;
+  const flat = k ? flatParts(k) : null;
+  return { out, kept: flat && Number.isFinite(k.age_ms) ? { parts: flat, age_ms: k.age_ms } : null };
+}
+/* R104 (G118b): the owner of an ask tells the object what the fleet answered, the three flat keys, so every other isolate reads it. */
+async function keepPartsOf(stub, doAnswer, parts) {
+  const a = await doAnswer(stub.fetch(new Request("http://do/bootstrapfacts", { method: "POST", body: JSON.stringify({ keep: parts }) })));
+  return a.answered === true;
 }
 
 /** R18, op=selftest: deployment health as JSON, so "did the deploy work" is a link rather than a command. It
@@ -3190,6 +3355,12 @@ export async function selftest(env, storeName, { cls = null, viewer = "", scratc
         ? await liveToken(env.DAEMON_TOKEN) : "not configured",
     },
     r2Configured,
+    /* R102: what this copy is configured with for its team's room: the location hint it asks the platform for when the room is
+       first created (`null` when none is configured) and the generation of the room it uses. Configuration only, never where
+       the room runs, and never a secret. */
+    store_location: storeHint(env),
+    store_generation: storeGeneration(env),
+    store_place_note: localize("instance-setup.selftest.store_place_note", "store_location and store_generation are what this copy is configured with for where its team's room is first created and which room it uses. They do not say where the room runs."),
   };
   /* Half a fence is a defect, not an option. */
   if ((typeof env.CAPTURES?.get === "function") !== (typeof env.PUBLISHED?.get === "function")) {
@@ -3198,7 +3369,7 @@ export async function selftest(env, storeName, { cls = null, viewer = "", scratc
   }
   try {
     /* REC-52: a store that answered `ok:false`, or did not answer, is a failure of the health check, never healthy. */
-    const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
+    const sOut = await doAnswer(storeStub(env, storeName)
       .fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}&viewer=${encodeURIComponent(viewer ?? "")}`));
     if (!sOut.answered) { out.ok = false; out.store = "ERR the store did not answer /stats"; }
     else out.store = sOut.result;
@@ -3304,7 +3475,7 @@ export const INSTANCE_SETUP_OPS = Object.freeze(["selftest", "livefire", "runtim
 export async function instanceSetupOp(op, url, env, storeName, { cls = null, viewer = "", scratch = "scratch", json,
                                                                   doAnswer, storeSilent, storeRefusal } = {}) {
   const io = { json, doAnswer, storeSilent, storeRefusal };
-  const store = () => env.STORE.get(env.STORE.idFromName(storeName));
+  const store = () => storeStub(env, storeName);
   /* selftest reports deployment health as JSON, so "did the deploy work" is a
      link rather than a command. It asserts every binding is present and that
      the store answers, and it never returns a secret. */
@@ -3345,7 +3516,7 @@ export async function instanceSetupOp(op, url, env, storeName, { cls = null, vie
  *  bootstrap flag and NOTHING the store knows — an instance answering "here is what I am" while unable to say
  *  anything about itself. The installer and `newgroup` both read this op, so the false success reached a caller
  *  deciding whether an instance was ready. `members=1` adds each member's own build. */
-export function bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer, caller = null }) {
+export function bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer, caller = null, stateTiming = null }) {
   return bootstrapReport(env, fp, { members: url.searchParams.get("members") === "1", stub, json, storeSilent,
-                                    storeRefusal, doAnswer, caller });
+                                    storeRefusal, doAnswer, caller, stateTiming });
 }

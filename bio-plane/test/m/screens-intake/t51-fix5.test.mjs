@@ -192,7 +192,9 @@ test("R31 (E8) 'Finish it' answered with the visitor copy filed says it, files t
   fill(p, { "ci-address": PAGE });
   await press(p, "acquire");
   await p.click(finishButton(p));
-  for (let i = 0; i < 10; i++) await p.settle(20);
+  /* R-NOLOAD (K4787): wait for the work asserted (the second promotion), not for a fixed number of turns */
+  for (let i = 0; i < 80 && p.byOp("promote").length < 2; i++) { await p.settle(20); await new Promise((r) => setTimeout(r, 5)); }
+  for (let i = 0; i < 4; i++) await p.settle(20);
   assert.equal(p.byOp("promote").length, 2, "the first capture, then the visitor copy");
   const second = p.byOp("promote")[1].body;
   assert.ok(second.files.some((x) => x.sha256 === "c".repeat(64) || x.blobSha === "c".repeat(64)), "the document filed is the rendered one");

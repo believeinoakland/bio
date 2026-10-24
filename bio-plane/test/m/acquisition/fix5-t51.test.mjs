@@ -32,7 +32,7 @@ async function held(w, bytes) {
   return { ev, parts, total: bytes.length, sha: sha(bytes) };
 }
 
-test("R101: the profile of a 10 MB PDF held in two parts with no declared type is pdf, certain, read from the first KiB of its first part", async () => {
+test("R101: the profile of a 10 MB PDF held in two parts with no declared type is pdf, certain, read from range reads of its head and tail, no part read whole", async () => {
   const w = world();
   const h = await held(w, pdfOf(10 * MIB));
   assert.equal(h.parts.length, 2);
@@ -41,10 +41,11 @@ test("R101: the profile of a 10 MB PDF held in two parts with no declared type i
                               view: profileView(w.core), retrieved: "2026-10-22T00:00:00Z", origin: "member", parts: h.parts });
   assert.equal(p.format.format, "pdf");
   assert.equal(p.format.confidence, "certain");
-  /* a look at the head, not a read of the part: one range of at most a KiB, and no whole-object read of any part */
+  /* R101: range reads of the head (at most the registry's 1 MiB) and the tail, and no whole-object read of any part */
   const reads = w.b.calls.filter((c) => c[0] === "get");
   assert.ok(reads.length >= 1, "the first part was looked at");
-  for (const c of reads) assert.ok(c[2] && c[2].range && c[2].range.offset === 0 && c[2].range.length <= 1024, `a head range, not the part (${JSON.stringify(c[2])})`);
+  assert.ok(reads.some((c) => c[2] && c[2].range && c[2].range.offset === 0), "its head was read");
+  for (const c of reads) assert.ok(c[2] && c[2].range && c[2].range.length <= 1024 * 1024, `a range, not the part (${JSON.stringify(c[2])})`);
 });
 
 test("R101: control: bytes that are not a known format, held in parts, stay undetermined; a missing first part is stated, never a failed profile", async () => {
@@ -60,7 +61,7 @@ test("R101: control: bytes that are not a known format, held in parts, stay unde
   assert.equal(lost.format.format, "undetermined");
 });
 
-test("R101: a fetched 10 MB PDF the source serves with no content type is profiled pdf, certain, with no part read back", async () => {
+test("R101: a fetched 10 MB PDF the source serves with no content type is profiled pdf, certain, with no part read whole", async () => {
   const w = world();
   const url = "https://oakland.example/big.pdf";
   const bytes = pdfOf(10 * MIB);
@@ -70,7 +71,7 @@ test("R101: a fetched 10 MB PDF the source serves with no content type is profil
   assert.equal(r.body.document.profile.format.format, "pdf");
   assert.equal(r.body.document.profile.format.confidence, "certain");
   const firstPart = r.body.document.parts[0].sha256;
-  assert.equal(w.b.calls.filter((c) => c[0] === "get" && c[1].endsWith(firstPart)).length, 0, "acquire holds the head it just stored");
+  assert.equal(w.b.calls.filter((c) => c[0] === "get" && c[1].endsWith(firstPart) && !(c[2] && c[2].range)).length, 0, "no part is read whole (R101: range reads of the head)");
 });
 
 test("R102: textTypeOf is the upload's rule: a declared text type, or a .txt/.md/.csv name when none is declared, only for bytes that are UTF-8 without NUL", () => {

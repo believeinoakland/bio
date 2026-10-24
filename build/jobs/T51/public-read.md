@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_01NMAPmXtfQM81PpmWgAWnaY · depth 2 · COMPLETE · handled B25
+**Status** · session_0184YebVjUHZmj4s1SrMEH85 · depth 2 · COMPLETE · handled B27
 
 ## J1 · QUESTION
 
@@ -305,3 +305,45 @@ Size (session_01NMAPmXtfQM81PpmWgAWnaY): test runs 24, module lines 4108
 **COMPLETE again (G54, CHANGE B25).** `tranche/T51` merged (publication's ledger and PUBLISH-SCHEDULE in it); nothing in my code changed. Against the real `publication`, public-read: 298 tests, 298 pass, 0 fail. Users (`impact.mjs`, 916 files besides mine): 7,650 tests, 7,635 pass, 12 fail, all of them also failing on a clean `tranche/T51`, none mine: case-checker R13 and R25 and plane/screens-action reds (your inherited list); seven R29 pseudo-sentence arms (journey-check, pass in isolation); and op-declarations `t33.test.mjs` R19, R6 (a census spec for `recordcasefile`, red on the clean tranche as well, so publication's or op-declarations'). `absent` passes through to publication's writer; public-read never decides `stopped`. format, architecture, coverage public-read (43 of 43), ownership (10 files): 0 failures; words: no new finding. The 13 new word ids and the signatures are as in J23.
 
 Size (session_01NMAPmXtfQM81PpmWgAWnaY): test runs 27, module lines 4108
+
+## J25 · COMPLETE
+
+**COMPLETE · fix round 8, G121 (R44).** Commit on `job/T51/public-read`.
+
+**(1) Cause, as planned, confirmed by reading.** `publication/worker.mjs` `assembleCaseFile` put the case file's files one at a time (`for … if (!(await b.head(...))) await b.put(...)`), and `public-read/casefile.mjs` `buildCaseFile` read each material, extracted text, archive, copy, attestation token and calculation input after the last through `read(sha)`.
+
+**Applied.** `casefile.mjs`: `export const CASEFILE_GROUP = 8`; `buildCaseFile` first reads every object it will need (findings' bytes, materials, extracted texts, registered archives, copies, attestation tokens, calculation inputs; each sha once, only well-formed ones, only those the facts do not carry inline) in groups of 8, keeps each answer or throw by hash, and hands it back where the assembly asks, so the files, `unheld`, statements and their order are what the one-at-a-time read gave, and a read that throws throws where it was asked (step `build`, code `UNKNOWN`, as before). `worker.mjs`: the `head` and `put` of the files run in groups of 8 over the distinct objects (two paths of one file are one object, which the sequential head already made one put). The manifest's own `head`/`put` is unchanged. Census (K4208): no op added or changed; the answers are byte for byte as before. Bound (R-SILENT): a group size of 8, stated here; it changes nothing a member may do.
+
+**(2) Why the tests missed it:** nothing counted R2 calls or their depth and the bucket stand-ins answered at once. **Fixed:** `r8-assemble.test.mjs` records start and end of every `get`, `head` and `put` on a bucket that answers after a wait.
+
+**(3) Failing-first, seen red on the base tree** (R44 named in every title): `head: peak concurrency at least 6 (1)` (both modes) and `read concurrency between 6 and 8 (1)`. Green after: 4 of 4. The file asserts, through the real commit, store and `assembleCaseContainer` over 19 files: peak concurrency of head, put and get at least 6 and never over 8; the golden set of keys (every file the manifest lists and the manifest's own bytes, once each; with the copied objects already present only the new ones); `buildCaseFile` with a slow read answers manifest, `unheld` and files equal to the one-at-a-time read's with no extra read; a throwing read stops at step `build`. Five runs on one core (`taskset -c 0`): 5 of 5.
+
+**(4) Platform check:** L here (counts and concurrency). P is BOB's after the redeploy (the case file's phase in `caseratify;dur`). Depth of the case file's R2 chain with 12 files is now 2 groups x (head, put) = 4 plus ONE group of reads, where G120's sum assumed the two `PUBLISHED.get` calls in sequence (6): the reads are concurrent too, so the figure is 5 for the case file, one lower than the plan's sum; this is why.
+
+**Requirement wording proposed for BOB (R44):** drop "*(not yet met: T51)*"; test: `r8-assemble.test.mjs`. Also: the reads of materials are issued first, before the file list is built, so an edition with a missing finding reads its materials before it is refused (the memory the assembly already held for files; bounded by `CASEFILE_FILES_MAX`).
+
+**Tests and checks.** public-read: 302 tests, 302 pass, 0 fail. Users: `impact.mjs origin/tranche/T51 HEAD` names 52 modules; the 60 test files outside mine that name `assembleCaseContainer`, `buildCaseFile`, `casefile.mjs` or `caseratify` (case-checker, ratification, control-plane, plane, others): 634 tests, 634 pass, 0 fail. format 0 failures; architecture 0; coverage 44 of 44 ids named, 0; ownership 0 (4 files changed by public-read). words: 13 failures, none in this module's files (installer-steps `installer.fleet.logsunconfirmed`, screens-intake `refusal.PROMOTE_NOT_A_PARTICIPANT` and others, other owners'). **Deferred:** none. **Found in other modules:** none; stale generated artifacts: `bio-plane/dist/bio-plane.bundled.mjs` and its manifest are stale by this change (the plane bundles both files); BOB regenerates at the round end.
+
+Size (session_01ASV3wk2NXRsmjWuZ5kcqd8): test runs 14, module lines 4142
+
+## J26 · COMPLETE
+
+**COMPLETE · fix round 9, job 50, G121b (R44).** Commit on `job/T51/public-read`.
+
+**(1) Cause, confirmed by reading and by counting.** `publication/worker.mjs` `assembleCaseFile` put the case file's files in two barriered groups of 8, a `head` before every `put`, and put the manifest's own bytes (a `head` then a `put`) only after `recordcasemanifest`; `public-read/casefile.mjs` `buildCaseFile` read its materials in barriered groups; `assembleCaseContainer` awaited the `building` ledger call before the facts were asked. My reading agrees with the diagnosis (item 3). On the walker's one-finding case the longest awaited chain of R2 calls was 5 levels locally (10 on a twelve-file case with ten materials); R2 `get`, `head`, `put` each waited for the one before.
+
+**Applied.** (a) `casefile.mjs` exports `inWindow(items, fn, width = CASEFILE_GROUP)`, a window of 8 that slides (the next call starts the moment one ends; answers settled results in item order; starts nothing after a failure), used for the reads of materials; `CASEFILE_BLIND_PUT_MAX` (256 KiB, proposed; BOB records). (b) `assembleCaseFile` records which shas it read from the bucket at their own key: a file of such a hash is held already and gets neither `head` nor `put`; every other file is put by its hash with no `head` before it (a file over `CASEFILE_BLIND_PUT_MAX` is asked after first, so a large file already held is not sent again). (c) The manifest's bytes are made before anything is written (`inbandQuartet` needs only the files' hashes) and put in the same window as the files, never above 8 at once; `recordcasemanifest` still follows the files; a failure of the manifest's own put is still stated after the record (step `manifest_put`, recorded, bytes not stored: `g54-attempt.test.mjs` (e) holds unchanged). (d) The `building` ledger call is issued while the facts are read, and awaited before any later ledger write (a late `building` would overwrite a `failed` or `built`).
+
+Chain now: one level of reads, one of writes (files and manifest together), for up to 7 derived files besides the manifest; each further 8 add one level. The same objects are written; the answers are byte for byte as before.
+
+**(2) Why the tests missed it.** Round 8's test counted peak concurrency and calls, not the awaited chain. **Fixed:** `r8-assemble.test.mjs` gives every bucket call a level (one more than the deepest call that had ended when it started) and asserts the top level.
+
+**(3) Failing-first, seen red on the base tree:** `at most 3 levels of awaited R2 calls (5)` (the walker's one-finding case) and `(10)` (twelve files and more); `…/<sha> was read and is not written`. Green after: 9 of 9 in the file (new: the two depth cases, the read-is-held test, a file put that fails stops before the record at `bucket_put` and a manifest put that fails stops at `manifest_put`, the window's own test). Two older assertions in the same file stated the mechanism and changed with it, to the requirement's intent (same objects written, groups of 8 never exceeded): the `head` concurrency of at least 6 and "every object put was asked after by its head" are gone because heads are gone, and the golden key set now excludes the objects read from the bucket (held) and includes small objects already held that are put again with identical bytes.
+
+**(4) Platform check:** L here (counts); P is BOB's: `assemble;dur` on the re-walk. **Old records:** none; stored data unchanged (new assemblies only; an object put twice is the same bytes under the same key).
+
+**Requirement wording proposed for BOB (R44):** "The assembly's `head` and `put` of the files run in groups of 8 over the distinct objects ...; the manifest's own `head` and `put` are unchanged" becomes: "The assembly puts the files it derives, and the manifest's own bytes, in a sliding window of 8 over the distinct objects (two paths of one file are one object), each by its hash and with no `head` before the `put` (a file over 256 KiB is asked after first); an object it just read from the bucket at its own hash is held and is not touched. The reads of materials likewise. The manifest is recorded after its files; a failure of its own put is stated after the record. Test: `r8-assemble.test.mjs`: the longest awaited chain of R2 calls is at most 3 for up to 7 derived files." One consequence to know: if `recordcasemanifest` refuses after the manifest's bytes are in the bucket, those bytes stay there unserved (no `published_shas` row), as the manifest of a case already public.
+
+**Tests and checks.** public-read: 308 tests, 308 pass, 0 fail. Users (`impact.mjs origin/tranche/T51 HEAD` names 52 modules; run: ratification, publication, plane `g54-sweep`, control-plane `r8-caseratify-calls` and `t51-round7-seam`, screens-publish, case-authoring `editions`, case-disclosures `g50-acts`): 526 + 295 tests, 0 fail. format: 176 modules, 1 failure (`office-readers`' path `bio-plane/src/office-xml.mjs`, not mine, on the tranche already); architecture public-read: 0 failures; coverage public-read: 44 of 44 ids named, 0 failures; ownership: 4 files, 0 failures; words: no finding in my module (19 failures round-wide, none mine).
+
+Size (session_0184YebVjUHZmj4s1SrMEH85): test runs 9, module lines 3910

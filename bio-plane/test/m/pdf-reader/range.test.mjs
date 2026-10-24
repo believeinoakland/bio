@@ -43,6 +43,8 @@ function child(args, nodeArgs = []) {
 const pagesDigest = (pages) => { const h = createHash("sha256"); for (const p of pages) h.update(JSON.stringify([p.page, p.text, p.undetermined])); return h.digest("hex"); };
 
 /* a small document of 7 text pages, for the shape rules */
+/* each page of `small()` has this many decoded content bytes: R43 judges `maxBytes` against a page's own decoded size (fix round 9, G124d) */
+const PAGE_BYTES = "BT /F1 12 Tf 10 700 Td (page number 1 text) Tj ET".length;
 const small = () => doc(Array.from({ length: 7 }, (_, i) => ({ content: `BT /F1 12 Tf 10 700 Td (page number ${i + 1} text) Tj ET` })));
 
 test("R43: a range answers the pages' text as the whole reading answers them, and the union of ranges is the whole, each page once", async () => {
@@ -100,11 +102,11 @@ test("R43: BUDGET-2024-APP (1,354 pages) is read 100 pages a call in a heap of 1
   assert.ok(got.slowestMs < 10_000, `a call took ${Math.round(got.slowestMs)} ms`);
 });
 
-/* R43's byte bound (fix round 6, G56; K4693): an optional `range.maxBytes` shrinks the pages a call builds to what that many
- * file bytes carry at the document's own bytes per page, at least one page. Asserted in pages, never in time (R-CLOCK). */
-test("R43: maxBytes shrinks a range to the pages that many bytes carry at the document's bytes per page, never widens it, floors it at one page, and without maxBytes the call is today's", async () => {
+/* R43's byte bound (fix round 6, G56; K4693; fix round 9, G124d): an optional `range.maxBytes` shrinks the pages a call builds
+ * to those whose own decoded content fits it, at least one page. Asserted in pages, never in time (R-CLOCK). */
+test("R43: maxBytes shrinks a range to the pages whose own decoded size fits it, never widens it, floors it at one page, and without maxBytes the call is today's", async () => {
   const bytes = small();
-  const perPage = bytes.length / 7;
+  const perPage = PAGE_BYTES;
   const none = await extractPdfRange(bytes, { from: 0, count: 7 });
   assert.equal(none.count, 7);
   /* absent, or not a finite number above 0: the call equals the call without it, byte for byte */

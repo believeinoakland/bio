@@ -26,7 +26,8 @@ function promote(w, id = BIG, snapKey = "mp1", author = "member:alice") {
   const r = w.promotion.promote({ bundleId: id, base: null, snapKey, author, meta: { object_type: "information" },
     files: [{ path: "bundle.md", text: infoMd(id) }, { path: "data/provenance.json", text: JSON.stringify({ documents: [doc] }, null, 1) },
             ...held.map((p) => ({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes }))],
-    register: held.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes })) });
+    register: [{ sha256: WHOLE, path: doc.file, encoding: "binary", bytes: TOTAL },      /* the whole first, then its parts: capture.mjs's own register */
+               ...held.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes }))] });
   if (!r.ok) throw new Error(`fixture multipart refused: ${JSON.stringify(r).slice(0, 400)}`);
 }
 /* the bytes an exporter holds: every named object the world can read, and the parts' bytes by their digests */
@@ -37,13 +38,13 @@ function bytesOf(w, manifest) {
 }
 const scene = () => { const w = world(); promote(w); w.inquiry("INQ-2026-0001-q", { cites: [BIG] }); return w; };
 
-test("R13: the manifest carries the whole's register row as an identity, with its parts in order, beside its parts' own rows", () => {
+test("R13: the manifest carries the whole's register row as an identity, with its parts in order, and no row of a part (provenance R74)", () => {
   const w = scene();
   const m = w.ce.exportManifest({});
-  assert.equal(m.register.length, 4);
+  assert.equal(m.register.length, 1, "the whole alone: a part's digest is no register row");
   const whole = m.register.find((r) => r.capture_sha === WHOLE);
   assert.deepEqual(whole, { bundle_id: BIG, path: "snapshots/big", capture_sha: WHOLE, bytes: TOTAL, whole: 1, parts: held.map((p) => p.sha256) });
-  for (const p of held) assert.deepEqual(m.register.find((r) => r.capture_sha === p.sha256), { bundle_id: BIG, path: p.file, capture_sha: p.sha256, bytes: p.bytes });
+  for (const p of held) assert.equal(m.register.find((r) => r.capture_sha === p.sha256), undefined);
 });
 
 test("R13: the bytes an exporter holds for a bundle held in parts verify, with no concatenation handed apart", () => {

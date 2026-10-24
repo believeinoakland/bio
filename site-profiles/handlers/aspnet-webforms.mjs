@@ -22,6 +22,7 @@
  */
 import { CONFIDENCE } from "../recogniser.mjs";
 import { REGION } from "../region.mjs";
+import { factsOf } from "../scan.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const VIEWSTATE_FIELDS = "__VIEWSTATE|__VIEWSTATEGENERATOR|__VIEWSTATEENCRYPTED|__EVENTVALIDATION"
@@ -35,13 +36,14 @@ export default {
 
   detect(ctx) {
     const h = ctx.headers || {};
-    const text = ctx.text || "";
+    const f = factsOf(ctx);
     const signals = [];
     /* The hidden field is the definitive signal: nothing but WebForms emits it,
-       and it is present on every WebForms page by construction. */
-    if (/<input[^>]*\bname="__VIEWSTATE"/i.test(text)) signals.push("__VIEWSTATE field");
-    if (/<input[^>]*\bname="__EVENTVALIDATION"/i.test(text)) signals.push("__EVENTVALIDATION field");
-    if (/\bid="aspnetForm"/i.test(text)) signals.push("aspnetForm");
+       and it is present on every WebForms page by construction. Linear in the text
+       (R20): the tags and the markers are read once, by `scan.mjs`. */
+    if (f.viewstate) signals.push("__VIEWSTATE field");
+    if (f.eventvalidation) signals.push("__EVENTVALIDATION field");
+    if (f.marks.has("aspnet_form")) signals.push("aspnetForm");
     const powered = String(h["x-powered-by"] || "");
     if (/asp\.net/i.test(powered)) signals.push("x-powered-by: " + powered);
     if (h["x-aspnet-version"]) signals.push("x-aspnet-version: " + h["x-aspnet-version"]);

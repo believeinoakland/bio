@@ -33,8 +33,8 @@ export function patternsOf(q, args) {
   return [...literal, ...bound];
 }
 
-export function storage({ schema = true } = {}) {
-  const db = new DatabaseSync(":memory:");
+export function storage({ schema = true, file = ":memory:" } = {}) {
+  const db = new DatabaseSync(file);
   let n = 0;
   const sql = {
     exec(q, ...args) {
@@ -80,12 +80,20 @@ export function multipartBucket({ minPart = 0, failComplete = null } = {}) {
   const state = { out: 0, peak: 0, begun: 0, completed: 0, aborted: 0, uploaded: [] };
   return Object.assign(base, {
     state,
-    async get(k) {
-      base.calls.push(["get", k]);
+    async get(k, opts) {
+      base.calls.push(opts && opts.range ? ["get", k, opts] : ["get", k]);
       if (!base.held.has(k)) return null;
-      const bytes = base.held.get(k);
+      const whole = base.held.get(k);
+      /* R2's `range` (K4855): `{offset, length}` or `{suffix}`; `size` stays the object's, the body is the range's */
+      let bytes = whole, range;
+      const r = opts && opts.range;
+      if (r) {
+        const offset = r.suffix != null ? Math.max(0, whole.length - r.suffix) : Math.min(r.offset ?? 0, whole.length);
+        const end = r.suffix != null ? whole.length : Math.min(whole.length, r.length != null ? offset + r.length : whole.length);
+        bytes = whole.subarray(offset, end); range = { offset, length: end - offset };
+      }
       state.out += 1; state.peak = Math.max(state.peak, state.out);
-      return { key: k, size: bytes.length, async arrayBuffer() { return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength); } };
+      return { key: k, size: whole.length, ...(range ? { range } : {}), async arrayBuffer() { return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength); } };
     },
     async createMultipartUpload(k) {
       base.calls.push(["createMultipartUpload", k]); state.begun += 1;

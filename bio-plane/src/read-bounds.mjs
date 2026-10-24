@@ -1,0 +1,157 @@
+/* The reading ceilings, one table (runtime-limits R29, R30, R31; fix round 9 G124; K4831 (3) (8), K4834, K4835 (1)).
+ *
+ * Every ceiling a reading module keeps is a row here: `standard` is the figure the standard sets (K4628), `alpha` the
+ * figure the alpha keeps (the kind's own figure at the start of fix round 9 where it is lower), `protective` a limit
+ * against a file no ordinary program produces. A quoting module writes `export const X_MAX = boundOf(kind, name)` and
+ * holds no numeric literal for a ceiling; the sentence a refusal says is the quoting module's (`key` names it). A job
+ * adds its own row below, with the three figures. MB and GB count 2^20 and 2^30 bytes (K4840 (1)). Where the
+ * requirements give no standard for a heavy kind, the row's standard is K4628's per kind (K4845: documents 100 MB,
+ * spreadsheets and images 50 MB; the alpha where it is above), a count or time row's standard is its alpha, and the
+ * protective figure is the one R30 names, else the standard. Pure; nothing at load but the frozen table. */
+
+const KiB = 1024, MiB = 1048576, GiB = 1073741824, MB50 = 52428800, MB100 = 104857600;
+
+/* the light kinds take the standard in Stage 1 (K4834) */
+const LIGHT_KINDS = Object.freeze(["text", "csv", "tsv", "json", "xml"]);
+
+const row = (standard, alpha, protective, key) => ({ standard, alpha, protective, key });
+/* a byte row of a heavy kind: the standard is K4628 per kind (K4845): documents 100 MB, spreadsheets and images 50 MB; where the alpha is above it, the alpha */
+const bytes = (alpha, key, perKind) => row(Math.max(alpha, perKind), alpha, Math.max(alpha, perKind), key);
+/* a count or size with one figure for all three columns */
+const same = (n, key) => row(n, n, n, key);
+const k = (kind, name) => `limit.${kind}.${name}`;
+
+const light = (kind, alphaBytes) => ({
+  bytes: row(MB50, alphaBytes, MB50, k(kind, "bytes")),
+  rows: row(1048576, 1048576, 1048576, k(kind, "rows")),
+});
+
+const TABLE = {
+  text: light("text", 24 * MiB),
+  csv: light("csv", 17 * MiB),
+  tsv: light("tsv", 24 * MiB),
+  json: light("json", 24 * MiB),
+  xml: { ...light("xml", 24 * MiB), tag: same(64 * KiB, k("xml", "tag")) },
+  archive: {
+    uploaded_bytes: row(524288000, 256 * MiB, 524288000, k("archive", "uploaded_bytes")),
+    unpacked_bytes: row(2 * GiB, 256 * MiB, 2 * GiB, k("archive", "unpacked_bytes")),
+    depth: same(3, k("archive", "depth")),
+    ratio: same(1100, k("archive", "ratio")),
+    members: same(10000, k("archive", "members")),
+    directory: same(16 * MiB, k("archive", "directory")),
+    name: same(4096, k("archive", "name")),
+    /* a member's bytes: the ooxml reader's own figure (OOXML R30 `MEMBER_MAX`, K4857) */
+    member_bytes: row(2 * GiB, 256 * MiB, 2 * GiB, k("archive", "member_bytes")),
+  },
+  pdf: {
+    bytes: bytes(24 * MiB, k("pdf", "bytes"), MB100),
+    worker_bytes: bytes(64 * MiB, k("pdf", "worker_bytes"), MB100),
+    need_mb: same(100, k("pdf", "need_mb")),
+    page_content: same(64 * MiB, k("pdf", "page_content")),
+    /* 32 MiB: 16 MiB refused a real govinfo file's 18.55 MiB object stream (K4862) */
+    object_stream: same(32 * MiB, k("pdf", "object_stream")),
+    cmap: same(MiB, k("pdf", "cmap")),
+    embedded_file: same(64 * MiB, k("pdf", "embedded_file")),
+    objects: same(2000000, k("pdf", "objects")),
+    direct_object: same(4 * MiB, k("pdf", "direct_object")),
+    operands: same(65536, k("pdf", "operands")),
+    tree_depth: same(256, k("pdf", "tree_depth")),
+    bfrange_codes: same(65536, k("pdf", "bfrange_codes")),
+    xmp: same(2 * MiB, k("pdf", "xmp")),
+  },
+  image: {
+    pixels: same(120000000, k("image", "pixels")),
+    edge: same(65535, k("image", "edge")),
+    chunks: same(65536, k("image", "chunks")),
+    row_stride: same(8 * MiB, k("image", "row_stride")),
+    cover_bytes: bytes(32 * MiB, k("image", "cover_bytes"), MB50),
+    picture_frame: same(4096 * 3072 * 3, k("image", "picture_frame")),
+    /* the figures the image jobs already hold (K4858, K4859) */
+    working_set: same(61300000, k("image", "working_set")),
+    retained_objects: same(250000, k("image", "retained_objects")),
+    picture_source: same(603979776, k("image", "picture_source")),
+    /* pixels of the rows route: 16384 x 12288, today's photo ceiling (K4862) */
+    rows_pixels: same(201326592, k("image", "rows_pixels")),
+  },
+  ocr: {
+    frame_bytes: bytes(61300000, k("ocr", "frame_bytes"), MB50),
+    picture_edge: same(4096, k("ocr", "picture_edge")),
+  },
+  render: {
+    safe_view_bytes: same(32 * MiB, k("render", "safe_view_bytes")),
+    safe_view_pages: same(500, k("render", "safe_view_pages")),
+    /* the serialised-DOM bound capture-sources' `renderBlock` takes as `domBound.bound`: 25 MiB, BOB's protective figure (K4831 (8)) */
+    dom_bytes: same(25 * MiB, k("render", "dom_bytes")),
+  },
+  /* the acquisition module's ceilings (K4882): `MULTIPART_KEEP_MAX` and `PROFILE_TEXT_MAX`, today's figures in all three columns */
+  capture: {
+    keep_bytes: same(32 * MiB, k("capture", "keep_bytes")),
+    profile_text_bytes: same(8 * MiB, k("capture", "profile_text_bytes")),
+  },
+  document: {
+    clean_bytes: bytes(16 * MiB, k("document", "clean_bytes"), MB100),
+    /* a part of a document: standard 100 MB, the alpha and the protective figure 32 MiB (K4860) */
+    part_bytes: row(MB100, 32 * MiB, 32 * MiB, k("document", "part_bytes")),
+  },
+  file_safety: { grade_read: bytes(20 * MiB, k("file_safety", "grade_read"), MB100) },
+  office: {
+    entries: same(100000, k("office", "entries")),
+    retained_objects: same(250000, k("office", "retained_objects")),
+    /* the ooxml reader's text figures: ooxml R6 `MEASURED_OOXML_TEXT_BOUND_BYTES`, R35 `STREAMED_TEXT_BOUND_BYTES` (K4857) */
+    text_bytes: row(MB100, 20 * MiB, MB100, k("office", "text_bytes")),
+    streamed_text_bytes: row(MB100, 32 * MiB, MB100, k("office", "streamed_text_bytes")),
+    /* a count of characters, not bytes (K4858) */
+    decoded_chars: same(64 * MiB, k("office", "decoded_chars")),
+    /* protective (K4859) */
+    structural_part_bytes: same(8 * MiB, k("office", "structural_part_bytes")),
+    piece_chars: same(8 * MiB, k("office", "piece_chars")),
+  },
+  /* the file scanner's ceilings (K4858); `time_ms` is milliseconds, `partitions` and `icons_pe` counts */
+  scan: {
+    max_bytes: row(524288000, 256 * MiB, 524288000, k("scan", "max_bytes")),
+    time_ms: same(900000, k("scan", "time_ms")),
+    embedded_pe: same(40 * MiB, k("scan", "embedded_pe")),
+    html_normalize: same(40 * MiB, k("scan", "html_normalize")),
+    script_normalize: same(20 * MiB, k("scan", "script_normalize")),
+    zip_type_rcg: same(MiB, k("scan", "zip_type_rcg")),
+    partitions: same(50, k("scan", "partitions")),
+    icons_pe: same(100, k("scan", "icons_pe")),
+  },
+  sheet: {
+    columns: same(16384, k("sheet", "columns")),
+    cell_chars: same(32767, k("sheet", "cell_chars")),
+    cell_kept_chars: same(MiB, k("sheet", "cell_kept_chars")),
+    sheets: same(1000, k("sheet", "sheets")),
+  },
+  xlsx: { declared_text: bytes(32 * MiB, k("xlsx", "declared_text"), MB50) },
+  ods: {
+    content_xml: bytes(20 * MiB, k("ods", "content_xml"), MB50),
+    repeat_units: same(262144, k("ods", "repeat_units")),
+  },
+  /* the analysis workbook's add: 50,000 cells today, 250,000 once the workbook-add job merges (K4831 (10)) */
+  workbook: { cells: row(250000, 50000, 250000, k("workbook", "cells")) },
+  sheet_worker: {
+    cells: same(250000, k("sheet_worker", "cells")),
+    bytes: bytes(9000000, k("sheet_worker", "bytes"), MB50),
+    ms: same(120000, k("sheet_worker", "ms")),
+  },
+};
+
+const deepFreeze = (o) => { for (const v of Object.values(o)) if (v && typeof v === "object") deepFreeze(v); return Object.freeze(o); };
+
+export const READ_BOUNDS = deepFreeze(TABLE);
+
+const rowOf = (kind, name) => {
+  const r = Object.hasOwn(READ_BOUNDS, kind) && Object.hasOwn(READ_BOUNDS[kind], name) ? READ_BOUNDS[kind][name] : null;
+  if (!r) throw new Error(`READ_BOUNDS has no row for kind ${String(kind)}, name ${String(name)}`);
+  return r;
+};
+
+/* the ACTIVE figure: the alpha, except the light kinds, which take the standard (K4834) */
+export const boundOf = (kind, name) => {
+  const r = rowOf(kind, name);
+  return LIGHT_KINDS.includes(kind) ? r.standard : r.alpha;
+};
+
+/* the size the caller measured, the figure it was judged against and the member sentence's key */
+export const statement = (kind, name, size) => ({ size, bound: boundOf(kind, name), key: rowOf(kind, name).key });

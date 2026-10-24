@@ -13,6 +13,8 @@ const LOC = "https://records.example.org/minutes.txt";
 const DOC = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcd/edit";
 const EXPORT = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcd/export?format=odt";
 const tick = (w, id, o = {}) => w.m.monitor({ bundleId: id, viewer: DAEMON, actorClass: "machine", actor: DAEMON, ...o });
+/* An empty frame site-profiles identifies CERTAIN (R2, G140): a mount point, a framework state and no readable text. */
+const certainShell = (n) => `<html><head><script src="/app.${n}.js"></script></head><body><div id="root"></div><script>window.__INITIAL_STATE__={}</script><!--${"x".repeat(2400)}--></body></html>`;
 /* What a refusal must leave untouched: the manifest, the looks, the reachability. */
 const untouched = (w, id) => ({ manifest: w.manifest(id).length, looks: w.looks().length,
   reach: w.rows(`SELECT count(*) c FROM source_reachability`)[0].c });
@@ -411,7 +413,8 @@ test("R7 a shell captured as the document grades no change: the status withdrawn
   const w = world();
   const id = "INFO-2026-0060-shell";
   const loc = "https://spa.example.org/app";
-  const shellPage = (n) => `<!DOCTYPE html><html><head><title>App</title><script src="/static/js/main.${n}.js"></script></head><body><div id="root"></div><noscript>You need to enable JavaScript to run this app.</noscript></body></html>`;
+  const shellPage = certainShell;
+  assert.equal(identify({ locator: loc, address: loc, content_type: "text/html", text: shellPage("aaaa") }).shell, true, "the control is a CERTAIN shell");
   w.monitored(id, loc, shellPage("aaaa"));
   w.net.routes[loc] = serve(shellPage("bbbb"), "text/html");
   const r = await tick(w, id);
@@ -424,6 +427,30 @@ test("R7 a shell captured as the document grades no change: the status withdrawn
   const g = await tick(w, id);
   assert.equal(g.body.status, "removed");
   assert.equal(g.body.reeval_raised, true);
+});
+
+test("R7 only a CERTAIN client-rendered match is an empty frame: a POSSIBLE one, a CSV and plain prose are judged by their document type and contract (G140)", async () => {
+  const w = world();
+  const weak = (n) => `<!DOCTYPE html><html><head><title>Minutes</title><script src="/static/js/main.${n}.js"></script></head><body><h1>Minutes</h1><p>${"The council met and discussed the budget. ".repeat(20)}</p><div id="root"></div></body></html>`;
+  const weakLoc = "https://records.example.org/minutes-page";
+  assert.equal(identify({ locator: weakLoc, address: weakLoc, content_type: "text/html", text: weak("aaaa") }).shell, undefined,
+    "the fixture is a weak client-rendered match, not a certain one");
+  const cases = [
+    ["INFO-2026-0061-weak", weakLoc, weak("aaaa"), weak("bbbb"), "text/html"],
+    ["INFO-2026-0062-csv", "https://records.example.org/budget.csv", "name,amount\nfoo,1\n", "name,amount\nfoo,1\nbar,2\n", "text/csv"],
+    ["INFO-2026-0063-prose", "https://records.example.org/notes.txt", "The council met on Tuesday and discussed the budget at length.\n",
+      "The council met on Tuesday and discussed the budget at length. It adjourned late.\n", "text/plain"],
+  ];
+  for (const [id, loc, was, now, type] of cases) {
+    w.monitored(id, loc, was);
+    w.net.routes[loc] = serve(now, type);
+    const r = await tick(w, id);
+    const held = w.rows(`SELECT content_type, contract FROM monitor_address_type WHERE address = ?`, loc)[0];
+    assert.ok(held && held.content_type, `${id} states its document type`);
+    assert.notEqual(held.contract, "unmonitorable", `${id} is not an empty frame`);
+    assert.doesNotMatch(String(r.body.note), /unmonitorable/, id);
+    assert.doesNotMatch(String(w.looks().at(-1).detail), /^unmonitorable;/, id);
+  }
 });
 
 test("R8 one mechanical promotion changing only the permitted fields, with a Session Log entry; every other file carried unchanged; the flag rule", async () => {

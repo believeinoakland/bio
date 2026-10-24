@@ -66,7 +66,7 @@
  */
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, FURNITURE_RECURS, alsoSatisfies,
          vocabPatterns, anyMatch, LINE_END } from "../docprofile/doctypes/index.mjs";
-import { scanFlatMany, flatFirst, countLines, lineTable } from "./windows.mjs";
+import { scanFlatMany, flatFirst, countLines, lineTable, counted } from "./windows.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
@@ -141,7 +141,7 @@ const minutesLongDate = (s) => {
 };
 const clockOf = (text, re) => { const h = flatFirst(text, re); return h ? h.m[0] : null; };
 
-export default {
+export default counted({
   key: "meeting_minutes",
   label: localize("doctypes.meeting-minutes.label", "a set of meeting minutes"),
   version: 1,
@@ -484,4 +484,4 @@ export default {
         : localize("doctypes.meeting-minutes.unchanged", "all {count} matters in these minutes are unchanged", { count: String(b.entities.length) }),
     };
   },
-};
+});

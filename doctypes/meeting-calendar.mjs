@@ -32,6 +32,7 @@ import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities, read
 import { event, worstSignificance, isMeaningful, bySeverity, unescapeHtml } from "../site-profiles/index.mjs";
 import { evaluateRule, localDay, reasonText } from "../bio-plane/src/civil-time/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
+import { counted, spend } from "./windows.mjs";
 
 /* How long after a meeting minutes stop being merely late is the JURISDICTION'S
    practice, not this reader's: it is the view's `practice.minutes_due_days`, with the
@@ -70,6 +71,40 @@ function minutesDue(ctx, day) {
   return { due: String(d.value).slice(0, 10), unit, amount: p.value, zone };
 }
 
+/** What lies inside the page's `<main>` element, from the end of its opening tag to its last `</main>`, or the whole text
+ *  when it holds none. Only the first opening tag can be the one: a `</main>` after a later one is after this one too.
+ *  (R40: found without trying every `<main` against the rest of the text.) */
+function insideMain(raw) {
+  const open = /<main\b/i.exec(raw);
+  if (!open) return raw;
+  const gt = raw.indexOf(">", open.index + open[0].length);
+  if (gt < 0) return raw;
+  const close = /<\/main>/gi;
+  close.lastIndex = gt + 1;
+  let last = -1;
+  for (let c; (c = close.exec(raw)) !== null;) last = c.index;
+  return last < 0 ? raw : raw.slice(gt + 1, last);
+}
+
+/** The table rows of the text, `<tr ...>` to the next `</tr>`, one at a time (R40: no list of all of them, and no tag
+ *  that never closes tried against the rest of the text). */
+function* rowsOf(scope) {
+  const lastGt = scope.lastIndexOf(">");
+  if (lastGt < 0) return;
+  const head = scope.slice(0, lastGt + 1);   // a tag opening after the last ">" never ends
+  const open = /<tr\b[^>]*>/gi, close = /<\/tr>/gi;
+  for (let at = 0; ;) {
+    open.lastIndex = at;
+    const o = open.exec(head);
+    if (!o) return;
+    close.lastIndex = o.index + o[0].length;
+    const c = close.exec(scope);
+    if (!c) return;
+    at = c.index + c[0].length;
+    yield scope.slice(o.index, at);
+  }
+}
+
 const parseDate = (s) => {
   const m = /(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(String(s || ""));
   if (!m) return null;
@@ -77,7 +112,7 @@ const parseDate = (s) => {
 };
 const iso = (t) => (t == null ? null : new Date(t).toISOString().slice(0, 10));
 
-export default {
+export default counted({
   key: "meeting_calendar",
   label: "a meeting calendar",
   version: 1,
@@ -89,6 +124,7 @@ export default {
   detect(ctx) {
     const t = String(ctx.text || "");
     const signals = [];
+    spend(t.length * 3);   // the three tests of the text below each read it once at most
     /* The pattern holds no character an entity stands for, so the text unescaped holds it exactly where the text as it
        stands does (R37: no unescaped copy of a large text). */
     if (/MeetingDetail\.aspx\?ID=/i.test(t)) signals.push("meeting detail links");
@@ -140,24 +176,34 @@ export default {
    *  the absence is honest until they exist. */
   parse(ctx) {
     const raw = unescapeHtml(String(ctx.text || ""));
-    const main = /<main\b[^>]*>([\s\S]*)<\/main>/i.exec(raw);
-    const scope = main ? main[1] : raw;
+    const scope = insideMain(raw);
 
     /* The window. Read from the control's own value where the page states it, and
        from the dates present as a fallback, because an inferred window is still far
        better than treating every absence as a delisting. `relative` is the fact
        that matters: a named range like "This Month" means the window MOVES. */
     const named = /lstYears_Input"[^>]*\bvalue="([^"]*)"/i.exec(raw);
-    const dates = (scope.match(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/g) || []).map(parseDate).filter((x) => x != null);
+    /* R41: the first and last of the dates are found as they are met, never by spreading a list of all of them into
+       `Math.min`, which throws past about 125,000 arguments. A date that is not a number (`99/99/2026`) makes both ends
+       not a number, as `Math.min` and `Math.max` made them. */
+    spend(scope.length);
+    let first = null, last = null, nan = false;
+    for (const d of scope.matchAll(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/g)) {
+      const t = parseDate(d[0]);
+      if (t == null) continue;
+      if (t !== t) nan = true;
+      if (first === null || t < first) first = t;
+      if (last === null || t > last) last = t;
+    }
     const window = {
       named: named ? named[1].trim() : null,
       relative: named ? /this|next|last|current|upcoming|past|month|year|week/i.test(named[1]) : true,
-      from: dates.length ? Math.min(...dates) : null,
-      to: dates.length ? Math.max(...dates) : null,
+      from: first === null ? null : nan ? NaN : first,
+      to: last === null ? null : nan ? NaN : last,
     };
 
     const entities = [];
-    for (const row of scope.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) || []) {
+    for (const row of rowsOf(scope)) {
       const id = /MeetingDetail\.aspx\?ID=(\d+)/i.exec(row);
       if (!id) continue;
       const flat = row.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
@@ -334,4 +380,4 @@ export default {
     }
     return out;
   },
-};
+});

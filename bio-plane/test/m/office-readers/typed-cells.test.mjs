@@ -13,8 +13,8 @@ const cellOf = (sheet, cell, value, type, declared, cached = null, formula = nul
 
 test("R30 xlsx cells: every cell holding a value or formula, typed only from `t`, lexical value kept, formula beside its cached value, row then column order", async () => {
   /* Written out of order on purpose (B2 before A2, row 3 before row 1), with
-     an empty cell, a styled number (s="1", which may be a date format: never
-     inferred), a formula with no cached value, and every declared type. */
+     an empty cell, a styled number (s="1"; the workbook has no styles part, so no
+     date is typed from it: the date rule is dates-typed.test.mjs), a formula with no cached value, and every declared type. */
   const xml = `<?xml version="1.0"?><worksheet ${NS}><sheetData>`
     + `<row r="3"><c r="A3" t="str"><f>A1&amp;"!"</f><v>zero!</v></c><c r="B3"><f>SUM(B1:B2)</f></c></row>`
     + `<row r="1"><c r="C1" t="b"><v>1</v></c><c r="A1" t="s"><v>0</v></c><c r="B1"><v>0.1</v></c><c r="D1" t="n"><v>1E+21</v></c></row>`

@@ -6,12 +6,17 @@
  * edited and compressed one at a time, so the working set is about one part's size twice (R4). */
 import { readContainer, readPart, crc32, normalizePartName, ODF_MANIFEST_PART, CORE_PROPERTIES_PART } from "../ooxml.mjs";
 import { CleanRefusal, cleanImage, imageKind, mediaKind, latin1 } from "./images.mjs";
-import { editXml } from "./xml.mjs";
+import { editXml, newScan } from "./xml.mjs";
+import { boundOf } from "../read-bounds.mjs";
 import { localize } from "../setup-words/index.mjs";
 
+/** The most entries a package may hold (R3 `TOO_MANY_ENTRIES`; R12: the table's, not a figure of this module's). */
+export const CLEAN_MAX_ENTRIES = boundOf("office", "entries");
+/** The most one part may inflate to, over what it holds (R3 `DOCUMENT_UNREADABLE`; the archive table's ratio). */
+const RATIO_MAX = boundOf("archive", "ratio");
 /** The most uncompressed bytes one part may declare: the largest the plane's isolate holds with its working copies
- *  (R4; measured in workerd, the job's record). */
-export const CLEAN_MAX_PART_BYTES = 32 * 1024 * 1024;
+ *  (R4; measured in workerd, the job's record). Quoted from `READ_BOUNDS` (R12). */
+export const CLEAN_MAX_PART_BYTES = boundOf("document", "part_bytes");
 
 const CUSTOM_PART = "docProps/custom.xml";
 /** The OOXML parts R6 removes (K2334, K2351): custom properties, custom XML data (which can carry a document
@@ -107,7 +112,13 @@ const le32 = (v) => [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 25
 const u16 = (d, o) => d[o] | (d[o + 1] << 8);
 const u32 = (d, o) => (d[o] | (d[o + 1] << 8) | (d[o + 2] << 16) | (d[o + 3] << 24)) >>> 0;
 
-/** A ZIP of `parts` (`{name, method, data, crc, size}`, `data` already compressed), in order. */
+const le64 = (v) => [...le32(v % 4294967296), ...le32(Math.floor(v / 4294967296))];
+const FIELD16 = 0xffff, FIELD32 = 0xffffffff;
+
+/** A ZIP of `parts` (`{name, method, data, crc, size}`, `data` already compressed), in order. The end record states
+ *  the count of entries written; past a 16-bit count (or a 32-bit size or offset) ZIP64's end record and locator are
+ *  written before it, and the count and the fields that overflow are the sentinels (R6: nothing is dropped for want of
+ *  a field's width). */
 function zip(parts) {
   const local = [], central = [];
   let at = 0;
@@ -119,9 +130,16 @@ function zip(parts) {
     central.push(new Uint8Array([0x50, 0x4b, 1, 2, ...le16(20), ...head, ...le16(0), ...le16(0), ...le16(0), ...le32(0), ...le32(at)]), name);
     at += 30 + name.length + p.data.length;
   }
-  const cdSize = central.reduce((k, c) => k + c.length, 0);
-  const end = new Uint8Array([0x50, 0x4b, 5, 6, 0, 0, 0, 0, ...le16(parts.length), ...le16(parts.length), ...le32(cdSize), ...le32(at), 0, 0]);
-  const all = [...local, ...central, end];
+  const cdSize = central.reduce((k, c) => k + c.length, 0), n = parts.length;
+  const wide = n >= FIELD16 || cdSize >= FIELD32 || at >= FIELD32;
+  const tail = [];
+  if (wide) {
+    const recAt = at + cdSize;
+    tail.push(new Uint8Array([0x50, 0x4b, 6, 6, ...le64(44), ...le16(45), ...le16(45), ...le32(0), ...le32(0), ...le64(n), ...le64(n), ...le64(cdSize), ...le64(at)]),
+      new Uint8Array([0x50, 0x4b, 6, 7, ...le32(0), ...le64(recAt), ...le32(1)]));
+  }
+  tail.push(new Uint8Array([0x50, 0x4b, 5, 6, 0, 0, 0, 0, ...le16(wide ? FIELD16 : n), ...le16(wide ? FIELD16 : n), ...le32(cdSize >= FIELD32 ? FIELD32 : cdSize), ...le32(at >= FIELD32 ? FIELD32 : at), 0, 0]));
+  const all = [...local, ...central, ...tail];
   const out = new Uint8Array(all.reduce((k, c) => k + c.length, 0));
   let o = 0;
   for (const c of all) { out.set(c, o); o += c.length; }
@@ -176,9 +194,29 @@ const resolvePath = (dir, target) => {
   return parts.join("/");
 };
 
+/** The entry count a ZIP's end record declares (ZIP64's record when the 16-bit field is the sentinel), for the refusal
+ *  `ooxml.readContainer` answers on `OFFICE_ENTRIES_MAX` (R3): that refusal names the limit, not the count. */
+function declaredEntries(d) {
+  let e = d.length - 22;
+  for (; e >= 0 && e >= d.length - 22 - FIELD16; e--) if (u32(d, e) === 0x06054b50) break;
+  if (e < 0 || u32(d, e) !== 0x06054b50) return 0;
+  const n = u16(d, e + 10);
+  const loc = e - 20;
+  if (n !== FIELD16 || loc < 0 || u32(d, loc) !== 0x07064b50) return n;
+  const at = u32(d, loc + 8) + u32(d, loc + 12) * 4294967296;
+  return at + 56 <= loc ? u32(d, at + 32) + u32(d, at + 36) * 4294967296 : n;
+}
+
+/** R3's `TOO_MANY_ENTRIES` for a package whose end record declares more entries than `ooxml` reads (`OFFICE_ENTRIES_MAX`). */
+export function tooManyEntries(d) {
+  const count = String(declaredEntries(d));
+  return refusal("TOO_MANY_ENTRIES", localize("doc-clean.package.the_package_holds_count_entries", "the package holds {count} entries, over the {CLEAN_MAX_ENTRIES} this module copies", { count, CLEAN_MAX_ENTRIES: String(CLEAN_MAX_ENTRIES) }));
+}
+
 /** Clean an OOXML (`family` "ooxml") or ODF ("odf") package. Answers `{clean:true}` or `{clean:false, bytes, images}`. */
-export async function cleanPackage(d, family) {
+export async function cleanPackage(d, family, scan = newScan()) {
   const c = readContainer(d);
+  if (!c.ok && c.why === "OFFICE_ENTRIES_MAX") throw tooManyEntries(d);
   if (!c.ok) throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.package.the_packages_zip_directory_cannot", "the package's ZIP directory cannot be read ({why})", { why: String(c.why) }));
   const names = new Set();
   for (const e of c.entries) {
@@ -187,6 +225,8 @@ export async function cleanPackage(d, family) {
     names.add(n);
     if (e.uncompressedSize > CLEAN_MAX_PART_BYTES)
       throw refusal("DOCUMENT_TOO_LARGE", localize("doc-clean.package.part_n_declares_uncompressedsize_bytes", "part {n} declares {uncompressedSize} bytes, over the {CLEAN_MAX_PART_BYTES} this module reads", { n: String(n), uncompressedSize: String(e.uncompressedSize), CLEAN_MAX_PART_BYTES: String(CLEAN_MAX_PART_BYTES) }));
+    if (e.uncompressedSize > e.compressedSize * RATIO_MAX)
+      throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.package.part_n_declares_uncompressedsize_bytes_in", "part {n} declares {uncompressedSize} bytes in {compressedSize}, over the ratio of {RATIO_MAX} this module inflates", { n: String(n), uncompressedSize: String(e.uncompressedSize), compressedSize: String(e.compressedSize), RATIO_MAX: String(RATIO_MAX) }));
     if (family === "ooxml" && (/(^|\/)embeddings\//i.test(n) || /(^|\/)vbaProject\.bin$/i.test(n)))
       throw refusal("EMBEDDED_FILE", localize("doc-clean.package.part_n_is_an_embedded", "part {n} is an embedded file", { n: String(n) }));
     if (family === "odf" && /^Object [^/]*(\/|$)/.test(n)) throw refusal("EMBEDDED_FILE", localize("doc-clean.package.part_n_is_or_belongs", "part {n} is or belongs to an embedded object", { n: String(n) }));
@@ -218,12 +258,12 @@ export async function cleanPackage(d, family) {
     if (media) throw refusal("EMBEDDED_MEDIA", localize("doc-clean.package.part_n_media", "part {n}: {media}", { n: String(n), media: String(media) }));
     const kind = n.endsWith("/") ? null : imageKind(bytes);
     if (kind) {
-      const out = await cleanImage(bytes, kind, `part ${n}`, CLEAN_MAX_PART_BYTES);
+      const out = await cleanImage(bytes, kind, `part ${n}`, CLEAN_MAX_PART_BYTES, scan);
       if (out.changed) { bytes = out.bytes; images.stripped++; } else images.unchanged++;
     } else {
       const rules = family === "ooxml" ? ooxmlRules(n, removed, dropped.get(n)) : odfRules(n);
       if (rules?.authorRuns) bytes = withoutAuthorRuns(bytes);
-      if (rules) bytes = editXml(bytes, rules, e.method === 8 && bytes === r.bytes);
+      if (rules) bytes = await editXml(bytes, rules, { inPlace: e.method === 8 && bytes === r.bytes, where: `part ${n}`, scan });
     }
     if (bytes !== r.bytes) changed = true;
     parts.push({ name: e.name, method: e.method, size: bytes.length, crc: crc32(bytes), data: e.method === 8 ? await deflateRaw(bytes) : bytes });

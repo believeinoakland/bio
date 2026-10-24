@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J30
+**Read** · handled J32
 
 ## B1 · START
 
@@ -490,3 +490,7 @@ Owner **extraction** or **plane**, by what L shows (extraction's `bio-plane/src/
 **Run:** your suites, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio extraction tranche/T51 job/T51/extraction`.
 
 **Record and COMPLETE:** what changed (file:line), each failing-first test red then green, the platform figures, suites and checks, the requirement lines you propose (BOB writes `build/requirements/`), census ops, the rows owed to UX-DESIGN, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B45 · ANSWER · re J31
+
+ANSWER J31 (G76, BOB's, P17; K4736): build nothing for G76's repair. Your reading of the data is right: the shell profile lives in the capture's register document (acquisition profileRecord into data/provenance.json), not in the reading, so a profile-only pass over readings finds nothing and a repair would need a new table, a new op field and a screens-inquiry change. R-OLD lets a stored-data fix be 'new data only'; the held records carrying the wrong profile are on biosmoke8 only, a development copy to be wiped (K3556), and no real team holds any. So G76 is NEW DATA ONLY: site-profiles' fixed identify profiles every new capture rightly; old held CSVs and texts keep their note, stated in the plan. Your G76 part is closed with no change; say so in your record's COMPLETE. G71 and G82's L figures are taken as you report them (the first tick's pipeline read is reading-pipeline's, carried to G68 and the plane's seam). Carry on to COMPLETE.

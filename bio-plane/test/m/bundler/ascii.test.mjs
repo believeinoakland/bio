@@ -207,7 +207,7 @@ const w :Workerd.Worker = (
 );
 `);
   mkdirSync(join(dir, "disk"), { recursive: true });
-  const child = spawn(WORKERD, ["serve", "--experimental", join(dir, "w.capnp")], { cwd: dir, stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(WORKERD, ["serve", "--experimental", join(dir, "w.capnp")], { cwd: dir, stdio: ["ignore", "pipe", "pipe"], detached: true });
   let log = "";
   child.stdout.on("data", (d) => { log += d; }); child.stderr.on("data", (d) => { log += d; });
   const get = async (path) => {
@@ -222,7 +222,12 @@ const w :Workerd.Worker = (
     if (!/^\d+\.\d+\.\d+/.test(v.text.trim())) return { ok: false, why: `/version ${v.status} ${v.text.slice(0, 80)} ${log.slice(0, 700)}` };
     const s = await get("/store");
     return s.status === 200 && /"ok":true/.test(s.text) ? { ok: true } : { ok: false, why: `/store ${s.status} ${s.text.slice(0, 120)} ${log.slice(0, 700)}` };
-  } finally { child.kill("SIGKILL"); }
+  } finally {
+    /* K4828: kill the whole process group. Where `.bin/workerd` is a Node shim (npm ci --ignore-scripts), killing the
+       child alone orphans the real workerd on the test's pipes and the file never exits. */
+    try { process.kill(-child.pid, "SIGKILL"); } catch { child.kill("SIGKILL"); }
+    child.stdout.destroy(); child.stderr.destroy();
+  }
 }
 
 test("R2 (G39): the plane's bundle boots and answers one store op in raw workerd with V8's old space capped at 60 MB (the unstripped bundle needs 86)", { timeout: 300000 }, async () => {

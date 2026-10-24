@@ -62,11 +62,11 @@
  * not evaluate the recommendation and does not treat the report's account of a fact as
  * the fact.
  */
-import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies,
-         vocabulary, vocabRegex, vocabPatterns, allMatches, enactmentPatterns, enactmentNumber, codePatterns,
+import { CONFIDENCE, CONTRACT, diffEntities, flatten, alsoSatisfies,
+         vocabulary, vocabRegex, vocabPatterns, enactmentPatterns, enactmentNumber, codePatterns,
          IN_PROSE } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
-import { eachLine, lineTable, flatPrefix, flatFirst, scanFlatMany } from "./windows.mjs";
+import { eachLine, lineTable, flatPrefix, flatFirst, scanFlatMany, rawMergedHits, referenceBook, counted, spend } from "./windows.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The memorandum header's four labels. Matched over flattened text and as a BLOCK —
@@ -188,7 +188,7 @@ function reportConfirmed(a, b) {
   return { entries: (b.entities || []).length, intact, recommendation_unchanged: recommendation };
 }
 
-export default {
+export default counted({
   key: "staff_report",
   label: localize("doctypes.staff-report.label", "a staff report to a public body"),
   version: 1,
@@ -216,6 +216,7 @@ export default {
     const secs = reportSections(t, reportSectionPatterns(ctx));
     if (secs.length) signals.push(localize("doctypes.staff-report.template_sections", "{count} report template section heading(s)", { count: String(secs.length) }));
     /* Both phrases bridge words with `\s+` only, so they are tested on the text as it stands (R37: no flattened copy). */
+    spend(t.length * 2);
     const signoff = SIGNOFF.test(t) || PREPARED.test(t);
     if (signoff) signals.push("a staff sign-off");
     const titles = reportTitlePatterns(ctx);
@@ -307,29 +308,30 @@ export default {
        person's name. A reference cited twice is one reference; the FIRST sighting
        carries `source`, and D-454: every sighting, the first included, is kept in
        `occurrences` once there is a second, so a later one is not lost. */
-    const entities = [];
-    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped. */
-    const seen = new Map();
-    const take = (key, kind, label, facts, offset) => {
-      if (seen.has(key)) { readAgain(seen.get(key), locate(offset)); return; }
-      const e = entity(key, kind, label, facts, locate(offset));
-      seen.set(key, e);
-      entities.push(e);
-    };
-    for (const { m, tag } of allMatches(enactmentPatterns(ctx), raw)) {
+    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped; R40: up to the bounds
+       ./windows.mjs `referenceBook` states, past which the answer says what it did not keep. */
+    const book = referenceBook(locate);
+    const { entities, take } = book;
+    /* R40: each kind of reference is met a window of the text at a time (./windows.mjs `rawMergedHits`), in the order
+       and with the overlap rule `allMatches` gives over all of it, so 400,000 citations are never a list of 400,000
+       matches. */
+    rawMergedHits(raw, enactmentPatterns(ctx), ({ m, tag }) => {
       const n = enactmentNumber(tag.forms, m.groups && m.groups.num);
-      if (!n) continue;
+      if (!n) return;
       take(`${tag.kind}:${n}`, "instrument", `${tag.kind[0].toUpperCase()}${tag.kind.slice(1)} No. ${n}`,
            { instrument: tag.kind, number: n }, m.index);
-    }
-    for (const { m } of allMatches(reportFileRefs(ctx), raw))
+    });
+    rawMergedHits(raw, reportFileRefs(ctx), ({ m }) => {
       take(`file:${m[1]}`, "legislation", `legislation ${m[1]}`, { file: m[1] }, m.index);
-    for (const { m, tag } of allMatches(codePatterns(ctx), raw))
+    });
+    rawMergedHits(raw, codePatterns(ctx), ({ m, tag }) => {
       take(`${tag.key}:${m.groups.sec}`, "code_section", `${tag.label} ${m.groups.sec}`,
            { code: tag.key, section: m.groups.sec }, m.index);
+    });
 
     return {
       entities,
+      ...book.state(),
       to: f.to || null,
       from: f.from || null,
       subject: f.subject || null,
@@ -337,7 +339,7 @@ export default {
       recommendation,
       ...(recommendationCut ? { recommendation_cut: true, recommendation_length: recommendationLength } : {}),
       sections: secs.length,
-      signed_off: SIGNOFF.test(raw) || PREPARED.test(raw),
+      signed_off: (spend(raw.length * 2), SIGNOFF.test(raw) || PREPARED.test(raw)),
       also_satisfies: alsoSatisfies(ctx, "staff_report"),
       at: ctx.at || null,
     };
@@ -386,4 +388,4 @@ export default {
         : localize("doctypes.staff-report.unchanged", "this report says what it said, and points at the same instruments"),
     };
   },
-};
+});

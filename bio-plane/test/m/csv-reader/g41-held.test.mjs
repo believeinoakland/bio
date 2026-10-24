@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { csvEntry, CSV_SHEET_NAME } from "../../../src/csv-reader/index.mjs";
-import { enc } from "./fixtures.mjs";
+import { enc, overBytes } from "./fixtures.mjs";
 import { harnessCsv, expectedCells, cellAt, rowOfCell } from "./g41.mjs";
 
 const MIB = 1024 * 1024;
@@ -112,7 +112,7 @@ test("R18 (proposed) cellsIn: maxCells stops at a row boundary and next_row name
 });
 
 /** A body of about 2.2 MiB whose 1 MiB and 2 MiB window edges fall inside a `""` of a quoted field holding a line break and
- *  between the CR and LF of a record end, with a byte no encoding reads past the signature's head. */
+ *  between the CR and LF of a record end, with a byte no encoding reads (0x81, which windows-1252 leaves undefined) in the last window. */
 function edgeBody() {
   const fields = [];
   let text = "";
@@ -127,11 +127,11 @@ function edgeBody() {
   const tail = "t".repeat(2 * MIB - 1 - (text.length + 4));
   add(["s", "t", tail], `s,t,${tail}\r\n`);
   add(["after", "edge", "ok"], "after,edge,ok\n");
-  add(["bad", "\u0001", "ok"], "bad,\u0001,ok\n");                 // \u0001 becomes the byte 0x96 below
+  add(["bad", "\u0001", "ok"], "bad,\u0001,ok\n");                 // \u0001 becomes the byte 0x81 below
   add(["last", "row", "ok"], "last,row,ok\n");
   const bytes = new TextEncoder().encode(text);
   const at = bytes.lastIndexOf(1);
-  bytes[at] = 0x96;
+  bytes[at] = 0x81;
   fields[fields.length - 2][1] = null;                             // an unreadable field: a cell with a null value
   return { bytes, fields };
 }
@@ -178,7 +178,7 @@ test("R18 (proposed) cellsIn never throws: no such sheet, a bad range, an empty 
   }
   assert.deepEqual(await csvEntry.cellsIn(new Uint8Array(0), { fromRow: 1, toRow: 1 }), { ok: false, why: "empty_body" });
   assert.deepEqual(await csvEntry.cellsIn(null, { fromRow: 1, toRow: 1 }), { ok: false, why: "empty_body" });
-  const huge = await csvEntry.cellsIn(new Uint8Array(32 * MIB + 1).fill(0x61), { fromRow: 1, toRow: 1 });
+  const huge = await csvEntry.cellsIn(overBytes(), { fromRow: 1, toRow: 1 });
   assert.equal(huge.ok, false);
   assert.equal(huge.why, "over_size_bound");
   assert.equal(huge.final, true);

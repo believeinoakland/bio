@@ -95,16 +95,22 @@
  */
 
 import {
-  hasZipMagic, readContainer, readPart, discriminate,
+  hasZipMagic, readContainer, discriminate,
   CONTENT_TYPES_PART, relsPartFor, normalizePartName, walkRels,
   declaredTextBytes, CORE_PROPERTIES_PART, readCoreProperties,
-  withContainerImages, textPlan, readPartPieces, pieceWhy, cutBefore,
+  withContainerImages, textPlan, cutBefore,
 } from "./ooxml.mjs";
 import { linkWrapper } from "./subresources.mjs";
 import { withMetadata, activeContent, withActive, detectByContentType } from "./docx.mjs";
 import { localize } from "./setup-words/index.mjs";
+import { boundOf } from "./read-bounds.mjs";
+import {
+  Scanner, scanPart, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, collectElements, memberIdentities,
+} from "./office-xml.mjs";
 
-const UTF8 = new TextDecoder("utf-8", { fatal: false });
+/* R44: what the walk may retain, cells and links together (the table's figure, never a literal here). */
+const OFFICE_RETAINED_MAX = boundOf("office", "retained_objects");
+const stripOk = ({ ok, ...rest }) => rest;
 
 /* Bytes as a Uint8Array, an ArrayBuffer, any typed-array view or an array of
  * byte values; anything else reads as no bytes, so a wrong argument is a
@@ -128,70 +134,133 @@ const XLSX_TWIN_CONTENT_TYPES = new Map([
 
 const WORKBOOK_PART = "xl/workbook.xml";
 const SHARED_STRINGS_PART = "xl/sharedStrings.xml";
+const STYLES_PART = "xl/styles.xml";
 
 /* ------------------------------------------------------------------ *
- * Minimal XML extraction for the spreadsheet grammars (worksheet,
- * sharedStrings, workbook). Same dependency-free discipline as ooxml.mjs:
- * what these patterns cannot read yields a stated undetermined, never a
- * guessed structure. None of these grammars nests an element inside an
- * element of the same local name, so a scan to the first closing tag is
- * exact, not an approximation.
+ * XML extraction for the spreadsheet grammars (worksheet, sharedStrings, workbook, styles): office-xml.mjs's one
+ * scanner reads each part once (R42); what a part cannot be read as yields a stated undetermined, never a guessed
+ * structure.
  * ------------------------------------------------------------------ */
 
-function decodeXmlEntities(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
-    if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      /* A code point past U+10FFFF makes fromCodePoint THROW; such a
-       * reference is not a character, so it stays as written (R21). */
-      return Number.isFinite(code) && code <= 0x10ffff ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
-  });
+const decodeXmlEntities = unescape;
+
+/** The shared strings as a scanner handler: one `<si>` is one string, its `<t>` text with the phonetic runs (`<rPh>`,
+ *  East Asian reading guides, which are a reading aid and not the cell's text) left out. */
+function sharedStringsReader() {
+  const strings = [];
+  let inSi = false, cur = "", inT = false, rph = 0;
+  const handler = {
+    text(s) { if (inT) cur += unescape(s); },
+    cdata(s) { if (inT) cur += s; },
+    open(name, raw, self) {
+      if (name === "si") { if (self) strings.push(""); else { inSi = true; cur = ""; rph = 0; } }
+      else if (inSi) {
+        if (name === "rPh" && !self) rph++;
+        else if (name === "t" && !self && rph === 0) inT = true;
+      }
+    },
+    close(name) {
+      if (name === "si") { if (inSi) strings.push(cur); inSi = false; inT = false; }
+      else if (name === "rPh") { if (rph > 0) rph--; }
+      else if (name === "t") inT = false;
+    },
+  };
+  return { handler, strings };
 }
 
-function parseAttrs(raw) {
-  const attrs = {};
-  for (const a of String(raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeXmlEntities(a[3] ?? a[4] ?? "");
+/* ------------------------------------------------------------------ *
+ * R30 — dates typed from the number format (fix round 9, G134c; S-11)
+ * ------------------------------------------------------------------ */
+
+/* The built-in number formats that are dates or date-times (ECMA-376 18.8.30; the East Asian locales' too). 18-21,
+   32-35 and 45-47 carry only a time and stay numbers. */
+const BUILTIN_DATE_FORMATS = new Set([14, 15, 16, 17, 22, 27, 28, 29, 30, 31, 36, 50, 51, 52, 53, 54, 55, 56, 57, 58]);
+
+/** A custom format code's kind: `"date"` when it carries date tokens (a year, a day, a month), `"time"` when it carries
+ *  only time tokens, else null. Quoted text, escaped characters, fill characters, colours and conditions are not
+ *  tokens; `m` is a minute when it follows an hour or precedes a second, else a month. */
+function formatKind(code) {
+  let f = String(code ?? "").replace(/"[^"]*"/g, "").replace(/\\./g, "").replace(/[_*]./g, "");
+  let elapsed = false;
+  f = f.replace(/\[(h+|m+|s+)\]/gi, (_, t) => { elapsed = true; return t[0].toLowerCase() === "m" ? "h" : t[0].toLowerCase(); });
+  f = f.replace(/\[[^\]]*\]/g, "").split(";")[0].toLowerCase().replace(/am\/pm|a\/p/g, "");
+  if (/[yd]/.test(f)) return "date";
+  let minuteOrTime = elapsed || /[hs]/.test(f);
+  for (const m of f.matchAll(/m+/g)) {
+    let before = m.index - 1;
+    while (before >= 0 && (f[before] === ":" || f[before] === " ")) before--;
+    let after = m.index + m[0].length;
+    while (after < f.length && (f[after] === ":" || f[after] === " " || f[after] === ".")) after++;
+    if (f[before] === "h" || f[after] === "s") minuteOrTime = true;
+    else return "date";
   }
-  return attrs;
+  return minuteOrTime ? "time" : null;
 }
 
-/** Every element with this LOCAL name (any prefix): `{ attrs, inner }`.
- *  `inner` is the raw content between the tags ("" for self-closing). */
-function elements(xml, localName) {
-  const out = [];
-  const open = new RegExp(`<((?:[\\w.-]+:)?${localName})\\b([^>]*?)(/)?>`, "g");
-  let m;
-  while ((m = open.exec(xml))) {
-    const attrs = parseAttrs(m[2]);
-    if (m[3]) { out.push({ attrs, inner: "" }); continue; }
-    const close = xml.indexOf(`</${m[1]}>`, open.lastIndex);
-    if (close < 0) { out.push({ attrs, inner: "" }); continue; }
-    out.push({ attrs, inner: xml.slice(open.lastIndex, close) });
-    open.lastIndex = close + m[1].length + 3;
+/** `xl/styles.xml` as a scanner handler: the custom number formats and the cell formats (`cellXfs`) in order. */
+function stylesReader() {
+  const numFmts = new Map();
+  const xfs = [];
+  let inCellXfs = false;
+  const handler = {
+    text() {}, cdata() {},
+    open(name, raw, self) {
+      if (name === "numFmt") { const a = parseAttrs(raw); if (a.numFmtId != null) numFmts.set(parseInt(a.numFmtId, 10), a.formatCode ?? ""); }
+      else if (name === "cellXfs" && !self) inCellXfs = true;
+      else if (name === "xf" && inCellXfs) { const a = parseAttrs(raw); xfs.push(a.numFmtId != null ? parseInt(a.numFmtId, 10) : 0); }
+    },
+    close(name) { if (name === "cellXfs") inCellXfs = false; },
+  };
+  return { handler, numFmts, xfs };
+}
+
+/** What a workbook's styles say about its cells: `{is1904, kindOf(styleIndex) -> "date"|"time"|null}`. */
+function datesFrom(styles, is1904) {
+  const cache = new Map();
+  const kindOfId = (id) => {
+    if (BUILTIN_DATE_FORMATS.has(id)) return "date";
+    if (id >= 164 && styles.numFmts.has(id)) return formatKind(styles.numFmts.get(id));
+    return null;
+  };
+  return { is1904, kindOf(style) {
+    const i = style != null && /^\d+$/.test(style) ? parseInt(style, 10) : 0;
+    if (!cache.has(i)) cache.set(i, i < styles.xfs.length ? kindOfId(styles.xfs[i]) : null);
+    return cache.get(i);
+  } };
+}
+
+const DAY_MS = 86400000;
+const pad = (n, w = 2) => String(n).padStart(w, "0");
+/** A stored serial as ISO 8601 under the workbook's date system, or null when its system cannot express it (a serial
+ *  before day 1, the 1900 system's nonexistent 29 February 1900, a year past 9999). A time part (`THH:MM:SS`) is given
+ *  when the stored number has one. */
+function serialToIso(lexical, is1904) {
+  if (typeof lexical !== "string" || !/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(lexical.trim())) return null;
+  const x = Number(lexical);
+  if (!Number.isFinite(x) || x < 0) return null;
+  let days = Math.floor(x);
+  const frac = x - days;
+  let secs = Math.round(frac * 86400);
+  if (secs >= 86400) { days += 1; secs -= 86400; }
+  let epochDays;
+  if (is1904) epochDays = Date.UTC(1904, 0, 1) / DAY_MS + days;
+  else {
+    if (days < 1 || days === 60) return null; // 0 is no day, 60 is the fictitious 29 February 1900
+    epochDays = Date.UTC(1899, 11, days < 60 ? 31 : 30) / DAY_MS + days;
   }
-  return out;
+  const d = new Date(epochDays * DAY_MS);
+  const y = d.getUTCFullYear();
+  if (!(y >= 1 && y <= 9999)) return null;
+  const date = `${pad(y, 4)}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  if (frac === 0) return date;
+  return `${date}T${pad(Math.floor(secs / 3600))}:${pad(Math.floor((secs % 3600) / 60))}:${pad(secs % 60)}`;
 }
 
-/** The concatenated <t> text of a run container (an <si> or an <is>). A
- *  phonetic run (`<rPh>`, East Asian reading guides) carries its own <t>, which
- *  is a reading aid and not the cell's text: it is removed first, or the guide
- *  would be glued onto the string the sheet displays. */
-function textRuns(inner) {
-  const bare = String(inner).replace(/<((?:[\w.-]+:)?rPh)\b[^>]*?(?:\/>|>[\s\S]*?<\/\1>)/g, "");
-  return elements(bare, "t").map((t) => decodeXmlEntities(t.inner)).join("");
-}
-
-const HEX = "0123456789abcdef";
-async function sha256Hex(u8) {
-  const d = await crypto.subtle.digest("SHA-256", u8);
-  const b = new Uint8Array(d);
-  let out = "";
-  for (let i = 0; i < b.length; i++) out += HEX[b[i] >> 4] + HEX[b[i] & 15];
-  return out;
+/** The ISO date a cell holds when its number format makes it a date, else null. */
+function dateOf(c, dates) {
+  if (!dates || !(c.t == null || c.t === "n") || c.v == null) return null;
+  if (dates.kindOf(c.s) !== "date") return null;
+  return serialToIso(c.v, dates.is1904);
 }
 
 /* The sheet-reference builders (IC-1 `sheet-cell`, FW-19 `sheet-range`, A1 column letters) live in
@@ -412,6 +481,7 @@ function resolveTarget(fromPart, target) {
 async function xlsxParts(bytes) {
   const b = toBytes(bytes);
   const undetermined = [];
+  const partials = [];
 
   /* The full discrimination (magic + parts + declared main content type). A
    * container that is not honestly an xlsx yields a stated refusal, never a
@@ -427,9 +497,12 @@ async function xlsxParts(bytes) {
 
   /* The workbook part: sheet order, names, and the HIDDEN state (DEC-5 —
    * state="hidden"|"veryHidden" is invisible in every rendered form). */
-  const wbRead = await readPart(b, container, WORKBOOK_PART);
+  const wbRead = await readText(b, container, WORKBOOK_PART);
   if (!wbRead.ok) return { ok: false, why: `workbook_unreadable:${wbRead.why}` };
-  const wbXml = UTF8.decode(wbRead.bytes);
+  if (wbRead.partial) partials.push(wbRead.partial);
+  const wb = collectElements(wbRead.text, ["sheet", "definedName", "workbookPr"]);
+  if (wb.badRef) return { ok: false, why: "workbook_unreadable:char_ref_invalid" };
+  const date1904 = wb.elements.some((e) => e.name === "workbookPr" && (e.attrs.date1904 === "1" || e.attrs.date1904 === "true"));
 
   /* Every _rels/*.rels part, walked ONCE: the workbook's (sheet parts), each
    * sheet's (hyperlink targets, table parts) and every other part's outbound
@@ -448,7 +521,7 @@ async function xlsxParts(bytes) {
     undetermined.push({ part: relsPartFor(WORKBOOK_PART), why: stated?.why ?? "part_absent" });
   }
 
-  const sheets = elements(wbXml, "sheet").map((s, index) => {
+  const sheets = wb.elements.filter((e) => e.name === "sheet").map((s, index) => {
     const state = s.attrs.state === "hidden" || s.attrs.state === "veryHidden" ? s.attrs.state : "visible";
     const rel = s.attrs.id ? relsById.get(s.attrs.id) : null;
     /* A <sheet> must carry a name; one that does not is stated, and the
@@ -468,9 +541,8 @@ async function xlsxParts(bytes) {
 
   /* Defined names -> anchor material, and R9's units. `localSheetId` and
    * `hidden` ride along for the units; the anchor links read name/ref only. */
-  const definedNames = elements(wbXml, "definedName")
-    .filter((d) => d.attrs.name != null)
-    .map((d) => ({ name: d.attrs.name, ref: decodeXmlEntities(d.inner).trim(),
+  const definedNames = wb.elements.filter((e) => e.name === "definedName" && e.attrs.name != null)
+    .map((d) => ({ name: d.attrs.name, ref: d.text.trim(),
       localSheetId: /^\d+$/.test(d.attrs.localSheetId ?? "") ? parseInt(d.attrs.localSheetId, 10) : null,
       hidden: d.attrs.hidden === "1" || d.attrs.hidden === "true" }));
 
@@ -486,9 +558,11 @@ async function xlsxParts(bytes) {
     for (const r of sr.relationships) {
       if (r.external || !r.target || !/\/table$/.test(String(r.type ?? ""))) continue;
       const part = resolveTarget(sheet.part, r.target);
-      const tr = await readPart(b, container, part);
+      const tr = await readText(b, container, part);
       if (!tr.ok) { tables.push({ sheet: sheet.name, part, name: null, ref: null, why: `table_part_unreadable:${tr.why}` }); continue; }
-      const t = elements(UTF8.decode(tr.bytes), "table")[0];
+      const found = collectElements(tr.text, ["table"]);
+      if (found.badRef) { tables.push({ sheet: sheet.name, part, name: null, ref: null, why: "table_part_unreadable:char_ref_invalid" }); continue; }
+      const t = found.elements[0];
       tables.push({ sheet: sheet.name, part,
         name: t ? (t.attrs.displayName ?? t.attrs.name ?? null) : null, ref: t ? (t.attrs.ref ?? null) : null,
         why: t ? null : "table_element_absent" });
@@ -511,23 +585,27 @@ async function xlsxParts(bytes) {
   const piecewise = plan.read === "pieces" ? plan.piecewise : null;
 
   let sharedStrings = null;
+  let dates = null;
   if (plan.read !== "none") {
     /* sharedStrings, if the package has one. Absence is normal; presence
      * that cannot be read is a stated undetermined every t="s" cell will
      * inherit rather than a guessed string. */
     if (container.byName.has(SHARED_STRINGS_PART)) {
-      if (plan.read === "whole") {
-        const ss = await readPart(b, container, SHARED_STRINGS_PART);
-        if (ss.ok) sharedStrings = elements(UTF8.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
-        else undetermined.push({ part: SHARED_STRINGS_PART, why: ss.why });
-      } else {
-        const strings = [];
-        const ss = await readPartPieces(b, container, SHARED_STRINGS_PART, SI_CUT, (piece) => {
-          for (const si of elements(piece, "si")) strings.push(textRuns(si.inner));
-        });
-        if (ss.ok) sharedStrings = strings;
-        else undetermined.push({ part: SHARED_STRINGS_PART, ...pieceWhy(ss) });
-      }
+      const reader = sharedStringsReader();
+      const ss = await scanPart(b, container, SHARED_STRINGS_PART, reader.handler,
+        { mode: plan.read === "whole" ? "whole" : "pieces", cut: SI_CUT });
+      if (ss.ok) {
+        sharedStrings = reader.strings;
+        if (ss.partial) partials.push(ss.partial);
+        undetermined.push(...scanNotes(SHARED_STRINGS_PART, ss.scanner));
+      } else undetermined.push({ part: SHARED_STRINGS_PART, ...stripOk(ss) });
+    }
+    /* The number formats (R30): which cells are dates. Absence is normal OPC. */
+    if (container.byName.has(STYLES_PART)) {
+      const reader = stylesReader();
+      const st = await scanPart(b, container, STYLES_PART, reader.handler, { mode: "whole" });
+      if (st.ok) { dates = datesFrom(reader, date1904); if (st.partial) partials.push(st.partial); }
+      else undetermined.push({ part: STYLES_PART, ...stripOk(st) });
     }
     for (const sheet of sheets) {
       if (!sheet.part) { undetermined.push({ part: `(sheet ${sheet.name})`, why: sheet.why }); continue; }
@@ -538,9 +616,9 @@ async function xlsxParts(bytes) {
         else { sheet.why = "part_absent"; undetermined.push({ part: sheet.part, why: "part_absent" }); }
         continue;
       }
-      const read = await readPart(b, container, sheet.part);
-      if (read.ok) sheet.xml = UTF8.decode(read.bytes);
-      else { sheet.why = read.why; undetermined.push({ part: sheet.part, why: read.why }); }
+      const read = await readText(b, container, sheet.part);
+      if (read.ok) { sheet.xml = read.text; if (read.partial) partials.push(read.partial); }
+      else { sheet.why = read.why; undetermined.push({ part: sheet.part, ...stripOk(read) }); }
     }
   }
   /* Over the streamed ceiling, nothing is inflated and nothing is pushed here:
@@ -561,8 +639,9 @@ async function xlsxParts(bytes) {
   const active = await activeContent(b, container, rels, "xl/");
 
   return {
-    ok: true, format: "xlsx", variant: disc.variant ?? null, bytes: b, container,
-    sheets, definedNames, tables, rels, sharedStrings, core, active, declared, guard, piecewise, undetermined,
+    ok: true, format: "xlsx", variant: disc.variant ?? null, bytes: b, container, date1904, dates,
+    sheets, definedNames, tables, rels, sharedStrings, core, active, declared, guard, piecewise, partials, undetermined,
+    access: new Map(),
   };
 }
 
@@ -579,11 +658,84 @@ async function xlsxParts(bytes) {
 const SHEET_CUT = cutBefore(/<(?:[\w.-]+:)?(?:row|hyperlink)\b/g);
 const SI_CUT = cutBefore(/<(?:[\w.-]+:)?si\b/g);
 
-/* A sheet's walk, one run of whole elements at a time: `feed(xml)` takes the
- * whole part or a piece of it that ends between two rows, `done()` the totals.
- * `onRow` is called with each row as it is walked. The whole part given to
- * `feed` once is the walk this function has always made. */
-function sheetWalker(onRow) {
+/* ------------------------------------------------------------------ *
+ * Access points (R37, G131e): where a sheet's rows are, left by the read, so a point read does not read the sheet again
+ * ------------------------------------------------------------------ */
+
+/* A sheet part over this is read for a point in blocks of about this size, not whole. */
+const ACCESS_BLOCK_CHARS = 1 << 20;
+
+/* The rows of a block, as the read meets them: the smallest and largest row number and whether they came in ascending
+   order. A row with no readable `r` follows the row before it, across blocks too (`before`). */
+function blockRows() {
+  let last = 0;
+  const open = (start, extra = {}) => ({ start, end: null, min: Infinity, max: 0, ordered: true, prev: 0, before: last, ...extra });
+  const take = (blk, r) => {
+    const n = Number.isInteger(r) && r > 0 ? r : last + 1;
+    last = n;
+    if (n < blk.prev) blk.ordered = false;
+    blk.prev = n;
+    if (n < blk.min) blk.min = n;
+    if (n > blk.max) blk.max = n;
+  };
+  return { open, take };
+}
+
+/** Access points for a sheet held whole: blocks of offsets into the held text. */
+function offsetAccess() {
+  const rows = blockRows();
+  const blocks = [];
+  let cur = null;
+  return {
+    row(at, r) {
+      if (!cur || at - cur.start >= ACCESS_BLOCK_CHARS) {
+        if (cur) cur.end = at;
+        cur = rows.open(blocks.length ? at : 0);
+        blocks.push(cur);
+      }
+      rows.take(cur, r);
+    },
+    async finish(length) {
+      if (cur) cur.end = length;
+      return { kind: "offsets", blocks: blocks.filter((b) => b.min !== Infinity), length };
+    },
+  };
+}
+
+async function deflateText(s) {
+  const out = new Blob([s]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(out).arrayBuffer());
+}
+async function inflateText(u8) {
+  const out = new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return await new Response(out).text();
+}
+
+/** Access points for a sheet read in pieces: each piece (whole rows) is a block, kept deflated. */
+function pieceAccess() {
+  const rows = blockRows();
+  const blocks = [];
+  let cur = null;
+  const begin = () => { cur = rows.open(0, { data: null, length: 0 }); };
+  begin();
+  return {
+    row(_at, r) { rows.take(cur, r); },
+    piece(text) {
+      const blk = cur;
+      blk.length = text.length;
+      if (blk.min !== Infinity) { blocks.push(blk); blk.data = deflateText(text); }
+      begin();
+    },
+    async finish() {
+      for (const b of blocks) b.data = await b.data;
+      return { kind: "pieces", blocks, length: blocks.reduce((n, b) => n + b.length, 0) };
+    },
+  };
+}
+
+/* A sheet's walk, as a scanner handler: `onRow` is called with each row as it is walked (`{r, hidden, cells:[{cell, t, s,
+   f, v, is}]}`). `ctl.stopped` ends the scan (a bound went past); `access` is told where each row starts. */
+function sheetHandler(onRow, { rowsOnly = false, ctl = { stopped: false }, access = null, retainedMax = OFFICE_RETAINED_MAX } = {}) {
   const hiddenRows = [];
   const hiddenCols = [];
   const hyperlinks = [];
@@ -598,68 +750,108 @@ function sheetWalker(onRow) {
      which is a MEASURED zero (this sheet holds nothing) and is a different
      fact from the NULL the bound carries when the format fixes no maximum. */
   let usedRows = 0, usedCols = 0;
-  return {
-    feed(xml) {
-      for (const el of elements(xml, "row")) {
-        const row = {
-          r: el.attrs.r != null ? parseInt(el.attrs.r, 10) : null,
-          hidden: el.attrs.hidden === "1" || el.attrs.hidden === "true",
-          cells: elements(el.inner, "c").map((c) => {
-            const f = elements(c.inner, "f");
-            const v = elements(c.inner, "v");
-            const is = elements(c.inner, "is");
-            return {
-              cell: c.attrs.r ?? null,
-              t: c.attrs.t ?? null,
-              f: f.length ? decodeXmlEntities(f[0].inner) : null,
-              v: v.length ? decodeXmlEntities(v[0].inner) : null,
-              is: is.length ? textRuns(is[0].inner) : null,
-            };
-          }),
-        };
-        if (row.hidden && row.r != null) hiddenRows.push(row.r);
-        if (row.cells.length) {
-          if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
-          for (const c of row.cells) {
-            const col = a1Col(c.cell);
-            if (col != null && col > usedCols) usedCols = col;
-          }
-        }
-        onRow(row);
+  let row = null, cell = null, target = null, buf = "", inIs = false, rph = 0;
+  const endCell = () => {
+    if (!cell) return;
+    if (row) row.cells.push(cell);
+    cell = null; target = null;
+  };
+  const endRow = () => {
+    if (!row) return;
+    endCell();
+    if (row.hidden && row.r != null) hiddenRows.push(row.r);
+    if (row.cells.length) {
+      if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
+      for (const c of row.cells) {
+        const col = a1Col(c.cell);
+        if (col != null && col > usedCols) usedCols = col;
       }
-      for (const c of elements(xml, "col")) {
-        if (c.attrs.hidden === "1" || c.attrs.hidden === "true") {
-          hiddenCols.push({ min: parseInt(c.attrs.min, 10), max: parseInt(c.attrs.max, 10) });
-        }
+    }
+    const done = row;
+    row = null;
+    onRow(done);
+  };
+  const handler = {
+    get stopped() { return ctl.stopped; },
+    text(s) { if (target) buf += decodeXmlEntities(s); },
+    cdata(s) { if (target) buf += s; },
+    open(name, raw, self) {
+      if (name === "row") {
+        endRow();
+        const a = parseAttrs(raw);
+        row = { r: a.r != null ? parseInt(a.r, 10) : null, hidden: a.hidden === "1" || a.hidden === "true", cells: [] };
+        if (access) access.row(handler.scanner.at, row.r);
+        if (self) endRow();
+        return;
       }
-      for (const h of elements(xml, "hyperlink")) {
-        hyperlinks.push({
-          cell: h.attrs.ref ?? null,
-          relId: h.attrs.id ?? null,
-          location: h.attrs.location ?? null,
-          display: h.attrs.display ?? null,
-        });
+      if (row) {
+        if (name === "c") {
+          endCell();
+          const a = parseAttrs(raw);
+          cell = { cell: a.r ?? null, t: a.t ?? null, s: a.s ?? null, f: null, v: null, is: null };
+          if (row.cells.length >= retainedMax) { ctl.stopped = true; ctl.exceeded ??= { why: "TOO_MANY_OBJECTS", n: row.cells.length + 1, bound: retainedMax, final: true }; }
+          if (self) endCell();
+        } else if (cell) {
+          if (name === "f") { if (self) { cell.f ??= ""; } else { target = cell.f == null ? "f" : "x"; buf = ""; } }
+          else if (name === "v") { if (self) { cell.v ??= ""; } else { target = cell.v == null ? "v" : "x"; buf = ""; } }
+          else if (name === "is") { if (!self) { inIs = cell.is == null; if (inIs) cell.is = ""; } else cell.is ??= ""; }
+          else if (inIs && name === "rPh" && !self) rph++;
+          else if (inIs && name === "t" && !self && rph === 0) { target = "t"; buf = ""; }
+        }
+        return;
+      }
+      if (rowsOnly) return;
+      if (name === "col") {
+        const a = parseAttrs(raw);
+        if (a.hidden === "1" || a.hidden === "true") hiddenCols.push({ min: parseInt(a.min, 10), max: parseInt(a.max, 10) });
+      } else if (name === "hyperlink") {
+        const a = parseAttrs(raw);
+        hyperlinks.push({ cell: a.ref ?? null, relId: a.id ?? null, location: a.location ?? null, display: a.display ?? null });
       }
     },
-    done: () => ({ hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols }),
+    close(name) {
+      if (name === "row") { endRow(); return; }
+      if (name === "c") { endCell(); return; }
+      if (!cell) return;
+      if (name === "f" || name === "v") {
+        if (target === name) cell[name] = buf;
+        if (target === name || target === "x") target = null;
+      } else if (name === "t") {
+        if (target === "t") { cell.is += buf; target = null; }
+      } else if (name === "rPh") { if (rph > 0) rph--; }
+      else if (name === "is") { inIs = false; rph = 0; }
+    },
   };
+  return { handler, done: () => ({ hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols }) };
 }
 
 /* One sheet part walked, whole (its XML in hand) or in pieces (R35): `onRow`
  * gets every row as it is walked, and the answer is the walk's totals, or
  * `{ failed: why }` when the part could not be read to its end. A caller whose
  * answer is `failed` has been given rows of a part that is not the part, and
- * drops what it built from them. */
-async function walkSheetPart(parts, sheet, onRow) {
-  const w = sheetWalker(onRow);
-  if (sheet.xml != null) { w.feed(sheet.xml); return w.done(); }
-  const read = await readPartPieces(parts.bytes, parts.container, sheet.part, SHEET_CUT, (piece) => w.feed(piece));
-  return read.ok ? w.done() : { failed: pieceWhy(read) };
+ * drops what it built from them. `ctl.exceeded` is a bound the walk went past (R44). With `access` the walk also leaves the
+ * sheet's access points (R37). */
+async function walkSheetPart(parts, sheet, onRow, { yieldNow = null, ctl = { stopped: false }, access = null } = {}) {
+  const w = sheetHandler(onRow, { ctl, access });
+  if (sheet.xml != null) {
+    const sc = new Scanner(w.handler);
+    await scanWhole(sc, sheet.xml, yieldNow);
+    if (sc.badRef && !ctl.exceeded) return { failed: { why: "char_ref_invalid", final: true } };
+    const done = w.done();
+    if (access) parts.access.set(sheet.part, await access.finish(sheet.xml.length));
+    return { ...done, scanner: sc };
+  }
+  const r = await scanPart(parts.bytes, parts.container, sheet.part, w.handler,
+    { mode: "pieces", cut: SHEET_CUT, yieldNow, onPiece: access ? (piece) => access.piece(piece) : null });
+  if (!r.ok && !ctl.exceeded) return { failed: stripOk(r) };
+  if (access && r.ok) parts.access.set(sheet.part, await access.finish());
+  return { ...w.done(), scanner: r.scanner };
 }
 
 /** One cell's DISPLAYED value (the cached claim the published sheet shows).
- *  Returns { value } or { undetermined: why }; an empty cell is null value. */
-function cellValue(c, sharedStrings) {
+ *  Returns { value } or { undetermined: why }; an empty cell is null value. A date by its number format shows as the
+ *  ISO date (R30, G134c). */
+function cellValue(c, sharedStrings, dates = null) {
   if (c.t === "s") {
     const i = c.v != null ? parseInt(c.v, 10) : NaN;
     if (sharedStrings && Number.isInteger(i) && i >= 0 && i < sharedStrings.length)
@@ -668,14 +860,16 @@ function cellValue(c, sharedStrings) {
   }
   if (c.t === "inlineStr") return { value: c.is ?? "" };
   if (c.t === "b") return { value: c.v === "1" ? "TRUE" : c.v === "0" ? "FALSE" : c.v };
+  const iso = dateOf(c, dates);
+  if (iso != null) return { value: iso };
   /* t="str" (formula string result), t="e" (an error like #DIV/0! — itself a
    * fact the sheet published), t="n" and untyped numerics: the raw <v>. */
   return { value: c.v };
 }
 
-/* R30 (C:A-3; K1448) — THE TYPED CELL. The type is read ONLY from what the
- * file declares in `t` (ECMA-376 ST_CellType); a date a cell's style implies
- * is not inferred, and nothing is recalculated: a formula's cached <v> is the
+/* R30 (C:A-3; K1448) — THE TYPED CELL. The type is what the file declares in `t` (ECMA-376 ST_CellType); a number whose
+ * format, read from the file's styles, is a date or date-time format is a `date` (fix round 9, G134c: its `value` the
+ * ISO date, `serial` the stored lexical value beside); nothing is recalculated: a formula's cached <v> is the
  * file's statement, held beside the formula as R10's item holds it. A token
  * outside the format's list is named, never mapped to a guess (R22). */
 const CELL_TYPES = { n: "number", s: "text", str: "text", inlineStr: "text", b: "boolean", d: "date", e: "error" };
@@ -683,8 +877,8 @@ const CELL_TYPES = { n: "number", s: "text", str: "text", inlineStr: "text", b: 
 /** One walked cell -> `{ cell, undetermined? }`. `value` is the lexical value
  *  as stored (the <v>, an inline string's text, a resolved shared string),
  *  never re-rendered through a float; null when it cannot be resolved. */
-function typedCell(c, sheetName, sharedStrings) {
-  const type = c.t == null ? "number" : (CELL_TYPES[c.t] ?? null);
+function typedCell(c, sheetName, sharedStrings, dates = null) {
+  let type = c.t == null ? "number" : (CELL_TYPES[c.t] ?? null);
   let value = c.t === "inlineStr" ? (c.is ?? c.v) : c.v;
   let why = type == null ? "cell_type_unknown" : null;
   if (c.t === "s") {
@@ -692,12 +886,12 @@ function typedCell(c, sheetName, sharedStrings) {
     value = r.undetermined ? null : r.value;
     if (r.undetermined) why = r.undetermined;
   }
+  const iso = dateOf(c, dates);
   const formula = c.f != null;
-  return {
-    cell: { source: c.cell ? sheetCellRef(sheetName, c.cell) : null, value: value ?? null, type,
-      declared: c.t ?? null, cached: formula ? c.v : null, formula: formula ? c.f : null },
-    why,
-  };
+  const cell = { source: c.cell ? sheetCellRef(sheetName, c.cell) : null, value: value ?? null, type,
+    declared: c.t ?? null, cached: formula ? c.v : null, formula: formula ? c.f : null };
+  if (iso != null) { cell.value = iso; cell.type = "date"; cell.serial = c.v; }
+  return { cell, why };
 }
 
 /** R30's order: row, then column. A cell with no readable `r` keeps the place
@@ -717,7 +911,7 @@ function rowColumnOrder(entries) {
  * structure(parts) -> the I2 shape (+ the IC-2 evidentiary envelope)
  * ------------------------------------------------------------------ */
 
-async function xlsxStructure(parts) {
+async function xlsxStructure(parts, opts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "xlsx", reason: parts ? parts.why : "PARTS_ABSENT" };
   }
@@ -725,7 +919,7 @@ async function xlsxStructure(parts) {
   const links = [];
   const notes = [];
   const evItems = [];
-  const evUndetermined = [...parts.undetermined];
+  const evUndetermined = [...parts.undetermined, ...parts.partials];
 
   for (const sheet of sheets) {
     /* The rels half: this sheet's own .rels, where the TARGETS live (read
@@ -752,7 +946,7 @@ async function xlsxStructure(parts) {
             value: c.v, // the cached result, null when the file carries none — stated, not invented
           });
         }
-      });
+      }, { yieldNow: opts?.yieldNow });
       if (walked.failed) {
         failedWhy = walked.failed.why;
         evUndetermined.push({ part: sheet.part, ...walked.failed });
@@ -892,18 +1086,22 @@ async function xlsxStructure(parts) {
   }
 
   /* xl/embeddings/ -> intra, content-addressed exactly as a bundle companion. */
+  /* R43: the identity is taken as the member streams, never from the member held whole. */
+  const embedded = [];
   for (const entry of container.entries) {
     const name = normalizePartName(entry.name);
-    if (!/^xl\/embeddings\//.test(name)) continue;
-    const read = await readPart(bytes, container, name);
-    if (!read.ok) {
+    if (/^xl\/embeddings\//.test(name)) embedded.push(name);
+  }
+  const identities = await memberIdentities(bytes, embedded);
+  for (const name of embedded) {
+    const read = identities.get(name);
+    if (!read?.ok) {
       links.push({ partition: "undetermined", wrapper: null,
-        target: { why: `embedding_unreadable:${read.why}`, name }, source: null });
+        target: { why: `embedding_unreadable:${read?.why ?? "unreadable"}`, name, ...(read?.limit != null ? { limit: read.limit } : {}) }, source: null });
       continue;
     }
-    const sha = await sha256Hex(read.bytes);
-    links.push({ partition: "intra", wrapper: linkWrapper.intra(sha),
-      target: { sha256: sha, name, bytes: read.bytes.length }, source: null });
+    links.push({ partition: "intra", wrapper: linkWrapper.intra(read.sha256),
+      target: { sha256: read.sha256, name, bytes: read.size }, source: null });
   }
 
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
@@ -964,6 +1162,29 @@ function cellJsonBytes(cell) {
   return /[^\x00-\x7f]/.test(j) ? JSON_ENC.encode(j).length : j.length;
 }
 
+/** Cell comments, as a scanner handler: one `<comment ref>` is one note, its `<t>` text (phonetic runs left out). */
+function commentsReader() {
+  const list = [];
+  let cur = null, inT = false, rph = 0;
+  const handler = {
+    text(s) { if (inT && cur) cur.text += decodeXmlEntities(s); },
+    cdata(s) { if (inT && cur) cur.text += s; },
+    open(name, raw, self) {
+      if (name === "comment") { cur = { ref: parseAttrs(raw).ref ?? null, text: "" }; list.push(cur); if (self) cur = null; rph = 0; }
+      else if (cur && name === "rPh" && !self) rph++;
+      else if (cur && name === "t" && !self && rph === 0) inT = true;
+    },
+    close(name) {
+      if (name === "comment") { cur = null; inT = false; }
+      else if (name === "rPh") { if (rph > 0) rph--; }
+      else if (name === "t") inT = false;
+    },
+  };
+  return { handler, list };
+}
+/* Parts that can hold text and that no unit reads: stated, never a reading that says it is whole (R38). */
+const UNREAD_TEXT_PART_RE = /^xl\/(drawings\/drawing[^/]*|charts\/chart[^/]*|diagrams\/data[^/]*)\.xml$/;
+
 async function xlsxText(parts, opts) {
   /* The shapes below are IC-2's pageless degenerate form AS ACCEPTED from
    * docx.mjs (paragraphs[] there, sheets[] here — the per-unit list named for
@@ -972,7 +1193,8 @@ async function xlsxText(parts, opts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "xlsx", reason: parts?.why ?? "PARTS_ABSENT" };
   }
-  const { sheets, sharedStrings, guard, piecewise } = parts;
+  const { sheets, sharedStrings, guard, piecewise, dates } = parts;
+  const yieldNow = opts?.yieldNow;
 
   if (guard) {
     /* Over the streamed ceiling: the sizeGuard marker carried VERBATIM inside
@@ -982,19 +1204,23 @@ async function xlsxText(parts, opts) {
       ok: true, container: "xlsx", document: null, sheets: [],
       ...xlsxRangeUnits(parts),
       undetermined: [guard],
-      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 },
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1, scanned_bytes: 0 },
     };
   }
 
   const outSheets = [];
-  const allUndetermined = [];
-  let cellCount = 0, formulaCount = 0;
+  const allUndetermined = [...parts.partials, ...parts.undetermined.filter((u) => u.part === STYLES_PART)];
+  let cellCount = 0, formulaCount = 0, scanned = 0;
   /* G41: with the caller's cap, the workbook's cells are listed while all of them together, as JSON, are within it;
      once they are not, every sheet's list is dropped and none is made (`held`). Over the whole-read bound none is
      made either (R35). Without the caller's cap nothing is held: every cell is listed, as always. */
   const cap = inlineCellsCap(opts);
   let held = false, listedBytes = 0;
   const walkedOut = [];
+  /* R44: the typed cells a read holds at once are bounded by the table's retained-objects figure: a read that would
+     hold more is refused, by name and with its figure. */
+  const ctl = { stopped: false, exceeded: null };
+  let retained = 0;
 
   /* A sheet that gave no text: the marker, and the sheet as a unit with no
    * text and no cells. */
@@ -1027,6 +1253,10 @@ async function xlsxText(parts, opts) {
     let typed = piecewise || held ? null : [];
     let sheetBytes = 2;
     let sheetCells = 0, sheetFormulas = 0;
+    /* R37: a sheet over a block leaves its access points when the caller keeps its cells held (the point reads follow). */
+    const declaredSize = parts.container.byName.get(sheet.part)?.uncompressedSize ?? 0;
+    const access = cap != null && declaredSize > ACCESS_BLOCK_CHARS && !parts.access.has(sheet.part)
+      ? (sheet.xml != null ? offsetAccess() : pieceAccess()) : null;
     const walked = await walkSheetPart(parts, sheet, (row) => {
       const vals = [];
       const rowNo = Number.isInteger(row.r) && row.r > 0 ? row.r : lastRow + 1;
@@ -1038,15 +1268,22 @@ async function xlsxText(parts, opts) {
         if (c.v != null || c.f != null || (c.t === "inlineStr" && c.is != null)) {
           if (c.t != null && CELL_TYPES[c.t] == null) undetermined.push({ sheet: sheet.index, cell: c.cell, reason: "cell_type_unknown" });
           if (typed) {
-            const tc = typedCell(c, sheet.name, sharedStrings);
+            const tc = typedCell(c, sheet.name, sharedStrings, dates);
             typed.push({ ref: c.cell, cell: tc.cell });
+            if (++retained > OFFICE_RETAINED_MAX && !ctl.exceeded) {
+              ctl.exceeded = { why: "TOO_MANY_OBJECTS", n: retained, bound: OFFICE_RETAINED_MAX, final: true };
+              ctl.stopped = true;
+            }
             if (cap != null) {
               sheetBytes += cellJsonBytes(tc.cell) + (typed.length > 1 ? 1 : 0);
-              if (listedBytes + sheetBytes > cap) { held = true; typed = null; }
+              if (listedBytes + sheetBytes > cap) {
+                held = true; typed = null; retained = 0;
+                for (const o of walkedOut) o.cells = null;
+              }
             }
           }
         }
-        const r = cellValue(c, sharedStrings);
+        const r = cellValue(c, sharedStrings, dates);
         if (r.undetermined) {
           undetermined.push({ sheet: sheet.index, cell: c.cell, reason: r.undetermined });
           continue;
@@ -1056,12 +1293,22 @@ async function xlsxText(parts, opts) {
         vals.push(r.value);
       }
       if (vals.length) { lines.push(vals.join("\t")); lineRows.push(rowNo); }
-    });
+    }, { yieldNow, ctl, access });
+    if (ctl.exceeded) {
+      return {
+        ok: true, container: "xlsx", document: null, sheets: [],
+        ...xlsxRangeUnits(parts),
+        undetermined: [{ part: sheet.part, ...ctl.exceeded }],
+        counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1, scanned_bytes: scanned },
+      };
+    }
     if (walked.failed) {
       const { why, ...rest } = walked.failed;
       unreadable(sheet, why, rest);
       continue;
     }
+    scanned += walked.scanner?.scanned ?? 0;
+    if (walked.scanner) allUndetermined.push(...scanNotes(sheet.part, walked.scanner));
     cellCount += sheetCells;
     formulaCount += sheetFormulas;
     if (typed) listedBytes += sheetBytes;
@@ -1088,18 +1335,41 @@ async function xlsxText(parts, opts) {
     }
   }
 
+  /* R38: the notes on cells are units (`cell_note`); the parts that can hold other text are stated unread. */
+  const cellNotes = [];
+  for (const sheet of sheets) {
+    for (const r of sheet.rels?.relationships ?? []) {
+      if (r.external || !r.target || !/\/comments$/.test(String(r.type ?? ""))) continue;
+      const part = resolveTarget(sheet.part, r.target);
+      const reader = commentsReader();
+      const got = await scanPart(parts.bytes, parts.container, part, reader.handler, { mode: "whole", yieldNow });
+      if (!got.ok) { allUndetermined.push({ part, ...stripOk(got) }); continue; }
+      scanned += got.scanner.scanned;
+      allUndetermined.push(...scanNotes(part, got.scanner));
+      if (got.partial) allUndetermined.push(got.partial);
+      for (const n of reader.list) {
+        if (n.text) cellNotes.push({ kind: "cell_note", ref: n.ref ? sheetCellRef(sheet.name, n.ref) : null, part, text: n.text });
+      }
+    }
+  }
+  for (const e of parts.container.entries) {
+    const part = normalizePartName(e.name);
+    if (UNREAD_TEXT_PART_RE.test(part)) allUndetermined.push({ part, why: "part_unread" });
+  }
+
   const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
   return {
     ok: true,
     container: "xlsx",
     document,
     sheets: outSheets,
+    parts: cellNotes,
     /* R9 / D-415: the defined names and tables as `sheet-range` units,
        beside each sheet's whole-sheet `range`. */
     ...xlsxRangeUnits(parts),
     undetermined: allUndetermined,
     counts: { chars: document.length, cells: cellCount, formulas: formulaCount,
-      undetermined: allUndetermined.length },
+      undetermined: allUndetermined.length, scanned_bytes: scanned },
     /* R35: said when the text was read in pieces, the figures it was judged by. */
     ...(piecewise ? { piecewise } : {}),
   };
@@ -1113,19 +1383,21 @@ async function xlsxText(parts, opts) {
  * sheet's name (exact, else without case when exactly one answers) or its
  * 0-based position; rows and columns 1-based and inclusive, `fromRow` and
  * `fromCol` 1 and `toRow` and `toCol` the end of the sheet when absent. The
- * answer is `{ ok:true, sheet, cells, rows:{from, to}, next_row, undetermined }`:
+ * answer is `{ ok:true, sheet, cells, rows:{from, to}, next_row, undetermined, served }`:
  * the cells text() would have listed for those rows and columns (the same
  * `typedCell`, shared strings from the one list, hidden rows and columns not
  * left out), in row then column order. A call answers at most `maxCells`
  * (default CELLS_IN_MAX) cells and whole rows only: the row that would pass it
  * is left to the next call, `next_row` its number, and `rows.to` the last row
  * answered; the first row is answered whole even if alone it is over. `next_row`
- * is absent when the range was answered whole. The sheet part is inflated in windows
- * to its end, so its length and CRC are verified, and only the rows in range
- * are parsed; a part that cannot be read to its end gives `{ ok:false, reason }`.
- * Rows are taken in the order the format requires, ascending: a piece whose
- * rows all lie outside the range is not parsed on that account. A cell with no
- * readable column is in every column range. Never throws.
+ * is absent when the range was answered whole.
+ *
+ * (Fix round 9, G131e; S-20) A sheet over a block (1 MiB of text) is read through its ACCESS POINTS: the read that
+ * walked it (text() with the caller's cap, else the first point read on this reading) left, for each block of whole rows,
+ * where it is and the rows it holds, so a call parses only the blocks that hold the rows asked for and stops when the
+ * answer is full, and never inflates or checks the sheet again. `served` is what the call parsed, `{bytes, blocks}`:
+ * bounded by the rows asked for and a block, not by the sheet's size or the row's offset. A sheet that cannot be read to
+ * its end gives `{ ok:false, reason }`. A cell with no readable column is in every column range. Never throws.
  */
 export const CELLS_IN_MAX = 20000;
 
@@ -1142,26 +1414,10 @@ function cellsInArguments(range) {
   return { sheet, fromRow, toRow: Math.min(toRow ?? XLSX_GRID_ROWS, XLSX_GRID_ROWS), toRowGiven: toRow !== null, fromCol, toCol: toCol ?? XLSX_GRID_COLS, maxCells };
 }
 
-/* The sheet's rows are the elements `<row ...>`: how many a piece holds, and the first and last `r` it names, read
- * without parsing a row. */
-const ROW_TAG = /<(?:[\w.-]+:)?row\b([^>]*)>/g;
-function rowSpan(piece) {
-  ROW_TAG.lastIndex = 0;
-  let n = 0, noR = 0, first = null, last = null, m;
-  while ((m = ROW_TAG.exec(piece)) !== null) {
-    n++;
-    const r = /(?:^|\s)r\s*=\s*["'](\d+)["']/.exec(m[1]);
-    if (!r) { noR++; continue; }
-    const v = parseInt(r[1], 10);
-    if (first == null) first = v;
-    last = v;
-  }
-  return { n, noR, first, last };
-}
-
 async function xlsxCellsIn(parts, a) {
   if (!parts || !parts.ok) return { ok: false, reason: parts?.why ?? "PARTS_ABSENT" };
-  const { sheets, sharedStrings, guard } = parts;
+  const { sheets, sharedStrings, guard, dates } = parts;
+  parts.access ??= new Map();
   if (guard) return { ok: false, reason: guard.why, size: guard.size, bound: guard.bound, boundName: guard.boundName, final: true };
   let sheet = null;
   if (typeof a.sheet === "number") sheet = sheets[a.sheet] ?? null;
@@ -1176,51 +1432,71 @@ async function xlsxCellsIn(parts, a) {
   if (sheet.xml == null && !sheet.pieces) return { ok: false, reason: sheet.why ?? "sheet_unreadable" };
 
   const out = [], undetermined = [];
-  let lastRow = 0, maxRow = 0, nextRow = null, stopped = false, lastTaken = null;
-  const feed = (xml, skipping) => {
-    if (stopped) return;
-    for (const el of elements(xml, "row")) {
-      const given = el.attrs.r != null ? parseInt(el.attrs.r, 10) : null;
-      const rowNo = Number.isInteger(given) && given > 0 ? given : lastRow + 1;
-      lastRow = rowNo;
-      if (rowNo > maxRow) maxRow = rowNo;
-      if (rowNo < a.fromRow || rowNo > a.toRow) continue;
-      const cells = [];
-      for (const c of elements(el.inner, "c")) {
-        const f = elements(c.inner, "f"), v = elements(c.inner, "v"), is = elements(c.inner, "is");
-        const w = { cell: c.attrs.r ?? null, t: c.attrs.t ?? null,
-          f: f.length ? decodeXmlEntities(f[0].inner) : null, v: v.length ? decodeXmlEntities(v[0].inner) : null,
-          is: is.length ? textRuns(is[0].inner) : null };
-        if (!(w.v != null || w.f != null || (w.t === "inlineStr" && w.is != null))) continue;
-        const col = a1Col(w.cell);
-        if (col != null && (col < a.fromCol || col > a.toCol)) continue;
-        const tc = typedCell(w, sheet.name, sharedStrings);
-        if (tc.why) undetermined.push({ sheet: sheet.index, cell: w.cell, reason: tc.why });
-        cells.push({ ref: w.cell, cell: tc.cell });
+  const ctl = { stopped: false };
+  let lastRow = 0, maxRow = 0, nextRow = null;
+  const served = { bytes: 0, blocks: 0 };
+  const takeRow = (row) => {
+    const rowNo = Number.isInteger(row.r) && row.r > 0 ? row.r : lastRow + 1;
+    lastRow = rowNo;
+    if (rowNo > maxRow) maxRow = rowNo;
+    if (rowNo < a.fromRow || rowNo > a.toRow) return;
+    const cells = [];
+    for (const w of row.cells) {
+      if (!(w.v != null || w.f != null || (w.t === "inlineStr" && w.is != null))) continue;
+      const col = a1Col(w.cell);
+      if (col != null && (col < a.fromCol || col > a.toCol)) continue;
+      const tc = typedCell(w, sheet.name, sharedStrings, dates);
+      if (tc.why) undetermined.push({ sheet: sheet.index, cell: w.cell, reason: tc.why });
+      cells.push({ ref: w.cell, cell: tc.cell });
+    }
+    if (out.length > 0 && out.length + cells.length > a.maxCells) { nextRow = rowNo; ctl.stopped = true; return; }
+    for (const c of cells) out.push(c);
+  };
+  const parse = (xml) => {
+    const w = sheetHandler(takeRow, { rowsOnly: true, ctl });
+    const sc = new Scanner(w.handler);
+    scanSync(sc, xml);
+    served.bytes += xml.length;
+    served.blocks++;
+    return sc.badRef;
+  };
+
+  let allMax = null;
+  const small = sheet.xml != null && sheet.xml.length <= ACCESS_BLOCK_CHARS;
+  if (small) {
+    if (parse(sheet.xml)) return { ok: false, reason: "char_ref_invalid", final: true };
+  } else {
+    let access = parts.access.get(sheet.part);
+    if (!access) {
+      /* The first point read on a reading the read did not leave access points for: one pass leaves them. */
+      if (sheet.xml != null) {
+        const acc = offsetAccess();
+        const w = sheetHandler(() => {}, { rowsOnly: true, access: acc });
+        const sc = new Scanner(w.handler);
+        scanSync(sc, sheet.xml);
+        if (sc.badRef) return { ok: false, reason: "char_ref_invalid", final: true };
+        access = await acc.finish(sheet.xml.length);
+      } else {
+        const walked = await walkSheetPart(parts, sheet, () => {}, { access: pieceAccess() });
+        if (walked.failed) { const { why, ...rest } = walked.failed; return { ok: false, reason: why, ...rest }; }
+        access = parts.access.get(sheet.part);
       }
-      if (out.length > 0 && out.length + cells.length > a.maxCells) { nextRow = rowNo; stopped = true; return; }
-      for (const c of cells) out.push(c);
-      lastTaken = rowNo;
+      parts.access.set(sheet.part, access);
     }
-  };
-  /* A piece wholly before the range, or wholly after it, is not parsed (ascending rows, every row named). */
-  const piece = (xml) => {
-    if (stopped) return;
-    const span = rowSpan(xml);
-    if (span.n > 0 && span.noR === 0 && span.first <= span.last) {
-      if (span.last < a.fromRow) { lastRow = span.last; if (span.last > maxRow) maxRow = span.last; return; }
-      if (span.first > a.toRow) { lastRow = span.last; if (span.last > maxRow) maxRow = span.last; return; }
+    allMax = access.blocks.reduce((m, b) => Math.max(m, b.max), 0);
+    for (const blk of access.blocks) {
+      if (ctl.stopped) break;
+      if (blk.max < a.fromRow || blk.min > a.toRow) continue;
+      let xml;
+      if (access.kind === "offsets") xml = sheet.xml.slice(blk.start, blk.end);
+      else { try { xml = await inflateText(blk.data); } catch { return { ok: false, reason: "sheet_unreadable" }; } }
+      lastRow = blk.before;
+      if (parse(xml)) return { ok: false, reason: "char_ref_invalid", final: true };
     }
-    feed(xml);
-  };
-  if (sheet.xml != null) piece(sheet.xml);
-  else {
-    const read = await readPartPieces(parts.bytes, parts.container, sheet.part, SHEET_CUT, piece);
-    if (!read.ok) { const { why, ...rest } = pieceWhy(read); return { ok: false, reason: why, ...rest }; }
   }
   const cells = rowColumnOrder(out).map((x) => x.cell);
-  const to = nextRow != null ? nextRow - 1 : (a.toRowGiven ? a.toRow : Math.max(a.fromRow, maxRow));
-  return { ok: true, sheet: sheet.name, cells, rows: { from: a.fromRow, to }, ...(nextRow != null ? { next_row: nextRow } : {}), undetermined };
+  const to = nextRow != null ? nextRow - 1 : (a.toRowGiven ? a.toRow : Math.max(a.fromRow, allMax ?? maxRow));
+  return { ok: true, sheet: sheet.name, cells, rows: { from: a.fromRow, to }, ...(nextRow != null ? { next_row: nextRow } : {}), undetermined, served };
 }
 
 /* ------------------------------------------------------------------ *
@@ -1254,13 +1530,13 @@ export const xlsxEntry = {
   /* Accept either parts() output or raw bytes, exactly as docx.mjs does, so
      detect→structure works uniformly at the registry seam while a caller that
      already paid for parts() does not pay twice. */
-  structure: async (partsOrBytes) => {
+  structure: async (partsOrBytes, opts) => {
     const parts = isBytes(partsOrBytes)
       ? await xlsxParts(partsOrBytes)
       : partsOrBytes;
-    return withActive(await xlsxStructure(parts), parts);
+    return withActive(await xlsxStructure(parts, opts), parts);
   },
-  /* `opts.inlineCellsMax` (G41): see HELD CELLS above. */
+  /* `opts.inlineCellsMax` (G41): see HELD CELLS above; `opts.yieldNow` (R42). */
   text: async (partsOrBytes, opts) => {
     const parts = isBytes(partsOrBytes)
       ? await xlsxParts(partsOrBytes)

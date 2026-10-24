@@ -2,7 +2,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { csvEntry, CSV_SHEET_NAME } from "../../../src/csv-reader/index.mjs";
-import { STREAMED_TEXT_BOUND_BYTES } from "../../../src/ooxml.mjs";
 import * as F from "./fixtures.mjs";
 
 const PARTITIONS = ["anchor", "intra", "deferred", "refused", "undetermined"];
@@ -25,11 +24,11 @@ test("R4 csv structure: the I2 shape, no links, every count zero, an empty evide
 test("R4 csv structure: ok:false with the parts failure when parts failed; the guard marker is the evidentiary's only possible undetermined", async () => {
   assert.deepEqual(await csvEntry.structure(F.enc("")), { ok: false, container: "csv", reason: "empty_body" });
   assert.deepEqual(await csvEntry.structure(undefined), { ok: false, container: "csv", reason: "PARTS_ABSENT" });
-  const big = new Uint8Array(32 * 1024 * 1024 + 1).fill(0x61);
+  const big = F.overBytes();
   const o = await csvEntry.structure(big);
   assert.equal(o.evidentiary.undetermined.length, 1);
-  assert.equal(o.evidentiary.undetermined[0].guard.boundName, "STREAMED_TEXT_BOUND_BYTES");
-  assert.equal(o.evidentiary.undetermined[0].guard.bound, STREAMED_TEXT_BOUND_BYTES);
+  assert.equal(o.evidentiary.undetermined[0].guard.boundName, "MEASURED_CSV_TEXT_BOUND_BYTES");
+  assert.equal(o.evidentiary.undetermined[0].guard.bound, F.BYTES_BOUND);
   assert.deepEqual(o.evidentiary.items, []);
   assert.deepEqual(o.evidentiary.kinds, []);
   assert.deepEqual(o.links, []);

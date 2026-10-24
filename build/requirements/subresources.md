@@ -1,6 +1,6 @@
 # subresources — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); R35's cap is this module's (K1069). Last changed T23 (R35, N482, K1020); every requirement met (K1116).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); R35's cap is this module's (K1069). Last changed T23 (R35, N482, K1020); every requirement met (K1116). Fix round 9 (T51; G133c; X12, S-21; K4837): R24 amended, R36 new, a failure that comes of an address's own bytes is a final record and never a throw; marked not yet met (T51).
 
 ## Public
 
@@ -47,9 +47,9 @@ Finds every reference an HTML page needs to render as itself, fetches or reuses 
 **`linkWrapper`** — the four wrapper forms `captureSubresources` and the other format readers embed for a link once its partition is decided:
 - **R22** `linkWrapper.anchor(fragment) → fragment`, unchanged.
 - **R23** `linkWrapper.intra(sha256) → "about:capture#" + sha256`.
-- **R24** `linkWrapper.deferred(url) → "about:link#" + encodeURIComponent(url)`.
+- **R24** `linkWrapper.deferred(url) → "about:link#" + encodeURIComponent(url)`, for every string `url`: a lone surrogate in `url` (`\uD800`, which `encodeURIComponent` throws `URIError` on) is encoded as U+FFFD (`%EF%BF%BD`), so the call never throws and gives the same wrapper every time.
 - **R25** `linkWrapper.refused() → "about:link#refused"`.
-- Errors: never throws.
+- Errors: never throws, for any string argument (R24, R36).
 
 **`LINK_TYPES` → `["anchor", "intra", "deferred", "refused"]`**
 - **R26** The closed, ordered set of partitions `linkWrapper` covers. Nothing else is a link type.
@@ -57,6 +57,8 @@ Finds every reference an HTML page needs to render as itself, fetches or reuses 
 **`SUBRESOURCE_CAP` (400), `SUBRESOURCE_MAX` (8 \* 1024 \* 1024 bytes), `SUBRESOURCE_BUDGET` (64 \* 1024 \* 1024 bytes)**
 - **R27** This instance's own appetite ceilings — the default fanout cap, the per-subresource byte ceiling, and the total per-capture byte ceiling — for a capture path to reuse so it spends against the same numbers `captureSubresources` does. Never the platform's own outbound-request limit, which is discovered, not declared (see R10's `platformCeiling`/`observed_ceiling`).
 - **R35** (N482, K1020) `SUBRESOURCE_CAP` is 400, and it is `captureSubresources`' default `cap`: called without `cap`, on a page naming more than 400 distinct fetchable references with no reuse and no platform ceiling, it calls `fetchOne` for exactly 400 of them, and records each further reference `{ok:false, reason:"CAP_REACHED", cap: 400}` (R4), with `manifest.truncated = true`. A test asserts it by calling the service, never by reading this module's source text.
+
+- **R36** (fix round 9, G133c; X12, S-21; rA D7) **A deterministic failure is final.** A failure that comes of an address's or a link's own bytes, and that the same bytes cause on every call (a lone surrogate, an unparseable address), is never a throw out of any service here and is never left for a caller to retry as a transient fault: `captureSubresources` records the reference as `{ok:false, reason:"UNRESOLVABLE"}` (R6) with `final: true`, `normalizeAddress` and `normalizeCitation` answer as R18 and R19 state, and a link record is classified and wrapped as any other. The only throw left is the `TypeError` for an injected function that is not callable (the Errors statement of `captureSubresources`), a caller's defect.
 
 - **R34** (N79, D-340; K278) Every `links[]` entry (R15) carries its containment: `chrome: true` with `chrome_basis` naming the furniture region its href sat in (`<nav>`, `<footer>`, `<header>`, `<aside>`, or `role=navigation|banner|contentinfo|complementary|search`), when that href (as written, trimmed) appears in a furniture region anywhere on the page by R8's rule (body wins anywhere on the open-element stack; a declared `role=` outranks the element name; a commented-out region opens nothing); otherwise `chrome: false` and `chrome_basis: null`, so the field is total. The first furniture basis met in document order is named. One link written two ways (a relative href in the body, the absolute one in the nav) is one entry, contained. Containment classifies and never filters: every link is recorded as without it, and whether a link is the site's chrome (recurrence across pages) is capture R28's, not decided here. A link restored from `resume` keeps its containment.
 

@@ -21,7 +21,7 @@ import { normalizeType } from "../record-grammar/types.mjs";
 import { sectionText } from "../record-grammar/document.mjs";
 import { NS_RATIFY, ratifyStatement, caseRatifyStatement } from "../sshsig.mjs";
 import { serialiseContainer, containerEntries } from "../container.mjs";
-import { buildCaseFile, isCaseFileManifest, caseFilePartLayout, caseFileParts, sha256Hex, CASEFILE_CODES } from "../public-read/casefile.mjs";
+import { buildCaseFile, isCaseFileManifest, caseFilePartLayout, caseFileParts, sha256Hex, inWindow, CASEFILE_CODES, CASEFILE_BLIND_PUT_MAX } from "../public-read/casefile.mjs";
 import { inbandQuartet } from "../inband.mjs";
 import { caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { legReaderOf } from "../public-read/legs.mjs";
@@ -219,9 +219,12 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
       await recordCaseFileFailure({ stub, cs, via, step: "copy", error: prior.copy_error, code: prior.copy_code ?? null, absent: false });
       return { ok: false, reason: "CASE_FILE_NOT_BUILT", code: CASEFILE_CODES.includes(prior.copy_code) ? prior.copy_code : "BUCKET_FAILED", step: "copy" };
     }
-    await ledger(stub, { caseId: cs.caseId, edition: cs.edition, state: "building" });
+    /* G121b: `building` is asked of the store while the assembly reads its facts; every later ledger write waits for it, since a
+       `building` after a `failed` or `built` would be the last word. */
+    const building = ledger(stub, { caseId: cs.caseId, edition: cs.edition, state: "building" });
     let out = null, err = null;
     try { out = await assembleOnce({ env, stub, storeName, cs, via, maxBytes, mark, prior }); } catch (e) { err = e; }
+    await building;
     if (!err && out && out.manifest_sha) {
       const done = await ledger(stub, { caseId: cs.caseId, edition: cs.edition, state: "built" });
       attemptLog(true, { ...base, step: "manifest_put", code: null, files: out.files ?? null, bytes: out.bytes ?? null, recorded: !!(done && done.ok) });
@@ -517,9 +520,13 @@ async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes
   const estimate = (facts.materials || []).reduce((n, m) => n + 2 + (m.archives || []).length, 0) + (facts.obscured || []).length
     + (facts.attestations || []).length + (facts.findings || []).length * 4 + (facts.calculations || []).reduce((n, c) => n + 1 + (c.inputs || []).length, 0);
   if (estimate > CASEFILE_FILES_MAX) return statement("TOO_LARGE", "build", { files: estimate });
+  /* G121b: a sha read from the bucket at its own key is held there; a file of that hash needs neither a `head` nor a `put`. */
+  const held = new Set();
   const read = async (sha) => {
     const o = await b.get(key(sha));
-    return o ? new Uint8Array(await o.arrayBuffer()) : null;
+    if (!o) return null;
+    held.add(sha);
+    return new Uint8Array(await o.arrayBuffer());
   };
   const built = await buildCaseFile({ facts, group: cs.group ?? null, read, ...(maxBytes ? { maxBytes } : {}) });
   if (!built.ok) return built;
@@ -528,8 +535,7 @@ async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes
   mark("materials");
   const missing = built.unheld.filter((u) => !u.why && !u.unspellable && !u.unregistered && /^[0-9a-fA-F]{64}$/.test(String(u.sha ?? ""))).length + (prior && Array.isArray(prior.materials_missing) ? prior.materials_missing.length : 0);
   if (missing) return statement("MATERIAL_MISSING", "materials", { files: built.files.length, missing });
-  mark("bucket_put");
-  for (const f of built.files) if (!(await b.head(key(f.sha256)))) await b.put(key(f.sha256), f.content);
+  /* The manifest's bytes depend on the files' hashes only, so they are made before anything is written and put with the files. */
   mark("quartet");
   const { bytes: mBytes, quartet: inband } = await inbandQuartet({
     subject: built.manifest,
@@ -538,6 +544,19 @@ async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes
     author: (cs.document && cs.document.attestor && cs.document.attestor.member) ?? null,
     bar: cs.bar ?? null });
   const mSha = inband.hash.sha256;
+  /* R44 (G121, G121b): what the case file derives (the document, the signature, the listings, the complete edition) is put, and its
+     manifest with it, in one sliding window of 8 over the distinct objects (two paths of one file are one object), each by its
+     hash and with no `head` before the put (a file over `CASEFILE_BLIND_PUT_MAX` is asked after first); an object just read from
+     the bucket is held already and is not touched. The manifest is recorded once its files are in; a failure of its own put is stated after the record. */
+  mark("bucket_put");
+  const objects = [...new Map(built.files.filter((f) => !held.has(f.sha256)).map((f) => [f.sha256, f])).values()];
+  const writes = [...objects.map((f) => ({ sha: f.sha256, content: f.content, manifest: false })), { sha: mSha, content: mBytes, manifest: true }];
+  const done = await inWindow(writes, async (w) => {
+    if (w.content.length > CASEFILE_BLIND_PUT_MAX && (await b.head(key(w.sha)))) return;
+    await b.put(key(w.sha), w.content);
+  });
+  const failure = done.findIndex((r, i) => r && r.status === "rejected" && !writes[i].manifest);
+  if (failure >= 0) throw done[failure].reason;
   mark("record");
   const recOut = await plane().doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
     method: "POST", body: JSON.stringify({ caseId: cs.caseId, edition: cs.edition,
@@ -546,8 +565,9 @@ async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes
   if (!recOut.answered)
     return { ok: false, reason: plane().STORE_SILENT_REASON, op: `${via}/recordcasemanifest`, detail: plane().STORE_SILENT_DETAIL };
   if (!(rec && rec.ok)) return { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
+  /* its own bytes went with the files; a put that failed is stated here, after the record, as it always was: recorded, bytes not stored */
   mark("manifest_put");
-  if (!(await b.head(key(mSha)))) await b.put(key(mSha), mBytes);
+  if (done[writes.length - 1].status !== "fulfilled") throw done[writes.length - 1].reason;
   const parts = built.manifest.parts.map((p) => ({ index: p.index, sha256: p.sha256, bytes: p.bytes,
     zip: `op=publishedbytes&sha256=${mSha}&format=zip&part=${p.index}` }));
   return { manifest_sha: mSha, format: built.manifest.format, parts: parts.length, part_addresses: parts,

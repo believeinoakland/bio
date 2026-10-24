@@ -1,7 +1,7 @@
 /* pdf-worker's HTTP surface: R1–R12, R35–R38 and R41 of build/requirements/pdf-worker.md.
  *
- * The subject is the COMMITTED BUNDLE (`dist/pdf-worker.bundled.mjs`), the file
- * that deploys. It is driven two ways: under miniflare (workerd, the runtime it
+ * The subject is a fresh build of the source by the committed bundle's own recipe (`subject.mjs`); that the committed
+ * `dist/pdf-worker.bundled.mjs`, the file that deploys, equals such a build is `fleetbundles.test.mjs`'s guard. It is driven two ways: under miniflare (workerd, the runtime it
  * serves in) for the behaviour of each route, and imported into node with a
  * recording `env` where the question is what the Worker touches (R1, R37). */
 import "../../bio-plane/test/sandbox.mjs";
@@ -9,8 +9,9 @@ import "../../bio-plane/test/sandbox.mjs";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs";
+import { extractPdfStructure, openPdfRange } from "../../bio-plane/src/pdfstructure.mjs";
 import { makePdf, content, image, hex, runner } from "./make-pdf.mjs";
+import { BUNDLE } from "./subject.mjs";
 
 const { Miniflare } = await (async () => {
   try { return await import("miniflare"); } catch { /* fall through */ }
@@ -19,7 +20,6 @@ const { Miniflare } = await (async () => {
 })();
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
-const BUNDLE = here("../dist/pdf-worker.bundled.mjs");
 const bundle = await import(pathToFileURL(BUNDLE).href);
 const worker = bundle.default;
 const { t, finish } = runner("structure");
@@ -169,7 +169,13 @@ console.log("\n--- R5: the R2 key, by .get only; NOT_FOUND ---");
   t("R5 under workerd too", [st2, out2.reason], [404, "NOT_FOUND"]);
 }
 
-console.log("\n--- R6: extractPdfStructure's refusal, verbatim, at 422 ---");
+/* pdf-reader's own answer for the range asked (R6, R7): the fields the member passes through beside its `text` and `tier`. */
+const rangeFields = async (bytes, range = {}) => {
+  const { text: _t, ...rest } = await (await openPdfRange(bytes)).range(range);
+  return JSON.parse(JSON.stringify(rest));
+};
+
+console.log("\n--- R6: pdf-reader's refusal, verbatim, at 422 ---");
 {
   const [st, out] = await answer(await post(mf, { capture_sha: NOT_PDF_SHA, store: "bio" }));
   const want = await extractPdfStructure(NOT_PDF);
@@ -180,11 +186,10 @@ console.log("\n--- R6: extractPdfStructure's refusal, verbatim, at 422 ---");
 console.log("\n--- R7 and R9: tier 2 replaces .text, everything else passes through ---");
 {
   const [st, out] = await answer(await post(mf, { capture_sha: SHA, store: "bio" }));
-  const base = JSON.parse(JSON.stringify(await extractPdfStructure(DOC)));
   t("R7 200 and tier 2", [st, out.ok, out.tier], [200, true, 2]);
-  const { text: _a, tier: _b, ...rest } = out;
-  const { text: _c, ...baseRest } = base;
-  t("R7 every other field is extractPdfStructure's own, unchanged", rest, baseRest);
+  const { text: _a, tier: _b, notes, ...rest } = out;
+  t("R7 every other field is pdf-reader's own for the range, unchanged", rest, await rangeFields(DOC));
+  t("R7 the notes are the member's own, none here", notes, []);
   t("R9 one entry per page, pages kept separate", out.text.pages.map((p) => [p.page, p.text.trim()]),
     [[0, "First page words"], [1, ""], [2, "Third page words"]]);
   const marker = { page: 1, reason: "no_text_layer", font: null, codes: "", count: 0 };
@@ -202,13 +207,12 @@ console.log("\n--- R8: over the envelope ---");
   const b = await mfSmall.getR2Bucket("CAPTURES");
   await b.put(`bio/captures/${SHA}`, DOC);
   const [st, out] = await answer(await post(mfSmall, { capture_sha: SHA, store: "bio" }));
-  const base = JSON.parse(JSON.stringify(await extractPdfStructure(DOC)));
   t("R8 over the env limit: 200, tier 1", [st, out.tier], [200, 1]);
   t("R8 the text is the over_envelope shape", out.text, {
     document: "", pages: [],
     undetermined: [{ page: null, reason: "over_envelope", font: null, codes: "", count: 0, bytes: DOC.length, limit: DOC.length - 1 }],
     counts: { chars: 0, undetermined: 1 } });
-  t("R8 the note is appended", out.notes, [...base.notes, "tier2_declined_over_envelope"]);
+  t("R8 the note is appended", out.notes, ["tier2_declined_over_envelope"]);
   await mfSmall.dispose();
 
   const mfExact = newMf({ MAX_PDF_BYTES: String(DOC.length) });
@@ -272,7 +276,6 @@ console.log("\n--- R10: the tier-2 pass throws ---");
 {
   await bucket.put(`bio/captures/${BROKEN_SHA}`, BROKEN);
   const [st, out] = await answer(await post(mf, { capture_sha: BROKEN_SHA, store: "bio" }));
-  const base = JSON.parse(JSON.stringify(await extractPdfStructure(BROKEN)));
   t("R10 200, tier 1", [st, out.ok, out.tier], [200, true, 1]);
   t("R10 the tier2_extraction_error text", out.text, {
     document: "", pages: [],
@@ -280,10 +283,9 @@ console.log("\n--- R10: the tier-2 pass throws ---");
     counts: { chars: 0, undetermined: 1 } });
   const note = out.notes[out.notes.length - 1] || "";
   t("R10 one tier2_error note appended, message at most 80 chars",
-    [out.notes.length, /^tier2_error:.{1,80}$/s.test(note)], [base.notes.length + 1, true]);
+    [out.notes.length, /^tier2_error:.{1,80}$/s.test(note)], [1, true]);
   const { text: _a, tier: _b, notes: _n, ...rest } = out;
-  const { text: _c, notes: _d, ...baseRest } = base;
-  t("R10 the structure fields are kept", rest, baseRest);
+  t("R10 the range's fields are kept", rest, await rangeFields(BROKEN));
 }
 
 console.log("\n--- R11: GET /version ---");

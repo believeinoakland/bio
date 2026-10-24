@@ -72,7 +72,7 @@
  *     (document B) an address's own line may carry two people's text or none; the
  *     entry's `line` fact is that line, verbatim, never a pairing this reader guessed. */
 import { CONFIDENCE, CONTRACT, entity, diffEntities, alsoSatisfies } from "../docprofile/doctypes/index.mjs";
-import { flatCount, firstLines } from "./windows.mjs";
+import { flatCount, firstLines, counted, spend } from "./windows.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
@@ -93,25 +93,67 @@ export const DIRECTORY_FLOOR = 5;
    a fifth is written — so that case is a named blind spot rather than a hidden one. */
 export const ONE_ORGANISATION = 0.8;
 
-const SD_EMAIL = /\b[A-Za-z0-9][A-Za-z0-9._%+-]*@((?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,})\b/g;
+/* An address, found by its `@` and not by a search for a start that most of a text cannot give (R40): `local@domain`, the
+   local part alnum first and then letters, digits and `._%+-`, after a word boundary, the domain labels and a top-level
+   name of two letters or more, then a word boundary. `sdEmailAt` finds the one match an `@` makes (what a global
+   pattern of this shape finds, and in work linear in the characters it walks); the sticky pattern reads it once its start
+   is known. */
+const SD_EMAIL_AT = /\b[A-Za-z0-9][A-Za-z0-9._%+-]*@((?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,})\b/y;
+const SD_LOCAL = /[A-Za-z0-9._%+-]/;
+const SD_WORD = /[A-Za-z0-9_]/;
+const SD_ALNUM = /[A-Za-z0-9]/;
 const SD_PHONE = /(?:\(\d{3}\)\s?|\b\d{3}[-.\s])?\b\d{3}[-.]\d{4}\b/g;
 /* A DATE, in the forms a published schedule uses: a month named with a day, or a
    three-part numeric date. A bare `08/23` (a revision stamp) is not a date here. */
 const SD_DATE = /\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2}\b|\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/gi;
 const SD_SELF_NAMING = /\b(?:directory|staff|roster|contacts)\b/i;
 
-/** The addresses in a document, by domain. Distinct, case-folded. */
+/* The most distinct addresses read from one document, in the order it lists them (R40; protective, BOB's, K4868): a directory
+   of this many people is read to its end, a longer text is read as far as the address after this many, and the answer
+   says where it stopped. The memory a reading holds is then a number of addresses and never the text's size. */
+export const ENTRIES_MAX = 10_000;
+/* The longest `line` an entry carries (R40; protective, BOB's, K4868): a line longer than this is cut to this many characters around the address, and
+   the entry says so (`line_cut`), so a text of 16,000 addresses on one line is not 16,000 copies of the line. */
+export const LINE_MAX = 600;
+
+/** The match the `@` at `p` makes in `raw`, no earlier than `from`: `{start, end, address, domain}` or null. The start is
+ *  the first place in the run of address characters before the `@` that a pattern would start (a letter or digit, after a
+ *  word boundary). */
+function sdEmailAt(raw, p, from) {
+  let r0 = p;
+  while (r0 > from && SD_LOCAL.test(raw[r0 - 1])) r0--;
+  let s = r0;
+  for (; s < p; s++) {
+    if (!SD_ALNUM.test(raw[s])) continue;
+    if (s === 0 || !SD_WORD.test(raw[s - 1])) break;
+  }
+  if (s >= p) return null;
+  SD_EMAIL_AT.lastIndex = s;
+  const m = SD_EMAIL_AT.exec(raw);
+  if (!m) return null;
+  return { start: s, end: s + m[0].length, address: m[0], domain: m[1] };
+}
+
+/** The addresses in a document, by domain. Distinct, case-folded. Read in work linear in the text, as far as the
+ *  `ENTRIES_MAX`th distinct address; `read` is how far (the text's end when it is all). */
 function sdAddresses(raw) {
+  spend(raw.length);
   const all = new Map();
-  for (const m of raw.matchAll(SD_EMAIL)) {
-    const a = m[0].toLowerCase().replace(/\.+$/, "");
-    if (!all.has(a)) all.set(a, { address: a, domain: m[1].toLowerCase().replace(/\.+$/, ""), offset: m.index });
+  let read = raw.length, cut = false;
+  for (let from = 0, p = raw.indexOf("@"); p >= 0; p = raw.indexOf("@", from)) {
+    const m = sdEmailAt(raw, p, from);
+    if (!m) { from = p + 1; continue; }
+    from = m.end;
+    const a = m.address.toLowerCase().replace(/\.+$/, "");
+    if (all.has(a)) continue;
+    if (all.size >= ENTRIES_MAX) { read = m.start; cut = true; break; }
+    all.set(a, { address: a, domain: m.domain.toLowerCase().replace(/\.+$/, ""), offset: m.start });
   }
   const byDomain = new Map();
   for (const x of all.values()) byDomain.set(x.domain, (byDomain.get(x.domain) || 0) + 1);
   let domain = null, atDomain = 0;
   for (const [d, n] of byDomain) if (n > atDomain) { domain = d; atDomain = n; }
-  return { all: [...all.values()], domain, atDomain };
+  return { all: [...all.values()], domain, atDomain, read, cut };
 }
 
 /** The title line, if the document names itself as this kind in its first lines. A
@@ -127,7 +169,7 @@ function sdConfirmed(a, b) {
   return intact ? { entries: (b.entities || []).length, intact } : null;
 }
 
-export default {
+export default counted({
   key: "staff_directory",
   label: "a staff directory",
   version: 1,
@@ -137,21 +179,31 @@ export default {
 
   detect(ctx) {
     const raw = String(ctx.text || "");
-    const { all, domain, atDomain } = sdAddresses(raw);
+    const { all, domain, atDomain, read, cut } = sdAddresses(raw);
     /* (1) DENSITY at (2) ONE ORGANISATION — THE DECIDING LEG. Every match passes
        through it; nothing else can make a directory. */
     if (atDomain < DIRECTORY_FLOOR || atDomain / all.length < ONE_ORGANISATION)
       return { match: false, confidence: CONFIDENCE.NONE };
-    const signals = [localize("doctypes.staff-directory.addresses", "{count} distinct contact address(es) at one organisation's domain ({domain}), {percent}% of the {total} in the document",
-                              { count: String(atDomain), domain: String(domain), percent: String(Math.round((atDomain / all.length) * 100)), total: String(all.length) })];
+    const vars = { count: String(atDomain), domain: String(domain), percent: String(Math.round((atDomain / all.length) * 100)), total: String(all.length) };
+    const signals = [cut
+      ? localize("doctypes.staff-directory.addresses_cut", "{count} of the first {total} distinct contact addresses are at one organisation's domain ({domain}), {percent}%; the document lists more, and the rest was not read", vars)
+      : localize("doctypes.staff-directory.addresses", "{count} distinct contact address(es) at one organisation's domain ({domain}), {percent}% of the {total} in the document", vars)];
+    /* The dates and phone numbers are those of the text read: all of it, or as far as the address the bound stopped at. */
+    const seen = cut ? raw.slice(0, read) : raw;
     /* (3) NOT DATED. A schedule names its contacts; its rows are events. */
     /* R37: the dates are counted in the flattened text a window at a time, no further than the count that decides. */
     const floor = Math.max(3, atDomain / 2);
-    if (flatCount(raw, SD_DATE, Math.ceil(floor)) >= floor) return { match: false, confidence: CONFIDENCE.NONE };
+    if (flatCount(seen, SD_DATE, Math.ceil(floor)) >= floor) return { match: false, confidence: CONFIDENCE.NONE };
+    /* R40: one pass, the distinct numbers kept no further than the bound on addresses. */
+    spend(seen.length);
     const phoneSet = new Set();
-    for (const p of raw.matchAll(SD_PHONE)) phoneSet.add(p[0].replace(/\D/g, ""));
+    let morePhones = false;
+    for (const p of seen.matchAll(SD_PHONE)) {
+      if (phoneSet.size >= ENTRIES_MAX) { morePhones = true; break; }
+      phoneSet.add(p[0].replace(/\D/g, ""));
+    }
     const phones = phoneSet.size;
-    if (phones) signals.push(`${phones} distinct phone number(s)`);
+    if (phones) signals.push(`${phones}${morePhones ? "+" : ""} distinct phone number(s)`);
     const title = sdTitleLine(raw);
     if (title) {
       signals.push(localize("doctypes.staff-directory.title_line", "it names itself in its title line (\"{title}\")", { title: title.slice(0, 80) }));
@@ -174,15 +226,25 @@ export default {
   parse(ctx) {
     const raw = String(ctx.text || "");
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
-    const { all, domain, atDomain } = sdAddresses(raw);
+    const { all, domain, atDomain, read, cut } = sdAddresses(raw);
     const entities = [];
+    /* The line an address stands on, found once for all the addresses on it (they come in the order of the text). */
+    let lineAt = -1, lineEnd = -1;
     for (const a of all) {
-      const start = raw.lastIndexOf("\n", a.offset) + 1;
-      const endAt = raw.indexOf("\n", a.offset);
-      const line = raw.slice(start, endAt < 0 ? raw.length : endAt).replace(/\s+/g, " ").trim();
+      if (a.offset > lineEnd || a.offset < lineAt) {
+        lineAt = raw.lastIndexOf("\n", a.offset) + 1;
+        const nl = raw.indexOf("\n", a.offset);
+        lineEnd = nl < 0 ? raw.length : nl;
+      }
+      /* A line is the entry's own `line`, verbatim; one longer than LINE_MAX is cut to that many characters around the
+         address, and says so (R40), so a text of 16,000 addresses on one line is not 16,000 copies of it. */
+      const long = lineEnd - lineAt > LINE_MAX;
+      const ws = long ? Math.max(lineAt, Math.min(a.offset - LINE_MAX / 2, lineEnd - LINE_MAX)) : lineAt;
+      const line = raw.slice(ws, long ? ws + LINE_MAX : lineEnd).replace(/\s+/g, " ").trim();
       const phones = [...new Set(line.match(SD_PHONE) || [])];
       entities.push(entity(a.address, "contact", line.slice(0, 160) || a.address,
-        { address: a.address, organisation: a.domain === domain, line, phone: phones.join(", ") || null },
+        { address: a.address, organisation: a.domain === domain, line, phone: phones.join(", ") || null,
+          ...(long ? { line_cut: true, line_length: lineEnd - lineAt } : {}) },
         locate(a.offset)));
     }
     const title = sdTitleLine(raw);
@@ -190,6 +252,8 @@ export default {
       entities,
       domain,
       entries: atDomain,
+      ...(cut ? { entries_cut: true, entries_limit: ENTRIES_MAX, read_to: read, chars: raw.length,
+                  entries_why: localize("doctypes.staff-directory.entries_cut", "this document lists more than {limit} distinct addresses: the first {limit} were read, up to character {read} of {total}, and the rest of it was not", { limit: String(ENTRIES_MAX), read: String(read), total: String(raw.length) }) } : {}),
       title,
       title_why: title ? null : localize("doctypes.staff-directory.no_title", "no line among the first five names this document as a directory, staff list, roster or contacts"),
       also_satisfies: alsoSatisfies(ctx, "staff_directory"),
@@ -224,4 +288,4 @@ export default {
                          : localize("doctypes.staff-directory.unchanged", "the directory lists the same addresses, each saying what it said"),
     };
   },
-};
+});

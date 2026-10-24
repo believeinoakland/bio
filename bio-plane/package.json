@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test \"test/m/**/*.test.mjs\"",
+    "test": "node --import ./test/platform-sqlite.mjs --test \"test/m/**/*.test.mjs\"",
     "test:system": "node --test \"test/system/**/*.test.mjs\"",
     "build": "node scripts/build-plane.mjs",
     "deploy": "node scripts/deploy.mjs",

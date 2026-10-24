@@ -28,6 +28,29 @@ import { CASE_FILE_FORMAT, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, 
 import * as grammar from "../case-grammar/index.mjs";
 import { CONTAINER_MAX_BYTES } from "../container.mjs";
 
+/** R44 (G121): the most R2 calls of one kind in flight at once: the case file's reads of materials, and the writes of its files. */
+export const CASEFILE_GROUP = 8;
+
+/** R44 (G121b): a window of `CASEFILE_GROUP` calls that slides, so the next call starts the moment one ends and no call waits for a
+ *  group's slowest. Runs `fn(item)` over `items`, at most `width` at a time, in order of start; answers the settled results in the
+ *  items' order (`{status, value | reason}`), never throws, and starts no further call once one has failed (those in flight finish). */
+export async function inWindow(items, fn, width = CASEFILE_GROUP) {
+  const out = new Array(items.length);
+  let next = 0, failed = false;
+  const lane = async () => {
+    while (!failed && next < items.length) {
+      const i = next++;
+      try { out[i] = { status: "fulfilled", value: await fn(items[i], i) }; } catch (reason) { failed = true; out[i] = { status: "rejected", reason }; }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(width, items.length) }, lane));
+  return out;
+}
+
+/** R44 (G121b): an object this small is written without asking after it first (its key is its hash, so the same bytes again change
+ *  nothing); a larger one is asked after, so a big file already held is not sent again. Proposed; BOB records. */
+export const CASEFILE_BLIND_PUT_MAX = 256 * 1024;
+
 const enc = new TextEncoder();
 const utf8 = (s) => enc.encode(String(s));
 
@@ -77,7 +100,7 @@ const entryCost = (name, bytes) => bytes + utf8(name).length * 2 + 76;
  *  or the signed document's bytes do not hash to its digest: a case file that would leave out what it must carry is
  *  never built. It is a statement inside an act that has committed, never a refusal (R6). `maxBytes` is the part bound
  *  (R5). */
-export async function buildCaseFile({ facts, group = null, read, maxBytes = CONTAINER_MAX_BYTES }) {
+export async function buildCaseFile({ facts, group = null, read: readStore, maxBytes = CONTAINER_MAX_BYTES }) {
   const files = [];
   /* G50 (B): one file at one path is listed once (a shared archive two captures reach, the same copy two rows name); a
      second file at the same path with other bytes is kept, and the case file's own check then states the repeated path. */
@@ -91,6 +114,33 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
     return notAssembled(localize("public-read.casefile.signed_document_text_does_not", "the signed case document's text does not hash to its digest"), { sha256: facts.document.doc_sha });
   await add(caseFilePath("case_document"), "case_document", docBytes);
   await add(caseFilePath("case_signature"), "case_signature", utf8(facts.document.sig_armored ?? ""));
+
+  /* R44 (G121): every object the assembly will read is read first, in groups of 8, each answer (or throw) kept by its hash and
+     handed back at the place that asks for it, so the files, the `unheld` list and every statement are what the one-at-a-time
+     read gave, in the same order, and a read that threw throws where it was asked. */
+  const wanted = [];
+  const inline = (sha, text) => { if (text == null) wanted.push(sha); };
+  for (const f of facts.findings) if (f.published) inline(((f.published.parts || []).find((x) => x && x.sha256 === f.published.bundle_sha) ?? { sha256: f.published.bundle_sha }).sha256);
+  for (const m of facts.materials) {
+    if (m.original_of_copy || m.capture_invalid) continue;
+    inline(m.sha, m.bytes_text);
+    if (m.kind !== "observation") inline(m.text_sha, m.extracted_text);
+    if (m.kind !== "observation") for (const a of m.archives || []) if (a.registered !== false) inline(a.sha, a.text);
+  }
+  for (const o of facts.obscured || []) if (o.registered && !o.capture_invalid) wanted.push(o.copy);
+  for (const a of facts.attestations) for (const t of a.held || []) inline(t.sha, t.text);
+  for (const c of facts.calculations || []) for (const i of c.inputs || []) inline(i.sha, i.text);
+  const fetched = new Map();
+  const todo = [...new Set(wanted)].filter((sha) => /^[0-9a-f]{64}$/.test(String(sha ?? "")));
+  await inWindow(todo, async (sha) => {
+    try { fetched.set(sha, { bytes: await readStore(sha) }); } catch (error) { fetched.set(sha, { error }); }
+  });
+  const read = async (sha) => {
+    const got = fetched.get(sha);
+    if (!got) return readStore(sha);
+    if (got.error) throw got.error;
+    return got.bytes;
+  };
 
   for (const f of facts.findings) {
     const at = (kind) => caseFilePath(kind, f.bundle_id);

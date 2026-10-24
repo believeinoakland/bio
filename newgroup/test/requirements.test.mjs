@@ -908,7 +908,7 @@ test("R23 the install and invitation pages state the prerequisites the install e
 
 test.todo("R24 an install never shares another copy's buckets and never overwrites its fleet workers in the same account (not yet met: MULTI-INSTANCE-ISOLATION, K102; the buckets and the members have fixed names)");
 
-test("R17 (K1541) an update gives a copy that holds no seal secret a fresh one, keeps one it holds unrestated, and sends none when the copy's settings cannot be read, saying which", async () => {
+test("R17 (K1541) an update gives a copy that holds no seal secret a fresh one, keeps one it holds unrestated, and refuses the whole update, uploading nothing and saying why, when the copy's settings cannot be read", async () => {
   const none = seen(await run({ slug: "seal-none", mode: "update", pre: { "seal-none": planeBase("seal-none") } }));
   const sent = (w) => w.planePuts.flatMap((p) => (p.meta.bindings || []).filter((b) => b.name === "ACCOUNT_SEAL_SECRET"));
   assert.equal(sent(none).length, 1);
@@ -920,11 +920,12 @@ test("R17 (K1541) an update gives a copy that holds no seal secret a fresh one, 
   assert.equal(sent(held).length, 0, "never restated over one held");
   assert.deepEqual(held.acct.get("seal-held").filter((b) => b.name === "ACCOUNT_SEAL_SECRET"), [OLD], "kept unchanged");
   assert.match(held.page.label("keys"), /already held the secret .* kept unchanged/);
+  /* K4758, installer-steps R42: settings that cannot be read refuse the update before anything is uploaded or removed. */
   const blind = seen(await run({ slug: "seal-blind", mode: "update", pre: { "seal-blind": planeBase("seal-blind") }, settingsBlind: true }));
+  assert.equal(blind.page.failed.said, word("installer.update.stopped.lookup", { said: word("installer.keys.unread") }), "refused, naming why");
+  assert.equal(blind.planePuts.length, 0, "nothing uploaded");
   assert.equal(sent(blind).length, 0, "unknown is not none");
-  assert.equal(blind.page.status("keys"), "no");
-  assert.match(blind.page.label("keys"), /could not be read.*Nothing was sent or removed/s);
-  assert.equal(blind.page.status("up"), "ok", "the update itself proceeds");
+  assert.equal(blind.page.done, null);
 });
 
 /* ------------------------------------------------------------------------------------------------ the assistant and the container member */

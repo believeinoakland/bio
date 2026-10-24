@@ -53,6 +53,16 @@
  */
 
 import { localize } from "../../bio-plane/src/setup-words/index.mjs"
+import { READ_BOUNDS, boundOf, statement } from "../../bio-plane/src/read-bounds.mjs"
+
+/* THE DECLARED FRAME (R12, fix round 9, G125a): a frame's width and height are judged against the table once its
+ * header is read, before a plane, a strip or the output is allocated. A JPEG's own fields are 16 bits wide, so its
+ * edge never passes the table's; the pixels bound is what a hostile frame meets. */
+const PIXELS_MAX = boundOf("image", "pixels");
+/* The row-by-row decoder (R11) holds no full-size plane, so BOB ruled it keeps today's ceiling in a row of its own, `image.rows_pixels`
+ * (K4862). Until runtime-limits has added it the row of the whole-frame decode is read; the guard needs no edit when the row lands. */
+const ROWS_ROW = Object.hasOwn(READ_BOUNDS.image, "rows_pixels") ? "rows_pixels" : "pixels";
+const ROWS_PIXELS_MAX = boundOf("image", ROWS_ROW);
 
 export class DctRefusal extends Error {
   constructor(code, detail = {}) {
@@ -457,7 +467,7 @@ export function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTra
  */
 export function decodeBaselineJpegRows(d, { expectComps = null, colorTransform = null, onRows } = {}) {
   if (typeof onRows !== "function") throw new TypeError("decodeBaselineJpegRows needs an onRows(rows, y0, count) function");
-  return decodeStrips(d, expectComps, colorTransform, (rows, y0, count) => { onRows(rows, y0, count); });
+  return decodeStrips(d, expectComps, colorTransform, (strip, y0, count) => { onRows(strip, y0, count); }, true);
 }
 
 /* ── the strip-wise decode R1 and R11 share ──────────────────────────────────
@@ -469,7 +479,7 @@ export function decodeBaselineJpegRows(d, { expectComps = null, colorTransform =
  * the one above or below, edges REPLICATED at the component's own height. So the
  * last output row of an MCU row, which reads the first sample row of the next,
  * waits for it, and each strip after the first begins with the one before. */
-function decodeStrips(d, expectComps, colorTransform, emit) {
+function decodeStrips(d, expectComps, colorTransform, emit, viaRows = false) {
   const h = readJpegHeader(d);
   const { frame, qt, hts, scan } = h;
   const nc = frame.comps.length;
@@ -498,6 +508,11 @@ function decodeStrips(d, expectComps, colorTransform, emit) {
     if (!qt[c.tq]) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.quantisation_table_tq_missing", "quantisation table {tq} missing", { tq: String(c.tq) }) });
   }
   const W = frame.width, H = frame.height;
+  const [limitName, limit] = viaRows ? [ROWS_ROW, ROWS_PIXELS_MAX] : ["pixels", PIXELS_MAX];
+  if (W * H > limit)
+    throw new DctRefusal("IMAGE_TOO_LARGE", {
+      note: localize("image-codecs.dctdecode.the_picture_is_width_by_height", "the picture is {width} by {height}, past the {bound} pixels the decoder reads", { width: String(W), height: String(H), bound: String(limit) }),
+      bound_name: limitName, ...statement("image", limitName, W * H), width: W, height: H, components: nc });
   /* A single-component scan is non-interleaved and walks its OWN block grid (for
    * a grey file, the same grid): its strip is one block row, and it is upsampled
    * by nothing. */

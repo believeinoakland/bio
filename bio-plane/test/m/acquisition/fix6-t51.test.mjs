@@ -377,12 +377,13 @@ test("R108 (G19): a page of 450 supporting files answers `supporting` kept 400, 
   const w = world();
   const r = await run(w, siteOf(imgPage(450)), { locator: "https://w.example/p.html", subresources: true });
   assert.equal(r.status, 200);
-  const want = { kept: 400, skipped: 50, total: 450, reasons: [{ reason: "CAP_REACHED", count: 50, limit: 400 }] };
+  /* R119 (fix round 9) amends R108: the 400 kept files are pictures, so their count and size are stated too (4,400 bytes in all) */
+  const want = { kept: 400, skipped: 50, total: 450, reasons: [{ reason: "CAP_REACHED", count: 50, limit: 400 }], pictures_unread: { count: 400, bytes: 4400 } };
   assert.deepEqual(r.body.supporting, want);
   assert.deepEqual(r.body.document.capture.supporting, want, "the stored capture facts carry it too");
   /* control: within the cap */
   const small = await run(world(), siteOf(imgPage(3)), { locator: "https://w.example/q.html", subresources: true });
-  assert.deepEqual(small.body.supporting, { kept: 3, skipped: 0, total: 3, reasons: [] });
+  assert.deepEqual(small.body.supporting, { kept: 3, skipped: 0, total: 3, reasons: [], pictures_unread: { count: 3, bytes: 33 } });
   /* control: no supporting files asked for, none stated */
   const none = await run(world(), siteOf(imgPage(3)), { locator: "https://w.example/q.html" });
   assert.equal(none.body.supporting, undefined);

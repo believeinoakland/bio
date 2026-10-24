@@ -1,3 +1,4 @@
+import { decodeText } from "../ooxml.mjs";
 /* acquisition — a document's own title (R98; fix round 3, C25). A fact read from the fetched bytes so that every screen names
  * the document by the record's one rule, not a reading: `acquire` still answers no `reading` or `text_units` (R8). The
  * rule is `reading-pipeline` R34's: for an HTML page, the text of its first `<title>` element, else of its first heading
@@ -63,15 +64,24 @@ export function titleOfHtml(html) {
   } catch { return null; }
 }
 
-/** R98: the title of HTML bytes, decoded as the declared `charset` of their content type when it names one the runtime knows,
- *  else as UTF-8. Pure; never throws. */
+/** R120 (fix round 9, G131g): the `charset` a content type declares, else null. Pure; never throws. */
+export function charsetOf(contentType) {
+  const m = /charset\s*=\s*"?([A-Za-z0-9._:-]+)/i.exec(typeof contentType === "string" ? contentType : "");
+  return m ? m[1] : null;
+}
+
+/** R120: THE ONE DECODE of a capture's bytes as text here: `ooxml.decodeText` with the `charset` of the content type as the declaration
+ *  (a header wins over a meta tag; a byte-order mark over both). Answers decodeText's own answer. Never throws. */
+export function decodeAs(bytes, contentType = null, { kind = undefined, name = undefined } = {}) {
+  return decodeText(bytes, { declared: charsetOf(contentType) ?? undefined, kind, name: name ?? charsetOf(contentType) });
+}
+
+/** R98, R120: the title of HTML bytes, decoded by `decodeText` (the content type's `charset`, else a meta declaration, else the
+ *  bytes); null when the bytes cannot be decoded (`ENCODING_UNSUPPORTED`) or state no title. Pure; never throws. */
 export function titleOfBytes(bytes, declaredContentType = null) {
   try {
     if (!(bytes instanceof Uint8Array)) return null;
-    const label = /charset\s*=\s*"?([A-Za-z0-9._:-]+)/i.exec(typeof declaredContentType === "string" ? declaredContentType : "");
-    let text;
-    try { text = new TextDecoder(label ? label[1] : "utf-8", { fatal: false }).decode(bytes); }
-    catch { text = new TextDecoder("utf-8", { fatal: false }).decode(bytes); }
-    return titleOfHtml(text);
+    const d = decodeAs(bytes, declaredContentType, { kind: "html" });
+    return d.ok ? titleOfHtml(d.text) : null;
   } catch { return null; }
 }

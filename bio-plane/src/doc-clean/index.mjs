@@ -9,13 +9,16 @@
 import { hasZipMagic, discriminate } from "../ooxml.mjs";
 import { CleanRefusal, latin1 } from "./images.mjs";
 import { cleanPdf } from "./pdf.mjs";
-import { cleanPackage, CLEAN_MAX_PART_BYTES } from "./package.mjs";
+import { cleanPackage, tooManyEntries, CLEAN_MAX_PART_BYTES, CLEAN_MAX_ENTRIES } from "./package.mjs";
+import { newScan } from "./xml.mjs";
+import { boundOf } from "../read-bounds.mjs";
 import { localize } from "../setup-words/index.mjs";
 
-export { CLEAN_MAX_PART_BYTES };
+export { CLEAN_MAX_PART_BYTES, CLEAN_MAX_ENTRIES };
 
-/** The largest document cleaned, in bytes; a larger one is refused before a byte of it is read (R3, R4). */
-export const CLEAN_MAX_BYTES = 16 * 1024 * 1024;
+/** The largest document cleaned, in bytes; a larger one is refused before a byte of it is read (R3, R4). Quoted from
+ *  `READ_BOUNDS` (R12). */
+export const CLEAN_MAX_BYTES = boundOf("document", "clean_bytes");
 
 /** Every refusal code of this module's own, with what it means (R3); `image-cover`'s strip refusals are relayed
  *  under their own codes. */
@@ -29,12 +32,16 @@ export const CLEAN_REFUSALS = Object.freeze({
   NOT_A_CLEANABLE_FORMAT: localize("doc-clean.index.the_file_is_of_no_format", "the file is of no format this module cleans"),
   DOCUMENT_TOO_LARGE: localize("doc-clean.index.the_document_or_one_of", "the document, or one of its parts, is larger than this module reads"),
   DOCUMENT_UNREADABLE: localize("doc-clean.index.the_document_s_structure_cannot", "the document's structure cannot be read whole"),
+  TOO_MANY_ENTRIES: localize("doc-clean.index.the_package_holds_more_entries", "the package holds more entries than this module copies"),
 });
 
 const FAMILY = { docx: "ooxml", xlsx: "ooxml", pptx: "ooxml", odt: "odf", ods: "odf", odp: "odf" };
 
-/** Clean one document (R1–R9). Never throws. */
-export async function cleanDocument(bytes) {
+/** Clean one document (R1–R12). Never throws. `options.yieldNow` is awaited at least every 65,536 tokens of markup
+ *  scanned (R11; default: a turn of the microtask queue); `options.scan`, when given, is filled with the counts of the
+ *  scan (`scanned` bytes, `tokens`, `yields`), so a caller can see that the work was bounded by count, not by time
+ *  (R-CLOCK). Nothing is kept between calls (R7). */
+export async function cleanDocument(bytes, { yieldNow, scan = newScan(yieldNow) } = {}) {
   try {
     const d = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
     if (!d) throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", localize("doc-clean.index.the_document_s_bytes_are_not", "the document's bytes are not a byte array"));
@@ -46,7 +53,7 @@ export async function cleanDocument(bytes) {
       done = await cleanPdf(d, CLEAN_MAX_PART_BYTES);
     } else if (hasZipMagic(d)) {
       format = await packageFormat(d);
-      done = await cleanPackage(d, FAMILY[format]);
+      done = await cleanPackage(d, FAMILY[format], scan);
     } else {
       format = textFormat(d);
       done = { clean: true };
@@ -62,6 +69,7 @@ export async function cleanDocument(bytes) {
  *  a refusal. */
 async function packageFormat(d) {
   const r = await discriminate(d);
+  if (!r.ok && r.why === "OFFICE_ENTRIES_MAX") throw tooManyEntries(d);
   if (!r.ok) throw new CleanRefusal("DOCUMENT_UNREADABLE", localize("doc-clean.index.the_zip_directory_cannot_be", "the ZIP directory cannot be read ({why})", { why: String(r.why) }));
   if (r.format === "zip") throw new CleanRefusal("ARCHIVE", localize("doc-clean.index.a_zip_archive_that_is_neither", "a ZIP archive that is neither an OOXML nor an ODF package"));
   if (FAMILY[r.format]) return r.format;

@@ -45,6 +45,8 @@ export const PNG_REFUSALS = {
   PNG_UNSUPPORTED_SHAPE: "the PNG's colour type / bit depth pair is not one this estate writes",
   PNG_FILTER_UNSUPPORTED: localize("ocr-worker.pngsamples.a_scanline_uses_a_filter", "a scanline uses a filter type this reader does not implement"),
   PNG_SHORT_RASTER: localize("ocr-worker.pngsamples.the_inflated_raster_is_shorter", "the inflated raster is shorter than the header's dimensions require"),
+  /* R7.5 (fix round 9, G132j): image data that does not inflate is a stream this reader refuses, stated, not a throw. */
+  PNG_CORRUPT_DATA: localize("ocr-worker.pngsamples.the_image_data_of_the_png_does_not_inflate", "the image data of the PNG does not inflate: it is not a valid compressed stream"),
 };
 
 const refuse = (code, detail = {}) => ({ ok: false, reason: code, detail: PNG_REFUSALS[code], ...detail });
@@ -54,7 +56,8 @@ const SIG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 async function inflateZlib(bytes) {
   const ds = new DecompressionStream("deflate");   /* zlib-wrapped — what an IDAT holds */
   const w = ds.writable.getWriter();
-  w.write(bytes); w.close();
+  /* the reader below reports a stream that does not inflate; the writer's own rejection is the same failure, handled there */
+  w.write(bytes).then(() => w.close()).catch(() => {});
   const chunks = [];
   const rd = ds.readable.getReader();
   for (;;) { const { done, value } = await rd.read(); if (done) break; chunks.push(value); }
@@ -111,7 +114,8 @@ export async function pngToSamples(bytes) {
     let o = 0;
     for (const c of idats) { z.set(c, o); o += c.length; }
   }
-  const raw = await inflateZlib(z);
+  let raw;
+  try { raw = await inflateZlib(z); } catch (e) { return refuse("PNG_CORRUPT_DATA", { error: String((e && e.name) || "Error") }); }
 
   const rowBytes = bitDepth === 1 ? Math.ceil(width / 8) : width * comps;
   if (raw.length < (rowBytes + 1) * height)

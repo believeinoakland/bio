@@ -30,6 +30,7 @@
  *  note already uses for an OCR pass, so this member reports the letter this
  *  estate already means rather than minting a second convention. */
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
 
 export const CAP = "C";
 
@@ -49,7 +50,7 @@ export const MEASURED_BY =
  *  every ceiling, BY BEING REFUSED: 33.7 / 48.5 / 61.3 MB frames complete, a
  *  75.7 MB frame is KILLED (`exceededMemory`, reproduced), and 134.6 MB is
  *  refused in-isolate as a catchable `RangeError`. */
-export const MAX_FRAME_BYTES = 61_300_000;
+export const MAX_FRAME_BYTES = boundOf("ocr", "frame_bytes");
 
 /** The frame a page of these pixel dimensions costs. `loadImage` refuses
  *  anything shorter than width*height*4, so this is not avoidable by sending
@@ -102,7 +103,34 @@ export const REFUSALS = {
   NO_SUCH_PAGE: localize("ocr-worker.contract.a_picture_is_a_one", "a picture is a one-page document (page 0); the page asked for does not exist"),
   /* R25. The engine read the picture and rated almost none of it: the text is not returned, and the refusal says so. */
   PICTURE_NOT_LEGIBLE: localize("ocr-worker.contract.the_picture_is_too_unclear_to_read", "the picture is too unclear to read: the engine rated almost none of its words as read, so no text is given rather than text that is mostly wrong"),
+  /* R25 (fix round 9, G137d). The same finding for a page of a PDF: the rule is one for photographs and pages alike. */
+  PAGE_NOT_LEGIBLE: localize("ocr-worker.contract.this_page_is_sideways_or_too_faint_to_read", "this page is sideways or too faint to read: the engine rated almost none of its words as read, so no text is given rather than text that is mostly wrong"),
+  /* R28 (fix round 9, G132j). Whatever threw inside a call the request checks had accepted. */
+  UNEXPECTED_FAILURE: localize("ocr-worker.contract.something_failed_inside_this_call", "something failed inside this call before the page could be read; the step and the error's name are beside this message, and the page stays unread"),
+  /* R29 (fix round 9, G125g). The instance setting `OCR_PSM` is set and names no page-segmentation mode. */
+  BAD_PSM: localize("ocr-worker.contract.ocr_psm_is_not_a_page_segmentation_mode", "this member's OCR_PSM setting is not a page-segmentation mode the engine accepts (a whole number from 0 to 13), so no page was read"),
 };
+
+/** R29 · The page-segmentation modes the engine accepts: tesseract's own `PageSegMode` set, the whole numbers 0 to 13
+ *  (the engine itself accepts any text as the variable's value and ignores a wrong one, which is why this member judges
+ *  the setting). A mode is a name, not a ceiling. */
+export const PAGE_SEG_MODES = Object.freeze(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"]);
+
+/** R29 · `OCR_PSM` read as the engine's mode: `{set:false}` when it is absent or empty, `{set:true, ok, mode?, value}`
+ *  otherwise, `value` the setting as text truncated to 80 characters. */
+export function psmFrom(env) {
+  const raw = env && env.OCR_PSM;
+  if (raw == null || raw === "") return { set: false, ok: true, mode: null };
+  const text = typeof raw === "string" || typeof raw === "number" ? String(raw) : null;
+  const ok = text != null && PAGE_SEG_MODES.includes(text);
+  return { set: true, ok, mode: ok ? text : null, value: (text == null ? JSON.stringify(raw) ?? String(raw) : text).slice(0, 80) };
+}
+
+/** R26 · The turns a renderer is asked for and the engine can name. */
+export const QUARTER_TURNS = Object.freeze([0, 90, 180, 270]);
+/** R26 · The engine says by how many degrees clockwise the frame lies turned from upright; the renderer's `turn`
+ *  (pdf-pixels R48) is the degrees clockwise to apply, so upright again is the rest of the way round. */
+export const turnToUpright = (rotation) => (QUARTER_TURNS.includes(rotation) ? (360 - rotation) % 360 : null);
 
 /** R25 · A word the engine rated at or over this (its own 0..1 confidence for the word, R9's basis) counts as read.
  *  Not a measurement of accuracy: over the fixtures of `pdf-pixels` R44 and this module's tests, the share of words rated
@@ -119,7 +147,7 @@ export const LEGIBLE_REFUSE_BELOW = 0.2;
  *  4096-pixel edge (pdf-pixels R42), so a 12-megapixel camera frame (4032 x 3024, 4000 x 3000) reaches the engine
  *  at its own resolution and a larger one is reduced by a whole factor; a 4:3 frame at this edge is 50.3 MB of
  *  RGBA, under `MAX_FRAME_BYTES`, and a squarer frame that would pass it is refused by R7 step 4, never attempted. */
-export const PICTURE_MAX_EDGE = 4096;
+export const PICTURE_MAX_EDGE = boundOf("ocr", "picture_edge");
 
 /** R23 · Are these bytes a JPEG or a PNG picture, by their signature? The picture renderer re-judges them; this
  *  only decides which renderer is asked, so bytes that are neither are left to the page renderer's refusal as today. */
@@ -146,4 +174,47 @@ export function chooseChunk(pages) {
     if (Number.isInteger(p) && p >= 0 && !clean.includes(p)) clean.push(p);
   clean.sort((a, b) => a - b);
   return { take: clean.length ? clean[0] : null, deferred: clean.slice(1) };
+}
+
+/** R7.4 (fix round 9, G125g) · The frame a picture will reach the engine as, judged from its header before anything is
+ *  rendered: `source` is `{size, readRange(offset, length)}`; answers `{width, height, frame_bytes}` for the picture as the
+ *  renderer reduces it to `maxEdge` (the renderer's own rule: the smallest whole factor that brings the long edge under
+ *  it, each side rounded up), or `null` when the header cannot be read here (the rendered frame is judged anyway).
+ *  The preparation only turns the lines level and enlarges, never shrinks, so a frame over the bound here is over it
+ *  once prepared: a refusal on this figure is certain. */
+export async function declaredPictureFrame(source, maxEdge = PICTURE_MAX_EDGE) {
+  const dims = await pictureDims(source);
+  if (!dims) return null;
+  const k = Math.max(1, Math.ceil(Math.max(dims.width, dims.height) / maxEdge));
+  const width = Math.ceil(dims.width / k), height = Math.ceil(dims.height / k);
+  return { width, height, frame_bytes: frameBytesOf(width, height), declared: dims, reduced_by: k };
+}
+
+const SOF = (m) => m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc;
+/** How much of a picture's start is read to find its header: the PNG's IHDR is in the first 33 bytes, a JPEG's frame
+ *  header follows its application segments. A header not found inside it is not judged here (the render is). A read
+ *  size, never a limit the file is refused on. */
+const HEADER_WINDOW = 65536;
+async function pictureDims({ readRange }) {
+  const b = await readRange(0, HEADER_WINDOW);
+  if (b.length >= 24 && b[0] === 0x89 && b[1] === 0x50) {
+    const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    return dv.getUint32(8) === 13 ? { width: dv.getUint32(16), height: dv.getUint32(20) } : null;
+  }
+  if (b.length < 4 || b[0] !== 0xff || b[1] !== 0xd8) return null;
+  let at = 2;
+  while (at + 9 <= b.length) {
+    if (b[at] !== 0xff) return null;
+    const m = b[at + 1];
+    if (SOF(m)) return { width: (b[at + 7] << 8) | b[at + 8], height: (b[at + 5] << 8) | b[at + 6] };
+    if (m === 0xd9 || m === 0xda) return null;
+    at += 2 + ((b[at + 2] << 8) | b[at + 3]);
+  }
+  return null;
+}
+
+/** R27 · A captured object as the renderers take it in place of its bytes (pdf-pixels R47): the object's size and a
+ *  ranged read of it. `bytes` is one that is already whole in memory (a caller that holds it, a test). */
+export function sourceOfBytes(bytes) {
+  return { size: bytes.length, readRange: async (offset, length) => bytes.subarray(offset, offset + length) };
 }

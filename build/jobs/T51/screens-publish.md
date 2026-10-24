@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01KL2qPsmV5ddqfba8gQ8CL3 · depth 2 · COMPLETE · handled B43
+**Status** · session_01D28pDd4hME17u4TLcoQx9s · depth 2 · COMPLETE · handled B46
 
 ## J1 · QUESTION
 
@@ -576,3 +576,53 @@ Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 9, module lines 3659
 ## J38 · COMPLETE
 
 COMPLETE after B43, record J37. Seam and page tests green; one red until rows.mjs is regenerated (g54-page 13 keys are words, common.test R24). Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 9, module lines 3659
+
+## Fix round 7 (B44 · G60, G62) · SCREENS-PUBLISH #21 (session_01D28pDd4hME17u4TLcoQx9s)
+
+Merged `tranche/T51` (already up to date). Both causes are in `ceremony.mjs` and `parts.mjs` only.
+
+**G60 · the ceremony's refusal lists no problem.**
+- (1) Cause as the plan states it, read in the code: `caseratify` and `publishat` named handlers for four codes only, so `GATE_REFUSED` fell to the code's word and its `findings` were never drawn. Changed: a self-contained `GATE_REFUSED` handler (`ceremony.mjs`:9-24, wired at :572 and :608) draws the refusal's sentence, then `ceremony.gate.heading`, then one line for each finding `{check, detail, repairs?}` (or `says: {key, vars}` when a finding carries its words): its text as data (escaped), its check as the reference a member can quote (`<code>`), each repair; a finding with neither text nor check is not drawn. The pre-flight has the same flaw (a `GATE_REFUSED` blocker, `ratification/index.mjs`:662, carries `findings`): `ceremony.mjs`:178-181 lists them through `PARTS.gateLines` (`parts.mjs`:98-111), one line each.
+- (2) Why the tests missed it: no screen test fed `caseratify` or the pre-flight a `GATE_REFUSED` carrying findings. Fixed: `r7-gate-refused.test.mjs` (4 tests: `caseratify`, `publishat`, the pre-flight blocker, and the controls: findings are data, a finding with nothing to draw is not drawn, a refusal with no findings draws its sentence alone).
+- (3) Seen red first: `0 findings drawn` (expected 1, expected `["C-12.2","C-12.3"]`) in the 4 tests; green after the change (4 pass).
+- (4) Platform check **N**.
+- The finding in the test is in the shape `runCaseGate` maps (`gate.mjs`:1324) but is not made by the real gate: `bio-plane/src/gate.mjs` is promotion's, and importing it is an architecture failure (not in my `uses`; `checks/architecture.mjs` caught it). The real-gate-over-a-held-finding refusal through the door is the control-plane seam file's (R-SEAM, plan section 0).
+- The "check named in plain words" has no key: no row names a check (`C-12.2`) in words, so the line carries the check's id as the reference and the plane's own `detail`. Row owed to UX-DESIGN (BOB's `later-ux.md`): a plain-words name per gate check. The heading is the held `ceremony.gate.heading` (stand-in).
+
+**G62 · the Sign step's "time zone isn't set" for three different answers.**
+- (1) Cause of the live difference: unknown, as the plan says (logging rides control-plane, ratification and retrieval). Certain, changed: `ceremony.mjs`:362-381 tells the three answers apart. `publish_at: {offered: false, …}` (no zone held) draws the offer's own `reason` by its word (`refusal.PUBLISH_AT_NO_ZONE` when it states none), `data-publish-at-none="nozone"`. `publish_at` null (or absent) draws the check's own held sentence: `case-authoring.publish_at_not_reached_sentence` when `ratification.reached` is false (`notreached`), `case-authoring.publish_at_unanswered_sentence` otherwise (`unanswered`). An offer that names no zone (`offered` true or unstated, zone empty) draws the unanswered sentence as a stand-in, `data-publish-at-none="nozonestated"`. The date and time fields and the second button are drawn only for an offer with a zone (unchanged). `publish_at.source`, when a provider states it, is carried as `data-source` and nothing else. Keys added to the ceremony's `words` (`keys.mjs`:115): `refusal.GATE_REFUSED`, `refusal.PUBLISH_AT_NO_ZONE`, and the two `case-authoring.publish_at_*` sentences.
+- (2) Why the tests missed it: `ceremony.test.mjs` G11 told only "no zone" from "a zone". Fixed: `r7-no-zone.test.mjs` (5 tests): no zone; check not reached; check unanswered; an offer with an empty, absent or null zone (3 shapes); no `publish_at` at all; another stated reason (`PUBLISH_AT_PAST`) by its own word; an offer with a zone (control). The two stated sentences are compared with case-authoring's own exports, so the keys are the op's words.
+- (3) Seen red first: 4 of 5 failed (no `data-publish-at-none` distinction; one sentence for all), the control passed; green after (5 pass).
+- (4) Platform check **L** and **P** are control-plane's seam file and BOB's read on biosmoke8. Not in the tranche yet (read at `a6688dc54e`): ratification's `#publishAtOffer` still answers `{offered, zone}` with no `source`, no fall-back to the profiles on a null, and no `console.log` line, and retrieval's `zone({why})` is absent. The screen needs none of them and draws the `source` when they arrive.
+
+**Row owed (design, BOB's `later-ux.md`):** `screen.ceremony.when.nozonestated` ("the check offered a time but no zone") for the third answer, until then the unanswered sentence stands in. Also the per-check plain names above.
+
+**Requirement lines I propose (BOB writes `build/requirements/`):** R13: "(fix round 7, G60) A signing refused by the case gate (`GATE_REFUSED`, from `caseratify`, `publishat` or the pre-flight) draws the refusal's sentence and one line for each finding it carries: its text, its check as a reference, and what repairs it." R12: "(fix round 7, G62) The Sign step tells apart the three answers that offer no publishing time (no zone held; the signing check not reached or not answering; an offer that names no zone) and says which; the date and time fields are drawn only for an offer with a zone."
+
+**Census ops:** none changed. **Found in another module:** nothing beyond the above (the real gate cannot be imported by this module's tests; the plan has it in the control-plane seam).
+
+**Suites and checks:** `test/m/screens-publish/`: tests 284, pass 282, fail 0, todo 2 (the two inherited reds, `common.test` R24 and `g54-page` "thirteen keys are words", are green: rows.mjs is regenerated). Impact set (`impact.mjs origin/tranche/T51 HEAD`): screens-publish 25/25, control-plane 72/85, plane 54/66 (the same counts as at B43; the consumers are unchanged by a page-local addition, not run beyond what the tool ran). Checks (`checks/run.mjs`): format 0 failures; architecture 0 failures; coverage 1 failure, record-core R89 R90 (not mine); words: no finding in screens-publish (inherited: case-checker spec, installer-steps `installer.fleet.logsunconfirmed`); `setup-words/build.mjs --check`: match; ownership: 0 failures.
+
+Size (session_01D28pDd4hME17u4TLcoQx9s): test runs 6, module lines 3704
+
+## J39 · COMPLETE · re B44
+
+COMPLETE (B44, fix round 7: G60, G62), record section 'Fix round 7'. G60: GATE_REFUSED findings (text, check, repair) are drawn under the refusal of caseratify, publishat and the pre-flight; G62: the Sign step tells apart no zone / check not reached or unanswered / offer with no zone. Both seen red first, now green. Suite 284 tests, 282 pass, 0 fail, 2 todo; impact set screens-publish 25/25; format, architecture, ownership, words clean for this module. Needs from BOB: (1) ratification's source/reason/console.log and retrieval's zone({why}) are not on tranche/T51 yet (the screen reads source when it arrives); (2) rows owed to the design: screen.ceremony.when.nozonestated and a plain name per gate check; (3) the real-gate refusal is the control-plane seam file's (promotion's gate.mjs is not in my uses). Size (session_01D28pDd4hME17u4TLcoQx9s): test runs 6, module lines 3704
+
+## J40 · REPORT · re B45
+
+B45 read. Merged tranche/T51 (suite unchanged). The rows named in B45 (screen.ceremony.gate.head, .gate.check, .publishat.nozone, .notreached, .nooffer) are in no words.json or rows.mjs I can reach (commit 21d62cc33b is not on tranche/T51 or main as fetched), and a key the word table lacks would draw nothing, so my stand-ins stay: ceremony.gate.heading + the check id (G60); refusal.PUBLISH_AT_NO_ZONE, case-authoring.publish_at_not_reached_sentence, case-authoring.publish_at_unanswered_sentence (G62: nozone / notreached / nooffer, data-publish-at-none). Mapping if the design keeps its names: gate.head replaces ceremony.gate.heading; gate.check {check} replaces the bare id; publishat.nozone / .notreached {reason} / .nooffer replace the three. Merge the design rows to tranche/T51 and send CHANGE; I switch the keys (3 lines in ceremony.mjs, keys.mjs) and re-run. COMPLETE otherwise stands.
+
+## Fix round 7, B46 (G62 cause: the pre-flight never sent `tieAttested`)
+
+- Changed: `ceremony.mjs` (the render's pre-flight read, before `const pre`; the "Check again" act's send). The pre-flight body carries `tieAttested: true` once the edition is prepared (this page's own `publish`, or the draft's `editions.prepared` in `casedrafts`, so a reload keeps it), and not before; nothing else is added (R50). The not-reached sentence stands before the attestation. `data-why` is carried beside `data-source` for `publish_at.why` (ratification's `source`/`why` are not on `tranche/T51` yet at this merge; the screen draws nothing from them but the attribute).
+- Failing-first: `r7-tie.test.mjs` (2 tests; a fake plane that answers as case-authoring does: no `tieAttested`, no `publish_at`). Red first: "the pre-flight after preparing carries it" and the date/time offer absent; green after. The seam's test 1 (control-plane's `t51-round7-seam.test.mjs` §G62) is the real-op check.
+- Suite `test/m/screens-publish/`: 286 tests, 284 pass, 0 fail, 2 todo. Checks: format, architecture, ownership 0 failures; words no finding in screens-publish.
+- Requirement line proposed (R50): "(fix round 7, G62) Once the member has attested the ties and the edition is prepared, the ceremony's pre-flight carries `tieAttested: true`, so the signing check is reached and a publishing time offered."
+- B45's design keys are still not in the word table here (see J40); stand-ins stand.
+
+Size (session_01D28pDd4hME17u4TLcoQx9s): test runs 9, module lines 3716
+
+## J41 · COMPLETE · re B46
+
+COMPLETE (B46): the ceremony's pre-flight now carries tieAttested: true once the edition is prepared (this page's publish, or the draft's editions.prepared on reload), nothing else added; before it the not-reached sentence stands. Red first (r7-tie.test.mjs), now green; suite 286 tests, 284 pass, 0 fail, 2 todo; format, architecture, ownership, words clean for this module. publish_at.source/why not on tranche/T51 yet: data-source/data-why carried only. B45's design keys still not in the word table (J40). Size (session_01D28pDd4hME17u4TLcoQx9s): test runs 9, module lines 3716

@@ -37,7 +37,7 @@ test("R121 (the phase clock): an `acquire` stopped in the reading states `timing
     assert.equal(late.json.code, "ACQUIRE_TIMED_OUT");
     const door = late.json.timings.door;
     assert.ok(door, `${reach}: the door states its phases`);
-    assert.deepEqual(Object.keys(door).sort(), ["acquire", "promote", "reading"]);
+    assert.deepEqual(Object.keys(door).sort(), ["acquire", "cold", "promote", "reading"], "R129 adds the ages");
     assert.equal(typeof door.acquire.started_ms, "number");
     assert.equal(typeof door.acquire.elapsed_ms, "number");
     assert.equal(door.acquire.running, undefined, `${reach}: the capture's phase ended`);

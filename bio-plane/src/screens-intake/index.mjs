@@ -80,6 +80,10 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.capture.address.filedhere", "screen.capture.later.none", "screen.document.text.unread.next",
     /* R38, R31 (fix round 5, E7, E8; K4530): a held copy's reading asked for by the press, and what "Finish it" was answered; the nearest held rows stand in (K4269) */
     "transcribe.why.evidenceabsent", "refusal.CAPTURE_NOT_HELD", "acquisition.index.render_pending_note", "acquisition.note.continuation_files_new",
+    /* G72, G74 (fix round 7; K4269): the nearest held rows stand in: a closed capture, and a project the member is not in (owed: refusal.NO_SUCH_SESSION, a row for the first) */
+    "acquisition.index.no_such_session", "project.notmember", "refusal.PROMOTE_NOT_A_PARTICIPANT",
+    /* G110 (fix round 8): a skipped supporting file is told by its reason's code: the count line and one sentence for each kind of reason */
+    "screen.capture.supporting.kept", "screen.capture.supporting.cap", "screen.capture.supporting.toolarge", "screen.capture.supporting.unavailable",
   ]),
   held: Object.freeze([
     "act.heldcaptures.label.held", "act.heldrestore.label.held", "act.heldsetaside.label.held",
@@ -99,7 +103,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.held.untitled", "screen.held.vouchbad", "screen.held.vouchmissing", "screen.held.waiting",
     "screen.held.withheld", "state.undetermined", "document.uploaded.by", "size.kb", "size.mb", "size.small",
     "screen.capture.openit", "screen.capture.openit.help", "state.item.review.name", "screen.held.name",
-    "screen.capture.address.filedhere", "shell.unread",
+    "screen.capture.address.filedhere", "shell.unread", "document.untitled.web",
   ]),
   archive: Object.freeze([
     "act.archivelist.label.archive", "act.gradenote.label.archive", "act.heldsetaside.label.archive",

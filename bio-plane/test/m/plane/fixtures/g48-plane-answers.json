@@ -57,8 +57,7 @@
     ],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -93,8 +92,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -129,8 +127,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -165,8 +162,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -223,8 +219,7 @@
     ],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -257,8 +252,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -322,8 +316,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -356,8 +349,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -376,8 +368,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -396,8 +387,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -416,8 +406,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1201,8 +1190,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1235,8 +1223,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1269,8 +1256,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1431,8 +1417,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1463,8 +1448,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1502,8 +1486,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1522,8 +1505,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1542,8 +1524,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1605,8 +1586,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1625,8 +1605,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1645,8 +1624,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1665,8 +1643,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1685,8 +1662,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1717,8 +1693,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1749,8 +1724,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1781,8 +1755,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -1801,8 +1774,7 @@
     "also": [],
     "parse_error": null,
     "stack": {
-     "handler": "client_rendered",
-     "kind": "shell"
+     "handler": "conservative"
     }
    }
   },
@@ -2040,5 +2012,119 @@
     }
    }
   }
- }
+ },
+ "rerecorded": [
+  {
+   "id": "doctypes:fw18:minutes@held",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "doctypes:fw18:minutes_council@held",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "doctypes:fw18:agenda@held",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "doctypes:fw18:regulation@held",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "doctypes:fw18:staff_report@held",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "doctypes:fw20:directory_nss@held",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "doctypes:fw20:directory_cro@held",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "doctypes:fw20:directory_benefits@held",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "doctypes:fw20:neg_candidates@held",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "doctypes:fw20:neg_schedule@held",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "doctypes:fw20:neg_recycling@held",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "roster:roster_committee",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "roster:roster_committee_rev",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "roster:roster_rps",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "roster:chart_cao_2024",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "roster:chart_opw",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "roster:neg_commenters",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "roster:neg_signin",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "roster:neg_business",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "budget:document-text",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "budget:volume-300k",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "budget:a14",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "budget:a19",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "budget:a24",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "budget:bb23",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "budget:fy2013-15-adopted.csv",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "budget:fy2019-21-adopted.csv",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  },
+  {
+   "id": "budget:m-m1-figures.csv",
+   "why": "site-profiles G76 (K4739): NO_PROSE counts only where markup exists, so markup-free text is 'conservative'"
+  }
+ ]
 }

@@ -1,6 +1,6 @@
 # ocr-worker — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Every requirement met.
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Every requirement met. Changed in T51 fix round 9 (BOB; K4831, K4834, K4837: R7, R25 amended; R26-R31 new; marked not yet met T51).
 
 ## Public
 
@@ -47,14 +47,14 @@ record, writes nothing, and reports the running build's own version.
   1. `ENGINE_ABSENT` (200, `ok:false`) — the wasm core or the language model did not load as the
      measured pair (checked before any bytes are touched).
   2. `PAGE_NOT_RENDERABLE` (200) — the page renderer (`pdf-pixels`) refused it; this member forwards
-     that refusal's own reason rather than reinterpreting it.
+     that refusal's own reason rather than reinterpreting it (`IMAGE_TOO_LARGE`, `PIXELS_UNDETERMINED` and the others of `pdf-pixels`' set alike).
   3. `PIXELS_UNREADABLE` (200) — the renderer answered in a container this member cannot read at all
      (anything other than `image/png`).
   4. `FRAME_OVER_MEASURED_BOUND` (200) — the page's RGBA frame (`width * height * 4` bytes) exceeds
-     `MAX_FRAME_BYTES` (61,300,000, the largest frame CPDF-15 measured completing on the deployed
-     runtime); the refusal names `width`, `height`, `frame_bytes` and `bound_bytes`. Checked only
+     `MAX_FRAME_BYTES` (quoted from `READ_BOUNDS`, `boundOf("ocr", "frame_bytes")`: the alpha column holds 61,300,000, the largest frame CPDF-15 measured completing on the deployed
+     runtime; no numeric literal of the module's own); the refusal names `width`, `height`, `frame_bytes` and `bound_bytes`. Checked only
      once the container has passed step 3, so a page too large is refused by its true reason even
-     when its container would also have been unreadable.
+     when its container would also have been unreadable. (Fix round 9, G125g) The frame is first judged from its declared size, before the renderer is called and so before anything is rendered: the page box at the render resolution, or the picture's header grown by R24's preparation; when that judgment applies, the answer is this step's, reported after step 1, and a page over the bound costs no render. A frame exactly at the bound is read and one pixel over is refused; the prepared frame, which may pass the 4096 edge, is judged at its true size. The rendered frame is judged again as before.
   5. `PIXELS_UNREADABLE` again (200) — the PNG this member did receive is a shape its own reader
      refuses (interlaced, an unsupported colour-type/bit-depth pair, a scanline filter it does not
      implement, or truncated data). Same reason code as step 3, reached only once the frame has
@@ -65,6 +65,7 @@ record, writes nothing, and reports the running build's own version.
      finite rectangle. This is answered exactly the same way for a blank page and for a page of pure
      noise: an engine that answers nothing on either is reporting a finding, not failing, and the
      refusal names how many boxes it found and how many were blank or unanchored.
+  Beside these (K4868): `PAGE_NOT_LEGIBLE` (200, `ok:false`) is R25's refusal of a page under its legibility floor; `UNEXPECTED_FAILURE` (200, `ok:false`, with `stage` and `error_name`) is R28's answer to a throw anywhere in the call; `BAD_PSM` (503) is R29's refusal of an instance setting that names no page segmentation mode, an instance's fault and never a document finding.
   Every one of these is a document-level finding and is answered `200` with `ok:false`, never an
   HTTP error status — only a malformed request (R1–R4), an unconfigured binding (R5) or a capture
   genuinely absent (R5) uses a non-200 status.
@@ -75,8 +76,8 @@ record, writes nothing, and reports the running build's own version.
   per request), `confidence_floor` (the instance's `OCR_CONFIDENCE_FLOOR`, read as a number in
   `0..1`, or `null` when it is absent, empty or out of range — `null` is a statement that no
   threshold has been measured, not an omission), `grain` (`"line"`), `deferred` (R6), `image`
-  (`{width, height, frame_bytes, route, upright, rotate_deg, dpi, pixels_sha256}` of the rendered
-  frame), `notes` (an array of strings, possibly empty), and `pages`: an array of exactly one
+  (`{width, height, frame_bytes, route, upright, rotate_deg, dpi, pixels_sha256, turned_deg}` of the rendered
+  frame; `turned_deg` is what the renderer says it turned, R26), `notes` (an array of strings, possibly empty), and `pages`: an array of exactly one
   `{page, regions}`.
 - **R9** Each region in `regions` carries: `text` (a non-blank string), `source` (`{kind:"pdf-page",
   ref:"p<page>", page, rect:[left,top,right,bottom]` — four finite numbers, pixel coordinates of the
@@ -109,16 +110,22 @@ engine_loaded, engine_unavailable?}`.
 - **R23** (T50; N1191 (c); JOURNEYS V4 B-30; pdf-pixels R42) A capture whose bytes are a JPEG or PNG picture, not a PDF, is transcribed as a one-page document: page `0` is rendered with the picture renderer (`pdf-pixels` R42, `renderPictureToPixels`) instead of the page renderer and then taken through R7's refusals and R8 onward exactly as a PDF page is, the same fields answered; any other page number named for a picture is refused `NO_SUCH_PAGE` naming it; a picture the renderer refuses answers `PAGE_NOT_RENDERABLE` with its reason (R7 step 2). A PDF is transcribed as before. Test: a fixture photograph of a printed sentence answers its words for page 0 with R8's fields; page 1 of it is `NO_SUCH_PAGE`; control: a PDF page is unchanged, and bytes that are neither are refused as today.
 
 - **R24** (T51; FR-67; K4194, L26) A photographed page is made ready before the engine reads it: the picture renderer is asked for page 0 with `prepare: true` (`pdf-pixels` R44: light levelled, tilt turned level, small print enlarged), so the engine reads the prepared pixels, and every field of R8 and R9 describes the prepared frame (`image`, `source.image`, the rectangles and `pixels_sha256` are those of the prepared samples). R7's bound (step 4) is judged on the prepared frame's size, which the renderer answers, a picture of 110 dpi growing about 2.5 times, never on the size of the capture's own picture. A picture whose answer says `prepared.text_found` is `false` (a blank wall, noise: no text lines in it) is not handed to the engine: it is answered `NOTHING_TRANSCRIBED` (R7 step 7) with `boxes`, `blank` and `unanchored` all 0, after the container and the bound have passed and before the engine runs. A PDF page is rendered and read exactly as before (R23's control). Test: through the member's real path, with the real picture renderer and the real engine, the photographs of `fixtures/` read at least 90 percent of their words prepared, where the same member asked without `prepare` reads under 90 percent; the blank picture is answered `NOTHING_TRANSCRIBED` and the engine never runs; control: the old answer without `prepare`.
-- **R25** (T51 fix round 2, C18; K4316; amends R7, R8) **A picture's reading says how legible it was.** A picture capture's ok answer carries `legibility {words, confident_words, share}`, a confident word being one the engine rated 0.6 or over; a share under 0.8 adds a notes sentence that the picture is only partly legible; a share under 0.2 is refused `PICTURE_NOT_LEGIBLE` (an answer with `ok: false`, the legibility and no text), a step after the engine runs; a PDF page's reading is unchanged; an engine that gave no words states none. Test: a clear picture answers a share at or over 0.8 and no note; a blurred one under 0.8 the note; an unreadable one is refused with its legibility; control: a PDF page carries no legibility.
+- **R25** (T51 fix round 2, C18; K4316; amends R7, R8; fix round 9, G137d; K4831 (10)) **Every page's reading says how legible it was, a PDF page's as a picture's.** An ok answer, for a picture capture and for a PDF page alike, carries `legibility {words, confident_words, share}`, a confident word being one the engine rated 0.6 or over; a share under 0.8 adds a notes sentence that the page is only partly legible and keeps its text; a share under 0.2 is refused with the legibility and no text kept, `PICTURE_NOT_LEGIBLE` for a picture and `PAGE_NOT_LEGIBLE` for a PDF page (each an answer with `ok: false`), a step after the engine runs and after R26's turn has been tried; an engine that gave no words states none. Test: a clear picture and a clear PDF page answer a share at or over 0.8 and no note; a blurred one under 0.8 the note; an unreadable one is refused with its legibility; an inverted, a blank, a handwritten and a faint page get the same answer as a picture and as a PDF page (SCAN B3, B8, B9).
+- **R26** (fix round 9, G132m, G137d; K4831 (10)) **A page found turned is turned upright first.** For every frame, picture or PDF page, the engine's orientation is asked before its text is read. A frame found turned by 90, 180 or 270 degrees is asked again from the renderer with `turn` (`pdf-pixels` R48) and read upright: `image` carries `turned_deg`, and the rectangles, `source.image` and `pixels_sha256` are those of the turned frame. (K4868) Because the engine's orientation is unreliable below a full-resolution page, a turn it asks for is tried only when the page as it lies is not clearly legible (under 0.8, or nothing read) or its boxed lines run up the frame (their median width under their height), and is kept only when the turned page rates at least as many words as reading it as it lies; a clearly legible page with its lines across the frame is never turned, and no page is read four ways. A frame whose orientation the engine cannot tell is read as it is and `notes` states that its orientation could not be determined; it is never read as garbage and answered `ok:true` with no mention. A page still under R25's 0.2 after being turned is refused as R25 says. Test: SCAN B1, B2 (a page turned 90, 180 and 270 as PNG, as JPEG without EXIF, and inside a PDF with and without `/Rotate`): read upright at the legibility floor, or stated; control: an upright page is not turned (`turned_deg` 0).
+- **R27** (fix round 9, G132k; F-5) **A call reads its page's bytes, not the file's.** The bytes read from R2 for one call are the cross-reference data, that page's objects and its image stream (`pdf-pixels` R47), so across the up to 24 calls of a document the bytes read per page are bounded by the page and not by the size of the capture; counted by the ranges `CAPTURES.get` is asked for.
+- **R28** (fix round 9, G132j; N23) **A top-level guard.** Whatever throws inside a call once R1–R5 have accepted it (the renderer, the picture renderer, the PNG reader, the inflater, R2) is answered 200 `ok:false` with the reason `UNEXPECTED_FAILURE`, `stage` (which step) and the error's name, a document-level finding like R7's, never a 5xx and never a thrown error. Test: SCAN D11, a throwing renderer and a throwing R2 each answer 200 with the named reason.
+- **R29** (fix round 9, G125g) An `OCR_PSM` that is set and is not a page-segmentation mode the engine accepts is refused on every call `BAD_PSM` (503), naming the value (truncated to 80 characters), checked with R5 before the body is read; it is never accepted silently.
+- **R30** (fix round 9, G132i; N13) **A page routed here is read though it shows text.** A page the plane sends to this member has been judged to need OCR (a folio on a scanned page, a stamp): the page renderer is asked with `allowTextPage: true`, so it is never refused `PAGE_HAS_TEXT_LAYER` (`pdf-pixels` R16), and the OCR text is returned for the plane to append to the text already held. Test: a scanned page carrying a printed folio is transcribed, not refused.
 
 ## Private
 
 ### Uses
 
-- `pdf-pixels` (K70): `renderPageToPixels(bytes, page, {decodeDct:true})` → `{ok:true, bytes, route,
+- `runtime-limits`: `READ_BOUNDS` and `boundOf(kind, name)` for `MAX_FRAME_BYTES` (R7), the one ceiling this module keeps (R31).
+- `pdf-pixels` (K70): `renderPageToPixels(source, page, {decodeDct:true})`, its first argument the bytes or a range source `{size, readRange(offset, length)}` over the capture (R27; K4868) → `{ok:true, bytes, route,
   mediaType, width, height, upright, rotate_deg, pixels_sha256, page_geometry}` or a named refusal
   (a text layer, vector marks, several images on one page, an undecodable container, and others).
-  This module always asks for `decodeDct:true` and forwards a refusal's `reason` verbatim as
+  This module always asks for `decodeDct:true` and, for a page the plane routed to it, `allowTextPage:true` (R30), and forwards a refusal's `reason` verbatim as
   `PAGE_NOT_RENDERABLE`'s own reason; it does not reinterpret or renumber pdf-pixels' refusal set.
 - `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
@@ -158,6 +165,7 @@ engine_loaded, engine_unavailable?}`.
   state between calls, reads the record only through `CAPTURES.get`, and makes no other network or
   storage call.
 - **R22** The module exports, from its engine-free contract, `PLANE_OPS` (`{op: {mutating, why}}`, the plane ops it calls: empty, since it calls none) and `NAMESPACES` (R16's set), both frozen; control-plane pins them against its op table and its namespace gate, which is how a record namespace set moved without this module's (R16) is caught. (N402, K631)
+- **R31** (fix round 9, G124; K4835 (1)) No numeric literal in this module's code is a ceiling it keeps (`MAX_FRAME_BYTES`): it is read from `READ_BOUNDS`, and a test reads the module's `src` and finds none.
 
 ### Satisfies
 
@@ -175,15 +183,15 @@ engine_loaded, engine_unavailable?}`.
 
 ### Suggestions
 
-- The memory bound (`MAX_FRAME_BYTES = 61,300,000`) and the one-page-per-invocation rule are both
+- The memory bound (`MAX_FRAME_BYTES`, the alpha column of `READ_BOUNDS`, 61,300,000) and the one-page-per-invocation rule are both
   measured facts (CPDF-15, `MEASUREMENTS.md` 2026-09-10, on the deployed runtime), not defaults; a
   runtime or engine change should re-measure rather than assume the same figure holds.
 - The namespace set (R16) is carried as a copy of the record's own set because a fleet member cannot
   import the plane's source; a job that changes either set should change both in the same act
   (D-478 is where this was last found stale).
 - `env.OCR_PSM`, when set, is passed to the engine as its page-segmentation mode. The response does
-  not echo it back, so this is not independently testable at the interface beyond "the call is
-  threaded through and does not crash the request".
+  not echo it back, so a valid value is not independently testable at the interface beyond "the call is
+  threaded through and does not crash the request"; an invalid one is refused (R29).
 - Discarding a region below `confidence_floor` is the CALLER's job (`applyConfidenceFloor` in
   `bio-plane/src/textchain.mjs`), never this module's: this module states the floor it was given and
   never applies it itself, so the discard rule exists in exactly one place.

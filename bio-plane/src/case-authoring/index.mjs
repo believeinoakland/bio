@@ -102,7 +102,8 @@ import { caseAccountOf } from "../case-account/index.mjs";
 /* B10 (K4240): `capture`, the one instance on the host, which records the members who captured each capture (its R69). */
 import { captureOf } from "../capture/index.mjs";
 /* R56, R57 (T33): case-grammar's `calculationsLines` and `timelineLines` (its R18, R20), the one spelling of each block. */
-import { calculationsLines, timelineLines, materialsOf, passagesOf } from "../case-grammar/index.mjs";
+import { calculationsLines, timelineLines, materialsOf, passagesOf, memberTiesOf, caseDocumentBlocks,
+         caseTensionsOf as tensionsOfDocument } from "../case-grammar/index.mjs";
 /* R63, R68 (T41; D56, D60): case-grammar's account and approval blocks (its R23, R26), the one spelling of each, and the
    approval digest an approval names (its R26; K2528). The review comments' block is `case-account` R7's answer. */
 import { accountLines, accountSectionLines, approvalsLines, approvalSubjectSha } from "../case-grammar/index.mjs";
@@ -1591,7 +1592,10 @@ export class CaseAuthoring {
   publishPreflight(args = {}, calculationFacts = null) {
     const given = args && typeof args === "object" ? args : {};
     const carried = given.viewer && typeof given.viewer === "object" ? given.viewer : null;
-    const a = this.#withDraft(carried ? { ...given, viewer: carried.stamp ?? null } : given);
+    const drafted = this.#withDraft(carried ? { ...given, viewer: carried.stamp ?? null } : given);
+    /* R34, R75, R76 (fix round 8, G112): the ties were attested when the edition was prepared, and the unsigned document
+       holds that attestation; a reload's call sends none, so it is read from the document, in this rolled-back run only. */
+    const a = { ...drafted, ...this.#fromPreparation(drafted) };
     const seen = {};
     let answer = null, text = null;
     try {
@@ -1723,6 +1727,47 @@ export class CaseAuthoring {
     const editions = this.draftEditions({ caseId: answer && answer.ok === true ? (answer.minted ? null : answer.caseId) : stoodAt,
                                           draft: str(a.draft) || null });
     return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps, editions };
+  }
+
+  /* R34, R75, R76 (fix round 8, G112; round 9, G112b; diagnosis-R8-capture.md F): what the call's own signer already stated,
+     in the unsigned document the record holds for the case the call stands at (R83's `draftEditions`), when it holds an
+     `attestation` row of `member_ties:` naming her: her ties' confirmation, the bias acknowledgement she typed, the reasons
+     she gave for self-attested captures and the words she gave for the tensions she disclosed, each only for a call that
+     sends none (a call's own, or its draft's, wins). The ceremony's `publish` body carries all four and the draft holds
+     none, so a reload's call is only {draft, project}. It reads and never throws, and it is never handed to `op=publish`,
+     which asks them in its own act (R76; DEC-46). Nothing prepared, or prepared by another signer, answers nothing. */
+  #fromPreparation(a) {
+    try {
+      const need = { tie: a.tieAttested !== true, bias: !str(a.biasAcknowledgement),
+                     self: a.selfAttested == null, tensions: a.tensionsDisclosed == null };
+      if (!Object.values(need).some(Boolean)) return {};
+      const who = str(a.author);
+      if (!who || isMachineIdentity(who)) return {};
+      /* the case identity the call stands at, from the record without the act (R83), as the pre-flight tells it */
+      const viewer = a.viewer ?? null;
+      const auth = this.#authority(a.project ?? null, viewer, who);
+      if (auth.ok === false) return {};
+      const members = membersOf(a.targets, a.target);
+      const judged = members.length ? this.#judgeMembers(members, auth.proj, viewer, auth.gate) : null;
+      const held = this.draftEditions({ caseId: this.#caseStood(members, a.caseId, a.newCase, judged),
+                                        draft: str(a.draft) || null });
+      if (!held.case || held.prepared === null) return {};
+      const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=? AND sig_armored IS NULL`,
+                          held.case, held.prepared);
+      if (!d) return {};
+      const bare = (x) => String(x ?? "").trim().replace(/^member:/, "");
+      const fm = parseFrontmatter(d.text).data || {};
+      if (!memberTiesOf(fm).some((r) => r.row === "attestation" && bare(r.signer) === bare(who))) return {};
+      const stored = str(fm.bias_acknowledgement);
+      const reasons = need.self ? (caseDocumentBlocks(d.text).captures || [])
+        .filter((c) => c.self_attested_only && c.acknowledgement && c.acknowledgement.reason && bare(c.acknowledgement.acknowledged_by) === bare(who))
+        .map((c) => ({ capture: c.capture, reason: c.acknowledgement.reason })) : [];
+      const disclosed = need.tensions ? (tensionsOfDocument(d.text).tensions || [])
+        .filter((t) => t.candidate && bare(t.acknowledged_by) === bare(who))
+        .map((t) => ({ candidate: t.candidate, ...(t.owner_words ? { words: t.owner_words.text } : {}) })) : [];
+      return { ...(need.tie ? { tieAttested: true } : {}), ...(need.bias && stored ? { biasAcknowledgement: stored } : {}),
+               ...(reasons.length ? { selfAttested: reasons } : {}), ...(disclosed.length ? { tensionsDisclosed: disclosed } : {}) };
+    } catch { return {}; }
   }
 
   /* R83 (R7, R9): the case identity a call stands at, told from the record without the act: the one named, else the one

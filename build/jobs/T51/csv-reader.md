@@ -1,6 +1,6 @@
 # csv-reader (T51)
 
-**Status** · session_015f6Az85H4GFawFsXC3ch9y · depth 2 · COMPLETE · handled B7
+**Status** · session_017pSg8G4No9aLcVtFV4dsxE · depth 2 · COMPLETE · handled B11
 
 ## Completion
 
@@ -84,3 +84,75 @@ Size (session_015f6Az85H4GFawFsXC3ch9y): test runs 30, module lines 990
 ## J4 · COMPLETE
 
 csv-reader #3 COMPLETE, G41 D1. Held cells (inlineCellsMax opt-in, cells_held), cellsIn slot, windowed walk with no record list, chunked text; bound 17 MiB with a stated final refusal above it and the pieces band dropped (K4652). Failing-first red then green (g41-held 10/11 red, g41-memory SIGABRT), plane/shape L: 16.99 MiB read whole at cap 150, 17.01 stated. csv-reader 55 pass; office-readers 105, format-registry 43, workbooks 29; file-safety R24 red on the unchanged entry too. Checks 0 failures. Proposed R6/R9/R16/R17/R18/R19 lines, measures and the tick-time note (14.8 s here) are in my record. Size: test runs 30, module lines 990.
+
+## J5 · COMPLETE
+
+COMPLETE · csv-reader · T51 fix round 7 · R20 (G82 share, as provider)
+
+**Entry applied:** R20. `text(partsOrBytes, {inlineCellsMax, yieldNow})` awaits `yieldNow()` between its 1 MiB windows when `yieldNow` is a function (`bio-plane/src/csv-reader/index.mjs`: `forEachRecord` is now async and awaits it before each window after the first; `csvText` is async). Also awaited between the windows of the UTF-16 validity pass in `parts()` when `text()` is given bytes (that pass is a synchronous walk of the whole body otherwise). A `yieldNow` that is not a function is no yield; one that throws or rejects is ignored (R13: never throws). Without `yieldNow` the answer and behaviour are unchanged.
+
+**Is `text()` already async?** Yes: the entry's `text` was `async` already, so its signature and every caller are unchanged. `cellsIn` also awaits the now-async `forEachRecord` with no `yieldNow` (it is async already). No caller needed a change; `git grep` shows `csvText`/`forEachRecord`/`validUtf16` are module-private.
+
+**Tests** (`bio-plane/test/m/csv-reader/r20-yield.test.mjs`, five tests naming R20): (1) counts `yieldNow` calls on a 3.5 MiB body (>= 3; none for a one-window body; same count given `parts()`), red before the change; (2) equivalence, deep-equal with and without `yieldNow`, bytes and `parts()`, with and without `inlineCellsMax`, over: record, quoted newline, doubled quote and CRLF across the 1 MiB edge, 2-, 3- and 4-byte characters across it, BOM, rows over 300 KiB, an undetermined byte past the head, no final newline, UTF-16LE valid and invalid; also over the size guard, an empty body, non-bytes; non-function / throwing / rejecting `yieldNow`; (3) longest synchronous stretch on a 17 MiB body (test's own clock, taken inside `yieldNow` outside the module, R-CLOCK): 17 stretches, longest 42-72 ms over runs (total 470-690 ms for the read), asserted under 500 ms (the K4354 bar). On the old code (4) and (1)-(2) are red.
+
+**Proposed wording for R20 (BOB writes):** add "also between the windows of the UTF-16 validity pass `parts()` makes for a windowed UTF-16 body, when `text()` is given bytes; a `yieldNow` that throws or rejects is ignored" and drop "(not yet met: T51)".
+
+**Run:** csv-reader tests 60 pass 0 fail (`node --test bio-plane/test/m/csv-reader/*.test.mjs`); reading-pipeline 278 pass, calculations 104 pass, office-readers 115 pass, 0 fail, 0 skipped. Checks from the process repo: format 0 failures; architecture 0; coverage 20 of 20 ids named, 0; words 0; ownership 1 file changed by csv-reader, 0 failures (the new test file; the source file is the other change, ownership counted both as one path set per its output).
+
+**Stale bundles (not regenerated, BOB at the round end):** `agent-worker` (csv-reader source changed; `fleetbundles.test.mjs` also reports `pdfstructure.mjs`, `promotion`, `record-grammar/bundle.mjs`, `site-profiles/handlers/client-rendered.mjs` stale from before this job), and the plane's `bio-plane.bundled.mjs` by the same route. Census ops: none owned.
+
+**Deferred / found in other modules:** none. reading-pipeline (READING-PIPELINE #29) passes a timer-turn `yieldNow` to `text()` and runs its workerd contention test after this merges.
+
+Size (session_01FDqgsYyKdawCypvN6ZABTN): test runs 14, module lines 1005
+
+## J6 · REPORT
+
+REPORT · csv-reader · T51 fix round 9 · ceilings and options this module keeps that READ_BOUNDS has no row for (START ruling 1; nothing waits on this)
+
+For runtime-limits (BOB carries it): one listing cap that is a ceiling by its effect on what a member reads.
+- kind `csv`, name `undetermined_listed` (what a sheet lists of its unreadable cells; `counts.undetermined` is the whole count): standard 200, alpha 200, protective 200 (requirement R9, G129f). Today `CSV_STREAMED_UNDETERMINED_MAX = 200` in `csv-reader/index.mjs`, marked "proposed; BOB records its row"; I will swap it for `boundOf("csv", "undetermined_listed")` when the row exists (one line and the quote test).
+
+Working constants I keep that are not read ceilings (no row asked; tell me if you want one): the window of the read (1 MiB, R19), the size below which a body keeps a record list (64 KiB, R19), the records a window's delimiter decision examines (1,000, R7), the lookahead of windows that decided nothing (4), the lines of a text chunk (2,048). The window and the 1,000 records are the requirements' own figures.
+
+Two optional arguments the entry takes, for BOB to name in R3/R5 or leave as test seams: `{windowBytes}` (a scaled window; the corpus smallest-case rule, R-FOUR (3)) and `{declared}` (a legacy charset the source declared; R7 "the declared or detected legacy charset"; the registry passes neither today). Both are the second argument of `parts`, `structure`, `text` and `dialect` (and in `cellsIn`'s query).
+
+## J7 · COMPLETE
+
+COMPLETE · csv-reader · T51 fix round 9 (CSV-READER #5) · G131a, G131b, G131c, G131d (text path), G131e (CSV half), G131i (CSV/TSV windows), G129f, G124e, G130b (owner of `isDelimitedText`), G124 quotes. Tranche merged through B11 (OOXML #4); the ooxml seam test is green.
+
+**Entries applied** (module `bio-plane/src/csv-reader/index.mjs`; R2, R5-R9, R18, R21-R25):
+- G131a: the byte transport was `TextDecoder("latin1")` (windows-1252: 0x92 became U+2019), so a UTF-8 field failed its decode. Now a bijective transport; UTF-8, windows-1252/declared legacy and UTF-16 (BOM or none) decode per window. The legacy guess is assumed and stated (`assumed`), never silent.
+- G131b/R23: a quote opens only at the start of a field; an open quote at the end of the file is `unterminated_quote` with its row and bytes.
+- G131c/R7/R24: encoding and delimiter decided per window (records, majority of up to 1,000), the file's by majority, `disagree` and `windows_disagree` stated, each window read under its own.
+- G131d/R5: an empty field keeps its column (`P100\t\t100`).
+- G131e/R18: pass 1 leaves access points (byte, row, CR flag); `cellsIn` resumes from the last before `fromRow`.
+- G131i/R6/R9/R25: bounds through `boundOf` (50 MB, 1,048,576 records); windows with a carry; `counts.replaced` added.
+- G129f: 200 listed, `counts.undetermined` whole. G124e/R22: 16,384-column refusal (`metric:"columns"`), cell kept to 1 MiB with `over_cell_bound`.
+- G130b/R21: `isDelimitedText`; `detect` also answers `text/tab-separated-values`.
+
+**Failing-first (R-FOUR (3))**, the old module on the cases, then the new (script run against both):
+```
+old  G131a {"undetermined":2,"cells":["a","b","1",null,"2",null]}      new  {"undetermined":0,"cells":[...,"it’s",...,"É Ñ 日本 😀"]}
+old  G131b {"usedRows":100,"of":500}                                    new  {"usedRows":500}
+old  G131c {"title":null,"crOnly":null,"firstLineOver1MiB":null,"utf16NoBom":"us-ascii"}   new  comma, semicolon, comma, utf-16le
+old  G131d {"text":"id\tqty\tprice\nP100\t100"}                         new  "P100\t\t100"
+old  G129f {"listed":1000}                                              new  listed 200, count 1000
+old  G124e {"document":"read","usedCols":16385}                         new  refused, marker metric "columns"
+old  G130b isDelimitedText undefined, detect(tsv) null                  new  function, "csv"
+```
+New test files, each red against the old module (windows 16 of 17 red, bounds 2 of 2, delimited and text red on import): `windows`, `delimited`, `bounds`, `standard-size`, `text` (rewritten), `ooxml-seam`.
+
+**Platform check (L), capped child:** a 50 MiB read survives a 144 MB old space and not 128 MB (retained 59.6 MB after the read; the transient is the chunks plus their join). The isolate is 128 MB with the body's bytes inside it: that is a Stage-3 platform figure for BOB (R-GATE), not a change here. The corpus R set runs the full size.
+
+**Tests:** csv-reader 95 pass 0 fail (every id R1-R25 named, coverage 25 of 25). Heavy files (standard-size, large-text, windows, r20-yield, g41-memory) run alone 5 times on all cores and 5 times on one core (`taskset -c 0`): 50 of 50 runs pass; R20 longest stretch 36-60 ms (bar 500). Users: format-registry 43, office-readers 115, calculations 114 pass. reading-pipeline 313 pass, 6 fail (see below). Checks from the process repository: format 0, architecture 0, coverage 25 of 25, ownership 0 (18 files), words (csv-reader) 0 (unkeyed 0).
+
+**Found in other modules (for BOB):**
+- reading-pipeline `g48-first-tick.test.mjs` controls csv-100k, csv-under-bound, csv-3m, csv-3m-small-budget record the old dialect: `encodingConfidence` certain -> likely (R7: us-ascii at likely only) and the delimiter signal "first 50 lines" -> "first N". They need re-recording by that job. Two other reading-pipeline reds have no csv path (R29 R23 text-recognition; R40 R36 BUDGET-2024-APP PDF); I did not examine them at baseline.
+- calculations (job 31) reads `delimiterSignature(text)` (kept, same shape) and its table text now has the empty slots. reading-pipeline's G131b mirror (`:1732`) is job 27's. format-registry takes `isDelimitedText` (job's edge).
+- Stale bundles (BOB regenerates): agent-worker and the plane's bundled artifacts that embed csv-reader source.
+
+**Proposed requirement wording (BOB writes):** (1) R7 Uses: ooxml's `decodeText` is whole-bytes and cannot stream windows, so csv-reader keeps its own per-window decision and the seam test checks the two agree. (2) R5: `counts.replaced`; undetermined reasons `unterminated_quote {row, bytes}` and `over_cell_bound {length}`. (3) the entry's optional second argument `{windowBytes, declared}` (see the REPORT). (4) R8's "cells is null over the size guard" reads `sheets: []` (carried from #4's note). (5) drop the "(not yet met)" marks.
+
+**Census ops owned:** none. **Deferred:** none. **R-PATH:** every path reaches this module through the one entry; the sibling-path doors are control-plane's seam (sections 12, 14).
+
+Size (session_017pSg8G4No9aLcVtFV4dsxE): test runs 40, module lines 1294

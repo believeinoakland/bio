@@ -154,11 +154,11 @@ test("R77 (E2): `owedwork` answers a `subresources` row by its session key as we
 
 test("R78 (E10): every route the object serves answers `server-timing: object;dur=<ms>`, the time it spent on the route, on two routes; the body is the route's own and a value carried in is replaced", async () => {
   const x = await world(undefined, () => ({ ok: true, read: true }));
-  const shape = /^object;dur=\d{1,7}$/;
+  const shape = /^object;dur=\d{1,7}, object-age;dur=\d{1,9}$/;   /* R96: the object states its age beside it */
   for (const path of ["/owedwork?cls=member&viewer=member:ann", "/owedwork?cls=admin&viewer=member:ann&sha=" + "d".repeat(64)]) {
     const res = await x.s.fetch(new Request("http://do" + path, { headers: { "server-timing": "object;dur=999999" } }));
     assert.match(res.headers.get("server-timing"), shape, path);
-    assert.notEqual(res.headers.get("server-timing"), "object;dur=999999");
+    assert.ok(!res.headers.get("server-timing").includes("999999"));
     assert.equal((await res.json()).result.ok, true, "the body is the route's own");
   }
   const other = await x.fetch("/ailimits?cls=member&viewer=member:ann");

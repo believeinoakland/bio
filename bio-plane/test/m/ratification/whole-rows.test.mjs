@@ -19,7 +19,9 @@ const provenanceDoc = JSON.stringify({ documents: [{ file: "snapshots/report.pdf
   capture: { method: "acquire", grade: "B", actor_class: "session", sha256: WHOLE, encoding: "binary", bytes: Buffer.concat(PARTS).length },
   origin: { kind: "named_request" }, parts: held }] }, null, 1);
 const partFiles = held.map((p) => ({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes }));
-const register = held.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes }));
+/* the whole first (the capture's own digest, its total bytes), then its parts: capture.mjs's own register */
+const register = [{ sha256: WHOLE, path: "snapshots/report.pdf", encoding: "binary", bytes: Buffer.concat(PARTS).length },
+  ...held.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes }))];
 
 /* the real chain: the register as provenance writes it for this bundle (parts' rows and the whole's row) */
 function realProvenance() {
@@ -50,11 +52,13 @@ async function setup() {
   return { w, head, sig, real };
 }
 
-test("R56: gateFacts lists the whole's row beside its parts' and ratifyGate passes the bundle: the whole is admitted as held in parts, the gate raises no finding for any of them", async () => {
+test("R56: gateFacts lists the whole's row (its parts are no rows) and ratifyGate passes the bundle: the whole is admitted as held in parts, the gate raises no finding for any of them", async () => {
   const { w, real } = await setup();
   const gf = w.r.gateFacts(DOC, null);
   assert.equal(gf.ok, true);
-  assert.deepEqual(gf.registers.map((x) => x.capture_sha).sort(), [WHOLE, ...held.map((p) => p.sha256)].sort());
+  /* provenance R73/R74: the register lists the whole alone, carrying its parts in order; a part is no row of its own */
+  assert.deepEqual(gf.registers.map((x) => x.capture_sha), [WHOLE]);
+  assert.deepEqual(gf.registers.map((x) => [x.path, x.bytes]), [["snapshots/report.pdf", Buffer.concat(PARTS).length]]);
   const image = w.record.readImage(DOC);
   const gate = await w.r.ratifyGate({ bundleId: DOC, image, knownIds: new Set([DOC]), registers: gf.registers,
     publishedRegistry: null, publishedCaseRegistry: null, earnedRegistry: null });

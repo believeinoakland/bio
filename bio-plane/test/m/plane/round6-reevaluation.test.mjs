@@ -100,6 +100,9 @@ for (const newerReadFirst of [false, true]) {
     assert.equal(items.length, 1, JSON.stringify(items.map((i) => i.id)));
     assert.equal(items[0].id, `FINDING::newer-capture-affects-reference::${notices[0].notice}`);
     assert.deepEqual([items[0].subject.holder, items[0].subject.newer_capture, items[0].subject.capture_sha], [Q, two.sha, one.sha]);
+    /* reevaluation R41 (G89, K4774): a notice raised before its copy was read keeps the sweep pending until one more tick
+       re-grades it; then the pass is complete */
+    r.noticeSweep(Date.now());
     assert.equal(r.noticeSweepDue(Date.now()), null, "the pass is complete: the sweep rests");
   });
 }

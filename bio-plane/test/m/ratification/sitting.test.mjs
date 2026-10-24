@@ -224,3 +224,86 @@ test("R52 (control): op=publishat answers a member's commit refusal at signing (
   assert.equal(s.w.count("scheduled_editions"), 0, "nothing waits");
   s.nothing("probe");
 });
+
+/* R60 (fix round 8, G120; CHANGE B15): a sitting's members are prepared together and their copies run together. */
+test("R60, R52: the members of a sitting are read together (gatefacts and image of the seven in flight at once, the list once), their bytes copied together, and the answer is the sitting's as before", async () => {
+  const s = await sitting();
+  const nap = () => new Promise((r) => setTimeout(r, 6));
+  const p = plane(s.w, as("iris"));
+  const calls = [], bucket = [];
+  let live = 0, peak = 0;
+  const real = p.stub.fetch.bind(p.stub);
+  p.stub.fetch = async (u, init) => {
+    const op = new URL(u instanceof Request ? u.url : u).pathname.slice(1);
+    const c = { op, start: performance.now(), end: null }; calls.push(c);
+    await nap();
+    try { return await real(u, init); } finally { c.end = performance.now(); }
+  };
+  for (const k of ["PUBLISHED", "CAPTURES"]) {
+    const b = p.ctx.env[k], o = {};
+    for (const m of ["head", "get", "put"]) o[m] = async (...a) => {
+      live++; peak = Math.max(peak, live); bucket.push(m);
+      try { await nap(); return await b[m](...a); } finally { live--; }
+    };
+    p.ctx.env[k] = o;
+  }
+  const r = await caseRatifyOp(p.request(s.body()), p.stub, p.ctx);
+  assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 400));
+  assert.deepEqual(r.body.sitting.map((m) => [m.bundleId, m.ok]), s.ids.map((id) => [id, true]), "answered in the sitting's order");
+  const inFlight = (op) => { const xs = calls.filter((c) => c.op === op); return Math.max(...xs.map((a) => xs.filter((b) => b.start <= a.start && b.end > a.start).length)); };
+  assert.ok(inFlight("gatefacts") >= 6, `gatefacts of the members in flight together: ${inFlight("gatefacts")}`);
+  assert.ok(inFlight("image") >= 6, `image of the members in flight together: ${inFlight("image")}`);
+  assert.equal(calls.filter((c) => c.op === "list").length, 1, "the list of known ids is one read for the sitting (G120b)");
+  assert.ok(peak >= 6, `the members' copies in flight together: ${peak}`);
+  for (const m of s.members) assert.equal(p.published.has(`s/published/${m.sha}`), true, m.id);
+});
+
+/* R60 (fix round 9, G120b; K4850): what a sitting asks of the store, counted. Every call is recorded with its start and end
+   after a real wait; the figures are counts (calls, calls in flight, the depth of a chain awaited one after another), never a
+   time. */
+async function recordedSitting() {
+  const s = await sitting();
+  const nap = () => new Promise((r) => setTimeout(r, 6));
+  const p = plane(s.w, as("iris"));
+  const calls = [];
+  const real = p.stub.fetch.bind(p.stub);
+  p.stub.fetch = async (u, init) => {
+    const op = new URL(u instanceof Request ? u.url : u).pathname.slice(1);
+    const c = { op, start: performance.now(), end: null }; calls.push(c);
+    await nap();
+    try { return await real(u, init); } finally { c.end = performance.now(); }
+  };
+  const r = await caseRatifyOp(p.request(s.body()), p.stub, p.ctx);
+  assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 400));
+  return { s, r, calls };
+}
+const inFlightOf = (calls, op) => { const xs = calls.filter((c) => c.op === op); return Math.max(0, ...xs.map((a) => xs.filter((b) => b.start <= a.start && b.end > a.start).length)); };
+/* the longest chain of calls, each begun after the one before it ended */
+const chainOf = (calls) => {
+  const sorted = [...calls].sort((a, b) => a.end - b.end);
+  const best = new Map();
+  for (const c of sorted) best.set(c, 1 + Math.max(0, ...sorted.filter((p) => p.end <= c.start).map((p) => best.get(p) ?? 0)));
+  return Math.max(0, ...best.values());
+};
+
+test("R60, R52 (G120b): a sitting of seven reads the list of known ids once, not once a member, and asks each member's gate facts, image and gate once", async () => {
+  const { calls, s } = await recordedSitting();
+  const count = (op) => calls.filter((c) => c.op === op).length;
+  assert.equal(count("list"), 1, `list asked ${count("list")} times (red: 7)`);
+  for (const op of ["gatefacts", "image", "ratifygate"]) assert.equal(count(op), s.ids.length, `${op}: once a member`);
+});
+
+test("R60, R52 (G120b): the gate phase of a sitting is at most four object levels deep (casedocfacts, the independent reads, the member's facts and image together, the gate), where it was five", async () => {
+  const { calls } = await recordedSitting();
+  const before = calls.filter((c) => c.op !== "caseratify" && c.op !== "reusedparts" && c.op !== "capturelimit" && c.op !== "recordreuseverdicts");
+  const gate = chainOf(before.filter((c) => ["casedocfacts", "casetestimony", "caseapproval", "casegate", "list", "gatefacts", "image", "ratifygate"].includes(c.op)));
+  assert.ok(gate <= 4, `the gate phase is ${gate} object levels deep (red: 5)`);
+  /* the weighing order is the sitting's: every member's gate is still asked after its own facts */
+  for (const g of calls.filter((c) => c.op === "ratifygate")) assert.ok(calls.some((c) => c.op === "gatefacts" && c.end <= g.start));
+});
+
+test("R60, R52 (G120b): the reuse checks of the members run together (reusedparts of the seven in flight at once), the answer in the sitting's order", async () => {
+  const { calls, r, s } = await recordedSitting();
+  assert.ok(inFlightOf(calls, "reusedparts") >= 6, `reusedparts of the members in flight together: ${inFlightOf(calls, "reusedparts")} (red: 1)`);
+  assert.deepEqual(r.body.sitting.map((m) => [m.bundleId, m.ok]), s.ids.map((id) => [id, true]), "answered in the sitting's order");
+});
