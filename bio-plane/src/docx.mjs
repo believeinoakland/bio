@@ -96,7 +96,7 @@
 import { linkWrapper } from "./subresources.mjs";
 import {
   hasZipMagic, readContainer, readPart, normalizePartName,
-  discriminate, walkRels, relsPartFor, textPlan, readPartPieces, pieceWhy, cutAfterTag,
+  discriminate, walkRels, relsPartFor, textPlan, pieceWhy, cutAfterTag,
   CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
   readVbaProject, MEASURED_OOXML_TEXT_BOUND_BYTES,
 } from "./ooxml.mjs";
@@ -104,8 +104,16 @@ import {
    this file's shared builders; both sides use only hoisted functions). */
 import { columnLetters } from "./formats-xlsx.mjs";
 import { localize } from "./setup-words/index.mjs";
+import { boundOf } from "./read-bounds.mjs";
+import {
+  Scanner, scanPart, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, jsonBytes, memberIdentities,
+} from "./office-xml.mjs";
 
-const UTF8 = new TextDecoder("utf-8", { fatal: false });
+/* R44: what the walk may retain, paragraphs, cells and links together (the table's figure, never a literal here). */
+const OFFICE_RETAINED_MAX = boundOf("office", "retained_objects");
+/* R44: the decoded characters a walk may hold at once. proposed; BOB records (runtime-limits' row `office.decoded_chars`
+   once it exists; until then this figure, reported in the job record). */
+export const OFFICE_DECODED_CHARS_MAX = 64 * 1048576;
 
 /* Bytes as a Uint8Array, an ArrayBuffer, any typed-array view or an array of
  * byte values; anything else reads as no bytes, so a wrong argument is a
@@ -164,37 +172,11 @@ export function docTableRef(table, cell = null) {
 }
 
 /* ------------------------------------------------------------------ *
- * Minimal XML plumbing (local: ooxml.mjs's helpers are private, and the
- * body walk needs NESTING, which its flat matchers deliberately avoid)
+ * XML plumbing: office-xml.mjs's one scanner (R42), its attribute reader and its entity decode (R40)
  * ------------------------------------------------------------------ */
 
-function decodeEntities(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
-    if (e[0] === "#") {
-      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      /* Past U+10FFFF fromCodePoint THROWS; such a reference is not a
-       * character, so it stays as written (R21). */
-      return Number.isFinite(code) && code <= 0x10ffff ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e] ?? m;
-  });
-}
-
-/* Attributes by LOCAL name (prefix-agnostic, entity-decoded). */
-function attrsOf(raw) {
-  const attrs = {};
-  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeEntities(a[3] ?? a[4] ?? "");
-  }
-  return attrs;
-}
-
-/* One tag / comment / PI / CDATA at a time; character data is the gap between
- * matches. Local names only — WordprocessingML always prefixes, but the walk
- * must not depend on which prefix a producer chose. */
-const TOKEN_RE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
-const localOf = (name) => (name.includes(":") ? name.split(":").pop() : name);
+const attrsOf = parseAttrs;
+const decodeEntities = unescape;
 
 /* ------------------------------------------------------------------ *
  * Markup Compatibility (ECMA-376 Part 3; N26) — one branch read, never two
@@ -244,10 +226,12 @@ export function mceSkipper() {
  * structure(), text() and the evidentiary envelope need, in body order
  * ------------------------------------------------------------------ */
 
-/** Walk a WordprocessingML document. Returns
+/** The body walk as a scanner handler. Collects
  *  { paragraphs:[{para,text}], hyperlinks:[{rid,anchor,para,run}],
  *    bookmarks:Map(name -> para), changes:[{change,author,date,text,para,run}],
- *    commentRefs:Map(id -> {para,run}), ridUsage:Map(rid -> {para,run}) }.
+ *    commentRefs:Map(id -> {para,run}), ridUsage:Map(rid -> {para,run}),
+ *    footnoteRefs, endnoteRefs: Map(id -> {para,run}), headerRefs:[{kind,rid,type,para,run}],
+ *    textBoxes:[{paras}], images:Map(para -> rid|null) }.
  *
  *  Paragraph index: EVERY `<w:p>` read in document order (a branch of
  *  `mc:AlternateContent` not read holds none: `mceSkipper`), numbered as it OPENS (a
@@ -258,26 +242,24 @@ export function mceSkipper() {
  *  runs and links stay its own — never dropped for the inner close. Run index: `<w:r>` opens within the current paragraph,
  *  0-based, wherever they sit (inside hyperlinks and tracked changes
  *  included) — one sequence per paragraph, so a run index means the same
- *  thing to every reference into that paragraph. */
-export function walkDocumentBody(xml) {
-  const w = createBodyWalk();
-  w.feed(xml);
-  return w.result();
-}
-
-/** The same walk, fed the part in pieces (R35): `feed(xml)` takes each piece in
- *  order (a piece may end anywhere; what it leaves unfinished is carried into
- *  the next), `result()` the walk's collections once the last is fed. One piece
- *  holding the whole part is `walkDocumentBody`. `paragraphText: false` keeps no
- *  paragraph's text (a reader that needs the count and the structure, not the
- *  words); the text of a tracked change is kept either way. */
-export function createBodyWalk({ paragraphText = true } = {}) {
+ *  thing to every reference into that paragraph.
+ *
+ *  `meter` (R44) counts what the walk retains, paragraphs, cells and links, and the characters it holds; the first
+ *  figure past its bound is `meter.exceeded` and stops the scan. `paragraphText: false` keeps no paragraph's text (a
+ *  reader that needs the count and the structure, not the words); the text of a tracked change is kept either way. */
+function bodyWalk({ paragraphText, meter, count, over, charsMax }) {
   const paragraphs = [];
   const hyperlinks = [];
   const bookmarks = new Map();
   const changes = [];
   const commentRefs = new Map();
   const ridUsage = new Map();
+  const footnoteRefs = new Map();
+  const endnoteRefs = new Map();
+  const headerRefs = [];
+  const textBoxes = [];
+  const boxStack = [];
+  const images = new Map();
 
   let para = -1;   // current 0-based paragraph index
   let run = -1;    // current 0-based run index within the paragraph
@@ -299,42 +281,26 @@ export function createBodyWalk({ paragraphText = true } = {}) {
   };
   const appendVisible = (s) => {
     if (!inPara || !s) return;
-    if (paragraphText) paragraphs[para].text += s;
+    if (paragraphText) {
+      paragraphs[para].text += s;
+      meter.chars += s.length;
+      if (meter.chars > charsMax) over("TOO_MANY_CHARACTERS", meter.chars, charsMax);
+    }
     for (const c of insStack) c.text += s;
+  };
+  const characters = (data) => {
+    if (textTarget === "t") appendVisible(data);
+    else if (textTarget === "delText" && delStack.length) delStack[delStack.length - 1].text += data;
   };
 
   const skipped = mceSkipper();
 
-  /* What the last piece left unread: the character data after its last token
-   * and any tag it ended inside. Read again with the next piece. */
-  let carry = "";
-  const feed = (piece) => {
-  const xml = carry + piece;
-  TOKEN_RE.lastIndex = 0;
-  let m, prev = 0;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    /* Character data between the previous token and this one. */
-    if (textTarget && m.index > prev) {
-      const data = decodeEntities(xml.slice(prev, m.index));
-      if (textTarget === "t") appendVisible(data);
-      else if (textTarget === "delText" && delStack.length) delStack[delStack.length - 1].text += data;
-    }
-    prev = TOKEN_RE.lastIndex;
-    if (m[1] === undefined) continue; // comment / CDATA / PI
-    const name = localOf(m[1]);
-    const selfClosed = m[3] === "/";
-    const closing = m[0][1] === "/";
-
-    /* N26: a branch of mc:AlternateContent not read adds no paragraph, run,
-     * text, link, change, bookmark or comment reference. A relationship it
-     * uses still locates its part, at the paragraph and run that hold the
-     * mc:AlternateContent — where the branch sits — never a guessed one. */
-    if (skipped(name, closing, selfClosed)) {
-      if (!closing && m[2] && m[2].includes("=")) noteRid(attrsOf(m[2]));
-      continue;
-    }
-
-    if (closing) {
+  const handler = {
+    text(s) { if (textTarget) characters(decodeEntities(s)); },
+    cdata(s) { if (textTarget) characters(s); },
+    close(name) {
+      /* N26: a branch of mc:AlternateContent not read adds nothing. */
+      if (skipped(name, true, false)) return;
       if (name === "t" || name === "delText") textTarget = null;
       else if (name === "p") {
         if (outer.length) ({ para, run } = outer.pop());
@@ -343,105 +309,198 @@ export function createBodyWalk({ paragraphText = true } = {}) {
       else if (name === "hyperlink") { const h = hyperStack.pop(); if (h) hyperlinks.push(h); }
       else if (name === "ins") { const c = insStack.pop(); if (c) changes.push(c); }
       else if (name === "del") { const c = delStack.pop(); if (c) changes.push(c); }
-      continue;
-    }
-
-    const attrs = m[2] && m[2].includes("=") ? attrsOf(m[2]) : {};
-    switch (name) {
-      case "p":
-        if (!selfClosed) {
-          if (inPara) outer.push({ para, run });
-          para = ++last; run = -1; inPara = true; paragraphs.push({ para, text: "" });
-        } else {
-          paragraphs.push({ para: ++last, text: "" });
-          if (!inPara) { para = last; run = -1; }
+      else if (name === "txbxContent") { const b = boxStack.pop(); if (b) textBoxes.push(b); }
+    },
+    open(name, raw, selfClosed) {
+      /* N26: a relationship a branch not read uses still locates its part, at the paragraph and run that hold the
+       * mc:AlternateContent — where the branch sits — never a guessed one. */
+      if (skipped(name, false, selfClosed)) {
+        if (raw && raw.includes("=")) noteRid(attrsOf(raw));
+        return;
+      }
+      const attrs = raw && raw.includes("=") ? attrsOf(raw) : {};
+      switch (name) {
+        case "p":
+          count();
+          if (!selfClosed) {
+            if (inPara) outer.push({ para, run });
+            para = ++last; run = -1; inPara = true; paragraphs.push({ para, text: "" });
+          } else {
+            paragraphs.push({ para: ++last, text: "" });
+            if (!inPara) { para = last; run = -1; }
+          }
+          for (const b of boxStack) b.paras.push(last);
+          break;
+        case "r":
+          if (inPara && !selfClosed) {
+            run++;
+            for (const c of hyperStack) if (c.run == null) c.run = run;
+            for (const c of insStack) if (c.run == null) c.run = run;
+            for (const c of delStack) if (c.run == null) c.run = run;
+          }
+          break;
+        case "t":
+          if (!selfClosed) textTarget = "t";
+          break;
+        case "delText":
+          if (!selfClosed) textTarget = "delText";
+          break;
+        case "tab":
+          appendVisible("\t");
+          break;
+        case "br":
+        case "cr":
+          appendVisible("\n");
+          break;
+        case "hyperlink":
+          count();
+          noteRid(attrs);
+          if (!selfClosed && inPara)
+            hyperStack.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
+          else if (selfClosed && inPara)
+            hyperlinks.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
+          break;
+        case "ins":
+          if (!selfClosed && inPara)
+            insStack.push({ change: "insertion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
+          break;
+        case "del":
+          if (!selfClosed && inPara)
+            delStack.push({ change: "deletion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
+          break;
+        case "bookmarkStart":
+          if (attrs.name != null && !bookmarks.has(attrs.name))
+            bookmarks.set(attrs.name, para >= 0 ? para : 0);
+          break;
+        case "commentReference":
+          if (attrs.id != null && !commentRefs.has(attrs.id))
+            commentRefs.set(attrs.id, { para, run: run >= 0 ? run : null });
+          break;
+        case "footnoteReference":
+        case "endnoteReference": {
+          const into = name === "footnoteReference" ? footnoteRefs : endnoteRefs;
+          if (attrs.id != null && !into.has(attrs.id)) into.set(attrs.id, { para, run: run >= 0 ? run : null });
+          break;
         }
-        break;
-      case "r":
-        if (inPara && !selfClosed) {
-          run++;
-          for (const c of hyperStack) if (c.run == null) c.run = run;
-          for (const c of insStack) if (c.run == null) c.run = run;
-          for (const c of delStack) if (c.run == null) c.run = run;
-        }
-        break;
-      case "t":
-        if (!selfClosed) textTarget = "t";
-        break;
-      case "delText":
-        if (!selfClosed) textTarget = "delText";
-        break;
-      case "tab":
-        appendVisible("\t");
-        break;
-      case "br":
-      case "cr":
-        appendVisible("\n");
-        break;
-      case "hyperlink":
-        noteRid(attrs);
-        if (!selfClosed && inPara)
-          hyperStack.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
-        else if (selfClosed && inPara)
-          hyperlinks.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
-        break;
-      case "ins":
-        if (!selfClosed && inPara)
-          insStack.push({ change: "insertion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
-        break;
-      case "del":
-        if (!selfClosed && inPara)
-          delStack.push({ change: "deletion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
-        break;
-      case "bookmarkStart":
-        if (attrs.name != null && !bookmarks.has(attrs.name))
-          bookmarks.set(attrs.name, para >= 0 ? para : 0);
-        break;
-      case "commentReference":
-        if (attrs.id != null && !commentRefs.has(attrs.id))
-          commentRefs.set(attrs.id, { para, run: run >= 0 ? run : null });
-        break;
-      default:
-        noteRid(attrs);
-    }
-  }
-  carry = xml.slice(prev);
+        case "headerReference":
+        case "footerReference":
+          headerRefs.push({ kind: name === "headerReference" ? "header" : "footer", rid: attrs.id ?? null,
+            type: attrs.type ?? null, para: inPara ? para : null, run: inPara && run >= 0 ? run : null });
+          noteRid(attrs);
+          break;
+        case "txbxContent":
+          if (!selfClosed) boxStack.push({ paras: [] });
+          break;
+        case "blip":
+        case "imagedata":
+          if (inPara && !images.has(para)) images.set(para, attrs.embed ?? attrs.id ?? null);
+          noteRid(attrs);
+          break;
+        default:
+          noteRid(attrs);
+      }
+    },
   };
-  return { feed, result: () => ({ paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage }) };
+  return { handler, result: () => ({ paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage,
+    footnoteRefs, endnoteRefs, headerRefs, textBoxes, images }) };
+}
+
+/** The walk the body gets (R42, R44): the body walk, and with `tables` the tables walk, fed by ONE scan. Its `handler` is
+ *  what a scanner is given; `result()` the two walks' collections once the part is scanned; `meter.exceeded` the
+ *  bound the walk went past, if it did (`{why:"TOO_MANY_OBJECTS"|"TOO_MANY_CHARACTERS", n, bound, final:true}`). */
+export function createDocWalk({ paragraphText = true, tables = true, retainedMax = OFFICE_RETAINED_MAX, charsMax = OFFICE_DECODED_CHARS_MAX } = {}) {
+  const meter = { objects: 0, chars: 0, exceeded: null };
+  const handler = { stopped: false };
+  const over = (why, n, bound) => {
+    if (!meter.exceeded) { meter.exceeded = { why, n, bound, final: true }; handler.stopped = true; }
+  };
+  const count = () => { if (++meter.objects > retainedMax) over("TOO_MANY_OBJECTS", meter.objects, retainedMax); };
+  const body = bodyWalk({ paragraphText, meter, count, over, charsMax });
+  const tab = tables ? tablesWalk(count) : null;
+  Object.assign(handler, {
+    text: body.handler.text,
+    cdata: body.handler.cdata,
+    open(n, r, s) { body.handler.open(n, r, s); if (tab) tab.handler.open(n, r, s); },
+    close(n) { body.handler.close(n); if (tab) tab.handler.close(n); },
+  });
+  return { handler, meter, body: body.result, tables: tab ? tab.result : () => [] };
+}
+
+/** Walk a whole WordprocessingML part held as a string, synchronously (the shape tests and callers without a part to
+ *  read use): `{body, tables, meter, scanner}`. */
+export function walkDocument(xml, opts) {
+  const w = createDocWalk(opts);
+  const scanner = new Scanner(w.handler);
+  scanSync(scanner, xml);
+  return { body: w.body(), tables: w.tables(), meter: w.meter, scanner };
 }
 
 /* ------------------------------------------------------------------ *
- * word/comments.xml
+ * The parts outside the body: comments, footnotes, endnotes, headers, footers
  * ------------------------------------------------------------------ */
+
+/** A part's units as a scanner handler. `unit` is the element delimiting them (`comment`, `footnote`, `endnote`) or null
+ *  when the whole part is one (a header, a footer). A unit's text is its `<w:t>` runs, paragraphs newline-joined,
+ *  `w:delText` never; with `layout`, tabs and line breaks too, as the body reads them. */
+function unitReader(unit, layout) {
+  const units = [];
+  let cur = unit == null ? { attrs: {}, paras: [] } : null;
+  if (cur) units.push(cur);
+  let para = null, inT = false, root = null;
+  const skipped = mceSkipper();
+  const add = (s) => { if (inT && para != null) para += s; };
+  const handler = {
+    text(s) { add(decodeEntities(s)); },
+    cdata(s) { add(s); },
+    open(name, raw, self) {
+      if (skipped(name, false, self)) return;
+      if (root == null) root = name;
+      if (unit != null && name === unit) {
+        cur = { attrs: attrsOf(raw), paras: [] };
+        units.push(cur);
+        if (self) cur = null;
+      } else if (name === "p") { if (cur && !self && para == null) para = ""; }
+      else if (name === "t") { if (!self) inT = true; }
+      else if (layout && para != null && name === "tab") para += "\t";
+      else if (layout && para != null && (name === "br" || name === "cr")) para += "\n";
+    },
+    close(name) {
+      if (skipped(name, true, false)) return;
+      if (name === "t") inT = false;
+      else if (name === "p") { if (para != null) { if (para) cur?.paras.push(para); para = null; } }
+      else if (unit != null && name === unit) cur = null;
+    },
+  };
+  return { handler, units: () => units.map((u) => ({ attrs: u.attrs, text: u.paras.join("\n") })), root: () => root };
+}
 
 /** Every `<w:comment>`: id, author, date, initials (each null when absent —
  *  never invented) and the comment's own text (its `<w:t>` runs, paragraphs
- *  newline-joined). */
-export function parseComments(xml) {
-  if (typeof xml !== "string" || !/<(?:[\w.-]+:)?comments\b/.test(xml)) {
-    return { ok: false, why: "comments_unparseable" };
-  }
-  const comments = [];
-  const re = /<(?:[\w.-]+:)?comment\b((?:[^>"']|"[^"]*"|'[^']*')*?)>([\s\S]*?)<\/(?:[\w.-]+:)?comment>/g;
-  for (const m of xml.matchAll(re)) {
-    const a = attrsOf(m[1]);
-    const paras = [];
-    for (const pm of m[2].split(/<\/(?:[\w.-]+:)?p>/)) {
-      let text = "";
-      for (const t of pm.matchAll(/<(?:[\w.-]+:)?t\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?t>/g))
-        text += decodeEntities(t[1]);
-      if (text) paras.push(text);
-    }
-    comments.push({
-      id: a.id ?? null,
-      author: a.author ?? null,
-      date: a.date ?? null,
-      initials: a.initials ?? null,
-      text: paras.join("\n"),
-    });
-  }
-  return { ok: true, comments };
+ *  newline-joined). A part holding a character reference that names no character is stated unreadable (R40). Async:
+ *  awaits `yieldNow` as the body walk does. */
+export async function parseComments(xml, yieldNow = null) {
+  if (typeof xml !== "string") return { ok: false, why: "comments_unparseable" };
+  const u = unitReader("comment", false);
+  const sc = new Scanner(u.handler);
+  await scanWhole(sc, xml, yieldNow);
+  if (sc.badRef) return { ok: false, why: "char_ref_invalid", final: true, scanned: sc.scanned };
+  if (u.root() !== "comments") return { ok: false, why: "comments_unparseable", scanned: sc.scanned };
+  const comments = u.units().map((c) => ({
+    id: c.attrs.id ?? null, author: c.attrs.author ?? null, date: c.attrs.date ?? null,
+    initials: c.attrs.initials ?? null, text: c.text,
+  }));
+  return { ok: true, comments, scanned: sc.scanned, scanner: sc };
 }
+
+/** Read one note, header or footer part and give its units: `{ok:true, units:[{attrs,text}], scanner, partial?}` or the
+ *  refusal (`{ok:false, why, ...}`) the part's own failure states. */
+async function readUnits(parts, partName, unit, yieldNow) {
+  const u = unitReader(unit, true);
+  const r = await scanPart(parts.bytes, parts.container, partName, u.handler, { mode: parts.stream ? "pieces" : "whole", yieldNow });
+  if (!r.ok) return r;
+  return { ok: true, units: u.units(), scanner: r.scanner, ...(r.partial ? { partial: r.partial } : {}) };
+}
+
 
 /* ------------------------------------------------------------------ *
  * Link classification — the same partition rule pdfstructure applies
@@ -470,14 +529,6 @@ function undeterminedRecord(source, why, extra = {}) {
   return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
 }
 
-const HEX = "0123456789abcdef";
-async function sha256Hex(u8) {
-  const d = await crypto.subtle.digest("SHA-256", u8);
-  const b = new Uint8Array(d);
-  let out = "";
-  for (let i = 0; i < b.length; i++) out += HEX[b[i] >> 4] + HEX[b[i] & 15];
-  return out;
-}
 
 /* Resolve a rels Target against the source part's directory ("media/x.png"
  * relative to "word/" -> "word/media/x.png"; a leading "/" is package-root). */
@@ -499,10 +550,46 @@ function resolveRelTarget(relsPart, target) {
  * parts() — the container walk (I7 slot 2)
  * ------------------------------------------------------------------ */
 
+const stripOk = ({ ok, ...rest }) => rest;
+const EXTRA_KINDS = [
+  [/\/header$/, "header"], [/\/footer$/, "footer"], [/\/footnotes$/, "footnote"], [/\/endnotes$/, "endnote"],
+];
+const EXTRA_NAME_RE = /^word\/(header\d*|footer\d*|footnotes|endnotes)\.xml$/;
+/* Parts that can hold text and that no unit reads: stated, never a reading that says it is whole (R38). */
+const UNREAD_TEXT_PART_RE = /^word\/(diagrams\/data[^/]*|charts\/chart[^/]*|glossary\/document)\.xml$/;
+
+/* The parts outside the body that hold text, found through the document's own relationships, else by name:
+   `[{kind, part, rid}]`, headers and footers in the order the relationships give them. */
+function extraParts(container, rels, mainPart) {
+  const found = [];
+  const seen = new Set();
+  const docRels = rels.byPart.find((p) => p.part === relsPartFor(mainPart));
+  for (const r of docRels?.relationships ?? []) {
+    if (r.external || !r.target) continue;
+    const hit = EXTRA_KINDS.find(([re]) => re.test(String(r.type ?? "")));
+    if (!hit) continue;
+    const part = resolveRelTarget(docRels.part, r.target);
+    if (seen.has(part)) continue;
+    seen.add(part);
+    found.push({ kind: hit[1], part, rid: r.id ?? null });
+  }
+  for (const entry of container.entries) {
+    const part = normalizePartName(entry.name);
+    const m = EXTRA_NAME_RE.exec(part);
+    if (!m || seen.has(part)) continue;
+    seen.add(part);
+    const base = m[1];
+    found.push({ kind: base.startsWith("header") ? "header" : base.startsWith("footer") ? "footer" : base === "footnotes" ? "footnote" : "endnote", part, rid: null });
+  }
+  return found;
+}
+
 /** Read everything structure()/text() will need, honestly:
  *  { ok:true, format:"docx", bytes, container, mainPart,
  *    documentXml|null, commentsXml|null, rels, core|null,
+ *    extras:[{kind,part,rid}],         // footnotes, endnotes, headers, footers (R38)
  *    guard|null,                       // the sizeGuard marker when over bound
+ *    partials:[{part,why:"partial",replaced}],   // a part decoded with more than 0.5 % replaced (R41)
  *    undetermined:[{part,why}...] }    // parts that exist but cannot be read
  *  or { ok:false, why, signals } when the bytes are not a readable DOCX. */
 async function docxParts(bytes) {
@@ -520,12 +607,15 @@ async function docxParts(bytes) {
   if (!container.ok) return { ok: false, why: container.why, signals: d.signals };
 
   const undetermined = [];
+  const partials = [];
   const mainPart = normalizePartName(d.mainPart || MAIN_PART);
+  const rels = await walkRels(b, container);
+  const extras = extraParts(container, rels, mainPart);
 
   /* The COFF-6 metric: DECLARED UNCOMPRESSED bytes of the text parts we would
    * inflate, summed from the central directory BEFORE any inflation. */
   let declaredTextBytes = 0;
-  for (const partName of [mainPart, COMMENTS_PART]) {
+  for (const partName of [mainPart, COMMENTS_PART, ...extras.map((x) => x.part)]) {
     const e = container.byName.get(partName);
     if (e) declaredTextBytes += e.uncompressedSize;
   }
@@ -537,9 +627,9 @@ async function docxParts(bytes) {
   let commentsXml = null;
   if (plan.read !== "none") {
     if (plan.read === "whole") {
-      const main = await readPart(b, container, mainPart);
-      if (main.ok) documentXml = UTF8.decode(main.bytes);
-      else undetermined.push({ part: mainPart, why: main.why });
+      const main = await readText(b, container, mainPart);
+      if (main.ok) { documentXml = main.text; if (main.partial) partials.push(main.partial); }
+      else undetermined.push({ part: mainPart, ...stripOk(main) });
     } else if (!container.byName.has(mainPart)) {
       /* Read in pieces by text() and structure(), each in its own pass; a body
          the package does not hold is stated now (R35). */
@@ -551,13 +641,17 @@ async function docxParts(bytes) {
          in pieces (they are parsed whole), and is stated with its size. */
       undetermined.push({ part: COMMENTS_PART, why: "over_size_bound", size: comments.uncompressedSize, final: true });
     } else if (comments) {
-      const com = await readPart(b, container, COMMENTS_PART);
-      if (com.ok) commentsXml = UTF8.decode(com.bytes);
-      else undetermined.push({ part: COMMENTS_PART, why: com.why });
+      const com = await readText(b, container, COMMENTS_PART);
+      if (com.ok) { commentsXml = com.text; if (com.partial) partials.push(com.partial); }
+      else undetermined.push({ part: COMMENTS_PART, ...stripOk(com) });
+    }
+    /* A part a relationship names and the package does not hold. */
+    for (const x of extras) if (!container.byName.has(x.part)) undetermined.push({ part: x.part, why: "part_absent" });
+    for (const entry of container.entries) {
+      const part = normalizePartName(entry.name);
+      if (UNREAD_TEXT_PART_RE.test(part)) undetermined.push({ part, why: "part_unread" });
     }
   }
-
-  const rels = await walkRels(b, container);
 
   let core = null;
   if (container.byName.has(CORE_PROPERTIES_PART)) {
@@ -570,8 +664,27 @@ async function docxParts(bytes) {
   const active = await activeContent(b, container, rels, "word/");
 
   return { ok: true, format: "docx", variant: d.variant ?? null, bytes: b, container, mainPart,
-    documentXml, commentsXml, rels, core, active, guard, piecewise, stream: plan.read === "pieces", undetermined };
+    documentXml, commentsXml, rels, core, active, extras: extras.filter((x) => container.byName.has(x.part)),
+    guard, piecewise, stream: plan.read === "pieces", partials, undetermined };
 }
+
+/* The body of a docx walked through `w` (createDocWalk): whole, its text in hand, or, over the bound, in pieces (R35).
+   Answers `{ok:true, scanner}` or the refusal that states why the part was not read (R40: a character reference that
+   names no character). A walk stopped by the retained-objects bound is `w.meter.exceeded` (R44). */
+async function runBody(parts, w, yieldNow) {
+  if (parts.documentXml != null) {
+    const sc = new Scanner(w.handler);
+    await scanWhole(sc, parts.documentXml, yieldNow);
+    if (sc.badRef && !w.meter.exceeded) return { ok: false, why: "char_ref_invalid", final: true };
+    return { ok: true, scanner: sc };
+  }
+  if (parts.stream) {
+    const r = await scanPart(parts.bytes, parts.container, parts.mainPart, w.handler, { mode: "pieces", yieldNow });
+    return r.ok || w.meter.exceeded ? { ok: true, scanner: r.scanner } : r;
+  }
+  return { ok: false, why: "unreadable" };
+}
+
 
 /* ------------------------------------------------------------------ *
  * structure() — I2 links + the evidentiary envelope (I7 slot 3)
@@ -603,19 +716,13 @@ async function docxParts(bytes) {
  *  column, a legacy `w:hMerge` continuation the cell before it in the row,
  *  each bringing its paragraphs (in practice empty) so no text is dropped; a
  *  continuation with nothing to join stands as its own cell. */
-export function walkDocumentTables(xml) {
-  const w = createTablesWalk();
-  w.feed(xml);
-  return w.result();
-}
-
-/** The same walk, fed the part in pieces (R35), as `createBodyWalk` is: `feed`
- *  each piece in order, `result()` once after the last. */
-export function createTablesWalk() {
+/** The tables walk as a scanner handler (the tables of N724 and their cells, as `walkDocumentTables` made them): fed by
+ *  the same scan as the body walk, so the part is read once. `count` is the meter's object count (a cell is one). */
+function tablesWalk(count) {
   const done = [];
   const stack = [];
   let next = 0;
-  let para = -1;  // the last paragraph number given, as walkDocumentBody gives them
+  let para = -1;  // the last paragraph number given, as the body walk gives them
   const skipped = mceSkipper(); // N26: a table in a branch not read is not a table of the reading
   const merge = (v) => (v == null ? null : v === "restart" ? "restart" : "continue");
   const closeCell = (t) => {
@@ -637,55 +744,49 @@ export function createTablesWalk() {
     done[t.table] = { table: t.table, rows,
       cols: t.gridCols > 0 ? t.gridCols : (t.maxTc > 0 ? t.maxTc : null), cells: t.cells };
   };
-  let carry = "";
-  const feed = (piece) => {
-  const xml = carry + piece;
-  TOKEN_RE.lastIndex = 0;
-  let m, prev = 0;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    prev = TOKEN_RE.lastIndex;
-    if (m[1] === undefined) continue;
-    const name = localOf(m[1]);
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    if (skipped(name, closing, selfClosed)) continue;
-    const top = stack.length ? stack[stack.length - 1] : null;
-    if (closing) {
+  const handler = {
+    text() {},
+    cdata() {},
+    close(name) {
+      if (skipped(name, true, false)) return;
+      const top = stack.length ? stack[stack.length - 1] : null;
       if (name === "tbl" && stack.length) finish(stack.pop(), top.rows);
       else if (name === "tr" && top) {
         closeCell(top);
         if (top.tc > top.maxTc) top.maxTc = top.tc;
       } else if (name === "tc" && top) closeCell(top);
-      continue;
-    }
-    if (name === "p") { para++; if (top?.cell) top.cell.paras.push(para); continue; }
-    if (name === "tbl" && !selfClosed) {
-      stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0,
-        cells: [], cell: null, nextCol: 1, rowCells: [], vOwner: new Map() });
-    }
-    else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null, cells: [] };
-    else if (!top) continue;
-    else if (name === "gridCol") top.gridCols++;
-    else if (name === "tr") { closeCell(top); top.rows++; top.tc = 0; top.nextCol = 1; top.rowCells = []; }
-    else if (name === "gridBefore") {
-      const n = parseInt(attrsOf(m[2]).val, 10);
-      if (top.tc === 0 && Number.isInteger(n) && n > 0) top.nextCol = 1 + n;
-    }
-    else if (name === "tc") {
-      closeCell(top);
-      top.tc++;
-      top.cell = { row: top.rows, col: top.nextCol, span: 1, vMerge: null, hMerge: null, paras: [] };
-      if (selfClosed) closeCell(top);
-    }
-    else if (!top.cell) continue;
-    else if (name === "gridSpan") {
-      const n = parseInt(attrsOf(m[2]).val, 10);
-      if (Number.isInteger(n) && n > 1) top.cell.span = n;
-    }
-    else if (name === "vMerge") top.cell.vMerge = merge(attrsOf(m[2]).val ?? "continue");
-    else if (name === "hMerge") top.cell.hMerge = merge(attrsOf(m[2]).val ?? "continue");
-  }
-  carry = xml.slice(prev);
+    },
+    open(name, raw, selfClosed) {
+      if (skipped(name, false, selfClosed)) return;
+      const top = stack.length ? stack[stack.length - 1] : null;
+      if (name === "p") { para++; if (top?.cell) top.cell.paras.push(para); return; }
+      if (name === "tbl" && !selfClosed) {
+        stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0,
+          cells: [], cell: null, nextCol: 1, rowCells: [], vOwner: new Map() });
+      }
+      else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null, cells: [] };
+      else if (!top) return;
+      else if (name === "gridCol") top.gridCols++;
+      else if (name === "tr") { closeCell(top); top.rows++; top.tc = 0; top.nextCol = 1; top.rowCells = []; }
+      else if (name === "gridBefore") {
+        const n = parseInt(attrsOf(raw).val, 10);
+        if (top.tc === 0 && Number.isInteger(n) && n > 0) top.nextCol = 1 + n;
+      }
+      else if (name === "tc") {
+        count();
+        closeCell(top);
+        top.tc++;
+        top.cell = { row: top.rows, col: top.nextCol, span: 1, vMerge: null, hMerge: null, paras: [] };
+        if (selfClosed) closeCell(top);
+      }
+      else if (!top.cell) return;
+      else if (name === "gridSpan") {
+        const n = parseInt(attrsOf(raw).val, 10);
+        if (Number.isInteger(n) && n > 1) top.cell.span = n;
+      }
+      else if (name === "vMerge") top.cell.vMerge = merge(attrsOf(raw).val ?? "continue");
+      else if (name === "hMerge") top.cell.hMerge = merge(attrsOf(raw).val ?? "continue");
+    },
   };
   const result = () => {
     /* A table the body never closed (a truncated part) is still a table this
@@ -694,8 +795,9 @@ export function createTablesWalk() {
     while (stack.length) { const t = stack.pop(); finish(t, t.rows || null); }
     return done;
   };
-  return { feed, result };
+  return { handler, result };
 }
+
 
 /** N26's MIGRATION MAP — how a reading made before N26 (every branch of
  *  `mc:AlternateContent` walked) is numbered against one made now (one
@@ -715,7 +817,7 @@ export function createTablesWalk() {
  *  is null for what is kept. R28 (K747). Null when `xml` is not a string (R21). */
 export function docxRenumbering(xml) {
   if (typeof xml !== "string") return null;
-  /* The paragraph/run numbering exactly as `walkDocumentBody` keeps it. */
+  /* The paragraph/run numbering exactly as the body walk keeps it. */
   const counter = () => {
     const s = { para: -1, run: -1, inPara: false, last: -1, outer: [] };
     return {
@@ -738,53 +840,52 @@ export function docxRenumbering(xml) {
   const skipped = mceSkipper();
   const paragraphs = [], runs = [], tables = [];
   let tablesNew = 0;
-  TOKEN_RE.lastIndex = 0;
-  let m;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    if (m[1] === undefined) continue;
-    const name = localOf(m[1]);
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    const skip = skipped(name, closing, selfClosed);
-    if (closing) {
+  scanSync(new Scanner({
+    text() {},
+    cdata() {},
+    close(name) {
+      const skip = skipped(name, true, false);
       if (name === "p") { was.closeP(); if (!skip) now.closeP(); }
-      continue;
-    }
-    if (name === "p") {
-      const old = was.openP(selfClosed);
-      if (skip) paragraphs[old] = { old, new: null, outer: now.s.inPara ? now.s.para : null };
-      else paragraphs[old] = { old, new: now.openP(selfClosed), outer: null };
-    } else if (name === "r" && !selfClosed) {
-      const run = was.openR();
-      if (run == null) continue;
-      const para = was.s.para;
-      if (skip) {
-        const p = paragraphs[para];
-        runs.push({ old: { para, run }, new: null, outer: p ? (p.new ?? p.outer) : null });
-      } else runs.push({ old: { para, run }, new: { para: now.s.para, run: now.openR() }, outer: null });
-    } else if (name === "tbl") {
-      tables.push({ old: tables.length, new: skip ? null : tablesNew++ });
-    }
-  }
+    },
+    open(name, raw, selfClosed) {
+      const skip = skipped(name, false, selfClosed);
+      if (name === "p") {
+        const old = was.openP(selfClosed);
+        if (skip) paragraphs[old] = { old, new: null, outer: now.s.inPara ? now.s.para : null };
+        else paragraphs[old] = { old, new: now.openP(selfClosed), outer: null };
+      } else if (name === "r" && !selfClosed) {
+        const run = was.openR();
+        if (run == null) return;
+        const para = was.s.para;
+        if (skip) {
+          const p = paragraphs[para];
+          runs.push({ old: { para, run }, new: null, outer: p ? (p.new ?? p.outer) : null });
+        } else runs.push({ old: { para, run }, new: { para: now.s.para, run: now.openR() }, outer: null });
+      } else if (name === "tbl") {
+        tables.push({ old: tables.length, new: skip ? null : tablesNew++ });
+      }
+    },
+  }), xml);
   return { paragraphs, runs, tables };
 }
 
-async function docxStructure(parts) {
+async function docxStructure(parts, opts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
   }
+  const yieldNow = opts?.yieldNow;
   const notes = [];
   const links = [];
-  let walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
-  /* R35: a body over the bound is walked here in pieces, keeping no paragraph's
-     text (this answer counts paragraphs and states changes, and holds no words
-     but a change's own). A body that cannot be read to its end is stated. */
-  let pieceFailure = null;
-  if (!walk && parts.stream) {
-    const w = createBodyWalk({ paragraphText: false });
-    const read = await readPartPieces(parts.bytes, parts.container, parts.mainPart, cutAfterTag, (piece) => w.feed(piece));
-    if (read.ok) walk = w.result();
-    else pieceFailure = read;
+  /* The body walked: whole (its XML in hand) or, over the bound, in pieces (R35), keeping no paragraph's text (this
+     answer counts paragraphs and states changes, and holds no words but a change's own). A body that cannot be read to
+     its end, or that the retained-objects bound refuses (R44), is stated. */
+  let walk = null, bodyFailure = null;
+  if (parts.documentXml != null || parts.stream) {
+    const w = createDocWalk({ paragraphText: false, tables: false });
+    const run = await runBody(parts, w, yieldNow);
+    if (w.meter.exceeded) bodyFailure = w.meter.exceeded;
+    else if (run.ok) walk = w.body();
+    else bodyFailure = stripOk(run);
   }
   if (!walk) {
     notes.push(parts.guard
@@ -836,7 +937,8 @@ async function docxStructure(parts) {
   }
 
   /* word/embeddings/* -> intra, content-addressed. Located back to a
-   * paragraph through the rels id when the body uses it; else source:null. */
+   * paragraph through the rels id when the body uses it; else source:null.
+   * The identity is taken as the member streams (R43), never from the member held whole. */
   const embeddingRids = new Map(); // resolved part name -> rel id (document rels)
   for (const bp of parts.rels.byPart) {
     if (bp.part !== docRelsPart) continue;
@@ -846,22 +948,27 @@ async function docxStructure(parts) {
       if (resolved.startsWith(EMBEDDINGS_DIR)) embeddingRids.set(resolved, r.id);
     }
   }
+  const embedded = [];
   for (const entry of parts.container.entries) {
     const name = normalizePartName(entry.name);
     if (!name.startsWith(EMBEDDINGS_DIR) || name === EMBEDDINGS_DIR) continue;
+    embedded.push(name);
+  }
+  const identities = await memberIdentities(parts.bytes, embedded);
+  for (const name of embedded) {
     const rid = embeddingRids.get(name) ?? null;
     const at = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
     const source = at ? docParaRef(at.para, at.run) : null;
-    const read = await readPart(parts.bytes, parts.container, name);
-    if (!read.ok) {
-      links.push(undeterminedRecord(source, "embedded_part_unreadable", { part: name, detail: read.why }));
+    const read = identities.get(name);
+    if (!read?.ok) {
+      links.push(undeterminedRecord(source, "embedded_part_unreadable", { part: name, detail: read?.why ?? "unreadable",
+        ...(read?.limit != null ? { limit: read.limit } : {}) }));
       continue;
     }
-    const sha = await sha256Hex(read.bytes);
     links.push({
       partition: "intra",
-      wrapper: linkWrapper.intra(sha),
-      target: { sha256: sha, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.bytes.length },
+      wrapper: linkWrapper.intra(read.sha256),
+      target: { sha256: read.sha256, name: name.slice(name.lastIndexOf("/") + 1), bytes: read.size },
       source,
     });
   }
@@ -885,14 +992,12 @@ async function docxStructure(parts) {
       items.push(item);
     }
   }
-  const evUndetermined = [...parts.undetermined];
+  const evUndetermined = [...parts.undetermined, ...parts.partials];
   if (parts.guard) evUndetermined.push({ part: parts.mainPart, why: "over_size_bound", guard: parts.guard });
-  if (pieceFailure) {
-    evUndetermined.push({ part: parts.mainPart, ...pieceWhy(pieceFailure) });
-  }
+  if (bodyFailure) evUndetermined.push({ part: parts.mainPart, ...bodyFailure });
   if (parts.commentsXml != null) {
-    const parsed = parseComments(parts.commentsXml);
-    if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
+    const parsed = await parseComments(parts.commentsXml, yieldNow);
+    if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why, ...(parsed.final ? { final: true } : {}) });
     else {
       for (const c of parsed.comments) {
         const at = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
@@ -934,6 +1039,7 @@ async function docxStructure(parts) {
   };
 }
 
+
 /* ------------------------------------------------------------------ *
  * text() — <w:t> runs in body order (I7 slot 4)
  * ------------------------------------------------------------------ */
@@ -964,7 +1070,14 @@ function tableCells(t, paragraphs) {
   return cells;
 }
 
-async function docxText(parts) {
+/** The refusal text() and structure() give a body the walk could not or may not read: the main part unread, with the
+ *  reason, the same on every call. */
+function bodyRefused(reason) {
+  return { ok: true, container: "docx", document: null, paragraphs: [], tables: null,
+    undetermined: [reason], counts: { chars: 0, undetermined: 1, scanned_bytes: 0 } };
+}
+
+async function docxText(parts, opts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
   }
@@ -974,54 +1087,110 @@ async function docxText(parts) {
     return {
       ok: true, container: "docx", document: null, paragraphs: [], tables: null,
       undetermined: [parts.guard],
-      counts: { chars: 0, undetermined: 1 },
+      counts: { chars: 0, undetermined: 1, scanned_bytes: 0 },
     };
   }
-  /* The body walked: whole (its XML in hand) or, over the bound, in pieces
-   * (R35), both walks fed each piece, so the part is never held. */
-  let walk, tablesDone;
-  if (parts.documentXml != null) {
-    walk = walkDocumentBody(parts.documentXml);
-    tablesDone = walkDocumentTables(parts.documentXml);
-  } else {
-    let read = null;
-    if (parts.stream) {
-      const body = createBodyWalk(), tables = createTablesWalk();
-      read = await readPartPieces(parts.bytes, parts.container, parts.mainPart, cutAfterTag, (piece) => {
-        body.feed(piece);
-        tables.feed(piece);
-      });
-      if (read.ok) { walk = body.result(); tablesDone = tables.result(); }
-    }
-    if (!walk) {
-      const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
-      return {
-        ok: true, container: "docx", document: null, paragraphs: [], tables: null,
-        undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart,
-          ...(read ? pieceWhy(read) : { why: stated?.why ?? "unreadable" }) }],
-        counts: { chars: 0, undetermined: 1 },
-      };
-    }
+  const yieldNow = opts?.yieldNow;
+  /* The body walked: whole (its XML in hand) or, over the bound, in pieces (R35): the body walk and the tables walk
+     are fed by ONE scan, so the part is never held and read once (R42). */
+  if (parts.documentXml == null && !parts.stream) {
+    const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
+    return bodyRefused({ reason: "main_part_unreadable", part: parts.mainPart, ...(stated ? stripOk(stated) : { why: "unreadable" }) });
   }
+  const w = createDocWalk({ paragraphText: true });
+  const run = await runBody(parts, w, yieldNow);
+  /* R44: the walk would retain more than the table's figures: refused, by name and with its figure. */
+  if (w.meter.exceeded) return bodyRefused({ part: parts.mainPart, ...w.meter.exceeded });
+  if (!run.ok) return bodyRefused({ reason: "main_part_unreadable", part: parts.mainPart, ...stripOk(run) });
+  const walk = w.body();
+  const tablesDone = w.tables();
+  let scanned = run.scanner.scanned;
+  const undetermined = [...parts.partials, ...scanNotes(parts.mainPart, run.scanner)];
+
   const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `¶${p.para + 1}`, text: p.text }));
   const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
   /* FW-19 / IC-124: the `doc-table` units — the bound the arm is checked
      against. An EMPTY list is a real zero (the body was walked and held no
-     table); the two branches above that walked nothing say `tables: null`.
-     Read in pieces, a table lists no `cells` (null, as a body not read lists
+     table). Read in pieces, a table lists no `cells` (null, as a body not read lists
      no tables): they are the copies of the paragraphs' text a large body
      cannot also carry (R35). */
   const tables = tablesDone
     .filter(Boolean)
     .map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols,
       cells: parts.stream ? null : tableCells(t, walk.paragraphs) }));
+  /* R45: past the caller's cap (reading-pipeline's 512 KiB) the cells of every table are omitted with a statement; the
+     paragraphs and `document` still carry every cell's text. */
+  const cap = typeof opts?.inlineCellsMax === "number" && Number.isFinite(opts.inlineCellsMax) && opts.inlineCellsMax >= 0
+    ? opts.inlineCellsMax : null;
+  if (cap != null && !parts.stream) {
+    let size = 0;
+    for (const t of tables) size += jsonBytes(t.cells);
+    if (size > cap) {
+      for (const t of tables) { t.cells = null; t.cells_omitted = true; }
+      undetermined.push({ part: parts.mainPart, why: "cells_omitted", size, bound: cap });
+    }
+  }
+
+  /* R39: a paragraph whose only content is a picture lists the picture (`images`) and states it unread; no OCR is called. */
+  for (const [p, rid] of walk.images) {
+    if (!walk.paragraphs[p]?.text) undetermined.push({ part: parts.mainPart, why: "image_unread", ref: docParaRef(p), ...(rid ? { rid } : {}) });
+  }
+
+  /* R38: every other piece of text in the file is a unit with its kind. */
+  const kinds = { header: [], body: [], footnote: [], endnote: [], footer: [], comment: [] };
+  const refAt = (at) => (at ? docParaRef(at.para, at.run) : null);
+  for (const x of parts.extras) {
+    const r = await readUnits(parts, x.part, x.kind === "footnote" || x.kind === "endnote" ? x.kind : null, yieldNow);
+    if (!r.ok) { undetermined.push({ part: x.part, ...stripOk(r) }); continue; }
+    scanned += r.scanner.scanned;
+    undetermined.push(...scanNotes(x.part, r.scanner));
+    if (r.partial) undetermined.push(r.partial);
+    if (x.kind === "header" || x.kind === "footer") {
+      const text = r.units[0]?.text ?? "";
+      if (!text) continue;
+      const hr = walk.headerRefs.find((h) => h.rid != null && h.rid === x.rid);
+      kinds[x.kind].push({ kind: x.kind, ref: hr && hr.para != null ? docParaRef(hr.para, hr.run) : null, part: x.part, text });
+      continue;
+    }
+    const into = x.kind === "footnote" ? walk.footnoteRefs : walk.endnoteRefs;
+    for (const u of r.units) {
+      if (!u.text || /^(separator|continuationSeparator|continuationNotice)$/.test(u.attrs.type ?? "")) continue;
+      kinds[x.kind].push({ kind: x.kind, ref: refAt(u.attrs.id != null ? into.get(u.attrs.id) : null), part: x.part, text: u.text });
+    }
+  }
+  if (parts.commentsXml != null) {
+    const parsed = await parseComments(parts.commentsXml, yieldNow);
+    if (!parsed.ok) undetermined.push({ part: COMMENTS_PART, why: parsed.why, ...(parsed.final ? { final: true } : {}) });
+    else {
+      scanned += parsed.scanned;
+      undetermined.push(...scanNotes(COMMENTS_PART, parsed.scanner));
+      for (const c of parsed.comments) {
+        if (c.text) kinds.comment.push({ kind: "comment", ref: refAt(c.id != null ? walk.commentRefs.get(c.id) : null), part: COMMENTS_PART, text: c.text });
+      }
+    }
+  } else {
+    const stated = parts.undetermined.find((u) => u.part === COMMENTS_PART);
+    if (stated) undetermined.push(stated);
+  }
+  for (const c of walk.changes) {
+    if (c.change === "deletion" && c.text) kinds.body.push({ at: [c.para, c.run ?? -1], u: { kind: "tracked_deletion", ref: docParaRef(c.para, c.run), part: parts.mainPart, text: c.text } });
+  }
+  for (const box of walk.textBoxes) {
+    const text = box.paras.map((p) => walk.paragraphs[p]?.text ?? "").filter(Boolean).join("\n");
+    if (text) kinds.body.push({ at: [box.paras[0] ?? 0, -1], u: { kind: "text_box", ref: docParaRef(box.paras[0] ?? 0), part: parts.mainPart, text } });
+  }
+  kinds.body.sort((a, b) => a.at[0] - b.at[0] || a.at[1] - b.at[1]);
+  for (const x of parts.undetermined) if (x.why === "part_unread" && !undetermined.includes(x)) undetermined.push(x);
+
   return {
     ok: true, container: "docx", document, paragraphs, tables,
-    undetermined: [],
-    counts: { chars: document.length, undetermined: 0 },
+    parts: [...kinds.header, ...kinds.body.map((b) => b.u), ...kinds.footnote, ...kinds.endnote, ...kinds.footer, ...kinds.comment],
+    undetermined,
+    counts: { chars: document.length, undetermined: undetermined.length, scanned_bytes: scanned },
     ...(parts.piecewise ? { piecewise: parts.piecewise } : {}),
   };
 }
+
 
 /* ------------------------------------------------------------------ *
  * R31 (B §(d) EVENTS 3; K1505 (11)) — what the file states about itself
@@ -1170,21 +1339,22 @@ export const docxEntry = {
     return detectByContentType("docx", DOCX_CONTENT_TYPE, DOCX_TWIN_CONTENT_TYPES, contentType);
   },
   parts: (bytes) => docxParts(bytes),
-  structure: async (partsOrBytes) => {
+  structure: async (partsOrBytes, opts) => {
     /* Accept either parts() output or raw bytes, so detect→structure works
      * uniformly at the registry seam (formats.test.mjs's stub pattern) while
      * a caller that already paid for parts() does not pay twice. */
     const parts = isBytes(partsOrBytes)
       ? await docxParts(partsOrBytes)
       : partsOrBytes;
-    return withActive(await docxStructure(parts), parts);
+    return withActive(await docxStructure(parts, opts), parts);
   },
-  text: async (partsOrBytes) => {
+  /* `opts.inlineCellsMax` (R45), `opts.yieldNow` (R42) */
+  text: async (partsOrBytes, opts) => {
     const parts = isBytes(partsOrBytes)
       ? await docxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` — every image under word/media/, content-
        addressed, exhaustive or NULL (ooxml.mjs's `containerImages`). */
-    return withContainerImages(withActive(withMetadata(await docxText(parts), parts, true), parts), parts, "word/media/");
+    return withContainerImages(withActive(withMetadata(await docxText(parts, opts), parts, true), parts), parts, "word/media/");
   },
 };
