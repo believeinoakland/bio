@@ -260,3 +260,7 @@ Your two ceilings are job 64's (RUNTIME-LIMITS #12): quote `boundOf("content", "
 ## B17 · CHANGE
 
 CHANGE (K4919). Job 64 (RUNTIME-LIMITS #12) is merged: `READ_BOUNDS` has `content.held_text_chars` (33,554,432) and `content.kind_scan_pages` (16). Merge `origin/tranche/T51` and quote `HELD_TEXT_CHARS_MAX = boundOf("content", "held_text_chars")` and `KIND_SCAN_PAGES_MAX = boundOf("content", "kind_scan_pages")` (no literal; `runtime-limits` is already in your `uses`? if not, it is BOB's edge to add: say so). Suites, checks, COMPLETE. The R61 seam CHANGE follows when job 41 merges.
+
+## B18 · CHANGE
+
+CHANGE (K4922). You are merged again (job 29, `45dffe2869`). Content R52 now: `cellsAt(contentId, {fromRow})` answers the extent's cells from row `fromRow` (1-based, inside the extent, as `extraction.cellsOf`'s `fromRow`), with `cells_truncated` and `next_row` as for the first window, so a caller reads a range over the window call after call; a `fromRow` outside the extent is refused stated (CALCULATIONS #12's J17). Merge `origin/tranche/T51`; red first, then green; COMPLETE. The R61 seam CHANGE still follows job 41.
