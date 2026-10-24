@@ -108,7 +108,7 @@ B6 applied (K4882): capture/keep_bytes 33,554,432, capture/profile_text_bytes 8,
 - **Test.** `read-bounds.test.mjs`: new test naming R30 and R31: the three figures, the key, `boundOf` answers the figure, `statement` answers `{size, bound, key}`; the invariants test (R29) covers the new row.
 - **Deferred / found in another module.** None.
 - **Ran.** runtime-limits suite: 54 tests, 54 pass, 0 fail. Importers (doc-clean, csv-reader, image-cover): 184 tests, 183 pass, 0 fail (1 not counted pass, none failing). `impact.mjs origin/tranche/T51 HEAD` lists 138 modules through the table's import tree; the change only adds a row, so I ran the importers listed in `src`. Checks: format 0 failures; architecture 0 failures; coverage 32 of 32 ids, 0 failures; ownership 3 files, 0 failures; words 19 failures, the same 19 on `origin/tranche/T51` without my diff (installer-steps `missingkey` and others, none in this module).
-- Generated artifacts made stale: none.
+- Generated artifacts made stale: every bundle whose inputs include `bio-plane/src/read-bounds.mjs` (the bundles built from it, e.g. ocr-worker and pdf-worker; their `.bundle.json` input hashes no longer match). Not regenerated; BOB regenerates at the round end.
 
 Size (session_01GcfAY6gBYxDeKZVA2QwFeC): test runs 4, module lines 164
 
