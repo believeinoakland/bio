@@ -174,7 +174,7 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
   const pdf = manifests.get("pdf-worker");
   const cross = (pdf?.inputs || []).filter((i) => i.path.startsWith("../bio-plane/")).map((i) => i.path).sort();
   t("pdf-worker's build reaches into the PLANE's source, and the manifest hashes those files too",
-    cross, ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/setup-words/index.mjs", "../bio-plane/src/setup-words/rows.mjs", "../bio-plane/src/subresources.mjs"]); // setup-words since the words pass (K3949): pdfstructure and subresources read their sentences by key
+    cross, ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/read-bounds.mjs", "../bio-plane/src/setup-words/index.mjs", "../bio-plane/src/setup-words/rows.mjs", "../bio-plane/src/subresources.mjs"]); // setup-words since the words pass (K3949): pdfstructure and subresources read their sentences by key; read-bounds since PDF-WORKER #6 quotes READ_BOUNDS (G124a, K4875)
   const agent = manifests.get("agent-worker");
   /* CORRECTED 2026-09-12 BY FL-6, never exempted: the roster was three modules
      when FL-9 pinned it. FL-6 added `src/cascade.mjs` AND the member's first
@@ -609,7 +609,7 @@ console.log("\n--- 8 · THE PLANE ITSELF (FL-10, D-298): the same guard, because
     planeInputs.filter((p) => p.startsWith("../site-profiles/")).sort(),
     ["../site-profiles/events.mjs", "../site-profiles/handlers/aspnet-webforms.mjs", "../site-profiles/handlers/client-rendered.mjs",
      "../site-profiles/handlers/conservative.mjs", "../site-profiles/handlers/wordpress.mjs", "../site-profiles/index.mjs",
-     "../site-profiles/recogniser.mjs", "../site-profiles/region.mjs"]);
+     "../site-profiles/recogniser.mjs", "../site-profiles/region.mjs", "../site-profiles/scan.mjs"]); // scan.mjs since SITE-PROFILES #4 (G140, K4875)
   t("bio-plane: and no input names a docprofile file that moved to site-profiles",
     planeInputs.filter((p) => /^\.\.\/docprofile\/(index|recogniser|events)\.mjs$|^\.\.\/docprofile\/handlers\//.test(p)), []);
   t("bio-plane: and vendors NOTHING — the byte arm is runnable on any checkout, so it can never skip",
