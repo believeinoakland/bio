@@ -1318,3 +1318,7 @@ Your readings stand: a container's unpacked text takes the same 3 MiB inline cei
 ## B71 · CHANGE
 
 CHANGE (K4919). Job 64 (RUNTIME-LIMITS #12) is merged: `READ_BOUNDS` has `text.request_bytes` (3,145,728, all three columns, key `limit.text.request_bytes`). Merge `origin/tranche/T51` and quote it with `boundOf("text", "request_bytes")` in place of your "proposed; BOB records" constant.
+
+## B72 · CHANGE
+
+CHANGE (K4925), for your seam section 19 (round 8's open seams): RECORD-CORE #30 found the round-8 seam file's A1, A1 control and A1b ("delivered within 120 s", the large capture) red on the tranche with and without its change. They are yours under section 19: find the cause (R-FOUR, R-CLOCK: a count, never a 120 s wall) or name the provider, in your COMPLETE. record-core job 61 is merged (`BOOKKEEPING_TABLES` names `job_unit_attempts`, `job_batches`); merge `origin/tranche/T51` when you next do.
