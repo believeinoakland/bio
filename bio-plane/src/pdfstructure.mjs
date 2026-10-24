@@ -720,6 +720,7 @@ export class PdfDoc {
     this.root = null;
     this.notes = [];
     this._trailingNoted = new Set(); // where each stream already noted flate_trailing_bytes starts
+    this._undecodedStreams = new Set(); // object stream nums whose data could not be decoded
   }
 
   /** The resolved dict of the page at 0-based `pageIdx` in page order, or null
@@ -1061,6 +1062,8 @@ export class PdfDoc {
     xr.eachEntry((n, e, si) => {
       if (e.type !== 2) return;
       if (si > 0 && !sameEntry(xr.lookup(n), e)) return;
+      /* an object in a stream that could not be decoded is lost to that, already stated (`objstm_undecodable`), and says nothing of the chain */
+      if (this._undecodedStreams.has(e.stm)) return;
       const row = this._objs.row(n);
       if (row < 0 || this._objs.stm[row] !== e.stm) missing.add(n);
     });
@@ -1088,7 +1091,7 @@ export class PdfDoc {
         let data = this._decodedSync(st);   // proved by its own checksum, or null
         const checked = data !== null;
         if (!checked) data = await this.streamDecoded(st);
-        if (!data) { this.note("objstm_undecodable"); continue; }
+        if (!data) { this.note("objstm_undecodable"); this._undecodedStreams.add(stm); continue; }
         const n = numberVal(this.resolve(st.dict.N));
         const first = numberVal(this.resolve(st.dict.First));
         if (n == null || first == null) continue;
@@ -4202,7 +4205,8 @@ class XrefReader {
         if (n < s.start || n >= s.start + s.count) continue;
         const e = /^(\d{10}) (\d{5}) ([nf])/.exec(binaryString(b.subarray(s.at + (n - s.start) * 20, s.at + (n - s.start) * 20 + 20)));
         if (!e) return null;
-        return e[3] === "n" ? { type: 1, off: Number(e[1]) } : { type: 0 };
+        /* an in-use entry at offset 0 is a free slot written carelessly: nothing opens there but the header */
+        return e[3] === "n" && Number(e[1]) > 0 ? { type: 1, off: Number(e[1]) } : { type: 0 };
       }
       return null;
     };
@@ -4210,7 +4214,7 @@ class XrefReader {
       for (const sub of subs) {
         for (let i = 0; i < sub.count; i++) {
           const e = /^(\d{10}) (\d{5}) ([nf])/.exec(binaryString(b.subarray(sub.at + i * 20, sub.at + i * 20 + 20)));
-          if (e) fn(sub.start + i, e[3] === "n" ? { type: 1, off: Number(e[1]) } : { type: 0 });
+          if (e) fn(sub.start + i, e[3] === "n" && Number(e[1]) > 0 ? { type: 1, off: Number(e[1]) } : { type: 0 });
         }
       }
     };
@@ -4252,7 +4256,7 @@ class XrefReader {
           if (at + cols > data.length) return null;
           const t = widths[0] ? field(at, widths[0]) : 1;
           const a = field(at + widths[0], widths[1]), c = field(at + widths[0] + widths[1], widths[2]);
-          return t === 1 ? { type: 1, off: a } : t === 2 ? { type: 2, stm: a, idx: c } : { type: 0 };
+          return t === 1 && a > 0 ? { type: 1, off: a } : t === 2 ? { type: 2, stm: a, idx: c } : { type: 0 };
         }
         row += count;
       }
@@ -4266,7 +4270,7 @@ class XrefReader {
           if (at + cols > data.length) return;
           const t = widths[0] ? field(at, widths[0]) : 1;
           const a = field(at + widths[0], widths[1]), c = field(at + widths[0] + widths[1], widths[2]);
-          fn(start + i, t === 1 ? { type: 1, off: a } : t === 2 ? { type: 2, stm: a, idx: c } : { type: 0 });
+          fn(start + i, t === 1 && a > 0 ? { type: 1, off: a } : t === 2 ? { type: 2, stm: a, idx: c } : { type: 0 });
         }
       }
     };
