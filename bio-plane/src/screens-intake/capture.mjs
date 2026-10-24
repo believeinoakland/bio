@@ -382,7 +382,9 @@ function renderCapture(cs, view) {
         const title = (row && row.title) || String(c.locator || "");
         /* G2: a session being fetched (acquisition `fetch_pending`) has nothing to finish; it is said, once (the press's own line says it when this visit began it) */
         if (c.fetch_pending && typeof c.fetch_pending === "object") {
-          if (c.failed) return failedLine(c.failed);
+          /* G105 (fix round 8; acquisition R111): the stated refusal is the listing's `fetch_pending.failed` */
+          const bad = c.fetch_pending.failed || c.failed;
+          if (bad) return failedLine(bad);
           return U.captured && U.captured.fetching && U.captured.fetching.session === c.session ? "" : fetchingLine(Number.isFinite(c.fetch_pending.declared_bytes) ? c.fetch_pending.declared_bytes : null, null, c.fetch_pending.why);
         }
         return `<p class="mk-note" role="status">${cs.w("capture.unfinished", { title, n: c.outstanding, ago: { html: cs.date(c.started) } })} `
@@ -743,10 +745,11 @@ function watchFetch(cs, o, n = 0, missed = 0) {
     if (!list || list.ok === false || !Array.isArray(list.captures)) return again(missed);
     const mine = list.captures.find((c) => c && c.session === o.session);
     /* B31: the owed fetch ended with a stated refusal and the session was kept with `failed`: said at once, in the refusal's words */
-    if (mine && mine.failed) {
+    const bad = mine && ((mine.fetch_pending && mine.fetch_pending.failed) || mine.failed);
+    if (bad) {
       k.set("ended", o.session);
       k.set("captured", null);
-      k.set("promoteRefused", { tab: "address", html: v.parts.refusalHtml(k, { code: String(mine.failed) }) || k.w("refusal.FETCH_FAILED") });
+      k.set("promoteRefused", { tab: "address", html: v.parts.refusalHtml(k, { code: String(bad) }) || k.w("refusal.FETCH_FAILED") });
       return;
     }
     if (mine) return again(0);

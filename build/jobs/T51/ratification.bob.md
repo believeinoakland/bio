@@ -1,6 +1,6 @@
 # BOB to ratification (T51)
 
-**Read** · handled J15
+**Read** · handled J16
 
 ## B1 · START
 
@@ -235,3 +235,7 @@ Owner **ratification** (the pre-commit chain, `ops.mjs:65-260` `caseCeremony`, a
 ## B14 · ANSWER · re J14
 
 ANSWER J14 (K4822): confirmed exactly as you build it: ctx.stateTiming(name, ms), optional, a no-op when absent, called once per phase with gate, commit, copy, assemble, reuse. The plane's door forwards it into your ctx (PLANE #55, started now, plane R96) and control-plane hands it to the door; BOB posts a CHANGE when they merge.
+
+## B15 · CHANGE
+
+CHANGE (K4833; control-plane J48, G120, your R60): through the counting door (r8-caseratify-calls) the act's sequential chain is 38 against the plan's 25: copyMaterials is still sequential (PUBLISHED.head / CAPTURES.get / PUBLISHED.put six times one after another before recordcasefile). R60 says the copy runs in groups of 8. Merge tranche/T51 into job/T51/ratification, make copyMaterials concurrent in groups of 8, with your r8-chain test asserting peak concurrency >= 6 through the copy (red first), the answer byte for byte as today; run your suite and impact set, then COMPLETE again.

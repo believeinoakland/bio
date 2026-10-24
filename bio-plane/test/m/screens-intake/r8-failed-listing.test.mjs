@@ -1,0 +1,43 @@
+/* screens-intake T51 fix round 8, B44 (control-plane J48, seam A2, G105): an owed fetch refused for good is listed by acquisition as `fetch_pending.failed`
+ * (acquisition R111), not as a top-level `failed`. The listing here is the real `openCaptures` output over a store holding such a session (R-SEAM), pressed through
+ * the Add screen: the watch ends in the refusal's words at once, and the Unfinished line states it with no "Finish it". R58. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { open as openPage, main, fill, press, ok, says, DOCUMENT_STUB } from "./page.mjs";
+import { SCREENS } from "../../../src/screens-intake/index.mjs";
+import { openCaptures } from "../../../src/acquisition/index.mjs";
+
+const ADDRESS = "https://www.govinfo.gov/content/pkg/BUDGET-2021-APP/pdf/BUDGET-2021-APP.pdf";
+const SESSION = "rs_held_elsewhere";
+const NOW = "2026-10-23T12:30:00Z";
+const store = { liveCaptureSessions: () => [{ session: SESSION, locator: ADDRESS, created: "2026-10-23T12:00:00Z", updated: NOW, expires: "2026-10-24T12:00:00Z", primarySha: null,
+  state: { opened_by: "mai", queue: [], fetch_done: { since: "2026-10-23T12:00:00Z" }, fetch_pending: { since: "2026-10-23T12:00:00Z", declared_bytes: 17400000, why: "over_wait", failed: "CAPTURE_HELD_BY_ANOTHER_BUNDLE" } } }] };
+const listing = openCaptures(store, { by: "member:mai", now: NOW });
+const PENDING = ok({ ok: true, fetch_pending: { session: SESSION, since: "2026-10-23T12:00:00Z", declared_bytes: 17400000, why: "over_wait" } });
+const open = (path, plane) => openPage(path, { plane: { projectlist: ok({ projects: [] }), heldcaptures: ok({ ok: true, held: [], truncated: false }), ...plane }, screens: [...SCREENS, DOCUMENT_STUB] });
+
+test("R58 (B44) the real listing states the refusal under fetch_pending.failed", () => {
+  assert.equal(listing.captures[0].fetch_pending.failed, "CAPTURE_HELD_BY_ANOTHER_BUNDLE");
+  assert.equal(listing.captures[0].failed, undefined);
+});
+
+test("R58 (B44) the watch ends in the held-elsewhere words at once, without three asks and without polling on", async () => {
+  const p = await open("/app/capture/address", { acquire: PENDING, opencaptures: ok(listing), heldat: (r) => ok(r.query.check ? { ok: true, held: false, copy: null, changed: { state: "undetermined" } } : { ok: true, held: false, copy: null }) });
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
+  await p.clock.tick(4000);
+  for (let i = 0; i < 8; i++) await p.settle(20);
+  assert.ok(says(p, "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE"));
+  assert.equal(main(p).querySelectorAll("[data-fetching]").length, 0);
+  assert.equal(p.byOp("heldat").filter((r) => !r.query.check).length, 0, "the record is not asked");
+  const n = p.byOp("opencaptures").length;
+  await p.clock.tick(30000);
+  for (let i = 0; i < 6; i++) await p.settle(20);
+  assert.equal(p.byOp("opencaptures").length, n, "the poll has ended");
+});
+
+test("R58 (B44) the Unfinished line states the refusal and offers no Finish it", async () => {
+  const p = await open("/app/capture/address", { opencaptures: ok(listing) });
+  assert.ok(says(p, "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE"));
+  assert.equal(Array.from(main(p).querySelectorAll('button[data-act="acquire"]')).filter((b) => b.getAttribute("data-session")).length, 0);
+});

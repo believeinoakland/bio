@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J44
+**Read** · handled J45
 
 ## B1 · START
 
@@ -575,3 +575,7 @@ Owner **screens-intake** (R29), no provider (review G12, decided K4164): no batc
 (3) **Failing-first.** `screens-intake/r8-add-reads.test.mjs`: Add opened for `INQ-...` over a fixture of 37 projects and 200 search hits; the count of `projectquestions` calls at settle is at most 1 (red: 37), and after the chooser is opened the labels equal today's (control).
 (4) Platform check **N** (a count) and **P** (the settle time at the re-walk).
 **Fix shape.** As the owner line says (the read moves off the settle path); K4354's 2 s for a screen is the bar. **Old records:** none.
+
+## B44 · CHANGE
+
+CHANGE (K4833; control-plane J48, seam A2, G105): the Add screen's watch (screens-intake/capture.mjs watchFetch about :746, and the Unfinished line about :385) reads a top-level 'failed' on an opencaptures capture, but acquisition R111 (merged) lists it as fetch_pending.failed (the row ends final with CAPTURE_HELD_BY_ANOTHER_BUNDLE). So the watch never ends in the held-elsewhere words and polls on. Merge tranche/T51 into job/T51/screens-intake, read c.fetch_pending.failed, add a failing-first test at your interface on that listing shape (from acquisition's real op output, R-SEAM), run your suite and impact set, then COMPLETE again.
