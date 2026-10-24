@@ -433,3 +433,10 @@ BLOCKED (cause: needs BOB, another module). G157 is built in installer (ready.mj
 1. api.mjs failureOf: a 401 becomes ApproveAgain with status and apiMessage but no code, so the Free account's 401/1000 on /containers/applications cannot be told from an expired permission. One line: add `code: e.code` to that object.
 2. probes.mjs registerSubdomain: a taken prefix is read as HTTP 409; measured is 403/10031. One line: accept `e.code === 10031` too.
 With both applied locally (reverted, uncommitted) r84.test.mjs is 8 pass 0 fail; without them R84 (2) and (4) fail on exactly these. Please have installer-steps change them (or tell me to proceed otherwise), then CHANGE me to merge and finish. Details in my record, Job 83.
+
+**Job 83 completion (after CHANGE B31, tranche merged, job 82's failureOf code and 403/10031 in).**
+- Entries applied: G157 / R84 amended: the Containers plan stop decided by 401 + code 1000 on this path (`CONTAINERS_CODES.planUnauthorized`), fixtures at every measured shape, controls for a bare 1000 and a bare 401. No sentence added. Nothing deferred.
+- Found in another module: nothing new (the two installer-steps points of J29 are fixed by job 82).
+- Tests: `newgroup/test/r84.test.mjs` 8 pass, 0 fail. Installer suite (`cd newgroup && node --test --test-force-exit test/`): tests 254, pass 232, fail 15, all on the accepted list (R8, R11, R20, R44, R55, R61, R71, G54, wizard, R33 six): fifteen, one fewer than the sixteen BOB named; none new. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: installer 12/23, journey-check 2/25 (affected modules 2 of 176, test files 14 of 2671). The user journey-check's files `account-installer.test.mjs`, `journey.test.mjs` with `newgroup-bundle-fresh.test.mjs`: 28 tests, 8 pass, 20 fail, identical with my three files (ready.mjs, fixture.mjs, r84.test.mjs) reverted to the tranche version, so not caused by this job (bundle staleness is BOB's regeneration; the newgroup bundle is stale by this change).
+- Checks (failure counts): format 0, architecture 0, coverage 0 (75 of 75), words 0, ownership 0.
+Size (session_01EBZBHpiJKKbVycjEP1ox2e): test runs 9, module lines 3270
