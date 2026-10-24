@@ -271,3 +271,16 @@ async function restartOver(w) {
   await Promise.all(waited);
   return x;
 }
+
+test("R82 R37 (G172): the ledger's first `reading` pass over a scan whose page the OCR member refuses from its header ends final and owes nothing; a member answering transiently still owes", async () => {
+  const registerJob = async () => ({ ok: true }), armJobs = async () => {};
+  const refuses = await held({ env: { OCR_WORKER: member(() => ({ ok: false, reason: "IMAGE_TOO_LARGE" })) } });
+  const a = await withEntry(pdf(SCAN(1)), () => refuses.w.x.readHeld({ sha: refuses.d, env: refuses.w.env, kind: "reading", registerJob, armJobs }));
+  assert.equal(a.read, true);
+  assert.equal(readingOf(refuses.w, refuses.d).failure, "final", "the refusal ends the reading final");
+  assert.notEqual(a.owed, true, "a reading that ended final owes nothing, an OCR member bound");
+  /* control: a member that answers transiently leaves the page owed */
+  const down = await held({ env: { OCR_WORKER: member(() => ({ status: 503, body: { ok: false } })) } });
+  const b = await withEntry(pdf(SCAN(1)), () => down.w.x.readHeld({ sha: down.d, env: down.w.env, kind: "reading", registerJob, armJobs }));
+  assert.equal(b.owed, true, "a transient answer is still owed");
+});
