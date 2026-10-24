@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket } from "./fixture.mjs";
+import { textTypeOf } from "../../../src/acquisition/index.mjs";
 
 const te = new TextEncoder();
 const MiB = 1024 * 1024;
@@ -77,9 +78,15 @@ test("R107 controls: a declaration never contradicts the bytes", async () => {
   const b = await upload(bin, { type: "text/csv" });
   assert.equal(formatOf(b), "undetermined", "non-text bytes declared text/csv stay undetermined");
   assert.equal(b.profile.source_content_type, "text/csv", "the declaration is still recorded as the uploader's");
-  /* non-text bytes declared text/html are not html */
-  const h = csvOf(9 * MiB); h[3] = 0xff; h[4] = 0xfe;
+  /* bytes `acquisition` does not decode as text, declared text/html, are not html: a run of NULs in a file that is no UTF-16 */
+  const h = csvOf(9 * MiB); h[3] = 0; h[4] = 0; h[5] = 0; h[7] = 0;
+  assert.equal(textTypeOf({ bytes: h.subarray(0, 65536), type: "text/html" }), null, "the one rule says it is not text");
   assert.notEqual(formatOf(await upload(h, { type: "text/html" })), "html");
+  /* G131g: the same one decode for the head as for a whole file: a legacy-charset byte pair mid-file is text, so what `textTypeOf` says of
+     the head is what the upload does (no UTF-8-only rule of this module's own) */
+  const legacy = csvOf(9 * MiB); legacy[3] = 0xff; legacy[4] = 0xfe;
+  const headIsText = textTypeOf({ bytes: legacy.subarray(0, 65536), type: "text/html" }) !== null;
+  assert.equal(formatOf(await upload(legacy, { type: "text/html" })) === "html", headIsText);
   /* a PDF declared text/csv is a pdf: the sniff names it and stands */
   assert.equal(formatOf(await upload(pdfOf(9 * MiB), { type: "text/csv" })), "pdf");
   /* a multipart PDF with no type is as R101 has it */

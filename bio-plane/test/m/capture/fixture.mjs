@@ -42,12 +42,13 @@ export function storage() {
 /* An evidence bucket stand-in (the R2 binding's shape), recording every call. */
 export function bucket() {
   const held = new Map(), calls = [];
-  const obj = (k) => { const b = held.get(k); return { key: k, size: b.length, body: b,
-    arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) }; };
+  /* a ranged read (`{range: {offset, length}}`, R2's option) answers those bytes alone, with the object's own size; none, the whole object */
+  const obj = (k, range = null) => { const all = held.get(k), b = range ? all.subarray(range.offset, range.offset + range.length) : all;
+    return { key: k, size: all.length, body: b, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) }; };
   return {
     calls, held, failPut: false,
     async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length } : null; },
-    async get(k) { calls.push(["get", k]); return held.has(k) ? obj(k) : null; },
+    async get(k, o) { const range = o && o.range ? o.range : null; calls.push(["get", k, range]); return held.has(k) ? obj(k, range) : null; },
     async put(k, bytes, opts) { calls.push(["put", k, opts]); if (this.failPut) throw new Error("bucket refused"); held.set(k, new Uint8Array(bytes)); return { key: k }; },
     async delete(k) { calls.push(["delete", k]); held.delete(k); },
   };
