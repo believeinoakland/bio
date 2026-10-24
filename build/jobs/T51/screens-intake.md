@@ -731,4 +731,4 @@ Merged `origin/tranche/T51` first. Read whole: the START, R67, R59 and the ids o
 
 Other modules: screens-inquiry's Document page copy should import `supportingReasons` from `screens-intake/index.mjs` (BOB's round-end pass). Generated artifacts made stale: the plane bundle if it embeds the served page (as J50 said).
 
-Size (session_0173SFnSQmQvKknpr8osxVr5): test runs 9, module lines 3051
+Size (session_0173SFnSQmQvKknpr8osxVr5): test runs 9, module lines 3041
