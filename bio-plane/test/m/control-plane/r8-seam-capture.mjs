@@ -88,6 +88,7 @@ export function sections(kit) {
       seen.push({ at: seen.length, listed: !!mine, pending: !!(mine && mine.fetch_pending) });
       await later(1000);
     }
+    if (!delivered && process.env.R8_DEBUG) console.log("DEBUG A1 rows", JSON.stringify(body(await get(await founder(), { op: "owedwork", sha: session }))).slice(0, 2500));
     assert.ok(delivered, "the document is delivered within 120 s");
     const unlisted = seen.filter((x) => !(x.listed && x.pending));
     assert.equal(unlisted.length, 0, `at every poll before the delivery the session is listed with fetch_pending; not so at polls ${unlisted.map((x) => x.at).join(",")} of ${seen.length}`);

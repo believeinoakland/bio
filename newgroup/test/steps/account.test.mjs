@@ -27,6 +27,15 @@ test("R1: a 401 throws approveAgain after one request and is never retried", asy
   assert.equal(approve(await cf(session(), "/x").catch((e) => e)), true);
 });
 
+test("R1: a 401 carries the API's code: the measured Containers answer on a Free account is 1000, a plain 401 has the code it was given or none", async () => {
+  sequence([new Response(JSON.stringify({ success: false, result: null, messages: [], errors: [{ code: 1000, message: '{"error":"Unauthorized"}' }] }), { status: 401 })]);
+  await assert.rejects(cf(session(), "/accounts/A1/containers/applications"), (e) => e.approveAgain === true && e.status === 401 && e.code === 1000);
+  sequence([cferr("Invalid access token", 401, 9109)]);
+  await assert.rejects(cf(session(), "/x"), (e) => e.approveAgain === true && e.code === 9109);
+  sequence([new Response("{}", { status: 401 })]);
+  await assert.rejects(cf(session(), "/x"), (e) => e.approveAgain === true && e.status === 401 && e.code === undefined, "control: no code given, none invented");
+});
+
 test("R1: a 503 for the whole bound throws lasting, having announced each wait, with the cause's message, status and code", async () => {
   sequence([cferr("upstream trouble", 503, 7000)]);
   const waits = [];

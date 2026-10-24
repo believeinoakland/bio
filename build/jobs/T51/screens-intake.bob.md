@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J50
+**Read** · handled J52
 
 ## B1 · START
 
@@ -913,3 +913,16 @@ ANSWER to J47 and J48 (K4930). J47 (1): yes, decide by size before the first req
 ## B48 · CHANGE
 
 CHANGE (BOB #280, K4939): tranche/T51 no longer tracks seven node_modules symlinks my merge c156abe97d added by mistake. Merge origin/tranche/T51 into your branch now (never a rebase); if a node_modules path in your checkout is a symlink afterwards, delete the link and run K4113's npm ci loop. Your diff must not add or keep any node_modules entry.
+
+## B49 · START
+
+START · SCREENS-INTAKE #24 · tranche T51 · product believeinoakland/bio · fix round 9, batch D: R67: one export classifying the supporting-file reasons (K4969) · depth 2 (BOB #281 at depth 1)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/screens-intake tranche/T51 && git branch -m job/T51/screens-intake stale/screens-intake-local && git checkout -b job/T51/screens-intake origin/job/T51/screens-intake`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module screens-intake`; record `build/jobs/T51/screens-intake.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); any act a safety or permission check refuses is NEVER worked around, split, rephrased or retried: post BLOCKED naming it and wait (K4696). Before any test run every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`; a symlink there is deleted first, K4939). Tests from `bio-plane/`: `node --import ./test/platform-sqlite.mjs --test --test-force-exit <files>`, heavy files alone. Your diff touches only this module's `paths`, its `tests` and your record (ownership); never a `node_modules` entry. Never contact any live deployment. A drawn-screen module: no `localize`; sentences by key only (K4859). Read whole: this START, your requirement R67 and the ids of the supporting line (G19, G110: R-ids that name `supporting`), `bio-plane/src/screens-intake/capture.mjs:400-420` (`supportingLine`), and the tests naming those ids. Before COMPLETE: your suite, `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the users it names, the checks (format, architecture, coverage, words, ownership) each by its failure count; COMPLETE with the four fields (cause, why missed, red first, platform check) and a `Size` line.
+**Why this job (job 81; SCREENS-INQUIRY #25's J36 finding, K4969).** The supporting-file reasons are sorted into sentences twice: the Add screen's `supportingLine` (`capture.mjs:405-419`) and screens-inquiry's Document page copy (job 36, merged). Merge `origin/tranche/T51` first. Add exactly R67: export `supportingReasons(reasons)` (the classification inside `supportingLine`) and draw the Add screen's line from it, its output unchanged. Do not touch screens-inquiry: its re-point is BOB's round-end mechanical pass. Add no sentence. Cause: the classification was written where it was first drawn (K4164). Why missed: no requirement named it. Platform check: N.
+
+## B50 · CHANGE
+
+CHANGE (BOB #281; re J51). Your R31 R58 (G72) red (r7-finish.test.mjs:28, 'in the held row's words') is yours, not inherited: BOB read capture.mjs:473-475 and the rows. The design's DEC-425 row `refusal.NO_SUCH_SESSION` ('This capture has ended, so there is nothing left to finish. Start it again from Add. Nothing was changed.') reached the word table with DEC-431's merge (K4968), so the test now expects it, while the closed line still draws the stand-in `acquisition.index.no_such_session` (its own comment says: until refusal.NO_SUCH_SESSION has its own row). Draw `refusal.NO_SUCH_SESSION` there (and retire the stand-in note at index.mjs:83 for that row), re-run your suite (R61 G126h stays red by name for job 38) and COMPLETE again. Your R67 work is unchanged; BOB merges both together.

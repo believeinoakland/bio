@@ -37,7 +37,7 @@ test("R123 E3: a capture over the whole-read ceiling is never deferred (its read
                   ["24 MiB exactly (PDF)", docOf({ pdf: true, bytes: 24 * MB, type: "application/pdf" })],
                   ["24 MiB + 1 (PDF)", docOf({ pdf: true, bytes: 24 * MB + 1, type: "application/pdf" })],
                   ["22 MiB text", docOf({ bytes: 22 * MB })]];
-    for (const [label, d] of rows) seen.push([label, ctx.deferReading(d)]);
+    for (const [label, d] of rows) seen.push([label, await ctx.deferReading(d)]);
     return M.json({ ok: true, document: docOf() });
   } };
   const w = world();
@@ -119,11 +119,11 @@ test("R123 E6: a scan read at `promote` with pages left (`owed`) has its `ocr` e
   const w = world({ answer: promoted({ ok: true, read: true, owed: true }) });
   const r = await promoteWith(w, [docOf({ bytes: 1 * MB, pdf: true })]);
   assert.equal(r.json.result.reading_pending, true);
-  assert.deepEqual(asked(w.env, "pendingadd").map((c) => [c.params.kind, c.params.sha]), [["ocr", SHA]]);
+  assert.deepEqual(asked(w.env, "pendingadd").map((c) => [c.params.kind, c.params.sha]), [["reading", SHA], ["ocr", SHA]], "R130: the reading row first, then the pages owed");
   const done = world({ answer: promoted({ ok: true, read: true }) });
   const d = await promoteWith(done, [docOf({ bytes: 1 * MB, pdf: true })]);
   assert.equal(d.json.result.reading_pending, undefined);
-  assert.equal(asked(done.env, "pendingadd").length, 0);
+  assert.equal(asked(done.env, "pendingadd").length, 1);
 });
 
 test("R123 E6: a document promoted with a reading that left pages of a scan unread owes the OCR pass when an OCR member is bound, and only then", async () => {

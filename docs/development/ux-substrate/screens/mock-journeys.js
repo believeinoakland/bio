@@ -118,7 +118,7 @@ const J = [
  { n: 28, t: 'From civicsmith.org to a new member\'s first work', who: 'The founder, then a new member (DEC-201; Bob\'s K3053)', steps: [
    { s: 'site', v: 'home', act: null, say: 'Rosa hears about Civicsmith from a tenants\' team across town and opens civicsmith.org. She reads what it is, opens a case another team published, and sees that her team would hold its own work.' },
    { s: 'site', v: 'start', act: null, say: 'On “Start your team” she reads what the team needs: a Cloudflare account on Workers Paid, twenty minutes, no Claude account. The association agrees its treasurer opens the Cloudflare account in the team\'s name, with Rosa added. Then she chooses “Create your team”.' },
-   { s: 'install', v: 'ready', act: null, say: 'Before anything else she follows the installer\'s Get ready guide: five plain steps, each with a button that opens the exact Cloudflare page, from opening an account in the team\'s name to turning containers on. Each opens in a new tab and the guide stays where it was.' },
+   { s: 'install', v: 'ready', act: null, say: 'Before anything else the installer asks whether she already has a Cloudflare account. She answers yes and goes on.' },
    { s: 'install', v: 'start', act: 'bootstrap', say: 'The installer asks two things. She picks the short name lakeshore-tenants, reads that it is permanent, and chooses Oakland as the team\'s place.' },
    { s: 'install', v: 'cloudflare', act: 'bootstrap', say: 'She reads what Cloudflare will ask her to allow, and that whoever holds the Cloudflare account controls the team\'s Civicsmith. She goes to Cloudflare\'s own page, signs in there and allows it.' },
    { s: 'install', v: 'check', act: 'owed:installcheck DEC-415', say: 'Back from Cloudflare\'s permission page, she presses Check my account. Two lines are not ready, each with its own fix and a button to the Cloudflare page that fixes it, and Install now stays closed. Checking created nothing in her account.' },
@@ -168,6 +168,18 @@ const J = [
    { s: 'people', v: 'newteam', act: null, say: 'Rosa opens People the day her team is set up. Three bodies are there already, each saying what it is, and that it came at setup from the public offices of the team\'s place. No document names them yet, so none offers “Explore connections”.' },
    { s: 'people', v: 'newteam', act: 'entitycreate', say: 'She adds someone the team means to follow.' },
    { s: 'people', v: 'add', act: 'entitycreate', say: 'The form asks her name, whether a person or an organization, as a choice, and her note on who they are and why the team follows them. She follows Dana Whitfield.' } ] },
+ { n: 32, t: 'Adding a second AI, and work that continues on it', who: 'An administrator, then a member (DEC-420; Bob\'s K4623)', noai: 'A member whose assistant is off sees none of the member steps, and the team\'s AI settings stay as the administrators left them.', steps: [
+   { s: 'aiproviders', v: 'before', act: 'owed:aiplanconnect DEC-420', say: 'Rosa opens AI providers. OpenAI is first and on; OpenRouter is second. She opens “Add an AI”, finds Mistral among the providers, in alphabetical order, and presses Connect on its pay-as-you-go API account.' },
+   { s: 'aiconnect', v: 'mistral', act: 'owed:aikeyenter DEC-420', say: 'The guide first says what Mistral is sent, who keeps it and for how long, and the terms that bind civic use, each with its source and date. She signs up on Mistral\'s own page, which Civicsmith never does for her, copies the key, and enters it here. It goes straight to the team\'s Cloudflare store and is never shown again.' },
+   { s: 'aiconnect', v: 'mistral', act: 'owed:aitermsaccept DEC-420', say: 'She ticks that she accepts the terms that bind the team\'s use. Her acceptance is recorded with her name and the date.' },
+   { s: 'aiconnect', v: 'mistral', act: 'owed:aiconnecttest DEC-420', say: 'She tests the connection with a harmless message that holds none of the team\'s material. It passes in 2.1 seconds. Until it did, the account stayed off.' },
+   { s: 'aiconnect', v: 'mistral', act: 'owed:aiaccountadd DEC-420', say: 'She turns it on and places it second in the order.' },
+   { s: 'aiproviders', act: 'owed:aiorderset DEC-420', say: 'Mistral now shows second in the list, on, with its health. OpenAI stays first. Work goes to the first account that is on, allowed for that work and within its limits.' },
+   { s: 'aimine', only: 'ai', act: 'owed:aimineuse DEC-420', say: 'Dev, a member, opens Your AI. His work uses OpenAI first and Mistral second, both the team\'s. He sees which checks the team requires, locked, and which he may require for his own work.' },
+   { s: 'aimoments', only: 'ai', v: 'continued', act: 'owed:aicontinue DEC-420', say: 'At 2:10 PM the team\'s OpenAI account reaches its monthly limit while Dev\'s answer is half written. The panel says so, names the account the answer would continue on, and waits. He chooses to keep going on Mistral. Had he declined, nothing more would have been sent.' },
+   { s: 'aimoments', only: 'ai', v: 'disclosure', act: 'owed:aisend DEC-420', say: 'Because material has never gone to Mistral from this team, the notice names Mistral, says what it is sent and where it runs, and waits. He sends it.' },
+   { s: 'aimoments', only: 'ai', v: 'cost', act: 'owed:airunstart DEC-420', say: 'For his next run the panel shows an estimate before it starts and the cost when it ends. Nothing about the switch was silent.' },
+   { s: 'aiproviders', act: 'owed:aibudgetset DEC-420', say: 'Rosa sees OpenAI at its budget and Mistral serving, and the switch among the changes. She raises OpenAI\'s budget for next month, or leaves the order as it is.' } ] },
 ];
 /* expand a journey into its steps for the path chosen (ai true or false) */
 function journeySteps(j, ai) {
@@ -213,4 +225,5 @@ const JBRIEF = {
  29: ["From installing the team's Civicsmith to a first conclusion on a real question: the release Bob must be able to use (K3320).", "civicsmith.org; then the team's own Civicsmith."],
  30: ["A member who may not start projects gets into one: by joining one they were invited to, or by asking to join one the team can find; its owners decide.", "Home's “Getting into a project”, and Projects."],
  31: ["A team follows a person or an organization the record does not hold yet; bodies added at setup say what they are.", "People."],
+ 32: ["An administrator adds a second provider's plan through the guided connection, tests it, turns it on and places it second; then a member's work continues on it after the first account's limit, with the switch shown and declinable.", "Settings › AI providers, then the assistant panel."],
 };

@@ -1,6 +1,6 @@
 # screens-inquiry (T51)
 
-**Status** · session_0173JDLUmEUBw56aUupWGyQE · depth 2 · COMPLETE · handled B53
+**Status** · session_01BwSTa3XEaYc7PpV5c1Q8ZD · depth 2 · COMPLETE · handled B56
 
 ## J1 · REPORT
 
@@ -463,3 +463,27 @@ Size (session_0173JDLUmEUBw56aUupWGyQE): test runs 14, module lines 6677
 
 COMPLETE · screens-inquiry #24 · re CHANGE B53 (K4668): merged tranche/T51 (CALCULATIONS #8, the in-tree shim); no code change. screens-inquiry 521 of 521 under `--import ./test/platform-sqlite.mjs`; checks/run.mjs all five 0 failures (words clean now); ownership 0 failures. J33 stands.
 Size (session_0173JDLUmEUBw56aUupWGyQE): test runs 15, module lines 6677
+
+## J35 · QUESTION
+
+QUESTION (SCREENS-INQUIRY #25, B54; best reading below, I carry on and do not wait).
+
+The code and tests for R130 (a kind with no reader is named, no no-op act), R131 (the part kind per passage), R132 (reading does not wait for the scan) and G110b (the supporting-file reasons by their code's sentence) are committed on `job/T51/screens-inquiry` (40203a1fa4). To avoid a row owed to UX-DESIGN where the sentence already exists, the Document page reads the code-origin rows other modules already minted: `reading-pipeline.index.unsupported_<kind>` (rtf, email, legacy_*, tiff, gif, webp, heic, avif, bmp, jp2, ico, and `_kind` with {kind}), `content.part_kind.<kind>` (the 11 kinds) and `file-safety.index.reading_is_not_gated`. They are in the merged source but not yet in `bio-plane/src/setup-words/rows.mjs` (stale until the round-end regeneration), so against the committed rows 11 tests of my module are red by name (`UNKNOWN_WORD` / `hasWord`): 9 in `r9-document`, `r9-seam` (R130, R131, R132) and the module's own R19 and R44 (which assert every key the screens list is held). With rows regenerated in my working copy (not committed; not mine to write) the module suite is 536 of 536.
+
+Smallest thing I need: the rows regenerated on `tranche/T51` now (`node bio-plane/src/setup-words/build.mjs`, commit `rows.mjs` and `words-unreviewed.json`), so I merge it and COMPLETE with no red. If you would rather keep the regeneration for the round end, answer so and I COMPLETE with these 11 listed as red by name for that one cause (K4640's pattern).
+
+Decisions made under P17, for rulings.md, reported as done: (1) the three sentences above are read from those rows, not from new `screen.document.*` keys; the page falls back to the reading's own `basis` for an unsupported kind while the row is not held, and draws nothing for a kind or the scan sentence while its row is not held (never a raw key); (2) `PICTURE_FORMAT` (the assistant's reading of a picture's page) is narrowed to JPEG and PNG, the only pictures the plane opens; (3) a passage's kind is drawn for every kind of the closed list, `body` included (content treats `body` as unmarked in a citation's ref; dropping it from the page is a one-line change if you want it quieter). The only new row owed to UX-DESIGN: `screen.document.supporting.notwalked.pending`, `.toolarge`, `.unavailable` (a page whose supporting files were not looked for at all; stood in as the key).
+
+## J36 · COMPLETE
+
+COMPLETE · screens-inquiry #25 · re START B54, ANSWER B55, CHANGE B56 (tranche/T51 merged through 9f050bbc02 and after; rows regenerated).
+
+**Entries applied (all in document.mjs):** R130 (G135a, G135e): a kind with no reader (reading states UNSUPPORTED_FORMAT {kind}, or, for an unread/repairable copy, the record's type/format/file name) is named by reading-pipeline.index.unsupported_<kind> (basis fallback while the row is absent) and offered no readheld, pdfstructure, pagetranscribe or image-unread fold; PICTURE_FORMAT narrowed to JPEG and PNG. R131 (G134d): each passage shows its unit's kind by content.part_kind.<kind> (all 11 kinds incl. body; none for a unit with no kind). R132 (G136e): file-safety.index.reading_is_not_gated on a filed copy's page (not a testimony). G110b: supporting-file reasons by screen.capture.supporting.* (cap/toolarge/unavailable, counts summed), detail and codes never drawn; not_walked by screen.document.supporting.notwalked.{pending,toolarge,unavailable}. fr6-seam test fixed per K4847 (polls op=reading for more===true, names 3.46 MB). fr6-document G19 test corrected (it pinned the defect).
+
+**Failing-first (RED then GREEN):** r9-document: RED "AssertionError: rtf: the statement is its own element", "no Read it for a GIF", "one tag for each kind of the list" ([] vs 11 kinds), R132 sentence absent; r9-supporting: RED "kept of all" (old "89 / 246 ·" form), "TOO_LARGE and BUDGET_EXHAUSTED share a sentence: 4 + 1"; r9-seam (real Miniflare plane: RTF, GIF, DOCX with footnote): RED "rtf: the page names it", "the page shows both:" . All GREEN after. Platform check: N for the screen (L through the real plane in r9-seam).
+
+**Tests/checks:** screens-inquiry 536 of 536. Impact (origin/tranche/T51..HEAD: screens-inquiry, control-plane, plane, journey-check): the 177 test files that import the module: 175 pass; 2 not mine: control-plane t51-round7-seam "G62 control" passes alone; "G61 twin" (Queue fetch-done by alarm) ran to its 600 s limit twice and touches nothing of the Document page. Checks: architecture 0, coverage 131/131 0, words 0, ownership 0; format 1 failure, build/rulings.md:4959 (K4964 states no standing-list decision), not mine.
+
+**Rows owed (UX-DESIGN):** screen.document.supporting.notwalked.pending / .toolarge / .unavailable (stood in as the key). Generated artifacts made stale: none. No file created outside paths. Found in another module: the Add screen's supportingLine and my Document copy map reasons to sentences twice; one shared export from screens-intake would end the duplication (BOB's call).
+
+Size (session_01BwSTa3XEaYc7PpV5c1Q8ZD): test runs 9, module lines 6722

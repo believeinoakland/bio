@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01U3Cn7msFQfwLaBjAPpmVKZ · depth 2 · COMPLETE · handled B86
+**Status** · session_01AWoVVqkqd48jwuoT2GtVPZ · depth 2 · COMPLETE · handled B89
 
 ## Record (PLANE #41, T51-125)
 
@@ -956,3 +956,43 @@ Size (session_01U3Cn7msFQfwLaBjAPpmVKZ): test runs 62, module lines 3741
 ## J58 · COMPLETE
 
 COMPLETE (PLANE #57, B84 K4912 and B85 K4916). (1) transcribe.mjs quotes boundOf("pdf", "request_bytes") alone. (2) g41-shape's refused workbook is judged by the refusal's size (the generator's declared sheet text, 44,732,492 B) and bound (boundOf xlsx.declared_text) as data, never the sentence. (3) r8-heal-door: a timing-dependent test, not a heal race: a traced setAlarm showed a firing in flight at the delete re-arming before any request; the test now counts the frame's own looks and arms and waits for a quiet stretch; 5/5 alone and 5/5 on one core, 4/4 each. R107 jobrow route and R76's awaited deferReading, each red first then green. Plane suite 500/502 on the merged tree (R24, R77 accepted; r8-headofline green). Checks 0 failures, coverage 107/107. Record: build/jobs/T51/plane.md, 'PLANE #57, CHANGEs B84 and B85'. Size (session_01U3Cn7msFQfwLaBjAPpmVKZ): test runs 62, module lines 3741
+
+### PLANE #58 (job 74, B87): R108, a deferred job keeps its project
+
+- **R108** `pending.mjs`: `add({kind, sha, project})` keeps a non-empty `project` of at most 200 characters as the row's `detail.project` (through `owe`/`registerJob`); `pendingadd` reads `project` from the address. Absent, empty or over 200: no `detail.project`, as before. A second registration without a project leaves the held one (`registerJob` replaces `detail` only when given). The drain's existing read (`unpack` owner) already sends `detail.project` with `op=unpack`.
+- Tests: new `r108-project.test.mjs` (3): the route with a project writes `detail.project` and the drain's `op=unpack` request carries it; control: none, empty, 201 characters write none; a re-registration without a project keeps it. The seam §6 end to end (members filed in the archive's project) is control-plane's seam, after its job 38 sends `project` from `jobs.mjs` `ask`.
+- Red first: `actual {}` against `{project: 'PROJ-2026-0001'}` (and `PROJ-2026-0002`); the control green before the change. Green after: 3 of 3.
+- Plane suite, the 66 affected files (`impact.mjs` names plane only: 1 of 176 modules): tests 445, pass 444, fail 1: `release.test.mjs`:74 R24 "screen.objective.purpose is held by the words list", the accepted red (not in this diff; `words.json` lacks the key, the design's file, BOB's regeneration).
+- Checks: format 0, architecture 0, coverage 108 of 108, words 0, ownership 0 failures.
+- Cause: the door's `pendingadd` and `holder.add` took only `kind` and `sha`. Why missed: R98/R97 gave `owe` a `detail` and the drain read `detail.project`, but no requirement named the route's parameter until control-plane R130 (G151). Platform check: none needed (SQL storage write, no workerd behaviour).
+- Found in other modules: the continuation's own registration by acquisition (`unpack.mjs`:671, no project) is registered before the door's; `registerJob` keeps the later `detail.project`, so control-plane's `promoteFiled` must register with the project (diagnosis item (a)); nothing for me to change.
+
+Size (session_01Di3H5CJCeTUBedG79gEybu): test runs 4, module lines 3752
+
+## J59 · COMPLETE
+
+COMPLETE (PLANE #58, job 74, B87): R108 met. pendingadd takes project and writes detail.project (pending.mjs add and route); absent, empty or over 200 chars: none. Red first, 3 new tests green (r108-project). Affected suite (66 files, plane only): 445 tests, 444 pass, 1 fail: release R24 screen.objective.purpose (accepted red, words.json lacks the key). Checks: format 0, architecture 0, coverage 108/108, words 0, ownership 0. Control-plane's promoteFiled must pass project for the continuation case (diagnosis a). Record updated.
+
+## Record (PLANE #59, fix round 9 batch D, job 84; B88)
+
+**Entries applied**
+- R109 (G159): `registerJob` arranges the alarm after the commit (`Promise.resolve().then(arm)` on success, so it runs once the caller's synchronous transaction returned); a refused registration arms nothing; `armJobs` stays. Tests: `r9-jobs.test.mjs` "R109 …" (daily alarm hours ahead brought forward and the row runs in one tick; second row; refusal; inside `transactionSync`).
+- R110 (G165): readers of `reading` and `ocr` rows are handed `stampUnit(unit)` (`p<page>` or `c<cursor>`; only while the row runs); it writes that unit in flight and clears every other stamp, and `reapInterrupted` charges the kill to the stamped unit (else the cursor's, else `whole`). `halfBudgetPages` unchanged. Tests: a page 5 (not first, not in `detail`) killed three times ends `killedPages: [5]`, pages 0-4, 6-7 read, `whole` uncharged; control: whole read charged to `whole`, ends stated; a `fetch` is handed none.
+- R97 (G160): `heldOf` now writes `{kind, capture_sha, holder}` into `failed_why` from the answer's `detail`, its refusal's `detail` or its top level; `holder` null where none is named (D-15). The G127c test is re-pointed to the new shape; new test for null holder, top-level facts and a no-facts control.
+
+**Red first:** all new tests failed before the change (`q.stampUnit is not a function`, alarm not forward, `failed_why` lacked the facts).
+**Cause / why missed:** the registrar was synchronous and armed nothing; plane stamped `unitOf(row.detail)` so extraction's rows (`detail {}`) were always `whole`; the old kill test only killed a page named in `detail.next_page`.
+**Deferred:** none. **Rows owed:** none (no sentence added).
+**Found in other modules:** none new. `release` R24 and `l77-size` R77 stay red as BOB listed them. Acquisition's `oweOf` still never calls `armJobs`, now harmless (the plane arms itself).
+
+**Tests and checks**
+- Light plane files: tests 472, pass 470, fail 2 (`release` R24 words; R77 L gate: both inherited, not mine). r9-jobs alone: 35/35.
+- Heavy, alone: r8-heal-door 4/4, r7-contention 5/5, g54-l 6/6, g55-alarm-l 2/2 (platform check L, workerd), r9-memory 3/3. `g41-shape` and `g44-shape` not run (untouched by this change).
+- `impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 176 (plane); no other user named.
+- format 0 failures; architecture 0; coverage 110 of 110, 0; words (plane) 0; ownership 0.
+
+Size (session_01AWoVVqkqd48jwuoT2GtVPZ): test runs 9, module lines 2310
+
+## J60 · COMPLETE
+
+Job 84 done: R109 (registerJob arms after the commit), R110 (stampUnit; kill charged to the page), R97 failed_why {kind, capture_sha, holder}. Red first for each. Light suite 470/472 (release R24 and l77 R77, inherited); heavy alone green incl. L files; impact: plane only; format, architecture, coverage, words, ownership 0 failures. Record has the four fields and Size.

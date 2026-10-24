@@ -1,6 +1,6 @@
 # screens-intake (T51)
 
-**Status** · session_01L76ARMq955JWkNCZQMCV7F · depth 2 · COMPLETE · handled B48
+**Status** · session_0173SFnSQmQvKknpr8osxVr5 · depth 2 · COMPLETE · handled B50
 
 ## Record
 
@@ -720,3 +720,31 @@ Applied: R21 the register is wholes (one row carrying its parts; no part a row; 
 Module suite 368/369: the one red is `t51-seam-g126h` test 1, RED BY NAME (R-SEAM) until control-plane R131 (job 38) and plane's job table (job 37) merge; the same file's other two tests are green. Users: screens-inquiry 520/521 (fr6-seam R96 G13, red by name on the tranche too), screens-daily/journey-check/plane 27/27, control-plane's 16 screen-importing files 9 reds, the SAME 9 on the tranche's own capture.mjs. Checks: format 0, architecture 0, coverage 65/65, words 0, ownership 0.
 New files outside paths: none. Generated artifacts possibly stale: the plane's bundle if it embeds the served page. Rows owed to later-ux.md are listed in the record. Merged `origin/tranche/T51` through B48.
 Size (session_01L76ARMq955JWkNCZQMCV7F): test runs 60, module lines 3034
+
+## B49 · START applied (SCREENS-INTAKE #24, session_0173SFnSQmQvKknpr8osxVr5)
+
+Merged `origin/tranche/T51` first. Read whole: the START, R67, R59 and the ids of the supporting line (G19, G110), `capture.mjs`'s `supportingLine`, `r8-supporting.test.mjs`. Nothing outside `paths`, `tests` and this record.
+
+**R67 · one classification of the supporting-file reasons (K4969).** (1) Cause as the START: the classification was written where it was first drawn (K4164). `supportingReasons(reasons) -> {cap?: {n, cap}, toolarge?: {n}, unavailable?: {n}}` is now a function of `capture.mjs`, exported from `capture.mjs` and from `index.mjs` (as `checkOutcome` is, for screens-inquiry's re-point, BOB's mechanical pass); it is also in `view.parts`, because the Add screen's draw code reaches its helpers through `view.parts` (my first form called the module function directly and the three R59 tests went red; fixed). `supportingLine` draws from it; its output is unchanged (`r8-supporting` and `t51-fix6` R59 pass unmodified). No sentence added; screens-inquiry untouched. (2) Missed: no requirement named it. (3) Red first: `r67-supporting-reasons.test.mjs` (3 tests: each code, counts summed per kind with a non-positive or non-number count as 1, a malformed entry skipped and no list is no kinds) was red on the tranche's code (`does not provide an export named 'supportingReasons'`), green now. (4) Platform check: N.
+
+**Tests and checks.** Module suite (from `bio-plane/`): tests 372, pass 370, fail 2: `R31 R58 (G72) 'Finish it' answered NO_SUCH_SESSION…` and `R61 (G126h…) a 2 MiB sheet…`, the SAME two on the tranche's code (checked by stashing my diff: 369 tests, the same 2 red; both red before this job). `impact.mjs origin/tranche/T51 HEAD`: 6 modules (screens-intake, screens-daily, screens-inquiry, control-plane, plane, journey-check); users run: screens-inquiry 536/536, screens-daily 292/292; journey-check's red files need a browser (`R1: browser() launches in this container with CHROMIUM unset`), environmental, not run to green here; control-plane and plane files not rerun (the change reaches them only through the Add screen's line, whose output is unchanged and pinned by R59's tests). Checks (civicos-process): format 0 failures; architecture 0; coverage 66 of 66 ids named, 0; words 0; ownership 0 (4 files).
+
+Other modules: screens-inquiry's Document page copy should import `supportingReasons` from `screens-intake/index.mjs` (BOB's round-end pass). Generated artifacts made stale: the plane bundle if it embeds the served page (as J50 said).
+
+Size (session_0173SFnSQmQvKknpr8osxVr5): test runs 9, module lines 3041
+
+## J51 · COMPLETE
+
+COMPLETE · B49 (fix round 9, batch D: R67). Record section 'B49 · START applied' has the four fields (cause: classification written where first drawn, K4164; missed: no requirement named it; red first: r67-supporting-reasons.test.mjs, no export on the tranche; platform check N). Applied: supportingReasons(reasons) exported from capture.mjs and index.mjs (and in view.parts); the Add screen's supportingLine draws from it, output unchanged (R59 tests unmodified green); no sentence added; screens-inquiry untouched (its re-point is your mechanical pass: import from screens-intake/index.mjs). Module suite 370/372: the 2 reds are the same two on the tranche without my diff (R58 G72 NO_SUCH_SESSION; R61 G126h seam). Users: screens-inquiry 536/536, screens-daily 292/292; journey-check files need CHROMIUM (environmental). Checks: format 0, architecture 0, coverage 66/66 0, words 0, ownership 0. Size (session_0173SFnSQmQvKknpr8osxVr5): test runs 9, module lines 3041
+
+## B50 · CHANGE applied (SCREENS-INTAKE #24)
+
+Merged `origin/tranche/T51`. The R31 R58 (G72) red was mine, as BOB read it: the closed-capture line drew the stand-in `acquisition.index.no_such_session` after the design's `refusal.NO_SUCH_SESSION` (DEC-425) reached the table. (1) Cause: the stand-in was left in place when the row arrived (K4269's owed row). Now `closedLine` draws `refusal.NO_SUCH_SESSION`, and `index.mjs`'s key list names that row in place of the stand-in. (2) Missed: the test said "the held row" by `hasWord`, which went red only when the row landed. (3) Red before, green after: `r7-finish.test.mjs` "R31 R58 (G72)…" red on the merged tranche, green now. (4) Platform check: N.
+
+Module suite: tests 372, pass 371, fail 1: `R61 (G126h…)`, red by name for job 38. Users: screens-daily and screens-inquiry 828/828. Checks: format 0, architecture 0, coverage 66/66 0, words 0, ownership 0. R67 work unchanged.
+
+Size (session_0173SFnSQmQvKknpr8osxVr5): test runs 13, module lines 3041
+
+## J52 · COMPLETE · re B50
+
+COMPLETE · B50 applied. closedLine draws refusal.NO_SUCH_SESSION; index.mjs key list updated (stand-in retired). Module suite 371/372, the one red R61 G126h by name (job 38). Users screens-daily + screens-inquiry 828/828. Checks: format 0, architecture 0, coverage 66/66 0, words 0, ownership 0. R67 unchanged. Four fields in the record's 'B50 · CHANGE applied'. Size (session_0173SFnSQmQvKknpr8osxVr5): test runs 13, module lines 3041

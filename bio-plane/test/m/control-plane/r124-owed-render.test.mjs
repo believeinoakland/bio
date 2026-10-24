@@ -186,3 +186,43 @@ test("R124 (G2, CAPTURE #48 merged): with the real capture the delivery leaves o
   await deliverOwedRender({ ctx: render.ctx, env: render.env, storeName: "bio", answer: { ok: true, document: rendered(render) }, session: render.session });
   assert.equal([...render.ctx.storage.sql.exec(`SELECT 1 FROM fetch_done`)].length, 0);
 });
+
+/* ---- fix round 9, P25 (K4855; screens-intake R49): an owed fetch whose `acquire` answered `existed: true` follows the inline path ---- */
+const heldBefore = async (r, doc, { project = "INQ-2026-0002", who } = {}) => {
+  const made = await CAPTURE_SCREEN.parts.promoteDocument(screen(r.ctx, who), { doc, title: "Held already", locator: doc.locator, project });
+  assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 300));
+  return made.bundleId;
+};
+const bundleCount = (r) => [...r.ctx.storage.sql.exec(`SELECT bundle_id FROM bundles`)].length;
+
+test("R124 (P25): a large fetch whose bytes a document the opener sees already holds ends done and linked to it: no second document, the fetch recorded done naming the holder", async () => {
+  const r = await owingFetch();
+  const doc = fetched(r, 15932155, "application/pdf");
+  doc.profile = { format: { format: "pdf" } };
+  const holder = await heldBefore(r, doc);
+  const before = bundleCount(r);
+  const out = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, existed: true, document: doc }, session: r.session });
+  assert.deepEqual([out.ok, out.bundleId, out.existed], [true, holder, true], JSON.stringify(out));
+  assert.equal(bundleCount(r), before, "no second document was promoted");
+  const rows = [...r.ctx.storage.sql.exec(`SELECT session, document, opener FROM fetch_done`)].map((x) => ({ ...x }));
+  assert.deepEqual(rows, [{ session: r.session, document: holder, opener: "member:ann" }], "the fetch is recorded done naming the holder");
+});
+
+test("R124 (P25 control): `existed: true` with no document the opener sees promotes as before; the bytes held by a document she cannot see end `CAPTURE_HELD_BY_ANOTHER_BUNDLE` with the holder named, never a bare `PROMOTE_REFUSED`", async () => {
+  const fresh = await owingFetch();
+  const doc = fetched(fresh, 100);
+  const out = await deliverOwedRender({ ctx: fresh.ctx, env: fresh.env, storeName: "bio", answer: { ok: true, existed: true, document: doc }, session: fresh.session });
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.notEqual(out.existed, true, "a promotion, not a link");
+  assert.equal(bundleRow(fresh, out.bundleId).project, "INQ-2026-0002");
+  /* held under another member's project: the one-home rule refuses, and the answer names the holder */
+  const r = await owingFetch();
+  const other = fetched(r, 100);
+  r.ctx.storage.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?, ?, 'active', 0, '2026-10-22T00:00:00Z', '2026-10-22T00:00:00Z')`, "INQ-2026-0009", "bea");
+  const holder = await heldBefore(r, other, { project: "INQ-2026-0009", who: { author: "bea", actorMemberId: "bea", actorIdentity: "member:bea", actorViewer: "member:bea" } });
+  const refused = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, existed: true, document: other }, session: r.session });
+  assert.equal(refused.ok, false, JSON.stringify(refused));
+  assert.equal(refused.reason, "CAPTURE_HELD_BY_ANOTHER_BUNDLE");
+  assert.ok("holder" in refused, "the holder field is stated (a name where the record names it, else null)");
+  assert.ok(holder);
+});

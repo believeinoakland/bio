@@ -86,11 +86,13 @@ export async function promoteArchive({ stub, doAnswer, docs, project = null, arc
   for (const doc of docs) {
     const sha = doc.capture.sha256;
     const at = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
-    const fail = (code) => not_promoted.push({ sha256: sha, code: typeof code === "string" && code ? code : "PROMOTE_FAILED" });
+    /* R134 (fix round 9, G129e): a failure of the exchange (the store did not answer, a throw) is transient: the member stays owed and the plane's `unpack` job
+       offers it again; a refusal that is the file's own (the store answered, `ok: false`, with its reason) is named and final */
+    const fail = (code, transient = false) => not_promoted.push({ sha256: sha, code: typeof code === "string" && code ? code : "PROMOTE_FAILED", ...(transient ? { transient: true } : {}) });
     try {
       const alloc = await doAnswer(stub.fetch(new Request(`http://do/allocid?prefix=INFO&year=${at.slice(0, 4)}`, { method: "POST" })));
       const id = alloc.answered && alloc.result && typeof alloc.result.id === "string" ? `${alloc.result.id}-archive-file` : null;
-      if (!id) { fail(alloc.result?.reason ?? alloc.reply?.body?.reason ?? "STORE_DID_NOT_ANSWER"); continue; }
+      if (!id) { fail(alloc.result?.reason ?? alloc.reply?.body?.reason ?? "STORE_DID_NOT_ANSWER", !alloc.refused); continue; }
       const f = filing(id, doc, { project: proj, archiveSha: archiveSha ?? doc.container?.archive_sha256 ?? sha, at });
       const raw = crypto.getRandomValues(new Uint8Array(4));
       const pkg = { bundleId: id, base: null, snapKey: `${at.replace(/[-:]/g, "")}_${hex(raw)}`, ...who, files: f.files,
@@ -105,8 +107,8 @@ export async function promoteArchive({ stub, doAnswer, docs, project = null, arc
         /* (G43) a document filed without its reading is handed back to be followed; the answer's shape is unchanged */
         if (f.readingDropped && typeof onDropped === "function") onDropped({ sha, document: doc });
       }
-      else fail(r?.reason ?? r?.code ?? out.reply?.body?.reason ?? "STORE_DID_NOT_ANSWER");
-    } catch { fail("PROMOTE_FAILED"); }
+      else fail(r?.reason ?? r?.code ?? out.reply?.body?.reason ?? "STORE_DID_NOT_ANSWER", !(r && r.ok === false) && !out.refused);
+    } catch { fail("PROMOTE_FAILED", true); }
   }
   return { promoted, not_promoted };
 }

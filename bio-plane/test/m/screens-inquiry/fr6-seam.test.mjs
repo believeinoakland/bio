@@ -128,7 +128,7 @@ test("R128 G12a (the real plane) a spreadsheet the member filed under a project 
   assert.ok(row.textContent.includes(word("screen.project.docs.kind.sheet")), "and its kind, from the picker row's `format`");
 });
 
-test("R96 G13 (the real plane) a 12 MB text filed by the screen's own promotion is drawn as being read, with its progress, until the plane says it is whole (red by name until extraction's `more` merges)", async () => {
+test("R96 G13 (the real plane) a 3.46 MB text (119,600 lines) filed by the screen's own promotion is drawn as being read, with its progress, until the plane says it is whole", async () => {
   const auth = await founder();
   const cs = screenCall(auth);
   const lines = []; for (let i = 0; i < 119599; i++) lines.push("WALKTXT line " + i + " appeal" + (i % 997));
@@ -137,6 +137,12 @@ test("R96 G13 (the real plane) a 12 MB text filed by the screen's own promotion 
   const up = await upload(auth, bytes, "w12.txt", "text/plain");
   const filed = await CAPTURE_SCREEN.parts.promoteDocument(cs, { doc: up.document, title: "w12.txt", locator: up.document.locator, project: "" });
   assert.equal(filed.refused, undefined, JSON.stringify(filed).slice(0, 300));
+  /* K4847 (R-NOLOAD): the page is booted once the plane holds a reading that says more follows (the reading window is about 4 s), as the G38 test below waits;
+     booted before it, the page rightly draws `unread` */
+  const readingOf = async () => (await (await door(`/api/?op=reading&sha256=${up.capture.sha256}`, { headers: auth })).json()).result;
+  let held = await readingOf();
+  for (const end = Date.now() + 60000; !(held && held.found === true && held.more === true) && Date.now() < end;) { await new Promise((r) => setTimeout(r, 250)); held = await readingOf(); }
+  assert.ok(held && held.found === true && held.more === true, "the plane holds a reading that says more follows: " + JSON.stringify(held).slice(0, 200));
   const p = await boot({ screens: SCREENS, plane: forwarded(auth), path: "/app/document/" + filed.bundleId });
   await until(p, () => !!main(p).querySelector("[data-text-state]"), 60000);
   const state = main(p).querySelector("[data-text-state]").getAttribute("data-text-state");

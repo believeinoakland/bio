@@ -1,6 +1,6 @@
 # scheduler (T51)
 
-**Status** · session_0113Q34uGoEBKcg4P8s4Pabg · depth 2 · COMPLETE · handled B10
+**Status** · session_01D72GnkQD2sSzFN9m6WNunZ · depth 2 · COMPLETE · handled B12
 
 ## J1 · REPORT
 
@@ -238,3 +238,31 @@ Size (session_0113Q34uGoEBKcg4P8s4Pabg): test runs 14, module lines 1045
 Job 62 done (G91, K4912). Cause: an arm made inside a firing (getAlarm() none) set a due row's past wake, readable for the firing's 8.7 s (diagnosis-R9-headofline.md). Fix in scheduler index.mjs: an arm inside a firing weighs nothing, leaves the alarm or sets start+budget+grace; the end reconcile sets the next outright. r8-headofline 3/3 alone x5 and on one core; scheduler suite 184/184 (+4, r9-visible); r8-wave 3/3, r8-heal-door 4/4; format, architecture, coverage 0 failures; ownership 1 failure: the new file build/plan/diagnosis-R9-headofline.md (outside my paths, as your START told me: please add it to my paths). Stale: plane bundle and agent-worker. Proposed R30 wording and Size line are in my record. Size (session_0113Q34uGoEBKcg4P8s4Pabg): test runs 14, module lines 1045
 
 Ring failed (J12): BOB's session session_017yBV9xWBLct2WNZvFNpVhc is archived, so no doorbell could be bound; the pushed COMPLETE (J12) is the message, for BOB's backstop (mechanics §13).
+
+## Fix round 9 · job 85 · G159's heal (SCHEDULER #45, session_01D72GnkQD2sSzFN9m6WNunZ, depth 2)
+
+Tranche/T51 merged first (`ff2f3368b4`).
+
+**Cause.** `heal` (`bio-plane/src/scheduler/index.mjs`) re-armed only an absent or spent alarm. A row registered behind a daily alarm hours ahead (the `fetch` row of a parked capture, registered by a caller that never arms) was never weighed: `heal` returned the future alarm and asked no consumer anything, so the row waited for the daily firing (seam: `alarm_at` 4.4 h ahead, row `owed`, `attempts` 0).
+
+**Why missed.** Every `heal` test set either no alarm, a spent one, or a live alarm with the consumer's wake also in the future or asserted that no consumer is asked; none had a live alarm later than a wake already come (the old R28 test even pinned "a live alarm is not disturbed" with an overdue consumer).
+
+**Red first.** `test/m/scheduler/spent.test.mjs` "R28 (G159, K4980)": alarm four hours ahead, one consumer owed, one `heal`: red on `origin/tranche/T51`'s `index.mjs` (alarm unmoved), green after. The old test's third part (an overdue consumer behind a live alarm, asserting nobody is asked) pinned the behaviour R28 now amends; it now has a consumer whose wake has not come.
+
+**What changed** (`index.mjs`): `heal` with a live alarm ahead of `now` asks each consumer its wake once (the existing `#oldestOverdue` probe, at most one look in `HEAL_EVERY_MS`, none inside a firing); when one has already come it arms with `arm(now, true)`, which sets `max(earliest wake, now)` = now (never the past instant). It runs no tick (R17). An alarm already due or past by under a minute, a wake not yet come, and no overdue wake leave everything as before. `arm`'s new second parameter is internal (the reconcile's existing `force`).
+
+**Platform check (L).** Miniflare seam `t51-round8-seam.test.mjs` `R8 (A1)`, `(A1 control)`, `(A1b)` (the real alarm, the real plane, the acquisition registrar that does not arm): was red (diagnosis §4), 3 of 3 green with this change alone.
+
+**Results**
+- scheduler suite: ℹ tests 185, ℹ pass 185, ℹ fail 0 (was 184; +1).
+- `impact.mjs origin/tranche/T51 HEAD`: 11 modules, 250 files. Run: tasks 120/121, queue 222/223, instance-setup 234/234, op-declarations 23/23, answer-envelope 43/43, store-door 57/57, signin-door 15/15, screens-action 4/4; plane 66 files and control-plane 78 files, each file run alone: 0 failures. The tasks failure (R25 K4488 `authority event`) and the queue failure (R55 `queue.kind.<kind>`) are red on `origin/tranche/T51`'s `index.mjs` too (checked), not this change's.
+- format 176 modules, 176 requirements files, 0 failures; architecture (scheduler) 22 product files, 87 imports, 0 failures; coverage (scheduler) 33 of 33 live ids, 0 failures; words (scheduler) 3526 literals, 0 failures; ownership 3 files, 0 failures.
+- No sentence added; no key owed.
+
+**Deferred**: none. **Other modules**: none new. **Generated artifacts made stale**: `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker`'s bundle carry scheduler source; BOB regenerates.
+
+Size (session_01D72GnkQD2sSzFN9m6WNunZ): test runs 12, module lines 1048
+
+## J13 · COMPLETE
+
+Job 85 done (G159, K4980). Cause: heal re-armed only an absent or spent alarm, so a row registered behind a future daily alarm waited for it. Why missed: no heal test had a live later alarm with a wake already come; the old R28 test pinned the opposite. Red first: spent.test.mjs 'R28 (G159)' red on tranche, green now. Platform check L: seam R8 (A1), (A1 control), (A1b) 3/3 green with this change alone. Scheduler suite 185/185; impact: 11 modules, all green except tasks R25 (K4488) and queue R55, both red on tranche too; format, architecture, coverage, words, ownership 0 failures. Details in my record. Stale: plane and agent-worker bundles. Size (session_01D72GnkQD2sSzFN9m6WNunZ): test runs 12, module lines 1048

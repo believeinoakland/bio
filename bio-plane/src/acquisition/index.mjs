@@ -140,7 +140,7 @@ export const PROFILE_TEXT_MAX = boundOf("capture", "profile_text_bytes");
 /* R17, R101: the bytes of a capture's head its format is judged from when the capture is held in parts: the first KiB of the first part. */
 export const FORMAT_HEAD = 1024;
 /* D-351: the bound on reading an OpenDocument capture back whole for its container digest. Chosen, not measured. */
-export const ODF_DIGEST_MAX = 8 * 1024 * 1024;
+export const ODF_DIGEST_MAX = boundOf("acquisition", "odf_digest_bytes");   // R122: quoted from READ_BOUNDS
 export function profilesAsText(ct, total, multipart) {
   return !multipart && total <= PROFILE_TEXT_MAX
     && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
@@ -429,7 +429,7 @@ const keepLaterOf = (cap, opts) => {
    `LARGE_FETCH_BYTES` is the most a request reads (a declared length over it is parked before one byte is read; with no length, the
    body read past it is parked); `FETCH_WAIT_MS` the longest a request reads a body (~10 s, as `RENDER_WAIT_MS` bounds the render).
    CHOSEN by the plan (K4562), not measured. */
-export const LARGE_FETCH_BYTES = 8 * 1024 * 1024;
+export const LARGE_FETCH_BYTES = boundOf("acquisition", "large_fetch_bytes");   // R122: quoted from READ_BOUNDS
 export const FETCH_WAIT_MS = 10000;
 /* the digest a parked fetch's session names as its primary: there is none yet, and the column is not null */
 const NO_PRIMARY = "0".repeat(64);
@@ -2433,7 +2433,7 @@ export async function owedRun(cap, entry, opts = {}) {
           if (!(given && given.ok === true)) {
             /* R111 (G105): a refusal no later try changes ends the copy's entry, stated; any other goes again */
             const why = refusalOf(given);
-            if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return { ok: true, done: true, final: true, reason: why }; }
+            if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return withFacts({ ok: true, done: true, final: true, reason: why }, given); }
             return { ok: true, done: false, outstanding: 1, reason: why };
           }
         }
@@ -2459,7 +2459,7 @@ export async function owedRun(cap, entry, opts = {}) {
         if (!(given && given.ok === true)) {
           /* R111 (G105): as for a finished copy above */
           const why = refusalOf(given);
-          if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return { ok: true, done: true, final: true, reason: why }; }
+          if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return withFacts({ ok: true, done: true, final: true, reason: why }, given); }
           return { ok: true, done: false, outstanding: 1, reason: why };
         }
         try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
@@ -2506,6 +2506,16 @@ const refusalOf = (given) => {
   const c = given && typeof given === "object" ? given.reason ?? given.code : null;
   return typeof c === "string" && c !== "" ? c.slice(0, 80) : "DELIVERY_REFUSED";
 };
+/* R116 (G160): the facts a refusal carried (`kind`, `capture_sha`, `holder`), as the refusing module gave them: from its `detail` when that is a plain object, else from its top level
+   (provenance's own shape). `{}` when it named none, and then no `detail` is added. Pure; never throws. */
+const refusalFacts = (given) => {
+  const out = {};
+  if (!given || typeof given !== "object") return out;
+  const src = given.detail && typeof given.detail === "object" && !Array.isArray(given.detail) ? given.detail : given;
+  for (const k of ["kind", "capture_sha", "holder"]) if (k in src) out[k] = src[k];
+  return out;
+};
+const withFacts = (answer, given) => { const f = refusalFacts(given); return Object.keys(f).length ? { ...answer, detail: f } : answer; };
 const FETCH_RETRY = Object.freeze(["HOST_COOLING_OFF", "FETCH_FAILED", "ACQUIRE_FAILED", "CAPTURE_NOT_KEPT", "ARCHIVE_UNREACHABLE", "EVIDENCE_STORAGE_NOT_CONFIGURED"]);
 export async function owedFetch(cap, entry, opts = {}) {
   try {
@@ -2515,7 +2525,7 @@ export async function owedFetch(cap, entry, opts = {}) {
     const st = ld.state && typeof ld.state === "object" ? ld.state : {};
     if (typeof opts.deliver !== "function") return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_NOT_HANDED" };
     const opener = typeof st.opened_by === "string" ? st.opened_by : "";
-    const final = (reason) => ({ ok: true, done: true, final: true, reason });
+    const final = (reason, given = null) => withFacts({ ok: true, done: true, final: true, reason }, given);
     if (!opener) return final("NO_OPENER");
     let made = st.fetch_done && typeof st.fetch_done === "object" ? st.fetch_done : null;
     if (!made) {
@@ -2558,7 +2568,7 @@ export async function owedFetch(cap, entry, opts = {}) {
                      fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why, failed_at: stampSecond() } },
             ttlMs: OWED_SESSION_TTL_MS });
         } catch { /* the entry still ends, stated */ }
-        return final(why);
+        return final(why, given);
       }
       return { ok: true, done: false, outstanding: 1, reason: why };
     }

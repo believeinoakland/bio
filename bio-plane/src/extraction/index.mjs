@@ -723,7 +723,7 @@ export class Extraction {
   /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
   async read(document, { storeName = "bio", env = null, budget = undefined, pieces = undefined, ocrInvocations = 0, registrar = null, killedPages = null,
-                         skipKilled = false } = {}) {
+                         skipKilled = false, stampUnit = null } = {}) {
     const e = env || this.env || {};
     const out = await this.#reader(document, {
       /* (fix round 9, K4904 (1); plan 2c item 8) the window at this cursor killed its reader three times: the reader steps past it, stated */
@@ -733,6 +733,8 @@ export class Extraction {
       ...(Number.isInteger(ocrInvocations) ? { ocrInvocations } : {}),
       /* (fix round 9, G129c; R101) the pages the ledger states killed their reader three times: not asked, stated `PAGE_KILLED_READER` */
       ...(Array.isArray(killedPages) && killedPages.length ? { killedPages } : {}),
+      /* (fix round 9, G165; R109) the plane's `stampUnit`, handed to the reader as it was given */
+      ...(typeof stampUnit === "function" ? { stampUnit } : {}),
       evidence: this.#evidenceOf(document && document.capture && document.capture.sha256),
       env: e, storeName, view: this.view(), planeVersion: e.VERSION || null,
       liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { unitsBudget: budget }),
@@ -857,7 +859,11 @@ export class Extraction {
    *  `kind: "ocr"` the stored reading's unread pages are asked of the OCR member, those the stored units do not hold, and the
    *  re-read is written as a composed reading; a member that is down leaves the entry owed, pages it declines end it. */
   async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined, kind = null, defer = false, registerJob = null, armJobs = null,
-                   killedPages = null, killedCursor = null, detail = null, halved = false } = {}) {
+                   killedPages = null, killedCursor = null, detail = null, halfBudgetPages = null, stampUnit = null } = {}) {
+    /* (fix round 9, G165; R109; plan 2c item 10) the pages the plane names killed twice are read at half the budget (plane R97's `halfBudgetPages`); the
+       plane's `stampUnit` goes to the reader unchanged, which calls it before each unit's member call */
+    const halved = Array.isArray(halfBudgetPages) && halfBudgetPages.length > 0;
+    const stamp = typeof stampUnit === "function" ? stampUnit : null;
     /* (fix round 9, G126b; R103; K4898) the ledger's tick names its job's kind (and hands the registrar); a call with neither is inside a member's
        request (`op=readheld`, the door's own read after a capture), which makes no OCR call */
     const call = typeof registerJob === "function" ? { registerJob, armJobs } : null;
@@ -891,7 +897,7 @@ export class Extraction {
     /* (fix round 6, G13; R90) a held reading of a text read in pieces that has more to read is not held: the next piece is read. */
     if (held && !ocr && stored && this.#moreOf(digest)) {
       if (defer === true) return left("READING_PENDING");
-      return this.#continueText({ digest, document, bundleId: home.bundleId, storeName, env: env || this.env || {}, left, call, ledger, killedPages, killedCursor });
+      return this.#continueText({ digest, document, bundleId: home.bundleId, storeName, env: env || this.env || {}, left, call, ledger, killedPages, killedCursor, halved, stamp });
     }
     /* (fix round 6, G8; R89) a "not read as text" reading whose held bytes detect nothing is tried: it stops stating itself repairable. */
     if (held && !ocr && ev && !repair && notReadAsText(heldReading)) this.#markRepairTried(home.bundleId, digest, "undetected");
@@ -919,11 +925,11 @@ export class Extraction {
        the ledger, which the door writes; nothing is read. */
     if (defer === true) return left("READING_PENDING");
     const e = env || this.env || {};
-    if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages, detail, halved });
+    if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left, call, killedPages, detail, halved, stamp });
     /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
     const reader = repair ? { ...document, profile: { ...(document.profile || {}), format: repair } } : document;
     const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: null },
-                                          ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, killedPages });
+                                          ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, killedPages, stampUnit: stamp });
     if (out.refused) return left(out.refused.code);
     if (repair && held && notReadAsText(out.reading)) { this.#markRepairTried(home.bundleId, digest, "still"); return left("READING_HELD"); }
     const prof = reader.profile && typeof reader.profile === "object" ? reader.profile : null;
@@ -992,7 +998,7 @@ export class Extraction {
    *  `{ok: true, read: true, more: true, detail}` while more follows, which the ledger continues at once, one piece a tick;
    *  `{ok: true, read: true}` for the last; `{final: true, why}` when the reader refuses the cursor (the bytes it was made
    *  from are no longer the ones held), which states it and ends the entry. Nothing else about the capture's reading changes. */
-  async #continueText({ digest, document, bundleId, storeName, env, left, call = null, ledger = false, killedPages = null, killedCursor = null }) {
+  async #continueText({ digest, document, bundleId, storeName, env, left, call = null, ledger = false, killedPages = null, killedCursor = null, halved = false, stamp = null }) {
     const st = this.#one(`SELECT cursor, read_through, total FROM capture_text_state WHERE capture_sha=? AND more=1`, digest);
     if (!st) return left("READING_HELD");
     /* a state with more to read and no cursor is a text read before pieces existed that the index holds only in part: it is read again
@@ -1002,7 +1008,7 @@ export class Extraction {
        past, stated, and the read goes on from the next */
     const skip = !restart && typeof killedCursor === "string" && killedCursor === st.cursor;
     const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : st.cursor },
-                                            ocrInvocations: ledger ? null : 0, registrar: false, skipKilled: skip });
+                                            ocrInvocations: ledger ? (halved === true ? HALF_OCR_INVOCATIONS : null) : 0, registrar: false, skipKilled: skip, stampUnit: stamp });
     /* (fix round 9, G129b; R101) a piece that failed for a cause outside the document (the store, a member: `transient`) is no end: the state keeps its
        cursor, nothing is indexed, and the entry stays owed, to be retried by the ledger with its back-off; never `more` 0 with no reason */
     const rd = out.reading && typeof out.reading === "object" ? out.reading : null;
@@ -1084,7 +1090,7 @@ export class Extraction {
    *  member was down or answered an error (the row stands: never `UNREADABLE`, never finished while the page stays unread). Pages the member declines
    *  in a 200 answer are the document's own, so that ends the entry (`OCR_NO_PROGRESS`). A stored reading that changed while the pass ran is not
    *  written over: the entry stays owed and is read again. */
-  async #continueOcr({ digest, heldReading, bundleId, storeName, env, left, call = null, killedPages = null, detail = null, halved = false }) {
+  async #continueOcr({ digest, heldReading, bundleId, storeName, env, left, call = null, killedPages = null, detail = null, halved = false, stamp = null }) {
     if (!heldReading) return left("NO_READING");
     const basis = this.reextractBasis({ captureSha: digest, ungated: true });
     if (!basis.held) return left("NO_READING");
@@ -1095,7 +1101,7 @@ export class Extraction {
     const d = detail && typeof detail === "object" ? detail : {};
     const author = typeof d.by === "string" && d.by ? d.by : PLANE_AUTHOR;
     const via = d.via === "op=pdfstructure&ocr=1" ? d.via : "ledger";
-    const pass = await this.#ocrPass({ digest, basis, env, storeName, author, via, killedPages, call, halved });
+    const pass = await this.#ocrPass({ digest, basis, env, storeName, author, via, killedPages, call, halved, stamp });
     const killed = pass.killed && pass.killed.length ? { killed: pass.killed } : {};
     if (pass.changed) return left("BASIS_CHANGED", { owed: true });
     if (!pass.filled.length && !pass.stated) return left(pass.why || "OCR_NO_PROGRESS", { ...(pass.transient ? { owed: true } : {}), ...killed });
@@ -1156,7 +1162,7 @@ export class Extraction {
    *  `#storedPages` (the OCR member asked for the pages left, within the call's budget), the reading composed as the press composed it, written by
    *  `#writeReread` only while the stored reading is still `basis` (R103), and the pages still left re-registered. Answers `{filled, transient, why,
    *  changed?, entry?, registration?}`. */
-  async #ocrPass({ digest, basis, env, storeName, author, via, killedPages = null, call = null, halved = false }) {
+  async #ocrPass({ digest, basis, env, storeName, author, via, killedPages = null, call = null, halved = false, stamp = null }) {
     const stored = basis.reading || {};
     const fmt = (this.#one(`SELECT capture_format FROM readings WHERE capture_sha=?`, digest) || {}).capture_format || stored.text_container || "pdf";
     const built = this.#storedPages(basis, fmt);
@@ -1165,7 +1171,9 @@ export class Extraction {
     const t3 = await tier3Extend(env, { sha: digest, storeName, i2text: built.i2text, wiredTier: baseTier, tier2PerPage: null, fmt,
       seed: built.seed, liveCalibration: (q) => this.#liveCalibration(q), ...(Array.isArray(killedPages) ? { killedPages } : {}),
       /* (G129c; R101) the one retry after three kills, at half the budget */
-      ...(halved === true ? { invocations: HALF_OCR_INVOCATIONS } : {}) });
+      ...(halved === true ? { invocations: HALF_OCR_INVOCATIONS } : {}),
+      /* (G165; R109) the plane's unit stamp, called with `p<page>` before each page's member call */
+      ...(stamp ? { stampUnit: stamp } : {}) });
     /* (G129c; R101) a page killed three times is stated for that page alone (`PAGE_KILLED_READER`, written so it is never asked again) and the read
        goes on; the pages whose call died this pass are answered (`killed`) for the ledger's attempt stamps */
     const statedNow = (Array.isArray(t3.refused) ? t3.refused : []).filter((r) => r && r.reason === PAGE_KILLED_READER).map((r) => r.page);

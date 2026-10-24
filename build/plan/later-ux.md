@@ -161,3 +161,5 @@
 - Add · the plain name of a reading that ended (`queue.kind.reading-ended`) · fix round 9, QUEUE #35 (K4944) · 2026-10-24
 - Add · cells a workbook's add dropped, with their count (`workbooks.dropped_cells`) · fix round 9, WORKBOOKS #6 (K4945) · 2026-10-24
 - Add · the states of a read and the parted upload's sentences (screens-intake, fix round 9; keys and stand-ins in `build/jobs/T51/screens-intake.md`, section "B45 · START applied", **Words**): `screen.capture.read.queued`, `screen.capture.address.working.head`, `screen.document.reading.progress`, `screen.capture.file.parts.hashing` · SCREENS-INTAKE #23 (K4954) · 2026-10-24
+- Add · a page whose supporting files were not looked for (`screen.document.supporting.notwalked.pending`, `.toolarge`, `.unavailable`; stood in as the key) · fix round 9, SCREENS-INQUIRY #25 (K4969) · 2026-10-24
+- Add · a reading the plane holds no job row for (`control-plane.reading.not_registered`) · fix round 9, CONTROL-PLANE #56 (K4978) · 2026-10-24

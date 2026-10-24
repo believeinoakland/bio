@@ -257,6 +257,9 @@ export function pendingOf(ctx, deps = {}) {
       if (sessionKeyed && typeof e.sha === "string") detail = { ...(detail || {}), sha: e.sha };
       const member = typeof e.member === "string" && e.member !== "" && e.member.length <= 200 ? e.member : undefined;
       const r = write(key, kind, { parts, detail, cursor: e.cursor, owed: e.owed, carrier: e.carrier, verdict: e.verdict, priority: e.priority, member });
+      /* R109 (G159): the alarm is arranged after the transaction the caller made this write in: a microtask runs once the synchronous function
+         given to `transactionSync` has returned, so the row has committed (a rolled-back one leaves the alarm nothing to weigh). */
+      void Promise.resolve().then(arm);
       return { ok: true, existed: r.existed, state: r.state };
     } catch (err) {
       return { ok: false, reason: "JOB_NOT_KEPT", detail: why(err) };
@@ -346,11 +349,15 @@ export function pendingOf(ctx, deps = {}) {
   /* G127c: what a stated end carries beside its reason: a refusal for a held capture names the refused digest, its holder, and whether the digest
      is a whole or a part, so the row says what was refused and by whom (never `detail {}`) */
   const heldOf = (r) => {
-    const d = r && (plain(r.detail) ? r.detail : plain(r.refusal) && plain(r.refusal.detail) ? r.refusal.detail : null);
+    /* R97 (G160): the facts as the refusing module answered them, in its `detail`, its refusal's `detail`, or at the top of its answer; `holder` is
+       null where provenance names none to this caller (D-15) */
+    const d = r && (plain(r.detail) ? r.detail : plain(r.refusal) && plain(r.refusal.detail) ? r.refusal.detail : plain(r) ? r : null);
     if (!d) return null;
-    const sha = typeof d.capture_sha === "string" ? d.capture_sha : typeof d.sha === "string" ? d.sha : null;
-    const out = { ...(sha ? { sha } : {}), ...(d.holder !== undefined ? { holder: d.holder } : {}), ...(d.kind === "whole" || d.kind === "part" ? { kind: d.kind } : {}) };
-    return Object.keys(out).length ? out : null;
+    const capture_sha = typeof d.capture_sha === "string" ? d.capture_sha : typeof d.sha === "string" ? d.sha : null;
+    const kind = d.kind === "whole" || d.kind === "part" ? d.kind : null;
+    const holder = typeof d.holder === "string" && d.holder !== "" ? d.holder : null;
+    if (capture_sha === null && kind === null && holder === null) return null;
+    return { kind, capture_sha, holder };
   };
   const stop = (row, at, because, units = null, state = "final", r = null) => {
     const held = heldOf(r);
@@ -466,10 +473,12 @@ export function pendingOf(ctx, deps = {}) {
     .filter((r) => !running.has(keyOf(r)));
   const reapInterrupted = (at) => {
     for (const row of startedRows()) {
+      /* the unit the dead run stamped last (R110's, else the cursor's): a page the reader can step past, killed, is not the row's end */
+      const stamped = all(`SELECT unit FROM job_unit_attempts WHERE sha=? AND kind=? AND stamped_at IS NOT NULL`, row.sha, row.kind).map((u) => u.unit);
       sql.exec(`UPDATE job_unit_attempts SET tries=tries+1, stamped_at=NULL WHERE sha=? AND kind=? AND stamped_at IS NOT NULL`, row.sha, row.kind);
       sql.exec(`UPDATE keeps_pending SET interrupted=interrupted+1, started_at=NULL, last_why=?, state=CASE WHEN written>0 THEN 'partial' ELSE 'queued' END
                 WHERE sha=? AND kind=?`, "OBJECT_STOPPED", row.sha, row.kind);
-      const unit = unitOf(json(row.detail, {}));
+      const unit = stamped.find((n) => n !== "whole") ?? unitOf(json(row.detail, {}));
       const u = all(`SELECT tries FROM job_unit_attempts WHERE sha=? AND kind=? AND unit=?`, row.sha, row.kind, unit)[0];
       /* a page or a window the reader can step past goes on (`killedPages`, `killedCursor`); only the whole, which has no unit to leave out, ends stated */
       const steppable = PAGED.includes(row.kind) && (pageOf(unit) !== null || unit.startsWith("c"));
@@ -480,13 +489,26 @@ export function pendingOf(ctx, deps = {}) {
       }
     }
   };
+  /* R110 (G165): the unit in flight. A paged reader calls `stampUnit("p<page>")` (or `"c<cursor>"`) synchronously before that unit's member call; the
+     unit is written as the one in flight and every other stamp of the row is cleared (the whole's, the units already done), so a kill is charged to
+     the unit that died, never to `whole` while a page is known. Only while the isolate is running the row; anything else is refused. */
+  const UNIT = /^(p\d{1,9}|c[^]{1,200})$/;
+  const stampFor = (row) => (unit) => {
+    if (typeof unit !== "string" || !UNIT.test(unit) || !running.has(keyOf(row))) return false;
+    try {
+      sql.exec(`UPDATE job_unit_attempts SET stamped_at=NULL WHERE sha=? AND kind=? AND unit<>?`, row.sha, row.kind, unit);
+      sql.exec(`INSERT INTO job_unit_attempts (sha, kind, unit, tries, stamped_at) VALUES (?,?,?,0,?)
+                ON CONFLICT (sha, kind, unit) DO UPDATE SET stamped_at=excluded.stamped_at`, row.sha, row.kind, unit, now());
+      return true;
+    } catch { return false; }
+  };
   const call = async (fn) => { try { return await fn(); } catch (e) { return { ok: false, reason: why(e) }; } };
   /* R98: what the owner is handed beside its row, so a reader below this module registers owed work through the one registrar */
   const handed = () => ({ registerJob, armJobs: arm });
 
   /* `detail` is what the owner's last answer left for it (a cursor over a text, `{}` at first), handed back as it was kept (R82); R101 the
      pages killed three times and twice */
-  const readArgs = (row) => ({ sha: row.sha, kind: row.kind, detail: json(row.detail, {}), storeName: store(), env: timed(row), ...unitPlan(row), ...handed() });
+  const readArgs = (row) => ({ sha: row.sha, kind: row.kind, detail: json(row.detail, {}), storeName: store(), env: timed(row), ...unitPlan(row), ...handed(), ...(PAGED.includes(row.kind) ? { stampUnit: stampFor(row) } : {}) });
   const readNow = (row, at) => call(() => extractionOf(ctx).readHeld(readArgs(row))).then((r) => settle(row, at, r));
   const owner = {
     reading: readNow,
@@ -573,7 +595,7 @@ export function pendingOf(ctx, deps = {}) {
     openInstruments(row);
     try {
       const w = deps.workers && deps.workers[row.kind];
-      if (typeof w === "function") return settle(row, at, await call(() => w({ ...row, parts: json(row.parts, []), detail: json(row.detail, {}), ...unitPlan(row) }, { at, ...handed() })));
+      if (typeof w === "function") return settle(row, at, await call(() => w({ ...row, parts: json(row.parts, []), detail: json(row.detail, {}), ...unitPlan(row) }, { at, ...handed(), ...(PAGED.includes(row.kind) ? { stampUnit: stampFor(row) } : {}) })));
       if (typeof owner[row.kind] !== "function") return attempt(row, at, "NO_OWNER");
       return await owner[row.kind](row, at);
     } finally {
@@ -643,8 +665,13 @@ export function pendingOf(ctx, deps = {}) {
     owedLater(entry) { return h.owe(entry || {}); },
     /** acquisition R96: a keep that will not end inside the bound. `parts` are the part digests in order. */
     keepLater({ sha, parts } = {}) { return h.owe({ kind: "keep", sha, parts }); },
-    /** control-plane R120, R123: work the door deferred; a keep names its parts, which only acquisition has. */
-    add({ kind, sha } = {}) { return kind === "keep" ? Promise.resolve({ ok: false, reason: "PENDING_MALFORMED" }) : h.owe({ kind, sha }); },
+    /** control-plane R120, R123: work the door deferred; a keep names its parts, which only acquisition has. R108: a `project` (a non-empty string
+     *  of at most 200 characters) is kept as the row's `detail.project`, so the unpack drain sends it; absent or any other, the row carries none. */
+    add({ kind, sha, project } = {}) {
+      if (kind === "keep") return Promise.resolve({ ok: false, reason: "PENDING_MALFORMED" });
+      const kept = typeof project === "string" && project !== "" && project.length <= 200;
+      return h.owe({ kind, sha, ...(kept ? { detail: { project } } : {}) });
+    },
     /** R104 (G128): a batch of a job lands once: true the first time `(sha, kind, batch)` is landed, false after. Synchronous. */
     landBatch({ sha, kind, batch } = {}) {
       if (typeof sha !== "string" || !JOB_KINDS.includes(kind) || (typeof batch !== "string" && !Number.isInteger(batch))) return false;
@@ -766,7 +793,7 @@ export function pendingOps(holder, url, { health, administers } = {}) {
     return { ...answer, ...Object.fromEntries(WATCHDOG_FIELDS.map((k) => [k, null])), watchdog_why: because || "WATCHDOG_UNREADABLE" };
   };
   return {
-    pendingadd: () => holder.add({ kind: url.searchParams.get("kind"), sha: url.searchParams.get("sha") }),
+    pendingadd: () => holder.add({ kind: url.searchParams.get("kind"), sha: url.searchParams.get("sha"), project: url.searchParams.get("project") ?? undefined }),
     /* R107 (K4916; control-plane R135): one job row, every column, ended rows included, `row: null` when none; store-internal (the door
        applies the sight check), a read */
     jobrow: () => {

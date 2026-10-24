@@ -5,7 +5,7 @@
    half is plane R77's. Each test has its control. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, run, sha, page, HTML } from "./fixture.mjs";
+import { world, run, sha, page, HTML, promoteFiled } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { ARCHIVE_TREE_ENTRIES_MAX } from "../../../src/ooxml.mjs";
 import { acquire, owedRun, keepPast, OWED_SESSION_TTL_MS, unpack, UNPACK_DAILY_ENTRIES, UNPACK_CALL_ENTRIES } from "../../../src/acquisition/index.mjs";
@@ -214,6 +214,7 @@ test("R100 (F11): an automatic unpack that stops on a daily budget, or for the c
   await zipAt(w4, tz);
   assert.deepEqual(oneRow(L4.log), [{ kind: "unpack", sha: sha(tz) }], "the share's stop of the first run");
   w4.rows("UPDATE archive_entries SET tree_entries=? WHERE archive_sha=? AND idx=-1", ARCHIVE_TREE_ENTRIES_MAX - 1, sha(tz));
+  promoteFiled(w4);
   const d4 = await unpack(w4.store, { archiveSha: sha(tz), cls: "daemon" });
   assert.equal(d4.waiting_on.code, "ARCHIVE_TREE_ENTRIES_MAX");
   assert.equal(oneRow(L4.log).length, 1, "nothing new is owed for the tree's stop");

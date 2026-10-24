@@ -57,13 +57,14 @@ export async function patiently(fn, { onWait = null, minutes = WAIT_BOUND_MINUTE
 const IDEMPOTENT = new Set(["GET", "PUT", "DELETE", "HEAD"]);
 
 /* What a reply that is not a success says, as the error every caller sees: the API's first message (else `HTTP <status>`), its
-   code and status; a 429's Retry-After (F4); a 401 as ApproveAgain, never retried. */
+   code and status; a 429's Retry-After (F4); a 401 as ApproveAgain carrying the API's code too (a Free account's Containers answer, 401 / 1000, is told from an expired
+   permission by it), never retried. */
 function failureOf(r, j = {}) {
   const e = new Error(j.errors?.[0]?.message || `HTTP ${r.status}`);
   e.code = j.errors?.[0]?.code;
   e.status = r.status;
   if (r.status === 429) { const after = Number(r.headers.get("retry-after")); if (Number.isFinite(after) && after > 0) e.retryAfter = after; }
-  if (r.status === 401) return Object.assign(new ApproveAgain(), { status: 401, apiMessage: e.message });
+  if (r.status === 401) return Object.assign(new ApproveAgain(), { status: 401, code: e.code, apiMessage: e.message });
   return e;
 }
 const networkError = (e) => Object.assign(new Error(String(e && e.message || e)), { network: true });
