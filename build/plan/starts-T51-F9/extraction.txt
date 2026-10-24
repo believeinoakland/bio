@@ -251,3 +251,5 @@ Corpus files are judged against I1-I22. Lines in §5 say which are particular to
 ---
 
 When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T51 HEAD`), the six checks (`node checks/run.mjs` and ownership from the civicos-process checkout), record completion with `Size (<session id>): test runs <n>, module lines <n>`, state COMPLETE, post COMPLETE.
+
+**Added by BOB #274 (K4863; P10).** From ODF-READER #9's J7: `bio-plane/test/m/extraction/g41.test.mjs:142-159` ("R97 (G41): the same for an ods workbook whose cells pass 1 MiB") pins the cliff G128e removes: with odf-reader R49 the `.ods` entry honours `inlineCellsMax`, so the cells are held (`cells: null`, `cells_held: true`) and the reading is stored whole. Rewrite it to the new behaviour (stored whole with `cells_held`, `cellsOf` answering the rows through `cellsIn`), as the xlsx case (R96 b) already is.
