@@ -124,3 +124,9 @@ Also learned: the reads of a held workbook now go by cursor and by position (a n
 **Not mine, new files:** none outside `paths`.
 
 Size (session_011euAAFYAD76GYT6xKMDMLz): test runs 31, module lines 1692
+
+## J6 · REPORT
+
+REPORT · WORKBOOKS #6 · found in other modules (details in my record).
+1. plane, `test/m/plane/shape/g44.probe.mjs:26` (`add10`) and `test/m/plane/g44-shape.test.mjs:12`: the case expects the 221,529-cell workbook refused WORKBOOK_TOO_LARGE; the cells row is 250,000 now, so it is held and `R85 G44: the add of the 10 MiB-declared short-row workbook` is red. It should refuse 250,001 cells (`xlsxDoc(11.3)` is one: refused with its count, child alive) and a second case should hold the 221,529 (or 248,000, `xlsxDoc(11.2)`) whole. Plane's file; untouched by me.
+2. office-readers / formats-xlsx (L): through the plane's real door a 248,000-cell add peaks 198.6 MB at cap 204 and the child dies at a cap of 184: about 16 MB of margin, all of it the reader listing every cell as an object in one `text()` call. Fine at 250,000; a reader option that lists cells by window would be needed before the cells row goes higher.
