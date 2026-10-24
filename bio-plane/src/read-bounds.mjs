@@ -93,7 +93,11 @@ const TABLE = {
     /* a part of a document: standard 100 MB, the alpha and the protective figure 32 MiB (K4860) */
     part_bytes: row(MB100, 32 * MiB, 32 * MiB, k("document", "part_bytes")),
   },
-  file_safety: { grade_read: bytes(20 * MiB, k("file_safety", "grade_read"), MB100) },
+  file_safety: {
+    grade_read: bytes(20 * MiB, k("file_safety", "grade_read"), MB100),
+    /* the declared size of an OpenDocument sheet's content.xml above which no preview is drawn: file-safety's SAFE_VIEW_ODS_DECLARED_MAX, today's figure (K4893) */
+    ods_declared: same(8 * MiB, k("file_safety", "ods_declared")),
+  },
   office: {
     entries: same(100000, k("office", "entries")),
     retained_objects: same(250000, k("office", "retained_objects")),

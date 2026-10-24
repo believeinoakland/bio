@@ -168,3 +168,14 @@ test("R30: the rows acquisition quotes (capture keep_bytes 32 MiB, profile_text_
     assert.deepEqual(statement(kind, name, n + 1), { size: n + 1, bound: n, key: `limit.${kind}.${name}` });
   }
 });
+
+/* the row file-safety quotes (K4893; K4842 (1)): today's figure in all three columns, so no member-facing bound moves (K1881) */
+test("R30: the row file-safety quotes (file_safety ods_declared, 8 MiB) holds one figure in all three columns, and boundOf and statement answer it (R31)", () => {
+  const n = 8 * MiB, row = READ_BOUNDS.file_safety?.ods_declared;
+  assert.ok(row);
+  assert.deepEqual({ standard: row.standard, alpha: row.alpha, protective: row.protective }, { standard: n, alpha: n, protective: n });
+  assert.equal(row.key, "limit.file_safety.ods_declared");
+  assert.equal(boundOf("file_safety", "ods_declared"), n);
+  assert.deepEqual(statement("file_safety", "ods_declared", n + 1), { size: n + 1, bound: n, key: "limit.file_safety.ods_declared" });
+  assert.equal(READ_BOUNDS.file_safety.grade_read.alpha, 20 * MiB);
+});
