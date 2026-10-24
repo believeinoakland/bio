@@ -217,6 +217,7 @@ function createMeter({ retainedMax = OFFICE_RETAINED_MAX, charsMax = OFFICE_DECO
 
 function slideHandler(meter) {
   const paragraphs = [];
+  const bodyParas = []; // the paragraphs that are in no text box
   const hlinks = [];
   const ridUsage = new Map();
   const pics = [];
@@ -247,6 +248,7 @@ function slideHandler(meter) {
           paragraphs.push(cur);
           const top = open.length ? open[open.length - 1] : null;
           if (top != null && boxText.has(top)) boxText.get(top).push(cur);
+          else bodyParas.push(cur);
           cur = null;
         }
       }
@@ -298,7 +300,7 @@ function slideHandler(meter) {
   };
   const result = () => {
     const text = paragraphs.filter((t) => t.length).join("\n");
-    return { paragraphs, text, shapes: shape + 1, hlinks, ridUsage, pics,
+    return { paragraphs, text, bodyText: bodyParas.filter((t) => t.length).join("\n"), shapes: shape + 1, hlinks, ridUsage, pics,
       boxes: [...boxText].map(([s, ps]) => ({ shape: s, text: ps.filter((t) => t.length).join("\n") })) };
   };
   return { handler, result };
@@ -306,7 +308,7 @@ function slideHandler(meter) {
 
 /** Walk a PresentationML slide, notesSlide, master or layout part held as a string. Answers
  *  `{ok:true, paragraphs:[string...], text, shapes:<int>, hlinks:[{rid,shape}], ridUsage:Map(rid -> shape|null), pics,
- *  boxes:[{shape,text}], scanner}`, or `{ok:false, why:"char_ref_invalid", final:true}` for a part holding a character
+ *  bodyText (the text outside the text boxes), boxes:[{shape,text}], scanner}`, or `{ok:false, why:"char_ref_invalid", final:true}` for a part holding a character
  *  reference that names no character (R40).
  *
  *  Text: `<a:t>` runs concatenated per `<a:p>` paragraph (CDATA included, R41); `<a:br>` is a
@@ -939,11 +941,13 @@ async function pptxText(parts, opts) {
       const walked = await walkPart(got, { reason: "slide_unreadable", part });
       if (walked) {
         slides.push({ slide, ref: slide != null ? `slide ${slide}` : null, part, hidden,
-          shapes: walked.shapes, text: walked.text });
+          shapes: walked.shapes, text: walked.text,
+          /* R38 (K4987): with a text box holding words, the slide's text without them; the box's piece is where they are found. */
+          ...(walked.boxes.some((b) => b.text) ? { bodyText: walked.bodyText } : {}) });
         const at = (shape) => (slide != null ? slideShapeRef(slide, shape) : null);
         /* R38: a hidden slide's text is a unit marked hidden; a text box is its own unit. */
-        if (hidden && walked.text) units.body.push({ kind: "body", ref: at(null), part, text: walked.text, hidden: true });
-        for (const b of walked.boxes) if (b.text) boxes.push({ kind: "text_box", ref: at(b.shape), part, text: b.text, ...(hidden ? { hidden: true } : {}) });
+        if (hidden && walked.bodyText) units.body.push({ kind: "body", ref: at(null), part, text: walked.bodyText, hidden: true });
+        for (const b of walked.boxes) if (b.text) boxes.push({ kind: "text_box", ref: at(b.shape), part, text: b.text, shapes: [b.shape], ...(hidden ? { hidden: true } : {}) });
         /* R39: a slide whose only content is a picture lists it (`images`) and states it unread; no OCR is called. */
         if (!walked.text) for (const shape of walked.pics) undetermined.push({ part, why: "image_unread", ref: at(shape) });
       }
