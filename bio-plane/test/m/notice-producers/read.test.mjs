@@ -8,7 +8,7 @@ import { world } from "../money-checks/fixture.mjs";
 import { fresh, reader, byId, texts, sentences, snapshot } from "./fixture.mjs";
 import { list as profiles } from "../../../../jurisdictions/index.mjs";
 import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX,
-  ACCOUNT_ITEMS_MAX, INVESTIGATION_ITEMS_MAX, WATCHED_ITEMS_MAX, FETCH_DONE_MAX, FETCH_DONE_DAYS, INGEST_NOTICE_MAX, INGEST_NOTICE_DAYS } from "../../../src/notice-producers/index.mjs";
+  ACCOUNT_ITEMS_MAX, INVESTIGATION_ITEMS_MAX, WATCHED_ITEMS_MAX, FETCH_DONE_MAX, FETCH_DONE_DAYS, INGEST_NOTICE_MAX, INGEST_NOTICE_DAYS, READING_ENDED_MAX, READING_ENDED_DAYS } from "../../../src/notice-producers/index.mjs";
 import { SECURITY_DAYS } from "../../../src/credentials/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -118,7 +118,8 @@ test("R1: every item R2–R6, R12–R17 and R24 derive for this member and viewe
     project_quiet: { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, review_left_out: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
     watched_changed: { bound: WATCHED_ITEMS_MAX, truncated: false },
     fetch_done: { bound: FETCH_DONE_MAX, days: FETCH_DONE_DAYS, truncated: false },
-    ingest: { bound: INGEST_NOTICE_MAX, days: INGEST_NOTICE_DAYS, truncated: false }, failed: [] });
+    ingest: { bound: INGEST_NOTICE_MAX, days: INGEST_NOTICE_DAYS, truncated: false },
+    reading_ended: { bound: READING_ENDED_MAX, days: READING_ENDED_DAYS, truncated: false }, failed: [] });
   /* R16's and R17's items each carry the class queue R1 takes for its kind */
   assert.deepEqual(Object.fromEntries(r.items.filter((i) => !/::(interest|money|standing|temporal|inquiry|security|policy|scan)/.test(i.id))
     .map((i) => [i.kind, i.class])), { "explore-ask": "FINDING", "ai-limit-reached": "FINDING", "project-account-suspended": "FINDING",
