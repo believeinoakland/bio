@@ -196,3 +196,7 @@ COMPLETE · RUNTIME-LIMITS #14 · B11 (K4936): READ_BOUNDS workbook rows: cells 
 **Cause / why missed / red first / platform check.** Cause: six reading ceilings in provenance, acquisition, case-authoring, case-carriage, monitoring and following were literals with no row in the table (control-plane's all-modules grep, seam §14). Why missed: they were added before R29 made the table the one home, and no earlier job quoted them. Red first: the R35 test fails at `assert.ok(row)` before the rows exist, passes after. Platform check: pure frozen data, no platform call; the runtime-limits suite includes its workerd test (R28) and passes.
 
 Size (session_01KNBHkxJ8mc4TazP5cEK4wj): test runs 3, module lines 175
+
+## J13 · COMPLETE · re B12
+
+COMPLETE · RUNTIME-LIMITS #15 · B12 (K4958): R35's six READ_BOUNDS rows added (provenance.part_verify_bytes 8 MiB, acquisition.odf_digest_bytes 8 MiB, acquisition.large_fetch_bytes 8 MiB, case.copy_now_bytes 2 MiB, monitoring.docket_read_bytes 8 MiB, following.portal_parse_bytes 4 MiB), each same(), keys limit.<kind>.<name>; tested through boundOf and statement (R35, R31). Suite 59/59; format, architecture, coverage, words, ownership 0 failures. No sentence added. Bundles with read-bounds.mjs as input are stale. Details in my record.
