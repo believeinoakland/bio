@@ -114,8 +114,8 @@ export async function captureObjectOp(req, url, env, { json, storageAbsent, requ
       return json(putTooLarge(size, request, ceiling, { storeName, cls }), 413);
     };
     try {
-      const said = Number(req.headers.get("content-length"));
-      const declared = Number.isSafeInteger(said) && said >= 0 && req.headers.get("content-length") !== "" ? said : null;
+      const said = req.headers.get("content-length");
+      const declared = typeof said === "string" && /^\d{1,15}$/.test(said.trim()) ? Number(said.trim()) : null;
       if (declared !== null && declared > ceiling) return await refuse(declared);
       let body, total = 0;
       const sum = createSha256();

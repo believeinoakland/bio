@@ -15,6 +15,8 @@ import { acquisitionOf, CAPTURE_MAX, MULTIPART_KEEP_MAX } from "../../../src/acq
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { captureObjectOp } from "../../../src/capture/ops.mjs";
 import { statement as boundStatement } from "../../../src/read-bounds.mjs";
+import { HELD_AT_CHECK_MAX } from "../../../src/capture/index.mjs";
+import { LARGE_FETCH_BYTES } from "../../../src/acquisition/index.mjs";
 
 const MiB = 1024 * 1024;
 const PART = 8 * MiB;
@@ -347,12 +349,14 @@ test("R111 (G124b; R21): a put holds its body once, counted by the byte ledger: 
   assert.ok(ledger.peak() >= body.length, `counted (${ledger.peak()})`);
   assert.ok(ledger.peak() <= body.length + MiB, `held once, never the request's buffer plus a copy (${ledger.peak()})`);
   assert.equal(ledger.held(), 0);
-  /* the same body without a declared length is held as one buffer at the end, never more than the body plus its chunks */
+  /* the same body without a declared length is collected and joined into one buffer: at most the body twice at the join, never more, and empty once answered */
   const l2 = byteLedger(); const b2 = bucket();
   const { req: r2 } = putOf(body, { declare: false });
+  assert.equal(r2.headers.get("content-length"), null, "no length declared");
   assert.equal((await captureObjectOp(r2, putUrl(body), { CAPTURES: b2 }, door(b2, { ledger: l2 }))).body.ok, true);
-  assert.ok(l2.peak() <= 2 * body.length, `bounded without a declared length (${l2.peak()})`);
+  assert.ok(l2.peak() > body.length && l2.peak() <= 2 * body.length, `bounded without a declared length (${l2.peak()})`);
   assert.equal(l2.held(), 0);
+  assert.equal(sha(b2.held.get(`bio/captures/${sha(body)}`)), sha(body));
 });
 
 test("R111 (R21's put refusals): a put declaring more than the request ceiling or the capture ceiling is refused 413 naming its size and the figure before one byte is read; one that goes past it while streaming is refused and cancelled; a body of the wrong digest is still INTEGRITY; the ceiling itself is accepted", async () => {
@@ -437,4 +441,11 @@ test("R112 (control and the waiting answer): a render that succeeds is charged a
   const waiting = w.c.renderAdmit({ allowanceMs: A, reserveMs: R, cap: 2, at });
   assert.deepEqual([waiting.state, waiting.running, waiting.cap], ["waiting", 2, 2]);
   assert.equal("spent_ms" in waiting || "reserved_ms" in waiting || "allowance_ms" in waiting, false, "a waiting answer states the running slots and cap only");
+});
+
+test("R111 (G124 quotes): the ceilings this module keeps are quoted, not written: the held-at look reads what acquisition hands a fetch to the plane past, the capture ceiling is the archive row of the table, and the request ceiling is the runtime-limits entry", () => {
+  assert.equal(HELD_AT_CHECK_MAX, LARGE_FETCH_BYTES);
+  assert.equal(CAPTURE_MAX, boundStatement("archive", "uploaded_bytes", 0).bound);
+  assert.deepEqual(Object.keys(PLATFORM_FIGURES.request_body_max).sort(), ["source", "value"]);
+  assert.equal(PLATFORM_FIGURES.request_body_max.value, bodyMax);
 });
