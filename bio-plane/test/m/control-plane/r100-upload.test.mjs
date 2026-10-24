@@ -36,7 +36,7 @@ test("R100 (the door's map): `captureupload` passes the address's `type` to `upl
   run({ by: "ann", statement: "s", name: "a.txt" });
   assert.deepEqual([calls[0].type, calls[0].by, calls[0].statement, calls[0].name], ["text/plain", "ann", "s", "a.txt"]);
   assert.equal("type" in calls[1], false, "no type named, none passed");
-  assert.deepEqual(Object.keys(calls[1]).sort(), ["by", "bytes", "name", "statement"]);
+  assert.deepEqual(Object.keys(calls[1]).sort(), ["by", "bytes", "ledger", "name", "statement"]);
 });
 
 test("R100 (the door): an upload capture answers as new is read by extraction as `op=acquire`'s document is — the store is asked `extractread` over the answer's document — and the answer's document carries `reading` and `text_units`, the rest of the answer unchanged", async () => {
