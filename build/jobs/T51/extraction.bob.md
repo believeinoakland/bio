@@ -754,3 +754,11 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 **Added by BOB #274 (K4863; P10).** From ODF-READER #9's J7: `bio-plane/test/m/extraction/g41.test.mjs:142-159` ("R97 (G41): the same for an ods workbook whose cells pass 1 MiB") pins the cliff G128e removes: with odf-reader R49 the `.ods` entry honours `inlineCellsMax`, so the cells are held (`cells: null`, `cells_held: true`) and the reading is stored whole. Rewrite it to the new behaviour (stored whole with `cells_held`, `cellsOf` answering the rows through `cellsIn`), as the xlsx case (R96 b) already is.
 
 **Added by BOB #276 (K4896; from READING-PIPELINE #32, merged).** Two of your tests pin behaviour reading-pipeline's requirements now reverse: `r82.test.mjs:103` pins a throw on the file's own bytes as `transient` (reading-pipeline R37, G133c: a deterministic throw is final); `n26.test.mjs:81` lists a docx's units by paragraph and now meets the text box's `doc-part` unit (R47, G134d: every part marked with its kind). Bring both to the merged behaviour (yours, stale against a provider's ruled change, K4297 (2)); red on the tranche by name until your merge.
+
+## B47 · CHANGE
+
+CHANGE (K4898): how extraction receives the registrar (section 2c item 1, "as `opts.registerJob`"), ruled with PLANE #57 (job 37):
+- `readHeld({...})`'s argument carries `registerJob` and `armJobs` when the plane's ledger calls it; extraction uses the call's `opts.registerJob` when given;
+- else the existing `registerOwe(fn)` hook (R89), which the plane now hands `(a) => pending.registerJob(a)`, so `owe({kind, sha, cursor, pages_left, ...})` is the job-table write;
+- never `extractionOf(ctx, opts)`'s construction options (made once per object; the first caller's options win).
+Test on `jobRegistrarStub` both ways (passed in the call; through the hook). No requirement text changes; no merge of the tranche needed for this.
