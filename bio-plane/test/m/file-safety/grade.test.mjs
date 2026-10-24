@@ -44,7 +44,7 @@ test("R6: a file other than an archive is low only when some receipt is a fetch 
     assert.deepEqual([r.ok, r.threat, r.reasons, r.format], [true, "low", [], format], format);
   }
   const one = await g(pdf(false, "fields"));
-  assert.deepEqual(Object.keys(one).sort(), ["active", "archive", "captureSha", "format", "latest_deeper", "latest_scan", "ok", "reasons", "safe_copy", "safe_view", "scan_hold", "source", "threat"]);
+  assert.deepEqual(Object.keys(one).sort(), ["active", "archive", "captureSha", "format", "latest_deeper", "latest_scan", "ok", "reading", "reasons", "safe_copy", "safe_view", "scan_hold", "source", "threat"]);
   assert.deepEqual([one.active, one.archive, one.scan_hold, one.source.fetched, one.source.routes], [[], null, null, true, ["direct"]]);
   /* handed in, not fetched */
   assert.deepEqual(codes(await g(pdf(false, "knock"), { via: "doorbell", address: "knock:K-1" })), ["source_not_fetched"]);
@@ -105,7 +105,7 @@ test("R6 (K1929 (Q1)): an archive is low only when its source condition holds, i
   /* an entry not filed, and a link */
   const nf = await unpacked(w, [{ name: "ok.txt", data: "ok words" }, { name: "locked", data: "x", encrypted: "traditional" }]);
   const gn = await w.fs.threatOf({ captureSha: nf.s });
-  assert.deepEqual(codes(gn), ["archive_entry_not_filed"]);
+  assert.deepEqual(codes(gn), ["archive_entry_not_filed", "encrypted"], "R54: an archive holding an encrypted member is graded high as encrypted too");
   assert.equal(gn.reasons[0].count, 1);
   const lz = symlinked(makeZip([{ name: "t.txt", data: "target words" }, { name: "ln", data: "t.txt", method: 0 }]), 1);
   const ls = await w.capture(lz);

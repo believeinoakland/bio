@@ -103,7 +103,14 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
    its key (`words.mjs`). `active` is the words of a kind of active content no row below names (a reader's newer kind), so
    no reason is ever shown blank. */
 const reason = (key) => Object.freeze({ translation: word(key) });
-export const THREAT_REASONS = Object.freeze(Object.fromEntries(Object.entries(REASON_KEYS).map(([code, key]) => [code, reason(key)])));
+export const THREAT_REASONS = Object.freeze({
+  ...Object.fromEntries(Object.entries(REASON_KEYS).map(([code, key]) => [code, reason(key)])),
+  /* R54 (fix round 9, G136a, G136d): a file the file scanner could not read to its end (a limit, or a kind it cannot open) counts as not
+     checked, never as clean; the limit or kind travels in the reason's own field. A stand-in owed to the design stream
+     (`file-safety.checks.the_file_scanner_could_not_read`); the sentence is read by key. */
+  unscannable: Object.freeze({ translation: localize("file-safety.checks.the_file_scanner_could_not_read",
+    "The file scanner could not read all of this file, so it counts as not checked. The reason is stated beside it.") }),
+});
 
 /* R27 (DEC-169 (6)): why a service is not offered, or held back, in member words, by the catalogue's reason. */
 export const PROVIDER_REASON_WORDS = Object.freeze(Object.fromEntries(Object.entries(PROVIDER_REASON_KEYS).map(([code, key]) => [code, word(key)])));

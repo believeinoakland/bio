@@ -30,12 +30,12 @@ function multipart(w, { sizes = [16 * MIB, 16 * MIB, 4 * MIB], pdfLike = false, 
   w.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version, project)
           VALUES (?, 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1, ?)`, bundleId, project);
   w.exec(`INSERT INTO files (bundle_id, path, content, bytes, sha256) VALUES (?, 'data/provenance.json', ?, ?, ?)`, bundleId, prov, prov.length, sha(prov));
-  for (const p of parts)
-    w.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered, authored) VALUES (?, ?, ?, 'binary', ?, '2026-01-01T00:00:00Z', 0)`,
-           p.sha256, bundleId, p.file, p.bytes);
-  if (wholeRow)   /* provenance D1: the whole's own row, marked whole, naming the same bundle */
-    w.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered, authored) VALUES (?, ?, 'snapshots/doc.pdf', 'binary', ?, '2026-01-01T00:00:00Z', 0)`,
+  /* G127a (fix round 9): the register's key is the whole's digest; the parts are rows of the bundle that holds the whole */
+  if (wholeRow)
+    w.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered, authored, whole) VALUES (?, ?, 'snapshots/doc.pdf', 'binary', ?, '2026-01-01T00:00:00Z', 0, 1)`,
            wsha, bundleId, whole.length);
+  parts.forEach((p, i) => w.exec(`INSERT INTO register_parts (bundle_id, whole_sha, idx, part_sha, bytes, path) VALUES (?, ?, ?, ?, ?, ?)`,
+                                 bundleId, wsha, i, p.sha256, p.bytes, p.file));
   const put = async () => { for (const [i, c] of chunks.entries()) await w.bucket.put(`bio/captures/${parts[i].sha256}`, c); };
   const receipt = () => w.prov.recordReceipt({ address: "https://files.example/doc.pdf", addressNorm: "https://files.example/doc.pdf", captureSha: wsha,
     retrieved: new Date(w.clock.now).toISOString().replace(/\.\d+Z$/, "Z"), via: "direct", retrievalLocator: "https://files.example/doc.pdf" });
@@ -118,7 +118,6 @@ test("R51 (F3a): a scan answered not_scanned NOT_FOUND (the bytes are not held y
 test("R51 (R-OLD): a file whose newest ClamAV note is already not_scanned NOT_FOUND (sent at every batch before this) waits for its bytes from the next start, and a safe view failed NOT_FOUND is a waiting one", async () => {
   const w = world({ scan: { clamav: () => ({ result: "not_scanned", reason: "NOT_FOUND" }) } });
   const s = await w.capture(pdf(false, "old"));
-  w.fs.scanBatch({}).then(() => {});
   await w.fs.scanBatch({});
   w.exec(`UPDATE fs_files SET scan_wait_at = NULL, render_state = 'failed', render_reason = 'NOT_FOUND' WHERE capture_sha = ?`, s);   /* as stored before */
   w.fs.migrate();
@@ -174,10 +173,11 @@ test("R51 (F10): the grade never loads a whole above GRADE_READ_MAX into this ob
   await w.bucket.put(`bio/captures/${bs}`, big);
   const loads = [];
   const get = w.bucket.get.bind(w.bucket);
-  w.bucket.get = async (k) => {
-    const o = await get(k);
+  w.bucket.get = async (k, opts) => {
+    const o = await get(k, opts);
     if (!o) return o;
-    return { ...o, arrayBuffer: async () => { loads.push(k); return o.arrayBuffer(); } };
+    /* a load of the whole: no range, or a range as long as the object (the readers' one reader, `readRange`, asks by range) */
+    return { ...o, arrayBuffer: async () => { if (!(opts && opts.range) || opts.range.length >= o.size) loads.push(k); return o.arrayBuffer(); } };
   };
   w.prov.recordReceipt({ address: "https://files.example/big", addressNorm: "https://files.example/big", captureSha: bs,
     retrieved: new Date(w.clock.now).toISOString().replace(/\.\d+Z$/, "Z"), via: "direct", retrievalLocator: "https://files.example/big" });
