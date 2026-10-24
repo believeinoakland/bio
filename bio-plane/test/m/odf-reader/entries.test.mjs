@@ -363,7 +363,7 @@ test("R43 the module owns no check: it exports readers and constants only, and e
   assert.deepEqual(Object.keys(M).sort(), [
     "ODF_EVIDENTIARY_MEASURED", "ODF_EVIDENTIARY_VERSION", "ODF_FORMATS", "ODF_REPEAT_EXPANSION_MAX",
     "ODP_CONTENT_TYPE", "ODP_ROW", "ODS_CONTENT_TYPE", "ODS_ROW", "ODT_CONTENT_TYPE", "ODT_ROW",
-    "odfEvidentiaryDigest", "odpEntry", "odsEntry", "odtEntry", "odtNormalisedContentXml",
+    "isOdfTextPart", "odfEvidentiaryDigest", "odpEntry", "odsEntry", "odtEntry", "odtNormalisedContentXml",
   ]);
   const refs = [];
   const walk = (v) => {

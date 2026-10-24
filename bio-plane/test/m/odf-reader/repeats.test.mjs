@@ -26,8 +26,8 @@ async function refusedOds(bytes, marker) {
   const t = await odsEntry.text(bytes);
   assert.equal(t.ok, true);
   assert.deepEqual({ ...t, images: undefined }, {
-    ok: true, container: "ods", document: null, sheets: [], rangeUnits: null, rangeUnitsSkipped: null,
-    undetermined: [marker], counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }, images: undefined,
+    ok: true, container: "ods", document: null, sheets: [], rangeUnits: null, rangeUnitsSkipped: null, parts: null,
+    undetermined: [marker], counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1, scanned_bytes: t.counts.scanned_bytes }, images: undefined,
     active: [],   // R47: content.xml was read for its listeners; the repeat bound stops only the projection
   });
   const s = await odsEntry.structure(bytes);
@@ -90,7 +90,7 @@ test("R45 each space a text:c stands for is a unit, at each address its text is 
   assert.equal(odtAt.paragraphs[0].text.length, MAX);
   const odtOver = await odtEntry.text(pkg("odt", { body: `<text:p>${spaces(MAX)}</text:p><text:p>${spaces(1)}</text:p>` }));
   assert.deepEqual([odtOver.document, odtOver.paragraphs, odtOver.tables, odtOver.undetermined, odtOver.counts],
-    [null, [], null, [UNITS], { chars: 0, undetermined: 1 }]);
+    [null, [], null, [UNITS], { chars: 0, undetermined: 1, scanned_bytes: odtOver.counts.scanned_bytes }]);
   const frame = (inner) => `<draw:frame><draw:text-box><text:p>${inner}</text:p></draw:text-box></draw:frame>`;
   const odpAt = await odpEntry.text(pkg("odp", { body: `<draw:page>${frame(spaces(MAX))}</draw:page>` }));
   assert.equal(odpAt.document.length, MAX);

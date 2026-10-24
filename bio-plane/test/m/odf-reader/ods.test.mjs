@@ -152,7 +152,7 @@ test("R19 a sheet's text is its non-empty rows of displayed values, tab-joined; 
   const t = await T(body);
   assert.deepEqual(t.sheets.map((s) => s.text), ["a1\tb1\n7\tb3\n2", "", "secret"]);
   assert.equal(t.document, "a1\tb1\n7\tb3\n2\nsecret");
-  assert.deepEqual(t.counts, { chars: t.document.length, cells: 6, formulas: 2, undetermined: 0 });
+  assert.deepEqual({ ...t.counts, scanned_bytes: undefined }, { chars: t.document.length, cells: 6, formulas: 2, undetermined: 0, scanned_bytes: undefined });
   assert.deepEqual(t.undetermined, []);
   assert.ok(!t.document.includes("of:"));
 });
@@ -188,7 +188,7 @@ test("R20 text() over the guard carries the guard marker verbatim; with no reada
   assert.equal(over.document, null);
   assert.deepEqual(over.sheets, []);
   assert.deepEqual(over.undetermined, [{ ...sizeGuard(OVER_BOUND), final: true }]);
-  assert.deepEqual(over.counts, { chars: 0, cells: 0, formulas: 0, undetermined: 1 });
+  assert.deepEqual({ ...over.counts, scanned_bytes: undefined }, { chars: 0, cells: 0, formulas: 0, undetermined: 1, scanned_bytes: undefined });
   for (const [bytes, reason] of [
     [buildZip(withCd(members("ods"), "content.xml", { crc: 9 })), "crc_mismatch"],
     [pkg("ods", { content: "<office:document-content><office:body><office:text/></office:body></office:document-content>" }), "no_office_spreadsheet_body"],
@@ -197,7 +197,7 @@ test("R20 text() over the guard carries the guard marker verbatim; with no reada
     assert.equal(t.document, null);
     assert.deepEqual(t.sheets, []);
     assert.deepEqual(t.undetermined, [{ sheet: null, cell: null, reason }]);
-    assert.deepEqual(t.counts, { chars: 0, cells: 0, formulas: 0, undetermined: 1 });
+    assert.deepEqual({ ...t.counts, scanned_bytes: undefined }, { chars: 0, cells: 0, formulas: 0, undetermined: 1, scanned_bytes: undefined });
   }
   // structure() on the same: no sheets read, and the notes say which
   const so = await odsEntry.structure(buildZip(withCd(members("ods", { body: table("S", row(cell("x"))) }), "content.xml", { usize: OVER_BOUND })));
