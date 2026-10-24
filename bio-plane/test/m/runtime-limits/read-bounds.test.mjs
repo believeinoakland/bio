@@ -104,3 +104,11 @@ test("R31: boundOf and statement throw an Error naming the kind and the name whe
   }
   for (const [kind, name] of rows()) assert.doesNotThrow(() => statement(kind, name, -1 === 0 ? 0 : 5));
 });
+
+test("R30 (K4845): the heavy kinds' standards are K4628's per kind: documents 100 MB, spreadsheets and images 50 MB, the alpha where it is above", () => {
+  const std = (k, n) => READ_BOUNDS[k][n].standard;
+  for (const [k, n] of [["pdf", "bytes"], ["pdf", "worker_bytes"], ["document", "clean_bytes"], ["file_safety", "grade_read"]]) assert.equal(std(k, n), 104857600, `${k}/${n}`);
+  for (const [k, n] of [["xlsx", "declared_text"], ["ods", "content_xml"], ["sheet_worker", "bytes"], ["image", "cover_bytes"]]) assert.equal(std(k, n), 52428800, `${k}/${n}`);
+  assert.equal(std("ocr", "frame_bytes"), 61300000);
+  assert.equal(boundOf("pdf", "bytes"), 24 * MiB);
+});

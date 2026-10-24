@@ -5,17 +5,18 @@
  * against a file no ordinary program produces. A quoting module writes `export const X_MAX = boundOf(kind, name)` and
  * holds no numeric literal for a ceiling; the sentence a refusal says is the quoting module's (`key` names it). A job
  * adds its own row below, with the three figures. MB and GB count 2^20 and 2^30 bytes (K4840 (1)). Where the
- * requirements give no standard for a heavy kind, the row's standard is the larger of its alpha and 50 MB and the
- * protective figure is the one R30 names, else the standard: proposed; BOB records. Pure; nothing at load but the frozen table. */
+ * requirements give no standard for a heavy kind, the row's standard is K4628's per kind (K4845: documents 100 MB,
+ * spreadsheets and images 50 MB; the alpha where it is above), a count or time row's standard is its alpha, and the
+ * protective figure is the one R30 names, else the standard. Pure; nothing at load but the frozen table. */
 
-const KiB = 1024, MiB = 1048576, GiB = 1073741824, MB50 = 52428800;
+const KiB = 1024, MiB = 1048576, GiB = 1073741824, MB50 = 52428800, MB100 = 104857600;
 
 /* the light kinds take the standard in Stage 1 (K4834) */
 const LIGHT_KINDS = Object.freeze(["text", "csv", "tsv", "json", "xml"]);
 
 const row = (standard, alpha, protective, key) => ({ standard, alpha, protective, key });
-/* a byte row of a heavy kind: standard 50 MB at least */
-const bytes = (alpha, key, protective) => row(Math.max(alpha, MB50), alpha, protective ?? Math.max(alpha, MB50), key);
+/* a byte row of a heavy kind: the standard is K4628 per kind (K4845): documents 100 MB, spreadsheets and images 50 MB; where the alpha is above it, the alpha */
+const bytes = (alpha, key, perKind) => row(Math.max(alpha, perKind), alpha, Math.max(alpha, perKind), key);
 /* a count or size with one figure for all three columns */
 const same = (n, key) => row(n, n, n, key);
 const k = (kind, name) => `limit.${kind}.${name}`;
@@ -41,8 +42,8 @@ const TABLE = {
     name: same(4096, k("archive", "name")),
   },
   pdf: {
-    bytes: bytes(24 * MiB, k("pdf", "bytes")),
-    worker_bytes: bytes(64 * MiB, k("pdf", "worker_bytes")),
+    bytes: bytes(24 * MiB, k("pdf", "bytes"), MB100),
+    worker_bytes: bytes(64 * MiB, k("pdf", "worker_bytes"), MB100),
     need_mb: same(100, k("pdf", "need_mb")),
     page_content: same(64 * MiB, k("pdf", "page_content")),
     object_stream: same(16 * MiB, k("pdf", "object_stream")),
@@ -59,16 +60,16 @@ const TABLE = {
     edge: same(65535, k("image", "edge")),
     chunks: same(65536, k("image", "chunks")),
     row_stride: same(8 * MiB, k("image", "row_stride")),
-    cover_bytes: bytes(32 * MiB, k("image", "cover_bytes")),
+    cover_bytes: bytes(32 * MiB, k("image", "cover_bytes"), MB50),
     picture_frame: same(4096 * 3072 * 3, k("image", "picture_frame")),
   },
-  ocr: { frame_bytes: same(61300000, k("ocr", "frame_bytes")) },
+  ocr: { frame_bytes: bytes(61300000, k("ocr", "frame_bytes"), MB50) },
   render: {
     safe_view_bytes: same(32 * MiB, k("render", "safe_view_bytes")),
     safe_view_pages: same(500, k("render", "safe_view_pages")),
   },
-  document: { clean_bytes: bytes(16 * MiB, k("document", "clean_bytes")) },
-  file_safety: { grade_read: bytes(20 * MiB, k("file_safety", "grade_read")) },
+  document: { clean_bytes: bytes(16 * MiB, k("document", "clean_bytes"), MB100) },
+  file_safety: { grade_read: bytes(20 * MiB, k("file_safety", "grade_read"), MB100) },
   office: {
     entries: same(100000, k("office", "entries")),
     retained_objects: same(250000, k("office", "retained_objects")),
@@ -79,16 +80,16 @@ const TABLE = {
     cell_kept_chars: same(MiB, k("sheet", "cell_kept_chars")),
     sheets: same(1000, k("sheet", "sheets")),
   },
-  xlsx: { declared_text: bytes(32 * MiB, k("xlsx", "declared_text")) },
+  xlsx: { declared_text: bytes(32 * MiB, k("xlsx", "declared_text"), MB50) },
   ods: {
-    content_xml: bytes(20 * MiB, k("ods", "content_xml")),
+    content_xml: bytes(20 * MiB, k("ods", "content_xml"), MB50),
     repeat_units: same(262144, k("ods", "repeat_units")),
   },
   /* the analysis workbook's add: 50,000 cells today, 250,000 once the workbook-add job merges (K4831 (10)) */
   workbook: { cells: row(250000, 50000, 250000, k("workbook", "cells")) },
   sheet_worker: {
     cells: same(250000, k("sheet_worker", "cells")),
-    bytes: same(9000000, k("sheet_worker", "bytes")),
+    bytes: bytes(9000000, k("sheet_worker", "bytes"), MB50),
     ms: same(120000, k("sheet_worker", "ms")),
   },
 };
