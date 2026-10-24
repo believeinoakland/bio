@@ -863,3 +863,7 @@ Change: `memory-child.mjs` digests `read`'s answer with ` — (the kind of docum
 Evidence for the re-pin (the hash still differed, so re-pinned): the stripped answer hashes alike at `40ce74590b` (the earlier pins) and at HEAD: synthetic `8cb8e488...`, APP `14e0a7fd...`; BUD and PER, which carry no sample sentence, kept their digests. memory.test.mjs comment names the cause.
 Ran: `memory.test.mjs` alone 5 times: 4 pass, 0 fail each time. Checks: format, architecture, coverage, ownership 0 failures.
 Size (session_01BnUjLxV46WcRESH2NN5cWw): test runs 24, module lines 4,274
+
+## J47 · COMPLETE · re B52
+
+COMPLETE: B52 done (option b). memory-child.mjs takes the 'judged from a sample' sentence off reading.basis by name before hashing; every other byte stays pinned. The stripped answer hashes alike at 40ce74590b and at HEAD (synthetic 8cb8e488..., APP 14e0a7fd...), so those two were re-pinned on that evidence; BUD and PER kept theirs. memory.test.mjs alone 5 times: 4 pass, 0 fail each. format, architecture, coverage, ownership 0 failures. Job 87 (R59) is green as in J45. Record section B52. Size (session_01BnUjLxV46WcRESH2NN5cWw): test runs 24, module lines 4,274
