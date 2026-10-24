@@ -517,3 +517,22 @@ test("R102 healFrame: `Store.fetch` looks at a lost alarm once for a request, at
   schedulerOf(x.ctx, x.env).heal = async () => { throw new Error("the look failed"); };
   assert.ok((await x.fetch("/whoami?viewer=member:ann")).status < 500);
 });
+
+/* ---- capture R113 (K4899): the composition's evidence key ---- */
+
+test("R98 R2 (capture R113, K4899): the composition assigns capture's `evidenceKey`, record-core's key for a digest, so through the Store a parted upload's begin answers `ok` with its parts, never PARTED_UPLOAD_UNAVAILABLE", async () => {
+  const opened = [];
+  const bucket = bucketStandIn();
+  bucket.createMultipartUpload = async (key) => { opened.push(key); return { uploadId: "u-1", key }; };
+  bucket.resumeMultipartUpload = (key, id) => ({ key, uploadId: id, uploadPart: async () => ({}), complete: async () => ({}), abort: async () => {} });
+  const x = await store({ env: { CAPTURES: bucket } });
+  const d = sha("a file past the request-body ceiling");
+  const r = await x.call("/captureuploadbegin?by=member:ann", { sha256: d, bytes: 200 * 1048576, statement: "handed to me", name: "big.pdf", type: "application/pdf" });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.ok(r.parts >= 2, `in parts: ${r.parts}`);
+  assert.deepEqual(opened, [`bio/captures/${d}`], "the key the evidence store reads the whole by");
+  /* control: without the key the begin is unavailable, as capture states it */
+  captureOf(x.ctx).evidenceKey = null;
+  const n = await x.call("/captureuploadbegin?by=member:ann", { sha256: sha("another"), bytes: 200 * 1048576, statement: "handed to me", name: "b.pdf", type: "application/pdf" });
+  assert.equal(n.reason, "PARTED_UPLOAD_UNAVAILABLE");
+});

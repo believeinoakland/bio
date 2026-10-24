@@ -441,6 +441,9 @@ export class Store extends DurableObject {
        synchronous write of the job row, made inside the caller's filing transaction; the alarm is armed by `armJobs` after the commit. */
     capture.registerJob = (e) => pending.registerJob(e);
     capture.armJobs = () => pending.armJobs();
+    /* capture R113 (fix round 9, G127f; K4899): the object key of a digest in the evidence bucket, record-core's own (its R38, the prefix R2 hands
+       it), so a file past the request-body ceiling is written in parts under the key its whole is read by */
+    capture.evidenceKey = (digest) => `${this.#ownNamespace() || "bio"}/captures/${digest}`;
     /* R83 (fix round 6, G8, G13; extraction R89), R98 (fix round 9; K4898 (1)): extraction's `owe` IS the registrar: its hook is handed `registerJob`
        (synchronous, so a reader may owe inside its own transaction), the alarm armed beside each row kept; every `readHeld` the ledger makes also
        carries `registerJob` and `armJobs` (pending.mjs). Guarded, as extraction's own merge is later than this line. */
