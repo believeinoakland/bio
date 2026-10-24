@@ -877,3 +877,7 @@ Merged `tranche/T51` first and read the requirements whole (R47's amendment). **
 **Ran:** `test/m/reading-pipeline/*.test.mjs` + `test/m/extraction/read.test.mjs`: 412 tests, 411 pass, 0 fail, 1 todo (existing). `test/m/extraction/*.test.mjs` (the user): 378 of 378. `impact.mjs origin/tranche/T51 HEAD`: 108 of 176 modules named (index.mjs is widely imported); the direct user extraction run whole as above. Checks: format 0 failures, architecture 0 failures, coverage 0 failures (58 of 58 ids), ownership 0 failures. Words: no new keyed sentence.
 **Cause / why missed / red first / platform check:** cause: `allUnitsOf` made a body unit of every reader paragraph, so box words were `body` and `text_box`; missed because no reading-pipeline test joined a `text_box` part to the paragraph list; red first as above; platform check: none needed (pure function of the reader's answer, no binding).
 Size (session_01SjVUXZtrnCWzhmEbrvVDzh): test runs 6, module lines 4,282
+
+## J48 · COMPLETE
+
+COMPLETE: job 90 (B53, R47 amended, G166). allUnitsOf makes no body unit of a paragraph a part names in paras; red-first test R47 (G166) in r9-reader.test.mjs; module + read.test 411/412 pass 0 fail (1 todo existing), extraction 378/378; format, architecture, coverage, ownership 0 failures. n26 (extraction R66) still green until office-readers emits paras; it then follows. Record section B53. Size (session_01SjVUXZtrnCWzhmEbrvVDzh): test runs 6, module lines 4,282
