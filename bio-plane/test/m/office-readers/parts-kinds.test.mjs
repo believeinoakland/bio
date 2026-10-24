@@ -62,6 +62,27 @@ test("R38 docx: footnotes, endnotes, headers, footers, comments, tracked deletio
   assert.deepEqual(again.parts, t.parts);
 });
 
+test("R38 docx (G166): a text_box part names the paragraphs it holds in paras, their indices in paragraphs; other kinds carry none; a paragraph outside a box is not named", async () => {
+  const body = F.wp(F.wr("Outside line"))
+    + F.wp(`<w:r><w:txbxContent>${F.wp(F.wr("Box first"))}${F.wp(F.wr("Box second"))}</w:txbxContent></w:r>`)
+    + F.wp(F.wr("After the box"));
+  const t = await docxEntry.text(F.docx({ body }));
+  assert.equal(t.ok, true);
+  const idx = (text) => t.paragraphs.findIndex((p) => p.text === text);
+  const [box, ...rest] = byKind(t.parts, "text_box");
+  assert.equal(rest.length, 0, "one text_box piece");
+  assert.equal(box.text, "Box first\nBox second");
+  assert.deepEqual(box.paras, [idx("Box first"), idx("Box second")]);
+  assert.ok(box.paras.every((n) => t.paragraphs[n].para === n), "indices in paragraphs are the para numbers");
+  assert.ok(!box.paras.includes(idx("Outside line")) && !box.paras.includes(idx("After the box")));
+  /* the paragraphs keep their numbers and stay in paragraphs and document (R11) */
+  assert.ok(t.document.includes("Box first") && t.document.includes("Box second"));
+  /* control: a part of another kind has no paras */
+  const w = await docxEntry.text(wordPackage());
+  for (const p of w.parts.filter((x) => x.kind !== "text_box")) assert.equal("paras" in p, false, p.kind);
+  assert.deepEqual(byKind(w.parts, "text_box")[0].paras, [w.paragraphs.findIndex((p) => p.text === "Inside the box")]);
+});
+
 test("R38 docx: a package with no part outside the body has parts: []; a part the reader cannot read is stated, never a reading that says it is whole", async () => {
   const plain = await docxEntry.text(F.docx());
   assert.deepEqual(plain.parts, []);

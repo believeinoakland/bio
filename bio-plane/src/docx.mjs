@@ -1178,9 +1178,10 @@ async function docxText(parts, opts) {
   for (const c of walk.changes) {
     if (c.change === "deletion" && c.text) kinds.body.push({ at: [c.para, c.run ?? -1], u: { kind: "tracked_deletion", ref: docParaRef(c.para, c.run), part: parts.mainPart, text: c.text } });
   }
+  /* R38 (G166): a text box's piece names the paragraphs it holds, so a reader takes their words from the piece only. */
   for (const box of walk.textBoxes) {
     const text = box.paras.map((p) => walk.paragraphs[p]?.text ?? "").filter(Boolean).join("\n");
-    if (text) kinds.body.push({ at: [box.paras[0] ?? 0, -1], u: { kind: "text_box", ref: docParaRef(box.paras[0] ?? 0), part: parts.mainPart, text } });
+    if (text) kinds.body.push({ at: [box.paras[0] ?? 0, -1], u: { kind: "text_box", ref: docParaRef(box.paras[0] ?? 0), part: parts.mainPart, text, paras: [...box.paras] } });
   }
   kinds.body.sort((a, b) => a.at[0] - b.at[0] || a.at[1] - b.at[1]);
   for (const x of parts.undetermined) if (x.why === "part_unread" && !undetermined.includes(x)) undetermined.push(x);
