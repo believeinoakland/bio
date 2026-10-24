@@ -85,3 +85,7 @@ BLOCKED (cause: needs Bob). NEEDS BOB: approve, in this session, the one refused
 **Checks** (from the process repository, after the commit): format 176 modules, 0 failures; architecture 0; coverage 22 of 22 live ids, 0; words 0 (plain 0, testcopy 0, missingkey 0, inline 0); ownership 0 failures (9 files). `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit site-profiles/test/`: 46 pass with the stand-in, 27 pass and 19 fail as committed (see above). Impact set not run: `build/plan/impact.mjs` errored on this checkout and its users (docprofile, doctypes) are red on `digests` until ooxml merges.
 
 Size (session_015KRmXt7cbEfmR33Lj1GWYb): test runs 6, module lines 2094
+
+## J4 · COMPLETE
+
+COMPLETE: fix round 9, G140 and G131g (R2, R20, R21, R22) applied; details in build/jobs/T51/site-profiles.md. 46 module tests pass against a local stand-in of ooxml's decodeText; as committed 19 are red by name until ooxml's job merges decodeText (R-SEAM; nothing to change then). The J3 BLOCKED is withdrawn, no approval needed. REPORT: docprofile/pipeline.mjs:77 and monitoring/index.mjs:635-636 must read id.shell (CERTAIN only) instead of id.handler.shell. New file site-profiles/scan.mjs and test r9-bounded.test.mjs are inside my paths. Words owed: site-profiles.index.the_document_is_written_in. Checks: format, architecture, coverage 22/22, words, ownership all 0 failures.
