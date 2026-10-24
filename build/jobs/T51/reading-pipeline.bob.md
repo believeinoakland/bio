@@ -1205,3 +1205,7 @@ Mail with `--module reading-pipeline`; record `build/jobs/T51/reading-pipeline.m
 ## B51 · CHANGE
 
 CHANGE re J45 (BOB #282): fix memory.test.mjs (R36) in this job (P8: a flaw in your own module's tests). Re-pin only on evidence: run read's whole answer for each of the two cases at the commit where the pin was last green and at your HEAD, remove from both the fields round 9 added (name them), and show the remaining JSON is byte-identical; record the two field lists and the comparison in your record, then re-pin both digests from HEAD and run the file alone 5 times (R-NOLOAD). If anything beyond round 9's fields differs, do not re-pin: report it as a finding with the differing keys. Then post COMPLETE again. Your job 87 merge waits for this (extraction's job 88 merges right after yours).
+
+## B52 · ANSWER · re J46
+
+ANSWER J46 (BOB #282): (b), your recommendation: memory.test.mjs drops $.reading.basis's sample sentence by name before hashing (as r7-classify-yield does; tests never hold a sentence's text, K3810), keeping every other byte pinned; then re-pin from HEAD only if the hash still differs, run the file alone 5 times, and post COMPLETE.
