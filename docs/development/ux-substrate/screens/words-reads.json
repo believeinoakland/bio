@@ -5589,7 +5589,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 25808
+    "generatedRows": 25846
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -5746,175 +5746,175 @@
     },
     {
      "file": "admission/index.mjs",
-     "line": 392,
+     "line": 412,
      "text": "credential '${…}' was withdrawn on ${…} by ${…}. The entry and the date are kept rather than deleted, so what it did while it was live stays readable.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 401,
+     "line": 421,
      "text": "credential '${…}' expired on ${…}. An agent credential lives for the days it was minted with and is never renewed: a member mints a new one to replace it, and the entry stays, so what it did while it was live stays readable.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 408,
+     "line": 428,
      "text": "no member of this team reaches '{String}', so no declared scope reaches it either. An agent is confined to what a member could do themselves, which is a property of the operation rather than a list kept anywhere.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 415,
+     "line": 435,
      "text": "'${…}' answers who a source is, so a member's reach alone does not hand it to an agent: credential '${…}' declares the task scope '${…}', which does not name it. Naming it is an authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding it can ask for.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 423,
+     "line": 443,
      "text": "credential '${…}' declares the task scope '${…}', whose writes are ${…}. Widening it is an authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding it can ask for.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 431,
+     "line": 451,
      "text": "credential '${…}' was made for one run, and writes only to it. This request ${…}, so nothing was written. A run's credential is made by the plane when the member starts that run, and ends with it.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 481,
+     "line": 501,
      "text": "'${…}' is not an operation this instance performs. A scope naming something nothing recognises would sit in the record looking like a permission and meaning nothing, which is exactly what declaring the scope on the record rather than in a settings row is for (D-199 (2)).",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 488,
+     "line": 508,
      "text": "'${…}' is reached by a member only from that member's own signed-in session, and no agent credential is among the credentials it admits, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: its OPS row names the credentials that reach it, and an agent's is not one.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 492,
+     "line": 512,
      "text": "'{op}' is not reachable by a member of this team, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: the unattended worker's own verbs carry no member class by construction, so they are outside every scope anybody can author.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 511,
+     "line": 531,
      "text": "'${…}' is not a confinement a credential can carry. The one namespace a credential may be bound to for its whole life is ${…}; ${…} is where every unconfined credential already lands, so recording it as a confinement would put a fence in the record that holds nothing (D-199 (2)). The name is matched exactly, so a capital letter or a stray space is a different name. Leave the field out altogether to mint an unconfined credential.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 574,
+     "line": 594,
      "text": "this operation is reserved to the founder's session",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 575,
+     "line": 595,
      "text": "'${…}' is reachable from a signed-in session, but only the founder's: the password session made when this instance was claimed with its root credential. This is a member's session, which is what every enrolled member signs in with, an administrator of this team included — so an administrator's session is refused this exactly as this one is, and nothing here says whether you are one. There is no machine credential to go and find: the founder performs this from their own browser.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 584,
+     "line": 604,
      "text": "this operation is reserved to a member's own session",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 585,
+     "line": 605,
      "text": "'${…}' is reachable from a signed-in session, but only a member's own, and this is the founder's session. There is no machine credential to go and find: a member performs this from their own browser.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 592,
+     "line": 612,
      "text": "this operation requires a machine credential, not a signed-in session",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 596,
+     "line": 616,
      "text": "no signed-in session reaches this operation, and no decision on record says why",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 597,
+     "line": 617,
      "text": "'${…}' is reachable by no session of any role, and this instance holds no recorded decision that it is not meant for a person. The plane will not invent one: a member told an absence is a decision stops reporting it as the gap it may well be. If you expected to perform this, that expectation is worth filing rather than working around.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 621,
+     "line": 641,
      "text": "creating a project needs the create-projects capability. This account may still contribute to projects it has been invited to, if it holds contribute.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 661,
+     "line": 681,
      "text": "the shared member key is retired",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 662,
+     "line": 682,
      "text": "this request presented the team's shared member key, which is retired: it no longer signs anybody in, and nothing was read or written. A member signs in with their own password, and an agent uses an agent credential a member creates for it.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 682,
+     "line": 702,
      "text": "a full working-corpus export needs the root of trust: the ADMIN_TOKEN-class credential, or the founder's own session, which the claim made from it. A member's session is neither, and neither is in-app administrator status: an administrator signs in as a member. The published record needs no credential at all: see op=publishedmanifest.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 705,
+     "line": 725,
      "text": "forbidden for token class",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 714,
+     "line": 734,
      "text": "this account does not hold the ${…} capability. Capabilities are set by an administrator, so ask one to grant it rather than looking for another route.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 806,
+     "line": 826,
      "text": "section 4 governance is a named administrator's own act, delivered through that administrator's own signed-in session. The credential that asked is the operator's `${…}`-class bearer token, which holds no position on the roster: it cannot be one of the administrators whose consensus §4.7 requires, and a vote it delivered would be attributed to whoever the caller named. Sign in as the administrator and do it there (D-136, applying D-421).",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 817,
+     "line": 837,
      "text": "the team's display name and its domain claim are set by a named administrator's own signed-in session, and the record names who set each one (Publication §7). The credential that asked is the operator's `${…}`-class bearer token, which holds no place on the roster. Nothing was changed.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 901,
+     "line": 921,
      "text": "at most ${…} requests from one source in any ${…} minutes",
      "why": "DOOR_WINDOW_STATED, the limit as a field beside DOOR_RATE_LIMITED; the member reads refusal.DOOR_RATE_LIMITED, which carries {minutes}"
     },
     {
      "file": "admission/index.mjs",
-     "line": 911,
+     "line": 931,
      "text": "at most ${…} requests from one signed-in session in any ${…} minutes",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 943,
+     "line": 963,
      "text": "this signed-in session",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 947,
+     "line": 967,
      "text": "too many requests to the operations anyone may call reached this team's Civicsmith from {where} in a short time, so this one was turned away before the operation ran; nothing was read or written. Try again in {wait} seconds.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     }
@@ -12662,6 +12662,10 @@
     "screen.capture.saw.wherein",
     "screen.capture.saw.words",
     "screen.capture.sub",
+    "screen.capture.supporting.cap",
+    "screen.capture.supporting.kept",
+    "screen.capture.supporting.toolarge",
+    "screen.capture.supporting.unavailable",
     "screen.capture.tab.address",
     "screen.capture.tab.file",
     "screen.capture.tab.saw",
@@ -12964,14 +12968,14 @@
     "transcribe.why.evidenceabsent"
    ],
    "counts": {
-    "reads": 637,
+    "reads": 641,
     "minted": 0,
     "keyedRows": 0,
-    "literalKeys": 621,
+    "literalKeys": 624,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 16
+    "computedKeys": 17
    },
    "unkeyed": []
   },
@@ -17176,73 +17180,73 @@
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 290,
+     "line": 302,
      "text": "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 323,
+     "line": 335,
      "text": "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 519,
+     "line": 531,
      "text": "knockerconsent is a POST",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 593,
+     "line": 605,
      "text": "the pack could not be rendered",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1066,
+     "line": 1099,
      "text": "instance has no bootstrap credential set",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1069,
+     "line": 1102,
      "text": "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1072,
+     "line": 1105,
      "text": "bootstrap credential does not match",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1310,
+     "line": 1343,
      "text": "capabilities are set by an administrator and gate what this account may DO, not what it may see",
      "why": "whoami's `detail`, which no screen draws"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1311,
+     "line": 1344,
      "text": "a machine credential has no member behind it and therefore holds no capabilities; it is bounded by the operation table and by namespace confinement instead",
      "why": "whoami's `detail`, which no screen draws"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 2346,
+     "line": 2379,
      "text": "this promotion says it is a replay of the record's own past, and a replay is honoured only when the plane can check it: it must name a drive-provenance capture (`provenanceCapture`) that this promotion registers at ${…}, whose bytes the record holds, and whose preserved promotion records name this record and list this revision's bundle.md SHA-256. One of those did not hold. Nothing was written.",
      "why": "a replaying tool's refusal `detail`, never a member's"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 3803,
+     "line": 3841,
      "text": "a POST to op=reviewcopy with the value above as `secret` in its JSON body, never in the address",
      "why": "API usage for the client holding the value, never drawn"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 3823,
+     "line": 3861,
      "text": "a POST to op=templateread with the value above as `secret` in its JSON body, never in the address",
      "why": "API usage for the client holding the value, never drawn"
     },
@@ -18871,181 +18875,181 @@
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 120,
+     "line": 131,
      "text": "Teo, from flat 9",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 130,
+     "line": 141,
      "text": "she signs in on her own computer",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 131,
+     "line": 142,
      "text": "assistant not ready: her connect screen",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 136,
+     "line": 147,
      "text": "she signs in on her own computer",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 159,
+     "line": 170,
      "text": "Roof repairs at 14 Lakeshore Row",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 159,
+     "line": 170,
      "text": "Mai, from flat 4",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 159,
+     "line": 170,
      "text": "Teo, from flat 9",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 159,
+     "line": 170,
      "text": "Interpreting, Spanish and English",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 160,
+     "line": 171,
      "text": "Water has come through the ceiling of flat 4 since Monday; reported twice.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 160,
+     "line": 171,
      "text": "Flat 4, second floor",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 160,
+     "line": 171,
      "text": "Housing notice 2026-118: repair order, 14 Lakeshore Row",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 161,
+     "line": 172,
      "text": "Housing notice 2026-131: heating order, 14 Lakeshore Row",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 161,
+     "line": 172,
      "text": "When did the tenants first report the leak to the landlord?",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 161,
+     "line": 172,
      "text": "The city withdrawing or amending notice",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 162,
+     "line": 173,
      "text": "The city's notice orders",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 162,
+     "line": 173,
      "text": "City repair order",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 162,
+     "line": 173,
      "text": "Flat 4, 14 Lakeshore Row",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 162,
+     "line": 173,
      "text": "My note of when the water came through the ceiling.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 163,
+     "line": 174,
      "text": "The copy is the notice the city published at that address",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 163,
+     "line": 174,
      "text": "Recorded by the release walk.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 163,
+     "line": 174,
      "text": "This is what the tenants need answered.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 163,
+     "line": 174,
      "text": "Tenants of 14 Lakeshore Row report water coming in.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 229,
+     "line": 240,
      "text": "1 · sign in by her handle",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 236,
+     "line": 247,
      "text": "she signs in by her handle",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 237,
+     "line": 248,
      "text": "assistant not ready: her connect screen",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 245,
+     "line": 256,
      "text": "she signs in by her handle",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 266,
+     "line": 277,
      "text": "{id}: not drawn signed out at its bare address, so its title and weight marks were not checked ({why})",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 287,
+     "line": 298,
      "text": "the live arm needs the test instance's address (--live",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 288,
+     "line": 299,
      "text": "the environment does not hold ${…}",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 307,
+     "line": 318,
      "text": "${…}: open / and sign in",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
@@ -55845,7 +55849,20 @@
     "reads": 1,
     "unkeyed": 0
    },
-   "unkeyed": [],
+   "unkeyed": [
+    {
+     "file": "bio-plane/src/pdfstructure.mjs",
+     "line": 5683,
+     "text": "{} 0 obj\n{}\nendobj\n",
+     "why": "PDF file syntax pdf-reader writes into an extracted page's bytes, never shown to a member (B510, K4872)"
+    },
+    {
+     "file": "bio-plane/src/pdfstructure.mjs",
+     "line": 5695,
+     "text": "{} 0 obj\n{}\nstream\n",
+     "why": "PDF file syntax pdf-reader writes into an extracted page's bytes, never shown to a member (B510, K4872)"
+    }
+   ],
    "batch": "DEC-260",
    "files": [
     "pdfstructure.mjs"
@@ -57135,6 +57152,51 @@
      "line": 63,
      "text": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
      "why": "the Content-Security-Policy header value: wire grammar (B364, L11)"
+    }
+   ],
+   "batch": "DEC-344"
+  },
+  "test-support": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "bio-plane/test/corpus.mjs",
+     "line": 239,
+     "text": "LibreOffice is not installed",
+     "why": "a test's skip reason: test-library text, never shown in Civicsmith (B508, K4855)"
+    },
+    {
+     "file": "bio-plane/test/corpus.mjs",
+     "line": 256,
+     "text": "Playwright is not installed",
+     "why": "a test's skip reason: test-library text, never shown in Civicsmith (B508, K4855)"
+    },
+    {
+     "file": "bio-plane/test/corpus.mjs",
+     "line": 260,
+     "text": "Chromium cannot start ({})",
+     "why": "a test's skip reason: test-library text, never shown in Civicsmith (B508, K4855)"
+    },
+    {
+     "file": "bio-plane/test/pdfgen.mjs",
+     "line": 130,
+     "text": "CMapName currentdict /CMap defineresource pop",
+     "why": "PDF syntax the test PDF generator writes: test-library text, never shown in Civicsmith (B508, K4855)"
+    },
+    {
+     "file": "bio-plane/test/pdfgen.mjs",
+     "line": 255,
+     "text": "{} 0 obj\n{}\nendobj\n",
+     "why": "PDF syntax the test PDF generator writes: test-library text, never shown in Civicsmith (B508, K4855)"
+    },
+    {
+     "file": "bio-plane/test/pdfgen.mjs",
+     "line": 259,
+     "text": "{} 0 obj\n{}\nstream\n",
+     "why": "PDF syntax the test PDF generator writes: test-library text, never shown in Civicsmith (B508, K4855)"
     }
    ],
    "batch": "DEC-344"

@@ -3794,6 +3794,58 @@
     "text": "the level is credentials' (its R45), over counts only (its R44); an episode is an unbroken run of hours at whose end the level was High, told once to each administrator, and a later one is told again.",
     "why": "the queue item's `basis.detail`, a builder's statement of which module's record the item stands on and who is told; the Queue draws an item's summary and detail, never its basis (screens-daily/item-words; B495)"
    }
+  ],
+  "test-support": [
+   {
+    "file": "bio-plane/test/corpus.mjs",
+    "line": 239,
+    "text": "LibreOffice is not installed",
+    "why": "a test's skip reason: test-library text, never shown in Civicsmith (B508, K4855)"
+   },
+   {
+    "file": "bio-plane/test/corpus.mjs",
+    "line": 256,
+    "text": "Playwright is not installed",
+    "why": "a test's skip reason: test-library text, never shown in Civicsmith (B508, K4855)"
+   },
+   {
+    "file": "bio-plane/test/corpus.mjs",
+    "line": 260,
+    "text": "Chromium cannot start ({})",
+    "why": "a test's skip reason: test-library text, never shown in Civicsmith (B508, K4855)"
+   },
+   {
+    "file": "bio-plane/test/pdfgen.mjs",
+    "line": 130,
+    "text": "CMapName currentdict /CMap defineresource pop",
+    "why": "PDF syntax the test PDF generator writes: test-library text, never shown in Civicsmith (B508, K4855)"
+   },
+   {
+    "file": "bio-plane/test/pdfgen.mjs",
+    "line": 255,
+    "text": "{} 0 obj\n{}\nendobj\n",
+    "why": "PDF syntax the test PDF generator writes: test-library text, never shown in Civicsmith (B508, K4855)"
+   },
+   {
+    "file": "bio-plane/test/pdfgen.mjs",
+    "line": 259,
+    "text": "{} 0 obj\n{}\nstream\n",
+    "why": "PDF syntax the test PDF generator writes: test-library text, never shown in Civicsmith (B508, K4855)"
+   }
+  ],
+  "pdf-reader": [
+   {
+    "file": "bio-plane/src/pdfstructure.mjs",
+    "line": 5683,
+    "text": "{} 0 obj\n{}\nendobj\n",
+    "why": "PDF file syntax pdf-reader writes into an extracted page's bytes, never shown to a member (B510, K4872)"
+   },
+   {
+    "file": "bio-plane/src/pdfstructure.mjs",
+    "line": 5695,
+    "text": "{} 0 obj\n{}\nstream\n",
+    "why": "PDF file syntax pdf-reader writes into an extracted page's bytes, never shown to a member (B510, K4872)"
+   }
   ]
  }
 }
