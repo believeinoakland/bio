@@ -754,3 +754,31 @@ The seven bare shape strings the words check flagged in bio-plane/src/capture/in
 Checks: capture suite 336/336 pass; timings test 5 runs on one core, all pass; words check capture 0 failures (was 7); run.mjs 19 failures, all inherited, none naming capture; format, architecture, ownership 0; coverage 66/66. No behaviour, requirement or test changed. Nothing deferred; no generated artifact stale.
 
 Size (session_01Wo2xMBoxbMVQCESiGbv5A2): test runs 6, module lines 4924
+
+## Fix round 9 · job 75 · CAPTURE #55 (B34: R109 amended, no reading row for a stated upload; the profile reads the held bytes; G152, K4958)
+
+Commit on `job/T51/capture`. Files: `bio-plane/src/capture/index.mjs`, `bio-plane/test/m/capture/r9-t51.test.mjs`.
+
+**Cause.** (b) `#file`'s `register` wrote a `reading` row always, though an upload over its kind's whole-read ceiling is never read (control-plane R125 (a), R132 state it at once). (i) `#file` called `profileOf` for a one-part upload with `firstPart` null, so `acquisition/index.mjs:2070-2073` read the stored object back whole (`ev.get`) for the format and `:2056-2059` for a text, though `#upload` held the part (`onlyPart`).
+**Why missed.** R109 said "`reading` always", and no test sent an upload over a kind's ceiling or counted `get` calls on the evidence store during a profile.
+**Red first** (both red on the tranche tip, green now; `r9-t51.test.mjs`): (1) a 25 MiB PDF upload (pdf.bytes is 24 MiB) registered a `reading` row; (2) a counting bucket saw one whole `get` of a 3 MiB PDF upload and of a 3 MiB text upload.
+**Platform check.** None owed by this job: nothing here depends on R2 or the Worker. P at the redeploy is BOB's: a PDF over 24 MiB uploaded through the proxy leaves no `reading` row (`op=jobs`/the plane's table) and the door's stated answer.
+
+**Entries applied**
+1. `reading` is not registered for an upload whose size is over the whole-read row of its kind: `wholeReadRow(profile)` (module constant) mirrors control-plane `reading-gate.mjs` `wholeRowOf(kindOf(document))` from what the profile states: PDF `pdf.bytes`, CSV `csv.bytes`, text kinds `text.bytes`, every other kind `pdf.bytes` (the whole-load row). The answer carries `reading_stated: true` (new key; also on a second sighting, and the no-registrar `jobs.not_registered` leaves `reading` out when stated). `unpack` and `keep` rows are unchanged. A second sighting of bytes the record holds computes the profile (only when the file is over `pdf.bytes`, the lowest row) so it owes no reading either.
+2. A one-part upload hands the bytes it holds to the profile: `Capture.#holding(ev, sha, bytes)` is the evidence store as `profileOf` meets it, `get` of the file's digest answering the held bytes (a range of them for a ranged read), every other call the store's. `acquisition.profileOf` takes no `bytes` argument (B34 said it did: its parameters are `ev, sha, ct, total, multipart, headers, locator, view, retrieved, origin, parts, firstPart, unread`), and acquisition is not mine; the seam is capture's own. The byte ledger counts the part until the profile is taken (`settle`), no longer released before it.
+3. No sentence added (no row owed to later-ux); `words` shows 0 failures naming capture.
+
+**Tests** (R109): the two new tests above (`G152`), plus `R109 (keep)` adapted to the amended requirement: its 33 MiB file is now text (read, so it still owes `reading` beside `keep`), and a 33 MiB file of no known kind owes `keep` alone.
+
+**Found in another module (REPORT to BOB)**
+- acquisition: `profileOf` could take the held `bytes` itself (one parameter, `formatBytes = readWhole = profileBytes = bytes`), which would replace `Capture.#holding`; then capture passes `onlyPart` and drops the wrapper. Efficiency only; capture meets R109 without it.
+- runtime-limits / acquisition: the kind-to-row map is written three times now (control-plane `wholeRowOf`/`kindOf`, capture `wholeReadRow`, and the diagnosis item (b) asked for one exported map). If the two ever differ, an upload either keeps a reading the door states, or loses one nobody states. One exported map (from runtime-limits or acquisition, taking a profile or a document) is the fix; capture will quote it.
+- control-plane: the upload's answer gains `reading_stated: true`; the door may pass it through.
+- Not mine, found: `fr6-seam.test.mjs` "R96 G13 (the real plane)" is red on the tranche tip too ("red by name until extraction's `more` merges").
+
+**Deferred.** Nothing.
+
+**Tests and checks.** capture suite 338/338 (`node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/capture/` from `bio-plane/`); timings test 3 runs on one core, all pass. Impact set: 98 modules name capture; the users that drive the real `uploadCapture` (screens-inquiry g41/fr5/fr6, journey-check route-encoding, wizard-scripts t47, affordances t36, op-declarations t41/t47, plane r8-heal-door, r8-headofline, r9-jobs): 97/98, the one red the `fr6-seam` G13 above, identical without my change. `format` 0 failures; `architecture` 0; `coverage` 66 of 66, 0; `words` capture 0 failures (inline 0); `ownership` 0.
+
+Size (session_01TcCgd312RDvc5erHPTSkhN): test runs 9, module lines 4963
