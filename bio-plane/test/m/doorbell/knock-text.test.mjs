@@ -38,13 +38,16 @@ test("R13: a knock with no stated type and a .txt or .md name is read as that te
   assert.equal(bare.source_content_type, null);
 });
 
-test("R13: a knock declared text/plain whose bytes hold a NUL, or are not UTF-8, is not read as text (control)", async () => {
+test("R13: a knock declared text/plain whose bytes hold a NUL is not read as text, and bytes the one decode reads (acquisition R120, G131g) are (control)", async () => {
   const withNul = new Uint8Array([...new TextEncoder().encode("looks like text"), 0, ...new TextEncoder().encode(" but is not")]);
   const a = await pulled(withNul, { fileName: "knock-b.txt", mediaType: "text/plain" });
   assert.equal(a.profiled_from_text, false);
+  const binary = new Uint8Array([0x00, 0x01, 0x02, 0x03]);
+  assert.equal((await pulled(binary, { fileName: "knock-b.txt", mediaType: "text/plain" })).profiled_from_text, false);
+  /* bytes that are not UTF-8 but decode without loss under the one decode are text, as an upload's are */
   const notUtf8 = new Uint8Array([0x61, 0xff, 0xfe, 0x62, 0x63]);
   const b = await pulled(notUtf8, { fileName: "knock-b.txt", mediaType: "text/plain" });
-  assert.equal(b.profiled_from_text, false);
+  assert.equal(b.profiled_from_text, true);
 });
 
 test("R13: a stated non-text type (application/pdf) over text bytes does not make them text (control)", async () => {
