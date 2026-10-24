@@ -2159,3 +2159,13 @@ HANDOFF (K4269; BOB #273): fix round 9 (T51, the reading architecture's Stage 1)
 - Document · a deterministic failure on the file's own bytes, final with its reason, not "try again" (G133c); "omitted with a statement": a reading over 1 MiB keeps its units and states the omitted part (G128e) · fix round 9 §5 · 2026-10-24
 - Document · "encrypted" and "could not be scanned" as their own states, "the scanner stopped at its limit" with the limit (G136a, G136b) · fix round 9 §5 · 2026-10-24
 - Add · a workbook refused with the count of its cells (G137e); a light-kind file refused over 50 MB or 1,048,576 rows with the figure (G131i) · fix round 9 §5 · 2026-10-24
+
+## B508 · HANDOFF · 2026-10-24 · session_01N66tu1ThrWqZd51TygSkj4 · primary
+HANDOFF (K3944; BOB #274): six inline strings in `test-support` that no member reads, for the design's `unkeyed` list in `words-reads.json` (module `test-support`), so the words check stops counting them. They are test-library text: a test's skip reason or PDF file syntax written by the test PDF generator, never shown in Civicsmith.
+- `bio-plane/test/corpus.mjs:239` "LibreOffice is not installed" (a test skip reason)
+- `bio-plane/test/corpus.mjs:256` "Playwright is not installed" (a test skip reason)
+- `bio-plane/test/corpus.mjs:260` "Chromium cannot start ({})" (a test skip reason)
+- `bio-plane/test/pdfgen.mjs:130` "CMapName currentdict /CMap defineresource pop" (PDF syntax)
+- `bio-plane/test/pdfgen.mjs:255` "{} 0 obj {} endobj" (PDF syntax)
+- `bio-plane/test/pdfgen.mjs:259` "{} 0 obj {} stream" (PDF syntax)
+Until your list carries them, BOB accepts them by name (K4855). No wording is asked.
