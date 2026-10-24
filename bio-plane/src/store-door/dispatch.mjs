@@ -370,7 +370,7 @@ function adminRefusal(ctx, by) {
    `store.namespace()` (the object's own name, plane R2) and `store.purgeHeld({bundleId})` (`actions`' R60 reader, plane
    R14), each a function asked at a purge and never before, for R4. The headers' credentials (R9) are set on the URL the
    map receives, and the grant is also handed as its third argument, which this module's `askcheck` (R11) reads. */
-export const STREAMED_BODY_OPS = Object.freeze(["captureupload"]);
+export const STREAMED_BODY_OPS = Object.freeze(["captureupload", "captureuploadpart"]);
 export async function dispatch(req, store) {
   const url = new URL(req.url);
   const op = url.pathname.slice(1);
@@ -378,8 +378,9 @@ export async function dispatch(req, store) {
      exception (error 1101) rather than a BIO refusal. An absent body is null, which is what a GET already passes; a
      body that is present but not JSON is refused by name. */
   let body = null;
-  /* R11 (K2585; control-plane R72): an upload's body is the request's own stream, handed on unread (never parsed, never
-     BAD_JSON), so `captureupload`'s arm streams it to capture as its `bytes`. */
+  /* R11, R19 (K2585, K4928; control-plane R72; capture R113): an upload's body, or a parted upload's part, is the
+     request's own stream, handed on unread (never parsed, never BAD_JSON), so the arm streams it to capture as its
+     `bytes`. */
   if (req.method === "POST" && STREAMED_BODY_OPS.includes(op)) body = req.body;
   else if (req.method === "POST") {
     const raw = await req.text();
