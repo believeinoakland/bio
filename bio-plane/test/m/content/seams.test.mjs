@@ -13,6 +13,7 @@ import {
 import * as textChain from "../../../src/textchain.mjs";
 import { TESTIMONY_PATH } from "../../../src/provenance/index.mjs";
 import { CONTENT_OP_NAMES } from "../../../src/content/ops.mjs";
+import { checkContentExtent as coreCheck, legExtent as coreLegExtent } from "../../../src/content/extent-core.mjs";
 
 const DOC = "INFO-2026-0001-a", OTHER = "INFO-2026-0002-b";
 const H = "a".repeat(64);
@@ -132,6 +133,30 @@ test("R48: the core's leg reader, content id shape, document-only context and pa
     "the face relates a table's cells over the core (R6, N759)");
   assert.equal(extentRelation({ kind: "doc-table" }, { kind: "doc-table", table: 0, cell: "A1" }), "unreadable",
     "a coarse field missing is unreadable, never narrower");
+});
+
+test("R48 (G167, K4985): the core takes a doc-part leg: its part and ref survive legExtent, its check is the grammar's, and an unknown kind is refused as before", () => {
+  const leg = { extent_kind: "doc-part", extent_part: "word/footnotes.xml", extent_ref: "fn:3", extent_cell: "A1" };
+  const ext = coreLegExtent(leg);
+  assert.deepEqual(ext, { kind: "doc-part", ref: "fn:3", part: "word/footnotes.xml" }, "the part and ref are read, a stray field is not");
+  assert.equal(coreCheck(ext, CONTENT_EXTENT_DOCUMENT_ONLY), null, "the leg grammar's pass admits it");
+  /* the content id a citation mints is over the extent the reading found */
+  assert.equal(contentIdFor("c", ext, LAYER), contentIdFor("c", { kind: "doc-part", part: "word/footnotes.xml", ref: "fn:3" }, LAYER));
+  assert.notEqual(contentIdFor("c", ext, LAYER), contentIdFor("c", { kind: "doc-part", ref: "fn:3" }, LAYER), "the part is in the address");
+  /* the core and the face answer alike over every shape and context */
+  const chain = LAYER;
+  for (const e of [ext, { kind: "doc-part", part: "p" }, { kind: "doc-part", ref: "r" }, { kind: "doc-part" }, { kind: "doc-part", part: 7 },
+                   { kind: "doc-part", part: "", ref: "" }, { kind: "doc-part", ref: ["fn"] }, { ...ext, cited_as: "bytes" }])
+    for (const ctx of [CONTENT_EXTENT_DOCUMENT_ONLY, { chain: null }, { chain }])
+      assert.deepEqual(coreCheck(e, ctx), checkContentExtent(e, ctx), JSON.stringify([e, ctx.chain]));
+  assert.equal(coreCheck(ext, { chain: null }).code, "CONTENT_EXTENT_NO_CHAIN", "a capture nobody read holds no text to address");
+  assert.equal(coreCheck({ kind: "doc-part" }, CONTENT_EXTENT_DOCUMENT_ONLY).code, "CONTENT_EXTENT_UNREADABLE");
+  assert.equal(coreCheck({ ...ext, cited_as: "bytes" }, CONTENT_EXTENT_DOCUMENT_ONLY).code, "CONTENT_EXTENT_UNREADABLE", "only an image is cited as bytes");
+  /* control: another kind's flattened fields are not read for it, and an unknown kind is refused C-45 as before */
+  assert.deepEqual(coreLegExtent({ extent_kind: "doc-para", extent_para: 1, extent_part: "word/footnotes.xml" }), { kind: "doc-para", para: 1 });
+  const unknown = coreCheck({ kind: "doc-footnote", part: "p" }, CONTENT_EXTENT_DOCUMENT_ONLY);
+  assert.equal(unknown.code, "CONTENT_EXTENT_UNREADABLE");
+  assert.equal(unknown.check, "C-45.3");
 });
 
 /* ------------------------------------------------------------------------------------------------------- R49 */
