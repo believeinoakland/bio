@@ -135,3 +135,7 @@ Tests: `cd bio-plane && node --test --test-force-exit test/m/case-carriage/`: 10
 Checks: format 0 failures; architecture (case-carriage) 16 files, 0 failures (the first run failed on a test import of `ooxml`, which I removed); coverage case-carriage 23 of 23, 0 failures; words case-carriage 0 failures; ownership 0 failures.
 
 Size (session_01VyoeUd2RteSyDN2p9gjFYw): test runs 9, module lines 1718
+
+## J6 · COMPLETE
+
+COMPLETE · G136c (case-carriage piece): tried is stamped before the clean runs (case-carriage/index.mjs #copyOne). Failing-first test seen red then green; DOCS C1 (70,009-entry DOCX, crash after the work) green with merged doc-clean. Module 100/100, scheduler 163/163, case-authoring 249/249; format, architecture, coverage, words, ownership 0 failures for my files. New ids none; files outside paths none; stale artifacts none; nothing deferred. Record: build/jobs/T51/case-carriage.md 'Round 9'.
