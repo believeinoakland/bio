@@ -991,14 +991,19 @@ const linesIn = (t) => { let n = 1; for (let i = t.indexOf("\n"); i >= 0; i = t.
 /* Every unit of the text, before the wire's cap and budget: null when the text has no unit list. */
 function allUnitsOf(i2text) {
   if (!i2text) return null;
-  const arm = (list, kind, fields) => (Array.isArray(list) ? list : [])
-    .map((u, i) => (u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0
+  /* R47 (G166; K4985): a paragraph a part names in its `paras` (`office-readers` R38: indices into `paragraphs`) is that part's words
+     alone, so it is no body unit; its number stays what it was. */
+  const named = new Set();
+  for (const p of Array.isArray(i2text.parts) ? i2text.parts : [])
+    if (p && typeof p === "object" && Array.isArray(p.paras)) for (const n of p.paras) if (Number.isInteger(n) && n >= 0) named.add(n);
+  const arm = (list, kind, fields, skip = null) => (Array.isArray(list) ? list : [])
+    .map((u, i) => (u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0 && !(skip && skip.has(i))
       ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text, kind: "body" } : null))
     .filter(Boolean);
   const body = Array.isArray(i2text.pages)      ? arm(i2text.pages, "pdf-page",
         (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null }))
     : Array.isArray(i2text.paragraphs) ? arm(i2text.paragraphs, "doc-para",
-        (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }))
+        (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }), named)
     : Array.isArray(i2text.slides)     ? arm(i2text.slides, "slide-shape",
         (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }))
     : Array.isArray(i2text.sheets)     ? arm(i2text.sheets, "sheet-range", sheetRangeOf)
