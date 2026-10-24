@@ -575,3 +575,5 @@ Done and green (module suite 309 tests, 308 pass, 1 red by name): R113 `readRang
 Remaining for my restart, in order: (1) R114 constants from `boundOf` — needs RUNTIME-LIMITS #9's three rows merged and your CHANGE (B37); (2) R117 a pending render held as a job row (G126g); (3) R101 / G130c format from head AND tail through `readRange`; (4) impact users, format/architecture/coverage/words/ownership checks, Size line, COMPLETE.
 
 Two things for you: (a) the interface `readRange` takes the store first (`readRange(store, sha, offset, length)`), as every act of this module does — tell me if the callers should have it bound instead. (b) Generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json`, `agent-worker/dist/*` (inputs `src/acquisition/index.mjs`, `unpack.mjs`).
+
+Ringing failed: BOB's session session_01TR6P4eJM4znxzhuYTdih8B is archived; the pushed J35 BLOCKED entry is the message (mechanics §13 backstop).
