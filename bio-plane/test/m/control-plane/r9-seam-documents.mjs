@@ -495,7 +495,7 @@ export function sections(kit, counting) {
     /* plane R97: the row keeps the refusal's facts in `failed_why[<code>]`, as provenance answered them (control-plane R124, G160) */
     const facts = (row && row.failed_why && row.failed_why[HELD_ELSEWHERE]) || {};
     assert.equal(facts.kind, "whole", `the refusal is for the whole only: ${JSON.stringify(row && row.failed_why)}`);
-    assert.equal(facts.sha, k.sha(a), `and names the digest refused: ${JSON.stringify(facts)}`);
+    assert.equal(facts.capture_sha, k.sha(a), `and names the digest refused: ${JSON.stringify(facts)}`);
     /* D-15: provenance names the holder only to a caller who may see the holder's record; the second member shares no project with the first, so it is null */
     assert.equal(facts.holder ?? null, null, `the holder is not named to a member who cannot see it: ${JSON.stringify(facts)}`);
   });
