@@ -162,7 +162,7 @@ test("R97: a search over a text read to half finds its hit in the part read and 
   const hit = rowsOf(w, "passage:culverts");
   assert.equal(hit.total, 1, "found in the part read");
   assert.equal(hit.scope.partial, 1);
-  assert.deepEqual(hit.scope.partial_reads, [{ capture_sha: c.sha, through: HALF, total: TOTAL }]);
+  assert.deepEqual(hit.scope.partial_reads, [{ capture_sha: c.sha, through: HALF, total: TOTAL, owed: 0 }]);
   assert.ok(hit.says.includes(String(HALF)) && hit.says.includes(String(TOTAL)), "says how far the reading had got");
   const miss = rowsOf(w, "passage:hydrants");
   assert.equal(miss.total, 0);
@@ -186,7 +186,7 @@ test("R97: a partial reading whose extent is not stated (a unit bound hit, no pi
   w.indexState(a.sha, "INFO-A", { state: "partial" });
   w.indexState(b.sha, "INFO-B", { state: "none" });
   const r = rowsOf(w, "passage:zzqx");
-  assert.deepEqual([r.scope.partial, r.scope.partial_reads], [1, [{ capture_sha: a.sha, through: null, total: null }]]);
+  assert.deepEqual([r.scope.partial, r.scope.partial_reads], [1, [{ capture_sha: a.sha, through: null, total: null, owed: 0 }]]);
   assert.ok(!r.says.includes("null") && !r.says.includes("undefined"), "no figure is made up where none is stated");
   w.indexState(a.sha, "INFO-A", { state: "whole" });
   assert.notEqual(rowsOf(w, "passage:zzqx").says, r.says, "the partial sentence goes once the reading is whole");
@@ -206,4 +206,30 @@ test("R97: the partial readings a tally lists are bounded and counted — more t
   assert.equal(r.scope.partial, N);
   assert.equal(r.scope.partial_reads.length, 20);
   assert.equal(r.scope.partial_truncated, true);
+});
+
+/* extraction R108's `progressOf(shas)`: the interface text, as a stand-in until job 41 merges. */
+const progressStub = (table) => (shas) => Object.fromEntries(shas.map((s) => [s, table[s] ?? { state: "none", read_through: null, total: null, owed: 0 }]));
+
+test("R97, K4571: a reading with pages owed is counted partial and never whole — a 30-page scan read 24 pages, asked of the provider's progressOf, says searched so far with the pages owed; the calls are of at most 500 shas; a whole text is not partial", () => {
+  const w = world();
+  const scan = w.cap("scan.pdf", "scan bytes"), text = w.cap("text.txt", "text bytes");
+  w.doc("INFO-SCAN", {}, { captures: [scan] }); w.doc("INFO-TXT", {}, { captures: [text] });
+  w.unit(scan.sha, "INFO-SCAN", 0, "a scanned page about culverts");
+  w.unit(text.sha, "INFO-TXT", 0, "a text about culverts");
+  w.indexState(scan.sha, "INFO-SCAN", { state: "whole" });   /* the unit index says whole: what is owed is not in it */
+  const calls = [];
+  const table = { [scan.sha]: { state: "whole", read_through: 24, total: 30, owed: 6 }, [text.sha]: { state: "whole", read_through: 9, total: 9, owed: 0 } };
+  const stub = progressStub(table);
+  w.retrieval.extraction.progressOf = (shas) => { calls.push(shas.length); return stub(shas); };
+  const r = rowsOf(w, "passage:zzqx");
+  assert.deepEqual(r.scope.partial_reads, [{ capture_sha: scan.sha, through: 24, total: 30, owed: 6 }]);
+  assert.equal(r.scope.partial, 1, "the scan, not the text");
+  assert.ok(r.says.includes("24") && r.says.includes("30"));
+  assert.ok(calls.length >= 1 && calls.every((n) => n <= 500));
+});
+
+test("R97, R108 (red until extraction job 41 merges): the real extraction answers progressOf, and a scan with pages owed is counted partial through it", () => {
+  const w = world();
+  assert.equal(typeof w.retrieval.extraction.progressOf, "function", "extraction R108's progressOf");
 });
