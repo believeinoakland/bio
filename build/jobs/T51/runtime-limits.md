@@ -128,3 +128,7 @@ Stale generated artifacts: bundles whose inputs include bio-plane/src/read-bound
 - **Ran.** Tranche merged first. runtime-limits suite: 55 tests, 55 pass, 0 fail. Importers (pdf-reader bounds and cmap, reading-pipeline r9-reader, file-safety r57-bounds, acquisition r9-ceilings, byte-ledger): 54 tests, 49 pass, 0 fail (5 not counted pass, none failing). `impact.mjs` reported 0 affected modules on the staged diff. Checks: format 0 failures; architecture 0 failures; coverage 32 of 32 ids, 0 failures; ownership 3 files, 0 failures. words not run (it fails on other modules' files, same as the earlier rounds).
 
 Size (session_01YC2QN7Jxms3WaivDnVr4Bf): test runs 5, module lines 12
+
+## J9 · COMPLETE
+
+COMPLETE B8: READ_BOUNDS row pdf/request_bytes (2 MiB x3, key limit.pdf.request_bytes) added and tested (R30, R31). Suite 55/55; importers 49 pass, 0 fail; format, architecture, coverage, ownership 0 failures. Bundles with read-bounds.mjs as input are stale; BOB regenerates at round end. Details in my record.
