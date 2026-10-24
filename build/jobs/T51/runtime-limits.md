@@ -97,3 +97,7 @@ Checks (civicos-process): format 0 failures; architecture 0 failures; coverage 3
 Size (session_01Hw98qUCFYLUAekavfPLPJZ): test runs 3, module lines 261
 
 **Found in another module (generated artifacts, §14; not regenerated).** `ocr-worker/dist/ocr-worker.bundled.mjs` is now stale against `bio-plane/src/read-bounds.mjs` (this change; its test `ocr-worker/test/ocr-worker.test.mjs` passed on `tranche/T51` and fails on this branch for that reason alone). `agent-worker/dist/agent-worker.bundled.mjs` was already stale on `tranche/T51` (browserrender, formats, provenance, read-bounds, render, doctypes registry), so `bio-plane/test/system/fleetbundles.test.mjs` fails before and after. Both are regenerated at the layer close (manifest, Generated artifacts); `pdf-worker` takes `runtime-limits` files too and should be checked then.
+
+## J6 · COMPLETE
+
+B6 applied (K4882): capture/keep_bytes 33,554,432, capture/profile_text_bytes 8,388,608, render/dom_bytes 26,214,400, each one figure in all three columns, keys limit.<kind>.<name>; test names R30/R31. Module 53/53; format, architecture, coverage, ownership 0 failures; words 19 failures are other modules'. Importers (18 files): 188/190. REPORT: ocr-worker's bundle is now stale against read-bounds.mjs (its test fails for that alone); agent-worker's bundle was already stale on tranche/T51; both for regeneration at layer close, pdf-worker's to be checked then. Nothing deferred.
