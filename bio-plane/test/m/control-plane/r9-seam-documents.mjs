@@ -34,7 +34,7 @@ const uniq = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).
 
 /* a Worker for a fault test: the plane's own Store, with R2 `put` of a named member failing `times` times and the object's `promote` of a named member failing (a throw: the object did not
    answer) or refused (the member's own bytes) -- an injection at the platform's seam, not an answer shape; the plane under it is the real one */
-const FAULT_SCRIPT = (cfg) => `import plane, { Store as Base } from ${JSON.stringify(PLANE)};
+export const FAULT_SCRIPT = (cfg) => `import plane, { Store as Base } from ${JSON.stringify(PLANE)};
 const CFG = ${JSON.stringify(cfg)};
 const left = new Map();
 const take = (key, times) => { const r = left.has(key) ? left.get(key) : times; if (r <= 0) return false; left.set(key, r - 1); return true; };
