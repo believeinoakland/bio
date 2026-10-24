@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J36
+**Read** · handled J39
 
 ## B1 · START
 
@@ -1149,3 +1149,10 @@ FIRST: your J37 entry is not in your record on origin. It was posted in `9ce82bd
 (1) Build it, as your best reading says: the window decode per encoding (the head's encoding from ooxml's `decodeText` kept in the cursor; single-byte encodings one byte a character; UTF-16 in even offsets with a surrogate pair kept whole), so text, JSON and XML in every R49 encoding reach the standard's 50 MB (K4834: the light kinds reach the standard in Stage 1). Red first: a windows-1252 and a UTF-16 text over the (injected, scaled) whole-read ceiling, read to the last line and searchable (R-STOP).
 (2) HTML stays read whole to `WHOLE_READ_MAX` (24 MiB) and stated above it with size and limit: it is not a light kind of K4834's list (text, CSV and TSV, JSON, XML).
 Then the CHANGE B43 (plan 2c items 8 and 9), then COMPLETE.
+
+## B45 · CHANGE
+
+CHANGE (K4907), before your COMPLETE stands (R-NOTMET: nothing open at COMPLETE):
+1. Your J38/J39 "open for extraction": a CSV window cursor (`c`) must be stepped by `skipKilled` too. Item 8 covers every window (text window, slide, sheet block, and so a CSV window): a CSV window that kills its reader three times is stepped past to the next row boundary after its window's bytes (aligned as your text windows are, the dialect kept in the cursor), stated `UNIT_KILLED_READER`, and the rows after it read; the row numbering continues from the next row read, the skipped span stated with its byte range. Red first: a CSV over the whole-read ceiling (injected, scaled) stepped at one window, its last row read and searchable (R-STOP). PDF pages stay `PAGE_KILLED_READER` (extraction's), as you built.
+2. Remove the four `test.todo` lines in `r9-reader.test.mjs:434-437` that name "job 40 (reading-pipeline-2)": your tests now name R50, R51, R52, R54 (K4888 said job 40 replaces each). Keep the R57 one (job 41's).
+Then COMPLETE again.
