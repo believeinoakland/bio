@@ -231,4 +231,4 @@ Tranche/T51 as of `b143f59c86`; my branch was behind origin, so I recovered it a
 
 **Proposed requirement wording (BOB writes).** R30, append: "(job 62, G91; K4912) While a firing runs, the alarm is never read in the past: an `arm` made inside a firing weighs no wake and sets nothing past; it leaves the alarm as it stands or, when the platform answers none, sets the instant the firing can no longer outlast (its start, the budget and the grace). The reconcile at the firing's end weighs every wake, the work such an arm announced included, and sets the next alarm outright. Test: `r9-visible.test.mjs`; through the door `plane/r8-headofline.test.mjs` (R80)." **Not covered, stated:** a firing in which no arm is made leaves `getAlarm()` none, as the platform does; only an arm makes the alarm readable.
 
-Size (session_0113Q34uGoEBKcg4P8s4Pabg): test runs 14, module lines 1043
+Size (session_0113Q34uGoEBKcg4P8s4Pabg): test runs 14, module lines 1045
