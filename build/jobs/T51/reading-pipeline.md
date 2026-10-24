@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01AbxdEFuxSqVBpz5Bascgjh · depth 2 · WORKING · handled B41
+**Status** · session_01AbxdEFuxSqVBpz5Bascgjh · depth 2 · COMPLETE · handled B41
 
 ## J1 · COMPLETE
 
