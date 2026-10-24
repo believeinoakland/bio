@@ -2621,7 +2621,7 @@ async function sizeHeld(evidence, digest) {
 /* `{bytes, why?, failure?}`. A failure is `transient` (R37: the object, or a part, is not held yet, or the parts cannot
    be assembled within MULTIPART_READ_MAX while no whole is held: it can be) or `final` (the capture is over WHOLE_READ_MAX
    and is never loaded: nothing later changes that). It throws only when the store does, which the caller marks transient. */
-export async function bytesOf(evidence, doc) {
+export async function bytesOf(evidence, doc, { kind = null } = {}) {
   const whole = async (digest) => {
     const o = await evidence.get(digest);
     return o ? new Uint8Array(await o.arrayBuffer()) : null;
@@ -2633,10 +2633,13 @@ export async function bytesOf(evidence, doc) {
   /* R37: a whole the object cannot hold is never loaded, whatever else is held; the size is the capture's own, else the
      store's. */
   /* R54 (G124a): the refusal names its cause and its two figures, the size and the limit, from the table (`statement`) */
-  const tooBig = (size) => ({ bytes: null, failure: FAILURE_FINAL,
-    stated: { reason: "TOO_LARGE", ...statement(...WHOLE_READ_ROW, size) },
-    why: word("reading-pipeline.why.capture_bytes_parts", { total: String(size), parts: String(parts ? parts.length : 1),
-                                                              multipart_read_max: String(WHOLE_READ_MAX) }) });
+  /* a CSV over its own bound is stated against that row (K4868), every other kind against the whole-load ceiling's */
+  const tooBig = (size) => {
+    const st = statement(...(kind === "csv" && size > boundOf("csv", "bytes") ? ["csv", "bytes"] : WHOLE_READ_ROW), size);
+    return { bytes: null, failure: FAILURE_FINAL, stated: { reason: "TOO_LARGE", ...st },
+             why: word("reading-pipeline.why.capture_bytes_parts", { total: String(size), parts: String(parts ? parts.length : 1),
+                                                                       multipart_read_max: String(st.bound) }) };
+  };
   if (total !== null && total > WHOLE_READ_MAX) return tooBig(total);
   /* the store is asked only when the document states no size */
   const held = wholeSha && total === null ? await sizeHeld(evidence, wholeSha) : null;
@@ -2740,7 +2743,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   if (rangedCsv && !piecesOn)
     return early(failed(doc, null, localize("reading-pipeline.index.csv_in_pieces", "this CSV is {size} bytes, more than a whole read holds ({limit}), so it is read in pieces and none of it is read yet", { size: String(rangedCsv.size), limit: String(WHOLE_READ_MAX) }), { failure: FAILURE_TRANSIENT }));
   if (rangedCsv) fmt = "csv";
-  const got = held ? { bytes: HELD_OPEN } : rangedCsv ? { bytes: rangedCsv.head } : await bytesOf(evidence, doc).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
+  const got = held ? { bytes: HELD_OPEN } : rangedCsv ? { bytes: rangedCsv.head } : await bytesOf(evidence, doc, { kind: fmt }).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
   let bytes = got.bytes;
   const objLen = bytes ? bytes.length : 0;
   got.bytes = null;
