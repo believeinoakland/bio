@@ -52,6 +52,7 @@ import { VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_STATES, VERSION_NOTICE_GRA
          affectsOf, heldTextAt, typedCellsAt, extentBox, normUnits, searchedOf, splitRun, kindAt } from "./notice.mjs";
 import { readRange as acquisitionReadRange } from "../acquisition/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 
 export * from "./extent.mjs";
 export { CONTENT_SCHEMA, CONTENT_TABLES } from "./schema.mjs";
@@ -83,12 +84,12 @@ export const TRANSCRIPTIONS_LIMIT_MAX = 200;
 /** R46, R60: one page of a capture's units is read at most this many characters of text (extraction R93's page, about 1 MiB), the pages
  *  followed by `next` until the reading's last unit, so a reading of more than 4,096 units is read whole and never from its first page alone. */
 export const UNITS_PAGE_CHARS = 1048576;
-/** R46, R60: the most unit text one capture's held units are read to (32 MiB of characters; proposed, BOB records). Past it the reading is held as
+/** R46, R60: the most unit text one capture's held units are read to (32 MiB of characters, `READ_BOUNDS` content.held_text_chars). Past it the reading is held as
  *  `partial` with `searched` naming how far it was read, never as `whole`, so a document too large to hold in one object is stated and not graded
  *  as if it were all read. */
-export const HELD_TEXT_CHARS_MAX = 32 * 1048576;
+export const HELD_TEXT_CHARS_MAX = boundOf("content", "held_text_chars");
 /** R58: how many pages of units a lookup of a unit's kind scans (one capture, 16 MiB of unit text) before it answers that the reading names none. */
-export const KIND_SCAN_PAGES_MAX = 16;
+export const KIND_SCAN_PAGES_MAX = boundOf("content", "kind_scan_pages");
 /** R59: the bytes a crop reads from a capture at a time through `readRange`. */
 const RANGE_BYTES = 8 * 1048576;
 /** R51: the figures this module reports for `op=stats` and purge's proof, through record-core's `registerCounts`. */

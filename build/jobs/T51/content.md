@@ -1,6 +1,6 @@
 # content (T51)
 
-**Status** · session_01K9HMgas2XJZzhRzt7oMHQn · depth 2 · COMPLETE · handled B15
+**Status** · session_01K9HMgas2XJZzhRzt7oMHQn · depth 2 · COMPLETE · handled B17
 
 ## J1 · COMPLETE
 
@@ -205,3 +205,15 @@ COMPLETE (fix round 9, content #20: G128g, G134d, G135f, G127d; re B13, B14, B15
 **Deferred:** none. **Found in other modules:** none beyond the above (job 41's three fields; text-chain's `doc-part` arm, job 63).
 
 Size (session_01K9HMgas2XJZzhRzt7oMHQn): test runs 26, module lines 3920
+
+## J12 · COMPLETE
+
+COMPLETE (re B16, item 1). Merged `origin/tranche/T51` (text-chain job 63 in). Content's own `doc-part` canonical arm in `extent.mjs` is dropped; `canonicalExtent` takes text-chain's. Shown agreed BEFORE the drop: content's arm and `textchain.canonicalExtent` gave the same string for 7 shapes (full, padded, ref only, part only, empty strings, non-string part, bare), and the content ids over them were identical before and after (a33870be253e, e6cc3ada024e, 8118ded0a641, c93b659ef24a, 974b1cbe16d0 for the rest). Pinned now in `r9-units.test.mjs` ("R1, R3 (K4913)": equal to text-chain's, ids fixed). Content's R1 shape check and human form stay content's.
+Suite: tests 174, pass 170, fail 4 (the same four R61 seam tests, red by name until job 41, B15/B16 item 2). format, architecture, coverage (61 of 61), words, ownership: 0 failures.
+Ceilings: job 64 (runtime-limits) has not merged to `origin/tranche/T51` (no `content` rows in `read-bounds.mjs`); `HELD_TEXT_CHARS_MAX` and `KIND_SCAN_PAGES_MAX` stay local constants. I need a CHANGE when it merges to switch them to `boundOf("content", "held_text_chars")` and `("content", "kind_scan_pages")`.
+Size (session_01K9HMgas2XJZzhRzt7oMHQn): test runs 28, module lines 3913
+
+## J13 · COMPLETE
+
+COMPLETE (re B17). Merged `origin/tranche/T51` (job 64 in). `HELD_TEXT_CHARS_MAX = boundOf("content", "held_text_chars")` and `KIND_SCAN_PAGES_MAX = boundOf("content", "kind_scan_pages")`, no literal; `runtime-limits` was already in content's `uses`, so no edge is owed. Suite: tests 174, pass 170, fail 4 (the R61 seam tests, red by name until job 41). format, architecture, coverage (61 of 61), words, ownership: 0 failures. Pushed.
+Size (session_01K9HMgas2XJZzhRzt7oMHQn): test runs 30, module lines 3914
