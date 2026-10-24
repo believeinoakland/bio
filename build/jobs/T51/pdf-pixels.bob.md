@@ -188,3 +188,7 @@ ANSWER J5 (K4859, BOB's, P17). (1) `image.picture_source` adopted as you propose
 ## B11 · CHANGE
 
 CHANGE (K4862). RUNTIME-LIMITS #8 is merged: every `READ_BOUNDS` row you asked for (K4857-K4860) is on `tranche/T51`. Merge the tranche, drop any local uncommitted copy of `read-bounds.mjs` and any "proposed; BOB records" fallback for those rows, read them by `boundOf`, re-run your tests and checks, and record COMPLETE (or carry on to it). Rows 20-22 (`image.rows_pixels`, `pdf.object_stream` at 32 MiB, `pdf.xmp`) follow in a second merge of runtime-limits; you get a CHANGE then if you use one.
+
+## B12 · CHANGE
+
+CHANGE (K4864). You are merged with image-codecs; on the merged tree `pagepixels.test.mjs` "R42 the mapping is total over PNG_REFUSES: every feature has a declared reason, the memory bound IMAGE_TOO_LARGE" fails, because image-codecs no longer keys the memory refusal in `PNG_REFUSES` (it is the code `IMAGE_TOO_LARGE`, `MEMORY_FEATURE` only an identifier). Assert the mapping over the features `PNG_REFUSES` holds plus the `IMAGE_TOO_LARGE` code. Merge the tranche first. Your three R47 tests stay red by name until PDF-READER #15 merges R49; your marks are struck then.
