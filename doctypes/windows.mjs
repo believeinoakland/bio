@@ -215,7 +215,7 @@ export function referenceBook(locate) {
       entities.push(e);
     },
     state: () => (skipped ? { references_cut: true, references_skipped: skipped, references_limit: REFERENCES_MAX, sightings_limit: SIGHTINGS_MAX,
-      references_why: localize("doctypes.references.cut", "this text cites more than the {references} different references, or the {sightings} repeat citations, a reading keeps: {skipped} citation(s) were counted and not kept", { references: String(REFERENCES_MAX), sightings: String(SIGHTINGS_MAX), skipped: String(skipped) }) } : {}),
+      references_why: localize("doctypes.windows.references_cut", "this text cites more than the {references} different references, or the {sightings} repeat citations, a reading keeps: {skipped} citation(s) were counted and not kept", { references: String(REFERENCES_MAX), sightings: String(SIGHTINGS_MAX), skipped: String(skipped) }) } : {}),
   };
 }
 
