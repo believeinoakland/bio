@@ -96,3 +96,18 @@ test("R45 R50 (K4907, item 8): a CSV window that killed its reader is stepped to
   }
   assert.match(last.text, /LASTROW/, "the last row is read");
 });
+
+test("R29 R6 (K4909): the transcription sentence counts only the pages that gained text: a 3-page scan whose OCR answers page 2 with no glyph says 2 transcribed and 1 not read by text recognition; `filled` is unchanged", async () => {
+  const { member: mk, ocrAnswer, noText } = await import("./fixture.mjs");
+  const b = bucket();
+  const d = await hold(b, "%PDF-stand-in");
+  const pages = [0, 1, 2].map((page) => ({ page, text: "", undetermined: [noText(page)] }));
+  const ocr = mk(() => ocrAnswer([0, 1, 2], { text: (p) => (p === 1 ? "" : `ocr words of page ${p}`) }));
+  await withEntry({ format: "pdf", detect: () => null, structure: async () => ({ ok: true, pages: 3, text: i2(pages) }) }, async () => {
+    const out = await readOf(b, doc({ digest: d, bytes: 13, ct: "application/pdf", format: "pdf" }), { env: { OCR_WORKER: ocr } });
+    const basis = out.reading.basis;
+    assert.match(basis, /\b2 scanned page\(s\) were transcribed/);
+    assert.doesNotMatch(basis, /\b3 scanned page\(s\) were transcribed/);
+    assert.match(basis, /1 page\(s\) \(2\) could not be read by text recognition|1 page\(s\) \(page 2\) could not be read by text recognition/);
+  });
+});
