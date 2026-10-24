@@ -46,3 +46,14 @@ Checks (civicos-process ebcc1a3, against /home/user/bio):
 Tests: none run (no module code changed).
 
 Size (session_01DQhDYhUjhzaGm67YZSpeDZ): test runs 0, module lines 0
+
+## J4 · QUESTION
+
+QUESTION (R-NOTMET: the smallest thing I need). R6, R30, R31 and R35 take every ceiling through `boundOf`, but `read-bounds.mjs` (runtime-limits' alone, START ruling 1) has no row for three ceilings this module keeps, so `boundOf` would throw at import. I need these three rows added to the table before I can commit the import; I carry on with everything else meanwhile, on a local uncommitted copy of the rows, and will not commit it.
+
+Rows (kind, name, standard, alpha, protective, key), all as `bytes(alpha, key, MB100)` in the table's own helper (K4845: documents 100 MB, the alpha where it is above):
+1. `office`, `text_bytes`: alpha 20,971,520 (20 MiB; R6 `MEASURED_OOXML_TEXT_BOUND_BYTES`), standard 104,857,600, protective 104,857,600, key `limit.office.text_bytes`.
+2. `office`, `streamed_text_bytes`: alpha 33,554,432 (32 MiB; R35 `STREAMED_TEXT_BOUND_BYTES`), standard 104,857,600, protective 104,857,600, key `limit.office.streamed_text_bytes`.
+3. `archive`, `member_bytes`: alpha 268,435,456 (256 MiB; R30 `MEMBER_MAX`), standard 2,147,483,648 (the archive unpacked standard, one member cannot exceed the archive), protective 2,147,483,648, key `limit.archive.member_bytes`.
+
+The other nine ceilings I keep have rows already: archive.members, unpacked_bytes, ratio, directory, name, depth; office.entries. ARCHIVE_TREE_TOTAL_MAX and ARCHIVE_TREE_ENTRIES_MAX I take from archive.unpacked_bytes and archive.members (same figures). If you prefer other names or figures, tell me; I will use what you add.
