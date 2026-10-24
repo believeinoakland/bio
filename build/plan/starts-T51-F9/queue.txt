@@ -1,4 +1,4 @@
-START · QUEUE #<k> · tranche T51 · product believeinoakland/bio · fix round 9, batch D: R1, the catalogue names `reading-ended` (K4933) · depth 2 (BOB #280 at depth 1)
+START · QUEUE #35 · tranche T51 · product believeinoakland/bio · fix round 9, batch D: R1, the catalogue names `reading-ended` (K4933) · depth 2 (BOB #280 at depth 1)
 
 FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `git fetch origin job/T51/queue tranche/T51 && git branch -m job/T51/queue stale/queue-local && git checkout -b job/T51/queue origin/job/T51/queue`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
 
