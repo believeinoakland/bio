@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01Di3H5CJCeTUBedG79gEybu · depth 2 · COMPLETE · handled B87
+**Status** · session_01AWoVVqkqd48jwuoT2GtVPZ · depth 2 · COMPLETE · handled B89
 
 ## Record (PLANE #41, T51-125)
 
@@ -972,3 +972,27 @@ Size (session_01Di3H5CJCeTUBedG79gEybu): test runs 4, module lines 3752
 ## J59 · COMPLETE
 
 COMPLETE (PLANE #58, job 74, B87): R108 met. pendingadd takes project and writes detail.project (pending.mjs add and route); absent, empty or over 200 chars: none. Red first, 3 new tests green (r108-project). Affected suite (66 files, plane only): 445 tests, 444 pass, 1 fail: release R24 screen.objective.purpose (accepted red, words.json lacks the key). Checks: format 0, architecture 0, coverage 108/108, words 0, ownership 0. Control-plane's promoteFiled must pass project for the continuation case (diagnosis a). Record updated.
+
+## Record (PLANE #59, fix round 9 batch D, job 84; B88)
+
+**Entries applied**
+- R109 (G159): `registerJob` arranges the alarm after the commit (`Promise.resolve().then(arm)` on success, so it runs once the caller's synchronous transaction returned); a refused registration arms nothing; `armJobs` stays. Tests: `r9-jobs.test.mjs` "R109 …" (daily alarm hours ahead brought forward and the row runs in one tick; second row; refusal; inside `transactionSync`).
+- R110 (G165): readers of `reading` and `ocr` rows are handed `stampUnit(unit)` (`p<page>` or `c<cursor>`; only while the row runs); it writes that unit in flight and clears every other stamp, and `reapInterrupted` charges the kill to the stamped unit (else the cursor's, else `whole`). `halfBudgetPages` unchanged. Tests: a page 5 (not first, not in `detail`) killed three times ends `killedPages: [5]`, pages 0-4, 6-7 read, `whole` uncharged; control: whole read charged to `whole`, ends stated; a `fetch` is handed none.
+- R97 (G160): `heldOf` now writes `{kind, capture_sha, holder}` into `failed_why` from the answer's `detail`, its refusal's `detail` or its top level; `holder` null where none is named (D-15). The G127c test is re-pointed to the new shape; new test for null holder, top-level facts and a no-facts control.
+
+**Red first:** all new tests failed before the change (`q.stampUnit is not a function`, alarm not forward, `failed_why` lacked the facts).
+**Cause / why missed:** the registrar was synchronous and armed nothing; plane stamped `unitOf(row.detail)` so extraction's rows (`detail {}`) were always `whole`; the old kill test only killed a page named in `detail.next_page`.
+**Deferred:** none. **Rows owed:** none (no sentence added).
+**Found in other modules:** none new. `release` R24 and `l77-size` R77 stay red as BOB listed them. Acquisition's `oweOf` still never calls `armJobs`, now harmless (the plane arms itself).
+
+**Tests and checks**
+- Light plane files: tests 472, pass 470, fail 2 (`release` R24 words; R77 L gate: both inherited, not mine). r9-jobs alone: 35/35.
+- Heavy, alone: r8-heal-door 4/4, r7-contention 5/5, g54-l 6/6, g55-alarm-l 2/2 (platform check L, workerd), r9-memory 3/3. `g41-shape` and `g44-shape` not run (untouched by this change).
+- `impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 176 (plane); no other user named.
+- format 0 failures; architecture 0; coverage 110 of 110, 0; words (plane) 0; ownership 0.
+
+Size (session_01AWoVVqkqd48jwuoT2GtVPZ): test runs 9, module lines 2310
+
+## J60 · COMPLETE
+
+Job 84 done: R109 (registerJob arms after the commit), R110 (stampUnit; kill charged to the page), R97 failed_why {kind, capture_sha, holder}. Red first for each. Light suite 470/472 (release R24 and l77 R77, inherited); heavy alone green incl. L files; impact: plane only; format, architecture, coverage, words, ownership 0 failures. Record has the four fields and Size.
