@@ -914,6 +914,33 @@ function utf8Check(b, from = 0, to = b.length) {
   return { valid: true, multi };
 }
 
+/* Whether `b`, not wholly valid UTF-8, is still UTF-8 with stray bytes (R36,
+ * G169): its well-formed multi-byte sequences number at least four times its
+ * invalid bytes (each byte that does not belong to a well-formed sequence counts
+ * one, a sequence cut off at the end included). Real Latin-1 holds almost no valid sequence. */
+function mostlyUtf8(b) {
+  let valid = 0, invalid = 0;
+  for (let i = 0; i < b.length;) {
+    const c = b[i];
+    if (c < 0x80) { i++; continue; }
+    let need, min;
+    if (c >= 0xc2 && c <= 0xdf) { need = 1; min = 0x80; }
+    else if (c >= 0xe0 && c <= 0xef) { need = 2; min = 0x800; }
+    else if (c >= 0xf0 && c <= 0xf4) { need = 3; min = 0x10000; }
+    else { invalid++; i++; continue; }
+    let ok = i + need < b.length;
+    let cp = c & (0x3f >> need);
+    for (let k = 1; ok && k <= need; k++) {
+      const x = b[i + k];
+      if ((x & 0xc0) !== 0x80) ok = false;
+      else cp = (cp << 6) | (x & 0x3f);
+    }
+    if (ok && (cp < min || cp > 0x10ffff || (cp >= 0xd800 && cp <= 0xdfff))) ok = false;
+    if (ok) { valid++; i += need + 1; } else { invalid++; i++; }
+  }
+  return valid > 0 && invalid * 4 <= valid;
+}
+
 /* The encoding a text declares of itself: the XML prolog's `encoding`, an
  * HTML `meta` charset. null when it declares none. */
 function declaredInText(b, kind) {
@@ -947,7 +974,7 @@ function sniffEncoding(b, { declared, kind, detect }) {
      * above is how UTF-16 without a mark shows itself). */
     return { ok: true, encoding: encoding.startsWith("utf-16") ? "utf-8" : encoding, assumed: false };
   }
-  if (detect && !utf8Check(b).valid) return { ok: true, encoding: "windows-1252", assumed: true };
+  if (detect && !utf8Check(b).valid && !mostlyUtf8(b)) return { ok: true, encoding: "windows-1252", assumed: true };
   return { ok: true, encoding: "utf-8", assumed: true };
 }
 
