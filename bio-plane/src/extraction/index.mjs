@@ -117,6 +117,8 @@ export const PRIOR_READING_COPY_MAX_BYTES = 2098176;
 /** (G41; R98) The most typed cells `cellsOf` answers a call: 20,000 cells in the extent asked for, so 20,000 cells per citation is the stated
  *  bound, the rest named by `next_row`. A protective bound, reported to Bob (K1881). */
 export const CELLS_RANGE_MAX = 20000;
+/** (fix round 9, R108) The most captures one `progressOf` call answers. */
+export const PROGRESS_MAX = 500;
 /** (fix round 9, G126e; R103; R-SILENT; K4901) The most of a capture a member's request loads whole: the `READ_BOUNDS` row `pdf.request_bytes` (2 MiB in
  *  all three columns, the figure the plan states and control-plane's inline gate holds). */
 export const REQUEST_READ_MAX = boundOf("pdf", "request_bytes");
@@ -2239,6 +2241,33 @@ export class Extraction {
                                   unaddressable: st.unaddressable, truncated: st.truncated,
                                   skipped_named: st.skipped_named }, chain_kind: st.chain_kind, at: st.at,
                         skipped } : {}) };
+  }
+
+  /** R108 (fix round 9, G135f; K4922; retrieval R97): how far each reading is read, without its units. `{[sha]: {state, read_through, total, owed}}` for
+   *  each capture asked, at most PROGRESS_MAX a call (the first asked, each once): `state` `whole`, `partial` or `none` (no index), never `whole` while
+   *  anything is owed or more follows; `read_through` and `total` R90's figures while more follows, else null; `owed` R100's owed count (the OCR pages or
+   *  pictures still owed). Only counts and the reading's facts are read, by SQL; no unit's text is loaded. */
+  progressOf(shas) {
+    const list = [...new Set((Array.isArray(shas) ? shas : []).filter((x) => typeof x === "string" && x))].slice(0, PROGRESS_MAX);
+    const out = {};
+    for (const sha of list) {
+      const st = this.#one(`SELECT state, more, read_through, total, over_bound, unaddressable, truncated, stated, ended_why FROM capture_text_state WHERE capture_sha=?`, sha);
+      if (!st) { out[sha] = { state: "none", read_through: null, total: null, owed: 0 }; continue; }
+      const f = this.#completenessFacts(sha);
+      let owed = 0;
+      if (f) {
+        if (f.ocrLeft && Number.isInteger(f.ocrLeft.pages) && f.ocrLeft.pages > 0) owed = f.ocrLeft.pages;
+        else if (f.tier3 && f.pageCount) {
+          /* the pages holding a glyph, counted by SQL over the units' lengths, never their text */
+          const read = this.#one(`SELECT count(DISTINCT json_extract(extent, '$.page')) n FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page' AND length(trim(text)) > 0`, sha).n;
+          owed = Math.max(0, f.pageCount - read - f.refusedPages);
+        }
+        owed += f.pictures;
+      }
+      const whole = st.state === "whole" && !st.more && !owed && !(f && f.found === false && f.failure === "transient" && !f.entities);
+      out[sha] = { state: whole ? "whole" : "partial", read_through: st.more ? st.read_through ?? null : null, total: st.more ? st.total ?? null : null, owed };
+    }
+    return out;
   }
 
   /** R51 (K138): the capture digests the bundle's stored readings carry, each with the instant it was read (the
