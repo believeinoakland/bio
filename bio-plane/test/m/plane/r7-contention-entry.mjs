@@ -5,7 +5,7 @@
    the plane's default export, so a cheap read is asked through the real door. */
 import { createHash } from "node:crypto";
 import { Store } from "../../../src/plane/store.mjs";
-import { pendingOf } from "../../../src/plane/pending.mjs";
+import { pendingOf } from "../../../src/store-assembly/pending.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
@@ -63,12 +63,14 @@ export class Contended extends Store {
       /* the control: the reading owner answers at once (`more` five times, then read), so what is measured is the plane's own consumer and the alarm, with no read's compute */
       let n = 0;
       this.#real ??= extractionOf(ctx).readHeld;
+      // fixtures-own: synthetic the control's reading owner answers at once (five pieces, then read) so that what is measured is the plane's own consumer and the alarm; the content of the answers is not asserted
       extractionOf(ctx).readHeld = async () => (++n < 6 ? { ok: true, more: true, read: true, detail: { piece: n } } : { ok: true, read: true });
       return json({ stubbed: true });
     }
     if (step === "ocr") {
       /* an `ocr` row whose owner awaits the OCR member (a service binding): what R91's `wait_ms` meters on the real binding */
       this.#real ??= extractionOf(ctx).readHeld;
+      // fixtures-own: synthetic the owner of an `ocr` row awaits the OCR member's real binding for one page: what is metered is the ledger's `wait_ms` on that binding, not what the reader answers
       extractionOf(ctx).readHeld = async ({ env }) => { const r = await env.OCR_WORKER.fetch("http://ocr/page/1"); await r.text(); return { ok: true, read: true }; };
       await pendingOf(ctx).owe({ kind: "ocr", sha: q("sha") });
       return json({ at: Date.now() });

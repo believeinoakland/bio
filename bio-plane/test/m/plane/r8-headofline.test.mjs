@@ -49,6 +49,7 @@ function world({ scanMs, renderMs = scanMs }) {
         events.push({ seq: ++seq, kind: "render-start" });
         await new Promise((r) => setTimeout(r, renderMs));
         events.push({ seq: ++seq, kind: "render-end", passes: await passes() });
+        // fixtures-generic: NOT_RENDERED the head-of-line probe needs the scanner's render to end in any refusal, held for `renderMs`; no code is asserted and the plane treats every refusal alike
         return new Response(JSON.stringify({ ok: false, code: "NOT_RENDERED" }), { status: 422, headers: { "content-type": "application/json" } });
       }
       return new Response(JSON.stringify({ ok: true, name: "file-scanner", version: "1.0.0" }), { headers: { "content-type": "application/json" } });

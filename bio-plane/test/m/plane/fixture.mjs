@@ -15,7 +15,13 @@ registerHooks({
   },
 });
 
-export const { Store, STEP_ORDER, stepOrderFrom } = await import("../../../src/plane/store.mjs");
+export const { Store } = await import("../../../src/plane/store.mjs");
+const { assembleStore } = await import("../../../src/store-assembly/index.mjs");
+const { deliverOwedRender } = await import("../../../src/control-plane/index.mjs");
+
+/** The class holds no route map (plane R1): a test that reads the route map reads the assembled store the class builds,
+ *  made again over the same storage (store-assembly R1: a second assembly on one storage builds nothing twice). */
+export const assembledOver = (ctx, env) => assembleStore(ctx, env, { deliver: deliverOwedRender });
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {
@@ -78,6 +84,11 @@ export async function store({ db, env: extra, before = null } = {}) {
   /* a test's own deps for a factory read on its first call only (K61), handed before construction */
   if (typeof before === "function") before(st.ctx, env);
   const s = new Store(st.ctx, env);
+  /* the class holds no route map (plane R1): a test that reads the route map reads the one assembled store over the same
+     storage (store-assembly R1: a second assembly on one storage builds nothing twice), handed to the object as `s.routes` */
+  const assembled = assembledOver(st.ctx, env);
+  s.routes = (url, body = null, grant = null) => assembled.routes(url, body, grant);
+  s.read = (op, params) => assembled.read(op, params);
   for (const p of st.blocked) await p;
   const routes = (path, body = null) => s.routes(new URL("http://do" + path), body);
   const call = async (path, body = null) => {

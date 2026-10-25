@@ -3,14 +3,14 @@
    turns of the event loop, `max_run_statements`: non-NULL for any pass that ran a statement, a stretch that never yields counted whole, a yield ending the count; a row keeps the largest over all its runs, so a later and
    smaller pass does not lower it; NULL when no statement was measured, never zero. The reading owner is a scripted double of the reader contract (`readHeld`) that runs the statements the test says. The real
    alarm on workerd with a 7.9 MB text is `r10-lag-figure.test.mjs`. */
-import "../../../src/plane/register.mjs";
+import "../../../src/store-assembly/register.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { store } from "./fixture.mjs";
 import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
-import { pendingOf } from "../../../src/plane/pending.mjs";
+import { pendingOf } from "../../../src/store-assembly/pending.mjs";
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const yields = () => new Promise((r) => setTimeout(r, 1));   /* a turn of the event loop */

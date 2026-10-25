@@ -4,7 +4,7 @@
    covers the sites the other owners re-point: admission's window, control-plane's forwards, instance-setup's `selftest` and `livefire`). With neither binding every call is today's, one argument.
    `#ownNamespace` answers the logical name inside a generation-2 room, so every `store=`, evidence prefix and published prefix is unchanged. A room of another generation is inert.
    The sites outside this module's paths are other jobs' and stay RED BY NAME in the Worker-wide cases until they merge. */
-import "../../../src/plane/register.mjs";
+import "../../../src/store-assembly/register.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, mkdtempSync } from "node:fs";
@@ -16,7 +16,7 @@ import { store } from "./fixture.mjs";
 import { multipartBucket } from "../record-core/storage.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { watchdog } from "../../../src/plane/watchdog.mjs";
-import { askOp, actionDraftOp } from "../../../src/plane/ask.mjs";
+import { askOp, actionDraftOp } from "../../../src/store-assembly/ask.mjs";
 import { gatedOp } from "../../../src/plane/door.mjs";
 
 /* ---- the plane's own sites, over a recording namespace ---- */

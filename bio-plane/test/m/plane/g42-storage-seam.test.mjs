@@ -7,7 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 /* The kit registers every owner's declared ops once, before the op tables are read (op-declarations R81); the plane's own start does the same
-   (`src/plane/register.mjs`), and a second registration is refused. Here the kit's registration is the one, so the plane's start-up import is answered
+   (`src/store-assembly/register.mjs`), and a second registration is refused. Here the kit's registration is the one, so the plane's start-up import is answered
    by an empty module (the tables it would have registered are the kit's); everything else of the plane is loaded for real. */
 const { registerHooks } = await import("node:module");
 registerHooks({

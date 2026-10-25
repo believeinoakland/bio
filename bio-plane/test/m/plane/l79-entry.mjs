@@ -3,7 +3,7 @@
    (`/l79/...`) that make the states the watchdog is for: an object that owes work and has no alarm, an object busy in one long
    synchronous stretch, an alarm in the past. Every other request is the plane's own door (`Store.fetch`). */
 import { Store } from "../../../src/plane/store.mjs";
-import { pendingOf } from "../../../src/plane/pending.mjs";
+import { pendingOf } from "../../../src/store-assembly/pending.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 export { default } from "../../../src/plane/index.mjs";
@@ -15,6 +15,7 @@ export class Watched extends Store {
   constructor(ctx, env) {
     super(ctx, env);
     /* every read the ledger asks for is answered at once, and counted */
+    // fixtures-own: synthetic the owner of the reading is a counter that answers at once: this probe measures when the alarm runs the ledger, and asserts nothing of what the reader answers
     extractionOf(ctx).readHeld = async (a) => { this.readHeldCalls.push({ ...a, at: Date.now() }); return { ok: true, read: true }; };
   }
   async fetch(req) {

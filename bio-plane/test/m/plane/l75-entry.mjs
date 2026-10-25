@@ -6,8 +6,8 @@
 import { Store } from "../../../src/plane/store.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
-import { pendingOf } from "../../../src/plane/pending.mjs";
-import { acquireTimingsOf } from "../../../src/plane/acquire-timings.mjs";
+import { pendingOf } from "../../../src/store-assembly/pending.mjs";
+import { acquireTimingsOf } from "../../../src/store-assembly/acquire-timings.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 export { default } from "../../../src/plane/index.mjs";
 
@@ -36,6 +36,7 @@ export class Held extends Store {
     }
     if (step === "keep") {
       const body = await req.json();
+      // fixtures-own: synthetic the owner of the reading is a counter that answers at once: this probe measures when the alarm runs the ledger and how often it asks, and asserts nothing of what the reader answers
       extractionOf(ctx).readHeld = async (a) => { this.readHeldCalls.push({ ...a, at: Date.now() }); return { ok: true, read: true }; };
       return json({ filed: await captureOf(ctx).keepLater(body), at: Date.now() });
     }
@@ -54,6 +55,7 @@ export class Held extends Store {
       /* R77 (fix round 5, B38): an `ocr` entry due now whose passes take `ms` each (the OCR member's 24 pages), 3 passes; the times each pass began are read back */
       const d = url.searchParams.get("sha"), ms = Number(url.searchParams.get("ms") || 2000);
       this.passes = [];
+      // fixtures-own: synthetic the OCR owner is a timed driver: each pass takes `ms` and the third ends the row; the figures under test are the times the plane ran the passes, not what the reader answers
       extractionOf(ctx).readHeld = async (a) => {
         this.passes.push(Date.now());
         await new Promise((r) => setTimeout(r, ms));
