@@ -315,37 +315,58 @@ async function reviewAnswer(out, op, extra = {}, group = null, batchGroup = null
    filing-templates' ONE dead answer, `NO_TEMPLATE_GRANT`, at 404 and in the same bytes whoever built it, so a revoked,
    never-issued or malformed secret and a stranger cannot be told apart. A store that did not answer is a silence. The
    inner request carries the caller's own arguments with every stamp and credential removed. */
+/* R138 (R136; store-request R23): the request of the secret-presenting doors (`reviewcopy`, `reviewcomment`, `statementack` and the four template
+   doors) is `innerRequest`'s too, a presented secret's digest its one stamp. The door sets only the reader's own sight, `reader` (`viewer`, and for
+   the template doors `author`), which no declaration stamps for these public ops. Until `innerRequest` itself removes them (REPORT, J64: R23 says the
+   secret value reaches neither address nor body, and R9 that a caller's stamps reach neither), the door drops the body's `secret` and the stamps
+   the caller names in the body before handing it over. */
+async function secretDoorRequest({ op, req, url, credential, reader, narrow = null }) {
+  const bySecret = credential.secret !== null;
+  const digest = bySecret ? await sha256Hex(credential.secret || "") : null;
+  let body;
+  if (req.method === "POST") {
+    body = await req.clone().text();
+    let b;
+    try { b = JSON.parse(body || "null"); } catch { b = undefined; }
+    if (b && typeof b === "object" && !Array.isArray(b)) {
+      for (const k of ["secret", ...QUERY_STAMPS]) delete b[k];
+      /* a recipient's body is the keys the arm takes (`narrow.body`) and nothing else */
+      if (narrow) for (const k of Object.keys(b)) if (!narrow.body.includes(k)) delete b[k];
+      body = JSON.stringify(b);
+    }
+  }
+  /* R138: a recipient holds a secret and no standing, so the address handed over is the keys the arm takes (`narrow.query`), the draft trimmed;
+     a member's is the page's whole, as every other op's */
+  let page = url;
+  if (narrow) {
+    page = new URL(url);
+    for (const k of [...page.searchParams.keys()]) if (!narrow.query.includes(k)) page.searchParams.delete(k);
+    if (page.searchParams.has("draft")) page.searchParams.set("draft", page.searchParams.get("draft").trim());
+  }
+  const built = innerRequest({ op, url: page, method: req.method, body, caller: null, bySecret, secretSha: digest });
+  const inner = new URL(built.url);
+  if (reader) for (const [k, v] of Object.entries(reader)) inner.searchParams.set(k, v);
+  return { url: inner.toString(), body: built.body, headers: { ...(built.body !== undefined ? { "content-type": "application/json" } : {}), ...built.headers } };
+}
+
 const TEMPLATE_GRANT_DOORS = Object.freeze([...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS]);   /* op-declarations R8 */
 const deadTemplateGrant = () => json({ ok: false, ...noTemplateGrant() }, 404);
 async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, credential }) {
-  const inner = new URL(`http://do/${op}`);
-  for (const [k, v] of url.searchParams) inner.searchParams.set(k, v);
-  for (const k of ["token", "op", "store", "secret", "secretSha", "bySecret", ...QUERY_STAMPS]) inner.searchParams.delete(k);
-  /* R59 (admission R20): the secret is the body's `secret`, never the address's; R64 (N761): its digest crosses in the
-     internal request's body alone (`secretSha`), beside the door's mark `bySecret` in the query */
-  let digest = null;
-  if (credential.secret !== null) {
-    inner.searchParams.set("bySecret", "1");
-    digest = await sha256Hex(credential.secret || "");
-  } else {
+  /* R138 (R136): the request is `store-request`'s `innerRequest` from the page's, a presented secret's digest its one stamp (store-request R23);
+     only the reader's own `viewer` and `author` are set here, from the session `admit` held to a member */
+  let reader = null;
+  if (credential.secret === null) {
     const admitted = await admit({ url, env, op, spec: { ...spec, classes: ["admin", "member"], machineClasses: [] },
                                    method: req.method, presented: presentedAi, doAnswer, credential,
                                    background: url.searchParams.get("background") === "1" });
     if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
     if (admitted.refusal || !admitted.caller.viaSession) return deadTemplateGrant();
-    inner.searchParams.set("viewer", admitted.caller.viewer);
-    inner.searchParams.set("author", admitted.caller.identity);
+    reader = { viewer: admitted.caller.viewer, author: admitted.caller.identity };
   }
-  let body;
-  if (req.method === "POST" || digest !== null) {
-    let b = {};
-    if (req.method === "POST") try { b = JSON.parse((await req.text()) || "{}"); } catch { b = {}; }
-    if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
-    for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret", "secret", "token"]) delete b[k];
-    if (digest !== null) b.secretSha = digest;
-    body = JSON.stringify(b);
-  }
-  const out = await doAnswer(stub.fetch(new Request(inner, body === undefined ? { method: "GET" } : { method: "POST", body })));
+  const built = await secretDoorRequest({ op, req, url, credential, reader });
+  const body = built.body;
+  const inner = built.url;
+  const out = await doAnswer(stub.fetch(new Request(inner, body === undefined ? { method: "GET" } : { method: "POST", body, headers: built.headers })));
   if (out.refused) return storeRefusal(out);   /* R23: the store's own refusal, at its status */
   if (!out.answered) return storeSilent(op, out.correlation);
   const r = out.result;
@@ -1034,50 +1055,28 @@ export function makeFetch(hooks = {}) {
          document (`case` + `edition`) in place of a draft. */
       if (op === "reviewcopy" || op === "reviewcomment" || op === "statementack") {
         const bySecret = credential.secret !== null;   /* R59 (admission R20): the body's `secret` */
-        const q = new URLSearchParams();
-        const draftParam = (url.searchParams.get("draft") || "").trim();
-        if (draftParam) q.set("draft", draftParam);
-        if (op === "statementack" && !bySecret)
-          for (const k of ["case", "edition"])
-            if (url.searchParams.get(k)) q.set(k, (url.searchParams.get(k) || "").trim());
-        if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
-        /* R20 (fix round 6, G12c): a member's read of several drafts at once names them in `drafts`; a grant's secret opens one copy, so a holder's read is single */
-        if (op === "reviewcopy" && !bySecret) {
-          const listed = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && Array.isArray(reqBody.drafts) ? reqBody.drafts.filter((d) => typeof d === "string").join(",") : "";
-          const drafts = url.searchParams.get("drafts") || listed;
-          if (drafts) q.set("drafts", drafts);
+        let reader = null;
+        if (!bySecret) {
+          const found = await caseReader(url, env, "bio", presentedAi.cred, credential);   /* admission's `readerOf` */
+          if (found.silent) return storeSilent(found.silent, found.correlation);
+          reader = { viewer: found.viewer };
         }
-        /* R64 (N761): the grant's digest crosses in the internal request's body alone, never its query; the door's mark
-           `bySecret` stays in the query, where the owners read it */
-        const digest = bySecret ? await sha256Hex(credential.secret || "") : null;
-        if (bySecret) {
-          q.set("bySecret", "1");
-        } else {
-          const reader = await caseReader(url, env, "bio", presentedAi.cred, credential);   /* admission's `readerOf` */
-          if (reader.silent) return storeSilent(reader.silent, reader.correlation);
-          q.set("viewer", reader.viewer);
+        const built = await secretDoorRequest({ op, req, url, credential, reader,
+          narrow: bySecret ? { query: op === "reviewcopy" ? ["draft", "limit"] : op === "statementack" ? ["draft", "reason"] : ["draft"], body: op === "reviewcomment" ? ["text"] : [] } : null });
+        const inner = new URL(built.url);
+        const q = inner.searchParams;
+        /* R20 (fix round 6, G12c): a member's read of several drafts at once names them in `drafts`; a grant's secret opens one copy, so a holder's read is single */
+        if (op === "reviewcopy" && !bySecret && !q.get("drafts")) {
+          const listed = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && Array.isArray(reqBody.drafts) ? reqBody.drafts.filter((d) => typeof d === "string").join(",") : "";
+          if (listed) q.set("drafts", listed);
         }
         /* DEC-88 (case-inputs R1, was case-authoring R19, C-82.8): an acknowledgement carries the acknowledger's own words, on either door, in
-           the query as case-inputs' `statementack` arm reads them: the caller's `reason=`, else a POST body's string
-           `reason`, verbatim. Nothing else of the caller's crosses; an absent reason stays absent, refused there. */
-        if (op === "statementack") {
-          let reason = url.searchParams.get("reason");
-          if (reason === null && req.method === "POST") {
-            let b = null;
-            try { b = JSON.parse((await req.text()) || "null"); } catch { b = null; }
-            if (b && typeof b === "object" && !Array.isArray(b) && typeof b.reason === "string") reason = b.reason;
-          }
-          if (reason !== null) q.set("reason", reason);
-        }
-        let innerBody = digest === null ? null : { secretSha: digest };
-        if (op === "reviewcomment") {
-          let b = {};
-          try { b = req.method === "POST" ? JSON.parse((await req.text()) || "{}") : {}; } catch { b = {}; }
-          innerBody = { text: typeof b?.text === "string" ? b.text : "", ...(innerBody || {}) };
-        }
-        const out = await doAnswer(stub.fetch(`http://do/${op}?${q}`,
-          innerBody === null ? undefined : { method: "POST", headers: { "content-type": "application/json" },
-                                             body: JSON.stringify(innerBody) }));
+           the query as case-inputs' `statementack` arm reads them: the caller's `reason=`, else a POST body's string `reason`, verbatim.
+           An absent reason stays absent, refused there. */
+        if (op === "statementack" && q.get("reason") === null && reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && typeof reqBody.reason === "string")
+          q.set("reason", reqBody.reason);
+        const out = await doAnswer(stub.fetch(inner.toString(),
+          built.body === undefined ? undefined : { method: "POST", headers: built.headers, body: built.body }));
         return reviewAnswer(out, op, {}, op === "reviewcopy" && out.answered && out.result?.ok ? await groupOf(stub, out.result.project) : null,
                             op === "reviewcopy" ? (project) => groupOf(stub, project) : null);
       }
