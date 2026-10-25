@@ -156,3 +156,7 @@ B10 applied: the membership double's projectAuthority and visibilitySettingRefus
 **Tests and checks.** `test/m/promotion/` + `d526-refusal-order` + `system/row-census`: 171 pass, 1 fail: `row-census`, the R50 pin against rows other modules added (CENSUS MOVED), awaiting the stamp (follow-up 32, a later session); it fails identically without my change. `format` 0, `architecture promotion` 0, `coverage promotion` 61 of 61, `words` 0, `fixtures` 0 failures, `ownership` 0.
 
 Size (session_01S23cDmLAXaM3ApftGXzWGJ): test runs 6, module lines 3987
+
+## J12 · COMPLETE
+
+B11 applied: R28 met. runGate admits a register row whose path in the image holds bytes hashing to its capture_sha, of its registered size, when the bucket answers absent; changed bytes, blob refs and absent paths stay refused; a rejecting probe still rejects. New R28 test seen red then green; promotion tests 171 pass, row-census the one inherited stamp red (follow-up 32). format, architecture, coverage 61/61, words, fixtures, ownership 0 failures. Pushed.
