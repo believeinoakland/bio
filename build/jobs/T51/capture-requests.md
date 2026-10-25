@@ -251,3 +251,15 @@ Size (session_01KmKzc6DsB65KPdNxW7UEBJ): test runs 4, module lines 2590.
 **Why the tests missed it (for the record, from J9).** The module's own tests called `markPlatform`, `unmarkPlatform` and `platformHosts` directly, and no test passed through the ops map, so the missing route was not seen. `platform-ops.test.mjs` is the test that goes through the map.
 
 **Size (session_014DGUrY7wCujoHhs8uwNL3N): test runs 3, module lines 2590.** (Test runs: the module directory run, then `platform-ops.test.mjs` run twice to confirm its result. Module lines: `bio-plane/src/capture-requests/*.mjs`, all files of the module.)
+
+## J10 · COMPLETE
+
+**COMPLETE: capture-requests, B10 (K5161, re-issue of K5148 cause 1).** No new code change.
+
+The three platform ops (`capturerequestplatformmark`, `capturerequestplatformunmark`, `capturerequestplatformhosts`) were already routed by my B9 completion (J9, commit `82e135a332`), which is on `tranche/T51`. The START's premise that the route map wires none is out of date.
+
+Checked from the tranche as it stands: the ops map (`captureRequestsOps`, `bio-plane/src/capture-requests/index.mjs` 1909–1930) routes the three ops, spread into the plane's and store-assembly's maps; `platform-ops.test.mjs` (R46) calls each op through the map, with the non-member refusal and the unmarked-host control.
+
+Checks: module tests 131/131 (run without `--test-force-exit`); `platform-ops.test.mjs` 1/1; format, architecture, coverage (58/58), words, ownership, fixtures `--list`: 0 failures. Nothing deferred; nothing found in another module.
+
+Record: `build/jobs/T51/capture-requests.md`, section "Completion (B10 ...)". Met ids: R46 (already marked by BOB's strike at B9 — still open on the tranche's mark; name stays).
