@@ -54,8 +54,11 @@ let browser;
 after(async () => { try { await browser?.close(); } catch {} kit.mf.dispose(); kit2.mf.dispose(); });
 const BASE = async (k = kit) => String(await k.mf.ready).replace(/\/$/, "");
 const ext = new Set(), apiTimes = [], badStatus = [];
+let ipN = 10;
+/* each browser is a different person at a different address, as members are: the door counts requests per source (300 in ten minutes), and one address would pool every browser of this walk */
+const nextIp = () => ({ "cf-connecting-ip": `203.0.113.${(ipN++ % 240) + 10}` });
 async function ctxOf(width = 1280, height = 900) {
-  const c = await browser.newContext({ viewport: { width, height } });
+  const c = await browser.newContext({ extraHTTPHeaders: nextIp(), viewport: { width, height } });
   const base = await BASE();
   c.on("request", (r) => { if (!r.url().startsWith(base) && !r.url().startsWith("data:") && !r.url().startsWith("blob:")) ext.add(r.url().slice(0, 120)); });
   c.on("response", async (r) => {
@@ -260,10 +263,10 @@ test("WALK-FINAL-02 #1: the team's people and accounts", { timeout: 4 * 3600e3 }
     /* the password again */
     await step("R04.l", "changing administrators asks the password again (reauth); signing and connecting Claude are walked in their areas", "founder", "proposed an administrator with no recent password, then gave the password, then again", async () => {
       const a = await kit.founder();
-      const first = await kit.post(a, "memberadd", { memberId: "nova", cover: "Nova the neighbour", role: "admin", capabilities: null });
+      const first = await kit.post(a, "memberadd", { memberId: "nina", cover: "Nina the neighbour", role: "admin", capabilities: null });
       const r1 = R(first.body);
       const ra = R((await kit.post(a, "reauth", { password: kit.PASSWORD })).body);
-      const second = R((await kit.post(a, "memberadd", { memberId: "nova", cover: "Nova the neighbour", role: "admin", capabilities: null })).body);
+      const second = R((await kit.post(a, "memberadd", { memberId: "nina", cover: "Nina the neighbour", role: "admin", capabilities: null })).body);
       return verdictOf(r1.ok === false && /REAUTH/.test(JSON.stringify(r1)) && ra.ok === true && second.ok !== false, `before the password again: ${J(words(r1), 200)} (${r1.reason || r1.code}); after reauth: ${second.ok === false ? "refused " + second.reason : "invited"}`);
     });
   }
@@ -656,7 +659,7 @@ const ctxAs = async (handle, pw, device = "own", width = 1280) => { if (!MADE_HE
       return verdictOf(before && before.state === "declared" && /interprets Spanish and English/.test(t2), `declared: state "${before && before.state}"; after confirmation the screen shows ${/confirmed/i.test(t2) ? "a confirmed mark" : "no confirmed mark"}: "${J((t2.split("WHAT YOU KNOW")[1] || "").split("YOUR")[0].replace(/\s+/g, " "), 200)}"; capabilities unchanged by confirmation: ${J(caps1)}`, { shot: sh });
     }, { width: "1280 and 390" });
     await step("R12.b", "the signing key: made in the browser, never sent; save the key file, revoke it, load the file; each key shows status, origin, who registered it, whether it attests", "member", "pressed Register your signing key, saved the file, revoked, loaded the file", async () => {
-      const c = await browser.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true }); const p = await c.newPage();
+      const c = await browser.newContext({ extraHTTPHeaders: nextIp(), viewport: { width: 1280, height: 900 }, acceptDownloads: true }); const p = await c.newPage();
       await uiSignIn(p, "dev", DEVPW); await go(p, "/app/account", 900);
       await p.click("button:has-text('Register your signing key')"); await settle(p, 2500);
       const made = await body(p); const sh = await look(p, "r12-key-made", "member dev");
