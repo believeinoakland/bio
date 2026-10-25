@@ -34,7 +34,7 @@ test("R27 R30 refusals in order: a machine or empty author first (C-32.8), then 
   assert.equal(g(w, { grounds: [{ ground: "g1", legs: [0] }, { ground: "g2", legs: [0, 1] }] }).reason, "BAD_PARTITION", "in two groups");
   assert.equal(g(w, { grounds: [{ ground: "g1", legs: [0], statement: "x".repeat(161) }, { ground: "g2", legs: [1] }] }).reason, "BAD_STATEMENT");
   assert.equal(g(w, { grounds: [{ ground: 'bad"label', legs: [0, 1] }] }).reason, "BASIS_REFUSED", "the candidate fails R8");
-  assert.equal(g(w, { grounds: [{ ground: "g1", legs: [0] }] }).reason, "BASIS_REFUSED", "half-labelled");
+  /* a partition leaving a supporting leg out is no refusal: the leg is a necessary leg beside the ground (R85, necessary-leg.test.mjs) */
   assert.equal(g(w).ok, true);
   assert.equal(g(w, { reason: "" }).reason, "NO_REASON", "a restructure needs a reason, decided from the record");
   assert.equal(g(w, { reason: "again" }).reason, "PARTITION_UNCHANGED");
@@ -59,11 +59,11 @@ test("R28 a changed group is stamped with this member and now; an unchanged one 
   assert.equal(second.act, "restructured");
   assert.deepEqual(w.fm(Q).grounds.map((r) => [r.ground, r.asserted_by, r.at]),
     [["g1", V("alice"), "2026-09-28T01:00:00Z"], ["g2", V("bob"), "2026-09-28T02:00:00Z"]], "byte for byte the carried stamp");
-  /* removing the partition is a restructure, and the document reads as one never grouped */
+  /* emptying the partition is a restructure, and the document holds the answer "no ground" (R85), no leg labelled */
   const removed = w.k.ground({ target: Q, grounds: [], reason: "back to weakest", viewer: "admin", author: V("bob") });
   assert.equal(removed.ok, true); assert.equal(removed.grouped, false);
-  assert.equal(w.fm(Q).grounds, undefined); assert.ok(w.fm(Q).basis.every((l) => l.ground === undefined));
-  assert.match(w.text(Q), /\| Restructured \| member:bob\nTrigger: op=inquiryground on INQ-2026-0001-q\nChanges: grouping removed/);
+  assert.deepEqual(w.fm(Q).grounds, []); assert.ok(w.fm(Q).basis.every((l) => l.ground === undefined));
+  assert.match(w.text(Q), /\| Restructured \| member:bob\nTrigger: op=inquiryground on INQ-2026-0001-q\nChanges: no ground; 2 leg\(s\) read as necessary/);
 });
 
 test("R28 R42 the Session Log records the partition, the reason and the pair before; the answer carries the pair before and after (onGrounded)", () => {
