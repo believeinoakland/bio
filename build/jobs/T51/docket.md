@@ -210,3 +210,25 @@ COMPLETE: B6 cause 1 (diag2-10b C4). docketFile keeps the filed summary for ever
 **Deferred:** none. **Found in other modules:** none caused by this job.
 
 Size (session_01QvBDcErVJLBYZXanqpFNrH): test runs 4, module lines 1661
+
+## J7 · COMPLETE
+
+COMPLETE, DOCKET #16 (B7; plan item 95, K5195). Docket R30's untested clause.
+
+What changed: `bio-plane/src/docket/index.mjs` `#markedBy` (around line 991). The code did not do what R30 says: it named a revoked member with her handle, since membership keeps a revoked member's row. Now `by` is `{member, handle}` only for an active member; otherwise null (no row, or a status other than active). The mark is kept. Commit f1dc951459.
+
+Test: `bio-plane/test/m/docket/reads.test.mjs`, "R30 (T51; DEC-340) a mark whose author is no longer a member answers by null; the mark itself is kept". A real pressure mark by bob, read by alice as {member:'bob', handle:'h_bob'} (control), then a real `membership.memberSet` revocation of bob, then by must be null. Red before the fix (actual {member:'bob', handle:'h_bob'}, expected null); green after.
+
+Decision for BOB (in the record, not in rulings.md): "not a member" = membership's own test, status active. Real acts can only produce such a mark by revoking the author after she marked (docketPressure refuses a non-joined author, K4557).
+
+Met ids: R30 (strike the mark).
+
+Suites and checks: docket 94 pass / 0 fail (exits by itself); dependents (action-holds, screens-publish t51 and fix3, queue-producers, plan-work stands, network-notices) 326 / 0; format 0 (178 modules), architecture 0, coverage 31 of 31, words 0, fixtures docket --list 0, ownership 0 (3 files by docket), run.mjs: no finding in docket's files.
+
+Markers added: none (no fixtures-own or fixtures-generic).
+
+Deferred: none. Found in other modules: none caused by this job.
+
+Note: `impact.mjs tranche/T51 HEAD` fails in this clone (unknown revision); `origin/tranche/T51` works.
+
+Size (session_01QvBDcErVJLBYZXanqpFNrH): test runs 4, module lines 1661
