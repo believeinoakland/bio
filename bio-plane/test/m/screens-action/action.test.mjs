@@ -36,7 +36,7 @@ test("R5 (action-producers R1; v0.2 rule 6): each due date is drawn with mark.du
 });
 
 test("R5: 'Record a reply' sends actioncorrespond with the day and the member's account; 'Mark a reply as pressure' marks a received one once", async () => {
-  const p = await open(ROUTES.action, { ...DATA_PLANE, actioncorrespond: ok({}), actionpressure: ok({}) });
+  const p = await open(ROUTES.action, { ...DATA_PLANE, pressurefor: ok({ ...PRESSURE, items: [] }), actioncorrespond: ok({}), actionpressure: ok({}) });
   const b = await press(p, "actioncorrespond", { reason: "it came" });
   assert.ok(beside(p, b).includes(W("screen.action.reply.at.needed")));
   await press(p, "actioncorrespond", { values: { "reply-at": "2026-10-11", "reply-account": "They will answer by 26 October." }, reason: "it came" });
@@ -47,6 +47,19 @@ test("R5: 'Record a reply' sends actioncorrespond with the day and the member's 
   const q = await open(ROUTES.action, { ...DATA_PLANE, action: ok({ ...ACTION, entries: [{ ord: 2, pressure: { kind: "legal", note: "x" } }] }) });
   assert.ok(!ops(q).includes("actionpressure"), "control: a marked reply is marked once");
   said(q, "screen.action.pressure.legal");
+});
+
+test("R5 (diagnosis 11 §17): a reply marked through `actionpressure` is drawn marked, read from `pressurefor`, and not offered again; another received reply still offers it", async () => {
+  const two = { ...ACTION, correspondence: [...ACTION.correspondence, { ord: 3, direction: "received", at: "2026-10-04", medium: "email", party: "Office of the City Clerk", author: "member:mai" }], entries: [{ ord: 2 }, { ord: 3 }] };
+  const marked = { ...PRESSURE, items: [{ arrived: { action: ACTION_ID, ord: 2 }, project: PROJECT, kind: "legal", note: "a letter", by: "member:mai", at: "2026-10-04T09:00:00Z" }] };
+  const p = await open(ROUTES.action, { ...DATA_PLANE, action: ok(two), pressurefor: ok(marked), actionpressure: ok({}) });
+  assert.equal(p.doc.getElementById("pressure-kind-2"), null, "ord 2 is marked: no choice to mark it again");
+  assert.ok(p.doc.getElementById("pressure-kind-3"), "ord 3 is not marked: it is still offered");
+  const row = main(p).querySelectorAll(".cs-row").find((r) => text(p, r).includes(D("2026-10-03")));
+  assert.ok(text(p, row).includes(W("screen.action.pressure.legal")), "the mark is drawn beside the reply it was made on");
+  // control: a mark on another action's reply is not read as this one's
+  const other = await open(ROUTES.action, { ...DATA_PLANE, action: ok(two), pressurefor: ok({ ...marked, items: [{ ...marked.items[0], arrived: { action: "ACTN-2026-9999999999999999", ord: 2 } }] }) });
+  assert.ok(other.doc.getElementById("pressure-kind-2"));
 });
 
 test("R5: 'Move the action' to a state its edges allow, with the reason in the query actions reads; resolving names how", async () => {

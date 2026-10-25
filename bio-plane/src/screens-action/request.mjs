@@ -6,7 +6,7 @@
    office known to hold such records the screen says so and points an administrator to where one is added (R20); on every
    preparation it draws the matter's stake (R21).
    Every function here is self-contained (interface-shell R21 (1)). */
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, readOnly, officeLine, joinFirst, recordsLawsOf, chosenLawOf, templateOffered, PREPARE, APPROVE, RECORD_SENT, JOIN } from "./send-steps.mjs";
+import { languagesOf, marksFields, marksBody, draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, readOnly, officeLine, joinFirst, recordsLawsOf, chosenLawOf, templateOffered, PREPARE, APPROVE, RECORD_SENT, JOIN } from "./send-steps.mjs";
 
 export const request = Object.freeze({
   id: "request",
@@ -31,6 +31,9 @@ export const request = Object.freeze({
       r.action = { op: "action", query: { id: s }, subject: true };
       r.filings = { op: "filingsfor", query: { action: s }, empty: function () { return false; } };
       r.profiles = { op: "profiles", empty: function () { return false; } };
+      // R3 (filings R43, R44): the language the draft is prepared in is the member's, among the team's
+      r.mylang = { op: "memberlanguage", empty: function () { return false; } };
+      r.languages = { op: "grouplanguages", empty: function () { return false; } };
       // R21: the matter's stake (`filings` R60, R62) and the team's name; the question is `start-send`'s alone
       r.stake = { op: "stakeatpreparation", query: { action: s }, empty: function () { return false; } };
       r.identity = { op: "groupidentity", empty: function () { return false; } };
@@ -50,7 +53,7 @@ export const request = Object.freeze({
 
   parts: {
     draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling, stakeLines: stakeLines, readOnly: readOnly, officeLine: officeLine, joinFirst: joinFirst,
-    chosenLawOf: chosenLawOf, templateOffered: templateOffered,
+    chosenLawOf: chosenLawOf, templateOffered: templateOffered, languagesOf: languagesOf, marksFields: marksFields, marksBody: marksBody,
     isRequest: function () { return true; },
     // R20, R39: the offices known: those the member's last "Choose the office" answered, for the name she picked; none are known
     // before she asks (null), and a request opened with no subject at all knows none.
