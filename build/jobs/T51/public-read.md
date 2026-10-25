@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_01ML8hpkf2vrUZPMLJcMVCtD · depth 2 · COMPLETE · handled B33
+**Status** · session_01ML8hpkf2vrUZPMLJcMVCtD · depth 2 · COMPLETE · handled B34
 
 ## J1 · QUESTION
 
@@ -457,3 +457,11 @@ Size (session_01Xm9gZFkkLPpKbxESgv347q): test runs 6, module lines 13869 (public
 - fixtures `--list`: 1 failure, `group-fields.test.mjs:18` `contract` (waits for instance-setup's `fixtures-run`, J30), no new line.
 
 Size (session_01ML8hpkf2vrUZPMLJcMVCtD): test runs 8, module lines 4205 (public-read `src/`, `worker.mjs`, `container.mjs`, `inband.mjs`, `wc -l`)
+
+## J32 · COMPLETE
+
+**COMPLETE (B34: K5153, a seal of the case document alone).** R28 met in full. When `docWithheld` (a seal of the case document without naming a finding), every finding row not already withheld now has `case_excludes`, `strength`, `grounds` and `required` null (`index.mjs`, the served-row return); identity facts stay.
+Test (`court-orders.test.mjs`, R28, red on the prior code at `case_excludes`, green now): a `seal` naming the document's hash nulls the four fields of every row, identity facts stay, and the exclusion sentence is served nowhere outside `court_orders`/`withheld`; control: before the order every row serves its strength.
+Checks: `bio-plane/test/m/public-read/` 315 pass, 0 fail; format 0; architecture 0; coverage 44 of 44; words none in public-read; ownership 0; fixtures: only the known `group-fields.test.mjs:18` contract line (waits for instance-setup). Deferred: none. Other modules: none.
+
+Size (session_01ML8hpkf2vrUZPMLJcMVCtD): test runs 5, module lines 4207
