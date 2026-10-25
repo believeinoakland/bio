@@ -68,3 +68,35 @@ Size (session_01E5aZgMS5PZNR6n1pGjwdGB): test runs 22, module lines 464
 ## J4 · COMPLETE
 
 COMPLETE: host-governor N-slow-refuse (R30, K4437 option B). governedFetch maxWaitMs default 8000 never slept over, over-long wait refused as R5; governorAdmit({host,maxWaitMs}); first 403/429/503 returns {res, retry_in_ms}; refused/cooling hosts answer at once. Four fields in my record. Root cause outside the governor (LIVE-CHECK P: three sites granted 1, report ~30 ms after grant, wait_ms 0); acquisition R95 and control-plane R121 name the stage. Tests: host-governor 57/0 (refuse.test.mjs, red first, controls); users capture 240, capture-requests 129, network-notices 75, monitoring 168, plane t36 14/0; plane 278/5 and acquisition 194/1 are the tranche tip's reds. Checks format/architecture/coverage/ownership 0. No question open. Size (session_01E5aZgMS5PZNR6n1pGjwdGB): test runs 22, module lines 464
+
+## J5 · COMPLETE
+
+COMPLETE: host-governor, fix round 10 (plan item 95; K5195), the six fixture lines of verify-marks row host-governor (K5175).
+
+**Changed (1 file: bio-plane/test/m/host-governor/ops.test.mjs; no source changed).**
+- `ops.test.mjs:104` (R27 test, status loop): marked `// fixtures-contract: store-door store-replies`. The BAD_JSON body's detail text is now store-door's contract text, "the request body is not valid JSON".
+- `ops.test.mjs:105`: the unknown-op row's status was 404; the store's own unknownOp reply is 400 (store-door's contract), so the row is now 400 with the same `unknown op: governorstate` text. The 404 case is dropped; the status pass-through is still covered by 400 and 409.
+- `ops.test.mjs:106`: invented code SOMETHING_ELSE replaced by the real code NOT_ELIGIBLE (acquisition/index.mjs:642, the store's 409 reply). Status 409 kept.
+- `ops.test.mjs:137` (was :135, the STORE_INTERNAL_ERROR loop without a valid correlation): marked `// fixtures-contract: store-door store-replies`. This clears both :135 lines and the orphan at store-door/fixtures.test:26.
+
+**Disclosure for BOB.** store-door's contract `store-replies` states only the internal error WITH a UUID correlation; the no-correlation case at ops.test:137 is covered by the evidence's wording ("with/without correlation") but not by the contract's values as they stand in store-door/fixtures.test.mjs:26-43. The marker is on the line as the job specified. store-door (later) may want to state the no-correlation reply in its contract; I changed nothing there.
+
+**No `fixtures-own` or `fixtures-generic` marker added.** The SOMETHING_ELSE case is now a real code, so none was needed.
+
+**Failing first.** The red state is the fixtures check at baseline: `checks/fixtures.mjs /home/user/bio host-governor` gave 5 FAIL answer lines (ops.test:104, :105, :106, :135 x2) and 1 FAIL contract (store-door/fixtures.test:26 orphan). After the edits: 0 failures. The module's tests were green before and after (no red test: the change is to fixture markers and values, not behaviour).
+
+**Runs.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/host-governor/*.test.mjs`: 57 pass, 0 fail, before and after (no skip).
+- `checks/fixtures.mjs /home/user/bio host-governor` and `--list`: 0 failures; accepted 5 (the store-replies marks).
+- `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs ... host-governor`: 0 failures. `checks/coverage.mjs ... host-governor`: 30 of 30 live ids named, 0 failures.
+- `checks/ownership.mjs /home/user/bio host-governor $(merge-base origin/tranche/T51 HEAD) HEAD`: 1 file changed (ops.test.mjs), 0 failures.
+- `checks/run.mjs /home/user/bio`: the 16 words failures and the answer FAILs listed are in other modules (explore, store-assembly); none in host-governor's files; I added no new t() or localize strings.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2981 test files (test-only change).
+
+**Requirement ids met.** R27 (the test named in ops.test:102). The module's live ids are all named (coverage 30 of 30).
+
+**Found in another module.** store-door/fixtures.test.mjs:26-43 contract gap described above (store-door's to decide). No other finding.
+
+**Deferred.** None.
+
+Size (session_01BYnS7iK2fBEoNxgUn6qGqg): test runs 3, module lines 1815
