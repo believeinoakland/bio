@@ -245,6 +245,7 @@ const CF = { CF_TOKEN: "cf-secret-token-value", CF_ACCT: ACCOUNT };
 const ASSET = "dist/bio-plane.bundled.mjs";
 const deploy = (root, { args = [SLUG, VERSION, ASSET], env = CF, stub } = {}) =>
   run(root, "bio-plane", ["scripts/deploy.mjs", ...args], { env, stub });
+// fixtures-own: platform the Cloudflare API's own answers to the deploy's account calls, a scripted-network double of the platform; no module answers for them
 const okStub = (extra = {}) => ({ subdomain: "sub", put: "accept", scripts: { "alpha-worker": { settings: {} } }, ...extra });
 /** The script uploads: a deploy's schedules PUT (G1) is a PUT too, but is not an upload; `anyPut` counts both. */
 const puts = (r) => r.calls.filter((c) => c.method === "PUT" && !c.url.endsWith("/schedules"));
@@ -1160,6 +1161,7 @@ test("R25: a container member that declares no Worker bundle is left out of the 
   } finally { rm(root); }
 });
 
+// fixtures-own: platform the Cloudflare API's own answers to the container deploy's account calls, a scripted-network double of the platform; no module answers for them
 const containerStub = (extra = {}) => ({ subdomain: "sub", containers: 200, scripts: { [SLUG]: {} },
   serving: { runner: JSON.stringify({ version: VERSION }) }, ...extra });
 
@@ -2064,6 +2066,7 @@ const OLD_BYTES = "// what the account holds now";
 const testFleet = () => makeRepo({ members: { "alpha-worker": { account: TEST_ACCOUNT }, "beta-worker": { account: TEST_ACCOUNT } },
   plane: { config: { services: [{ binding: "SELF", service: "bio-plane" }, { binding: "AGENT", service: "alpha-worker" }] } } });
 const MARK = { CIVICSMITH_TEST_INSTANCE: COPY };
+// fixtures-own: platform the Cloudflare API's own answers to the test-instance deploy's account calls, a scripted-network double of the platform; no module answers for them
 const testStub = (extra = {}) => ({ subdomain: "sub", put: "accept", scripts: { [COPY]: { body: OLD_BYTES }, "alpha-worker": { body: OLD_BYTES, settings: {} } },
   serving: { "alpha-worker": JSON.stringify({ version: VERSION }), "beta-worker": JSON.stringify({ version: VERSION }) }, ...extra });
 const testFleetDeploy = (root, member, { env = { CF_TOKEN: "t", ...MARK }, flags = ["--test-instance", "--dry-run"], instance = COPY, stub = testStub() } = {}) =>
