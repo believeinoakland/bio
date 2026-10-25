@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_0163P54gLUEcmDWPVLMFfvL7 · depth 2 · COMPLETE · handled B15
+**Status** · session_01Qqt8fVgM4Tk1A5Lz73WMQG · depth 2 · COMPLETE · handled B17
 
 ## J1 · REPORT · re B1
 
@@ -243,3 +243,43 @@ COMPLETE (re B13, B14, B15; fix round 9, G118b). R104 is met as amended below; n
 **Tests and checks.** instance-setup 234 pass, 0 fail. Users named by `impact.mjs` that touch `bootstrap`/`bootstrapfacts`, run with mine: control-plane `r8-bootstrap-fanout`, `r8-hops`, `t51-bootstrap`, `t51-hops`, `r8-phase-clock`; plane `door`, `r8-timing-hook`, `worker`; op-declarations `t47`; credentials `t51`; answer-envelope and store-door suites: 377 pass, 0 fail. format 1 (not mine); architecture 0; coverage 76 of 76, 0; words 0; ownership 4 files, 0 failures.
 
 Size (session_0163P54gLUEcmDWPVLMFfvL7): test runs 17, module lines 3845
+
+## J21 · COMPLETE
+
+COMPLETE (re B16; fix round 10, Wave A batch 5: the fixture round). Test files only; no product code changed.
+
+**Causes done.** Fixtures I publish, lines I re-pointed, contracts I run. Lines left, each named below.
+
+**Published, `bio-plane/test/m/instance-setup/fixtures.mjs` (new), each made by the real code at test time, each called by a test in `fixtures.test.mjs` that checks the real answer:**
+- `assistantState()` → `{notKept, kept}`: the real `assistantstate` answer over the real ai-accounts (`{ok:true, on:true, set_by/set_at/reason null}`; `on:false` with the setting's who, when and reason). Users now: screens-settings 1.
+- `instanceGroupAnswer()` → `{recorded: {ok:true, group}, none: {ok:true, group:null, detail: NO_GROUP_RECORDED}}`. Users now: installer 2.
+- `selftestAnswer()` → the real `selftest` body of a copy with its store binding unbound, with `status` (500): `ok:false`, `bindings.STORE:false`, `bindingsAllPresent:false`, `store: "ERR …"`. Users now: installer-steps 1.
+- `fleetReports()` (K5071, installer R66's lag cases): the real `bootstrapReport` body, status included, for `serving`, `silent` (a member answering 500 and one that throws), `misnamed`, `unbound`, `storeVersionAbsent` (the store's answer carries no `storeVersion`) and `withoutMembers` (no `members=1`, so no `memberVersions`). Every case answers 200 with the real `memberVersions` states.
+- Contract `group-identity-public`, run in `fixtures.test.mjs` (`// fixtures-run: public-read group-identity-public`): `groupIdentityPublic()` with no group recorded is `{ok:true, group:null, display_name:null, domain:null, domain_verified_at:null, logo:false, detail: NO_GROUP_RECORDED}`. **The real answer carries `logo: false`, which the START's value omits: the real one wins, public-read's hand-built value changes (REPORT below).**
+
+**Own lines re-pointed (fixture.mjs, 21 listed → 3 left):**
+- promotion/registrars (79, 82): `providers().promotion` is the real `registrars().p`; the stand-in `facts` map is gone. `group.test.mjs` R1 now reads the fact's module from promotion's own STEP_DECLARED on a second registration.
+- entities/entitiesWorld (249–266) and lines/linesWorld (275–283): `registryOver` is now the real `Entities` and `Lines` of lines' published `linesWorld().w`; `ents`, `idents` and `lines` read their own tables back for the assertions (the world's own entities and lines are left out). Findings in the real code that changed the tests, not the product: the id spaces are a closed list (`idspaces`), so the seeds test's invented spaces `org`, `lb`, `lp`, `lo`, `court`, `docket` are now the real `institution`, `body`, `person`, `office` with a form of their own per scheme (`TEST_SPACES`); the test profile no longer repeats the held test profile's `ellery_body` and `ellery_office`-like scheme names (the module and the registry must read the same scheme); a line's source capture must be held by the record (`registryOver(view, captures)` holds them); real line ids are random (`noIds` in the N756 test); one assertion compared object identity and now compares the body's id. All 13 seeds tests pass unchanged in what they assert.
+- translations/memberLanguageRead (`r8-parts-report.test.mjs`:161, and the same stand-in at :118): `registerMemberLanguageRead` answers translations' own `registered`.
+
+**Lines left (`checks/fixtures.mjs … instance-setup --list`, 3 + 1):**
+- `fixture.mjs:113` public-read/groupIdentityRegistrar: waits for public-read. Its `fixtures.mjs` (`groupIdentityRegistrar`) is on `job/T51/instance-setup`'s sibling branch `origin/job/T51/public-read` and not yet on `tranche/T51`; I merge it as a CHANGE and re-point.
+- `fixture.mjs:186`, `:197` (`contract-no-run`, store-door's `store-replies`): `// fixtures-contract: store-door store-replies` placed on the line above each; waits for store-door's `fixtures-run: instance-setup store-replies`.
+- `fixtures.test.mjs:49` `orphan-run` for public-read `group-identity-public`: waits for public-read's marker on its hand-built value.
+- No `fixtures-own` or `fixtures-generic` marker added.
+
+**Found in other modules (REPORT):** (1) public-read: its hand-built `groupIdentityPublic` no-group value lacks `logo: false` (real answer above). (2) lines' `linesWorld()` registers four entities and some lines before it hands the world over (a user counting entities or lines must subtract them; mine does). Neither blocks.
+
+**Tests and checks (from /home/user/bio, process checks at civicos-process main):** instance-setup 239 pass, 0 fail (234 before, +5 fixtures); screens-action `join-seam-t51` and `seam-t51` (the only other importers of `instance-setup/fixture.mjs`) 4 pass. `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs instance-setup`: 0 failures. `checks/coverage.mjs instance-setup`: 76 of 76 live requirement ids named, 0 failures. `checks/words.mjs instance-setup`: 0 failures (inline 0, plain 0, testcopy 0). `checks/ownership.mjs … instance-setup origin/tranche/T51 job/T51/instance-setup`: 7 files, 0 failures. `setup-words/build.mjs --check`: only the expected stale-rows note, none naming my module. `checks/fixtures.mjs instance-setup`: 21 → 3 answer lines + 1 orphan-run, all waiting as above.
+
+Size (session_01Qqt8fVgM4Tk1A5Lz73WMQG): test runs 6, module lines 3846
+
+## J22 · COMPLETE
+
+COMPLETE (re B17). Merged origin/tranche/T51 (merge commit, no rebase) and re-pointed fixture.mjs:113: the stand-in public-read registration now answers with public-read's own `groupIdentityRegistrar()` results (malformed, first, declared), still recording the identity for the tests.
+
+`checks/fixtures.mjs /home/user/bio instance-setup --list`: 0 failures; two lines listed as `accepted(store-replies)` (fixture.mjs:190, :201, store-door's run now on the tranche); the orphan-run at fixtures.test.mjs:49 cleared. No line left.
+
+Tests: instance-setup 239 pass, 0 fail. format 0 failures; architecture, coverage (76 of 76), words, ownership 0 failures.
+
+Size (session_01Qqt8fVgM4Tk1A5Lz73WMQG): test runs 8, module lines 3846
