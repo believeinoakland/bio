@@ -5,8 +5,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
 import { queueOps, queueAnswer, Queue } from "../../../src/queue/index.mjs";
+import { classOfKind, QUEUE_OBLIGATION_KINDS } from "../../../src/queuestate.mjs";
 import { queueFeedOp } from "../../../src/queue/door.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
+import { answeredRequests, answeredRequestsHidden } from "../project-roster/fixtures.mjs";
 
 const DAY = 86400000;
 const FACTS = { objective_gap: { bound: 50, truncated: false }, contradiction: { bound: 50, truncated: false }, dispositions: [] };
@@ -351,4 +353,67 @@ test("R61: a decision names the same row whoever decided it; the route and the d
   assert.equal(r.ok, true);
   const all = aside(w).aside;
   assert.deepEqual([all[0].finding, all[0].at, all[0].definition_version], ["FINDING::source-modified::three", r.at, null]);
+});
+
+/* ------------------------------------------------------------------------------------------------------------- R95 */
+
+/* project-roster's real answer to "the requests a member answered" (R44), taken from its published fixtures; a world answers it to
+   the member the fixture was made for (owner "ann") and the real empty answer to anyone else. */
+const rosterAnswering = async (answers) => {
+  const full = await answeredRequests(answers ? { answers } : undefined), none = await answeredRequestsHidden();
+  return { full, none, dep: { projectRequestsAnswered: ({ by }) => (by === "ann" ? full : none) } };
+};
+const answeredOf = (w, who) => w.q.queueFeed({ ...who, answered: true }).answered.filter((r) => r.act === "join_answer");
+const asAnn = { member: "ann", viewer: "member:ann" };
+
+test("R95: What you answered holds each join request the viewer answered: its project, the requester, the answer and the day", async () => {
+  const { full, dep } = await rosterAnswering();
+  const w = setup([], {}, { projectRoster: dep });
+  w.member("ann"); w.bundle("PROJ-D", "project", { title: "Discoverable D" }); w.join("PROJ-D", "ann", { owner: true });
+  const rows = answeredOf(w, asAnn);
+  assert.equal(full.answered.length, 2, "the fixture is the real answer for two answered requests");
+  /* answers made in the same millisecond tie: queue orders ties by requester, so compare by requester */
+  const byHandle = (a, b) => (a[3].handle < b[3].handle ? -1 : 1);
+  assert.deepEqual(rows.map((r) => [r.act, r.project, r.title, r.requester, r.answer, r.at]).sort(byHandle),
+    full.answered.map((x) => ["join_answer", x.projectId, "Discoverable D", x.requester, x.answer, x.closed]).sort(byHandle));
+  assert.deepEqual(rows.map((r) => r.answer).sort(), ["declined", "granted"], "both answers, Decline and Grant");
+  const all = w.q.queueFeed({ ...asAnn, answered: true });
+  assert.equal(all.ok, true);
+  assert.equal(all.count, all.answered.length, "the count includes them");
+});
+
+test("R95: another owner's answer is not hers, and a project she can no longer see names nothing (R33)", async () => {
+  const { dep } = await rosterAnswering();
+  const w = setup([], {}, { projectRoster: dep });
+  w.member("ann"); w.bundle("PROJ-D", "project", { title: "Hidden Discoverable D" });
+  assert.deepEqual(answeredOf(w, asAlice), [], "control: alice answered none");
+  assert.deepEqual(answeredOf(w, asAnn), [], "ann is no longer a participant of PROJ-D: the project names nothing");
+  assert.ok(!JSON.stringify(w.q.queueFeed({ ...asAnn, answered: true })).includes("Hidden Discoverable D"));
+  w.join("PROJ-D", "ann", { owner: true });
+  assert.equal(answeredOf(w, asAnn).length, 2, "control: seen again, it is named");
+});
+
+/* ----------------------------------------------------------------------------------------------- R57, queue-producers R54 */
+
+/* An item of the shape queue-producers R54 mints for a participant's request to leave: keyed by project and handle, the owners its
+   recipients, `projectremove` its act. */
+const LEAVE = { id: "OBLIGATION::project-leave::PRJ-1::dee", class: "OBLIGATION", kind: "project-leave",
+  subject: { kind: "project", id: "PRJ-1", name: "Roof project", participant: "dee" }, assignee: null, assignee_role: null, subjects: ["PRJ-1"] };
+
+test("R57: project-leave is an OBLIGATION with its one sentence, passes the mint, and is answered by the owners' projectremove; it is never muted", () => {
+  assert.equal(classOfKind("project-leave"), "OBLIGATION");
+  assert.ok(typeof QUEUE_OBLIGATION_KINDS["project-leave"] === "string" && QUEUE_OBLIGATION_KINDS["project-leave"].length > 20);
+  const w = setup([LEAVE]);
+  const f = w.feed("alice");
+  assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+  const it = byId(f)[LEAVE.id];
+  assert.deepEqual([it.kind, it.class], ["project-leave", "OBLIGATION"]);
+  assert.deepEqual([it.disposition.available, it.disposition.instead], [false, "projectremove"]);
+  assert.match(it.disposition.detail, /op=projectremove/);
+  // control: the near miss is still refused whole; under another class it is misclassed; muted it is not personal
+  assert.deepEqual([w.feed("alice").ok, withItems([{ id: "FINDING::x::1", class: "FINDING", kind: "project-leaves" }]).feed(null, "class:admin").reason],
+    [true, "NO_SUCH_KIND"]);
+  assert.equal(withItems([{ ...LEAVE, id: "FINDING::project-leave::1", class: "FINDING" }]).feed(null, "class:admin").reason, "KIND_MISCLASSED");
+  const m = mute(w, { item: LEAVE.id });
+  assert.deepEqual([m.ok, m.reason, m.kind_class], [false, "KIND_NOT_PERSONAL", "OBLIGATION"]);
 });
