@@ -3,6 +3,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, button, fill, press, WALK, GRAPH, ENT, ORG, SHA, word, hasWord, drew, notDrew, dayOf } from "./fixtures.mjs";
+import { inWorld, openAs, settled, readHeld, rewrite } from "./world.mjs";
+
+/** Two people the record follows and a tie one declared to the other (a `proxy_for`, a declared step with no source), by the members' own acts. */
+async function declaredTie(me) {
+  const a = (await me.act("entitycreate", { body: { kind: "person", label: "Ana Rivera", note: "Deputy clerk, named in the minutes." } })).entity_id;
+  const b = (await me.act("entitycreate", { body: { kind: "person", label: "Ben Okafor", note: "Contractor, named in the minutes." } })).entity_id;
+  await me.act("relationdeclare", { body: { fromEntity: a, toEntity: b, relation: "proxy_for", justification: "He signs for her on the minutes.", citation: "minutes, page 2" } });
+  return { a, b };
+}
 
 const at = "/app/explore/" + ENT;
 const walked = async (o = {}) => {
@@ -109,21 +118,27 @@ test("R2 explore's own refusal ({refused, why}) is drawn, never as no chains (co
 });
 
 test("R2 explorepreset by its name; promote opens a question naming the chain", async () => {
-  const p = await walked({ plane: { allocid: ok({ ok: true, id: "INQ-2026-0042" }), promote: ok({ ok: true }) } });
-  fill(p, { "explore-preset": "flowsFrom" });
+  const { world, me } = await inWorld();
+  const { a, b } = await declaredTie(me);
+  const p = await openAs(world, me, "/app/explore/" + a);
+  fill(p, { "explore-at": "2026-09-30", "explore-preset": "pathBetween", "explore-to": b });
   await press(p, "explorepreset");
-  assert.equal(p.byOp("explorepreset").at(-1).body.preset, "flowsFrom");
-  assert.equal(p.byOp("explorepreset").at(-1).body.from, ENT);
-  const [a] = main(p).querySelectorAll("div.mk-msg[data-chain]");
-  assert.deepEqual(actsIn(a).sort(), ["exploreverify", "promote"]);
-  await press(p, "promote", { within: a });
+  await settled(p);
+  assert.equal(p.byOp("explorepreset").at(-1).body.preset, "pathBetween");
+  assert.equal(p.byOp("explorepreset").at(-1).body.from, a);
+  const [chain] = main(p).querySelectorAll("div.mk-msg[data-chain]");
+  assert.ok(chain, "the real walk draws the chain");
+  assert.deepEqual(actsIn(chain).filter((x) => ["exploreverify", "promote"].includes(x)).sort(), ["exploreverify", "promote"]);
+  const walk = (await world.door({ url: "/api/?op=explorepreset", init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(p.byOp("explorepreset").at(-1).body) } }, me)).json.result;
+  const steps = walk.paths[0].hops.map((h) => `${h.from} → ${h.kind} → ${h.to}`).join("; ");
+  await press(p, "promote", { within: chain, reason: "The minutes say so." });
+  await settled(p);
   const pr = p.byOp("promote")[0].body;
-  assert.equal(pr.bundleId, "INQ-2026-0042-chain");
-  const steps = `${ENT} → line:holds:employee → ${ORG}; ${ORG} → mentioned_together → ENT-2026-0200`;
+  assert.match(pr.bundleId, /^INQ-\d{4}-\d{4}-chain$/, "the id the record allocated");
   assert.ok(pr.files[0].text.includes(word("file.chain.question", { steps })), "the question, by its key");
   assert.ok(pr.files[0].text.includes(word("file.recheck.chain")) && pr.files[0].text.includes(word("file.recheck.chain.why")), "the recheck trigger, by its keys");
   assert.ok(pr.meta.title.startsWith(word("file.chain.title", { steps }).slice(0, 40)));
-  assert.equal(p.location.pathname, "/app/question/INQ-2026-0042-chain");
+  assert.equal(p.location.pathname, "/app/question/" + pr.bundleId);
 });
 
 test("R2 exploreverify \"Check this chain\" sends the drawn path as chain (explore R23) and draws matches, lead and each hop's answer; control: a tampered hop is drawn \"does not match\"", async () => {
@@ -146,35 +161,37 @@ test("R2 exploreverify \"Check this chain\" sends the drawn path as chain (explo
   assert.ok(b);
 });
 
-const walkWith = (declared, sourced) => {
-  const w = WALK();
-  w.paths[1].hops[0] = sourced
-    ? { id: "STEPSOURCE-1", from: ENT, to: "ENT-2026-0300", kind: "step_source", owner: "connections", valid: {}, evidence: [{ source: "BND-1", capture_sha: SHA, extent: { kind: "pdf-page", page: 3 }, basis: "The minutes name him as the company's agent.", relation: "REL-2026-0002" }],
-      grade: { assertion: "B", ends: ["D", "D"] }, derived: null, backs: "REL-2026-0002", attached_by: "member:mai", at: "2026-10-12T09:00:00Z" }
-    : w.paths[1].hops[0];
-  if (sourced) { w.paths[1].label = "evidenced"; w.paths[1].grade = { assertion: "B", end: "B" }; w.paths[1].marks = []; }
-  return w;
-};
-
 test("R17 Attach a source to a declared step sends stepsource with the hop's relation, the chosen passage and the member's words; the walk is read again and the hop is drawn evidenced; B14: the design draws no withdrawal of the attached source on explore, so none is drawn", async () => {
-  let attached = false;
-  const p = await walked({ plane: { explore: () => ok(walkWith(true, attached)),
-    stepsource: () => { attached = true; return ok({ ok: true, id: "STEPSOURCE-1", wrote: true }); } } });
-  const lead = () => main(p).querySelectorAll("div.mk-msg[data-chain]")[1];
+  const { world, me } = await inWorld();
+  const { a } = await declaredTie(me);
+  const memo = await world.recipes.hold(me, "Memo.txt", "Ben Okafor signs for Ana Rivera when she is away.\n\nThe clerk confirms it.");
+  const mu = await readHeld(world, me, memo.sha);
+  const p = await openAs(world, me, "/app/explore/" + a);
+  fill(p, { "explore-groups-4": true, "explore-at": "2026-09-30" });
+  await press(p, "explore");
+  await settled(p);
+  const lead = () => main(p).querySelectorAll("div.mk-msg[data-chain]").find((c) => c.querySelector('button[data-act="stepsource"]') || c.querySelector("[data-attached]"));
   drew(lead(), "screen.explore.lead");
   assert.equal(button(p, "connectionassert"), null, "connectionassert is not drawn for this act");
+  const basis = "The memo says he signs for her.";
   /* R34 (K5148): the document is chosen by title and the passage by its words, never typed */
-  fill(p, { "explore-assert-doc": SHA, "explore-assert-basis": "The minutes name him as the company's agent." });
+  fill(p, { "explore-assert-doc": memo.sha, "explore-assert-basis": basis });
   p.fire(p.doc.getElementById("explore-assert-doc"), "change");
-  await p.settle();
+  await settled(p);
   await p.click(main(p).querySelectorAll("[data-words]").find((e) => e.getAttribute("data-words").startsWith("explore-assert-passage-")).querySelectorAll('[data-shell="word"]')[1]);
-  await press(p, "stepsource", { within: lead() });
-  assert.deepEqual(p.byOp("stepsource")[0].body, { relation: "REL-2026-0002", captureSha: SHA, extent: { kind: "pdf-page", page: 1 }, basis: "The minutes name him as the company's agent." });
+  await press(p, "stepsource", { within: lead(), reason: basis });
+  await settled(p);
+  const sent = p.byOp("stepsource")[0].body;
+  assert.deepEqual([sent.captureSha, sent.extent, sent.basis], [memo.sha, mu[1].extent, basis]);
+  assert.match(sent.relation, /^REL-/, "the hop's own relation");
   const done = lead();
   drew(done, "screen.explore.evidenced", undefined, "evidenced, no longer a lead");
   notDrew(done, "screen.explore.declared");
-  assert.equal(done.querySelector(".cs-grade").textContent, "ConnectionB", "at the capture's grade");
-  drew(done.querySelector("[data-attached]"), "screen.explore.attached", { by: "mai", date: dayOf("2026-10-12") });
+  const walked = (await world.door({ url: "/api/?op=explore", init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(p.byOp("explore").at(-1).body) } }, me)).json.result;
+  const step = walked.paths.flatMap((x) => x.hops).find((h) => h.kind === "step_source");
+  assert.ok(step && step.backs === sent.relation, "the world: the walk holds the attached source for that relation");
+  assert.equal(done.querySelector(".cs-grade").textContent, word("mark.scale.connection.name") + step.grade.assertion, "at the capture's grade");
+  drew(done.querySelector("[data-attached]"), "screen.explore.attached", { by: me.handle, date: dayOf(step.at.slice(0, 10)) });
   assert.ok(button(p, "stepsourcewithdraw") === null, "B14: stepsourcewithdraw is not the registry's act on explore and the design draws no control for it (K3052)");
   assert.equal(main(p).textContent.includes(word("screen.explore.withdraw")), false);
 });

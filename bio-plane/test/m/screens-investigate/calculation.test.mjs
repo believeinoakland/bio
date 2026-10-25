@@ -1,10 +1,80 @@
 /* screens-investigate R5, R11, R14: a calculation, its spot-check and the help page, on interface-shell's served page. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
+import { inWorld, openAs, settled, refused } from "./world.mjs";
+import { createHash } from "node:crypto";
+import { crc32 } from "node:zlib";
 import { open, main, actsIn, button, fill, press, CALCULATION, SPOT, P, CALC, DRAW, SHA, SHA2, word, drew, notDrew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/calculation/" + CALC;
+
+/* ---- a workbook the member holds: an .xlsx written here (a stored zip of the smallest SpreadsheetML package) and held as the capture screen holds a file ---- */
+const enc = new TextEncoder();
+function zipStored(entries) {
+  const parts = [], central = [];
+  let offset = 0, size = 0;
+  for (const [name, text] of entries) {
+    const data = enc.encode(text), nameBytes = enc.encode(name), crc = crc32(data);
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true); local.setUint16(4, 20, true); local.setUint16(6, 0x0800, true);
+    local.setUint32(14, crc, true); local.setUint32(18, data.length, true); local.setUint32(22, data.length, true); local.setUint16(26, nameBytes.length, true);
+    parts.push(new Uint8Array(local.buffer), nameBytes, data);
+    const cen = new DataView(new ArrayBuffer(46));
+    cen.setUint32(0, 0x02014b50, true); cen.setUint16(4, 20, true); cen.setUint16(6, 20, true); cen.setUint16(8, 0x0800, true);
+    cen.setUint32(16, crc, true); cen.setUint32(20, data.length, true); cen.setUint32(24, data.length, true); cen.setUint16(28, nameBytes.length, true); cen.setUint32(42, offset, true);
+    central.push(new Uint8Array(cen.buffer), nameBytes);
+    offset += 30 + nameBytes.length + data.length; size += 46 + nameBytes.length;
+  }
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true); end.setUint32(12, size, true); end.setUint32(16, offset, true);
+  const all = [...parts, ...central, new Uint8Array(end.buffer)];
+  const out = new Uint8Array(all.reduce((n, a) => n + a.length, 0));
+  let at = 0;
+  for (const a of all) { out.set(a, at); at += a.length; }
+  return out;
+}
+/** A workbook of one sheet, "Model": the three payments in B2:B4 and their total in B5 (a formula). */
+function workbook() {
+  const head = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  const ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main", rel = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+  const text = (ref, s) => `<c r="${ref}" t="inlineStr"><is><t>${s}</t></is></c>`;
+  const sheet = `${head}<worksheet xmlns="${ns}"><sheetData><row r="1">${text("A1", "payer")}${text("B1", "amount")}</row>`
+    + `<row r="2">${text("A2", "City")}<c r="B2"><v>5</v></c></row><row r="3">${text("A3", "City")}<c r="B3"><v>7</v></c></row><row r="4">${text("A4", "Fund")}<c r="B4"><v>9</v></c></row>`
+    + `<row r="5"><c r="B5"><f>SUM(B2:B4)</f><v>21</v></c></row></sheetData></worksheet>`;
+  return zipStored([
+    ["[Content_Types].xml", `${head}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`],
+    ["_rels/.rels", `${head}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${rel}/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ["xl/workbook.xml", `${head}<workbook xmlns="${ns}" xmlns:r="${rel}"><sheets><sheet name="Model" sheetId="1" r:id="rId1"/></sheets></workbook>`],
+    ["xl/_rels/workbook.xml.rels", `${head}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${rel}/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`],
+    ["xl/worksheets/sheet1.xml", sheet],
+  ]);
+}
+const hex = (v) => createHash("sha256").update(v).digest("hex");
+const resultOf = (a) => (a && a.json && a.json.result !== undefined ? a.json.result : a && a.json);
+/** The file `bytes` held as the capture screen holds one (`recipes.hold` holds text only): `captureupload`, then `promote` of an information bundle at `collected`. Answers `{sha, bundle}`. */
+async function holdBytes(world, me, name, bytes, project) {
+  const up = await world.door({ url: `/api/?${new URLSearchParams({ op: "captureupload", statement: name, name })}`,
+    init: { method: "POST", headers: { "content-type": "application/octet-stream" }, body: bytes } }, me);
+  const doc = resultOf(up) && resultOf(up).document;
+  assert.ok(doc && doc.capture, "the file was captured: " + JSON.stringify(resultOf(up)).slice(0, 300));
+  const now = new Date(world.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
+  const minted = await me.read("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } });
+  const id = minted.id + "-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const sha = doc.capture.sha256;
+  const front = ["---", "id: " + id, "object_type: information", "schema: information@2", "title: " + JSON.stringify(name), "current_state: collected", "prior_state: null",
+    "created: " + now, "last_updated: " + now, "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []", "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "criticality: supporting", "source_status: unchanged", "content_hash: sha256:" + hex(sha),
+    "source:", "  locator: " + JSON.stringify(doc.locator || "upload"), "  authority: member-entered", "  retrieved: " + now, "monitoring:", "  enabled: false", "  frequency: none",
+    "project: " + project, "---", "", "## Summary", "", name, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const prov = JSON.stringify({ documents: [doc] }, null, 1), dataset = JSON.stringify({ documents: [{ bytes: doc.capture.bytes, locator: doc.locator || "upload", sha256: sha }] });
+  const len = (s) => enc.encode(s).length;
+  const files = [{ path: "bundle.md", text: front, bytes: len(front), sha256: hex(front) }, { path: "data/provenance.json", text: prov, bytes: len(prov), sha256: hex(prov) },
+    { path: "data/dataset.json", text: dataset, bytes: len(dataset), sha256: hex(dataset) }, { path: doc.file, blobSha: sha, sha256: sha, bytes: doc.capture.bytes }];
+  const register = [{ sha256: sha, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }];
+  const made = await me.act("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(id).slice(0, 8),
+    meta: { object_type: "information", title: name, current_state: "collected", created: now, last_updated: now }, files, register } });
+  return { sha, bundle: made.bundleId || id };
+}
 
 test("R5 reads calculation (the computed fact, its method as written, its inputs with their grades, its checks)", async () => {
   const p = await open(at);
@@ -44,57 +114,156 @@ test("R5 a disagreeing item's visits are drawn in tension, never one picked", as
   drew(row, "screen.calculation.tension");
 });
 
+/** A project, a payments register the member holds, the table she declares from it (her own `tabledeclare`), a calculation she has made to stand on, a second
+ *  register to declare a table from, and a workbook (an .xlsx, held as the capture screen holds a file) added to the project. */
+async function register(world, me) {
+  const project = await world.recipes.project(me, "Repairs");
+  const csv = await world.recipes.hold(me, "Payments.csv", "payer,payee,amount\nCity,Acme,5\nCity,Beta,7\nFund,Acme,9\n", project);
+  const other = await world.recipes.hold(me, "Grants.csv", "grantee,amount\nAcme,10\nBeta,12\n", project);
+  const table = (await me.act("tabledeclare", { body: { source: { capture_sha: csv.sha, extent: { kind: "document" } }, header: ["payer", "payee", "amount"],
+    schema: { fields: [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }] } } })).sha;
+  const first = (await me.act("calculationcreate", { body: { question: "How many payments?", period: { from: "2025-07-01", to: "2026-06-30" }, kind: "count", project, inputs: [{ name: "input", table }] } })).calc_id;
+  const book = await holdBytes(world, me, "Budget.xlsx", workbook(), project);
+  return { project, csv, other, table, first, book };
+}
+
+/** The two photos or documents a visit may cite are held files; the draw's `set` is a declared table's digest (see the REPORTED todo below). */
+const drawn = (p) => p.byOp("calculationdraw").slice(-1)[0];
+
 test("R5 the acts: calculationcreate, tabledeclare, recordcheck, calculationaccept, addworkbook, bind, calculationdraw (how many, the seed recorded)", async () => {
-  const p = await open(at, { plane: { calculationcreate: ok({ ok: true, calc_id: "CALC-2026-0009" }), tabledeclare: ok({ ok: true, sha: SHA }), recordcheck: ok({ ok: true }),
-    calculationaccept: ok({ ok: true }), addworkbook: ok({ ok: true }), bind: ok({ ok: true }), calculationdraw: ok({ ok: true, draw: "e".repeat(64), seed: "s" }) } });
-  fill(p, { "calc-set": SHA, "calc-n": "40", "calc-seed": "2026-10-05-7f31", "calc-dq": "Was it repaired?" });
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const R = await register(world, me);
+  const stored = (await me.read("calculation", { query: { id: R.first } }));
+  assert.equal(stored.found, true);
+  const p = await openAs(world, me, "/app/calculation/" + R.first);
+  /* calculationdraw: how many, the seed recorded; the draw the plane made is read */
+  fill(p, { "calc-set": R.table, "calc-n": "2", "calc-seed": "2026-10-05-7f31", "calc-dq": "Was it repaired?" });
   await press(p, "calculationdraw", { reason: "a sample to visit" });
-  assert.deepEqual(p.byOp("calculationdraw")[0].body, { set: SHA, n: 40, seed: "2026-10-05-7f31", question: "Was it repaired?", project: P, reason: "a sample to visit" });
-  assert.equal(p.byOp("spotcheck").at(-1).query.draw, "e".repeat(64), "the new draw is read");
-  fill(p, { "calc-content": SHA, "calc-header": "report, closed, reported" });
-  await press(p, "tabledeclare", { reason: "the work orders" });
-  assert.deepEqual(p.byOp("tabledeclare")[0].body.header, ["report", "closed", "reported"]);
-  fill(p, { "calc-wb": SHA2, "calc-period": "FY2025" });
+  await settled(p);
+  assert.deepEqual(drawn(p).body, { set: R.table, n: 2, seed: "2026-10-05-7f31", question: "Was it repaired?", project: R.project, reason: "a sample to visit" });
+  const draw = p.byOp("spotcheck").at(-1).query.draw;
+  const made = await me.read("spotcheck", { query: { draw } });
+  assert.equal(made.found, true, "the new draw is read, and the store holds it");
+  assert.deepEqual([made.draw.set, made.draw.n, made.draw.seed, made.draw.drawn_by], [R.table, 2, "2026-10-05-7f31", me.member], "its set, how many and the seed recorded");
+  assert.equal(made.question, "Was it repaired?");
+  /* tabledeclare: the passage chosen on the document, the header named */
+  fill(p, { "calc-content": R.other.sha, "calc-header": "grantee, amount" });
+  p.fire(p.doc.getElementById("calc-content"), "change");
+  await settled(p);
+  await press(p, "tabledeclare", { reason: "the grants register" });
+  await settled(p);
+  assert.deepEqual(p.byOp("tabledeclare")[0].body.header, ["grantee", "amount"]);
+  assert.equal(p.byOp("tabledeclare")[0].body.source.capture_sha, R.other.sha);
+  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the plane holds the table");
+  /* addworkbook: the workbook added to the project, under the calculation's question and the period */
+  fill(p, { "calc-wb": R.book.sha, "calc-period": "FY2025" });
   await press(p, "addworkbook", { reason: "my own count" });
-  assert.deepEqual(p.byOp("addworkbook")[0].body, { captureSha: SHA2, question: "Reports closed within seven days, FY2025", period: "FY2025", project: P, reason: "my own count" });
-  fill(p, { "calc-range": "Budget!B2:B5", "calc-table": SHA, "calc-trange": "B1:B4" });
+  await settled(p);
+  assert.deepEqual(p.byOp("addworkbook")[0].body, { captureSha: R.book.sha, question: stored.question, period: "FY2025", project: R.project, reason: "my own count" });
+  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the plane holds the workbook");
+  const held = await me.read("workbook", { query: { capture: R.book.sha, project: R.project } });
+  assert.deepEqual([held.ok, held.workbook.period, held.workbook.question], [true, "FY2025", stored.question], "the store holds it under that question and period");
+  /* bind: a range of the workbook to the table's own cells */
+  fill(p, { "calc-range": "Model!B2:B4", "calc-table": R.table, "calc-trange": "C1:C3" });
   await press(p, "bind");
-  assert.deepEqual(p.byOp("bind")[0].body, { captureSha: SHA2, project: P, range: "Budget!B2:B5", input: { table: SHA, range: "B1:B4" } });
-  fill(p, { "calc-outcome": "agrees", "calc-note": "I recounted 812" });
+  await settled(p);
+  assert.deepEqual(p.byOp("bind")[0].body, { captureSha: R.book.sha, project: R.project, range: "Model!B2:B4", input: { table: R.table, range: "C1:C3" } });
+  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "bound");
+  const bound = (await me.read("workbook", { query: { capture: R.book.sha, project: R.project } })).bindings;
+  assert.deepEqual(bound.map((b) => [b.range, b.input.table, b.bound_by, b.agrees]), [["Model!B2:B4", R.table, me.member, true]], "the store holds the binding, and the table's cells agree with the workbook's");
+  /* recordcheck is a second member's: the author's own is refused (drawn beside it); a second member's lands */
+  fill(p, { "calc-outcome": "agrees", "calc-note": "I recounted 21" });
   await press(p, "recordcheck");
-  assert.deepEqual(p.byOp("recordcheck")[0].body, { captureSha: SHA2, project: P, outcome: "agrees", note: "I recounted 812" });
+  await settled(p);
+  assert.ok(main(p).querySelector('[data-gap="refused"]'), "the workbook's author cannot check it herself: the refusal is drawn beside the act");
+  const ana = await world.signIn("ana", { admin: true });
+  const q = await openAs(world, ana, "/app/calculation/" + R.first);
+  fill(q, { "calc-wb": R.book.sha, "calc-outcome": "agrees", "calc-note": "I recounted 21" });
+  await press(q, "recordcheck");
+  await settled(q);
+  assert.deepEqual(q.byOp("recordcheck")[0].body, { captureSha: R.book.sha, project: R.project, outcome: "agrees", note: "I recounted 21" });
+  assert.equal(main(q).querySelector('[data-gap="refused"]'), null, "a second member's check lands");
+  assert.ok(JSON.stringify(await me.read("workbook", { query: { capture: R.book.sha, project: R.project } })).includes("I recounted 21"), "and the store holds it with her note");
+  /* calculationaccept */
   await press(p, "calculationaccept", { reason: "recomputed and agrees" });
-  assert.equal(p.byOp("calculationaccept")[0].query.id, CALC);
-  fill(p, { "calc-q": "Reports closed within 7 days, FY2026", "calc-from": "2025-07-01", "calc-to": "2026-06-30", "calc-kind": "count", "calc-input": SHA });
+  await settled(p);
+  assert.equal(p.byOp("calculationaccept")[0].query.id, R.first);
+  const accepted = await me.read("calculation", { query: { id: R.first } });
+  assert.equal(accepted.accepted_by, me.member, "accepted by the member who pressed it");
+  /* calculationcreate: a new calculation over the table, and its page opens */
+  fill(p, { "calc-q": "Payments in FY2026", "calc-from": "2025-07-01", "calc-to": "2026-06-30", "calc-kind": "count", "calc-input": R.table });
   await press(p, "calculationcreate", { reason: "the new year" });
-  assert.deepEqual(p.byOp("calculationcreate")[0].body.inputs, [{ name: "input", table: SHA }]);
-  assert.equal(p.location.pathname, "/app/calculation/CALC-2026-0009");
+  await settled(p);
+  assert.deepEqual(p.byOp("calculationcreate")[0].body.inputs, [{ name: "input", table: R.table }]);
+  const id = /CALC-[^/]+$/.exec(p.location.pathname || String(p.location))[0];
+  assert.notEqual(id, R.first);
+  const newer = await me.read("calculation", { query: { id } });
+  assert.equal(newer.found, true);
+  assert.equal(newer.question, "Payments in FY2026");
 });
 
+/* REPORTED (calculation.mjs, `calc-set` and `calculationdraw`): the draw's set is chosen among the held documents (`calc-set` lists captures, R34), but the store's
+   `calculationdraw` takes the digest of a declared TABLE (`NO_SUCH_SET` for a capture's: "no frozen set answers to that sha"), so no choice the page offers can be drawn. */
+test.todo("REPORTED: calculationdraw is refused NO_SUCH_SET for every document the calc-set choice offers (it takes a declared table's digest) (calculation.mjs: calc-set docChoice, calculationdraw.send)");
+
 test("R14 \"Record what you saw at a report\" sends testify (her own words) and \"Count it for the drawn report\" sends spotcheckvisit tying it to the drawn item with her finding: two acts", async () => {
-  const p = await open(at, { plane: { testify: ok({ ok: true, capture_sha: SHA2, axes: {} }), spotcheckvisit: ok({ ok: true, standing: "yes" }) } });
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const R = await register(world, me);
+  const p = await openAs(world, me, "/app/calculation/" + R.first);
+  fill(p, { "calc-set": R.table, "calc-n": "2", "calc-seed": "2026-10-05-7f31", "calc-dq": "Was the pothole repaired?" });
+  await press(p, "calculationdraw", { reason: "a sample to visit" });
+  await settled(p);
+  const draw = p.byOp("spotcheck").at(-1).query.draw;
+  const items = (await me.read("spotcheck", { query: { draw } })).items.map((x) => x.item);
+  assert.equal(items.length, 2, "two reports drawn");
   assert.equal(button(p, "testify").textContent.startsWith(word("act.testify.label.calculation")), true);
   assert.equal(button(p, "spotcheckvisit").textContent.startsWith(word("act.spotcheckvisit.label.calculation")), true);
-  fill(p, { "calc-words": "The pothole at 60th and Seminary is filled and level.", "calc-observed": "2026-10-06" });
+  fill(p, { "calc-words": "The pothole at 60th and Seminary is filled and level.", "calc-observed": "2026-09-30" });
   await press(p, "testify");
-  assert.deepEqual(p.byOp("testify")[0].body, { words: "The pothole at 60th and Seminary is filled and level.", observedAt: "2026-10-06" });
+  await settled(p);
+  assert.deepEqual(p.byOp("testify")[0].body, { words: "The pothole at 60th and Seminary is filled and level.", observedAt: "2026-09-30" });
   assert.equal(p.byOp("spotcheckvisit").length, 0, "two acts: the visit is not counted until she says so");
-  fill(p, { "calc-item": "9", "calc-finding-0": true, "calc-photo": SHA });
+  assert.equal((await me.read("spotcheck", { query: { draw } })).counts.judged, 0, "and the store has counted none");
+  fill(p, { "calc-item": items[0], "calc-finding-0": true, "calc-photo": R.csv.sha });
   await press(p, "spotcheckvisit", { reason: "I visited it" });
-  assert.deepEqual(p.byOp("spotcheckvisit")[0].body, { draw: DRAW, item: "9", testimony: SHA2, finding: "yes", exhibits: [SHA], reason: "I visited it" });
+  await settled(p);
+  const sent = p.byOp("spotcheckvisit")[0].body;
+  assert.deepEqual([sent.draw, sent.item, sent.finding, sent.exhibits, sent.reason], [draw, items[0], "yes", [R.csv.sha], "I visited it"]);
+  assert.match(sent.testimony, /^[0-9a-f]{64}$/, "tied to her testimony, the capture testify made");
+  const after = await me.read("spotcheck", { query: { draw } });
+  const visit = after.items.find((x) => x.item === items[0]).visits[0];
+  assert.deepEqual([visit.finding, visit.visitor, visit.exhibits, visit.observed_at], ["yes", me.member, [R.csv.sha], "2026-09-30"], "the store holds her visit");
+  assert.equal(after.counts.yes, 1);
 });
 
 test("R5 R14 spotcheckvisit needs her testimony and a finding (control: none sends nothing); a refusal drawn beside it", async () => {
-  const p = await open(at, { plane: { testify: ok({ ok: true, capture_sha: SHA2 }), spotcheckvisit: refusedIn("NOT_DRAWN", "That report is not in the draw.") } });
-  fill(p, { "calc-item": "9", "calc-finding-1": true });
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const R = await register(world, me);
+  const p = await openAs(world, me, "/app/calculation/" + R.first);
+  fill(p, { "calc-set": R.table, "calc-n": "2", "calc-seed": "2026-10-05-7f31", "calc-dq": "Was the pothole repaired?" });
+  await press(p, "calculationdraw", { reason: "a sample to visit" });
+  await settled(p);
+  const draw = p.byOp("spotcheck").at(-1).query.draw;
+  const items = (await me.read("spotcheck", { query: { draw } })).items.map((x) => x.item);
+  fill(p, { "calc-item": items[0], "calc-finding-1": true });
   await press(p, "spotcheckvisit", { reason: "x" });
   assert.equal(p.byOp("spotcheckvisit").length, 0);
-  fill(p, { "calc-words": "Not repaired.", "calc-observed": "2026-10-06" });
+  fill(p, { "calc-words": "Not repaired.", "calc-observed": "2026-09-30" });
   await press(p, "testify");
-  fill(p, { "calc-item": "9", "calc-finding-1": true });
+  await settled(p);
+  /* a report that is not in the draw: the store refuses it */
+  const notDrawn = "99";
+  assert.ok(!items.includes(notDrawn));
+  fill(p, { "calc-item": notDrawn, "calc-finding-1": true });
   await press(p, "spotcheckvisit", { reason: "x" });
+  await settled(p);
   assert.equal(p.byOp("spotcheckvisit")[0].body.finding, "no");
+  assert.equal((await refused(world, me, "spotcheckvisit", p.byOp("spotcheckvisit")[0].body)).reason, "NOT_DRAWN", "the store's own refusal");
   assert.ok(main(p).textContent.includes(word("refusal.NOT_DRAWN")), "the refusal by its words");
+  assert.equal((await me.read("spotcheck", { query: { draw } })).counts.judged, 0, "nothing was counted");
 });
 
 test("R11 \"How spot-checks work\" is reached from calculation and says, in plain words, what a spot-check does, why the draw is random and recorded, what the result says and does not say", async () => {

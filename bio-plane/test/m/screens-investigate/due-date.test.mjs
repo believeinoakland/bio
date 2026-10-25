@@ -3,7 +3,7 @@
    `clockadopt`, `reminderset`); every value a test asserts is read back from the world's answers. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { inWorld, openAs, settled, rewrite, refused } from "./world.mjs";
+import { inWorld, openAs, rewrite, refused } from "./world.mjs";
 import { main, actsIn, button, fill, press, word, drew, dayOf } from "./fixtures.mjs";
 
 const REASON = "The clerk received it that day.";

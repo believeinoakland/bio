@@ -1,8 +1,12 @@
 /* screens-investigate R9: the member's own ties, on interface-shell's served page over a scripted plane. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, button, fill, press, word, drew } from "./fixtures.mjs";
+import { inWorld, openAs, settled } from "./world.mjs";
+
+const REASON = "It is so.";
+/** A body the member's ties can name, by her own act. */
+const entity = async (me, label) => (await me.act("entitycreate", { body: { kind: "body", label, note: "A body." } })).entity_id;
 
 const at = "/app/ties";
 
@@ -22,24 +26,39 @@ test("R9 reads memberties (her own ties, seen only by her and the administrators
 });
 
 test("R9 declaretie \"Add this tie\": its kind, who, her words, and whether a case names her by her handle or says \"a member of the group\", the disclosure stated either way", async () => {
-  const p = await open(at, { plane: { declaretie: ok({ ok: true, tie_id: "MTI-2026-0003" }) } });
+  const { world, me } = await inWorld();
+  const co = await entity(me, "Lakeshore Hardware Co-op");
+  const p = await openAs(world, me, at);
   drew(main(p), "screen.ties.either");
-  fill(p, { "tie-kind": "business", "tie-who": "ENT-2026-0702", "tie-note": "member-owner of Lakeshore Hardware Co-op", "tie-says": "name" });
-  await press(p, "declaretie");
-  assert.deepEqual(p.byOp("declaretie")[0].body, { entity: "ENT-2026-0702", kind: "business", note: "member-owner of Lakeshore Hardware Co-op", attribution: "name" });
-  const q = await open(at, { plane: { declaretie: ok({ ok: true }) } });
-  fill(q, { "tie-who": "ENT-2026-0702", "tie-note": "an interest" });
-  await press(q, "declaretie");
+  fill(p, { "tie-kind": "business", "tie-who": co, "tie-note": "member-owner of Lakeshore Hardware Co-op", "tie-says": "name" });
+  await press(p, "declaretie", { reason: REASON });
+  await settled(p);
+  assert.deepEqual(p.byOp("declaretie")[0].body, { entity: co, kind: "business", note: "member-owner of Lakeshore Hardware Co-op", attribution: "name" });
+  const held = (await me.read("memberties", {})).ties.filter((t) => !t.withdrawn);
+  assert.deepEqual(held.map((t) => [t.entity, t.kind, t.note, t.attribution]), [[co, "business", "member-owner of Lakeshore Hardware Co-op", "name"]], "the world holds the tie");
+  const q = await openAs(world, me, at);
+  fill(q, { "tie-who": co, "tie-note": "an interest" });
+  await press(q, "declaretie", { reason: REASON });
+  await settled(q);
   assert.equal(q.byOp("declaretie")[0].body.attribution, "group", "by default a case says \"a member of the group\"");
+  const both = (await me.read("memberties", {})).ties.filter((t) => !t.withdrawn);
+  assert.equal(both.find((t) => t.note === "an interest").attribution, "group", "the world holds it so");
 });
 
 test("R9 withdrawtie \"Remove a tie\" from its row, with a reason (control: an unnamed tie sends nothing)", async () => {
-  const p = await open(at, { plane: { withdrawtie: ok({ ok: true }) } });
+  const { world, me } = await inWorld();
+  const co = await entity(me, "East Bay Transit");
+  await me.act("declaretie", { body: { entity: co, kind: "employer", note: "East Bay Transit", attribution: "group" } });
+  const tie = (await me.read("memberties", {})).ties[0];
+  const p = await openAs(world, me, at);
   const row = main(p).querySelectorAll("tr.cs-r")[0];
   await p.click(row.querySelector('[data-shell="row"]'));
   await press(p, "withdrawtie", { within: main(p).querySelectorAll("tr.cs-r")[0].nextElementSibling, reason: "I left that job" });
-  assert.deepEqual(p.byOp("withdrawtie")[0].body, { tieId: "MTI-2026-0001", reason: "I left that job" });
-  const q = await open(at);
+  await settled(p);
+  assert.deepEqual(p.byOp("withdrawtie")[0].body, { tieId: tie.tie_id, reason: "I left that job" });
+  const after = (await me.read("memberties", {})).ties.filter((t) => !t.withdrawn);
+  assert.equal(after.length, 0, "the world holds the tie withdrawn");
+  const q = await openAs(world, me, at);
   await press(q, "declaretie");
   assert.equal(q.byOp("declaretie").length, 0);
 });
