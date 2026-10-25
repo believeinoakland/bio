@@ -152,7 +152,7 @@ export class QueueProducers {
   /* R49: what this one read has already asked, cleared with it, so a kind of fact is asked once for all the items that name it. */
   #memo = null;
   #fresh() {
-    return { titles: new Map(), cases: new Map(), owners: new Map(), seen: new Map(), names: new Map(), caseProject: new Map(),
+    return { titles: new Map(), cases: new Map(), owners: new Map(), seen: new Map(), names: new Map(), caseProject: new Map(), scopes: new Map(),
              authors: new Map(), captured: new Map(), lead: { homes: new Map(), facts: new Map() }, homes: new Map(), options: new Map(), shared: null };
   }
   /** The ids of `ids` that are strings, once each, that `held` has not answered yet. */
@@ -229,8 +229,29 @@ export class QueueProducers {
     if (typeof id !== "string" || !id) return null;
     return this.#titlesOf([id]).get(id) ?? null;
   }
-  /** What a sentence calls a bundle: its title, else its id. */
-  #nameOf(id) { return this.#titleOf(id) ?? (id === undefined || id === null ? "" : String(id)); }
+  /** R43: the scope of each of `ids` that is a published case, from publication's `published_cases` (its R40, a stated read
+   *  contract): the newest edition that states one; null for an id that is no case or states none. One statement for all not yet held. */
+  #scopesOf(ids) {
+    const held = this.#memo.scopes;
+    const todo = QueueProducers.#missing(held, ids);
+    if (todo.length) {
+      const found = this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='published_cases'`)
+        ? new Map(this.#rows(`SELECT p.case_id, p.scope FROM published_cases p WHERE p.case_id IN (SELECT value FROM json_each(?))
+                              AND p.scope IS NOT NULL AND p.scope <> ''
+                              AND p.edition = (SELECT MAX(q.edition) FROM published_cases q WHERE q.case_id = p.case_id AND q.scope IS NOT NULL AND q.scope <> '')`,
+                              JSON.stringify(todo)).map((r) => [r.case_id, r.scope]))
+        : new Map();
+      for (const id of todo) held.set(id, found.get(id) ?? null);
+    }
+    return held;
+  }
+  /** What a sentence calls a holder: a bundle by its title, a published case by its scope (its reading name), else its id (R43). */
+  #nameOf(id) {
+    const title = this.#titleOf(id);
+    if (title) return title;
+    if (typeof id === "string" && id) { const scope = this.#scopesOf([id]).get(id); if (scope) return scope; }
+    return id === undefined || id === null ? "" : String(id);
+  }
   /** What a sentence calls a member (C94): her handle; the founder by the handle she holds, else `member.founder.unnamed`'s word
    *  (DEC-230), never `admin`; any other member with no handle by her id, as R46 states (the word list holds no key for a member
    *  who has none: named in the job's QUESTION). */
