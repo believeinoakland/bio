@@ -45,10 +45,12 @@ export function zipStored(entries) {
   const end = new DataView(new ArrayBuffer(22));
   end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
   end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
-  const all = [...parts, ...central, new Uint8Array(end.buffer)];
-  const out = new Uint8Array(all.reduce((n, p) => n + p.length, 0));
+  /* the file is laid into one buffer, each part released as it is placed, so no second copy of the parts is held */
+  const out = new Uint8Array(offset + cdSize + 22);
   let at = 0;
-  for (const p of all) { out.set(p, at); at += p.length; }
+  for (let i = 0; i < parts.length; i++) { out.set(parts[i], at); at += parts[i].length; parts[i] = null; }
+  for (const p of central) { out.set(p, at); at += p.length; }
+  out.set(new Uint8Array(end.buffer), at);
   return out;
 }
 
@@ -58,6 +60,9 @@ export function xmlText(s) {
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f￾￿]/g, "")
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+
+/** R22: the last column a sheet has, XFD; nothing is written past it. */
+export const XLSX_MAX_COLUMNS = 16384;
 
 /** 1 → A, 27 → AA (bijective base 26). */
 export function colName(n) {
@@ -90,6 +95,7 @@ function cellXml(ref, c) {
 function sheetXml(rows) {
   const body = rows.map((cells, i) => {
     const r = i + 1;
+    if ((cells || []).length > XLSX_MAX_COLUMNS) throw new RangeError(`a sheet has at most ${XLSX_MAX_COLUMNS} columns (XFD)`);
     const xs = (cells || []).map((c, j) => cellXml(a1(r, j + 1), c)).join("");
     return xs ? `<row r="${r}">${xs}</row>` : "";
   }).join("");
