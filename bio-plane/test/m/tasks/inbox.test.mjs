@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { world, inbox, ev, host, NOW, iso } from "./world.mjs";
+import { homeOfHomed, sha } from "../provenance/fixtures.mjs";
 import { tasksOf, tasksOps, Tasks, TASK_DRAIN_BACKSTOP_MS, TASK_DRAIN_RETRY_LIMIT, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar,
          TASKS_TABLES, tasksOwns } from "../../../src/tasks/index.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
@@ -184,8 +185,8 @@ test("R1, R3: an act given no instant stamps the instance's clock, not the wall'
   // the instance binding, when no clock is given
   const h = host();
   const t = tasksOf(h.host, { record: h.record, membership: h.membership, start: false, env: { BIO_NOW_MS: String(Date.parse("2030-01-02T03:04:05Z")) },
-    capture: { taskEvents: () => [ev("a3")], taskEventCount: () => 0, taskEventRemove: () => true },
-    provenance: { homeOf: () => ({ bundleId: DOC2 }) }, connections: { edgeSevered: () => false } });
+    capture: { taskEvents: () => [ev(sha("a3"))], taskEventCount: () => 0, taskEventRemove: () => true },
+    provenance: homeOfHomed({ [sha("a3")]: DOC2 }), connections: { edgeSevered: () => false } });
   t.migrate();
   h.db.prepare(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
                 VALUES (?,?,?,?,?,?,?,?)`).run(DOC2, "information", "g", "t", "collected", iso(NOW), iso(NOW), "sha");
@@ -304,8 +305,7 @@ test("R18 (K2038): after a tick that drains nothing the wake backs off by each e
 });
 
 test("R25 (K4488): an event whose capture is filed after its eighth try is run at the next wake, never dropped by a count", () => {
-  const homes = {};
-  const w = inbox([ev("a3")], homes);
+  const w = inbox([ev("a3")], {});
   w.bundle(DOC2);
   const c = w.t.drainConsumer();
   let t = NOW;
@@ -317,7 +317,7 @@ test("R25 (K4488): an event whose capture is filed after its eighth try is run a
   assert.equal(w.queue[0].attempts, Tasks.TASK_DRAIN_RETRY_LIMIT, "eight tries came back unfiled");
   assert.notEqual(t, null, "still queued: a wake remains, however many tries it has had");
   assert.ok(t - Date.parse(w.queue[0].lastTry) <= Tasks.TASK_DRAIN_MAX_WAIT_MS, "backed off to at most one hour");
-  homes.a3 = DOC2;     // the capture is filed after its eighth try
+  w.home("a3", DOC2);     // the capture is filed after its eighth try
   w.now = t;
   const r = c.tick(t).drain;
   assert.deepEqual(r.created.map((x) => x.refers_to), [DOC2]);

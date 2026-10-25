@@ -181,3 +181,36 @@ K4269 basis, stated: a sentence with a hole in it is a code bug in the owning mo
 **Run:** your suites, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio queue-producers tranche/T51 job/T51/queue-producers`.
 
 **Record and COMPLETE:** what changed (file:line), each failing-first test red then green, the platform figures, suites and checks, the requirement lines you propose (BOB writes `build/requirements/`), census ops, the rows owed to UX-DESIGN, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B13 · START
+
+START · QUEUE-PRODUCERS #25 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B job, batch 6: re-point 33 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #292 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/queue-producers tranche/T51 && git branch -m job/T51/queue-producers stale/queue-producers-local && git checkout -b job/T51/queue-producers origin/job/T51/queue-producers`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module queue-producers`; record `build/jobs/T51/queue-producers.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Your own fixture lines, done in this job** (33; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- action-producers/actionItems (1 judgment): action.test.mjs:20
+- escalation/escalationsDue (1 judgment): action.test.mjs:88
+- CODE (PROJECT_NOT_PARTICIPANT: no product file gives it; contradiction `conflictNotices` answers membership `notAParticipant` = PROJECT_ACT_NOT_A_PARTICIPANT. Use that, from contradiction/readRefusals): contradictions.test.mjs:159
+- publication/caseDocumentFacts (1 judgment/1 mechanical): credit.test.mjs:28; world.mjs:159
+- docket/coreDue (4 judgment/1 mechanical): docket.test.mjs:36; every.mjs:65; localday.test.mjs:38; words.test.mjs:214; world.mjs:183
+- monitoring/monitoringReads (5 judgment/3 mechanical): every.mjs:59; feeditems.test.mjs:130; producers.test.mjs:114,140; reads.test.mjs:21,121; words.test.mjs:127; world.mjs:173
+- provenance/homeOfHomed (4 judgment): feeditems.test.mjs:125; lead.test.mjs:18; producers.test.mjs:29; reads.test.mjs:227
+- FIX-E (per-feed provider reads, see the part): feeds.test.mjs:74
+- project-roster reads (2 judgment): feeds.test.mjs:98; inviter.test.mjs:74: no `projectReadRefusals` fixture exists (K5088: `projectList` and `projectInvitations` never refuse, R35, R36); re-point each case to the real answer (an empty `ok: true` list for an unknown viewer; the throw is the `boom` case), no hand-built `REFUSED`
+- reevaluation/noticesRead (1 judgment): noticed.test.mjs:10
+- monitoring/flaggedRefusal (1 judgment): producers.test.mjs:133
+- provenance/homeOfEmpty (2 mechanical): proposals.test.mjs:32; world.mjs:150
+- contradiction/readRefusals (2 judgment): reads.test.mjs:90,98
+- CODE (SCHEDULED_SOURCE_CHANGED and SCHEDULED_HOLD_CHANGED are in no source; ratification gives SCHEDULED_SOURCES_CHANGED and SCHEDULED_TIES_CHANGED, use those): scheduled.test.mjs:62,157
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . queue-producers --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/queue-producers.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
