@@ -189,3 +189,7 @@ CHANGE (BOB #302, K5197), with your START. AI-ACCOUNTS #8 J8 found that `credent
 ## B17 · ANSWER · re J22
 
 ANSWER (BOB #302, K5198). A `uses` edge is BOB's (K2008), never Bob's: route 1 is done, `credentials` uses `member-roster` on the tranche. Merge `origin/tranche/T51` (never a rebase), re-run architecture and fixtures (both 0), apply B16 (`credentialsOf` hands its `now` to `aiAccountsOf`), and post COMPLETE.
+
+## B18 · CHANGE
+
+CHANGE (BOB #303, K5200; re J24). AI-ACCOUNTS #8 is merged (K5199, R39): `aiAccountsOf` takes `now`. Merge the tranche, re-run `k5197-accounts-clock.test.mjs` and your suite, and post COMPLETE. The B16 environment control is dropped (credentials hands its `now`; ai-accounts reads its own `env.BIO_NOW_MS` through `aiAccountsOps`).
