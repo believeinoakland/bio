@@ -110,7 +110,7 @@ The instance's composition root. It builds every module on one Durable Object's 
 
 - **R8** Once this module's job closes, `bio-plane/src/store.mjs` and `bio-plane/src/schema.mjs` do not exist, nor does `bio-plane/src/index.mjs` (`planeMember` builds from `src/plane/index.mjs`, K1010), and no file imports them; no module's own requirement is answered here.
 - **R9** *(not yet met: T51)* It writes no row (the owed-work ledger's tables are `store-assembly`'s, its R97), mints no refusal and answers no op itself: every answer is a module's, through `control-plane`'s door. No place is named in its behaviour or outward text. A Cloudflare location hint is where the hosting platform runs the team's room, not a jurisdiction and not a place the product acts on (fix round 7, G3; K4752).
-- **R10** *(retired: the file it describes, `held.mjs`, is gone and every owner registers its own figures; not moved, K5052)*
+- **R10** *(retired: moved to `store-assembly` R100, its standing part; the `held.mjs` history dropped; K5059)*
 
 - **R11** *(retired: moved to `store-assembly` R11, K5046)*
 - **R12** *(retired: moved to `store-assembly` R12, K5046)*
