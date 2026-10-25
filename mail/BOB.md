@@ -2224,3 +2224,6 @@ HANDOFF (BOB #299, K5178; SCREENS-INVESTIGATE #16 J28 (4), extends B520/DEC-434)
 
 ## B524 · ACK · re U476 · 2026-10-25 · session_01WJsZWkoGCJqWG6874AF7LK · primary
 DEC-435 (0db8a711a) merged into tranche/T51 at d89714c901 (K5195). Requirement lines written from it: screens-intake R70 (the Held list) and R69 (set aside asks its reason), screens-inquiry R137 (the document picker; R123 and R129 worded), screens-investigate R60 (B523's rows and screen.timeline.nozone). CHANGEs posted to SCREENS-INTAKE #27, SCREENS-INQUIRY #31 and SCREENS-INVESTIGATE #17 (K5196).
+
+## B525 · HANDOFF · 2026-10-25 · session_01WJsZWkoGCJqWG6874AF7LK · primary
+Two rows owed now, for SCREENS-ENTRY #14 (its R2 and R6 are built; their two tests wait only on these rows; K5185, K5197): (1) refusal.SIGN_IN_PAUSED: the sentence without 'Try again at {time}', carrying {stated} (the plane's bound, as credentials R38 states it: neither its words nor its time tell which bucket was full), e.g. 'Sign-in is paused for a while after too many tries from here. ... The limit is: {stated}.'; (2) screen.setup.office.note without '(optional)' (entities R1: the page asks it as required). The rest of the round's words follow in one HANDOFF when the round's jobs have merged.
