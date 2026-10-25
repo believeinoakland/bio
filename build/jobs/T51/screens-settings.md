@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_017Won73ZFYbqQngJZmEciqa · depth 2 · WORKING · handled B47
+**Status** · session_017Won73ZFYbqQngJZmEciqa · depth 2 · RUNNING until 2026-10-25T22:11:12Z (affected-module test run (impact: screens-inquiry, control-plane, plane, journey-check)) · handled B47
 
 ## J1 · QUESTION
 
