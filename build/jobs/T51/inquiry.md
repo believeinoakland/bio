@@ -119,3 +119,15 @@ Tests and checks
 - `checks/run.mjs` whole: format and architecture 0 failures; words inline 0, plain 0, missingkey 0 (nothing for inquiry); the 7 coverage failures (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring) and 7 testcopy failures (op-grades) are other modules', none in my files.
 
 Size (session_01CYcxZgZhrDnqWKu6J5KF4X): test runs 4, module lines 3835
+
+## J6 · QUESTION
+
+QUESTION (best reading given; I carry on). Three things for BOB, none decided by me.
+
+1. **modules.json: `inquiry` does not declare `duties` in `uses`.** FIX-E for held-legs.test.mjs:118 (duties/occurrencesOf) means importing `bio-plane/test/m/duties/fixtures.mjs`; `checks/architecture.mjs` refuses it ("duties, which inquiry does not declare in uses"). inquiry's source reaches duties only through leg-earning, so this is the first direct use. Please add `duties` to inquiry's `uses` (build/modules.json is not mine). Until then architecture shows that one failure; my re-point stands.
+
+2. **R8/R85 half "conclude with `reading` and no `affirmed` is ok through basis-versions `world()`" is not met by inquiry alone.** I stored the walker's case with `ground` (one labelled ground, one unlabelled supporting leg: lands, projection holds the label on the grounded leg only). The version block that `conclude` writes copies the question's legs with their labels into a version, and basis-version-grammar R3 (C-25.5 `VERSION_PARTITION_INCOMPLETE`, "labelled all or none") still refuses it: `{basis: [A ground "the minutes", B unlabelled], grounds: [the minutes]}` through basis-versions `world()`+`conclude({reading})` answers BASIS_VERSION_REFUSED / VERSION_PARTITION_INCOMPLETE. That is basis-version-grammar's (and basis-versions' R51 copy), not inquiry's: it needs the same amendment inquiry-grammar R68 got (an unlabelled supporting leg beside labelled grounds is a necessary leg in a version too). I did not write a test for it in my module.
+
+3. **R85's "read back as answered" (inquiry R65).** `ground` with `grounds: []` now holds `grounds: []` in the document (no longer removes the key), every supporting leg necessary; `divide` passes it to the children. To read it back I added one field to `partitionOf`: `answered` (true when any leg names a ground or the document holds a `grounds` array, even empty); `grouped` keeps its meaning (a leg names a ground). So all-"No" reads `{grouped: false, answered: true, groups: [], ungrouped: [all]}`; never partitioned reads `answered: false`. If you want `grouped` itself to be true for it, say so (a one-line change). R65's text needs the field.
+
+Also for your record: the Session Log line of an emptied partition now reads "no ground; N leg(s) read as necessary" (was "grouping removed"; `loggedChanges` parses both alike). NO_PARTITION's localized detail still says "Pass an EMPTY array to remove the grouping"; changing it is a setup-words row (not mine), left.
