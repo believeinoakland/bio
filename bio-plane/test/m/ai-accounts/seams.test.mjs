@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
 import { world, SEAL, SIGNIN_TOKEN } from "./fixture.mjs";
+import { tableDeclarationRefusals } from "../record-core/fixtures.mjs";
 import { aiAccountsOf, aiAccountsOps, AI_ACCOUNT_CHECKS, AI_WORDS, KEPT_AWAY_UNREADABLE, AI_ACCOUNTS_TABLES,
          AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "../../../src/ai-accounts/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
@@ -337,7 +338,8 @@ test("R28: a store whose tables another module declared first refuses ai-account
   const w = world();
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...args) { const st = db.prepare(q); return st.columns().length ? st.all(...args) : (st.run(...args), []); } };
-  const core = { declareTable: (module, entries) => ({ ok: false, reason: "TABLE_DECLARED", table: entries[0].name, module, declaredBy: "credentials" }) };
+  const refused = tableDeclarationRefusals("account_references", { by: "credentials" });
+  const core = { declareTable: () => refused.declaredAgainByTable };
   const a = new AiAccounts({ sql, core, membership: w.m, sealSecret: SEAL });
   assert.throws(() => a.migrate(), /ai-accounts: record-core refused its table declaration: TABLE_DECLARED/);
 });
