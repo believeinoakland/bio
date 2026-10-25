@@ -189,3 +189,34 @@ Size (session_017s65dDGHCvSe8iRWnSsjCe): test runs 6, module lines 1645
 ## J10 · COMPLETE
 
 FR-66 done (J9 in the record, pushed): C80 R68's test now follows member-roster R76 (claimed founder answers her facts, unclaimed null, both tested); R154 delegates added for expertiseWithdraw, endorsementsOwed, expertiseAwaitingConfirmation, test green. Membership suites 178 pass, 0 fail; checks 0 failures; ownership lists build/requirements/membership.md only (R154 amended). Module lines 1645.
+
+## J11 · COMPLETE
+
+Fix round 10, Wave A batch 2 (B9; START `build/plan/starts-T51-F10/membership.txt`). Read whole: `build/requirements/membership.md` (both parts), `build/plan/fix-round-10-T51.md`, `build/plan/fix-round-10-waves.md`, the START, `bio-plane/test/m/membership/fixture.mjs`, and promotion's `fixtures.mjs` (its `makeMembership` double). Commit `3d301f571a` pushed to `job/T51/membership`.
+
+**Causes done:** none in this START.
+
+**Published:** `bio-plane/test/m/membership/fixtures.mjs` (new), `projectActRefusals`. The real membership over `world()`, with `ann` the owner of `PRJ-1` (a creation with an owner, discoverable), `bob` invited and joined, `cy` invited and not joined, `dee` neither, `second` an administrator. It returns `membership` (the whole real instance, for a user that needs more than the two answers, the whole `makeMembership` double included), `projectAuthority(p, identity, need, act)` (R55), `visibilitySettingRefusal(v)` at a creation (R47), and `identity`. Its test is `fixtures.test.mjs`: three tests, each naming its requirement (R55 twice, R47), each checking the real answer, the refusal shape included.
+
+**Markers added** (trailing comments; no line moved):
+- `fixture.mjs:55`, `fixture.mjs:99`: `fixtures-own: harness`, the founder's claim, a world helper named like an op.
+- `t19-enrol-boot.test.mjs:39`: `fixtures-generic: X`, the made-up refusal reason.
+- `t45-project-guard.test.mjs:124`: `fixtures-generic: EMPTY_REASON`, the empty reason.
+- `t45-project-guard.test.mjs:125`: `fixtures-generic: X`, the made-up refusal reason in an array.
+- `t47-check-tables.test.mjs:86`: `fixtures-generic: NO_SUCH_CODE`, the invented code.
+
+**Lines left:** none for membership. `node checks/fixtures.mjs /home/user/bio membership --list`: 0 failures (answer 0, accepted 6: two own, four generic). I ran it with the absolute root: with `.` the check reads no file and reports 0 (K5066).
+
+**Users:** promotion's two lines (`fixtures.mjs:163,166`, judgment) re-point in promotion's own job, not here. `build/plan/impact.mjs origin/tranche/T51 HEAD` names membership alone for this change (32 of its 33 test files), so no other module's tests are named.
+
+**Tests and checks:**
+- Membership suite, `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/membership/*.test.mjs`: 180 pass, 0 fail (exit 0). Its three fixture tests are among them.
+- `checks/format.mjs /home/user/bio`: 0 failures (178 modules).
+- `checks/architecture.mjs /home/user/bio membership`: 0 failures.
+- `checks/coverage.mjs /home/user/bio membership`: 50 of 50 live requirement ids named by a test.
+- `checks/words.mjs /home/user/bio membership`: 0 failures (6,543 literals; inline 0, testcopy 0, missingkey 0, handlist 0).
+- `checks/ownership.mjs /home/user/bio membership tranche/T51 job/T51/membership`: 0 failures (7 files changed by membership).
+
+**Note for BOB:** commit `3d301f571a` carries a Co-Authored-By trailer that names the model. The system rule says no model identifier in commit messages, and I missed it when I wrote the message. The commit is pushed, and rewriting it would be a force-push, so I have not amended it. Later commits omit the trailer.
+
+Size (session_01PkQWxjvpvMWiosMQuytmKK): test runs 3, module lines 1645 (`bio-plane/src/membership/*.mjs`, unchanged; this job changes only test-side files).
