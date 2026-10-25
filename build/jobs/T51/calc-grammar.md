@@ -44,3 +44,14 @@ CHANGE B2 is done on job/T51/calc-grammar (commit 3d763245de). I merged tranche/
 ## J3 · QUESTION
 
 R23 reading (measured on the tip: draw over 1M keys is one 12 s synchronous stretch; interval at frame_size 10,000 takes 57 s, 5,000 takes 7.9 s, growth ~n^3). My reading, which I build unless you say otherwise: (1) draw stays synchronous and unchanged in answer (R16 callers/tests); I add draw's yielding twin 'drawSliced(args, {yieldNow})' exported from the index, async, same {sample, frame_hash, seed, method} byte for byte, every stretch between yields bounded to a fixed slice of keys (hash, top-n heap, chunked merge for frame_hash). (2) interval stays synchronous with the same low/high; its tail sums become an exact BigInt recurrence on the hypergeometric terms (O(n) per tail, log N tails) instead of recomputing binomials per term. (3) New public name drawSliced is the only surface change; no other module calls draw or interval today, so nothing else is touched. Tell me if R23 meant draw itself becomes async.
+
+## Job 110 (CALC-GRAMMAR #4): R23, G183 (S-31's draw and interval)
+
+- Reproduced on the tip first (measured through the index): `draw` over 1,000,000 keys was one synchronous stretch of 12.2 s; `interval` took 0.7 s at frame_size 2,000, 7.9 s at 5,000 and 57 s at 10,000 (growth about n^3), so 100,000 was out of reach.
+- Applied: `draw.mjs` computes the draw as one generator that yields at each slice of `DRAW_SLICE` (4,000) keys: the duplicate check, the hashing into a bounded heap of the n lowest ranks, the extraction, and the frame hash (sorted chunks merged, the canonical JSON streamed through `createSha256`). `draw` runs it through; the new `drawSliced(args, {yieldNow})` awaits `yieldNow` between slices; both answer alike, byte for byte. `interval`'s tail sums follow the exact term ratio in whole numbers (one binomial product, then small multiplications) in place of two binomials per term; the same low and high (R17's test over every small frame passes unchanged). Measured now: 100,000 frame, n 400: 27 ms; n 2,000: 141 ms; n 50,000: 11.5 s (worst shape).
+- New public names: `drawSliced`, `DRAW_SLICE` (index). Nothing else calls `draw` or `interval`. QUESTION J3 asked whether R23 meant `draw` itself async; no answer had come, so built on the stated reading (draw stays sync).
+- Tests (`key-draw.test.mjs`): R23 1,000,000-key draw equals an independent node:crypto ranking and canonical frame hash, yields at least 250 times, longest stretch under 500 ms; R23 interval over 100,000 checks low and high against a direct binomial-sum rule at the bound and one beyond.
+- Deferred: none. Found in other modules: none.
+- Ran: `node --test bio-plane/test/m/calc-grammar/` 37 of 37 pass; format 0 failures; architecture 0; coverage 23 of 23 ids, 0; words 0; ownership 0.
+
+**Size (session_01FexeYxPJJZWcYdHzcUMoYo): test runs 4, module lines 1441.**
