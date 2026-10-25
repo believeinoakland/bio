@@ -71,3 +71,10 @@ test("R156 a handed clock answers before the environment's BIO_NOW_MS", async ()
   assert.equal(w.row(`SELECT joined_at FROM project_participants WHERE project_id=? AND member_id=?`, "PROJ-H", "ann").joined_at,
     new Date(HANDED).toISOString(), "the handed `now` is read first, before BIO_NOW_MS");
 });
+
+test("R156 a member-roster instant recorded through membershipOps reads BIO_NOW_MS: the members delegate takes the same clock", async () => {
+  const w = await world().group("ann");
+  const answer = membershipOps(w.m, url("by=admin"), { holders: "ann", note: "pinned" }, pinnedEnv(PINNED)).hostingaccessset();
+  assert.equal(answer.ok, true, "the hosting-access record is made");
+  assert.equal(answer.at, PINNED_ISO, "member-roster's instant reads BIO_NOW_MS when the act comes through membership");
+});

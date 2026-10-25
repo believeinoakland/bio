@@ -6,8 +6,8 @@
  * Design: docs/architecture/BIO_Membership_Architecture_v2.md.
  *
  * SHAPE (K61). `membershipOf(ctx)` answers the one instance for a Durable Object's storage, over `ctx.storage.sql`, and
- * reaches record-core by `recordOf(ctx)` on the same `ctx` (`bundleInfo`, `declarePurge`, …) and `member-roster` by
- * `membersOf(ctx)`; a test may pass its own record-core as `membershipOf(ctx, { record })`. This module's SQL joins
+ * reaches record-core by `recordOf(ctx)` on the same `ctx` (`bundleInfo`, `declarePurge`, …) and builds its member-roster
+ * half on its own clock (R156); a test may pass its own record-core as `membershipOf(ctx, { record })`. This module's SQL joins
  * record-core's `bundles` only on the stated read contract, `bundle_id` and `object_type` (record-core R37), and reads
  * `members` only for `member_id`, `role` and `status` (`member-roster` R67); every other bundle fact (a project's title) is
  * asked of `core.bundleInfo` (R34).
@@ -15,7 +15,7 @@
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { MEMBERSHIP_PROJECT_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
-import { Members, membersOf, membersOps, ROOT_ADMIN, CAPABILITIES, adminMath, listenerRefusal, notAnAdmin, noSuchMember,
+import { Members, membersOps, ROOT_ADMIN, CAPABILITIES, adminMath, listenerRefusal, notAnAdmin, noSuchMember,
          MODULE_ORDER, moduleOrderFrom, viewerMember, carriedProject, baseViewer,
          MEMBER_EXEMPT_TABLES, MEMBER_DECLARED_TABLES } from "../member-roster/index.mjs";
 import { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
@@ -231,10 +231,11 @@ export class Membership {
   constructor({ sql, core = null, members = null, now = null } = {}) {
     this.sql = sql;
     this.core = core;
-    /* R154: the members half, `member-roster`'s `Members` over the same storage. */
-    this.members = members ?? new Members({ sql });
     this.now = typeof now === "function" ? now : null;   /* R156: the clock handed in, else the store's environment, else the wall clock */
     this.env = null;   /* R156: the store's environment, set by `membershipOps` through `membersOps` (`#nowMs`) */
+    /* R154: the members half, `member-roster`'s `Members` over the same storage. R156 (K5202): it reads this instance's clock,
+       so member-roster's instants follow the store's environment as membership's own do; a `members` handed in is left as handed. */
+    this.members = members ?? new Members({ sql, now: () => this.#nowMs() });
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -1359,13 +1360,14 @@ export class Membership {
 }
 
 /* K61: the one Membership of a Durable Object's storage, made on first use over its `sql`, reaching record-core by
-   `recordOf(ctx)` on the same `ctx` and `member-roster` by `membersOf(ctx)`. `record` (a test's own record-core) is read on
-   the first call only. */
+   `recordOf(ctx)` on the same `ctx`. Its member-roster half is its own `Members`, built on this instance's clock (R156,
+   K5202), so an instant member-roster records follows the store's environment; `membersOf(ctx)` stays member-roster's
+   reads. `record` (a test's own record-core) is read on the first call only. */
 const OF = new WeakMap();
 export function membershipOf(ctx, { record = null } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let m = OF.get(storage);
-  if (!m) { m = new Membership({ sql: storage.sql, core: record ?? recordOf(ctx), members: membersOf(ctx) }); OF.set(storage, m); }
+  if (!m) { m = new Membership({ sql: storage.sql, core: record ?? recordOf(ctx) }); OF.set(storage, m); }
   return m;
 }
 
