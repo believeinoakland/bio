@@ -1,6 +1,6 @@
 # admission (T51)
 
-**Status** · session_017HGmsDoJ43QYVkTR8QtABy · depth 2 · COMPLETE · handled B2
+**Status** · session_014YKSz5P9aQ8AFfPFSti6pv · depth 2 · COMPLETE · handled B2
 
 ## Completion (T51-108)
 
@@ -95,3 +95,22 @@ COMPLETE, fix round 8, cause G119 (R32, one session read per request), session A
 **Tests and checks:** admission 73 of 73. Impact set (origin/tranche/T51..HEAD): admission 20/20, control-plane 70/87, plane 59/73, pdf-worker 1/12 as named users. control-plane folder 477 of 478: `R122 (the page's bootstrap is read once per load)` failed once under a concurrent plane run (54 s) and passes alone (clean tranche: pass; this branch: pass). plane folder 430 of 434: `R24` words and the two `R77 L` child-capped PDF tests fail as on the clean tranche (named in J4); `R84 G41` failed under load, passes alone on this branch and on the clean tranche. format 0 failures; architecture 0 failures; coverage 32 of 32 live ids named; words 0 failures; ownership 0 failures.
 
 Size (session_017HGmsDoJ43QYVkTR8QtABy): test runs 8, module lines 1590
+
+## Completion (B6, fix round 10, cause R27b)
+
+**R27b** (admission R21, "Fix round 10, cause 27b").
+1. Root cause: `admission/window.mjs` `#counted` ran a `DELETE` of passed buckets and an `INSERT ... ON CONFLICT DO UPDATE` in a transaction on every public op (old `:79-96`): 50 counts changed 50 rows.
+2. Missed: no test counted rows changed by counts; tests read the table after each count.
+3. Now: the counts are kept in memory per table and key (a key's stored rows are read once, at its first count after the object starts); the limit is judged from memory; `flush()` upserts the changed counts (absolute values) and drops passed buckets in one transaction, run by a timer `WINDOW_FLUSH_MS` (5000, exported, injected through `admissionOf(ctx, {flushMs})`) after the first unwritten count. A failed write keeps the counts and warns without data. Failing-first: new `r10-doorwindow-writes.test.mjs` (3 tests: 50 counts by source and by session change at most 2 rows; the timer writes after the interval and not before, a restart reads what was written; controls: the 301st refused from memory, two sources apart, a refused request not counted). Run against the old `window.mjs` it is red (3 of 3 fail; the first on the missing flush, so the 50-row figure itself is the old code's by reading, not printed); green now.
+4. Platform: P is BOB's (R-QUIET: `do-doorwindow` p50/max on the re-walk). Timers are unref'd; the interval is an injected constant (R-CLOCK).
+Existing tests: `harness.mjs` `rows()` and `t49.test.mjs` `sessionRows` flush before reading the table (the counts are now written later, by requirement); `storeWorld` takes `flushMs`. No assertion weakened.
+
+**Applied:** R27b. **Deferred:** none. **Found in another module:** none. **Stale generated artifacts:** `bio-plane/dist/bio-plane.bundled.mjs` (contains window.mjs); BOB regenerates. **Requirement wording:** none proposed.
+
+**Tests and checks:** admission folder 76 of 76; plane/control-plane tests naming doorwindow (t41, t35-door, t38-door, r8-hops) 23 of 23; impact set: admission 20/21, plane 68/89 users named, those touching the window run. format 0 failures; architecture 0; coverage 32 of 32; words 0; ownership 0.
+
+Size (session_014YKSz5P9aQ8AFfPFSti6pv): test runs 6, module lines 1593
+
+## J6 · COMPLETE
+
+COMPLETE · ADMISSION #18 · R27b: the door window counts in memory, written at most every 5 s (WINDOW_FLUSH_MS, injected). Failing-first r10-doorwindow-writes.test.mjs red on old code, green now; admission 76/76, plane/control-plane window users 23/23; format, architecture, coverage (32/32), words, ownership 0 failures. Stale: dist/bio-plane.bundled.mjs. Details in my record's last section.

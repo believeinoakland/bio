@@ -224,7 +224,10 @@ export class Finder {
    *  most `FIND_CAPTURES_PER_CALL`): one `{kind, items, count, truncated, nothing, not_read}` per kind asked. `whole` is
    *  true when these captures are the whole scope, so a kind with no match and nothing unread may say "Nothing here". */
   find({ captures, kinds, term, limit, viewer, whole }) {
-    const data = new Map(captures.map((c) => [c.capture_sha, this.#load(c)]));
+    /* R20: a `term` find takes its hits from the index and reads the stored text of the units holding a hit alone; every other
+       kind reads the text it matches over. */
+    const withText = kinds.some((k) => k !== "term");
+    const data = new Map(captures.map((c) => [c.capture_sha, this.#load(c, withText)]));
     const language = this.r.localeOf();
     return kinds.map((kind) => {
       const acc = { items: [], not_read: [], truncated: false };
@@ -339,10 +342,10 @@ export class Finder {
   }
 
   /* One capture's reading (content type, language, typed cells, items) and its text units in reading order. */
-  #load(c) {
+  #load(c, withText) {
     const row = this.r.oneOf(`SELECT content_type, reading FROM readings WHERE capture_sha = ?`, c.capture_sha);
     const reading = row ? safeJson(row.reading) : null;
-    const units = this.r.rowsOf(`SELECT seq, extent_kind, extent, ref, text FROM capture_text WHERE capture_sha = ?
+    const units = this.r.rowsOf(`SELECT seq, extent_kind, extent, ref${withText ? ", text" : ""} FROM capture_text WHERE capture_sha = ?
                                   ORDER BY seq, extent_kind, extent`, c.capture_sha)
       .map((u) => ({ ...u, extentObj: safeJson(u.extent) }));
     const lang = reading && typeof reading.language === "string" && reading.language
@@ -592,6 +595,26 @@ export class Finder {
     return out;
   }
 
+  /* R20: one unit's stored text, read when a hit needs it (a `term` find loads no other); the text a load already holds is kept. */
+  #textOf(sha, u) {
+    if (typeof u.text === "string") return u.text;
+    const row = this.r.oneOf(`SELECT text FROM capture_text WHERE capture_sha = ? AND extent_kind = ? AND extent = ?`,
+      sha, u.extent_kind, u.extent);
+    u.text = row && typeof row.text === "string" ? row.text : "";
+    return u.text;
+  }
+
+  /* R17a: the part kind one unit was stored with (extraction R107), null for a unit stored before the kind. */
+  #partOf(sha, u) {
+    if (u.part === undefined) {
+      const held = this.r.rowsOf(`PRAGMA table_info(capture_text)`).some((x) => x.name === "kind");
+      const row = held ? this.r.oneOf(`SELECT kind FROM capture_text WHERE capture_sha = ? AND extent_kind = ? AND extent = ?`,
+        sha, u.extent_kind, u.extent) : null;
+      u.part = row && typeof row.kind === "string" && row.kind ? row.kind : null;
+    }
+    return u.part;
+  }
+
   /* `term`: the term as written, matched as `search` matches words in a passage (query-language's `passage:` arm,
      through the compiler and the gated executor, R18), each passage one item. */
   #term(captures, data, add, skip, term, viewer, acc) {
@@ -623,21 +646,24 @@ export class Finder {
       const d = data.get(r.capture_sha);
       const u = d.units.find((x) => x.seq === r.seq && x.extent === r.extent);
       const extent = safeJson(r.extent);
+      /* R17a (retrieval R95): the part the hit lies in, from its unit, null where the unit was stored without a kind. */
+      const part = u ? this.#partOf(r.capture_sha, u) : null;
       /* R8: a passage of a sheet is found cell by cell, and a match names the row it lies in. */
       const rows = extent && SHEET_EXTENTS.includes(extent.kind) && typeof extent.sheet === "string"
         ? this.#sheetRows(d, extent.sheet, phrase) : [];
       if (rows.length) {
         for (const x of rows)
           add({ kind: "term", words: cutWords(x.words), capture_sha: r.capture_sha, extent: x.range, origin: FIND_ORIGIN,
-                term: String(term), sheet: extent.sheet, cells: x.cells, cells_truncated: x.cells_truncated,
+                part, term: String(term), sheet: extent.sheet, cells: x.cells, cells_truncated: x.cells_truncated,
                 not_calculated: x.not_calculated });
         continue;
       }
       /* G41: a held sheet's unit is a block of many rows; its words are the row (line) holding the term, not the block's head. */
-      const line = u && extent && SHEET_EXTENTS.includes(extent.kind) && d.cellsHeld.has(extent.sheet)
-        ? String(u.text).split("\n").find((l) => hasPhrase(tokensOf(l), phrase)) : null;
-      add({ kind: "term", words: cutWords(line ?? (u ? u.text : r.snippet ?? "")), capture_sha: r.capture_sha,
-            extent, origin: FIND_ORIGIN, term: String(term) });
+      const text = u ? this.#textOf(r.capture_sha, u) : null;
+      const line = text !== null && extent && SHEET_EXTENTS.includes(extent.kind) && d.cellsHeld.has(extent.sheet)
+        ? text.split("\n").find((l) => hasPhrase(tokensOf(l), phrase)) : null;
+      add({ kind: "term", words: cutWords(line ?? (text !== null ? text : r.snippet ?? "")), capture_sha: r.capture_sha,
+            extent, origin: FIND_ORIGIN, part, term: String(term) });
     }
   }
 }

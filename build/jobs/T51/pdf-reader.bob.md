@@ -359,3 +359,26 @@ START (job 106, K5006; depth 2; P10, P19: found in this round, done in it). Read
 
 G179: reading-pipeline yields before and after `entry.text` (`reading-pipeline/index.mjs:2020-2023`), but the PDF text entry's compute over a region does not yield inside: one tick holds the thread 260-435 ms quiet, so a cheap request waits up to a whole tick. FIRST locate the root: instrument (temporarily) which loop of the text entry runs unyielded and how long, and write it in your record with file:line before fixing (K4426 (1), K4849). Then yield inside it on bounded slices, as R45 already does for the open; answers identical with and without `yieldNow`. Failing-first: `bio-plane/test/m/reading-pipeline/r7-contention.test.mjs` (reading-pipeline's file; it has a same-run control `slow`): the PDF case's bar at 150 ms times `slow` (red now), five of five under L-4B. If the root turns out to be in reading-pipeline's own code, not pdf-reader's, stop and post a QUESTION naming it.
 Run your suite (and the files named above); checks (format, architecture, coverage, words, ownership); RUNNING never more than 30 minutes ahead (K4976). Workers: haiku low for mechanical, sonnet medium for reading; never a refused act worked around (K4696). Model claude-sonnet-5-5, medium effort. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading; K3678). Before any test run: every directory with a tracked package-lock.json has node_modules (K4113). Load runs: `taskset` and CPU burners are as `build/plan/diagnosis-R9-load-reds.md` names them (L-PIN, L-4B); never a red passed by running alone (K4966). Record completion with a Size line, then COMPLETE.
+
+## B20 · START
+
+START · PDF-READER #17 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 2: publish 1 fixture, 1 marker line (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/pdf-reader tranche/T51 && git branch -m job/T51/pdf-reader stale/pdf-reader-local && git checkout -b job/T51/pdf-reader origin/job/T51/pdf-reader`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module pdf-reader`; record `build/jobs/T51/pdf-reader.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/pdf-reader/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `notAPdf` (users now: extraction 2): extractPdfStructure(new TextEncoder().encode("not a pdf")) -> {ok:false, container:"pdf", reason:"NOT_A_PDF"}.
+
+**Markers owed (K5044 (2), K5060; the audit read each line and found it no module's answer):** write on the line or up to eight lines above:
+- `// fixtures-own: input <why>` (a literal handed to your own export, a route map handed to your own dispatch, an input the module reads opaquely): pagesource.test.mjs:177
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . pdf-reader --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/pdf-reader.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5, medium effort.
