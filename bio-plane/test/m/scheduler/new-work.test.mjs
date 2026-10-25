@@ -9,6 +9,9 @@ import assert from "node:assert/strict";
 import { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, DETECTORS_BUDGET_MS, Scheduler, localDayOf } from "../../../src/scheduler/index.mjs";
 import { world, storage, writes, NOW, pinNow } from "./fixture.mjs";
 import { world as dutiesWorld } from "../duties/fixture.mjs";
+import { recordTransitionsAnswers } from "../duties/fixtures.mjs";
+import { evaluateChecksAnswers } from "../people/fixtures.mjs";
+import { runDetectorsAnswers } from "../money-checks/fixtures.mjs";
 import { world as inquiryWorld, inquiryMd, V } from "../inquiry/fixture.mjs";
 import { world as followingWorld, MEMBER as FOLLOWER, T0, DAY as F_DAY } from "../following/fixture.mjs";
 
@@ -88,9 +91,10 @@ test("R21: answers' and inquiry's services read now as instant text, and their w
 });
 
 test("R21 (K1522): a daily consumer is due at the group's local day start, runs once that day, and wakes at the next local day's start", async () => {
+  const [checks, money] = [await evaluateChecksAnswers({}), await runDetectorsAnswers()];
   for (const name of DAILY) {
-    const { s, st, calls } = world({ [name]: { tick: () => (name === "duty-transitions" ? { ok: true, duties_read: 3, recorded: 1, cursor: null, done: true }
-      : name === "interest-checks" ? { ok: true, evaluated: 4, remaining: false } : { ok: true, detectors: 2, remaining: false, cursor: null }) } },
+    const { s, st, calls } = world({ [name]: { tick: () => (name === "duty-transitions" ? recordTransitionsAnswers().finished
+      : name === "interest-checks" ? checks : { ...money, detectors: 2 }) } },   /* money-checks' real answer of an empty world reports no work (R6): here two detectors ran */
       null, { zone: LA });
     assert.equal(await s.arm(NOW), LA_TODAY, `${name}: not yet run today: its wake is today's local start, already passed`);
     const r = await s.onAlarm(NOW);
@@ -118,13 +122,14 @@ test("R21: with no time zone held the day read is the UTC day, and the answer sa
 
 test("R21 (K1566): while a pass is under way it is due at every firing, its owner's cursor handed back, until the owner answers none", async () => {
   /* duties: done false with a cursor, then done */
-  const d = [{ ok: true, duties_read: 5, recorded: 2, cursor: "DUT-2026-0005", done: false }, { ok: true, duties_read: 2, recorded: 0, cursor: null, done: true }];
+  const real = recordTransitionsAnswers();
+  const d = [real.unfinished, real.finished];
   const dw = world({ "duty-transitions": { tick: () => d.shift() } }, null, { zone: LA });
   const r1 = await dw.s.onAlarm(NOW);
   assert.equal(r1.nextAt, NOW, "under way: wanted again at once");
   await dw.s.onAlarm(NOW + 10);
   const asked = dw.calls.filter(([m]) => m === "duties.recordTransitions").map(([, a]) => a);
-  assert.deepEqual(asked, [{ asOf: TEXT }, { asOf: "2026-09-28T12:00:00Z", cursor: "DUT-2026-0005" }],
+  assert.deepEqual(asked, [{ asOf: TEXT }, { asOf: "2026-09-28T12:00:00Z", cursor: real.unfinished.cursor }],
     "asOf the firing; the cursor handed back; no budget given (duties states its own)");
   assert.equal(dw.st.alarm, LA_TOMORROW, "the pass done: tomorrow");
   /* money-checks: remaining with a cursor, given the budget its siblings state */
@@ -164,7 +169,7 @@ test("R21, R3: a daily pass that throws, or that its owner refuses, is answered 
 
 test("R21, R18: the daily consumers' state is the storage value sched_daily, never a table: a restarted instance does not run a pass twice in a day", async () => {
   const st = storage();
-  const set = { "duty-transitions": { tick: { ok: true, duties_read: 2, recorded: 0, cursor: null, done: true } } };
+  const set = { "duty-transitions": { tick: recordTransitionsAnswers().finished } };
   const a = world(set, null, { zone: LA, st });
   await a.s.onAlarm(NOW);
   assert.deepEqual(st.kv.get("sched_daily"), { "duty-transitions": { day: "2026-09-28", cursor: null, more: false } });

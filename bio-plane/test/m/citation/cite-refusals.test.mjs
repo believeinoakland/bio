@@ -6,6 +6,7 @@ import { world, V, projMd, inqMd, biasMd, NOW } from "./fixture.mjs";
 import { Citation, CITE_CHECKS, CITE_EXTENT_CHECKS, EXTENT_PARAMS } from "../../../src/citation/index.mjs";
 import { INLINE_MAX } from "../../../src/promotion/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
+import { basisRefusals } from "../inquiry/fixtures.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
 
@@ -267,11 +268,14 @@ test("R1: a refusal from the write (inquiry R11: BASIS_REFUSED, SELF_BASIS, BASI
   let refusal = null;
   w.promotion.registerStep("inquiry", { check: (c) => (c.bundleId === q ? refusal : null) });
   const h = await w.select(["INFO-2026-0001"]);
-  for (const [reason, extra] of [["BASIS_REFUSED", { findings: [{ check: "C-2.8", detail: "d" }] }],
-                                 ["SELF_BASIS", { check: "C-33.22" }], ["BASIS_CYCLE", { path: [q, "INQ-2026-0002", q] }],
-                                 ["PROPOSAL_NOT_TAKEN_UP", { check: "C-104.32", legs: [{ ord: 0, target: "INFO-2026-0001" }] }],
-                                 ["MACHINE_PASSAGE_UNCHECKED", { check: "C-2.20" }]]) {
-    refusal = { ok: false, reason, code: reason, ...extra, detail: `refused: ${reason}` };
+  /* The four inquiry's step gives are the answers of its real promotion of a bad basis (inquiry's published fixture); the
+     fifth is run-productions' (a later module, no fixture gives it): a code the relay must pass on whatever it is. */
+  const real = basisRefusals();
+  const proposalNotTakenUp = { ok: false, reason: "PROPOSAL_NOT_TAKEN_UP", code: "PROPOSAL_NOT_TAKEN_UP", check: "C-104.32",
+    legs: [{ ord: 0, target: "INFO-2026-0001" }], detail: "refused: PROPOSAL_NOT_TAKEN_UP" };
+  for (const answer of [real.basisRefused, real.selfBasis, real.basisCycle, proposalNotTakenUp, real.machinePassageUnchecked]) {
+    refusal = answer;
+    const reason = answer.reason;
     const before = w.md(q);
     const r = w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" });
     /* R21: a BASIS_REFUSED also states its repairs, none here (the basis is not grouped) */
