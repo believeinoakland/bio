@@ -95,17 +95,17 @@ test("R37 (T48; N847; DEC-227 (4); K3190) the elsewhere route's pointer is the r
 });
 
 test("R38 (T48; DEC-226, DEC-227, DEC-218; K2241, K3190, K3192 D1; amends R13, R35; R41) the registry is re-taken at PR #34's merge (4664e8efd4): 67 screens and 329 acts, five owed, and again at the design commit named at T50's START (7be06eb4cb), named as the source: 71 screens and 413 acts, sixteen owed; registeredScreens() lists elsewhere with no act and updates; dash-home is gone; owed acts updatestart, updatelater and updateskip are registered as those ops once declared, updatelater on queue too; controls: not while the op table lacks them, wizardsAt(\"elsewhere\") answers []", () => {
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "f72b2f8a4c", path: "docs/development/ux-substrate/screens/registry.json",
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "c752a602da", path: "docs/development/ux-substrate/screens/registry.json",
                                                 sha256: createHash("sha256").update(src("registry.json"), "utf8").digest("hex") });
   assert.equal(REG_T48.screens.length, 67);
   assert.equal(REG_T48.screens.reduce((n, s) => n + s.acts.length, 0), 329);
   assert.equal(REG_T48.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed").length, 5, "five owed at PR #34: passwordresetlink and the update acts");
-  assert.equal(wz.SCREEN_REGISTRY.length, 84, "R50: 84 at f72b2f8a4c");
-  assert.equal(REG_FILE.screens.reduce((n, s) => n + s.acts.length, 0), 609, "R50: the file at f72b2f8a4c, 45 acts more than R49's 564 (projectjoin, scanmirror and T52's owed acts)");
-  assert.equal(REG_FILE.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed").length, 78, "R50: seventy-eight owed at f72b2f8a4c");
+  assert.equal(wz.SCREEN_REGISTRY.length, 91, "R50: 84 at c752a602da");
+  assert.equal(REG_FILE.screens.reduce((n, s) => n + s.acts.length, 0), 652, "R52: the file at c752a602da, 88 acts more than R49's 564 (projectjoin, scanmirror and T52's owed acts)");
+  assert.equal(REG_FILE.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed").length, 121, "R52: 121 owed at c752a602da");
   assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id), REG_FILE.screens.map((f) => f.id));
   assert.equal(REG_T48.screens.length - REG_T47.screens.length, 1, "PR #34 has one screen more than PR #33's head");
-  assert.deepEqual(REG_FILE.screens.map((s) => s.id).filter((id) => !REG_T48.screens.some((x) => x.id === id)).sort(), ["about-knocker", "actionnew", "bias", "contradiction", "counsel", "docket-public", "glossary", "grouprules", "hold", "holdnotice", "leads", "more", "objective", "registers", "teamai", "theme", "watching"], "new since R38 (R41 and R44)");
+  assert.deepEqual(REG_FILE.screens.map((s) => s.id).filter((id) => !REG_T48.screens.some((x) => x.id === id)).sort(), ["about-knocker", "actionnew", "aiconnect", "aimine", "aimoments", "aiproject", "aiproviders", "airesults", "aitest", "bias", "contradiction", "counsel", "docket-public", "glossary", "grouprules", "hold", "holdnotice", "leads", "more", "objective", "registers", "teamai", "theme", "watching"], "new since R38 (R41 and R44)");
   const ids = new Set(wz.SCREEN_REGISTRY.map((s) => s.id));
   assert.ok(ids.has("elsewhere") && ids.has("updates"));
   assert.ok(!ids.has("dash-home"), "control: no registered screen is dash-home (DEC-218)");

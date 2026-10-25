@@ -22,13 +22,9 @@ test("R51 ADMIN_ACTS holds exactly the 45 administrator acts and ADMIN_SCREENS e
   assert.deepEqual([...ADMIN_SCREENS], ["updates"]);
 });
 
-/* The interface-shell pair, `bio-plane/src/interface-shell/index.mjs` (`ADMIN_ACTS`, `ADMIN_SCREENS`), is the copy this was taken
-   from; interface-shell's Wave B job deletes its pair and imports these, and with it this test (K624). */
-test("R51 the copy equals interface-shell's pair, until that module imports these", async () => {
-  const shell = await import("../../../src/interface-shell/index.mjs");
-  assert.deepEqual([...ADMIN_ACTS], [...shell.ADMIN_ACTS]);
-  assert.deepEqual([...ADMIN_SCREENS], [...shell.ADMIN_SCREENS]);
-});
+/* The interface-shell pair, `bio-plane/src/interface-shell/index.mjs` (`ADMIN_ACTS`, `ADMIN_SCREENS`), is the copy these were taken from
+   (R51's list above is the same 45 names and `updates`); interface-shell's Wave B job deletes its pair and imports these (K624), or makes
+   its own test of equality. A test here cannot import it: interface-shell is a later module (architecture check). */
 
 test("R51 handed to the registration, startFrom omits a script whose first act is among ADMIN_ACTS for a plain member and lists it for an administrator", () => {
   const ops = [...new Set(SCREEN_REGISTRY.flatMap((s) => [...s.acts, ...(s.owed || []).map((o) => o.op)]))];
