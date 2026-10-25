@@ -1,13 +1,13 @@
 /* screens-investigate R22, R23, R26: the design walk folded (WALK-084 #2; K3250, K3254), on interface-shell's served page
- * over a scripted plane. */
+ * over `store-request`'s world. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
+import { refusedIn } from "../interface-shell/harness.mjs";
 import * as shell from "../../../src/interface-shell/index.mjs";
 import { SCREENS } from "../../../src/screens-investigate/index.mjs";
 import { inWorld, openAs, settled, readHeld, declareStandard } from "./world.mjs";
-import { open, main, button, fill, PATHS, ENT, ORG, MSR, CALC, PROC, STD, P, ACT, PERSON, TRAIL, word, drew, notDrew } from "./fixtures.mjs";
+import { main, button, fill, word, drew, notDrew } from "./fixtures.mjs";
 
 const page = readFileSync(new URL("../../../../docs/development/ux-substrate/screens/page.src.html", import.meta.url), "utf8");
 const css = page.split("<style>")[1].split("</style>")[0] + readFileSync(new URL("../../../../docs/development/ux-substrate/visual-language/civicsmith.css", import.meta.url), "utf8") + (shell.STYLE || "");
@@ -16,11 +16,51 @@ const DEFINED = new Set([...css.matchAll(/\.([a-zA-Z_][\w-]*)/g)].map((m) => m[1
 for (const f of ["browser.mjs", "index.mjs"]) for (const m of readFileSync(new URL("../../../src/interface-shell/" + f, import.meta.url), "utf8").matchAll(/class=\\?["']([^"'$\\]*)/g)) for (const c of m[1].split(/\s+/).filter(Boolean)) DEFINED.add(c);
 const classesOf = (el) => new Set(el.querySelectorAll("*").filter((e) => !e.closest(".cs-crumbs")).flatMap((e) => (e.getAttribute("class") || "").split(/\s+/).filter(Boolean)));
 const DESIGN_SPELT = ["cs-frontgrid", "cs-signin", "cs-fronthead", "cs-flogo", "cs-facts", "cs-note", "cs-sub", "cs-small", "cs-steps", "cs-passage", "cs-strengthbox", "cs-gapblock", "cs-pickc", "cs-areas", "cs-table"];
-const PAGES = { ...PATHS, standard: "/app/standard/" + P, "standard-law": "/app/standard/" + STD, "explore-walked": PATHS.explore };
+
+const ORDINANCE = "Section 8.22.050 No landlord shall increase the rent above the limit the board sets.\n\nSection 8.22.020 No landlord shall retaliate against a tenant who complains.";
+const POLICY = "The Director shall repair each reported pothole within seven calendar days.\n\nCrews log each pothole they fill.";
+const QUESTION = "Is the city repairing reported potholes within seven days?";
+const entity = async (me, kind, label, note, extra = {}) => (await me.act("entitycreate", { body: { kind, label, note, ...extra } })).entity_id;
+
+/** A world with a screen to draw for each address: the team's profile; a person and a department; a court, a proceeding in it with a party; a project holding an
+ *  ordinance and a policy, each declared a standard, the policy implementing the ordinance, and a question the project asks; a money trail with a figure; a
+ *  payments register, its table and a calculation worked out over it; a records request with its clock; a theme and a tie. All of it by the member's own acts. */
+async function scene() {
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const chen = await entity(me, "person", "L. Chen", "Named in the minutes.");
+  const works = await entity(me, "institution", "Public Works Department", "The city department.");
+  const court = await entity(me, "body", "Alameda Housing Tribunal", "A court.", { forum_kind: "court" });
+  const proc = await entity(me, "proceeding", "Lease rent case", "From the caption.", { proceeding: { forum: court, kind: "civil", number: "24CV123456" } });
+  const project = await world.recipes.project(me, "Pothole repairs");
+  const doc = await world.recipes.hold(me, "Ordinance.txt", ORDINANCE, project);
+  const memo = await world.recipes.hold(me, "Policy.txt", POLICY, project);
+  const du = await readHeld(world, me, doc.sha), mu = await readHeld(world, me, memo.sha);
+  const ord = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: doc.sha, extent: du[0].extent });
+  const pol = await declareStandard(me, { cite: "Public Works Instruction 9.1", kind: "policy", issuer: "Public Works Department", sha: memo.sha, extent: mu[0].extent, period: { from: "2026-01-01", to: null } });
+  await me.act("lawrelate", { body: { type: "implements", from: pol, to: ord, citation: (await me.read("standard", { query: { id: pol } })).texts[0].content_id, reason: "The instruction implements the ordinance." } });
+  await world.recipes.question(me, project, { title: QUESTION, draw: true });
+  const trail = await world.recipes.trail(me, project, "Stormwater fund transfers");
+  const fact = (await me.act("recordfact", { body: { currency: "USD", sign: "+", precision: "exact", period: { from: "2021-07-01", to: "2022-06-30" }, source: { capture_sha: doc.sha, extent: { kind: "document" } },
+    amount: "4200000.00", as_read: "4,200,000", kind: "transfer", phase: "adopted", basis: "budgetary", from: { as_written: "Sewer Fund 3100" }, to: { as_written: "General Fund 1010" } } })).fact_id;
+  await me.act("moneysetpropose", { body: { setId: trail, factId: fact, method: "member:recordfact" } });
+  const csv = await world.recipes.hold(me, "Payments.csv", "payer,payee,amount\nCity,Acme,5\nCity,Beta,7\nFund,Acme,9\n", project);
+  const table = (await me.act("tabledeclare", { body: { source: { capture_sha: csv.sha, extent: { kind: "document" } }, header: ["payer", "payee", "amount"],
+    schema: { fields: [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }] } } })).sha;
+  const calc = (await me.act("calculationcreate", { body: { question: "How many payments?", period: { from: "2025-07-01", to: "2026-06-30" }, kind: "count", project, inputs: [{ name: "input", table }] } })).calc_id;
+  const action = (await me.act("actioncreate", { body: { document: ["---", "id: PENDING", "object_type: action", 'title: "Records request"', "current_state: planned", 'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"',
+    "project: " + project, "action_kind: records_request", "counterparty:", "  state: named", "  role: Town Clerk", "  body: Town of Port Ellery", "---", "", "An action.", ""].join("\n") } })).id;
+  await me.act("themedeclare", { body: { name: "Deferred maintenance", test: "repairs put off" } });
+  await me.act("declaretie", { body: { entity: works, kind: "employer", note: "Public Works Director", attribution: "group" } });
+  const PATHS = { people: "/app/people", person: "/app/person/" + chen, theme: "/app/theme", explore: "/app/explore/" + chen, timeline: "/app/timeline/" + project, money: "/app/money/" + trail,
+    calculation: "/app/calculation/" + calc, help: "/app/help", proceeding: "/app/proceeding/" + proc, "due-date": "/app/due-date/" + action, standard: "/app/standard/" + pol, ties: "/app/ties" };
+  return { world, me, chen, works, court, proc, project, ord, pol, trail, calc, action, PATHS, PAGES: { ...PATHS, standard: "/app/standard/" + project, "standard-law": "/app/standard/" + pol, "explore-walked": PATHS.explore } };
+}
 
 test("R22 every element these screens draw uses a class a served stylesheet defines (civicsmith.css, the design page's styles, the shell's own); control: a class the design spells mk-* is not drawn as cs-*", async () => {
+  const { world, me, PAGES } = await scene();
   for (const [id, path] of Object.entries(PAGES)) {
-    const p = await open(path);
+    const p = await openAs(world, me, path);
     if (id === "explore-walked") { fill(p, { "explore-at": "2025-06-30" }); await p.click(button(p, "explore")); await p.settle(); }
     const used = classesOf(main(p));
     for (const c of used) assert.ok(DEFINED.has(c), `${id}: class ${c} is defined by no served stylesheet`);
@@ -36,8 +76,9 @@ test("R22 control: no source of this module writes a class the design spells mk-
 });
 
 test("R22 every labelled field is drawn with cs.field: no screen draws cs-form or a bare label with help beside it", async () => {
+  const { world, me, PAGES } = await scene();
   for (const [id, path] of Object.entries(PAGES)) {
-    const p = await open(path);
+    const p = await openAs(world, me, path);
     const m = main(p);
     assert.equal(m.querySelectorAll(".cs-form").length, 0, `${id}: cs-form`);
     for (const l of m.querySelectorAll("label")) {
@@ -96,9 +137,11 @@ test("R22 a section, list or reading that holds nothing is not drawn, and no cou
 });
 
 test("R22 control: a read that failed is still drawn as failed on every screen", async () => {
+  const { world, me, PATHS } = await scene();
   for (const [id, path] of Object.entries({ person: PATHS.person, timeline: PATHS.timeline, money: PATHS.money, "due-date": PATHS["due-date"] })) {
     const op = { person: "person", timeline: "timeline", money: "moneyset", "due-date": "action" }[id];
-    const p = await open(path, { plane: { [op]: refusedIn("SOME_REFUSAL", "The plane refused this read.") } });
+    /* a fault the test injects on purpose: the read answers a refusal */
+    const p = await openAs(world, me, path, { plane: { [op]: refusedIn("SOME_REFUSAL", "The plane refused this read.") } });
     assert.ok(main(p).querySelector('[data-state="failed"], .cs-gap[data-gap="refused"]'), id);
   }
 });

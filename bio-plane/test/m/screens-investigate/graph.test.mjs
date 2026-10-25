@@ -111,7 +111,7 @@ test("R18 control: a step the read does not answer (a hidden hop) is not drawn o
   assert.equal(walk.nodes.length, 2);
   assert.equal(walk.steps.length, 1);
   assert.equal(m.querySelectorAll("svg g.node").length, 2);
-  assert.equal(m.querySelectorAll("svg .gwrap .e-pos").length, 1, "the one step the read answers");
+  assert.equal(m.querySelectorAll(".gwrap .e-pos").length, 1, "the one step the read answers");
   assert.equal(m.querySelector(`a.cs-ref[href="/app/person/${org}"]`), null);
   assert.equal(m.querySelector("[data-limit]"), null, "no stop said when none was met");
   /* the contrast the control rests on: with the department's line, its node is drawn and the stop said */

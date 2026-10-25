@@ -25,21 +25,24 @@ async function projectCiting(world, me, title, targets) {
  *  she sets aside; a standard over the lease, a person, a court case, a trail with one figure, a calculation over the table, and a matter in a progression.
  *  Answers the screens' paths as the world gave their ids. */
 async function scene() {
-  /* a member of her own (the founder's session names no member, and setting aside is a member's own act) */
-  const { world, me } = await inWorld({ handle: "rosa", founder: false });
-  await world.recipes.profiles(me, ["oakland-alameda"]);
-  const ent = async (kind, label, note, more = {}) => (await me.act("entitycreate", { body: { kind, label, note, ...more } })).entity_id;
+  /* the founder holds the ordinance and declares the standard over it; the documents the pickers list are a member's own (rosa's): setting aside is a member's own act, and the
+     founder's session names no member */
+  const { world, me: founder } = await inWorld();
+  const me = await world.signIn("rosa", { admin: true });
+  await world.recipes.profiles(founder, ["oakland-alameda"]);
+  const ent = async (kind, label, note, more = {}) => (await founder.act("entitycreate", { body: { kind, label, note, ...more } })).entity_id;
   const org = await ent("office", "Public Works Director", "The city's office for repairs.");
-  const project = await projectCiting(world, me, "Pothole repairs", [org]);
+  const project = await projectCiting(world, founder, "Pothole repairs", [org]);
   const lease = await world.recipes.hold(me, "Lease amendment 1", LEASE, project);
+  const ordinance = await world.recipes.hold(founder, "Ordinance.txt", LEASE, project);
   const rent = await world.recipes.hold(me, "Rent schedule", "month,rent\njan,5\nfeb,7\n", project);
   const minutes = await world.recipes.hold(me, "Vouched minutes", "The council adopted the amendment.", project);
   const draft = await world.recipes.hold(me, "Withdrawn draft", "A draft nobody keeps.", project);
   const selected = await me.act("select", { body: { ids: [minutes.bundle] } });
   await me.act("release", { query: { handle: selected.handle }, body: { handle: selected.handle, acknowledgment: "They are what they say.", mitigation: "I read them." } });
   await me.act("heldsetaside", { body: { ids: [draft.bundle], reason: "Not the one we hold." } });
-  const units = await readHeld(world, me, lease.sha);
-  const std = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: lease.sha, extent: units[0].extent });
+  const units = await readHeld(world, founder, ordinance.sha);
+  const std = await declareStandard(founder, { cite: "Ordinance 8.22", kind: "ordinance", sha: ordinance.sha, extent: units[0].extent });
   const chen = await ent("person", "Lin Chen", "Council member who moved the vote.");
   const court = await ent("body", "Alameda Housing Tribunal", "A court.", { forum_kind: "court" });
   const proc = await ent("proceeding", "Lease rent case", "From the caption.", { proceeding: { forum: court, kind: "civil", number: "24CV123456" } });
