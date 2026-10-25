@@ -487,3 +487,17 @@ COMPLETE · screens-inquiry #25 · re START B54, ANSWER B55, CHANGE B56 (tranche
 **Rows owed (UX-DESIGN):** screen.document.supporting.notwalked.pending / .toolarge / .unavailable (stood in as the key). Generated artifacts made stale: none. No file created outside paths. Found in another module: the Add screen's supportingLine and my Document copy map reasons to sentences twice; one shared export from screens-intake would end the duplication (BOB's call).
 
 Size (session_01BwSTa3XEaYc7PpV5c1Q8ZD): test runs 9, module lines 6722
+
+## J37 · COMPLETE
+
+COMPLETE · screens-inquiry #26 · re START B57 (job 107, G135b (4), R130 amended). Merged tranche/T51 first.
+
+**Entry applied (document.mjs):** a reading stated final whose `ocr_refused[].reason` the member gave (reading-pipeline's `refusalReasonOf`) is drawn by the word held for each distinct code (`refusal.<code>`; IMAGE_TOO_LARGE, TRUNCATED_IMAGE_DATA, UNSUPPORTED_JPEG_PROCESS, DECODE_FAILED, NO_PAGE_RENDERED listed for the words check), ahead of the size sentence and the generic basis; a code with no held word is not drawn raw. The too_large statement still wins.
+
+**Failing-first:** `r9-refusal.test.mjs` (real plane + the real OCR member booted from its committed bytes in Miniflare; a 9000x9000 PNG from imggen; the member's own refusal, nothing hand-built, K4990). RED: "the page draws the word held for the refusal's code" (page drew "This document is 97 KB, which is more than your team's Civicsmith can read"; the plane's reading already held `ocr_refused [{page 0, IMAGE_TOO_LARGE}]`). GREEN after the change. Asserts the key's word, never a sentence.
+
+**Tests/checks:** screens-inquiry 537 of 537. Checks: format 0, architecture 0, coverage 131/131 0, words 0, ownership 0. checks/run.mjs: only failures not mine: coverage office-readers R46 unnamed. setup-words --check: rows.mjs stale (expected; BOB regenerates).
+
+**For BOB:** the test boots the OCR member by a recipe stated in the test (a copy of ocr-worker/test/memberworker.mjs's), because ocr-worker is not in screens-inquiry's `uses` and the architecture check refuses the import. Adding `ocr-worker` to the module's uses would let it import the helper (BOB's call). Not covered: a partly read document (`partial`/`cut`) with refused pages still draws pages-unread, not the reasons. Generated artifacts made stale: none.
+
+Size (session_017ynA4AjG9xoWDjtf4KG27R): test runs 5, module lines 6727
