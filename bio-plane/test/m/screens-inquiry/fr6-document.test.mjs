@@ -213,3 +213,14 @@ test("R3 G19 a web capture that skipped supporting files says how many were kept
   const none = await open(at, { images: doc({ kept: 12, skipped: 0, total: 12, reasons: [] }) });
   assert.ok(!main(none).querySelector("[data-supporting]"));
 });
+
+test("R96 DEC-432 a refusal measured in characters (a `_chars` metric) draws its size and limit as the design's one unit `characters`, never as bytes", async () => {
+  const UNIT = "screen.document.reading.unit.characters";
+  const fig = (n) => (hasWord(UNIT) ? word(UNIT, { n: n.toLocaleString("en-US") }) : n.toLocaleString("en-US"));
+  for (const metric of ["text_chars", "chars"]) {
+    const p = await open(at, { images: five, plane: { reading: stated({ reading: { content_type: "generic", reader_version: 1, found: false, basis: BASIS, failure: "final", reason: "TOO_LARGE", size: 3200000, bound: 2000000, metric, metadata: null } }), heldcaptures: ok({ ok: true, held: [] }) } });
+    const t = text(main(p));
+    assert.ok(t.includes(fig(3200000)) && t.includes(fig(2000000)), `${metric}: the counts, in the characters unit`);
+    assert.ok(!t.includes(mbOf(3200000)), `${metric}: not drawn as a byte size`);
+  }
+});

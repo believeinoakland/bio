@@ -62,6 +62,11 @@ test("R38 R136 a web capture that kept 40 pictures and read none draws their num
   assert.equal(el1.getAttribute("data-pictures-unread"), "1");
   const single = said(PICTURE_ONE, { count: "1", size: word("size.kb", { n: "2" }) });
   assert.ok(single ? text(el1).includes(single) : text(el1).includes("1") && text(el1).includes(word("size.kb", { n: "2" })), "one picture is told as one");
+  /* DEC-433 (B60): the sentence is drawn only when the size is known; a count with no size draws neither the sentence nor a figure */
+  for (const pu of [{ count: 40 }, { count: 40, bytes: null }, { count: 1, bytes: "big" }]) {
+    const nosize = await open(at, { images: doc({ capture: { supporting: { kept: 40, skipped: 0, total: 40, reasons: [], pictures_unread: pu } } }) });
+    assert.equal(main(nosize).querySelector("[data-pictures-unread]"), null, "no size known: nothing drawn: " + JSON.stringify(pu));
+  }
   for (const sup of [{ kept: 3, skipped: 0, total: 3, reasons: [] }, { kept: 3, skipped: 0, total: 3, reasons: [], pictures_unread: { count: 0, bytes: 0 } }, undefined]) {
     const none = await open(at, { images: doc(sup ? { capture: { supporting: sup } } : {}) });
     assert.equal(main(none).querySelector("[data-pictures-unread]"), null, "a capture with no unread picture draws neither the sentence nor the figures");

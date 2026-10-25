@@ -229,3 +229,27 @@ test("R2 R58 the question screen draws inquiry's set-aside waits and history as 
   const hidden = await open("/app/question/" + Q, reads(fx.hiddenFrom));
   assert.ok(!main(hidden).querySelector('[data-wait]') && !main(hidden).querySelector("[data-history-act]"));
 });
+
+test("R106 R12 a retired aspiration stays readable on the objective page: marked retired, with what pursuing it taught and its dead ends, before and after it was retired; the held list is unchanged", async () => {
+  const { world, ann, project } = await teamWorld();
+  const held = (await ann.act("aspirationdeclare", { body: { scope: "project", owner: project, statement: "Map every storm drain" } })).aspiration;
+  const gone = (await ann.act("aspirationdeclare", { body: { scope: "project", owner: project, statement: "Name every signatory" } })).aspiration;
+  await ann.act("aspirationdeadend", { body: { aspiration: gone, note: "The register was sealed." } });
+  await ann.act("aspirationretire", { body: { aspiration: gone, taught: "Signatories are in the minutes, not the register." } });
+  await ann.act("aspirationdeadend", { body: { aspiration: gone, note: "The clerk had no copy." } });
+  const p = await pageAs(world, ann, "/app/objective/" + project);
+  const rows = main(p).querySelectorAll("[data-retired]");
+  assert.equal(rows.length, 1, "only the retired one is marked");
+  const said = rows[0].textContent;
+  for (const s of ["Name every signatory", "Signatories are in the minutes, not the register.", "The register was sealed.", "The clerk had no copy."]) assert.ok(said.includes(s), s);
+  assert.ok(!said.includes("Map every storm drain"), "the held one is not among the retired");
+  assert.ok(main(p).textContent.includes("Map every storm drain") && held, "the held one is still listed");
+  /* control: the retire act offers only what is held */
+  const retire = p.doc.getElementById("ob-ret-asp");
+  assert.ok(retire && !retire.outerHTML.includes(gone), "a retired aspiration cannot be retired again");
+  /* control: a project with none retired draws none */
+  const { world: w2, ann: a2, project: p2 } = await teamWorld();
+  await a2.act("aspirationdeclare", { body: { scope: "project", owner: p2, statement: "Only held" } });
+  const q = await pageAs(w2, a2, "/app/objective/" + p2);
+  assert.equal(main(q).querySelectorAll("[data-retired]").length, 0);
+});

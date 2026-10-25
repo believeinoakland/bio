@@ -298,7 +298,8 @@ function render(cs, view) {
     const m = String(statedOf("metric") || statedOf("unit") || "").toLowerCase();
     const nm = String(statedOf("name") || "").toUpperCase();
     const pick = m || (/ROWS/.test(nm) ? "rows" : /COLUMNS/.test(nm) ? "columns" : /CELLS/.test(nm) ? "cells" : /OBJECTS/.test(nm) ? "objects" : "bytes");
-    return /bytes?$/.test(pick) ? "bytes" : pick;
+    /* DEC-432 (B60): the `_chars` metrics (`text_chars`, `chars`) are the design's one unit `characters` */
+    return /bytes?$/.test(pick) ? "bytes" : /(^|_)chars$|^characters$/.test(pick) ? "characters" : pick;
   })();
   const figure = (n, alike) => {
     if (metricOf === "bytes" && !alike) return sizeWord(n);
@@ -407,12 +408,24 @@ function render(cs, view) {
     const gaps = reg0.render && Array.isArray(reg0.render.undetermined) ? reg0.render.undetermined.filter((g) => typeof g === "string") : [];
     if (heldWord(COPY) && gaps.some((g) => g.trim() === T(COPY).trim())) out.push(`<p class="mk-small" data-render-copy="1">${cs.w(COPY)}</p>`);
   }
+  /* R62 (reading-pipeline; DEC-432, B60): what the structure read repaired, as the reading lists it (`recovery_notes`: `xref_reconstructed`, `pdf_truncated`, and `pages_missing` with the
+     count `missing` of `of`), each by the design's key `screen.document.recovery.<note>`; a sound file lists none and draws none, and a note this page holds no sentence for is not drawn */
+  {
+    const notes = Array.isArray(statedOf("recovery_notes")) ? statedOf("recovery_notes") : [];
+    for (const n of notes) {
+      if (!n || typeof n !== "object" || !["xref_reconstructed", "pdf_truncated", "pages_missing"].includes(n.note)) continue;
+      const key = "screen.document.recovery." + n.note;
+      if (n.note === "pages_missing" && !(Number.isInteger(n.missing) && Number.isInteger(n.of))) continue;
+      out.push(`<p class="mk-small" data-recovery="${n.note}">${cs.w(key, n.note === "pages_missing" ? { missing: String(n.missing), of: String(n.of) } : {})}</p>`);
+    }
+  }
   /* R136 (fix round 10, cause 38; acquisition R119): the pictures a web capture kept as bytes and never read, with their number and total size (`supporting.pictures_unread`);
      the sentence is the row owed `screen.document.supporting.pictures` ({count}, {size}; `.one` for one); until it is held the figures alone are drawn */
   {
     const supP = reg0.capture && reg0.capture.supporting && typeof reg0.capture.supporting === "object" ? reg0.capture.supporting : reg0.supporting && typeof reg0.supporting === "object" ? reg0.supporting : null;
     const pu = supP && supP.pictures_unread && typeof supP.pictures_unread === "object" ? supP.pictures_unread : null;
-    if (pu && Number.isInteger(pu.count) && pu.count > 0) {
+    /* DEC-432 (B60): drawn only when the size is known; a count with no size draws nothing, never the sentence with a hole in it */
+    if (pu && Number.isInteger(pu.count) && pu.count > 0 && Number.isFinite(pu.bytes) && pu.bytes >= 0) {
       const key = pu.count === 1 && heldWord("screen.document.supporting.pictures.one") ? "screen.document.supporting.pictures.one" : "screen.document.supporting.pictures";
       const size = Number.isFinite(pu.bytes) && pu.bytes >= 0 ? sizeWord(pu.bytes) : "";
       out.push(`<p class="mk-small" data-pictures-unread="${pu.count}">${heldWord(key) ? cs.w(key, { count: String(pu.count), size }) : cs.esc(String(pu.count)) + (size ? " · " + cs.esc(size) : "")}</p>`);
@@ -1874,6 +1887,8 @@ const words = Object.freeze([
   "file-safety.index.reading_is_not_gated",
   /* fix round 10 (R133, R135): an archive's own page uses the Held list's rows until `screen.document.archive.says` is held; the first-load statement is capture-sources' own row */
   "screen.held.archive", "screen.held.archivefiles", "screen.archive.facts.entries", "capture-sources.render.copy_first_load_not_scrolled",
+  "screen.document.recovery.xref_reconstructed", "screen.document.recovery.pages_missing", "screen.document.recovery.pdf_truncated", "screen.document.reading.unit.characters",
+  "screen.document.supporting.pictures", "screen.document.supporting.pictures.one",
   "document.read.title", "document.read.help", "document.read.tab.page", "document.read.page", "document.read.prev", "document.read.next", "document.read.select", "document.read.cite.help",
   /* T51 (R81, R82, CR-19): the compare tab, the original-file card, its size and kind */
   "document.read.tab.compare", "document.read.original.card", "size.small", "size.kb", "size.mb", "size.gb",
