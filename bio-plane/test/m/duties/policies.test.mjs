@@ -203,10 +203,14 @@ test("R29 an organisation's own policy becomes a duty only where its obligor act
   row(g({}), "NO_ENFORCER");
   assert.equal(g({ enforcer: E.auditor }).ok, true);
   /* a government obligor rests on a company's policy only where standards answers that an adoption binds it */
-  let sw = null;
-  sw = world({ deps: { standards: () => new Proxy(sw.standards, { get: (o, k) => (k === "bindsAt"
-    ? ({ standard, body }) => ({ ok: true, standard, body, binds: body === E.council }) : typeof o[k] === "function" ? o[k].bind(o) : o[k]) }) } });
+  const sw = world();
+  const at = sw.passage().contentId;
+  const ordinance = sw.sw.declare({ kind: "ordinance", cite: "Test Code § 40", issuer: E.council, text: [at], period: { from: "2020-01-01", to: null } });
+  assert.equal(ordinance.ok, true, JSON.stringify(ordinance));
   const adopted = sw.policy({ issuer: E.private, cite: "Industry Code" });
+  const adoption = sw.standards.adoptionRecord({ standard: adopted.id, act: ordinance.id, edition: "2020", from: "2021-07-01", mode: "by_reference",
+    citation: at, reason: "The council adopted the industry code by ordinance.", author: BOB, viewer: BOB });
+  assert.equal(adoption.ok, true, JSON.stringify(adoption));
   const asked = (obligor) => sw.declare({ obligor, source: { kind: "standard", standard: adopted.id }, time: { basis: "commitment", date: "2026-04-01" } });
   assert.equal(asked(E.council).ok, true, "the council adopted it");
   row(asked(E.clerk), "NOT_ACTING_FOR_PUBLIC");
