@@ -403,3 +403,36 @@ Cause: tests. The module's tests do not all pass, and I cannot make them pass wi
 NEEDS BOB: regenerate the four bundles at the cut (your record says BOB does this at round end), or tell me how to proceed. Once `fleetbundles` passes I will post COMPLETE.
 
 Full detail is in my record, Record (BUNDLER #31, B18).
+
+## J19 · COMPLETE
+
+COMPLETE · BUNDLER #31 · fix round 10 item 95 (K5195), answering B19 (K5198).
+
+**What changed (file:line):** comment lines only, no code, no test logic.
+- `bio-plane/test/m/bundler/g54-observability.test.mjs:20`: `// fixtures-own: platform` above `okStub`.
+- `bio-plane/test/m/bundler/g83-g84.test.mjs:23`: same marker above `okStub`.
+- `bio-plane/test/m/bundler/release.test.mjs:248`, `:1163`, `:2067`: same marker above `okStub`, `containerStub`, `testStub`.
+- `bio-plane/test/m/bundler/repo.mjs:278`: same marker at :277, covering the `stubFile`/`stubLog` declaration and its use.
+
+Why each is marked: each stub is the Cloudflare API's own answer, a scripted-network double of the platform. No module answers for it.
+
+**Fixtures:** `checks/fixtures.mjs /home/user/bio bundler --list`: 0 failures; the seven are `accepted(own)`.
+
+**Red-first:** not applicable. The change is comments only, so there was no failing test to reproduce first.
+
+**Tests** (`node --import ./bio-plane/test/platform-sqlite.mjs --test` over `bio-plane/test/m/bundler/*.test.mjs` plus the four `system` files): 169 run, 168 pass, 1 file fails.
+- `bio-plane/test/system/fleetbundles.test.mjs`: 146 pass, 21 fail, all `STALE BUNDLE` checks for `agent-worker`, `file-scanner`, `ocr-worker` and `pdf-worker`. Accepted red by name per B19 (K5198), cleared by BOB's regeneration at the round end.
+
+**Met ids:** no requirement line changed. R2 (G39, pure-ASCII bundle) and R39 pass with `agent-runner` and `file-scanner` installed.
+
+**Checks** (absolute root `/home/user/bio`):
+- `format`: 178 modules, 0 failures.
+- `architecture`: 0 failures.
+- `coverage`: 42 of 42 live ids named, 0 failures.
+- `ownership` against `tranche/T51`: 0 failures.
+- `run.mjs`: findings only in other modules; none in a bundler path; words count unchanged (no sentence added).
+- `impact.mjs origin/tranche/T51 HEAD`: bundler only, 1 of 178 modules, 4 of 2981 test files.
+
+**Deferred:** none. **Stale artifacts I made:** none. **Found in another module:** the four stale bundles, already reported (J18).
+
+Size (session_01CYcedBDKbptHQ4Ss9eBGVV): test runs 3, module lines 4559
