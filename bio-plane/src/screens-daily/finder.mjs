@@ -172,7 +172,8 @@ export const finder = Object.freeze({
     }
 
     const pickBox = function (id, title) {
-      return '<input type="checkbox" id="finder-pick-' + cs.esc(id) + '" aria-label="' + cs.w("screen.finder.pick", { title: title }) + '">';
+      // R92: the kit's pick class, so the phone rule makes the box a 44 px target (06 §19 (d)).
+      return '<input type="checkbox" class="mk-pick" id="finder-pick-' + cs.esc(id) + '" aria-label="' + cs.w("screen.finder.pick", { title: title }) + '">';
     };
     const mark = function (it) {
       const bits = [];
@@ -189,14 +190,41 @@ export const finder = Object.freeze({
     let results = "";
     if (browsing && themeId) {
       // R43: with a theme chosen, what was placed in it, then its hunches apart; a hunch is never drawn as membership.
+      // R26: each document by its title, never its id. The placement view answers the document's id and no title (`connections` R44), so the
+      // titles of the documents it names are asked for once (`search` over `id:` terms, as R89's frontier does), kept in the screen's page
+      // memory under the ids asked and drawn on arrival; a document no title is read for is the plain word.
+      const docOf = function (p) {
+        if (p && typeof p.document === "string" && p.document) return p.document;
+        return p && p.target && p.target_kind !== "content" && p.target_kind !== "passage" && !/^CNT-/.test(String(p.target)) ? String(p.target) : "";
+      };
+      const named = function (p) { return p && typeof p.title === "string" && p.title.trim() ? p.title : ""; };
+      const placements = function (v) { return (Array.isArray(v.members) ? v.members : []).concat(Array.isArray(v.hunches) ? v.hunches : []); };
+      const titleOf = function (p) {
+        const own = named(p);
+        if (own) return own;
+        const id = docOf(p);
+        return id && ui.themeTitles && ui.themeTitles.map[id] ? ui.themeTitles.map[id] : "";
+      };
       const row = function (p) {
         const id = String(p.target || "");
-        const t = p.document && typeof p.document === "object" && p.document.title ? String(p.document.title) : (typeof p.title === "string" && p.title ? p.title : id);
-        return cs.row("", cs.ref(screenOf(p.target_kind, id), id, t, []), "", "");
+        const passage = p.target_kind === "content" || p.target_kind === "passage" || /^CNT-/.test(id);
+        return cs.row("", cs.ref(screenOf(p.target_kind, id), id, titleOf(p) || cs.w(passage ? "shell.card.passage" : "shell.card.document"), []), "", "");
       };
       results = cs.state(theme && theme.state === "ok" ? { state: "ok", value: theme.value } : theme && theme.state === "failed" ? { state: "failed", refusal: null } : { state: "loading" }, function (v) {
         const members = Array.isArray(v.members) ? v.members : [];
         const hunches = Array.isArray(v.hunches) ? v.hunches : [];
+        const wanted = [];
+        placements(v).forEach(function (p) { const id = docOf(p); if (id && !named(p) && wanted.indexOf(id) < 0) wanted.push(id); });
+        const key = themeId + "|" + wanted.slice().sort().join(" ");
+        if (wanted.length && (!ui.themeTitles || ui.themeTitles.key !== key)) {
+          ui.themeTitles = { key: key, map: {} };
+          cs.call("search", { query: { q: wanted.map(function (id) { return "id:" + id; }).join(" OR "), limit: String(wanted.length) } }).then(function (a) {
+            const b = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
+            const map = {};
+            (b && b.ok !== false && Array.isArray(b.hits) ? b.hits : []).forEach(function (h) { if (h && h.bundle_id && h.title) map[String(h.bundle_id)] = String(h.title); });
+            cs.set("themeTitles", { key: key, map: map });
+          }, function () { cs.set("themeTitles", { key: key, map: {} }); });
+        }
         return (members.length ? cs.sec("theme.placed", cs.sheet(members.map(row).join(""))) : "")
           + (hunches.length ? cs.sec("theme.hunches", '<p class="mk-small muted">' + cs.w("theme.hunch.note") + "</p>" + cs.sheet(hunches.map(row).join(""))) : "");
       }, { empty: "state.empty" }) || "";

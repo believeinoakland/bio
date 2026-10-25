@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J62
+**Read** · handled J63
 
 ## B1 · START
 
@@ -1939,3 +1939,12 @@ CHANGE (K5178): more through-the-door cases for your Wave B (K5138), each the wa
 2. CONTENT #23 J19: `cite` with `extent_kind=pdf-page` over a docx selection answers `BASIS_REFUSED` carrying content's C-45.1 finding (diag2-06 §5).
 3. STORE-REQUEST #3 J11 (3): the publication's `held: true` case: `recipes.finding` (merged, `bio-plane/test/m/store-request/recipes.mjs`) makes the concluded own reading; `publishpreflight` then `publishcheck` through the door with every authored field.
 Merge origin/tranche/T51 for the recipes. Each in your record with K4426's fields when one is red.
+
+## B95 · RESUME
+
+RESUME (K5180) for CONTROL-PLANE #63. CONTROL-PLANE #62's J63 work (R136, R137, the door cases of B89-B93) is merged into the tranche; BOB merged and archived it while it was still writing CHANGE B94's door cases (its last commit `54007f3a07`, "cite pdf-page over docx, publishcheck held", is on your branch and not yet merged; the rest of B94 was in a worker's hands and is lost). Merge origin/tranche/T51 into your branch first (never a rebase). Then, in order, each with K4426's fields in your record when a case is red:
+1. **B94 whole:** check which of its cases `54007f3a07` holds; write the rest (screens-investigate's four; content's `cite`; store-request's `held: true` publish).
+2. **R136 covers every request the door sends to the store** (BOB's reading, your J63 question): the review-copy and template-grant secret doors build their request through `innerRequest` too, not an allow-list; a failing-first case each.
+3. **Reds you named:** `walk-monitoring-checknow-adopt` (monitoring R79's copy entry lacks `provenance_chain`; extraction reads a text/plain copy as `final`): REPORT each with file:line in the owning module the day you confirm it (BOB starts those jobs); money R105 G61/G63 in `t51-round7-seam` (BINDING_UNREADABLE, MONEY_BAD_PERIOD, red before your change): find the cause (file:line) and REPORT or fix it if yours; `r9-seam` §14 and `r10-caseratify-chain` stay red by name until their quoting jobs and ADMISSION #20 merge.
+4. **Your own fixture lines** (68 in `checks/fixtures.mjs /home/user/bio control-plane --list`, all in older tests): to zero (re-point to providers' published fixtures or `storeWorld()`; markers listed in COMPLETE).
+5. `owner-ops.mjs` is deleted once PLANE #62 merges (BOB sends a CHANGE then); leave it until then.

@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J62
+**Read** · handled J63
 
 ## B1 · START
 
@@ -1240,3 +1240,11 @@ Your job is plane's Wave B: the copy-then-delete split of K5046 (a) (K624) finis
 ## B95 · CHANGE
 
 CHANGE (K5178; plan item 4; the K5175 audit row 4): LOAD-RED 5 (1) is still open: g54-l "(measure)"'s queued `state` request closed when the object's alarm ended, seen once under load, not reproduced in PLANE #61's 9 whole-file L-PIN runs (K5081, K5121). A pass never clears a red seen under load (K4966). After your Wave B steps (the test now runs over `assembleStore`), run the whole-file L-PIN form with §11's instrumentation (`build/plan/diagnosis-R9-load-reds.md` §11: client `cause`, object-side begin and end) under named load (8 busy loops beside it, as capture-sources' K5108 proof) at least 20 times. Reproduced: name the cause (Node socket, workerd's queued-request behaviour, or product), fix it where it lies (REPORT if outside your paths), prove it green 20 times under that load. Not reproduced in 20 under load: record each run's figures and the instrumentation's reading in your record, and write the deployed-plane check (a request sent while an alarm sweep runs) as a script for BOB's redeploy of biosmoke8 (round-end step, K5063 step 4). Both outcomes are complete answers; "flaky" is not.
+
+## B96 · RESUME
+
+RESUME (K5179): the oversized `build/plan/audit-r10.md` was split on the tranche into `audit-r10-1.md` and `audit-r10-2.md`, each under the limit (ab951dae05). Merge origin/tranche/T51 into your branch (never a rebase), then `mail inbox` and begin with START B94 and CHANGE B95.
+
+## B97 · CHANGE
+
+CHANGE (K5180; CONTROL-PLANE #62 J63, items 42, 69): 'alarm_at was null while a firing was in progress' is workerd's behaviour (getAlarm() answers null while alarm() runs), not a product defect; control-plane fixed its test to read the alarm the way the platform states it. Your `r8-headofline.test.mjs:124` fails identically: fix it the same way (read control-plane's change in `bio-plane/test/m/control-plane/` on the tranche), seen red then green, beside your Wave B.
