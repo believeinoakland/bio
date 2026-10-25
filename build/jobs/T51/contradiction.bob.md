@@ -110,3 +110,7 @@ Mail with `--module contradiction`; record `build/jobs/T51/contradiction.md` (ap
 **Re-point (test files only; BASIS-VERSIONS #22 J7).** `fixture.mjs:119`, the `conclude` op-table entry, takes basis-versions' published `concludeAct({kind, target})` (`bio-plane/test/m/basis-versions/fixtures.mjs`: `concluded`, `no_conclusion`, `bad_reading`; read it and its test whole) in place of the hand-built answer.
 
 **Done:** `checks/fixtures.mjs <absolute root> contradiction --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: ask BOB, QUESTION, for the edge). List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if a real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B9 · ANSWER · re J10
+
+ANSWER (K5114): option 1. BASIS-VERSIONS #23 now publishes `NO_CLAIM` and the adoption of a named accepted version as `concludeAct` kinds (follow-up 40). Keep your pushed work; set your state `WAITING ON BOB (J10)` and end your turn. A CHANGE names the new kinds once basis-versions merges; you then re-point `fixture.mjs:120`'s named-version arm and post COMPLETE.
