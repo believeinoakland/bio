@@ -259,3 +259,7 @@ Your job: wizard-scripts R52 (written by BOB, K5186; read it whole with R10, R11
 ## B26 · RESUME
 
 RESUME (BOB #302 backstop at takeover): your record reads QUIET (no push for 20 minutes, or past its RUNNING window). Read every entry of mine past your cursor, set your state (RUNNING with its window if a command runs), push, and continue from your record's next step.
+
+## B27 · CHANGE
+
+CHANGE (BOB #302, K5195; plan item 95 (2)). Read B26 (RESUME) first. Also yours: `writing-help.test.mjs:217` hand-builds `LIMITS_UNREADABLE`; take answers' published `limitsUnreadable()` (`answers/fixtures.mjs`, its R30) so `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio wizard-scripts` reads 0.
