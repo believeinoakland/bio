@@ -39,7 +39,7 @@ import { promotionOf } from "../promotion/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { basisVersionsOf, versionsIn } from "../basis-versions/index.mjs";
 import { eventsOf } from "../events/index.mjs";
-import { canonicalExtent } from "../content/index.mjs";
+import { canonicalExtent, checkContentExtent, describeExtent, contentOf } from "../content/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { compare, bounds } from "../civil-time/index.mjs";
 import { defaultRegistry, derivedId, isRecordId, BOUNDS, LOWEST_GRADE } from "../connection-grammar/index.mjs";
@@ -114,6 +114,8 @@ export const ACCEPTANCE_REVIEW = Object.freeze({ rate: 0.95, min_offered: 30, st
 /** R61: the key a member's own flag of two documents is held under. It is no pairing key (R5, R18): the plane forms no
  *  pair for it, a member names the two passages, so `pairs` never answers it and R5 refuses it. */
 export const FLAG_KEY = "FLAG";
+/* R61: the pages of a reading's units read to find a flagged passage (a reading is read page by page, never whole). */
+const FLAG_UNIT_PAGES_MAX = 200;
 /** R61: a flag is a source against a source, the `world` label, so it is a lead (R24) and creates no duty of its own. */
 export const FLAG_LABEL = "world";
 
@@ -210,7 +212,7 @@ const live = new Set();
 
 /** K61: the one Contradiction for this object's storage. `opts` is read on the first call only: `record`
  *  (`recordOf(ctx)`), `extraction` (`extractionOf(ctx)`), `membership`, `promotion`, `entities`, `basisVersions`,
- *  `events`, `money` (each its module's factory), `inquiry` (inquiry's N345 services, R46–R48: by default its module's
+ *  `events`, `money`, `content` (each its module's factory), `inquiry` (inquiry's N345 services, R46–R48: by default its module's
  *  exports and its instance's `contradictionLink` and `inquiryOfCandidate`), `now` (a clock). Every service but
  *  `record` is reached on first use. A test may pass its own. The promotion check (R38) is registered here, once. */
 export function contradictionOf(ctx, opts = {}) {
@@ -228,6 +230,7 @@ export function contradictionOf(ctx, opts = {}) {
       basisVersions: lazy(opts.basisVersions, () => basisVersionsOf(ctx, { record })),
       events: lazy(opts.events, () => eventsOf(ctx, { record })),
       money: lazy(opts.money, () => moneyOf(ctx, { record })),
+      content: lazy(opts.content, () => contentOf(ctx, { record })),
       inquiry: lazy(opts.inquiry, () => inquiryServices(ctx)),
     });
     instances.set(storage, c);
@@ -291,10 +294,10 @@ export const OWNER_REGISTRATION = (() => {
 
 export class Contradiction {
   #sql; #record; #extraction; #now; #runGate = null; #declared = false;
-  #membership; #promotion; #entities; #bv; #inquiry; #events; #money;
+  #membership; #promotion; #entities; #bv; #inquiry; #events; #money; #content;
 
   constructor(storage, { record, extraction = null, now = null, membership = null, promotion = null, entities = null,
-                         basisVersions = null, inquiry = null, events = null, money = null } = {}) {
+                         basisVersions = null, inquiry = null, events = null, money = null, content = null } = {}) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#extraction = extraction;
@@ -305,6 +308,7 @@ export class Contradiction {
     this.#inquiry = inquiry;
     this.#events = events;
     this.#money = money;
+    this.#content = content;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -325,6 +329,7 @@ export class Contradiction {
   #b() { return typeof this.#bv === "function" ? (this.#bv = this.#bv()) : this.#bv; }
   #i() { return typeof this.#inquiry === "function" ? (this.#inquiry = this.#inquiry()) : (this.#inquiry || {}); }
   #ev() { return typeof this.#events === "function" ? (this.#events = this.#events()) : this.#events; }
+  #ct() { return typeof this.#content === "function" ? (this.#content = this.#content()) : this.#content; }
   #mo() { return typeof this.#money === "function" ? (this.#money = this.#money()) : this.#money; }
 
   /* ---- boot (K4) ---- */
@@ -2524,9 +2529,37 @@ export class Contradiction {
     const row = canon ? this.#rows(`SELECT content_id, capture_sha, bundle_id, ref, extent_kind, stale FROM content
                                      WHERE capture_sha=? AND extent=? ORDER BY content_id LIMIT 16`, capture, canon)
       .find((r) => this.#sees(r.bundle_id, viewer)) : null;
-    if (!row) return missing(localize("contradiction.index.flag_passage_unheld", "no passage you can see is held there"));
+    if (row) return { row };
+    /* (K5148) a passage no content row yet holds, of a reading the viewer may see, is made citable by the flagging member in
+       `flag` below, once every other refusal has passed; here it is only found, and a page the reading does not hold,
+       a bundle not seen and a capture never read stay one answer. */
+    const unit = canon ? this.#readUnit(capture, canon, viewer) : null;
+    if (!unit) return missing(localize("contradiction.index.flag_passage_unheld", "no passage you can see is held there"));
+    const ctx = this.#ct().contentContextFor(capture, { searched: false });
+    if (checkContentExtent(extent, ctx)) return missing(localize("contradiction.index.flag_passage_unheld", "no passage you can see is held there"));
     /* END DEC-49 REGION is-flag-no-passage */
-    return { row };
+    return { row: { content_id: null, capture_sha: capture, bundle_id: unit.bundle_id, ref: describeExtent(extent),
+                    extent_kind: extent.kind, stale: 0 }, mint: { extent } };
+  }
+
+  /** The reading's own unit at a canonical extent, `{bundle_id}`, when the capture has a reading filed in a bundle the viewer
+   *  may see and its indexed units (extraction R36) include that extent; null otherwise. Reads the units page by page, bounded. */
+  #readUnit(capture, canon, viewer) {
+    const filed = this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, capture);
+    const x = this.#x();
+    if (!filed || !this.#sees(filed.bundle_id, viewer) || !x || typeof x.unitsOf !== "function") return null;
+    let after = null;
+    for (let pages = 0; pages < FLAG_UNIT_PAGES_MAX; pages++) {
+      const page = x.unitsOf(capture, after === null ? {} : { after });
+      for (const u of page && Array.isArray(page.units) ? page.units : []) {
+        let at = null;
+        try { at = canonicalExtent(u.extent); } catch { at = null; }
+        if (at === canon) return { bundle_id: filed.bundle_id };
+      }
+      after = page && Number.isInteger(page.next) ? page.next : null;
+      if (after === null) return null;
+    }
+    return null;
   }
 
   /** op=contradictionflag — R61: a member sets a passage of one document beside a passage of another as a contradiction
@@ -2541,6 +2574,7 @@ export class Contradiction {
     const lost = found.find((f) => f.refusal);
     if (lost) return lost.refusal;
     const [x, y] = found.map((f) => f.row);
+    const mints = found.map((f) => f.mint ?? null);
     /* DEC-49 REGION is-flag-same-document */
     if (x.bundle_id === y.bundle_id || x.capture_sha === y.capture_sha)
       return Contradiction.#refuse("FLAG_SAME_DOCUMENT",
@@ -2553,6 +2587,21 @@ export class Contradiction {
     /* END DEC-49 REGION is-flag-no-reason */
     const over = this.#overCap({ reason });
     if (over) return over;
+    const who = author.trim();
+    const stamp = at || this.#now();
+    /* (K5148) the flagging member makes each unheld passage citable (`content`'s mint, minted by them), with the candidate in one
+       write: the rows of this call, never a refusal's. */
+    const rows = this.#record.transact(() => [x, y].map((r, k) => {
+      if (!mints[k]) return r;
+      const m = this.#ct().mint({ bundleId: r.bundle_id, captureSha: r.capture_sha, extent: mints[k].extent, mintedBy: who, at: stamp });
+      return m.ok ? this.#one(`SELECT content_id, capture_sha, bundle_id, ref, extent_kind, stale FROM content WHERE content_id=?`, m.content_id) : null;
+    }));
+    if (rows.some((r) => !r))
+      return Contradiction.#refuse("FLAG_NO_PASSAGE", localize("contradiction.index.flag_passage_unheld", "no passage you can see is held there"));
+    return this.#flagWritten({ x: rows[0], y: rows[1], reason, who, stamp, viewer });
+  }
+
+  #flagWritten({ x, y, reason, who, stamp, viewer }) {
     const memo = new Map();
     const side = (r) => {
       const d = this.#doc(r.capture_sha, memo, viewer);
@@ -2579,8 +2628,6 @@ export class Contradiction {
     if (held)
       return { ok: true, already: true, wrote: false, candidate: held.id, state: held.view.state,
                says: localize("contradiction.says.flag_already_held", "these two passages are already set side by side as a contradiction, and it stays as it is") };
-    const who = author.trim();
-    const stamp = at || this.#now();
     const why = localize("contradiction.flag_why", "a member set these two documents side by side as contradicting, with their reason");
     const row = { candidate: id, key: FLAG_KEY, a, b, run: "", proposed_by: who, label: FLAG_LABEL, reason: reason.trim(),
                   origin: "member", at: stamp, a_side: { ...pa, context: { why } }, b_side: { ...pb, context: { why } } };

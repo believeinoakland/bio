@@ -1,6 +1,6 @@
 # contradiction (T51)
 
-**Status** · session_01H1kEAWw53A5hmDc6bvvHAe · depth 2 · COMPLETE · handled B10
+**Status** · session_017TrbRYp1J3suhTf9xgvcAT · depth 2 · COMPLETE · handled B10
 
 ## J1 · COMPLETE
 
@@ -215,3 +215,25 @@ COMPLETE for B8 (fix round 10, the `conclude` re-point) and B10 (follow-up 40).
 - `checks/ownership.mjs … contradiction tranche/T51`: 0 failures. The two files changed are `bio-plane/test/m/contradiction/fixture.mjs` and my job record `build/jobs/T51/contradiction.md`.
 
 Size (session_01H1kEAWw53A5hmDc6bvvHAe): test runs 2, module lines 3786
+
+## J12 · COMPLETE
+
+COMPLETE for B11 (fix round 10, item 70; K5148; cause diag2-020305 §7): **R61 is met** (the mark `*(not yet met: T51)*` on R61 may be struck).
+
+**Cause and fix.** `#flagPassage` found only an existing `content` row, and a find mints none, so a passage the Document screen offers was `FLAG_NO_PASSAGE`. Now a passage with no row is looked for in the capture's reading: its `readings` bundle must be one the viewer sees, and its indexed units (extraction's `unitsOf`, read page by page, at most 200 pages) must include the canonical extent, and `content`'s own `checkContentExtent` against the capture's context must pass (an unread capture has no chain and is refused). Only then does `flag`, after every other refusal (same document, no reason, cap), mint the passage through `content.mint` as the flagging member (`minted_by` the member, `at` the act's instant) and write the candidate. A refusal mints nothing. `contradictionOf` takes a `content` option (default `contentOf(ctx, {record})`, reached on first use); `content` was already in `uses`. No other module changed.
+
+**Failing first** (seen red on the unchanged code, then green): `flag.test.mjs` "R61 a passage of a reading the viewer may see that no content row holds is made citable by the flagging member…", over a new `unmintedWorld()` in `flag-seed.mjs` (readings with a text chain and page count, indexed units, and no `content` row). It checks the act answers `ok`, writes the candidate and two content rows minted by the member; the controls (a page past the reading's pages, a page inside the page count but not a unit, a hidden bundle's passage, an unread capture, and a missing reason) are refused and mint and write nothing; a second flag of the pair answers `already` and mints nothing more; a member who may see the hidden bundle may flag its passage. `fixture.mjs` passes the real `content` to `contradictionOf`.
+
+**Why the tests missed it.** `flagWorld()` pre-minted a content row for every passage the tests used, and its only passage control was a page not in the reading at all; no test sent the act for a passage nobody had cited, and the screens' and control-plane's tests script the plane's answer.
+
+**Deferred.** Nothing. **Found in other modules.** Nothing. REPORT for BOB to place: a through-the-door case (upload a pair, `findin` each figure, `contradictionflag` ok) belongs to control-plane (K5138); I added none.
+
+**Markers added.** None (`fixtures-own`/`fixtures-generic`).
+
+**Tests and checks** (absolute root `/home/user/bio`): module tests `bio-plane/test/m/contradiction/`: 153 tests, 145 pass, 0 fail, 8 todo, 0 cancelled (the run exits by itself); `checks/format.mjs`: 178 modules, 0 failures; architecture: 29 product files, 0 failures; coverage: 61 of 61 live ids named, 0 failures; words: 6255 literals, 0 failures; `checks/fixtures.mjs … contradiction --list`: answer 0, 0 failures; ownership: 0 failures (files changed: `bio-plane/src/contradiction/index.mjs`, `bio-plane/test/m/contradiction/{flag.test,flag-seed,fixture}.mjs`, this record).
+
+Size (session_017TrbRYp1J3suhTf9xgvcAT): test runs 6, module lines 3833
+
+## J13 · COMPLETE
+
+COMPLETE for B11 (item 70, K5148). R61 is met (strike its mark). A passage with no content row, of a reading the viewer sees whose indexed units hold it and whose content context passes, is made citable by the flagging member (content.mint, minted_by the member) after every other refusal, then flagged; a page not in the reading, a hidden bundle and an unread capture stay FLAG_NO_PASSAGE, nothing minted or written. Failing-first test and why tests missed it are in J12. Module tests 153: 145 pass, 0 fail, 8 todo; format, architecture, coverage, words, fixtures, ownership 0 failures. REPORT: the through-the-door case (upload pair, findin, contradictionflag) belongs to control-plane (K5138); I added none. Size (session_017TrbRYp1J3suhTf9xgvcAT): test runs 6, module lines 3833.
