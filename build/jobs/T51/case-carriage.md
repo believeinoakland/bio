@@ -219,3 +219,7 @@ COMPLETE · follow-up 14, cause R24 (b2). Root cause: index.mjs #copyOne (and #o
 **Checks** (absolute root `/home/user/bio`): format 0 failures; architecture case-carriage 19 files, 0; coverage 23 of 23, 0; words 0; ownership 0; fixtures `--list` 0 failures, no new line.
 
 Size (session_01Eyr6nAcJni3EthrUFAfdnx): test runs 9, module lines 1756
+
+## J9 · COMPLETE
+
+COMPLETE · follow-up 70, 10A §1. Root cause as diagnosed: #isPhoto/#photo read only capture.content_type and the path extension; an upload records neither. Fixed with one rule #judgePhoto: image content_type, else profile.format.format image, else profile.source_content_type image, else extension only when nothing states a type or format (a known non-image format wins over the name). Met: R1 (and R8, R9, R13 that read it). Failing-first upload-photo.test.mjs (3 of 4 red on old code, green now). Module 110/110; impact: case-disclosures 116, case-check 35, case-authoring 257, public-read 310, scheduler 185, publication 184 pass 0 fail. format, architecture, coverage 23/23, words, ownership, fixtures --list: 0 failures. Markers added: none. REPORT: capture publishes no upload fixture; I used the shape pinned at capture/upload.test.mjs:138-155, hand-built, no marker; the through-the-door case is control-plane's to place (K5138). Record: build/jobs/T51/case-carriage.md. Size (session_01Eyr6nAcJni3EthrUFAfdnx): test runs 9, module lines 1756.
