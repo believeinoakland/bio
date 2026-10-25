@@ -26,6 +26,7 @@ import { eventsOf } from "../../../src/events/index.mjs";
 import { moneyOf } from "../../../src/money/index.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
 import { noSelection } from "../retrieval/fixtures.mjs";
+import { concludeAct } from "../basis-versions/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -121,14 +122,15 @@ export function world({ gate = true, now = null, strictConclude = false } = {}) 
       if (bv.concludeRefusal) return bv.concludeRefusal;
       /* With `strictConclude`: R16's no-project arms in its order, and R51's one-act path (a `reading` takes the place of a
          named `version`, 12 to 500 characters), as basis-versions answers them. Off, it concludes whatever it is given
-         (the stand-in other modules' tests were written against). */
+         (the stand-in other modules' tests were written against). The reading arms and the concluded receipt are
+         basis-versions' published answers (`concludeAct`), the target this question's. */
       const concl = String(args.conclusion ?? "").trim(), vname = String(args.version ?? "").trim();
       const hasReading = args.reading !== undefined && args.reading !== null;
       const own = hasReading ? String(args.reading).trim() : "";
       if (strictConclude) {
-        if (!concl && !hasReading) return { ok: false, reason: "NO_CONCLUSION", code: "NO_CONCLUSION" };
+        if (!concl && !hasReading) return concludeAct({ kind: "no_conclusion", target: args.target });
         if (hasReading && (own.length < 12 || own.length > 500 || vname))
-          return { ok: false, reason: "BAD_READING", code: "BAD_READING" };
+          return concludeAct({ kind: "bad_reading", target: args.target });
         if (!hasReading && (!vname || !bv.accepted.has(`${args.target}|${vname}`)))
           return { ok: false, reason: "NO_CLAIM", code: "NO_CLAIM" };
       }
@@ -139,8 +141,7 @@ export function world({ gate = true, now = null, strictConclude = false } = {}) 
       text = text.replace(/\n---\n/, `\nconclusion: "${concl || own}"\nfalsifier: "${args.falsifier || "a record showing otherwise"}"\n---\n`);
       const r = promotion.promote({ bundleId: args.target, base: head.bundleSha, snapKey: `conclude${++n}`,
         author: args.author, files: [{ path: "bundle.md", text }], meta: { object_type: "inquiry" } });
-      return r.ok ? { ok: true, target: args.target, to: "concluded", relationship: "no_project", project: null,
-                      version: hasReading ? "reading-1" : vname, ...(hasReading ? { own_reading: true } : {}) } : r;
+      return r.ok ? { ...concludeAct({ kind: "concluded", target: args.target }), version: hasReading ? "reading-1" : vname } : r;
     },
   };
   let n = 0;
