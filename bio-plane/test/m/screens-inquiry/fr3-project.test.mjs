@@ -67,6 +67,8 @@ test("R29 R40 R54 C94 the members the project names from the record are drawn by
 });
 
 test("R29 R40 R54 C94 the members the project names from the record are drawn by handle, never by id (shapes the real plane never gives, which the page still guards): a participant given by id, the visibility history's setter, the stake's, the owners' vote; an id no roster holds by the plain word; control: the roster silent, the fallback words", async () => {
+  /* still scripted (projectparticipants, projectvisibility, projectstake, projectownervotes): these are shapes the real owners never give (a participant by id, a setter by id, an id no roster holds), which the page still
+     guards; no recipe can make them (needed: none, the real counterpart is the test above) */
   const plane = (roster) => ({ memberlist: roster,
     projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: 1 }, { member: "u-7", state: "joined", owner: 0 }, { handle: "ana", state: "joined", owner: 0 }] }),
     projectvisibility: ok({ ok: true, projectId: P, setting: "hidden", recorded: true, history: [
