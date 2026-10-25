@@ -1,6 +1,31 @@
 # Diagnosis of re-walk 9's causes, groups G2 (R6-R10) and G3 (R11-R18): DIAG-R10-B #1 for BOB #287 (fix round 10 of T51; K5047)
 
-**Status** · IN PROGRESS (each cause is committed and pushed as it is finished; the line becomes `COMPLETE` when R6-R18 are all in). Written by DIAG-R10-B #1, a study session: no product code and no test is changed. Method: the walk records read whole (`walk-T51-rewalk9/A.md`, `C.md`, the rows of `D.md` and `E.md` that name my causes), the code at each cause read in full around it, and each case rebuilt in Node from the walker's recipe (`bio-plane/test/imggen.mjs`, `pdfgen.mjs`, `docgen.mjs`; the member's real engine, tesseract-wasm 0.11.0, through `ocr-worker/test/memberworker.mjs` as `ocr-worker/test/g128i-l26-photo.test.mjs` does). Scratch scripts are in the session's scratchpad, not in the repository. "Red" below means I ran it and saw the walker's wrong answer.
+**Status** · COMPLETE (R6-R18 all in; each cause was committed and pushed as it was finished). Written by DIAG-R10-B #1, a study session: no product code and no test is changed. Method: the walk records read whole (`walk-T51-rewalk9/A.md`, `C.md`, the rows of `D.md` and `E.md` that name my causes), the code at each cause read in full around it, and each case rebuilt in Node from the walker's recipe (`bio-plane/test/imggen.mjs`, `pdfgen.mjs`, `docgen.mjs`; the member's real engine, tesseract-wasm 0.11.0, through `ocr-worker/test/memberworker.mjs` as `ocr-worker/test/g128i-l26-photo.test.mjs` does). Scratch scripts are in the session's scratchpad, not in the repository. "Red" below means I ran it and saw the walker's wrong answer.
+
+## Summary (for BOB; each row is detailed below)
+
+| cause | root, one line | owner (K4427) | seen red |
+|---|---|---|---|
+| R6 | `levelLight` stretches by the darkest 0.5 % of all pixels; a sparse page has under 0.5 % ink, goes all dark, `text_found:false`, `NOTHING_TRANSCRIBED`, final (`picturepixels.mjs:349`, `:437`) | `pdf-pixels` | yes |
+| R7 | one engine orientation claim, one retry turn; on a 3-line page the engine answers 270 for every frame (`member.mjs:249`-`:275`) | `ocr-worker` (R26 forbids the repair: BOB) | yes |
+| R8 | pdf.js throws on a file cut before its trailer; tier 2 gives up and tier 1 cannot decode a no-ToUnicode font (`pdf-worker/src/index.mjs:131`, `:217`) | `pdf-worker` (R10 silent: BOB) | yes |
+| R9 | the reading never takes the structure answer's `notes` (`reading-pipeline/index.mjs:3050`) | `reading-pipeline`, then the Document page and a word from the design | yes |
+| R10 | `ocr_left.pages` is the piece's count, published as `pages_left` beside the document's `total` (`reading-pipeline/index.mjs:755`, `extraction/index.mjs:766`, `:3251`) | `extraction` | yes (through `read`) |
+| R11a | docx `text()` peaks 90 MB above its start on a 17-20 MB part; the 250,000-object bound trips after the object has spent its memory (`docx.mjs:413`-`:419`, `ooxml.mjs:210`) | `office-readers` (R44, R46: BOB) | yes (heap 96 MB OOM) |
+| R11b | `Math.max(...200,000 args)` overflows the stack (`reading-pipeline/index.mjs:1020`) | `reading-pipeline` | yes |
+| R11c | safe view: container's `NOT_RENDERABLE` loses its message in the Worker; why LibreOffice made no PDF is **UNKNOWN** (the run was refused here) | `file-scanner` | no |
+| R12 | `NAME_TEXT_TYPES` has no `tsv` (`acquisition/index.mjs:154`) | `acquisition` (R102: BOB) | yes |
+| R13a | the "connect/flag another document" choices list every document (R99): by design, not a defect | none (BOB's design call) | yes (drawn) |
+| R13b | members absent from the project list and breadcrumb: the data carries the project; the draw not reproduced, **UNKNOWN** | `screens-inquiry` after a live reading | data side only |
+| R14 | the "yours" sentence replaces the grade's other reasons (`screens-intake/open-file.mjs:79`-`:83`) | `screens-intake` | yes |
+| R15 | `TAG_RE` is quadratic on an unclosed tag run: 26.9 s at 240 KB (`subresources.mjs:75`) | `subresources` | yes |
+| R16 | a hidden slide is in `slides` and in `parts` (`pptx.mjs:943`, `:949`; `reading-pipeline/index.mjs:1011`) | `office-readers` | yes |
+| R17a | the Find-in term item drops the unit's part kind (`retrieval-browse/findin.mjs:639`) | `retrieval-browse`, then `screens-daily` | yes |
+| R17b | a `doc-part` leg has no place word (`screens-inquiry/question.mjs:219`) | `screens-inquiry` | by reading |
+| R18a | a links-only `<div>` is furniture by R51 | none (BOB's call on R51) | yes (behaviour) |
+| R18b | a block inside a `td` ends the row's paragraph (`reading-pipeline/html.mjs:397`) | `reading-pipeline` | yes |
+
+Two causes are **not diagnosed to the end** and say so: R11c (the converter's refusal inside the renderer image) and R13b (the project list and breadcrumb at the draw). Each has the reproduction still owed named in its section (K4428).
 
 **Recipe note (applies to R6, R7, R10).** The walk's A7 says "each 3 lines" and A8 gives no line count; `imggen`'s default is 6 lines. The walker's file sizes (A7 PNG 6,237 B; A8 rotated PDF scan 15 KB for 4 pages) match a **3-line page** (I build 6,192 B for `{kind:"png",seed:"rw9-A-7",size:{pages:1,lines:3}}`). Every R6/R7 case below was run at 3 lines (the walker's) and at 6 and 18 lines as controls: the failure is a property of a **sparse page** (a few short lines on a letter page), which is what a one-page photograph of a note or a form is.
 
@@ -76,7 +101,7 @@ Wording: the sentence the member reads is the generic final-reading sentence (G1
   | 270 | 270 | R90 (9/17) | **270** | 270 / 270 / 270 | R90 (5/6) |
 
   On 6 lines the engine's claim is right (its `rotation` is the degrees the frame lies turned clockwise, as `turnToUpright` assumes) and the member reads the page upright. On **3 lines the engine answers 270 for every frame, upright included**: it has too little text to tell. The member turns a 3-line page "by 90" (`360 - 270`), which for a page turned 90 clockwise makes it 180 (I measured the ink box: text at the bottom right, upside down), the engine reads garbage ("FIPNE ST-T4-e8-Y-6r"), rated 0 words, and the page is refused. The upright reading exists at the other turn (R270 for a page turned 90: 5 of 6 rated), but **no code ever tries a turn the claim did not name**.
-- Red, through the real member and engine, the walker's cases at 3 lines: `degrade:{turn:90}` → `PICTURE_NOT_LEGIBLE`; `degrade:{turn:180}` → `PICTURE_NOT_LEGIBLE`; the PDF scan `{pages:2, lines:3, kinds:["scan"], rotate:{every:1, angle:90}}` → page 0 `PAGE_NOT_LEGIBLE` (the A8 "pages 1-4 `PAGE_NOT_LEGIBLE`", all four refused). Controls (all read, turned upright, partly legible notes): the same at 6 and 18 lines, a PDF scan rotated 90 at 6 and 20 lines (`turned_deg` 270 on the second read). So the A8 failures are the **sparse** pages; dense pages are fine.
+- Red, through the real member and engine, the walker's cases at 3 lines: `degrade:{turn:90}` → `PICTURE_NOT_LEGIBLE`; `degrade:{turn:180}` → `PICTURE_NOT_LEGIBLE`; the PDF scan `{pages:2, lines:3, kinds:["scan"], rotate:{every:1, angle:90}}` → page 0 `PAGE_NOT_LEGIBLE` (the A8 "pages 1-4 `PAGE_NOT_LEGIBLE`", all four refused). Controls (all read, turned upright, partly legible notes): the same at 6 and 18 lines, a PDF scan rotated 90 at 6 and 20 lines (the second render, turned, is read upright: the engine's claim is 0 there). So the A8 failures are the **sparse** pages; dense pages are fine.
 - The second half of the walker's row, "not stated as sideways": the member **does** state it: `PAGE_NOT_LEGIBLE` carries "this page is sideways or too faint to read" (`ocr-worker/src/contract.mjs:107`, key `ocr-worker.contract.this_page_is_sideways_or_too_faint_to_read`), and `PICTURE_NOT_LEGIBLE` "the picture is too unclear to read" (`:105`). The Document page does not draw either: it draws the size sentence for any final reading with no size reason (A N3). That is **R1 (G1), DIAG-R10-A's**; merged here by reference, not re-diagnosed. (The word chosen is `PICTURE_NOT_LEGIBLE`'s "too unclear", which does not say "turned": for a refused turned *picture* the member's word is the module's key; whether a picture also deserves the "sideways" sentence is the design's if BOB wants it said.)
 
 ### 2. Why the tests missed it
@@ -176,7 +201,7 @@ None (data flow). After the fix, on the live copy the Document page of the two A
 
 - A PDF is read in ranges of 100 pages (`rangePages`). The first piece of a 300-page scan is pages 0-99; `tier3Extend` is asked about those pages only, so `ocr_left` is `{cursor: 0, pages: 100}`. I read it in-process (`read(..., {cursor: null, ocrInvocations: 0})` with the real pdf-worker, a 300-page scan `{pages:300, lines:3, kinds:["scan"]}`, 1,015,391 B): `more: true, read_through: 100, total: 300, ocr_left: {cursor: 0, pages: 100}, counters.owed: 100`. That is the walker's `readheld` answer exactly: `detail {read_through: 100, total: 300}` and `registration {kind:"ocr", pages_left: 100}`.
 - So `pages_left: 100` is true of the piece (100 pages owed OCR out of the 100 read) and false of the document (300 owed, 200 not yet read), under a name and next to a total that say "left". The ledger's later rows show OCR "continuing through all 300", because each later piece registers its own count (extraction R102: "from each continuation piece").
-- This is the same number the Document page and a `owedwork` row would show as "pages left" if either draws `pages_left`; I found one consumer that draws it as the document's: `extraction`'s `#pressOwes` (`:2919`), which counts the whole document (`#pagesLeft`), so the two registrations of one document disagree (100 from `readheld`, 300 from the press).
+- The press (`extraction/index.mjs:2905`-`:2925`, `#pressOwes`) registers the same kind of job from `#pagesLeft(sha, basis)`, the pages the stored reading's units leave unread, i.e. the document's count (read from the code, not run here); so one document can be registered with 100 by the door's own read and with a larger figure by the press. I did not find a screen that draws `pages_left`; it is on the answer and on the ledger row.
 
 ### 2. Why the tests missed it
 
