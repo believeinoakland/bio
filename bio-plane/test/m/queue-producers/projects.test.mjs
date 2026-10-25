@@ -173,3 +173,69 @@ test("R8: feedItems answers both kinds beside the others, and writes nothing", (
   assert.ok(w.read("bob", V("bob")).items.some((i) => i.kind === "project-invitation"));
   assert.equal(JSON.stringify(w.db.prepare(`SELECT * FROM project_join_requests`).all()) + JSON.stringify(w.db.prepare(`SELECT * FROM project_participants`).all()), before);
 });
+
+/* R54 (K5157; walk-T51-final 03 §6; membership R35): a participant's request to leave is an item for the project's owners. The
+   rows are made by membership's real acts (invite, join, leave, remove) over the real project-roster. */
+const joined = (w, who, project = "PRJ-1") => {
+  invite(w, who, project);
+  const r = w.membership.projectJoin({ projectId: project, by: who, viewer: V(who) });
+  assert.equal(r.ok, true, JSON.stringify(r));
+};
+const leave = (w, who, comment = undefined, project = "PRJ-1") => {
+  const r = w.membership.projectLeave({ projectId: project, by: who, comment, viewer: V(who) });
+  assert.equal(r.ok, true, JSON.stringify(r));
+};
+
+test("R54: a participant who asks to leave gives one OBLIGATION project-leave to each owner and to nobody else, naming her and carrying her note apart; a joined participant and an invited one give none", () => {
+  const w = parkside();
+  joined(w, "bob"); joined(w, "dee"); invite(w, "eve");
+  leave(w, "dee", "I am moving away");
+  for (const owner of ["ann", "cal"]) {
+    const items = kind(w.read(owner, V(owner)), "project-leave");
+    assert.deepEqual(items.map((i) => i.id), ["OBLIGATION::project-leave::PRJ-1::dee"], `${owner}: one item, for dee only`);
+    const it = items[0];
+    assert.deepEqual([it.class, it.kind], ["OBLIGATION", "project-leave"]);
+    assert.deepEqual([...it.recipients].sort(), ["ann", "cal"], "each owner of the project, and nobody else");
+    assert.ok(it.summary.includes("dee") && it.summary.includes("Parkside"), "names the participant and the project");
+    assert.deepEqual(it.quote, { by: "dee", text: "I am moving away" }, "her note, apart from ours");
+    assert.doesNotMatch(it.summary + it.detail, /moving away/);
+    assert.equal(it.case.ungrouped, true);
+    assert.deepEqual(it.options.map((o) => o.id), ["projectremove"]);
+  }
+  /* nobody else: the participants, the one invited, and the one who asked read none */
+  for (const m of ["bob", "dee", "eve"]) assert.deepEqual(kind(w.read(m, V(m)), "project-leave"), [], `${m}: none`);
+  /* a request with no note carries no quote */
+  leave(w, "bob");
+  assert.equal(kind(w.read("ann", V("ann")), "project-leave").find((i) => i.subject.participant === "bob").quote, null);
+});
+
+test("R54: the item leaves for every owner at once when an owner removes the participant, and when she withdraws the request by joining again", () => {
+  const w = parkside();
+  joined(w, "bob"); joined(w, "dee");
+  leave(w, "bob", "bye"); leave(w, "dee");
+  const ids = (m) => kind(w.read(m, V(m)), "project-leave").map((i) => i.id).sort();
+  const both = ["OBLIGATION::project-leave::PRJ-1::bob", "OBLIGATION::project-leave::PRJ-1::dee"];
+  assert.deepEqual(ids("ann"), both); assert.deepEqual(ids("cal"), both);
+  /* an owner removes bob */
+  const rm = w.membership.projectRemove({ projectId: "PRJ-1", handle: "bob", comment: "thanks for your work", by: "ann", viewer: V("ann") });
+  assert.equal(rm.ok, true, JSON.stringify(rm));
+  assert.deepEqual(ids("ann"), [both[1]]); assert.deepEqual(ids("cal"), [both[1]]);
+  /* dee withdraws (membership R34: a join withdraws a request to leave) */
+  const back = w.membership.projectJoin({ projectId: "PRJ-1", by: "dee", viewer: V("dee") });
+  assert.equal(back.ok, true, JSON.stringify(back));
+  assert.deepEqual(ids("ann"), []); assert.deepEqual(ids("cal"), []);
+});
+
+test("R54: a project the viewer does not own names nothing: an owner of another project, and an outsider to a hidden project, read none of its leave requests", () => {
+  const w = parkside();
+  w.bundle("PRJ-2", "project", { title: "Hidden project" });
+  w.membership.projectClaimOwner({ projectId: "PRJ-2", memberId: "bob" });
+  w.membership.reindexProjectSight("PRJ-2");
+  invite(w, "eve", "PRJ-2", "bob");
+  assert.equal(w.membership.projectJoin({ projectId: "PRJ-2", by: "eve", viewer: V("eve") }).ok, true);
+  leave(w, "eve", "private note", "PRJ-2");
+  /* the owner of the hidden project reads it; ann owns only PRJ-1 and is no participant of PRJ-2 */
+  assert.deepEqual(kind(w.read("bob", V("bob")), "project-leave").map((i) => i.id), ["OBLIGATION::project-leave::PRJ-2::eve"]);
+  assert.deepEqual(kind(w.read("ann", V("ann")), "project-leave"), []);
+  assert.doesNotMatch(JSON.stringify(w.read("ann", V("ann"))), /private note|Hidden project/);
+});

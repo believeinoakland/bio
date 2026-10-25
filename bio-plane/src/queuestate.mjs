@@ -204,6 +204,9 @@ export const QUEUE_OBLIGATION_KINDS = {
                               + "— LIVE: queue-producers R41",
   "project-request":             "a member asks to join a project you own; grant or decline (op=projectrequestanswer) "
                               + "— LIVE: queue-producers R42",
+  /* Fix round 10 (R57; queue-producers R54; K5157): a participant asks to leave a project; only an owner removes her. */
+  "project-leave":               "a participant asks to leave a project you own; remove them from it (op=projectremove) "
+                              + "— LIVE: queue-producers R54",
 };
 
 export const QUEUE_FINDING_KINDS = {

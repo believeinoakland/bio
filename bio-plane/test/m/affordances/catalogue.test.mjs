@@ -785,9 +785,9 @@ test("R1 R5 R12 (N512): provenance-routes' op map holds its three ops and attest
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => [...routeOps, "attest"].includes(op)), []);
-  /* negative controls: carried gated, the read reads unpublished; carried by no row, each write reads stale; an op
-     the catalogue leaves out reads unpublished and unranked */
-  assert.deepEqual(A.unaccounted([{ op: "provenanceroutes", mutating: false, gated: true }]).unpublished, ["provenanceroutes"]);
+  /* negative controls: carried gated, the owner's declared read is a NON_ACT whether or not it is gated (R12, K4279), so it
+     reads published; carried by no row, each write reads stale; an op the catalogue leaves out reads unpublished and unranked */
+  assert.deepEqual(A.unaccounted([{ op: "provenanceroutes", mutating: false, gated: true }]).unpublished, []);
   assert.deepEqual([...WRITES, "attest"].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
   const left = A.unaccounted([...table, { op: "provenanceunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["provenanceunnamed"], ["provenanceunnamed"]]);

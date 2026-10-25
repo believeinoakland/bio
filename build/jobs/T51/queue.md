@@ -1,6 +1,6 @@
 # queue (T51)
 
-**Status** · session_01YGp5SXAG8uve2pBSVTbPvh · depth 2 · COMPLETE · handled B20
+**Status** · session_01VKactdh7kQCY61oFDcnvi4 · depth 2 · COMPLETE · handled B22
 
 ## J1 · QUESTION
 
@@ -347,3 +347,27 @@ COMPLETE (B19, B20). 7 of 8 fixture lines re-pointed to providers' fixtures (pro
 - `checks/fixtures.mjs /home/user/bio queue --list`: answer 0, stub 0, code 0, op-table 0; 0 failures.
 
 Size (session_01YGp5SXAG8uve2pBSVTbPvh): test runs 2, module lines 0 (test file only; about 20 test lines changed)
+
+## Completion, fix round 10 final pass (QUEUE #38; B22)
+
+**Entries applied.**
+1. **R95 met.** `#answeredList` (`queue/index.mjs`) gains the fifth row kind `join_answer`: `{act: "join_answer", project, title, requester: {member, handle}, answer: "granted" | "declined", at}`, read from project-roster's `projectRequestsAnswered` (its R44) for the viewer, kept inside R39's window by `closed`, and left out when the project is not visible to the viewer under queue's own gate (R33). A refusal or a throw from the roster adds no rows (never throws). Ties on `at` order by requester handle. `projectRoster` is a lazy dep like the others (`projectRosterOf(host)`; `project-roster` was already in queue's `uses`). Reading taken: `title` is the project's title as the viewer sees it (screens-daily draws handle, answer and day; the title is there for its heading), and the owner's word (`comment`) is not carried, R95 not naming it.
+2. **`project-leave` registered** (queue-producers R54; R57's list as the code reads it): `QUEUE_OBLIGATION_KINDS["project-leave"]` (`queuestate.mjs`), kind to act `projectremove` and its note (`queue/index.mjs`, `localize("queue.index.this_one_is_a_participants", …)`, a new sentence people read; the design stream reviews it through the unreviewed list). `classOfKind("project-leave")` answers `OBLIGATION`; a mint of it is accepted; its disposition is `available: false, instead: projectremove`; muted it is `KIND_NOT_PERSONAL`.
+
+**Met ids for BOB to strike the mark from:** queue R95. (queue-producers R54 is that job's.) R57's list now holds `project-leave` as the code reads it; its text in `build/requirements/queue.md` does not name it yet: BOB's to amend.
+
+**Tests** (`t51.test.mjs`, red on the old code, then green): `R95` x2 (project-roster's published `answeredRequests` and `answeredRequestsHidden` answers through a world; control: another member's read gets the real empty answer; a project she is out of names nothing, and appears again once she is a participant again), `R57` project-leave (class, sentence, mint accepted, near miss `NO_SUCH_KIND`, misclassed under FINDING, door `projectremove`, muted `KIND_NOT_PERSONAL`). `catalogue.test.mjs`'s list of obligation kinds gains `project-leave` (the catalogue grew by the requirement; nothing weakened).
+
+**Why the tests missed them.** (1) Queue's tests proved the four kinds the producers and tasks already gave; a join request is a producer-derived item never stored, so no queue test ever built an answered one, and project-roster had no read by `closed_by` until R44. (2) `project-leave` did not exist when R57's tests listed the kinds; the producer's job added the kind and queue's closed catalogue refuses an unknown kind whole, so the first test over both is this one.
+
+**Not mine, for BOB.** Screens-daily draws `join_answer` (its START). The door case through the control plane for "the page is empty after answering" is control-plane's (`r8-kit.mjs`, K5138): the queue-level case is covered here; no through-the-door test added.
+
+**Run against queue-producers.** `origin/job/T51/queue-producers` merged into my branch locally (not pushed, undone): `projects.test.mjs` 11 of 11 pass; queue suite 232 of 232 pass with that merge.
+
+**Tests and checks** (absolute root `/home/user/bio`): queue suite `bio-plane/test/m/queue/*.test.mjs` 232 tests, 232 pass, 0 fail (run three times); format 0 failures; architecture 41 files, 146 imports, 0 failures; coverage 56 of 56 live ids, 0 failures; words 0 failures; ownership 1 file changed by queue, 0 failures; `fixtures.mjs … queue --list`: answer 0, stub 0, code 0, contract 0; 0 failures. Markers added: none.
+
+Size (session_01VKactdh7kQCY61oFDcnvi4): test runs 8, module lines 41
+
+## J19 · COMPLETE
+
+COMPLETE (B22). R95 met: What you answered gains join_answer (project-roster R44 read, window, R33 gate). project-leave registered as an OBLIGATION (kind to act projectremove; sentence queue.index.this_one_is_a_participants). Queue suite 232/232; format, architecture, coverage, words, ownership, fixtures 0 failures; no markers. With origin/job/T51/queue-producers merged locally (undone): projects.test.mjs 11/11, queue 232/232. Yours: strike R95's mark, add project-leave to R57's text; screens-daily draws join_answer; the through-the-door case is control-plane's. Details in my record.

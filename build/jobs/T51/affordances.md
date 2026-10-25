@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_01F6cD98xuTLXGhudyFtHWu4 · depth 2 · COMPLETE · handled B21
+**Status** · session_015sXYDym4apQ4UugkRYpfcT · depth 2 · COMPLETE · handled B25
 
 ## J1 · QUESTION
 
@@ -364,3 +364,87 @@ Size (session_01F6cD98xuTLXGhudyFtHWu4): test runs 7, module lines 2726
 ## J25 · COMPLETE
 
 COMPLETE (job 80, re B22 · K4968). The four parted-upload ops moved to T51_DESIGN_OPS and read by their DEC-431 rows; t36 R48 green; affordances 287/0; op-declarations 248/0, affordances-pack 4/0, store-door 57/0, admission 73/0; architecture, channels, words, ownership 0 failures. Inherited reds, identical without my change: tasks R25 (K4488), queue R55. Not run to the end: control-plane whole (hangs at t51-round8-seam), interface-shell. See record, job 80.
+
+## J26 · REPORT
+
+## Fix round 10, item 73 (2): `t33.test.mjs:189` (R12 R24) red on the tranche
+
+**Cause.** The catalogue is right to refuse; the grade is missing. `ruleservicesstate` is an answers read (K5138; declared in `src/answers/ops.mjs:47`, served at `:24`). The R12 totality counts every gated read that is neither published nor named in op-grades' `NON_ACTS`; this read is named in neither, so `unaccounted` reports it as `unpublished`. `ruleanswer` passes only because op-declarations' `OP_ALIASES` (`src/op-declarations/index.mjs:99`) files it under `rule`, which op-grades grades in `T33_NON_ACTS` (`src/op-grades/t33.mjs`, answers block, around line 316). Nothing in that table grades `ruleservicesstate`. The catalogue does learn the owner-declared read (the test's table takes answers' op map), so no kind of declaration is missing from affordances: the row is missing from op-grades.
+
+**Why missed.** The read was added by K5138 with its handler and its declaration, but not its grade row in op-grades' table. The totality is checked only by affordances' `t33` (R12 R24), which runs on the merged tranche and not on answers' own tests.
+
+**Red first.** `t33.test.mjs:189` on the tranche as merged (K5153): `unpublished: ["ruleservicesstate"]`, `unranked: []`. Still red after my checks: the affordances suite is 287 tests, 286 pass, 1 fail, and the one fail is this test. No change made by me.
+
+**Platform check.** N.
+
+**Change needed (outside my paths; op-grades, for BOB to route).** In `src/op-grades/t33.mjs`, answers block of `T33_NON_ACTS`, add one row beside `rule` and `asktallies`:
+`ruleservicesstate: R("whether the rule services are switched on, so a screen draws their control only while on"),`
+By reading, that row removes the `unpublished` entry: the read is then named in `NON_ACTS` and no longer counted by the R12 totality. I have not run it, since the file is outside my paths. Please check also `src/op-declarations/index.mjs:318` (the class table lists `rule: "read"` and `asktallies`/`standing`/`standinganswers` as `ownread`, and has no `ruleservicesstate`); if the door needs its class there too, that is the same change. Once it lands I re-run the suite and COMPLETE.
+
+**Checks** (ABSOLUTE root `/home/user/bio`): format 0 failures; architecture 0; coverage 54 of 54, 0 failures; words 0 failures (dev 1, unchanged); ownership 0 failures. Fixtures: 4 failures (`door.test.mjs:154` and `:234` code; `answer-envelope/door-helpers.test.mjs:16` contract fixtures-run `affordances door-helpers`). I added no marker and changed no file, so none is new; `--list` shows the tranche's state.
+
+**Deferred:** none. **Found in other modules:** the op-grades row above (and the op-declarations class line to check).
+
+## J27 · BLOCKED
+
+BLOCKED (cause: needs Bob). The one red left in my suite, `t33.test.mjs:189` (R12 R24), is caused by a grade row missing in op-grades (J26), outside my paths. I changed nothing in my paths: affordances tests 286 pass, 1 fail (287 total); my checks are at 0 failures. The "module tests green" line of the Done list is not met until that row lands.
+
+NEEDS BOB: one row in `src/op-grades/t33.mjs`, answers block of `T33_NON_ACTS`: `ruleservicesstate: R("whether the rule services are switched on, so a screen draws their control only while on")`, and check the class line in `src/op-declarations/index.mjs:318` (J26).
+
+When it lands on the tranche, I merge it, re-run the suite and the checks, then COMPLETE with the four fields.
+
+Size (session_01DY2KdCQs7GqoGoDGHPGsK3): test runs 2, module lines 2845
+
+## J28 · COMPLETE
+
+**COMPLETE** · fix round 10, item 77 (2) (K5159). Branch `job/T51/affordances` at `ad057f2363`, pushed. Tranche merged first (`origin/tranche/T51` at `b4d3076f30`, merge `d758d1ea52`, no conflicts). Met ids: **R12**.
+
+**Cause: `register-owners.mjs` registers three owners by hand.** (1) Failing first: `bio-plane/test/m/affordances/owners-registered.test.mjs` (new, names R12) red on the three-owner registration with "an owner that declares ops is not registered"; green after. (2) Fix where the cause is: `register-owners.mjs` finds every module whose source exports `DECLARED_OPS` from `build/modules.json` (82 owners, 426 ops, no op declared twice) and registers each owner's rows as the owner wrote them. The search is inline, not test-support's `declaredOpsOf`: affordances does not declare `test-support` in `uses`, and the architecture check refused that import. (3) Why missed: R12's totality only ever saw the three owners' ops, so any other owner's declared op was ungraded here and no test in this suite could see it.
+
+**Consequence in one of my tests:** `catalogue.test.mjs` (R1 R5 R12 (N512)) had a negative control expecting the gated read `provenanceroutes` to read unpublished. That held only because the owner's declaration was missing. R12 says an owner-declared read is a NON_ACT whether or not it is gated (K4279), so the control now expects `[]`; the undeclared-op control (`provenanceunnamed`) is unchanged.
+
+**Start-note check:** the `t33.test.mjs:189` red (`unpublished: ["ruleservicesstate"]`) named in START is already green on the tranche: op-grades' J29 landed that row. `t33.test.mjs` passes.
+
+**Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/affordances/*.test.mjs`: 288 tests, 288 pass, 0 fail, exited on its own. Before the change: 287 pass, 0 fail. The new test alone, against the old registration: 1 fail. Layer tests: none named in `build/manifest.md`.
+
+**Checks (ABSOLUTE root `/home/user/bio`):** format 0 failures; architecture `affordances` 36 product files, 388 relative imports, 0 failures; coverage `affordances` 54 of 54 live ids; words `affordances` 0 failures; ownership `tranche/T51` 0 failures (3 files); fixtures `affordances` 4 failures, the same four as a clean checkout of the pre-change HEAD (`door.test.mjs:115`, `:154`, `:234` code; `answer-envelope/door-helpers.test.mjs:16` contract). None is new; I added no fixture marker.
+
+**Deferred:** none.
+
+**Found in other modules:** none new. The newly registered owners' ops produced no red in affordances' suite. I did not run the whole-product `checks/run.mjs`.
+
+**Commit:** the commit carries the session's Claude-Session line but no model-identifier Co-Authored-By line (the process rule against model identifiers in repo artifacts).
+
+Size (session_015sXYDym4apQ4UugkRYpfcT): test runs 6, module lines 0
+Note: module source lines changed 0 (test files only: `register-owners.mjs` 32+/9-, `owners-registered.test.mjs` new 34 lines, `catalogue.test.mjs` 3+/3-).
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_
+
+## J29 · COMPLETE
+
+**COMPLETE** · CHANGE (K5164, plan item 80 (2)). Branch `job/T51/affordances` at `dafaf275e2`, pushed; tranche merged first (`origin/tranche/T51`, no conflicts). Met ids: **R48** (affordances), and op-declarations' R34 for the two ops.
+
+**Each op's place (by my rule: a declared read gets its owner's sentence as a `localize` stand-in under its own `act.<op>.does` key, read through `ACT_HELP_KEYS`; the word list holds neither key, so `ACT_HELP_ABSENT` was not used):**
+- `authority` (provenance, R80): held in `T51_STANDIN_HELP`: "Lists, for each captured file of this document, who issued it as the record now stands, with the dated basis, and whether a member reviewed it and could not tell. Changes nothing."
+- `ruleservicesstate` (answers): held in `T51_STANDIN_HELP`: "Says whether the rule services are switched on, so a screen draws their control only while they are. Changes nothing."
+
+Both are new English sentences, reviewed through the design stream's unreviewed list.
+
+**Test:** `bio-plane/test/m/affordances/t36.test.mjs`, new test "R48 R34 R61 (T51, K5164)": each op is held under its stand-in, keyed `act.<op>.does`, and a table dropping either departs. The existing K4968 assertion that no stand-in is left would have failed once these were added; it now checks only that no `captureupload` step is a stand-in. Behaviour unchanged for every other op.
+
+**Tests:**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/affordances/*.test.mjs`: 289 tests, 289 pass, 0 fail, exited on its own.
+- `op-declarations/t36.test.mjs` (where BOB's R34 finding sits): 14 pass, 0 fail.
+
+**Checks (ABSOLUTE root `/home/user/bio`):** format 0 failures; architecture `affordances` 36 files, 388 relative imports, 0 failures; coverage `affordances` 54 of 54 live ids; words `affordances` 0 failures; ownership `tranche/T51` 0 failures; fixtures `affordances` 4 failures, the same four as before (`door.test.mjs:115`, `:154`, `:234` code; `door-helpers.test.mjs:16` contract), none new, no fixture marker added.
+
+**Deferred:** none.
+
+**Found in other modules:** none new.
+
+Size (session_015sXYDym4apQ4UugkRYpfcT): test runs 4, module lines 15
+Note: module lines changed in `act-help.mjs` 9+/6- (src) and `t36.test.mjs` 13+/1- (tests).
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_
