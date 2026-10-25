@@ -1,6 +1,6 @@
 # odf-reader (T51)
 
-**Status** · session_01FYSm4Xubbtcon5NpEXmiLS · depth 2 · COMPLETE · handled B8
+**Status** · session_01FYSm4Xubbtcon5NpEXmiLS · depth 2 · COMPLETE · handled B10
 
 ## J1 · REPORT
 
