@@ -1198,7 +1198,8 @@ function paragraphsOfText(text, html) {
 }
 export function textUnitsOfText(text, { html = false, budget } = {}) {
   if (typeof text !== "string" || !text) return { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null };
-  return textUnitsFor(paragraphsOfText(text, html), { budget });
+  const paras = paragraphsOfText(text, html);
+  return { ...textUnitsFor(paras, { budget }), paragraphCount: paras.paragraphs.length };
 }
 /* R35: the words of a capture read as text, over the text its units are drawn from. */
 export function textWordsOfText(text, { html = false, budget } = {}) {
@@ -1351,13 +1352,14 @@ function textPiece(visible, { html, at, budget, maxUnits, grain: given }) {
 /* R35 over the whole text, for a first piece: the units the text has and the words of them. */
 async function totalsOfText(visible, html, grain) {
   const walk = runWalker(visible, grain, html, 0);
-  let units = 0, words = 0, since = 0;
+  let units = 0, words = 0, since = 0, paras = 0;
   for (let r = walk(); r; r = walk()) {
+    paras++;
     if (glyphCount(r.text) > 0) { units += r.text.length > CAPTURE_TEXT_UNIT_CAP ? chunksOf(r.text).length : 1; words += wordsIn(r.text); }
     since += r.text.length;
     if (since > BREATHE_AT) { since = 0; await yieldNow(); }   /* G82: the walk over a whole text is given back every slice */
   }
-  return { units, words };
+  return { units, words, paras };
 }
 
 /* R41: a sheet unit over the cap as blocks of whole lines, the sheet's first line (its header) repeated at the head of each
@@ -2968,6 +2970,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   let reading, classifiedText = null, member = null;
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null, heldCounts = null, joinedDropped = false;
   let pieceInfo = null, pieceWords = null, rangeScope = null, pieceBase = null;
+  let textParas = null;   /* R63: the paragraphs the text numbers (`para` takes 0..n-1); null where this answer does not hold the whole text */
 
   if (!wireable && textRead) {
     /* R1: text read as text with no format entry that reads it goes to the content type's reader. */
@@ -2999,10 +3002,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (piecesOn) await breathe(visible.length);
       const tot = await totalsOfText(visible, html, p.grain);
       textUnits = p.units.length ? p.units : null;
+      textParas = tot.paras;
       pieceInfo = { ...p.fields, piece: { ...p.piece, units_total: tot.units } };
       pieceWords = { words_total: tot.words, words_read: p.piece.words };
       }
-    } else ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsOfText(text, { html: fmt === "html", budget: unitsBudget }));
+    } else ({ textUnits, textUnitsOverBound, textUnitsSkipped, paragraphCount: textParas } = textUnitsOfText(text, { html: fmt === "html", budget: unitsBudget }));
     /* R34: the title, read from the markup R32's units drop; null for any text that is not HTML. A reader that throws
        gives a failed reading, which carries none. */
     const title = fmt === "html" ? titleOfHtml(text) : null;
@@ -3057,6 +3061,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       const container = fmt && fmt !== "undetermined" ? fmt : "text";
       reading.text_source = layerChainFor(null, { tier: null, container });
       reading.text_container = container;
+      /* R63: the paragraph count, as an office reading states it, so a paragraph extent past the end is bounded; null where the answer does not hold the whole text */
+      reading.container_extent = { container, levels: ["paragraphs"], sheets: null, paragraphs: textParas, slides: null };
       /* R35: the words of the text the units were drawn from, and the words the units hold. */
       Object.assign(reading, piecesOn ? pieceWords : textWordsOfText(text, { html: fmt === "html", budget: unitsBudget }));
     }
