@@ -35,6 +35,14 @@ export async function settled(p) {
   }
 }
 
+/** The page is quiet and `done()` holds: an act whose answer the page is waiting for shows no loading state, so a quiet page alone does not say it has drawn the
+ *  act's result; under load the store takes longer than the quiet window. Returns `done()`'s last value after at most `limit` more settles. */
+export async function settledUntil(p, done, limit = 60) {
+  let v = done();
+  for (let i = 0; !v && i < limit; i++) { await settled(p); v = done(); }
+  return v;
+}
+
 /** An op's answer as the world gives it, changed by `fn(request, answer)`: for a record the live copy holds that this build does not make
  *  (K5044 (1)); every other part of the answer is the world's own. */
 export function rewrite(world, me, fn) {

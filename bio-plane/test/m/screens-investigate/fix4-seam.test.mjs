@@ -4,7 +4,7 @@
    R34 (C59 / N3), R4 (C8: the refusal's words and the figure's row). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { inWorld, openAs, settled, readHeld, rewrite } from "./world.mjs";
+import { inWorld, openAs, settled, settledUntil, readHeld, rewrite } from "./world.mjs";
 import { fill, press, main, word } from "./fixtures.mjs";
 
 const NOTE = "The stormwater fund transferred 1,200,000 dollars to the general fund on June 30.";
@@ -104,9 +104,9 @@ test("R4 C8 (the figure) Money, over the world: a figure read in with its period
   await settled(p);
   fill(p, { "mf-amount": "1250000.00", "mf-asread": "$1,250,000", "mf-from-date": "2025-07-01", "mf-to-date": "2026-06-30" });
   await press(p, "recordfact", { reason: REASON });
-  await settled(p);
+  /* the act's answer is awaited by its result (the row drawn), never by a quiet window the store can outlast under load */
+  const row = await settledUntil(p, () => main(p).querySelectorAll("tr").find((r) => r.textContent.includes(word("screen.money.proposed.member"))));
   assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "recorded: no refusal stays on the page");
-  const row = main(p).querySelectorAll("tr").find((r) => r.textContent.includes(word("screen.money.proposed.member")));
   assert.ok(row, "the figure the member read in is a row of the trail, proposed by a member (the store names her `admin`, not `member:admin`)");
   const stored = (await me.read("moneyset", { query: { id: trail } })).proposals[0];
   const fact = (await me.read("money", { query: { id: stored.fact_id } })).fact;
