@@ -40,3 +40,7 @@ Size (session_01J2t3i3VhkxqkCZisrCcbZ6): test runs 1, module lines 423
 **Checks.** case-check tests 35 pass, 0 fail; format 0, architecture 0, coverage 5 of 5 ids named, ownership 0 failures (1 file set by this module); `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules, so no other users' tests to run; `checks/run.mjs` names no finding in case-check.
 
 Size (session_016ctg5nhcTUAhdWo4A3CTkV): test runs 3, module lines 423
+
+## J3 · COMPLETE
+
+COMPLETE fix round 10 batch 5. Published caseCheckOfNoSuchCase (fixtures.mjs + fixtures.test.mjs); re-pointed hold.test.mjs:8,47 (and :120) to case-authoring preflightAnswer. fixtures --list case-check: 0; tests 35 pass; format/architecture/coverage/ownership 0 failures; impact: 0 affected. No fixtures-own/generic markers added. Record: build/jobs/T51/case-check.md J2.
