@@ -89,3 +89,7 @@ EVENTS #13 B5 complete on job/T51/events: cause 1 done. R50 met (grade_why and t
 **Tests and checks.** events: 101 pass, 0 fail (99 before, 2 new). `checks/format.mjs`: 0 failures; `architecture.mjs events`: 0; `coverage.mjs events`: 55 of 55, 0 failures; `words.mjs events`: 0 failures; `fixtures.mjs events --list`: 0 failures, no marker added; `ownership.mjs events tranche/T51`: 0 failures (run before this commit; rerun at COMPLETE).
 
 Size (session_01DQzTUD8weDGve6uNRAcm2V): test runs 7, module lines 2812
+
+## J6 · COMPLETE
+
+EVENTS #14 B6 complete on job/T51/events (839ded5c9e). R50 met (K5152): the event view's dated-attestation why and vote_value_why are {key, vars}; drawn and fixtures tests added (red first for the view's why). Events 101/101; format, architecture, coverage 55/55, words, fixtures, ownership 0 failures. Other word() whys in the module are import diagnostics and refusal sentences, not views' undetermined whys (listed in the record). Record: build/jobs/T51/events.md.
