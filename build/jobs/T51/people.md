@@ -274,3 +274,7 @@ People #15 COMPLETE (B11): R12 met (person read answers removed [{ground, at, by
 **Ran:** people 88/88; screens-investigate 249/249; corpus-export 35/35; entities 164/164; op-declarations 248/248; case-disclosures 116/116. `impact.mjs` names 86 modules (shared); the callers of `person` above were run. Checks (people): format 0, architecture 0, coverage 44 of 44, words 0, fixtures 0 (list empty), ownership 0 (3 files). `checks/run.mjs`: failures only in other modules (store-assembly words; "answer" lines in other modules' tests naming earlier providers), none in my files. Markers added: none.
 
 Size (session_01QpNtcpwtgWU5abMjNpSapV): test runs 12, module lines 1898
+
+## J16 · COMPLETE
+
+PEOPLE #16 COMPLETE (B12): R43 met (personAt claim rows carry basis), R44 met (personAt answers withdrawn_facts apart; facts unchanged). Tests red then green; people 88/88; users run green; checks 0. REPORT: screens-investigate person.mjs:166 should read p.withdrawn_facts. Record: build/jobs/T51/people.md.
