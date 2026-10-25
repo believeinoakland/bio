@@ -1,7 +1,7 @@
 /* inquiry's published fixtures (fixtures.mjs): each is called here and its real answer checked (K4990). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { basisForUnread, basisRefusals, datedWaitOf, disposeAct, migratedSurfacing, readRefusals } from "./fixtures.mjs";
+import { basisForUnread, basisRefusals, datedWaitOf, disposeAct, migratedSurfacing, questionWaitsSetAside, readRefusals } from "./fixtures.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
 test("R16: basisForUnread answers the real basis read for no question (NO_ID) and for one the record does not hold (resting on nothing)", () => {
@@ -68,4 +68,21 @@ test("R55: datedWaitOf answers the setter's dated wait due from its local day in
   const g = datedWaitOf({ viewer: "member:bob", date: "2026-10-20" });
   assert.deepEqual(g.answer.waits.map((x) => [x.date, x.state, x.set_by]), [["2026-10-20", "due", "member:bob"]]);
   assert.deepEqual(g.before.waits.map((x) => x.state), ["waiting"]);
+});
+
+test("R55 R58: questionWaitsSetAside answers the asker the set-aside wait with by and reason, the restore ending it with both in the history, and nothing to a viewer who may not see the document", () => {
+  const f = questionWaitsSetAside();
+  assert.equal(f.answer.ok, true);
+  assert.deepEqual(f.answer.waits, [], "no dated wait");
+  assert.deepEqual(f.answer.document_waits.map((x) => [x.document, x.by, x.reason]), [[f.document, f.setter, f.reason]]);
+  assert.equal(typeof f.answer.document_waits[0].at, "string");
+  assert.deepEqual(f.answer.history.map((h) => [h.document, h.act, h.by, h.reason]), [[f.document, "set_aside", f.setter, f.reason]]);
+  assert.deepEqual(f.restored.document_waits, [], "a restore ends the wait");
+  assert.deepEqual(f.restored.history.map((h) => [h.act, h.by, h.reason]),
+    [["set_aside", f.setter, f.reason], ["restore", f.asker, f.restoreReason]]);
+  assert.deepEqual([f.hiddenFrom.document_waits, f.hiddenFrom.history], [[], []], "a document the viewer may not see is neither announced nor counted");
+  assert.deepEqual(f.restored.history, f.inquiry.documentWaits({ questions: [f.question], viewer: f.asker }).questions[0].history,
+    "the history is documentWaits'");
+  const g = questionWaitsSetAside({ asker: "member:carol", setter: "member:dave", reason: "Duplicate." });
+  assert.deepEqual(g.answer.document_waits.map((x) => [x.by, x.reason]), [["member:dave", "Duplicate."]]);
 });

@@ -200,3 +200,23 @@ COMPLETE after CHANGE B12 (follow-up 9, K5109). Commit `1d109a5008` on `job/T51/
 **Deferred.** None. **Found in another module.** None. **Markers.** None added.
 
 Size (session_01JMyjNSQDBNMdgULeA9Az7a): test runs 4, module lines 3844
+
+## J11 · COMPLETE
+
+B13 (follow-up 55, WALK-FINAL-05 row R38; K5130) applied. Requirement met: **R55's T51 amendment** (the extended `questionWaits`, with R58's answer); the *(not yet met: T51)* mark on it is BOB's to strike. R58 is unchanged.
+
+**Root cause, with evidence.** `questionWaits` (`bio-plane/src/inquiry/index.mjs`) read only `inquiry_dated_waits`; R58's `documentWaits` was reached by no op (only `investigation` called it), so `op=questionwaits`, which `screens-inquiry/question.mjs:31` reads for the question screen, never answered a set-aside wait or its history. Seen red: the new test's first assertion read `document_waits` as `undefined`.
+
+**Fix.** `questionWaits` now also answers `document_waits` (R58's `waits`: `{document, by, reason, at}`) and `history` for that question, taken from `documentWaits({questions: [question], viewer})` itself, so a viewer who may not see a document gets neither, and an ending state answers the history and no wait. An unreadable capture read answers both `null` with `document_waits_why` (R58's `undetermined` reason), never as no wait. An absent or invisible question is answered as before.
+
+**Why the tests missed it.** The screen's tests use a hand-built `questionwaits` fixture (`screens-inquiry/fixtures.mjs:115`) of a shape the real op never gave. Gap fixed: the fixture `questionWaitsSetAside` below is made by the real capture module's set-aside and restore, for screens-inquiry's re-point.
+
+**Tests (the walker's case through the real entry, seen red, then green).** `document-waits.test.mjs`, two tests named R55 R58 (K5130): a question, a document cited to it, another member sets it aside with a reason, `questionWaits` as the asker reads the wait with by and reason; a restore ends it, both in `history`, equal to `documentWaits`' own; a viewer who may not see the document gets neither; an ending state answers the history and no wait; an unreadable capture read answers `null`/`null` with the reason; control: an invisible question is answered as an absent one.
+
+**Published fixture.** `questionWaitsSetAside({asker = "member:alice", setter = "member:bob", reason = "Not needed yet.", restoreReason = "The question needs it after all."})` in `bio-plane/test/m/inquiry/fixtures.mjs` returns `{inquiry, question, document, asker, setter, reason, restoreReason, answer, hiddenFrom, restored}`: `answer` is the real `questionWaits` answer to the asker after the set-aside, `hiddenFrom` the answer when the document is hidden from the viewer, `restored` the answer after the asker's restore. Its test is in `fixtures.test.mjs`. No `fixtures-own`/`fixtures-generic` markers added.
+
+**Tests and checks** (absolute root `/home/user/bio`). `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/inquiry/*.test.mjs`: tests 238, pass 237, fail 0, todo 1 (the existing one). format 0 failures; architecture inquiry 0; coverage 58 of 58, 0; words inquiry 0; `fixtures.mjs inquiry --list` 0 failures; ownership 0 (see the commit below). **Platform check:** none needed (no storage or deployment change).
+
+**Deferred.** None. **Found in another module.** None. The requirements file is unchanged by me (R55's mark is BOB's to strike).
+
+Size (session_019Sucssuvy7GkW7YhXyGe5i): test runs 6, module lines 3848
