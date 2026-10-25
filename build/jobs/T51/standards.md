@@ -1,6 +1,6 @@
 # standards (T51)
 
-**Status** · session_0156GUxDJmfWv8jdceqhcys5 · depth 2 · COMPLETE · handled B3
+**Status** · session_01SABp1mbexAxC9AfGM6BDu6 · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -78,3 +78,28 @@ K4015 (B3 START, the words round RW): the five findings `checks/words.mjs` lists
 - Commit message: I kept the Claude-Session line and left out the Co-Authored-By model line, because the process rules say no model identifier goes in a commit.
 
 Size (session_0156GUxDJmfWv8jdceqhcys5): test runs 3, module lines 3563
+
+## Fix round 10, Wave A batch 1 (B4) · session_01SABp1mbexAxC9AfGM6BDu6
+
+**Causes done:** six fixtures published and one contract run, in `bio-plane/test/m/standards/fixtures.mjs` (new) with `fixtures.test.mjs` (new). Every fixture is made by the real `standardsOf` over the real record, membership, content and entities each time it is called; nothing is stored.
+- `bindsAt` → `{standard, body, elsewhere, date, binds, other}`: the real R43 answers. The real answer is `{ok, standard, body, date, state, why, rests_on, says}`, not `{ok, standard, body, binds}`: the user (duties) changes to read `state === "binds"`.
+- `standardRead` → `{id, contentId, absentId, read, absent, unseen}`: R5 with designation, edition, access, requires and texts; NO_SUCH_STANDARD for an absent id and for a viewer naming no member (R17).
+- `standardReadWorld` → the real instance with `policy(over)`, `declare`, `passage`, `standardRead`, and the viewers `member` and `stranger`.
+- `standardRow` → `{std, cnt, ordinance, row, standards}`: one held policy's R5 read and the `standardsIn` list of two; the STD and CNT ids are the real minted ones.
+- `standardsEmptyReads` → the real `standardsAt`, `standardsWithPortion`, `addressesOf` over an empty record.
+- `standardsIn` → the real `{ok, items: [], count: 0, limit, truncated: false, cursor: null}`.
+- Contract `host-refusals`: the ten refusals stated as data in `fixtures.test.mjs` ("R10 R17 R23 host-refusals…"), each run through law ops on the real instance; marker `// fixtures-run: law-relations host-refusals`.
+
+**Where the real answer differs from the users' hand-built ones (the real wins; each user changes in its own job):**
+- law-relations `hostRefusal` adds `host: true`; the real refusals have none, and carry `check` and `translation`. Their extras differ: NO_REASON has `{max_chars: 2000}` (not `fault`), WHY_INVALID `{max: 240}`, NO_SUCH_STANDARD `{standard, id, end}`, FIELD_UNKNOWN `{rejected, accepted}`, NO_ID `{op}`, DATE_INVALID `{date}`, NO_SUCH_PROPOSAL `{proposal}`, PROPOSAL_ADOPTED `{proposal, adopted_as}`, PORTION_UNKNOWN `{end, standard, portion}`, PROPOSER_UNNAMED none.
+- duties' `bindsAt` Proxy answer (see above). reevaluation's and following's empty reads: the real `standardsAt`/`standardsWithPortion` give `{ok, items, truncated}`; `addressesOf` gives `{ok, addresses, truncated}`-shaped (checked: `addresses` is `[]`, `truncated` false); `standardsIn` also carries `count`, `limit`, `cursor`.
+
+**Markers added:** no `fixtures-own` and no `fixtures-generic`. One `fixtures-run` (law-relations host-refusals), `orphan-run` until law-relations' marker merges; it waits for law-relations.
+
+**Fixtures check** (`checks/fixtures.mjs . standards --list`): zero lines for standards. **Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/standards/*.test.mjs`: tests 117, pass 117, fail 0. **Checks:** format 0 failures; architecture 0 failures; coverage 53 of 53 ids, 0 failures; words (standards) 0 failures; ownership 0 failures. `impact.mjs origin/tranche/T51 HEAD`: standards only (affected modules 1 of 178); no other module's tests are affected, since no source changed.
+
+Size (session_01SABp1mbexAxC9AfGM6BDu6): test runs 4, module lines 3563
+
+## J4 · COMPLETE
+
+Fix round 10, Wave A batch 1 done (commit on job/T51/standards). Six fixtures published in bio-plane/test/m/standards/fixtures.mjs (bindsAt, standardRead, standardReadWorld, standardRow, standardsEmptyReads, standardsIn), each made by the real standardsOf at test time; host-refusals contract run (marker fixtures-run: law-relations host-refusals, orphan-run until law-relations' marker merges). No fixtures-own or fixtures-generic markers added. Real answers differ from users' hand-built ones (host:true absent; NO_REASON max_chars, WHY_INVALID max, bindsAt returns state not binds): listed in my record. Tests 117/117; format, architecture, coverage, words, fixtures (standards lines 0), ownership all 0 failures; impact: standards only. Record: build/jobs/T51/standards.md.

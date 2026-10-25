@@ -1,6 +1,6 @@
 # retrieval-browse (T51)
 
-**Status** · session_01DRhBLuRPVD8G3hWpq1rxBR · depth 2 · COMPLETE · handled B10
+**Status** · session_01QPk5CHNKGRuomEEUu9w4Zn · depth 2 · COMPLETE · handled B12
 
 ## Completion (T51-29)
 
@@ -132,3 +132,33 @@ Size (session_01DRhBLuRPVD8G3hWpq1rxBR): test runs 16, module lines 2030
 ## J6 · COMPLETE
 
 COMPLETE (G41, retrieval-browse). Providers merged in; all six g41-findin tests green under the shim (61/61 module suite; users 208/208; format, architecture, coverage, words (unchanged 18524), ownership 0 failures). A held sheet has no cell list: term hits name sheet + range, cells null, held-sheet cells_why, row only for a one-row range, words of the row holding the term; money/dates read its text. No seam red. Row owed: retrieval-browse.findin.cells_held_why. N1272 noted. Requirement lines and Size line in my record. Note: platform-sqlite.mjs still not on tranche; ran under an outside copy.
+
+## Completion (fix round 10, Wave A batch 1; B11)
+
+**Causes done.**
+- **R17a** (G3; walk C3). Root: `findin.mjs` `#term` built the item without the unit's part kind (the old `add({kind:"term", …})`); the item's `kind` is the result kind, so the part is `part` (the module's name, per diagnosis-R10-b-2 §R17a). Fix: `#partOf` (`findin.mjs`, beside `#textOf`) reads the unit's `capture_text.kind` (null where the column is absent or the unit was stored without one, never read as `body`); every term item, the sheet-row ones too, carries `part`. Tests missed it: `fixture.mjs` `unit()` inserted no `kind` and the schema text lacks the column the real insert writes (`extraction/index.mjs:1788`); the fixture now adds the column as `migrate()` does and `unit()` takes a `kind`. Failing-first `findin.test.mjs` "R17a…" (body, footnote, unit stored without): red before the fix (no `part`), green after. Platform N. `screens-daily` draws it; the word is UX-DESIGN's (no `screen.find-in.part.*` row yet; the key is `screens-daily`'s to choose).
+- **R26 / R20** (G5). Root: `#load(c)` selected `capture_text.text` for every unit of every capture in the page for every kind, `term` included (`findin.mjs` `#load`). Fix: `find()` passes `withText` (any kind but `term`); a `term`-only find loads the unit list without text and `#textOf` reads one hit unit's text when its words are cut (R20). Tests missed it: no test counted what a find loads. Failing-first `r10-find-term-loads.test.mjs` (twelve units of 2 MiB, term in unit 1; `sql.exec` wrapped to count the text read): red before, "a term find read 23.3 MiB of stored text"; green after (at most 4 MiB, one item); control: `money` beside `term` reads every unit's text and the term items are identical. Platform P at the redeploy: `findin` on `INFO-2026-0110` right after a restart, `do-findin` 97 ms or better (diagnosis-R10-d §6); not run here (no live contact).
+
+**Fixtures published** (`bio-plane/test/m/retrieval-browse/fixtures.mjs`, test `fixtures.test.mjs`): `browseViewerMissing` (the real `browse({})` refusal VIEWER_MISSING), `marksRegistrarDeclared` (the real second `registerBrowseMarks`, LISTENER_DECLARED). Their users (`notice-producers`, `following`) re-point in their jobs.
+
+**Own fixture lines.** Done: FIX-L `fixture.mjs:175,176` carry `// fixtures-contract: retrieval selection-read`; both show `contract-no-run` until `retrieval`'s `fixtures-run: retrieval-browse selection-read` merges (waits for the `retrieval` job). Left, as the START says (FIX-E, providers entities, events, provenance, arriving as a CHANGE): `g41-findin.test.mjs:39`, `t36.test.mjs:139`, `t37.test.mjs:172`, `words.test.mjs:60`. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Requirement lines proposed (BOB writes them).** R17a: "A `term` item carries `part`, the part kind of the unit it lies in (`extraction` R107), null for a unit stored without one." Words for the part kind are the design's.
+
+**Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/retrieval-browse/`: 66 tests, 66 pass, 0 fail. format 0 failures; architecture 17 files, 0 failures; coverage 20 of 20 ids, 0 failures; words 0 failures; fixtures: the six lines above (two contract-no-run, four FIX-E not in this job); ownership 0 failures. `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178 (no other module imports a changed file). Nothing found in other modules; no generated artifact made stale.
+
+Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 7, module lines 1427
+
+## J7 · COMPLETE · re B11
+
+Fix round 10 Wave A batch 1 complete on job/T51/retrieval-browse (record: 'Completion (fix round 10, Wave A batch 1; B11)'). R17a: term items carry 'part' (the unit's part kind, null if stored without), failing-first red then green. R26/R20: a term find reads only hit units' text (23.3 MiB -> under 4 MiB), failing-first red then green; control green. Published fixtures.mjs: browseViewerMissing, marksRegistrarDeclared (with fixtures.test.mjs). FIX-L fixture.mjs:175,176 marked 'fixtures-contract: retrieval selection-read' (contract-no-run until retrieval's run merges). Left per START: 4 FIX-E lines (g41-findin:39, t36:139, t37:172, words:60). Tests 66/66 under the shim; format, architecture, coverage (20/20), words, ownership 0 failures; impact: 0 other modules. Proposed requirement line R17a in the record. Platform P check (do-findin 97 ms on INFO-2026-0110 after restart) is for the redeploy. Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 7, module lines 1427
+
+## Completion (B12, K5067)
+
+R17a's test now names R21 (R20's mark struck by BOB). `g41-findin.test.mjs` takes provenance's published `homeOfHomed` instead of its hand-built `homeOf` (stub line gone). Left, waiting on events and entities: `t36.test.mjs:139`, `t37.test.mjs:172`, `words.test.mjs:60`; `fixture.mjs:175,176` now `accepted(selection-read)`. Tests 66/66 under the shim; coverage 21 of 21; format 0 failures.
+
+Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 3, module lines 1427
+
+## J8 · COMPLETE · re B12
+
+B12 done: R17a test renamed to R21; g41-findin.test.mjs re-pointed to provenance's homeOfHomed. Tests 66/66, coverage 21/21, format 0 failures; fixtures list: only t36:139, t37:172, words:60 left (events, entities). Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 3, module lines 1427

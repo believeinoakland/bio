@@ -117,22 +117,116 @@ function overEnvelopeText(bytes, limit) {
 const WORK = { opens: 0, pagesDecoded: 0 };
 export function tier2Work() { return { ...WORK }; }
 
+/* R10 (fix round 10, cause 8): a file cut before its trailer. pdf.js throws `InvalidPDFException` on it (no trailer names
+ * the catalog, so the objects it indexed have no root), and tier 1 cannot decode a font with no ToUnicode, so the whole file
+ * answered nothing. The repaired view is the bytes up to the last complete object, with a trailer naming the last catalog
+ * found: the objects that are there, without the cross-reference that is not. */
+const bytesOf = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));
+const ENDOBJ = bytesOf("endobj"), CATALOG = bytesOf("/Catalog"), STARTXREF = bytesOf("startxref"), PAGES = bytesOf("/Pages");
+function indexOfBytes(bytes, pat, from = 0, to = bytes.length) {
+  for (let i = from, last = Math.min(to, bytes.length) - pat.length; i <= last; i++) {
+    let k = 0;
+    while (k < pat.length && bytes[i + k] === pat[k]) k++;
+    if (k === pat.length) return i;
+  }
+  return -1;
+}
+function lastIndexOfBytes(bytes, pat) {
+  for (let i = bytes.length - pat.length; i >= 0; i--) {
+    let k = 0;
+    while (k < pat.length && bytes[i + k] === pat[k]) k++;
+    if (k === pat.length) return i;
+  }
+  return -1;
+}
+function latin1(bytes, from, to) {
+  let out = "";
+  for (let i = Math.max(0, from); i < Math.min(to, bytes.length); i += 512) out += String.fromCharCode(...bytes.subarray(i, Math.min(i + 512, to, bytes.length)));
+  return out;
+}
+/* A file with a trailer ends with `startxref` and its offset, within pdf.js's own search of the file's last two blocks of 512. */
+const lacksStartxref = (bytes) => indexOfBytes(bytes, STARTXREF, Math.max(0, bytes.length - 2 * 512)) < 0;
+
+function repairedView(bytes) {
+  const end = lastIndexOfBytes(bytes, ENDOBJ);
+  if (end < 0) return null;
+  const cutAt = end + ENDOBJ.length;
+  let root = null;
+  for (let at = indexOfBytes(bytes, CATALOG, 0, cutAt); at >= 0; at = indexOfBytes(bytes, CATALOG, at + 1, cutAt)) {
+    const m = /(\d+)\s+(\d+)\s+obj\s*<<(?:(?!\bobj\b)[^])*$/.exec(latin1(bytes, at - 256, at));
+    if (m) root = `${m[1]} ${m[2]}`;
+  }
+  if (!root) return null;
+  const trailer = bytesOf(`\ntrailer\n<< /Root ${root} R >>\n%%EOF\n`);
+  const view = new Uint8Array(cutAt + trailer.length);
+  view.set(bytes.subarray(0, cutAt));
+  view.set(trailer, cutAt);
+  return { view, cutAt };
+}
+
+/* The page count the page tree's root declares (its `/Count`), which a cut file may no longer hold the pages of; null when
+ * no root states one in the bytes that are there. */
+function declaredPages(view) {
+  let best = null;
+  for (let at = indexOfBytes(view, PAGES, 0); at >= 0; at = indexOfBytes(view, PAGES, at + 1)) {
+    const from = lastIndexOfBytes(view.subarray(0, at), bytesOf(" obj"));
+    const stop = indexOfBytes(view, ENDOBJ, at);
+    const dict = latin1(view, from < 0 ? at : from, stop < 0 ? view.length : stop);
+    if (!/\/Type\s*\/Pages\b/.test(dict) || /\/Parent\b/.test(dict)) continue;
+    const n = /\/Count\s+(\d+)/.exec(dict);
+    if (n) best = Math.max(best ?? 0, Number(n[1]));
+  }
+  return best;
+}
+
+/* pdf.js opens the bytes it is handed and detaches them, so a file that may be cut keeps a copy for the repaired view. */
+async function openDocument(bytes) {
+  const mayBeCut = lacksStartxref(bytes);
+  const spare = mayBeCut ? bytes.slice() : null;
+  try {
+    return { pdf: await getDocumentProxy(bytes), repaired: null };
+  } catch (e) {
+    if (!spare || !e || e.name !== "InvalidPDFException") throw e;
+    const r = repairedView(spare);
+    if (!r) throw e;
+    const declared = declaredPages(r.view);
+    try {
+      return { pdf: await getDocumentProxy(r.view), repaired: { cutAt: r.cutAt, declared } };
+    } catch { throw e; }
+  }
+}
+
 /* unpdf/pdf.js text, reshaped into the RECORD's terms (fleet rule 1): the same
  * `text` shape Tier 1 emits, not pdf.js's. A page pdf.js recovered nothing for
  * is a no-text-layer (scanned/image) page — OCR territory neither tier provides,
  * NAMED as undetermined rather than returned as a silent blank. Only the pages
  * [from, from + count) are decoded (R9, R42); pdf.js opens the document lazily,
- * so the bytes it decodes are the range's. `open` is false for a range with no page in it. */
+ * so the bytes it decodes are the range's. `open` is false for a range with no page in it.
+ * On a file cut before its trailer (R10) the pages that cannot be read are named `truncated`, and `partial` is true. */
 async function tier2Text(bytes, from, count, open) {
   const pages = [];
   const undetermined = [];
+  let partial = false;
   if (open) {
     WORK.opens++;
-    const pdf = await getDocumentProxy(bytes);
-    const last = Math.min(pdf.numPages, from + count);
+    const { pdf, repaired } = await openDocument(bytes);
+    const total = Math.max(pdf.numPages, repaired?.declared ?? 0);
+    const last = Math.min(repaired ? total : pdf.numPages, from + count);
     for (let i = from; i < last; i++) {
       WORK.pagesDecoded++;
-      const content = await (await pdf.getPage(i + 1)).getTextContent();
+      let content = null;
+      try {
+        content = await (await pdf.getPage(i + 1)).getTextContent();
+      } catch (e) {
+        if (!repaired) throw e;
+      }
+      if (!content) {
+        const marker = { page: i, reason: "truncated", font: null, codes: "", count: 0 };
+        undetermined.push(marker);
+        pages.push({ page: i, text: "", undetermined: [marker] });
+        partial = true;
+        continue;
+      }
       const pageText = content.items.filter((item) => item.str != null).map((item) => item.str + (item.hasEOL ? "\n" : "")).join("");
       const u = [];
       if (pageText.trim().length === 0) {
@@ -142,9 +236,10 @@ async function tier2Text(bytes, from, count, open) {
       }
       pages.push({ page: i, text: pageText, undetermined: u });
     }
+    if (repaired) partial = true;
   }
   const document = pages.map((p) => p.text).filter((t) => t.length).join("\n");
-  return { document, pages, undetermined, counts: { chars: document.length, undetermined: undetermined.length } };
+  return { text: { document, pages, undetermined, counts: { chars: document.length, undetermined: undetermined.length } }, partial };
 }
 
 /* R8 (G124a): the answer for a file over the envelope, made before any parse: tier 1, no text, the size and the limit
@@ -212,8 +307,13 @@ async function handleStructure(req, env) {
   const open = opened.pages === 0 || Math.min(asked, opened.pages - from) > 0;
 
   try {
-    structure.text = await tier2Text(bytes, from, asked, open);
+    const read = await tier2Text(bytes, from, asked, open);
+    structure.text = read.text;
     structure.tier = 2;
+    if (read.partial) {
+      structure.partial = true;
+      structure.notes = [...structure.notes, "pdf_truncated"];
+    }
   } catch (e) {
     if (e && e.name === "PasswordException") {
       /* R9: a document that needs a user password is not a tier-2 failure; nothing is invented. */

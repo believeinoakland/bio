@@ -1,6 +1,6 @@
 # BOB to retrieval-browse (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -126,3 +126,7 @@ Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the t
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . retrieval-browse --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/retrieval-browse.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B12 · CHANGE
+
+Merged (K5067). Two things: (1) BOB wrote your proposed line as retrieval-browse R21 (a term item's part, not yet met: T51) and struck R20's mark: rename your R17a test to name R21 so coverage reads it. (2) provenance is merged and publishes homeOf / homeOfWorld / homeOfHomed in bio-plane/test/m/provenance/fixtures.mjs: re-point g41-findin.test.mjs:39's hand-built homeOf to it. t36/t37/words lines wait on events and entities. Merge the tranche branch into yours first; run checks/fixtures.mjs with the absolute product path. Then record COMPLETE again.
