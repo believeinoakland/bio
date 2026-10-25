@@ -19,7 +19,11 @@ const pdfgen = await import(join(T, "pdfgen.mjs"));
 const sheetgen = await import(join(T, "sheetgen.mjs"));
 const docgen = await import(join(T, "docgen.mjs"));
 const imggen = await import(join(T, "imggen.mjs"));
-const { ocrMember } = await import(join(CP, "r9-seam-reading.mjs"));
+const { ocrWorkerDef } = await import(join(HERE, "../../../../ocr-worker/test/memberworker.mjs"));
+import { readFileSync } from "node:fs";
+const PDF_BUNDLE = join(HERE, "../../../../pdf-worker/dist/pdf-worker.bundled.mjs");
+const pdfWorkerDef = () => ({ name: "pdf-worker", modules: true, modulesRoot: "/", scriptPath: PDF_BUNDLE, script: readFileSync(PDF_BUNDLE, "utf8"),
+  compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"], r2Buckets: ["CAPTURES"], bindings: { VERSION: "test" } });
 
 const RECORD = join(HERE, "../04a-documents.md");
 const enc = encodeURIComponent;
@@ -77,11 +81,11 @@ const outbound = async (req) => {
   if (f.redirect) return new Response(null, { status: 301, headers: { location: f.redirect } });
   return new Response(req.method === "HEAD" ? null : f.rate ? siteBody(f.bytes, f.rate) : f.bytes, { status, headers });
 };
-const ocr = ocrMember({ perCall: 8 });
+const ocr = { inside: () => 0, made: () => 0 };
 const scanVerdicts = new Map();
 let k;
-k = makeKit({ tag: "w04a", outbound, bindings: { DAEMON_TOKEN: "dmn-w04a-0123456789abcdef", RENDER_DAILY_ALLOWANCE_MS: "100000" },
-  serviceBindings: { SELF: (req) => k.mf.dispatchFetch(req), OCR_WORKER: ocr.binding,
+k = makeKit({ tag: "w04a", outbound, workers: [pdfWorkerDef(), ocrWorkerDef()], bindings: { DAEMON_TOKEN: "dmn-w04a-0123456789abcdef", RENDER_DAILY_ALLOWANCE_MS: "100000" },
+  serviceBindings: { SELF: (req) => k.mf.dispatchFetch(req), PDF_WORKER: "pdf-worker", OCR_WORKER: "ocr-worker",
     FILE_SCANNER: async (req) => {
       const u = new URL(req.url), body = req.method === "POST" ? await req.json() : null;
       const json = (b, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "content-type": "application/json" } });
