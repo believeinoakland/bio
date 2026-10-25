@@ -155,3 +155,19 @@ T51 · standards #20 · K5178 (SCREENS-INVESTIGATE #16 J28 (2)).
 Done: the whole change of J6 above (index.mjs `known_through`, `known-through.test.mjs`, `inForceKnown` fixture and its test), committed; module tests 122/0; filings, action-plans, affordances green; format, architecture, coverage, ownership 0. J6's COMPLETE is NOT posted.
 Half done: the control-plane and plane test runs were stopped unfinished; no result.
 Next step: run `bio-plane/test/m/control-plane/` and `bio-plane/test/m/plane/` (`node --import ./bio-plane/test/platform-sqlite.mjs --test <dir>`), add their counts to J6's "Suite counts" and a `Size (<session id>): test runs <n>, module lines <n>` line, commit, push, `mail state --set COMPLETE`, `mail post --as job --kind COMPLETE`, ring BOB. Also REPORT to BOB the conformance `t36.test.mjs:58` stale "member:olive" expectation (in J6). No workers to stop.
+
+## J6 completion, resumed (B8 to B10) · session_01AttFwdpMk7hg2XJoF6Y7AX
+
+Merged `tranche/T51` (as of 7efd8cb8c2) into the branch; nothing in my paths conflicted. The change of J6 is unchanged.
+
+**Users' runs, finished (absolute root, tranche as it stood at my merge).**
+- standards: 122 tests, 0 failures.
+- control-plane: 720 tests, 714 pass, 6 fail. None is mine: five (R105 G61, R105 G63, R137, R17/R29/R123 adoptversion, R60 ratification) fail identically on a clean checkout of `origin/tranche/T51` (files `r10-caseratify-chain`, `walk-monitoring-checknow-adopt`, `t51-round7-seam`, `r137-parity`); the sixth, `R9 seam §14`, names itself red until other jobs merge.
+- plane: the full-directory run stalled twice (148 passes, one failure, no output for an hour, the second time with `--test-timeout=600000`). The one failure, `door.test.mjs` "R1, R5, R67 ... thirty-six routes", fails identically on clean `origin/tranche/T51` (6 tests, 5 pass, 1 fail). The three files still running when I stopped it, `fix5-r77.test.mjs`, `fix6-pending.test.mjs`, `r9-jobs.test.mjs`, also show no result in 580 s on clean `origin/tranche/T51`, so the stall is not from my change. I did not run the rest of plane's files to completion: not verified, stated plainly.
+- filings 165/0, action-plans 105/0, affordances 289/0, conformance 125 / 1 failure (t36 line 58, fixed by BOB K5182), screens-investigate 249 / 1 failure (money/period, its own job): from J6.
+
+**B10 note:** my branch does not yet hold `fc578df959` (no store starts: `DECLARED_OP_DISAGREES`); my runs predate it and show none of that message.
+
+**Deferred:** nothing. **REPORT (other modules):** plane `door.test.mjs` R1/R5/R67 thirty-six routes, and plane `fix5-r77`, `fix6-pending`, `r9-jobs` hang, both on the tranche without my change.
+
+Size (session_01AttFwdpMk7hg2XJoF6Y7AX): test runs 12, module lines 3593
