@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { store } from "./fixture.mjs";
+import { readHeldAnswer } from "../extraction/fixtures.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 
@@ -14,7 +15,8 @@ test("R61 (fix round 3, C5; K4389; extraction R80, control-plane R117): through 
   const x = await store();
   const ex = extractionOf(x.ctx);
   const held = [];
-  ex.readHeld = async (args) => { held.push(args); return { ok: true, read: false, why: "NO_HOME" }; };
+  const noHome = await readHeldAnswer.noHome();
+  ex.readHeld = async (args) => { held.push(args); return readHeldAnswer.noHome(); };
   const answer = JSON.parse(JSON.stringify(await x.call(`/readheldfor?sha=${SHA}`)));
   assert.equal(held.length, 1, "the arm called extraction's readHeld once, on the one instance");
   assert.equal(held[0].sha, SHA);
