@@ -104,3 +104,7 @@ Markers added: none (`fixtures-own`/`fixtures-generic`: none).
 Found in another module (REPORT): `bio-plane/src/case-checker/program.mjs` is a generated artifact built from case-catalogue's `checks.mjs` (manifest §14). It was already stale at the tranche tip (case-checker R13, R25 fail without my change); my change to `checks.mjs` makes it stale again. BOB regenerates it (`node bio-plane/src/case-checker/build-program.mjs`) at the layer close. The three producers (`publication` `#pinnedMemberBasis`, `ratification` `#memberBasisAtPins`, `case-checker/check.mjs:506-515`) still send the array form until their jobs send `{basis, references}`; until then R6 has no effect in production.
 
 Size (session_01Gh45buVGyYP3TcXiTnyq1L): test runs 4, module lines 1015
+
+## J7 · COMPLETE
+
+R6 applied on job/T51/case-catalogue: checks.mjs:918-934 reads a memberBasis entry as an array or {basis, references}; failing-first test seen red then green; module 18/18; users ratification and case-checker fail only as before (R21 R29 R32; R13 R25 stale program.mjs, REPORT in J5); checks, fixtures, ownership 0 in my files. Record: J5.
