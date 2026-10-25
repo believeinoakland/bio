@@ -99,3 +99,7 @@ Size (session_0156GUxDJmfWv8jdceqhcys5): test runs 3, module lines 3563
 **Fixtures check** (`checks/fixtures.mjs . standards --list`): zero lines for standards. **Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/standards/*.test.mjs`: tests 117, pass 117, fail 0. **Checks:** format 0 failures; architecture 0 failures; coverage 53 of 53 ids, 0 failures; words (standards) 0 failures; ownership 0 failures. `impact.mjs origin/tranche/T51 HEAD`: standards only (affected modules 1 of 178); no other module's tests are affected, since no source changed.
 
 Size (session_01SABp1mbexAxC9AfGM6BDu6): test runs 4, module lines 3563
+
+## J4 · COMPLETE
+
+Fix round 10, Wave A batch 1 done (commit on job/T51/standards). Six fixtures published in bio-plane/test/m/standards/fixtures.mjs (bindsAt, standardRead, standardReadWorld, standardRow, standardsEmptyReads, standardsIn), each made by the real standardsOf at test time; host-refusals contract run (marker fixtures-run: law-relations host-refusals, orphan-run until law-relations' marker merges). No fixtures-own or fixtures-generic markers added. Real answers differ from users' hand-built ones (host:true absent; NO_REASON max_chars, WHY_INVALID max, bindsAt returns state not binds): listed in my record. Tests 117/117; format, architecture, coverage, words, fixtures (standards lines 0), ownership all 0 failures; impact: standards only. Record: build/jobs/T51/standards.md.
