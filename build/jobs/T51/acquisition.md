@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01JjkV7W74Hx4TPxHQN3nSf6 · depth 2 · WORKING · handled B48
+**Status** · session_01JjkV7W74Hx4TPxHQN3nSf6 · depth 2 · RUNNING until 2026-10-25T18:17:17Z (plane/control-plane/monitoring suites) · handled B48
 
 ## J1 · REPORT
 
