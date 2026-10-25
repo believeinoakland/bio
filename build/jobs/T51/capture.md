@@ -948,3 +948,21 @@ COMPLETE B40: R29 fixed (four parted ops admit admin+member; red-first test, Min
 - `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2910 test files affected.
 
 Size (session_01HsvPvAFoM9DaMzZURAeCPZ): test runs 6, module lines 5011
+
+## J41 · COMPLETE
+
+**COMPLETE**, B41 (CAPTURE #61, fix round 10, the final pass's cause 1). Record: `build/jobs/T51/capture.md`, section "Fix round 10 · CAPTURE #61".
+
+**Cause 1 (case-carriage photo test).** Root: `capture/index.mjs` `#uploadedDocument` writes the upload's document with no `content_type` (R86 and `upload.test.mjs:140`), and nothing outside capture had the real document, so case-carriage hand-built it with `content_type` (`obscured.test.mjs:50`, `fixture.mjs:142,162`, `marker.test.mjs:63`). Why the tests missed it: `upload.test.mjs:138-155` pinned the shape, but no consumer got the real answer. The consumer fix is case-carriage's, not mine.
+
+**Fixture published** (`bio-plane/test/m/capture/fixtures.mjs`, checked by `fixtures.test.mjs`): `uploadProvenance({ bytes = UPLOAD_PNG, name = "street.png", statement, by = "m1", at = "2026-10-09T12:00:00Z" })` → `Promise<document>`. It runs the real `uploadCapture` with no declared type and answers `r.document`; it throws on a refusal. Also exports `UPLOAD_PNG` (a 1x1 PNG). Test: pinned to `upload.test.mjs:138-155`'s shape; failing first on the missing export, green after. Control: a text named `notes.png` is profiled by its bytes, not its name. Platform: none needed (diagnosis).
+
+**Markers added:** `// fixtures-generic: RENDER_MADE_UP` at `bio-plane/test/m/capture/fixtures.test.mjs:14` (a control code; the check had been reporting it since J39). Now `checks/fixtures.mjs /home/user/bio capture`: 0 failures.
+
+**Met ids:** none named; no capture requirement is marked not yet met for this cause. **Deferred:** none. **Found in other modules:** nothing new. **Users to re-point** (later CHANGE or new session): case-carriage.
+
+**Inbox:** B40 was unread at start, but its work is complete by J39 and J40; `done` through B41 covers it.
+
+**Tests and checks:** capture suite (51 files, 363 tests) 363 pass, 0 fail, exit 0; `cap13-reuse-pages` and `d57selflink` 2 of 2; `fixtures.test.mjs` 8 of 8. format, architecture (0), coverage (67 of 67), words (0), fixtures (0), ownership (0; 3 files: fixtures.mjs, fixtures.test.mjs, the record). `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 modules affected.
+
+Size (session_01HsvPvAFoM9DaMzZURAeCPZ): test runs 6, module lines 5011
