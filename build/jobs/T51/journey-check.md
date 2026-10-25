@@ -1,6 +1,6 @@
 # journey-check (T51)
 
-**Status** · session_01MdLNC4RWKfjZejBoGhZ5iF · depth 2 · WORKING · handled B19
+**Status** · session_01MdLNC4RWKfjZejBoGhZ5iF · depth 2 · WAITING ON BOB (K5183 save) · handled B19
 
 ## Completion record (JOURNEY-CHECK #7)
 
