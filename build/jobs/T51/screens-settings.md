@@ -449,3 +449,11 @@ Size (session_01LW6V3mNSxPRyfn48u2tZEY): test runs 19, module lines 5417
 ## J34 · COMPLETE
 
 COMPLETE (re B45). Merged tranche/T51 (plane's uses holds screens-settings). checks/run.mjs: format, architecture, coverage, channels, words 0 failures. ownership: 1, the named path bio-plane/test/m/plane/g42-storage-seam.test.mjs you accept at the merge (K4648). Tests: screens-settings 266 + the seam's 4 = 270 pass, 0 fail. Gauge R79, keys, keys.mjs sync and R39 test as in J30/J31. Size: test runs 19, module lines 5417.
+
+## J35 · QUESTION
+
+QUESTION (cause 1, the roster's projects column). Two points; I carry on with everything else on my best reading.
+
+(a) The START says R47 is amended and marked `*(not yet met: T51)*`, but `build/requirements/screens-settings.md` on tranche/T51 (merged at 91be8801ca+) has no projects-column sentence and no T51 mark (grep "not yet met: T51" finds none; R47 ends at "Control: the roster's counts are R29's, R35's."). Please amend R47 (or add an R80) with the sentence and mark it.
+
+(b) My best reading, which I build: to a session that administers, `members` reads `projectlist` once (names of the projects the administrator sees in full) and the roster gains a column `screen.projects.name` ("Projects", the design holds no column word for it); each row's cell lists the member's projects from `memberlist`'s `projects` ({project, state, owner}) that `projectlist` names, as the design's member-card words `screen.members.tip.owner` ("owner of {project}") for an owner and `screen.members.tip.workson` ("works on {project}") otherwise; a member with none draws an empty cell; a member's (non-administrator's) table has no column and the screen sends no `projectlist`. An entry `memberlist` marks `existence: true` (a hidden project the administrator sees only at EXISTENCE, owner only) has no name in any read I can make (`projectlist` omits hidden projects; membership R18 gives the row only the id), so it is NOT drawn by id. If R18/Membership v2 §7.8 means the existence-level name is to be drawn, membership must answer it on the row (e.g. `name`), and I draw it then; tell me if you want that as a REPORT to membership.
