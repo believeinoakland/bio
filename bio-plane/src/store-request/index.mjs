@@ -17,7 +17,7 @@ import { EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUC
          PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS,
          OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS,
          QUEUE_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, INTENT_ACTIONS, INTENT_READS,
-         REEVALUATION_ACTIONS, STANDARDS_ACTIONS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS,
+         REEVALUATION_ACTIONS, STANDARDS_ACTIONS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, OPS, NEEDS,
          ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_PROPOSAL_ACTIONS, TEMPLATE_PROPOSAL_ACTIONS, LOCAL_FACTS_ACTIONS,
          WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS,
          NETWORK_NOTICES_BY, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, OP_STAMPS } from "../op-declarations/index.mjs";
@@ -68,6 +68,11 @@ export const BODY_ACTOR = Object.freeze({
 const BODY_ACTOR_KEYS = Object.freeze([...new Set(Object.values(BODY_ACTOR))]);
 
 /** R2: the ops whose store route has another name. */
+/** R25: an op graded as `publish`, read from the declarations: `publish`'s spec and capability, `author` declared. */
+const gradedAsPublish = (op) => op !== undefined && NEEDS[op] === "publish" && (OP_STAMPS[op] || []).includes("author")
+  && sameSpec(OPS[op], OPS.publish);
+const sameSpec = (a, b) => !!a && !!b && a.mutating === b.mutating && a.classes.join() === b.classes.join()
+  && JSON.stringify(a.machineClasses) === JSON.stringify(b.machineClasses);
 export const DO_PATH = Object.freeze({ inbox: "inboxlist", publish: "publishcase", inboxpull: "inboxpullfile" });
 /** R5: the internal headers a stamped session and an ask's grant travel in (`store-door` R9). */
 export const SESSION_HEADER = "x-bio-session";
@@ -236,9 +241,9 @@ function make({ op, url, method = "GET", body, caller, source = null, country = 
   if (op === "connectionassert" || op === "filemembershipjudge") put("author", T);
   if (op === "projectbarset") put("author", T);
   /* R8 */
-  if (op === "publishpreflight" && isAi) put("aiCred", JSON.stringify({ tokenId: aiCred.tokenId, principal: aiCred.principal }));
-  /* R7 */
-  if (op === "publishtensions" || op === "publishpreflight") put("author", T);
+  if ((op === "publishpreflight" || gradedAsPublish(op)) && isAi) put("aiCred", JSON.stringify({ tokenId: aiCred.tokenId, principal: aiCred.principal }));
+  /* R7, R25 */
+  if (op === "publishtensions" || op === "publishpreflight" || gradedAsPublish(op)) put("author", T);
   if (REEVALUATION_ACTIONS.includes(op)) put("author", T);
   if (POSITIONAL_ACTS.includes(op)) put("identity", N);
   if (op === "calibrate") put("identity", N);

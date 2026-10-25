@@ -55,9 +55,6 @@ export const WORLD_UNREACHED = Object.freeze({
   airundispatch: "control-plane's door calls the object's `dispatchMemberRun` RPC, plane's Store method; no earlier module exports it",
   textcheck: "control-plane's door shapes the draft (`draft.mjs` `checkedDraft`); a later module",
   readtranslate: "control-plane's door shapes the draft (`draft.mjs` `checkedDraft`); a later module",
-  capturerequestplatformmark: "declared by op-declarations, answered by no module (no route, no arm): a dead declaration, reported",
-  capturerequestplatformunmark: "declared by op-declarations, answered by no module (no route, no arm): a dead declaration, reported",
-  capturerequestplatformhosts: "declared by op-declarations, answered by no module (no route, no arm): a dead declaration, reported",
 });
 /* control-plane R2, R53, R56, R63, R66: the names a table may hold that the real door answers as an op with no spec */
 const NOT_ROUTED = Object.freeze(["assistantset", "securitycount", "translationdraftrecord", "groupswitchset", "accountswitchset"]);
