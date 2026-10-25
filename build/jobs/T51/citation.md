@@ -312,3 +312,17 @@ Tests and checks:
 - checks/fixtures.mjs /home/user/bio citation --list: 0 failures.
 
 Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 8, module lines 1731
+
+## J19 · COMPLETE
+
+COMPLETE B14 (follow-up 62, K5131): R18 met as far as citation can; pushed on job/T51/citation.
+
+1. Root cause: `citeimported` and `withdrawimported` declared no `stamps`, so op-declarations stamped `viewer` alone; the door deleted the caller's `author` and set none, the handler saw `author = null`, and `#importedMemberRefusal` answered MACHINE_CANNOT_CITE_IMPORTED. Seen through the real door: member `ann` got that refusal with `inquiry: null`. Fix: both rows declare `stamps: ["author", "viewer"]` (citation/index.mjs).
+2. Why missed: declared-ops.test.mjs checked fields only and module tests passed `author` straight to the handler. Gap fixed: declared-ops.test.mjs holds both rows' stamps; new imported-door.test.mjs runs both ops through the real plane (r8 kit).
+3. Walker's case: imported-door.test.mjs, two R18 tests. citeimported as a joined member answers BASIS_REFUSED (edition not accepted, the op's own refusal); withdrawimported answers NOT_CITED. Seen red first (0 pass, 2 fail with the stamps change reverted), then green.
+4. Platform check: none.
+
+NOT DONE, for BOB: R18 as amended names `identity` too. op-declarations' registered stamps (declared.mjs STAMPS) have no `identity`, so a row declaring it is refused BAD_STAMPS. The positional identity is set only for ops in op-declarations' POSITIONAL_ACTS. Neither imported handler reads `identity`, so the walker's case needs none; if you want it stamped (as cite's is), op-declarations must list the two ops in POSITIONAL_ACTS, or R18's wording drop `identity`.
+
+Checks (absolute root): citation tests 134/134; format 178 modules 0; architecture 0; coverage 21 of 21; words 0; ownership 0; fixtures --list 0 failing.
+Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 8, module lines 1731
