@@ -1218,3 +1218,20 @@ B103 applied (commit 7431437678 on job/T51/plane). r10-reading-ended.test.mjs ta
 NOT GREEN YET: the module's tests cannot import the store. Every run fails at import with DECLARED_OP_DISAGREES: readtranslate description (op-grades' stale hand row, tranche/T51 at 315ca3677b). Waiting for OP-GRADES #30 to merge; I then run the file green and post COMPLETE.
 
 Found in other modules: (1) extraction does not publish a final answer with why NO_PROGRESS (plane's table stops on it at pending.mjs:446 when a tick progresses nothing); the unopened row now takes the published CURSOR_MISMATCH final, the assertion's meaning unchanged. (2) op-grades: readtranslate description, as above.
+
+## Record (PLANE #64, B104; on job/T51/plane after the DONE of B103)
+
+**Entries applied (B104, K5202, plan item 101 (4)(a))**
+- New `bio-plane/test/m/plane/r-transcribe-answer.test.mjs`, with `// fixtures-run: reading-pipeline transcribe-answer` and `// fixtures-run: extraction transcribe-answer`. It runs the users' contract (`{ok: true, engine, version, pages: [{page, text}]}`) against the REAL AI path (`transcriberOf(...).transcription(...).transcribe`) over a held scan, with agent-worker's `/transcribe` answering the shape the users state. Two tests, both naming R36: the answer's shape and fields (each page `{page, text}`, `sent`, `asked`, `owed`); and the page order / a page the scan lacks (never answered as text).
+- Path correction: the CHANGE names `bio-plane/src/plane/transcribe.mjs`; the AI path is in `bio-plane/src/store-assembly/transcribe.mjs` (`aiPath`, :101; the transcriber, :168 on). Used there; the test imports `transcriberOf` from it.
+- Marker names: the runs use `reading-pipeline` and `extraction` with id `transcribe-answer`, as the CHANGE says. Current users' markers still read `content transcribe-answer` (extraction t48:29, reading-pipeline text-units:531, :537, transcribe:323), so the pairing lands at BOB's rename.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/plane/r-transcribe-answer.test.mjs`: fails at import, the same `DECLARED_OP_DISAGREES: readtranslate description` (op-grades #30, not merged). Not run green yet.
+- `checks/fixtures.mjs /home/user/bio plane`: 0 failures. format 0 failures; coverage 37 of 37; ownership 0 failures.
+
+**Deferred:** none.
+
+**Found in other modules:** none new. The op-grades row in J69 still blocks every plane run.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 2, module lines 371
