@@ -31,7 +31,7 @@ import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 import * as jurisdictions from "../../jurisdictions/index.mjs";
 import { pageWorld, TOK, ORIGIN, req, begin, callback, cookieOf, cookieValue, b64url, script, realFetch, jres, run, release,
   SIGNER, STRANGER, armWith, disarm, restoreSigners, sha, bump, CAPABLE_SRC, PRE116_SRC, MEMBER_SRC, bindingOf,
-  parsePage, LIMITS, LIMITS_STATEMENT, UNSTATED_SRC, BUILTIN_LIMITS, DEFAULT_VERSION, DESCRIPTOR, IMAGE, RUNNER,
+  parsePage, LIMITS, LIMITS_STATEMENT, CRONS_STATEMENT, UNSTATED_SRC, BUILTIN_LIMITS, DEFAULT_VERSION, DESCRIPTOR, IMAGE, RUNNER,
   SCANNER, SCANNER_CLASSES, SCANNER_WORKER, SCAN_IMAGE, RENDER_IMAGE, VPC_ID, signer, headOf, like } from "./fixture.mjs";
 
 after(restoreSigners);
@@ -293,7 +293,7 @@ test("R8 `rel`: the repository's release installs only when newer, hashing to it
     const put = w.planePuts[0];
     /* The built-in installs in its place, unless it states no limits, when R20 refuses the act (asserted under R20). */
     if (from === "built-in" && !BUILTIN_LIMITS.ok) { assert.equal(put, undefined, why); continue; }
-    assert.equal(put.source, from === "repository" ? rel.src : RELEASE_SOURCE, why);
+    assert.equal(put?.source, from === "repository" ? rel.src : RELEASE_SOURCE, why);
     assert.equal(bindingOf(put, "VERSION").text, from === "repository" ? NEXT : RELEASE_VERSION, why);
   }
   disarm();
@@ -757,7 +757,7 @@ test("R19 the Cloudflare token and every credential appear in no page, log or er
 });
 
 test("R20 the plane's limits are read from the signed release R8 chose and sent exactly, on install and update; a release stating none or unreadably is passed over by name, and with a built-in stating none the act is refused before anything is created; the fleet statement is unchanged", async () => {
-  const plane = (stmt, q = '"') => `export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const S = ${q}${stmt}${q};`;
+  const plane = (stmt, q = '"') => `export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const S = ${q}${stmt}${q}; export const C = "${CRONS_STATEMENT}";`;
   const limitsOf = (w) => w.planePuts.map((p) => p.meta.limits);
   armWith(SIGNER.line);
   /* Exactly the release's statement, whatever it says, in any quote style a bundler prints: the installer has no value of its own. */
@@ -1317,7 +1317,8 @@ test("R44 the install and the update install file-scanner with exactly the bindi
     /* The prefixes it writes (clamav/, reputation/) are in the copy's evidence bucket and nowhere else: its one bucket. */
     assert.deepEqual(meta.bindings.filter((b) => b.type === "r2_bucket"), [{ type: "r2_bucket", name: "CAPTURES", bucket_name: `bio-captures-${slug}` }], mode);
     assert.deepEqual(w.schedules.get(FS), ["17 4 * * *"], mode);
-    assert.equal([...w.schedules.keys()].join(), FS, `${mode}: only the member whose part states one`);
+    assert.deepEqual([...w.schedules.keys()].sort(), [slug, FS].sort(), `${mode}: the plane's watchdog (R39) and only the member whose part states one`);
+    assert.deepEqual(w.schedules.get(slug), [CRONS_STATEMENT.replace("bio-plane-crons/1 ", "")], `${mode}: the plane's own schedule, as its release states it`);
     /* The plane: bound to it as FILE_SCANNER, by instance-setup's name (R30). */
     assert.deepEqual(FLEET_BINDINGS.find(([m]) => m === SCANNER), [SCANNER, "FILE_SCANNER"], "instance-setup's name for it");
     assert.deepEqual(bindingOf(w.planePuts.at(-1), "FILE_SCANNER"), { type: "service", name: "FILE_SCANNER", service: FS }, mode);
@@ -1336,10 +1337,10 @@ test("R44 the install and the update install file-scanner with exactly the bindi
   /* A release without the part (bundler's N772 not yet in it): installed without bucket and cron, and the page says what it lacks. */
   const bare = seen(await run({ slug: "r44-bare", rel: await release({ version: NEXT, scanner: true, scannerWorker: null }) }));
   assert.deepEqual((await metaOf(bare, SCANNER + "-r44-bare")).bindings.map((b) => b.name).sort(), ["RENDERER", "SCANNER", "VERSION"]);
-  assert.equal(bare.schedules.size, 0);
+  assert.deepEqual([...bare.schedules.keys()], ["r44-bare"], "no cron for the member; the plane's watchdog (R39) only");
   assert.match(bare.page.label("fleet"), like("installer.fleet.note.scanner", { member: SCANNER }));
   /* A schedule refused: the member stays installed and the page says so. */
-  const late = seen(await run({ slug: "r44-late", rel, refuseSchedules: true }));
+  const late = seen(await run({ slug: "r44-late", rel, refuseSchedules: [SCANNER + "-r44-late"] }));
   assert.ok(late.acct.has(SCANNER + "-r44-late"));
   assert.match(late.page.label("fleet"), like("installer.fleet.note.schedule", { member: SCANNER, schedule: "17 4 * * *" }));
   assert.ok(!late.raw.includes("<i>by the fake</i>"));

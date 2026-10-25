@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { RELEASE_VERSION } from "../src/release.mjs";
 import { word } from "../src/words.mjs";
 import { invitePage } from "../scripts/invite-page.mjs";
-import { run, release, armWith, restoreSigners, SIGNER, bump, heldCopy, bindingOf, DESCRIPTOR, RUNNER, IMAGE } from "./fixture.mjs";
+import { run, release, armWith, restoreSigners, SIGNER, bump, heldCopy, bindingOf, DESCRIPTOR, RUNNER, IMAGE, like } from "./fixture.mjs";
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
@@ -302,15 +302,17 @@ test("G54 an unreadable settings read-back shows the step's note on the install'
   /* The sentence is installer-steps' (read by its own key); this run holds none of it: the page gains one notice the control page lacks. */
   const notices = (w) => new Set(w.page.done.match(/<div class="notice">[\s\S]*?<\/div>/g) || []);
   const extra = (w, c) => [...notices(w)].filter((n) => !notices(c).has(n));
+  /* An unreadable read of the plane's settings also leaves its bindings unread, so the page may gain the members' own notice beside the logs one: the note is the one that names the logs. */
+  const logsNote = (w, c) => extra(w, c).filter((n) => like("installer.fleet.logsunconfirmed").test(n.replace(/&#39;/g, "'")));
   const cleanI = await run({ slug: "g54-note-i", rel });
   const inst = await run({ slug: "g54-note-i", rel, observabilityUnreadable: true });
   assert.equal(inst.page.failed ?? null, null, "the install goes on");
-  assert.equal(extra(inst, cleanI).length, 1, "the install's page shows the note");
+  assert.equal(logsNote(inst, cleanI).length, 1, "the install's page shows the note");
   assert.equal(extra(cleanI, inst).length, 0, "control: the page that read enabled shows none");
   const pre = { "g54-note-u": planeBase("g54-note-u") };
   const cleanU = await run({ slug: "g54-note-u", mode: "update", rel, pre });
   const upd = await run({ slug: "g54-note-u", mode: "update", rel, pre, observabilityUnreadable: true });
   assert.equal(upd.page.failed ?? null, null, "the update goes on");
-  assert.equal(extra(upd, cleanU).length, 1, "the update's page shows the note");
+  assert.equal(logsNote(upd, cleanU).length, 1, "the update's page shows the note");
   assert.equal(extra(cleanU, upd).length, 0, "control: the page that read enabled shows none");
 });

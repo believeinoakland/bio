@@ -43,6 +43,21 @@ export const jres = (o, status = 200) => new Response(JSON.stringify(o), { statu
 export const cfok = (result) => jres({ success: true, result });
 export const cferr = (message, status = 400, code = 0) => jres({ success: false, errors: [{ message, code }] }, status);
 
+/* The Worker schedules endpoint of the fake account (installer-steps R39, R84 (3)): GET answers what `schedules` holds (by script name) plus `crons`, PUT stores
+   the crons it is given, or is refused. One definition, used by `pageWorld` and by the suites that script their own account. */
+export const scheduleRules = ({ schedules = new Map(), crons = {}, refuse = false } = {}) => [
+  { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "GET", f: (u) => {
+    const name = u.split("/workers/scripts/")[1].split("/")[0];
+    return cfok({ schedules: [...(schedules.get(name) || []), ...(crons[name] || [])].map((cron) => ({ cron })) });
+  } },
+  { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "PUT", f: (u, init) => {
+    const name = u.split("/workers/scripts/")[1].split("/")[0];
+    if (refuse === true || (Array.isArray(refuse) && refuse.includes(name))) return cferr("schedules refused <i>by the fake</i>", 403);
+    schedules.set(name, JSON.parse(init.body).map((x) => x.cron));
+    return cfok({ schedules: JSON.parse(init.body) });
+  } },
+];
+
 export const req = (path, init) => worker.fetch(new Request(ORIGIN + path, init));
 export const b64url = (s) => Buffer.from(s).toString("base64url");
 export const cookieOf = (r) => (r.headers.get("set-cookie") || "").split(";")[0];
@@ -258,7 +273,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   /* G54: the account states each script's `observability` as the last upload sent it; `observabilityDropped` makes it state none (an upload that lost it). */
   observabilityDropped = false, observabilityUnreadable = false,
   /* T36: `vpc` the Workers VPC service the operator names (R45), `refuseVpc` an upload naming one refused; `logpush` the
-     account's Logpush jobs, or "refused" (R46); `refuseSchedules` a schedule refused (R44). */
+     account's Logpush jobs, or "refused" (R46); `refuseSchedules` a schedule refused (R44): `true` for every script's, or the names of the scripts whose schedule is refused (the plane's own refusal stops the act, R39). */
   vpc, refuseVpc = false, logpush = [], refuseSchedules = false,
   /* R55 (T48): the release an update is of; by default the one the world serves (the built-in, when the repository does not answer). */
   version,
@@ -400,15 +415,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     } },
     { m: (u) => u.endsWith("/logpush/jobs"), f: () => logpush === "refused" ? cferr("Authentication error", 403, 10000) : cfok(logpush) },
     /* R84 (3): the scheduled jobs a Worker holds (`crons`: more, for a script of the account's, by name). */
-    { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "GET", f: (u) => {
-      const name = u.split("/workers/scripts/")[1].split("/")[0];
-      return cfok({ schedules: [...(schedules.get(name) || []), ...(crons[name] || [])].map((cron) => ({ cron })) });
-    } },
-    { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "PUT", f: (u, init) => {
-      if (refuseSchedules) return cferr("schedules refused <i>by the fake</i>", 403);
-      schedules.set(u.split("/workers/scripts/")[1].split("/")[0], JSON.parse(init.body).map((x) => x.cron));
-      return cfok({ schedules: JSON.parse(init.body) });
-    } },
+    ...scheduleRules({ schedules, crons, refuse: refuseSchedules }),
     { m: (u, mth) => u.includes("/workers/durable_objects/namespaces") && mth === "GET", f: () =>
       cfok([...classes].flatMap(([script, cs]) => cs.map((c) => ({ id: `ns-${script}-${c}`, script, class: c })))) },
     { m: (u) => u.includes("/containers/applications"), f: (u, init) => {
