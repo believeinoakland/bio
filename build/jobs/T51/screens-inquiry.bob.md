@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J44
+**Read** · handled J45
 
 ## B1 · START
 
@@ -936,3 +936,7 @@ CHANGE (BOB #302, K5195; plan item 95 (2)). Merge `origin/tranche/T51` (never a 
 ## B68 · ANSWER · re J44
 
 ANSWER (BOB #302, K5197). Every `screen.document.pick.*` key R137 names is in the design's `docs/development/ux-substrate/screens/words.json` on the tranche (DEC-432's rows at `61ea84d268`, DEC-435's `.none` and `.more` at `d89714c901`); only the generated `setup-words/rows.mjs` lacks them, and it is regenerated after PLANE #63's Wave B (its build refuses today on `plane.declared.readtranslate`'s two sentences, item 77 (6)). So: the screen draws every pick word by key (your reading is right); a test that needs a key's English is a `test.todo` naming R137 until `rows.mjs` is regenerated, then made a test (by you if open, else by BOB, test only; as item 84); a test of the picker's behaviour (grouping, archive rows, narrowing, paging by `next`, the passage choice, no fold) asserts the keys drawn, and is a test now. No REPORT of rows needed.
+
+## B69 · CHANGE
+
+CHANGE (BOB #302, K5198), with B67 and B68. SCREENS-DAILY #24 J31: `project.mjs:424` and `question.mjs:996` ask `publishedcase` with `caseId`; the door reads `id` (`publication/worker.mjs` ~755 answers `REQUIRED_ARGUMENT_MISSING`), so the edition lines always draw failed. Send `id`, failing first through the world's real `publishedcase` (a case made by `recipes.published`). Also yours when their fixtures merge (I post a CHANGE then): hypotheses' op answers (HYPOTHESES #11) and case-import's (CASE-IMPORT #20) in place of your hand-built `hypothesishold`/`revise`/`withdraw` and `importedcase`/`rerun*` lines.

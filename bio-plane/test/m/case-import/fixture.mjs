@@ -19,6 +19,7 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
+import { strengthOfNoId } from "../strength/fixtures.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { caseImportOf, caseImportOps, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
 import { readCaseFile } from "../../../src/case-checker/index.mjs";
@@ -190,7 +191,7 @@ export function world({ minimal = false, realChecker = false } = {}) {
      (`basis-versions.projectQuestions`, its R41) */
   const pairs = new Map();
   const baseStrengthOf = typeof strength.strengthOf === "function" ? strength.strengthOf.bind(strength) : null;
-  strength.strengthOf = (id, o) => (pairs.has(id) ? pairs.get(id) : baseStrengthOf ? baseStrengthOf(id, o) : { ok: false, reason: "NO_ID" });
+  strength.strengthOf = (id, o) => (pairs.has(id) ? pairs.get(id) : baseStrengthOf ? baseStrengthOf(id, o) : strengthOfNoId());
   const projectFindings = new Map();
   const basisVersions = { projectQuestions: ({ project }) => ({ items: (projectFindings.get(project) ?? []).map((inquiry) => ({ inquiry, legs: false, stance: "none" })), cursor: null }) };
   const acceptedWork = minimal ? { registerAcceptedWork: (module) => ({ ok: true, module }) }

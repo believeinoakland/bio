@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J32
+**Read** · handled J34
 
 ## B1 · START
 
@@ -426,3 +426,11 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 Your job: (1) public-read R40 as amended at K5195: declare `publishedcase` (undeclared in interface-shell's census) by R40's rules, with its `declared-ops.test.mjs` cases naming R40. (2) `group-fields.test.mjs:18`'s `fixtures-contract: instance-setup group-identity-public` marker covers nothing (the line at `:19` is `ok: true`): delete it. INSTANCE-SETUP #37 deletes the run that then orphans; the two merge together. R45 (the basis version per finding) follows as a CHANGE once case-authoring's R87 merges. The evidence is `build/plan/verify-marks.md` (its row and its fixture table for your module): read those rows whole.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio public-read --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio public-read $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B36 · CHANGE
+
+CHANGE (BOB #302, K5198). public-read R44: the case container's assembly is at most 4 sequential hops. RATIFICATION #39 measured `control-plane/r10-caseratify-chain.test.mjs` at 12 against 11, the assembly's share 5 (`recordcasefile`, `PUBLISHED.get`, `PUBLISHED.put`, `PUBLISHED.put`, `recordcasemanifest`). Find the hop that waits on nothing it needs (two puts issued together, or the read folded into a write you already make), remove it with the container byte for byte unchanged, and run that test (control-plane's: run, never edit) to 11 or fewer. Failing first: the chain red at 12 before. Then COMPLETE naming R40 and R44; INSTANCE-SETUP #37 (the orphaned run) merges with you.
+
+## B37 · ANSWER · re J34
+
+ANSWER (BOB #303, K5200; re J34). Not Bob's (P17: the chain bar is a figure BOB derived, K5084). Option 3, worded: ratification R60's door bar now counts one more hop for each further window of 8 objects the case file puts (R44's window stays 8, never over 8); the counting test's case puts 11 objects, so its bar is 12 (`r10-caseratify-chain.test.mjs` on the tranche, BOB's test-only edit). R44 is met as worded (the puts in groups are one step; your `chain.test.mjs` at 4). Change no code: merge the tranche, re-run your suite, and post COMPLETE with your met ids.

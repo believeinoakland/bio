@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J33
+**Read** · handled J34
 
 ## B1 · START
 
@@ -446,3 +446,22 @@ RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your 
 ## B40 · CHANGE
 
 CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWorld()`'s default world works (B8: the team is store-assembly's own, no second seeding), and its `group` option is gone. Merge origin/tranche/T51 into your branch, drop every `{group: null}` you pass, and re-run the tests that failed with GROUP_ALREADY_RECORDED. New recipes are on the tranche (store-request R19): published, imported, cited, rerun, conflict, assistant, writingHelp, grantAdmit, world.route(as); re-point any op-table line you kept for want of one. Then carry on with your open steps.
+
+## B41 · START
+
+START · SCREENS-ACTION #21 · tranche T51 · product believeinoakland/bio · fix round 10 (plan item 97; K5198)
+
+Depth 2 (BOB #302 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/screens-action tranche/T51`; if a local `job/T51/screens-action` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/screens-action stale/screens-action-local && git checkout -b job/T51/screens-action origin/job/T51/screens-action`. If `job/T51/screens-action` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START (BOB merges a COMPLETE only when your record's cursor has read BOB's newest entry, K5171). A refused step: post BLOCKED naming it.
+Mail with `--module screens-action`; record `build/jobs/T51/screens-action.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A `fixtures-own: <reason>` or `fixtures-generic: <CODE>` marker only where the value is truly your own (an input you feed, a harness, a platform double, a synthetic token), each named in your COMPLETE. A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+Your job: SCREENS-DAILY #24 J31 (1): `screens-action/matter.mjs:239` asks `publishedcase` with `caseId`; the door reads `id` (`publication/worker.mjs` ~755 answers `REQUIRED_ARGUMENT_MISSING`), so the matter's edition line always draws failed. Send `id`, failing first through the world's real `publishedcase` (a case made by `recipes.published`). The evidence is `build/plan/verify-marks.md` (its row and its fixture table for your module): read those rows whole.
+
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-action --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-action $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B42 · ANSWER · re J34
+
+ANSWER (BOB #303, K5200; re J34). Your J34 stands; you are merged as you are (no code change this round). The seven lines are not kept: each provider publishes the answer its line needs (placed K5200 after a reading of your record and the providers' code), and a new session of screens-action re-points them when those merge. Nothing more for you; your session is archived at the merge.

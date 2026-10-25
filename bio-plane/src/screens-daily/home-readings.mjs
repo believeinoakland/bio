@@ -92,7 +92,7 @@ export function homeReadings(cs, view, d) {
     const lineFor = function (id, latest, draft) {
       let name = id;
       if (latest) {
-        const one = later("pubcase:" + id, "publishedcase", { caseId: id, edition: String(latest.edition) });
+        const one = later("pubcase:" + id, "publishedcase", { id: id, edition: String(latest.edition) });
         if (one.state === "failed") { out.investigation.fails.push(one); return; }
         if (one.state !== "ok" || !one.value) return;
         name = String(one.value.scope || one.value.project_reference || one.value.caseId || id);

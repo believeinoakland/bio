@@ -1,9 +1,9 @@
 /* store-request's published fixtures (K4990, K4993; K5046 (d), K5054): made by the real code when a test runs, never stored.
    `storeWorld()` is `store-assembly`'s world (its R90–R94) with this module's door, sign-ins and recipes over it (R16–R19):
    the real store, the real claim and sign-in, the page's door, recipes of real acts and a pinned clock. */
-import { storeWorld as assemblyWorld, WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE, WORLD_INSTANCE_NAME, memoryBucket } from "../store-assembly/world.mjs";
+import { storeWorld as assemblyWorld, WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE, WORLD_INSTANCE_NAME } from "../store-assembly/world.mjs";
 import { doorOf, bootOf, routeOf, signIn, admittedAs, hold, project, trail, profiles, queue, WORLD_UNREACHED, WORLD_ORIGIN } from "./door.mjs";
-import { page, pdf, question, questions, contradiction, conflict, setAside, finding, signer, published, imported, cited, rerun, assistant, writingHelp, grantAdmit } from "./recipes.mjs";
+import { page, pdf, question, questions, contradiction, conflict, setAside, finding, signer, published, imported, cited, rerun, assistant, writingHelp, grantAdmit, parted, largeSheet, credential } from "./recipes.mjs";
 
 export { WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE, WORLD_UNREACHED, WORLD_ORIGIN, doorOf, bootOf, routeOf, signIn, admittedAs };
 
@@ -22,10 +22,11 @@ export const WORLD_AI_SECRET = "world-account-seal-secret-3b9d71c4e0a5f628";
  *  `door(req, as)` (R17: what a page's `fetch("/api/?op=...")` receives), `signIn(handle, {admin?, capabilities?, device?})` (R16),
  *  `plane(as)` and `boot(as)` (R18: `{door, session}` for interface-shell's `boot`), `route(as)` (R18: a Playwright route handler answering the page's `/api/` from the door, for a browser test), `session(as)` (the record `{t, e, d, w}`),
  *  `admitted(token, op?)` (admission's caller for a token) and `recipes.hold|project|trail|profiles` (R19), each of real acts;
- *  `store`, `ctx`, `sql`, `tick(ms)` are the world's own. */
+ *  `store`, `ctx`, `sql`, `tick(ms)` are the world's own. The world binds `CAPTURES` (store-assembly's) and no `PUBLISHED`: `selftest` reads that as the owner does, one bucket bound without the other, and a test that unbinds
+ *  `CAPTURES` leaves neither bound (SCREENS-SETTINGS #20 J37 (1); STORE-REQUEST #6 B15 (4)); `recipes.published` binds the published store when it publishes. */
 export async function storeWorld({ env = {}, ai = false, ...opts } = {}) {
   const name = WORLD_GROUP;
-  const world = await assemblyWorld({ ...opts, env: { ...WORLD_TOKENS, PUBLISHED: memoryBucket(), ...(ai ? { ACCOUNT_SEAL_SECRET: WORLD_AI_SECRET, INSTANCE_NAME: name, CIVICSMITH_TEST_INSTANCE: name } : {}), ...env } });
+  const world = await assemblyWorld({ ...opts, env: { ...WORLD_TOKENS, ...(ai ? { ACCOUNT_SEAL_SECRET: WORLD_AI_SECRET, INSTANCE_NAME: name, CIVICSMITH_TEST_INSTANCE: name } : {}), ...env } });
   const door = doorOf(world);
   const make = () => storeWorld();
   return Object.assign(world, {
@@ -58,6 +59,9 @@ export async function storeWorld({ env = {}, ai = false, ...opts } = {}) {
       assistant: (as, o) => assistant(world, as, o),
       writingHelp: (as, o) => writingHelp(world, as, o),
       grantAdmit: (as, o) => grantAdmit(world, as, o),
+      parted: (as, name, o) => parted(world, as, name, o),
+      largeSheet: (as, o) => largeSheet(world, as, o),
+      credential: (as, o) => credential(world, as, o),
     },
   });
 }
