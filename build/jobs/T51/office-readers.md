@@ -214,3 +214,10 @@ For you (details in my record, job 105): (1) the ownership check refuses an edit
 - **Found in other modules (REPORT):** the workbooks test above; `bio-plane/dist/bio-plane.bundled.mjs` stale again (formats-xlsx.mjs). ODS `covered-table-cell` (the wrong-citation half of S-18) is odf-reader's.
 - **Deferred:** none.
 - Size (session_01Uhytx8VzpNnUec6KSH9otY): test runs 14 (office-readers 2, plane files 5, other modules 4, the 3 first reproductions), module lines 4599
+
+## J16 · COMPLETE
+
+COMPLETE (B22 and B23: R47 and R48). Reproduced on the tip, then fixed, tests red first (cells-as-stated.test.mjs, 5 tests red on the tip, green after; plane g124f-bounds F1, C07, C08 were red, green after; C07/C08 read whole).
+R47: shared-formula dependents carry the master's text moved by their distance (relative moves, $ stays, quotes left, off-grid #REF!; masters kept on the reading so cellsIn finds them); a row/cell with no r is placed by position (R48) so source, used range, range, lineRows, hidden rows and cellsIn equal a referenced copy; a position past the grid is stated (outside_grid); styled empty cells no longer extend the used range; mergeCells read: sheet.merges, and a listed covered cell is stated covered_by_merge (not flagged for held/piecewise sheets or cellsIn: mergeCells follows sheetData).
+Tests: office-readers 156 pass (typed-cells R30 test updated: a no-address cell is now C1, the amended requirement's), plane g124f-bounds 16/16, g41-shape 11/11 (xlsx probe peak 161 MB of 202), g123f-cells 3/3, format-registry 59, odf-reader 127, file-safety 137. Checks 0 failures.
+For you: (1) workbooks 49/50: g137e.test.mjs "R21 SHEET X12" fails (add.dropped undefined) because it pins that cells with no r are dropped (no_reference 4); with R48 they are held. It was green before this change; workbooks' test and R21's no-reference arm (workbooks/index.mjs:280-287, S-26) are workbooks' to amend. (2) bio-plane/dist/bio-plane.bundled.mjs is stale again. (3) ODS covered-table-cell (S-18's wrong-citation half) is odf-reader's. Details in my record.
