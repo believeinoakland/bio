@@ -1,6 +1,6 @@
 # installer (T51)
 
-**Status** · session_01DCAWkiUVqfwYfbb2mBxLJd · depth 2 · WORKING · handled B32
+**Status** · session_01DCAWkiUVqfwYfbb2mBxLJd · depth 2 · RUNNING until 2026-10-25T13:36:49Z (installer tests (requirements, t50, wizard, corpus, t47)) · handled B32
 
 ## J1 · QUESTION
 
