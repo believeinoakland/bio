@@ -1,6 +1,6 @@
 # screens-daily (T51)
 
-**Status** · session_016XfA9hFzs8hzpGvnNxPG5g · depth 2 · WORKING · handled B41
+**Status** · session_016XfA9hFzs8hzpGvnNxPG5g · depth 2 · RUNNING until 2026-10-25T20:39:41Z (six workers re-pointing op-table tests) · handled B41
 
 ## Completion (SCREENS-DAILY #18, B27: fix round 4, wave 2)
 
