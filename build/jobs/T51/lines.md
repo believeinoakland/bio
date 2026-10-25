@@ -52,3 +52,11 @@ BLOCKED (cause: needs BOB, a file outside my paths). Done and pushed: linesWorld
 ## J6 · COMPLETE
 
 COMPLETE (B4+B5). linesWorld published (fixtures.mjs, tested); fixture.mjs:57 promotion stub replaced by makePromotion(). After merging tranche/T51: architecture 0 failures, format 0, fixtures(lines) 0, lines tests 37 pass/0 fail, impact 0 affected. No fixtures-own/generic markers added. Record: build/jobs/T51/lines.md.
+
+## J7 · REPORT
+
+Findings outside my paths (K5175: REPORTed the day found).
+
+1. Generated word row missing. `lines.declared.linewithdraw` (bio-plane/src/lines/index.mjs:846) is a new `localize` id, the description of linewithdraw's DECLARED_OPS row. Its row is not in bio-plane/src/setup-words/rows.mjs; that file is setup-words' generated artifact, so I did not edit it. It needs regenerating at layer close (`node bio-plane/src/setup-words/build.mjs`). The `lines.declared.recordline` row is the pattern.
+
+2. Full product run (`node checks/run.mjs /home/user/bio`) shows failures in other modules' tests that name lines' ops, which I did not cause and did not establish as pre-existing: screens-investigate organization.test.mjs:78 (recordline stub, "-> lines"), organization.test.mjs:134 (linewithdraw stub, "-> lines"), fold.test.mjs:54 (partiesof stub, "-> lines"). The fixtures check counts 1712 failures across the product and coverage 3 failures, all outside lines. My change adds a declaration row and no op behaviour, so the cause is for those modules' owners to place.
