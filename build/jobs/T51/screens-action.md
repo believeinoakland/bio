@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_01KNqRbreNMPFiyJbKTakfps · depth 2 · WORKING · handled B35
+**Status** · session_01KNqRbreNMPFiyJbKTakfps · depth 2 · RUNNING until 2026-10-25T19:22:08Z (four workers converting op-table test files to storeWorld) · handled B35
 
 ## J1 · REPORT
 
