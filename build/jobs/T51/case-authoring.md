@@ -627,3 +627,21 @@ Root, by reading (not changed here): case-catalogue/checks.mjs 920-928 (the case
 Proposed fix, for you to assign (case-catalogue and ratification): the member's references from its pinned bytes reach that arm beside basis (ratification's memberBasis carries them, or a memberReferences context is added), and memberFm carries references. Then the severed test goes green with its control unchanged.
 
 Module tests: 258 of 259 pass; the one failure is the severed chain. format 0, architecture 0, coverage 58 of 58 named. Record: build/jobs/T51/case-authoring.md, "Completion record for B33".
+
+## Completion record for B39 (CHANGE, R87)
+
+**Entries applied.** R87 (case-grammar R34). Prepare writes each member finding's basis version on its `case_roles:` row: `basis_version` (the name) and `basis_version_identity` (the SHA-256 of the version's composition, UTF-8). The name is basis-versions' `currentOf` for the publishing project, read with the act's viewer; the composition is that version's entry in `basisVersions` listing (limit `BASIS_VERSIONS_LIMIT_MAX`, 1000). A project naming no version, or a version not in the listing, writes both null (never filled).
+
+**Reading I took (BOB may redirect).** "That finding's project" is the publishing project of this act, whose conclusion the case records (R4, R8). A member committed with another project (R72) is read against the publishing project too.
+
+**Code.** `case-authoring/index.mjs`: `#basisVersionOf`, called in `#judgeMembers`; the render passes `basisVersions`. `case-authoring/document.mjs`: the `case_roles` row takes `memberBasisVersionLines` (case-grammar). No format change: an optional field of `bio-case-document/8`.
+
+**Tests.** `bio-plane/test/m/case-authoring/r87-basis-version.test.mjs`: R87 (a finding on a named version; the identity is computed from the listed composition with node's crypto, not the module's helper), and the control (no version named: both null). Red first: with the source reverted both fail; green with the change.
+
+**R31.** Unchanged. Its test is still red on the cause in B38; the COMPLETE covers both when the four jobs merge.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/case-authoring/`: 261 tests, 260 pass, 1 fail (R31 chain, as above).
+- format 0; architecture 0; coverage 59 of 59 live ids named; ownership 0 failures.
+
+**Size (session_01PkeaPY8AiQwGQmpx2xoXoy): test runs 7, module lines 3121** (`bio-plane/src/case-authoring/*.mjs`).
