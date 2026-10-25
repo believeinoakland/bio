@@ -108,7 +108,7 @@ overdue.test.mjs:93 no longer copies the sentence: it asserts the `why` contains
 
 COMPLETE for B6: overdue.test.mjs:93 now compares through word('progressions.why.captured_bound_date', {from, at}) with the registered instant read from provenance. words check for progressions 0 failures; progressions tests 93 pass, 0 fail.
 
-## J8 · COMPLETE
+## J9 · COMPLETE
 
 COMPLETE for B7 (fix round 10, R49; K5186; SCREENS-INVESTIGATE #16 J29). Branch job/T51/progressions at the R49 commit (1ca4bc4130), tranche/T51 merged in (a9a1ee0a3f).
 
