@@ -154,23 +154,41 @@ async function captureAndVouch(walk, page, base, { question, password }) {
 }
 
 /* R23 (K3815; usability review B-11, B-30, B-31): the first page of the document the walk captured reads "Page 1", in the page
-   bar's words (`document.read.page`) and in the passage's place (`screen.document.passage.where`), each by its key (R14); a
-   capture that states no page draws no page number, and the step notes that it had none. Every screen's text is also scanned
-   for a page numbered 0 (walker.mjs, `PAGE_ZERO`). */
+   bar's words (`document.read.page`), in the passage's place (`screen.document.passage.where`) and in the picker of the pages
+   its reading could not make out where the screen draws one (`#document-unread-page`, whose choices are the record's pages
+   numbered from 1), each by its key (R14); a capture that states no page draws no page number, and the step notes that it had
+   none. Every screen's text is also scanned for a page numbered 0 (walker.mjs, `PAGE_ZERO`). */
+export const NO_PAGE_NOTE = "document: the capture states no page, so none is drawn";
+export async function pageNumbersOf(page) {
+  /* where the real screen draws them: the page bar (`[data-pagebar]`, "Page n of count") and the span beside each passage
+     (`.mk-passage .mk-small`, "Page n"); the bar's words would match the passage's pattern too, so each is read in its own place */
+  const bar = (await page.locator("#cs-main [data-pagebar]").first().textContent().catch(() => "")) || "";
+  const places = await page.locator("#cs-main .mk-passage .mk-small").allTextContents();
+  const number = (key, texts) => {
+    const re = new RegExp(wordPattern(key, {}).source);
+    for (const t of texts) { const m = re.exec(t.replace(/\s+/g, " ")); if (m) return Number(/\d+/.exec(m[0])[0]); }
+    return null;
+  };
+  const picker = await page.locator("#cs-main #document-unread-page option").evaluateAll((os) => os.map((o) => o.value)).catch(() => []);
+  return { bar: number("document.read.page", [bar]), place: number("screen.document.passage.where", places), picker };
+}
+/* What is wrong with the page numbers a document draws, or null: the first page reads 1 in the bar and in the passage's place,
+   and the picker offers pages numbered from 1. */
+export function pageNumbersProblem({ bar, place, picker }) {
+  if (bar !== null && bar !== 1) return localize("journey-check.investigation.the_page_bar_reads_page_first", "the page bar reads page {bar} first, not Page 1 (document.read.page)", { bar: String(bar) });
+  if (place !== null && place !== 1) return localize("journey-check.investigation.the_first_passage_s_place_reads", "the first passage's place reads page {place}, not Page 1 (screen.document.passage.where)", { place: String(place) });
+  const low = picker.filter((v) => !(Number.isInteger(Number(v)) && Number(v) >= 1));
+  if (low.length) return localize("journey-check.investigation.the_picker_of_unread_pages_offers", "the picker of unread pages offers page {pages}, pages are numbered from 1 (screen.document.unread.page)", { pages: low.join(", ") });
+  return null;
+}
 export async function firstPage(walk, page, document) {
   await walk.step(page, "document: its first page reads Page 1", async (p) => {
     await p.goto(document); await settle(p);
     await requireDrawn(walk, p, "document");
-    const text = (await p.locator("#cs-main").innerText()).replace(/\s+/g, " ");
-    const first = (key, vars) => {
-      const re = wordPattern(key, vars);
-      const m = new RegExp(re.source, "g").exec(text);
-      return m ? Number(/\d+/.exec(m[0])[0]) : null;
-    };
-    const bar = first("document.read.page", {}), place = first("screen.document.passage.where", {});
-    if (bar !== null && bar !== 1) throw new Error(`the page bar reads page ${bar} first, not Page 1 (document.read.page)`);
-    if (place !== null && place !== 1) throw new Error(`the first passage's place reads page ${place}, not Page 1 (screen.document.passage.where)`);
-    if (bar === null && place === null) walk.notes.push("document: the capture states no page, so none is drawn");
+    const seen = await pageNumbersOf(p);
+    const problem = pageNumbersProblem(seen);
+    if (problem) throw new Error(problem);
+    if (seen.bar === null && seen.place === null && !seen.picker.length) walk.notes.push(NO_PAGE_NOTE);
   }, { expect: READING_EXPECTS });
 }
 
@@ -277,7 +295,10 @@ async function concludeOn(walk, page, { question, project }) {
    assistant control drawn anywhere (absent, not greyed), and, where the screen says why the assistant cannot work here,
    in the words of `refusal.AGENT_WORKER_UNBOUND` or `refusal.ASSISTANT_REMOTE_NOT_READY`, never a code. A screen that
    draws an assistant control that cannot work fails by name. */
-export const ASSISTANT_OPS = Object.freeze(["subscriptionsignin", "disclosureshown", "accountconnect", "airunopen", "planask", "ask"]);
+/* the acts that connect or run the assistant, by the names the plane declares: `connect` draws the sign-in (`subscriptionsignin`, after
+   `disclosureshown`) and the own key (`accountreferenceset`); the question's dock `airunopen`; the plan `planask`; Ask `ask` */
+export const ASSISTANT_OPS = Object.freeze(["subscriptionsignin", "disclosureshown", "accountreferenceset", "airunopen", "planask", "ask"]);
+export const CONNECT_OPS = Object.freeze(["subscriptionsignin", "disclosureshown", "accountreferenceset"]);
 export const ASSISTANT_SHELL = Object.freeze(["dock"]);
 export const NOT_READY_KEYS = Object.freeze(["refusal.AGENT_WORKER_UNBOUND", "refusal.ASSISTANT_REMOTE_NOT_READY"]);
 
@@ -302,7 +323,7 @@ export async function notReady(walk, page, base, { label, path, screen, names, a
     const bad = [...drawn.acts.map((op) => `act ${op}`), ...drawn.shell.map((k) => `the ${k} button`)];
     /* B3 (K4086): `connect`'s disclosure and sign-in are the assistant's own sign-in, drawn though not working (K3717): an
        assistant step, reported not walked above, never a failure */
-    if (assistantSignin) for (const op of ["subscriptionsignin", "disclosureshown", "accountconnect"]) { const i = bad.indexOf(`act ${op}`); if (i >= 0) bad.splice(i, 1); }
+    if (assistantSignin) for (const op of CONNECT_OPS) { const i = bad.indexOf(`act ${op}`); if (i >= 0) bad.splice(i, 1); }
     if (bad.length) throw new Error(`${screen} draws an assistant control that cannot work while the assistant does not: ${bad.join(", ")}`);
     for (const t of drawn.said) {
       const code = developerWords(t).find((w) => w.what === "a refusal code");

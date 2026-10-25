@@ -10,6 +10,7 @@ import { Walk, FAIL, INTERFACE_MARK, SETUP_PAGE_TITLE, LEGACY_UI_WORKER, documen
 import { drawnState, sweepScreens, registryScreens, EXCEPTED, INSTALLER_SCREENS } from "../../../src/journey-check/screens.mjs";
 import { browser } from "../../../src/journey-check/run.mjs";
 import { ABSENCE } from "../../../src/journey-check/journeys.mjs";
+import { assertDeclared, assertGiven } from "./tables.mjs";
 
 const COPY = "https://grp.test.workers.dev";
 const page = (body, title = "Civicsmith") => `<!doctype html><html><head><title>${title}</title><link rel="stylesheet" href="${INTERFACE_MARK}"></head><body>${body}</body></html>`;
@@ -23,7 +24,7 @@ const WORLD = {
   "/app/foreign": page(`<main id="cs-main"><img src="https://elsewhere.example/x.png"></main>`),
   "/app/legacy": page(`<main id="cs-main"><img src="https://civicos.grp.workers.dev/app.html"></main>`),
   /* R8: the walk's D1, D3 and D5, each a refusal carried inside an HTTP 200 */
-  "/app/d1": page(`<main id="cs-main"><script>fetch("/api/?op=accountconnect")</script></main>`),
+  "/app/d1": page(`<main id="cs-main"><script>fetch("/api/?op=accountreferenceset")</script></main>`),
   "/app/d3": page(`<main id="cs-main"><script>fetch("/api/?op=airunopen")</script></main>`),
   "/app/d5": page(`<main id="cs-main"><script>fetch("/api/?op=planask")</script></main>`),
   /* R8: a refusal in a stream of JSON lines (an ask's answer) */
@@ -36,11 +37,14 @@ const WORLD = {
   "/": `<!doctype html><html><head><title>${SETUP_PAGE_TITLE}</title></head><body>setup</body></html>`,
   "/other": `<!doctype html><html><head><title>x</title></head><body>an old page</body></html>`,
 };
+// fixtures-own: input a route map and answers handed to the walker's own dispatch (K5060), which reads them opaquely
 const API = { queue: { ok: true, items: [] }, enroll: { ok: false, code: "HANDLE_TAKEN" },
   /* D1: the own key refused, inside a 200 */
-  accountconnect: { ok: true, result: { ok: false, code: "NOT_YOUR_ACCOUNT", check: "C-29.14" } },
+  accountreferenceset: { ok: true, result: { ok: false, code: "NOT_YOUR_ACCOUNT", check: "C-29.14" } },
+  // fixtures-own: input a route map and answers handed to the walker's own dispatch (K5060), which reads them opaquely
   /* D3: the dock's run not started, said as `started: false` */
   airunopen: { ok: true, result: { started: false, code: "AI_RUN_BOUND_NO_ALLOWANCE", check: "C-22.16" } },
+  // fixtures-own: platform a fake-network answer for the walker's browser context, the platform double of its page (K5060)
   /* D5: planning help refused, deeper in the answer */
   planask: { ok: true, result: { plan: { help: { ok: false, reason: "AI_RUN_NOT_PROJECT_MEMBER" } } } } };
 
@@ -153,9 +157,10 @@ test("R8 (K4486): a reading's own `found` (whether the reader found entities) is
   assert.deepEqual(refusalsIn(answer), []);
   /* controls: the op found nothing, at the answer's top or its result; and an object that is not a reading keeps its `found: false` */
   assert.deepEqual(refusalsIn({ ok: true, found: false, capture_sha: "e".repeat(64), reading: null }).map((r) => r.how), ["found: false"]);
-  assert.deepEqual(refusalsIn({ ok: true, result: { found: false, reason: "NO_SUCH_READING" } }).map((r) => `${r.at}=${r.code}`), ["result=NO_SUCH_READING"]);
+  assert.deepEqual(refusalsIn({ ok: true, result: { found: false, capture_sha: "e".repeat(64), reading: null } }).map((r) => `${r.at}=${r.code}`), ["result=found: false"]);
   assert.deepEqual(refusalsIn({ ok: true, result: { reading: { found: false } } }).map((r) => r.at), ["result.reading"], "not shaped as a reading: still a refusal");
   /* a refusal inside a reading is still seen */
+  // fixtures-own: input a literal answer handed to the walker's own refusal reader (K5060), which reads it opaquely
   assert.deepEqual(refusalsIn({ ok: true, result: { reading: { reader_version: 1, entities: [], found: false, steps: [{ ok: false, code: "STEP" }] } } }).map((r) => r.code), ["STEP"]);
 });
 
@@ -260,4 +265,13 @@ test("R25: the old pages stay failures after the old interface is deleted: the s
   assert.deepEqual(kinds(legacy), [FAIL.OLD_PAGE]);
   assert.match(legacy.failures[0].detail, /civicos\.grp\.workers\.dev is legacy-ui/);
   assert.deepEqual((await walked("/app")).failures, []);
+});
+
+test("R8 (K5062): the ops and codes of the walker's modelled answers (D1, D3, D5) are the plane's: every op is declared and every code and check is given by a product file", () => {
+  assertDeclared(API, "the walker's answers");
+  const codes = JSON.stringify(API).match(/"(?:code|reason|check)":"([^"]+)"/g).map((m) => m.replace(/^"[a-z]+":"|"$/g, ""));
+  assert.ok(codes.length >= 4, codes.join(", "));
+  assertGiven(codes, "the walker's answers");
+  /* every route the pages fetch is an op of the table or a declared op */
+  assertDeclared(["captureupload", "reading", "ask"], "the walker's pages");
 });
