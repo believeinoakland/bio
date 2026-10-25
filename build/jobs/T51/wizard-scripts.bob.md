@@ -226,3 +226,16 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B23 · CHANGE
 
 Your REPORT J23 (1)-(2): re-take is yours in this job (K5069). R41's design commit for this re-take is c752a602da (the tranche's docs/development/ux-substrate/, carrying the owed installregion (K4746) and installaddress (K4937) acts). Merge the tranche branch, regenerate with node bio-plane/src/wizard-scripts/build-data.mjs, re-pin the counts and SCREEN_REGISTRY_SOURCE in your tests to that commit, run build-data.mjs --check, your module tests and plane's R24 test (bio-plane/test/m/plane: the DEC-149 T34-87 test) and say whether plane R24 is green. (3) is passed to plane. Then record COMPLETE again.
+
+## B24 · START
+
+START · WIZARD-SCRIPTS #26 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 10 (plan build/plan/fix-round-10-T51.md §3; K5078)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/wizard-scripts tranche/T51 && git branch -m job/T51/wizard-scripts stale/wizard-scripts-local && git checkout -b job/T51/wizard-scripts origin/job/T51/wizard-scripts`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module wizard-scripts`; record `build/jobs/T51/wizard-scripts.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078).
+
+**Follow-up 10 (test files only).** WIZARD-SCRIPTS #25 is merged. The words check fails once on your module: `handlist wizard-scripts bio-plane/test/m/wizard-scripts/r51.test.mjs:9` (the test hand-lists the 45 admin acts, 29 of them other modules' ops; K3268: a test never hand-lists another module's operations). Make R51's test derive what it checks instead of copying it: assert `ADMIN_ACTS` against a set computed from the real sources (the declarations' admin classes and/or the registry's admin screens, whichever R51's text names; read R51 whole), with a control that a non-admin act is not in it. Keep R51 named. `checks/words.mjs <root> wizard-scripts` 0 failures; module tests green; the one FIX-E line left (`writing-help.test.mjs:217`, `LIMITS_UNREADABLE`, provider in a later batch) stays.
+
+**Done:** record the change, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5.
