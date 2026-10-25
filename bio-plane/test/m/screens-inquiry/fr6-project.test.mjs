@@ -3,8 +3,9 @@
  * read for each question). On interface-shell's served page over a scripted plane; every expectation is a word read by key (R44). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok } from "../interface-shell/harness.mjs";
-import { open, main, section, says, word, day, P, Q, Q2 } from "./fixtures.mjs";
+import { ok, boot } from "../interface-shell/harness.mjs";
+import { inquiryMd } from "../inquiry/fixture.mjs";
+import { open, main, section, says, word, day, storeWorld, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
 const at = "/app/project/" + P;
@@ -29,23 +30,52 @@ test("R128 G12a every read of the project's documents asks for picker rows, page
 });
 
 const QS = (n) => ({ ok: true, project: P, items: Array.from({ length: n }, (_, i) => ({ inquiry: "INQ-2026-" + String(100 + i).padStart(4, "0"), title: "Question " + i })), cursor: null });
+/** A world where `ann` started a project and drew `n` questions on it by real acts: every odd one rests on a held document (so it grades), the others rest on nothing. */
+async function questionsWorld(n) {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Stormwater");
+  const doc = (await world.recipes.hold(ann, "Passage", "The Director shall repair each reported pothole.", project)).bundle;
+  const ids = [];
+  for (let i = 0; i < n; i++) {
+    const id = (await ann.read("allocid", { query: { prefix: "INQ", year: "2026" } })).id;
+    const legs = i % 2 ? [{ target: doc, role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture" }] : [];
+    await ann.act("promote", { body: { bundleId: id, base: null, snapKey: "20261001T000000_aaaa", meta: { object_type: "inquiry", title: "Question " + i, current_state: "open",
+      created: "2026-09-27T00:00:00Z", last_updated: "2026-09-27T00:00:00Z" }, files: [{ path: "bundle.md", text: inquiryMd(id, { question: "Question " + i, legs, extra: ["project: " + project] }) }], register: [] } });
+    await ann.act("drawquestion", { query: { project, inquiry: id, note: "" } });
+    ids.push(id);
+  }
+  return { world, ann, project, ids };
+}
+const pageAs = async (world, me, path) => {
+  const { door, session } = world.boot(me);
+  const p = await boot({ screens: SCREENS, door, session, path });
+  await p.settle();
+  return p;
+};
 const graded = (i) => ({ ok: true, capture: { state: "graded", grade: "BCDA"[i % 4] }, connection: { state: "graded", grade: "CDAB"[i % 4] } });
 
 test("R1 R9 G12c a project with five questions asks for their strength once (inquirystrength with their five ids), draws each question's own pair, and sends no read for one id", async () => {
-  const items = QS(5);
-  const ids = items.items.map((x) => x.inquiry);
-  const p = await open(at, { plane: { projectquestions: ok(items),
-    inquirystrength: (r) => ok(r.query.ids ? { ok: true, results: Object.fromEntries(String(r.query.ids).split(",").map((id) => [id, { ok: true, target: id, ...graded(ids.indexOf(id)) }])) } : { ok: false, code: "NO_ID" }) } });
+  const { world, ann, project, ids } = await questionsWorld(5);
+  const p = await pageAs(world, ann, "/app/project/" + project);
   const reads = p.byOp("inquirystrength");
   assert.equal(reads.length, 1, "one strength read for five questions");
   assert.deepEqual(String(reads[0].query.ids).split(","), ids, "naming all five");
   assert.equal(reads[0].query.id, undefined, "and not one");
   const rows = section(p, "screen.project.questions.head").querySelectorAll(".cs-row");
   assert.equal(rows.length, 5);
+  let gradedRows = 0;
   for (const [i, r] of rows.entries()) {
-    const marks = r.querySelectorAll(".cs-strength .cs-grade, .cs-strength [data-grade]").map((m) => m.textContent);
-    assert.ok(marks.join("").includes("BCDA"[i % 4]) && marks.join("").includes("CDAB"[i % 4]), "question " + i + " draws its own two grades: " + marks.join("|"));
+    const own = await ann.read("inquirystrength", { query: { id: ids[i] } });
+    const marks = r.querySelectorAll(".cs-strength .cs-grade, .cs-strength [data-grade]").map((m) => m.textContent).join("");
+    for (const axis of ["capture", "connection"]) {
+      if (own[axis].state !== "graded") continue;
+      gradedRows++;
+      assert.ok(marks.includes(own[axis].grade), "question " + i + " draws its own " + axis + " grade, as strength answered it: " + marks);
+    }
+    if (own.capture.state !== "graded" && own.connection.state !== "graded") assert.equal(marks, "", "question " + i + " rests on nothing and draws no grade: " + marks);
   }
+  assert.ok(gradedRows >= 2, "control: the questions that rest on a document are graded");
 });
 
 test("R1 R9 G12c more than fifty questions are asked for fifty at a time; a question the batch refuses (or leaves out) is drawn failed alone, the others graded", async () => {
@@ -62,13 +92,15 @@ test("R1 R9 G12c more than fifty questions are asked for fifty at a time; a ques
 });
 
 test("R79 G12c the project's dashboard asks for the questions' strength once too", async () => {
-  const items = QS(5);
-  const p = await open("/app/dash-project/" + P, { plane: { projectquestions: ok(items), inquirystrength: (r) => ok({ ok: true, results: Object.fromEntries(String(r.query.ids).split(",").map((id) => [id, { ok: true, target: id, ...graded(1) }])) }) } });
+  const { world, ann, project } = await questionsWorld(5);
+  await ann.act("projectbarset", { query: { project }, body: { capture: "B", connection: "B", expected: { capture: null, connection: null }, reason: "the bar for the walk" } });
+  const p = await pageAs(world, ann, "/app/dash-project/" + project);
   assert.equal(p.byOp("inquirystrength").length, 1);
 });
 
 test("R79 G12a the project's dashboard reads its documents and the member's own held photos as picker rows too", async () => {
-  const p = await open("/app/dash-project/" + P, { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
+  const { world, ann, project } = await questionsWorld(0);
+  const p = await pageAs(world, ann, "/app/dash-project/" + project);
   const asked = p.byOp("heldcaptures");
   assert.ok(asked.length >= 2, "both lists are read");
   assert.deepEqual(asked.map((r) => r.query.fields), asked.map(() => "picker"), "every one a picker read");

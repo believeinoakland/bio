@@ -1887,8 +1887,6 @@ const words = Object.freeze([
   "file-safety.index.reading_is_not_gated",
   /* fix round 10 (R133, R135): an archive's own page uses the Held list's rows until `screen.document.archive.says` is held; the first-load statement is capture-sources' own row */
   "screen.held.archive", "screen.held.archivefiles", "screen.archive.facts.entries", "capture-sources.render.copy_first_load_not_scrolled",
-  "screen.document.recovery.xref_reconstructed", "screen.document.recovery.pages_missing", "screen.document.recovery.pdf_truncated", "screen.document.reading.unit.characters",
-  "screen.document.supporting.pictures", "screen.document.supporting.pictures.one",
   "document.read.title", "document.read.help", "document.read.tab.page", "document.read.page", "document.read.prev", "document.read.next", "document.read.select", "document.read.cite.help",
   /* T51 (R81, R82, CR-19): the compare tab, the original-file card, its size and kind */
   "document.read.tab.compare", "document.read.original.card", "size.small", "size.kb", "size.mb", "size.gb",
