@@ -148,14 +148,14 @@ export function profilesAsText(ct, total, multipart) {
 
 /** R102 (fix round 5, E5): THE ONE RULE for reading a file a member brought in as text, shared by the upload and the knock's pull.
  *  `textTypeOf({bytes, type, name})` answers the text content type the bytes are to be profiled and read as, else null: the
- *  declared `type` when it is a text type (`profilesAsText`), or, when none is declared, the type a `.txt`, `.md` or `.csv` name
- *  stands for; and only for bytes that are text, valid UTF-8 with no NUL, within what a profile reads as text (`PROFILE_TEXT_MAX`).
+ *  declared `type` when it is a text type (`profilesAsText`), or, when none is declared, the type a `.txt`, `.md`, `.csv`, `.tsv` or `.tab` name
+ *  stands for (csv-reader's delimited names); and only for bytes that are text, valid UTF-8 with no NUL, within what a profile reads as text (`PROFILE_TEXT_MAX`).
  *  A declared type that is not text is never overridden by a name. Pure; never throws. */
-const NAME_TEXT_TYPES = Object.freeze({ txt: "text/plain", md: "text/markdown", csv: "text/csv" });
+const NAME_TEXT_TYPES = Object.freeze({ txt: "text/plain", md: "text/markdown", csv: "text/csv", tsv: "text/tab-separated-values", tab: "text/tab-separated-values" });
 export function textTypeOf({ bytes = null, type = null, name = null } = {}) {
   try {
     if (!(bytes instanceof Uint8Array) || bytes.length > PROFILE_TEXT_MAX) return null;
-    const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name === "string" ? name : "") : null;
+    const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv|tsv|tab)$/i.exec(typeof name === "string" ? name : "") : null;
     const readAs = named ? NAME_TEXT_TYPES[named[1].toLowerCase()] : type;
     if (typeof readAs !== "string" || readAs === "" || !profilesAsText(readAs, bytes.length, false)) return null;
     /* R120: the one decode; UTF-16 carries NULs by its nature, any other NUL is a binary file; replacement over 0.5 % is not text */
