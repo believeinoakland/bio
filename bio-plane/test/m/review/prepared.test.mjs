@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { world, V, AUTHORED } from "../case-authoring/fixture.mjs";
 import { caseTensionsOf } from "../../../src/case-tensions/index.mjs";
 import { reviewOf } from "../../../src/review/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { sha as shaOf } from "./fixture.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -79,7 +80,7 @@ test("R16 (K5130): a new-case draft that has prepared its case reads each author
   for (const c of after) {
     const o = byObs(c);
     assert.deepEqual([o[oa].chosen, o[ob].chosen], [false, true]);
-    assert.equal(o[ob].stated, `its author has chosen a level for ${p.caseId} edition 1`);
+    assert.equal(o[ob].stated, word("review.stated.author_chosen_level", { case_id: p.caseId, edition: "1" }));
     assert.equal(JSON.stringify(c.observations).includes("\"name\""), false, "never the level itself");
   }
   assert.deepEqual(after[0].observations, after[1].observations, "both doors alike");
