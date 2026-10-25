@@ -332,3 +332,33 @@ COMPLETE · fix round 10, the final pass's cause 1 (B14; plan item 71 (3); STORE
 - `fixtures credentials --list`: one line, `seam.test.mjs:177` (member-roster's `LISTENER_MALFORMED`), the baseline's. No marker added.
 
 **Size (session_01TQdg39hRq6XmHth6mQqW3i): test runs 4, module lines 2223**
+
+## J22 · BLOCKED
+
+Fix round 10, plan item 95 (B15): the fixture line `seam.test.mjs:177` (LISTENER_MALFORMED) is cleared; one architecture item needs Bob.
+
+**Applied (B15).** `bio-plane/test/m/credentials/seam.test.mjs`:
+- :9 imports member-roster's published `listenerRefusals()` from `../member-roster/fixtures.mjs`.
+- :172-175 the test's membership fake answers with the published refusals: a non-function → `refusals.malformed`; a second registration → `refusals.declared`; the first → `refusals.registered`. The hand-written `{ ok: false, reason: "LISTENER_MALFORMED" }` and `"LISTENER_DECLARED"` literals are gone.
+- :185 asserts `c.start().password` is the same object as `refusals.declared` (credentials passes membership's answer through unchanged, `src/credentials/index.mjs:174`).
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/seam.test.mjs`: 8 of 8 pass (same count as before). `… --test bio-plane/test/m/credentials/*.test.mjs`: 194 of 194 pass, 0 fail.
+
+**Checks (absolute root `/home/user/bio`).**
+- `checks/fixtures.mjs /home/user/bio credentials --list`: 0 failures (was 1: `seam.test.mjs:177 [refusal]`).
+- `checks/format.mjs`: 0 failures.
+- `checks/coverage.mjs … credentials`: 58 of 58 live requirement ids named; 0 failures.
+- `checks/ownership.mjs … credentials <merge-base> HEAD`: 0 failures (one file changed).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules, 0 of 2981 test files affected.
+- `checks/architecture.mjs /home/user/bio credentials`: **1 failure** (below).
+- `checks/run.mjs /home/user/bio`: the only finding in credentials' files is the architecture one. Words: 19247 words, 0 missingkey; 16 failures reported, all in other modules (listed below for BOB).
+
+**Needs Bob (one line, in `build/modules.json`, not my path).** The architecture check fails: `seam.test.mjs (credentials): imports bio-plane/test/m/member-roster/fixtures.mjs of member-roster, which credentials does not declare in uses`. The only published answer for a listener refusal is member-roster's `listenerRefusals()`, and member-roster is not in credentials' `uses` (`uses`: setup-words, record-grammar, record-core, membership, ai-accounts, test-support). Two routes:
+1. **Recommended:** add `"member-roster"` to credentials' `uses`. It is layer 2, and it is test-only (the same way the seam already imports `record-core/fixtures.mjs`, a declared use). It does not change any runtime dependency.
+2. Alternative: membership (declared already) re-publishes the same three refusals from its own `fixtures.mjs`. That is membership's job to make, and it adds a second fixture for one answer.
+
+Until Bob chooses, my branch is one declaration short of COMPLETE. The code change is already correct and committed on `job/T51/credentials`.
+
+**Found outside credentials (REPORT for BOB; not touched).** `run.mjs` lists 15 other failures: interface-shell `harness.mjs:97` (signout answer from credentials, earlier); law-relations `fixture.mjs:136` (citationLookup refusal from credentials/acquisition, earlier); screens-daily `home.test.mjs:39,466` and `queue-foot.test.mjs:138` (op-table answers from credentials, earlier); screens-intake `t51-credentials.test.mjs:33,46` (capture-sources/capture-requests, earlier); store-assembly `wiring.mjs:49,78`, `wizards.mjs:51` (plain/inline strings, not localized), `declared.mjs:16` (`plane.declared.readtranslate` has a different `en` than `plane/declared.mjs:13`). None is caused by this change; this change touches only one test file.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte): test runs 2, module lines 2223**
