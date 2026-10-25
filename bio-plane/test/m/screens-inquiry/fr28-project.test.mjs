@@ -6,10 +6,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { ok, refused, refusedIn } from "../interface-shell/harness.mjs";
+import { boot, ok, refused, refusedIn } from "../interface-shell/harness.mjs";
 import { BUNDLE_ID_RE } from "../../../src/record-grammar/index.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { open, main, actsIn, button, fill, press, says, section, word, projectWith, SCREENS, P, Q } from "./fixtures.mjs";
+import { open, storeWorld, main, actsIn, button, fill, press, says, section, word, projectWith, SCREENS, P, Q } from "./fixtures.mjs";
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245) */
 /* the weights of the two owners whose acts these tests press (registering every owner's weights is refused today by `accountusesset`'s row, an owner's defect reported to BOB) */
@@ -20,7 +20,27 @@ const PROJECT = SCREENS.find((s) => s.id === "project");
 /* the screens of other modules the work rows open: stand-ins, so the page serves them and a reference to one is a link */
 const stub = (id) => ({ id, reads: () => ({}), render: () => "", acts: [], words: [] });
 const SERVED = { boot: { screens: [...SCREENS, stub("matter"), stub("calculation"), stub("action")] } };
-const OWNERS = { projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "dev", state: "joined", owner: 1 }, { handle: "mai", state: "joined", owner: 1 }, { handle: "ana", state: "joined", owner: 0 }] }) };
+/** The world (store-assembly's store with the real door, K5054): `ann` owns the project "Pothole repairs" she started, with two questions drawn into it, and `mai` is joined to it (no owner); all by the real acts.
+ *  `ai` makes the world the team's Claude account can be set up in (`recipes.assistant`). */
+const OWN = { capabilities: ["contribute", "create_projects"] };
+const team = async ({ ai = false } = {}) => {
+  const world = await storeWorld({ ai });
+  const ann = await world.signIn("ann", OWN);
+  const mai = await world.signIn("mai", { capabilities: ["contribute"] });
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const doc = (await world.recipes.hold(ann, "Policy memo", "The Director shall repair each reported pothole within seven days.", project)).bundle;
+  const ids = await world.recipes.questions(ann, project, 2, { legsOf: (i) => (i === 0 ? [{ target: doc, role: "supports" }] : []) });   /* one resting on the document, one not yet */
+  await ann.act("projectinvite", { query: { projectId: project, handle: "mai" }, body: {} });
+  await mai.act("projectjoin", { query: { projectId: project }, body: {} });
+  return { world, ann, mai, project, doc, ids, at: "/app/project/" + project };
+};
+/** The page at `path` as `as` reads it, over the world's door (`plane` overrides only the ops it names; `screens` the served screens). */
+const pageOf = async (world, as, path, o = {}) => {
+  const { door, session } = world.boot(as);
+  const p = await boot({ screens: SCREENS, door, session, path, ...o });
+  await p.settle();
+  return p;
+};
 const hrefs = (el) => el.querySelectorAll("a").map((a) => a.getAttribute("href"));
 /* project-stage R4's answer: the four stages, each with its fixed sentence (the plane's `word`s, read by key) */
 const STAGES = (over = {}) => ({ ok: true, project: P, stage: "investigating", closed_reason: null, questions: { read: 2, with_legs: 1, concluded: 0, truncated: false }, published_editions: 0,
@@ -88,9 +108,8 @@ test("R94 a closed project: every need is null and each unreached stage says why
 });
 
 test("R109 Close this project now: an owner sees what is still open, three reasons with none chosen, an optional note and the act; each reason sends the declared fields; the page then reads closed with the reason", async () => {
-  let shut = null;
-  const stage = () => ok(shut ? STAGES({ stage: "closed", closed_reason: shut }) : STAGES());
-  const p = await open(at, { plane: { ...OWNERS, projectstage: stage, projectclose: (r) => { shut = r.body.reason; return ok({ ok: true, project: P, closed_reason: shut }); } } });
+  const w = await team();
+  const p = await pageOf(w.world, w.ann, w.at);
   const s = section(p, "screen.project.closenow.head");
   assert.ok(s.querySelector("h2").getAttribute("data-tip").includes(word("screen.project.closenow.tip").split("'")[0]));
   assert.ok(says(s.querySelector('[data-closenow="open"]'), "screen.project.closenow.open", { stage: word("screen.project.stage.matured"), count: "0", total: "2" }));
@@ -106,13 +125,14 @@ test("R109 Close this project now: an owner sees what is still open, three reaso
   /* nothing chosen: nothing sent, the three reasons said */
   assert.ok(says(await press(p, "projectclose"), "screen.project.closenow.ref.reason"));
   assert.equal(p.byOp("projectclose").length, 0);
-  /* each of the three reasons sends project, reason (and the note only when she wrote one) */
+  /* each of the three reasons sends project, reason (and the note only when she wrote one); a close is final, so each is a project of its own */
   for (const [i, reason] of ["resolved", "superseded", "abandoned"].entries()) {
-    const q = await open(at, { plane: { ...OWNERS, projectstage: ok(STAGES()), projectclose: ok({ ok: true }) } });
+    const other = await w.world.recipes.project(w.ann, "Another " + reason);
+    const q = await pageOf(w.world, w.ann, "/app/project/" + other);
     choose(q, "project-close-why", reason);
     if (i === 1) fill(q, { "project-close-note": "the council took it over" });
     await press(q, "projectclose");
-    assert.deepEqual(q.byOp("projectclose").map((r) => r.body), [i === 1 ? { project: P, reason, note: "the council took it over" } : { project: P, reason }], reason);
+    assert.deepEqual(q.byOp("projectclose").map((r) => r.body), [i === 1 ? { project: other, reason, note: "the council took it over" } : { project: other, reason }], reason);
   }
   /* after the close: stage reads closed with the reason, and the section is gone */
   choose(p, "project-close-why", "superseded");
@@ -123,11 +143,13 @@ test("R109 Close this project now: an owner sees what is still open, three reaso
 });
 
 test("R109 controls: a member who is not an owner sees no close; the refusals not an owner and a reason outside the three are drawn by their words", async () => {
-  const m = await open(at, { plane: { projectstage: ok(STAGES()) } });
+  const w = await team();
+  const m = await pageOf(w.world, w.mai, w.at);
   assert.equal(section(m, "screen.project.closenow.head"), undefined);
   assert.ok(!actsIn(main(m)).includes("projectclose"));
+  /* the refusals are scripted over the owner's page: the page offers an owner no reason the owner refuses */
   for (const [code, key] of [["PROJECT_ACT_NOT_THE_OWNER", "screen.project.closenow.ref.owner"], ["CLOSE_BAD_REASON", "screen.project.closenow.ref.reason"]]) {
-    const o = await open(at, { plane: { ...OWNERS, projectstage: ok(STAGES()), projectclose: refusedIn(code) } });
+    const o = await pageOf(w.world, w.ann, w.at, { plane: { projectclose: refusedIn(code) } });
     choose(o, "project-close-why", "resolved");
     assert.ok(says(await press(o, "projectclose"), key), code);
   }
@@ -150,18 +172,20 @@ test("R94 every key of What each stage needs is held and listed (K874)", () => {
 });
 
 test("R11 L20 a question opened from a title whose 40th character falls on a hyphen gets an id BUNDLE_ID_RE accepts; control: a short title is unchanged", async () => {
+  const w = await team();
   const title = "a".repeat(39) + " b";
-  const p = await open(at, { plane: { allocid: ok({ ok: true, id: "INQ-2026-0008" }), promote: ok({ ok: true }), drawquestion: ok({ ok: true, cited: ["x"] }) } });
+  const p = await pageOf(w.world, w.ann, w.at);
   fill(p, { "project-question": title });
   await press(p, "promote");
   const id = p.byOp("promote")[0].body.bundleId;
   assert.match(id, BUNDLE_ID_RE, "no trailing hyphen after the cut");
-  assert.equal(id, "INQ-2026-0008-" + "a".repeat(39));
+  assert.match(id, /^INQ-\d{4}-\d{4}-a{39}$/, "the id the record minted, then the title cut at 39");
   assert.equal(p.byOp("drawquestion")[0].query.inquiry, id, "the project draws the same id");
-  const short = await open(at, { plane: { allocid: ok({ ok: true, id: "INQ-2026-0010" }), promote: ok({ ok: true }), drawquestion: ok({ ok: true, cited: ["x"] }) } });
+  assert.ok((await w.ann.read("projectquestions", { query: { project: w.project } })).items.some((x) => x.inquiry === id), "and the question is the project's");
+  const short = await pageOf(w.world, w.ann, w.at);
   fill(short, { "project-question": "Did the report count working days?" });
   await press(short, "promote");
-  assert.equal(short.byOp("promote")[0].body.bundleId, "INQ-2026-0010-did-the-report-count-working-days");
+  assert.match(short.byOp("promote")[0].body.bundleId, /^INQ-\d{4}-\d{4}-did-the-report-count-working-days$/);
   assert.match(short.byOp("promote")[0].body.bundleId, BUNDLE_ID_RE);
 });
 
@@ -183,13 +207,15 @@ test("R117 a refused act whose answer carries findings draws the first finding's
   const none = await draw(refused("BASIS_REFUSED", "These documents cannot be used here.", 400));
   assert.ok(says(none, "refusal.BASIS_REFUSED"), "no findings: the generic sentence");
   /* "Open a question": the same, beside the act */
-  const q = await open(at, { plane: { allocid: ok({ ok: true, id: "INQ-2026-0011" }),
+  /* the refusal of `promote` is scripted over the real `allocid` (no question the page can send is one the owner refuses on an action's basis: needs a recipe of a refused promotion with findings) */
+  const w = await team();
+  const q = await pageOf(w.world, w.ann, w.at, { plane: {
     promote: { status: 200, json: { ok: true, result: { ok: false, reason: "ACTION_BASIS_REFUSED", code: "ACTION_BASIS_REFUSED", translation: "An action cannot rest on another action.", findings: [findings[1]] } } } } });
   fill(q, { "project-question": "Who inspects?" });
   await press(q, "promote");
   const said = main(q).querySelector('[data-refusal="promote"]');
   assert.ok(said.textContent.includes("the target is not a canonical id") && !said.textContent.includes("An action cannot rest on another action."));
-  const plain = await open(at, { plane: { allocid: ok({ ok: true, id: "INQ-2026-0011" }),
+  const plain = await pageOf(w.world, w.ann, w.at, { plane: {
     promote: { status: 200, json: { ok: true, result: { ok: false, reason: "ACTION_BASIS_REFUSED", code: "ACTION_BASIS_REFUSED", translation: "An action cannot rest on another action." } } } } });
   fill(plain, { "project-question": "Who inspects?" });
   await press(plain, "promote");
@@ -202,21 +228,32 @@ test("R10 entry 25 the project draws exactly its registry acts, writing help und
   assert.deepEqual(PROJECT.acts.map((a) => a.op).sort(), reg, "exactly the registry's acts");
   assert.ok(reg.includes("writinghelp") && reg.includes("rerunread") && reg.includes("rerunpair") && reg.includes("projectclose"));
   /* a page that draws every one it can: an owner, the assistant reachable, a rerun */
-  const RERUN = { ok: true, project: P, reruns: [{ rerun: "RERUN-1", project: P, import: "IMP-1", group: "west-oakland", case: "port-lease", edition: 1, declared_by: "mai", declared_at: "2026-10-05T09:00:00Z",
+  const w = await team({ ai: true });
+  await w.ann.act("projectowneradd", { query: { projectId: w.project, handle: "mai" }, body: {} });   /* two owners, so a stand-down is offered */
+  const ana = await w.world.signIn("ana", { capabilities: ["contribute"] });   /* and a member who is no owner, so one can be made */
+  await w.ann.act("projectinvite", { query: { projectId: w.project, handle: "ana" }, body: {} });
+  await ana.act("projectjoin", { query: { projectId: w.project }, body: {} });
+  const RERUN = { ok: true, project: w.project, reruns: [{ rerun: "RERUN-1", project: w.project, import: "IMP-1", group: "west-oakland", case: "port-lease", edition: 1, declared_by: "mai", declared_at: "2026-10-05T09:00:00Z",
     findings: [{ finding: "F1", ref: "imported:IMP-1/F1", role: "supports", source: { pair: null, lens_statements: [] }, paired: false, pairings: [] }], lens_difference: { only_source: [], only_own: [], shared: 0 }, pairing_history: [] }] };
-  const p = await open(at, { plane: { ...OWNERS, projectstage: ok(STAGES()), rerunread: ok(RERUN), assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
+  /* the assistant is not reachable until the team's Claude account is set up (control), then it is, by the administrator's real acts */
+  const off = await pageOf(w.world, w.ann, w.at);
+  assert.ok(!actsIn(main(off)).includes("writinghelp"));
+  await w.world.recipes.assistant(await w.world.signIn("admin"), { readers: [w.ann, w.mai] });
+  /* a question of another project of hers, to draw on */
+  const elsewhere0 = await w.world.recipes.project(w.ann, "Bridge repairs");
+  await w.world.recipes.question(w.ann, elsewhere0, { title: "Bridge", text: "Is the bridge safe?", draw: true });
+  const p = await pageOf(w.world, w.ann, w.at, { plane: { rerunread: ok(RERUN) } });
   await press(p, "rerunread");
   const drawn = new Set(actsIn(main(p)));
   const elsewhere = ["projectrequest", "projectrequestwithdraw", "projectjoin", "projectownerrescue", "noticepost"];
   for (const op of reg.filter((o) => !elsewhere.includes(o))) assert.ok(drawn.has(op) || op === "projectfork", `${op} is drawn`);
-  /* writing help is the assistant's, under the stake field; it is absent while the assistant is not reachable (control) */
+  /* writing help is the assistant's, under the stake field; it is absent while the assistant is not reachable (control, above) */
   const stake = section(p, "stake.project.title");
   assert.ok(stake.querySelector('button[data-act="writinghelp"]'), "under the field");
-  const off = await open(at, { plane: OWNERS });
-  assert.ok(!actsIn(main(off)).includes("writinghelp"));
-  /* it sends the field and what she told it; the draft stands in the field, labelled, and nothing is saved */
-  const h = await open(at, { plane: { assistantstate: ok({ on: true }), accountreference: ok({ held: true }),
-    writinghelp: ok({ ok: true, text: "We rent from the contractor.", label: { kind: "machine", asked_by: "member:mai" }, untested: false }) } });
+  /* it sends the field and what she told it; the draft stands in the field, labelled, and nothing is saved
+     (the draft is scripted: needs a recipe for the writing help's draft text, which the world's door answers without `text`) */
+  const h = await pageOf(w.world, w.ann, w.at, { plane: {
+    writinghelp: ok({ ok: true, text: "We rent from the contractor.", label: { kind: "machine", asked_by: "member:ann" }, untested: false }) } });
   fill(h, { "project-stake": "we rent" });
   await press(h, "writinghelp");
   assert.deepEqual(h.byOp("writinghelp").map((r) => r.body), [{ op: "projectstakeset", field: "stake", told: "we rent" }]);
@@ -226,13 +263,17 @@ test("R10 entry 25 the project draws exactly its registry acts, writing help und
 
 test("R106 the project page opens the objective screen with the project's id; control: a member who has not joined is drawn none", async () => {
   /* the objective screen is another job's file: served here by a stand-in only while SCREENS does not hold it */
-  const boot = { screens: SCREENS.some((s) => s.id === "objective") ? SCREENS : [...SCREENS, stub("objective")] };
-  const p = await open(at, { boot });
+  const screens = SCREENS.some((s) => s.id === "objective") ? SCREENS : [...SCREENS, stub("objective")];
+  const w = await team();
+  const p = await pageOf(w.world, w.ann, w.at, { screens });
   const s = section(p, "screen.objective.name");
   assert.ok(says(s, "screen.project.how-far-the-project-has-come-toward-its-objectiv"));
   const a = s.querySelector("a[data-work='objective']");
-  assert.equal(a.getAttribute("href"), "/app/objective/" + P);
+  assert.equal(a.getAttribute("href"), "/app/objective/" + w.project);
   assert.ok(says(a, "screen.objective.name"));
-  const invited = await open(at, { boot, plane: { projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "invited", owner: 0 }] }) } });
+  /* the real state: dev is invited to the project and has not joined */
+  const dev = await w.world.signIn("dev", { capabilities: ["contribute"] });
+  await w.ann.act("projectinvite", { query: { projectId: w.project, handle: "dev" }, body: {} });
+  const invited = await pageOf(w.world, dev, w.at, { screens });
   assert.equal(section(invited, "screen.objective.name"), undefined);
 });

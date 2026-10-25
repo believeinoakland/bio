@@ -1,14 +1,42 @@
 /* screens-inquiry fix round 3 (T51), the question screen: C41 (R35, R50, R117: a refused basis version names the legs the plane says it left
  * unplaced, by their documents' titles), C36 (R23, R24, R34: a leg whose extent states a paragraph draws it), C44 (R2: no opener, the head draws
  * the date), C38 (R2: a removed citation is counted nowhere), C94 (members named by handle). On interface-shell's served page over a scripted
- * plane; every expectation is a word read by key (R44), never copied (K3810). */
+ * plane (C36 paragraph, C38 over the real world: the state made by real acts, K5054); every expectation is a word read by key (R44), never copied (K3810). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok } from "../interface-shell/harness.mjs";
-import { open, main, fill, press, inquiryMd, INQUIRY_REFS, LEGS, BASIS, says, word, day, lead, section, P, Q, D, SHA, POLICY } from "./fixtures.mjs";
+import { boot, ok } from "../interface-shell/harness.mjs";
+import { open, storeWorld, main, fill, press, inquiryMd, INQUIRY_REFS, LEGS, BASIS, says, word, day, lead, section, SCREENS, P, Q, D, SHA, POLICY } from "./fixtures.mjs";
 
 const at = "/app/question/" + Q;
 const refusedBody = (code, extra = {}) => ({ status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...extra } } });
+
+const OWN = { capabilities: ["contribute", "create_projects"] };
+/** A project of `ann`'s with a held page for each of `docs` (`{title, paragraphs?}`) and a question of hers resting on them (`legs[i]` overrides leg i's keys), drawn into the project, by real acts.
+ *  Answers `{world, ann, project, targets, id, page(opts)}`; `page` boots the question's page over the world's door. */
+const worldOf = async (docs, legs = []) => {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const targets = [];
+  for (const d of docs) targets.push((await (d.plain ? world.recipes.hold(ann, d.title, d.plain, project, { read: !!d.read }) : world.recipes.page(ann, d.title, { paragraphs: d.paragraphs || ["The Director shall repair each reported pothole within seven calendar days of the report."], project }))).bundle);
+  const id = (await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?",
+    legs: targets.map((target, i) => ({ target, role: "supports", ...(legs[i] || {}) })), draw: true })).id;
+  const page = async (o = {}) => {
+    const { door, session } = world.boot(ann);
+    const p = await boot({ screens: SCREENS, door, session, path: "/app/question/" + id, ...o });
+    await p.settle();
+    return p;
+  };
+  return { world, ann, project, targets, id, page };
+};
+/** the question's citation of `target` taken out, by the acts the page makes (a selection, then `sever` with the question as the citing object) */
+const severLeg = async (w, target, reason = "the wrong year's orders") => {
+  const sel = await w.ann.act("select", { body: { ids: [target] } });
+  await w.ann.act("sever", { query: { project: w.id, handle: sel.handle, reason }, body: {} });
+};
+/** the partition held, by the act the page's "Save the answers" makes */
+const ground = (w, grounds, reason = "my reading") => w.ann.act("inquiryground", { body: { target: w.id, grounds, reason } });
+const CAPTURE = (grade) => ({ grade, grade_axis: "capture", grade_source: "capture" });
 
 /* ------------------------------------------------------------------------------------------------------------------ C41 */
 
@@ -19,6 +47,7 @@ const D5 = "INFO-2026-0013";
 const TITLE5 = "Work orders, October";
 const docMd = (id, title) => ["---", `id: ${id}`, "object_type: information", ...(title ? [`title: "${title}"`] : []), `project: ${P}`, "---", "", "## Summary", ""].join("\n");
 const unplaced = (legs) => ({ check: "C-2.8", code: "VERSION_PARTITION_INCOMPLETE", detail: "version 'main' has 2 legs with no ground", translation: "Every passage must be placed in a part.", legs, repairs: ["repair-sentinel-qq"] });
+/* still scripted (the refusal of conclude): needed: no recipe can make it; VERSION_PARTITION_INCOMPLETE is held by basis-version-grammar but raised by no document (its own comment, K5077), so no real act refuses with it */
 const conclude = async (code, findings, o = {}) => {
   const p = await open(at, { images: { [D5]: { "bundle.md": docMd(D5, TITLE5) }, [D3]: { "bundle.md": docMd(D3, "") }, [D4]: { "bundle.md": docMd(D4, "") } }, plane: { conclude: refusedBody(code, { findings }), ...(o.plane || {}) } });
   fill(p, { "question-conclude-falsifier": "logs dated later", "question-conclude-reason": "it answers it" });
@@ -68,12 +97,13 @@ const readingOf = (r) => ok({ ok: true, found: true, capture_sha: r.query.sha256
 const supportsRows = (p) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word("screen.question.supports.head")).querySelectorAll(".cs-row");
 
 test("R23 R24 R34 C36 a web-page leg whose extent states a paragraph draws `screen.question.leg.paragraph` (counted from zero in the record, drawn from one) and its words; control: a leg with no paragraph and no page draws neither", async () => {
-  const p = await open(at, { images: { [Q]: { "bundle.md": legsMd([{ target: D2, ext: ["    extent_kind: doc-para", "    extent_para: 2"] }, { target: D }]) }, [D]: webImage(D, SHA), [D2]: webImage(D2, SHA2) },
-    plane: { reading: readingOf, basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
+  const WORDS = "Potholes reported through 311 are repaired within seven days.";
+  const w = await worldOf([{ title: SITE, paragraphs: ["Intro.", WORDS] }, { title: POLICY }], [{ extent_kind: "doc-para", extent_para: 2 }, {}]);
+  const p = await w.page();
   const rows = supportsRows(p);
   assert.equal(rows.length, 2);
   assert.ok(says(rows[0], "screen.question.leg.paragraph", { n: "3" }), "Paragraph 3 for paragraph 2 counted from zero");
-  assert.ok(rows[0].textContent.includes("Potholes reported through 311 are repaired within seven days."), "and its words");
+  assert.ok(rows[0].textContent.includes(WORDS), "and its words");
   assert.ok(!rows[0].textContent.includes(word("screen.document.passage.where", { page: "3" })), "not as a page");
   assert.ok(!rows[1].textContent.includes(word("screen.question.leg.paragraph", { n: "1" }).split("1")[0]) && !rows[1].textContent.includes(word("screen.document.passage.where", { page: "1" }).split("1")[0]),
     "control: no paragraph and no page, neither");
@@ -118,60 +148,68 @@ const twoLegs = (o = {}) => [{ target: D, role: "supports", grade: "B", ...(o.g1
 const GROUNDS = [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }];
 
 test("R2 R23 C38 state b: a severed citation is not asked about and not sent in the partition; saving sends the live passage alone; control: the same leg live is both asked about and sent", async () => {
-  const run = async (status2) => {
-    const p = await open(at, { images: { [Q]: { "bundle.md": inquiryMd(P, refsWith(status2), { legs: twoLegs() }) } }, plane: { inquiryground: ok({ ok: true, act: "authored" }) } });
+  const run = async (severed) => {
+    const w = await worldOf([{ title: POLICY }, { title: "Work orders" }]);
+    if (severed) await severLeg(w, w.targets[1]);
+    const p = await w.page();
     const asked = section(p, "question.ask.title").querySelectorAll("[data-ask]").length;
     /* each live passage answered "Yes" with no other named: a ground of its own (R23; a "No" is necessary and in no ground, DEC-32 clause 2) */
     p.doc.getElementById("ask-0-1").checked = true;
-    if (status2 !== "severed") p.doc.getElementById("ask-1-1").checked = true;
+    if (!severed) p.doc.getElementById("ask-1-1").checked = true;
     await press(p, "inquiryground", { reason: "my first reading" });
     return { asked, grounds: p.byOp("inquiryground")[0].body.grounds };
   };
-  const sev = await run("severed");
+  const sev = await run(true);
   assert.equal(sev.asked, 1, "only the live passage is asked about");
   assert.deepEqual(sev.grounds, [{ ground: "part 1", legs: [0] }], "the partition holds the live passage alone");
-  const live = await run("confirmed");
+  const live = await run(false);
   assert.equal(live.asked, 2, "control: the live leg is asked about");
   assert.deepEqual(live.grounds, [{ ground: "part 1", legs: [0] }, { ground: "part 2", legs: [1] }], "control: and sent");
 });
 
-test("R2 R116 C38 the strength sentence names the legs it leaves out by title, never a removed citation: a severed leg the answer lists is not named; control: the same leg live is named", async () => {
-  const unrated = { state: "unrated", grade: null, weakest: null, load_bearing: 0, population: 2, not_load_bearing: [{ target_id: D }, { target_id: D2 }],
-    detail: `UNRATED on capture: no leg carries a grade. Not load-bearing: ${D}, ${D2}.` };
-  const strength = { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: { state: "graded", grade: "B" }, connection: unrated }) };
-  const draw = async (status2) => {
-    const p = await open(at, { images: { [Q]: { "bundle.md": inquiryMd(P, refsWith(status2), { legs: twoLegs({ g1: true, g2: true }), grounds: GROUNDS }) } }, plane: strength });
-    return main(p).querySelector(".mk-strengthbox");
+test("R2 R116 C38 the strength sentence names the legs it leaves out by title, never a removed citation: a severed leg is not named; control: the same leg live is named", async () => {
+  /* the owner's strength lists no removed citation among the legs it leaves out (it counts it nowhere), so the screen has none to hide; the live leg is named as before */
+  const draw = async (severed) => {
+    const w = await worldOf([{ title: POLICY }, { title: "Work orders" }]);
+    await ground(w, [{ ground: "part 1", legs: [0, 1] }]);
+    if (severed) await severLeg(w, w.targets[1]);
+    const p = await w.page();
+    return { box: main(p).querySelector(".mk-strengthbox"), doc: w.targets[1] };
   };
-  const sev = await draw("severed");
+  const sev = await draw(true);
   const axis = word("mark.scale.connection.name");
-  assert.ok(says(sev, "strength.arithmetic.unrated_no_leg_on_this_axis", { axis, legs: POLICY }), "the live leg alone, by its title");
-  assert.ok(!sev.textContent.includes("Work orders") && !sev.textContent.includes(D2), "the removed citation is not named");
-  const live = await draw("confirmed");
-  assert.ok(says(live, "strength.arithmetic.unrated_no_leg_on_this_axis", { axis, legs: POLICY + ", Work orders" }), "control: the same leg live is named");
+  assert.ok(says(sev.box, "strength.arithmetic.unrated_no_leg_on_this_axis", { axis, legs: POLICY }) || says(sev.box, "strength.arithmetic.unrated_no_leg_on_any_set", { axis, count: "1", legs: POLICY }), "the live leg alone, by its title");
+  assert.ok(!sev.box.textContent.includes("Work orders") && !sev.box.textContent.includes(sev.doc), "the removed citation is not named");
+  const live = await draw(false);
+  assert.ok(says(live.box, "strength.arithmetic.unrated_no_leg_on_this_axis", { axis, legs: POLICY + ", Work orders" }) || says(live.box, "strength.arithmetic.unrated_no_leg_on_any_set", { axis, count: "2", legs: POLICY + ", Work orders" }), "control: the same leg live is named");
 });
 
 test("R2 R24 C38 'What your answer rests on' and the weakest part leave out a removed citation; control: the same leg live is read back", async () => {
-  const legs = twoLegs({ g1: true, g2: true });
-  const draw = async (status2) => {
-    const p = await open(at, { images: { [Q]: { "bundle.md": inquiryMd(P, refsWith(status2), { legs, grounds: GROUNDS }) } },
-      plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: { state: "graded", grade: "B", weakest: { target_id: D2, title: "Work orders" } }, connection: { state: "graded", grade: "C" } }) } });
+  const WORDS = "Within seven calendar days of the report.";
+  const draw = async (severed) => {
+    /* the weakest part of the answer is the work orders, the one leg graded (capture C) while both are cited; the policy is cited at its paragraph (a leg that points into a read page carries no grade the world accepts) */
+    const w = await worldOf([{ title: POLICY, paragraphs: [WORDS] }, { title: "Work orders", plain: "The work orders of 2026." }], [{ extent_kind: "doc-para", extent_para: 1 }, CAPTURE("C")]);
+    await ground(w, [{ ground: "part 1", legs: [0, 1] }]);
+    if (severed) await severLeg(w, w.targets[1]);
+    const p = await w.page();
     return { rests: section(p, "question.rests.title"), box: main(p).querySelector(".mk-strengthbox") };
   };
-  const sev = await draw("severed");
+  const sev = await draw(true);
   assert.ok(sev.rests.textContent.includes(POLICY) && !sev.rests.textContent.includes("Work orders"), "the read-back holds the live passage alone");
   assert.ok(!sev.box.textContent.includes("Work orders"), "and the weakest part is not a removed citation");
-  const live = await draw("confirmed");
-  /* fix round 4 (C36 aside; R24): each passage in the read-back is named with the words it cites where the reading shown states them */
-  assert.ok(says(live.rests, "question.rests.all", { passages: POLICY + " \u00b7 \u201cwithin seven calendar days of the report\u201d, Work orders" }), "control: live, both are read back, the first by its words");
+  const live = await draw(false);
+  /* fix round 4 (C36 aside; R24): each passage in the read-back is named with the words it cites where the record states them */
+  assert.ok(says(live.rests, "question.rests.all", { passages: POLICY + " \u00b7 Paragraph 2 \u00b7 \u201c" + WORDS + "\u201d, Work orders" }), "control: live, both are read back, the first by its words");
   assert.ok(says(live.box, "screen.question.strength.weakest", { weakest: "Work orders" }), "control: and the weakest part is named");
 });
 
 test("R2 C38 the page reads the strength and the partition again after a sever", async () => {
-  const p = await open(at, { images: { [Q]: { "bundle.md": inquiryMd(P, refsWith("confirmed"), { legs: twoLegs({ g1: true, g2: true }), grounds: GROUNDS }) } },
-    plane: { select: (r) => ok({ ok: true, handle: "SEL-" + r.body.ids[0], items: r.body.ids }), sever: ok({ ok: true, severed: [D] }) } });
+  const w = await worldOf([{ title: POLICY }, { title: "Work orders" }]);
+  await ground(w, [{ ground: "part 1", legs: [0, 1] }]);
+  const p = await w.page();
   const before = [p.byOp("inquirystrength").length, p.byOp("inquirypartition").length, p.byOp("partitionindependence").length];
   await press(p, "sever", { reason: "it is the 2023 policy", within: section(p, "screen.question.supports.head") });
+  assert.ok(p.byOp("sever").length === 1 && p.byOp("select").length === 1, "the page's own selection and sever were sent");
   assert.ok(p.byOp("inquirystrength").length > before[0], "the strength is read again");
   assert.ok(p.byOp("inquirypartition").length > before[1], "and the partition");
   assert.ok(p.byOp("partitionindependence").length > before[2], "and its shared origins");

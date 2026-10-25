@@ -6,10 +6,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
 import { readFileSync } from "node:fs";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
+import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { BUNDLE_ID_RE } from "../../../src/record-grammar/ids.mjs";
-import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, day, word, SCREENS, POLICY, P, Q, D } from "./fixtures.mjs";
+import { open, storeWorld, WORLD_FOUNDER_HANDLE, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, day, word, SCREENS, POLICY, P, Q, D } from "./fixtures.mjs";
 
 /* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
 
@@ -19,20 +19,47 @@ const GROUNDS = [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T
 const grouped = (o = {}) => inquiryMd(P, INQUIRY_REFS, { legs: LEGS.map((l) => (l.target === D ? { ...l, ground: "part 1" } : l)), grounds: GROUNDS, ...o });
 const A = { images: { [Q]: { "bundle.md": grouped() } } };
 const DOC_TITLE = POLICY;
-const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), agentpack: ok({ ok: true, pack: { version: "p@1" } }), airuns: ok({ ok: true, runs: [] }) };
-const reach = (o = {}) => ({ ...o, boot: { plane: { ...plane(o), ...REACH } } });
+const OWN = { capabilities: ["contribute", "create_projects"] };
+/** A project of `ann`'s with `n` held documents (the first titled POLICY) and a question of hers resting on them, drawn into the project, by real acts. `join(handle)` makes another member of the project (she invites,
+ *  the other joins). Answers `{world, ann, project, targets, id, join(handle), page(opts, who)}`; `page` boots the question's page over the world's door as `who` (default `ann`). */
+const stateWorld = async ({ n = 3, world = null } = {}) => {
+  world = world || await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const targets = [];
+  for (let i = 0; i < n; i++) targets.push((await world.recipes.hold(ann, i ? "Passage " + (i + 1) : POLICY, "The Director shall repair each reported pothole, part " + (i + 1) + ".", project)).bundle);
+  const id = (await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", legs: targets.map((target) => ({ target, role: "supports" })), draw: true })).id;
+  const join = async (handle) => {
+    const m = await world.signIn(handle, { capabilities: ["contribute"] });
+    await ann.act("projectinvite", { query: { projectId: project, handle } });
+    await m.act("projectjoin", { query: { projectId: project } });
+    return m;
+  };
+  const page = async (o = {}, who = ann) => {
+    const { door, session } = world.boot(who);
+    const p = await boot({ screens: SCREENS, door, session, path: "/app/question/" + id, ...o });
+    await p.settle();
+    return p;
+  };
+  return { world, ann, project, targets, id, join, page };
+};
 const CONCLUDED = (r) => ok(BASIS(r.query.project ? { conclusion: { claim: { text: "Yes." }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" } : {}));
 
 /* ------------------------------------------------------------------------------------------------------------------ R101 */
 
-const HUNCH = (o = {}) => ({ hypothesis_id: "HYP-1", inquiry: Q, kind: "other", statement: "Crews close reports when they inspect.", held_by: "dev", held_at: "2026-10-04T09:00:00Z", status: "live",
-  history: [{ act: "hold", by: "dev", at: "2026-10-04T09:00:00Z", statement: "Crews close reports when they inspect." },
-    { act: "revise", by: "ana", at: "2026-10-05T09:00:00Z", statement: "Crews close reports on inspection.", reason: "the inspection log says so" }], ...o });
-const hunches = (list) => ({ hypotheses: ok({ ok: true, inquiry: Q, hypotheses: list }) });
+/** a question with a hunch of dev's (dev joined the project and held it by the act the page makes), and ana, a second member who can see the question */
+const hunchWorld = async () => {
+  const w = await stateWorld({ n: 1 });
+  const dev = await w.join("dev");
+  const ana = await w.join("ana");
+  const held = await dev.act("hypothesishold", { body: { inquiry: w.id, kind: "other", statement: "Crews close reports when they inspect.", about: [w.id] } });
+  return { ...w, dev, ana, hid: held.hypothesis_id };
+};
 
 test("R101 any member who sees the question revises or takes back a hunch, each with her reason: revise sends the hunch, the new statement and the reason; withdraw sends the hunch and the reason", async () => {
-  const p = await open(at, { ...A, plane: { ...hunches([HUNCH()]), hypothesisrevise: ok({ ok: true }), hypothesiswithdraw: ok({ ok: true }) } });
-  const foldNow = () => main(p).querySelector('[data-hunch="HYP-1"] details');
+  const w = await hunchWorld();
+  const p = await w.page();
+  const foldNow = () => main(p).querySelector(`[data-hunch="${w.hid}"] details`);
   const fold = foldNow();
   assert.ok(fold && says(fold.querySelector("summary"), "screen.question.hunch.change.summary", { name: "dev" }), "the fold for dev's hunch");
   assert.ok(says(fold, "screen.question.hunch.change.note") && says(fold, "screen.question.hunch.revise.label") && says(fold, "screen.question.hunch.revise.help") && says(fold, "screen.question.hunch.revise.reason"));
@@ -40,46 +67,57 @@ test("R101 any member who sees the question revises or takes back a hunch, each 
   /* revise: the new statement and the reason */
   fill(p, { "question-hrev-0": "Crews close reports at inspection, not repair.", "question-hrevr-0": "the crew foreman said so" });
   await press(p, "hypothesisrevise", { within: foldNow() });
-  assert.deepEqual(p.byOp("hypothesisrevise")[0].body, { hypothesisId: "HYP-1", statement: "Crews close reports at inspection, not repair.", reason: "the crew foreman said so" });
+  assert.deepEqual(p.byOp("hypothesisrevise")[0].body, { hypothesisId: w.hid, statement: "Crews close reports at inspection, not repair.", reason: "the crew foreman said so" });
+  assert.equal(p.doc.getElementById("question-hrev-0").value, "Crews close reports at inspection, not repair.", "the change reached the record: the statement to change is now the revised one");
   /* revise with the words left as they are: only the reason changes (the statement is omitted) */
-  fill(p, { "question-hrev-0": "Crews close reports when they inspect.", "question-hrevr-0": "I checked it again" });
+  fill(p, { "question-hrevr-0": "I checked it again" });
   await press(p, "hypothesisrevise", { within: foldNow() });
-  assert.deepEqual(p.byOp("hypothesisrevise")[1].body, { hypothesisId: "HYP-1", reason: "I checked it again" });
+  assert.deepEqual(p.byOp("hypothesisrevise")[1].body, { hypothesisId: w.hid, reason: "I checked it again" });
   /* withdraw: the hunch and the reason, with the sentences that say it cannot be undone */
   assert.ok(says(foldNow(), "screen.question.hunch.withdraw.reason") && says(foldNow(), "screen.question.hunch.withdraw.note") && says(foldNow(), "screen.question.hunch.withdraw.note2"));
   assert.ok(says(button(p, "hypothesiswithdraw", foldNow()), "screen.question.hunch.withdraw.button"));
   fill(p, { "question-hwr-0": "the foreman corrected me" });
   await press(p, "hypothesiswithdraw", { within: foldNow() });
-  assert.deepEqual(p.byOp("hypothesiswithdraw")[0].body, { hypothesisId: "HYP-1", reason: "the foreman corrected me" });
+  assert.deepEqual(p.byOp("hypothesiswithdraw")[0].body, { hypothesisId: w.hid, reason: "the foreman corrected me" });
   assert.ok(p.byOp("hypotheses").length >= 3, "the hunches are read again after each change");
+  assert.equal((await w.ann.read("hypotheses", { query: { inquiry: w.id } })).hypotheses[0].status, "withdrawn", "and the real act took the hunch back");
 });
 
 test("R101 each change stays on the record with who and why: the hunch's history is drawn; a hunch taken back is shown withdrawn and offers no change (control: no reason sends nothing and says so)", async () => {
-  const p = await open(at, { ...A, plane: { ...hunches([HUNCH()]) } });
-  const h = main(p).querySelector('[data-hunch="HYP-1"]');
+  const w = await hunchWorld();
+  await w.ana.act("hypothesisrevise", { body: { hypothesisId: w.hid, statement: "Crews close reports on inspection.", reason: "the inspection log says so" } });
+  /* the date the record states for her change (the hunches' own clock) */
+  const revised = (await w.ann.read("hypotheses", { query: { inquiry: w.id } })).hypotheses[0].history.find((x) => x.act === "revise");
+  const p = await w.page();
+  const h = main(p).querySelector(`[data-hunch="${w.hid}"]`);
   const rows = h.querySelectorAll("[data-history]");
   assert.deepEqual(rows.map((r) => r.getAttribute("data-history")), ["hold", "revise"]);
-  assert.ok(rows[1].textContent.includes("ana") && rows[1].textContent.includes(day("2026-10-05")) && rows[1].textContent.includes("the inspection log says so") && says(rows[1], "shell.reason.lead"), "who, when and why");
+  assert.ok(rows[1].textContent.includes("ana") && rows[1].textContent.includes(day(revised.at)) && rows[1].textContent.includes("the inspection log says so") && says(rows[1], "shell.reason.lead"), "who, when and why");
   /* a hunch is never a leg: it is drawn as a hunch, with no grade */
   assert.equal(h.querySelectorAll(".cs-grade").length, 0);
   assert.ok(h.querySelector('[data-mark="hunch"]'));
-  const gone = await open(at, { ...A, plane: { ...hunches([HUNCH({ status: "withdrawn", history: [...HUNCH().history, { act: "withdraw", by: "dev", at: "2026-10-06T09:00:00Z", reason: "mistaken" }] })]) } });
-  const g = main(gone).querySelector('[data-hunch="HYP-1"]');
-  assert.equal(g.getAttribute("data-status"), "withdrawn");
-  assert.ok(g.textContent.includes("mistaken") && says(g, "screen.question.hunch.withdraw.note2"));
-  assert.equal(g.querySelector("details"), null, "a hunch taken back is not changed again");
   /* control: no reason, nothing sent */
-  const n = await open(at, { ...A, plane: { ...hunches([HUNCH()]), hypothesisrevise: ok({ ok: true }), hypothesiswithdraw: ok({ ok: true }) } });
-  const f = main(n).querySelector('[data-hunch="HYP-1"] details');
+  const n = await w.page();
+  const f = main(n).querySelector(`[data-hunch="${w.hid}"] details`);
   assert.ok(says(await press(n, "hypothesisrevise", { within: f }), "screen.question.hunch.refused.body"));
   assert.ok(says(await press(n, "hypothesiswithdraw", { within: f }), "screen.question.hunch.refused.body"));
   assert.equal(n.byOp("hypothesisrevise").length + n.byOp("hypothesiswithdraw").length, 0);
   assert.ok(says(f, "screen.question.hunch.refused.summary") && says(f, "screen.question.hunch.refused.body2"));
+  /* a hunch taken back is shown withdrawn and offers no change */
+  await w.dev.act("hypothesiswithdraw", { body: { hypothesisId: w.hid, reason: "mistaken" } });
+  const gone = await w.page();
+  const g = main(gone).querySelector(`[data-hunch="${w.hid}"]`);
+  assert.equal(g.getAttribute("data-status"), "withdrawn");
+  assert.ok(g.textContent.includes("mistaken") && says(g, "screen.question.hunch.withdraw.note2"));
+  assert.equal(g.querySelector("details"), null, "a hunch taken back is not changed again");
 });
 
 test("R101 the owner's refusals of a change are drawn by their words", async () => {
-  const p = await open(at, { ...A, plane: { ...hunches([HUNCH()]), hypothesisrevise: refusedIn("HYPOTHESIS_WITHDRAWN") } });
-  const f = main(p).querySelector('[data-hunch="HYP-1"] details');
+  const w = await hunchWorld();
+  const p = await w.page();
+  /* the hunch is taken back by its holder after the page was drawn: the page still offers the change, and the owner refuses it */
+  await w.dev.act("hypothesiswithdraw", { body: { hypothesisId: w.hid, reason: "mistaken" } });
+  const f = main(p).querySelector(`[data-hunch="${w.hid}"] details`);
   fill(p, { "question-hrevr-0": "why" });
   assert.ok(says(await press(p, "hypothesisrevise", { within: f }), "refusal.HYPOTHESIS_WITHDRAWN"));
   assert.deepEqual(rawKeys(p.root()), [], "every sentence the folds draw is a held word");
@@ -88,10 +126,8 @@ test("R101 the owner's refusals of a change are drawn by their words", async () 
 /* ------------------------------------------------------------------------------------------------------------------ R102 */
 
 test("R102 Divide this question sends the reason, and two new questions, each numbered by the plane's allocator and carrying the passages sent to it; the new questions are drawn with their numbers", async () => {
-  let n = 99;
-  const divided = (r) => ok({ ok: true, target: Q, from: "open", to: "divided", terminal: true, into: r.body.children.map((c) => c.id),
-    children: r.body.children.map((c) => ({ id: c.id, question: c.question, legs: c.legs })) });
-  const p = await open(at, { ...A, plane: { allocid: () => ok({ ok: true, id: "INQ-2026-" + String(++n).padStart(4, "0") }), inquirydivide: divided } });
+  const w = await stateWorld({ n: 3 });
+  const p = await w.page();
   const fold = main(p).querySelector("details[data-divide]");
   assert.ok(fold && says(fold.querySelector("summary"), "screen.question.divide.summary"));
   assert.deepEqual(rawKeys(fold), [], "every sentence the divide fold draws is a held word");
@@ -101,10 +137,10 @@ test("R102 Divide this question sends the reason, and two new questions, each nu
   check(0, 0); check(1, 1); check(2, 0); check(2, 1);
   await press(p, "inquirydivide", { within: fold });
   const b = p.byOp("inquirydivide")[0].body;
-  assert.equal(b.target, Q);
+  assert.equal(b.target, w.id);
   assert.equal(b.reason, "It was two questions.");
   assert.deepEqual(b.children.map((c) => [c.question, c.legs]), [["How many reported potholes were marked closed within seven days?", [0, 2]], ["Were the potholes marked closed actually repaired?", [1, 2]]]);
-  assert.deepEqual(b.children.map((c) => c.id.slice(0, 13)), ["INQ-2026-0100", "INQ-2026-0101"], "numbered for the member");
+  assert.deepEqual(b.children.map((c) => c.id.slice(0, 13)), ["INQ-2026-0002", "INQ-2026-0003"], "numbered for the member (the question took the first number)");
   for (const c of b.children) assert.match(c.id, BUNDLE_ID_RE, "an id the record's grammar accepts");
   const shown = main(p).querySelector("[data-divided]");
   assert.deepEqual(shown.querySelectorAll("[data-child]").map((c) => c.getAttribute("data-child")), b.children.map((c) => c.id));
@@ -113,7 +149,8 @@ test("R102 Divide this question sends the reason, and two new questions, each nu
 });
 
 test("R102 control: a missing reason, a missing question or a passage sent nowhere sends nothing and says what to give; a refusal is drawn by its words; a long title never ends the id in a hyphen", async () => {
-  const p = await open(at, { ...A, plane: { allocid: ok({ ok: true, id: "INQ-2026-0100" }), inquirydivide: ok({ ok: true }) } });
+  const w = await stateWorld({ n: 3 });
+  const p = await w.page();
   const fold = main(p).querySelector("details[data-divide]");
   assert.ok(says(await press(p, "inquirydivide", { within: fold }), "screen.question.divide.refused.body"), "nothing written");
   fill(p, { "question-divide-reason": "r", "question-divide-q1": "One?", "question-divide-q2": "Two?" });
@@ -121,10 +158,9 @@ test("R102 control: a missing reason, a missing question or a passage sent nowhe
   assert.ok(says(await press(p, "inquirydivide", { within: fold }), "screen.question.divide.refused.body"), "two passages have no home");
   assert.equal(p.byOp("inquirydivide").length, 0);
   assert.equal(p.byOp("allocid").length, 0, "no number is taken for a division that cannot be sent");
-  /* a question whose 40th character falls on a hyphen */
+  /* a question whose 40th character falls on a hyphen (the owner's refusal is its own answer, scripted over the world: the real act refuses only what already exists) */
   const long = "Did the city close every one of the reported potholes - on time";
-  let n = 0;
-  const q = await open(at, { ...A, plane: { allocid: () => ok({ ok: true, id: "INQ-2026-" + String(++n + 100).padStart(4, "0") }), inquirydivide: refusedIn("CHILD_EXISTS") } });
+  const q = await w.page({ plane: { inquirydivide: refusedIn("CHILD_EXISTS") } });
   const f = main(q).querySelector("details[data-divide]");
   fill(q, { "question-divide-reason": "r", "question-divide-q1": long, "question-divide-q2": "Two?" });
   for (const o of [0, 1, 2]) { q.doc.getElementById(`question-divide-leg-${o}-0`).checked = true; q.doc.getElementById(`question-divide-leg-${o}-1`).checked = true; }
@@ -134,6 +170,7 @@ test("R102 control: a missing reason, a missing question or a passage sent nowhe
 
 /* ------------------------------------------------------------------------------------------------------------------ R103 */
 
+/* still scripted (reevaluations, reevaluationrecord): needed: a recipe for a document whose newer edition makes an "edition" cause for a question citing the older (no act of the world makes a second edition of a held document) */
 const OBLIGATION = (extra = {}) => ({ bundle_id: Q, title: "Seven days", object_type: "inquiry", current_state: "open", target: D, target_state: "open", legs: [],
   causes: [{ source: "edition", since: "2026-10-06T09:00:00Z", ord: 0, cited_edition: 1, latest_edition: 2, detail: "this leg rests on edition 1" }],
   closed: [{ source: "edition", since: "2026-09-01T09:00:00Z", closed_by: "mai", closed_at: "2026-10-07T09:00:00Z", note: "The new edition repeats page 12 unchanged." }], ...extra });
@@ -184,7 +221,10 @@ test("R103 control: a finding with no reminder draws none (R20); an empty note s
 const OWN_CONCLUDED = { images: { [Q]: { "bundle.md": grouped().replace("object_type: inquiry\n", "object_type: inquiry\ncurrent_state: concluded\n") } } };
 
 test("R104 a concluded question offers 'Reopen this finding, with a reason', the reason required: sent as the target and the reason; an empty reason sends nothing", async () => {
-  const p = await open(at, { ...OWN_CONCLUDED, plane: { basisversions: CONCLUDED, reopen: ok({ ok: true, target: Q, to: "open" }) } });
+  /* the question's own state concluded, by her real conclusion with no project */
+  const w = await stateWorld({ n: 1 });
+  await w.ann.act("conclude", { query: { target: w.id, reading: "Yes: repairs are made within seven days.", falsifier: "Work orders dated later show otherwise." } });
+  const p = await w.page();
   const fold = main(p).querySelector("details[data-reopen]");
   assert.ok(fold && says(fold.querySelector("summary"), "screen.question.reopen.summary"));
   assert.deepEqual(rawKeys(fold), [], "every sentence the reopen fold draws is a held word");
@@ -193,9 +233,10 @@ test("R104 a concluded question offers 'Reopen this finding, with a reason', the
   fill(p, { "question-reopen-why": "a later audit corrects the figure" });
   await press(p, "reopen", { within: fold });
   const q = p.byOp("reopen")[0].query;
-  assert.deepEqual([q.target, q.reason], [Q, "a later audit corrects the figure"]);
+  assert.deepEqual([q.target, q.reason], [w.id, "a later audit corrects the figure"]);
   /* control: an open question offers none */
-  const open1 = await open(at, A);
+  const v = await stateWorld({ n: 1 });
+  const open1 = await v.page();
   assert.ok(!actsIn(main(open1)).includes("reopen"));
   assert.equal(main(open1).querySelector("details[data-reopen]"), null);
 });
@@ -221,9 +262,19 @@ test("R10 question draws exactly its registry acts: each act the registry lists 
   assert.deepEqual(screen.acts.map((a) => a.op).sort(), [...reg].sort());
   for (const op of ["reopen", "hypothesisrevise", "hypothesiswithdraw", "inquirydivide", "reevaluationrecord", "reevaluations", "writinghelp"])
     assert.equal(screen.acts.find((a) => a.op === op).label, `act.${op}.label.question`, op);
-  const off = await open(at, A);
+  const bare = await stateWorld({ n: 1 });
+  const off = await bare.page();
   assert.ok(!actsIn(main(off)).includes("writinghelp"));
-  const on = await open(at, reach(A));
+  /* reachable: the team's Claude account set up by the administrator's real acts, and the notice read by the member */
+  const world = await storeWorld({ ai: true });
+  const admin = await world.signIn(WORLD_FOUNDER_HANDLE);
+  await admin.act("reauth", { body: { password: admin.password } });
+  await admin.act("groupkeyset", { body: { key: "sk-ant-api03-" + "w".repeat(40) } });
+  await admin.act("groupkeyswitch", { body: { on: true } });
+  await admin.act("groupkeynoticeseen", { body: {} });
+  const w = await stateWorld({ n: 1, world });
+  await w.ann.act("groupkeynoticeseen", { body: {} });
+  const on = await w.page();
   assert.ok(actsIn(main(on)).includes("writinghelp"), "reachable: the help is drawn");
   assert.deepEqual(rawKeys(on.root()), []);
 });

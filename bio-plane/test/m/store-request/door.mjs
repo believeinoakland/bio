@@ -64,6 +64,8 @@ const BYTE_OPS = Object.freeze(["openoriginal", "openwithwarning", "safeview", "
 const STATED_STATUS_OPS = Object.freeze(["inbox", "inboxpull", "inboxresolve", "heldsetaside", "heldrestore"]);
 /* control-plane R45, R49: the registered public reads served by public-read's door read */
 const PUBLIC_DOOR_READS = Object.freeze([...NETWORK_NOTICES_PUBLIC_READS, ...CASE_CHECKER_PUBLIC_READS, "casedetailspublic"]);
+/* control-plane R138: the secret-presenting doors a member also reads with her own session */
+const REVIEW_COPY_DOORS = Object.freeze(["reviewcopy", "reviewcomment", "statementack"]);
 const STATS_GRAIN = 100_000_000;
 
 /* ---- the helpers control-plane hands its arms, re-made from earlier modules ---- */
@@ -441,9 +443,28 @@ async function publicAnswer({ world, stub, env, page, op, req, reqBody, credenti
                                                                                                     bySecret: true, secretSha: await sha256Hex("") }));
     caller = admitted.caller;
   }
+  /* control-plane R138: with no secret, the review copy's three are read as the caller's session or credential resolves (`caseReader`'s viewer, the one stamp the door sets), and a
+     member's read of several drafts names them in `drafts`, an acknowledgement's `reason` comes from a POST body's string when the address has none */
+  let reader = null;
+  if (!bySecret && REVIEW_COPY_DOORS.includes(op)) {
+    const found = await caseReader(url, env, "bio", presentedAi.cred, credential);
+    if (found.silent) return storeSilent(found.silent, found.correlation);
+    reader = found.viewer;
+  }
   const made = innerRequest({ op, url, method: page.method, body: page.method === "POST" ? page.text : undefined, caller,
                               bySecret, secretSha: bySecret ? await sha256Hex(credential.secret || "") : null });
   if (made.refusal) return json(made.refusal.body, made.refusal.status);
+  if (reader !== null) {
+    const inner = new URL(made.url);
+    inner.searchParams.set("viewer", reader);
+    const b = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) ? reqBody : null;
+    if (op === "reviewcopy" && !inner.searchParams.get("drafts") && b && Array.isArray(b.drafts)) {
+      const listed = b.drafts.filter((d) => typeof d === "string").join(",");
+      if (listed) inner.searchParams.set("drafts", listed);
+    }
+    if (op === "statementack" && inner.searchParams.get("reason") === null && b && typeof b.reason === "string") inner.searchParams.set("reason", b.reason);
+    made.url = inner.toString();
+  }
   if (!routesOf(world).has(new URL(made.url).pathname.slice(1))) return noArm(op);
   if (TEMPLATE_DOORS.includes(op)) return templateAnswer(world, op, made);
   return relayAnswer(world.send({ url: made.url, body: made.body ?? null, headers: made.headers, method: page.method }), op);

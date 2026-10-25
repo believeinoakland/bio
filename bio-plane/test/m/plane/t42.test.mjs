@@ -5,13 +5,13 @@
    plane's interface: construction over a storage, the route map, the object's door, the Worker's hooks (`publicOp`,
    `gatedOp`), the transcriber the plane registers, and the Worker under Miniflare. Each test carries a negative control
    (K874). */
-import "../../../src/plane/register.mjs";   /* R68: the start's registration before any op table is read */
+import "../../../src/store-assembly/register.mjs";   /* R68: the start's registration before any op table is read */
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { store, storage, Store, disclosed } from "./fixture.mjs";
+import { store, storage, Store, disclosed, assembledOver } from "./fixture.mjs";
 import { Miniflare } from "miniflare";
 import { doorbellOf, doorbellOps } from "../../../src/doorbell/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
@@ -25,12 +25,13 @@ import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { CIVICSMITH_TEST_SET } from "../../../src/run-rules/index.mjs";
-import { assistantGateOf } from "../../../src/plane/ask.mjs";
-import { transcriberOf, renderPages, TRANSCRIBE_PAGES_MAX, TRANSCRIBE_IMAGE_MAX_BYTES, TRANSCRIBE_LOAD_MAX, PAGES_MAX, OWED } from "../../../src/plane/transcribe.mjs";
-import { pendingOf } from "../../../src/plane/pending.mjs";
+import { assistantGateOf } from "../../../src/store-assembly/ask.mjs";
+import { transcriberOf, renderPages, TRANSCRIBE_PAGES_MAX, TRANSCRIBE_IMAGE_MAX_BYTES, TRANSCRIBE_LOAD_MAX, PAGES_MAX, OWED } from "../../../src/store-assembly/transcribe.mjs";
+import { pendingOf } from "../../../src/store-assembly/pending.mjs";
 import { publicOp, gatedOp } from "../../../src/plane/door.mjs";
 import * as AGENT_WORKER_OPS from "../../../../agent-worker/src/ops.mjs";
 import { renderPageToPixels } from "../../../../pdf-worker/src/pagepixels.mjs";
+import { pageRefusal } from "../../../../pdf-worker/test/pdf-pixels-fixtures.mjs";   /* pdf-pixels' published refusals, made by its real renderers */
 import { word } from "../../../src/setup-words/index.mjs";
 
 const SENTINEL = "sk-ant-SENTINEL-T42-0000";
@@ -75,6 +76,9 @@ async function plane({ testSet = null, worker = null, evidence = bucket(), accou
   /* R40 (T46): a test's own set is ai-runs', handed through `assistantGateOf` before construction */
   if (testSet) assistantGateOf(st.ctx, { testSet });
   const s = new Store(st.ctx, env);
+  /* the class holds no route map (plane R1): the map is the assembled store's over the same storage */
+  const assembled = assembledOver(st.ctx, env);
+  s.routes = (url, body = null, grant = null) => assembled.routes(url, body, grant);
   for (const p of st.blocked) await p;
   const ctx = st.ctx, sql = ctx.storage.sql;
   sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
@@ -149,7 +153,7 @@ test("R37, R3 (K2629): doorbell's tables exist on a fresh store and after a seco
   for (const t of names) assert.equal([...bare.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE name=?`, t)].length, 0, t);
 });
 
-test("R37, R6 (doorbell R20): the public hook's knock is doorbell's handler: it forwards `/knock` with the country the door read, refuses an empty knock KNOCK_EMPTY (C-85.5) before the store, and answers no other op", async () => {
+test("R113 (was R37, in part; doorbell R20): the public hook's knock is doorbell's handler: it forwards `/knock` with the country the door read, refuses an empty knock KNOCK_EMPTY (C-85.5) before the store, and answers no other op", async () => {
   const seen = [];
   const stub = { fetch: async (r) => { seen.push(String(r instanceof Request ? r.url : r));
     return new Response(JSON.stringify({ ok: true, result: { ok: true, knockId: "k" } }), { headers: { "content-type": "application/json" } }); } };
@@ -187,7 +191,7 @@ const send = async (q, init) => {
   return { status: res.status, body, text };
 };
 
-test("R37 (K2630, K2634; doorbell R1, R11; carried from capture's plane.test.mjs:66–75): op=knock is reached at the whole plane's door with no token, through doorbell's doorbellPublicOp, and answers as the doorbell does; GET is 405 and an empty knock KNOCK_EMPTY (C-85.5)", async () => {
+test("R113 (was R37, in part; K2630, K2634; doorbell R1, R11; carried from capture's plane.test.mjs:66–75): op=knock is reached at the whole plane's door with no token, through doorbell's doorbellPublicOp, and answers as the doorbell does; GET is 405 and an empty knock KNOCK_EMPTY (C-85.5)", async () => {
   const k = await send("op=knock", { method: "POST", headers: { "cf-connecting-ip": "203.0.113.8" }, body: JSON.stringify({ contentText: "a tip for the group" }) });
   assert.equal(k.status, 200, k.text);
   assert.deepEqual([k.body.ok, k.body.sha256, k.body.bytes], [true, shaOf(Buffer.from("a tip for the group")), "a tip for the group".length]);
@@ -294,6 +298,7 @@ test("R36: transcription({member, project, at}) answers the object's own ai-acco
   assert.equal(tx.useCheck({ ...q, owner: "nobody" }).ok, false, "ai-use's own refusal, relayed");
   const d = await hold(x.evidence, SCAN);
   const r = await tx.transcribe({ account: { ok: true, kind: "apikey", level: "member", key: SENTINEL }, capture_sha: d, store: "bio", pages: [0], use: "transcribe" });
+  // fixtures-run: extraction transcribe-not-sent
   assert.deepEqual(r, { ok: false, reason: "AGENT_WORKER_UNBOUND" });
   assert.equal(x.evidence.calls.length, 0, "nothing read");
   assert.equal(tx.act, "transcribe::2026-10-11T06:00:00Z", "unbound, it does nothing else: no capture reached the act");
@@ -375,8 +380,9 @@ test("R36: a project's account is counted under `project:<id>` and named in the 
 test("R36 (K2611): the pages are rendered one at a time in ascending order, at most TRANSCRIBE_PAGES_MAX; a page the renderer refuses or throws on, a picture that is not a PNG, or a PNG over TRANSCRIBE_IMAGE_MAX_BYTES is not sent; with none left NO_PAGE_RENDERED and with no bytes EVIDENCE_ABSENT, nothing posted", async () => {
   const asked = [];
   const png = (n) => { const b = new Uint8Array(n); b.set(PNG_SIG); return b; };
+  const textLayerRefusal = await pageRefusal("PAGE_HAS_TEXT_LAYER");
   const render = async (bytes, page, opts) => { asked.push([page, opts.decodeDct]);
-    if (page === 1) return { ok: false, reason: "PAGE_HAS_TEXT_LAYER" };
+    if (page === 1) return textLayerRefusal;
     if (page === 2) throw new Error("bad");
     if (page === 3) return { ok: true, mediaType: "image/jpeg", bytes: new Uint8Array(10) };
     if (page === 4) return { ok: true, mediaType: "image/png", bytes: png(TRANSCRIBE_IMAGE_MAX_BYTES + 1) };
@@ -393,6 +399,7 @@ test("R36 (K2611): the pages are rendered one at a time in ascending order, at m
   const d = await hold(x.evidence, SCAN);
   const r = await transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", at: "2026-10-11T06:00:00Z" })
     .transcribe({ account: { ok: true, kind: "apikey", level: "member", key: SENTINEL }, capture_sha: d, pages: [5, 6] });
+  // fixtures-run: extraction transcribe-not-sent
   assert.deepEqual(r, { ok: false, reason: "NO_PAGE_RENDERED", refused: [{ page: 5, reason: "NO_SUCH_PAGE" },
                                                                      { page: 6, reason: "NO_SUCH_PAGE" }],
                         asked: [5, 6], sent: [], owed: [] }, "K2684 (2); T44's `refused`; R106: the pages asked and sent are stated");
@@ -400,6 +407,7 @@ test("R36 (K2611): the pages are rendered one at a time in ascending order, at m
   /* K2684 (2): the capture's bytes absent from the evidence store: EVIDENCE_ABSENT, nothing posted */
   const gone = await transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", at: "2026-10-11T06:00:00Z" })
     .transcribe({ account: { ok: true, kind: "apikey", level: "member", key: SENTINEL }, capture_sha: "e".repeat(64), pages: [0] });
+  // fixtures-run: extraction transcribe-not-sent
   assert.deepEqual(gone, { ok: false, reason: "EVIDENCE_ABSENT" });
   assert.equal(worker.seen.length, 0);
   /* negative control: the same act on the held capture's page 0 is posted */
@@ -417,7 +425,7 @@ test("R36 (agent-worker R72): TRANSCRIBE_PAGES_MAX and TRANSCRIBE_IMAGE_MAX_BYTE
 
 /* ===== R36: the door's arm, and the act end to end ===== */
 
-test("R36, R6 (K2635, K2656; control-plane R74): the gated hook answers op=pagetranscribe through extraction's pageTranscribeOp: the store is asked `/pagetranscribe` with the door's stamps and the project; a malformed digest and no evidence storage are refused before the store", async () => {
+test("R112 (was R36, in part; K2635, K2656; control-plane R74): the gated hook answers op=pagetranscribe through extraction's pageTranscribeOp: the store is asked `/pagetranscribe` with the door's stamps and the project; a malformed digest and no evidence storage are refused before the store", async () => {
   const seen = [];
   const stub = { fetch: async (r) => { seen.push(String(r instanceof Request ? r.url : r));
     return new Response(JSON.stringify({ ok: true, result: { status: 200, body: { ok: true, op: "pagetranscribe" } } }), { headers: { "content-type": "application/json" } }); } };

@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01J62mKtsqgL6Mp8fpdgGVVo · depth 2 · COMPLETE · handled B93
+**Status** · session_01XqR8bbBrQezZtH2cTDie6Q · depth 2 · COMPLETE · handled B102
 
 ## Record (PLANE #41, T51-125)
 
@@ -1086,3 +1086,97 @@ Fix round 10, batch 1 done (PLANE #61); details, numbers and the four fields in 
 - COUPLED MERGE: every plane test fails at import until job/T51/signin-door merges with this branch, and BOB deletes the subscriptionsignin row (lines 30-32) of control-plane/owner-ops.mjs, or the start stops with "declared by two modules".
 - Checks: format, architecture, words, ownership 0 failures; coverage 37/37; light suite 521/521 and the heavy files alone green in the coupled state (release R24 inherited).
 - One safety check refused a scratch-file rm in a shell script of mine (K4696); not retried, nothing blocked.
+
+## J63 · BLOCKED
+
+Cause: context (reading). 'mail inbox --as job' is refused by the size gate: build/plan/audit-r10.md is 79435 bytes > 51200 bytes (my reading set under build/plan/). I cannot read BOB's START, so I have not begun. BOB: prune or archive build/plan/audit-r10.md (move to build/plan/archive/ or add to size-exempt.txt), then RESUME me.
+
+## J64 · REPORT
+
+REPORT 1 (PLANE #62, Wave B, step 3 and step 2): deletions are made in my working tree (not yet pushed); what lies outside my paths, for BOB.
+
+A. Imports of the deleted plane paths outside plane's paths (grep over bio-plane/, newgroup/, the worker directories, scripts):
+1. bio-plane/test/m/following/checks.test.mjs:152 `await import(join(REPO, "bio-plane/src/plane/register.mjs"))` -> `bio-plane/src/store-assembly/register.mjs` (FOLLOWING; and :157 the skip of `bio-plane/src/store-assembly/` goes: one root remains).
+2. bio-plane/test/m/answer-envelope/families.test.mjs:20-28 the walk skips `bio-plane/src/store-assembly/` (K5164): the remaining root is `bio-plane/src/store-assembly/register.mjs`; the skip goes, the walk imports that file first (ANSWER-ENVELOPE). The remaining ROOT after my merge: store-assembly (plane/register.mjs, declarations.mjs, declared.mjs are gone).
+3. bio-plane/src/setup-words/words-unreviewed.json:39956, 39963, 39970 `"file": "bio-plane/src/plane/declared.mjs"` (generated; the round-end regeneration, item 77 (6)): the three sentences are `store-assembly/declared.mjs`'.
+No other file imports a deleted path (src, newgroup/, scripts/, worker directories, release/ is generated).
+
+B. STORE-ASSEMBLY (CHANGE to STORE-ASSEMBLY #3):
+4. `store-assembly/declared.mjs` still exports `ASSEMBLY_DECLARED_OPS` ("Wave B names this export `DECLARED_OPS`", its header); plane's `declared.mjs` is deleted now, so `test-support`'s collector finds none from it and R83's start still takes the rows through `ASSEMBLY_DECLARED_OPS`. Rename is store-assembly's (not in my paths).
+5. Tests of store-assembly's code with NO twin in `bio-plane/test/m/store-assembly/` (plane's t42 and t46 hold them): `t42.test.mjs` (R35-R38, R57, R106: doorbell/case-account composition, the transcriber `transcriberOf`, `renderPages`, the 24 MiB and 300-page press) and `t46.test.mjs` (R40 gate of the ask, the drafts and the transcriber; R47 sign-in; R36 relayed refusal; R114 RPCs). I kept both in plane, re-pointed by path to `store-assembly/{ask,transcribe,pending}.mjs`, so no coverage is lost; BOB places the store-assembly-owned tests in store-assembly and the files shrink to R112-R114.
+6. Item 23 / fixtures: `r10-fixtures-run.test.mjs` (the four FIX-L contracts job-registrar, keep-later, owed-later, owed-ledger run through the real Store, 8 tests) is deleted from plane (its provider code, `pending.mjs`, is store-assembly's): `git show origin/tranche/T51:bio-plane/test/m/plane/r10-fixtures-run.test.mjs` is the file BOB places in store-assembly, same day, with these `fixtures-run:` lines (the users): test-support job-registrar; acquisition job-registrar; capture job-registrar; doorbell job-registrar; file-safety job-registrar; extraction job-registrar; control-plane job-registrar; monitoring job-registrar; acquisition keep-later; capture keep-later; screens-intake owed-later; acquisition owed-ledger; control-plane owed-ledger. The users' markers read `fixtures-contract: plane <id>` (acquisition: r9-failed-ends, r8-render-bar, r7-render-failed, r7-fetchdone, g27-g32-t51, r9-ceilings, fix6-t51, fix3-t51, r8-fetch-refused, r7-t51, fixtures.mjs:59 ...) and become `store-assembly <id>` with the move. Until then those users read `contract-no-run`.
+   The `transcribe-answer` runs (item 23): plane never held a `fixtures-run` for it; the markers `fixtures-contract: plane transcribe-answer` are in reading-pipeline and extraction's tests only after the section 5.10 pass; its value is `store-assembly/transcribe.mjs`' `aiPath` answer, so the run belongs in store-assembly (t42/t46 above hold the cases).
+7. Item 12: the line `r9-jobs.test.mjs:318` is no longer in plane: it is in store-assembly's `r9-jobs.test.mjs:313` (which already takes `storeFailedTransient` from reading-pipeline's fixtures; extraction's published `readHeld` failure is the item's other half). STORE-ASSEMBLY's, not plane's.
+
+C. Found, outside my paths: none beyond the above.
+
+## Record (PLANE #62, fix round 10, Wave B; B94, B95, B96) — STATE AT HAND-OFF (context)
+
+**Done (committed on job/T51/plane):** `plane/store.mjs` is the thin class: constructor calls `assembleStore(ctx, env, {deliver: deliverOwedRender})`; RPCs, alarm hooks, heal, headers, retired room kept; `door.mjs` takes `askOp`/`actionDraftOp`/`ACTION_DRAFT_OPS` from store-assembly; `index.mjs` first import is `store-assembly/index.mjs` (the registration root). Deleted: pending, ask, wiring, owners, stats, unpack, transcribe, casesweep, acquire-timings, register, declarations, declared, wizards (.mjs). Tests: twin files deleted; plane-owned tests kept or rewritten (store.test: R1, R4, R9, R56, R95/R111/R114; r78-timing; r99-r103; split, t43-t45, t47, t48, t50 pruned to plane ids; door.test counts 37 routes and drives `selftestmigrations`, item 85 (1)); t42/t46 kept, re-pointed to store-assembly paths (no twin there). `r10-fixtures-run.test.mjs` deleted (REPORT J64). fixtures plane: 0 failures (markers: fixtures-own synthetic at l75-entry (2), l79-entry, r7-contention-entry (2); harness at watchdog.test and migrate-released; fixtures-generic NOT_RENDERED at r8-headofline; t42 uses pdf-pixels pageRefusal; watchdog uses extraction readHeldAnswer.read). Checks: format 0, architecture 0, coverage 37/37, ownership 0, fixtures 0.
+**Tests run:** light plane files green. Heavy alone: worker 7/7, r8-lag, r8-wave, r8-heal-door, g55-alarm-l, g54-l 6/6 (72 s quiet), g57-heal, r9-memory, r7-contention 5/5, l75, l79, g83-census green. RED to investigate: r8-headofline R80 (alarm_at null in 6 answers; ran while I ran checks, rerun alone first), g83-location (1 of 15), r10-lag-figure (1 of 2): rerun alone, then diagnose. Not yet run: r10-filing-stall, r10-nohome, r10-land-yields, g42, l77, g123h, g124f, g128i, g41, g44, g123f, shape-harness.
+**Still to do:** (1) rerun the three reds alone; (2) impact users: op-declarations t47, screens-daily (29), control-plane (89), journey-check (2), store-assembly suite; `fleetbundles`; `checks/run.mjs`; (3) B95: whole-file g54-l under 8 busy loops (`node -e 'for(;;){}'`) x20 with diagnosis-R9-load-reds.md section 11 instrumentation; reproduced -> cause and fix; else record figures and write the deployed-plane check script; (4) final record, COMPLETE with the Size line; remaining root: store-assembly/register.mjs.
+
+## J65 · BLOCKED
+
+Cause: context. Wave B is mostly done and pushed (my record's last section, STATE AT HAND-OFF): store.mjs calls assembleStore, plane's copy deleted, tests re-pointed; fixtures, format, architecture, coverage, ownership 0. Open: r8-headofline, g83-location, r10-lag-figure red in the heavy run (rerun alone first), remaining heavy files, impact users, B95's 20 loaded g54-l runs. BOB: RESUME me.
+
+## Saved at K5183 (PLANE #62)
+
+Done and pushed: see "STATE AT HAND-OFF" above (Wave B code, test re-pointing, fixtures 0, checks 0). No half-done files; no workers running (the background heavy-test script was stopped).
+Exact next step: (1) apply B97: fix `bio-plane/test/m/plane/r8-headofline.test.mjs:124` as control-plane did (read its change in `bio-plane/test/m/control-plane/` on the tranche), seen red then green; (2) rerun alone `g83-location`, `r10-lag-figure` (red in the batch), then the heavy files not yet run (r10-filing-stall, r10-nohome-filed-later, r10-land-yields, g42, l77, g123h, g124f, g128i, g41, g44, g123f, shape-harness); (3) impact users, `fleetbundles`, `checks/run.mjs`; (4) B95's 20 loaded g54-l runs; (5) COMPLETE with the Size line and the remaining root (store-assembly/register.mjs).
+
+## Record (PLANE #63, resumed from K5183; B97, B95, B100)
+
+**Applied**
+- B97: `r8-headofline.test.mjs` R80 reads `alarm_at` as the platform states it (null is true only while `running_since` is set), as control-plane's; green alone.
+- B100 (1): `g123f-cells.test.mjs` declares the file's own columns (CSV four, the generated workbook three, `XLSX_FIELDS`); R84 and R85 met, assertions unchanged in meaning.
+- B100 (2): `// fixtures-run: extraction transcribe-not-sent` at `t42.test.mjs` (the three real answers AGENT_WORKER_UNBOUND, NO_PAGE_RENDERED, EVIDENCE_ABSENT of the transcriber); extraction's `t44.test.mjs:93` now reads `accepted(transcribe-not-sent)`.
+- B100 (3): `door.test.mjs` already counts instance-setup's 37 routes with `selftestmigrations` driven.
+- Test fixes found in the heavy run: `g42-storage-seam` took `groupTable`, `ADMIN`, `MEMBER`, `FOUNDER` from screens-settings' pruned fixtures: the callers are local now, the stats answer is the door's, drawn by the shell's own `open("group", {table: {stats}})`; `fixture.mjs` `store({retired})` builds no assembly for a retired room (g83 T-retired red: the fixture assembled it).
+- B95: whole-file `g54-l` (6 tests, instrumented copy: client send/answer/throw with `cause`, object-side fetch/alarm begin/end) under 8 busy loops, 20 runs: **20 of 20 green**, about 107 s each. In every run exactly one client throw (`UND_ERR_SOCKET`, `fetch failed`) at `g54p/alarm`: the "killed in the middle of a sweep" test's deliberate `mf.dispose()`; none at "(measure)" or at any `state` request. NOT REPRODUCED; no cause established. The instrumented copies are deleted (not committed). The deployed-plane check is `bio-plane/test/m/plane/deployed-alarm-request-check.mjs` (not a test; BOB runs it on biosmoke8 with PLANE_URL and PLANE_ADMIN_TOKEN; PASS / FAIL / INCONCLUSIVE exit 0/1/2).
+
+**Met ids named:** R1, R4, R9, R56, R95, R111, R114 (Wave B); R79 (g42); R80 (headofline); R84, R85 (g123f); R102; R78 (timing).
+
+**Tests run:** whole `bio-plane/test/m/plane/` directory: 299 tests, 296 pass; 2 of the 3 reds were my fixture change and are fixed (R102 healFrame, R80 owedwork re-run green); the third is below. Heavy files alone, all green: r10-filing-stall, r10-nohome-filed-later, r10-land-yields, l77*, g123h, g124f, g128i, g41, g44, g123f-workerd, shape-harness, g83-location, g42, g123f-cells, r8-headofline R80. Impact (`impact.mjs origin/tranche/T51 HEAD`): plane only (33 of 53 files).
+**Checks:** format 0 failures; architecture 0; coverage 37/37; ownership 0; fixtures plane 0; words findings listed are store-assembly's files only (15), none in plane.
+
+**RED, not mine to change: `r10-lag-figure.test.mjs` "R78 R28b L"** (the 7.9 MB test): the pass that wrote 1058 rows states `max_run_statements` 290, the test (and store-assembly R78's text: "a figure above 1,000 for the pass that wrote a tick's 4,096 units") expects above 1,000. Cause: extraction R111 (b195c78f02, merged today) lands units in batches of `LAND_BATCH_UNITS` = 256 with a turn given back between batches, so the longest stretch is about 256 units, about 290 statements. The measure is right and the requirement wording is stale. I did not weaken the test. BOB: amend store-assembly R78's test sentence (e.g. a figure of at least one batch, `LAND_BATCH_UNITS`, and below 1,000 now that landing yields) and tell me; I then change the assertion at `r10-lag-figure.test.mjs:95` and the 1,000 at `:96`.
+
+**Found in other modules (REPORT)**
+1. store-assembly `pending.mjs` `openInstruments` (about :316): the lag meter's `setInterval` is not `unref`'d. A run abandoned by a killed alarm (the tests' `NEVER`) never reaches `closeInstruments`, so 16 live Timeouts keep the process alive: `store-assembly/r9-jobs.test.mjs` passes 34 and never exits (measured: 240 s terminated; with `setInterval` unref'd by a preload: 34/34, exits in 38 s). Fix `t.timer.unref?.()` (harmless on workerd). B100 (4) is store-assembly's, not a plane handle.
+2. extraction `fixtures` class failures that name plane as a later provider (`job-registrar` stubs in `r99-r107`, `s25-pieces-chain`) and acquisition `fix6-t51.test.mjs:146, :291` are the B6 relocation to store-assembly (J64).
+3. store-assembly R78 test sentence (above).
+
+**Deferred:** none in plane.
+Remaining root for the two walks: `store-assembly/register.mjs`.
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 31, module lines 371
+
+## J66 · COMPLETE
+
+COMPLETE (PLANE #63; B97, B95, B100). Full account: my record, section "Record (PLANE #63 ...)".
+Met/green: B97 r8-headofline R80; B100 (1) g123f R84, R85 (3 columns for the workbook); (2) t42 `fixtures-run: extraction transcribe-not-sent` (extraction t44:93 now accepted); (3) door.test 37 routes already; also g42 (R79) and g83 (R95) fixed test-side; whole plane directory green except one red below. Checks: format, architecture, ownership, fixtures plane 0 failures; coverage 37/37; no words finding in plane.
+B95: g54-l whole file x20 under 8 busy loops, instrumented: 20/20 green, the only client throw per run is the kill test's deliberate dispose; NOT REPRODUCED. Deployed check: bio-plane/test/m/plane/deployed-alarm-request-check.mjs (for biosmoke8).
+ONE RED, yours to decide: r10-lag-figure R78/R28b expects max_run_statements > 1,000 for the pass that wrote a tick's units (store-assembly R78 text says so); extraction R111 (b195c78f02) now yields every 256 units, so the pass states 290. Amend R78's test sentence and I change the assertion (r10-lag-figure.test.mjs:95-96); I did not weaken it.
+REPORT: (a) B100 (4) is store-assembly's: pending.mjs openInstruments (~:316) lag-meter setInterval not unref'd; abandoned (killed) runs keep 16 timers alive so r9-jobs.test.mjs passes 34 and never exits; with setInterval unref'd it exits in 38 s. Fix: t.timer.unref?.(). (b) extraction/acquisition contract-no-run lines naming plane are the J64 relocation to store-assembly.
+Remaining root: store-assembly/register.mjs.
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 31, module lines 371
+
+## B101 (PLANE #63)
+`r10-reading-ended.test.mjs` (new; `// fixtures-run: notice-producers reading-ended`, named R1): the REAL job table (`Store` over the plane's fixture, four readings registered and ended by the object's own alarm with extraction's reader answers) answers `readingsEnded` in the contract's shapes (refused with its bound key, finished, final with the reader's reason, final with member null, the ten-key row, `ended_at` epoch ms, order) and by the cursor `<ended_at>\u0001<sha>\u0001<kind>`; a read writes nothing. 2 of 2 green. fixtures plane 0 failures, format/architecture/coverage/ownership 0.
+REPORT (notice-producers): `reading-ended-seam.test.mjs:18` `fixtures-contract: plane reading-ended` is flagged `[idle]` by `checks/fixtures.mjs notice-producers` with and without plane's run: the marker holds nothing the check recognizes (it precedes `const READING_ROWS = Object.freeze([...])`, not a call the check classes as an answer/stub use). Placement of the marker is notice-producers'.
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 33, module lines 371
+
+## J67 · COMPLETE
+
+COMPLETE again (PLANE #63; B101 on top of J66). B101: `bio-plane/test/m/plane/r10-reading-ended.test.mjs` carries `fixtures-run: notice-producers reading-ended` and runs the contract on the real job table (`readingsEnded`: refused, finished, final, final with no opener, the paged cursor); 2/2 green; fixtures plane 0 failures; format, architecture, coverage 37/37, ownership 0.
+REPORT: notice-producers `reading-ended-seam.test.mjs:18` `fixtures-contract: plane reading-ended` is still `[idle]` in `checks/fixtures.mjs notice-producers` with or without plane's run: the check recognizes no answer/stub use after the marker (it precedes `const READING_ROWS = Object.freeze([...])`). The marker's placement is notice-producers'.
+Still open from J66: r10-lag-figure's 1,000 (store-assembly R78 text, extraction R111) awaits your amendment; r9-jobs's open handle is store-assembly's `openInstruments` setInterval (unref).
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 33, module lines 371
+
+## B102 (PLANE #63)
+`r10-lag-figure.test.mjs` :95-97 now asserts store-assembly R78's reworded sentence: the pass that wrote a tick's units, and the row's end figure, state `max_run_statements` above 256 and at most 1,000 (seen: 290 for the pass that wrote 1,058 rows; 612 at the end). Both tests green alone (27 s, 30 s). Plane's whole directory is green. The open handle stays with store-assembly (K5200).
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 35, module lines 371
+
+## J68 · COMPLETE
+
+COMPLETE (PLANE #63; B102). r10-lag-figure.test.mjs :95-97 asserts above 256 and at most 1,000 for the pass that wrote a tick's units and for the row's end figure (seen 290 and 612); both tests green alone; plane's whole directory green; ownership 0, coverage 37/37. Nothing open in plane. Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 35, module lines 371

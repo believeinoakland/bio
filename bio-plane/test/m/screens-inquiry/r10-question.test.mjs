@@ -6,8 +6,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok } from "../interface-shell/harness.mjs";
-import { open, storeWorld, SCREENS, main, press, says, inquiryMd, section, P, Q, D } from "./fixtures.mjs";
-import { inquiryMd as realInquiryMd } from "../inquiry/fixture.mjs";
+import { open, storeWorld, SCREENS, main, press, says, fill, inquiryMd, section, P, Q, D } from "./fixtures.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 process.env.TZ = "UTC";
 const GRADES = ["B", "B", "C"];
@@ -18,15 +18,14 @@ const stateB = async (n = 3) => {
   const project = await world.recipes.project(ann, "Stormwater");
   const docs = [];
   for (let i = 0; i < n; i++) docs.push((await world.recipes.hold(ann, "Passage " + (i + 1), "The Director shall repair each reported pothole, part " + (i + 1) + ".", project)).bundle);
-  const id = (await ann.read("allocid", { query: { prefix: "INQ", year: "2026" } })).id;
   const legs = docs.map((target, i) => ({ target, role: "supports", grade: GRADES[i], grade_axis: "capture", grade_source: "capture" }));
-  const text = realInquiryMd(id, { question: "Seven days", legs, extra: ["project: " + project] });
-  await ann.act("promote", { body: { bundleId: id, base: null, snapKey: "20261001T000000_aaaa", meta: { object_type: "inquiry", title: "Seven days", current_state: "open",
-    created: "2026-09-27T00:00:00Z", last_updated: "2026-09-27T00:00:00Z" }, files: [{ path: "bundle.md", text }], register: [] } });
+  const id = (await world.recipes.question(ann, project, { title: "Seven days", text: "Do crews repair each pothole within seven days?", legs, draw: true })).id;
   const { door, session } = world.boot(ann);
   const p = await boot({ screens: SCREENS, door, session, path: "/app/question/" + id });
   await p.settle();
   p.question = id;
+  p.project = project;
+  p.ann = ann;
   return p;
 };
 const tick = (p, id) => { p.doc.getElementById(id).checked = true; };
@@ -61,6 +60,80 @@ test("R30a R23 one 'No' and two holding each other up send one ground of two; th
 test("R30a R23 nothing answered 'Yes' is AND: the passages left unanswered are necessary and send no ground", async () => {
   const p = await stateB(2);
   assert.deepEqual((await save(p)).grounds, []);
+});
+
+/* R23 (cause 30b, K5059): what each passage carries is read back from what the plane holds. A question answered all "No" holds an EMPTY partition; the page reads it back
+   (each passage "No, my answer falls") and is not the unanswered state again. A mixed answer reads back with the "No" passage beside the grounds, a necessary leg. */
+const carries = (p) => main(p).querySelectorAll("[data-carries]").map((e) => e.getAttribute("data-carries"));
+const asked = (p) => main(p).querySelectorAll('[data-state="ask"]').length;
+test("R23 R30b after 'Save the answers' with every passage answered 'No', the page reads the held empty partition back: each passage 'No, my answer falls', not the unanswered state", async () => {
+  const p = await stateB(2);
+  assert.equal(asked(p), 1, "before the save: state b");
+  tick(p, "ask-0-0"); tick(p, "ask-1-0");
+  assert.deepEqual((await save(p)).grounds, []);
+  assert.equal(asked(p), 0, "the questions are not asked again: the answer is held");
+  assert.deepEqual(carries(p), ["falls", "falls"], "each passage is drawn 'No, my answer falls'");
+  assert.ok(main(p).textContent.includes(word("question.falls")), "the sentence is the key's words");
+});
+test("R23 R30b a mixed answer: the 'No' passage stands beside the ground as a necessary leg, the two that hold each other up read back as holding", async () => {
+  const p = await stateB(3);
+  tick(p, "ask-0-0"); tick(p, "ask-1-1"); tick(p, "ask-which-1-1");
+  assert.deepEqual((await save(p)).grounds, [{ ground: "part 1", legs: [1, 2] }]);
+  assert.equal(asked(p), 0);
+  assert.deepEqual(carries(p), ["falls", "holds", "holds"]);
+});
+test("R23 control: a question never answered draws the questions, none preselected, with no read-back of an answer", async () => {
+  const p = await stateB(2);
+  assert.equal(asked(p), 1);
+  assert.deepEqual(carries(p), []);
+  assert.ok(!p.doc.getElementById("ask-0-0").checked && !p.doc.getElementById("ask-0-1").checked);
+});
+
+/* R50 (cause 30b): concluding on her own reading asks the affirmation only for parts that are alternatives, one tick for each; the ticked parts go as \`affirmed\`;
+   necessary passages, which form no part, ask none. Over the real plane. */
+const conclude = async (p, { own = "Crews close reported potholes within a week.", ticks = [] } = {}) => {
+  fill(p, { "question-conclude-own": own, "question-conclude-falsifier": "work orders showing repairs after seven days", "question-conclude-reason": "the sources agree" });
+  for (const id of ticks) tick(p, id);
+  await press(p, "conclude");
+  return p.byOp("conclude").at(-1);
+};
+/** the plane's own answer: the project stands on the reading she wrote and the question is concluded */
+const concluded = async (p) => {
+  const r = await p.ann.read("basisversions", { query: { id: p.question, project: p.project } });
+  return !!(r && r.conclusion);
+};
+const twoGrounds = async () => {
+  const p = await stateB(3);
+  tick(p, "ask-0-1"); tick(p, "ask-1-1"); tick(p, "ask-2-0"); /* two passages each enough alone, the third necessary */
+  assert.deepEqual((await save(p)).grounds, [{ ground: "part 1", legs: [0] }, { ground: "part 2", legs: [1] }]);
+  return p;
+};
+test("R50 R30b an own reading over two separately sufficient parts draws one tick for each, and sends the ticked parts as affirmed; the plane concludes", async () => {
+  const p = await twoGrounds();
+  const ticks = main(p).querySelectorAll('input[name="affirm-own"]');
+  assert.equal(ticks.length, 2, "one tick for each alternative part");
+  const sent = await conclude(p, { ticks: ["affirm-own-0", "affirm-own-1"] });
+  assert.deepEqual(String(sent.query.affirmed).split(",").sort(), ["part 1", "part 2"]);
+  assert.equal(sent.query.version, undefined, "her own reading, no version");
+  assert.equal(main(p).querySelectorAll('[role="alert"]').length, 0, "no refusal drawn: " + main(p).querySelectorAll('[role="alert"]').map((e) => e.textContent).join(" | "));
+  assert.ok(await concluded(p), "the plane concluded on her own reading");
+});
+test("R50 R30b control: a part left unticked is refused by its words, naming the part, and nothing is concluded", async () => {
+  const p = await twoGrounds();
+  await conclude(p, { ticks: ["affirm-own-0"] });
+  assert.ok(says(main(p), "refusal.VERSION_AFFIRMATION_INCOMPLETE", { part: "part 2" }), "the part left out is named: " + main(p).querySelectorAll('[role="alert"]').map((e) => e.textContent).join(" | "));
+  assert.ok(!(await concluded(p)), "nothing is concluded");
+});
+test("R50 R30b control: one ground beside a necessary passage, and every passage answered 'No', ask no affirmation and send none", async () => {
+  const one = await stateB(3);
+  tick(one, "ask-0-1"); tick(one, "ask-1-0"); tick(one, "ask-2-0");
+  assert.deepEqual((await save(one)).grounds, [{ ground: "part 1", legs: [0] }]);
+  assert.equal(main(one).querySelectorAll('input[name="affirm-own"]').length, 0, "one part: nothing asked");
+  assert.equal((await conclude(one)).query.affirmed, undefined);
+  const none = await stateB(2);
+  tick(none, "ask-0-0"); tick(none, "ask-1-0"); await save(none);
+  assert.equal(main(none).querySelectorAll('input[name="affirm-own"]').length, 0);
+  assert.equal((await conclude(none)).query.affirmed, undefined);
 });
 
 /* R17b: a question's leg whose extent names a part of the document (`doc-part`) is placed by its reference */
