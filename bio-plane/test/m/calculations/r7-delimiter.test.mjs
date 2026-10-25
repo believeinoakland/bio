@@ -69,3 +69,27 @@ test("R1 G64: a source that is one cell per line against a 3-column header is re
   assert.equal(code(one), "ok");
   assert.equal(one.rows, 2);
 });
+
+test("R1 (K5148) a source no line of which splits into the declared columns is refused SOURCE_NOT_READ with the delimiter and the columns expected, nothing written; a short row among full ones still pads (R45)", async () => {
+  const H4 = ["payer", "payee", "amount", "fund"], F4 = H4.map((name) => ({ name, type: "string" }));
+  const w = seeded();
+  const before = w.count("calc_tables");
+  /* (a) a semicolon file whose lines have 3 cells against a 4-column header; (c) a prose letter whose one comma splits a line in two */
+  const cases = [
+    ["payer;payee;amount\nCity of Oakland;Acme Paving;5\n", "semicolon"],
+    ["Dear clerk, please send me the budget.\nThank you for your help.\n", null],
+  ];
+  for (const [text, delimiter] of cases) {
+    const r = await declare(w, text, H4, F4);
+    assert.equal(code(r), "SOURCE_NOT_READ", text);
+    assert.equal(r.delimiter, delimiter, "the delimiter found, null when the lines show none");
+    assert.equal(r.columns_expected, 4);
+    assert.equal(typeof r.content_id, "string");
+  }
+  assert.equal(w.count("calc_tables"), before, "nothing written");
+  /* control: one short row among full ones is padded and counted */
+  const ok = await declare(w, "payer,payee,amount,fund\nA,B,1,F\nC,D,2\nE,F,3,G\n", H4, F4);
+  assert.equal(code(ok), "ok");
+  assert.equal(ok.rows, 3);
+  assert.ok(ok.undetermined.count >= 1, "the padded cell is counted apart (R45)");
+});
