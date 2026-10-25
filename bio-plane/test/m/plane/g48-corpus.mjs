@@ -8,7 +8,7 @@ import { ROSTER_DOCS } from "../../../../roster-reader/test/fixtures.mjs";
 import { budgetDocumentText, budgetVolumeText } from "../../../../roster-reader/test/shape-texts.mjs";
 import { pdfFixture, firstView as budgetView, fixture as budgetFixture } from "../../../../budget-doctypes/test/helpers.mjs";
 import { viewFor, fixture as courtFixture, FIRST } from "../../../../court-doctypes/test/helpers.mjs";
-import { registerReaders } from "../../../src/plane/wiring.mjs";
+import { registerReaders } from "../../../src/store-assembly/wiring.mjs";
 
 registerReaders();
 const NOW = "2026-03-20T12:00:00Z";

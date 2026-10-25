@@ -3,8 +3,8 @@
  * (`citation`) declares. Words by key (R44): each expectation is read through `word(key, vars)`, never copied. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, says, section, word, P, Q } from "./fixtures.mjs";
+import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
+import { open, storeWorld, SCREENS, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, says, section, word, P, Q } from "./fixtures.mjs";
 import { importedNamed } from "../case-import/fixtures.mjs";
 import { V, F1, F2 } from "../case-import/fixture.mjs";
 
@@ -28,6 +28,22 @@ const REF1 = HELD.one.edition.findings.find((x) => x.finding === F1).ref;
 const IMPORTS = ok(HELD.list);
 const IMPORTED = ok(HELD.one);
 const withImports = (o = {}) => ({ plane: { importedcases: IMPORTS, importedcase: IMPORTED, ...(o.plane || {}) }, ...(o.images ? { images: o.images } : {}) });
+/** A project of `ann`'s with a held document, a question of hers in it resting on that document (`draw`n in), and another team's finding imported and accepted by her real acts (`recipes.imported`, titled `TITLES[F1]`). */
+const worldOf = async ({ accept = true } = {}) => {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const doc = (await world.recipes.hold(ann, "Policy memo", "The Director shall repair each reported pothole within seven days.", project)).bundle;
+  const imp = await world.recipes.imported(ann, { accept, title: TITLES[F1] });
+  const question = async (title = "Seven days") => (await world.recipes.question(ann, project, { title, text: "Is the city repairing reported potholes within seven days?", legs: [{ target: doc, role: "supports" }], draw: true })).id;
+  const pageOf = async (id, o = {}) => {
+    const { door, session } = world.boot(ann);
+    const p = await boot({ screens: SCREENS, door, session, path: "/app/question/" + id, ...o });
+    await p.settle();
+    return p;
+  };
+  return { world, ann, project, doc, imp, question, pageOf };
+};
 const choose = (p, id, value) => { p.doc.getElementById(id).querySelectorAll("input").find((i) => i.getAttribute("value") === value).checked = true; };
 const KEY = "act.owed_citeimported.label.question";
 const rested = { images: { [Q]: { "bundle.md": inquiryMd(P, INQUIRY_REFS, { legs: [...LEGS, { target: REF1, role: "supports" }] }) } } };
@@ -48,21 +64,24 @@ test("R110 \"Cite another team's finding\" is chosen among the findings the team
 test("R110 citeimported sends the question, the import, the finding, the edition and the role she chose (and her note); with no finding or no role chosen nothing is sent", async () => {
   /* the shell asks a reason for this act as for every Reasoned one, and marks the request with it (`reason`, not a declared field) */
   const sent = (p, n = 0) => { const b = { ...p.byOp("citeimported")[n].body }; delete b.reason; return b; };
-  const p = await open(at, withImports({ plane: { citeimported: ok({ ok: true, inquiry: Q, cited: [REF1], alreadyCited: [] }) } }));
+  const w = await worldOf();
+  const value = `${w.imp.import}|${w.imp.edition}|${w.imp.finding}`;
+  const q1 = await w.question("Seven days"), q2 = await w.question("Seven days again");
+  const p = await w.pageOf(q1);
   await press(p, "citeimported", { reason: "x" });
   assert.equal(p.byOp("citeimported").length, 0, "nothing chosen, nothing sent");
-  fill(p, { "question-imp-finding": `${IMP}|${EDITION}|${F1}` });
+  fill(p, { "question-imp-finding": value });
   await press(p, "citeimported", { reason: "x" });
   assert.equal(p.byOp("citeimported").length, 0, "no role chosen, nothing sent");
   choose(p, "question-imp-role", "cuts_against");
   fill(p, { "question-imp-note": "Their ledger disagrees with ours." });
   await press(p, "citeimported", { reason: "x" });
-  assert.deepEqual(sent(p), { inquiry: Q, import: IMP, finding: F1, edition: EDITION, role: "cuts_against", note: "Their ledger disagrees with ours." }, "the guard accepted exactly these fields");
-  const q = await open(at, withImports({ plane: { citeimported: ok({ ok: true }) } }));
-  fill(q, { "question-imp-finding": `${IMP}|${EDITION}|${F1}` });
+  assert.deepEqual(sent(p), { inquiry: q1, import: w.imp.import, finding: w.imp.finding, edition: w.imp.edition, role: "cuts_against", note: "Their ledger disagrees with ours." }, "the guard accepted exactly these fields");
+  const q = await w.pageOf(q2);
+  fill(q, { "question-imp-finding": value });
   choose(q, "question-imp-role", "supports");
   await press(q, "citeimported", { reason: "x" });
-  assert.deepEqual(sent(q), { inquiry: Q, import: IMP, finding: F1, edition: EDITION, role: "supports" }, "the note is optional");
+  assert.deepEqual(sent(q), { inquiry: q2, import: w.imp.import, finding: w.imp.finding, edition: w.imp.edition, role: "supports" }, "the note is optional");
 });
 
 test("R110 IMPORTED_NOT_ACCEPTED, carried inside BASIS_REFUSED or answered alone, is drawn by its words; control: another BASIS_REFUSED draws its first finding's own detail", async () => {
@@ -81,16 +100,20 @@ test("R110 IMPORTED_NOT_ACCEPTED, carried inside BASIS_REFUSED or answered alone
 });
 
 test("R110 \"Take it back\" is offered on a leg on another team's finding only: it sends the question, the import and the finding with her reason; a leg on a document offers sever and no take-back", async () => {
-  const p = await open(at, { ...withImports(rested), plane: { ...withImports().plane, withdrawimported: ok({ ok: true, inquiry: Q, withdrawn: [REF1] }) } });
+  const w = await worldOf();
+  const qid = await w.question("Seven days");
+  const plainId = await w.question("Resting on documents only");
+  await w.ann.act("citeimported", { query: { inquiry: qid, import: w.imp.import, finding: w.imp.finding, edition: w.imp.edition, role: "supports", note: "" } });
+  const p = await w.pageOf(qid);
   const rows = main(p).querySelectorAll("[data-imported]");
   assert.equal(rows.length, 1);
   assert.ok(rows[0].textContent.includes(TITLES[F1]), "the leg is named by the finding's title, never its ref");
   assert.deepEqual(actsIn(main(p)).filter((o) => o === "withdrawimported"), ["withdrawimported"]);
   assert.ok(!p.requests.some((r) => r.op === "image" && String(r.query.id).startsWith("imported:")), "no document is read for it");
   await press(p, "withdrawimported", { reason: "Their case was withdrawn." });
-  assert.deepEqual(p.byOp("withdrawimported")[0].body, { inquiry: Q, import: IMP, finding: F1, reason: "Their case was withdrawn." });
+  assert.deepEqual(p.byOp("withdrawimported")[0].body, { inquiry: qid, import: w.imp.import, finding: w.imp.finding, reason: "Their case was withdrawn." });
   assert.equal(p.byOp("sever").length, 0);
-  const plain = await open(at, withImports());
+  const plain = await w.pageOf(plainId);
   assert.ok(!actsIn(main(plain)).includes("withdrawimported"), "control: legs on documents offer sever, not take-back");
   assert.ok(actsIn(main(plain)).includes("sever"));
 });

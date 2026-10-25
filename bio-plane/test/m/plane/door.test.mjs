@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
-import "./fixture.mjs";   /* answers `cloudflare:workers` */
+import { assembledOver } from "./fixture.mjs";   /* answers `cloudflare:workers` */
 const { translationsOf, translationsOps } = await import("../../../src/translations/index.mjs");
 const D = await import("../../../src/store-door/dispatch.mjs");
 const { Store } = await import("../../../src/plane/store.mjs");
@@ -46,6 +46,8 @@ function object() {
   };
   return { ctx, env: { STORE: { idFromName: (n) => n } }, blocked, failWith(pred) { fail = pred; } };
 }
+/* the class holds no route map (R1): the map is the assembled store's over the same storage (store-assembly R1: a second assembly builds nothing twice) */
+const routesOf = (o, url, body) => assembledOver(o.ctx, o.env).routes(url, body);
 const settle = async (o) => { const out = []; for (const p of o.blocked) out.push(await p); o.blocked.length = 0; return out; };
 const started = (outs) => outs.filter((x) => x && typeof x === "object" && "started" in x);
 
@@ -111,6 +113,8 @@ const DRIVES = [
   ["grouplanguages", "GET"],
   ["bootstrapfacts", "GET"],
   ["grouplogo", "GET"],
+  /* R105 (K5170; extraction R110; item 85 (1)): the administrators' selftest reads each migration's counts, a read */
+  ["selftestmigrations", "GET"],
 ];
 const req = ([path, method, body]) => new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) });
 /* Instants differ between two runs; everything else must not. */
@@ -138,9 +142,9 @@ test("R1: the class whose fetch is control-plane's door: at construction it star
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R1, R5, R67 (K1690, K1870, K2162, K2249, K4124): instance-setup's thirty-six routes (T48: `updatenotice`, `updatestart`, `updatelater`, `updateskip`, R89, R90; T45: `declaredstakeset`, K2896; T46: `infolevelset`, `infolevel`, K3004; T47: `grouplogoset`, `grouplogo`, `grouplanguagesset`, `grouplanguages`, R48) and translations' nine (R61, R67) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
+test("R1, R5, R67 (K1690, K1870, K2162, K2249, K4124): instance-setup's thirty-seven routes (T48: `updatenotice`, `updatestart`, `updatelater`, `updateskip`, R89, R90; T45: `declaredstakeset`, K2896; T46: `infolevelset`, `infolevel`, K3004; T47: `grouplogoset`, `grouplogo`, `grouplanguagesset`, `grouplanguages`, R48) and translations' nine (R61, R67) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
-  assert.equal(ops.length, 36);
+  assert.equal(ops.length, 37);
   const translationOpNames = Object.keys(translationsOps(null, new URL("http://do/"), null));
   assert.equal(translationOpNames.length, 9, "translations' nine routes");
   assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops, ...translationOpNames].sort(), "every route is driven");
@@ -148,7 +152,7 @@ test("R1, R5, R67 (K1690, K1870, K2162, K2249, K4124): instance-setup's thirty-s
   const store = new Store(now.ctx, now.env);
   await settle(now);
   /* every route instance-setup holds is in the route map the door answers */
-  const map = Object.keys(store.routes(new URL("http://do/"), null));
+  const map = Object.keys(routesOf(now, new URL("http://do/"), null));
   for (const op of ops) assert.ok(map.includes(op), `${op} is routed`);
   new Store(before.ctx, before.env);
   await settle(before);
@@ -253,7 +257,7 @@ test("R2, R5 (N13): queue's, tasks' and affordances' maps are part of the route 
   for (const t of Q.QUEUE_TABLES) assert.ok(tables.includes(t), `queue's ${t}`);
   /* they are control-plane's additions to the map (R5), and the map the class answers holds them */
   const mine = Object.keys(D.controlPlaneRoutes(o.ctx, u, null));
-  const map = Object.keys(store.routes(u, null));
+  const map = Object.keys(routesOf(o, u, null));
   const aOps = Object.keys(A.affordancesOps(null, u));
   for (const op of [...qOps, ...tOps, ...aOps]) {
     assert.ok(mine.includes(op), `controlPlaneRoutes lacks ${op}`);

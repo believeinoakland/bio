@@ -1,6 +1,6 @@
 # BOB to store-request (T51)
 
-**Read** · handled J17
+**Read** · handled J18
 
 ## B1 · START
 

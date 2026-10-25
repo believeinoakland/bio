@@ -3,12 +3,30 @@
  * R108 (where this document came from). Each act's request is checked by the shell's guard against its owner's declaration. Words by key. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, fill, press, says, section, word, day, READING, P, D, SHA } from "./fixtures.mjs";
+import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
+import { open, storeWorld, main, actsIn, fill, press, says, section, word, day, READING, SCREENS, D, SHA } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
 const at = "/app/document/" + D;
 const text = (el) => String(el && el.textContent || "");
+/* the real world (store-assembly's store with the real door; the state is made by real acts, K5054): a page as `as` reads it over the world's door, `plane` scripting only the ops it names */
+const OWN = { capabilities: ["contribute", "create_projects"] };
+async function pageOn(world, as, path, o = {}) {
+  const { door, session } = world.boot(as);
+  const p = await boot({ screens: SCREENS, door, session, path, ...o });
+  await p.settle();
+  return p;
+}
+/** A member with a PDF (or, `kind: "page"`, a web page that is read; `read: false`, one held and not read) held in her project, and a second document beside it. */
+async function member({ kind = "pdf", read = true, pages = 3 } = {}) {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const held = kind === "pdf" ? await world.recipes.pdf(ann, "Policy memo", { project, pages })
+    : read ? await world.recipes.page(ann, "Policy memo", { paragraphs: ["The Director shall repair each reported pothole within seven days."], project })
+           : await world.recipes.hold(ann, "Policy memo", "<html><head><title>Policy memo</title></head><body><p>The Director shall repair each reported pothole within seven days.</p></body></html>", project, { type: "text/html" });
+  return { world, ann, project, document: held.bundle, sha: held.sha, at: "/app/document/" + held.bundle };
+}
 const state = (p) => { const e = main(p).querySelector("[data-text-state]"); return e && e.getAttribute("data-text-state"); };
 
 /* ---- R96 ---- */
@@ -25,17 +43,25 @@ test("R96 each of the four states of a document's text is drawn from the answer:
 });
 
 test("R96 the OCR act sends the capture and ocr=1 and reads the document again; a scanned and a partial document offer it, an unread one does not, a full one does not", async () => {
-  const p = await open(at, { plane: { pdfstructure: ok({ ok: true, reextraction: { performed: true } }) } });
+  const w = await member();
+  /* the PDF is the world's own, held; the world reads no text from a generated PDF, so its reading is scripted with unread pages (needed: a recipe for a held PDF read in part), and so is the re-read,
+     which the world refuses (REEXTRACT_NO_OCR_MEMBER: no OCR engine is bound) (needed: a world with an OCR member bound) */
+  const partial = READING({ capture_sha: w.sha });
+  const p = await pageOn(w.world, w.ann, w.at, { plane: { reading: ok(partial), pdfstructure: ok({ ok: true, reextraction: { performed: true } }) } });
   assert.ok(says(main(p), "screen.document.ocr.says", { pages: "8–10" }));
   await press(p, "pdfstructure");
-  assert.deepEqual([p.byOp("pdfstructure")[0].query.sha256, p.byOp("pdfstructure")[0].query.ocr], [SHA, "1"], "the guard accepted exactly these");
+  assert.deepEqual([p.byOp("pdfstructure")[0].query.sha256, p.byOp("pdfstructure")[0].query.ocr], [w.sha, "1"], "the guard accepted exactly these");
   assert.equal(p.byOp("reading").length, 2, "the reading is read again");
   /* fix round 3 (R96, C17): a scanned copy a reading is held for offers it; a copy no reading is held for draws no act that reads it again */
-  const o = await open(at, { plane: { reading: ok(READING({ text_units: [], unread_pages: [] })) } });
+  const o = await pageOn(w.world, w.ann, w.at, { plane: { reading: ok(READING({ capture_sha: w.sha, text_units: [], unread_pages: [] })) } });
   assert.ok(actsIn(main(o)).includes("pdfstructure"));
-  const unread = await open(at, { plane: { reading: ok({ ok: true, found: false }) } });
+  const u = await member({ kind: "page", read: false });
+  const unread = await pageOn(u.world, u.ann, u.at);
+  assert.equal(state(unread), "unread", "the copy the world holds with no reading");
   assert.ok(!actsIn(main(unread)).includes("pdfstructure"), "control: an unread copy offers no re-read");
-  const full = await open(at, { plane: { reading: ok(READING({ unread_pages: [] })) } });
+  const f = await member({ kind: "page" });
+  const full = await pageOn(f.world, f.ann, f.at);
+  assert.equal(state(full), "full");
   assert.ok(!actsIn(main(full)).includes("pdfstructure"), "control: a full document offers no OCR");
 });
 
@@ -49,14 +75,13 @@ test("R96 the owner's refusals of the re-read are drawn by the design's words", 
 /* ---- A-23 (fix round 6; K4426): the plane's 409 REEXTRACT_NOT_READ is right, and the screen never offers the act it refuses: an unread page draws
  * "Read it now" (readheld) and never the OCR re-read (pdfstructure), before or after it is read */
 test("A-23 an unread document page draws readheld and never pdfstructure: pressing Read it now sends the digest and the page then draws the reading, with no OCR re-read offered", async () => {
-  const held = { read: false };
-  const p = await open(at, { plane: { reading: () => (held.read ? ok(READING({ unread_pages: [] })) : ok({ ok: true, found: false })),
-    readheld: () => { held.read = true; return ok({ ok: true, read: true, bundle_id: D, found: true }); } } });
+  const w = await member({ kind: "page", read: false });
+  const p = await pageOn(w.world, w.ann, w.at);
   assert.equal(state(p), "unread");
   assert.ok(actsIn(main(p)).includes("readheld"), "Read it now is offered");
   assert.ok(!actsIn(main(p)).includes("pdfstructure"), "the OCR re-read is never offered for an unread copy (the 409 it would draw)");
   await press(p, "readheld", { reason: "the scan has no text layer" });
-  assert.equal((p.byOp("readheld")[0].body || {}).sha, SHA, "the digest, in the body");
+  assert.equal((p.byOp("readheld")[0].body || {}).sha, w.sha, "the digest, in the body");
   assert.equal(p.byOp("pdfstructure").length, 0, "nothing sends the OCR re-read");
   assert.equal(state(p), "full", "the page then draws the reading");
   assert.ok(!actsIn(main(p)).includes("pdfstructure"), "and offers no OCR re-read after it");
@@ -64,16 +89,29 @@ test("A-23 an unread document page draws readheld and never pdfstructure: pressi
 
 /* ---- R97 ---- */
 const TYPED = (by) => ok({ ok: true, transcriptions: [{ content_id: "c".repeat(64), transcriber: by, at: "2026-10-05T09:00:00Z", extent: { kind: "pdf-page", page: 7 } }] });
+/** A PDF of ten pages held by ann, in a project that rosa has joined, and a page rosa typed: all by real acts (`transcribe` is refused to a member who cannot read the document, so she joins first). */
+async function typedBy() {
+  const w = await member({ pages: 10 });
+  const rosa = await w.world.signIn("rosa", { capabilities: ["contribute"] });
+  await w.ann.act("projectinvite", { query: { projectId: w.project, handle: "rosa" }, body: {} });
+  await rosa.act("projectjoin", { query: { projectId: w.project }, body: {} });
+  const typed = await rosa.act("transcribe", { body: { bundleId: w.document, extent: { kind: "pdf-page", page: 7 }, text: "Eight repairs were closed in March." } });
+  const row = (await w.ann.read("transcriptions", { query: { bundleId: w.document } })).transcriptions.find((t) => t.content_id === typed.content_id);
+  return { ...w, rosa, content: typed.content_id, typedAt: row.at };
+}
 test("R97 a page typed by another member offers Confirm and sends the content id and her note", async () => {
-  const p = await open(at, { plane: { transcriptions: TYPED("rosa"), transcriptionattest: ok({ ok: true }) } });
+  const w = await typedBy();
+  const p = await pageOn(w.world, w.ann, w.at);
   const box = main(p).querySelector("[data-fold=typed]");
-  assert.ok(says(box, "screen.document.attest.row", { page: "8", name: "rosa", date: day("2026-10-05T09:00:00Z") }) && says(box, "screen.document.attest.status", { name: "rosa" }));
+  assert.ok(says(box, "screen.document.attest.row", { page: "8", name: "rosa", date: day(w.typedAt) }) && says(box, "screen.document.attest.status", { name: "rosa" }));
   const empty = await press(p, "transcriptionattest");
   assert.equal(p.byOp("transcriptionattest").length, 0);
   assert.ok(says(empty, "screen.document.attest.refused.note"), "no note, nothing sent");
-  fill(p, { ["document-attest-note-" + "c".repeat(64)]: "I read all of page 8 against it." });
+  fill(p, { ["document-attest-note-" + w.content]: "I read all of page 8 against it." });
   await press(p, "transcriptionattest");
-  assert.deepEqual(p.byOp("transcriptionattest")[0].body, { contentId: "c".repeat(64), note: "I read all of page 8 against it." });
+  assert.deepEqual(p.byOp("transcriptionattest")[0].body, { contentId: w.content, note: "I read all of page 8 against it." });
+  const after = (await w.ann.read("transcriptions", { query: { bundleId: w.document } })).transcriptions.find((t) => t.content_id === w.content);
+  assert.equal(after.attestations.length, 1, "the world holds her confirmation");
 });
 
 test("R97 control: the typist's own page offers no Confirm; the plane's refusal of a self-confirmation is drawn by its words", async () => {
@@ -89,14 +127,21 @@ test("R97 control: the typist's own page offers no Confirm; the plane's refusal 
 
 /* ---- R98 ---- */
 test("R98 the route check sends the bundle and reads the answer back: not shown, shown, and nothing new", async () => {
-  const p = await open(at, { plane: { provenanceroute: ok({ ok: true, bundleId: D, appended: true, route: { finding: "LOOKED_INDETERMINATE" } }) } });
+  const w = await member();
+  /* not shown: the world's route is PRESENT for a document whose register it can read; a route looked at and found indeterminate is scripted (needed: a held document whose register cannot be read) */
+  const p = await pageOn(w.world, w.ann, w.at, { plane: { provenanceroute: ok({ ok: true, bundleId: w.document, appended: true, route: { finding: "LOOKED_INDETERMINATE" } }) } });
   assert.ok(says(main(p), "screen.document.route.standing") && says(main(p), "screen.document.route.says"));
   await press(p, "provenanceroute");
   /* C32: the arm reads `bundleId` from the query, so it is sent there and in no body */
-  assert.equal(p.byOp("provenanceroute")[0].query.bundleId, D);
+  assert.equal(p.byOp("provenanceroute")[0].query.bundleId, w.document);
   assert.ok(!p.byOp("provenanceroute")[0].body || !("bundleId" in p.byOp("provenanceroute")[0].body));
   assert.ok(says(main(p), "screen.document.route.notshown") && !says(main(p), "screen.document.route.standing"));
-  const q = await open(at, { plane: { provenanceroute: ok({ ok: true, bundleId: D, appended: false, route: { finding: "PRESENT" } }) } });
+  /* shown, then nothing new: the world's own check, made twice */
+  const first = await pageOn(w.world, w.ann, w.at);
+  assert.ok(says(main(first), "screen.document.route.standing"), "nobody has looked");
+  await press(first, "provenanceroute");
+  assert.ok(says(main(first), "screen.document.route.shown"), "the check found it shown");
+  const q = await pageOn(w.world, w.ann, w.at);
   await press(q, "provenanceroute");
   assert.ok(says(main(q), "screen.document.route.shown") && says(main(q), "screen.document.route.same"));
   const r = await open(at, { plane: { provenanceroute: refusedIn("ROUTE_MARK_NO_SUCH_BUNDLE", "x") } });
@@ -104,20 +149,30 @@ test("R98 the route check sends the bundle and reads the answer back: not shown,
 });
 
 /* ---- R99 ---- */
-const DOCS = ok({ bundles: [{ bundle_id: D, object_type: "information", title: "This one" }, { bundle_id: "INFO-2026-0011", object_type: "information", title: "2026 performance report" }, { bundle_id: "INQ-2026-0001-x", object_type: "inquiry", title: "A question" }] });
+/** choose the other document in the R137 picker (one radio of the fold `kind`, not one of its page controls) */
+async function pickDoc(p, kind, value) {
+  const picker = main(p).querySelector(`[data-picker="${kind}"]`);
+  const r = picker && picker.querySelectorAll("input").find((i) => i.getAttribute("type") === "radio" && i.getAttribute("value") === value && !i.closest("[data-pick-pages]"));
+  assert.ok(r, `${value} is offered in the ${kind} picker`);
+  r.checked = true; p.fire(r, "change"); await p.settle();
+}
 test("R99 asserting a connection sends this document, the other one chosen and her reason; a refusal is drawn by its words", async () => {
-  const p = await open(at, { plane: { list: (r) => (r.query.type === "information" ? DOCS : ok({ bundles: [] })), connectionassert: ok({ ok: true, wrote: true }) } });
-  const o = p.doc.getElementById("document-assert-other").querySelectorAll("option").map((x) => x.getAttribute("value"));
-  assert.deepEqual(o, ["", "INFO-2026-0011"], "only other documents");
+  const w = await member();
+  const other = await w.world.recipes.page(w.ann, "2026 performance report", { project: w.project });
+  await w.world.recipes.question(w.ann, w.project, { title: "A question", text: "Is it so?", draw: true });
+  const p = await pageOn(w.world, w.ann, w.at);
+  const offered = main(p).querySelector('[data-picker="connect"]').querySelectorAll("input").filter((i) => i.getAttribute("type") === "radio" && !i.closest("[data-pick-pages]")).map((i) => i.getAttribute("value"));
+  assert.deepEqual(offered, [other.bundle], "only other documents");
   assert.ok(says(await press(p, "connectionassert"), "screen.document.connect.refused.other"));
-  fill(p, { "document-assert-other": "INFO-2026-0011" });
+  await pickDoc(p, "connect", other.bundle);
   assert.ok(says(await press(p, "connectionassert"), "screen.document.connect.refused.basis"));
   assert.equal(p.byOp("connectionassert").length, 0);
   fill(p, { "document-assert-basis": "Both count closed work orders." });
   await press(p, "connectionassert");
-  assert.deepEqual(p.byOp("connectionassert")[0].body, { a: D, b: "INFO-2026-0011", basis: "Both count closed work orders." });
-  const r = await open(at, { plane: { list: DOCS, connectionassert: refusedIn("CONNECTION_ASSERT_BASIS_TOO_LONG", "x") } });
-  fill(r, { "document-assert-other": "INFO-2026-0011", "document-assert-basis": "x" });
+  assert.deepEqual(p.byOp("connectionassert")[0].body, { a: w.document, b: other.bundle, basis: "Both count closed work orders." });
+  const r = await pageOn(w.world, w.ann, w.at, { plane: { connectionassert: refusedIn("CONNECTION_ASSERT_BASIS_TOO_LONG", "x") } });
+  await pickDoc(r, "connect", other.bundle);
+  fill(r, { "document-assert-basis": "x" });
   assert.ok(says(await press(r, "connectionassert"), "screen.document.connect.refused.basis"));
 });
 
@@ -129,6 +184,7 @@ test("R99 control: with no other document to connect to the section is not drawn
 /* ---- R100 ---- */
 const RES = ok({ ok: true, names: [{ entity_id: "ENT-17", label: "L. Chen", kind: "person", grade: "A", matched_by: "identifier", mentions: 1 }],
   resolutions: [{ ref: "name:l-chen", entity_id: "ENT-17", grade: "A" }] });
+/* still scripted (resolutions, resolutiondefect): needed: a held document whose reading carries a reference resolved to an entity (the world's reading carries no reference to resolve) */
 test("R100 a match reported as wrong sends the capture, the reference, the entity and her reason", async () => {
   const p = await open(at, { plane: { resolutions: RES, resolutiondefect: ok({ ok: true }) } });
   assert.ok(says(main(p).querySelector("[data-fold=defect]"), "screen.document.defect.summary"));
@@ -152,20 +208,20 @@ test("R100 control: the plane's refusals are drawn by the design's words; no mat
 /* ---- R108 ---- */
 test("R108 declaring where the document came from sends the bundle and the system; a second declaration is drawn beside the first, never replacing it", async () => {
   /* the declarations are read (`origins`, provenance R70) and read again after each one */
-  const store = [];
-  const p = await open(at, { plane: { origins: () => ok({ ok: true, bundleId: D, origins: store.slice() }),
-    declareorigin: (r) => { store.push({ seq: store.length + 1, system: r.body.system, by: "mai", at: "2026-10-08T09:00:00Z" }); return ok({ ok: true, bundleId: D, ...store[store.length - 1] }); } } });
+  const w = await member();
+  const p = await pageOn(w.world, w.ann, w.at);
   const s = section(p, "screen.document.origin.head");
   assert.ok(says(s, "screen.document.origin.second1") && says(s, "screen.document.origin.second2"));
   fill(p, { "document-origin-system": "The city's records portal" });
   await press(p, "declareorigin");
-  assert.deepEqual(p.byOp("declareorigin")[0].body, { bundleId: D, system: "The city's records portal" });
+  assert.deepEqual(p.byOp("declareorigin")[0].body, { bundleId: w.document, system: "The city's records portal" });
   fill(p, { "document-origin-system": "The clerk's office, by email" });
   await press(p, "declareorigin");
   const rows = section(p, "screen.document.origin.head").querySelectorAll("[data-origin]");
   assert.equal(rows.length, 2, "both are drawn");
   assert.ok(text(rows[0]).includes("The city's records portal") && text(rows[1]).includes("The clerk's office, by email"), "the first is not replaced");
-  assert.ok(text(rows[0]).includes("mai") && text(rows[0]).includes(day("2026-10-08T09:00:00Z")), "with her name and the date");
+  const held = (await w.ann.read("origins", { query: { bundleId: w.document } })).origins;
+  assert.ok(text(rows[0]).includes("ann") && text(rows[0]).includes(day(held[0].at)), "with her name and the date");
 });
 
 test("R108 each refusal is drawn by its key: a machine, an empty system, a record that is no document", async () => {

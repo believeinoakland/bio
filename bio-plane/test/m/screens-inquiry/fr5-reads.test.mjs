@@ -31,7 +31,7 @@ test("R1 R9 C14 the project reads its own questions once, their strength in one 
 
 test("R3 C14 the document reads its own copy by bundle_id alone, its questions once, and nothing twice", async () => {
   const p = await open("/app/document/" + D);
-  const held = p.byOp("heldcaptures");
+  const held = p.byOp("heldcaptures").filter((r) => "bundle_id" in r.query); /* R137: the connect and contradict pickers read the team's held documents beside it (no bundle_id) */
   assert.equal(held.length, 1, "one read of the held copies");
   assert.deepEqual([held[0].query.bundle_id, "limit" in held[0].query, "member" in held[0].query, "project" in held[0].query], [D, false, false, false], "this copy's row alone, no list of rows");
   assert.equal(p.byOp("reading").filter((r) => r.query.sha256 === SHA).length, 1, "its reading once");
