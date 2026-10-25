@@ -394,3 +394,23 @@ Size (session_01BEeDNCorrpjXyGB6RpWrrB): test runs 4, module lines 2956
 (c) Fold the reads into casefilefacts (store-side, large): chain 3.
 
 **Recommendation: (a).** Nothing else of the CHANGE is done. I did not change the assembly, since any change to it now would break G54. The module's tests are green apart from the red chain test. Waiting on BOB (J28).
+
+## J29 · COMPLETE
+
+**COMPLETE (CHANGE B31: the case-file chain to 4).** Merged `tranche/T51` (publication #39, R15) and applied the change in `bio-plane/src/publication/worker.mjs`.
+
+**Entries applied.** The case file's own record (`recordcasemanifest`) now carries `built: manifestStored`, true only when the manifest's own bytes are stored (G54's order kept). `assembleCaseContainer` skips its separate built write for those results (a WeakSet marks them, so the answer's shape is unchanged). The legacy container path still writes built itself.
+
+**Test changes.**
+- `chain.test.mjs`: bar 4, seen red at 5 first. It now passes at 4 (`CHAIN_DEBUG` shows: recordcasefile, casefilefacts, bucket.get, seven puts, recordcasemanifest).
+- `g54-attempt.test.mjs`: the success-order test asserted a separate `ledger:built` write after the manifest's bytes. It now asserts the folded `manifest:built=true` comes after the manifest's bytes and that no separate built write is made. The claim is the same.
+
+**Deferred:** none. **Found in other modules:** none new. The ratification chain bar (R60's door bar of 11) is BOB's, as stated in B30.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/public-read/*.test.mjs`: 310 pass, 0 fail.
+- `publication/*.test.mjs` plus ratification `g54-paths` and `g57-heal`: 214 pass, 0 fail.
+- format 0 failures (178 modules); architecture 0; coverage 44 of 44; words 0; ownership 0 (13 files).
+- fixtures `--list`: 4 `contract-no-run` remain, waiting on providers' `fixtures-run` (answer-envelope door-helpers, store-door store-replies, instance-setup group-identity-public). The rest are accepted.
+
+Size (session_01BEeDNCorrpjXyGB6RpWrrB): test runs 6, module lines 2956
