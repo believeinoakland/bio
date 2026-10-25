@@ -1,33 +1,31 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #284 (`session_01RLobC6fNNmfG9HpTbZ9dyT`, depth 1, parent ROOT #9 `session_01GndWUi5ubGmXCVVnFqtJAi`, third account) for BOB #285, 2026-10-25 ~00:52 UTC, at 39 % context (`get_session`). **T51 is OPEN** on `tranche/T51`. Read rulings K5004 to the last line of `build/rulings.md` whole: they carry Bob's three directions of this session.
+**Status** · Replaced whole at each handoff. Written by BOB #285 (`session_01ASV9NLY6Cwsx6qfQ2M3ExU`, depth 1, parent ROOT #9 `session_01GndWUi5ubGmXCVVnFqtJAi`, third account) for BOB #286, 2026-10-25 ~02:30 UTC, at 45 % context (`get_session`). **T51 is OPEN** on `tranche/T51`, fix round 9. Read rulings K5016 to the last line of `build/rulings.md` whole.
 
-## Bob's direction this session (rulings K5006, K5012)
+## Open with Bob (one question)
 
-- **P19, no waiting:** "the next fix round" is not a reason (K5006, line in `rulings-active.md` §1). Every item with no P19 reason starts now as a job, session or worker (K5006-K5011 did so).
-- **No scanning; the document set within its limits** (Bob, K5012): `rulings-active.md` at most 80 lines and 25 KB; every working document under `build/plan/` at most 50 KB, finished material moved whole to `build/plan/archive/`. BOB #284 scanned `next.md` (cut at 400 characters) and told Bob; it was then read whole.
-- **Bob approved the enforcement (K5015), read it whole:** the mail-tool size gate, plans archived per round, deferrals only in `next.md`. Build it on a civicos-process prep branch right after step 2's cleanup (worker sonnet high), dry-run it (P3), then render its exact mechanics text and the `fixtures` check's text (`prep/fixtures-check-K4996` @ `099940688823`, draft `checks/fixtures-mechanics-draft.md`) to Bob for approval (K1258). Nothing else is open with Bob.
+- **Approve the two process texts** (K5023, K5028, K5029): the size gate's mechanics text (§5.1, §5.4, §6, §8.4, §13, §17) and the fixtures check (§8 item 7), rendered at https://claude.ai/artifact/55ZtvQ7QC7z2AhjcYBqBdf (version 3), options A both (recommended), B the gate only, C a change. The gate is certified by dry run D17 (SG1-SG5). Read the channel before recording his ruling (§13.1 (3c)).
+- **On his approval** (the ruling cites K1258 and his words): merge into civicos-process `main` the branches `prep/size-gate-K5015` (@ `5ac283a`: `tools/mail.mjs` gate, `checks/format.mjs` deferral check, tests 165/165, `checks/size-gate-mechanics-draft.md`), `prep/D17-matrix` (@ `e0d5260`), and, for A, `prep/fixtures-check-K4996` (@ `0999406888`); write the approved text into `PROCESS-MECHANICS.md` exactly as rendered; for A wire `checks/fixtures.mjs` into `checks/run.mjs` and §8's heading to "seven checks"; then post a `CHANGE` naming the tool fix to any running job (§4). With A, the fixture round (plan `fix-round-9-T51.md` §7 item 7) starts from `node checks/fixtures.mjs <product> --list`.
 
-## Do first, in order
+## Done this session (the record is K5016-K5029)
 
-1. Take over (§5.1): Status line; archive BOB #284 (row `BOB-final`); delete its backstop (`list_triggers`) and WATCH #284 `trig_01SXrzY4qSHaPAbR8qzUJaZG`; arm yours.
-2. **The cleanup (K5012), before anything else:** (a) `prep/prune-rulings-active`: the pruned `rulings-active.md` and its dropped list; read both whole, check every dropped line is stated in BOB.md/the mechanics, no longer in force, or merged; then merge. (b) `prep/split-plans`: `current.md`, `fix-round-9-T51.md`, `k4426-check-T51-F9.md` split, moved text moved whole; check `mail check` still parses addresses and `checks/run.mjs` format 0; merge. If either branch is absent, the worker died: redo it with a worker (sonnet, high), its brief in K5012.
-3. Merge jobs as they complete (§5.5), each merge ruling with its context figure.
+- K5012's cleanup merged and finished: `rulings-active.md` 77 lines, 24,987 bytes; every working document under `build/plan/` within 51,200 bytes; `build/plan/size-exempt.txt` names four data files with reasons. Keep it so (the gate will enforce it).
+- Merged: acquisition (G154 (4)), odf-reader (R56), calculations (R47-R49), workbooks (R22, R23, R21), capture (R114), office-readers (R46-R48). Coverage 6,939 of 6,939, words 0, architecture 0. No job runs.
+- CORPUS #1 merged (K5020, K5022); L26 accepted green-only.
 
-## Running (each in `mail check` or its own branch)
+## Running
 
-- Jobs: **ACQUISITION #39** (job 103 merged; its B47 CHANGE, G154 (4) at workerd, open); **OFFICE-READERS #19** (job 105: G178 R46, G185 R47); **CALCULATIONS #13** (job 109: R47-R50); **ODF-READER #11** (job 111: R56).
-- Sessions (K5009), each writing its results file on its branch; read it whole, merge its test files (K4297 (2)), place each product finding as a cause with a job: **LOAD-REDS #2** `prep/load-reds-2`; **VERIFY #1** `prep/verify-1`; **CORPUS #1** `prep/corpus-1`.
-- Owed by BOB now (no reason to wait): reading-pipeline `r7-contention` PDF bar to 150 ms times `slow` (test fix, K4297 (2)); capture's next job re-points to record-grammar's `createResumableSha256` and drops `sha256-resume.mjs` (G180).
-- Lanes nothing past H43, A41, W4, P26; channel UX-DESIGN nothing past U471 (its MERGE `c752a602da` at the close). INVESTIGATION #4 (secondary) unreachable.
-- Tools: `/home/user/cp-jobbranch`, `/home/user/cp-close`, `/home/user/cp-cap` worktrees of civicos-process `prep/jobbranch-K4385`, `prep/T51-close-v2`, `prep/running-cap-K4976` (that branch's `mail.test.mjs` fixed to 30 minutes at `6bbd65f`). Merge in a worktree with `node_modules`; `git ls-files | grep -cE '(^|/)node_modules$'` is 0 before every push.
+- Sessions (K5009), each writing a results file on its branch; read it whole, merge its test files (K4297 (2)), place each product finding with a job: **LOAD-REDS #2** `session_01BhjwfEquJ5G3x14STBdhB4` (`prep/load-reds-2`; also owns LOAD-RED 5's cause, why workerd closes the queued request, K5019); **VERIFY #1** `session_01U8WCe3faWwxZ1z68eBtruf` (`prep/verify-1`, K4426 rows G126c (3), G126h (3)).
+- Lanes nothing past H43, A41, W4, P26 (PERFORMANCE archived P1-P26, its `HANDOFF.md` now holds none open); channel UX-DESIGN nothing past U471 (its MERGE `c752a602da` at the close). INVESTIGATION #4 (secondary) unreachable: `mail check` keeps listing it; leave it.
+- Tools: worktrees `/home/user/cp-jobbranch`, `/home/user/cp-cap`, `/home/user/cp-close` of civicos-process `prep/jobbranch-K4385`, `prep/running-cap-K4976`, `prep/T51-close-v2` (recreate in a new container). Run mail and checks from `cp-cap`, not from a clone a worker may switch.
 
-## Then (each waits on the merges above, a real dependency)
+## Then (each waits on the sessions above or on Bob's answer, real dependencies)
 
-The round end of `fix-round-9-T51.md` §7: K4426's check (rows 4, 5 by VERIFY #1; 1, 2, 6 by CORPUS #1), regenerate every artifact in the manifest's order (stale: plane, pdf-worker bundles, setup-words `rows.mjs`, case-checker, newgroup), the whole suite in its own session (K4787), one redeploy with `--store-generation 2`, BOB's claim of the new room (3a), the P list, the re-walk, K4994's tracing and mutation sample; the fixture round from the `fixtures` check's list (§7 item 7); §7 items 4a/4b; the final pass (K4781); 0.87.0; T51's close (§5.7; the design MERGE first, K1177; the civicos-process prep branches merged). AW4 waits under K3717.
+The round end of `fix-round-9-T51.md` §7: K4426's remaining cells (G123f (4), G124f, G128i rows by CORPUS #1 are merged: fold them), regenerate every artifact in the manifest's order (stale: plane, pdf-worker bundles, setup-words `rows.mjs` with the orphan `workbooks.dropped_cells`, case-checker, newgroup), the whole suite in its own session (K4787), one redeploy with `--store-generation 2`, BOB's claim of the new room (3a), the P list, the re-walk, K4994's tracing and mutation sample, the fixture round (§7 item 7, after Bob's answer), §7 items 4a/4b, the final pass (K4781), 0.87.0, T51's close (§5.7; the design MERGE first, K1177; the civicos-process prep branches merged). AW4 waits under K3717.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
 - `main` moves only by T51's close PR (§5.7 (3)), the design MERGE first (§5.7 (1), K1177); no refusal recorded.
-- Job branches only by `mail jobbranch`; never a force-push. biosmoke deployments: K4841 (standing list: not added); account `…7f72` only, plus the rehearsal account from the Default environment (K4949, K4956); the live copy only through the proxy (K4733).
+- civicos-process `main` changes only with Bob's approval of the exact text (K1258); no refusal recorded.
+- Job branches only by `mail jobbranch`; never a force-push. biosmoke deployments: K4841 (standing list: not added); account `…7f72` only, plus the rehearsal account (K4949, K4956); the live copy only through the proxy (K4733).
 - Sessions: archive each job at its merge (K4219); refused acts never taken to Bob nor rephrased (K3466, K4696).
