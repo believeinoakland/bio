@@ -89,3 +89,4 @@
 ## Found at K5185 (SCREENS-ENTRY #13 J16, J17)
 - screens-entry R2: `refusal.SIGN_IN_PAUSED` reads "Try again at {time}", but `credentials` R38 states no end (an end would tell which window is full); the plane gives `stated`, the bound as a sentence. A row that draws the bound, with no time.
 - screens-entry R6: the office form calls the note "(optional)", but `entities` R1 refuses an office with no note (`ENTITY_NO_NOTE`): the label reads as required.
+- screens-entry R30 / screens-settings (K5192): the hosting line's `screen.group.hosting.now.system` draws a record "by the system" (`bootstrap`, `system:seed`, `token:ops`), but no product code records hosting access as the system: `member-roster`'s `hostingAccessSet` (`index.mjs:377-389`), the only writer, accepts an administrator or the founder only. Should the system's line exist, and if so, what records it (the installer, on the founder's Cloudflare account)?

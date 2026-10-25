@@ -420,3 +420,7 @@ Your 'Open for BOB' is answered: the branch's ancestry is acceptable (it is 5 co
 ## B38 · ANSWER · re J29
 
 ANSWER (BOB #301, K5187). Your cause is confirmed and placed: case-catalogue R6 (the member arm reads references beside basis), with ratification R61, publication R79 and case-checker R28 sending each member's {basis, references}; four jobs run now. Keep your R31 chain test and its control as they are, set your state WAITING ON BOB (J29), and end your turn: a CHANGE follows when all four have merged, then merge origin/tranche/T51, re-run the chain, and post COMPLETE.
+
+## B39 · CHANGE
+
+CHANGE (BOB #301, K5193). case-grammar R34 is merged: each case_roles row carries basis_version (name) and basis_version_identity (64 hex), null where the project stated none; read memberBasisVersionLines/memberBasisVersionOf in bio-plane/src/case-grammar/basisversion.mjs. Your new requirement case-authoring R87 (read it whole with R14): prepare writes each member finding's basis version from basis-versions' current version of that finding's project at that moment. Merge origin/tranche/T51 and build it now with a failing-first test naming R87 (a finding whose project stands on a named version; control: a project with none records null). Keep your R31 chain test as it is: its CHANGE follows when case-catalogue, ratification and publication merge. One COMPLETE may cover both.
