@@ -72,7 +72,13 @@ const READS = () => JSON.parse(readFileSync(join(ROOT, "docs/development/ux-subs
 test("R39 words by key: the module holds no row, every key it reads is a word of the list (hasWord), the design's reads list is met and its retired row is gone", () => {
   assert.ok(Object.isFrozen(SCREEN_WORDS) && SCREEN_WORDS.length === 0, "no row of English is held");
   const reads = READS();
-  for (const k of reads.reads) assert.ok(KEYS.includes(k), `${k} is a key this module reads`);
+  /* the design's reads list for this module also names keys of screens and acts that are another module's or are owed and not yet
+     built: the acts `captureupload*` (screens-intake's), the AI and install pages the registry marks owed, and `plan`'s writing help
+     (screens-action's). None of them is drawn here, and this module draws no key to satisfy the list (SCREENS-SETTINGS #19, K5148):
+     a key of the list that `KEYS` lacks must be of that kind, and every other key of the list is in `KEYS` */
+  const NOT_DRAWN_HERE = [/^act\.captureupload[a-z]+\.does$/, /^act\.owed_(ai|install)[a-z]+\.does$/, /^screen\.ai[a-z]+\.(name|purpose)$/, /^act\.writinghelp\.label\.plan$/];
+  const elsewhere = (k) => NOT_DRAWN_HERE.some((re) => re.test(k));
+  for (const k of reads.reads) assert.ok(KEYS.includes(k) || elsewhere(k), `${k} is a key this module reads, or one of another module's`);
   for (const k of KEYS) assert.ok(hasWord(k), `${k} is a word`);
   // the design's list no longer carries a retired list; the one row known retired stays asserted absent by name (DEC-256)
   for (const k of [...(reads.retired ?? []), "screen.updates.skip.noreason"]) assert.ok(!KEYS.includes(k) && !hasWord(k), `${k} is retired`);

@@ -4,7 +4,8 @@
    door and the real record is `storage-seam.test.mjs`. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { all, has, lacks, open } from "./kit.mjs";
+import { all, has, lacks, open, SCREENS } from "./kit.mjs";
+import { KEYS } from "../../../src/screens-settings/keys.mjs";
 import { ADMIN, MEMBER, env, groupTable } from "./fixtures.mjs";
 
 const G = "screen.group.storage.";
@@ -65,4 +66,13 @@ test("R79 G42 group control: a member's screen sends no `stats` and draws no gau
   lacks(m, G + "head"); lacks(m, G + "warn2");
   const failed = await open("group", { me: ADMIN, table: groupTable({ stats: () => ({ ok: false, status: 500, reason: "STORE_FAILED" }) }) });
   assert.equal(drawn(failed, "storagewarn1") + drawn(failed, "storagewarn2") + drawn(failed, "storage"), 0, "no size is invented from a failed read");
+});
+
+test("R79 R39 group: the gauge's heading is the design's key for it (screen.settings.storage.head), and the screen lists no other key for that heading", async () => {
+  const group = SCREENS.find((s) => s.id === "group");
+  assert.ok(group.words.includes("screen.settings.storage.head"));
+  assert.ok(!group.words.includes(G + "head"), "the group-scoped key for the same heading is not read");
+  assert.ok(KEYS.includes("screen.settings.storage.head") && !KEYS.includes(G + "head"));
+  const o = await gauge(0);
+  has(o, "screen.settings.storage.head");
 });
