@@ -80,7 +80,7 @@ CHANGE B4 applied. Merged tranche/T51 into job/T51/agent-steps (5713f46431). Wor
 - FIX-L control-plane/ask-wire: `interface.test.mjs:224`, `t49r90.test.mjs:100`, `world.mjs:34,59,69,71` carry `// fixtures-contract: control-plane ask-wire`. `world.mjs`'s `refusal403` now takes either an invented code or a provider's real answer (set as the 403 body with `reason` and `code`).
 - `readers.test.mjs:130`: `// fixtures-own: input` (the host's `askPlane` answer handed to my own `driveHarness`).
 
-**Markers added** (BOB reads each at the merge, K5060): `fixtures-own` — `readers.test.mjs:130` input: a reached 403 handed as the host's `askPlane` answer to this module's own `driveHarness`, which reads it opaquely. `fixtures-generic` — none. `fixtures-contract` control-plane ask-wire — `interface.test.mjs:224`, `t49r90.test.mjs:100`, `world.mjs:17,39,65,76,79` (the refusal builder and its call sites, the airunclose refusal, UNKNOWN_OP).
+**Markers added** (BOB reads each at the merge, K5060): `fixtures-own` — `readers.test.mjs:130` input: a reached 403 handed as the host's `askPlane` answer to this module's own `driveHarness`, which reads it opaquely. `fixtures-generic` — none. `fixtures-contract` control-plane ask-wire — `interface.test.mjs:229`, `t49r90.test.mjs:103`, `world.mjs:17,39,65,76,79` (the refusal builder and its call sites, the airunclose refusal, UNKNOWN_OP).
 
 **Left at done, waiting.** None of mine. control-plane's `fixtures-run: agent-steps ask-wire` shows `orphan-run` in control-plane's list until these markers merge (it already ran green in its test).
 
