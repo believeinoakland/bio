@@ -172,3 +172,22 @@ Size (session_01P5bsgjRaPhtyPChVVxk1mW): test runs 14, module lines 1699
 ## J12 · COMPLETE
 
 COMPLETE (B11 applied; R29): the fixtures-contract marker now sits on readingsEnded's returned answer (reading-ended-seam.test.mjs:36). Module 155/155, format 0, ownership run after commit. The marker stays [idle] only until plane merges 'fixtures-run: notice-producers reading-ended'. REPORT for plane's run: contract id reading-ended; answer {ok:true, rows, next}; row {sha, kind:'reading', state refused|finished|final, why string|null, written, skipped, owed, failed (ints), ended_at epoch ms, member 'member:<id>'|null}; next '<ended_at>\u0001<sha>\u0001<kind>'|null; order ended_at,sha,kind; limit cap 500. Cases: refused (why 'pdf.bytes', counters 0), finished (why null, written 5), final (why PASSWORD_REQUIRED), final with member null, paged cursor. Met id: R29. Size (session_01P5bsgjRaPhtyPChVVxk1mW): test runs 14, module lines 1699
+
+## J13 · BLOCKED
+
+BLOCKED (cause: needs Bob) on B12 (fix round 10, K5202): the marker placement cannot be done in my paths. No line of the seam is a candidate the fixtures check classes.
+
+What I checked:
+- The marker is at `bio-plane/test/m/notice-producers/reading-ended-seam.test.mjs:36` (`readingsEnded`'s return, B11). `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio notice-producers --list` lists exactly one line, that marker, `[idle]`. It lists no answer candidate at all, so there is no other line to move it to.
+- Plane's run is merged: `bio-plane/test/m/plane/r10-reading-ended.test.mjs:30` carries `// fixtures-run: notice-producers reading-ended` (PLANE #63, B101).
+
+Why the check classes nothing: `checks/fixtures.mjs:884` skips any object literal with a `why` key and no `reason` key ("`why` is not the refusal key of any module's answer"). The ended rows that plane's `readingsEnded` returns (`bio-plane/src/store-assembly/pending.mjs:744`) carry the refusal or final reason in `why` (`pdf.bytes`, `PASSWORD_REQUIRED`) and `state`, never `reason`/`code`/`error`/`failure_class`/`refusal`. So the answer is skipped by design, and the marker covers nothing under any placement. The `{ok: true, rows, next}` envelope is not a refusal either.
+
+Options for Bob (one decision):
+1. (Recommended) The checker classes a row carrying `state` and `why` as the refusal answer of its provider, so the marker on `readingsEnded`'s return covers it. Process-repo change (`checks/fixtures.mjs`), not mine to make.
+2. Plane renames the row's reason key to `reason`. This changes plane's shape and its R98 paths; I would not recommend it.
+3. Drop the marker and keep the seam as data. This leaves `READING_ROWS` as hand-built answer data, which K4990 forbids, so I would not recommend it.
+
+Meanwhile: `notice-producers` tests run from the root, `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/notice-producers/*.test.mjs`: 155 pass, 0 fail. The OP-GRADES `DECLARED_OP_DISAGREES` red did not appear on this run. I have made no code change this round. Format, architecture, coverage and ownership checks are not yet run; I will run them once Bob decides, with the COMPLETE.
+
+Met ids: none new this round (R29 stays marked until the fixtures check classes its answer).
