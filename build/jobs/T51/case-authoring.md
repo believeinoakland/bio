@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_01PkeaPY8AiQwGQmpx2xoXoy · depth 2 · WAITING ON BOB (J30) · handled B39
+**Status** · session_01PkeaPY8AiQwGQmpx2xoXoy · depth 2 · WAITING ON BOB (J30) · handled B40
 
 ## Completion record (T51, B1 START)
 
