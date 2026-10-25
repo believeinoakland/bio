@@ -479,3 +479,7 @@ Two things I did not do, for your ruling:
 2. The case-catalogue CHANGE, to clear R18.
 
 Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 8, module lines 4066
+
+## J25 · REPORT
+
+Correction to J24's Size line: the module's source is 4097 lines (cat of bio-plane/src/ratification/*.mjs | wc -l), not 4066, which I estimated. Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 8, module lines 4097.
