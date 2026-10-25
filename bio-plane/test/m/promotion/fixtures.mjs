@@ -5,6 +5,10 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { PROJECT_VISIBILITY_CHECKS } from "../../../src/membership/index.mjs";
+import { projectActRefusals } from "../membership/fixtures.mjs";
+
+/* membership's own answers to the two project refusals, from its published fixture (K4990): the double returns them. */
+const REAL = await projectActRefusals();
 
 export const sha = (s) => createHash("sha256").update(Buffer.from(s, "utf8")).digest("hex");
 export const EMPTY = sha("");
@@ -160,10 +164,9 @@ export function makeMembership() {
       if (!identity || !String(identity).startsWith("member:")) return null;
       const who = String(identity).slice(7);
       if (m.isProjectOwner(p, who) || (m.joined.get(p) || []).includes(who)) return null;
-      return { ok: false, reason: "PROJECT_ACT_NOT_A_PARTICIPANT", act };
+      return REAL.projectAuthority(REAL.project, REAL.identity("dee"), need, act);
     },
-    visibilitySettingRefusal: (v) => (v === "discoverable" || v === "hidden" ? null
-      : { ok: false, reason: "PROJECT_VISIBILITY_UNKNOWN_SETTING" }),
+    visibilitySettingRefusal: (v) => REAL.visibilitySettingRefusal(v),
     /* R77: C-70.1, minted by membership; the id and name only. `titleOf` is set by makePromotion from the record. */
     titleOf: () => null,
     existenceAct(projectId, viewer) {
