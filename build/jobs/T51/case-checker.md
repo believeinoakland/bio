@@ -161,3 +161,7 @@ G50 complete (record: Completion section). tranche/T51 merged; g50-path 8/8 gree
 **Found in other modules:** none.
 
 Size (session_01TKioRc2yRq4EnYqzY6AQst): test runs 5, module lines 0 (src; the two new test-folder files are 22 lines)
+
+## J9 · COMPLETE
+
+B11 complete (fix round 10, Wave A batch 2; record Completion section, fix round 10). Published checkAccountMalformed in bio-plane/test/m/case-checker/fixtures.mjs (new): the real checkAccount({account:"x"}) answer MALFORMED/account, made at test time; its test fixtures.test.mjs (R24) checks the real answer. Markers added: none. Checks at merged head: fixtures (case-checker) 0 failures, format 0, architecture 0, ownership 0, coverage 27/27 (before merge). Tests: 108, 106 pass, 2 fail: R13 and R25, inherited from the stale generated program.mjs (not regenerated here; BOB regenerates round-end artifacts, K5033). Impact: case-checker only; no user tests named (case-account re-points in its own job). Merged tranche/T51 at ce31ba37bd. Size (session_01TKioRc2yRq4EnYqzY6AQst): test runs 5, module lines 0 (src).
