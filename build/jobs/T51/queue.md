@@ -299,3 +299,15 @@ Size (session_01YN9TEdL7KJ1syeaAkvZf85): test runs 3, module lines 2956
 ## J16 · BLOCKED
 
 BLOCKED (cause: needs BOB). B19 applied on job/T51/queue: 7 of my 8 fixture lines now take the providers' published fixtures; queue suite 229/229; format, coverage, words, ownership 0 failures. Two things left, in my record's last section. (1) NEEDS BOB: architecture queue has 5 failures because the new fixture imports are of modules queue does not declare in uses (K1088's case): add to queue's uses in build/modules.json the earlier modules people, money-checks, provenance, monitoring, docket (progressions is declared). modules.json is yours, not mine. (2) fixtures list keeps noticed.test.mjs:292 (op-table notices): people and money-checks halves are done; the same table holds duties, answers and inquiry answers with no published fixture for them, so that line waits on those providers. No marker added. Say when the edges are on tranche/T51 and I merge and re-run the checks, then COMPLETE.
+
+## Completion, after B20 (QUEUE #36)
+
+Merged `origin/tranche/T51` (the five `uses` edges, K5103). Architecture queue: 0 failures. Queue suite 229 of 229; format 0; ownership 0 (6 files); coverage 55 of 55; words 0; impact set (queue only, 31 test files) is the queue suite. Fixtures: 7 of 8 lines done; no `fixtures-own`, `fixtures-generic` or `fixtures-contract` marker added.
+
+**Left, per B20 (2): `noticed.test.mjs:292`, the `notices:` table of the real `noticeProducersOf`, test "R51, R7, R11, R12, R14, R49" (lines 295-302).** Three providers' ops there are still hand-built:
+- **duties** `dutiesOf(...)` → `{ok: true, duties: []}` and `occurrencesOf(...)` → `{ok: true, occurrences: []}`: duties' real answer for a viewer holding no duty; needed throughout the test (the producers read them on every feed read; none is expected in the feed).
+- **answers** `standingAnswersFor({member, ...})` → `{ok: true, cursor: null, entries: [{question: {id: "STQ-1", question}, run: "r1", at, finds: {ids: ["DOC-2"]}, answer: null, held_back: "ai_off", label}]}`: one standing question of the viewer whose run is held back because AI is off, with the finds it kept; the test needs it for the item `FINDING::standing-answer::STQ-1::r1`, and asserts the call's `member` is `member:alice`.
+- **inquiry** `datedWaits({viewer, ...})` → `{ok: true, zone: "America/Los_Angeles", waits: [{inquiry: "INQ-1", index: 0, text, description, date: "2026-08-31", state: "due", set_by: "member:alice", set_at}]}`: one dated wait on the question INQ-1 that the test also writes into its world (`w.bundle("INQ-1","inquiry")`, a leg to DOC-2, cited by PRJ-A), due before `NOW`; needed for `OBLIGATION::inquiry-recheck-due::INQ-1::2026-08-31` and asserts the call's `viewer`.
+Each provider's follow-up fixture should return these by its real code (duties: empty and, if wanted, one; answers: one held-back standing run; inquiry: one due wait on a stated question); I re-point the line then.
+
+Size (session_01YN9TEdL7KJ1syeaAkvZf85): test runs 4, module lines 2956
