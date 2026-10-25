@@ -62,3 +62,24 @@ Size (session_01JWt7Mqtc8vPeZptturDMR6): test runs 4, module lines 0
 ## J4 · COMPLETE
 
 Fix round 10 batch 3 done (record J3). Published fixtures escalationRead and escalationsDue (fixtures.mjs + fixtures.test.mjs). Re-pointed my 5 own actions lines to actions' published fixtures. No fixtures-own/generic/contract markers added. Left: draft.test.mjs:113 (consequences, arrives as CHANGE). Note: the real escalationsDue item has age_ms and by, no state; stage is the name. Tests 102 pass; format, architecture, coverage (38/38), words, ownership 0 failures; impact 0 modules.
+
+## J5 · COMPLETE
+
+Follow-up 17 (B3) done. Test files only.
+
+Entries applied:
+- `bio-plane/test/m/escalation/draft.test.mjs:113` (R29's unreadable case): the consequences answer is no longer hand-built `{ok:false, reason:"UNAVAILABLE"}`. It is consequences' real refusal, taken from its published fixture `consequencesOfRefusal` (`bio-plane/test/m/consequences/fixtures.mjs`) for this draft's determination (`w.D`), which consequences does not hold: `NO_SUCH_DETERMINATION`. Import added at line 7. The expected parts (the two undetermined lines, the actions and consequences) are unchanged and still pass.
+- Commit 1fb74fda1b (the escalation test change only).
+
+Deferred: none. Found in other modules: none new.
+
+Tests and checks (from /home/user/bio, absolute root):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/escalation/*.test.mjs`: 102 tests, 102 pass, 0 fail.
+- `node checks/fixtures.mjs /home/user/bio escalation --list`: 0 failures (3275 test files read; escalation's list is empty).
+- `node checks/words.mjs /home/user/bio escalation`: 0 failures.
+- `node checks/architecture.mjs /home/user/bio escalation`: 23 product files; 0 failures. No `uses` edge requested (consequences is earlier in the order; the test-side import is not a product edge).
+- `node checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files; 0 failures.
+- `node checks/ownership.mjs /home/user/bio escalation tranche/T51`: 1 file changed by escalation; 0 failures.
+- `node checks/coverage.mjs /home/user/bio escalation`: 38 of 38 live requirement ids named by a test; 0 failures.
+
+Size (session_018J3iWfL3tx9JNibc3aC31F): test runs 2, module lines 0
