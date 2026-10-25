@@ -1,6 +1,6 @@
 # publication (T51)
 
-**Status** · session_016A5pnT8yWBYi5ogyJCNRvX · depth 2 · COMPLETE · handled B12
+**Status** · session_01B3sty8GH9yv5VdR2zqwU5D · depth 2 · COMPLETE · handled B14
 
 ## J1 · COMPLETE
 
@@ -245,3 +245,28 @@ Size (session_016A5pnT8yWBYi5ogyJCNRvX): test runs 3, module lines 2503
 ## J14 · COMPLETE
 
 Follow-up 27 (B12, K5094): complete. New fixture restingOf(held) in bio-plane/test/m/publication/fixtures.mjs, held = [{finding, projects, digests}]: real published findings (real inquiry, a case per named project, real signature with serve edges) resting on exactly the named capture digests; answers {world, publication, restingCapturesOf(q)}, restingCapturesOf the real R42 over the project ids named. fixture.mjs doc() takes an optional digest. Tested in fixtures.test.mjs against the real module. No marker added; fixtures.mjs --list: 0 failures (1 accepted, door.test.mjs:95, pre-existing). Suite 183 (182 pass, 0 fail, 1 todo); format/architecture/coverage/words/ownership 0 failures. monitoring can re-point stubPublication to restingOf(...).publication. Record: build/jobs/T51/publication.md.
+
+## J15 · COMPLETE
+
+**Follow-up 39 applied (test files only).** New file `bio-plane/test/m/publication/contract-case-parts.test.mjs` (commit `6057c635be`), carrying `// fixtures-run: reevaluation case-cited-parts` (line 12). Two tests call the real `caseCitedParts`, the function publication hands to reevaluation's `registerCaseParts`, against reevaluation's contract: a ratified case built by the ratification acts (prepare, signCase, signFinding, as `cases.test.mjs` plays them), and a case with no ratified edition. No hand-built answer. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Difference from the contract, for BOB (no product code changed).** The contract names `{case, edition, project, parts}` for a ratified case and `{ok: false, reason: "NO_SUCH_CASE_EDITION"}` for none. The real answers carry more:
+- success: also `ok: true`, `limit`, `truncated` (`limit` and `truncated` are R41's bound, CITED_PARTS_MAX)
+- refusal: also `case`, `edition`, `detail`
+
+The refusal code matches the contract, and each part is exactly `{bundle_id, capture_sha}`. The test pins the extra keys, with a comment naming them, so it stays green and the difference is visible. Reevaluation's line `caseparts.test.mjs:31` is now accepted by the checker. Whether the contract or the real shape should move is BOB's call; reevaluation's line follows his ruling.
+
+**Checks** (absolute root `/home/user/bio`):
+- `fixtures.mjs … publication --list`: 0 failures (accepted 1: `door.test.mjs:95`, already there)
+- `fixtures.mjs … reevaluation --list`: 0 failures (accepted `case-cited-parts`; before this job, `caseparts.test.mjs:31` failed `contract-no-run`)
+- `format`, `architecture` (40 product files), `coverage` (48 of 48), `words`, `ownership` (1 file): 0 failures
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/publication/*.test.mjs`: `tests 185, pass 184, fail 0, todo 1` (the todo was already there). The new file alone: 2 pass.
+
+**Merged.** `tranche/T51` merged into the job branch at takeover (8 commits, merge commit `d646f8e67f`, no conflicts).
+
+**Deferred:** none. **Found in another module:** none.
+
+START B13 carried another job's "Re-point" paragraph and its "Done" line; CHANGE B14 said to ignore them, and I did.
+
+**Size (session_01B3sty8GH9yv5VdR2zqwU5D): test runs 4, module lines 2645** (code lines, comments and blanks excluded, across `deliverer.mjs` and `publication/`).
