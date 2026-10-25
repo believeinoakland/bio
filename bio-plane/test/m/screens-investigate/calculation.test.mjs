@@ -142,7 +142,7 @@ test("R5 the spot-check: the draw (the set, its size, the seed and method, that 
   assert.equal(s.querySelectorAll(".cs-grade[data-scale=testimony]").length, spot.items.reduce((n, x) => n + x.visits.length, 0), "every visit, graded as testimony");
 });
 
-test.todo("REPORTED (screens-investigate, src/screens-investigate/calculation.mjs `range`): R5 the estimate's exact range is drawn \"NaN% to NaN%\": calculations answers low_share and high_share as figures ({value, sign, precision}), the page rounds them as numbers", async () => {
+test("R5 the estimate's exact range is drawn from the owner's low and high shares (figures), never NaN", async () => {
   const { world, me, estimate, spotPath } = await drawnWorld();
   const p = await openAs(world, me, spotPath);
   const iv = (await me.read("calculation", { query: { id: estimate } })).results.interval;

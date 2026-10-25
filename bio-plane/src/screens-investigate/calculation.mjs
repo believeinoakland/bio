@@ -29,6 +29,8 @@ function render(cs, view) {
   const ui = view.ui;
   const c = view.data.calc && view.data.calc.state === "ok" ? view.data.calc.value : null;
   const out = [cs.title(c ? c.question || c.calc_id : String(view.subject || ""), { thing: { kind: "record", facts: c ? [c.kind || ""] : [] } })];
+  /* a share the owner answers as a figure `{value, sign, precision}` (or, as older answers did, a plain number); the screen's functions are served to the page whole, so this stays inside */
+  const num = (x) => (x && typeof x === "object" ? Number(x.value) : Number(x)) || 0;
   const fig = (o) => (o && o.value !== undefined ? (o.sign === "-" ? "−" : "") + String(o.value) : o && o.low !== undefined ? o.low + "–" + o.high : "");
   out.push(cs.state("calc", view, (v) => {
     const r = v.results || {};
@@ -63,7 +65,7 @@ function render(cs, view) {
         const apart = [["disagree", k.disagree], ["notvisited", k.not_visited]].filter((x) => x[1]).map((x) => cs.w(S + "counts." + x[0], { n: String(x[1]) }));
         return `<dt>${cs.w(S + "found")}</dt><dd>${cs.w(S + "counts", { visited: String(Math.max(0, (d.n || 0) - (k.not_visited || 0))), n: String(d.n || 0), yes: String(k.yes || 0), no: String(k.no || 0), unsure: String(k.could_not_tell || 0) })}${apart.length ? " · " + apart.join(", ") : ""}</dd>`;
       })()
-      + `<dt>${cs.w(S + "estimate")}</dt><dd>${range ? cs.w(S + "range", { share: String(Math.round((range.successes / Math.max(1, range.sample_size)) * 100)), judged: String(range.sample_size), confidence: String(Math.round((range.confidence || 0.95) * 100)), low: String(Math.round((range.low_share || 0) * 100)), high: String(Math.round((range.high_share || 0) * 100)) })
+      + `<dt>${cs.w(S + "estimate")}</dt><dd>${range ? cs.w(S + "range", { share: String(Math.round((range.successes / Math.max(1, range.sample_size)) * 100)), judged: String(range.sample_size), confidence: String(Math.round((range.confidence || 0.95) * 100)), low: String(Math.round(num(range.low_share) * 100)), high: String(Math.round(num(range.high_share) * 100)) })
         : est ? cs.state(est, () => cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })) : cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })}</dd></dl>`
       + cs.sheet((s.items || []).map((it) => cs.row(`<span class="cs-kind" data-standing="${cs.esc(it.standing)}">${cs.w(S + "standing." + (["yes", "no", "disagree", "could_not_tell", "not_visited"].includes(it.standing) ? it.standing : "not_visited"))}</span>`,
         `<b>${cs.w(S + "item", { item: String(it.item) })}</b>` + (it.standing === "disagree" ? ` <span class="mk-small">${cs.w(S + "tension")}</span>` : ""),
