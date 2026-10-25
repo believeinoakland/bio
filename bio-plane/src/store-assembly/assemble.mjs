@@ -593,7 +593,7 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
      and instance-setup is built first). Its nine routes are spread beside instance-setup's (R5), and migrated in R3's
      pass. */
   translationsOf(ctx);
-  const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });
+  const instanceSetup = instanceSetupOf(ctx, env, { queueProducers, now: () => nowMs(null) });   /* K5171: the instance clock, handed, not read from the env */
   /* R44 (T47; N981; K3030; credentials R64, instance-setup R54): instance-setup's disclosure read registered with
      credentials once, on this object's own instances, on instance-setup's behalf (credentials is earlier in the order
      and cannot reach it), so `disclosureDue` is asked in the assembled plane: `accountreferenceset` and a sign-in's

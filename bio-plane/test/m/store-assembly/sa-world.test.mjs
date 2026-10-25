@@ -181,3 +181,10 @@ test("R5 R92 (K5168): a pinned world's claim records the pin as `consumedAt`, no
   const consumed = credentialsOf(w.ctx).bootstrapState(null).consumedAt;
   assert.equal(consumed, new Date(WORLD_NOW).toISOString());
 });
+
+test("R5 R92 (K5171): a pinned world's producing team is recorded at the pin (`recorded_at`) at the first boot, and a seed after it is refused; instance-setup takes the clock the assembly hands it", async () => {
+  const w = await storeWorld({ claimed: false });
+  const group = instanceSetupOf(w.ctx).instanceGroup();
+  assert.equal(group.group, WORLD_INSTANCE_NAME);
+  assert.equal(group.recorded_at, new Date(WORLD_NOW).toISOString());
+});

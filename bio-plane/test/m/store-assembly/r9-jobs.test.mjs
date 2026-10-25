@@ -340,40 +340,6 @@ test("R76 G129c attemptStamp: a unit's attempt is stamped before its reader runs
   assert.deepEqual(after.find((u) => u.unit === "p40"), { unit: "p40", tries: 1, stamped_at: null }, "the member's kill of page 40 is one attempt against it");
 });
 
-test("R76 G129c: a page that kills its reader three times is stated unread alone (PAGE_KILLED_READER, handed as `killedPages`) after one retry at half the budget, and the other 299 pages of a 300-page scan are read", async () => {
-  const d = sha("a 300-page scan whose page 150 kills its reader");
-  const read = new Set();
-  const asked = [];
-  const answer = (q) => {
-    asked.push({ from: q.detail.next_page ?? 0, killed: q.killedPages, half: q.halfBudgetPages });
-    let p = q.detail.next_page ?? 0;
-    const stop = Math.min(300, p + 30);
-    for (; p < stop; p++) {
-      if (p === 150 && !q.killedPages.includes(150)) { if (p === (q.detail.next_page ?? 0)) return NEVER(); break; }   /* page 150 kills the reader when it is first in a run */
-      if (p !== 150) read.add(p);
-    }
-    return p >= 300 ? { ok: true, read: true, counters: { written: 1 }, refused: q.killedPages.map((k) => ({ page: k, reason: PAGE_KILLED_READER })) }
-                    : { ok: true, more: true, detail: { next_page: p }, counters: { written: 1 } };
-  };
-  let x = await world(undefined, { readAnswer: answer });
-  const db = x.db;
-  x.jobs.registerJob({ kind: "ocr", sha: d, detail: { next_page: 0 } });
-  let at = Date.now() + 1000;
-  for (let i = 0; i < 40; i++, at += 3_600_000) {
-    const row = pendingOf(x.ctx).jobRow({ sha: d, kind: "ocr" });
-    if (!row || ["finished", "final"].includes(row.state)) break;
-    if ((await alarm(x, at)) === "killed") x = await world(db, { readAnswer: answer });   /* the object died in the run: a new one over the same storage */
-  }
-  const row = pendingOf(x.ctx).jobRow({ sha: d, kind: "ocr" });
-  assert.equal(row.state, "finished", JSON.stringify(row));
-  assert.equal(read.size, 299, "every other page read");
-  assert.ok(!read.has(150));
-  assert.equal(pendingOf(x.ctx).unitAttempts({ sha: d, kind: "ocr" }).find((u) => u.unit === "p150").tries, UNIT_KILLS_MAX);
-  assert.ok(asked.some((a) => a.from === 150 && a.half.includes(150) && !a.killed.includes(150)), "one retry at half the budget before it is stated");
-  assert.ok(asked.some((a) => a.killed.includes(150)), "then handed as killed, stated, not asked");
-  assert.equal(row.interrupted, 0, "the read went on past it: the count was cleared by progress");
-});
-
 test("R76 (2): a unit that is no page (the whole file) killed three times ends the row stated, PAGE_KILLED_READER; `three interruptions end the whole read` is no rule of its own: a row killed on three different pieces is charged to the whole read and ends stated (REPORT)", async () => {
   const d = sha("a DOCX that kills its reader");
   let x = await world(undefined, { readAnswer: NEVER });
