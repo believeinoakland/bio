@@ -73,3 +73,9 @@ Checks run (from civicos-process):
 Layer tests: `build/manifest.md` names none for layer 8.
 
 Size (session_0198J3TFZaWG93Pfbmb1pDqC): test runs 1, module lines 1000 (checks.mjs; its test file is 333 lines more)
+
+## J5 · REPORT
+
+Found outside case-catalogue (not changed by this job):
+1. case-checker's generated program.mjs bundles case-catalogue/checks.mjs and is now stale after R31: case-checker R13 (build reproducible / committed program is the build) and R25 fail until BOB regenerates it (node bio-plane/src/case-checker/build-program.mjs). 2 failures in 899 over ratification, case-checker, case-authoring, member-roster; all else green.
+2. The case-authoring chain test for R31 is that job's: two grounded legs, sever one citation, conclude, prepare, gate clean. Not written here (K4426).
