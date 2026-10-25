@@ -176,3 +176,22 @@ Checks (absolute root `/home/user/bio`): `fixtures.mjs --list` 0 failures (`case
 Commit `25585b3bfb` on `job/T51/reevaluation`, pushed. The branch first took `origin/job/T51/reevaluation` (fast-forward) and then `origin/tranche/T51` (merged, no conflicts) at this START.
 
 Size (session_018qdj8PzS6Dm7AAErJ82iZx): test runs 4, module lines 3469
+
+## J11 · COMPLETE
+
+COMPLETE (fix round 10, follow-up 43, B11 CHANGE; test files only). Commit `6aa339c393`, pushed on `job/T51/reevaluation`.
+
+Added two sibling exports in `bio-plane/test/m/reevaluation/fixtures.mjs`, made by the real code when the test runs. `noticesRead` and its `several` scene are unchanged, so queue-producers' existing users keep their answer.
+
+- `noticesTwoVersions({ viewer = "class:admin" })`: one holder's leg (`INQ-2026-0004-q`) cites passage of `INFO-2026-0007-old3` at capture a. Two newer captures of that address, both read and changed, come in turn: a first `raiseNotices` raises one notice for the first, then the second is filed and a second `raiseNotices` raises one for it. Returns `{ world, viewer, holder, raised, newer_captures: [sha, sha], ok, limit, truncated, notices, count, cursor, state }`. Its two notices share holder and target and differ in `newer_capture`; both grade `NOT_FOUND`, `affects` `affected`.
+- `noticesHiddenVersion({ viewer = V("owen") })`: one leg (`INQ-2026-0005-q`, filed in no project) cites `INFO-2026-0010-old4` at a. Its newer capture is filed in project "Elsewhere" (owner ann), which owen does not participate in. Returns `{ world, viewer, holder, raised, newer_capture: sha, ok, limit, truncated, notices, count, cursor, state }`. Owen's one notice keeps its holder and target, with `newer_capture`, `grade` and `affects` null; the admin read of the same notice gives the sha and `affects` `affected`.
+
+Note for queue-producers (its `noticed.test.mjs`, R52): a single `raiseNotices` pass raises one notice per leg for the newest copy it can see at that time. Two notices on one leg come from two passes, one after each newer copy is filed; `noticesTwoVersions` does that by real acts.
+
+Tests: `fixtures.test.mjs` has four tests, all green. Each of the two new ones calls its export and checks the real answer and that a second `notices` read gives the same rows (the hidden one checks the admin's view too). Module suite `bio-plane/test/m/reevaluation/`: 167 of 167 pass.
+
+Checks (absolute root `/home/user/bio`): `fixtures.mjs --list` 0 failures; `format` 0; `architecture` 0; `coverage` 41 of 41 ids, 0; `words` 0 failures; `ownership` 0 failures against `origin/tranche/T51`.
+
+Markers added: none (no `fixtures-own`, `fixtures-generic` or `fixtures-contract`).
+
+Size (session_018qdj8PzS6Dm7AAErJ82iZx): test runs 6, module lines 3469
