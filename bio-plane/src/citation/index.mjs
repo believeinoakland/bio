@@ -97,6 +97,14 @@ export const EXTENT_PARAMS = Object.freeze({
   content_id: "text",
 });
 
+/* R22: a leg's (or an incoming part's) part as one comparable string: its content id and extent fields, none for the
+   whole document. */
+function partKey(o) {
+  return JSON.stringify(Object.keys(EXTENT_PARAMS).sort()
+    .filter((k) => o[k] !== undefined && o[k] !== null && String(o[k]).trim() !== "")
+    .map((k) => [k, Array.isArray(o[k]) ? o[k].join(",") : String(o[k]).trim()]));
+}
+
 /* R1 (T35; N698, DEC-164 (4)): a found match's extent (`content`'s extent grammar, retrieval R73) as the part bag a
    cited extent arrives in: each field `f` as `extent_f`, so the found part meets exactly the refusals a named part
    meets, and a field no part carries (`extent_space`, a nested note) is refused by name (C-45.7), never dropped. */
@@ -585,9 +593,15 @@ export class Citation {
        referenced under another relation (C-6.3 asks that a leg's target be in references[], not for a duplicate). */
     const referenced = new Set(existing
       .filter((r) => r && typeof r === "object" && typeof r.target === "string").map((r) => r.target));
-    const legged = new Set(ontoInquiry && Array.isArray(doc.data.basis)
-      ? doc.data.basis.filter((l) => l && typeof l === "object" && typeof l.target === "string").map((l) => l.target)
-      : []);
+    /* R22: a document is cited already only under the same PART; the parts the question's legs hold, per target. */
+    const leggedParts = new Map();
+    if (ontoInquiry && Array.isArray(doc.data.basis))
+      for (const l of doc.data.basis)
+        if (l && typeof l === "object" && typeof l.target === "string") {
+          if (!leggedParts.has(l.target)) leggedParts.set(l.target, new Set());
+          leggedParts.get(l.target).add(partKey(l));
+        }
+    const legged = new Set(leggedParts.keys());
 
     const severed = [], already = [], add = [];
     for (const id of sel.members) {
@@ -643,6 +657,21 @@ export class Citation {
       } else legFields[k] = raw;
     }
     /* END DEC-49 REGION is-cite-extent */
+
+    /* R22: on a question a member already cited under a DIFFERENT part (another content_id or extent, the whole
+       document being a part of its own) is a new leg, not a repeat; the same part stays alreadyCited. */
+    if (ontoInquiry && already.length) {
+      const mine = partKey(legFields);
+      const fresh = already.filter((id) => !leggedParts.get(id).has(mine));
+      if (fresh.length) {
+        for (const id of fresh) already.splice(already.indexOf(id), 1);
+        add.splice(0, add.length, ...sel.members.filter((id) => !already.includes(id) && !severed.includes(id)));
+        if (authored.length && add.length > 1)
+          return { ok: false, reason: "EXTENT_ON_MANY", ...rowOf(CITE_EXTENT_CHECKS, "EXTENT_ON_MANY"),
+                   project, handle, offenders: add.slice().sort(), drift: sel.drift,
+                   detail: localize("citation.index.a_part_of_a_document_is", "a part of a document is a part of ONE document, and this call would write {n} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made — the extent was named once. Cite the one document this part belongs to, and cite the rest separately.", { n: String(add.length) }) };
+      }
+    }
 
     /* AND NOW THE LEG GRAMMAR JUDGES IT, under the write's own name: the composed part goes through
        `inquiry.checkLegExtentGrammar`, the same function that judges it again at the write, so an unlanded kind, an
