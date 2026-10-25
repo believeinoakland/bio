@@ -190,6 +190,7 @@ const quietly = async (fn) => {
 
 test("R24: a public op relaying the store's answer answers the store's own status and its envelope, and R23 (502 STORE_DID_NOT_ANSWER) on a store failure, never 200 — claim through the door, and login, invitelook and enroll through the relay they answer by", async () => {
   const body = { bootstrapToken: null, password: "pw" };
+  // fixtures-own: synthetic malformed or failing store replies: what the door must read as a silence (R23), no module's answer
   const failures = [() => new Response("<html>oops", { status: 200 }), reply({ ok: false, error: "x" }, 500),
                     reply({ ok: "true", result: {} }), reply({}, 200), reply({ ok: false, error: "x" }, 503),
                     () => { throw new Error("gone"); }];
@@ -346,6 +347,7 @@ test("R23, R25 (N349): every silence the door answers itself carries the correla
     ["reviewgrant", "reviewgrant", (w) => ({ op: "reviewgrant", token: w.S.founder, method: "POST", body: {} })],
   ];
   for (const [route, named, drive] of sites) {
+    // fixtures-own: synthetic store failure bodies of every shape, with and without the internal-error code and id: what the door carries into its silence
     for (const [body, carried] of [[failed, corr], [{ ok: false, error: "x" }, undefined],
                                    [{ ok: false, reason: "STORE_INTERNAL_ERROR" }, undefined], [{ ok: false, reason: "OTHER", correlation: corr }, undefined]]) {
       const w = world({ answer: (c) => (c.route === route ? reply(body, 500)() : null) });
@@ -395,6 +397,7 @@ test("R22 (N347; T43-23, K2710): the door reads capture's table for EVIDENCE_NOT
   assert.deepEqual(M.dec49Row("NO_SUCH_KNOCK"), { check: "C-118.2", translation: ROWS.NO_SUCH_KNOCK.translation });
   assert.equal(M.dec49Row("NOT_FOUND"), null);
   for (const [route, op, token, code] of [["inboxget", "inboxget", "ADMIN_TOKEN", "NO_SUCH_KNOCK"], ["capture", "capture", "ADMIN_TOKEN", "EVIDENCE_NOT_HELD"]]) {
+    // fixtures-own: input the code is fed in only so the door looks up its row (R22 decorates any code with a row); the provider's answer shape is not under test
     const w = world({ answer: (c) => (c.route === route ? reply({ ok: true, result: { ok: false, reason: code } })() : null) });
     const r = await call(w.env, { op, token: w.env[token], params: { id: "K1", sha256: "0".repeat(64) } });
     assert.deepEqual([r.json.result.code, r.json.result.check, r.json.result.translation],
@@ -480,6 +483,7 @@ test("R32, R39, R46: each check the door answers carries its C-number on the wir
   const { value: sie } = await quietly(() => D.dispatch(new Request("http://do/x"), { routes: () => ({ x: () => { throw new Error("x"); } }) }));
   const sj = await sie.json();
   got[sj.code] = sj.check; sentences[sj.code] = sj.translation;                 /* C-69.4 */
+  // fixtures-own: synthetic a purge route that is never reached: the hold refuses before it runs (R46)
   const held = await (await D.dispatch(new Request("http://do/purge?confirm=bio"),
     { routes: () => ({ purge: () => ({ ok: true }) }), namespace: () => "bio", purgeHeld: () => true })).json();
   got[held.code] = held.check; sentences[held.code] = held.translation;         /* C-69.5 (R46) */
@@ -564,6 +568,7 @@ test("R22 (N382, K606): a task-actor refusal forwarded from taskresolve or taskf
     assert.deepEqual([r.json.result.code, r.json.result.check, r.json.result.translation, r.json.result.with],
                      ["TASK_NOT_YOURS", "C-76.1", task.translation, "bea"], op);
     /* negative control: intent's code at the same door still reads intent's row */
+    // fixtures-own: input intent's code fed in so the door looks up intent's row, not tasks' (the negative control of R22)
     const v = world({ answer: (c) => (c.route === op ? reply({ ok: true, result: { ok: false, reason: "NOT_YOURS" } })() : null) });
     const q = await call(v.env, { op, token: v.S.ann, method: "POST", body: {} });
     assert.deepEqual([q.json.result.check, q.json.result.translation], [intentRow.check, intentRow.translation], op);

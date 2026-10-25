@@ -13,6 +13,7 @@ const reply = (o, status = 200) => new Response(JSON.stringify(o), { status });
 /* A public op reaching a hook means the door did not answer it. */
 const declining = (log = []) => ({
   log,
+  // fixtures-generic: HOOK_REACHED (a sentinel: the hook answers it only if the door did not answer the op itself)
   publicOp: async (ctx) => { log.push(ctx.op); return M.json({ ok: false, reason: "HOOK_REACHED" }, 418); },
   gatedOp: async () => undefined,
   publicInstanceGroup: async () => ({ answered: true, result: {} }),

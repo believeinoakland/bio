@@ -70,6 +70,7 @@ test("R58: a refused promotion is named in `not_promoted` with its code and undo
   assert.deepEqual([p[0].body.author, "actorMemberId" in p[0].body, p[0].body.assistantPrincipal], ["token:daemon", false, "class:daemon"]);
   assert.equal(/^project:/m.test(p[0].body.files[0].text), false);
   /* `archiveDocuments` reads only an answer that is ok, with an unpack that is ok, and documents with a digest */
+  // fixtures-own: input archiveDocuments is this module's own function: the acquire answer is its argument, an unpack that failed is the case read
   assert.deepEqual(archiveDocuments("acquire", { ok: true, document: archive, unpack: { ok: false } }), []);
   assert.deepEqual(archiveDocuments("unpack", { ok: true, documents: [files[0], { capture: {} }] }), [files[0]]);
 });

@@ -59,6 +59,7 @@ test("R115 control: a call answered in time carries no door timings, asks the ob
   const hooks = { ...defaultHooks(), acquireBoundMs: 400,
     async gatedOp(ctx) {
       seen.push([ctx.op, ctx.timings]);
+      // fixtures-own: synthetic a finished acquire the handler gives in time; only that the door adds nothing to it is tested
       return ctx.op === "acquire" ? M.json({ ok: true, result: { ok: true, done: true } }) : undefined;
     } };
   const quick = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks, body: { locator: "https://example.org/small" } });

@@ -19,6 +19,7 @@ const ASK_OPS = [...Object.keys(PLANE_OPS), ...Object.keys(ASK_PLANE_OPS)];
    `unknown`: an op with no spec */
 const ASK_WIRE = {
   answered: { status: 200, keys: ["ok", "result", "store", "tokenClass"], ok: true, store: "bio", tokenClass: "ai" },
+  // fixtures-own: synthetic the contract stated as data: the expected refusal of an op whose row admits no ai credential, compared with the real door's answer
   refused: { ops: ["askcheck", "askceiling", "askusage"], status: 403, keys: ["ok", "reason", "code", "check", "translation"], more: ["detail", "op", "tokenId", "taskScope", "declared", "cls"], ok: false, reason: "AI_BEYOND_TASK_SCOPE", check: "C-29.6" },
   silent: { status: 502, reason: "STORE_DID_NOT_ANSWER", check: "C-69.2" },
   unknown: { status: 400, reason: "UNKNOWN_OP", check: "C-69.1" },
@@ -48,6 +49,7 @@ test("R2, R28 (contract ask-wire, agent-steps, agent-worker): every op the agent
     }
   }
   /* a store's own refusal travels inside a 200 envelope unchanged: {ok: true, result: {ok: false, reason, check}} */
+  // fixtures-generic: AI_RUN_NOT_VISIBLE (the door relays a store's own refusal unchanged inside a 200 envelope, whatever its code)
   const inner = { ok: false, reason: "AI_RUN_NOT_VISIBLE", check: "C-22.9" };
   const w1 = world({ creds: { [agent]: cred({ tokenId: "agent-wire", principal: "member:ann", writes: [] }) }, answer: (c) => (c.route === "airun" ? json({ ok: true, result: inner }) : undefined) });
   const nested = await call(w1.env, { op: "airun", token: agent });

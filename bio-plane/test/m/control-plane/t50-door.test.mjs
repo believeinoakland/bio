@@ -12,6 +12,7 @@ import { ok, routesForSessions } from "./door-routes.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { callerViewer, admit, aiCredentialPresented, presentedCredential } from "../../../src/admission/index.mjs";
 import { ARCHIVE_CHECKS } from "../../../src/acquisition/index.mjs";
+import { readRefusals } from "../inquiry/fixtures.mjs";
 const { inbandQuartet } = await import("../../../src/inband.mjs");
 
 const { OPS, OP_ALIASES } = O;
@@ -171,9 +172,13 @@ function acquireWorld({ sight, hookCalls }) {
     } };
   return { w, hooks };
 }
-const seesOnlyQ1 = (c) => (c.params.id === "Q-1" && c.params.viewer === "member:ann" ? ok({ ok: true, id: "Q-1" })
-  : c.params.id === "Q-5" ? ok({ ok: false, reason: "NOT_AN_INQUIRY", target: "Q-5" })
-  : ok({ ok: false, reason: "NO_SUCH_BUNDLE", target: c.params.id }));
+/* inquiry's own answers to `inquirypartition` (its published `readRefusals`): a question she sees, one hidden from her,
+   one absent, and a bundle that is no question */
+const sight = readRefusals();
+const seesOnlyQ1 = (c) => (c.params.id === "Q-1" && c.params.viewer === "member:ann" ? ok(sight.visible)
+  : c.params.id === "Q-5" ? ok(sight.notAnInquiry)
+  : c.params.id === "Q-404" ? ok(sight.absent)
+  : ok(sight.hiddenFromViewer));
 
 test("R105 (T50; N1117, N1194; K3369, K3627; acquisition R47 `BAD_FOR`, C-139.21): a member's `acquire` whose `for` names a question she may not see, one that does not exist, or a bundle that is no question is refused `BAD_FOR`, one answer for all three, before the handler runs, so nothing is fetched, written or filed; one she may see is accepted and reaches the handler (control: no `for`, a malformed `for` and a daemon's `for` are not judged here; a store that does not answer is a silence and the handler is not reached)", async () => {
   const hookCalls = [];
@@ -348,6 +353,7 @@ test("R105 (T50; T51: N1234, DEC-329 (5); K3770): the door answers `acquire` wit
     ? new Response(JSON.stringify({ ok: true, result: { ok: true, stageTimes: { total_ms: 60, stages: { fetch: 55 }, running: "fetch" } } })) : null) });
   const slow = { ...defaultHooks(), acquireBoundMs: 60,
     async gatedOp(ctx) {
+      // fixtures-own: synthetic a handler that only takes time; the door must answer within its bound whatever the handler would give
       if (ctx.op === "acquire") { await new Promise((r) => setTimeout(r, ctx.url.searchParams.get("wait") === "long" ? 400 : 5));
         return M.json({ ok: true, result: { ok: true, done: true } }); }
       if (ctx.op === "whoami") return undefined;

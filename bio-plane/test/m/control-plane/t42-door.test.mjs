@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, aik, cred, hex64, member, refused, FORGED } from "./harness.mjs";
 import { pageTranscribeOp, EXTRACTION_OPS } from "../../../src/extraction/ops.mjs";
+import { reextractRow } from "../../../src/extraction/checks.mjs";
 import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/actors.mjs";
 
 const OP = "pagetranscribe";
@@ -110,8 +111,9 @@ test("R74: the door holds no arm's behaviour — the owner's refusals and answer
   assert.deepEqual([r0.status, r0.json.reason, r0.json.argument], [400, "REQUIRED_ARGUMENT_MISSING", "sha256"]);
   assert.equal(routeCalls(bad.env).length, 0);
   /* extraction's Durable Object half answers `{status, body}` (its R71), which `pageTranscribeOp` answers as given */
+  const notDeployed = reextractRow("TRANSCRIBE_NOT_DEPLOYED");   /* extraction's own row: code, check C-51.7, its sentence */
   const results = [
-    [403, { ok: false, reason: "TRANSCRIBE_NOT_DEPLOYED", code: "TRANSCRIBE_NOT_DEPLOYED", check: "C-51.7" }],
+    [403, { ok: false, reason: notDeployed.code, ...notDeployed }],
     [200, { ok: true, performed: false, why: "no assistant is bound" }],
     [200, { ok: true, performed: true, pages: [3, 4] }],
   ];

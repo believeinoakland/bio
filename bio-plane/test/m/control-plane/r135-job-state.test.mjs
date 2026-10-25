@@ -30,6 +30,7 @@ test("R135: each state of the job row is answered for a row of that state, with 
 });
 
 test("R135: a refused row answers its verdict (`size`, `limit`, `bound_key`) and no other state does, a refused row with no verdict none", () => {
+  // fixtures-own: input a row field fed through jobStateOf (this module's own function); its `reason` is a sentinel the test asserts is dropped
   const verdict = { ok: false, size: 30000000, limit: 25165824, bound_key: "limit.pdf.bytes", reason: "never carried" };
   const refused = jobStateOf([row({ job_state: "refused", verdict })]);
   assert.equal(refused.state, "refused");

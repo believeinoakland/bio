@@ -12,6 +12,8 @@ const { actionHoldsOps } = await import("../../../src/action-holds/index.mjs");
 const { docketOps } = await import("../../../src/docket/index.mjs");
 const { publicReadDoorOp } = await import("../../../src/public-read/door.mjs");
 const D = await import("../../../src/store-door/dispatch.mjs");
+const { membershipOf } = await import("../../../src/membership/index.mjs");
+const { storeWorld } = await import("../store-request/fixtures.mjs");
 
 const { OPS } = O;
 const U = new URL("http://do/");
@@ -188,15 +190,18 @@ test("R47, R48, R27: `projectholds` is among the reads naming no project, with t
   }
   assert.match(NOT.projectholds, /held: null/);
   assert.equal(Object.hasOwn(NAMES, "actionholdpreview"), false, "the preview's `target` is an action, not a project");
-  const P = "PROJ-seen";
+  /* the real store (store-request's world): a discoverable project of the founder's that ann has seen and is no participant of; the door's frame
+     (store-door `dispatch`) over the real routes and the real membership, spied on to see what ran and what was asked */
+  const w = await storeWorld({ group: null });
+  const P = await w.recipes.project(await w.signIn("admin"), "Seen project");
+  const ann = await w.signIn("ann");
   const ran = [], asked = [];
-  const membership = () => ({ visibilityOf: (id) => { asked.push(id); return id === P ? "discoverable" : "hidden"; },
-                               existenceAct: (id) => (id === P ? { ok: false, reason: "PROJECT_SEEN_NOT_A_PARTICIPANT", project: id } : null) });
-  const store = { routes: () => ({ projectholds: () => { ran.push(1); return { ok: true, projects: [{ project: P, held: null }] }; },
-                                   notices: () => ({ ok: true }) }), membership };
-  const r = await (await D.dispatch(new Request(`http://do/projectholds?viewer=member:ann&project=${P}&projects=${P}`,
+  const store = { routes: (u, b, g) => { const m = w.store.routes(u, b, g); return { ...m, projectholds: (...a) => { ran.push(1); return m.projectholds(...a); } }; },
+                  membership: () => { const m = membershipOf(w.ctx);
+                    return new Proxy(m, { get: (t, k) => (k === "visibilityOf" ? (id) => { asked.push(id); return t.visibilityOf(id); } : typeof t[k] === "function" ? t[k].bind(t) : t[k]) }); } };
+  const r = await (await D.dispatch(new Request(`http://do/projectholds?viewer=member:${ann.member}&project=${P}&projects=${P}`,
     { method: "POST", body: JSON.stringify({ projects: [P], project: P, id: P }) }), store)).json();
   assert.deepEqual([r.result.projects[0].held, ran, asked], [null, [1], []]);
-  const n = await (await D.dispatch(new Request(`http://do/notices?viewer=member:ann&project=${P}`), store)).json();
+  const n = await (await D.dispatch(new Request(`http://do/notices?viewer=member:${ann.member}&project=${P}`), store)).json();
   assert.equal(n.result.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
 });

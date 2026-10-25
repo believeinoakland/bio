@@ -61,6 +61,7 @@ test("R100 (controls): bytes already held (`existed: true`) and a refusal are no
     assert.deepEqual(r.json.result, landed);
     assert.equal(opCalls(env).some((c) => c.route === "extractread"), false, JSON.stringify(landed));
   }
+  // fixtures-generic: READ_FAILED (any refusal of the store's reading leaves the upload standing; the door relays it as given)
   const { env, S } = world({ answer: (c) => c.route === "captureupload" ? ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 9 }, document: doc() })
     : c.route === "extractread" ? bare({ ok: false, reason: "READ_FAILED", error: "the reading failed" }, 400) : null });
   const r = await call(env, { op: "captureupload", token: S.ann, method: "POST", params: { statement: "s", type: "text/plain" }, body: "line one\nline two" });

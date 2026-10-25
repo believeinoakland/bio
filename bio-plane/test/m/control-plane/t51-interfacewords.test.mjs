@@ -95,6 +95,7 @@ test("R116 control: the gates are as they were and no other answer is kept: no s
     assert.equal(r.headers.get("content-encoding"), null, label);
   }
   /* an answer that is a refusal inside a 200 is not kept */
+  // fixtures-generic: NO_SUCH_LANGUAGE (any refusal inside a 200: the door keeps no refused answer)
   const refusing = { ...defaultHooks(), async gatedOp(ctx) { return ctx.op === "interfacewords" ? M.json({ ok: true, result: { ok: false, reason: "NO_SUCH_LANGUAGE" } }, 200) : undefined; } };
   const refused = await ask(w, { token: w.S.ann, v: keyOf(w.env.VERSION), hooks: refusing });
   assert.doesNotMatch(refused.headers.get("cache-control") ?? "", /max-age|immutable/);

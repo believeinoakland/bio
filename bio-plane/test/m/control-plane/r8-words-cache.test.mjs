@@ -164,6 +164,7 @@ test("R127 control (G114): a refusal this op gives is still read and tallied: a 
     await r.text();
     assert.doesNotMatch(r.headers.get("cache-control") ?? "", /max-age|immutable/, label);
     assert.equal(r.headers.get("etag"), null, label);
+    // fixtures-generic: NO_SUCH_LANGUAGE (the code the hook refused with above, read back at the tally)
     const tallied = w2.env.calls.some((c) => c.route === "wizardrefusaltally" && c.body && c.body.code === "NO_SUCH_LANGUAGE");
     assert.ok(tallied, `${label}: the refusal's code reaches the tally`);
   }
