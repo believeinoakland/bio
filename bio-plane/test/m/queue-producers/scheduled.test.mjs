@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { world, byId, NOW, iso, said, atWord } from "./world.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { publishScheduleOf } from "../../../src/publish-schedule/index.mjs";
+import { rowOf } from "../../../src/ratification/checks.mjs";
 
 const entry = (over = {}) => ({ case: "CASE-1", edition: 2, project: "PRJ-1", state: "waiting", signer: "KEY-O", set_by: "carol",
   signed_at: iso(NOW - 3600000), at: { date: "2026-09-03", time: "09:30", zone: "America/Los_Angeles" },
@@ -59,8 +60,8 @@ test("R37: a waiting edition is one CONDITION edition-scheduled, keyed CONDITION
 });
 
 test("R37: once published, one FINDING edition-published-as-scheduled naming the set time and the instant published; once stopped, one FINDING scheduled-edition-stopped naming each reason in its own translation; a cancelled edition earns none", () => {
-  const reasons = [{ code: "SCHEDULED_SOURCE_CHANGED", translation: "A source this case rests on changed after it was signed." },
-                   { code: "SCHEDULED_HOLD_CHANGED", translation: "A hold on this case changed after it was signed." }];
+  /* the reasons ratification's real check gives a stop: each row's code, check and canned translation */
+  const reasons = [rowOf("SCHEDULED_SOURCES_CHANGED"), rowOf("SCHEDULED_HOLD_CHANGED")];
   const w = scheduled([
     entry({ case: "CASE-P", state: "published", outcome_at: iso(NOW - 60000) }),
     entry({ case: "CASE-S", state: "stopped", outcome_at: iso(NOW - 120000), reasons }),
@@ -79,7 +80,7 @@ test("R37: once published, one FINDING edition-published-as-scheduled naming the
   for (const x of reasons) assert.ok(stop.detail.includes(x.translation), `names ${x.code} in its own translation`);
   assert.equal(stop.detail, said("queue.scheduled-edition-stopped.detail", { reasons: reasons.map((x) => x.translation).join(" ") }));
   assert.equal(stop.summary, said("queue.scheduled-edition-stopped.summary", { case: "CASE-S", edition: 2, when: atWord("2026-09-03", 9, 30) }));
-  assert.deepEqual(stop.basis.reasons, reasons);
+  assert.deepEqual(stop.basis.reasons, reasons.map(({ code, translation }) => ({ code, translation })), "its code and translation, the check left with the provider");
   assert.deepEqual(stop.age, { state: "determined", since: iso(NOW - 120000), ms: 120000 });
   assert.equal(r.items.filter((i) => i.subject && i.subject.case === "CASE-C").length, 0, "a cancelled edition earns no item");
   assert.equal(ofKind(r, /scheduled|published-as/).length, 2, "nothing else: no CONDITION once it has left waiting");
@@ -154,7 +155,7 @@ function real() {
 
 test("R37: through the real publish-schedule read, a waiting edition is one status, a published and a stopped one a finding each, a cancelled one nothing, to the setter and the owners only", () => {
   const w = real();
-  const reasons = [{ check: "C-122.5", code: "SCHEDULED_SOURCE_CHANGED", translation: "A source this case rests on changed after it was signed." }];
+  const reasons = [rowOf("SCHEDULED_SOURCES_CHANGED")];
   w.edition("CASE-W", "waiting", { moves: [{ at: { date: "2026-09-02", time: "08:00", zone: "America/Los_Angeles" }, by: "owner", when: iso(NOW) }] });
   w.edition("CASE-P", "published", { outcome_at: iso(NOW - 60000) });
   w.edition("CASE-S", "stopped", { outcome_at: iso(NOW - 120000), reasons });

@@ -5,17 +5,17 @@
    provenance R4); the record's bundles and the two basis projections (inquiry R40, connections R58) are real tables. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, sha, homed } from "./world.mjs";
 
 const INQ_A = "INQ-2026-4100-was-0042-bid", INQ_B = "INQ-2026-4200-how-many-held";
 const req = (request, extra = {}) => ({ request, run: "RUN-pl15", target: INQ_A, lead_inquiry: INQ_B,
   address: `https://records.example.gov/contracts/${request}.pdf`, host: "records.example.gov", purpose: "investigate",
-  ua_mode: "civicos", capture_sha: `sha-${request}`, captured_at: iso(NOW - 60000),
+  ua_mode: "civicos", capture_sha: sha(`sha-${request}`), captured_at: iso(NOW - 60000),
   attribution: { ok: true, actor: "token:daemon", statement: "the daemon captured this at the session's request" }, ...extra });
 
 function leads(requests, homes = {}) {
   const w = world({ captureRequests: { leads: () => ({ requests: requests() }) },
-                    provenance: { homeOf: (sha) => (homes[sha] ? { bundleId: homes[sha] } : null) } });
+                    provenance: homed(Object.fromEntries(Object.entries(homes).map(([k, b]) => [sha(k), b]))) });
   w.bundle(INQ_A, "inquiry"); w.bundle(INQ_B, "inquiry");
   w.bundle("PRJ-A", "project"); w.bundle("PRJ-B", "project");
   w.cite("PRJ-A", INQ_A); w.cite("PRJ-B", INQ_B);
@@ -54,7 +54,7 @@ test("R2, R10: the lead names both questions apart, its source, request, run, ad
   const lead = byId(r)["FINDING::out-of-inquiry-lead::CR-1"];
   assert.deepEqual([lead.class, lead.kind], ["FINDING", "out-of-inquiry-lead"]);
   assert.deepEqual(lead.subject, { kind: "capture_request", id: "CR-1", inquiry: INQ_B,
-    address: "https://records.example.gov/contracts/CR-1.pdf", capture_sha: "sha-CR-1", bundle_id: "INF-1" });
+    address: "https://records.example.gov/contracts/CR-1.pdf", capture_sha: sha("sha-CR-1"), bundle_id: "INF-1" });
   assert.deepEqual([lead.basis.source, lead.basis.request, lead.basis.run, lead.basis.address, lead.basis.found_while_working, lead.basis.bears_on],
     ["capture_requests", "CR-1", "RUN-pl15", "https://records.example.gov/contracts/CR-1.pdf", INQ_A, INQ_B]);
   assert.deepEqual([lead.basis.attribution.ok, lead.basis.attribution.actor.startsWith("token:"), typeof lead.basis.attribution.statement],

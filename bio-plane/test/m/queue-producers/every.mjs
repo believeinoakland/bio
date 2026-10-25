@@ -1,6 +1,6 @@
 /* The shared fixtures of the producers' suites: a world in which every producer has something to say (`busy`), and the same
    with the contradictions added (`everyKind`), for the checks that range over every kind this module produces. */
-import { world, NOW, iso } from "./world.mjs";
+import { world, NOW, iso, MONITORING, DOCKET } from "./world.mjs";
 
 /* A world in which every producer has something to say, for the checks that range over all of them. */
 const DOCKET_DEPENDENTS = { ok: true, truncated: false, cursor: null, entries: [
@@ -55,15 +55,13 @@ export function busy(extra = {}) {
     intent: { gaps: ({ project }) => ({ ok: true, gaps: project === "PRJ-A"
       ? [{ key: "intent::PRJ-A::p::E", basis: { project, stages_missing: ["s"], says: "ask" } }] : [] }) },
     monitoring: {
-      flagged: () => ({ ok: true, limit: 200, truncated: false, items: [{ bundleId: "INF-1", source_status: "modified", since: iso(NOW) }] }),
-      monitoring: () => ({ ok: true, truncated: false, items: [{ state: "unscheduled", bundle: "INF-1", address: null, reason: "none" }] }),
-      archiveEligible: () => ({ ok: true, limit: 50, truncated: false, paused: { paused: false },
-        eligible: [{ address: "https://gone.example/a", first_failure_since: iso(NOW) }] }) },
+      flagged: () => MONITORING.seeded.flagged,
+      monitoring: () => MONITORING.seeded.monitoring,
+      archiveEligible: () => MONITORING.seeded.archiveEligible },
     governor: { governorHolding: () => [{ host: "h.example", cooloff_until: NOW + 5, refusals: 1 }] },
     capture: { liveCaptureSessions: () => [{ session: "S1", locator: "https://x.example/", primarySha: "p1", created: iso(NOW),
       updated: iso(NOW), expires: iso(NOW + 10), ticks: 1, state: { queue: [1] } }] },
-    docket: { coreDue: () => ({ ok: true, count: 1, wrote: false, items: [
-      { case: "CASE-D", kind: "response", ref: "DKT-2026-0001", edition: 1, since: iso(NOW - 7) }] }) },
+    docket: { coreDue: () => DOCKET.due },
     ...extra,
   });
   /* R37: an edition waiting, one published, one stopped (publish-schedule R4, was publication R69); R39: a copy whose base moved (wizard-scripts R26) */
@@ -81,7 +79,7 @@ export function busy(extra = {}) {
   w.bundle("INQ-S", "inquiry"); w.bundle("INQ-A", "inquiry"); w.bundle("INF-1");
   w.bundle("PRJ-A", "project"); w.bundle("PRJ-B", "project");
   w.join("PRJ-A", "alice", { owner: true }); w.join("PRJ-B", "alice");
-  w.run(`INSERT INTO cases (case_id, project_id) VALUES ('CASE-D', 'PRJ-A')`);
+  w.run(`INSERT INTO cases (case_id, project_id) VALUES (?, 'PRJ-A')`, DOCKET.case);
   w.cite("PRJ-A", "INQ-S"); w.cite("PRJ-B", "INQ-S"); w.leg("INQ-S", "INF-1");
   w.run(`INSERT INTO progression_instances VALUES ('p','E','s','c1','INF-1')`);
   w.bundle("ACT-1", "action"); w.signer("KEY-1", "alice", { comment: "laptop" });
