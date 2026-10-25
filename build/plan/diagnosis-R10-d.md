@@ -129,3 +129,35 @@ No platform dependence in the cause. The only platform element is that `Date.now
 
 1. **A hazard, not seen:** a filing that does not go through the door's follow (a direct `promotionOf(ctx).promote`, as the `r8-headofline` harness does) leaves a `NO_HOME` row at its back-off, up to one hour (plane R77: "retries back off from 15 s, doubling to at most one hour"). Today no product path files without following (`inboxpull`, `promote`, `acquire` all register), so it is unreachable; a one-line option is for `promotion.onCommitted` to re-arm a waiting `NO_HOME` row for the digests it registers (owner plane, with promotion as provider).
 2. **A sentence a member could read:** `last_why: "NO_HOME"` is the ledger's machine code on `op=owedwork` (administrator's answer). Plane R97 permits it on a waiting row (the code it must not carry is on a *finished* scan's row, D7). No word-table key is drawn for it (`setup-words` has no `...nohome` key for the owed row); if BOB wants the admin to read a sentence ("not filed yet"), the key is the design's to add (UX-DESIGN) and the module's to choose.
+
+## R26: the first search on the 24 MiB text took 18.9 s (C7)
+
+### 1. Root cause with evidence
+
+**The 18.9 s was a wait for the object's turn (R24 b, c), not the search.** On the quiet copy, the same file (`INFO-2026-0110`, C's 25,165,824 B text, sha `1853073469f1...bd949c5`), the same call the walker made (`op=findin`, scope the capture, kinds `term`, term `u1`; the call records nothing), made on an object that had just restarted (`object-age` 9.9 s, so its caches are as cold as they get):
+
+| call | wall | `Server-Timing` |
+|---|---|---|
+| first | **0.34 s** | `findin;dur=195`, `do-session` 98, `do-findin` 97, `object-age` 9,904 |
+| second | 1.50 s (proxy) | `findin;dur=172`, `do-findin` 73 |
+| the 12 MB text `INFO-2026-0085`, first / second | 0.60 s / 0.38 s | `findin;dur=170` / 166 |
+
+And in-process (Node, `retrieval-browse`'s own world, 12 units of 2 MiB = 24.0 MB, one unit holding the term): a `findIn` is **150-170 ms warm**, which is the walker's second figure (0.17 s). The walker's 18.9 s minus that is 18.7 s of waiting, in the minutes his copy was running C's 24 MiB reading (14.1 s), 20 MB CSVs and A's PDFs (the minute 05:18 had an `http` invocation of 237 s, the minute 05:19 a p999 wall of 16.3 s: analytics, R24 b).
+
+**One real inefficiency stands behind it, small by itself:** `retrieval-browse/findin.mjs:342-355`, `#load(c)`, runs `SELECT seq, extent_kind, extent, ref, text FROM capture_text WHERE capture_sha = ?` for **every unit of every capture in the page, for every kind asked, including `term`**, and parses each unit's `extent` JSON; the `term` kind (`#term`, :597-640) takes its hits from the index (`passage:` through `planOf`/`runQuery`) and uses the loaded text only to say whether any unit exists and to find the hit unit (`d.units.find(...)`). So a search for a term with one hit loads 100% of the file's text. Measured in-process by counting the bytes the `capture_text` selects return: **24.0 MB loaded per call, in both calls, for one hit** (one unit needed, 2 MiB). It is O(document) of synchronous work for each search (150-170 ms here).
+
+### 2. Why the tests missed it
+
+`findin.test.mjs` and `g41-findin.test.mjs` build documents of a few units and assert the matches; none asserts what a find loads. C7 is the first search on a 24 MiB text.
+
+### 3. Failing-first test
+
+**retrieval-browse** · `bio-plane/test/m/retrieval-browse/r10-find-term-loads.test.mjs` · `world()` (`fixture.mjs`), a capture with a held `readings` row and 12 units of 2 MiB written with `w.unit(...)`, the term in unit 1 only; the `capture_text` selects counted by wrapping `st.sql.exec` · `findIn({scope: {capture}, kinds: ["term"], term})` · asserts one item whose words hold the term (the control, green today) and that the text bytes read are **at most 4 MiB** (the hit unit and slack). **Seen red: 24.0 MB** (`scratchpad/exp/find24.mjs`). The queueing half has no test of its own: R24's tests 3 and 4.
+
+### 4. The platform check
+
+**P**, after the fix, on the quiet copy: the same `findin` on `INFO-2026-0110` right after a restart, `do-findin` and `findin;dur` as above (97 / 195 ms) or better; under load, R24's analytics. The byte count is the **L** check.
+
+### 5. Owner
+
+The wait: **extraction** and **credentials** (R24 a, b). The load: **retrieval-browse** (`#load` reads the units of the kinds that need text only, and for `term` only the hit units).
