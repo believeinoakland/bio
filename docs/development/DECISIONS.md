@@ -6689,3 +6689,19 @@ the design: a Sonnet reader's 22 findings; 16 changed now: one name for one thin
 verified: on tranche/T51 (`fa149084d`) with rows.mjs regenerated: the words check 0; find-in, fr5-document, t48, words, r10-document, r10-question, open-file, r10-refusals, r10-declared-kind, r49-columns, r10-tab-lines, render all pass.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-432", edited in place); `screens/mock-screens.js`; `screens/parked-T52.md`.
 owed: BOB: merge this commit in place of DEC-432's (it carries it).
+
+### DEC-434 · decided
+raised: 2026-10-25 · the UX design session with Bob (session_01DtBKhrSmV3NbfCcEaygkz9, UX design #40) (BOB's B520: K5173; fix round 10, SCREENS-INVESTIGATE #16 J27)
+for: design (T51, K4269: acts a member cannot complete without these rows)
+question: The rows the person, office, standard and calculation forms need, worded from the job's proposals.
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: the job's English as proposed; not taken where it reads as a code or says "Nothing was sent" for a record.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-25 · the design session (P17)
+the design: `screen.person.expunge.marker` "Removed on {date} by {member}, as the law or a court order requires."; `screen.person.holds.heading` "Who holds it now", `.holder` "Who holds it", `.through` "Current through", `.empty` "Choose who holds it and cite what shows it. Nothing was recorded."; `act.recordline.label.office` "Record who holds it"; `act.recordline.does` names all three lines it records (a party by role, who holds an office, an office that keeps records), and `mock-acts.js`'s second, narrower `recordline` entry (which silently won) is removed; `act.linecurrentthrough.label.person` "Confirm it is current as of a day" and its `.does`; nine `screen.standard.rel.in.*` read from the other side ("Implemented by" … "Has a term defined by", "Has an exception in", "Incorporated by"); `screen.standard.issuer.typed` "Or type a name that is not listed"; `screen.calculation.column` and `.part` with their help.
+verified: on tranche/T51 at its tip: the words check the same as the tranche alone (16 failures, store-assembly's inline strings); rows.mjs cannot be regenerated there today (`plane.declared.readtranslate`'s two sentences, B519).
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-434"); `screens/mock-acts.js` (recordline).
+owed: BOB: merge this commit (MERGE); when rows.mjs is regenerated, `case-checker/program.mjs` embeds the old `act.recordline.does` and is rebuilt with it.

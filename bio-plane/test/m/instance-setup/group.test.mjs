@@ -211,3 +211,16 @@ test("R4 instanceGroupSeed records its instant on the instance clock: pinned by 
   const at = Date.parse(wall.recorded_at);
   assert.ok(at >= before - 1000 && at <= Date.now() + 1000, wall.recorded_at);
 });
+
+test("R4 instanceGroupSeed takes its instant from the clock handed in before env.BIO_NOW_MS; none handed, env; none at all, the wall clock", async () => {
+  const handed = Date.parse("2032-07-08T09:10:11.000Z");
+  const pinned = Date.parse("2031-03-04T05:06:07.000Z");
+  const h = await boot({ env: { BIO_NOW_MS: String(pinned) }, now: () => handed });
+  assert.equal(h.m.instanceGroupSeed({ slug: "handed-town", author: "class:admin" }).recorded_at, "2032-07-08T09:10:11.000Z");
+  const e = await boot({ env: { BIO_NOW_MS: String(pinned) } });
+  assert.equal(e.m.instanceGroupSeed({ slug: "env-town", author: "class:admin" }).recorded_at, "2031-03-04T05:06:07.000Z");
+  const before = Date.now();
+  const w = await boot({ env: {} });
+  const at = Date.parse(w.m.instanceGroupSeed({ slug: "free-town", author: "class:admin" }).recorded_at);
+  assert.ok(at >= before - 1000 && at <= Date.now() + 1000);
+});

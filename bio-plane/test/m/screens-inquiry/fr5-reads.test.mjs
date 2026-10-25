@@ -4,8 +4,7 @@
  * R93), not this module's. On interface-shell's served page over a scripted plane; no sentence is copied. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok } from "../interface-shell/harness.mjs";
-import { open, P, Q, D, SHA } from "./fixtures.mjs";
+import { open, P, Q, D, SHA, storeWorld, PROJECT_MD } from "./fixtures.mjs";
 
 /** the ops asked for the same thing twice, by op, query and body; `groupidentity` is read by the frame and by the project's stake (the frame's reads are
  *  interface-shell's, shared with the screens by cause-shell-4: not this module's to remove) */
@@ -17,9 +16,14 @@ const repeats = (p, except = ["groupidentity"]) => {
 const ops = (p, op) => p.byOp(op).map((r) => r.query);
 
 test("R1 R9 C14 the project reads its own questions once, their strength in one read, and no project's questions but its own; nothing is read twice for the same thing", async () => {
-  const many = Array.from({ length: 11 }, (_, i) => ({ id: "PROJ-2026-01" + (10 + i), name: "Project " + i, question_count: 3 }));
-  const p = await open("/app/project/" + P, { plane: { projectlist: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs", question_count: 2 }, ...many] }) } });
-  assert.deepEqual(ops(p, "projectquestions").map((q) => q.project), [P], "only this project's questions, once");
+  /* the member's team holds twelve projects, started by the real act; she opens the first */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const mine = await world.recipes.project(ann, "Pothole repairs");
+  for (let i = 0; i < 11; i++) await world.recipes.project(ann, "Project " + i);
+  const { door, session } = world.boot(ann);
+  const p = await open("/app/project/" + mine, { images: { [mine]: { "bundle.md": PROJECT_MD.replace(P, mine) } }, boot: { door, session } });
+  assert.deepEqual(ops(p, "projectquestions").map((q) => q.project), [mine], "only this project's questions, once");
   assert.equal(p.byOp("inquirystrength").length, 1, "one strength read for its two questions (G12c: strength's batch)");
   assert.deepEqual(repeats(p), [], "nothing is asked twice");
   assert.equal(p.byOp("bootstrap").length, 1, "the frame's one bootstrap");

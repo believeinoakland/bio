@@ -329,7 +329,7 @@ function render(cs, view) {
   /* R71: she is a participant of the project the question is in (R60: only she may set it aside for it) */
   const partsRead = project ? later("participants", "projectparticipants", { projectId: project }) : null;
   const joined = !!(partsRead && partsRead.state === "ok" && partsRead.value && Array.isArray(partsRead.value.participants)
-    && partsRead.value.participants.some((x) => x && x.handle === (view.me && view.me.handle) && x.state === "joined"));
+    && partsRead.value.participants.some((x) => view.parts.isMe(view, x) && x.state === "joined"));
   /* R71: the project's own decision on this question, read from the set-aside list (`queueFeed` with `aside: true`, `queue`
      R61), paged by `after` until found or the last page */
   let decision = null, asideRead = null;
@@ -606,23 +606,45 @@ function render(cs, view) {
     }), { help: "mark.strength.means" }));
   }
 
-  /* what it waits on: a document set aside, with who and why; restore it with a reason, or find another source */
+  /* what it waits on: a document set aside, with who and why; restore it with a reason, or find another source. inquiry R58 (K5130): the set-aside waits are
+     `questionwaits`' `document_waits` (`{document, by, reason, at}`, the document set aside by the stamp `member:<id>`), beside the dated waits (`waits`), and its
+     `history` holds every set-aside and restore recorded with the question, in order (`{document, act: set_aside | restore, reason, by, at}`), a restore beside
+     the set-aside it undid; both acts stay. A document's name is its title, as its own record states it, never its id (R39) */
   if (!(d.waits && d.waits.state === "empty")) {
     const inner = cs.state("waits", view, (v) => {
-      const list = Array.isArray(v) ? v : (v.waits || v.items || []);
-      return list.map((x, i) => {
+      const dated = Array.isArray(v) ? v : (v.waits || v.items || []);
+      const aside = Array.isArray(v.document_waits) ? v.document_waits : [];
+      const history = Array.isArray(v.history) ? v.history.filter((h) => h && h.document) : [];
+      const docName = (docId) => {
+        const im = docId ? later("wdoc:" + docId, "image", { id: String(docId) }) : null;
+        const f = im && im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? view.parts.front(im.value["bundle.md"]) : null;
+        return f && f.title ? String(f.title) : T("state.undetermined", { reason: "" });
+      };
+      const asideRows = aside.map((x, i) => {
+        const by = whoIs(x.by || x.setter || "");
+        const doc2 = x.document || "";
+        /* C81 (R5): the status line is its own element and the acts follow it as a group the stylesheet wraps and stacks at 390 px; they were
+           the inline flex line's own items, squeezed to 44 px wide and 300 px tall */
+        return `<div data-wait="aside" data-wait-document="${cs.esc(String(doc2))}"><p class="cs-wait">${W("screen.question.waits.setaside", { document: docName(doc2), who: by, reason: x.reason || "" })}`
+          + (x.at ? `<span class="mk-small">${W("screen.question.waits.since", { who: by, date: { html: cs.date(String(x.at), { year: false }) } })}</span>` : "")
+          + `</p><span class="mk-acts">` + (doc2 ? cs.act("heldrestore", { label: "act.heldrestore.label.question", data: { doc: doc2 } }) : "")
+          + cs.act("search", { label: "act.search.label.question", data: { q: heading } }) + "</span></div>";
+      }).join("");
+      const datedRows = dated.map((x, i) => {
         const by = whoIs(x.setter || x.by || x.handle || "");
         const doc2 = x.document || x.bundle_id || x.capture || "";
         const said = doc2 && x.reason !== undefined
-          ? W("screen.question.waits.setaside", { document: x.title || doc2, who: by, reason: x.reason || "" })
+          ? W("screen.question.waits.setaside", { document: x.title || docName(doc2), who: by, reason: x.reason || "" })
           : W("screen.question.waits.item", { text: x.text || x.what || "" });
-        /* C81 (R5): the status line is its own element and the acts follow it as a group the stylesheet wraps and stacks at 390 px; they were
-           the inline flex line's own items, squeezed to 44 px wide and 300 px tall */
         return `<div data-wait="${i}"><p class="cs-wait">${said}`
           + (x.date || x.at ? `<span class="mk-small">${W("screen.question.waits.since", { who: by, date: { html: cs.date(String(x.date || x.at), { year: false }) } })}</span>` : "")
           + `</p><span class="mk-acts">` + (doc2 ? cs.act("heldrestore", { label: "act.heldrestore.label.question", data: { doc: doc2 } }) : "")
           + cs.act("search", { label: "act.search.label.question", data: { q: heading } }) + "</span></div>";
       }).join("");
+      const log = history.length ? `<div data-wait="history">` + history.map((h) => `<p class="mk-small" data-history-act="${cs.esc(String(h.act || ""))}">`
+        + `<b class="rec">${cs.esc(docName(h.document))}</b> · ${h.act === "restore" ? cs.w("act.heldrestore.label.held") : cs.w("screen.held.setaside")} · ${cs.esc(whoIs(h.by || ""))}`
+        + (h.at ? " · " + cs.date(String(h.at), { year: false }) : "") + (h.reason ? ` · <span class="rec">“${cs.esc(String(h.reason))}”</span>` : "") + "</p>").join("") + "</div>" : "";
+      return asideRows + datedRows + log;
     });
     if (inner) out.push(cs.sec("screen.question.waits.head", inner));
   }
@@ -1628,7 +1650,7 @@ const words = Object.freeze([
   "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading", "mark.strength.means", "mark.hunch.means",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
   "mark.origin.machine.name", "mark.origin.machine.means", "ai.label.untested",
-  "state.empty", "state.loading", "state.failed", "state.undetermined", "member.founder.unnamed", "screen.document.passage.where",
+  "state.empty", "state.loading", "state.failed", "state.undetermined", "member.founder.unnamed", "screen.document.passage.where", "act.heldrestore.label.held", "screen.held.setaside",
   ...["opened", "opened.noproject", "strength.head", "strength.two", "strength.weakest", "strength.raise", "strength.against",
     "strength.short", "strength.meets", "strength.nobar", "waits.head", "waits.setaside", "waits.item", "waits.since", "supports.head",
     "against.head", "leg.severed", "leg.severed.why", "leg.unselectable", "hunches.head", "hunch.by", "hunch.label", "hunch.kind",

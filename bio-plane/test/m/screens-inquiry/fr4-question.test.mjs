@@ -3,8 +3,9 @@
  * On interface-shell's served page over a scripted plane; every expectation is a word read by key (R44), never copied (K3810). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok } from "../interface-shell/harness.mjs";
-import { open, main, press, says, word, SCREENS, P, Q, D, SHA, BASIS } from "./fixtures.mjs";
+import { boot, ok } from "../interface-shell/harness.mjs";
+import { open, main, press, says, word, SCREENS, P, Q, D, SHA, BASIS, DOCUMENT_MD, storeWorld } from "./fixtures.mjs";
+import { questionWaitsSetAside } from "../inquiry/fixtures.mjs";
 import { onPhone } from "./phone.mjs";
 
 const at = "/app/question/" + Q;
@@ -29,14 +30,16 @@ const PDF_WORDS = "The Director shall repair each reported pothole within seven 
 const WEB_WORDS = "Potholes reported through 311 are repaired within seven days.";
 const OTHER_WORDS = "Repairs are recorded as closed when the crew reports the work complete.";
 const unit = (seq, extent, text) => ({ seq, extent, reference: "u" + seq, truncated: false, text });
-const UNITS = {
-  [SHA]: [unit(0, { kind: "pdf-page", page: 0, rect: null }, PDF_WORDS), unit(1, { kind: "pdf-page", page: 1, rect: null }, "Page two words.")],
-  [SHA2]: [unit(0, { kind: "doc-para", para: 0, run: null }, "Intro."), unit(1, { kind: "doc-para", para: 2, run: null }, WEB_WORDS)],
-  [SHA3]: [unit(0, { kind: "pdf-page", page: 0, rect: null }, OTHER_WORDS)],
-};
+const UNIT_LISTS = [
+  [unit(0, { kind: "pdf-page", page: 0, rect: null }, PDF_WORDS), unit(1, { kind: "pdf-page", page: 1, rect: null }, "Page two words.")],
+  [unit(0, { kind: "doc-para", para: 0, run: null }, "Intro."), unit(1, { kind: "doc-para", para: 2, run: null }, WEB_WORDS)],
+  [unit(0, { kind: "pdf-page", page: 0, rect: null }, OTHER_WORDS)],
+];
+const UNITS = { [SHA]: UNIT_LISTS[0], [SHA2]: UNIT_LISTS[1], [SHA3]: UNIT_LISTS[2] };
 const readingOf = (units) => (r) => ok({ ok: true, found: true, capture_sha: r.query.sha256, reading: { content_type: "application/pdf", found: true }, text_units: units[r.query.sha256] || [], unread_pages: [] });
 const legsPlane = (legs, units = UNITS) => ({ images: { [Q]: { "bundle.md": legsMd(legs) }, [D]: docImage(D, SHA), [D2]: docImage(D2, SHA2, "A web page from www.oaklandca.gov"), [D3]: docImage(D3, SHA3) },
   plane: { reading: readingOf(units), basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
+
 
 test("R23 R24 R34 C36 each leg draws the words it cites, told apart by them: two legs on two documents (a PDF page, a web paragraph) in the units' real shape (null rect, null run) draw their own words; control: the same units without the null fields draw the same words", async () => {
   const legs = [{ target: D, ext: ["    extent_kind: pdf-page", "    extent_page: 0"] }, { target: D2, ext: ["    extent_kind: doc-para", "    extent_para: 2"] }, { target: D3, ext: ["    extent_kind: pdf-page", "    extent_page: 0"] }];
@@ -147,19 +150,40 @@ test("R2 R113 every act of the question screen declares the reads it changes: a 
 });
 
 test("R2 R113 a hunch held re-reads the hunches and no other read; a document restored re-reads what it waits on and no other; control: a refused act re-reads nothing", async () => {
-  const p = await open(at, { plane: { hypothesishold: ok({ ok: true, hypothesisId: "HYP-2" }), heldrestore: ok({ ok: true }) } });
+  /* a real question and its hunch: held by the real act; the document that waits (inquiry's own set-aside answer) and its restore are the two answers left by hand */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Stormwater");
+  const held = await world.recipes.hold(ann, "Minutes", "The council met on Monday.", project);
+  const qid = (await ann.read("allocid", { query: { prefix: "INQ", year: "2026" } })).id;
+  const text = ["---", `id: ${qid}`, "object_type: inquiry", 'title: "Seven days"', 'created: "2026-09-27T00:00:00Z"', "surfaced_by: human", `project: ${project}`, "references:",
+    `  - target: ${held.bundle}`, "    rel: cites", "    status: confirmed", "basis:", `  - target: ${held.bundle}`, "    role: supports", "    grade: B", "    grade_axis: capture", "    grade_source: capture",
+    "---", "", "## Question", "", "Is the city repairing reported potholes within seven days?", "", "## Session Log", ""].join("\n");
+  const promoted = await ann.act("promote", { body: { bundleId: qid, base: null, snapKey: "20261001T000000_aaaa", meta: { object_type: "inquiry", title: "Seven days", current_state: "open",
+    created: "2026-09-27T00:00:00Z", last_updated: "2026-09-27T00:00:00Z" }, files: [{ path: "bundle.md", text }], register: [] } });
+  assert.equal(promoted.ok, true, JSON.stringify(promoted));
+  const fx = questionWaitsSetAside({ asker: "member:mai", setter: "member:ben" });
+  const waiting = { questionwaits: ok(fx.answer), heldrestore: ok({ ok: true }), image: (r) => (r.query.id === fx.document ? ok({ "bundle.md": DOCUMENT_MD }) : undefined) };
+  const pageOf = async (plane = {}) => {
+    const { door, session } = world.boot(ann);
+    const page = await boot({ screens: SCREENS, door, session, path: "/app/question/" + qid, plane: { ...waiting, ...plane } });
+    await page.settle();
+    return page;
+  };
+  const p = await pageOf();
   const a = readCounts(p);
   p.doc.getElementById("question-hunch").value = "Crews close reports when they inspect, not when they repair.";
   await press(p, "hypothesishold");
   const b = readCounts(p);
   assert.equal(p.byOp("hypothesishold").length, 1, "the act was sent");
   assert.deepEqual(changed(a, b), ["hunches"], "exactly the declared read: " + JSON.stringify({ a, b }));
+  assert.equal((await ann.read("hypotheses", { query: { inquiry: qid } })).hypotheses.length, 1, "and it reached the store: the hunch is held");
   await press(p, "heldrestore", { reason: "it is the right year" });
   const c = readCounts(p);
   assert.equal(p.byOp("heldrestore").length, 1, "the restore was sent");
   assert.deepEqual(changed(b, c), ["waits"], "exactly the declared read: " + JSON.stringify({ b, c }));
   /* control: the same act refused re-reads nothing */
-  const r = await open(at, { plane: { hypothesishold: refusedAct } });
+  const r = await pageOf({ hypothesishold: refusedAct });
   const x = readCounts(r);
   r.doc.getElementById("question-hunch").value = "A suspicion.";
   await press(r, "hypothesishold");

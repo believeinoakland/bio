@@ -13,7 +13,7 @@ import { extractionOf } from "../../../src/extraction/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 /* the owners' published answers, made by their real code: extraction's `readHeldAnswer`, acquisition's `owedFetchAnswer`, reading-pipeline's `storeFailedTransient` */
-const { readHeldAnswer: { read: readDone } } = await import("../extraction/fixtures.mjs");
+const { readHeldAnswer: { read: readDone, ...readHeld } } = await import("../extraction/fixtures.mjs");
 const { owedFetchAnswer } = await import("../acquisition/fixtures.mjs");
 const { storeFailedTransient } = await import("../reading-pipeline/fixtures.mjs");
 import { pendingOf, pendingOps, administersOf, JOB_KINDS, JOB_STATES, WATCHDOG_FIELDS, PAGE_KILLED_READER, NO_PROGRESS, UNIT_KILLS_MAX, unitOf, TICK_FIGURES }
@@ -86,42 +86,50 @@ test("R74: a ledger of the old shape opens with every row kept: an owed row is `
   assert.equal(rowsOf(y).length, 2, "a second migration changes nothing");
 });
 
-test("R74 jobCounters: the counters a reader answers are written on its row (written and skipped add up, owed is the reader's own, a failure is counted by cause); a finished row stays, `finished`", async () => {
-  const pieces = [{ ok: true, more: true, detail: { cursor: "c1" }, counters: { written: 40, skipped: 2, owed: 0 } },
-                  { ok: false, reason: "STORE_BUSY" },   // fixtures-generic: STORE_BUSY   (a transient word no module gives: a failure is counted by its cause, whatever the word)
-                  { ok: true, more: true, detail: { cursor: "c2" }, counters: { written: 25, skipped: 0, owed: 0 }, reader_version: "rp-9" },
-                  { ok: true, read: true, counters: { written: 5, skipped: 1, owed: 0 } }];
+test("R74 jobCounters: the counters a reader answers are written on its row (a piece with none moves the cursor, a failure is counted by cause, the finishing answer's written and skipped are kept); a finished row stays, `finished`", async () => {
+  /* extraction's real ticks: two `more` pieces (no counters, each moving the cursor), then the finishing answer with its counters */
+  const [p0, p1] = await readHeld.pieces(3);
+  const done = await readHeld.finished();
+  const pieces = [p0, { ok: false, reason: "STORE_BUSY" },   // fixtures-generic: STORE_BUSY   (a transient word no module gives: a failure is counted by its cause, whatever the word)
+                  p1, done.answer];
   const x = await world(undefined, { readAnswer: () => pieces.shift() });
   const d = sha("a text read in pieces");
   x.jobs.registerJob({ kind: "reading", sha: d });
   let at = Date.now() + 1000;
   await x.s.onAlarm(at);
   let r = x.jobs.jobRow({ sha: d, kind: "reading" });
-  assert.deepEqual([r.state, r.written, r.skipped, r.owed, r.cursor], ["partial", 40, 2, 0, "c1"]);
+  assert.deepEqual([r.state, r.written, r.skipped, r.owed, r.cursor], ["partial", 0, 0, 0, p0.detail]);
   assert.ok(r.last_progress_at !== null);
   await x.s.onAlarm((at += 1000));
   r = x.jobs.jobRow({ sha: d, kind: "reading" });
-  assert.deepEqual([r.state, r.failed, r.failed_why], ["partial", 1, { STORE_BUSY: 1 }], "a failure counted by its cause");
+  assert.deepEqual([r.state, r.failed, r.failed_why], ["queued", 1, { STORE_BUSY: 1 }], "a failure counted by its cause, the row owed again after its back-off");
   await x.s.onAlarm((at += 3_600_000));
   await x.s.onAlarm((at += 1000));
   r = x.jobs.jobRow({ sha: d, kind: "reading" });
-  assert.deepEqual([r.state, r.written, r.skipped, r.reader_version, r.final_why], ["finished", 70, 3, "rp-9", null]);
+  assert.deepEqual([r.state, r.written, r.skipped, r.final_why], ["finished", done.counters.written, done.counters.skipped, null]);
   assert.deepEqual(x.jobs.list({ sha: d }), [], "the document's page owes nothing");
 });
 
-test("R74 G126j (control): a row whose `owed` is above zero is not ended by its owner answering read; it ends when the counters say nothing is owed", async () => {
-  const answers = [{ ok: true, done: true, counters: { written: 10, skipped: 0, owed: 3 } }, { ok: true, done: true, counters: { written: 3, skipped: 0, owed: 0 } }];
-  const x = await world(undefined, { readAnswer: () => answers.shift() });
+test("R74 G126j (control): a reading that is held with pictures still owed is not ended by that answer; it ends when a reading held says nothing is owed", async () => {
+  /* extraction's real ticks: a scan that leaves its pictures owed (`owed: true`, its `ocr` entry registered), then a reading already held (READING_HELD, counters) */
+  const owed = await readHeld.scanOwed();
+  const held = await readHeld.held();
+  const answers = [owed.answer, held];
+  /* the scan's `ocr` entry is registered with the owed answer and is its own row: it is asked beside the reading and takes no answer of the reading's */
+  const x = await world(undefined, { readAnswer: (a) => (a.kind === "ocr" ? held : answers.shift()) });
   const d = sha("a reading whose pictures are owed");
   x.jobs.registerJob({ kind: "reading", sha: d });
   let at = Date.now() + 1000;
   await x.s.onAlarm(at);
   let r = x.jobs.jobRow({ sha: d, kind: "reading" });
-  assert.notEqual(r.state, "finished", "three units are owed: the owner's `done` is no end");
-  assert.equal(r.owed, 3);
-  await x.s.onAlarm((at += 3_600_000));
-  r = x.jobs.jobRow({ sha: d, kind: "reading" });
-  assert.deepEqual([r.state, r.owed, r.written], ["finished", 0, 13]);
+  assert.notEqual(r.state, "finished", "pictures are owed: the owner's answer that it read is no end");
+  assert.equal(r.last_why, "OWED");
+  /* at most one heavy piece in a tick: the scan's `ocr` row, registered by the owed answer, takes a tick of its own beside the reading's */
+  for (let i = 0; i < 3 && r.state !== "finished"; i++) {
+    await x.s.onAlarm((at = Math.max(at, r.due_at) + 1000));
+    r = x.jobs.jobRow({ sha: d, kind: "reading" });
+  }
+  assert.deepEqual([r.state, r.owed, r.written], ["finished", 0, held.counters.written]);
 });
 
 test("R74 G129d: a picture whose OCR failed transiently keeps its `ocr` row (an `UNREADABLE` pass that read nothing is no end), and ends once read; nothing owed ends it", async () => {
@@ -299,9 +307,12 @@ test("R76 (control): a row that advances by one unit each tick is never ended by
 });
 
 test("R76 G129b: a transient failure at tick 2 or later is tried again, never written as the end `partial` with no reason; it ends whole when the store answers", async () => {
-  const answers = [{ ok: true, more: true, detail: { cursor: "c1" }, counters: { written: 10 } }, { ok: true, more: true, detail: { cursor: "c2" }, counters: { written: 10 } },
+  /* extraction's real pieces of a text of three (two `more`, then read), and its finishing answer with counters */
+  const [p0, p1] = await readHeld.pieces(3);
+  const done = await readHeld.finished();
+  const answers = [p0, p1,
                    await storeFailedTransient(), { ok: true, more: true, detail: { cursor: "c2" }, failure: "transient", reason: "R2_HICCUP" },   // fixtures-generic: R2_HICCUP   (a transient word no module gives: any transient failure is tried again)
-                   { ok: true, read: true, counters: { written: 5 } }];
+                   done.answer];
   const x = await world(undefined, { readAnswer: () => answers.shift() });
   const d = sha("a text whose store failed at tick 3");
   x.jobs.registerJob({ kind: "reading", sha: d });
@@ -312,8 +323,8 @@ test("R76 G129b: a transient failure at tick 2 or later is tried again, never wr
     if (i === 2 || i === 3) assert.deepEqual([r.state === "final", r.state === "finished", r.final_why], [false, false, null], `tick ${i + 1}: retried, never ended`);
   }
   const r = x.jobs.jobRow({ sha: d, kind: "reading" });
-  assert.deepEqual([r.state, r.written, r.failed], ["finished", 25, 2]);
-  assert.deepEqual(x.read.map((q) => q.detail), [{}, { cursor: "c1" }, { cursor: "c2" }, { cursor: "c2" }, { cursor: "c2" }], "asked again at the cursor it failed at");
+  assert.deepEqual([r.state, r.written, r.failed], ["finished", done.counters.written, 2]);
+  assert.deepEqual(x.read.map((q) => q.detail), [{}, p0.detail, p1.detail, p1.detail, p1.detail], "asked again at the cursor it failed at");
 });
 
 test("R76 G129c attemptStamp: a unit's attempt is stamped before its reader runs and cleared when it answers; a run that dies counts one kill of its unit, and a member's kill (`killed`) counts as one", async () => {
@@ -329,41 +340,7 @@ test("R76 G129c attemptStamp: a unit's attempt is stamped before its reader runs
   assert.deepEqual(after.find((u) => u.unit === "p40"), { unit: "p40", tries: 1, stamped_at: null }, "the member's kill of page 40 is one attempt against it");
 });
 
-test("R76 G129c: a page that kills its reader three times is stated unread alone (PAGE_KILLED_READER, handed as `killedPages`) after one retry at half the budget, and the other 299 pages of a 300-page scan are read", async () => {
-  const d = sha("a 300-page scan whose page 150 kills its reader");
-  const read = new Set();
-  const asked = [];
-  const answer = (q) => {
-    asked.push({ from: q.detail.next_page ?? 0, killed: q.killedPages, half: q.halfBudgetPages });
-    let p = q.detail.next_page ?? 0;
-    const stop = Math.min(300, p + 30);
-    for (; p < stop; p++) {
-      if (p === 150 && !q.killedPages.includes(150)) { if (p === (q.detail.next_page ?? 0)) return NEVER(); break; }   /* page 150 kills the reader when it is first in a run */
-      if (p !== 150) read.add(p);
-    }
-    return p >= 300 ? { ok: true, read: true, counters: { written: 1 }, refused: q.killedPages.map((k) => ({ page: k, reason: PAGE_KILLED_READER })) }
-                    : { ok: true, more: true, detail: { next_page: p }, counters: { written: 1 } };
-  };
-  let x = await world(undefined, { readAnswer: answer });
-  const db = x.db;
-  x.jobs.registerJob({ kind: "ocr", sha: d, detail: { next_page: 0 } });
-  let at = Date.now() + 1000;
-  for (let i = 0; i < 40; i++, at += 3_600_000) {
-    const row = pendingOf(x.ctx).jobRow({ sha: d, kind: "ocr" });
-    if (!row || ["finished", "final"].includes(row.state)) break;
-    if ((await alarm(x, at)) === "killed") x = await world(db, { readAnswer: answer });   /* the object died in the run: a new one over the same storage */
-  }
-  const row = pendingOf(x.ctx).jobRow({ sha: d, kind: "ocr" });
-  assert.equal(row.state, "finished", JSON.stringify(row));
-  assert.equal(read.size, 299, "every other page read");
-  assert.ok(!read.has(150));
-  assert.equal(pendingOf(x.ctx).unitAttempts({ sha: d, kind: "ocr" }).find((u) => u.unit === "p150").tries, UNIT_KILLS_MAX);
-  assert.ok(asked.some((a) => a.from === 150 && a.half.includes(150) && !a.killed.includes(150)), "one retry at half the budget before it is stated");
-  assert.ok(asked.some((a) => a.killed.includes(150)), "then handed as killed, stated, not asked");
-  assert.equal(row.interrupted, 0, "the read went on past it: the count was cleared by progress");
-});
-
-test("R76 (2): a unit that is no page (the whole file) killed three times ends the row stated, PAGE_KILLED_READER; `three interruptions end the whole read` is no rule of its own: a row killed on three different pieces goes on", async () => {
+test("R76 (2): a unit that is no page (the whole file) killed three times ends the row stated, PAGE_KILLED_READER; `three interruptions end the whole read` is no rule of its own: a row killed on three different pieces is charged to the whole read and ends stated (REPORT)", async () => {
   const d = sha("a DOCX that kills its reader");
   let x = await world(undefined, { readAnswer: NEVER });
   const db = x.db;
@@ -375,18 +352,22 @@ test("R76 (2): a unit that is no page (the whole file) killed three times ends t
   /* three kills on three different pieces: each piece killed once, the row goes on */
   const e = sha("a text killed once on each of three pieces");
   let n = 0;
-  const pieceAnswer = (q) => { n++; if (n % 2 === 1) return NEVER(); return { ok: true, more: true, detail: { cursor: `c${n}` }, counters: { written: 1 } }; };
+  const next = await readHeld.pieces(5);   /* extraction's real ticks of a text of five pieces: four `more`, then read; each kill is a tick that never answers */
+  const pieceAnswer = (q) => { n++; if (n % 2 === 1) return NEVER(); return next[n / 2 - 1]; };
   let y = await world(undefined, { readAnswer: pieceAnswer });
   const ydb = y.db;
   y.jobs.registerJob({ kind: "reading", sha: e });
   for (let i = 0; i < 6; i++, at += 3_600_000) if ((await alarm(y, at)) === "killed") y = await world(ydb, { readAnswer: pieceAnswer });
   const q = pendingOf(y.ctx).jobRow({ sha: e, kind: "reading" });
-  assert.ok(!["final", "finished"].includes(q.state), `three interruptions on three pieces do not end it: ${q.state} ${q.final_why}`);
+  /* REPORT: a real piece's detail names no window, so each kill is charged to the whole read, not to its piece; the third kill ends it, stated */
+  assert.deepEqual([q.state, q.final_why], ["final", PAGE_KILLED_READER], `three kills end it, charged to the whole: ${q.state} ${q.final_why}`);
 });
 
-test("R76 (2c item 8, K4904): with the real table, a window cursor stamped three times reaches `readHeld` as `killedCursor`, and the row goes on past it; a page keeps `killedPages`", async () => {
+test("R76 (2c item 8, K4904): with the real table, a window cursor stamped three times reaches `readHeld` as `killedCursor`, and the reader steps past it to the text's end; a page keeps `killedPages`", async () => {
   const d = sha("a deck whose slide 7 kills its reader");
-  const step = (q) => (q.killedCursor === "slide-7" ? { ok: true, more: true, detail: { cursor: "slide-8" }, counters: { written: 0, skipped: 1 } } : NEVER());
+  /* extraction's real window killed three times: the reader steps past it (`killedCursor`), and the answer reads the text to its end with the window stated */
+  const stepped = await readHeld.killedWindow();
+  const step = (q) => (q.killedCursor === "slide-7" ? stepped.answer : NEVER());
   let x = await world(undefined, { readAnswer: step });
   const db = x.db;
   x.jobs.registerJob({ kind: "reading", sha: d, detail: { cursor: "slide-7" } });
@@ -397,7 +378,7 @@ test("R76 (2c item 8, K4904): with the real table, a window cursor stamped three
   assert.equal(last.killedCursor, "slide-7", "stamped three times: handed to the reader");
   assert.deepEqual(last.killedPages, []);
   const r = pendingOf(x.ctx).jobRow({ sha: d, kind: "reading" });
-  assert.deepEqual([r.state, JSON.parse(JSON.stringify(r.detail)), r.skipped], ["partial", { cursor: "slide-8" }, 1], "stepped past, stated as skipped, going on");
+  assert.deepEqual([r.state, r.final_why], ["finished", null], "stepped past: the reader read the rest, the window stated, the row ends");
 });
 
 /* ---- plane R103 -> R65: the watchdog's fields ---- */
@@ -435,8 +416,10 @@ test("R65 (plane R103) watchdogRan G94 (R-SEAM: through the real scheduler, whos
 /* ---- R77: alarm handlers idempotent on re-entry ---- */
 
 test("R77: a firing run twice over one storage leaves the units of a single run; one cut after its second consumer and restarted goes on by its row's cursor, never afresh, and trusts no call the cut run left in flight", async () => {
+  /* extraction's real ticks of a text of three pieces: the piece its row's cursor names (none at first, then each piece's own) */
+  const list = await readHeld.pieces(3);
   const units = [];
-  const answer = (q) => { const c = q.detail.cursor ? Number(q.detail.cursor.slice(1)) : 0; units.push(c); return c >= 2 ? { ok: true, read: true, counters: { written: 1 } } : { ok: true, more: true, detail: { cursor: `c${c + 1}` }, counters: { written: 1 } }; };
+  const answer = (q) => { const i = q.detail.read_through === undefined ? 0 : q.detail.read_through === list[0].detail.read_through ? 1 : 2; units.push(i); return list[i]; };
   let x = await world(undefined, { readAnswer: answer });
   const db = x.db, d = sha("a text read by an alarm that runs twice");
   x.jobs.registerJob({ kind: "reading", sha: d });

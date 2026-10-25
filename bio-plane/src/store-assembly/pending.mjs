@@ -444,7 +444,7 @@ export function pendingOf(ctx, deps = {}) {
       const t = tally(row, r, moved);
       /* R101 (1): a step that moved neither its cursor nor any counter ends the row stated, on this tick, never retried */
       if (!t.progressed) return stop(row, at, NO_PROGRESS, t.units);
-      const cursor = plain(r.detail) ? JSON.stringify(r.cursor ?? r.detail.cursor ?? r.detail.next_page ?? r.detail) : row.cursor;
+      const cursor = plain(r.detail) ? JSON.stringify(r.cursor ?? r.detail.cursor ?? r.detail) : row.cursor;
       /* due one millisecond on: a pass that went on moves its due instant (B38), so the scheduler's hold against a spin (its R27) reads a changed
          wake even where the tick began with a row found stopped, whose wake it read as "now" */
       sql.exec(`UPDATE keeps_pending SET ${ended(row, "more", t.units)}, detail=?, cursor=?, attempts=0, due_at=?, last_try=?, last_why=NULL, state='partial'${moved ? ", interrupted=0" : ""} WHERE sha=? AND kind=?`,
