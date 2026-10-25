@@ -485,3 +485,13 @@ QUESTION (cause 1, the roster's projects column). Two points; I carry on with ev
 
 **Checks:** format 0; coverage 79 of 79, 0; words 0; ownership 0 (43 files); architecture 3 failures, all the `store-request` edge above.
 Size (session_0113BrTiSXZhcH7hGcpNfDSD): test runs 20, module lines 5476
+
+## J36 · COMPLETE
+
+COMPLETE (re B46, B47; K5148). Full account in the record's section "Fix round 10 work".
+Met: R80 (projects column), R39 (reads keys; 63 listed keys are other modules' or owed pages, listed in the record for UX-DESIGN, none drawn to satisfy the test). Cause 3 (the red on the tip) is the same R39 red, diagnosed with K4426's fields in the record.
+Op tables: 247 fixtures lines to 16 (+3 accepted markers), all world gaps listed with why; suite on storeWorld(), 272 tests, 270 pass, 2 red by name (D1). Five product defects found by the real world and fixed (members expOf, security tool names, grouprules drafter prefix, bias promote/adopt, account empty key section).
+Checks: format 0, coverage 79/79, words 0, ownership 0; architecture 3 failures, all the missing `uses` edge `store-request` (please add; also file-scanner test helpers and interface-shell/world.mjs are imported by tests).
+RED BY NAME (2): connect.test R5,R76 "key the page sends/removes": D1, ai-accounts route reads `member` from the body only (index.mjs:1691-1692) while the page sends none (R76): no member can set or remove an API key through the page. Owner: ai-accounts or store-request (stamp).
+REPORT for store-request: D2 `QUERY_STAMPS` holds `source`, so every `factconfirm` correction loses it (FACT_VALUE_REFUSED); world: non-founder admin refused NOT_AN_ADMIN on adminremovalsopen/expertisewithdraw, stale founder session after tick(1 day), several owners read Date.now not the pinned clock, no grantAdmit. REPORT for instance-setup: D3 `bootstrap.installed_at` is the running release's first sighting, not the set-up day (R73).
+Size (session_0113BrTiSXZhcH7hGcpNfDSD): test runs 20, module lines 5476
