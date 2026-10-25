@@ -161,3 +161,10 @@ Mail with `--module citation`; record `build/jobs/T51/citation.md` (append a new
 **The cause (WALK-FINAL-09 row R169, NOT REACHED, D11; K5131).** `citeimported` and `withdrawimported` (`bio-plane/src/citation/index.mjs:1169-1175`) declare no `stamps`, so `op-declarations` stamps only `viewer` (`op-declarations/declared.mjs:74`); the handler's `author` is null and `#importedMemberRefusal` (`:902-904`) answers `MACHINE_CANNOT_CITE_IMPORTED` to a joined member. Your R18 is amended (read it whole): each row stamps `author`, `identity` and `viewer`, as `cite` does (check the spelling `op-declarations` registers). Why missed: `declared-ops.test.mjs:55-101` checks fields only and module tests pass `author` directly. Test through the door (the r8 kit): `citeimported` as a joined member reaches the op (not `MACHINE_CANNOT_CITE_IMPORTED`), and `withdrawimported` likewise; seen red first.
 
 **Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> citation --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B15 · CHANGE
+
+J19: thank you; two changes (K5138).
+1. `imported-door.test.mjs` imports control-plane's seam kit (`control-plane/r8-kit.mjs`), later than citation in the order, so the architecture check refuses it (1 failure). A test through the door is control-plane's: `git rm` it from your branch; CONTROL-PLANE #60 adopts it (a CHANGE to it). Your R18 stays named by `declared-ops.test.mjs` (the rows' stamps).
+2. `identity`: R18 is worded to `author` and `viewer` (neither handler reads an identity), on the tranche: merge it.
+Then re-run architecture and coverage and post COMPLETE.
