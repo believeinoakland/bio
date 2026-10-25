@@ -242,20 +242,12 @@ const answerOf = (a) => {
 };
 const NOT_FOUND = /^NO_SUCH_|_NOT_FOUND$|^NOT_FOUND$/;
 
-/** The member's session as whoami answers it, once the screen has handed one over (`cs.signin`): the founder holding the
- *  handle she chose (membership R144), the founder of a group claimed before T49 holding none (R18), a member, and an
- *  administrator who is not the founder (R19). */
-export const FOUNDER = Object.freeze({ tokenClass: "admin", session: true, member: "admin", handle: "rivera", rootOfTrust: true, administer: true, capabilities: ["contribute", "publish", "create_projects"] });
-export const OLD_FOUNDER = Object.freeze({ ...FOUNDER, handle: null });
-export const JOINED = Object.freeze({ tokenClass: "member", session: true, member: "mai", handle: "mai", rootOfTrust: false, administer: false, capabilities: ["contribute"] });
-export const AN_ADMIN = Object.freeze({ tokenClass: "member", session: true, member: "dev", handle: "dev", rootOfTrust: false, administer: true, capabilities: ["contribute", "publish", "create_projects"] });
-
 /**
  * Draws screen `id` as the shell would: `session` the record's state (`view.session`), `fragment` what the shell took
- * from the address (`view.fragment`), `me` whoami's answer when a session exists, `table` op → answer or
- * `(body, query) => answer`, `subject` the address's subject.
+ * from the address (`view.fragment`), `world` the plane behind it and `as` the member signed in (her whoami is `view.me`),
+ * `table` the faults only (op → `"pending"`, `"none"`), `subject` the address's subject.
  */
-export async function open(id, { table = {}, session = { state: "none" }, fragment = {}, me = null, subject = null, signinAs = FOUNDER, world = null, as = null } = {}) {
+export async function open(id, { table = {}, session = { state: "none" }, fragment = {}, me = null, subject = null, world = null, as = null } = {}) {
   const spec = SCREENS.find((s) => s.id === id);
   if (!spec) throw new Error("no screen " + id);
   const o = { spec, requests: [], signins: [], gone: [], wizards: [], saves: [], copies: [], timers: [], now: 0, refused: null, token: as ? as.token : session.state === "live" || session.state === "locked" ? "tok-locked" : null };
@@ -287,8 +279,10 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
     o.requests.push(rec);
     let a = table[op];
     if (typeof a === "function") a = a(req.body, req.query || {});
-    if (a === undefined && world) { const r = await viaDoor(world, op, req, header ? o.token : null); a = r.json; }
-    if (a === undefined) a = { ok: true, result: { ok: true } };
+    if (a === undefined) {
+      if (!world) throw new Error(`${id}: ${op} asked, and no plane behind the screen (open it with a world)`);
+      a = (await viaDoor(world, op, req, header ? o.token : null)).json;
+    }
     return (rec.answer = answerOf(a));
   }
   const kitOf = () => {
@@ -310,7 +304,8 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
       async signin(answer, opts = {}) {
         o.signins.push({ answer, opts }); if (!(answer && answer.token)) return false; o.token = answer.token;
         // the member the shell reads once the session is handed over (whoami, interface-shell R32): the world's own answer
-        if (world) { const r = await viaDoor(world, "whoami", {}, o.token); view.me = r.json && r.json.result ? r.json.result : null; } else view.me = signinAs;
+        const r = await viaDoor(world, "whoami", {}, o.token);
+        view.me = r.json && r.json.result ? r.json.result : null;
         return true;
       },
       wizard(...a) { o.wizards.push(a); },
