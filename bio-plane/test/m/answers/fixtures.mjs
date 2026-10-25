@@ -28,3 +28,23 @@ export function standingQuestions({ author = V("bob"), other = V("carol") } = {}
   const ended = w.a.standingQuestionEndSet({ id: q.id, ends: "2027-01-31", author });
   return { id: q.id, noSuch, noSuchEndSet, ending, ended };
 }
+
+/* `standingAnswersFor` for `member` (R20): one standing question of theirs whose run found `finds` (a document, its text
+   and title) while the copy's AI switch was off, so the run is held back (R19: `held_back` `{condition: "switch_off",
+   switch: "copy"}`) and its entry carries no answer. Made by answers' own acts: the question set by `member`, a first run
+   (it finds nothing), the document captured, the switch turned off by an administrator, then the run that finds it. */
+export async function standingAnswersHeldBack({ member = "bob", finds = "Budget held" } = {}) {
+  const w = answersWorld();
+  const author = V(member);
+  const q = w.a.standingQuestionSet({ author, question: "Anything new on the budget?", query: "title:budget",
+                                      cadence: "daily", ends: "2026-12-31" });
+  if (!q.ok) throw new Error(`standingAnswersHeldBack: ${q.reason}`);
+  await w.a.standingTick(w.clock.now);
+  w.document(finds, { title: `Budget ${finds}` });
+  const off = w.a.standingAiSwitch({ on: false, by: V("alice") });
+  if (!off.ok) throw new Error(`standingAnswersHeldBack: ${JSON.stringify(off)}`);
+  w.at("2026-10-06T15:00:00.000Z");
+  const run = (await w.a.standingTick(w.clock.now)).ran.find((x) => x.id === q.id);
+  if (!run || run.new_found !== true) throw new Error(`standingAnswersHeldBack: the run found nothing: ${JSON.stringify(run)}`);
+  return w.a.standingAnswersFor({ member: author });
+}
