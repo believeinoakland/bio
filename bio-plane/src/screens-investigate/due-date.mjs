@@ -46,8 +46,14 @@ function render(cs, view) {
   /* how it was worked out: each standing proposal's trace */
   const trace = (p) => {
     const t = p.trace || {};
+    /* the calendar the count read is stated per year (`trace.calendar.entries`, each with its `basis`); a closed day names the entry of its year, a
+       weekend (no calendar entry says it) the counting rule's own basis */
     const cal = (t.calendar && Array.isArray(t.calendar.entries)) ? t.calendar.entries : [];
-    const srcOf = (day) => { const c = cal.find((x) => x.day === day || x.date === day); return c ? c.basis || c.source || "" : (t.calendar && t.calendar.status) || ""; };
+    const srcOf = (day) => {
+      const weekend = [0, 6].includes(new Date(String(day) + "T00:00:00Z").getUTCDay());
+      const c = weekend ? null : cal.find((x) => Number(x.year) === Number(String(day).slice(0, 4)));
+      return (c && c.basis) || p.basis || "";
+    };
     const steps = [`<li>${cs.w(S + "step.basis", { basis: p.basis || "" })}</li>`,
       `<li>${t.anchor_day ? cs.w(S + "step.received." + (p.start_from || t.start_from || "receipt"), { date: cs.date(t.anchor_day) }) : cs.mark("gap", "undetermined", { reason: cs.w(S + "noreceipt") })}</li>`,
       `<li>${cs.w(S + "step.counted", { amount: String(t.amount || ""), units: t.units || "" })}</li>`]

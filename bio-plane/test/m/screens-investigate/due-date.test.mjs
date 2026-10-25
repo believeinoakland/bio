@@ -50,6 +50,10 @@ test("R7 reads the action's clock entry (action) and its standing proposals (clo
   t.skipped.forEach((s, i) => {
     assert.ok(steps[3 + i].includes(dayOf(s.day)), "the day skipped: " + s.day);
     assert.ok(steps[3 + i].includes(s.why), "and why: " + s.why);
+    /* R7: the source is the calendar entry of that day's year the count read (its basis), or, for a weekend, the counting rule's own basis; never the calendar's status */
+    const weekend = [0, 6].includes(new Date(s.day + "T00:00:00Z").getUTCDay());
+    const source = weekend ? proposal.basis : t.calendar.entries.find((e) => e.year === Number(s.day.slice(0, 4))).basis;
+    assert.equal(steps[3 + i], word("screen.due-date.step.skipped", { date: dayOf(s.day), why: s.why, source }), "the day skipped, why, and from what");
   });
   assert.equal(steps[steps.length - 1], word("screen.due-date.step.due", { date: dayOf(proposal.date), zone: t.zone }));
   assert.equal(t.zone, "America/Los_Angeles", "in the zone of the team's profile");
