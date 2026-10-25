@@ -28,11 +28,16 @@ const stamp = (w) => new Date(w.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
 const GATE = "https://city.example/gate";
 const LOT = "https://city.example/lot";
 
-/** A document the member holds, collected and not vouched for, by the real acts: from a public address (`acquire`, the address answered by
- *  the world's network, scripted), then the promotion of its information bundle at `collected`, as the capture screen promotes it.
- *  Answers the bundle's id and the capture's digest. */
-async function held(w, as, { title, address, paragraphs = [address + " " + title] }) {
+/** The store's own appetite for a host's requests (`GOVERNOR_APPETITE_PER_MIN`, an instance binding): a public address is fetched at once, not after the
+ *  seconds a person's pace would wait, so a test that captures hundreds of pages from one host does not wait for them. */
+const world = (o = {}) => storeWorld({ group: null, ...o, env: { GOVERNOR_APPETITE_PER_MIN: "6000000", ...(o.env || {}) } });
+
+/** A document the member holds, collected and not vouched for, by the real acts: fetched from its public address (`acquire`, the address answered by the
+ *  world's network, scripted; the clock moves a second on, which refills the host's appetite), then the promotion of its information bundle at `collected`, as
+ *  the capture screen promotes it. `read` has the page read, as the scheduler reads it. Answers the bundle's id and the capture's digest. */
+async function held(w, as, { title, address, paragraphs = [address + " " + title], read = false }) {
   const body = `<html><head><title>${title}</title></head><body>${paragraphs.map((x) => `<p>${x}</p>`).join("\n")}</body></html>`;
+  await w.tick(1000);
   w.script(address, async () => new Response(body, { status: 200, headers: { "content-type": "text/html" } }));
   const doc = (await as.act("acquire", { body: { locator: address } })).document;
   const now = stamp(w);
@@ -51,12 +56,13 @@ async function held(w, as, { title, address, paragraphs = [address + " " + title
   const register = [{ sha256: sha, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }];
   const made = await as.act("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(id).slice(0, 8),
     meta: { object_type: "information", title, current_state: "collected", created: now, last_updated: now }, files, register } });
+  if (read) await as.act("readheld", { query: { sha } });
   return { id: made.bundleId || id, sha };
 }
 
 /** A group with a member `mai` who may start projects and has looked at Home before (her first look is the real `lookedsince`, which records it). */
 async function desk() {
-  const w = await storeWorld({ group: null });
+  const w = await world();
   const mai = await w.signIn("mai", { capabilities: CREATE });
   await mai.read("lookedsince");
   return { w, mai };
@@ -101,7 +107,7 @@ test("R87 (C14, P2.2): Projects draws each project's question count from its ros
 
 test("R87 (C14, P2.2): a project seen only at EXISTENCE answers a null count, drawn as not known and never as zero; the reading is not drawn from a partial sum", timeout, async () => {
   // The rescue is open to the administrator for the hidden project of a member since removed: the roster knows nothing of its questions.
-  const w = await storeWorld({ group: null });
+  const w = await world();
   const [founder, rosa, ana] = [await w.signIn("admin"), await w.signIn("rosa", { admin: true }), await w.signIn("ana", { capabilities: CREATE })];
   await rosa.read("lookedsince");
   const coliseum = await w.recipes.project(rosa, "The Coliseum lease");
@@ -122,7 +128,7 @@ test("R87 (C14, P2.2): a project seen only at EXISTENCE answers a null count, dr
   await settle();
   assert.ok(!area(home, "investigation").includes(word("screen.home.rd.questions")) && !area(home, "investigation").includes(word("screen.home.rd.question")), "no total is drawn while one count is not known");
   // Control: a roster of one project draws the same as the rows say.
-  const solo = await storeWorld({ group: null });
+  const solo = await world();
   const sam = await solo.signIn("sam", { admin: true });
   await sam.read("lookedsince");
   await solo.recipes.questions(sam, await solo.recipes.project(sam, "The Coliseum lease"), 2);
@@ -132,10 +138,10 @@ test("R87 (C14, P2.2): a project seen only at EXISTENCE answers a null count, dr
   assert.ok(area(one, "investigation").includes(`2 ${word("screen.home.rd.questions")}`));
 });
 
-/** A team: the administrator `rosa` with three projects ("The Coliseum lease" with three questions, "Pothole repairs", "Odd"), a draft of the first shared
- *  for review until a day (`casedraft`, `reviewgrant`). Answers the day, the case the draft is of and the project's id. */
+/** A team: the administrator `rosa` with three projects ("The Coliseum lease" with three questions, "Pothole repairs", "Odd") and a draft of the first shared
+ *  for review until a day (`casedraft`, `reviewgrant`), by the real acts. Answers the day and the project's id. */
 async function shared() {
-  const w = await storeWorld({ group: null });
+  const w = await world({ now: Date.now() });
   const rosa = await w.signIn("rosa", { admin: true });
   await rosa.read("lookedsince");
   const coliseum = await w.recipes.project(rosa, "The Coliseum lease");
@@ -145,19 +151,31 @@ async function shared() {
   const draft = await rosa.act("casedraft", { body: { project: coliseum, statement: "A draft for review" } });
   const until = new Date(w.now() + 5 * 86400000).toISOString();
   await rosa.act("reviewgrant", { body: { draft: draft.draftId, recipient: "A neighbour", until } });
-  const drafts = (await rosa.read("casedrafts", { query: { projects: coliseum } })).lists[coliseum].drafts;
-  return { w, rosa, coliseum, until, caseId: drafts[0].case.case_id };
+  return { w, rosa, coliseum, until };
 }
+/** The real door's answer to `req` (a read, as the page or the browser's plane makes it), its result replaced by `f(result, req)`: an answer of a shape the
+ *  real store cannot give here, or the real rows with what only the measure needs of their shape. */
+const through = (w, as, f) => counted(async (req) => {
+  const a = await w.door({ url: `/api/?${new URLSearchParams({ ...req.query, op: req.op })}`, init: { method: "GET" } }, as);
+  return { ...a, status: 200, json: { ...a.json, ok: true, result: f(a.json && a.json.result, req) } };
+});
 
 test("R87 (C14, P2.2): the drafts shared for review are read only for the projects whose row says one is shared; a null or zero summary reads none", timeout, async () => {
-  const { w, rosa, coliseum, until, caseId } = await shared();
-  const p = await open(w, rosa, "/app");
+  const { w, rosa, coliseum, until } = await shared();
+  // The store names a draft's case only once a case is published (a ratification no test of this screen can sign), so the case the draft is of, and its two
+  // editions, are the real answers of `casedrafts` and `publishedlist` / `publishedcase` with the case named; the draft, its grant and its roster row are real.
+  const CASE = "CASE-1";
+  const named = through(w, rosa, (r) => { for (const l of Object.values(r.lists)) for (const d of l.drafts || []) d.case = { case_id: CASE, edition: 3, identity: "x" }; return r; });
+  const plane = { casedrafts: named,
+    publishedlist: through(w, rosa, (r) => ({ ...r, cases: [{ case_id: CASE, edition: 1, published_at: "2026-09-01T10:00:00Z" }, { case_id: CASE, edition: 2, published_at: "2026-09-18T10:00:00Z" }] })),
+    publishedcase: through(w, rosa, (r, req) => ({ ...(r || {}), ok: true, caseId: req.query.caseId, edition: Number(req.query.edition), scope: "The Coliseum lease" })) };
+  const p = await open(w, rosa, "/app", plane);
   await settle();
   assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.projects), [coliseum], "only the project with a draft shared is asked");
-  const line = word("screen.home.area.edition.draftonly", { case: caseId, until: dmy(until.slice(0, 10)) });
+  const line = word("screen.home.area.edition", { n: "2", case: "The Coliseum lease", date: dmy("2026-09-18"), until: dmy(until.slice(0, 10)) });
   assert.ok(area(p, "investigation").includes(line), "its draft line is drawn as before");
   // Control: every summary null (the tranche before control-plane R118) reads no draft and draws no draft line.
-  const q = await open(w, rosa, "/app", { projectlist: shaped(w, rosa, (r) => { for (const x of r.projects) x.shared_drafts = null; }) });
+  const q = await open(w, rosa, "/app", { ...plane, projectlist: shaped(w, rosa, (r) => { for (const x of r.projects) x.shared_drafts = null; }) });
   await settle();
   assert.deepEqual(q.byOp("casedrafts"), [], "an unknown summary is not read project by project");
   assert.ok(!area(q, "investigation").includes(line));
@@ -262,16 +280,22 @@ test("R89 (C22) control: a level with nothing left unlooked names no place; plac
 const NAMES = ["The Coliseum lease and the sewer fund transfers", "Pothole repairs", "Odd", "Oakland Unified budget"];
 /* The browser draws the page over a plane of answers; the roster rows are four of a shape the measure needs (stage, owner, members, activity) and are
    the plane's own, but the held captures, the group and the doors' first steps are the REAL store's, forwarded from a world's door. */
-const WIDE = NAMES.map((name, i) => ({ id: "PROJ-" + i, name, stage: ["investigating", "forming", null, "closed"][i], question_count: i, shared_drafts: null, rescue_open: i === 1,
-  owner: i % 2 ? null : { member: "M-1", handle: "dev" }, members: [{ member: "M-1", handle: "dev" }].concat(i ? [{ member: "M-2", handle: "rosa" }] : []),
-  activity: [3, 5, 4, 6, 8, 7, 9, 11], lastChange: i === 2 ? null : "2026-10-12T15:00:00Z" }));
+/** The page's rows for the four projects, each the real row with what the measure needs of its shape: the stage, owner, members, activity and last change a
+ *  project of this width carries (the world's own rows are all alike, forming and new). */
+const wide = (r) => ({ ...r, projects: r.projects.map((x) => {
+  const i = NAMES.indexOf(x.name);
+  return { ...x, stage: ["investigating", "forming", null, "closed"][i], question_count: i, rescue_open: i === 1,
+    owner: i % 2 ? null : { member: "M-1", handle: "dev" }, members: [{ member: "M-1", handle: "dev" }].concat(i ? [{ member: "M-2", handle: "rosa" }] : []),
+    activity: [3, 5, 4, 6, 8, 7, 9, 11], lastChange: i === 2 ? null : "2026-10-12T15:00:00Z" };
+}) });
 const forward = (w, as, op) => (req) => w.door({ url: `/api/?${new URLSearchParams({ ...req.query, op })}`, init: { method: "GET" } }, as);
 let fullPlane = null;
 const FULL = () => (fullPlane ||= (async () => {
   const { w, mai } = await desk();
+  for (const name of NAMES) await w.recipes.project(mai, name);
   await held(w, mai, { title: "Photo H1", address: GATE });
   return { whoami: ok({ ...MEMBER, capabilities: CREATE }),
-    projectlist: ok({ ok: true, count: WIDE.length, limit: 200, truncated: false, projects: WIDE }), themeread: ok({ themes: [] }),
+    projectlist: through(w, mai, wide), themeread: ok({ themes: [] }),
     queue: ok({ items: [{ id: "TSK-1", class: "OBLIGATION", kind: "check", summary: "Vouch for 3 photos", due: "2026-10-12", assignee: "mai", assignee_role: "member", options: [], disposition: { instead: "taskresolve" }, subject: { kind: "bundle", id: "INF-7" } }], item_count: 1 }),
     lookedsince: ok({ since: "2026-10-01T00:00:00Z" }), inbox: ok({ inbox: [{ id: 1, status: "new" }] }),
     heldcaptures: forward(w, mai, "heldcaptures"), startfrom: forward(w, mai, "startfrom"), groupidentity: forward(w, mai, "groupidentity") };
@@ -308,7 +332,7 @@ const badge = (p) => p.root().querySelector(".cs-rail a .count").textContent;
 
 /** `rosa`'s project with a document, a check of it asked of `mai` once for each name in `names` (each a To do in her queue, a task of kind check-requested), by the real acts. */
 async function todos(...names) {
-  const w = await storeWorld({ group: null });
+  const w = await world();
   const rosa = await w.signIn("rosa", { admin: true });
   const mai = await w.signIn("mai", { capabilities: CREATE });
   const project = await w.recipes.project(rosa, "Library hours");
@@ -353,11 +377,11 @@ async function newer(n) {
   const { w, mai } = await desk();
   const project = await w.recipes.project(mai, "Budget");
   const address = "https://city.example/budget";
-  const first = await held(w, mai, { title: "Budget", address, paragraphs: ["Cut by ten percent.", "Library closed.", "Parks open."] });
+  const first = await held(w, mai, { title: "Budget", address, paragraphs: ["Cut by ten percent.", "Library closed.", "Parks open."], read: true });
   await w.recipes.question(mai, project, { title: "Budget", text: "What happened to the budget?", draw: true,
     legs: Array.from({ length: n }, (_, i) => ({ target: first.id, extent_kind: "doc-para", extent_para: i })) });
   await w.tick(2000);
-  await held(w, mai, { title: "Budget", address, paragraphs: ["Restored in full.", "Library open.", "Parks closed."] });
+  await held(w, mai, { title: "Budget", address, paragraphs: ["Restored in full.", "Library open.", "Parks closed."], read: true });
   await w.tick(120000);
   const item = (await mai.read("queue")).items.find((i) => i.kind === "newer-capture-affects-reference");
   assert.ok(item, "the newer-version item stands in her queue");
