@@ -36,7 +36,12 @@ export function createDeclaredOps({ ladder, grounds, rungs, absent, nonActs, mac
   const kindOf = (op, r) => {
     if (typeof r.mutating !== "boolean") throw fail("DECLARED_OP_BAD_WEIGHT", op, "mutating=missing");
     const w = r.weight;
-    if (w === "irreversible") throw fail("DECLARED_OP_BAD_WEIGHT", op, "weight=irreversible");
+    /* R54: an irreversible row is taken only where a hand row holds the op in RUNGS; the agreement check below then
+       accepts it when that hand row is irreversible too, and refuses it (DECLARED_OP_DISAGREES) otherwise */
+    if (w === "irreversible") {
+      if (!has(rungs, op) || !r.mutating) throw fail("DECLARED_OP_BAD_WEIGHT", op, "weight=irreversible");
+      return "rung";
+    }
     if (w === "read") {
       if (r.mutating) throw fail("DECLARED_OP_BAD_WEIGHT", op, "read-but-writes");
       return "read";
