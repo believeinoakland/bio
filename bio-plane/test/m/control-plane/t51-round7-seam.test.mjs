@@ -161,6 +161,8 @@ async function declareFrom(auth, filed, { header = HEADER } = {}) {
   return { contentId, declared: declared.body.result || declared.body, status: declared.status };
 }
 async function ingestAs(auth, bytes, name) {
+  /* a period names the day in the team's time zone (calculations R105's binding read), which the team's profile gives: the instance has chosen one, as setup does */
+  await profileSet(["oakland-alameda"]);
   const filed = await uploadCsv(auth, bytes, name);
   const d = await declareFrom(auth, filed);
   assert.equal(d.declared.ok, true, "table declared: " + JSON.stringify(d.declared).slice(0, 400));
