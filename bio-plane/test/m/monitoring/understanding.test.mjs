@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, stubIntent, sha, V, NOW_MS, infoMd, serve, DAEMON } from "./fixture.mjs";
+import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 import { markOverdue, MONITOR_AUTHOR, MONITOR_VIEWER, DEADLINE_RECHECK_MAX, GATHERING_PURPOSE, GATHERING_LANDS_AT,
          MONITOR_CADENCE_BATCH, DEADLINE_NO_ZONE } from "../../../src/monitoring/index.mjs";
 import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
@@ -509,7 +510,7 @@ test("R50 (N429) an entry of an action whose last R34 mark failed is left out of
   assert.equal(w.m.deadlineRecheckWake(NOW_MS), dayAfter("2026-09-01"), "before any failure, the past entry holds the wake");
   /* R34's mark of FAIL fails: its entry is held out until the start of the next local day */
   const real = w.promotion.promote.bind(w.promotion);
-  w.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" && pkg.bundleId === FAIL ? { ok: false, reason: "BASE_MOVED" } : real(pkg));
+  w.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" && pkg.bundleId === FAIL ? staleBaseRefusal() : real(pkg));
   const r1 = await w.m.deadlineRecheck(NOW_MS);
   assert.deepEqual(r1.failed.map((f) => f.action), [FAIL]);
   assert.equal(w.m.deadlineRecheckWake(NOW_MS), nextDay, "held no earlier than the next day, never in the past");
@@ -542,7 +543,7 @@ test("R50 (N429) an entry of an action whose last R34 mark failed is left out of
   const v = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
   createAction(v, "ACTN-2026-0773-both", [["past", "2026-09-01", "pending"], ["future", "2026-10-20", "pending"]]);
   const vreal = v.promotion.promote.bind(v.promotion);
-  v.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? { ok: false, reason: "BASE_MOVED" } : vreal(pkg));
+  v.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? staleBaseRefusal() : vreal(pkg));
   await v.m.deadlineRecheck(NOW_MS);
   assert.equal(v.m.deadlineRecheckWake(NOW_MS), nextDay);
   v.promotion.promote = vreal;
@@ -579,7 +580,7 @@ test("R34 R50 (K1444 (iii)) an entry's date passes on the local day of the actio
   const y = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
   createAction(y, "ACTN-2026-0782-hold", [["a", "2026-09-01", "pending"]]);
   const real = y.promotion.promote.bind(y.promotion);
-  y.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? { ok: false, reason: "BASE_MOVED" } : real(pkg));
+  y.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? staleBaseRefusal() : real(pkg));
   const late = Date.parse("2026-09-29T01:00:00Z");   /* 22:00 on the 28th in Halifax */
   y.clock.ms = late;
   assert.equal((await y.m.deadlineRecheck(late)).failed.length, 1);

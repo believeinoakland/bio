@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world as retrievalWorld, V, sha, infoMd } from "../retrieval/fixture.mjs";
+import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 import { Ratification, ratificationOf, ratificationOps, RELEASE_ACK_MAX,
          RELEASE_CHECKS } from "../../../src/ratification/index.mjs";
 import { parseFrontmatter, canonicalJson } from "../../../src/record-grammar/index.mjs";
@@ -332,8 +333,9 @@ test("R25: a member whose bundle.md is gone at its turn is NO_DOCUMENT, one whos
   assert.deepEqual([unsplice.r.reason, unsplice.r.bundleId, unsplice.r.releasedSoFar], ["UNSPLICEABLE_STATE_HISTORY", ids[1], [ids[0]]]);
   assert.match(unsplice.r.detail, /C-4\.2/);
   assert.equal(unsplice.w.state(ids[0]), "verified");
-  const refused = await drive(() => {}, { ok: false, reason: "STALE_BASE", detail: "d" });
-  assert.deepEqual(refused.r, { ok: false, reason: "STALE_BASE", detail: "d", bundleId: ids[1], releasedSoFar: [ids[0]] });
+  const stale = staleBaseRefusal();
+  const refused = await drive(() => {}, stale);
+  assert.deepEqual(refused.r, { ...stale, bundleId: ids[1], releasedSoFar: [ids[0]] });
   assert.equal(refused.w.state(ids[0]), "verified");
 });
 

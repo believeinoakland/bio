@@ -239,3 +239,18 @@ export const create = (id, text, extra = {}) => ({ bundleId: id, base: null, sna
 /** A revision of `id` over `base`. */
 export const revise = (id, base, text, extra = {}) => ({ bundleId: id, base, snapKey: "k2", author: "member:ann",
   files: [{ path: "bundle.md", text }], meta: {}, ...extra });
+
+/** A stale-base refusal as promotion gives it, produced by promotion's real code when this is called (K4993 (1)): a
+ *  document is created, revised (the base moves), and the revision is sent again over the base it first read. Never a
+ *  stored literal; the answer is `{ ok: false, reason: "CAS_STALE", code, check, translation, detail, expected, got }`. */
+export function staleBaseRefusal() {
+  const id = "INFO-2026-0001";
+  const { p } = makePromotion();
+  const head = p.promote(create(id, infoDoc(id)));
+  if (!head.ok) throw new Error(`staleBaseRefusal: the creation was refused: ${JSON.stringify(head)}`);
+  const moved = p.promote(revise(id, head.bundleSha, infoDoc(id, { title: "Moved" })));
+  if (!moved.ok) throw new Error(`staleBaseRefusal: the move was refused: ${JSON.stringify(moved)}`);
+  const stale = p.promote(revise(id, head.bundleSha, infoDoc(id, { title: "Late" }), { snapKey: "k3" }));
+  if (stale.ok !== false || stale.reason !== "CAS_STALE") throw new Error(`staleBaseRefusal: not a stale-base refusal: ${JSON.stringify(stale)}`);
+  return stale;
+}
