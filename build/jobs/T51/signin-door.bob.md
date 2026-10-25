@@ -47,3 +47,7 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-WORDS (every sentence a me
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . signin-door --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/signin-door.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B4 · ANSWER · re J3
+
+Added: signin-door now uses test-support and op-declarations (K5066, modules.json on tranche/T51 at its tip). Merge the tranche branch into yours and keep the R6 registration test as written; the architecture check should then read 0. Note: run checks/fixtures.mjs with the absolute product path (a relative root reads nothing, K5066).
