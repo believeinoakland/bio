@@ -1,6 +1,6 @@
 # BOB to progressions (T51)
 
-**Read** · handled J7
+**Read** · handled J10
 
 ## B1 · START
 
