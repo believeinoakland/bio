@@ -1,6 +1,6 @@
 # case-inputs (T51)
 
-**Status** · session_01CP6548xUsizHesCu8wGwzp · depth 2 · COMPLETE · handled B12
+**Status** · session_0129yAVbwi5t6RJnJxwU2Px9 · depth 2 · COMPLETE · handled B13
 
 ## J1 · QUESTION
 
@@ -252,3 +252,29 @@ Checks (root `/home/user/bio`, absolute):
 Markers added: none. Deferred: none. Found in another module: none new.
 
 Size (session_01CP6548xUsizHesCu8wGwzp): test runs 1, module lines 1602
+
+## J14 · COMPLETE
+
+COMPLETE, re B13 (fix round 10: delete the idle `fixtures-contract: review no-review-copy` marker).
+
+**Entries applied.** The B13 job only. Pushed `ca1e745b86` on `job/T51/case-inputs` (merged `tranche/T51` first, at `c89ce3d78f`).
+- `bio-plane/test/m/case-inputs/fixtures.mjs:41`: marker deleted. The `noReviewCopy` line is a real call (`act({viewer: MACHINE, ...})`), so no provider run is named.
+- `bio-plane/test/m/case-inputs/fixtures.mjs:27-29`: the statementAck doc comment no longer says review's `fixtures-run` checks the answer.
+- No test changed, and no test was red before the change: the marker removal alters no answer. The existing `fixtures.test.mjs` assertions on `statementAck().noReviewCopy` (equal to DEAD, its key set and types) pass unchanged.
+
+**Deferred.** None. **Markers added.** None.
+
+**Checks** (root `/home/user/bio`, absolute):
+- Module tests `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/case-inputs/*.test.mjs`: 77 pass, 0 fail.
+- `checks/fixtures.mjs /home/user/bio case-inputs --list`: one failure left, `contract case-inputs bio-plane/test/m/review/fixtures.test.mjs:10 [orphan-run] fixtures-run: case-inputs no-review-copy -> review`. This is the orphan the verify-marks row predicts: review's `fixtures-run` at review's `fixtures.test.mjs:10` is deleted by REVIEW #28, and the two merge together. Nothing in this module closes it.
+- `checks/ownership.mjs`: 1 file changed by case-inputs; 0 failures.
+- `checks/format.mjs`: 178 modules, 178 requirements files; 0 failures.
+- `checks/architecture.mjs`: 5123 product files, 17831 relative imports; 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 modules affected, 0 test files affected.
+- `checks/run.mjs /home/user/bio` (whole repo): not clean, none in case-inputs. Coverage: 10 failures, none naming case-inputs. Words: 16 failures, all in store-assembly (`ask.mjs`, `wiring.mjs`, `wizards.mjs`, `declared.mjs:16`); none in case-inputs. Fixtures: 1476 failures repo-wide; the case-inputs one is the orphan above; the rest are listed below.
+
+**Found in another module (for BOB; not fixed here):**
+1. screens-publish: `bio-plane/test/m/screens-publish/fixtures.mjs:134-135` and `fr30b.test.mjs:300, 339, 354, 399` hand-build answers for `casedetails`, `casedetailsset` and `casedetailspublic` (`[op-table]` findings, provider named as case-inputs, earlier in the order). Those answers should come from case-inputs' published fixtures or the real op, not a hand list. Those are screens-publish's to fix.
+2. store-assembly: 15 inline and plain sentences at `ask.mjs:389, 469, 502, 521-540`, `wiring.mjs:49, 78, 103`, `wizards.mjs:51`, plus one marker finding at `declared.mjs:16` (`plane.declared.readtranslate` has a different en than at `bio-plane/src/plane/declared.mjs:13`). Words of store-assembly's own.
+
+**Size (session_0129yAVbwi5t6RJnJxwU2Px9): test runs 1, module lines 1602**

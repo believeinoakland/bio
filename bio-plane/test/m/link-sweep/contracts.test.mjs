@@ -28,10 +28,10 @@ const SWEEP_MUTATE = {
     detail: localize("link-sweep.sweep.no_sweep_is_named_string_2", "no sweep is named {String} in this bundle. Nothing was written.", { String: name }) }),
 };
 const SWEEP_SCOPE = {
-  unknown: (name) => ({ ok: false, reason: "unknown", detail: localize("link-sweep.sweep.no_sweep_is_named_string", "no sweep is named {String}", { String: name }) }),
+  unknown: (name) => ({ ok: false, reason: "unknown", detail: localize("link-sweep.sweep.no_sweep_is_named_string", "no sweep is named {String}", { String: name }) }), // fixtures-own: harness link-sweep's own published contract value (SWEEP_SCOPE), run against its code at :65
   unratified: { ok: false, reason: "unratified" },
   held: { ok: false, reason: "held", detail: localize("link-sweep.sweep.the_sweep_s_backlog_is", "the sweep's backlog is at or over its limit") },
-  out_of_scope: (locator) => ({ ok: false, reason: "out-of-scope", detail: localize("link-sweep.sweep.string_is_outside_the_sweeps", "{String} is outside the sweep's sources", { String: locator }) }),
+  out_of_scope: (locator) => ({ ok: false, reason: "out-of-scope", detail: localize("link-sweep.sweep.string_is_outside_the_sweeps", "{String} is outside the sweep's sources", { String: locator }) }), // fixtures-own: harness link-sweep's own published contract value (SWEEP_SCOPE), run against its code at :65
   no_locator: { ok: false, reason: "out-of-scope", detail: localize("link-sweep.sweep.no_locator_was_named", "no locator was named") },
   in_scope: (sources) => ({ ok: true, scope: sources }),
 };

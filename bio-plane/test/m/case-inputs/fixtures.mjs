@@ -25,8 +25,7 @@ export function carryOutcome() {
 }
 
 /** `caseInputsOps(...).statementack()` (R1, R12), three answers over an unsigned case document that a joined member `bo`
- *  may acknowledge: `noReviewCopy` for a viewer with no door (the review copy's dead answer, which the test world's review
- *  stand-in gives; review's own NO_REVIEW_COPY is checked by review's `fixtures-run`), `noReason` for an act with no
+ *  may acknowledge: `noReviewCopy` for a viewer with no door (the review copy's dead answer, given by the real act), `noReason` for an act with no
  *  reason (STATEMENT_ACK_NO_REASON), and `ok`, the reasoned acknowledgement. */
 export function statementAck() {
   const w = world();
@@ -38,7 +37,6 @@ export function statementAck() {
   const act = (params) => caseInputsOps(w.ci, new URL(`http://do/statementack?${new URLSearchParams({
     case: pub.caseId, edition: "1", ...params })}`), null).statementack();
   return {
-    // fixtures-contract: review no-review-copy
     noReviewCopy: act({ viewer: MACHINE, reason: WORDS }),
     noReason: act({ viewer: V("bo") }),
     ok: act({ viewer: V("bo"), reason: WORDS }),
