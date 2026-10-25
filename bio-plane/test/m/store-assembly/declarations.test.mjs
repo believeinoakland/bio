@@ -14,8 +14,6 @@ import { OWNERS, assembleDeclaredOps } from "../../../src/store-assembly/declara
 import { ASSEMBLY_DECLARED_OPS } from "../../../src/store-assembly/declared.mjs";
 import { OWNER_MAP_DECLARED_OPS } from "../../../src/store-assembly/owner-ops.mjs";
 /* the copy window (K5052 (4)): plane and control-plane still export these rows as `DECLARED_OPS`, so the collector finds them under those two */
-import { DECLARED_OPS as PLANE_OPS } from "../../../src/plane/declared.mjs";
-import { DECLARED_OPS as CONTROL_PLANE_OPS } from "../../../src/control-plane/owner-ops.mjs";
 import { declaredFields, OPS } from "../../../src/op-declarations/index.mjs";
 import { opsServedBy, servedThroughDoor } from "./maps.mjs";
 
@@ -44,7 +42,7 @@ test("R83 the assembly started over the real modules holds, for every module who
     assert.ok(Object.hasOwn(OWNERS["store-assembly"], op), `${op}: store-assembly holds the row ${owners[op]} declares`);
     assert.deepEqual(bare(OWNERS["store-assembly"][op]), bare(ops[op]), `${op}: store-assembly's row is ${owners[op]}'s but for its description`);
   }
-  assert.deepEqual(Object.keys(OWNERS["store-assembly"]).sort(), [...Object.keys(PLANE_OPS), ...Object.keys(CONTROL_PLANE_OPS)].sort(), "and holds no other");
+  assert.deepEqual(Object.keys(OWNERS["store-assembly"]).sort(), Object.keys(ops).filter((o) => COPIED_FROM.includes(owners[o])).sort(), "and holds no other (plane's and control-plane's rows, as the collector finds them)");
   for (const [op, d] of Object.entries(ops)) {
     if (COPIED_FROM.includes(owners[op])) { assert.ok(Object.hasOwn(OPS, op), `${op} is in the assembled table`); if (d.fields) assert.deepEqual(declaredFields(op), d.fields, `${op}: the owner's fields are read back`); continue; }
     assert.equal(OWNERS[owners[op]][op], d, `${op}: the assembly holds the owner's own row`);

@@ -16,7 +16,7 @@ import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps, WIZARD_SCRIPTS_TABLES, CIVICSMITH_LIBRARY, SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { MACHINE_REFUSALS, RUNGS } from "../../../src/op-grades/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
-import { ADMIN_ACTS, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { ADMIN_ACTS, ADMIN_SCREENS } from "../../../src/wizard-scripts/index.mjs";
 
 const WZ = [...WIZARD_SCRIPTS_TABLES];
 const tableNames = (x) => [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)].map((r) => r.name);
@@ -140,8 +140,8 @@ test("R17, R6, R34: every op of wizard-scripts' map is in the route map, after r
 test("R18 (R085-34; K874; wizard-scripts R40): the registration the plane builds carries the administrator's acts and screens; through the live store, a plain member's startFrom omits the three group-setup scripts and an administrator's lists them", async () => {
   const named = (r) => r.scripts.map((s) => s.name);
   const reg = wizardRegistration();
-  assert.deepEqual(reg.adminActs, [...ADMIN_ACTS], "the administrator's acts, from interface-shell");
-  assert.deepEqual(reg.adminScreens, [...ADMIN_SCREENS], "the administrator's screens, from interface-shell");
+  assert.deepEqual(reg.adminActs, [...ADMIN_ACTS], "the administrator's acts, from wizard-scripts (its R51)");
+  assert.deepEqual(reg.adminScreens, [...ADMIN_SCREENS], "the administrator's screens, from wizard-scripts (its R51)");
   const x = await store();
   const sql = x.ctx.storage.sql;
   sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
