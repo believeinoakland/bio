@@ -17,6 +17,7 @@ import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { registeredHomes } from "../provenance/fixtures.mjs";
 
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 export const H = (hex) => hex.padEnd(64, "0").slice(0, 64);
@@ -85,26 +86,54 @@ export function governor({ refuse = [], held = [] } = {}) {
    parts its home's document names (R6). `captureGrade` answers as R24, R25, R26 and R59 state for the vias recorded. */
 export function provenance({ registered = [], acquired = [], sql = null, homes = {}, named = {}, heldAt = {} } = {}) {
   const receipts = [], holds = [];
+  /* `homeOf` and `registerHolds` are provenance's own (R4, R6) over provenance's own real world (its `registeredHomes` fixture): a home the
+     test names in `homes` (or `registered`) is registered when the chain is next asked, by really promoting a bundle that carries a register
+     document; a receipt is recorded with the real provenance too */
+  let real = registeredHomes();
+  let synced = new Map(), created = new Set(), alias = {};
+  const sync = () => {
+    const want = [...Object.entries(homes), ...registered.filter((r) => !homes[r]).map((r) => [r, null])];
+    /* a capture named in `homes` again under another bundle starts the real world over, with the receipts recorded so far */
+    if (want.some(([s, b]) => synced.has(s) && synced.get(s) !== b)) {
+      real = registeredHomes(); synced = new Map(); created = new Set(); alias = {};
+      for (const r of receipts) if (r.addressNorm && r.captureSha) real.provenance.recordReceipt(r);
+    }
+    const groups = new Map();
+    for (const [s, bundleId] of want) {
+      if (synced.has(s)) continue;
+      const k = bundleId ?? `INFO-2026-${String(synced.size + groups.size + 1).padStart(4, "0")}-registered`;
+      groups.set(k, [...(groups.get(k) ?? []), { sha: s, declared: bundleId }]);
+    }
+    for (const [bundleId, captures] of groups) {
+      /* a bundle already promoted takes no more captures from this fixture: the later ones are promoted in a bundle of their own, named back below */
+      const realId = created.has(bundleId) ? `${bundleId}~${created.size}` : bundleId;
+      if (realId !== bundleId) alias[realId] = bundleId;
+      created.add(realId);
+      const r = real.many(realId, captures);
+      if (r.ok !== true) throw new Error(`fixture provenance: ${bundleId}: ${JSON.stringify(r)}`);
+      for (const c of captures) synced.set(c.sha, c.declared);
+    }
+  };
+  const named_ = (h) => (h && alias[h.bundleId] ? { ...h, bundleId: alias[h.bundleId] } : h);
   const vias = (s) => [...new Set(receipts.filter((r) => r.captureSha === s).map((r) => r.via || "direct"))];
   const p = {
     receipts, holds, homes, named, heldAt,
     recordReceipt(r) {
       receipts.push(r);
+      if (r.addressNorm && r.captureSha) real.provenance.recordReceipt(r);
       if (sql && r.addressNorm && r.captureSha)
         sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved)
                   VALUES (?,?,?,?,?,?,?) ON CONFLICT DO UPDATE SET observations=observations+1, last_retrieved=excluded.last_retrieved`,
                  r.addressNorm, r.address ?? r.addressNorm, r.captureSha, r.via || "direct", r.retrievalLocator ?? null, r.retrieved, r.retrieved);
       return { recorded: true };
     },
-    registerHolds({ sha: s, bundle = null }) { holds.push(s); return { ok: true, sha: s, asked: true, registered: registered.includes(s),
-      acquired: acquired.includes(s) || receipts.some((r) => r.captureSha === s),
-      ...(bundle ? { parts: named[s] ? { state: "named", parts: named[s] } : { state: "none" } } : {}) }; },
+    registerHolds(a) { holds.push(a.sha); sync(); return { ...real.provenance.registerHolds(a), ...(a.bundle ? { parts: named[a.sha] ? { state: "named", parts: named[a.sha] } : { state: "none" } } : {}) }; },
     /* R12: the bundle's captures with `held_at` (a test names it in `heldAt`, else the earliest receipt's instant) */
     capturesOf(bundleId) {
       return Object.keys(homes).filter((s) => homes[s] === bundleId).sort().map((s) => ({ capture_sha: s,
         held_at: heldAt[s] ?? receipts.filter((r) => r.captureSha === s).map((r) => r.retrieved).sort()[0] ?? null }));
     },
-    homeOf(s) { return homes[s] ? { bundleId: homes[s], path: "data/x", encoding: "binary", bytes: 0, registered: "T", authored: false } : null; },
+    homeOf(s) { sync(); return named_(real.provenance.homeOf(s)); },
     captureGrade(s, depth = 0) {
       const v = vias(s);
       if (v.includes("direct")) return { grade: EARNED_CAPTURE_CEILING, route: "direct", determined: true, basis: "measured" };
@@ -259,12 +288,12 @@ export function world({ env = {}, gov = {}, provOpts = {}, prov = undefined, fai
   core.migrate();
   for (const t of PROVENANCE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) s.db.exec(t);
   const g = governor(gov);
+  const mem = membership({ admins });
   const p = prov === undefined ? provenance({ sql: s.sql, ...provOpts }) : prov;
   const att = attestationOf(host, { record: core, provenance: p, signingKey, instanceName: "inst" });
   const store = captureStore({ core, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9", ...env }, gov: g, prov: p, failures });
   store.attestation = att;
   /* acquisition's own instance over the same storage (R38–R41, R43), handed in as `store.acquisition` (capture R73's form) */
-  const mem = membership({ admins });
   const acq = acquisition ? acquisitionOf(host, { record: core, provenance: p, membership: mem }) : null;
   if (acq) store.acquisition = acq;
   return { s, b, core, gov: g, prov: p, att, store, acq, mem, host, rows: (q, ...a) => s.sql.exec(q, ...a),

@@ -23,6 +23,7 @@ function pending() {
   const registered = [];
   const w = world({ provOpts: { registered }, env: { RENDERER: { fetch: async (u, init) => { await gate; return new Response(JSON.stringify(R_ANSWER(JSON.parse(init.body).url))); } } } });
   const entries = new Map();
+  // fixtures-contract: plane owed-ledger
   w.store.owedLater = async (e) => { entries.set(e.session, e); return { ok: true }; };
   return { w, entries, open, registered };
 }
@@ -51,6 +52,7 @@ test("R104 (E8): \"Finish it\" that completes the render leaves the session owin
   assert.equal(openCaptures(p.w.store, { by: "m1" }).captures.length, 0, "nothing is left for the member to finish");
   /* the alarm: the copy is not filed anywhere, so it is delivered, once, and the session is dropped once it is */
   const delivered = [];
+  // fixtures-contract: control-plane deliver-owed
   const deliver = async (d) => { delivered.push(d); return { ok: true }; };
   const refused = await owedRun(p.w.store, p.entries.get(sid), { deliver: async () => ({ ok: false }) });
   assert.deepEqual([refused.ok, refused.done, refused.reason], [true, false, "DELIVERY_REFUSED"]);
@@ -72,6 +74,7 @@ test("R104 (E8) control: a copy the caller did file (the register holds its dige
   const done = await finish(p, sid);
   p.registered.push(done.body.document.capture.sha256);   // the screen promoted it
   let delivered = 0;
+  // fixtures-contract: control-plane deliver-owed
   const out = await owedRun(p.w.store, p.entries.get(sid), { deliver: async () => { delivered++; return { ok: true }; } });
   assert.deepEqual([out.ok, out.done], [true, true]);
   assert.equal(delivered, 0, "filed already: nothing delivered");
@@ -105,6 +108,7 @@ test("R104 (E8): a second \"Finish it\" on a session whose visitor copy is alrea
   assert.equal(again.body.continued.session, sid);
   assert.ok(p.w.store.state.sessions.has(sid), "the session is not dropped by the second press");
   const delivered = [];
+  // fixtures-contract: control-plane deliver-owed
   const out = await owedRun(p.w.store, p.entries.get(sid), { deliver: async (d) => { delivered.push(d); return { ok: true }; } });
   assert.deepEqual([out.ok, out.done], [true, true]);
   assert.equal(delivered.length, 1);
