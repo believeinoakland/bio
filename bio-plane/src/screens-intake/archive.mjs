@@ -28,7 +28,8 @@ function renderArchive(cs, view) {
   const body = cs.state(data, (v) => {
     const a = v.archive || {}, sum = v.summary || {};
     const entries = Array.isArray(v.entries) ? v.entries : [];
-    const g = a.grade && typeof a.grade === "object" ? a.grade : null;
+    /* the owner answers the grade as its bare letter (acquisition `archivelist`); an object carrying it is read the same */
+    const g = a.grade && typeof a.grade === "object" ? a.grade : typeof a.grade === "string" && a.grade ? { grade: a.grade } : null;
     const grade = g && g.grade ? cs.grade("capture", g.grade)
       : `<span class="meta">${cs.w("state.undetermined", { reason: cs.w("screen.archive.ungraded") })}</span>`;
     const note = U.note !== undefined ? U.note : view.data.note && view.data.note.state === "ok" ? view.data.note.value && view.data.note.value.note : null;

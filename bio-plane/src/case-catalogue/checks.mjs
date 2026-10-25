@@ -917,7 +917,10 @@ export function checkCaseDocument(fm, ctx = {}) {
     }
     for (const m of members) {
       const row = rolesRows.find((r) => String(r.target ?? '') === m) || {};
-      const basis = memberBasis && Object.prototype.hasOwnProperty.call(memberBasis, m) ? memberBasis[m] : undefined;
+      /* R6: an entry is the member's basis array, or `{basis, references}` read at the same pinned bytes. */
+      const entry = memberBasis && Object.prototype.hasOwnProperty.call(memberBasis, m) ? memberBasis[m] : undefined;
+      const basis = entry && !Array.isArray(entry) && typeof entry === 'object' ? entry.basis : entry;
+      const references = entry && !Array.isArray(entry) && typeof entry === 'object' ? entry.references : undefined;
       const memberFm = {
         edition: row.edition,
         completeness: fm?.completeness,
@@ -926,6 +929,7 @@ export function checkCaseDocument(fm, ctx = {}) {
         ...(rowsFor('case_strength_grounds', m).length
           ? { published_strength_grounds: rowsFor('case_strength_grounds', m) } : {}),
         ...(Array.isArray(basis) ? { basis } : {}),
+        ...(Array.isArray(references) ? { references } : {}),
       };
       const own = [];
       checkPublishedExtension(memberFm, own);
