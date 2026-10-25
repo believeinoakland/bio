@@ -11,12 +11,14 @@ import { shapeRun, csvDoc, xlsxRowsDoc, capFor } from "./shape/harness.mjs";
 const ME = "member:ann";
 const F = [{ name: "id", type: "string" }, { name: "name", type: "string" }, { name: "amount", type: "string" }, { name: "note", type: "string" }];
 const addOp = { op: "workbookadd", path: "/workbookadd", body: { captureSha: "$SHA", question: "What does it cost?", period: "FY2025", project: "$PROJECT", by: ME } };
-const declareOp = { op: "tabledeclare", path: `/tabledeclare?viewer=${ME}`, body: { source: "$DOC", schema: { fields: F }, header: F.map((f) => f.name), by: ME } };
-const run = (doc) => shapeRun({ doc, cellRanges: true, project: true, opsAfter: [addOp, declareOp], maxTicks: 60, readingFor: false }, { capMB: capFor(doc.bytes / 1048576) });
+/* the table declared is the file's own columns: a CSV carries four, the generated workbook three (`xlsxRowsDoc`), and a header wider than the widest line is refused SOURCE_NOT_READ */
+const declareOp = (fields) => ({ op: "tabledeclare", path: `/tabledeclare?viewer=${ME}`, body: { source: "$DOC", schema: { fields }, header: fields.map((f) => f.name), by: ME } });
+const run = (doc, fields = F) => shapeRun({ doc, cellRanges: true, project: true, opsAfter: [addOp, declareOp(fields)], maxTicks: 60, readingFor: false }, { capMB: capFor(doc.bytes / 1048576) });
+const XLSX_FIELDS = F.slice(0, 3);
 const op = (r, name) => r.ops.find((o) => o.op === name);
 
-async function rangesHold(name, doc) {
-  const r = await run(doc);
+async function rangesHold(name, doc, fields) {
+  const r = await run(doc, fields);
   assert.equal(r.died, false, r.error || r.stderr);
   const g = r.ranges; assert.ok(g, "the ranges were asked");
   for (const label of ["last", "edge", "bound"]) {
@@ -47,13 +49,13 @@ test("R84 G123f: a 3 MiB CSV: the last row, a block edge and an over-bound range
 });
 
 test("R84 G123f: a 16,000-row xlsx: the same ranges equal the generator's, the table is declared and the workbook added", { timeout: 600_000 }, async () => {
-  const r = await rangesHold("xlsx", await xlsxRowsDoc(16_000));
+  const r = await rangesHold("xlsx", await xlsxRowsDoc(16_000), XLSX_FIELDS);
   assert.equal(op(r, "tabledeclare").ok, true);
   assert.equal(op(r, "workbookadd").ok, true, JSON.stringify(op(r, "workbookadd")));
 });
 
 test("R85 G123f: a 30,000-row xlsx (90,003 cells with its header row) is refused WORKBOOK_TOO_LARGE with its count and the add's bound when the bound is under it, added when the bound is over it (250,000 once workbooks R20 merges), never silently cut; its table is declared either way", { timeout: 600_000 }, async () => {
-  const r = await run(await xlsxRowsDoc(30_000));
+  const r = await run(await xlsxRowsDoc(30_000), XLSX_FIELDS);
   assert.equal(r.died, false, r.error || r.stderr);
   const add = op(r, "workbookadd");
   if (add.ok === false) {
