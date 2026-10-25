@@ -615,3 +615,15 @@ Proposed fix, for BOB to assign (it crosses case-catalogue and ratification): th
 **Not complete.** COMPLETE is not posted: the chain test, which B33 asks for, is red on a cause outside this module. BLOCKED (cause: tests) is posted instead, with the root and the proposed fix above. I did not skip or weaken the test.
 
 **Size (session_01PkeaPY8AiQwGQmpx2xoXoy): test runs 13, module lines 3102** (`bio-plane/src/case-authoring/*.mjs`; this job changed no source).
+
+## J29 · BLOCKED
+
+BLOCKED (cause: tests). The R31 chain test (B33) is written and pushed (job/T51/case-authoring, a3d566ed40), and it is red on a cause outside case-authoring, so COMPLETE is not posted.
+
+The chain: two grounded legs, one citation severed, concluded, prepared. The publish's gate (publishPreflight; ratification's caseRatifyPreflight over the stored text) refuses with C-2.8: "published_strength_grounds names no row for ground 'part 2'". The control, the same with the citation live, is green and freezes the part 2 row.
+
+Root, by reading (not changed here): case-catalogue/checks.mjs 920-928 (the case document's member arm) builds memberFm without the member's references. The live-leg filter at checks.mjs 382-388 reads fm.references, so on this arm no leg is ever severed. The R31 fix (302c1d7319) is correct for its unit test but not for this path: I ran the chain with the pre-fix checks.mjs swapped in and the refusal is identical.
+
+Proposed fix, for you to assign (case-catalogue and ratification): the member's references from its pinned bytes reach that arm beside basis (ratification's memberBasis carries them, or a memberReferences context is added), and memberFm carries references. Then the severed test goes green with its control unchanged.
+
+Module tests: 258 of 259 pass; the one failure is the severed chain. format 0, architecture 0, coverage 58 of 58 named. Record: build/jobs/T51/case-authoring.md, "Completion record for B33".
