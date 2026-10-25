@@ -97,3 +97,102 @@ None for the cause (engine, deterministic). After the fix, the same two files on
 ### 5. Owner
 
 **`ocr-worker`.** Requirement for BOB: R26 says "a turn it asks for is tried ... and is kept only when the turned page rates at least as many words ... **no page is read four ways**". That sentence forbids the repair. A repair that stays inside R26's reasoning: only a page that is **refused** (under R25's 0.2 after the claimed turn) and whose claim was one the frame itself did not confirm (the claimed frame's own claim is again a turn) may try the quarter turns not yet tried (up to two more, 90/270 then 180), keeping the best-rated one; a legible page is still never read four ways. R26 needs that exception written.
+
+---
+
+## R8 · a truncated PDF stores nothing of its readable pages (A5b)
+
+### 1. Root cause with evidence
+
+**Decided in `pdf-worker/src/index.mjs:131` and `:215`-`:239` (tier 2): pdf.js (`unpdf`) throws `InvalidPDFException: Invalid PDF structure` on a file cut off before its trailer, `handleStructure` catches it as `tier2_extraction_error` and answers tier 1 with no text; and tier 1 cannot decode the walker's pages itself, so nothing is stored.**
+
+- The walker's A5b file is `{kind:"pdf", seed:"rw9-A-5b", size:{pages:30, lines:6}, truncate:0.7}`: I rebuild it at exactly **16,746 B** (the walker's size), and tier 1 states **264 undetermined** (the walker's "264 undecodable region(s): no_tounicode"), 22 pages found, notes `xref_reconstructed`, `structure_reconstructed`, `pages_missing:8/30`.
+- The pages use pdfgen's default font: Type1 Helvetica with `/Encoding /WinAnsiEncoding` and **no `/ToUnicode`** (object 3 at byte 334, present in the cut file). Tier 1 (`bio-plane/src/pdfstructure.mjs`, `loadFont` `:2277`, `show` `:2770`-`:2780`) decodes only through `/ToUnicode` and marks every such run `no_tounicode` ("no character is guessed", pdf-reader). That is true of the **intact** file too: its tier-1 text has `chars: 0, undetermined: 360`. The design is that tier 2 (pdf.js) takes every no-ToUnicode file (`needsTier2`, `reading-pipeline/index.mjs:130`; `pdf-worker` header "Tier 2 handles ... no-/ToUnicode fonts").
+- On the **truncated** file tier 2 fails to open it. In-process with the unpdf the worker bundles: intact file, 30 pages, 117-136 characters a page; truncated file: **`InvalidPDFException: Invalid PDF structure`** (warning "Indexing all PDF objects" then throw). So `tier2Text` (`:131`) throws before any page, the `catch` at `:217` answers `tier2_extraction_error`, `structure.tier = 1`, and the plane keeps tier 1's undecodable text: `readingFromWire` states "the text of this document is undetermined (264 undecodable region(s): no_tounicode); a reading over text nobody decoded would be an invented one", `failure: final`, 0 units.
+- The readable pages are readable by pdf.js: with a trailer line appended and the unfinished last object cut away (`...endobj\ntrailer\n<< /Root 1 0 R /Size 49 >>\n%%EOF`) the same unpdf opens the file (`numPages` 23, "checkLastPage - invalid /Pages tree /Count: 30") and returns **pages 1-22 with 117-136 characters each** and one page error ("Page dictionary kid reference") at 23. The truth (`pdfgen`) says pages 22-30 are `TRUNCATED` and 1-21 readable. So pages 1-21/22 can be stored; the defect is that tier 2 gives up on the whole file where pdf.js would serve the pages before the cut once it is given a trailer.
+- Red, through the real `read` with the real `pdf-worker` bound (`bio-plane/test/m/reading-pipeline/fixture.mjs`, as `convert-tiers.test.mjs` does): `found: false`, `failure: "final"`, **0 text units**, basis the walker's sentence word for word. The same harness on the intact file (control) reads 30 pages.
+- The sentence the member then sees ("This document is 16 KB, which is more than your team's Civicsmith can read") is G1/R1 (DIAG-R10-A's). The "N of 30 pages could not be read" the brief expected is drawn from **units written and `unread_pages`**: once the 22 pages are stored the reading is `partial` with pages 23-30 unread and the Document page draws its existing "Pages ... couldn't be read" line (A10 shows the page draws it for a partial scan). The structure notes' own `pages_missing:8/30` does not reach the reading (R9 below).
+
+### 2. Why the tests missed it
+
+- `bio-plane/test/m/test-support/generators.test.mjs:107`-`:115` (R20): "a truncated PDF is cut where the recipe says ... **pdf.js reads the pages before the cut**" then `const o = await pdfjsText(b); if (o.skip || o.error) return;`: when pdf.js **throws** (as it does on this recipe's own `T1` file, which I ran: `InvalidPDFException`) the test **returns green**. The claim in its title is never asserted.
+- `pdf-worker/test/structure.test.mjs:263`-`:285`: R10 tests `tier2_extraction_error` with a hand-built `BROKEN` catalog-only file (`:43`), proving the error answer, not that a truncated real document gets read. No test of `pdf-worker` or `reading-pipeline` builds a `truncate` file (`grep truncate:` finds only `pdfgen.mjs` and the generator's own test).
+- `pdf-reader` tests the tier-1 half only (`pages_missing:8/30` is asserted there, satisfying its R8 (d)), where tier 1 needs no fonts.
+
+### 3. Failing-first test
+
+- **Module and file:** `pdf-worker`, `pdf-worker/test/structure.test.mjs` (a new `R8 truncated` block, Miniflare like its `mfWalker`), and `reading-pipeline`, `bio-plane/test/m/reading-pipeline/convert-tiers.test.mjs`-style test with `realMember(w)`.
+- **Builds:** `generate({kind:"pdf", seed:"rw9-A-5b", size:{pages:30, lines:6}, truncate:0.7})` (16,746 B), put under `bio/captures/<sha>`.
+- **Asserts:** (a) `POST /structure`: 200, `tier: 2`, `text.pages` holds pages 0-21 with the generator's line text (`truth.page(n).text` normalised) and none of 22-29; (b) through `read(...)`: `failure` absent, units = 22 (or 21 where the page cut mid-object, the truth's `unread` decides), each unit's text equal to the truth, `completeness` `partial`; (c) fix `generators.test.mjs:112` to `assert.ok(!o.error)` for the truncated recipe (the test the title promises).
+- **Seen red:** yes, in-process (tier 2 throw; `read` → final, 0 units). Not yet seen under workerd: see 4.
+
+### 4. Platform check
+
+Whether pdf.js in workerd throws at the same point as in Node is the question the Miniflare run answers: the test (a) runs under Miniflare (`pdf-worker/test/structure.test.mjs` builds one, `newMf()`), and it must show `tier: 2` with 22 pages there too. On the live copy, after the fix: upload the same file; `reading` must be `partial`, 22 units, the Document page "Read N of ..." with the cut pages named.
+
+### 5. Owner
+
+**`pdf-worker`** (tier 2: retry a failed open on a repaired view of the bytes, e.g. the bytes up to the last complete `endobj` plus a synthesized `trailer << /Root n 0 R >>` whose root is the catalog tier 1 already found, stating the repair in `notes`; or open page by page). Requirement for BOB: `pdf-worker` **R10** says a throw makes the answer "`tier2_extraction_error` ... `.tier` is 1" for every throw. That is right for corruption of the *document* but wrong for a *truncated* one, which has a readable front; R10 is silent on it. Alternative the requirement could choose instead (BOB's call, not mine): tier 1 decodes the PDF standard simple encodings (WinAnsi, MacRoman) without a `/ToUnicode`; `pdf-reader` currently forbids it ("no character is guessed"), and it would change every no-ToUnicode file, not only truncated ones.
+
+---
+
+## R9 · `xref_reconstructed` is never shown (A9)
+
+### 1. Root cause with evidence
+
+**The reading never takes the PDF reader's recovery notes: `reading-pipeline/index.mjs:3022`-`:3105` keeps only `st.text`, `st.metadata`, `st.pages`, `st.pageBoxes`, `st.images` from tier 1's answer (`:3050`-`:3057`) and `t2.text` from tier 2's (`:161`, `memberNotes` collected and unused); `st.notes` (`xref_reconstructed`, `structure_reconstructed`, `pages_missing`, `encrypted`, ...) is read by no one.**
+
+- `pdfstructure.mjs:848` adds `xref_reconstructed` when the cross-reference chain does not validate; `:1256`-`:1259` add `structure_reconstructed` and `pages_missing:<n>/<declared>`. `grep -rn "xref_reconstructed\|pages_missing\|structure_reconstructed" bio-plane/src pdf-worker/src` (outside `pdfstructure.mjs` and the word rows) finds **no consumer**.
+- `formats.mjs:344` (`structure: (bytes) => extractPdfStructure(bytes)`) hands the whole answer on; the pipeline reads the text of it only.
+- Red, through the real `read` with the real pdf-worker: A9's `structure:"damaged-xref"` and `"no-xref"` files (3 pages) read whole (3 units, tier 2 re-read the 3 pages), and a search of the whole stored `reading` object for `xref|reconstruct|pages_missing` finds **nothing**; the truncated A5b file's reading likewise carries no `pages_missing:8/30`. The walker's "searched the whole `reading` answer for 'xref'" is exactly this.
+- No word row exists for it: `words.json` has no key for a repaired file (`grep -i reconstruct` finds none). So a sentence is owed by the **design** (UX-DESIGN) as well as the carrying by the module.
+
+### 2. Why the tests missed it
+
+`pdf-reader`'s tests assert the note on the **structure answer** (`structure.notes.includes("xref_reconstructed")`, its R8 (a)), which is where it is made; `reading-pipeline` has no test that a recovery note reaches `reading`, and no requirement says it must (`build/requirements/reading-pipeline.md` has no line naming `notes`; the pdf-reader requirement R8's "notes ... informational only" stops at the structure answer). A9's brief ("read with `xref_reconstructed` stated") is a walk expectation that no module requirement owns: K4426's row G132 lists it under `pdf-reader` only.
+
+### 3. Failing-first test
+
+- **Module and file:** `reading-pipeline`, `bio-plane/test/m/reading-pipeline/` new `r10-recovery-notes.test.mjs` (the `fresh()` + `realMember` harness above).
+- **Builds:** `generate({kind:"pdf", seed:"rw9-A-9b", size:{pages:3, lines:6}, structure:"damaged-xref"})`, the same `"no-xref"`, and the A5b truncated file.
+- **Asserts:** `reading.recovery` (the name is the module's to choose) lists `xref_reconstructed` for the first two and `structure_reconstructed` + `pages_missing` (8 of 30) for the third; a control PDF with a good xref lists nothing; and (in the screens module's test, below) the Document page draws a sentence from a new word key.
+- **Seen red:** yes (nothing about the repair in the stored reading).
+
+### 4. Platform check
+
+None (data flow). After the fix, on the live copy the Document page of the two A9 files must draw the sentence; the stored reading's size grows by a few bytes.
+
+### 5. Owner
+
+**`reading-pipeline`** (carry the notes onto the reading, as `container_extent`/`text_source` are), then the Document page draws it: **`screens-inquiry`** (`document.mjs`) with a word row from the design, which is one job after this one (K4427: the carrying is this cause's job; the sentence is a second cause for UX-DESIGN's word table and `screens-inquiry`'s draw). Requirement for BOB: `pdf-reader` R8 (a)/(d) promise the notes; no requirement says where a member sees them. Silent: whether "this file was repaired before it was read" is a statement the member must see, or only an audit fact.
+
+---
+
+## R10 · `pages_left` wrong (A10 N5)
+
+### 1. Root cause with evidence
+
+**`reading-pipeline/index.mjs:755` (`stateOcr`: `target.ocr_left = { cursor, pages: left.pages.length }`) counts the OCR pages owed *in the piece just read*, and `extraction/index.mjs:760`-`:766` (`#ocrEntry`) and `:3251` (`owedAnswer`) publish that count as `registration.pages_left` beside the document's `total`.**
+
+- A PDF is read in ranges of 100 pages (`rangePages`). The first piece of a 300-page scan is pages 0-99; `tier3Extend` is asked about those pages only, so `ocr_left` is `{cursor: 0, pages: 100}`. I read it in-process (`read(..., {cursor: null, ocrInvocations: 0})` with the real pdf-worker, a 300-page scan `{pages:300, lines:3, kinds:["scan"]}`, 1,015,391 B): `more: true, read_through: 100, total: 300, ocr_left: {cursor: 0, pages: 100}, counters.owed: 100`. That is the walker's `readheld` answer exactly: `detail {read_through: 100, total: 300}` and `registration {kind:"ocr", pages_left: 100}`.
+- So `pages_left: 100` is true of the piece (100 pages owed OCR out of the 100 read) and false of the document (300 owed, 200 not yet read), under a name and next to a total that say "left". The ledger's later rows show OCR "continuing through all 300", because each later piece registers its own count (extraction R102: "from each continuation piece").
+- This is the same number the Document page and a `owedwork` row would show as "pages left" if either draws `pages_left`; I found one consumer that draws it as the document's: `extraction`'s `#pressOwes` (`:2919`), which counts the whole document (`#pagesLeft`), so the two registrations of one document disagree (100 from `readheld`, 300 from the press).
+
+### 2. Why the tests missed it
+
+`extraction` and `reading-pipeline` tests assert `pages_left` for documents of **one range** (under 100 pages: 30-page scans, `SCAN A1`/`C1`), where the piece and the document are the same pages; no test reads the first piece of a document longer than `rangePages` and asserts what `pages_left` means.
+
+### 3. Failing-first test
+
+- **Module and file:** `extraction`, a new case beside its `readHeld` tests (`bio-plane/test/m/extraction/`), using the real store fixture `bio-plane/test/m/plane/fixture.mjs` for the registrar.
+- **Builds:** the 300-page scan above held in the evidence store, `readHeld({sha, defer:false})` with no `kind` (the door's own read).
+- **Asserts:** the answer's `registration.pages_left` equals the **document's** unread count (300, or `total - read_through + owed`, whichever the requirement fixes) or the key is renamed for what it is (`pages_in_piece`); and the `ocr` job row registered holds the same figure the press registers for the same document.
+- **Seen red:** the figure (100 against total 300) seen in-process through `read`; not through the `readHeld` entry (needs the plane fixture; the number is the same one `owedAnswer` copies from `ocr_left`).
+
+### 4. Platform check
+
+None (arithmetic). Live copy after the fix: `readheld` on a 300-page scan must answer a `pages_left` the walker can add up.
+
+### 5. Owner
+
+**`extraction`** (what it publishes: `owedAnswer`/`#ocrEntry`). Requirement for BOB: `extraction` R102 says the row is `{kind:"ocr", sha, cursor, pages_left}` "from each continuation piece" without saying whether `pages_left` is the piece's or the document's; `reading-pipeline` R37 says `ocr_left` is "the first page owed and how many". Silent: the word. MINOR (A10): no member sees the key unless a screen draws it.
