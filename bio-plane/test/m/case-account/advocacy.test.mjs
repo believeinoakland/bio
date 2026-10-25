@@ -9,6 +9,7 @@ import { world, V, sha } from "./fixture.mjs";
 import { CaseAccount, CASE_ACCOUNT_CHECKS, ADVOCACY_RESULTS, ADVOCACY_CHECKS_MAX } from "../../../src/case-account/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { checkAccountMalformed } from "../case-checker/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", OPEN = "INQ-2026-0002-q", MET = "CNT-2026-0001";
 const CLAIM = "the award followed the minutes";
@@ -120,7 +121,7 @@ test("R13: refusals in order, each writing nothing — MACHINE_CANNOT_CHECK_ADVO
 test("R13: a judgment that throws or answers anything but its departures answers every sentence undetermined, never supported, and is kept as answered; negative control: the real check answers the same text", () => {
   const { w, MINE } = setup();
   const text = [{ text: "The council met on 3 March 2026.", cites: [passage(MET)] }, { text: "The award followed the minutes.", cites: [finding(Q)] }];
-  for (const checker of [{ checkAccount: () => { throw new Error("down"); } }, { checkAccount: () => ({ ok: false, reason: "MALFORMED" }) },
+  for (const checker of [{ checkAccount: () => { throw new Error("down"); } }, { checkAccount: () => checkAccountMalformed() },
                          { checkAccount: () => null }, { checkAccount: () => ({ ok: true }) }]) {
     const c = new CaseAccount({ storage: w.st, record: w.record, ...w.deps, checker });
     const r = c.advocacyCheck({ project: MINE, sentences: text, author: V("alice"), viewer: V("alice") });
