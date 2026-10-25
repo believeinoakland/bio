@@ -108,3 +108,29 @@ COMPLETE (T51 fix round 10, Wave A batch 4 · basis-versions), answering B8. Ful
 - Tests: basis-versions 194 pass / 0 fail; 18 users 0 fail; control-plane 2 and plane 3 failures are inherited (also fail with the tranche's module). format, architecture, coverage (47 of 47), words, fixtures, ownership: 0 failures.
 - Deferred: none. Found in other modules: none.
 Size (session_01SrdYb2t95osCMqx6hdxR2r): test runs 16, module lines 2,855
+
+## J9 · COMPLETE
+
+COMPLETE (T51 · basis-versions), answering B9 (follow-up 40, K5114).
+
+**Entries applied.** Two kinds added to `concludeAct` in `bio-plane/test/m/basis-versions/fixtures.mjs`, each the real `conclude` over a real world. The existing kinds (`concluded`, `no_conclusion`, `bad_reading`) answer as before; their world is built as before.
+- `adopted`: a named accepted reading (`accepted-reading`, state `accepted`, claim "the council approved the transfer") adopted with no project, the conclusion text given beside it. Answers `{ok: true, target, from: "open", to: "concluded", relationship: "no_project", project: null, version: "accepted-reading", claim: {state: "adopted", text, version}, conclusion}`. No reading is made.
+- `no_claim`: the same named reading, accepted but stating no claim. Answers `{ok: false, reason: "NO_CLAIM", code: "NO_CLAIM", check: "C-33.34", translation, detail, version: "accepted-reading"}`.
+
+Tests in `fixtures.test.mjs`: "a named accepted reading with a claim, adopted with no project…" and "a named accepted reading that states no claim is the real NO_CLAIM refusal…". Each checks the real answer, the refusal's code, check and translation (translation equals `word("refusal.NO_CLAIM")`). The control for an unknown kind is unchanged.
+
+**Markers added.** None.
+
+**Deferred.** None. The contradiction re-point (`fixture.mjs:120`) is contradiction's CHANGE, which BOB sends; nothing of mine waits on it.
+
+**Found in other modules.** None.
+
+**Tests and checks run.**
+- `fixtures.test.mjs`: 6 pass, 0 fail.
+- `bio-plane/test/m/basis-versions/*.test.mjs`: 196 pass, 0 fail, 0 todo.
+- `checks/fixtures.mjs /home/user/bio basis-versions --list`: 0 failures (answer 0, stub 0, contract 0).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs`: 0 failures. `checks/coverage.mjs`: 47 of 47 live ids, 0 failures. `checks/words.mjs`: 0 failures. `checks/ownership.mjs … tranche/T51`: 0 failures.
+
+Commit `d712527905` on `job/T51/basis-versions`, pushed.
+
+Size (session_013iNHaS6ke2aVZUYTPJEyMy): test runs 2, module lines 2855
