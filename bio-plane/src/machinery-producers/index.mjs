@@ -443,10 +443,10 @@ export class MachineryProducers {
    *  carries (`ACQUIRE_GRADE_NOTE`, capture's export, as its R76 answers them), read synchronously. A capture is named,
    *  and held, by its `register` row (provenance R48): those under the item's bundle, at most the option bound (queue-producers R2), or a
    *  request's own digest. A capture the viewer may not see (its register row's bundle out of sight) carries none. R16 (K4509):
-   *  a capture held in parts is one capture, its whole's, so the rows provenance marks `part_of` (its R73) are skipped. */
+   *  a capture held in parts is one capture, its whole's: `registeredFor` answers wholes only (provenance R73, R74). */
   #gradeNotes({ bundle = null, sha = null }, visible) {
     const rows = bundle
-      ? this.#provenance.registeredFor(bundle).filter((r) => !r.part_of)
+      ? this.#provenance.registeredFor(bundle)
           .slice(0, MachineryProducers.QUEUE_OPTION_SUBJECTS_MAX).map((r) => ({ capture_sha: r.capture_sha, bundle_id: bundle }))
       : typeof sha === "string" && sha
         ? this.#rows(`SELECT r.capture_sha, r.bundle_id FROM register r WHERE r.capture_sha=?`, sha.toLowerCase())
