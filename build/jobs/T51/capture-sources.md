@@ -363,3 +363,7 @@ Screens-intake's tests forward with the bare id until this merges; after it they
 No `fixtures-own`/`fixtures-generic` markers added. Deferred: none. Found in another module: none beyond the above.
 
 Size (session_01Q1yszDBNgp9hK77DQ5s84q): test runs 14, module lines 493
+
+## J13 · COMPLETE
+
+R72 done: credential ops resolve member from the door's stamped form (credentials.mjs). Red-first ops test green; module 133/133, users green. Door-level test refused by architecture check in my tests (store-request later in order): REPORT, place it with store-request (text in J12). screens-intake forwards bare id until this merges. Record J12.
