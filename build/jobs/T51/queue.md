@@ -295,3 +295,7 @@ B18 applied: merged origin/tranche/T51 (no node_modules entry tracked in my bran
 **Checks.** queue suite 229 of 229; format 0 failures; coverage queue 55 of 55, 0 failures; words queue 0 failures; ownership 0 failures; architecture 5 failures (the edges above); fixtures 1 failure (the waiting line above).
 
 Size (session_01YN9TEdL7KJ1syeaAkvZf85): test runs 3, module lines 2956
+
+## J16 · BLOCKED
+
+BLOCKED (cause: needs BOB). B19 applied on job/T51/queue: 7 of my 8 fixture lines now take the providers' published fixtures; queue suite 229/229; format, coverage, words, ownership 0 failures. Two things left, in my record's last section. (1) NEEDS BOB: architecture queue has 5 failures because the new fixture imports are of modules queue does not declare in uses (K1088's case): add to queue's uses in build/modules.json the earlier modules people, money-checks, provenance, monitoring, docket (progressions is declared). modules.json is yours, not mine. (2) fixtures list keeps noticed.test.mjs:292 (op-table notices): people and money-checks halves are done; the same table holds duties, answers and inquiry answers with no published fixture for them, so that line waits on those providers. No marker added. Say when the edges are on tranche/T51 and I merge and re-run the checks, then COMPLETE.
