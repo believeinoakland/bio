@@ -592,3 +592,17 @@ The record's previous COMPLETE (J31, session_01EL8F…) stated 375/375 on an old
 2. Not reproduced: I did not find any `interface-shell` source cause for the 82 beyond the storeWorld one. Once REPORT 1 is placed, re-run the suite; any test still red then is mine to look at in a CHANGE.
 
 **Size (session_0135BWD8XZpisnx9i7kU3v1o): test runs 5, module lines 3392**
+
+## J33 · COMPLETE
+
+COMPLETE for interface-shell, B47 (K5178): `person`'s second act `linecurrentthrough` is a named re-point.
+
+Changed: `bio-plane/src/interface-shell/index.mjs:156-157` (RE_POINTS gains `person: ["linecurrentthrough"]`); new `bio-plane/test/m/interface-shell/k5178.test.mjs` (R73 K5178, failing first: red with "person's act linecurrentthrough is not the registry's for it, nor a named re-point"; green after the change; control: `stepsourcewithdraw` on person and `linecurrentthrough` on explore still throw); `design.test.mjs:81` and `t50.test.mjs:34` pin the new RE_POINTS contents.
+
+Met: R73 (the re-point set; R55 unchanged). Markers added: none.
+
+Checks (absolute root /home/user/bio, tip 08f661ccb1): format 0; architecture 0; coverage 127/127; words 0; ownership 0; fixtures --list: only the lines B46 named (harness 22, 23, 88, 89, 91, 97).
+
+Tests: the interface-shell suite is 376 tests, 294 pass, 82 fail. The same 82 fail with the change reverted. The cause is outside my paths: store-assembly's world (K5149, 38536482fc) now binds INSTANCE_NAME, so the base world records the team, and store-request's storeWorld (fixtures.mjs:34) then fails GROUP_ALREADY_RECORDED on every call. Placement needed (REPORT 1 in the record). Until it lands, the interface-shell suite is not green.
+
+Record: build/jobs/T51/interface-shell.md, section J32. Size (session_0135BWD8XZpisnx9i7kU3v1o): test runs 5, module lines 3392.
