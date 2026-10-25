@@ -186,3 +186,28 @@ test("R66 the request log line and every answer carry no secret: nothing is logg
   assert.equal(logged.length, 0);
   assert.deepEqual(leaks(w.raw()), []);
 });
+
+test("R72 the stamps read as the door writes them: member:<id> (with a carried project) resolves the member, a bare id and the founder's own form still do, a machine form never", async () => {
+  const w = await world();
+  const d = door(w);
+  const a = await d("capturecredentialsupply", { stamps: { viewer: "member:ann@P1", by: "member:ann@P1" }, body: supplyBody() });
+  assert.equal(a.ok, true, JSON.stringify(a));
+  assert.equal(a.credential.supplied_by, "ann", "stored as the member id, as R56 reads it");
+  const seen = (viewer) => d("capturecredentiallist", { stamps: { viewer } }).entries.map((e) => e.credential);
+  for (const viewer of ["member:ann", "member:ann@P1"]) assert.deepEqual(seen(viewer), [a.credential.credential], viewer);
+  for (const viewer of ["ann", "member:bob", "class:admin", "class:ai/tok", "member:nobody", ""])
+    assert.deepEqual(seen(viewer), [], `${JSON.stringify(viewer)} sees none`);
+  /* the founder's own form supplies a group credential and any member form withdraws only what R63 lets it */
+  const g = await d("capturecredentialsupply", { stamps: { viewer: "admin", by: "admin" }, body: supplyBody({ scope: "group", host: "g.example.gov" }) });
+  assert.equal(g.ok, true, JSON.stringify(g));
+  const denied = await d("capturecredentialwithdraw", { stamps: { viewer: "member:bob", by: "member:bob" }, body: { credential: g.credential.credential } });
+  assert.equal(denied.code, "CAPTURE_CREDENTIAL_NOT_PERMITTED");
+  const own = await d("capturecredentialwithdraw", { stamps: { viewer: "member:ann", by: "member:ann" }, body: { credential: a.credential.credential } });
+  assert.equal(own.ok, true, JSON.stringify(own));
+  assert.equal(own.withdrawn.withdrawn_by, "ann");
+  /* a stamp that resolves to no active member, a machine credential's included, is refused as before */
+  for (const by of ["member:nobody", "class:ai/tok", "member:ann/tok"]) {
+    const r = await d("capturecredentialsupply", { stamps: { viewer: "admin", by }, body: supplyBody() });
+    assert.equal(r.code, "CAPTURE_CREDENTIAL_NOT_A_MEMBER", by);
+  }
+});
