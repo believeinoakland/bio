@@ -1,7 +1,7 @@
 /* conformance's published fixtures (K4990, K4993, K4995): each is made by conformance's real code over the real modules
    it uses (./fixture.mjs) when a test calls it, never stored. A user takes `conformance` (the real module on a real
    database) and the ids and viewers that answer to its reads. */
-import { scene, V } from "./fixture.mjs";
+import { scene, V, F, DOC } from "./fixture.mjs";
 
 /** R37: `curesOf` over a noncompliant determination, the later compliant determination that cures it, and the link a
  *  member recorded. `viewer` is a participant who sees both; `outsider` is a member who sees neither. */
@@ -36,4 +36,39 @@ export function determinationRead() {
 export function noDeterminations() {
   const { w } = scene();
   return { conformance: w.c, viewer: V("pat"), world: w };
+}
+
+const IMPORT_SHA = "a".repeat(64);
+const HELD = "INQ-2026-0201-held";
+const made = (d) => { if (!d.ok) throw new Error(`fixture determination refused: ${JSON.stringify(d).slice(0, 300)}`); return d.id; };
+
+/** R9, R14, R31, R32, R33: `determinationRead` over each state a determination reads in: one resting on a finding checked
+ *  for publication and held unsigned (basis `checked_held`), one on another group's accepted finding (basis `accepted`),
+ *  a compliant one, one a later determination superseded (`superseded_by` set) with its successor, and a live one
+ *  (`superseded_by: null`). None is void here (see `voidDetermination`). */
+export function determinationVariants() {
+  const { w, proj, std, input } = scene();
+  w.inquiry(HELD, { legs: [{ target: DOC }] });
+  w.hold(HELD, proj);
+  const ref = w.accept(IMPORT_SHA, "INQ-2026-0001-theirs");
+  const held = made(w.c.determine(input({ findings: [HELD] })));
+  const accepted = made(w.c.determine(input({ findings: [{ ref, edition: 1 }] })));
+  const compliant = made(w.c.determine(input({ standards: [{ standard: std, outcome: "compliant" }],
+                                                rows: [{ ...input().rows[0], reading: "aligns" }] })));
+  const superseded = made(w.c.determine(input()));
+  const supersededBy = made(w.c.determine(input({ supersedes: superseded, reason: "restated" })));
+  return { conformance: w.c, held, accepted, compliant, superseded, supersededBy, live: supersededBy,
+           viewer: V("pat"), outsider: V("quinn"), world: w };
+}
+
+/** R33: a determination resting on a held check whose source then lapsed: it reads void, its outcome undetermined with the
+ *  recorded one beside it, still live and unedited. `control` is a published-finding determination that reads not void. */
+export function voidDetermination() {
+  const { w, proj, input } = scene();
+  w.inquiry(HELD, { legs: [{ target: DOC }] });
+  w.hold(HELD, proj);
+  const voided = made(w.c.determine(input({ findings: [HELD] })));
+  const control = made(w.c.determine(input({ findings: [F] })));
+  w.lapse.sources = [{ source: "lapsed" }];
+  return { conformance: w.c, voided, control, viewer: V("pat"), outsider: V("quinn"), world: w };
 }

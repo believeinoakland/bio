@@ -395,11 +395,21 @@ function decideDelimiter(text, first) {
   DELIMITERS.forEach((d, j) => {
     const seen = new Map();
     for (const r of recs) seen.set(r[j], (seen.get(r[j]) ?? 0) + 1);
-    let best = 0, bestN = 0;
-    for (const [count, times] of seen) if (times > bestN || (times === bestN && count > best)) { best = count; bestN = times; }
+    let best = 0, bestN = 0, present = 0;
+    for (const [count, times] of seen) {
+      if (count < 1) continue;
+      present += times;
+      if (times > bestN || (times === bestN && count > best)) { best = count; bestN = times; }
+    }
     modal[d.name] = best;
-    if (best >= 1 && bestN * 2 > lines) consistent.push({ ...d, times: bestN });
+    // consistent: present (at least once) on the majority of the lines, whatever its count on each (R7); the modal count breaks a tie
+    if (present * 2 > lines) consistent.push({ ...d, times: present, modalLines: bestN });
   });
+  if (consistent.length > 1) {
+    const top = Math.max(...consistent.map((d) => d.modalLines));
+    const lead = consistent.filter((d) => d.modalLines === top);
+    if (lead.length === 1) consistent.splice(0, consistent.length, lead[0]);
+  }
   if (consistent.length === 1) {
     const d = consistent[0];
     return { delimiter: d.ch, name: d.name, confidence: "certain", lines,

@@ -274,7 +274,7 @@ test("R7 dialect delimiter: exactly one candidate consistent on a majority of th
   const tied = d("a,b;c\n1,2;3\n");
   assert.equal(tied.delimiter, null);
   assert.deepEqual(tied.undetermined, ["delimiter_undetermined_tied"]);
-  assert.deepEqual(d("a,b\n1,2,3\n").undetermined, ["delimiter_undetermined_none_consistent"]);
+  assert.deepEqual(d("a,b\nplain\n").undetermined, ["delimiter_undetermined_none_consistent"], "half the records is not a majority");
   assert.deepEqual(d("plain\nwords\n").undetermined, ["delimiter_undetermined_none_consistent"]);
   assert.deepEqual(d("a,b\n").undetermined, ["delimiter_undetermined_too_few_lines"]);
   assert.deepEqual(d("a,b\n1,2").undetermined, ["delimiter_undetermined_too_few_lines"], "the unterminated last line is not complete");
@@ -283,7 +283,9 @@ test("R7 dialect delimiter: exactly one candidate consistent on a majority of th
   assert.equal(d("Report title\nprepared by\nsomeone\nmore text\nand more\n" + "a,b,c\n".repeat(60)).delimiter, "comma");
   assert.equal(d('a,"x\ny"\n'.repeat(30)).delimiter, "comma");
   assert.equal(d("a;b\r1;2\r3;4\r").delimiter, "semicolon");
-  assert.equal(d("a,b\n1,2,3\n").delimiter, null, "half the records is not a majority");
+  assert.equal(d("a,b\n1,2,3\n").delimiter, "comma", "whatever its count on each line (cause 20): both records have commas");
+  assert.equal(d("a,b\nplain\n").delimiter, null, "half the records is not a majority");
+  assert.equal(d("a,b;c;d\n1,2;3;4\n5;6;7\n").delimiter, "semicolon", "two consistent: the modal count holding on most lines breaks the tie");
   // the first 1,000 complete records decide
   assert.equal(d("a,b\n".repeat(1000) + "x\n".repeat(5000)).delimiter, "comma");
   // both undetermined at once

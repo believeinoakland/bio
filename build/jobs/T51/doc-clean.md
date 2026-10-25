@@ -1,6 +1,6 @@
 # doc-clean (T51)
 
-**Status** · session_01GLQmY1ex7pDodDcbS94kDg · depth 2 · COMPLETE · handled B6
+**Status** · session_01QUXFAzg41W7YNtvFQwBTkB · depth 2 · COMPLETE · handled B7
 
 ## J1 · REPORT
 
@@ -108,3 +108,23 @@ Size (session_01GLQmY1ex7pDodDcbS94kDg): test runs 4, module lines 1157
 ## J8 · COMPLETE
 
 COMPLETE (START B6). ooxml's OFFICE_ENTRIES_MAX refusal (readContainer and discriminate) now maps to TOO_MANY_ENTRIES with the declared count, nothing written; the package of exactly the bound is still copied (package.mjs tooManyEntries, index.mjs packageFormat). Red: round9 'R3 R12 TOO_MANY_ENTRIES' (AssertionError OFFICE_ENTRIES_MAX, then DOCUMENT_UNREADABLE); green after. The test's own count of the over-bound fixture used readContainer, which ooxml now refuses; it uses endCounts. doc-clean tests 66 (65 pass, 1 skipped oracle absent), case-carriage 98/98, case-disclosures 115/115. Checks: format 0, architecture 0, coverage 0, ownership 0 failures; words: no finding in doc-clean (the 19 failures are pdfgen.mjs inline x2 and installer-steps missingkey x5 etc., not mine). Details in build/jobs/T51/doc-clean.md 'Completion notes'.
+
+## J9 · COMPLETE
+
+COMPLETE (START B7, fix round 10 Wave A batch 3: publish 1 fixture).
+
+Applied. `bio-plane/test/m/doc-clean/fixtures.mjs` publishes `encryptedRefusal`: the real `cleanDocument` answer for an encrypted PDF (trailer naming /Encrypt, Standard security handler), `{ok: false, code: "ENCRYPTED", detail}`, made at call time, never stored. Its test, `fixture-answers.test.mjs` (two tests, R3), checks the answer by its exact keys, code and detail, and that each call answers afresh and equally. Users: case-disclosures 1 (re-pointed in its own job, later).
+
+Markers added: none (no `fixtures-own` or `fixtures-generic`). Lines: doc-clean's own lines of the list at zero (fixtures check, absolute root: 0 failures). `checks/fixtures.mjs` with a relative root reads nothing (K5066), so the absolute path was used.
+
+Merge: tranche/T51 merged into the job branch (no conflict); pushed `405fc4e336`. No source change in `bio-plane/src/doc-clean/`.
+
+Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/doc-clean/*.test.mjs`: 68 tests, 67 pass, 0 fail, 1 skipped (the LibreOffice/pdftotext oracle, by name, tool missing).
+Impact (`node build/plan/impact.mjs origin/tranche/T51 HEAD`, run after the merge): doc-clean 6 test files, case-carriage 3 (documents, marker, since), scheduler 1 (copies). Those 4 files run: 47 tests, 47 pass, 0 fail.
+Checks (civicos-process, absolute product root /home/user/bio): format 0 failures; fixtures doc-clean 0; architecture doc-clean 0; coverage doc-clean 12 of 12, 0; ownership doc-clean tranche/T51 0; words doc-clean 0 (unkeyed 0, missingkey 0).
+
+Deferred: none. Found in other modules: none.
+Stale generated artifacts: none new (no src change).
+Stray files, my error: an unset shell variable sent four scratch outputs to the filesystem root: /impact.txt, /impact.json, /users.log, /dc.log. Not in the repository; outside the working tree. Their removal was refused by a safety check, so they are left for a person to delete.
+
+Size (session_01QUXFAzg41W7YNtvFQwBTkB): test runs 4, module lines 1157
