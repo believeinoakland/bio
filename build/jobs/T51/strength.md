@@ -1,6 +1,6 @@
 # strength (T51)
 
-**Status** · session_01JmYPC9c3SBS7Z6uwYREAt2 · depth 2 · COMPLETE · handled B17
+**Status** · session_01KLPsZDDduC4727bYshWARJ · depth 2 · COMPLETE · handled B18
 
 ## J1 · REPORT
 
@@ -264,3 +264,19 @@ Size (session_01JmYPC9c3SBS7Z6uwYREAt2): test runs 7, module lines 3048
 ## J16 · COMPLETE · re B17
 
 B17 done: money readFact re-pointed to readFactNotFound/readFactOf; fixtures.mjs --list for strength at 0; strength tests 186 pass; format, architecture, coverage, ownership 0 failures; no fixtures-own/generic markers.
+
+## J17 · COMPLETE · re B18
+
+B18 done (fix round 10, item 74): strength R45 is met.
+
+- `projectBarSet` takes `expected` (`{capture, connection}`, each null for none). It is compared axis by axis with R14's answer for the bar now held, after every other refusal and before anything is written. A changed bar writes nothing and answers `BAR_STALE` (new row C-107.5, `checks.mjs`; sentence a `localize("refusal.BAR_STALE", …)` stand-in for the design list) with `previous` (the bar now held) and `project`. `expected` absent or null keeps R40's last-writer behaviour. An `expected` that is not a pair of grades-or-null is `BAD_GRADE` with `axis: "expected"`. The sentence names the bar, never who changed it. The DEC-49 region `is-project-bar-fresh` is added. `projectbarset`'s declared `fields.accepts` gains `expected` (R41).
+- Fixture published: `projectBarStale()` in `fixtures.mjs` (screens-inquiry draws it), checked in `fixtures.test.mjs`. The project world the bar tests used moved to `projectbar-world.mjs`, so the fixture and `projectbar.test.mjs` share one world.
+- Met ids for BOB to strike: R45.
+- Failing-first: seven R45 tests in `projectbar.test.mjs`; five were red on the old code (the second set succeeded), green now. Two older row-count assertions (`reads.test.mjs` C-107.3, `vocabulary.test.mjs` R28) now count the new row.
+- Why the tests missed it: `projectbar.test.mjs` and `strengthbarset.test.mjs` set the bar in sequence by one writer; no test held two views, and promotion's CAS tests use an explicit `base`, while `projectBarSet` read its base at write time so the CAS always passed.
+- Tests: strength 194 pass (the files run alone sum to 194). The users of `projectbarset` (op-declarations, op-grades, affordances, screens-inquiry project, control-plane, store-request): 92 of 94 pass; the two failures are credentials `R83` tests in control-plane `t47-door.test.mjs` and `store-request/inner-request.test.mjs`, which fail identically on `tranche/T51` (not mine).
+- Checks (absolute root): format 0; architecture 0; coverage 45 of 45; ownership 0 (9 files); words 0; `fixtures --list` strength: no failing line, no marker added.
+- REPORT, row census: C-107.5 `BAR_STALE` is a new refusal row, so `row-census.test.mjs` is red until the layer-2 stamp (current.md rule); `bio-plane/test/fixtures/row-census-*.jsonl` and the AWAITING_STAMP list are promotion's.
+- Deferred: nothing.
+
+Size (session_01KLPsZDDduC4727bYshWARJ): test runs 12, module lines 3081

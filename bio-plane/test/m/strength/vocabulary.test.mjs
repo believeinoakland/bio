@@ -246,7 +246,7 @@ test("R28: the bar's sentences (R14–R16) carry no analyst's word", () => {
 test("R28: every refusal row's translation (C-30, C-71, C-32.9, C-107) carries no analyst's word", () => {
   const rows = [VERSION_STRENGTH_CHECKS, PARTITION_INDEPENDENCE_CHECKS, STRENGTH_BAR_CHECKS]
     .flatMap((t) => Object.entries(t).map(([code, row]) => [`${row.check} ${code}.translation`, row.translation]));
-  assert.equal(rows.length, 9 + 9 + 5);
+  assert.equal(rows.length, 9 + 9 + 6);
   for (const [where, t] of rows) assert.ok(typeof t === "string" && t.length > 20, where);
   clean(rows);
 });
