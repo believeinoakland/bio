@@ -50,6 +50,7 @@ The pure engine of calculation: it reads figures exactly as printed, holds them 
 
 **A streamed table** (N571; K1576; `calculations` R1)
 - **R22** A table input of `evaluate` may also be bound as a *streamed table*: `{fields, rows}`, `rows` a function that answers, on each call, a new iterator over the table's rows, each row an array of its cell values in `fields` order, not an object keyed by field name. Over a streamed table `evaluate` answers exactly as over the same table bound as row objects (R7–R14: the same `result`, `undetermined_rows` and `trace`), and a malformed one is refused `INPUT_INVALID` as a malformed table is. Evaluating any recipe of R6's grammar over a streamed table of 1,000,000 cells grows the heap by less than the 35 MB K1576 measured for 500,000 cells as row objects, so `calculations` R1's cell bound can return to about 1,000,000; the test measures the growth and states it. A table result whose source was bound streamed is answered streamed, `{fields, rows}`, holding the same table as the row-object answer; a result over row objects alone is answered as before (K1734).
+- **R23** (fix round 9, G183; K5011; S-31) **`draw` and `interval` scale to the table bound.** `draw` over 1,000,000 keys yields on bounded slices and answers the same sample; `interval` is O(n log n) or better with the same intervals. Test: a 1,000,000-key draw equal to today's sample with no synchronous stretch over one slice; `interval` over 100,000 values, same result. *(not yet met: T51)*
 
 ## Private
 
