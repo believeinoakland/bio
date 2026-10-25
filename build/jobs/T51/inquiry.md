@@ -266,3 +266,35 @@ Findings outside inquiry's paths (B15, plan item 99 (6)), each the day found:
    The re-pointing is screens-inquiry's, in its next session (plan item 99 (6)).
 
 Also observed, not a finding in our paths: `checks/run.mjs /home/user/bio` exits 1 with 820 `FAIL` lines across other modules (none under `inquiry`); its words line reads 19247 words, 16 failures, and this job adds no user-facing string.
+
+## J15 · COMPLETE
+
+COMPLETE for B15 (inquiry's refusal answers published as fixtures, plan item 99 (6), K5200). Commit `944dc10695` on `job/T51/inquiry`. `tranche/T51` was fast-forwarded in first (`61ae2a7`), so there was nothing to merge by hand.
+
+**Entries applied**
+- `bio-plane/test/m/inquiry/fixtures.mjs`: three exports, each made by the real act over a fresh world, never stored:
+  - `divideAnswers()` (:129), `op=inquirydivide`: `divided` (its `into`, `children`, `apportionment`), `childExists` (`CHILD_EXISTS`), `noHome` (`NO_APPORTIONMENT`, `orphans` naming leg 1), `noReason` (`NO_REASON`), `notAnInquiry` (`NOT_AN_INQUIRY`), `absent` (`NO_SUCH_BUNDLE`), `machine` (`MACHINE_CANNOT_DIVIDE`, `C-32.7`).
+  - `groundAnswers()` (:154), `op=inquiryground`: `authored`, `restructured`, `noPartition` (`NO_PARTITION`), `notAnInquiry`, `absent`, `cutsAgainst` (`BASIS_REFUSED`, the finding naming leg 1, `C-2.8`), `noReason` (`NO_REASON`). `heldAfterAuthored` and `heldAfterRefusals` show that a refusal writes nothing.
+  - `questionWaitsNone()` (:174), `op=questionwaits`: a visible question with no wait, in a world with `capture`.
+  - Constants `P`, `C1`, `C2`, `E`, `G`; `MACHINE` imported from `fixture.mjs`. No source change.
+- `bio-plane/test/m/inquiry/fixtures.test.mjs`: the imports, the catalogue import `INQUIRY_GRAMMAR_CHECKS`, and five tests: R23 R25 (:96), R23 R25 catalogue (:110), R27 R85 (:116), R55 R58 (:130), and the two-calls test (:137).
+
+**Failing first.** The new tests were red before the exports existed (`SyntaxError: ... does not provide an export named 'divideAnswers'`). Two first-draft assertions were wrong, and the real answers corrected them:
+- `divide`'s `NO_REASON` carries no `target` (`#divide` returns `reason` and `detail` only). The assertion now checks the reason alone.
+- `questionWaits` in a world without `capture` gives `document_waits: null`, `HELD_ACTS_UNREADABLE`. The fixture now builds its world with `capture`, as the screen's world has it.
+
+**Met ids.** The new tests name R23, R25, R27, R55, R58 and R85, all already met. Nothing is newly met, and no requirement changed. BOB strikes marks as he sees fit.
+
+**Markers.** None added (`fixtures-own` and `fixtures-generic` count 0).
+
+**Tests and checks** (absolute root `/home/user/bio`; run without `--test-force-exit`, each exits by itself):
+- `--test bio-plane/test/m/inquiry/fixtures.test.mjs`: 12 tests, 12 pass.
+- `--test bio-plane/test/m/inquiry/*.test.mjs`: 243 tests, 242 pass, 0 fail, 1 todo (R31, the existing `not yet met: MK-5`).
+- Impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`): 8 modules, 10 test files (`inquiry/fixtures.test.mjs`, `citation/cite-refusals`, `citation/draw`, `ai-runs/plan`, `intent/discovery`, `case-disclosures/hunch`, `queue/noticed`, `screens-inquiry/fr4-question`, `screens-inquiry/t51-final`, `control-plane/t50-door`): 98 of 98 pass.
+- `format` 0 failures (178 modules). `architecture inquiry` 0 (151 relative imports). `coverage inquiry` 58 of 58 named, 0. `ownership` 0 against the merge base `61ae2a7` and against `tranche/T51` (3 files: my two and my record).
+- `fixtures.mjs /home/user/bio inquiry --list`: 0 failures, answer 0.
+- `run.mjs /home/user/bio`: no finding in `inquiry`'s files, words in this job 0. The run exits 1 on other modules; see the REPORT.
+
+**Deferred.** None. **Flaws found in inquiry.** None. **Found in another module:** the REPORT above (control-plane :175, screens-inquiry's seven lines).
+
+Size (session_01RuijnFp5KUgZxc7Koddggy): test runs 7, module lines 3849
