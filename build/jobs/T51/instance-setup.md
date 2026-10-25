@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_011ShJzhwLnZv3XLiooRzh1n · depth 2 · COMPLETE · handled B21
+**Status** · session_01EL6fyybXDaUbWobs5GqhCa · depth 2 · COMPLETE · handled B22
 
 ## J1 · REPORT · re B1
 
@@ -380,3 +380,42 @@ COMPLETE (re B20). Cause 1 (instanceGroupSeed's recorded_at under a pinned clock
 COMPLETE (re B21, CHANGE K5170). R105 is met: op=selftest states each migration's counts to an administrator, read only, from extraction's migrationCounts, through the store-internal route selftestmigrations (setup.mjs: selftestMigrations(), the route in instanceSetupOps, the arm in selftest(); extraction added to the import). A non-administrator's answer has no migrations key; a store that does not answer states null, not a health failure. Tests: r105-migrations.test.mjs (3, red first: the answer had no migrations key), exports.test.mjs route list gains selftestmigrations. Module suite: 246 of 246 pass. format 0, architecture 0, coverage 77 of 77, words 0, ownership 0, fixtures no new line (no marker). Commit 75ea81e370 on job/T51/instance-setup.
 
 REPORT for BOB, outside my paths: (1) plane's door.test.mjs R1, R5, R67 is red now: it counts instance-setup's routes as thirty-six, and selftestmigrations makes thirty-seven; plane's job sets the count and lists the route. (2) extraction publishes no migrationCounts fixture, so the test takes the real answer from instance-setup's own store route over a booted world; extraction's R110 test drives the counts. (3) The route is store-internal, like bootstrapfacts: op-declarations' internal-route list (t47) should name it too; not red today. (4) Not run: plane, store-assembly, control-plane suites.
+
+## J28 · COMPLETE
+
+COMPLETE · re B22 (K5182; plan item 89; R106)
+
+**Changed (file:line).**
+- `bio-plane/src/setup.mjs:2701` (`#setupOut()`, new): the oldest `running_releases` row as `{version, installed_at}` (`first_seen_at`), else `null`.
+- `bio-plane/src/setup.mjs:2809` `updateNotice`: its answer now carries `setup: this.#setupOut()` beside `running`. No other key changed; `bootstrap` (R95) is unchanged.
+- `bio-plane/test/m/instance-setup/r106-setup-release.test.mjs` (new), three tests, each named R106.
+
+**Failing-first, seen red then green.**
+- Red on the code before the change: all three tests failed with `setup` `undefined` (`AssertionError`).
+- Green after the change: 3 pass, 0 fail.
+- Test 1: a copy set up on 0.84.0 (first seen at T0), then running 0.85.0 at T0+1 day, answers `setup: {version: "0.84.0", installed_at: "2026-10-14T20:00:00.000Z"}` and `running` 0.85.0. This proves the oldest row is taken.
+- Control: a first-release copy answers the same release and instant as both `setup` and `running`.
+- Control: an emptied `running_releases` answers `setup: null`; `running` still answers 0.84.0 with `installed_at: null`.
+
+**Answer shape for screens-settings (R81).** `setup` is `{version, installed_at}` (both strings, `installed_at` an ISO instant) or `null`. Its re-point is in screens-settings' own job.
+
+**Met ids.** R106 is met on this commit (BOB strikes the mark). No other id is claimed.
+
+**Markers.** No `fixtures-own` or `fixtures-generic` marker added (checked against `origin/tranche/T51`).
+
+**Suite counts.** Module folder `bio-plane/test/m/instance-setup/*.test.mjs`: 249 tests, 249 pass, 0 fail, 0 cancelled (it includes the three R106 tests).
+
+**Checks** (absolute root `/home/user/bio`, run on the committed HEAD `ab53a29712`, amended once for the commit message):
+- `checks/format.mjs`: 178 requirement files, 0 failures.
+- `checks/architecture.mjs instance-setup`: 35 product files, 0 failures.
+- `checks/coverage.mjs instance-setup`: 78 of 78 live ids named by a test, 0 failures (the first run, before the commit, showed R106 unnamed because coverage reads committed files; after the commit it passes).
+- `checks/ownership.mjs instance-setup <merge-base> HEAD`: 0 failures.
+- `checks/run.mjs /home/user/bio`: no finding in `bio-plane/src/setup.mjs` or the test file. Words: 19239, unchanged from the tranche; failure total 1731, identical to the tranche's own run. The findings are all outside my paths.
+- `checks/fixtures.mjs /home/user/bio instance-setup --list`: 0 failures. Two lines are accepted and wait on the provider's marker, as the rules allow: `bio-plane/test/m/instance-setup/fixture.mjs:190` and `:201`, `accepted(store-replies)`, waiting on store-door (later in the order, its `fixtures-run` on the tranche).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 modules affected of 178, 0 test files affected.
+
+**Tranche merge.** The job branch was 41 commits behind `tranche/T51`; merged `origin/tranche/T51` into it (no rebase) before `mail start`.
+
+**Size (session_01EL6fyybXDaUbWobs5GqhCa): test runs 3, module lines 3880** (`setup.mjs`, `setup-fleet.mjs` and `livefire.mjs` together; the tests directory is 6085 lines).
+
+**Reported, not in my paths.** None found.
