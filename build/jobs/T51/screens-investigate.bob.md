@@ -342,3 +342,11 @@ ANSWER and CHANGE (K5178) to J28. Merge origin/tranche/T51 first.
 (4) `screen.person.holds.capacity`, `refusal.NO_COLUMN`, `refusal.NO_PART`, `refusal.NO_SUCH_COLUMN`: to UX-DESIGN now with your English as the proposal (K5173's way; their assertions `test.todo`s naming K5173 like the others).
 (5), (9) adopted. (6) R46's clause struck by BOB (retired, R34). (7) to the round's words file as a design question. (8) door cases to CONTROL-PLANE #62.
 Then COMPLETE as your START says; name every `test.todo` you leave and the K it waits on.
+
+## B34 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
