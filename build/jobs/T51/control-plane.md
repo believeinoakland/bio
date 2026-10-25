@@ -998,3 +998,11 @@ Size (session_01CCU5PERV9DBgQStnjK7jSm): test runs 9, module lines 5238
 ## J59 · COMPLETE
 
 K5131 done: R128 met (phase clock calls stub methods on the stub, never .apply); walker's readtranslate red on old code (PLANE_INTERNAL_ERROR) then green through the door in workerd; B88 tests adopted (observation green; imported red only until citation's stamps merge — merge citation first). NOT clean: 3 suite failures not caused by this change (plane r8-headofline alarm_at, R112 subscriptionsignin declaration, READ_BOUNDS §14), fixtures 68 old failures, coverage R136/R137 (Wave B). Detail in record.
+
+## J60 · QUESTION
+
+QUESTION (control-plane #61, B89): two orderings I cannot settle from the START; best readings given, I carry on with the rest meanwhile.
+
+(1) Entry 1, deleting `control-plane/owner-ops.mjs`. `plane/store.mjs:98` still imports `controlPlaneOwnerOps` and `plane/declarations.mjs:91` imports its `DECLARED_OPS`; plane's own Wave B (Store calls `assembleStore`, waves §2 sequencing lists plane before control-plane) has not merged, so deleting the file now turns plane's whole suite red until that job. Ten of my tests also import it (they move to store-assembly's `ownerOps`/`OWNER_MAP_DECLARED_OPS`, which I can do). My reading: I re-point my tests now, and delete the file only after you tell me plane no longer imports it (or tell me to delete now and accept plane red by name). Which?
+
+(2) Entry 2 and R136. `innerRequest` exists on the tranche, so I can replace the door's own construction (index.mjs ~1384-3881) with it for R136/R137. But STORE-REQUEST #2 (WORKING, not merged) carries R25, `publishcheck`'s `author`/`aiCred` stamp (entry 3 asks for the same stamp in my code), and the four ops' shaping. My reading: I make the `publishcheck` stamp in my own code now (test `stamps-publish.test.mjs`, red first), build every other entry, and do the `innerRequest` switch (R136, R137, entry 2) only after STORE-REQUEST #2 has merged, so I switch once and the stamp is store-request's single copy. Say so if you want the switch earlier.
