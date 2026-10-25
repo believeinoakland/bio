@@ -344,3 +344,39 @@ export async function credential(world, as, { host = "records.example.gov", kind
     throw new Error("storeWorld: recipes.credential needs the instance's key: make the world with storeWorld({ env: { CAPTURE_CREDENTIALS_KEY } })");
   return as.act("capturecredentialsupply", { body: { kind, host, secret, scope, ...(filed ? { project: filed } : {}) } });
 }
+
+/** R19 (STORE-REQUEST #6, B16 (2); SCREENS-DAILY #24 J31 (6)): a team of `n` projects, each started by the real `promote` of its document (`project`), in order. Answers their bundle ids. */
+export async function projects(world, as, n, { prefix = "Project" } = {}) {
+  const ids = [];
+  for (let i = 1; i <= n; i++) ids.push(await project(world, as, `${prefix} ${String(i).padStart(3, "0")}`));
+  return ids;
+}
+
+/** R19 (STORE-REQUEST #6, B16 (2); SCREENS-DAILY #24 J31): a draft shared for review on a case no edition of which is published, by the real acts: a project and a finding in it, a
+ *  draft of a new case (`casedraft` with `newCase`) and a reader's link to it (`reviewgrant`, `days` from the world's clock; `comment` makes the reader's own `reviewcomment` under the
+ *  link's secret). Answers `{project, finding, draft, grant, secret, until, comment}`. `publishedlist` answers no case of it. */
+export async function draftOnly(world, as, { project: filed = null, days = 60, comment = null } = {}) {
+  const n = counter(world, "__draftonlys");
+  const projectId = filed ?? await project(world, as, `Draft only ${n}`);
+  const found = await finding(world, as, projectId, { title: `A finding awaiting its edition ${n}` });
+  const draft = (await as.act("casedraft", { body: { project: projectId, newCase: true, targets: [found.id] } })).draftId;
+  const until = new Date(world.now() + days * 86_400_000).toISOString().replace(/\.\d{3}Z$/, "Z");
+  const grant = await as.act("reviewgrant", { body: { draft, recipient: "A reader", until } });
+  let said = null;
+  if (comment) said = resultOf(await world.door({ url: `/api/?${new URLSearchParams({ op: "reviewcomment", draft })}`, init: { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ secret: grant.secret, text: comment }) } }, null));
+  return { project: projectId, finding: found.id, draft, grant: grant.grantId, secret: grant.secret, until, comment: said };
+}
+
+/** R19 (STORE-REQUEST #6, B16 (2); SCREENS-INVESTIGATE #17 J31 (3)): a court's register followed and read, by the real acts: the member follows the address (`followregister`), the source
+ *  serves a page (the network double), and the world's clock is moved on (`tick`) so the following consumer reads it as it does. Afterwards `follows` carries the read's `last_read` and
+ *  `last_outcome` (`captured`). The member's session locks after the idle that `tick` is, so she is signed in again; answers `{follow, address, as, read}` (`as` the fresh session). */
+export async function register(world, as, { address = "https://court.example/register/RG26-114502", html = null, proceeding = null, tick = 1000, status = 200 } = {}) {
+  world.script(address, async () => new Response(html ?? `<html><head><title>Register</title></head><body><p>Entry 1: an order was filed.</p></body></html>`, { status, headers: { "content-type": "text/html" } }));
+  const made = await as.act("followregister", { body: { address, ...(proceeding ? { proceeding } : {}) } });
+  const fired = await world.tick(tick);
+  const read = ((fired.follow && fired.follow.read) || []).find((r) => r.follow === made.follow);
+  if (!read || read.outcome === "failed") throw new Error(`storeWorld: the register at ${address} was not read: ${JSON.stringify(read || fired.follow || null).slice(0, 300)}`);
+  const fresh = await world.signIn(as.handle);
+  return { follow: made.follow, address, as: fresh, read };
+}

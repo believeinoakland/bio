@@ -102,9 +102,9 @@ test("R53 control: a member who is not in the project reads its stake and is dra
 
 test("R63 the project's published cases and docket: each case it published a published reference and its docket, once however many editions; a read that fails is failed, never none", async () => {
   const list = ok({ bundles: [], cases: [{ case_id: "CASE-1", edition: 1 }, { case_id: "CASE-1", edition: 2 }, { case_id: "CASE-2", edition: 1 }] });
-  const pc = (r) => ok({ ok: true, case_id: r.query.caseId, edition: Number(r.query.edition), project: r.query.caseId === "CASE-1" ? P : "PROJ-2026-0042" });
+  const pc = (r) => ok({ ok: true, case_id: r.query.id, edition: Number(r.query.edition), project: r.query.id === "CASE-1" ? P : "PROJ-2026-0042" });
   const p = await open(at, { plane: { publishedlist: list, publishedcase: pc } });
-  assert.deepEqual(p.byOp("publishedcase").map((r) => [r.query.caseId, r.query.edition]).sort(), [["CASE-1", "2"], ["CASE-2", "1"]], "the latest edition of each case, once");
+  assert.deepEqual(p.byOp("publishedcase").map((r) => [r.query.id, r.query.edition]).sort(), [["CASE-1", "2"], ["CASE-2", "1"]], "the latest edition of each case, once");
   const s = section(p, "project.work.title");
   assert.ok(s.textContent.includes(word("screen.published.name")) && s.textContent.includes(word("screen.docket.name")));
   assert.ok(!s.textContent.includes("CASE-2"), "another project's case is not listed");

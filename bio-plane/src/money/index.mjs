@@ -962,7 +962,8 @@ export class Money {
     if (!fact) return noSuchFact(factId);
     const at = this.#now();
     return this.#record.transact(() => {
-      const open = act === "include" ? this.#one(`SELECT proposal_id FROM money_set_proposals WHERE set_id=? AND fact_id=? AND adopted_act IS NULL ORDER BY proposal_id LIMIT 1`, setId, fact.fact_id) : null;
+      /* R12, R13 (T51; K5198): either act on a fact closes its open proposal, so a proposal then excluded is not left open. */
+      const open = this.#one(`SELECT proposal_id FROM money_set_proposals WHERE set_id=? AND fact_id=? AND adopted_act IS NULL ORDER BY proposal_id LIMIT 1`, setId, fact.fact_id);
       this.#sql.exec(`INSERT INTO money_set_acts (set_id, fact_id, act, reason, by, at, proposal_id) VALUES (?,?,?,?,?,?,?)`,
         setId, fact.fact_id, act, clip(reason, REASON_MAX), by, at, open ? open.proposal_id : null);
       const actId = this.#one(`SELECT max(act_id) AS id FROM money_set_acts`).id;

@@ -2058,7 +2058,7 @@ export function credentialsOf(ctx, { record = null, membership = null, sealSecre
     const core = record ?? recordOf(ctx);
     const m = membership ?? membershipOf(ctx, { record });
     /* R72 (T48; `ai-accounts` R32): `ai-accounts` is made here, first, with the seal secret this module is given */
-    const accounts = aiAccountsOf(ctx, { record: core, membership: m, sealSecret });
+    const accounts = aiAccountsOf(ctx, { record: core, membership: m, sealSecret, now });   /* K5197: the instance clock reaches it */
     c = new Credentials({ sql: storage.sql, core, membership: m, accounts, now });
     OF.set(storage, c);
     c.start();

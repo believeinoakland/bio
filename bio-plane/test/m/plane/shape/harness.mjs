@@ -137,7 +137,7 @@ async function child(spec) {
   const { createHash } = await import("node:crypto");
   const { createReadStream } = await import("node:fs");
   const v8 = await import("node:v8");
-  await import("../../../../src/plane/register.mjs");
+  await import("../../../../src/store-assembly/register.mjs");
   const { store } = await import("../fixture.mjs");
   const { multipartBucket } = await import("../../record-core/storage.mjs");
   const { recordOf } = await import("../../../../src/record-core/index.mjs");

@@ -20,6 +20,7 @@ const ASSET = "dist/bio-plane.bundled.mjs";
 const SERVICES = [{ binding: "SELF", service: "bio-plane" }, { binding: "AGENT", service: "alpha-worker" }];
 const repo = () => makeRepo({ plane: { config: { services: SERVICES } } });
 const deploy = (root, stub, flags = []) => run(root, "bio-plane", ["scripts/deploy.mjs", SLUG, VERSION, ASSET, ...flags], { env: CF, stub });
+// fixtures-own: platform the Cloudflare API's own answers to the deploy's account calls, a scripted-network double of the platform; no module answers for them
 const okStub = (extra = {}) => ({ subdomain: "sub", put: "accept", scripts: { "alpha-worker": { settings: {} } }, ...extra });
 const uploads = (r) => r.calls.filter((c) => c.method === "PUT" && !c.url.endsWith("/schedules"));
 const plain = (put, name) => put.metadata.bindings.find((b) => b.name === name);

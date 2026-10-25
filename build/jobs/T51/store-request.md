@@ -1,6 +1,6 @@
 # store-request (T51)
 
-**Status** · session_01YAznjnRHhLsjKXBKS2Q9hy · depth 2 · WORKING · handled B16
+**Status** · session_01YAznjnRHhLsjKXBKS2Q9hy · depth 2 · COMPLETE · handled B17
 
 ## J1 · QUESTION
 
@@ -233,3 +233,29 @@ REPORT, NOT BUILT: each cause is outside my paths, with file:line in my record.
 Met (BOB strikes): R4, R7 (R72 case), R17 (selftest), R19 (recipes), R20 (the verify-marks row is stale: world.test is 9 of 9). R19's list gains parted, largeSheet, credential. No fixtures-own or fixtures-generic marker added.
 TESTS AND CHECKS: suite 81 tests, 80 pass, 1 todo (R22), equal to the sum of its 17 files run alone; run.mjs: format 0, architecture 0, words 19247 unchanged, no finding in my files; fixtures store-request 0 failures; ownership 0; screens-entry front.test 15/15 (the only outside files naming PUBLISHED/selftest/published recipes).
 Size (session_01YAznjnRHhLsjKXBKS2Q9hy): test runs ~40, module lines 559
+
+## B16 answered (STORE-REQUEST #6)
+
+Merged `origin/tranche/T51`. Module suite 86 tests, 85 pass, 1 todo (R22), equal to the 19 files' sum (81 + 5 new).
+
+**(1) `reviewcopy` stamped with the member's viewer** (SCREENS-DAILY #24 J31 (4)). `door.mjs` `publicAnswer` asked the store for `reviewcopy`, `reviewcomment` and `statementack` with no caller, so a member's session was never her viewer and even a project's owner was given `NO_REVIEW_COPY`. With no secret the door now resolves the reader as the Worker's door does (`caseReader`'s viewer, control-plane R138, `index.mjs:1054-1081`), sets it on the store's address, and carries a member's `drafts` list and a statement's body `reason` as the Worker's does (`REVIEW_COPY_DOORS`). New `review-copy.test.mjs` (2 tests, R23), red before (the owner was given `NO_REVIEW_COPY`), green now: the owner reads the copy; a member with no standing and a caller with no session are given the same bytes at the same status; a forged `viewer` in the address is not read; a member's `drafts` list and `reviewcomment` work; a recipient's secret still opens the copy.
+
+**(2) Recipes** (`recipes.mjs`, tests `recipes-b16.test.mjs`, 3): `recipes.projects(as, n)` (n real promotions; 201 give a first page of 200 with `truncated` and `next`, the cursor `after` reaches the last; 201 take 4.4 s); `recipes.draftOnly(as, {project, days, comment})` (a draft of a new case, a reader's link, optionally the reader's own `reviewcomment`; `publishedlist` holds none of it, control: a published finding makes an edition); `recipes.register(as, {address, html, proceeding, tick, status})` (`followregister`, the source scripted, `tick`, the follow consumer reads it: `follows` then carries `last_read` and `last_outcome: captured`; the member's session locks across the tick, so it answers a fresh `as`; a source that fails throws). R19's list gains `projects`, `draftOnly`, `register`.
+
+**REPORT, no act makes the state (code read):**
+1. *A project at stage `investigating`, `paused` or none.* `project-roster/index.mjs:928` lists the bundle's recorded `current_state`; `promotion/index.mjs:712-717` refuses a new project at any state but `forming` or `closed` (`PROJECT_STAGE_COMPUTED`) and `promotion/history.mjs:253` removed the `forming -> investigating` edges, so the recorded state is `forming` or `closed` only and is never null; `paused` is in no table. The 200-project team is built (above).
+2. *`startfrom` with no scripts.* `wizard-scripts/index.mjs:1384` `startFrom` offers the Civicsmith library to every viewer; the library is read-only (`wizardretire` of its script answers `WIZARD_NOT_THE_GROUPS`, measured), and members with no capability, `contribute` or administrator all read 16 or 19 scripts (measured). A team's own scripts cannot subtract from it.
+3. *A release notice for the queue's R19.* `setup.mjs:2635` accepts a notice only when `verifyReleaseNotice` verifies its signature against `this.#deps.releaseKeys ?? RELEASE_KEYS` (the product's release keys, whose private halves no repository holds); the assembled store hands instance-setup no `releaseKeys`. Cause for store-assembly: an option handing the world a test release key (`releaseKeys` to `instanceSetupOf`); then the notice is made by the real check (`setup.mjs:2596`, the feed scripted at `RELEASE_NOTICE_ADDRESS`).
+4. *A `mentioned_together` hop.* The hop needs two documents whose readings name one entity; references are written only from a reading's `entities` (`extraction/index.mjs:1535-1556`), and those come from a wired reading (`reading-pipeline/index.mjs:2290-2306`, `wired.parsed.entities`). A prose page with case numbers and company names read by the real `readheld` answered `found: false` and left `reading_refs` empty (measured). A recipe would need a wired reader's output (an `AGENT_WORKER` double that answers entities, K5044 (1)), which is a job of its own; say if you want it built.
+
+**Checks.** `checks/run.mjs`: format 0, architecture 0, words 19247 unchanged (16 failures, none mine), coverage failures none in my files; `checks/fixtures.mjs store-request --list`: 0 failures (3 accepted, unchanged); ownership 0.
+Size (session_01YAznjnRHhLsjKXBKS2Q9hy): test runs ~55, module lines 559
+
+## J18 · COMPLETE
+
+COMPLETE for B16 (STORE-REQUEST #6); full account in my record, section "B16 answered". Pushed.
+BUILT: (1) the world's door now stamps reviewcopy/reviewcomment/statementack with a member's viewer as the Worker's door does (control-plane R138) and carries drafts/reason; review-copy.test.mjs (2), red before (the owner got NO_REVIEW_COPY), green now. (2) recipes projects(as,n) (201 give a cut page of 200 + cursor), draftOnly (draft on a case with no edition, optional reader comment), register (followregister + tick: follows carries last_read); recipes-b16.test.mjs (3). R19's list gains projects, draftOnly, register.
+REPORT, no act makes it (code with file:line in my record): (a) project stage investigating/paused/none: promotion/index.mjs:712-717 + history.mjs:253 + project-roster/index.mjs:928 (only forming/closed are recorded); (b) startfrom with no scripts: wizard-scripts/index.mjs:1384 offers the read-only library to every viewer (wizardretire refuses it, WIZARD_NOT_THE_GROUPS); (c) release notice for queue R19: setup.mjs:2635 verifies against RELEASE_KEYS (no private half in any repo), world hands no releaseKeys: store-assembly option needed; (d) mentioned_together hop: references come only from a wired reading's entities (reading-pipeline/index.mjs:2290-2306, extraction/index.mjs:1535-1556); a prose page read gives found:false (measured); would need an AGENT_WORKER double answering entities: a job of its own, say if wanted.
+Met (BOB strikes): R23 (viewer at the review copy's three), R17, R19. Earlier J17 report items (a)-(d: older install, deliver, clock, upload reading) still stand for store-assembly.
+Tests/checks: suite 86 tests, 85 pass, 1 todo (R22), equals sum of files; format 0, architecture 0, words 19247 unchanged, fixtures store-request 0, ownership 0. No fixtures-own/generic marker added.
+Size (session_01YAznjnRHhLsjKXBKS2Q9hy): test runs ~55, module lines 559

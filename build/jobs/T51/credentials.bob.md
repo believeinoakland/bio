@@ -1,6 +1,6 @@
 # BOB to credentials (T51)
 
-**Read** · handled J24
+**Read** · handled J26
 
 ## B1 · START
 

@@ -61,7 +61,6 @@ test("fixture fleetReports: the real bootstrap body of each lag case installer r
 
 /* The public group identity of a store that recorded no group: public-read holds the registered `identity()` it is handed and answers it as given
    (its R34), so the value is this module's. `logo` is part of the real answer. */
-// fixtures-run: public-read group-identity-public
 test("contract group-identity-public: the answer of groupIdentityPublic() with no group recorded", async () => {
   const w = await boot({ env: {} });
   assert.deepEqual(w.m.groupIdentityPublic(), { ok: true, group: null, display_name: null, domain: null, domain_verified_at: null, logo: false,
