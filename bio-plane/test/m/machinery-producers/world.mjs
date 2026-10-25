@@ -60,7 +60,7 @@ export function world({ updateNotice, provenance: homes = null, ...fakes } = {})
      is the real provenance a test hands in (`homeOfHomed`, provenance's published fixture), the empty one when none. */
   let home = homes;
   F.provenance = { homeOf: (sha) => (home ??= homeOfEmpty()).homeOf(sha),
-                   registeredFor: (bundleId) => provenanceOf(host, { record, membership }).registeredFor(bundleId) };
+                   registeredFor: (bundleId) => (w.registered ?? provenanceOf(host, { record, membership })).registeredFor(bundleId) };
   /* R12: the plane hands the notice read in `deps.updateNotice`; none is handed unless a test gives one. */
   const p = machineryProducersOf(host, { record, membership, ...F, ...(updateNotice ? { updateNotice } : {}) });
 
@@ -86,7 +86,7 @@ export function world({ updateNotice, provenance: homes = null, ...fakes } = {})
   };
   const asked = { homes: [], options: [] };
   const w = {
-    db, sql, host, record, membership, p, fakes: F, statements, now: NOW, asked,
+    db, sql, host, record, membership, p, fakes: F, registered: null, statements, now: NOW, asked,
     run: (s, ...a) => db.prepare(s).run(...a.map(bind)),
     bundle(id, type = "information", { title = id, state = null } = {}) {
       const st = state || ({ inquiry: "open", project: "active", information: "collected" }[type] || "collected");
