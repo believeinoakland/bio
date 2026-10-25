@@ -364,3 +364,23 @@ Size (session_01F6cD98xuTLXGhudyFtHWu4): test runs 7, module lines 2726
 ## J25 · COMPLETE
 
 COMPLETE (job 80, re B22 · K4968). The four parted-upload ops moved to T51_DESIGN_OPS and read by their DEC-431 rows; t36 R48 green; affordances 287/0; op-declarations 248/0, affordances-pack 4/0, store-door 57/0, admission 73/0; architecture, channels, words, ownership 0 failures. Inherited reds, identical without my change: tasks R25 (K4488), queue R55. Not run to the end: control-plane whole (hangs at t51-round8-seam), interface-shell. See record, job 80.
+
+## J26 · REPORT
+
+## Fix round 10, item 73 (2): `t33.test.mjs:189` (R12 R24) red on the tranche
+
+**Cause.** The catalogue is right to refuse; the grade is missing. `ruleservicesstate` is an answers read (K5138; declared in `src/answers/ops.mjs:47`, served at `:24`). The R12 totality counts every gated read that is neither published nor named in op-grades' `NON_ACTS`; this read is named in neither, so `unaccounted` reports it as `unpublished`. `ruleanswer` passes only because op-declarations' `OP_ALIASES` (`src/op-declarations/index.mjs:99`) files it under `rule`, which op-grades grades in `T33_NON_ACTS` (`src/op-grades/t33.mjs`, answers block, around line 316). Nothing in that table grades `ruleservicesstate`. The catalogue does learn the owner-declared read (the test's table takes answers' op map), so no kind of declaration is missing from affordances: the row is missing from op-grades.
+
+**Why missed.** The read was added by K5138 with its handler and its declaration, but not its grade row in op-grades' table. The totality is checked only by affordances' `t33` (R12 R24), which runs on the merged tranche and not on answers' own tests.
+
+**Red first.** `t33.test.mjs:189` on the tranche as merged (K5153): `unpublished: ["ruleservicesstate"]`, `unranked: []`. Still red after my checks: the affordances suite is 287 tests, 286 pass, 1 fail, and the one fail is this test. No change made by me.
+
+**Platform check.** N.
+
+**Change needed (outside my paths; op-grades, for BOB to route).** In `src/op-grades/t33.mjs`, answers block of `T33_NON_ACTS`, add one row beside `rule` and `asktallies`:
+`ruleservicesstate: R("whether the rule services are switched on, so a screen draws their control only while on"),`
+By reading, that row removes the `unpublished` entry: the read is then named in `NON_ACTS` and no longer counted by the R12 totality. I have not run it, since the file is outside my paths. Please check also `src/op-declarations/index.mjs:318` (the class table lists `rule: "read"` and `asktallies`/`standing`/`standinganswers` as `ownread`, and has no `ruleservicesstate`); if the door needs its class there too, that is the same change. Once it lands I re-run the suite and COMPLETE.
+
+**Checks** (ABSOLUTE root `/home/user/bio`): format 0 failures; architecture 0; coverage 54 of 54, 0 failures; words 0 failures (dev 1, unchanged); ownership 0 failures. Fixtures: 4 failures (`door.test.mjs:154` and `:234` code; `answer-envelope/door-helpers.test.mjs:16` contract fixtures-run `affordances door-helpers`). I added no marker and changed no file, so none is new; `--list` shows the tranche's state.
+
+**Deferred:** none. **Found in other modules:** the op-grades row above (and the op-declarations class line to check).
