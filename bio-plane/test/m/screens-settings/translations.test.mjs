@@ -25,7 +25,7 @@ async function spanish({ reachable = false } = {}) {
   await ana.act("translationadopt", { body: { language: "es", key: CHANGED, text: "Preguntar" } });
   englishWas(w, "es", CHANGED, "Questions");   // SEED: the English it was kept from
   await founder.act("translationadopt", { body: { language: "es", key: PROTECTED, text: "Reversible, en español" } });
-  t.draft = draftOf(w, "es", QUEUE, "Cola", "ana");   // SEED: the assistant's draft
+  t.draft = draftOf(w, "es", QUEUE, (await wordOf(founder, QUEUE)).en, "Cola", "ana");   // SEED: the assistant's draft
   if (reachable) await holdKey(founder, w);
   t.only = onlyWords(founder, [HOME, QUEUE, PROTECTED, CHANGED, NOTED]);   // WORLD GAP: 26,000 rows are not drawn in a test's time
   t.table = { translations: t.only };

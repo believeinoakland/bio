@@ -7,10 +7,10 @@ import { env } from "./fixtures.mjs";
 export const PROFILE = "oakland-alameda";
 
 /** A world with the founder (its one active administrator) and dev (a member who administers nothing), the Oakland profile active unless `profile: false`. */
-export async function team({ profile = true, env = {} } = {}) {
+export async function team({ profile = true, env = {}, devCapabilities = null } = {}) {
   const w = await storeWorld({ env });
   const founder = await w.signIn("founder");
-  const dev = await w.signIn("dev");
+  const dev = await w.signIn("dev", devCapabilities ? { capabilities: devCapabilities } : undefined);
   if (profile) await w.recipes.profiles(founder, [PROFILE]);
   return { w, founder, dev };
 }
@@ -123,4 +123,67 @@ export async function pickerPages(as, state = "held_and_vouched") {
     if (!r.truncated || !r.next) return pages;
     q = { state, fields: "picker", limit: "1000", after: r.next };
   }
+}
+
+/* ---- bias ---- */
+
+import { createHash } from "node:crypto";
+const sha256Hex = (t) => createHash("sha256").update(t).digest("hex");
+const q = (x) => JSON.stringify(String(x));
+const STATES = ["draft", "proposed", "adopted"];
+
+/** The registry's subject: an entity the team holds under `label`. Answers its entity id. */
+export const subjectNamed = async (as, label = "City Housing Department") => (await as.act("entitycreate", { body: { kind: "body", label, note: "n" } })).entity_id;
+
+/** `as` writes a bias set the way the page's "Write a set" does (a minted id, then `promote` of its bundle.md), moved on through the states to `upTo`
+ *  (a set reaches adopted only through proposed: the owner's state machine). Answers the last promotion's answer. */
+export async function writeSet(w, as, { title, subject, text, why, not = "It does not check whether a second source was independent of the first.", kind = "scrutiny", upTo = "proposed", locked = false, nullifies = null, id = "s1" }) {
+  const iso = new Date(w.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
+  const minted = await as.read("allocid", { query: { prefix: "BIAS", year: iso.slice(0, 4) } });
+  const bundleId = minted.id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-$/, "");
+  let base = null, made = null;
+  for (const [i, state] of STATES.slice(0, STATES.indexOf(upTo) + 1).entries()) {
+    const yaml = ["---", "object_type: bias", "title: " + q(title), "current_state: " + state, "prior_state: " + (i === 0 ? "null" : STATES[i - 1]), "created: " + q(iso), "last_updated: " + q(iso), "statements:",
+      "  - id: " + q(id), "    kind: " + q(kind), "    subject: " + q(subject), "    text: " + q(text), "    justification: " + q(why), "    citations: []", "    locked: " + locked,
+      ...(nullifies ? ["    nullifies: " + q(nullifies)] : []), "---", "", "## What This Does Not Enforce", "", not, ""].join("\n");
+    made = await as.act("promote", { body: { bundleId, base, snapKey: iso.replace(/[-:]/g, "") + "_" + sha256Hex(bundleId + state).slice(0, 8),
+      meta: { object_type: "bias", title, current_state: state, created: iso, last_updated: iso }, files: [{ path: "bundle.md", text: yaml }], register: [] } });
+    base = made.bundleSha;
+  }
+  return made;
+}
+
+/** `as` adopts the set `bundleId` for the team (`scope: "instance"`) or the project `scopeId`, with a reason (the owner reads the set and scope from the address, the reason from the body). */
+export const adoptSet = (as, bundleId, reason = "We agreed.", scopeId = null) =>
+  as.act("biasadopt", { query: { bundleId, scope: scopeId ? "project" : "instance", ...(scopeId ? { scopeId } : {}) }, body: { reason } });
+
+/** A team with a subject in the registry, the founder, dev (who may start projects) and a project dev started. */
+export async function biasTeam({ env = {} } = {}) {
+  const t = await team({ profile: false, env, devCapabilities: ["contribute", "create_projects"] });
+  t.dept = await subjectNamed(t.founder);
+  t.project = await t.w.recipes.project(t.dev, "The Coliseum lease");
+  return t;
+}
+
+/** Work made under a lens that has since moved: a question concluded under the project's lens (a finding, bias R40), then the project's lens changed and the
+ *  scheduler's sweep run. Answers the work's key as bias names it (`finding:<bundle>`). The founder owns the project's lens here (the page's reader). */
+export async function debtOf(t, { text0 = "We read the Department's reports closely.", text1 = "A late reply is not read as a refusal." } = {}) {
+  const { w, founder, dept } = t;
+  const project = await w.recipes.project(founder, "Findings project");
+  await adoptSet(founder, (await writeSet(w, founder, { title: "First lens", subject: dept, text: text0, why: "It writes the figures it is judged by.", upTo: "adopted", id: "p1" })).bundleId, "The first.", project);
+  const doc = await w.recipes.hold(founder, "evidence.txt", "The lease was signed.");
+  const id = "INQ-2026-0001-signed", iso = new Date(w.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
+  const { word } = await import("../../../src/setup-words/index.mjs");
+  const md = (state, prior, extra) => ["---", "id: " + id, "object_type: inquiry", "schema: inquiry@1", 'title: "Was it signed?"', "current_state: " + state, "prior_state: " + prior, "created: " + q(iso), "last_updated: " + q(iso),
+    "references:", "  - target: " + doc.bundle, "    rel: cites", "    status: confirmed", "state_history: []", "surfaced_by: human", 'disposition_reason: ""', "basis:", "  - target: " + doc.bundle, "    role: supports",
+    ...extra, "---", "", "## Question", "", "Was it signed?", "", word("conformance.rests"), "", "## Conclusion", "", word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const promote = (state, prior, extra, base) => founder.act("promote", { body: { bundleId: id, base, snapKey: iso.replace(/[-:]/g, "") + "_" + sha256Hex(id + state).slice(0, 8),
+    meta: { object_type: "inquiry", title: "Was it signed?", current_state: state, created: iso, last_updated: iso }, files: [{ path: "bundle.md", text: md(state, prior, extra) }], register: [] } });
+  const opened = await promote("open", "null", ["project: " + project], null);
+  await promote("concluded", "open", ["project: " + project, 'conclusion: "it was signed"', 'falsifier: "a ledger showing otherwise"'], opened.bundleSha);
+  await adoptSet(founder, (await writeSet(w, founder, { title: "Second lens", subject: dept, text: text1, why: "Offices miss dates for many reasons.", upTo: "adopted", id: "p2" })).bundleId, "It changed.", project);
+  for (let i = 0; i < 12; i++) { await w.tick(120000); await founder.read("whoami"); }   // the sweep runs on the scheduler's alarm; the reads keep the session unlocked
+  const run = "finding:" + id;
+  if (!(await founder.read("biasdebt", { query: { run } })).found) throw new Error("no debt was raised");
+  return run;
 }

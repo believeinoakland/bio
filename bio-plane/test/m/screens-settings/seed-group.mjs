@@ -60,9 +60,6 @@ export async function eastoak(t, { copies = true } = {}) {
   return t;
 }
 
-/** The faults a world cannot make: a read that never answers. */
-export const SILENT = Object.freeze({ groupidentity: "none", grouplanguages: "none" });
-
 /** A member the roster knows with the handle `handle` that differs from her id (the sign-in makes the id the handle). */
 export async function enrolled(w, founder, id, handle) {
   const added = await founder.act("memberadd", { body: { memberId: id, cover: `the world's member ${id}` } });
@@ -158,8 +155,9 @@ export const onlyWords = (as, keys) => async (q) => {
 
 /** SEED, no act makes it (the assistant's draft is asked by the door, which the world's does not do): a draft of the word `key` in `language` as
  *  the assistant kept it, asked by `by` (translation_drafts). Answers the draft's id as the owner then lists it. */
-export function draftOf(w, language, key, text, by, byName = by) {
-  return w.sql.exec("INSERT INTO translation_drafts (language, key, en, text, label, asked_by, asked_name, at) VALUES (?, ?, ?, ?, 'Draft', ?, ?, ?) RETURNING seq", language, key, "", text, "member:" + by, byName, iso(w)).toArray()[0].seq;
+export function draftOf(w, language, key, en, text, by) {
+  return w.sql.exec("INSERT INTO translation_drafts (language, key, en, text, label, asked_by, asked_name, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING seq",
+    language, key, en, text, JSON.stringify({ kind: "machine", drafter: "assistant" }), by, by, iso(w)).toArray()[0].seq;
 }
 /** SEED, no act makes it (the English is the release's, and a release does not change in a test): the English a kept translation was made from. */
 export function englishWas(w, language, key, was) {
