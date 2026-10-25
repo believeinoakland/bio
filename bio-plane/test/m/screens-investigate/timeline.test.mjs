@@ -70,10 +70,10 @@ const STAGES = (loose) => [{ key: "sent", label: "Request sent", after: null, wi
 /** The world of a project that follows the Public Works Director's office: the people and the question its document cites; two documents it holds (each reading
  *  names the office, and `resolve` ties it); three dated facts; a vote of three, two meetings whose order no date settles, a statement no date places; a records
  *  request the team sent (`ours`); a progression `pra` declared twice and threaded for the office with the first document at its first step, dated by a day
- *  the member stated (`matter`). `bare` makes the project and the people alone. */
-async function scene({ bare = false, cites = true, ours = false, matter = false } = {}) {
+ *  the member stated (`matter`). `bare` makes the project and the people alone; `place: false` leaves the team with no active place. */
+async function scene({ bare = false, cites = true, ours = false, matter = false, place = true } = {}) {
   const { world, me } = await inWorld();
-  await world.recipes.profiles(me, ["oakland-alameda"]);
+  if (place) await world.recipes.profiles(me, ["oakland-alameda"]);
   const org = (await me.act("entitycreate", { body: { kind: "office", label: "Public Works Director", note: "The city's office for repairs." } })).entity_id;
   const chen = (await me.act("entitycreate", { body: { kind: "person", label: "Lin Chen", note: "Council member who moved the vote." } })).entity_id;
   const voter = (await me.act("entitycreate", { body: { kind: "person", label: "Dev Patel", note: "Council member who voted against." } })).entity_id;
@@ -476,6 +476,24 @@ test("R45 the Define and Revise step fields are labelled by the six keys in orde
   drew(main(p), "progression.revise.help");
   drew(main(p), "progression.steps.help");
 });
+
+test("R60 a team with no active place has no time zone: the hint (screen.timeline.nozone) is drawn once above the events placed in no zone; control: a team with an active place draws none", async () => {
+  const s = await scene({ place: false });
+  assert.equal((await s.me.read("profiles", {})).profiles.length, 0, "the team has no active place");
+  const p = await pageOf(s);
+  const nowhere = (await timelineOf(s)).world.placed_nowhere;
+  assert.ok(nowhere.length > 0, "the world places events nowhere");
+  const hints = main(p).querySelectorAll("[data-nozone]");
+  assert.equal(hints.length, 1, "said once");
+  if (hasWord("screen.timeline.nozone")) drew(hints[0], "screen.timeline.nozone");
+  const apart = main(p).querySelectorAll("section").find((x) => x.querySelector("h2") && x.querySelector("h2").textContent === word("screen.timeline.undated.head"));
+  assert.ok(apart, "the events placed nowhere are listed");
+  const ahead = hints[0].compareDocumentPosition ? hints[0].compareDocumentPosition(apart) : null;
+  if (ahead !== null) assert.ok(ahead & 4, "above the events it touches");
+  const placed = await scene();
+  assert.equal(main(await pageOf(placed)).querySelectorAll("[data-nozone]").length, 0, "control: an active place draws no hint");
+});
+if (!hasWord("screen.timeline.nozone")) test.todo("K5173 R60: screen.timeline.nozone is a word the table holds (hasWord), and it is drawn");
 
 test("K3996 an event placed nowhere draws its grade_why, {key, vars}, through its word; control: a bare string draws none of our English", async () => {
   const s = await scene();

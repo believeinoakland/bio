@@ -9,6 +9,7 @@ import { TIMELINE_PARTS } from "./timeline-parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
 import { WHY_KEYS } from "./whywords.mjs";
 import { rereading } from "./rereads.mjs";
+import { hasWord } from "../setup-words/index.mjs";
 
 /* R33 (4): the addresses. State a is the project (`/app/timeline/<project>`); state b one matter the project follows,
  * `<project>/matter/<progression>/<entity>`; state c one progression, `<project>/progression/<progression>`. */
@@ -107,6 +108,9 @@ function render(cs, view) {
   if (!proj || proj.state !== "ok") out.push(cs.state("project", view, () => ""));
   else if (!tl) out.push(`<p>${cs.w(S + "noset")}</p>`);
   else out.push(cs.state(tl, (v) => {
+    /* R60: a team with no active place holds no time zone, so an event dated by a fact is placed in none; the hint is said once above those events */
+    const pq = ((v.world || {}).placed_nowhere || []).length ? P.later(cs, view, "profiles", "profiles", { query: {} }) : null;
+    const nozone = pq && pq.state === "ok" && pq.value && Array.isArray(pq.value.profiles) && !pq.value.profiles.length;
     const dated = v.dated && Array.isArray(v.dated.items) ? v.dated.items : [];
     if (!((v.world || {}).items || []).length && !((v.world || {}).placed_nowhere || []).length && !dated.length
         && !((v.ours || {}).sources || []).some((x) => (x.items || []).length)) return `<p class="cs-state" data-state="empty">${cs.w(S + "empty")}</p>`;
@@ -122,6 +126,7 @@ function render(cs, view) {
       + (ourItems.map((x) => `<div class="mk-ev us"><span class="mk-date">${cs.date(x.at) || cs.esc(String(x.at || ""))}</span> <b>${P.refOf(cs, x.ref, x.label || x.ref, [x.kind || ""], /^ACTN-/.test(String(x.ref)) ? "action" : undefined)}</b></div>`).join(""))
       + ourFails.map((s) => cs.mark("gap", "undetermined", { reason: cs.w(S + "lane.failed", { source: s.source || "" }) })).join("") + "</section></div>";
     return lanes
+      + ((world.placed_nowhere || []).length && nozone ? `<p class="mk-note" data-nozone>${cs.w(S + "nozone")}</p>` : "")
       + ((world.placed_nowhere || []).length ? cs.sec(S + "undated.head", cs.sheet(world.placed_nowhere.map((x) => cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [x.status || "", cs.w(S + "undated.apart")], "event"), `<span class="mk-small">${cs.w(S + "undated.apart")}</span>${x.grade_why ? ` <span class="mk-small">${P.why(cs, x.grade_why)}</span>` : ""}`)).join(""))) : "")
       ;
   }));
@@ -306,7 +311,7 @@ const PROGRESSION_KEYS = [
   "theme.name.label", "theme.name.help", "entity.relation.why", "entity.relation.cite", "entity.relation.cite.help", "connection.node.unnamed", "mark.grade.reading",
 ];
 
-const words = [...new Set(["screen.timeline.name", "screen.timeline.purpose", ...PROGRESSION_KEYS,
+const words = [...new Set(["screen.timeline.name", ...["screen.timeline.nozone"].filter((k) => hasWord(k)), "screen.timeline.purpose", ...PROGRESSION_KEYS,
   ...["instance", "thread", "discharge", "proposedispose", "progression", "progressiondefine"].flatMap((op) => ["act." + op + ".label.timeline", "act." + op + ".does"]),
   ...["createevent", "addparticipant", "relate", "recorddatedfact", "hypothesishold", "findin"].flatMap((op) => ["act." + op + ".label.timeline", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
