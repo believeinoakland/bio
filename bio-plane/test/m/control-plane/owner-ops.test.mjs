@@ -3,7 +3,7 @@
    body, so a body's `by`, `viewer` or `principal` never wins (R29). Negative controls throughout (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { ownerOps as controlPlaneOwnerOps } from "../../../src/store-assembly/owner-ops.mjs";
 
 const FORGED = "member:forged-by-caller";
 /* A recording owner: every method answers `{ok: true, method, args}` and is logged. */

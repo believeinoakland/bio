@@ -1,12 +1,9 @@
 /* screens-publish R1 (the case editor) on interface-shell's served page: the project's drafts and the chosen draft's
  * ladder, scope, what it leaves out with each acknowledgement, the people it names with their reasons, what changed;
  * each act sent with what its owner takes. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, drew, word, ops, press, fill, last, ok, refusedIn, P, DR, C, plane } from "./fixtures.mjs";
+import { open, main, text, drew, word, ops, press, fill, last, ok, refusedIn, P, DR, C, plane, COPY } from "./fixtures.mjs";
 
 const PATH = `/app/case-editor/${P}`;
 
@@ -90,4 +87,50 @@ test("R1 \"Draft what changed\" only while the assistant is reachable, its answe
   await press(p, "writinghelp", { values: { "ce-scope": "rents 2024 2026" } });
   assert.equal(last(p, "writinghelp").body.field, "scope");
   assert.ok(drew(p, "screen.case-editor.help.draft") && text(p).includes("Rent adjustments, 2024–2026.") && drew(p, "ai.label.untested.writinghelp"));
+});
+
+/* ---------- fix round 10 (K5148): R44's What-changed words, the document read for a prepared edition only, the people of a prepared new-case draft ---------- */
+
+const drafted = (case_, editions) => ok({ kind: "review-drafts", project: P, drafts: [{ draft_id: DR, case: case_, ...(editions ? { editions } : {}), created_by: "dev", updated_by: "dev" }] });
+
+test("R44 (10A R90 (i)) \"Prepare the draft\" sends the member's What-changed words as whatChanged {text} when changed; an unchanged or empty field sends none (control)", async () => {
+  const p = await open(PATH);
+  fill(p, { "ce-wc": "Adds the 2025 schedules." });
+  await press(p, "casedraft", { reason: "edit" });
+  assert.deepEqual(last(p, "casedraft").body.whatChanged, { text: "Adds the 2025 schedules." });
+  const q = await open(PATH);
+  await press(q, "casedraft", { reason: "edit" });
+  assert.ok(!("whatChanged" in (last(q, "casedraft").body || {})), "a field she did not touch sends nothing");
+  const held = await open(PATH, { plane: { reviewcopy: ok(COPY({ authored: { ...COPY().authored, whatChanged: { text: "Held words." } } })) } });
+  assert.equal(held.doc.getElementById("ce-wc").value || held.doc.getElementById("ce-wc").textContent, "Held words.", "the words the draft holds are drawn in the field");
+  await press(held, "casedraft", { reason: "edit" });
+  assert.ok(!("whatChanged" in (last(held, "casedraft").body || {})), "words the draft already holds are not sent again");
+  fill(held, { "ce-wc": "Held words, then more." });
+  await press(held, "casedraft", { reason: "edit" });
+  assert.deepEqual(last(held, "casedraft").body.whatChanged, { text: "Held words, then more." });
+});
+
+test("R44 (10B C10) the editor reads the document of an edition that is prepared or published only; a begun edition sends no casedocument", async () => {
+  const begun = { case_id: C, edition: 3, identity: "The Coliseum lease" };
+  const none = await open(PATH, { plane: { casedrafts: drafted(begun, { prepared: null, published: null }) } });
+  assert.equal(none.byOp("casedocument").length, 0, "edition 3 is begun and has no document yet");
+  const prepared = await open(PATH, { plane: { casedrafts: drafted(begun, { prepared: 3, published: null }) } });
+  assert.equal(last(prepared, "casedocument").query.edition, "3");
+  const published = await open(PATH, { plane: { casedrafts: drafted(begun, { prepared: null, published: { edition: 3, address: "x" } }) } });
+  assert.equal(published.byOp("casedocument").length, 1, "a published edition is read");
+});
+
+test("R16 (follow-up 54, review R16) a new-case draft that is prepared sends attribute with the prepared case and edition; unprepared it refuses in place (control)", async () => {
+  const fresh = { case_id: null, edition: null, identity: "A case this draft will start" };
+  const prep = await open(PATH, { plane: { casedrafts: drafted(fresh, { prepared: 1, published: null, case: C }),
+    reviewcopy: ok(COPY({ case: { case_id: C, edition: 1, identity: "The Coliseum lease", newCase: true } })) } });
+  fill(prep, { "ce-level-1": "cover", "ce-why-1": "They signed the adjustment as the council's agent." });
+  await press(prep, "attribute", { nth: 1 });
+  assert.deepEqual({ ...last(prep, "attribute").body }, { caseId: C, edition: 1, observation: "OBS-2026-0002", level: "cover", reason: "They signed the adjustment as the council's agent." });
+  const un = await open(PATH, { plane: { casedrafts: drafted(fresh, { prepared: null, published: null, case: null }),
+    reviewcopy: ok(COPY({ case: { case_id: null, edition: null, identity: "A case this draft will start", newCase: true } })) } });
+  fill(un, { "ce-level-1": "cover", "ce-why-1": "A reason." });
+  await press(un, "attribute", { nth: 1 });
+  assert.equal(un.byOp("attribute").length, 0, "nothing is prepared: nothing is sent");
+  assert.ok(drew(un, "screen.case-editor.people.nocase"));
 });

@@ -1,6 +1,6 @@
 # op-declarations (T51)
 
-**Status** · session_01PfsuZ6j8UCFgigeTRxA37x · depth 2 · COMPLETE · handled B41
+**Status** · session_01RkSbN8aUrWKGhGQpRQEqD6 · depth 2 · COMPLETE · handled B42
 
 ## J1 · QUESTION
 
@@ -586,3 +586,34 @@ COMPLETE. Fix round 10 for op-declarations, after the merge of tranche/T51 (B41,
 **Tests and checks:** `node --import ./bio-plane/test/platform-sqlite.mjs --test` over all 25 files in `bio-plane/test/m/op-declarations/`: 248 tests, 248 pass. Checks against `/home/user/bio`: format 0 failures (178 modules); architecture 0 (40 files, 275 imports); coverage 0 (82 of 82 ids); words 0; fixtures 0 (no new marker); ownership 0 (2 files changed).
 
 Size (session_01PfsuZ6j8UCFgigeTRxA37x): test runs 9, module lines 7
+
+## J40 · COMPLETE
+
+COMPLETE for B40, B41 and B42 (K5178; plan item 80 (2) and item 85 (2)). Commit 0777b1183a, pushed on job/T51/op-declarations; tranche/T51 merged in at e5b5a40505 (fast-forward of the job branch first; no local work lost).
+
+**B40 (item 80 (2)): the three reds.** t33.test.mjs:290 (`ruleservicesstate`), t36.test.mjs:306 (`authority`, `ruleservicesstate`), t42.test.mjs:129. Cause, diagnosed against the code: both ops have correct specs in op-declarations (their rows, classes, stamps and NEEDS are right); what was missing is their affordances `ACT_HELP` entry, which is affordances' table (AFFORDANCES #48, K5168, merged; held under `T51_STANDIN_HELP`). Nothing in op-declarations needed changing for them. Audit row 80.2 is DONE (K5171, K5168). Each of the three now passes.
+
+**B41 (CHANGE, K5168): tranche merged, suite re-run.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/op-declarations/*.test.mjs`: tests 248, pass 248, fail 0 (as expected).
+
+**B42 (item 85 (2)): t47's internal-route list.** Changed: bio-plane/test/m/op-declarations/t47.test.mjs:368-372, `selftestmigrations` added to R62's list, with its R105 / K5170 / K5178 comment, beside `bootstrapfacts`.
+- Failing-first: NOT achievable for this change, and I did not fake one. The R62 test asserts each listed name is in no table; `selftestmigrations` is in no table today, so the check is green before and after. The list is a hand-written expectation, and deriving it from instanceSetupOps was not possible: the map serves 37 routes, 10 of them with no spec (bootstrapfacts, cpuprobeend, cpuprobestart, cpuprobestate, groupidentitypublic, grouplogo, instancegrouppublic, recordcpuprobestep, runtimeobservations, selftestmigrations). Of those, instancegrouppublic and groupidentitypublic are public projections (PUBLIC_GROUP_PROJECTIONS, setup.mjs:3210), and the cpuprobe group and runtimeobservations are older routes R62 does not cover; the map carries no marker telling store-internal routes from them. So the "else add the op" branch applied, with no derivation. BOB may want a marker on instance-setup's store-internal routes (a data table, not comments) if the list should ever be derived; that is a design choice for BOB, not made here.
+
+**Why the tests missed it (B42).** Routes an owner adds to its own store-internal map are not compared with R62's list by any test; only the instance-setup exports test pins the route map.
+
+**Tests and checks** (absolute product root /home/user/bio):
+- op-declarations suite: 248 of 248 pass, 0 fail (run before and after the t47 edit).
+- format: 178 modules, 178 requirements files, 0 failures.
+- architecture (op-declarations): 40 product files, 275 relative imports, 0 failures.
+- coverage (op-declarations): 82 of 82 live ids named by a test, 0 failures.
+- fixtures (op-declarations --list): 3463 test files read, 0 failures, no marker added.
+- ownership (merge-base with tranche/T51 to HEAD): 1 file, t47.test.mjs, 0 failures.
+- impact (origin/tranche/T51 to HEAD): 0 of 178 modules, 0 of 2938 test files affected.
+- aggregate run (checks/run.mjs): words reports 16 failures, all in other modules (store-assembly, plane); coverage 3 failures and fixtures 2027 failures, all in other modules. The aggregate `answer` check flags control-plane's test/m/control-plane/envelope.test.mjs:567 with op-declarations listed among the earlier modules of its refusal check; it is control-plane's file, not my paths, and my module-scoped checks above are green. Reported for BOB to place.
+
+**Met ids.** None of mine are newly met in this job; no requirement mark of mine changed. R62, R63 and R6 stay as they are.
+
+**Deferred.** Nothing in my module. The R62 list's derivation question above, for BOB.
+
+**Found in other modules (REPORT, with file:line).** (1) control-plane `test/m/control-plane/envelope.test.mjs:567`, the aggregate `answer` refusal check names op-declarations among earlier modules (see above). (2) Aggregate words failures: 16, in store-assembly (ask.mjs:389, 469, 502, 521, 522, 526, 531, 535, 540; wiring.mjs:49, 78, 103; wizards.mjs:51) and plane (declared.mjs:16 vs plane/declared.mjs:13, `plane.declared.readtranslate`'s en differs). Not measured by this job.
+
+Size (session_01RkSbN8aUrWKGhGQpRQEqD6): test runs 2, module lines 3470

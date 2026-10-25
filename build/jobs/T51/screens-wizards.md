@@ -1,6 +1,6 @@
 # screens-wizards (T51)
 
-**Status** · session_01THUDz9b6Jp6TtsS2uCUgJj · depth 2 · COMPLETE · handled B6
+**Status** · session_01QiJTxoqM2vV4sPHpBViTjn · depth 2 · WAITING ON BOB (K5183 save) · handled B8
 
 ## Completion (T51-115)
 
@@ -88,3 +88,58 @@ Size (session_01THUDz9b6Jp6TtsS2uCUgJj): test runs 4, module lines 948
 ## J5 · COMPLETE
 
 B6 done: the no-subject cards for action, matter and due-date steps (guide.mjs; b421.test.mjs). Module 75 pass, 0 fail; words, format, architecture, coverage 21/21, ownership, setup-words --check green. Requirement line R22 (amends R20, R21) is in my record, 'Completion (B6 ...)'. Not mine: the ops owed to the design (Bring back, release) and the generic none words for question/document steps.
+
+## Completion (fix round 10, batch 7: op tables to the world; K5175, K5178)
+
+**What changed (all under `bio-plane/test/m/screens-wizards/`; no source file touched).** Every op-table entry of the module's tests is gone: the tests are answered by the real store through `store-request`'s `storeWorld()` (real sign-ins, the page's door), and the scripted state is made by the acts that make it.
+- `world.mjs` (new, 142 lines): `team()` (the founder's world with `rosa` an administrator, `mai` who contributes and starts projects, `ivy` who contributes and is in none, `teo` who holds nothing; `P1` mai's with rosa a second owner by `projectinvite`/`projectjoin`/`projectowneradd`, `P2` rosa's), `libraryTeam()` (a Civicsmith wizard finished twice by `wizardprogress`; an approved copy by `wizarddraft`/`wizardsubmit`/`wizardapprove`; a newer draft of it; a submitted copy; a retired copy by `wizardretire`; a copy whose base changed; two proposals by `wizardpropose`), `authored()` (a group wizard written in the advanced editor, optionally widened), `template()` (a team template by `templatedraft`/`templatesubmit`/`templateapprove` with `widen`), `withSubjects()` (questions and documents by the recipes, the clock moved a minute between), `refusalOf()` (the door's own answer to an act, refusals included), `finished()`, `copyOf()`, `copyable()`, `listed()`, `libraryRead()`.
+- `kit.mjs:100` `open(id, {team, as, faults, subject})` boots the page over the world's door and the session its sign-in made; `standin.mjs:46` `standIn({team, as, faults, ...})` answers the guide's `cs.call` through the world's door as the shell's `cs.call` hands an answer back (the whole answer, or a refusal's own fields), waits while a call is out, and sends `wizarddraft` for real from the recording's save.
+- `fixtures.mjs` deleted (its tables, `noSuchWizard` line 55 included: the store's own `NO_SUCH_WIZARD` is read from `wizardread` in `guide.test.mjs`).
+- Each test file re-pointed: `library.test.mjs` (12), `page.test.mjs` (6), `guide.test.mjs` (14), `t48.test.mjs` (7), `t50.test.mjs` (10), `t51.test.mjs` (8), `l27.test.mjs` (8), `b421.test.mjs` (6), `walk.test.mjs` (2). Expected values are read from the store's answers (names, ids, counts, the most recent by `last_updated`, the projects by `projectlist`). `words.test.mjs` unchanged.
+- Fault answers kept: a read that never answers or fails (`faults: {wizards: "pending" | "none"}`, `startfrom: null`); a refusal the page is drawn from is the door's own answer to the act that causes it, replayed (`refusalOf`: `WIZARDS_STATE_REFUSED` by a bad state, `WIZARD_NOT_THE_GROUPS` by retiring a Civicsmith script, `WIZARD_ACT_UNKNOWN` with its step by submitting a draft whose stored step names an act the screen lacks, seeded in the `wiz_revisions` row the store then reads).
+
+**State the world cannot make by an act, seeded in the row the store reads (op-tables §5.4).** `library.test.mjs`, `world.mjs`: a copy whose base has changed (`UPDATE wiz_copies SET based_on` one version back: the library gains a version only when the product ships one); a draft step naming an unknown act (`UPDATE wiz_revisions`). Both are the real code reading real rows.
+
+**Markers.** One `fixtures-own: platform` at `guide.test.mjs:203`: the text of a machine draft (`writinghelp`) is the model's answer, which the world does not make (K5044 (1)). The same scripted answer a few lines above (`guide.test.mjs:189`, a held `const`) is not listed by the check and is the same case.
+
+**Differences the real store showed against the old fixtures (the old tables were wrong, not the module).** `question`/`testify` is no act of the registry (the store refuses the script); the old welcome had three steps and no side trip (the real one has a `via` at step 5, so the tally of a walk counts the trip's script too); a Civicsmith row's finish count and approver are the store's (`BOB`); a draft or a submitted copy is listed only in its state, not in the default list; adopting or drafting from a proposal consumes it.
+
+**Tests.** Module: 75 pass, 0 fail (three consecutive runs; no `--test-force-exit`; 12+6+14+7+10+8+8+6+2+2 = 75, as before). Suite time 54 s (26 s before): the walk of the whole library is 36 s of it (46 page boots over a real store); the world is built once per file and copied per test by `store-assembly` (base 0.5 s, copy 0.09 s). The red-then-green of this batch is the fixtures check: 51 lines at the START, 0 now (`fixtures.mjs --list` prints one `accepted(own)`).
+`fixtures.mjs screens-wizards --list`: 0 failures, 1 accepted. `run.mjs`: `format` 0, `coverage` 0 failures for this module (22 of 22 ids named), `words` 0 for this module (the repo's 16 are `store-assembly`'s), `architecture`: **1 failure, mine, below**. `ownership` (merge-base..HEAD): 14 files, 0 failures. `impact.mjs origin/tranche/T51 HEAD`: screens-wizards 9/10 only; no other module imports these files.
+
+**Met ids.** R1–R9, R10–R22 are named by tests and met; BOB strikes the marks (the file's Status line marks the T47–T51 lines "not yet met").
+
+**For BOB (REPORT, posted):**
+1. **uses edge: `store-request`** (`world.mjs:5` imports `bio-plane/test/m/store-request/fixtures.mjs`); `architecture.mjs screens-wizards` fails until `build/modules.json` lists it. The module's tests also use `wizard-scripts` (already listed).
+2. **`storeWorld()` is red at the tranche tip** (`store-request/fixtures.mjs:31`): the default `group: "world-town"` is seeded by `instancegroupseed` after the base already records `town` from `INSTANCE_NAME` (store-assembly, K5149): `GROUP_ALREADY_RECORDED`. `interface-shell/r129-door.test.mjs` and `screens-inquiry/fr4-question.test.mjs` fail on it. This module uses `storeWorld({group: null})`.
+3. **`wizardsat` rows carry no `required`** (`wizard-scripts` R11 lists `{id, version, name, steps, approver, finished}`), so `screens-wizards` R11's "a required one shows `wizard.mark.recommended`" holds only for Home's welcome, which the guide marks itself; the ceremony's required "Publication ceremony" is listed with no such mark. The fix is in `wizard-scripts` (R11 gains `required`).
+4. **`templatereview` by a member's session through the world's door** answers `MACHINE_CANNOT_REVIEW_TEMPLATE` ("this call carries nobody"): the member is not stamped for the secret-presenting ops (`store-request/index.mjs:85`). Not used here (`templateapprove` needs no review); for STORE-REQUEST.
+5. No door arm refused; no state asked of the world that it could not make beyond the two seeded rows above.
+
+**Deferred**: none. **Found in my module**: none (the guide and the library meet R1–R22 against the real store).
+
+Size (session_01QiJTxoqM2vV4sPHpBViTjn): test runs 40, module lines 941
+
+## J6 · REPORT
+
+REPORT · SCREENS-WIZARDS #7 · batch 7 · findings outside the module (details in my record's last section)
+
+1. USES EDGE NEEDED: `store-request` in `screens-wizards` `uses` (`bio-plane/test/m/screens-wizards/world.mjs:5` imports `store-request/fixtures.mjs`). `checks/architecture.mjs screens-wizards` fails on it alone until you add it.
+2. `storeWorld()` is red at the tranche tip (`bio-plane/test/m/store-request/fixtures.mjs:31`): its default `group: "world-town"` is seeded by `instancegroupseed` after the base already records `town` from INSTANCE_NAME (store-assembly, K5149), so it answers GROUP_ALREADY_RECORDED. `interface-shell/r129-door.test.mjs` and `screens-inquiry/fr4-question.test.mjs` fail on it today. I call `storeWorld({group: null})`. For STORE-REQUEST.
+3. `wizardsat` rows carry no `required` (wizard-scripts R11 lists `{id, version, name, steps, approver, finished}`), so screens-wizards R11's "a required one shows wizard.mark.recommended" and R7's required "Publication ceremony" mark hold only for Home's welcome, which the guide flags itself; on `ceremony` the required script is listed with no such mark (checked in the world). The fix is in wizard-scripts (R11 gains `required`); no change possible in my module.
+4. `templatereview` by a member's session through the world's door answers MACHINE_CANNOT_REVIEW_TEMPLATE ("this call carries nobody"); the member is not stamped for the secret-presenting ops (`bio-plane/src/store-request/index.mjs:85` SECRET_PRESENTING_OPS). Not used by my tests (templateapprove needs no review). For STORE-REQUEST.
+
+## J7 · COMPLETE
+
+COMPLETE · SCREENS-WIZARDS #7 · fix round 10, batch 7 (op tables to the world; K5175, K5178). Record: build/jobs/T51/screens-wizards.md, last section.
+
+- Every op-table entry re-pointed to storeWorld(): `fixtures.mjs screens-wizards --list` 51 lines -> 0 (1 accepted `fixtures-own: platform`, guide.test.mjs:203, the model's machine draft). fixtures.mjs deleted; world.mjs new (team, libraryTeam, authored, template, withSubjects, refusalOf); kit.mjs/standin.mjs take the world.
+- Module 75 pass / 0 fail, three runs (54 s; was 26 s, the walk of the library is 36 s); format 0; coverage 22/22; words 0 for this module; ownership 0; impact: this module only.
+- architecture: 1 failure, the missing `uses` edge `store-request` (REPORT J6 item 1): BOB adds it.
+- REPORT J6 also: storeWorld() default red at the tip (GROUP_ALREADY_RECORDED), wizardsat rows lack `required`, templatereview stamp in the world's door.
+- harness.mjs frame defaults left to the last batch-7 screens job, as told.
+Size (session_01QiJTxoqM2vV4sPHpBViTjn): test runs 40, module lines 941
+
+## Saved at K5183
+
+Done: everything. Batch 7 is COMPLETE (J7), all committed and pushed; nothing half done, no worker running. Only open item: BOB adds the `store-request` `uses` edge to `screens-wizards` (J6 item 1), after which `architecture.mjs screens-wizards` is green. Next step for a continuing session: read BOB's answer to J6/J7 (`mail inbox --as job`), then act on it.

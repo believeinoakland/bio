@@ -1,9 +1,6 @@
 /* screens-publish R38 (T51-121; DEC-330 A77): "Read it at a minimum strength" on `published`: a minimum on each axis, the browser act
  * that shows only the findings at or above both, the filtered view that says it is the reader's own, and the way back. Page memory
  * only: no request is sent to set or clear a minimum. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, drew, drewIn, tipOf, word, ops, press, fill, ok, C, F1, F2, FINDING, publishedPlane, hasWord } from "./fixtures.mjs";

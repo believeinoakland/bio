@@ -76,7 +76,7 @@ test("R20: standings answers at most 200 ids in one set-based read, each without
 test("R21: the transcription axis: not applicable for bytes, undetermined for an unevaluable kind, else gradeCeiling over the right attestations", () => {
   const w = world();
   const a = w.cap("a"); w.doc(DOC, [a]);
-  w.read(a.sha, { chain: OCR, pageCount: 3, captureFormat: "docx",
+  w.read(a.sha, { chain: OCR, pageCount: 3,
                   containerExtent: { container: "docx", levels: ["paragraphs", "tables", "images"], paragraphs: 9, tables: [], images: [{ part: "e".repeat(64) }] } });
   const m = (e, by = V("bo")) => w.content.mint({ bundleId: DOC, captureSha: a.sha, extent: e, mintedBy: by }).content_id;
   const bytes = m({ kind: "image", part: "e".repeat(64) });
@@ -111,7 +111,7 @@ test("R21: the transcription axis: not applicable for bytes, undetermined for an
 test("R22: a replaced chain marks every other-chain row over the capture stale, one way; typings and bytes rows are not; nothing is deleted; a null chain marks nothing", () => {
   const w = world();
   const a = w.cap("a"); w.doc(DOC, [a]);
-  w.read(a.sha, { chain: OCR, pageCount: 3, captureFormat: "docx",
+  w.read(a.sha, { chain: OCR, pageCount: 3,
                   containerExtent: { container: "docx", levels: ["images"], images: [{ part: "e".repeat(64) }] } });
   const r1 = w.content.mint({ bundleId: DOC, captureSha: a.sha, extent: { kind: "pdf-page", page: 0 }, mintedBy: V("bo") }).content_id;
   const r2 = w.content.mint({ bundleId: DOC, captureSha: a.sha, extent: { kind: "document" }, mintedBy: V("bo") }).content_id;

@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import { O, world, call, opCalls, aik, cred, FORGED } from "./harness.mjs";
 
 const { OPS, OP_STAMPS } = O;
+/* store-request R7: the translation family's acts stamp `by` as the bare member id: the translation ops that declare `by` */
+export const TRANSLATION_ACTS = Object.keys(OPS).filter((op) => op.startsWith("translation") && (OP_STAMPS[op] || []).includes("by"));
 export const ok = (result, status = 200) => new Response(JSON.stringify({ ok: true, result }), { status });
 
 /* Every kind of caller; only the two sessions reach a session-only op. */
@@ -40,7 +42,11 @@ export async function routesForSessions(ops, bodyOf, { refuseMachines = () => tr
       assert.equal(inner.length, 1, `${op}/${s.name}`);
       assert.equal(inner[0].ns, "bio");
       for (const k of ["viewer", "by"]) {
-        if (declared.includes(k)) assert.equal(inner[0].params[k], s[k], `${op}/${s.name}: ${k} is the session's own`);
+        if (declared.includes(k)) {
+          /* store-request R7: the translation family's acts ask `membership` of the bare member id, not the viewer form */
+          const want = (k === "by" && TRANSLATION_ACTS.includes(op)) || (k === "viewer" && op === "translations") ? String(s[k]).replace(/^member:/, "") : s[k];
+          assert.equal(inner[0].params[k], want, `${op}/${s.name}: ${k} is the session's own`);
+        }
         else assert.equal(Object.hasOwn(inner[0].params, k), false, `${op}/${s.name}: ${k} not declared, not passed`);
       }
       for (const k of ["author", "identity"])
