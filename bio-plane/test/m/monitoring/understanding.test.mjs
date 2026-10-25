@@ -4,7 +4,9 @@
    its R1). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, stubIntent, sha, V, NOW_MS, infoMd, serve, DAEMON } from "./fixture.mjs";
+import { world, sha, V, NOW_MS, infoMd, serve, DAEMON } from "./fixture.mjs";
+import { watchSetOf } from "../intent/fixtures.mjs";
+import { restingOf } from "../publication/fixtures.mjs";
 import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 import { acquireRefusals } from "../acquisition/fixtures.mjs";
 import { escalationsDue } from "../escalation/fixtures.mjs";
@@ -17,6 +19,13 @@ import { word } from "../../../src/setup-words/index.mjs";
 
 /* escalation as its real module answers in a world with no escalation open (its published fixture, R16) */
 const emptyEscalation = () => escalationsDue().emptyWorld.esc;
+
+/* publication's real answers, followed a page of two at a time to the end (each call recorded in `calls`): the page
+   size the paging of R33 needs, as the cursor is followed to its end over more than one page. */
+function pagedResting(publication) {
+  const calls = [];
+  return { calls, restingCapturesOf(q = {}) { calls.push({ after: q.after ?? null }); return publication.restingCapturesOf({ ...q, limit: 2 }); } };
+}
 
 /* R28: a bundle carrying named requests, in project P. */
 const GB = "INFO-2026-0600-gathering", GP = "PROJ-2026-0600-g";
@@ -271,57 +280,59 @@ const createAction = (w, id, clock) => {
   return md;
 };
 
-test("R33 (N170) the sources a live objective rests on are known to monitoring through intent's watchSet, followed to its end; one not monitored is proposed to the project's members through intent's registration, never enabled", () => {
-  const w = world();
+test("R33 (N170) the sources a live objective rests on are known to monitoring through intent's watchSet, followed to its end; one not monitored is proposed to the project's members through intent's registration, never enabled", async () => {
+  const f = await watchSetOf({ objective: [sha("w1"), sha("w2"), sha("w3")] }, { page: 2 });
+  const w = world({ intent: f.intent });
   const a = w.monitored("INFO-2026-0710-watched", "https://records.example.org/w1", "w1", { freq: "daily" });
   const b = w.monitored("INFO-2026-0711-unwatched", "https://records.example.org/w2", "w2", { enabled: false });
   const c = w.monitored("INFO-2026-0712-also", "https://records.example.org/w3", "w3", { enabled: false });
-  w.intent.watch["PROJ-2026-0001-p"] = [a.cap, b.cap, c.cap];
-  const k = w.m.watched({ project: "PROJ-2026-0001-p" });
+  const P = f.projects.objective;
+  const k = w.m.watched({ project: P });
   assert.equal(k.ok, true);
-  assert.deepEqual(k.captures.map((x) => [x.bundle, x.monitored]),
-    [["INFO-2026-0710-watched", true], ["INFO-2026-0711-unwatched", false], ["INFO-2026-0712-also", false]]);
-  assert.deepEqual(w.intent.calls.map((x) => x.after), [null, b.cap], "the cursor is followed to null");
+  assert.deepEqual(Object.fromEntries(k.captures.map((x) => [x.bundle, x.monitored])),
+    { "INFO-2026-0710-watched": true, "INFO-2026-0711-unwatched": false, "INFO-2026-0712-also": false });
+  /* intent pages its captures in sha order, two at a time: the cursor is followed to null */
+  assert.deepEqual(f.calls.map((x) => x.after), [null, [a.cap, b.cap, c.cap].sort()[1]], "the cursor is followed to null");
   /* registered as intent's proposal source at start (intent R15) */
-  const src = w.intent.sources.find((s) => s.kind === "monitoring");
+  const src = f.sources.find((s) => s.kind === "monitoring");
   assert.ok(src, "monitoring registered its proposal source");
-  const props = src.reader({ project: "PROJ-2026-0001-p", viewer: "class:daemon" });
-  assert.deepEqual(props.map((p) => p.basis.bundle), ["INFO-2026-0711-unwatched", "INFO-2026-0712-also"]);
+  const props = src.reader({ project: P, viewer: "class:daemon" });
+  assert.deepEqual(props.map((p) => p.basis.bundle).sort(), ["INFO-2026-0711-unwatched", "INFO-2026-0712-also"]);
   for (const p of props) {
     assert.deepEqual([p.source, p.kind, p.surfaced_by], ["monitoring", "monitor-source", "machine"]);
     assert.match(p.basis.says, /the daemon never enables it/);
   }
   assert.equal(w.fm("INFO-2026-0711-unwatched").monitoring.enabled, false, "never enabled by the daemon");
-  assert.equal(src.reader({ project: "PROJ-2026-0001-p", viewer: "nobody" }).length, 0, "through the viewer's sight");
+  assert.equal(src.reader({ project: P, viewer: "nobody" }).length, 0, "through the viewer's sight");
   /* a change at a watched source reaches reevaluation as R8's flag: the document's own reeval_pending (tick.test R8) */
 });
-test("R33 (N230) the sources a published finding rests on are known to monitoring through publication's restingCapturesOf, followed by its cursor to the end, and one not monitored is proposed to the finding's project the same way, never enabled", () => {
-  const w = world();
-  const P = "PROJ-2026-0002-f", OTHER = "PROJ-2026-0003-o";
+test("R33 (N230) the sources a published finding rests on are known to monitoring through publication's restingCapturesOf, followed by its cursor to the end, and one not monitored is proposed to the finding's project the same way, never enabled", async () => {
+  /* the objective of P reads f3; the findings rest on f1 and f3 (F, of P), on f2 (G, of P and another project) and on f4 (H, of the other) */
+  const f = await watchSetOf({ objective: [sha("f3")] }, { page: 2 });
+  const P = f.projects.objective, OTHER = "PROJ-2026-0003-o";
+  const pub = pagedResting(restingOf([
+    { finding: "INQ-2026-0701-f", projects: [P], digests: [sha("f1"), sha("f3")] },
+    { finding: "INQ-2026-0702-g", projects: [P, OTHER], digests: [sha("f2")] },
+    { finding: "INQ-2026-0703-h", projects: [OTHER], digests: [sha("f4")] },
+  ]).publication);
+  const w = world({ intent: f.intent, publication: pub });
   const a = w.monitored("INFO-2026-0740-rests", "https://records.example.org/f1", "f1", { freq: "daily" });
   const b = w.monitored("INFO-2026-0741-unwatched", "https://records.example.org/f2", "f2", { enabled: false });
   const c = w.monitored("INFO-2026-0742-both", "https://records.example.org/f3", "f3", { enabled: false });
-  const d = w.monitored("INFO-2026-0743-other", "https://records.example.org/f4", "f4", { enabled: false });
-  const F = "FIND-2026-0001-x";
-  w.publication.resting.push(
-    { capture_sha: a.cap, findings: [{ bundle_id: F, projects: [P] }] },
-    { capture_sha: b.cap, findings: [{ bundle_id: F, projects: [P, OTHER] }] },
-    { capture_sha: c.cap, findings: [{ bundle_id: F, projects: [P] }] },
-    { capture_sha: d.cap, findings: [{ bundle_id: "FIND-2026-0002-y", projects: [OTHER] }] });
-  w.intent.watch[P] = [c.cap];
+  w.monitored("INFO-2026-0743-other", "https://records.example.org/f4", "f4", { enabled: false });
   const k = w.m.watched({ project: P });
   assert.equal(k.ok, true);
   const by = Object.fromEntries(k.captures.map((x) => [x.bundle, x]));
   assert.deepEqual(Object.keys(by).sort(), ["INFO-2026-0740-rests", "INFO-2026-0741-unwatched", "INFO-2026-0742-both"], "only this project's findings");
   assert.deepEqual(by["INFO-2026-0741-unwatched"].rests_on, ["finding"]);
-  assert.deepEqual(by["INFO-2026-0741-unwatched"].findings, [F]);
+  assert.deepEqual(by["INFO-2026-0741-unwatched"].findings, ["INQ-2026-0702-g"]);
   assert.deepEqual(by["INFO-2026-0742-both"].rests_on.sort(), ["finding", "objective"]);
   assert.equal(by["INFO-2026-0740-rests"].monitored, true);
   /* the cursor is followed to its end (pages of two) */
-  const sorted = [a.cap, b.cap, c.cap, d.cap].sort();
-  assert.deepEqual(w.publication.calls.map((x) => x.after), [null, sorted[1]]);
+  const sorted = [a.cap, b.cap, c.cap, sha("f4")].sort();
+  assert.deepEqual(pub.calls.map((x) => x.after), [null, sorted[1]]);
   /* proposed through intent's registration to the project, never enabled */
-  const src = w.intent.sources.find((s) => s.kind === "monitoring");
+  const src = f.sources.find((s) => s.kind === "monitoring");
   const props = src.reader({ project: P, viewer: "class:daemon" });
   assert.deepEqual(props.map((p) => p.basis.bundle).sort(), ["INFO-2026-0741-unwatched", "INFO-2026-0742-both"]);
   const pb = props.find((p) => p.basis.bundle === "INFO-2026-0741-unwatched");
@@ -329,10 +340,10 @@ test("R33 (N230) the sources a published finding rests on are known to monitorin
   assert.match(props.find((p) => p.basis.bundle === "INFO-2026-0742-both").basis.says, /^an objective and a published finding/);
   assert.equal(w.fm("INFO-2026-0741-unwatched").monitoring.enabled, false, "never enabled by the daemon");
   /* a publication that cannot be read leaves the objective half standing, and says so */
-  const x = world({ publication: { restingCapturesOf: () => { throw new Error("gone"); } } });
-  const xa = x.monitored("INFO-2026-0744-obj", "https://records.example.org/f5", "f5", { enabled: false });
-  x.intent.watch[P] = [xa.cap];
-  const xk = x.m.watched({ project: P });
+  const g = await watchSetOf({ objective: [sha("f5")] }, { page: 2 });
+  const x = world({ intent: g.intent, publication: { restingCapturesOf: () => { throw new Error("gone"); } } });
+  x.monitored("INFO-2026-0744-obj", "https://records.example.org/f5", "f5", { enabled: false });
+  const xk = x.m.watched({ project: g.projects.objective });
   assert.deepEqual([xk.ok, xk.captures.length, xk.findings_unread], [true, 1, "gone"]);
 });
 
@@ -440,7 +451,6 @@ test("R35 when a clock is marked overdue or a response is recorded against an ac
   w.m.actionCommitted({ bundleId: "INFO-2026-0001-x", type: "information" });
   w.m.actionCommitted({ bundleId: "ACTN-2026-0730-esc", type: "action", replay: true });
   assert.equal(calls.length, 0);
-  assert.ok(stubIntent);
 });
 
 const DAY = 86400000, HOUR = 3600000;
