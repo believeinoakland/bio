@@ -61,6 +61,8 @@ test("R17, R29 (consequences R27, escalation R14): an escalation whose consequen
   assert.ok(partId, "a part id: " + JSON.stringify(part).slice(0, 300));
   assert.equal(R(await kit.get(e.auth, { op: "consequencesof", determination: det.id })).unproven.length, 0, "a question concluded in her project is not unproven (consequences R27)");
   /* a later determination of the same act finds it compliant, superseding the first */
+  /* escalation R14 asks for a compliant determination recorded after the escalation: the store stamps whole seconds, so the later one is made in a later second */
+  await new Promise((r) => setTimeout(r, 1100));
   okOf("the later compliant determination", await kit.post(e.auth, "determine", determination("compliant", "aligns", { supersedes: det.id, reason: "The playground was reopened after notice was posted." })));
   /* control: not yet addressed, the escalation does not end, and nothing is written */
   const early = await kit.post(e.auth, "escalationend", { id: esc.id });

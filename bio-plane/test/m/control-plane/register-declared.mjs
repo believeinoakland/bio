@@ -8,4 +8,11 @@ import { registerDeclared } from "../../declared-ops.mjs";
 import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { registerDeclaredOps as registerOpGrades } from "../../../src/op-grades/index.mjs";
 
-await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps, registerOpGrades);
+/* A test that loads the plane's store world first has had every owner's declarations registered by the plane itself (plane R68) at
+   its load: the second registration is then refused by op-declarations R81 ("registered after the first read" or "a second
+   registration"), and the tables read are already the plane's. Only that refusal is let pass; any other stops the file. */
+try {
+  await registerDeclared(fileURLToPath(new URL("../../../../", import.meta.url)), registerDeclaredOps, registerOpGrades);
+} catch (e) {
+  if (!(e instanceof TypeError && /\(R81\)/.test(e.message) && /registered after the first read|a second registration/.test(e.message))) throw e;
+}
