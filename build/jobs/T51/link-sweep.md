@@ -263,3 +263,17 @@ COMPLETE, B12 (fix round 10, the two fixture lines). Changed: bio-plane/test/m/l
 - `bio-plane/src/setup-words/build.mjs --check`: refuses on `plane.declared.readtranslate` (plane and store-assembly disagree on its en), not this module's.
 
 **Size (session_01LKAdrdE7uyhWnvvZNvEPDx): test runs 2, module lines 1232.**
+
+## J11 · COMPLETE
+
+COMPLETE, B13 (fix round 10, item 97: the sweepset and sweepratify fixtures).
+
+Changed: bio-plane/test/m/link-sweep/fixtures.mjs (new, f62e973e8d): sweepsetAnswer (R13), sweepratifyAnswer (R14), sweepratifyNotOwner (R14 refusal), each the real door's answer over a fresh world, never stored. bio-plane/test/m/link-sweep/fixtures.test.mjs (new): 4 tests naming R13/R14, each checking the answer against the real sweeps read. Record section appended, pushed as bb6cfae0e1.
+
+Consumer: screens-intake's t51-watching-named.test.mjs no longer hand-builds these answers on the tranche tip (J9's three lines are gone); fixtures check reports no sweep finding there. No consumer marker added; nothing in another module needs a fixtures-run yet.
+
+Met: R13, R14, R15 unchanged (no mark to strike). Markers added: none. Deferred: none. Found elsewhere: none new; run.mjs has no link-sweep line; setup-words --check refuses on plane.declared.readtranslate (plane vs store-assembly en), not this module's.
+
+Tests: link-sweep 52 of 52 pass (4 new). format, architecture, coverage, words, fixtures --list, ownership: 0 failures. impact: 1 of 178 modules.
+
+Size (session_01LKAdrdE7uyhWnvvZNvEPDx): test runs 2, module lines 1232.
