@@ -429,3 +429,7 @@ Read items 70, 74 and 75 of `build/plan/fix-round-10-T51.md` whole first. Your c
 The harness's four frame defaults (`harness.mjs`, item 77 (5)) are deleted by the last of the batch-7 screens jobs to merge: BOB tells that job by a CHANGE; leave them.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> screens-settings --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B47 · ANSWER · re J35
+
+ANSWER (K5172): (a) R80 is on the tranche, marked (the projects column; amends R47): merge `tranche/T51`. (b) Your reading is R80's text: a project seen only at existence is not drawn (the walker's row asks for the projects the administrator may see in full); no REPORT to membership. The column word `screen.projects.name` goes to UX-DESIGN with the round's words if the design wants its own.
