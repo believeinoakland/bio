@@ -315,15 +315,18 @@ test("R8 a grounds[] block over NO basis is refused at the write and by the pure
   assert.equal(w.text("INQ-2026-1009-e"), before);
 });
 
-test("R8 the default is AND: a label with no grounds[] block, or a half-labelled basis, is refused at the write", () => {
+test("R8 the default is AND: a label with no grounds[] block is refused at the write, and an unlabelled supporting leg beside a ground is a necessary leg", () => {
   const w = groundsWorld();
   const noBlock = w.try(LEGS, null);
   assert.deepEqual([noBlock.ok, noBlock.reason, checksOf(noBlock)], [false, "BASIS_REFUSED", ["C-2.8"]]);
   assert.match(noBlock.findings[0].detail, /^basis legs 0, 1 name a ground with no grounds\[\] block: .*affirmative, attributed act/);
   assert.equal(w.record.head(noBlock.id), null, "the refused write landed nothing");
+  /* a supporting leg without a label beside a labelled ground is a necessary leg (inquiry-grammar R68), no finding */
   const half = w.try([{ target: DA, ground: "charter" }, { target: DB }], [row("charter")]);
-  assert.deepEqual([half.ok, half.reason], [false, "BASIS_REFUSED"]);
-  assert.match(detailsOf(half), /1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all/);
+  assert.equal(half.ok, true, JSON.stringify(half).slice(0, 300));
+  /* control: a leg that cuts against never names a ground */
+  const cut = w.try([{ target: DA, ground: "charter" }, { target: DB, role: "cuts_against", ground: "charter" }], [row("charter")]);
+  assert.deepEqual([cut.ok, cut.reason], [false, "BASIS_REFUSED"]);
   /* the pure arm names the same document */
   assert.ok(errs((f) => checkInquiryBasis(fmWith(LEGS), f, null, null)).some((x) => /no grounds\[\] block/.test(x.message)));
 });
