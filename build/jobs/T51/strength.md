@@ -260,3 +260,7 @@ Wave A batch 3 done: fixtures.mjs published (gradingFactsUnread, strengthBarSet,
 Merged `origin/tranche/T51`. `fixture.mjs` money `readFact` now answers with money's published fixtures: `readFactNotFound()` for an unheld id, and `readFactOf()`'s real envelope carrying the fact the test holds. `fixtures.mjs --list` for strength: 0 failures. Strength tests 186 pass; format, architecture, coverage (44 of 44), ownership: 0 failures. No `fixtures-own` or `fixtures-generic` marker added.
 
 Size (session_01JmYPC9c3SBS7Z6uwYREAt2): test runs 7, module lines 3048
+
+## J16 · COMPLETE · re B17
+
+B17 done: money readFact re-pointed to readFactNotFound/readFactOf; fixtures.mjs --list for strength at 0; strength tests 186 pass; format, architecture, coverage, ownership 0 failures; no fixtures-own/generic markers.
