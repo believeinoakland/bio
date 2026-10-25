@@ -12,7 +12,8 @@ import { main, fill, press, section, word, storeWorld, SCREENS } from "./fixture
 const OWN = { capabilities: ["contribute", "create_projects"] };
 const text = (el) => String(el && el.textContent || "");
 /** a picker word where the list holds it, else the held row that stands in for it */
-const wordOr = (key, vars, fb, fbVars) => (hasWord(key) ? word(key, vars) : fb ? word(fb, fbVars || {}) : "");
+/* B68 (K5197): every pick word is drawn by key; until rows.mjs holds it the key itself is what is drawn */
+const wordOr = (key, vars) => (hasWord(key) ? word(key, vars) : key);
 
 async function pageOn(world, as, path) {
   const { door, session } = world.boot(as);
@@ -106,7 +107,7 @@ test("R137 an archive is one row naming its files' count, each of its files inde
   assert.deepEqual(inner.map((x) => x.value), [m1.bundle, m2.bundle], "each file, in the archive's order");
   for (const [x, name] of [[inner[0], "m1.txt"], [inner[1], "m2.txt"]]) {
     assert.ok(x.text.includes(name), name);
-    if (hasWord("screen.document.pick.member")) assert.ok(x.text.includes(word("screen.document.pick.member", { archive: "minutes.zip" })), "naming the archive");
+    assert.ok(x.text.includes(wordOr("screen.document.pick.member", { archive: "minutes.zip" })), "naming the archive");
   }
   const outside = radios(p, "connect").filter((r) => !r.el.closest("[data-pick-files]")).map((r) => r.value);
   assert.deepEqual(outside, [zip.bundle], "the files are listed beside their archive only");

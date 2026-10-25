@@ -1134,7 +1134,7 @@ function render(cs, view) {
      row with its files indented under it; one radio choice kept in page memory (`view.ui[<choice>]`), so a choice made on another page replaces it; typing in
      the find box narrows the pages read so far to documents whose name holds the text (the read takes no name filter). The words `screen.document.pick.*`
      are drawn where the list holds them, else the nearest held row stands in (the rows are owed to the words list). */
-  const pickHeld = (k) => heldWord(k);
+  const pickHeld = () => true; /* B68 (K5197): every screen.document.pick.* key is drawn by key; rows.mjs is regenerated after PLANE #63 Wave B */
   const pickRead = (phase, after) => later("pick:" + phase + ":" + (after || ""), "heldcaptures",
     { state: "held_and_vouched", sort: "project", limit: "20", ...(phase === "own" ? { project } : {}), ...(after ? { after } : {}) });
   const pickKeep = (row, phase) => !!row && typeof row.bundle_id === "string" && row.bundle_id !== id
