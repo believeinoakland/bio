@@ -1,6 +1,6 @@
 # screens-entry (T51)
 
-**Status** · session_015gSwauMbsH62NN9H8Dt6EX · depth 2 · WORKING · handled B12
+**Status** · session_015gSwauMbsH62NN9H8Dt6EX · depth 2 · BLOCKED · handled B12
 
 ## Completion (T51-114)
 
