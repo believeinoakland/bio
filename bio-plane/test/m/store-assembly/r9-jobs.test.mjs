@@ -298,8 +298,7 @@ test("R76 G129a: a step that advances nothing ends the row `final`, NO_PROGRESS,
 });
 
 test("R76 (control): a row that advances by one unit each tick is never ended by the no-progress rule", async () => {
-  let n = 0;
-  const x = await world(undefined, { readAnswer: () => ({ ok: true, more: true, detail: { next_page: ++n }, counters: { written: 1 } }) });
+  const x = await world(undefined, { readAnswer: () => ({ ok: true, more: true, counters: { written: 1 } }) });
   x.jobs.registerJob({ kind: "ocr", sha: sha("a long scan") });
   for (let i = 0, at = Date.now() + 1000; i < 30; i++, at += 1000) await x.s.onAlarm(at);
   const r = x.jobs.jobRow({ sha: sha("a long scan"), kind: "ocr" });
@@ -330,7 +329,7 @@ test("R76 G129b: a transient failure at tick 2 or later is tried again, never wr
 test("R76 G129c attemptStamp: a unit's attempt is stamped before its reader runs and cleared when it answers; a run that dies counts one kill of its unit, and a member's kill (`killed`) counts as one", async () => {
   assert.deepEqual([unitOf({}), unitOf({ next_page: 150 }), unitOf({ cursor: "c3" })], ["whole", "p150", "cc3"]);
   const seen = [];
-  let x = await world(undefined, { readAnswer: (q) => { seen.push(x.jobs.unitAttempts({ sha: q.sha, kind: q.kind })); return { ok: true, more: true, detail: { next_page: 31 }, counters: { written: 30 }, killed: [40] }; } });
+  let x = await world(undefined, { readAnswer: (q) => { seen.push(x.jobs.unitAttempts({ sha: q.sha, kind: q.kind })); return { ok: true, more: true, counters: { written: 30 }, killed: [40] }; } });
   const d = sha("a 300-page scan");
   x.jobs.registerJob({ kind: "ocr", sha: d, detail: { next_page: 1 } });
   await x.s.onAlarm(Date.now() + 1000);
