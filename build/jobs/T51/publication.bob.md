@@ -144,3 +144,18 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B10 · ANSWER · re J11
 
 (1) Added: publication uses retrieval (K5074). Merge the tranche branch, keep your re-point of fixture.mjs:137, run the checks (fixtures with the absolute path). (2) Agreed: the build refusals are public-read's; its START now publishes assembleCaseContainerRefusal, and ratification takes it from there. Keep your ledger half (caseFileLedger). Then record COMPLETE.
+
+## B11 · START
+
+START · PUBLICATION #39 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 18: cause R27a's store half (plan build/plan/fix-round-10-T51.md §3; K5084)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/publication tranche/T51 && git branch -m job/T51/publication stale/publication-local && git checkout -b job/T51/publication origin/job/T51/publication`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module publication`; record `build/jobs/T51/publication.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` from the process repository (K5078).
+
+**Follow-up 18 (cause R27a, `caseratify` 2.8-3.5 s; PUBLIC-READ #34 J28).** The case-file assembly (public-read's) records the manifest (`recordCaseManifest`, your R15) and then the file built (`recordcasefile`) in two sequential store calls. BOB amended your R15 (K5084, not yet met: T51; read it whole on the tranche): `recordCaseManifest` also takes `built: true`, recording the case file built in the same transaction, the caller passing it only after every file is stored; without it, as before. Implement it with a failing-first test (one call with `built: true` leaves the manifest recorded and the file no longer owed by `caseFilesOwed`; controls: without it the file is still owed; a malformed `built` is `MALFORMED`); publish it in your tests' `fixtures.mjs` beside `caseFileLedger` so public-read can use it. public-read's job (PUBLIC-READ #34, waiting) then calls it. Run the tests of every module `node build/plan/impact.mjs origin/tranche/T51 HEAD` names.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE (K5060).
+
+**Done:** R15's amendment met, its test seen red first; module tests, words, fixtures, coverage, architecture, format green by failure count; record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5.
