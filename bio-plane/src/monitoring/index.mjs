@@ -59,7 +59,7 @@ import { promotionOf } from "../promotion/index.mjs";
 import { governorOf, governedFetch } from "../host-governor/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf, MONITOR_FREQ } from "../capture/index.mjs";
-import { substanceDigests, profilesAsText, ODF_DIGEST_MAX, civicsmithUserAgent, DRIVE_CAPTURE_CHECKS } from "../acquisition/index.mjs";
+import { substanceDigests, profilesAsText, profileOf, profileView, firstHopWho, ODF_DIGEST_MAX, civicsmithUserAgent, DRIVE_CAPTURE_CHECKS } from "../acquisition/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { actionClocksOf } from "../action-clocks/index.mjs";
@@ -581,6 +581,20 @@ export class Monitoring {
   get publication() { return this.#deps.publication === undefined ? null : (this.#deps.publication ||= publicationOf(this.#deps.host)); }
   get caseImport() { return this.#deps.caseImport ||= caseImportOf(this.#deps.host); }
   get investigation() { return this.#deps.investigation ||= investigationOf(this.#deps.host); }
+  /** R80: the capture's profile, acquisition's own `profileOf` over the bytes the store now holds (the headers the tick saw, the
+   *  entry's locator, the file name it ends in, the combined jurisdiction view), so a textual copy is read as text and a copy of any
+   *  other format is known by its bytes. A profile that cannot be made is null: the copy is still filed (R9), without one. */
+  async #copyProfile(ev, cap, ctx, base, locator) {
+    try {
+      const at = base && typeof base.locator === "string" ? base.locator : locator;
+      let name = null;
+      try { const seg = new URL(String(at)).pathname.split("/").pop(); name = seg ? decodeURIComponent(seg) : null; } catch { name = null; }
+      return await profileOf({ ev, sha: cap.sha256, ct: cap.content_type, total: cap.bytes, headers: (ctx && ctx.headers) || {},
+                               locator: at, view: profileView(this.record), retrieved: cap.retrieved, origin: "fetch", name,
+                               declaredType: cap.content_type });
+    } catch { return null; }
+  }
+
   /** R79: the register file `file` with a document entry for the copy the tick filed (`cap`): its locator (the baseline entry's, else
    *  `locator`), file, retrieval instant, authority as the baseline entry states it, origin, and the capture block with the content type
    *  and digest. An entry already naming the digest is left as it is. Never throws: an unreadable register is returned unchanged. */
@@ -589,13 +603,22 @@ export class Monitoring {
     try { reg = JSON.parse(file.text); } catch { return file; }
     if (!reg || !Array.isArray(reg.documents) || reg.documents.some((d) => d && d.capture && d.capture.sha256 === cap.sha256)) return file;
     const kind = base && base.origin && typeof base.origin === "object" ? base.origin.kind : null;
+    const at = base && typeof base.locator === "string" ? base.locator : locator;
     const entry = {
-      file: cap.file, locator: base && typeof base.locator === "string" ? base.locator : locator, retrieved: cap.retrieved,
+      file: cap.file, locator: at, retrieved: cap.retrieved,
+      ...(cap.profile ? { profile: cap.profile } : {}),
       ...(base && base.authority ? { authority: base.authority } : {}),
       authority_state: base && base.authority ? "determined" : "undetermined",
       authority_basis: base && base.authority
         ? localize("monitoring.index.authority_basis_baseline", "the authority the baseline capture of this address states, carried to its later copy ({retrieved})", { retrieved: String(cap.retrieved) })
         : localize("monitoring.index.authority_basis_none", "no authority was asserted when the monitor tick filed this copy ({retrieved})", { retrieved: String(cap.retrieved) }),
+      /* R80: one hop, as acquisition's direct fetch states it (R16): this instance, the bytes served for the address at the instant */
+      provenance_chain: [{
+        who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
+        asserts: localize("monitoring.index.copy_hop_asserts", "these bytes were served for {locator} at {retrieved}", { locator: String(at), retrieved: String(cap.retrieved) }),
+        evidence: localize("monitoring.index.copy_hop_evidence", "first-party https fetch by the monitor tick, hashed at receipt"),
+        bound: false, via: "direct",
+      }],
       origin: kind === "named_request" || kind === "sweep" ? base.origin : { kind: "named_request" },
       attestation_attempts: [],
       capture: { method: localize("monitoring.index.copy_method", "bio-plane monitor tick, https fetch, hashed at receipt"),
@@ -1136,6 +1159,7 @@ export class Monitoring {
           monCap.existed = !!(await store.head(seen));
           if (!monCap.existed) await store.put(seen, fetchedBytes);
           monCap.held = true;
+          monCap.profile = await this.#copyProfile(store, monCap, fetchedCtx, baselineRow, locator);
         } catch (e) {
           monCap.why = localize("monitoring.index.the_served_bytes_could_not", "the served bytes could not be written to R2: {String}", { String: String(String(e && e.message || e).slice(0, 90)) });
         }

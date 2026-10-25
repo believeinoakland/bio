@@ -8,7 +8,8 @@ import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 import { monitorOp, monitoringOps, MONITOR_AUTHOR, DRIVE_TICK_CHECKS } from "../../../src/monitoring/index.mjs";
 import { identify } from "../../../../docprofile/registry.mjs";
-import { substanceDigests, DRIVE_CAPTURE_CHECKS } from "../../../src/acquisition/index.mjs";
+import { substanceDigests, DRIVE_CAPTURE_CHECKS, profileOf, profileView, firstHopWho } from "../../../src/acquisition/index.mjs";
+import { registerChecks } from "../../../src/provenance/register-checks.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -612,6 +613,50 @@ test("R79 a copy the tick files carries its provenance document entry and owes a
   assert.equal(r5.body.capture.registered, true, "the copy is still filed");
   assert.match(r5.body.note, /reading/);
   assert.match(r5.body.note, /REGISTRAR_REFUSED/);
+});
+
+test("R80 the copy's document entry carries acquisition's first-hop provenance_chain and the capture's profile, so the register files a vouched copy and a textual copy is read as text", async () => {
+  const w = world({ env: { INSTANCE_NAME: "Oakland", VERSION: "1.2.3" } });
+  const docsOf = (id) => JSON.parse(w.record.readFile(id, "data/provenance.json").text).documents;
+  const refusals = (id, docs) => registerChecks({ files: { "data/provenance.json": JSON.stringify({ ...JSON.parse(w.record.readFile(id, "data/provenance.json").text), documents: docs }) },
+    fm: { current_state: "verified" } }).filter((f) => /documents\[1\]/.test(JSON.stringify(f)) && /C-18\.9/.test(JSON.stringify(f)));
+  const ev = w.record.evidenceStore();
+  /* a textual copy: one hop, the monitor tick's fetch, by the first hop's one spelling; the profile is acquisition's own over the same bytes */
+  const id = "INFO-2026-0094-chain";
+  w.monitored(id, LOC, "v1 bytes");
+  w.net.routes[LOC] = serve("v2 bytes");
+  const r = await tick(w, id);
+  const s2 = sha("v2 bytes");
+  assert.equal(r.body.capture.registered, true);
+  const mine = docsOf(id).find((d) => d.capture.sha256 === s2);
+  assert.equal(mine.provenance_chain.length, 1);
+  const hop = mine.provenance_chain[0];
+  assert.deepEqual([hop.who, hop.bound, hop.via], [firstHopWho("Oakland", "1.2.3"), false, "direct"]);
+  assert.ok(hop.asserts.includes(LOC) && hop.asserts.includes(mine.retrieved), "the hop says which address and when");
+  assert.ok(typeof hop.evidence === "string" && hop.evidence.length > 0);
+  const want = await profileOf({ ev, sha: s2, ct: "text/plain", total: 8, headers: { "content-type": "text/plain" }, locator: LOC,
+    view: profileView(w.record), retrieved: mine.retrieved, origin: "fetch", name: "minutes.txt", declaredType: "text/plain" });
+  assert.deepEqual(mine.profile, want);
+  assert.equal(mine.profile.profiled_from_text, true, "a text/plain copy is read as text (reading-pipeline R2)");
+  assert.deepEqual(refusals(id, docsOf(id)), [], "the register finds a chain for the copy at or past verified");
+  /* a binary copy: its profile is the bytes' own, not read as text, and the chain is there all the same */
+  const pdf = (n) => new TextEncoder().encode(`%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n% ${n}\n%%EOF\n`);
+  const bid = "INFO-2026-0095-binary", BLOC = "https://records.example.org/agenda.pdf";
+  w.monitored(bid, BLOC, "b1");
+  w.net.routes[BLOC] = serve(pdf("two"), "application/pdf");
+  const rb = await tick(w, bid);
+  assert.equal(rb.body.capture.registered, true);
+  const bm = docsOf(bid).find((d) => d.capture.sha256 === rb.body.capture.sha256);
+  assert.equal(bm.provenance_chain.length, 1);
+  assert.equal(bm.profile.profiled_from_text, false);
+  assert.equal(bm.profile.format.format, "pdf");
+  assert.equal(bm.profile.source_content_type, "application/pdf");
+  assert.deepEqual(refusals(bid, docsOf(bid)), []);
+  /* control: the baseline's entry stays first and unchanged, and an entry already naming the digest is not added twice */
+  assert.equal(docsOf(id).length, 2);
+  w.clock.ms += 3600000;
+  await tick(w, id);
+  assert.equal(docsOf(id).length, 2);
 });
 
 test("R10 the answer's fields, and a promotion that does not answer is named as silent, never reported as recorded", async () => {
