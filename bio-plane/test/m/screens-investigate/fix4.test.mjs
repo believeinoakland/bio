@@ -200,7 +200,8 @@ test("R18 C14 a graph with no step to colour does not read the connection vocabu
   const today = new Date(t.world.now()).toISOString().slice(0, 10);
   const graph = await refused(t.world, t.me, "exploregraph", { centre: t.chen, at: { value: today, precision: "day", zone: "UTC" }, rings: 2 });
   assert.ok(graph.steps.length > 0, "the world's graph of a person has steps");
-  const served = { exploregraph: async () => ({ status: 200, json: { ok: true, result: graph } }) };
+  /* the trail's own answer, with the person's real nodes and steps grafted on (every other part of the answer is the world's) */
+  const served = { exploregraph: rewrite(t.world, t.me, (req, a) => (a && a.json && a.json.result ? { ...a, json: { ...a.json, result: { ...a.json.result, nodes: graph.nodes, steps: graph.steps } } } : a)) };
   const bareAt = { money: "/app/money/" + trail, person: "/app/person/" + lone };
   for (const name of ["money", "person"]) {
     const bare = await openAs(world, me, bareAt[name]);

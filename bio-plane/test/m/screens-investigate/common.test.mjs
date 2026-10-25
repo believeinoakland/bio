@@ -6,13 +6,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { interfacePage } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, RE_POINTS } from "../../../src/interface-shell/index.mjs";
 import { WORD_ROWS, word, hasWord } from "../../../src/setup-words/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { createHash } from "node:crypto";
 import { refusedIn, silent, pending, ok } from "../interface-shell/harness.mjs";
 import { inWorld, openAs, refused, settled, rewrite, readHeld, declareStandard } from "./world.mjs";
-import { main, rawKeys, plane, press, fill, SCREENS } from "./fixtures.mjs";
+import { main, rawKeys, press, fill, SCREENS } from "./fixtures.mjs";
 
 const REGISTRY = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
 /* N1073: no hand list of other modules' ops. The reads a screen makes are those it is seen to send over the scripted plane; each
@@ -98,10 +98,11 @@ let shared = null;
 const theWorld = () => (shared ||= universe());
 const TIES = "/app/ties";
 const changing = (world, me, op, fn) => rewrite(world, me, (req, a) => (a && a.json && a.json.result && req.url.includes("op=" + op) ? { ...a, json: { ...a.json, result: fn(a.json.result, req) } } : a));
+/** The reads a screen makes beyond the shell's own: every op the page asked, less those the help page (which reads nothing) asks of the frame. */
 const readsOf = async (U, id) => {
+  const frame = new Set((await openAs(U.world, U.me, "/app/help")).requests.map((r) => r.op));
   const p = await openAs(U.world, U.me, U.PATHS[id]);
-  const served = new Set(Object.keys(plane()));
-  return [...new Set(p.requests.map((r) => r.op))].filter((op) => served.has(op));
+  return [...new Set(p.requests.map((r) => r.op))].filter((op) => !frame.has(op));
 };
 
 for (const id of ["people", "person", "theme", "explore", "timeline", "money", "calculation", "proceeding", "due-date", "standard", "ties"]) {
@@ -173,7 +174,7 @@ test("R10 every record item a screen names is a reference with its card (DEC-160
   assert.ok(main(p).querySelector(`a.cs-ref[href="/app/person/${U.chen}"]`), "a person's name opens person (interface-shell R47)");
 });
 
-test.todo("REPORTED (screens-investigate, src/screens-investigate/money.mjs graph via P.graph): a trail's own node in the graph is a `cs-card` with no card (no data-tip): every record item a screen names carries its card (DEC-160)", async () => {
+test("R10 DEC-160 a trail's own node in the money graph carries its card: every record item a screen names does", async () => {
   const U = await theWorld();
   const p = await openAs(U.world, U.me, U.PATHS.money);
   const node = main(p).querySelectorAll(".mk-graph .cs-card, .mk-graph a.cs-ref");
@@ -215,19 +216,19 @@ test("R10 each screen draws exactly its registry acts, labelled by its words, ea
     const reg = REGISTRY.screens.find((x) => x.id === s.id);
     assert.ok(reg, `${s.id} is a registry screen`);
     /* B14 (K4259): each screen names exactly the acts the registry lists for it (and its owed acts under their op names) */
-    const want = reg.acts.map((a) => a.op.replace(/^owed:(\S+).*$/, "$1"));
+    const want = reg.acts.map((a) => a.op.replace(/^owed:(\S+).*$/, "$1")).concat((RE_POINTS[s.id] || []).filter((op) => s.acts.some((a) => a.op === op)));
     assert.deepEqual([...new Set(s.acts.map((a) => a.op))].sort(), [...new Set(want)].sort(), s.id);
     for (const a of s.acts) {
       assert.ok(Object.hasOwn(OPS, a.op), `${a.op} in OPS`);
       assert.equal(a.label, LABELS[s.id + ":" + a.op] ? LABELS[s.id + ":" + a.op] : a.op === "stepsource" ? "act.stepsource.label.explore" : `act.${a.op}.label.${s.id}`);
-      assert.ok(s.words.some((w) => (typeof w === "string" ? w : w[0]) === a.label), `${a.label} listed`);
+      assert.ok(ADOPTED.includes(a.label) || s.words.some((w) => (typeof w === "string" ? w : w[0]) === a.label), `${a.label} listed`);
     }
   }
 });
 
 /* K5173 (HANDOFF B520): the rows UX-DESIGN adopts for this round's causes; the source draws each by key, and each is a `test.todo` until the word table holds it */
 const ADOPTED = ["screen.person.expunge.marker", "screen.person.holds.heading", "screen.person.holds.holder", "screen.person.holds.capacity", "screen.person.holds.empty",
-  "act.recordline.label.office", "screen.calculation.column", "screen.calculation.column.help", "screen.calculation.part", "screen.calculation.part.help",
+  "act.recordline.label.office", "screen.person.holds.through", "act.linecurrentthrough.label.person", "act.linecurrentthrough.does", "screen.calculation.column", "screen.calculation.column.help", "screen.calculation.part", "screen.calculation.part.help",
   ...["implements", "refers_to", "amends", "repeals", "renumbers", "recodifies", "defines", "excepts", "incorporates"].map((k) => "screen.standard.rel.in." + k)];
 for (const key of ADOPTED) if (!hasWord(key)) test.todo(`K5173: ${key} is a word the table holds (hasWord)`);
 

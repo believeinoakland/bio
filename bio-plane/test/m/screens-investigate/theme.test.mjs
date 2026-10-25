@@ -2,9 +2,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { refusedIn, pending, boot, counted } from "../interface-shell/harness.mjs";
-import { main, button, fill, press, PATHS, MORE_PATHS, SCREENS, word, drew, notDrew, dayOf, rawKeys } from "./fixtures.mjs";
+import { main, button, fill, press, SCREENS, word, drew, notDrew, dayOf, rawKeys } from "./fixtures.mjs";
 import { inWorld, openAs, settled } from "./world.mjs";
 
+/** The addresses this file opens (screens-investigate R31, R33): the theme page, and the matter and progression of a project. */
+const PATHS = { theme: "/app/theme" };
+const MORE_PATHS = { matter: "/app/timeline/PROJ-2026-0007/matter/pra/ENT-2026-0003", progression: "/app/timeline/PROJ-2026-0007/progression/pra" };
 const REASON = "It is so.";
 const dayIn = (iso) => dayOf(iso.slice(0, 10));
 

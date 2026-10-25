@@ -285,6 +285,8 @@ export const PARTS = Object.freeze({
       return l || unnamed.replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
     };
     const isUnnamed = (id) => { const n = nodes.find((x) => x.id === id); return !(n && typeof n.label === "string" && n.label.trim()) && !names[id]; };
+    /* a card says what the thing is: a money trail and a payment, which the kit holds no kind word for, carry their kind as their fact (DEC-160) */
+    const plainOf = (t) => t.replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
     const tipOf = (id) => cs.w("connection.node.unnamed.tip", { kind: cs.w("connection.thing." + (thingOf(id) || "entity")) });
     const shape = (t, r) => (t === "person" ? `<circle r="${r}"/>` : t === "doc" ? `<path d="M${-r} ${-r * 0.85} h${r * 1.45} l${r * 0.55} ${r * 0.55} v${r * 1.15} h${-2 * r} z"/>`
       : t === "pay" ? `<path d="M0 ${-r} L${r} 0 L0 ${r} L${-r} 0 z"/>` : `<rect x="${-r}" y="${-r * 0.78}" width="${2 * r}" height="${1.56 * r}" rx="3"/>`);
@@ -323,7 +325,8 @@ export const PARTS = Object.freeze({
       : `<a class="cs-btn" data-tone="quiet" data-nav href="/app/explore/${encodeURIComponent(id)}">${cs.w("connection.graph.click")}</a>`);
     const list = nodes.map((n) => {
       const t = thingOf(n.id);
-      return cs.row("", `<b>${cs.ref(/^ENT-/.test(n.id) ? "person" : /^(INFO|INF)-/.test(n.id) ? "document" : "record", n.id, label(n.id), isUnnamed(n.id) ? [tipOf(n.id).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]))] : [])}</b>${t ? ` <span class="mk-small"${isUnnamed(n.id) ? ` data-tip="${cs.esc(tipOf(n.id))}"` : ""}>${cs.w("connection.thing." + t)}</span>` : ""}`
+      return cs.row("", `<b>${cs.ref(/^ENT-/.test(n.id) ? "person" : /^(INFO|INF)-/.test(n.id) ? "document" : "record", n.id, label(n.id), isUnnamed(n.id) ? [tipOf(n.id).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]))]
+        : /^MSR-/.test(n.id) ? [plainOf(cs.w("screen.money.name"))] : /^MNY-/.test(n.id) ? [plainOf(cs.w("connection.thing.pay"))] : [])}</b>${t ? ` <span class="mk-small"${isUnnamed(n.id) ? ` data-tip="${cs.esc(tipOf(n.id))}"` : ""}>${cs.w("connection.thing." + t)}</span>` : ""}`
         + (o && o.idonly && o.idonly[n.id] && isUnnamed(n.id) ? `<br><span class="mk-small" data-why="${cs.esc(n.id)}">${cs.w("screen.explore.unnamed.why", { n: String(o.idonly[n.id]) })}</span>` : "")
         + (limit.has(n.id) && n.id !== centre ? ` <span class="mk-small" data-limit="${cs.esc(n.id)}"><b>${cs.w("connection.graph.limit")}</b> · ${cs.w("connection.graph.limit.means")}</span>` : ""),
         n.id === centre ? `<span class="mk-small">${cs.w("connection.graph.center.means")}</span>` : press(n.id));
