@@ -4,7 +4,7 @@
 
 ## Entries
 
-- every screen · "group" where "team" is meant in text people read (K3472; K3803 item 3, moved by K4269) · census-team-words.md, group-words-T51.md · 2026-10-21
+- every screen · "group" where "team" is meant in text people read (K3472; K3803 item 3, moved by K4269) · archive/census-team-words.md, group-words-T51.md · 2026-10-21
 - every module · the words check's two new arms (pattern/prefix copies in tests; "group" in member-read code), K4208 (2), on the process repository's branch `prep/words-arms-K4208` · moved by K4269 · 2026-10-21
 - objective, contradiction, document, question, project · DEC-391's minted label keys not yet adopted (`GAP_WORDS`/`PENDING_WORDS` still in code) · screens-inquiry, K4258/K4260 · 2026-10-21
 - project page · `rerunread` finding titles not drawn (case-import R31 serves them) · K4259 · 2026-10-21
