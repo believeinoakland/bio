@@ -162,3 +162,17 @@ Tests: reevaluation module `bio-plane/test/m/reevaluation/*.test.mjs` 165 pass, 
 Commit f27aaa0792 pushed to job/T51/reevaluation.
 
 Size (session_014QYiuArevRHEaH98AGpvCi): test runs 4, module lines 0 in src, 44 added in tests
+
+## J10 · COMPLETE
+
+COMPLETE (fix round 10, follow-up 41, test file only): `caseparts.test.mjs:30-36` (the contract stand-in for publication's `case-cited-parts`) now answers the real shape publication's run pins. A ratified case answers `{ok: true, case, edition, project, parts, limit: 1000, truncated: false}` (`limit` is publication's `CITED_PARTS_MAX`). A case with no ratified edition answers `{ok: false, reason: "NO_SUCH_CASE_EDITION", case, edition: null}`, the real answer for a call that names no edition. The value leaves out the refusal's `detail` sentence, as B10 says. The marker `// fixtures-contract: publication case-cited-parts` stays on line 30. Reevaluation's consumers (`index.mjs:514`, `:2539`) read `ok === false` and `project`, so the fuller shape changes nothing for them.
+
+Markers added: none; the existing `fixtures-contract` marker is kept.
+
+Tests: `caseparts.test.mjs` 7 of 7; `bio-plane/test/m/reevaluation/` 165 of 165 (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/reevaluation/`).
+
+Checks (absolute root `/home/user/bio`): `fixtures.mjs --list` 0 failures (`caseparts.test.mjs:31` is now `accepted(case-cited-parts)`, so the `contract-no-run` line from J8 is gone; publication's `fixtures-run` is no longer needed for it to pass the check); `format` 0 failures; `architecture` 0 failures; `coverage` 41 of 41 live ids, 0 failures; `words` 0 failures; `ownership` 0 failures (against `origin/tranche/T51`).
+
+Commit `25585b3bfb` on `job/T51/reevaluation`, pushed. The branch first took `origin/job/T51/reevaluation` (fast-forward) and then `origin/tranche/T51` (merged, no conflicts) at this START.
+
+Size (session_018qdj8PzS6Dm7AAErJ82iZx): test runs 4, module lines 3469
