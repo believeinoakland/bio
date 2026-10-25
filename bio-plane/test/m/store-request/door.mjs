@@ -145,6 +145,7 @@ async function pageAnswer(res) {
   }
   return { status: res.status, bytes: new Uint8Array(await res.arrayBuffer()), type };
 }
+// fixtures-generic: WORLD_NO_DOOR_ARM (store-request R17: the world's own refusal of an op it does not reach; store-assembly R94)
 const noArm = (op) => json({ ok: false, reason: "WORLD_NO_DOOR_ARM", op }, 501);
 
 /* control-plane R61's byte answer: a served file relayed whole, a JSON answer enveloped */
@@ -186,6 +187,7 @@ async function answer(world, stub, env, page) {
     op = "inboxpull"; spec = OPS.inboxpull; resolving = true;
   }
   /* (1) control-plane R2: byte-identical to the real door's */
+  // fixtures-own: harness the world's door re-makes control-plane R2's unknown-op answer (store-request R17 (1)), the row answer-envelope's
   if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP", ...dispatchRow("UNKNOWN_OP"), op }, 400);
   if (Object.hasOwn(WORLD_UNREACHED, op)) return noArm(op);
   const req = page.make();

@@ -84,6 +84,7 @@ test("R17: the door's families: unknown op, admission, a store route per stamp k
   const look = await door(post("invitelook", { invite: "none" }));
   assert.notEqual(look.status, 501);
   /* a refused op the world does not reach */
+  // fixtures-generic: WORLD_NO_DOOR_ARM (store-request R17)
   const noArm = await door(post("textcheck", { text: "t" }), f);
   assert.deepEqual(noArm, { status: 501, json: { ok: false, reason: "WORLD_NO_DOOR_ARM", op: "textcheck" } });
   /* control: a stamp in the address reaches the store without it */
@@ -172,6 +173,7 @@ test("R20: every declared op is a key of the route map or answered by the world'
   assert.ok(worldAnswers("selftest") && worldAnswers("runtime") && worldAnswers("attest"));
   const f = await w.signIn("admin");
   for (const op of ["selftest", "runtime"]) assert.notEqual((await w.door(get(op), f)).status, 501, op);
+  // fixtures-generic: WORLD_NO_DOOR_ARM (store-request R17, R20)
   for (const op of Object.keys(WORLD_UNREACHED)) assert.equal((await w.door(get(op), f)).json.reason, "WORLD_NO_DOOR_ARM", op);
   /* control: an op declared and answered nowhere is named */
   assert.deepEqual(unreachedOf(w, [...Object.keys(OPS), "worldprobeop"]), ["worldprobeop"]);
@@ -181,4 +183,17 @@ test("R17: the binding classes the world's env holds are admitted as the Worker 
   const w = await storeWorld();
   const probe = await w.door({ url: "/api/?op=whoami", init: { headers: { authorization: `Bearer ${WORLD_TOKENS.PROBE_TOKEN}` } } });
   assert.equal(resultOf(probe).tokenClass, "probe");
+});
+
+test("storeWorld (fixture), R17: the world binds the published plane as plane's Worker does, so R70's case-file sweep builds an edition's case file in a world", async () => {
+  const { memoryBucket } = await import("../store-assembly/world.mjs");
+  const { seedEdition, completeEdition, stateOf, NOW } = await import("../store-assembly/g54-seed.mjs");
+  const w = await storeWorld({ now: Date.parse(NOW), env: { PUBLISHED: memoryBucket(), INSTANCE_NAME: "town" } });
+  const s = await seedEdition(w.ctx, "CASE-2026-4780");
+  await completeEdition(w.ctx, w.env, s);
+  assert.equal(stateOf(w.ctx, s).manifest_sha ?? null, null, "complete, no case file");
+  const swept = (await w.tick(10 * 60_000)).casefilesweep;
+  assert.equal(swept.finished, 1);
+  assert.match(stateOf(w.ctx, s).manifest_sha, /^[0-9a-f]{64}$/);
+  assert.equal((await w.door(get("publishedbytes", { sha256: "a".repeat(64) }))).json.reason, "NO_PUBLISHED_PART");
 });

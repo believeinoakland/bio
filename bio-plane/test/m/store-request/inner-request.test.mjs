@@ -11,6 +11,7 @@ import { innerRequest, QUERY_STAMPS, BODY_STAMPS, BODY_ONLY, BODY_DROPPED, SESSI
 import * as OD from "../../../src/op-declarations/index.mjs";
 import { callerViewer } from "../../../src/admission/index.mjs";
 import { createSha256 } from "../../../src/record-grammar/index.mjs";
+import { readFileSync } from "node:fs";
 
 const { OPS, OP_STAMPS } = OD;
 let C = {};          /* caller kind → admission's caller */
@@ -363,55 +364,41 @@ test("R23: a grant's digest crosses in the body; the secret-presenting ops both 
   }
 });
 
+/* R24's lists, read from the requirement itself (`build/requirements/store-request.md`), so no test hand-lists another module's ops */
+const R24_LINE = (() => {
+  const t = readFileSync(new URL("../../../../build/requirements/store-request.md", import.meta.url), "utf8");
+  const at = t.indexOf("- **R24**");
+  return t.slice(at, t.indexOf("\n", at));
+})();
+const listOf = (name) => {
+  const m = new RegExp("`" + name + "`(?: \\(R3's [a-z-]+ (?:keys|ops)\\))?: ((?:`[a-zA-Z]+`(?:, )?)+)").exec(R24_LINE);
+  return m ? [...m[1].matchAll(/`([a-zA-Z]+)`/g)].map((x) => x[1]) : null;
+};
+const ownConstants = { MEMBERSHIP_ADMIN_ACTS, WIZARD_AUTHOR_ACTIONS, WIZARD_PROPOSAL_ACTIONS, WIZARD_VIEWER_OPS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS,
+                       SESSION_MEMBER_BODY_OPS };
+
 test("R24: each constant equals its list; each family equals op-declarations' export; every op named in R3 to R12 is in OPS", () => {
   assert.deepEqual([...QUERY_STAMPS], ["viewer", "identity", "author", "by", "actor", "who", "origin", "administer", "aiCred", "source", "country"]);
   assert.equal(ACT_CLOCK_OPS.length, 21);
   assert.deepEqual([...BODY_STAMPS], ["actorIdentity", "actorViewer", "actorMemberId", "ownerMemberId", "assistantPrincipal", "migrationReplay"]);
   assert.deepEqual(JSON.parse(JSON.stringify(BODY_ONLY)), { securitytooladd: ["credentials", "config"], projectkeyset: ["key"], setpassword: ["current", "password", "role"] });
   assert.deepEqual(JSON.parse(JSON.stringify(BODY_DROPPED)), { setpassword: ["role"] });
-  assert.deepEqual([...SESSION_MEMBER_BODY_OPS], ["stepsource", "stepsourcewithdraw"]);
-  assert.deepEqual([...MEMBERSHIP_ADMIN_ACTS], ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
-    "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset", "joindoors"]);
-  assert.deepEqual([...WIZARD_AUTHOR_ACTIONS], ["wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire", "wizardeditorgrant", "wizardeditorrevoke"]);
-  assert.deepEqual([...WIZARD_PROPOSAL_ACTIONS], ["wizardpropose"]);
-  assert.deepEqual([...WIZARD_VIEWER_OPS], ["wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire", "wizardpropose", "wizards",
-    "wizardread", "wizardsat", "wizarduse", "wizardcandidates", "wizardcheck", "startfrom", "baseupdates"]);
-  assert.deepEqual([...CASE_IMPORT_ACTIONS], ["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw", "importflag", "importflagclear",
-    "importwatch", "importunwatch", "rerunstart", "rerunpair"]);
-  assert.deepEqual([...CASE_IMPORT_READS], ["importedcases", "importedcase", "importregrade", "rerunread"]);
-  assert.deepEqual({ ...BODY_ACTOR }, { lawrelate: "author", lawwithdraw: "author", courtlink: "author", courttreat: "author", standardforce: "author",
-    standardforcewithdraw: "author", standardrelease: "author", standardadoption: "author", standardimpose: "author", standardbenchmark: "author",
-    standardinforcethrough: "author", standardinforcethroughwithdraw: "author", lawpropose: "proposer", standardforcepropose: "proposer" });
-  /* the families' members as R24 fixes them, each equal to op-declarations' export of its name */
-  const R24 = {
-    CAPTURE_MEMBER_ACTIONS: ["inboxpull", "reattest", "captureaccount", "heldsetaside", "heldrestore"], CAPTURE_READS: ["heldcaptures", "gradenote", "doorbelltally"],
-    CAPTURE_VIEWER_ACTIONS: ["heldsetaside", "heldrestore", "inboxpull", "inboxresolve"],
-    CONTRADICTION_ACTIONS: ["contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve", "contradictionoptin", "contradictionrespond"],
-    CONTRADICTION_READS: ["contradictioncandidates", "contradictiontensions", "contradictionfacts", "contradictionnotices", "contradictionresponses"],
-    DOCKET_ACTIONS: ["docketfile", "docketpressure", "docketdecline", "docketpost"], DOCKET_AUTHOR: ["docketfile", "docketpressure"],
-    DOCKET_BY: ["docketprepare", "docketdecline", "docketpost"], DOCKET_READS: ["docket", "docketprepare", "docketinvitation"],
-    INTENT_ACTIONS: ["objectivecondition", "goaldeclare", "goallink", "goalclose", "aspirationdeclare", "aspirationdepart", "aspirationdeadend", "aspirationretire", "triage", "workobjective"],
-    INTENT_READS: ["objectiveprogress", "objectivegaps", "goal", "aspirations", "aspirationcontacts", "pursuit", "intentproposals"],
-    LOCAL_FACTS_ACTIONS: ["factconfirm"], NETWORK_NOTICES_ACTIONS: ["noticepost"], NETWORK_NOTICES_BY: ["noticeprepare", "noticepost"],
-    NETWORK_NOTICES_READS: ["noticeprepare", "notices", "directorysubmission"], OWN_KEY_ACTIONS: ["signerregister", "signerrevoke", "signerregisterown", "signerrevokeown"],
-    PLAN_PROPOSAL_ACTIONS: ["optionpropose"], POSITIONAL_ACTS: ["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude", "withdrawconclusion", "linkproject", "drawquestion"],
-    PROJECT_ACTIONS: ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd", "projectownerremove", "projectfork", "projectownerrescue", "projectvisibilityset", "projectrequest", "projectrequestwithdraw", "projectrequestanswer"],
-    QUEUE_ACTIONS: ["queuemute", "queuesnooze"], REEVALUATION_ACTIONS: ["versionadopt", "versionkeep", "reevaluationrecord", "adoptversion", "keepversion"],
-    ROSTER_SELF_ACTIONS: ["adminresign", "hostingaccessset", "memberpairingset"], RUN_PRODUCTION_ACTIONS: ["suggest", "extractpropose", "capturerequest", "contradictionpropose", "contradictionrecommend"],
-    RUN_VERB_ACTIONS: ["airunopen", "airuntick", "airunclose"], SOURCE_ACTIONS: ["sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw"],
-    SOURCE_READS: ["sourceof", "sourcerung", "sourcereadlog"], STANDARDS_ACTIONS: ["standarddeclare", "standardpropose", "standardadopt"], STRUCTURE_ACTIONS: ["inquiryground"],
-    TEMPLATE_PROPOSAL_ACTIONS: ["templatepropose"], VERSION_ACTIONS: ["versionaccept", "versionreject", "versionconsider", "versionrevert", "versioncurrent", "versionhide"],
-    WHAT_CHANGED_PROPOSAL_ACTIONS: ["whatchangedpropose"], WHAT_CHANGED_READS: ["whatchangeddrafts"],
-  };
-  for (const [name, members] of Object.entries(R24)) assert.deepEqual([...OD[name]].sort(), [...members].sort(), name);
-  assert.equal(OD.ACTION_LAYER_ACTIONS.length, 58); assert.ok(OD.ACTION_LAYER_ACTIONS.includes("factconfirm"));
-  assert.equal(OD.QUERY_AUTHOR_ACTIONS.length, 52); assert.ok(!OD.QUERY_AUTHOR_ACTIONS.includes("optionpropose"));
+  for (const [name, mine] of Object.entries(ownConstants)) {
+    const listed = name === "SESSION_MEMBER_BODY_OPS" ? ["stepsource", "stepsourcewithdraw"] : listOf(name);
+    assert.ok(listed, `${name} is listed in R24`);
+    assert.deepEqual([...mine], listed, name);
+  }
+  /* BODY_ACTOR (op: key), as R24 states it */
+  const ba = /`BODY_ACTOR` \(op: key\): `author` for ((?:`[a-z]+`(?:, )?)+); `proposer` for ((?:`[a-z]+`(?:, )?)+)/.exec(R24_LINE);
+  const names = (g) => [...g.matchAll(/`([a-z]+)`/g)].map((x) => x[1]);
+  assert.deepEqual({ ...BODY_ACTOR }, Object.fromEntries([...names(ba[1]).map((op) => [op, "author"]), ...names(ba[2]).map((op) => [op, "proposer"])]));
+  /* every family R24 fixes whose name op-declarations exports: equal to that export */
+  const families = [...R24_LINE.matchAll(/`([A-Z_]+)`: (?=`[a-z])/g)].map((m) => m[1]).filter((n) => !Object.hasOwn(ownConstants, n) && Object.hasOwn(OD, n));
+  assert.ok(families.length >= 30, `${families.length} families`);
+  for (const name of families) assert.deepEqual([...OD[name]].sort(), [...listOf(name)].sort(), name);
   const named = new Set([...VIEWER_STAMPED_OPS, ...ACT_CLOCK_OPS, ...Object.keys(BODY_ONLY), ...Object.keys(BODY_ACTOR), ...MEMBERSHIP_ADMIN_ACTS,
-    ...WIZARD_AUTHOR_ACTIONS, ...CASE_IMPORT_ACTIONS, "unpack", "pagetranscribe", "pdfstructure", "lease", "monitorpause", "versionchain", "readheld",
-    "captureupload", "captureuploadpart", "promote", "expertisedeclare", "expertiseconfirm", "resolutiondefect", "entitycreate", "entityalias",
-    "relationdeclare", "progressiondefine", "aliaswithdraw", "relationwithdraw", "resolve", "resolvetestify", "connect", "taskforward", "taskresolve",
-    "taskdrain", "taskdecide", "testify", "lead", "attribute", "themedeclare", "calibrate", "aicredentialrevoke", "aicredentialmint", "instancegroupseed",
-    "reviewgrant", "reviewrevoke", "profilesset", "handlechange", "selectionrelease", "opencaptures"]);
-  const missing = [...named].filter((op) => !Object.hasOwn(OPS, op));
+    ...WIZARD_AUTHOR_ACTIONS, ...CASE_IMPORT_ACTIONS, ...[...R24_LINE.matchAll(/`([a-z]+)`/g)].map((m) => m[1])]);
+  const missing = [...named].filter((op) => !Object.hasOwn(OPS, op) && !["at", "now", "credentials", "config", "key", "current", "password", "role",
+    "author", "proposer", "member", "by", "viewer", "identity", "who", "origin", "administer", "source", "country", "actor"].includes(op));
   assert.deepEqual(missing, []);
 });
