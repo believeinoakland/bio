@@ -1196,6 +1196,8 @@ export class PublicRead {
                  parts: (fnd.parts || []).map((p) => ({ ...p, withheld: true })),
                  withheld: { orders: by, detail: WITHHELD_SENTENCE } };
       return { ...fnd, serves, names, unresolved,
+               /* R28 (K5153): under a seal of the case document, the row's document-derived content is withheld with it. */
+               ...(docWithheld ? { case_excludes: null, strength: null, grounds: null, required: null } : {}),
                division: {
                  parent: names.find((n) => n.kind === "division_parent")?.to ?? null,
                  siblings: names.filter((n) => n.kind === "division_sibling").map((n) => n.to).sort(),
