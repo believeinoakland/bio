@@ -1,6 +1,6 @@
 # link-sweep (T51)
 
-**Status** · session_01TKfaRpezEfw8cgXa711BFo · depth 2 · COMPLETE · handled B7
+**Status** · session_014LubSgUXQ2457eSNMheo6B · depth 2 · COMPLETE · handled B8
 
 ## Completion (T51-242, words)
 
@@ -119,3 +119,33 @@ B7 (CHANGE, K4247) applied on job/T51/link-sweep at b79e0bbc0a (tranche/T51 merg
 - Before tests (K4113): `npm ci --ignore-scripts` in agent-runner, bio-plane/src/journey-check, file-scanner, sheet-worker, site, all missing node_modules.
 
 **Size (session_01TKfaRpezEfw8cgXa711BFo):** test runs 4, module lines 1230.
+
+## Completion (fix round 10, Wave A batch 5; LINK-SWEEP #7, B8)
+
+**Causes done.**
+- `capture-requests/sweepScopeRegistrar` (fixture.mjs:74, FIX-E): `stubCaptureRequests` is gone. `world()` builds the real `captureRequestsOf` (migrated) and wraps it in `recordingCaptureRequests`, which delegates `registerSweepScope` to the real one and only records what it accepted, so a test reaches the registered check. The slot's `LISTENER_DECLARED` refusal is now the real one. capture-requests has no `fixtures.mjs` on the branch, so the real module is the fixture.
+- `acquisition/acquireRefusals` (fixture.mjs:201, FIX-E): the scripted site's refusal for a missing or failing address is `acquireRefusals({kind: "source_refused"})` from `test/m/acquisition/fixtures.mjs` (the real 502 SOURCE_REFUSED). The source's status in the body is the provider's (410); no link-sweep test reads it (`fail: 503` stays an input only).
+- Three contracts run against the real code, all in the new `bio-plane/test/m/link-sweep/contracts.test.mjs`, each value stated as data: `// fixtures-run: monitoring sweep-fence`, `// fixtures-run: monitoring sweep-mutate`, `// fixtures-run: capture-requests sweep-scope`.
+
+**Values the users must equal (real answers; the users change where theirs differ).**
+- `sweep-fence`: the refusal is `{ok:false, reason:"SWEEP_NOT_A_MEMBER", code:"SWEEP_NOT_A_MEMBER", check:"C-18.17", translation, detail, sweeps:[ids]}`; admitted is `null`. monitoring's stand-in (`{ok, reason, code, detail}` only) lacks `check`, `translation` and `sweeps`.
+- `sweep-mutate`: `{ok:false, reason:"NO_SUCH_SWEEP", code:"NO_SUCH_SWEEP", sweep:<name>, detail}`, never `reason` alone. monitoring's `{ok:false, reason:"NO_SUCH_SWEEP", detail:"no such sweep"}` lacks `code` and `sweep`.
+- `sweep-scope`: `{ok:false, reason: unknown|unratified|held|out-of-scope, detail?}` (`unratified` carries no detail) or `{ok:true, scope:[the sweep's sources]}`; in scope is equal or continuing at a `/` (`…/council`, `…/council/x` in; `…/councilor` out); an empty locator list is `out-of-scope`, "no locator was named".
+
+**Fixture lines.** `checks/fixtures.mjs . link-sweep --list`: answer 0, stub 0, code 0, contract 0; 0 failures. Lines left: none. No `fixtures-own` or `fixtures-generic` marker added. The three `fixtures-run` lines show `orphan-run` for monitoring (2) and capture-requests (1) until their markers are merged.
+
+**Needs BOB (one item).** `architecture link-sweep` fails on `fixture.mjs`, which imports `acquisition/fixtures.mjs` while `link-sweep` does not declare `acquisition` in `uses` (`build/modules.json`, line 144). The requirement text already names acquisition (R5, R31). Adding `"acquisition"` to link-sweep's `uses` clears it; modules.json is not mine to edit. Every other check is green.
+
+**Deferred.** None. **Found in another module.** `node bio-plane/src/setup-words/build.mjs --check` reports `rows.mjs` stale at word 20125 (basis-version-grammar); not mine, and it fails the same without my change.
+
+**Tests and checks.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/link-sweep/*.test.mjs`: tests 44, pass 44, fail 0.
+- `bio-plane/test/m/scheduler/consumers.test.mjs` (the one user of link-sweep's fixture, named by impact): tests 13, pass 13, fail 0.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: link-sweep 7/7, scheduler 1/20; affected modules 2 of 178.
+- format: 178 modules; 0 failures. coverage link-sweep: 15 of 15 ids named; 0 failures. words link-sweep: 0 failures. ownership link-sweep tranche/T51: 0 failures. fixtures link-sweep: 0 failures. architecture link-sweep: 1 failure (the `uses` item above).
+
+**Size (session_014LubSgUXQ2457eSNMheo6B):** test runs 8, module lines 1230.
+
+## J6 · COMPLETE
+
+Fix round 10 batch 5 done on job/T51/link-sweep (8a12d4da58). Both own fixture lines done (sweepScopeRegistrar: the real capture-requests, migrated, wrapped only to record; acquireRefusals: acquisition's published fixture). The 3 contracts run in test/m/link-sweep/contracts.test.mjs: sweep-fence, sweep-mutate, sweep-scope; the real values differ from monitoring's hand-built ones (see record: fence adds check/translation/sweeps; mutate adds code/sweep). fixtures link-sweep 0 failures; module tests 44/44; scheduler consumers 13/13; format, coverage, words, ownership green. NEEDS YOU (one item): architecture link-sweep fails because fixture.mjs imports acquisition/fixtures.mjs and link-sweep's uses (build/modules.json:144) lacks acquisition; please add it (R5/R31 already name it). Found elsewhere: setup-words build --check reports rows.mjs stale at basis-version-grammar word 20125 (not mine). No fixtures-own/generic markers added.
