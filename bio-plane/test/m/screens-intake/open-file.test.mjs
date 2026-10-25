@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { open, html, text, main, btn, fill, press, ok, refused, bytes, ADMIN, rawKeys, word, hasWord, says, saysIn } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
+import { CHECK_INSIDE, IMAGE_UNREAD, OPEN_FILE_STAND_INS as STAND_INS } from "../../../src/screens-intake/standins.mjs";
 
 const day = (d, m, y) => word("date.daymonthyear", { day: String(d), month: word(`date.month.${m}`), year: String(y) });
 
@@ -223,7 +224,8 @@ test("R39 controls: the safe view is not verified against the original's digest;
 });
 
 test("R26 every key the open-file screen reads is a word of the list, and its three states draw word(key, vars)", async () => {
-  for (const k of SCREENS.find((x) => x.id === "open-file").words) assert.ok(hasWord(k), k);
+  /* a key is a word of the list; a stand-in is a `[id, en]` row of standins.mjs (the list wins once it holds the id) */
+  for (const k of SCREENS.find((x) => x.id === "open-file").words) assert.ok(typeof k === "string" ? hasWord(k) : STAND_INS.includes(k), String(k));
   for (const [state, kind] of [["low", "low"], ["warned", "high"], ["held", "held"]]) {
     const p = await at(state);
     assert.ok(says(p, `screen.open-file.risk.${kind}`), kind);
@@ -296,4 +298,36 @@ test("R36 controls: a file the team's Civicsmith fetched, or one another member 
   assert.ok(says(other, "screen.open-file.closed", { why: "NOT_SCANNED" }), "the generic line for a file that is not hers");
   const unknown = await mine({ captureaccounts: refused("STORE_SILENT", "x") });
   assert.ok(!says(unknown, "screen.open-file.high.yours"), "who added it unknown: not worded as hers");
+});
+
+/* ---- fix round 10, cause 14 (G3; walk C7): an added file's other reasons are said ---- */
+const reasonsOf = (...codes) => ok({ ok: true, threat: "high", scan_hold: null, reasons: codes.map((code) => ({ code, translation: `the plane's words for ${code}` })) });
+const NOTE_CLEAN = ok({ ok: true, notes: [NOTE] });
+/* the stand-in sentences (standins.mjs): the list always wins, so a test compares with the module's own `[id, en]` row, which is the list's text once it holds the id */
+const said = (p, row) => text(p).includes(row[1]);
+const mineWith = (...codes) => mine({ threatof: reasonsOf(...codes), verdictnotes: NOTE_CLEAN });
+
+test("R5 R36 cause 14: a file the viewer added, with a clean scanner note, still says that its inside could not be checked, and the other reason's words", async () => {
+  for (const other of ["encrypted", "active:vba-project", "format_unchecked"]) {
+    const p = await mineWith("source_not_fetched", other);
+    assert.ok(says(p, "screen.open-file.high.yours"), `${other}: still her own file`);
+    assert.ok(text(p).includes(`the plane's words for ${other}`), `${other}: the reason is said in the plane's words`);
+    assert.ok(says(p, "screen.open-file.why", { reasons: `the plane's words for ${other}` }), `${other}: beside the "why" line`);
+    assert.ok(said(p, CHECK_INSIDE), `${other}: the scanner's "Clean" does not stand for the inside`);
+    assert.ok(says(p, "screen.open-file.note.line", { tool: word("screen.open-file.tool.clamav"), result: word("screen.open-file.result.clean") }), `${other}: the note stays`);
+  }
+});
+
+test("R5 R36 cause 14 control: source_not_fetched alone draws no empty why line and no inside line; a reason that does not hide the inside draws only its words", async () => {
+  const alone = await mineWith("source_not_fetched");
+  assert.ok(says(alone, "screen.open-file.high.yours"));
+  assert.ok(!text(alone).includes(word("screen.open-file.why", { reasons: "" })), "no empty why line");
+  assert.ok(!main(alone).querySelector(".mk-small[data-risk], p.mk-small:empty"), "and no empty paragraph");
+  assert.ok(!said(alone, CHECK_INSIDE));
+  const macro = await mineWith("source_not_fetched", "active:macro");
+  assert.ok(text(macro).includes("the plane's words for active:macro"));
+  assert.ok(!said(macro, CHECK_INSIDE), "a macro in a readable file: its inside was checked");
+  /* a file that is not hers keeps the one line for every reason */
+  const hers = await at("warned", { threatof: reasonsOf("encrypted") });
+  assert.ok(said(hers, CHECK_INSIDE), "a fetched file with an encrypted inside says it too");
 });

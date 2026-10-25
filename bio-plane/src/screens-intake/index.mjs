@@ -25,6 +25,7 @@ import { ARCHIVE_SCREEN } from "./archive.mjs";
 import { ABOUT_KNOCKER_SCREEN } from "./about-knocker.mjs";
 import { LEADS_SCREEN } from "./leads.mjs";
 import { WATCHING_SCREEN } from "./watching.mjs";
+import { OPEN_FILE_STAND_INS } from "./standins.mjs";
 
 /* The keys each screen reads (R26). */
 export const SCREEN_KEYS = Object.freeze({
@@ -145,6 +146,8 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.nothing.title", "refusal.NO_SAFE_VIEW", "screen.open-file.check.notyet", "screen.open-file.high.yours",
     "screen.open-file.next.head", "screen.open-file.next.yours", "screen.open-file.safetext", "screen.open-file.safetext.cut",
     "shell.unread", "screen.open-file.digest.checked", "refusal.DIGEST_MISMATCH", "refusal.DIGEST_MISMATCH.unheld",
+    /* fix round 10 (R14, R35b): stand-in rows, `[id, en]`, until the design's rows replace them (standins.mjs) */
+    ...OPEN_FILE_STAND_INS,
   ]),
   "about-knocker": Object.freeze([
     "act.sourcedisclose.label.about-knocker", "act.sourceconsent.label.about-knocker", "act.sourceconsentwithdraw.label.about-knocker",

@@ -45,7 +45,8 @@ function renderOpenFile(cs, view) {
       + (engine ? `<span class="meta">${cs.esc(engine)}</span>` : "")
       + (scanned && n.scanned_at ? `<span class="meta">${cs.w("screen.open-file.note.at")} ${cs.date(n.scanned_at)}</span>` : "");
   };
-  const notes = cs.state(D.notes, (v) => `<div class="cs-sheet">${v.notes.map((n) => `<div class="cs-row">${noteLine(n)}</div>`).join("")}</div>`,
+  const notesFor = (inside) => cs.state(D.notes, (v) => `<div class="cs-sheet">${v.notes.map((n) => `<div class="cs-row">${noteLine(n)}</div>`).join("")}</div>`
+    + (inside ? `<p class="mk-small" data-unexamined="1">${cs.w("screen.open-file.check.inside")}</p>` : ""),
     { empty: addedBy ? "screen.open-file.check.notyet" : "screen.open-file.checks.none" });
   const safeDrawn = (s) => {
     if (!s) return "";
@@ -76,11 +77,20 @@ function renderOpenFile(cs, view) {
   const body = cs.state(D.threat, (t) => cs.state(D.state, (o) => {
     const held = !!t.scan_hold || o.why === "SCAN_HOLD";
     const kind = held ? "held" : t.threat === "low" ? "low" : "high";
-    const reasons = (Array.isArray(t.reasons) ? t.reasons : []).map((r) => r && (r.translation || r.code)).filter(Boolean);
-    const yours = kind === "high" && addedBy && (Array.isArray(t.reasons) ? t.reasons : []).some((r) => r && r.code === "source_not_fetched");
+    const listed = (Array.isArray(t.reasons) ? t.reasons : []).filter((r) => r && (r.translation || r.code));
+    const yours = kind === "high" && addedBy && listed.some((r) => r.code === "source_not_fetched");
+    /* R14 (G3): for a file she added, `yours` says why the file is high (nobody fetched it); every other reason is still said in its own words,
+       and none is said as an empty line */
+    const reasons = (yours ? listed.filter((r) => r.code !== "source_not_fetched") : listed).map((r) => r.translation || r.code);
+    /* R14: a reason that says the file's inside was not examined (an encrypted file or member, a macro container, a format nothing checked, a file
+       left unread or unscannable) is said beside the checks, so a scanner's "Clean" is not taken to cover it */
+    const unexamined = listed.some((r) => /^(encrypted|format_unchecked|unread|unscannable|active:vba-project)$/.test(String(r.code)));
+    /* R68 (G7; file-safety R56): a TIFF, HEIC or BMP is not read, and its structure was not examined */
+    const unreadImage = !!(t.image && typeof t.image === "object" && t.image.read === false);
     let out = `<div class="row"><span class="cs-risk" data-risk="${kind}" tabindex="0">${cs.w(`screen.open-file.risk.${kind}`)}</span>`
       + `<span class="mk-small">${cs.w(yours ? "screen.open-file.high.yours" : `screen.open-file.risk.${kind}.means`)}</span></div>`
-      + (reasons.length && !yours ? `<p class="mk-small">${cs.w("screen.open-file.why", { reasons: reasons.join("; ") })}</p>` : "");
+      + (reasons.length ? `<p class="mk-small">${cs.w("screen.open-file.why", { reasons: reasons.join("; ") })}</p>` : "")
+      + (unreadImage ? `<p class="mk-small" data-unread-image="1">${cs.w("screen.open-file.image.unread")}</p>` : "");
     const safe = cs.sec("screen.open-file.safe", `<p class="mk-small">${cs.w("screen.open-file.safe.about")} `
       + `${cs.mark("origin", "machine")} ${cs.w("screen.open-file.safe.origin")}. ${cs.w("screen.open-file.safe.cite")}</p>`
       + `<div class="mk-acts">${cs.act("safeview", { tone: kind === "low" ? undefined : "primary" })}</div>`
@@ -92,12 +102,12 @@ function renderOpenFile(cs, view) {
       + `<div class="mk-acts">${cs.act("deepercheck")}</div>`);
     if (kind === "low") {
       out += `<div class="mk-acts">${cs.act("openoriginal", { tone: "primary" })}</div>` + refused
-        + cs.sec("screen.open-file.checks", notes) + `<p class="mk-note">${cs.w("screen.open-file.weekly")}</p>`;
+        + cs.sec("screen.open-file.checks", notesFor(unexamined)) + `<p class="mk-note">${cs.w("screen.open-file.weekly")}</p>`;
     } else if (kind === "high") {
       const warned = o.may_open === true && o.path === "warned";
       out += (o.may_open === true && o.path === "deeper" ? `<div class="mk-acts">${cs.act("openoriginal", { tone: "primary", data: { override: "1" } })}</div>` : "")
         + (yours ? `<h2>${cs.w("screen.open-file.next.head")}</h2><p class="mk-note">${cs.w("screen.open-file.next.yours")}</p>` : "")
-        + safe + deeper + cs.sec("screen.open-file.checks", notes)
+        + safe + deeper + cs.sec("screen.open-file.checks", notesFor(unexamined))
         + (warned ? cs.sec("screen.open-file.warn", `<div class="cs-dialog"><b>${cs.w("screen.open-file.warn.title")}</b>`
           + `<p class="ends">${cs.w("screen.open-file.warn.ends")}</p>`
           + `<fieldset class="mk-checks"><legend>${cs.w("screen.open-file.warn.confirm")}</legend>`
@@ -116,7 +126,7 @@ function renderOpenFile(cs, view) {
         + safe + deeper + refused
         + cs.sec("screen.open-file.risk.held", `<p class="mk-small">${cs.w("screen.open-file.held.about")}</p>`
           + (t.scan_hold ? `<div class="mk-acts">${cs.act("releasescanhold", { tone: "primary" })}</div>` : ""))
-        + cs.sec("screen.open-file.checks", notes);
+        + cs.sec("screen.open-file.checks", notesFor(unexamined));
     }
     /* R39: the original was checked against the record's fingerprint before it was handed over, and the sentence says so */
     if (U.opened) out += said("screen.open-file.digest.checked") + said("screen.open-file.opened");
