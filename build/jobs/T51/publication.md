@@ -224,3 +224,7 @@ Size (session_01XbERoEwBuhJPVYwb5wJ3HY): test runs 5, module lines 190
 - format 0 failures; architecture 0; coverage 48 of 48, 0 failures; ownership 0 (5 files); words 0 failures; fixtures for publication: 1 line, `door.test.mjs:95` `contract-no-run`, waiting for store-door's `fixtures-run` (before this job).
 
 Size (session_01Cz7XXhRgKLEhdaMNQ5hG3Y): test runs 8, module lines 4790
+
+## J13 · COMPLETE
+
+Follow-up 18 complete: R15's amendment (K5084) met. recordCaseManifest takes built:true, recording the case file built in the same transaction (also on a same-hash retry); absent/false as before; a malformed built is MALFORMED. Test seen red first (g54-casefile.test.mjs); fixture caseFileLedger(...).manifest(case, edition, {built}) published in fixtures.mjs with a fixtures.test.mjs test. Publication suite 180 pass, 0 fail, 1 todo (R30); public-read 307, ratification 335, publish-schedule 34, docket 90, all pass. format, architecture, coverage (48/48), ownership, words 0 failures; fixtures: only the old door.test.mjs:95 contract-no-run. No fixtures-own or fixtures-generic marker added. Deferred none; nothing found in other modules. public-read (#34) may now call it. Size (session_01Cz7XXhRgKLEhdaMNQ5hG3Y): test runs 8, module lines 4790.
