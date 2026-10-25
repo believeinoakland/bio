@@ -1386,7 +1386,14 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
 
   /* The plane's own remaining duty: bytes the register claims must exist. */
   for (const r of registers || []) {
-    const probe = await hasCapture(r.capture_sha);
+    let probe = await hasCapture(r.capture_sha);
+    /* R28 (K5130): a register row whose `path` in the image holds bytes hashing to its `capture_sha` is present
+       there: a member's own testified observation is held only so (provenance's `testify`, an inline file
+       registered with its digest), never in the bucket. Bytes that differ leave the bucket's answer as it was. */
+    if (!probe.present && typeof image?.[r.path] === "string") {
+      const held = image[r.path];
+      if (await sha256(held) === r.capture_sha) probe = { present: true, bytes: te.encode(held).length };
+    }
     /* D-556 (BOB #34, 2026-09-25 00:00Z; Intake Doctrine section 8): A WHOLE-HASH ROW HELD IN PARTS RATIFIES
        when every part the record names (the bundle's data/provenance.json) is present and its digest verifies:
        the audit calls those bytes SOUND (D-533), and publication now copies them part by part and re-verifies
