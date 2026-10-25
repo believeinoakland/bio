@@ -108,3 +108,7 @@ Follow-up 27 (B4, MONITORING #26 J7) done. Test files only (`bio-plane/test/m/in
 **Deferred:** nothing. **Found in other modules:** nothing beyond those lines.
 
 Size (session_01GUj8GfroqrbB9njoTNg55o): test runs 4, module lines 0
+
+## J5 · COMPLETE
+
+COMPLETE follow-up 27 (B4): see record J4. Fixture: watchSetOf(held, { throwsFor, page }) in bio-plane/test/m/intent/fixtures.mjs; answers { world, intent, projects, viewer, calls, sources }; projects[name] is the real project id. Tests 98/98; format, architecture, coverage, ownership 0.
