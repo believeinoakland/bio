@@ -198,3 +198,7 @@ B9 applied (G127a/c/d/e): register key is the whole; register_parts; partsOf; re
 **Tests/checks**: provenance folder + mk6: 189 pass, 0 fail. format 0 failures; architecture 0; coverage 64 of 64; ownership 1 file (the marker) + the new fixtures files within my tests path, 0 failures; setup-words --check clean; `impact.mjs origin/tranche/T51 HEAD`: 0 modules, 0 test files affected (new files and a comment only), so no users' tests to run.
 Deferred: none. Open QUESTION: none.
 Size (session_013AJsWwtb6GMtSPg9NTJgff): test runs 4, module lines 3280
+
+## J12 · COMPLETE · re B10
+
+B10 done. Published bio-plane/test/m/provenance/fixtures.mjs: heldParts, holdsOf (+holdsWorld), holdsRegister, homeOf, homeOfEmpty, homeOfHomed, homeOfWorld, provenanceOver, registeredHomes (takes the user's own {host,record,membership,promotion,now}; register/many), versionChainNoSuchVersion; each made by the real code and checked by fixtures.test.mjs (10 tests). Marker added (1): testimony-slot.test.mjs:105 fixtures-generic: CONTENT_EXTENT_REFUSED (a stand-in refusal handed to the slot to show it relays any refusal as it came). fixtures --list provenance lines: zero. provenance 189 pass 0 fail; format/architecture/coverage/ownership 0; impact: 0 modules affected. Record: build/jobs/T51/provenance.md. Size (session_013AJsWwtb6GMtSPg9NTJgff): test runs 4, module lines 3280
