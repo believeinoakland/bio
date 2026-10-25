@@ -60,3 +60,31 @@ No new member-facing sentence, so no new word id.
 **Deferred:** nothing. **Found in other modules:** only the failures above (not changed).
 
 Size (session_01XcNgiqYHy6Zizx3gVoR4W1): test runs 5, module lines 2265
+
+## J3 · COMPLETE
+
+Fix round 10, Wave A batch 4 (B3) done. Only intent's `tests` files changed (`bio-plane/test/m/intent/`); no source change.
+
+**Fixtures published** (`bio-plane/test/m/intent/fixtures.mjs`, new; checked by `fixtures.test.mjs`, which calls each and compares the real answer):
+- `intentWorld` (users: monitoring): the real `intentOf(...)` over a project whose condition reads ENT-1's `proc` instances (ENT-2 has `need` placed, `award` missing, so one gap). Answers `intent`, `project`, `viewer`, the real `gaps` and `watchSet` answers, and `captures`; `registerSource` is the real one. It replaces `stubIntent()`.
+- `notYoursRefusal` (user: control-plane): the real NOT_YOURS (C-111.15) of `declareAspiration` when a member declares a member-scope aspiration for another member; `refusal` is the answer, nothing written.
+
+**Own fixture lines, 6 of 6 done** (`node checks/fixtures.mjs . intent --list`: answer 0, stub 0, code 0, contract 0, accepted 0; 0 failures):
+- discovery.test.mjs:220: HELD_ELSEWHERE replaced by inquiry's real dispose refusal, `disposeAct({ to: "no-such-state" }).done` (BAD_TARGET_STATE), asserted `ok: false`.
+- fixture.mjs:113: `provenance` is now `registeredHomes({ host, record, membership, promotion }).provenance`, the real provenance with nothing registered, which progressions, content, events and inquiry share.
+- reasons.test.mjs:139: provenance's fixture `homeOfEmpty()` (the real provenance over an empty store), not `registeredHomes`: that test's ai-runs world creates a partial `register` table without `path`, so a real provenance cannot migrate over it (`no such column: path`). `homeOf` answers null as the hand-built one did.
+- fixture.mjs:125,132 and :151 (judgment): intent's world now builds the real retrieval (`retrievalOf`, `observation: {}` as basis-versions' world does, since observation-log is not among intent's uses) and the real inquiry (`inquiryOf`, its connections reached through the instance and migrated), and records each call by delegating (`selectionCreate`, `dispose`). The hand-built NO_OWNER / NO_SUCH_SELECTION / NOT_YOURS refusals and the hand-written dispose are gone; the selection handle is retrieval's own, so discovery.test.mjs R17 asserts the dispose handle equals the handle `selectionCreate` answered (`calls.handles`) instead of `"sel-1"`. The world registers promotion's `caseMember` (false) and `publishedRegistry` (null) facts as inquiry's own world does, which dispose asks.
+- `personFacts` stays a stand-in (not listed; no published inquiry fixture for it).
+
+**Markers added:** none (`fixtures-own` 0, `fixtures-generic` 0, `fixtures-contract` 0).
+**Left:** nothing of mine. Wave B / `stay` lines: none in intent.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/intent/*.test.mjs`: tests 96, pass 96, fail 0 (94 + 2 new).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs intent`: 0 failures. `checks/coverage.mjs intent`: 36 of 36 live requirement ids named by a test; 0 failures. `checks/ownership.mjs . intent origin/tranche/T51`: 1 files changed by intent... 0 failures.
+- `checks/words.mjs`: 1 failure, `testcopy progressions bio-plane/test/m/progressions/overdue.test.mjs:93`, none in intent (not mine, unchanged).
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178; affected test files 0 of 2777 (test-only change), so no user's tests to run.
+
+**Found in other modules:** only the words failure above (progressions). The stored `register` table of ai-runs' test world lacks `path` (it is a partial stand-in of provenance's), which is why reasons.test.mjs uses `homeOfEmpty()`.
+
+Size (session_01BBT6yik8ZYE33ZBXj5u7xP): test runs 6, module lines 2265
