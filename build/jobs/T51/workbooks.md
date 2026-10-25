@@ -204,3 +204,15 @@ Reader (office-readers R48) now gives no-r rows and cells their position, so the
 Tests: workbooks 50/50; plane g124f-bounds 16/16. Checks: format, architecture, coverage (23 of 23), words, ownership: 0 failures.
 Row owed to UX-DESIGN: stand-in id is now workbooks.cells_not_kept ({count},{unreadable},{repeated}) because the stale rows.mjs row for workbooks.dropped_cells still wants {no_reference}; BOB regenerates rows.mjs and may drop the orphan. Stale generated: setup-words rows.mjs, plane bundle. Found in other modules: none.
 Size (session_01A8uYztGp9qatq9Wz5yfrRC): test runs 5, module lines 1732
+
+## B9 · WORKBOOKS #9 (session_01E3sALXgG1461qUtoUERfBg) · fix round 10, Wave B batch 6
+
+Line done: `sheet-worker/recomputeNotEnabled`, `bio-plane/test/m/workbooks/add.test.mjs:78` (R2 test). The hand-built `{ ok:false, reason:"NOT_ENABLED", why }` is replaced by `recomputeNotEnabled()` from `sheet-worker/test/fixtures.mjs` (FIX-E, provider merged on the branch). Lines left: none. No `fixtures-own` or `fixtures-generic` marker added. Only the test file changed; no module code.
+
+- `node --test` over `bio-plane/test/m/workbooks/*.test.mjs`: `tests 50`, `pass 50`, `fail 0`.
+- `checks/fixtures.mjs . workbooks --list`: `answer 0 ... 0 failures`.
+- format `178 modules, 178 requirements files; 0 failures`; architecture `0 failures`; coverage `23 of 23 live requirement ids named by a test; 0 failures`; ownership `1 files changed by workbooks ...; 0 failures`.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: `affected modules: 0 of 178`, so no user's tests to run.
+- `sheet-worker` had no `node_modules` (K4113); I ran `npm ci` there because the fixture imports its engine.
+
+Size (session_01E3sALXgG1461qUtoUERfBg): test runs 3, module lines 0
