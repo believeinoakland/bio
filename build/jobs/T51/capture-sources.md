@@ -1,6 +1,6 @@
 # capture-sources (T51)
 
-**Status** · session_016pEx7TYe1KsCbHGpZGUn13 · depth 2 · COMPLETE · handled B8
+**Status** · session_01YENRH2Y3YDuYBqxX65xUfX · depth 2 · COMPLETE · handled B9
 
 ## J1 · REPORT
 
@@ -289,3 +289,39 @@ Tests and checks
 - Stale generated artifacts I made: setup-words rows (new localize ids, BOB regenerates at the round end).
 
 Size (session_016pEx7TYe1KsCbHGpZGUn13): test runs 24, module lines 2894
+
+## J9 · COMPLETE
+
+COMPLETE · CAPTURE-SOURCES #18 · fix round 10, Wave A batch 1 (START B9). Code commit c2cfee5724 on job/T51/capture-sources (pushed; tranche/T51 not merged, nothing it changed was read).
+
+Entries applied
+- Published `bio-plane/test/m/capture-sources/fixtures.mjs` (new), two named exports, each made by the real driver at test time over this module's own fake binding (`fake-binding.mjs`), nothing stored:
+  - `renderFailure({class})`: the failed answer of `renderWithBinding` (`src/browserrender.mjs`) for `no_session` (the binding hands out a session with no id: permanent), `session_refused` (HTTP 503: transient) and `open_bound` (no session within the navigation bound: transient). Each answer is `{ok:false, error, elapsed_ms, failure_class, detail}`.
+  - `renderRefusal({kind})`: the runner's failing answer for `connection_refused` (ERR_CONNECTION_REFUSED on navigation, permanent), `session_refused` (transient), `not_html` (no serialised document, permanent) and `navigation_timeout` (the navigation does not answer within its bound and fails by name, permanent).
+- `bio-plane/test/m/capture-sources/fixtures.test.mjs` (new): two tests, one per fixture, each checking the real answer's `ok`, `failure_class`, `error` words, whole-ms `elapsed_ms`, `detail` of at most 200 characters, and the bound held for the two timing cases. Titles name R19, R20, R69.
+
+Rulings I made (job-level, for BOB to enter in build/rulings.md; the job cannot write it)
+1. `renderFailure` takes `{class}` and `renderRefusal` takes `{kind}`; neither takes `elapsed_ms`. The plan's note shows `renderFailure({class, elapsed_ms})`, but `elapsed_ms` is the run's own measurement (R69), and a caller-stated figure would be a made-up value under K4426. Acquisition's and control-plane's re-points pass the class or kind and read the time from the answer.
+2. START's "no session free = permanent" is read as the driver's no-session-id case (`acquired a session with no sessionId`), which the driver already marks permanent. A refused session and a spent open bound are transient under R69, as the START's other half says.
+3. Only the two named exports. START says the success answer `OK()` "can come from the same fixture"; I did not add a third export, so acquisition keeps its own success answers.
+
+Lines (`node checks/fixtures.mjs /home/user/bio capture-sources --list`)
+- Done: none to do; the module had no live line at takeover (answer 0, stub 0, code 0, contract 0). No marker was added, so there is no `fixtures-own` or `fixtures-generic` line to list for BOB's merge read (K5060).
+- Left, in other modules: acquisition 8 (FIX-E `renderFailure`, re-points in acquisition's job) and control-plane 5 (FIX-E `renderRefusal`: r9-seam-safety.mjs:185, :209, :211, :213, :221), to be re-pointed in control-plane's job.
+
+Finding for BOB (not in the START): the fixtures check reads nothing when its root is relative. `node checks/fixtures.mjs . capture-sources --list` (and the same with `.` as the product) reported `0 failures` across 178 modules; with the absolute path `/home/user/bio` the same check reports the plan's count, 2,816 failures in 178 modules. Any wave gate run with a relative root reads zero. Please run it with the absolute path.
+
+Checks (absolute product path)
+- fixtures capture-sources --list: answer 0, stub 0, code 0, contract 0; 0 failures.
+- format /home/user/bio: 178 modules, 178 requirements files; 0 failures.
+- architecture capture-sources: 29 product files, 59 relative imports; 0 failures.
+- coverage capture-sources: 71 of 71 live requirement ids named by a test; 0 failures.
+- words capture-sources: 4139 literals, inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0; 0 failures (dev 9 and unkeyed 5 are as before; no new string added).
+- ownership capture-sources tranche/T51: 3 files changed by capture-sources; 0 failures.
+
+Tests
+- New: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/capture-sources/fixtures.test.mjs`: 2 pass, 0 fail.
+- Module: `bio-plane/test/m/capture-sources/*.test.mjs`: 128 tests, 128 pass, 0 fail, 0 skipped (126 before plus the 2 new).
+- Impact: `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 178 (capture-sources only), affected test files 1 of 2710 (its own new test). No user module is named, so no user's tests were run; the change adds test files and no product code.
+
+Size (session_01YENRH2Y3YDuYBqxX65xUfX): test runs 3, module lines 2894
