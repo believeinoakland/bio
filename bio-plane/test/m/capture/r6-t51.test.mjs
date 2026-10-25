@@ -208,6 +208,7 @@ test("R96 R105 G2 (fix round 6): a look at a source that declares more than 8 Mi
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const doAnswer = async (res) => { const r = await res; const out = await r.json(); return out.ok === true ? { answered: true, result: out.result, reply: { status: r.status, body: out } } : { answered: false }; };
+// fixtures-contract: answer-envelope door-helpers
 const storeSilent = (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502);
 const kept = { ok: true, existed: false, document: { file: "f", locator: "https://t.example/d", capture: { sha256: H("ab") } } };
 const acquireStore = () => ({ fetch: async () => json({ ok: true, result: { status: 200, body: kept } }) });

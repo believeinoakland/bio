@@ -10,6 +10,7 @@ import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { PER_ITEM_MAX } from "../../../src/record-core/index.mjs";
 import { DOORBELL_VIA } from "../../../src/provenance/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { holdsWorld } from "../provenance/fixtures.mjs";
 
 const everything = (rows) => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
   .map((t) => [t, JSON.stringify(rows(`SELECT * FROM ${t}`))]);
@@ -34,7 +35,8 @@ test("R76 (DEC-95 (1)): gradeNoteOf answers acquisition's grade note, the words 
   /* not held: null */
   for (const x of [H("ab"), "not a sha", null, undefined, 42]) assert.equal((await f.c.gradeNoteOf({ captureSha: x })).note, null, String(x));
   /* held through provenance's register or receipt alone (a capture held in parts) */
-  f.c.provenance.registerHolds = ({ sha: s }) => ({ ok: true, sha: s, asked: true, registered: false, acquired: s === H("cd") });
+  const holdsCd = holdsWorld({ [H("cd")]: { acquired: true } });
+  f.c.provenance.registerHolds = (a) => holdsCd.registerHolds(a);
   assert.equal((await f.c.gradeNoteOf({ captureSha: H("cd") })).note, ACQUIRE_GRADE_NOTE);
   /* with no evidence store and no provenance answer, nothing is held */
   assert.equal((await fresh({}).c.gradeNoteOf({ captureSha: d })).note, null);
@@ -124,7 +126,8 @@ test("R77 R76 (D54): an administrator or the founder not in a hidden project see
     const f = heldWorld();
     f.s.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES ('m3', 'c', 'admin', 'active', '2026-01-01', '2026-01-01')`);
     /* the project's capture held, as R76's first test holds one, through provenance's answer */
-    f.c.provenance.registerHolds = ({ sha: x }) => ({ ok: true, sha: x, asked: true, registered: x === H("4"), acquired: false });
+    const holds4 = holdsWorld({ [H("4")]: { registered: true } });
+    f.c.provenance.registerHolds = (a) => holds4.registerHolds(a);
     if (sight) f.s.sql.exec(`INSERT INTO project_sight (project_id, setting) VALUES ('PROJ-1', ?)`, sight);
     return f;
   };

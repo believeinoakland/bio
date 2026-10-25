@@ -1,5 +1,5 @@
 /* The Worker the platform check of capture R113 (G127f) runs under Miniflare: a minimal Durable Object over REAL DO SQLite and a REAL R2 bucket binding that holds
-   capture's `Capture` as the plane's store does (record-core's tables, the evidence bucket, capture's own tables), with provenance and the governor stood in
+   capture's `Capture` as the plane's store does (record-core's tables, the evidence bucket, capture's own tables), with the real provenance over the same storage and the governor stood in
    (this check is of the multipart path, not of provenance). One command per request, so the parts of one upload arrive in separate requests, as they do from
    a browser; the object lives between them. A test helper, not product code. */
 import { DurableObject } from "cloudflare:workers";
@@ -7,6 +7,7 @@ import { Capture } from "../../../src/capture/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { provenanceOf } from "../../../src/provenance/index.mjs";
 
 const KEY = (d) => `bio/captures/${d}`;
 
@@ -18,13 +19,11 @@ export class Probe extends DurableObject {
     membershipOf(ctx, { record: core }).migrate();
     const credentials = credentialsOf(ctx, { record: core });
     credentials.migrate();
-    const receipts = [];
-    const provenance = { receipts, registerHolds: () => ({ ok: true, registered: false, acquired: false }),
-                         recordReceipt: (r) => { receipts.push(r.captureSha); return { recorded: true, observation: null }; } };
+    const provenance = provenanceOf(ctx, { record: core, membership: membershipOf(ctx, { record: core }) });
+    provenance.migrate();
     this.c = new Capture(ctx.storage, { record: core, env: { ...env, INSTANCE_NAME: "probe", VERSION: "0" }, governor: {}, provenance, credentials });
     this.c.migrate();
     this.c.evidenceKey = KEY;
-    this.receipts = receipts;
     this.inst = crypto.randomUUID();   /* which in-memory object answered: it changes when workerd took the object out of memory */
   }
 
@@ -42,8 +41,9 @@ export class Probe extends DurableObject {
     else if (q("cmd") === "state") {
       const h = await this.env.CAPTURES.head(KEY(q("sha256")));
       const listed = await this.env.CAPTURES.list({ prefix: "bio/captures/" });
-      out = { ok: true, inst: this.inst, size: h ? h.size : null, objects: listed.objects.map((o) => o.key), receipts: this.receipts,
+      out = { ok: true, inst: this.inst, size: h ? h.size : null, objects: listed.objects.map((o) => o.key), receipts: [...this.ctx.storage.sql.exec(`SELECT capture_sha FROM captured_locators`)].map((r) => r.capture_sha),
               rows: [...this.ctx.storage.sql.exec(`SELECT count(*) AS n FROM parted_uploads`)][0].n };
+    // fixtures-own: harness the probe Worker's own reply to a command it was not sent, not any module's answer
     } else out = { ok: false, reason: "UNKNOWN_COMMAND" };
     return new Response(JSON.stringify(out), { headers: { "content-type": "application/json" } });
   }

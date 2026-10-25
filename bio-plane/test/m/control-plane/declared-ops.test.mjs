@@ -12,7 +12,7 @@ import { fresh } from "../capture/fixture.mjs";
 import { world as caseWorld, V as CV } from "../case-account/fixture.mjs";
 import { world as clockWorld, MACHINE, CLK } from "../action-clocks/fixture.mjs";
 import { boot as translationsBoot } from "../translations/fixture.mjs";
-import { translationsOps } from "../../../src/translations/index.mjs";
+import { translationsOps, DECLARED_OPS as TRANSLATIONS_DECLARED } from "../../../src/translations/index.mjs";
 import { call } from "./harness.mjs";
 import { callers } from "./door-routes.mjs";
 
@@ -120,8 +120,12 @@ test("R112 (K4210) subscriptionsignin: its step is required, a step agent-worker
 });
 
 test("R116, R112 (K4317) interfacewords: it requires nothing (the viewer's own language is the default), `language` and `v` are accepted, a malformed language is refused naming it, and a field outside accepts is dropped", async () => {
-  assert.deepEqual(DECLARED_OPS.interfacewords.fields, { accepts: ["language", "v"], requires: [] });
-  await declaredOpHolds({ op: "interfacewords", declaration: DECLARED_OPS.interfacewords, call: wordsOf,
+  /* the declaration is translations' (R21 there, K5052 (4)), read from its own DECLARED_OPS; the plane's registry holds it from there */
+  const declaration = TRANSLATIONS_DECLARED.interfacewords;
+  assert.ok(declaration, "translations declares interfacewords");
+  assert.equal(DECLARED_OPS.interfacewords, undefined, "control-plane's owner map holds no row of its own for it");
+  assert.deepEqual(declaration.fields, { accepts: ["language", "v"], requires: [] });
+  await declaredOpHolds({ op: "interfacewords", declaration, call: wordsOf,
     refusedNaming: named({ language: ["LANGUAGE_MALFORMED"] }), values: { language: "es", v: "9.8.7" }, same: sameCode });
   /* control: `language` is read, so a malformed one is refused naming it (the declaration is not vacuous) */
   const bad = await wordsOf({ language: "bad tag" });

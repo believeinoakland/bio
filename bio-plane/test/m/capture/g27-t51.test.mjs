@@ -15,6 +15,7 @@ const doAnswer = async (res) => {
   const out = r ? await r.json().catch(() => null) : null;
   return out && out.ok === true ? { answered: true, result: out.result, reply: { status: r.status, body: out } } : { answered: false };
 };
+// fixtures-contract: answer-envelope door-helpers
 const storeSilent = (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502);
 const kept = { ok: true, existed: false, document: { file: "f", locator: "https://t.example/d", capture: { sha256: H("ab") } } };
 const env = { CAPTURES: { put() {}, get() {} } };
