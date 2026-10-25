@@ -30,7 +30,8 @@
  *
  * (R42; T51 fix round 2, C76) A read asks no reason and is never irreversible, so it carries no mark above Reversible: `accountdrafts`,
  * `bootstrap` ("Show what each part runs", which the kit weighs Irreversible), `exportlog`, `groupdescriptiondraft`, `noticeprepare`,
- * `pdfstructure`, `reconcile`, `runtime` and `writinghelp` take the read's mark, as `versionnotice` does (source `read`). */
+ * `pdfstructure`, `reconcile`, `runtime`, `writinghelp` and (K5159) `namedrequests`, which monitoring declares a read, take the read's mark,
+ * as `versionnotice` does (source `read`). */
 
 /* the commit the kit and the registry are read at: the design as `tranche/T51` holds it (`0310c4953d`, R46, re-taken in fix round 2,
    K4323), which moved both files on from `aa8bdcd0b4` (K4206), `e6d16d8f53` (the fix round's first re-take, K4193) and `7be06eb4cb`
@@ -137,7 +138,7 @@ const ROWS = [
   ["monitoring", "Reversible", "kit"],
   ["monitorpause", "Reversible", "kit"],
   ["monitorslate", "Reversible", "kit"],
-  ["namedrequests", "Reasoned", "default"],
+  ["namedrequests", "Reversible", "read"],
   ["namedrequestset", "Reversible", "kit"],
   ["notedelete", "Reasoned", "default"],
   ["noterevise", "Reasoned", "default"],

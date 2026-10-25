@@ -33,7 +33,7 @@
 import { isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
-import { CONNECTION_CHOICE_CHECKS, CONNECTION_PAIR_CHECKS, THEME_CHECKS, THEME_ID_RE, THEME_REF_RE, THEME_LEG_KEYS,
+import { CONNECTION_CHOICE_CHECKS, CONNECTION_PAIR_CHECKS, NO_SUCH_DOCUMENT_CHECKS, THEME_CHECKS, THEME_ID_RE, THEME_REF_RE, THEME_LEG_KEYS,
          themeLegFindings } from "./checks.mjs";
 import { readingSourceFromColumns, readingSourceJson, readingOccurrenceKey, readingPositionInExtent }
   from "../textchain.mjs";
@@ -63,8 +63,19 @@ export { STEP_SOURCE_KIND, STEP_SOURCE_KINDS, STEP_SOURCE_DECLARES, STEP_SOURCE_
   from "./stepsources.mjs";
 /* R35, R46: C-49, C-74 and C-81 and the leg check are this module's own (`./checks.mjs`; C-74 T18, the rest copied
    T19), its public face for `inquiry-grammar` and `action-grammar` (`themeLegFindings`). */
-export { CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, THEME_CHECKS, THEME_ID_RE, THEME_REF_RE, THEME_LEG_KEYS,
+export { CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, NO_SUCH_DOCUMENT_CHECKS, THEME_CHECKS, THEME_ID_RE, THEME_REF_RE, THEME_LEG_KEYS,
          themeLegFindings };
+
+/** R72: the refusal for a document or record the viewer cannot see or the record does not hold, its code at this one
+ *  literal site, with its row (DEC-49) so no other module's code decorates it. */
+function noSuchDocument(target, detail) {
+  /* DEC-49 REGION is-no-such-document */
+  const r = NO_SUCH_DOCUMENT_CHECKS.NO_SUCH_DOCUMENT;
+  const out = { ok: false, reason: "NO_SUCH_DOCUMENT", code: "NO_SUCH_DOCUMENT", check: r.check, translation: r.translation, target };
+  if (detail) out.detail = detail;
+  return out;
+  /* END DEC-49 REGION is-no-such-document */
+}
 
 /** R2, R4: the meaning layer's bound (REC-60 / D-225): the default and the ceiling of every connection read. */
 export const CONNECTIONS_LIMIT_DEFAULT = 500;
@@ -881,7 +892,7 @@ export class Connections {
    *  withheld citer (its id, title, type, state, relation, or how many) reaches the answer. */
   backlinks({ target = null, viewer = null } = {}) {
     if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("connections.index.backlinks_need_target", "backlinks are asked of an object: pass target=<record id>") };
-    if (!this.sees(target, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (!this.sees(target, viewer)) return noSuchDocument(target);
     const gate = viewerPredicate(viewer);
     const rows = this.#rows(
       `SELECT r.bundle_id AS from_id, r.kind AS rel, b.object_type AS from_type,
@@ -935,7 +946,7 @@ export class Connections {
     if (bundle) {
       const named = this.record.bundleInfo(bundle);
       { const existence = named ? this.membership.existenceAct(bundle, viewer) : null; if (existence) return existence; }
-      if (!named || !this.sees(bundle, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: bundle };
+      if (!named || !this.sees(bundle, viewer)) return noSuchDocument(bundle);
     } else {
       const reg = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, sourceCapture);
       bundle = reg ? reg.bundle_id : null;
@@ -1082,8 +1093,8 @@ export class Connections {
     const x = str(a), y = str(b);
     for (const id of [x, y])
       if (!id || !this.record.bundleInfo(id) || !this.sees(id, viewer))
-        return { ok: false, reason: "NO_SUCH_BUNDLE", target: id || null,
-                 detail: localize("connections.index.assert_joins_two_held", "a member's connection joins two documents this record holds and you can see") };
+        return noSuchDocument(id || null,
+                 localize("connections.index.assert_joins_two_held", "a member's connection joins two documents this record holds and you can see"));
     if (x === y) return { ok: false, reason: "CONNECTION_ASSERT_SELF", target: x,
                           detail: localize("connections.index.assert_names_one_twice", "a connection joins two documents; this names one twice") };
     const [lo, hi] = x < y ? [x, y] : [y, x];
@@ -1124,7 +1135,7 @@ export class Connections {
   asserted({ bundleId = null, viewer = null, limit = null } = {}) {
     const id = str(bundleId);
     if (!id || !this.record.bundleInfo(id) || !this.sees(id, viewer))
-      return { ok: false, reason: "NO_SUCH_BUNDLE", target: id || null };
+      return noSuchDocument(id || null);
     const cap = clamp(limit, ASSERTED_LIMIT_DEFAULT, ASSERTED_LIMIT_MAX);
     const keep = this.redactor(viewer);
     const seen = this.#bundleGate("x.other_end", viewer);

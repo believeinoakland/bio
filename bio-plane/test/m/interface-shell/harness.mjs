@@ -113,8 +113,14 @@ export const scriptOf = (html, screens, options = {}) => {
 };
 
 const tick = () => new Promise((r) => setImmediate(r));
+/* a world's door answers after real asynchronous work (hashing, the store's SQL), which a count of ticks does not wait for: `settle` also waits
+   while a `door` call is in flight, and until none was started in the last ten ticks */
+let doorBusy = 0, doorStarted = 0;
+/** A function of the request that reaches a world's door (a test's wrapper of its answer): `settle` waits for it while it works. */
+export const counted = (f) => async (...args) => { doorBusy++; doorStarted++; try { return await f(...args); } finally { doorBusy--; } };
 export async function settle(n = 40) {
   for (let i = 0; i < n; i++) await tick();
+  for (let seen = -1; doorBusy > 0 || seen !== doorStarted;) { seen = doorStarted; for (let i = 0; i < 10; i++) await tick(); }
   /* R104: a request that did not match its owner's declaration fails the test that sent it */
   if (unsettled.length) { const e = unsettled[0]; unsettled.length = 0; throw e; }
 }
@@ -154,17 +160,19 @@ export function fakeIndexedDB(dbs = new Map()) {
 
 /**
  * Boot the page at `path` with `screens` registered, over `plane` (an op's answer, or `(req) => answer`).
- * `session` is the record R32 keeps in localStorage (null for none); `testInstance` is `interfacePage`'s option (R58); `tabs` (from `tabs()`) shares one localStorage
+ * `door` is the world's door (a function of the request); `session` is the record R32 keeps in localStorage (null for none); `testInstance` is `interfacePage`'s option (R58); `tabs` (from `tabs()`) shares one localStorage
  * among pages, each told of the others' writes by the storage event; `idb` is the IndexedDB stand-in's store.
  * Answers `{doc, win, requests, root, clock, settle, click, choose, fire, back, assigned, store, local, byOp, location, ...}`:
  * `store` is the tab's sessionStorage, `local` its localStorage.
  */
-export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, tabStore = null, tabThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false, version = null, declared = collectOwnerRows() } = {}) {
+export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, tabStore = null, tabThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false, version = null, door = null, declared = collectOwnerRows() } = {}) {
   const options = { ...(guide ? { guide } : {}), ...(testInstance ? { testInstance } : {}), ...(version ? { version } : {}) };
   html = html || served(interfacePage(screens, options));
   const doc = documentOf(html);
   const requests = [], polls = [];
-  const answers = { ...FRAME, ...plane };
+  /* `door` (store-request R18: `storeWorld().boot(as).door`) answers every op the `plane` table does not; with a door the frame's
+     defaults are not used, the world answers `whoami`, `groupidentity` and the rest itself (op-tables §2); only the version poll is the harness's */
+  const answers = { ...(door ? { version: FRAME.version } : FRAME), ...plane };
   const fetch = async (url, init = {}) => {
     const u = new URL(url, "https://group.example");
     /* R92: the version poll is a plain-text address of its own, not an op */
@@ -189,6 +197,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     }
     let a = answers[op];
     if (typeof a === "function") a = await a(req);
+    if (a === undefined && door) a = await counted(door)(req);
     if (a === undefined) a = ok(null);
     if (a.pending) return new Promise(() => {});
     if (a.silent) throw new TypeError("Failed to fetch");

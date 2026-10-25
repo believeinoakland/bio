@@ -5,6 +5,8 @@ import assert from "node:assert/strict";
 import { declaredFit, fitSend, boot, ok, refused, STORE_KEY } from "./harness.mjs";
 import { ALL, FRONT } from "./screens.fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { MEMBERS } from "./screens.fixture.mjs";
+import { inWorld, bootAs, idleFor, passwordOf } from "./world.mjs";
 
 const MIN = 60 * 1000;
 const SCREENS = [...ALL, FRONT];
@@ -60,16 +62,23 @@ test("R33 every read the shell makes on its own timers carries background=1 (cs.
   assert.ok(lockOf(p));
 });
 
-test("R33 the plane governs over the page's clock: SESSION_LOCKED to any request draws the lock at once; a 401 ends the session at once", async () => {
-  const p = await boot({ screens: SCREENS, path: "/app/held", plane: { heldcaptures: refused("SESSION_LOCKED", "Locked.", 403) } });
+test("R33 the plane governs over the page's clock: SESSION_LOCKED to any request draws the lock at once, and the store answers it 401; a 401 ends the session at once", async () => {
+  const { world, me } = await inWorld();
+  const p = await bootAs(world, me, { screens: SCREENS, path: "/app/held" });
+  assert.equal(lockOf(p), null, "live: no lock");
+  /* the store counts the session idle past its device's limit; the page's own clock is minutes from its limit */
+  idleFor(world, me, 31);
+  await p.back("/app/held");
   assert.ok(lockOf(p), "locked at the plane's word, minutes before the page's own limit");
+  assert.equal(p.local.get(STORE_KEY + ":state"), "locked");
+  assert.ok(p.local.has(STORE_KEY), "the record is kept: a locked session is not an ended one");
   const q = await boot({ screens: SCREENS, path: "/app/held", plane: { heldcaptures: refused("SESSION_ENDED", null, 401) } });
   assert.equal(screenOf(q), "front");
 });
 
 test("R33 R34 unlock from the lock returns to the screen as it was; a wrong password keeps it locked and says so", async () => {
-  let n = 0;
-  const p = await boot({ screens: SCREENS, plane: { projectdirectory: ok({ projects: [] }), unlock: (req) => (++n, req.body.password === "right-one" ? ok({ ok: true }) : refused("SIGN_IN_REFUSED", "That password did not match.")) } });
+  const { world, me } = await inWorld();
+  const p = await bootAs(world, me, { screens: SCREENS });
   p.doc.getElementById("home-title").value = "Kept";
   await p.clock.tick(30 * MIN + 1);
   p.doc.getElementById("cs-lock-pw").value = "wrong";
@@ -77,77 +86,82 @@ test("R33 R34 unlock from the lock returns to the screen as it was; a wrong pass
   assert.ok(lockOf(p));
   assert.ok(lockOf(p).querySelector('[data-gap="refused"]'), "the refusal said in the lock");
   assert.equal(p.doc.getElementById("cs-lock-pw").value, "", "a typed password never survives its send");
-  p.doc.getElementById("cs-lock-pw").value = "right-one";
+  p.doc.getElementById("cs-lock-pw").value = passwordOf(world, me);
   await p.click('[data-shell="unlock"]');
   assert.equal(lockOf(p), null);
   assert.equal(p.doc.getElementById("home-title").value, "Kept");
   assert.equal(screenOf(p), "home");
-  assert.equal(n, 2);
-  assert.deepEqual(p.byOp("unlock").map((r) => [r.headers.Authorization, r.body.password]), [["Bearer tok-1", "wrong"], ["Bearer tok-1", "right-one"]]);
+  assert.equal(p.byOp("unlock").length, 2);
+  assert.deepEqual(p.byOp("unlock").map((r) => [r.headers.Authorization, r.body.password]), [["Bearer " + me.token, "wrong"], ["Bearer " + me.token, passwordOf(world, me)]]);
   assert.equal(p.local.has(STORE_KEY + ":state"), false);
-  /* the lock's "Not mai?" signs out */
+  /* the lock's "Not rosa?" signs out */
   await p.clock.tick(30 * MIN + 1);
-  assert.ok(lockOf(p).textContent.includes("Not mai?"));
+  assert.ok(lockOf(p).textContent.includes("Not " + me.handle + "?"));
   await p.click('[data-shell="lock-other"]');
   assert.equal(p.byOp("signout").length, 1);
   assert.equal(screenOf(p), "front");
 });
 
 test("R32 R33 a page opened on a locked session draws front locked; front's own unlock (under the locked session's token) returns to the page kept", async () => {
-  let locked = true;
-  const plane = { whoami: () => (locked ? refused("SESSION_LOCKED", null, 403) : ok({ tokenClass: "member", session: true, member: "mai", handle: "mai", administer: false, capabilities: ["contribute"] })),
-    unlock: () => { locked = false; return ok({ ok: true }); }, heldcaptures: HELD };
-  const p = await boot({ screens: SCREENS, path: "/app/held", plane });
+  const { world, me } = await inWorld();
+  idleFor(world, me, 31);
+  const p = await bootAs(world, me, { screens: SCREENS, path: "/app/held" });
   assert.equal(screenOf(p), "front");
   assert.equal(p.doc.getElementById("state").textContent, "fx t state locked");
-  assert.equal(p.doc.getElementById("f-handle").value, "mai", "the handle the record names");
+  assert.equal(p.doc.getElementById("f-handle").value, me.handle, "the handle the record names");
   assert.equal(lockOf(p), null, "front draws the lock itself");
-  p.doc.getElementById("f-pass").value = "pw";
+  p.doc.getElementById("f-pass").value = passwordOf(world, me);
   await p.click('button[data-act="unlock"]');
-  assert.equal(p.byOp("unlock")[0].headers.Authorization, "Bearer tok-1");
+  assert.equal(p.byOp("unlock")[0].headers.Authorization, "Bearer " + me.token);
   assert.equal(p.location.pathname, "/app/held");
   assert.equal(screenOf(p), "held");
 });
 
+/* the Members screen, with the act that asks the password again: adding an administrator is one of the weighty acts (credentials R66) */
+const ADDING = { ...MEMBERS, acts: [{ op: "memberadd", send: new Function("view", "el", "cs", 'return { body: { memberId: "new-admin", cover: "The new administrator", role: "admin" } };') }] };
+const press = async (p, reason = "because") => {
+  await p.click('button[data-act="memberadd"]');
+  const box = p.root().querySelector("textarea");
+  if (box) { box.value = reason; await p.click('[data-shell="reason-send"]'); }
+};
+
 test("R34 an act answered REAUTH_DUE opens the password dialog (session.reauth), sends reauth, and on success sends the act once more", async () => {
-  let due = true;
-  const plane = { projectdirectory: ok({ projects: [] }), promote: () => (due ? refused("REAUTH_DUE", "Enter your password again.", 403) : ok({ project: "P1" })),
-    reauth: (req) => { if (req.body.password !== "pw") return refused("SIGN_IN_REFUSED", "No."); due = false; return ok({ ok: true }); } };
-  const p = await boot({ screens: SCREENS, plane });
-  p.doc.getElementById("home-title").value = "New";
-  await p.click('button[data-act="promote"]');
+  const { world, me } = await inWorld();
+  const p = await bootAs(world, me, { screens: [...SCREENS.filter((s) => s.id !== "members"), ADDING], path: "/app/members" });
+  await press(p);
   const dlg = p.root().querySelector('[data-overlay="reauth"]');
-  assert.ok(dlg);
+  assert.ok(dlg, "the store's REAUTH_DUE opened the dialog");
   assert.ok(dlg.textContent.includes(word("session.reauth")));
   /* control: a wrong password resends nothing */
   p.doc.getElementById("cs-reauth-pw").value = "nope";
   await p.click('[data-shell="reauth"]');
-  assert.equal(p.byOp("promote").length, 1);
+  assert.equal(p.byOp("memberadd").length, 1);
   assert.ok(p.root().querySelector('[data-overlay="reauth"] [data-gap="refused"]'));
-  p.doc.getElementById("cs-reauth-pw").value = "pw";
+  p.doc.getElementById("cs-reauth-pw").value = passwordOf(world, me);
   await p.click('[data-shell="reauth"]');
   assert.equal(p.root().querySelector('[data-overlay="reauth"]'), null);
-  const sent = { ...declaredFit("promote"), meta: { title: "New" } };
-  assert.deepEqual(p.byOp("promote").map((r) => r.body), [sent, sent], "sent once more, the same");
-  assert.deepEqual(p.byOp("reauth").map((r) => [r.headers.Authorization, r.body.password]), [["Bearer tok-1", "nope"], ["Bearer tok-1", "pw"]]);
-  assert.equal(p.location.pathname, "/app/project/P1", "its done ran");
+  const [first, again] = p.byOp("memberadd").map((r) => r.body);
+  assert.equal(p.byOp("memberadd").length, 2);
+  assert.deepEqual(again, first, "sent once more, the same");
+  assert.deepEqual(p.byOp("reauth").map((r) => [r.headers.Authorization, r.body.password]), [["Bearer " + me.token, "nope"], ["Bearer " + me.token, passwordOf(world, me)]]);
+  const added = (await me.read("memberlist")).members.map((m) => m.memberId || m.member_id || m.id);
+  assert.ok(added.includes("new-admin"), "the second send was served: the store holds the member");
 });
 
 test("R34 cancelling the password dialog sends nothing more; cs.reauth() answers whether the window opened", async () => {
-  const plane = { projectdirectory: ok({ projects: [] }), promote: refused("REAUTH_DUE", null, 403) };
-  const p = await boot({ screens: SCREENS, plane });
-  p.doc.getElementById("home-title").value = "New";
-  await p.click('button[data-act="promote"]');
+  const { world, me } = await inWorld();
+  const p = await bootAs(world, me, { screens: [...SCREENS.filter((s) => s.id !== "members"), ADDING], path: "/app/members" });
+  await press(p);
   await p.click('[data-shell="reauth-cancel"]');
   assert.equal(p.root().querySelector('[data-overlay="reauth"]'), null);
-  assert.equal(p.byOp("promote").length, 1);
+  assert.equal(p.byOp("memberadd").length, 1);
   assert.equal(p.byOp("reauth").length, 0);
   const s = { id: "account", reads: () => ({}), acts: [{ op: "setpassword", async send(view, el, cs) { cs.set("got", String(await cs.reauth())); return null; } }],
     render: (cs, view) => cs.act("setpassword", { data: { got: view.ui.got || "" } }) };
-  const q = await boot({ screens: [s], path: "/app/account", plane: { reauth: ok({ ok: true }) } });
+  const q = await bootAs(world, me, { screens: [s], path: "/app/account" });
   await q.click('button[data-act="setpassword"]');
   if (q.root().querySelector('[data-shell="reason-send"]')) { q.root().querySelector("textarea").value = "r"; await q.click('[data-shell="reason-send"]'); }
-  q.doc.getElementById("cs-reauth-pw").value = "pw";
+  q.doc.getElementById("cs-reauth-pw").value = passwordOf(world, me);
   await q.click('[data-shell="reauth"]');
   assert.equal(q.root().querySelector('button[data-act="setpassword"]').getAttribute("data-got"), "true");
 });
