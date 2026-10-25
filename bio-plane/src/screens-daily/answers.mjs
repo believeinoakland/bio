@@ -15,14 +15,15 @@ export const answers = Object.freeze({
     const ui = view.ui || {};
     const out = {};
     if (!view.reachable && typeof ui.q === "string" && ui.q.trim()) {
-      // R35: the words asked as words, and as passages holding them (retrieval R15); a query in the member's own syntax is sent as written.
+      // R6, R35: the words asked as words (the fields route) and, apart, as passages holding them (retrieval R15, R88: an `OR` across routes is
+      // refused `ROUTES_CROSSED`, so each route is its own read); a query in the member's own syntax is sent as written, to `search` alone.
       const w = ui.q.trim().split(/\s+/);
       const plain = w.every(function (x) { return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x); });
-      const asked = plain ? "(" + w.join(" ") + ") OR (" + w.map(function (x) { return "passage:" + x; }).join(" ") + ")" : ui.q;
       out.search = {
-        op: "search", query: { q: asked, limit: "50", snippet: "160" },
-        empty: function (v) { return !v || !Array.isArray(v.hits) || v.hits.length === 0; },
+        op: "search", query: { q: plain ? w.join(" ") : ui.q, limit: "50", snippet: "160" },
+        empty: function () { return false; },
       };
+      if (plain) out.passages = { op: "search", query: { q: w.map(function (x) { return "passage:" + x; }).join(" "), limit: "50", snippet: "160" } };
     }
     return out;
   },
@@ -110,12 +111,23 @@ export const answers = Object.freeze({
     }
 
     // Not reachable: "Find and count".
-    const results = view.data.search ? cs.state("search", function (s) {
-      return cs.sheet((Array.isArray(s.hits) ? s.hits : []).map(function (h) {
-        const id = String(h.bundle_id);
-        return cs.row(cs.mark("origin", "search"), cs.ref("document", id, h.title || id, []) + (h.snippet ? '<span class="meta">' + cs.esc(String(h.snippet)) + "</span>" : ""), "", "");
-      }).join(""));
-    }, { empty: "screen.finder.none" }) : "";
+    // The fields route and the passages route are read apart (R6); the documents either holds are drawn once each.
+    const f = view.data.search, p = view.data.passages;
+    const settled = function (x) { return !!x && x.state !== "loading"; };
+    const hitsOf = function (x) { return x && x.state === "ok" && x.value && Array.isArray(x.value.hits) ? x.value.hits : []; };
+    let results = "";
+    if (f) {
+      const seen = {};
+      const merged = hitsOf(f).concat(hitsOf(p)).filter(function (h) { const id = String(h.bundle_id); return seen[id] ? false : (seen[id] = true); });
+      if (!settled(f) || (p && !settled(p))) results = cs.state(f.state === "loading" ? f : p, null);
+      else if (merged.length === 0 && f.state === "failed" && (!p || p.state === "failed")) results = cs.state(f, null);
+      else results = cs.state(merged.length ? { state: "ok", value: { hits: merged } } : { state: "empty" }, function (s) {
+        return cs.sheet(s.hits.map(function (h) {
+          const id = String(h.bundle_id);
+          return cs.row(cs.mark("origin", "search"), cs.ref("document", id, h.title || id, []) + (h.snippet ? '<span class="meta">' + cs.esc(String(h.snippet)) + "</span>" : ""), "", "");
+        }).join(""));
+      }, { empty: "screen.finder.none" });
+    }
     const r = ui.rule && typeof ui.rule === "object" ? ui.rule : null;
     const LABELS = ["legal_information", "procedural_fact", "computed_fact"];
     const rule = !r ? "" : '<div class="mk-note">' + (r.not_held
@@ -213,17 +225,16 @@ export const answers = Object.freeze({
         cs.set("untested", !!(ev && ev.untested) || !!(a && a.untested));
       } },
     // "Search instead" (reachable) opens Find with the question's words; "Search" (not reachable) searches here.
-    { op: "search", label: "act.search.label.answers", rereads: ["search"],
+    { op: "search", label: "act.search.label.answers", rereads: ["search", "passages"],
       send: function (view, el, cs) {
         const q = String(cs.value("answers-q") || "").trim();
         if (!q) return { refuse: "screen.finder.wordsfirst" };
         cs.set("q", q);
         if (view.reachable) { cs.go("finder", q); return null; }
-        // R35: the words asked as words, and as passages holding them (retrieval R15); a query in the member's own syntax is sent as written.
+        // R6, R35: the plain words go to the fields route as they are; the passage route is the screen's other read (`passages`), never joined by `OR`.
         const w = q.split(/\s+/);
         const plain = w.every(function (x) { return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x); });
-        const asked = plain ? "(" + w.join(" ") + ") OR (" + w.map(function (x) { return "passage:" + x; }).join(" ") + ")" : q;
-        return { query: { q: asked, limit: "50", snippet: "160" } };
+        return { query: { q: plain ? w.join(" ") : q, limit: "50", snippet: "160" } };
       } },
     // "Show how this was counted": the rule service's answer with its basis and label (answers R7).
     { op: "ruleanswer", label: "act.ruleanswer.label.answers", rereads: [],

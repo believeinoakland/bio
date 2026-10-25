@@ -48,7 +48,7 @@ const OLD = /this instance|the instance\b|the plane\b/;
 
 test("R6 R9 DEC-149 P (C-85.3, checks.mjs:96): the envelope refusal's translation says \"The size this inbox will read is published beside this message.\"", async () => {
   const { send } = setup();
-  const r = await send(knock(null, { raw: "x".repeat(KNOCK.maxBytes + 4097) }));
+  const r = await send(knock(null, { raw: "x".repeat(KNOCK.maxEnvelope + 1) }));
   assert.equal(r.status, 413);
   assert.equal(r.body.check, "C-85.3");
   assert.equal(r.body.translation, EXPECT.KNOCK_ENVELOPE_TOO_LARGE);
@@ -107,7 +107,7 @@ test("R13 DEC-149 M (index.mjs:695): a pulled knock's first hop asserts \"these 
 test("R20 R10: every knock R10 refuses is counted once as a handover in credentials' security tally, beside R19's tally, with the control plane's country; an accepted knock, and a method other than POST, are never counted", async () => {
   const { send, rows, st } = setup({ evidence: false });
   const cases = [
-    [knock(null, { raw: "x".repeat(KNOCK.maxBytes + 4097) }), 413, "KNOCK_ENVELOPE_TOO_LARGE"],
+    [knock(null, { raw: "x".repeat(KNOCK.maxEnvelope + 1) }), 413, "KNOCK_ENVELOPE_TOO_LARGE"],
     [knock(null, { raw: "not json" }), 400, "REQUIRED_ARGUMENT_MISSING"],
     [knock({ contentB64: "%%%" }), 400, "REQUIRED_ARGUMENT_MISSING"],
     [knock({ contentText: "" }), 400, "KNOCK_EMPTY"],

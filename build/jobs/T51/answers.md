@@ -1,6 +1,6 @@
 # answers (T51)
 
-**Status** · session_01X6LaydCKjbEtyPkjE9aDG2 · depth 2 · COMPLETE · handled B4
+**Status** · session_01NMnEkwehTCokR9MqCgrgY7 · depth 2 · COMPLETE · handled B4
 
 ## J1 · REPORT
 
@@ -109,3 +109,39 @@ Follow-up 38 applied (B4). Commit c2b4db9755 on job/T51/answers, pushed.
 **Order note:** `mail start` ran after the fast-forward of the job branch and before the tranche merge (B4 asked for the fetch and merge first). The merge of origin/tranche/T51 followed (deeae59476, clean). `mail start` only set the Status line.
 
 Size (session_01X6LaydCKjbEtyPkjE9aDG2): test runs 2, module lines 1919
+
+## J5 · COMPLETE
+
+T51 fix round 10, follow-up 57 (B5): the state read for R7 (K5131), WALK-FINAL-09 R84. Applied on job/T51/answers.
+
+**Requirement met (BOB strikes the mark):** R7's amendment (`ruleservicesstate`); R36 now also covers the new declaration. Ids named by tests: R7, R36.
+
+**Cause (K4426's four fields)**
+1. *Root cause, with evidence.* `ruleAnswer` refuses `RULE_SERVICES_OFF` while the setting `answers_rule_services` is not true (index.mjs `ruleAnswer`, first line), and a new team's record holds no such setting, so it is off (K1505 (14)); the only op that touched the setting was `ruleservicesswitch`, an administrator's write. No read answered the switch's state, so `screens-daily` could not tell off from on and drew "Show how this was counted" whenever the assistant was unreachable.
+2. *Why the tests missed it.* R7's tests drove `ruleAnswer` with the switch off (refusal) and on, and the switch's own act; none asked what a screen could read. The gap is closed by a test that reads the state through the op arm for a member and an administrator, on a fresh record and after each switch.
+3. *Test of the walker's exact case through its real entry.* `rules.test.mjs`, "R7 ruleservicesstate answers {ok: true, on} to any signed-in member": through `answersOps(...).ruleservicesstate()` as a member, off on a fresh record (`{ok: true, on: false}`), a member's switch refused `NOT_AN_ADMIN` and still off, on after the administrator's switch, off again after switching off; the record snapshot unchanged by the read. Seen failing before the change (4 of the new tests failed with the source stashed: the arm and the declaration did not exist) and passing after (75 of 75).
+4. *Platform check.* None: the read takes no platform; it reads one setting.
+
+**Entries applied**
+- `Answers.ruleServicesState()` (index.mjs): `{ok: true, on}`, `on` true only when the setting is true; writes nothing.
+- `ruleservicesstate` arm in `answersOps` (ops.mjs), beside `ruleservicesswitch`; it reads no stamp and no field.
+- `ruleservicesstate` in `DECLARED_OPS`: `classes` admin and member, a read (`mutating` false, weight `read`), `fields` accepts and requires both empty; description through `localize("answers.declared.ruleservicesstate", ...)`.
+- Fixture `ruleServicesState({on = false})` exported from `bio-plane/test/m/answers/fixtures.mjs`, for screens-daily: returns the real op arm's answer `{ok: true, on}` over a world whose switch is off; with `on: true` the administrator's real switch act is made first. Its test (`fixtures.test.mjs`) calls it and checks both states. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Tests:** `declared-ops.test.mjs` (R36 R7: the declaration holds through `declaredOpHolds`, and the collector `declaredOpsOf` finds it as answers' own, declared by no other owner), `rules.test.mjs` (R7 state read), `fixtures.test.mjs` (the fixture).
+
+**For BOB**
+- The hand tables of `op-declarations` and `op-grades` hold no row for `ruleservicesstate` (op-grades R49 wants a ground for an op; its `t33.mjs` is not mine). Registration at the composition root takes the declaration as `DECLARED_OPS` rows (R80), so the door can route it for `admin` and `member`; whether `op-grades` needs its own row for the new op is theirs to say.
+- `rows.mjs` is stale for `answers.declared.ruleservicesstate`; its regeneration is yours at the layer close.
+- Found in another module: none. The run of `checks/run.mjs` shows answer-fixture findings in control-plane, credentials, interface-shell and plane; they are those modules' and I did not read them.
+
+**Tests and checks (summary lines)**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/answers/`: tests 75, pass 75, fail 0.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures. `checks/architecture.mjs /home/user/bio answers`: 24 product files, 0 failures. `checks/coverage.mjs /home/user/bio answers`: 36 of 36 live ids named, 0 failures. `checks/ownership.mjs /home/user/bio answers tranche/T51 job/T51/answers`: 0 failures. `checks/fixtures.mjs /home/user/bio answers --list`: 0 failures.
+- `node bio-plane/src/setup-words/build.mjs --check`: only the expected stale-rows note, naming `answers.declared.ruleservicesstate`.
+
+Size (session_01NMnEkwehTCokR9MqCgrgY7): test runs 7, module lines 1930
+
+## J6 · COMPLETE
+
+COMPLETE · ANSWERS #15 · follow-up 57 (K5131). R7 amended: `ruleservicesstate` → {ok: true, on} (arm in answersOps, `Answers.ruleServicesState`), declared in DECLARED_OPS (read, admin+member, no fields). Fixture `ruleServicesState({on = false})` exported from bio-plane/test/m/answers/fixtures.mjs for screens-daily (no fixtures-own/generic markers). Answers tests 75/75; format, architecture, coverage, ownership, fixtures 0; words: only the expected stale rows.mjs note (answers.declared.ruleservicesstate). Record J5 holds the four K4426 fields. For you: op-grades/op-declarations hand tables hold no row for the new op; whether op-grades R49 needs one is theirs. Commit 14a162ecbb pushed.

@@ -3,11 +3,12 @@
    naming it, and a field outside accepts is dropped or refused naming it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { declaredOpHolds } from "../../declared-ops.mjs";
+import { fileURLToPath } from "node:url";
+import { declaredOpHolds, declaredOpsOf } from "../../declared-ops.mjs";
 import { DECLARED_OPS, answersOps } from "../../../src/answers/ops.mjs";
 import { answersWorld } from "./fixture.mjs";
 const sameCode = (x, y) => x && y && x.ok === y.ok && (x.code ?? x.reason) === (y.code ?? y.reason);
-const ARM = { ruleanswer: "rule", standingquestionset: "standingset", standingquestionend: "standingend" };
+const ARM = { ruleanswer: "rule", ruleservicesstate: "ruleservicesstate", standingquestionset: "standingset", standingquestionend: "standingend" };
 /* bob's world, with one standing question of his, whose id stands for the sample one */
 const mkEnv = async () => {
   const w = answersWorld();
@@ -47,4 +48,19 @@ test("R36 answers declares standingquestionset: its requires alone raise no refu
 test("R36 answers declares standingquestionend: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "standingquestionend", declaration: DECLARED_OPS["standingquestionend"], call: mk("standingquestionend", {"viewer":"member:bob"}, null, null, (fields, env) => (real(fields, env))),
     refusedNaming: named({"id":["NO_SUCH_STANDING_QUESTION"]}, true), same: sameCode });
+});
+
+test("R36 R7 answers declares ruleservicesstate: a read for admin and member with no fields, its requires alone raise no refusal and a field outside accepts is dropped", async () => {
+  const d = DECLARED_OPS["ruleservicesstate"];
+  assert.deepEqual([...d.classes].sort(), ["admin", "member"]);
+  assert.equal(d.mutating, false); assert.equal(d.weight, "read");
+  assert.deepEqual(d.fields, { accepts: [], requires: [] });
+  await declaredOpHolds({ op: "ruleservicesstate", declaration: d, call: mk("ruleservicesstate", {"viewer":"member:bob"}), same: sameCode });
+});
+
+test("R36 R7 the owners' declarations, found from build/modules.json, hold ruleservicesstate as answers' own, declared by no other owner", async () => {
+  const { ops, owners, duplicates } = await declaredOpsOf(fileURLToPath(new URL("../../../../", import.meta.url)));
+  assert.equal(owners["ruleservicesstate"], "answers");
+  assert.deepEqual(ops["ruleservicesstate"], DECLARED_OPS["ruleservicesstate"]);
+  assert.deepEqual(duplicates.filter((d) => d.op === "ruleservicesstate"), []);
 });
