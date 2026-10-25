@@ -338,3 +338,9 @@ Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 10, module lines 1731
 ## J20 · COMPLETE
 
 COMPLETE B15 (K5138): imported-door.test.mjs removed from citation (control-plane #60 adopts it); tranche/T51 merged (R18 worded to author and viewer, rows unchanged). Citation tests 132/132; architecture 0, coverage 21 of 21, format 0, ownership 0, fixtures --list 0. Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 10, module lines 1731
+
+## J21 · QUESTION
+
+B16 item 1 (citation R22), asked before writing as the entry requires. I measured strength's own fixture (bio-plane/test/m/strength/fixture.mjs, `inquiryStrength` over one question with two supporting legs on the same INFO document, grades B and C, capture axis): strength does NOT count the document once. The capture axis answers `grade: C` (the weakest leg, so a second passage can only lower a grade, never raise it: no inflation), but `load_bearing: 2` and `population: 2` (one per leg); only `ungraded` is distinct by target (R6). inquiry-grammar R68 groups legs for grounds and does not itself dedupe by document.
+So the R22 sentence "Strength counts that document once" does not hold for the counts today. Strength is outside my paths.
+My best reading: the strength arithmetic is safe (a second passage never strengthens a pair), so R22's cite behaviour can be built now, and the "counts once" clause is either (a) a strength change BOB assigns to that module (distinct by target in load_bearing/population), or (b) dropped from R22 as only the pair is meant. QUESTION: build R22 as written now and report the counts as a strength finding (my recommendation), or wait? I will wait for your answer before writing.
