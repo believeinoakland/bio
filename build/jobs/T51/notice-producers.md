@@ -149,3 +149,15 @@ Size (session_01YTEEz6mMUuYSeNrA5gXVxw): test runs 10, module lines 1699
 ## J10 · COMPLETE
 
 COMPLETE (fix round 10, batch 6): 10 fixture lines re-pointed to the providers' published fixtures (FIX-E: credentials, standards, provenance x2, steps, retrieval-browse, following; steps' laterFound bound test uses 201 real entries). fixtures check 0 failures for notice-producers; architecture, format, coverage 0 failures; ownership 0; module 151/151; impact user workbooks 4/4. No fixtures-own/fixtures-generic markers. No files outside paths. Size (session_01YTEEz6mMUuYSeNrA5gXVxw): test runs 10, module lines 1699
+
+## Fix round 10 (NOTICE-PRODUCERS #19, B10): R29's marked clause, the seam over the real job table
+
+Applied: new `bio-plane/test/m/notice-producers/reading-ended-seam.test.mjs` (4 tests naming R29): the `reading-ended` producer driven at `noticeItems` over the rows plane's real job table answers. The table is plane's (172, later than this module at 148), so its answer is stated as data, `READING_ROWS` (`:18`, `// fixtures-contract: plane reading-ended`), taken from a probe of the real `Store`'s `readingsEnded` (member `member:<id>`, `ended_at` epoch ms, refusal `why` the bound key `pdf.bytes`, final `why` the reader's reason, cursor `<ended_at>\u0001<sha>\u0001<kind>`, cap 500). No product code changed.
+Tests: opener-only recipients over real shapes (`:41`); sentences fill the real counts and reasons, a refused file never said read (`:52`); the real cursor followed in 3 pages (450 rows), each told once, facts bound/days/truncated (`:64`); a row past the window not told, a row given twice one notice (`:75`).
+Failing first: with `bare(g.member)` removed from `#readingsEnded` (index.mjs), all 4 fail (0 pass); restored, 4 pass. The product file is unchanged.
+Found, not in my paths: a refused row's `why` is the bound key (`pdf.bytes`) or `REFUSED`, so the refused sentence reads "was not taken in: pdf.bytes" (R29 fills "the limit where it was refused"; the row states no size or limit, `plane/pending.mjs:231`). Wording that key for people is plane/setup-words work, not mine; reported.
+Owed by plane (REPORT): add `// fixtures-run: notice-producers reading-ended` in `bio-plane/test/m/plane/r10-fixtures-run.test.mjs` and a case there running `READING_ROWS` (reading-ended-seam.test.mjs:18-23) against the real table (register 4 `reading` rows, end them, compare `readingsEnded({})` row for row). The fixtures check lists my marker as `[idle]` until then: the one finding in my files.
+Checks: module 155 tests, 155 pass; format 0; architecture 0; coverage 29 of 29, 0; ownership 0; impact: 0 affected; `run.mjs`: words 16 failures, none in my files (count not risen by me), fixtures 1 (the idle contract above).
+Met ids: R29 (BOB strikes the mark once plane's run is merged). No `fixtures-own` or `fixtures-generic` marker added.
+
+Size (session_01P5bsgjRaPhtyPChVVxk1mW): test runs 12, module lines 1699
