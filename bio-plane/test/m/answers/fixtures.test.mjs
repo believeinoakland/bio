@@ -1,7 +1,7 @@
 /* answers' published fixtures (fixtures.mjs), each called here and its real answer checked (K4990, K5044). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { limitsUnreadable, standingQuestions, standingAnswersHeldBack } from "./fixtures.mjs";
+import { limitsUnreadable, standingQuestions, standingAnswersHeldBack, ruleServicesState } from "./fixtures.mjs";
 import { ANSWERS_CHECKS, STANDING_LABEL } from "../../../src/answers/index.mjs";
 
 test("R30 fixture limitsUnreadable is the real refusal of an ask whose paying limits cannot be judged: LIMITS_UNREADABLE, nothing used", async () => {
@@ -39,4 +39,10 @@ test("R20 fixture standingAnswersHeldBack takes the member it is asked for: caro
   assert.equal(r.entries.length, 1);
   assert.equal(r.entries[0].question.question, "Anything new on the budget?");
   assert.deepEqual(r.entries[0].held_back, { condition: "switch_off", switch: "copy" });
+});
+
+test("R7 fixture ruleServicesState is the real read of the rule services' switch: off on a fresh team, on after the administrator's switch", () => {
+  assert.deepEqual(ruleServicesState(), { ok: true, on: false });
+  assert.deepEqual(ruleServicesState({ on: false }), { ok: true, on: false });
+  assert.deepEqual(ruleServicesState({ on: true }), { ok: true, on: true });
 });
