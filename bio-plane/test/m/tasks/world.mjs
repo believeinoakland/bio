@@ -8,7 +8,12 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { tasksOf } from "../../../src/tasks/index.mjs";
-import { homeOfEmpty, registeredHomes, sha } from "../provenance/fixtures.mjs";
+import { homeOfEmpty, homeOfProject, registeredHomes, sha } from "../provenance/fixtures.mjs";
+
+/** A project made by provenance's real creation (`homeOfProject`): the record mints its `PROJ-` id, which a test takes as
+ *  `projectOf(title).projectId`. `labels` are the captures registered in it (a test names a capture by its label). The
+ *  answer's `homeOf` is what `inbox`'s `homes` takes for a capture homed in the project. */
+export const projectOf = (title, labels = [], owner = "ann") => homeOfProject(labels, { owner, title });
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
 export const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -129,13 +134,13 @@ export function inbox(events = [], homes = {}, { fakes = {}, start = false } = {
   /* provenance's real homeOf answers by a digest; a test names a capture by a label, so the label's digest is what is homed */
   /* captures sharing a bundle are promoted together (a bundle is promoted once) */
   w.home = (label, ...more) => w.homes({ [label]: more[0] });
+  /* `map` is `{label: bundleId}` for an information bundle, or `{label: project}` for a project made by `projectOf` with the
+     label among its captures; the project's own real `homeOf` answers that capture */
   w.homes = (map) => {
     const byBundle = new Map();
-    for (const [label, bundleId] of Object.entries(map)) {
-      if (/^PROJ-/.test(bundleId)) { // a capture homed in a project: promotion refuses a chosen PROJ id and provenance's fixture homes only information bundles
-        projectHomes.set(label, { bundleId }); continue;
-      }
-      byBundle.set(bundleId, [...(byBundle.get(bundleId) ?? []), { sha: sha(label) }]);
+    for (const [label, to] of Object.entries(map)) {
+      if (typeof to === "object") { projectHomes.set(label, to.homeOf(sha(label))); continue; }
+      byBundle.set(to, [...(byBundle.get(to) ?? []), { sha: sha(label) }]);
     }
     for (const [bundleId, captures] of byBundle) {
       const r = real.many(bundleId, captures);

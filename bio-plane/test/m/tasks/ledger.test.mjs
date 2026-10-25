@@ -2,7 +2,7 @@
    ledger (its R40) seeded at start and before the first mint. */
 import { test, mock } from "node:test";
 import assert from "node:assert/strict";
-import { world, host, queueRead, NOW, iso } from "./world.mjs";
+import { world, host, queueRead, NOW, iso, projectOf } from "./world.mjs";
 import { homeOfHomed, sha } from "../provenance/fixtures.mjs";
 import { tasksOf } from "../../../src/tasks/index.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
@@ -14,9 +14,10 @@ const hidOf = (viewer) => {
 
 function seeded() {
   const w = world();
+  const PRJ_H = projectOf("H").projectId, PRJ_A = projectOf("A").projectId;
   w.member("alice");
-  w.bundle("INF-1"); w.bundle("PRJ-H", "project"); w.bundle("PRJ-A", "project"); w.join("PRJ-A", "alice");
-  w.task("TASK-2026-0001-a", "INF-1"); w.task("TASK-2026-0002-b", "PRJ-H"); w.task("TASK-2026-0003-c", "PRJ-A");
+  w.bundle("INF-1"); w.bundle(PRJ_H, "project"); w.bundle(PRJ_A, "project"); w.join(PRJ_A, "alice");
+  w.task("TASK-2026-0001-a", "INF-1"); w.task("TASK-2026-0002-b", PRJ_H); w.task("TASK-2026-0003-c", PRJ_A);
   return w;
 }
 const direct = (w) => w.all(`SELECT count(*) c FROM tasks`)[0].c;
