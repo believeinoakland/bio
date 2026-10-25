@@ -658,3 +658,35 @@ REPORT: uses must gain answer-envelope, case-inputs, store-request (architecture
 ## Saved at K5183
 
 Done: all of fix round 10's causes 1-5 (J42 COMPLETE posted, pushed at the commit before this section); markers, FIX-E lines, doorbell `knock` on the world; checks as in J42. Half done: none; no worker running. Open: the 41 op-table lines listed above (states the world cannot make; they wait for store-request recipes or provider fixtures, BOB's placement) and BOB's `uses` edges (answer-envelope, case-inputs, store-request). Exact next step: answer BOB's reply to J42 (a CHANGE or the merge); if asked, re-point more op-table lines as store-request recipes appear (`openWorld` in `fixtures.mjs`). The control-plane/plane impact run was not finished for plane's heavy files (see the record); `t47` and `t50` pass.
+
+## Fix round 11 (B49 · K5202, K5175) · SCREENS-PUBLISH #23 (session_01QdkoEiuG83wpMkf86sUqDW)
+
+Merged `tranche/T51` (31 commits) into the job branch first; `mail start` done. Commit `aee8d9883a`.
+
+**Re-pointed to case-import's published answers (START item 1).** `fixtures.mjs` gains `importedCase({accepted})` (the `importedcase` answer over case-import's accepted import, edition 2, or a bare import, edition 1, both made by its real code) and `rerunImport({twice})` (its `rerunstart` answer and the page's own `importedcase` answer). `fr30.test.mjs` builds `ACCEPTED`/`BARE` from them (R55) and no longer hand-builds `IMPORT`. `fr30b.test.mjs` does the same for R58 (regrade, citeimported, rerun); the rerun tests take the import and edition from the answer and the refused second declaration (`RERUN_ALREADY`) from the real door. Expected ids are read from the answers (`ACCEPTED.import`, the first accepted finding); no literal `IMP-2026-0001` / `FND-W-1` remains except inside `importregrade`'s hand-built answer (see below).
+
+**Fixtures list (`checks/fixtures.mjs … --list`): 41 → 37.** Cleared: `fr30:41`, `fr30b:188`, `fr30b:211`, `fr30b:219`. No other line's provider publishes the answer it names (list below).
+
+**Checks.** Format 0 failures. Coverage 80 of 80 ids named, 0 failures. Ownership 0 failures (committed diff). Architecture: 2 failures, both `fixtures.mjs` imports case-import's fixtures, which `screens-publish` does not declare in `uses` (see REPORT 1). `checks/run.mjs`: no finding in my files; words count not risen. `impact.mjs origin/tranche/T51 HEAD`: screens-publish 26/26 files, control-plane 2 of 134 (the two seam files that import this module's fixtures).
+
+**Module tests: NOT run.** Every file that imports the store world fails at load with `DECLARED_OP_DISAGREES: readtranslate description` (op-grades' stale hand row, OP-GRADES #30, as the START says). Not mine. The suites run green only after the CHANGE that merges #30; I will run them then and post COMPLETE with the counts.
+
+**Failing-first.** This round changes tests only (no product code), so there is no product fix to see fail first; the re-pointed tests run after #30 lands.
+
+**Lines left (37), each with its provider and the state it lacks** (the provider publishes no fixture for that op, or publishes it for a different state):
+- review: `casedraft` (fr30:12); `reviewcopy` (fr30:227, a copy with refused gates); `reviewrevoke` (drafts:85, style:57); `reviewcomment` (fix2:233). State: a review draft with concluded findings, and its copy.
+- case-authoring: `publishpreflight` (ceremony:261 generic marker; fr30:150, fr30:156, fr30b:77). State: a prepared case edition with a pre-flight that refuses.
+- capture: `reattest` (fix3:37, fix3:325, fix4:17, fr30b:116); `captureaccount` (fr30b:116). State: a capture whose attestation is unacknowledged, and a capture account by its capturing member.
+- credentials: `signerregisterown` (fix3:276). State: a member's own signing key registered.
+- public-read: `publishedcase` (finding:75, seam4:158); `docketpublic` (fixtures:126). State: a published case edition and its docket, with a finding in several cases.
+- case-inputs: `casedetails` (fixtures:134, fr30b:306); `casedetailsset` (fr30b:345); `casedetailspublic` (fixtures:135, fr30b:360, fr30b:405). State: a case with recorded details, published and unpublished.
+- entities: `entitieskind` (fixtures:138). State: the `body` kind's entity list.
+- sources: `knockerconsent` (fr30:68, fr30:80). State: a source with a pending consent entry (store-request has no recipe for it).
+- doorbell: `knock` (fr30:95, fr30:140). State: a stored knock with its receipt and made phrase (the door's own; `openWorld` can make it, not yet re-pointed).
+- citation: `sever`, `reinstate` (fr30b:165, :166); `citeimported` (fr30b:232, :244). State: a case with a severed citation; an accepted import's citing question. case-import publishes no `citeimported`.
+- wizard-scripts: `writinghelp` (case-editor:86, fr30:252, fr30:267, fr30b:379). State: the assistant reachable with a draft held (model stream; the world cannot make it).
+- action-holds: `holdsdue` (t51:76). State: a due hold with its arrival.
+- generic markers (accepted, not blocking): `fixtures.mjs:47` (`PHOTO_CHECK_UNWORDED`), `ceremony.test.mjs:261`, `g54-page.test.mjs:116`, `public.test.mjs:325`, `review.test.mjs:213`, `t50.test.mjs:115`.
+- Not in the list but hand-built: `importregrade` (fr30b, the regrade answer). case-import publishes no regrade answer; state: a re-check that moves a finding under a lens.
+
+Size: this round not yet closed; the COMPLETE after #30 merges carries the line.
