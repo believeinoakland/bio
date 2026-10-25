@@ -166,6 +166,7 @@ test("R4: a relayed store answer answers the store's own status and its envelope
                   [JSON.stringify({ ok: true }), 200], [JSON.stringify({ ok: "true", result: 1 }), 200], [JSON.stringify({ ok: false }), 500],
                   [JSON.stringify({ ok: false, reason: "BAD_JSON", detail: "d" }), 400], [JSON.stringify({ ok: false, error: "e" }), 200],
                   [JSON.stringify({ ok: 1, result: 2 }), 200], ["", 200], ["null", 200], [JSON.stringify([{ ok: true }]), 200],
+                  // fixtures-generic: WRONG_PASSWORD
                   [JSON.stringify({ ok: true, result: { ok: false, reason: "WRONG_PASSWORD" } }), 200],
                   [JSON.stringify({ ok: false, error: "x" }), 503], [JSON.stringify({}), 200]];
   for (const op of ["claim", "login", "invitelook", "enroll"])

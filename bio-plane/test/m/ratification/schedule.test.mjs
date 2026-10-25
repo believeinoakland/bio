@@ -14,6 +14,7 @@ import { caseConclusionRowLines, keyFingerprint, CHECKED_PARTS, rowOf } from "..
 import { peopleLines, memberTieLines } from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { scheduleRefusals } from "../publish-schedule/fixtures.mjs";
 
 const Q1 = "INQ-2026-0001-first", CASE = "CASE-2026-0001";
 const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
@@ -123,10 +124,12 @@ test("R40, R32: past every refusal op=publishat hands publish-schedule R1 the si
   assert.deepEqual(Object.keys(a.checked), CHECKED_PARTS);
   nothingCommitted(s.w);
   assert.deepEqual([s.w.sealCalls, s.w.levelMoves, s.w.pub.committed.length], [[], [], 1], "only the rolled-back probe reached the commit");
+  /* publish-schedule's own refusals (its `fixtures.mjs`, the real answers of its real call) */
+  const refusals = scheduleRefusals();
   for (const reason of ["PUBLISH_AT_MALFORMED", "PUBLISH_AT_NO_ZONE", "PUBLISH_AT_PAST", "PUBLISH_AT_ALREADY_SET"]) {
-    s.w.scheduleAnswer = { ok: false, reason, detail: `publish-schedule's ${reason}` };
+    s.w.scheduleAnswer = refusals[reason];
     const r = await s.op(publishAtOp, { caseId: CASE, edition: 1, expectedSha: s.docSha, sig: s.sig, at: AT });
-    assert.deepEqual([r.status, r.body.reason, r.body.detail], [409, reason, `publish-schedule's ${reason}`]);
+    assert.deepEqual([r.status, r.body.reason, r.body.detail], [409, reason, refusals[reason].detail]);
   }
   s.w.scheduleAnswer = null;
   const viaOps = s.w.op("publishat", {}, s.body);

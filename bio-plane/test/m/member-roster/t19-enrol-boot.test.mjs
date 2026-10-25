@@ -37,6 +37,7 @@ test("R32 R13 enroll sets the password through the registered setter, inside its
 });
 
 test("R32 a setter that throws or answers ok:false is ENROL_NOT_RECORDED, C-96.18: nothing written, the invitation still live", async () => {
+  // fixtures-generic: X
   for (const failing of [async () => { throw new Error("disk full"); }, async () => ({ ok: false, reason: "X" }),
                          () => { throw new Error("sync"); }]) {
     const { w, invite, set } = await invited();

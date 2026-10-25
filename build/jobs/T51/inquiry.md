@@ -1,6 +1,6 @@
 # inquiry (T51)
 
-**Status** · session_01CYcxZgZhrDnqWKu6J5KF4X · depth 2 · COMPLETE · handled B7
+**Status** · session_011Jyr771vUcNgdkLV7aQq1C · depth 2 · COMPLETE · handled B10
 
 ## J1 · COMPLETE
 
@@ -119,3 +119,44 @@ Tests and checks
 - `checks/run.mjs` whole: format and architecture 0 failures; words inline 0, plain 0, missingkey 0 (nothing for inquiry); the 7 coverage failures (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring) and 7 testcopy failures (op-grades) are other modules', none in my files.
 
 Size (session_01CYcxZgZhrDnqWKu6J5KF4X): test runs 4, module lines 3835
+
+## J6 · QUESTION
+
+QUESTION (best reading given; I carry on). Three things for BOB, none decided by me.
+
+1. **modules.json: `inquiry` does not declare `duties` in `uses`.** FIX-E for held-legs.test.mjs:118 (duties/occurrencesOf) means importing `bio-plane/test/m/duties/fixtures.mjs`; `checks/architecture.mjs` refuses it ("duties, which inquiry does not declare in uses"). inquiry's source reaches duties only through leg-earning, so this is the first direct use. Please add `duties` to inquiry's `uses` (build/modules.json is not mine). Until then architecture shows that one failure; my re-point stands.
+
+2. **R8/R85 half "conclude with `reading` and no `affirmed` is ok through basis-versions `world()`" is not met by inquiry alone.** I stored the walker's case with `ground` (one labelled ground, one unlabelled supporting leg: lands, projection holds the label on the grounded leg only). The version block that `conclude` writes copies the question's legs with their labels into a version, and basis-version-grammar R3 (C-25.5 `VERSION_PARTITION_INCOMPLETE`, "labelled all or none") still refuses it: `{basis: [A ground "the minutes", B unlabelled], grounds: [the minutes]}` through basis-versions `world()`+`conclude({reading})` answers BASIS_VERSION_REFUSED / VERSION_PARTITION_INCOMPLETE. That is basis-version-grammar's (and basis-versions' R51 copy), not inquiry's: it needs the same amendment inquiry-grammar R68 got (an unlabelled supporting leg beside labelled grounds is a necessary leg in a version too). I did not write a test for it in my module.
+
+3. **R85's "read back as answered" (inquiry R65).** `ground` with `grounds: []` now holds `grounds: []` in the document (no longer removes the key), every supporting leg necessary; `divide` passes it to the children. To read it back I added one field to `partitionOf`: `answered` (true when any leg names a ground or the document holds a `grounds` array, even empty); `grouped` keeps its meaning (a leg names a ground). So all-"No" reads `{grouped: false, answered: true, groups: [], ungrouped: [all]}`; never partitioned reads `answered: false`. If you want `grouped` itself to be true for it, say so (a one-line change). R65's text needs the field.
+
+Also for your record: the Session Log line of an emptied partition now reads "no ground; N leg(s) read as necessary" (was "grouping removed"; `loggedChanges` parses both alike). NO_PARTITION's localized detail still says "Pass an EMPTY array to remove the grouping"; changing it is a setup-words row (not mine), left.
+
+## Fix round 10, Wave A batch 3 (INQUIRY #24, session_011Jyr771vUcNgdkLV7aQq1C) · completion notes
+
+**Cause 30b, the record half (R8, R85, R65).** Root cause: `ground` (index.mjs `#ground`) removed the `grounds` key for an empty partition (so "no ground" read as never partitioned) and `divide`'s `keepGroups` refused a child holding any unlabelled supporting leg; the tests asserted the old whole-partition refusal. Now: an unlabelled supporting leg beside labelled grounds lands as a necessary leg; `grounds: []` is held (`setOrAddScalar`), `PARTITION_UNCHANGED` is judged with the key's presence, `divide` keeps a group whole for a child with other unlabelled legs and passes `grounds: []` on; `partitionOf` adds `answered` (B9: accepted, `grouped` unchanged). Failing-first: `necessary-leg.test.mjs`' empty-partition test was seen red on the old source (stash), the other two pass on both (the first case already lands under inquiry-grammar R68). Platform: N.
+- `conclude` with `reading` through basis-versions: not inquiry's (B9); `test.todo` naming R85 in `necessary-leg.test.mjs`; R85 struck when basis-version-grammar and basis-versions have merged.
+- The five inherited reds (grammar R8; case-grammar R8 default-AND; ground R27/R30 order; partition R65; cutting-legs R85 control) are brought in line; `ground.test.mjs` R28 emptying now asserts `grounds: []` and the log line "no ground; N leg(s) read as necessary". Controls kept: a cutting leg naming a ground is still refused (grammar, case-grammar, cutting-legs).
+- Deferred: NO_PARTITION's detail still says "remove the grouping" (word-table row, UX-DESIGN, B9).
+
+**Fixtures.** Published in `bio-plane/test/m/inquiry/fixtures.mjs` with `fixtures.test.mjs`: basisForUnread, basisRefusals, disposeAct, migratedSurfacing, readRefusals. Own lines: retrieval/selectionResolve re-pointed (the test world now uses the real retrieval over its host, `w.select` makes real selections; two tests take a fresh selection after the act moved the set, as a real selection does); duties/occurrencesOf re-pointed to duties' `occurrencesOf()` fixture (B9 added `duties` to `uses`). **Left: capture/heldActsUnreadable (document-waits.test.mjs:115,124), waiting for capture's published fixture (no `fixtures.mjs` in capture's tests yet).** No `fixtures-own` or `fixtures-generic` marker added.
+
+**Other modules.** citation's R21 (3 tests) is red identically on tranche/T51 (their repair texts for a grouped basis); not mine.
+
+**Tests and checks.** inquiry: tests 235, pass 233, fail 0, todo 2. format 0 failures; architecture inquiry 0; coverage 58 of 58, 0; ownership 0; words 0 (unkeyed 12, the design's list); fixtures inquiry: 2 failures (capture, above). Users named by `impact.mjs` run (hypotheses, citation, basis-versions, strength, contradiction, ai-runs, run-productions, capture-requests, question-explorer, intent, investigation, reevaluation, publication, docket, project-stage, ratification, case-disclosures, case-account, case-authoring, conformance, consequences, actions, action-plans, scheduler, affordances, queue-producers, notice-producers, queue, op-declarations, answer-envelope, store-door): 0 failures each except citation's 3 above.
+
+Size (session_011Jyr771vUcNgdkLV7aQq1C): test runs 14, module lines 3860
+
+## J7 · COMPLETE
+
+COMPLETE: fix round 10 batch 3 for inquiry; see the record section 'Fix round 10, Wave A batch 3'. Cause 30b record half done (conclude half is a test.todo per B9); five fixtures published; own lines done but capture/heldActsUnreadable (2, waiting for capture's fixture). Tests 235/233 pass/0 fail/2 todo; checks clean but fixtures 2 (capture). No fixtures-own/generic markers.
+
+## B10 (CHANGE) applied
+
+Merged tranche/T51 (capture's `fixtures.mjs`). `document-waits.test.mjs` lines 115 and 124 now take `heldActsUnreadable()` from `bio-plane/test/m/capture/fixtures.mjs`. `checks/fixtures.mjs /home/user/bio inquiry --list`: 0 findings. inquiry tests 235, pass 233, fail 0, todo 2; format, architecture, coverage, ownership, words 0 failures. No fixtures-own or fixtures-generic marker added. The earlier "left" line (capture) is closed.
+
+Size (session_011Jyr771vUcNgdkLV7aQq1C): test runs 16, module lines 3860
+
+## J8 · COMPLETE
+
+COMPLETE after B10: document-waits.test.mjs:115,124 re-pointed to capture's heldActsUnreadable; fixtures check for inquiry at 0; tests 235/233 pass/0 fail/2 todo; format, architecture, coverage, ownership, words 0.

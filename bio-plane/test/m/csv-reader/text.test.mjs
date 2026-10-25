@@ -213,6 +213,33 @@ test("R22 a record of more than 16,384 columns refuses the body whole, stated wi
   assert.equal(h.sheets[0].cells.at(-1).value, "999.199");
 });
 
+test("R22 a body of ONE line (no delimiter decided, R7) is judged by its columns too: 16,385 is refused with the count and the limit, 16,384 is read", async () => {
+  const line = (n, sep = ",", end = "") => F.enc(Array.from({ length: n }, (_, i) => `c${i}`).join(sep) + end);
+  const marker = (n) => [{ ok: false, text: "undetermined", why: "over_size_bound", size: n, bound: F.COLUMNS_BOUND,
+    boundName: "SHEET_COLUMNS_MAX", metric: "columns", final: true }];
+  for (const [sep, name] of [[",", "comma"], [";", "semicolon"], ["\t", "tab"], ["|", "pipe"]]) {
+    for (const end of ["", "\n"]) {
+      const over = line(F.COLUMNS_BOUND + 1, sep, end);
+      const t = await csvEntry.text(over);
+      assert.equal(t.document, null, `${name} ${JSON.stringify(end)}: refused whole`);
+      assert.deepEqual(t.sheets, []);
+      assert.deepEqual(t.undetermined, marker(F.COLUMNS_BOUND + 1), `${name}: the count and the limit`);
+      const s = await csvEntry.structure(over);
+      assert.deepEqual(s.evidentiary.undetermined.map((u) => u.guard), marker(F.COLUMNS_BOUND + 1));
+      const at = line(F.COLUMNS_BOUND, sep, end);
+      const r = await csvEntry.text(at);
+      assert.equal(r.ok, true);
+      assert.deepEqual(r.undetermined.filter((u) => u.why === "over_size_bound"), [], `${name}: 16,384 is not refused`);
+      assert.equal(r.sheets.length, 1);
+    }
+  }
+  // commas inside a quoted field are one field, not columns
+  const quoted = await csvEntry.text(F.enc(`"${Array.from({ length: F.COLUMNS_BOUND + 5 }, (_, i) => `c${i}`).join(",")}"`));
+  assert.equal(quoted.sheets.length, 1);
+  assert.deepEqual(quoted.undetermined.filter((u) => u.why === "over_size_bound"), []);
+  assert.equal(quoted.sheets[0].usedCols, 1);
+});
+
 test("R22 a cell over 32,767 characters is kept to 1 MiB and stated as over_cell_bound with its own reference and length; no other cell is affected", async () => {
   const a = "x".repeat(F.CELL_CHARS), b = "y".repeat(F.CELL_CHARS + 1), c = "z".repeat(F.CELL_KEPT + 5000);
   const t = await csvEntry.text(F.enc(`id,v\n1,${a}\n2,${b}\n3,${c}\n4,tail\n`));

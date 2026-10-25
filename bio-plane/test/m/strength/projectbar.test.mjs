@@ -12,6 +12,7 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { strengthOf, strengthOps, STRENGTH_BAR_CHECKS } from "../../../src/strength/index.mjs";
 import { storage } from "./fixture.mjs";
+import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const NOW = "2026-10-13T12:00:00.000Z";
@@ -269,7 +270,7 @@ test("R40: the joined fence asks the control plane's identity stamp when it give
 test("R40: promotion's refusal is answered unchanged, and nothing is written", () => {
   const w = world();
   const held = w.snapshot(w.P);
-  const refusal = { ok: false, reason: "CAS_STALE", expected: "a", got: "b", detail: "the base moved" };
+  const refusal = staleBaseRefusal();
   w.mode.refuse = refusal;
   const r = w.s.projectBarSet(byBob(w));
   assert.equal(r, refusal, "the very answer promotion gave");

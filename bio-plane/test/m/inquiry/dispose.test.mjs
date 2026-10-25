@@ -52,7 +52,8 @@ test("R20 refusals in order, each moving nothing and naming every offender", () 
   caseMembers.delete(Q2);
   w.select("q1", [Q1]);
   assert.equal(go(w, "q1", "deferred").ok, true);
-  const again = go(w, "q1", "deferred");
+  w.select("q1-again", [Q1]);   /* the set moved with the act, as a real selection does (retrieval R20): a new one */
+  const again = go(w, "q1-again", "deferred");
   assert.equal(again.reason, "ILLEGAL_TRANSITION", "deferred -> deferred is not an edge"); assert.deepEqual(again.offenders.map((o) => o.id), [Q1]);
   /* CITED: a dismissal while a live leg rests on a member */
   w.inquiry("INQ-2026-0003-s", { legs: [{ target: Q2 }] });

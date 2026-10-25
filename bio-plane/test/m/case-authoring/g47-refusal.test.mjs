@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, sha } from "./fixture.mjs";
 import { PUBLISH_ACT_CHECKS } from "../../../src/case-authoring/index.mjs";
 import * as publicationExports from "../../../src/publication/index.mjs";
+import { storeCaseDocumentRefusal } from "../publication/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q";
@@ -40,7 +41,8 @@ test("R14 (G47 b): a document over publication's CASE_DOCUMENT_BYTES_MAX is refu
 
 test("R14 (G47 c): a store that refuses (ok: false) makes the act refuse; it is never answered as a prepared document with doc_sha null", () => {
   const { w, P } = setup();
-  w.publication.storeCaseDocument = () => ({ ok: false, reason: "MALFORMED", detail: "stub" });
+  const { refused: malformed } = storeCaseDocumentRefusal();
+  w.publication.storeCaseDocument = () => malformed;
   const r = w.publish(P, "alice", [Q]);
   assert.equal(r.ok, false);
   assert.equal(r.reason, "MALFORMED");

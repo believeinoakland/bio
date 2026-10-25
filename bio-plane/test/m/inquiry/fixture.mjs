@@ -1,7 +1,7 @@
 /* inquiry over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
    extraction, entities, connections), on a real SQLite database (node:sqlite) standing in for a Durable
    Object's storage. What later modules register with it (publication's facts `caseMember` and `publishedRegistry`,
-   reevaluation's `onRaised`, strength's `onGrounded`) and retrieval's selections are stand-ins the test controls. Every
+   reevaluation's `onRaised`, strength's `onGrounded`) are stand-ins the test controls; retrieval's selections are the real ones (`select` makes them through `selectionCreate`). Every
    test drives `inquiry` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -13,7 +13,8 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
-import { retrievalOf } from "../../../src/retrieval/index.mjs";
+import { retrievalOf, observationOf } from "../../../src/retrieval/index.mjs";
+import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { biasOf } from "../../../src/bias/index.mjs";
 import { inquiryOf, inquiryFindings } from "../../../src/inquiry/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
@@ -69,7 +70,7 @@ export function world({ caseMembers = new Set(), published = null, group = "test
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
-  for (const c of [...BUNDLE_COLUMNS, ...(legacyColumns ? LEGACY_BUNDLE_COLUMNS : []), ...(realRetrieval ? STRENGTH_COLUMNS : [])])
+  for (const c of [...BUNDLE_COLUMNS, ...(legacyColumns ? LEGACY_BUNDLE_COLUMNS : []), ...STRENGTH_COLUMNS])
     st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
   const clock = { now: NOW };
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
@@ -93,18 +94,16 @@ export function world({ caseMembers = new Set(), published = null, group = "test
   entities.migrate();
   const connections = connectionsOf(host, { record, membership, promotion, content, extraction, capture, entities });
   connections.migrate();
+  /* R20: the selection is retrieval's own, the real one (K4990); `select(name, members)` makes it through `selectionCreate` and
+     the test keeps asking by `name`, which is mapped to the handle the real code minted */
   const selections = new Map();
-  const retrieval = realRetrieval
-    ? retrievalOf(host, { record, membership, promotion, extraction, observation: null, now: () => Date.parse(clock.now) })
-    : {
-    selectionResolve: ({ handle, weight }) => {
-      const s = selections.get(handle);
-      if (!s) return { ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" };
-      if (s.moved && weight === "refuse") return { ok: false, reason: "SET_MOVED", check: "C-33.32", members: [] };
-      return { ok: true, members: s.members, drift: s.drift || null };
-    },
-  };
-  if (realRetrieval) retrieval.migrate();
+  const log = observationLogOf(host, { record, membership, provenance: prov, extraction });
+  log.migrate();
+  const real = retrievalOf(host, { record, membership, promotion, extraction, observation: observationOf(log, st.sql), now: () => Date.parse(clock.now) });
+  const retrieval = new Proxy(real, { get: (t, p) => (p === "selectionResolve"
+    ? (args) => t.selectionResolve({ ...args, handle: selections.get(args?.handle) ?? args?.handle })
+    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
+  retrieval.migrate();
   const bias = withBias ? biasOf(host, { record, membership, promotion, entities: null }) : null;
   if (bias) bias.migrate();
   /* R11: the real standards module on the same host, over the test profile (its R1's cite recognition), with no events */
@@ -201,7 +200,18 @@ export function world({ caseMembers = new Set(), published = null, group = "test
       if (!r.ok) throw new Error(`fixture standard refused: ${JSON.stringify(r).slice(0, 400)}`);
       return r.id;
     },
-    select(handle, members, extra = {}) { selections.set(handle, { members, ...extra }); },
+    /** A real selection named `name`: an enumeration of `members` (visible to the admin, owner "o"), or, for none, a query that
+     *  matches nothing (an empty enumeration is not one retrieval makes). With `moved`, the first member is then revised, so the
+     *  set has moved since it was selected (retrieval R20). */
+    select(name, members, { moved = false } = {}) {
+      let made = null;
+      void retrieval.selectionCreate(members.length ? { owner: "o", viewer: "admin", ids: members }
+                                                    : { owner: "o", viewer: "admin", q: "no-bundle-reads-this-words-7f3a" })
+        .then((r) => { made = r; });
+      const row = st.sql.exec(`SELECT handle FROM selections WHERE owner='o' ORDER BY created DESC, rowid DESC LIMIT 1`)[0];
+      selections.set(name, row.handle);
+      if (moved) w.promote(members[0], `${w.text(members[0])}\nAfter the selection, a note.\n`);
+    },
     fm: (id) => parseFm(w.text(id)),
   };
   return w;

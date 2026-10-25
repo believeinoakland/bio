@@ -4,11 +4,13 @@
    are read by key from `words.json` (`./words.mjs`); a key the list lacks fails the test. Each test names its ids. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, doc, withEntry, i2, noText, pageUnits } from "./fixture.mjs";
+import { fresh, bundle, hold, doc, withEntry, i2, noText, pageUnits, payingAccount } from "./fixture.mjs";
 import { REEXTRACT_CHECKS, TRANSCRIBE_WORDS } from "../../../src/extraction/index.mjs";
 import { WORD } from "./words.mjs";
 import { crc32 as zlibCrc } from "node:zlib";
+import { noAccount } from "../ai-accounts/fixtures.mjs";
 
+const fillWords = (key, f) => Object.entries(f).reduce((t, [k, v]) => t.replace(`{${k}}`, v), WORD(key));
 const member1 = { cls: "member", session: true, caps: ["contribute"], viewer: "class:admin", by: "member:m1" };
 const ONE_MATTER = { id: "t-set", version: 2, matters: [{ id: "m1" }] };
 
@@ -20,7 +22,7 @@ function transcriber({ deployable = true, account = null, limit = null,
     deployable: () => deployable && ONE_MATTER.matters.length > 0,
     keptAway: () => null,
     transcription: ({ member, project, at }) => ({ member, project, at, act: `transcribe:t43:${at}`,
-      accounts: { accountFor: async () => account ?? { ok: true, kind: "apikey", level: "member", key: "k" } },
+      accounts: { accountFor: payingAccount({ answer: account }) },
       useCheck: async () => limit,
       transcribe: async (q) => { calls.transcribe.push(q); return answer(q.pages, q); } }),
   };
@@ -103,8 +105,12 @@ test("R71 (T43, N862, K2689): transcribe.none only when agent-worker was asked a
 });
 
 test("R71 (T43, N853a): an account or limit refusal tier 4 relays as aiRefusal is answered as that refusal, ok false with its code, check and translation, nothing written; a declining AI stays 200 performed false (control)", async () => {
-  const refusals = [{ ok: false, reason: "NO_ACCOUNT", code: "NO_ACCOUNT", check: "C-29.20", translation: "no account", detail: "none serves" },
-                    { ok: false, reason: "AI_LIMIT_REACHED", code: "AI_LIMIT_REACHED", check: "C-130.1", translation: "limit" }];
+  /* the account refusal is ai-accounts' real one; the limit refusal is `ai-use`'s `useCheck` answer, which ai-use's test runs against its real code */
+  // fixtures-contract: ai-use use-check
+  const refusals = [await noAccount(),
+                    { ok: false, code: "AI_LIMIT_REACHED", check: "C-143.1",
+                      translation: fillWords("ai.refused.limit", { whose: WORD("ai.whose.own"), period: WORD("ai.period.day"), use: WORD("ai.use.transcribe.inline"), when: WORD("ai.when.day") }),
+                      detail: "member:ann's day limit (transcribe, in calls) is reached for the period from 2026-10-09. Nothing was started." }];
   for (const [i, refusal] of refusals.entries()) {
     const { w, d } = await heldScan();
     const tr = transcriber(i === 0 ? { account: refusal } : { limit: refusal });

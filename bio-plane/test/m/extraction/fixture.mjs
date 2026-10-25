@@ -3,6 +3,7 @@
    (PDF_WORKER, OCR_WORKER), a calibration provider behaving as calibration's Provides state (R10–R12), a promotion
    registry recording the step this module registers, a hook registry stand-in (`readHooks`) when a test hands one (R69), and helpers that build capture documents in the shape
    capture's acquire answer carries. */
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -14,6 +15,9 @@ import { calibrationOf, CALIBRATION_SCHEMA } from "../../../src/calibration/inde
 import { registerFormat, unregisterFormat, getFormat } from "../../../src/formats.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { promotionOver, registeredSteps } from "../promotion/fixtures.mjs";
+import { accountsServing } from "../ai-accounts/fixtures.mjs";
+import { registeredHomes, heldParts } from "../provenance/fixtures.mjs";
 
 /* K1737, N636: docprofile registers no content type of its own, so every suite that loads this fixture registers
    doctypes' readers, as the plane's store does (`plane/wiring.mjs`). */
@@ -108,17 +112,54 @@ export function calibration({ live = [], worse = [], throws = false } = {}) {
   };
 }
 
-/* promotion's R39 registry, recording what registers. */
-export function promotion() {
-  const steps = [];
-  return { steps, registerStep(module, s) {
-    if (steps.some((x) => x.module === module)) return { ok: false, reason: "STEP_DECLARED" };
-    steps.push({ module, ...s }); return { ok: true }; } };
+/* The register a read finds a capture's home in (`provenance` R4, R74): provenance's real instance, over its published fixture (K4990, K5044). The test
+   keeps its map of register rows (`rows`: digest to `{bundleId, path, encoding, bytes}`) and, for a capture kept in parts, `parts` (the whole's digest to
+   `[{sha256, bytes}]`); each row is registered by the fixture's real promotion when the module first asks, so a row set after the store was made is found, and a
+   digest the map does not hold answers as provenance answers an unregistered one. `partsOf` is the real answer of a multi-part capture registered by the
+   fixture. */
+export function homesOver(rows, parts = null) {
+  const homes = registeredHomes();
+  const done = new Map(), kept = new Map();
+  /* each capture is registered in a bundle of its own in the fixture's record (a bundle takes one promotion, and the fixture's ids are its own); the
+     answer names the bundle the test's row names */
+  const sync = () => {
+    for (const [digest, r] of rows) {
+      if (done.has(digest)) continue;
+      const own = `INFO-2026-${String(done.size + 1).padStart(4, "0")}-home`;
+      const out = homes.register(digest, { bundleId: own, bytes: r.bytes, encoding: r.encoding });
+      if (out.ok !== true) throw new Error(`homesOver: ${r.bundleId}: ${JSON.stringify(out)}`);
+      done.set(digest, r.bundleId);
+    }
+    if (parts) for (const [digest, list] of parts) if (!kept.has(digest)) kept.set(digest, heldParts(digest, list));
+  };
+  return new Proxy(homes.provenance, {
+    get(real, key) {
+      sync();
+      if (key === "partsOf") return (digest) => (kept.has(digest) ? kept.get(digest).partsOf(digest) : null);
+      if (key === "homeOf") return (digest) => { const h = real.homeOf(digest); return h && done.has(digest) ? { ...h, bundleId: done.get(digest) } : h; };
+      const v = real[key];
+      return typeof v === "function" ? v.bind(real) : v;
+    },
+  });
+}
+
+/* The paying account's service a transcriber hands the reader (`reading-pipeline` R29's `accounts.accountFor`): ai-accounts' real `accountFor`, over its
+   published fixture (K4990, K5044), serving `key`. The fixture enrols one member and the acts here name others, so the call carries the enrolled member in
+   place of the act's, and the act's own project dropped (the fixture's group holds none of the projects these tests name). `record` (a list) is handed what the caller asked, as it was asked; `answer` replaces the real answer with one a test needs (a
+   refusal from its provider's fixture, a limit). */
+export function payingAccount({ key = "k", record = null, answer = null } = {}) {
+  const served = accountsServing({ key });
+  return async (q) => {
+    if (record) record.push(q);
+    if (answer) return answer;
+    const s = await served;
+    return s.accountFor({ member: s.member, act: { kind: (q && q.act && q.act.kind) || "transcribe", member: s.member } });
+  };
 }
 
 /* A fresh store with record-core, membership and this module (its figures registered, R67, as `extractionOf` does).
    `provenance` is handed to the module as `extractionOf` hands it (R65). */
-export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom = promotion(), provenance = null,
+export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom = null, provenance = null,
                         readHooks = null, host = null, reader = null } = {}) {
   const s = storage();
   const ctx = { storage: s };
@@ -131,7 +172,10 @@ export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom
     for (const t of CALIBRATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) s.db.exec(t);
     cal = calibrationOf(ctx, { record: core });
   }
-  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: prom, env, readHooks, host, reader,
+  /* promotion's real registry over this store's record-core and membership: what registers is read back as `prom.steps` */
+  const realPromotion = prom ? null : promotionOver({ record: core, membership });
+  if (!prom) prom = { p: realPromotion, get steps() { return registeredSteps(realPromotion); } };
+  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: realPromotion || prom, env, readHooks, host, reader,
                                 provenance: typeof provenance === "function" ? provenance(ctx, core, membership) : provenance });
   x.registerFigures();
   x.migrate();

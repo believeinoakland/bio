@@ -112,7 +112,8 @@ test("R1 R20 R21 R2 dispose moves inquiry@1 and a legacy surfaced problem alike:
   assert.deepEqual(await w.k.checkEntry(w.text(LEGACY)), [], "and it is judged conformant under its own vocabulary afterwards");
   assert.deepEqual(w.raisedCalls.map((c) => [c.target, c.cause]), [[LEGACY, "deferred"]], "the deferral raises for it as for any inquiry");
   /* negative controls: deferred -> deferred is not an edge; a document that is not an inquiry is still refused */
-  const again = w.k.dispose({ handle: "l", to: "deferred", reason: "later", viewer: "admin", owner: "o", author: V("alice") });
+  w.select("l-again", [LEGACY]);   /* the first selection moved with the act (retrieval R20) */
+  const again = w.k.dispose({ handle: "l-again", to: "deferred", reason: "later", viewer: "admin", owner: "o", author: V("alice") });
   assert.equal(again.reason, "ILLEGAL_TRANSITION"); assert.deepEqual(again.offenders.map((o) => o.id), [LEGACY]);
   w.doc(A); w.select("x", [A]);
   const ni = w.k.dispose({ handle: "x", to: "deferred", reason: "later", viewer: "admin", owner: "o", author: V("alice") });

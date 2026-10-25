@@ -36,6 +36,16 @@
      "status": "owed"
     },
     {
+     "op": "owed:installregion K4746",
+     "label": "Keep the record in a region you choose",
+     "status": "owed"
+    },
+    {
+     "op": "owed:installaddress K4937",
+     "label": "Use the address you chose for the account",
+     "status": "owed"
+    },
+    {
      "op": "owed:installupdate K3471",
      "label": "Update it",
      "status": "owed"
@@ -785,7 +795,7 @@
    "id": "connect",
    "name": "The assistant",
    "frame": "working",
-   "purpose": "The member's own API key or subscription token, or the team's key where it offers one, or none; which account pays for an act; their own account's uses and limits; their own use across every payer (K1547, K1755, DEC-188).",
+   "purpose": "The member's own API key or subscription token, or the team's key where it offers one, or none; which account pays for an act; their own account's uses and limits; their own use across every payer (K1547, K1755, DEC-188). In the first beta, Your AI takes its place (DEC-420).",
    "acts": [
     {
      "op": "groupkeynoticeseen",
@@ -870,7 +880,7 @@
    "id": "teamai",
    "name": "The team's assistant",
    "frame": "working",
-   "purpose": "Administrators: the team's API key and whether it is on; what it pays for; its limits, overall and for each member; its use, summed over members and naming none; keeping the team's material away from AI; every change (moved from Members, DEC-284; the walk's D2).",
+   "purpose": "Administrators: the team's API key and whether it is on; what it pays for; its limits, overall and for each member; its use, summed over members and naming none; keeping the team's material away from AI; every change (moved from Members, DEC-284; the walk's D2). In the first beta, AI providers takes its place (DEC-420).",
    "acts": [
     {
      "op": "groupkeyset",
@@ -2985,7 +2995,7 @@
    "id": "projectai",
    "name": "AI for this project",
    "frame": "working",
-   "purpose": "Who pays for the assistant's work in a project: its own API key, or its sole member's sign-in; what it pays for; its limits; its use summed, naming no member; keeping the project's material away from AI; every change, seen by every owner (DEC-188).",
+   "purpose": "Who pays for the assistant's work in a project: its own API key, or its sole member's sign-in; what it pays for; its limits; its use summed, naming no member; keeping the project's material away from AI; every change, seen by every owner (DEC-188). In the first beta, AI for this project takes its place (DEC-420).",
    "acts": [
     {
      "op": "projectkeyset",
@@ -5906,6 +5916,288 @@
     10,
     12,
     14
+   ]
+  },
+  {
+   "id": "aiproviders",
+   "name": "AI providers",
+   "frame": "working",
+   "purpose": "First beta (DEC-420): administrators set up the team's AI. How things stand, the accounts in use in order with their status, health and listing, the catalogue folded and grouped by provider then plan and type, budgets and alerts, the seven privacy and origin checks the whole team may require, what members may use, and every change with who, when and at which level.",
+   "acts": [
+    {
+     "op": "owed:aiplanconnect DEC-420",
+     "label": "Connect a plan",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aitestopen DEC-420",
+     "label": "Test an AI that isn't listed",
+     "status": "owed"
+    },
+    {
+     "op": "owed:airesultsopen DEC-420",
+     "label": "Read results other teams sent",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiorderset DEC-420",
+     "label": "Move an account up or down",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiaccountswitch DEC-420",
+     "label": "Switch an account on or off",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiaccountremove DEC-420",
+     "label": "Remove an account",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aibudgetset DEC-420",
+     "label": "Set a budget or an alert",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aicheckset DEC-420",
+     "label": "Choose the checks the whole team requires",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aimemberallow DEC-420",
+     "label": "Choose what members may use",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    32
+   ]
+  },
+  {
+   "id": "aiconnect",
+   "name": "Connect an AI",
+   "frame": "working",
+   "purpose": "First beta (DEC-420): a guided connection for one chosen plan, in six steps: what it is sent and which terms bind civic use, signing up with the provider, giving Civicsmith the key (here, yourself in Cloudflare, by signing in, or by reference), what you accept, a harmless test, and turning it on in its place in the order; and a member's own subscription, member-level only.",
+   "acts": [
+    {
+     "op": "owed:aikeyenter DEC-420",
+     "label": "Enter the key here",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aikeycloudflare DEC-420",
+     "label": "Say the key is entered in Cloudflare",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aisignin DEC-420",
+     "label": "Sign in with the provider",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aikeyreference DEC-420",
+     "label": "Use a reference instead of the key",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aitermsaccept DEC-420",
+     "label": "Accept the terms that bind our use",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiconnecttest DEC-420",
+     "label": "Test the connection",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiaccountadd DEC-420",
+     "label": "Turn the account on",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aipersonalchoose DEC-420",
+     "label": "Use my own subscription",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    32
+   ]
+  },
+  {
+   "id": "aimine",
+   "name": "Your AI",
+   "frame": "working",
+   "purpose": "First beta (DEC-420): every member's own page. What serves you now, choosing among what the team allows, your own accounts and a personal subscription, the checks in force for you (locked where the team requires them), your use and cost, and when the first notice to a provider is shown.",
+   "acts": [
+    {
+     "op": "owed:aimineuse DEC-420",
+     "label": "Choose the AI that serves my work",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiownadd DEC-420",
+     "label": "Add an account of my own",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aimycheckset DEC-420",
+     "label": "Require a check for my own work",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    32
+   ]
+  },
+  {
+   "id": "aiproject",
+   "name": "AI for this project",
+   "frame": "working",
+   "purpose": "First beta (DEC-420): a project owner narrows which of the team's AIs the project uses, sets its budget and order, and requires checks for the work done directly in the project; members read the same and see who decides.",
+   "acts": [
+    {
+     "op": "owed:aiprojectuse DEC-420",
+     "label": "Choose which AIs the project uses",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiprojectbudget DEC-420",
+     "label": "Set the project's budget",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiprojectorder DEC-420",
+     "label": "Move an AI up or down in the project",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiprojectcheckset DEC-420",
+     "label": "Require a check for the project",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    32
+   ]
+  },
+  {
+   "id": "aimoments",
+   "name": "When the AI can't go on",
+   "frame": "dock",
+   "purpose": "First beta (DEC-420): what the assistant panel shows, one moment at a time and never as a silent change: an answer continues on another account, the notice before material first goes to a provider, the limit reached with no account left, a provider down or slow, a retired model, a part the AI has not passed, a use switched off, and the cost before and after a run.",
+   "acts": [
+    {
+     "op": "owed:aicontinue DEC-420",
+     "label": "Keep going on the next account",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aistop DEC-420",
+     "label": "Stop here",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aisend DEC-420",
+     "label": "Send it to the provider",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aisendrefuse DEC-420",
+     "label": "Don't send",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiwait DEC-420",
+     "label": "Wait",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiwithout DEC-420",
+     "label": "Continue without AI",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiswitchaccount DEC-420",
+     "label": "Switch to another account",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aimodelchoose DEC-420",
+     "label": "Use another model",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aichooseother DEC-420",
+     "label": "Choose another AI",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiaskadmin DEC-420",
+     "label": "Ask an administrator",
+     "status": "owed"
+    },
+    {
+     "op": "owed:airunstart DEC-420",
+     "label": "Start the run",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiaccountpick DEC-420",
+     "label": "Choose another account",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    32
+   ]
+  },
+  {
+   "id": "aitest",
+   "name": "Test an AI that isn't listed",
+   "frame": "working",
+   "purpose": "First beta (DEC-420): administrators test a custom endpoint or an unlisted plan before it is used: the cost and a spend ceiling first, progress part by part, the result by part, and exactly what the sealed results bundle would hold before it is sent or kept.",
+   "acts": [
+    {
+     "op": "owed:aitestsetup DEC-420",
+     "label": "Save the endpoint and key",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aitestrun DEC-420",
+     "label": "Run the test",
+     "status": "owed"
+    },
+    {
+     "op": "owed:airesultsend DEC-420",
+     "label": "Send the results",
+     "status": "owed"
+    },
+    {
+     "op": "owed:airesultsdecline DEC-420",
+     "label": "Don't send the results",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    32
+   ]
+  },
+  {
+   "id": "airesults",
+   "name": "Results other teams sent",
+   "frame": "working",
+   "purpose": "First beta (DEC-420): every member may read what other teams' tests found for each AI: the parts it passed and its limits, the speed and cost of standard jobs, who tested it and when, and the grade; never a test conversation.",
+   "acts": [
+    {
+     "op": "owed:airesultsread DEC-420",
+     "label": "Read the results for an AI",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    32
    ]
   }
  ]

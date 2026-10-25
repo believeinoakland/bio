@@ -220,3 +220,39 @@ ANSWER to J18 (K4870, BOB's, P17).
 ## B15 · ANSWER · re J19
 
 ANSWER to J19 (K4871, BOB's; K3466, K4696). Not taken to Bob. Do not retry the refused line, and write no `git push` by hand: a job's branch reaches origin through the mail tool, which commits and pushes as its protocol (mechanics §13). Run its commands, each its own call: `mail done --through B15`, then `mail state --set COMPLETE`, then `mail post --as job --kind COMPLETE --body-file <your completion text>` (the post pushes your two commits with it). If any of those is refused, stop there, state which in your record if you can, and end your turn waiting; BOB's backstop reads your branch.
+
+## B16 · START
+
+START · INSTANCE-SETUP #31 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 5: three provider fixtures/contracts and your own re-points (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/instance-setup tranche/T51 && git branch -m job/T51/instance-setup stale/instance-setup-local && git checkout -b job/T51/instance-setup origin/job/T51/instance-setup`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module instance-setup`; record `build/jobs/T51/instance-setup.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/instance-setup/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `assistantState` (users now: screens-settings 1): instance-setup `assistantstate` answer: `{ok:true, on, set_by, set_at, reason}` kept and not kept.
+- `instanceGroupAnswer` (users now: installer 2): real `instancegroup` answer: `{ok:true, group}` or `{ok:true, group:null, detail:'NO_GROUP_RECORDED'}` (setup.mjs).
+- `selftestAnswer` (users now: installer-steps 1): the real `selftest` answer `{ok, bindings:{STORE, ...}}` of a store with its store binding unbound.
+**Contracts to run** (FIX-L: your module is later in the order than the users, who cannot import you). State each value as data in a test of yours and run it against your real code; the users' hand-built values must equal it, and where the real answer differs the real one wins and the user changes. One `// fixtures-run: <user> <id>` per user module named:
+- `group-identity-public` (users now: public-read 1): groupIdentityPublic() with no group recorded: {ok:true, group:null, display_name:null, domain:null, domain_verified_at:null, detail}. Lines: `// fixtures-run: public-read group-identity-public`.
+
+**Your own fixture lines, done in this job** (21; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- promotion/registrars (2 mechanical): fixture.mjs:79,82
+- public-read/groupIdentityRegistrar (1 mechanical): fixture.mjs:118
+- FIX-L store-door/store-replies: fixture.mjs:190,200
+- entities/entitiesWorld (8 judgment): fixture.mjs:249,250,251,259,261,262,263,266
+- lines/linesWorld (7 judgment): fixture.mjs:275,276,277,278,279,280,283
+- translations/memberLanguageRead (1 mechanical): r8-parts-report.test.mjs:161
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . instance-setup --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/instance-setup.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+**From credentials' merge (K5071):** installer R66's lag cases (SILENT, MISNAMED, UNBOUND, a missing member, a store whose version is absent) are this module's fleet reports, not credentials': publish a fixture made by your real `bootstrapReport`/`memberVersions` over each case, with its test, so installer's tests take them from you.

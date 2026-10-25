@@ -25,6 +25,7 @@ import { methodBlockLines, materialBlockLines } from "../../../src/case-grammar/
 import { GRADING_METHOD_VERSION } from "../../../src/strength/method.mjs";
 import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { holdsRegister } from "../provenance/fixtures.mjs";
 
 /* K1321: every case document these fixtures sign is `/6` (publication R58 refuses committing any other), with its
    `method:` block and its `materials:` and `material_attestations:` blocks (empty), written by case-grammar's own
@@ -141,9 +142,10 @@ export function world({ steer = {}, worker = null, carriage = null, schedule = n
   const holds = new Map();
   /* provenance R66's standing decision on a capture's authority, as the test sets it by capture hash (nothing, by default) */
   const standing = new Map();
+  /* what provenance's own `registerHolds` answers for a hash nothing registered or received, from its real code (its `fixtures.mjs`) */
+  const nothingHeld = holdsRegister();
   const provenance = { registeredFor: (id) => registers.get(id) ?? [],
-                       registerHolds: ({ sha }) => holds.get(sha) ?? { ok: true, sha, asked: true, parts: null,
-                                                                       registered: false, acquired: false },
+                       registerHolds: ({ sha }) => holds.get(sha) ?? nothingHeld.registerHolds({ sha }),
                        containerResolver: () => ({ holds: (a) => { const h = holds.get(a); return !!h && (h.registered === true || h.acquired === true); },
                                                    gradeVia: () => null, archiveOrigin: () => ({ found: false }),
                                                    authority: (a) => standing.get(a) ?? null }),
@@ -419,7 +421,7 @@ export function plane(w, { session = { role: "member:alice" }, viaSession = true
   const bucket = bucketOver;
   const json = (body, status = 200) => ({ status, body });
   const ctx = {
-    env: { CAPTURES: bucket(captures), PUBLISHED: bucket(published) }, json, storeName: "s",
+    env: { CAPTURES: bucket(captures), PUBLISHED: bucket(published) }, json, storeName: "s", // fixtures-contract: answer-envelope door-helpers
     doAnswer: async (p) => { const v = await p; return v === SILENT ? { answered: false } : { answered: true, result: v }; },
     storeSilent: (op) => json({ ok: false, reason: "STORE_SILENT", op }, 502),
     assembleCaseContainer: async (a) => { assembled.push(a); return { manifest_sha: "m".repeat(64), zip: "z" }; },

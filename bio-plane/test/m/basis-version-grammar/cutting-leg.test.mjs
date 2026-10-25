@@ -16,10 +16,9 @@ test("R3: a version whose only legs cut against, with no ground declared, is not
   assert.deepEqual(codes(x), []);
 });
 
-test("R3 control: a supporting leg left out of the partition is still VERSION_PARTITION_INCOMPLETE, beside a cutting leg or not", () => {
+test("R3 control: a supporting leg left out of the partition is a necessary leg and no finding, beside a cutting leg or not (fix round 10, cause 30b)", () => {
   const supports = (target) => ({ version: "first", target, role: "supports" });
   const labelled = { version: "first", target: DOC, role: "supports", ground: "main" };
-  assert.deepEqual(codes(fm({ legs: [labelled, supports(DOC2)] })), ["VERSION_PARTITION_INCOMPLETE"]);
-  assert.deepEqual(codes(fm({ legs: [labelled, supports(DOC2), { ...CUTTING, target: "INFO-2026-0003-c" }] })),
-    ["VERSION_PARTITION_INCOMPLETE"]);
+  assert.deepEqual(codes(fm({ legs: [labelled, supports(DOC2)] })), []);
+  assert.deepEqual(codes(fm({ legs: [labelled, supports(DOC2), { ...CUTTING, target: "INFO-2026-0003-c" }] })), []);
 });

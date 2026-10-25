@@ -6,10 +6,15 @@
    their full sizes are the corpus R set's. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits } from "./fixture.mjs";
+import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, payingAccount } from "./fixture.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { REQUEST_READ_MAX } from "../../../src/extraction/index.mjs";
 import { WORD } from "./words.mjs";
+import { memberRefusal } from "../../../../ocr-worker/test/fixtures.mjs";
+
+/* the real OCR member declining a page it cannot read (its published fixture, K5044) */
+const PAGE_NOT_LEGIBLE = await memberRefusal("PAGE_NOT_LEGIBLE");
 
 const MiB = 1048576;
 const member1 = { cls: "member", session: true, caps: ["contribute"], viewer: "class:admin", by: "member:m1" };
@@ -66,7 +71,7 @@ test("R103 (G126e; SCAN E4, PDF E11): `op=pagetranscribe` on a 3 MiB scan reads 
   const { w, d } = await held(scan(5, [0]));
   const asked = [];
   w.x.registerTranscriber("plane", { deployable: () => true, keptAway: () => null,
-    transcription: ({ member: m, project, at }) => ({ member: m, project, at, act: "t", accounts: { accountFor: async () => ({ ok: true, kind: "apikey", level: "member", key: "k" }) },
+    transcription: ({ member: m, project, at }) => ({ member: m, project, at, act: "t", accounts: { accountFor: payingAccount() },
       useCheck: async () => null, transcribe: async (q) => { asked.push(q.pages); return { ok: true, engine: "claude-test", version: "1", pages: [{ page: 2, text: "AI words of page 2" }, { page: 4, text: "AI words of page 4" }] }; } }) });
   const ocr = member(() => { throw new Error("never in the request"); });
   const r = await withEntry(pdfDetect, () => w.x.pageTranscribe({ captureSha: d, ...member1, env: { OCR_WORKER: ocr } }));
@@ -83,7 +88,7 @@ test("R103 (G126e): a stored reading that changes while a transcription runs is 
   const { w, d } = await held(scan(3, [0]));
   const newer = { content_type: "generic", reader_version: 1, found: true, entities: [], facts: {}, at: "2026-10-01T00:00:00Z", basis: "a newer reading", text_source: null, page_count: 3 };
   w.x.registerTranscriber("plane", { deployable: () => true, keptAway: () => null,
-    transcription: ({ member: m, project, at }) => ({ member: m, project, at, act: "t", accounts: { accountFor: async () => ({ ok: true, kind: "apikey", level: "member", key: "k" }) },
+    transcription: ({ member: m, project, at }) => ({ member: m, project, at, act: "t", accounts: { accountFor: payingAccount() },
       useCheck: async () => null,
       transcribe: async (q) => {
         /* while the AI reads, a promotion writes a newer reading of the capture */
@@ -97,7 +102,7 @@ test("R103 (G126e): a stored reading that changes while a transcription runs is 
   /* control: the same act with nothing changing under it is written */
   const c = await held(scan(3, [0]));
   c.w.x.registerTranscriber("plane", { deployable: () => true, keptAway: () => null,
-    transcription: ({ member: m, project, at }) => ({ member: m, project, at, act: "t", accounts: { accountFor: async () => ({ ok: true, kind: "apikey", level: "member", key: "k" }) },
+    transcription: ({ member: m, project, at }) => ({ member: m, project, at, act: "t", accounts: { accountFor: payingAccount() },
       useCheck: async () => null, transcribe: async (q) => ({ ok: true, engine: "claude-test", version: "1", pages: q.pages.map((p) => ({ page: p, text: `AI ${p}` })) }) }) });
   assert.equal((await withEntry(pdfDetect, () => c.w.x.pageTranscribe({ captureSha: c.d, ...member1 }))).body.transcription.written, true);
 });
@@ -133,7 +138,7 @@ test("R106 (G129d; SCAN E3): a photograph's OCR continues without the PDF struct
 
 test("R106 (control): a photograph the OCR member declines ends stated with its reason, owing nothing", async () => {
   const { w, d } = await held(i2([{ page: 0, text: "", undetermined: [noText(0)] }]), { bytes: 2048, format: "jpeg", extra: { tier3_candidate: true } });
-  const a = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: member(() => ({ ok: false, reason: "PAGE_NOT_LEGIBLE" })) } });
+  const a = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: member(() => PAGE_NOT_LEGIBLE) } });
   assert.deepEqual([a.read, a.owed, a.why], [false, undefined, "OCR_NO_PROGRESS"]);
 });
 

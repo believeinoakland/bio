@@ -1,6 +1,6 @@
 # member-roster (T51)
 
-**Status** · session_01WzR28gkdxHayrjWwZ6pTwS · depth 2 · COMPLETE · handled B6
+**Status** · session_017ZmLdEK9H7TnpXz4LEe9eG · depth 2 · COMPLETE · handled B8
 
 ## Completion (MEMBER-ROSTER #4) · FR-07 (B4; K4165, K4168, K4169, K4202, K4204)
 
@@ -153,3 +153,55 @@ FR-07 found in other modules (details in my record, "Found in other modules"):
 member-roster FR-07 (B4) complete. Record: build/jobs/T51/member-roster.md, section "Completion (MEMBER-ROSTER #4)" on job/T51/member-roster. Requirement lines R76 to R81 are written in build/requirements/member-roster.md, marked not yet met: T51 (B5/B6).
 Applied: C80 founder is a member once claimed (R76: memberFacts, expertiseDeclare, expertiseConfirm, expertiseHolders); C62 endorsementsOwed and expertiseAwaitingConfirmation (R77, R78); C79 the withdrawal reads as DEC-376 states, plus one flaw fixed (a withdrawn label could be confirmed without a new declaration; R79); DEC-386 expertiseWithdraw / op=expertisewithdraw with the reason kept (R79); DECLARED_OPS for 20 ops, each held true by declaredOpHolds through the ops map (R80, R81).
 Tests: bio-plane/test/m/member-roster, 29 files, 206 pass, 0 fail (42 new). Checks: format 0; architecture 0; coverage 81 of 81; words 0; ownership 0 failures. QUESTION J5 lists eight readings; REPORT J6 the findings in membership, op-grades and the generated rows.
+
+## Completion (MEMBER-ROSTER #5) · fix round 10, Wave A batch 4 (START; K5044 (2), (4), (5), K5060)
+
+**Fixtures published (provider).** New `bio-plane/test/m/member-roster/fixtures.mjs`, two named exports, each made by this module's real code when called (nothing stored):
+- `expertiseWithdrawn()`: the real `expertiseWithdraw` (R79, DEC-386) on a label that `ann` declared and the administrator confirmed; answers `ok`, state `withdrawn`, the reason and `by`. Users now: screens-settings 1 (re-point in its own job).
+- `listenerRefusals()`: the real `registerPasswordSetter` (R81, N202) through the module's `listenerRefusal`: `registered` ok; `declared` LISTENER_DECLARED naming the holder; `malformed` LISTENER_MALFORMED for a non-function. Each whole, with its row's `check` and `translation`. Users now: credentials 1 (re-point in its own job; the findings list names 2, the START names 1, both are its own lines to re-point).
+- `fixtures.test.mjs` (new) calls both and checks each real answer (R79, R81; 2 tests).
+
+**Markers owed (each a line comment, read by the check):**
+- `fixture.mjs:36`: `// fixtures-own: harness …`. Why: the world helper `claim()` is named like the op `claim`; it records the test's fact (`creds.claimed`) and no store answers it.
+- `t19-enrol-boot.test.mjs:40`: `// fixtures-generic: X`. Why: the R32 negative control's setter answers `{ok:false, reason:"X"}`, a made-up refusal the setter gives on purpose.
+- `t47-check-tables.test.mjs:89`: `// fixtures-generic: NO_SUCH_CODE`. Why: the R-check negative control forges a code with no row, on purpose.
+
+**Lines.** The three live findings in the list (`checks/fixtures.mjs /home/user/bio member-roster --list`) are now accepted (own, generic, generic); the list reports 0 failures. The t9-notice-bounds:184 line in the audit (part-1) is not live in V3 and was not touched.
+
+**Entries applied.** The two fixtures and their tests; the three markers. No change to any source file; no other module's file changed.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/member-roster/*.test.mjs`: 208 pass, 0 fail (the 206 of FR-07 plus the two new). User suites named by `impact.mjs origin/tranche/T51 HEAD` that test this module's answers: `membership` 180/180, `credentials` 189/189, `interface-shell` 369/369, `screens-settings` 265 of 266. The one red, `screens-settings/contract.test.mjs:72` (R39 words by key), asserts that `act.captureuploadabort.does` is a key the module reads; it is not this job's: no file of this job is read by that test, and the key is another module's (`screens-intake`, `capture`, `control-plane` hold it). Not verified against the base branch. The other impact users were not run (their tests cannot see a change that is test-only here; BOB's merge run covers them).
+
+**Checks** (process repository, absolute root `/home/user/bio`): `format` 178 modules, 0 failures; `architecture member-roster` 0; `coverage member-roster` 81 of 81 ids named, 0 failures; `words member-roster` 0 failures (inline 0, plain 0, testcopy 0, unkeyed 0); `ownership member-roster tranche/T51 job/T51/member-roster` 0 failures (5 files: 3 edited, 2 new, all in `paths` and `tests`); `fixtures member-roster` 0 failures.
+
+**Deferred.** None.
+
+**Found outside this module.** None new. (The stale rows and the membership, op-grades and screens-settings items of FR-07 stand as in Completion (MEMBER-ROSTER #4).)
+
+**Waiting for BOB at the merge.** Nothing new beyond the three markers above (listed for BOB's read, K5060): `fixture.mjs:36` (own, harness), `t19-enrol-boot.test.mjs:40` (generic X), `t47-check-tables.test.mjs:89` (generic NO_SUCH_CODE).
+
+Size (session_017ZmLdEK9H7TnpXz4LEe9eG): test runs 7, module lines 2926
+
+## J8 · COMPLETE
+
+member-roster, fix round 10 Wave A batch 4 (B8) complete. Record: build/jobs/T51/member-roster.md, section "Completion (MEMBER-ROSTER #5)" on job/T51/member-roster at 62c242f7cb.
+
+Published: bio-plane/test/m/member-roster/fixtures.mjs with expertiseWithdrawn (R79, real expertiseWithdraw, users now screens-settings 1) and listenerRefusals (R81, real registerPasswordSetter through listenerRefusal, users now credentials 1); fixtures.test.mjs checks both (2 tests).
+
+Markers added (each for BOB's read, K5060):
+- fixture.mjs:36 fixtures-own: harness. World helper claim() named like the op; it records the test's fact, no store answers it.
+- t19-enrol-boot.test.mjs:40 fixtures-generic: X. R32 negative control: a setter answering {ok:false, reason:"X"}, made up on purpose.
+- t47-check-tables.test.mjs:89 fixtures-generic: NO_SUCH_CODE. Negative control forging a code with no row.
+
+Lines: fixtures check member-roster 0 failures (the three live findings accepted).
+
+Tests: module suite 208 pass, 0 fail. Impact users run: membership 180/180, credentials 189/189, interface-shell 369/369; screens-settings 265/266. The red one, contract.test.mjs:72 (R39 words by key: act.captureuploadabort.does), reads another module's key; no file of this job is involved; not verified on base.
+
+Checks: format 0; architecture 0; coverage 81 of 81; words 0; ownership 0 (5 files, all in paths/tests/record); fixtures 0.
+
+Deferred: none. No source file changed.
+
+Size (session_017ZmLdEK9H7TnpXz4LEe9eG): test runs 7, module lines 2926
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_

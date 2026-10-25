@@ -11,6 +11,8 @@ import { ACQUIRE_TEXT_UNITS_BUDGET, CAPTURE_TEXT_UNIT_CAP, ACQUIRE_TEXT_UNIT_ENV
 import { list as listProfiles } from "../../../../jurisdictions/index.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { accountsServing } from "../ai-accounts/fixtures.mjs";
+import { world as accountsWorld } from "../ai-accounts/fixture.mjs";
 
 registerDoctypes(registerDoctype);
 
@@ -503,6 +505,8 @@ async function outwardText() {
   say(await pdf(t1(20), { PDF_WORKER: member(() => ({ ok: true, text: { document: "", pages: [], undetermined: [], counts: { chars: 0, undetermined: 0 } } })) }));
   for (const o of ["unbound", "no_improvement", "unavailable", "merged"]) say(rp.tier2FailureNote(o) || "");
   /* tier 3 */
+  // fixtures-generic: busy
+  // fixtures-generic: no
   const ocrEnvs = [{}, { OCR_WORKER: member(() => ({ status: 500, body: {} })) }, { OCR_WORKER: member(() => new Error("down")) },
     { OCR_WORKER: member(() => ({ ok: false, reason: "busy" })) }, { OCR_WORKER: member(() => ({ ok: true })) },
     { OCR_WORKER: member(() => ocrAnswer([0, 2])) }, { OCR_WORKER: member(() => ocrAnswer([0, 1, 7])) },
@@ -521,12 +525,17 @@ async function outwardText() {
   say(rp.ocrTextFromMember(ocrAnswer([0], { floor: 0.9 })));
   /* tier 4: every stop and a success */
   const base = { sha: "d", storeName: "bio", i2text: scan(), wiredTier: 1, chain: rp.layerChainFor(scan(), { tier: 1, container: "pdf" }) };
-  const acct = { ok: true, level: "member", key: "k" };
-  const good = { member: "ann", accounts: { accountFor: () => acct }, useCheck: () => null,
+  /* the paying account is ai-accounts' real one (its published `accountsServing`: a member's own key referenced), and a real group with no account for the refusal */
+  const serving = (await accountsServing()).accounts;
+  const refusing = (await accountsWorld().group("ann")).a;
+  // fixtures-contract: content transcribe-answer
+  const good = { member: "ann", accounts: serving, useCheck: () => null,
                  transcribe: (q) => ({ ok: true, engine: "model", version: "1", pages: q.pages.map((p) => ({ page: p, text: `ai ${p}` })) }) };
   const variants = [undefined, {}, { ...good, member: "" }, { ...good, accounts: {} }, { ...good, accounts: { accountFor: () => { throw new Error("x"); } } },
-    { ...good, accounts: { accountFor: () => ({ ok: false, code: "NO_ACCOUNT", detail: "none" }) } }, { ...good, useCheck: undefined },
+    { ...good, accounts: refusing }, { ...good, useCheck: undefined },
     { ...good, useCheck: () => ({ code: "AI_LIMIT_REACHED", detail: "limit" }) }, { ...good, useCheck: () => { throw new Error("x"); } },
+    // fixtures-contract: content transcribe-answer
+    // fixtures-generic: no
     { ...good, transcribe: undefined }, { ...good, transcribe: () => { throw new Error("x"); } }, { ...good, transcribe: () => ({ ok: false, reason: "no" }) },
     { ...good, transcribe: () => ({ ok: true, pages: [] }) }, { ...good, transcribe: () => ({ ok: true, engine: "m", pages: [] }) },
     { ...good, transcribe: (q) => ({ ok: true, engine: "m", pages: [{ page: 1, text: "stray" }, ...q.pages.slice(0, 1).map((p) => ({ page: p, text: "t" }))] }) },

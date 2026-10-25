@@ -122,7 +122,7 @@ export function world({ slug = SLUG, before = null } = {}) {
   /* case-tensions first, with the stand-in contradiction, so publication's factory registers its provider on it */
   const caseTensions = caseTensionsOf(host, { record, membership, promotion, contradiction, now: () => iso(clock.now) });
   const realPublication = publicationOf(host, { record, membership, promotion, now: () => iso(clock.now) });
-  /* publication R62, the real module's; `stamps.refuse` or `stamps.throws` makes the pass-through refuse or throw */
+  /* publication R62, the real module's; `stamps.refuse` (publication's own refusal, from its published `stampEditionRefusal`) or `stamps.throws` makes the pass-through refuse or throw */
   const stamps = { calls: [], refuse: null, throws: false,
     get list() {
       return [...st.sql.exec(`SELECT case_id, edition FROM edition_stamps GROUP BY case_id, edition ORDER BY MIN(rowid)`)]
@@ -134,7 +134,7 @@ export function world({ slug = SLUG, before = null } = {}) {
     stampEdition(q) {
       stamps.calls.push(q);
       if (stamps.throws) throw new Error("stamp store down");
-      if (stamps.refuse) return { ok: false, reason: stamps.refuse, detail: "refused by the test" };
+      if (stamps.refuse) return stamps.refuse;
       return realPublication.stampEdition(q);
     } };
   const subjects = new Map();

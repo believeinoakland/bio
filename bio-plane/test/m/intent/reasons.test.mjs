@@ -9,6 +9,7 @@ import { INTENT_CHECKS, intentOf } from "../../../src/intent/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
 import { seeded, V, MACHINE, COND } from "./fixture.mjs";
+import { homeOfEmpty } from "../provenance/fixtures.mjs";
 import { world as runsWorld, PROJ, ORG, T0 } from "../ai-runs/world.mjs";
 
 const ROW = INTENT_CHECKS.INTENT_NO_REASON;
@@ -136,7 +137,7 @@ test("R18 a reasoned run is opened through ai-runs with the reason recorded on i
   const proj = r.project(PROJ, "ann", { joined: ["bob"] });
   const i = intentOf(r.ctx, { record: r.record, membership: r.membership, promotion: r.promotion, aiRuns: r.runs,
     entities: entitiesOf(r.ctx, { record: r.record, membership: r.membership, provenance: {} }),
-    progressions: progressionsOf(r.ctx, { record: r.record, provenance: { homeOf: () => null } }), now: () => T0 });
+    progressions: progressionsOf(r.ctx, { record: r.record, provenance: homeOfEmpty() }), now: () => T0 });   /* provenance's real homeOf over an empty store: this ai-runs world holds a partial `register` table */
   i.migrate();
   const why = "  The contracts list is the gap; find who holds the award records.  ";
   const opened = await i.workObjective({ project: proj, reason: why, author: "member:bob", viewer: "member:bob",

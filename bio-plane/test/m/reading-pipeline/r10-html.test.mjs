@@ -103,3 +103,36 @@ test("R51 R40 (G131h, DOCS H2): the pieces of a 6 MB page of 90,000 paragraphs r
     assert.ok(b.served <= (restartAt === null ? 1.2 * size : limit), `${b.served} bytes served for a ${size} B page${restartAt === null ? "" : " (a restart re-reads once)"}`);
   }
 });
+
+/* R51 (fix round 10, cause 18b; walk C8): a block inside a table cell (a p, a div, a list item) does not end the row */
+const unitsOfHtml = async (html) => {
+  const b = bucket();
+  const d = await hold(b, html);
+  const out = await read(doc({ digest: d, bytes: Buffer.byteLength(html), ct: "text/html", format: "html", fromText: true }), { evidence: evidenceStore(b), env: {}, storeName: "bio", unitsBudget: Infinity });
+  return (out.text_units || []).map((u) => u.text);
+};
+
+test("R51 (cause 18b; walk C8): a row whose cells hold a p each is one paragraph, the cells told apart by a tab", async () => {
+  assert.deepEqual(await unitsOfHtml("<table><tr><td><p>a</p></td><td><p>b</p></td></tr></table>"), ["a\tb"]);
+  assert.deepEqual(await unitsOfHtml("<table><tr><th><div>Name</div></th><th><div>Amount</div></th></tr><tr><td><div>Fire</div></td><td><div>12</div></td></tr></table>"), ["Name\tAmount", "Fire\t12"]);
+  assert.deepEqual(await unitsOfHtml("<table><tr><td><ul><li>one</li><li>two</li></ul></td><td>three</td></tr></table>"), ["one two\tthree"]);
+});
+
+test("R51 (cause 18b): two blocks in one cell stay in that cell, their words apart; an empty cell keeps its place", async () => {
+  assert.deepEqual(await unitsOfHtml("<table><tr><td><p>first</p><p>second</p></td><td><p>b</p></td></tr></table>"), ["first second\tb"]);
+  assert.deepEqual(await unitsOfHtml("<table><tr><td><p>a</p></td><td><p></p></td><td><p>c</p></td></tr></table>"), ["a\t\tc"]);
+});
+
+test("R51 R35 (cause 18b; walk C8): a 500 x 20 table whose cells hold a p reads as 500 rows, each row one unit of its 20 cells", async () => {
+  const rows = Array.from({ length: 500 }, (_, r) => `<tr>${Array.from({ length: 20 }, (_, c) => `<td><p>r${r}c${c}</p></td>`).join("")}</tr>`);
+  const units = await unitsOfHtml(`<html><body><p>Before.</p><table>${rows.join("")}</table><p>After.</p></body></html>`);
+  assert.equal(units.length, 502, "Before., 500 rows, After.");
+  assert.equal(units[1], Array.from({ length: 20 }, (_, c) => `r0c${c}`).join("\t"));
+  assert.equal(units[500].split("\t").at(-1), "r499c19");
+});
+
+test("R51 (cause 18b): controls: blocks outside a table still end their paragraph; a block after the table ends the row; a nested table's rows are rows", async () => {
+  assert.deepEqual(await unitsOfHtml("<p>one</p><div>two</div>"), ["one", "two"]);
+  assert.deepEqual(await unitsOfHtml("<table><tr><td>a</td><td>b</td></tr></table><p>after</p>"), ["a\tb", "after"]);
+  assert.deepEqual((await unitsOfHtml("<table><tr><td>a</td><td><table><tr><td>x</td></tr><tr><td>y</td></tr></table></td></tr></table>")).map((t) => t.trim()), ["a", "x", "y"], "a nested table's rows are rows of their own");
+});

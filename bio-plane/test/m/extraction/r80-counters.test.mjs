@@ -2,10 +2,10 @@
    `{written, skipped}`, never `owed`, so the plane's job row learns the units the door's read and the passes wrote. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, bucket, withEntry, i2, doc } from "./fixture.mjs";
+import { fresh, bundle, hold, bucket, withEntry, i2, doc, homesOver } from "./fixture.mjs";
 
 const pdf = (text) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: (text.pages || []).length, notes: [] }) });
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 
 async function held(pages) {
   const rows = new Map(), evidence = bucket();

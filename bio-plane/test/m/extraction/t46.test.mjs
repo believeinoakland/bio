@@ -6,7 +6,7 @@
    K2872). Each test names its ids. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, pressThenPass } from "./fixture.mjs";
+import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, pressThenPass, payingAccount } from "./fixture.mjs";
 import { TRANSCRIBE_WORDS } from "../../../src/extraction/index.mjs";
 import { WORD } from "./words.mjs";
 
@@ -25,7 +25,7 @@ function transcriber({ untested, answer = (pages) => ({ ok: true, engine: "claud
     keptAway: () => null,
     transcription: ({ member: m, project, at }) => ({ member: m, project, at, act: `transcribe:t46:${at}`,
       ...(state.untested !== undefined ? { untested: state.untested } : {}),
-      accounts: { accountFor: async () => ({ ok: true, kind: "apikey", level: "member", key: "k" }) },
+      accounts: { accountFor: payingAccount() },
       useCheck: async () => null,
       transcribe: async (q) => { calls.transcribe.push(q); return state.answer(q.pages, q); } }),
   };
@@ -119,6 +119,7 @@ const SIX = [["BAD_BODY", 400, "transcribe.reason.requestfault"], ["BAD_SHA", 40
 test("R75 (T46; N886; DEC-193): each of agent-worker R72's six codes answered after the post is that refusal: its code as answered, the worker's status (a refusal's status when none is relayed), DEC-193's reason by key as its translation, says transcribe.refused filled with it, no check of its own, nothing written", async () => {
   for (const [code, status, key] of SIX)
     for (const relayed of [status, null]) {
+      // fixtures-contract: agent-worker transcribe-refusal
       const { w, tr, run } = await heldScan({ answer: () => workerRefusal(code, relayed) });
       const before = writes(w);
       const r = await run();
@@ -146,6 +147,9 @@ test("R75 (controls): a refusal carrying its own row's translation keeps it; ano
   const r = await run();
   assert.equal(r.status, 409);
   assert.deepEqual(r.body, { ...OWN, says: WORD("transcribe.refused").replace("{reason}", OWN.translation) });
+  /* a code outside the six, made up on purpose: it names no row of agent-worker's */
+  // fixtures-generic: SOME_OTHER_CODE
+  // fixtures-contract: agent-worker transcribe-refusal
   for (const answer of [workerRefusal("SOME_OTHER_CODE", 400), { ok: false, reason: "busy" }]) {
     const v = await heldScan({ answer: () => answer });
     const x = await v.run();

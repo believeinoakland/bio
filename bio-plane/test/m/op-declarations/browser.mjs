@@ -26,8 +26,8 @@ export const browserActs = (registry) => {
    registry's own owed rows (K3268: no hand list): every owed act that is no op, no browser act (R76) and no installer
    route; an act leaves the list when it becomes an op. */
 const INSTALLER = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
-const owedActs = (file) => {
-  const rows = JSON.parse(readFileSync(new URL(`./fixtures/${file}`, import.meta.url), "utf8"));
+const owedActs = (file, dir = "./fixtures/") => {
+  const rows = JSON.parse(readFileSync(new URL(`${dir}${file}`, import.meta.url), "utf8"));
   return [...new Set(rows.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed")
     .map((a) => a.op.replace(/^owed:/, "").split(" ")[0]))];
 };
@@ -41,5 +41,6 @@ const notBuilt = (acts) => acts
   .filter((act) => !Object.hasOwn(OPS, act) && !Object.hasOwn(BROWSER_ACTS, act) && !INSTALLER.includes(act)).sort();
 /** The owed acts of the registry at `43379a1a44` that no op, browser act or installer route is (what t34 to t51 read). */
 export const OWED_BY_FIX_ROUND_AT_43379A1A44 = notBuilt(OWED_ALL);
-/** The same for the design's registry at `f72b2f8a4c`: the acts the fix rounds and T52 still owe (R73). */
-export const OWED_BY_FIX_ROUND = notBuilt(owedActs("registry-f72b2f8a4c.json"));
+/** The same for the design's registry wizard-scripts R41 carries (its `source/registry.json`, re-taken at `c752a602da`,
+ *  K5069; read from there, never copied): the acts the fix rounds and T52 still owe (R73). */
+export const OWED_BY_FIX_ROUND = notBuilt(owedActs("registry.json", "../wizard-scripts/source/"));

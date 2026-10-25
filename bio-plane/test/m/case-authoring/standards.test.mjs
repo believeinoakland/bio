@@ -12,6 +12,7 @@ import { PUBLISH_ACT_CHECKS } from "../../../src/case-authoring/index.mjs";
 import { materialsOf, passagesOf, memberSubjectOf } from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { hasWord, word, localize } from "../../../src/setup-words/index.mjs";
+import { standardReadWorld } from "../standards/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", SDOC = "INFO-2026-0002-std";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -21,6 +22,9 @@ const VIOLATED = "It does not cover whether the turnout rule was violated after 
 
 /* `standards`, as held: FREE a free policy, PAY a paywalled standard whose text is CID_P (a passage of SDOC's capture);
    `binding` maps `standard|body` to bindsAt's state. `table` and `binding` are the test's to change. */
+/* standards' real refusal of an id it holds none of (its R5), made by its published fixture's real instance. */
+const noSuchStandard = standardReadWorld();
+
 function standardsOf() {
   const table = {
     [FREE]: { access: "free", texts: [CID_F], requires: [CID_F] },
@@ -31,7 +35,7 @@ function standardsOf() {
     table, binding,
     standardRead({ id }) {
       const s = table[id];
-      if (!s) return { ok: false, reason: "NO_SUCH_STANDARD", code: "NO_SUCH_STANDARD", standard: id };
+      if (!s) return noSuchStandard.standardRead({ id, viewer: noSuchStandard.member });
       return { ok: true, id, cite: `${id} §1`, kind: "policy", issuer: "ENT-2026-0099", designation: id, edition: "2024",
                access: s.access, owner: { issuer: "ENT-2026-0099", label: "Issuer" }, requires: s.requires,
                texts: s.texts.map((t) => ({ content_id: t, standing: null, newer: null })),
