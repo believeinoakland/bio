@@ -161,3 +161,7 @@ Fix round 10, item 1 (diag2-11 §2b): R44 met. An absent voice on a public comme
 **Checks** (absolute root): module tests 165 pass, 0 fail (`bio-plane/test/m/filings/`, run as a directory); format 0 failures; architecture 0; coverage 68 of 68 ids, 0; words 0 (unkeyed 2, the J2 wire grammar); ownership 0; `fixtures --list` no failing line, no marker added.
 
 Size (session_01Xe56US2uGqhQLaVtDchwh5): test runs 4, module lines 3811
+
+## J13 · COMPLETE
+
+Fix round 10 item 1 applied: R44 met (an absent voice on a public comment reads group; other kinds unchanged). Test t45 R44 red then green; module 165 pass; format, architecture, coverage, words, ownership, fixtures 0 failures. Details in J4 of my record.
