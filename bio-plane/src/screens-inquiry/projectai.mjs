@@ -99,7 +99,10 @@ function render(cs, view) {
   out.push(`<p class="mk-sub">${W(S + "purpose")}</p>`);
 
   /* the project's account: what it is, who set it and when; an owner's acts on it */
-  out.push(cs.sec(S + "account.head", cs.state("state", view, (a) => {
+  out.push(cs.sec(S + "account.head", cs.state("state", view, (a0) => {
+    /* a joined participant who is no owner is told only `{on, serving}` (ai-accounts R10): a sign-in never serves a project
+       of two or more members, so what serves her is the project's key; nothing serving reads as no account of its own */
+    const a = a0.held === undefined && !isOwner ? { ...a0, held: a0.serving === true, kind: a0.serving === true ? "key" : null } : a0;
     const say = !a.held ? S + "account.none"
       : a.on === false ? S + "account.off"
       : a.serving === false ? S + "account.suspended"
