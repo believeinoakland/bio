@@ -443,3 +443,7 @@ Size (session_01RNBm7pmRk2YDU7VtxCuH3U): test runs 6, module lines 5750
 - format 0 failures; architecture 0 failures; coverage 50 of 50 live ids named, 0 failures; ownership (`tranche/T51`): 6 files changed, 0 failures; `checks/fixtures.mjs /home/user/bio`: 2,742 failures before and after my change, none in a pdf-reader file.
 
 Size (session_01HRJxJCDxgaoWS3f4CW9K9k): test runs 9, module lines 5765
+
+## J16 · COMPLETE
+
+R50 met (fix round 10, cause R9, K5074). openPdfRange and every range / extractPdfRange answer carry notes: the open's, kept, then the range's own, each once; intact => []. Failing-first ranged-notes.test.mjs (6 tests, red before, green after); fixture rangedNotes published in fixtures.mjs with its test; no fixtures-own/generic markers added. pdf-reader tests 201/201; users 1142 tests 0 fail; format/architecture/coverage/ownership 0 failures. FOR BOB: pdf-worker/dist bundle is stale (embeds pdfstructure.mjs): pdf-worker structure.test.mjs R7/R10 range checks fail 2 of 98 until regenerated (npm run build in pdf-worker); passes 98/0 at tranche tip. Details in my record.
