@@ -326,6 +326,7 @@ test("R44 (G41, K4656): one refusal shape whatever the entry: `reason` is set fr
   await withEntry({ format: "t41", cellsIn: async () => ({ ok: false, why: "bad_range" }) }, async () => {
     assert.deepEqual(await cellsInRange(store(b), document, { format: "t41" }), { ok: false, why: "bad_range", reason: "bad_range" });
   });
+  // fixtures-own: synthetic a plug-in format entry registered through this module's own seam (`withEntry`), whose cellsIn answers both `reason` and `why` to test the one refusal shape; no other module's answer
   await withEntry({ format: "t41", cellsIn: async () => ({ ok: false, reason: "r", why: "w" }) }, async () => {
     assert.deepEqual(await cellsInRange(store(b), document, { format: "t41" }), { ok: false, reason: "r", why: "w" });
   });

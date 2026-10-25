@@ -1,6 +1,6 @@
 # csv-reader (T51)
 
-**Status** · session_017Uh2sTFUFdx4GLx1SnmNqp · depth 2 · COMPLETE · handled B12
+**Status** · session_01KK3V2itArCQimGgpgdg95M · depth 2 · COMPLETE · handled B12
 
 ## Completion
 
@@ -172,3 +172,19 @@ Size (session_017Uh2sTFUFdx4GLx1SnmNqp): test runs 8, module lines 1304
 ## J8 · COMPLETE
 
 R20 done (G4): decideDelimiter now counts a delimiter consistent when it occurs on the majority of lines, modal count breaking ties (index.mjs ~395-410). Failing-first windows.test.mjs R7 (title+ragged 3000x5) red (delimiter null) then green (comma, 5 cols, 3003 rows, mark at A3003). One old text.test.mjs R7 assertion (a,b/1,2,3 = null) updated to the amended R7. csv-reader 96/96; users (format-registry, calculations, acquisition, office-readers, reading-pipeline, extraction) 0 fail; checks format/architecture/coverage 25 of 25/ownership 0 failures. No markers, no deferrals. Platform N. Size (session_017Uh2sTFUFdx4GLx1SnmNqp): test runs 8, module lines 1304.
+
+## Fix round 10, follow-up 11 — CSV-READER #7 (session_01KK3V2itArCQimGgpgdg95M), one-line file past the column bound
+
+**Root (file:line):** `createRecordWalk`, `bio-plane/src/csv-reader/index.mjs` (`endRecord`, `info.cols`), and `csvParts`'s `onRecord` guard (~:807). R7 decides no delimiter for a body of fewer than two complete lines (`delimiter_undetermined_too_few_lines`), and an undetermined delimiter reads each record as ONE field, so `info.cols` was 1 for `c0,c1,...,c16384` and the R22 check (`info.cols > CSV_COLUMNS_MAX`) never fired. The same held for any record read under a null delimiter (a tie, no consistent delimiter).
+**Change:** while no delimiter is decided, the walk also counts occurrences of each of the four candidate delimiters (comma, semicolon, tab, pipe) outside quotes and reports `info.wide`, the most fields the record would have under any one of them (`0` when a delimiter is decided). The guard judges `max(info.cols, info.wide)` and states the count and the limit in R6's marker with `metric:"columns"`. The dialect is untouched (R3, R7): the line is still read as one cell with `delimiter:null`; only the refusal uses the count. Commas inside a quoted field are not counted. Platform: N.
+**Why the tests missed it:** every R22 test used a header plus a data line, so R7 decided a delimiter; none had a single line wider than the bound.
+**Failing-first (red, then green):** `text.test.mjs` "R22 a body of ONE line …" through `csvEntry.text` and `csvEntry.structure`, for comma, semicolon, tab and pipe, with and without a final newline: 16,385 columns refused with `{size:16385, bound:16384, boundName:"SHEET_COLUMNS_MAX", metric:"columns"}`, `document` null, `sheets` []; 16,384 on one line read (no marker, one sheet); a 16,389-comma quoted field is one cell, not refused. Seen red before the change (the 16,385-column line was read, `usedCols` 1, only an `over_cell_bound`), green after. The many-line past-bound test and its 16,384 control are unchanged and pass.
+**Tests:** csv-reader 97 pass 0 fail. Users: format-registry 59, office-readers 164, odf-reader 127, calculations 143, acquisition 356, reading-pipeline 437 (0 fail; the one not counted as pass was so before), extraction 381, all 0 fail. `impact.mjs` named 107 modules, driven by an unrelated `extraction` DECLARED_OPS difference between the tranche and this branch; I ran csv-reader's users, not those.
+**Checks (absolute root):** format 0 failures; architecture 0; coverage 25 of 25; ownership 0; words 0; fixtures 0.
+**fixtures-own / fixtures-generic markers added:** none. **Deferred:** none. **Found in other modules:** none. Stale bundles that embed csv-reader source: BOB regenerates.
+**Note for BOB (R22 wording, optional):** R22 could say "while R7 decides no delimiter, the bound judges the most fields the record would have under comma, semicolon, tab or pipe".
+Size (session_01KK3V2itArCQimGgpgdg95M): test runs 12, module lines 1314
+
+## J9 · COMPLETE
+
+Follow-up 11 done. Root: an undetermined delimiter (R7: fewer than 2 complete lines, or a tie) reads each record as one field, so info.cols was 1 and R22's guard never fired on a one-line 16,385-column file. Fix: the record walk also counts comma/semicolon/tab/pipe outside quotes while no delimiter is decided (info.wide); the guard judges max(cols, wide) and states the count and limit in the metric:columns marker. Dialect unchanged. Failing-first test text.test.mjs 'R22 a body of ONE line' (all four delimiters, with/without final newline, text and structure; 16,384 read; quoted commas not counted) seen red then green. csv-reader 97/97; users format-registry 59, office-readers 164, odf-reader 127, calculations 143, acquisition 356, reading-pipeline 437, extraction 381: 0 fail. Checks (absolute root): format, architecture, coverage 25/25, ownership, words, fixtures: 0 failures. fixtures markers added: none. Deferred: none. Platform N. Size (session_01KK3V2itArCQimGgpgdg95M): test runs 12, module lines 1314

@@ -70,9 +70,10 @@ test("R43: a range answers the pages' text as the whole reading answers them, an
 
 test("R43: a range past the end answers no pages with the document's total; a range is clamped; what is not a PDF answers as the whole reading does", async () => {
   const bytes = small();
+  const { notes } = await extractPdfStructure(bytes);   /* R50: a range carries the document's notes */
   for (const from of [7, 8, 1000]) {
     const r = await extractPdfRange(bytes, { from, count: 5 });
-    assert.deepEqual(r, { ok: true, container: "pdf", pages: 7, from, count: 0, text: { pages: [], undetermined: [], counts: { chars: 0, undetermined: 0 } } });
+    assert.deepEqual(r, { ok: true, container: "pdf", pages: 7, from, count: 0, text: { pages: [], undetermined: [], counts: { chars: 0, undetermined: 0 } }, notes });
   }
   const tail = await extractPdfRange(bytes, { from: 5, count: 100 });
   assert.equal(tail.count, 2);

@@ -9,6 +9,8 @@ import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
+import { promotionOver } from "../promotion/fixtures.mjs";
+import { registeredHomes, sha as digest } from "../provenance/fixtures.mjs";
 /* the one answers progressions gives through its upstreams (K1563 (10), K1568 (3)), re-exported for the tests */
 export { noSuchDatedFact } from "../../../src/events/index.mjs";
 export { portionUnknown } from "../../../src/standards/index.mjs";
@@ -123,9 +125,17 @@ export function world({ now = "2026-09-01T00:00:00.000Z", nowMs = null, zone = Z
   const membership = membershipOf(host, { record });
   membership.migrate();
   const mean = meaning();
-  const dates = { reading: {}, registered: {} };
+  const dates = { reading: {} };
   const extraction = { readingOf: (s) => (s in dates.reading ? { reading: { at: dates.reading[s] }, chain: null } : null) };
-  const provenance = { homeOf: (s) => (s in dates.registered ? { bundleId: null, registered: dates.registered[s] } : null) };
+  /* provenance's published fixture (K4990): the real `homeOf`, a capture registered by really promoting a bundle at the
+     instant `registerAt` names (provenance's clock) */
+  let registeredAt = now;
+  const promotion = promotionOver({ record, membership, host, now: () => registeredAt });
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
+  promotion.registerFact("citedBy", "connections", () => []);
+  promotion.registerFact("caseMember", "publication", () => false);
+  const homes = registeredHomes({ host, record, membership, promotion, now: () => registeredAt });
+  const provenance = homes.provenance;
   const ev = eventsWorld(), std = standardsWorld();
   const tz = { zone };
   const p = progressionsOf(host, { record, extraction, provenance, entities: mean.entities_,
@@ -134,6 +144,14 @@ export function world({ now = "2026-09-01T00:00:00.000Z", nowMs = null, zone = Z
   p.migrate();
   const w = {
     st, host, record, p, clock, mean, dates, ev, std, tz,
+    /** A capture registered in a bundle (provenance R1) at `at`, by the real register act; answers the `registered`
+     *  instant provenance holds for it. */
+    registerAt(captureSha, at) {
+      registeredAt = at;
+      const r = homes.register(captureSha);
+      if (r.ok !== true) throw new Error(`registerAt: ${JSON.stringify(r)}`);
+      return provenance.homeOf(captureSha).registered;
+    },
     /** A dated fact `events` holds for a capture (its R1): a day, in the governing zone. */
     fact(captureSha, value, id = `DF-${captureSha}-${value}`, extra = {}) {
       if (!ev.facts.has(captureSha)) ev.facts.set(captureSha, []);
@@ -183,8 +201,12 @@ export function seeded(opts) {
   for (const b of ["INFO-A", "INFO-B", "INFO-C", "INFO-D"]) w.bundle(b);
   w.entity("ENT-1", "Contract one");
   w.resolve("ENT-1", "sa", "INFO-A", "A");
+  w.resolve("ENT-1", digest("sa"), "INFO-A", "A");   // the same capture by the digest provenance registers it under
   w.resolve("ENT-1", "sb", "INFO-B", "B");
+  w.resolve("ENT-1", digest("sb"), "INFO-B", "B");   // the same capture by the digest provenance registers it under
   w.resolve("ENT-1", "sc", "INFO-C", "C");
+  w.resolve("ENT-1", digest("sc"), "INFO-C", "C");   // the same capture by the digest provenance registers it under
   w.resolve("ENT-1", "sd", "INFO-D", "A");
+  w.resolve("ENT-1", digest("sd"), "INFO-D", "A");   // the same capture by the digest provenance registers it under
   return w;
 }

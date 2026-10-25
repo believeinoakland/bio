@@ -445,7 +445,7 @@ test("G54 SEAM (publication, public-read): the real ledger and the real assembly
   publicationWorker.bindPublishedPlane({
     json: (o, status = 200) => ({ status, body: o }), STORE_SILENT_REASON: "STORE_DID_NOT_ANSWER", STORE_SILENT_DETAIL: "the store did not answer",
     PUBLISHED_STORE: "s", storeSilent: (op) => ({ status: 502, body: { ok: false, reason: "STORE_DID_NOT_ANSWER", op } }),
-    requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }),
+    requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }), // fixtures-contract: answer-envelope door-helpers
     doAnswer: async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
                                return out && out.ok === true ? { answered: true, result: out.result } : { answered: false }; } });
   const s = await house({ worker: { env, storeName: "s", stub: door } });

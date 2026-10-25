@@ -33,6 +33,7 @@ export function world({ omit = [] } = {}) {
     row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; },
     rows(q, ...a) { return sql.exec(q, ...a); },
     /* The founder claims the instance: the fact `credentials` states (its R17). */
+    // fixtures-own: harness a world helper named like the op `claim`: it records the test's fact, and no store answers it
     async claim() { creds.claimed = true; return { ok: true, role: "admin" }; },
     /* Invite and enrol a member all the way to active; returns the enrol answer. */
     async enrol(id, role = "member", by = "admin", caps = null) {

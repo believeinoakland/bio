@@ -108,7 +108,7 @@ test("R77, R47: the registered check receives origin and response (null for a me
   const v = world({ deployedModes: ["check", "plan"] });
   await v.group("ann", "bob");
   v.project(PROJ, "ann", { joined: ["bob"] });
-  const no = { ok: false, code: "PLAN_NOT_AFTER_RESPONSE", check: "C-0.0", translation: "t" };
+  const no = { ok: false, code: "PLAN_NOT_OPEN", check: "C-124.61", translation: "t" };
   v.runs.registerOpenCheck("action-plans", "plan", (a) => (a.origin === "reexamination" ? no : null));
   const before = v.dump();
   const r = await reexam(v, { run: "X1" });

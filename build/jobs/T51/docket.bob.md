@@ -1,6 +1,6 @@
 # BOB to docket (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -37,3 +37,28 @@ Walker's row (fix round 5 E9, B `C65 | CA66`): "As the MEMBER who made and sent 
 Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio`; `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio <module> tranche/T51 job/T51/<module>`. COMPLETE: what changed (file:line), the failing-first tests red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry.** Two points of K4557 in docket. (1) `docketpressure` checks no participation today: it is a weighty act of a project (BOB's reading, K4558): ask `membership.projectAuthority(project, identity, "joined", act)` before any write. (2) `docketfile` checks joined (:386) but answers its own `DOCKET_NOT_A_PARTICIPANT`: one condition, one code (K231): answer membership's `PROJECT_ACT_NOT_A_PARTICIPANT` (whose held sentence says to join), keeping any caller that reads the old code working (find them: `grep -rn DOCKET_NOT_A_PARTICIPANT bio-plane`; a screen that reads it is told by REPORT, BOB places it). Failing-first: an invited, not joined member: `docketpressure` refused with that code, nothing written (red today); `docketfile` answers the code (red today: the old code). Controls: a joined member unchanged.
+
+## B3 · START
+
+START · DOCKET #12 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 4: publish 3 fixtures, re-point 1 own line (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/docket tranche/T51 && git branch -m job/T51/docket stale/docket-local && git checkout -b job/T51/docket origin/job/T51/docket`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module docket`; record `build/jobs/T51/docket.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/docket/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `coreDue` (users now: queue-producers 5, queue 1): real `docket.coreDue()` unread answers.
+- `docketEntryRead` (users now: action-holds 2): real docket entry read (`docketEntry`/`docketPressureOf`) over marks: NO_SUCH_DOCKET_ENTRY for unseen entries.
+- `pressureMarks` (users now: filings 3): the real `docketPressureMarks` over an empty docket (`marks:[]`), a docket not asked, and an unreadable one.
+
+**Your own fixture lines, done in this job** (1; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- publication/stampEditionRefusal (1 judgment): fixture.mjs:137
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . docket --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/docket.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

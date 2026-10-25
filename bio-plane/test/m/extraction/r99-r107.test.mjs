@@ -7,15 +7,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { fresh, bundle, bucket, doc, sha, docx, wp, wr, member, ocrAnswer } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, docx, wp, wr, member, ocrAnswer, homesOver } from "./fixture.mjs";
 import { generate } from "../../pdfgen.mjs";
 import * as F from "../office-readers/fixtures.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { read as readDocument } from "../../../src/reading-pipeline/index.mjs";
 import { extractionOps, LAND_BATCH_BYTES, READING_SHAPE, CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "../../../src/extraction/index.mjs";
 
 const MiB = 1048576;
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 
 /* a held home: the bytes in the evidence store, the register naming it, the document in its bundle's provenance document */
 async function home(bytes, { ct = "text/plain", format = "undetermined", fromText = false, reader = null } = {}) {

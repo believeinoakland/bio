@@ -1,6 +1,6 @@
 # answers (T51)
 
-**Status** · session_01S1McqV7qoGLx6V9Y9QpaCn · depth 2 · COMPLETE · handled B2
+**Status** · session_01VDycP8MTrbpjvMkmzgTofN · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
@@ -43,3 +43,26 @@ T51-212 (words, answers) is applied. Commit 7ea65d9ec0 on job/T51/answers, pushe
 - `node checks/ownership.mjs /home/user/bio answers tranche/T51 job/T51/answers`: 5 files changed by answers, 0 failures (the four source and test files, and this record).
 
 Size (session_01S1McqV7qoGLx6V9Y9QpaCn): test runs 3, module lines 1906
+
+## Fix round 10, Wave A batch 3 (B3, ANSWERS #13)
+
+**Causes done:**
+- Published `bio-plane/test/m/answers/fixtures.mjs` (new): `limitsUnreadable` (real `askAccount` with no `useCheck`: LIMITS_UNREADABLE) and `standingQuestions` (real `standingQuestionEnd` / `standingQuestionEndSet`: NO_SUCH_STANDING_QUESTION, STANDING_ENDED). Each is called by `fixtures.test.mjs`, which checks the real answer (2 tests).
+- standing.test.mjs (8 lines, FIX-E): the hand-built `accountFor` answers are now ai-accounts' fixtures (`keptAwayGroup`, `accountsServing`, `noAccount`, `switchedOff`, `keptAwayUnreadable`) from `bio-plane/test/m/ai-accounts/fixtures.mjs`. The standing stand-ins are now helpers that call those fixtures when the step runs. A real account's `standing` use is off by default, so the "serves" answer is the fixture's `ask` answer (the code under test reads only `ok`); the sign-in arm's R32 case uses the same serving answer.
+- words.test.mjs:40 (CODE): NO_PROFILES is in no product file; the test now takes the real refusal of `jurisdictions.combine(["nosuch"])` (UNKNOWN_PROFILE, `ok: false`). The brief's `combine([])` answers `{ok: true, view: {profiles: []}}`, which never reaches the "no profile is active" reason (answers' `view()` is null only on a refused combine), so a real refusal was used; BOB to note.
+
+**Markers added:** no `fixtures-own` and no `fixtures-generic` marker.
+
+**Lines left:** none. `checks/fixtures.mjs . answers --list`: 0 failures (stub 0, answer 0).
+
+**Tests and checks:**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/answers/`: tests 69, pass 69, fail 0.
+- `node checks/format.mjs .`: 178 modules, 0 failures. `architecture . answers`: 22 files, 0 failures. `coverage . answers`: 36 of 36, 0 failures. `ownership . answers tranche/T51 job/T51/answers`: 0 failures.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 178 (answers); its tests are the run above.
+- `setup-words/build.mjs --check`: stale-rows note only, no refusal naming answers. The run's words findings are other modules'.
+
+Size (session_01VDycP8MTrbpjvMkmzgTofN): test runs 9, module lines 1919
+
+## J3 · COMPLETE
+
+Fix round 10 batch 3 applied. Published limitsUnreadable and standingQuestions fixtures (answers/fixtures.mjs, tested by fixtures.test.mjs); 8 standing.test.mjs lines now use ai-accounts' fixtures; words.test.mjs:40 uses the real refusal of jurisdictions.combine(["nosuch"]) (combine([]) answers ok, never reaching the no-profile reason). No fixtures-own or fixtures-generic markers. checks/fixtures answers: 0 failures; module tests 69/69; format, architecture, coverage (36 of 36), ownership 0 failures. Record: build/jobs/T51/answers.md.

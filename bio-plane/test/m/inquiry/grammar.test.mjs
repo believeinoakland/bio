@@ -136,11 +136,14 @@ test("R7 an inherited leg rests on a published case at an edition the registry h
   assert.ok(basisErrs(fmWith([{ target: INFO, role: "supports", grade_source: "inherited" }]), pub).length, "inherited rests on a published case");
 });
 
-test("R8 grounds: every leg labelled or none; each label declared once by a named member at an ISO instant; none empty", () => {
+test("R8 grounds: a supporting leg may name a ground or be necessary beside them; each label declared once by a named member at an ISO instant; none empty", () => {
   const legs = [{ target: INFO, role: "supports", ground: "g1" }, { target: INFO2, role: "supports", ground: "g2" }];
   const g = [{ ground: "g1", asserted_by: "member:alice", at: "2026-09-27T00:00:00Z" }, { ground: "g2", asserted_by: "member:alice", at: "2026-09-27T00:00:00Z" }];
   assert.equal(basisErrs(fmWith(legs, { grounds: g })).length, 0);
-  assert.ok(basisErrs(fmWith([legs[0], { target: INFO2, role: "supports" }], { grounds: [g[0]] })).length, "half-labelled");
+  assert.equal(basisErrs(fmWith([legs[0], { target: INFO2, role: "supports" }], { grounds: [g[0]] })).length, 0,
+    "an unlabelled supporting leg beside a labelled ground is a necessary leg (inquiry-grammar R68)");
+  assert.ok(basisErrs(fmWith([legs[0], { target: INFO2, role: "cuts_against", ground: "g1" }], { grounds: [g[0]] })).length,
+    "control: a leg that cuts against never names a ground");
   assert.ok(basisErrs(fmWith(legs, { grounds: [g[0]] })).length, "an undeclared label");
   assert.ok(basisErrs(fmWith(legs, { grounds: [g[0], g[1], g[1]] })).length, "a label declared twice");
   assert.ok(basisErrs(fmWith(legs, { grounds: [g[0], { ...g[1], asserted_by: "class:daemon" }] })).length, "a machine asserter");

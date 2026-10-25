@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { answersWorld, answer, V } from "./fixture.mjs";
 import { ANSWERS_CHECKS, STANDING_LABEL, STANDING_TICK_MAX, nextDueDay } from "../../../src/answers/index.mjs";
 import { KEPT_AWAY_UNREADABLE } from "../../../src/ai-accounts/index.mjs";
+import { accountsServing, keptAwayGroup, noAccount, switchedOff, keptAwayUnreadable } from "../ai-accounts/fixtures.mjs";
 
 const BOB = V("bob"), CAROL = V("carol"), ALICE = V("alice");
 const set = (w, over = {}) => w.a.standingQuestionSet({ author: BOB, question: "Anything new on the budget?", query: "title:budget",
@@ -294,7 +295,12 @@ test("R19 keep-away is never reported as no_account, nor an account's refusal as
   assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
   const calls = [];
   w.a.registerStandingAnswerer("agent-worker", async (x) => { calls.push(x); return answer(); });
-  const ROW = { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", translation: "Your team keeps its material away." };
+  /* ai-accounts' published fixtures: its real refusals and its real serving answer */
+  const keptRow = async () => (await keptAwayGroup()).accountFor;
+  const ROW = await keptRow();
+  const served = async () => (await accountsServing()).accountFor({ member: "ann", act: { kind: "ask", member: "ann" } });
+  const none = async () => noAccount();
+  const switchedOffRow = (whose) => async () => switchedOff({ whose, use: "standing" });
   let n = 0;
   /* (T48-36) `accts` stands for ai-accounts (keep-away, the account), `creds` for credentials (the standing grant) */
   const step = async (accts, creds = w.credentials) => {
@@ -305,26 +311,27 @@ test("R19 keep-away is never reported as no_account, nor an account's refusal as
     return (await w.a.standingTick(w.clock.now)).ran.find((x) => x.id === q.id).held_back;
   };
   const kept = { condition: "kept_away", code: "AI_KEPT_AWAY", translation: ROW.translation };
-  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ROW }), kept, "accountFor's AI_KEPT_AWAY");
-  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ({ ok: true, level: "member", key: "k" }) },
+  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: keptRow }), kept, "accountFor's AI_KEPT_AWAY");
+  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: served },
                               { aiGrantMintStanding: async () => ROW }), kept, "R32's AI_KEPT_AWAY");
-  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ({ ok: false, code: "NO_ACCOUNT" }) }),
+  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: none }),
                    { condition: "no_account" }, "keep-away off: no account is no_account");
-  const off = (whose) => ({ ok: false, code: "AI_USE_SWITCHED_OFF", whose, use: "standing", translation: "Off." });
-  for (const [whose, sw] of [["own", "member"], ["group", "group"]])
-    assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => off(whose) }),
+  for (const [whose, sw] of [["own", "member"], ["group", "group"]]) {
+    assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: switchedOffRow(whose) }),
                      { condition: "switch_off", switch: sw }, `ai-accounts R11 for the ${whose} account`);
+  }
   /* (ai-accounts R34) unreachable, throwing, or answering neither null nor a refusal with its code: kept away, carrying
      KEPT_AWAY_UNREADABLE's row as given, never a code minted here nor a blank one */
   const unread = { condition: "kept_away", code: KEPT_AWAY_UNREADABLE.code, translation: KEPT_AWAY_UNREADABLE.translation };
   assert.equal(unread.code, "AI_KEPT_AWAY"); assert.equal(typeof unread.translation, "string");
-  for (const accts of [null, { accountFor: async () => ({ ok: true }) }, { aiKeptAway: () => { throw new Error("down"); } },
+  const UNREAD = (await keptAwayUnreadable()).aiKeptAway;
+  for (const accts of [null, { aiKeptAway: () => UNREAD }, { accountFor: served }, { aiKeptAway: () => { throw new Error("down"); } },
                        { aiKeptAway: () => undefined }, { aiKeptAway: () => ({ ok: false }) }, { aiKeptAway: () => "no" }])
     assert.deepEqual(await step(accts), unread, "fail closed, with the unreadable refusal's row");
   /* (T48-36) keep-away and the account are never read from credentials: a credentials holding both, its keep-away on,
      with ai-accounts saying neither, is not read for them */
-  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ({ ok: false, code: "NO_ACCOUNT" }) },
-                              { aiKeptAway: () => ROW, accountFor: async () => ROW }), { condition: "no_account" });
+  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: none },
+                              { aiKeptAway: () => ROW, accountFor: keptRow }), { condition: "no_account" });
   assert.equal(calls.length, 0);
 });
 
@@ -370,8 +377,9 @@ test("R19 the sign-in arm (N796, Bob K2425; credentials R32; ai-accounts R7, R14
   assert.deepEqual(await step(), held);
   assert.deepEqual(touched, ["accounts.aiKeptAway", "accounts.accountFor"], "keep-away, then the account; no grant asked for");
   assert.equal(w.limit.asked.length, 0); assert.equal(calls.length, 0, "no model called"); assert.equal(grants(), 0, "no grant minted");
-  /* and where the account answers the sign-in but R32 refuses its standing switch: the same hold */
-  w.a.deps.accounts = { aiKeptAway: () => null, accountFor: async () => ({ ok: true, kind: "signin", level: "member", member: "carol" }),
+  /* and where the account serves (ai-accounts' published serving answer) but R32 refuses its standing switch: the same hold */
+  const served = async () => (await accountsServing()).accountFor({ member: "ann", act: { kind: "ask", member: "ann" } });
+  w.a.deps.accounts = { aiKeptAway: () => null, accountFor: served,
                         projectsKeptAway: () => [] };
   w.a.deps.credentials = { aiGrantMintStanding: async () => ({ ok: false, code: "STANDING_SWITCH_OFF", translation: "Off." }) };
   w.a.resolved.delete("accounts"); w.a.resolved.delete("credentials");

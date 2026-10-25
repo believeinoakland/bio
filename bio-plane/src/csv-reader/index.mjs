@@ -463,12 +463,15 @@ export function walkRecords(text, delimiter) {
  *  `info` is `{ end, skipLF, cols, over, open }`: `end` is the number of characters consumed up to and including the
  *  record's terminator (so a walk can resume there; `skipLF` says a CR ended the record and a LF that follows is its own),
  *  `cols` the record's field count, `over` the `[column, length]` of each field longer than `CELL_CHARS_MAX` (the field is
- *  kept to `CELL_KEPT_CHARS`), `open` `{col, chars}` for a quote still open at the end of the text (that field is `""`).
+ *  kept to `CELL_KEPT_CHARS`), `open` `{col, chars}` for a quote still open at the end of the text (that field is `""`),
+ *  `wide` the most fields the record would have under any one of the four delimiters, counted outside quotes while no delimiter
+ *  is decided (`0` when one is), so the column bound (R22) judges a record whose delimiter R7 could not decide.
  *  `limits.maxColumns` stops a record keeping fields past it (`cols` still counts them). */
 export function createRecordWalk(delimiter, onRecord, limits = {}) {
   const maxColumns = limits.maxColumns ?? Infinity;
   let delim = delimiter ? delimiter.charCodeAt(0) : -1;
   let row = [], cols = 0, field = "", fieldLen = 0, over = null;
+  const candidates = [0, 0, 0, 0];
   let inQuotes = false, atStart = true, started = false;
   /* The last piece ended on a `"` inside quotes: the next character says whether it was one half of a doubled `""`. */
   let quoteOpen = false;
@@ -489,8 +492,9 @@ export function createRecordWalk(delimiter, onRecord, limits = {}) {
   };
   const endRecord = (end, crEnd, open) => {
     endField();
-    const info = { end, skipLF: crEnd, cols, over, open: open ?? null };
+    const info = { end, skipLF: crEnd, cols, over, open: open ?? null, wide: delim < 0 ? Math.max(...candidates) + 1 : 0 };
     const record = row;
+    candidates.fill(0);
     row = []; cols = 0; over = null; started = false; atStart = true;
     onRecord(record, info);
   };
@@ -522,6 +526,10 @@ export function createRecordWalk(delimiter, onRecord, limits = {}) {
           continue;
         }
         if (c === 34 && atStart) { inQuotes = true; atStart = false; started = true; run = i + 1; continue; }
+        if (delim < 0) {
+          const k = c === 44 ? 0 : c === 59 ? 1 : c === 9 ? 2 : c === 124 ? 3 : -1;
+          if (k >= 0) candidates[k]++;
+        }
         if (c === delim) { append(text.slice(run, i)); endField(); run = i + 1; atStart = true; started = true; continue; }
         if (c === 13) {
           append(text.slice(run, i));
@@ -804,7 +812,8 @@ async function csvParts(bytes, opts) {
   const onRecord = (record, info) => {
     if (guard) return;
     rows++;
-    if (info.cols > CSV_COLUMNS_MAX) { guard = sizeMarker("columns", info.cols, CSV_COLUMNS_MAX, "SHEET_COLUMNS_MAX", encodingOf); return; }
+    const columns = Math.max(info.cols, info.wide);
+    if (columns > CSV_COLUMNS_MAX) { guard = sizeMarker("columns", columns, CSV_COLUMNS_MAX, "SHEET_COLUMNS_MAX", encodingOf); return; }
     if (rows > CSV_ROWS_MAX) { guard = sizeMarker("rows", rows, CSV_ROWS_MAX, "MEASURED_CSV_ROWS_BOUND", encodingOf); return; }
     if (records) {
       if (info.over || info.open) recInfo.set(records.length, info);

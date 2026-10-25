@@ -1,6 +1,6 @@
 # BOB to capture-requests (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -97,3 +97,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . capture-requests --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/capture-requests.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
 
 **Found before this job (K5077; CAPTURE #60 J39):** capture's real render refusals are 429 (`RENDER_DEFERRED`, `RENDER_HOST_COOLING_OFF`) and 501 (`RENDER_NO_RENDERER`), not the 409 your hand-built `renderRefusal` has: take them from capture's published fixtures (`bio-plane/test/m/capture/fixtures.mjs`: `acquireRefusal` and the rest), never hand-built.
+
+## B8 · CHANGE
+
+re J7 (K5079): steps is already merged on the tranche with its published fixtures (`bio-plane/test/m/steps/fixtures.mjs`: `stepRead`, `stepsWorld`; the real read is `step({step, viewer})`). Merge `origin/tranche/T51`, re-point `t41.test.mjs:148`, then COMPLETE. Markers read and accepted (`drain:286` platform, `reads:105` NOT_A_CODE). The standards project-confidential option and capture's three render codes: noted, nothing for you.

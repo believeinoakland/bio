@@ -6,12 +6,12 @@
    container is set to one without the slot, so only detection can. Run through the module's real entry, `readHeld` then `cellsOf`. Each test names the requirement id it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, bucket, doc, sha } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, homesOver } from "./fixture.mjs";
 import * as F from "../office-readers/fixtures.mjs";
 import { getFormat, detectFormat } from "../../../src/formats.mjs";
 
 const XLSX_CT = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 const COLS = "ABCDEFGHIJ";
 const cellOf = (sheet, row, col, value) => ({ source: { kind: "sheet-cell", ref: `${sheet}!${COLS[col]}${row}`, sheet, cell: `${COLS[col]}${row}` }, value, type: "text", declared: null, cached: null, formula: null });
 

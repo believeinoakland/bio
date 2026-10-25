@@ -38,17 +38,14 @@ test("R85 a question with one supporting and one cutting leg accepts a one-part 
   assert.deepEqual(p.ungrouped, [1], "the cutting leg is among the legs that name no ground");
 });
 
-test("R85 control: a partition leaving a supporting leg out is still refused, and nothing is written", () => {
+test("R85 a partition leaving a supporting leg out lands: that leg is a necessary leg beside the ground, and the cutting leg stays unlabelled", () => {
   const w = twoAndOneAgainst();
-  const before = w.text(Q);
   const r = ground(w, [{ ground: "g1", legs: [0] }]);
-  assert.equal(r.ok, false);
-  assert.equal(r.reason, "BASIS_REFUSED");
-  assert.ok(Array.isArray(r.findings) && r.findings.length >= 1 && r.findings.every((f) => f.check && f.detail),
-    "the refusal carries the finding that refused it");
-  assert.equal(w.text(Q), before);
-  /* and the same question, every supporting leg covered, lands with the cutting leg unlabelled */
-  const ok = ground(w, [{ ground: "g1", legs: [0] }, { ground: "g2", legs: [1] }]);
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
+  assert.deepEqual(roleGround(w), [[0, "supports", "g1"], [1, "supports", null], [2, "cuts_against", null]]);
+  assert.deepEqual(w.k.partitionOf({ id: Q, viewer: "admin" }).ungrouped, [1, 2]);
+  /* and every supporting leg covered lands as before, the cutting leg unlabelled */
+  const ok = ground(w, [{ ground: "g1", legs: [0] }, { ground: "g2", legs: [1] }], { reason: "each stands alone" });
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 500));
   assert.deepEqual(roleGround(w), [[0, "supports", "g1"], [1, "supports", "g2"], [2, "cuts_against", null]]);
 });
