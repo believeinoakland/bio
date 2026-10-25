@@ -371,3 +371,20 @@ COMPLETE · fix round 10, follow-up 43 (B15). Test files only; no source of the 
 **Checks and tests.** queue-producers all 155 tests: 155 pass, 0 fail (node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/queue-producers/*.test.mjs). format 0 failures (178 modules). architecture 0 failures. coverage 41 of 41, 0 failures. words 0 failures. ownership 0 failures. fixtures --list 0 failures (accepted 3: two generic, one own, unchanged).
 
 Size (session_011GmeYymb9AKMxsLsx3vBDB): test runs 2, module lines 3631
+
+## J21 · COMPLETE
+
+COMPLETE · fix round 10, final pass cause 1 (B16; diag2-10b C7; R43 as amended, K5148, WALK-FINAL-10B R213).
+
+**Met:** R43's sentence "A holder in a summary is named by its title, a case by its scope, never by its id" (BOB strikes the not-yet-met mark on that sentence; no other id).
+
+**Cause 1 (a notice names a case by its raw id).** Re-read: `#nameOf` read titles of bundles only (`#titlesOf` reads `bundles`); a published case holder fell through to its id. Fix: `#nameOf` (queue-producers/index.mjs) is the holder's title, else the scope of the newest edition of that case that states one (new `#scopesOf`, one statement per read, memoised in `#memo.scopes`, from publication's `published_cases`, a stated read contract, publication R40), else the id (a case that states no scope anywhere has no other name). Sentence unchanged; no new sentence, no new key.
+- (1) Failing-first: words.test.mjs "R43 (R213; WALK-FINAL-10B C7)": a notice whose holder is a published case (editions 1 'Old scope', 2 'Port lease revenue', 3 no scope) reads the summary with 'Port lease revenue' and no CASE- id; control: a question holder by its title; control: a case with no scope keeps its id. Seen red on the previous code (summary read 'CASE-2026-4006'), then green.
+- (2) The fix is in `#nameOf`/`#scopesOf`.
+- (3) Why the tests missed it: words.test.mjs filled `holder` with a question's title only, so the id branch of `#nameOf` was never driven by a case. world.mjs also had no `published_cases` table; I added it (minimal columns case_id, edition, scope).
+
+**Markers added:** none (fixtures --list: 0 failures, accepted 3 as before).
+**Found in other modules:** none. The through-the-door case (diag2-10b: publish a case citing a captured page, capture a newer version, read queue/home as owner, assert no CASE- id) belongs to control-plane (K5138) and is left for BOB to place.
+**Tests/checks:** queue-producers all tests: 156 pass, 0 fail (node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/queue-producers/, no force-exit, exits by itself). format 0 failures (178 modules); architecture 0 failures; coverage 41 of 41, 0 failures; ownership 0 failures; words 0 failures; fixtures --list 0 failures.
+
+Size (session_01DGBpwp2MkVRUms4MnyuCjB): test runs 4, module lines 3659
