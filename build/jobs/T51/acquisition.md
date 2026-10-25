@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01JjkV7W74Hx4TPxHQN3nSf6 · depth 2 · COMPLETE · handled B50
+**Status** · session_014DNpW1Q22zeKQnfdHbUNup · depth 2 · COMPLETE · handled B51
 
 ## J1 · REPORT
 
@@ -839,3 +839,36 @@ Size (session_01JjkV7W74Hx4TPxHQN3nSf6): test runs 12, module lines 4479
 ## J49 · COMPLETE
 
 R123 met (see J48): every HTML capture files its page's own links with no fetching. Tests member-links.test.mjs red then green; acquisition 359 pass. Door case for control-plane to place (K5138). control-plane suite has 7 failures in credentials/money-ingest, unrelated, not compared with the tranche tip.
+
+## J50 · REPORT
+
+The fixtures check (`checks/run.mjs /home/user/bio`) reports 16 FAIL lines in files outside acquisition's paths and tests. None is in acquisition's paths; my change is a comment on one test line, so none comes from this job:
+
+- screens-publish: `finding.test.mjs:75` (op-table publishedcase), `fr30.test.mjs:147` (op-table publishpreflight), `fr30b.test.mjs:354` and `:399` (op-table casedetailspublic); each answers from a module that comes earlier.
+- control-plane: `r8-words-cache.test.mjs:166` (code; reads a `wizardrefusaltally` call).
+- plane, stand-ins of acquisition's `owedRun` and `owedFetch`: `fix4b-r77.test.mjs:144,160,197`, `fix5-r77.test.mjs:115`, `fix6-pending.test.mjs:31,84`, `r9-jobs.test.mjs:151,574,671`. These name acquisition as the earlier module; acquisition's own fixtures are accepted.
+
+I did not trace the 16 further than their lines. Owners to place them: screens-publish, control-plane and plane.
+
+## J51 · COMPLETE
+
+Fix round 10, item 95 (K5195): the one job named in B51, the fixture line `fixtures.test.mjs:55`. Read B51 whole and the verification rows in `build/plan/verify-marks.md` for acquisition (`fixtures.test:55 [code NOT_A_FINAL]`, "clear now with `fixtures-own: input`").
+
+Changed (`bio-plane/test/m/acquisition/fixtures.test.mjs:55`, commit e84e2f2b8f): the line that feeds `owedFetchAnswer` the bad code `NOT_A_FINAL` to prove it throws now ends in `// fixtures-own: input a bad code fed to this module's own owedFetchAnswer, to prove it throws; no provider's answer`. The assertion is unchanged. This is a marker only, so there is no behaviour to fail first; no cause, no failing-first test, no met ids to strike.
+
+Markers added: one, `fixtures-own: input` at `fixtures.test.mjs:55`. No `fixtures-generic` marker.
+
+Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/acquisition/*.test.mjs` from /home/user/bio: 54 files, 359 tests, 359 pass, 0 fail (one run; no `--test-force-exit`, the run exited by itself).
+
+Checks, absolute root /home/user/bio:
+- `checks/fixtures.mjs /home/user/bio acquisition`: 3520 files, 178 modules; answer 0, stub 0, code 0, contract 0, accepted 85; 0 failures. Line 55 is now `accepted(own)`.
+- `checks/fixtures.mjs /home/user/bio acquisition --list`: no unaccepted line for acquisition.
+- `checks/run.mjs /home/user/bio`: no finding in acquisition's paths (0 lines naming `acquisition/`); words 19247, unchanged since this change adds no string literal. The 16 FAIL lines in other modules are in J50's REPORT.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178; affected test files 0 of 2981. (I ran it with `origin/tranche/T51`; `tranche/T51` is not a local ref in this checkout.)
+- `checks/ownership.mjs /home/user/bio acquisition <merge-base> HEAD`: 1 file changed by acquisition, 0 failures.
+
+Setup: the job branch was behind tranche/T51, so I merged origin/tranche/T51 into it (fast-forward to 7915a4d54b) before `mail start`. `bio-plane/node_modules` was already present; `npm install` ran in bio-plane.
+
+Commit message has no model identifier (the session's model rule); it ends with the Claude-Session trailer only.
+
+Size (session_014DNpW1Q22zeKQnfdHbUNup): test runs 1, module lines 4479
