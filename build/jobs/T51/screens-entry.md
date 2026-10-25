@@ -210,3 +210,7 @@ BLOCKED (cause: context). Work is done and pushed on job/T51/screens-entry; the 
 
 Done: everything in "Completion (fix round 10, Wave B)" above (96/96 tests, fixtures 173 -> 1, two source fixes, markers, checks). Nothing half done; no workers.
 Exact next step: (1) mail the three REPORTs (published-case recipe; system hosting recorder; store-assembly `world.script` is process-global) and two QUESTIONs (SIGN_IN_PAUSED has no time in `stated`; office note required but worded optional) written in the completion section; (2) after BOB's CHANGE that fixes `storeWorld()`'s default group, drop `group: null` in `kit.mjs` `worldOf`; (3) `mail state --set COMPLETE`, post COMPLETE, ring BOB.
+
+## J13 · REPORT
+
+REPORT 2 (published-case recipe; for store-request). `front.test.mjs`:18: the published list stays scripted in the two tests that read it. No recipe in `storeWorld()` signs and commits a case edition, so the `fixtures.mjs --list` line remains (1 of 173). Needed: a store-request recipe that publishes a case edition into the world.
