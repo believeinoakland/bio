@@ -23,6 +23,7 @@ import { entitiesOf } from "../../../src/entities/index.mjs";
 import { moneyOf } from "../../../src/money/index.mjs";
 import { peopleOf } from "../../../src/people/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
+import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { consequencesModule, Consequences } from "../../../src/consequences/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { noSelection } from "../retrieval/fixtures.mjs";
@@ -204,15 +205,19 @@ export function world({ passages = true, group = "test-group", superseded = null
   /* inquiry as this module reads it; a test may state which inquiries are superseded (inquiry R16's index). */
   const inq = new Proxy(inquiry, { get: (t, p) => (p === "supersededBy" && superseded
     ? (id) => superseded.get(id) || [] : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
+  /* basis-versions, real, on this host and over the same inquiry (R27: a project's conclusion of a question); it joins every
+     promotion, so it is built with its tables. */
+  const bv = basisVersionsOf(host, { record, membership, promotion, content, inquiry, now: () => clock.now });
+  bv.migrate();
   const deps = { record, membership, promotion, conformance, content, provenance: prov, inquiry: inq, strength, money,
-    calculations, entities, people, caseInputs,
+    calculations, entities, people, caseInputs, basisVersions: bv,
     now: () => clock.now, ...(passages ? { passageText: (id) => texts.get(id) ?? null } : {}) };
   const c = consequencesModule(host, deps);
 
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, content, inquiry, strength, c, clock, ex, texts, determinations,
-    cures, carried, noCases, deps,
+    cures, carried, noCases, deps, bv,
     entities, money, people, calculations,
     /** R15: this module over the same record, with a sight rule that withholds the bundles in `hidden` from `pat`
      *  (and from no one else). membership's rule shows every bundle outside a project to a member (its R43), so a
@@ -236,9 +241,9 @@ export function world({ passages = true, group = "test-group", superseded = null
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, 'active', '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);
     },
-    project(title, owner) {
+    project(title, owner, cites = []) {
       const res = promotion.promote({ base: null, snapKey: `k${++n}`, author: V(owner), ownerMemberId: owner,
-        files: [{ path: "bundle.md", text: projMd(title) }], meta: { object_type: "project" } });
+        files: [{ path: "bundle.md", text: projMd(title, cites) }], meta: { object_type: "project" } });
       if (!res.ok) throw new Error(`fixture project refused: ${JSON.stringify(res).slice(0, 400)}`);
       return res.bundleId;
     },
@@ -370,10 +375,11 @@ function infoMd(id) {
           "---", "", "## Summary", "", "A document.", ""].join("\n");
 }
 
-function projMd(title) {
+function projMd(title, cites = []) {
   return ["---", "object_type: project", "schema: project@1", `title: "${title}"`, "current_state: forming",
           "prior_state: null", `created: "2026-09-27T00:00:00Z"`, `last_updated: "2026-09-27T00:00:00Z"`,
-          "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n");
+          ...(cites.length ? ["references:", ...cites.flatMap((t) => [`  - rel: cites`, `    target: ${t}`, `    status: confirmed`, `    note: ""`])]
+                           : ["references: []"]), "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n");
 }
 
 function provDoc(c) {
