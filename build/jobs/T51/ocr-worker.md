@@ -145,3 +145,19 @@ FIX-ROUND-10 (B8) · cause R7 (R26), fixtures, markers. Cause fixed in source; B
 **Checks:** format 0 failures; architecture 0 failures; coverage 31 of 31 ids named, 0 failures; ownership 0 failures. Module tests (`ocr-worker/test/ocr-worker.test.mjs`, before my test edit and rebuilt-dist question): 456 passed, 4 failed (3 are the counts above, now updated; 1 is R19 on the stale bundle). `fixtures.mjs --list` for ocr-worker: 3 lines, 2 waiting as above, 1 accepted (own).
 
 Size (session_012f28ABxU8SxXmiGjV5KtjB): test runs 14, module lines 1117
+
+## J8 · COMPLETE
+
+COMPLETE · fix round 10, B8 with B9 applied.
+
+**Cause R7 (R26) done:** see J7. After merging pdf-pixels (R6), all five r10-sparse-pages tests are green (four 3-line pictures: upright `turned_deg` 0, turned 90/180/270 read at 270/180/90; the two-page rotated PDF scan read at 270), red first on the old code. Threshold per B9: R25's floor (share >= 0.2), the words read and the turn. R26's "not yet met" mark removed (tests name it). Platform check: N and L (the extra passes' `own_ms`) are for the redeploy; the extra reads happen only for a page that would be refused.
+
+**Fixtures published** (`ocr-worker/test/fixtures.mjs`, `fixtures.test.mjs`, 7 tests): `memberRefusal`, `pageNotRenderable`, `memberWorker`; `fixtures-run` lines at fixtures.test.mjs:9, :24, :37 show as orphan-run until extraction and reading-pipeline add their `fixtures-contract` markers (their jobs).
+
+**Own lines done:** `ocr-worker.test.mjs` renderedPage: the stubbed renderer's success answer is now pdf-pixels' real `renderedPage("pdf")` (frame, digest as the case's own; R8/R9 expectations read route and dpi from it); pixelRefusal: `pixelRefusal("PIXELS_UNDETERMINED")`. Imported from `pdf-worker/test/pdf-pixels-fixtures.mjs`.
+
+**Markers (K5060):** `ocr-worker/test/ocr-worker.test.mjs:207` `fixtures-own: harness` (the engine seam of makeMember); `:221` `fixtures-own: harness` (a spy on the renderer seam; serves the provider's fixture answers). No fixtures-generic.
+
+**Checks:** format 0 failures; architecture 0; coverage 31 of 31, 0; ownership 0; fixtures --list ocr-worker: 3 failures, all orphan-run (above), 0 answer, 0 stub, 2 accepted(own). Module tests: 455 passed, 5 failed, all on the stale `dist/` (Part B boots the committed bundle): R19 manifest hash, and R23 jpeg/png image digest and anchoring (2 each), whose digest is the merged renderer's and the old bundle's differs. BOB's rebuild of `dist/` at the round's end clears them; none is a source defect. Words: no sentence added.
+
+Size (session_012f28ABxU8SxXmiGjV5KtjB): test runs 19, module lines 1117
