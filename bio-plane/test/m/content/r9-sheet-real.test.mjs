@@ -9,7 +9,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, bucket, doc, sha } from "../extraction/fixture.mjs";
 import { xlsx } from "./realread.mjs";
+import { registeredHomes } from "../provenance/fixtures.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
+import { heldTextAt, normUnits } from "../../../src/content/notice.mjs";
 
 const CAP = 128 * 1024;
 /** `n` data rows under a header, the fields of each a function of its row; one in `multi` has a quoted line break. */
@@ -32,8 +34,11 @@ function rowsToSize(target, opts) {
 async function home(bytes, { format, ct }) {
   const evidence = bucket();
   const d = sha(bytes);
-  const w = fresh({ evidence, provenance: { homeOf: (s) => (s === d ? { bundleId: "INFO-1", path: "table", encoding: "binary", bytes: bytes.length, registered: "t", authored: false } : null),
-                                          onTestimony: () => ({ ok: true }) } });
+  /* the capture's home is provenance's own: really promoted (its published fixture, K5044) */
+  const homes = registeredHomes();
+  const promoted = homes.register(d, { bundleId: "INFO-1", path: "table", bytes: bytes.length, encoding: "binary" });
+  assert.equal(promoted.ok, true, JSON.stringify(promoted).slice(0, 300));
+  const w = fresh({ evidence, provenance: homes.provenance });
   bundle(w.s, "INFO-1");
   await evidence.put(`bio/captures/${d}`, bytes);
   const document = doc({ digest: d, bytes: bytes.length, ct, format, fromText: format === "csv" });
@@ -89,4 +94,31 @@ test("R61 (G128g): an xlsx sheet over the unit cap reads as its rows once each (
   const units = w.x.unitsOf(d);
   assert.ok(units.units.length >= 2, `held as blocks (${units.units.length})`);
   assert.equal(content.passageText(id), textOf(rows));
+});
+
+test("R22 (G4, walk B10a): a cited range of a later block is read back from the range's first row, without the header the block repeats at its head", async () => {
+  const rows = rowsToSize(3 * CAP);
+  const { w, d, content } = await csvHome(rows);
+  const units = w.x.unitsOf(d).units;
+  assert.ok(units.length >= 3, `the sheet is held as blocks (${units.length} units)`);
+  const header = "id\tname\tamount\tnote";
+  const mintAt = (u) => content.mint({ bundleId: "INFO-1", captureSha: d, extent: u.extent, mintedBy: "member:bo" });
+  /* block 1 keeps the header: it is the sheet's first row, not a repeat */
+  const first = mintAt(units[0]);
+  assert.equal(first.ok, true, JSON.stringify(first));
+  assert.ok(content.passageText(first.content_id).startsWith(`${header}\n`), "block 0 keeps its header");
+  for (const k of [1, units.length - 1]) {
+    const e = units[k].extent;
+    const m = mintAt(units[k]);
+    assert.equal(m.ok, true, JSON.stringify(m));
+    const text = content.passageText(m.content_id);
+    assert.notEqual(text, null, `block ${k} is held`);
+    const [r0, r1] = e.range.split(":").map((a) => Number(a.replace(/[^0-9]/g, "")));
+    const lines = text.split("\n");
+    assert.equal(lines[0], textOf(rows).split("\n")[r0 - 1], `block ${k} begins at the range's first row (${e.range}), not the header`);
+    assert.equal(lines.length, r1 - r0 + 1, "its line count equals the range's rows");
+    assert.equal(text, textOf(rows).split("\n").slice(r0 - 1, r1).join("\n"));
+    /* the notice's grade reads the same text on both sides (R31 through the one rule, R61) */
+    assert.equal(heldTextAt(e, normUnits(w.x.unitsOf(d))).text, text);
+  }
 });

@@ -1,6 +1,7 @@
 /* content, fix round 9 (T51; K4831, K4837, K4910): a capture's held units read whole and as one rule (R46, R61), the part's kind named (R58, R1's `doc-part`),
    a capture cited and read by its whole digest (R59), and a partial reading said to be searched only so far (R60). Every test drives `content` at its interface; the
    units are what `extraction.unitsOf` answers (R36, R93, R107: a page and `next`, `state`, `counts`, each unit's `kind` and `lineRows`), stood in by the test. */
+import { notHeldRange } from "../acquisition/fixtures.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, bucket, V, sha, infoMd, provDoc, LAYER, onePagePdf } from "./fixture.mjs";
@@ -354,7 +355,7 @@ test("R59: the crop reads a capture's bytes by its whole digest through readRang
   assert.deepEqual(asked[0].slice(1, 3), [0, 8 * 1048576]);
   assert.deepEqual(asked.at(-1).slice(3), ["function", "object"], "the record's store and provenance are what readRange is handed");
   /* a capture readRange does not hold is not held, stated as before */
-  w.content.readRange = async () => ({ ok: false, reason: "NOT_HELD" });
+  w.content.readRange = async () => notHeldRange();
   assert.equal((await w.content.cropOf({ contentId: id, viewer: V("bo") })).reason, "CROP_CAPTURE_NOT_HELD");
   w.content.readRange = async () => { throw new Error("store failed"); };
   assert.equal((await w.content.cropOf({ contentId: id, viewer: V("bo") })).reason, "CROP_CAPTURE_NOT_HELD", "never a throw");
