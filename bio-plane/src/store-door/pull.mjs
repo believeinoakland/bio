@@ -19,6 +19,13 @@ import { word, localize } from "../setup-words/index.mjs";
 export const PULL_BUNDLE_SLUG = "doorbell-knock";
 
 const hexOf = (b) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+/* The knock's instant as a date a member reads ("30 September 2026"), from its ISO instant; an instant that does not parse is
+   given as written, never a knock id. */
+function dateOf(instant) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(instant ?? ""));
+  return m && MONTHS[+m[2] - 1] ? `${+m[3]} ${MONTHS[+m[2] - 1]} ${m[1]}` : String(instant ?? "");
+}
 const enc = (text) => {
   const b = new TextEncoder().encode(text);
   return { text, bytes: b.length, sha256: createSha256().update(b).hex() };
@@ -30,7 +37,9 @@ const enc = (text) => {
 function filing(record, doc, { knockId, by, identity, viewer, at }) {
   const cap = doc.capture || {};
   const id = `${record.allocId("INFO", at.slice(0, 4)).id}-${PULL_BUNDLE_SLUG}`;
-  const title = word("store-door.title.material_handed_doorbell", { knock_id: String(knockId) }).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+  /* R7 (K5129): the title names the knock's instant, never its id (`screens-intake` R32 (3)): every list draws the stored title. */
+  const date = dateOf((doc.source && doc.source.receipt && doc.source.receipt.received) || doc.retrieved || at);
+  const title = localize("store-door.title.material_handed_doorbell_on", "Material handed in at the doorbell on {date}", { date }).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
   const md = ["---",
     `id: ${id}`, "object_type: information", "schema: information@2",
     `title: ${JSON.stringify(title)}`, "current_state: collected", "prior_state: null",
@@ -114,8 +123,8 @@ export async function pullAndFile(deps, { knockId, by, identity, viewer, resolve
   const who = { knockId, by, identity, viewer, at };
   /* The pull and its promotion, one transaction (doorbell R13's `within`): a refusal of either writes nothing. */
   const within = (doc) => promoteOrFault(deps, doc, who);
-  const pulled = await (resolve ? doorbell.inboxResolve({ knockId, status: "pulled", by, reason, at, within })
-                                : doorbell.pullKnock({ knockId, by, at, within }));
+  const pulled = await (resolve ? doorbell.inboxResolve({ knockId, status: "pulled", by, reason, at, within, viewer })
+                                : doorbell.pullKnock({ knockId, by, at, within, viewer }));
   if (!pulled || pulled.ok !== true) return pulled;
   const { within: filed, ...answer } = pulled;
   if (!pulled.existed) return { ...answer, ...readingOfAnswer(deps, answer), bundle: bundleOf(filed) };
