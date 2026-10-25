@@ -912,3 +912,11 @@ Continue item C of SCREENS-INQUIRY #29's record (its last section, J42, read who
 ## B63 · CHANGE
 
 CHANGE (K5178; the K5175 audit `build/plan/audit-r10-2.md` rows screens-inquiry R23, R50): cause 30b's screen half, promised at K5090 and never sent. Its providers have all merged: inquiry R85 and R8 (mixed and all-"No" partitions, necessary legs beside grounds; K5113), basis-version-grammar R3 (K5090), basis-versions R51 (`conclude` with `reading`; K5109). Read cause 30b whole in `build/plan/archive/fix-round-10-T51-rewalk9-causes.md`, then R23 (state b, the "Save the answers" partition: a "No" passage necessary and in no part, the "Yes" passages with the others each names one part, all-"No" sends `grounds: []` and reads back as answered, K5059) and R50 (Conclude takes a member's own reading) in `build/requirements/screens-inquiry.md` whole. For each: a failing-first test at your interface over `storeWorld()` (real `inquiryground` and `conclude` acts), seen red on today's draw or send where it is not met, then the fix; if a test shows it is already met, say so with the test's name. Name R23 and R50 as met in your COMPLETE; BOB strikes the marks. Do this beside your op tables; it does not wait on them.
+
+## B64 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
