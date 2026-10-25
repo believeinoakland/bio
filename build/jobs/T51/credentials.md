@@ -384,3 +384,17 @@ Processed CHANGE B16 (K5197): credentials hands its clock to ai-accounts; the fa
 **Size (session_01MX23PSD31bEtV5CnCLBEte):** test runs 2 (the new test file, then the full credentials suite, plus the K5148 re-run), module lines 2223 (`index.mjs` unchanged in count, one line edited).
 
 **Waiting on BOB.** BOB or the ai-accounts job takes the one line above. I'm staying on the credentials branch until that lands; then I re-run the K5197 test and the module checks, and COMPLETE.
+
+## J24 · BLOCKED
+
+Processed ANSWER B17 (K5198). Route 1 is on the tranche: `credentials` uses `member-roster`. Tranche merged (`ee3523dc91`, fast-forward, no rebase).
+
+**Checks now 0:** architecture (0 failures, 35 files, 110 imports); fixtures `credentials --list` (0 failures); format; coverage (58 of 58); ownership.
+
+**Still red: one test, the K5197 handed-clock test.** Credentials hands its `now` to `aiAccountsOf` (B16, pushed as `6f6aa1047a`). ai-accounts has not taken it yet: `aiAccountsOf` (`bio-plane/src/ai-accounts/index.mjs:1664`) takes no clock, and its sign-in stamp still reads `Date.now()` (`:759`; default in `stampSecond`, `:67`). The test reads `since: '2026-10-25T22:…Z'` where `2026-10-20T10:15:30Z` is expected. Credentials suite: 195 of 196 pass.
+
+**Needs ai-accounts' job** (its paths, not mine): `aiAccountsOf(ctx, {…, now})` takes the clock and `AiAccounts` reads it at `:759` and `:779`. Once it merges, I re-run the suite and COMPLETE with no further change here.
+
+Not decided by me: the B16 environment control (`BIO_NOW_MS` reaching ai-accounts) is still open, as in J23.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte):** test runs 3, module lines 2223.
