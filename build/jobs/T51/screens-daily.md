@@ -488,3 +488,7 @@ Merged `tranche/T51` first.
 **Runs.** screens-daily suite 295/295. Users (impact: control-plane 83, plane 68, journey-check 2): 1027 tests, 1019 pass, 8 fail, all journey-check `pseudo*` (R29): `playwright-core` cannot be loaded (`npm ci` not run in bio-plane/src/journey-check in this container), not from this change. Checks: format 0, coverage 100/100, words 0, ownership 0, architecture 1 (the `uses` above).
 Requirement line proposed (BOB writes): **R103** A Find-in term item says which part of the document it lies in when it is not the body (the held `content.part_kind` word); none for body, an unkeyed item or an unknown kind. Test: the R17a test above.
 Size (session_0177s7VkCbiDMwJSDa3V4Dzp): test runs 8, module lines 4262
+
+## J24 · QUESTION
+
+R17a draw and the two queue-states fixture lines are done and pushed (record: Completion, SCREENS-DAILY #20). One thing I need: add record-core to screens-daily's uses in build/modules.json (queue-states.test.mjs imports record-core/fixtures.mjs per the FIX-E rule; architecture fails on it only). Also: retrieval-browse publishes no find-in term-item fixture (my find-in.test.mjs carries fixtures-contract: retrieval-browse findin-term-part; it needs a fixtures-run). Stand-in words are held content.part_kind rows, not localize (render cannot call it). I COMPLETE once architecture is green.
