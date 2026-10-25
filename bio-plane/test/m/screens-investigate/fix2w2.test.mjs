@@ -218,13 +218,12 @@ test("R1 R32 C94 person: the names of who added a name, declared a tie, made a c
   const gone = await me.act("recordpersonfact", { body: { person: chen, kind: "contact", value: "old@example.org", valid: { from: "2020-01-01", to: "2030-12-31" }, citation: cite } });
   const w = (await me.act("personfactwithdraw", { body: { factId: gone.fact_id, reason: "a typo" } })).withdrawn;
   const path = "/app/person/" + chen;
-  /* person answers no withdrawn fact (REPORTED in person.test.mjs, R32 (2)): the record the live copy holds is the withdrawn fact beside the store's own answer */
+  /* people R44: the store answers the withdrawn fact (`withdrawn_facts`); a handle the owner states for who withdrew it is the one scripted control below */
   const withWithdrawn = (extra = {}) => rewrite(world, me, (req, a) => {
-    if (!(a && a.json && a.json.result && req.url.includes("op=person") && Array.isArray(a.json.result.facts) && a.json.result.facts.length)) return a;
-    const f = a.json.result.facts.find((x) => x.fact_id === kept.fact_id) || a.json.result.facts[0];
-    return { ...a, json: { ...a.json, result: { ...a.json.result, facts: a.json.result.facts.concat([{ ...f, fact_id: gone.fact_id, withdrawn: { ...w, ...extra } }]) } } };
+    if (!(a && a.json && a.json.result && req.url.includes("op=person") && Array.isArray(a.json.result.withdrawn_facts))) return a;
+    return { ...a, json: { ...a.json, result: { ...a.json.result, withdrawn_facts: a.json.result.withdrawn_facts.map((f) => ({ ...f, withdrawn: { ...f.withdrawn, ...extra } })) } } };
   });
-  const p = await openAs(world, me, path, { plane: { person: withWithdrawn() } });
+  const p = await openAs(world, me, path);
   const m = main(p);
   const ent = (await me.read("entity", { query: { id: chen } })).entity;
   const at = (who) => dayOf(ent.aliases.find((x) => x.alias === who).at.slice(0, 10));

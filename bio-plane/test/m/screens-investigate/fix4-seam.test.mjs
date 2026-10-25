@@ -75,7 +75,7 @@ test("R4 C8 (words) Money, over the world: a fiscal year the team's profile cann
   fill(p, { "mf-doc": held.sha });
   p.fire(p.doc.getElementById("mf-doc"), "change");
   await settled(p);
-  fill(p, { "mf-amount": "1250000.00", "mf-asread": "$1,250,000", "mf-fiscal": "FY2025-26" });
+  fill(p, { "mf-amount": "1250000.00", "mf-asread": "$1,250,000", "mf-fiscal": "FY2025-27" });
   await press(p, "recordfact", { reason: REASON });
   await settled(p);
   const sent = p.byOp("recordfact");

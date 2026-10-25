@@ -72,7 +72,8 @@ test("R4 reads the trail (moneyset) and each of its figures (moneyof's fact, by 
   assert.deepEqual(r1.slice(2, 4), [a.from.as_written, a.to.as_written], "from and to, as the source writes them");
   assert.equal(r1[4], word("screen.money.didnotmove", { phase: adopted }));
   assert.equal(r1[5].trim(), word("screen.money.stage", { phase: adopted, stage: "" }).trim());
-  assert.equal(r1[6], word("screen.money.period", { from: dayOf(a.period.from.slice(0, 10)), to: dayOf(a.period.to.slice(0, 10)) }));
+  assert.equal(a.period.fiscal, "FY2021-22", "the store holds the fiscal year the figure was recorded with");
+  assert.equal(r1[6], a.period.fiscal, "its period is the fiscal year the store names, as the profile maps it");
   assert.equal(r1[7], word("screen.money.amount", { sign: "", amount: a.amount, currency: a.currency }));
   assert.ok(r1[8].startsWith("Lease amendment 1"), "the source, by its title");
   assert.ok(rowOf(p, F.adopted).querySelector('.cs-gap[data-gap="unrated"]'), "the store grades no upload: drawn unrated, never a grade the store did not give");
@@ -91,9 +92,9 @@ test("R4 reads the trail (moneyset) and each of its figures (moneyof's fact, by 
   const q = await openAs(world, me, "/app/money/" + trail, { plane: { money: graded } });
   const g = rowOf(q, F.adopted).querySelectorAll("td").map((d) => d.textContent);
   assert.ok(g[8].endsWith(word("mark.scale.capture.name") + "B"), "the source and its grade");
-  const held = (await me.read("money", { query: { id: F.adopted } })).fact;
-  assert.equal(held.period.fiscal, "FY2021-22", "the store holds the figure's fiscal year");
-  assert.equal(g[6], held.period.fiscal, "the fiscal year, as the store names it");
+  const heldFact = (await me.read("money", { query: { id: F.adopted } })).fact;
+  assert.equal(heldFact.period.fiscal, "FY2021-22", "the store holds the figure's fiscal year");
+  assert.equal(g[6], heldFact.period.fiscal, "the fiscal year, as the store names it");
 });
 
 test("R4 a value its source does not state is drawn undetermined and opens the row's panel at that item, with the evidence that would help", async () => {
