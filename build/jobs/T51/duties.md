@@ -147,3 +147,34 @@ Tests and checks:
 Other modules (P9, not changed): none new beyond the plan-work item above.
 
 Size (session_0183nvKGgohACwBMciK6jGZB): test runs 5, module lines 2210.
+
+## J5 · COMPLETE
+
+Follow-up 38 (K5108; test files only; QUEUE #36). queue's `noticed.test.mjs:292` table needs `dutiesOf` and `occurrencesOf` answers for a viewer, published by the real module.
+
+Applied:
+- `bio-plane/test/m/duties/fixtures.mjs`: new export `dutiesForViewer()` (no arguments), returning `{duties, asOf, entity, viewer, holder, dutyId, absentId, none, noneOccurrences, held, heldOccurrences}`.
+  - `none`: `dutiesOf({entity, as: "obligor", viewer})` over a record holding no duty: `{ok: true, entity, as: "obligor", duties: [], count: 0, limit: 100, truncated: false}`.
+  - `noneOccurrences`: `occurrencesOf({dutyId: absentId, asOf, viewer})` for an id the record does not hold: `{ok: false, reason: "NO_SUCH_DUTY"}`.
+  - `held`: `dutiesOf` over the one duty the holder sees (`duties` is `[dutyId]`).
+  - `heldOccurrences`: `occurrencesOf` for that duty over a window holding none of its triggers: `{ok: true, ..., occurrences: []}`.
+- `bio-plane/test/m/duties/fixtures.test.mjs`: one test naming R7 and R9, checking each answer and that the held listing equals the module's direct answer.
+- No `fixtures-own` or `fixtures-generic` marker added; no stub.
+
+For queue (its user re-points): the stub's `occurrencesOf` → `{ok: true, occurrences: []}` matches the real answer for a held duty with no occurrence in the window. A viewer holding no duty has no duty id to read, so the real `occurrencesOf` answers `NO_SUCH_DUTY`, not an empty list. notice-producers asks `occurrencesOf` only for duties `dutiesOf` returned, so this is not a product defect and nothing is reported as one.
+
+Merged `origin/tranche/T51` (ebaa7e8b8f) into the job branch before `mail start`, as the START required.
+
+Deferred: none. Found in other modules: none.
+
+Tests and checks:
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/duties/fixtures.test.mjs`: 5 pass, 0 fail.
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/duties/*.test.mjs`: 80 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 0 failures (178 modules).
+- `checks/fixtures.mjs /home/user/bio duties`: 0 failures (answer 0, stub 0, code 0).
+- `checks/architecture.mjs /home/user/bio duties`: 0 failures.
+- `checks/coverage.mjs /home/user/bio duties`: 34 of 34 live ids named by a test.
+- `checks/words.mjs /home/user/bio duties`: 0 failures.
+- `checks/ownership.mjs /home/user/bio duties tranche/T51 job/T51/duties`: 0 failures.
+
+Size (session_01MyQq2MvqjNMyK2TgY7expN): test runs 3, module lines 2217.
