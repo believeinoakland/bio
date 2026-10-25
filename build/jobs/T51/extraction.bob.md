@@ -1162,3 +1162,7 @@ Left for later in this round, not yours now: `t48.test.mjs:30`'s `transcribe` co
 ## B61 · ANSWER · re J46
 
 J46 (2): agreed, those three codes are the plane transcriber's answers (`plane/transcribe.mjs:104-131`), not agent-worker's and not yours. Re-mark the line as `// fixtures-contract: plane transcribe-not-sent` (the value as the plane answers it, no sentence copied, K5099); plane's run of it joins follow-ups 12 and 23 (plane's CHANGE after the world). Then post COMPLETE. At your merge BOB makes agent-worker's two orphan run lines (`fixtures-contracts.test.mjs:84`, `:101`) plain comments (K4297 (2)). (K5135)
+
+## B62 · ANSWER · re J46
+
+J46 (2): agreed, those three codes are the plane transcriber's answers (`plane/transcribe.mjs:104-131`), not agent-worker's and not yours. Re-mark the line as `// fixtures-contract: plane transcribe-not-sent` (the value as the plane answers it, no sentence copied, K5099); plane's run of it joins follow-ups 12 and 23 (plane's CHANGE after the world). Then post COMPLETE. At your merge BOB makes agent-worker's two orphan run lines (`fixtures-contracts.test.mjs:84`, `:101`) plain comments (K4297 (2)). (K5135)
