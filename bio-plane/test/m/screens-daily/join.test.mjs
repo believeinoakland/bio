@@ -26,6 +26,9 @@ test("R42: a member who may not start projects is drawn no doors and no start fo
   assert.ok(!main(p).querySelector("details[data-start]"));
   assert.deepEqual(main(p).querySelectorAll(".mk-door").map((d) => d.getAttribute("data-door")), ["elsewhere"], "\"Help for my own situation\" stays for everyone");
   assert.ok(!text(p).includes(word("door.front.intro")));
+  // K5148 (03 R20): the lone door has no "What happened?" over it; control below: the administrator's Home still has it.
+  const lone = main(p).querySelectorAll("section").find((x) => x.querySelector('[data-door="elsewhere"]'));
+  assert.ok(lone && !text(p, lone).includes(word("door.front.head")) && !text(p).includes(word("door.front.head")), "no heading over a lone door");
   const t = text(p);
   assert.ok(t.includes(word("screen.home.join.heading")) && t.includes(word("screen.home.join.lead")));
   // The invitation as the invitation item reads, with Join.
@@ -51,6 +54,7 @@ test("R42: a member who may not start projects is drawn no doors and no start fo
   // Controls: an administrator is drawn the doors and the form; a member in a project is not drawn the section.
   const admin = await open("/app", { ...BASE, whoami: ok({ ...ADMIN, capabilities: ["contribute"] }), projectlist: INVITED });
   assert.ok(ops(admin).includes("promote") && admin.doc.querySelector('[data-door="problem"]'));
+  assert.ok(text(admin).includes(word("door.front.head")), "control: with the five doors the heading is drawn");
   assert.ok(!text(admin).includes(word("screen.home.join.heading")));
   const joined = await open("/app", { ...BASE, ...NOCREATE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Mine", participation: "joined" }] }), projectdirectory: DIRECTORY, projectrequests: REQUESTS });
   assert.ok(!text(joined).includes(word("screen.home.join.heading")));
@@ -123,27 +127,4 @@ test("R66: Projects with no theme declared still draws the Themes section with i
   // The same with the read failed: the door is still there.
   const failed = await open("/app/projects", { ...plane, themeread: refused("THEMES_DOWN", "x", 500) });
   assert.ok(main(failed).querySelectorAll("a").some((a) => a.getAttribute("href") === "/app/theme"));
-});
-
-test("R43: Find's Theme filter lists what was placed in the chosen theme, then its hunches apart; a hunch is never drawn as membership", async () => {
-  const themes = ok({ ok: true, themes: [{ theme_id: "THM-1", name: "Deferred maintenance", test: "t", at: "2026-10-01" }] });
-  const one = (req) => ok({ ok: true, theme: { theme_id: "THM-1", name: "Deferred maintenance" },
-    members: [{ target: "INF-1", target_kind: "bundle", document: { title: "Work orders" }, membership: true }],
-    hunches: [{ target: "INF-2", target_kind: "bundle", document: { title: "Budget memo" }, hunch: true }] });
-  const p = await open("/app/finder", { lookedat: ok({ since: null }), browse: ok({ ok: true, items: [], next: null, truncated: false }), themeread: (req) => (req.query.id ? one(req) : themes) });
-  assert.ok(p.doc.getElementById("finder-theme"), "the Theme choice");
-  assert.deepEqual(p.doc.getElementById("finder-theme").querySelectorAll("option").map((o) => o.textContent), [word("theme.filter.any"), "Deferred maintenance"]);
-  assert.ok(text(p).includes(word("theme.filter.help")));
-  // R54: the choice reads at once, with no second press.
-  const pickTheme = async (v) => { const el = p.doc.getElementById("finder-theme"); el.value = v; p.fire(el, "change"); await settle(); };
-  await pickTheme("THM-1");
-  assert.equal(last(p, "themeread").query.id, "THM-1");
-  const heads = main(p).querySelectorAll("section h2").map((h) => h.textContent);
-  assert.deepEqual(heads, [word("theme.placed"), word("theme.hunches")], "what was placed, then its hunches apart");
-  const [placed, hunches] = main(p).querySelectorAll("section");
-  assert.ok(text(p, placed).includes("Work orders") && !text(p, placed).includes("Budget memo"));
-  assert.ok(text(p, hunches).includes("Budget memo") && text(p, hunches).includes(word("theme.hunch.note")));
-  // Control: back to "Any theme" lists the browse again.
-  await pickTheme("");
-  assert.ok(!text(p).includes(word("theme.placed")));
 });

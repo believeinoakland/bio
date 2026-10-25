@@ -100,6 +100,17 @@ export function itemWords() {
       const note = it.quote && typeof it.quote === "object" && typeof it.quote.text === "string" && it.quote.text.trim() ? it.quote.text : "";
       return { summary: cs.w("queue." + k + ".summary", fills), detail: cs.w("queue." + k + ".detail", fills) + (note ? ' <span class="muted">' + cs.esc(note) + "</span>" : "") };
     }
+    // Item 78 (1): a participant's request to leave (queue-producers R54) names her and the project in the producer's own words (the design holds
+    // none for this kind yet), with her word apart as the request to join carries it; the project is a reference to it.
+    if (it.kind === "project-leave") {
+      const s = it.subject || {};
+      const own = typeof it.summary === "string" ? it.summary.trim() : "";
+      const note = it.quote && typeof it.quote === "object" && typeof it.quote.text === "string" && it.quote.text.trim() ? it.quote.text : "";
+      const pid = s.id !== undefined && s.id !== null ? String(s.id) : "";
+      const name = typeof s.name === "string" && s.name.trim() ? s.name : typeof s.title === "string" && s.title.trim() ? s.title : "";
+      const ref = pid && name ? cs.ref("project", pid, name, []) : "";
+      return { summary: cs.esc(own), detail: (ref ? ref + " " : "") + (typeof it.detail === "string" ? cs.esc(it.detail) : "") + (note ? ' <span class="muted">' + cs.esc(note) + "</span>" : "") };
+    }
     if (k) return { summary: cs.w("queue." + k + ".summary", fills), detail: cs.w("queue." + k + ".detail", fills) };
     // R28: the subject by its title, beside the producer's words when they say something other than an address.
     const own = typeof it.summary === "string" ? it.summary.trim() : "";
