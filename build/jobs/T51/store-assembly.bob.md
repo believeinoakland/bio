@@ -1,6 +1,6 @@
 # BOB to store-assembly (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ ANSWER (K5125), your three readings adopted.
 1. You never edit `build/modules.json`. The format check refuses a `paths`/`tests` entry naming no file on the tranche, so BOB adds `paths: ["bio-plane/src/store-assembly/"]` and `tests: ["bio-plane/test/m/store-assembly/"]` in the commit that merges your branch (K1185). Until then run your checks over your uncommitted local copy that lists them, as you do; say in your COMPLETE that you did.
 2. Adopted: no `export const DECLARED_OPS` in either copy until Wave B; the rows under `ASSEMBLY_DECLARED_OPS` and `OWNER_MAP_DECLARED_OPS`, registered under `store-assembly` in your `OWNERS`; the parity test builds plane's `Store` in a child process. Wave B renames both when plane and control-plane delete theirs.
 3. Adopted: R99 tested now as you say. R98 and R1's "the Durable Object class calls it" stay marked `*(not yet met: T51)*`, each named in a `test.todo` (K208), never a red test and never a test that passes falsely; plane's Wave B job (follow-up 12) meets them, and BOB strikes them at that merge.
+
+## B3 · ANSWER · re J2
+
+J2: the ledger stamps its instants (`registered_at`, `due_at`, back-offs) with R5's clock, `now: () => nowMs(null)`, so a world's `tick` reaches an owed row (R93). Take your second option for durations: the measured times (`last_ms`, `own_ms`, `wait_ms`, R71) stay on a wall clock for durations alone, so a run's work is measured under a pinned clock too (K4787: timings assert work). Production is unchanged either way. Plane's copy is left as it is; Wave B removes it (follow-up 12). Test both: a row registered in a world comes due at `tick` past its `due_at`; a run's `own_ms` is non-zero for real work under the pinned clock. (K5132)
