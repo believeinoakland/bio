@@ -8,6 +8,15 @@ import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 export { ok, refused, refusedIn, bytes, MEMBER, ADMIN, word, hasWord };
 
+/* A fresh real world with the members a test names signed in by the real acts: `members({ mai: ["contribute", "create_projects"], rosa: [] })` answers `{ world, mai, rosa }`. */
+export async function members(spec = {}, opts = {}) {
+  const { storeWorld } = await import("../store-request/fixtures.mjs");   
+  const world = await storeWorld({ group: null, ...opts });   /* the world already records its team from INSTANCE_NAME (store-assembly K5149) */
+  const out = { world };
+  for (const [handle, capabilities] of Object.entries(spec)) out[handle] = await world.signIn(handle, capabilities && capabilities.length ? { capabilities } : {});
+  return out;
+}
+
 /* The owners' declarations of the ops this module's screens send that no hand row holds (C20's credential ops, C56's named requests and
    sweeps), registered as the plane registers them at start-up (op-declarations R80, R81), once per process before any table is read. They
    are read through the harness's one collector (test-support `declaredOpsOf`), never named or copied here (K3268). `link-sweep`'s two
@@ -15,8 +24,16 @@ export { ok, refused, refusedIn, bytes, MEMBER, ADMIN, word, hasWord };
    to BOB (screens-intake record): here they carry the capability the same kind of act names, so the screens' requests are held to the
    fields link-sweep declares. */
 const NEW_OPS = ["capturecredentialsupply", "capturecredentiallist", "capturecredentialwithdraw", "namedrequestset", "namedrequests", "sweepset", "sweepratify"];
-const rows = collectOwnerRows();
-registerDeclaredOps({ "screens-intake fixture": Object.fromEntries(NEW_OPS.filter((op) => rows[op]).map((op) => [op, rows[op].mutating && rows[op].needs === undefined ? { ...rows[op], needs: "contribute", stamps: ["author", "viewer"] } : rows[op]])) });
+/* Fix round 10 (K5054): a screen opened over the real store (`openWorld`) has the owners' own declarations, which the world registers itself
+   (store-assembly register.mjs), so this stand-in is registered only by the scripted opener, once, and only where it can still be (a file that
+   made a world never calls `open`). It goes with the last scripted table. */
+let standIns = false;
+function standInOps() {
+  if (standIns) return;
+  standIns = true;
+  const rows = collectOwnerRows();
+  try { registerDeclaredOps({ "screens-intake fixture": Object.fromEntries(NEW_OPS.filter((op) => rows[op]).map((op) => [op, rows[op].mutating && rows[op].needs === undefined ? { ...rows[op], needs: "contribute", stamps: ["author", "viewer"] } : rows[op]])) }); } catch { /* read already */ }
+}
 
 /* The assistant reachable for this member (interface-shell R20): on, with the group's key held and on. */
 const REACH = { assistantstate: ok({ on: true }), groupkeystate: ok({ on: true, held: true }) };
@@ -51,8 +68,21 @@ export async function idle(p, rounds = 400) {
 }
 
 export async function open(path, { plane = {}, me = MEMBER, reachable = false, screens = SCREENS } = {}) {
+  standInOps();
   const p = await boot({ screens, path, plane: { whoami: ok(me), ...(reachable ? REACH : {}), ...Object.fromEntries(Object.entries(plane).map(([op, a]) => [op, counted(a)])) } });
   await p.settle();
+  return p;
+}
+
+/* Fix round 10 (K5054; store-request R16-R19): a screen opened over the REAL store. `world` is `storeWorld()` (store-request's fixtures) and `as` a
+   member `world.signIn(...)` made; the page's door is the world's, so every op the test's own `plane` table does not name is answered by the
+   real modules from what real acts made. `plane` keeps only faults (a refusal, a silence, a delay) a real act cannot make. A test
+   makes its state by `as.act(op, {query, body})` or a recipe, and reads values from those answers, never from a literal. */
+export async function openWorld(path, { world, as, plane = {}, screens = SCREENS, ...rest } = {}) {
+  const { door, session } = world.boot(as);
+  const p = await boot({ screens, path, door, session, plane: Object.fromEntries(Object.entries(plane).map(([op, a]) => [op, counted(a)])), ...rest });
+  await p.settle();
+  await idle(p);
   return p;
 }
 
