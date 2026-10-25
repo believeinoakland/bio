@@ -10,7 +10,9 @@ import { store } from "./fixture.mjs";
 
 const child = fileURLToPath(new URL("./sa-plane-routes.mjs", import.meta.url));
 const preload = fileURLToPath(new URL("../../platform-sqlite.mjs", import.meta.url));
-const planeKeys = (path) => JSON.parse(execFileSync(process.execPath, ["--import", preload, child, path],
+/* plane's fixture, run in the child only: a path, never an import of a later module (P4) */
+const planeFixture = new URL(["..", "plane", "fixture.mjs"].join("/"), import.meta.url).href;
+const planeKeys = (path) => JSON.parse(execFileSync(process.execPath, ["--import", preload, child, planeFixture, path],
   { encoding: "utf8", maxBuffer: 16 * 1024 * 1024, env: { ...process.env, NODE_OPTIONS: "" } }));
 
 test("R6, R89: assembleStore's route keys equal plane's Store.routes over the same fixture ctx, for a plain address and for `rule`", async () => {
