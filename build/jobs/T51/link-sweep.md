@@ -230,3 +230,7 @@ B10 done (commit d4f95d29c3, pushed): R14 met. A project's own bundle (bundleInf
 - `checks/run.mjs /home/user/bio`: no finding in link-sweep's own files; its 3 findings are the screens-intake lines above.
 
 **Size (session_01UkFgnSip697B4cSDmc7tSS): test runs 1, module lines 1232.**
+
+## J9 · REPORT
+
+Found outside my paths (B12, reported the day found; not touched): fixtures.mjs answer findings in bio-plane/test/m/screens-intake/t51-watching-named.test.mjs at :76 (sweepset), :89 and :104 (sweepratify). Each hand-builds the answer (open({sweepset: ok({...})}) / open({sweepratify: ok({...})})) where the provider is link-sweep (earlier). link-sweep publishes no fixtures file for sweepset or sweepratify, so there is no published value for screens-intake to take. Two ways for BOB to place it: (a) link-sweep publishes sweepset and sweepratify fixtures (its own paths, a later job), then screens-intake takes them; (b) screens-intake's tests carry a fixtures-own marker with a reason. My recommendation is (a). Decision is BOB's.
