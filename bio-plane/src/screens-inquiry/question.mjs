@@ -163,7 +163,12 @@ function render(cs, view) {
      among the legs the strength leaves out (the targets of the question's own severed legs) */
   const sev = new Set(citedLegs.filter((l) => !live(l)).map((l) => String(l.target)));
   const grounds = doc.lists.grounds || [];
-  const partitioned = grounds.length > 0 && legs.some((l) => l.ground);
+  /* R23 (fix round 10, cause 30b; K5059): a question answered all "No" holds an empty partition (`grounds: []`, no leg names a ground); `inquirypartition` says it was
+     answered (`answered`), and the page reads that back (each passage "No, my answer falls") instead of asking again. A read still pending draws nothing to answer. */
+  const heldPart = d.partition && d.partition.state === "ok" && d.partition.value && d.partition.value.ok !== false ? d.partition.value : null;
+  const heldEmpty = !!heldPart && heldPart.answered === true;
+  const partitioned = (grounds.length > 0 && legs.some((l) => l.ground)) || heldEmpty;
+  const partPending = !partitioned && !!d.partition && d.partition.state === "loading";
 
   /* the readings (R25): every one `basisversions` answers, and the one the project stands on (read with `project`) */
   const vs = d.basis && d.basis.state === "ok" && Array.isArray(d.basis.value.versions) ? d.basis.value.versions : [];
@@ -442,6 +447,49 @@ function render(cs, view) {
     return inner ? cs.sec("act.owed_citeimported.label.question", inner, { help: "screen.imported.citeimp.tip", id: "cite-imported" }) : "";
   };
 
+  /* what it waits on: a document set aside, with who and why; restore it with a reason, or find another source. inquiry R58 (K5130): the set-aside waits are
+     `questionwaits`' `document_waits` (`{document, by, reason, at}`, the document set aside by the stamp `member:<id>`), beside the dated waits (`waits`), and its
+     `history` holds every set-aside and restore recorded with the question, in order (`{document, act: set_aside | restore, reason, by, at}`), a restore beside
+     the set-aside it undid; both acts stay. A document's name is its title, as its own record states it, never its id (R39) */
+  const waitsPart = () => {
+    if (d.waits && d.waits.state === "empty") return "";
+    const inner = cs.state("waits", view, (v) => {
+      const dated = Array.isArray(v) ? v : (v.waits || v.items || []);
+      const aside = Array.isArray(v.document_waits) ? v.document_waits : [];
+      const history = Array.isArray(v.history) ? v.history.filter((h) => h && h.document) : [];
+      const docName = (docId) => {
+        const im = docId ? later("wdoc:" + docId, "image", { id: String(docId) }) : null;
+        const f = im && im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? view.parts.front(im.value["bundle.md"]) : null;
+        return f && f.title ? String(f.title) : T("state.undetermined", { reason: "" });
+      };
+      const asideRows = aside.map((x, i) => {
+        const by = whoIs(x.by || x.setter || "");
+        const doc2 = x.document || "";
+        /* C81 (R5): the status line is its own element and the acts follow it as a group the stylesheet wraps and stacks at 390 px; they were
+           the inline flex line's own items, squeezed to 44 px wide and 300 px tall */
+        return `<div data-wait="aside" data-wait-document="${cs.esc(String(doc2))}"><p class="cs-wait">${W("screen.question.waits.setaside", { document: docName(doc2), who: by, reason: x.reason || "" })}`
+          + (x.at ? `<span class="mk-small">${W("screen.question.waits.since", { who: by, date: { html: cs.date(String(x.at), { year: false }) } })}</span>` : "")
+          + `</p><span class="mk-acts">` + (doc2 ? cs.act("heldrestore", { label: "act.heldrestore.label.question", data: { doc: doc2 } }) : "")
+          + cs.act("search", { label: "act.search.label.question", data: { q: heading } }) + "</span></div>";
+      }).join("");
+      const datedRows = dated.map((x, i) => {
+        const by = whoIs(x.setter || x.by || x.handle || "");
+        const doc2 = x.document || x.bundle_id || x.capture || "";
+        const said = doc2 && x.reason !== undefined
+          ? W("screen.question.waits.setaside", { document: x.title || docName(doc2), who: by, reason: x.reason || "" })
+          : W("screen.question.waits.item", { text: x.text || x.what || "" });
+        return `<div data-wait="${i}"><p class="cs-wait">${said}`
+          + (x.date || x.at ? `<span class="mk-small">${W("screen.question.waits.since", { who: by, date: { html: cs.date(String(x.date || x.at), { year: false }) } })}</span>` : "")
+          + `</p><span class="mk-acts">` + (doc2 ? cs.act("heldrestore", { label: "act.heldrestore.label.question", data: { doc: doc2 } }) : "")
+          + cs.act("search", { label: "act.search.label.question", data: { q: heading } }) + "</span></div>";
+      }).join("");
+      const log = history.length ? `<div data-wait="history">` + history.map((h) => `<p class="mk-small" data-history-act="${cs.esc(String(h.act || ""))}">`
+        + `<b class="rec">${cs.esc(docName(h.document))}</b> · ${h.act === "restore" ? cs.w("act.heldrestore.label.held") : cs.w("screen.held.setaside")} · ${cs.esc(whoIs(h.by || ""))}`
+        + (h.at ? " · " + cs.date(String(h.at), { year: false }) : "") + (h.reason ? ` · <span class="rec">“${cs.esc(String(h.reason))}”</span>` : "") + "</p>").join("") + "</div>" : "";
+      return asideRows + datedRows + log;
+    });
+    return inner ? cs.sec("screen.question.waits.head", inner) : "";
+  };
   const proposals = view.reachable ? vs.filter((v) => machine(v) && v.state === "suggested" && !v.hidden) : [];
   if (!citedLegs.length && !myRun && !asking && !concluded) {
     /* state c: new and empty, the three ways in (R38: "Capture a document for it" opens `capture` with this question) */
@@ -455,6 +503,8 @@ function render(cs, view) {
     /* R50, R51: nothing to conclude on before the first citation, said beneath the three ways; no "Concluding" section */
     out.push(`<p class="mk-note" data-owed="reading">${W("question.empty.conclude.own")}</p>`);
     out.push(importCite());
+    /* R2: what a question waits on is drawn before any citation too: a copy set aside for it is restored from here */
+    out.push(waitsPart());
     out[stepsAt] = stepsHtml(["current", "todo", "todo"]) + receipt;
     if (ui.said) out.push(ui.said.html);
     out.push(limitPart());
@@ -567,7 +617,9 @@ function render(cs, view) {
     return `<div class="mk-versions">${asks}</div>` + readback
       + cs.act("inquiryground", { label: "act.inquiryground.label.question", data: { inquiry: id, regroup: regroup ? "1" : "" }, tone: "primary" });
   };
-  if (live1.length && !partitioned) {
+  if (live1.length && partPending) {
+    out.push(cs.state(d.partition, () => ""));
+  } else if (live1.length && !partitioned) {
     out.push(`<div class="cs-sheet" data-state="ask"><b>${W("question.ask.first.title")}</b><p class="mk-small">${W("question.ask.first.says")}</p></div>`);
     out.push(cs.sec("question.ask.title", askForm(false), { help: "question.ask.help", id: "state-b" }));
   } else if (supports.length) {
@@ -606,48 +658,7 @@ function render(cs, view) {
     }), { help: "mark.strength.means" }));
   }
 
-  /* what it waits on: a document set aside, with who and why; restore it with a reason, or find another source. inquiry R58 (K5130): the set-aside waits are
-     `questionwaits`' `document_waits` (`{document, by, reason, at}`, the document set aside by the stamp `member:<id>`), beside the dated waits (`waits`), and its
-     `history` holds every set-aside and restore recorded with the question, in order (`{document, act: set_aside | restore, reason, by, at}`), a restore beside
-     the set-aside it undid; both acts stay. A document's name is its title, as its own record states it, never its id (R39) */
-  if (!(d.waits && d.waits.state === "empty")) {
-    const inner = cs.state("waits", view, (v) => {
-      const dated = Array.isArray(v) ? v : (v.waits || v.items || []);
-      const aside = Array.isArray(v.document_waits) ? v.document_waits : [];
-      const history = Array.isArray(v.history) ? v.history.filter((h) => h && h.document) : [];
-      const docName = (docId) => {
-        const im = docId ? later("wdoc:" + docId, "image", { id: String(docId) }) : null;
-        const f = im && im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? view.parts.front(im.value["bundle.md"]) : null;
-        return f && f.title ? String(f.title) : T("state.undetermined", { reason: "" });
-      };
-      const asideRows = aside.map((x, i) => {
-        const by = whoIs(x.by || x.setter || "");
-        const doc2 = x.document || "";
-        /* C81 (R5): the status line is its own element and the acts follow it as a group the stylesheet wraps and stacks at 390 px; they were
-           the inline flex line's own items, squeezed to 44 px wide and 300 px tall */
-        return `<div data-wait="aside" data-wait-document="${cs.esc(String(doc2))}"><p class="cs-wait">${W("screen.question.waits.setaside", { document: docName(doc2), who: by, reason: x.reason || "" })}`
-          + (x.at ? `<span class="mk-small">${W("screen.question.waits.since", { who: by, date: { html: cs.date(String(x.at), { year: false }) } })}</span>` : "")
-          + `</p><span class="mk-acts">` + (doc2 ? cs.act("heldrestore", { label: "act.heldrestore.label.question", data: { doc: doc2 } }) : "")
-          + cs.act("search", { label: "act.search.label.question", data: { q: heading } }) + "</span></div>";
-      }).join("");
-      const datedRows = dated.map((x, i) => {
-        const by = whoIs(x.setter || x.by || x.handle || "");
-        const doc2 = x.document || x.bundle_id || x.capture || "";
-        const said = doc2 && x.reason !== undefined
-          ? W("screen.question.waits.setaside", { document: x.title || docName(doc2), who: by, reason: x.reason || "" })
-          : W("screen.question.waits.item", { text: x.text || x.what || "" });
-        return `<div data-wait="${i}"><p class="cs-wait">${said}`
-          + (x.date || x.at ? `<span class="mk-small">${W("screen.question.waits.since", { who: by, date: { html: cs.date(String(x.date || x.at), { year: false }) } })}</span>` : "")
-          + `</p><span class="mk-acts">` + (doc2 ? cs.act("heldrestore", { label: "act.heldrestore.label.question", data: { doc: doc2 } }) : "")
-          + cs.act("search", { label: "act.search.label.question", data: { q: heading } }) + "</span></div>";
-      }).join("");
-      const log = history.length ? `<div data-wait="history">` + history.map((h) => `<p class="mk-small" data-history-act="${cs.esc(String(h.act || ""))}">`
-        + `<b class="rec">${cs.esc(docName(h.document))}</b> · ${h.act === "restore" ? cs.w("act.heldrestore.label.held") : cs.w("screen.held.setaside")} · ${cs.esc(whoIs(h.by || ""))}`
-        + (h.at ? " · " + cs.date(String(h.at), { year: false }) : "") + (h.reason ? ` · <span class="rec">“${cs.esc(String(h.reason))}”</span>` : "") + "</p>").join("") + "</div>" : "";
-      return asideRows + datedRows + log;
-    });
-    if (inner) out.push(cs.sec("screen.question.waits.head", inner));
-  }
+  out.push(waitsPart());
 
   /* the partition as the inquiry holds it (R23, R24): each ground's legs; a leg with no ground is a part of its own */
   const parts = [];
@@ -1091,6 +1102,11 @@ function render(cs, view) {
   /* the form is drawn once the reads that say which reading stands have answered, so its default is not kept from a pending draw */
   const settled = (!cur || cur.state !== "loading") && !(d.basis && d.basis.state === "loading");
   if (!concluded && cited && settled) {
+    /* R50 (fix round 10, cause 30b): her own reading rests on the question's grounds as they stand; the affirmation is asked only for parts that are alternatives (each separately
+       sufficient), one tick for each, the ground labels of the live supporting legs as the plane counts them (`basis-versions` R51, R53); necessary passages are no part and ask none */
+    const altParts = [...new Set(supports.filter(live).map((l) => String(l.ground || "").trim()).filter(Boolean))];
+    const affirmOwn = altParts.length < 2 ? "" : `<fieldset class="cs-field" id="affirm-own" data-affirm="own"><legend>${W("reading.affirm.head")}</legend><p class="mk-small">${W("reading.affirm.says", { n: String(altParts.length) })}</p>`
+      + altParts.map((pt, i) => `<label><input type="checkbox" name="affirm-own" id="affirm-own-${i}" value="${cs.esc(pt)}"> ${W("reading.affirm.part", { part: pt })}</label>`).join("") + "</fieldset>";
     const names = [...new Set((reading ? [reading] : []).concat(accepted.map((v) => String(v.name))))];
     concl += `<details class="mk-details" data-conclude="form"${stands ? " open" : ""}><summary>${W("act.conclude.label.question")}</summary>`
       + cs.choice("question-conclude-reading", "question.conclude.reading", names.map((n) => ({ value: n, text: n })).concat([{ value: "", key: "question.conclude.own.choice" }]), { value: stands ? reading : "" })
@@ -1098,6 +1114,7 @@ function render(cs, view) {
       + (project ? "" : cs.field("question-conclude-claim", "screen.question.conclude.claim", { area: true, rec: true }))
       + cs.field("question-conclude-falsifier", "question.conclude.falsifier", { area: true, rec: true, help: "question.conclude.falsifier.help" })
       + cs.checks("question-conclude-none", "question.conclude.falsifier", [["none", "question.conclude.nofalsifier"]])
+      + affirmOwn
       /* R121: her reason is its own required box (what Conclude sends as the reason); Commentary stays an optional note */
       + cs.field("question-conclude-reason", "question.conclude.reason", { area: true, rec: true, help: "question.conclude.reason.help" })
       + cs.field("question-conclude-commentary", "question.conclude.commentary", { area: true, rec: true, help: "question.conclude.commentary.help" })
@@ -1304,7 +1321,10 @@ const acts = [
   /* R35, R41: the reading she concludes on (the project's CURRENT), what would change it (required, or none stated), and
      her commentary (not evidence); sent by a member, never the assistant */
   { op: "conclude", label: "act.conclude.label.question", reasonField: "reason", rereads: ["inquiry", "basis"], failed: legNamesFailed,
-    refusals: { BASIS_VERSION_REFUSED: versionRefusal, BASIS_REFUSED: function (refusal, cs) {
+    refusals: { BASIS_VERSION_REFUSED: versionRefusal,
+      VERSION_AFFIRMATION_INCOMPLETE: (r, cs) => cs.w("refusal.VERSION_AFFIRMATION_INCOMPLETE",
+        { part: String((r && (r.part !== undefined ? r.part : Array.isArray(r.missing) ? r.missing[0] : "")) || "") }),
+      BASIS_REFUSED: function (refusal, cs) {
       const f = refusal && Array.isArray(refusal.findings) ? refusal.findings.find((x) => x && typeof x.detail === "string" && x.detail.trim()) : null;
       if (!f) throw new Error("no finding");
       return '<span data-finding="' + cs.esc(String(f.check || "")) + '">' + cs.esc(f.detail.trim()) + "</span>";
@@ -1329,6 +1349,9 @@ const acts = [
       const proj = view.project || (m ? m[1] : "");
       if (proj) q.project = proj; else if (claim && !version) q.conclusion = claim;
       if (version) q.version = version; else if (own) q.reading = own;
+      /* R50: the parts she ticked ("Before you accept", as R59), sent with her own reading only; a reading she chose was affirmed when it was accepted */
+      const aff = cs.value("affirm-own");
+      if (!version && own && Array.isArray(aff) && aff.length) q.affirmed = aff.join(",");
       if (falsifier) q.falsifier = falsifier; else q.no_falsifier = "1";
       if (commentary) q.commentary = commentary;
       q.reason = reason;
@@ -1516,7 +1539,7 @@ const acts = [
     send(view, el, cs) { cs.go("finder", el.dataset.q || ""); return null; } },
   /* R23, R24: what each passage carries, as a partition: "No" a part of its own; the passages that hold each other up one
      part together; each part's statement left empty. A restructure carries her reason (the shell's, NO_REASON) */
-  { op: "inquiryground", label: "act.inquiryground.label.question", rereads: ["inquiry", "strength", "basis"], failed: legNamesFailed,
+  { op: "inquiryground", label: "act.inquiryground.label.question", rereads: ["inquiry", "strength", "basis", "partition"], failed: legNamesFailed,
     /* R117: a refusal that carries `findings[]` draws the first finding's own detail; one with none, the code's sentence */
     refusals: { BASIS_VERSION_REFUSED: versionRefusal, BASIS_REFUSED: function (refusal, cs) {
       const f = refusal && Array.isArray(refusal.findings) ? refusal.findings.find((x) => x && typeof x.detail === "string" && x.detail.trim()) : null;

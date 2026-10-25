@@ -7,9 +7,12 @@ import { SCREENS } from "../../../src/screens-inquiry/index.mjs";
 import { boot, ok, textNodes } from "../interface-shell/harness.mjs";
 /* K4245, K5054: the op declarations are registered once, by the world (store-assembly R83: every owner's, op-declarations and op-grades), which
    this module's tests import for the acts they seed (op-tables §5.3) */
-import { storeWorld, WORLD_FOUNDER_HANDLE } from "../store-request/fixtures.mjs";
+import { storeWorld as requestWorld, WORLD_FOUNDER_HANDLE } from "../store-request/fixtures.mjs";
 
-export { SCREENS, word, storeWorld, WORLD_FOUNDER_HANDLE };
+export { SCREENS, word, WORLD_FOUNDER_HANDLE };
+/** store-assembly's world records its team at first boot (K5149, `INSTANCE_NAME`), so store-request's own seed of "world-town" is refused `GROUP_ALREADY_RECORDED`
+ *  (REPORT J43): the world is asked for no second seed until store-request's fixture follows. */
+export const storeWorld = (o = {}) => requestWorld({ group: null, ...o });
 /** strength's batch (fix round 6, G12c) around a function giving one question's answer: `ids` answers `results`, keyed by id, each the single read's answer */
 export const batchStrength = (one) => (r) => ok(r.query.ids ? { ok: true, results: Object.fromEntries(String(r.query.ids).split(",").map((id) => [id, one(id)])) } : one(r.query.id));
 export const P = "PROJ-2026-0007";

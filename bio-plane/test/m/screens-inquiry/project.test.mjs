@@ -2,9 +2,9 @@
  * over a scripted plane. Every expectation is a word read by key (R44). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn, MEMBER, ADMIN } from "../interface-shell/harness.mjs";
+import { ok, refusedIn, MEMBER, ADMIN, boot } from "../interface-shell/harness.mjs";
 import { NEEDS } from "../../../src/op-declarations/index.mjs";
-import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, lead, word, projectWith, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, lead, word, projectWith, storeWorld, WORLD_FOUNDER_HANDLE, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
 
 /* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
 
@@ -274,26 +274,45 @@ test("R29 beneath the rows: invite (an owner), leave, and start a project from t
   assert.equal(p.location.pathname, "/app/project/PROJ-2026-0050");
 });
 
-test("R30 state c: an administrator at a hidden project's existence, its owners inactive: the rescue and nothing else", async () => {
-  const p = await open(at(), { boot: { plane: { ...plane({ plane: { projectstage: seenWith, image: ok(null), projectparticipants: refusedIn("NO_SUCH_PROJECT"),
-    affordances: ok({ target: P, object_type: "project", current_state: null, acts: [{ id: "projectownerrescue" }], vocabularies: {}, capture_acts: [] }), projectownerrescue: ok({ ok: true }) } }), whoami: ok(ADMIN) } } });
-  const s = section(p, "project.rescue.title.nodate");
-  assert.ok(says(s, "project.rescue.says", { owners: "dev" }) && says(s, "project.rescue.own"));
+test("R30 R54 state c: an administrator at a hidden project's existence, its owners inactive: the rescue and nothing else; the title carries the date they stopped; controls: a refusal by its words, a project whose owners are active offers none", async () => {
+  /* the real state: a member makes a hidden project, the founder revokes her (`memberset`), so every owner is inactive; an enrolled administrator sees it at its existence only */
+  const world = await storeWorld();
+  const founder = await world.signIn(WORLD_FOUNDER_HANDLE);
+  const rosa = await world.signIn("rosa", { admin: true });
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const cal = await world.signIn("cal", { capabilities: ["contribute", "create_projects"] });
+  const strand = async (owner, title) => {
+    const id = await world.recipes.project(owner, title);
+    await owner.act("projectvisibilityset", { query: { projectId: id, setting: "hidden", reason: "kept to its owner" }, body: {} });
+    return id;
+  };
+  const project = await strand(ann, "Stormwater"), second = await strand(cal, "Culverts");
+  await founder.act("memberset", { body: { memberId: "ann", status: "revoked" } });
+  await founder.act("memberset", { body: { memberId: "cal", status: "revoked" } });
+  const since = (await rosa.read("projectownersgone", { query: { projectId: project } })).since;
+  assert.ok(since, "the plane states when the last owner stopped being active");
+  const page = async (as, path, plane = {}) => { const { door, session } = world.boot(as); const b = await boot({ screens: SCREENS, door, session, path, plane }); await b.settle(); return b; };
+  const p = await page(rosa, "/app/project/" + project);
+  const s = section(p, "project.rescue.title", { date: day(since) });
+  assert.ok(s, "the title carries the date the last owner stopped being active (`projectownersgone`'s since)");
+  assert.ok(says(s, "project.rescue.says", { owners: "ann" }) && says(s, "project.rescue.own"));
   assert.deepEqual(actsIn(main(p)), ["projectownerrescue"], "nothing else of the project");
+  assert.equal(p.byOp("projectownersgone")[0].query.projectId, project);
   fill(p, { "project-rescue-why": "its work must go on" });
   await press(p, "projectownerrescue");
   const q = p.byOp("projectownerrescue")[0].query;
-  assert.deepEqual([q.projectId, q.handle, q.reason], [P, "rosa", "its work must go on"]);
-  /* R54: the date of the title is `projectownersgone`'s `since` */
-  const dated = await open(at(), { boot: { plane: { ...plane({ plane: { projectstage: seenWith, image: ok(null), projectparticipants: refusedIn("NO_SUCH_PROJECT"),
-    affordances: ok({ target: P, object_type: "project", current_state: null, acts: [{ id: "projectownerrescue" }], vocabularies: {}, capture_acts: [] }), projectownersgone: ok({ ok: true, projectId: P, gone: true, since: "2026-09-30T09:00:00Z" }) } }), whoami: ok(ADMIN) } } });
-  assert.equal(dated.byOp("projectownersgone")[0].query.projectId, P);
-  assert.ok(section(dated, "project.rescue.title", { date: day("2026-09-30") }));
-  /* control: refused by its words (a project kept for its owner alone) */
-  const r = await open(at(), { boot: { plane: { ...plane({ plane: { projectstage: seenWith, image: ok(null),
-    affordances: ok({ target: P, object_type: "project", current_state: null, acts: [{ id: "projectownerrescue" }], vocabularies: {}, capture_acts: [] }), projectownerrescue: refusedIn("PROJECT_SCOPE_OWN", "A project kept for one member alone is never taken over.") } }), whoami: ok(ADMIN) } } });
-  fill(r, { "project-rescue-why": "x" });
-  assert.ok((await press(r, "projectownerrescue")).textContent.length > 0);
+  assert.deepEqual([q.projectId, q.handle, q.reason], [project, "rosa", "its work must go on"]);
+  assert.ok((await rosa.read("projectparticipants", { query: { projectId: project } })).participants.some((x) => x.handle === "rosa" && x.owner), "and it reached the store: she is an owner");
+  /* control: a refusal of the act (a project kept for its owner alone is never taken over) is drawn by its words */
+  const k = await page(rosa, "/app/project/" + second, { projectownerrescue: refusedIn("PROJECT_SCOPE_OWN", "A project kept for one member alone is never taken over.") });
+  fill(k, { "project-rescue-why": "x" });
+  assert.ok((await press(k, "projectownerrescue")).textContent.length > 0, "the refusal is drawn beside the act");
+  /* control: a project whose owners are still active is offered no rescue */
+  const bob = await world.signIn("bob", { capabilities: ["contribute", "create_projects"] });
+  const busy = await world.recipes.project(bob, "Active");
+  await bob.act("projectvisibilityset", { query: { projectId: busy, setting: "hidden", reason: "kept to its owner" }, body: {} });
+  const r = await page(rosa, "/app/project/" + busy);
+  assert.deepEqual(actsIn(main(r)), [], "no rescue is drawn for a project whose owners are active: " + actsIn(main(r)).join(","));
 });
 
 test("R1 R60 a member who has not joined: a findable project shows its name with Ask to join; a hidden one is unavailable, with no form", async () => {

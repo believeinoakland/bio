@@ -149,28 +149,22 @@ test("R2 R113 every act of the question screen declares the reads it changes: a 
   }
 });
 
-test("R2 R113 a hunch held re-reads the hunches and no other read; a document restored re-reads what it waits on and no other; control: a refused act re-reads nothing", async () => {
-  /* a real question and its hunch: held by the real act; the document that waits (inquiry's own set-aside answer) and its restore are the two answers left by hand */
+/** A page of the question `qid`, served by the world for `as`, over the plane's own answers but for the ones a test overrides. */
+const worldPage = async (world, as, qid, plane = {}) => {
+  const { door, session } = world.boot(as);
+  const page = await boot({ screens: SCREENS, door, session, path: "/app/question/" + qid, plane });
+  await page.settle();
+  return page;
+};
+test("R2 R113 a hunch held re-reads the hunches and no other read; control: a refused act re-reads nothing", async () => {
+  /* a real question resting on a document the member holds; the hunch is held by the page's own act */
   const world = await storeWorld();
   const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
   const project = await world.recipes.project(ann, "Stormwater");
   const held = await world.recipes.hold(ann, "Minutes", "The council met on Monday.", project);
-  const qid = (await ann.read("allocid", { query: { prefix: "INQ", year: "2026" } })).id;
-  const text = ["---", `id: ${qid}`, "object_type: inquiry", 'title: "Seven days"', 'created: "2026-09-27T00:00:00Z"', "surfaced_by: human", `project: ${project}`, "references:",
-    `  - target: ${held.bundle}`, "    rel: cites", "    status: confirmed", "basis:", `  - target: ${held.bundle}`, "    role: supports", "    grade: B", "    grade_axis: capture", "    grade_source: capture",
-    "---", "", "## Question", "", "Is the city repairing reported potholes within seven days?", "", "## Session Log", ""].join("\n");
-  const promoted = await ann.act("promote", { body: { bundleId: qid, base: null, snapKey: "20261001T000000_aaaa", meta: { object_type: "inquiry", title: "Seven days", current_state: "open",
-    created: "2026-09-27T00:00:00Z", last_updated: "2026-09-27T00:00:00Z" }, files: [{ path: "bundle.md", text }], register: [] } });
-  assert.equal(promoted.ok, true, JSON.stringify(promoted));
-  const fx = questionWaitsSetAside({ asker: "member:mai", setter: "member:ben" });
-  const waiting = { questionwaits: ok(fx.answer), heldrestore: ok({ ok: true }), image: (r) => (r.query.id === fx.document ? ok({ "bundle.md": DOCUMENT_MD }) : undefined) };
-  const pageOf = async (plane = {}) => {
-    const { door, session } = world.boot(ann);
-    const page = await boot({ screens: SCREENS, door, session, path: "/app/question/" + qid, plane: { ...waiting, ...plane } });
-    await page.settle();
-    return page;
-  };
-  const p = await pageOf();
+  const qid = (await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?", draw: true,
+    legs: [{ target: held.bundle, role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture" }] })).id;
+  const p = await worldPage(world, ann, qid);
   const a = readCounts(p);
   p.doc.getElementById("question-hunch").value = "Crews close reports when they inspect, not when they repair.";
   await press(p, "hypothesishold");
@@ -178,15 +172,27 @@ test("R2 R113 a hunch held re-reads the hunches and no other read; a document re
   assert.equal(p.byOp("hypothesishold").length, 1, "the act was sent");
   assert.deepEqual(changed(a, b), ["hunches"], "exactly the declared read: " + JSON.stringify({ a, b }));
   assert.equal((await ann.read("hypotheses", { query: { inquiry: qid } })).hypotheses.length, 1, "and it reached the store: the hunch is held");
-  await press(p, "heldrestore", { reason: "it is the right year" });
-  const c = readCounts(p);
-  assert.equal(p.byOp("heldrestore").length, 1, "the restore was sent");
-  assert.deepEqual(changed(b, c), ["waits"], "exactly the declared read: " + JSON.stringify({ b, c }));
   /* control: the same act refused re-reads nothing */
-  const r = await pageOf({ hypothesishold: refusedAct });
+  const r = await worldPage(world, ann, qid, { hypothesishold: refusedAct });
   const x = readCounts(r);
   r.doc.getElementById("question-hunch").value = "A suspicion.";
   await press(r, "hypothesishold");
   assert.equal(r.byOp("hypothesishold").length, 1, "the refused act was sent");
   assert.deepEqual(changed(x, readCounts(r)), [], "control: a refused act re-reads nothing");
+});
+
+test("R2 R113 a document restored re-reads what the question waits on and no other read", async () => {
+  /* the world's recipe: a capture request drained, its copy promoted and set aside by the member's own act (K4428's restore is the page's) */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Stormwater");
+  const aside = await world.recipes.setAside(ann, { project });
+  assert.equal((await ann.read("questionwaits", { query: { question: aside.question } })).document_waits.length, 1, "the document set aside is waited on");
+  const p = await worldPage(world, ann, aside.question);
+  const b = readCounts(p);
+  await press(p, "heldrestore", { reason: "it is the right year" });
+  const c = readCounts(p);
+  assert.equal(p.byOp("heldrestore").length, 1, "the restore was sent");
+  assert.deepEqual(changed(b, c), ["waits"], "exactly the declared read: " + JSON.stringify({ b, c }));
+  assert.equal((await ann.read("questionwaits", { query: { question: aside.question } })).document_waits.length, 0, "and it reached the store: the document is restored");
 });
