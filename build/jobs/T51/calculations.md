@@ -449,4 +449,4 @@ Fix round 10, follow-up 58 (B31, K5131): two causes. Branch job/T51/calculations
 
 **Tests and checks.** calculations module 151/151 pass (151 tests, 0 fail). Users: 20 non-calculations test files naming `calculationcreate`/`recordVisit`/`spotcheckvisit`: 221/221 pass. format 0 failures; architecture 0; coverage 49 of 49; words 0; fixtures 0; ownership 1 file, 0 failures (before commit of the working tree).
 **Deferred.** Nothing. **Found in another module.** Nothing new.
-Size (session_017WZeneCFenmdMXwGaZTxaK): test runs 9, module lines 4245
+Size (session_017WZeneCFenmdMXwGaZTxaK): test runs 9, module lines 4181
