@@ -8,11 +8,12 @@ export const drawsOn = (fm, inquiryId) => (Array.isArray(fm?.references) ? fm.re
   x && typeof x === "object" && x.rel === "cites" && x.status !== "severed" && String(x.target ?? "").trim() === inquiryId);
 
 
-/** R51: the extent fields of a leg, with the type `narrow` reads each as, and the leg fields a copied leg carries. */
+/** R51, R58: the extent fields of a leg (every one a citation carries, `citation`'s EXTENT_PARAMS), with the type `narrow` reads each as, and the leg fields a copied leg carries. */
 export const EXTENT_FIELDS = {
   extent_kind: "text", extent_ref: "text", extent_page: "int", extent_rect: "nums",
   extent_sheet: "text", extent_cell: "text", extent_slide: "int", extent_shape: "int",
-  extent_para: "int", extent_run: "int", content_id: "text",
+  extent_para: "int", extent_run: "int", extent_range: "text", extent_table: "int", extent_part: "text",
+  extent_cited_as: "text", content_id: "text",
 };
 /* `target_edition` so a leg on another group's finding is copied whole (N522) */
 export const LEG_COPY_KEYS = ["target", "target_edition", "derivation_kind", "derivation_from", "derivation_to",

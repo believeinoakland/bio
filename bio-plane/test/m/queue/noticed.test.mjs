@@ -8,6 +8,8 @@ import { world, NOW, iso, byId } from "./world.mjs";
 import { Queue, QUEUE_MINT_CHECKS } from "../../../src/queue/index.mjs";
 import { classOfKind, QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS } from "../../../src/queuestate.mjs";
 import { noticeProducersOf } from "../../../src/notice-producers/index.mjs";
+import { checkResults } from "../people/fixtures.mjs";
+import { noticed } from "../money-checks/fixtures.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
 const HOUR = 3600000;
@@ -288,8 +290,8 @@ const QUIET_T40_T41 = {
 test("R51, R7, R11, R12, R14, R49: the real notice-producers' items (its R4, R6) reach the feed, homed, minted, offered, muted and sorted by due", () => {
   const asked = {};
   const w = world({}, { notices: (host, { membership }) => noticeProducersOf(host, { membership, ...QUIET_T40_T41,
-    people: { checkResults: () => ({ ok: true, results: [] }), listChecks: () => ({ checks: [] }) },
-    moneyChecks: { noticed: () => ({ ok: true, results: [] }) },
+    people: checkResults,
+    moneyChecks: { noticed: () => noticed() },
     duties: { dutiesOf: () => ({ ok: true, duties: [] }), occurrencesOf: () => ({ ok: true, occurrences: [] }) },
     answers: { standingAnswersFor: (a) => { asked.answers = a; return { ok: true, cursor: null, entries: [
       { question: { id: "STQ-1", question: "who signed the lease?" }, run: "r1", at: iso(NOW - HOUR), finds: { ids: ["DOC-2"] },

@@ -3,9 +3,10 @@
    `basisVersions` at the interface, over the real record, promotion, content and membership. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, block, V, MACHINE } from "./fixture.mjs";
+import { world, block, version, V, MACHINE } from "./fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { citationExtent } from "../../../src/content/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", Q = "INQ-2026-0001-q";
 const NOW = "2026-09-28T01:00:00Z", ALICE = "member:alice";
@@ -233,4 +234,107 @@ test("R51, R3: a question whose legs carry no ground and one of them cuts agains
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
   const [v] = read(w).versions;
   assert.deepEqual(v.legs.map((l) => [l.target_id, l.role, l.ground]), [[DOC, "supports", "g1"], [DOC2, "cuts_against", ""]]);
+});
+
+/* R58 (fix round 10, cause 23; K5056): a version's leg keeps every extent field its citation carries. Each case is a leg
+   of the question as a member cites it; the extent's own fields reach `basis_version_legs` and `basisVersions`. */
+const BOOK = "INFO-2026-0003-book", TBL = "INFO-2026-0004-tbl", PRT = "INFO-2026-0005-part", IMG = "INFO-2026-0006-img";
+const SHEET = "INFO-2026-0007-sheet", PNG = "a".repeat(64);
+const R58_CASES = [
+  ["sheet-range", { target: BOOK, extent_kind: "sheet-range", extent_sheet: "csv", extent_range: "A2:E2" }],
+  ["doc-table", { target: TBL, extent_kind: "doc-table", extent_table: 0, extent_cell: "A1" }],
+  ["doc-part", { target: PRT, extent_kind: "doc-part", extent_part: "word/footnotes.xml" }],
+  ["cited_as", { target: IMG, extent_kind: "image", extent_part: PNG, extent_cited_as: "bytes" }],
+];
+function setup58(legs, { held = null } = {}) {
+  const w = world();
+  w.member("alice");
+  const facts = { [BOOK]: { captureFormat: "xlsx", containerExtent: { container: "xlsx", levels: ["sheets"], images: [], sheets: [{ name: "csv", rows: 99, cols: 9 }] } },
+                  [TBL]: { captureFormat: "docx", containerExtent: { container: "docx", levels: ["paragraphs", "tables"], paragraphs: 3, tables: [{ rows: 2, cols: 3 }], images: [] } },
+                  [PRT]: { captureFormat: "docx", containerExtent: { container: "docx", levels: ["paragraphs"], paragraphs: 3, images: [] } },
+                  [IMG]: { captureFormat: "docx", containerExtent: { container: "docx", levels: ["images"], images: [{ part: PNG, mime: "image/png" }] } },
+                  [SHEET]: { captureFormat: "xlsx", containerExtent: { container: "xlsx", levels: ["sheets"], images: [], sheets: [{ name: "csv", rows: 99, cols: 9 }] } },
+                  [DOC]: {} };
+  for (const [id, f] of Object.entries(facts)) { const cap = w.doc(id); Object.assign(w.readings[cap], f); }
+  const basis = legs.map((l) => ({ role: "supports", ...l }));
+  const r = w.inquiry(Q, block(held ? { versions: held.versions, grounds: held.grounds, legs: held.legs, refs: held.legs.map((l) => l.target) }
+                                    : { basis, refs: legs.map((l) => l.target) }));
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
+  return w;
+}
+const extentOf = (l) => Object.fromEntries(Object.entries(l).filter(([k]) => k.startsWith("extent_") && k !== "extent_capture"));
+
+/* the document's version leg keeps each field; the answer's leg names its part by `content_id` (R38 has no extent
+   columns), the row of exactly the extent the citation carries */
+function keepsExtent(w, leg) {
+  const held = fmOf(w, Q).basis_version_legs.find((l) => l.target === leg.target);
+  for (const [k, val] of Object.entries(extentOf(leg))) assert.equal(String(held[k]), String(val), `${k} in basis_version_legs`);
+  const [v] = read(w).versions;
+  const got = v.legs.find((l) => l.target_id === leg.target);
+  const row = w.content.contentRow(got.content_id).extent;
+  for (const [k, val] of Object.entries(citationExtent(leg))) assert.equal(row[k], val, `${k} of the part the answer's leg names`);
+}
+
+for (const [kind, leg] of R58_CASES)
+  test(`R58: a ${kind} leg of the question keeps every extent field its citation carries through conclude, in basis_version_legs and in the basisVersions answer`, () => {
+    const w = setup58([leg, { target: DOC }]);
+    const r = conclude(w, { reading: WORDS, falsifier: "the minutes say otherwise" });
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 600));
+    keepsExtent(w, leg);
+    assert.equal(w.count("inquiry_basis_version_legs"), 2);
+  });
+
+test("R58 control: a doc-para leg concludes as before and keeps its paragraph and run", () => {
+  const leg = { target: DOC, extent_kind: "doc-para", extent_para: 1, extent_run: 0 };
+  const w = setup58([leg]);
+  const r = conclude(w, { reading: WORDS, falsifier: "the minutes say otherwise" });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 600));
+  keepsExtent(w, leg);
+});
+
+const R58_LEGS = R58_CASES.map(([, l]) => l);
+
+test("R58: the same legs composed by appendVersion keep every extent field, in basis_version_legs and in the part each names", () => {
+  const w = setup58(R58_LEGS);
+  const r = w.bv.appendVersion({ target: Q, author: MACHINE, at: NOW,
+    version: { name: "composed", description: "a machine run proposes this", relationship: "and", author: MACHINE },
+    grounds: [{ ground: "main", asserted_by: ALICE, at: NOW }], legs: R58_LEGS.map((l) => ({ ...l, role: "supports", ground: "main" })) });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 600));
+  for (const leg of R58_LEGS) {
+    const held = fmOf(w, Q).basis_version_legs.find((l) => l.version === "composed" && l.target === leg.target);
+    for (const [k, val] of Object.entries(extentOf(leg))) assert.equal(String(held[k]), String(val), `${k} of ${leg.extent_kind}`);
+    const got = read(w).versions.find((v) => v.name === "composed").legs.find((l) => l.target_id === leg.target);
+    const row = w.content.contentRow(got.content_id).extent;
+    for (const [k, val] of Object.entries(citationExtent(leg))) assert.equal(row[k], val, `${k} of the part ${leg.extent_kind} names`);
+  }
+});
+
+test("R58: narrow copies every other leg with all of its extent fields and takes a sheet-range part as the narrowing", () => {
+  const legs = [...R58_LEGS.map((l) => ({ version: "first", ...l, role: "supports", ground: "main" })),
+                { version: "first", target: SHEET, role: "supports", ground: "main", extent_kind: "document" }];
+  const v = version("first", []);
+  const w = setup58(R58_LEGS, { held: { versions: v.versions, grounds: [{ version: "first", ground: "main", asserted_by: ALICE, at: "2026-09-27T00:00:00Z" }], legs } });
+  const r = w.bv.narrow({ target: Q, version: "first", ord: 4, author: ALICE, viewer: V("alice"), name: "narrowed",
+    description: "points at the one row, where the vote is recorded",
+    extent: { extent_kind: "sheet-range", extent_sheet: "csv", extent_range: "A2:E2" } });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 600));
+  for (const leg of R58_LEGS) {
+    const held = fmOf(w, Q).basis_version_legs.find((l) => l.version === "narrowed" && l.target === leg.target);
+    for (const [k, val] of Object.entries(extentOf(leg))) assert.equal(String(held[k]), String(val), `${k} of ${leg.extent_kind} kept by narrow`);
+  }
+  const narrowedLeg = fmOf(w, Q).basis_version_legs.find((l) => l.version === "narrowed" && l.target === SHEET);
+  assert.deepEqual([narrowedLeg.extent_kind, narrowedLeg.extent_sheet, narrowedLeg.extent_range], ["sheet-range", "csv", "A2:E2"]);
+  assert.deepEqual(w.content.contentRow(r.narrowed.to.content_id).extent.range, "A2:E2");
+});
+
+test("R51, R3 (K5077): a question of one labelled ground and one unlabelled supporting leg concludes on its own reading — the unlabelled leg is a necessary leg of the version, copied as it stands, and no part is left incomplete", () => {
+  const w = setup({ lines: [...block({ basis: [{ target: DOC, role: "supports", ground: "the minutes" }, { target: DOC2, role: "supports" }],
+                                       refs: [DOC, DOC2] }), ...GROUNDS.slice(0, 4)] });
+  const p = project(w);
+  const r = conclude(w, { project: p, reading: WORDS, falsifier: "the minutes say otherwise" });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
+  const [v] = read(w, { project: p }).versions;
+  assert.deepEqual(v.legs.map((l) => [l.target_id, l.role, l.ground]), [[DOC, "supports", "the minutes"], [DOC2, "supports", ""]]);
+  assert.deepEqual([v.state, v.parts, v.relationship], ["accepted", ["the minutes"], "and"]);
+  assert.equal(w.count("inquiry_basis_version_legs"), 2);
 });

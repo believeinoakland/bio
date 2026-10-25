@@ -1,6 +1,6 @@
 # BOB to queue (T51)
 
-**Read** · handled J16
+**Read** · handled J17
 
 ## B1 · START
 

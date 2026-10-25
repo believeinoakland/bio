@@ -2,8 +2,9 @@
    code, and a read that says "told nothing" is not a failure; the feed publishes what it cost. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, NOW, iso } from "./world.mjs";
+import { world, NOW, iso, sha, homed, MONITORING } from "./world.mjs";
 import { busy, everyKind } from "./every.mjs";
+import { readRefusals } from "../contradiction/fixtures.mjs";
 
 const side = (inquiry) => ({ kind: "claim", inquiry });
 const ids = (r) => r.items.map((i) => i.id).sort();
@@ -18,8 +19,8 @@ test("R51: facts.ms has whole non-negative milliseconds for each feed read, the 
   assert.deepEqual(Object.keys(r.facts.ms).sort(), [...FEEDS].sort(), "every feed this world reads");
   for (const [feed, v] of Object.entries(r.facts.ms)) assert.ok(Number.isInteger(v) && v >= 0, `${feed}: ${v}`);
   /* a feed that threw is timed too */
-  const t = busy({ monitoring: { flagged: () => { throw new Error("no"); }, monitoring: () => ({ ok: true, items: [], truncated: false }),
-                                 archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) } });
+  const t = busy({ monitoring: { flagged: () => { throw new Error("no"); }, monitoring: () => MONITORING.empty.monitoring,
+                                 archiveEligible: () => MONITORING.empty.archiveEligible } });
   const rt = t.read("alice");
   assert.ok(rt.facts.failed.some((f) => f.feed === "sources"));
   assert.ok(Number.isInteger(rt.facts.ms.sources) && rt.facts.ms.sources >= 0, "the feed that threw has its milliseconds");
@@ -83,18 +84,21 @@ test("R50: with no candidate index (nothing makes candidates, the assistant bein
   assert.deepEqual(r.facts.contradiction, { bound: 50, truncated: false });
 });
 
-test("R50, R7: a project contradiction.conflictNotices tells this viewer nothing about (NOT_A_PARTICIPANT, NO_SUCH_PROJECT, PROJECT_SEEN_NOT_A_PARTICIPANT) has no notice for her and is no failure; another refusal still names the feed", () => {
-  for (const code of ["NOT_A_PARTICIPANT", "NO_SUCH_PROJECT", "PROJECT_SEEN_NOT_A_PARTICIPANT"]) {
+test("R50, R7: a project contradiction.conflictNotices tells this viewer nothing about (NOT_A_PARTICIPANT, NO_SUCH_PROJECT) has no notice for her and is no failure; another refusal still names the feed", () => {
+  const real = readRefusals();
+  for (const [name, refusal] of [["notAParticipant", real.notAParticipant], ["unknownProject", real.unknownProject]]) {
+    const code = refusal.code;
     const w = everyKind();
     w.fakes.contradiction.conflictNotices = ({ project }) => (project === "PRJ-A"
-      ? { ok: false, reason: code, code, detail: "x" }
+      ? refusal
       : { ok: true, truncated: false, cursor: null, notices: [] });
     const r = w.read("alice");
-    assert.deepEqual(r.facts.failed.filter((f) => f.feed === "contradictions"), [], code);
+    assert.deepEqual(r.facts.failed.filter((f) => f.feed === "contradictions"), [], `${name} (${code})`);
     assert.ok(!r.items.some((i) => /-unseen$/.test(i.kind)), `${code}: no notice`);
     assert.ok(r.items.some((i) => i.kind === "contradiction-duty"), `${code}: the feed's other reads still answer`);
   }
   const w = everyKind();
+  // fixtures-generic: OTHER (a code no refusal of conflictNotices gives: the control that a refusal this module does not know is a failure)
   w.fakes.contradiction.conflictNotices = () => ({ ok: false, reason: "OTHER", code: "OTHER", detail: "x" });
   assert.deepEqual(w.read("alice").facts.failed.filter((f) => f.feed === "contradictions"),
     [{ feed: "contradictions", reason: "refused", read: "contradiction.conflictNotices", code: "OTHER" }], "control: another code is a failure");
@@ -118,8 +122,8 @@ function scaled(N, M) {
       entries: Array.from({ length: M }, (_, j) => ({ dependent: `INQ-${j % 4}`, candidate: `cc-${String(j).padStart(3, "0")}`, reason: "named wrong", since: iso(NOW - 5) })) }) },
     caseTensions: { caseTensions: ({ project }) => { counts.tensions += 1; return { ok: true, cursor: null, cases: [{ case: `CASE-${project}`, edition: 1, project,
       tensions: [{ candidate: "cc-000", member: "INQ-0", state: "open", depth: 1 }, { candidate: "cc-000", member: "INQ-1", state: "open", depth: 1 }] }] }; } },
-    monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
-                  archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }),
+    monitoring: { monitoring: () => MONITORING.empty.monitoring,
+                  archiveEligible: () => MONITORING.empty.archiveEligible,
                   flagged: () => ({ ok: true, limit: 200, truncated: false, items: Array.from({ length: M }, (_, j) => ({ bundleId: `DOC-${String(j).padStart(3, "0")}`, source_status: "modified", since: iso(NOW - 9) })) }) },
     intent: { gaps: () => { counts.gaps += 1; return { ok: true, gaps: [] }; } },
     /* machinery-producers' own reads (its R1) are its module's, answered here by a fake that raises nothing */
@@ -223,8 +227,8 @@ test("R49: the proposals feed reads the bundles behind its instances once for al
 test("R49: the leads read where their captures are registered and what points at those bundles once for all of them: the statements do not grow with the number of leads, and each lead's basis entry is its own", () => {
   const run = (K) => {
     const requests = Array.from({ length: K }, (_, j) => ({ request: `CR-${j}`, run: "r", target: "INQ-A", lead_inquiry: "INQ-S", address: `https://x.example/${j}`,
-      host: "x.example", purpose: "investigate", ua_mode: "civicos", capture_sha: `sha${j}`, captured_at: iso(NOW), attribution: { ok: true, statement: "s" } }));
-    const w = world({ captureRequests: { leads: () => ({ requests }) }, provenance: { homeOf: (sha) => ({ bundleId: `DOC-${sha.slice(3)}` }) } });
+      host: "x.example", purpose: "investigate", ua_mode: "civicos", capture_sha: sha(`sha${j}`), captured_at: iso(NOW), attribution: { ok: true, statement: "s" } }));
+    const w = world({ captureRequests: { leads: () => ({ requests }) }, provenance: homed(Object.fromEntries(requests.map((q, j) => [q.capture_sha, `DOC-${j}`]))) });
     w.member("alice"); w.bundle("INQ-S", "inquiry"); w.bundle("INQ-A", "inquiry");
     for (let j = 0; j < K; j++) w.bundle(`DOC-${j}`);
     w.leg("INQ-S", "DOC-1");                                       // only the second document is part of a case
