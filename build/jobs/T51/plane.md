@@ -1075,3 +1075,14 @@ Session session_01J62mKtsqgL6Mp8fpdgGVVo. The tranche (5906a22054) is merged. **
 - Rows owed (sentences a member reads): none.
 
 Size (session_01J62mKtsqgL6Mp8fpdgGVVo): test runs 74, module lines 3825
+
+## J62 · COMPLETE
+
+Fix round 10, batch 1 done (PLANE #61); details, numbers and the four fields in my record's last section.
+- LOAD-RED 5 (1) study: NOT reproduced, no cause established (9 valid whole-file L-PIN runs, measure green 9 of 9; 180 of 180 requests answered during an 8 s alarm; no product change justified). Found and fixed a different, reproducible test race in g54-l (publishedcase, 9 of 9 red under load; now 6/6 in three L-PIN runs, via a held alarm). The deployed-plane check rides biosmoke8.
+- R24 (b2): the cause is in case-carriage (the one-shot pure-JS SHA-256 in #copyOne, about half of the stall; native digest experiment 524 -> 268 ms under L-PIN) plus doc-clean's 25 ms: REPORT, one case-carriage job. r10-filing-stall is green quiet, red under L-PIN (447-682 ms).
+- R24 (d) done: the Worker logs each captureupload arrival (size, instant, cf-ray). R28b done: keeps_last.max_run_statements (8,210 for the 7.9 MB text's tick, kept after the finishing pass; 3 for a wait pass). R24 (b) r10-land-yields: red by name (p95 223-228 ms) until extraction merges.
+- FIX-L contracts run (job-registrar, keep-later, owed-later, owed-ledger): green; test-support's stub differs from the real registrar in 2 cases (array entry, keep with no parts). 8 fixtures-run lines wait for their users' markers.
+- COUPLED MERGE: every plane test fails at import until job/T51/signin-door merges with this branch, and BOB deletes the subscriptionsignin row (lines 30-32) of control-plane/owner-ops.mjs, or the start stops with "declared by two modules".
+- Checks: format, architecture, words, ownership 0 failures; coverage 37/37; light suite 521/521 and the heavy files alone green in the coupled state (release R24 inherited).
+- One safety check refused a scratch-file rm in a shell script of mine (K4696); not retried, nothing blocked.
