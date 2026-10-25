@@ -188,3 +188,15 @@ Size (session_01KK3V2itArCQimGgpgdg95M): test runs 12, module lines 1314
 ## J9 · COMPLETE
 
 Follow-up 11 done. Root: an undetermined delimiter (R7: fewer than 2 complete lines, or a tie) reads each record as one field, so info.cols was 1 and R22's guard never fired on a one-line 16,385-column file. Fix: the record walk also counts comma/semicolon/tab/pipe outside quotes while no delimiter is decided (info.wide); the guard judges max(cols, wide) and states the count and limit in the metric:columns marker. Dialect unchanged. Failing-first test text.test.mjs 'R22 a body of ONE line' (all four delimiters, with/without final newline, text and structure; 16,384 read; quoted commas not counted) seen red then green. csv-reader 97/97; users format-registry 59, office-readers 164, odf-reader 127, calculations 143, acquisition 356, reading-pipeline 437, extraction 381: 0 fail. Checks (absolute root): format, architecture, coverage 25/25, ownership, words, fixtures: 0 failures. fixtures markers added: none. Deferred: none. Platform N. Size (session_01KK3V2itArCQimGgpgdg95M): test runs 12, module lines 1314
+
+## J10 · COMPLETE
+
+Fix round 10, final pass item 74, cause 1 (diag2-06 §6): **R26 met** (BOB strikes the mark).
+- Root: `decideDelimiter` called a delimiter consistent when present on a majority of lines (`present * 2 > lines`, index.mjs), and `isDelimitedText` (R21) used no stricter rule for plain text, so prose with a comma on 3 of 4 lines in a `.txt`/`text/plain` file was a table.
+- Fix: `decideDelimiter` also returns the chosen delimiter's `modalLines`; the file dialect carries `records` (the deciding window's lines); `isDelimitedText` for a declared plain-text file (type `text/plain` or a `.txt` name, unless a CSV/TSV type or a `.csv`/`.tsv` name declares it) requires `modalLines * 2 > records`. Declared CSV/TSV keep presence (R7); `dialect()` and reads are unchanged.
+- Failing-first test: `delimited.test.mjs` two R26 tests (the walker's four paragraphs as `minutes.txt`, plus controls: three-column CSV as `.txt` and `.csv`, TSV `.txt`, ragged titled CSV `.csv`/text-plain, declared CSV/TSV type with `.txt` name). Seen red (minutes true), then green.
+- Why the tests missed it: the prose case had one comma line in three; no test had commas on most lines, and the cause-20 test was a ragged CSV.
+- Tests: csv-reader 99/99; users format-registry, reading-pipeline, office-readers, odf-reader, doc-clean (857 tests, 855 pass, 0 fail, 1 skipped). Not run: the remaining impact-named modules (2279 files); only `isDelimitedText`'s answer for plain-text prose changed.
+- Checks (absolute root): format, architecture, coverage 26/26, ownership, words, fixtures: 0 failures. fixtures markers added: none. Deferred: none.
+- Found elsewhere: `bio-plane/dist/bio-plane.bundled.mjs` (plane bundle, includes csv-reader) is now stale; BOB regenerates. Door twin (upload `comma-minutes.txt` through control-plane's r8-kit) is for BOB to place (K5138).
+Size (session_016SDhXPpFVHc4twnonLuCEQ): test runs 4, module lines 1323
