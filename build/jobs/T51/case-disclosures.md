@@ -232,3 +232,7 @@ Size (session_0137mVoPheg67hT8zpcCsqQL): test runs 6, module lines 2447
 
 **Tests and checks:** case-disclosures 116 pass / 0 fail; ratification 335 pass; case-import 162 pass; case-authoring 256 pass / 1 fail (item 2). `checks/fixtures.mjs … case-disclosures --list`: no new line (accepted 2 as before; no marker added), 0 failures; coverage 34 of 34, 0 failures; format 0; architecture 0; ownership 0; words: no finding in my module (the run's other failures are store-assembly's, control-plane, interface-shell, store-request and actions').
 Size (session_01Jh7vJfztCtrsN747UW4pTj): test runs 9, module lines 2
+
+## J14 · COMPLETE
+
+COMPLETE · B12. R15 met (passages rows carry the extent object and parsed chain; recompute test red then green; branch pushed). REPORT: (1) door case (publish, served checker recreates, caseimport recreates) is BOB's to place; (2) bio-plane/test/m/case-authoring/carries.test.mjs:157 (R55) pins the string extent and now fails 1 of 257, case-authoring must take the object; details in my record.
