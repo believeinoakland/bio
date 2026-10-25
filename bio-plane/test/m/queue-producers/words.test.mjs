@@ -7,7 +7,7 @@
    the job's REPORT, and the item is still raised. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso, said, dayWord, atWord } from "./world.mjs";
+import { world, byId, NOW, iso, said, dayWord, atWord, MONITORING, DOCKET } from "./world.mjs";
 import { busy, everyKind } from "./every.mjs";
 import { hasWord, word } from "../../../src/setup-words/index.mjs";
 
@@ -121,28 +121,29 @@ test("R43 (R2): objective-gap reads .summary with what the gap says else .summar
 });
 
 test("R43 (R2, R40): source-modified and source-removed read the document's title, else queue.source.untitled with the local day of its earliest capture's retrieval; with no capture day readable the fill is left empty; the detail is queue.source.detail", () => {
-  const w = busy({ monitoring: { flagged: () => ({ ok: true, limit: 200, truncated: false, items: [
-    { bundleId: "B-TITLED", source_status: "modified", since: iso(NOW) }, { bundleId: "B-GONE", source_status: "removed", since: iso(NOW) },
-    { bundleId: "B-CAPTURED", source_status: "modified", since: iso(NOW) }, { bundleId: "B-NONE", source_status: "removed", since: iso(NOW) }] }),
-    monitoring: () => ({ ok: true, items: [], truncated: false }),
-    archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) } });
-  w.bundle("B-TITLED", "information", { title: "Water Quality Report" }); w.bundle("B-GONE", "information", { title: "Zoning Memo" });
-  w.bundle("B-CAPTURED", "information", { title: null }); w.bundle("B-NONE", "information", { title: null });
-  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('sha-1','B-CAPTURED','p','utf8',?,1), ('sha-2','B-CAPTURED','p','utf8',?,1)`, iso(NOW), iso(NOW));
+  /* monitoring's real flagged read (its published fixture): one document found modified, one removed */
+  const F = MONITORING.seeded, MOD = F.bundles.modified, REM = F.bundles.removed;
+  const read = (w) => byId(w.read("alice", "member:alice", { now: F.now }));
+  const titled = busy();
+  titled.bundle(MOD, "information", { title: "Water Quality Report" }); titled.bundle(REM, "information", { title: "Zoning Memo" });
+  const m = read(titled);
+  const w = busy();
+  w.bundle(MOD, "information", { title: null }); w.bundle(REM, "information", { title: null });
+  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('sha-1',?,'p','utf8',?,1), ('sha-2',?,'p','utf8',?,1)`, MOD, iso(NOW), MOD, iso(NOW));
   w.run(`INSERT INTO captured_locators (address_norm, address, capture_sha, first_retrieved, last_retrieved) VALUES
          ('a','a','sha-1',?,?), ('b','b','sha-2',?,?)`, iso(NOW - 10 * DAY), iso(NOW), iso(NOW - 20 * DAY), iso(NOW));
-  const m = byId(w.read("alice"));
+  const u = read(w);
   const S = (kind, title) => said(`${K(kind)}.summary`, { title });
-  assert.equal(m["FINDING::source-modified::B-TITLED"].summary, S("source-modified", "Water Quality Report"));
-  assert.equal(m["FINDING::source-removed::B-GONE"].summary, S("source-removed", "Zoning Memo"));
-  assert.equal(m["FINDING::source-modified::B-CAPTURED"].summary,
+  assert.equal(m[`FINDING::source-modified::${MOD}`].summary, S("source-modified", "Water Quality Report"));
+  assert.equal(m[`FINDING::source-removed::${REM}`].summary, S("source-removed", "Zoning Memo"));
+  assert.equal(u[`FINDING::source-modified::${MOD}`].summary,
     S("source-modified", word(`${K("source")}.untitled`, { date: dayWord("2026-08-12") })), "the earliest of its captures' retrievals");
-  assert.equal(m["FINDING::source-removed::B-NONE"].summary, S("source-removed", said(`${K("source")}.untitled`, { date: "" })), "none readable: the fill is empty");
-  for (const it of Object.values(m).filter((i) => /^source-/.test(i.kind))) {
+  assert.equal(u[`FINDING::source-removed::${REM}`].summary, S("source-removed", said(`${K("source")}.untitled`, { date: "" })), "none readable: the fill is empty");
+  for (const it of [...Object.values(m), ...Object.values(u)].filter((i) => /^source-/.test(i.kind))) {
     assert.equal(it.detail, word(`${K("source")}.detail`));
     assert.deepEqual([it.summary_key, it.detail_key], [`${K(it.kind)}.summary`, `${K("source")}.detail`]);
   }
-  assert.equal(m["FINDING::source-modified::B-CAPTURED"].title, null, "R40: the title stays null");
+  assert.equal(u[`FINDING::source-modified::${MOD}`].title, null, "R40: the title stays null");
 });
 
 test("R43 (R4–R7): contradiction items read .detail.open, .taken_up and .explained_not_shown by the candidate's state; the unseen notices read their own .detail, not the notice's fixed sentence; side-corrected reads .detail.reason only when the correction states one; tension-after-publication reads .summary.unnumbered with no edition", () => {
@@ -211,17 +212,19 @@ test("R43 (R23): attribution-unchosen names the case and the observation by its 
 });
 
 test("R43 (R30): docket-core-due reads the item's own sentence by its kind and .detail.tail, and .summary.edition only when an edition is stated; a kind the list holds no `what` for is raised with an empty fill", () => {
+  /* docket's real response item (its published fixture) beside two kinds it does not publish: a statement stated with no edition, and a kind this module has no `what` for */
+  const CD = DOCKET.case, R = DOCKET.due.items[0];
   const w = busy({ docket: { coreDue: () => ({ ok: true, count: 3, wrote: false, items: [
-    { case: "CASE-D", kind: "response", ref: "R-1", edition: 1, since: iso(NOW - DAY) },
-    { case: "CASE-D", kind: "statement", ref: "S-1", since: iso(NOW - DAY) },
-    { case: "CASE-D", kind: "novel", ref: "N-1", since: iso(NOW - DAY) }] }) } });
+    R,
+    { case: CD, kind: "statement", ref: "S-1", since: iso(NOW - DAY) },
+    { case: CD, kind: "novel", ref: "N-1", since: iso(NOW - DAY) }] }) } });
   const m = byId(w.read("alice"));
   const D = (k) => `${K("docket-core-due")}.${k}`, tail = word(D("detail.tail"));
-  const a = m["OBLIGATION::docket-core-due::CASE-D::response::R-1"], b = m["OBLIGATION::docket-core-due::CASE-D::statement::S-1"], c = m["OBLIGATION::docket-core-due::CASE-D::novel::N-1"];
-  assert.equal(a.summary, word(D("summary.edition"), { case: "CASE-D", what: word(D("what.response")), edition: 1 }));
-  assert.equal(b.summary, word(D("summary"), { case: "CASE-D", what: word(D("what.statement")) }), "no edition stated: the base sentence");
+  const a = m[`OBLIGATION::docket-core-due::${CD}::response::${R.ref}`], b = m[`OBLIGATION::docket-core-due::${CD}::statement::S-1`], c = m[`OBLIGATION::docket-core-due::${CD}::novel::N-1`];
+  assert.equal(a.summary, word(D("summary.edition"), { case: CD, what: word(D("what.response")), edition: R.edition }));
+  assert.equal(b.summary, word(D("summary"), { case: CD, what: word(D("what.statement")) }), "no edition stated: the base sentence");
   assert.equal(b.detail, `${word(D("detail.statement"))} ${tail}`);
-  assert.equal(c.summary, said(D("summary"), { case: "CASE-D", what: "" }), "an unknown kind: the fill left empty, the item still raised");
+  assert.equal(c.summary, said(D("summary"), { case: CD, what: "" }), "an unknown kind: the fill left empty, the item still raised");
   assert.equal(c.detail, tail);
 });
 
