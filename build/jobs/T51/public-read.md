@@ -347,3 +347,31 @@ Chain now: one level of reads, one of writes (files and manifest together), for 
 **Tests and checks.** public-read: 308 tests, 308 pass, 0 fail. Users (`impact.mjs origin/tranche/T51 HEAD` names 52 modules; run: ratification, publication, plane `g54-sweep`, control-plane `r8-caseratify-calls` and `t51-round7-seam`, screens-publish, case-authoring `editions`, case-disclosures `g50-acts`): 526 + 295 tests, 0 fail. format: 176 modules, 1 failure (`office-readers`' path `bio-plane/src/office-xml.mjs`, not mine, on the tranche already); architecture public-read: 0 failures; coverage public-read: 44 of 44 ids named, 0 failures; ownership: 4 files, 0 failures; words: no finding in my module (19 failures round-wide, none mine).
 
 Size (session_0184YebVjUHZmj4s1SrMEH85): test runs 9, module lines 3910
+
+## J27 · COMPLETE
+
+**COMPLETE (fix round 10, Wave A batch 4, public-read).** START B28 applied, commit 124baaaa6a on job/T51/public-read.
+
+**Fixtures published** (`bio-plane/test/m/public-read/fixtures.mjs`, new; each made by the real code at call time, never stored; checked against the real answer in `fixtures.test.mjs`, new):
+- `groupIdentityRegistrar` (R34): PROVIDER_MALFORMED, the first registration, PROVIDER_DECLARED. User: instance-setup (re-points in its job).
+- `assembleCaseContainerRefusal` (K5074; R6, R23): MATERIAL_MISSING at materials, BUCKET_FAILED at bucket_put, CASE_FILE_NOT_ASSEMBLED naming the finding. Users: ratification g54-paths, g57-heal (re-pointed in ratification's job).
+
+**Own fixture lines** (10 FIX-L contract markers, each on its own line directly above the value, `// fixtures-contract: <provider> <id>`): docket-real:21 and public-path:30, sampling:30, served:29 and relay:31 and door:29 (`answer-envelope door-helpers`); door:82, relay:40, relay:42 (`store-door store-replies`); group-fields:19 (`instance-setup group-identity-public`). The line numbers moved by the inserted marker lines.
+
+**Markers added** (for the merge, K5060):
+- `dec149.test.mjs` above line 130: `// fixtures-own: input` (a literal the negative control plants for the voice rule, which reads any answer; no module answers it).
+- `g54-attempt.test.mjs` above line 220: `// fixtures-generic: SOMETHING_ELSE` (an invented code, on purpose, to prove a code outside the closed set reads UNKNOWN).
+
+**Left at done** (`contract-no-run`, waiting on the providers' `fixtures-run`): answer-envelope door-helpers (6 lines above), store-door store-replies (3), instance-setup group-identity-public (1). Each provider's job runs its contract.
+
+**Deferred:** none. **Found in other modules:** `screens-publish/g54-page.test.mjs:114` fails (the sentence "couldn't be built yet" is drawn HTML-escaped as `couldn&#39;t`). It fails identically on the base commit before this job, so it is not from this change: screens-publish's job, or the words/escaping path, to settle. The op-table entries and the three public-read FIX-E users re-point in their own jobs. The two `owner-ops.mjs` rows are not touched here.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/public-read/*.test.mjs`: 309 pass, 0 fail.
+- touched files and fixtures.test: 61 pass, 0 fail.
+- user modules named by impact that import the changed files (case-disclosures g50-acts, op-declarations t35, screens-publish c47-seam and g54-page, control-plane r45/r48/r49 routes and case-inputs-public): 34 pass, 1 fail (the escaping above; it fails on the base too).
+- `checks/fixtures.mjs /home/user/bio public-read --list`: 0 failures; 10 `contract-no-run` (listed above), 2 `accepted` (the markers).
+- format 0 failures (178 modules); architecture 0; coverage 44 of 44 live ids named; ownership 0 (12 files); words 0 failures.
+- `impact.mjs origin/tranche/T51 HEAD`: 51 modules; the changed files are imported only by the user modules listed above.
+
+Size (session_01BEeDNCorrpjXyGB6RpWrrB): test runs 4, module lines 2956
