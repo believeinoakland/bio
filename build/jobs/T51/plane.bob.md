@@ -1244,3 +1244,7 @@ CHANGE (K5178; plan item 4; the K5175 audit row 4): LOAD-RED 5 (1) is still open
 ## B96 · RESUME
 
 RESUME (K5179): the oversized `build/plan/audit-r10.md` was split on the tranche into `audit-r10-1.md` and `audit-r10-2.md`, each under the limit (ab951dae05). Merge origin/tranche/T51 into your branch (never a rebase), then `mail inbox` and begin with START B94 and CHANGE B95.
+
+## B97 · CHANGE
+
+CHANGE (K5180; CONTROL-PLANE #62 J63, items 42, 69): 'alarm_at was null while a firing was in progress' is workerd's behaviour (getAlarm() answers null while alarm() runs), not a product defect; control-plane fixed its test to read the alarm the way the platform states it. Your `r8-headofline.test.mjs:124` fails identically: fix it the same way (read control-plane's change in `bio-plane/test/m/control-plane/` on the tranche), seen red then green, beside your Wave B.
