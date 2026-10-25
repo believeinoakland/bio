@@ -246,3 +246,7 @@ COMPLETE (TASKS #20, follow-up 44, K5117). Cause: reports of tasks/grammar.test.
 **Runs.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/tasks/*.test.mjs` (no force-exit, exits by itself): 135 tests (134 + 1), 0 fail, 0 cancelled. Checks with the absolute root: format 0; architecture 0; coverage 25 of 25, 0; words 0 (no new strings); `fixtures.mjs … tasks --list` 0 failures, no marker added; ownership 0.
 
 Size (session_01XHqSWAYfTVFiPw8iMY9K7P): test runs 4, module lines 1710
+
+## J12 · COMPLETE
+
+COMPLETE (TASKS #21, item 70, K5148). #routeTask now routes to the first active owner of the project the document is filed in (bundleInfo().project), after the bundle-is-a-project arm, before cites. Failing-first test in inbox.test.mjs seen red then green; suite 135 (134+1), 0 fail. Met: tasks R1 (filed-in-project clause). Checks format/architecture/coverage/words/fixtures/ownership all 0. REPORT: the through-the-door case (acquire into project, promote, drain, op=tasks shows owner) belongs to control-plane's door tests; I added none (K5138). Details: build/jobs/T51/tasks.md J11.
