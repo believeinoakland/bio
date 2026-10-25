@@ -156,3 +156,22 @@ AI-RUNS #29 · fix round 10, follow-up 21 (B6): plan-open-check contract. Test o
 **Note for BOB:** the job branch was 458 commits behind origin at start; my first `mail start` hit a rebase conflict on my own record. I aborted it, kept the old local branch as `stale/ai-runs-local` (its one start commit, af267bbab9), reset to origin/job/T51/ai-runs and re-ran start as the job's instructions say. Nothing from the stale branch was lost or merged.
 
 Size (session_019UFFfaJbR6QhDzY4q1jnEB): test runs 1, module lines 3812
+
+## J8 · COMPLETE
+
+AI-RUNS #29 · CHANGE B7 handled (K5094) with follow-up 21. Test only; no source, requirement or id change.
+
+**Merged** `tranche/T51` into `job/T51/ai-runs` (merge d902552d63), then applied the change.
+
+**Applied.** The two hand-built POST /run refusals under `fixtures-contract: agent-worker dispatch-refusal` now carry the worker's wire shape: `worker: "agent-worker"` beside `{ok, reason, code, detail}`, status 400, code BAD_BODY. Read `agent-worker/test/fixtures-contracts.test.mjs` whole; no sentence copied (the `detail` stays a stand-in that the test never reads for its text). Sites: `scheduler.test.mjs:239`, `t46.test.mjs:353`. Commit on `job/T51/ai-runs`.
+
+**Checks.**
+- ai-runs tests: 141 pass, 0 fail.
+- `fixtures --list`: 0 failures; accepted 3 (plan-open-check, and both dispatch-refusal sites). No `contract-no-run` remains.
+- format 0 failures; architecture 0 failures; coverage 59 of 59, 0 failures; words 0 failures; ownership 0 failures.
+
+**Markers added:** none in this change (no `fixtures-own` or `fixtures-generic`).
+
+**Deferred:** none. **Other modules:** none found. **Generated artifacts made stale:** none.
+
+Size (session_019UFFfaJbR6QhDzY4q1jnEB): test runs 2, module lines 3812
