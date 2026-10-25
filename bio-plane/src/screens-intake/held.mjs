@@ -138,16 +138,18 @@ function renderHeld(cs, view) {
   /* R4 (fix round 10, cause 33): the way between the pages. The sentence that more are waiting is drawn only with its door to the next page (the answer's `next`),
      and a door back when the member is past the first; the doors are the page read again (`heldcaptures`), the next one from the answer's `next`. */
   const pg = U.heldPage && U.heldPage.who === (U.who === "all" ? "all" : "mine") ? U.heldPage : null;
+  /* a word by its own key where the words table holds it, else the nearest held row (K4269); the rows owed: screen.held.who, .who.mine, .who.all, .next, .back */
+  const held_ = (k, alt) => (cs.w(k) !== k ? k : alt);
   const doors = (v) => {
     const next = v.truncated === true && typeof v.next === "string" && v.next ? v.next : "";
     const back = pg && Array.isArray(pg.trail) && pg.trail.length;
     return (next ? `<p class="mk-small" data-more="1">${cs.w("screen.held.more", { count: v.held.length })}</p>` : "")
-      + (next || back ? `<div class="mk-acts">${back ? cs.act("heldcaptures", { label: "screen.held.back", tone: "quiet", data: { back: "1" } }) : ""}`
-        + `${next ? cs.act("heldcaptures", { label: "screen.held.next", tone: "quiet", data: { after: next } }) : ""}</div>` : "");
+      + (next || back ? `<div class="mk-acts">${back ? cs.act("heldcaptures", { label: held_("screen.held.back", "document.read.prev"), tone: "quiet", data: { back: "1" } }) : ""}`
+        + `${next ? cs.act("heldcaptures", { label: held_("screen.held.next", "document.read.next"), tone: "quiet", data: { after: next } }) : ""}</div>` : "");
   };
   /* R4: whose captures the list shows, a filter between the viewer's own and everyone's (R90: the choice redraws and the page is read again with `member` or without) */
   const me = view.me && typeof view.me.member === "string" ? view.me.member : "";
-  const whoChoice = me ? cs.choice("ch-who", "screen.held.who", [["mine", "screen.held.who.mine"], ["all", "screen.held.who.all"]], { redraw: "who", value: "mine" }) : "";
+  const whoChoice = me ? cs.choice("ch-who", held_("screen.held.who", "screen.held.name"), [["mine", held_("screen.held.who.mine", "ai.whose.own")], ["all", held_("screen.held.who.all", "ai.whose.group")]], { redraw: "who", value: "mine" }) : "";
   const list = cs.state(view.data.held, (v) => cs.rows({
     id: "held",
     cols: ["screen.held.col"],

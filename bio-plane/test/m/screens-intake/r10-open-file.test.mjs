@@ -10,9 +10,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { generate } from "../../corpus.mjs";
-import { open, text, main } from "./page.mjs";
+import { open, text, main, word, hasWord } from "./page.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
-import { IMAGE_UNREAD } from "../../../src/screens-intake/standins.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const ADM = "adm-r10of-0123456789abcdef", PASSWORD = "the founder's long password, r10 open-file", ORIGIN = "https://group.example";
@@ -50,14 +49,17 @@ async function planeAnswers(auth, recipe, name) {
   return { sha, plane: { threatof: await read("threatof"), originalstate: await read("originalstate"), verdictnotes: await read("verdictnotes"),
                           scanfindings: { status: 200, json: await (await door("/api/?op=scanfindings&limit=1000", { headers: auth })).json() }, captureaccounts: await read("captureaccounts") } };
 }
-const said = (p) => text(p).includes(IMAGE_UNREAD[1]);
+/* the design's row `screen.open-file.image.unread` is owed (K4269); until it is held the sentence is the one the reading's owner holds for the type */
+const OWED = "screen.open-file.image.unread";
+const sentence = (type) => (hasWord(OWED) ? word(OWED, { type }) : word(`reading-pipeline.index.unsupported_${type}`));
+const said = (p, type) => text(p).includes(sentence(type));
 
 test("R68 (R35b; the real plane) a BMP, a type nothing reads, says on open-file that it is not read and that the structure check could not examine it; the scanner's note stays but does not stand for the structure", async () => {
   const auth = await founder();
   const { sha, plane } = await planeAnswers(auth, { kind: "bmp", seed: "rw9-A-13", size: { lines: 3 } }, "scan.bmp");
   assert.deepEqual(plane.threatof.json.result.image, { type: "bmp", read: false }, "the provider's own answer: " + JSON.stringify(plane.threatof.json).slice(0, 300));
   const p = await open(`/app/open-file/${sha}`, { plane });
-  assert.ok(said(p), "the unread-type sentence is drawn: " + text(p).slice(0, 400));
+  assert.ok(said(p, "bmp"), "the unread-type sentence is drawn: " + text(p).slice(0, 400));
   assert.equal(main(p).querySelectorAll("[data-unread-image]").length, 1, "once");
 });
 
@@ -66,6 +68,6 @@ test("R68 control (the real plane): a PNG is read, and open-file says nothing of
   const { sha, plane } = await planeAnswers(auth, { kind: "png", seed: "rw9-A-13-png", size: { lines: 3 } }, "scan.png");
   assert.equal(plane.threatof.json.result.image.read, true, JSON.stringify(plane.threatof.json).slice(0, 300));
   const p = await open(`/app/open-file/${sha}`, { plane });
-  assert.ok(!said(p));
+  assert.ok(!said(p, "bmp") && !said(p, "tiff") && !said(p, "heic"));
   assert.equal(main(p).querySelectorAll("[data-unread-image]").length, 0);
 });

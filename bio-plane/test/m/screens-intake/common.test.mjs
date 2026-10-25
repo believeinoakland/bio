@@ -4,7 +4,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, interfaceScript, interfaceScriptHash, checkScreens, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
-import { ALL_STAND_INS } from "../../../src/screens-intake/standins.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { OPS, SESSION_OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
@@ -111,14 +110,11 @@ test("R26 (interface-shell R5) each screen's words are the keys it reads, all of
     assert.ok(Object.isFrozen(s.words), s.id);
     assert.equal(new Set(s.words).size, s.words.length, `${s.id}: keys distinct`);
     for (const w of s.words) {
-      /* fix round 10 (R-WORDS, K3943): the one exception is a stand-in row `[id, en]` of standins.mjs, written once as `localize(id, en)` and owed to
-         the design's list; the list's row replaces it when it holds the id. Any other pair is refused. */
-      if (Array.isArray(w)) { assert.ok(ALL_STAND_INS.includes(w), `${s.id}: ${w[0]} is a stand-in of standins.mjs`); continue; }
-      assert.equal(typeof w, "string", `${s.id}: a key, never a [key, en] row of its own`);
+      assert.equal(typeof w, "string", `${s.id}: a key, never a [key, en] row`);
       assert.ok(hasWord(w), `${s.id}: ${w} is a word of the list`);
     }
   }
-  assert.ok(SCREENS.every((s) => s.words.every((w) => Array.isArray(w) || WORD_ROWS.some((r) => r[0] === w))));
+  assert.ok(SCREENS.every((s) => s.words.every((w) => WORD_ROWS.some((r) => r[0] === w))));
 });
 
 test("R26 word(key, vars): a missing placeholder and an unknown key throw their codes, so a screen never draws a key or a half-filled sentence", () => {

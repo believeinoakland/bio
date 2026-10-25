@@ -45,8 +45,13 @@ function renderOpenFile(cs, view) {
       + (engine ? `<span class="meta">${cs.esc(engine)}</span>` : "")
       + (scanned && n.scanned_at ? `<span class="meta">${cs.w("screen.open-file.note.at")} ${cs.date(n.scanned_at)}</span>` : "");
   };
+  /* a sentence by its own key where the words table holds it, else `alt()`: the nearest held rows stand in until the design's rows reach the table (K4269); the rows
+     owed are named in the job record and in `fix-round-10-words.md`. A drawn-screen module holds no English and adds no marker of its own (K4640). */
+  const keyedW = (k, f, alt) => { const t = cs.w(k, f); return t === k ? alt() : t; };
+  /* R14 (G3): beside a scanner's "Clean" on a file whose inside was not examined, the design's line `screen.open-file.check.inside` ("its inside could not be
+     checked"); until its row is held the reasons' own words (the plane's translation of `encrypted`, `unread`, ...) say it, in the "why" line above, and nothing is invented */
   const notesFor = (inside) => cs.state(D.notes, (v) => `<div class="cs-sheet">${v.notes.map((n) => `<div class="cs-row">${noteLine(n)}</div>`).join("")}</div>`
-    + (inside ? `<p class="mk-small" data-unexamined="1">${cs.w("screen.open-file.check.inside")}</p>` : ""),
+    + (inside && keyedW("screen.open-file.check.inside", {}, () => "") ? `<p class="mk-small" data-unexamined="1">${keyedW("screen.open-file.check.inside", {}, () => "")}</p>` : ""),
     { empty: addedBy ? "screen.open-file.check.notyet" : "screen.open-file.checks.none" });
   const safeDrawn = (s) => {
     if (!s) return "";
@@ -74,6 +79,15 @@ function renderOpenFile(cs, view) {
     return said("screen.open-file.safe.ready")
       + (Number.isFinite(s.pages) ? said(s.truncated ? "screen.open-file.safe.truncated" : "screen.open-file.safe.pages", { pages: s.pages, total: s.source_pages ?? s.pages }) : "");
   };
+  /* R68 (G7; file-safety R56): the unread picture type is said by the design's `screen.open-file.image.unread`; until its row is held, by the sentence the reading's
+     owner holds for the type (`reading-pipeline.index.unsupported_<type>`: "BMP is not read yet.") */
+  const imageUnread = (type) => {
+    const kind = String(type || "").toLowerCase().replace(/[^a-z0-9_]/g, "");
+    return keyedW("screen.open-file.image.unread", { type: kind }, () => {
+      const own = "reading-pipeline.index.unsupported_" + kind, general = "reading-pipeline.index.unsupported_kind";
+      return kind && cs.w(own) !== own ? cs.w(own) : kind && cs.w(general, { kind }) !== general ? cs.w(general, { kind }) : cs.w("shell.unread");
+    });
+  };
   const body = cs.state(D.threat, (t) => cs.state(D.state, (o) => {
     const held = !!t.scan_hold || o.why === "SCAN_HOLD";
     const kind = held ? "held" : t.threat === "low" ? "low" : "high";
@@ -90,7 +104,7 @@ function renderOpenFile(cs, view) {
     let out = `<div class="row"><span class="cs-risk" data-risk="${kind}" tabindex="0">${cs.w(`screen.open-file.risk.${kind}`)}</span>`
       + `<span class="mk-small">${cs.w(yours ? "screen.open-file.high.yours" : `screen.open-file.risk.${kind}.means`)}</span></div>`
       + (reasons.length ? `<p class="mk-small">${cs.w("screen.open-file.why", { reasons: reasons.join("; ") })}</p>` : "")
-      + (unreadImage ? `<p class="mk-small" data-unread-image="1">${cs.w("screen.open-file.image.unread")}</p>` : "");
+      + (unreadImage ? `<p class="mk-small" data-unread-image="1">${imageUnread(t.image.type)}</p>` : "");
     const safe = cs.sec("screen.open-file.safe", `<p class="mk-small">${cs.w("screen.open-file.safe.about")} `
       + `${cs.mark("origin", "machine")} ${cs.w("screen.open-file.safe.origin")}. ${cs.w("screen.open-file.safe.cite")}</p>`
       + `<div class="mk-acts">${cs.act("safeview", { tone: kind === "low" ? undefined : "primary" })}</div>`

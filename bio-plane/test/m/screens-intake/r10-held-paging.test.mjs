@@ -4,15 +4,15 @@
 import { test, after, before } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { open, main, text, idle, press, btn } from "./page.mjs";
+import { open, main, text, idle, press, btn, word, hasWord } from "./page.mjs";
 import { realPlane } from "./realplane.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
-import { HELD_STAND_INS } from "../../../src/screens-intake/standins.mjs";
 
 const plane = realPlane("r10held");
 after(() => plane.dispose());
 const N = 60;
-const stand = (id) => HELD_STAND_INS.find((r) => r[0] === id)[1];
+/* the design's rows for the filter and the doors are owed (K4269); the nearest held rows stand in until they are held */
+const said = (key, held) => word(hasWord(key) ? key : held);
 
 let world;
 const held = () => world ||= (async () => {
@@ -58,7 +58,7 @@ test("R4 (cause 33; the real plane) sixty held: the first page names fifty of th
   assert.ok(moreLine(p), "the sentence that more are waiting");
   const door = btn(p, "heldcaptures", `[data-after]`);
   assert.ok(door, "and its door to the next page");
-  assert.ok(text(p).includes(stand("screen.held.next")));
+  assert.ok(text(p).includes(said("screen.held.next", "document.read.next")));
   await press(p, "heldcaptures", { sel: `[data-after]` });
   await idle(p, 3000);
   const after = pageReads(p).filter((r) => r.query.after);
@@ -84,7 +84,7 @@ test("R4 (cause 33; the real plane) 'Everyone's' is a filter between the viewer'
   assert.equal(last.query.member, undefined, "everyone's: no `member`");
   assert.equal(last.query.after, undefined, "and from the first page");
   assert.equal(rows(p).length, 50);
-  assert.ok(text(p).includes(stand("screen.held.who.all")));
+  assert.ok(text(p).includes(said("screen.held.who.all", "ai.whose.group")));
   const again = p.doc.getElementById("ch-who");
   assert.equal(again.value, "all", "the choice stays where the member put it");
   again.value = "mine";

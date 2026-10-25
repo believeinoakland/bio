@@ -11,6 +11,8 @@ import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
 const plane = realPlane("r10kind");
 after(() => plane.dispose());
+/* the owner's keys, by kind (a held row of reading-pipeline, code-origin until the layer close regenerates the list) */
+const unsupported = (kind) => `reading-pipeline.index.unsupported_${kind}`;
 const KINDS = ["rtf", "email", "legacy_word", "legacy_excel", "legacy_powerpoint", "legacy_office", "tiff", "gif", "webp", "heic", "avif", "bmp", "jp2", "ico"];
 
 test("R64 R36 (the real plane) a GIF the plane stored as UNSUPPORTED_FORMAT is drawn as reading-pipeline's own sentence for GIF, with no stand-in sentence and no raw kind", async () => {
@@ -19,7 +21,7 @@ test("R64 R36 (the real plane) a GIF the plane stored as UNSUPPORTED_FORMAT is d
   await plane.ticksUntil(p, () => main(p).querySelector('[data-reading="refused"]'));
   const line = main(p).querySelector('[data-reading="refused"]');
   assert.ok(line, "a refused reading line: " + text(p).slice(-300));
-  assert.ok(line.textContent.includes(word("reading-pipeline.index.unsupported_gif")), "the owner's sentence for the kind: " + line.textContent);
+  assert.ok(line.textContent.includes(word(unsupported("gif"))), "the owner's sentence for the kind: " + line.textContent);
   assert.ok(!line.textContent.includes(word("capture.picture.unread")), "not the stand-in 'picture unread' sentence");
   assert.equal(line.querySelectorAll(".mk-data").length, 0, "and no raw kind span");
 });
@@ -29,7 +31,7 @@ test("R64 R36 every kind reading-pipeline names has its own sentence, drawn from
   const cs = { w: (k, v) => (hasWord(k) ? word(k, v) : k), esc: (x) => String(x) };
   const seen = new Set();
   for (const kind of KINDS) {
-    const key = `reading-pipeline.index.unsupported_${kind}`;
+    const key = unsupported(kind);
     assert.ok(hasWord(key) && keys.includes(key), key);
     const html = CAPTURE_SCREEN.parts.readRefusalHtml(cs, { reason: "UNSUPPORTED_FORMAT", kind });
     assert.equal(html, word(key), kind);
@@ -40,6 +42,6 @@ test("R64 R36 every kind reading-pipeline names has its own sentence, drawn from
 
 test("R64 R36 control: a kind with no sentence of its own is the general one with the kind filled; a refusal naming no kind is 'could not be read'", () => {
   const cs = { w: (k, v) => (hasWord(k) ? word(k, v) : k), esc: (x) => String(x) };
-  assert.equal(CAPTURE_SCREEN.parts.readRefusalHtml(cs, { reason: "UNSUPPORTED_FORMAT", kind: "mkv" }), word("reading-pipeline.index.unsupported_kind", { kind: "mkv" }));
+  assert.equal(CAPTURE_SCREEN.parts.readRefusalHtml(cs, { reason: "UNSUPPORTED_FORMAT", kind: "mkv" }), word(unsupported("kind"), { kind: "mkv" }));
   assert.equal(CAPTURE_SCREEN.parts.readRefusalHtml(cs, { reason: "UNSUPPORTED_FORMAT" }), word("shell.unread"));
 });
