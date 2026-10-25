@@ -513,8 +513,10 @@ export class QueueProducers {
       /* R38 (DEC-150 (3); N665): a held profile for the place the group named, arrived with an update, to the administrators. */
       if (this.#placeArrivals) add(feed("places", () => this.#conditionsPlaceArrived(me, viewer, at)));
       else absent.push("places");
-      /* R41, R42 (T50; N1091; DEC-248, DEC-286): a project's invitation, to the member invited; a request to join it, to its owners. */
-      add(feed("projects", () => [...this.#obligationsProjectInvitation(me, viewer, at), ...this.#obligationsProjectRequest(me, viewer, at)]));
+      /* R41, R42, R54 (T50; N1091; DEC-248, DEC-286; K5157): a project's invitation, to the member invited; a request to join it, and a
+         participant's request to leave it, to its owners. */
+      add(feed("projects", () => [...this.#obligationsProjectInvitation(me, viewer, at), ...this.#obligationsProjectRequest(me, viewer, at),
+                                  ...this.#obligationsProjectLeave(me, viewer, at)]));
       /* R46–R48 (T51's fix round; K4169, UC-046): an endorsement owed on a proposed administrator, an owner vote owed on a project's
          owner change, an expertise awaiting confirmation. */
       add(feed("members", () => [...this.#obligationsEndorsementOwed(me, at), ...this.#obligationsOwnerVoteOwed(me, viewer, at),
@@ -3164,6 +3166,54 @@ export class QueueProducers {
           options: [{ id: "projectrequestanswer", label: word("act.projectrequestanswer.label.queue"), weight: "single",
                       answers: [{ answer: "grant", label: word("screen.home.request.grant") },
                                 { answer: "decline", label: word("screen.home.request.decline") }] }],
+        });
+      }
+    }
+    return out;
+  }
+
+  /** `project-leave` (R54; K5157; membership R35): for each project the member owns, at most 50 in id order, one OBLIGATION per
+   *  participant whose row `projectParticipants` (project-roster R1) answers as `leaving`, keyed
+   *  `OBLIGATION::project-leave::<project>::<handle>`, to each owner of the project (membership R65) and to nobody else, with no
+   *  project home. The participant is named by handle, her note carried apart as `quote` (null when she left none). It offers
+   *  `projectremove`, the owners' act: only an owner removes a participant (membership v2 §7.7). It leaves when an owner removes
+   *  her or she withdraws the request (her row is no longer `leaving`). An owner who asks to leave is removed by the owners' vote
+   *  (R47), not by this act, so she makes no item here. The project is read only for its owners, who are participants, so a
+   *  hidden project names nothing to anyone else. */
+  #obligationsProjectLeave(me, viewer, now) {
+    if (!me) return [];
+    const cap = QueueProducers.QUEUE_PROJECT_ITEMS_MAX;
+    const scope = this.#ownedProjects(me, viewer, cap);
+    const out = [];
+    this.#titlesOf(scope.projects); this.#ownersOf(scope.projects);
+    for (const project of scope.projects) {
+      const r = this.#projectRoster.projectParticipants({ projectId: project, by: me });
+      const rows = QueueProducers.#answered(r, "participants", "project-roster.projectParticipants");
+      const owners = this.#ownersOf([project]).get(project);
+      const name = this.#nameOf(project);
+      for (const q of rows) {
+        if (!q || q.state !== "leaving" || q.owner || typeof q.handle !== "string" || !q.handle) continue;
+        const text = typeof q.comment === "string" && q.comment.trim() ? q.comment : null;
+        const fills = { who: q.handle, project: name };
+        out.push({
+          id: `OBLIGATION::project-leave::${project}::${q.handle}`,
+          class: "OBLIGATION",
+          kind: "project-leave",
+          case: this.#homesOf([]),
+          subject: { kind: "project", id: project, name: this.#titleOf(project), participant: q.handle },
+          fills,
+          summary: localize("queue-producers.index.project_leave_summary", "{who} asks to leave {project}", fills),
+          detail: localize("queue-producers.index.project_leave_detail", "A participant has asked to leave this project. Nothing changes until an owner removes them; they can also withdraw the request."),
+          quote: text === null ? null : { by: q.handle, text },
+          basis: { source: "project-roster.projectParticipants", project, participant: q.handle, comment: text,
+                   recipients_rule: "project_owners",
+                   bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true },
+                   detail: localize("queue-producers.index.a_request_to_leave_is_the", "a request to leave is the participant's row in state leaving (membership R35, project-roster R1), read here at every read and never stored. It goes to each owner of the project and to nobody else, and leaves for all of them when an owner removes the participant or she withdraws the request.") },
+          age: QueueProducers.#instantAge(null, now, "no_leave_instant", localize("queue-producers.index.the_row_carries_no_leave_instant", "the participant's row carries no instant for the request that this producer can read")),
+          assignee: null,
+          assignee_role: null,
+          recipients: [...owners],
+          options: [{ id: "projectremove", label: word("act.projectremove.label.project"), weight: "single" }],
         });
       }
     }
