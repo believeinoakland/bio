@@ -102,3 +102,28 @@ No marker added; the sentinel `silent` answers stay as they were, since they are
 Once that is in, I re-run `architecture.mjs` and post `COMPLETE` with the `Size` line. Nothing else is open.
 
 **Deferred:** none.
+
+## J7 · COMPLETE
+
+T51-245 applied (signin-door, fix round 10, B5 and B6).
+
+**Entries applied.** The four FIX-E lines in `bio-plane/test/m/signin-door/door.test.mjs` now take their answers from the providers' published fixtures:
+- `:31` the store's refused reply → answer-envelope `refusedAnswer()`.
+- `:52` the account state → ai-accounts `accountReference()` (its `with` state; the test compares against that state's `subscription`).
+- `:246` the malformed-token hold → ai-accounts `tokenMalformedHold().tooShort`.
+- `:286` the disconnect → ai-accounts `subscriptionDisconnect()`.
+
+Each case keeps what it tests. No marker added; the `silent` sentinels were never invented answers. B6 (CHANGE) merged in as `tranche/T51` (merge commit pushed to `job/T51/signin-door`).
+
+**Deferred.** None. **Found in other modules.** None.
+
+**Checks (absolute root `/home/user/bio`, after the merge).**
+- `fixtures.mjs signin-door --list`: 0 failures (was 4).
+- `architecture.mjs signin-door`: 0 failures (was 1; resolved by the `ai-accounts` edge in `uses`, B6).
+- `format.mjs`: 178 modules, 178 requirements files; 0 failures.
+- `coverage.mjs signin-door`: 6 of 6 live requirement ids named by a test; 0 failures.
+- `words.mjs signin-door`: 0 failures.
+- `ownership.mjs signin-door tranche/T51`: 0 failures.
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/signin-door/door.test.mjs`: 12 of 12 pass.
+
+Size (session_01QWraGRuuGWaxTVGHcshZSM): test runs 2, module lines 343
