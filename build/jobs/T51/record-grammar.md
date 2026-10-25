@@ -176,3 +176,17 @@ G59 · COMPLETE (code commit b3a087a5a8; parity test placement settled by B7).
 **Census ops:** none. **Rows owed to UX-DESIGN:** none. **Deferred / found elsewhere:** none. `case-checker/program.mjs` embeds this code: BOB regenerates it.
 
 Size (session_01W5LgYyUoKbwf29MJrEqkHm): test runs 14, module lines 2562
+
+## J7 · COMPLETE
+
+G180 (job 108): done. R64 is met.
+
+**Changed.** `bio-plane/src/record-grammar/sha256.mjs`: one private `core(init)` holds the compression function, the round table, the padding and the state; `createSha256` (R20) and the new `createResumableSha256(state?)` (R64) both wrap it (R25 still holds: one implementation). `snapshot()` answers a JSON string `{h, t, b}`; a state that is not a string `snapshot()` wrote throws `TypeError`. `length` is the bytes taken, a resumed stream's earlier ones included. Exported from `record-grammar/index.mjs`. Capture is untouched.
+
+**Tests (failing first).** `test/m/record-grammar/digests.test.mjs`, three R64 tests: NIST vectors with a snapshot/resume at padding-boundary cuts; a 105 MiB stream cut at 40 random points, snapshot and resumed at each, equal to `createSha256`; tampered snapshots (16 shapes) throw `TypeError`. Red first: `does not provide an export named 'createResumableSha256'`; then green. `invariants.test.mjs` export list gained the new name (OWN). R20, R21, R22 tests unchanged and green.
+
+**Run.** `node --test bio-plane/test/m/record-grammar/`: 107 pass, 0 fail. Users of the digest: record-core 219, credentials 186, acquisition 342, citation 132, answers 67, money 104, all pass. checks/run.mjs: format 0, architecture 0, channels 0, words 0 (no rise); coverage 1 failure, office-readers R46 (not mine). ownership: 5 files by record-grammar, 0 failures.
+
+**Deferred.** Nothing. **Other modules.** office-readers R46 is named by no test (its job's).
+
+Size (session_013Br3vEBV5reudfaJtbrbAV): test runs 14, module lines 2634
