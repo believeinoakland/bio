@@ -55,3 +55,17 @@ Size (session_01DAv9PSDWrsm3wEZhdCb73f): test runs 4, module lines 2807
 ## J4 · COMPLETE
 
 EVENTS #12 B4 complete on job/T51/events: five fixtures published in bio-plane/test/m/events/fixtures.mjs (recordedByMalformedExtent, sequenceUndetermined, timelineAnswer, timelineRefusal, usesOf), each with a test naming its requirement; own line fixture.mjs:48 re-pointed to promotion's promotionOver. fixtures check for events at 0; events 98/98; format, words, ownership 0 failures; no fixtures-own/generic/contract markers added. NEEDS BOB: architecture fails 1 file (events/fixture.mjs imports promotion's fixtures; add "promotion" to events' uses in build/modules.json, your file). Record: build/jobs/T51/events.md.
+
+## Fix round 10 · cause 1 (B5; events R50)
+
+**Applied.** `grade_why` (timeline items placed nowhere) and the event view's `why` for an event with no dated attestation are now `{key, vars}` via `reason()` (`events.why.grade_placed_nowhere`, `events.why.grade_time_unread`, `events.why.placed_nowhere_attestation`), not `word()` strings; `reasons.mjs` `reasonText` carries all three keys so English callers still get the sentence. R50 is met; the mark may be struck.
+
+**Tests (red on old source, green now).** `drawn.test.mjs` R50 and `reasons.test.mjs` R54 assert `{key, vars}` (and `reasonText` English); `events.test.mjs` R9 asserts the view's `why`; new fixture `timelineUndated` in `fixtures.mjs` (made by the real code) with `fixtures.test.mjs` R50 test, for screens-investigate's timeline test.
+
+**Why the tests missed it.** Each half was green against its own stub: events asserted the finished string and screens-investigate a hand-made `{key, vars}`; no test drew the screen over events' real answer. The published fixture now closes that.
+
+**Found, not changed.** `#eventView` still gives `word("events.why.dated_attestation_see")` as a string `why` (index.mjs:1065, event with a dated attestation the viewer cannot see); R54 says no `why` is a string. No key is named in R50/R54 for it, so left for BOB. Also `following/checks.test.mjs` R1 C-137 fails identically with and without my change (pre-existing, not events').
+
+**Ran.** events tests 99 pass 0 fail; screens-investigate + following 377 tests, 376 pass, the 1 above pre-existing. format 0, architecture 0, coverage 55/55, words 0 failures, ownership 0, fixtures --list 0 failures (no marker added).
+
+Size (session_014vh9swNghbuHGzUzM6v8bp): test runs 6, module lines 2809

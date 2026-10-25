@@ -91,7 +91,7 @@ test("R50 an item placed nowhere answers grade null with grade_why saying no att
     const it = item(t, id);
     assert.ok(t.world.placed_nowhere.includes(it), id);
     assert.equal(it.grade, null);
-    assert.equal(it.grade_why, word("events.why.grade_placed_nowhere"));
+    assert.deepEqual(it.grade_why, { key: "events.why.grade_placed_nowhere", vars: {} });
     assert.equal(it.participants_total, 1);
   }
   /* control: the member who may see the governing attestation is answered its grade */
@@ -100,7 +100,7 @@ test("R50 an item placed nowhere answers grade null with grade_why saying no att
   w.st.sql.exec(`UPDATE event_when_cache SET value='2020-01-01' WHERE event_id=?`, dated);
   const stale = item(w.ev.timeline({ set: [p], viewer: MEMBER }), dated);
   assert.deepEqual([stale.grade, stale.why], [null, { key: "events.why.cache_stale", vars: {} }]);
-  assert.equal(stale.grade_why, word("events.why.grade_time_unread"));
+  assert.deepEqual(stale.grade_why, { key: "events.why.grade_time_unread", vars: {} });
 });
 
 test("R40 a role is answered only through an attestation in sight: a role resting on a hidden capture is not answered beside a visible one (eventsFor, timeline)", () => {

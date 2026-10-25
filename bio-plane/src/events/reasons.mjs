@@ -14,6 +14,9 @@ const TEXT = {
   "events.text.upper_bound_says": (v) => word("events.text.upper_bound_says", v),
   "events.why.precision_held_settle": (v) => word("events.why.precision_held_settle", v),
   "events.why.cited_orders_disagree": (v) => word("events.why.cited_orders_disagree", v),
+  "events.why.grade_placed_nowhere": (v) => word("events.why.grade_placed_nowhere", v),
+  "events.why.grade_time_unread": (v) => word("events.why.grade_time_unread", v),
+  "events.why.placed_nowhere_attestation": (v) => word("events.why.placed_nowhere_attestation", v),
   "events.why.cache_stale": (v) => localize("events.why.cache_stale", "the time held for this event differs from what its attestations give, so it is not answered", v),
 };
 

@@ -55,3 +55,14 @@ export function usesOf() {
   made.assessment = w.ev.recordAssessment({ ...common, unmet: [] });
   return { w, decider, subject, made, all: w.ev.usesOf({ viewer: MEMBER }), refused: w.ev.usesOf({ viewer: MEMBER, kinds: ["x"] }) };
 }
+
+/** events.timeline over an event no dated attestation places (R50): the item in `world.placed_nowhere`, its `grade_why`
+ *  as `{key, vars}`, and the event's own view (`readEvent`) whose `why` is `{key, vars}` too. */
+export function timelineUndated() {
+  const w = world();
+  const p = w.entity("Una");
+  const e = w.ev.createEvent({ kind: "meeting", attestations: [{ captureSha: w.capture("undated"), extent: doc }], by: MEMBER,
+    participants: [{ entityId: p, role: "present", attestation: 0 }] }).event_id;
+  const t = w.ev.timeline({ set: [p], viewer: MEMBER });
+  return { timeline: t, item: t.world.placed_nowhere.find((i) => i.event_id === e), view: w.ev.readEvent({ eventId: e, viewer: MEMBER }).event };
+}

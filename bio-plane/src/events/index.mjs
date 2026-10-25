@@ -1064,7 +1064,7 @@ export class Events {
     if (when !== "undetermined" && w.governing != null && !attById.has(Number(w.governing))) {
       when = null; why = word("events.why.dated_attestation_see");
     }
-    if (when === null && !why) why = word("events.why.placed_nowhere_attestation");
+    if (when === null && !why) why = reason("events.why.placed_nowhere_attestation");
     const parts = this.#rows(`SELECT * FROM event_participants WHERE event_id=? ORDER BY participant_id`, id)
       .filter((p) => attById.has(Number(p.attestation_id))).map((p) => this.#participantView(p, viewer, attById));
     const sees = this.#seer(viewer);
@@ -1261,8 +1261,8 @@ export class Events {
         return { participants, participants_total: live.length, participants_truncated: live.length > ITEM_PARTICIPANTS_MAX,
                  grade: placed ? g.grade ?? null : null,
                  ...(placed ? {} : { grade_why: item.why && item.why.key === "events.why.cache_stale"
-                   ? word("events.why.grade_time_unread")
-                   : word("events.why.grade_placed_nowhere") }) };
+                   ? reason("events.why.grade_time_unread")
+                   : reason("events.why.grade_placed_nowhere") }) };
       });
     }
     return out;
