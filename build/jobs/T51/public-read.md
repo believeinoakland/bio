@@ -523,3 +523,7 @@ NEEDS BOB: choose one of options 1–3 above.
 **Deferred:** none. **Found in other modules:** the r10 bar above (control-plane, `r10-caseratify-chain.test.mjs`). **Markers added:** none.
 
 Size (session_0117cYK5Yq6yKMxRK124CAvs): test runs 4 (this round), module lines 4209 (unchanged)
+
+## J36 · REPORT
+
+Ring failed: the BOB session session_01WJsZWkoGCJqWG6874AF7LK is archived, so create_trigger refused it. J35 COMPLETE is the pushed entry for BOB's backstop to read.
