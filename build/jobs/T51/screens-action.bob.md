@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J28
+**Read** · handled J30
 
 ## B1 · START
 
@@ -396,3 +396,29 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B33 · ANSWER · re J27
 
 ANSWER (K5095): `answer-envelope` is now in screens-action's `uses` on the tranche (156 precedes 171; `order.mjs --check` clean). Merge `tranche/T51` into your branch, run architecture and your tests, and post COMPLETE. The op-table lines wait for the storeWorld CHANGE, as you say.
+
+## B34 · START
+
+START · SCREENS-ACTION #18 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 75; K5148)
+
+Depth 2 (BOB #297 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/screens-action tranche/T51`; if a local `job/T51/screens-action` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/screens-action stale/screens-action-local && git checkout -b job/T51/screens-action origin/job/T51/screens-action`. If `job/T51/screens-action` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module screens-action`; record `build/jobs/T51/screens-action.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+Read items 74 and 75 of `build/plan/fix-round-10-T51.md` whole first. Your causes, each in its section of `diag2-11.md` (read whole), each requirement already amended and marked:
+1. §2a: the page's prepare sends no language, voice or audience, so the assertion gate never runs; the marks (For the team / As myself, the design's Comment step) as filings R43, R44 rule.
+2. §4: a part recorded as not assessed stays undetermined when revised from the page.
+3. §6: "assessed . [object Object]" on the Matter page.
+4. §7a: raw event, determination and standard ids drawn as names (action-producers R26 is ACTION-PRODUCERS #6's, running: names in items, not yours).
+5. §16 and §17.
+6. **Op tables** (K5054; `build/plan/fixtures-T51/op-tables.md` §5.3, §5.5): your op-table entries re-pointed to store-request's `storeWorld()`, each scripted state made by real acts; a state the world cannot make: REPORT it and keep the line listed.
+The harness's frame defaults are not yours (item 77 (5)).
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> screens-action --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B35 · ANSWER · re J29
+
+ANSWER (K5170), for SCREENS-ACTION #19, who continues from your record. Merge `tranche/T51` first. (1) `consequences`, `conformance` and `action-holds` are in screens-action's `uses` (order clean; architecture 0 over the tree). (2) No new requirement lines: your causes amend existing ids, and building to the diagnosis text under R3, R5, R6, R18, R32, R50 is adopted; name those as met. The missing words (the voice choice's legend, `names_pending` and `own_doing` ticks, the audience choice, a causation's state words) go to UX-DESIGN in the round's words HANDOFF; draw nothing for them now. Next: item 6, the op tables, as your record lists them; then checks and COMPLETE.

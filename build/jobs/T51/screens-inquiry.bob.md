@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J39
+**Read** · handled J41
 
 ## B1 · START
 
@@ -857,3 +857,39 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . screens-inquiry --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/screens-inquiry.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
 
 **Inherited red (K5068, from inquiry-grammar's merge of cause 30b):** `R129 R3` asserts the old refusal of a half-labelled basis and is red on the tranche; bring it in line with inquiry-grammar R68 as amended, with your R30a/R30b work.
+
+## B59 · START
+
+START · SCREENS-INQUIRY #28 · tranche T51 · product believeinoakland/bio · fix round 10, the final pass's causes (plan build/plan/fix-round-10-T51.md §3 item 35, 55, 70, 73 (1), 75, 78 (2); K5148)
+
+Depth 2 (BOB #297 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/screens-inquiry tranche/T51`; if a local `job/T51/screens-inquiry` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/screens-inquiry stale/screens-inquiry-local && git checkout -b job/T51/screens-inquiry origin/job/T51/screens-inquiry`. If `job/T51/screens-inquiry` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module screens-inquiry`; record `build/jobs/T51/screens-inquiry.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one to your tests; write your test at your module's interface (with providers' published fixtures) and REPORT the door case for BOB to place (K5138).
+
+**Each cause below** is diagnosed with K4426's four fields in the named section of a diagnosis file under `build/plan/walk-T51-final/diagnosis/`: read that section whole first, then re-read every cited line yourself before changing anything (the line numbers are of an older tranche commit). The requirement named is already amended on the tranche (K5148) and marked `*(not yet met: T51)*`: build to its text; name the met ids in your COMPLETE (BOB strikes the marks). For each cause: (1) the failing-first test at your interface, seen red on today's code, then green; (2) the fix where the cause is; (3) why the tests missed it, written in your record. A new sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); the design stream reviews it through the unreviewed list. If a cause needs a change outside your `paths`, or you find the cause is not where the diagnosis says, REPORT it to BOB and carry on with the rest.
+
+Read items 35, 55, 70, 73, 74, 75 and 78 (2) of `build/plan/fix-round-10-T51.md` whole first. Your causes, each in its diagnosis section (read whole), each requirement already amended and marked:
+1. `diag2-020305.md` §1 (03 R24): the founder with no handle sees no owner acts (`project.mjs:144`, `:174-176`).
+2. `diag2-03b.md` §2, §3, §6, §7, §10, §12, §13, §14 (their screen draws), and §8's draw: strength's new `BAR_STALE` refusal (`projectBarStale()` in strength's `fixtures.mjs`; send `expected` with the bar you drew).
+3. `diag2-06.md` §15.
+4. Item 73 (1): a document's standing authority drawn through provenance's read `authority` (R80), asked with `later()` as `origins` is.
+5. Item 35: the dead repair control (`document.mjs:601-603`, citation's `repairs` is always `[]`) goes.
+6. Item 55: the question screen's set-aside waits and history re-point to inquiry's published `questionWaitsSetAside`.
+7. Item 78 (2): `document.mjs:95`'s held list names connections' `NO_SUCH_DOCUMENT` (R72), not `NO_SUCH_BUNDLE`.
+8. project-roster R44 is merged: a declined join request's state and comment, where your project screen draws the request.
+9. **Op tables** (K5054; `build/plan/fixtures-T51/op-tables.md` §5.3, §5.5): your op-table entries re-pointed to store-request's `storeWorld()`, each scripted state made by real acts; `--list` names them. If the world cannot make a state, REPORT it (store-request's recipe) and keep the line listed.
+The harness's four frame defaults (`harness.mjs` 88, 89, 91, 97) stay until the last batch-7 job (item 77 (5)): not yours.
+
+**Done:** module tests green; `checks/fixtures.mjs <absolute root> screens-inquiry --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B60 · ANSWER · re J40
+
+ANSWER (K5168), and a CHANGE in the same entry. Merge `tranche/T51` first.
+- J40: `modules.json` gives screens-inquiry `store-request`, `project-roster`, `strength` and `inquiry` in `uses` (order clean). Your replacement of the module's own `registerDeclared` by the world's registration is adopted (tests only). `storeWorld()` is on the tranche (store-request #1's world); store-request's own second job (R25-R28, four door ops) is not merged yet, which touches none of your recipes.
+- Intent R37 is merged: `aspirationsFor({ project, member, viewer, retired: true })` and the published `retiredWorld()` in `bio-plane/test/m/intent/fixtures.mjs`; 03b §12's draw is yours now.
+- UX design's DEC-432/DEC-433 (U473, U474) are merged into the tranche (`docs/development/ux-substrate/screens/words.json`; `rows.mjs` is regenerated at the round end, after plane's Wave B): read the three recovery-note keys the design chose (`screen.document.recovery.xref_reconstructed`, `.pages_missing` ({missing}, {of}), `.pdf_truncated`); map the `_chars` metrics to `screen.document.reading.unit.characters`; draw `screen.document.supporting.pictures` only when the size is known; the Held list as DEC-432 (b) draws it (`screen.held.who`, `.who.mine`, `.who.all`, `.next`, `.back`, `screen.held.more` with Next page only); the Document page's connect and contradict pickers as one `docpick` picker (DEC-432 (c)) if your START's draw covers them, else REPORT it. Each read as `localize(key, en)` with the design's English.
+
+## B61 · ANSWER · re J41
+
+ANSWER (K5170), for SCREENS-INQUIRY #29, who continues from your record (A, B, C in order). B's question: your reading is adopted: draw by `cs.w(key)` with the keys in the screen's `words`, never `localize` in a screens module; tests read `word(key)`; the round-end regeneration of `rows.mjs` carries the design's words. The Held list and the one picker: REPORT if they are not in your draw (BOB places them with screens-intake). Your finding 1 (project-roster's participant rows carry no `member`): R29/R40's wording follows the real row; BOB words it, nothing for you. Your new sentences go to UX-DESIGN in the round's words HANDOFF.

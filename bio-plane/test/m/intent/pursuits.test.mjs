@@ -5,7 +5,7 @@ import { checkBundle } from "../../../src/record-grammar/index.mjs";
 import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { seeded, V, MACHINE } from "./fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
-import { GROUP_ASPIRATION_ACT } from "../../../src/intent/index.mjs";
+import { GROUP_ASPIRATION_ACT, intentOps } from "../../../src/intent/index.mjs";
 
 const strip = (r) => { const { detail, goal, aspiration, project, ...rest } = r; return rest; };
 /* R9 (N327): the one answer membership's R84 gives, with R9's fixed act and its next step: code, row (C-96.1), `by` as
@@ -309,4 +309,56 @@ test("R26 aspirations and goals are record documents of two new types with histo
   assert.equal(p.goals[0].closed_reason, "Abandoned: the office closed.");
   /* a goal is not opened under a retired aspiration */
   assert.equal(w.i.declareGoal({ statement: "s", bounds: "b", aspiration: a, author: V("bob") }).reason, "PURSUIT_ENDED");
+});
+
+test("R37 aspirationsFor with retired: true lists the project's retired aspirations and the member's own, each with what pursuing it taught and its dead ends, in id order; the default read is unchanged; a project the viewer may not see is refused as ever", () => {
+  const w = seeded();
+  const lost = w.i.declareAspiration({ scope: "project", owner: w.P, statement: "Name every signatory", author: V("bob") }).aspiration;
+  const kept = w.i.declareAspiration({ scope: "project", owner: w.P, statement: "Map the minutes", author: V("bob") }).aspiration;
+  const mine = w.i.declareAspiration({ scope: "member", owner: "bob", statement: "Learn the codes", author: V("bob") }).aspiration;
+  const carols = w.i.declareAspiration({ scope: "member", owner: "carol", statement: "Carol's", author: V("carol") }).aspiration;
+  const group = w.i.declareAspiration({ scope: "group", statement: "Old", author: V("alice") }).aspiration;
+  const Q = w.project("Second", "bob");
+  const elsewhere = w.i.declareAspiration({ scope: "project", owner: Q, statement: "Elsewhere", author: V("bob") }).aspiration;
+  assert.equal(w.i.recordDeadEnd({ aspiration: lost, note: "The register was sealed.", author: V("bob") }).ok, true);
+  for (const [a, who, taught] of [[lost, "bob", "Signatories are in the minutes, not the register."], [mine, "bob", "Codes are learned by use."],
+                                  [carols, "carol", "Hers."], [group, "alice", "Done."], [elsewhere, "bob", "Elsewhere."]])
+    assert.equal(w.i.retireAspiration({ aspiration: a, taught, author: V(who) }).ok, true);
+  /* a dead end after retirement is still recorded and read */
+  w.clock.now = "2026-09-29T00:00:00Z";
+  assert.equal(w.i.recordDeadEnd({ aspiration: lost, note: "Late note.", author: V("alice") }).ok, true);
+  const held = w.i.aspirationsFor({ project: w.P, member: "bob", viewer: V("bob") });
+  const r = w.i.aspirationsFor({ project: w.P, member: "bob", viewer: V("bob"), retired: true });
+  assert.equal(r.ok, true);
+  assert.equal(r.retired, true);
+  assert.deepEqual(r.aspirations.map((a) => [a.id, a.scope, a.state]), [[lost, "project", "retired"], [mine, "member", "retired"]]);
+  assert.deepEqual(r.aspirations.map((a) => a.taught), ["Signatories are in the minutes, not the register.", "Codes are learned by use."]);
+  assert.deepEqual(r.aspirations[0].dead_ends.map((d) => [d.at, d.author, d.note]),
+                   [["2026-09-28T01:00:00Z", V("bob"), "The register was sealed."], ["2026-09-29T00:00:00Z", V("alice"), "Late note."]]);
+  assert.deepEqual(r.aspirations[1].dead_ends, []);
+  assert.equal(r.aspirations[0].statement, "Name every signatory");
+  /* the pursuit record agrees with what the list answers */
+  const p = w.i.pursuitOf({ aspiration: lost, viewer: V("bob") });
+  assert.deepEqual([r.aspirations[0].taught, r.aspirations[0].dead_ends], [p.taught, p.dead_ends]);
+  /* control: the default read lists those in force only, as before, and says it is not the retired read */
+  assert.deepEqual(held.aspirations.map((a) => a.id), [kept]);
+  assert.ok(!("retired" in held) || held.retired === false);
+  assert.ok(!held.aspirations.some((a) => "taught" in a || "dead_ends" in a));
+  assert.deepEqual(w.i.aspirationsFor({ project: w.P, member: "bob", viewer: V("bob"), retired: false }), held);
+  /* the member read alone; another member's retired aspiration is not asked for; the project's alone */
+  assert.deepEqual(w.i.aspirationsFor({ member: "bob", viewer: V("bob"), retired: true }).aspirations.map((a) => a.id), [mine]);
+  assert.deepEqual(w.i.aspirationsFor({ project: w.P, viewer: V("bob"), retired: true }).aspirations.map((a) => a.id), [lost]);
+  assert.deepEqual(w.i.aspirationsFor({ viewer: V("bob"), retired: true }).aspirations, []);
+  /* the bound is the read's own (R12): limit and truncated are answered */
+  assert.equal(r.limit, 1000);
+  assert.equal(r.truncated, false);
+  /* a project the viewer may not see is the one absent answer, as in the default read */
+  assert.deepEqual(w.i.aspirationsFor({ project: w.P, viewer: V("dave"), retired: true }), w.i.aspirationsFor({ project: w.P, viewer: V("dave") }));
+  assert.equal(w.i.aspirationsFor({ project: w.P, viewer: V("dave"), retired: true }).reason, "NO_SUCH_PROJECT");
+  /* a retired project aspiration of a project the viewer may not see is skipped, never listed */
+  assert.deepEqual(w.i.aspirationsFor({ project: Q, viewer: V("bob"), retired: true }).aspirations.map((a) => a.id), [elsewhere]);
+  /* the door: the aspirations op takes retired=true */
+  const url = (q) => new URL(`https://plane.test/aspirations?${q}`);
+  assert.deepEqual(intentOps(w.i, url(`project=${w.P}&member=bob&viewer=${V("bob")}&retired=true`), null).aspirations(), r);
+  assert.deepEqual(intentOps(w.i, url(`project=${w.P}&member=bob&viewer=${V("bob")}`), null).aspirations(), held);
 });

@@ -158,9 +158,14 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const held = S;
     let r;
     try { r = await win.fetch("/api/?" + qs.toString(), init); } catch { return { kind: "silent" }; }
-    if (r.status === 401 && !own && !pub) { if (S && S === held) over("ended"); return { kind: "silent" }; }
+    let j = null, read = false;
+    if (r.status === 401 && !own && !pub) {
+      /* R33: the store answers a locked session 401 with its own `SESSION_LOCKED` (admission R24); that session is locked, not ended, and falls to the lock below */
+      try { j = await r.json(); } catch { j = null; }
+      read = true;
+      if (!(j && typeof j === "object" && (j.code === "SESSION_LOCKED" || j.reason === "SESSION_LOCKED"))) { if (S && S === held) over("ended"); return { kind: "silent" }; }
+    }
     if (req.bytes) return { kind: "response", r };
-    let j = null;
     const type = r.headers && typeof r.headers.get === "function" ? String(r.headers.get("content-type") || "") : "";
     const server = r.status >= 500;
     const refusedOf = (o) => {
@@ -196,7 +201,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (!r.ok || (last && typeof last === "object" && last.ok === false)) return refusedOf(last && typeof last === "object" ? last : null);
       return { kind: "ok", value: events, json: events };
     }
-    try { j = await r.json(); } catch { j = null; }
+    if (!read) { try { j = await r.json(); } catch { j = null; } }
     if (j && typeof j === "object" && j.ok === false) return refusedOf(j);
     const value = j && typeof j === "object" && "result" in j ? j.result : j;
     if (value && typeof value === "object" && value.ok === false) return refusedOf(value);
@@ -777,7 +782,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const attrs = (o.type ? ' type="' + esc(o.type) + '"' : o.area ? "" : ' type="text"') + (o.max ? ' maxlength="' + esc(o.max) + '"' : "")
           + (o.accept ? ' accept="' + esc(o.accept) + '"' : "") + (o.capture ? ' capture="' + esc(o.capture) + '"' : "")
           + (o.help ? ' aria-describedby="' + (Array.isArray(o.help) ? o.help.map((k, i) => esc(id) + "-help" + (i ? i + 1 : "")).join(" ") : esc(id) + "-help") + '"' : "") + (o.autocomplete ? ' autocomplete="' + esc(o.autocomplete) + '"' : "")
-          + (o.placeholder ? ' placeholder="' + wordOrData(o.placeholder) + '"' : "") + (typeof o.typing === "function" ? ' data-typing="1"' : "");
+          + (o.placeholder ? ' placeholder="' + wordOrData(o.placeholder) + '"' : "") + (typeof o.typing === "function" ? ' data-typing="1"' : "") + (o.enter ? ' data-enter="' + esc(o.enter) + '"' : "");
         if (typeof o.typing === "function") inst.typing[id] = o.typing;
         const input = o.area ? '<textarea id="' + esc(id) + '" class="' + cls + '"' + attrs + ">" + esc(o.value || "") + "</textarea>"
           : "<input id=\"" + esc(id) + '" class="' + cls + '"' + attrs + (o.type === "file" || o.type === "password" ? "" : ' value="' + esc(o.value || "") + '"') + ">";
@@ -2440,8 +2445,24 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       win.addEventListener("pointermove", move);
       win.addEventListener("pointerup", up);
     });
+    /* R132 (DEC-155): a double-click on the rail's edge restores the default width and keeps it; delegated on the root because the grip is redrawn after a drag */
+    root.addEventListener("dblclick", (e) => {
+      if (blocked(e.target) || !(e.target.closest && e.target.closest('[data-shell="grip"]'))) return;
+      e.preventDefault();
+      RAILW = RAIL_DEFAULT;
+      local.set("cs-railw", String(RAILW));
+      draw();
+    });
     root.addEventListener("keydown", (e) => {
       if (blocked(e.target)) return;
+      /* R130: Enter in a one-line field of a screen presses the primary act of the section that holds it (or the act the field names), once, as a click would */
+      if (e.key === "Enter" && !e.repeat && !e.isComposing && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && e.target.matches && e.target.matches("input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=button]):not([type=submit])") && e.target.closest && e.target.closest("#cs-main")) {
+        const box = e.target.closest("section") || e.target.closest("#cs-main");
+        const named = e.target.getAttribute("data-enter");
+        const acts = [...box.querySelectorAll("button[data-act]")].filter((b) => !b.hasAttribute("disabled"));
+        const go = named ? acts.find((b) => b.getAttribute("data-act") === named) : acts.find((b) => b.getAttribute("data-tone") === "primary");
+        if (go) { e.preventDefault(); return press(go); }
+      }
       const gc = (e.key === "Enter" || e.key === " ") && !e.repeat && !(e.target.matches && e.target.matches("input, textarea, select")) ? guideControl(e.target) : null;
       if (gc) { e.preventDefault(); GUIDE_KEYED = { el: gc, at: Date.now() }; return guidePress(gc); }
       if (e.target.closest && e.target.closest('[data-shell="word"]') && wordKey(e.target.closest('[data-shell="word"]'), e)) return;

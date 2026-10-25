@@ -171,6 +171,15 @@ function overdueSince(text, date, nowMs, place) {
   return hi * 1000;
 }
 
+/** R39 (actions R33, R110): the earliest date among an action's clock entries stored `overdue`, or null. */
+function storedOverdueDate(text) {
+  const clock = (parseFm(text) || {}).clock;
+  const dates = (Array.isArray(clock) ? clock : [])
+    .filter((e) => e && typeof e === "object" && e.status === "overdue" && typeof e.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.date))
+    .map((e) => e.date).sort();
+  return dates.length ? dates[0] : null;
+}
+
 /** R29 (conformance R25, events R9): an act's event's `when` in words, as the record holds it: a day or instant, a span
  *  with its precision and zone, placed nowhere, or undetermined with why; never a guessed date. */
 function eventWhenWords(w, why) {
@@ -442,10 +451,15 @@ export class Escalation {
           continue;
         }
         const facts = actionFacts(this.#text(a.action), nowMs, place) || {};
-        if (!facts.clock_next)
+        /* R39 (actions R110): `clock_overdue` is tested first; a stored `overdue` entry makes it true with no entry pending. */
+        const stored = storedOverdueDate(this.#text(a.action));
+        if (facts.clock_overdue && (stored || facts.clock_next)) {
+          /* a stored overdue entry holds no instant of its own: it was past by its day, which is the age we can state */
+          const date = stored && (!facts.clock_next || stored <= facts.clock_next) ? stored : facts.clock_next;
+          alts.push({ ms: stored && date === stored ? instantMs(stored) : overdueSince(this.#text(a.action), facts.clock_next, nowMs, place),
+                      ids: [a.action], clock: date });
+        } else if (!facts.clock_next && !stored)
           notes.push({ action: a.action, says: word("escalation.says.notification_action_pending") });
-        else if (facts.clock_overdue)
-          alts.push({ ms: overdueSince(this.#text(a.action), facts.clock_next, nowMs, place), ids: [a.action], clock: facts.clock_next });
         else if (facts.clock_overdue === null)
           notes.push({ action: a.action, says: localize("escalation.index.clock_entry_past_undetermined", "whether this action's clock entry is past is undetermined (actions R12: no time zone is held for the office's local day, or the entry's day cannot be read), so stage 3 is not triggered by time on it") });
       }

@@ -10,6 +10,7 @@ import { interfacePage, interfaceScript, checkScreens, classLiterals, stylesheet
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { MARKS } from "../../../src/op-grades/index.mjs";
 import { fitSend, boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
+import { inWorld, bootAs, obligations } from "./world.mjs";
 import { documentOf } from "./dom.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { ALL, HELD } from "./screens.fixture.mjs";
@@ -190,20 +191,25 @@ test("R59 the guide's marks are drawn inside the screen's title row, after its h
 });
 
 test("R60 the masthead never draws a count at zero, never the group's slug (\"Your group\" when groupidentity answers no display_name), and names the explanation level by its own words; control: a set name is drawn", async () => {
-  const p = await boot({ screens: ALL, plane: { queue: ok({ items: [{ id: "x", class: "OTHER" }] }), groupidentity: ok({ ok: true, group: "river-town", display_name: null }) } });
+  const { world, me } = await inWorld();
+  const slug = (await me.read("groupidentity")).group;
+  assert.equal((await me.read("groupidentity")).display_name, null, "the world's team is unnamed");
+  const p = await bootAs(world, me, { screens: ALL });
   const mast = p.root().querySelector(".cs-mast");
   assert.equal(mast.querySelector('[data-kind="todo"]'), null, "zero To-do items draw no count");
   assert.ok(!mast.textContent.includes("0"));
   assert.equal(mast.querySelector(".mk-grp").textContent, word("shell.group.unnamed"));
-  assert.ok(!p.root().innerHTML.includes("river-town"), "no slug anywhere the shell draws");
-  assert.ok(!p.doc.title.includes("river-town"), "nor the page's title");
+  assert.ok(!p.root().innerHTML.includes(slug), "no slug anywhere the shell draws");
+  assert.ok(!p.doc.title.includes(slug), "nor the page's title");
   assert.equal(mast.querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.prompt"), "R76: the button names itself and its setting");
   await p.click('[data-shell="level"]');
   assert.equal(p.root().querySelector('.cs-mast [data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.pause"));
   /* control: a set name is drawn, and a count above zero */
-  const q = await boot({ screens: ALL });
-  assert.equal(q.root().querySelector(".cs-mast .mk-grp").textContent, "River Town");
-  assert.equal(q.root().querySelector('.cs-mast [data-kind="todo"]').textContent, word("shell.todo", { n: 3 }));
+  const name = (await me.act("groupnameset", { body: { name: "River Town" } })).display_name;
+  const items = await obligations(world, me, 3);
+  const q = await bootAs(world, me, { screens: ALL });
+  assert.equal(q.root().querySelector(".cs-mast .mk-grp").textContent, name);
+  assert.equal(q.root().querySelector('.cs-mast [data-kind="todo"]').textContent, word("shell.todo", { n: items.length }));
 });
 
 test("R61 absence: a subject read refused with an absence code draws only Nothing is here, with the way back to its place; a subject screen opened with no subject likewise, reading nothing; a refusal with its own words draws them alone; a failure without words draws could not be read with its reference; control: a 5xx still draws can't be reached", async () => {

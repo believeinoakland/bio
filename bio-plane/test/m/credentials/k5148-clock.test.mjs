@@ -37,3 +37,21 @@ test("R65 a sign-in in a pinned world stamps the session's last_active with the 
   assert.equal(l.ok, true);
   assert.equal(Number(w.row("SELECT last_active FROM sessions").last_active), PINNED);
 });
+
+test("R1 R2 an instance handed a pinned clock records that instant as consumedAt, with no environment at the door", async () => {
+  const w = world({ now: () => PINNED });
+  const answer = await w.claim();
+  assert.equal(answer.ok, true);
+  assert.equal(answer.consumedAt, PINNED_ISO);
+  assert.equal(w.c.bootstrapState("fp-1").consumedAt, PINNED_ISO);
+});
+
+test("R1 R2 control: an instance handed no clock records the wall clock at its claim", async () => {
+  const w = world();
+  const before = Date.now();
+  const answer = await w.claim();
+  const after = Date.now();
+  assert.equal(answer.ok, true);
+  const at = Date.parse(answer.consumedAt);
+  assert.ok(at >= Math.floor(before / 1000) * 1000 && at <= after, `wall clock, got ${answer.consumedAt}`);
+});
