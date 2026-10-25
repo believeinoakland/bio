@@ -1325,6 +1325,14 @@ test("Overlay", { timeout: 1800000 }, async (t) => {
   });
   await step(OV, "check 32 namespace discipline: every call of this journey names no store (the default real record) and the witness (stats) counters moved only by the journey's own acts", async () => nr("a walker's calls are made through the member's session (a session class has one store); the HTTP namespace fixture is for the DAEMON/PROBE classes and was not used"));
   await step(OV, "R108 five members at once on a team with material (G20: about 250 items in a project): the offline kit has one object and no Server-Timing at everyday load; the live phase measures", async () => nr("Phase 2 (live, everyday load); offline Miniflare timings are not quiet-copy or proxy times (R-QUIET, R-CLOCK)"));
+  await step(OV, "R217 'Help me write this' with no assistant connected: each writing box of the sitting answers (a guide or the not-ready state), never a silent failure", async () => {
+    const out = {};
+    for (const [op, field] of [["contradictionclarify", "explanation"], ["contradictiontakeup", "question"], ["contradictionresolve", "conclusion"], ["hypothesishold", "statement"], ["monitorset", "note"]]) {
+      const r = await post(ann, "writinghelp", { op, field, told: "two documents give different amounts for one payment" });
+      out[`${op}:${field}`] = refusal(r.body) ? { code: codeOf(r.body), translation: (refusal(r.body).translation || "").slice(0, 120) } : { ok: result(r.body).ok, keys: Object.keys(result(r.body) || {}).slice(0, 6), says: J(result(r.body), 160) };
+    }
+    return { v: Object.values(out).every((x) => x.code || x.ok !== undefined) ? "WORKS" : "BROKEN", saw: J(out, 1300) };
+  });
   await step(OV, "R212 one person alone: this sitting's chain made by ann alone in her own project except the second account (mel) used only for the withheld/visibility checks; the founder's membership made her", async () => {
     return { v: "WORKS", saw: "every step of this sitting except the withheld/NOT_YOURS/hidden-project checks was made by one member (ann) with no second party's approval: upload, file, vouch, find, cite, flag, take up, conclude, keep/adopt (adopt refused: see R49), retire. The member account (mel) was needed only to see what a non-participant is shown (R152, R50, R150)." };
   });
@@ -1418,6 +1426,178 @@ test("Browser pass", { timeout: 2400000 }, async (t) => {
         return { v: "__noted__" };
       });
     }
+    await ctx.close();
+  }
+  await browser.close();
+});
+
+/* ---- the browser pass, the interactive half: the Document page of the 20-page PDF (R45), the Finder (R46), the contradiction screen (R50) ---- */
+test("Browser interactive", { timeout: 2400000 }, async (t) => {
+  if (!want("BROWSER2")) return t.skip("not chosen");
+  mkdirSync(SHOTS, { recursive: true });
+  const { chromium } = requireC("playwright");
+  const base = (await kit.mf.ready).toString().replace(/\/$/, "");
+  const ann = await kit.ownerOf("ann");
+  const browser = await chromium.launch();
+  const BR = "BROWSER2";
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await ctx.newPage();
+  const errs = []; const ext = new Set();
+  page.on("pageerror", (e) => errs.push(String(e).slice(0, 160)));
+  page.on("request", (r) => { const u = new URL(r.url()); if (u.origin !== base) ext.add(u.origin); });
+  await page.goto(base + "/app", { waitUntil: "networkidle" });
+  await page.fill("#fs-handle", "ann"); await page.fill("#fs-pw", ann.password);
+  await page.locator("button", { hasText: /sign in/i }).first().click();
+  await page.waitForTimeout(2500);
+  const shot = async (name) => { await page.screenshot({ path: join(SHOTS, name) }); return `shots/06-read-cite/${name}`; };
+  const legend = async () => (await page.locator("legend", { hasText: /Page \d+ of \d+/ }).first().innerText().catch(() => "?")).replace(/\s+/g, " ");
+  await page.goto(base + "/app/document/" + W.w10.bundle, { waitUntil: "networkidle" });
+  await page.waitForTimeout(2500);
+  const times = []; let last = await legend();
+  await step(BR, "Document page of the 20-page PDF: 'Next page' pressed 19 times, one press each (a label click), page 1 of 20 to page 20 of 20; each press's wall time", async () => {
+    for (let i = 0; i < 19; i++) {
+      const t0 = Date.now();
+      await page.locator("label", { hasText: "Next page" }).first().click({ timeout: 6000 });
+      await page.waitForFunction((n) => [...document.querySelectorAll("legend")].some((l) => new RegExp("Page " + n + " of").test(l.innerText)), i + 2, { timeout: 8000 }).catch(() => {});
+      times.push(Date.now() - t0);
+    }
+    last = await legend();
+    const sh = await shot("document-last-page-1280.png");
+    note(BR, "Document page of the 20-page PDF: Next page x19", /Page 20 of 20/.test(last) ? "WORKS" : "BROKEN", J({ legend: last, pressMs: { min: Math.min(...times), max: Math.max(...times), median: times.slice().sort((a, b) => a - b)[9] }, nextOnLast: await page.locator("label", { hasText: "Next page" }).count() }), `${times.reduce((a, b) => a + b, 0)} ms`, sh);
+    return { v: "__noted__" };
+  });
+  await step(BR, "on the last page choose the question and role, select the words of the passage and press 'Cite this': the sentence the page draws says what was written (page or whole document)", async () => {
+    await page.selectOption("#document-cite-question", W.question2);
+    await page.selectOption("#document-cite-role", "supports");
+    await page.locator("blockquote").first().click({ clickCount: 3 });
+    await page.waitForTimeout(400);
+    await page.locator("button", { hasText: /^Cite this/ }).first().click();
+    await page.waitForTimeout(2500);
+    const done = await page.locator("[data-cite-done], [data-cite=repair], .mk-msg, .mk-note").allInnerTexts().catch(() => []);
+    const leg = (await legsOf(W.ann, W.question2)).filter((l) => l.target === W.w10.bundle);
+    const sh = await shot("document-cite-page-20-1280.png");
+    note(BR, "Document page: select words on page 20 and press Cite this into the second question", leg.length ? "WORKS" : "BROKEN", J({ pageSays: done.map((x) => x.replace(/\s+/g, " ").slice(0, 200)).slice(0, 4), legsWritten: leg.map((l) => `${l.extent_kind} page ${l.extent_page}`) }), null, sh);
+    return { v: "__noted__" };
+  });
+  await step(BR, "go back to page 3 of the same document and cite a second passage into the SAME question: what the page says (it must not claim a page was cited that was not written)", async () => {
+    for (let i = 0; i < 17; i++) await page.locator("label", { hasText: "Previous page" }).first().click({ timeout: 6000 }).catch(() => {});
+    await page.waitForTimeout(800);
+    const at = await legend();
+    await page.selectOption("#document-cite-question", W.question2);
+    await page.locator("blockquote").first().click({ clickCount: 3 });
+    await page.locator("button", { hasText: /^Cite this/ }).first().click();
+    await page.waitForTimeout(2500);
+    const done = await page.locator("[data-cite-done], [data-cite=repair], .mk-msg, .mk-note").allInnerTexts().catch(() => []);
+    const leg = (await legsOf(W.ann, W.question2)).filter((l) => l.target === W.w10.bundle);
+    const sh = await shot("document-cite-second-passage-1280.png");
+    note(BR, "Document page: cite a second passage (page 3) of an already cited document into the same question", leg.length >= 2 ? "WORKS" : "BROKEN", J({ at, pageSays: done.map((x) => x.replace(/\s+/g, " ").slice(0, 240)).slice(0, 4), legsOnDocument: leg.map((l) => `${l.extent_kind} page ${l.extent_page}`) }), null, sh);
+    return { v: "__noted__" };
+  });
+  await step(BR, "the Document page's whole text read: heading, 'Captured ...' line, the grade note door, 'Read N of M words', fingerprint, original file card, what a member reads of the address of an upload", async () => {
+    await page.goto(base + "/app/document/" + W.text.bundle, { waitUntil: "networkidle" });
+    await page.waitForTimeout(2500);
+    const text = await page.evaluate(() => { const out = []; const walk = (n) => { if (n.nodeType === 3) { const t = n.textContent.trim(); if (t) out.push(t); } else if (n.nodeType === 1 && !/^(SCRIPT|STYLE)$/.test(n.tagName)) { if (n.shadowRoot) walk(n.shadowRoot); n.childNodes.forEach(walk); } }; walk(document.body); return out.join(" | "); });
+    const sh = await shot("document-minutes-1280.png");
+    const raw = (text.match(/upload:[0-9a-f]{20,}|[0-9a-f]{40,}/g) || []);
+    note(BR, "Document page of an uploaded text: raw address or fingerprint in running text", raw.length ? "BROKEN" : "WORKS", J({ rawInText: raw.slice(0, 2), excerpt: text.slice(0, 700) }), null, sh);
+    return { v: "__noted__" };
+  });
+  await step(BR, "the Finder: type a word, run the search; the answer, its counts and the coverage words; the 'Passages' route finds a word held in the body", async () => {
+    await page.goto(base + "/app/finder", { waitUntil: "networkidle" });
+    await page.waitForTimeout(1500);
+    const inputs = await page.locator("input[type=text], input[type=search], input:not([type])").evaluateAll((els) => els.map((e) => e.id + ":" + (e.getAttribute("aria-label") || ""))).catch(() => []);
+    const box = page.locator("#finder-q");
+    await box.fill("passage:treasurer");
+    await box.press("Enter");
+    await page.waitForTimeout(3000);
+    const text = await page.evaluate(() => { const out = []; const walk = (n) => { if (n.nodeType === 3) { const t = n.textContent.trim(); if (t) out.push(t); } else if (n.nodeType === 1 && !/^(SCRIPT|STYLE)$/.test(n.tagName)) { if (n.shadowRoot) walk(n.shadowRoot); n.childNodes.forEach(walk); } }; walk(document.body); return out.join(" | "); });
+    const sh = await shot("finder-passage-1280.png");
+    note(BR, "Finder: search 'passage:treasurer' typed and entered", /treasurer/i.test(text) ? "WORKS" : "BROKEN", J({ inputs: inputs.slice(0, 4), excerpt: text.slice(0, 900) }), null, sh);
+    return { v: "__noted__" };
+  });
+  note(BR, "console and network across the interactive pass", errs.length || ext.size ? "BROKEN" : "WORKS", J({ pageErrors: errs, outsideHosts: [...ext] }));
+  await browser.close();
+});
+
+/* ---- the browser pass, the overlay half: dark, the phone's five tabs, gap states, help pages, the glossary, "Help me write this" ---- */
+const deepText = () => { const out = []; const walk = (n) => { if (n.nodeType === 3) { const t = n.textContent.trim(); if (t) out.push(t); } else if (n.nodeType === 1 && !/^(SCRIPT|STYLE)$/.test(n.tagName)) { if (n.shadowRoot) walk(n.shadowRoot); n.childNodes.forEach(walk); } }; walk(document.body); return out.join(" | "); };
+test("Browser overlay", { timeout: 2400000 }, async (t) => {
+  if (!want("BROWSER3")) return t.skip("not chosen");
+  mkdirSync(SHOTS, { recursive: true });
+  const { chromium } = requireC("playwright");
+  const base = (await kit.mf.ready).toString().replace(/\/$/, "");
+  const ann = await kit.ownerOf("ann"), mel = await kit.ownerOf("mel");
+  const browser = await chromium.launch();
+  const BR = "BROWSER3";
+  const signIn = async (handle, password, opts) => { const ctx = await browser.newContext(opts); const page = await ctx.newPage(); await page.goto(base + "/app", { waitUntil: "networkidle" }); await page.fill("#fs-handle", handle); await page.fill("#fs-pw", password); await page.locator("button", { hasText: /sign in/i }).first().click(); await page.waitForTimeout(2500); return { ctx, page }; };
+  const shot = async (page, name) => { await page.screenshot({ path: join(SHOTS, name) }); return `shots/06-read-cite/${name}`; };
+  { /* dark */
+    const { ctx, page } = await signIn("ann", ann.password, { viewport: { width: 1280, height: 900 }, colorScheme: "dark" });
+    for (const [name, path] of [["home", "/app"], ["project", "/app/project/" + W.project], ["settings", "/app/settings"], ["question", "/app/question/" + W.question]]) {
+      await step(BR, `dark mode on ${name} (the device asks for dark): the page follows it; colour is not the only signal`, async () => {
+        await page.goto(base + path, { waitUntil: "networkidle" }); await page.waitForTimeout(2000);
+        const c = await page.evaluate(() => { const b = getComputedStyle(document.body); const m = getComputedStyle(document.querySelector("main") || document.body); return { body: b.backgroundColor, text: b.color, main: m.backgroundColor, scheme: matchMedia("(prefers-color-scheme: dark)").matches }; });
+        const lum = (rgb) => { const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(rgb); return m ? (0.2126 * m[1] + 0.7152 * m[2] + 0.0722 * m[3]) / 255 : 1; };
+        const sh = await shot(page, `${name}-dark-1280.png`);
+        note(BR, `dark mode on ${name}`, lum(c.body) < 0.35 ? "WORKS" : "BROKEN", J({ ...c, bodyLuminance: lum(c.body).toFixed(2) }), null, sh);
+        return { v: "__noted__" };
+      });
+    }
+    await ctx.close();
+  }
+  { /* phone */
+    const { ctx, page } = await signIn("ann", ann.password, { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    await step(BR, "the phone's five tabs (Home, Queue, Add, Find, More) at 390 px, reachable by tap; no sideways scroll", async () => {
+      const tabs = await page.evaluate(() => [...document.querySelectorAll("nav a, a[data-nav]")].map((a) => (a.innerText || a.getAttribute("aria-label") || "").trim()).filter(Boolean));
+      const sh = await shot(page, "home-tabs-390.png");
+      const need = ["Home", "Queue", "Add", "Find", "More"].filter((x) => !tabs.some((t0) => t0.toLowerCase().includes(x.toLowerCase())));
+      note(BR, "phone tabs at 390 px", need.length ? "BROKEN" : "WORKS", J({ tabs: [...new Set(tabs)].slice(0, 14), missing: need }), null, sh);
+      return { v: "__noted__" };
+    });
+    await step(BR, "a heavy act read at 390 px says where to finish: the Document page's 'Retire' / 'Get an independent timestamp' (signing) / the case ceremony", async () => {
+      await page.goto(base + "/app/document/" + W.text.bundle, { waitUntil: "networkidle" }); await page.waitForTimeout(2000);
+      const text = await page.evaluate(deepText);
+      const sh = await shot(page, "document-heavy-acts-390.png");
+      note(BR, "Document page at 390 px: the heavy acts", /larger screen|bigger screen|wider screen|on a computer/i.test(text) ? "WORKS" : "NOT REACHED", J({ mentionsLargerScreen: /larger screen|bigger screen|wider screen|on a computer/i.test(text), hasRetire: /Retire/.test(text), excerpt: text.slice(0, 500) }), null, sh);
+      return { v: "__noted__" };
+    });
+    await ctx.close();
+  }
+  { /* gap states, help pages */
+    const { ctx, page } = await signIn("ann", ann.password, { viewport: { width: 1280, height: 900 } });
+    const read = async (path) => { await page.goto(base + path, { waitUntil: "networkidle" }); await page.waitForTimeout(2200); return page.evaluate(deepText); };
+    await step(BR, "an empty list says 'Nothing here' (the Finder with a word nobody holds)", async () => {
+      await page.goto(base + "/app/finder", { waitUntil: "networkidle" }); await page.waitForTimeout(1200);
+      const box = page.locator("#finder-q"); await box.fill("zzqqxxnomatch"); await box.press("Enter"); await page.waitForTimeout(2500);
+      const text = await page.evaluate(deepText); const sh = await shot(page, "finder-empty-1280.png");
+      note(BR, "Finder: a word nobody holds", /Nothing here|No document|nothing/i.test(text) ? "WORKS" : "BROKEN", J({ excerpt: text.slice(0, 800) }), null, sh);
+      return { v: "__noted__" };
+    });
+    await step(BR, "a failed read says 'Could not read this, because ...' and never an empty list: the Document page with its image read cut by the network", async () => {
+      await page.route("**/api/?op=image*", (r) => r.abort());
+      const text = await read("/app/document/" + W.w10.bundle);
+      await page.unroute("**/api/?op=image*");
+      const sh = await shot(page, "document-cannot-read-1280.png");
+      note(BR, "Document page with its main read failing at the network", /Could not read|could not read|because/i.test(text) ? "WORKS" : "BROKEN", J({ excerpt: text.slice(0, 700) }), null, sh);
+      return { v: "__noted__" };
+    });
+    await step(BR, "the help pages and the glossary: /app/help-records, /app/help, /app/glossary open and say something", async () => {
+      const out = {};
+      for (const path of ["/app/help-records", "/app/help", "/app/glossary"]) { const text = await read(path); out[path] = { len: text.length, head: text.slice(0, 260) }; await shot(page, `${path.split("/").pop()}-1280.png`); }
+      note(BR, "help-records, help and glossary pages", Object.values(out).every((x) => x.len > 120) ? "WORKS" : "BROKEN", J(out, 1500), null, "shots/06-read-cite/help-1280.png");
+      return { v: "__noted__" };
+    });
+    await ctx.close();
+  }
+  { /* withheld: mel opens ann's document */
+    const { ctx, page } = await signIn("mel", mel.password, { viewport: { width: 1280, height: 900 } });
+    await step(BR, "withheld: mel (not in the project) opens ann's document: one fixed sentence, no title, state or count", async () => {
+      await page.goto(base + "/app/document/" + W.text.bundle, { waitUntil: "networkidle" }); await page.waitForTimeout(2200);
+      const text = await page.evaluate(deepText); const sh = await shot(page, "document-withheld-1280.png");
+      const leaks = ["council minutes", "Council spending", "Ellery", W.text.sha.slice(0, 8)].filter((x) => text.includes(x));
+      note(BR, "mel opens a document of a project he is not in", leaks.length ? "BROKEN" : "WORKS", J({ leaks, excerpt: text.slice(0, 600) }), null, sh);
+      return { v: "__noted__" };
+    });
     await ctx.close();
   }
   await browser.close();
