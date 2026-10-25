@@ -1,6 +1,6 @@
 # T51 walk coverage map: index
 
-This folder is the map `build/plan/walk-coverage-T51.md` split mechanically by sitting (mechanics §17 step 2, P20), nothing lost. Each area file holds, verbatim, the map's Status line and §1, that area's line of §3, that area's part of §4 (its sitting text, its table header and every row placed there) and that area's part of §6. This README holds the rest: §2 counts, §3 whole, the §4 heading, §5 whole, the general part of §6. The map itself is the source; these files are regenerated from it.
+This folder is the map `build/plan/walk-coverage-T51.md` split mechanically by sitting (mechanics §17 step 2, P20), nothing lost. Each area file holds, verbatim, the map's Status line and §1, that area's line of §3, that area's part of §4 (its sitting text, its table header and every row placed there) and that area's part of §6. This README holds the rest: §2 counts, §3 whole, the §4 heading, §5 whole, the general part of §6. The map itself is the source; these files are regenerated from it. Five area files were over 50 KB and are split again (K5012, K5021): `<area>-part2.md` holds the rest of the area (the Files table below names which); a walker reads every part of its area, each part's first line names its siblings.
 
 ## Status and how to read it (from the map)
 
@@ -130,17 +130,17 @@ What the writers and reconcilers could not settle, contradictions between source
 
 | file | map area | sitting |
 | --- | --- | --- |
-| `01-install.md` | Area 1 Install, claim, set up the room | sitting 1 |
+| `01-install.md` and `01-install-part2.md` (its §6 notes) | Area 1 Install, claim, set up the room | sitting 1 |
 | `02-people.md` | Area 2 The team's people and accounts | sitting 2 |
 | `03-projects.md` | Area 3 Projects and the daily rhythm | sitting 3 |
-| `04-documents.md` | Area 4 Bring documents in (4a and 4b) | sitting 4 |
+| `04-documents.md` and `04-documents-part2.md` (rows R135 to R146 and its §6 notes) | Area 4 Bring documents in (4a and 4b) | sitting 4 |
 | `05-vouch.md` | Area 5 Vouch; people, organizations, ties | sitting 5 |
 | `06-read-cite.md` | Area 6 Read, find, cite into a question | sitting 6 |
 | `07-money-time.md` | Area 7 Money, time, connections, registers | sitting 7 |
 | `08-law.md` | Area 8 Law and courts | sitting 8 |
 | `09-question.md` | Area 9 Question to conclusion (and the plan opened) | sitting 9 |
-| `10-case.md` | Area 10 Case to publication (10a and 10b) | sitting 10 |
-| `11-act.md` | Area 11 Act | sitting 11 |
+| `10-case.md` and `10-case-part2.md` (rows R98 to R185 and its §6 notes) | Area 10 Case to publication (10a and 10b) | sitting 10 |
+| `11-act.md` and `11-act-part2.md` (its §6 notes) | Area 11 Act | sitting 11 |
 | `12-after-alpha.md` | Area 12 After the alpha (not walked in the alpha) | not walked in the alpha |
-| `overlay.md` | Overlay for every walker | every walker, in every area |
+| `overlay.md` and `overlay-part2.md` (its §6 notes) | Overlay for every walker | every walker, in every area |
 | `README.md` | this index | |
