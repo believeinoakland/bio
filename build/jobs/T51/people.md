@@ -177,3 +177,26 @@ Not published, needs BOB: moneyChecks.noticed (listed under this fixture by the 
 Markers: none added (no fixtures-own, no fixtures-generic). Users of these fixtures are later in modules.json than people, so no fixtures-contract or fixtures-run markers are needed.
 
 Lines of the list: the people fixture lines are done except the one FIX-E events line you named (why.test.mjs:110, op-table sequence; events' fixture, left for the CHANGE). checks/fixtures.mjs people: 1 failure, that line.
+
+## J12 · COMPLETE
+
+**Fixture round 10, Wave A batch 3 (people): COMPLETE.** Three fixtures published (commit 0b2c72995a, job/T51/people); the REPORT (J11) carries the decisions.
+
+Applied
+- checkResults (R22, R24), evaluateChecksAnswers (R23), tiesConcerningRefusal (R20): published in bio-plane/test/m/people/fixtures.mjs, each made by the real people code when a test runs; fixtures.test.mjs calls each and asserts the real answer.
+- moneyChecks.noticed: not published here (money-checks' code; see J11, a decision for BOB).
+
+Fixtures-own / fixtures-generic markers added: none.
+
+Lines left: the one FIX-E events line (why.test.mjs:110, op-table sequence), named in your START as left for the events CHANGE.
+
+Deferred: none in the module.
+
+Checks (process repository e8…, product job/T51/people at 0b2c72995a)
+- node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/people/: tests 82, pass 82, fail 0.
+- node build/plan/impact.mjs origin/tranche/T51 HEAD: 0 modules affected (this batch adds test files only, no product change).
+- checks/format.mjs: 0 failures. checks/architecture.mjs people: 0 failures. checks/coverage.mjs people: 42 of 42. checks/words.mjs people: 0 failures.
+- checks/ownership.mjs people origin/tranche/T51 job/T51/people: 3 files, 0 failures.
+- checks/fixtures.mjs people: 1 failure (the events line above).
+
+Size (session_014qiZzWUT5rWTceixKQwyba): test runs 3, module lines 2281
