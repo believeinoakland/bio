@@ -40,6 +40,7 @@ test("R35 R50 R117 C41 a BASIS_VERSION_REFUSED whose first finding carries legs:
   const bare = await conclude("BASIS_VERSION_REFUSED", [{ ...unplaced(undefined), legs: undefined }]);
   assert.ok(says(bare, "refusal.VERSION_PARTITION_INCOMPLETE") && bare.querySelector("[data-legs]") === null, "no legs, none named");
   /* control: BASIS_REFUSED is drawn as before (its detail) and names no legs */
+  // fixtures-generic: SOMETHING_ELSE (a finding code made up on purpose: the control that BASIS_REFUSED names no legs, whatever code it carries)
   const old = await conclude("BASIS_REFUSED", [{ check: "C-9.9", code: "SOMETHING_ELSE", detail: "the leg names no edition", legs: [D, D2] }]);
   assert.ok(old.textContent.includes("the leg names no edition") && old.querySelector("[data-legs]") === null, "BASIS_REFUSED unchanged");
 });
@@ -120,8 +121,9 @@ test("R2 R23 C38 state b: a severed citation is not asked about and not sent in 
   const run = async (status2) => {
     const p = await open(at, { images: { [Q]: { "bundle.md": inquiryMd(P, refsWith(status2), { legs: twoLegs() }) } }, plane: { inquiryground: ok({ ok: true, act: "authored" }) } });
     const asked = section(p, "question.ask.title").querySelectorAll("[data-ask]").length;
-    p.doc.getElementById("ask-0-0").checked = true;
-    if (status2 !== "severed") p.doc.getElementById("ask-1-0").checked = true;
+    /* each live passage answered "Yes" with no other named: a ground of its own (R23; a "No" is necessary and in no ground, DEC-32 clause 2) */
+    p.doc.getElementById("ask-0-1").checked = true;
+    if (status2 !== "severed") p.doc.getElementById("ask-1-1").checked = true;
     await press(p, "inquiryground", { reason: "my first reading" });
     return { asked, grounds: p.byOp("inquiryground")[0].body.grounds };
   };

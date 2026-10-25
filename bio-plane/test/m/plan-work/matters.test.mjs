@@ -5,6 +5,7 @@ import { world, code, by, V, MACHINE, OFFICE, option, choose } from "./fixture.m
 import { noSuchPlan, refusePlanClosed, ACTION_PLAN_CHECKS } from "../../../src/action-plans/index.mjs";
 import { PLAN_WORK_CHECKS, MATTER_STATES } from "../../../src/plan-work/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { escalationRead } from "../escalation/fixtures.mjs";
 
 const set = (w, extra = {}) => w.pw.matterOutcomeSet({ plan: w.PL, subject: w.S1, text: "The lights work again", ...by("bob"), ...extra });
 
@@ -110,7 +111,8 @@ test("R2: the order when two hold: the first of ended, fixed, stopped, acting, f
 
 test("R2: a matter whose escalations cannot be read is undetermined with why, never a guessed state", () => {
   const w = world();
-  w.stand.escalation.escalationsFor = () => ({ ok: false, reason: "NO_SUCH_DETERMINATION" });
+  const refused = escalationRead().unknownDeterminationAnswer;
+  w.stand.escalation.escalationsFor = () => refused;
   const m = stateOf(w);
   assert.equal(m.state, "undetermined"); assert.match(m.why, /escalations/);
   assert.equal(MATTER_STATES.includes(m.state), false);

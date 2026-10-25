@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J27
+**Read** · handled J28
 
 ## B1 · START
 
@@ -390,3 +390,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B32 · CHANGE
 
 re J27 (K5083): merged with `doc-clean`, `retrieval`, `standards` added to your `uses`; your six `fixtures-generic` markers (`disclosures.test.mjs:68-73`, one-letter codes proving order) read and accepted. ratification is now merged with `preflightRefusal` in `bio-plane/test/m/ratification/fixtures.mjs`: merge `origin/tranche/T51`, re-point `preflight.test.mjs:409`, fixtures for case-authoring at zero, then COMPLETE.
+
+## B33 · CHANGE
+
+Also, with B32 (K5084; CASE-CATALOGUE #4 J5, cause R31): case-catalogue is merged (C-2.8 counts live legs only). Add the chain test of R31 at your interface: two grounded legs, sever one citation, conclude, prepare: the gate is clean (no C-2.8 finding for the severed leg's ground); control: the same with the citation live asks for its row. Seen red before the tranche merge if you can, else name it new; then COMPLETE.

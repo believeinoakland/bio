@@ -331,3 +331,23 @@ test("R5: no place is named in this module's vocabularies or findings", () => {
   assert.ok(said.length > 2000, "negative control: the findings were drawn");
   assert.doesNotMatch(said, /oakland|alameda|california|berkeley/i);
 });
+
+test("R2, R31: C-2.8's grounds arm counts only live legs, as strength does: a ground whose every leg is severed has no row to ask for", () => {
+  const leg = (target, ground) => ({ target, role: "supports", grade: "B", grade_axis: "capture", ground });
+  const grounded = (refs, rows) => {
+    const m = member();
+    m.basis = [leg("INFO-2026-0001-a", "part 1"), leg("INFO-2026-0002-b", "part 2")];
+    m.references = refs;
+    m.published_strength_grounds = rows.map((g) => ({ ground: g, axis: "capture", state: "graded", grade: "B" }));
+    return m;
+  };
+  const cite = (target, status) => ({ target, rel: "cites", status });
+  const live = [cite("INFO-2026-0001-a", "confirmed"), cite("INFO-2026-0002-b", "confirmed")];
+  const severed = [cite("INFO-2026-0001-a", "confirmed"), cite("INFO-2026-0002-b", "severed")];
+  assert.deepEqual(armOf(grounded(severed, ["part 1"])), [], "part 2's only leg is severed: no row for it, no finding");
+  assert.deepEqual(armOf(grounded(live, ["part 1"])), ["C-2.8"], "control: the same leg live and its row absent is still the finding");
+  assert.deepEqual(armOf(grounded(live, ["part 1", "part 2"])), [], "control: every live ground has its row");
+  const oneLeg = grounded(severed, ["part 1"]);
+  oneLeg.basis.push(leg("INFO-2026-0001-a", "part 2"));
+  assert.deepEqual(armOf(oneLeg), ["C-2.8"], "a ground with a live leg left is asked for");
+});

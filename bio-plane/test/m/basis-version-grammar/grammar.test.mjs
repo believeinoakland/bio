@@ -113,10 +113,11 @@ test("R3: each version's legs obey the leg grammar (lead and theme first), the t
   assert.equal(theme[0], "THEME_NOT_EVIDENCE", "a theme is refused by name first");
   /* grounds */
   assert.deepEqual(codes(fm({ legs: [] , grounds: [] })), [], "a version with no legs is legal");
-  assert.ok(codes(fm({ legs: [{ version: "first", target: DOC, role: "supports", ground: "main" },
-                              { version: "first", target: DOC2, role: "supports" }] })).includes("VERSION_PARTITION_INCOMPLETE"));
-  assert.ok(codes(fm({ legs: [{ version: "first", target: DOC, role: "supports" }], grounds: [] }))
-    .includes("VERSION_PARTITION_INCOMPLETE"), "a leg with no ground, whether or not any ground is named");
+  assert.deepEqual(codes(fm({ legs: [{ version: "first", target: DOC, role: "supports", ground: "main" },
+                                     { version: "first", target: DOC2, role: "supports" }] })), [],
+    "an unlabelled supporting leg beside a labelled ground is a necessary leg (R3, fix round 10, cause 30b)");
+  assert.deepEqual(codes(fm({ legs: [{ version: "first", target: DOC, role: "supports" }], grounds: [] })), [],
+    "a version with no ground at all is clean");
   assert.ok(codes(fm({ legs: [{ version: "first", target: DOC, role: "supports", ground: "no/good" }] })).includes("VERSION_GROUND_UNASSERTED"),
     "a leg's ground label outside the form");
   assert.ok(codes(fm({ legs: [{ version: "first", target: DOC, role: "supports", ground: "other" }] })).includes("VERSION_GROUND_UNASSERTED"),
@@ -256,7 +257,6 @@ const RAISING = {
   VERSION_NAME_MALFORMED: fm({ v: { name: "x".repeat(65) }, legs: [], grounds: [] }),
   VERSION_NO_RELATIONSHIP: fm({ v: { relationship: "xor" } }),
   VERSION_RELATIONSHIP_DISAGREES: fm({ v: { relationship: "or" } }),
-  VERSION_PARTITION_INCOMPLETE: fm({ legs: [{ version: "first", target: DOC, role: "supports", ground: "main" }, { version: "first", target: DOC2, role: "supports" }] }),
   VERSION_GROUND_UNASSERTED: fm({ grounds: [{ version: "first", ground: "main", asserted_by: "class:ai", at: T }] }),
   VERSION_DERIVED_FROM_UNKNOWN: fm({ v: { derived_from: "nowhere" } }),
   VERSION_DERIVATION_CYCLE: { id: Q, basis_versions: [
@@ -274,6 +274,7 @@ const RAISING = {
   VERSION_ORPHAN_ROW: fm({ legs: [{ version: "ghost", target: DOC, role: "supports", ground: "main" }] }),
   VERSION_DISPOSITION_UNATTRIBUTED: fm({ v: { state: "rejected" } }),
 };
+const RETIRED = "VERSION_PARTITION_INCOMPLETE";
 const WANT_CHECKS = {
   VERSION_NO_DESCRIPTION: "C-25.1", VERSION_NAME_NOT_UNIQUE: "C-25.2", VERSION_NAME_MALFORMED: "C-25.36",
   VERSION_NO_RELATIONSHIP: "C-25.3", VERSION_RELATIONSHIP_DISAGREES: "C-25.4", VERSION_PARTITION_INCOMPLETE: "C-25.5",
@@ -286,7 +287,8 @@ const WANT_CHECKS = {
 test("R8: every refusal this module raises is a row with its C-number, a site in this module and a translation by key; every code a document raises has a row and every row a document that raises it", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(BASIS_VERSION_GRAMMAR_CHECKS).map(([k, r]) => [k, r.check])), WANT_CHECKS,
     "the grammar's rows, by code, with their C-numbers (C-25.11, .16–.18, .37–.39 are basis-versions')");
-  assert.deepEqual(Object.keys(RAISING).sort(), Object.keys(BASIS_VERSION_GRAMMAR_CHECKS).sort(), "a document for every row");
+  /* C-25.5 is held but raised by no document since fix round 10, cause 30b (K5077): the partition need not cover the legs */
+  assert.deepEqual([...Object.keys(RAISING), RETIRED].sort(), Object.keys(BASIS_VERSION_GRAMMAR_CHECKS).sort(), "a document for every row but the one no document raises");
   assert.deepEqual(Object.fromEntries(Object.entries(VERSION_KIND_CHECKS).map(([k, r]) => [k, r.check])), { VERSION_KIND_UNKNOWN: "C-27.15" });
   for (const [k, r] of [...Object.entries(BASIS_VERSION_GRAMMAR_CHECKS), ...Object.entries(VERSION_KIND_CHECKS)]) {
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"], k);

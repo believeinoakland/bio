@@ -64,6 +64,7 @@ test("R110 IMPORTED_NOT_ACCEPTED, carried inside BASIS_REFUSED or answered alone
   };
   assert.ok(says(await go(refused([{ code: "IMPORTED_NOT_ACCEPTED", check: "C-21.4", detail: "basis[0] rests on x" }])), "refusal.IMPORTED_NOT_ACCEPTED"));
   assert.ok(says(await go(refusedIn("IMPORTED_NOT_ACCEPTED")), "refusal.IMPORTED_NOT_ACCEPTED"));
+  // fixtures-generic: SOMETHING_ELSE (a finding code made up on purpose: no module gives it, so a finding with an unlisted code is drawn by its own detail)
   const other = await go(refused([{ code: "SOMETHING_ELSE", check: "C-9.9", detail: "the leg names no edition" }]));
   assert.ok(other.textContent.includes("the leg names no edition") && !says(other, "refusal.IMPORTED_NOT_ACCEPTED"));
 });

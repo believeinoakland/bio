@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, world, opened, V, MACHINE, OFFICE, ms, noSuchAction } from "./fixture.mjs";
 import { actionsForRefusal } from "../actions/fixtures.mjs";
+import { consequencesOfRefusal } from "../consequences/fixtures.mjs";
 import { JUDGMENT_KEYS, REASON_MAX } from "../../../src/escalation/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -109,8 +110,9 @@ test("R29 what could not be read is stated undetermined, never filled: the actio
   /* the actions and the consequences unreadable: each stated undetermined, named by the determination; nothing in
      their place */
   const refused = actionsForRefusal().unknownRead;
+  const unreadable = consequencesOfRefusal({ determination: w.D }).answer;
   w.stand.actions.actionsFor = () => refused;
-  w.stand.consequences.consequencesOf = () => ({ ok: false, reason: "UNAVAILABLE" });
+  w.stand.consequences.consequencesOf = () => unreadable;
   const u = draftOf(w);
   assert.deepEqual(u.parts.slice(4).map((p) => [p.id, p.text]), [
     [w.D, word("escalation.actions_resting_determination")],

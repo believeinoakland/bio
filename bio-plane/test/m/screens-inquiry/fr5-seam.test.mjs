@@ -103,7 +103,7 @@ test("R129 N5 (the real plane) a copy stored with no reading (its upload promote
 import { fill } from "./fixtures.mjs";
 
 const hereAt = (p) => p.location.pathname;
-test("R129 R3 (the real plane, citation R21) a second passage cited while the only citation is grouped is refused by the real citation with its repairs; the page draws them as acts in the member's words; each, done, lets the cite land (the group, then the grouping taken off)", async () => {
+test("R129 R3 (the real plane, citation R21; inquiry-grammar R68 as amended) a second passage cited while the only citation is grouped lands as a necessary leg beside the group: nothing is refused, so no repair is offered and the grouping is untouched", async () => {
   const auth = await founder();
   const cs = screenCall(auth);
   const both = SCREENS;
@@ -146,27 +146,21 @@ test("R129 R3 (the real plane, citation R21) a second passage cited while the on
   assert.ok(main(first).querySelector("[data-cite-done=cited]"), "the first passage is cited");
   const grouped = await cs.call("inquiryground", { body: { target: question, grounds: [{ ground: "part 1", legs: [0] }], reason: "the first passage is a group of its own" } });
   assert.equal(grouped.ok, true, JSON.stringify(grouped).slice(0, 300));
-  /* the second document's passage: refused by the real citation, with its repairs */
+  /* the second document's passage: inquiry-grammar R68 (fix round 10, cause 30b; DEC-32 clause 4) judges a supporting leg that names no ground, beside a grounded one, a necessary leg and no
+     finding, so the real citation lets the cite land with no refusal and so no repairs to offer; the grouping the question declares is untouched */
   const second = await openDoc(docs[1]);
   await second.click(citeOf(second));
-  await until(second, () => repairsOf(second).length === 2);
-  assert.equal(repairsOf(second).length, 2, "the two repairs are acts: " + main(second).textContent.slice(-500));
-  assert.ok(repairsOf(second)[0].textContent.includes("Add it to the group part 1"), "the first adds it to the group the question already declares");
-  assert.ok(!/grouped WHOLE|C-2\.8/.test(main(second).textContent), "and the finding's own English, with its check number, is not what she is left with");
-  await second.click(repairsOf(second)[0]);
-  await until(second, () => repairsOf(second).length === 0);
-  assert.equal(repairsOf(second).length, 0, "the repair done, the repairs go");
+  await until(second, () => !!main(second).querySelector("[data-cite-done=cited]"));
+  assert.ok(main(second).querySelector("[data-cite-done=cited]"), "the second passage lands: " + main(second).textContent.slice(-300));
+  assert.equal(repairsOf(second).length, 0, "no repair is offered where nothing was refused");
   const md1 = await img();
-  assert.equal((md1.match(/\n    ground: part 1/g) || []).length, 2, "both legs are in the group part 1: " + md1.slice(md1.indexOf("basis:"), md1.indexOf("basis:") + 500));
-  /* the third: refused again; this time the grouping is taken off, with her reason, and the cite lands */
+  assert.equal((md1.match(/\n    ground: part 1/g) || []).length, 1, "only the first leg is in the group part 1; the second stands beside it, unlabelled and necessary: " + md1.slice(md1.indexOf("basis:"), md1.indexOf("basis:") + 500));
+  assert.equal((md1.match(/role: supports/g) || []).length, 2, "both legs are on the question");
   const third = await openDoc(docs[2]);
   await third.click(citeOf(third));
-  await until(third, () => repairsOf(third).length === 2);
-  assert.equal(repairsOf(third).length, 2, "refused again, with its repairs");
-  fill(third, { "document-cite-repair-reason": "the third passage stands apart from the first two" });
-  await third.click(repairsOf(third)[1]);
-  await until(third, () => repairsOf(third).length === 0);
+  await until(third, () => !!main(third).querySelector("[data-cite-done=cited]"));
+  assert.ok(main(third).querySelector("[data-cite-done=cited]"), "the third lands too");
   const md2 = await img();
   assert.equal((md2.match(/role: supports/g) || []).length, 3, "all three legs are on the question: " + md2.slice(md2.indexOf("basis:"), md2.indexOf("basis:") + 700));
-  assert.equal((md2.match(/\n    ground: part/g) || []).length, 0, "and the grouping is off");
+  assert.equal((md2.match(/\n    ground: part/g) || []).length, 1, "and the one grouping is as it was");
 });
