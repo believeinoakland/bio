@@ -262,3 +262,7 @@ COMPLETE · fix round 10, wave A batch 1 (B11). R65 grain (cause 24 (a)) done, f
 `tranche/T51` merged. `fixture.mjs` `world()` now takes record-core from record-core's published `coreOver(db)` (real `declarePurge`, `declareTable`, `bundleInfo`; `declared` read back from `declaredTables()`), replacing the hand-built `stubCore` and the hand-made `bundles` table (lines :37, :48, :55, :57, :58); bundles are added with `addBundle` (`fixture.mjs` `project`, `t50.test.mjs`). `seam.test.mjs` takes its TABLE_DECLARED and TABLE_CLASS_UNKNOWN refusals from `tableDeclarationRefusals` (:153, :156). Not done: `seam.test.mjs:177` (member-roster's `registerPasswordSetter` refusal; its job, batch 4). `fixtures.mjs /home/user/bio credentials --list`: 1 failure, that line. No `fixtures-own`/`fixtures-generic` markers.
 Module tests: 189 pass, 0 fail. format, architecture, coverage (58 of 58), words, ownership: 0 failures.
 Size (session_015BgLFhXk6KZEKYCGLb1LEg): test runs 9, module lines 2714
+
+## J16 · COMPLETE
+
+COMPLETE · CHANGE B12 done (record: J15). record-core lines re-pointed to coreOver and tableDeclarationRefusals; fixtures list now 1 failure, seam.test.mjs:177 (member-roster, batch 4). Module tests 189/189; format, architecture, coverage 58/58, words, ownership 0 failures. No fixtures-own/-generic markers.
