@@ -179,7 +179,7 @@ The 8 derived seeds draw every axis from the envelope's distribution: pages log-
 Passing means SI1-SI14 for each seed. On a red, the seed and its shrunk spec are recorded in the run's file (owner: plane, which runs them; the generator is test-support's).
 
 
-[pdf-envelope-T51.md 3.1: pdfgen.mjs]
+[pdf-envelope-T51-s2-s3.md 3.1: pdfgen.mjs]
 ## 3. The corpus (K4785 (3))
 
 ### 3.1 How it is made
@@ -220,7 +220,7 @@ Every text line carries `<seed>-p<page>-l<line>` and a word drawn from a small v
 **What passing means.** A file passes when all of I1-I14 hold for it, or, for a refusal file, when I3 and I7 hold with exactly the statement its truth names and nothing else is read wrongly. The column "Passes when" gives only what is particular to the file.
 
 
-[pdf-envelope-T51.md 3.2 F: the 8 fixed seeds]
+[pdf-envelope-T51-s2-s3.md 3.2 F: the 8 fixed seeds]
 **F. Seeded variations** (16 a round end: 8 fixed, 8 derived)
 
 The fixed seeds 1-8 cover the joint space once, chosen so each axis value appears at least twice:
