@@ -416,3 +416,7 @@ Merged `origin/tranche/T51`. `instance-setup/selftestAnswer` (verify.test.mjs R2
 Checks: steps tests 123, 121 pass, 0 fail; fixtures `--list` 0 failures; words, format, architecture, coverage (45 of 45), ownership all 0 failures. Impact: installer-steps and installer; `newgroup/test/*.test.mjs` shows 15 failures that are identical with my change stashed (inherited from the tranche, installer's, not touched by this job).
 
 Size (session_01Qsr6sBAiKXETnXBTaFti8B): test runs 6, module lines 1,734
+
+## J29 · COMPLETE
+
+All 3 fixture lines done (selftestAnswer now re-pointed; bootstrapVersions earlier). Fixtures/words/format/architecture/coverage/ownership 0 failures; steps tests 121 pass/0 fail. No fixtures-own/generic markers added. Note: newgroup/test/*.test.mjs (installer) has 15 failures identical with my change stashed, inherited, not mine. Record updated.
