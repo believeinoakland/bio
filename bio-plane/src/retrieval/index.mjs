@@ -1249,7 +1249,8 @@ export class Retrieval {
    *  array that is COMPLETE tells no lie; its named consumers (the browser, the audit, the migration verifier) need it
    *  whole, and `roster.test.mjs` (R63) holds it complete. Paging is opt-in: a positive `limit` answers the envelope
    *  `{bundles, limit, cursor, total}`, `limit` the bound applied after the 5,000 ceiling (REC-57) and `total` what the
-   *  VIEWER may see (a total over rows the caller cannot read would say "something is hidden"). */
+   *  VIEWER may see of the same `type` and `state` (a total over rows the caller cannot read would say "something is
+   *  hidden"; a total narrowed by `after` would say the page is the whole set). */
   listBundles({ type = null, state = null, after = null, limit = null, viewer = null } = {}) {
     const gate = viewerPredicate(viewer);
     /* R93: the bundle's project, the empty text for a project-less bundle, read in this same statement. */
@@ -1267,6 +1268,8 @@ export class Retrieval {
        (the record grammar's R5) rather than answered with an empty page, as `query-language` does for `type:`. */
     if (type) { w.push(`b.object_type=?`); a.push(normalizeType(type)); }
     if (state) { w.push(`b.current_state=?`); a.push(state); }
+    /* R63: the total counts the viewer's bundles that match `type` and `state` as the page does, never narrowed by `after`. */
+    const counted = { where: w.join(" AND "), args: [...a] };
     if (after) { w.push(`b.bundle_id > ?`); a.push(after); }
     q += ` WHERE ${w.join(" AND ")} ORDER BY b.bundle_id`;
     const asked = Number(limit);
@@ -1276,7 +1279,7 @@ export class Retrieval {
     const rows = this.#rows(`${q} LIMIT ?`, ...a, cap).map(Retrieval.#withRoute);
     return { bundles: rows, limit: cap,
              cursor: rows.length === cap ? rows[rows.length - 1].bundle_id : null,
-             total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n };
+             total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE ${counted.where}`, ...counted.args).n };
   }
 
   /** R64 (`op=index`): the index projection, every bundle R63's gate passes, in id order. It names no locator: there is
