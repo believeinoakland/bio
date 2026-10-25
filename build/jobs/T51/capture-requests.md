@@ -163,3 +163,7 @@ Size (session_019iGGVzKW9ch92DaSZZghQc): test runs 4, module lines 2585 (src/cap
 - `impact.mjs origin/tranche/T51 HEAD` names modules by the tranche's own changes; no module imports a file I changed (only my tests changed; the new fixture has no user yet), so no user tests needed re-running.
 
 Size (session_016v1BcEsgoXvoBS2PnqgQYs): test runs 8, module lines 2585 (src/capture-requests; only tests changed).
+
+## J7 · COMPLETE · re B7
+
+COMPLETE B7 (fix round 10, batch 3) at 543ac61afb. Published sweepScopeRegistrar (fixtures.mjs + fixtures.test.mjs, R45). Re-pointed fixture.mjs captureArm and acquireRefusal (renderRefusal; RENDER_NOT_A_PAGE/FAILED/AT_CAPACITY via captureArm, no provider gives them) and t35 standardRead (realStandards over standardReadWorld). Markers: drain.test.mjs:286 fixtures-own platform; reads.test.mjs:105 fixtures-generic NOT_A_CODE; sweep.test.mjs:18 fixtures-contract link-sweep sweep-scope (4 lines contract-no-run until link-sweep's run merges). Left: t41.test.mjs:148 (steps, CHANGE). Module tests 130/130; fixtures list 9 -> 5 failures (all waiting); format, architecture, coverage 58/58, words, ownership 0 failures. For BOB: standards fixture lacks a project-confidential standard option; capture could publish the three render codes. Record: build/jobs/T51/capture-requests.md, section 'Completion (B7)'.
