@@ -3,9 +3,6 @@
  * every live review link on any draft is listed on the review copy, each stoppable with `reviewrevoke`, and counted on the editor and the
  * ceremony. Each sentence is asserted by its key (R24); every request is compared with its owner's declaration by the harness
  * (interface-shell R104). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, drew, day, ops, press, fill, tick, last, ok, refusedIn, word, COPY, DOCUMENT, P, DR, C, B1, GRANT_UNTIL } from "./fixtures.mjs";

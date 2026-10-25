@@ -50,7 +50,10 @@
    T50 (T50-79; N1179, N1186, N1146; K3747, K3557; DEC-278): an administrator's own act that `REAUTH_ACTS` names, asked
    by a session whose member is not an administrator, is refused membership's `NOT_AN_ADMIN` before the password is
    asked (R29); the viewer of an `ai` credential minted in a project carries that project (R30); the key list R28 reads
-   is the design's regenerated one (R31). */
+   is the design's regenerated one (R31).
+
+   T51 fix round 10 (K5170; ratification R60): the session read and, for an act that asks the password again, the
+   question whether it is due are issued together, one hop in the door's chain (R33). */
 import { liveToken, sha256hex } from "../tokens.mjs";
 import { storeStub } from "../store-place.mjs";
 import { word, localize } from "../setup-words/index.mjs";
@@ -667,7 +670,7 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
   const bound = await bindingOf(t, env);
   let cls = bound === RETIRED ? null : bound;
   let viaSession = false, sess = null, halves = { member: null, viewer: null, identity: null };
-  let aiCred = null;
+  let aiCred = null, dueEarly = null;
   if (!cls && bound !== RETIRED && presented?.cred) { cls = "ai"; aiCred = presented.cred; }
 
   /* DEC-49 REGION is-admission
@@ -684,6 +687,14 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
             + "agent credential a member creates for it." } } };
   if (!cls) {
     if (t && SESSION_TOKEN_SHAPE.test(t)) {
+      /* R33 (fix round 10; K5170; ratification R60): an act that asks the password again asks the store whether it is due
+         in the same hop as the session read, the two issued together, not one after the other. It is asked only for an
+         act R29 does not put to the roster first (a member who may not take that act is never asked, so those keep their
+         order); its answer is used only if the gates between the session and R25 let the request on, and a request one
+         of them refuses has the answer dropped unread. */
+      const dueAsked = reauthAsked(reauthActs, op, { url, body }) && !administratorsOwnActs().has(op)
+        ? reauthDuePresented(t, env, doAnswer) : null;
+      if (dueAsked) dueAsked.catch(() => {});
       const looked = await sessionRead(credential, t, env, doAnswer, background);
       if (looked.silent) return { silent: looked.silent };
       if (looked.sess) {
@@ -709,6 +720,7 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
         sess = looked.sess;
         halves = resolveSession(sess);
         viaSession = true;
+        dueEarly = dueAsked;
       }
     }
   }
@@ -739,7 +751,7 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
          take it is never asked to sign in again for it. Membership's one answer, `NOT_AN_ADMIN`; nothing is asked of the store. */
       if (sess.administer !== true && administratorsOwnActs().has(op))
         return { refusal: { status: 403, body: notAnAdmin(halves.member, op) } };
-      const due = await reauthDuePresented(t, env, doAnswer);
+      const due = await (dueEarly ?? reauthDuePresented(t, env, doAnswer));
       if (due.silent) return { silent: due.silent };
       if (due.refusal) return { refusal: { status: 403, body: due.refusal } };
     }

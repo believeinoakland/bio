@@ -2,9 +2,6 @@
  * measured (C81). The page is the one the shell serves (`interfacePage`, `interfaceScript`) with the served stylesheets; the plane
  * is `fixtures.mjs`'s, answering each op by the `op` query the page sends. Needs `playwright-core` (beside the product or in
  * /opt/node-tools) and Chromium (CHROMIUM, or /opt/pw-browsers/chromium); without them the test that measures fails, saying so. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { existsSync } from "node:fs";

@@ -11,8 +11,9 @@ const { OPS } = O;
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status });
 
 /* the ops the agent worker and agent-steps call over the plane's door, as an `ai` credential presents them */
-const ASK_OPS = ["whoami", "airun", "airunlog", "airunspawn", "airuntick", "airunclose", "agentpack", "plan", "plans", "meaningrows", "basisversions", "versionchain",
-                 "search", "suggest", "optionpropose", "capturerequest", "askcheck", "askceiling", "askusage"];
+const { PLANE_OPS, ASK_PLANE_OPS } = await import("../../../../agent-worker/src/ops.mjs");
+const ASK_OPS = [...Object.keys(PLANE_OPS), ...Object.keys(ASK_PLANE_OPS)];
+
 /* the wire, as data. `answered`: the envelope of an op that admits an `ai` credential and whose store answers `{ok: true, result}`; `refused`: an op whose row
    admits no `ai` credential (the ask* trio, member-only): 403 with the refusal body's keys in order (the five every refusal has, then the admission row's own: what was asked of whom); `silent`: a store that answers nothing readable;
    `unknown`: an op with no spec */

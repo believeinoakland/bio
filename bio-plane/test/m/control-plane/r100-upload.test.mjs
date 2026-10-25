@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { world, call, opCalls, defaultHooks } from "./harness.mjs";
-import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { ownerOps as controlPlaneOwnerOps } from "../../../src/store-assembly/owner-ops.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 
 const SHA = "b".repeat(64);

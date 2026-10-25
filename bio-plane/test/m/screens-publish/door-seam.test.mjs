@@ -2,9 +2,6 @@
  * member's own acts make the project and its drafts (`casedraft`), and the page's reads (`casedrafts`, `reviewcopy` single and batch) go through the door to the real
  * review, not a scripted answer. */
 import "../../sandbox.mjs";
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

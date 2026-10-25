@@ -136,9 +136,13 @@ export const home = Object.freeze({
           const opt = (Array.isArray(it.options) ? it.options : []).filter(function (o) { return o && (o.id || o.op) === op; })[0];
           const answers = opt && Array.isArray(opt.answers) && opt.answers.length ? opt.answers
             : [{ answer: "grant", label: "screen.home.request.grant" }, { answer: "decline", label: "screen.home.request.decline" }];
-          return answers.map(function (a) {
-            return cs.act(op, { label: "screen.home.request." + (String(a.answer) === "decline" ? "decline" : "grant"), data: Object.assign({ answer: String(a.answer) }, data) });
+          // R104: a place to add a word, read by the act's `send` through `cs.value`.
+          // one place for each request, by the project and the requester, so a word written for one is never sent with another
+          const f = ("ha-" + data.project + "-" + data.who).replace(/[^A-Za-z0-9_-]/g, "_");
+          const buttons = answers.map(function (a) {
+            return cs.act(op, { label: "screen.home.request." + (String(a.answer) === "decline" ? "decline" : "grant"), data: Object.assign({ answer: String(a.answer), f: f }, data) });
           }).join("");
+          return buttons ? cs.field(f + "-comment", "screen.plan.judge.note", { max: 280 }) + buttons : "";
         }
         if (op === "projectjoin") return joinOf(cs.act(op, { label: "act." + op + ".label.home", data: data }), String(it.subject && typeof it.subject.name === "string" && it.subject.name.trim() ? it.subject.name : data.project));
         if (op !== "adoptversion") return cs.act(op, { label: "act." + op + ".label.home", data: data });
@@ -237,7 +241,8 @@ export const home = Object.freeze({
     const front = failed(data.doors)
       ? '<section class="mk-welcome" data-front="doors"><h2 class="mk-h2">' + cs.w("door.front.head") + "</h2>" + cs.state("doors", null) + "</section>"
       : (starts && five.length) || away.length
-        ? '<section class="mk-welcome" data-front="doors"><h2 class="mk-h2" tabindex="0">' + cs.w("door.front.head") + "</h2>"
+        // K5148 (R42): "What happened?" is asked only over the five doors; a lone "Help for my own situation" has no heading over it.
+        ? '<section class="mk-welcome" data-front="doors">' + (starts && five.length ? '<h2 class="mk-h2" tabindex="0">' + cs.w("door.front.head") + "</h2>" : "")
           + (starts ? '<p class="mk-sub">' + cs.w("door.front.intro") + "</p>" : "") + '<div class="mk-doors">' + (starts ? five.map(doorCard).join("") : "") + awayCard + "</div>"
           + (start ? '<p class="mk-note">' + cs.w("door.front.blank") + "</p>" + start : "") + "</section>"
         : start ? '<section class="mk-welcome" data-front="start">' + start + "</section>" : "";
@@ -464,8 +469,11 @@ export const home = Object.freeze({
       send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; } },
     // R42: an owner answers a request to join, Grant or Decline; the queue is read again.
     { op: "projectrequestanswer", label: "act.projectrequestanswer.label.home", rereads: ["queue"],
-      send: function (view, el) {
-        return el.dataset.project && el.dataset.who && el.dataset.answer ? { query: { projectId: el.dataset.project, handle: el.dataset.who, answer: el.dataset.answer } } : null;
+      send: function (view, el, cs) {
+        if (!(el.dataset.project && el.dataset.who && el.dataset.answer)) return null;
+        // R104: the member's word, when she wrote one, goes with the answer as `comment`.
+        const comment = String(cs.value(el.dataset.f + "-comment") || "").trim();
+        return { query: Object.assign({ projectId: el.dataset.project, handle: el.dataset.who, answer: el.dataset.answer }, comment ? { comment: comment } : {}) };
       } },
     {
       // R1, R23, R25, R30: a new project, its title the member's and written as its `title`, its visibility the member's

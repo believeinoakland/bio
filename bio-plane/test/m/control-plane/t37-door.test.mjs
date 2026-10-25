@@ -190,13 +190,13 @@ test("R57 (T37; N669, K2201; instance-setup R67; agent-worker R68–R70): `trans
     assert.deepEqual([a.op, a.direction, a.language, a.words], ["translationdraft", "to_language", "es", WORDS], s.name);
     for (const k of ["told", "act", "field", "firsthand", "grant"]) assert.equal(Object.hasOwn(a, k), false, `${s.name}: no ${k}`);
     const [first] = opCalls(w.env).filter((c) => c.route === "translationdraft");
-    assert.deepEqual([first.params.by, first.params.viewer], [s.by, s.viewer], `${s.name}: the owner's stamps`);
+    assert.deepEqual([first.params.by, first.params.viewer], [s.by.replace(/^member:/, ""), s.viewer], `${s.name}: the owner's stamps (by the bare member id, store-request R7)`);
     const usage = opCalls(w.env).filter((c) => c.route === "askusage");
     assert.equal(usage.length, 1);
     assert.deepEqual([usage[0].params.viewer, usage[0].body], [s.viewer, { mode: "draft", usage: { input_tokens: 5 }, calls: 1 }]);
     const rec = opCalls(w.env).filter((c) => c.route === "translationdraftrecord");
     assert.equal(rec.length, 1);
-    assert.deepEqual([rec[0].params.by, rec[0].params.viewer], [s.by, s.viewer]);
+    assert.deepEqual([rec[0].params.by, rec[0].params.viewer], [s.by.replace(/^member:/, ""), s.viewer]);   /* the hand-back carries the owner's stamps (by: the bare member id) */
     assert.deepEqual(rec[0].body.draft, { words: [{ key: "nav.home", text: "Inicio" }] });
     /* K2238 (3d): instance-setup's hand-back body, the caller's asked `keys` beside the owner's words and the draft */
     assert.deepEqual(rec[0].body, { direction: "to_language", language: "es", keys: ["nav.home", "nav.cases"], words: WORDS,
