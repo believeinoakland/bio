@@ -190,4 +190,4 @@ Follow-up 22 done on job/T51/retrieval-browse (6ac1fd45c3). findin.test.mjs gain
 
 **Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/retrieval-browse/*.test.mjs`: 68 tests, 68 pass, 0 fail (it did not exit by itself without `--test-force-exit` in the first, looping run; the final run is with it, its count equals the files' sum). format 0 failures; architecture 0 (20 files); coverage 0 (21 of 21 ids named); ownership 0 (3 files: source, test, record); the words check lists findings only in other modules (control-plane, host-governor). `checks/fixtures.mjs /home/user/bio retrieval-browse --list`: no new line; the earlier `orphan-run` is gone; left, as before and waiting on events and entities: `t36.test.mjs:139`, `t37.test.mjs:172`, `words.test.mjs:60`. No marker added. Impact: `findin.mjs` `matchRequirements` is an internal export; `retrieval` still holds its own copy until T51-42.
 
-Size (session_01DZGdo16CETLocZnm2PWpbh): test runs 4, module lines 1456
+Size (session_01DZGdo16CETLocZnm2PWpbh): test runs 4, module lines 1449
