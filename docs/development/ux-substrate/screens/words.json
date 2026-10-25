@@ -16874,7 +16874,7 @@
   },
   {
    "key": "screen.held.more",
-   "en": "{count} shown here. More are waiting on the next page.",
+   "en": "{count} shown here. More are on the next page.",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-intake's own rows; DEC-259: reworded"
@@ -55139,7 +55139,7 @@
   },
   {
    "key": "refusal.NO_PARTITION",
-   "en": "Grouping needs the list of groups, even an empty one. An empty list keeps no groups, and every piece of support is then needed. Nothing was written.",
+   "en": "Grouping needs a list of groups, even if it is empty. An empty list means no grouping, and then every supporting citation is needed. Nothing was written.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432 rewords it (B517 inquiry R30b: an empty list is kept, no removal); DEC-342: grouping call without a groups list"
@@ -81543,7 +81543,7 @@
   },
   {
    "key": "screen.document.pick.find.help",
-   "en": "Type part of its name. The list shows only the documents whose name holds those words.",
+   "en": "Type part of the document's name. The list shows only the documents whose name contains what you typed.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-inquiry R13a"
@@ -81578,7 +81578,7 @@
   },
   {
    "key": "refusal.NOTHING_TRANSCRIBED",
-   "en": "Reading its pages found no words to transcribe, so it has no text to search or cite.",
+   "en": "Reading its pages found no words, so it has no text to search or cite.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-inquiry R1: a final reading refused for this reason; no placeholder; two may print back to back"
@@ -81599,21 +81599,21 @@
   },
   {
    "key": "refusal.PASSWORD_REQUIRED",
-   "en": "It is locked with a password, so its words can't be read. Open it with its password on your own device, or add a copy that is not locked.",
+   "en": "The file is locked with a password, so its words can't be read. Open it with its password on your own device, or add a copy that is not locked.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-inquiry R1: a final reading refused for this reason; no placeholder; two may print back to back"
   },
   {
    "key": "refusal.PAGE_KILLED_READER",
-   "en": "One of its pages stopped the reader each time it was tried, so that page was left unread.",
+   "en": "One of its pages made your team's Civicsmith stop each time it tried to read it, so that page was left unread.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-inquiry R1: a final reading refused for this reason; no placeholder; two may print back to back; per page"
   },
   {
    "key": "refusal.STRUCTURE_OVER_BOUND",
-   "en": "One of its parts is larger than your team's Civicsmith reads in a single part, so it was not read.",
+   "en": "One of its parts is larger than your team's Civicsmith can read at once, so that part was not read.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-inquiry R1: a final reading refused for this reason; no placeholder; two may print back to back; never the stem \"which is more than your team's Civicsmith can read\" (r10-stated.test.mjs:119)"
@@ -81662,7 +81662,7 @@
   },
   {
    "key": "screen.document.archive.says",
-   "en": "An archive of {n} files. Civicsmith reads each file in it as its own document, not the archive as a whole.",
+   "en": "An archive of {n} files. Your team's Civicsmith reads each file in it as its own document, not the archive as a whole.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-inquiry R4: an archive's own Document page, beside \"Open its files\"; no \"Read it\"; {n} its entries"
@@ -81697,7 +81697,7 @@
   },
   {
    "key": "capture-sources.render.copy_first_load_not_scrolled",
-   "en": "This is a copy of the page as it first loaded: it was not scrolled, no banner or dialog was closed, and frames and embedded parts are not in it. What a visitor sees past the first load is not claimed.",
+   "en": "This is a copy of the page as it first loaded: it was not scrolled, no banner or dialog was closed, and frames and embedded parts are not in it. What a visitor sees past the first load is not in this copy.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-inquiry R38, capture-sources render.mjs:436: keeps \"first load\" and \"not scrolled\" (render.test.mjs:547)"
@@ -81718,28 +81718,28 @@
   },
   {
    "key": "screen.document.recovery.pages_missing",
-   "en": "{missing} of its {of} pages are missing from the file, so they were not read.",
+   "en": "Missing from the file and not read: {missing} of its {of} pages.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-inquiry R9: {note:\"pages_missing\", missing, of}"
   },
   {
    "key": "screen.document.recovery.pdf_truncated",
-   "en": "The file ends early, as if it was cut off, so whatever came after the cut was not read.",
+   "en": "The file ends early, as if it had been cut off, so whatever came after the cut was not read.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-inquiry R9: {note:\"pdf_truncated\"}, carried beside the two the table names"
   },
   {
    "key": "screen.open-file.image.unread",
-   "en": "This kind of image ({type}) is not read yet. Civicsmith keeps it and you can open it, but \"Clean\" says only that the scanner found nothing harmful, not that the picture itself was checked.",
+   "en": "This kind of image (.{type}) is not read yet. Civicsmith keeps it and you can open it, but “Clean” says only that the scanner found nothing harmful, not that the picture itself was checked.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-intake R35b; {type} lowercase (tiff, heic, bmp)"
   },
   {
    "key": "screen.open-file.check.inside",
-   "en": "Its inside could not be checked: the file is locked, holds macros, or is of a kind the scanner does not look inside, so \"Clean\" covers only what the scanner could see.",
+   "en": "Its contents could not be checked: the file is locked, holds macros, or is of a kind the scanner does not look inside, so “Clean” covers only what the scanner could see.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 screens-intake R14: beside \"Clean\", under Checks"
@@ -81844,7 +81844,7 @@
   },
   {
    "key": "reading-pipeline.index.structure_over_bound_units",
-   "en": "{part} holds more than {bound} {unit}, past what is allowed for this kind of file.",
+   "en": "{part} holds more than the {bound} {unit} allowed for this kind of file.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 reading-pipeline R2b: a final reading's basis; raw digits; never \"read\", \"parts\" or \"multipart\" in too_large (r10-refusals.test.mjs:76-80)"
@@ -81858,14 +81858,14 @@
   },
   {
    "key": "reading-pipeline.index.unsupported_legacy_word_not_word",
-   "en": "It was sent as a Word file, but its contents do not look like one.",
+   "en": "It was handed in as a Word file, but its contents do not look like one.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 reading-pipeline R3: the clause after it; keeps \"do not look like one\""
   },
   {
    "key": "calculations.index.the_delimiter_is_tied",
-   "en": "the source's separator could not be told ({tied} fit its lines equally well), so it is not read as a table. Nothing was written.",
+   "en": "the source's separator could not be told (these fit its lines equally well: {tied}), so it is not read as a table. Nothing was written.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 calculations R19 (SOURCE_NOT_READ); lowercase, as its neighbour the_source_reads_as_one; {tied} the separators that tied"
@@ -81879,7 +81879,7 @@
   },
   {
    "key": "inquiry.index.pass_grounds_an_array",
-   "en": "pass grounds[] — an array of { ground, legs: [ord, ...], statement? }, one entry per group, where each ord is a leg's position in this question's basis. An EMPTY array keeps the answer with no grouping: every supporting leg is then necessary, and the answer reads as its weakest leg. That is a restructuring like any other and takes a reason.",
+   "en": "pass grounds[] — an array of { ground, legs: [ord, ...], statement? }, one entry per group, where each ord is a leg's position in this question's basis. An EMPTY array keeps the answer with no grouping: every supporting citation is then needed, and the answer reads as its weakest citation. That is a restructuring like any other and takes a reason.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-432: B517 inquiry R30b (K5077, DEC-32 clause 4): an empty list is kept, not a removal"

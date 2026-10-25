@@ -6673,3 +6673,19 @@ the design: (1) Six refusals by reason (`refusal.NOTHING_TRANSCRIBED`, `PICTURE_
 verified: on a tranche/T51 worktree (tip `fa149084d`) with these words and rows.mjs regenerated: the words check 0 failures; the modules' tests (screens-inquiry, screens-intake, screens-daily, reading-pipeline, ocr-worker, calculations, office-readers, inquiry, capture-sources) fail only in files that fail on the tranche alone (23 files, the same with and without these words); the four that failed only with them (find-in, fr5-document, t48, words) pass after (5) and (8).
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-432"); `screens/build_words.mjs` (GROUP_SENSE); `screens/page.src.html` (the scrim rule); `screens/mock-screens.js` (`held`, `docpick` on `document`).
 owed: BOB: merge this commit (ANSWER) and regenerate rows.mjs; INTERFACE-ASSETS: regenerate `shell.css` from the scrim rule and its Chromium test (R32); SCREENS-INQUIRY: the recovery notes' three keys, `unit.characters` for `_chars` metrics, the picker's keys (`screen.document.pick.*`) once BOB's live reading of the missing members is placed; the control-plane sentence at `control-plane/index.mjs:1363` ("the file is kept, but its reading could not be queued ...") is inline and untriaged, so the reads list was not regenerated this round.
+
+### DEC-433 · decided
+raised: 2026-10-25 · the UX design session with Bob (session_01DtBKhrSmV3NbfCcEaygkz9, UX design #40) (the standing tail: a consistency read after a large batch of rows)
+for: design (T51)
+question: Do DEC-432's 63 rows read as one set with their neighbours?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: park every finding for T52; not taken: the rows are not yet merged, and each change keeps every placeholder and every test's pinned phrase.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-25 · the design session (P17)
+the design: a Sonnet reader's 22 findings; 16 changed now: one name for one thing (a grouping's support is a "citation", as `citation.index.repair_remove_grouping` says, in `refusal.NO_PARTITION` and `inquiry.index.pass_grounds_an_array`; "read", not "transcribe"; "handed in", not "sent"; "separator" in `calculations.index.the_delimiter_is_tied`, its list after a colon); a refusal that could be read as its neighbour's subject names its own ("The file is locked …"); no internal term ("the reader" → "your team's Civicsmith"); "that part was not read"; `screen.held.more` "More are on the next page." (held captures already "wait" for a vouch); "your team's Civicsmith" on the archive's statement; the picker's search help; `recovery.pages_missing` right at one page; "had been cut off"; curly quotes around “Clean”, ".{type}" for the image kind, "Its contents"; the first-load statement "is not in this copy"; `structure_over_bound_units` in `too_large_units`'s form. Six parked in `screens/parked-T52.md` (T51's bar, K4269): a unit and a plain part name for `structure_over_bound`; the neighbour's "delimiter"; raw digits in the readings; "slide 2 (notes)"; a plainer word than "objects"; the archive of one file. `reading.stated` against `.toolarge` was parked already.
+verified: on tranche/T51 (`fa149084d`) with rows.mjs regenerated: the words check 0; find-in, fr5-document, t48, words, r10-document, r10-question, open-file, r10-refusals, r10-declared-kind, r49-columns, r10-tab-lines, render all pass.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-432", edited in place); `screens/mock-screens.js`; `screens/parked-T52.md`.
+owed: BOB: merge this commit in place of DEC-432's (it carries it).
