@@ -163,3 +163,7 @@ Tests and checks:
 - `checks/ownership.mjs`: 1 file changed by observation-log, 0 failures.
 
 Size (session_01NWeJdk2kVHeYkijVPMg5d9): test runs 2, module lines 3122
+
+## J9 · COMPLETE
+
+COMPLETE (B6, fix round 10 batch 6). My one fixture line (extraction/extractionNotice, fixture.mjs:71) is done: observation-log's test fixture now takes `extractionNotice` from extraction's published fixtures.mjs. `fixtures.mjs --list` for observation-log: 0 failures. Suite 84/84; format, architecture, words, ownership 0 failures; impact 0 modules. No fixtures-own/generic markers added. Details in record J8.
