@@ -16,6 +16,7 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 const yields = () => new Promise((r) => setTimeout(r, 1));   /* a turn of the event loop */
 async function world(readAnswer) {
   const x = await store({ env: { CAPTURES: bucketStandIn() } });
+  // fixtures-own: synthetic the reader is a driver that runs a stated number of statements in a stated number of stretches; the figure under test is the plane's count of them, not anything the answer says
   extractionOf(x.ctx).readHeld = readAnswer;
   x.jobs = pendingOf(x.ctx);
   x.runs = (d) => x.jobs.ledgerLast({ sha: d }).filter((l) => l.kind === "reading");

@@ -11,6 +11,7 @@ import { createHash } from "node:crypto";
 import { store } from "./fixture.mjs";
 import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
+// fixtures-own: harness the shared stub IS the contract this provider test runs (FIX-L): its cases are run against the real registrar and the two are compared
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 
 // fixtures-run: test-support job-registrar

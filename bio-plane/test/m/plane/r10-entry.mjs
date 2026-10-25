@@ -12,6 +12,7 @@ export class Stalled extends Headline {
   #hook() {
     if (this.#real !== null) return;   /* once: \`Headline\` wraps whatever \`readHeld\` is at its first request, to count the passes */
     const ex = extractionOf(this.ctx), real = (this.#real = ex.readHeld.bind(ex));
+    // fixtures-own: synthetic the stall study isolates the plane's own work from the reading by a reader that answers at once; extraction's published fixture is not yet merged, and no test asserts what the answer says
     ex.readHeld = async (...a) => (this.#mode === "read" ? { ok: true, read: true, done: true } : real(...a));
   }
   async fetch(req) {

@@ -28,7 +28,6 @@ const mf = new Miniflare({
   serviceBindings: { FILE_SCANNER: async (req) => {
     const u = new URL(req.url), body = req.method === "POST" ? await req.json() : null;
     if (u.pathname === "/scan") return new Response(JSON.stringify({ ok: true, verdicts: body.targets.map((t) => clean(t.capture_sha)) }), { headers: { "content-type": "application/json" } });
-    if (u.pathname === "/render") return new Response(JSON.stringify({ ok: false, code: "NOT_RENDERED" }), { status: 422, headers: { "content-type": "application/json" } });
     return new Response(JSON.stringify({ ok: true, name: "file-scanner", version: "1.0.0" }), { headers: { "content-type": "application/json" } });
   } },
 });
