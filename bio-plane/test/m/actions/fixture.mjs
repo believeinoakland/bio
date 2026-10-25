@@ -15,6 +15,7 @@ import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
 import { Retrieval } from "../../../src/retrieval/index.mjs";
+import { actionRegistrar } from "../retrieval/fixtures.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
 import { DatabaseSync } from "node:sqlite";
@@ -108,11 +109,14 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
      stand-in (which brings none). */
   let realContent = null;
   const reg = { facts: [], decorations: [] };
-  const retrievalStub = retrieval ? {
-    registerActionFacts: (m, fn) => { reg.facts.push({ m, fn }); return { ok: true }; },
-    registerProjectionDecoration: (m, fn) => { reg.decorations.push({ m, fn }); return { ok: true }; },
+  /* retrieval's registrars are the real ones (its published `actionRegistrar`); each registration is also kept in `reg`,
+     for the tests that read what actions registered. */
+  const registrar = retrieval ? actionRegistrar() : null;
+  const retrievalSeam = retrieval ? {
+    registerActionFacts: (m, fn) => { reg.facts.push({ m, fn }); return registrar.registerActionFacts(m, fn); },
+    registerProjectionDecoration: (m, fn) => { reg.decorations.push({ m, fn }); return registrar.registerProjectionDecoration(m, fn); },
   } : null;
-  const a = actionsOf(host, { record: recordAs ? recordAs(record) : record, membership, promotion, retrieval: retrievalStub, conformance,
+  const a = actionsOf(host, { record: recordAs ? recordAs(record) : record, membership, promotion, retrieval: retrievalSeam, conformance,
                               content: { captureFor: (id) => captures.get(id) ?? null,
                                          contentContextFor: (s) => context ?? (realContent ? realContent.contentContextFor(s) : {}),
                                          mint: (args) => realContent.mint({ ...args, ...(context ? { context } : {}) }) },
