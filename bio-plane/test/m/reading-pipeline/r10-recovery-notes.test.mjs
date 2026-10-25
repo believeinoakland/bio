@@ -11,6 +11,7 @@ import { BUNDLE } from "../../../../pdf-worker/test/subject.mjs";
 import { pathToFileURL } from "node:url";
 import { bucket, evidenceStore, hold, doc } from "./fixture.mjs";
 import { synthPdf } from "./bigpdf.mjs";
+import { rangedNotesFiles } from "../pdf-reader/fixtures.mjs";
 
 const worker = (await import(pathToFileURL(BUNDLE).href)).default;
 const bytesOf = (recipe) => generate({ kind: "pdf", ...recipe }).bytes();
@@ -79,4 +80,19 @@ test("R62 (cause 9): recoveryNotesOf lists pages_missing with the count missing 
   const got = recoveryNotesOf(["xref_reconstructed", "structure_reconstructed", "pages_missing:8/30", "page_order_by_object_number_fallback"], ["xref_reconstructed", "pdf_truncated", 5, null], undefined);
   assert.deepEqual(got, [{ note: "xref_reconstructed" }, { note: "pages_missing", missing: 8, of: 30 }, { note: "pdf_truncated" }]);
   assert.deepEqual(recoveryNotesOf(), []);
+});
+
+/* the page-range path (pdf-reader R50: every ranged answer carries `notes`; its published fixture's files) */
+async function readRanged(bytes) {
+  const b = bucket();
+  const d = await hold(b, bytes);
+  const out = await read(doc({ digest: d, bytes: bytes.length, ct: "application/pdf", format: "pdf" }), { evidence: evidenceStore(b), env: {}, storeName: "bio", cursor: null });
+  return out.reading;
+}
+
+test("R62 (cause 9; walk A9, the ranged path): an upload read by range over a damaged PDF, and over one cut at 70 per cent, lists xref_reconstructed; the intact file lists none", async () => {
+  const files = rangedNotesFiles();
+  assert.deepEqual((await readRanged(files.damaged)).recovery_notes, [{ note: "xref_reconstructed" }]);
+  assert.ok(((await readRanged(files.cut)).recovery_notes || []).some((n) => n.note === "xref_reconstructed"));
+  assert.equal((await readRanged(files.intact)).recovery_notes, undefined);
 });

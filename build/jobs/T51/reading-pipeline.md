@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01NNvA213u4YaYMybJVG2Epk · depth 2 · COMPLETE · handled B56
+**Status** · session_01NNvA213u4YaYMybJVG2Epk · depth 2 · COMPLETE · handled B57
 
 ## J1 · COMPLETE
 
@@ -917,3 +917,8 @@ Markers (K5060): fixtures-own synthetic classify-once:69, g41-held:329 (plug-in 
 
 **Ran:** module (51 files, concurrency 2) + extraction + content + events suites: `tests 1078, pass 1077, fail 0, todo 1`; memory 4/4, pdf-pieces 1/1, r7-contention 6/6 alone; d606-perpage-ocr 26 passed 0 failed; tier2-wire 46 pass 0 fail; system/pdf-worker-binding 12 passed 0 failed. format 0, architecture 0, coverage 61 of 61, words 0, ownership (23 files) 0 failures. fixtures --list: only the waiting lines above.
 Size (session_01NNvA213u4YaYMybJVG2Epk): test runs 12, module lines 4,266
+
+## J52 · COMPLETE
+
+COMPLETE: B57 done. Merged tranche/T51 (pdf-reader R50). The ranged answer's `notes` were already carried onto `recovery_notes` by the same code as the whole read (st.notes from the range or the whole answer); added the ranged test to r10-recovery-notes.test.mjs using pdf-reader's published `rangedNotesFiles` (an upload read with cursor null over the damaged file lists xref_reconstructed, the cut file lists it, the intact file none). Red first: with the carry line removed on the range path the test fails (7 pass, 1 fail), restored 8 of 8. Module r10-* and r9-reader files pass; format, architecture, coverage 61 of 61, words, ownership 0 failures.
+Size (session_01NNvA213u4YaYMybJVG2Epk): test runs 15, module lines 4,266
