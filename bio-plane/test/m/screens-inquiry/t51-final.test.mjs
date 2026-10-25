@@ -3,7 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "../interface-shell/harness.mjs";
-import { SCREENS, word, storeWorld, main, actsIn, section, press } from "./fixtures.mjs";
+import { SCREENS, word, storeWorld, main, actsIn, section, press, day, lead } from "./fixtures.mjs";
+import { provenanceOf } from "../../../src/provenance/index.mjs";
 
 const PASSWORD = "a founder password that is long enough";
 
@@ -139,4 +140,70 @@ test("R30 an administrator at a hidden project whose owners are all inactive is 
   await (await world.signIn("admin")).act("memberset", { body: { memberId: "ann", status: "revoked" } });
   const p = await pageAs(world, founder, "/app/project/" + project);
   assert.deepEqual(actsIn(main(p)), ["projectownerrescue"], "the rescue and nothing else");
+});
+
+test("R106 a goal row lists the objectives linked to it: the project's name, who linked it and the day; a goal with none linked draws nothing more", async () => {
+  const { world, ann, project } = await teamWorld();
+  const goal = (await ann.act("goaldeclare", { body: { statement: "Every street drains", bounds: "By 2028" } })).goal;
+  const lone = (await ann.act("goaldeclare", { body: { statement: "Every drain is mapped", bounds: "By 2029" } })).goal;
+  await ann.act("goallink", { body: { goal, project } });
+  const read = (await ann.read("goal", { query: { id: goal } })).goal.objectives[0];
+  const p = await pageAs(world, ann, "/app/objective/" + project);
+  const links = main(p).querySelectorAll("[data-objective-link]");
+  assert.equal(links.length, 1, "only the linked goal carries a link");
+  const text = links[0].textContent;
+  assert.ok(text.includes("Stormwater") && text.includes("ann") && text.includes(day(read.at)), text);
+  assert.ok(lone && !main(p).textContent.includes("undefined"));
+});
+
+test("R46 the declarer is named the same way everywhere: the founder's handle on the objective page, the unnamed word where she holds none", async () => {
+  const world = await storeWorld();
+  const founder = await world.signIn("founder", { admin: true });
+  const project = await world.recipes.project(founder, "Stormwater");
+  await founder.act("aspirationdeclare", { body: { scope: "project", owner: project, statement: "Every street drains" } });
+  const p = await pageAs(world, founder, "/app/objective/" + project);
+  const row = main(p).textContent;
+  assert.ok(row.includes("Every street drains") && row.includes("founder"), "her handle");
+  assert.ok(!row.includes(word("member.founder.unnamed")), "not the unnamed word");
+  /* control: a founder who chose no handle reads the unnamed word */
+  const bare = await storeWorld({ claimed: false });
+  await bare.claim({ password: PASSWORD });
+  const me = await bare.signIn("admin", { admin: true });
+  const proj2 = await bare.recipes.project(me, "Roads");
+  await me.act("aspirationdeclare", { body: { scope: "project", owner: proj2, statement: "Every road is paved" } });
+  const q = await pageAs(bare, me, "/app/objective/" + proj2);
+  assert.ok(main(q).textContent.includes(word("member.founder.unnamed")));
+});
+
+test("R32 an uploaded copy's source line says who brought the file and when, never its upload: address or its fingerprint", async () => {
+  const { world, ann, project } = await teamWorld();
+  const { sha, bundle } = await world.recipes.hold(ann, "Minutes", "The council met on Monday.", project);
+  const p = await pageAs(world, ann, "/app/document/" + bundle);
+  const page = main(p).textContent;
+  assert.ok(!/upload:/i.test(page), "no upload: address anywhere on the page");
+  const sub = main(p).querySelector(".mk-sub").textContent;
+  assert.ok(!sub.includes(sha.slice(0, 8)) && !/[0-9a-f]{40}/.test(sub), "and no fingerprint in the source line");
+  assert.ok(page.includes(lead("document.uploaded.by") + "ann"), "uploaded by her, in the word's own sentence");
+});
+
+test("provenance R80 a document's standing authority is read by `authority` and drawn: undetermined at capture, then its issuer and dated basis once a member decided", async () => {
+  const { world, ann, project } = await teamWorld();
+  const { sha, bundle } = await world.recipes.hold(ann, "Minutes", "The council met on Monday.", project);
+  const before = await pageAs(world, ann, "/app/document/" + bundle);
+  assert.equal(before.byOp("authority")[0].query.bundleId, bundle, "asked by the document");
+  const control = main(before).querySelector("[data-authority]");
+  assert.equal(control && control.getAttribute("data-authority"), "undetermined", "control: the register's value alone");
+  const decided = provenanceOf(world.ctx).declareAuthority({ bundle, capture: sha, outcome: "determined", authority: "City Clerk", basis: "The clerk's office stamped it.", by: "ann", viewer: "member:ann" });
+  assert.equal(decided.ok, true);
+  const after = await pageAs(world, ann, "/app/document/" + bundle);
+  const line = main(after).querySelector("[data-authority]");
+  assert.equal(line.getAttribute("data-authority"), "determined");
+  assert.ok(line.textContent.includes("City Clerk") && line.textContent.includes("The clerk's office stamped it.") && line.textContent.includes(day(decided.at)), line.textContent);
+  /* a document decided undetermined after review says it was reviewed */
+  const second = await world.recipes.hold(ann, "Letter", "Dear council.", project);
+  provenanceOf(world.ctx).declareAuthority({ bundle: second.bundle, capture: second.sha, outcome: "undetermined_after_review", basis: "No issuer is named on it.", by: "ann", viewer: "member:ann" });
+  const reviewed = await pageAs(world, ann, "/app/document/" + second.bundle);
+  const rl = main(reviewed).querySelector("[data-authority]");
+  assert.deepEqual([rl.getAttribute("data-authority"), rl.getAttribute("data-reviewed")], ["undetermined", "1"]);
+  assert.ok(rl.textContent.includes("No issuer is named on it."));
 });

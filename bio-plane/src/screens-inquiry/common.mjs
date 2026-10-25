@@ -86,6 +86,16 @@ export function who(cs, x, founder) {
   return s === "admin" ? String(cs.w("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) : s;
 }
 
+/** R40 (K5148; WALK-FINAL-03 R24): whether the roster row `x` is the viewer (`view.me`, `whoami`'s answer). project-roster R29 answers a participant by
+ *  `handle` (null for a founder who chose none) and marks the founder's row `founder: true`; it carries no `member`, a row that does is matched by it. So
+ *  a row is hers when its `member` is hers, when it is the founder's and `whoami` names the member `admin`, or when its handle is hers. Self-contained. */
+export function isMe(view, x) {
+  const me = view && view.me ? view.me : null;
+  if (!me || !x || typeof x !== "object") return false;
+  const member = me.member ? String(me.member) : "";
+  return (member !== "" && String(x.member || "") === member) || (member === "admin" && x.founder === true) || (!!x.handle && x.handle === me.handle);
+}
+
 /** R60: a project she cannot see, drawn as the shell's "unavailable" state b ("You can't open this"), with nothing beneath. */
 export function unavailable(cs) {
   return `<p class="cs-state" data-state="empty" data-unavailable="notyours"><b>${cs.w("shell.unavailable.notyours.title")}</b> ${cs.w("shell.unavailable.notyours.says")}</p>`;
@@ -234,4 +244,4 @@ export function strengths(read, ids, esc) {
 }
 
 /** The parts every screen of the module carries. */
-export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress, legWords, legExtent, readPages, strengths, kinds: KIND_IDS });
+export const COMMON = Object.freeze({ front, later, plain, who, isMe, unavailable, ending, costLine, progress, legWords, legExtent, readPages, strengths, kinds: KIND_IDS });

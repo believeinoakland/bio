@@ -41,85 +41,26 @@ test("R3 R69 C36-aside the 'Your citations' row of a web page names the paragrap
   assert.ok(says(r2, "screen.document.place.restson", { page: "3" }) && text(r2).includes("“Page three words.”"), "control: a paged document names its page and its words");
 });
 
-/* ---- R129 / R3 / citation R21: a cite refused with repairs ---- */
-import { fill } from "./fixtures.mjs";
+/* ---- R129 / R3 / citation R21: a cite refused draws no repair control (fix round 10, item 35: citation R21 retired its C-2.8 arm, K5101, so a refusal's `repairs` is always []) ---- */
 const CHECK = "C-2.8";
 const JARGON = "1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all";
-/* the repairs as citation R21 answers them: each `{key, act, fields, text}` (the keys are citation's own, `citation.index.*`; the page draws them by key) */
-const REPAIRS = [{ key: "citation.index.repair_add_to_group", act: "cite", fields: { ground: "G1" }, text: "Add it to the group G1" },
-  { key: "citation.index.repair_remove_grouping", act: "inquiryground", fields: { target: Q, grounds: [] }, text: "Take the grouping off" }];
 const refusedCite = (extra = {}) => ({ status: 200, json: { ok: true, result: { ok: false, reason: "BASIS_REFUSED", code: "BASIS_REFUSED",
-  findings: [{ check: CHECK, code: null, detail: JARGON, repairs: [] }], repairs: REPAIRS, ...extra } } });
-const REF = `${D}#x`;
-/** The plane where the first cite is refused as the walker's state is (the only citation grouped), and the next one lands once the grouping is repaired. */
-function groupedPlane() {
-  const state = { repaired: false, cites: 0 };
-  return { state, plane: {
-    cite: (r) => { state.cites += 1; return state.repaired || (r.body && r.body.ground === "G1") ? ok({ ok: true, inquiry: Q, role: "supports", cited: [REF], alreadyCited: [] }) : refusedCite(); },
-    inquiryground: () => { state.repaired = true; return ok({ ok: true, target: Q }); } } };
-}
-async function pressedRefusal() {
-  const { plane: pl, state } = groupedPlane();
-  const p = await open(at, { plane: pl });
+  findings: [{ check: CHECK, code: null, detail: JARGON, repairs: [] }], repairs: [], ...extra } } });
+
+test("R129 R3 a cite refused draws its finding in words and no repair control; a cite that lands draws none either (citation answers no repairs since R21)", async () => {
+  const p = await open(at, { plane: { cite: () => refusedCite() } });
   const el = p.doc.getElementById("document-cite-question");
   el.value = Q; p.fire(el, "change"); await p.settle();
-  await p.click(main(p).querySelector('button[data-act="cite"]:not([data-repair])'));
+  await p.click(main(p).querySelector('button[data-act="cite"]'));
   await p.settle();
-  return { p, state };
-}
-const repairButtons = (p) => main(p).querySelectorAll('button[data-act="cite"][data-repair]');
-
-test("R129 R3 a cite refused because the only citation is grouped draws the two repairs as acts, each in the words citation gives it, beside the refusal; control: a refusal with no repairs draws none, and a cite that lands draws none", async () => {
-  const { p } = await pressedRefusal();
-  const acts = repairButtons(p);
-  assert.equal(acts.length, 2, "two repairs, each an act");
-  assert.ok(text(acts[0]).includes(REPAIRS[0].text), "the first: add it to the group, naming the group, in the words citation gives it");
-  assert.ok(text(acts[1]).includes(REPAIRS[1].text), "the second: take the grouping off");
-  assert.ok(main(p).querySelector('[data-cite="repair"] textarea, [data-cite="repair"] input') !== null, "and the second asks her reason");
-  assert.ok(!text(main(p)).includes(JARGON) && !text(main(p)).includes(CHECK), "and the finding's own English, with its check number, is not what she is left with");
-  const none = await open(at, { plane: { cite: () => refusedCite({ repairs: [] }) } });
-  const el = none.doc.getElementById("document-cite-question");
-  el.value = Q; none.fire(el, "change"); await none.settle();
-  await none.click(main(none).querySelector('button[data-act="cite"]:not([data-repair])')); await none.settle();
-  assert.equal(repairButtons(none).length, 0, "control: a refusal with no repairs draws none");
-  const landed = await open(at, { plane: { cite: ok({ ok: true, inquiry: Q, role: "supports", cited: [REF], alreadyCited: [] }) } });
+  assert.equal(main(p).querySelectorAll('button[data-act="cite"][data-repair]').length, 0, "no repair act");
+  assert.ok(!main(p).querySelector('[data-cite="repair"]'), "and no repair block");
+  assert.ok(text(main(p)).includes(JARGON) || text(main(p)).includes(CHECK), "the refusal is still told by its finding");
+  const landed = await open(at, { plane: { cite: ok({ ok: true, inquiry: Q, role: "supports", cited: [`${D}#x`], alreadyCited: [] }) } });
   const el2 = landed.doc.getElementById("document-cite-question");
   el2.value = Q; landed.fire(el2, "change"); await landed.settle();
-  await landed.click(main(landed).querySelector('button[data-act="cite"]:not([data-repair])')); await landed.settle();
-  assert.equal(repairButtons(landed).length, 0, "control: a cite that lands draws none");
-});
-
-test("R129 R3 adding the passage to the group sends the refused cite again with the group, and it lands; the repairs go", async () => {
-  const { p, state } = await pressedRefusal();
-  await p.click(repairButtons(p)[0]);
-  await p.settle();
-  const cites = p.byOp("cite");
-  assert.equal(cites.length, 2, "the refused cite and the repaired one");
-  assert.deepEqual([cites[1].body.project, cites[1].body.role, cites[1].body.ground], [Q, "supports", "G1"], "the original cite with the group the repair names");
-  assert.deepEqual(cites[1].body.found, cites[0].body.found, "the same passage");
-  assert.equal(p.byOp("inquiryground").length, 0, "control: no grouping change for this repair");
-  assert.equal(repairButtons(p).length, 0, "the repairs go once the cite lands");
-  assert.ok(main(p).querySelector("[data-cite-done=cited]"), "and the page says it was cited");
-  assert.equal(state.cites, 2);
-});
-
-test("R129 R3 taking the grouping off asks her reason first and sends nothing without it; with it, the question's grouping is changed and the refused cite is sent again and lands", async () => {
-  const { p } = await pressedRefusal();
-  await p.click(repairButtons(p)[1]);
-  await p.settle();
-  assert.equal(p.byOp("inquiryground").length, 0, "no reason, nothing sent");
-  assert.equal(p.byOp("cite").length, 1, "and the cite is not sent again");
-  fill(p, { "document-cite-repair-reason": "the second passage stands alone" });
-  await p.click(repairButtons(p)[1]);
-  await p.settle();
-  const g = p.byOp("inquiryground");
-  assert.equal(g.length, 1);
-  assert.deepEqual([g[0].body.target, g[0].body.grounds, g[0].body.reason], [Q, [], "the second passage stands alone"], "the grouping taken off, with her reason");
-  const cites = p.byOp("cite");
-  assert.equal(cites.length, 2, "then the refused cite again");
-  assert.ok(!("ground" in cites[1].body), "as she first asked it");
-  assert.equal(repairButtons(p).length, 0);
-  assert.ok(main(p).querySelector("[data-cite-done=cited]"));
+  await landed.click(main(landed).querySelector('button[data-act="cite"]')); await landed.settle();
+  assert.equal(main(landed).querySelectorAll('button[data-act="cite"][data-repair]').length, 0, "control: a cite that lands draws none");
 });
 
 /* ---- R129 / N5: an unread copy can be read ---- */

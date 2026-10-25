@@ -92,7 +92,7 @@ function render(cs, view) {
           const f = r && r.ok === false ? r : a || {};
           const code = String(f.code || f.reason || "");
           /* a refusal is drawn by its words: the plane's own, else the word held for the code, else "could not be read" */
-          const held = ["NO_SUCH_BUNDLE", "NO_BUNDLE", "NO_SHA", "VERSION_NOTICE_NO_INQUIRY", "VERSION_NOTICE_NO_SUBJECT"].includes(code);
+          const held = ["NO_SUCH_DOCUMENT", "NO_BUNDLE", "NO_SHA", "VERSION_NOTICE_NO_INQUIRY", "VERSION_NOTICE_NO_SUBJECT"].includes(code);
           settle({ state: "failed", refusal: { code, words: f.translation ? cs.esc(f.translation) : held ? cs.w("refusal." + code) : code ? cs.esc(code) : cs.w("shell.unread") } });
         }
         else if (r && r.found === false) settle({ state: "empty" });
@@ -177,12 +177,6 @@ function render(cs, view) {
   if (!doc) { out.push(cs.state("capture", view, () => "")); return out.join(""); }
   const project = /^PROJ-/.test(String(doc.project || "")) ? String(doc.project) : "";
   const pimg = project ? later("project:" + project, "image", { id: project }) : null;
-  /* R32: the address an outside link, unquoted; a testimony's source drawn as its words */
-  out.push(`<p class="mk-sub">${cs.w("screen.document.captured", {
-    date: { html: doc.source.retrieved ? cs.date(String(doc.source.retrieved), { year: true }) : doc.created ? cs.date(String(doc.created), { year: true }) : "" },
-    source: outside ? { html: `<a class="cs-btn" data-tone="quiet" href="${cs.esc(locator)}" rel="noopener noreferrer" target="_blank" data-outward="1">${cs.esc(locator)}</a>` }
-      : (locator || doc.source.authority || "") })}</p>`);
-
   /* R54: this copy's grade is `capturegrade`'s own answer for its digest, not the project's list of held captures; the row of
      that list (R49, R61) still says what the capture was held for. R55: the viewer's own held captures say whether this copy
      is hers and not yet vouched for. */
@@ -195,6 +189,32 @@ function render(cs, view) {
   const meId = view.me && view.me.member ? String(view.me.member) : "";
   const held = sha ? later("held", "heldcaptures", { bundle_id: id, state: "held_and_vouched" }) : null;
   const row = heldRows(held).find(isThis) || null;
+  /* R32, 06 §15 (K5157): the address an outside link, unquoted; a testimony's source drawn as its words; an upload (`upload:<64 hex>`, capture R108) says who brought the
+     file and when (`document.uploaded.by`, as screens-intake R35 draws it in Held), never its address nor its fingerprint. The uploader is the copy's held row's `actor`. */
+  const fromUpload = /^upload:/i.test(locator);
+  const stamp = doc.source.retrieved ? String(doc.source.retrieved) : doc.created ? String(doc.created) : "";
+  const uploader = row && typeof row.actor === "string" ? row.actor.replace(/^member:/, "") : "";
+  out.push(`<p class="mk-sub">${fromUpload
+    ? cs.w("document.uploaded.by", { member: cs.memberName(uploader), date: { html: stamp ? cs.date(stamp, { year: true }) : "" } })
+    : cs.w("screen.document.captured", {
+      date: { html: stamp ? cs.date(stamp, { year: true }) : "" },
+      source: outside ? { html: `<a class="cs-btn" data-tone="quiet" href="${cs.esc(locator)}" rel="noopener noreferrer" target="_blank" data-outward="1">${cs.esc(locator)}</a>` }
+        : (locator || doc.source.authority || "") })}</p>`);
+  /* provenance R80 (K5153; WALK-FINAL-04B R146): the document's standing authority, as the register and the member's decisions state it together
+     (`authority`, asked with `later()` as `origins` is): a determined one by its issuer and the dated basis the decision gave, an undetermined one by its basis
+     (marked undetermined, and as reviewed where a member decided it so); a read that fails is drawn failed, one that answers nothing draws nothing */
+  const au = sha ? later("authority", "authority", { bundleId: id, capture: sha }) : null;
+  const auEntry = au && au.state === "ok" && au.value && Array.isArray(au.value.captures)
+    ? (au.value.captures.find((c) => c && c.capture_sha === sha) || au.value.captures[0] || null) : null;
+  const standing = auEntry && auEntry.authority && typeof auEntry.authority === "object" ? auEntry.authority : null;
+  if (au && au.state === "failed") out.push(`<div data-authority="failed">${cs.state(au, () => "")}</div>`);
+  else if (standing) {
+    const det = standing.authority_state === "determined" && standing.authority;
+    out.push(`<p class="mk-small" data-authority="${det ? "determined" : "undetermined"}"${standing.reviewed === true ? " data-reviewed=\"1\"" : ""}>`
+      + (det ? `<b class="rec" data-authority-issuer="1">${cs.esc(String(standing.authority))}</b> ` : cs.mark("gap", "undetermined", { reason: "" }) + " ")
+      + (standing.basis ? `<span class="meta" data-authority-basis="1">${cs.esc(String(standing.basis))}</span>` : "")
+      + (standing.at ? ` <span class="meta">${cs.date(String(standing.at), { year: true })}</span>` : "") + "</p>");
+  }
   const gr = sha ? later("grade", "capturegrade", { capture: sha }) : null;
   const gradeObj = gr && gr.state === "ok" && gr.value && gr.value.grade ? gr.value.grade : null;
   const letter = gradeObj && /^[A-D]$/.test(String(gradeObj.grade || "")) ? String(gradeObj.grade) : "";
@@ -595,18 +615,6 @@ function render(cs, view) {
       return `<p class="mk-note" data-cite-done="already" role="status"><b>${W("screen.finder.a17.left_as_it_was")}</b> ${W("screen.finder.a17.the_question_already_cited_it")}`
         + (places.length ? " · " + places.map((n) => W("screen.document.passage.where", { page: n })).join(", ") : "") + ` · ${ref}</p>`;
     };
-    /* R129: the repairs a refused cite carried, each an act in the member's words (`citation` R21: the key of its sentence, the fields it sends); the
-       one that changes the grouping asks her reason first. The refused request waits on the page (`ui.citeRepair`). */
-    const repairBlock = () => {
-      const held = ui.citeRepair && typeof ui.citeRepair === "object" && Array.isArray(ui.citeRepair.repairs) ? ui.citeRepair : null;
-      if (!held || !held.repairs.length) return "";
-      const asks = held.repairs.some((x) => x.act === "inquiryground");
-      const says = "";
-      return `<div class="mk-note" data-cite="repair" role="alert">${says}`
-        + (asks ? cs.field("document-cite-repair-reason", "shell.reason", { area: true, rec: true, help: "shell.reason.help" }) : "")
-        + held.repairs.map((x, i) => `<p class="mk-small">${cs.act("cite", { label: x.key, fills: x.fields && typeof x.fields === "object" ? Object.fromEntries(Object.entries(x.fields).filter(([, v]) => typeof v === "string")) : {}, data: { repair: String(i) } })}</p>`).join("")
-        + "</div>";
-    };
     const none = ui.citeNone ? `<details class="mk-details" data-cite="none" open><summary>${cs.w("screen.document.cite.none.summary")}</summary><p class="mk-small">${cs.w("screen.find-in.questionfirst")}</p></details>` : "";
     /* R80, R78: the reading's pages (an extent's page counts from 0, a slide from 1) drawn from one, one at a time, with the kit's
        choice control (interface-shell R90) redrawing in the page: no op, no new read. A text of one page draws no page bar. */
@@ -649,7 +657,7 @@ function render(cs, view) {
         + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + partKind(p) + citedMark(extent) + "</blockquote>"
         + (extent && askable.length ? cs.act("cite", { label: "document.read.cite",
             data: { found: JSON.stringify({ capture_sha: sha, extent, kind: "passage" }) } }) : "");
-    }).join("") + pick + pickHelp + none + repairBlock() + citeDoneHtml() + own("cite");
+    }).join("") + pick + pickHelp + none + citeDoneHtml() + own("cite");
   }, { help: "document.read.help" });
 
   /* the pages its reading could not make out (extraction R27), and the two ways to their words */
@@ -984,7 +992,8 @@ function render(cs, view) {
     if (first) {
       const f0 = factsOf(revs.length - 1);
       log.push(rowOf("", `<b>${W("screen.document.record.added", { member: who(first.author) })}</b>`, "", [at(first.at), f0 && f0.standing === "collected" ? W("screen.document.a27.held_until_vouched_for") : "",
-        locator ? `<span class="id">${cs.esc(locator)}</span>` : ""].filter(Boolean).join(" · ")));
+        /* an upload's address (`upload:<64 hex>`) is its fingerprint's, drawn once in Fingerprints (R26); the row names who added it above */
+        locator && !/^upload:/i.test(locator) ? `<span class="id">${cs.esc(locator)}</span>` : ""].filter(Boolean).join(" · ")));
     }
     for (const s of states) {
       const to = String(s.to || "");
@@ -1374,15 +1383,10 @@ async function legTitlesFailed(view, answer, cs) {
   answer.fields = Object.assign({}, answer.fields, { legTitles });
 }
 
-/** R129 (cite-refusal; citation R21): a cite refused with `repairs` (the acts that clear the finding, each `{key, act, fields, text}`) is drawn by the sentence
- *  in the member's words where the design holds one (`screen.document.cite.repair.says`), else by its first finding as R117 draws it (the same reading of `findings` as `findingsRefusal`, here whole because a refusal's function is carried by its own text); the repairs
- *  themselves are drawn as acts (`repairBlock`, from the page's memory). Self-contained. */
+/** R129 (cite-refusal; citation R21): a cite refused is drawn by its first finding as R117 draws it (the same reading of `findings` as `findingsRefusal`, here whole because a
+ *  refusal's function is carried by its own text). citation answers no `repairs` since R21 retired its C-2.8 arm (K5101), so no repair control is drawn (fix round 10, item 35). Self-contained. */
 function citeRefusal(refusal, cs) {
   const r = refusal && typeof refusal === "object" ? refusal : {};
-  const has = Array.isArray(r.repairs) && r.repairs.some((x) => x && typeof x === "object" && typeof x.key === "string");
-  /* the sentence that says what is wrong (`screen.document.cite.repair.says`) is a row the design owes (K4269); until it lands the repairs, each a sentence
-     in the member's words, are the way forward, and the finding's own English (its check number and detail) is not drawn beside the act */
-  if (has) return "";
   const f = (Array.isArray(r.findings) ? r.findings : []).find((x) => x && typeof x === "object" && (x.code || x.translation || x.detail));
   if (f) {
     const key = f.code ? "refusal." + f.code : "";
@@ -1391,14 +1395,6 @@ function citeRefusal(refusal, cs) {
   }
   const generic = "refusal." + String(r.code || r.reason || "");
   return cs.w(generic) !== generic ? cs.w(generic) : r.translation ? cs.esc(String(r.translation)) : cs.w("shell.unread");
-}
-
-/** R129: when a cite is refused with repairs, the page keeps them (with the request that was refused) so it can draw each as an act; any other
- *  answer clears them. Self-contained. */
-async function citeFailed(view, answer, cs) {
-  const f = answer && answer.kind === "refused" && answer.fields && typeof answer.fields === "object" ? answer.fields : null;
-  const repairs = f && Array.isArray(f.repairs) ? f.repairs.filter((x) => x && typeof x === "object" && typeof x.key === "string" && typeof x.act === "string") : [];
-  cs.set("citeRepair", repairs.length ? { repairs, req: view.ui.citeReq || null } : null);
 }
 
 /** R129 (N5; extraction R80 as amended): "Read it now" on a copy stored with no reading (a photo whose promotion was cut short, a record stored unread
@@ -1502,28 +1498,8 @@ const acts = [
   { op: "findin", label: "act.findin.label.document", rereads: [],
     /* `find-in`'s scope is the route's subject: for a document, its capture's digest (screens-daily) */
     send(view, el, cs) { if (el.dataset.capture) cs.go("find-in", el.dataset.capture); return null; } },
-  { op: "cite", label: "act.cite.label.document", rereads: ["backlinks"], failed: citeFailed, refusals: { BASIS_REFUSED: citeRefusal, ACTION_BASIS_REFUSED: findingsRefusal },
+  { op: "cite", label: "act.cite.label.document", rereads: ["backlinks"], refusals: { BASIS_REFUSED: citeRefusal, ACTION_BASIS_REFUSED: findingsRefusal },
     async send(view, el, cs) {
-      /* R129: a repair of a refused cite is this act pressed again: the first kind adds the field it names (the group) to the request that was
-         refused; the second changes the question's grouping first (`inquiryground`, with her reason, asked here) and then sends the request
-         that was refused. Nothing is sent while the reason is empty. */
-      const pressed = el && el.dataset ? el.dataset.repair : undefined;
-      if (pressed !== undefined && pressed !== "") {
-        const held = view.ui.citeRepair && typeof view.ui.citeRepair === "object" ? view.ui.citeRepair : null;
-        const rp = held && held.repairs ? held.repairs[Number(pressed)] : null;
-        const req = held && held.req && typeof held.req === "object" ? held.req : null;
-        if (!rp || !req) return null;
-        if (rp.act === "inquiryground") {
-          const reason = String(cs.value("document-cite-repair-reason") || "").trim();
-          if (!reason) return { refuse: "shell.reason.needed" };
-          let a = null;
-          try { a = await cs.call("inquiryground", { body: Object.assign({}, rp.fields || {}, { reason }) }); } catch { a = null; }
-          const r = a && a.result !== undefined ? a.result : a;
-          if (!a || a.ok === false || (r && r.ok === false)) return { refuse: "state.failed", fills: { reason: String((r && (r.code || r.reason)) || "") } };
-          return { body: Object.assign({}, req) };
-        }
-        return { body: Object.assign({}, req, rp.fields && typeof rp.fields === "object" ? rp.fields : {}) };
-      }
       const question = String(cs.value("document-cite-question") || "").trim();
       /* N2 (R61, R49): with no question chosen nothing is sent, and the sentence is said beside the act pressed (the fold at the foot of the
          reading is kept for the page's reload), never silently */
@@ -1534,7 +1510,6 @@ const acts = [
       /* R125 (C31; citation R20): the citing object, the role and the passage found go in the body, none in the address; `found` as the object it is */
       let found = el.dataset.found || "";
       try { found = JSON.parse(found); } catch { /* sent as the string it is */ }
-      cs.set("citeReq", { project: question, role, found });
       return { body: { project: question, role, found } };
     },
     /* C30 (R3, R49): the answer is read, never left silent: what was cited, or that the question already rests on a passage of this document
@@ -1545,7 +1520,6 @@ const acts = [
       const q = String((r && r.inquiry) || view.ui.citing || "");
       /* the question's bundle is read again, so the passage cited is marked from its legs (R125) */
       if (list(r && r.cited).length) cs.set("later", Object.assign({}, view.ui.later, { ["qimg:" + q]: null }));
-      cs.set("citeRepair", null);
       cs.set("citeDone", { question: q, cited: list(r && r.cited), already: list(r && r.alreadyCited) });
     } },
   /* reasoned: the member's own acknowledgment is its reason (interface-shell R11, DEC-88), so no second one is asked */
@@ -1837,7 +1811,7 @@ const words = Object.freeze([
   "screen.document.name", "screen.document.purpose",
   ...["gradenote", "findin", "cite", "release", "attest", "retire", "monitorset", "monitor", "identityclaim", "transcribe", "pagetranscribe",
     "adoptversion", "keepversion", "versionnotice", "connectionchoose", "explore", "captureprogressions"].map((op) => "act." + op + ".label.document"),
-  "act.pagetranscribe.does", "ai.label.untested", "document.unread.pages", "citation.index.repair_add_to_group", "citation.index.repair_remove_grouping", "document.read.title", "refusal.CAPTURE_NOT_HELD", "transcribe.why.evidenceabsent",
+  "act.pagetranscribe.does", "ai.label.untested", "document.unread.pages", "document.read.title", "refusal.CAPTURE_NOT_HELD", "transcribe.why.evidenceabsent",
   /* T50 (R54–R56, R61) */
   "document.held.says", "document.vouched", "document.attest.label", "document.attest.when", "document.retire.fold", "document.retire.when",
   "document.retire.label", "document.image.unread", "document.image.unread.summary", "document.table.flattened", "document.untitled.web",
@@ -1858,7 +1832,7 @@ const words = Object.freeze([
   /* T51 (R65–R69, R78): the record of this copy, the fingerprints, the links in five groups, the names, "Your citations, leg by leg" */
   "time.at", "time.clock", "time.am", "time.pm", "document.versions.thiscopy", "state.item.retired.name",
   "refusal.IMAGE_TOO_LARGE", "refusal.TRUNCATED_IMAGE_DATA", "refusal.UNSUPPORTED_JPEG_PROCESS", "refusal.DECODE_FAILED", "refusal.NO_PAGE_RENDERED",
-  "refusal.CONTENT_EXTENT_NO_CHAIN", "refusal.NO_SUCH_BUNDLE", "refusal.NO_BUNDLE", "refusal.NO_SHA", "refusal.VERSION_NOTICE_NO_INQUIRY", "refusal.VERSION_NOTICE_NO_SUBJECT",
+  "refusal.CONTENT_EXTENT_NO_CHAIN", "refusal.NO_SUCH_BUNDLE", "refusal.NO_SUCH_DOCUMENT", "document.uploaded.by", "refusal.NO_BUNDLE", "refusal.NO_SHA", "refusal.VERSION_NOTICE_NO_INQUIRY", "refusal.VERSION_NOTICE_NO_SUBJECT",
   "act.owed_linkopen.label.document", "act.owed_linkopen.does", "act.owed_revisioncompare.label.document", "act.owed_revisioncompare.does",
   "act.owed_hashcopy.label.document", "act.owed_hashcopy.does", "act.versionnotice.does",
   ...["fingerprints.head", "revision.title", "revisions.compare", "revisions.with", "revisions.compare.act", "fingerprint.setonly",

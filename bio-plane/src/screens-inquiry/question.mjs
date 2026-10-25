@@ -329,7 +329,7 @@ function render(cs, view) {
   /* R71: she is a participant of the project the question is in (R60: only she may set it aside for it) */
   const partsRead = project ? later("participants", "projectparticipants", { projectId: project }) : null;
   const joined = !!(partsRead && partsRead.state === "ok" && partsRead.value && Array.isArray(partsRead.value.participants)
-    && partsRead.value.participants.some((x) => x && x.handle === (view.me && view.me.handle) && x.state === "joined"));
+    && partsRead.value.participants.some((x) => view.parts.isMe(view, x) && x.state === "joined"));
   /* R71: the project's own decision on this question, read from the set-aside list (`queueFeed` with `aside: true`, `queue`
      R61), paged by `after` until found or the last page */
   let decision = null, asideRead = null;

@@ -146,10 +146,7 @@ function render(cs, view) {
   const me = view.me && view.me.handle;
   /* R40 (K5148; WALK-FINAL-03 R24): the viewer is found in a roster by `member`, else by handle: a founder who chose no handle has
      `handle: null` in the roster and in `whoami`, and is still the owner whose row reads "founder" */
-  const meMember = view.me && view.me.member ? String(view.me.member) : "";
-  /* project-roster R29 answers no `member` on a participant row: the founder is the one row marked `founder: true` (her `handle` null while
-     she holds none), and she is the viewer when `whoami` names the member `admin`; any other row is the viewer's by handle */
-  const isMe = (x) => !!x && ((meMember !== "" && String(x.member || "") === meMember) || (meMember === "admin" && x.founder === true) || (!!x.handle && x.handle === me));
+  const isMe = (x) => P.isMe(view, x);
   /* R1, R37: an invited member who has not joined is a participant to the roster but not to the project's reads
      (`projectaccountstate` answers NO_SUCH_PROJECT): she sees the not-joined state, never a failed read */
   const roster = d.participants && d.participants.state === "ok" && Array.isArray(d.participants.value.participants)
