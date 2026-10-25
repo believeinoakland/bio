@@ -139,3 +139,7 @@ COMPLETE · SCREENS-WIZARDS #7 · fix round 10, batch 7 (op tables to the world;
 - REPORT J6 also: storeWorld() default red at the tip (GROUP_ALREADY_RECORDED), wizardsat rows lack `required`, templatereview stamp in the world's door.
 - harness.mjs frame defaults left to the last batch-7 screens job, as told.
 Size (session_01QiJTxoqM2vV4sPHpBViTjn): test runs 40, module lines 941
+
+## Saved at K5183
+
+Done: everything. Batch 7 is COMPLETE (J7), all committed and pushed; nothing half done, no worker running. Only open item: BOB adds the `store-request` `uses` edge to `screens-wizards` (J6 item 1), after which `architecture.mjs screens-wizards` is green. Next step for a continuing session: read BOB's answer to J6/J7 (`mail inbox --as job`), then act on it.
