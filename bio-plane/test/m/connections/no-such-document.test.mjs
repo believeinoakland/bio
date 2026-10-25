@@ -4,7 +4,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { NO_SUCH_DOCUMENT_CHECKS } from "../../../src/connections/index.mjs";
-import { dec49Row } from "../../../src/answer-envelope/families.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b", GONE = "INFO-2026-0404-z";
 
@@ -21,7 +20,6 @@ function holdsOwnRow(r, target) {
   assert.equal(r.ok, false);
   assert.equal(r.reason, "NO_SUCH_DOCUMENT"); assert.equal(r.code, "NO_SUCH_DOCUMENT");
   assert.equal(r.check, row.check); assert.equal(r.translation, row.translation);
-  assert.equal(dec49Row("NO_SUCH_DOCUMENT").check, row.check);
   assert.equal(r.target, target);
   assert.equal(/inquiry/i.test(r.translation), false);
 }

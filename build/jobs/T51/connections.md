@@ -111,3 +111,9 @@ Batch 6 done on job/T51/connections: 6 of 6 own fixture lines (4 contract marker
 ## J5 · COMPLETE
 
 B8 done on job/T51/connections. Cause 1 (R72, R20): connections' own code NO_SUCH_DOCUMENT (C-155.1, family NO_SUCH_DOCUMENT_CHECKS, one literal site noSuchDocument) replaces NO_SUCH_BUNDLE at backlinks, projectLinks, assert and asserted; sentence is a localize stand-in about a document or record. Met: R72, R20 as amended (name NO_SUCH_DOCUMENT in R20 and R72; R20 still reads NO_SUCH_BUNDLE). 149 connections tests pass; users 640 pass; format, architecture, coverage 72/72, words, ownership 0; no fixtures marker added. Other modules: screens-inquiry/document.mjs:95 held list should name NO_SUCH_DOCUMENT; strength, actions, action-holds still answer bare NO_SUCH_BUNDLE; answer-envelope tests are 16 red with or without my change (op-declarations adminendorse registered twice). Check id C-155 was unused at my commit: confirm. Size line in record.
+
+## J6 · B9 handled (CONNECTIONS #19)
+
+Merged `origin/tranche/T51`. `no-such-document.test.mjs` no longer imports answer-envelope: it reads connections' own `NO_SUCH_DOCUMENT_CHECKS` row (the door's decoration is answer-envelope's to test). connections 149 pass; architecture, coverage 72/72, words, format, ownership 0 failures.
+
+Size (session_01KxwDp4ty9H6XwcoGUpKoBx): test runs 8, module lines 2394.
