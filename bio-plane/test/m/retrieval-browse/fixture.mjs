@@ -126,6 +126,8 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
   const prov = provenanceOf(host, { record, membership, promotion, now: iso });
   prov.migrate();
   run(st.db, EXTRACTION_SCHEMA);
+  /* extraction's migrate() adds the unit's part kind (R107) to `capture_text` (index.mjs's column list); the schema text lacks it. */
+  st.db.exec(`ALTER TABLE capture_text ADD COLUMN kind TEXT`);
   /* extraction's text index over `capture_text`, as its migrate() creates it (external content, kept by triggers). */
   st.db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS capture_text_fts USING fts5(text, content='capture_text',
                 content_rowid='rowid', tokenize='unicode61')`);
@@ -167,6 +169,7 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
     tally.applied++;
     return [...st.sql.exec(stmt.sql, ...stmt.args)];
   };
+  // fixtures-contract: retrieval selection-read
   const selectionRead = ({ handle = null, viewer = null, owner = null } = {}) => {
     const sel = w.selections.get(handle);
     if (!sel) return { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" };
@@ -218,10 +221,10 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
       st.sql.exec(`INSERT INTO readings (capture_sha, bundle_id, reading, at) VALUES (?,?,?,?)`, capSha, bundleId, "{}", T0);
     },
     /** One indexed unit of a capture's text, as extraction's index writes it. */
-    unit(capSha, bundleId, seq, text, extent = { kind: "pdf-page", page: seq }) {
+    unit(capSha, bundleId, seq, text, extent = { kind: "pdf-page", page: seq }, kind = null) {
       const ex = JSON.stringify(extent);
-      st.sql.exec(`INSERT INTO capture_text (capture_sha, bundle_id, extent_kind, extent, ref, seq, text, truncated, chain_kind)
-                   VALUES (?,?,?,?,?,?,?,0,'layer')`, capSha, bundleId, extent.kind, ex, `p${seq}`, seq, text);
+      st.sql.exec(`INSERT INTO capture_text (capture_sha, bundle_id, extent_kind, extent, ref, seq, text, truncated, chain_kind, kind)
+                   VALUES (?,?,?,?,?,?,?,0,'layer',?)`, capSha, bundleId, extent.kind, ex, `p${seq}`, seq, text, kind);
     },
   });
   return w;

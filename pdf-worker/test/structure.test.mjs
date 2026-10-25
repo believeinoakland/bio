@@ -11,6 +11,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { extractPdfStructure, openPdfRange } from "../../bio-plane/src/pdfstructure.mjs";
 import { makePdf, content, image, hex, runner } from "./make-pdf.mjs";
+import { generate } from "../../bio-plane/test/pdfgen.mjs";
 import { BUNDLE } from "./subject.mjs";
 
 const { Miniflare } = await (async () => {
@@ -288,6 +289,34 @@ console.log("\n--- R10: the tier-2 pass throws ---");
   t("R10 the range's fields are kept", rest, await rangeFields(BROKEN));
 }
 
+console.log("\n--- R10: a file cut before its trailer is read on a repaired view (fix round 10, cause 8) ---");
+{
+  /* The walker's case (A5b): 30 pages of six lines, cut at 70 per cent of its bytes (16,746 B). pdf.js throws on the cut
+     file; tier 1 cannot decode its WinAnsi font; so before this the whole file answered tier2_extraction_error. */
+  const cut = generate({ kind: "pdf", seed: "rw9-A-5b", size: { pages: 30, lines: 6 }, truncate: 0.7 });
+  const bytes = await cut.bytes();
+  const sha = hex(bytes);
+  await bucket.put(`bio/captures/${sha}`, bytes);
+  t("R10 the walker's file is 16,746 bytes and loses pages 23 to 30", [bytes.length, [...Array(30)].map((_, i) => cut.truth.page(i + 1).unread).filter(Boolean).length], [16746, 8]);
+  const [st, out] = await answer(await post(mf, { capture_sha: sha, store: "bio" }));
+  const words = (x) => x.replace(/\s+/g, "");
+  t("R10 a cut file: 200, tier 2, stated partial", [st, out.ok, out.tier, out.partial, out.notes.includes("pdf_truncated")], [200, true, 2, true, true]);
+  t("R10 a cut file: pages 0 to 21 carry the truth's text, none unread",
+    out.text.pages.slice(0, 22).map((p) => [p.page, words(p.text), p.undetermined.length]),
+    Array.from({ length: 22 }, (_, i) => [i, words(cut.truth.page(i + 1).text), 0]));
+  t("R10 a cut file: the pages it could not read are named, pages 22 to 29",
+    out.text.undetermined.map((u) => [u.page, u.reason]), Array.from({ length: 8 }, (_, i) => [22 + i, "truncated"]));
+  t("R10 a cut file: no tier2_extraction_error", out.text.undetermined.some((u) => u.reason === "tier2_extraction_error"), false);
+  t("R10 a cut file: the counts", out.text.counts, { chars: out.text.document.length, undetermined: 8 });
+  /* the range asked is kept on a cut file (R42) */
+  const [, r] = await answer(await post(mf, { capture_sha: sha, store: "bio", from: 20, count: 4 }));
+  t("R10 a cut file, pages 20 to 23: two read, two named", r.text.pages.map((p) => [p.page, p.undetermined.map((u) => u.reason)]),
+    [[20, []], [21, []], [22, ["truncated"]], [23, ["truncated"]]]);
+  /* a whole file is not partial */
+  const [, whole] = await answer(await post(mf, { capture_sha: SHA, store: "bio" }));
+  t("R10 a whole file is not stated partial", [whole.partial, whole.notes], [undefined, []]);
+}
+
 console.log("\n--- R11: GET /version ---");
 {
   const [st, out] = await answer(await mf.dispatchFetch("http://pdf-worker/version"));
@@ -300,6 +329,7 @@ console.log("\n--- R11: GET /version ---");
 
 console.log("\n--- R12: anything else ---");
 {
+  // fixtures-own: input the module's own refusal for a route it does not serve, compared with its own dispatch
   const want = { ok: false, reason: "UNKNOWN", detail: "POST /structure or GET /version only" };
   for (const [label, path, method] of [
     ["POST /version", "version", "POST"], ["GET /structure", "structure", "GET"], ["PUT /structure", "structure", "PUT"],
