@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01Jx17YoKtyusq7GHL5JmPG7 · depth 2 · COMPLETE · handled B36
+**Status** · session_017HhDkwNt6ddjD3dPVU5hd5 · depth 2 · COMPLETE · handled B36
 
 ## J1 · COMPLETE
 
@@ -818,3 +818,27 @@ Size (session_01Jx17YoKtyusq7GHL5JmPG7): test runs 9, module lines 4966
 ## J35 · COMPLETE
 
 COMPLETE (CAPTURE #56, job 97, B35/B36; R107 amended, G170). The upload hands profileOf the file's name and declared type (declaredType); a declared text type over bytes judged not text is not handed, so a declaration never contradicts the bytes. Cause: no name/type reached format-registry R31's name pass. Why missed: tests only used text/csv or a .csv name with no type. Red first: g170-t51 3 of 6 red before acquisition job 96, green after. Platform check: none owed. g41b-t51's last control (9 MiB x.csv declared octet-stream) is now csv, judged against R107 and R31. Capture suite 344/344, real-upload users green; format, architecture, coverage (66/66), words, ownership 0 failures. For you: acquisition profileOf could guard 'declared text type over non-text bytes' for every caller (a fetch passes declaredType: ct). No rows owed. Size (session_01Jx17YoKtyusq7GHL5JmPG7): test runs 9, module lines 4966.
+
+## Fix round 9 · job 101 (CAPTURE #57, B37; R113 amended, G173, K5001)
+
+**Entries applied**
+1. R113 (G173): an upload sent in parts survives the object being taken out of memory between two parts. The running SHA-256 of the parts so far is kept with the upload's row (`parted_uploads.hash_state`, a few hundred characters: the eight words, the length and the bytes held back for the next block), written in the same transaction as the part that advanced it (`parts` and `hash_state` never disagree), and taken up again by `#liveOf(row)` in a new instance, at `putUploadPart` and at `completePartedUpload`. `UPLOAD_LOST` is answered only when the row cannot say the digest: no `hash_state` (an upload begun before this change) or one whose length is not the sum of the parts held. A new file `capture/sha256-resume.mjs` holds the resumable stream. The column is in the table's `CREATE` and in `CAPTURE_ADDITIVE_COLUMNS` (older stores gain it at boot, never back-filled). The ledger bound (one part) is unchanged; the row grows by about 300 bytes, far under SQLite's row bound.
+
+**Why a stream of my own.** `record-grammar`'s `createSha256` offers no state to save, and record-grammar is not mine. R2's open multipart parts cannot be read back, so "taken again from the parts held" is not available. `sha256-resume.mjs` is the same FIPS 180-4 compression with a `snapshot()`; its tests drive it against WebCrypto over the block and padding boundaries and across several saves, as record-grammar's own tests drive its stream. See the REPORT item below.
+
+**Tests (R113)**: `g127f-t51.test.mjs`: the old "restarted instance → UPLOAD_LOST" test is replaced by two (that is the requirement's change): a restarted instance accepts the next part, again between later parts, and completes to the declared digest, with the controls that a wrong part is still refused (`PART_DIGEST_MISMATCH`, nothing stored) and a wrong whole still aborts (`WHOLE_DIGEST_MISMATCH`, nothing held); and `UPLOAD_LOST` for a row with no digest or a digest that does not describe the parts held. New `sha256-resume.test.mjs` (3). `g127f-plane.test.mjs`: begin, part 0, a real 12 s pause in Miniflare over the real object, the answering object proven a different one (`inst` in the test Worker, `g127f-worker.mjs`), part 1 accepted, completion's digest the declared one, a wrong part still refused.
+**Red first (seen):** on the tranche tip's code the plane test answers `UPLOAD_LOST` at part 1 after the pause, and the two unit tests fail the same way.
+
+**Found in another module (for BOB).** (a) `record-grammar`'s `createSha256` could offer `snapshot()` and a restoring constructor; `capture/sha256-resume.mjs` would then be deleted (one SHA-256 implementation, its comment's rule). (b) `g127f-plane` test 1 (the idempotent re-put of a full 16 MiB part) is red now and then with `write ECONNRESET` (the diagnosis' P2, on `prep/load-reds`, whose test edit I was told not to merge): it failed 1 run in 3 here, with my change in and with it out; it also takes the other three tests of the file down with it, as the Miniflare instance is shared. Product side of P2 (a part put again or an unknown upload is answered before its body is read) is not part of this job and is left for BOB to place.
+
+**Deferred.** Nothing. **Rows owed.** None (no sentence added; the existing `UPLOAD_LOST` words stand).
+
+**Tests and checks.** capture suite 344/344 (the plane files alone: `g127f-plane` 4/4 green in 2 of 3 runs, the third the ECONNRESET above; `r7-upload-plane`, `g41b-plane`, `plane` 1/1 each); users that name the parted ops: affordances t36, screens-intake r9-parts, store-door dispatch, control-plane stamps, r72-declared-door, r72-parted: 60/60. `impact.mjs` names 98 modules because `index.mjs` carries `DECLARED_OPS` (a shared table); `DECLARED_OPS` is unchanged, so I ran the users that drive the changed code, above. `checks/run.mjs`: format 0, architecture 0, coverage 0 (6927 of 6927), channels 0, words 0 failures (inline 0, plain 0, testcopy 0). Ownership: 8 files changed by capture, 0 failures.
+
+**COMPLETE fields.** Cause: `putUploadPart` kept the running SHA-256 of the parts only in the object's memory (`#parted`), and workerd takes an object out of memory after about 10 s with no event, so a pause of 12 s between two parts answered `UPLOAD_LOST` and the member began again. Why missed: `g127f-plane` and `g127f-t51` sent parts back to back, and the only restart test asserted the loss as the intended behaviour. Red first: seen, above. Platform check: L, passed (Miniflare, real object, real R2 multipart, a real 12 s pause, the object proven replaced).
+
+Size (session_017HhDkwNt6ddjD3dPVU5hd5): test runs 9, module lines 5095
+
+## J36 · COMPLETE
+
+COMPLETE (CAPTURE #57, job 101, B37; R113 amended, G173). An upload sent in parts survives the object being taken out of memory: the digest of the parts so far is kept with the upload's row (hash_state, written with the part) and taken up again by a new instance; UPLOAD_LOST only when the row cannot say it. Red first and platform check L seen (Miniflare, real object replaced by a 12 s pause). Suite 344/344, checks 0 failures, ownership 0. For you, see my record: record-grammar could offer a digest state (capture carries sha256-resume.mjs until then); g127f-plane test 1 is intermittently red with ECONNRESET (diagnosis P2, not this change).

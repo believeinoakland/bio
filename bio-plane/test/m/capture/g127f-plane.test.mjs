@@ -76,3 +76,25 @@ test("R113 (L): an upload abandoned part-way is aborted by the member and holds 
   const late = await call("part", { upload: b.upload, index: "2", sha256: sha(ps[2]) }, ps[2]);
   assert.equal(late.reason, "UPLOAD_UNKNOWN");
 });
+
+test("R113 (L, G173): an upload survives the object being taken out of memory between two parts: begin, part 0, a pause of 12 s (past the platform's window of about 10 s with no event), part 1 accepted by a new object, and the completion's digest is the declared one; a wrong part is still refused", { timeout: 300000 }, async () => {
+  const file = varied(20 * MiB, 9), whole = sha(file);
+  const b = await call("begin", {}, { sha256: whole, bytes: file.length, statement: STATEMENT });
+  assert.deepEqual([b.ok, b.part_bytes, b.parts], [true, 16 * MiB, 2], JSON.stringify(b).slice(0, 300));
+  const ps = partsOf(file, b.part_bytes);
+  assert.equal((await call("part", { upload: b.upload, index: "0", sha256: sha(ps[0]) }, ps[0])).ok, true);
+  const before = (await call("state", { sha256: whole })).inst;
+  await new Promise((r) => setTimeout(r, 12000));
+  /* the control that the object was taken out of memory: the one that answers now is not the one that took part 0 */
+  const after = (await call("state", { sha256: whole })).inst;
+  assert.notEqual(after, before, "workerd took the object out of memory during the pause");
+  const wrong = await call("part", { upload: b.upload, index: "1", sha256: sha(ps[1]) }, varied(ps[1].length, 77));
+  assert.deepEqual([wrong.ok, wrong.reason], [false, "PART_DIGEST_MISMATCH"]);
+  const r1 = await call("part", { upload: b.upload, index: "1", sha256: sha(ps[1]) }, ps[1]);
+  assert.deepEqual([r1.ok, r1.next], [true, 2], JSON.stringify(r1).slice(0, 300));
+  const done = await call("complete", {}, { upload: b.upload, parts: ps.map((p) => sha(p)) });
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 400));
+  assert.deepEqual([done.capture.sha256, done.capture.bytes], [whole, file.length]);
+  const post = await call("state", { sha256: whole });
+  assert.deepEqual([post.size, post.rows], [file.length, 0]);
+});
