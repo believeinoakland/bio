@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { csvEntry } from "../../../src/csv-reader/index.mjs";
 import { enc } from "./fixtures.mjs";
 import { prng } from "./large.mjs";
+import { generate } from "../../sheetgen.mjs";
 
 const MIB = 1024 * 1024;
 
@@ -336,4 +337,25 @@ test("R18 cellsIn from an access point equals the whole read for rows around eve
       assert.deepEqual(r.cells, want, `rows ${fromRow}-${fromRow + 3} after the access point at row ${ap.row}`);
     }
   }
+});
+
+test("R7 a 3,000-row five-column CSV with a title block and ragged rows reads with comma, five columns and its last mark in column A (cause 20); ragged alone and title alone read as before", async () => {
+  const seed = "rw9-B-5c";
+  const read = async (recipe) => csvEntry.text(await generate({ kind: "csv", seed, size: { rows: 3000, cols: 5 }, ...recipe }).bytes());
+  const both = await read({ header: "title", ragged: true });
+  assert.equal(both.dialect.delimiter, "comma", "every row ragged, a title block above: the delimiter is still the comma");
+  assert.equal(both.sheets[0].usedCols, 5);
+  assert.equal(both.sheets[0].usedRows, 3003);
+  const last = both.sheets[0].cells.find((c) => c.value === `${seed}-R3003-C1`);
+  assert.ok(last, "the last mark is read");
+  assert.equal(last.source.cell, "A3003", "in column A of its row");
+  const row3003 = both.sheets[0].cells.filter((c) => /\D3003$/.test(c.source.cell));
+  assert.equal(row3003.length, 5, "a five-field row");
+  const ragged = await read({ header: "one", ragged: true });
+  assert.equal(ragged.dialect.delimiter, "comma");
+  assert.equal(ragged.sheets[0].usedCols, 5);
+  const title = await read({ header: "title" });
+  assert.equal(title.dialect.delimiter, "comma");
+  assert.equal(title.sheets[0].usedCols, 5);
+  assert.equal(title.sheets[0].usedRows, 3003);
 });
