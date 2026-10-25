@@ -3,6 +3,7 @@
    reminder the page set) and R54 (one list of laws). The harness checks every request against its owner's declaration. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { clockWorld, openIn } from "./world-B.mjs";
 import { SCREENS, open, main, text, ops, press, last, ok, beside, button, refusedIn, W, D, hasWord, DATA_PLANE, ROUTES, ACTION, ACTION_ID, FILINGS, PROFILES, draft, FILING, AFFORDANCES } from "./page.mjs";
 import { DECLARED_FIELDS } from "./declared.mjs";
 
@@ -86,21 +87,23 @@ test("R38: a reply needs its day and a received one its account; a refusal is dr
 });
 
 test("R52 (L21): after `reminderset` the entry shows the day the member set, by key; control: a refused day shows its refusal and no reminder", async () => {
-  // C53: the reminder is the record's (`remindersfor`, action-clocks R26): the plane keeps what `reminderset` was sent and answers it back
-  const held = [];
-  const p = await open(ROUTES.action, { ...DATA_PLANE, reminderset: (req) => { held.push({ entry: req.body.entry, on: req.body.on, set_by: "mai", set_at: "2026-10-09T10:00:00Z", answered_at: null, state: "waiting" }); return ok({ ok: true }); },
-    remindersfor: () => ok({ ok: true, action: ACTION_ID, reminders: held }) });
+  // C53: the reminder is the record's (`remindersfor`, action-clocks R26): the world's store keeps what `reminderset` was sent and answers it back
+  const { world, me, action } = await clockWorld();
+  const p = await openIn(world, me, `/app/action/${action}`);
   await press(p, "reminderset", { nth: 1, values: { "remind-1": "2099-10-20" } });
-  assert.deepEqual(last(p, "reminderset").body, { target: ACTION_ID, entry: 1, on: "2099-10-20" });
+  assert.deepEqual(last(p, "reminderset").body, { target: action, entry: 1, on: "2099-10-20" });
   const mark = main(p).querySelector('[data-reminder="1"]');
   assert.ok(mark, "the reminder is drawn beside its entry");
   assert.ok(mark.textContent.includes(W("screen.reminder.on", { date: D("2099-10-20") })), "the sentence by key (DEC-387: `screen.reminder.on`), with the day");
   assert.equal(main(p).querySelector('[data-reminder="0"]'), null, "only the entry it was set on");
-  const r = await open(ROUTES.action, { ...DATA_PLANE, reminderset: refusedIn("REMINDER_REFUSED", "the owner's own sentence") });
+  // a refused day: the same day set twice on one entry is the owner's own refusal (REMINDER_REFUSED, arm `held`), and the record holds the one reminder
+  const { world: w2, me: m2, action: a2 } = await clockWorld({ handle: "mai" });
+  await m2.act("reminderset", { body: { target: a2, entry: 1, on: "2099-10-20" } });
+  const r = await openIn(w2, m2, `/app/action/${a2}`);
   const b = await press(r, "reminderset", { nth: 1, values: { "remind-1": "2099-10-20" } });
   assert.ok(beside(r, b).includes(W("refusal.REMINDER_REFUSED")), "by its word");
-  assert.equal(main(r).querySelector("[data-reminder]"), null, "a refused day sets no reminder");
-  const none = await open(ROUTES.action, { ...DATA_PLANE, reminderset: ok({}) });
+  assert.equal((await m2.read("remindersfor", { query: { action: a2 } })).reminders.length, 1, "a refused day sets no further reminder");
+  const none = await openIn(w2, m2, `/app/action/${a2}`);
   const c = await press(none, "reminderset", { nth: 1, values: { "remind-1": "" } });
   assert.ok(beside(none, c).includes(W("screen.action.remindon.needed")));
   assert.equal(none.byOp("reminderset").length, 0, "control: no day, nothing sent");
