@@ -146,8 +146,9 @@ test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `sessi
   assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().held, false);
   const set = await w.ops("by=ann", { member: "ann", kind: "apikey", secret: "sk-route", by: "admin" }).accountreferenceset();
   assert.equal(set.ok, true);
-  assert.equal((await w.ops("by=second", { member: "ann", kind: "apikey", secret: "x", by: "ann" }).accountreferenceset()).reason,
-    "NOT_YOUR_ACCOUNT", "the stamp wins over the body's `by`");
+  assert.equal((await w.ops("by=second", { member: "ann", kind: "apikey", secret: "x", by: "ann" }).accountreferenceset()).ok, true,
+    "the stamp wins over the body's `by` and `member` (ai-accounts R38): the caller sets its own reference");
+  assert.equal(w.ops("member=second&viewer=member:second").accountreference().held, true, "R38: second's own reference, not ann's");
   assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().held, true);
   assert.equal(w.ops("member=ann&viewer=member:second").accountreference().reason, "NOT_YOUR_ACCOUNT");
   assert.equal(w.ops("by=ann", { owner: "member:ann", switch: "standing", on: true }).accountusesset().on, true, "T41: accountswitchset retired");

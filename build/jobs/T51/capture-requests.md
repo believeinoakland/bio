@@ -1,6 +1,6 @@
 # capture-requests (T51)
 
-**Status** · session_014DGUrY7wCujoHhs8uwNL3N · depth 2 · COMPLETE · handled B10
+**Status** · session_01LzS8HvjY3FmLTxLbvbfkTu · depth 2 · COMPLETE · handled B11
 
 ## Completion (T51-59 · red #27, N1243)
 
@@ -263,3 +263,42 @@ Checked from the tranche as it stands: the ops map (`captureRequestsOps`, `bio-p
 Checks: module tests 131/131 (run without `--test-force-exit`); `platform-ops.test.mjs` 1/1; format, architecture, coverage (58/58), words, ownership, fixtures `--list`: 0 failures. Nothing deferred; nothing found in another module.
 
 Record: `build/jobs/T51/capture-requests.md`, section "Completion (B10 ...)". Met ids: R46 (already marked by BOB's strike at B9 — still open on the tranche's mark; name stays).
+
+## Completion (B11 · fix round 10, plan item 89; K5182, K5175)
+
+**Entry applied: R59.** `capturerequests` is declared in `DECLARED_OPS` (`bio-plane/src/capture-requests/index.mjs`, the `capturerequests` row after `capturerequestretry`, lines 1904–1914). Declared as a read, by the rules R57 and R58 use:
+- `classes` `["admin", "member", "probe"]` and `mutating: false`, the same as its op-declarations hand row (`op-declarations/index.mjs:1454`), which the registration checks.
+- `weight: "read"`, the weight a read takes (money's and capture-requests' own reads register the same way, `op-grades/declared.mjs`).
+- `description`: the read sentence, passed through `localize("capture-requests.index.declared_capturerequests", …)` so the words check holds it (K3930). A first draft used a plain string, and `checks/run.mjs` flagged it `[plain]`; the localized form is the one that passes.
+- `fields.accepts` `["run", "target", "state", "limit"]`: the query fields the arm reads (`capturerequests` in `captureRequestsOps`). `viewer` is the stamp and is excluded, as R57 and R58 exclude theirs. `fields.requires` `[]`.
+
+**Failing first.** `bio-plane/test/m/capture-requests/declared-ops.test.mjs`, new test "R59 capturerequests declares its fields …", was run against the code without the row and was red: `declared op "capturerequests": the declaration has no fields.accepts and fields.requires arrays`. With the row it is green. The test's door puts the fields in the query string, because this op reads its filters there, not from a body; a body door would have made every field a silent no-op. The test checks: no field is required (`declaredOpHolds` (a)); each query field the arm reads is accepted, given with a sample value and never refused naming it; a field outside accepts is dropped (`declaredOpHolds` (c)).
+
+**Tests run** (from `/home/user/bio`, `node --import ./bio-plane/test/platform-sqlite.mjs --test …`; each run exited by itself, no `--test-force-exit`):
+- `bio-plane/test/m/capture-requests/*.test.mjs`: 132 of 132 pass, before and after the second tranche merge (R59 included in both).
+- `declared-ops.test.mjs` alone: 3 of 3 pass (R57, R58, R59).
+- Test modules that read `DECLARED_OPS` through the registration: `interface-shell/declared.test.mjs` (the census: `capturerequests` now declared), `op-declarations/*.test.mjs`, `op-grades/*.test.mjs`: 411 of 411 pass.
+- `affordances/*.test.mjs` and `store-request/*.test.mjs`: 296 of 342 pass, 45 fail. The same 45 fail on the tranche as it stood before this job (`origin/tranche/T51` at `7efd8cb8c2`, checked in a temporary worktree, removed afterwards), with the same failing names; the failures are `storeWorld`'s `GROUP_ALREADY_RECORDED` and its dependents. Not caused by this change; see *Found in another module*.
+
+**Checks** (absolute root `/home/user/bio`):
+- `checks/format.mjs`: 178 modules, 0 failures.
+- `checks/architecture.mjs capture-requests`: 0 failures.
+- `checks/coverage.mjs capture-requests`: 59 of 59 live requirement ids named by a test, 0 failures. R59 is named by its test's title.
+- `checks/ownership.mjs capture-requests origin/tranche/T51 HEAD`: 0 failures (3 files, all the module's own).
+- `checks/fixtures.mjs /home/user/bio capture-requests --list`: 0 failures; no fixture marker added, and no `fixtures-own` or `fixtures-generic` marker added.
+- `checks/run.mjs /home/user/bio`: the words count is 19,239 before and after this change (not risen). No finding in `bio-plane/src/capture-requests/` or `bio-plane/test/m/capture-requests/`. The 16 words failures in the run are in other modules and were there before.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 49 modules and 1,016 test files named, because `DECLARED_OPS` is a shared registry. The users are run above: the registry readers, and the two modules that read the op tables; the rest are the modules that import the registry without reading this row.
+
+**Met ids (BOB strikes the marks):** R59. No other requirement's text changed.
+
+**Deferred.** None.
+
+**Found in another module.** (1) The 45 failing tests in `affordances/` and `store-request/` above fail the same way on the tranche before this job, so they are on the tranche and not this module's. Their cause is `storeWorld` (`bio-plane/test/m/store-request/fixtures.mjs:34`): the producing team is recorded a second time, and `GROUP_ALREADY_RECORDED` answers the record. This is for BOB to place with the module that owns the team recording, which I have not identified; I have not changed anything outside my paths. (2) `checks/run.mjs` reports 16 words failures in other modules (the store-assembly and the `marker` one at `bio-plane/src/store-assembly/declared.mjs:16`, which is the `plane.declared.readtranslate` en mismatch); none is in this module.
+
+**Why the tests missed it (for the record).** The module's tests never called the `capturerequests` op through the registry's declaration. `declared-ops.test.mjs` covered only `capturerequest` and `capturerequestretry` (R57, R58), so an undeclared read passed every test.
+
+**Size (session_01LzS8HvjY3FmLTxLbvbfkTu): test runs 9, module lines 2599.** (Test runs: the first red run, the first green run, the full module run, the declared-ops run after the localize change, the registry-reader run, the affordances and store-request run, the same run on the tranche baseline in a temporary worktree, and the module run after the tranche merge. Module lines: `bio-plane/src/capture-requests/*.mjs`, all files of the module.)
+
+## J11 · COMPLETE
+
+COMPLETE: capture-requests, B11 (K5182, fix round 10, plan item 89). R59 is met: capturerequests is declared in DECLARED_OPS (bio-plane/src/capture-requests/index.mjs, lines 1904-1914) as a read, its failing-first test is in declared-ops.test.mjs. Module suite 132 of 132 pass; registry readers 411 of 411 pass. Checks format, architecture, coverage, ownership, fixtures and words are clean for this module. One finding outside my paths, not caused by this change: 45 tests in affordances/ and store-request/ fail identically on the tranche before this job (storeWorld's GROUP_ALREADY_RECORDED); REPORT in the record. Full detail and the Size line are in build/jobs/T51/capture-requests.md.

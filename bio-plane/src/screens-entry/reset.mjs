@@ -30,7 +30,7 @@ export const reset = {
     if (dead) return `<h1 class="t-title">${W(S + "dead")}</h1><p class="cs-row" data-state="dead">${W(S + "dead.what")}</p>` + back("screen.entry.backtofront");
     return cs.title() + cs.state(look, (v) => {
       const handle = v.handle || "";
-      const until = v.until || v.expires || v.expires_at || "";
+      const until = v.expiresAt || "";
       return `<p class="mk-sub">${until ? W(S + "for", { handle, date: { html: cs.date(until) } }) : W(S + "forhandle", { handle })}</p>`
         + cs.field("rs-pw", "screen.entry.newpassword", { type: "password", help: "screen.entry.twelve", autocomplete: "new-password" })
         + cs.field("rs-pw2", "screen.entry.again", { type: "password", autocomplete: "new-password" })
