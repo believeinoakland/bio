@@ -43271,6 +43271,54 @@
    "en": "Type the value as it appears in that column. The calculation counts the rows that hold it.",
    "protected": false,
    "note": "DEC-434: B520 its help"
+  },
+  {
+   "key": "screen.held.empty.mine",
+   "en": "Nothing of yours is held. Choose Everyone's to see the captures other members are holding.",
+   "protected": false,
+   "note": "DEC-435: B522: the Held list on Mine with none held, while others' may be"
+  },
+  {
+   "key": "screen.document.pick.more",
+   "en": "{count} shown here. More are on the next page.",
+   "protected": false,
+   "note": "DEC-435: B522: the picker's line when the read pages by its next and gives no total (screen.list.showing when it does)"
+  },
+  {
+   "key": "screen.document.pick.none",
+   "en": "No document you can see has “{text}” in its name.",
+   "protected": false,
+   "note": "DEC-435: B522: a search in the picker that finds none; {text} what was typed"
+  },
+  {
+   "key": "screen.person.holds.capacity",
+   "en": "In what capacity",
+   "protected": false,
+   "note": "DEC-435: B523: the field on a holds line (refusal.NO_CAPACITY when it is empty)"
+  },
+  {
+   "key": "refusal.NO_COLUMN",
+   "en": "Choose the column of the table to work from. Nothing was written.",
+   "protected": false,
+   "note": "DEC-435: B523: calculations, the column not given"
+  },
+  {
+   "key": "refusal.NO_PART",
+   "en": "Type the value to count in that column. Nothing was written.",
+   "protected": false,
+   "note": "DEC-435: B523: calculations, the value not given"
+  },
+  {
+   "key": "refusal.NO_SUCH_COLUMN",
+   "en": "That column is not in the table. Choose one of its columns. Nothing was written.",
+   "protected": false,
+   "note": "DEC-435: B523: calculations, a column the table does not have"
+  },
+  {
+   "key": "screen.timeline.nozone",
+   "en": "Some times here are placed nowhere: your team has not chosen the places whose rules apply, so Civicsmith has no time zone to place them in. An administrator chooses them under Places and languages.",
+   "protected": false,
+   "note": "DEC-435: B523: a hint on Timeline when the team has no active place (zone null); drawn once above the events it touches"
   }
  ],
  "rewrite": {
