@@ -483,3 +483,31 @@ Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 8, module lines 4066
 ## J25 · REPORT
 
 Correction to J24's Size line: the module's source is 4097 lines (cat of bio-plane/src/ratification/*.mjs | wc -l), not 4066, which I estimated. Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 8, module lines 4097.
+
+## J26 · BLOCKED
+
+Cause: tests. One test is red: `control-plane/r10-caseratify-chain.test.mjs`, 12 calls against the bar of 11. R60 is not met yet, so I am not posting COMPLETE. Everything else is green.
+
+**Done since J25** (commit `30296b270a`, pushed; the tranche `origin/tranche/T51` merged in, never rebased).
+- **R18**: passes after the merge, with no change of mine (`preflight.test.mjs`, 18 of 18 with R61's four).
+- **R61**: passes (`r61-member-basis.test.mjs`, 4 of 4).
+- **R21**: passes (`SELECTION_NOT_YOURS`; from J25).
+- **R53**: `publishat` is declared in `DECLARED_OPS` (`index.mjs`): classes admin, member, probe; mutating; weight `irreversible` (op-grades); description `act.publishat.does`; fields the caseratify payload plus `at`, `at` required. `declared-ops.test.mjs` holds it against `publishAtOp` in a new case, 4 of 4 pass. The case registers the litigation-hold reader (R45) first: without it the requires-only call is `SCHEDULE_UNCHECKABLE`, a precondition, not a field.
+- Ratification suite: 340 of 340 pass.
+- Checks: format 0 failures; architecture 47 product files, 249 imports, 0 failures; coverage 60 of 60 live ids named, 0 failures.
+
+**R60 is not met, and the reason is the measured chain** (`r10-caseratify-chain.test.mjs`, measured on the merged tree with a scratch copy that prints each call; the test file is unchanged):
+1. `reauthdue` (admission): 1
+2. the group `list`, `gatefacts`, `image`, `casedocfacts`, read together: 1
+3. `ratifygate`, the sitting in one call (from J25): 1
+4. `caseratify`: 1
+5. `reusedparts`: 1
+6. copy read and copy write: 2
+7. assembly: `recordcasefile`, `PUBLISHED.get`, `PUBLISHED.put` ×2, `recordcasemanifest`: 5
+
+Admission 1 + ratification 6 = 7, which is this module's bar. The assembly is 5 against public-read's bar of 4 (R44). The test is red for that one call. B23 says "R60's two hops" are done. The first hop (the second `ratifygate`) is done. The `list` read is not a separate hop: it sits in the group with `gatefacts`, `image` and `casedocfacts`, which is one hop whichever of them ends last, so removing it alone changes nothing. The second thing I had listed, the assembly's extra hop, is in public-read, and I have not touched it.
+
+**What I need from you**
+1. Either public-read drops one hop in the assembly, or you rule that R60 is met for ratification's share and the chain test's bar is the assembly's to meet. Until then, the test stays red and R60 stays unmet.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 6, module lines 4097
