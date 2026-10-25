@@ -20,29 +20,29 @@ const SCREENS_WITH_A_PICKER = [
 ];
 const titles = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent.split(" · ")[0]).filter((t) => t);
 
-/** A world with a project that holds documents "Document 1" ... "Document N" (the first three are read for a standard, a table and a figure), the screens' subjects made
+/** A world with a project that holds documents "Document 1.txt" ... "Document N.txt" (the first three are read for a standard, a table and a figure), the screens' subjects made
  *  over them, and `grow(n)` holding more until `n` are held. Answers the screens' paths as the world gave their ids. */
 async function scene() {
   const { world, me } = await inWorld();
   await world.recipes.profiles(me, ["oakland-alameda"]);
   const project = await world.recipes.project(me, "Pothole repairs");
   let held = 0;
-  const grow = async (n) => { while (held < n) { held++; await world.recipes.hold(me, "Document " + held, held === 2 ? "month,rent\njan,5\nfeb,7\n" : `Section ${held}.01 No landlord shall retaliate (${held}).`, project); } };
+  const grow = async (n) => { while (held < n) { held++; await world.recipes.hold(me, "Document " + held + ".txt", held === 2 ? "month,rent\njan,5\nfeb,7\n" : `Section ${held}.01 No landlord shall retaliate against a tenant who complains about the condition of the unit (copy ${held}).`, project); } };
   await grow(3);
   const rows = (await me.read("heldcaptures", { query: { project, state: "held_and_vouched", fields: "picker", limit: "200" } })).held;
   const shaOf = (title) => rows.find((r) => r.title === title).capture.sha256;
-  const units = await readHeld(world, me, shaOf("Document 1"));
-  const std = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: shaOf("Document 1"), extent: units[0].extent });
+  const units = await readHeld(world, me, shaOf("Document 1.txt"));
+  const std = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: shaOf("Document 1.txt"), extent: units[0].extent });
   const ent = async (kind, label, note, more = {}) => (await me.act("entitycreate", { body: { kind, label, note, ...more } })).entity_id;
   const chen = await ent("person", "Lin Chen", "Council member who moved the vote.");
   const court = await ent("body", "Alameda Housing Tribunal", "A court.", { forum_kind: "court" });
   const proc = await ent("proceeding", "Lease rent case", "From the caption.", { proceeding: { forum: court, kind: "civil", number: "24CV123456" } });
   const trail = await world.recipes.trail(me, project, "Stormwater fund transfers, FY2023");
-  const fact = (await me.act("recordfact", { body: { currency: "USD", sign: "+", precision: "exact", period: { from: "2021-07-01", to: "2022-06-30" }, source: { capture_sha: shaOf("Document 3"), extent: DOC },
+  const fact = (await me.act("recordfact", { body: { currency: "USD", sign: "+", precision: "exact", period: { from: "2021-07-01", to: "2022-06-30" }, source: { capture_sha: shaOf("Document 3.txt"), extent: DOC },
     amount: "4200000.00", as_read: "4,200,000", kind: "transfer", phase: "adopted", basis: "budgetary", from: { as_written: "Sewer Fund" }, to: { as_written: "General Fund" } } })).fact_id;
   await me.act("moneysetpropose", { body: { setId: trail, factId: fact, method: "member:recordfact" } });
   await me.act("include", { body: { setId: trail, factId: fact, reason: "the transfer we ask about" } });
-  const table = (await me.act("tabledeclare", { body: { source: { capture_sha: shaOf("Document 2"), extent: DOC }, header: ["month", "rent"],
+  const table = (await me.act("tabledeclare", { body: { source: { capture_sha: shaOf("Document 2.txt"), extent: DOC }, header: ["month", "rent"],
     schema: { fields: [{ name: "month", type: "string" }, { name: "rent", type: "number" }] } } })).sha;
   const calc = (await me.act("calculationcreate", { body: { question: "How many months?", period: { from: "2025-07-01", to: "2026-06-30" }, kind: "count", project, inputs: [{ name: "input", table }] } })).calc_id;
   const PATHS = { standard: "/app/standard/" + std, person: "/app/person/" + chen, proceeding: "/app/proceeding/" + proc, timeline: "/app/timeline/" + project,
@@ -59,7 +59,7 @@ const held = (total) => (r) => {
   const from = q.after ? Number(q.after) : 0;
   const n = Math.min(Number(q.limit) || 200, 1000);
   const rows = [];
-  for (let i = from; i < Math.min(total, from + n); i++) rows.push({ bundle_id: "INFO-2026-" + String(i + 1).padStart(4, "0"), title: "Document " + (i + 1), capture: { sha256: sha(i + 1) } });
+  for (let i = from; i < Math.min(total, from + n); i++) rows.push({ bundle_id: "INFO-2026-" + String(i + 1).padStart(4, "0"), title: "Document " + (i + 1) + ".txt", capture: { sha256: sha(i + 1) } });
   const more = from + n < total;
   return ok({ ok: true, held: rows, state: q.state, limit: n, truncated: more, next: more ? String(from + n) : null });
 };

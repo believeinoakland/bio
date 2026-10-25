@@ -1,9 +1,10 @@
 /* screens-investigate, T51 fix round 3 (wave 2): C59 and N3 (one passage picker, R34), C14 (the pickers read when the screen opens, R34, R52),
- * C95 (the cite list's preselection, R34), each over a scripted plane, with the control that shows the fix is the cause. C8 is in money.test.mjs. */
+ * C95 (the cite list's preselection, R34), each over `store-request`'s world (the real store behind the page's door), with the control that shows the fix is the cause. C8 is in money.test.mjs. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, fill, press, PATHS, P, ENT, ORG, SHA, SHA2, MSR, word, drew, notDrew } from "./fixtures.mjs";
+import { createHash } from "node:crypto";
+import { refusedIn } from "../interface-shell/harness.mjs";
+import { main, fill, press, word } from "./fixtures.mjs";
 import { inWorld, openAs, settled, readHeld } from "./world.mjs";
 
 const wordsOf = (p, id) => p.doc.querySelectorAll("[data-words]").find((e) => e.getAttribute("data-words").startsWith(id + "-"));
@@ -11,60 +12,25 @@ const unitsOf = (p, id) => wordsOf(p, id).querySelectorAll('[data-shell="word"]'
 const pickWord = async (p, id, i) => { await p.click(wordsOf(p, id).querySelectorAll('[data-shell="word"]')[i]); await p.settle(); };
 const heading = (p, id) => main(p).querySelectorAll("[data-passage]").filter((e) => e.getAttribute("data-passage") === id);
 const NOT_READ = word("retrieval.notread.not_extracted");
-const orgAt = "/app/person/" + ORG;
-const orgPlane = { entity: (r) => ok(r.query.id === ORG ? { ok: true, found: true, entity: { entity_id: ORG, kind: "institution", label: "Public Works Department", note: "", aliases: [], relations: [] } } : { ok: false, found: false }),
-  person: refusedIn("NOT_A_PERSON", "The record named is not a person."), samepersoncandidates: refusedIn("NOT_A_PERSON", "The record named is not a person.") };
-
-const SCREENS = [
-  ["person", PATHS.person, "person-fact-doc", "person-fact-passage"],
-  ["organization", orgAt, "person-fact-doc", "person-fact-passage", orgPlane],
-  ["money", PATHS.money, "mf-doc", "mf-passage"],
-  ["timeline", PATHS.timeline, "tl-doc", "tl-passage"],
-];
-
-for (const [name, path, doc, words, extra] of SCREENS) {
-  test(`R34 C59 ${name}: "Choose the passage on the document" is drawn with the chosen document's words, from its reading; control: a document with a reading lists its passages`, async () => {
-    const p = await open(path, { plane: extra || {} });
-    assert.equal(heading(p, words).length, 1, "the heading is drawn, once");
-    assert.ok(heading(p, words)[0].textContent.includes(word("form.choose.passage")));
-    assert.deepEqual(unitsOf(p, words), ["Lin Chen, Director of Public Works", "Appointed in March 2022"], "the first document's words");
-    assert.equal(p.byOp("reading")[0].query.sha256, SHA);
-    assert.equal(main(p).querySelector('[data-state="failed"]'), null, "nothing failed");
-    /* choosing the other document redraws the words from that document's reading */
-    fill(p, { [doc]: SHA2 });
-    p.fire(p.doc.getElementById(doc), "change");
-    await p.settle();
-    assert.deepEqual(unitsOf(p, words), ["Monthly rent is due on the first."]);
-  });
-
-  test(`R34 N3 ${name}: a document with no reading, or one that cannot be read, says why; never "Nothing here" nor "Could not read this"; control: a document with a reading draws no such sentence`, async () => {
-    for (const reading of [ok({ ok: true, sha256: SHA, unread_pages: [], text_units: [] }), refusedIn("NOT_READ", ""), () => ({ ok: false })]) {
-      const p = await open(path, { plane: Object.assign({ reading }, extra || {}) });
-      const sec = main(p).textContent;
-      assert.ok(sec.includes(NOT_READ), "the reason is said");
-      assert.ok(!sec.includes(word("shell.unread")), "not 'could not read this'");
-      assert.equal(wordsOf(p, words), undefined, "no words to select");
-      assert.ok(heading(p, words).length === 1, "the heading stays");
-    }
-    const read = await open(path, { plane: extra || {} });
-    assert.ok(!main(read).textContent.includes(NOT_READ), "control: a reading draws no reason");
-  });
-}
 
 /** A world whose member holds two documents of a project, the first of two paragraphs, the second of one, each read by the store (`readHeld`), and a money trail of
- *  the project: the passages a page offers are the words of those readings. */
-async function twoDocuments() {
+ *  the project: the passages a page offers are the words of those readings. `read: false` leaves them held and unread. Also a person and an organisation to open. */
+async function twoDocuments({ read = true } = {}) {
   const { world, me } = await inWorld();
   await world.recipes.profiles(me, ["oakland-alameda"]);
   const project = await world.recipes.project(me, "Pothole repairs");
   const first = await world.recipes.hold(me, "Lease amendment 1.txt", "The council adopted the amendment on March 3, 2026.\n\nThe rent is due on the first of each month.", project);
   const second = await world.recipes.hold(me, "Rent schedule.txt", "Monthly rent is due on the first.", project);
-  const firstUnits = await readHeld(world, me, first.sha);
-  const secondUnits = await readHeld(world, me, second.sha);
-  assert.equal(firstUnits.length, 2, "the first document reads as two passages");
-  assert.equal(secondUnits.length, 1, "the second as one");
+  const firstUnits = read ? await readHeld(world, me, first.sha) : [];
+  const secondUnits = read ? await readHeld(world, me, second.sha) : [];
+  if (read) {
+    assert.equal(firstUnits.length, 2, "the first document reads as two passages");
+    assert.equal(secondUnits.length, 1, "the second as one");
+  }
   const trail = await world.recipes.trail(me, project, "Pothole repairs, FY2026");
-  return { world, me, project, trail, first, second, firstUnits, secondUnits };
+  const person = (await me.act("entitycreate", { body: { kind: "person", label: "Lin Chen", note: "Director of Public Works." } })).entity_id;
+  const org = (await me.act("entitycreate", { body: { kind: "institution", label: "Public Works Department", note: "A city department." } })).entity_id;
+  return { world, me, project, trail, person, org, first, second, firstUnits, secondUnits };
 }
 /** `settled`, but `#cs-main` is looked up each round: choosing another document redraws the screen and replaces it, and world.mjs's `settled`, which holds the first
  *  element, then waits on a detached "loading" for its whole bound (sixteen seconds). */
@@ -77,6 +43,51 @@ async function quiet(p) {
   }
 }
 const select = async (p, id, sha) => { fill(p, { [id]: sha }); p.fire(p.doc.getElementById(id), "change"); await quiet(p); };
+
+/** The four screens that offer a passage picker: where each is opened over `w`, and the ids of its document choice and its words. */
+const SCREENS = [
+  ["person", (w) => "/app/person/" + w.person, "person-fact-doc", "person-fact-passage"],
+  ["organization", (w) => "/app/person/" + w.org, "person-fact-doc", "person-fact-passage"],
+  ["money", (w) => "/app/money/" + w.trail, "mf-doc", "mf-passage"],
+  ["timeline", (w) => "/app/timeline/" + w.project, "tl-doc", "tl-passage"],
+];
+
+for (const [name, at, doc, words] of SCREENS) {
+  test(`R34 C59 ${name}: "Choose the passage on the document" is drawn with the chosen document's words, from its reading; control: a document with a reading lists its passages`, async () => {
+    const w = await twoDocuments();
+    const p = await openAs(w.world, w.me, at(w));
+    assert.equal(heading(p, words).length, 1, "the heading is drawn, once");
+    assert.ok(heading(p, words)[0].textContent.includes(word("form.choose.passage")));
+    const chosen = p.doc.getElementById(doc).value;
+    const units = { [w.first.sha]: w.firstUnits, [w.second.sha]: w.secondUnits };
+    assert.ok(units[chosen], "a held document is the one chosen");
+    assert.deepEqual(unitsOf(p, words), units[chosen].map((u) => u.text), "the chosen document's words");
+    assert.equal(p.byOp("reading")[0].query.sha256, chosen);
+    assert.equal(main(p).querySelector('[data-state="failed"]'), null, "nothing failed");
+    /* choosing the other document redraws the words from that document's reading */
+    const other = chosen === w.first.sha ? w.second.sha : w.first.sha;
+    await select(p, doc, other);
+    assert.deepEqual(unitsOf(p, words), units[other].map((u) => u.text));
+  });
+
+  test(`R34 N3 ${name}: a document with no reading, or one that cannot be read, says why; never "Nothing here" nor "Could not read this"; control: a document with a reading draws no such sentence`, async () => {
+    /* held and not yet read: the store's own answer; then a reading the store answered with no words, one it refused, and one it gave no reason for (faults) */
+    const w = await twoDocuments({ read: false });
+    const faults = [null, () => ({ status: 200, json: { ok: true, result: { ok: true, sha256: w.first.sha, unread_pages: [], text_units: [] } } }), refusedIn("NOT_READ", ""),
+      () => ({ status: 200, json: { ok: true, result: { ok: false } } })];
+    for (const reading of faults) {
+      const p = await openAs(w.world, w.me, at(w), { plane: reading ? { reading } : {} });
+      const sec = main(p).textContent;
+      assert.ok(sec.includes(NOT_READ), "the reason is said");
+      assert.ok(!sec.includes(word("shell.unread")), "not 'could not read this'");
+      assert.equal(wordsOf(p, words), undefined, "no words to select");
+      assert.ok(heading(p, words).length === 1, "the heading stays");
+    }
+    const r = await twoDocuments();
+    const read = await openAs(r.world, r.me, at(r));
+    assert.ok(!main(read).textContent.includes(NOT_READ), "control: a reading draws no reason");
+  });
+}
 
 test("R34 C59 money and timeline send the passage chosen on screen, and the whole document when none is chosen", async () => {
   const w = await twoDocuments();
@@ -121,33 +132,70 @@ test("R34 C59 each document's words are their own selection: words picked on one
 });
 
 /* C95 (R34, parts): the question choice leads with the question the page was opened for, chosen; with none, none is chosen */
-const QS = { ok: true, bundles: [{ bundle_id: "INQ-2026-0009-other", title: "Another team question" }, { bundle_id: "INQ-2026-0001-seven-days", title: "Is the city repairing reported potholes within seven days?" }] };
+const hex = (x) => createHash("sha256").update(x).digest("hex");
+const iso = (world) => new Date(world.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
+/** A question the team asks (an inquiry), as the record holds one. Answers its id. */
+async function ask(world, me, title) {
+  const now = iso(world);
+  const id = (await me.read("allocid", { query: { prefix: "INQ", year: now.slice(0, 4) } })).id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 20);
+  const text = ["---", "id: " + id, "object_type: inquiry", "schema: inquiry@1", "title: " + JSON.stringify(title), "current_state: open", "prior_state: null", "references: []",
+    "state_history: []", "surfaced_by: human", "---", "", "## Question", "", title, "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const made = await me.act("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(id).slice(0, 8),
+    meta: { object_type: "inquiry", title, current_state: "open", created: now, last_updated: now }, files: [{ path: "bundle.md", text }], register: [] } });
+  return made.bundleId || id;
+}
+/** A project (as `recipes.project` starts one) whose document cites `targets`, as a project's document cites the questions it follows. */
+async function projectCiting(world, me, title, targets) {
+  const now = iso(world);
+  const refs = targets.length ? ["references:", ...targets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: active"])] : [];
+  const text = ["---", "object_type: project", "title: " + JSON.stringify(title), "objective: " + JSON.stringify(title), "current_state: forming", `created: "${now}"`, `last_updated: "${now}"`,
+    ...refs, "---", "", "## Session Log", "", `### Session ${now} | Formation | interactive`, "Trigger: test", "Changes: created.", ""].join("\n");
+  const made = await me.act("promote", { body: { base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(title).slice(0, 8),
+    meta: { object_type: "project", title, current_state: "forming", created: now, last_updated: now }, files: [{ path: "bundle.md", text }], register: [], visibility: "discoverable" } });
+  return made.bundleId;
+}
+/** Two questions the team asks, one of which a project cites (the other is asked first, so it leads the list unless the page puts the cited one ahead), a project that
+ *  cites it with a money trail, and a project that cites none with a trail. */
+async function questions() {
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const other = await ask(world, me, "Another team question");
+  const cited = await ask(world, me, "Is the city repairing reported potholes within seven days?");
+  const citing = await projectCiting(world, me, "Pothole repairs", [cited]);
+  const bare = await projectCiting(world, me, "Street lighting", []);
+  return { world, me, other, cited, citing, bare, trail: await world.recipes.trail(me, citing, "Pothole repairs, FY2026"), bareTrail: await world.recipes.trail(me, bare, "Street lighting, FY2026") };
+}
 const optionsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.hasAttribute("selected")]);
 
 test("R34 C95 money: the question the project cites is first and chosen; control: a project citing none has none chosen", async () => {
-  const p = await open(PATHS.money, { plane: { list: ok(QS) } });
-  assert.deepEqual(optionsOf(p, "mf-question"), [["INQ-2026-0001-seven-days", true], ["INQ-2026-0009-other", false]]);
-  const none = await open(PATHS.money, { plane: { list: ok(QS), image: (r) => ok(r.query.id === P ? { "bundle.md": ["---", `id: ${P}`, "object_type: project", "title: \"Pothole repairs\"", "---", ""].join("\n") } : null) } });
+  const q = await questions();
+  const listed = (await q.me.read("list", { query: { type: "inquiry", limit: "500" } })).bundles.map((b) => b.bundle_id);
+  assert.deepEqual(listed.slice().sort(), [q.cited, q.other].sort(), "the world lists both questions");
+  const p = await openAs(q.world, q.me, "/app/money/" + q.trail);
+  assert.deepEqual(optionsOf(p, "mf-question"), [[q.cited, true], [q.other, false]]);
+  const none = await openAs(q.world, q.me, "/app/money/" + q.bareTrail);
   assert.deepEqual(optionsOf(none, "mf-question").map(([, sel]) => sel), [false, false], "none chosen when the project cites none");
 });
 
 test("R34 C95 timeline: the cited question is the chosen one; control: none cited, none offered", async () => {
-  const p = await open(PATHS.timeline, { plane: { list: ok(QS) } });
-  assert.deepEqual(optionsOf(p, "tl-question"), [["INQ-2026-0001-seven-days", true]]);
-  const none = await open(PATHS.timeline, { plane: { list: ok(QS), image: (r) => ok(r.query.id === P ? { "bundle.md": ["---", `id: ${P}`, "object_type: project", "title: \"Pothole repairs\"", "---", ""].join("\n") } : null) } });
+  const q = await questions();
+  const p = await openAs(q.world, q.me, "/app/timeline/" + q.citing);
+  assert.deepEqual(optionsOf(p, "tl-question"), [[q.cited, true]]);
+  const none = await openAs(q.world, q.me, "/app/timeline/" + q.bare);
   assert.deepEqual(optionsOf(none, "tl-question"), [], "none cited, none offered, none chosen");
 });
 
 /* C14 (R34, R52; shell R113): the picker reads when the screen opens, once, with `fields=picker`; choosing, searching and acts that file no
  * document read nothing of it again, and a document's reading is read once however often it is chosen */
-for (const [name, path, doc, words] of SCREENS.filter((x) => !x[4])) {
+for (const [name, at, doc] of SCREENS.filter(([n]) => n !== "organization")) {
   test(`R34 C14 ${name}: one picker read when the screen opens (fields picker, held and vouched); choosing and choosing back reads no document list again, and each reading once`, async () => {
-    const p = await open(path);
+    const w = await twoDocuments();
+    const p = await openAs(w.world, w.me, at(w));
     assert.equal(p.byOp("heldcaptures").length, 1, "one read of the documents at open");
     assert.equal(p.byOp("heldcaptures")[0].query.fields, "picker");
     assert.equal(p.byOp("heldcaptures")[0].query.state, "held_and_vouched");
-    for (const sha of [SHA2, SHA, SHA2]) { fill(p, { [doc]: sha }); p.fire(p.doc.getElementById(doc), "change"); await p.settle(); }
+    for (const sha of [w.second.sha, w.first.sha, w.second.sha]) await select(p, doc, sha);
     assert.equal(p.byOp("heldcaptures").length, 1, "control: a picker already opened is not read twice");
-    assert.deepEqual(p.byOp("reading").map((r) => r.query.sha256).sort(), [SHA, SHA2].sort(), "each document's reading once");
+    assert.deepEqual(p.byOp("reading").map((r) => r.query.sha256).sort(), [w.first.sha, w.second.sha].sort(), "each document's reading once");
   });
 }
