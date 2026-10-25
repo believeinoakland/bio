@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, world, call, opCalls, FORGED, aik, cred } from "./harness.mjs";
 import { callers, ok, routesForSessions } from "./door-routes.mjs";
-import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { ownerOps as controlPlaneOwnerOps } from "../../../src/store-assembly/owner-ops.mjs";
 import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { aiUseOps } from "../../../src/ai-use/index.mjs";
 import { T41_RUNGS, T41_RUNG_ABSENT, T41_NON_ACTS } from "../../../src/op-grades/t41.mjs";

@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J39
+**Read** · handled J40
 
 ## B1 · START
 

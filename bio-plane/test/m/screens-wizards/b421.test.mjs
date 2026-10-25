@@ -1,18 +1,14 @@
 /* T51 (B6 CHANGE, K4248; DEC-387 B421): a step whose subject is an action, a matter or a due date, with none held for the run,
    stays on the wizard's card with the step's own `none` words and the door "Open a plan" (R22, amending R20). The walk of the
-   whole library in the real page is `walk.test.mjs` (R21). */
+   whole library in the real page is `walk.test.mjs` (R21). Answered by the real store through the world's door (K5175; `world.mjs`):
+   the library's scripts are read as the store gives them. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { standIn, unhtml, said } from "./standin.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { CIVICSMITH_LIBRARY } from "../../../src/wizard-scripts/index.mjs";
+import { CIVICSMITH_LIBRARY, team } from "./world.mjs";
 
-const okr = (result) => ({ ok: true, result });
-const PROJECTS = okr({ ok: true, projects: [{ id: "P1", name: "Pothole repairs" }, { id: "P2", name: "The Coliseum lease" }] });
 const scriptOf = (id) => CIVICSMITH_LIBRARY.find((s) => s.id === id);
-const read = (id) => () => okr({ ok: true, script: { id, name: id, origin: "civicsmith" }, version: { id: id + "@1", state: "approved", steps: scriptOf(id).steps } });
-const plane = (id, over = {}) => ({ wizardread: read(id), startfrom: okr({ ok: true, doors: [] }), wizardprogress: okr({ ok: true }), projectlist: PROJECTS,
-  list: okr({ ok: true, bundles: [] }), ...over });
 const key = (id, n) => "wizard." + id + ".step" + n + ".none";
 
 /* the steps the design drew a card for (U420, B421): script id, step, the kind of subject */
@@ -26,7 +22,8 @@ const CARDS = [
 test("R22 each step the design drew a card for, with no subject held, draws its none keys in place and navigates nowhere", async () => {
   for (const [id, n, kind] of CARDS) {
     assert.equal(scriptOf(id).steps[n - 1].screen, kind, `${id} step ${n} is on ${kind}`);
-    const g = standIn({ plane: plane(id) });
+    const t = await team();
+    const g = standIn({ team: t, as: t.rosa });
     await g.enter("wizards");
     await g.start({ script: id, at: n });
     assert.deepEqual(g.nav, [], `${id} step ${n} opens no screen on a null subject`);
@@ -42,16 +39,18 @@ test("R22 each step the design drew a card for, with no subject held, draws its 
 
 test("R22 the door \"Open a plan\" opens the project choice, then plan on the chosen project, ringing and pressing nothing", async () => {
   for (const [id, n] of [["WIZ-33cece8a68e76f58", 1], ["WIZ-33cece8a68e76f58", 2], ["WIZ-33cece8a68e76f58", 5]]) {
-    const g = standIn({ plane: plane(id), values: { "wz-subject": "P2" } });
+    const t = await team();
+    const g = standIn({ team: t, as: t.rosa, values: { "wz-subject": t.P2 } });
     await g.enter("wizards");
     await g.start({ script: id, at: n });
     assert.equal(g.requests.filter((r) => r.op === "projectlist").length, 0, "no project asked before the door is pressed");
     await g.control("door");
     assert.deepEqual(g.nav, [], "the choice is made before anything opens");
     const html = g.render();
-    assert.ok(html.includes('id="wz-subject"') && html.includes("Pothole repairs") && html.includes("The Coliseum lease"));
+    const mine = (await t.rosa.read("projectlist")).projects;
+    assert.ok(html.includes('id="wz-subject"') && mine.every((x) => html.includes(x.name)));
     await g.control("subjectgo");
-    assert.deepEqual(g.nav, [["plan", "P2"]]);
+    assert.deepEqual(g.nav, [["plan", t.P2]]);
     assert.deepEqual(g.rings, [], "nothing is rung");
     assert.ok(g.requests.every((r) => ["wizardread", "startfrom", "wizardprogress", "wizardsat", "projectlist"].includes(r.op)), "no act is sent");
   }
@@ -59,7 +58,8 @@ test("R22 the door \"Open a plan\" opens the project choice, then plan on the ch
 
 test("R22 the door with no project to choose says wizard.subject.none.project in its fold and opens nothing", async () => {
   const id = "WIZ-33cece8a68e76f58";
-  const g = standIn({ plane: plane(id, { projectlist: okr({ ok: true, projects: [] }) }) });
+  const t = await team();
+  const g = standIn({ team: t, as: t.ivy });
   await g.enter("wizards");
   await g.start({ script: id, at: 3 });
   await g.control("door");
@@ -73,7 +73,8 @@ test("R22 the door with no project to choose says wizard.subject.none.project in
 test("R22 control: a step whose subject the run holds draws no card and opens its screen on it; each kind", async () => {
   const id = "WIZ-33cece8a68e76f58";
   for (const [n, kind, subject] of [[1, "matter", "DET-1"], [2, "action", "ACT-1"], [5, "due-date", "ACT-1~0"]]) {
-    const g = standIn({ plane: plane(id) });
+    const t = await team();
+    const g = standIn({ team: t, as: t.rosa });
     await g.enter(kind, subject);
     await g.enter("home");
     await g.start({ script: id, at: n });
@@ -85,7 +86,8 @@ test("R22 control: a step whose subject the run holds draws no card and opens it
 
 test("R22 the card gives way when the member reaches the step's own screen on a subject, and the step is rung", async () => {
   const id = "WIZ-33cece8a68e76f58";
-  const g = standIn({ plane: plane(id), drawn: { action: ["actioncorrespond"] } });
+  const t = await team();
+  const g = standIn({ team: t, as: t.rosa, drawn: { action: ["actioncorrespond"] } });
   await g.enter("wizards");
   await g.start({ script: id, at: 2 });
   assert.ok(unhtml(g.render()).includes(said(key(id, 2) + ".what")));
@@ -96,11 +98,12 @@ test("R22 the card gives way when the member reaches the step's own screen on a 
 
 test("R22 the unopened step is counted once, and Back and Next work from the card", async () => {
   const id = "WIZ-33cece8a68e76f58";
-  const g = standIn({ plane: plane(id) });
+  const t = await team();
+  const g = standIn({ team: t, as: t.rosa });
   await g.enter("wizards");
   await g.start({ script: id, at: 1 });
   await g.control("next");
   await g.control("back");
   await g.control("next");
-  assert.deepEqual(g.progress().filter((b) => b.event === "step").map((b) => b.step), [1, 2]);
+  assert.deepEqual(g.progress().filter((b) => b.script === id && b.event === "step").map((b) => b.step), [1, 2]);
 });

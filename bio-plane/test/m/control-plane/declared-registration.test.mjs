@@ -3,7 +3,7 @@
    (R81), so this file reads no table before it: each test below is its own process's first call. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DECLARED_OPS } from "../../../src/control-plane/owner-ops.mjs";
+import { OWNER_MAP_DECLARED_OPS as DECLARED_OPS } from "../../../src/store-assembly/owner-ops.mjs";
 import { registerDeclaredOps as registerRows } from "../../../src/op-declarations/index.mjs";
 import { registerDeclaredOps as registerGrades } from "../../../src/op-grades/index.mjs";
 

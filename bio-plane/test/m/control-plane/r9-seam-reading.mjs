@@ -403,7 +403,9 @@ export function sections(kit, counting) {
     assert.ok(answered.length >= 5, `the administrator's answers carry alarm_at (${answered.length} of ${r.asks.length})`);
     const past = r.asks.filter((a) => a.body && typeof a.body.alarm_at === "number" && a.body.alarm_at < a.at - 2_000);
     assert.deepEqual(past.map((a) => [a.body.alarm_at, a.at]), [], "an alarm_at in the past (more than the poll's own 2 s of slack)");
-    assert.equal(answered.filter((b) => b.alarm_at === null).length, 0, "alarm_at was null while a firing was in progress");
+    /* workerd clears the object's alarm while `alarm()` runs (getAlarm() answers null until the firing sets the next one), so a null `alarm_at` is the platform's and is true only of an answer
+       that says a firing is in progress (`running_since` set); an answer with no firing in progress and no alarm would be a lost alarm (K4787, K4966; item 42) */
+    assert.deepEqual(answered.filter((b) => b.alarm_at === null && !Number.isFinite(b.running_since)).map((b) => b.running_since), [], "alarm_at was null with no firing in progress");
     assert.ok(answered.every((b) => b.stale === false), "healthy: firings complete, so `stale` stays false");
   });
 
