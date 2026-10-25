@@ -177,7 +177,8 @@ function render(cs, view) {
   const undet = p ? (p.undetermined || []).filter((f) => f && f.fact_id && !f.withdrawn) : [];
   const have = new Set(standing.map((f) => f.fact_id));
   const undetRows = undet.filter((f) => !have.has(f.fact_id));
-  const withdrawn = p ? (p.facts || []).concat(p.undetermined || []).filter((f) => f && f.fact_id && f.withdrawn) : [];
+  /* people R44: the withdrawn facts are answered apart from `facts` (`withdrawn_facts`) */
+  const withdrawn = p ? (p.withdrawn_facts || []).concat(p.facts || [], p.undetermined || []).filter((f) => f && f.fact_id && f.withdrawn) : [];
   const seen = new Set();
   const gone = withdrawn.filter((f) => (seen.has(f.fact_id) ? false : seen.add(f.fact_id)));
   const undetLine = (f) => {
