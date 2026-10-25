@@ -2,7 +2,7 @@
    published fixture world, never a hand-written part), and a part recorded as not assessed revised from the page. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, press, last, ok, choose, W, DATA_PLANE, DETERMINATION, PROJECT } from "./page.mjs";
+import { open, text, press, last, ok, choose, W, DATA_PLANE, DETERMINATION, QUESTION } from "./page.mjs";
 import { world as consWorld, V as CV } from "../consequences/fixture.mjs";
 
 const S = "STD-2026-0001-law";
@@ -20,8 +20,7 @@ function plane(w) {
   return { ...DATA_PLANE,
     determination: ok({ ...DETERMINATION, id: w.D, project: w.P, standards: [{ standard: S, outcome: "noncompliant", in_force: true, rows: [{ requires: "a", did: "b" }] }] }),
     consequencesof: () => ok(w.c.consequencesOf({ determination: w.D, viewer: ALICE })),
-    consequencerevise: (req) => ok(w.c.consequenceRevise({ ...req.body, author: ALICE, viewer: ALICE })),
-    projectquestions: ok({ ok: true, project: w.P, items: [{ inquiry: "INQ-2026-0001-cause", title: "Did the cut reduce the hours?" }], cursor: null }) };
+    consequencerevise: (req) => ok(w.c.consequenceRevise({ ...req.body, author: ALICE, viewer: ALICE })) };
 }
 
 test("R50 (diagnosis 11 §4): a part recorded as not assessed is revised from the page to assessed, the page sending how it is known; control: a revise that changes neither sends neither", async () => {
@@ -53,8 +52,8 @@ test("R50 (diagnosis 11 §4): the question the harm follows from is sent when sh
   const rec = w.c.consequenceRecord({ ...w.base, basis: { rationale: "r", rests_on: [] } });
   const p = await open(`/app/matter/${w.D}`, plane(w));
   await choose(p, "mt-mode", "consequencerevise");
-  await press(p, "consequencerevise", { values: { "mt-r-part": rec.part.id, "mt-r-cause": "INQ-2026-0001-cause", "mt-r-why": "the question names it" } });
-  assert.equal(last(p, "consequencerevise").body.causation, "INQ-2026-0001-cause");
+  await press(p, "consequencerevise", { values: { "mt-r-part": rec.part.id, "mt-r-cause": QUESTION, "mt-r-why": "the question names it" } });
+  assert.equal(last(p, "consequencerevise").body.causation, QUESTION);
 });
 
 test("R6 (diagnosis 11 §6): a part is drawn by what its label says and its causation not yet established, never as an object", async () => {
