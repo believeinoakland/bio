@@ -509,3 +509,14 @@ Outside my paths, found today, REPORTed with file:line:
 2. R5, R76 (connect.test.mjs) red after ai-accounts R38 merged, see above.
 
 Affected modules (impact on the merged tree): screens-inquiry, control-plane, plane, journey-check. Their run is going now; I will report its counts in the COMPLETE.
+
+## J38 · QUESTION
+
+Question: R58 (`bio-plane/test/m/screens-settings/identity.test.mjs:87`) and R69 control (`bio-plane/test/m/screens-settings/group.test.mjs:465`) model "an older installation that recorded no producing team" with `team({group: null})`. Since K5193 that option is gone and the base world always records `town`, so the premise cannot be built from `storeWorld()`, and the test sees `'town' !== null`. Those two tests did not fail with GROUP_ALREADY_RECORDED, so I have not dropped the option: dropping it would leave the assertion checking a world that records a team.
+
+Options:
+(a) store-request adds a named recipe, e.g. `world.unrecorded()`, that makes the world's team unrecorded through the real store (the store has no real act for that, so it would be a test-only seam, which store-request would have to own).
+(b) I re-point those two tests at an older installation through an answer the store really gives (e.g. `updatenotice`/`bootstrap` with no team held), with the same expectations.
+(c) Drop the no-team cases from my module and move them to store-request.
+
+My recommendation is (a), owned by store-request, since two modules need the same premise. Please rule before I change either test.
