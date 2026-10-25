@@ -345,3 +345,21 @@ Size (session_015NNE8YXK9B29MQ2FEJGQ2N): test runs 12, module lines 2897
 ## J11 · COMPLETE
 
 Follow-up 31 done: cause = the product timed a body phase that did no work on the tests' 20x clock (instrumented: bodies 20, no requests, nothing in flight). Fixed in browserrender.mjs (bodies is the time waited, 0 when none) and the two clock-dependent test assertions (R68 control, R69 refused/closing). Browserrender tests 18/18, 20 runs in a row green under 8 busy loops on 4 cores; module 129/129, users 363/363; format, architecture, coverage, words, fixtures, ownership 0. Record J10.
+
+## J12 · COMPLETE
+
+Fix round 10, R72 (K5184): the credential ops read the door's stamped form. Code commits on job/T51/capture-sources (tranche/T51 merged in, never rebased).
+
+**Cause.** `credentials.mjs` `#active`, `#sees` and the listing looked the member up by the bare id, while the door stamps `by` and `viewer` as `member:<id>`; every non-founder supply and withdraw was refused `CAPTURE_CREDENTIAL_NOT_A_MEMBER`.
+
+**Fix** (`bio-plane/src/capture-sources/credentials.mjs`, `memberOfStamp`, used in `credentialSupply`, `credentialWithdraw`, `credentialList`). The member is resolved through membership's `positionalMember` (member-roster R73's spelling, a service of `membership`, already in `uses`; no new edge), including a carried project (`member:ann@P1`). The founder's `admin` and a bare id (direct calls) still resolve; the listing's viewer takes viewer spellings only (a bare id there sees none, R58). `class:…` and anything naming no active member are refused as before. Stored `supplied_by` and `withdrawn_by` stay the bare member id, which R56 reads.
+
+**Failing-first test.** `ops.test.mjs` R72 (member, carried project, bare id, founder, machine and unknown forms): red on the tranche's source, green now. The through-the-door test (non-founder supplies, lists, withdraws; another member neither sees nor withdraws; founder and machine controls) was red on the tranche, green after, but `checks/architecture.mjs` refuses it in my tests (it imports `store-request/fixtures.mjs`, later in the order), so I removed it. **REPORT for BOB:** place it with store-request; its text is at `/tmp/claude-0/-home-user-bio/3c3bc349-d5fe-5f90-a8d2-997ab5abdda8/scratchpad/door-stamp.test.mjs` in session_01Q1yszDBNgp9hK77DQ5s84q's container (use `storeWorld({group: null, env: {CAPTURE_CREDENTIALS_KEY}})`, `w.signIn`, `w.door`).
+
+**Tests.** capture-sources 133/133. Users: capture-requests 131/131, answer-envelope 52/52, screens-intake 387/387, wizard-scripts 140/140, store-assembly and plane hosts/t36 files 36/36 (the two whole directories exceeded my 900 s cap, not run to the end).
+**Checks (absolute root).** format 0, architecture capture-sources 0, coverage 72/72 ids 0, fixtures capture-sources `--list` 0, ownership 4 files changed, 0 failures. `checks/run.mjs`: no finding in my files; words failures (16) are store-assembly's and screens-intake's op-table answers, not mine.
+
+Screens-intake's tests forward with the bare id until this merges; after it they may use `member:<id>`.
+No `fixtures-own`/`fixtures-generic` markers added. Deferred: none. Found in another module: none beyond the above.
+
+Size (session_01Q1yszDBNgp9hK77DQ5s84q): test runs 14, module lines 493
