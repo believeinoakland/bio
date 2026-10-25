@@ -527,3 +527,34 @@ Size (session_0117cYK5Yq6yKMxRK124CAvs): test runs 4 (this round), module lines 
 ## J36 · REPORT
 
 Ring failed: the BOB session session_01WJsZWkoGCJqWG6874AF7LK is archived, so create_trigger refused it. J35 COMPLETE is the pushed entry for BOB's backstop to read.
+
+## J37 · COMPLETE
+
+**COMPLETE (fix round 10, START B38; K5207, K5175).** Code commit `9e064e0b43` on `job/T51/public-read` (pushed). The tranche (`origin/tranche/T51`, 0fe95a97b6) was merged into the job branch before start (merge, not rebase).
+
+**Entries applied (the fixtures BOB asked for).**
+- `bio-plane/test/m/public-read/fixtures.mjs`: two new exports, each made by this module's real code over docket's own world (`seeded()` from docket's fixture, real modules) on each call, read through this module's op map (`publicReadOps`):
+  - `publishedCaseSeveralCases()`: `publishedcase` for a published case edition whose finding (F1) is cited in several cases. By the finding's id alone: `FINDING_IN_SEVERAL_CASES`, check `C-44.2`, naming `CASE-2026-0101` and `CASE-2026-0102`. By `caseId` `CASE-2026-0101`: that case's edition 1.
+  - `docketPublicOfCase()`: `docketpublic` for `CASE-2026-0101`'s public docket after a posted withdrawal of edition 1 (the docket's own answer, one entry, with its feed).
+- `bio-plane/test/m/public-read/fixtures.test.mjs`: an R39 test and an R21 test, each asserting the real answer, each with a negative control.
+- Failing-first: the R21 test was broken on purpose (expected reason changed) and went red (1 fail), then restored and went green.
+- No product code changed. No `fixtures-own` or `fixtures-generic` markers added. No words added.
+
+**Deferred:** none.
+
+**Found in other modules (REPORT: for the owners, not in my paths).** Three answers in screens-publish are still hand-built where these exports now answer, each cited by `checks/run.mjs` as `-> public-read`:
+- `bio-plane/test/m/screens-publish/finding.test.mjs:75` (`publishedcase`, FINDING_IN_SEVERAL_CASES): take `publishedCaseSeveralCases().byFinding`.
+- `bio-plane/test/m/screens-publish/fixtures.mjs:126` (`docketpublic`): take `docketPublicOfCase()`.
+- `bio-plane/test/m/screens-publish/seam4.test.mjs:158` (`publishedcase`, NOT_PUBLISHED-shaped stub): take `publishedCaseSeveralCases().byCase` or the id refusal, as the test needs.
+
+**Tests and checks.**
+- Fixture tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/public-read/fixtures.test.mjs`: 4 pass, 0 fail (after the restore).
+- Full module suite, `bio-plane/test/m/public-read/*.test.mjs`: 318 tests, 318 pass, 0 fail, 0 cancelled, no shortfall.
+- `checks/fixtures.mjs /home/user/bio public-read --list`: 0 invented answers, 0 stubs, 0 contract markers in public-read; exit 0.
+- `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs public-read`: 0 failures. `checks/coverage.mjs public-read`: 45 of 45 live ids named, 0 failures. `checks/ownership.mjs /home/user/bio public-read <merge-base> HEAD`: 0 failures.
+- `checks/run.mjs /home/user/bio`: exit 1, 373 FAIL lines. None is in public-read's files. The three that cite public-read are the screens-publish rows above. Words: no product string added, so the count does not rise from this module.
+- `build/plan/impact.mjs`: this clone has only `origin/tranche/T51`, so it was run as `origin/tranche/T51 HEAD`: 0 of 178 modules affected (a test-only change).
+
+**Met ids (this round):** R21 and R39 (the new answers). R6, R23 and R34 stay met.
+
+Size (session_01HPeMsK2U9rvs16rEGDCexd): test runs 4, module lines 4209
