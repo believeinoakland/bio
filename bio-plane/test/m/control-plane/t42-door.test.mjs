@@ -112,6 +112,7 @@ test("R74: the door holds no arm's behaviour — the owner's refusals and answer
   assert.equal(routeCalls(bad.env).length, 0);
   /* extraction's Durable Object half answers `{status, body}` (its R71), which `pageTranscribeOp` answers as given */
   const notDeployed = reextractRow("TRANSCRIBE_NOT_DEPLOYED");   /* extraction's own row: code, check C-51.7, its sentence */
+  // fixtures-own: synthetic extraction's Durable Object half answers {status, body}; the door relays each as given, so only the relay is under test
   const results = [
     [403, { ok: false, reason: notDeployed.code, ...notDeployed }],
     [200, { ok: true, performed: false, why: "no assistant is bound" }],

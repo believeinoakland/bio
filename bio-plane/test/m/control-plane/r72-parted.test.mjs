@@ -7,6 +7,7 @@ import "../../sandbox.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, sha } from "../capture/fixture.mjs";
+// fixtures-contract: plane job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { ownerOps as controlPlaneOwnerOps } from "../../../src/store-assembly/owner-ops.mjs";
 import { PARTED_PART_BYTES } from "../../../src/capture/index.mjs";
@@ -41,6 +42,7 @@ const setup = () => {
   const w = fresh({ evidence: b, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9" } });
   w.c.evidenceKey = (d) => `bio/captures/${d}`;
   const j = jobRegistrarStub();
+  // fixtures-contract: plane job-registrar
   w.c.registerJob = j.registerJob; w.c.armJobs = j.armJobs;
   const real = w.core.transact.bind(w.core);
   w.core.transact = (fn) => {

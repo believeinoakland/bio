@@ -128,6 +128,7 @@ test("R49, R27: `importedcases` and `importedcase` are among the reads naming no
   const ran = [], asked = [];
   const membership = () => ({ visibilityOf: (id) => { asked.push(id); return id === P ? "discoverable" : "hidden"; },
                                existenceAct: (id) => (id === P ? { ok: false, reason: "PROJECT_SEEN_NOT_A_PARTICIPANT", project: id } : null) });
+  // fixtures-own: synthetic a route table the store door dispatches: only that it runs the route named and relays or awaits its answer is under test
   const store = { routes: () => ({ importedcase: () => { ran.push(1); return { ok: true, editions: [] }; },
                                    notices: () => ({ ok: true }) }), membership };
   const r = await (await D.dispatch(new Request(`http://do/importedcase?viewer=member:ann&import=${P}&project=${P}&id=${P}`), store)).json();
@@ -138,6 +139,7 @@ test("R49, R27: `importedcases` and `importedcase` are among the reads naming no
 
 test("R49, R26, R25 (K1324): case-import's map answers promises (`caseimport`, `caseimportdocument` reach case-checker's WebCrypto), and the store's door awaits each — the envelope carries the settled answer, never a promise — and a rejected one is the store's internal error with a correlation id, never its message (negative control: a plain answer is enveloped the same)", async () => {
   const settled = { ok: true, import: "IMP-1", existed: false };
+  // fixtures-own: synthetic a route table whose entries answer promises or reject: the door must await each and carry the settled answer
   const routes = { caseimport: () => Promise.resolve(settled),
                    caseimportdocument: () => new Promise((resolve) => setTimeout(() => resolve({ ok: false, reason: "IMPORT_DOCUMENT_NOT_MISSING" }), 5)),
                    importedcases: () => ({ ok: true, imports: [] }),
