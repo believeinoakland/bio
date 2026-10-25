@@ -12,6 +12,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/index.mjs";
 import { strengthOf, GRADE_RANK } from "../../../src/strength/index.mjs";
 import { factUnavailable } from "../promotion/fixtures.mjs";
+import { readFactOf, readFactNotFound } from "../money/fixtures.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 const statements = (ddl) => ddl.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n")
@@ -137,7 +138,7 @@ export function world({ group = "grp-one", now = "2026-09-28T00:00:00.000Z" } = 
     },
     people: { identityOf: ({ entityId }) => (clusters.has(entityId) ? { ok: true, found: true, entity_id: entityId, ...clusters.get(entityId) }
                                                                      : { ok: true, found: true, entity_id: entityId, state: "linked", members: [entityId] }) },
-    money: { readFact: ({ factId }) => (facts.has(factId) ? { ok: true, found: true, fact: facts.get(factId) } : { ok: true, found: false }) },
+    money: { readFact: ({ factId }) => (facts.has(factId) ? { ...readFactOf(), fact: facts.get(factId) } : readFactNotFound()) },
   };
   /* basis-versions' side: a project's CURRENT (R11). */
   const currents = new Map();         // `${project}|${inquiry}` → version
