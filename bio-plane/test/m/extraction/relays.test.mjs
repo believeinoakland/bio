@@ -10,10 +10,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { pdfStructureOp, acquireReadingOp } from "../../../src/extraction/ops.mjs";
+import { storageNotConfigured } from "../capture/fixtures.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
-const storageAbsent = (op, error) => json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", op, error }, 503);
+/* capture's real refusal of an instance with no evidence store (its published fixture, K5044) */
+const STORAGE_ABSENT = await storageNotConfigured();
+const storageAbsent = (op, error) => json({ ...STORAGE_ABSENT.body, op, error }, STORAGE_ABSENT.status);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /* control-plane R23, R25: a reply with `ok: false` below 500 is the store's own refusal, `refused` with its `reply`;
    at 500 or above it is a silence, carrying the correlation of the store's own STORE_INTERNAL_ERROR only. */
