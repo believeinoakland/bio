@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J28
+**Read** · handled J30
 
 ## B1 · START
 
