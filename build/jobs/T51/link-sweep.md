@@ -207,3 +207,7 @@ B9 was LINK-SWEEP #8's and is merged (B11, K5170); only B10 applied.
 - `checks/fixtures.mjs … link-sweep --list`: 2 failures, the pre-existing `contracts.test.mjs:31` and `:34` lines; no new failing line; no marker added.
 
 **Size (session_012fb14vSLdvVVJS3hQmqck4): test runs 6, module lines 1232.**
+
+## J8 · COMPLETE
+
+B10 done (commit d4f95d29c3, pushed): R14 met. A project's own bundle (bundleInfo type project) is its own project in sweepFence and in the closed test (R4). Tests 48 of 48 green (2 new, seen red on the old code); format, architecture, coverage, words (also with monitoring following link-sweep scheduler), ownership 0 failures; fixtures --list shows only the 2 old contracts.test.mjs lines. Door case: control-plane r41-sweepset test 2 should go green on merge, untouched. Nothing deferred, nothing found elsewhere.
