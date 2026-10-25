@@ -39,3 +39,10 @@ Source of every entry: the fixtures check on civicos-process `main` (`250046c6e9
 - **Starts** are written from this section, the module's lines of the list and its part's subsections, by BOB (STARTs owed when the round opens).
 5. **civicos-process `checks/fixtures.mjs` (K5066):** given a relative product root (`.`) it reads no file and reports 0 failures; with the absolute path it reports the real count. Owed: the check resolves its root (and every check run by `checks/run.mjs` likewise), with a fixture test run from a relative root that fails on the old check; merged by PR (K5036). Until then BOB and the STARTs' gates use the absolute path.
 6. **test-support (K5068, PDF-WORKER #7's REPORT):** `bio-plane/test/m/test-support/generators.test.mjs:114` passes when pdf.js throws, so a generator that makes an unreadable PDF goes unseen. A stale test, test files only (K4297 (2)): fixed in the §5.10 pass with test-support's other lines, the assertion made to fail on a throw, seen red with a broken generator first.
+
+## 3. Follow-ups owed in this round (K5077)
+
+Each is a CHANGE to the running job, or a new session of a merged job (K4219), as its provider merges; none waits past the round.
+7. **conformance** (after basis-versions, batch 4, and case-check, batch 5): `fixture.mjs:178` to basis-versions' published `conclude` answer; `t45.test.mjs:402` to case-check's `noSuchCase`.
+8. **control-plane** (its Wave B job after `store-request`): `r72-parted.test.mjs` adds the founder's (`admin`) parted upload (CAPTURE #60 J39 (4); capture R113 as amended for cause 29).
+9. **inquiry R85** struck only when inquiry, basis-version-grammar (R3, K5077) and basis-versions (the walker's `conclude({reading})` case) have all merged; inquiry's `test.todo` for that half is made a test by the basis-versions job's run, or by an inquiry follow-up if basis-versions' test cannot reach it.
