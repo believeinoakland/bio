@@ -150,3 +150,7 @@ Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 16, module lines 2913
 - **Branch:** merged `origin/tranche/T51` into `job/T51/skills` (merge, not rebase) before START.
 
 Size (session_01QXJwufFsGsNaqYS3jMjRJe): test runs 1, module lines 2913
+
+## J8 · COMPLETE
+
+T51-skills fix round 10 (plan item 95, K5195) complete: pack.test.mjs:152 fence MACHINE_CANNOT_MOVED is marked fixtures-own: input (the test makes it up to prove R3 pass-through; no source holds the code). No code change beyond the marker; no test added or altered, so no red step. Skills tests 133/133. Fixtures skills: 2 accepted(own), 0 failures. Format 0; architecture 0; coverage 51/51; ownership 0; words 16 failures, none in skills; impact: 0 of 178 modules. Commit 42faa86687 pushed to job/T51/skills. Record: build/jobs/T51/skills.md (Completion fix round 10). Opened no pull request, per JOB.md step 1. Size (session_01QXJwufFsGsNaqYS3jMjRJe): test runs 1, module lines 2913.
