@@ -281,3 +281,17 @@ QUEUE #35 (session_01MHgZjvBKiaDWFEhDJRUvf3), job 70, R1 reading-ended (G135f, K
 ## J15 · COMPLETE
 
 B18 applied: merged origin/tranche/T51 (no node_modules entry tracked in my branch; diff vs tranche is 4 files: queuestate.mjs, two queue tests, my record). Queue suite 229/229. COMPLETE stands.
+
+## Completion (QUEUE #36, fix round 10, Wave B batch 6: 8 own fixture lines, B19)
+
+**Applied (FIX-E, the providers' fixtures taken in place of hand-built answers).** `world.mjs` `defaultFakes`: `provenance.homeOf` from provenance's `homeOfEmpty()`; `progressions.disposeProposal`'s refusal branch from progressions' `disposeProposalRefusal()`; `monitoring.monitoring` from `monitoringReads().empty` (the harness awaits it once at load); `docket.coreDue` from docket's `coreDue().unread`; each answer is copied (`structuredClone`) per call. `dispose.test.mjs` and `converts.test.mjs`: the `disposeProposal` spy returns progressions' `disposeProposalOk(args)` (the real success, over a world that holds the progression). `noticed.test.mjs`: `people` is people's `checkResults`, `moneyChecks.noticed` is money-checks' `noticed()`. `watched.test.mjs`: the refusal code `STEP_GONE` (no product file gives it) is the real `WIZARD_STEP_REFUSED` with its check `C-131.7`. In `dispose.test.mjs` R27 the call now names definition version 1, the version the provider's real world holds (the old fake accepted any).
+
+**Markers added:** no `fixtures-own`, no `fixtures-generic`, no `fixtures-contract` (every provider was FIX-E).
+
+**Lines.** `fixtures.mjs . queue --list`: 8 failures before; 7 of my 8 lines gone. Left, named: `noticed.test.mjs:292` (`notices:` op table, tag `op-table notices`): it stood on `people` and `moneyChecks`, now fixtures; it still lists because the same table holds `duties.dutiesOf/occurrencesOf`, `answers.standingAnswersFor` and `inquiry.datedWaits` answers, which are not in this batch (they need fixtures from duties, answers, inquiry that do not publish these answers yet: waiting).
+
+**NEEDS BOB (not mine to change).** `node checks/architecture.mjs . queue` has 5 failures: each fixtures import is a test import of a module queue does not declare in `uses` in `build/modules.json` (the K1088 case): `people` and `money-checks` (noticed.test.mjs), `provenance`, `monitoring` and `docket` (world.mjs). `progressions` is already declared. Adding those five edges (all earlier modules) clears it.
+
+**Checks.** queue suite 229 of 229; format 0 failures; coverage queue 55 of 55, 0 failures; words queue 0 failures; ownership 0 failures; architecture 5 failures (the edges above); fixtures 1 failure (the waiting line above).
+
+Size (session_01YN9TEdL7KJ1syeaAkvZf85): test runs 3, module lines 2956
