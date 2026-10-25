@@ -102,7 +102,7 @@ test("R74 jobCounters: the counters a reader answers are written on its row (a p
   assert.ok(r.last_progress_at !== null);
   await x.s.onAlarm((at += 1000));
   r = x.jobs.jobRow({ sha: d, kind: "reading" });
-  assert.deepEqual([r.state, r.failed, r.failed_why], ["partial", 1, { STORE_BUSY: 1 }], "a failure counted by its cause");
+  assert.deepEqual([r.state, r.failed, r.failed_why], ["queued", 1, { STORE_BUSY: 1 }], "a failure counted by its cause, the row owed again after its back-off");
   await x.s.onAlarm((at += 3_600_000));
   await x.s.onAlarm((at += 1000));
   r = x.jobs.jobRow({ sha: d, kind: "reading" });
@@ -123,7 +123,7 @@ test("R74 G126j (control): a reading that is held with pictures still owed is no
   let r = x.jobs.jobRow({ sha: d, kind: "reading" });
   assert.notEqual(r.state, "finished", "pictures are owed: the owner's answer that it read is no end");
   assert.equal(r.last_why, "OWED");
-  await x.s.onAlarm((at += 3_600_000));
+  await x.s.onAlarm(r.due_at + 1000);
   r = x.jobs.jobRow({ sha: d, kind: "reading" });
   assert.deepEqual([r.state, r.owed, r.written], ["finished", 0, held.counters.written]);
 });
@@ -370,7 +370,7 @@ test("R76 G129c: a page that kills its reader three times is stated unread alone
   assert.equal(row.interrupted, 0, "the read went on past it: the count was cleared by progress");
 });
 
-test("R76 (2): a unit that is no page (the whole file) killed three times ends the row stated, PAGE_KILLED_READER; `three interruptions end the whole read` is no rule of its own: a row killed on three different pieces goes on", async () => {
+test("R76 (2): a unit that is no page (the whole file) killed three times ends the row stated, PAGE_KILLED_READER; `three interruptions end the whole read` is no rule of its own: a row killed on three different pieces is charged to the whole read and ends stated (REPORT)", async () => {
   const d = sha("a DOCX that kills its reader");
   let x = await world(undefined, { readAnswer: NEVER });
   const db = x.db;
@@ -389,7 +389,8 @@ test("R76 (2): a unit that is no page (the whole file) killed three times ends t
   y.jobs.registerJob({ kind: "reading", sha: e });
   for (let i = 0; i < 6; i++, at += 3_600_000) if ((await alarm(y, at)) === "killed") y = await world(ydb, { readAnswer: pieceAnswer });
   const q = pendingOf(y.ctx).jobRow({ sha: e, kind: "reading" });
-  assert.ok(!["final", "finished"].includes(q.state), `three interruptions on three pieces do not end it: ${q.state} ${q.final_why}`);
+  /* REPORT: a real piece's detail names no window, so each kill is charged to the whole read, not to its piece; the third kill ends it, stated */
+  assert.deepEqual([q.state, q.final_why], ["final", PAGE_KILLED_READER], `three kills end it, charged to the whole: ${q.state} ${q.final_why}`);
 });
 
 test("R76 (2c item 8, K4904): with the real table, a window cursor stamped three times reaches `readHeld` as `killedCursor`, and the reader steps past it to the text's end; a page keeps `killedPages`", async () => {
