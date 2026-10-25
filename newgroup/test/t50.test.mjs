@@ -8,6 +8,8 @@ import { fileURLToPath } from "node:url";
 import * as installer from "../src/index.mjs";
 import { CFG } from "../src/index.mjs";
 import { word, hasWord, KEYS } from "../src/words.mjs";
+import { bootstrapVersions } from "../../bio-plane/test/m/credentials/fixtures.mjs";
+import { fleetReports, bootstrapFacts } from "../../bio-plane/test/m/instance-setup/fixtures.mjs";
 import { WAIT_BOUND_MINUTES } from "../src/steps/api.mjs";
 import { ASSISTANT_NEEDS, ASSISTANT_OFFER } from "../src/ui.mjs";
 import { partsLeftOut, leftOutNotice } from "../src/images.mjs";
@@ -36,8 +38,8 @@ const planeBase = (slug, v = "0.1.0") => [{ type: "durable_object_namespace", na
 const counted = ({ workers, containers, captured, published }) => [word(`installer.fallback.programs.${workers === 1 ? "one" : "other"}`, { n: workers }),
   word(`installer.fallback.containers.${containers === 1 ? "one" : "other"}`, { n: containers }), word(`installer.fallback.captured.${captured === 1 ? "one" : "other"}`, { n: captured }),
   word(`installer.fallback.published.${published === 1 ? "one" : "other"}`, { n: published })].join(", ");
-const TEAM = { team_name: "Lakeshore Tenants", installed_at: "2026-09-01T10:00:00Z", last_used_at: "2026-10-10", count_projects: 3, count_documents: 412,
-  count_published: 1, count_members: 6 };
+/* The facts a held copy tells (instance-setup R95): the real `bootstrapfacts` answer, for the team and counts these arms state. */
+const TEAM = await bootstrapFacts({ team: "Lakeshore Tenants", members: 6, projects: 3, documents: 412, published: 1 });
 
 /* ------------------------------------------------------------------------------------------ the two not yet met */
 
@@ -198,7 +200,7 @@ test("R63 the page draws whose it is, its release and what it holds as that copy
   const known = await run({ slug: "other-two", ...h, copy: { held: { "mine-one": TEAM } } });
   const p = strip(known.page.done);
   assert.ok(p.includes(word("screen.install.exists.whose", { team: "Lakeshore Tenants", address: "https://mine-one.grp.workers.dev" })));
-  assert.ok(p.includes(word("screen.install.exists.release", { release: "0.80.0", date: "2026-09-01", used: "2026-10-10" })));
+  assert.ok(p.includes(word("screen.install.exists.release", { release: "0.80.0", date: TEAM.installed_at.slice(0, 10), used: TEAM.last_used_at.slice(0, 10) })));
   assert.ok(p.includes(word("screen.install.exists.holds", { holdings: "3 projects, 412 documents, 1 published case, 6 members" })));
   /* Asked once, with no credential. */
   const asked = known.calls.filter((c) => c.u.includes("mine-one.grp.workers.dev"));
@@ -269,7 +271,7 @@ test("R64 installing alongside uses names no other copy holds: two installs into
 test("R65 removal is guided, confirmed and complete: the page lists what would be deleted and deletes nothing; only the short name typed exactly confirms; the confirmation deletes every resource the copy holds, names each, and offers the new install; a refusal names what remains; control: installremove alone deletes nothing, a wrong name deletes nothing", async () => {
   const h = heldCopy({ slug: "mine-one" });
   /* The copy being removed is the run's own slug, so it answers as the copy of the run does. */
-  const view = await run({ slug: "mine-one", mode: "remove", ...h, copy: { bootstrap: () => jres({ ok: true, version: "0.80.0", ...TEAM }) } });
+  const view = await run({ slug: "mine-one", mode: "remove", ...h, copy: { bootstrap: async () => jres({ ...(await bootstrapVersions({ storeVersion: "0.80.0" })), ...TEAM }) } });
   const pv = strip(view.page.done);
   assert.ok(pv.includes(word("screen.install.remove.lost.records", { team: "Lakeshore Tenants", holdings: "3 projects, 412 documents, 1 published case, 6 members" })), "the holdings equal what R63 reads");
   for (const k of ["lost.members", "lost.published", "lost.address", "keep", "type.label"]) assert.ok(pv.includes(word("screen.install.remove." + k)), k);
@@ -398,7 +400,7 @@ test("R68 an update that left a container's old image running is not done: the d
   assert.ok(!match.calls.some((c) => /agent-worker/.test(c.u) && /workers\.dev/.test(c.u)), "agent-worker is asked at no address of its own");
   /* Control: a part that does not answer is named, and is not a warning the founder must judge: no success is claimed. */
   const silentPart = await run({ ...common, preApps: [{ id: "app9", name: RUNNER, configuration: { image: DESCRIPTOR.image } }],
-    copy: { bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "agent-worker": { state: "SILENT" } } }) } });
+    copy: { bootstrap: async (q, s) => jres(await bootstrapVersions({ storeVersion: s.v, version: s.v, memberVersions: { ...s.members, "agent-worker": (await fleetReports()).silent.memberVersions["ocr-worker"] } })) } });
   assert.equal(silentPart.page.status("verify"), "no");
   assert.match(silentPart.page.done.replace(/&#39;/g, "'"), like("installer.lag.member.silent", { name: "agent-worker" }));
   assert.ok(!strip(silentPart.page.done).includes(word("installer.update.done.title")));

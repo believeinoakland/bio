@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J31
+**Read** · handled J34
 
 ## B1 · START
 
@@ -268,3 +268,11 @@ CHANGE (K5101; SUITE #2, `build/plan/suite-T51-r9.md` and its diagnosis `build/p
 ## B34 · ANSWER · re J31
 
 ANSWER (re J31; K5105). The edge is on `tranche/T51`: installer now uses `credentials` (`order.mjs --check` clean). Merge `origin/tranche/T51` (never a rebase) and re-run the architecture check. Your `t50.test.mjs:272` `bootstrapFacts` line is follow-up 36 (instance-setup publishes the fixture first): name it as waiting on that. Then finish CHANGE B33 (the `wizard.test.mjs` schedules rule and cron statement from `fixture.mjs`; every red left named as waiting on the 0.87.0 cut, G90) and COMPLETE once with both.
+
+## B35 · CHANGE
+
+CHANGE · follow-up 36 (K5110), test files only.
+
+(1) The `credentials` edge you asked for is on `tranche/T51` (K5105, ANSWER B34): merge `origin/tranche/T51` into your branch (never a rebase); `checks/architecture.mjs <absolute root> installer` then reads 0.
+(2) instance-setup has merged its published `bootstrapFacts({team, members, projects, documents, published})` (`bio-plane/test/m/instance-setup/fixtures.mjs`, async; the real `bootstrapFacts()` answer, the seven `BOOTSTRAP_FACT_KEYS`). Re-point `newgroup/test/t50.test.mjs:272`'s hand-built `TEAM` facts to it, stating the team name and counts your test needs.
+Then your checks by failure count, the reds you named in J32 unchanged (they wait on the 0.87.0 cut, G90), and COMPLETE. Your five `fixtures-own: platform` markers (J31) are read and accepted.

@@ -24,12 +24,14 @@ import * as esbuild from "esbuild";
 import { bundleText } from "../scripts/build.mjs";
 import { gunzipSync } from "node:zlib";
 import { word, hasWord } from "../src/words.mjs";
+import { bootstrapVersions } from "../../bio-plane/test/m/credentials/fixtures.mjs";
+import { fleetReports } from "../../bio-plane/test/m/instance-setup/fixtures.mjs";
 import { WAIT_BOUND_MINUTES } from "../src/steps/api.mjs";
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 import * as jurisdictions from "../../jurisdictions/index.mjs";
 import { pageWorld, TOK, ORIGIN, req, begin, callback, cookieOf, cookieValue, b64url, script, realFetch, jres, run, release,
   SIGNER, STRANGER, armWith, disarm, restoreSigners, sha, bump, CAPABLE_SRC, PRE116_SRC, MEMBER_SRC, bindingOf,
-  parsePage, LIMITS, LIMITS_STATEMENT, UNSTATED_SRC, BUILTIN_LIMITS, DEFAULT_VERSION, DESCRIPTOR, IMAGE, RUNNER,
+  parsePage, LIMITS, LIMITS_STATEMENT, CRONS_STATEMENT, UNSTATED_SRC, BUILTIN_LIMITS, DEFAULT_VERSION, DESCRIPTOR, IMAGE, RUNNER,
   SCANNER, SCANNER_CLASSES, SCANNER_WORKER, SCAN_IMAGE, RENDER_IMAGE, VPC_ID, signer, headOf, like } from "./fixture.mjs";
 
 after(restoreSigners);
@@ -291,7 +293,7 @@ test("R8 `rel`: the repository's release installs only when newer, hashing to it
     const put = w.planePuts[0];
     /* The built-in installs in its place, unless it states no limits, when R20 refuses the act (asserted under R20). */
     if (from === "built-in" && !BUILTIN_LIMITS.ok) { assert.equal(put, undefined, why); continue; }
-    assert.equal(put.source, from === "repository" ? rel.src : RELEASE_SOURCE, why);
+    assert.equal(put?.source, from === "repository" ? rel.src : RELEASE_SOURCE, why);
     assert.equal(bindingOf(put, "VERSION").text, from === "repository" ? NEXT : RELEASE_VERSION, why);
   }
   disarm();
@@ -517,6 +519,7 @@ test("R14 `addr`: the account's workers.dev prefix is used; with none, one is re
 });
 
 test("R15 `verify`: op=selftest with the probe credential until it answers within the stated bound (R66), the credential only in each request's Authorization: Bearer header and in no address; a capable release's parts read back until each answers it, every lagging part named; an incapable release's parts stated undetermined; no success while a part lags", async () => {
+  // fixtures-own: platform a copy still waking: its self-check answers not-ok, the fake network's own double of a platform that is not up yet, not any module's answer
   const quiet = seen(await run({ slug: "ver-quiet", copy: { selftest: () => jres({ ok: false }) } }));
   const probe = bindingOf(quiet.planePuts[0], "PROBE_TOKEN").text;
   const tries = quiet.calls.filter((c) => c.u.includes("op=selftest"));
@@ -548,17 +551,20 @@ test("R15 `verify`: op=selftest with the probe credential until it answers withi
   assert.equal(all.page.status("verify"), "ok");
   assert.ok(all.calls.some((c) => c.u.includes("op=bootstrap&members=1")));
   assert.ok(all.page.done.includes(h(word("installer.success.running"))));
+  /* R66: each lag case's `bootstrap` answer is the store's part from credentials' published fixture and the member entries from instance-setup's, never built by hand. */
+  const fleet = await fleetReports();
+  const { status: _status, version: _plane, memberVersions: _members, ...storeAbsent } = fleet.storeVersionAbsent;
   const lags = [
     [{ storeVersion: "0.1.0" }, ["installer.lag.store.version", { version: "0.1.0" }]],
     [{ memberVersion: "0.1.0" }, ["installer.lag.member.version", { name: "pdf-worker", version: "0.1.0" }]],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, memberVersions: s.members }) }, ["installer.lag.store.unreported"]],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: null, memberVersions: s.members }) }, ["installer.lag.store.unknown"]],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v }) }, ["installer.lag.members.unreported"]],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: "0.1.0", storeVersion: s.v, memberVersions: s.members }) }, ["installer.lag.address.version", { version: "0.1.0" }]],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "SILENT" } } }) }, ["installer.lag.member.silent.installed", { name: "ocr-worker" }]],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "MISNAMED", name: "pdf-worker" } } }) }, ["installer.lag.member.misnamed", { name: "ocr-worker", other: "pdf-worker" }]],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "UNBOUND" } } }) }, ["installer.lag.member.unbound", { name: "ocr-worker" }]],
-    [{ bootstrap: (q, s) => { const mv = { ...s.members }; delete mv["ocr-worker"]; return jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: mv }); } }, ["installer.lag.member.unknown", { name: "ocr-worker" }]],
+    [{ bootstrap: async (q, s) => jres({ ...storeAbsent, version: s.v, memberVersions: s.members }) }, ["installer.lag.store.unreported"]],
+    [{ bootstrap: async (q, s) => jres(await bootstrapVersions({ storeVersion: null, version: s.v, memberVersions: s.members })) }, ["installer.lag.store.unknown"]],
+    [{ bootstrap: async (q, s) => jres(await bootstrapVersions({ storeVersion: s.v, version: s.v })) }, ["installer.lag.members.unreported"]],
+    [{ bootstrap: async (q, s) => jres(await bootstrapVersions({ storeVersion: s.v, version: "0.1.0", memberVersions: s.members })) }, ["installer.lag.address.version", { version: "0.1.0" }]],
+    [{ bootstrap: async (q, s) => jres(await bootstrapVersions({ storeVersion: s.v, version: s.v, memberVersions: { ...s.members, "ocr-worker": fleet.silent.memberVersions["ocr-worker"] } })) }, ["installer.lag.member.silent.installed", { name: "ocr-worker" }]],
+    [{ bootstrap: async (q, s) => jres(await bootstrapVersions({ storeVersion: s.v, version: s.v, memberVersions: { ...s.members, "pdf-worker": fleet.misnamed.memberVersions["pdf-worker"] } })) }, ["installer.lag.member.misnamed", { name: "pdf-worker", other: "ocr-worker" }]],
+    [{ bootstrap: async (q, s) => jres(await bootstrapVersions({ storeVersion: s.v, version: s.v, memberVersions: { ...s.members, "ocr-worker": fleet.unbound.memberVersions["ocr-worker"] } })) }, ["installer.lag.member.unbound", { name: "ocr-worker" }]],
+    [{ bootstrap: async (q, s) => { const mv = { ...s.members }; delete mv["ocr-worker"]; return jres(await bootstrapVersions({ storeVersion: s.v, version: s.v, memberVersions: mv })); } }, ["installer.lag.member.unknown", { name: "ocr-worker" }]],
   ];
   for (const [copy, [key, vars]] of lags) {
     const named = key;
@@ -612,6 +618,7 @@ test("R34 the wizard's last screen shows, before the hand-over to your team's Ci
   /* Every ending of the install that hands over: running, lagging, asleep. */
   const ends = [seen(await run({ slug: "last-ok", rel: await release({ version: NEXT }) })),
     seen(await run({ slug: "last-lag", rel: await release({ version: NEXT }), copy: { storeVersion: "0.1.0" } })),
+    // fixtures-own: platform a copy still waking: its self-check answers not-ok, the fake network's own double of a platform that is not up yet, not any module's answer
     seen(await run({ slug: "last-asleep", copy: { selftest: () => jres({ ok: false }) } }))];
   restoreSigners();
   for (const w of ends) {
@@ -750,7 +757,7 @@ test("R19 the Cloudflare token and every credential appear in no page, log or er
 });
 
 test("R20 the plane's limits are read from the signed release R8 chose and sent exactly, on install and update; a release stating none or unreadably is passed over by name, and with a built-in stating none the act is refused before anything is created; the fleet statement is unchanged", async () => {
-  const plane = (stmt, q = '"') => `export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const S = ${q}${stmt}${q};`;
+  const plane = (stmt, q = '"') => `export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const S = ${q}${stmt}${q}; export const C = "${CRONS_STATEMENT}";`;
   const limitsOf = (w) => w.planePuts.map((p) => p.meta.limits);
   armWith(SIGNER.line);
   /* Exactly the release's statement, whatever it says, in any quote style a bundler prints: the installer has no value of its own. */
@@ -1310,7 +1317,8 @@ test("R44 the install and the update install file-scanner with exactly the bindi
     /* The prefixes it writes (clamav/, reputation/) are in the copy's evidence bucket and nowhere else: its one bucket. */
     assert.deepEqual(meta.bindings.filter((b) => b.type === "r2_bucket"), [{ type: "r2_bucket", name: "CAPTURES", bucket_name: `bio-captures-${slug}` }], mode);
     assert.deepEqual(w.schedules.get(FS), ["17 4 * * *"], mode);
-    assert.equal([...w.schedules.keys()].join(), FS, `${mode}: only the member whose part states one`);
+    assert.deepEqual([...w.schedules.keys()].sort(), [slug, FS].sort(), `${mode}: the plane's watchdog (R39) and only the member whose part states one`);
+    assert.deepEqual(w.schedules.get(slug), [CRONS_STATEMENT.replace("bio-plane-crons/1 ", "")], `${mode}: the plane's own schedule, as its release states it`);
     /* The plane: bound to it as FILE_SCANNER, by instance-setup's name (R30). */
     assert.deepEqual(FLEET_BINDINGS.find(([m]) => m === SCANNER), [SCANNER, "FILE_SCANNER"], "instance-setup's name for it");
     assert.deepEqual(bindingOf(w.planePuts.at(-1), "FILE_SCANNER"), { type: "service", name: "FILE_SCANNER", service: FS }, mode);
@@ -1329,10 +1337,10 @@ test("R44 the install and the update install file-scanner with exactly the bindi
   /* A release without the part (bundler's N772 not yet in it): installed without bucket and cron, and the page says what it lacks. */
   const bare = seen(await run({ slug: "r44-bare", rel: await release({ version: NEXT, scanner: true, scannerWorker: null }) }));
   assert.deepEqual((await metaOf(bare, SCANNER + "-r44-bare")).bindings.map((b) => b.name).sort(), ["RENDERER", "SCANNER", "VERSION"]);
-  assert.equal(bare.schedules.size, 0);
+  assert.deepEqual([...bare.schedules.keys()], ["r44-bare"], "no cron for the member; the plane's watchdog (R39) only");
   assert.match(bare.page.label("fleet"), like("installer.fleet.note.scanner", { member: SCANNER }));
   /* A schedule refused: the member stays installed and the page says so. */
-  const late = seen(await run({ slug: "r44-late", rel, refuseSchedules: true }));
+  const late = seen(await run({ slug: "r44-late", rel, refuseSchedules: [SCANNER + "-r44-late"] }));
   assert.ok(late.acct.has(SCANNER + "-r44-late"));
   assert.match(late.page.label("fleet"), like("installer.fleet.note.schedule", { member: SCANNER, schedule: "17 4 * * *" }));
   assert.ok(!late.raw.includes("<i>by the fake</i>"));
@@ -1747,6 +1755,7 @@ test("R33 the install and the update read back the uploaded plane's content and 
     assert.equal(w.page.status("verify"), "no", readBack);
     assert.ok(w.page.done.includes('id="out-boot"'), `${readBack}: the credentials are still handed over`);
     /* With the address silent too, the mismatch is still named. */
+    // fixtures-own: platform a copy still waking: its self-check answers not-ok, the fake network's own double of a platform that is not up yet, not any module's answer
     const quiet = seen(await run({ slug: "rb-quiet", rel, readBack, copy: { selftest: () => jres({ ok: false }) } }));
     assert.match(quiet.page.done.replace(/&#39;/g, "'"), named, `${readBack}, address silent`);
     assert.ok(quiet.page.done.includes(h(word("installer.success.lagging.asleep"))), "the address has not woken up yet");

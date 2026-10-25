@@ -1,6 +1,6 @@
 # BOB to conformance (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -85,3 +85,7 @@ Mail with `--module conformance`; record `build/jobs/T51/conformance.md` (append
 **Follow-up 7 (test files only).** Your two lines left: (1) `fixture.mjs:178`, the `conclude` op-table entry, takes basis-versions' published `concludeAct({kind, target})` (`bio-plane/test/m/basis-versions/fixtures.mjs`: `concluded`, `no_conclusion`, `bad_reading`; read it and its test whole) in place of the hand-built answer. (2) `t45.test.mjs:402`, the fenced `caseCheckOf` refusal `{ok: false, reason: "NO_SUCH_CASE"}`, takes case-check's published `caseCheckOfNoSuchCase()` (`bio-plane/test/m/case-check/fixtures.mjs`).
 
 **Done:** `checks/fixtures.mjs <absolute root> conformance --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0 (a new test import of a module you do not declare in `uses`: ask BOB, QUESTION, for the edge). List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if a real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B7 · ANSWER · re J7
+
+ANSWER (K5112): `basis-versions` is in conformance's `uses` on `tranche/T51`. Merge `origin/tranche/T51` (never a rebase), apply your change exactly as you describe it (one import; keep the promotion write; return `concludeAct({kind: "concluded", target: args.target})` on success), run your checks by failure count, and post COMPLETE.

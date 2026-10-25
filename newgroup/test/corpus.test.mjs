@@ -67,6 +67,7 @@ async function states() {
   await add("install ok", run({ slug: "cor-ok", rel }));
   await add("install ai", run({ slug: "cor-ai", rel, ai: "sk-ant-api03-" + "x".repeat(40) }));
   await add("install lagging", run({ slug: "cor-lag", rel, copy: { storeVersion: "0.1.0" } }));
+  // fixtures-own: platform a copy still waking: its self-check answers not-ok, the fake network's own double of a platform that is not up yet, not any module's answer
   await add("install asleep", run({ slug: "cor-asleep", copy: { selftest: () => jres({ ok: false }) } }));
   await add("install silent", run({ slug: "cor-silent", silentAddress: true }));
   await add("install resumed", run({ slug: "cor-res", ...heldCopy({ slug: "cor-res", finished: false, members: [], version: "0.1.0" }), group: null }));

@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_016R48b4KURUGUt3h76T2fsb · depth 2 · COMPLETE · handled B13
+**Status** · session_01G4hiobwHM5NUXY6cmXDBEb · depth 2 · COMPLETE · handled B14
 
 ## J1 · REPORT
 
@@ -316,3 +316,36 @@ No `fixtures-own`, no `fixtures-contract`.
 **Checks and tests.** queue-producers `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit` 154 tests, 154 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: "queue-producers 24/24, affected modules: 1 of 178" (tests only; no user to run). `checks/format.mjs`: 178 modules, 0 failures. `checks/coverage.mjs queue-producers`: 41 of 41, 0 failures. `checks/ownership.mjs queue-producers tranche/T51`: 16 files, 0 failures. `checks/words.mjs queue-producers`: 0 failures. `checks/fixtures.mjs queue-producers`: answer 3 (3 op-table), stub 0, code 0, contract 0, accepted 2; 3 failures (the three waiting lines). `checks/architecture.mjs queue-producers`: 1 failure (above).
 
 Size (session_016R48b4KURUGUt3h76T2fsb): test runs 14, module lines 3630
+
+## J17 · REPORT
+
+Owed by reevaluation (found in another module; described against its fixture, K5060). `noticesRead({several: true})` (bio-plane/test/m/reevaluation/fixtures.mjs) publishes three holders' four notices, but no second newer version of one holder's target. queue-producers R52 requires "a newer version of the same target is a new item"; my test for it was hand-built and is removed (K4990: no hand-built answers). Owed: reevaluation publishes a real answer in which one holder's target has two newer versions (two notices, different newer_capture), so R52's control can be taken from it. Until then R52's control is untested here.
+
+## J18 · COMPLETE
+
+Fix round 10, batch 6 (B14, follow-up 37). Tests only; no source of the module changed. Commit 80f3bb057d on job/T51/queue-producers.
+
+**Applied.**
+- docket R30 (`docket.test.mjs:36`): takes docket's `coreDueKinds()` real items for alice's case CASE-2026-0101 and dave's CASE-2026-0202; the fake returns both cases to every viewer, so this module's recipient rule is measured.
+- `words.test.mjs:217` (R43, docket-core-due): the statement with no edition is removed (K5111); the response item is the real one; the unknown-kind control stays.
+- reevaluation R52 (`noticed.test.mjs`, was `:10`): takes `noticesRead({several: true})`: holder Q's two legs are one item (id the least notice id, basis naming both); the other holder's leg and the third holder's leg are each their own item; the UNDETERMINED and NOT_FOUND grades read through their rows (G65).
+
+**Dropped, and why.**
+- docket R30's hidden-project (R11) and no-case controls: docket's fixture publishes no case of a hidden project or of no project.
+- R43 base sentence for a statement with no edition: no real producer (K5111); the branch is untested now.
+- R52's "a newer version of the same target is a new item" and "a newer version the viewer cannot see stays one item each" controls: no real answer (reported to BOB in a REPORT, owed by reevaluation).
+
+**Markers added (K5060).** `words.test.mjs:216` `// fixtures-own: synthetic`: a docket kind docket never publishes, the test's own control.
+
+**Found in other modules.** reevaluation's `noticesRead` owes a second newer version on one target (REPORT posted).
+
+**Tests and checks.**
+- queue-producers, all 153 tests: 153 pass, 0 fail (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/queue-producers/*.test.mjs`).
+- `checks/fixtures.mjs /home/user/bio queue-producers --list`: 0 failures (answer 0; accepted 3: two fixtures-generic, one fixtures-own).
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio queue-producers`: 29 product files, 125 relative imports; 0 failures. (J15 is no longer failing on the merged tranche.)
+- `checks/coverage.mjs /home/user/bio queue-producers`: 41 of 41 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio queue-producers tranche/T51`: 1 file changed by queue-producers; 0 failures.
+- `checks/words.mjs /home/user/bio queue-producers`: 0 failures.
+
+Size (session_01G4hiobwHM5NUXY6cmXDBEb): test runs 5, module lines 3631

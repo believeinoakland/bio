@@ -71,6 +71,30 @@ export function homeOfHomed(map = {}) {
   return provenance;
 }
 
+/** `homeOfProject`: a project made by the real creation (promoted with no chosen id, so the record mints its `PROJ-` id
+ *  and writes it into the document), with `captures` (digests, or strings to digest) registered in it by the real
+ *  register act. Answers `{provenance, projectId, homeOf, made}`: `projectId` is the minted id the creation returned,
+ *  `homeOf(sha)` the real answer, `{bundleId: projectId, ...}` for a capture registered there, null for any other.
+ *  `owner` is the member who creates it; `made` is the promotion's answer. */
+export function homeOfProject(captures = [], { owner = "ann", title = "Fixture Project" } = {}) {
+  const { provenance, promotion } = registeredHomes();
+  const held = captures.map((c, i) => ({
+    sha: asDigest(c), path: `snapshots/${i}-${asDigest(c).slice(0, 8)}.bin`, bytes: BYTES, encoding: "binary" }));
+  const text = `---\nobject_type: project\ntitle: ${title}\ncurrent_state: forming\n`
+    + "created: 2026-09-27T03:00:00.000Z\nlast_updated: 2026-09-27T03:00:00.000Z\n---\n\n## Session Log\n";
+  const documents = held.map((c) => provDoc({ path: c.path, text: "x" }, {
+    capture: { method: "acquire", grade: "B", actor_class: "session", sha256: c.sha, encoding: c.encoding, bytes: c.bytes } }));
+  const made = promotion.promote({
+    base: null, snapKey: "project", author: `member:${owner}`, ownerMemberId: owner, meta: {},
+    files: [{ path: "bundle.md", text },
+            ...(held.length ? [{ path: "data/provenance.json", text: JSON.stringify({ documents }, null, 2) }] : []),
+            ...held.map((c) => ({ path: c.path, blobSha: c.sha, sha256: c.sha, bytes: c.bytes }))],
+    register: held.map((c) => ({ sha256: c.sha, path: c.path, encoding: c.encoding, bytes: c.bytes })),
+  });
+  if (made.ok !== true) throw new Error(`homeOfProject: ${JSON.stringify(made)}`);
+  return { provenance, projectId: made.bundleId, homeOf: (s) => provenance.homeOf(s), made };
+}
+
 /** `homeOf`: the real `homeOf(captureSha)` of a capture registered in a bundle through the real register acts:
  *  `{bundleId, path, encoding, bytes, registered, authored}`, or null where nothing registered it (`registered: false`). */
 export function homeOf({ capture = null, bundleId = "INFO-2026-0001-home", registered = true, path, bytes, encoding } = {}) {

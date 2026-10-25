@@ -10,7 +10,9 @@ import { classOfKind, QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS } from "../../
 import { noticeProducersOf } from "../../../src/notice-producers/index.mjs";
 import { checkResults } from "../people/fixtures.mjs";
 import { noticed } from "../money-checks/fixtures.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { dutiesForViewer } from "../duties/fixtures.mjs";
+import { standingAnswersHeldBack } from "../answers/fixtures.mjs";
+import { datedWaitOf } from "../inquiry/fixtures.mjs";
 
 const HOUR = 3600000;
 const item = (id, kind, cls, subjects, a, extra = {}) => ({ id, class: cls, kind, subject: { kind: "bundle", id: subjects[0] ?? null },
@@ -287,28 +289,31 @@ const QUIET_T40_T41 = {
   review: { reviewCommentsLeftOut: () => ({ ok: true, items: [] }) },
 };
 
-test("R51, R7, R11, R12, R14, R49: the real notice-producers' items (its R4, R6) reach the feed, homed, minted, offered, muted and sorted by due", () => {
+test("R51, R7, R11, R12, R14, R49: the real notice-producers' items (its R4, R6) reach the feed, homed, minted, offered, muted and sorted by due", async () => {
   const asked = {};
+  const duties = dutiesForViewer();
+  const held = await standingAnswersHeldBack({ member: "alice" });
+  const dated = datedWaitOf({ viewer: "member:alice", date: "2026-08-31" });
+  const Q = dated.question;
+  const run = held.entries[0];
   const w = world({}, { notices: (host, { membership }) => noticeProducersOf(host, { membership, ...QUIET_T40_T41,
     people: checkResults,
     moneyChecks: { noticed: () => noticed() },
-    duties: { dutiesOf: () => ({ ok: true, duties: [] }), occurrencesOf: () => ({ ok: true, occurrences: [] }) },
-    answers: { standingAnswersFor: (a) => { asked.answers = a; return { ok: true, cursor: null, entries: [
-      { question: { id: "STQ-1", question: "who signed the lease?" }, run: "r1", at: iso(NOW - HOUR), finds: { ids: ["DOC-2"] },
-        answer: null, held_back: "ai_off", label: word("answers.machine_work_standing") }] }; } },
-    inquiry: { datedWaits: (a) => { asked.inquiry = a; return { ok: true, zone: "America/Los_Angeles", waits: [
-      { inquiry: "INQ-1", index: 0, text: "the auditor's reply", description: "from the City", date: "2026-08-31",
-        state: "due", set_by: "member:alice", set_at: iso(NOW - 9 * 86400000) }] }; } } }) });
+    duties: { dutiesOf: () => duties.none, occurrencesOf: () => duties.heldOccurrences },
+    answers: { standingAnswersFor: (a) => { asked.answers = a; return held; } },
+    inquiry: { datedWaits: (a) => { asked.inquiry = a; return dated.answer; } } }) });
   w.member("alice"); w.member("bob");
-  w.bundle("DOC-2"); w.bundle("INQ-1", "inquiry"); w.leg("INQ-1", "DOC-2");
-  w.bundle("PRJ-A", "project"); w.join("PRJ-A", "alice"); w.cite("PRJ-A", "INQ-1");
+  w.bundle("DOC-2"); w.bundle(Q, "inquiry"); w.leg(Q, "DOC-2");
+  w.bundle("PRJ-A", "project"); w.join("PRJ-A", "alice"); w.cite("PRJ-A", Q);
   const f = w.q.queueFeed({ member: "alice", viewer: "member:alice", sort: "due" });
   assert.equal(f.ok, true, JSON.stringify(f).slice(0, 400));
   assert.deepEqual(asked.answers.member, "member:alice"); assert.equal(asked.inquiry.viewer, "member:alice");
-  assert.deepEqual(f.items.map((i) => i.id), ["OBLIGATION::inquiry-recheck-due::INQ-1::2026-08-31", "FINDING::standing-answer::STQ-1::r1"]);
+  const waitId = `OBLIGATION::inquiry-recheck-due::${Q}::2026-08-31`;
+  const ansId = `FINDING::standing-answer::${run.question.id}::${run.run}`;
+  assert.deepEqual(f.items.map((i) => i.id), [waitId, ansId]);
   assert.deepEqual(f.notice_producers.failed, []);
   const [wait, ans] = f.items;
-  assert.deepEqual(wait.case.ancestors.map((a) => a.id), ["INQ-1", "PRJ-A"], "the wait's inquiry and every ancestor R7's walk reaches");
+  assert.deepEqual(wait.case.ancestors.map((a) => a.id), [Q, "PRJ-A"], "the wait's inquiry and every ancestor R7's walk reaches");
   assert.deepEqual([wait.disposition.instead, ans.disposition.instead], ["waitlook", "queuemute"]);
   assert.ok(wait.options.some((o) => o.id === "waitlook"));
   // the answer is the author's to quiet; the wait is never muted

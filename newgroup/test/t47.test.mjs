@@ -189,6 +189,7 @@ test("R51 the progress page draws one plain line per step as it starts and ends;
   restoreSigners();
   const r3 = [...section(lag.page.done, "checks").matchAll(/<span class="mk">([^<]+)<\/span><span>([^<]+)<\/span>/g)];
   assert.equal(r3[1][1], word("installer.check.notyet"));
+  // fixtures-own: platform a copy still waking: its self-check answers not-ok, the fake network's own double of a platform that is not up yet, not any module's answer
   const asleep = await run({ slug: "checks-asleep", copy: { selftest: () => jres({ ok: false }) } });
   const r4 = [...section(asleep.page.done, "checks").matchAll(/<span class="mk">([^<]+)<\/span>/g)].map((m) => m[1]);
   assert.deepEqual(r4.slice(0, 2), Array(2).fill(word("installer.check.notyet")));

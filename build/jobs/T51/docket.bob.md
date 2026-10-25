@@ -1,6 +1,6 @@
 # BOB to docket (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -75,3 +75,16 @@ Mail with `--module docket`; record `build/jobs/T51/docket.md` (append a new sec
 **Follow-up 37 (test files only; QUEUE-PRODUCERS #25 J16).** Your published `coreDue()` gives one `response` item. queue-producers' `docket.test.mjs:36` and `words.test.mjs:217` need `coreDue` over items of kind `statement` (with and without an edition), `edition` (with `what_changed`) and `tension` (with `member`, `state`), across several cases of different projects. Publish that answer (a new export, or `coreDue` extended without changing its existing answers' shape) made by real acts on a real docket world.
 
 **Done:** the fixture exported from `bio-plane/test/m/docket/fixtures.mjs` with a test in your `fixtures.test.mjs` that calls it and checks the real answer; `checks/fixtures.mjs <absolute root> docket --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0. Name each new export and its signature in your COMPLETE (its user re-points next). List every `fixtures-own`/`fixtures-generic` marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only: if the real answer shows a product defect, REPORT it to BOB and change no product code.
+
+## B5 · START
+
+START · DOCKET #14 · tranche T51 · product believeinoakland/bio · fix round 10, follow-up 43, a published fixture (plan build/plan/fix-round-10-T51.md §3; K5116)
+
+Depth 2 (BOB #293 is depth 1).
+
+FIRST, before `mail start`: `git fetch origin job/T51/docket tranche/T51`; if a local `job/T51/docket` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/docket stale/docket-local && git checkout -b job/T51/docket origin/job/T51/docket`. If `job/T51/docket` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module docket`; record `build/jobs/T51/docket.md` (append a new section). Model claude-haiku-5-5; workers haiku low, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root (`/home/user/bio` or wherever your clone is), never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture (K4990, K4993).
+
+**Follow-up 43 (test files only; QUEUE-PRODUCERS #26 J18).** queue-producers' R30 (`docket-core-due` to the case's manager, its project's owners, and to nobody else) lost two controls because your `coreDueKinds()` holds no case of a project the viewer cannot see and no case outside any project. Add to `coreDueKinds()` (keeping every answer it gives now) or a sibling export, made by real acts: (a) a case of a project whose owner is not the viewer (what the real `coreDue` answers that viewer), and (b) a case with no project, if your real code can make one (if not, say so in your COMPLETE: that state is then not a real answer). Test each in `fixtures.test.mjs` against the real read. Name what you added in your COMPLETE.
+
+**Done:** `checks/fixtures.mjs <absolute root> docket --list` 0; your module's tests green; format, architecture, coverage, words, ownership 0. List every marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Test files only.
