@@ -14,6 +14,8 @@ export const answers = Object.freeze({
   reads: function (view) {
     const ui = view.ui || {};
     const out = {};
+    // R6 (K5131): whether the rule services are on, read once; "Show how this was counted" is drawn only while it reads `on`.
+    if (!view.reachable) out.rules = { op: "ruleservicesstate", query: {} };
     if (!view.reachable && typeof ui.q === "string" && ui.q.trim()) {
       // R6, R35: the words asked as words (the fields route) and, apart, as passages holding them (retrieval R15, R88: an `OR` across routes is
       // refused `ROUTES_CROSSED`, so each route is its own read); a query in the member's own syntax is sent as written, to `search` alone.
@@ -128,6 +130,8 @@ export const answers = Object.freeze({
         }).join(""));
       }, { empty: "screen.finder.none" });
     }
+    const rs = view.data.rules;
+    const ruleOn = !!(rs && rs.state === "ok" && rs.value && rs.value.on === true);
     const r = ui.rule && typeof ui.rule === "object" ? ui.rule : null;
     const LABELS = ["legal_information", "procedural_fact", "computed_fact"];
     const rule = !r ? "" : '<div class="mk-note">' + (r.not_held
@@ -141,7 +145,7 @@ export const answers = Object.freeze({
       + '<div class="mk-search">' + cs.field("answers-q", "screen.finder.words", { value: ui.q || "" })
       + '<span class="mk-acts">' + cs.act("search", { label: "act.search.label.finder", tone: "primary" }) + "</span></div>"
       + results
-      + (ui.q ? '<div class="mk-acts">' + cs.act("ruleanswer", { label: "act.ruleanswer.label.answers" }) + "</div>" : "")
+      + (ui.q && ruleOn ? '<div class="mk-acts">' + cs.act("ruleanswer", { label: "act.ruleanswer.label.answers" }) + "</div>" : "")
       + rule + keep;
   },
 

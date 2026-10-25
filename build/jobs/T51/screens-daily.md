@@ -517,3 +517,11 @@ Size (session_01GykapzvyLDepprUbDPaXny): test runs 6, module lines 4258
 ## J26 · COMPLETE
 
 COMPLETE (B38): R6 first half met — Ask-as-search now sends plain words to search alone and the passage: terms as a second read, never joined by OR; seen red first against the real retrieval.search, green. Second half of R6 (ruleanswer drawn only while ruleservicesstate is on) waits for the CHANGE after ANSWERS #15, so R6's mark stays. Module tests 296/296, format/architecture/coverage/ownership/words 0; fixtures --list: 249, all op-table (waiting). Record: build/jobs/T51/screens-daily.md.
+
+## Completion (SCREENS-DAILY #21, B39: R6's second half, K5138)
+
+Merged `tranche/T51` first. `answers.mjs` reads `ruleservicesstate` (read `rules`, while not reachable); "Show how this was counted" (`ruleanswer`) is drawn only while it reads `on`. Test (`answers.test.mjs`, "R6 (K5131) ... ruleservicesstate reads on") on answers' published fixture `ruleServicesState({on})`, both states, red first (answers.mjs stashed: it failed), green with it; the earlier R6 Find-and-count tests now take the same fixture with `on: true`. The reads list in `contract.test.mjs` names `rules`.
+
+Tests: `screens-daily/*.test.mjs` 297 pass, 0 fail. Checks (absolute root): format 0; coverage 101/101, 0; ownership 0; words 0; fixtures `--list` 249, all `op-table` (waiting); impact: 0 other modules affected. **architecture: 1 failure**: `answers.test.mjs` imports `bio-plane/test/m/answers/fixtures.mjs` of `answers`, which `screens-daily` does not declare in `uses` (`build/modules.json` is BOB's, as with record-core in B37). BOB: add `answers` to screens-daily's `uses` (order check: answers precedes screens-daily).
+Markers added: none.
+Size (session_01GykapzvyLDepprUbDPaXny): test runs 11, module lines 4264
