@@ -80,3 +80,19 @@ test("R95, R111, R114: a retired room is inert: it builds nothing, answers 410 R
   new Store(p.ctx, { STORE: { idFromName: (n) => n } });
   assert.ok(p.blocked.length > 0, "a private instance is built");
 });
+
+test("R56 (T49; K3366; setup-words R11–R13): the class holds no member-facing English: a retired room's answers are codes and flags, never a sentence, and every key words-reads.json lists for plane is held by the words list", async () => {
+  const { hasWord } = await import("../../../src/setup-words/index.mjs");
+  const { readFileSync } = await import("node:fs");
+  const st = storage();
+  st.ctx.id = { name: "bio~g2", equals: () => false };
+  const s = new Store(st.ctx, { STORE: { idFromName: (n) => n } });
+  const answers = [await (await s.fetch(new Request("http://do/membershiplist"))).json(), await s.dispatchMemberRun({}), await s.groupFields({})];
+  for (const a of answers) {
+    assert.deepEqual(Object.keys(a).sort(), ["code", "ok", "reason", "retired"], "a code and flags only");
+    for (const v of Object.values(a)) if (typeof v === "string") assert.ok(!/\s/.test(v), `${v} is a code, not a sentence`);
+  }
+  const reads = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules.plane.reads;
+  for (const k of reads) assert.equal(hasWord(k), true, `${k} is held by the words list`);
+  assert.equal(hasWord("zz.no.such.key"), false, "control: an unknown key is not held");
+});

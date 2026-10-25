@@ -1,8 +1,6 @@
-/* plane T45's composition (R39, R14; K2781 (1), K2815, K2839, K2858, K2874; the plan's reconciliation R19; M-T45-5):
-   the five new modules built at their places, migrated and routed; every registration a T45 module makes with an earlier
-   one held once before the first request; and `action-holds`' `purgeHeld` the reader the door is handed (hold.test.mjs).
-   Each module's own behaviour is its own tests'; these check the composition through the plane's interface:
-   construction over a storage, the route map and the object's door. Each test carries a negative control (K874). */
+/* plane R111 (was R41; K2824, K2881; op-declarations R49): the Worker's door arm for `infractiondraft` and `bearingdraft`
+   asks the `bio` object's draft RPC with the member's session and the task's own fields, checked through the real `Store`
+   with a negative control (K874). The composition of the T45 modules is `store-assembly`'s (its R34). */
 import "../../../src/store-assembly/register.mjs";   /* R68: the start's registration before any op table is read */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -48,8 +46,6 @@ async function doors({ gate = null, parts = [] } = {}) {
    `partRefusal(part)` answers it, unchanged. */
 
 /* ===== R41 (K2824): the action drafts ===== */
-
-import { M } from "../action-replies/fixture.mjs";
 
 import { gatedOp } from "../../../src/plane/door.mjs";
 

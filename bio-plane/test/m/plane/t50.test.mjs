@@ -1,7 +1,6 @@
-/* plane T50's composition (T50-36; N1186, N1195, N933, N1171, N1084; K3630, K3637, K3643, K3731): R58 the 15 ops and the
-   reach readers, R59 the ask stream passed through, R62 the Store's RPC `groupFields` taking a project. (R60 is
-   `store.test.mjs`', R61 and R63 are below it as they are built.) Each test drives the plane at its interface (the
-   object's routes, its door and its RPC) and carries a negative control (K874). */
+/* plane R62, R63 (T50-36; N933; K3664, K3731): the Store's RPC `groupFields` takes a project (R62), and a burst of the
+   widest screen's own reads answers every one with no 503 (R63). Each drives the plane at its interface (the object's RPC and
+   door) and carries a negative control (K874). The composition tests of T50 are `store-assembly`'s. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -14,10 +13,6 @@ import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
 import { assistantGateOf } from "../../../src/store-assembly/ask.mjs";
-
-/* ===== R58: the 15 ops op-declarations R73 declares, each in its owner's map ===== */
-
-/* ===== R58: following's registration with retrieval ===== */
 
 /* ===== R58: the readers of a project's reach ===== */
 

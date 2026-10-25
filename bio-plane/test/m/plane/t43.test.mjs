@@ -1,9 +1,6 @@
-/* plane T43 (T43-15; N853b, N862, N866; DEC-190; K2611, K2691, K2692, K2716): the `bundle` screen's new acts (R24), a
-   picture file's page rendered by pdf-pixels' picture renderer for the AI (R36), and an `ai` caller's author on the
-   gated hook (R6). Each is checked at the plane's interface (the registry it carries, the transcriber's page rendering,
-   the object's door, the Worker's gated hook) with a negative control (K874). The fixtures are made for this suite with
-   Pillow 12.3.0: `t43-photo-o6.jpg`, a 3200×2400 baseline colour JPEG whose EXIF Orientation is 6, and `t43-page.png`,
-   an 800×600 colour PNG. */
+/* plane R6 (T43-15; N866; K2692; control-plane R17): an `ai` caller's author on the gated hook, checked at the Worker's
+   interface (`door.mjs`' `gatedOp`) with a negative control (K874). The rest of T43's cases (the `bundle` screen's acts, the
+   picture renderer) moved with the transcriber and the registry to `store-assembly`. */
 import "../../../src/store-assembly/register.mjs";   /* R68: the start's registration before any op table is read */
 
 import assert from "node:assert/strict";

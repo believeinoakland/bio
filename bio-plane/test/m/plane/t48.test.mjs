@@ -1,9 +1,7 @@
-/* plane T48's composition (T48-78; N670, N847, N996, N1015, N1039, N1047; DEC-127 (3), DEC-227; K2591, K3101, K3103, K3147,
-   K3189): the draft door's `readtranslate` (R50), the front door's pointer (R51), the update notice read handed to
-   machinery-producers (R52), `ai-accounts` spread and read in place of `credentials`' delegates (R53), the global scope
-   measured against bundler R31's budget (R54) and the door's trace and member ref on every call to agent-worker (R55).
-   Each test drives the plane at its interface (construction over a storage, the object's RPC and door, the transcriber it
-   registers, the built artifact) and carries a negative control (K874). */
+/* plane R54, R55 (T48-78; N1015, N1039; K3103, K3147): the plane's global scope is measured against bundler R31's budget
+   (R54), and the door's trace and member ref ride the Store's RPC methods and the Worker's ask arm to every call to
+   agent-worker (R55). Each drives the plane at its interface (the object's RPC and door, the built artifact) and carries a
+   negative control (K874). The composition tests of T48 are `store-assembly`'s. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -67,16 +65,10 @@ async function doors({ gate = { flags: READ_FLAGS, testSet: GATE_SET }, parts = 
 }
 const count = (x, table) => [...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ${table}`)][0].c;
 
-/* ===== R50 (T48; N670; DEC-127 (3); run-rules R33; agent-worker R86; instance-setup R87) ===== */
-
-/* ===== R51 (T48; N847; K2591; DEC-227 (3), (4); wizard-scripts R23, R37; jurisdictions R89, R90) ===== */
-
 /* ===== R52 (T48; N1047; K3189; machinery-producers R12; instance-setup R88, R89) ===== */
 
 /* R52: instance-setup's real `updateNoticeState` (its R89), observed (the call is relayed unchanged). A stored ready
    notice is a verified release notice row (`release_notices`, its R88), newer than the running version. */
-
-/* ===== R53 (T48; N996; K3101; ai-accounts R32, R23) ===== */
 
 /* ===== R54 (T48; N1039; K3147; amends R43; bundler R31) ===== */
 

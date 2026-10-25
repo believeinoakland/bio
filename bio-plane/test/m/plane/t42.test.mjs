@@ -153,7 +153,7 @@ test("R37, R3 (K2629): doorbell's tables exist on a fresh store and after a seco
   for (const t of names) assert.equal([...bare.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE name=?`, t)].length, 0, t);
 });
 
-test("R37, R6 (doorbell R20): the public hook's knock is doorbell's handler: it forwards `/knock` with the country the door read, refuses an empty knock KNOCK_EMPTY (C-85.5) before the store, and answers no other op", async () => {
+test("R113 (was R37, in part; doorbell R20): the public hook's knock is doorbell's handler: it forwards `/knock` with the country the door read, refuses an empty knock KNOCK_EMPTY (C-85.5) before the store, and answers no other op", async () => {
   const seen = [];
   const stub = { fetch: async (r) => { seen.push(String(r instanceof Request ? r.url : r));
     return new Response(JSON.stringify({ ok: true, result: { ok: true, knockId: "k" } }), { headers: { "content-type": "application/json" } }); } };
@@ -191,7 +191,7 @@ const send = async (q, init) => {
   return { status: res.status, body, text };
 };
 
-test("R37 (K2630, K2634; doorbell R1, R11; carried from capture's plane.test.mjs:66–75): op=knock is reached at the whole plane's door with no token, through doorbell's doorbellPublicOp, and answers as the doorbell does; GET is 405 and an empty knock KNOCK_EMPTY (C-85.5)", async () => {
+test("R113 (was R37, in part; K2630, K2634; doorbell R1, R11; carried from capture's plane.test.mjs:66–75): op=knock is reached at the whole plane's door with no token, through doorbell's doorbellPublicOp, and answers as the doorbell does; GET is 405 and an empty knock KNOCK_EMPTY (C-85.5)", async () => {
   const k = await send("op=knock", { method: "POST", headers: { "cf-connecting-ip": "203.0.113.8" }, body: JSON.stringify({ contentText: "a tip for the group" }) });
   assert.equal(k.status, 200, k.text);
   assert.deepEqual([k.body.ok, k.body.sha256, k.body.bytes], [true, shaOf(Buffer.from("a tip for the group")), "a tip for the group".length]);
@@ -422,7 +422,7 @@ test("R36 (agent-worker R72): TRANSCRIBE_PAGES_MAX and TRANSCRIBE_IMAGE_MAX_BYTE
 
 /* ===== R36: the door's arm, and the act end to end ===== */
 
-test("R36, R6 (K2635, K2656; control-plane R74): the gated hook answers op=pagetranscribe through extraction's pageTranscribeOp: the store is asked `/pagetranscribe` with the door's stamps and the project; a malformed digest and no evidence storage are refused before the store", async () => {
+test("R112 (was R36, in part; K2635, K2656; control-plane R74): the gated hook answers op=pagetranscribe through extraction's pageTranscribeOp: the store is asked `/pagetranscribe` with the door's stamps and the project; a malformed digest and no evidence storage are refused before the store", async () => {
   const seen = [];
   const stub = { fetch: async (r) => { seen.push(String(r instanceof Request ? r.url : r));
     return new Response(JSON.stringify({ ok: true, result: { status: 200, body: { ok: true, op: "pagetranscribe" } } }), { headers: { "content-type": "application/json" } }); } };

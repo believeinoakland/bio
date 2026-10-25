@@ -1,10 +1,7 @@
-/* plane T47's composition (T47-66; N908, N955, N961, N981, N993, N1002; K3030, K3084, K3089, K3137): instance-setup's
-   disclosure read registered with credentials (R44); case-inputs' and action-records' maps spread before their source
-   modules' and the route map re-pinned to T47's ops (R45, R48); the Store's `dispatchMemberRun` RPC taking no
-   credential (R46); a draft grant's `op=rule` read opened with the draft use (answers R35); and the plane's global scope
-   measured against bundler R31's budget (R43). R47 is t46.test.mjs' (the sign-in's held token on the wire). Each test
-   drives the plane at its interface (construction over a storage, the object's door and RPC, the built artifact) and
-   carries a negative control (K874). */
+/* plane R43, R46, R48 (T47-66; N955, N993, N1002; K3147): the Store's `dispatchMemberRun` RPC takes no credential (R46); the
+   plane's global scope is measured against bundler R31's budget (R43); the page the Worker serves is composed from the nine
+   screen modules' screens (R48). Each drives the plane at its interface (the object's RPC, the built artifact, the
+   Worker's page) and carries a negative control (K874). The composition tests of T47 are `store-assembly`'s. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
@@ -19,8 +16,6 @@ import { interfaceScript, interfaceScriptHash } from "../../../src/interface-she
 const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 const member = (x, id, role = "member") => x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status,
   capabilities, created, updated) VALUES (?, ?, ?, ?, 'active', '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);
-
-/* ===== R44 (T47; N981; K3030; credentials R64) ===== */
 
 /* ===== R45, R48 (T47; N908, N961; op-declarations R57–R59, R61; tasks R19): the route map ===== */
 
@@ -51,8 +46,6 @@ test("R46 (T47; N955; ai-runs R18, credentials R63): the Store's RPC dispatchMem
     assert.deepEqual(seen.at(-1), {});
   } finally { ai.dispatchMemberRun = was; }
 });
-
-/* ===== answers R35 (T47; K3089): a draft grant's `op=rule` read ===== */
 
 /* ===== R43 (T47; N993; bundler R31; K3147) ===== */
 
@@ -130,8 +123,4 @@ test("R48 (T47; N1002; DEC-201; control-plane R81, R82): the page the plane's Wo
   const probe = function render() { return "zz-probe-screen-t47"; };
   assert.equal(script.includes(String(probe)), false);
 });
-
-/* ===== R45 (T47; K3150; control-plane R71): the owner map's action-clocks getter ===== */
-
-/* ===== R49 (T47; K3143; signin-door R2, R4, R5) ===== */
 

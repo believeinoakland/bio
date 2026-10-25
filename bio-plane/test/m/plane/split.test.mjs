@@ -1,7 +1,5 @@
-/* plane R2, R3, R5, R6 (N512): the composition of `attestation` and `provenance-routes`, the two modules split from
-   provenance, driven through the plane's interface: construction over a storage, the route map, `op=stats`, the audit
-   and the door's hooks. Each module's own behaviour is its own tests'; these check only that the plane builds each
-   once, with what the deployment hands it, and reaches each through its own map and arm. */
+/* plane R6 (N512): the Worker's `attest` arm is `attestation`'s `attestOp`, driven through the plane's door hook
+   (`door.mjs`' `gatedOp`). The composition of `attestation` and `provenance-routes` is `store-assembly`'s. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
