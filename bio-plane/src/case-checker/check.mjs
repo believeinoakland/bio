@@ -509,7 +509,9 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
     const ff = fileOf("finding", "finding", id);
     const t = ff && ff.content ? textOf(ff.content) : null;
     const p = t !== null ? parseFrontmatter(t) : null;
-    if (p && isObj(p.data) && Array.isArray(p.data.basis)) memberBasis[id] = p.data.basis; else basisAll = false;
+    /* R28: each member's `{basis, references}` from its own bytes, so a leg its references sever is not counted (`strength` R2) */
+    if (p && isObj(p.data) && Array.isArray(p.data.basis)) memberBasis[id] = { basis: p.data.basis, references: Array.isArray(p.data.references) ? p.data.references : [] };
+    else basisAll = false;
   }
   const statedChecks = method && typeof method.checks === "string" ? method.checks : null;
   const pubFindings = fm ? checkCaseDocument(fm, { caseId: fm.case_id, edition: fm.case_edition, body, memberBasis }) : [];

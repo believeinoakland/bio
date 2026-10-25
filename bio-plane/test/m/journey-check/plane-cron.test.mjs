@@ -137,6 +137,8 @@ test("R1 (a), G1: an update sets the plane's watchdog cron again, whether or not
 
 test("R1 (a), G1, control: when the account refuses the plane's schedule, the install and the update each stop with a sentence and do not finish", async () => {
   const slug = "cronrefused";
+  /* the same install over an account that refuses nothing finishes: a stop that the refusal did not cause cannot stand for it (K5101: the built-in release 0.86.0 states no cron, so every install stops at its description until the 0.87.0 cut, G90) */
+  assert.deepEqual((await run(fakeAccount({ copyFetch: copy }), "cronallowed")).filter((e) => e.k === "fail"), [], "without the refusal the install does not stop");
   const account = fakeAccount({ copyFetch: copy, refuseSchedules: new RegExp("^" + slug + "$") });
   const installed = await run(account, slug);
   const stopped = installed.filter((e) => e.k === "fail");
