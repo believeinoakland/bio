@@ -18,7 +18,7 @@ const PICKS = () => Array.from(document.querySelectorAll('#cs-main input[type=ch
 });
 
 for (const [where, path] of [["the browse", "/app/finder"], ["a search", "/app/finder/pothole"]]) {
-  test(`R92 (06 §19 (d); ${where}): every pick box of Find's results is a 44 px target at 390 px; control: the same box at 1280 px is the desktop's`, { timeout: 120000 }, async () => {
+  test(`R92, R106 (06 §19 (d); ${where}): every pick box of Find's results is a 44 px target at 390 px; control: the same box at 1280 px is the desktop's`, { timeout: 120000 }, async () => {
     const m = await measure({ path, width: 390, plane: PLANE, ready: "#cs-main .cs-row", measure: new Function(`return (${PICKS.toString()})();`) });
     assert.equal(m.length, 2, "a box on each result");
     for (const b of m) {
