@@ -89,7 +89,7 @@ const unfilled = (r) => [r.status, r.body.ok, r.body.transcription.performed, r.
 test("R71 (T44; N869; DEC-191 (4)): nothing sent (AGENT_WORKER_UNBOUND, EVIDENCE_ABSENT, NO_PAGE_RENDERED) stays 200 performed false, nothing written, and says transcribe.notsent with {why} from transcribe.why.*, by key; control: a post agent-worker answered ok filling nothing says transcribe.none", async () => {
   for (const [reason, why] of [["AGENT_WORKER_UNBOUND", "transcribe.why.unbound"], ["EVIDENCE_ABSENT", "transcribe.why.evidenceabsent"],
                                ["NO_PAGE_RENDERED", "transcribe.why.norender"]]) {
-    // fixtures-contract: agent-worker transcribe-not-sent
+    // fixtures-contract: plane transcribe-not-sent
     const { r, written, asked } = await act({ answer: { ok: false, reason } });
     assert.deepEqual(asked, [[1, 2]], reason);
     assert.deepEqual(unfilled(r), [200, true, false, false], reason);
