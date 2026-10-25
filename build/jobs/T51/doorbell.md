@@ -151,3 +151,7 @@ COMPLETE · DOORBELL #8 · fix round 9, G126 (the pull registers its row), R28. 
 **Deferred.** None of the module's own.
 
 Size (session_01YBReDY5hYh8xKFsNUdPD1p): test runs 6, module lines 1206
+
+## J8 · COMPLETE
+
+COMPLETE (B9, fix round 10, WALK-FINAL-04B R39). R1 and R6 met: the envelope bound is KNOCK.maxEnvelope = base64 length of 8 MiB + 4 KiB = 11,188,908 bytes; contentB64 of 7 MiB and 8 MiB kept, 8 MiB + 1 B KNOCK_PAYLOAD_TOO_LARGE, 11,188,909 bytes KNOCK_ENVELOPE_TOO_LARGE 413; seen red first (7 MiB refused on the old bound). Doorbell 98/98; users screens-publish and answer-envelope families 41/41; format, architecture, coverage (28/28), words, ownership 0 failures. Fixtures list 22 -> 13: record-core refusals re-pointed to its published fixture; registrar contract markers added (plane runs doorbell job-registrar). Remaining 13, with why, in my record: 10 hand-built storeSilent/BAD_JSON/UNKNOWN_OP answers (provider answer-envelope is later; its door-helpers contract carries the translation sentence the words check forbids copying), and homeOf stand-ins (REPORT: provenance owes a homeOf fixture over a caller's storage). Platform check for BOB at the redeploy: request-body limit for an 11.19 MB body, memory/CPU of a full 8 MiB knock (not measured here). Record: build/jobs/T51/doorbell.md, Completion (B9).
