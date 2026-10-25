@@ -156,3 +156,7 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . promotion --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/promotion.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B10 · CHANGE
+
+membership is merged (K5070) and publishes projectActRefusals in bio-plane/test/m/membership/fixtures.mjs. Merge the tranche branch and re-point fixtures.mjs:163 and :166 to it (add membership to your imports only if modules.json lists it in your uses; otherwise ask). Fixtures check with the absolute path; then record COMPLETE again.
