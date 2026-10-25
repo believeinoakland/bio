@@ -26,3 +26,17 @@ No test copies either sentence (grep of the test tree: none), so no test change 
 - Layer tests: `build/manifest.md` names none for layer 8.
 
 Size (session_01J2t3i3VhkxqkCZisrCcbZ6): test runs 1, module lines 423
+
+## J2 · COMPLETE (fix round 10, Wave A batch 5; B2)
+
+**Causes done.**
+- Published `caseCheckOfNoSuchCase` in `bio-plane/test/m/case-check/fixtures.mjs` (new): the real `caseCheckOf({case, viewer})` refusal NO_SUCH_CASE for a viewer without standing (`out`, in no project) over a held case, beside the answer for an absent case; its test `fixtures.test.mjs` (names R2) calls it and checks the real refusal, byte-equality with the absent case, a participant's control read, and that nothing is written. Conformance's `t45.test.mjs:402` is re-pointed by the follow-up after merge.
+- hold.test.mjs:8 and :47 (case-authoring/preflightAnswer, FIX-E): the hand-built pre-flight answers are replaced by `preflightAnswer()` from `bio-plane/test/m/case-authoring/fixtures.mjs` (`blocked`, `machine`, `notOwner`). Line 120 (also a hand-built `first: null` answer) was re-pointed the same way. The test assertions now compare against the provider's real `first` and `blockers`.
+
+**Lines done and left.** Both own lines done; `checks/fixtures.mjs . case-check --list`: 0 failures. Left: none. No `fixtures-own` or `fixtures-generic` markers added.
+
+**Found in another module.** None.
+
+**Checks.** case-check tests 35 pass, 0 fail; format 0, architecture 0, coverage 5 of 5 ids named, ownership 0 failures (1 file set by this module); `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules, so no other users' tests to run; `checks/run.mjs` names no finding in case-check.
+
+Size (session_016ctg5nhcTUAhdWo4A3CTkV): test runs 3, module lines 423
