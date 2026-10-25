@@ -127,6 +127,7 @@ B8 applied: promote refuses with PROMOTE_NOT_A_PARTICIPANT, sentence keyed refus
 **Markers added (K5060).** `converts.test.mjs:39` `// fixtures-generic: BIAS_FENCE`: the test registers the fence itself and makes it refuse; no provider's code. `bio-plane/test/system/row-census.test.mjs:482` `// fixtures-generic: CONTROL_ARRIVAL`: a census row made up for the negative control; no module gives it.
 **Lines left (named).** `checks/fixtures.mjs . promotion --list`: 2 FIX-E lines, `fixtures.mjs:163` (`PROJECT_ACT_NOT_A_PARTICIPANT`) and `:166` (`PROJECT_VISIBILITY_UNKNOWN_SETTING`) in the `makeMembership` double, provider membership (`projectActRefusals`): not in this job, they arrive as a CHANGE.
 **Deferred.** None. **Found in other modules.** None.
+**Users run.** impact names ratification, monitoring, store-door, control-plane: their 8 affected test files, 103 pass, 0 fail.
 **Tests and checks.** `test/m/promotion/` + `d526-refusal-order`: 170 pass, 0 fail (the 8 new). `system/row-census`: 1 fail, the R50 pin against rows other modules added (C-102.34 ... C-130.22, CENSUS MOVED), awaiting the stamp (T52, accepted red by name); the same without my change, and my only edit there is a comment line. `checks/format`: 0 failures. `architecture promotion`: 0. `coverage promotion`: 61 of 61. `words promotion`: 0 failures. `fixtures . promotion --list`: 4 -> 2 failures (the two above).
 
 Size (session_01FjnskQoMLcMGgXpteLNQ1m): test runs 7, module lines 3987
