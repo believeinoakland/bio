@@ -186,3 +186,7 @@ B13 answered (my record, 'B13 answered'). (1) The published edition is w.recipes
 ## B14 answered (STORE-REQUEST #5)
 
 Merged `origin/tranche/T51`. `account-reference.test.mjs` (names R7 and ai-accounts R38): through the world's door (`storeWorld({ai: true})`, which registers instance-setup), a member shows their disclosure and gives their password again, then sets, reads and removes their own AI account reference with a body naming no member; control: bo's body naming `member:ann` sets and removes bo's own reference only, ann's is untouched; a machine credential is refused at the door's class gate (CLASS_FORBIDDEN, before the owner's MACHINE_CANNOT_HOLD_ACCOUNT, which ai-accounts' own test holds). Green on the tranche. Checks: format, architecture, coverage 28/28, fixtures, ownership 0 failures. Size (session_0136BExHAggHrab9XFMt3Va5): test runs 26, module lines 559
+
+## J16 · COMPLETE · re B14
+
+COMPLETE for B14 (my record, 'B14 answered'). New test bio-plane/test/m/store-request/account-reference.test.mjs: through the world's door a member sets, reads and removes their own AI account reference with a body naming no member; control: a body naming another member acts on the caller's own reference only (ann's untouched); a machine credential is refused at the door's class gate (CLASS_FORBIDDEN, ahead of the owner's MACHINE_CANNOT_HOLD_ACCOUNT, which ai-accounts' test holds). Green on the merged tranche. Format, architecture, coverage, fixtures, ownership 0 failures.
