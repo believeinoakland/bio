@@ -708,3 +708,17 @@ FOR BOB TO PLACE
 1. `uses` of screens-publish needs case-import (architecture: 2 failures on fixtures.mjs until added). The import is lazy.
 2. case-import publishes no `citeimported` or `importregrade` answer. Those lines (fr30b citeimported x2, importregrade) need one, or a store-request recipe.
 3. 37 fixture lines remain, each a state no provider publishes yet. Grouped by provider with the state each lacks in the record, section "Fix round 11": review (4), case-authoring (publishpreflight, 3), capture (reattest x4, captureaccount), credentials, public-read (3), case-inputs (6), entities, sources, doorbell (knock x2), citation (sever, reinstate, citeimported x2), wizard-scripts (writinghelp x4; the model stream), action-holds (holdsdue), plus 6 accepted generic markers.
+
+## J44 · REPORT
+
+REPORT, re B50 (K5207). Merged tranche/T51 (uses gains case-import: architecture 0 failures). Pushed job/T51/screens-publish.
+
+DONE
+- Doorbell knock (fr30:95 R67 control and fr30:140 R49 control): both now take the real door answer from openWorld, with the field under test taken off it. A real door never omits these fields, so the controls are built from its answer, not hand-built. Fixtures list 37 -> 35.
+- Checks: architecture 0 failures; coverage 80/80; format 0.
+
+NOT YET
+- Module tests: still blocked at load by DECLARED_OP_DISAGREES (OP-GRADES #30 not merged). I will run them after its CHANGE, then post COMPLETE with counts.
+- Re-points for the other providers' answers (review, credentials, public-read, case-inputs, entities, sources, citation, wizard-scripts, action-holds, case-import importregrade, capture, case-authoring): I re-open on each CHANGE as BOB's answer says.
+
+LINES LEFT: 35 (fixtures list). Named in the record section "Fix round 11".
