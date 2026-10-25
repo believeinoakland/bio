@@ -815,3 +815,7 @@ B47 done: G154 (4) platform check. New r122-workerd.test.mjs + offers-worker.mjs
 - Found in another module (P9): none beyond csv-reader's delimited-names table not being exported.
 
 Size (session_01UzsMeXPSWSfbJkij7yPiZw): test runs 30, module lines 4457
+
+## J47 · COMPLETE
+
+COMPLETE (B48, fix round 10 Wave A batch 2). R12: .tsv/.tab members read as text (textTypeOf; r12-tsv-members.test.mjs red first, green; platform N done, L named for the redeploy: the 30-member archive, 10 .tsv whole). 7 fixtures published in test/m/acquisition/fixtures.mjs (acquireRefusals, archiveAnswer, archiveNotHeld, keyedServiceOff, notHeldRange, owedFetchAnswer, owedRunAnswer), each tested against the real answer. Own fixture lines: FIX-E done (renderFailure, evidencePartsRefusal, JOB_NOT_KEPT, heldParts/homeOfEmpty, provenance registeredHomes behind fixture.mjs homeOf/registerHolds, real provenanceOf in the workerd worker); FIX-L markers added on 76 lines, 75 remain contract-no-run waiting on plane (owed-ledger, keep-later, job-registrar) and control-plane (deliver-owed); no fixtures-own or fixtures-generic marker added. Suite 349/349; other importers 352/352; capture+doorbell+screens-intake 823/823; format, architecture, words 0; coverage acquisition 76/76; ownership lists only build/requirements/acquisition.md (R102 marker removed, K4210). P9: csv-reader does not export its delimited names, so acquisition keeps the .tsv/.tab names as a literal. Record: build/jobs/T51/acquisition.md
