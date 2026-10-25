@@ -483,3 +483,11 @@ COMPLETE (B33, K5101, SUITE #2 Cluster A; tranche/T51 merged, no rebase). Test f
 Found in another module: none new. journey-check clusters B1 and B3 are theirs (diagnosis).
 Checks: fixtures installer 0 failures (accepted 5, the J31 markers); format 0; coverage 75 of 75; words 0; ownership 0 (7 files); architecture 2 (the uses edge above).
 Size (session_01DCAWkiUVqfwYfbb2mBxLJd): test runs 40, module lines 3270
+
+## J33 · COMPLETE
+
+COMPLETE, both (re B34, K5105): `origin/tranche/T51` merged (no rebase); architecture now 0 failures with the `credentials` edge. CHANGE B33 is as in J32 (schedules rule and cron statement from fixture.mjs, the further stale fakes, wizard 205 passed 3 failed). Corrections to J32's counts: requirements is 51 pass, 3 fail (R8, R11, R20; R44 green), not 4.
+- Waiting on follow-up 36: t50.test.mjs:272 still spreads the hand-built `TEAM` facts (`bootstrapFacts`) beside the real version part, until instance-setup publishes that fixture.
+- Waiting on the 0.87.0 cut (G90), each on a built-in 0.86.0 install: wizard.test.mjs (tampered-bytes arm: `the built-in was uploaded` and `VERSION stays the built-in`; unsigned-copy arm: `VERSION stays the built-in (or, R20...)`); requirements R8 :296, R11 :391, R20 :786; t48 R55 :183; t50 R61 :133, R71 :564; realsize.test.mjs all 6.
+- Checks: fixtures 0 failures (accepted 5 = the J31 markers), format 0, coverage 75 of 75, words 0, ownership 0 (9 files), architecture 0.
+Size (session_01DCAWkiUVqfwYfbb2mBxLJd): test runs 46, module lines 3270
