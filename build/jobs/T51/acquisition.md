@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01FepaYctVekwaxhoDHB6QtY · depth 2 · WORKING · handled B45
+**Status** · session_01FepaYctVekwaxhoDHB6QtY · depth 2 · RUNNING until 2026-10-25T00:45:37Z (acquisition suite then control-plane t51-round7-seam) · handled B45
 
 ## J1 · REPORT
 
