@@ -2,12 +2,10 @@
  * reads, the Photos step, the Ties step that prepares the edition, and signing inside the ceremony: when it becomes
  * public, one sitting of the member's key over every statement listed, signed and waiting or published, and the three
  * states that stop it (no key here, a phone, a member who is not an owner). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, drew, drewIn, day, clock, word, ops, press, fill, tick, last, ok, refusedIn, pending, keptKey, answerSign, until, PREFLIGHT, P, DR, C, SHA, B1, E1, PHOTO } from "./fixtures.mjs";
+import { gateRefusal } from "../case-disclosures/fixtures.mjs";
 
 const PATH = `/app/ceremony/${P}/${DR}`;
 const R = "because";
@@ -249,17 +247,17 @@ test("R4 R30 a photo's facts: taken by and relied on, with the local day when `p
 test("R3 R50 (fix round 6, G10) a refusal's placeholder is filled from the refusal's own field: the real canned text names the document, no raw {document}", async () => {
   const canned = word("document.refused.pending", { document: "{document}" }); // what case-disclosures' check answers as `translation`
   assert.ok(canned.includes("{document}"), "the answer's text carries the placeholder");
-  const pre = PREFLIGHT({
-    first: { ok: false, code: "DOCUMENT_COPY_PENDING", reason: "DOCUMENT_COPY_PENDING", translation: canned, document: "INFO-2026-0134-x" },
-    blockers: [{ ok: false, code: "PHOTO_UNCHECKED", reason: "PHOTO_UNCHECKED", translation: word("photo.refused.unchecked", { photo: "{photo}" }), photo: "INFO-2026-0007" }],
-  });
+  const gate = gateRefusal(); // case-disclosures' own refusals, raised by worlds that hold them
+  assert.ok(gate.DOCUMENT_COPY_PENDING.translation.includes("{document}"), "the real answer's text carries the placeholder");
+  const pre = PREFLIGHT({ first: gate.DOCUMENT_COPY_PENDING, blockers: [gate.PHOTO_UNCHECKED] });
   const p = await open(PATH, { plane: { publishpreflight: ok(pre) } });
   const lines = main(p).querySelector("[data-blockers]").querySelectorAll("li").map((l) => l.textContent);
   assert.equal(lines.length, 2);
-  assert.ok(lines[0].includes("INFO-2026-0134-x"), "the document is named");
-  assert.ok(lines[1].includes("INFO-2026-0007"), "the photo is named");
+  assert.ok(lines[0].includes(gate.held.document), "the document is named");
+  assert.ok(lines[1].includes(gate.held.photo), "the photo is named");
   assert.ok(!lines.some((l) => /[{}]/.test(l)), "no raw placeholder is drawn");
   // control: a refusal that names no field draws no brace either
+  // fixtures-generic: DOCUMENT_COPY_UNWORDED (a code no module gives, so the page falls back to the plane's canned text (R-fallback control))
   const q = await open(PATH, { plane: { publishpreflight: ok(PREFLIGHT({ first: { ok: false, code: "DOCUMENT_COPY_UNWORDED", translation: canned }, blockers: [] })) } });
   assert.ok(!/[{}]/.test(main(q).querySelector("[data-blockers]").textContent), "control: a missing field leaves no brace");
 });

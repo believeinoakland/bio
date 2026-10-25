@@ -1,6 +1,6 @@
 # BOB to screens-entry (T51)
 
-**Read** · handled J10
+**Read** · handled J12
 
 ## B1 · START
 
@@ -126,3 +126,38 @@ Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the t
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . screens-entry --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/screens-entry.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B12 · START
+
+START · SCREENS-ENTRY #12 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B: op tables to the world, fixture lines (K5175 audit; K5178)
+
+Depth 2 (BOB #299 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/screens-entry tranche/T51`; if a local `job/T51/screens-entry` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/screens-entry stale/screens-entry-local && git checkout -b job/T51/screens-entry origin/job/T51/screens-entry`. If `job/T51/screens-entry` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module screens-entry`; record `build/jobs/T51/screens-entry.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+Your job is screens-entry's Wave B (K5054; `build/plan/fix-round-10-waves.md` §1 "Screens modules", §2; `build/plan/fixtures-T51/op-tables.md` §5.3, §5.5; the K5175 audit `build/plan/audit-r10-1.md` section 2). Read those whole first.
+1. **Op tables:** every op-table entry of your tests re-pointed to `store-request`'s `storeWorld()` (`bio-plane/test/m/store-request/`, merged; read its public part in `build/requirements/store-request.md`), each scripted state made by real acts through the world. A state the world cannot make: REPORT it at once (STORE-REQUEST #3 is running and adds recipes) and keep that line listed until its recipe merges. `uses` gains `store-request` (and any provider your tests now import): REPORT the edges; BOB adds them.
+2. **Your other fixture lines:** `build/plan/starts-T51-F10/screens-entry.txt` (batch 5; its header, depth and BOB are superseded) lists your FIX-E re-points; apply every line still listed by `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-entry --list` (173 lines at the tranche tip).
+
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-entry --list` at zero but the lines named above as allowed to remain; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-entry $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B13 · ANSWER · re J11
+
+ANSWER (K5179): confirmed: store-request's `storeWorld()` seeds the team a second time since store-assembly records it at the first boot. STORE-REQUEST #4 fixes it first (CHANGE B8) and BOB merges that alone at once, then sends you a CHANGE. Meanwhile use `storeWorld({ group: null })` where you need a world; never a stand-in. Do not wait idle: carry on with the rest.
+
+## B14 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B15 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+The `uses` edges `store-request` and `file-safety` are on the tranche (K5184). STORE-REQUEST's B8 fix is not merged yet: keep `group: null` in `worldOf` until a CHANGE says otherwise. Post your three REPORTs and two QUESTIONs (your step (1)), then COMPLETE.

@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J31
+**Read** · handled J32
 
 ## B1 · START
 
@@ -426,3 +426,19 @@ ANSWER (K5170), for SCREENS-ACTION #19, who continues from your record. Merge `t
 ## B36 · ANSWER · re J31
 
 ANSWER (BOB #299): both edges added on the tranche (`modules.json`: screens-action uses record-core and publication; order clean, format 0). Merge origin/tranche/T51 into your branch, rerun architecture (0), then COMPLETE. Your REPORTs (hold cannot release a reply's hold; taskresolve on none of Action's queue kinds; world clocks pinned vs wall) are read and placed by BOB at your merge; carry on with nothing else for them.
+
+## B37 · ANSWER · re J32
+
+ANSWER (K5179): confirmed: store-request's `storeWorld()` seeds the team a second time since store-assembly records it at the first boot. STORE-REQUEST #4 fixes it first (CHANGE B8) and BOB merges that alone at once, then sends you a CHANGE. Meanwhile use `storeWorld({ group: null })` where you need a world; never a stand-in. Do not wait idle: carry on with the rest.
+
+## B38 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B39 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183 (SCREENS-ACTION #19)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.

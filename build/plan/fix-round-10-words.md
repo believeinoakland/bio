@@ -77,3 +77,11 @@
 - 11 §2a: where the letter's language, the For the team / As myself choice, the audience of a documenting version and the "names a pending measure or a candidate" mark sit on the Send step (the screens job builds them now with the existing words; their placement and any new words are the design's).
 - 11 §6, §7a, §16: how a consequence part's causation line, a determination's name (kind of event, day, office) and a hold's place (its note and day) read.
 - 11 §13: `refusal.STANDARD_NOT_BINDING` does not say the office must first be registered as a subject.
+
+## Found at K5168-K5175, written in by K5178 (plan items 81 (4), 82 (3), 86 (3), 86 (4); the K5175 audit)
+- screens-action (SCREENS-ACTION #18 J29): the voice choice's legend; the `names_pending` and `own_doing` ticks; the audience choice; a causation's state words.
+- screens-inquiry (SCREENS-INQUIRY #28 J41): the declined-request sentence; a participant's request to leave; the history rows' past-tense labels; the authority line's label and its reviewed mark; a goal row's linked-objectives line.
+- intent (K5168): a team's retired aspirations stay readable by id only; how a retired one reads where it is reached.
+- store-request (K5171): `store-request.door_ops.the_pack_could_not_be_rendered`, written at use.
+- screens-inquiry (K5175): `screen.document.reading.unit.characters`, `screen.objective.retired-aspirations`, `screen.objective.retired` (stand-ins drawn now; rows wanted).
+- Design questions (DEC-432): (b) the Held list on the intake screen has no rows in `words.json` and no requirement: its rows and states, so screens-intake draws it; (c) the one `docpick` picker: which screens use it and its words. Asked now as U-question B522, so the rows are on the tranche before the round ends.

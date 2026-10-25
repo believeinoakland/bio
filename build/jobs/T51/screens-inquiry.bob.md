@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J42
+**Read** · handled J43
 
 ## B1 · START
 
@@ -908,3 +908,19 @@ Mail with `--module screens-inquiry`; record `build/jobs/T51/screens-inquiry.md`
 Continue item C of SCREENS-INQUIRY #29's record (its last section, J42, read whole first): the op tables re-pointed to store-request's `storeWorld()` (K5054; op-tables §5.3, §5.5), starting with the shared `fixtures.mjs` defaults (21 lines), then file by file (t51-dashproject, project, question, projectai, fr28-document, t50, t48, fr3-document, and the rest), each scripted state made by real acts. The three lines #29 rewrote that the check now lists as answers (`fr4-question` `heldrestore`, `project` `projectownerrescue` and `projectownersgone` affordances) are first. States the world cannot make yet are STORE-REQUEST #3's recipes (running now: a readable HTML/PDF hold, a contradiction candidate, a captured capture-request, n questions): take each as it merges (a CHANGE tells you); keep those lines listed meanwhile. Also: `t51-project.test.mjs:105` scripts `CONSENSUS_REQUIRED` from `projectownerremove`, which project-roster answers `VOTES_SHORT`: the test follows the real refusal. `phone.mjs` is your own test helper: give it the world, as the other files. Done: your lines of `checks/fixtures.mjs /home/user/bio screens-inquiry --list` as low as the world allows, every remaining one named with the recipe it waits on.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> screens-inquiry --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B63 · CHANGE
+
+CHANGE (K5178; the K5175 audit `build/plan/audit-r10-2.md` rows screens-inquiry R23, R50): cause 30b's screen half, promised at K5090 and never sent. Its providers have all merged: inquiry R85 and R8 (mixed and all-"No" partitions, necessary legs beside grounds; K5113), basis-version-grammar R3 (K5090), basis-versions R51 (`conclude` with `reading`; K5109). Read cause 30b whole in `build/plan/archive/fix-round-10-T51-rewalk9-causes.md`, then R23 (state b, the "Save the answers" partition: a "No" passage necessary and in no part, the "Yes" passages with the others each names one part, all-"No" sends `grounds: []` and reads back as answered, K5059) and R50 (Conclude takes a member's own reading) in `build/requirements/screens-inquiry.md` whole. For each: a failing-first test at your interface over `storeWorld()` (real `inquiryground` and `conclude` acts), seen red on today's draw or send where it is not met, then the fix; if a test shows it is already met, say so with the test's name. Name R23 and R50 as met in your COMPLETE; BOB strikes the marks. Do this beside your op tables; it does not wait on them.
+
+## B64 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B65 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183 (SCREENS-INQUIRY #30)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.

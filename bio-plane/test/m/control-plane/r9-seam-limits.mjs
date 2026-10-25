@@ -265,7 +265,7 @@ export function sections(kit, counting) {
   });
 
   test("R9 seam §14b (G124b; R72, R111): the door hands `uploadCapture` its own byte ledger and the request's declared length: a 24 MiB text peaks at the file and at most two parts beyond it, and nothing is held once it is answered", { timeout: 900000 }, async () => {
-    const { controlPlaneOwnerOps } = await import("../../../src/control-plane/owner-ops.mjs");
+    const { ownerOps: controlPlaneOwnerOps } = await import("../../../src/store-assembly/owner-ops.mjs");
     const { fresh, bucket } = await import("../capture/fixture.mjs");
     const { jobRegistrarStub } = await import("../../job-registrar-stub.mjs");
     const PART = 8 * MiB;

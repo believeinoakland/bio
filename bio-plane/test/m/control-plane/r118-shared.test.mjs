@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
-import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { ownerOps as controlPlaneOwnerOps } from "../../../src/store-assembly/owner-ops.mjs";
 
 test("R118 (the door's map): `projectlist` is project-roster's `projectList` over the stamped viewer and the request's `limit` and `after`, handed review's `sharedDraftsByProject` as `sharedDraftsOf`; the roster calls it with the page's projects and the viewer and its answer is what the roster reads; the arm exists once the plane hands the getter (negative control: without it the roster's own `projectlist` arm is left in place)", () => {
   const listed = [], shared = [];

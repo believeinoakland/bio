@@ -1,6 +1,6 @@
 # BOB to journey-check (T51)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 
@@ -162,3 +162,45 @@ Mail with `--module journey-check`; record `build/jobs/T51/journey-check.md` (ap
 **What to do.** In `browser()`: when `CHROMIUM` is unset and `chromium.executablePath()` does not exist on disk, fall back to `/opt/pw-browsers/chromium` when that exists; otherwise keep today's behaviour. A test of `browser()`'s choice (an injected `exists` function or a temp path), named with the requirement id your requirements give the launch (read them; if none names it, say so in your record and BOB writes one). Then run the eleven files with `CHROMIUM` unset, one at a time (they drive a local browser only, never a live deployment), your module's other tests, `node build/plan/impact.mjs tranche/T51 HEAD`, and the six checks (format, architecture, coverage, words, ownership), each by its failure count. Record completion (mechanics §6 step 7) with your `Size` line; state COMPLETE; post COMPLETE.
 
 **Reading rule (K3678).** Read whole: this START, `build/requirements/journey-check.md` (both parts), `bio-plane/src/journey-check/run.mjs`, and the test you add. Other tests are run, not read. A document you would read only in part: stop, post BLOCKED with cause `reading`.
+
+## B17 · START
+
+START · JOURNEY-CHECK #14 · tranche T51 · product believeinoakland/bio · fix round 10, batch 7: SUITE #2's reds, marks, fixture lines (K5175 audit; K5178)
+
+Depth 2 (BOB #299 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/journey-check tranche/T51`; if a local `job/T51/journey-check` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/journey-check stale/journey-check-local && git checkout -b job/T51/journey-check origin/job/T51/journey-check`. If `job/T51/journey-check` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module journey-check`; record `build/jobs/T51/journey-check.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+B16 in your mailbox is history (JOURNEY-CHECK #13's fix-round-9 START, met and merged): read it, act on nothing in it, and move your cursor past it.
+
+Your job is journey-check's batch-7 work (`build/plan/fix-round-10-waves.md` §2 sequencing 4, §3 row 178), plan items 34 (b) and the K5175 audit (`build/plan/audit-r10-1.md` row 34b and section 2; `audit-r10-2.md` rows journey-check R20-R28). Read them, and plan item 34 of `build/plan/fix-round-10-T51.md`, whole first. `build/plan/starts-T51-F10/journey-check.txt` was written for you and never posted: read it whole and apply it (its header, depth and BOB are superseded).
+1. **SUITE #2's reds (item 34 (b), K5101):** B1 the fake account's prefix, B3 the guide click, and `live.test.mjs` run alone; each cause found (file:line), fixed in your paths, a failing-first test. B2 waits on the 0.87.0 cut (G90, K4777), cut at the round's end: leave it named.
+2. **Marks R20, R21, R23-R28** in `build/requirements/journey-check.md` (older T51-131 marks, "read at the close audit", K4495): read each whole; show each met by a test naming the id, or meet it now.
+3. **Your 17 fixture lines** (`node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio journey-check --list`): journey-check imports no module (K3100), so before you touch `storeWorld()` or any other module's fixture, REPORT the line, the provider and the import you would add; BOB decides the edge and answers. Carry on with the rest meanwhile.
+
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio journey-check --list` at zero but the lines named above as allowed to remain; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio journey-check $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B18 · ANSWER · re J13
+
+ANSWER re J13 (K5182). Build your best reading, (1) to (3), with the 0.87.0 cut as the one dependency (K5175: nothing is left out):
+(1) `walkStates` takes the arm: on the local arm an unreached state FAILS by its name (kind `state`); on the live arm it stays a note, as R21 is written. No requirement change.
+(2) CARRIED_STATES is completed from the mock's own "In this mockup, show" controls for the four new screens of R28 (hold, holdnotice, counsel, grouprules) and the carried-feature states of screens-settings, screens-intake and screens-daily, labels read from the mock.
+(3) A `reach` function for each state whose live screen you can read in the screens' source, proven at the interface by drawing the real screen through the interface harness (as pseudo.test.mjs does): it finds the screen in the state, and answers false for a screen not in it.
+A state you cannot write a `reach` for from the source: name it in your COMPLETE with why. The local arm end to end runs after the 0.87.0 cut (G90) in the round's step 4 (K5063), where its red-by-name states are read; your tests here prove each `reach` at the interface. Your B1, B3 and live.test fixes: keep them.
+
+## B19 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B20 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183 (JOURNEY-CHECK #14, B17's fix-round-10 batch 7; the work moves to Bob's primary account)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+B18 answered your J13: build (1) to (3). Your saved section's 'Half done' and 'Bookkeeping not done' lists are your steps; `mail done --as job --through B20` after reading this.

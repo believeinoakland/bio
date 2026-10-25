@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J54
+**Read** · handled J56
 
 ## B1 · START
 
@@ -971,3 +971,40 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B52 · ANSWER · re J53
 
 ANSWER (K5090): your reading stands. A drawn-screen module writes no `localize` (words check `marker`; R26, K4640). The new sentences are keyed rows owed to UX-DESIGN, drawn by the nearest held row until held, exactly as you applied; the rows are listed in `build/plan/fix-round-10-words.md` for the round's HANDOFF. Finish and post COMPLETE.
+
+## B53 · START
+
+START · SCREENS-INTAKE #26 · tranche T51 · product believeinoakland/bio · fix round 10, Wave B: op tables to the world, fixture lines, marks (K5175 audit; K5178)
+
+Depth 2 (BOB #299 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/screens-intake tranche/T51`; if a local `job/T51/screens-intake` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/screens-intake stale/screens-intake-local && git checkout -b job/T51/screens-intake origin/job/T51/screens-intake`. If `job/T51/screens-intake` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module screens-intake`; record `build/jobs/T51/screens-intake.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+Your job is screens-intake's Wave B (K5054; `build/plan/fix-round-10-waves.md` §1 "Screens modules", §2; `build/plan/fixtures-T51/op-tables.md` §5.3, §5.5; plan `build/plan/fix-round-10-T51.md` item 86 (4); the K5175 audit `build/plan/audit-r10-1.md` section 2). Read those whole first.
+1. **Op tables:** every op-table entry of your tests re-pointed to `store-request`'s `storeWorld()` (`bio-plane/test/m/store-request/`, merged; read its public part in `build/requirements/store-request.md`), each scripted state made by real acts through the world. A state the world cannot make: REPORT it at once (STORE-REQUEST #3 is running and adds recipes) and keep that line listed until its recipe merges. `uses` gains `store-request` (and any provider your tests now import): REPORT the edges; BOB adds them.
+2. **Your other fixture lines:** `build/plan/starts-T51-F10/screens-intake.txt` (batch 3; its header, depth and BOB are superseded) lists your FIX-E re-points and markers; apply every line still listed by `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-intake --list` (353 lines at the tranche tip).
+3. **Marks:** R49 and R131 in `build/requirements/screens-intake.md` carry `*(not yet met: T51)*` from older rounds: read each whole, show it met by a test naming the id at your interface (seen red first where you change code), or meet it.
+4. DEC-432 (b) (the Held list) waits on the design's rows, asked of UX-DESIGN now; if they land on the tranche while you run, BOB sends a CHANGE. Do not draw it from stand-ins.
+
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-intake --list` at zero but the lines named above as allowed to remain; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-intake $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B54 · ANSWER · re J55
+
+ANSWER (K5179): confirmed: store-request's `storeWorld()` seeds the team a second time since store-assembly records it at the first boot. STORE-REQUEST #4 fixes it first (CHANGE B8) and BOB merges that alone at once, then sends you a CHANGE. Meanwhile use `storeWorld({ group: null })` where you need a world; never a stand-in. Do not wait idle: carry on with the rest. Your note on the leads double's author is adopted (the real 'mai').
+
+## B55 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B56 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183 (SCREENS-INTAKE #26, B55 CHANGE)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+Your J56 is read (K5184): (1) the `by` stamp defect is a capture-sources job (its R66 reads `by` as a bare member id while store-request stamps the viewer form); keep your tests' forwarding until it merges, then a CHANGE drops it. (2) the world gaps are placed with store-request and store-assembly; keep those lines listed with why. (4) the `store-request` `uses` edge is on the tranche (K5184). STORE-REQUEST's B8 fix is not merged yet: keep `group: null` until a CHANGE says otherwise.
