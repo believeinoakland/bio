@@ -2801,10 +2801,18 @@ const charsetOf = (type) => { const m = /;\s*charset\s*=\s*"?([^";\s]+)/i.exec(t
 function decodedTextOf(bytes, type, kind) {
   return decodeText(bytes, { declared: charsetOf(type), name: charsetOf(type), kind });
 }
-/* R2/R32 (fix round 5, E1): the bytes of a capture held in parts as text, when they decode with no NUL and within the tolerance. */
-function partsTextOf(bytes, type) {
-  const d = decodedTextOf(bytes, type, "text");
-  return d.ok && !d.text.includes("\0") && d.replaced_ratio <= REPLACED_TOLERANCE ? d : null;
+/* R49, R54 (fix round 10, K5195): the name an encoding it cannot decode is refused by: the charset the type declares, else the one the text
+   declares of itself (the XML prolog's `encoding`, an HTML `meta` charset, as `ooxml.decodeText` looks for it), else none. `ooxml.decodeText` echoes only the
+   `name` it is handed, so a refusal for the page's own declaration would otherwise name nothing. */
+function declaredNameOf(bytes, type, kind) {
+  const header = charsetOf(type);
+  if (header) return header;
+  if ((kind !== "xml" && kind !== "html") || !(bytes instanceof Uint8Array)) return null;
+  const head = new TextDecoder("windows-1252").decode(bytes.subarray(0, kind === "xml" ? 1024 : 4096));
+  const m = kind === "xml"
+    ? head.match(/^\s*<\?xml[^>]*?\bencoding\s*=\s*["']([^"']+)["']/i)
+    : head.match(/<meta\b[^>]*?\bcharset\s*=\s*["']?\s*([^\s"';>/]+)/i);
+  return m ? m[1] : null;
 }
 /* R49: what the reading states of its decode. */
 const encodingFacts = (d) => (d && d.ok ? { encoding: d.encoding, encoding_assumed: d.assumed === true,
@@ -2899,18 +2907,25 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   let textRead = !multipart && profile.profiled_from_text === true && bytes;
   /* the charset declared by the transport first (the header wins over the markup's own, H5), then the capture's and the profile's type */
   const declaredType = [headers["content-type"], ct, profile.source_content_type].find((t) => charsetOf(t)) || null;
-  let decoded = textRead ? decodedTextOf(bytes, declaredType, fmt === "xml" ? "xml" : fmt === "html" ? "html" : "text") : null;
+  const kindOfText = fmt === "xml" ? "xml" : fmt === "html" ? "html" : "text";
+  let decoded = textRead ? decodedTextOf(bytes, declaredType, kindOfText) : null;
   if (rangedTxt) { textRead = true; decoded = rangedTxt.decoded; }
+  /* R2/R32, R49 (fix round 10): a capture held in parts, its format still undetermined and its declared type a text type, is decoded as an upload is: by the one rule,
+     and what the rule says stands (an encoding it cannot decode is refused by name below; a replacement over the tolerance leaves the reading partial, counted).
+     Bytes that decode to text holding a NUL are no text (R2 R32's control), as before. */
+  if (!textRead && multipart && bytes && fmt === "undetermined" && TEXT_TYPE.test(profile.source_content_type || "")) {
+    const d = decodedTextOf(bytes, declaredType, "text");
+    if (!d.ok) decoded = d;
+    else if (!d.text.includes("\0")) { textRead = true; decoded = d; }
+  }
   /* R49, R54: an encoding the rule cannot decode is stated by its name, never read as replacement characters */
-  if (decoded && !decoded.ok)
-    return early(failed(doc, null, localize("reading-pipeline.index.encoding_unsupported", "the text declares the encoding {name}, which is not read here, so nothing was read", { name: String(decoded.name) }),
-                        { failure: FAILURE_FINAL, reason: "ENCODING_UNSUPPORTED", name: decoded.name }));
+  if (decoded && !decoded.ok) {
+    const name = decoded.name ?? declaredNameOf(bytes, declaredType, kindOfText);
+    return early(failed(doc, null, localize("reading-pipeline.index.encoding_unsupported", "the text declares the encoding {name}, which is not read here, so nothing was read", { name: String(name) }),
+                        { failure: FAILURE_FINAL, reason: "ENCODING_UNSUPPORTED", name }));
+  }
   let text = decoded ? decoded.text : "";
   if (piecesOn) await breathe(text.length);
-  if (!textRead && multipart && bytes && fmt === "undetermined" && TEXT_TYPE.test(profile.source_content_type || "")) {
-    const d = partsTextOf(bytes, declaredType);
-    if (d !== null) { textRead = true; text = d.text; decoded = d; }
-  }
   /* R40: a later piece of a text is its units alone, drawn from the bytes now held. It runs before any recogniser: the
      reading is the first piece's, and the text is not classified again for each piece. */
   if (piecesOn && pieceAsk.cursor !== null && bytes && textRead) {
