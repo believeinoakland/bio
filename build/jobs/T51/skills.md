@@ -131,3 +131,22 @@ Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 16, module lines 2913
 
 B6 done (pushed): merged tranche/T51; the word conversion reads the canon's asked by <handle> as the row's words (DEC-372), controls that another changed word in the clause still fails. Skills tests 133/133; format, architecture, words, ownership 0 failures. Walk not run.
 Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 16, module lines 2913
+
+## Completion (fix round 10, K5195; plan item 95)
+
+- **Entry applied: the two fixture lines of `pack.test.mjs:152`** (verify-marks row `skills`, the one fixture line of this module). The code `MACHINE_CANNOT_MOVED` is held by no source: the test makes it up to prove R3's pass-through (the pack carries whatever the plane publishes, unchanged). No module answers it, so it is an input, not a provider's answer. Marked `fixtures-own: input` on the line; no real code exists for it, and none was invented.
+- **Code change:** none beyond the marker. No test was added or altered, so there is no failing-first red step to record; the module tests were green before and after.
+- **Deferred:** none.
+- **Found in other modules:** none. The words check's 16 failures are in other modules (store-assembly and others), none in `skills`.
+- **Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/skills/*.test.mjs`: tests 133, pass 133, fail 0.
+- **Checks** (product root `/home/user/bio`):
+  - `checks/fixtures.mjs /home/user/bio skills --list`: 2 accepted(own), 0 failures (the two `pack.test.mjs:152` lines).
+  - `checks/format.mjs`: 178 modules, 0 failures.
+  - `checks/architecture.mjs bio skills`: 20 product files, 0 failures.
+  - `checks/coverage.mjs bio skills`: 51 of 51 live ids named by a test, 0 failures.
+  - `checks/ownership.mjs bio skills <merge-base> HEAD`: 1 file changed by skills, 0 failures.
+  - `checks/run.mjs bio` (words): 16 failures, none in `skills`.
+  - `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178; affected test files 0 of 2981.
+- **Branch:** merged `origin/tranche/T51` into `job/T51/skills` (merge, not rebase) before START.
+
+Size (session_01QXJwufFsGsNaqYS3jMjRJe): test runs 1, module lines 2913
