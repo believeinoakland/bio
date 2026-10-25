@@ -50,6 +50,7 @@ export function extractionNotice() {
  *  follow: `partial` with R90's figures); `unknown` is a digest nothing holds (`none`). `answer` is the answer for all four, as the module gives it. */
 export async function progressOf() {
   const { generate } = await import("../../pdfgen.mjs");
+  // fixtures-contract: plane job-registrar
   const { jobRegistrarStub } = await import("../../job-registrar-stub.mjs");
   const g = generate({ kind: "pdf", seed: "progress", fonts: ["type0"], size: { pages: 30, lines: 1 }, kinds: ["scan"] });
   const scan = await held(await g.bytes(), { ct: "application/pdf", format: "pdf", fromText: false });
