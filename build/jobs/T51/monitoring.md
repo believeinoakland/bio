@@ -276,3 +276,7 @@ COMPLETE for T51 monitoring, fix round 10 (START B15, plan item 92, K5186), sess
 **Checks** (absolute root, from `/home/user/civicos-process`): format 178 modules, 0 failures; architecture monitoring 26 files, 135 imports, 0 failures; coverage 67 of 67, 0 failures; words monitoring 0 failures (the new ids `monitoring.index.copy_hop_asserts`, `monitoring.index.copy_hop_evidence` are not in `rows.mjs` yet, regenerated at the layer close); fixtures `--list` monitoring: 0 failures, accepted 11, no new marker; ownership (merge-base to HEAD) 3 files, 0 failures.
 
 Size (session_01YbVRaWcH7WiJvTG3xdtHxz): test runs 8, module lines 4260
+
+## J14 · COMPLETE
+
+COMPLETE: monitoring R80 met (J13 in my record). The copy's entry now carries a one-hop provenance_chain and acquisition's profileOf profile (index.mjs #copyProfile, #withCopyEntry). Module 179/179, users green, checks 0. REPORT: control-plane walk-monitoring-checknow-adopt.test.mjs now gets the notice graded (newer_capture_matched, affected) but fails on its own predicate (n.notice || n.id): versionnotice entries carry no such key; details in J13.
