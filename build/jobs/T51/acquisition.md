@@ -839,3 +839,13 @@ Size (session_01JjkV7W74Hx4TPxHQN3nSf6): test runs 12, module lines 4479
 ## J49 · COMPLETE
 
 R123 met (see J48): every HTML capture files its page's own links with no fetching. Tests member-links.test.mjs red then green; acquisition 359 pass. Door case for control-plane to place (K5138). control-plane suite has 7 failures in credentials/money-ingest, unrelated, not compared with the tranche tip.
+
+## J50 · REPORT
+
+The fixtures check (`checks/run.mjs /home/user/bio`) reports 16 FAIL lines in files outside acquisition's paths and tests. None is in acquisition's paths; my change is a comment on one test line, so none comes from this job:
+
+- screens-publish: `finding.test.mjs:75` (op-table publishedcase), `fr30.test.mjs:147` (op-table publishpreflight), `fr30b.test.mjs:354` and `:399` (op-table casedetailspublic); each answers from a module that comes earlier.
+- control-plane: `r8-words-cache.test.mjs:166` (code; reads a `wizardrefusaltally` call).
+- plane, stand-ins of acquisition's `owedRun` and `owedFetch`: `fix4b-r77.test.mjs:144,160,197`, `fix5-r77.test.mjs:115`, `fix6-pending.test.mjs:31,84`, `r9-jobs.test.mjs:151,574,671`. These name acquisition as the earlier module; acquisition's own fixtures are accepted.
+
+I did not trace the 16 further than their lines. Owners to place them: screens-publish, control-plane and plane.
