@@ -212,18 +212,17 @@ test("R43 (R23): attribution-unchosen names the case and the observation by its 
 });
 
 test("R43 (R30): docket-core-due reads the item's own sentence by its kind and .detail.tail, and .summary.edition only when an edition is stated; a kind the list holds no `what` for is raised with an empty fill", () => {
-  /* docket's real response item (its published fixture) beside two kinds it does not publish: a statement stated with no edition, and a kind this module has no `what` for */
+  /* docket's real response item (its published fixture) beside a kind it does not publish, a kind this module has no `what` for */
   const CD = DOCKET.case, R = DOCKET.due.items[0];
-  const w = busy({ docket: { coreDue: () => ({ ok: true, count: 3, wrote: false, items: [
+  // fixtures-own: synthetic a kind docket never publishes, the test's own control that a kind this module has no `what` for is raised with an empty fill
+  const w = busy({ docket: { coreDue: () => ({ ok: true, count: 2, wrote: false, items: [
     R,
-    { case: CD, kind: "statement", ref: "S-1", since: iso(NOW - DAY) },
     { case: CD, kind: "novel", ref: "N-1", since: iso(NOW - DAY) }] }) } });
   const m = byId(w.read("alice"));
   const D = (k) => `${K("docket-core-due")}.${k}`, tail = word(D("detail.tail"));
-  const a = m[`OBLIGATION::docket-core-due::${CD}::response::${R.ref}`], b = m[`OBLIGATION::docket-core-due::${CD}::statement::S-1`], c = m[`OBLIGATION::docket-core-due::${CD}::novel::N-1`];
+  const a = m[`OBLIGATION::docket-core-due::${CD}::response::${R.ref}`], c = m[`OBLIGATION::docket-core-due::${CD}::novel::N-1`];
   assert.equal(a.summary, word(D("summary.edition"), { case: CD, what: word(D("what.response")), edition: R.edition }));
-  assert.equal(b.summary, word(D("summary"), { case: CD, what: word(D("what.statement")) }), "no edition stated: the base sentence");
-  assert.equal(b.detail, `${word(D("detail.statement"))} ${tail}`);
+  assert.equal(a.detail, `${word(D("detail.response"))} ${tail}`);
   assert.equal(c.summary, said(D("summary"), { case: CD, what: "" }), "an unknown kind: the fill left empty, the item still raised");
   assert.equal(c.detail, tail);
 });
