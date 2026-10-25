@@ -981,3 +981,7 @@ control-plane fix round 10 wave A batch 1 complete and pushed: ask-wire, unknown
 declared-ops.test.mjs (R116, R112) now reads interfacewords' declaration from translations' `DECLARED_OPS` (no hand row; asserts control-plane's owner map holds none). Merged `tranche/T51`. Ran the six interfacewords files (t37-door, r8-words-door, r9-words-no-language, declared-ops, r8-words-cache, t51-interfacewords): 36 pass, 0 fail; whole suite: 683 pass, 0 fail. The 70 own lines wait for store-request.
 
 Size (session_019S55YpubfG7GsCPNPQm4VN): test runs 12, module lines unchanged
+
+## J58 · COMPLETE · re B86
+
+B86 done and pushed: declared-ops.test.mjs reads interfacewords from translations' DECLARED_OPS; the six interfacewords files 36/36, whole suite 683/683.
