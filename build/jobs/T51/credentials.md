@@ -232,3 +232,23 @@ COMPLETE · fix round 3 (B9), CREDENTIALS #25. Commits on `job/T51/credentials`;
 - `checks/architecture.mjs credentials`: 30 product files; 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named by a test; 0 failures. `checks/words.mjs credentials`: 0 failures. `checks/ownership.mjs credentials tranche/T51 job/T51/credentials`: 4 files changed; 0 failures.
 
 Size (session_019Weuk3yVSt11Vsjp9xvR7M): test runs 5, module lines 2708
+
+## J13 · Fix round 10, wave A batch 1 (B11), CREDENTIALS #26
+
+**Cause done: R24 (a), requirement R65 (fix round 10 amendment).**
+- Root cause: `session()` ended every foreground read in `UPDATE sessions SET last_active=?` (`credentials/index.mjs`, the line after `#stateOf`), a write hop on every request. Tests missed it: `r9-bookkeeping` and record-core `r8-bookkeeping` count the write counter of a read, none counts statements; `t47-signin.test.mjs` sets `last_active` by hand.
+- Built: `ACTIVITY_GRAIN_MS` (60 s, exported); a not-background read writes `last_active` only when the stored value is older than the grain or none is recorded. Locked sessions and background reads write nothing, as before. Every limit is still judged from the stored value, so an idle ending moves by at most one minute.
+- Failing-first, seen red (50 rows changed for 50 reads): `r10-session-write.test.mjs` (R65): fifty reads of a session one second old change at most 1 row; controls: background changes 0, a read past the grain changes 1 and stores now, a session idle past `sharedIdle` still ends. All 187 module tests green after.
+- Platform check (for the redeploy, not run: I never contact a live deployment): alternate foreground and `background=1` `whoami` on biosmoke8, 90 each (`diagnosis-R10-d.md` §6): foreground p50 about 66 ms, no hop over 500 ms; measure on a quiet copy.
+
+**Fixtures published** in `bio-plane/test/m/credentials/fixtures.mjs`, each called by `r10-fixtures.test.mjs`:
+- `bootstrapVersions({storeVersion, version, memberVersions, claimed, fp})`: the real `bootstrap` arm of `credentialsOps` over a real (claimed by `claim`) world; `storeVersion: null` is a store whose environment names none (the arm answers `null`). `ok`, `version` and `memberVersions` are the public door's (`instance-setup` `bootstrapReport`), passed through as given, not made by this module. **Found, for BOB:** installer R66's lag cases "store version absent" (an older store without the key), SILENT, MISNAMED, UNBOUND and a missing member are not states this module's code can produce: the first is a store on older code, the rest are `instance-setup`'s fleet reports. Those need an `instance-setup` provider fixture (its `bootstrapReport`/`memberVersions`), or K5044's exemption of the fake network.
+- `securityMapRefusal()`: `{notAnAdmin, invalidPeriod}`, the real `securityMap` refusals.
+
+**Fixture lines not done (8, FIX-E):** seam.test.mjs:153,156,175 and fixture.mjs:37,48,55,57,58 (providers member-roster, record-core); they arrive as a CHANGE. `fixtures.mjs --list`: 8 failures, all those. **Markers added:** no `fixtures-own` and no `fixtures-generic`.
+
+**Deferred:** nothing. **Found in other modules:** the above only.
+
+**Tests and checks:** module `node --test` 187 + 2 new: pass, fail 0. `format` 0 failures; `architecture credentials` 0; `coverage credentials` 58 of 58; `words credentials` 0; `ownership credentials tranche/T51` 0. `impact.mjs origin/tranche/T51 HEAD` names 105 modules (the shared `index.mjs`); the users that name `last_active` or the session limits (record-core r8-bookkeeping, instance-setup t51, store-door routes) and control-plane and admission were run: see COMPLETE.
+
+Size (session_015BgLFhXk6KZEKYCGLb1LEg): test runs 6, module lines 2714
