@@ -4,13 +4,14 @@ import "../../sandbox.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { storeWorld } from "./fixtures.mjs";
-import { innerRequest } from "../../../src/store-request/index.mjs";
+import { innerRequest, TRANSLATION_ACTS as ACTS } from "../../../src/store-request/index.mjs";
 
-const ACTS = ["translationdraft", "translationgrant", "translationadopt", "translationconfirm", "translationrevert", "translationmark"];
+import { OPS } from "../../../src/op-declarations/index.mjs";
 const Q = (r) => new URL(r.url).searchParams;
 
 test("R7: the translation acts carry `by` and `translations` carries `viewer` as the session's member id, a forged one dropped; a non-session caller carries `class:<cls>`", async () => {
   const w = await storeWorld();
+  assert.ok(ACTS.length === 6 && ACTS.every((op) => Object.hasOwn(OPS, op)), "each is a declared op");
   const bea = await w.signIn("bea", { admin: true });
   const founder = await w.signIn("admin");
   for (const as of [bea, founder]) {

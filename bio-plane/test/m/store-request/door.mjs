@@ -46,16 +46,15 @@ import { CONNECTIONS_OPS, connectionsOp } from "../../../src/connections/ops.mjs
 import { ratificationOp } from "../../../src/ratification/ops.mjs";
 import { askOp, actionDraftOp, ACTION_DRAFT_OPS, askOnObject, draftOnObject } from "../../../src/store-assembly/index.mjs";
 import { innerRequest } from "../../../src/store-request/index.mjs";
+import { agentPackOp, airunDispatchOp, draftCheckOp, TEXT_CHECK, READ_TRANSLATE } from "../../../src/store-request/door-ops.mjs";
+import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
+import { mintTrace, memberRefOf } from "../../../src/signin-door/index.mjs";
 import { evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
 
 /** R17: the address a page's relative request is read against. */
 export const WORLD_ORIGIN = "https://group.example";
 /** R20: the declared ops the world's door cannot answer, each with its cause; closed (R20's test fails on any other). */
 export const WORLD_UNREACHED = Object.freeze({
-  agentpack: "control-plane's door renders the pack (`packOf`) from the affordances arm's answer; a later module",
-  airundispatch: "control-plane's door calls the object's `dispatchMemberRun` RPC, plane's Store method; no earlier module exports it",
-  textcheck: "control-plane's door shapes the draft (`draft.mjs` `checkedDraft`); a later module",
-  readtranslate: "control-plane's door shapes the draft (`draft.mjs` `checkedDraft`); a later module",
 });
 /* control-plane R2, R53, R56, R63, R66: the names a table may hold that the real door answers as an op with no spec */
 const NOT_ROUTED = Object.freeze(["assistantset", "securitycount", "translationdraftrecord", "groupswitchset", "accountswitchset"]);
@@ -93,6 +92,12 @@ function stubOf(world) {
     fetch: (input, init) => world.store.dispatch(input instanceof Request && init === undefined ? input : new Request(input, init)),
     ask: (args) => askOnObject(world.ctx, world.env, args || {}),
     draft: (args) => draftOnObject(world.ctx, world.env, args || {}, { read: (op, params) => world.store.read(op, params) }),
+    dispatchMemberRun: (args) => {
+      const a = args && typeof args === "object" ? args : {}, asked = {};
+      for (const k of ["run", "by", "viewer", "at"]) if (a[k] !== undefined) asked[k] = a[k];
+      for (const k of ["trace", "memberRef"]) if (typeof a[k] === "string" && a[k] !== "") asked[k] = a[k];
+      return aiRunsOf(world.ctx, world.env).dispatchMemberRun(asked);
+    },
     groupFields: (args) => publicReadOf(world.ctx).groupFields(args && args.project ? { project: args.project } : {}),
   };
 }
@@ -257,6 +262,20 @@ async function answer(world, stub, env, page) {
                                  aiCred, storeName, stub });
   if (armed) return armed;
 
+  /* store-request R26–R28: the four ops the door shapes itself, through this module's functions (the hooks and stubs are the world's) */
+  if (op === "agentpack")
+    return agentPackOp({ url, headers: req.headers, gatedOp: (a) => gatedArm(a), stamps: { env, cls, viaSession, sessMember, sessViewer, sessIdentity,
+      sessRights, sessCaps, aiCred, aiViewer: cls === "ai" ? callerViewer(caller, { carry: false }) : undefined, storeName, stub,
+      grantMember: aiCred?.grant ? aiCred.principal : undefined } });
+  if (op === "airundispatch" || op === TEXT_CHECK || op === READ_TRANSLATE) {
+    const trace = viaSession ? mintTrace() : undefined;
+    const memberRef = viaSession ? await memberRefOf(env, actor) ?? undefined : undefined;
+    if (op === "airundispatch")
+      return airunDispatchOp({ stub, reqBody, who: actor, at: new Date(world.now()).toISOString(), trace, memberRef, storeName, cls });
+    return draftCheckOp({ op, stub, viaSession, sessMember, session: credential.token, reqBody, trace, memberRef, by: actor, viewer: sessViewer,
+      store: stored, storeName, cls });
+  }
+
   /* control-plane's own steps around the forward that the world re-makes: a credential's mint and a grant's secret */
   const isUpload = op === "captureupload" || op === "captureuploadpart";
   const length = /^\d+$/.test(page.headers.get("content-length") || "") ? Number(page.headers.get("content-length"))
@@ -405,7 +424,7 @@ async function publicAnswer({ world, stub, env, page, op, req, reqBody, credenti
 /** R20: whether the world's door answers `op` through an arm or function of its own (class (b)); a store route is class (a). */
 export function worldAnswers(op) {
   return ["whoami", "subscriptionsignin", "signintrace", "subscriptiondisconnect", "ask", "affordances", "registeraudit", "attest",
-          "monitor", "pagetranscribe", "claim", "login", "recover", "passwordresetlook", "passwordreset", "invitelook", "enroll",
+          "monitor", "pagetranscribe", "agentpack", "airundispatch", TEXT_CHECK, READ_TRANSLATE, "claim", "login", "recover", "passwordresetlook", "passwordreset", "invitelook", "enroll",
           "grouplanguages", "websiteinvite", "joinlinkinvite", "groupdescription", "handlecheck", "bootstrap",
           /* capture's arm (`capture`, `links`), ratification's (`ratify`), public-read's public arm (`publishedbytes`, `credit`) */
           "capture", "links", "ratify", "publishedbytes", "credit",
