@@ -393,3 +393,16 @@ Size (session_01GJy1fny8QM6KzhgqNmKu8v): test runs 3, module lines 4054
 - Product code unchanged, so `impact.mjs` was not needed.
 
 Size (session_016UGXAT7b4bSBYAh8LnmNAf): test runs 5, module lines 0 (the new test file is 89 lines)
+
+## J22 · COMPLETE
+
+**CHANGE B20 done.** The walker-case test is removed from this branch (commit "ratification: remove the walker-case test", pushed); CONTROL-PLANE #60 adopts it with the red-then-green evidence from J21. No product or test change is left in ratification.
+
+**Correction to J21.** I reported architecture at 0 failures, but the test file was already in the tree when I ran it. Re-run with the file present: 2 failures (imports of `screens-publish/parts.mjs` and control-plane's `r8-kit.mjs`), as B20 said. The file is gone now.
+
+**Checks, after removal** (absolute root `/home/user/bio`):
+- `checks/architecture.mjs ratification`: 0 failures (46 product files, 248 relative imports).
+- `checks/ownership.mjs ratification tranche/T51`: 0 failures (1 file changed by ratification, the job record).
+- `checks/format.mjs`: 0 failures (178 modules). `checks/coverage.mjs ratification`: 59 of 59 live ids named, 0 failures. `checks/words.mjs ratification`: 0 failures.
+
+Size (session_016UGXAT7b4bSBYAh8LnmNAf): test runs 5, module lines 0
