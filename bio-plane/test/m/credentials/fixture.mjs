@@ -43,14 +43,14 @@ function coreWithDeclared(db) {
 /* The seal secret the composition root hands in (R23, R29); a test world binds one unless told not to. */
 export const SEAL = "test-seal-secret-0123456789";
 
-export function world({ sealSecret = SEAL } = {}) {
+export function world({ sealSecret = SEAL, now = null } = {}) {
   const db = new DatabaseSync(":memory:");
   const core = coreWithDeclared(db);
   const sql = sqlOver(db);
   const ctx = { storage: { sql } };
   const m = membershipOf(ctx, { record: core });
   m.migrate();
-  const c = credentialsOf(ctx, { record: core, membership: m, sealSecret });
+  const c = credentialsOf(ctx, { record: core, membership: m, sealSecret, now });
   if (credentialsOf(ctx) !== c) throw new Error("credentialsOf answers one instance per storage");
   c.migrate();
   const w = {
