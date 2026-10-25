@@ -266,3 +266,7 @@ Mail with `--module queue-producers`; record `build/jobs/T51/queue-producers.md`
 ## B17 · RESUME
 
 RESUME (BOB #296, §5.3 (5)): QUEUE-PRODUCERS #28 never confirmed its start (its local branch held a stray commit; its reset was refused), so it is archived and you are QUEUE-PRODUCERS #29. Your session's clone is fresh: follow B16's FIRST block (never `reset --hard`; rename a differing local branch), `mail start`, then do B16's cause.
+
+## B18 · CHANGE
+
+CHANGE (K5157; plan item 75): merge origin/tranche/T51 into your branch, then add one cause: queue-producers R54 (new; `diag2-03b.md` §6): a participant's request to leave a project (membership R35's state `leaving`) is an item for that project's owners, as a join request is (R42, `#obligationsProjectRequest`), naming the participant and any note; it leaves when an owner removes the participant or the participant withdraws (rejoins). Words at use as `localize`. Test at your interface over membership's published fixture: a `leaving` participant gives one item to each owner and none to others; control: after removal or withdrawal no item; a hidden project names nothing to a non-owner. Name R54 met in your COMPLETE.
