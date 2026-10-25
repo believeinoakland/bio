@@ -1,6 +1,6 @@
 # Walk record, sitting 5: Vouch; the people, organizations and ties the documents name
 
-**Walker:** WALK-FINAL-05 #1, offline (Phase 1), on `prep/final-05-vouch` merged with `tranche/T51` at `be71d70e3f` or later (PHASE1-NOW.md). Script: `scripts/05-vouch.test.mjs` (run from `bio-plane/`: `node --import ./test/platform-sqlite.mjs --test ../build/plan/walk-T51-final/scripts/05-vouch.test.mjs`; about 40 s; run three times, the same 81 verdicts each time). It writes the table below as `05-vouch.rows.md` while it runs.
+**Walker:** WALK-FINAL-05 #1, offline (Phase 1), on `prep/final-05-vouch` merged with `tranche/T51` at `be71d70e3f` or later (PHASE1-NOW.md). Script: `scripts/05-vouch.test.mjs` (run from `bio-plane/`: `node --import ./test/platform-sqlite.mjs --test ../build/plan/walk-T51-final/scripts/05-vouch.test.mjs`; about 40 s; the last two runs, with all 81 rows, gave the same 81 verdicts). It writes the table below as `05-vouch.rows.md` while it runs.
 
 ## Counts
 
@@ -38,7 +38,7 @@ Every input was made by the acts a member's screen presses, through the real Wor
 
 ## Leftovers
 
-Everything is in the Miniflare copy, which is discarded at the end of the run: the room, three members and Zoe, one project (plus Ana's hidden one and the founder's), fourteen documents, 27 registered subjects, one signing key (Zoe's, for the vouch-cite-sign chain, made on purpose), one signed case in the copy. No live deployment was contacted. An early exploratory run of mine pressed `retire` on a fixture in the throwaway copy; the final script does not.
+Everything is in the Miniflare copy, which is discarded at the end of the run: the room, three members and Zoe, one project (plus Ana's hidden one and the founder's), a few dozen documents and registered subjects, one signing key (Zoe's, for the vouch-cite-sign chain, made on purpose), one signed case in the copy. No live deployment was contacted. An early exploratory run of mine pressed `retire` on a fixture in the throwaway copy; the final script does not.
 
 ## Rows
 
