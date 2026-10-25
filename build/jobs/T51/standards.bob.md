@@ -1,6 +1,6 @@
 # BOB to standards (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -98,3 +98,17 @@ Cause: `op=standardinforce` (`bio-plane/src/standards/index.mjs:1186-1191`, `s.i
 Fix: where the state rests on an R50 record, R20's `inForceAt` answer and R7's alias carry `known_through: {through, source: {captureSha, extent}, by}` beside `why` (unchanged). Failing-first test at your interface (an R50 record made by the real act, then `standardinforce`), red on today's answer; a control: a state resting on no R50 record carries no `known_through`. Publish it in your `fixtures.mjs` by the real code so screens-investigate takes it from there. Run your users (`node build/plan/impact.mjs tranche/T51 HEAD`): conformance, filings, action-plans, affordances, control-plane, plane, screens-investigate.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio standards --list` at zero but the lines named above as allowed to remain; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio standards $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B7 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B8 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+Your J6 is read (K5184). The conformance `t36.test.mjs:58` expectation was fixed by BOB (test only, K5182): no REPORT needed. The screens-investigate money/period red goes to screens-investigate's own job. Finish your users' runs (control-plane and plane on the tranche as it stands), the Size line, then COMPLETE.

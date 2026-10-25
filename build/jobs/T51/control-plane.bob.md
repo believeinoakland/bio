@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J63
+**Read** · handled J64
 
 ## B1 · START
 
@@ -1948,3 +1948,21 @@ RESUME (K5180) for CONTROL-PLANE #63. CONTROL-PLANE #62's J63 work (R136, R137, 
 3. **Reds you named:** `walk-monitoring-checknow-adopt` (monitoring R79's copy entry lacks `provenance_chain`; extraction reads a text/plain copy as `final`): REPORT each with file:line in the owning module the day you confirm it (BOB starts those jobs); money R105 G61/G63 in `t51-round7-seam` (BINDING_UNREADABLE, MONEY_BAD_PERIOD, red before your change): find the cause (file:line) and REPORT or fix it if yours; `r9-seam` §14 and `r10-caseratify-chain` stay red by name until their quoting jobs and ADMISSION #20 merge.
 4. **Your own fixture lines** (68 in `checks/fixtures.mjs /home/user/bio control-plane --list`, all in older tests): to zero (re-point to providers' published fixtures or `storeWorld()`; markers listed in COMPLETE).
 5. `owner-ops.mjs` is deleted once PLANE #62 merges (BOB sends a CHANGE then); leave it until then.
+
+## B96 · CHANGE
+
+CHANGE (K5182): admission is merged (ADMISSION #20 J7, R33: the session read and the `reauthdue` question are issued together). Merge `origin/tranche/T51` into your branch. Its record says `r10-caseratify-chain.test.mjs` should read one hop less (14 to 13). Ratification R60's bar is 11 (K5084: ratification 6, control-plane's session+reauthdue one hop, public-read 4). Within B94/B95: run the chain test after the merge and state the count; for each hop above 11, name its call and the module that owns it (file:line) in your COMPLETE, fixing those in your paths; one outside them is a REPORT the same day. Admission's offered alternative (one store route `sessionreauth` answering `{session, due}`, store-door) is not ordered unless your count shows the pair is still two hops.
+
+## B97 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B98 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **CONTROL-PLANE #63 (B95): saved at K5183** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+Your J64 is read (K5184). R138 stands as you wrote it (BOB's, K2008: the secret doors are innerRequest's; a recipient's review request narrowed to the arm's keys); BOB writes its line at your merge from your record. J64 (1) is a CHANGE to store-request (innerRequest drops body `secret` and the caller's stamps); keep your pre-strip until that merges, then a CHANGE asks you to delete it. J64 (2) (monitoring R79's copy entry) and (3) (text/plain `final`) are placed with their owners; `walk-monitoring-checknow-adopt` stays red by name until monitoring's job merges. B96 is your step (1).

@@ -1,20 +1,15 @@
 /* screens-publish, T51 fix round 4 (K4429), the seam tests: the page's own act into the real merged provider, no scripted double of it.
  * C28 (R9): "Hand it over" through the page into the real doorbell, and the Inbox list the real doorbell answers. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, press, choose, until, last, ok } from "./fixtures.mjs";
 import { fresh, bucket } from "../doorbell/fixture.mjs";
+import { planeHelpers } from "../answer-envelope/fixtures.mjs";
 import { doorbellOps } from "../../../src/doorbell/index.mjs";
 import { knockOp } from "../../../src/doorbell/door.mjs";
 
-const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
-const doAnswer = async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
-  return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined }; };
-const helpers = { json, requiredArgument: (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }),
-  storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502), doAnswer };
+const { json, doAnswer } = planeHelpers;
+const helpers = planeHelpers; // answer-envelope's published helpers, as the plane binds them (fixtures-run by their provider)
 
 /* the real doorbell behind the page's `knock`: the control plane's own door handler over the module's store routes */
 function doorbell() {

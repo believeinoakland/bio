@@ -139,7 +139,7 @@ export const SCREEN_KEYS = Object.freeze({
   ]),
   published: Object.freeze([
     "screen.document.passage.where", "screen.question.leg.paragraph",
-    "refusal.NO_SUCH_CASE", "refusal.NO_PUBLISHED_EDITION",
+    "refusal.NO_SUCH_CASE", "refusal.NO_PUBLISHED_EDITION", "refusal.NOT_RECORDED", "refusal.TOO_LARGE", "screen.published.this_edition_carries_only_the",
     "screen.case-editor.details.name.area", "screen.case-editor.details.name.contact", "screen.case-editor.details.name.related", "screen.case-editor.details.name.relationships",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.published.name", "screen.published.purpose",
     "screen.published.casefile.being_prepared", "screen.published.casefile.retrying", "screen.published.casefile.stopped", "screen.published.casefile.waiting_on_members",
@@ -180,7 +180,7 @@ export const SCREEN_KEYS = Object.freeze({
   imported: Object.freeze([
     "refusal.IMPORT_ACCEPT_NO_REASON", "refusal.IMPORT_NOTHING_ACCEPTED",
     "act.writinghelp.label.imported", "act.writinghelp.does", "screen.start-send.draft.machine", "refusal.IMPORTED_NOT_ACCEPTED",
-    "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.imported.name", "screen.imported.purpose",
+    "screen.published.finding", "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.imported.name", "screen.imported.purpose",
     "act.caseimport.label.imported", "act.caseimport.does", "act.importaccept.label.imported",
     "act.importaccept.does", "act.importflag.label.imported", "act.importflag.does", "act.importwatch.label.imported",
     "act.importwatch.does", "screen.imported.accept", "screen.imported.checked.label",

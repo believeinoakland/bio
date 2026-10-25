@@ -2,9 +2,6 @@
  * pre-flight carries `tieAttested: true` (as `caseratify` will), so the signing check is reached and the publishing time offered;
  * before the attestation it does not, and the not-reached sentence stands. The fake plane answers as case-authoring does: with no
  * `tieAttested` the signing check is not reached (`publish_at: null`). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { PUBLISH_AT_NOT_REACHED_SENTENCE } from "../../../src/case-authoring/index.mjs";

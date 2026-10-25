@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J63
+**Read** · handled J65
 
 ## B1 · START
 
@@ -1248,3 +1248,17 @@ RESUME (K5179): the oversized `build/plan/audit-r10.md` was split on the tranche
 ## B97 · CHANGE
 
 CHANGE (K5180; CONTROL-PLANE #62 J63, items 42, 69): 'alarm_at was null while a firing was in progress' is workerd's behaviour (getAlarm() answers null while alarm() runs), not a product defect; control-plane fixed its test to read the alarm the way the platform states it. Your `r8-headofline.test.mjs:124` fails identically: fix it the same way (read control-plane's change in `bio-plane/test/m/control-plane/` on the tranche), seen red then green, beside your Wave B.
+
+## B98 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
+
+## B99 · RESUME
+
+RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Record (PLANE #62 ...) STATE AT HAND-OFF** and **Saved at K5183 (PLANE #62)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+Your J64 REPORT is read and placed (K5184): A1, A2 (the following and answer-envelope walks point at `store-assembly/register.mjs`) are BOB's test-only edits after your merge; A3 is the round-end regeneration; B4-B7 (the `DECLARED_OPS` rename, store-assembly's twins of t42/t46, `r10-fixtures-run.test.mjs` and the users' `fixtures-contract: store-assembly <id>` markers, `r9-jobs.test.mjs:313`) are a store-assembly job started when you merge. Keep t42/t46 re-pointed as you have them. B97 and B95 are in your saved steps.

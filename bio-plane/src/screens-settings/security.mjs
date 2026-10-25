@@ -136,8 +136,10 @@ export const security = {
       acts: (t) => cs.act("securitytooltest", { data: { tool: t.tool_id } }) + cs.act("securitytoolremove", { data: { tool: t.tool_id } }),
     }), { empty: S + "tools.none" })));
 
-    // what happened to them
-    if (!data.events || data.events.state !== "empty") out.push(cs.sec(S + "events.heading", cs.state(data.events, (v) => `<ul class="mk-list">${(v.events || []).map((e) => `<li>${W(S + "event." + (["added", "test_passed", "test_failed", "removed", "switched_off"].indexOf(e.event) >= 0 ? e.event : "added"), { tool: e.tool_id })} · ${cs.date(e.at, { year: true })}${e.reason ? ` · <span class="rec">${E(e.reason)}</span>` : ""}</li>`).join("")}</ul>`, { empty: S + "events.none" })));
+    // what happened to them: a tool is named here as in its row, by its provider's display name; its id carries its provider's slug, so it is never drawn
+    const heldTools = data.tools && data.tools.state === "ok" && data.tools.value && Array.isArray(data.tools.value.tools) ? data.tools.value.tools : [];
+    const eventTool = (id) => { const t = heldTools.find((x) => x.tool_id === id), c = t && known.find((x) => x.provider_id === t.provider_id); return c && (c.vendor || c.product) ? [c.vendor, c.product].filter(Boolean).join(" · ") : T(S + "col.tool"); };
+    if (!data.events || data.events.state !== "empty") out.push(cs.sec(S + "events.heading", cs.state(data.events, (v) => `<ul class="mk-list">${(v.events || []).map((e) => `<li>${W(S + "event." + (["added", "test_passed", "test_failed", "removed", "switched_off"].indexOf(e.event) >= 0 ? e.event : "added"), { tool: eventTool(e.tool_id) })} · ${cs.date(e.at, { year: true })}${e.reason ? ` · <span class="rec">${E(e.reason)}</span>` : ""}</li>`).join("")}</ul>`, { empty: S + "events.none" })));
 
     // the catalogue: each entry's panel says what the tool is sent and keeps, then asks what its config lists
     if (!data.catalogue || data.catalogue.state !== "empty") out.push(`<details class="mk-details" data-fold="add"><summary>${W(S + "add.fold")}</summary>${cs.sec(S + "catalogue.heading", cs.state(data.catalogue, (v) => cs.rows({
