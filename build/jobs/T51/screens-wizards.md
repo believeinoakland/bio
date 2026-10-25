@@ -151,3 +151,7 @@ Written, not yet run: the store cannot import until OP-GRADES #30 merges (`DECLA
 - `bio-plane/test/m/screens-wizards/t51.test.mjs` (end): "R7 R11 a script the row says is required is drawn Recommended on its screen…": on `ceremony` and `members`, every `wizardsat` row carries a boolean `required`; the opened chip lists each row, and `wizard.mark.recommended` is drawn exactly for the rows with `required: true`; a control script of the member's is not marked; the ceremony offers a required script.
 - Module code unchanged: `guide.mjs:476` already reads `s.required === true` and `:491` draws the mark (T48-70); it never infers. The red-before is therefore shown by mutation after the CHANGE (the guide made to ignore the row), not by a missing field.
 Next: after OP-GRADES' CHANGE, merge `tranche/T51`, run the module, do the mutation red, run the done checks, COMPLETE.
+
+## J8 · REPORT
+
+REPORT · SCREENS-WIZARDS #8 · R7/R11 required-mark test and the dead group:null are written and pushed (8f906b432b). Module code needs no change: guide.mjs:476 reads the row's required, :491 draws wizard.mark.recommended. Not yet run: every store import fails DECLARED_OP_DISAGREES until OP-GRADES #30 merges (t48.test.mjs fails at import, 1 of 1). I wait for your CHANGE, then run green, show the red by mutation (the guide made to ignore the row), run the done checks and post COMPLETE.
