@@ -280,3 +280,7 @@ Batch 6 (J14): my 14 fixture lines are re-pointed and 'checks/fixtures.mjs /home
 **Needs BOB (J14, QUESTION):** `architecture.mjs` fails on `consumers.test.mjs` importing `acquisition/fixtures.mjs`: `acquisition` is not in scheduler's `uses` (`build/modules.json`, BOB's file).
 
 **Results:** scheduler suite ℹ tests 185, ℹ pass 185, ℹ fail 0. format 178 modules, 0 failures; coverage 33 of 33, 0 failures; ownership 1 file, 0; words 3528 literals, 0; architecture 22 product files, 96 imports, 1 failure (the `uses` above). `impact.mjs origin/tranche/T51 HEAD`: scheduler only (test files only), 16/20 files of its tests run: green.
+
+**Completion (batch 6).** BOB's B14 added `acquisition` to scheduler's `uses`; `tranche/T51` merged into the branch. After the merge: architecture 22 product files, 96 imports, 0 failures; format 178 modules, 0; coverage 33 of 33, 0; ownership 6 files, 0; words 3528 literals, 0; fixtures (scheduler) 0 failures; scheduler suite ℹ tests 185, ℹ pass 185, ℹ fail 0. Markers added: none (`fixtures-own` 0, `fixtures-generic` 0). Lines left: none. Deferred: none. Other modules: none. Generated artifacts made stale: none (test files only).
+
+Size (session_018cr32nWucL2LEJyJ5hyu4F): test runs 7, module lines 1048
