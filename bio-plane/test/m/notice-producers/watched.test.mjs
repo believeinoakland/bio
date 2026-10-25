@@ -4,6 +4,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world } from "../money-checks/fixture.mjs";
+import { browseViewerMissing } from "../retrieval-browse/fixtures.mjs";
+import { watchedByRefusal } from "../following/fixtures.mjs";
 import { fresh, reader, ofKind, snapshot, texts } from "./fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { NOTICE_KINDS, WATCHED_ITEMS_MAX, WATCHED_PAGE } from "../../../src/notice-producers/index.mjs";
@@ -129,9 +131,9 @@ test("R24 R1 a browse or watchedBy that throws, or answers undetermined, contrib
   const cases = [
     ["retrieval", { retrieval: { browse: boom } }],
     ["retrieval", { retrieval: { browse: ({ only }) => ({ ok: true, only, items: [], undetermined: { why: "no module registered" }, truncated: false, next: null }) } }],
-    ["retrieval", { retrieval: { browse: () => ({ ok: false, reason: "VIEWER_MISSING" }) } }],
+    ["retrieval", { retrieval: { browse: () => browseViewerMissing() } }],
     ["following", { following: { ...base.following, watchedBy: boom } }],
-    ["following", { following: { ...base.following, watchedBy: () => ({ ok: false, reason: "MARK_NO_SUCH_ITEM" }) } }],
+    ["following", { following: { ...base.following, watchedBy: () => watchedByRefusal() } }],
   ];
   for (const [who, over] of cases) {
     const { w, read } = setup(spec, over);

@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MEMBER, BOB, MACHINE, DAY } from "../following/fixture.mjs";
+import { standardReadWorld } from "../standards/fixtures.mjs";
 import { fresh, reader, ofKind, sentences, snapshot, notHintFailures, JUDGMENT, HINT, SIGNAL, dayOn } from "./fixture.mjs";
 import { HINT_MARK, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS } from "../../../src/notice-producers/index.mjs";
 import { WORDS } from "../ai-use/fixture.mjs";
@@ -35,10 +36,11 @@ function policy(w, { id = P1, address = ADDR, bundle = "INFO-2026-0300-policy", 
   return p;
 }
 /* standards R5 as read here: the declaration's fields and its declarer, to a viewer who may see the policy. */
+const noStandard = standardReadWorld();
 const standardsOver = (w) => ({ standardRead: ({ id, viewer }) => {
   const p = w.policies.find((x) => x.id === id);
   const sees = p && (p.readers ? p.readers.includes(viewer) : /^member:/.test(String(viewer)));
-  return sees ? { ok: true, id, cite: p.cite, declared_by: p.declared_by } : { ok: false, reason: "NO_SUCH_STANDARD" };
+  return sees ? { ok: true, id, cite: p.cite, declared_by: p.declared_by } : noStandard.standardRead({ id, viewer });
 } });
 async function setup({ second = false } = {}) {
   const w = world();

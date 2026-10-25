@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world } from "../money-checks/fixture.mjs";
+import { homeOfHomed } from "../provenance/fixtures.mjs";
 import { fresh, reader, byId, texts, sentences, snapshot } from "./fixture.mjs";
 import { list as profiles } from "../../../../jurisdictions/index.mjs";
 import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX,
@@ -47,7 +48,7 @@ function providers(calls = []) {
       securityToolEvents: () => ({ ok: true, truncated: false, cursor: "2", events: [{ tool_id: "scanii-1", event: "added", at: "2026-10-01T00:00:00Z" },
         { tool_id: "scanii-1", event: "switched_off", at: "2026-10-05T00:00:00Z" }] }),
       securityTools: () => ({ ok: true, tools: [{ tool_id: "scanii-1", provider_id: "scanii", state: "off", off_reason: "PRIVATE_MODE_NOT_HONOURED" }] }) },
-    provenance: { homeOf: () => ({ bundleId: P }) },
+    provenance: homeOfHomed({ ["c".repeat(64)]: "INFO-2026-0001-scan" }),
     /* R16 (ai-use R5, R9) and R17 (steps, question-explorer, investigation, review): one entry each, as each answers */
     aiUse: { exploreAsksPending: () => ({ ok: true, asks: [{ key: `explore-ask:project:${P}:2026-10-06`, owner: `project:${P}`, day: "2026-10-06",
         what: ["What did the council vote?"], asked_at: NOW, estimate: word("question-explorer.known") }] }),
