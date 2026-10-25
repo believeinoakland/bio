@@ -64,5 +64,12 @@ export function realPlane(tag) {
     return p;
   }
 
-  return { door, founder, viaDoor, deferred, uploaded, dispose: () => mf.dispose() };
+  /* the page's clock is ticked, a step of thirty seconds at a time, until what the test waits for is drawn (the plane's own jobs run on its alarm, however loaded the
+     machine is): a bound of counts, never a time (R66) */
+  async function ticksUntil(p, drawn, steps = 20) {
+    for (let i = 0; i < steps && !drawn(); i++) { await p.clock.tick(i === 0 ? 21000 : 30000); await idle(p, 3000); }
+    return drawn();
+  }
+
+  return { door, founder, viaDoor, deferred, uploaded, ticksUntil, dispose: () => mf.dispose() };
 }

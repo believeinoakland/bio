@@ -193,9 +193,11 @@ function heldPlane(n, extra = {}) {
   return { projectlist: ok({ projects: [] }), heldcaptures: (req) => {
     const q = req.query;
     if (q.state === "set_aside") return ok({ ok: true, held: [], truncated: false });
-    const page = rows.slice(0, Number(q.limit) || 200);
+    /* fix round 10, cause 33: a page of `limit` rows from `after`, with `truncated` and the `next` cursor that continues it, as capture R77 pages */
+    // fixtures-contract: capture held-page
+    const from = q.after ? Number(q.after) : 0, page = rows.slice(from, from + (Number(q.limit) || 200)), more = from + page.length < n;
     if (q.bundle_ids) { const want = String(q.bundle_ids).split(","); return ok({ ok: true, truncated: false, held: want.map((id) => fullRow(Number(id.slice(-4)) - 1000)) }); }
-    return ok({ ok: true, truncated: n > page.length, held: page.map(q.fields === "picker" ? pickerRow : fullRow) });
+    return ok({ ok: true, truncated: more, next: more ? String(from + page.length) : null, held: page.map(q.fields === "picker" ? pickerRow : fullRow) });
   }, ...extra };
 }
 const reads = (p) => p.byOp("heldcaptures").map(({ query: { op, ...q } }) => q);
@@ -205,7 +207,8 @@ test("R4 (C14) Held reads the page as picker rows, then the full fields for the 
   const q = reads(p);
   assert.equal(q.length, 3, "the picker page, the full fields of its rows, the set-aside list: no more");
   const picker = q.find((x) => x.fields === "picker"), full = q.find((x) => x.bundle_ids), aside = q.find((x) => x.state === "set_aside");
-  assert.deepEqual(picker, { limit: "50", fields: "picker" });
+  /* fix round 10, cause 33 (R4, DEC-97 clause 1): the list opens on the viewer's own captures, sent as `member` */
+  assert.deepEqual(picker, { limit: "50", fields: "picker", member: "mai" });
   assert.ok(full && !full.fields, "the full read asks no picker");
   const ids = full.bundle_ids.split(",");
   assert.equal(ids.length, 50, "the 50 rows the page draws, never 60");

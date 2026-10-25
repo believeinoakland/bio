@@ -16,8 +16,7 @@ const KINDS = ["rtf", "email", "legacy_word", "legacy_excel", "legacy_powerpoint
 test("R64 R36 (the real plane) a GIF the plane stored as UNSUPPORTED_FORMAT is drawn as reading-pipeline's own sentence for GIF, with no stand-in sentence and no raw kind", async () => {
   const auth = await plane.founder();
   const p = await plane.uploaded(auth, { kind: "gif", seed: "r10-gif", size: { pages: 1, lines: 2 } }, "scan.gif");
-  await p.clock.tick(21000);
-  await idle(p, 3000);
+  await plane.ticksUntil(p, () => main(p).querySelector('[data-reading="refused"]'));
   const line = main(p).querySelector('[data-reading="refused"]');
   assert.ok(line, "a refused reading line: " + text(p).slice(-300));
   assert.ok(line.textContent.includes(word("reading-pipeline.index.unsupported_gif")), "the owner's sentence for the kind: " + line.textContent);

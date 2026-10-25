@@ -16,11 +16,11 @@ const unread = (p) => says(p, "screen.document.text.unread.next");
 const drawn = (p) => (main(p).innerHTML.match(/data-reading="([a-z]+)"/g) || []).map((m) => /"([a-z]+)"/.exec(m)[1]);
 const OWN = "no OCR engine is installed";
 
-async function ticked(edit) {
+async function ticked(edit, ready = (p) => p.byOp("reading").length >= 1 && !unread(p)) {
   const auth = await founder();
   const p = await uploaded(auth, { kind: "png", seed: "r10-pending-png", size: { lines: 3 } }, "scan.png", edit);
-  await p.clock.tick(21000);
-  await idle(p, 3000);
+  /* the first ask is at twenty seconds; the plane's own jobs run on its alarm, so the clock is ticked on, by counts, until the page has drawn what the reading answered */
+  await plane.ticksUntil(p, () => ready(p));
   return p;
 }
 
@@ -51,9 +51,9 @@ test("R65 (G1; the real plane) the same when the job row is gone (`job: {state: 
 test("R65 control (the real plane): a reading the plane has not stored yet keeps the unread sentence, and a pending row draws its state", async () => {
   /* named edits: the stored reading is absent (`found: false`, `reading: null`), the row says it is being read */
   const absent = (json) => (json && json.result ? { ...json, result: { ...json.result, found: false, reading: null, job: { state: null } } } : json);
-  const p = await ticked({ reading: absent });
+  const p = await ticked({ reading: absent }, (x) => x.byOp("reading").length >= 1);
   assert.ok(unread(p), "no reading stored, no row: the static line");
   const reading = (json) => (json && json.result ? { ...json, result: { ...json.result, found: false, reading: null, job: { state: "reading", written: 3, skipped: 0, owed: 7, failed: 0, failed_why: {}, cursor: null, last_progress_at: null, priority: null } } } : json);
-  const q = await ticked({ reading });
+  const q = await ticked({ reading }, (x) => x.byOp("reading").length >= 1);
   assert.ok(main(q).querySelector('[data-job-state="reading"]'), "a pending row draws its state: " + drawn(q));
 });
