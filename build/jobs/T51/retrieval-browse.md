@@ -152,3 +152,9 @@ Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 7, module lines 1427
 ## J7 · COMPLETE · re B11
 
 Fix round 10 Wave A batch 1 complete on job/T51/retrieval-browse (record: 'Completion (fix round 10, Wave A batch 1; B11)'). R17a: term items carry 'part' (the unit's part kind, null if stored without), failing-first red then green. R26/R20: a term find reads only hit units' text (23.3 MiB -> under 4 MiB), failing-first red then green; control green. Published fixtures.mjs: browseViewerMissing, marksRegistrarDeclared (with fixtures.test.mjs). FIX-L fixture.mjs:175,176 marked 'fixtures-contract: retrieval selection-read' (contract-no-run until retrieval's run merges). Left per START: 4 FIX-E lines (g41-findin:39, t36:139, t37:172, words:60). Tests 66/66 under the shim; format, architecture, coverage (20/20), words, ownership 0 failures; impact: 0 other modules. Proposed requirement line R17a in the record. Platform P check (do-findin 97 ms on INFO-2026-0110 after restart) is for the redeploy. Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 7, module lines 1427
+
+## Completion (B12, K5067)
+
+R17a's test now names R21 (R20's mark struck by BOB). `g41-findin.test.mjs` takes provenance's published `homeOfHomed` instead of its hand-built `homeOf` (stub line gone). Left, waiting on events and entities: `t36.test.mjs:139`, `t37.test.mjs:172`, `words.test.mjs:60`; `fixture.mjs:175,176` now `accepted(selection-read)`. Tests 66/66 under the shim; coverage 21 of 21; format 0 failures.
+
+Size (session_01QPk5CHNKGRuomEEUu9w4Zn): test runs 3, module lines 1427
