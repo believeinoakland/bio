@@ -5,4 +5,4 @@ export { parseFigure } from "./figures.mjs";
 export { add, subtract, multiply, divide, round, relate, MODES, PRECISIONS } from "./decimal.mjs";
 export { checkRecipe, evaluate, resultKey, METHOD, OPS, TESTS, FIELD_TYPES, SPAN_UNITS, SUM_RULE, RATIO_DEFAULT }
   from "./recipe.mjs";
-export { draw, interval, DRAW_METHOD, INTERVAL_METHOD } from "./draw.mjs";
+export { draw, drawSliced, interval, DRAW_METHOD, DRAW_SLICE, INTERVAL_METHOD } from "./draw.mjs";

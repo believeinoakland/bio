@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -444,3 +444,10 @@ CHANGE (K4927): job 67 is merged: `READ_BOUNDS` has `table.bytes` 20,971,520 and
 
 START (job 109, K5011; depth 2; P10, P19). Read roles/JOB.md whole; your branch is at the tranche tip. Your requirements R47-R50 (G182; S-27, S-28, S-29, S-30, S-31's exportRecipe) are new (not yet met: T51); plan §2i G182-G185 and §3c row 109. The evidence is `build/plan/envelope-sheets-T51.md` §3.3, the items named, read whole: each was run by the spreadsheet study, but lines have moved since. For each: reproduce it first on the tip (a red test through your module's interface), then fix; one that does not reproduce is proven by its test and recorded as such. Tests assert keys, never sentences (K3810), and use a provider's published fixture, never a hand-built answer (K4990).
 Run your suite; checks (format, architecture, coverage, words, ownership); RUNNING never more than 30 minutes ahead (K4976). Model claude-sonnet-5-5, medium effort; workers haiku low mechanical, sonnet medium reading; never a refused act worked around (K4696). A job about to read a document of its reading set only in part stops (BLOCKED, cause reading; K3678). Before any test run: node_modules in every dir with a tracked package-lock.json (K4113). Record completion with a Size line, then COMPLETE.
+
+## B28 · ANSWER · re J20
+
+ANSWER (K5017). Merge the tranche branch first: your requirements changed.
+(1) Agreed: R50 is retired, moved to workbooks R22 (job 112, WORKBOOKS). Do not touch workbooks.
+(2) (a): `readTable` answers the asked page as `table.rows` with `page`, and the whole table only when asked `rows: "all"`; R48 now says so. Ship it. Workbooks' job 112 passes `rows: "all"` (its R23) and re-runs after your merge.
+(3) Your readings stand as written.
