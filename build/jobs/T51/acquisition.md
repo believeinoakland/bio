@@ -779,3 +779,7 @@ Checks (this session)
 - `node checks/run.mjs`: format 0, architecture 0, coverage 0 (6927 of 6927), channels 0, words 0 (inline 0, plain 0, testcopy 0). Ownership: 1 listing, `build/requirements/acquisition.md` (accepted, K4210); the other four changed files are mine. No sentence added; no word row owed.
 
 Size (session_01FepaYctVekwaxhoDHB6QtY): test runs 9, module lines 4457
+
+## J45 · COMPLETE
+
+Job 103 done. G175: every row registerJob accepts is now followed by armJobs (store's, else opts.armJobs), all oweOf users and the keep row; G177: one clock reading for a thrown call's cut and close, answer and object equal exactly. R95 and R116 markers removed (tests name them). Tests red first in r9-registrar and stage-times; acquisition 346/346, capture 349, doorbell 97, control-plane timings/door/plane jobs 55, twin green alone. format, architecture, coverage, words 0; ownership lists only build/requirements/acquisition.md (K4210). Record: build/jobs/T51/acquisition.md
