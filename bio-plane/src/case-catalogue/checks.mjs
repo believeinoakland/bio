@@ -374,8 +374,18 @@ export function checkPublishedExtension(fm, findings) {
      Not required when nothing was grouped: an unstructured case's two axis
      objects already are the whole truth, and a one-row restatement would be a
      second place to state one fact (D-21). */
-  const grouped = Array.isArray(fm.basis)
-    && fm.basis.some((l) => l && typeof l === 'object' && typeof l.ground === 'string' && l.ground !== '');
+  /* R2 (fix round 10, cause 31): only LIVE legs count, as `strength` counts them. A leg whose citation edge the member's
+     references[] marks severed (the first entry for a target decides) is dropped from the strength walk, so a ground
+     whose every leg is severed has no frozen row and is none to ask for. */
+  const severed = new Set();
+  const seenRef = new Set();
+  for (const x of Array.isArray(fm.references) ? fm.references : []) {
+    if (!x || typeof x !== 'object' || seenRef.has(x.target)) continue;
+    seenRef.add(x.target);
+    if (x.status === 'severed') severed.add(x.target);
+  }
+  const liveLegs = Array.isArray(fm.basis) ? fm.basis.filter((l) => !(l && severed.has(l.target))) : [];
+  const grouped = liveLegs.some((l) => l && typeof l === 'object' && typeof l.ground === 'string' && l.ground !== '');
   const frozenGrounds = Array.isArray(fm.published_strength_grounds) ? fm.published_strength_grounds : null;
   if (grouped && !frozenGrounds) {
     findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.a_case_member_requires_published_grounds', 'a case member requires published_strength_grounds when the basis names grounds: the grade above is the STRONGEST ground rather than the weakest leg, and "these grounds were each independently sufficient" is a claim a reader can only test if the case says which legs were in which branch and what each branch reached'),
@@ -398,7 +408,8 @@ export function checkPublishedExtension(fm, findings) {
         findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.published_strength_grounds_i_is_3', 'published_strength_grounds[{i}] is {state} and still carries grade \'{grade}\': a suspended ground states what is unknown, and an unrated one states that nothing on it is established — neither is a grade', { i: String(i), state: String(g.state), grade: String(g.grade) })));
       }
     }
-    for (const label of new Set(fm.basis.filter((l) => l && typeof l.ground === 'string' && l.ground).map((l) => l.ground))) {
+    const liveGrounds = liveLegs.filter((l) => l && typeof l.ground === 'string' && l.ground);
+    for (const label of new Set(liveGrounds.map((l) => l.ground))) {
       if (!frozenGrounds.some((g) => g && g.ground === label)) {
         findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.published_strength_grounds_names_no', 'published_strength_grounds names no row for ground \'{label}\': every branch the basis carries is frozen on every axis, because a branch missing from the frozen result is one no reader can check', { label: String(label) })));
       }
