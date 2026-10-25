@@ -6,6 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { PART_KINDS } from "../../../src/retrieval/index.mjs";
+import { progressOf } from "../extraction/fixtures.mjs";
 
 const hitsOf = (w, q, viewer = V("vera")) => w.retrieval.search({ q, viewer }).hits;
 const rowsOf = (w, q, viewer = V("vera")) => w.retrieval.meaningRows({ q, rows: "passage", viewer });
@@ -207,10 +208,7 @@ test("R97: the partial readings a tally lists are bounded and counted — more t
   assert.equal(r.scope.partial_truncated, true);
 });
 
-/* extraction R108's `progressOf(shas)`: the interface text, as a stand-in until job 41 merges. */
-const progressStub = (table) => (shas) => Object.fromEntries(shas.map((s) => [s, table[s] ?? { state: "none", read_through: null, total: null, owed: 0 }]));
-
-test("R97, K4571: a reading with pages owed is counted partial and never whole — a 30-page scan read 24 pages, asked of the provider's progressOf, says searched so far with the pages owed; the calls are of at most 500 shas; a whole text is not partial", () => {
+test("R97, K4571: a reading with pages owed is counted partial and never whole — a 30-page scan read 24 pages, asked of the provider's progressOf, says searched so far with the pages owed; the calls are of at most 500 shas; a whole text is not partial", async () => {
   const w = world();
   const scan = w.cap("scan.pdf", "scan bytes"), text = w.cap("text.txt", "text bytes");
   w.doc("INFO-SCAN", {}, { captures: [scan] }); w.doc("INFO-TXT", {}, { captures: [text] });
@@ -218,13 +216,15 @@ test("R97, K4571: a reading with pages owed is counted partial and never whole �
   w.unit(text.sha, "INFO-TXT", 0, "a text about culverts");
   w.indexState(scan.sha, "INFO-SCAN", { state: "whole" });   /* the unit index says whole: what is owed is not in it */
   const calls = [];
-  const table = { [scan.sha]: { state: "whole", read_through: 24, total: 30, owed: 6 }, [text.sha]: { state: "whole", read_through: 9, total: 9, owed: 0 } };
-  const stub = progressStub(table);
-  w.retrieval.extraction.progressOf = (shas) => { calls.push(shas.length); return stub(shas); };
+  /* extraction's published `progressOf` fixture (R108): its answers for the 30-page scan and the short text, keyed by this test's digests */
+  const published = await progressOf();
+  const table = { [scan.sha]: published.answer[published.shas.scan], [text.sha]: published.answer[published.shas.text] };
+  w.retrieval.extraction.progressOf = (shas) => { calls.push(shas.length); return Object.fromEntries(shas.map((s) => [s, table[s] ?? published.answer[published.shas.unknown]])); };
   const r = rowsOf(w, "passage:zzqx");
-  assert.deepEqual(r.scope.partial_reads, [{ capture_sha: scan.sha, through: 24, total: 30, owed: 6 }]);
+  /* the provider's published answer for the scan: partial, 6 owed, and no read_through or total (R108 states R90's figures only where they exist) */
+  assert.deepEqual(r.scope.partial_reads, [{ capture_sha: scan.sha, through: null, total: null, owed: 6 }]);
   assert.equal(r.scope.partial, 1, "the scan, not the text");
-  assert.ok(r.says.includes("24") && r.says.includes("30"));
+  assert.ok(r.says.includes("Searched so far: 1 capture(s)"), "no extent is stated, so the sentence is the unmeasured one");
   assert.ok(calls.length >= 1 && calls.every((n) => n <= 500));
 });
 

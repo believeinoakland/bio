@@ -4,7 +4,7 @@
    default export also carries `scheduled`, the watchdog's cron handler (R79, `watchdog.mjs`). A `captureupload` request is stated in a line on
    arrival (`arrival.mjs`, R24 d). No other export. (R105) Each answer
    states the calls its request made to the object, `object-calls;dur=<n>` in its `Server-Timing`. */
-import "./register.mjs";   /* R68 (T51; K4168): first, since control-plane reads the op tables when it loads */
+import "../store-assembly/index.mjs";   /* store-assembly R83 (was plane R68; T51; K4168): its first import is the start's registration of the owners' op declarations, before control-plane reads the op tables when it loads */
 import { makeFetch, PUBLISHED_STORE } from "../control-plane/index.mjs";
 import { json, doAnswer, storeSilent, storeRefusal, requiredArgument, STORE_SILENT_REASON,
          STORE_SILENT_DETAIL } from "../answer-envelope/index.mjs";   /* K1907, K2041: the envelope's */

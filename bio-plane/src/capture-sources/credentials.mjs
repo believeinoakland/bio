@@ -113,9 +113,19 @@ export function principalMember(principal) {
   return m[1];
 }
 
-/* The member a viewer names (R58): `member:<id>`, or the founder's `admin`. */
-const viewerMember = (viewer) => (viewer === "admin" ? "admin"
-  : typeof viewer === "string" && /^member:[a-z0-9][a-z0-9-]{1,40}$/.test(viewer) ? viewer.slice(7) : null);
+/* R72: the member id a stamp names. The door stamps `by` and `viewer` as the session's viewer form (`member:<id>`, with a
+   carried project when the viewer has one; the founder's own `admin`), read through membership's one spelling
+   (`positionalMember`, `member-roster` R73's). A bare member id, as a direct call gives, names that member; a machine
+   credential (`class:<cls>`, with or without a token) and anything else names none, which `#active` then refuses. The
+   listing's `viewer` is a viewer spelling only, so a bare id there names none (R58). */
+const MACHINE_STAMP = /^class:/;
+function memberOfStamp(members, stamp, { bare = true } = {}) {
+  if (typeof stamp !== "string" || stamp === "") return null;
+  if (stamp === "admin") return "admin";
+  const named = members.positionalMember(stamp);
+  if (named) return named;
+  return !bare || MACHINE_STAMP.test(stamp) || stamp.startsWith("member:") || stamp.includes("@") ? null : stamp;
+}
 const viewerOf = (memberId) => (memberId === "admin" ? "admin" : `member:${memberId}`);
 
 const b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };
@@ -278,8 +288,9 @@ export class CaptureCredentials {
 
   /** Stores a credential under its declared scope and answers its listing entry, never the secret. */
   async credentialSupply(args) {
-    const { kind, host, secret, scope, project, by } = args && typeof args === "object" ? args : {};
+    const { kind, host, secret, scope, project, by: stamped } = args && typeof args === "object" ? args : {};
     try {
+      const by = memberOfStamp(this.#members, stamped);
       /* DEC-49 REGION is-credential-supplier-member */
       if (!this.#active(by))
         return refusal("CAPTURE_CREDENTIAL_NOT_A_MEMBER", localize("capture-sources.credentials.the_supplier_named_is_not", "the supplier named is not an active member of your team"));
@@ -406,8 +417,9 @@ export class CaptureCredentials {
   /** Withdraws a credential: R56 never answers it again, its ciphertext is destroyed now, and its secretless
    *  entry stays with `withdrawn_at` and `withdrawn_by`. */
   async credentialWithdraw(args) {
-    const { credential, by } = args && typeof args === "object" ? args : {};
+    const { credential, by: stamped } = args && typeof args === "object" ? args : {};
     try {
+      const by = memberOfStamp(this.#members, stamped);
       const found = typeof credential === "string" && credential !== ""
         ? this.#one(`SELECT * FROM ${CREDENTIALS_TABLE} WHERE credential_id=?`, credential) : null;
       /* An unknown id and one `by` may not see are one condition, answered alike (R57, R58). */
@@ -458,7 +470,7 @@ export class CaptureCredentials {
     const cap = Math.max(1, Math.min(Math.floor(Number(limit)) || CREDENTIAL_LIST_LIMIT, CREDENTIAL_LIST_LIMIT));
     const empty = { entries: [], limit: cap, truncated: false };
     try {
-      const who = viewerMember(viewer);
+      const who = memberOfStamp(this.#members, viewer, { bare: false });
       if (!who) return empty;
       const vis = this.#visibleClause(who);
       if (!vis) return empty;

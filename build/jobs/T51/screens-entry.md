@@ -1,6 +1,6 @@
 # screens-entry (T51)
 
-**Status** · session_01Nwkwhy5gismLNucwdyhzuP · depth 2 · COMPLETE · handled B15
+**Status** · session_0143bTM29139UynmAYarEGQM · depth 2 · COMPLETE · handled B19
 
 ## Completion (T51-114)
 
@@ -242,3 +242,33 @@ Size (session_01Nwkwhy5gismLNucwdyhzuP): test runs 2, module lines 1158
 ## J18 · COMPLETE
 
 B15 applied: tranche/T51 merged (uses edges in); REPORTs J13-J15 and QUESTIONs J16-J17 posted. No code change; module tests 96/96; format, architecture, coverage (30 of 30), ownership 0 failures. group: null stays in worldOf until a CHANGE (STORE-REQUEST B8 not merged). Details in the record (Completion B15).
+
+## Fix round 10 (B16, K5185)
+
+**R2.** `front.mjs`:115 and `forgot.mjs`:57 draw `refusal.SIGN_IN_PAUSED` with the plane's `stated` as the row's variable `{stated}` and no time. Failing-first tests (red on the old source, run with the source stashed): `front.test.mjs` "R2 paused" (eleven refused logins from one place through `storeWorld()`, then the page), `public.test.mjs` "R2 R4 forgot paused" (the same over `recover`). They assert the drawn text equals `word("refusal.SIGN_IN_PAUSED", {stated})`, holds the plane's `stated`, holds no "try again at" and no unfilled `{…}`. **They stay red** on the design's row, which still reads "…Try again at {time}." (`words.json`, `rows.mjs`:673): the row without `{time}` and with `{stated}` is UX-DESIGN's and outside my paths (asked of BOB in the BLOCKED entry). Green the day the row lands, with no change here.
+
+**R6.** `setup.mjs`:474-476: an office with a name and no note is refused on the page (`refusal.ENTITY_NO_NOTE`, the plane's own held row, read by key, added to the setup list in `words.mjs`) and nothing is sent; with a note it is sent as before. Failing-first test `setup.test.mjs` "R6 an office is never sent without its note" (red on the old source: it sent `note: null`; green now: nothing sent, the plane holds no such office, then the same office with its note is recorded). The label's "(optional)" in `screen.setup.office.note` is UX-DESIGN's to drop (asked of BOB).
+
+**Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/screens-entry/`: 98 tests, 96 pass, 2 fail (the two R2 tests above, on the design's row). `checks/format.mjs`: 0 failures. `architecture`: 16 files, 0. `coverage`: 30 of 30 ids named, 0. `ownership` against `origin/tranche/T51`: 8 files, 0 failures. `checks/run.mjs`: the one line naming screens-entry is the known `front.test.mjs`:18 scripted `publishedlist` (REPORT J13, awaiting STORE-REQUEST), not risen. Users named by `impact.mjs origin/tranche/T51 HEAD` (control-plane, plane, journey-check): `r137-parity`, `pseudo` and `door` fail 9 of 15 identically with this module's source at the tranche's (before) and at my commit (after), so none is from this change; I did not complete the full 157-file run of the users.
+
+Size (session_0143bTM29139UynmAYarEGQM): test runs 9, module lines 1157
+
+## J19 · BLOCKED
+
+BLOCKED (cause: tests; needs a design word row, not Bob). R6 is done and green (an office with no note is refused on the page by refusal.ENTITY_NO_NOTE, nothing sent; setup.test.mjs). R2 is coded: front.mjs:115 and forgot.mjs:57 draw refusal.SIGN_IN_PAUSED with {stated} (the plane's bound) and no time. Two tests stay red only on the design's row: front.test.mjs 'R2 paused' and public.test.mjs 'R2 R4 forgot paused' (red on the old source, red now on the row). ASK for UX-DESIGN, in the round's words: (1) refusal.SIGN_IN_PAUSED without 'Try again at {time}', carrying {stated}, e.g. 'Sign-in is paused for a while after too many tries from here... The limit is: {stated}.'; (2) screen.setup.office.note without '(optional)'. Both land green with no change on my side. Module 96/98; format, architecture, coverage 30/30, ownership 0 failures; impact users r137-parity, pseudo, door fail 9/15 identically before and after my change. Record: build/jobs/T51/screens-entry.md 'Fix round 10'. Size (session_0143bTM29139UynmAYarEGQM): test runs 9, module lines 1156
+
+## Fix round 10, B17 (CHANGE, K5193)
+
+Merged `origin/tranche/T51` (STORE-REQUEST #5). `kit.mjs` `worldOf` no longer passes `group: null` (no other `{group: null}` was held); the module tests ran green on the default world. `front.test.mjs`: the scripted `publishedlist` is gone; the two tests that read it (R1 what it has published; R1 a part kept from the public) now publish a case by `recipes.published` (`publishedCase()`) and read the plane's list; `checks/run.mjs` names no finding in this module's files (the `front.test.mjs`:18 line is gone, REPORT J13 met). R30's system-recorded hosting rows stay seeded into `hosting_access` (J14, K5192, a UX question; the line is not a stand-in the fixtures check flags, so it carries no `fixtures-own` marker, which `checks/run.mjs` reports as idle).
+
+**Tests and checks.** Module: 98 tests, 96 pass, 2 fail: the two R2 paused-sign-in tests, on the design's `refusal.SIGN_IN_PAUSED` row (J19). format, architecture, coverage (30 of 30), ownership (0 failures), `checks/run.mjs` (no finding in screens-entry).
+
+Size (session_0143bTM29139UynmAYarEGQM): test runs 11, module lines 1156
+
+## J20 · BLOCKED
+
+BLOCKED (cause: tests; needs UX-DESIGN's word row, same as J19). B17 applied: tranche merged, no {group: null} left, front.test.mjs:18's scripted publishedlist replaced by recipes.published (checks/run.mjs: no finding in screens-entry), R30's hosting seed kept (not flagged by the fixtures check, so no marker). Module 96/98: only the two R2 paused-sign-in tests are red, on refusal.SIGN_IN_PAUSED's row still reading 'Try again at {time}' (needs the row without {time}, carrying {stated}; and screen.setup.office.note without '(optional)'). Code draws refusal.SIGN_IN_PAUSED with variable stated. Say when the row lands and I re-run and COMPLETE. Size (session_0143bTM29139UynmAYarEGQM): test runs 11, module lines 1156
+
+## J21 · COMPLETE
+
+COMPLETE (B16, B17, B19). Drew: key refusal.SIGN_IN_PAUSED, variable {stated} (the plane's bound), no time: front.mjs:113-117, forgot.mjs:55-59. R6: setup.mjs:474-478 sends no office without its note, shows refusal.ENTITY_NO_NOTE (held row, listed in words.mjs). B17: no {group: null}; front.test.mjs reads a case published by recipes.published (kit.mjs worldOf). Failing-first, red then green: setup.test.mjs 'R6 an office is never sent without its note' (green); front.test.mjs 'R2 paused' and public.test.mjs 'R2 R4 forgot paused' (red on old source; red by name now on the design's row, accepted per B19). Module 98 tests, 96 pass, 2 fail (those two). format, architecture, coverage 30/30, ownership 0 failures; checks/run.mjs no finding in screens-entry; impact users r137-parity, pseudo, door fail 9/15 identically before and after. Met: R2 (code), R6. Markers added: none (the R30 hosting seed is not flagged, so a marker would be idle). Size (session_0143bTM29139UynmAYarEGQM): test runs 11, module lines 1156

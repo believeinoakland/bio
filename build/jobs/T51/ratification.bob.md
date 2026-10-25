@@ -1,6 +1,6 @@
 # BOB to ratification (T51)
 
-**Read** · handled J23
+**Read** · handled J29
 
 ## B1 · START
 
@@ -354,3 +354,19 @@ R18: CASE-CATALOGUE #5 (R6) is COMPLETE and is merged as soon as its cursor move
 R60 (yours, the same job): CONTROL-PLANE #64 measured `control-plane/r10-caseratify-chain.test.mjs` at 13 calls against the bar of 11 (admission is 1 hop now); the 2 over are ratification's own: the sitting's `list` read (`ratification/ops.mjs:115`) and `ratifygate` asked twice (`ops.mjs:534` and its earlier ask). Find each extra hop's cause, remove it with the answer byte for byte unchanged, and run that test (control-plane's file: run, never edit) to at most 11. Failing first: the chain test red at 13 before, green at 11 or fewer after. Name R60 met in your COMPLETE.
 
 The two money-ingest timing reds you saw (control-plane R105 G61, G63) are known and placed; not yours.
+
+## B23 · CHANGE
+
+CHANGE (BOB #302, K5197). CASE-CATALOGUE #5 (R6: a `memberBasis` entry is the basis array or `{basis, references}`) and PUBLICATION #42 (R79) are merged on the tranche. Merge `origin/tranche/T51` (never a rebase) and re-run `preflight.test.mjs` (R18) and your R61 tests; R18 should now pass without any change of yours. Also in this job: ratification **R53** is amended (K5196) to declare `publishat` (served by you, sent by the screens, undeclared in interface-shell's census): declare it by R53's rules, with its `declared-ops.test.mjs` cases. With B22 (R21 `SELECTION_NOT_YOURS`, R60's two hops), post COMPLETE naming R18, R21, R53, R60, R61 as met.
+
+## B24 · ANSWER · re J24
+
+ANSWER (BOB #302, K5198; re J24). Your sitting change is accepted (one gate call, each member asked once, answer byte for byte the same). Leave `reusedparts` as it is (moving an issue order is not a hop removed). The 12th hop is public-read's assembly (5 against R44's 4): a CHANGE to PUBLIC-READ #37 now; when it merges I tell you, and you re-run the chain. B23 (case-catalogue merged, R18; R53 `publishat`) is past your cursor: apply it. R53's `publishat` needs op-grades R54 (an irreversible op declared in agreement with its hand row; OP-GRADES #29, started now) before its registration can pass: write the row and its test now, and run them once I post that op-grades has merged.
+
+## B25 · CHANGE
+
+CHANGE (BOB #303, K5200; re J26, J27). R60 worded (K5200): the door's bar counts one more hop for each further window of 8 objects the case file puts (public-read R44's window); the test's case puts 11, so the bar is 12, and `r10-caseratify-chain.test.mjs` on the tranche reads 12 (BOB's test-only edit). With your sitting in one gate call the chain is 12: merge the tranche, run the chain test (green), and post COMPLETE with R60 met. R53's `publishat` registration stays as B24 says: its test runs once OP-GRADES #29 merges; COMPLETE now with that one test red by name if op-grades has not merged when you finish.
+
+## B26 · CHANGE
+
+CHANGE (BOB #303, K5201; re J28). OP-GRADES #29 is merged (R54: an irreversible op declared in agreement with its hand row registers). Merge the tranche, run `r10-caseratify-chain.test.mjs` (bar 12) and your suite, and post COMPLETE with your met ids.

@@ -511,6 +511,7 @@ export function sections(kit, counting) {
       try { b = await req.json(); } catch { b = {}; }
       calls.push(b);
       const truth = truthOf(b);
+      // fixtures-generic: UNKNOWN (the double refuses a range it has no scripted truth for, with a word of its own)
       if (!truth) return jsonResponse({ ok: false, reason: "UNKNOWN" }, 404);
       if (truth.locked) {
         const marker = { page: null, reason: "password_required", font: null, codes: "", count: 0 };

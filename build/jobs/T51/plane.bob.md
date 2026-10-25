@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J65
+**Read** · handled J68
 
 ## B1 · START
 
@@ -1266,3 +1266,11 @@ Your J64 REPORT is read and placed (K5184): A1, A2 (the following and answer-env
 ## B100 · CHANGE
 
 CHANGE (BOB #302, K5195; plan item 95 (2)), with your Wave B. (1) plane R85: `g123f-cells.test.mjs` "R85 G123f" fails at `:64` (and R84's at `:51`): `tabledeclare` answers `SOURCE_NOT_READ` ("widest line has 3") because the test declares 4 fields while `xlsxRowsDoc` builds 3-column rows (`:14`, `:51`, `:64`): a test defect in your module; make the declared fields match the generated rows, the assertion unchanged in meaning; name R85 met. (2) `fixtures-run: extraction transcribe-not-sent` in a plane test (extraction `t44.test.mjs:92` marks `fixtures-contract: plane transcribe-not-sent`, and no plane test runs it), beside item 23's `transcribe-answer` runs. (3) `door.test.mjs:143` (R1, R5, R67) counts instance-setup's routes at 36; there are 37 (`selftestmigrations`, item 85 (1)): yours in Wave B. (4) `r9-jobs.test.mjs`: its 37 tests pass and then the process does not exit (killed after 7 minutes; verify-marks side finding 4): find the open handle and close it (a load or exit defect, K4787). Name every met id in your COMPLETE.
+
+## B101 · CHANGE
+
+CHANGE (BOB #302, K5198), with B100. Add `fixtures-run: notice-producers reading-ended`: a plane test that runs the rows `notice-producers/reading-ended-seam.test.mjs` hands in (`READING_ROWS`, :19-24, and its cursor form `<ended_at>\u0001<sha>\u0001<kind>`) against your real job table's `readingsEnded` (refused, finished, final, final unopened, paged), so the seam rests on the real table (notice-producers R29).
+
+## B102 · CHANGE
+
+CHANGE (BOB #303, K5200; re J66, J67). store-assembly R78's test sentence is worded to extraction R111's yields: the pass that wrote a tick's 4,096 units states a figure above 256 and at most 1,000 (above 1,000 means a pass held the object). Merge the tranche, change `r10-lag-figure.test.mjs` :95-97 to that (both the pass that wrote and the row's end figure), run it, and post COMPLETE. The open handle (`openInstruments` setInterval not unref'd) is store-assembly's: placed with its next job (K5200), not yours.

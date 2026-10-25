@@ -1,6 +1,6 @@
 # money (T51)
 
-**Status** · session_014aMgy6krydsoCbHAbQm7TM · depth 2 · COMPLETE · handled B11
+**Status** · session_019EsZQTWhoRebUjdPxoj29x · depth 2 · COMPLETE · handled B13
 
 ## J1 · REPORT
 
@@ -223,3 +223,34 @@ Size (session_014aMgy6krydsoCbHAbQm7TM): test runs 14, module lines 1631
 ## J15 · COMPLETE
 
 Fix round 10 (B12) done, record J14. R12: readSet fences a set concerning a bundle the viewer cannot see (answers as absent). R7: checkConstant and factBySource published, index money_facts_source_row, four fixtures. Met: R12, R7 (strike marks). Money 114/114; format, architecture, coverage 31/31, words, ownership, fixtures 0 failures; dependent set-reading tests pass. Door case (max opens /app/money/trail) is control-plane's, for you to place. Stale: bio-plane.bundled.mjs.
+
+## J16 · COMPLETE
+
+SCREENS-INVESTIGATE #17 J31 (B13) done: `exclude` now closes a figure's open proposal as `include` does.
+
+**Cause (found and read):** `#setAct` in `bio-plane/src/money/index.mjs` looked up the open proposal only when `act === "include"`, so a figure proposed then excluded stayed open and was listed under both `proposals` and `exclusions`. Requirements R12 (the latest act on a fact governs) and R13 (a proposal waits for a member's act) do not say an exclusion leaves a proposal open, so I built to the brief's reading without a QUESTION. The verify-marks file has no money row for this defect; the evidence is the code and requirements read directly.
+
+**Changes (file:line):**
+- `bio-plane/src/money/index.mjs:965-966`: the open-proposal lookup runs for either act (the `act === "include"` guard removed), with a `/* R12, R13 */` comment. Lines changed: 2 added, 1 removed.
+- `bio-plane/test/m/money/sets.test.mjs`: new test "R12 R13 exclude closes a figure's open proposal as include does: a proposal then excluded is listed under exclusions, never under proposals; control: include still closes one" (after the R13 proposal test).
+
+**Failing-first:** red on the tranche code: `AssertionError`, `ex.adopted_proposal` undefined, expected the proposal id. Green after the fix. Control (include still closes its proposal) passes both before and after.
+
+**Suites:** `sets.test.mjs` 7 of 7 pass. Full `bio-plane/test/m/money/*.test.mjs` 115 of 115 pass (114 before, plus this one).
+
+**Checks (absolute root `/home/user/bio`):**
+- `checks/format.mjs`: 0 failures
+- `checks/architecture.mjs ... money`: 0 failures
+- `checks/coverage.mjs ... money`: 31 of 31 live requirement ids named
+- `checks/fixtures.mjs /home/user/bio money --list`: 0 failures
+- `checks/ownership.mjs ... money <merge-base> HEAD`: 0 failures
+- `checks/run.mjs /home/user/bio`: 0 findings in money's own paths (`src/money/`, `test/m/money/`). Its findings are in other modules' tests that stub money, and in store-assembly, plane and others. The words count is unchanged because the change adds no string literal.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules and 0 of 2985 test files affected.
+
+**Met ids:** R12, R13 (no strike mark placed by me; the exclude closing a proposal is what those texts require).
+
+**Markers added:** none (no `fixtures-own` or `fixtures-generic`).
+
+**Other:** merged `origin/tranche/T51` (11 commits, a merge commit, no rebase) into the job branch before the start. Commit `5029bb5c49` on `job/T51/money`.
+
+Size (session_019EsZQTWhoRebUjdPxoj29x): test runs 8, module lines 3 (lines changed in money/index.mjs: 2 added, 1 removed).

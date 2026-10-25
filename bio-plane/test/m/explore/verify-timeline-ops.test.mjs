@@ -7,6 +7,7 @@ import { AT, INQUIRY, ent, conn, world, byOwner, makeStore } from "./fixtures/ow
 import { seeded, ANN } from "../money/fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { NO_EVENTS_RECORD } from "../../../src/explore/timeline.mjs";
+import { timelineAnswer } from "../events/fixtures.mjs";
 
 const V = "alice";
 const A = ent(1), B = ent(2), C = ent(3);
@@ -80,7 +81,7 @@ test("R13 timelineOver composes the real events.timeline over the set with the p
 
 test("R14 exploreOps publishes route arms for explore, explorepreset, exploreverify, exploretimeline and exploregraph (T48), reads only, the viewer from the query string and never the body", () => {
   const { registry } = world(byOwner([conn("line:part_of", A, B, { id: "h" }), conn("line:seat_on", A, C), conn("line:seat_on", B, C)]));
-  const x = exploreOf(null, { registry, events: { timeline: () => ({ ok: true, world: { items: [] }, ours: { sources: [] } }) } });
+  const x = exploreOf(null, { registry, events: { timeline: () => timelineAnswer() } });
   const url = new URL(`https://instance.example/?viewer=${V}`);
   const ops = exploreOps(x, url, { from: A, at: AT, viewer: "mallory" });
   assert.deepEqual(Object.keys(ops).sort(), ["explore", "exploregraph", "explorepreset", "exploretimeline", "exploreverify"]);
@@ -155,7 +156,7 @@ test("DEC-149 (T34-78) the timeline's member-facing refusal and note call the gr
   const none = exploreOf(null, {}).timelineOver({ set: [A], viewer: V });
   assert.equal(none.refused, "NOT_AVAILABLE");
   assert.equal(none.why, NO_EVENTS_RECORD);
-  const noMoney = exploreOf(null, { events: { timeline: () => ({ ok: true, world: { items: [] }, ours: { sources: [] } }) } }).timelineOver({ set: [A], viewer: V });
+  const noMoney = exploreOf(null, { events: { timeline: () => timelineAnswer() } }).timelineOver({ set: [A], viewer: V });
   assert.equal(noMoney.money_note, word("explore.money_note"));
   for (const t of [none.why, noMoney.money_note]) assert.doesNotMatch(t, /\b(this instance|the instance|copy|plane|server)\b/);
 });

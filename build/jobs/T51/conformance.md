@@ -1,6 +1,6 @@
 # conformance (T51)
 
-**Status** · session_01H6qaqGGdsgsJYq9QcBswrD · depth 2 · COMPLETE · handled B5
+**Status** · session_016jHoSN6Fe8DtYJkQyfT6Rr · depth 2 · COMPLETE · handled B8
 
 ## J1 · REPORT
 
@@ -112,3 +112,47 @@ Checks by failure count (absolute root /home/user/bio):
 - module tests (bio-plane/test/m/conformance/*.test.mjs): 125 pass, 0 fail
 
 Size (session_01H6qaqGGdsgsJYq9QcBswrD): test runs 4, module lines 0 (source unchanged; test and stand-in lines only)
+
+## Fix round 10, plan item 97 (B8) · actions' determination states
+
+Published in `bio-plane/test/m/conformance/fixtures.mjs`, each made by conformance's real `determine` and `determinationRead` when called (no stored values, no `fixtures-own` or `fixtures-generic` markers):
+
+- `determinationBothBases()` (line 66): one determination resting on a held check (`checked_held`) and on another group's accepted finding (`accepted`) together. Users: `actions/t45.test.mjs:41` (ACTIONS #26 J8 item 1).
+- `matterStakeBases()` (line 84): three determinations, each on an accepted finding of an import whose source facts are one of the three states case-import answers: a matter stake recorded at import (`withStake`), recorded with none (`withoutStake`, `matter_stake: null`), and not recorded at all (`undetermined`, `matter_stake: "undetermined"`, identity null, stake undetermined). User: `actions/t50.test.mjs:27` (ACTIONS #26 J8 item 2).
+
+Tests in `fixtures.test.mjs` (lines 57 and 65) check each state's real answer. Red first: the file failed with `does not provide an export named 'determinationBothBases'`; green after the fixtures: 7 of 7 in that file.
+
+Stand-in, reported to BOB: the import facts for `matterStakeBases` are set through conformance's world stand-in `w.imports.editions` (the `case-import` R4 shape, as `t47.test.mjs` sets them), not through case-import's real import. The shape matches case-import's R25 in `case-import/matter-stake.test.mjs`. The accepted finding is the world's `w.accept` stand-in as before. No case-import-real path reaches conformance's test world today (its `caseImport` is the stand-in in `fixture.mjs:263`).
+
+Deferred: none. Found in another module: none new.
+
+Checks (absolute root `/home/user/bio`):
+- conformance suite `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/conformance/*.test.mjs`: 127 pass, 0 fail (125 before, plus the two new tests)
+- `checks/fixtures.mjs /home/user/bio conformance --list`: 0 failures
+- `checks/format.mjs`: 0 failures; `checks/architecture.mjs conformance`: 0 failures; `checks/coverage.mjs conformance`: 42 of 42, 0 failures; `checks/words.mjs conformance`: 0 failures
+- `checks/ownership.mjs` run after the commit (see the COMPLETE)
+
+Size (session_016jHoSN6Fe8DtYJkQyfT6Rr): test runs 5, module lines 0 (source unchanged; 51 test lines added)
+
+## J9 · COMPLETE
+
+B8 done (commit 495e6f8773, pushed; fast-forward from a0aabbbfdc). Published two determination states for actions, each made by conformance's real `determine` and `determinationRead`:
+
+1. `determinationBothBases()` (bio-plane/test/m/conformance/fixtures.mjs:66): one determination resting on a held check and on another group's accepted finding together. For actions t45.test.mjs:41.
+2. `matterStakeBases()` (fixtures.mjs:84): accepted bases with a matter stake recorded at import, recorded with none (matter_stake null), and not recorded at all (matter_stake "undetermined", identity null, stake undetermined). For actions t50.test.mjs:27.
+
+Stand-in, stated plainly: the import facts for (2) are set through conformance's world stand-in `w.imports.editions` (the case-import R4 shape, as t47 does), not through case-import's real import. The shape matches case-import's R25 in case-import/matter-stake.test.mjs. The accepted finding is the world's `w.accept` stand-in as before. Nothing of case-import's real import reaches conformance's test world today.
+
+Tests (bio-plane/test/m/conformance/fixtures.test.mjs:57, :65): red first (the file failed with "does not provide an export named 'determinationBothBases'"), then green: 7 of 7 in that file. Conformance suite: 127 pass, 0 fail (125 before, plus 2).
+
+Checks (absolute root /home/user/bio): fixtures --list 0 failures; format 0; architecture 0; coverage 42 of 42 live ids named, 0 failures; words 0 failures; ownership 0 failures (3 files changed by conformance vs tranche, committed HEAD).
+
+Met ids: none of conformance's marks changed by this round; the new tests name R9, R14, R31, R32, R41 (conformance's own), as the fixtures are read by actions and do not change conformance's requirements.
+
+Markers: none added (no fixtures-own, no fixtures-generic).
+
+Deferred: none. Found in another module: none new.
+
+Size (session_016jHoSN6Fe8DtYJkQyfT6Rr): test runs 5, module lines 0 (source unchanged; 51 test lines added)
+
+Waiting on BOB (J8) to merge; ACTIONS re-points after the merge.

@@ -2103,4 +2103,6 @@ export function publicReadOps(r, url) {
 export const DECLARED_OPS = Object.freeze({
   verify: { classes: null, mutating: false, weight: "read", description: "act.verify.label.published",
     fields: { accepts: ["sha256"], requires: [] } },
+  publishedcase: { classes: null, mutating: false, weight: "read", description: "act.publishedcase.label.published",
+    fields: { accepts: ["id", "edition", "caseId", "sha256"], requires: [] } },
 });

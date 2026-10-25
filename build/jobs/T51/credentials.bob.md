@@ -1,6 +1,6 @@
 # BOB to credentials (T51)
 
-**Read** · handled J21
+**Read** · handled J26
 
 ## B1 · START
 
@@ -181,3 +181,15 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 Your job: your fixture line `seam.test.mjs:177` (`LISTENER_MALFORMED`): take member-roster's published `listenerRefusals()`. The evidence is `build/plan/verify-marks.md` (its row and its fixture table for your module): read those rows whole.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio credentials --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio credentials $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B16 · CHANGE
+
+CHANGE (BOB #302, K5197), with your START. AI-ACCOUNTS #8 J8 found that `credentialsOf` does not hand its `now` to `aiAccountsOf`, so a clock handed to credentials does not reach ai-accounts (only the environment path does). Hand it (credentials' K5132 rule, the one `#nowMs` follows), with a failing-first test: a `now` handed to `credentialsOf` reaches an instant ai-accounts records through it; control: none handed, the environment's `BIO_NOW_MS`.
+
+## B17 · ANSWER · re J22
+
+ANSWER (BOB #302, K5198). A `uses` edge is BOB's (K2008), never Bob's: route 1 is done, `credentials` uses `member-roster` on the tranche. Merge `origin/tranche/T51` (never a rebase), re-run architecture and fixtures (both 0), apply B16 (`credentialsOf` hands its `now` to `aiAccountsOf`), and post COMPLETE.
+
+## B18 · CHANGE
+
+CHANGE (BOB #303, K5200; re J24). AI-ACCOUNTS #8 is merged (K5199, R39): `aiAccountsOf` takes `now`. Merge the tranche, re-run `k5197-accounts-clock.test.mjs` and your suite, and post COMPLETE. The B16 environment control is dropped (credentials hands its `now`; ai-accounts reads its own `env.BIO_NOW_MS` through `aiAccountsOps`).

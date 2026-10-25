@@ -2,7 +2,8 @@
    K2848–K2850): the gate (R8 amended, R74–R76), addressing (R9 amended, R77–R79, R94), receipt, responses and outcomes
    (R81–R83, R85, R86, R95; R80, R87, R88 moved to `action-records` R4–R6 at T47, read here through it), the misuse guards and recognition (R92, R93), the
    registrations (R97), the view (R10), "what we did" (R66), the machine fence (R33) and the tables (R36).
-   Determinations and success records are stand-ins in conformance R9's and consequences R20's shapes; members, entities,
+   Success records are consequences' published `successRecordRead` (R20); determinations are stand-ins in conformance R9's shape
+   until conformance publishes a fixture for the states this file reads; members, entities,
    events, standards and the jurisdiction view are the real modules on the fixture's host. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -11,13 +12,14 @@ import * as actions from "../../../src/actions/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
 import * as conformance from "../../../src/conformance/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
+import { successRecordRead } from "../consequences/fixtures.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c", D = "ACTN-2026-0004-d";
 const M = V("alice");
 const reasons = (list) => list.map((r) => r.reason);
 const NC = "CONF-2026-0001-noncompliant", CO = "CONF-2026-0002-compliant", VO = "CONF-2026-0003-void",
       SU = "CONF-2026-0004-superseded", PUB = "CONF-2026-0005-published";
-const SUC = "SUC-2026-0001", SUC_NONE = "SUC-2026-0404";
+const SUC_NONE = "SUC-2026-0404";
 const CAUSES = [{ finding: "INQ-2026-0001-q", what: "its check was voided", at: "2026-09-20" }];
 /* determinations in conformance R9's shape (T45: `basis` per finding, `void` while void, R33) */
 const DETS = {
@@ -38,11 +40,12 @@ const DETS = {
            findings: [{ finding: "INQ-2026-0005-q", basis: { kind: "published", case: "CASE-2026-0001", edition: 1 } }] },
 };
 const conf = { determinationRead: ({ id }) => DETS[id] || { ok: false, reason: "NO_SUCH_DETERMINATION" } };
-/* a success record in consequences R20's shape; `registerOwnActReader` (its R19) keeps what actions registers */
+/* consequences' published success record (its R20): its real read of a live record, and the real refusal for one no record
+   holds. `registerOwnActReader` (its R19) is a registry double that keeps what actions registers. */
 function consequencesStandIn() {
-  const c = { readers: [],
-    successRecordRead: ({ id }) => (id === SUC ? { ok: true, id: SUC, statement: "the reports were published", superseded_by: null }
-                                               : { ok: false, reason: "NO_SUCH_SUCCESS_RECORD" }),
+  const f = successRecordRead();
+  const c = { readers: [], id: f.id,
+    successRecordRead: ({ id }) => (id === f.id ? f.read : f.absent),
     registerOwnActReader: (fn) => (c.readers.push(fn), { ok: true }) };
   return c;
 }
@@ -91,8 +94,20 @@ test("R8 (T45) (a) a breach action rests on a live determination noncompliant fo
   assert.equal(r(B, CO, VO, NC).ok, true, "any leg live, not void and noncompliant rests it");
 });
 
+test("R8 (T45) (e) a success record consequences reads superseded (live false, a successor named) is no basis: ACTION_BASIS_REFUSED, nothing written", () => {
+  const { w, cons } = grounded();
+  const read = cons.successRecordRead({ id: cons.id, viewer: M });
+  assert.equal(read.success.live, true, "control: the published record reads live, and lands");
+  assert.equal(w.promote(C, actionMd(C, [...CP, "action_kind: other", ...legs(cons.id)])).ok, true);
+  /* consequences R20 answers a superseded record ok with `live` false and its successor named under `success` */
+  cons.successRecordRead = () => ({ ok: true, success: { ...read.success, live: false, superseded_by: "SUC-2026-0002" } });
+  const r = w.promote(D, actionMd(D, [...CP, "action_kind: other", ...legs(cons.id)]));
+  assert.equal(r.reason, "ACTION_BASIS_REFUSED");
+  assert.equal(w.record.head(D), null, "nothing was written");
+});
+
 test("R8 (T45) (d) an overridden action may later gain a leg on a live noncompliant determination: the override stays, the read answers both; (e) a rests_on leg may name a live success record", () => {
-  const { w } = grounded();
+  const { w, cons } = grounded();
   assert.equal(w.promote(A, actionMd(A, [...CP, "action_kind: other", "breach: true", ...override(LEGAL)])).ok, true);
   const later = w.text(A).replace("breach: true", `breach: true\n${legs(NC).join("\n")}`);
   assert.equal(w.promote(A, later).ok, true, "a member's revision adds the determination");
@@ -101,7 +116,7 @@ test("R8 (T45) (d) an overridden action may later gain a leg on a live noncompli
   assert.equal(w.promote(A, w.text(A).replace(/premise_override:\n(  .*\n)+/, "")).reason, "PREMISE_OVERRIDE_REWRITTEN",
     "the override stays");
   /* (e) a success record as a rests_on target; one the record does not hold is refused as any unheld target */
-  assert.equal(w.promote(B, actionMd(B, [...CP, "action_kind: other", ...legs(SUC)])).ok, true);
+  assert.equal(w.promote(B, actionMd(B, [...CP, "action_kind: other", ...legs(cons.id)])).ok, true);
   assert.equal(w.promote(C, actionMd(C, [...CP, "action_kind: other", ...legs(SUC_NONE)])).reason, "ACTION_BASIS_REFUSED");
 });
 
@@ -428,10 +443,10 @@ test("R92 openItemsWith: the visible open actions to the same office (entity id,
 });
 
 test("R93 a recognition (the view's shape: recognition) answers recognition_basis: compliant, success or promise_only with its sentence; nothing is refused for it", () => {
-  const { w } = grounded();
+  const { w, cons } = grounded();
   const rec = (id, ...ids) => w.promote(id, actionMd(id, [...CP, "action_kind: recognition_letter", ...(ids.length ? legs(...ids) : [])]));
   assert.equal(rec(A, CO).ok, true);
-  assert.equal(rec(B, SUC).ok, true);
+  assert.equal(rec(B, cons.id).ok, true);
   assert.equal(rec(C).ok, true, "nothing is refused for its basis");
   const basis = (id) => w.a.actionRead({ id, viewer: M }).recognition_basis;
   assert.deepEqual(basis(A), { basis: "compliant" });

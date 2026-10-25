@@ -664,8 +664,14 @@ export default {
      2025 through June 30, 2027"; read 2026-10-22). Alameda County's runs July 1 to June 30 and is written "FY 2025-26"
      (the county's budget press release: "The new budget goes into effect from July 1, 2024, to June 30, 2025"; the Board
      letter "Fiscal Year (FY) 2025-26 Final Budget"; budget.alamedacountyca.gov; read 2026-10-22). The State Controller's
-     Office keeps no entry: no page of its own was read. */
+     Office keeps no entry of its own: no page of its own was read (its host answers a bot check, so the statute and its
+     own pages could not be read; the profile's `*` below is what an unnamed body resolves to, and is the City's).
+     `*`, the year of a figure that names no body, is the City's: Charter section 800, "The fiscal year for the City shall
+     commence on the first day of July of each year" (the City's published Charter, gocodebook.com/library/us/ca/oakland/
+     charter, Article VIII, read 2026-10-25), the name and label as the City's budget writes them (above). */
   fiscal_year: [
+    { body: "*", start: "07-01", named_by: "start", label: "FY{start}-{end2}", status: "researched",
+      basis: "2026-10-25 oakland-charter-s800, 2026-10-22 oaklandca.gov-fy2025-27-budget" },
     ...["Finance Department", "Oakland City Council", "Office Of The City Auditor"].map((body) => ({
       body, start: "07-01", named_by: "start", label: "FY{start}-{end2}", status: "researched",
       basis: "2026-10-22 oaklandca.gov-fy2025-27-budget" })),

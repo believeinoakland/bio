@@ -3,32 +3,41 @@
  * project as before. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, main, ok, DOCUMENT_STUB } from "./page.mjs";
+import { openWorld, members, main, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
-const PROJECTS = Array.from({ length: 37 }, (_, i) => ({ id: `PROJ-2026-${String(i + 1).padStart(4, "0")}`, name: `Project ${i + 1}` }));
-const qid = (i) => `INQ-2026-${String(i + 1).padStart(4, "0")}-q${i + 1}`;
-const ROUTED = qid(0);
-const HITS = Array.from({ length: 200 }, (_, i) => ({ bundle_id: qid(i), title: `Question ${i + 1}` }));
-/* question i is in project (i mod 37) */
-const itemsOf = (project) => { const k = PROJECTS.findIndex((x) => x.id === project); return HITS.filter((_, i) => i % 37 === k).map((h) => ({ inquiry: h.bundle_id, title: h.title })); };
-const md = (title, extra = []) => ["---", `title: ${JSON.stringify(title)}`, ...extra, "---", "", "## Summary", ""].join("\n");
-const plane = { search: ok({ hits: HITS, truncated: false }), projectlist: ok({ projects: PROJECTS }), projectquestions: (r) => ok({ ok: true, items: itemsOf(r.query.project) }),
-  image: (r) => ok(r.query.id === ROUTED ? { "bundle.md": md("Question 1", [`project: ${PROJECTS[0].id}`]) } : { "bundle.md": md("Project 1") }),
-  opencaptures: ok({ ok: true, truncated: false, captures: [] }), heldcaptures: ok({ ok: true, held: [], truncated: false }), capturerequests: ok({ ok: true, requests: [] }) };
+/* Over the REAL store (fix round 10, K5054): 37 projects and 200 questions are made by the member's real acts (the project and question recipes), question i in
+   project (i mod 37), and the page reads them through the owners' own `search`, `projectlist`, `projectquestions` and `image`. */
+const COUNT_PROJECTS = 37, COUNT_QUESTIONS = 200;
+/* one world for the file: the page only reads it, and making it is the cost (every test opens its own page over it) */
+let made = null;
+async function build() {
+  if (made) return made;
+  const t = await members({ mai: ["contribute", "create_projects"] });
+  const projects = [];
+  for (let i = 0; i < COUNT_PROJECTS; i++) projects.push(await t.world.recipes.project(t.mai, `Project ${i + 1}`));
+  const ids = [];
+  for (let i = 0; i < COUNT_QUESTIONS; i++) ids.push((await t.world.recipes.question(t.mai, projects[i % COUNT_PROJECTS], { title: `Question ${i + 1}`, text: `Question ${i + 1}`, draw: true })).id);
+  made = { ...t, projects, ids };
+  return made;
+}
+const ROUTED = (t) => t.ids[0];
 const options = (p) => Array.from(main(p).querySelectorAll("#ci-for option")).map((o) => o.textContent);
 const reads = (p) => p.byOp("projectquestions").map((r) => r.query.project);
+const open = (t, path) => openWorld(path, { world: t.world, as: t.mai, screens: [...SCREENS, DOCUMENT_STUB] });
 
-test("R29 (G111) Add opened for a question reads only the routed question's project by the time it settles", async () => {
-  const p = await openPage(`/app/capture/address/${ROUTED}`, { plane, screens: [...SCREENS, DOCUMENT_STUB] });
+test("R29 (G111) Add opened for a question reads only the routed question's project by the time it settles", { timeout: 600000 }, async () => {
+  const t = await build();
+  const p = await open(t, `/app/capture/address/${ROUTED(t)}`);
   await p.settle();
   assert.ok(reads(p).length <= 1, `projectquestions reads at settle: ${reads(p).length}`);
-  assert.deepEqual(reads(p), [PROJECTS[0].id]);
-  assert.ok(options(p).some((t) => t.includes("Question 1") && t.includes("Project 1")), "the routed question is told by its project at once");
+  assert.deepEqual(reads(p), [t.projects[0]]);
+  assert.ok(options(p).some((o) => o.includes("Question 1") && o.includes("Project 1")), "the routed question is told by its project at once");
 });
 
-test("R29 (G111) control: afterwards each other project is read once and every question is labelled by its project as before", async () => {
-  const p = await openPage(`/app/capture/address/${ROUTED}`, { plane, screens: [...SCREENS, DOCUMENT_STUB] });
+test("R29 (G111) control: afterwards each other project is read once and every question is labelled by its project as before", { timeout: 600000 }, async () => {
+  const t = await build();
+  const p = await open(t, `/app/capture/address/${ROUTED(t)}`);
   await p.settle();
   await p.clock.tick(2000);
   for (let i = 0; i < 12; i++) await p.settle(20);
@@ -43,8 +52,9 @@ test("R29 (G111) control: afterwards each other project is read once and every q
   assert.equal(reads(p).length, 37, "a later redraw reads nothing again");
 });
 
-test("R29 (G111) control: a screen opened for no question reads no project's questions", async () => {
-  const p = await openPage("/app/capture/address", { plane, screens: [...SCREENS, DOCUMENT_STUB] });
+test("R29 (G111) control: a screen opened for no question reads no project's questions", { timeout: 600000 }, async () => {
+  const t = await build();
+  const p = await open(t, "/app/capture/address");
   await p.clock.tick(5000);
   for (let i = 0; i < 6; i++) await p.settle(20);
   assert.equal(reads(p).length, 0);
