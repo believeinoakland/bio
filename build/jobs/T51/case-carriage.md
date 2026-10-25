@@ -271,3 +271,36 @@ Not a red first: the old file passed on unchanged module code. The divergence is
 REPORT / QUESTION (not blocking; no change made): (1) R1: is an undetermined text file under a `.png` path a photo? Real uploads file at `upload-<sha>`, so the upload flow cannot reach it. (2) Coverage gap: the declared-type branch of `#judgePhoto` has no test with capture's answer; I dropped the hand-built case that covered it, since an upload never declares a type.
 
 Size (session_019b9mQAfKq3DmpzFv9GUmSd): test runs 6, module lines 1756
+
+## J11 · COMPLETE
+
+COMPLETE. Fix round 10, cause 1 (K5148, K5152) is applied on `job/T51/case-carriage`, merged with `tranche/T51` at 75824d57c2. Entries applied: the round 10 cause 1 test change (test files only).
+
+**Applied.** `bio-plane/test/m/case-carriage/upload-photo.test.mjs` takes each upload's provenance document from capture's published `uploadProvenance` (`bio-plane/test/m/capture/fixtures.mjs:133`), which capture's real `uploadCapture` writes when the test runs. Only the bundle, its register and files rows, and the held bytes stay in the test. The change itself is at 277a446b75 (J10). This round: local `job/T51/case-carriage` had no commits the origin lacked, so it was moved to `stale/case-carriage-local` and reset to origin; the tranche was merged in cleanly. `capture` is now in case-carriage's `uses` (verified in `build/modules.json`), so the architecture failure J10 reported is gone. No module code changed.
+
+**Met ids.** R1, R9 and R13 (named in the upload-photo test titles; they check the photo rule against capture's real documents). R8 follows the same rule, but no test of mine names it, so I am not claiming it.
+
+**Failing-first.** I did not observe a red run on today's code for this test-only change. The module is unchanged and passes on the real document. The divergence was shown by probe (J10): a real text upload filed under a `.png` path is judged a photo by `#judgePhoto`, which the old hand-built document never showed. BOB decides whether that probe stands in for the red.
+
+**Why the tests missed it.** The file built the provenance document by hand from its author's idea of the shape, so it could not diverge from the module's rule. Nothing compared it with capture's answer. It now takes capture's answer.
+
+**Deferred:** none in my paths.
+
+**Found, for BOB (carried from J10; not blocking).**
+- **Question (R1, judgment).** An undetermined text file at a `.png` path is judged a photo by its extension. Real uploads file at `upload-<sha>`, so the upload flow cannot reach this case. Best reading: no change. It is BOB's to say.
+- **Coverage gap.** The declared-type branch of `#judgePhoto` (`profile.source_content_type` an image type, with no format) has no test whose document is capture's answer. The hand-built case covering it was dropped, because an upload never declares a type.
+- **Door case (K5138).** The walker's through-the-door check for this cause (`control-plane/r10-upload-photo.test.mjs`) imports control-plane's `r8-kit.mjs`, so it belongs to control-plane. I did not write it. BOB to place it.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/case-carriage/*.test.mjs` from the repository root, run without `--test-force-exit` (it exits by itself): 110 tests, 110 pass, 0 fail.
+
+**Checks** (from `/home/user/civicos-process`, product `/home/user/bio`):
+- format: 178 modules, 178 requirements files; 0 failures.
+- architecture case-carriage: 20 product files, 90 relative imports; 0 failures.
+- coverage case-carriage: 23 of 23 live requirement ids named by a test; 0 failures.
+- words case-carriage: 0 failures (unkeyed 1, reported, not a failure).
+- ownership case-carriage tranche/T51: 1 file changed by case-carriage; 0 failures.
+- fixtures case-carriage --list: 3456 test files, 178 modules; 0 failures; no line for `upload-photo.test.mjs`.
+
+Found in other modules: none new.
+
+Size (session_01NTQ4iqbexAgwqHavh3qwVV): test runs 1, module lines 1756
