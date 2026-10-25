@@ -4,10 +4,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, MEMBER, ZONE, noSuchDatedFact } from "./fixture.mjs";
+import { sha as digest } from "../provenance/fixtures.mjs";
 import { PROGRESSION_CHECKS } from "../../../src/progressions/index.mjs";
 
 const T = (w, placements, entityId = "ENT-1") =>
   w.p.threadInstance({ progressionKey: "proc", entityId, placements, threadedBy: "member:alice", viewer: MEMBER });
+/* a capture registered in provenance is keyed by its sha-256 digest, as the real register holds it */
+const [SA, SB, SC, SD] = ["sa", "sb", "sc", "sd"].map(digest);
 const R = (w, entityId = "ENT-1") => w.p.readInstance({ progressionKey: "proc", entityId, viewer: MEMBER });
 const docOf = (r, sha) => r.stages.flatMap((s) => s.documents).find((d) => d.capture_sha === sha);
 const E1 = "EVT-2026-aaaaaaaaaaaaaaaa", E2 = "EVT-2026-bbbbbbbbbbbbbbbb";
@@ -41,31 +44,31 @@ test("R37: a placement may name an event its document attests or a dated fact of
 test("R37 R10: each placement's own date and its source on read: the event's when, the named or only dated fact, or none with why; never the capture's instants", async () => {
   const w = seeded();
   w.define();
-  w.event(E1, { start: "2026-02-03T10:30", end: null, precision: "minute", zone: "Europe/Paris" }, ["sa"]);
-  w.fact("sb", "2026-02-04", "DF-B");
-  w.fact("sc", "2026-02-05", "DF-C1");
-  w.fact("sc", "2026-02-06", "DF-C2");
-  for (const s of ["sa", "sb", "sc", "sd"]) { w.dates.reading[s] = "2026-08-01T00:00:00Z"; w.dates.registered[s] = "2026-08-02T00:00:00Z"; }
-  await T(w, [{ stage: "need", captureSha: "sa", event: E1 }, { stage: "award", captureSha: "sb" },
-              { stage: "contract", captureSha: "sc" }, { stage: "contract", captureSha: "sd" }]);
+  w.event(E1, { start: "2026-02-03T10:30", end: null, precision: "minute", zone: "Europe/Paris" }, [SA]);
+  w.fact(SB, "2026-02-04", "DF-B");
+  w.fact(SC, "2026-02-05", "DF-C1");
+  w.fact(SC, "2026-02-06", "DF-C2");
+  for (const s of [SA, SB, SC, SD]) { w.dates.reading[s] = "2026-08-01T00:00:00Z"; w.registerAt(s, "2026-08-02T00:00:00Z"); }
+  await T(w, [{ stage: "need", captureSha: SA, event: E1 }, { stage: "award", captureSha: SB },
+              { stage: "contract", captureSha: SC }, { stage: "contract", captureSha: SD }]);
   const r = R(w);
   const view = (sha) => { const d = docOf(r, sha); return [d.own_date, d.own_date_source, d.own_date_ref]; };
-  assert.deepEqual(view("sa"), [{ value: "2026-02-03T10:30", precision: "minute", zone: "Europe/Paris" }, "event", E1]);
-  assert.deepEqual(view("sb"), [{ value: "2026-02-04", precision: "day", zone: ZONE }, "dated_fact", "DF-B"]);   // the one held
-  assert.deepEqual(view("sc").slice(0, 2), [null, "none"]);
-  assert.match(docOf(r, "sc").own_date_why, /2 dated facts/);
-  assert.deepEqual(view("sd").slice(0, 2), [null, "none"]);
-  assert.match(docOf(r, "sd").own_date_why, /no dated fact/);
+  assert.deepEqual(view(SA), [{ value: "2026-02-03T10:30", precision: "minute", zone: "Europe/Paris" }, "event", E1]);
+  assert.deepEqual(view(SB), [{ value: "2026-02-04", precision: "day", zone: ZONE }, "dated_fact", "DF-B"]);   // the one held
+  assert.deepEqual(view(SC).slice(0, 2), [null, "none"]);
+  assert.match(docOf(r, SC).own_date_why, /2 dated facts/);
+  assert.deepEqual(view(SD).slice(0, 2), [null, "none"]);
+  assert.match(docOf(r, SD).own_date_why, /no dated fact/);
   assert.doesNotMatch(JSON.stringify(r.stages), /2026-08-0[12]/);   // no registration or reading instant is a date
   // named: the member's choice of one of several
-  await T(w, [{ stage: "contract", captureSha: "sc", datedFact: "DF-C2" }]);
-  assert.deepEqual(docOf(R(w), "sc").own_date.value, "2026-02-06");
+  await T(w, [{ stage: "contract", captureSha: SC, datedFact: "DF-C2" }]);
+  assert.deepEqual(docOf(R(w), SC).own_date.value, "2026-02-06");
   // read on every read, never stored: the event's when moves, the read follows; an event placed nowhere has none
   w.ev.events.get(E1).when = { start: "2026-02-01", end: null, precision: "day", zone: ZONE };
-  await T(w, [{ stage: "need", captureSha: "sa", event: E1 }]);
-  assert.equal(docOf(R(w), "sa").own_date.value, "2026-02-01");
+  await T(w, [{ stage: "need", captureSha: SA, event: E1 }]);
+  assert.equal(docOf(R(w), SA).own_date.value, "2026-02-01");
   w.ev.events.get(E1).when = null;
-  assert.match(docOf(R(w), "sa").own_date_why, /placed nowhere/);
+  assert.match(docOf(R(w), SA).own_date_why, /placed nowhere/);
   const cols = w.rows(`PRAGMA table_info(progression_instances)`).map((c) => c.name);
   for (const c of ["own_date", "when", "date", "value"]) assert.ok(!cols.includes(c), c);
 });
