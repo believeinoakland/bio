@@ -22,6 +22,8 @@ const lab = () => (shared ||= (async () => {
 })());
 const open = async (path, plane, o = {}) => { const L = await lab(); return openRaw(path, plane, { screens: withScreens("document", "question", "person", "action", "plan", "project", "timeline"), ...L.w.boot(L.mem), ...o }); };
 const press = (p, op, o = {}) => pressRaw(p, op, { reason: R, ...o });
+/** Waits (in small steps) until `cond()` holds: the held set's answer is the real store's, wrapped, and takes a moment the harness does not count. */
+const until = async (cond) => { for (let i = 0; i < 40 && !cond(); i++) await new Promise((r) => setTimeout(r, 50)).then(() => settle()); };
 const choose = async (p, id, value) => { const el = p.doc.getElementById(id); el.value = value; p.fire(el, "change"); await settle(); };
 const ITEM = (id, kind, title, state, at, extra = {}) => ({ kind, id, title, state, last_changed: at, new: false, watched: false, flagged: null, ...extra });
 const REC = [
@@ -176,6 +178,7 @@ test("R57: the cite state's own words: the legend, Support it and Cut against it
   const selection = async (req) => { const real = await L.mem.read("selection", { query: req.query }); return ok({ ...real, n: members.length, members }); };
   const p = await open("/app/finder", { ...PLANE, browse: BROWSE(items), selection, search: qs });
   await press(p, "select", { values: { ["finder-pick-" + d1]: true, ["finder-pick-" + d2]: true, ["finder-pick-" + d3]: true } });
+  await until(() => main(p).querySelector(".cs-hold") && text(p, main(p).querySelector(".cs-hold")).includes(word("screen.finder.held.many", { n: "2" })));
   await press(p, "cite", { nth: 0 });
   const t = text(p);
   for (const k of ["legend", "support", "against", "back", "back.help"]) assert.ok(t.includes(word(`screen.finder.cite.${k}`)), k);
@@ -186,6 +189,7 @@ test("R57: the cite state's own words: the legend, Support it and Cut against it
   p.doc.getElementById("finder-cite-role-against").checked = true;
   const stateAct = () => main(p).querySelectorAll('button[data-act="cite"]').findIndex((b) => b.dataset.cite === "1");
   await press(p, "cite", { nth: stateAct() });
+  await until(() => text(p).includes(word("screen.finder.cite.set_changed")));
   const after = text(p);
   assert.equal(last(p, "cite").query.role, "cuts_against");
   assert.ok(after.includes(word("screen.finder.cite.cited")) && after.includes(word("screen.finder.cite.newly_against")));

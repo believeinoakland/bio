@@ -331,8 +331,8 @@ test("R5, R26, R103 (R17a, fix round 10, G3): a term item says which part of the
   const plane = { findin: async (req) => ok({ ...(await L.rosa.act("findin", { body: req.body })), kinds: [{ ...real.kinds[0], items, count: items.length }] }) };
   const p = await openRaw("/app/find-in/" + L.project, plane, L.w.boot(L.rosa));
   await press(p, "findin", { values: { "findin-kind-people": false, "findin-kind-money": false, "findin-kind-dates": false, "findin-kind-requirements": false, "findin-kind-events": false, "findin-term": "lease", "findin-question": L.q }, reason: R });
+  for (let i = 0; i < 40 && !main(p).querySelectorAll(".cs-row").length; i++) await new Promise((r) => setTimeout(r, 50)).then(() => settle());   // the plane's answer waits on the real act
   const rows = main(p).querySelectorAll(".cs-row");
-  console.log("DBG", JSON.stringify(p.byOp("findin").map((r) => [r.body, r.status, r.response && JSON.stringify(r.response).slice(0,300)])), Object.keys(p.byOp("findin")[0] || {}));
   assert.equal(rows.length, 5);
   const named = rows.map((r) => r.querySelectorAll("[data-part-kind]").map((e) => e.getAttribute("data-part-kind")));
   assert.deepEqual(named, [["footnote"], [], [], ["header"], []], "the footnote and the header say so; a body hit, an unkeyed item and an unknown kind say none");
