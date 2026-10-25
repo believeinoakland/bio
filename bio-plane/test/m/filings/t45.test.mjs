@@ -216,8 +216,25 @@ test("R39 when the member marks that a text names a pending measure or a candida
   assert.equal(prep(f, A).notices.some((n) => n.kind === "election"), false, "control: unmarked");
   const g = comm(f, A, { voice: "group", text: "We support the new budget. The vote was on 2 March." });
   assert.deepEqual(g.outward.pointed.position.pointed.map((p) => p.index), [0]);
-  assert.equal("position" in comm(f, A, { text: "We support the new budget." }).outward.pointed, false, "not a comment as the group's act");
+  assert.equal("position" in comm(f, A, { text: "We support the new budget." }).outward.pointed, false, "control: a kind that is not a public comment, with no voice, is not read for a position");
   assert.equal((await approve(f, g.id)).ok, true, "pointed, still approved");
+});
+
+test("R44 an absent voice on a public comment reads group, so its position sentences are pointed out; a self voice stays self; a kind that is not a public comment, with no voice, is not read for a position", () => {
+  const x = world();
+  /* the Oakland profile names the public_comment kind (the test profile does not) */
+  x.record.setSetting("jurisdiction_profiles", [PROFILE, "oakland-alameda"], V("olive"));
+  const f = f45(x);
+  const P = x.action({ kind: "public_comment" });
+  const ng = comm(f, P, { text: "We believe the council should adopt a stricter rule." });
+  assert.equal(ng.ok, true, JSON.stringify(ng).slice(0, 200));
+  assert.equal(ng.marks.voice, "group", "absent reads group");
+  assert.deepEqual(ng.outward.pointed.position.pointed.map((p) => p.index), [0]);
+  assert.equal(comm(f, P, { voice: "self", text: "We support the new budget." }).marks.voice, "self", "self stays self");
+  const R = x.action({ kind: "records_request" });
+  const rr = comm(f, R, { text: "We believe the council should adopt a stricter rule." });
+  assert.equal(rr.marks.voice, null, "control: a records request states no voice");
+  assert.equal("position" in rr.outward.pointed, false, "control: a records request has no position");
 });
 
 test("R40 a draft or communication for a request for comment carries the sentence that the reply may be quoted unless it says otherwise; an approved text without it is refused RFC_QUOTING_MISSING; with it, approved", async () => {

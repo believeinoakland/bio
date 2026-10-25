@@ -37,7 +37,7 @@ test("R18, R19, R20: selectionResolve fixture: NO_SUCH_SELECTION, NOT_YOURS, SET
   assert.deepEqual(f.resolve({ handle: "sel-nope", owner: "o" }), { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" });
   const handle = await f.selection(["INFO-001", "INFO-002"], "o");
   assert.match(handle, /^sel-[0-9a-f]{24}$/);
-  assert.equal(f.resolve({ handle, owner: "x" }).reason, "NOT_YOURS");
+  assert.equal(f.resolve({ handle, owner: "x" }).reason, "SELECTION_NOT_YOURS");
   const ok = f.resolve({ handle, owner: "o" });
   assert.deepEqual([ok.ok, ok.members, ok.moved], [true, ["INFO-001", "INFO-002"], false]);
   assert.deepEqual(Object.keys(ok.drift).sort(), ["added", "hidden", "kind", "purged", "removed", "revised"]);
@@ -56,8 +56,8 @@ test("R77: selection-read: NO_SUCH_SELECTION, NOT_YOURS, and the members of a se
   assert.deepEqual(f.read({ handle: "sel-nope", owner: "o" }), { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" });
   const handle = await f.selection(["INFO-001", "INFO-003"], "o");
   const mine = f.read({ handle, owner: "x" });
-  assert.deepEqual([mine.ok, mine.reason], [false, "NOT_YOURS"]);
-  assert.equal(f.read({ handle, owner: null }).reason, "NOT_YOURS");
+  assert.deepEqual([mine.ok, mine.reason], [false, "SELECTION_NOT_YOURS"]);
+  assert.equal(f.read({ handle, owner: null }).reason, "SELECTION_NOT_YOURS");
   const held = f.read({ handle, owner: "o" });
   assert.deepEqual([held.ok, held.members], [true, ["INFO-001", "INFO-003"]]);
   assert.equal("viewer" in held, false, "the real answer does not echo the viewer (the user's stand-in does)");

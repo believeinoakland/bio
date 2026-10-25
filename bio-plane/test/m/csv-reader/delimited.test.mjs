@@ -78,3 +78,35 @@ test("R21 never throws and is false for an empty head or arguments of the wrong 
   globalThis.TextDecoder = class { constructor() { throw new Error("none"); } };
   try { assert.equal(typeof isDelimitedText("x.csv", "text/csv", CSV), "boolean"); } finally { globalThis.TextDecoder = Real; }
 });
+
+/* csv-reader R26 (K5157; walk-T51-final 06 §6): a file declared plain text must repeat the delimiter's count on the majority of its
+   lines; a declared CSV or TSV keeps presence on the majority. Every case goes through the exported function. */
+const MINUTES = enc([
+  "The board met at 7 pm, with all members present, and approved the agenda.",
+  "Ms. Reyes, the treasurer, reported a balance of $4,200.",
+  "After a long discussion, the members agreed, by a show of hands, to postpone the vote, pending a legal opinion.",
+  "The meeting adjourned at nine.",
+  "",
+].join("\n"));
+const TITLED = enc("Quarterly report\nid,name,amount,note,date\n1,Ann,10\n2,Bo,20,late\n3,Cy,30,,2026-01-01\n4,Di,40,x\n5,Ed,50,,2026-02-02\n");
+
+test("R26 prose with commas on most lines, declared plain text, is not a table (the walker's four paragraphs as minutes.txt)", () => {
+  assert.equal(isDelimitedText("minutes.txt", "text/plain", MINUTES), false, "three of four lines carry a comma, no count repeats");
+  assert.equal(isDelimitedText("minutes.txt", "text/plain; charset=utf-8", MINUTES), false);
+  assert.equal(isDelimitedText("minutes.txt", "application/octet-stream", MINUTES), false, "named .txt");
+  assert.equal(isDelimitedText("minutes.tab", "text/plain", MINUTES), false, "declared plain text");
+  assert.equal(isDelimitedText("minutes.txt", "text/plain", new Uint8Array([0xef, 0xbb, 0xbf, ...MINUTES])), false, "with a BOM");
+});
+
+test("R26 controls: a repeating count is a table in a .txt, and a declared CSV or TSV keeps presence", () => {
+  const three = enc("id,name,amount\n1,Ann,10\n2,Bo,20\n3,Cy,30\n");
+  assert.equal(isDelimitedText("a.txt", "text/plain", three), true, "a real three-column CSV named .txt");
+  assert.equal(isDelimitedText("a.csv", "text/plain", three), true, "the same bytes named .csv");
+  assert.equal(isDelimitedText("a.csv", "text/csv", three), true);
+  assert.equal(isDelimitedText("a.txt", "text/plain", enc("id\tname\tamount\n1\tAnn\t10\n2\tBo\t20\n")), true, "a TSV named .txt");
+  assert.equal(isDelimitedText("a.csv", "text/plain", TITLED), true, "cause 20: a ragged CSV with a title block named .csv");
+  assert.equal(isDelimitedText("a.csv", "text/csv", TITLED), true);
+  assert.equal(isDelimitedText("a.csv", "text/plain", MINUTES), true, "a .csv name keeps presence on the majority (R7)");
+  assert.equal(isDelimitedText("minutes.txt", "text/csv", MINUTES), true, "a declared CSV type keeps presence on the majority (R7)");
+  assert.equal(isDelimitedText("minutes.txt", "text/tab-separated-values", enc("a\tb\n1\t2\n3\n4\t5\t6\n")), true, "a declared TSV type keeps presence");
+});

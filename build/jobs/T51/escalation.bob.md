@@ -1,6 +1,6 @@
 # BOB to escalation (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -76,3 +76,7 @@ Mail with `--module escalation`; record `build/jobs/T51/escalation.md` (append a
 1. **An action whose only clock entry is stored overdue reads "action pending" instead of meeting the stage trigger** (`diag2-11.md` §5; escalation R39, new): `escalation/index.mjs:445-448` tests `!facts.clock_next` before `facts.clock_overdue`. Test `clock_overdue` first (actions R110 makes it true for a stored `overdue` entry; until actions merges, take the facts from actions' published fixture or REPORT what you need). Test: in `test/m/escalation/`, an action whose only entry is stored `overdue` meets the overdue stage trigger; control: no pending and no overdue entry gives the pending note.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> escalation --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K5161, plan item 78 (3)): actions R110 is merged on the tranche. Merge `origin/tranche/T51` into your branch, re-run r39.test.mjs and your suite, then COMPLETE with R39 as met.

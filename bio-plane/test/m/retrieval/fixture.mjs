@@ -32,6 +32,7 @@ export const MACHINE = "class:member";
    pattern too complex"), which node:sqlite does not (K313). This storage answers as workerd does, so code that indexes
    a cursor or writes a long pattern fails here as it would in the Durable Object (K316). */
 export const WORKERD_PATTERN_CAP = 50;
+export const PLANE_VARIABLE_CEILING = 100;
 function cursor(rows) {
   let i = 0;
   const c = {
@@ -48,7 +49,8 @@ function cursor(rows) {
 }
 
 export function storage() {
-  const db = new DatabaseSync(":memory:");
+  /* D-36: the plane binds at most 100 variables a statement; this database refuses more, as query-language's does. */
+  const db = new DatabaseSync(":memory:", { limits: { variableNumber: PLANE_VARIABLE_CEILING } });
   let n = 0;
   const sql = {
     exec(q, ...args) {

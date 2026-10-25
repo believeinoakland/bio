@@ -75,8 +75,8 @@ test("R19, R31: an unknown, released or expired handle is NO_SUCH_SELECTION (C-3
   assert.deepEqual(unknown, { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" });
   assert.equal(SELECTION_CHECKS.NO_SUCH_SELECTION.check, "C-33.20");
   assert.match(SELECTION_CHECKS.NO_SUCH_SELECTION.where, /is-selection-known/);
-  assert.equal(w.retrieval.selectionResolve({ handle: s.handle, owner: "x", viewer: V("vera") }).reason, "NOT_YOURS");
-  assert.equal(w.retrieval.selectionResolve({ handle: s.handle, owner: null, viewer: V("vera") }).reason, "NOT_YOURS");
+  assert.equal(w.retrieval.selectionResolve({ handle: s.handle, owner: "x", viewer: V("vera") }).reason, "SELECTION_NOT_YOURS");
+  assert.equal(w.retrieval.selectionResolve({ handle: s.handle, owner: null, viewer: V("vera") }).reason, "SELECTION_NOT_YOURS");
   /* Use extends the life: resolved at +200 s, alive at +400 s. */
   w.clock.sel += 200000;
   const used = w.retrieval.selectionResolve({ handle: s.handle, owner: "o", viewer: V("vera") });
@@ -157,8 +157,8 @@ test("R21: selectionList answers NO_OWNER, else the owner's selections newest fi
   assert.equal(w.retrieval.selectionList({ owner: "o", viewer: V("ann") }).bytes, bytesOf("INFO-001") + bytesOf(proj));
   assert.equal(w.retrieval.selectionList({ owner: "o" }).bytes, bytesOf("INFO-001") + bytesOf(proj), "an internal call is whole");
   assert.deepEqual(w.retrieval.selectionRelease({ handle: a.handle }), { ok: false, reason: "NO_OWNER" });
-  assert.deepEqual(w.retrieval.selectionRelease({ handle: hidden.handle, owner: "o" }), { ok: false, reason: "NOT_YOURS" });
-  assert.deepEqual(w.retrieval.selectionRelease({ handle: "sel-none", owner: "o" }), { ok: false, reason: "NOT_YOURS" });
+  assert.deepEqual(w.retrieval.selectionRelease({ handle: hidden.handle, owner: "o" }), { ok: false, reason: "SELECTION_NOT_YOURS" });
+  assert.deepEqual(w.retrieval.selectionRelease({ handle: "sel-none", owner: "o" }), { ok: false, reason: "SELECTION_NOT_YOURS" });
   assert.deepEqual(w.retrieval.selectionRelease({ handle: a.handle, owner: "o" }), { ok: true, released: 1 });
   await w.retrieval.selectionCreate({ owner: "o", viewer: V("vera"), q: "x" });
   assert.deepEqual(w.retrieval.selectionRelease({ owner: "o" }), { ok: true, released: 2 });
