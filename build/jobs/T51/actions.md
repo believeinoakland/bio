@@ -1,6 +1,6 @@
 # actions (T51)
 
-**Status** · session_01JVxfm6Xv26CMbdeCJgfGt4 · depth 2 · COMPLETE · handled B5
+**Status** · session_019WFFDn8nuGumB6cnvbuWah · depth 2 · COMPLETE · handled B5
 
 ## Completion (T51-89)
 
@@ -76,3 +76,21 @@ Size (session_01JVxfm6Xv26CMbdeCJgfGt4): test runs 9, module lines 0
 ## J5 · COMPLETE
 
 COMPLETE (B5). Published fixtures actionRead, actionsForRefusal (fixtures.mjs, tested). Own lines: fixture.mjs:111, t12:16, t18:16, write:153 re-pointed to retrieval/conformance fixtures. Left: t45:40 and t50:27 need conformance fixture variants (finding bases, void, compliant, live-superseded): product cause for BOB; t12:55 one arm (superseded_by null) unreachable by conformance's fixture, kept as own test; t45:45 is consequences'. Note: real actionRead answers NO_SUCH_ACTION (R106), not NO_SUCH_BUNDLE/NOT_AN_ACTION as the plan says; escalation fixture.mjs:162-165 and draft.test.mjs:143 copy a stale shape. No fixtures-own/generic markers added. Tests 151/151; words, format, architecture, coverage, ownership 0 failures. Details in record.
+
+## Completion of B6 (item 1: actioncreate for a member outside the project)
+
+**Cause** (diag2-04 §10), re-read at `index.mjs` (actionCreate's promote): it passed no `actorMemberId`, so promotion R53's participant check (`filer` null) never ran. **Fix:** `actionCreate` now stamps `actorIdentity`, `actorViewer` and `actorMemberId` (`membership.positionalMember(viewer ?? author, author)`, null for a machine credential), as `intent` does. **Met:** actions R47 (with promotion R53).
+
+**Test** `create-participant.test.mjs`: a stranger's `actionCreate` into a project is refused `PROMOTE_NOT_A_PARTICIPANT` and no action is written (red on the earlier code: accepted); controls: a joined member, an invited member and the owner succeed; the machine path (`class:daemon`) is unchanged.
+
+**Why the tests missed it:** promotion's tests drive `promote` with `actorMemberId` stamped, and actions' tests called `actionCreate({document, author})` with only members of no project or with no non-member case, so the unstamped path was never asked.
+
+**Other promote calls** (`#revise` at 615 and its callers, the calls at ~1607, 1943, 2206, 2323, 2406): these revise an action already filed; I left them unstamped. Stamping them would make promotion's R53 refuse a reader who is not in the project from corresponding on a public action, a policy question, not this cause. REPORT for BOB: say if R53 should also fence revisions by non-participants.
+
+**Checks:** actions tests 154/154 (+3); format, architecture, coverage (76/76), words, ownership 0 failures; `fixtures.mjs actions --list` 4 failing lines, the same as before (t12:55, t45:40, t45:45, t50:27); no marker added.
+
+Size (session_019WFFDn8nuGumB6cnvbuWah): test runs 5, module lines 3525
+
+## J6 · COMPLETE
+
+B6 item 1 done: actionCreate now stamps actorIdentity/actorViewer/actorMemberId, so a stranger is refused PROMOTE_NOT_A_PARTICIPANT, nothing written (create-participant.test.mjs; controls: joined, invited, owner, machine). Met: actions R47. Tests 154/154; format, architecture, coverage 76/76, words, ownership 0; fixtures list unchanged (4). REPORT: other promote calls (revisions of filed actions) left unstamped; stamping them would fence non-participant readers from corresponding: BOB's policy call (see record).
