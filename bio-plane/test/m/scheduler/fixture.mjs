@@ -1,6 +1,17 @@
 /* scheduler's test world: a Durable Object storage that holds the one alarm and a key-value map and logs every call,
    and owners whose services answer what a test sets and record every call made to them. */
 import { Scheduler } from "../../../src/scheduler/index.mjs";
+import { world as monitoringWorld, NOW_MS as MONITORING_NOW } from "../monitoring/fixture.mjs";
+import { batchTickAnswers } from "../file-safety/fixtures.mjs";
+import { recordTransitionsAnswers } from "../duties/fixtures.mjs";
+
+/* What each owner answers when a test sets nothing, taken from the owner's own code: monitoring's ticks over an empty world,
+   file-safety's five batches on an empty store, duties' finished pass over an empty record. Cloned at every answer. */
+const monitoringIdle = monitoringWorld();
+const MONITORING = { archiveTick: await monitoringIdle.m.archiveTick(MONITORING_NOW, null), cadenceTick: await monitoringIdle.m.cadenceTick(MONITORING_NOW, null),
+                     deadlineRecheck: await monitoringIdle.m.deadlineRecheck(MONITORING_NOW) };
+const FILE_IDLE = await batchTickAnswers();
+const DUTIES_IDLE = recordTransitionsAnswers().empty;
 
 export function storage() {
   const kv = new Map();
@@ -41,14 +52,14 @@ export function owners(set = {}) {
       archiveDue: (now) => rec("monitoring.archiveDue", [now], v("archive-monitor", "due", now, now)),
       archiveWake: (now) => rec("monitoring.archiveWake", [now], v("archive-monitor", "wake", now)),
       archiveTick: async (now, rank) => rec("monitoring.archiveTick", [now, rank], v("archive-monitor", "tick", now,
-        { configured: true, at: null, checked: 0, epoch: null, eligible: [], fired: [], failed: [], skipped: [] })),
+        structuredClone(MONITORING.archiveTick))),
       cadenceDue: (now) => rec("monitoring.cadenceDue", [now], v("monitor-cadence", "due", now)),
       cadenceWake: (now) => rec("monitoring.cadenceWake", [now], v("monitor-cadence", "wake", now)),
-      cadenceTick: async (now, rank) => rec("monitoring.cadenceTick", [now, rank], v("monitor-cadence", "tick", now, { ticked: [] })),
+      cadenceTick: async (now, rank) => rec("monitoring.cadenceTick", [now, rank], v("monitor-cadence", "tick", now, structuredClone(MONITORING.cadenceTick))),
       deadlineRecheckDue: (now) => rec("monitoring.deadlineRecheckDue", [now], v("deadline-recheck", "due", now)),   /* R50 */
       deadlineRecheckWake: (now) => rec("monitoring.deadlineRecheckWake", [now], v("deadline-recheck", "wake", now)),
       deadlineRecheck: async (now) => rec("monitoring.deadlineRecheck", [now], v("deadline-recheck", "tick", now,
-        { ok: true, at: null, marked: [], failed: [], truncated: false, escalations: null })),   /* R34, R35 */
+        structuredClone(MONITORING.deadlineRecheck))),   /* R34, R35 */
     },
     linkSweep: {   /* link-sweep R4 */
       sweepDue: (now) => rec("linkSweep.sweepDue", [now], v("gathering-sweep", "due", now)),
@@ -111,7 +122,7 @@ export function owners(set = {}) {
         { configured: true, at: now, epoch: null, read: 0, captured: 0, unscheduled: [], member_act_required: [], failed: [], paused: false })),
     },
     duties: { recordTransitions: (a) => rec("duties.recordTransitions", [a], v("duty-transitions", "tick", a,
-      { ok: true, as_of: a.asOf, duties_read: 0, recorded: 0, cursor: null, done: true })) },
+      { ...structuredClone(DUTIES_IDLE), as_of: a.asOf })) },
     people: { evaluateChecks: (a) => rec("people.evaluateChecks", [a], v("interest-checks", "tick", a, { ok: true, evaluated: 0, remaining: false })) },
     moneyChecks: { runDetectors: (a) => rec("moneyChecks.runDetectors", [a], v("money-detectors", "tick", a,
       { ok: true, written: 0, unchanged: 0, raised: 0, skipped: {}, persons_skipped: 0, detectors: 0, remaining: false, cursor: null })) },
@@ -151,11 +162,10 @@ export function owners(set = {}) {
         if (r && r.ok) this.listeners.push(fn);
         return rec("fileSafety.onFileWork", [module], r);
       },
-      scanBatch: async (a) => rec("fileSafety.scanBatch", [a], v("file-scan", "tick", a, { ok: true, scanned: 0, found: 0, not_scanned: 0, remaining: 0 })),
-      renderBatch: async (a) => rec("fileSafety.renderBatch", [a], v("file-render", "tick", a,
-        { ok: true, rendered: 0, failed: 0, none: 0, data: 0, copies: { made: 0, failed: 0 }, remaining: 0 })),
-      deeperBatch: async (a) => rec("fileSafety.deeperBatch", [a], v("file-deeper", "tick", a, { ok: true, started: 0, polled: 0, done: [], running: 0, queued: 0 })),
-      forwardSecurityCounts: async (a) => rec("fileSafety.forwardSecurityCounts", [a], v("file-forward", "tick", a, { ok: true, sent: [], failed: [] })),
+      scanBatch: async (a) => rec("fileSafety.scanBatch", [a], v("file-scan", "tick", a, structuredClone(FILE_IDLE.scan))),
+      renderBatch: async (a) => rec("fileSafety.renderBatch", [a], v("file-render", "tick", a, structuredClone(FILE_IDLE.render))),
+      deeperBatch: async (a) => rec("fileSafety.deeperBatch", [a], v("file-deeper", "tick", a, structuredClone(FILE_IDLE.deeper))),
+      forwardSecurityCounts: async (a) => rec("fileSafety.forwardSecurityCounts", [a], v("file-forward", "tick", a, structuredClone(FILE_IDLE.forward))),
     },
     /* T39-15 (R25): a stand-in shaped as case-carriage R15 and R17: `copyWake(now)` (the `document-copy` consumer's `wake`
        in `set`, the instant in ms or null, none by default), `copyBatch({limit})` answering a Promise, and `onCopyWork`,

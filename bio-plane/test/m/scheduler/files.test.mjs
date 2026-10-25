@@ -11,6 +11,7 @@ import * as scheduler from "../../../src/scheduler/index.mjs";
 import { world, storage, writes, NOW, FILE_CONSUMERS, pinNow } from "./fixture.mjs";
 import { world as fsWorld, pdf } from "../file-safety/fixture.mjs";
 import { FILE_SAFETY_CHECKS } from "../../../src/file-safety/index.mjs";
+import { batchTickAnswers, declaredRefusals } from "../file-safety/fixtures.mjs";
 
 const { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, ALWAYS_DUE, FILE_SAFETY_CONSUMERS, SCHED_GRACE_MS, Scheduler, schedulerOf } = scheduler;
 const FIVE = ["file-scan", "file-render", "file-deeper", "file-forward", "file-reputation"];
@@ -42,10 +43,11 @@ test("R24, R5, R2: the five stand after dated-waits, in R24's order, before R25'
 });
 
 test("R2, R24: each of the five that ticks answers under its key, the owner's answer as it is; one that did not tick is absent", async () => {
+  const real = await batchTickAnswers();   /* file-safety's own answers: the deeper batch's and the forward counts' */
   const answers = [{ ok: true, scanned: 2, found: 0, not_scanned: 0, remaining: 0 },
     { ok: true, rendered: 1, failed: 0, none: 0, data: 0, copies: { made: 0, failed: 0, queued: 0 }, remaining: 0 },
-    { ok: true, started: 0, polled: 0, done: [], running: 0, queued: 0 },
-    { ok: true, sent: [], failed: [], record: null },
+    real.deeper,
+    real.forward,
     { ok: true, refreshed: [{ tool_id: "rep-1", list_version: "v2", fetched_at: iso(NOW) }], failed: [], skipped: [] }];
   const { s } = world(Object.fromEntries(FIVE.map((n, i) => [n, { wake: NOW, tick: answers[i] }])));
   const r = await s.onAlarm(NOW);
@@ -161,7 +163,9 @@ test("R24, R11, R18: a restarted instance re-derives the five's wakes from file-
 
 test("R24, R3: a refusal file-safety answers (one of its declared refusal codes) is the tick's answer, and the next wake is again R39's; a batch or a wake that throws is answered {error} and every other consumer still ticks", async () => {
   const declared = Object.keys(FILE_SAFETY_CHECKS).filter((c) => /_(ABSENT|UNREADABLE|INVALID)$/.test(c));
-  const refusals = FIVE.map((_, i) => ({ ok: false, code: declared[i % declared.length], reason: declared[i % declared.length], detail: "refused" }));
+  const real = await declaredRefusals();   /* file-safety's real refusal of each declared code */
+  assert.deepEqual([...declared].sort(), Object.keys(real).sort(), "every declared code has its real refusal");
+  const refusals = FIVE.map((_, i) => real[declared[i % declared.length]]);
   const later = [NOW + 86_400_000, NOW + 300_000, NOW + 300_000, NOW + 3_600_000, NOW + 600_000];
   const fired = new Set();
   const set = Object.fromEntries(FIVE.map((n, i) => [n, { wake: () => (fired.has(n) ? later[i] : NOW), tick: () => { fired.add(n); return refusals[i]; } }]));
