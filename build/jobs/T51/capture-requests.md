@@ -173,3 +173,7 @@ COMPLETE B7 (fix round 10, batch 3) at 543ac61afb. Published sweepScopeRegistrar
 Merged `origin/tranche/T51`. `t41.test.mjs` R55's thrown-tie arm no longer hand-lists a `steps` answer: it uses the real steps of the world with a real step (`stepOf`) and a `recordProduct` that throws (a fault injection). Module tests 130/130; fixtures list now 4 failures, all `sweep.test.mjs:22-25` `contract-no-run` waiting on link-sweep's run; format, architecture, coverage, words 0 failures.
 
 Size (session_016v1BcEsgoXvoBS2PnqgQYs): test runs 10, module lines 2585 (only tests changed).
+
+## J8 · COMPLETE · re B8
+
+COMPLETE B8 at 69c59e3372 (tranche/T51 merged). t41.test.mjs R55 thrown-tie arm now runs over the real steps (real step via stepOf, recordProduct throwing as a fault). Module tests 130/130; fixtures list 4 failures, all sweep.test.mjs:22-25 contract-no-run waiting on link-sweep's run; format, architecture, coverage 58/58, words, ownership 0 failures. Record: section 'Completion again (B8)'.
