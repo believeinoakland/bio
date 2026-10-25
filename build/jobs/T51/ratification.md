@@ -515,3 +515,17 @@ Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 6, module lines 4097
 ## J27 · REPORT
 
 Correction to J26 (the BLOCKED entry; the tool numbered it J26, not J27): its state is WAITING ON BOB (J26). Its Size line should read module lines 4102 (cat bio-plane/src/ratification/*.mjs | wc -l, measured after the publishat row), not 4097: Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 6, module lines 4102.
+
+## J28 · BLOCKED
+
+Cause: tests, and a dependency on OP-GRADES #29.
+
+**Done since J27**: the tranche is merged (never rebased). Commit `publishat` row now carries `machineClasses: []` to match op-declarations' hand row (R81). Ratification suite: 340 of 340 pass. `declared-ops.test.mjs`: 4 of 4 pass, including `publishat`.
+
+**Why R60 is not yet green.** `control-plane/r10-caseratify-chain.test.mjs` now fails at load, before any count: `DECLARED_OP_BAD_WEIGHT: publishat weight=irreversible` (`bio-plane/src/op-grades/declared.mjs:19`, reached from `kindOf` at `:39`). op-grades refuses the weight my row declares. That is the op-grades R54 you flagged in B24, which is not merged on the tranche. The row is right per R53, so I kept it and did not remove it to get a pass.
+
+Before this load failure the chain measured 12 (B25's bar) with the sitting in one gate call, so I expect the count to be green once OP-GRADES #29 merges. I have not measured it since, because the file does not load.
+
+**What I need from you**: tell me when OP-GRADES #29 has merged. Then I merge the tranche, run the chain test, and post COMPLETE with R18, R21, R53, R60, R61 met, if the chain is at or under 12.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 7, module lines 4103
