@@ -262,3 +262,7 @@ COMPLETE · B14 applied: progressOf is read through the real extraction (job 41)
 **Tests and checks.** Retrieval suite 202 of 202 (5 new); fixtures list for retrieval: 1 line (the extraction one); impact.mjs: 0 of 178 modules affected, so no user tests to run. format 0, architecture 0, coverage 86 of 86, ownership 0.
 
 Size (session_019Nb9MktkjHjGw15MBh7yrF): test runs 5, module lines 3097
+
+## J15 · COMPLETE
+
+COMPLETE · retrieval T51 fix round 10, Wave A batch 1 (B15). Published in bio-plane/test/m/retrieval/fixtures.mjs: actionRegistrar, meaningRowsUnknownArm, noSelection, selectionResolve; each called and checked against the real answer in fixtures.test.mjs. Ran the selection-read contract (fixtures-run: retrieval-browse selection-read); the real selectionRead has NO viewer key where retrieval-browse's stand-in (fixture.mjs:172-173) echoes it, and its NOT_YOURS detail is a localized sentence: the real answer wins, retrieval-browse changes. Left: fixtures-run orphan-run until retrieval-browse's marker merges; 1 FIX-E line (progressStub, t51-round9.test.mjs:211, extraction's progressOf) waits on extraction (CHANGE). No fixtures-own/fixtures-generic markers added. Retrieval suite 202/202; impact.mjs 0 of 178 affected. format, architecture, coverage 86/86, words, ownership: 0 failures. Record: build/jobs/T51/retrieval.md.
