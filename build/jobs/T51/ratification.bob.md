@@ -354,3 +354,7 @@ R18: CASE-CATALOGUE #5 (R6) is COMPLETE and is merged as soon as its cursor move
 R60 (yours, the same job): CONTROL-PLANE #64 measured `control-plane/r10-caseratify-chain.test.mjs` at 13 calls against the bar of 11 (admission is 1 hop now); the 2 over are ratification's own: the sitting's `list` read (`ratification/ops.mjs:115`) and `ratifygate` asked twice (`ops.mjs:534` and its earlier ask). Find each extra hop's cause, remove it with the answer byte for byte unchanged, and run that test (control-plane's file: run, never edit) to at most 11. Failing first: the chain test red at 13 before, green at 11 or fewer after. Name R60 met in your COMPLETE.
 
 The two money-ingest timing reds you saw (control-plane R105 G61, G63) are known and placed; not yours.
+
+## B23 · CHANGE
+
+CHANGE (BOB #302, K5197). CASE-CATALOGUE #5 (R6: a `memberBasis` entry is the basis array or `{basis, references}`) and PUBLICATION #42 (R79) are merged on the tranche. Merge `origin/tranche/T51` (never a rebase) and re-run `preflight.test.mjs` (R18) and your R61 tests; R18 should now pass without any change of yours. Also in this job: ratification **R53** is amended (K5196) to declare `publishat` (served by you, sent by the screens, undeclared in interface-shell's census): declare it by R53's rules, with its `declared-ops.test.mjs` cases. With B22 (R21 `SELECTION_NOT_YOURS`, R60's two hops), post COMPLETE naming R18, R21, R53, R60, R61 as met.

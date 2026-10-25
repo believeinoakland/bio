@@ -1,98 +1,140 @@
-/* screens-intake R44 (T51 fix round; DEC-375 C18): the `leads` screen on the real served page. Each act sends the fields its owner
- * declares; a lead not shared stays the member's (control). A sentence is asserted by its key. */
+/* screens-intake R44 (T51 fix round; DEC-375 C18): the `leads` screen on the real served page, over the REAL store (fix round 10, K5054): the
+ * members are signed in by the real acts, a lead is written by the page's own act and read back by the owner's `leadread`/`leadlist`, a look and a
+ * share are the owner's. Each act sends the fields its owner declares; a lead not shared stays the member's (control). A sentence is asserted by its
+ * key. A fault (an owner's refusal the real acts cannot make) is the only scripted answer. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, text, main, btn, fill, press, ok, refused, word, says, saysIn, rawKeys } from "./page.mjs";
-import { SCREENS } from "../../../src/screens-intake/index.mjs";
+import { openWorld, members, text, main, fill, press, refused, says, saysIn, rawKeys } from "./page.mjs";
 
-const PROJECTS = ok({ projects: [{ id: "PROJ-1", name: "The Coliseum lease" }, { id: "PROJ-2", name: "Pothole repairs" }] });
-const MEMBERS = ok({ members: [{ member_id: "rosa", handle: "Rosa-h" }] });
 const WORDS = "The city inspected the Coliseum garage in 2019.";
-const LEAD = (more = {}) => ({ ok: true, lead_id: "LEAD-2026-1008-aaaaaaaaaaaa", author: "member:mai", words: WORDS, locator: null, at: "2026-10-08T10:00:00Z", evidence: false, shared_to: [], looks: [], state: "NEVER_LOOKED", ...more });
-/* `leadlist` (observation-log R20) answers the leads the viewer may read: the plane's record, kept here by `held`; a written lead enters it
-   only as the plane would put it there */
-const listed = (held) => (req) => ({ status: 200, json: { ok: true, result: { ok: true, limit: 50, truncated: false, leads: held.map((l) => ({ lead_id: l.lead_id, author: l.author, words: l.words, locator: l.locator, at: l.at, state: l.state, looked_at: null, looks: 0, evidence: false })), empty: held.length ? null : { cause: "no_leads_visible" } } } });
-const open = (o = {}, path = "/app/leads") => openPage(path, { reachable: true, plane: { projectlist: PROJECTS, memberlist: MEMBERS, leadlist: listed(o.held || []), ...(o.plane || {}) } });
-const written = async (more = {}, plane = {}) => {
-  const held = [];
-  const lead = (req) => { held.push(LEAD({ words: req.body.words, locator: req.body.locator || null, ...more })); return ok({ ok: true, lead_id: LEAD().lead_id, state: "NEVER_LOOKED", looks: 0, evidence: false }); };
-  const p = await open({ held, plane: { lead, leadread: ok(LEAD(more)), ...plane } });
-  fill(p, { "ld-words": WORDS, "ld-where": "Oakland Public Works, inspection records, 2019" });
+const WHERE = "Oakland Public Works, inspection records, 2019";
+const CAN = ["contribute", "create_projects"];
+/* mai writes; rosa is a participant of a project mai shares to: invited by mai, joined by herself */
+async function team() {
+  const t = await members({ mai: CAN, rosa: [] });
+  const project = await t.world.recipes.project(t.mai, "The Coliseum lease");
+  const other = await t.world.recipes.project(t.mai, "Pothole repairs");
+  await t.mai.act("projectinvite", { query: { projectId: project, handle: "rosa" } });
+  await t.rosa.act("projectjoin", { query: { projectId: project } });
+  return { ...t, project, other };
+}
+const at = (t, as = t.mai, path = "/app/leads", plane = {}) => openWorld(path, { world: t.world, as, plane });
+const written = async (t, plane = {}) => {
+  const p = await at(t, t.mai, "/app/leads", plane);
+  fill(p, { "ld-words": WORDS, "ld-where": WHERE });
   await press(p, "lead", { reason: WORDS });
   return p;
 };
+const idOf = async (t) => (await t.mai.read("leadlist")).leads[0].lead_id;
 
 test("R44 R52 writing a lead sends its words and where it might be found; it is then listed, unlooked-at, as the member's own", async () => {
-  const p = await written();
-  assert.deepEqual(p.byOp("lead").map((r) => ({ words: r.body.words, locator: r.body.locator })), [{ words: WORDS, locator: "Oakland Public Works, inspection records, 2019" }]);
+  const t = await team();
+  const p = await written(t);
+  assert.deepEqual(p.byOp("lead").map((r) => ({ words: r.body.words, locator: r.body.locator })), [{ words: WORDS, locator: WHERE }]);
   assert.ok(says(p, "screen.leads.mine.head"));
   assert.ok(text(p).includes(WORDS));
   assert.ok(says(p, "screen.leads.state.never"));
   assert.ok(p.byOp("leadlist").length >= 2, "R52 a lead written in the visit appears by the list being read again");
   assert.ok(says(p, "screen.leads.write.note1") && says(p, "screen.leads.write.note2"), "only you can read it until you share it");
   assert.deepEqual(rawKeys(p), []);
+  const kept = (await t.mai.read("leadlist")).leads;
+  assert.deepEqual(kept.map((l) => [l.words, l.locator, l.author]), [[WORDS, WHERE, "mai"]], "the owner holds what the page sent");
   /* control: where is optional */
-  const q = await open({ plane: { lead: ok({ ok: true, lead_id: LEAD().lead_id }) } });
+  const u = await team();
+  const q = await at(u);
   fill(q, { "ld-words": "w" });
   await press(q, "lead", { reason: "w" });
   assert.deepEqual(q.byOp("lead").map((r) => Object.keys(r.body).sort()), [["words"]]);
+  assert.equal((await u.mai.read("leadlist")).leads.length, 1);
 });
 
 test("R44 an empty lead is refused in the owner's words and nothing is listed; no list is drawn before anything is written", async () => {
-  const p = await open({ plane: { lead: refused("LEAD_NO_WORDS", "builder detail") } });
+  const t = await team();
+  /* the page sends the words it was given as the reason, so a blank one is stopped before the owner; the owner's own refusal is a fault the real act cannot be made to
+     cause from this page, and so the one scripted answer */
+  const p = await at(t, t.mai, "/app/leads", { lead: refused("LEAD_NO_WORDS", "builder detail") });
   assert.ok(!says(p, "screen.leads.mine.head"));
   fill(p, { "ld-words": "x" });
   const r = await press(p, "lead", { reason: "x" });
   assert.ok(saysIn(r.slot(), "refusal.LEAD_NO_WORDS"));
   assert.ok(!r.slot().textContent.includes("builder detail"));
   assert.ok(!says(p, "screen.leads.mine.head"));
+  assert.equal((await t.mai.read("leadlist")).leads.length, 0, "nothing was recorded");
+  /* control: a blank lead is stopped at the page, which sends nothing */
+  const q = await at(t);
+  fill(q, { "ld-words": "   " });
+  await press(q, "lead", { reason: "   " });
+  assert.equal(q.byOp("lead").length, 0);
 });
 
 test("R44 reading it back: Open it draws the lead, its looks by who looked and what they found, and where it was shared", async () => {
-  const p = await written({ looks: [{ seq: 1, at: "2026-10-09T10:00:00Z", looked_by: "member:rosa", state: "LOOKED_INDETERMINATE", detail: "Searched the portal; nothing under that name.", result_kind: null, result_ref: null }],
-    shared_to: [{ project: "PROJ-1", shared_by: "member:mai", at: "2026-10-09T11:00:00Z", reason: "The project needs this report." }], state: "LOOKED_INDETERMINATE" });
+  const t = await team();
+  const p = await written(t);
+  const id = await idOf(t);
+  await t.mai.act("leadshare", { body: { lead: id, project: t.project, reason: "The project needs this report." } });
+  await t.rosa.act("leadlook", { body: { lead: id, state: "LOOKED_INDETERMINATE", detail: "Searched the portal; nothing under that name." } });
   await press(p, "leadread");
-  assert.deepEqual(p.byOp("leadread").map((r) => r.query.id), [LEAD().lead_id]);
+  assert.deepEqual(p.byOp("leadread").map((r) => r.query.id), [id]);
   assert.ok(says(p, "screen.leads.one.head"));
-  const t = text(p);
-  assert.ok(t.includes("Rosa-h") && t.includes("Searched the portal; nothing under that name."));
-  assert.ok(t.includes("The Coliseum lease") && t.includes("The project needs this report."));
+  const s = text(p);
+  assert.ok(s.includes("rosa") && s.includes("Searched the portal; nothing under that name."));
+  assert.ok(s.includes("The Coliseum lease") && s.includes("The project needs this report."));
   assert.ok(says(p, "screen.leads.state.unclear"));
 });
 
 test("R44 recording a look sends each outcome the owner declares: not there, could not tell, part, there; a found document is pointed at", async () => {
   const states = { absent: "LOOKED_ABSENT", unclear: "LOOKED_INDETERMINATE", part: "partial", found: "PRESENT" };
   for (const [key, state] of Object.entries(states)) {
-    const p = await written({}, { leadlook: ok({ ok: true, seq: 1 }) });
+    const t = await team();
+    const held = await t.world.recipes.page(t.mai, "The inspection report");
+    const p = await written(t);
+    const id = await idOf(t);
     await press(p, "leadread");
-    fill(p, { "ld-lks": state, "ld-lkd": "Looked at the portal.", ...(state === "PRESENT" || state === "partial" ? { "ld-lkk": "capture", "ld-lkr": "a".repeat(64) } : {}) });
+    fill(p, { "ld-lks": state, "ld-lkd": "Looked at the portal.", ...(state === "PRESENT" || state === "partial" ? { "ld-lkk": "capture", "ld-lkr": held.sha } : {}) });
     await press(p, "leadlook", { reason: "Looked at the portal." });
     const b = p.byOp("leadlook")[0].body;
     assert.equal(b.state, state, key);
-    assert.equal(b.lead, LEAD().lead_id);
+    assert.equal(b.lead, id);
     assert.equal(b.detail, "Looked at the portal.");
-    if (state === "PRESENT" || state === "partial") assert.deepEqual([b.resultKind, b.resultRef], ["capture", "a".repeat(64)]);
+    if (state === "PRESENT" || state === "partial") assert.deepEqual([b.resultKind, b.resultRef], ["capture", held.sha]);
     else assert.ok(!("resultKind" in b) && !("resultRef" in b), "only a look that found something points at anything");
+    const looks = (await t.mai.read("leadread", { query: { id } })).looks;
+    assert.deepEqual(looks.map((l) => [l.state, l.detail]), [[state, "Looked at the portal."]], `${key}: the owner recorded the look`);
   }
-  assert.ok(true);
 });
 
 test("R44 sharing it with a project sends the lead, the project and the reason; a lead not shared stays the member's (no share, no project told)", async () => {
-  const p = await written({}, { leadshare: ok({ ok: true, lead: LEAD().lead_id, project: "PROJ-2" }) });
+  const t = await team();
+  const p = await written(t);
+  const id = await idOf(t);
   await press(p, "leadread");
   assert.equal(p.byOp("leadshare").length, 0, "control: opening it shares nothing");
-  fill(p, { "ld-lsp": "PROJ-2", "ld-lsr": "The project needs this report." });
+  assert.deepEqual((await t.rosa.read("leadlist")).leads, [], "control: until it is shared, a participant reads none");
+  fill(p, { "ld-lsp": t.other, "ld-lsr": "The project needs this report." });
   await press(p, "leadshare", { reason: "The project needs this report." });
-  assert.deepEqual(p.byOp("leadshare").map((r) => ({ lead: r.body.lead, project: r.body.project, reason: r.body.reason })), [{ lead: LEAD().lead_id, project: "PROJ-2", reason: "The project needs this report." }]);
+  assert.deepEqual(p.byOp("leadshare").map((r) => ({ lead: r.body.lead, project: r.body.project, reason: r.body.reason })), [{ lead: id, project: t.other, reason: "The project needs this report." }]);
   assert.ok(says(p, "screen.leads.share.note1") && says(p, "screen.leads.share.note2"));
+  assert.deepEqual((await t.mai.read("leadread", { query: { id } })).shared_to.map((s) => s.project), [t.other], "the owner recorded the share");
 });
 
 test("R44 the share and the look are refused in the owner's words: not a participant, already shared, no reason, no detail", async () => {
   const seen = new Set();
-  for (const [op, code, fields] of [["leadshare", "LEAD_SHARE_NOT_A_PARTICIPANT", { "ld-lsr": "r" }], ["leadshare", "LEAD_SHARE_NO_REASON", { "ld-lsr": "r" }], ["leadlook", "LEAD_LOOK_NO_DETAIL", { "ld-lkd": "d" }], ["leadlook", "LEAD_LOOK_REFERENT", { "ld-lkd": "d" }]]) {
-    const p = await written({}, { [op]: refused(code, "builder detail") });
+  /* what the owner refuses for the real acts: a share to a project the member is not in; a look at a found document the record does not hold */
+  for (const [op, code, fields, projectOf] of [["leadshare", "LEAD_SHARE_NOT_A_PARTICIPANT", { "ld-lsr": "r" }, "PROJ-2026-0000-nobody"], ["leadlook", "LEAD_LOOK_REFERENT", { "ld-lkd": "d", "ld-lks": "PRESENT", "ld-lkk": "capture", "ld-lkr": "f".repeat(64) }]]) {
+    const t = await team();
+    const p = await written(t);
     await press(p, "leadread");
-    fill(p, fields);
+    fill(p, { ...(projectOf ? { "ld-lsp": projectOf } : {}), ...fields });
+    const r = await press(p, op, { reason: "r" });
+    assert.ok(saysIn(r.slot(), `refusal.${code}`), code);
+    seen.add(r.slot().textContent);
+  }
+  /* the two the page's own reason field stops before the owner (it sends the reason as the reason/detail): the owner's refusal is a fault, the one scripted answer */
+  for (const [op, code, fields] of [["leadshare", "LEAD_SHARE_NO_REASON", { "ld-lsr": "r" }], ["leadlook", "LEAD_LOOK_NO_DETAIL", { "ld-lkd": "d" }]]) {
+    const t = await team();
+    const p = await written(t, { [op]: refused(code, "builder detail") });
+    await press(p, "leadread");
+    fill(p, { ...(op === "leadshare" ? { "ld-lsp": t.project } : {}), ...fields });
     const r = await press(p, op, { reason: "r" });
     assert.ok(saysIn(r.slot(), `refusal.${code}`), code);
     assert.ok(!r.slot().textContent.includes("builder detail"));
@@ -102,36 +144,45 @@ test("R44 the share and the look are refused in the owner's words: not a partici
 });
 
 test("R44 a lead's address opens it: leadread is asked for it; one that cannot be read is Nothing is here", async () => {
-  const p = await open({ plane: { leadread: ok(LEAD()) } }, `/app/leads/${LEAD().lead_id}`);
-  assert.ok(p.byOp("leadread").every((r) => r.query.id === LEAD().lead_id) && p.byOp("leadread").length >= 1);
+  const t = await team();
+  await written(t);
+  const id = await idOf(t);
+  const p = await at(t, t.mai, `/app/leads/${id}`);
+  assert.ok(p.byOp("leadread").every((r) => r.query.id === id) && p.byOp("leadread").length >= 1);
   assert.ok(says(p, "screen.leads.one.head"));
-  const q = await open({ plane: { leadread: refused("LEAD_NOT_FOUND", "x", 404) } }, `/app/leads/${LEAD().lead_id}`);
+  /* a lead the member cannot read is not found, however it is asked for: rosa reads none of mai's unshared lead */
+  const q = await at(t, t.rosa, `/app/leads/${id}`);
   assert.ok(says(q, "shell.unavailable.nothing.says"));
 });
 
 test("R52 'Your leads' is what leadlist answers, newest first, one row for each; an empty answer draws no list; the screen keeps no list of its own", async () => {
-  const L1 = LEAD({ lead_id: "LEAD-2026-1009-bbbbbbbbbbbb", words: "The owner paid the city a fee in 2021.", state: "LOOKED_INDETERMINATE" });
-  const L2 = LEAD();
-  const p = await open({ held: [L1, L2] });
+  const t = await team();
+  const first = await t.mai.act("lead", { body: { words: WORDS } });
+  t.world.tick(1000);
+  const second = await t.mai.act("lead", { body: { words: "The owner paid the city a fee in 2021." } });
+  await t.mai.act("leadlook", { body: { lead: second.lead_id, state: "LOOKED_INDETERMINATE", detail: "Could not tell." } });
+  const p = await at(t);
   assert.ok(says(p, "screen.leads.mine.head"));
-  const t = text(p);
-  assert.ok(t.includes(L1.words) && t.includes(L2.words) && t.indexOf(L1.words) < t.indexOf(L2.words), "in the order the plane answers");
-  assert.deepEqual(main(p).querySelectorAll('button[data-act="leadread"]').map((b) => b.getAttribute("data-id")), [L1.lead_id, L2.lead_id]);
+  const s = text(p);
+  const order = (await t.mai.read("leadlist")).leads;
+  assert.deepEqual(order.map((l) => l.lead_id).sort(), [first.lead_id, second.lead_id].sort());
+  assert.ok(s.includes(order[0].words) && s.includes(order[1].words) && s.indexOf(order[0].words) < s.indexOf(order[1].words), "in the order the plane answers");
+  assert.deepEqual(main(p).querySelectorAll('button[data-act="leadread"]').map((b) => b.getAttribute("data-id")), order.map((l) => l.lead_id));
   assert.ok(says(p, "screen.leads.state.unclear") && says(p, "screen.leads.state.never"));
   assert.ok(p.byOp("leadlist").length >= 1);
   assert.deepEqual(rawKeys(p), []);
   /* the empty answer: the design draws no list */
-  const q = await open({});
+  const q = await at(await team());
   assert.ok(!says(q, "screen.leads.mine.head"));
 });
 
-test("R52 control: a lead the viewer may not read is not drawn, even one the member has just written; a list that failed draws no list", async () => {
-  const hidden = LEAD({ words: "Someone else's note, not shared with this member." });
-  const p = await open({ held: [], plane: { lead: ok({ ok: true, lead_id: hidden.lead_id, state: "NEVER_LOOKED", looks: 0, evidence: false }) } });
-  fill(p, { "ld-words": hidden.words });
-  await press(p, "lead", { reason: hidden.words });
-  assert.ok(!says(p, "screen.leads.mine.head"), "the list is what the record shows this viewer");
-  const f = await open({ plane: { leadlist: refused("LEAD_LIST_X", "x", 500) } });
+test("R52 control: a lead the viewer may not read is not drawn; a list that failed draws no list", async () => {
+  const t = await team();
+  await written(t);
+  const other = await at(t, t.rosa);
+  assert.ok(!says(other, "screen.leads.mine.head"), "the list is what the record shows this viewer: rosa reads none of mai's lead");
+  assert.ok(!text(other).includes(WORDS));
+  const f = await at(t, t.mai, "/app/leads", { leadlist: refused("LEAD_LIST_X", "x", 500) });
   assert.ok(!says(f, "screen.leads.mine.head") && says(f, "screen.leads.write.heading") && f.byOp("leadlist").length >= 1, "the writing form stays; no list is drawn from a list that failed");
   assert.deepEqual(rawKeys(f), []);
 });

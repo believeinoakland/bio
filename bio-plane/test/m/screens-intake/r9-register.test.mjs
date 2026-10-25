@@ -1,10 +1,13 @@
 /* screens-intake fix round 9 (SCREENS-INTAKE #23), G127a and G127c, R21 (K4833; section 2c item 4): the promote register is WHOLES. A multipart upload is one row, the
  * capture's own digest with its total bytes, carrying `parts` in order; a part's digest is never a row of its own. Entered by pressing the act over the real served
  * page (the register the page sends), and by `promoteDocument` over the REAL provenance (the merged provider, job 21: provenance's own fixture), so two documents
- * that share a part are both held and only a whole answers `CAPTURE_HELD_BY_ANOTHER_BUNDLE`. */
+ * that share a part are both held and only a whole answers `CAPTURE_HELD_BY_ANOTHER_BUNDLE`.
+ * The page tests are over the REAL store (fix round 10, K5054): the file is sent in parts by the page's own acts and the owner (`captureupload`'s) answers the parts
+ * it holds; what the register must hold is computed from the bytes the test made (their digests), never copied from an answer. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, fill, press, ok, DOCUMENT_STUB } from "./page.mjs";
+import { createHash } from "node:crypto";
+import { openWorld, members, fill, press, ok, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 import { world, sha, provDoc } from "../provenance/fixture.mjs";
@@ -12,7 +15,8 @@ import { world, sha, provDoc } from "../provenance/fixture.mjs";
 const MIB = 1024 * 1024;
 const FILE = new File(["x"], "packet.pdf", { type: "application/pdf" });
 const filled = { "ci-file": FILE, "ci-how-made": true, "ci-where": "City hall", "ci-what": "The packet." };
-const open = (plane) => openPage("/app/capture/file", { plane: { allocid: ok({ ok: true, id: "INFO-2026-0150" }), promote: (r) => ok({ ok: true, bundleId: r.body.bundleId }), ...plane }, screens: [...SCREENS, DOCUMENT_STUB] });
+const open = async (plane = {}) => { const t = await members({ mai: ["contribute"] }); return openWorld("/app/capture/file", { world: t.world, as: t.mai, plane, screens: [...SCREENS, DOCUMENT_STUB] }); };
+const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 /* a multipart upload's door document, as `captureupload` answers it: the whole's digest, its parts in order */
 function multipart(label, { n = 5, shared = {}, size = 8 * MIB } = {}) {
@@ -23,32 +27,54 @@ function multipart(label, { n = 5, shared = {}, size = 8 * MIB } = {}) {
 }
 const answer = (m) => ok({ ok: true, existed: false, capture: { sha256: m.whole, bytes: m.total }, document: m.doc });
 
-test("R21 (G127a, G127c) a five-part upload registers ONE row, the whole with its five parts in order, and no part as a row of its own", async () => {
-  const m = multipart("five");
-  const p = await open({ captureupload: answer(m) });
-  fill(p, filled);
+test("R21 (G127a, G127c) a five-part upload registers ONE row, the whole with its five parts in order, and no part as a row of its own", { timeout: 300000 }, async () => {
+  /* 36 MiB and 17 bytes: the owner takes it in parts of 8 MiB, the last the remainder (five) */
+  const size = 4 * 8 * MIB + 17;
+  const content = new Uint8Array(size);
+  for (let i = 0; i < size; i += 13) content[i] = (i * 7 + 3) & 255;
+  content.set(new TextEncoder().encode("%PDF-1.4 "));
+  const p = await open();
+  fill(p, { ...filled, "ci-file": new File([content], "packet.pdf", { type: "application/pdf" }) });
   await press(p, "captureupload");
+  await p.settle(50);
   const reg = p.byOp("promote")[0].body.register;
   assert.equal(reg.length, 1, "red before: the whole and then each of the five parts, six rows");
-  assert.equal(reg[0].sha256, m.whole);
-  assert.equal(reg[0].bytes, m.total, "with its total bytes");
-  assert.equal(reg[0].path, m.path);
-  assert.deepEqual(reg[0].parts, m.parts.map((x) => ({ sha256: x.sha256, path: x.file, bytes: x.bytes })), "the parts, in order, with their paths and sizes");
-  for (const x of m.parts) assert.ok(!reg.some((r) => r.sha256 === x.sha256), "a part's digest is no register row");
+  assert.equal(reg[0].sha256, digest(content), "the whole's own digest");
+  assert.equal(reg[0].bytes, size, "with its total bytes");
+  assert.equal(typeof reg[0].path, "string");
+  assert.equal(reg[0].parts.length, 5, "five parts");
+  let at = 0;
+  for (const x of reg[0].parts) {
+    assert.equal(x.sha256, digest(content.subarray(at, at + x.bytes)), "each part is the next bytes of the file, in order");
+    at += x.bytes;
+  }
+  assert.equal(at, size, "and the parts make the whole");
+  for (const x of reg[0].parts) assert.ok(!reg.some((r) => r.sha256 === x.sha256), "a part's digest is no register row");
   /* the bundle still names each part as a file, so the original is held by its parts */
   const files = p.byOp("promote")[0].body.files;
-  for (const x of m.parts) assert.ok(files.some((f) => f.path === x.file && f.blobSha === x.sha256), "the part is a file of the bundle");
+  for (const x of reg[0].parts) assert.ok(files.some((f) => f.path === x.path && f.blobSha === x.sha256), "the part is a file of the bundle");
 });
 
 test("R21 control: a single-part upload registers its one file as one row with no parts; a document whose only part is the whole is the same", async () => {
-  const SHA = "c".repeat(64);
-  const one = { file: `snapshots/upload-${SHA}`, locator: `upload:${SHA}`, capture: { method: "uploaded", sha256: SHA, encoding: "binary", bytes: 9 }, source: { kind: "uploader" } };
-  const p = await open({ captureupload: ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 9 }, document: one }) });
-  fill(p, filled);
+  const small = new TextEncoder().encode("%PDF-1.4 a small packet\n");
+  const p = await open();
+  fill(p, { ...filled, "ci-file": new File([small], "packet.pdf", { type: "application/pdf" }) });
   await press(p, "captureupload");
-  assert.deepEqual(p.byOp("promote")[0].body.register, [{ sha256: SHA, path: one.file, encoding: "binary", bytes: 9 }]);
-  const q = await open({ captureupload: ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 9 }, document: { ...one, parts: [{ file: one.file, sha256: SHA, bytes: 9 }] } }) });
-  fill(q, filled);
+  const reg = p.byOp("promote")[0].body.register;
+  assert.equal(reg.length, 1);
+  assert.equal(reg[0].sha256, digest(small));
+  assert.equal(reg[0].bytes, small.length);
+  assert.ok(!("parts" in reg[0]), "one part: no parts stated");
+  /* the owner's single upload states no `parts`; a document whose only part is the whole is a shape the world's owner never answers, so the part is laid on the owner's own answer for the file */
+  const t = await members({ mai: ["contribute"] });
+  const lone = new TextEncoder().encode("%PDF-1.4 another small packet\n");
+  const door = t.world.boot(t.mai).door;
+  const stored = (await door({ url: `/api/?${new URLSearchParams({ op: "captureupload", statement: "The packet.", name: "packet.pdf", type: "application/pdf" })}`,
+    init: { method: "POST", headers: { "content-type": "application/pdf" }, body: lone } })).json.result;
+  const own = stored.document;
+  const q = await openWorld("/app/capture/file", { world: t.world, as: t.mai, screens: [...SCREENS, DOCUMENT_STUB],
+    plane: { captureupload: ok({ ...stored, document: { ...own, parts: [{ file: own.file, sha256: stored.capture.sha256, bytes: stored.capture.bytes }] } }) } });
+  fill(q, { ...filled, "ci-file": new File([lone], "packet.pdf", { type: "application/pdf" }) });
   await press(q, "captureupload");
   assert.ok(!("parts" in q.byOp("promote")[0].body.register[0]), "the part is the whole: it states no parts");
 });

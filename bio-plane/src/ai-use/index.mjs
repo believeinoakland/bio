@@ -81,6 +81,10 @@ export class AiUse {
     const storage = ctx && ctx.storage ? ctx.storage : ctx;
     this.sql = storage.sql;
     this.#deps = deps || {};
+    /* R17 (K5132, K5148): the clock this instance was handed (`now`, a function of milliseconds), and the store's
+       environment (`env.BIO_NOW_MS`), set here or by `aiUseOps`; both are read by `#nowMs` */
+    this.clock = typeof this.#deps.now === "function" ? this.#deps.now : null;
+    this.env = this.#deps.env && typeof this.#deps.env === "object" ? this.#deps.env : null;
     this.record = this.#deps.record || recordOf(ctx);
     this.membership = this.#deps.membership || membershipOf(ctx, { record: this.record });
   }
@@ -133,7 +137,7 @@ export class AiUse {
   }
 
   #carryCeilingsOnce() {
-    const now = stampInstant("second", Date.now());
+    const now = stampInstant("second", this.#nowMs());
     const held = this.#rows(`SELECT name FROM sqlite_master WHERE type='table' AND name='ai_ceilings'`).length
       ? this.#rows(`SELECT holder, tokens, calls FROM ai_ceilings ORDER BY holder`) : [];
     for (const c of held) {
@@ -255,14 +259,30 @@ export class AiUse {
     } catch { return "UTC"; }
   }
 
-  /** An instant (ms, or an ISO string) as the record's spelling; now when absent or unreadable. */
-  static #ms(at) { const ms = typeof at === "string" ? Date.parse(at) : typeof at === "number" ? at : NaN; return Number.isFinite(ms) ? ms : Date.now(); }
+  /** R17 (T51 fix round 10; K5132, K5148; R-CLOCK): the instance clock. A handed `now` answers first; else the store's
+   *  `env.BIO_NOW_MS`; else the wall clock (credentials' `#nowMs`). Every instant this module records, and every judgement
+   *  of one, reads it. */
+  #nowMs() {
+    if (this.clock) {
+      const handed = Number(this.clock());
+      if (Number.isFinite(handed) && handed >= 0) return handed;
+    }
+    const raw = this.env ? this.env.BIO_NOW_MS : undefined;
+    if (raw !== undefined && raw !== null && raw !== "") {
+      const v = Number(raw);
+      if (Number.isFinite(v) && v >= 0) return v;
+    }
+    return Date.now();
+  }
+
+  /** An instant (ms, or an ISO string) as the record's spelling; now (on the instance clock, R17) when absent or unreadable. */
+  #ms(at) { const ms = typeof at === "string" ? Date.parse(at) : typeof at === "number" ? at : NaN; return Number.isFinite(ms) ? ms : this.#nowMs(); }
   static #iso(ms) { return stampInstant("second", ms); }
 
   /** R1: the local day, in the group's zone, on which an instant falls (`civil-time.localDay`); UTC's when the zone
    *  cannot be read. */
   #dayOf(at) {
-    const iso = AiUse.#iso(AiUse.#ms(at));
+    const iso = AiUse.#iso(this.#ms(at));
     const zone = this.#zone();
     const d = localDay(iso, zone);
     if (typeof d === "string") return { day: d, zone };
@@ -335,7 +355,7 @@ export class AiUse {
       const e = { mode, model, effort, usage, calls };
       const fault = this.#entryRefusal(e);
       if (fault) return fault;
-      const ms = AiUse.#ms(at);
+      const ms = this.#ms(at);
       const { day } = this.#dayOf(ms);
       const u = usage;
       const n = (f) => (u[f] === null ? 0 : u[f]);
@@ -591,7 +611,7 @@ export class AiUse {
       if (unit === "usd" && stored !== null && this.#isSignin(p, by))
         return { ...this.#refuse("LIMIT_UNIT_UNAVAILABLE", localize("ai-use.index.this_account_is_a_sign", "this account is a sign-in, which reports no cost; set the limit in tokens or calls. Nothing was changed.")), word: "ai.refused.unitunavailable" };
       /* END DEC-49 REGION is-limit-unit-unavailable */
-      const ms = AiUse.#ms(at);
+      const ms = this.#ms(at);
       const now = AiUse.#iso(ms);
       const incl = useScope ? (inclusive === undefined || inclusive === null ? true : inclusive) : null;
       if (stored === null && !this.#limit(p.owner, scope, unit, period))
@@ -620,7 +640,7 @@ export class AiUse {
     if (!USE_KINDS.includes(use)) return failClosed(localize("ai-use.fail_closed.kind_use_limits", "'{use}' is not a kind of use, so its limits cannot be judged.", { use: String(String(use).slice(0, 40)) }));
     try {
       if (use === "explore" && this.#exploreOf(p) === "no") return this.#exploreOff(p);
-      const hit = this.#reachedFor(p, use, memberIdOf(member), AiUse.#ms(at));
+      const hit = this.#reachedFor(p, use, memberIdOf(member), this.#ms(at));
       return hit ? this.#limitReached(p, hit.lim, use, hit.start) : null;
     } catch { return failClosed(localize("ai-use.fail_closed.use_counted_far", "the use counted so far could not be read.")); }
   }
@@ -672,7 +692,7 @@ export class AiUse {
       const mine = p ? this.#owns(p, `member:${id}`) : false;
       const limits = p ? this.#limits(o).filter((l) => l.scope === "overall" || l.scope === "per_member"
         || rows.some((r) => r.owner === o && r.use === l.scope)).map((l) => {
-        const hit = this.#reachedFor(p, l.scope === "overall" || l.scope === "per_member" ? null : l.scope, id, AiUse.#ms(at));
+        const hit = this.#reachedFor(p, l.scope === "overall" || l.scope === "per_member" ? null : l.scope, id, this.#ms(at));
         return { scope: l.scope, unit: l.unit, period: l.period, amount: l.unit === "usd" ? Number(l.amount) / 100 : Number(l.amount),
                  inclusive: l.inclusive === null ? null : !!l.inclusive,
                  reached: !!(hit && hit.lim.scope === l.scope && hit.lim.unit === l.unit && hit.lim.period === l.period) };
@@ -761,7 +781,7 @@ export class AiUse {
       : typeof what === "string" && what.trim() ? what.trim() : null;
     if (!text || text.length > EXPLORE_WHAT_MAX)
       return this.#askFault("what", `an ask states what is worth exploring, a statement or a list of questions, at most ${EXPLORE_WHAT_MAX} characters.`);
-    const ms = AiUse.#ms(at);
+    const ms = this.#ms(at);
     const { day } = this.#dayOf(ms);
     const key = `explore-ask:${p.owner}:${day}`;
     const held = this.#one(`SELECT asked_at FROM ai_explore_asks WHERE owner=? AND day=?`, p.owner, day);
@@ -809,7 +829,7 @@ export class AiUse {
     if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day.trim()))
       return this.#askFault("day", "an approval names its local day, YYYY-MM-DD.");
     const d = day.trim();
-    const now = AiUse.#iso(AiUse.#ms(at));
+    const now = AiUse.#iso(this.#ms(at));
     const who = memberIdOf(by) === "admin" ? "admin" : `member:${memberIdOf(by)}`;
     this.#transact(() => {
       if (this.#one(`SELECT day FROM ai_explore_asks WHERE owner=? AND day=?`, p.owner, d))
@@ -976,7 +996,9 @@ export function aiUseOf(ctx, deps = {}) {
 /** The ops this module answers (`op-declarations` R41): `ailimitset`, `ailimits`, `aiusage` (with `owner` an account's
  *  month, R4; without, the viewer's own), `exploreapprove` and `aiuseovertime` (R14). Every identity (`by`, `viewer`) is the control plane's
  *  stamp, read from the QUERY after the body is spread, so a caller's own copy never wins (D-136). */
-export function aiUseOps(use, url, body) {
+export function aiUseOps(use, url, body, env = null) {
+  /* R17 (K5132): the store's environment is the instance clock's source (`BIO_NOW_MS`), as credentialsOps hands it */
+  if (env && typeof env === "object") use.env = env;
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
   return {
