@@ -879,3 +879,7 @@ COMPLETE fix round 10, Wave A batch 3 (B58). R10: pages_left is the document's u
 `tranche/T51` merged. `relays.test.mjs` `storageAbsent` now takes capture's real `storageNotConfigured` (body and status). `t43` and `t50`: ai-use is after this module, so its `AI_LIMIT_REACHED` refusal is the contract literal ai-use's `fixtures.test.mjs:23` runs (`{ok, code, check: "C-143.1", translation, detail}`), `// fixtures-contract: ai-use use-check` at `t43.test.mjs` and `t50.test.mjs`; a direct import of `ai-use/fixtures.mjs` is refused by architecture ("not earlier in the order"). Module `ℹ tests 390`, `ℹ pass 390`, `ℹ fail 0`; format, architecture, coverage 87/87, ownership 0 failures; fixtures list 23, all waiting on providers' runs (plane, store-door, agent-worker, content, ai-use) or ocr-worker's stray run line.
 
 Size (session_01VLArEXuqRCiEGE52grGAFk): test runs 30, module lines 4980
+
+## J45 · COMPLETE
+
+COMPLETE after CHANGE B59: merged tranche/T51; relays storageAbsent from capture's storageNotConfigured; ai-use's AI_LIMIT_REACHED is the contract literal (t43, t50) with fixtures-contract: ai-use use-check, since ai-use is after extraction and architecture refuses its fixtures import. Module 390/390; format, architecture, coverage 87/87, ownership 0 failures. Fixtures list 23, all waiting on providers' runs or ocr-worker's stray run line.
