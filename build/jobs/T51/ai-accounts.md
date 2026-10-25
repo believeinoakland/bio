@@ -126,3 +126,7 @@ Generic markers added: none.
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs ai-accounts`: 0 failures. `checks/coverage.mjs ai-accounts`: 37 of 37 live ids named, 0 failures. `checks/ownership.mjs ai-accounts tranche/T51`: 0 failures. `checks/fixtures.mjs . ai-accounts`: 0 failures.
 
 Size (session_012zC89ytoyYon28aQ3j1D4U): test runs 9, module lines 2188
+
+## J6 · COMPLETE · re B6
+
+COMPLETE fix round 10 Wave A batch 2. 14 fixtures published (bio-plane/test/m/ai-accounts/fixtures.mjs, 14 tests in fixtures.test.mjs); 8 own lines re-pointed to record-core coreOver / tableDeclarationRefusals (tranche/T51 merged in first); fixtures check 0 failures. Marker added: fixture.mjs:68 'fixtures-own: harness' for claim() (world helper named like an op). No generic markers. Brief says NO_ACCOUNT check C-29.1; the module's real check is C-29.20 (fixture follows the code; users must not assert C-29.1). Module tests 145/145; impact users (affordances, translations, instance-setup) 71/71; format, architecture, coverage (37/37), ownership 0 failures. Record: build/jobs/T51/ai-accounts.md. Size (session_012zC89ytoyYon28aQ3j1D4U): test runs 9, module lines 2188.
