@@ -1,6 +1,6 @@
 # law-relations (T51)
 
-**Status** · session_018WDm7E3VEq77FEdczJFfnV · depth 2 · WORKING · handled B3
+**Status** · session_018WDm7E3VEq77FEdczJFfnV · depth 2 · WAITING ON BOB (J3) · handled B3
 
 ## J1 · COMPLETE
 
