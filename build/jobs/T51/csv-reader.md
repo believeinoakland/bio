@@ -1,6 +1,6 @@
 # csv-reader (T51)
 
-**Status** · session_016SDhXPpFVHc4twnonLuCEQ · depth 2 · RUNNING until 2026-10-25T17:57:02Z (impact-module tests (format-registry, reading-pipeline, office-readers, odf-reader, doc-clean)) · handled B12
+**Status** · session_016SDhXPpFVHc4twnonLuCEQ · depth 2 · COMPLETE · handled B12
 
 ## Completion
 
