@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { answersWorld, V } from "./fixture.mjs";
 import { ANSWERS_CHECKS } from "../../../src/answers/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { combine } from "../../../../jurisdictions/index.mjs";
 
 const BANNED = /\b(?:copy|copies|instance|instances|plane|planes|server|servers)\b/i;
 const OURS = word("queue.capture-completed-unattended.who");
@@ -36,8 +37,10 @@ test("R29 the refusals' details and the not-held reasons it answers: the rule se
   assert.equal(r.detail, localize("answers.index.the_rule_services_are_switched", "the rule services are switched off in your team's Civicsmith"));
   const unknown = await answersWorld().a.ruleAnswer({ service: "nosuch", viewer: V("bob") });
   for (const s of said(unknown)) assert.doesNotMatch(s, BANNED, s);
-  /* no profile active: jurisdictions' combine answers no view */
-  const none = answersWorld({ deps: { combine: () => ({ ok: false, reason: "NO_PROFILES" }) } });
+  /* no profile active: jurisdictions' combine answers no view (its real refusal, a profile it does not hold) */
+  const refused = combine(["nosuch"]);
+  assert.equal(refused.ok, false);
+  const none = answersWorld({ deps: { combine: () => refused } });
   for (const [service, args] of [["profiles", { section: "deadlines", key: "x" }], ["deadlinecompute", { rule: "x", start: "2026-01-05" }]]) {
     const got = await none.a.ruleAnswer({ service, args, viewer: V("bob") });
     assert.equal(got.not_held.reason, localize("answers.rules.no_jurisdiction_profile_is_active", "no jurisdiction profile is active in your team's Civicsmith"), service);
