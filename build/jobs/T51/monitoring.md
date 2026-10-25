@@ -1,6 +1,6 @@
 # monitoring (T51)
 
-**Status** · session_01YbVRaWcH7WiJvTG3xdtHxz · depth 2 · WORKING · handled B13
+**Status** · session_01YbVRaWcH7WiJvTG3xdtHxz · depth 2 · COMPLETE · handled B13
 
 ## J1 · COMPLETE
 
@@ -255,3 +255,24 @@ COMPLETE for T51 monitoring, fix round 10 (START B14, K5148; plan item 74, K5157
 **Checks** (absolute root, from `/home/user/civicos-process`): format 178 modules, 0 failures; architecture monitoring 26 files, 133 imports, 0 failures; coverage 66 of 66, 0 failures; words monitoring 0 failures; ownership (tranche/T51 to HEAD) 4 files, 0 failures; fixtures `--list`: the four `contract-no-run` lines above, no other new line.
 
 Size (session_01CECUdTfDDfi9p5Y2ZtFV4w): test runs 10, module lines 4233
+
+## J13 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10 (START B15, plan item 92, K5186), session session_01YbVRaWcH7WiJvTG3xdtHxz.
+
+**Entry applied: R80 (met).** The copy's provenance document entry now carries what acquisition's entry for the same capture carries. `monitoring/index.mjs`: `#copyProfile` (new) calls acquisition's own exported `profileOf` over the bytes the evidence store now holds (headers the tick saw, the entry's locator, the file name it ends in, `profileView(this.record)`, origin `fetch`) right after the copy is held, into `monCap.profile`; `#withCopyEntry` adds `profile` and a one-hop `provenance_chain` (`who` by acquisition's `firstHopWho` over the tick's `INSTANCE_NAME`/`VERSION`, `asserts` "these bytes were served for <locator> at <retrieved>", `evidence`, `bound: false`, `via: "direct"`). Acquisition exports no chain builder, only `profileOf`, `profileView` and `firstHopWho`, which I use; the hop itself is built here because acquisition's lives inline in `op=acquire`. A profile that cannot be made is null and the copy is still filed without one (R9).
+
+**Met ids for BOB to strike:** R80.
+
+**Test (failing first, seen red `provenance_chain` undefined, then green):** `tick.test.mjs` "R80 ...": the text copy's hop (`who`, `bound`, `via`, the address and instant in `asserts`); its `profile` deep-equal to acquisition's `profileOf` over the same bytes, with `profiled_from_text === true` (what reading-pipeline R2 reads as text); `registerChecks` at `verified` finds no C-18.9 for the copy's entry; a binary (PDF) copy has the chain, `profiled_from_text === false`, format `pdf`, and passes the same check; the baseline stays first and a second tick adds no second entry.
+
+**Why the tests missed it:** R79's test asserted the entry's locator, file, digest and the owed job, never the fields the register and the reader judge an entry by (the chain at or past `verified`, the profile's `profiled_from_text`); no test ran the register checks over the copy's entry.
+
+**Deferred:** none.
+
+**REPORT (outside my paths):** the walker's door test `control-plane/walk-monitoring-checknow-adopt.test.mjs` (run, not edited) now gets past the filing and the reading: the notice for the leg is `state: newer_capture_matched`, `newer: true`, `affects: "affected"`. It still fails at `test.mjs:60`, its own predicate `n && (n.notice || n.id) && ...`: the `versionnotice` entries carry `ord`, `target`, `content_id`, `capture_sha`, `bundle_id`, ... and no `notice` or `id` key, so the find never matches and `adoptversion` cannot be given `notice`. `screens-inquiry/document.mjs:885` reads `o.notice || o.id` from an open-notice list (reevaluation R15), not from `versionnotice`. That is control-plane's test (or the notice id's source) to settle. No copy carrying acquisition's profile is read `final` in this run.
+
+**Tests run** (`node --import ./bio-plane/test/platform-sqlite.mjs --test`): `bio-plane/test/m/monitoring/` tests 179, pass 179, fail 0. Users: scheduler 185/185, link-sweep 48/48, queue-producers 159/159, machinery-producers 38/38, following 128/128. `impact.mjs origin/tranche/T51 HEAD` run before the commit named 0 modules (nothing committed then).
+**Checks** (absolute root, from `/home/user/civicos-process`): format 178 modules, 0 failures; architecture monitoring 26 files, 135 imports, 0 failures; coverage 67 of 67, 0 failures; words monitoring 0 failures (the new ids `monitoring.index.copy_hop_asserts`, `monitoring.index.copy_hop_evidence` are not in `rows.mjs` yet, regenerated at the layer close); fixtures `--list` monitoring: 0 failures, accepted 11, no new marker; ownership (merge-base to HEAD) 3 files, 0 failures.
+
+Size (session_01YbVRaWcH7WiJvTG3xdtHxz): test runs 8, module lines 4260
