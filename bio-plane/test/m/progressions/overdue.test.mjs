@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, MEMBER, ZONE } from "./fixture.mjs";
 import { sha as digest } from "../provenance/fixtures.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { readInterval } from "../../../src/progressions/index.mjs";
 
 const T = (w, placements, entityId = "ENT-1") =>
@@ -90,7 +91,7 @@ test("R16 R37: an event's own date anchors the clock in the event's zone; no own
     const f = overdueOf(u, now, SA);
     assert.deepEqual([f.length, f[0].overdue, f[0].deadline], [1, "undetermined", null]);
     assert.match(f[0].why, /no own date/);
-    assert.ok(f[0].why.includes(`${registered}, a bound only and never its date`));
+    assert.ok(f[0].why.includes(word("progressions.why.captured_bound_date", { from: "registered", at: registered })));
     assert.deepEqual(f[0].bounds.map((b) => [b.capture_sha, b.bound.at]), [[SA, registered]]);
   }
   assert.equal(u.p.overdueScan(at("2040-01-01T00:00:00Z")).overdue_count, 0);
