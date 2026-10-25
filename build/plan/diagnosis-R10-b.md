@@ -243,3 +243,54 @@ R11 is **three roots**, not one: a memory root and a stack root in the reading, 
 - R11b: **`reading-pipeline`** (a code defect; the spread at `:1020`, and I did not search the module for others: `grep -n "Math.max(\.\.\." bio-plane/src/reading-pipeline/index.mjs` is the job's first step).
 - R11c: **`file-safety`/`file-scanner`** (K4427: the renderer's module is `file-scanner`): the message loss is certain; the cause inside the container is not.
 - The sentence the member reads ("The renderer refused the file", A12; "Unread" with a Read it button, C7) is G1/R1 and the Document page's.
+
+---
+
+## R12 · `.tsv` members of an archive are unread (C1)
+
+### 1. Root cause with evidence
+
+**`bio-plane/src/acquisition/index.mjs:154`: `const NAME_TEXT_TYPES = Object.freeze({ txt: "text/plain", md: "text/markdown", csv: "text/csv" })`, used by `textTypeOf` (`:155`-`:167`), which `fileDocument` (`bio-plane/src/acquisition/unpack.mjs:823`-`:828`) calls for a member whose bytes have no magic: `if (!ct && head && !multipart) ct = textTypeOf({ bytes: head, name: row.name })`. There is no `tsv` (nor `tab`) in the table, so a member `dir/m02.tsv` gets `ct = null`, is profiled `undetermined`, and the reading is the walker's "the document was not read as text (non-textual or too large), so no reading was attempted".**
+
+- Red, in Node, the real function on tab-separated bytes: `textTypeOf({bytes, name:"dir/m02.tsv"})` → **`null`**; `"dir/m03.csv"` → `"text/csv"`; `"m1.txt"` → `"text/plain"`; `"dir/m04.tab"` → `null`. The same bytes with a declared type, as a browser gives a standalone file, `textTypeOf({bytes, type:"text/tab-separated-values", name:"solo.tsv"})` → `"text/tab-separated-values"`. That is the walker's finding exactly: "the same bytes uploaded alone as `solo.tsv` read `whole`, so the member path misses the tsv type that the door gives a standalone file".
+- Downstream is already right: `csv-reader` reads `text/tab-separated-values` (`csv-reader/index.mjs:193`, its R21), and the walk's `.csv` members read as sheets.
+- Requirement text as written: acquisition **R102**: "the type a `.txt`, `.md` or `.csv` name stands for (text/plain, text/markdown, text/csv)". The requirement itself omits `.tsv`; the brief for the walk (C1: "txt, csv, tsv") asks for it.
+
+### 2. Why the tests missed it
+
+`bio-plane/test/m/acquisition/fix5-t51.test.mjs:77`-`:90` tests the names the requirement lists (`k.csv`, `k.MD`, `knock-b.txt`) and controls (a NUL, invalid UTF-8, a declared PDF type). No test builds a `.tsv` (or `.tab`) member, and `acquisition`'s archive tests (`archive-entries.test.mjs`) use `.txt` members. The 30-member archive's three kinds (txt, tsv, csv) was only built by the walk.
+
+### 3. Failing-first test
+
+- **Module and file:** `acquisition`, `bio-plane/test/m/acquisition/fix5-t51.test.mjs` (the R102 test) plus `archive-entries.test.mjs` (a member through `fileDocument`).
+- **Builds:** `makeZip([{name:"dir/m02.tsv", data: tab-separated bytes}, {name:"dir/m03.csv", ...}, {name:"dir/m01.txt", ...}])`, unpacked through the real `unpack` path (the same `acquisition` fixtures `archive-entries.test.mjs` already builds).
+- **Asserts:** `textTypeOf({bytes, name:"x.tsv"})` is `"text/tab-separated-values"`; the unpacked member's `capture.content_type` is that, its profile is a tab-separated format, and through `reading-pipeline`'s `read` (the `fresh()` fixture) the member reads `whole` with the same cells as the standalone file of the same bytes; controls: a `.tsv` holding a NUL is null.
+- **Seen red:** the first assertion, yes (`null`).
+
+### 4. Platform check
+
+None for the cause. After the fix: the walker's 30-member archive on the live copy, all 10 `.tsv` members `whole` with cells.
+
+### 5. Owner
+
+**`acquisition`.** Requirement for BOB: **R102** lists three names and so encodes the gap; a `.tsv` (and `.tab`, which `csv-reader`'s `DELIMITED_EXTENSIONS` already accepts, `csv-reader/index.mjs:1193`) is a table the product reads standalone; the requirement should say the name table is the one `csv-reader` states, so the two cannot drift.
+
+---
+
+## R13 · an archive's members listed on unrelated Document pages (D7b); absent from the project list and breadcrumb (E5)
+
+R13 is **two observations with different causes**; (a) is explained and is not a defect of a screen's code, (b) I could not reproduce at the screen.
+
+### R13a · members listed on documents that are not archives (D7b)
+
+**What draws them (reproduced).** The Document page draws two choices that list **every information document the viewer can see**: "assert a connection to another document" (`bio-plane/src/screens-inquiry/document.mjs:1137`-`:1146`, `later("docs","list",{type:"information", limit:"500"})`, then `others.map(b => ({value: b.bundle_id, text: b.title}))`) and "this contradicts another document" (`:1059`-`:1062`, the same `list`). `build/requirements/screens-inquiry.md` R99: "the other document is chosen among the documents she can see". The test `bio-plane/test/m/screens-inquiry/fr28-document-acts.test.mjs:107`-`:114` (`DOCS`, a hand-built `list` answer) asserts exactly that the options are "only other documents". A member of an archive is an ordinary information document titled "`<path>`, from the archive `<sha>`" (`control-plane/archive.mjs:42`, word `file.archive.entry.title`), so it is an option on **every** Document page, the ODS's and the other ZIP's included, which is what D7b saw. Nothing in the page lists "the archive's members" as such, and the other Document pages the walker names would list them as well in the same choice (the walker saw them at the tail, the newest documents).
+**Verdict:** not a wrong result of the screen; a **design matter** for BOB: whether those two choices, today a flat 500-document list of titles, should be narrowed to the document's project and paged (screens-inquiry R99/R127 are silent on scope). Not an R13 cause for a job.
+
+### R13b · members absent from the project's list and from the breadcrumb (E5): NOT reproduced
+
+- **What I reproduced (green).** The members are filed under the archive's project: `control-plane/archive.mjs:48`/`:49` writes `project: "<PROJ>"` into each member's `bundle.md` when `promoteArchive` is given a project (`:85`), and `promotion/index.mjs:147`-`:151` (`projectOf`) stores it. Run through the real record (the harness of `bio-plane/test/m/control-plane/archive.test.mjs:78`): with `project: "PROJ-2026-0001"` the archive's bundle and the member's (`INFO-2026-0002-archive-file`, "one.txt, from the archive cd74...") both answer `bundleInfo().project === "PROJ-2026-0001"`. E5 itself reads `project` = the walker's project on all three members in `op=heldcaptures`. So the project is carried to the record; G154 is as FIXED as E5 says.
+- **What the screens read.** The project's documents list is `heldcaptures {project, state:"held_and_vouched", fields:"picker"}` read once on load and paged (`screens-inquiry/project.mjs:244`-`:258`), refreshed only by its own act `heldcaptures`; the `capture` layer's filter is `b.project = ? OR seen_in` (`capture/index.mjs:2027`-`:2028`), which the members satisfy. The breadcrumb's project is `doc.project` (`document.mjs:178`) read from the member's `bundle.md` by `front()` (`screens-inquiry/common.mjs:9`, a quoted value is JSON-read, so `project: "PROJ-..."` is read), then `later("project:"+project, "image", ...)`.
+- **So both symptoms contradict the data and the reads I can follow**; I did not reproduce either at the draw. The candidates, in the order to test: (i) the project page was loaded before the unpack job made the members and shows its first read (E5 counts "5 documents after the unpack" without pressing the refresh act); (ii) the member's page read an `image` of the bundle from before the project line existed. **UNKNOWN, with the reproduction owed (K4428)**: on the live copy, in one sitting: `op=image&id=<member>` and look for `project:` in `bundle.md`; `op=heldcaptures&project=<E>&state=held_and_vouched` and count; then the Document page of that member and the project page after a hard reload. If the first two show the project and the page still omits it, the cause is in the draw (`document.mjs:178`/`project.mjs:253`) and is `screens-inquiry`'s; if `bundle.md` lacks the line, it is `acquisition`/`control-plane`'s (a member made when the unpack call carried no project: the path `control-plane/index.mjs:2450`-`:2459` reads it from `heldat`).
+- **Why the tests missed it**: `archive.test.mjs` asserts the promote body carries `project:` in the md and, once, `bundleInfo`; no test draws a member's Document page or the project's list after an unpack (the screen tests script the answers by hand).
+
+**Owner (R13 as a whole):** (a) none (BOB's design call); (b) `screens-inquiry`, pending the live reading above; no job should be opened for (b) before that reading (K4428).
