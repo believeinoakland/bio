@@ -142,3 +142,7 @@ QUESTION: one line of the batch is not doable under the rules as they stand. fix
 - No `fixtures-own` or `fixtures-generic` marker added; one `fixtures-contract` (caseparts.test.mjs:30, publication case-cited-parts).
 - Tests: module 164/164. Checks: format, architecture, coverage (41/41), ownership, words: 0 failures.
 - Size (session_01Ed3McYsoc4pJynhHKAnecp): test runs 8, module lines 0 changed in src
+
+## J8 · COMPLETE
+
+COMPLETE (fix round 10, Wave A batch 5): noticesRead published with its test; standardsEmptyReads and noSelection fixtures taken (fixture.mjs:100, :160); caseparts code now NO_SUCH_CASE_EDITION with fixtures-contract publication case-cited-parts (caseparts:31 stays listed until publication's fixtures-run). No fixtures-own or fixtures-generic markers added. Module 164/164; format, architecture, coverage 41/41, ownership, words 0 failures. See record.
