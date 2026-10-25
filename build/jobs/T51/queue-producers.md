@@ -273,3 +273,11 @@ Size (session_018ia9y7957RisU9biUjnUGX): test runs 5, module lines 3189
 ## J14 · COMPLETE
 
 G65 applied: fillWord closes up a grade's underscores so NOT_FOUND reads queue.fill.grade.notfound. Two failing-first tests (red then green); queue-producers 154, queue 210, control-plane 447 pass; coverage, words, ownership 0 failures. Details in record J5.
+
+## J15 · QUESTION
+
+QUESTION (fix round 10, batch 6; replaces nothing): `build/modules.json` is BOB's, and queue-producers' `uses` lacks `escalation`.
+
+`bio-plane/test/m/queue-producers/action.test.mjs` now takes `escalationsDue().due` from `bio-plane/test/m/escalation/fixtures.mjs` (the START's line 88; escalation is earlier in the list). `checks/architecture.mjs bio queue-producers` therefore fails once: "imports escalation/fixtures.mjs of escalation, which queue-producers does not declare in uses". Every other provider I import (action-producers, contradiction, publication, monitoring, docket, provenance) is already in `uses`.
+
+My reading: add `escalation` to queue-producers' `uses`. The alternative is to leave that line hand-built (it stays a fixtures finding), which the START does not want. I carry on with the rest and post COMPLETE with this one check red until you answer.
