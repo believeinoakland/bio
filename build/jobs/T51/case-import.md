@@ -174,3 +174,19 @@ B10 (fix round 10, Wave A batch 2): three fixtures published in `bio-plane/test/
 **Checks.** case-import suite: 162 pass, 0 fail (was 158 + 3 new + 1 earlier). format 0 failures; architecture 0; coverage 33 of 33; words 0 failures (dev 1, inherited); fixtures: 1 failure, the FIX-E line above; ownership 0 failures; `impact.mjs origin/tranche/T51 HEAD`: 0 modules affected (test-only files).
 
 Size (session_01NT1x92ZN1kdow5LA1zD2mQ): test runs 3, module lines 2689
+
+## J11 · COMPLETE
+
+B11 item 1 (C6, diag2-10b): done. R4 met: `importedCases` (per import, the latest edition's) and `importedCase` (the edition shown) answer `scope`, the `case_scope` of the edition's case document (null where none, never the id); each finding of `#editionView` answers `title` from `#findingTitle` (R31's rule; null where none). Product code: `bio-plane/src/case-import/index.mjs` (`#scopeOf`, two answers, one finding field).
+
+**Tests.** New `names.test.mjs` (5 tests, R4): scope and titles on both reads; null scope and null title as controls; latest vs named edition; a non-member answered with no scope; the published fixture. Seen red on the old code (3 of 4 then failed), green after. `reads.test.mjs` pins the list row whole, so its expected row gained `scope: null` (R4's new field, no assertion weakened). `fixture.mjs` `caseFile`/`caseDocText` take `scope`. Published for screens-publish: `importedNamed()` in `fixtures.mjs`, made by the real reads at test time.
+
+**Why the tests missed it.** R4 named no title or scope, so no case-import test asked for one, and screens-publish's fake plane hand-wrote titles the real answer never carried.
+
+**Met ids for BOB to strike:** R4.
+
+**Checks.** case-import suite 166 pass, 0 fail. format 0; architecture 0; coverage case-import 33 of 33; ownership 0; words: no finding names case-import. `fixtures.mjs case-import --list`: the one inherited line (`fixture.mjs:193`, `strength.strengthOf` scripted, FIX-E, waiting on strength's provider); no marker added. `checks/run.mjs`: other modules' coverage and fixture lines only. Declarations unchanged; no new word ids; generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` (carries this module's source), not regenerated (§14).
+
+**For screens-publish (BOB):** `imported.mjs` should read `c.scope` and `f.title` (diag2-10b C6 item 4); its fake plane should take `importedNamed()`.
+
+Size (session_01JD7L1vW9GM6iWcpLj3beF4): test runs 6, module lines 2700
