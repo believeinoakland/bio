@@ -117,3 +117,7 @@ Failing-first: with the module at HEAD (stashed), the three tests fail (`set_at`
 - `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2,976 test files.
 
 Size (session_012pQPh7QQptB92PrassaGET): test runs 7, module lines 1022
+
+## J6 · REPORT
+
+Ring not delivered: create_trigger refused three times on rate limit (retry after about 50s each). My pushed COMPLETE (J5, job/T51/ai-use at 012837d1e1) is the message; BOB's backstop reads it. I will retry the ring when I am woken.
