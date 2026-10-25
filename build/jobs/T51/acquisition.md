@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_014DNpW1Q22zeKQnfdHbUNup · depth 2 · WORKING · handled B51
+**Status** · session_014DNpW1Q22zeKQnfdHbUNup · depth 2 · COMPLETE · handled B51
 
 ## J1 · REPORT
 
