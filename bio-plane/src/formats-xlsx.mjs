@@ -641,7 +641,7 @@ async function xlsxParts(bytes) {
   return {
     ok: true, format: "xlsx", variant: disc.variant ?? null, bytes: b, container, date1904, dates,
     sheets, definedNames, tables, rels, sharedStrings, core, active, declared, guard, piecewise, partials, undetermined,
-    access: new Map(),
+    access: new Map(), shared: new Map(),
   };
 }
 
@@ -755,12 +755,88 @@ function pieceAccess() {
   };
 }
 
+/** R47 (S-18): the cells of `typed` (`{ref, cell}`) that lie in a merged range but are not its top-left cell: they are covered,
+ *  and the value one holds is the file's statement under a merge, stated (`covered_by_merge`, with the range). */
+function coveredCells(merges, typed, sheetIndex) {
+  const at = new Map();
+  for (const t of typed) { const c = a1Corner(t.ref ?? ""); if (c) at.set(c.row * 16385 + c.col, t.ref); }
+  const out = [];
+  for (const range of merges) {
+    const ends = String(range).split(":");
+    const a = a1Corner(ends[0]), b = ends.length === 2 ? a1Corner(ends[1]) : a;
+    if (!a || !b) continue;
+    const r1 = Math.min(a.row, b.row), r2 = Math.max(a.row, b.row), c1 = Math.min(a.col, b.col), c2 = Math.max(a.col, b.col);
+    const note = (ref) => out.push({ sheet: sheetIndex, cell: ref, reason: "covered_by_merge", range });
+    if ((r2 - r1 + 1) * (c2 - c1 + 1) <= at.size) {
+      for (let row = r1; row <= r2; row++) for (let col = c1; col <= c2; col++) {
+        const ref = at.get(row * 16385 + col);
+        if (ref !== undefined && !(row === r1 && col === c1)) note(ref);
+      }
+    } else {
+      for (const [k, ref] of at) {
+        const row = Math.floor(k / 16385), col = k % 16385;
+        if (row >= r1 && row <= r2 && col >= c1 && col <= c2 && !(row === r1 && col === c1)) note(ref);
+      }
+    }
+  }
+  return out;
+}
+
+/** A cell that holds a value or a formula (what the cell list and the text keep; a styled empty cell is neither). */
+const holdsValue = (c) => c.v != null || c.f != null || (c.t === "inlineStr" && c.is != null);
+
+/** R47 (S-15): a formula moved `dr` rows and `dc` columns, as Excel moves a shared formula's dependents: every relative
+ *  reference (a cell, a column range, a row range) moves, an absolute one (`$`) stays, text in quotes is left alone,
+ *  and a reference moved off the grid becomes `#REF!`. */
+function shiftFormula(f, dr, dc) {
+  if (!dr && !dc) return f;
+  const CELL = /^(\$?)([A-Za-z]{1,3})(\$?)(\d{1,7})$/, COL = /^\$?[A-Za-z]{1,3}$/, ROW = /^\$?\d{1,7}$/;
+  const colOf = (letters) => { let n = 0; for (const ch of letters.toUpperCase()) n = n * 26 + ch.charCodeAt(0) - 64; return n; };
+  const move = (abs, v, d, max) => { if (abs) return v; const n = v + d; return n >= 1 && n <= max ? n : null; };
+  let out = "", i = 0;
+  while (i < f.length) {
+    const ch = f[i];
+    if (ch === '"' || ch === "'") {
+      let j = i + 1;
+      for (;;) { const k = f.indexOf(ch, j); if (k < 0) { j = f.length; break; } if (f[k + 1] === ch) { j = k + 2; continue; } j = k + 1; break; }
+      out += f.slice(i, j); i = j; continue;
+    }
+    if (/[$A-Za-z0-9_.]/.test(ch)) {
+      let j = i; while (j < f.length && /[$A-Za-z0-9_.]/.test(f[j])) j++;
+      const run = f.slice(i, j);
+      const m = CELL.exec(run);
+      if (m && f[j] !== "(") {
+        const c = move(m[1] === "$", colOf(m[2]), dc, XLSX_GRID_COLS), r = move(m[3] === "$", parseInt(m[4], 10), dr, XLSX_GRID_ROWS);
+        out += c == null || r == null ? "#REF!" : `${m[1]}${columnLetters(c)}${m[3]}${r}`;
+        i = j; continue;
+      }
+      const rest = f[j] === ":" ? /^\$?[A-Za-z0-9]{1,7}/.exec(f.slice(j + 1)) : null;
+      if (rest && COL.test(run) && COL.test(rest[0])) {
+        const a = move(run[0] === "$", colOf(run.replace("$", "")), dc, XLSX_GRID_COLS), b = move(rest[0][0] === "$", colOf(rest[0].replace("$", "")), dc, XLSX_GRID_COLS);
+        out += a == null || b == null ? "#REF!" : `${run[0] === "$" ? "$" : ""}${columnLetters(a)}:${rest[0][0] === "$" ? "$" : ""}${columnLetters(b)}`;
+        i = j + 1 + rest[0].length; continue;
+      }
+      if (rest && ROW.test(run) && ROW.test(rest[0])) {
+        const a = move(run[0] === "$", parseInt(run.replace("$", ""), 10), dr, XLSX_GRID_ROWS), b = move(rest[0][0] === "$", parseInt(rest[0].replace("$", ""), 10), dr, XLSX_GRID_ROWS);
+        out += a == null || b == null ? "#REF!" : `${run[0] === "$" ? "$" : ""}${a}:${rest[0][0] === "$" ? "$" : ""}${b}`;
+        i = j + 1 + rest[0].length; continue;
+      }
+      out += run; i = j; continue;
+    }
+    out += ch; i++;
+  }
+  return out;
+}
+
 /* A sheet's walk, as a scanner handler: `onRow` is called with each row as it is walked (`{r, hidden, cells:[{cell, t, s,
    f, v, is}]}`). `ctl.stopped` ends the scan (a bound went past); `access` is told where each row starts. */
-function sheetHandler(onRow, { rowsOnly = false, ctl = { stopped: false }, access = null, retainedMax = OFFICE_RETAINED_MAX } = {}) {
+function sheetHandler(onRow, { rowsOnly = false, ctl = { stopped: false }, access = null, retainedMax = OFFICE_RETAINED_MAX, shared = new Map(), startRow = 0 } = {}) {
   const hiddenRows = [];
   const hiddenCols = [];
   const hyperlinks = [];
+  const merges = [];
+  /* R48: where the walk is. A row with no usable `r` is the row after the last; a cell with no `r` is the column after the last. */
+  let rowNo = startRow, colNo = 0;
   /* COFF-11 — THE USED EXTENT, accumulated over the cells this walk has
      already read. It is taken from the CELLS and not from the `<row>`
      elements: a producer may declare a row to carry formatting and put no
@@ -775,6 +851,11 @@ function sheetHandler(onRow, { rowsOnly = false, ctl = { stopped: false }, acces
   let row = null, cell = null, target = null, buf = "", inIs = false, rph = 0;
   const endCell = () => {
     if (!cell) return;
+    /* R47 (S-15): a shared formula's master states its text, its dependents state none: each is the master's, moved by the distance between the cells. */
+    if (cell.shared != null) {
+      if (cell.f) shared.set(cell.shared, { formula: cell.f, row: cell.row, col: cell.col });
+      else { const m = shared.get(cell.shared); if (m) cell.f = shiftFormula(m.formula, cell.row - m.row, cell.col - m.col); }
+    }
     if (row) row.cells.push(cell);
     cell = null; target = null;
   };
@@ -782,9 +863,11 @@ function sheetHandler(onRow, { rowsOnly = false, ctl = { stopped: false }, acces
     if (!row) return;
     endCell();
     if (row.hidden && row.r != null) hiddenRows.push(row.r);
-    if (row.cells.length) {
-      if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
-      for (const c of row.cells) {
+    /* R47 (S-17): only a cell holding a value or a formula reaches; a styled empty cell is formatting. */
+    const held = row.cells.filter(holdsValue);
+    if (held.length) {
+      if (row.r > usedRows) usedRows = row.r;
+      for (const c of held) {
         const col = a1Col(c.cell);
         if (col != null && col > usedCols) usedCols = col;
       }
@@ -801,7 +884,10 @@ function sheetHandler(onRow, { rowsOnly = false, ctl = { stopped: false }, acces
       if (name === "row") {
         endRow();
         const a = parseAttrs(raw);
-        row = { r: a.r != null ? parseInt(a.r, 10) : null, hidden: a.hidden === "1" || a.hidden === "true", cells: [] };
+        const given = a.r != null ? parseInt(a.r, 10) : NaN;
+        rowNo = Number.isInteger(given) && given > 0 ? given : rowNo + 1;
+        colNo = 0;
+        row = { r: rowNo, hidden: a.hidden === "1" || a.hidden === "true", cells: [] };
         if (access) access.row(handler.scanner.at, row.r);
         if (self) endRow();
         return;
@@ -810,11 +896,16 @@ function sheetHandler(onRow, { rowsOnly = false, ctl = { stopped: false }, acces
         if (name === "c") {
           endCell();
           const a = parseAttrs(raw);
-          cell = { cell: a.r ?? null, t: a.t ?? null, s: a.s ?? null, f: null, v: null, is: null };
+          const at = a.r ? a1Corner(a.r) : null;
+          colNo = at ? at.col : colNo + 1;
+          cell = { cell: a.r ? a.r : `${columnLetters(colNo)}${row.r}`, t: a.t ?? null, s: a.s ?? null, f: null, v: null, is: null, shared: null, row: at ? at.row : row.r, col: colNo };
           if (row.cells.length >= retainedMax) { ctl.stopped = true; ctl.exceeded ??= { why: "TOO_MANY_OBJECTS", n: row.cells.length + 1, bound: retainedMax, final: true }; }
           if (self) endCell();
         } else if (cell) {
-          if (name === "f") { if (self) { cell.f ??= ""; } else { target = cell.f == null ? "f" : "x"; buf = ""; } }
+          if (name === "f") {
+            if (cell.f == null) { const fa = parseAttrs(raw); if (fa.t === "shared" && fa.si != null) cell.shared = fa.si; }
+            if (self) { cell.f ??= ""; } else { target = cell.f == null ? "f" : "x"; buf = ""; }
+          }
           else if (name === "v") { if (self) { cell.v ??= ""; } else { target = cell.v == null ? "v" : "x"; buf = ""; } }
           else if (name === "is") { if (!self) { inIs = cell.is == null; if (inIs) cell.is = ""; } else cell.is ??= ""; }
           else if (inIs && name === "rPh" && !self) rph++;
@@ -826,6 +917,9 @@ function sheetHandler(onRow, { rowsOnly = false, ctl = { stopped: false }, acces
       if (name === "col") {
         const a = parseAttrs(raw);
         if (a.hidden === "1" || a.hidden === "true") hiddenCols.push({ min: parseInt(a.min, 10), max: parseInt(a.max, 10) });
+      } else if (name === "mergeCell") {
+        const a = parseAttrs(raw);
+        if (a.ref) merges.push(a.ref);
       } else if (name === "hyperlink") {
         const a = parseAttrs(raw);
         hyperlinks.push({ cell: a.ref ?? null, relId: a.id ?? null, location: a.location ?? null, display: a.display ?? null });
@@ -844,7 +938,14 @@ function sheetHandler(onRow, { rowsOnly = false, ctl = { stopped: false }, acces
       else if (name === "is") { inIs = false; rph = 0; }
     },
   };
-  return { handler, done: () => ({ hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols }) };
+  return { handler, done: () => ({ hiddenRows, hiddenCols, hyperlinks, merges, usedRows, usedCols }) };
+}
+
+/* R47 (S-15): a sheet's shared-formula masters, kept on the reading, so a block read alone (cellsIn) still finds the master of a dependent in a block before it. */
+function sharedFormulasOf(parts, part) {
+  parts.shared ??= new Map();
+  if (!parts.shared.has(part)) parts.shared.set(part, new Map());
+  return parts.shared.get(part);
 }
 
 /* One sheet part walked, whole (its XML in hand) or in pieces (R35): `onRow`
@@ -854,7 +955,7 @@ function sheetHandler(onRow, { rowsOnly = false, ctl = { stopped: false }, acces
  * drops what it built from them. `ctl.exceeded` is a bound the walk went past (R44). With `access` the walk also leaves the
  * sheet's access points (R37). */
 async function walkSheetPart(parts, sheet, onRow, { yieldNow = null, ctl = { stopped: false }, access = null } = {}) {
-  const w = sheetHandler(onRow, { ctl, access });
+  const w = sheetHandler(onRow, { ctl, access, shared: sharedFormulasOf(parts, sheet.part) });
   if (sheet.xml != null) {
     const sc = new Scanner(w.handler);
     await scanWhole(sc, sheet.xml, yieldNow);
@@ -1341,6 +1442,9 @@ async function xlsxText(parts, opts) {
     }
     scanned += walked.scanner?.scanned ?? 0;
     if (walked.scanner) allUndetermined.push(...scanNotes(sheet.part, walked.scanner));
+    /* R48 / R22: a row or column a positional reading puts past the format's grid is stated, never read as if it were an address of the sheet */
+    if (walked.usedRows > XLSX_GRID_ROWS || walked.usedCols > XLSX_GRID_COLS)
+      undetermined.push({ sheet: sheet.index, cell: null, reason: "outside_grid", usedRows: walked.usedRows, usedCols: walked.usedCols });
     cellCount += sheetCells;
     formulaCount += sheetFormulas;
     if (typed) listedBytes += sheetBytes;
@@ -1354,7 +1458,10 @@ async function xlsxText(parts, opts) {
       usedRows: walked.usedRows, usedCols: walked.usedCols,
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
-      text: "", lineRows, cells: typed ? rowColumnOrder(typed).map((x) => x.cell) : null, undetermined });
+      text: "", lineRows, cells: typed ? rowColumnOrder(typed).map((x) => x.cell) : null,
+      /* R47 (S-18): the merged ranges the sheet states, when it states any */
+      ...(walked.merges.length ? { merges: walked.merges } : {}), undetermined });
+    if (walked.merges.length && typed) undetermined.push(...coveredCells(walked.merges, typed, sheet.index));
     if (from >= 0) spans.push({ o: outSheets[outSheets.length - 1], from, to: sink.chars });
     walkedOut.push(outSheets[outSheets.length - 1]);
     for (const u of undetermined) allUndetermined.push(u);
@@ -1488,7 +1595,7 @@ async function xlsxCellsIn(parts, a) {
     for (const c of cells) out.push(c);
   };
   const parse = (xml) => {
-    const w = sheetHandler(takeRow, { rowsOnly: true, ctl });
+    const w = sheetHandler(takeRow, { rowsOnly: true, ctl, shared: sharedFormulasOf(parts, sheet.part), startRow: lastRow });
     const sc = new Scanner(w.handler);
     scanSync(sc, xml);
     served.bytes += xml.length;
@@ -1506,7 +1613,7 @@ async function xlsxCellsIn(parts, a) {
       /* The first point read on a reading the read did not leave access points for: one pass leaves them. */
       if (sheet.xml != null) {
         const acc = offsetAccess();
-        const w = sheetHandler(() => {}, { rowsOnly: true, access: acc });
+        const w = sheetHandler(() => {}, { rowsOnly: true, access: acc, shared: sharedFormulasOf(parts, sheet.part) });
         const sc = new Scanner(w.handler);
         scanSync(sc, sheet.xml);
         if (sc.badRef) return { ok: false, reason: "char_ref_invalid", final: true };
