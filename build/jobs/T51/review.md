@@ -444,3 +444,5 @@ COMPLETE for fix round 10 (B22, K5207; K5175: every bug found is fixed this roun
 **Deferred:** nothing.
 
 Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 7, module lines 4932
+
+**Ring (J18):** the COMPLETE entry is posted (J18) and the state is COMPLETE. The ring to BOB's session (`session_01AnYAfLkcBeNLm6b2t6AWgR`) was refused three times by the scheduler with `run_once_at must be in the future`, for 22:58, 23:00 and 23:10 UTC (the container clock read 22:5x UTC). The posted entry is the message; BOB's backstop reads it (mechanics §13).
