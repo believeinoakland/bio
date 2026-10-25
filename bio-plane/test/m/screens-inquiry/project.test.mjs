@@ -183,6 +183,7 @@ test("R27 R36 This project's work: its plans by name and the calculations, stand
   const none = await open(at());
   assert.ok(section(none, "project.work.title").textContent.includes(word("screen.plan.name")), "no plan: the plan kind is still listed");
   /* R36 (fix round 2, C63): a plan opened here opens its page, where the receipt is; the plan is listed by name when she returns */
+  // fixtures-contract: screens-action plan-screen-shape
   const stubPlan = { id: "plan", reads: () => ({}), render: () => "", acts: [], words: [] };
   const o = await open(at(), { boot: { screens: [...SCREENS, stubPlan] }, plane: { planopen: ok({ ok: true, id: "PLAN-2026-0004", title: "Ask the committee" }) } });
   fill(o, { "project-plan": "Ask the committee", "project-plan-about": Q });

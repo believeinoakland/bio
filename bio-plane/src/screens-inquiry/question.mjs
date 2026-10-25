@@ -219,11 +219,28 @@ function render(cs, view) {
     }
     return null;
   };
-  /* where in the document: its page, else its paragraph, as the leg's extent states one (HTML-escaped words, for a fill or markup) */
+  /* R17b (fix round 10, cause 17b; content's extent grammar): a leg that cites a part of the document outside its body (`doc-part`: a footnote, an endnote, a header, a comment)
+     states that part's own reference (`extent_ref`, "footnote 1"), the document's own label for it, drawn as the record states it */
+  const docPartRef = (l) => {
+    const r = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === String(l.target)) : null;
+    for (const x of [l, r]) {
+      if (!x) continue;
+      const kind = x.extent_kind !== undefined && x.extent_kind !== null ? x.extent_kind : x.extent && typeof x.extent === "object" ? x.extent.kind : undefined;
+      if (String(kind) !== "doc-part") continue;
+      const ref = x.extent_ref !== undefined && x.extent_ref !== null && x.extent_ref !== "" ? x.extent_ref : x.extent && typeof x.extent === "object" ? x.extent.ref : "";
+      if (typeof ref === "string" && ref.trim()) return ref.trim();
+    }
+    return null;
+  };
+  /* where in the document: its page, else its paragraph, else the part it cites, as the leg's extent states one (HTML-escaped words, for a fill or markup). The sentence that
+     places a part is the row owed `screen.question.leg.part` ({ref}); until it is held the reference alone is drawn, as the record states it */
   const whereOf = (l, plain) => {
     const say = plain ? T : W;
-    return pageOf(l) !== null ? say("screen.document.passage.where", { page: String(pageOf(l)) })
-      : paraOf(l) !== null ? say("screen.question.leg.paragraph", { n: String(paraOf(l)) }) : "";
+    if (pageOf(l) !== null) return say("screen.document.passage.where", { page: String(pageOf(l)) });
+    if (paraOf(l) !== null) return say("screen.question.leg.paragraph", { n: String(paraOf(l)) });
+    const ref = docPartRef(l);
+    if (ref === null) return "";
+    return cs.w("screen.question.leg.part") !== "screen.question.leg.part" ? say("screen.question.leg.part", { ref }) : plain ? ref : `<span class="rec" data-part-ref="1">${cs.esc(ref)}</span>`;
   };
   /* C36 (R23, R24, R34): the first words of the passage a leg cites. The leg's own words, else the reading shown's; else the passage of the
      cited capture's reading (`reading`, extraction R27) whose extent the leg states (`parts.legWords`: every `extent_*` field the unit's extent
@@ -1492,11 +1509,16 @@ const acts = [
       const gone = (l) => { const r = refs.find((x) => x && String(x.target) === String(l.target)); return r ? r.status === "severed" : l.status === "severed"; };
       const legs = (doc.lists.basis || []).map((l, ord) => Object.assign({ ord }, l))
         .filter((l) => l && l.target && (l.role || "supports") === "supports" && !gone(l));
+      /* R23 (fix round 10, cause 30a; DEC-32 clauses 2 and 4): a passage answered "No, my answer falls" is NECESSARY and belongs to no part; a passage answered "Yes, because of
+         these others" is, with the others it names, one independently sufficient part together. A passage left unanswered counts as necessary (the default is AND). An answer of
+         "No" for every passage sends no ground at all (`grounds: []`); the passages in no part stand beside the grounds as necessary legs (`inquiry` R85). */
       const parent = new Map(legs.map((l) => [l.ord, l.ord]));
       const root = (x) => { while (parent.get(x) !== x) x = parent.get(x); return x; };
+      const asserting = new Set();
       for (const l of legs) {
         const said = cs.value("ask-" + l.ord) || [];
         if (!said.includes("yes")) continue;
+        asserting.add(l.ord);
         for (const o of cs.value("ask-which-" + l.ord) || []) {
           const n = Number(o);
           if (parent.has(n)) parent.set(root(n), root(l.ord));
@@ -1504,7 +1526,7 @@ const acts = [
       }
       const groups = new Map();
       for (const l of legs) { const r = root(l.ord); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(l.ord); }
-      const grounds = [...groups.values()].map((ords, i) => ({ ground: "part " + (i + 1), legs: ords }));
+      const grounds = [...groups.values()].filter((ords) => ords.some((o) => asserting.has(o))).map((ords, i) => ({ ground: "part " + (i + 1), legs: ords }));
       return { body: { target: String(view.subject || ""), grounds } };
     } },
   /* R25: the reading acts, each with the version; Stand on with the project; accept with the affirmation of every ground */

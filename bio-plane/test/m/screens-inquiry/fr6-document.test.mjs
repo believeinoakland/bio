@@ -17,18 +17,23 @@ const PARTS = Array.from({ length: 5 }, (_, i) => ({ file: `snapshots/upload-${W
 const BYTES = 41942040;
 const five = { [D]: { "bundle.md": DOCUMENT_MD, "data/provenance.json": JSON.stringify({ documents: [{ capture: { sha256: WHOLE, bytes: BYTES }, parts: PARTS }] }) } };
 /* the statement as the real `op=reading` answers it for a capture over the reader's size (the seam test makes it by a 40 MB upload) */
-const BASIS = "the capture is 41942040 bytes in 5 parts, over the 25165824 B a format entry is handed here, so it was not read";
+/* what the real plane stores for a capture over the reader's size (`fr6-seam.test.mjs` makes it by a 40 MB upload): its reason, the figure it measured, the limit and the basis it states */
+const BOUND = 25165824;
+const BASIS = "This file is 41942040 bytes in 5 parts, over the 25165824 bytes allowed for this kind of file.";
 const stated = (o = {}) => ok({ ok: true, found: true, capture_sha: WHOLE, bundle_id: D, content_type: "generic", reader_version: 1, reader_found: false, entity_count: 0,
-  at: "2026-10-22T15:22:10Z", reading: { content_type: "generic", reader_version: 1, found: false, basis: BASIS, failure: "final", metadata: null },
+  at: "2026-10-22T15:22:10Z", reading: { content_type: "generic", reader_version: 1, found: false, basis: BASIS, failure: "final", reason: "TOO_LARGE", size: BYTES, bound: BOUND, key: "limit.pdf.bytes", metadata: null },
   text_units: [], bytes: BYTES, format: "undetermined", ...o });
-const sizeWord = () => word("size.mb", { n: (BYTES / 1048576).toFixed(1) });
+const mbOf = (n) => word("size.mb", { n: (n / 1048576).toFixed(1) });
+const sizeWord = () => mbOf(BYTES);
+/* a size refusal is drawn by its own figures (R96, fix round 10): the reading's size and its limit */
+const sizeSentence = () => word("screen.document.reading.toolarge", { size: mbOf(BYTES), limit: mbOf(BOUND) });
 
 test("R96 R129 G6 a 5-part capture whose reading is stored under the whole as a final statement draws that statement with the file's size; no 'Nothing here', no OCR re-read, nothing offered after it", async () => {
   const p = await open(at, { images: five, plane: { reading: stated(), heldcaptures: ok({ ok: true, held: [] }) } });
   const reads = p.byOp("reading").map((r) => r.query.sha256);
   assert.deepEqual(reads, [WHOLE], "the reading is asked of the whole's digest, never a part's");
   const m = main(p);
-  assert.ok(text(m).includes(hasWord(OWED.stated) ? word(OWED.stated, { size: sizeWord() }) : BASIS), "the statement the plane stored is drawn, by the design's row when held, else in the plane's own words");
+  assert.ok(text(m).includes(sizeSentence()), "the statement the plane stored is drawn: a size refusal, with the reading's own size and limit (R96)");
   assert.ok(text(m).includes(sizeWord()), "with the file's size");
   assert.ok(!says(m, "state.empty"), "the section is not 'Nothing here'");
   const acts = actsIn(m);
@@ -119,7 +124,7 @@ test("R96 G13 a reading the plane pages (`next`) draws the first page of passage
 
 test("R96 G6 G8 the design's rows (DEC-418) are drawn when the words list holds them: the statement with the file's size, the repairable sentence and its door; until then the plane's own words and 'Read it' stand in", async () => {
   const st = await open(at, { images: five, plane: { reading: stated() } });
-  assert.ok(text(main(st)).includes(hasWord(OWED.stated) ? word(OWED.stated, { size: sizeWord() }) : BASIS));
+  assert.ok(text(main(st)).includes(sizeSentence()), "a stored size refusal is drawn with the reading's own size and limit");
   const rep = await open(at, { images: five, plane: { reading: stated({ repairable: true }) } });
   assert.ok(text(main(rep)).includes(hasWord(OWED.repairable) ? word(OWED.repairable) : BASIS));
   const door = main(rep).querySelector('button[data-act="readheld"]');
@@ -136,8 +141,8 @@ test("R96 G14 a reading that states itself refused whole (a PDF over 16 MiB) dra
     completeness: { state: "stated", why: WHY } }) } });
   const m = main(p);
   assert.equal(m.querySelector("[data-text-state]").getAttribute("data-text-state"), "stated");
-  assert.ok(text(m).includes(hasWord(OWED.stated) ? word(OWED.stated, { size: word("size.mb", { n: (BYTES2 / 1048576).toFixed(1) }) }) : WHY), "the statement: the design's row when held, else the reason in the plane's words");
-  assert.ok(text(m).includes(word("size.mb", { n: (BYTES2 / 1048576).toFixed(1) })), "with the file's size");
+  assert.ok(text(m).includes(WHY), "the statement: the reason in the plane's words (the reading states no reason of its own, R96)");
+  assert.ok(text(m).includes(word("size.mb", { n: (BYTES2 / 1048576).toFixed(1) })), "with the file's size (the original-file card)");
   assert.ok(!text(m).includes(word("screen.document.text.partial", { pages: "3–6" })) && !m.querySelector('[data-text-state="none"]'), "never 'pages have no text', never none");
   assert.ok(!actsIn(m).includes("pdfstructure") && !actsIn(m).includes("pagetranscribe") && !actsIn(m).includes("transcribe"), "no OCR, no typing of pages the size left unread");
 });
