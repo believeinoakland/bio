@@ -31,6 +31,7 @@ import { standardRead as standardReadFixture } from "../standards/fixtures.mjs";
 import { occurrences as occurrencesFixture } from "../duties/fixtures.mjs";
 import { watchReaderRegistrar } from "../plan-work/fixtures.mjs";
 import { standingQuestions as standingQuestionsFixture } from "../answers/fixtures.mjs";
+import { monitorAnswer } from "../monitoring/fixtures.mjs";
 
 /* The refusals of the providers following's stand-ins answer, each made by the provider's real code (K4990; fix round 10):
    acquire's FETCH_FAILED, standards' NO_SUCH_STANDARD, duties' NO_SUCH_DUTY, plan-work's registration refusals and answers'
@@ -176,7 +177,8 @@ export function world({ view = testView(), now = T0, realRetrieval = false, door
     sweepHost: () => sweepHost,
     schedule: () => ({ due: [], scheduled: [], unscheduled: w.watched.map((s) => ({ bundle: s.bundle, address: s.address, frequency: "per_meeting",
       reason: word("monitoring.cadence_meeting_schedule") })) }),
-    async monitor({ bundleId }) { w.monitored.push({ bundleId, at: w.t }); return { status: 200, body: { ok: true, status: "unchanged", capture: { sha256: sha(`m${w.monitored.length}`) } } }; },
+    /* monitoring's real answer (its published fixture): the nth call's answer is the nth tick's, each with its own capture */
+    async monitor({ bundleId }) { w.monitored.push({ bundleId, at: w.t }); return (await monitorAnswer({ ticks: w.monitored.length, kind: "modified" })).answer; },
   };
   w.bundle = (id, { type = "information", project = "" } = {}) => {
     st.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version, project)
