@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_01EuQtSZAq5UjiGxgEKWZHMP · depth 2 · RUNNING until 2026-10-25T13:48:49Z (instance-setup module tests) · handled B17
+**Status** · session_01EuQtSZAq5UjiGxgEKWZHMP · depth 2 · COMPLETE · handled B17
 
 ## J1 · REPORT · re B1
 
