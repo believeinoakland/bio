@@ -7,7 +7,7 @@
    Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { planeWorld as world, infoMd, V, NOW } from "./fixture.mjs";
+import { planeWorld as world, infoMd, V, NOW, absentStandard } from "./fixture.mjs";
 import { rowOf, CASE_SOURCES_CHECKS } from "../../../src/publication/checks.mjs";
 import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -29,7 +29,7 @@ function standardsOf() {
     table,
     standardRead({ id }) {
       const s = table[id];
-      if (!s) return { ok: false, reason: "NO_SUCH_STANDARD", code: "NO_SUCH_STANDARD", standard: id };
+      if (!s) return absentStandard(id);
       return { ok: true, id, cite: id, kind: "policy", issuer: "X", designation: id, edition: "1", access: s.access,
                owner: { issuer: "X", label: "X" }, requires: s.requires,
                texts: s.texts.map((t) => ({ content_id: t, standing: null, newer: null })),
