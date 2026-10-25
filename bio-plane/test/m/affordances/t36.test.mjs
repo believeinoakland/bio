@@ -220,11 +220,23 @@ test("R61 R62 (T51, B14; K4376): the ops op-declarations' registration leaves wi
   for (const op of [...T51_OWED_OPS, ...T51_LIST_ONLY_OPS, ...T51_STANDIN_OPS]) assert.equal(meetsR48(without(op)), false, op);
 });
 
+test("R48 R34 R61 (T51, K5164): `authority` (provenance's read, R80) and `ruleservicesstate` (answers' read) are explained in ACT_HELP under their own "
+   + "names, each its stand-in sentence under `act.<op>.does`, so op-declarations' R34 finds neither unexplained; a table dropping either departs", () => {
+  for (const op of ["authority", "ruleservicesstate"]) {
+    assert.ok(T51_STANDIN_OPS.includes(op), op);
+    assert.equal(ACT_HELP[op], T51_STANDIN_HELP[op], op);
+    assert.equal(ACT_HELP_KEYS[op], `act.${op}.does`, op);
+    assert.ok(ACT_HELP[op].length > 0, op);
+    const without = Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== op));
+    assert.equal(meetsR48(without), false, op);
+  }
+});
+
 test("R48 R62 (T51, K4900, K4968; capture R113): the four steps of a file sent in parts are member ops this table explains under their own names, "
    + "each a sentence read from the design's row for its own key (DEC-431) and none shared; a table dropping any of them, or giving two the one "
    + "sentence, departs", () => {
   const parts = ["captureuploadbegin", "captureuploadpart", "captureuploadcomplete", "captureuploadabort"];
-  assert.deepEqual([...T51_STANDIN_OPS], [], "no stand-in is left: the design gave the rows");
+  assert.deepEqual(parts.filter((op) => T51_STANDIN_OPS.includes(op)), [], "the design gave the rows: no captureupload step is a stand-in");
   for (const op of parts) {
     assert.ok(T51_DESIGN_OPS.includes(op), `${op} is a design op`);
     assert.ok(Object.hasOwn(ACT_HELP, op), `${op} is held under its own name`);

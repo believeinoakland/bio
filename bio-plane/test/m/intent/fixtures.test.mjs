@@ -1,7 +1,7 @@
 /* intent's published fixtures (fixtures.mjs): each is called here and its real answer checked (K4990). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { intentWorld, notYoursRefusal, watchSetOf } from "./fixtures.mjs";
+import { intentWorld, notYoursRefusal, watchSetOf, retiredWorld } from "./fixtures.mjs";
 import { INTENT_CHECKS } from "../../../src/intent/index.mjs";
 
 test("R6 R7 R15: intentWorld is the real intent over a condition with one gap; its gaps and watchSet are the real answers, which the same calls give again, and a source registers once", async () => {
@@ -66,4 +66,17 @@ test("R7: one digest held by two projects is read by both, each by its own condi
   const f = await watchSetOf({ one: ["9".repeat(64)], two: ["9".repeat(64), "8".repeat(64)] });
   assert.deepEqual(f.intent.watchSet({ project: f.projects.one }).captures, ["9".repeat(64)]);
   assert.deepEqual(f.intent.watchSet({ project: f.projects.two }).captures, ["8".repeat(64), "9".repeat(64)]);
+});
+
+test("R11 R12 R37: retiredWorld is the real intent holding a project's retired aspiration with its lesson and dead ends, and bob's own; its retired read lists exactly those, the default read lists the one in force", () => {
+  const f = retiredWorld();
+  const r = f.intent.aspirationsFor({ project: f.project, member: "bob", viewer: f.viewer, retired: true });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.aspirations.map((a) => a.id), [f.retired, f.mine]);
+  for (const a of r.aspirations) {
+    assert.equal(a.state, "retired");
+    assert.equal(a.taught, f.taught[a.id]);
+    assert.deepEqual(a.dead_ends.map((d) => d.note), f.deadEnds[a.id]);
+  }
+  assert.deepEqual(f.intent.aspirationsFor({ project: f.project, member: "bob", viewer: f.viewer }).aspirations.map((a) => a.id), [f.held]);
 });

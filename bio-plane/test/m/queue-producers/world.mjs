@@ -89,7 +89,8 @@ export function world(fakes = {}) {
              role TEXT, grade TEXT, grade_axis TEXT, grade_source TEXT, ground TEXT, content_id TEXT);
            CREATE TABLE IF NOT EXISTS progression_instances (progression_key TEXT, entity_id TEXT, stage_key TEXT, capture_sha TEXT, bundle_id TEXT);
            CREATE TABLE IF NOT EXISTS case_documents (case_id TEXT NOT NULL, edition INTEGER NOT NULL, authored_at TEXT NOT NULL, sig_armored TEXT);
-           CREATE TABLE IF NOT EXISTS cases (case_id TEXT PRIMARY KEY, project_id TEXT)`);
+           CREATE TABLE IF NOT EXISTS cases (case_id TEXT PRIMARY KEY, project_id TEXT);
+           CREATE TABLE IF NOT EXISTS published_cases (case_id TEXT NOT NULL, edition INTEGER NOT NULL, scope TEXT, PRIMARY KEY (case_id, edition))`);
   record.migrate();
   membership.migrate();
   credentials.migrate();
