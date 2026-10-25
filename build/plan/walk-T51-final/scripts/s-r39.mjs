@@ -2,7 +2,7 @@
 import { check } from "./lib-04b.mjs";
 import { word } from "../../../../bio-plane/src/setup-words/index.mjs";
 
-export const J = (x, n = 600) => JSON.stringify(x).slice(0, n);
+export const J = (x, n = 600) => String(JSON.stringify(x)).slice(0, n);
 let ipn = 10;
 export function knocker(kit) {
   return (payload, ip = `203.0.113.${ipn++}`, raw = null) => kit.plane("/api/?op=knock", { method: "POST", headers: { "cf-connecting-ip": ip },
@@ -105,7 +105,7 @@ export async function r39(kit, ctx) {
     const base = (await kit.get(ctx.mem, { op: "inbox" })).result;
     const rows = base.inbox;
     const bySort = {};
-    for (const s of ["received", "status", "pseudonym", "project"]) {
+    for (const s of ["received", "status", "secret", "project"]) {
       const a = await kit.get(ctx.mem, { op: "inbox", sort: s });
       bySort[s] = (a.result && a.result.inbox) ? (a.result.sort + "/" + a.result.inbox.length) : "answered " + J(a.result || a, 160);
     }
@@ -208,5 +208,9 @@ export async function r39(kit, ctx) {
     const t = await kit.get(ctx.mem, { op: "doorbelltally" });
     const f = await kit.get(await kit.founder(), { op: "doorbelltally" });
     return `member: ${J(t.result)}; founder (admin session, handle admin): ${J(f.result)}; refusals so far counted: the tally lists ${t.result.days.reduce((n, d) => n + d.refused, 0)} turned away`;
+  });
+
+  await check("R39", "the litigation hold pauses the archive's one-week clearing of discarded knocks; the optional gatekeeper (machine work) dismisses obvious spam and is labelled; a stranger's knock that contests a published finding raises a re-evaluation notice; the older setup page's 'Mark as taken up' and 'Set aside'", "as the member", "look for each door", async () => {
+    return ["NOT REACHED", "the clearing is the scheduler's and is paused by a hold made in the action area (area 11); no assistant is connected so no gatekeeper runs (nothing machine-labelled appears in the inbox rows read above: none of the rows carries a machine mark); a published finding does not exist in this sitting (areas 9 and 10); the older setup page is a screen, not drawn offline (its two acts are the inbox ops inboxpull and inboxresolve, walked above)"];
   });
 }
