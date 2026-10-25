@@ -58,10 +58,13 @@ export async function s4b(c) {
   const again = await c.k.post(c.W.ben, "projectrequest", {}, { projectId: p2 });
   rec("R25", "A second open request from the same member is refused in words (one at a time)", 1280, "member ben (the op the page sends)", "sent projectrequest a second time", again.body.result && again.body.result.ok === false ? "WORKS" : "BROKEN", clip(again.body.result && (again.body.result.translation || JSON.stringify(again.body.result)), 260), "");
   s = await c.go("f", "/app/queue"); t = await c.text(s);
+  rec("R21", "Queue's count sentence reads in the singular for one item ('1 item waits on you')", 1280, "administrator (owner ross)", "read the count sentence with exactly one item waiting", /\b1 items wait/.test(t) ? "BROKEN" : "WORKS", `MINOR: ${clip((t.match(/\d+ items? wait[^.]*\./) || [""])[0], 120)}`, "");
   rec("R21", "Queue (project owner): a join request is a To do with Grant and Decline and the sentence 'Grant it to invite them... They see your answer and any word you add'", 1280, "administrator (owner ross)", "opened Queue with ben's request waiting", has(t, "ben asks to join Park Lease Review", "Grant", "Decline") ? "WORKS" : "BROKEN",
     `${stSummary(s.st)}; ${clip(t.slice(t.indexOf("TO DO")), 260)}; a field for 'any word you add' is drawn: ${await s.page.locator("#cs-main textarea, #cs-main input[type=text]").count() ? "yes" : "no"}`, await shot(s.page, "R21-queue-join-request-1280"));
   const sh = await c.go("f", "/app/home"); const ht = await c.text(sh);
   rec("R20", "Home: the same join request appears (under 'Needs the team'/'Needs you') and Home's count equals the Queue's rows", 1280, "administrator (owner ross)", "read Home with one request waiting", /ben asks to join Park Lease Review/.test(ht) ? "WORKS" : "BROKEN", clip(ht.slice(0, 500), 360), await shot(sh.page, "R20-founder-home-with-request-1280"));
+  rec("R20", "Home names who can take a join request's next step correctly (only the project's owners can answer it)", 1280, "administrator (owner ross)", "read the wording under the request on Home", /any member can take the next step/.test(ht) ? "BROKEN" : "WORKS",
+    `MINOR: the item sits under 'Needs the team' and reads 'any member can take the next step', while the same item in the owner's Queue is her To do and only an owner may Grant or Decline`, "");
   // ben withdraws
   s = await c.go("ben", "/app/project/" + p2); await c.press(s, "Withdraw your request"); t = await c.text(s);
   rec("R25", "The requester withdraws a waiting request; she may ask again", 1280, "member ben", "pressed 'Withdraw your request'", has(t, "Ask to join") && !/You asked to join/.test(t) ? "WORKS" : "BROKEN", clip(t, 200), "");
@@ -70,9 +73,10 @@ export async function s4b(c) {
   s = await c.go("ben", "/app/project/" + p2); await c.press(s, "Ask to join");
   s = await c.go("f", "/app/queue"); await c.press(s, "Decline"); const dalert = await alerts(s); t = await c.text(s);
   rec("R25", "Owner declines the request (Decline): the request leaves the Queue", 1280, "administrator (owner ross)", "pressed Decline", /Nothing is waiting on you/.test(t) ? "WORKS" : "BROKEN", `${dalert}; ${clip(t, 160)}`, "");
+  rec("R21", "The receipt after Grant or Decline says which was done", 1280, "administrator (owner ross)", "read the line after pressing Decline", /Done: Grant or decline\./.test(t) ? "BROKEN" : "WORKS", `MINOR: '${clip((t.match(/Done:[^.]*\.[^.]*\./) || [""])[0], 100)}': it names both choices, not the one made`, "");
   s = await c.go("ben", "/app/project/" + p2); const bt = await c.text(s);
   s = await c.go("ben", "/app/queue"); const bq = await c.text(s);
-  rec("R25", "The requester is told the owners' answer ('They see your answer and any word you add')", 1280, "member ben", "read the project page and Queue after the decline", /declined|not now|answer/i.test(bt + bq) ? "WORKS" : "BROKEN",
+  rec("R25", "The requester is told the owners' answer ('They see your answer and any word you add')", 1280, "member ben", "read the project page and Queue after the decline", /declin|not granted|turned down/i.test(bt + bq) ? "WORKS" : "BROKEN",
     `MAJOR for BOB to place: after the decline his project page reads again '${clip(bt.slice(bt.indexOf("MEMBERS"), bt.indexOf("MEMBERS") + 120), 120)}' and his Queue is empty: nothing says the request was answered, though the owner's item promised 'They see your answer and any word you add'; and Decline offers no place to add a word`, "");
   s = await c.go("f", "/app/queue/answered"); t = await c.text(s);
   rec("R21", "'What you answered and set aside' lists the join answer (name and day only)", 1280, "administrator (owner ross)", "opened /app/queue/answered after granting nothing and declining once", /ben|join/i.test(t) ? "WORKS" : "BROKEN",
@@ -173,8 +177,13 @@ export async function s4e(c) {
   rec("R25", "A plain member presses 'Ask to leave this project': it records a request without removing her, and she and the owners are told", 1280, "member ola (joined, not an owner)", "pressed the act, then read her page, the owners' Members block and the owner's Queue",
     /leaving|asked to leave|left/i.test(t + ft + qt) ? "WORKS" : "BROKEN",
     `MAJOR for BOB to place: her press gives no receipt (new lines on her page: '${added || "none"}'); the plane holds her as state 'leaving' (a second projectleave answers ${JSON.stringify(st.body.result && { reason: st.body.result.reason, state: st.body.result.state })}), yet the owner's Members block still reads '${clip(ft.match(/ola · member[^M]{0,40}/)?.[0] || "", 80)}' with no act on her row (owner acts are drawn only for 'joined' rows), the owner's Queue holds nothing ('${clip(qt.slice(0, 80), 80)}'), and she is shown no way to cancel`, await shot(s.page, "R25-ask-to-leave-1280"));
+}
+
+export async function s4e2(c) {
+  const p2 = c.P.p2;
+  let s, t, before, after;
   /* ---- an owner removes a participant with a comment ---- */
-  sf.page && await fold(sf);
+  const sf = await c.go("f", "/app/project/" + p2); await fold(sf);
   await sf.page.locator("#project-invite").fill("cho"); await sf.page.getByRole("button", { name: "Invite a member to the project" }).click(); await c.settle(sf.page, 1200);
   const sc = await c.go("cho", "/app/project/" + p2); await c.press(sc, "Join");
   s = await c.go("f", "/app/project/" + p2);

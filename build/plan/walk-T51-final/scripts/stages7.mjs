@@ -35,7 +35,7 @@ export async function s14(c) {
   const badTitle = all.filter((o) => !/ · .+ · Civicsmith$/.test(o.title));
   rec("OV-16", "Tab titles read '{screen} · {team} · Civicsmith'", "1280", "administrator and member", "read the document title on every screen", badTitle.length ? "BROKEN" : "WORKS", badTitle.length ? [...new Set(badTitle.map((o) => `${o.name}: '${o.title}'`))].join("; ") : "all match", "");
   const sw = all.filter((o) => o.sw > o.width); const nameless = all.filter((o) => o.nameless);
-  rec("OV-19", "Every control has an accessible name", "1280 and 390", "administrator and member", "counted visible controls with no text, label, title or aria-label", nameless.length ? "BROKEN" : "WORKS", nameless.length ? [...new Set(nameless.map((o) => `${o.name}: ${o.nameless}`))].join("; ") : "none", "");
+  rec("OV-19", "Every control has an accessible name", "1280 and 390", "administrator and member", "counted visible controls with no text, label, title or aria-label", nameless.length ? "BROKEN" : "WORKS", nameless.length ? "MINOR: " + [...new Set(nameless.map((o) => `${o.name}: ${o.nameless} (${(o.namelessSample || []).join(" ").slice(0, 150)})`))].slice(0, 6).join("; ") : "none", "");
   rec("OV-31", "Timing note on every screen: first answer time and requests, whether a reading tick was running (offline Miniflare on this host, no proxy; not K4354's live bars)", "1280 and 390", "administrator and member", "recorded the wall time to settle and the worst Server-Timing per screen",
     "WORKS", all.map((o) => `${o.name} ${o.wall} ms, ${o.timing.replace(" api requests, worst Server-Timing", " req, worst")}`).join("; ").slice(0, 3800), "");
   /* what could not be forced */

@@ -51,17 +51,20 @@ export async function s10(c) {
 export async function s11(c) {
   /* the working frame: rail resize, keyboard, reset, icon-only */
   let s = await c.go("f", "/app/home");
-  const handle = s.page.getByRole("button", { name: "Width of the sections list" }).first();
-  const railW = () => s.page.evaluate(() => { const r = document.querySelector("nav, aside, [class*=rail]"); return r ? Math.round(r.getBoundingClientRect().width) : -1; });
-  const w0 = await railW(); let w1 = w0, w2 = w0, w3 = w0, w4 = w0;
-  if (await handle.count()) {
-    await handle.focus(); for (let i = 0; i < 4; i++) await s.page.keyboard.press("ArrowRight"); w1 = await railW();
-    for (let i = 0; i < 12; i++) await s.page.keyboard.press("ArrowLeft"); w2 = await railW();
-    await handle.dblclick(); w3 = await railW();
-    const bb = await handle.boundingBox(); if (bb) { await s.page.mouse.move(bb.x + 2, bb.y + 30); await s.page.mouse.down(); await s.page.mouse.move(bb.x - 120, bb.y + 30, { steps: 6 }); await s.page.mouse.up(); w4 = await railW(); }
+  const grip = s.page.locator(".cs-grip").first();
+  const val = async () => Number(await grip.getAttribute("aria-valuenow"));
+  const rail = async () => s.page.evaluate(() => { const g = document.querySelector(".cs-grip"); const r = g && g.previousElementSibling && g.previousElementSibling.getBoundingClientRect(); const n = document.querySelector("[aria-label=Sections], .cs-rail, nav"); return Math.round((r && r.width) || (n && n.getBoundingClientRect().width) || -1); });
+  let w0 = -1, w1 = -1, w2 = -1, w3 = -1, w4 = -1, v0 = -1, v1 = -1, v2 = -1, v3 = -1, v4 = -1;
+  if (await grip.count()) {
+    v0 = await val(); w0 = await rail();
+    await grip.focus(); for (let i = 0; i < 4; i++) await s.page.keyboard.press("ArrowRight"); v1 = await val(); w1 = await rail();
+    for (let i = 0; i < 40; i++) await s.page.keyboard.press("ArrowLeft"); v2 = await val(); w2 = await rail();
+    await grip.dblclick({ force: true }); v3 = await val(); w3 = await rail(); await grip.focus(); await s.page.keyboard.press("Home"); const vHome = await val(); const wHome = await rail(); c.railHome = [vHome, wHome];
+    const bb = await grip.boundingBox(); if (bb) { await s.page.mouse.move(bb.x + bb.width / 2, bb.y + 60); await s.page.mouse.down(); await s.page.mouse.move(bb.x - 140, bb.y + 60, { steps: 8 }); await s.page.mouse.up(); v4 = await val(); w4 = await rail(); }
   }
-  rec("R213", "Desktop rail: drags from 184 px, moves by arrow keys, resets by double-click, goes icons-only under 120 px", 1280, "administrator", "focused the rail's width handle: four right arrows, twelve left arrows, a double-click, then a drag left",
-    handle && (await handle.count()) ? (w1 > w0 && w3 === w0 ? "WORKS" : "BROKEN") : "NOT REACHED", `rail width: start ${w0}, after ArrowRight x4 ${w1}, after ArrowLeft x12 ${w2}, after double-click ${w3}, after a drag left ${w4}; (icons-only below 120 px is read at ${w2 < 120 ? "yes" : "no"} wide)`, await shot(s.page, "R213-rail-1280"));
+  const iconsOnly = await s.page.evaluate(() => { const l = [...document.querySelectorAll("#cs-root a, nav a")].find((a) => /Queue/.test(a.getAttribute("aria-label") || a.innerText || "")); return l ? (l.innerText || "").trim().length === 0 || getComputedStyle(l.querySelector("span, b") || l).display === "none" : null; });
+  rec("R213", "Desktop rail: drags from its width, moves by arrow keys, resets by double-click, goes icons-only under 120 px, kept per member", 1280, "administrator", "focused the rail's grip: four right arrows, forty left arrows, a double-click, then a drag left",
+    (await grip.count()) ? (v1 > v0 && v3 === v0 ? "WORKS" : "BROKEN") : "NOT REACHED", `MINOR: grip value start ${v0}, after ArrowRight x4 ${v1}, after ArrowLeft x40 ${v2} (rail ${w2} px: icons only, names show on hover/focus), after a double-click ${v3} (it does NOT reset; the grip's own tip says 'Home resets it', and Home gives ${(c.railHome || [])[0]}), after a drag left ${v4}; DEC-154's 'resets by double-click' is not what the screen does`, await shot(s.page, "R213-rail-1280"));
   const band = await s.page.evaluate(() => { const b = [...document.querySelectorAll("body *")].find((e) => /Working · not public/.test(e.innerText || "") && e.children.length < 4); return b ? b.innerText.replace(/\s+/g, " ") : ""; });
   rec("R213", "The band text for a working screen ('Working · not public · seen by your team's members'); a review copy and another team's imported case", 1280, "administrator", "read the band on Home", /Working/.test(band) ? "WORKS" : "BROKEN", `working screen: '${clip(band, 90)}'; review copy and imported case bands are read in areas 9-10 (NOT REACHED here)`, "");
   /* check 19: keyboard only */
@@ -86,13 +89,14 @@ export async function s11(c) {
   await pg.locator("#project-stake").fill("Park lease reserves."); const btn = pg.getByRole("button", { name: "Save this project's stake" });
   await btn.click(); await pg.waitForTimeout(500);
   const working = await pg.evaluate(() => { const b = document.querySelector("[data-act=projectstakeset]"); return { busy: b && b.getAttribute("aria-busy"), live: [...document.querySelectorAll("[aria-live]")].map((x) => x.innerText).join("|") }; });
-  await btn.click({ timeout: 500 }).catch(() => {}); await pg.waitForTimeout(1800);
-  const done = await pg.evaluate(() => { const b = document.querySelector("[data-act=projectstakeset]"); return { done: b && b.getAttribute("data-done"), txt: b && b.innerText }; });
+  await btn.click({ timeout: 500 }).catch(() => {});
+  let done = { done: null, txt: "" };
+  for (let i = 0; i < 40; i++) { await pg.waitForTimeout(100); done = await pg.evaluate(() => { const b = document.querySelector("[data-act=projectstakeset]"); return { done: b && b.hasAttribute("data-done") ? "set" : null, txt: b && b.innerText }; }); if (done.done) break; }
   await pg.unroute(/op=projectstakeset/);
   rec("R215", "The four button states: pressed, working (second press does nothing, aria-busy, 'Working…' live region), answered (a check about two seconds), refused (ready again, the refusal beside it)", 1280, "administrator", "delayed the stake act by 1.5 s, pressed twice, read the button while it worked and after it answered",
     working.busy === "true" ? "WORKS" : "BROKEN", `while working: aria-busy=${working.busy}, live region '${clip(working.live, 80)}'; after: data-done=${done.done}, label '${clip(done.txt, 60)}'; the refused state is the 6,000-character stake row (R24)`, "");
   /* the weight marks on the project page: what rung each act wears */
-  const marks = await pg.evaluate(() => [...document.querySelectorAll("#cs-main button[data-act]")].map((b) => b.dataset.act + ":" + ((b.querySelector("[data-mark]") || {}).dataset ? b.querySelector("[data-mark]").dataset.mark : "inline") + ":" + b.querySelectorAll(".cs-pips i.on").length));
+  const marks = await pg.evaluate(() => [...document.querySelectorAll("#cs-main button[data-act]")].map((b) => b.dataset.act + ":" + (/Asks for a reason/.test(b.innerText) ? "reasoned" : b.querySelector("[data-mark]") ? b.querySelector("[data-mark]").dataset.mark : "reversible (no mark)") + ":" + b.querySelectorAll(".cs-pips i.on").length));
   const scale = (await c.text(s)).match(/[^.]*(rung|weight)[^.]*\./i);
   rec("R215", "Act weight by rung: reversible acts inline with no pips; reasoned acts show 'Asks for a reason' and pips; terminal and attested open a dialog; the scale sentence appears once", 1280, "administrator (owner)", "listed every act button on the project page with its mark and pips",
     "WORKS", `acts (act:mark:pips): ${[...new Set(marks)].join(", ")}; scale sentence on this page: ${scale ? clip(scale[0], 100) : "none drawn"}; the terminal/attested/irreversible rungs (publish, sign, expunge) are on area 9-10 screens (NOT REACHED here)`, "");
@@ -110,15 +114,25 @@ export async function s12(c) {
 }
 
 export async function s13(c) {
-  /* R218: two members change one record at once: the project's stake */
+  const { reasoned } = await import("./stages2.mjs");
   const url = "/app/project/" + c.P.p2;
+  /* R24: the stake is set by 'a member of the project or an administrator' (the page's own words); a joined member (ben) tries it */
+  const sm = await c.go("ben", url);
+  await sm.page.locator("#project-stake").fill("Stake by ben: the pavilion roof fund."); await sm.page.getByRole("button", { name: "Save this project's stake" }).click(); await c.settle(sm.page, 1500);
+  const said = await alerts(sm);
+  rec("R24", "A joined member (not an administrator) sets the project's stake: 'A member of the project or an administrator can set it'", 1280, "member ben (joined, owner)", "wrote a stake on his own page and pressed 'Save this project's stake'", /not joined|have not joined|PROJECT_ACT_NOT_A_PARTICIPANT/.test(said) ? "BROKEN" : "WORKS",
+    `MAJOR for BOB to place: the page draws the field and the act for a joined owner, and the plane refuses with '${clip(said, 170)}' (PROJECT_ACT_NOT_A_PARTICIPANT, C-56.1), though he is joined and an owner (the roster says state joined, owner 1) and the same member sets the project's bar and invites in the same project; the founder's save works; the call is project-roster projectStakeSet (src/project-roster/index.mjs:692-695, \`projectAuthority(projectId, member:\${by}, "joined", "projectstakeset")\`); a plain joined member is refused alike`, "");
+  /* R218: two owners change the same record at once: the project's own bar */
   const a = await c.go("f", url), b = await c.go("ben", url);
-  await a.page.locator("#project-stake").fill("Stake by ross: the park lease reserves."); await a.page.getByRole("button", { name: "Save this project's stake" }).click(); await c.settle(a.page, 1500);
-  await b.page.locator("#project-stake").fill("Stake by ben: the pavilion roof fund."); await b.page.getByRole("button", { name: "Save this project's stake" }).click(); await c.settle(b.page, 1500);
+  for (const x of [a, b]) await x.page.evaluate(() => { const d = document.querySelector("details[data-fold=settings]"); if (d) d.open = true; });
+  await a.page.locator("#project-bar-capture").selectOption("B");
+  await reasoned(c, a, /Set this project's bar/, "ross sets capture B.");
+  await b.page.locator("#project-bar-capture").selectOption("C");
+  await reasoned(c, b, /Set this project's bar/, "ben sets capture C from a page loaded before ross's save.");
   const bt = await c.text(b); const bal = await alerts(b);
   const fresh = await c.go("f", url); const ft = await c.text(fresh);
-  const kept = /Stake by ben/.test(ft) ? "ben's (the later save)" : /Stake by ross/.test(ft) ? "ross's" : "neither";
-  rec("R218", "Two members change the same field at once (the project's stake): the second save is neither silently lost nor silently overwriting; a divergence is named", 1280, "administrator (ross) and member (ben, an owner)", "both held the page open; ross saved a stake, then ben saved a different one from his stale page; reloaded",
-    /diverg|changed since|someone else|newer/i.test(bt + bal) ? "WORKS" : "BROKEN", `ben saw: '${bal || "no refusal and no merge notice"}'; after a reload the record keeps ${kept} (history line: ${clip((ft.match(/Set by[^.]*[.]?[^.]*earlier statements/) || [""])[0], 120)}); MAJOR for BOB to place if the later write silently overwrote: no divergence word was drawn`, "");
-  rec("R218", "Two accounts hold the same case draft or the objective's condition open and write the same field", 1280, "administrator and member", "the case draft is area 10; the objective's condition needs a money flow (area 7)", "NOT REACHED", "no same-field write on the objective is possible before a flow exists; the case draft is walked in area 10; the stake above is the project page's own field", "");
+  const kept = /Bar: C/.test(ft) ? "ben's C (the later save)" : /Bar: B/.test(ft) ? "ross's B" : "neither";
+  rec("R218", "Two owners change the same field at once (the project's bar): the second save is neither silently lost nor silently overwriting; a divergence is named", 1280, "administrator (ross) and member (ben, an owner)", "both held the page open; ross saved capture B, then ben saved capture C from his stale page; reloaded",
+    /diverg|changed since|someone else|newer|already/i.test(bt + bal) ? "WORKS" : "BROKEN", `ben saw: '${bal || "no refusal and no merge notice"}'; after a reload the record keeps ${kept} (bar line: ${clip((ft.match(/THE PROJECT'S BAR\s*([^\n]{0,80})/i) || [, ""])[1], 80)}); MAJOR for BOB to place if the later write silently overwrote the earlier: no divergence word was drawn and the first writer's value is gone without a record on the page`, "");
+  rec("R218", "Two accounts hold the same case draft or the objective's condition open and write the same field", 1280, "administrator and member", "the case draft is area 10; the objective's condition needs a money flow (area 7)", "NOT REACHED", "no same-field write on the objective is possible before a flow exists; the case draft is walked in area 10; the project's bar above is the project page's own field", "");
 }

@@ -44,18 +44,18 @@ export async function makeWorld({ tag = "w03" } = {}) {
 
 /* ---- the overlay's mechanical checks, made on every screen this sitting reads ---- */
 const WORDS = [[/\bgroup\b/i, "group"], [/\bsecret\b/i, "secret"], [/\bconfidential\b/i, "confidential"], [/\bSignal\b/, "Signal"], [/\bObligation\b|\bCondition\b/, "Obligation/Condition chip word"],
-  [/\bundefined\b|\bnull\b|\[object|NaN/, "raw value"], [/\b(PROJ|INQ|BUN)-\d{4}-\d+/, "raw id"]];
+  [/\bundefined\b|\bnull\b|\[object|NaN/, "raw value"], [/\b(PROJ|INQ|INFO|THEME|BUN|STD|CASE)-\d{4}-\d+/, "raw id"]];
 export async function overlay(c, s, name) {
   const t = await mainText(s.page);
   const info = await s.page.evaluate(() => {
     const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
     const small = [...document.querySelectorAll("#cs-main button, #cs-main a.cs-btn, #cs-main input[type=checkbox], #cs-main input[type=radio], #cs-main select")].filter(vis)
       .filter((e) => { const r = e.getBoundingClientRect(); return r.height < 44 || r.width < 44; }).length;
-    const nameless = [...document.querySelectorAll("#cs-main button, #cs-main input, #cs-main select, #cs-main textarea")].filter(vis)
-      .filter((e) => !((e.innerText || "").trim() || e.getAttribute("aria-label") || e.getAttribute("title") || (e.labels && e.labels.length) || e.value)).length;
-    return { sw: document.documentElement.scrollWidth, title: document.title, small, nameless, lang: document.documentElement.lang };
+    const namelessEls = [...document.querySelectorAll("#cs-main button, #cs-main input, #cs-main select, #cs-main textarea")].filter(vis)
+      .filter((e) => !((e.innerText || "").trim() || e.getAttribute("aria-label") || e.getAttribute("title") || (e.labels && e.labels.length) || e.value));
+    return { sw: document.documentElement.scrollWidth, title: document.title, small, nameless: namelessEls.length, namelessSample: namelessEls.slice(0, 2).map((e) => e.outerHTML.slice(0, 110)), lang: document.documentElement.lang };
   });
-  const rec2 = { name, width: s.width, who: s.who, sw: info.sw, title: info.title, small: info.small, nameless: info.nameless, words: [], outside: s.log.filter((l) => l.startsWith("OUTSIDE")), errors: s.log.filter((l) => !l.startsWith("OUTSIDE")), timing: stSummary(s.st), wall: s.wall };
+  const rec2 = { name, width: s.width, who: s.who, sw: info.sw, title: info.title, small: info.small, nameless: info.nameless, namelessSample: info.namelessSample, words: [], outside: s.log.filter((l) => l.startsWith("OUTSIDE")), errors: s.log.filter((l) => !l.startsWith("OUTSIDE")), timing: stSummary(s.st), wall: s.wall };
   for (const [re, w] of WORDS) { const m = t.match(re); if (m) rec2.words.push(w + ": " + clip(t.slice(Math.max(0, m.index - 30), m.index + 40), 80)); }
   if (/\boverdue\b/i.test(t) && /^\/app(\/home|\/queue)?$/.test(s.path)) rec2.words.push("overdue on Home/Queue");
   c.ov.push(rec2);

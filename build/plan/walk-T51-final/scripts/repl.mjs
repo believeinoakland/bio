@@ -4,8 +4,9 @@ import { makeWorld } from "./walk03.mjs";
 import { dump, show, settle } from "./lib.mjs";
 const DIR = process.argv[2];
 const c = await makeWorld({ tag: "w03repl" });
-c.dump = dump; c.show = show; c.settle = settle;
+c.dump = dump; c.show = show;
 c.D = async (who, path, o = {}) => { const s = await c.go(who, path, o); show(await dump(s.page, { max: o.max ?? 1500 })); return s; };
+c.runStages = async (from, to) => { const { PLAN } = await import("./plan.mjs?t=" + Date.now()); for (const [name, fn] of PLAN.slice(from, to)) { const t0 = Date.now(); await fn(c); console.log("STAGE", name, Math.round((Date.now() - t0) / 1000), "s"); } };
 console.log("READY");
 const done = new Set();
 for (;;) {

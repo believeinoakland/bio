@@ -51,6 +51,7 @@ export async function s3b(c) {
     await a.click(); await c.settle(s.page, 1500);
     const tt = await c.text(s);
     const nothing = /Nothing is here|couldn't be read|Could not read/i.test(tt);
+    if (l === "Proceeding") { const bc = (await c.text(s)).slice(0, 70); rec("R24", "Breadcrumb of the Proceeding page ends with its own name and keeps the project", 1280, "administrator (owner)", "read the path above the Proceeding page", /Projects › [^›]+ › Proceeding/.test(bc) ? "WORKS" : "BROKEN", `MINOR: '${bc}' (the other door pages read 'Projects › <project> › <page>')`, ""); }
     rec("R24", `Door '${l}' on the project page opens a working page`, 1280, "administrator (owner)", `pressed '${l}'`, nothing || s.page.url().endsWith("/app/project/" + c.P.p1) ? "BROKEN" : "WORKS", `${s.page.url().replace("https://group.example", "")}; ${stSummary(s.st)}; ${clip(tt, 160)}`, "");
   }
 }
@@ -72,7 +73,9 @@ export async function s3c(c) {
   const qrow = clip((t.match(/Did the council[\s\S]{0,260}/) || [""])[0], 260);
   rec("R24", "A question added: the computed stage reads from the record (no hand control); each question shows capture and connection badges, one phrase against the bar and 'Undetermined' with its reason, never one combined badge", 1280, "administrator (owner)",
     "read the page after adding a question", /Did the council/.test(t) ? "WORKS" : "BROKEN",
-    `stage words now: ${clip(stageNow, 60)}; 'what stage needs': ${clip((t.match(/Investigating\s+([^\n]*)/) || [, ""])[1], 160)}; the question row: ${qrow}`, await shot(s.page, "R24-project-with-question-1280"));
+    `stage line now: ${clip(stageNow, 60)}; what each stage needs: ${clip((t.match(/WHAT EACH STAGE NEEDS([\s\S]{0,420})/) || [, ""])[1], 420)}; the question row: ${qrow}`, await shot(s.page, "R24-project-with-question-1280"));
+  rec("R24", "Plural agrees with the number on the project page ('1 question', 'the project holds 1 question')", 1280, "administrator (owner)", "read the stage line and 'what each stage needs' with exactly one question", /\b1 questions\b|the 1 held questions/.test(t) ? "BROKEN" : "WORKS",
+    `MINOR: ${clip((t.match(/[^.]*\b1 questions\b[^.]*/g) || [""]).join(" // "), 200)}`, "");
   rec("R24", "A plan can be opened for a question from the project page (door to the plan)", 1280, "administrator (owner)", "looked for 'planopen' on the page once a question exists", /Open a plan|plan/i.test(t) && (await s.page.locator("#project-plan, #project-plan-about").count()) ? "WORKS" : "BROKEN",
     `plan fields drawn: ${(await s.page.locator("#project-plan, #project-plan-about").count())}`, "");
 
@@ -100,7 +103,9 @@ export async function s3c(c) {
   rec("R24", "Set the project's stake: shown with who set it and when, beside the team's statement", 1280, "administrator (owner)", "typed a stake and pressed 'Save this project's stake'", /sewer fund reserves/.test(t) && /set/i.test(t) ? "WORKS" : "BROKEN", `${await alerts(s)}; ${clip((t.match(/WHAT THE TEAM HAS AT STAKE HERE([\s\S]*?)MEMBERS/i) || [, ""])[1], 320)}`, "");
   await s.page.locator("#project-stake").fill("x".repeat(6000));
   await s.page.getByRole("button", { name: "Save this project's stake" }).click(); await c.settle(s.page, 1500);
-  rec("R24", "A malformed stake (6,000 characters) is refused in words (STAKE_MALFORMED.project), never a code", 1280, "administrator (owner)", "saved a 6,000-character stake", /STAKE_MALFORMED|undefined|code/.test(await c.text(s)) ? "BROKEN" : "WORKS", `answer: ${await alerts(s) || clip(await c.text(s), 200)}`, "");
+  const stakeSaid = await alerts(s);
+  rec("R24", "A malformed stake (6,000 characters) is refused in words that name the PROJECT's stake (STAKE_MALFORMED.project), never a code", 1280, "administrator (owner)", "saved a 6,000-character stake", /STAKE_MALFORMED|undefined/.test(stakeSaid) ? "BROKEN" : (/Your team's declared stake/.test(stakeSaid) ? "BROKEN" : "WORKS"),
+    `MINOR: the refusal is in words, but they describe the TEAM's declared stake ('${clip(stakeSaid, 150)}'), not the project's; nothing was written`, "");
   rec("R24", "A machine cannot set a stake (MACHINE_CANNOT_SET_STAKE)", 1280, "machine credential", "needs a machine credential, which the room has not minted (an operator act)", "NOT REACHED", "no machine credential exists in this room; aicredentialmint is an operator act, not a room walk (overlay check 32)", "");
   rec("R24", "Declare the project's kind of work (UC-170)", 1280, "administrator (owner)", "looked on the page and its settings fold for a 'kind of work' control", /kind of work/i.test(await c.text(s)) ? "WORKS" : "NOT REACHED", "no 'kind of work' control is drawn on the project page (designed, not built or not drawn; recorded, not a defect)", "");
 
@@ -114,6 +119,8 @@ export async function s3c(c) {
   await s.page.getByRole("button", { name: "Change who can find it" }).click(); await c.settle(s.page, 1500);
   await fold(s); t = await c.text(s);
   rec("R24", "Change who can find it with a reason: the history line is dated with the reason", 1280, "administrator (owner)", "gave a reason and pressed the act", /Findable/.test(t) && /other members to find it/.test(t) ? "WORKS" : "BROKEN", clip((t.match(/WHO CAN FIND IT([\s\S]*)/i) || [, ""])[1], 360), "");
+  const hist = clip((t.match(/WHO CAN FIND IT([\s\S]*)/i) || [, ""])[1], 400);
+  rec("R24", "The 'Who can find it' history lines read as sentences", 1280, "administrator (owner)", "read the history lines under the setting", /exists\.,|join\. by /.test(hist) ? "BROKEN" : "WORKS", `MINOR: the lines glue a full sentence into another: '${hist}'`, "");
   // put it back to hidden for the rest of the walk
   await fold(s);
   await s.page.locator("#project-visibility-why").fill("Back to hidden while the team reads the first documents.");

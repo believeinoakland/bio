@@ -23,9 +23,9 @@ export async function browserFor(kit) {
       const res = await kit.plane(rq.url(), { method: rq.method(), headers: rq.headers(), ...(body ? { body } : {}) });
       const buf = Buffer.from(await res.arrayBuffer());
       const headers = {}; res.headers.forEach((v, k) => { headers[k] = v; });
-      await r.fulfill({ status: res.status, headers, body: buf });
+      try { await r.fulfill({ status: res.status, headers, body: buf }); } catch { /* the page moved on while the plane was answering */ }
     });
-    await ctx.route(/^https?:\/\/(?!group\.example)/, (r) => { log.push("OUTSIDE request: " + r.request().url()); r.abort(); });
+    await ctx.route(/^https?:\/\/(?!group\.example)/, (r) => { log.push("OUTSIDE request: " + r.request().url()); try { r.abort(); } catch {} });
     return { ctx, page, log, st };
   }
   return { browser, open, close: () => browser.close() };

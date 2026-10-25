@@ -7,7 +7,7 @@ const alerts = async (s) => clip((await s.page.locator("[role=alert],[aria-live]
 const sect = async (c, s, h, n = 700) => { const t = await c.text(s); const i = t.indexOf(h); return i < 0 ? "" : clip(t.slice(i, i + n), n); };
 const openFold = async (s, label) => { await s.page.evaluate((l) => { for (const d of document.querySelectorAll("#cs-main details")) { const sm = d.querySelector("summary"); if (sm && sm.innerText.trim() === l) d.open = true; } }, label); await s.page.waitForTimeout(250); };
 const press = async (c, s, name) => { await s.page.getByRole("button", { name }).first().click(); await c.settle(s.page, 1100); };
-const reasonSend = async (c, s, text) => { if (await s.page.locator(".cs-reason textarea:visible").count()) { await s.page.locator(".cs-reason textarea:visible").last().fill(text); await s.page.getByRole("button", { name: "Send with this reason" }).click(); await c.settle(s.page, 1500); } };
+const reasonSend = async (c, s, text) => { if (await s.page.getByRole("button", { name: "Send with this reason" }).count()) { await s.page.locator(".cs-reason textarea:visible").last().fill(text); await s.page.getByRole("button", { name: "Send with this reason" }).click(); await c.settle(s.page, 1500); } };
 
 export async function s5(c) {
   const p = c.P.p2; const url = "/app/objective/" + p;
@@ -62,7 +62,8 @@ export async function s5(c) {
   await press(c, s, /Open this goal/); t = await c.text(s);
   rec("R26", "Declare a goal (what it pursues, what limits it)", 1280, "administrator (owner)", "opened a goal", /Public land leases are all on the record/.test(t) ? "WORKS" : "BROKEN", await sect(c, s, "GOALS THIS OBJECTIVE SERVES", 360), "");
   await openFold(s, "Say this objective serves a goal"); await s.page.locator("#ob-goal-link").selectOption({ index: 0 }); await press(c, s, /Link this objective to the goal/);
-  rec("R26", "Link this objective to the goal", 1280, "administrator (owner)", "linked the objective to the open goal", "WORKS", `${await alerts(s) || "no error"}; the page draws no sign that the link was made (the goal row is unchanged): MINOR, no receipt shown`, "");
+  rec("R26", "Link this objective to the goal: the act answers with a receipt (what was written, by whom, when)", 1280, "administrator (owner)", "linked the objective to the open goal", "BROKEN", `MINOR: ${await alerts(s) || "no error and no receipt"}; the page draws no sign that the link was made (the goal row is unchanged)`, "");
+  rec("R26", "The declarer is named the same way everywhere (the founder chose the handle 'ross')", 1280, "administrator (owner)", "compared the declarer's name on aspirations and goals with the Members block", /The team's founder/.test(await c.text(s)) ? "BROKEN" : "WORKS", `MINOR: the aspiration and goal rows read 'The team's founder' while the project's Members block and Home read 'ross'`, "");
   await openFold(s, "Close a goal"); await s.page.locator("#ob-goal-cl").selectOption({ index: 0 }); await s.page.locator("#ob-goal-why").fill("The leases are all on the record now."); await press(c, s, /Close this goal/); t = await c.text(s);
   rec("R26", "Close a goal with a reason (it stays readable, with its reason, and cannot be reopened)", 1280, "administrator (owner)", "closed the goal", /The leases are all on the record now/.test(t) ? "WORKS" : "BROKEN", await sect(c, s, "GOALS THIS OBJECTIVE SERVES", 380), "");
   rec("R26", "Triage a gap or proposal from the Queue (adopt, open a question, defer or dismiss); a machine is refused every adopt", 1280, "administrator (owner)", "looked for the 'Decide this proposal' control and any proposal to decide", "NOT REACHED",
@@ -93,7 +94,8 @@ export async function s6(c) {
   await press(c, s, /Place it in a theme/);
   s = await c.go("f", "/app/theme/" + c.P.theme); t = await c.text(s);
   rec("R27", "Place a document in a theme from the document's own 'Place it in a theme…'", 1280, "administrator", "chose the theme on the document page and pressed 'Place it in a theme…'", /PLACED IN IT[\s\S]{0,40}lease-minutes-a/.test(t) ? "WORKS" : "BROKEN",
-    `${clip(t.slice(t.indexOf("PLACED IN IT")), 200)}${/“”/.test(t) ? " (MINOR: a placement made with no note draws empty quotation marks)" : ""}`, await shot(s.page, "R27-theme-placed-1280"));
+    `${clip(t.slice(t.indexOf("PLACED IN IT")), 200)}`, await shot(s.page, "R27-theme-placed-1280"));
+  rec("R27", "A placement made with no note reads without empty quotation marks", 1280, "administrator", "read the placed row", /“”/.test(t) ? "BROKEN" : "WORKS", `MINOR: 'Placed by ross, October 25, 2026: “”' draws an empty quotation`, "");
   s = await c.go("f", "/app/document/" + d2.bundleId);
   await s.page.locator("#document-theme-which").selectOption({ index: 0 }); await s.page.locator("#document-theme-note").fill("It says the repair was cut from the budget.");
   await press(c, s, /Propose it for a theme/);
@@ -117,6 +119,8 @@ export async function s6(c) {
   s = await c.go("f", "/app/finder"); await s.page.locator("#finder-theme").selectOption({ index: 1 }); await c.settle(s.page, 1500); t = await c.text(s);
   rec("R27", "Find's Theme filter lists what was placed, then its hunches apart", 1280, "administrator", "chose the theme in Find", /lease-minutes/.test(t) ? "WORKS" : "BROKEN", clip(t.slice(t.indexOf("With a theme chosen")), 320), "");
   s = await c.go("f", "/app/projects"); t = await c.text(s); const th = t.slice(t.indexOf("THEMES"));
+  s = await c.go("f", "/app/finder"); await s.page.locator("#finder-theme").selectOption({ index: 1 }); await c.settle(s.page, 1500); t = await c.text(s);
+  rec("R27", "Find with a theme chosen names each document in words, never by its raw id", 1280, "administrator", "read the 'Placed in it' list under the theme filter", /\b(INFO|PROJ|INQ)-\d{4}-\d+/.test(t.slice(t.indexOf("PLACED IN IT"))) ? "BROKEN" : "WORKS", `MINOR: ${clip(t.slice(t.indexOf("PLACED IN IT")), 140)} (the line reads the id 'INFO-2026-…-lease-minutes-b', where the theme page reads the title)`, "");
   rec("R27", "The Themes section on Projects carries no counts", 1280, "administrator", "read the section", !/\d/.test(th) ? "WORKS" : "BROKEN", clip(th, 200), "");
   rec("R27", "Citing a theme or its membership as a basis refused THEME_NOT_EVIDENCE (C-81.1)", 1280, "member", "looked for a screen that offers a theme as a basis", "NOT REACHED", "no screen offers a theme as a leg's basis; the refusal is the plane's, reached only by a hand-built leg (not a member act)", "");
 }
@@ -136,8 +140,10 @@ export async function s7(c) {
   const sm = await c.go("mai", "/app/dash-action"); const mt = await c.text(sm);
   rec("R28", "Action dashboard as a member: the same screen, with only what she may see", 1280, "member mai", "opened it as a member", /The Action dashboard/.test(mt) ? "WORKS" : "BROKEN", clip(mt, 220), "");
   s = await c.go("f", "/app/dash-project/" + c.P.p2); 
+  await s.page.evaluate(() => { for (const d of document.querySelectorAll("#cs-main details")) d.open = true; });
   const sv = s.page.locator("#dp-vouch-0-ack");
   if (await sv.count()) {
+    await s.page.locator("#dp-vouch-0-ack").scrollIntoViewIfNeeded().catch(() => {});
     await sv.fill("I checked this file is the minutes as filed."); await s.page.locator("#dp-vouch-0-mitigation").fill("Nothing in it names a private person.");
     await s.page.getByRole("button", { name: /Vouch for photos/ }).first().click(); await c.settle(s.page, 1800);
     t = await c.text(s);
