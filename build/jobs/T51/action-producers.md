@@ -39,3 +39,15 @@ Size (session_017khFK7Ufj5EYQeuEKFTJ3B): test runs 5, module lines 1560
 ## J2 · COMPLETE · re B2
 
 Fix round 10, Wave A batch 5 complete on job/T51/action-producers. actionItems fixture published (bio-plane/test/m/action-producers/fixtures.mjs, test fixtures.test.mjs R13); 7 own lines re-pointed to escalation's escalationsDue and action-plans' planRead fixtures (7 of 7, none left). Markers added: none. Module tests 54 pass; fixtures/format/architecture/coverage/words/ownership 0 failures; impact named queue-producers, its suite run. Record: build/jobs/T51/action-producers.md.
+
+## Completion (fix round 10, item 75: R26)
+
+**Applied.** R26 met: every item names an action by its title (`#actionName`, `index.mjs`, reading `bundles.title`; an action with no title: "a request", the request-unsent item's own fallback), never its `ACTN-` id: the reminder, legal-threat, released-hold and local-fact items. Test `action.test.mjs` "R26", red on the old code (reminder summary held `ACT-1`), green now.
+
+**Why the tests missed it.** `action.test.mjs` asserted each item's subject, age and doors, never the `summary`, and its fixtures titled every action with its own id (`world.bundle` defaults title = id), so a title and an id were indistinguishable.
+
+**Deferred.** None. **Found in other modules.** None. `plan` fills in `queue.plan-*` sentences take plan ids; not an action id, so outside R26.
+
+**Checks.** Module tests: 55 pass, 0 fail. format 0, architecture 0, coverage 26 of 26, ownership 0, fixtures `--list` 0 failures (no marker added). words: 16 failures, none in action-producers (store-assembly and others, older than this job).
+
+Size (session_012LQdkfZK3Z7i7zJvQqnFh6): test runs 3, module lines 1565

@@ -103,6 +103,11 @@ export class ActionProducers {
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
+  /** R26: an action as an item's sentence names it: its title, else the fallback "a request" (the request-unsent item's own), never its id. */
+  #actionName(action) {
+    const row = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, action);
+    return row && typeof row.title === "string" && row.title.trim() ? row.title.trim() : "a request";
+  }
 
   /* ------------------------------------------------------------------ the viewer gate (membership R43, R80; R14) */
 
@@ -746,7 +751,7 @@ export class ActionProducers {
         due: ActionProducers.#dueDay(isCalendarDate(x.date) ? x.date : null, zone),
         subject: { kind: "action", id: x.action, entry: x.ord, date: x.date ?? null, basis: x.basis ?? null,
                    text: x.text ?? null, on: x.on ?? null, project: x.project ?? null },
-        summary: word("action-producers.summary.reminder_asked", { text: String(x.text || word("action-producers.summary.clock_entry")), action: String(x.action), date: String(x.date ? `, due ${x.date}` : "") }),
+        summary: word("action-producers.summary.reminder_asked", { text: String(x.text || word("action-producers.summary.clock_entry")), action: this.#actionName(x.action), date: String(x.date ? `, due ${x.date}` : "") }),
         detail: `you asked to be reminded of this date on ${x.on}. Answer it with another reminder on a later day, or with `
               + "none; nothing reminds you again unless you ask.",
         basis: { source: "action-clocks.remindersDue", action: x.action, entry: x.ord, date: x.date ?? null,
@@ -800,7 +805,7 @@ export class ActionProducers {
           id: `OBLIGATION::litigation-hold::${arrived.action}::${arrived.ord}`,
           case: this.#actionHomes(arrived.action, project, viewer),
           subject: { kind: "action", id: arrived.action, entry: arrived.ord, note: m.note ?? null, project },
-          summary: word("action-producers.summary.legal_threat_recorded", { action: String(arrived.action) }),
+          summary: word("action-producers.summary.legal_threat_recorded", { action: this.#actionName(arrived.action) }),
           detail: `a received entry of this action (position ${arrived.ord}) was marked as a legal threat${said}. Record `
                 + "that the team is preserving what the matter may reach (a hold in place), or that it need not (a "
                 + "release), with a reason. This is told once; it leaves when a member records either.",
@@ -885,7 +890,7 @@ export class ActionProducers {
         case: this.#actionHomes(x.action, project, viewer),
         subject: { kind: "action", id: x.action, entry: x.ord, sequence: x.seq, released_by: by,
                    reason: x.reason ?? null, restarted },
-        summary: word("action-producers.summary.released_litigation_hold", { by: String(by || "a member"), action: String(x.action) }),
+        summary: word("action-producers.summary.released_litigation_hold", { by: String(by || "a member"), action: this.#actionName(x.action) }),
         detail: localize("action-producers.index.the_hold_on_a_legal", "the hold on a legal threat recorded on this action (position {ord}) was released{v1}. {v2} This is told once, to the administrators and to whoever placed the hold.", { ord: String(x.ord), v1: String(x.reason ? `, because "${x.reason}"` : ""), v2: String(restarted.length
                 ? `Ordinary deletion restarts for ${restarted.join(", ")}.`
                 : "No project you may name restarts its ordinary deletion.") }),
@@ -1003,7 +1008,7 @@ export class ActionProducers {
         case: this.#actionHomes(first.action, first.project, viewer),
         subject: { kind: "action", id: first.action, project: first.project ?? null, path: f.path, fact: f.fact ?? null,
                    status, why: f.why ?? null },
-        summary: word("action-producers.summary.local_fact_deadline", { action: String(first.action), status: String(status === "disputed" ? "disputed" : "unconfirmed"), why: String(f.why ? `: ${f.why}` : "") }),
+        summary: word("action-producers.summary.local_fact_deadline", { action: this.#actionName(first.action), status: String(status === "disputed" ? "disputed" : "unconfirmed"), why: String(f.why ? `: ${f.why}` : "") }),
         detail: "a deadline on this action is counted in business days over a local calendar or office's hours that no "
               + "member here has confirmed as current, or that a member disputed. Confirm it, correct it with its source, "
               + "or dispute it. This is told once for each status the fact takes; it leaves when a member confirms or "
