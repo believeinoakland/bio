@@ -212,3 +212,24 @@ COMPLETE for B10 (fix round 10, Wave A batch 3: publish 2 fixtures).
 - `node build/plan/impact.mjs origin/tranche/T51 HEAD` lists the affected modules. Its pass/total lines for other modules (for example control-plane 93/108, plane 74/89, pdf-worker 7/16, acquisition 52/53) are not caused by this job: my diff touches no product source and only this module's test folder, and nothing outside case-inputs imports the changed harness. I did not re-run those modules on a clean worktree of `origin/tranche/T51`, so that attribution rests on the diff, not on a clean run.
 
 Size (session_01HuoienLKeDjonTgFdKvMxF): test runs 4, module lines 1602
+
+## J12 · COMPLETE
+
+COMPLETE again after B11 (CHANGE, K5079).
+
+Pushed `14b585cd62` on `job/T51/case-inputs`.
+- `fixtures.mjs` and `fixtures.test.mjs` no longer import `review`. `statementAck().noReviewCopy` is now the test world's dead answer (`DEAD`), and the line above it carries `// fixtures-contract: review no-review-copy` for review's job to run.
+- `fixture.mjs` is back to its tranche text (`git diff origin/tranche/T51 -- fixture.mjs` is empty).
+
+Checks (root `/home/user/bio`, absolute):
+- case-inputs tests: 77 pass, 0 fail.
+- architecture: 19 product files, 71 relative imports; 0 failures.
+- format: 178 modules, 178 requirements files; 0 failures.
+- coverage: 29 of 29 live requirement ids named by a test; 0 failures.
+- words: 0 failures.
+- fixtures: 1 failure, the expected `idle` contract `fixtures-contract: review no-review-copy` (tag `idle`) until review's `fixtures-run` lands.
+
+Lines done: unchanged from J11 (no own user lines). Lines left: consequences (carryOutcome, 2) and control-plane (statementack, 1) re-point in their own jobs; review's `fixtures-run` for `no-review-copy` in review's job.
+Markers added: none. Deferred: none. Found in another module: as J11 (control-plane's statementack stand-in shape).
+
+Size (session_01HuoienLKeDjonTgFdKvMxF): test runs 3, module lines 1602
