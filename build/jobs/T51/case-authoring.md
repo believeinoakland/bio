@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_01JY7NQfdWnfdhovvoytMtwy · depth 2 · WAITING ON BOB (K5183 save) · handled B33
+**Status** · session_01PkeaPY8AiQwGQmpx2xoXoy · depth 2 · WORKING · handled B33
 
 ## Completion record (T51, B1 START)
 
