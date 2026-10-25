@@ -26,9 +26,14 @@ import { ABOUT_KNOCKER_SCREEN } from "./about-knocker.mjs";
 import { LEADS_SCREEN } from "./leads.mjs";
 import { WATCHING_SCREEN } from "./watching.mjs";
 
+/* R36 (fix round 10, G7): the sentences reading-pipeline holds for a file kind it does not read (`UNSUPPORTED_FORMAT {kind}`), and its general one with the kind filled */
+const UNSUPPORTED = ["rtf", "email", "legacy_word", "legacy_excel", "legacy_powerpoint", "legacy_office", "tiff", "gif", "webp", "heic", "avif", "bmp", "jp2", "ico", "kind"]
+  .map((k) => "reading-pipeline.index.unsupported_" + k);
+
 /* The keys each screen reads (R26). */
 export const SCREEN_KEYS = Object.freeze({
   capture: Object.freeze([
+    ...UNSUPPORTED,
     "act.acquire.label.capture", "act.capturerequest.label.capture", "act.captureupload.label.capture",
     "capture.cite", "capture.cite.tip", "capture.filed.project", "capture.filed.question", "act.monitor.label.capture", "act.monitorset.label.capture",
     "act.testify.label.capture", "act.writinghelp.label.capture", "ai.label.untested", "capture.fieldneeded",
@@ -104,6 +109,8 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.held.withheld", "state.undetermined", "document.uploaded.by", "size.kb", "size.mb", "size.small",
     "screen.capture.openit", "screen.capture.openit.help", "state.item.review.name", "screen.held.name",
     "screen.capture.address.filedhere", "shell.unread", "document.untitled.web",
+    /* fix round 10 (cause 33): the held rows that stand in for the filter and the doors until the design's own are in the list (K4269) */
+    "ai.whose.own", "ai.whose.group", "document.read.next", "document.read.prev",
   ]),
   archive: Object.freeze([
     "act.archivelist.label.archive", "act.gradenote.label.archive", "act.heldsetaside.label.archive",
@@ -145,6 +152,8 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.nothing.title", "refusal.NO_SAFE_VIEW", "screen.open-file.check.notyet", "screen.open-file.high.yours",
     "screen.open-file.next.head", "screen.open-file.next.yours", "screen.open-file.safetext", "screen.open-file.safetext.cut",
     "shell.unread", "screen.open-file.digest.checked", "refusal.DIGEST_MISMATCH", "refusal.DIGEST_MISMATCH.unheld",
+    /* fix round 10 (R35b, R33): the held rows that stand in until the design's own are in the list (K4269): the owner's sentence for an unread picture type */
+    "reading-pipeline.index.unsupported_tiff", "reading-pipeline.index.unsupported_heic", "reading-pipeline.index.unsupported_bmp", "reading-pipeline.index.unsupported_kind",
   ]),
   "about-knocker": Object.freeze([
     "act.sourcedisclose.label.about-knocker", "act.sourceconsent.label.about-knocker", "act.sourceconsentwithdraw.label.about-knocker",

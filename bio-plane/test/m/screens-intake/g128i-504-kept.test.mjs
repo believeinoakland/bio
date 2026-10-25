@@ -21,6 +21,7 @@ const fetching = (p) => main(p).querySelectorAll("[data-fetching]").length;
 /** the member's own press, parked and owed by the real acquisition; the Add screen over the real listing */
 async function addScreen() {
   const w = world();
+  // fixtures-contract: plane owed-later
   w.store.owedLater = async () => ({ ok: true });
   const first = await run(w, { [BIG]: source }, { locator: BIG, project: PROJ }, { settle: false, sessMember: "m1", cls: "member" });
   assert.equal(first.status, 200);

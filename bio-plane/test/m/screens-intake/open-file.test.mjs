@@ -297,3 +297,36 @@ test("R36 controls: a file the team's Civicsmith fetched, or one another member 
   const unknown = await mine({ captureaccounts: refused("STORE_SILENT", "x") });
   assert.ok(!says(unknown, "screen.open-file.high.yours"), "who added it unknown: not worded as hers");
 });
+
+/* ---- fix round 10, cause 14 (G3; walk C7): an added file's other reasons are said ---- */
+const reasonsOf = (...codes) => ok({ ok: true, threat: "high", scan_hold: null, reasons: codes.map((code) => ({ code, translation: `the plane's words for ${code}` })) });
+const NOTE_CLEAN = ok({ ok: true, notes: [NOTE] });
+/* the design's line "its inside could not be checked" is owed (K4269); until its row is held the reasons' own words say it, so the line is asserted where the row is held */
+const INSIDE = "screen.open-file.check.inside";
+const insideSaid = (p) => text(p).includes(word(INSIDE));
+const mineWith = (...codes) => mine({ threatof: reasonsOf(...codes), verdictnotes: NOTE_CLEAN });
+
+test("R5 R36 cause 14: a file the viewer added, with a clean scanner note, still says that its inside could not be checked, and the other reason's words", async () => {
+  for (const other of ["encrypted", "active:vba-project", "format_unchecked"]) {
+    const p = await mineWith("source_not_fetched", other);
+    assert.ok(says(p, "screen.open-file.high.yours"), `${other}: still her own file`);
+    assert.ok(text(p).includes(`the plane's words for ${other}`), `${other}: the reason is said in the plane's words`);
+    assert.ok(says(p, "screen.open-file.why", { reasons: `the plane's words for ${other}` }), `${other}: beside the "why" line`);
+    if (hasWord(INSIDE)) assert.ok(insideSaid(p), `${other}: the scanner's "Clean" does not stand for the inside`);
+    assert.ok(says(p, "screen.open-file.note.line", { tool: word("screen.open-file.tool.clamav"), result: word("screen.open-file.result.clean") }), `${other}: the note stays`);
+  }
+});
+
+test("R5 R36 cause 14 control: source_not_fetched alone draws no empty why line and no inside line; a reason that does not hide the inside draws only its words", async () => {
+  const alone = await mineWith("source_not_fetched");
+  assert.ok(says(alone, "screen.open-file.high.yours"));
+  assert.ok(!text(alone).includes(word("screen.open-file.why", { reasons: "" })), "no empty why line");
+  assert.ok(!main(alone).querySelector(".mk-small[data-risk], p.mk-small:empty"), "and no empty paragraph");
+  assert.ok(!hasWord(INSIDE) || !insideSaid(alone));
+  const macro = await mineWith("source_not_fetched", "active:macro");
+  assert.ok(text(macro).includes("the plane's words for active:macro"));
+  assert.ok(!hasWord(INSIDE) || !insideSaid(macro), "a macro in a readable file: its inside was checked");
+  /* a file that is not hers keeps the one line for every reason */
+  const hers = await at("warned", { threatof: reasonsOf("encrypted") });
+  assert.ok(!hasWord(INSIDE) || insideSaid(hers), "a fetched file with an encrypted inside says it too");
+});

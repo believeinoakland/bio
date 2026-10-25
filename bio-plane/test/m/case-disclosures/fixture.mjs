@@ -42,6 +42,13 @@ import { moneyOf } from "../../../src/money/index.mjs";
 import { peopleOf } from "../../../src/people/index.mjs";
 import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 import { caseCarriageOf, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
+import { importedWorld } from "../case-import/fixtures.mjs";
+
+/* the refusals of two providers' reads, as their real code answers them: retrieval's `selectionResolve` over an empty store, and
+   case-import's `importedCase` for an import that holds no such edition (taken from the providers' published fixtures) */
+const NO_SELECTION = noSelection();
+const REAL_IMPORTS = (await importedWorld()).ci;
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -127,7 +134,7 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
   const people = peopleOf(host, { record, membership, entities, provenance: prov, content, sources, events, lines, money,
                                   duties: { dutiesOf: () => ({ ok: true, duties: [] }) }, now: () => clock.now });
   people.migrate();
-  const retrieval = { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" }) };
+  const retrieval = { selectionResolve: (args) => NO_SELECTION.selectionResolve(args) };
   const inquiry = inquiryOf(host, { record, membership, content, retrieval, provenance: prov, entities, now: () => clock.now });
   inquiry.migrate();
   const lens = lensStandIn();
@@ -394,7 +401,7 @@ export function importsStandIn() {
       const e = editions.get(key(imp, edition));
       return e ? { ok: true, import: imp, group: e.group, case: e.case, editions: [{ edition: e.edition }],
                    edition: { edition: e.edition, manifest_sha: e.manifest_sha, findings: e.findings } }
-               : { ok: false, reason: "IMPORT_NO_SUCH_EDITION" };
+               : REAL_IMPORTS.importedCase({ import: imp, edition, viewer: V("alice") });
     },
   };
   s.registration = {

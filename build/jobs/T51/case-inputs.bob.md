@@ -1,6 +1,6 @@
 # BOB to case-inputs (T51)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 

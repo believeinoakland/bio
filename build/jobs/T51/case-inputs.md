@@ -1,6 +1,6 @@
 # case-inputs (T51)
 
-**Status** · session_01HuoienLKeDjonTgFdKvMxF · depth 2 · COMPLETE · handled B11
+**Status** · session_01CP6548xUsizHesCu8wGwzp · depth 2 · COMPLETE · handled B12
 
 ## J1 · QUESTION
 
@@ -233,3 +233,22 @@ Lines done: unchanged from J11 (no own user lines). Lines left: consequences (ca
 Markers added: none. Deferred: none. Found in another module: as J11 (control-plane's statementack stand-in shape).
 
 Size (session_01HuoienLKeDjonTgFdKvMxF): test runs 3, module lines 1602
+
+## J13 · COMPLETE
+
+Follow-up 25 done (B12, test files only), pushed `e8cbf00ccd` on `job/T51/case-inputs`.
+- `fixture.mjs`: `DEAD` (the stand-in review provider's NO_REVIEW_COPY answer) now carries `detail` as well as `translation`, the shape review's `refusal` builds. Both sentences stay placeholders, never copied (K3810).
+- `fixtures.test.mjs`: `statementAck().noReviewCopy` is checked to have exactly the keys `check, code, detail, ok, reason, translation`, with `translation` and `detail` strings.
+
+Checks (root `/home/user/bio`, absolute):
+- case-inputs tests: 77 pass, 0 fail.
+- format: 178 modules, 178 requirements files; 0 failures.
+- architecture: 19 product files, 71 relative imports; 0 failures.
+- coverage: 29 of 29 live requirement ids named by a test; 0 failures.
+- words: 0 failures.
+- ownership: changed files are this module's test folder and the record; 0 failures.
+- fixtures: 1 remaining, `fixtures-contract: review no-review-copy` at `bio-plane/test/m/case-inputs/fixtures.mjs:41` (state `idle`). It is named with why: the answer is review's, and it is checked by review's `fixtures-run`, which lands in review's job. Nothing in this module can close it.
+
+Markers added: none. Deferred: none. Found in another module: none new.
+
+Size (session_01CP6548xUsizHesCu8wGwzp): test runs 1, module lines 1602

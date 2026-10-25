@@ -12,6 +12,7 @@
  */
 import worker from "../src/index.mjs";
 import { SIGNIN_CODES } from "../src/signin.mjs";
+import { runnerRefusal } from "../../agent-runner/test/fixtures.mjs";
 import { MEMBER } from "./account.mjs";
 import { remoteBindings } from "./remote.mjs";
 import { word } from "../../bio-plane/src/setup-words/index.mjs";
@@ -200,13 +201,18 @@ section("R84 · trace on every /signin answer; the member's words on every refus
     "R20": ["SIGNOUT_FAILED"], "R26": ["RUNNER_NOT_STARTED"], "R27": ["SIGNIN_REFUSED"],
     "R28": ["SIGNIN_NOT_HELD", "SIGNIN_TOKEN_REFUSED"], "R31": ["ATTEMPT_SUPERSEDED"],
   };
+  const NOT_FROM_THE_IMAGE = new Set(["SIGNOUT_FAILED", "RUNNER_NOT_STARTED"]);
   const produced = new Set(own.map(([code]) => code));
   for (const [rid, codes] of Object.entries(RUNNER_REQUIREMENT_CODES)) {
     for (const code of codes) {
-      const body = { ok: false, reason: code, code, detail: "Words for the member." };
-      const r = await signin({ member: MEMBER, step: "code", code: CODE }, { headers: DOOR, answer: () => Response.json(body, { status: 409 }) });
+      /* The image's own answer, from agent-runner's published fixture; the two codes it never sends from a route are made up here. */
+      // fixtures-generic: SIGNOUT_FAILED
+      // fixtures-generic: RUNNER_NOT_STARTED
+      const given = NOT_FROM_THE_IMAGE.has(code) ? { status: 409, body: { ok: false, code, detail: "Words for the member." } } : await runnerRefusal(code);
+      const { body } = given, status = given.status ?? 409; /* a conversation frame has no HTTP status of its own: the wire here carries it as a 409 */
+      const r = await signin({ member: MEMBER, step: "code", code: CODE }, { headers: DOOR, answer: () => Response.json(body, { status }) });
       t(`R84, R85: the runner's ${code} (agent-runner ${rid}) is relayed unchanged but for trace, and is in SIGNIN_CODES`,
-        [r.status, bare(r.out), r.out?.trace, SIGNIN_CODES.includes(r.out?.code)], [409, body, TRACE, true]);
+        [r.status, bare(r.out), r.out?.trace, SIGNIN_CODES.includes(r.out?.code)], [status, bare(body), body.trace ?? TRACE, true]);
       produced.add(r.out?.code);
     }
   }

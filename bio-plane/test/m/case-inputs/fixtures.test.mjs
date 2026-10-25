@@ -30,6 +30,10 @@ test("R9: each carryOutcome fixture is made when it is called, over a fresh worl
 test("R1, R12: the statementAck fixture answers the test world's dead answer for a viewer with no door, STATEMENT_ACK_NO_REASON for an act with no reason, and the reasoned acknowledgement's real answer for a joined participant", () => {
   const f = statementAck();
   assert.deepEqual(f.noReviewCopy, DEAD, "the one dead answer of the test world's review stand-in, whole");
+  assert.deepEqual(Object.keys(f.noReviewCopy).sort(), ["check", "code", "detail", "ok", "reason", "translation"],
+    "the dead answer's shape is review's refusal: its code, check, translation and detail");
+  assert.equal(typeof f.noReviewCopy.translation, "string");
+  assert.equal(typeof f.noReviewCopy.detail, "string");
   assert.equal(f.noReason.ok, false);
   assert.equal(f.noReason.reason, "STATEMENT_ACK_NO_REASON");
   assert.equal(f.noReason.check, STATEMENT_ACK_CHECKS.STATEMENT_ACK_NO_REASON.check);

@@ -7,7 +7,7 @@
    project's active owners, else the administrators: membership R65, R68, R86) are its own. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, escalationsAnswer, noEscalations } from "./world.mjs";
 import { WORD } from "./words.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -88,7 +88,7 @@ test("R2: one OBLIGATION per checkpoint action-plans answers due, keyed OBLIGATI
     { plan: "PLN-1", project: "PRJ-1", scenario: 1, version: 2, phase: "p1", set_by: "bob", due: day(NOW - 4 * DAY), days_since_due: 4 },
     { plan: "PLN-1", project: "PRJ-1", scenario: 2, version: 1, phase: "p2", set_by: "token:member", due: day(NOW), days_since_due: 0 },
     { plan: "PLN-2", project: "PRJ-H", scenario: 1, version: 1, phase: "p1", set_by: "alice", due: day(NOW - DAY), days_since_due: 1 }];
-  const w = people({ actionPlans: { checkpointsDue: (a) => { asked = a; return { ok: true, items: due, limit: 500, truncated: false }; } } });
+  const w = people({ actionPlans: { checkpointsDue: (a) => { asked = a; return escalationsAnswer(...due); } } });
   const ids = (r) => ofKind(r, "plan-checkpoint-due").map((i) => i.id).sort();
   const bob = w.read("bob");
   assert.deepEqual(asked, { nowMs: NOW }, "K711: checkpointsDue({nowMs}) at the read's instant");
@@ -132,7 +132,7 @@ test("R3: one OBLIGATION per (escalation, proposed edge) escalation answers the 
       instant: iso(NOW - 6 * DAY), age_ms: 6 * DAY, ids: ["RESP-1"], by: "protocol" },
     { id: "ESC-2", project: "PRJ-1", opened_by: "token:member", from: 1, to: 2, stage: "notification", instant: "not an instant",
       ids: [], by: "protocol" }];
-  const w = people({ escalation: { escalationsDue: (a) => { asked = a; return { ok: true, items: due, limit: 500, truncated: false }; } } });
+  const w = people({ escalation: { escalationsDue: (a) => { asked = a; return escalationsAnswer(...due); } } });
   const ids = (r) => ofKind(r, "escalation-stage-proposed").map((i) => i.id).sort();
   const alice = w.read("alice");
   assert.deepEqual(asked, { nowMs: NOW, viewer: "member:alice" });
@@ -147,7 +147,7 @@ test("R3: one OBLIGATION per (escalation, proposed edge) escalation answers the 
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]]);
   assert.deepEqual(it.basis.ids, ["RESP-1"]);
   assert.equal(byId(w.read("olga"))["OBLIGATION::escalation-stage-proposed::ESC-2::2"].age.state, "undetermined");
-  w.fakes.escalation.escalationsDue = () => ({ ok: true, items: [], limit: 500, truncated: false });
+  w.fakes.escalation.escalationsDue = () => noEscalations();
   assert.deepEqual(ids(w.read("alice")), [], "it leaves when the edge is advanced or declined, or the escalation suspended or ended");
 });
 

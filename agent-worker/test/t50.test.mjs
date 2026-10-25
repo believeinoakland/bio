@@ -9,10 +9,14 @@
 import worker, { CheckRecord } from "../src/index.mjs";
 import { remoteBindings, REMOTE_VERSION } from "./remote.mjs";
 import { MEMBER } from "./account.mjs";
+import { meaningRowsUnknownArm } from "../../bio-plane/test/m/retrieval/fixtures.mjs";
 import { word } from "../../bio-plane/src/setup-words/index.mjs";
 import { REPORTING_LEVEL, LEVELS } from "../../agent-harness/src/harness.mjs";
 import { MODEL_FOR_MODE, EFFORT_DEFAULT, EFFORT_SUBSESSION, SUBSESSION_MODEL } from "../../agent-model/src/model.mjs";
 import { discoverMembers, buildMember } from "../../bio-plane/scripts/fleet-bundle.mjs";
+
+/* retrieval's real refusal of a meaning read it will not make (its published fixture). */
+const MEANING_ROWS_REFUSAL = await meaningRowsUnknownArm();
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -80,7 +84,7 @@ function plane(cfg = {}) {
       case "meaningrows": {
         const id = body?.ids?.[0];
         if ((id && (cfg.refuseIds ?? []).includes(id)) || (!id && cfg.refuseReads))
-          return Response.json({ ok: false, reason: "MEANING_ROWS_REFUSED", check: "C-23.9" }, { status: 403 });
+          return Response.json(MEANING_ROWS_REFUSAL, { status: 403 });
         return ok({ ok: true, arm: "leg", rows: [], scope: { documents: cfg.scopeSeq ? cfg.scopeSeq[Math.min(cfg.seq = (cfg.seq ?? -1) + 1, cfg.scopeSeq.length - 1)] : (cfg.scopeDocuments ?? 3), documents_with_rows: 0, documents_without_rows: 3 }, count: 0 });
       }
       case "search": {
@@ -423,7 +427,7 @@ section("R114 · a run's re-reads are ticked as they are made");
   const answered = await drive("run", { ...RUN, account: APIKEY }, { noRemote: true, modelCfg: { cites: [A, B, C] }, planeCfg: { refuseIds: [B] } });
   const ent = answered.plane.filter((c) => c.op === "airuntick").flatMap((c) => c.body?.log || []).filter((e) => e.read);
   t("R114 (control): a refused re-read is ticked too, as refused, with the plane's code in words; the others as answered",
-    [ent.map((e) => e.read.outcome), ent[1].detail.includes("MEANING_ROWS_REFUSED")], [["answered", "refused", "answered"], true]);
+    [ent.map((e) => e.read.outcome), ent[1].detail.includes("MEANING_ROWS_UNKNOWN_ARM")], [["answered", "refused", "answered"], true]);
   t("R114: the run's answer counts the reads that answered, not the ones refused", answered.out?.citations_reread, 2);
 }
 
@@ -523,7 +527,7 @@ section("R116 · a disagreement between levels is stated and read once, never lo
     [pass2.out?.passes, passages(pass2).length, stated(pass2).length], [2, 1, 1]);
   const refused = await drive("run", { ...RUN, account: APIKEY }, { noRemote: true, planeCfg: { refuseIds: [A] }, modelCfg: { custom: composeNaming([PAIR]) } });
   t("R116: a refused read is stated unread, the pair still carried as data, and the refusal named in the run's refusals",
-    [stated(refused)[0]?.disagree, /unread/.test(stated(refused)[0]?.detail ?? ""), (refused.out?.refusals || []).some((x) => x.code === "MEANING_ROWS_REFUSED")],
+    [stated(refused)[0]?.disagree, /unread/.test(stated(refused)[0]?.detail ?? ""), (refused.out?.refusals || []).some((x) => x.code === "MEANING_ROWS_UNKNOWN_ARM")],
     [{ record: A, levels: ["meaning", "content"] }, true, true]);
   const none = await drive("run", { ...RUN, account: APIKEY }, { noRemote: true });
   t("R116 (control): no disagreements, no passage read and no entry", [passages(none).length, stated(none).length], [0, 0]);

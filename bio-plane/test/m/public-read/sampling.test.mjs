@@ -26,6 +26,7 @@ const HELPERS = {
   },
   storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502),
   storeRefusal: (out) => json(out.reply.body, out.reply.status),
+  // fixtures-contract: answer-envelope door-helpers
   requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }),
 };
 bindPublishedPlane(HELPERS);
