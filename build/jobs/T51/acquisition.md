@@ -835,3 +835,7 @@ Reported for BOB: the walker's door case (control-plane's: `op=links capture=<sh
 Checks: acquisition suite 359 pass, 0 fail. capture and screens-intake suites 750 pass. plane `sweep` and `t50`, the only plane tests naming links: 13 pass. control-plane suite: 682 pass, 7 fail, all in credentials R83/R112 and R105 money-ingest tests that do not touch capture or links. I did not run them against the tranche tip, so I take them as inherited but have not shown it. The whole plane suite hung with no progress at test 149 and I stopped it; the monitoring suite was not run (the combined run hit its time limit). format 0 failures; architecture 0; coverage 77 of 77; ownership 0 failures (4 files); fixtures `--list`: nothing new from acquisition (the failures listed belong to other modules).
 
 Size (session_01JjkV7W74Hx4TPxHQN3nSf6): test runs 12, module lines 4479
+
+## J49 · COMPLETE
+
+R123 met (see J48): every HTML capture files its page's own links with no fetching. Tests member-links.test.mjs red then green; acquisition 359 pass. Door case for control-plane to place (K5138). control-plane suite has 7 failures in credentials/money-ingest, unrelated, not compared with the tranche tip.
