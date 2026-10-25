@@ -141,3 +141,7 @@ Size (session_01YTEEz6mMUuYSeNrA5gXVxw): test runs 9, module lines 1699
 ## J9 · QUESTION
 
 QUESTION (fix round 10, batch 6): all 10 fixture lines are re-pointed and pushed (7874865fea): fixtures check 0 failures for notice-producers, module 151/151, format, coverage, words, ownership clean. One architecture failure remains and only your edge fixes it: watched.test.mjs:132 takes browseViewerMissing from bio-plane/test/m/retrieval-browse/fixtures.mjs (the plan's provider), and notice-producers.uses declares retrieval, not retrieval-browse. Please add retrieval-browse to notice-producers.uses in build/modules.json on tranche/T51 (or name another provider); then I merge tranche/T51 and COMPLETE. Best reading: add the edge.
+
+**Completion (after B9).** Merged `tranche/T51` (the `retrieval-browse` edge). Architecture 0 failures; format 0; coverage 29 of 29, 0; fixtures for notice-producers 0 failures; module tests 151, 151 pass. No `fixtures-own` or `fixtures-generic` marker added. Files outside my paths: none.
+
+Size (session_01YTEEz6mMUuYSeNrA5gXVxw): test runs 10, module lines 1699
