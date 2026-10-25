@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J23
+**Read** · handled J24
 
 ## B1 · START
 
@@ -379,3 +379,7 @@ Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the t
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . screens-daily --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/screens-daily.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B37 · ANSWER · re J24
+
+ANSWER (K5090): `record-core` is now in screens-daily's `uses` on the tranche (37 precedes 167; `order.mjs --check` clean). Merge `tranche/T51` into your branch, run architecture and your tests, and post COMPLETE. Your `find-in.test.mjs` `fixtures-contract: retrieval-browse findin-term-part` marker may stay listed `contract-no-run`: retrieval-browse publishes the run in follow-up 22.

@@ -91,12 +91,12 @@ test("R23 state b: three cited passages and no partition: the ask first, no stre
     assert.ok(fs.querySelectorAll("input").every((i) => !i.checked), "none preselected");
   }
   assert.ok(says(ask, "question.ask.which") && says(ask, "question.rests.any") && says(ask, "question.rests.readback"));
-  /* the first answered "no", the second and third holding each other up */
+  /* the first answered "no" (a passage the answer falls without: necessary, in no ground), the second and third holding each other up (one ground of two) (R23; DEC-32 clauses 2, 4) */
   p.doc.getElementById("ask-0-0").checked = true;
   p.doc.getElementById("ask-1-1").checked = true;
   p.doc.getElementById("ask-which-1-1").checked = true;
   await press(p, "inquiryground", { reason: "my first reading" });
-  assert.deepEqual(p.byOp("inquiryground")[0].body.grounds, [{ ground: "part 1", legs: [0] }, { ground: "part 2", legs: [1, 2] }]);
+  assert.deepEqual(p.byOp("inquiryground")[0].body.grounds, [{ ground: "part 1", legs: [1, 2] }]);
   assert.equal(p.byOp("inquiryground")[0].body.target, Q);
   assert.ok(p.byOp("inquiryground")[0].body.grounds.every((g) => !("statement" in g)), "each part's statement left empty");
   /* no drawn word is AND or OR */

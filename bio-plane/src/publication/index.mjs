@@ -2257,12 +2257,15 @@ export class Publication {
      every member finding's parts and every member's own signature. The
      published_shas row is what makes it answerable by its own hash and what
      op=publishedbytes checks before serving anything. */
-  recordCaseManifest({ caseId, edition, manifest, manifestSha, bytes = null } = {}) {
-    /* R15: a case id, a whole edition, a manifest object, its SHA-256 as 64 lowercase hex, and a byte count that is a
-       whole number or absent; anything else is MALFORMED and nothing is written (never a throw). */
+  recordCaseManifest({ caseId, edition, manifest, manifestSha, bytes = null, built = undefined } = {}) {
+    /* R15: a case id, a whole edition, a manifest object, its SHA-256 as 64 lowercase hex, a byte count that is a
+       whole number or absent, and `built` absent or a boolean; anything else is MALFORMED and nothing is written (never a
+       throw). `built: true` (fix round 10, cause 27a; K5084) records the case file built in the same transaction, the caller
+       passing it only after every file of the manifest, its own bytes included, is stored. */
+    if (!(built == null || typeof built === "boolean")) built = Symbol.for("malformed");
     if (typeof caseId !== "string" || !caseId.trim() || !Number.isInteger(Number(edition)) || Number(edition) < 1
         || !manifest || typeof manifest !== "object" || typeof manifestSha !== "string" || !/^[0-9a-f]{64}$/.test(manifestSha)
-        || !(bytes == null || (Number.isInteger(bytes) && bytes >= 0)))
+        || !(bytes == null || (Number.isInteger(bytes) && bytes >= 0)) || typeof built === "symbol")
       return { ok: false, reason: "MALFORMED",
                detail: localize("publication.index.a_case_manifest_names_its", "a case manifest names its case, its edition, the manifest and its SHA-256 (64 lowercase hex)") };
     const ed = Number(edition);
@@ -2271,7 +2274,10 @@ export class Publication {
       if (!c) return { ok: false, reason: "NO_SUCH_CASE_EDITION", caseId, edition: ed };
       /* R15, R24: recorded once. The same hash again is a retry and writes nothing (the manifest held is the one that
          hash was recorded for, whatever this call carries); another hash is refused. */
-      if (c.manifest_sha === manifestSha) return { ok: true, caseId, edition: ed, manifest_sha: manifestSha, existed: true };
+      if (c.manifest_sha === manifestSha) {
+        if (built === true) this.#markCaseFileBuilt(caseId, ed);
+        return { ok: true, caseId, edition: ed, manifest_sha: manifestSha, existed: true };
+      }
       if (c.manifest_sha)
         return { ok: false, reason: "MANIFEST_EXISTS", caseId, edition: ed, manifest_sha: c.manifest_sha,
                  detail: localize("publication.index.case_edition_already_has_a", "case {caseId} edition {ed} already has a manifest at a different hash. An edition is a SEPARATE DOCUMENT and its container answers forever; a second manifest under the same number would leave a reader unable to say which container they checked.", { caseId: String(caseId), ed: String(ed) }) };
@@ -2293,8 +2299,17 @@ export class Publication {
           Number.isInteger(f.bytes) ? f.bytes : null, this.#when());
         files++;
       }
+      if (built === true) this.#markCaseFileBuilt(caseId, ed);
       return { ok: true, caseId, edition: ed, manifest_sha: manifestSha, ...(files ? { files } : {}) };
     });
+  }
+
+  /* R15: the case file built, for an edition whose manifest is recorded, inside the caller's transaction; a built file is
+     left as it is. Written by `recordCaseManifest`'s `built: true`; `recordCaseFileAttempt` writes `built` itself. */
+  #markCaseFileBuilt(caseId, ed) {
+    this.sql.exec(`UPDATE published_cases SET casefile_state='built', casefile_attempted_at=?, casefile_why=NULL
+                   WHERE case_id=? AND edition=? AND manifest_sha IS NOT NULL AND casefile_state IS NOT 'built'`,
+                  this.#when(), caseId, ed);
   }
 
   /* R15 (G54; K4426, K4565, K4566, K4571): the one writer of the case file's ledger, the four `casefile_*` columns of
@@ -2304,7 +2319,7 @@ export class Publication {
      `why.code` is `MATERIAL_MISSING`, with `absent: true` (the caller's probe of the evidence store confirmed the object
      gone), that is the `CASEFILE_MISSING_MAX_ATTEMPTS`th in a row (counted in `why.run`) is stored `stopped`. A built or
      stopped edition is not rewritten by a late `building` or `failed`; a `built` is accepted over anything. It is a
-     store-internal hop (`recordcasefile`), no caller's op, and `recordCaseManifest` leaves these columns alone. */
+     store-internal hop (`recordcasefile`), no caller's op, and `recordCaseManifest` leaves these columns alone but for `built: true`. */
   recordCaseFileAttempt({ caseId, edition, state, why = null, at = null, absent = false } = {}) {
     const ed = Number(edition);
     const whyOf = state === "built" ? null : caseFileWhy(why);

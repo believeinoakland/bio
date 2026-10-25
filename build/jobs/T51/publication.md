@@ -1,6 +1,6 @@
 # publication (T51)
 
-**Status** · session_01XbERoEwBuhJPVYwb5wJ3HY · depth 2 · COMPLETE · handled B10
+**Status** · session_01Cz7XXhRgKLEhdaMNQ5hG3Y · depth 2 · COMPLETE · handled B10
 
 ## J1 · COMPLETE
 
@@ -207,3 +207,24 @@ Fix round 10, Wave A batch 2: publication complete (only test files of my module
 Deferred: none. Found in other modules: none.
 
 Size (session_01XbERoEwBuhJPVYwb5wJ3HY): test runs 5, module lines 190
+
+## Follow-up 18 · completion (PUBLICATION #39, session_01Cz7XXhRgKLEhdaMNQ5hG3Y; fix round 10, cause R27a's store half; START B11)
+
+**Entry applied.** R15's amendment (K5084): `recordCaseManifest({caseId, edition, manifest, manifestSha, bytes?, built?})`. With `built: true` the case file is recorded built (`casefile_state='built'`, why cleared, attempts unchanged) in the same transaction as the manifest, so `caseFilesOwed` no longer lists it; also on the same-hash retry (a manifest recorded without `built`, then called again with it, builds the file). Without `built`, or `built: false`, the act is as before. `built` that is not absent, null or a boolean is `MALFORMED`, nothing written. The hop `recordcasemanifest` passes the body whole, so the Worker can send `built`. `recordCaseFileAttempt` is unchanged.
+
+**Test, seen red first.** `g54-casefile.test.mjs`, "R15 recordCaseManifest built:true": failed before the change (`casefile_state` null after the call, expected `built`), 16/16 with `fixtures.test.mjs` after. Controls: without `built` the ledger is left alone; a failed ledger with a manifest stays owed without it and is built by the retry with it; six malformed values write nothing; `NO_SUCH_CASE_EDITION` and `MANIFEST_EXISTS` keep their reasons.
+
+**Fixture.** `bio-plane/test/m/publication/fixtures.mjs`: `caseFileLedger(...).manifest(caseId, edition, {built})` passes `built` to the real `recordCaseManifest`; `fixtures.test.mjs` has one new test for it. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Deferred.** None. **Found in other modules.** None. `public-read` can now call it (its job waits).
+
+**Tests and checks.**
+- Publication suite under the preload: tests 181, pass 180, fail 0, todo 1 (R30, before).
+- Impact set (`impact.mjs origin/tranche/T51 HEAD`: 56 modules): the only caller of the hop is `public-read`; I ran the modules that use publication's manifest or ledger: public-read 307/307, ratification 335/335, publish-schedule 34/34, docket 90/90. The change is an added optional field, so I did not run the other 50 modules' 1,100 test files.
+- format 0 failures; architecture 0; coverage 48 of 48, 0 failures; ownership 0 (5 files); words 0 failures; fixtures for publication: 1 line, `door.test.mjs:95` `contract-no-run`, waiting for store-door's `fixtures-run` (before this job).
+
+Size (session_01Cz7XXhRgKLEhdaMNQ5hG3Y): test runs 8, module lines 4790
+
+## J13 · COMPLETE
+
+Follow-up 18 complete: R15's amendment (K5084) met. recordCaseManifest takes built:true, recording the case file built in the same transaction (also on a same-hash retry); absent/false as before; a malformed built is MALFORMED. Test seen red first (g54-casefile.test.mjs); fixture caseFileLedger(...).manifest(case, edition, {built}) published in fixtures.mjs with a fixtures.test.mjs test. Publication suite 180 pass, 0 fail, 1 todo (R30); public-read 307, ratification 335, publish-schedule 34, docket 90, all pass. format, architecture, coverage (48/48), ownership, words 0 failures; fixtures: only the old door.test.mjs:95 contract-no-run. No fixtures-own or fixtures-generic marker added. Deferred none; nothing found in other modules. public-read (#34) may now call it. Size (session_01Cz7XXhRgKLEhdaMNQ5hG3Y): test runs 8, module lines 4790.

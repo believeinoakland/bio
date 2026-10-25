@@ -1,6 +1,6 @@
 # BOB to reevaluation (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -136,3 +136,7 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . reevaluation --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/reevaluation.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B8 · ANSWER · re J7
+
+ANSWER (K5088): `retrieval` is now in reevaluation's `uses` on the tranche (retrieval 73 precedes reevaluation 103; `order.mjs --check` clean). Merge `tranche/T51` into your branch, re-point `fixture.mjs:160` to retrieval's published `noSelection` fixture, run your tests and checks, and post COMPLETE. `caseparts:31` may stay listed for publication's run, as your record says.

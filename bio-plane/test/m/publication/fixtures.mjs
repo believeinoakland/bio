@@ -60,8 +60,8 @@ export function caseDocumentFacts() {
 }
 
 /** R15 (G54): the real ledger of the case file over `editions` complete case editions (the real commit), `record` the
- *  Worker's store-internal hop `recordcasefile`, `owed({now, limit})` and `nextAt()` the one owed rule, `manifest(case)` the
- *  real `recordCaseManifest`. `refusals` are the ledger's own refusals, made by the real writer: a state it does not know
+ *  Worker's store-internal hop `recordcasefile`, `owed({now, limit})` and `nextAt()` the one owed rule, `manifest(case, edition, {built})` the
+ *  real `recordCaseManifest` (`built: true` records the file built in the same call, K5084). `refusals` are the ledger's own refusals, made by the real writer: a state it does not know
  *  (`MALFORMED`), an edition it does not hold (`NO_SUCH_CASE_EDITION`), and `built` before any manifest is recorded
  *  (`NO_MANIFEST`). The build's own refusals (`MATERIAL_MISSING`, `BUCKET_FAILED`) are `public-read`'s. */
 export function caseFileLedger({ editions = 1, at = NOW } = {}) {
@@ -78,8 +78,8 @@ export function caseFileLedger({ editions = 1, at = NOW } = {}) {
     world: w, project, cases, record, refusals,
     owed: ({ now, limit } = {}) => w.p.caseFilesOwed({ now: typeof now === "number" ? iso(now) : now, limit }),
     nextAt: () => w.p.caseFileNextAt(),
-    manifest: (caseId, edition = 1) => w.p.recordCaseManifest({ caseId, edition, manifest: { files: [] },
-      manifestSha: sha(`manifest ${caseId} ${edition}`), bytes: 5 }),
+    manifest: (caseId, edition = 1, { built } = {}) => w.p.recordCaseManifest({ caseId, edition, manifest: { files: [] },
+      manifestSha: sha(`manifest ${caseId} ${edition}`), bytes: 5, ...(built === undefined ? {} : { built }) }),
     state: (caseId, edition = 1) => w.row(`SELECT casefile_state AS state, casefile_attempts AS attempts,
       casefile_attempted_at AS at, casefile_why AS why FROM published_cases WHERE case_id=? AND edition=?`, caseId, edition),
   };

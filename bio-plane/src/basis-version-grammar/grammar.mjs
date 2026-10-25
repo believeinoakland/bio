@@ -335,8 +335,6 @@ export function basisVersionFindings(fm, findings) {
     const legs = legsOf.get(name) || [];
     const declared = groundsOf.get(name) || new Map();
     const labels = new Set();
-    let unlabelled = 0;
-    const unplacedIds = [];
 
     for (const [li, leg] of legs) {
       /* MK-4 / C-54.1: the same named refusal at the version's grain. */
@@ -395,9 +393,9 @@ export function basisVersionFindings(fm, findings) {
       }
 
       const g = typeof leg.ground === 'string' ? leg.ground.trim() : '';
-      /* R3 (T51 fix round 2, C1; `inquiry-grammar` R68): a leg that cuts against is no reason FOR the conclusion, so the
-         totality counts the legs that support only; one that names a ground is judged as any ground a leg names. */
-      if (!g) { if (leg.role !== 'cuts_against') { unlabelled++; unplacedIds.push(String(leg.target ?? '')); } continue; }
+      /* R3 (`inquiry-grammar` R68): a leg that names no ground is a necessary leg (or, cutting against, in none); one that
+         names a ground is judged as any ground a leg names. */
+      if (!g) continue;
       if (!GROUND_LABEL_RE.test(g)) {
         push('VERSION_GROUND_UNASSERTED', localize('basis-versions.grammar.basis_version_legs_li_version_8', 'basis_version_legs[{li}] (version \'{name}\').ground \'{g}\' is not a ground label', { li: String(li), name: String(name), g: String(g.slice(0, 60)) }));
         continue;
@@ -411,19 +409,11 @@ export function basisVersionFindings(fm, findings) {
       if (!labels.has(label))
         push('VERSION_ORPHAN_ROW', localize('basis-versions.grammar.basis_version_grounds_gi_declares', 'basis_version_grounds[{gi}] declares \'{label}\' for version \'{name}\', which no leg of that version belongs to: a ground is a partition OF THE LEGS, and an empty one asserts that nothing is sufficient on its own', { gi: String(gi), label: String(label), name: String(name) }));
     }
-    /* THE PARTITION IS TOTAL. Not checkGrounds' whole-or-not-at-all — a version
-       does not get the not-at-all arm, because §3 requires it to CARRY the
-       partition. An empty version (no legs at all) is legal and is NOT this
-       finding: §9 lists "this level is empty" among the kinds a run may report,
-       and a version saying the evidence is not there is a real answer. */
-    if (legs.length && unlabelled) {
-      /* R11 (T51 fix round 2, C41): the finding names the legs left unplaced, so a caller can say which. */
-      const before = findings.length;
-      push('VERSION_PARTITION_INCOMPLETE', localize('basis-version-grammar.grammar.version_name_has_unlabelled_leg', 'version \'{name}\' has {unlabelled} leg{s} with no ground while {labels} ground{are} named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make', { name: String(name), unlabelled: String(unlabelled), s: unlabelled === 1 ? '' : 's', labels: String(labels.size), are: labels.size === 1 ? ' is' : 's are' }),
-        [localize('basis-version-grammar.grammar.give_every_leg_of_this', 'give every leg of this version a ground — a leg needed whatever else holds belongs in every ground'),
-         localize('basis-version-grammar.grammar.or_put_every_leg_in_one', 'or put every leg in one ground and say relationship: and')]);
-      findings[before].legs = unplacedIds;
-    }
+    /* R3 (fix round 10, cause 30b; K5077; `inquiry-grammar` R68, DEC-32 clause 4): the partition need not cover the legs. A
+       supporting leg that names no ground, beside legs that do, is a necessary leg of the version, the unlabelled
+       supporting legs together its one necessary part, and no finding; a version with no ground at all is clean. What
+       stays refused is each ground's own accounting, above and below: a label in form, declared once, none empty, a
+       leg naming one naming a declared one. */
 
     /* THE RELATIONSHIP: required, and checked AGAINST the partition. */
     const rel = typeof rows[i].relationship === 'string' ? rows[i].relationship.trim().toLowerCase() : '';

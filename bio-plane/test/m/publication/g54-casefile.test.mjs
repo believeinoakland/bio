@@ -273,3 +273,41 @@ test("R15 the hop `recordcasefile` is served through the real dispatcher beside 
     assert.deepEqual(ledger(w, id), fixed, `${k} leaves the ledger`);
   }
 });
+
+test("R15 recordCaseManifest built:true: one call leaves the manifest recorded and the case file built, no longer owed; without it still owed; a retry with it builds a manifest recorded without it; a malformed built is MALFORMED and writes nothing", () => {
+  const { w, proj, cases } = base(3);
+  for (const c of cases) complete(w, proj, c);
+  const at = T0 + CASEFILE_GRACE_MS;
+  const call = (c, extra = {}) => w.p.recordCaseManifest({ caseId: c.id, edition: 1, manifest: { files: [] }, manifestSha: sha(`manifest ${c.id} 1`), bytes: 5, ...extra });
+
+  const r = call(cases[0], { built: true });
+  assert.equal(r.ok, true);
+  assert.equal(r.manifest_sha, sha(`manifest ${cases[0].id} 1`));
+  assert.equal(ledger(w, cases[0].id).state, "built", "the case file is built by the one call");
+  assert.equal(w.row(`SELECT manifest_sha FROM published_cases WHERE case_id=?`, cases[0].id).manifest_sha, r.manifest_sha);
+  assert.equal(owed(w, at).some((x) => x.case === cases[0].id), false, "a built case file is no longer owed");
+
+  /* control: without it, as before: the manifest is recorded and the file is still owed */
+  assert.equal(call(cases[1]).ok, true);
+  assert.equal(ledger(w, cases[1].id).state, null);
+  assert.equal(owed(w, at).some((x) => x.case === cases[1].id), false, "a manifest with no ledger state is built, as before");
+  assert.equal(call(cases[1], { built: false }).ok, true, "built:false is as without it");
+  assert.equal(ledger(w, cases[1].id).state, null);
+  /* a failing ledger with a manifest and no built stays owed */
+  assert.equal(rec(w, cases[1].id, "failed", FAIL, at).ok, true);
+  assert.equal(owed(w, at + CASEFILE_BACKOFF_MAX_MS * 2).some((x) => x.case === cases[1].id), true, "without built the file is still owed");
+  assert.equal(call(cases[1], { built: true }).ok, true, "the same manifest again with built:true builds the file");
+  assert.equal(ledger(w, cases[1].id).state, "built");
+  assert.equal(owed(w, at + CASEFILE_BACKOFF_MAX_MS * 2).some((x) => x.case === cases[1].id), false);
+
+  /* a malformed built writes nothing */
+  for (const bad of ["true", 1, 0, "yes", {}, []]) {
+    const m = call(cases[2], { built: bad });
+    assert.equal(m.ok, false); assert.equal(m.reason, "MALFORMED");
+  }
+  assert.equal(w.row(`SELECT manifest_sha FROM published_cases WHERE case_id=?`, cases[2].id).manifest_sha, null, "nothing written");
+  assert.equal(ledger(w, cases[2].id).state, null);
+  /* refusals keep their reasons and write no ledger */
+  assert.equal(w.p.recordCaseManifest({ caseId: "CASE-2026-0404", edition: 1, manifest: { files: [] }, manifestSha: sha("x"), built: true }).reason, "NO_SUCH_CASE_EDITION");
+  assert.equal(call(cases[0], { manifestSha: sha("another"), built: true }).reason, "MANIFEST_EXISTS");
+});
