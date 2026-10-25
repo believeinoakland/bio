@@ -94,3 +94,27 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio membership tranche/T51 job/T51/membership`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B9 · START
+
+START · MEMBERSHIP #45 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 2: publish 1 fixture, 6 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/membership tranche/T51 && git branch -m job/T51/membership stale/membership-local && git checkout -b job/T51/membership origin/job/T51/membership`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module membership`; record `build/jobs/T51/membership.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/membership/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `projectActRefusals` (users now: promotion 2): the real membership (`membershipOf(ctx, {record})`) with a project, owner and participants set through its own acts: `projectAuthority(p, identity, need, act)` -> PROJECT_ACT_NOT_A_PARTICIPANT; `visibilitySettingRefusal(v)` -> PROJECT_VISIBILITY_UNKNOWN_SETTING; also the whole `makeMembership` double of promotion's fixtures.mjs.
+
+**Markers owed (K5044 (2), K5060; the audit read each line and found it no module's answer):** write on the line or up to eight lines above:
+- `// fixtures-own: harness <why>` (your own harness, or a world helper named like an op): fixture.mjs:55,99
+- `// fixtures-generic: <the made-up word the line carries>`: t19-enrol-boot.test.mjs:39; t45-project-guard.test.mjs:124,125; t47-check-tables.test.mjs:86
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . membership --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/membership.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5, medium effort.
