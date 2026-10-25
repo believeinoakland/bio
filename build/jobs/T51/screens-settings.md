@@ -495,3 +495,17 @@ Checks: format 0, coverage 79/79, words 0, ownership 0; architecture 3 failures,
 RED BY NAME (2): connect.test R5,R76 "key the page sends/removes": D1, ai-accounts route reads `member` from the body only (index.mjs:1691-1692) while the page sends none (R76): no member can set or remove an API key through the page. Owner: ai-accounts or store-request (stamp).
 REPORT for store-request: D2 `QUERY_STAMPS` holds `source`, so every `factconfirm` correction loses it (FACT_VALUE_REFUSED); world: non-founder admin refused NOT_AN_ADMIN on adminremovalsopen/expertisewithdraw, stale founder session after tick(1 day), several owners read Date.now not the pinned clock, no grantAdmit. REPORT for instance-setup: D3 `bootstrap.installed_at` is the running release's first sighting, not the set-up day (R73).
 Size (session_0113BrTiSXZhcH7hGcpNfDSD): test runs 20, module lines 5476
+
+## J37 · REPORT
+
+Re B49 (CHANGE, K5193): merged origin/tranche/T51 into job/T51/screens-settings (merge 11ec419236). `storeWorld()` now builds the default world: the GROUP_ALREADY_RECORDED failures are gone, and updates.test.mjs runs. I did not pass `{group: null}` anywhere in updates.test.mjs; the two places that still do are listed below.
+
+Done since the last record:
+- R81 (commit b76b82d5f4): the set-up release and its day come from `updatenotice`'s `setup`, never `bootstrap`'s `installed_at`. `bio-plane/src/screens-settings/updates.mjs:23-24` (reads: `updatenotice` only; the bootstrap read is gone), `:102-117` (setup from `setup`, matched by version), `:160-162` (earlier installs). The R81 test (`bio-plane/test/m/screens-settings/updates.test.mjs:243`) was red before the change (`updates.running.setup_on` not drawn) and is green after; the R27 and R37 expectations that encoded the old bootstrap meaning now follow `setup`. All 14 tests in updates.test.mjs pass.
+- Module run on the merged tree: 267 of 272 pass. Red: R5 and R76 (connect.test.mjs; still red after ai-accounts R38 merged in K5191, so please look at them with ai-accounts), R58 and R69 (see the question), and R68 (below).
+
+Outside my paths, found today, REPORTed with file:line:
+1. R68 selftest (`bio-plane/test/m/screens-settings/updates.test.mjs:284`): pressing `selftest` is refused by the door with no code (the page shows its generic refusal; the act is sent as `GET selftest` with the founder's bearer token). It passed before this merge. The merge brought in 9fd44d0f66 (K5193, store-request: `bio-plane/src/store-request/index.mjs:79-93` and `:170-173`, `:264-269`, `:288-295`) and 59997c5a81 (K5191, ai-accounts: `bio-plane/src/ai-accounts/index.mjs:1690-1694`). I have not pinned which of them refuses `selftest`; the owners of store-request and ai-accounts should look.
+2. R5, R76 (connect.test.mjs) red after ai-accounts R38 merged, see above.
+
+Affected modules (impact on the merged tree): screens-inquiry, control-plane, plane, journey-check. Their run is going now; I will report its counts in the COMPLETE.
