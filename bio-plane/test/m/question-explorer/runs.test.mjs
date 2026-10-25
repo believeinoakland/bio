@@ -2,7 +2,7 @@
    actual cost, R13). Each with a negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, sha, Q, Q2, DOC, DOC2, HDOC, PROJ, HPROJ, ENT, PERSON, PERSON2, CAP, CAP2, HCAP, CALLER } from "./fixture.mjs";
+import { world, sha, capOf, Q, Q2, DOC, DOC2, HDOC, PROJ, HPROJ, ENT, PERSON, PERSON2, CAP, CAP2, HCAP, CALLER } from "./fixture.mjs";
 import { EXPLORE_PERSON_CAP, EXPLORE_CHECKS } from "../../../src/question-explorer/index.mjs";
 import { KEPT_AWAY_UNREADABLE } from "../../../src/ai-accounts/index.mjs";
 
@@ -123,7 +123,7 @@ test("R12: at its close each run carries ai-runs R76's actual cost, answered to 
 
 test("R13: a run reads inside a held document through run-productions R24, a few pages at a time within its pages bound, never a document under a no-AI material limit; it says how far it read", async () => {
   const w = await world().standard();
-  w.doc("INFO-2026-0003-c", sha("long"), { pages: 45 });
+  w.doc("INFO-2026-0003-c", capOf("long"), { pages: 45 });
   const o = await w.openRun("group");
   const r1 = w.p.read({ run: o.run, bundleId: "INFO-2026-0003-c", caller: CALLER });
   assert.deepEqual([r1.ok, r1.from, r1.read_to, r1.next_from, r1.step], [true, 0, 5, 5, o.step]);

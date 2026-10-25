@@ -23,6 +23,8 @@ import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
 import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
 import * as runRules from "../../../src/run-rules/index.mjs";
+import { contentContextFor } from "../content/fixtures.mjs";
+import { LAYER } from "../content/fixture.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 /* A test set with one matter (Civicsmith's own holds none yet, so it opens nothing), and the records that hold its bar. */
@@ -37,7 +39,10 @@ export const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-r", Q3 = "INQ-2026-0003-
 export const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", HDOC = "INFO-2026-0009-h";
 export const PROJ = "PROJ-2026-0001-p", HPROJ = "PROJ-2026-0009-h";
 export const ENT = "ENT-2026-10001", PERSON = "ENT-2026-10002", PERSON2 = "ENT-2026-10003";
-export const CAP = sha("capture of a"), CAP2 = sha("capture of b"), HCAP = sha("capture of h");
+/* A capture's sha with its text kept, so `w.doc` can hold the same capture in content's real chain (content's fixture). */
+const CAP_TEXT = new Map();
+export const capOf = (text) => { const s = sha(text); CAP_TEXT.set(s, text); return s; };
+export const CAP = capOf("capture of a"), CAP2 = capOf("capture of b"), HCAP = capOf("capture of h");
 
 function cursor(rows) {
   let i = 0;
@@ -250,11 +255,13 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true, aiA
   /* run-productions is the real module (merged, K2499): R24 `readPages` over the real credentials' limits and
      ai-runs' bounds (the stand-in's `runFor`, `boundOf`, `consumeBound`), a document's capture and its text units
      answered by content's and extraction's stand-ins (`w.units`). */
+  const contentFx = contentContextFor();
   const runProductions = runProductionsOf(host, {
     record, membership, connections, aiRuns, credentials, steps: realSteps, legEarning,
-    content: { captureFor: (b) => Object.keys(w.captures).find((c) => w.captures[c] === b) ?? null,
-               contentContextFor: () => ({ chain: [{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: null, calibration: null }] }),
-               mint: () => ({ ok: false, code: "NOT_IN_THESE_TESTS" }) },
+    /* content is its real code over captures held by the real chain, from content's published fixture (K4990, K4995);
+       `w.doc` registers each document's capture there. */
+    content: { captureFor: (b, authored) => contentFx.captureFor(b, authored),
+               contentContextFor: (sha) => contentFx.contentContextFor(sha), mint: (a) => contentFx.mint(a) },
     extraction: { unitsOf: (sha) => ({ units: w.units[sha] || [], state: "indexed" }) },
     strength: {}, citation: {}, basisVersions: { onCandidates: () => ({ ok: true }), onMachinePassage: () => null },
     /* inquiry's R62 slot and basis-versions' R49 slot (above), each of which run-productions registers its
@@ -324,6 +331,10 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true, aiA
   w.doc = (id, cap, { project = null, pages = 3 } = {}) => {
     w.bundle(id, "information", null, { project });
     w.captures[cap] = id;
+    if (!CAP_TEXT.has(cap)) throw new Error(`w.doc: make the capture with capOf(text), not ${cap}`);
+    const held = contentFx.world.cap(id, CAP_TEXT.get(cap));
+    contentFx.world.doc(id, [held]);
+    contentFx.world.read(held.sha, { chain: LAYER, pageCount: pages });
     st.sql.exec(`INSERT OR IGNORE INTO register (capture_sha, bundle_id, path, registered) VALUES (?, ?, ?, 't')`, cap, id, `snapshots/${id}`);
     w.units[cap] = Array.from({ length: pages }, (_, i) => ({ extent: { kind: "pdf-page", page: i }, ref: `page ${i + 1}`, text: `text of page ${i + 1}` }));
     return cap;
