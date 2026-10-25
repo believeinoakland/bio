@@ -250,3 +250,7 @@ Lines done (FIX-E, promotion's published fixtures): `fixture.mjs` promotion `fac
 Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/strength/`: 186 pass, 0 fail. Checks: format 0 failures; architecture 0; coverage 44 of 44 ids; ownership 5 files, 0 failures; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules. `checks/run.mjs`: no finding in strength other than the money line above.
 
 Size (session_01JmYPC9c3SBS7Z6uwYREAt2): test runs 5, module lines 3048
+
+## J15 · COMPLETE
+
+Wave A batch 3 done: fixtures.mjs published (gradingFactsUnread, strengthBarSet, strengthOfNoId, testimonyCorroboration; note the unknown-inquiry code is NO_SUCH_BUNDLE), 2 promotion lines re-pointed; 1 line left (money op-table, awaits money). Module tests 186 pass; checks green. See record.
