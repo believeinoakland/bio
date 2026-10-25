@@ -421,3 +421,37 @@ Size (session_01T9Q1bzf8ZbBrV2wLLGqZoT): test runs 5, module lines 1
 2. Still open from J30, unchanged here: `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand, so affordances' R12 does not see other owners' declared ops (the fix belongs in affordances' test); and `plane.declared.readtranslate` has two sentences (`bio-plane/src/plane/declared.mjs:13`, `bio-plane/src/store-assembly/declared.mjs:16`), which `setup-words build.mjs --check` refuses.
 
 Size (session_01FQzZSFC8jvCf4w2KhSK6C5): test runs 8, module lines 5
+
+## J32 · COMPLETE
+
+**COMPLETE** · fix round 10, item 97 (K5198): R54 (PUBLISH-SCHEDULE #6 J8). Branch `job/T51/op-grades` at `64e97ce338`, pushed; tranche merged first (`bf6bb18293`, no conflict; no rebase).
+
+**Change (applies R54):**
+- `bio-plane/src/op-grades/declared.mjs:37-43` (`kindOf`): an owner row weighted `irreversible` is no longer refused outright. It is taken only where the op has a hand row in `RUNGS` and the row is writing (`mutating`); the existing agreement check (R50 (b), `declared.mjs` `register`) then accepts it when the hand row is `irreversible` (nothing changed) and refuses it `DECLARED_OP_DISAGREES` when the hand row is anything else. An `irreversible` row with no `RUNGS` hand row (or a read) stays `DECLARED_OP_BAD_WEIGHT`.
+- Nothing else changed: no table, no refusal code, no marks.
+
+**Failing-first test:** `bio-plane/test/m/op-grades/r54.test.mjs` (new, 83 lines; names R54; 7 tests). Red first on the old code: `publishatmove` and `publishat` refused `DECLARED_OP_BAD_WEIGHT` (the two accept-tests failed), and the reasoned and reversible controls failed too (refused `BAD_WEIGHT`, not `DISAGREES`). Green after the change. Tests: publishatmove and publishat (both irreversible hand rows) register and change nothing; an irreversible row with no RUNGS hand row (`fxirreversible`) is refused naming it; an irreversible row on a read hand row (`holdsdue`) is refused; control: `standardinforcethrough` (reasoned) declared irreversible → `DECLARED_OP_DISAGREES`; control: `cite` (reversible) declared irreversible → `DISAGREES`, and the call's other rows are not added. The owner rows are built from this module's own hand rows (descriptions read from `NON_ACTS`); the weight `irreversible` is the input under test. `publish-schedule` does not yet declare `publishatmove` (see REPORT), so no published owner fixture exists for it; the test marks no `fixtures-own` (the check reads zero for op-grades).
+
+**Suite:** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-reporter=tap bio-plane/test/m/op-grades/*.test.mjs` → 161 of 161 pass, 0 fail, 0 cancelled (23 files; `r54.test.mjs` 7 of 7; others unchanged). Declared-ops and affordances files of the affected modules (the impact users' declared tests, 123 files): 849 of 849 pass, 0 fail, exited by itself.
+
+**Checks** (ABSOLUTE root `/home/user/bio`):
+- format: 0 failures (178 modules, 178 requirements files).
+- architecture `op-grades`: 0 failures.
+- coverage `op-grades`: 54 of 54 live requirement ids named by a test, 0 failures.
+- ownership `tranche/T51 job/T51/op-grades` (merge-base to HEAD): 0 failures.
+- fixtures `op-grades --list`: 0 failures, 0 answers, no marker added.
+- words: 16 failures, the same 16 as at `origin/tranche/T51` (baseline run in a temporary worktree, removed); word count 19247 unchanged; string literals 754909 → 754910 (the new test file).
+- run.mjs: 1139 failures at HEAD and at `origin/tranche/T51`, none in `bio-plane/src/op-grades/` or `bio-plane/test/m/op-grades/`. The words failures and others are in other modules' files; not mine.
+- impact `origin/tranche/T51 HEAD`: 24 modules, 718 test files; the declared-ops and affordances runs above cover what the change can touch (the only other test expectations on `DECLARED_OP_BAD_WEIGHT` are the rung-on-read and ground-on-read cases, unchanged).
+
+**Met ids:** R54 (named by `r54.test.mjs`). BOB strikes the mark as it judges.
+
+**Deferred:** none.
+
+**Markers:** no `fixtures-own` or `fixtures-generic` marker added.
+
+**REPORT (for BOB):**
+1. `publish-schedule` (R12, `build/plan/verify-marks.md` line 86, still NOT MET): it serves `publishatmove` (`bio-plane/src/publish-schedule/index.mjs:168`) but does not declare it. R54 now lets it be declared `irreversible` in agreement with this module's hand row, so the owner's `DECLARED_OPS` row for `publishatmove` is what closes that mark. Not my module; not changed here. `publishat` (ratification) is the same case.
+2. The ones carried over in J30 remain open and unchanged: `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand; and `plane.declared.readtranslate` has two sentences (`bio-plane/src/plane/declared.mjs:13` and `bio-plane/src/store-assembly/declared.mjs:16`).
+
+Size (session_012vYFrTXPwUmqg22vRjid91): test runs 29, module lines 7 (`declared.mjs` +6/−1; test file `r54.test.mjs` +83 new).
