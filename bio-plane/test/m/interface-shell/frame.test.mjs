@@ -237,6 +237,25 @@ test("R26 the rail's width: 184 px by default, 64 to 320, set by the keyboard (a
 });
 
 
+test("R132 (DEC-155) a double-click on the rail's edge restores 184 px and keeps it, though the grip was redrawn by the drag before; control: a double-click elsewhere changes nothing", async () => {
+  const p = await boot({ screens: ALL });
+  const grip = () => p.root().querySelector('[data-shell="grip"]');
+  p.fire(grip(), "pointerdown", { clientX: 184 });
+  for (const f of p.win.listeners.pointermove || []) f({ clientX: 263 });
+  for (const f of p.win.listeners.pointerup || []) f({});
+  await p.settle();
+  assert.equal(grip().getAttribute("aria-valuenow"), "263");
+  assert.equal(p.local.get("cs-railw"), "263");
+  p.fire(p.root().querySelector(".cs-rail a"), "dblclick");
+  await p.settle();
+  assert.equal(grip().getAttribute("aria-valuenow"), "263", "elsewhere changes nothing");
+  p.fire(grip(), "dblclick");
+  await p.settle();
+  assert.equal(grip().getAttribute("aria-valuenow"), "184");
+  assert.equal(p.local.get("cs-railw"), "184");
+  assert.match(p.root().querySelector("#cs-frame").getAttribute("style"), /--rail:184px/);
+});
+
 test("R9 /app/review maps to review-outside (screens-publish R17), drawn in its published frame", async () => {
   const review = { id: "review-outside", reads: () => ({}), acts: [], render: (cs) => cs.title() };
   const p = await boot({ screens: [...ALL, review], path: "/app/review", session: null });

@@ -339,6 +339,7 @@ const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:f
 .cs-main td,.cs-main th{min-width:0;overflow-wrap:anywhere}.cs-main .cs-field label{min-width:0}.cs-main fieldset.cs-field label{display:flex;align-items:flex-start;gap:8px}
 .cs-main fieldset.cs-field label>span{display:block;min-width:0}.cs-main [role=tablist]{flex-wrap:wrap}
 .cs-btn,button.mk-avatar,.cs-main a.cs-ref,.cs-main input:not([type=checkbox]):not([type=radio]),.cs-main select,.cs-tabs a,.cs-mast a,.cs-mast button,.cs-wizmark{min-height:44px;min-width:44px}
+.cs-main :is(.cs-row,.mk-rowname,li,td) a.cs-ref{display:inline-flex;align-items:center;box-sizing:border-box}
 .cs-main input[type=checkbox],.cs-main input[type=radio]{width:24px;height:24px;flex:none}
 :root:root .cs-main input.mk-pick{width:44px;height:44px;margin:0}
 :root:root .mk-open,:root:root .mk-mastsearch{min-width:44px;min-height:44px;box-sizing:border-box;align-items:center}

@@ -39,9 +39,9 @@ export async function obligations(world, me, n) {
 export const passwordOf = (world, me) => (me.handle === WORLD_FOUNDER_HANDLE ? world.password : world.__passwords.get(me.handle));
 
 /** `me`'s session idle for `minutes`, as the store reads it: a seeded `last_active` on the session's own row (the store counts idle from the
- *  real clock, which a test does not wait out; op-tables §5.4). An own device locks at 30 minutes (credentials R65). */
+ *  instance clock, `env.BIO_NOW_MS`, which the world pins; op-tables §5.4). An own device locks at 30 minutes (credentials R65). */
 export function idleFor(world, me, minutes) {
-  world.sql.exec("UPDATE sessions SET last_active = ? WHERE token_sha = ?", Date.now() - minutes * 60 * 1000, sha256HexSync(me.token));
+  world.sql.exec("UPDATE sessions SET last_active = ? WHERE token_sha = ?", world.now() - minutes * 60 * 1000, sha256HexSync(me.token));
 }
 
 /** The interface in `language` as the team's translator keeps it: the language offered, the founder granted it, each `[key, text]` adopted, and

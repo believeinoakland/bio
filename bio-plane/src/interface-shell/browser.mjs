@@ -782,7 +782,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const attrs = (o.type ? ' type="' + esc(o.type) + '"' : o.area ? "" : ' type="text"') + (o.max ? ' maxlength="' + esc(o.max) + '"' : "")
           + (o.accept ? ' accept="' + esc(o.accept) + '"' : "") + (o.capture ? ' capture="' + esc(o.capture) + '"' : "")
           + (o.help ? ' aria-describedby="' + (Array.isArray(o.help) ? o.help.map((k, i) => esc(id) + "-help" + (i ? i + 1 : "")).join(" ") : esc(id) + "-help") + '"' : "") + (o.autocomplete ? ' autocomplete="' + esc(o.autocomplete) + '"' : "")
-          + (o.placeholder ? ' placeholder="' + wordOrData(o.placeholder) + '"' : "") + (typeof o.typing === "function" ? ' data-typing="1"' : "");
+          + (o.placeholder ? ' placeholder="' + wordOrData(o.placeholder) + '"' : "") + (typeof o.typing === "function" ? ' data-typing="1"' : "") + (o.enter ? ' data-enter="' + esc(o.enter) + '"' : "");
         if (typeof o.typing === "function") inst.typing[id] = o.typing;
         const input = o.area ? '<textarea id="' + esc(id) + '" class="' + cls + '"' + attrs + ">" + esc(o.value || "") + "</textarea>"
           : "<input id=\"" + esc(id) + '" class="' + cls + '"' + attrs + (o.type === "file" || o.type === "password" ? "" : ' value="' + esc(o.value || "") + '"') + ">";
@@ -2445,8 +2445,24 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       win.addEventListener("pointermove", move);
       win.addEventListener("pointerup", up);
     });
+    /* R132 (DEC-155): a double-click on the rail's edge restores the default width and keeps it; delegated on the root because the grip is redrawn after a drag */
+    root.addEventListener("dblclick", (e) => {
+      if (blocked(e.target) || !(e.target.closest && e.target.closest('[data-shell="grip"]'))) return;
+      e.preventDefault();
+      RAILW = RAIL_DEFAULT;
+      local.set("cs-railw", String(RAILW));
+      draw();
+    });
     root.addEventListener("keydown", (e) => {
       if (blocked(e.target)) return;
+      /* R130: Enter in a one-line field of a screen presses the primary act of the section that holds it (or the act the field names), once, as a click would */
+      if (e.key === "Enter" && !e.repeat && !e.isComposing && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && e.target.matches && e.target.matches("input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=button]):not([type=submit])") && e.target.closest && e.target.closest("#cs-main")) {
+        const box = e.target.closest("section") || e.target.closest("#cs-main");
+        const named = e.target.getAttribute("data-enter");
+        const acts = [...box.querySelectorAll("button[data-act]")].filter((b) => !b.hasAttribute("disabled"));
+        const go = named ? acts.find((b) => b.getAttribute("data-act") === named) : acts.find((b) => b.getAttribute("data-tone") === "primary");
+        if (go) { e.preventDefault(); return press(go); }
+      }
       const gc = (e.key === "Enter" || e.key === " ") && !e.repeat && !(e.target.matches && e.target.matches("input, textarea, select")) ? guideControl(e.target) : null;
       if (gc) { e.preventDefault(); GUIDE_KEYED = { el: gc, at: Date.now() }; return guidePress(gc); }
       if (e.target.closest && e.target.closest('[data-shell="word"]') && wordKey(e.target.closest('[data-shell="word"]'), e)) return;
