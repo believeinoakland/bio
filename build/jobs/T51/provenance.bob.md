@@ -299,3 +299,11 @@ Mail with `--module provenance`; record `build/jobs/T51/provenance.md` (append a
 **Follow-up 30 (test files only; TASKS #18 J8).** Your published `homeOfHomed` homes captures only in information bundles, so tasks' tests answer `homeOf` for a capture homed in a project from a hand map (`PROJ-` ids): promotion refuses a chosen project id (`PROJECT_ID_SUPPLIED`). Publish in `bio-plane/test/m/provenance/fixtures.mjs` a fixture that homes captures in a project made by real acts (the project promoted with no chosen id, its minted id answered with the real `homeOf` answers for its captures), tested in your `fixtures.test.mjs` against the real module. Name it and its signature in your COMPLETE: tasks re-points to it next.
 
 **Done:** `checks/fixtures.mjs <absolute root> provenance --list` with your lines at zero; your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B12 · RESUME
+
+RESUME · PROVENANCE #31 · tranche T51 · depth 2 (BOB #293 is depth 1).
+
+PROVENANCE #30 never started: its container's local `job/T51/provenance` was 1,510 commits behind origin, `mail start` conflicted, and a `git reset --hard` was refused (never retry it). Your work is B11 only (follow-up 30, haiku-5-5, test files only); B10 was PROVENANCE #29's, done and merged.
+
+FIRST, before `mail start`: `git fetch origin job/T51/provenance tranche/T51`; if a local `job/T51/provenance` exists and differs from origin, do NOT reset it: `git checkout --detach && git branch -m job/T51/provenance stale/provenance-local && git checkout -b job/T51/provenance origin/job/T51/provenance`. Then merge `origin/tranche/T51` into it (never a rebase), then `mail start`. A refused step: post BLOCKED naming it, never work around it.
