@@ -15,6 +15,8 @@ import { canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { CASE_DOCUMENT_FORMAT, extractedTextOf, materialBlockLines, methodBlockLines, materialsOf, methodOf, GRADING_FACT_FIELDS,
          gradingFactsLines, passagesLines, gradingFactsOf, passagesOf } from "../../../src/case-grammar/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { factUnavailable } from "../promotion/fixtures.mjs";
+import { gradingFactsUnread } from "../strength/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
@@ -169,7 +171,7 @@ test("R7: material_attestations states, per material, the attesting member's sig
                              word("case-disclosures.with_their_signature")].join(", "))])
     assert.ok(body.includes(s), s);
   /* no producing group: the group row names none, and the words say "the group" */
-  const g = world({ deps: { promotion: { fact: () => ({ ok: false, reason: "NO_SUCH_FACT" }) } } });
+  const g = world({ deps: { promotion: { fact: () => factUnavailable() } } });
   g.member("alice"); g.doc(DOC); g.finding(Q, [{ target: DOC }]);
   const og = blocks(g, [Q]).out;
   assert.deepEqual([og.group, og.materials.attestations.at(-1).by], [null, null]);
@@ -292,7 +294,7 @@ test("R15: findingFacts answers one grading_facts row per leg of each finding re
   assert.deepEqual(passagesOf(fm)[Q].map((x) => x.content_id).sort(), p.map((x) => x.content_id).sort());
   assert.ok(extractedTextOf(w.extraction.unitsOf(a).units).includes(JSON.stringify(`the text of ${DOC}`)));
   /* a refusing or throwing gradingFacts: no row, answered in unread */
-  for (const gf of [() => ({ ok: false, reason: "NO_SUCH_INQUIRY" }), () => { throw new Error("down"); }]) {
+  for (const gf of [() => gradingFactsUnread(), () => { throw new Error("down"); }]) {
     const x = world({ deps: { strength: { gradingFacts: gf } } });
     const out = x.cd.findingFacts([{ id: Q, member: Q }, { id: Q, member: Q2 }], V("alice"));
     assert.deepEqual([out.grading, out.passages, out.unread.map((u) => u.finding)], [[], [], [Q]]);

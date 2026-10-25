@@ -11,6 +11,7 @@ import { CASE_DISCLOSURE_CHECKS, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE, NOT_SHOW
          tensionBodyLines } from "../../../src/case-disclosures/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { candidateReads } from "../contradiction/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", F = "INQ-2026-0001-q", G = "INQ-2026-0002-g";
 const RUN = "RUN-2026-0001";
@@ -132,7 +133,7 @@ test("R1: tensionsDisclosed is a list of {candidate, words?}: a malformed one is
 test("R1 (C-120.3): a read that fails, throws, answers nothing or is truncated is TENSIONS_UNDETERMINED, naming each finding and why, alone and before any other refusal; each member is read at its pin, as the viewer; tensionsUndetermined is the same refusal for a caller's own failed read", () => {
   const failed = word("case-disclosures.why.read_failed");
   for (const [answer, why] of [[{ ok: true, candidates: [], undetermined: true, why: failed }, failed],
-                               [{ ok: false, reason: "X" }, failed],
+                               [candidateReads().noSubject, failed],
                                [{ ok: true, candidates: [], truncated: true, bound: 200 }, word("case-disclosures.why.candidates", { bound: "200" })],
                                [{ ok: true }, failed],
                                [null, localize("case-disclosures.why.no_answer", "no answer")], ["throws", "boom"]]) {
