@@ -92,7 +92,7 @@ test("R47: registerOpenCheck — malformed LISTENER_MALFORMED, a second by the s
   const open = () => w.runs.open(OPEN({ mode: "plan", plan: PLN, ...BOB }));
   refused(await open(), "AI_RUN_MODE_UNCHECKED");
   // fixtures-contract: action-plans plan-open-check
-  const mine = { ok: false, code: "PLAN_NOT_OPEN", check: "C-999.1", translation: "the plan's own sentence", detail: "d", extra: [1] };
+  const mine = { ok: false, code: "PLAN_CLOSED", check: "C-124.10", translation: "the plan's own sentence", detail: "d", extra: [1] };
   assert.equal(w.runs.registerOpenCheck("action-plans", "plan", () => mine).ok, true);
   assert.equal(w.runs.registerOpenCheck("action-plans", "check", ok).code, "LISTENER_DECLARED");
   const other = w.runs.registerOpenCheck("someone-else", "plan", ok);
