@@ -135,3 +135,24 @@ AI-RUNS #28 · fix round 10, Wave A batch 4 (B5): four fixtures published, nine 
 **Run:** ai-runs tests, all 25 files: 141 tests, 141 pass, 0 fail. `checks/fixtures.mjs /home/user/bio ai-runs --list`: 3 failures, all contract-no-run (above); stub 0, code 0, answer 3. `checks/format.mjs`: 178 modules, 0 failures. `checks/words.mjs ... ai-runs`: 0 failures. `checks/architecture.mjs`: 0 failures. `checks/coverage.mjs`: 59 of 59 live requirement ids named, 0 failures. `checks/ownership.mjs ... tranche/T51 job/T51/ai-runs`: 0 failures. `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178 (tests only), so no user's tests to run. Generated artifacts made stale: none.
 
 Size (session_013fMeokVqHBqehW2ZZc86MS): test runs 14, module lines 3812
+
+## J7 · COMPLETE
+
+AI-RUNS #29 · fix round 10, follow-up 21 (B6): plan-open-check contract. Test only; no source, requirement or id change.
+
+**Applied.** `bio-plane/test/m/ai-runs/plan.test.mjs:95` (R47): the hand-built open-check refusal now carries `code: "PLAN_CLOSED"` and `check: "C-124.10"`, the real answer of action-plans' open check for a closed plan (`fixtures.test.mjs`, `fixtures-run: ai-runs plan-open-check`, read whole first). Its `translation`, `detail` and `extra` are unchanged; the test still checks relay unchanged. Commit 50f8d6e49d on job/T51/ai-runs.
+
+**Checks.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/ai-runs/*.test.mjs`: 141 tests, 141 pass, 0 fail.
+- `checks/fixtures.mjs /home/user/bio ai-runs --list`: plan.test.mjs:95 now `accepted(plan-open-check)`. Two failures remain, both my own FIX-L markers waiting on agent-worker's `fixtures-run: ai-runs dispatch-refusal` (not this follow-up's scope): scheduler.test.mjs:239 and t46.test.mjs:353, `contract-no-run`. No `fixtures-own` or `fixtures-generic` marker added.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio ai-runs`: 0 failures.
+- `checks/coverage.mjs /home/user/bio ai-runs`: 59 of 59 live requirement ids named, 0 failures.
+- `checks/words.mjs /home/user/bio ai-runs`: 0 failures.
+- `checks/ownership.mjs /home/user/bio ai-runs tranche/T51 job/T51/ai-runs`: 1 file changed by ai-runs, 0 failures.
+
+**Deferred:** none. **Other modules:** none found. **Generated artifacts made stale:** none.
+
+**Note for BOB:** the job branch was 458 commits behind origin at start; my first `mail start` hit a rebase conflict on my own record. I aborted it, kept the old local branch as `stale/ai-runs-local` (its one start commit, af267bbab9), reset to origin/job/T51/ai-runs and re-ran start as the job's instructions say. Nothing from the stale branch was lost or merged.
+
+Size (session_019UFFfaJbR6QhDzY4q1jnEB): test runs 1, module lines 3812
