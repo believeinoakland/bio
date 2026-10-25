@@ -130,4 +130,4 @@ Size (session_018n2VPXYoQnwCMwqn3JaZHt): test runs 8, module lines 3760
 Deferred: none. Found in another module: none. For BOB: `screens-action`'s "notheld" sentence is now reachable only for a profile with no block; `controlplane`'s door case (item 1's through-the-door test) is BOB's to place (K5138).
 
 Met ids: R51 and R93 (first-profile halves). Tests and checks: jurisdictions suite 178/178; users loading the first profile (28 files): 185 pass, 7 fail, all in `journey-check/pseudo.test.mjs`, identical without my change; format, architecture, coverage (97/97) and fixtures (0 failures, no new marker) clean; words: no failure names jurisdictions (the 16 are store-assembly's and plane's).
-Size (session_01AfTJJunnDTjUWKse11VPbW): test runs 8, module lines 3874
+Size (session_01AfTJJunnDTjUWKse11VPbW): test runs 8, module lines 3815
