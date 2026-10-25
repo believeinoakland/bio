@@ -202,6 +202,27 @@ function badGrade(capture, connection) {
   return null;
 }
 
+/* R45 (K5157): `expected`, the bar the writer saw (`{capture, connection}`, each null for none), against the bar the
+   project holds now (`previous`, R14's answer). Absent (undefined or null) is not asked, R40's last writer standing; a
+   value that is not a pair of grades-or-null is `BAD_GRADE` naming `expected`; a bar changed since is `BAR_STALE` with
+   `previous`. The sentence names the bar, never who changed it. Null to proceed. */
+function staleBar(expected, previous, project) {
+  if (expected == null) return null;
+  if (typeof expected !== "object" || Array.isArray(expected))
+    return barRefusal("BAD_GRADE", localize("strength.index.expected_must_be_the_bar_you_saw",
+      "{axis} must be the bar you saw, as a capture and a connection grade, each null for none", { axis: "expected" }), { axis: "expected" });
+  const bad = badGrade(expected.capture, expected.connection);
+  if (bad) return { ...bad, axis: "expected", detail: localize("strength.index.expected_must_be_the_bar_you_saw",
+    "{axis} must be the bar you saw, as a capture and a connection grade, each null for none", { axis: "expected" }) };
+  /* DEC-49 REGION is-project-bar-fresh */
+  if ((expected.capture ?? null) === (previous.capture ?? null) && (expected.connection ?? null) === (previous.connection ?? null))
+    return null;
+  return barRefusal("BAR_STALE", localize("strength.index.the_projects_bar_changed_after_you_read_it",
+    "The project's bar is now {bar}; it changed after you read it. Nothing was changed.",
+    { bar: barLogWords(previous) }), { project, previous });
+  /* END DEC-49 REGION is-project-bar-fresh */
+}
+
 /* R40: a bar as a Session Log states it: an absent one as "no bar", never as a bar of zero. */
 const barLogWords = (bar) => (bar && bar.declared ? barAxisWords(bar) : "no bar");
 
@@ -1505,7 +1526,7 @@ export class Strength {
    *  unchanged. Given neither axis it withdraws the bar (both axes null, which R14 reads as absent, never a bar of zero).
    *  It never reads or changes the group's default (R15), and it gates nothing (R21). */
   projectBarSet({ project = null, capture = null, connection = null, reason = undefined, author = null, viewer = null,
-                  identity = null } = {}) {
+                  identity = null, expected = undefined } = {}) {
     const machine = machineCannotDeclare(author, "project");
     if (machine) return machine;
     const who = String(author).trim();
@@ -1539,6 +1560,9 @@ export class Strength {
     const doc = this.record.readFile(pid, "bundle.md");
     if (!head || !doc || typeof doc.text !== "string") return noSuchProject(pid);
     const previous = this.projectBar(pid);
+    /* R45: the bar the writer saw, asked after every other refusal and before anything is written. */
+    const stale = staleBar(expected, previous, pid);
+    if (stale) return stale;
     const at = this.now();
     const next = { capture: capture ?? null, connection: connection ?? null };
     const spliced = spliceProjectBar(doc.text, next, at);
@@ -1776,7 +1800,7 @@ export const DECLARED_OPS = Object.freeze({
   inquirystrength: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("strength.declared.inquirystrength", "read: the derived pair for one question — the panel the acts are rendered under, never an act on an object"),
     fields: { accepts: ["id","ids"], requires: [["id","ids"]] } },
   projectbarset: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("strength.declared.projectbarset", "project-directed: keyed by a project; the project's own required strength, set with the member's reason; never the group's bar, and it gates nothing (`strength` R21)"),
-    fields: { accepts: ["project","capture","connection","reason"], requires: ["project","reason"] } },
+    fields: { accepts: ["project","capture","connection","reason","expected"], requires: ["project","reason"] } },
 });
 
 const instances = new WeakMap();
