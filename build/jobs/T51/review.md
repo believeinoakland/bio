@@ -325,3 +325,33 @@ Size (session_01QnDe6zFwq9Dr5SvYgBwJnE): test runs 5, module lines 13
 ## J15 · COMPLETE
 
 Follow-up 53 (R171 (h), K5130) done: R16 met. The review copy's observations of a draft that has prepared its new case are read at the prepared case and edition (case-authoring draftEditions); draftIdentity and R8 untouched (grants before and after preparation both stay live, tested). New prepared.test.mjs through the real acts, red 0/3 then green 3/3; module tests 100/100; format, architecture, coverage 45/45, words, ownership, fixtures 0. For screens-publish (follow-up 54): the prepared case is casedrafts rows' editions.case with editions.prepared; the copy's case.case_id stays null. Record: build/jobs/T51/review.md.
+
+## Completion record (fix round 10, B20 START, K5148; REVIEW #27)
+
+COMPLETE for the final pass's cause 1 (plan item 78 (5)). Branch job/T51/review; `tranche/T51` merged at the start (the job lacked its tranche's B15–B20 merges) and before the commit; the stale local branch was moved aside to `stale/review-local`, never reset.
+
+**Cause 1: `sharedDraftsByProject` binds over the plane's 100 variables** (RETRIEVAL #29 J16; `diag2-06.md` §2, read whole; cited lines re-read)
+
+1. **Root cause (certain, reproduced):** `review/index.mjs` `sharedDraftsByProject` had `CHUNK = 200` and bound up to 200 project ids in one statement; in the member scope the viewer gate's two arguments were bound on top (the founder's one), so a call with 150 project ids bound 152 variables, past workerd's bound of about 100 (D-36; retrieval's `PLANE_VARIABLE_CEILING`). Reproduced red on today's code: `too many SQL variables` from both new tests, with the fixture's database capped at the ceiling.
+2. **Fix (where the cause is):** `CHUNK` is now 64 (the platform's id-list chunk: `SELECTION_ID_CHUNK`, `BROWSE_ID_CHUNK`), so a statement binds at most 64 ids and the gate's two arguments, 66 in all. The cases chunk (line ~1075) uses the same constant and binds no gate argument. No other statement in the module binds an unbounded list (every placeholder join is one of the three chunked reads; the gate's own arguments are at most two).
+3. **Why the tests missed it:** the review fixture opened `new DatabaseSync(":memory:")` with no variable limit, and no test asked for more than a handful of projects. retrieval's and query-language's fixtures carry the ceiling; review's did not.
+4. **Failing-first tests** (`bio-plane/test/m/review/ceiling.test.mjs`, two, both naming R43): 150 project ids for a member (one shared, 149 unknown) answer the shared count and the newest instant, each id answered, and the same answer as asked alone; the same 150 for the founder's viewer (with the project made discoverable, as membership's administrator arm requires). Red at `too many SQL variables`; green after the fix.
+5. **The fixture change** (`fixture.mjs`): `storage()` caps variables at `PLANE_VARIABLE_CEILING` = 100, as retrieval's does, so the whole module suite runs under the bound.
+
+**Met ids (for BOB to strike):** R43 (its text: one read for many projects, its cost not growing per project; the 150-project tests name it).
+
+**Deferred:** none.
+
+**Found in another module:** none. (Retrieval's `#documentsOf` is cause 2 of diag2-06 and is retrieval's to place; not touched here.)
+
+**Tests and checks** (from the repository root, `node --import ./bio-plane/test/platform-sqlite.mjs --test`):
+- `bio-plane/test/m/review/ceiling.test.mjs`: 2 pass after the fix (2 red before it).
+- `bio-plane/test/m/review/*.test.mjs` (the whole module suite, under the 100-variable bound): `tests 102, pass 102, fail 0`; the run exited by itself, no force-exit.
+- `node checks/format.mjs /home/user/bio`: `178 modules, 178 requirements files; 0 failures`
+- `node checks/architecture.mjs /home/user/bio review`: `19 product files, 91 relative imports; 0 failures`
+- `node checks/coverage.mjs /home/user/bio review`: `1 modules, 45 of 45 live requirement ids named by a test; 0 failures`
+- `node checks/words.mjs /home/user/bio review`: `1 modules, 3413 string literals read ... 0 failures`
+- `node checks/fixtures.mjs /home/user/bio review --list`: `answer 0 ... stub 0, code 0, contract 0, accepted 0; 0 failures`; no marker added.
+- `node checks/ownership.mjs /home/user/bio review tranche/T51`: `4 files changed by review between tranche/T51 and HEAD; 0 failures` (the three module files and this record).
+
+Size (session_01M2YpYVJJ3a8nqiAq2D2WTS): test runs 8, module lines 1716
