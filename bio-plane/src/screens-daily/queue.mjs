@@ -103,9 +103,13 @@ export const queue = Object.freeze({
         const opt = (it && Array.isArray(it.options) ? it.options : []).filter(function (o) { return o && (o.id || o.op) === op; })[0];
         const answers = opt && Array.isArray(opt.answers) && opt.answers.length ? opt.answers
           : [{ answer: "grant", label: "screen.home.request.grant" }, { answer: "decline", label: "screen.home.request.decline" }];
-        return answers.map(function (a) {
-          return own(cs.act(op, { label: "screen.home.request." + (String(a.answer) === "decline" ? "decline" : "grant"), data: Object.assign({ answer: String(a.answer) }, data) }));
+        // R104: a place to add a word (`project-roster` R12: at most 280 characters), read by the act's `send` through `cs.value`.
+        // one place for each request, by the project and the requester, so a word written for one is never sent with another
+        const f = ("qa-" + data.project + "-" + data.who).replace(/[^A-Za-z0-9_-]/g, "_");
+        const buttons = answers.map(function (a) {
+          return own(cs.act(op, { label: "screen.home.request." + (String(a.answer) === "decline" ? "decline" : "grant"), data: Object.assign({ answer: String(a.answer), f: f }, data) }));
         }).join("");
+        return buttons ? cs.field(f + "-comment", "screen.plan.judge.note", { max: 280 }) + buttons : "";
       }
       // R68: Defer beside Dismiss, each asking the member's reason in place; one act, the button's `data-to` says which.
       if (op === "proposedispose") {
@@ -506,8 +510,11 @@ export const queue = Object.freeze({
       send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; },
       done: function (view, answer, cs) { cs.set("done", "projectjoin"); } },
     { op: "projectrequestanswer", label: "act.projectrequestanswer.label.queue", rereads: ["queue"],
-      send: function (view, el) {
-        return el.dataset.project && el.dataset.who && el.dataset.answer ? { query: { projectId: el.dataset.project, handle: el.dataset.who, answer: el.dataset.answer } } : null;
+      send: function (view, el, cs) {
+        if (!(el.dataset.project && el.dataset.who && el.dataset.answer)) return null;
+        // R104: the member's word, when she wrote one, goes with the answer as `comment`.
+        const comment = String(cs.value(el.dataset.f + "-comment") || "").trim();
+        return { query: Object.assign({ projectId: el.dataset.project, handle: el.dataset.who, answer: el.dataset.answer }, comment ? { comment: comment } : {}) };
       },
       done: function (view, answer, cs) { cs.set("done", "projectrequestanswer"); } },
     // R19: Not now, for every administrator (instance-setup R90).
