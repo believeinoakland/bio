@@ -11,6 +11,7 @@ import { multipartBucket } from "../record-core/storage.mjs";
 import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
+const { readHeldAnswer: { read: readDone } } = await import("../extraction/fixtures.mjs");
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { pendingOf, PENDING_RETRY_MAX_MS } from "../../../src/store-assembly/pending.mjs";
 import { acquireTimingsOf, HOLD_MAX } from "../../../src/store-assembly/acquire-timings.mjs";
@@ -27,11 +28,11 @@ function threeParts(b, sizes = [14 * MiB, 14 * MiB, 12 * MiB]) {
   for (const n of sizes) { const p = whole.slice(at, at + n); at += n; b.held.set(`${KEY}${sha(p)}`, p); parts.push(sha(p)); }
   return { digest: sha(whole), parts };
 }
-/* the store, with `extraction.readHeld` spied (answering `answer`) and the alarm read as the runtime would fire it (`alarmed-store.mjs`: the scheduler's, as the class forwards it) */
-async function pendingStore({ db, bucket = multipartBucket(), answer = { ok: true, read: true } } = {}) {
+/* the store, with `extraction.readHeld` spied (answering `answer`, by default extraction's published `readHeldAnswer.read()`) and the alarm read as the runtime would fire it (`alarmed-store.mjs`: the scheduler's, as the class forwards it) */
+async function pendingStore({ db, bucket = multipartBucket(), answer = null } = {}) {
   const x = await store({ db, env: { CAPTURES: bucket } });
   const asked = [];
-  extractionOf(x.ctx).readHeld = async (a) => { asked.push(a); return typeof answer === "function" ? answer(a) : answer; };
+  extractionOf(x.ctx).readHeld = async (a) => { asked.push(a); return typeof answer === "function" ? answer(a) : (answer ?? await readDone()); };
   return Object.assign(x, { bucket, asked });
 }
 /* R74: the rows still held as work (owed, or ended for a stated reason); a finished row stays in the job table for its readers */
@@ -106,7 +107,7 @@ test("R62 (control-plane R120): a deferred reading is registered by the store-in
   await x.s.alarm();
   assert.deepEqual(rows(x).map((r) => [r.kind, r.attempts]), [["reading", 1]], "no home yet: it is tried again");
   x.asked.length = 0;
-  extractionOf(x.ctx).readHeld = async (a) => { x.asked.push(a); return { ok: true, read: true }; };
+  extractionOf(x.ctx).readHeld = async (a) => { x.asked.push(a); return readDone(); };
   await x.s.onAlarm(Date.now() + 3_600_000);
   assert.deepEqual(x.asked.map((a) => a.sha), [d]);
   assert.deepEqual(rows(x), []);

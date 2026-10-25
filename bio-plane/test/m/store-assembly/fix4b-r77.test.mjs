@@ -12,6 +12,9 @@ import { recordOf } from "../../../src/record-core/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
+/* the owners' published answers (extraction's `readHeldAnswer`, acquisition's `owedRunAnswer`), made by their real code; bare names so each call reads as the owner's */
+const { readHeldAnswer: { noHome, read: readDone } } = await import("../extraction/fixtures.mjs");
+const { owedRunAnswer } = await import("../acquisition/fixtures.mjs");
 import { pendingOf, PENDING_RETRY_MAX_MS, KEEPS_PENDING_DDL } from "../../../src/store-assembly/pending.mjs";
 import { ASSEMBLY_DECLARED_OPS } from "../../../src/store-assembly/declared.mjs";
 
@@ -23,7 +26,7 @@ const wake = (x, at) => pendingOf(x.ctx).consumer().wake(at);
 async function world(env = { CAPTURES: bucketStandIn() }) {
   const x = await store({ env });
   const state = { home: false, asked: [], answer: null };
-  extractionOf(x.ctx).readHeld = async (a) => { state.asked.push(a); return state.answer ? state.answer(a) : state.home ? { ok: true, read: true } : { ok: true, read: false, why: "NO_HOME" }; };
+  extractionOf(x.ctx).readHeld = async (a) => { state.asked.push(a); return state.answer ? state.answer(a) : state.home ? await readDone() : await noHome(); };
   return Object.assign(x, { state });
 }
 /* the alarm fired at each of `times` */
@@ -140,15 +143,15 @@ test("R64 (F9, F5, F11): an `ocr` entry is continued by `readHeld({sha, kind: \"
   await x.s.onAlarm(now += 1000);
   assert.deepEqual(rows(x).map((r) => r.kind), ["unpack"], "acquisition's real owedRun ends the entry of a session that is gone (nothing left to do)");
   await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("page"), session });
-  const ran = []; let outstanding = 30;
-  acquisitionOf(x.ctx).owedRun = async (cap, e, o) => { ran.push([cap === captureOf(x.ctx), e]); return outstanding ? { ok: true, done: false, outstanding } : { ok: true, done: true }; };
+  const ran = []; let outstanding = true;
+  acquisitionOf(x.ctx).owedRun = async (cap, e, o) => { ran.push([cap === captureOf(x.ctx), e]); return owedRunAnswer({ kind: outstanding ? "outstanding" : "done" }); };
   const answers = [{ ok: true, result: { ok: true, complete: false, waiting_on: { code: "UNPACK_DAILY_BYTES" } } }];
   x.env.SELF = { fetch: async () => new Response(JSON.stringify(answers[0]), { status: 200 }) };
   x.env.DAEMON_TOKEN = "t";
   await x.s.onAlarm(now += PENDING_RETRY_MAX_MS);
   assert.deepEqual(ran.map((r) => [r[0], r[1]]), [[true, { kind: "subresources", session }]]);
-  assert.deepEqual(rows(x).map((r) => [r.kind, r.last_why, r.final_why]).sort(), [["subresources", "OUTSTANDING", null], ["unpack", "UNPACK_DAILY_BYTES", null]], "outstanding files and a daily budget stay owed");
-  outstanding = 0; answers[0] = { ok: true, result: { ok: true, complete: false, waiting_on: { code: "ARCHIVE_TREE_ENTRIES_MAX" } } };
+  assert.deepEqual(rows(x).map((r) => [r.kind, r.last_why, r.final_why]).sort(), [["subresources", "DELIVERY_FAILED", null], ["unpack", "UNPACK_DAILY_BYTES", null]], "outstanding files and a daily budget stay owed");
+  outstanding = false; answers[0] = { ok: true, result: { ok: true, complete: false, waiting_on: { code: "ARCHIVE_TREE_ENTRIES_MAX" } } };
   await x.s.onAlarm(now += PENDING_RETRY_MAX_MS);
   assert.deepEqual(rows(x).map((r) => [r.kind, r.final_why]), [["unpack", "ARCHIVE_TREE_ENTRIES_MAX"]], "done ends the one; a tree limit ends the other, stated");
   await pendingOf(x.ctx).owe({ kind: "unpack", sha: u });
@@ -157,9 +160,9 @@ test("R64 (F9, F5, F11): an `ocr` entry is continued by `readHeld({sha, kind: \"
   assert.deepEqual(rows(x), [], "complete ends it");
   /* a final answer from acquisition ends a subresources entry with its reason */
   await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("p2"), session: "s2" });
-  acquisitionOf(x.ctx).owedRun = async () => ({ ok: true, final: true, reason: "CAPTURE_SESSION_GONE" });
+  acquisitionOf(x.ctx).owedRun = async () => owedRunAnswer({ kind: "final", reason: "RENDER_FAILED" });
   await x.s.onAlarm(now += PENDING_RETRY_MAX_MS);
-  assert.deepEqual(rows(x).map((r) => [r.sha, r.final_why]), [["s2", "CAPTURE_SESSION_GONE"]]);
+  assert.deepEqual(rows(x).map((r) => [r.sha, r.final_why]), [["s2", "RENDER_FAILED"]]);
 });
 
 test("R64 (R-OLD): a ledger an earlier release wrote (one row for each digest, five tries and given up) is carried over and re-armed, so none stays given up", async () => {
@@ -194,7 +197,7 @@ test("R64 B29 (seam, control-plane): the alarm runs a pending render with the `d
   const spy = async (a) => { calls.push(a); return { ok: true }; };
   const x = await store({ env: { CAPTURES: bucketStandIn() }, deliver: spy });   /* the assembly is handed `deliver`, as the class hands the door's */
   let handed = null;
-  acquisitionOf(x.ctx).owedRun = async (_cap, _e, o) => { handed = o; return { ok: true, done: false }; };
+  acquisitionOf(x.ctx).owedRun = async (_cap, _e, o) => { handed = o; return owedRunAnswer({ kind: "outstanding" }); };
   await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("shell"), session: "s-render" });
   await x.s.onAlarm(Date.now() + 1000);
   assert.equal(typeof handed.deliver, "function", "the assembly hands `deliver`");
