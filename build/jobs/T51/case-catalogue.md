@@ -79,3 +79,10 @@ Size (session_0198J3TFZaWG93Pfbmb1pDqC): test runs 1, module lines 1000 (checks.
 Found outside case-catalogue (not changed by this job):
 1. case-checker's generated program.mjs bundles case-catalogue/checks.mjs and is now stale after R31: case-checker R13 (build reproducible / committed program is the build) and R25 fail until BOB regenerates it (node bio-plane/src/case-checker/build-program.mjs). 2 failures in 899 over ratification, case-checker, case-authoring, member-roster; all else green.
 2. The case-authoring chain test for R31 is that job's: two grounded legs, sever one citation, conclude, prepare, gate clean. Not written here (K4426).
+
+## J6 · COMPLETE
+
+R31 done (fix round 10, batch 4). Root cause: checks.mjs checkPublishedExtension (C-2.8 totality arm, ~lines 377-415) iterated every ground label in fm.basis including legs whose citation edge fm.references marks severed; strength #liveLegs drops those so their ground has no frozen row. Why tests missed it: none severed a grounded leg. Fix: severed targets read from fm.references (first entry per target decides, as strength does); both the 'grouped' test and the per-ground row loop use live legs only. Failing-first test (seen red on the walker's case before the change): checks.test.mjs 'R2, R31' - severed second ground with rows for part 1 only answers no C-2.8 finding; controls: same leg live and row absent answers it; both rows present clean; a ground with a live leg left is still asked for. Platform check: pure module, nothing to redeploy; the stale generated case-checker program is in the REPORT.
+Checks: case-catalogue tests 17 pass 0 fail; format 0 failures; architecture 0; coverage 5 of 5 ids; words 0; ownership 0. Impact (impact.mjs): 51 modules; ran ratification, case-checker, case-authoring, member-roster tests: 897 pass, 2 fail (case-checker R13, R25: stale generated program, REPORT).
+fixtures markers added: none. Deferred: none. Lines done: R31; left: none (R31b/R31c are other modules').
+Size (session_016Ysqrto5mteFuYJids9GDN): test runs 5, module lines 1020
