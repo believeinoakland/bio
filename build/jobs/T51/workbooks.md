@@ -171,3 +171,12 @@ Size (session_011euAAFYAD76GYT6xKMDMLz): test runs 31, module lines 1692
 **Stale generated artifacts I make:** `bio-plane/src/setup-words/rows.mjs` (two new keys above); `bio-plane/dist/bio-plane.bundled.mjs` (the plane bundles this module); BOB regenerates both.
 
 Size (session_01XG3wEDwRsPvJ8ZMf1es3qF): test runs 7, module lines 1732
+
+## J8 · COMPLETE
+
+COMPLETE · WORKBOOKS #7 · R22 and R23 (G182, job 112) done; completion in my record, section 'G182 · WORKBOOKS #7'.
+Tests: workbooks 50/50 (4 new in r22-r23.test.mjs, each seen red on the earlier source first). Checks: format, architecture, coverage (23 of 23), words, ownership: 0 failures.
+R22: exportRecipe refuses EXPORT_TOO_LARGE {cells, bound_cells, limit} above workbook.cells (250,000, the add's bound) and EXPORT_TOO_WIDE past XFD (16,384), judged from table shapes before rows load and again on what the file lays out; the op builds base64 in pieces. R23: bind and export pass rows: 'all'; the sight check and grade facts ask one row.
+NOT YET PROVEN against job 109: calculations' readTable still returns the whole table at the tip I merged (cec275b674), so R23 runs green; send a CHANGE when 109 merges and I re-run.
+Rows owed to UX-DESIGN: refusal.EXPORT_TOO_LARGE ({cells},{bound_cells}), refusal.EXPORT_TOO_WIDE ({columns},{bound_columns}). Stale for BOB to regenerate: setup-words rows.mjs, the plane bundle. Found in other modules: none new.
+Size (session_01XG3wEDwRsPvJ8ZMf1es3qF): test runs 7, module lines 1732
