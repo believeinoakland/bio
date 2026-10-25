@@ -1687,9 +1687,9 @@ export function aiAccountsOps(a, url, body, env) {
   return {
     /* R18: the member's own act; `subscriptionConnected` is in-plane and not routed. */
     subscriptiondisconnect: () => a.subscriptionDisconnect({ member: url.searchParams.get("by"), by: url.searchParams.get("by") }),
-    /* R1, R2: the member's own account, `by` and `viewer` the stamps */
-    accountreferenceset: () => a.accountReferenceSet({ ...(body || {}), by: url.searchParams.get("by") }),
-    accountreferenceremove: () => a.accountReferenceRemove({ ...(body || {}), by: url.searchParams.get("by") }),
+    /* R1, R38: the member's own account. The door's stamped `by` is both the member and the act; a `member` in the body is not read. */
+    accountreferenceset: () => a.accountReferenceSet({ ...(body || {}), member: by(), by: by() }),
+    accountreferenceremove: () => a.accountReferenceRemove({ member: by(), by: by() }),
     accountreference: () => a.accountReferenceState({ member: url.searchParams.get("member"),
                                                       viewer: url.searchParams.get("viewer") }),
     /* R5, R6, R8: the group's key and its notice */
