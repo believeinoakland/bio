@@ -86,9 +86,12 @@ export async function store({ db, env: extra, before = null } = {}) {
   const s = new Store(st.ctx, env);
   /* the class holds no route map (plane R1): a test that reads the route map reads the one assembled store over the same
      storage (store-assembly R1: a second assembly on one storage builds nothing twice), handed to the object as `s.routes` */
-  const assembled = assembledOver(st.ctx, env);
-  s.routes = (url, body = null, grant = null) => assembled.routes(url, body, grant);
-  s.read = (op, params) => assembled.read(op, params);
+  /* a retired room (R95) builds and writes nothing, so the fixture assembles nothing beside it: it is known by the object's own refusal */
+  if ((await s.fetch(new Request("http://do/whoami"))).status !== 410) {
+    const assembled = assembledOver(st.ctx, env);
+    s.routes = (url, body = null, grant = null) => assembled.routes(url, body, grant);
+    s.read = (op, params) => assembled.read(op, params);
+  }
   for (const p of st.blocked) await p;
   const routes = (path, body = null) => s.routes(new URL("http://do" + path), body);
   const call = async (path, body = null) => {

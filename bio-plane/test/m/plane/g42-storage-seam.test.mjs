@@ -17,10 +17,16 @@ registerHooks({
   },
 });
 const { all, has, lacks, open } = await import("../screens-settings/kit.mjs");
-const { ADMIN, FOUNDER, MEMBER, groupTable } = await import("../screens-settings/fixtures.mjs");
+const { env: envelope } = await import("../screens-settings/fixtures.mjs");
 const { store } = await import("./fixture.mjs");
 const worker = (await import("../../../src/plane/index.mjs")).default;
 const { randomBytes } = await import("node:crypto");
+
+/* the three callers as the shell's `whoami` states them (the sessions the door below is given) */
+const VOCAB = ["contribute", "publish", "create_projects"];
+const ADMIN = Object.freeze({ member: "rosa", handle: "rosa", administer: true, capabilities: VOCAB, vocabulary: VOCAB, tokenClass: "member" });
+const MEMBER = Object.freeze({ member: "dev", handle: "dev", administer: false, capabilities: ["contribute"], vocabulary: VOCAB, tokenClass: "member" });
+const FOUNDER = Object.freeze({ member: "admin", handle: "founder", administer: true, capabilities: VOCAB, vocabulary: VOCAB, tokenClass: "admin" });
 
 const G = "screen.group.storage.";
 const drawn = (o, state) => all(o.tree, (e) => e.attrs["data-state"] === state).length;
@@ -58,7 +64,7 @@ async function plane() {
 /* the screen, whose `stats` read is the door's answer to the caller the screen's `me` stands for (the session's token) */
 const screenAs = async (p, me, token) => {
   const answer = await p.stats(token);   /* made at the door before the page boots, so the page's own read waits on no timer */
-  return open("group", { me, table: groupTable({ stats: async () => answer }) });
+  return open("group", { me, table: { stats: envelope(answer.result) } });
 };
 const asked = (o) => o.p.all.filter((r) => r.op === "stats").length;
 
