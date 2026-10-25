@@ -26,6 +26,8 @@
 | `inquiry` | R30b (K5077) | `NO_PARTITION`'s detail ("Pass an EMPTY array to remove the grouping") | an empty list now saves a partition with no ground (every supporting leg necessary, DEC-32 clause 4), not a removal: the sentence that says so |
 | `plane` R24 (design gap, K5078) | `screen.objective.purpose`, `screen.about-knocker.purpose` | the registry at `c752a602da` names screens `objective` and `about-knocker` whose purpose sentence `words.json` lacks: the two sentences |
 
+- **Rows the round's screens jobs now read by key (K5090; SCREENS-INQUIRY #27 J39, SCREENS-INTAKE #25 J53).** A drawn-screen module holds no English (words check `marker`; screens-intake R26, K4640): until each row is held the page draws the nearest held row or the figures alone. screens-inquiry: `refusal.NOTHING_TRANSCRIBED`, `.PICTURE_NOT_LEGIBLE`, `.PAGE_NOT_LEGIBLE`, `.PASSWORD_REQUIRED`, `.PAGE_KILLED_READER`, `.STRUCTURE_OVER_BOUND`; `screen.document.reading.unit.bytes|rows|columns|cells|objects` ({n}); `screen.document.archive.says` ({n}); `screen.document.gradenote.head.ungraded`; `screen.document.encoding.assumed` ({name}); `screen.document.supporting.pictures`, `.one` ({count}, {size}); `screen.question.leg.part` ({ref}). screens-intake: `screen.open-file.check.inside`, `screen.open-file.image.unread`, `screen.held.who`, `.who.mine`, `.who.all`, `.next`, `.back`.
+
 ## Layout and scope
 
 | Module | Cause | Item | What UX-DESIGN supplies |
