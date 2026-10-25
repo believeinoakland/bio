@@ -252,3 +252,25 @@ Size (session_019AxS4iGwSHPNGPFzWXjziz): test runs 10, module lines 1895
 ## J15 · COMPLETE
 
 People #15 COMPLETE (B11): R12 met (person read answers removed [{ground, at, by}] via a person_removals link table; PERSON_ITEM_NOT_HELD for an unknown id) and R21 met (sourcepersonlinks reads source_id; neither source_id nor person refused NO_LINK_SUBJECT). Fixture personRemoved published for screens-investigate. People suite 86/86; format, architecture, coverage, words, fixtures, ownership 0 for people. REPORT: door cases for control-plane (K5138); word rows refusal.PERSON_ITEM_NOT_HELD and refusal.NO_LINK_SUBJECT owed by the design stream; op-declarations has 3 inherited failures. Details in build/jobs/T51/people.md.
+
+## PEOPLE #16 · fix round 10 (B12, K5186)
+
+**Met ids** (BOB strikes the marks): R43, R44.
+
+**What changed**
+- `bio-plane/src/people/index.mjs` `#claimsOn` (~1068): each claim row also carries `basis`, as stored (the same column `identityOf` serves). R43.
+- `index.mjs` `#factsOf(person, viewer, withdrawn)` (~819) and `personAt` (~1039): `personAt` answers `withdrawn_facts`, the person's withdrawn facts the viewer may see (R31; contact facts with `publishable: false`), each already marked `withdrawn: {by, at, reason}`, bounded at 500 with `truncated.withdrawn_facts`. `facts` (not withdrawn) is unchanged. An expunged fact is not listed. R44.
+
+**Tests (reads.test.mjs), red on today's code then green**
+- R43: new test; the R39 test's exact claim keys now include `basis`. Red 2 of 13 on the tranche code (R39, R43), green 13/13.
+- R44: new test (withdrawn listed with who/when/why, standing facts as before, fenced capture's withdrawn fact absent for OUT, expunged not listed). Red on tranche code, green.
+
+**Why the tests missed it:** R39's test asserted the claim's keys exactly as the earlier text listed them, and no requirement asked the person read to answer a withdrawn fact; R11's test proved only that a withdrawn fact left `facts`.
+
+**For BOB (REPORT)**
+- screens-investigate `person.mjs:166` draws the withdrawn fold from `p.facts` and `p.undetermined` filtered on `withdrawn`; those never hold one. It should read `p.withdrawn_facts` (not my paths). Its `screen.person.same.because` `{basis}` can now read `claims[].basis`.
+- The new field `withdrawn_facts` is not named by R44's text; BOB may rename.
+
+**Ran:** people 88/88; screens-investigate 249/249; corpus-export 35/35; entities 164/164; op-declarations 248/248; case-disclosures 116/116. `impact.mjs` names 86 modules (shared); the callers of `person` above were run. Checks (people): format 0, architecture 0, coverage 44 of 44, words 0, fixtures 0 (list empty), ownership 0 (3 files). `checks/run.mjs`: failures only in other modules (store-assembly words; "answer" lines in other modules' tests naming earlier providers), none in my files. Markers added: none.
+
+Size (session_01QpNtcpwtgWU5abMjNpSapV): test runs 12, module lines 1898
