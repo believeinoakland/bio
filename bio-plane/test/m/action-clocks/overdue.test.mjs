@@ -2,7 +2,7 @@
    America/Halifax (UTC−3 in September): R3's day is that local day (K1444 (iii)), never the UTC day. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, actionMd, CP, CLK } from "./fixture.mjs";
+import { world, V, ALICE, MACHINE, actionMd, CP, CLK, determinations } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import { get as profile } from "../../../../jurisdictions/index.mjs";
 
@@ -169,19 +169,17 @@ test("R9 every read answers an invisible action as an absent one; the module's t
 });
 
 test("R3 R5 the action's project is the project of the first determination among its rests_on legs that the viewer may see, read through conformance; null when it rests on none (K702)", () => {
-  const w = world();
-  for (const x of ["INFO-2026-0001-d", "CONF-2026-0001-hidden", "CONF-2026-0002-seen", "CONF-2026-0003-later"]) w.doc(x);
-  w.determinations.set("CONF-2026-0001-hidden", { project: "PROJ-2026-0009", sees: [BOB] });
-  w.determinations.set("CONF-2026-0002-seen", { project: "PROJ-2026-0001", sees: [M, BOB] });
-  w.determinations.set("CONF-2026-0003-later", { project: "PROJ-2026-0002", sees: [M, BOB] });
+  const d = determinations([ALICE]);
+  const w = world({ conformance: d.conformance });
+  for (const x of ["INFO-2026-0001-d", d.live, d.superseded, d.supersededBy]) w.doc(x);
   const legs = (...l) => ["action_basis:", ...l.flatMap(([t, k]) => [`  - target: ${t}`, `    kind: ${k}`])];
-  w.action(A, ["clock:", ...CLK("2026-09-01"), ...legs(["CONF-2026-0003-later", "advances"], ["INFO-2026-0001-d", "rests_on"],
-    ["CONF-2026-0001-hidden", "rests_on"], ["CONF-2026-0002-seen", "rests_on"], ["CONF-2026-0003-later", "rests_on"])]);
-  w.action(B, ["clock:", ...CLK("2026-09-01"), ...legs(["CONF-2026-0002-seen", "advances"])]);
+  w.action(A, ["clock:", ...CLK("2026-09-01"), ...legs([d.supersededBy, "advances"], ["INFO-2026-0001-d", "rests_on"],
+    [d.live, "rests_on"], [d.superseded, "rests_on"])]);
+  w.action(B, ["clock:", ...CLK("2026-09-01"), ...legs([d.live, "advances"])]);
   const proj = (viewer) => w.c.overdueClocks({ viewer }).items.map((x) => [x.action, x.project]);
-  assert.deepEqual(proj(M), [[A, "PROJ-2026-0001"], [B, null]], "an advances leg, a document and an unseen determination are passed over");
-  assert.deepEqual(proj(BOB), [[A, "PROJ-2026-0009"], [B, null]], "the first the viewer sees");
+  assert.deepEqual(proj(M), [[A, d.project], [B, null]], "an advances leg and a document are passed over");
+  assert.deepEqual(proj(BOB), [[A, null], [B, null]], "a determination the viewer may not see is passed over");
   w.c.reminderSet({ target: A, entry: 0, on: "2026-09-20", author: M, viewer: M });
   w.c.reminderSet({ target: B, entry: 0, on: "2026-09-20", author: M, viewer: M });
-  assert.deepEqual(w.c.remindersDue({ viewer: M }).items.map((x) => [x.action, x.project]), [[A, "PROJ-2026-0001"], [B, null]]);
+  assert.deepEqual(w.c.remindersDue({ viewer: M }).items.map((x) => [x.action, x.project]), [[A, d.project], [B, null]]);
 });
