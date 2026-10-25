@@ -62,3 +62,7 @@ Mail with `--module store-assembly`; record `build/jobs/T51/store-assembly.md` (
 ## B6 · CHANGE
 
 CHANGE (K5149; plan item 71 (2); STORE-REQUEST #1 J3 (2), merged). An improvement found in your module, to do in this job (P9): store-assembly's world builds its base with no `INSTANCE_NAME`, and instance-setup records the producing team only at the first boot (its R2), so in a bare `store-assembly` world every `promote` that must name the team is refused `GROUP_UNDETERMINED` (C-64.1). store-request's `storeWorld()` works around it with the real `instancegroupseed` act. Hand `INSTANCE_NAME` (and whatever a real first boot needs) when the world builds its base, so its own world can promote; test: a bare world's `promote` of an information bundle succeeds and names the team; the base time stays as measured (K5046 (g), state it in your record). Merge `origin/tranche/T51` first (store-request is merged there). If the change touches a requirement's meaning, REPORT it; the wording is BOB's.
+
+## B7 · RESUME
+
+RESUME (BOB #296, §5.4): your session is idle while your record says RUNNING until 16:57Z. Read your mailbox past your cursor (B5, B6: CHANGE, `INSTANCE_NAME` in your world, K5149), finish your run in pieces of at most 30 minutes, each recorded and pushed, and COMPLETE.
