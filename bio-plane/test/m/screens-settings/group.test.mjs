@@ -16,6 +16,12 @@ const ALL = SCREENS.find((s) => s.id === "group").acts.map((a) => a.op).filter((
 const named = (tags, lang = "en") => tags.map((t) => { const n = new Intl.DisplayNames([lang], { type: "language" }).of(t); return n.charAt(0).toUpperCase() + n.slice(1); }).join(", ");
 const timeOf = (iso) => /T(\d{2}:\d{2})/.exec(iso)[1];
 
+/** The copy of a whole record is a large answer: waits (bounded) until the page draws it, not for a fixed number of ticks. */
+async function copyDrawn(o) {
+  const until = Date.now() + 20000;
+  for (o.redraw(); Date.now() < until && !all(o.tree, (x) => x.attrs["data-shown"] === "copy").length; o.redraw()) await o.b.settle(100);
+}
+
 test("R18 group: what the group chose is drawn to every member; the acts only to an administrator (control: a member is drawn none)", async () => {
   const t = await eastoak(await team());
   const { w, rosa, dev } = t;
@@ -644,7 +650,7 @@ test("R66 C85: each count of a copy in the list is drawn with its label (records
   // the copy just taken: the sentence's records and files, then a comma, then its tables
   const taken = await open("group", { world: w, as: founder });
   await taken.press("export", { values: { "gr-exnote": "" } });
-  await taken.b.settle(300); taken.redraw();   // the copy of a whole record is a large answer: the page has it when it has settled
+  await copyDrawn(taken);   // the copy of a whole record is a large answer: the page has it when it has settled
   const copy = (await founder.read("exportlog")).exports[0];
   const said1 = squash(textOf(all(taken.tree, (x) => x.attrs["data-shown"] === "copy")[0]));
   const sentence = said("queue.export-performed.summary", { date: day(copy.at), records: label(copy.bundles, "queue.export-performed.records.one", "queue.export-performed.records.other"), files: label(copy.files, "queue.export-performed.files.one", "queue.export-performed.files.other") });
@@ -653,7 +659,7 @@ test("R66 C85: each count of a copy in the list is drawn with its label (records
   const small = async () => { const m = await founder.act("export", { query: {} }); return { ok: true, result: { ...m, counts: { bundles: 1, files: 1, tables: 1, rows: 1 } } }; };
   const single = await open("group", { world: w, as: founder, table: { export: small } });
   await single.press("export", { values: { "gr-exnote": "" } });
-  await single.b.settle(300); single.redraw();
+  await copyDrawn(single);
   const said2 = squash(textOf(all(single.tree, (x) => x.attrs["data-shown"] === "copy")[0]));
   assert.ok(said2.includes(", " + said("screen.group.export.count.tables.one")) && said2.includes(said("queue.export-performed.records.one")), said2);
 });
