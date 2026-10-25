@@ -110,3 +110,7 @@ Existing tests: `harness.mjs` `rows()` and `t49.test.mjs` `sessionRows` flush be
 **Tests and checks:** admission folder 76 of 76; plane/control-plane tests naming doorwindow (t41, t35-door, t38-door, r8-hops) 23 of 23; impact set: admission 20/21, plane 68/89 users named, those touching the window run. format 0 failures; architecture 0; coverage 32 of 32; words 0; ownership 0.
 
 Size (session_014YKSz5P9aQ8AFfPFSti6pv): test runs 6, module lines 1593
+
+## J6 · COMPLETE
+
+COMPLETE · ADMISSION #18 · R27b: the door window counts in memory, written at most every 5 s (WINDOW_FLUSH_MS, injected). Failing-first r10-doorwindow-writes.test.mjs red on old code, green now; admission 76/76, plane/control-plane window users 23/23; format, architecture, coverage (32/32), words, ownership 0 failures. Stale: dist/bio-plane.bundled.mjs. Details in my record's last section.
