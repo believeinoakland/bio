@@ -265,6 +265,7 @@ test("D29 an answer that says ok and carries a refusal is drawn as the refusal, 
   const p = await openAs(U.world, U.me, U.PATHS.people, { plane: { peopledirectory: rewrite(U.world, U.me, (req, a) => (req.query && req.query.q ? refusal : a)) } });
   fill(p, { "people-q": "chen" });
   await press(p, "search");
+  await settled(p);
   assert.ok(main(p).querySelector('[data-state="failed"]'), "the search");
   assert.equal(main(p).querySelector('[data-state="empty"]'), null);
 });
