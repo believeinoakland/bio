@@ -171,3 +171,28 @@ COMPLETE (fix round 10, Wave A batch 2; START B8). Commit `01b9b9d0f1` on `job/T
 - impact `origin/tranche/T51 HEAD`: names 119 modules and 2084 test files, from the tranche's own movement. My change reaches only the tests that import `fixture.mjs`, run above. I did not run the 2084.
 
 Size (session_016jr2sKapnMAJpzphgBXm9Q): test runs 5, module lines 1719
+
+## Fix round 10, follow-up 14: cause R24 (b2), the filing stall (START B9; CASE-CARRIAGE #18)
+
+**Root cause.** `index.mjs` `#copyOne` (the read of a queued document's bytes) verified them with `createSha256().update(bytes).hex()`, the one-shot pure-JS SHA-256 of `record-grammar`, run synchronously over the whole file. Over an 8 MB text that held the object's thread for about half of the stretch (PLANE #61 J62's profile: 524 ms, 268 ms with a native digest). The same pattern verified an original in `#original` (photo, up to `COVER_MAX_BYTES`) and digested a derived copy's bytes in `#derive` and `#copyOne`.
+
+**Why the tests missed it.** No test measured the work of a large copy: every copy test used a document of a few hundred bytes to 5 MB that `copyNow` skips unread, and none counted which digest ran.
+
+**Change.** `NATIVE_DIGEST_MIN_BYTES` (1 MiB, exported) and one method `#digest(bytes)`: over the bound it asks `crypto.subtle.digest('SHA-256', ...)` (the constructor's `nativeDigest` seam), else, or when the native digest throws or answers anything but 64 hex digits, the pure-JS hash (the `jsDigest` seam). Both answer the same lower-case hex, so the identifier is unchanged (R-OLD: nothing stored changes). It replaces the four `createSha256().update(bytes).hex()` calls over file bytes (`#original`, `#derive`'s cover, `#copyOne`'s read check and its copy). `shaOf` (short text strings) is unchanged.
+
+**Tests** (`copy-digest.test.mjs`, new; `fixture.mjs`'s `world(extra)` passes deps through, so a test supplies the counting seam). Failing first: seen red (native digest asked 0 times, not once) against the old code with only the constant added.
+- R15: a 2 MiB document: native digest called once with 2 MiB, pure-JS zero; the document is made `clean`; its digest equals node's SHA-256 of the input and the old pure-JS output (byte for byte).
+- Controls: a 356-byte document: JS once, native zero, same digest as before; exactly 1 MiB is small, 1 MiB + 1 is large; native throwing, or answering "not a digest", falls back to the pure-JS hash with the same result; stored bytes that are not the capture's digest are still `failed` and stay queued, over the bound too.
+
+**Owed by plane (named for BOB).** `r10-filing-stall`, plane's own platform-side check (plane's tests, merged with plane's coupled merge): not mine, not run here.
+
+**For BOB (requirements).** R15 says nothing of how the bytes are digested; it may want one clause (the native digest over 1 MiB, the same digest). I changed no requirement.
+
+**Deferred.** None. **Found in other modules.** None (`record-grammar`'s `createSha256` stays pure-JS for small inputs by design; other modules that hash large bytes with it are not mine to judge).
+
+**Markers added (K5060).** None (no `fixtures-own` or `fixtures-generic`). **Words.** No new sentence.
+
+**Tests run.** case-carriage: 106 tests, 106 pass, 0 fail (103 before, plus 3). Impact set, modules using case-carriage: case-disclosures 115/115, case-authoring 256/256, case-check 34/34, scheduler 185/185, public-read 307/307, publication 179 pass of 180 (0 fail; the rest not a fail). Not run: affordances, op-declarations, answer-envelope, control-plane, plane (they reach this module only through its declared ops, unchanged).
+**Checks** (civicos-process, absolute root `/home/user/bio`): format: 0 failures; architecture case-carriage: 18 product files, 0 failures; coverage case-carriage: 23 of 23 ids named, 0 failures; ownership: see the push; `checks/run.mjs`: fixtures 2622 failures and words 1 failure (progressions) are inherited, identical with my change stashed, none in my files.
+
+Size (session_01VR43LyTQS6cPbKEumGEzr6): test runs 12, module lines 1740
