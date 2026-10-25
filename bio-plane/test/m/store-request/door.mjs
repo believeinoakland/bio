@@ -17,6 +17,7 @@
    archive's members promoted after `unpack`, no draft asked after a draft-due act (the door's own steps after the forward);
    no bootstrap credential at `claim` (store-assembly R92). The helpers `control-plane` hands its arms (`sha256Hex`,
    `captureKey`, `caseReader`) are re-made from earlier modules (record-grammar, store-assembly R2's key, admission). */
+import { generateKeyPairSync } from "node:crypto";
 import { OPS, OP_ALIASES, OP_STAMPS, ACT_GATE, NETWORK_NOTICES_PUBLIC_READS, CASE_CHECKER_PUBLIC_READS } from "../../../src/op-declarations/index.mjs";
 import { admit, aiCredentialPresented, presentedCredential, readerOf, bearerFence, aiCredentialMint, reviewGrantSecret,
          sourceOf, countryOf, callerViewer, SCRATCH } from "../../../src/admission/index.mjs";
@@ -45,19 +46,15 @@ import { CONNECTIONS_OPS, connectionsOp } from "../../../src/connections/ops.mjs
 import { ratificationOp } from "../../../src/ratification/ops.mjs";
 import { askOp, actionDraftOp, ACTION_DRAFT_OPS, askOnObject, draftOnObject } from "../../../src/store-assembly/index.mjs";
 import { innerRequest } from "../../../src/store-request/index.mjs";
+import { agentPackOp, airunDispatchOp, draftCheckOp, TEXT_CHECK, READ_TRANSLATE } from "../../../src/store-request/door-ops.mjs";
+import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
+import { mintTrace, memberRefOf } from "../../../src/signin-door/index.mjs";
 import { evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
 
 /** R17: the address a page's relative request is read against. */
 export const WORLD_ORIGIN = "https://group.example";
 /** R20: the declared ops the world's door cannot answer, each with its cause; closed (R20's test fails on any other). */
 export const WORLD_UNREACHED = Object.freeze({
-  agentpack: "control-plane's door renders the pack (`packOf`) from the affordances arm's answer; a later module",
-  airundispatch: "control-plane's door calls the object's `dispatchMemberRun` RPC, plane's Store method; no earlier module exports it",
-  textcheck: "control-plane's door shapes the draft (`draft.mjs` `checkedDraft`); a later module",
-  readtranslate: "control-plane's door shapes the draft (`draft.mjs` `checkedDraft`); a later module",
-  capturerequestplatformmark: "declared by op-declarations, answered by no module (no route, no arm): a dead declaration, reported",
-  capturerequestplatformunmark: "declared by op-declarations, answered by no module (no route, no arm): a dead declaration, reported",
-  capturerequestplatformhosts: "declared by op-declarations, answered by no module (no route, no arm): a dead declaration, reported",
 });
 /* control-plane R2, R53, R56, R63, R66: the names a table may hold that the real door answers as an op with no spec */
 const NOT_ROUTED = Object.freeze(["assistantset", "securitycount", "translationdraftrecord", "groupswitchset", "accountswitchset"]);
@@ -95,6 +92,12 @@ function stubOf(world) {
     fetch: (input, init) => world.store.dispatch(input instanceof Request && init === undefined ? input : new Request(input, init)),
     ask: (args) => askOnObject(world.ctx, world.env, args || {}),
     draft: (args) => draftOnObject(world.ctx, world.env, args || {}, { read: (op, params) => world.store.read(op, params) }),
+    dispatchMemberRun: (args) => {
+      const a = args && typeof args === "object" ? args : {}, asked = {};
+      for (const k of ["run", "by", "viewer", "at"]) if (a[k] !== undefined) asked[k] = a[k];
+      for (const k of ["trace", "memberRef"]) if (typeof a[k] === "string" && a[k] !== "") asked[k] = a[k];
+      return aiRunsOf(world.ctx, world.env).dispatchMemberRun(asked);
+    },
     groupFields: (args) => publicReadOf(world.ctx).groupFields(args && args.project ? { project: args.project } : {}),
   };
 }
@@ -259,6 +262,20 @@ async function answer(world, stub, env, page) {
                                  aiCred, storeName, stub });
   if (armed) return armed;
 
+  /* store-request R26–R28: the four ops the door shapes itself, through this module's functions (the hooks and stubs are the world's) */
+  if (op === "agentpack")
+    return agentPackOp({ url, headers: req.headers, gatedOp: (a) => gatedArm(a), stamps: { env, cls, viaSession, sessMember, sessViewer, sessIdentity,
+      sessRights, sessCaps, aiCred, aiViewer: cls === "ai" ? callerViewer(caller, { carry: false }) : undefined, storeName, stub,
+      grantMember: aiCred?.grant ? aiCred.principal : undefined } });
+  if (op === "airundispatch" || op === TEXT_CHECK || op === READ_TRANSLATE) {
+    const trace = viaSession ? mintTrace() : undefined;
+    const memberRef = viaSession ? await memberRefOf(env, actor) ?? undefined : undefined;
+    if (op === "airundispatch")
+      return airunDispatchOp({ stub, reqBody, who: actor, at: new Date(world.now()).toISOString(), trace, memberRef, storeName, cls });
+    return draftCheckOp({ op, stub, viaSession, sessMember, session: credential.token, reqBody, trace, memberRef, by: actor, viewer: sessViewer,
+      store: stored, storeName, cls });
+  }
+
   /* control-plane's own steps around the forward that the world re-makes: a credential's mint and a grant's secret */
   const isUpload = op === "captureupload" || op === "captureuploadpart";
   const length = /^\d+$/.test(page.headers.get("content-length") || "") ? Number(page.headers.get("content-length"))
@@ -407,7 +424,7 @@ async function publicAnswer({ world, stub, env, page, op, req, reqBody, credenti
 /** R20: whether the world's door answers `op` through an arm or function of its own (class (b)); a store route is class (a). */
 export function worldAnswers(op) {
   return ["whoami", "subscriptionsignin", "signintrace", "subscriptiondisconnect", "ask", "affordances", "registeraudit", "attest",
-          "monitor", "pagetranscribe", "claim", "login", "recover", "passwordresetlook", "passwordreset", "invitelook", "enroll",
+          "monitor", "pagetranscribe", "agentpack", "airundispatch", TEXT_CHECK, READ_TRANSLATE, "claim", "login", "recover", "passwordresetlook", "passwordreset", "invitelook", "enroll",
           "grouplanguages", "websiteinvite", "joinlinkinvite", "groupdescription", "handlecheck", "bootstrap",
           /* capture's arm (`capture`, `links`), ratification's (`ratify`), public-read's public arm (`publishedbytes`, `credit`) */
           "capture", "links", "ratify", "publishedbytes", "credit",
@@ -421,7 +438,7 @@ const resultOf = (a) => (a && a.json && a.json.result !== undefined ? a.json.res
 const refusedAct = (op, a) => new Error(`storeWorld: ${op} was refused: ${JSON.stringify(a && (a.json ?? a.type)).slice(0, 400)}`);
 const passwordOf = (handle) => `${handle}-world-passphrase`;
 
-/** R16: `signIn(world, handle, {admin?, capabilities?, device?})` → `{handle, member, token, session, act, read}`, by the real acts:
+/** R16: `signIn(world, handle, {admin?, capabilities?, device?})` → `{handle, member, token, password, session, act, read}`, by the real acts:
  *  the founder by `login` with the claim's password; any other member by the founder's `memberadd`, the invitation's `enroll` with
  *  her own password, then `login` (with `adminendorse` for `admin: true` and `membercaps` for `capabilities`). */
 export async function signIn(world, handle, { admin = false, capabilities = null, device = "own" } = {}) {
@@ -448,19 +465,32 @@ export async function signIn(world, handle, { admin = false, capabilities = null
     const founder = world.__founderSession || (world.__founderSession = await login(founderHandle || "admin", world.password));
     const as = { token: founder.token };
     /* an administrator is proposed by `memberadd` with role `admin` (changing administrators asks the founder's password again,
-       `reauth`, as the page's re-ask does) and endorsed by `adminendorse` while one is still owed */
+       `reauth`, as the page's re-ask does); while the team has two or more, the proposal is an invitation only once every
+       administrator has endorsed it (`adminendorse`, membership's 4.7), each by her own session */
     if (admin) await call("reauth", as, { body: { password: world.password } });
-    const added = await call("memberadd", as, { body: { memberId: handle, cover: `the world's member ${handle}`, ...(admin ? { role: "admin" } : {}) } });
+    const raw = await door({ url: `/api/?${new URLSearchParams({ op: "memberadd" })}`, init: { method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ memberId: handle, cover: `the world's member ${handle}`, ...(admin ? { role: "admin" } : {}) }) } }, as);
+    let added = resultOf(raw);
+    if (added && added.reason === "CONSENSUS_REQUIRED") {
+      for (const other of added.awaiting || []) {
+        const theirs = await login(other, passwords.get(other));
+        await call("reauth", { token: theirs.token }, { body: { password: passwords.get(other) } });
+        const voted = await door({ url: `/api/?${new URLSearchParams({ op: "adminendorse" })}`, init: { method: "POST",
+          headers: { "content-type": "application/json" }, body: JSON.stringify({ memberId: handle }) } }, { token: theirs.token });
+        added = resultOf(voted);
+        if (added && added.reason !== "CONSENSUS_REQUIRED" && !added.invite) throw refusedAct("adminendorse", voted);   /* a vote short of the last answers CONSENSUS_REQUIRED */
+      }
+    }
+    if (!added || added.ok === false || !added.invite) throw refusedAct("memberadd", raw);
     const password = passwordOf(handle);
     await call("enroll", null, { body: { invite: added.invite, handle, password } });
     passwords.set(handle, password);
-    if (admin && !(await call("whoami", { token: (await login(handle, password)).token })).administer)
-      await call("adminendorse", as, { body: { memberId: handle } });
+    if (admin) (world.__admins || (world.__admins = [])).push(handle);
     if (capabilities) await call("membercaps", as, { body: { memberId: handle, capabilities } });
     member = handle;
   } else member = handle;
   const signed = await login(isFounder ? (founderHandle || "admin") : handle, isFounder ? world.password : passwords.get(handle));
-  const me = { handle, member, token: signed.token,
+  const me = { handle, member, token: signed.token, password: isFounder ? world.password : passwords.get(handle),
                session: { t: signed.token, e: typeof signed.expires === "number" ? signed.expires : Date.parse(signed.expires) || 0, d: device === "own" ? "own" : "shared", w: handle } };
   me.act = (op, { query = {}, body = {} } = {}) => call(op, me, { query, body });
   me.read = (op, { query = {} } = {}) => call(op, me, { query });
@@ -525,6 +555,27 @@ export async function trail(world, as, projectId, label = "Stormwater trail") {
 /** R19: the profiles the team's administrator makes active (`profilesset`). Answers its answer. */
 export async function profiles(world, as, ids) {
   return as.act("profilesset", { body: { profiles: ids } });
+}
+
+/** R19 (J5, K5163): `queue(world, {obligations?, findings?, conditions?})` → `{obligations: [ids], findings: [], conditions: []}`: the founder's
+ *  queue made to hold that many obligations, by real acts: a member, `ruth`-like and made for the purpose, registers a signing key of
+ *  her own for each (`signerregisterown`, which tells every administrator: an OBLIGATION `signer-self-registered`, `queue-producers`
+ *  R14). A finding or a condition is raised by acts that need a project's dated actions or a recorded observation, which no act of the
+ *  door makes alone: asking for one is refused naming it, never guessed (the world's rule for an arm no test needs). */
+export async function queue(world, { obligations = 0, findings = 0, conditions = 0 } = {}) {
+  if (findings > 0 || conditions > 0)
+    throw new Error(`storeWorld: recipes.queue makes obligations only; ${findings} findings and ${conditions} conditions asked, and no act of the door raises one by itself`);
+  const founder = await signIn(world, "admin");
+  const holder = await signIn(world, "queue-member");
+  const made = [];
+  for (let i = 0; i < obligations; i++) {
+    const raw = generateKeyPairSync("ed25519").publicKey.export({ format: "der", type: "spki" }).subarray(-32);
+    const part = (b) => Buffer.concat([Buffer.from([0, 0, 0, b.length]), b]);
+    const keyB64 = Buffer.concat([part(Buffer.from("ssh-ed25519")), part(raw)]).toString("base64");
+    await holder.act("signerregisterown", { body: { keyB64, comment: `key ${i + 1}` } });
+    made.push(`OBLIGATION::signer-self-registered::${keyB64}`);
+  }
+  return { obligations: made, findings: [], conditions: [] };
 }
 
 /** R1's callers, as the door has them: `admission.admit`'s answer for `op` over the world's store, for a request presenting

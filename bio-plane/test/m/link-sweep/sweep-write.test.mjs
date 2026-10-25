@@ -170,3 +170,43 @@ test("R15 the module declares its three ops by key, and the ratify words say wha
   assert.ok(typeof RATIFY_NOTICE === "string" && RATIFY_NOTICE.length > 0, "the ratify screen's sentence is written once, by key, here");
   for (const d of Object.values(DECLARED_OPS)) assert.ok(typeof d.description === "string" && d.description.length > 0);
 });
+
+/* a project's own bundle carrying `gathering.json`: the project document, promoted by its owner, then revised to hold the sweeps */
+const projectWorld = (sweeps) => {
+  const { w } = listWorld({ list: "INFO-2026-0992-other", project: null });
+  const md = (id) => ["---", ...(id ? [`id: ${id}`] : []), "object_type: project", "schema: project@1", 'title: "The Sweeping Project"', "current_state: forming",
+    "prior_state: null", 'created: "2026-10-03T00:00:00Z"', 'last_updated: "2026-10-03T00:00:00Z"', "group: test-group",
+    "objective: Know whether the award was proper", "references: []", "state_history: []", "---", "", "## Objective", "", "Know it.", ""].join("\n");
+  const made = w.promotion.promote({ base: null, snapKey: "k-proj-1", author: "member:alice", meta: { object_type: "project" },
+    files: [{ path: "bundle.md", text: md(null) }] });
+  assert.equal(made.ok, true, JSON.stringify(made));
+  const P = made.bundleId;
+  w.st.sql.exec(`INSERT OR REPLACE INTO project_sight (project_id, setting) VALUES (?, 'discoverable')`, P);
+  w.inProject(P, { owner: "alice", joined: ["bob"] });
+  const t = JSON.stringify({ sweeps });
+  const rev = w.promotion.promote({ bundleId: P, base: w.record.head(P).bundleSha, snapKey: "k-proj-2", author: "member:alice", meta: { object_type: "project" },
+    files: [{ path: "bundle.md", text: md(P) }, { path: "data/gathering.json", text: t }] });
+  return { w, P, rev };
+};
+
+test("R14 a project's own bundle belongs to that project: the owner ratifies a sweep defined on it, a non-owner is refused, a bundle in no project has no owner", async () => {
+  const { w, P, rev } = projectWorld([sweepDef({ id: "minutes", ratified: false })]);
+  assert.equal(rev.ok, true, JSON.stringify(rev));
+  assert.deepEqual([w.record.bundleInfo(P).type, w.record.bundleInfo(P).project], ["project", null]);
+  const name = `${P}#minutes`;
+  const bob = await door(w, "sweepratify", { sweep: name, ratified: true }, { author: "member:bob" });
+  assert.deepEqual([bob.ok, bob.code], [false, "SWEEP_RATIFY_NOT_AN_OWNER"]);
+  const own = await door(w, "sweepratify", { sweep: name, ratified: true });
+  assert.equal(own.ok, true, JSON.stringify(own));
+  assert.deepEqual([own.ratified, own.ratified_by], [true, "member:alice"]);
+  const stop = await door(w, "sweepratify", { sweep: name, ratified: false }, { author: "member:bob" });
+  assert.deepEqual([stop.ok, stop.ratified], [true, false]);
+  /* control: a bundle in no project still has no owner (the R13 R14 test above) */
+});
+
+test("R4 R14 a ratified sweep on a project's own bundle is not due once that project is closed", async () => {
+  const { w, P } = projectWorld([sweepDef({ id: "minutes", ratified: true })]);
+  assert.equal(w.s.sweepDue(NOW_MS), NOW_MS);
+  w.stages[P] = "closed";
+  assert.equal(w.s.sweepDue(NOW_MS), null);
+});

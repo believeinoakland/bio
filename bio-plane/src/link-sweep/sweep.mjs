@@ -184,7 +184,8 @@ export class LinkSweep {
     const ratifying = touched.filter((t) => t.ratified);
     if (!ratifying.length) return null;
     const info = this.record.bundleInfo(c.bundleId);
-    const project = info ? info.project : (c.docFm && typeof c.docFm.project === "string" ? c.docFm.project : null);
+    /* a project's own bundle belongs to that project (R14, K5170) */
+    const project = info ? (info.type === "project" ? info.id : info.project) : (c.docFm && typeof c.docFm.project === "string" ? c.docFm.project : null);
     const member = author.startsWith("member:") ? author.slice(7) : author;
     let owns = false;
     try { owns = !!project && this.membership.isProjectOwner(project, member) === true; } catch { owns = false; }
@@ -286,8 +287,9 @@ export class LinkSweep {
 
   #closed(bundle) {
     const info = this.record.bundleInfo(bundle);
-    if (!info || !info.project) return false;
-    try { const st = this.projectStage.projectStage({ project: info.project, viewer: "class:daemon" }); return !!st && st.stage === "closed"; }
+    const project = info ? (info.type === "project" ? info.id : info.project) : null;
+    if (!project) return false;
+    try { const st = this.projectStage.projectStage({ project, viewer: "class:daemon" }); return !!st && st.stage === "closed"; }
     catch { return false; }
   }
 
