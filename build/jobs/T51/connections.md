@@ -85,3 +85,7 @@ Also in the record: the hand rows that can go; assertedBy left out of connect's 
 **Run.** connections tests 146 pass, 0 fail; users named by impact (explore real-connections, affordances t48-backing, corpus-export) 39 pass, 0 fail; format 178 modules 0 failures; words (connections) 0 failures; architecture 0; coverage 71 of 71; ownership 0.
 
 **Size (session_01KkQy33QFAKvdUAn9HUSQ1C): test runs 4, module lines 2379.**
+
+## J4 · COMPLETE
+
+Batch 6 done on job/T51/connections: 6 of 6 own fixture lines (4 contract markers: answer-envelope door-helpers, store-door store-replies x3; OVERLOADED 503 -> STORE_INTERNAL_ERROR 500; unheldStructure replaces the 404 hand-build). fixtures --list 0 failures. No fixtures-own/generic markers. 146 connections tests, users 39 pass; format, words, architecture, coverage, ownership 0. Requirement lines: none new. Record has Size line.
