@@ -28,7 +28,12 @@ function setup({ newText = "something else entirely", address = true, register =
   const pub = {
     ratified: { [CASE]: { case: CASE, edition: 1, project: P, parts: [{ bundle_id: OLD, capture_sha: a.sha }] } },
     // fixtures-contract: publication case-cited-parts
-    parts: ({ case: c }) => { asked.push(c); return pub.ratified[c] || { ok: false, reason: "NO_SUCH_CASE_EDITION" }; },
+    parts: ({ case: c }) => {
+      asked.push(c);
+      return pub.ratified[c]
+        ? { ok: true, ...pub.ratified[c], limit: 1000, truncated: false }
+        : { ok: false, reason: "NO_SUCH_CASE_EDITION", case: c, edition: null };
+    },
     cases: ({ after = "", limit = 200 }) => {
       const ids = [CASE, CASE2, CASE3].filter((c) => c > after).slice(0, limit);
       return { cases: ids, cursor: ids.length ? ids[ids.length - 1] : null };
