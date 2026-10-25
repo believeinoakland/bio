@@ -5,6 +5,7 @@ import * as steps from "../../src/steps/index.mjs";
 import { verifyInstall, servingVerdict, verifyServing, waitForAnswer, currentDeployment, rollBack, withByteLags, failedLags, logsStep, logpushCheck, filterExcludes,
   PER_REQUEST_DATASET, copyWorkers, namesFor, ARMED_SIGNERS, loadFleet, BINDING_OF, WAIT_BOUND_MINUTES } from "../../src/steps/index.mjs";
 import { RELEASE_KEYS, verifySshsig, NS_FLEET, fleetStatement } from "../../../bio-plane/src/sshsig.mjs";
+import { selftestAnswer } from "../../../bio-plane/test/m/instance-setup/fixtures.mjs";
 import { bootstrapVersions } from "../../../bio-plane/test/m/credentials/fixtures.mjs";
 import { session, sink, immediateTimers, account, sequence, release, chosen, armWith, restoreSigners, SIGNER, STRANGER, jres, cferr, cfok, realFetch, TOK } from "./world.mjs";
 
@@ -46,8 +47,9 @@ test("R27: an address that answers after the third try answers the reply; one th
   assert.ok(waits.slice(1).every(([a, b]) => a === 1 && b === 300));
   assert.equal(waits.length, 10, "at the start and every 30 seconds of a 300-second bound");
   w.restore();
-  w = account({ pre: grp, subdomain: "pfx", copy: { selftest: () => jres({ ok: true, bindings: { STORE: false } }) } });
-  assert.equal(await verifyInstall(BASE, PROBE), null, "ok without the store is not an answer");
+  const { status, ...unbound } = await selftestAnswer();
+  w = account({ pre: grp, subdomain: "pfx", copy: { selftest: () => jres(unbound, status) } });
+  assert.equal(await verifyInstall(BASE, PROBE), null, "a copy whose store is not bound is not an answer");
   w.restore();
 });
 
