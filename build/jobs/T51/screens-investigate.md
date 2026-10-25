@@ -388,3 +388,11 @@ BLOCKED · screens-investigate · cause: context (past half my window). Everythi
 **Helpers the workers wished store-request had:** recipes for an action, an inquiry, a hold with a reading that names entities, a graded capture, a project that cites entities, a binary hold, `me.post`.
 **todos I leave (name, K):** K5173 words (screen.person.expunge.marker, holds.heading/holder/capacity/empty, act.recordline.label.office, screen.calculation.column/.help/part/.help, screen.standard.rel.in.* x9, refusal.NO_COLUMN/NO_PART/NO_SUCH_COLUMN); K5178 (linecurrentthrough, known_through); REPORTED product defects above (person.test.mjs x5, organization.test.mjs x1, timeline.test.mjs x1 instance says, proceeding.test.mjs x1 declare, calculation.test.mjs x1 calc-set).
 Size (session_01HexPB818kMy65T42q8wh6t): test runs 40, module lines 3700 (partial; the successor re-measures)
+
+## J30 · REPORT
+
+REPORT · screens-investigate · Saved at K5183
+
+Done and pushed (job/T51/screens-investigate, tranche/T51 merged at 12c0b90f4f): causes 1-4 built with failing-first tests over storeWorld; op tables 164 -> 12 listed lines; checks format/architecture/coverage/words/ownership 0. Full detail in J29 (BLOCKED, context), which is the exact list of what remains.
+Half done: nothing uncommitted. Workers: all six finished; none running.
+Exact next step: (1) re-point the ~15 test files that still call the scripted `open()` (calculation, common, explore, fix2w2, fix3, fold, graph, money, pickers/picker-more, proceeding, standard, theme, ties) to `openAs(world, me, ...)`, then delete `plane()` and unused constants from fixtures.mjs (clears its 10 listed lines); (2) fix proceeding.mjs:195 `declare` (needs a court-kind standard chosen) and calculation `calc-set` (offer declared tables); (3) known_through source draw as the document title (K5178), linecurrentthrough after INTERFACE-SHELL #23; (4) COMPLETE with scratchpad/complete-draft.md contents and Size line.
