@@ -211,6 +211,6 @@ test("R32 reset fills every placeholder: the live page names the team in screen.
   assert.doesNotMatch(o.text, UNFILLED);
   assert.ok(!o.text.includes("town"), "never the short name");
   // control: a name that cannot be read still leaves no placeholder
-  const none = await open("reset", { fragment: { reset: bare.link }, world: bare.world, table: { groupidentity: { ok: false } } });
+  const none = await open("reset", { fragment: { reset: bare.link }, world: bare.world, table: { groupidentity: "none" } });
   assert.doesNotMatch(none.text, UNFILLED);
 });

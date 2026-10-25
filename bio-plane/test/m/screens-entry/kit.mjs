@@ -40,6 +40,97 @@ export async function enrol(world, founder, founderPassword, handle, { admin = f
   const login = await act(world, null, "login", { body: { handle, password, device: "own" } });
   return { handle, token: login.token, password };
 }
+
+/** The founder's session on a team she claimed before the handle was asked (credentials R1: a claim with no handle holds none; she signs in as `admin`). */
+export async function oldFounder({ env = {}, password = "founder long password" } = {}) {
+  const world = await worldOf({ claimed: false, env: { ACCOUNT_SEAL_SECRET: SEAL, ...env } });
+  await world.claim({ password });
+  const login = await act(world, null, "login", { body: { handle: "admin", password, device: "own" } });
+  return { world, as: { token: login.token }, password };
+}
+/** The password asked again before an act that keeps a key or changes administrators (credentials R66), as the shell asks it. */
+export const reauth = (world, as, password) => act(world, as, "reauth", { body: { password: password ?? world.password } });
+
+// ---- every screen in its states, over a team with everything set and a team with nothing ----
+const memo = new Map();
+/** `scenes(full)`: each screen drawn in the states the module draws it, once (the pages are read-only; a test that presses opens its own),
+ *  over the real store: a team with every part the founder can set already set (`full`), or with nothing set. Answers
+ *  `{pages: [{label, id, o}], acted: [{label, id, o}] (after an act), places}`; `places` the plane's own place names, record data. */
+export function scenes(full) {
+  if (!memo.has(full)) memo.set(full, buildScenes(full));
+  return memo.get(full);
+}
+async function buildScenes(full) {
+  const env = { ACCOUNT_SEAL_SECRET: SEAL, FILE_SCANNER: scannerBinding() };
+  const FPW = "a founder long password";
+  const mk = async () => {
+    const world = await worldOf({ env });
+    const admin = await world.signIn("admin");
+    if (full) {
+      await act(world, admin, "groupnameset", { body: { name: "River Town" } });
+      await act(world, admin, "groupdescriptionset", { body: { kinds: [], focus: "Leases", purpose: "Checking terms.", visibility: "public" } });
+      await act(world, admin, "grouplanguagesset", { body: { languages: ["en", "es"] } });
+      await act(world, admin, "profilesset", { body: { profiles: ["oakland-alameda"] } });
+      await act(world, admin, "entitycreate", { body: { kind: "office", label: "City Clerk", note: "Takes our requests" } });
+      await act(world, admin, "courtnoticeset", { body: { choice: "tell" } });
+      await act(world, admin, "hostingaccessset", { body: { holders: "Someone", note: null } });
+      await act(world, admin, "reauth", { body: { password: world.password } });
+      await act(world, admin, "groupkeyset", { body: { key: "sk-held-key-1234567890" } });
+      const cat = (await act(world, admin, "securitytoolcatalogue", {})).offered[0];
+      await act(world, admin, "securitytooladd", { body: { providerId: cat.provider_id, config: { region: "eu1" }, credentials: { api_key: "k", api_secret: "s" }, handlingDigest: cat.handling_digest, confirmRetention: true, use: "on_request" } });
+    }
+    return { world, admin };
+  };
+  const { world, admin } = await mk();
+  const mai = await world.signIn("mai");
+  const dev = await world.signIn("dev", { admin: true });
+  const invite = (await act(world, admin, "memberadd", { body: { memberId: "ann", cover: "Ann K." } })).invite;
+  const link = (await act(world, admin, "joinlinkenable", { body: { capabilities: ["contribute"], dailyCap: 20 } })).link;
+  const reset = (await act(world, admin, "passwordresetlink", { body: { member: "mai" } })).link;
+  const unclaimed = await worldOf({ claimed: false, env });
+  const old = await oldFounder({ env });
+  const pages = [], acted = [];
+  const page = async (label, id, opts) => { pages.push({ label, id, o: await open(id, opts) }); };
+  await page("front", "front", { world });
+  await page("front signedout", "front", { world, session: { state: "signedout", handle: "mai" } });
+  await page("front ended", "front", { world, session: { state: "ended", handle: "mai" } });
+  for (let n = 1; n <= 6; n++) await page("tour " + n, "tour", { subject: String(n), world });
+  await page("forgot", "forgot", { world });
+  await page("reset live", "reset", { world, fragment: { reset } });
+  await page("reset none", "reset", { world });
+  await page("setup unclaimed", "setup", { world: unclaimed, fragment: { boot: "otp" } });
+  await page("setup founder", "setup", { world, as: admin });
+  await page("setup old founder", "setup", { world: old.world, as: old.as });
+  await page("setup member", "setup", { world, as: mai });
+  await page("setup administrator", "setup", { world, as: dev });
+  await page("setup claimed", "setup", { world, fragment: { boot: "otp" } });
+  await page("join invitation", "join", { world, fragment: { invite } });
+  await page("join link", "join", { world, fragment: { join: link } });
+  await page("join none", "join", { world });
+  // a session the plane has locked: an own-device session idle for thirty minutes, on a team of its own (its clock moves)
+  const lockedTeam = await mk();
+  const lou = await lockedTeam.world.signIn("lou");
+  await lockedTeam.world.tick(31 * 60e3);
+  await page("front locked", "front", { world: lockedTeam.world, as: lou, session: { state: "locked", handle: "lou" } });
+  // the states only an act reaches: the codes shown, a handle chosen, an administrator invited, a password set, a member enrolled
+  const press = async (label, id, opts, op, values) => { const o = await open(id, opts); await o.press(op, { values }); acted.push({ label: id + " after " + op, id, o }); };
+  const fresh = await worldOf({ claimed: false, env });
+  await press("claim", "setup", { world: fresh, fragment: { boot: "otp" } }, "claim", { "su-handle": "rivera", "su-pw": "a long password!", "su-pw2": "a long password!" });
+  const old2 = await oldFounder({ env });
+  await press("handle", "setup", { world: old2.world, as: old2.as }, "founderhandleset", { "su-fh": "rivera" });
+  const t3 = await mk();
+  await reauth(t3.world, t3.admin);
+  await press("invite", "setup", { world: t3.world, as: t3.admin }, "memberadd", { "su-adm-id": "dev2", "su-adm-cover": "Dev" });
+  const t4 = await mk();
+  const codes = (await act(t4.world, t4.admin, "recoverycodesissue", { body: {} })).codes;
+  await press("recover", "forgot", { world: t4.world }, "recover", { "fg-handle": "founder", "fg-code": codes[0], "fg-pw": "a long password!", "fg-pw2": "a long password!" });
+  const t5 = await mk();
+  const inv5 = (await act(t5.world, t5.admin, "memberadd", { body: { memberId: "bob", cover: "Bob" } })).invite;
+  await press("enroll", "join", { world: t5.world, fragment: { invite: inv5 } }, "enroll", { "jn-handle": "bob", "jn-pw": "a long password!", "jn-pw2": "a long password!" });
+  const choices = (await act(world, admin, "profiles", {})).choices || [];
+  return { pages, acted, world, admin, places: choices.flatMap((c) => [c.name, c.id, ...(c.covers || [])]) };
+}
+
 /** A 1×1 PNG, the logo a team sets. */
 export const LOGO_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAHnOcQAAAAABJRU5ErkJggg==";
 /** The world's team as the founder's real acts make it: a name, a public description, a logo (each only when asked), the founder
@@ -276,7 +367,7 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
         const v = a.value;
         const empty = r.empty ? !!r.empty(v) : v === null || v === undefined || (Array.isArray(v) && !v.length);
         data[n] = { state: empty ? "empty" : "ok", value: v, refusal: null };
-      } else if (a.kind === "refused") data[n] = { state: "failed", value: null, refusal: { code: a.code, words: WORDS.has("refusal." + a.code) ? w("refusal." + a.code) : esc(a.code) } };
+      } else if (a.kind === "refused") data[n] = { state: "failed", value: null, refusal: { code: a.code, get words() { return WORDS.has("refusal." + a.code) ? w("refusal." + a.code) : esc(a.code); } } };   // read, so drawn, only by a screen that draws the failure
       else data[n] = { state: "failed", value: null, refusal: { code: null, words: w("state.failed", { reason: "" }) } };
       if (r.subject && a.kind === "refused" && NOT_FOUND.test(a.code)) o.notFound = true;
     }
