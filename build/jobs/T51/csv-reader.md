@@ -200,3 +200,7 @@ Fix round 10, final pass item 74, cause 1 (diag2-06 §6): **R26 met** (BOB strik
 - Checks (absolute root): format, architecture, coverage 26/26, ownership, words, fixtures: 0 failures. fixtures markers added: none. Deferred: none.
 - Found elsewhere: `bio-plane/dist/bio-plane.bundled.mjs` (plane bundle, includes csv-reader) is now stale; BOB regenerates. Door twin (upload `comma-minutes.txt` through control-plane's r8-kit) is for BOB to place (K5138).
 Size (session_016SDhXPpFVHc4twnonLuCEQ): test runs 4, module lines 1323
+
+## J11 · COMPLETE
+
+R26 met: isDelimitedText now requires the delimiter's modal count on a majority of lines for declared plain text; declared CSV/TSV keep presence. Failing-first seen red, csv-reader 99/99, users 855 pass 0 fail, all checks 0 failures, no fixtures markers added. REPORT: bio-plane/dist/bio-plane.bundled.mjs is stale (regenerate); door twin for control-plane to place. See record J10.
