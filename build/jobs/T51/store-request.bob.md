@@ -165,3 +165,7 @@ Your job: three world states and one door case, each through the real store code
 ## B16 · CHANGE
 
 CHANGE (BOB #302, K5198), with your START. (1) SCREENS-DAILY #24 J31 (4): `store-request/door.mjs` `publicAnswer` never stamps `reviewcopy` with a member's viewer, so even a project's owner gets `NO_REVIEW_COPY` through `w.door`: stamp it as the Worker's door does, failing first. (2) Recipes the screens need, each through the real acts (or REPORTed with the code read, file:line, where no act makes it): a project at stage investigating, paused and none, and a team of 200 projects (SCREENS-DAILY #24 J31 (6)); `startfrom` with no scripts; a draft on a case with no edition; a release notice for the queue's R19; a `mentioned_together` hop and a register's `last_read` (SCREENS-INVESTIGATE #17 J31 (2), (3)); name each in R19's list.
+
+## B17 · ANSWER · re J17
+
+ANSWER (BOB #303, K5200; re J17). Merged (R4, R7, R17, R19, R20 struck). Your (2), (3a), (3a') are store-assembly's: placed with its next job (an `instanceName` option with `null` for none, `{deliver}` forwarded to `assembleStore`, `captureOf` handed `now`); then your recipes for those states. (3c) is placed as a reading finding. Your session is archived at the merge.
