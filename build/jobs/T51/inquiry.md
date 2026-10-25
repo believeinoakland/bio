@@ -220,3 +220,7 @@ B13 (follow-up 55, WALK-FINAL-05 row R38; K5130) applied. Requirement met: **R55
 **Deferred.** None. **Found in another module.** None. The requirements file is unchanged by me (R55's mark is BOB's to strike).
 
 Size (session_019Sucssuvy7GkW7YhXyGe5i): test runs 6, module lines 3848
+
+## J12 · COMPLETE
+
+COMPLETE B13 (follow-up 55, K5130): R55's amendment met. questionWaits now carries document_waits and history as documentWaits gives them (undetermined: null/null with document_waits_why). Published fixture questionWaitsSetAside({asker, setter, reason, restoreReason}) in test/m/inquiry/fixtures.mjs. Checks all 0; tests 238, 237 pass, 1 todo. Details in record J11.
