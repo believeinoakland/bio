@@ -3,7 +3,7 @@
    `op=reading`. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, pressThenPass } from "./fixture.mjs";
+import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, pressThenPass, payingAccount } from "./fixture.mjs";
 
 const pdf = (text) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: (text.pages || []).length, notes: [] }) });
 
@@ -63,7 +63,7 @@ test("R71 R35 (reading-pipeline R35, C17): a transcription states, stores and an
   w.x.registerTranscriber("plane", {
     deployable: () => true, keptAway: () => null,
     transcription: ({ member: m, project, at }) => ({ member: m, project, at, act: `transcribe:abc:${at}`,
-      accounts: { accountFor: async () => ({ ok: true, kind: "apikey", level: "member", key: "sk-ant-SENTINEL-KEY-0000" }) },
+      accounts: { accountFor: payingAccount({ key: "sk-ant-SENTINEL-KEY-0000" }) },
       useCheck: async () => null,
       transcribe: async (q) => ({ ok: true, engine: "claude-test", version: "2026-01", pages: q.pages.map((p) => ({ page: p, text: `AI text of page ${p}` })) }) }) });
   const scan = { format: "pdf",

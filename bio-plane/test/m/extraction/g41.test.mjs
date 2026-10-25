@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { fresh, bundle, bucket, doc, sha } from "./fixture.mjs";
+import { fresh, bundle, bucket, doc, sha, homesOver } from "./fixture.mjs";
 import * as F from "../office-readers/fixtures.mjs";
 import { extractionOps, Extraction, READING_ROW_MAX_BYTES, PRIOR_READING_COPY_MAX_BYTES, CELLS_RANGE_MAX, SCREEN_WORDS } from "../../../src/extraction/index.mjs";
 import * as pipeline from "../../../src/reading-pipeline/index.mjs";
@@ -14,7 +14,7 @@ import * as pipeline from "../../../src/reading-pipeline/index.mjs";
 const MiB = 1048576;
 const XLSX_CT = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const DOCX_CT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
+const register = (rows) => homesOver(rows);
 const bytesOf = (s) => Buffer.byteLength(s);
 const viaOp = (w, d) => extractionOps(w.x, new URL(`http://x/reading?sha256=${d}&viewer=class:admin`), null, {}).reading();
 
