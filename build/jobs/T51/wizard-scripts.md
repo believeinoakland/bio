@@ -515,3 +515,20 @@ REPORT · other modules. (1) wizard-scripts t52g53 R50 fails on tranche/T51 as m
 ## J24 · COMPLETE
 
 COMPLETE · K5046 (c): ADMIN_ACTS (45) and ADMIN_SCREENS copied verbatim into wizard-scripts/admin.mjs and exported; registration unchanged (R40 test forbids defaulting; plane re-points in its job). Fixture noSuchWizard published and tested. r51.test.mjs 4/4; module 140/141 (the t52g53 R50 red, see REPORT, not mine). format, architecture, coverage 51/51, ownership green. Fixtures list: 1 left, LIMITS_UNREADABLE (FIX-E, answers). No fixtures-own/generic markers added. Users' suites green except the plane reds in the REPORT. Record: build/jobs/T51/wizard-scripts.md.
+
+## B23 · CHANGE (K5069) · WIZARD-SCRIPTS #25
+
+**Built.** Merged `tranche/T51`; the registry re-taken at the design commit `c752a602da`: `SOURCES.registry.commit` is `c752a602da`; `source/registry.json` is the tranche's `docs/development/ux-substrate/screens/registry.json`; the f72b2f8a4c file kept whole as `source/registry-f72b2f8a4c.json`; `screen-registry.mjs` regenerated (library and front doors unchanged). `build-data.mjs --check` passes. Counts: 91 screens (seven new: aiproviders, aiconnect, aimine, aiproject, aimoments, aitest, airesults), 652 acts (448 declared, 83 function, 121 owed naming 105 ops; `installregion` and `installaddress` among the owed).
+- Pins moved in `library`, `t47`, `t48`, `t50`, `t51`, `t51fr3` (commit, 91, 652, 121, 105; 101 net of the installer's four) and `t52g53` (the f72b2f8a4c file kept whole and asserted: 84 screens, 609 acts; the diff 564 to 652 adds acts only).
+- `r51.test.mjs`: the interface-shell equality test removed (architecture check: a later module may not be imported, even by a test); the by-path line stays as a comment for that module's Wave B job.
+
+**Proposed requirement line for BOB (R52), amending R50:** The registry is re-taken at `c752a602da`: `SCREEN_REGISTRY_SOURCE` becomes `c752a602da`, 91 screens and 652 acts (448 declared, 83 function, 121 owed naming 105 ops); the seven AI screens are new; every act of the earlier registry (`f72b2f8a4c`, kept whole beside it) is still registered. Test: `t52g53` and the pins.
+
+**Results.** Module suite 140/140. format 0; architecture 0; coverage 51 of 51; ownership 0; `build-data.mjs --check` passes. words: 1 failure, `r51.test.mjs:9` handlist (the 45 administrator acts as a hand list: the check counts 29 of them other modules' ops). R51's own test text asks for exactly this list ("the two sets equal the lists above, a one-name change failing"), so I kept it; BOB to decide (accept the line, or change R51's test to a form the check allows). fixtures: 1 line (`LIMITS_UNREADABLE`, FIX-E, answers).
+
+**Plane R24 is NOT green**, and the cause is not the registry: `screen.objective.purpose` and `screen.about-knocker.purpose` are missing from the words list (`setup-words`; the design's `words.json` / `build_words.mjs`), failing identically on the tranche before the re-take. The seven new AI screens have their words.
+
+**Found in other modules (REPORT).**
+- `op-declarations` `t50.test.mjs:391` (R73, R21): `registryActGaps` now reports `installregion` and `installaddress` (install screen, owed K4746 and K4937) as owed gaps. Either that test's `OWED_BY_FIX_ROUND` gains the two, or they are installer routes like `INSTALLER_ROUTES`' four (`data.mjs:69`, mine): a requirement-level reading (R41 says "four"), so I did not widen it; BOB to decide.
+- `screens-settings` `contract.test.mjs:75` (R39): `act.captureuploadabort.does` is not a word of the list; not registry-related.
+- Passing on my head: interface-shell 369, screens-wizards 75, translations 42, instance-setup 234, affordances 287.
