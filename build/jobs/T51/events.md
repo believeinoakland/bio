@@ -50,4 +50,4 @@ EVENTS #10 B3 complete on job/T51/events: C54, C6 met, events R53 as amended by 
 
 **Tests and checks.** events: 98 pass, 0 fail (93 before, 5 new). format 0 failures; fixtures 0 failures; words: no events finding; coverage: no events failure (other modules' ids listed unnamed are not mine); ownership 0 failures; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules (test files only).
 
-Size (session_01DAv9PSDWrsm3wEZhdCb73f): test runs 4, module lines 2795
+Size (session_01DAv9PSDWrsm3wEZhdCb73f): test runs 4, module lines 2807
