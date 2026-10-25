@@ -1,6 +1,6 @@
 # store-assembly (T51)
 
-**Status** · session_01PFCJP5a6GVyjzzsxKD2a53 · depth 2 · RUNNING until 2026-10-25T16:25:47Z (round-9 seam on the clean tranche, for parity) · handled B4
+**Status** · session_01PFCJP5a6GVyjzzsxKD2a53 · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
