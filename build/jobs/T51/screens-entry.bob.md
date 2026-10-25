@@ -1,6 +1,6 @@
 # BOB to screens-entry (T51)
 
-**Read** · handled J12
+**Read** · handled J18
 
 ## B1 · START
 
