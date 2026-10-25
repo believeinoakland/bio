@@ -690,3 +690,21 @@ Merged `tranche/T51` (31 commits) into the job branch first; `mail start` done. 
 - Not in the list but hand-built: `importregrade` (fr30b, the regrade answer). case-import publishes no regrade answer; state: a re-check that moves a finding under a lens.
 
 Size: this round not yet closed; the COMPLETE after #30 merges carries the line.
+
+## J43 · REPORT
+
+REPORT, fix round 11 (B49 / K5202). Pushed job/T51/screens-publish @ eb4b8c14f7 (record section "Fix round 11").
+
+DONE
+- Re-pointed to case-import's published answers: fr30 R55 and fr30b R58 (regrade, citeimported, rerun) now take their answers from `importedCase` and `rerunImport` (new in screens-publish fixtures.mjs). Expected ids are read from the answers. Commit aee8d9883a.
+- Fixtures list: 41 -> 37. Cleared: fr30:41, fr30b:188, :211, :219. No other line's provider publishes the answer it names.
+- Checks: format 0; coverage 80/80; ownership 0; run.mjs no finding in my files; impact: screens-publish 26/26, control-plane 2/134 (the two seam files that import these fixtures).
+
+NOT YET RUN
+- Module tests. Every file that imports the store world fails at load with DECLARED_OP_DISAGREES: readtranslate description (OP-GRADES #30). I will run them green after your CHANGE that merges #30, then post COMPLETE with the counts.
+- This round changes tests only; no product fix, so nothing to see fail first.
+
+FOR BOB TO PLACE
+1. `uses` of screens-publish needs case-import (architecture: 2 failures on fixtures.mjs until added). The import is lazy.
+2. case-import publishes no `citeimported` or `importregrade` answer. Those lines (fr30b citeimported x2, importregrade) need one, or a store-request recipe.
+3. 37 fixture lines remain, each a state no provider publishes yet. Grouped by provider with the state each lacks in the record, section "Fix round 11": review (4), case-authoring (publishpreflight, 3), capture (reattest x4, captureaccount), credentials, public-read (3), case-inputs (6), entities, sources, doorbell (knock x2), citation (sever, reinstate, citeimported x2), wizard-scripts (writinghelp x4; the model stream), action-holds (holdsdue), plus 6 accepted generic markers.
