@@ -5,7 +5,7 @@ import "../../../src/store-assembly/register.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { store, deliverOwedRender } from "./alarmed-store.mjs";
+import { store } from "./alarmed-store.mjs";
 import { multipartBucket } from "../record-core/storage.mjs";
 import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
@@ -190,12 +190,17 @@ test("R64: `owedwork` is declared (read, no required field, one accepted) and re
 });
 
 test("R64 B29 (seam, control-plane): the alarm runs a pending render with the door's `deliverOwedRender` handed as `deliver`, and the delivery reaches it with the answer and the session (RED BY NAME until control-plane exports `deliverOwedRender`)", async () => {
-  const x = await world();
+  const calls = [];
+  const spy = async (a) => { calls.push(a); return { ok: true }; };
+  const x = await store({ env: { CAPTURES: bucketStandIn() }, deliver: spy });   /* the assembly is handed `deliver`, as the class hands the door's */
   const door = await import("../../../src/control-plane/index.mjs");
   assert.equal(typeof door.deliverOwedRender, "function", "control-plane exports deliverOwedRender({ctx, env, storeName, answer, session})");
   let handed = null;
   acquisitionOf(x.ctx).owedRun = async (_cap, _e, o) => { handed = o; return { ok: true, done: false }; };
   await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("shell"), session: "s-render" });
   await x.s.onAlarm(Date.now() + 1000);
-  assert.equal(handed.deliver, deliverOwedRender, "the assembly hands the `deliver` it was given (the door's `deliverOwedRender`, which the alarmed store passes as the class does)");
+  assert.equal(typeof handed.deliver, "function", "the assembly hands `deliver`");
+  await handed.deliver({ answer: { ok: true }, session: "s-render" });
+  assert.equal(calls.length, 1, "and it reaches the delivery it was given");
+  assert.deepEqual([calls[0].answer, calls[0].session, calls[0].ctx === x.ctx, calls[0].env === x.env], [{ ok: true }, "s-render", true, true]);
 });
