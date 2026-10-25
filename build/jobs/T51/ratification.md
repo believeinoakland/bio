@@ -1,6 +1,6 @@
 # ratification (T51)
 
-**Status** · session_01BjXA2f1GgToabWomrTvi6L · depth 2 · WAITING ON BOB (J27) · handled B22
+**Status** · session_01BjXA2f1GgToabWomrTvi6L · depth 2 · WAITING ON BOB (J27) · handled B23
 
 ## J1 · REPORT
 
