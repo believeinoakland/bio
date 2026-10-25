@@ -455,3 +455,30 @@ Size (session_01FQzZSFC8jvCf4w2KhSK6C5): test runs 8, module lines 5
 2. The ones carried over in J30 remain open and unchanged: `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand; and `plane.declared.readtranslate` has two sentences (`bio-plane/src/plane/declared.mjs:13` and `bio-plane/src/store-assembly/declared.mjs:16`).
 
 Size (session_012vYFrTXPwUmqg22vRjid91): test runs 29, module lines 7 (`declared.mjs` +6/−1; test file `r54.test.mjs` +83 new).
+
+## J33 · COMPLETE
+
+**COMPLETE** · OP-GRADES #30 (B39, K5202): `readtranslate` hand row. Pushed `ec2ebbf51d` on `job/T51/op-grades` (tranche merged first at `261f327a5b`, no conflict; no rebase).
+
+**Change**
+- `bio-plane/src/op-grades/t48.mjs:71`: the hand row ends "(store-assembly R53)" (was "(plane R50)"). Nothing else in the row changed.
+- `bio-plane/test/m/op-grades/t37.test.mjs:24`: `subscriptionsignin`'s reason reads `declaredSentence("signin-door", …)` (was `"control-plane"`). The word `signin-door.declared.subscriptionsignin` exists and its text equals the hand row at `t37.mjs:53`. Before this edit `t37.test.mjs` failed at import with `UNKNOWN_WORD: no word control-plane.declared.subscriptionsignin`; I confirmed that on the tranche tip with my hand-row edit stashed. Found while running the module's suite; fixed here, in my tests path.
+
+**Failing-first test:** `bio-plane/test/m/op-grades/r50-readtranslate.test.mjs` (new; names R50). It imports store-assembly's `ASSEMBLY_DECLARED_OPS` through its export, registers `readtranslate` with `registerDeclaredOps`, and asserts `agreed: ["readtranslate"]`. Red before: `Error: DECLARED_OP_DISAGREES: readtranslate description`. Green after.
+
+**Starts (B39's stated check):**
+- `bio-plane/test/m/screens-action/action-fix.test.mjs` and `bio-plane/test/m/screens-settings/account.test.mjs`: 28 of 28 pass; the stores start.
+- `bio-plane/test/m/control-plane/r10-caseratify-chain.test.mjs`: the store starts and the registration passes; the R60 chain test then fails at line 27: "the longest chain awaited one after another is 13 of 46 calls (bar 12)". Its header says it is red by name until RATIFICATION #39 (one gate call) is merged. Not mine; not changed.
+
+**Suites:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/op-grades/*.test.mjs`: 162 tests, 162 pass, 0 fail, 0 cancelled, exited by itself. Before the t37 edit the same run was 159 pass, 1 fail (the t37 import error above).
+
+**Checks** (absolute root `/home/user/bio`): format 0 failures (178 modules); architecture `op-grades` 0 failures; coverage `op-grades` 54 of 54 live ids named, 0 failures; words `op-grades` 0 failures, handlist 0, unkeyed 29 (as before); fixtures `op-grades --list` 0 failures, no marker added; ownership `op-grades` 0 failures. `checks/run.mjs` prints no line naming op-grades.
+
+**Markers:** none added (no `fixtures-own` or `fixtures-generic`).
+
+**Deferred / found elsewhere (REPORT, for BOB):**
+1. `bio-plane/test/m/store-assembly/declarations.test.mjs`, test R83 (line range of the "copy window" check) is red: `actual: ['control-plane'], expected: ['control-plane', 'plane']`. Plane's `bio-plane/src/plane/declared.mjs` was deleted in Wave B (`51f57fa193`), so `plane` no longer exports `DECLARED_OPS` and the test's expectation is stale. This only became visible now that the store starts. Not op-grades; store-assembly owns the test.
+2. I did not finish the full `signin-door` and `store-assembly` suites. The run stalled after 118 passing tests and one R83 failure (above); I stopped it. They are not verified here.
+3. Carried over from J30, unchanged: `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand; affordances' R12 does not see the others' declared ops.
+
+Size (session_01ADU8ZLB34wMH6KE4yEcSe5): test runs 9, module lines 2
