@@ -1,23 +1,28 @@
 /* wizard-scripts R51 (K5046 (c)): `ADMIN_ACTS` and `ADMIN_SCREENS`, exported frozen data, and the fixture `noSuchWizard`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { seeded, V } from "./fixture.mjs";
 import { noSuchWizard } from "./fixtures.mjs";
 import { ADMIN_ACTS, ADMIN_SCREENS, SCREEN_REGISTRY, CIVICSMITH_LIBRARY } from "../../../src/wizard-scripts/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
-const ACTS = ["memberadd", "membercaps", "memberset", "adminendorse", "adminremove", "expertiseconfirm", "hostingaccessset",
-  "invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset", "joinlinkreplace",
-  "joinlinkoff", "courtnoticeset", "groupdescriptionset", "joindoors", "projectownerrescue", "groupkeyset", "groupkeyremove",
-  "groupkeyswitch", "aikeepaway", "personexpunge", "passwordresetlink", "signerset", "groupnameset", "grouplogoset",
-  "groupdomainset", "grouplanguagesset", "profilesset", "placewanted", "officesseed", "translationgrant", "translationrevert",
-  "securitytools", "securitytoolcatalogue", "securitytoolevents", "securitytooladd", "securitytooltest", "securitytoolremove",
-  "signeradd", "instancegroupseed", "scanmirror", "officeconfirm"];
+/* R51's list is read from the requirement it is written in (the contract, K3268): the backquoted names after "the administrator's
+   acts on the team:" and before "(45 names)" on R51's line. A test never hand-lists another module's operations. */
+const REQUIREMENTS = readFileSync(new URL("../../../../build/requirements/wizard-scripts.md", import.meta.url), "utf8");
+const R51_LINE = REQUIREMENTS.split("\n").find((l) => l.startsWith("- **R51**"));
+const R51_LIST = R51_LINE.slice(R51_LINE.indexOf("on the team:"), R51_LINE.indexOf("(45 names)"));
+const ACTS = [...R51_LIST.matchAll(/`([^`]+)`/g)].map((m) => m[1]);
+/* the control: an act a member does without administering, the first act of the join screen as the registry gives it */
+const REGISTRY = JSON.parse(readFileSync(new URL("./source/registry.json", import.meta.url), "utf8"));
+const MEMBER_ACT = REGISTRY.screens.find((s) => s.id === "join").acts[0].op;
 
-test("R51 ADMIN_ACTS holds exactly the 45 administrator acts and ADMIN_SCREENS exactly `updates`, both frozen", () => {
+test("R51 ADMIN_ACTS holds exactly the 45 administrator acts R51 names and ADMIN_SCREENS exactly `updates`, both frozen", () => {
+  assert.ok(R51_LINE, "R51 is in the requirement");
   assert.equal(ACTS.length, 45);
   assert.ok(ADMIN_ACTS instanceof Set && Object.isFrozen(ADMIN_ACTS));
   assert.deepEqual([...ADMIN_ACTS], ACTS, "the members and their order");
+  assert.ok(!ADMIN_ACTS.has(MEMBER_ACT), "a member's own act is not an administrator's");
   assert.ok(Array.isArray(ADMIN_SCREENS) && Object.isFrozen(ADMIN_SCREENS));
   assert.deepEqual([...ADMIN_SCREENS], ["updates"]);
 });
