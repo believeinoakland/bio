@@ -491,3 +491,10 @@ COMPLETE, both (re B34, K5105): `origin/tranche/T51` merged (no rebase); archite
 - Waiting on the 0.87.0 cut (G90), each on a built-in 0.86.0 install: wizard.test.mjs (tampered-bytes arm: `the built-in was uploaded` and `VERSION stays the built-in`; unsigned-copy arm: `VERSION stays the built-in (or, R20...)`); requirements R8 :296, R11 :391, R20 :786; t48 R55 :183; t50 R61 :133, R71 :564; realsize.test.mjs all 6.
 - Checks: fixtures 0 failures (accepted 5 = the J31 markers), format 0, coverage 75 of 75, words 0, ownership 0 (9 files), architecture 0.
 Size (session_01DCAWkiUVqfwYfbb2mBxLJd): test runs 46, module lines 3270
+
+## J34 · COMPLETE
+
+COMPLETE (re B35, follow-up 36, K5110). `origin/tranche/T51` merged (no rebase). t50.test.mjs:272's hand-built `TEAM` facts are now instance-setup's published `bootstrapFacts({team: "Lakeshore Tenants", members: 6, projects: 3, documents: 412, published: 1})`, awaited once at the top of the file and used for both the held-copy arm (:200) and the removal arm (:274); the R63 date assertion reads `installed_at` and `last_used_at` from that answer instead of the old literals. No line is left hand-built.
+- Checks (failure counts): fixtures 0 (accepted 5, the J31 markers), format 0, coverage 0 (75 of 75), words 0, ownership 0 (9 files), architecture 0.
+- Tests: t50 17 pass, 2 fail (R61 :133, R71 :564; R63 and R65 green with the real facts). Every other red is unchanged from J33 and waits on the 0.87.0 cut (G90): wizard.test.mjs 3 assertions, requirements R8/R11/R20, t48 R55, t50 R61/R71, realsize all 6.
+Size (session_01DCAWkiUVqfwYfbb2mBxLJd): test runs 48, module lines 3270
