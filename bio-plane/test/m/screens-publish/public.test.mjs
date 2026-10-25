@@ -1,12 +1,9 @@
 /* screens-publish R6 (the published case), R7 (another group's case), R8 and R16 (the docket) and R9 (the doorbell), on
  * interface-shell's served page: the two public pages drawn with no session and no credential, the imported case's
  * recreation and acts, the docket's entries, filing and posting signed with the member's key. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, PUBLISHED_CASE, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
+import { open, openWorld, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, PUBLISHED_CASE, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
 
 const carries = (body, want) => { for (const [k, v] of Object.entries(want)) assert.deepEqual(body[k], v, k); };
 const R = "because";
@@ -219,7 +216,7 @@ test("R9 the doorbell at /app/doorbell with no session: headed by the group's pu
 
 test("R9 R11 \"Hand it over\" sends the file, note and phrase with no credential, says it was received, and keeps no phrase", async () => {
   const phrase = "SENTINEL-PHRASE-correct-horse-battery";
-  const p = await open("/app/doorbell", { boot: PUBLIC });
+  const p = await openWorld("/app/doorbell"); // the real doorbell behind the page's door (store-request's world)
   choose(p, "db-file", new Uint8Array([104, 105]));
   await press(p, "knock", { values: { "db-note": "Inspection sheets.", "db-secret": phrase } });
   const k = last(p, "knock");

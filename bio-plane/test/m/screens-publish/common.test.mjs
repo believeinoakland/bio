@@ -2,9 +2,6 @@
  * served page: each screen with each of its reads pending, refused and unanswered draws that read in its own state and
  * no key the page holds no word for; after an act the screen reads again what it changed; no secret is kept; the
  * module's screens are the registry's, each drawing exactly its registry acts; it holds no English, only keys (R24). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

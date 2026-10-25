@@ -2,9 +2,6 @@
  * reads, the Photos step, the Ties step that prepares the edition, and signing inside the ceremony: when it becomes
  * public, one sitting of the member's key over every statement listed, signed and waiting or published, and the three
  * states that stop it (no key here, a phone, a member who is not an owner). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, drew, drewIn, day, clock, word, ops, press, fill, tick, last, ok, refusedIn, pending, keptKey, answerSign, until, PREFLIGHT, P, DR, C, SHA, B1, E1, PHOTO } from "./fixtures.mjs";

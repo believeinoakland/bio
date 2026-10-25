@@ -5,9 +5,10 @@
 import { webcrypto } from "node:crypto";
 import { SCREENS } from "../../../src/screens-publish/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
-import { boot, ok, refused, refusedIn, silent, pending, textNodes, settle, bytes, MEMBER } from "../interface-shell/harness.mjs";
+import { storeWorld } from "../store-request/fixtures.mjs"; // registers the declared ops (store-assembly) before anything reads them
+import { boot, counted, ok, refused, refusedIn, silent, pending, textNodes, settle, bytes, MEMBER } from "../interface-shell/harness.mjs";
 
-export { SCREENS, ok, refused, refusedIn, silent, pending, settle, bytes, word, hasWord };
+export { storeWorld, SCREENS, ok, refused, refusedIn, silent, pending, settle, bytes, word, hasWord };
 
 export const P = "PROJ-2026-0012";
 export const DR = "RVD-2026-0001";
@@ -132,7 +133,6 @@ export function plane(o = {}) {
     projectlist: ok({ projects: [{ id: P, title: "The Coliseum lease" }, { id: "PROJ-2026-0013", title: "Potholes" }] }),
     list: ok({ bundles: [{ bundle_id: "INQ-2026-0001", title: "Is the city repairing reported potholes?" }] }),
     entitieskind: ok({ ok: true, kind: "body", entities: [{ entity_id: "ENT-1", kind: "body", label: "Oakland Rent Board" }], count: 1, truncated: false, next: null }),
-    knock: ok({ ok: true, knockId: "KNOCK-1", sha256: SHA, bytes: 3, received: true, pseudonym: null }),
     ...o,
   };
 }
@@ -154,6 +154,21 @@ export async function answerSign(p, yes = true, sent = null) {
   await p.click(`[data-shell="${yes ? "dialog-yes" : "dialog-no"}"]`);
   await until(p, () => (sent ? p.byOp(sent).length > 0 : !signDialog(p)));
   return lines;
+}
+
+/** The served page at `path` with this module's screens over a real world (store-request, op-tables §5.3): the world's door answers every
+ *  op the `plane` table does not (the table keeps what a world cannot make: a fault, the model's stream, a state no act reaches). `as` is a
+ *  signed-in member of the world (`world.signIn`), or none for the public frame. Answers the page with its `world` and `as`. */
+export async function openWorld(path, o = {}) {
+  const world = o.world || (await storeWorld());
+  const as = o.as === undefined ? null : o.as;
+  const { door, session } = world.boot(as);
+  const got = [];
+  const p = await boot({ screens: SCREENS, plane: o.plane || {}, path, session, ...(o.boot || {}),
+    door: counted(async (req) => { const a = await door(req); got.push({ op: req.op, answer: a }); return a; }) });
+  await p.settle();
+  /* `answered(op)`: the world's last answer to `op` (its `result`), what a test reads its expected values from */
+  return Object.assign(p, { world, as, answered: (op) => { const a = got.filter((x) => x.op === op).at(-1); return a && a.answer.json ? (a.answer.json.result !== undefined ? a.answer.json.result : a.answer.json) : undefined; } });
 }
 
 /** The served page at `path` with this module's screens, over the plane. */

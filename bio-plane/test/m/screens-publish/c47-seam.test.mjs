@@ -5,9 +5,6 @@
  * (R41: the entry named by the title, else the address; the place the passage's), drawn by the real case page (R80, R76). No stand-in
  * for those four; the world is case-authoring's (the four plus publication, strength, inquiry, content, record on one host).
  * The signing key's ceremony (C51) is not this chain: the fixture's `ratify` commits the edition as op=caseratify does after its gate. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, press, tick, main, norm, word, ok } from "./fixtures.mjs";

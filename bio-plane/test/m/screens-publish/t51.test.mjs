@@ -1,9 +1,6 @@
 /* screens-publish R42 and R43 (T51-121) and DEC-342 on interface-shell's served page: the sign step's open requests for comment and
  * minutes comparisons, drawn once from `publishpreflight`'s sign step by the keys its rows carry; the docket's "Pressure marked on
  * this case"; and a failed read's words, never the builder's `detail`. Each sentence is asserted by its key (R24). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, tipOf, drew, drewIn, day, word, hasWord, ops, press, ok, refusedIn, refused, PREFLIGHT, P, DR, C } from "./fixtures.mjs";

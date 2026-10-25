@@ -1,8 +1,5 @@
 /* screens-publish, T51 fix round 4 (K4429), the seam tests: the page's own act into the real merged provider, no scripted double of it.
  * C28 (R9): "Hand it over" through the page into the real doorbell, and the Inbox list the real doorbell answers. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, press, choose, until, last, ok } from "./fixtures.mjs";

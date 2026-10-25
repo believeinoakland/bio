@@ -4,9 +4,6 @@
  * device key and progress line, a member named by handle, an act re-reading only what it changes, and the controls at 390 px.
  * A word the design has not written yet is drawn as its key (interface-shell R5) and asserted by that key; no test holds a sentence's
  * English (R24, K3810). Every request is compared with its owner's declaration by the harness (interface-shell R104). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, drew, day, ops, press, last, fill, tick, norm, until, keptKey, answerSign, ok, refusedIn, pending, word, hasWord, COPY, DOCUMENT, PREFLIGHT, FINDING, F1, B1, P, C, DR, SHA, publishedPlane, findingPath, signDialog } from "./fixtures.mjs";

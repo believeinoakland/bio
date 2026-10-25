@@ -1,8 +1,5 @@
 /* screens-publish, T51 fix round 4 (K4429), over a scripted plane: C40. The seam tests that need a provider's own instance are in
  * seam4.test.mjs. A sentence is asserted by its key (R24); every request is compared with its owner's declaration (interface-shell R104). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, drew, press, ok, PREFLIGHT, F1, P, DR, rawKeys, main } from "./fixtures.mjs";

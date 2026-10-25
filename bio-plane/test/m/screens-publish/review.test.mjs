@@ -1,12 +1,10 @@
 /* screens-publish R2 (the review copy) and R17 (the review copy, from outside), on interface-shell's served page: the
  * named readers and their acts, the reader's link shown once and kept nowhere, the comments and replies; and the outside
  * reader's page, its secret only in a request's body. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, tipOf, drew, drewIn, day, clock, word, ops, press, fill, last, ok, refused, refusedIn, plane, PREFLIGHT, COPY, P, DR, C, GRANT_SECRET, GRANT_UNTIL } from "./fixtures.mjs";
+import { statementAck } from "../case-inputs/fixtures.mjs";
 
 const PATH = `/app/review-copy/${P}`;
 /* Each field the act's owner takes, as sent; a reason the shell adds by the act's weight (interface-shell R11) aside. */
@@ -172,7 +170,7 @@ test("R23 review-outside draws \"What the case says it does not cover\" with the
 });
 
 test("R23 \"Acknowledge it\" sends statementack with the draft, the note as the reason and the secret, the secret in the body only, never in an address", async () => {
-  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ ok: true, acknowledged: true }) } });
+  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok(statementAck().ok) } });
   const n = p.requests.length;
   await press(p, "statementack", { values: { "ro-note": `  ${NOTE}  ` } });
   const r = last(p, "statementack");
@@ -187,8 +185,8 @@ test("R23 \"Acknowledge it\" sends statementack with the draft, the note as the 
 });
 
 test("R23 an empty note is refused and nothing is sent (control); STATEMENT_ACK_NO_REASON and the dead answer are drawn by their words and the note is kept", async () => {
-  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ ok: true }) } });
-  const { slot } = await press(p, "statementack", { values: { "ro-note": "   " } });
+  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok(statementAck().ok) } });
+  const { slot } = await press(p, "statementack", { values: { "ro-note": "   " } }); // case-inputs' real acknowledgement
   assert.equal(p.byOp("statementack").length, 0, "an empty note sends nothing");
   assert.ok((slot().textContent + text(p)).includes(word("refusal.STATEMENT_ACK_NO_REASON")), "an empty note, in the code's own words");
   const q = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: refusedIn("STATEMENT_ACK_NO_REASON") } });

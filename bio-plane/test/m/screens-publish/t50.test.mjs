@@ -3,9 +3,6 @@
  * answer; the confirmation's own explanation; a project's first case; publish with nothing prepared; the public page's
  * "Corrections and orders" and the public docket; the case editor's account; `publishedcase` read asynchronously. Each
  * sentence is asserted by its key (R24). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ADMIN } from "../interface-shell/harness.mjs";

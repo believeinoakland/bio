@@ -3,9 +3,6 @@
  * preparing and signing as separate steps, a reopened ceremony, the signing key, the owner's reply, the review copy for a member
  * and the minutes line. Each sentence is asserted by its key (R24); every request is compared with its owner's declaration by
  * the harness (interface-shell R104). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";

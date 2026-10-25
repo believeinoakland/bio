@@ -1,9 +1,6 @@
 /* screens-publish R1 (the case editor) on interface-shell's served page: the project's drafts and the chosen draft's
  * ladder, scope, what it leaves out with each acknowledgement, the people it names with their reasons, what changed;
  * each act sent with what its owner takes. */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, drew, word, ops, press, fill, last, ok, refusedIn, P, DR, C, plane, COPY } from "./fixtures.mjs";
