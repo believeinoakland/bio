@@ -755,3 +755,27 @@ Size (session_01Lv37K3RbyQhtwcLT3uXGvx): test runs 4, module lines 2658
 ## J44 · COMPLETE
 
 G174 done: fetch no longer reads a declared text type over non-text bytes as text (profiled_from_text was true, now false, as the same bytes declared octet-stream); format and content_type were already unchanged. Test r17-fetch-declared.test.mjs, red first. Acquisition 342/342, capture+doorbell 441/441; format, architecture, coverage, words, ownership 0 failures. Record: build/jobs/T51/acquisition.md (Round 9 batch D).
+
+## Round 9, job 103: G175 (R116) and G177 (R95), session_01FepaYctVekwaxhoDHB6QtY
+
+Applied
+- G175: `oweOf` (`acquisition/index.mjs`) now awaits the plane's `armJobs` (the store handed in's, else `opts.armJobs`; `armerOf`, `armAfter`) after every row the registrar accepts, so every `oweOf` user arms (parkFetch, the subresources rows, the render's owed row, the continuation's re-arm, the `unpack` row and `unpack`'s own `owedLater`); `keepLaterOf` (the `keep` row) arms the same way. A refused row arms nothing; an arm that throws never fails the capture (the next alarm is the backstop).
+- G177: a thrown call takes ONE clock reading for the cut and the close (`stageTimes(t, at)`, `stageEnd(t, at)`); the normal close reads once too. The answer's `timings.stages` and `total_ms` equal the caller's `opts.timings` object exactly.
+- Requirement lines: R95 and R116 were amended by BOB; I removed their "not yet met: T51" markers in `build/requirements/acquisition.md` now that tests name them (K4210: the ownership check lists that one file, accepted at the merge).
+
+Tests (red first, then green)
+- `r9-registrar.test.mjs` (3 new, all naming R116; red on the tip: `armed()` false after fetch, keep, subresources, unpack and via `opts.armJobs`; green now). Controls: a refusing registrar arms nothing; a throwing arm leaves the capture 200; a small capture arms nothing.
+- `stage-times.test.mjs`: the C5a test now asserts exact equality (my own version; LOAD-REDS' edit not merged); new G177 test with `performance.now` moving 1.5 ms per read after the throw (red: read 7 vs 4; green now).
+- control-plane `t51-round7-seam` "G61 twin": green alone (`node --max-old-space-size=6144`, 18/18 in the file, the twin 25.6 s). It was also green alone on the tip with my change stashed (it is the load-dependent test LOAD-REDS found; the module-level red above is the failing-first proof of the missing arm).
+
+The four fields
+- cause (G175): `oweOf` registered the row and never called `armJobs`, so the plane's alarm was set for a later time; (G177): three clock readings (`stageTimes`, `t.end`, `stageEnd`) for one cut.
+- why missed: no test of an owed row read whether the alarm was armed; the C5a test never moved the clock between reads.
+- red first: as above.
+- platform check: G175 L (control-plane twin run alone, Node, 6 GB); G177 N.
+
+Checks (this session)
+- acquisition suite: tests 346, pass 346, fail 0. capture 349/349, doorbell 97/97, control-plane acquire-timings/server-timing/door-phases + plane r9-jobs 55/55, fail 0.
+- `node checks/run.mjs`: format 0, architecture 0, coverage 0 (6927 of 6927), channels 0, words 0 (inline 0, plain 0, testcopy 0). Ownership: 1 listing, `build/requirements/acquisition.md` (accepted, K4210); the other four changed files are mine. No sentence added; no word row owed.
+
+Size (session_01FepaYctVekwaxhoDHB6QtY): test runs 9, module lines 4457
