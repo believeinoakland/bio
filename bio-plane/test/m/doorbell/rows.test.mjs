@@ -79,6 +79,7 @@ test("R21 R4 R5 R6 R7 R8: each of this module's raisers answers with its row's c
 /* K874: a negative control for each C-85 refusal by name: the case just inside its bound is admitted. */
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const helpers = { json, requiredArgument: (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }),
+  // fixtures-contract: answer-envelope door-helpers
   storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502),
   doAnswer: async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
     return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined }; } };
