@@ -11,7 +11,7 @@ export { ok, refused, refusedIn, bytes, MEMBER, ADMIN, word, hasWord };
 /* A fresh real world with the members a test names signed in by the real acts: `members({ mai: ["contribute", "create_projects"], rosa: [] })` answers `{ world, mai, rosa }`. */
 export async function members(spec = {}, opts = {}) {
   const { storeWorld } = await import("../store-request/fixtures.mjs");   
-  const world = await storeWorld({ group: null, ...opts });   /* the world already records its team from INSTANCE_NAME (store-assembly K5149) */
+  const world = await storeWorld({ ...opts });   /* the world already records its team from INSTANCE_NAME (store-assembly K5149) */
   const out = { world };
   for (const [handle, capabilities] of Object.entries(spec)) out[handle] = await world.signIn(handle, capabilities && capabilities.length ? { capabilities } : {});
   return out;

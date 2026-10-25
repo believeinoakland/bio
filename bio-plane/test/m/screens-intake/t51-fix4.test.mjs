@@ -10,7 +10,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { openWorld, members, text, main, btn, fill, press, refused, word, says, DOCUMENT_STUB, untitled } from "./page.mjs";
+import { ok, openWorld, members, text, main, btn, fill, press, refused, word, says, DOCUMENT_STUB, untitled } from "./page.mjs";
 import { SCREENS, SCREEN_KEYS } from "../../../src/screens-intake/index.mjs";
 import { generate } from "../../pdfgen.mjs";
 
@@ -121,6 +121,37 @@ test("R49 (C9) a captureseenin the plane refuses at the press is drawn by its wo
   assert.ok(says(p, "refusal.CAPTURE_NOT_HELD"), "the refusal in the row's words");
   assert.equal(anchors(p, t.HOLDER).length, 1);
   assert.ok(!says(p, "screen.capture.address.filedhere", { project: "Housing repairs" }));
+});
+
+test("R49 (G73) a home project the member cannot read: no filedhere sentence and never the home's id; the project it is filed under is named, and the held list's marker is drawn without words", async () => {
+  const t = await heldElsewhere();
+  /* the owner names the home to a viewer who may read it; here the home answers no name (its document and its project's list entry are not read for her): the two reads the screen names it by */
+  const unreadable = (as, op, hide) => async (req) => {
+    const hidden = hide(req);
+    if (hidden) return hidden;
+    const { op: _op, ...query } = req.query;
+    return ok(await as.read(op, { query }));
+  };
+  const plane = {
+    image: unreadable(t.mai, "image", (req) => (req.query.id === t.HOME ? refused("NOT_FOUND", "No such project.", 404) : null)),
+    projectlist: async () => ok({ projects: (await t.mai.read("projectlist")).projects.filter((x) => x.id !== t.HOME) }),
+  };
+  const p = await open(t, t.mai, `/app/capture/address/${t.MINE}`, plane);
+  await pressCapture(p);
+  assert.equal(p.byOp("captureseenin").length, 1, "it is filed here all the same");
+  assert.ok(!says(p, "screen.capture.address.filedhere", { project: "Housing repairs" }) && !says(p, "screen.capture.address.filedhere", { project: "" }), "no filedhere sentence");
+  assert.ok(says(p, "capture.filed.project", { project: "Pothole repairs" }), "the project it is filed under is named");
+  assert.ok(!text(p).includes(t.HOME) && !text(p).includes("housing-repairs"), "never the home's id");
+  const held = await open(t, t.mai, `/app/held/${t.MINE}`, plane);
+  const choice = held.doc.getElementById("ch-who");   /* the document is xan's: Everyone's holds it */
+  choice.value = "all";
+  await held.fire(choice, "change");
+  await held.settle(); await held.settle();
+  const row = main(held).querySelector(`#pick-held-${t.HOLDER}`);
+  assert.ok(row, "the project's list holds it");
+  const mark = main(held).querySelector("[data-also-here]");
+  assert.ok(mark && mark.textContent.trim() === "", "the marker is drawn without words");
+  assert.ok(!text(held).includes(t.HOME), "and never the home's id");
 });
 
 /* ---------- FC-23: the login control's words ---------- */

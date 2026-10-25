@@ -103,6 +103,9 @@ const everyone = async (p) => {
   return p;
 };
 const day = (iso) => dayOf(iso);
+/* the design's row for an empty Mine (DEC-435) is on the words list once setup-words is regenerated: its key where held, else the empty state's */
+const mineEmpty = hasWord("screen.held.empty.mine") ? "screen.held.empty.mine" : "screen.held.empty";
+const wordOr = (k, alt) => (hasWord(k) ? k : alt);
 const age = (d) => (d === 0 ? word("screen.held.age.today") : d === 1 ? word("screen.held.age.one") : word("screen.held.age", { days: d }));
 
 test("R4 the screen reads heldcaptures; a list with no row is drawn in the screen's own empty sentence", async () => {
@@ -113,7 +116,7 @@ test("R4 the screen reads heldcaptures; a list with no row is drawn in the scree
   assert.deepEqual(p.byOp("heldcaptures").map((r) => (r.query.state ? "state:" + r.query.state : r.query.fields ? "fields:" + r.query.fields : r.query.bundle_ids ? "bundle_ids" : "page")).sort(), ["bundle_ids", "fields:picker", "state:set_aside"]);
   const none = await desk({ mai: CAN });
   const e = await open(none);
-  assert.ok(says(e, "screen.held.empty"));
+  assert.ok(says(e, mineEmpty), "R70: on Mine, the empty state of Mine");
   /* control: a read that failed is drawn as failed, never as empty (the store's silence is a fault no act can make) */
   const f = await open(t, "/app/held", t.mai, { plane: { heldcaptures: refused("STORE_SILENT", "store silent (test fixture)") } });
   /* interface-shell R61: a refusal with its own words is drawn as those words alone */
@@ -610,4 +613,71 @@ test("B6 a row names its project by its name, never its record id; a project the
   const zrow = (await rowsOf(t.mai, z.archive.bundle))[z.archive.bundle];
   const zip = await scripted(t, [{ ...zrow, files: zrow.files.map((f) => ({ ...f, name: null })) }]);
   assert.ok(!text(zip).includes(zrow.files[0].document) && !text(zip).includes("INFO-2026"));
+});
+
+test("R69 Set aside asks its reason: picked rows with no reason typed send nothing and draw the field's refusal; a reason typed sends heldsetaside with it, and the row moves to Set aside with who, when and why", async () => {
+  const t = await desk({ mai: CAN });
+  const a = await hold(t, t.mai, { name: "City budget" });
+  const p = await open(t);
+  await pick(p, a.bundle);
+  const none = await press(p, "heldsetaside", { reason: "", sel: ":not([data-id])" });
+  assert.equal(p.byOp("heldsetaside").length, 0, "nothing is sent");
+  assert.ok(none.slot().textContent.trim().length > 0, "the field's own refusal is drawn");
+  assert.deepEqual(Object.keys(await rowsOf(t.mai, a.bundle)), [a.bundle], "and the owner still holds it");
+  await press(p, "heldsetaside", { reason: "Wrong year.", sel: ":not([data-id])" });
+  assert.deepEqual(p.byOp("heldsetaside")[0].body, { ids: [a.bundle], reason: "Wrong year." });
+  const kept = (await asideOf(t.mai, a.bundle))[a.bundle].set_aside;
+  assert.equal(kept.reason, "Wrong year.");
+  assert.ok(text(p).includes(`${word("screen.held.asideby", { author: kept.author, reason: kept.reason })} ${day(kept.at)}`), "who, when and why");
+});
+
+test("R70 the Held list: Mine by default, Everyone's by the choice, each reading the list again; the empty state of each", async () => {
+  const t = await desk({ mai: CAN, rosa: CAN });
+  const mine = await hold(t, t.mai, { name: "Mai's notice" });
+  const hers = await hold(t, t.rosa, { name: "Rosa's notice" });
+  const p = await open(t);
+  assert.ok(main(p).querySelector(`#pick-held-${mine.bundle}`) && !main(p).querySelector(`#pick-held-${hers.bundle}`), "Mine: what the viewer handed in");
+  assert.ok(p.byOp("heldcaptures").some((r) => r.query.member === t.mai.member), "read for the viewer");
+  const before = p.byOp("heldcaptures").length;
+  await everyone(p);
+  assert.ok(main(p).querySelector(`#pick-held-${mine.bundle}`) && main(p).querySelector(`#pick-held-${hers.bundle}`), "Everyone's: both");
+  assert.ok(p.byOp("heldcaptures").length > before && p.byOp("heldcaptures").slice(before).some((r) => r.query.member === undefined && r.query.state === undefined), "the choice reads the list again, without a member");
+  /* the choice's words and the empty states */
+  assert.ok(says(p, wordOr("screen.held.who.mine", "ai.whose.own")) && says(p, wordOr("screen.held.who.all", "ai.whose.group")));
+  const none = await desk({ mai: CAN });
+  const e = await open(none);
+  assert.ok(says(e, mineEmpty), "none of Mine");
+  await everyone(e);
+  assert.ok(says(e, "screen.held.empty"), "none of Everyone's");
+  /* a member's own empty Mine is not the team's: rosa holds one, mai none */
+  const mixed = await desk({ mai: CAN, rosa: CAN });
+  await hold(mixed, mixed.rosa, { name: "Rosa's notice" });
+  assert.ok(says(await open(mixed), mineEmpty));
+});
+
+test("R70 past a page of 50 the list says more are waiting with a door to the next page, drawn only when the read gives next; the second page by next, with a door back", async () => {
+  const t = await desk({ mai: CAN });
+  for (let i = 0; i < 52; i++) await t.world.recipes.hold(t.mai, `Held ${String(i).padStart(2, "0")}`, `Held capture number ${i}.\n`);
+  const p = await open(t);
+  const first = p.byOp("heldcaptures").find((r) => !r.query.state && r.query.fields === "picker");
+  assert.equal(first.query.limit, "50");
+  const page = await t.mai.read("heldcaptures", { query: { limit: 50, fields: "picker", member: t.mai.member } });
+  assert.ok(page.truncated === true && typeof page.next === "string" && page.next, "the owner says there are more, and where");
+  assert.equal(main(p).querySelectorAll('input[id^="pick-held-"]').length, 50);
+  assert.ok(says(p, "screen.held.more", { count: 50 }));
+  const nextWord = wordOr("screen.held.next", "document.read.next");
+  const door = main(p).querySelectorAll('button[data-act="heldcaptures"]').find((b) => b.textContent.includes(word(nextWord)));
+  assert.ok(door, "its door");
+  assert.equal(main(p).querySelectorAll('button[data-act="heldcaptures"]').filter((b) => b.textContent.includes(word(wordOr("screen.held.back", "document.read.prev")))).length, 0, "no way back on the first page");
+  await p.click(door);
+  await idle(p);
+  assert.ok(p.byOp("heldcaptures").some((r) => r.query.after === page.next), "read from the answer's next");
+  assert.equal(main(p).querySelectorAll('input[id^="pick-held-"]').length, 2, "the rest");
+  assert.ok(!says(p, "screen.held.more", { count: 2 }), "no sentence of more on the last page");
+  assert.ok(main(p).querySelectorAll('button[data-act="heldcaptures"]').some((b) => b.textContent.includes(word(wordOr("screen.held.back", "document.read.prev")))), "a door back");
+  /* control: a team of fewer than a page draws neither */
+  const small = await desk({ mai: CAN });
+  await hold(small, small.mai, { name: "One" });
+  const q = await open(small);
+  assert.ok(!main(q).querySelector("[data-more]"));
 });
