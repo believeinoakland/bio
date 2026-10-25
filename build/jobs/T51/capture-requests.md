@@ -228,3 +228,26 @@ Found in other modules (not changed here, for BOB to place):
 - screens-intake tests hand-build answers for capture-request ops this module serves: capture.test.mjs:274,280,646; common.test.mjs:35; phone390.test.mjs:37; r8-add-reads.test.mjs:18; t51-credentials.test.mjs:33,57; t51-fix2.test.mjs:101. Their re-pointing is screens-intake's job.
 
 Size (session_01KmKzc6DsB65KPdNxW7UEBJ): test runs 4, module lines 2590.
+
+## Completion (B10 · re-issue of K5148 cause 1 as K5161; the route is already on the tranche)
+
+**The cause was done before this START.** B10 (K5161) asks for the same change as B9 (K5148): route `capturerequestplatformmark`, `capturerequestplatformunmark` and `capturerequestplatformhosts`. My J9 completion (B9) already did it: the three ops are routed in `captureRequestsOps` (`bio-plane/src/capture-requests/index.mjs`, from line 1909, the three entries at 1923–1925), with the test `bio-plane/test/m/capture-requests/platform-ops.test.mjs` (R46). That commit, `82e135a332`, is on `tranche/T51` and on this branch. Reading the START's premise ("your route map wires none", "today each answers as an unknown op") against the code shows it is out of date. I made no new code change this round.
+
+**Checked this round, from the tranche as it stands.**
+- Read whole: `build/plan/starts-T51-F10/capture-requests-k5161.txt` (this START's text), `build/plan/fix-round-10-T51.md` §3 item 71 (1), `bio-plane/src/capture-requests/index.mjs` lines 1625–1680 (`markPlatform`, `unmarkPlatform`, `platformHosts`) and 1906–1930 (the ops map), `bio-plane/test/m/capture-requests/platform-ops.test.mjs`.
+- Route wiring: the ops map is spread into the plane's and store-assembly's maps (`bio-plane/src/plane/store.mjs:922`, `bio-plane/src/store-assembly/assemble.mjs:831`). Both spread `captureRequestsOps`, so the three ops reach the control plane.
+- The test calls each op through `captureRequestsOps(c, url, body)`: mark, a repeated mark (`already: true`), unmark, a repeated unmark, the hosts list, and the controls (an unmarked host is not listed; a mark by an absent, empty, `class:ai`, `class:member` or `token:` viewer is refused `CAPTURE_PLATFORM_MARK_REFUSED` (C-28.22) and writes nothing).
+- Which screen offers the mark is not touched (UX-DESIGN's).
+
+**Tests and checks** (from the repository root / absolute product root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/capture-requests/*.test.mjs`: 131 of 131 pass; the run exited by itself, no `--test-force-exit`.
+- `platform-ops.test.mjs` alone: 1 of 1 pass (R46).
+- `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs capture-requests`: 0 failures. `checks/coverage.mjs capture-requests`: 58 of 58 live ids named, 0 failures (R46 is named by `platform-ops.test.mjs`). `checks/words.mjs capture-requests`: inline 0, plain 0, testcopy 0, missingkey 0, unkeyed 55; 0 failures. `checks/ownership.mjs capture-requests tranche/T51 job/T51/capture-requests`: 1 file changed by capture-requests, 0 failures. `checks/fixtures.mjs /home/user/bio capture-requests --list`: 0 failures; the six accepted markers are the existing ones (`sweep.test.mjs:23–25` and the rest of the list). No marker added this round.
+
+**Deferred.** None.
+
+**Found in another module.** None.
+
+**Why the tests missed it (for the record, from J9).** The module's own tests called `markPlatform`, `unmarkPlatform` and `platformHosts` directly, and no test passed through the ops map, so the missing route was not seen. `platform-ops.test.mjs` is the test that goes through the map.
+
+**Size (session_014DGUrY7wCujoHhs8uwNL3N): test runs 3, module lines 2590.** (Test runs: the module directory run, then `platform-ops.test.mjs` run twice to confirm its result. Module lines: `bio-plane/src/capture-requests/*.mjs`, all files of the module.)
