@@ -72,3 +72,31 @@ Size (session_01CnYEEbvuMRb9yWAomBsnUW): test runs 3, module lines 0
 ## J3 · COMPLETE
 
 COMPLETE fix round 10 Wave A batch 4. Published docket/fixtures.mjs: coreDue, docketEntryRead, pressureMarks (real code, each tested in fixtures.test.mjs). Re-pointed fixture.mjs:137 to publication's stampEditionRefusal (court.test.mjs R25). No fixtures-own/fixtures-generic markers added. fixtures --list docket: 0 failures. Docket 90/90; impact 0 modules; format, architecture, coverage (31/31), ownership 0 failures. Notes: plan's 'docketEntry' is docketPressureOf (no docketEntry exists); 'a docket not asked' (filings docket:{}) has no real answer, so pressureMarks gives a refused-kind answer instead. Details in build/jobs/T51/docket.md.
+
+## Fix round 10, follow-up 37 (B4, DOCKET #13, session_01XN4PpTaXJFq2tHmnnK6J94)
+
+**Done.** Test files only; no product code changed. Published `coreDueKinds()` in `bio-plane/test/m/docket/fixtures.mjs` (new export): the real `coreDue` answer over real acts in two cases of two projects. Case `CASE-2026-0101` (project P, alice manages) holds a subject's response and a subject's statement (both edition 1), edition 2 ratified with its "What changed" statement ("Corrected the totals."), and a tension on load-bearing finding `INQ-2026-0001-transfers` (candidate `CAND-1`, state `open`). Case `CASE-2026-0202` (project Q, dave manages) holds a subject's statement (edition 1, from `OTHER_SUBJECT`), edition 2 ratified with "What changed" ("Added a permit."), and a tension on load-bearing `INQ-2026-0003-permits` (`CAND-3`, `open`). Returns `{world, case, caseQ, manager, other, response, statementP, statementQ, due, otherDue}`: `due` is alice's real `coreDue({viewer})` (4 items), `otherDue` dave's (3 items). Test: `fixtures.test.mjs`, "R9 fixtures: coreDueKinds ...", which checks kinds, refs, `since`, each statement's `edition`, each edition's `what_changed`, each tension's `member` and `state`, that each manager is told of her own case alone, and that `coreDue({case: caseQ, viewer: alice})` is empty and `one case when named` equals `otherDue`.
+
+**Markers.** None added (`fixtures-own`, `fixtures-generic`): every answer comes from docket's real code at test time.
+
+**Note for the user's re-point (queue-producers, its own job).** Every `statement` item the real code answers carries its `edition`: `docket_record.edition` is NOT NULL and `docketFile` refuses a missing edition (`DOCKET_NO_EDITION`), so no real act yields a statement without one. queue-producers' `words.test.mjs:217` ("a statement stated with no edition") therefore has no real producer. BOB to decide (K4426): the no-edition branch is tested by a stand-in there, or the requirement is read as always carrying an edition.
+The two lines still hand-built on `coreDue` are queue-producers' `docket.test.mjs:36` and `words.test.mjs:217` (op-table); they re-point to `coreDueKinds` in that module's job.
+
+**Deferred:** none.
+
+**Found in other modules:** none caused by this job. `checks/run.mjs` lists failing fixture lines in other modules (2,248 fixture failures, 2,255 `FAIL` lines product-wide); none names a file under `bio-plane/test/m/docket/` or `bio-plane/src/docket/`.
+
+**Ran.**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/docket/fixtures.test.mjs`: 4 pass, 0 fail.
+- Docket suite, `bio-plane/test/m/docket/*.test.mjs`: 91 pass, 0 fail.
+- Users named by `node build/plan/impact.mjs origin/tranche/T51 HEAD` (docket, action-holds, filings, queue-producers, queue; 58 test files): 388 pass, 0 fail.
+- `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio docket --list`: 0 failures.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio docket`: 17 product files, 0 failures.
+- `checks/coverage.mjs /home/user/bio docket`: 31 of 31 live requirement ids named by a test, 0 failures.
+- `checks/words.mjs /home/user/bio docket`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0; 0 failures.
+- `checks/ownership.mjs /home/user/bio docket tranche/T51 job/T51/docket`: 3 files changed by docket, 0 failures.
+- `checks/run.mjs /home/user/bio`: exit 1 for the product-wide fixture failures above (none in docket's files); words 0 failures.
+- `bio-plane/src/setup-words/build.mjs --check`: stale `rows.mjs` note only, as expected; no refusal names docket.
+
+Size (session_01XN4PpTaXJFq2tHmnnK6J94): test runs 5, module lines 0
