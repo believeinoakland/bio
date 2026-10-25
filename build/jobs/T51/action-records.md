@@ -51,3 +51,19 @@ Checks after the change:
 - `checks/ownership.mjs /home/user/bio action-records tranche/T51 job/T51/action-records`: reports 0 files, because tranche/T51 already carries my COMPLETE merge; the only diff against tranche is index.mjs in the commit above, inside the module's paths.
 
 Size (session_01VQcZbhMadSrXupkovniD1S): test runs 2, module lines 1036
+
+## J4 · COMPLETE
+
+Entries applied: B3 START (fix round 10, Wave B batch 6): the 2 own fixture lines, both FIX-E (providers earlier in the order).
+- `fixture.mjs:175` (progressions/definitionRead): the stand-in's refusal is now `definitionRead({})`, progressions' real `NO_KEY` answer.
+- `fixture.mjs:194` (standards/standardReadWorld): the stand-in's not-seen answer is now standards' real `standardRead` for the stranger viewer, from `standardReadWorld()`.
+- Markers added: none (no `fixtures-own`, no `fixtures-generic`). Deferred: none. Product code unchanged.
+
+Checks:
+- `checks/fixtures.mjs . action-records --list`: 0 failures (answer 0).
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/action-records/*.test.mjs`: 34 pass, 0 fail.
+- format 0 failures; architecture 0 failures; coverage 20 of 20 ids named, 0 failures; words 0 failures (action-records).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178 (a test-fixture change only, no user of action-records affected).
+- `checks/ownership.mjs`: 1 file changed, 0 failures.
+
+Size (session_01NsKSfvCegNhmvxjABmWB8Z): test runs 2, module lines 1036
