@@ -386,3 +386,7 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . case-authoring --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/case-authoring.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B32 · CHANGE
+
+re J27 (K5083): merged with `doc-clean`, `retrieval`, `standards` added to your `uses`; your six `fixtures-generic` markers (`disclosures.test.mjs:68-73`, one-letter codes proving order) read and accepted. ratification is now merged with `preflightRefusal` in `bio-plane/test/m/ratification/fixtures.mjs`: merge `origin/tranche/T51`, re-point `preflight.test.mjs:409`, fixtures for case-authoring at zero, then COMPLETE.
