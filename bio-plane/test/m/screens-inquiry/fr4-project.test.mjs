@@ -4,8 +4,8 @@
  * expectation is a word read by key (R44), never copied. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, press, fill, says, word, section, projectWith, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
+import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
+import { open, storeWorld, main, press, fill, says, word, section, projectWith, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
 import { onPhone } from "./phone.mjs";
 
 const at = "/app/project/" + P;
@@ -14,26 +14,40 @@ const options = (p, id) => p.doc.getElementById(id).querySelectorAll("option").m
 
 /* ------------------------------------------------------------------------------------------------------------------ C35 */
 
-const P2 = "PROJ-2026-0012", P3 = "PROJ-2026-0013";
-const QA = "INQ-2026-0050-days", QB = "INQ-2026-0060-days", QC = "INQ-2026-0061-unique", QO = "INQ-2026-0200-orphan";
 const SAME = "How many days passed between the report and the repair?";
-/* `list`'s rows as retrieval R63 answers them: no project on a row; `projectlist`'s as project-roster R26 (`id`, `name`, `question_count`);
-   `projectquestions`' as basis-versions R50 (`items: [{inquiry, title}]`) */
-const row = (id, title) => ({ bundle_id: id, object_type: "inquiry", current_state: "open", title, last_updated: "2026-10-05T09:00:00Z" });
-const ELSEWHERE = {
-  list: ok({ bundles: [row(Q, "Is the city repairing reported potholes within seven days?"), row(Q2, "Does closed mean repaired?"), row(QA, SAME), row(QB, SAME), row(QA, SAME), row(QC, "A title only one has"), row(QO, "Nobody draws on this")] }),
-  projectlist: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs", question_count: 2 }, { id: P2, name: "Bridge repairs", question_count: 1 }, { id: P3, name: "Culvert repairs", question_count: 2 }, { id: "PROJ-2026-0014", name: "Empty one", question_count: 0 }] }),
-  projectquestions: (r) => ok(r.query.project === P2 ? { ok: true, project: P2, items: [{ inquiry: QA, title: SAME }], cursor: null }
-    : r.query.project === P3 ? { ok: true, project: P3, items: [{ inquiry: QB, title: SAME }, { inquiry: QC, title: "A title only one has" }], cursor: null }
-    : r.query.project === P ? { ok: true, project: P, items: [{ inquiry: Q, title: "Is the city repairing reported potholes within seven days?" }, { inquiry: Q2, title: "Does closed mean repaired?" }], cursor: null }
-    : { ok: true, project: r.query.project, items: [], cursor: null }),
+const SEVEN = "Is the city repairing reported potholes within seven days?";
+const OWN = { capabilities: ["contribute", "create_projects"] };
+/** The world (store-assembly's store with the real door, K5054): `ann` owns the project "Pothole repairs" she started, with a document held in it and two questions drawn into it (`q`, `q2`), by the real acts. */
+const worldOf = async () => {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const doc = (await world.recipes.hold(ann, "Policy memo", "The Director shall repair each reported pothole within seven days.", project)).bundle;
+  const q = (await world.recipes.question(ann, project, { title: SEVEN, text: SEVEN, legs: [{ target: doc, role: "supports" }], draw: true })).id;
+  const q2 = (await world.recipes.question(ann, project, { title: "Does closed mean repaired?", text: "Does closed mean repaired?", legs: [{ target: doc, role: "supports" }], draw: true })).id;
+  return { world, ann, project, doc, q, q2, at: "/app/project/" + project };
 };
+/** The page at `path` as `as` reads it, over the world's door (`plane` overrides only the ops it names). */
+const pageOf = async (world, as, path, o = {}) => {
+  const { door, session } = world.boot(as);
+  const p = await boot({ screens: SCREENS, door, session, path, ...o });
+  await p.settle();
+  return p;
+};
+/* `list`'s rows as retrieval R63 answers them: no project on a row */
+const row = (id, title) => ({ bundle_id: id, object_type: "inquiry", current_state: "open", title, last_updated: "2026-10-05T09:00:00Z" });
 
 test("R16 R1 C35 'Draw on a question from elsewhere': two questions of two projects with the same title are told apart, each option naming its project (`screen.document.cite.option`); one option per question id; control: a question whose title is its own, and one no project draws on, are the title alone", async () => {
   /* fix round 4 (C14; R16, R1): a project is named where the project is known: a list row's `project`, else, for the questions that share a title, their own `image`'s;
-     no `projectquestions` is read for any project but this one's. The two same-titled questions' images state their projects. */
-  const images = { [QA]: { "bundle.md": `---\nid: ${QA}\nproject: ${P2}\n---\n` }, [QB]: { "bundle.md": `---\nid: ${QB}\nproject: ${P3}\n---\n` } };
-  const p = await open(at, { images, plane: ELSEWHERE });
+     no `projectquestions` is read for any project but this one's. The two same-titled questions' own documents state their projects. */
+  const w = await worldOf();
+  const made = (title, project) => w.world.recipes.question(w.ann, project, { title, text: title, draw: Boolean(project) }).then((r) => r.id);
+  const bridge = await w.world.recipes.project(w.ann, "Bridge repairs"), culvert = await w.world.recipes.project(w.ann, "Culvert repairs");
+  await w.world.recipes.project(w.ann, "Empty one");
+  const QA = await made(SAME, bridge), QB = await made(SAME, culvert), QC = await made("A title only one has", culvert), QO = await made("Nobody draws on this", null);
+  /* the list is scripted over the real ids: the same question listed twice (a row the world's own `list` never repeats) is the case the option is drawn once for */
+  const list = ok({ bundles: [row(w.q, SEVEN), row(w.q2, "Does closed mean repaired?"), row(QA, SAME), row(QB, SAME), row(QA, SAME), row(QC, "A title only one has"), row(QO, "Nobody draws on this")] });
+  const p = await pageOf(w.world, w.ann, w.at, { plane: { list } });
   const opts = options(p, "project-draw-question");
   const text = (id) => (opts.find(([v]) => v === id) || [])[1];
   assert.deepEqual(opts.map(([v]) => v), [QA, QB, QC, QO], "one option per question id (QA is listed twice and drawn once), the project's own two left out");
@@ -43,48 +57,68 @@ test("R16 R1 C35 'Draw on a question from elsewhere': two questions of two proje
   assert.equal(text(QC), "A title only one has", "control: a title that is its own needs no project to tell it apart");
   assert.equal(text(QO), "Nobody draws on this", "control: no project of hers draws on it, its title alone");
   /* the reads: this project's questions once; no other project's; the image of each question that shares a title and no other */
-  assert.deepEqual(p.byOp("projectquestions").map((r) => r.query.project), [P], "no other project's questions are read");
-  assert.deepEqual(p.byOp("image").map((r) => r.query.id).filter((x) => x === QA || x === QB || x === QC || x === QO).sort(), [QA, QB], "an image only for the two that share a title");
-  /* sending the choice of the second still sends its id and her note */
-  const d = await open(at, { images, plane: { ...ELSEWHERE, drawquestion: (r) => ok({ ok: true, cited: [r.query.inquiry], alreadyCited: [] }) } });
+  assert.deepEqual(p.byOp("projectquestions").map((r) => r.query.project), [w.project], "no other project's questions are read");
+  assert.deepEqual(p.byOp("image").map((r) => r.query.id).filter((x) => x === QA || x === QB || x === QC || x === QO).sort(), [QA, QB].sort(), "an image only for the two that share a title");
+  /* sending the choice of the second still sends its id and her note, and the real act draws it */
+  const d = await pageOf(w.world, w.ann, w.at, { plane: { list } });
   fill(d, { "project-draw-question": QB, "project-draw-note": "the same crews" });
   await press(d, "drawquestion");
-  assert.deepEqual([d.byOp("drawquestion")[0].query.project, d.byOp("drawquestion")[0].query.inquiry], [P, QB]);
+  assert.deepEqual([d.byOp("drawquestion")[0].query.project, d.byOp("drawquestion")[0].query.inquiry], [w.project, QB]);
+  assert.ok((await w.ann.read("projectquestions", { query: { project: w.project } })).items.some((x) => x.inquiry === QB), "the question is drawn into the project");
 });
 
 /* ------------------------------------------------------------------------------------------------------------------ C63 */
 
-/* planopen's answer as action-plans R1 gives it: `{ok, id, project, title, state, opened_by, at, subjects}`, the id `<PLN-year-n>-plan` (doc.mjs `planId`) */
-const OPENED = (title) => ({ ok: true, id: "PLN-2026-0003-plan", project: P, title, state: "open", opened_by: "mai", at: "2026-10-10T09:00:00Z",
-  subjects: [{ subject: { kind: "inquiry", inquiry: Q }, support: null }] });
 /* A stand-in for screens-action's `plan` screen (a later module this one may not import, P4): it only reads the plan
    its address names, which is all these tests ask of it (the plan page opened, and that plan read). */
 const PLAN_SCREEN = Object.freeze({ id: "plan", reads: (view) => ({ plan: { op: "plan", query: { id: String(view.subject || "") }, subject: true } }),
   render: () => "", acts: [], words: [] });
 const WITH_PLAN_SCREEN = { screens: [...SCREENS, PLAN_SCREEN] };
+const plansOf = async (w) => (await w.ann.read("plans", { query: { project: w.project } })).items;
 
 test("R1 R36 C63 'Plan what to do' on the project page opens the plan page it made, over the op's real answer and the real `plan` screen; control: a project that has a plan opens another with the same press, and links its plan by name; a refusal opens none", async () => {
-  const p = await open(at, { boot: WITH_PLAN_SCREEN, plane: { planopen: (r) => ok(OPENED(r.body.title)), plan: ok({ ok: true, id: "PLN-2026-0003-plan", project: P, title: "Ask the committee", state: "open", subjects: [], options: [] }) } });
-  fill(p, { "project-plan": "Ask the committee", "project-plan-about": Q });
+  const w = await worldOf();
+  const p = await pageOf(w.world, w.ann, w.at, WITH_PLAN_SCREEN);
+  fill(p, { "project-plan": "Ask the committee", "project-plan-about": w.q });
   await press(p, "planopen");
-  assert.deepEqual(p.byOp("planopen")[0].body, { project: P, title: "Ask the committee", subjects: [{ kind: "inquiry", inquiry: Q }] });
-  assert.equal(p.location.pathname, "/app/plan/PLN-2026-0003-plan", "the plan page opens with the plan as subject");
-  assert.equal(p.byOp("plan")[0].query.id, "PLN-2026-0003-plan", "and it reads that plan");
+  assert.deepEqual(p.byOp("planopen")[0].body, { project: w.project, title: "Ask the committee", subjects: [{ kind: "inquiry", inquiry: w.q }] });
+  const made = await plansOf(w);
+  assert.equal(made.length, 1, "the plan was made");
+  assert.equal(p.location.pathname, "/app/plan/" + made[0].id, "the plan page opens with the plan as subject");
+  assert.equal(p.byOp("plan")[0].query.id, made[0].id, "and it reads that plan");
   /* control: the project has one plan already (`plansFor`'s items): it is linked by name, and the press opens the new one */
-  const had = await open(at, { boot: WITH_PLAN_SCREEN, plane: { plans: ok({ ok: true, items: [{ id: "PLN-2026-0001-plan", project: P, title: "Earlier plan", state: "open" }], truncated: false, cursor: null, limit: 200 }),
-    planopen: (r) => ok(OPENED(r.body.title)) } });
-  assert.equal(section(had, "project.work.title").querySelector('a.cs-ref[href="/app/plan/PLN-2026-0001-plan"]').textContent, "Earlier plan", "the plan she has is a link to it");
-  fill(had, { "project-plan": "Ask the committee", "project-plan-about": Q });
+  const earlier = (await w.ann.act("planopen", { body: { project: w.project, title: "Earlier plan", subjects: [{ kind: "inquiry", inquiry: w.q2 }] } })).id;
+  const third = (await w.world.recipes.question(w.ann, w.project, { title: "Third", text: "Is it so?", draw: true })).id;   /* a matter is in one open plan at a time */
+  const held = new Set((await plansOf(w)).map((x) => x.id));
+  const had = await pageOf(w.world, w.ann, w.at, WITH_PLAN_SCREEN);
+  assert.equal(section(had, "project.work.title").querySelector(`a.cs-ref[href="/app/plan/${earlier}"]`).textContent, "Earlier plan", "the plan she has is a link to it");
+  fill(had, { "project-plan": "Ask the committee again", "project-plan-about": third });
   await press(had, "planopen");
-  assert.equal(had.location.pathname, "/app/plan/PLN-2026-0003-plan");
-  /* control: a refused press stays */
-  const r = await open(at, { boot: WITH_PLAN_SCREEN, plane: { planopen: refusedIn("PLAN_NO_TITLE", "no") } });
-  fill(r, { "project-plan": "x", "project-plan-about": Q });
+  const fresh = (await plansOf(w)).filter((x) => !held.has(x.id));
+  assert.equal(fresh.length, 1, "the press made another plan");
+  assert.equal(had.location.pathname, "/app/plan/" + fresh[0].id);
+  /* control: a refused press stays (the refusal is scripted: no title the page sends is one the owner refuses) */
+  const r = await pageOf(w.world, w.ann, w.at, { ...WITH_PLAN_SCREEN, plane: { planopen: refusedIn("PLAN_NO_TITLE", "no") } });
+  fill(r, { "project-plan": "x", "project-plan-about": w.q });
   await press(r, "planopen");
-  assert.equal(r.location.pathname, at);
+  assert.equal(r.location.pathname, w.at);
 });
 
 /* ------------------------------------------------------------------------------------------------------------------ C81 */
+
+/* the phone measurement below is scripted: `onPhone` (phone.mjs) answers the page from a plane table only and takes no world door (it would need `world.route(as)`) */
+const P2 = "PROJ-2026-0012", P3 = "PROJ-2026-0013";
+const QA = "INQ-2026-0050-days", QB = "INQ-2026-0060-days", QC = "INQ-2026-0061-unique", QO = "INQ-2026-0200-orphan";
+/* `projectlist`'s as project-roster R26 (`id`, `name`, `question_count`);
+   `projectquestions`' as basis-versions R50 (`items: [{inquiry, title}]`) */
+const ELSEWHERE = {
+  list: ok({ bundles: [row(Q, "Is the city repairing reported potholes within seven days?"), row(Q2, "Does closed mean repaired?"), row(QA, SAME), row(QB, SAME), row(QA, SAME), row(QC, "A title only one has"), row(QO, "Nobody draws on this")] }),
+  projectlist: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs", question_count: 2 }, { id: P2, name: "Bridge repairs", question_count: 1 }, { id: P3, name: "Culvert repairs", question_count: 2 }, { id: "PROJ-2026-0014", name: "Empty one", question_count: 0 }] }),
+  projectquestions: (r) => ok(r.query.project === P2 ? { ok: true, project: P2, items: [{ inquiry: QA, title: SAME }], cursor: null }
+    : r.query.project === P3 ? { ok: true, project: P3, items: [{ inquiry: QB, title: SAME }, { inquiry: QC, title: "A title only one has" }], cursor: null }
+    : r.query.project === P ? { ok: true, project: P, items: [{ inquiry: Q, title: "Is the city repairing reported potholes within seven days?" }, { inquiry: Q2, title: "Does closed mean repaired?" }], cursor: null }
+    : { ok: true, project: r.query.project, items: [], cursor: null }),
+};
 
 const LONG = "a-very-long-member-handle-without-any-breaks-at-all";
 const PEOPLE = [{ handle: "mai", state: "joined", owner: 1, owner_since: "2026-10-01T09:00:00Z" }, { handle: "dev", state: "joined", owner: 1 }, { handle: LONG + "1", state: "joined", owner: 1 },
@@ -142,18 +176,24 @@ test("R1 R113 every act of the project declares the reads it changes (names in t
   for (const a of PROJECT.acts) {
     assert.ok(a.rereads === "all" || (Array.isArray(a.rereads) && a.rereads.every((n) => names.includes(n))), a.op + " declares rereads: " + JSON.stringify(a.rereads));
   }
-  const specs = PROJECT.reads({ subject: P, me: { member: "mai", handle: "mai" } });
-  const ops = [...new Set(Object.values(specs).map((s) => s.op))];
+  const ops = [...new Set(Object.values(PROJECT.reads({ subject: P, me: { member: "mai", handle: "mai" } })).map((s) => s.op))];
   const counts = (p) => Object.fromEntries(ops.map((o) => [o, p.byOp(o).length]));
-  const p = await open(at, { plane: { projectbarset: ok({ ok: true }) } });
+  /* the real state: ann owns the project; mai joined it, invited by her */
+  const w = await worldOf();
+  const mai = await w.world.signIn("mai", { capabilities: ["contribute"] });
+  await w.ann.act("projectinvite", { query: { projectId: w.project, handle: "mai" }, body: {} });
+  await mai.act("projectjoin", { query: { projectId: w.project }, body: {} });
+  const specs = PROJECT.reads({ subject: w.project, me: { member: "ann", handle: "ann" } });
+  const p = await pageOf(w.world, w.ann, w.at);
   const before = counts(p);
   await press(p, "projectbarset", { reason: "the bar" });
   const after = counts(p);
   const grew = ops.filter((o) => after[o] > before[o]);
   assert.deepEqual(grew, [specs.bar.op], "exactly the declared read is repeated");
   assert.equal(p.byOp("projectbarset").length, 1);
-  /* control: a refused act re-reads nothing */
-  const r = await open(at, { plane: { projectbarset: refusedIn("NOT_PERMITTED", "no") } });
+  /* control: a refused act re-reads nothing (the bar she saw is stale: mai set one after the page was drawn, so the owner refuses with `BAR_STALE`) */
+  const r = await pageOf(w.world, w.ann, w.at);
+  await mai.act("projectbarset", { body: { project: w.project, capture: "B", expected: { capture: null, connection: null }, reason: "a bar" } });
   const b0 = counts(r);
   await press(r, "projectbarset", { reason: "the bar" });
   assert.equal(r.byOp("projectbarset").length, 1, "it was sent");
@@ -162,13 +202,15 @@ test("R1 R113 every act of the project declares the reads it changes (names in t
 
 /* ---- C63 on the question page (re-walk B E42, E46 pressed it there) ---- */
 test("R2 R36 C63 'Plan what to do' on the question page opens the plan page it made; control: a refused press stays on the question", async () => {
-  const qat = "/app/question/" + Q;
-  const plane = { planopen: (r) => ok(OPENED(r.body.title)), plan: ok({ ok: true, id: "PLN-2026-0003-plan", project: P, title: "Ask the committee", state: "open", subjects: [], options: [] }) };
-  const p = await open(qat, { boot: WITH_PLAN_SCREEN, plane });
+  const w = await worldOf();
+  const qat = "/app/question/" + w.q;
+  const p = await pageOf(w.world, w.ann, qat, WITH_PLAN_SCREEN);
   fill(p, { "question-plan": "Ask the committee" });
   await press(p, "planopen");
-  assert.equal(p.location.pathname, "/app/plan/PLN-2026-0003-plan", "the plan page opens");
-  const r = await open(qat, { boot: WITH_PLAN_SCREEN, plane: { planopen: refusedIn("PLAN_NO_TITLE", "no") } });
+  const made = await plansOf(w);
+  assert.equal(made.length, 1, "the plan was made");
+  assert.equal(p.location.pathname, "/app/plan/" + made[0].id, "the plan page opens");
+  const r = await pageOf(w.world, w.ann, qat, { ...WITH_PLAN_SCREEN, plane: { planopen: refusedIn("PLAN_NO_TITLE", "no") } });
   fill(r, { "question-plan": "x" });
   await press(r, "planopen");
   assert.equal(r.location.pathname, qat, "control: a refused press stays");
