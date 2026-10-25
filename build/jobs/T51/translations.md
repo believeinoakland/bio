@@ -140,3 +140,14 @@ Module tests 44/44; format, architecture, coverage (21 of 21), ownership 0 failu
 **REPORT for BOB (other modules).** The 5 failing tests above (on the tranche tip too). The `[op-table]` hand answers at `screens-settings/seed-common.mjs:119`, `screens-settings/translations.test.mjs:87` and `interface-shell/harness.mjs:88` (owners to re-point).
 
 Size (session_01Tf5NmNFqYZCzWAek1veTcX): test runs 7, module lines 4 (`index.mjs`, 4 added; `declared-ops.test.mjs`, 6 added).
+
+## J6 · COMPLETE
+
+COMPLETE, fix round 10 (B6, plan item 95; K5195): R18 met for `translationdraft`.
+
+- Declared in `bio-plane/src/translations/index.mjs` `DECLARED_OPS` (`:824-827`): classes admin and member, no machine class, mutating, weight `caller-owned` (op-grades t37's grade), description as op-grades words it, accepts `language`, `direction`, `keys`, `key`, requires `language`, `direction`.
+- Test: `bio-plane/test/m/translations/declared-ops.test.mjs`, "R18 translations declares translationdraft ..." (red before, green after). R18 named there.
+- Module tests 45 of 45. Users (impact: 80 files run, 758 tests): 753 pass, 5 fail, the same 5 on the tranche tip without my change (credentials rows-ops, instance-setup t47, capture-requests plane, screens-settings connect, group, identity, updates).
+- Checks: format, architecture, coverage, fixtures (0), ownership (0) green. run.mjs: 16 findings, none in translations' files; the two `[op-table]` hand answers for translations' ops (screens-settings seed-common.mjs:119, translations.test.mjs:87; interface-shell harness.mjs:88) are for their owners to re-point to translations' published fixture.
+- Markers added: none. Deferred: none.
+- Size and record: build/jobs/T51/translations.md, section "fix round 10, B6".
