@@ -27,3 +27,15 @@ Checks run (civicos-process checks, product `/home/user/bio`):
 - `bio-plane/src/setup-words/build.mjs --check`: rows.mjs stale, as expected (BOB regenerates at layer close); no refusal naming conformance
 
 Size (session_01ViYfNCYcxxWgYECRmXKcky): test runs 3, module lines 2709
+
+## Fix round 10, Wave A batch 1 (B2) · work
+
+Published `bio-plane/test/m/conformance/fixtures.mjs` (new): `curesOf` (real `curesOf` over a noncompliant determination, its later compliant cure and the recorded link, R37), `determinationRead` (live, superseded-with-successor and unclear determinations, R9), `noDeterminations` (real module over an empty store, R19). Each returns `{conformance, ids, viewer, outsider, world}`, made by the real code when called. Their test `fixtures.test.mjs` calls each and checks the real answer (3 pass).
+
+Markers added: no `fixtures-own` or `fixtures-generic`.
+
+Lines left in `fixtures.mjs --list conformance`: 4, the FIX-E lines named in B2 (fixture.mjs:147 retrieval, :173 basis-versions, :263 case-import, t45.test.mjs:402 case-import/case-check/queue); they arrive as a CHANGE.
+
+Checks: module tests 123 pass, 0 fail; words 0 failures; format 0; architecture 0; coverage 42 of 42, 0 failures; `impact.mjs origin/tranche/T51 HEAD`: affected modules 0 (no source change), no user tests to run.
+
+Size (session_014bYaS8aw3Ywr8iWF6pbvdN): test runs 4, module lines 0 (source unchanged; 63 test lines added)
