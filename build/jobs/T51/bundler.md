@@ -391,3 +391,15 @@ R41 and R42 complete on job/T51/bundler. With runtime-limits merged: bundler + d
 **Stale artifacts I made:** none. **Deferred:** none. **Found in another module:** the four stale bundles above, reported to BOB.
 
 Size (session_01CYcedBDKbptHQ4Ss9eBGVV): test runs 3, module lines 4559
+
+## J18 · BLOCKED
+
+Cause: tests. The module's tests do not all pass, and I cannot make them pass without writing another module's generated artifacts.
+
+- Done and pushed (`b06a10e90d`): the seven fixture lines carry `fixtures-own: platform`; `fixtures.mjs bundler --list` shows 0 failures.
+- Tests: 169 run, 168 pass. The one failing file is `bio-plane/test/system/fleetbundles.test.mjs` (21 checks fail). Its failures are STALE BUNDLE: the committed `dist/agent-worker.bundled.mjs`, `dist/file-scanner.bundled.mjs`, `dist/ocr-worker.bundled.mjs` and `dist/pdf-worker.bundled.mjs` are older than their sources (for example `src/render.mjs` in file-scanner, and `bio-plane/src/project-roster/index.mjs`, `provenance/index.mjs`, `reading-pipeline/index.mjs` in agent-worker).
+- I did not regenerate those bundles: they are other modules' generated artifacts (mechanics §14). I did not verify the failure on the tranche tip; my edits are comment lines in test files and do not touch the compared hashes.
+
+NEEDS BOB: regenerate the four bundles at the cut (your record says BOB does this at round end), or tell me how to proceed. Once `fleetbundles` passes I will post COMPLETE.
+
+Full detail is in my record, Record (BUNDLER #31, B18).
