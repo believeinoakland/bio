@@ -12,8 +12,7 @@ const AT = `/app/matter/${DET}~${ESC}`;
 const BARE = `/app/matter/${DET}`;
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
 const STANDARDS = ok({ ok: true, items: [{ id: "STD-1", cite: "Lease §7.2" }, { id: "STD-9", cite: "Lease §9.1" }], truncated: false });
-const PUBLISHED = { publishedlist: ok({ bundles: [], cases: [{ case_id: "CASE-1", edition: 1 }, { case_id: "CASE-1", edition: 2 }] }),
-  publishedcase: ok({ ok: true, findings: [{ bundle_id: "FND-1", title: "Rents rose without a vote" }, { bundle_id: "FND-2", title: "The shortfall was not reported" }] }) };
+const PUBLISHED = { publishedlist: ok({ bundles: [], cases: [] }) };
 const QUESTIONS = ok({ ok: true, project: PROJECT, items: [{ inquiry: "INQ-1", title: "Did the adjustments cause the higher rent?" }], cursor: null });
 /** What the act sent less the reason the shell asks of a reasoned act (it is no field of the screen). */
 const sent = (p, op) => { const { reason, ...rest } = last(p, op).body; return rest; };

@@ -269,7 +269,7 @@ test("R48: 'Keep this filing as your team's template' is offered once the filing
   assert.equal(p.byOp("templatesave").length, 2, "both landed");
   // C65: the scope is the action's project (the filing's basis names one only for a determination); an action in no project sends none
   assert.equal(second.project, project);
-  const loose = await me.act("actioncreate", { body: { document: actionDoc(project, { title: "In no project" }).replace(`project: ${project}\n`, "") } });
+  const loose = await me.act("actioncreate", { body: { document: actionDoc(project, { title: "Loose request" }).replace(`project: ${project}\n`, "") } });
   await me.act("actionrisktier", { body: { target: loose.id, tier: 2, reason: "the office has fought requests before" } });
   await me.act("filingapprove", { body: { filing: await filingIn(me, loose.id) } });
   const bare = await openIn(world, me, `/app/start-send/${loose.id}`);

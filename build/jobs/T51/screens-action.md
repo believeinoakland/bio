@@ -383,3 +383,31 @@ Size (session_01V2UjYMTJVamFVmEpii2ZSk): test runs 26, module lines 5078
 BLOCKED (cause: context), SCREENS-ACTION #18, at the end of a step, not for tests. Causes 1 to 5 of B34 are built, tested red-then-green and pushed (record section "Round 10 · fix round 10", on `job/T51/screens-action`): the prepare states its language and a public comment's voice (R3; 6 tests, one over the real filings), the revise form states how it is known and the question (R50), a part's label is drawn by what it says (R6), a determination is named by its act and a standard by its citation on the Matter, the Plan and Start and send (R18), the hold's places are named by note and day (R32), a reply's mark is read from `pressurefor` (R5). The module's suites pass (294); format, words, ownership, coverage 0 failures; `fixtures.mjs screens-action` 54 failures, the same as the tranche's (no new line). `architecture.mjs` shows 3 failures that wait on your answer to J29 (add `consequences`, `conformance`, `action-holds` to screens-action's `uses`, tests only).
 
 **What remains is item 6, the op tables** (about 50 entries over 20 test files, each to be re-pointed to `storeWorld()` with its state made by real acts), which is a job of its own and would take me past half my window. The record lists the entries by file. Please restart me (or a successor) for it with the J29 answer: if you add the three edges, the architecture check goes green, and I then finish the op tables, run the full checks and post COMPLETE with the met ids (R3, R5, R6, R18, R32, R50 as amended by diagnosis 11; no requirement line for them exists on the tranche, see J29 (2)).
+
+## Round 11 · fix round 10, op tables (SCREENS-ACTION #19, session_01KNqRbreNMPFiyJbKTakfps, B34 START, B35 ANSWER)
+
+Merged `tranche/T51`. Causes 1 to 5 were built by #18. **Met ids (B35): R3, R5, R6, R18, R32, R50**, as amended by diagnosis 11 (no new lines).
+
+**Item 6, the op tables.** The 50 op-table/builder entries are re-pointed to store-request's `storeWorld()`, each state made by real acts, in 20 files. Helpers: `world.mjs` (`actionWorld`, `correspond`, `counselMatter`, `openIn`; import it before `page.mjs`, which reads op-declarations first), `world-A.mjs` (the matter: documents, events, question, standards, determination, consequences, escalation), `world-B.mjs` (clocks, plans, profile), `world-C.mjs` (profile, entities and offices, filings), `world-D.mjs` (questions, plans, colleagues). `real.mjs` lost its `NO_OWNER` answer (never reached). `fixtures.mjs screens-action`: 54 failures -> 7 (6 op-table, 1 builder) plus 2 accepted markers.
+
+**Still scripted, a state the world cannot make (lines kept listed):**
+- `dash-action.test.mjs:92` `taskresolve`: the real queue offers it on none of Action's three item kinds (action-producers DOORS). Possible gap against R30: REPORT.
+- `c94-t51.test.mjs:34` `plans`: a plan whose opener has no handle; every real member has one.
+- `fix4-t51.test.mjs:233` `templatesforaction` refused while `action` reads: both share one visibility gate.
+- `matter-t51.test.mjs:438,459` and `send-t51.test.mjs:428` `writinghelp`: model-backed; the world has no account or model (`NO_ACCOUNT`, `ASSISTANT_DRAFT_UNAVAILABLE`).
+- `send-t51.test.mjs:339` builder: `TEMPLATE_FROM_UNAPPROVED` (approval is never taken back) and `TEMPLATE_USE_REFUSED` (the page never sends that use).
+- Also scripted, unflagged: `checkpointsdue` "our move" (action-plans reads the wall clock; a checkpoint cannot be due today), the draft-tier-3 variant of the counsel test (only `filingprepare` sets a draft's tier and it refuses at tier 3), actionnew-fix's shapes the owner never gives, and a project's followed events in `image`.
+
+**Flaws found and fixed in my module:** `matter.mjs:254` asked `publishedcase` with `caseId`; the op wants `id` (publication/worker.mjs:753), so on a real store the Matter's published-findings picker never filled. Now `id`; matter-t51 (c) runs over a really published case.
+
+**Found, not mine / not fixed (REPORT):**
+1. `hold` (R32): after a hold is placed on a reply, `holdsdue` no longer lists it (action-holds R19), and the release form draws only for places listed, so a reply's hold cannot be released from this screen; only a counsel matter's can. Needs a design reading (the requirement names `projectholds` for the strip, which the screen does not read).
+2. The addressed/success evidence fields take typed ids; the store accepts only content ids or findings (`NO_SUCH_EVIDENCE` for an `INFO-` id).
+3. The world's clocks disagree: the pinned `BIO_NOW_MS` (2026-10-01) versus the wall clock that `action-clocks` (`remindersfor`) and `action-plans` (`opened_at`, to the second) read. Plans opened in one second tie; `world-D` waits a second per plan.
+4. A reminder's state is `undetermined` until a jurisdiction profile is active (`world-B`, `world-C` activate Oakland).
+5. `actions` could publish a `breachRefusal` fixture (from #18).
+
+**Words for UX-DESIGN (B35):** the voice choice's legend, `names_pending` and `own_doing` ticks, the audience choice, a causation's state words: drawn nothing.
+
+**Checks:** suite 295 pass, 0 fail; format 0; coverage 55 of 55; words 0; ownership 0; fixtures 7 + 2 accepted. **architecture: 2 failures, waiting on BOB (J31):** `world-A.mjs` imports `publication` and `record-core` (the published case is made by publication's own commits on `world.ctx`, as `store-assembly/g54-seed.mjs` does; a ratification signs with an SSH key no door act can).
+Size (session_01KNqRbreNMPFiyJbKTakfps): test runs 14, module lines 5078
