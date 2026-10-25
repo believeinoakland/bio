@@ -14,7 +14,7 @@ const PATHS = { ...ROUTES, "request on a project": `/app/request/${PROJECT}`, "p
 const OWN = {
   plan: ["determinations", "list", "memberlist", "plan", "projectquestions", "standards"],
   "start-send": ["affordances", "list", "memberlist", "optionstartpreview", "plan", "projectquestions"],
-  request: ["action", "filingsfor", "grouplanguages", "list", "memberlanguage", "memberlist", "profiles", "projectlist", "stakeatpreparation", "templatesforaction"],
+  request: ["action", "filingsfor", "list", "memberlist", "profiles", "projectlist", "stakeatpreparation", "templatesforaction"],
   action: ["action", "affordances", "filingsfor", "heldcaptures", "list", "memberlist", "pressurefor", "procedureguides", "profiles", "projectlist", "remindersfor", "templatesforaction"],
   matter: ["consequencesof", "determination", "escalation", "escalationstatus", "list", "standards"],
   "help-records": ["profiles"],
@@ -25,8 +25,12 @@ const OWN = {
   "dash-action": ["action", "actions", "affordances", "checkpointsdue", "filingsfor", "list", "profiles", "projectlist"],
   "request on a project": ["list", "peopledirectory", "profiles"],
   "plan on a project": ["list", "plans"],
-  "start-send on an action": ["action", "affordances", "filingsfor", "grouplanguages", "list", "memberlanguage", "memberlist", "projectlist", "stakeatpreparation"],
+  "start-send on an action": ["action", "affordances", "filingsfor", "list", "memberlist", "projectlist", "stakeatpreparation"],
 };
+
+/* fix round 10 (R3, R18): the language the draft is prepared in is read where a text is prepared; the standards' citations where a determination is named */
+const LANGUAGE = ["grouplanguages", "memberlanguage"];
+for (const id of ["request", "start-send on an action"]) OWN[id] = [...OWN[id], ...LANGUAGE].sort();
 
 for (const [id, path] of Object.entries(PATHS)) {
   test(`C14 (${id}): the screen asks for each of its reads once, and for none of the frame's again`, async () => {
