@@ -389,3 +389,17 @@ test("R1, R16: a find writes nothing — no selection, no observation row, no fa
     assert.equal(run(w, { scope, kinds: [...FIND_KINDS], term: "agenda" }).ok, true);
   assert.equal(snap(), before);
 });
+
+test("R17a (fix round 10, G3; retrieval R95) a term hit names the part it lies in, `part`: a footnote's hit says footnote, a body paragraph's body, a unit stored without a kind null", () => {
+  const w = find();
+  const c = w.cap("d.docx", "d");
+  w.doc("INFO-D", {}, { captures: [c] });
+  w.read(c, "INFO-D");
+  w.unit(c.sha, "INFO-D", 0, "The ordinance takes effect in spring.", { kind: "doc-para", paragraph: 1 }, "body");
+  w.unit(c.sha, "INFO-D", 1, "See the footnote: the zebra levy was $5,000.", { kind: "doc-part", part: "word/footnotes.xml", ref: "footnote 1" }, "footnote");
+  w.unit(c.sha, "INFO-D", 2, "An older unit mentions the quokka rate.", { kind: "doc-para", paragraph: 3 });
+  const partOf = (term) => kindOf(run(w, { scope: { capture: c.sha }, kinds: ["term"], term }), "term").items.map((i) => [i.kind, i.part]);
+  assert.deepEqual(partOf("zebra"), [["term", "footnote"]]);
+  assert.deepEqual(partOf("ordinance"), [["term", "body"]]);
+  assert.deepEqual(partOf("quokka"), [["term", null]], "a unit stored before the kind is undetermined, never read as body");
+});
