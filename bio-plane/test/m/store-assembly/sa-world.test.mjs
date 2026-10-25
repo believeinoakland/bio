@@ -143,17 +143,19 @@ test("R71 (K5132): under a pinned instance clock a run's measured times are stil
   const { pendingOf } = await import("../../../src/store-assembly/pending.mjs");
   const st = storage();
   const pinned = WORLD_NOW;
-  const busy = async () => { const until = performance.now() + 30; while (performance.now() < until) { /* real work */ } return { ok: true, done: true }; };
-  const ledger = pendingOf(st.ctx, { now: () => pinned, workers: { scan: busy } });
+  /* the reading's owner works 30 ms and answers what extraction's `readHeld` answers for a reading done (its published fixture) */
+  const { readHeldAnswer: { read: readDone } } = await import("../extraction/fixtures.mjs");
+  const busy = async () => { const until = performance.now() + 30; while (performance.now() < until) { /* real work */ } return readDone(); };
+  const ledger = pendingOf(st.ctx, { now: () => pinned, workers: { reading: busy } });
   ledger.migrate();
   const sha = "e".repeat(64);
-  assert.equal(ledger.registerJob({ kind: "scan", sha }).ok, true);
+  assert.equal(ledger.registerJob({ kind: "reading", sha }).ok, true);
   await ledger.consumer().tick(pinned);
   const [last] = ledger.ledgerLast({ sha });
   assert.equal(last.outcome, "finished");
   assert.ok(last.own_ms >= 25, `own_ms ${last.own_ms} measures the work`);
   assert.ok(last.last_ms >= last.own_ms);
-  const row = ledger.jobRow({ sha, kind: "scan" });
+  const row = ledger.jobRow({ sha, kind: "reading" });
   assert.equal(row.registered_at, pinned, "the row's instants are the instance clock's");
   assert.equal(row.ended_at, pinned);
 });

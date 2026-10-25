@@ -12,6 +12,10 @@ import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
+/* the owners' published answers, made by their real code: extraction's `readHeldAnswer`, acquisition's `owedFetchAnswer`, reading-pipeline's `storeFailedTransient` */
+const { readHeldAnswer: { read: readDone } } = await import("../extraction/fixtures.mjs");
+const { owedFetchAnswer } = await import("../acquisition/fixtures.mjs");
+const { storeFailedTransient } = await import("../reading-pipeline/fixtures.mjs");
 import { pendingOf, pendingOps, administersOf, JOB_KINDS, JOB_STATES, WATCHDOG_FIELDS, PAGE_KILLED_READER, NO_PROGRESS, UNIT_KILLS_MAX, unitOf, TICK_FIGURES }
   from "../../../src/store-assembly/pending.mjs";
 
@@ -26,7 +30,7 @@ const alarm = (x, at) => Promise.race([x.s.onAlarm(at), new Promise((r) => { beg
 async function world(db, { readAnswer = null, workers = null } = {}) {
   const x = await store({ db, env: { CAPTURES: bucketStandIn() }, before: workers ? (ctx, env) => pendingOf(ctx, { env, workers }) : null });
   x.read = [];
-  if (readAnswer) extractionOf(x.ctx).readHeld = async (a) => { x.read.push(a); return readAnswer(a); };
+  if (readAnswer) extractionOf(x.ctx).readHeld = async (a) => { x.read.push(a); const k = readAnswer(a); return k === "read" ? readDone() : k; };   /* "read": extraction's published read-to-its-end answer */
   x.jobs = pendingOf(x.ctx);
   return x;
 }
@@ -84,7 +88,7 @@ test("R74: a ledger of the old shape opens with every row kept: an owed row is `
 
 test("R74 jobCounters: the counters a reader answers are written on its row (written and skipped add up, owed is the reader's own, a failure is counted by cause); a finished row stays, `finished`", async () => {
   const pieces = [{ ok: true, more: true, detail: { cursor: "c1" }, counters: { written: 40, skipped: 2, owed: 0 } },
-                  { ok: false, reason: "STORE_BUSY" },
+                  { ok: false, reason: "STORE_BUSY" },   // fixtures-generic: STORE_BUSY   (a transient word no module gives: a failure is counted by its cause, whatever the word)
                   { ok: true, more: true, detail: { cursor: "c2" }, counters: { written: 25, skipped: 0, owed: 0 }, reader_version: "rp-9" },
                   { ok: true, read: true, counters: { written: 5, skipped: 1, owed: 0 } }];
   const x = await world(undefined, { readAnswer: () => pieces.shift() });
@@ -142,16 +146,16 @@ test("R74 G129d: a picture whose OCR failed transiently keeps its `ocr` row (an 
 
 test("R74 G127c: a fetch refused for a capture another bundle holds ends `final` with the refused digest, its holder and whether it is a whole or a part on the row, never `detail {}`", async () => {
   const x = await world(undefined, {});
-  const held = sha("part 2 of another document");
   const { acquisitionOf } = await import("../../../src/acquisition/index.mjs");
-  acquisitionOf(x.ctx).owedFetch = async () => ({ ok: true, done: true, final: true, reason: "CAPTURE_HELD_BY_ANOTHER_BUNDLE",
-    detail: { bundleId: "INFO-2026-0002", capture_sha: held, kind: "part", holder: "INFO-2026-0001" } });
+  /* acquisition's real refusal for a capture another bundle holds: its `detail` names the whole and its holder */
+  acquisitionOf(x.ctx).owedFetch = async () => owedFetchAnswer({ kind: "final" });
+  const facts = (await owedFetchAnswer({ kind: "final" })).detail;
   x.jobs.registerJob({ kind: "fetch", session: "s-held" });
   await x.s.onAlarm(Date.now() + 1000);
   const r = x.jobs.jobRow({ sha: "s-held", kind: "fetch" });
   assert.deepEqual([r.state, r.final_why], ["final", "CAPTURE_HELD_BY_ANOTHER_BUNDLE"]);
-  assert.deepEqual(r.failed_why.CAPTURE_HELD_BY_ANOTHER_BUNDLE, { kind: "part", capture_sha: held, holder: "INFO-2026-0001" });
-  assert.deepEqual(x.jobs.list({ sha: "s-held" }).map((e) => [e.state, e.why, e.failed_why.CAPTURE_HELD_BY_ANOTHER_BUNDLE.kind]), [["final", "CAPTURE_HELD_BY_ANOTHER_BUNDLE", "part"]]);
+  assert.deepEqual(r.failed_why.CAPTURE_HELD_BY_ANOTHER_BUNDLE, { kind: facts.kind, capture_sha: facts.capture_sha, holder: facts.holder });
+  assert.deepEqual(x.jobs.list({ sha: "s-held" }).map((e) => [e.state, e.why, e.failed_why.CAPTURE_HELD_BY_ANOTHER_BUNDLE.kind]), [["final", "CAPTURE_HELD_BY_ANOTHER_BUNDLE", facts.kind]]);
 });
 
 test("R97 R74: the assembly's own tables, the job table with `job_unit_attempts` and `job_batches` beside `keeps_last` and `acquire_stages`, are declared to record-core's purge by store-assembly, and no other row is its", async () => {
@@ -296,7 +300,7 @@ test("R76 (control): a row that advances by one unit each tick is never ended by
 
 test("R76 G129b: a transient failure at tick 2 or later is tried again, never written as the end `partial` with no reason; it ends whole when the store answers", async () => {
   const answers = [{ ok: true, more: true, detail: { cursor: "c1" }, counters: { written: 10 } }, { ok: true, more: true, detail: { cursor: "c2" }, counters: { written: 10 } },
-                   { ok: false, transient: true, reason: "STORE_FAILED" }, { ok: true, more: true, detail: { cursor: "c2" }, failure: "transient", reason: "R2_HICCUP" },
+                   await storeFailedTransient(), { ok: true, more: true, detail: { cursor: "c2" }, failure: "transient", reason: "R2_HICCUP" },   // fixtures-generic: R2_HICCUP   (a transient word no module gives: any transient failure is tried again)
                    { ok: true, read: true, counters: { written: 5 } }];
   const x = await world(undefined, { readAnswer: () => answers.shift() });
   const d = sha("a text whose store failed at tick 3");
@@ -524,12 +528,12 @@ test("R74 G160: a final answer carries the refusal's `kind`, `capture_sha` and `
   const answers = [
     { ok: true, done: true, final: true, reason: "CAPTURE_HELD_BY_ANOTHER_BUNDLE", kind: "whole", capture_sha: held },
     { ok: true, done: true, final: true, reason: "CAPTURE_HELD_BY_ANOTHER_BUNDLE", refusal: { detail: { kind: "part", capture_sha: held, holder: "INFO-2026-0001" } } },
-    { ok: true, done: true, final: true, reason: "TOO_LARGE" },
+    "TOO_LARGE",   /* acquisition's published final answer of this reason, made in the stand-in below */
   ];
   const x = await world(undefined, {});
   const { acquisitionOf } = await import("../../../src/acquisition/index.mjs");
   const seen = [];
-  acquisitionOf(x.ctx).owedFetch = async (_cap, e) => { seen.push(e.session); return answers[seen.length - 1]; };
+  acquisitionOf(x.ctx).owedFetch = async (_cap, e) => { seen.push(e.session); const a = answers[seen.length - 1]; return typeof a === "string" ? owedFetchAnswer({ kind: "final", reason: a }) : a; };
   for (let i = 0; i < 3; i++) x.jobs.registerJob({ kind: "fetch", session: `s-facts-${i}` });
   for (let i = 0; i < 3; i++) await x.s.onAlarm(Date.now() + 1000 + i * 3_600_000);
   const w = (i) => x.jobs.jobRow({ sha: `s-facts-${i}`, kind: "fetch" }).failed_why;
@@ -626,7 +630,7 @@ test("R82 control: a whole read with no unit stamped is charged to `whole` as be
   const y = await world(undefined, {});
   const { acquisitionOf } = await import("../../../src/acquisition/index.mjs");
   let got = "unset";
-  acquisitionOf(y.ctx).owedFetch = async (_c, _e, o) => { got = typeof o.stampUnit; return { ok: true, done: true }; };
+  acquisitionOf(y.ctx).owedFetch = async (_c, _e, o) => { got = typeof o.stampUnit; return owedFetchAnswer({ kind: "done" }); };
   y.jobs.registerJob({ kind: "fetch", session: "s-nostamp" });
   await y.s.onAlarm(Date.now() + 1000);
   assert.equal(got, "undefined");

@@ -21,6 +21,7 @@ import { extractionOf } from "../../../src/extraction/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { renderPageToPixels } from "../../../../pdf-worker/src/pagepixels.mjs";
 import { renderPictureToPixels } from "../../../../pdf-worker/src/picturepixels.mjs";
+import { pageRefusal } from "../../../../pdf-worker/test/pdf-pixels-fixtures.mjs";   /* pdf-pixels' published refusals, made by its real renderers */
 
 const fixture = (rel) => new Uint8Array(readFileSync(fileURLToPath(new URL(rel, import.meta.url))));
 const PHOTO = fixture("./fixtures/t43-photo-o6.jpg");
@@ -113,7 +114,7 @@ test("R57 (T43; N853b): the picture renderer's refusals, and a throw, leave the 
   /* another refusal of the page renderer is answered as before: no picture asked */
   let pictured = 0;
   const count = async (...a) => { pictured++; return renderPictureToPixels(...a); };
-  const refuse = async () => ({ ok: false, reason: "PAGE_HAS_TEXT_LAYER" });
+  const refuse = async () => pageRefusal("PAGE_HAS_TEXT_LAYER");
   assert.deepEqual(await renderPages(PHOTO, [0], refuse, count), []);
   assert.equal(pictured, 0);
   /* control: a PDF page renders as before, byte for byte, the picture renderer never asked */

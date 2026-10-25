@@ -48,6 +48,7 @@ function scanner() {
     const body = req.method === "GET" ? null : await req.json().catch(() => null);
     seen.push({ path: new URL(req.url).pathname, body });
     const path = new URL(req.url).pathname;
+    // fixtures-generic: NOT_HERE   (the double's fall-through for a path it was not scripted for: no module gives it)
     const out = path === "/scan"
       ? { ok: true, verdicts: (body.targets || []).map(() => ({ tool: "clamav", engine: "clamav", engine_version: "1.4.1",
           signatures: "27000", scanned_at: "2026-10-08T00:00:00Z", result: "clean", findings: [] })) }

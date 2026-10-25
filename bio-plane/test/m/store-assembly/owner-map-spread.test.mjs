@@ -71,10 +71,10 @@ test("R89: the route map holds each key once, the owner map is spread after ever
 test("R88: through the real store `readheldfor` reaches extraction's one instance and `projectlist` answers `shared_drafts` from review; a project with none answers {count: 0, newest: null}; neither getter is asked for another op", async () => {
   const x = await world();
   /* readheldfor: extraction's one instance, asked for the digest and the namespace the door names */
-  const ex = extractionOf(x.ctx), real = ex.readHeld, seen = [];
-  ex.readHeld = function (a, ...rest) { seen.push(a); return real.call(this, a, ...rest); };
+  const ex = extractionOf(x.ctx), real = ex.readHeld.bind(ex), seen = [];
+  ex.readHeld = function (a, ...rest) { seen.push(a); return real(a, ...rest); };
   try {
-    const direct = JSON.parse(JSON.stringify(await real.call(ex, { sha: SHA, storeName: "bio" })));
+    const direct = JSON.parse(JSON.stringify(await real({ sha: SHA, storeName: "bio" })));
     const viaStore = await x.call(`/readheldfor?sha=${SHA}`);
     assert.deepEqual(viaStore, direct, "answered as extraction answers it");
     assert.deepEqual(seen, [{ sha: SHA, storeName: "bio" }], "extraction's one instance, `store` defaulting to bio");

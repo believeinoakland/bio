@@ -6,12 +6,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { store } from "./fixture.mjs";
+import { archiveNotHeld } from "../acquisition/fixtures.mjs";            /* acquisition's published refusal of an archive it does not hold, made by its real `unpack` */
+import { storeSilentParsed } from "../answer-envelope/fixtures.mjs";    /* answer-envelope's published 502 STORE_DID_NOT_ANSWER, made by its real helper */
 import { captureOf } from "../../../src/capture/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { ARCHIVE_UNPACK, UNPACK_BACKSTOP_MS, UNPACK_RETRY_LIMIT, unpackDueAt, unpackOutcome } from "../../../src/store-assembly/unpack.mjs";
 
 const A = "a".repeat(64), B = "b".repeat(64), C = "c".repeat(64);
 const T0 = Date.parse("2026-10-07T12:00:00Z");
+const silent = async () => { const r = await storeSilentParsed("unpack"); return [r.status, r.body]; };
 
 /* A plane whose SELF answers each archive as `answers[sha]` says: [status, body], or "throw". */
 async function world({ answers = {}, self = true, daemon = "dmn-unpack" } = {}) {
@@ -37,7 +40,7 @@ async function world({ answers = {}, self = true, daemon = "dmn-unpack" } = {}) 
 }
 
 test("K2046: on the alarm each archive-unpack event is asked of the Worker as op=unpack through SELF, the daemon's credential in the Authorization header and the archive in the body; done and refused-for-good events leave capture's queue, a failure is an attempt", async () => {
-  const x = await world({ answers: { [B]: [409, { ok: false, reason: "ARCHIVE_NOT_HELD" }], [C]: [503, { ok: false, reason: "STORE_DID_NOT_ANSWER" }] } });
+  const x = await world({ answers: { [B]: [409, await archiveNotHeld()], [C]: await silent() } });
   assert.ok(schedulerOf(x.ctx).consumers().includes(ARCHIVE_UNPACK), "registered with the scheduler");
   assert.deepEqual([x.consumer.key, x.consumer.module], ["archiveunpack", "plane"]);
   assert.equal(await x.consumer.wake(T0), T0, "an event waiting and never tried wants a wake now");
@@ -81,7 +84,7 @@ test("K2046 negative controls: without SELF or without DAEMON_TOKEN the drain ca
 });
 
 test("K2051: through the scheduler's whole alarm, tasks' drain leaves archive-unpack events to this drain, which asks each of the Worker once and empties the queue of the done", async () => {
-  const x = await world({ answers: { [C]: [503, { ok: false, reason: "STORE_DID_NOT_ANSWER" }] } });
+  const x = await world({ answers: { [C]: await silent() } });
   const r = await schedulerOf(x.ctx, x.env).onAlarm(T0);
   assert.deepEqual(x.seen.map((s) => s.body.archiveSha), [A, B, C], "each event reached the Worker: none was taken by task-drain");
   assert.deepEqual([r.archiveunpack.asked, r.archiveunpack.removed, r.archiveunpack.retried], [3, 2, 1]);

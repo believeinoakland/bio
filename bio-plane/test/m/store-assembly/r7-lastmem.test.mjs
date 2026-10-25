@@ -8,6 +8,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { storage } from "./fixture.mjs";
 import { pendingOf, pendingOps } from "../../../src/store-assembly/pending.mjs";
+/* extraction's published answers, made by its real code */
+const { readHeldAnswer: { read: readDone, piece, final: readFinal } } = await import("../extraction/fixtures.mjs");
 
 const D = "c".repeat(64);
 
@@ -19,6 +21,7 @@ async function reporting(shape, fn) {
 const ZEROS = { rss: 0, heapTotal: 0, heapUsed: 0, external: 0, arrayBuffers: 0 };
 
 test("R72 (G69): a platform that reports zeros gives `last_mem` NULL on the row, never 0; the same row measured by a platform that reports bytes stores them", async () => {
+  // fixtures-generic: AGAIN   (a retry word no module gives: the row is measured whatever the owner's answer)
   const mk = () => { const { ctx } = storage(); const h = pendingOf(ctx, { workers: { reading: async () => ({ ok: false, reason: "AGAIN" }) } }); h.migrate(); return { ctx, h }; };
   await reporting(ZEROS, async () => {
     const { h } = mk();
@@ -38,7 +41,7 @@ test("R72 (G69): after a row ends `finished`, the last run of that digest and ki
   await reporting(ZEROS, async () => {
     let t = 9_000_000;
     const { ctx } = storage();
-    const h = pendingOf(ctx, { now: () => t, clock: () => t, workers: { reading: async () => { t += 1_500; return { ok: true, read: true }; } } });
+    const h = pendingOf(ctx, { now: () => t, clock: () => t, workers: { reading: async () => { t += 1_500; return readDone(); } } });
     h.migrate();
     await h.owe({ kind: "reading", sha: D });
     await h.consumer().tick(t);
@@ -56,7 +59,8 @@ test("R72 (G69): after a row ends `finished`, the last run of that digest and ki
 
 test("R72 (G69): a later run replaces the last run of its (digest, kind); a final stop and a retry are kept as their outcomes; a piece that goes on is `more`", async () => {
   let t = 11_000_000, n = 0;
-  const answers = [{ ok: false, reason: "SLOW" }, { ok: true, more: true, detail: { cursor: 2 } }, { final: true, why: "NO_TEXT" }];
+  // fixtures-generic: SLOW   (a retry word no module gives: the first run is tried again, whatever the word)
+  const answers = [{ ok: false, reason: "SLOW" }, await piece(), await readFinal()];
   const { ctx } = storage();
   const h = pendingOf(ctx, { now: () => t, clock: () => t, workers: { reading: async () => { t += 100 * (n + 1); return answers[n++]; } } });
   h.migrate();

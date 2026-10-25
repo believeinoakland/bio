@@ -7,6 +7,8 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { store } from "./fixture.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
+/* extraction's published answers, made by its real code */
+const { readHeldAnswer: { noHome, read: readDone } } = await import("../extraction/fixtures.mjs");
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { pendingOf } from "../../../src/store-assembly/pending.mjs";
 
@@ -16,7 +18,7 @@ async function world(home) {
   const parts = [sha("part one"), sha("part two")], whole = sha("the whole");
   recordOf(x.ctx).evidenceStore = () => ({ putFromParts: async () => ({ ok: true }) });
   x.read = [];
-  extractionOf(x.ctx).readHeld = async (a) => { x.read.push(a.sha); return home ? { ok: true, read: true } : { ok: true, read: false, why: "NO_HOME" }; };
+  extractionOf(x.ctx).readHeld = async (a) => { x.read.push(a.sha); return home ? readDone() : noHome(); };
   await pendingOf(x.ctx).keepLater({ sha: whole, parts });
   await pendingOf(x.ctx).consumer().tick(Date.now() + 1000);
   return { x, whole, rows: pendingOf(x.ctx).list() };
@@ -34,6 +36,7 @@ test("R64 R73 (G79) control: a keep whose document is filed (a home) still reads
 test("R64 R73 (G79) control: a transient failure of the reading after a keep still leaves the reading owed", async () => {
   const x = await store({});
   recordOf(x.ctx).evidenceStore = () => ({ putFromParts: async () => ({ ok: true }) });
+  // fixtures-generic: STORE_DOWN   (an outage no module gives: the ledger must keep the reading owed for a refusal it holds no word for)
   extractionOf(x.ctx).readHeld = async () => ({ ok: false, reason: "STORE_DOWN" });
   await pendingOf(x.ctx).keepLater({ sha: sha("w2"), parts: [sha("p")] });
   await pendingOf(x.ctx).consumer().tick(Date.now() + 1000);

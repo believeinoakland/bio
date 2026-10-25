@@ -6,7 +6,8 @@ import "../../sandbox.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, sha } from "../capture/fixture.mjs";
-import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
+import { store } from "./fixture.mjs";
+import { pendingOf } from "../../../src/store-assembly/pending.mjs";
 import { ownerOps } from "../../../src/store-assembly/owner-ops.mjs";
 import { PARTED_PART_BYTES } from "../../../src/capture/index.mjs";
 
@@ -35,15 +36,17 @@ function r2() {
   b.resumeMultipartUpload = (key, id) => handle(id);
   return b;
 }
-const setup = () => {
+/* the job registrar is this module's own: the assembled store's real one (`pendingOf(ctx).registerJob`), on the store's own storage */
+const setup = async () => {
   const b = r2();
   const w = fresh({ evidence: b, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9" } });
   w.c.evidenceKey = (d) => `bio/captures/${d}`;
-  const j = jobRegistrarStub();
+  const x = await store({});
+  const j = pendingOf(x.ctx);
   w.c.registerJob = j.registerJob; w.c.armJobs = j.armJobs;
   const real = w.core.transact.bind(w.core);
   w.core.transact = (fn) => {
-    try { return real(() => j.transact(() => { const out = fn(); if (out && typeof out === "object" && out.ok === false) throw Object.assign(new Error("refused"), { refused: out }); return out; })); }
+    try { return real(() => x.ctx.storage.transactionSync(() => { const out = fn(); if (out && typeof out === "object" && out.ok === false) throw Object.assign(new Error("refused"), { refused: out }); return out; })); }
     catch (e) { if (e && e.refused) return e.refused; throw e; }
   };
   return { ...w, b, j, of: { capture: () => w.c } };
@@ -52,13 +55,13 @@ const arm = (w, op, query, body) => ownerOps(w.of, url(op, query), body)[op]();
 const captures = (w) => w.c.provenance.receipts.length;
 
 test("R87 (the upload's declared length): an upload declaring 104,857,601 bytes in the address is refused 413 with {size, bound} before a byte is read, and nothing is written (controls: a declared length equal to the real size lands, none declared lands as before, a garbled one is not a declaration)", async () => {
-  const w = setup();
+  const w = await setup();
   let pulled = 0;
   const tiny = new ReadableStream({ pull(c) { pulled++; c.enqueue(new TextEncoder().encode("tiny")); c.close(); } }, { highWaterMark: 0 });
   const r = await arm(w, "captureupload", { by: MEMBER, statement: STATEMENT, name: "big.bin", declared: String(OVER) }, tiny);
   assert.deepEqual([r.ok, r.reason, r.status, r.size, r.bound], [false, "TOO_LARGE", 413, OVER, 104857600]);
   assert.equal(pulled, 0, "no byte was read");
-  assert.deepEqual([captures(w), w.b.held.size, w.j.rows().length], [0, 0, 0], "nothing written");
+  assert.deepEqual([captures(w), w.b.held.size, w.j.list().length], [0, 0, 0], "nothing written");
   const bytes = new TextEncoder().encode("a page of notes " + Date.now());
   const sized = await arm(w, "captureupload", { by: MEMBER, statement: STATEMENT, declared: String(bytes.length) }, bytes);
   assert.equal(sized.ok, true, JSON.stringify(sized).slice(0, 200));
@@ -86,7 +89,7 @@ test("R87 (the upload's ledger): `uploadCapture` is handed a byte ledger per req
 });
 
 test("R87 (parted upload): begin, part, part, complete lands ONE capture under the whole digest with ONE job row; the ledger is back to nothing held", async () => {
-  const w = setup();
+  const w = await setup();
   const file = varied(PARTED_PART_BYTES + 1000, 5), whole = sha(file);
   const q = { by: MEMBER };
   const b = await arm(w, "captureuploadbegin", q, { sha256: whole, bytes: file.length, statement: STATEMENT, name: "big.bin", by: FORGED });
@@ -102,12 +105,12 @@ test("R87 (parted upload): begin, part, part, complete lands ONE capture under t
   assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
   assert.equal(done.capture.sha256, whole);
   assert.deepEqual(w.c.provenance.receipts.map((r) => r.captureSha), [whole], "one capture");
-  assert.deepEqual(w.j.rows().map((r) => [r.kind, r.sha]), [["reading", whole]], "one job row");
+  assert.deepEqual(w.j.list().map((r) => [r.kind, r.sha]), [["reading", whole]], "one job row");
   assert.deepEqual(w.c.captureAccountsOf(whole).actors.map((a) => a.actor), ["member:ann"], "by the door's stamp, never the body's");
 });
 
 test("R87 (parted upload, abort): abort removes the session and the R2 upload, answered {ok, aborted}; a second abort is idempotent; nothing is held", async () => {
-  const w = setup();
+  const w = await setup();
   const file = varied(PARTED_PART_BYTES + 10, 7);
   const b = await arm(w, "captureuploadbegin", { by: MEMBER }, { sha256: sha(file), bytes: file.length, statement: STATEMENT });
   const first = file.subarray(0, PARTED_PART_BYTES);
@@ -122,7 +125,7 @@ test("R87 (parted upload, abort): abort removes the session and the R2 upload, a
 });
 
 test("R87 (parted upload, who): a caller's `by` in the body names nobody; another member cannot use a member's upload; a machine stamp and an ai stamp are refused by capture's member-session fence (controls: the owner's own stamp is served)", async () => {
-  const w = setup();
+  const w = await setup();
   const file = varied(PARTED_PART_BYTES + 10, 9);
   const begin = { sha256: sha(file), bytes: file.length, statement: STATEMENT };
   for (const by of ["class:ai", "class:probe", undefined]) {
@@ -142,7 +145,7 @@ test("R87 (parted upload, who): a caller's `by` in the body names nobody; anothe
 });
 
 test("R87 (parted upload, part bound): a part whose declared length is over the part size is refused as capture refuses, {size, bound} relayed, nothing stored, its body read and discarded so the client reads the answer (capture R113, G176) (control: a part of exactly the part size is accepted)", async () => {
-  const w = setup();
+  const w = await setup();
   const file = varied(PARTED_PART_BYTES + 10, 11);
   const b = await arm(w, "captureuploadbegin", { by: MEMBER }, { sha256: sha(file), bytes: file.length, statement: STATEMENT });
   let pulled = 0;

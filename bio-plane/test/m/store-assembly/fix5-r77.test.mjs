@@ -9,6 +9,9 @@ import { createHash } from "node:crypto";
 import { store } from "./alarmed-store.mjs";
 import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
+/* the owners' published answers (extraction's `readHeldAnswer`, acquisition's `owedRunAnswer`), made by their real code */
+const { readHeldAnswer: { read: readDone } } = await import("../extraction/fixtures.mjs");
+const { owedRunAnswer } = await import("../acquisition/fixtures.mjs");
 import { pendingOf, PENDING_BATCH } from "../../../src/store-assembly/pending.mjs";
 import { ASSEMBLY_DECLARED_OPS } from "../../../src/store-assembly/declared.mjs";
 
@@ -26,7 +29,7 @@ const stopped = "PAGE_KILLED_READER";
 async function world(db, answer) {
   const x = await store({ db, env: { CAPTURES: bucketStandIn() } });
   x.asked = [];
-  extractionOf(x.ctx).readHeld = async (a) => { x.asked.push(a); return answer(a); };
+  extractionOf(x.ctx).readHeld = async (a) => { x.asked.push(a); const k = answer(a); return k === "read" ? readDone() : k; };   /* "read": extraction's published read-to-its-end answer */
   return x;
 }
 /* one alarm that the isolate may be killed in: abandoned as soon as a run that never returns has begun */
@@ -34,7 +37,7 @@ const alarm = (x, at) => Promise.race([x.s.onAlarm(at), new Promise((r) => { beg
 
 test("R64 (E2): a run that never returns is counted before it runs, so its row is not first at the next tick, a following row runs, and the third interruption ends it stated", async () => {
   const heavy = sha("a 15.9 MB many-object PDF"), after = sha("a note's small reading");
-  const hang = (a) => (a.sha === heavy ? NEVER() : { ok: true, read: true });
+  const hang = (a) => (a.sha === heavy ? NEVER() : "read");
   let x = await world(undefined, hang);
   await x.call(`/pendingadd?kind=reading&sha=${heavy}`);
   await new Promise((r) => setTimeout(r, 5));
@@ -110,9 +113,9 @@ test("R64 (E2): one heavy row (reading, ocr, keep) runs in a tick, and the other
   const order = [];
   const light = "rs_" + "f".repeat(16) + "_abc";
   x.asked.length = 0;
-  extractionOf(x.ctx).readHeld = async (e) => { order.push("heavy"); return { ok: true, read: true }; };
+  extractionOf(x.ctx).readHeld = async (e) => { order.push("heavy"); return readDone(); };
   const { acquisitionOf } = await import("../../../src/acquisition/index.mjs");
-  acquisitionOf(x.ctx).owedRun = async () => { order.push("light"); return { ok: true, done: true }; };
+  acquisitionOf(x.ctx).owedRun = async () => { order.push("light"); return owedRunAnswer({ kind: "done" }); };
   const { captureOf } = await import("../../../src/capture/index.mjs");
   await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("page"), session: light });
   await x.s.onAlarm(Date.now() + 3000);

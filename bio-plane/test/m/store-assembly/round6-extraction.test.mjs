@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { store } from "./alarmed-store.mjs";
+import { storeSilent } from "../answer-envelope/fixtures.mjs";   /* answer-envelope's published 502 STORE_DID_NOT_ANSWER, made by its real helper */
 import { multipartBucket } from "../record-core/storage.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
@@ -30,7 +31,6 @@ const doAnswer = async (res) => {
   if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: undefined, reply };
   return { answered: false, result: undefined };
 };
-const storeSilent = (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502);
 
 const PAGE = "https://r.example/page";
 const SHELL = new TextEncoder().encode("<!doctype html><html><head><title>A notice</title></head><body><div id=app>the notice text of the shell</div></body></html>");

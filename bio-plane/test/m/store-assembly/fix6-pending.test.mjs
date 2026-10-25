@@ -12,6 +12,9 @@ import { store } from "./alarmed-store.mjs";
 import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
+/* the owners' published answers (extraction's `readHeldAnswer`, acquisition's `owedFetchAnswer`, `owedRunAnswer`), made by their real code */
+const { readHeldAnswer: { read: readDone, pieces: piecesOf } } = await import("../extraction/fixtures.mjs");
+const { owedFetchAnswer, owedRunAnswer } = await import("../acquisition/fixtures.mjs");
 import { captureOf } from "../../../src/capture/index.mjs";
 import { pendingOf, PENDING_KINDS } from "../../../src/store-assembly/pending.mjs";
 
@@ -30,8 +33,8 @@ async function world(db, { fetchAnswer = null, readAnswer = null } = {}) {
   const delivered = [];
   const x = await store({ db, env: { CAPTURES: bucketStandIn() }, deliver: async (a) => { delivered.push(a); return { ok: true }; } });
   x.fetched = []; x.read = []; x.delivered = delivered;
-  if (fetchAnswer) acquisitionOf(x.ctx).owedFetch = async (cap, entry, o) => { x.fetched.push({ cap, entry, o }); return fetchAnswer(entry, o); };
-  if (readAnswer) extractionOf(x.ctx).readHeld = async (a) => { x.read.push(a); return readAnswer(a); };
+  if (fetchAnswer) acquisitionOf(x.ctx).owedFetch = async (cap, entry, o) => { x.fetched.push({ cap, entry, o }); const k = fetchAnswer(entry, o); return k && k.kind ? owedFetchAnswer(k) : k; };   /* `{kind, reason}`: acquisition's published answer of that kind */
+  if (readAnswer) extractionOf(x.ctx).readHeld = async (a) => { x.read.push(a); const k = readAnswer(a); return k === "read" ? readDone() : k; };   /* "read": extraction's published read-to-its-end answer */
   return x;
 }
 
@@ -51,7 +54,7 @@ test("R67 (G2): `fetch` is a ledger kind, keyed by its capture session, never by
 });
 
 test("R67 (G2): the tick runs a due `fetch` row through acquisition's `owedFetch`, handing it the session, the store's name and the door's `deliver`; done ends it, a final reason ends it stated, anything else backs off", async () => {
-  const x = await world(undefined, { fetchAnswer: (e) => (e.session === "s-ok" ? { ok: true, done: true } : e.session === "s-final" ? { final: true, reason: "FETCH_REFUSED" } : { ok: false, reason: "UPSTREAM_SLOW" }) });
+  const x = await world(undefined, { fetchAnswer: (e) => (e.session === "s-ok" ? { kind: "done" } : e.session === "s-final" ? { kind: "final" } : { kind: "outstanding" }) });
   for (const s of ["s-ok", "s-final", "s-slow"]) { await captureOf(x.ctx).owedLater({ kind: "fetch", session: s }); await new Promise((r) => setTimeout(r, 2)); }
   const at = Date.now() + 1000;
   await x.s.onAlarm(at);
@@ -62,15 +65,15 @@ test("R67 (G2): the tick runs a due `fetch` row through acquisition's `owedFetch
   await x.s.onAlarm(at + 1000);
   await x.s.onAlarm(at + 2000);
   const left = rows(x);
-  assert.deepEqual(left.map((r) => [r.sha, r.final_why]), [["s-final", "FETCH_REFUSED"], ["s-slow", null]], "the ok one ended, the final one is stated, the slow one is owed");
+  assert.deepEqual(left.map((r) => [r.sha, r.final_why]), [["s-final", "CAPTURE_HELD_BY_ANOTHER_BUNDLE"], ["s-slow", null]], "the ok one ended, the final one is stated, the slow one is owed");
   const slow = left.find((r) => r.sha === "s-slow");
   assert.equal(slow.attempts, 1);
-  assert.equal(slow.last_why, "UPSTREAM_SLOW");
+  assert.equal(slow.last_why, "DELIVERY_FAILED");
   assert.ok(slow.due_at > at + 2000, "backed off");
 });
 
 test("R67 (G2): a fetch is heavy: a tick runs at most one heavy row, whatever its kind, beside the light ones; with no owner of `owedFetch` the row waits, owed", async () => {
-  const x = await world(undefined, { fetchAnswer: () => ({ ok: true, done: true }), readAnswer: () => ({ ok: true, read: true }) });
+  const x = await world(undefined, { fetchAnswer: () => ({ kind: "done" }), readAnswer: () => "read" });
   const d = sha("a reading owed");
   await captureOf(x.ctx).owedLater({ kind: "fetch", session: "s-a" });
   await new Promise((r) => setTimeout(r, 2));
@@ -81,9 +84,9 @@ test("R67 (G2): a fetch is heavy: a tick runs at most one heavy row, whatever it
   assert.equal(x.fetched.length + x.read.length, 1, "one heavy row in the tick");
   assert.equal(asked.asked, 1);
   /* control: a light row runs beside the one heavy row */
-  const y = await world(undefined, { fetchAnswer: () => ({ ok: true, done: true }) });
+  const y = await world(undefined, { fetchAnswer: () => ({ kind: "done" }) });
   await captureOf(y.ctx).owedLater({ kind: "fetch", session: "s-a" });
-  acquisitionOf(y.ctx).owedRun = async () => ({ ok: true, done: true });
+  acquisitionOf(y.ctx).owedRun = async () => owedRunAnswer({ kind: "done" });
   await captureOf(y.ctx).owedLater({ kind: "subresources", session: "s-light" });
   const out = (await y.s.onAlarm(Date.now() + 1000)).pendingwork;
   assert.deepEqual(out.results.map((r) => r.kind).sort(), ["fetch", "subresources"]);
@@ -134,28 +137,31 @@ test("R67 (G2): `owedwork` answers a `fetch` row by its session key, which is no
 
 test("R68 (G13): a reading answered `more` with a cursor is asked again at the next tick with that cursor handed back, one piece for each tick, until it answers read; no count ends it", async () => {
   const d = sha("a twelve megabyte text");
-  const pieces = [{ ok: true, more: true, detail: { cursor: "c1" } }, { ok: true, more: true, detail: { cursor: "c2" } }, { ok: true, read: true }];
+  const made = await piecesOf(3);   /* extraction's real ticks of a text of three pieces: two `more`, then read */
+  const pieces = [...made];
   const x = await world(undefined, { readAnswer: () => pieces.shift() });
   await x.call(`/pendingadd?kind=reading&sha=${d}`);
   let at = Date.now() + 1000;
   for (let i = 0; i < 3; i++) { await x.s.onAlarm(at); at += 1000; }
-  assert.deepEqual(x.read.map((a) => a.detail), [{}, { cursor: "c1" }, { cursor: "c2" }], "each piece is asked with the cursor the last left");
+  assert.deepEqual(x.read.map((a) => a.detail), [{}, made[0].detail, made[1].detail], "each piece is asked with the cursor the last left");
   assert.equal(rows(x).length, 0, "ended with the last piece");
   /* between pieces the row is owed and due, its tries cleared, its cursor kept; each piece moves the cursor (R76's control: a row that
      advances each tick is never ended by the no-progress rule) */
   let n = 0;
-  const y = await world(undefined, { readAnswer: () => ({ ok: true, more: true, detail: { cursor: `c${++n}` } }) });
+  const loop = (await piecesOf(5)).slice(0, 4);   /* the four `more` ticks of a text of five pieces, asked in turn: each moves the cursor from the one before */
+  const y = await world(undefined, { readAnswer: () => loop[n++ % 4] });
   await y.call(`/pendingadd?kind=reading&sha=${d}`);
   for (let i = 0, t = Date.now() + 1000; i < 40; i++, t += 1000) await y.s.onAlarm(t);
   const [r] = rows(y);
-  assert.deepEqual([r.attempts, r.final_why, JSON.parse(r.detail)], [0, null, { cursor: "c40" }], "forty pieces and it is still owed: no count or clock ends it");
+  assert.deepEqual([r.attempts, r.final_why, JSON.parse(r.detail)], [0, null, loop[39 % 4].detail], "forty pieces and it is still owed: no count or clock ends it");
   assert.equal(y.read.length, 40);
 });
 
 test("R68 (G13): one heavy piece for each tick across rows: two readings going on by cursor take turns, none is read twice in a tick", async () => {
   const a = sha("text a"), b = sha("text b");
-  const left = { [a]: 3, [b]: 3 };
-  const x = await world(undefined, { readAnswer: (q) => (--left[q.sha] > 0 ? { ok: true, more: true, detail: { cursor: left[q.sha] } } : { ok: true, read: true }) });
+  const made = await piecesOf(3);
+  const seq = { [a]: [...made], [b]: [...made] };
+  const x = await world(undefined, { readAnswer: (q) => seq[q.sha].shift() });
   await x.call(`/pendingadd?kind=reading&sha=${a}`);
   await new Promise((r) => setTimeout(r, 2));
   await x.call(`/pendingadd?kind=reading&sha=${b}`);
@@ -208,7 +214,7 @@ test("R68 (G13): the interrupted-run accounting is kept across pieces: a piece t
   await x.s.onAlarm((at += 3_600_000));
   assert.equal(x.read[x.read.length - 1].killedCursor, "c2", "the cursor killed three times is handed to the reader to step past");
   /* control: a reading that never answers `more` is handed no cursor but the empty one */
-  const y = await world(undefined, { readAnswer: () => ({ ok: true, read: true }) });
+  const y = await world(undefined, { readAnswer: () => "read" });
   await y.call(`/pendingadd?kind=reading&sha=${d}`);
   await y.s.onAlarm(Date.now() + 1000);
   assert.deepEqual(y.read.map((a) => a.detail), [{}]);
