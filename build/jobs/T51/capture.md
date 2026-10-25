@@ -910,3 +910,7 @@ Size (session_012fgH9vTfzdHdBqQC1UfCpA): test runs 4, module lines 5011
 **Tests/checks:** capture module 355+ pass 0 fail (before fixtures.test: 355/355; fixtures.test 7/7, g127f-t51 25/25, g127f-plane 8/8, archive 10/10). Impact users (op-declarations, admission, control-plane, affordances, op-grades, screens-intake, store-door, plane r9-jobs): 1909 tests, 1907 pass; the 2 failures (op-grades g55 moneyingestread, owners "every op T33 publishes is graded") fail identically on `origin/tranche/T51`, not mine. format 0 failures; architecture 0; coverage 67/67; words 0; ownership 0.
 
 Size (session_0156pHGtfAvwRXABsnFAHq8o): test runs 14, module lines 5013
+
+## J40 · COMPLETE
+
+COMPLETE B40: R29 fixed (four parted ops admit admin+member; red-first test, Miniflare P green; L at redeploy), R33 capture half green, 7 fixtures published, own fixture lines re-pointed or marked; remaining 26 lines are contract-no-run (plane job-registrar/keep-later, answer-envelope door-helpers, store-door store-replies). Findings for users: real render refusals are 429/501 not 409; real setAside names documents by 'document' with waiting.{questions,withheld}. control-plane r72-parted needs the founder case. Details in my record J39.
