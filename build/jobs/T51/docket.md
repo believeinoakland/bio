@@ -178,3 +178,7 @@ Size (session_01AfpNQasnQVjYv36UwxUmau): test runs 3, module lines 1657
 **Ran:** docket tests 93 pass, 0 fail; dependents public-read 310/0, network-notices 78/0, filings 164/0, case-import 162/0, action-holds 50/0, queue-producers 155/0. Checks (absolute root): format 0 failures, architecture 0, coverage 31 of 31 ids, ownership 0, words 0, `fixtures docket --list` 0 failures, no marker added.
 
 Size (session_01LYRnnKMee8tichiXQJP812): test runs 10, module lines 1657
+
+## J6 · COMPLETE
+
+COMPLETE: B6 cause 1 (diag2-10b C4). docketFile keeps the filed summary for every kind; docketPrepare uses it when none named. Met: R1, R4 (BOB strikes marks). docket 93/0; dependents green; screens-publish R24, R22 G54 fail inherited. Checks all 0. Door case (K5138) for control-plane walk10b-docket: not added by me. Record: build/jobs/T51/docket.md.
