@@ -397,3 +397,7 @@ Mail with `--module screens-daily`; record `build/jobs/T51/screens-daily.md` (ap
 Then (a CHANGE after ANSWERS #15 merges, follow-up 57): "Show how this was counted" drawn only while `answers`' `ruleservicesstate` reads `on` (R6 as amended), on answers' published fixture.
 
 **Done:** the marked requirement met (name the ids; BOB strikes the marks); `node /home/user/civicos-process/checks/fixtures.mjs <absolute root> screens-daily --list` 0 failing; module tests green; format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B39 · CHANGE
+
+CHANGE (K5138): ANSWERS #15 is merged on the tranche: `ruleservicesstate` → `{ok: true, on}` and its fixture `ruleServicesState({on})` in `bio-plane/test/m/answers/fixtures.mjs`. Merge `origin/tranche/T51`, then R6's second half: "Show how this was counted" (`ruleanswer`) is drawn only while `ruleservicesstate` reads `on`; while off it is not drawn. Test on answers' fixture (both states), seen red first. Then COMPLETE (R6's mark is struck at that merge).
