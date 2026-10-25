@@ -82,7 +82,7 @@ test("R9 projectDirectory: needs a member; the discoverable projects the caller 
      ["PROJ-X3", "X 3", null]]);
   for (const p of d.projects) assert.deepEqual(Object.keys(p).sort(), ["id", "name", "request"]);
   const x1 = d.projects[2].request;
-  assert.deepEqual([Object.keys(x1).sort(), x1.closed], [["asked", "closed", "state"], null]);
+  assert.deepEqual([Object.keys(x1).sort(), x1.closed], [["asked", "closed", "closed_comment", "state"], null]);
   assert.deepEqual([d.ok, d.count, d.limit, d.truncated], [true, 5, ProjectRoster.PROJECT_DIRECTORY_LIMIT, false]);
   assert.equal(ProjectRoster.PROJECT_DIRECTORY_LIMIT, 200);
   /* a declined request shows as declined while it is the latest */
