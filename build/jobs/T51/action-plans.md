@@ -97,3 +97,7 @@ Size (session_019adkgzUkBj7R8ajuFvhTNL): test runs 4, module lines 3357
 **Checks:** module suite 103 pass, 0 fail; `fixtures.mjs --list` for action-plans: 0 failures (the one accepted line is the generic marker); `words.mjs`: 0 failures; `format.mjs`: 0; `coverage.mjs`: 53 of 53; `ownership.mjs`: 0 failures; `impact.mjs`: 0 affected modules.
 
 Size (session_0129vmmwvkC9E9jVVexUhTsz): test runs 6, module lines 3357
+
+## J4 · COMPLETE
+
+COMPLETE (B5). Published planRead fixture (planRead, checkpointsDue, plansToLookAgain) in test/m/action-plans/fixtures.mjs; ran contract plan-open-check (fixtures-run: ai-runs plan-open-check). REAL DIFFERS: the open check refuses a closed plan with PLAN_CLOSED (C-124.10), not PLAN_NOT_OPEN; ai-runs plan.test.mjs:95 must change to it. Own lines re-pointed: escalationRead (131), actionRead (180, real NO_SUCH_ACTION), retrieval (169). Marker: words.test.mjs:29 fixtures-generic: SOMEONE_ELSES (code made up on purpose as a scan control). NEEDS BOB: add 'retrieval' to action-plans' uses in modules.json (architecture.mjs fails with 1 failure until then; fixture.mjs imports test/m/retrieval/fixtures.mjs). Tests 103/0, fixtures 0 failures, words/format/coverage/ownership 0. Waiting: orphan-run on ai-runs' marker.
