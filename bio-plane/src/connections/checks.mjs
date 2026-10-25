@@ -67,6 +67,19 @@ export const CONNECTION_CHOICE_CHECKS = {
   },
 };
 
+/* R72 (K5157; walk-T51-final 06 §12) — A DOCUMENT OR RECORD THE VIEWER CANNOT SEE, OR THE RECORD DOES NOT HOLD. The
+ * reads and acts of this module that name a document (`backlinks`, the link projection, `assert`, `asserted`) once
+ * answered hypotheses' `NO_SUCH_BUNDLE`, whose canned sentence speaks of an inquiry and was put on a read of a document
+ * by the door's decoration by code. Its own code and row, as tasks' `TASK_NOT_YOURS` apart from intent's `NOT_YOURS`:
+ * a document the viewer cannot see answers exactly as one that is absent (R20). */
+export const NO_SUCH_DOCUMENT_CHECKS = {
+  NO_SUCH_DOCUMENT: {
+    check: 'C-155.1',
+    where: 'src/connections/index.mjs noSuchDocument > is-no-such-document',
+    translation: localize('connections.checks.no_such_document', 'There is no document or record here by that id that you can see.'),
+  },
+};
+
 /* =========================================================================
  * FW-17 · THE DETERMINING REFERENCE PAIR, AND WHAT A PORTION MAY EARN FROM IT
  * (D-161; Bob's rulings of 2026-09-14, CONTENT-EXTENT-DESIGN-SPACE.md 5.1
