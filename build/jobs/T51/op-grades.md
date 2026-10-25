@@ -355,3 +355,15 @@ Options:
 - B: the design words the calculations sentence with a "read: " lead. The prefix test then stands as it was.
 
 I have not edited the requirement. Per the job rules I write only my paths, tests and record, so this decision is recorded here and not in `build/rulings.md`; please record it there.
+
+## J28 · COMPLETE
+
+**COMPLETE (follow-up 19, K5094).** Cause: `moneyingestread` is calculations' read, graded in `t33.mjs:285` with the owner's words. The grade row is right (a read, no rung or ground, a NON_ACT, phone true). Two of my tests took a read by its "read: " lead and "writes nothing" ending, so they failed on a correct row. Fix, tests only (commit 7775f42248): `declared.mjs` gains `ownerReads`, which finds a table's ops whose owner declares weight `read`; `owners.test.mjs` R13 adds those to `T33_READS` and holds each to its owner's sentence (`declaredSentence(owner, op)`); `g55.test.mjs` asserts weight `read`, `mutating: false`, and the owner's sentence. No product code and no other module changed; no fixtures markers added.
+
+**Entries applied:** follow-up 19. `owners.test.mjs:195` was red on the tranche and is green now.
+**Deferred:** none.
+**Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/op-grades/*.test.mjs`: 144 pass, 0 fail (before the fix, 2 fail: `owners.test.mjs:195` and `g55.test.mjs`).
+**Checks** (product root `/home/user/bio`): format 0 failures; architecture 0 failures; coverage 53 of 53 live requirement ids named; ownership 0 failures (4 files, the job's own); words 0 failures; fixtures for op-grades 0 failures, answer 0.
+**Impact:** not run; no product code changed.
+
+Size (session_01HMaPz7pqmixWTqj6Bw5a1N): test runs 3, module lines 3680
