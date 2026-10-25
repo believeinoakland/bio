@@ -152,7 +152,7 @@ export function world({ gate = true, now = null, strictConclude = false } = {}) 
   events.migrate();
   const money = moneyOf(host, { record, membership, entities, provenance: prov, events, lines: null, now: tick });
   money.migrate();
-  const c = contradictionOf(host, { record, extraction: x, membership, promotion, entities, basisVersions: bv, events, money,
+  const c = contradictionOf(host, { record, extraction: x, membership, promotion, entities, basisVersions: bv, events, money, content,
                                     inquiry: inquiryServices(host), now: now || (() => clock.now) });
   c.migrate();
   /* The runs the stand-in gate answers for: {status, principal, hidden}. */

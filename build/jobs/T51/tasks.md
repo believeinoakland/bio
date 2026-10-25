@@ -1,6 +1,6 @@
 # tasks (T51)
 
-**Status** · session_018khTeR7Ftw2mCC35fSYLYA · depth 2 · COMPLETE · handled B11
+**Status** · session_01XHqSWAYfTVFiPw8iMY9K7P · depth 2 · COMPLETE · handled B12
 
 ## J1 · COMPLETE
 
@@ -232,3 +232,21 @@ Size (session_018khTeR7Ftw2mCC35fSYLYA): test runs 130, module lines 1702
 ## J10 · COMPLETE
 
 COMPLETE (TASKS #20, follow-up 44, K5117). Cause: reports of tasks/grammar.test.mjs's burst of sync tests are lost under --test-force-exit (all tests run; probe showed 45 of 45 ran while 46 of 53 reported); one-process run gave 103-134. Fix: root afterEach yielding one event-loop turn in grammar.test.mjs (tests only). Proof: 20 idle + 15 under 8 busy loops, 134 each, 0 fail. Checks fixtures/format/architecture/coverage/words/ownership all 0. Details in build/jobs/T51/tasks.md J8. Nothing for other modules.
+
+## J11 · COMPLETE
+
+**TASKS #21, fix round 10, item 70 (K5148; WALK-FINAL-04B R146, `diag2-04.md` §6): authority tasks now route to the owner of the project the document is filed in.**
+
+1. **Failing-first test** (`inbox.test.mjs`, "R1 (K5148, WALK-FINAL-04B R146) …"), seen red on the old code (the task read `unassigned`, group-admin), green after: a document with `project: P` in its record row and no `cites` edge routes to P's first active owner (a revoked owner before them is skipped), basis `tasks.why.owner_referred_project`; the filed-in project comes before a citing project; a filed-in project with no active owner falls through to the citing one; control: no project and no edge still routes by the administrator rule. `world.mjs` gained a `project` option on `bundle()` (the project column record-core R34 reads).
+2. **Fix** (`tasks/index.mjs`, `#routeTask`): a new arm after the bundle-is-a-project arm and before the `cites` arm, reading `bundleInfo().project` (which the function already held as `info`) and taking its first active owner by the same `ownerOf`. No new sentence.
+3. **Why the tests missed it:** `inbox.test.mjs` built its only project route through a `cites` edge from the project (`word("tasks.why.owner_cites_record")`), the one way the old code could reach a project; no test filed a document with the project in its record row. The world fixture had no way to set that column.
+
+**Met:** tasks R1 (its filed-in-project clause, K5148); BOB may strike its `not yet met: T51` mark. Door case (acquire into a project, promote, drain, `op=tasks` shows the owner) belongs to control-plane's door tests (K5138): REPORT to BOB to place; I added none.
+
+**Runs.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/tasks/*.test.mjs` (no force-exit, exits by itself): 135 tests (134 + 1), 0 fail, 0 cancelled. Checks with the absolute root: format 0; architecture 0; coverage 25 of 25, 0; words 0 (no new strings); `fixtures.mjs … tasks --list` 0 failures, no marker added; ownership 0.
+
+Size (session_01XHqSWAYfTVFiPw8iMY9K7P): test runs 4, module lines 1710
+
+## J12 · COMPLETE
+
+COMPLETE (TASKS #21, item 70, K5148). #routeTask now routes to the first active owner of the project the document is filed in (bundleInfo().project), after the bundle-is-a-project arm, before cites. Failing-first test in inbox.test.mjs seen red then green; suite 135 (134+1), 0 fail. Met: tasks R1 (filed-in-project clause). Checks format/architecture/coverage/words/fixtures/ownership all 0. REPORT: the through-the-door case (acquire into project, promote, drain, op=tasks shows owner) belongs to control-plane's door tests; I added none (K5138). Details: build/jobs/T51/tasks.md J11.

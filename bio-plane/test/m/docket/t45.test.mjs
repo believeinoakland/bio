@@ -53,10 +53,14 @@ test("R1 (T45) an outcome states {kind, on} and a summary: DOCKET_OUTCOME_UNREAD
   refusedThenAccepted(w, () => file(w, { outcome: OUTCOME.outcome }), () => file(w), "DOCKET_OUTCOME_UNREADABLE");
   for (const x of [{ kind: "statement", capture: w.swept.sha }, { kind: "reaction", from: { kind: "other", name: "A blog" } }])
     refusedThenAccepted(w, () => file(w, { ...x, outcome: { kind: "cure", on: "2026-09-30" } }), () => file(w, x), "DOCKET_OUTCOME_UNREADABLE");
-  /* a summary on another kind is not an outcome's statement: it is neither refused nor recorded */
-  const plain = file(w, { summary: "not read" });
+  /* a summary on another kind is not an outcome's statement, but it is kept (R1, K5148); an unusable one is not refused */
+  const plain = file(w, { summary: "kept words" });
   assert.equal(plain.ok, true);
-  assert.equal("summary" in plain, false);
+  assert.equal(plain.summary, "kept words");
+  assert.equal("outcome" in plain, false);
+  const bad = file(w, { summary: "a\n\nb" });
+  assert.equal(bad.ok, true);
+  assert.equal("summary" in bad, false);
 });
 
 test("R1 (T45) the outcome's refusals come after R1's form checks, in order: outcome, then summary", () => {

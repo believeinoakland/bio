@@ -114,8 +114,9 @@ export function findingText(id, pair = { capture: "B", connection: "C" }, title 
 }
 /** The case document: its lens (`bias_manifest.statements_sha`) and the source's bar (`required_strength`). */
 export function caseDocText({ case: caseId = CASE, edition = 1, lens = LENS, bar = { capture: "B", connection: "B" }, note = "",
-                              calcs = null, apps = null, printedLens = null } = {}) {
-  return ["---", "format: bio-case-document/6", `case_id: ${caseId}`, `case_edition: ${edition}`, "bias_manifest:",
+                              calcs = null, apps = null, printedLens = null, scope = null } = {}) {
+  return ["---", "format: bio-case-document/6", `case_id: ${caseId}`, `case_edition: ${edition}`,
+          ...(scope === null ? [] : [`case_scope: ${JSON.stringify(scope)}`]), "bias_manifest:",
           `  in_force: ${lens ? "true" : "false"}`, `  statements_sha: ${lens ?? "null"}`, "required_strength:",
           `  declared: ${bar ? "true" : "false"}`, `  capture: ${bar?.capture ?? "null"}`, `  connection: ${bar?.connection ?? "null"}`,
           ...(calcs ? calculationsBlock(calcs) : []),
@@ -142,10 +143,10 @@ export function calcInputAt(calc, hash) {
  *  document and its signature in part 1 and each other file in a part of its own. A document is a material, carried
  *  at `materials/<name>/document`. */
 export function caseFile({ group = SOURCE, case: caseId = CASE, edition = 1, lens = LENS, bar, note = "", findings = [F1, F2, F3],
-                           pairs = {}, titles = {}, documents = [], split = false, manifestExtra = {}, calcs = null, calcInputs = [], apps = null, printedLens = null } = {}) {
+                           pairs = {}, titles = {}, documents = [], split = false, manifestExtra = {}, calcs = null, calcInputs = [], apps = null, printedLens = null, scope = null } = {}) {
   const at = (kind, key) => caseFilePath(kind, key);
   const files = [
-    { path: at("case_document"), kind: "case_document", bytes: bytes(caseDocText({ case: caseId, edition, lens, bar, note, calcs, apps, printedLens })) },
+    { path: at("case_document"), kind: "case_document", bytes: bytes(caseDocText({ case: caseId, edition, lens, bar, note, calcs, apps, printedLens, scope })) },
     { path: at("case_signature"), kind: "case_signature", bytes: bytes(`-----BEGIN SSH SIGNATURE-----\n${caseId}/${edition}\n`) },
     { path: at("complete_edition"), kind: "complete_edition", bytes: bytes(`<!doctype html><title>${caseId}</title>`) },
     ...findings.map((id) => ({ path: at("finding", id), kind: "finding", bytes: bytes(findingText(id, pairs[id], titles[id] ?? null)) })),

@@ -15,7 +15,7 @@ import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
 import { acquireRefusals } from "../acquisition/fixtures.mjs";
 import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
-import { linkSweepOf } from "../../../src/link-sweep/index.mjs";
+import { linkSweepOf, DECLARED_OPS } from "../../../src/link-sweep/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { monitoringOf, MONITOR_PAUSE_SETTING as PAUSE_SETTING } from "../../../src/monitoring/index.mjs";
 
@@ -224,6 +224,10 @@ export function site(w, map) {
 }
 
 export const SEED = "https://records.example.org/council/index.html";
+/** The query the door hands an op: the caller's own params, then each stamp the op's row declares (`viewer` when it declares
+ *  none, op-declarations' default), set to the caller's id. The arm reads a member only from these, never from a copy the
+ *  caller wrote, so a test builds its stamps here and not by hand. */
+export const doorQuery = (op, who) => new URLSearchParams({ op, ...Object.fromEntries((DECLARED_OPS[op].stamps ?? ["viewer"]).map((s) => [s, who])) });
 export const U = (p) => `https://records.example.org/council/${p}`;
 export const page = (links) => `<html><body>${links.map(([href, text]) => `<a href="${href}">${text}</a>`).join("\n")}</body></html>`;
 export const runsOf = (w) => w.rows(`SELECT * FROM sweep_runs ORDER BY sweep, seq`).map((r) => ({ ...r, detail: JSON.parse(r.detail) }));

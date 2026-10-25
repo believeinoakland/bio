@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { MACHINE } from "./fixture.mjs";
-import { flagWorld, M1, M2, DOC, HIDDEN, P, CID, WHY, HERE, OTHER } from "./flag-seed.mjs";
+import { flagWorld, unmintedWorld, M1, M2, DOC, HIDDEN, P, CID, WHY, HERE, OTHER } from "./flag-seed.mjs";
 import { refusedWith, RUN } from "./seed.mjs";
 import { contradictionOps, CONTRADICTION_CANDIDATE_CHECKS as ROWS, TEXT_CAPS } from "../../../src/contradiction/index.mjs";
 
@@ -186,4 +186,36 @@ test("R61, R19: a flag's candidate is no pairing: R5 knows no key for it, and a 
   assert.equal(r.ok, false);
   assert.equal(r.code, "CONTRADICTION_KEY_UNKNOWN");
   assert.equal(r.keys.includes("FLAG"), false);
+});
+
+test("R61 a passage of a reading the viewer may see that no content row holds is made citable by the flagging member, then flagged; a page not in the reading, a hidden bundle's passage and an unread capture are refused, nothing written", () => {
+  const w = unmintedWorld();
+  assert.equal(w.count("content"), 0);
+  /* controls first: each refused, and nothing minted or written */
+  const answers = [
+    flag(w, { other: { capture: "capL", extent: { kind: "pdf-page", page: 99 } } }),
+    flag(w, { here: { capture: "capN", extent: { kind: "pdf-page", page: 2 } } }),
+    flag(w, { here: { capture: "capS", extent: P.lease1 } }),
+    flag(w, { other: { capture: "capZ", extent: P.lease1 } }),
+  ];
+  for (const r of answers) refusedWith(assert, ROWS, r, "FLAG_NO_PASSAGE");
+  assert.deepEqual(rowsWritten(w), { candidates: 0, acts: 0 });
+  assert.equal(w.count("content"), 0, "a refusal mints nothing");
+  /* a refusal later in the order (no reason) mints nothing either */
+  refusedWith(assert, ROWS, flag(w, { reason: "" }), "FLAG_NO_REASON");
+  assert.equal(w.count("content"), 0);
+  /* the act itself */
+  const r = flag(w);
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.equal(r.wrote, true);
+  assert.deepEqual(rowsWritten(w), { candidates: 1, acts: 0 });
+  const rows = w.rows(`SELECT capture_sha, bundle_id, minted_by FROM content ORDER BY capture_sha`);
+  assert.deepEqual(rows.map((x) => [x.capture_sha, x.bundle_id, x.minted_by]), [["capL", DOC.lease, M1], ["capN", DOC.notice, M1]]);
+  /* flagged again, the same pair is answered and nothing more is written */
+  const again = flag(w);
+  assert.equal(again.already, true);
+  assert.equal(w.count("content"), 2);
+  assert.equal(w.count("contradiction_candidates"), 1);
+  /* the member who may see the hidden bundle may flag its passage */
+  assert.equal(flag(w, { here: { capture: "capS", extent: P.lease1 } }, { viewer: M2, author: M2 }).ok, true);
 });

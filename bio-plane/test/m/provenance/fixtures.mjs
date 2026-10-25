@@ -2,7 +2,8 @@
    never stored. A user takes the answer or the instance from here instead of hand-building provenance's answer
    (`{homeOf: () => null}`, a stubbed `partsOf`, a hand-written `registerHolds` row). Each is checked by
    `fixtures.test.mjs`, which calls it and compares the real answer. */
-import { world, sha, infoMd, provDoc } from "./fixture.mjs";
+import { world, sha, infoMd, provDoc, storage } from "./fixture.mjs";
+import { migrateProvenance } from "../../../src/provenance/schema.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 
 export { sha };
@@ -181,4 +182,29 @@ export function heldParts(wholeSha, parts) {
  *  (VERSION_CHAIN_NO_SUCH_VERSION, C-24.2). */
 export function versionChainNoSuchVersion({ addressNorm = "e.org/a", at = sha("elsewhere"), viewer = "member:x" } = {}) {
   return world().prov.versionChain({ addressNorm, at, viewer });
+}
+
+/** `homeOfOver`: the real `homeOf(captureSha)` over a CALLER's own storage, for a test that builds its own record and writes
+ *  the register's contract columns itself (provenance R48: `register.capture_sha`, `bundle_id`, `path`, `bytes`,
+ *  `registered`; `bundles` for the home to exist). `host` is the caller's `ctx` (`{storage}`, the key of the instance) and
+ *  `record` its record-core; `membership`, `promotion` and `now` are the caller's when it has them, else the real ones over
+ *  `host`. A `register` table the caller made with the contract's columns alone is first given the columns the real schema
+ *  has beyond them (read from a real migrated store, a default stated for a `NOT NULL` one), never a row. Answers
+ *  `{provenance, homeOf}`: `provenance` the real instance (migrated) and `homeOf(sha)` its real answer, `{bundleId, path,
+ *  encoding, bytes, registered, authored}` while the register row's bundle exists, else null. */
+export function homeOfOver({ host, record, membership, promotion, now } = {}) {
+  const sql = host.storage.sql;
+  const cols = (q, t) => [...q.exec(`PRAGMA table_info(${t})`)];
+  const have = new Set(cols(sql, "register").map((c) => c.name));
+  if (have.size) {
+    const real = storage();
+    migrateProvenance(real.sql);
+    for (const c of cols(real.sql, "register")) {
+      if (have.has(c.name)) continue;
+      const dflt = c.dflt_value ?? (c.notnull ? (c.type === "INTEGER" ? "0" : "'utf8'") : null);
+      sql.exec(`ALTER TABLE register ADD COLUMN ${c.name} ${c.type}${c.notnull ? " NOT NULL" : ""}${dflt === null ? "" : ` DEFAULT ${dflt}`}`);
+    }
+  }
+  const provenance = provenanceOver({ host, record, membership, promotion, now });
+  return { provenance, homeOf: (s) => provenance.homeOf(s) };
 }

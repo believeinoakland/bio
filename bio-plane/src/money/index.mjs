@@ -46,6 +46,8 @@ const MOVING_EVENTS = Object.freeze(["payment", "transfer"]);
 const SOURCE_DEPTH_MAX = 32;
 /* R31: an ingest key, at most. */
 const INGEST_KEY_MAX = 200;
+/* R7: the roles `checkConstant` reads. */
+const CONSTANT_ROLES = Object.freeze(["period", "kind", "phase", "stage", "basis", "currency"]);
 
 /* R1, R6: the fields a write may carry, and a party's. Every other field is refused (R6: no field marks a fact as
    the group's own). `fact_id`, `grade` and `at` are the module's to assign, never a caller's. */
@@ -696,6 +698,48 @@ export class Money {
     return { ok: true, found: true, fact: { ...this.#view_(row, viewer ?? ""), adjustments, cited_by: citing } };
   }
 
+  /* ---- R7 (T51; K5148): the checks money publishes for its callers ---- */
+
+  /** `checkConstant({role, value})`: whether money can read `value` as its `role` (`period`, `kind`, `phase`, `stage`,
+   *  `basis` or `currency`), before any fact is written. Answers `{ok: true, role}` or money's own refusal for that value
+   *  (`MONEY_BAD_PERIOD`, `UNKNOWN_MONEY_KIND`, `UNKNOWN_PHASE`, `UNKNOWN_STAGE`, `UNKNOWN_BASIS`, `NO_CURRENCY`), the
+   *  role beside it; an unknown role is `UNKNOWN_ROLE`. A period is a money period object, or a string read as
+   *  calculations reads a binding's period (`YYYY-MM-DD/YYYY-MM-DD?`, else a fiscal key). Writes nothing. */
+  checkConstant({ role, value } = {}) {
+    if (!CONSTANT_ROLES.includes(role))
+      return refusal("UNKNOWN_ROLE", localize("money.index.a_constant_role_is_one", "a constant's role is one of {list}", { list: String(list(CONSTANT_ROLES)) }), { list: CONSTANT_ROLES });
+    const r = (() => {
+      if (role === "period") {
+        let p = value;
+        if (typeof value === "string") {
+          const t = value.trim();
+          const m = /^(\d{4}-\d{2}-\d{2})\s*\/\s*(\d{4}-\d{2}-\d{2})?$/.exec(t);
+          p = m ? { from: m[1], to: m[2] ?? null, precision: "day" } : t ? { fiscal: t } : null;
+        }
+        const q = this.#period(p, this.#view());
+        return q.ok === false ? (q.code === "NO_PERIOD" ? badPeriod(q.detail) : q) : null;
+      }
+      if (role === "currency") return filled(value) ? null : refusal("NO_CURRENCY", localize("money.index.a_money_fact_names_its", "a money fact names its currency"));
+      const lists = { kind: MONEY_KINDS, phase: PHASES, stage: STAGES, basis: BASES };
+      if (lists[role].includes(value)) return null;
+      const code = { kind: "UNKNOWN_MONEY_KIND", phase: "UNKNOWN_PHASE", stage: "UNKNOWN_STAGE", basis: "UNKNOWN_BASIS" }[role];
+      return refusal(code, localize("money.index.role_is_one_of_list", "{role} is one of {list}", { role: String(role), list: String(list(lists[role])) }), { list: lists[role] });
+    })();
+    return r ? { ...r, role } : { ok: true, role };
+  }
+
+  /** `factBySource({table, row, binding, viewer?})`: the live (not withdrawn) fact written from that source row through
+   *  that binding, `{ok: true, found: true, fact_id}`, or `{ok: true, found: false}`: one indexed read. A withdrawn fact
+   *  is none. With a `viewer`, a fact the viewer may not see is none, as `readFact` answers. Writes nothing. */
+  factBySource({ table, row, binding, viewer } = {}) {
+    if (!filled(table) || row === undefined || row === null || !filled(binding))
+      return refusal("NO_SOURCE", localize("money.index.a_table_row_source_names", "a table row source names its table, its row and the binding it was read through"));
+    const key = typeof row === "string" ? row : JSON.stringify(row);
+    const f = this.#one(`SELECT fact_id, sight_bundle FROM money_facts WHERE source_binding=? AND source_table=? AND source_row=? AND withdrawn_at IS NULL ORDER BY at, fact_id LIMIT 1`, binding, table, key);
+    if (!f || (viewer !== undefined && viewer !== null && !this.#visibleBundle(f.sight_bundle, viewer))) return { ok: true, found: false };
+    return { ok: true, found: true, fact_id: f.fact_id };
+  }
+
   #view_(row, viewer) {
     const codes = this.#rows(`SELECT scheme, code FROM money_codes WHERE fact_id=? ORDER BY scheme, code`, row.fact_id);
     const concerns = this.#rows(`SELECT concerns FROM money_concerns WHERE fact_id=? ORDER BY concerns`, row.fact_id).map((r) => r.concerns);
@@ -943,6 +987,10 @@ export class Money {
     if (!filled(setId)) return refusal("NO_SET", localize("money.index.a_money_set_is_read", "a money set is read by its id (MSR-...)"));
     const set = this.#one(`SELECT * FROM money_sets WHERE set_id=?`, setId);
     if (!set) return { ok: true, found: false, set_id: setId };
+    /* R12 (T51; K5148): a set concerning a bundle the viewer may not see is answered exactly as an absent set, as R28
+       fences `moneySets`; nothing of the set (its label, its project, who, when) is told. */
+    if (filled(set.concerns) && this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, set.concerns)
+        && !this.#visibleBundle(set.concerns, viewer ?? "")) return { ok: true, found: false, set_id: setId };
     const st = this.#setState(setId, viewer ?? "", at);
     const props = this.#rows(`SELECT * FROM money_set_proposals WHERE set_id=? AND adopted_act IS NULL ORDER BY proposal_id`, setId)
       .filter((p) => this.#factRow(p.fact_id, viewer ?? ""))

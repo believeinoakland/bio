@@ -1,6 +1,6 @@
 # docket (T51)
 
-**Status** · session_01AfpNQasnQVjYv36UwxUmau · depth 2 · COMPLETE · handled B4
+**Status** · session_01LYRnnKMee8tichiXQJP812 · depth 2 · COMPLETE · handled B4
 
 ## Completion (T51-162, R8)
 
@@ -159,3 +159,26 @@ Ran: docket suite and queue-producers docket.test.mjs 94 pass, 0 fail; checks fi
 Deferred: none. Found in other modules: none caused by this job.
 
 Size (session_01AfpNQasnQVjYv36UwxUmau): test runs 3, module lines 1657
+
+## Fix round 10, final pass cause 1 (B6, DOCKET #15, session_01LYRnnKMee8tichiXQJP812)
+
+**Entries applied (K5148; diag2-10b C4)**
+- R1: `docketFile` keeps the filed `summary` for every kind that has one (one paragraph of at most 600 characters, trimmed); an unusable summary on a kind other than outcome is still not refused and is not kept (`#formRefusal` returns it in `fields.summary`; the filing answers `summary` whenever one was kept, `outcome` still for an outcome only).
+- R4: `docketPrepare` uses the filed summary (`rec.summary`) when the prepare names none, for every kind but outcome (which reads its own from the record); a summary the prepare names is the manager's words and wins. A reaction filed with none, prepared with none, is still `DOCKET_NO_SUMMARY`; `DOCKET_NO_ARCHIVE_COPY` unchanged (specified).
+- Met ids for BOB to strike: R1, R4.
+
+**Tests.** `place.test.mjs` "R1 R4 K5148 …" (red on the earlier code at `filed.summary`, green now): a reaction filed with a summary, then the screen's bare prepare is ok and the statement carries it; a named summary wins; the no-summary control stays `DOCKET_NO_SUMMARY`; a response keeps its summary to the statement. `t45.test.mjs` asserted the old behaviour (a summary on another kind "neither refused nor recorded"); updated to the amended R1: kept when usable, absent when not.
+
+**Why the tests missed it:** `place.test.mjs` and `formats.test.mjs` always passed `summary` to `docketPrepare` directly, and `screens-publish`'s fixture stubs `docketprepare`, so neither side ran the other; `t45.test.mjs` pinned the discard as intended.
+
+**Deferred:** none. **Door case for BOB (K5138):** the through-the-door walk (summary at filing, then prepare as the screen sends it) belongs to control-plane `walk10b-docket.test.mjs`; I added none.
+
+**Found in other modules:** `screens-publish` tests `R24 the module holds no English…` and `R22 G54 …` fail on the tranche with and without my change (inherited).
+
+**Ran:** docket tests 93 pass, 0 fail; dependents public-read 310/0, network-notices 78/0, filings 164/0, case-import 162/0, action-holds 50/0, queue-producers 155/0. Checks (absolute root): format 0 failures, architecture 0, coverage 31 of 31 ids, ownership 0, words 0, `fixtures docket --list` 0 failures, no marker added.
+
+Size (session_01LYRnnKMee8tichiXQJP812): test runs 10, module lines 1657
+
+## J6 · COMPLETE
+
+COMPLETE: B6 cause 1 (diag2-10b C4). docketFile keeps the filed summary for every kind; docketPrepare uses it when none named. Met: R1, R4 (BOB strikes marks). docket 93/0; dependents green; screens-publish R24, R22 G54 fail inherited. Checks all 0. Door case (K5138) for control-plane walk10b-docket: not added by me. Record: build/jobs/T51/docket.md.

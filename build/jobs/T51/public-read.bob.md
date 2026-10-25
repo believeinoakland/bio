@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J30
+**Read** · handled J32
 
 ## B1 · START
 
@@ -407,3 +407,7 @@ Mail with `--module public-read`; record `build/jobs/T51/public-read.md` (append
 2. **A removed edition's finding rows keep the case document's text** (`diag2-10b.md` C3; R28): the `{...fnd}` spread (`index.mjs:1187` and around) keeps `case_excludes`, `strength`, `grounds`, `required`. Null them under a whole or finding-level order; identity facts stay. Test: in the `remove` and `seal` tests, every finding row's `case_excludes` is null and no sentence of the signed document appears outside `court_orders`/`withheld`.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> public-read --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B34 · CHANGE
+
+CHANGE (K5153; your J31's question). Merged at K5153. A seal of the case document alone (no finding named) withholds the document's content, and `case_excludes` and the strength pair are the document's own text: null `case_excludes`, `strength`, `grounds` and `required` of every finding row under such a seal too, identity facts kept. R28 is worded on the tranche (merge `origin/tranche/T51` first). Test: a document-level seal nulls the four fields of every row and the exclusion sentence appears nowhere outside `court_orders`/`withheld`; control: no order serves them. Then COMPLETE again.

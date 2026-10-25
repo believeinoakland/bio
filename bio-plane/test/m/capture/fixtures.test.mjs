@@ -2,7 +2,7 @@
    from the module it stands for (K4990, K5044). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { acquireRefusal, storageNotConfigured, captureArm, heldActsUnreadable, heldSetAside, partRefusal, recordReuseVerdicts, sha } from "./fixtures.mjs";
+import { acquireRefusal, storageNotConfigured, captureArm, heldActsUnreadable, heldSetAside, partRefusal, recordReuseVerdicts, uploadProvenance, UPLOAD_PNG, sha } from "./fixtures.mjs";
 
 test("fixture acquireRefusal: the real refusals of a render, by code: deferred (429, render state deferred), no renderer (501), host cooling off (429); nothing is fetched or filed", async () => {
   const d = await acquireRefusal({ code: "RENDER_DEFERRED" });
@@ -11,6 +11,7 @@ test("fixture acquireRefusal: the real refusals of a render, by code: deferred (
   assert.deepEqual([n.status, n.body.ok, n.body.reason], [501, false, "RENDER_NO_RENDERER"]);
   const c = await acquireRefusal({ code: "RENDER_HOST_COOLING_OFF" });
   assert.deepEqual([c.status, c.body.reason], [429, "RENDER_HOST_COOLING_OFF"]);
+  // fixtures-generic: RENDER_MADE_UP (a control: a code no render refusal gives, which the fixture must refuse to make)
   await assert.rejects(() => acquireRefusal({ code: "RENDER_MADE_UP" }), /no render refusal/);
 });
 
@@ -73,4 +74,22 @@ test("fixture recordReuseVerdicts: reusedparts answers the seeded reused parts o
   const out = f.ops.recordreuseverdicts("http://do/recordreuseverdicts", { verdicts: read.parts.map((p, i) => ({ source_capture: p.primary_sha, host: p.host, address_norm: p.address_norm, verdict: i ? "changed" : "confirmed", reused_sha: p.reused_sha, observed_sha: sha(`now ${i}`) })) });
   assert.deepEqual([out.ok, out.recorded], [true, 2]);
   assert.deepEqual(f.recorded().map((v) => [v.address_norm, v.verdict, v.phase]).sort(), [["https://x.example/a.css", "confirmed", "ratify"], ["https://x.example/b.js", "changed", "ratify"]]);
+});
+
+test("fixture uploadProvenance: the document capture's real uploadCapture writes for a PNG brought with no declared type is the one upload.test.mjs pins (graded received, no content_type, file snapshots/upload-<sha>, the bytes profiled as a PNG); a text named notes.png is profiled by its bytes, not its name", async () => {
+  const d = await uploadProvenance();
+  const s = sha(UPLOAD_PNG), at = "2026-10-09T12:00:00Z";
+  assert.deepEqual(d.capture, { method: "uploaded", grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED", actor_class: "member", actor: "m1", sha256: s, encoding: "binary", bytes: UPLOAD_PNG.length });
+  assert.equal("content_type" in d.capture, false, "no declared type, so no content_type");
+  assert.deepEqual([d.file, d.locator, d.retrieved], [`snapshots/upload-${s}`, `upload:${s}`, at]);
+  assert.deepEqual(d.source, { kind: "uploader", receipt: { sha256: s, bytes: UPLOAD_PNG.length, received: at } });
+  assert.deepEqual([d.origin, d.authority_state], [{ kind: "upload" }, "undetermined"]);
+  assert.deepEqual(d.origin_statement, { text: "a photo the clerk took at the counter", words_of: "m1", evidence_of_truth: false });
+  assert.deepEqual([d.attestation_attempts, "parts" in d], [[], false]);
+  assert.deepEqual([d.provenance_chain.length, d.provenance_chain[0].via, d.provenance_chain[0].bound], [1, "upload", false]);
+  assert.deepEqual([d.profile.format.format, d.profile.source_content_type], ["png", null]);
+  assert.equal(d.name_stated.text, "street.png");
+  const t = await uploadProvenance({ bytes: new TextEncoder().encode("the minutes of the meeting"), name: "notes.png" });
+  assert.notEqual(t.profile.format.format, "png", "the bytes decide what the file is, not its name");
+  assert.equal("content_type" in t.capture, false);
 });

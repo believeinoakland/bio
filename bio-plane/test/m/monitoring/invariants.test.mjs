@@ -108,7 +108,7 @@ test("R41 the tables are this module's and declared to purge: monitor_fired by s
   const w = world();
   assert.deepEqual(MONITORING_TABLES.map((t) => [t.name, t.keys]),
     [["monitor_fired", ["subject"]], ["monitor_tick_epoch", []], ["monitor_address_type", []], ["monitor_address_frequency", []],
-     ["monitor_address_end", []], ["monitor_gathering_run", ["bundle_id"]]]);
+     ["monitor_address_end", []], ["monitor_address_look", []], ["monitor_gathering_run", ["bundle_id"]]]);
   /* the link sweep's tables are link-sweep's (N506): this module neither creates nor declares them */
   assert.deepEqual(w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name IN ('sweep_runs', 'sweep_filed')`), []);
   const id = "INFO-2026-0850-purge";

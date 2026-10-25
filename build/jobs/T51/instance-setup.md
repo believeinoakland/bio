@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_01EuQtSZAq5UjiGxgEKWZHMP · depth 2 · COMPLETE · handled B17
+**Status** · session_01Krcj2LG7HmHfw9eDsAuwvm · depth 2 · COMPLETE · handled B19
 
 ## J1 · REPORT · re B1
 
@@ -299,3 +299,43 @@ Tests: `fixtures.test.mjs` 7 of 7 pass (2 new); the instance-setup module 241 of
 Found in other modules: none. Deferred: none. Installer's t50 (`newgroup/test/t50.test.mjs:272`) is its re-point to make.
 
 Size (session_01EuQtSZAq5UjiGxgEKWZHMP): test runs 2, module lines 3846
+
+## J24 · COMPLETE
+
+COMPLETE. Re B19 (fix round 10, the final pass's causes; plan item 71 (3); K5148). B18 (follow-up 36) is superseded: it was merged at K5110, so I took no further action on it.
+
+**Cause 1: the team's seed instant kept the wall clock under a pinned clock.** Applied in full.
+
+1. **Root cause, with evidence.** `instanceGroupSeed` records `recorded_at` through `#iso()`, which read `#now()`: the injected clock, else `Date.now()`. `env.BIO_NOW_MS` was never read, so a world pinned by it recorded the wall time. Failing run: `actual: '2026-10-25T16:53:32.949Z', expected: '2031-03-04T05:06:07.000Z'`. The diagnosis is STORE-REQUEST #1 J3 (3) and K5132's rule; the `diag2-*` files do not cover it.
+2. **Why the module tests missed it.** The R4 test boots with `env: {}`, so the pinned path never ran. Tests that pin a clock inject `now` through `boot({now})`, which bypasses `env`. No test read `recorded_at` against a pinned `BIO_NOW_MS`.
+3. **Failing-first test.** `bio-plane/test/m/instance-setup/group.test.mjs`, the last test: "R4 instanceGroupSeed records its instant on the instance clock: pinned by env.BIO_NOW_MS it is that instant; unpinned, the wall clock". Red on today's code (above); green after the fix. Its control (unpinned) asserts the wall clock within a second.
+4. **Owning module.** instance-setup (`bio-plane/src/setup.mjs`, `bio-plane/src/livefire.mjs`).
+
+**Fix (commit `4815d2418f` on `job/T51/instance-setup`).**
+- `setup.mjs`: new `#instant()`: the injected clock, else `env.BIO_NOW_MS` (an absent value falls through, never the epoch), else `Date.now()`. `#iso()` records through it. `#now()` is unchanged and stays the duration clock.
+- `setup.mjs` update deadline (`updateLater`'s `now`, near `:2865`) moved to `#instant()`: it is a recorded date the schedule uses, not a duration.
+- `livefire.mjs`: `instantOf(env)` (the same rule). Its `last_updated` (a stored canary row) and `ranAt` (the answer's instant) read it. `totalMs` and the timing reads stay on `Date.now()`.
+
+**Every other recorded instant from the wall clock, listed as the cause asks.**
+- Changed (they follow `#iso()` or `#instant()`): every `this.#iso()` call in `setup.mjs`, about twenty (the seed `recorded_at`, the profiles boot note, the lines and entity writes, the rows at `:1236`, `:1257`, `:1287`, `:1431`, `:1468`, `:1579`, `:1660`, `:1750`, `:1762`, `:1803`, `:1813`, `:2183`, `:2260`, `:2305`, `:2346`, `:2391`, `:2566`); the `:2588` fallback; the update deadline `:2865`; livefire `last_updated` and `ranAt`.
+- Not changed, with why: `keptFleetParts` age and its stamp (`#now()`, `:2729`, `:2735`: a measured duration); `partsReport` and `bootstrapReport`'s default `now` parameters (report clocks, injected by their callers); the health answer's `time` (`:3353`: an answer, not a stored instant); the selftest scratch key (`:3387`: a key); the cpu-probe run id stamp (`:3437`: an identifier); livefire's `totalMs` and timing reads (durations).
+- `BIO_NOW_MS` is read as the instance clock by about twenty modules already, and no deployment config sets it, so the fix matches the rest of the product.
+
+**Checks and tests (with summary lines).**
+- Module suite, `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/instance-setup/*.test.mjs` (run to its own exit, no force-exit): `tests 242, pass 242, fail 0, cancelled 0, skipped 0`.
+- Neighbouring pinned-clock tests (store-assembly, plane, tasks, intent, progressions files that read `BIO_NOW_MS`), since they seed a group: `tests 101, pass 99, fail 0, todo 2` (the two todo are pre-existing `test.todo`s).
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio instance-setup`: 34 product files, 0 failures.
+- `checks/coverage.mjs /home/user/bio instance-setup`: 76 of 76 live requirement ids named by a test, 0 failures.
+- `checks/ownership.mjs /home/user/bio instance-setup origin/tranche/T51`: 0 failures.
+- `checks/words.mjs /home/user/bio instance-setup`: 0 failures (no new sentence).
+- `checks/fixtures.mjs /home/user/bio instance-setup --list`: 0 failures. Its two `accepted` lines (`fixture.mjs:190`, `:201`) are pre-existing; I touched no fixture.
+- No new fixture export and no `fixtures-own` or `fixtures-generic` marker added.
+
+**Requirement ids met.** R4 (the seed's recorded instant is the instance clock's). The rule the cause rests on is R-CLOCK (fix-round-7 §0) with K5132; no requirement in `build/requirements/instance-setup.md` carries the `not yet met: T51` mark, so I struck nothing. BOB: if the instant should be written into R4's text, say so and I will fold it.
+
+**For BOB (REPORT, not blocking).**
+- The bundles that include `setup.mjs` or `livefire.mjs` are now stale. The plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, and the copy in `release/bio-plane.bundled.mjs`) is one; I did not regenerate it (`bio-plane`'s `npm run build` at layer close).
+- Two other modules have a pinned-world instant of their own, in their paths, not mine: credentials' claim `consumedAt` (STORE-REQUEST J3 (3)). Not touched.
+
+Size (session_01Krcj2LG7HmHfw9eDsAuwvm): test runs 4, module lines 3860

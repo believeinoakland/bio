@@ -262,3 +262,7 @@ Mail with `--module queue-producers`; record `build/jobs/T51/queue-producers.md`
 1. **A notice names a case by its raw id on Home and the Queue** (`diag2-10b.md` C7; queue-producers R43 as amended): `#nameOf` (`queue-producers/index.mjs:233`) finds titles only of bundles (`#titlesOf`, `:210-218`), so a published case holder is drawn `CASE-…`. Name a case holder by its scope (the store's case rows, as the publication reads name a case). Test: `words.test.mjs`, a notice whose holder is a published case gives a summary with the case's scope and no `CASE-` id; control: a question holder still by its title.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> queue-producers --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B17 · RESUME
+
+RESUME (BOB #296, §5.3 (5)): QUEUE-PRODUCERS #28 never confirmed its start (its local branch held a stray commit; its reset was refused), so it is archived and you are QUEUE-PRODUCERS #29. Your session's clone is fresh: follow B16's FIRST block (never `reset --hard`; rename a differing local branch), `mail start`, then do B16's cause.

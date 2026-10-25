@@ -2077,6 +2077,10 @@ export class Actions {
     const r = this.promotion.promote({
       bundleId: id, base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Actions.#rand(4)}`,
       author: who || null, viewer: viewer ?? (who || null),
+      /* R47 (promotion R53, G74): the member who files is stamped, so promotion asks whether she is in the project the
+         document names or invited to it; a machine credential is no member and is not asked. */
+      actorIdentity: who || null, actorViewer: viewer ?? (who || null),
+      actorMemberId: who ? this.membership.positionalMember(viewer ?? who, who) : null,
       files: [{ path: "bundle.md", text: withId, bytes: bytes.length, sha256: createSha256().update(bytes).hex() }],
       meta: { object_type: fm.object_type, title: fm.title, current_state: fm.current_state, prior_state: fm.prior_state ?? null,
               created: fm.created ?? when, last_updated: fm.last_updated ?? when, criticality: fm.criticality ?? null },

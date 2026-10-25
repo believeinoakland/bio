@@ -99,6 +99,8 @@ test("R70: a change tick on a source a watched project's intent R7 names is repo
   /* a gone source and an unreachable one record no change: nothing reported */
   w.clock.ms += 1000;
   w.net.routes[LA] = serve("gone", "text/plain", 410);
+  await tick(w, "INFO-2026-0001-agenda");           /* R4: the first 410 is unconfirmed; the second, a day on, is a removal */
+  w.clock.ms += 24 * 3600e3;
   assert.deepEqual([(await tick(w, "INFO-2026-0001-agenda")).body.status, w.arrivals().length], ["removed", 0]);
   w.net.routes[LA] = new Error("connection reset");
   assert.equal((await tick(w, "INFO-2026-0001-agenda")).body.arrivals, null);

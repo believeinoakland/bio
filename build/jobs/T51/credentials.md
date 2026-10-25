@@ -1,6 +1,6 @@
 # credentials (T51)
 
-**Status** · session_015BgLFhXk6KZEKYCGLb1LEg · depth 2 · COMPLETE · handled B12
+**Status** · session_01S9FGXy1ukQYTEAfDtbgonY · depth 2 · COMPLETE · handled B13
 
 ## J1 · COMPLETE
 
@@ -266,3 +266,34 @@ Size (session_015BgLFhXk6KZEKYCGLb1LEg): test runs 9, module lines 2714
 ## J16 · COMPLETE
 
 COMPLETE · CHANGE B12 done (record: J15). record-core lines re-pointed to coreOver and tableDeclarationRefusals; fixtures list now 1 failure, seam.test.mjs:177 (member-roster, batch 4). Module tests 189/189; format, architecture, coverage 58/58, words, ownership 0 failures. No fixtures-own/-generic markers.
+
+## J17 · Fix round 10, cause 1 (B13), CREDENTIALS #27
+
+START B13 (plan item 71 (3); STORE-REQUEST #1 J3 (3); K5132, R-CLOCK). The START names no diagnosis section for this cause, and a search of `build/plan/walk-T51-final/diagnosis/` finds none for it; I took the cause from the START and plan item 71 (3), and re-read `credentials/index.mjs` lines 330–380 (the claim) before changing anything. The cause is where the START places it: `claim` stamped `consumedAt` with the wall clock, and so did every other write of a recorded instant.
+
+- **Cause:** a world pinned by `env.BIO_NOW_MS` read the wall clock for every instant this module records, so `bootstrap`'s `consumedAt` and the claim's answer disagreed with the pinned instant.
+- **Fix (where the cause is):** one instance clock, `#nowMs()`, read as `actions` reads its own: `env.BIO_NOW_MS` when the store's environment names one, else the wall clock. `credentialsOps` hands the store's environment in (`c.env`), since every store request reaches the module through it. Every recorded instant and every judgement of one now reads it; measured durations (R9's `timings`, `performance.now()`) stay on the wall clock.
+- **Sites changed (each read in its enclosing method; none is in a static method):** the claim's `consumedAt` (`claim`); `#instant` (was static, now an instance method, read by `#memberRevoked`, `signerAdd`, `signerRegisterOwn`, `signerRevokeOwn`, `signerSet`, `#storePassword`, and the recovery-code spend); the migrations' expiry and `last_active` (`migrate`); `stampSecond()` with no argument, nine places (member revocation's reset links and run credentials, the run cascade, the ai credential revoke/mint stamps, the codes' issue, the reset links' spend and set, and `#revokeRunCredentials` callers); `session`, `login`, `passwordChange`, `#passwordAgain`, `signOutEverywhere`, `#gate`, `#succeeded`, `#refusedAttempt`'s window (R38), `reauthDue`, `#liveSession`; `aiCredentialMint`'s expiry; `#aiCredentialPublic`'s `expired`; `aiRunCredentialMint` (`index.mjs:1246`, the instance's stamp and expiry; `index.mjs:1248` its TTL); `#mintGrant`'s sweep and both grant mints (R27, R32); `#liveGrant`, `#settle`, `#settleSoon`, `#tallyOwn`, `securityCount`, `securityMap`, `securityLevel` (R44, R45); `#liveResetLink` and `passwordResetLinkMake` (R69). After the edit `grep` finds `Date.now()` and `new Date(` only at the module's `stampSecond` default, its fallback in `#nowMs`, and the three ISO conversions of a given instant (lines 118, 145, 211, 519, 827).
+- **Failing-first, seen red on today's code:** `k5148-clock.test.mjs` (new): R1 R2 a claim in a pinned world records `consumedAt` as the pinned instant and `bootstrap` reads it back (red: `consumedAt` was the wall clock, `2026-10-25T16:53:31.054Z` for a pin of `2026-10-20T10:15:30Z`); R65 a sign-in in a pinned world stamps `last_active` with the pinned instant (red: the wall clock). Controls: R1 R2 with no pinned clock records the wall clock between the calls either side (green on today's code and after).
+- **Why the tests missed it:** no test pinned the store's environment, so every instant was checked only for its shape, never for its value. The claim's test read the answer's `consumedAt` as an ISO string and never compared it with any clock. The fixture's `world()` passes no environment into `credentialsOps`. The new test drives the store's door (`credentialsOps` with `{BIO_NOW_MS}`), the path the store takes, so a pinned world is what it asserts.
+
+**Applied:** cause 1 (the clock) only. The requirement text (R2: `consumedAt` is the instant the instance was claimed; R-CLOCK) is met; R9's `timings` is untouched and remains as the requirements state it (its "not yet met: T51" mark is another cause's).
+
+**Deferred:** nothing.
+
+**Found in other modules (for BOB):**
+- Direct service calls from other modules reach the module through `credentialsOf(ctx)`, which passes no environment (`store-assembly/ask.mjs:281`, `:361`; `plane/ask.mjs:281`, `:361`; `store-assembly/assemble.mjs:203`, `:248`, `:307`; `plane/store.mjs:185`). In a pinned world those calls read the wall clock until the store has served one request on the same storage, since `credentialsOps` sets the environment. Passing `env` to `credentialsOf` in `assemble.mjs` and `store.mjs` would close it; those are their modules' sites, not mine.
+- `checks/words.mjs` reports 16 failures, all in `store-assembly` and in `plane/declared.mjs` (`ask.mjs`, `wiring.mjs`, `wizards.mjs`, `declared.mjs`), not in credentials. The same 16 fail on `origin/tranche/T51` with my change absent.
+- `checks/fixtures.mjs credentials --list`: one line, `seam.test.mjs:177` (member-roster's `LISTENER_MALFORMED`), the same on `origin/tranche/T51`; no new failing line from this job.
+
+**Tests and checks:** the module's tests, all 192 under `bio-plane/test/m/credentials/*.test.mjs` run together: 192 pass, 0 fail (the new three included). `format` 0 failures (178 modules); `architecture credentials` 0 failures; `coverage credentials` 58 of 58 live ids named; `ownership credentials tranche/T51` 0 failures (run before the commit that carries this change; re-run on the commit); `words` 16 failures, all outside this module, the same as the baseline (above); `fixtures credentials --list` one line, the baseline's.
+
+Size (session_01S9FGXy1ukQYTEAfDtbgonY): test runs 2, module lines 2216
+
+## J18 · REPORT
+
+Found in other modules (not my paths; nothing changed there): (1) store-assembly/ask.mjs:281,361, plane/ask.mjs:281,361, store-assembly/assemble.mjs:203,248,307, plane/store.mjs:185 call credentialsOf(ctx) without an environment, so a direct service call in a pinned world reads the wall clock until the store has served one request on the same storage (credentialsOps then sets it). Passing env to credentialsOf at those sites closes it. (2) checks/words.mjs: 16 failures, all in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, declared.mjs), the same 16 on origin/tranche/T51 without my change. Details: build/jobs/T51/credentials.md J17.
+
+## J19 · COMPLETE
+
+COMPLETE · fix round 10, cause 1 (B13). The instance clock reads env.BIO_NOW_MS (credentialsOps hands the store's environment in); every recorded instant and judgement of one reads it; measured durations stay on the wall clock. New tests k5148-clock.test.mjs (R1, R2, R65): red on today's code, green now. Module tests 192 pass, 0 fail; format, architecture, coverage (58 of 58), ownership 0; words 16 failures outside this module (same on the tranche). Commit 3227a15ed9 on job/T51/credentials. Record: build/jobs/T51/credentials.md J17. Met ids: R1, R2, R65 (the clock's rule R-CLOCK, K5132). Other-module finding: REPORT above.

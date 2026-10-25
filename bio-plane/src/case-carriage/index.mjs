@@ -107,6 +107,7 @@ export const NATIVE_DIGEST_MIN_BYTES = 1024 * 1024;
 export const DOCUMENT_COPY_RETRY_MS = 300000;
 
 /* R9, R10: a photo is told by the type recorded with its capture, else its register path's extension (synchronous). */
+const IMAGE_FORMATS = new Set(["jpeg", "jpg", "png", "gif", "webp", "heic", "heif", "avif", "tiff", "tif", "bmp"]);
 const IMAGE_EXT = /\.(jpe?g|jfif|png|gif|webp|heic|heif|avif|tiff?|bmp)$/i;
 /* R8 (K2291 (2)): an entry of an archive's listing that is itself an archive never opened. */
 const ARCHIVE_EXT = /\.zip$/i;
@@ -744,9 +745,25 @@ export class CaseCarriage {
      any home's register path has an image's extension. */
   #isPhoto(sha) {
     const homes = this.#homes(sha);
-    const types = homes.flatMap((h) => this.#entriesFor(h, sha)).map((d) => str(d.capture.content_type).toLowerCase()).filter(Boolean);
+    return this.#judgePhoto(homes.flatMap((h) => this.#entriesFor(h, sha)), homes.map((h) => h.path));
+  }
+
+  /* R1 (K5148): the one rule for a photo, over the provenance documents of a capture and its register paths. An image
+     when a document's `capture.content_type` is an image type; else when its `profile.format.format` names an image
+     (an upload records no content type, only the profile of its bytes), or, with no format, its
+     `profile.source_content_type` is an image type; else, when nothing states a type or a format, by the path's
+     extension. A format or a type that is not an image wins over the extension. */
+  #judgePhoto(docs, paths) {
+    const types = docs.map((d) => str(d.capture?.content_type).toLowerCase()).filter(Boolean);
     if (types.some((t) => t.startsWith("image/"))) return true;
-    return !types.length && homes.some((h) => IMAGE_EXT.test(String(h.path || "")));
+    let stated = types.length > 0;
+    for (const d of docs) {
+      const fmt = str(d.profile?.format?.format).toLowerCase(), declared = str(d.profile?.source_content_type).toLowerCase();
+      if (IMAGE_FORMATS.has(fmt)) return true;
+      if (fmt && fmt !== "undetermined") stated = true;
+      else if (declared) { if (declared.startsWith("image/")) return true; stated = true; }
+    }
+    return !stated && paths.some((x) => IMAGE_EXT.test(String(x || "")));
   }
 
   /* R1, R8: every register row homing a capture on a bundle that exists (provenance R48, record-core R37). */
@@ -802,7 +819,7 @@ export class CaseCarriage {
 
   /* R9, R10: the photo `sha` as `viewer` may see it: `{ok: true, sha, photo}` or NO_SUCH_PHOTO. Held means a register
      row homes it on a bundle that exists; seen means membership's sight admits `viewer` to one such bundle. A photo is
-     told by the `capture.content_type` its home's provenance records, else its register path's extension. */
+     told as R1 tells it (`#judgePhoto`). */
   #photo(captureSha, viewer) {
     const sha = digestOf(captureSha);
     const none = () => refusal("NO_SUCH_PHOTO", localize("case-carriage.index.no_photo_you_can_see", "no photo you can see is held under that digest"), { capture: HEX64.test(sha) ? sha : null });
@@ -819,8 +836,7 @@ export class CaseCarriage {
       if (ok) { seen = h; break; }
     }
     if (!seen) return none();
-    const types = this.#entriesFor(seen, sha).map((d) => str(d.capture.content_type).toLowerCase()).filter(Boolean);
-    const photo = types.length ? types[0].startsWith("image/") : IMAGE_EXT.test(String(seen.path || ""));
+    const photo = this.#judgePhoto(this.#entriesFor(seen, sha), [seen.path]);
     return { ok: true, sha, photo };
   }
 

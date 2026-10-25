@@ -198,6 +198,13 @@ export class Tasks {
       const o = ownerOf(bundleId);
       if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: word("tasks.why.owner_referred_project") };
     }
+    /* R1 (K5148): a document filed in a project states it in its front matter (promotion R53; `record-core`'s
+       `bundleInfo().project`, its R34), and no `cites` edge need exist, so the project it is filed in comes before the
+       citing ones. Its owner, if none is active, leaves the next arm to try. */
+    if (info && info.project) {
+      const o = ownerOf(info.project);
+      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: word("tasks.why.owner_referred_project") };
+    }
     /* D-280, site (b), and it is D-267's own harm one op over: `refs` carries
        the RELATION and DROPS the STATUS, so the project this arm hands the
        obligation to may be one that WITHDREW from the bundle it is being made
