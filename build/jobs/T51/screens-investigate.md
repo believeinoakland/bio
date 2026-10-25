@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_01XJx9SjMm4WbibPm3bDFTGW · depth 2 · COMPLETE · handled B30
+**Status** · session_01Pdj4AeSbnHnToosQruPH5w · depth 2 · COMPLETE · handled B41
 
 ## J1 · QUESTION
 
@@ -340,3 +340,108 @@ COMPLETE · screens-investigate #15 · fix round 6, wave 2 (B30): G20 (S11), my 
 **Requirement line proposed (BOB writes it):** R58: a "Which document" picker offers every document `heldcaptures` holds, reading on by its cursor; past the bound it keeps (three reads of up to 1,000) it says how many it shows. Amends R52.
 **Found in other modules:** screens-publish `docket.mjs:20`, screens-action `matter.mjs:156,177`, screens-daily `doors.mjs:17` have the same fixed page (S11, other owners).
 Size (session_01XJx9SjMm4WbibPm3bDFTGW): test runs 6, module lines 3,260
+
+## J27 · QUESTION
+
+QUESTION · fix round 10 causes: new sentences for a drawn screen (replaces none)
+
+START says write a new sentence "at its use as `localize(id, en, vars)`". `checks/words.mjs` fails a `localize` call in any `screens-*` module (DRAWN_MODULES, arm `marker`), and my R30 test fails a key the word table lacks (`hasWord`). So I cannot add a sentence myself. Best reading, as for `screen.people.more` ("adopted from screens-investigate's own rows"): BOB (or the UX stream) adopts the rows below into `docs/development/ux-substrate/screens/words.json`; I code against these exact keys and draw no English of my own. Until a row exists I use a held stand-in where one fits, and only the keys marked NEW are blocked. Proposed English is a stand-in for UX-DESIGN to review.
+
+NEW keys wanted (key · proposed English):
+- screen.person.expunge.marker · Removed where the law requires, {date}, by {member}   (diag2-020305 §6; the statement already promises this sentence)
+- screen.person.holds.heading · Who holds it now
+- screen.person.holds.holder · Who holds it
+- screen.person.holds.through · Current through
+- screen.person.holds.empty · Choose who holds it and say what shows it. Nothing was sent.
+- act.recordline.label.office · Record who holds it   (+ act.recordline.does for the office form is held)
+- act.linecurrentthrough.label.person · State it current through a day   (+ act.linecurrentthrough.does)   (diag2-020305 §5)
+- screen.standard.rel.in.{implements|refers_to|amends|repeals|renumbers|recodifies|defines|excepts|incorporates} · Implemented by / Referred to by / Amended by / Repealed by / Renumbered by / Recodified by / Defined by / Excepted from by / Incorporated by   (diag2-08 C8)
+- screen.standard.issuer.typed · Or a name that is not listed   (C9)
+- screen.calculation.column · The column to work from ; screen.calculation.column.help · Choose the column of the table this reads. ; screen.calculation.part · The value to count ; screen.calculation.part.help · Type the value in that column whose rows this is about.   (item 59)
+
+Stand-ins I use now (no ask): money's source cell is `contradiction.text.row_table` with the document's title in {source_table}; the Standard's passage choice is labelled `form.choose.passage`; a choice that opens with nothing chosen has a blank first option with no text.
+
+If you would rather I ship with the stand-ins and no NEW row, say so: the office's two acts and the marker would then be left unbuilt and listed as deferred. I carry on with every cause that needs none of these.
+
+## J28 · REPORT
+
+REPORT · screens-investigate · fix round 10, findings outside my paths so far (the causes themselves are built and pushed; the op-table pass is under way)
+
+1. **interface-shell** (CHANGE or registry): the second act of R1 (diag2-020305 §5), `linecurrentthrough` "state a holder current through a day", is not the registry's act for `person` nor a named re-point, so `checkScreens` refuses the whole screen ("screen person's act linecurrentthrough is not the registry's for it, nor a named re-point"). Add `person: ["linecurrentthrough"]` to `RE_POINTS` (or the registry lists it) and send me a CHANGE: the act is written (reads `lines` R21's `recordCurrentThrough({lineId, day, basis})`; shares the holder form's source and a day field) and is kept out only for this.
+2. **standards** (`op=standardinforce`): the answer is `{id, date, state, why}` with `why` a finished sentence, "Known to be in force through 2026-09-30, from capture e13196ea25b2, ¶1, recorded by admin": it names the author by member id (the founder's handle is not `admin`) and the capture by a fingerprint prefix. R45/R51 want the member drawn by name: the answer needs the structure the plane already holds (`#throughOf`: `{through, source, by}`) as `known_through`, or `why` as `{key, vars}`. The screen draws `standard.inforce.known` with `P.who` from `known_through` when it is present (test: fix5-standard, over a `rewrite` of the world's answer, because the op does not answer it).
+3. **store-request**: `world.mjs` imports `store-request`'s fixtures, so `uses` gains `store-request` (architecture: "imports bio-plane/test/m/store-request/fixtures.mjs of store-request, which screens-investigate does not declare in uses"). Please add the edge.
+4. **words** (extends J27/B520): one more NEW key, `screen.person.holds.capacity` ("In what capacity"; a `holds` line needs one: `NO_CAPACITY`), listed with the others. Calculations' refusals have no row: `refusal.NO_COLUMN`, `refusal.NO_PART`, `refusal.NO_SUCH_COLUMN` (the page draws "Civicsmith has no explanation of this refusal in its words yet ... NO_COLUMN"); `refusal.NO_CAPACITY` exists. K5173's todos are in `common.test.mjs` (one per NEW key).
+5. **A defect I found and fixed in my own module**: the screen's `tabledeclare` sent a bare capture digest as `source`; calculations takes a content id or a found passage `{capture_sha, extent}` and answered NO_SUCH_CONTENT. It was hidden by the scripted `tabledeclare`. Fixed with a test over the world (fix5-calculation).
+6. **R46 superseded in part**: R46's clause "the page a member types in `explore-assert-page` counts from 1 (`PARTS.passage` sends it less one)" is dead: R34's K5148 text has Explore choose the document by title and the passage by its words (no typed page). I replaced that test with one that names R46 and R34 over the chosen words; please strike the clause.
+7. **An observation, not a defect**: with no active jurisdiction profile the team has no time zone, so a dated fact (`recorddatedfact`) is stored with `zone: null` and the event dated by it is "placed nowhere" with no word telling the member why. The walker's team had a profile; the world needs `recipes.profiles` for any dated test. Worth a words row if the design wants a hint on Timeline when no zone is held.
+8. **Door cases for control-plane's Wave B (K5138)**: the walker's case for each cause is already a screen test over the world in my module (fix5-*.test.mjs); the through-the-door shapes to place there: `createevent` with `{datedFactId}` placed on a lane; `lawrelate` from a standard under a project path; `standarddeclare` with a body's `ENT-` id as issuer then `bindsat`; a person's `removed` rows after `personexpunge` read by another member.
+9. The old Miniflare `real-plane.mjs` is removed: `fix4-seam.test.mjs` runs over the world (55 s -> 7 s) and its load-dependent red (R4 C8 under the full run) is gone with it.
+
+## J29 · BLOCKED
+
+BLOCKED · screens-investigate · cause: context (past half my window). Everything below is pushed on job/T51/screens-investigate (tranche/T51 merged at 12c0b90f4f). Restart me (or a successor) to finish; nothing is owed by Bob.
+
+**State.** Causes 1-4 built with failing-first tests over `storeWorld()` (fix5-*.test.mjs, fix4-seam over the world; old Miniflare real-plane removed). Module suite at the last full run: 311 tests, 272 pass, 2 fail (both fixed since, re-run alone green), 37 `test.todo` (K5173 words, K5178 below, REPORTED product defects). Checks: format 0, architecture 0, coverage 59/59, words 0, ownership 0.
+**Op tables.** 164 -> 12 listed lines. Six sonnet workers converted every file's listed lines. Left: `acquire` x2 (fix2w2.test.mjs:68, money.test.mjs:103: a fetched site, externally driven, K5044 (1): stays, REPORT) and 10 in `fixtures.mjs` (the scripted default `plane()`, STANDARD at :132, samepersoncandidates :170, money :179, sequence :195, reading :201, entitieskind :204, readingname :205, instances :206, themeread :209, clocksics :210). They remain because ~15 test files still call the scripted `open()` for tests the check does not list (calculation 5, common 9, explore 10, fix2w2 18, fix3 8, fold 11, graph 12, money 8, pickers 8, proceeding 8, standard 10, theme 4, ties 2). NEXT STEP: re-point those tests to `openAs(world, me, ...)` (the brief for workers is scratchpad/worker-brief.md pattern), then delete `plane()`, the unused constants and the frame-default users from `fixtures.mjs`, then the two `[refusal]`/STANDARD lines go with them (fix2.test.mjs:198 is already gone). `harness.mjs`'s four frame defaults are not mine (BOB's CHANGE).
+**To do after that.** (a) CHANGE B33 (2): `standardinforce`'s `known_through` is now `{through, source: {captureSha, extent}, by}`; standard.mjs draws `source: String(r.known.source)` (a string in my first reading): draw the source as the held document's title (docsAll) instead; the member from `.by` by name already; the test over the world is a `test.todo` naming K5178 until standards merges. (b) CHANGE B33 (1): `linecurrentthrough` waits for INTERFACE-SHELL #23 (RE_POINTS.person); code is ready in my notes: act `{op:"linecurrentthrough", send: lineId from el.dataset.line, day ho-through, basis as the holder form}`, a button per open-ended holder row, field `ho-through` (`screen.person.holds.through`), test.todo naming K5178. (c) COMPLETE with the causes + "why the tests missed" (scratchpad/complete-draft.md) and the `Size` line.
+**Product defects found by the workers (REPORT, not mine to fix):** proceeding.mjs:195 `declare` sends `source:{kind:"court"}` with no standard: the store refuses NO_SUCH_STANDARD (a defect in MY module: needs a court-kind standard chosen; do it in the next pass, test.todo in proceeding.test.mjs); calculation `calc-set` offers captures but `calculationdraw` takes a declared table's digest (mine too: offer the module's tables); people `person` gives no `basis` on claims (people/index.mjs:1071) and omits withdrawn facts (:822); progressions `instance` findings carry no `says` (readInstance :976); due-date `srcOf` reads per-day calendar entries the store gives per year; `relate`, `recorddatedfact`, `hypothesishold` are not Reasoned in the world; `recordline` and `recordpersonfact` check extents differently (CONTENT_EXTENT_NO_CHAIN). **Tranche defect:** after the merge `store-request`'s own `world.test.mjs` fails 9 of 9 (`GROUP_ALREADY_RECORDED`: store-assembly now records the group at first boot, `storeWorld()` seeds it again); my `world.mjs` uses `storeWorld({group: null})` meanwhile.
+**Helpers the workers wished store-request had:** recipes for an action, an inquiry, a hold with a reading that names entities, a graded capture, a project that cites entities, a binary hold, `me.post`.
+**todos I leave (name, K):** K5173 words (screen.person.expunge.marker, holds.heading/holder/capacity/empty, act.recordline.label.office, screen.calculation.column/.help/part/.help, screen.standard.rel.in.* x9, refusal.NO_COLUMN/NO_PART/NO_SUCH_COLUMN); K5178 (linecurrentthrough, known_through); REPORTED product defects above (person.test.mjs x5, organization.test.mjs x1, timeline.test.mjs x1 instance says, proceeding.test.mjs x1 declare, calculation.test.mjs x1 calc-set).
+Size (session_01HexPB818kMy65T42q8wh6t): test runs 40, module lines 3700 (partial; the successor re-measures)
+
+## J30 · REPORT
+
+REPORT · screens-investigate · Saved at K5183
+
+Done and pushed (job/T51/screens-investigate, tranche/T51 merged at 12c0b90f4f): causes 1-4 built with failing-first tests over storeWorld; op tables 164 -> 12 listed lines; checks format/architecture/coverage/words/ownership 0. Full detail in J29 (BLOCKED, context), which is the exact list of what remains.
+Half done: nothing uncommitted. Workers: all six finished; none running.
+Exact next step: (1) re-point the ~15 test files that still call the scripted `open()` (calculation, common, explore, fix2w2, fix3, fold, graph, money, pickers/picker-more, proceeding, standard, theme, ties) to `openAs(world, me, ...)`, then delete `plane()` and unused constants from fixtures.mjs (clears its 10 listed lines); (2) fix proceeding.mjs:195 `declare` (needs a court-kind standard chosen) and calculation `calc-set` (offer declared tables); (3) known_through source draw as the document title (K5178), linecurrentthrough after INTERFACE-SHELL #23; (4) COMPLETE with scratchpad/complete-draft.md contents and Size line.
+
+## J31 · COMPLETE
+
+COMPLETE · screens-investigate · T51-120, fix round 10 causes 1-4 and B35-B38 (K5184-K5195)
+
+**Entries applied (met ids: R1, R5, R7, R32 (1), R33 (2), R34, R51, R60; all 60 live ids named by a test).**
+- Own-module defects fixed, failing first over the world: `declare` (proceeding) now names the court order chosen in `pr-court` as `source.standard` (the store refused NO_SUCH_STANDARD); the calculation's "set to draw from" is a choice of the tables the calculation reads, by their documents' titles (the store takes a table's digest); the estimate's exact range is drawn from the owner's figures (`low_share`/`high_share` are `{value,...}`, it drew NaN%); due-date skipped days name their source from the calculation's calendar entry of the day's year (weekends: the counting rule's basis), not the calendar's status (B36 (1)); a money-trail node and a payment carry their kind as the card's fact (DEC-160).
+- B35 (1): `linecurrentthrough` on an office's holder rows (button per open-ended holder, day field `ho-through`, the holder form's source); the Standard draws `known_through.source` as the held document's title (K5178; the world's own answer lands with STANDARDS: `test.todo` names it).
+- R60: `screen.timeline.nozone` once above the events placed in no zone when the team has no active place (read `profiles`, only when events are placed nowhere), control with a place. `screen.person.holds.capacity` and the calculation refusals are keyed already.
+- R33 (2): state b over the world draws a `missing_predecessor` finding's `progression.expects` sentence (progressions R49), test with a three-step progression.
+- Op tables: 164 -> 2 listed lines. Both are `acquire` (fix2w2.test.mjs:102, money.test.mjs:137): a fetched site, externally driven (K5044 (1)). `fixtures.mjs` is now only helpers (no scripted plane); 6 workers converted every other scripted test to `openAs(world, me, ...)`; the `{group: null}` is dropped (B37).
+- K4787/K4966: "R4 C8 (the figure)" could not be made to fail (12 copies in parallel plus three suites, original and fixed, all green). Probable cause: `settled` stops after a quiet window or its 1500-loop bound while the act's answer is still in flight under load (the failing batch took 64 s). The test now waits for the act's result (`settledUntil`: the row drawn), and is green 12 of 12 in parallel. The standards REPORT (red "real plane" version) is gone with the Miniflare test; its world version passes.
+
+**Deferred / todos kept (43 `test.todo`).** K5173 words not yet in the table (screen.person.expunge.marker, holds.*, act.recordline.label.office, act.linecurrentthrough.*, screen.calculation.column/part, screen.standard.rel.in.*, screen.timeline.nozone, refusal.NO_COLUMN/NO_PART/NO_SUCH_COLUMN); K5178 `known_through` over the world (STANDARDS); people R43/R44 draws (person.test, organization.test; waits for your CHANGE).
+
+**Found in other modules (REPORT).**
+1. money (`moneyset`, src/money/index.mjs ~965): `exclude` does not close a figure's open proposal as `include` does, so a figure proposed then excluded is listed under `proposals` and `exclusions`; the page draws two rows (todo in money.test.mjs).
+2. explore: the page's `exploregraph` read sends no inquiry scope, so a hunch hop can never be drawn; `mentioned_together` hops are not made by any real act of the world (graph/explore tests rewrite one answer).
+3. interface-shell/store-request helpers wished: a shared `holdNamed`/`holdPaged` (two local copies), `WORLD_TOKENS` re-exported by world.mjs; no act sets a register's `last_read` (the `follows` answer is rewritten in proceeding.test.mjs); no fiscal year for body "*" in the oakland-alameda profile (money period.fiscal refused MONEY_BAD_PERIOD, the grade and fiscal cell are rewritten).
+4. A fault-only path stays scripted: `heldcaptures` beyond three pages (5000 documents) in picker-more.test.mjs.
+
+**Tests and checks.** Module suite at the final tree: 330 tests, 287 pass, 0 fail, 43 todo. format 0 failures; architecture 0; coverage 60 of 60; ownership 0 (vs origin/tranche/T51); words 0 (alone and over all modules: none names this module); fixtures 2 (the acquire lines above).
+Size (session_01Pdj4AeSbnHnToosQruPH5w): test runs 25, module lines 3400
+
+## J32 · COMPLETE
+
+COMPLETE · screens-investigate · B39 (K5197) applied; B36-B38 were in J31
+
+PEOPLE #16 merged: the person page reads `withdrawn_facts` for the withdrawn fold (R32 (2): `person.mjs` now takes the withdrawn from `withdrawn_facts` as well as `facts`), and the claim rows' basis was already drawn by `screen.person.basis.row.<basis>` / `.org` (R38, R39, R58). The four todos naming people R43/R44 are now tests over the world's real `person` read (person.test.mjs x3, organization.test.mjs x1); module person+organization suites: 36 pass, 0 fail. Remaining todos are the K5173 words, K5178 `known_through`, and the other modules' REPORTs in J31.
+Checks at HEAD: format 0, architecture 0, coverage 60 of 60, ownership 0, words 0, fixtures 2 (both `acquire`, a fetched site). Met ids as in J31 plus R32 (2), R38, R39, R58.
+Size (session_01Pdj4AeSbnHnToosQruPH5w): test runs 27, module lines 3400
+
+## J33 · QUESTION
+
+QUESTION · explore: which inquiry is the graph's scope (B40; replaces none)
+
+`exploregraph` walks a hunch hop only when `scope` is `{inquiry}` naming the inquiry that holds it and the viewer may see (explore R6, R21). No page of mine knows an inquiry on Explore, Person or Money: the Explore address is `/app/explore/<entity>`, the page has no question context, so there is nothing to send today.
+
+Best reading (the least that works, no new address): on Explore only, a choice "Include the leads of a question" over the questions the member may see (the `list` read, as the Timeline's question choice does), none chosen by default; when one is chosen the graph read is repeated with `scope: {inquiry: <id>}` and the hunch hops of that question are drawn as leads (class `lead`, as R27 already draws declared ones). Person and Money send no scope (they show no leads). It needs two NEW words for UX-DESIGN to adopt, which I code against by key until then (todo per K5173): `screen.explore.scope` ("Include the leads of a question") and `screen.explore.scope.help` ("A lead is a guess a question rests on; no finding rests on it. Choose none to see only what the record shows.").
+
+Alternative: scope comes from the address (`/app/explore/<entity>?question=<id>`, the link a question's page draws to Explore): needs your decision on the address and the question page's link (not mine). Say which; until then I build nothing for this item. J32 (COMPLETE) stands for B36-B39.
+
+## J34 · COMPLETE
+
+COMPLETE · screens-investigate · B40-B41 (K5198, K5200) applied
+
+B40 withdrawn by B41: Explore, Person and Money send no scope and draw no hunch hop (unchanged, correct). JURISDICTIONS #19 and HYPOTHESES #11 merged: the hold tests of money and timeline already run over the world's real `hypothesishold` (no scripted `hold` answer is left; the fixtures check lists none), so there is nothing to re-point to `holdAnswer()`. With each body's fiscal year stated, the money test now records the adopted figure with its fiscal year by the real `recordfact` and asserts the page draws the store's `period.fiscal`; only the capture grade of an upload (never graded) stays a rewrite of the world's answer. The words test for a fiscal year the profile cannot map now uses a span no profile maps (FY2025-27) and still draws money's own refusal. The C94 person test takes the withdrawn fact from the store's `withdrawn_facts` (people R44), with one scripted control (a handle the owner states).
+Final tree: the four touched files and person.test pass (67 pass, 0 fail, 1 todo: the money exclude-after-propose defect, reported in J31); the last full run before these edits had 3 failing tests, all fixed above. Checks: format 0, architecture 0, coverage 60 of 60, ownership 0, words 0, fixtures 2 (both `acquire`). Met ids as in J31, J32.
+Size (session_01Pdj4AeSbnHnToosQruPH5w): test runs 32, module lines 3400

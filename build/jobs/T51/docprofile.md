@@ -1,6 +1,6 @@
 # docprofile (T51)
 
-**Status** · session_01W1qFDLihyPDuY1fytvKzdh · depth 2 · COMPLETE · handled B10
+**Status** · session_01V2QiH5EoLyL2WkgqTbBv2X · depth 2 · COMPLETE · handled B12
 
 ## J1 · REPORT
 
@@ -224,3 +224,30 @@ COMPLETE, fix round 9 batch C (K4889). The finding is J14's REPORT: the garbage 
 **Proposed R38 wording for a text over the bound:** in J14's REPORT. **Found in another module:** `doctypes` (the re-flatten per pass) and plane's control bar, both in J14.
 
 Size (session_01W1qFDLihyPDuY1fytvKzdh): test runs 14, module lines 1420
+
+## J16 · COMPLETE · re B12
+
+COMPLETE, fix round 10 (plan item 95; K5195), B12's START.
+
+**Changed (markers only, no source change).** `docprofile/test/stubs.mjs:28` (`stubMeetings`), `:86` (`stubItems`), `:126` (`stubFallback`): each declaration carries `// fixtures-own: harness <why>` on its own line, so the line numbers do not move. Reason written: a test reader registered through this module's own `registerDoctype` seam; no module provides it. Commit `d5a762eda0`.
+
+**Failing-first.** Not applicable: the three lines are fixture-check markers, not behaviour. The check before the change listed these three lines as failures (verify-marks row `docprofile`, three of the 65 FAIL lines); after it, `checks/fixtures.mjs /home/user/bio docprofile --list` reports all three `accepted(own)` and `0 failures`.
+
+**Met ids.** None struck: this change touches no requirement and no test assertion.
+
+**Markers added.** `docprofile/test/stubs.mjs:28`, `:86`, `:126`, each `fixtures-own: harness`, because the stub types are the test's own readers registered through the seam (verify-marks row, the "Clear now with `fixtures-own: harness`" option).
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test docprofile/test/*.test.mjs` from the repository root: 75 tests, 75 pass, 0 fail, 0 cancelled (run without `--test-force-exit`; it exits by itself, so no count shortfall to compare).
+
+**Impact.** `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178; affected test files 0 of 2981. (The bare `tranche/T51` ref form fails in this container: no local tranche branch; `origin/tranche/T51` is the ref it takes.)
+
+**Checks.** From `civicos-process` with the absolute root `/home/user/bio`:
+- `checks/run.mjs`: format 0 failures; architecture 0 failures; channels 0 failures; coverage 10 failures and fixtures 1473 failures, repo-wide, none naming docprofile; words 16 failures, none in docprofile (the module's own word count is unchanged, since the edit adds a comment only). No finding names `docprofile` in the output.
+- `checks/fixtures.mjs /home/user/bio docprofile --list`: 3 accepted(own), 0 failures.
+- `checks/ownership.mjs /home/user/bio docprofile $(git merge-base origin/tranche/T51 HEAD) HEAD`: 1 file changed by docprofile, 0 failures.
+
+**Found in another module.** None in this job. The repo-wide fixtures and coverage failures above are other modules' and are not this job's to fix; I did not touch them.
+
+**Merge.** Before starting, `job/T51/docprofile` was behind `origin/tranche/T51` (fast-forward, no conflict), and I merged it in with `git merge`, not a rebase.
+
+Size (session_01V2QiH5EoLyL2WkgqTbBv2X): test runs 1, module lines 3

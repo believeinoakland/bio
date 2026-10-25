@@ -275,6 +275,7 @@ export async function buildAll(root) {
 /** Runs a command; `stub` is a scenario object for stubfetch, `env` extra environment. */
 export function run(root, cwdRel, args, { env = {}, stub = null, timeout = 120_000 } = {}) {
   const work = mkdtempSync(join(tmpdir(), "bundler-run-"));
+  // fixtures-own: platform the Cloudflare API's own answers, handed to the deploy script's wrangler and HTTP calls through a scripted-network double; no module answers for them
   const stubFile = join(work, "stub.json"), stubLog = join(work, "stub.log"), wLog = join(work, "wrangler.log");
   const dLog = join(work, "docker.log");
   writeFileSync(stubFile, JSON.stringify(stub || {}));

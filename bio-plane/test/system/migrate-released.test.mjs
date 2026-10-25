@@ -228,6 +228,7 @@ const bootCurrent = (persist) =>
    a bricked Durable Object answers with an error page, and `.json()` on it would end
    the module with no tally, which names nothing. */
 const asJson = async (res) => { const txt = await res.text();
+  // fixtures-own: harness the test's own report of a body that is not JSON (a bricked object's error page), made at the transport, never a module's answer
   try { return JSON.parse(txt); } catch { return { ok: false, status: res.status, error: `non-JSON ${res.status}: ${txt.slice(0, 300)}` }; } };
 /* HOW A CREDENTIAL TRAVELS (admission R5, R20; K2166). A RELEASED plane is driven as it shipped: its credential in the
    address (`?token=`), the member binding its default. The CURRENT plane reads a credential only from the

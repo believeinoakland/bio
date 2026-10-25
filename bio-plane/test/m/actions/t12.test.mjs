@@ -2,7 +2,7 @@
    entry cursor, N311, went with R31's held copy: N428.) */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, actionMd, CP, NONCOMPLIANT } from "./fixture.mjs";
+import { world, V, actionMd, CP } from "./fixture.mjs";
 import { determinationRead } from "../conformance/fixtures.mjs";
 import * as conformance from "../../../src/conformance/index.mjs";
 
@@ -45,15 +45,4 @@ test("R8 (N312) the answer is conformance's own, check and translation its catal
   const r = w.promote(A, md(f.superseded), { author: f.viewer });
   assert.deepEqual(r, conformance.determinationSuperseded(f.superseded, f.supersededBy));
   assert.ok(r.check && r.translation, "its row's");
-});
-
-/* The one arm conformance's real determinations do not reach (K252): a determination that is not live and names no
-   successor. Its answer is the shape conformance R9 gives, held here by hand until conformance publishes it. */
-test("R8 (N312) a superseded determination whose successor the reader does not name answers superseded_by null", () => {
-  const D3 = "CONF-2026-0003-determination";
-  const dets = { [D3]: { ok: true, id: D3, live: false, superseded_by: null, outcomes: NONCOMPLIANT } };
-  const w = world({ conformance: { determinationRead: ({ id }) => dets[id] || { ok: false, reason: "NO_SUCH_DETERMINATION" } } });
-  assert.equal(w.promote(D3, ["---", `id: ${D3}`, "object_type: determination", `title: ${D3}`, "current_state: recorded",
-    'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"), { extra: { replay: true } }).ok, true);
-  assert.equal(w.promote(A, mdFor(A, D3)).superseded_by, null);
 });

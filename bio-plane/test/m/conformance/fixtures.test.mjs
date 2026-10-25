@@ -1,7 +1,8 @@
 /* conformance's published fixtures (./fixtures.mjs), each called here and checked against the real answer. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { curesOf, determinationRead, determinationVariants, voidDetermination, noDeterminations } from "./fixtures.mjs";
+import { curesOf, determinationRead, determinationVariants, voidDetermination, noDeterminations, determinationBothBases,
+         matterStakeBases } from "./fixtures.mjs";
 import { noSuchDetermination } from "../../../src/conformance/index.mjs";
 
 test("R37: the curesOf fixture answers the standing link per standard to a viewer who sees it, and one answer to one who does not", () => {
@@ -51,4 +52,22 @@ test("R33: the voidDetermination fixture reads void while its held check's sourc
   assert.deepEqual([r.ok, r.live, r.void.causes.map((c) => c.cause), r.outcomes.map((o) => o.outcome)],
                    [true, true, ["check_void"], ["undetermined"]]);
   assert.equal("void" in f.conformance.determinationRead({ id: f.control, viewer: f.viewer }), false);
+});
+
+test("R9 R14 R31 R32: the determinationBothBases fixture reads one determination resting on a held check and an accepted finding together", () => {
+  const f = determinationBothBases();
+  const r = f.conformance.determinationRead({ id: f.both, viewer: f.viewer });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.findings.map((x) => x.basis.kind).sort(), ["accepted", "checked_held"]);
+  assert.deepEqual(f.conformance.determinationRead({ id: f.both, viewer: f.outsider }), noSuchDetermination(f.both));
+});
+
+test("R32 R41 (T50): the matterStakeBases fixture reads each accepted basis's matter stake as its import recorded it: a matter stake, null, or undetermined", () => {
+  const f = matterStakeBases();
+  const basis = (id) => f.conformance.determinationRead({ id, viewer: f.viewer }).findings[0].basis;
+  assert.equal(basis(f.withStake).matter_stake.stake, f.matterStake.stake);
+  assert.deepEqual(basis(f.withStake).matter_stake, f.matterStake);
+  assert.equal(basis(f.withoutStake).matter_stake, null);
+  assert.equal(basis(f.undetermined).matter_stake, "undetermined");
+  assert.deepEqual([basis(f.undetermined).identity, basis(f.undetermined).stake], [null, "undetermined"]);
 });

@@ -8,6 +8,7 @@
 import { PARTS } from "./parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
 import { rereading } from "./rereads.mjs";
+import { hasWord } from "../setup-words/index.mjs";
 
 function reads(view) {
   const id = String(view.subject || "");
@@ -28,6 +29,8 @@ function render(cs, view) {
   const ui = view.ui;
   const c = view.data.calc && view.data.calc.state === "ok" ? view.data.calc.value : null;
   const out = [cs.title(c ? c.question || c.calc_id : String(view.subject || ""), { thing: { kind: "record", facts: c ? [c.kind || ""] : [] } })];
+  /* a share the owner answers as a figure `{value, sign, precision}` (or, as older answers did, a plain number); the screen's functions are served to the page whole, so this stays inside */
+  const num = (x) => (x && typeof x === "object" ? Number(x.value) : Number(x)) || 0;
   const fig = (o) => (o && o.value !== undefined ? (o.sign === "-" ? "−" : "") + String(o.value) : o && o.low !== undefined ? o.low + "–" + o.high : "");
   out.push(cs.state("calc", view, (v) => {
     const r = v.results || {};
@@ -62,16 +65,24 @@ function render(cs, view) {
         const apart = [["disagree", k.disagree], ["notvisited", k.not_visited]].filter((x) => x[1]).map((x) => cs.w(S + "counts." + x[0], { n: String(x[1]) }));
         return `<dt>${cs.w(S + "found")}</dt><dd>${cs.w(S + "counts", { visited: String(Math.max(0, (d.n || 0) - (k.not_visited || 0))), n: String(d.n || 0), yes: String(k.yes || 0), no: String(k.no || 0), unsure: String(k.could_not_tell || 0) })}${apart.length ? " · " + apart.join(", ") : ""}</dd>`;
       })()
-      + `<dt>${cs.w(S + "estimate")}</dt><dd>${range ? cs.w(S + "range", { share: String(Math.round((range.successes / Math.max(1, range.sample_size)) * 100)), judged: String(range.sample_size), confidence: String(Math.round((range.confidence || 0.95) * 100)), low: String(Math.round((range.low_share || 0) * 100)), high: String(Math.round((range.high_share || 0) * 100)) })
+      + `<dt>${cs.w(S + "estimate")}</dt><dd>${range ? cs.w(S + "range", { share: String(Math.round((range.successes / Math.max(1, range.sample_size)) * 100)), judged: String(range.sample_size), confidence: String(Math.round((range.confidence || 0.95) * 100)), low: String(Math.round(num(range.low_share) * 100)), high: String(Math.round(num(range.high_share) * 100)) })
         : est ? cs.state(est, () => cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })) : cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })}</dd></dl>`
       + cs.sheet((s.items || []).map((it) => cs.row(`<span class="cs-kind" data-standing="${cs.esc(it.standing)}">${cs.w(S + "standing." + (["yes", "no", "disagree", "could_not_tell", "not_visited"].includes(it.standing) ? it.standing : "not_visited"))}</span>`,
         `<b>${cs.w(S + "item", { item: String(it.item) })}</b>` + (it.standing === "disagree" ? ` <span class="mk-small">${cs.w(S + "tension")}</span>` : ""),
         (it.visits || []).map((x) => `<span>${cs.grade("testimony", x.grade || "D")} ${cs.w(S + "visit", { finding: cs.w(S + "finding." + (["yes", "no", "could_not_tell"].includes(x.finding) ? x.finding : "could_not_tell")), by: P.who(cs, x.visitor), date: cs.date(x.observed_at || "") })} ${P.refOf(cs, x.testimony, cs.w(S + "account"), [], "capture")}</span>`).join(" "))).join(""));
   });
   const items = spot && spot.state === "ok" ? (spot.value.items || []).map((x) => ({ value: String(x.item), text: cs.w(S + "item", { item: String(x.item) }) })) : [];
+  /* the draw's set is a declared table (calculations R38: `calculationdraw` takes a table's digest): the choice offers the tables this calculation reads,
+     each by the title of the document it was made from, never by its fingerprint (R34) */
+  const titles = new Map(P.docsAll(cs, view).rows.map((r) => [r.capture && r.capture.sha256, typeof r.title === "string" && r.title ? r.title : null]));
+  const setOptions = [...new Set((c && Array.isArray(c.inputs) ? c.inputs : []).map((i) => i && i.table).filter((t) => /^[0-9a-f]{64}$/.test(String(t))))].map((t) => {
+    const q = P.later(cs, view, "table:" + t, "table", { query: { sha: t } });
+    const from = q.state === "ok" && q.value && q.value.source ? titles.get(q.value.source.capture_sha) : null;
+    return { value: t, text: from || P.plain(cs, "screen.held.untitled") };
+  });
   out.push(cs.sec(S + "spot", spotInner
     + `<p class="mk-small">${cs.w("screen.help.notsays.p")} <a href="/app/help" data-nav>${cs.w(S + "help")}</a></p>`
-    + P.docChoice(cs, view, "calc-set", { label: S + "set", help: S + "set.help", passage: false, project: c && c.project }) + cs.field("calc-n", S + "n", { value: "40" }) + cs.field("calc-seed", S + "seed", { help: S + "seed.help" })
+    + cs.choice("calc-set", S + "set", [{ value: "", text: "" }].concat(setOptions), {}) + `<p class="mk-small">${cs.w(S + "set.help")}</p>` + cs.field("calc-n", S + "n", { value: "40" }) + cs.field("calc-seed", S + "seed", { help: S + "seed.help" })
     + cs.field("calc-dq", S + "dq", { area: true, rec: true })
     + cs.act("calculationdraw", { label: "act.calculationdraw.label.calculation" })
     + cs.field("calc-words", S + "words", { area: true, rec: true, help: S + "words.help" }) + cs.field("calc-observed", S + "observed", { type: "date", value: P.today(cs) })
@@ -82,9 +93,18 @@ function render(cs, view) {
     + P.docChoice(cs, view, "calc-photo", { label: S + "photo", help: S + "photo.help", passage: false, project: c && c.project })
     + cs.act("spotcheckvisit", { label: "act.spotcheckvisit.label.calculation" }), { help: S + "spot.help" }));
   /* working it out, and a member's own spreadsheet */
+  /* item 59 (K5131; calculations R4): a built-in kind other than a count is worked out over a column of the one table it reads (and a share, a ratio and
+     a difference over the rows whose column is one value, its part): the form asks the column from the held table's own columns, and the part, and sends them */
+  const kindNow = String(ui["choice:calc-kind"] || "count"), inputNow = String(cs.value("calc-input") || "").trim().toLowerCase();
+  const needsColumn = ["total", "share", "ratio", "difference"].includes(kindNow), needsPart = ["share", "ratio", "difference"].includes(kindNow);
+  const tq = needsColumn && /^[0-9a-f]{64}$/.test(inputNow) ? P.later(cs, view, "table:" + inputNow, "table", { query: { sha: inputNow } }) : null;
+  const columns = tq && tq.state === "ok" && tq.value && tq.value.table && Array.isArray(tq.value.table.fields) ? tq.value.table.fields.filter((f) => f && f.name).map((f) => ({ value: f.name, text: f.name })) : [];
+  const columnChoice = columns.length ? cs.choice("calc-column", "screen.calculation.column", [{ value: "", text: "" }].concat(columns), {}) + `<p class="mk-small">${cs.w("screen.calculation.column.help")}</p>`
+    + (needsPart ? cs.field("calc-part", "screen.calculation.part", { help: "screen.calculation.part.help" }) : "") : "";
   out.push(cs.sec(S + "work", cs.field("calc-q", S + "q", { rec: true }) + cs.field("calc-from", S + "from", { type: "date" }) + cs.field("calc-to", S + "to", { type: "date" })
-    + cs.choice("calc-kind", S + "kind", ["count", "total", "share", "ratio", "difference", "estimate"].map((k) => [k, S + "kind." + k]), {})
-    + cs.field("calc-input", S + "input", { help: S + "input.help" })
+    + cs.choice("calc-kind", S + "kind", ["count", "total", "share", "ratio", "difference", "estimate"].map((k) => [k, S + "kind." + k]), { acts: {} })
+    + cs.field("calc-input", S + "input", { help: S + "input.help", typing: (cs2) => { cs2.set("calcin", String(cs2.value("calc-input") || "").trim()); } })
+    + columnChoice
     + cs.act("calculationcreate", { label: "act.calculationcreate.label.calculation", tone: "primary" })
     + P.docChoice(cs, view, "calc-content", { label: S + "content", help: S + "content.help", passage: false, project: c && c.project }) + cs.field("calc-header", S + "header", { help: S + "header.help" })
     + cs.act("tabledeclare", { label: "act.tabledeclare.label.calculation" })));
@@ -106,15 +126,21 @@ const acts = rereading([
       const kind = String(cs.value("calc-kind") || "count");
       const ref = /^MNY-/.test(input) ? { money: input } : /^CALC-/.test(input) ? { calculation: input } : /^[0-9a-f]{64}$/.test(input) ? (kind === "estimate" ? { draw: input } : { table: input }) : { figure: input };
       const c = view.data.calc && view.data.calc.state === "ok" ? view.data.calc.value : null;
-      return { body: Object.assign({ question, period: { from: from || null, to: to || null }, kind, inputs: [Object.assign({ name: "input" }, ref)] }, c && c.project ? { project: c.project } : {}) };
+      /* item 59: the column the kind needs (and, for a share, a ratio and a difference, the part), as the form asked them; a kind sent without them is
+         refused by `calculations` in its words (NO_COLUMN, NO_PART) and drawn beside the act */
+      const column = String(cs.value("calc-column") || "").trim(), part = String(cs.value("calc-part") || "").trim();
+      return { body: Object.assign({ question, period: { from: from || null, to: to || null }, kind, inputs: [Object.assign({ name: "input" }, ref)] },
+        column ? { column } : {}, part ? { part } : {}, c && c.project ? { project: c.project } : {}) };
     },
     done(view, answer, cs) { const r = answer && answer.result !== undefined ? answer.result : answer; if (r && r.calc_id) cs.go("calculation", r.calc_id); } },
   { op: "tabledeclare", label: "act.tabledeclare.label.calculation",
     send(view, el, cs) {
-      const source = String(cs.value("calc-content") || "").trim();
+      /* the source is the passage the member chose, `{capture_sha, extent}` as `calculations` R1 takes a passage nobody has cited yet (a bare capture
+         digest is no content id: the plane refused it NO_SUCH_CONTENT) */
+      const at = view.parts.chosen(cs, "calc-content");
       const header = String(cs.value("calc-header") || "").split(",").map((x) => x.trim()).filter(Boolean);
-      if (!source || !header.length) return { refuse: "screen.calculation.table.empty" };
-      return { body: { source, header, schema: { fields: header.map((name) => ({ name, type: "string" })) } } };
+      if (!at || !header.length) return { refuse: "screen.calculation.table.empty" };
+      return { body: { source: { capture_sha: at.captureSha, extent: at.extent }, header, schema: { fields: header.map((name) => ({ name, type: "string" })) } } };
     } },
   { op: "calculationdraw", label: "act.calculationdraw.label.calculation",
     send(view, el, cs) {
@@ -212,7 +238,10 @@ function renderHelp(cs) {
     + ["does", "random", "says", "notsays", "evidence"].map((k) => cs.sec(H + k, `<p>${cs.w(H + k + ".p")}</p>`)).join("");
 }
 
-const words = ["screen.calculation.name", "screen.calculation.purpose",
+/* K5173: the rows UX-DESIGN adopts (HANDOFF B520), listed once the word table holds them */
+const NEW_KEYS = ["screen.calculation.column", "screen.calculation.column.help", "screen.calculation.part", "screen.calculation.part.help"].filter((k) => hasWord(k));
+
+const words = ["screen.calculation.name", "screen.calculation.purpose", ...NEW_KEYS,
   ...["calculationcreate", "tabledeclare", "calculationdraw", "addworkbook", "bind", "recordcheck", "calculationaccept", "testify", "spotcheckvisit"]
     .flatMap((op) => ["act." + op + ".label.calculation", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",

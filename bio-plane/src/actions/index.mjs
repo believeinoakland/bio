@@ -1282,13 +1282,15 @@ export class Actions {
   }
 
   /* R8 (e), R93 (T45): the live success record `id` names, as the viewer reads it (`consequences.successRecordRead`, its
-     R20), or null when it names none the viewer may see, none is live, or no success record can be read here. */
+     R20), or null when it names none the viewer may see, none is live, or no success record can be read here. Its answer
+     nests the record under `success`, where `live` and `superseded_by` stand (a superseded record reads ok with live false). */
   #successRecord(id, viewer) {
     const cons = this.consequences;
     if (!cons || typeof cons.successRecordRead !== "function" || typeof id !== "string" || !SUCCESS_RECORD_ID_RE.test(id)) return null;
     let r = null;
     try { r = cons.successRecordRead({ id, viewer }); } catch { r = null; }
-    return r && r.ok !== false && !r.superseded_by ? r : null;
+    const s = r && r.ok !== false && r.success && typeof r.success === "object" ? r.success : null;
+    return s && s.live === true && !s.superseded_by ? s : null;
   }
 
   /* R8: an action recorded for a breach (`breach: true`) rests on a live conformance determination the author may see,

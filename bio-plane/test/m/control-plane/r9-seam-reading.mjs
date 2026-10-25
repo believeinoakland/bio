@@ -143,9 +143,12 @@ export function ocrMember({ perCall = 1, down = () => false, killPages = [] } = 
     const inside = req.headers.get("x-r9-in-request") === "1";
     log.push({ inside, pages: [...(b.pages || [])] });
     const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", ...headers } });
+    // fixtures-generic: R9_CALL_INSIDE_A_REQUEST (the double fails any call made inside a request with a code of its own: the finding the walk looks for)
     if (inside) return json({ ok: false, reason: "R9_CALL_INSIDE_A_REQUEST" }, 500);
+    // fixtures-generic: R9_DOWN (fault injection: the member is down, with a code of its own)
     if (m.down === true || down(log.length) || (m.downFn && m.downFn(log.length))) return json({ ok: false, reason: "R9_DOWN" }, 503);
     const wanted = (b.pages || []).slice(), take = wanted.slice(0, m.perCall), rest = wanted.slice(m.perCall);
+    // fixtures-generic: R9_KILL (fault injection: a page that kills its reader, with a code of its own)
     if (take.some((p) => m.killPages.has(p))) return json({ ok: false, reason: "R9_KILL" }, 500, { "x-r9-kill": "1" });
     return json({ ok: true, engine: "tess", version: "5.3", cap: "C", measured_by: "M-1", confidence_floor: null, deferred: rest,
       pages: take.map((p) => ({ page: p, regions: [{ text: `ocr scan page ${p} words`, source: { kind: "pdf-page", ref: `p${p}`, page: p, rect: [0, 0, 10, 10] }, confidence: "none" }] })) });
@@ -207,6 +210,7 @@ function headWorld({ scanMs, renderMs = scanMs }) {
         events.push({ seq: ++seq, kind: "render-start" });
         await later(renderMs);
         events.push({ seq: ++seq, kind: "render-end", passes: await passes() });
+        // fixtures-generic: NOT_RENDERED (the double renders nothing; a code of its own)
         return json({ ok: false, code: "NOT_RENDERED" }, 422);
       }
       return json({ ok: true, name: "file-scanner", version: "1.0.0" });

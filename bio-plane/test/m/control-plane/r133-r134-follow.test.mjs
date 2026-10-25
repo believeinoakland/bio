@@ -14,6 +14,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, world, call, opCalls, sha, FORGED, defaultHooks } from "./harness.mjs";
 import { promoteArchive } from "../../../src/control-plane/archive.mjs";
+import { archiveAnswer } from "../acquisition/fixtures.mjs";
 
 const MB = 1024 * 1024;
 const ok = (result) => new Response(JSON.stringify({ ok: true, result }), { status: 200, headers: { "content-type": "application/json" } });
@@ -249,7 +250,9 @@ test("R134 (fix round 9, G162; K4980): `op=unpack` follows EVERY member it filed
 });
 
 test("R134 (fix round 9, G162; K4980): an acquire's archive is followed alike: the members its unpack filed are each followed; the archive document itself, whose reading was not dropped, is not", async () => {
-  const members = [1, 2].map((i) => archiveDoc(shaOf(i), { container: { archive_sha256: shaOf(99), index: i, path: `m${i}.txt` } }));
+  /* acquisition's real answer to an archive locator (its published fixture): the archive's document and the members its unpack filed */
+  const { body: fetched } = await archiveAnswer({ memberBytes: [64, 64] });
+  const members = fetched.unpack.documents;
   let n = 0;
   const w = world({ answer: (c) => {
     if (c.route === "allocid") return ok({ id: `INFO-2026-${String(++n).padStart(4, "0")}` });
@@ -259,10 +262,10 @@ test("R134 (fix round 9, G162; K4980): an acquire's archive is followed alike: t
   } });
   const hooks = { ...defaultHooks(), async gatedOp(ctx) {
     if (ctx.op !== "acquire") return undefined;
-    return M.json({ ok: true, document: archiveDoc(shaOf(99), { reading: { found: true }, text_units: [] }), unpack: { ok: true, archive: { sha256: shaOf(99) }, documents: members, complete: true } });
+    return M.json({ ...fetched, document: { ...fetched.document, reading: { found: true }, text_units: [] } });
   } };
   const r = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks, body: { locator: "https://example.org/a.zip", unpack: true } });
   assert.equal(r.status, 200, r.text);
   const rows = asked(w.env, "pendingadd").filter((c) => c.params.kind === "reading").map((c) => c.params.sha);
-  assert.deepEqual(rows, [shaOf(1), shaOf(2)], "each member of the fetched archive is followed; the archive's own document is not");
+  assert.deepEqual(rows, members.map((m) => m.capture.sha256), "each member of the fetched archive is followed; the archive's own document is not");
 });

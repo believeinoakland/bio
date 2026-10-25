@@ -1,6 +1,6 @@
 # BOB to member-roster (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 

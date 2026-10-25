@@ -267,6 +267,7 @@ export function sections(kit, counting) {
   test("R9 seam §14b (G124b; R72, R111): the door hands `uploadCapture` its own byte ledger and the request's declared length: a 24 MiB text peaks at the file and at most two parts beyond it, and nothing is held once it is answered", { timeout: 900000 }, async () => {
     const { ownerOps: controlPlaneOwnerOps } = await import("../../../src/store-assembly/owner-ops.mjs");
     const { fresh, bucket } = await import("../capture/fixture.mjs");
+    // fixtures-contract: plane job-registrar
     const { jobRegistrarStub } = await import("../../job-registrar-stub.mjs");
     const PART = 8 * MiB;
     const b = bucket();
@@ -275,6 +276,7 @@ export function sections(kit, counting) {
     const w = fresh({ evidence: b, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9" } });
     w.c.evidenceKey = (d) => `bio/captures/${d}`;
     const j = jobRegistrarStub();
+    // fixtures-contract: plane job-registrar
     w.c.registerJob = j.registerJob; w.c.armJobs = j.armJobs;
     const real = w.core.transact.bind(w.core);
     w.core.transact = (fn) => { try { return real(() => j.transact(() => { const out = fn(); if (out && typeof out === "object" && out.ok === false) throw Object.assign(new Error("refused"), { refused: out }); return out; })); } catch (e) { if (e && e.refused) return e.refused; throw e; } };

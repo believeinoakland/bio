@@ -2,55 +2,54 @@
    K2848–K2850): the gate (R8 amended, R74–R76), addressing (R9 amended, R77–R79, R94), receipt, responses and outcomes
    (R81–R83, R85, R86, R95; R80, R87, R88 moved to `action-records` R4–R6 at T47, read here through it), the misuse guards and recognition (R92, R93), the
    registrations (R97), the view (R10), "what we did" (R66), the machine fence (R33) and the tables (R36).
-   Determinations and success records are stand-ins in conformance R9's and consequences R20's shapes; members, entities,
-   events, standards and the jurisdiction view are the real modules on the fixture's host. */
+   Success records are consequences' published `successRecordRead` (R20). Determinations are conformance's own, each made by
+   its published fixture (conformance R9, R33) and read through its real `determinationRead`: the states this file reads
+   are NC (a held check and another group's accepted finding), CO (compliant), VO (void), SU (superseded by NC's successor
+   in the R9 fixture) and PUB (a published finding). Members, entities, events, standards and the jurisdiction view are the
+   real modules on the fixture's host. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, actionMd, CP, NONCOMPLIANT, COMPLIANT } from "./fixture.mjs";
+import { world, V, MACHINE, actionMd, CP } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
 import * as conformance from "../../../src/conformance/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
+import { successRecordRead } from "../consequences/fixtures.mjs";
+import { determinationBothBases, determinationVariants, determinationRead, voidDetermination } from "../conformance/fixtures.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c", D = "ACTN-2026-0004-d";
 const M = V("alice");
 const reasons = (list) => list.map((r) => r.reason);
-const NC = "CONF-2026-0001-noncompliant", CO = "CONF-2026-0002-compliant", VO = "CONF-2026-0003-void",
-      SU = "CONF-2026-0004-superseded", PUB = "CONF-2026-0005-published";
-const SUC = "SUC-2026-0001", SUC_NONE = "SUC-2026-0404";
-const CAUSES = [{ finding: "INQ-2026-0001-q", what: "its check was voided", at: "2026-09-20" }];
-/* determinations in conformance R9's shape (T45: `basis` per finding, `void` while void, R33) */
-const DETS = {
-  [NC]: { ok: true, id: NC, live: true, superseded_by: null, outcomes: NONCOMPLIANT, findings: [
-    { finding: "INQ-2026-0001-q", basis: { kind: "checked_held", check: "CHK-1", checked_at: "2026-11-03" } },
-    { finding: "INQ-2026-0002-q", basis: { kind: "checked_held", check: "CHK-1", checked_at: "2026-11-03" } },
-    { finding: "INQ-2026-0003-q", basis: { kind: "accepted", group: "Hayward Parents", case: "CASE-2026-0009", edition: 2,
-      edition_date: "2026-09-03", accepted_at: "2026-09-20", accepted_by: M, identity: "Hayward Parents for Accountability",
-      stake: "none declared" } },
-    { finding: "INQ-2026-0004-q", basis: { kind: "accepted", group: "Hayward Parents", case: "CASE-2026-0009", edition: 2,
-      edition_date: "2026-09-03", accepted_at: "2026-09-20", accepted_by: M, identity: "Hayward Parents for Accountability",
-      stake: "none declared" } }] },
-  [CO]: { ok: true, id: CO, live: true, superseded_by: null, outcomes: COMPLIANT, findings: [] },
-  [VO]: { ok: true, id: VO, live: true, superseded_by: null, void: { causes: CAUSES },
-          outcomes: [{ standard: NONCOMPLIANT[0].standard, outcome: "undetermined", recorded_outcome: "noncompliant" }], findings: [] },
-  [SU]: { ok: true, id: SU, live: false, superseded_by: NC, outcomes: NONCOMPLIANT, findings: [] },
-  [PUB]: { ok: true, id: PUB, live: true, superseded_by: null, outcomes: NONCOMPLIANT,
-           findings: [{ finding: "INQ-2026-0005-q", basis: { kind: "published", case: "CASE-2026-0001", edition: 1 } }] },
-};
-const conf = { determinationRead: ({ id }) => DETS[id] || { ok: false, reason: "NO_SUCH_DETERMINATION" } };
-/* a success record in consequences R20's shape; `registerOwnActReader` (its R19) keeps what actions registers */
+const SUC_NONE = "SUC-2026-0404";
+/* Each fixture numbers its determinations from 0001, so a world holds only determinations whose ids its fixtures do not share:
+   VO (void) and PUB (noncompliant on a published finding, not void) from the void fixture; CO (compliant), SU (superseded by NC)
+   and NC (noncompliant on a published finding) from the variants fixture. R75 grounds its own, both-basis NC (`both`). */
+const REAL = { both: determinationBothBases(), variants: determinationVariants(), voided: voidDetermination(), read: determinationRead() };
+const VOIDS = REAL.voided, VARIANTS = REAL.variants;
+const VO = VOIDS.voided, PUB = VOIDS.control;
+const CO = VARIANTS.compliant, SU = VARIANTS.superseded, NC = VARIANTS.live;
+const CAUSES = VOIDS.conformance.determinationRead({ id: VO, viewer: VOIDS.viewer }).void.causes;
+const SEES = VOIDS.viewer;
+/* conformance's `determinationRead` as the participant who sees these reads it, for each id of the fixture it is made in */
+const reader = (homes) => ({ determinationRead: ({ id }) => {
+  const home = homes.get(id) || REAL.read;
+  return home.conformance.determinationRead({ id, viewer: SEES });
+} });
+const conf = reader(new Map([[VO, VOIDS], [PUB, VOIDS], [CO, VARIANTS], [SU, VARIANTS], [NC, VARIANTS]]));
+/* consequences' published success record (its R20): its real read of a live record, and the real refusal for one no record
+   holds. `registerOwnActReader` (its R19) is a registry double that keeps what actions registers. */
 function consequencesStandIn() {
-  const c = { readers: [],
-    successRecordRead: ({ id }) => (id === SUC ? { ok: true, id: SUC, statement: "the reports were published", superseded_by: null }
-                                               : { ok: false, reason: "NO_SUCH_SUCCESS_RECORD" }),
+  const f = successRecordRead();
+  const c = { readers: [], id: f.id,
+    successRecordRead: ({ id }) => (id === f.id ? f.read : f.absent),
     registerOwnActReader: (fn) => (c.readers.push(fn), { ok: true }) };
   return c;
 }
 /* each determination and success record named by a leg, held as the record's own history */
 function grounded(opts = {}) {
   const cons = consequencesStandIn();
-  const w = world({ conformance: conf, deps: { consequences: cons, ...(opts.deps || {}) }, ...(opts.world || {}) });
-  for (const id of Object.keys(DETS))
+  const w = world({ conformance: opts.conf || conf, deps: { consequences: cons, ...(opts.deps || {}) }, ...(opts.world || {}) });
+  for (const id of opts.ids || [NC, CO, VO, SU, PUB])
     assert.equal(w.promote(id, ["---", `id: ${id}`, "object_type: determination", `title: ${id}`, "current_state: recorded",
       'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"),
       { extra: { replay: true } }).ok, true);
@@ -91,8 +90,20 @@ test("R8 (T45) (a) a breach action rests on a live determination noncompliant fo
   assert.equal(r(B, CO, VO, NC).ok, true, "any leg live, not void and noncompliant rests it");
 });
 
+test("R8 (T45) (e) a success record consequences reads superseded (live false, a successor named) is no basis: ACTION_BASIS_REFUSED, nothing written", () => {
+  const { w, cons } = grounded();
+  const read = cons.successRecordRead({ id: cons.id, viewer: M });
+  assert.equal(read.success.live, true, "control: the published record reads live, and lands");
+  assert.equal(w.promote(C, actionMd(C, [...CP, "action_kind: other", ...legs(cons.id)])).ok, true);
+  /* consequences R20 answers a superseded record ok with `live` false and its successor named under `success` */
+  cons.successRecordRead = () => ({ ok: true, success: { ...read.success, live: false, superseded_by: "SUC-2026-0002" } });
+  const r = w.promote(D, actionMd(D, [...CP, "action_kind: other", ...legs(cons.id)]));
+  assert.equal(r.reason, "ACTION_BASIS_REFUSED");
+  assert.equal(w.record.head(D), null, "nothing was written");
+});
+
 test("R8 (T45) (d) an overridden action may later gain a leg on a live noncompliant determination: the override stays, the read answers both; (e) a rests_on leg may name a live success record", () => {
-  const { w } = grounded();
+  const { w, cons } = grounded();
   assert.equal(w.promote(A, actionMd(A, [...CP, "action_kind: other", "breach: true", ...override(LEGAL)])).ok, true);
   const later = w.text(A).replace("breach: true", `breach: true\n${legs(NC).join("\n")}`);
   assert.equal(w.promote(A, later).ok, true, "a member's revision adds the determination");
@@ -101,7 +112,7 @@ test("R8 (T45) (d) an overridden action may later gain a leg on a live noncompli
   assert.equal(w.promote(A, w.text(A).replace(/premise_override:\n(  .*\n)+/, "")).reason, "PREMISE_OVERRIDE_REWRITTEN",
     "the override stays");
   /* (e) a success record as a rests_on target; one the record does not hold is refused as any unheld target */
-  assert.equal(w.promote(B, actionMd(B, [...CP, "action_kind: other", ...legs(SUC)])).ok, true);
+  assert.equal(w.promote(B, actionMd(B, [...CP, "action_kind: other", ...legs(cons.id)])).ok, true);
   assert.equal(w.promote(C, actionMd(C, [...CP, "action_kind: other", ...legs(SUC_NONE)])).reason, "ACTION_BASIS_REFUSED");
 });
 
@@ -131,12 +142,16 @@ test("R74 the override is {ground, reason}: each ground lands; none, or another 
 });
 
 test("R75 the read answers disclosures: one per distinct held check and per distinct accepted source edition, and the override's; published findings carry none", () => {
-  const { w } = grounded();
-  assert.equal(w.promote(A, breach(A, NC)).ok, true);
+  /* conformance's both-basis determination (a held check and another group's accepted finding), beside the published one */
+  const BOTH = REAL.both.both;
+  const { w } = grounded({ conf: reader(new Map([[BOTH, REAL.both], [PUB, VOIDS]])), ids: [BOTH, PUB] });
+  assert.equal(w.promote(A, breach(A, BOTH)).ok, true);
+  /* the values are conformance's own basis (its R9): this edition was imported without its identity or stake, so they read
+     as unknown or undetermined, and the disclosure relays exactly that */
   assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).disclosures, [
-    { kind: "checked_held", checked_at: "2026-11-03" },
-    { kind: "accepted", group: "Hayward Parents", edition_date: "2026-09-03", accepted_at: "2026-09-20",
-      identity: "Hayward Parents for Accountability", stake: "none declared", matter_stake: null }]);
+    { kind: "checked_held", checked_at: "2026-09-28T01:00:00Z" },
+    { kind: "accepted", group: "Hayward Parents", edition_date: null, accepted_at: "2026-09-20T00:00:00Z",
+      identity: null, stake: "undetermined", matter_stake: "undetermined" }]);
   /* control: an action resting only on published findings answers none */
   assert.equal(w.promote(B, breach(B, PUB)).ok, true);
   assert.deepEqual(w.a.actionRead({ id: B, viewer: M }).disclosures, []);
@@ -428,10 +443,10 @@ test("R92 openItemsWith: the visible open actions to the same office (entity id,
 });
 
 test("R93 a recognition (the view's shape: recognition) answers recognition_basis: compliant, success or promise_only with its sentence; nothing is refused for it", () => {
-  const { w } = grounded();
+  const { w, cons } = grounded();
   const rec = (id, ...ids) => w.promote(id, actionMd(id, [...CP, "action_kind: recognition_letter", ...(ids.length ? legs(...ids) : [])]));
   assert.equal(rec(A, CO).ok, true);
-  assert.equal(rec(B, SUC).ok, true);
+  assert.equal(rec(B, cons.id).ok, true);
   assert.equal(rec(C).ok, true, "nothing is refused for its basis");
   const basis = (id) => w.a.actionRead({ id, viewer: M }).recognition_basis;
   assert.deepEqual(basis(A), { basis: "compliant" });

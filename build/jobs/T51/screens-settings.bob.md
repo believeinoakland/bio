@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J36
+**Read** · handled J39
 
 ## B1 · START
 
@@ -453,3 +453,15 @@ Your job: screens-settings R81 (written by BOB at K5182; read it whole with R73)
 ## B49 · CHANGE
 
 CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWorld()`'s default world works (B8: the team is store-assembly's own, no second seeding), and its `group` option is gone. Merge origin/tranche/T51 into your branch, drop every `{group: null}` you pass, and re-run the tests that failed with GROUP_ALREADY_RECORDED. New recipes are on the tranche (store-request R19): published, imported, cited, rerun, conflict, assistant, writingHelp, grantAdmit, world.route(as); re-point any op-table line you kept for want of one. Then carry on with your open steps.
+
+## B50 · ANSWER · re J38
+
+ANSWER (BOB #302, K5197; re J37, J38). J38: option (a), BOB's (K2008): an older installation that recorded no producing team is a real state (installs before the team was recorded), so `storeWorld()` makes it as a named recipe, store-request's (STORE-REQUEST #6, started now): the base built the way such an older store was, through the real store code. Leave R58 and R69's control as they are, red by name until it merges; I will post a CHANGE to re-point them to the recipe. J37: (1) R68 `selftest` refused with no code since your merge: pin the cause yourself, without guessing: run `updates.test.mjs`'s R68 at `9fd44d0f66^` and `9fd44d0f66`, and at `59997c5a81^` and `59997c5a81` (a worktree each, `git worktree add`), and read the refusal the door answers (its status and body); REPORT the commit, the file:line and the answer, and I place it today. (2) R5, R76 (`connect.test.mjs`): the same: read what the door answers in each and the line that answers it, and REPORT with file:line (ai-accounts is running as AI-ACCOUNTS #8, so a cause there is forwarded at once). Then post COMPLETE with these four red by name and the impact run's counts.
+
+## B51 · ANSWER · re J39
+
+ANSWER (BOB #303, K5200; re J39). (1) R68: the cause was store-request's world binding `PUBLISHED` alone; STORE-REQUEST #6 fixed it (the world binds no PUBLISHED; `recipes.published` binds it) and is merged: merge the tranche and re-run updates.test.mjs:284. (2) R5, R76: the door and the page are right: once a key is held the set is no longer offered (R5: sent once, never drawn again). The blank-key control is the test's: press `accountreferenceset` with a blank key BEFORE the first set (on a fresh page) and assert `sent: []` there, then set the key; a test of your own module. Then finish the impact run and post COMPLETE.
+
+## B52 · RESUME
+
+RESUME (K5202; mechanics §5.4: your record says RUNNING, your session is idle). Note: since `fc578df959` no store starts on the tranche (`DECLARED_OP_DISAGREES: readtranslate description`, op-grades' stale hand row); OP-GRADES #30 fixes it now and I CHANGE you to merge the tranche when it merges. Any world test red at import with that message is that cause, not yours: name it and carry on with the rest. Read your record, continue from its next step, keep your state current, and post COMPLETE (or QUESTION) when done.

@@ -27,7 +27,7 @@ async function team() {
 }
 
 for (const [where, path] of [["the queue", "/app/queue"], ["Home", "/app"]]) {
-  test(`R3, R28 (03b §6, item 78 (1); ${where}): a participant's request to leave is drawn with her name, the project and her word, and leads to the project, where an owner removes her; \`projectremove\` is no act of Home or the queue in the registry`, { timeout: 120000 }, async () => {
+  test(`R3, R28, R105 (03b §6, item 78 (1); ${where}): a participant's request to leave is drawn with her name, the project and her word, and leads to the project, where an owner removes her; \`projectremove\` is no act of Home or the queue in the registry`, { timeout: 120000 }, async () => {
     const { w, rosa, ola, project } = await team();
     const p = await open(w, rosa, path);
     await settle();
@@ -52,7 +52,7 @@ for (const [where, path] of [["the queue", "/app/queue"], ["Home", "/app"]]) {
   });
 }
 
-test("R59, R95 (03b §5; item 78 (1)): \"What you answered\" lists each join request the member answered, with the requester, the project, the answer and the day; the asker's own list holds none", { timeout: 120000 }, async () => {
+test("R59, R95, R105 (03b §5; item 78 (1)): \"What you answered\" lists each join request the member answered, with the requester, the project, the answer and the day; the asker's own list holds none", { timeout: 120000 }, async () => {
   const { w, rosa, dev, mai, project } = await team();
   await rosa.act("projectrequestanswer", { query: { projectId: project, handle: "dev", answer: "decline", comment: "Not now" } });
   await rosa.act("projectrequestanswer", { query: { projectId: project, handle: "mai", answer: "grant" } });
@@ -103,7 +103,7 @@ for (const [where, path] of [["the queue", "/app/queue"], ["Home", "/app"]]) {
 }
 
 /* R43, R26 (03b §17): Find's Theme filter over a real theme: documents the member held, one placed, one proposed (a hunch). */
-test("R43, R26 (03b §17): Find's Theme filter lists what was placed in the chosen theme, then its hunches apart, each document by its title, never its id; with no title read the plain word stands", { timeout: 120000 }, async () => {
+test("R43, R26, R106 (03b §17): Find's Theme filter lists what was placed in the chosen theme, then its hunches apart, each document by its title, never its id; with no title read the plain word stands", { timeout: 120000 }, async () => {
   const w = await storeWorld();
   const rosa = await w.signIn("rosa", { admin: true });
   const project = await w.recipes.project(rosa, "Pothole repairs");

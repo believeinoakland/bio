@@ -288,7 +288,7 @@ export function queueStates() {
         : (you ? cs.w("queue.aside.deferred", { date: { html: cs.date(String(r.at || "")) } }) : cs.w("queue.aside.deferred.bymember", { member: cs.memberName(r.decided_by), date: { html: cs.date(String(r.at || "")) } }));
       const version = r.definition_version !== null && r.definition_version !== undefined ? " · " + cs.w("queue.aside.v2", { n: String(r.definition_version) }) : "";
       const reason = typeof r.reason === "string" && r.reason.trim() ? ' · <span class="rec">' + cs.esc(r.reason) + "</span>" : "";
-      const again = !dismissed ? cs.act("proposedispose", { label: "act.proposedispose.label.queue", data: { to: "dismissed", project: r.project ? String(r.project) : "", finding: String(r.finding || ""), key: r.key ? String(r.key) : "", version: r.definition_version === null || r.definition_version === undefined ? "" : String(r.definition_version) } }) : "";
+      const again = !dismissed ? cs.act("proposedispose", { label: "act.proposedispose.label.queue", data: { to: "dismissed", project: r.project ? String(r.project) : "", finding: String(r.finding || ""), key: r.scope === "instance" && r.key ? String(r.key) : "", version: r.definition_version === null || r.definition_version === undefined ? "" : String(r.definition_version) } }) : "";
       return cs.row(cs.icon(dismissed ? "refused" : "clock"), ref + '<span class="meta">' + decision + reason + version + (again ? " " + again : "") + "</span>", "", "");
     }).filter(Boolean).join("");
     return cs.sec("progression.finding.state.dismissed", '<p class="mk-small muted">' + cs.w("queue.aside.help2") + "</p>" + cs.sheet(body), { help: "queue.aside.help" });

@@ -5,6 +5,7 @@ import { generateKeyPairSync, createHash, sign as cryptoSign } from "node:crypto
 import { generate } from "../../pdfgen.mjs";
 import { HEADINGS } from "../../../src/record-grammar/index.mjs";
 import { caseRatifyStatement, ratifyStatement, NS_RATIFY } from "../../../src/sshsig.mjs";
+import { memoryBucket } from "../store-assembly/world.mjs";
 import { hold, project, resultOf, refusedAct, instant, hex } from "./door.mjs";
 
 const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "x";
@@ -211,9 +212,10 @@ export async function conflict(world, as, { label = "record", through = "notice"
 
 /** R19 (K5178; STORE-REQUEST #3 J11): a case published, by the real ceremony. `finding` is `recipes.finding`'s answer; `as` is its member (the owner of its project, holding `publish`).
  *  `publish` prepares the case document; she gives her password again (`reauth`), signs the case and its finding with her key (`signer`) and `caseratify` ratifies it; the finding's
- *  document crosses to the published store and the case file is assembled (the world holds a published store, `PUBLISHED`); each part of the case file is then fetched as anyone
+ *  document crosses to the published store and the case file is assembled (the recipe binds the published store, `PUBLISHED`, as an installation that publishes has it); each part of the case file is then fetched as anyone
  *  fetches it (`publishedbytes`). Answers `{case, edition, finding, published, ratified, manifest, parts}`: `parts` are the case file's bytes, ready for another team's `caseimport`. */
 export async function published(world, as, finding) {
+  world.env.PUBLISHED ??= memoryBucket();   /* an installation that publishes binds both buckets; the default world binds the captures alone */
   const key = await signer(world, as);
   const prepared = await as.act("publish", { query: finding.publish.query, body: { ...finding.publish.body, tieAttested: true } });
   const doc = prepared.caseDocument.doc_sha, pin = (prepared.findings.find((f) => f.target === finding.id) || {}).bundleSha;
@@ -308,4 +310,73 @@ export async function grantAdmit(world, as, { calls = 1, mode = "ask", usage = C
     body: JSON.stringify({ mode, usage, calls }) } }, { token: grant.token }));
   if (!counted || counted.ok !== true) throw refusedAct("askusage", { status: 200, json: { ok: true, result: counted } });
   return { grant: grant.token, counted };
+}
+
+/** R19 (STORE-REQUEST #6, B15 (3); SCREENS-INTAKE #27 J57 (5)): a capture held in parts, by the real acts a member's upload of a file past what the store holds whole makes
+ *  (`captureupload` of `bytes` bytes, then the `promote` that files it, as the capture screen files it). The bytes are the recipe's, a seeded filler distinct per `name`; the
+ *  store cuts them into parts itself. Answers `{sha, bundle, parts, bytes}` (`parts`: the document's `[{file, sha256, bytes}]` in order). `bytes` defaults to 33 MiB, past the
+ *  32 MiB of one part. */
+export async function parted(world, as, name, { bytes = 33 * 1048576, project: filed = "", type = "application/pdf" } = {}) {
+  const content = new Uint8Array(bytes);
+  const seed = createHash("sha256").update(String(name)).digest();
+  for (let i = 0; i < content.length; i += 4099) content[i] = seed[i % seed.length] ^ (i >>> 12);
+  const held = await hold(world, as, name, content, filed, { type });
+  if (!Array.isArray(held.parts) || held.parts.length < 2) throw new Error(`storeWorld: a file of ${bytes} bytes was held whole, not in parts`);
+  return { ...held, bytes };
+}
+
+/** R19 (STORE-REQUEST #6, B15 (3); J57 (5)): a sheet at an address whose reading is over what a promotion takes inline, by the real read: the source serves a one-column CSV of
+ *  `rows` numbers (the network, scripted), and the store's own `acquire` reads it into a document whose provenance file passes 1 MiB. The recipe acts for nobody: a page that presses
+ *  "Capture" at `address` meets the same answer (the world's `script` is the only double). With `as` and `acquire: true` it also acquires it, answering the owner's answer. Answers
+ *  `{address, rows, bytes}` and `{answer}` when acquired. */
+export async function largeSheet(world, as, { address = "https://city.example/data/large.csv", rows = 200000, acquire = false } = {}) {
+  const text = "x\n" + Array.from({ length: rows }, (_, i) => i).join("\n") + "\n";
+  world.script(address, async () => new Response(text, { status: 200, headers: { "content-type": "text/csv" } }));
+  const out = { address, rows, bytes: text.length };
+  if (acquire) out.answer = await as.act("acquire", { body: { locator: address } });
+  return out;
+}
+
+/** R19 (STORE-REQUEST #6, B15 (1), (3); CAPTURE-SOURCES #20): a capture credential stored by `as`, by the real act (`capturecredentialsupply`, the door stamping `by` as the member).
+ *  Needs the instance's key: make the world with `storeWorld({ env: { CAPTURE_CREDENTIALS_KEY } })`. Answers the owner's answer (the entry R58 lists, never the secret). */
+export async function credential(world, as, { host = "records.example.gov", kind = "login", secret = "a-login-no-answer-carries", scope = "member", project: filed = null } = {}) {
+  if (!world.env.CAPTURE_CREDENTIALS_KEY)
+    throw new Error("storeWorld: recipes.credential needs the instance's key: make the world with storeWorld({ env: { CAPTURE_CREDENTIALS_KEY } })");
+  return as.act("capturecredentialsupply", { body: { kind, host, secret, scope, ...(filed ? { project: filed } : {}) } });
+}
+
+/** R19 (STORE-REQUEST #6, B16 (2); SCREENS-DAILY #24 J31 (6)): a team of `n` projects, each started by the real `promote` of its document (`project`), in order. Answers their bundle ids. */
+export async function projects(world, as, n, { prefix = "Project" } = {}) {
+  const ids = [];
+  for (let i = 1; i <= n; i++) ids.push(await project(world, as, `${prefix} ${String(i).padStart(3, "0")}`));
+  return ids;
+}
+
+/** R19 (STORE-REQUEST #6, B16 (2); SCREENS-DAILY #24 J31): a draft shared for review on a case no edition of which is published, by the real acts: a project and a finding in it, a
+ *  draft of a new case (`casedraft` with `newCase`) and a reader's link to it (`reviewgrant`, `days` from the world's clock; `comment` makes the reader's own `reviewcomment` under the
+ *  link's secret). Answers `{project, finding, draft, grant, secret, until, comment}`. `publishedlist` answers no case of it. */
+export async function draftOnly(world, as, { project: filed = null, days = 60, comment = null } = {}) {
+  const n = counter(world, "__draftonlys");
+  const projectId = filed ?? await project(world, as, `Draft only ${n}`);
+  const found = await finding(world, as, projectId, { title: `A finding awaiting its edition ${n}` });
+  const draft = (await as.act("casedraft", { body: { project: projectId, newCase: true, targets: [found.id] } })).draftId;
+  const until = new Date(world.now() + days * 86_400_000).toISOString().replace(/\.\d{3}Z$/, "Z");
+  const grant = await as.act("reviewgrant", { body: { draft, recipient: "A reader", until } });
+  let said = null;
+  if (comment) said = resultOf(await world.door({ url: `/api/?${new URLSearchParams({ op: "reviewcomment", draft })}`, init: { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ secret: grant.secret, text: comment }) } }, null));
+  return { project: projectId, finding: found.id, draft, grant: grant.grantId, secret: grant.secret, until, comment: said };
+}
+
+/** R19 (STORE-REQUEST #6, B16 (2); SCREENS-INVESTIGATE #17 J31 (3)): a court's register followed and read, by the real acts: the member follows the address (`followregister`), the source
+ *  serves a page (the network double), and the world's clock is moved on (`tick`) so the following consumer reads it as it does. Afterwards `follows` carries the read's `last_read` and
+ *  `last_outcome` (`captured`). The member's session locks after the idle that `tick` is, so she is signed in again; answers `{follow, address, as, read}` (`as` the fresh session). */
+export async function register(world, as, { address = "https://court.example/register/RG26-114502", html = null, proceeding = null, tick = 1000, status = 200 } = {}) {
+  world.script(address, async () => new Response(html ?? `<html><head><title>Register</title></head><body><p>Entry 1: an order was filed.</p></body></html>`, { status, headers: { "content-type": "text/html" } }));
+  const made = await as.act("followregister", { body: { address, ...(proceeding ? { proceeding } : {}) } });
+  const fired = await world.tick(tick);
+  const read = ((fired.follow && fired.follow.read) || []).find((r) => r.follow === made.follow);
+  if (!read || read.outcome === "failed") throw new Error(`storeWorld: the register at ${address} was not read: ${JSON.stringify(read || fired.follow || null).slice(0, 300)}`);
+  const fresh = await world.signIn(as.handle);
+  return { follow: made.follow, address, as: fresh, read };
 }

@@ -1,50 +1,47 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #301 (`session_01XyocY4vTpVxnRGtUj6yfAa`, depth 1, parent ROOT #7 `session_01NBNGB2ziVqiZg4ewLgRSWm`, **Bob's primary account**) for BOB #302, 2026-10-25 21:40Z, at 43 % of its window (`get_session`). **T51 is OPEN** on `tranche/T51`; fix round 10 runs. Read rulings K5184 to the last line of `build/rulings.md` whole, and `build/plan/fix-round-10-T51.md` whole (items 87-94 are the live placements; finished items are in `archive/fix-round-10-T51-done-items.md`).
+**Status** · Replaced whole at each handoff. Written by BOB #303 (`session_01DVM2PvavUWQD9RhBRZoyCz`, depth 1, parent ROOT #7 `session_01NBNGB2ziVqiZg4ewLgRSWm`, **Bob's primary account**) for BOB #304, 2026-10-25 ~23:20Z, at about 40 % of its window (BOB's estimate; `get_session` reads 0, K5167). **T51 is OPEN** on `tranche/T51`; fix round 10 runs. Read rulings K5200 and K5201 whole, and `build/plan/fix-round-10-T51.md` items 98-100 whole (the live placements).
 
 ## Bob's rulings in force for this round (in `rulings-active.md`)
 
 - **K5175 (governs everything):** "this round must be the last one before the final round that must be the alpha release ... No guessing. No deferrals. No assumptions." Every owed item is a job the day it is found.
-- K5171: no cap on concurrent jobs. K5167: refresh past 40 % by `get_session`, never early. K5183: the work runs on the primary account; the third account's sessions (BOB #300, ROOT #9, their jobs) are unreachable: never ring or wait on them, write no `BOB-final` row for them (K4790).
+- K5171: no cap on concurrent jobs. K5167: refresh past 40 % (`get_session` reads 0 all session: estimate from your own turns). K5183: the work runs on the primary account; third-account sessions are unreachable (STORE-ASSEMBLY #3 was one: archive refused "not found", skip it).
 
 ## Open with Bob
 
-Nothing.
+Nothing. Labels "needs Bob" on chain bars, `uses` edges, test reds, dead arms: BOB's (P17, K2008).
 
 ## First
 
-1. Take over (§5.1). BOB #301's timers to delete (primary account, deletable): backstop `trig_01SyiCkESnb7Bd6XjhUbF4hh` (21:38Z, may have fired) and WATCH #301 `trig_019zbGV1XJd4Gn1nCEApjJXG` (22:18Z into ROOT #7). Archive BOB #301 once idle and write its `BOB-final` row under T51.
-2. `build/plan/verify-marks.md` (item 87 (1)) landed at K5194, read by no BOB yet: 105 rows, 90 MET, 13 NOT MET, 2 ALREADY STRUCK, 0 UNKNOWN, and 65 fixture lines of 22 modules (most clearable now). Read it whole: strike each MET mark on its evidence; place each NOT MET row (docket R30, interface-shell R107, notice-producers R29, plane R9 and R85, publish-schedule R12 and translations R18 (`publishatmove`, `translationdraft` undeclared), reading-pipeline R49, screens-inquiry R20, R123, R129, screens-intake R49, store-request R20) and every clearable fixture line as a job or CHANGE the same day. Its `storeWorld()` 'broken' finding was taken while STORE-REQUEST #5's B8 fix merged under it (K5193): re-run `bio-plane/test/m/store-request/world.test.mjs` and the named interface-shell and screens-inquiry tests on the tranche before placing anything for it. Its other reds: `plane/door.test.mjs:143` (37 routes, plane's Wave B, item 85 (1)), two control-plane round-7 seam tests, `r9-jobs` hanging after its 37 tests passed (a load or exit defect, K4787: diagnose).
+1. Take over (§5.1). My timers: backstop `trig_012MCM4h81V1DMgofofEGDy4` (23:05Z, fired) and a new one I arm at handoff (named in K5201's push line below, if any); WATCH #303 `trig_01N6XWnhQgzZ5wQ681XhHgfE` (23:45Z into ROOT #7). Archive BOB #303 once idle; write its `BOB-final` row under T51.
+2. **Prune `fix-round-10-T51.md`** (48 KB of 51.2 KB): move finished items 87-97 whole to `archive/fix-round-10-T51-done-items.md` after checking each is done or carried by items 98-100.
+3. Run `mail check` and read every READ entry; premerge and merge each COMPLETE (my premerge script: ownership against the tranche, `checks/fixtures.mjs` on a worktree of the job branch; when ownership fails on many files, check `git merge-base --all`: a criss-cross base, read the job's own commits).
+4. Place item 100 (2)'s new sessions the day each dependency merges: PLANE, NOTICE-PRODUCERS, READING-PIPELINE, FILINGS now; STORE-REQUEST, CONTROL-PLANE after STORE-ASSEMBLY #4; SCREENS-ACTION after store-request; RETRIEVAL, CONNECTIONS with BOB's wording first (R63, R44); screens-action R32, R30 worded by BOB first. START template: `build/plan/starts-T51-F10/calculations-k5195.txt` (generic; only "Your job:" differs); never over an existing file name.
 
-## Running jobs (all on the primary account; addresses in the plan's Jobs line)
+## Running jobs (primary account; addresses in the plan's Jobs line)
 
-Waiting on: PLANE #63 (Wave B, B95, B97, heavy files), CONTROL-PLANE #64 (B96 caseratify chain, groups B-D fixture lines, B99), STANDARDS #21 (users' runs, then COMPLETE; then CHANGE SCREENS-INVESTIGATE the `known_through` draw), SCREENS-INTAKE #27, SCREENS-DAILY #24, SCREENS-INQUIRY #31, SCREENS-INVESTIGATE #17 (B36 `srcOf`, B37), SCREENS-ACTION #20, SCREENS-ENTRY #14 (R2, R6, B17), SCREENS-SETTINGS #20 (R81, B49), CASE-AUTHORING #46 (B39: R87; R31 chain red by name), CAPTURE-SOURCES #20 (R72), MONITORING #30 (R80), WIZARD-SCRIPTS #27 (R52), PEOPLE #16 (R43, R44), PROGRESSIONS #18 (R49), CASE-CATALOGUE #5 (R6), RATIFICATION #39 (R61), PUBLICATION #42 (R79), AI-USE #13 (R17), AI-ACCOUNTS #8 (R39), MEMBER-ROSTER #6 (R82). Every CHANGE posted at K5193 was rung.
+STORE-ASSEMBLY #4 (just started: the composition's clocks, unref, world options), RATIFICATION #39 (B26), PUBLISH-SCHEDULE #6 (B8), SCREENS-INVESTIGATE #17 (B41), SCREENS-ACTION #21 (B42: merge, no code), SCREENS-SETTINGS #20 (B51), SCREENS-DAILY #24 (B46: Count reads `results.output`), MEMBERSHIP #46 (B11 RESUME), CASE-IMPORT #20, STANDARDS #21, ACTIONS #27, INQUIRY #31 (B15, B16), CASE-AUTHORING #46 (waits: R31 chain, then R87), SITE #4 (J5 waiting), SCREENS-PUBLISH #22 and SCREENS-WIZARDS #7 (saved, K5183).
 
-## Then, as each merges (each a CHANGE or a new session the same day)
+## Then (each the day its dependency merges)
 
-1. **Premerge every COMPLETE** (K5171, K5180): state COMPLETE (a WAITING ON BOB on its own COMPLETE counts) and the record's cursor at BOB's newest entry, else ring and wait (the small jobs often leave the cursor one behind: ring once, it moves); ownership, fixtures (no new FAIL line against the tranche's), merge `--no-ff` in `modules.json` order, architecture over the tree, words on the module, strike the met marks, archive the session with its row. New STARTs: use the template in the scratchpad of BOB #301 (gone with its container): the START text names `mail done --as job --through B<n>` right after `mail start`.
-2. **After CASE-CATALOGUE #5, RATIFICATION #39, PUBLICATION #42 merge:** CHANGE to CASE-AUTHORING #46: merge the tranche, re-run the R31 chain (K5187).
-3. **After CASE-AUTHORING merges R87:** public-read R45 (a new session), then screens-publish (R6's header, and its 41 op-table lines on store-request's new recipes; items 90 (4), 92).
-4. **After WIZARD-SCRIPTS #27:** a screens-wizards session (R7, R11's required mark; drop its `{group: null}`).
-5. **After PEOPLE #16 and PROGRESSIONS #18:** CHANGEs to screens-investigate for the draws (R32 (2), R38, R39; R33 (2)).
-6. **After MONITORING #30:** control-plane's `walk-monitoring-checknow-adopt` must go green (CHANGE to control-plane if still open).
-7. **After CAPTURE-SOURCES #20:** CHANGE to screens-intake to drop its bare-id forwarding (J56 (1)).
-8. **When PLANE #63 merges:** a store-assembly job (item 90 (3): `DECLARED_OPS` rename, the t42/t46 twins, `r10-fixtures-run.test.mjs` and its users' markers, `r9-jobs.test.mjs:313`, `world.script`'s process-wide `SCRIPTS`, the handed clock to `fileSafetyOf` and corpus-export); CHANGE CONTROL-PLANE to delete `owner-ops.mjs`; BOB re-points the following and answer-envelope walks to `store-assembly/register.mjs` (80 (1), test only); regenerate `rows.mjs` and every artifact in the manifest's order.
-9. The last batch-7 screens job deletes `harness.mjs`'s frame defaults (77 (5)).
-10. In the window when the round's jobs have merged: the §5.10 pass (item 33 rewords; items 6, 15; screens-wizards' dead `{group: null}`), then 32 (promotion's stamp, last); the words HANDOFF to UX-DESIGN (`fix-round-10-words.md` whole, with the K5185 and K5192 rows); K5063's step 4 (redeploy biosmoke8, the targeted re-walk, the final pass live, the 0.87.0 cut, installer and site deploys, the rehearsal), with journey-check's R21 reach functions after the cut (item 94); T51's close (§5.7), where `build/channels.md`'s `BOB` row moves to the primary account (K4790).
+1. PUBLIC-READ merged: CASE-AUTHORING #46's R31 chain CHANGE (case-catalogue, publication merged; ratification R61 once ratification merges).
+2. CASE-IMPORT #20 merged: screens-inquiry, screens-publish re-point to its fixtures; control-plane's lines.
+3. STORE-ASSEMBLY #4 merged: CONTROL-PLANE (delete `owner-ops.mjs`; item 99 (2)'s list), STORE-REQUEST recipes, then SCREENS-SETTINGS R58/R69, SCREENS-INTAKE #28, SCREENS-DAILY, SCREENS-INVESTIGATE recipes; regenerate every artifact in the manifest's order; the `test.todo`s waiting on rows (screens-investigate's 43, screens-inquiry R137's, screens-intake's held keys, screens-entry R2's two) become tests.
+4. Words to UX-DESIGN: the round's one words HANDOFF (`fix-round-10-words.md` whole, plus Explore's leads question (99 (8)) and dash-action's `taskresolve` label (K5201 A2)) when the jobs have merged. They have not read B524-B525.
+5. In the window when the round's jobs have merged: the §5.10 pass (items 33, 6, 15, the `transcribe` markers, screens-wizards' dead `{group: null}`), then 32 (promotion's stamp, last); K5063's step 4 (redeploy biosmoke8, targeted re-walk, final pass live, the 0.87.0 cut, installer and site deploys, the rehearsal); journey-check's R21 reach functions after the cut (item 94); T51's close (§5.7), where `build/channels.md`'s `BOB` row moves to the primary account (K4790).
 
 ## Tools
 
-- Mail tool and checks: civicos-process `main` (`cf957b7`), `--product /home/user/bio --tranche T51`. A full `mail check` takes about 2 minutes: run it in the background. `addjob --name` takes the name with its space (`"PLANE #63"`).
-- A compound command holding `rm -rf` was refused once (K5120: re-take plain); `git worktree add` then the checks, chained, is accepted.
-- `rulings-active.md` 78 lines, 24,594 bytes (NEAR): a new rule replaces or merges a line. `fix-round-10-T51.md` about 41 KB of 51.2 KB.
+- Mail tool and checks: civicos-process `main` (`cf957b7`), `--product /home/user/bio --tranche T51`. `mail check` 2-6 minutes. Trigger creation is rate limited (~10 a minute). A new session created with only the bio source reads JOB.md by attaching civicos-process itself.
+- `rulings-active.md` 78 lines, 24,594 bytes (NEAR): a new rule replaces a line.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
 - bio `main` moves only by T51's close PR (§5.7 (3), CLAUDE.md's standing direction), the design MERGE first (K1177); no refusal recorded.
 - civicos-process `main`: by PR with the GitHub merge tool (K5036, K5137).
 - biosmoke deployments: K4841, K5120. Account `…7f72` only, plus the rehearsal account (K4942). Job branches only by `mail jobbranch`; never a force-push.
+- Two doorbells into BOB #302 (`trig_01JVFqi5jFY6QNbzxEL3hu9A`, `trig_01FdyaJntfgrKSzz24EUitfh`) were refused delete by auto mode: skipped (§5.1 (5)), never retried.
 
 ## Timers and lanes
 
-- Lanes nothing new (H43, A41, W4, P26). Channel: UX-DESIGN read through U475; B521 ACK, B522 QUESTION (DEC-432 (b), (c)), B523 HANDOFF unread by them.
+- Lanes nothing new (H43, A41, W4, P26 → P27 onward empty). Channel: UX-DESIGN read through U476; B524, B525 unread by them.

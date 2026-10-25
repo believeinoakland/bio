@@ -2,10 +2,11 @@
    over the real record, promotion, retrieval and membership each time a test calls one, never stored. A module that reads
    inquiry takes its answer from here and never builds one by hand. Each export returns the real answers together with the
    ids the real code was given. */
-import { world, inquiryMd, V } from "./fixture.mjs";
+import { world, inquiryMd, V, MACHINE } from "./fixture.mjs";
 
 const A = "INFO-2026-9001-a", B = "INFO-2026-9002-b";
 const Q = "INQ-2026-9001-q", R = "INQ-2026-9002-r", S = "INQ-2026-9003-s", MIGRATED = "INQ-2026-9004-m";
+const P = "INQ-2026-9010-p", C1 = "INQ-2026-9011-a", C2 = "INQ-2026-9012-b", E = "INQ-2026-9013-e", G = "INQ-2026-9014-g";
 const must = (r, what) => {
   if (!r || r.ok !== true) throw new Error(`fixture ${what} refused: ${JSON.stringify(r).slice(0, 300)}`);
   return r;
@@ -117,4 +118,61 @@ export function questionWaitsSetAside({ asker = V("alice"), setter = V("bob"), r
   w.st.sql.exec(`UPDATE bundles SET project=NULL WHERE bundle_id=?`, A);
   must(w.held.restoreHeld({ ids: [A], reason: restoreReason, author: asker, viewer: asker }), "restore");
   return { inquiry: w.k, question: Q, document: A, asker, setter, reason, restoreReason, answer, hiddenFrom, restored: read() };
+}
+
+/** R23–R25 (`op=inquirydivide`): the real division of a question of two supporting legs into two children, as the answer
+ *  a screen reads it (`divided`: `into`, `children`, `apportionment`), and each refusal the screens build by hand, from the
+ *  real act over this world: `childExists` (a child's id names a record already: `CHILD_EXISTS`), `noHome` (both children
+ *  take leg 0, so leg 1 is no child's: `NO_APPORTIONMENT`, its `orphans` naming it), `noReason` (`NO_REASON`), `notAnInquiry`
+ *  (a document: `NOT_AN_INQUIRY`), `absent` (`NO_SUCH_BUNDLE`) and `machine` (a machine's author: `MACHINE_CANNOT_DIVIDE`,
+ *  with its row). A refusal writes nothing, so each is asked before the division that lands. */
+export function divideAnswers() {
+  const w = world(); w.member("alice"); w.doc(A); w.doc(B);
+  w.inquiry(P, { legs: [{ target: A }, { target: B }] });
+  w.inquiry(E);
+  const kids = (a, b) => [{ id: C1, question: "First half?", legs: a }, { id: C2, question: "Second half?", legs: b }];
+  const act = (extra = {}) => w.k.divide({ target: P, reason: "two questions", children: kids([0], [1]), viewer: "admin",
+                                            author: V("alice"), ...extra });
+  const childExists = w.k.divide({ target: P, reason: "two questions", viewer: "admin", author: V("alice"),
+    children: [{ id: E, question: "First half?", legs: [0] }, { id: C2, question: "Second half?", legs: [1] }] });
+  const noHome = act({ children: kids([0], [0]) });
+  const noReason = act({ reason: "" });
+  const notAnInquiry = act({ target: A });
+  const absent = act({ target: "INQ-2026-9099-x" });
+  const machine = act({ author: MACHINE });
+  const divided = act();
+  return { world: w, parent: P, children: [C1, C2], existing: E, document: A, childExists, noHome, noReason, notAnInquiry,
+           absent, machine, divided };
+}
+
+/** R27, R85 (`op=inquiryground`): the real partition of a question with a supporting and a cutting leg, as the answer a
+ *  screen reads it (`authored`), its restructure (`restructured`: the empty partition, with a reason), and each refusal the
+ *  screens build by hand: `noPartition` (`NO_PARTITION`), `notAnInquiry` (`NOT_AN_INQUIRY`), `absent` (`NO_SUCH_BUNDLE`),
+ *  `cutsAgainst` (a partition naming the cutting leg: `BASIS_REFUSED`, its finding naming the leg) and `noReason` (a
+ *  restructure without its reason: `NO_REASON`). `heldAfterAuthored` and `heldAfterRefusals` are the question's bytes
+ *  after the authored act and after every refusal: a refusal writes nothing, so they are equal. */
+export function groundAnswers() {
+  const w = world(); w.member("alice"); w.doc(A); w.doc(B);
+  w.inquiry(G, { legs: [{ target: A }, { target: B, role: "cuts_against" }] });
+  const ground = (grounds, extra = {}) => w.k.ground({ target: G, grounds, viewer: "admin", author: V("alice"), ...extra });
+  const noPartition = ground(undefined);
+  const notAnInquiry = ground([], { target: A });
+  const absent = ground([], { target: "INQ-2026-9099-x" });
+  const cutsAgainst = ground([{ ground: "g1", legs: [0, 1] }]);
+  const authored = ground([{ ground: "g1", legs: [0] }]);
+  const heldAfterAuthored = w.text(G);
+  const noReason = ground([{ ground: "g2", legs: [0] }], { reason: "" });
+  const heldAfterRefusals = w.text(G);
+  const restructured = ground([], { reason: "no grouping after all" });
+  return { world: w, question: G, document: A, noPartition, notAnInquiry, absent, cutsAgainst, authored, noReason,
+           restructured, heldAfterAuthored, heldAfterRefusals };
+}
+
+/** R55, R58 (`op=questionwaits`): the real `questionWaits` answer for a question nobody has made a wait on, read by its
+ *  asker: no dated wait, no set-aside, nothing in its history. The world holds `capture`, which the set-asides are read
+ *  from: without it the answer says the set-asides could not be read, which is not what the screen is shown. */
+export function questionWaitsNone() {
+  const w = world({ capture: true }); w.member("alice");
+  w.inquiry(Q);
+  return { inquiry: w.k, question: Q, answer: w.k.questionWaits({ question: Q, viewer: V("alice"), asOf: "2026-10-10T12:00:00Z" }) };
 }
