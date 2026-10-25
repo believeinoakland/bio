@@ -96,3 +96,7 @@ Tests: progressions 90 pass, 0 fail (`node --import ./bio-plane/test/platform-sq
 Checks: fixtures 0 failures; format 178 modules, 0 failures; architecture progressions 22 files, 87 imports, 0 failures; coverage progressions 48 of 48 ids, 0 failures; ownership progressions 0 failures; run.mjs shows other modules' fixture lines naming progressions as a provider (action-records, queue, ...), none progressions' own.
 Deferred: none. Found elsewhere: none.
 Size (session_011v5ZCTD2aqsukHM8utVFpG): test runs 12, module lines 2228.
+
+## J6 · COMPLETE
+
+COMPLETE for B5: fixtures definitionRead, disposeProposalOk, disposeProposalRefusal published (fixtures.mjs + fixtures.test.mjs); own lines provenance/registeredHomes and promotion/makePromotion re-pointed; fixtures list for progressions at 0; progressions tests 90 pass; format, architecture, coverage (48/48), ownership 0 failures. No markers added. Detail in record J5.
