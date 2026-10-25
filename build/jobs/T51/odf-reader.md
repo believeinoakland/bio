@@ -193,3 +193,7 @@ Batch D (B9, G166/K4987) done: R53 amended. An ODT text_box part now carries par
 **Fixture note (K4990):** the repo holds no committed real `.ods`; the markup follows what LibreOffice writes for an error cell and for a padded row (the module header's measurement). **Requirement lines for BOB:** R45's marker shape gains `final: true`; R45's units meter is per sheet (R56). No sentence added, so no rows owed. Census ops: none owned (K4208).
 
 Size (session_01FYSm4Xubbtcon5NpEXmiLS): test runs 5, module lines 2910
+
+## J12 · COMPLETE
+
+Job 111 (B10, R56/G184) done. Red first: error cell typed null (calcext overrode office), typed-empty repeat refused after 16 rows, over_repeat_bound markers lacked final, meter shared across sheets. Not reproduced: covered cells (R50 already met). Fixed in odf.mjs; r56.test.mjs 5/5; odf-reader suite 127/127; checks 0 failures (coverage 56/56, ownership 0, words 0). BOB: R45 marker gains final:true and its units meter is per sheet. Details in my record.
