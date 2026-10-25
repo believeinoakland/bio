@@ -816,7 +816,7 @@ const tlv = (tag, body) => {
 const statusInfo = (s) => tlv(0x30, tlv(0x02, new Uint8Array([s])));
 const resp = (s, token) => tlv(0x30, token ? u8(statusInfo(s), token) : statusInfo(s));
 const DIGEST = createHash("sha256").update("the capture").digest("hex");
-const fakeToken = (digestHex) => tlv(0x30, u8(tlv(0x06, new Uint8Array([0x2a, 0x86])), tlv(0x04, Buffer.from(digestHex, "hex"))));
+const fakeToken = (digestHex) => tlv(0x30, u8(tlv(0x06, new Uint8Array([0x2a, 0x86])), tlv(0x04, Buffer.from(digestHex, "hex")))); // fixtures-own: synthetic a hand-built RFC 3161 token for the parser test; no module provides it
 
 /* A real reply from a throwaway TSA made with openssl, when openssl is here. */
 function opensslReply(dataText) {
