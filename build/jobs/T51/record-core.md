@@ -194,3 +194,7 @@ COMPLETE (job 61, K4912). job_unit_attempts and job_batches are on BOOKKEEPING_T
 **Tests and checks.** record-core 223 pass, 0 fail; the 10 plane/other test files that import `storage.mjs` 58 pass, 0 fail. `impact.mjs origin/tranche/T51 HEAD`: record-core, plane (the plane files above run). format 0 failures; architecture 0; coverage 91 of 91 ids named, 0; words 0 failures; fixtures 0; ownership 5 files, 0.
 
 Size (session_01546V8BAmajZDX4MTnH1caQ): test runs 6, module lines 2505
+
+## J9 · COMPLETE · re B10
+
+COMPLETE (fix round 10, Wave A batch 1). Published coreOver, evidencePartsRefusal, perItemRetained, tableDeclarationRefusals in bio-plane/test/m/record-core/fixtures.mjs, each with a test (fixtures.test.mjs). Marker added: record-core.test.mjs:777 // fixtures-generic: NOPE (act's made-up refusal code). storage.mjs gained an optional db argument. record-core 223/223, 10 other storage.mjs users 58/58; format, architecture, coverage, words, fixtures, ownership 0 failures. Details in my record.
