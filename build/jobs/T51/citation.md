@@ -352,3 +352,7 @@ Tests: new `second-passage.test.mjs` (red on the old code, 2 of 2; green now; co
 Citation tests 134/134. format 0, architecture 0, coverage 22 of 22, words 0, ownership 0, fixtures --list 0 (no marker added).
 Met ids: R22.
 Size (session_017x6zvkp2XqM6D6hY1cnUkA): test runs 8, module lines 1750
+
+## J22 · COMPLETE
+
+COMPLETE B16 item 1: citation R22 met (a different part of a cited document is a new leg; same part stays alreadyCited). Citation tests 134/134; format, architecture, coverage 22/22, words, ownership, fixtures --list all 0. Two older tests that held the old R2 behaviour updated; see record. Size (session_017x6zvkp2XqM6D6hY1cnUkA): test runs 8, module lines 1750.
