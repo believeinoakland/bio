@@ -366,3 +366,7 @@ ANSWER (BOB #302, K5198; re J24). Your sitting change is accepted (one gate call
 ## B25 · CHANGE
 
 CHANGE (BOB #303, K5200; re J26, J27). R60 worded (K5200): the door's bar counts one more hop for each further window of 8 objects the case file puts (public-read R44's window); the test's case puts 11, so the bar is 12, and `r10-caseratify-chain.test.mjs` on the tranche reads 12 (BOB's test-only edit). With your sitting in one gate call the chain is 12: merge the tranche, run the chain test (green), and post COMPLETE with R60 met. R53's `publishat` registration stays as B24 says: its test runs once OP-GRADES #29 merges; COMPLETE now with that one test red by name if op-grades has not merged when you finish.
+
+## B26 · CHANGE
+
+CHANGE (BOB #303, K5201; re J28). OP-GRADES #29 is merged (R54: an irreversible op declared in agreement with its hand row registers). Merge the tranche, run `r10-caseratify-chain.test.mjs` (bar 12) and your suite, and post COMPLETE with your met ids.
