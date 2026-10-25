@@ -41,6 +41,8 @@ const make = {
   manyobjects: () => manyObjects(15.9),
   pdf22: () => synthPdf({ pages: 600, linesPerPage: 60, targetBytes: 22 * 1048576 }),
 }[kind];
+/* the pages the file holds: a paged read (R97, R101) takes at most one tick for each page, so this bounds the ticks, and no clock does */
+const PAGES = { synthetic: 1300, pdf22: 600, manyobjects: 1 }[kind];
 const bytes = make();
 const d = hex(bytes);
 const bucket = multipartBucket();
@@ -75,10 +77,19 @@ const base = use(); let peak = base;
 const tick = setInterval(() => { peak = Math.max(peak, use()); }, 5);
 const t0 = Date.now(); let at = Date.now() + 1000, ticks = 0;
 if (direct) { await extractionOf(x.ctx).readHeld({ sha: d, storeName: "bio", env: x.env }); }
-while (!direct && rows().length && ticks < 6) { await x.s.onAlarm(at); at += 3_600_000; ticks++; }
+/* R97/R101: a large reading goes by pieces, one heavy piece for each tick, the row `partial` with a cursor {read_through, total}. Each tick must move the cursor
+   forward (a tick that moves it not at all is a stall, which R101 (1) ends stated, so the ledger must not hold it); the ticks are bounded by the file's pages. */
+const cursorOf = () => { const r = [...x.ctx.storage.sql.exec(`SELECT cursor FROM keeps_pending WHERE kind = 'reading' AND state <> 'finished'`)][0];
+  try { const c = JSON.parse((r && r.cursor) || "null"); return c && typeof c.read_through === "number" ? c : null; } catch { return null; } };
+const maxTicks = PAGES + 2; let last = -1, stalled = 0, total = null, moves = 0;
+while (!direct && rows().length && ticks < maxTicks) {
+  await x.s.onAlarm(at); at += 3_600_000; ticks++;
+  const c = cursorOf();
+  if (c) { total = c.total ?? total; if (c.read_through > last) moves++; else stalled++; last = Math.max(last, c.read_through); }
+}
 clearInterval(tick); peak = Math.max(peak, use());
 const got = extractionOf(x.ctx).readingFor(d, "class:admin");
 const words = (got.text_units || []).map((u) => u.text).join(" ");
-console.log(JSON.stringify({ kind, fileMb: +(bytes.length / 1048576).toFixed(1), ticks, ms: Date.now() - t0, left: rows(), found: got.found, units: (got.text_units || []).length,
+console.log(JSON.stringify({ kind, pages: PAGES, maxTicks, total, moves, stalled, lastReadThrough: last, fileMb: +(bytes.length / 1048576).toFixed(1), ticks, ms: Date.now() - t0, left: rows(), found: got.found, units: (got.text_units || []).length,
   words: /budget/.test(words), basis: (got.reading && got.reading.basis) || "", peakAboveIdleMb: +((peak - base) / 1048576).toFixed(0), idleMb: +(base / 1048576).toFixed(0), peakMb: +(peak / 1048576).toFixed(0) }));
 process.exit(0);
