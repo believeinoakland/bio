@@ -184,3 +184,19 @@ COMPLETE: fix round 10, follow-up 38, the inquiry share (test files only; K5077,
 Commit `4d33ca45d6` on `job/T51/inquiry`, pushed.
 
 Size (session_01JMyjNSQDBNMdgULeA9Az7a): test runs 3, module lines 3844
+
+## J10 · COMPLETE
+
+COMPLETE after CHANGE B12 (follow-up 9, K5109). Commit `1d109a5008` on `job/T51/inquiry`, pushed.
+
+**Applied.** Merged `origin/tranche/T51` first. In `bio-plane/test/m/inquiry/necessary-leg.test.mjs`, the R85 `test.todo` (one labelled ground beside one unlabelled necessary leg, concluded on its own reading) is replaced by a one-line comment citing basis-versions' test "R51, R3 (K5077): a question of one labelled ground and one unlabelled supporting leg concludes on its own reading". **`necessary-leg.test.mjs` holds no R85 todo**; BOB may strike R85 at the merge. Other R85 tests stay.
+
+**Still owed from B11.** The datedWaitOf fixture from J9 is unchanged.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/inquiry/*.test.mjs` (absolute root): 235 tests, 234 pass, 0 fail, 1 todo (an existing todo, not the R85 one).
+
+**Checks** (`/home/user/bio` as root): format 0 failures; architecture inquiry 0; coverage 58 of 58, 0; ownership against `origin/tranche/T51` 0 (3 files: the two fixture files and necessary-leg); words 0 failures; fixtures inquiry `--list` 0 failures.
+
+**Deferred.** None. **Found in another module.** None. **Markers.** None added.
+
+Size (session_01JMyjNSQDBNMdgULeA9Az7a): test runs 4, module lines 3844
