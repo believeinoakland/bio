@@ -161,3 +161,7 @@ Details in my record, Completion (follow-up 24).
 - `checks/fixtures.mjs /home/user/bio inquiry-grammar --list`: 0 failures. `format`: 178 modules, 0 failures. `architecture inquiry-grammar`: 0 failures. `coverage inquiry-grammar`: 20 of 20, 0 failures. `words inquiry-grammar`: 0 failures. `ownership inquiry-grammar tranche/T51 job/T51/inquiry-grammar`: 2 files changed (`golden.json` and this record), 0 failures.
 
 Size (session_011JT8beX7mv7RWXrkz2inzX): test runs 1, module lines 2039
+
+## J8 · COMPLETE
+
+CHANGE B10 applied (K5095; test files only): the stale C-25.5 finding is removed from INQ-2026-0130-versions-entry and INQ-2026-0134-version-name-twice, the same four objects each (versions, both, nosubject, none), in golden.json. Red first: 6 differences between golden and the real merged grammars; green after: 0. Module tests 88/88; format, architecture, coverage, words, fixtures and ownership 0 failures. A first attempt over-deleted two C-2.8 findings; caught by the real-grammar comparison, redone, committed. No C-25.5 remains in golden.json. Details in my record, Completion (CHANGE B10).
