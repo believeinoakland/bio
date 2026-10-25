@@ -226,3 +226,7 @@ REPORT 4 (store-assembly `world.script` is process-global). `store-assembly/worl
 ## J16 · QUESTION
 
 QUESTION (R2, paused sign-in; replaces nothing). The plane's `SIGN_IN_PAUSED` carries `stated` as a sentence (the bound: "at most 10 refused attempts from one place, and 10 for one account, in any 10 minutes", credentials R38), never an instant. R2 says the page draws `{time}` from `stated`; the plane cannot give one, so `front.mjs`:115 and `forgot.mjs`:57 draw "Try again at at most 10 refused attempts ...". Best reading: the page draws `stated` as the sentence with no "Try again at" prefix (a word row without `{time}`), or the plane adds an instant (`until`). Which? Needs a ruling and, for the first, a design word row.
+
+## J17 · QUESTION
+
+QUESTION (R6, offices; replaces nothing). The page sends `note: null` for an office added with no note and the word calls the note "(optional)", but `entities` R1 refuses an office with no note (`ENTITY_NO_NOTE`), which the page then draws in the plane's words. Best reading: the word row must drop "(optional)" (design lane) and the page must not send an office without a note, or `entities` R1 should accept none. Which?
