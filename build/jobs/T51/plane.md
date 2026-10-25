@@ -1124,3 +1124,29 @@ Cause: context. Wave B is mostly done and pushed (my record's last section, STAT
 
 Done and pushed: see "STATE AT HAND-OFF" above (Wave B code, test re-pointing, fixtures 0, checks 0). No half-done files; no workers running (the background heavy-test script was stopped).
 Exact next step: (1) apply B97: fix `bio-plane/test/m/plane/r8-headofline.test.mjs:124` as control-plane did (read its change in `bio-plane/test/m/control-plane/` on the tranche), seen red then green; (2) rerun alone `g83-location`, `r10-lag-figure` (red in the batch), then the heavy files not yet run (r10-filing-stall, r10-nohome-filed-later, r10-land-yields, g42, l77, g123h, g124f, g128i, g41, g44, g123f, shape-harness); (3) impact users, `fleetbundles`, `checks/run.mjs`; (4) B95's 20 loaded g54-l runs; (5) COMPLETE with the Size line and the remaining root (store-assembly/register.mjs).
+
+## Record (PLANE #63, resumed from K5183; B97, B95, B100)
+
+**Applied**
+- B97: `r8-headofline.test.mjs` R80 reads `alarm_at` as the platform states it (null is true only while `running_since` is set), as control-plane's; green alone.
+- B100 (1): `g123f-cells.test.mjs` declares the file's own columns (CSV four, the generated workbook three, `XLSX_FIELDS`); R84 and R85 met, assertions unchanged in meaning.
+- B100 (2): `// fixtures-run: extraction transcribe-not-sent` at `t42.test.mjs` (the three real answers AGENT_WORKER_UNBOUND, NO_PAGE_RENDERED, EVIDENCE_ABSENT of the transcriber); extraction's `t44.test.mjs:93` now reads `accepted(transcribe-not-sent)`.
+- B100 (3): `door.test.mjs` already counts instance-setup's 37 routes with `selftestmigrations` driven.
+- Test fixes found in the heavy run: `g42-storage-seam` took `groupTable`, `ADMIN`, `MEMBER`, `FOUNDER` from screens-settings' pruned fixtures: the callers are local now, the stats answer is the door's, drawn by the shell's own `open("group", {table: {stats}})`; `fixture.mjs` `store({retired})` builds no assembly for a retired room (g83 T-retired red: the fixture assembled it).
+- B95: whole-file `g54-l` (6 tests, instrumented copy: client send/answer/throw with `cause`, object-side fetch/alarm begin/end) under 8 busy loops, 20 runs: **20 of 20 green**, about 107 s each. In every run exactly one client throw (`UND_ERR_SOCKET`, `fetch failed`) at `g54p/alarm`: the "killed in the middle of a sweep" test's deliberate `mf.dispose()`; none at "(measure)" or at any `state` request. NOT REPRODUCED; no cause established. The instrumented copies are deleted (not committed). The deployed-plane check is `bio-plane/test/m/plane/deployed-alarm-request-check.mjs` (not a test; BOB runs it on biosmoke8 with PLANE_URL and PLANE_ADMIN_TOKEN; PASS / FAIL / INCONCLUSIVE exit 0/1/2).
+
+**Met ids named:** R1, R4, R9, R56, R95, R111, R114 (Wave B); R79 (g42); R80 (headofline); R84, R85 (g123f); R102; R78 (timing).
+
+**Tests run:** whole `bio-plane/test/m/plane/` directory: 299 tests, 296 pass; 2 of the 3 reds were my fixture change and are fixed (R102 healFrame, R80 owedwork re-run green); the third is below. Heavy files alone, all green: r10-filing-stall, r10-nohome-filed-later, r10-land-yields, l77*, g123h, g124f, g128i, g41, g44, g123f-workerd, shape-harness, g83-location, g42, g123f-cells, r8-headofline R80. Impact (`impact.mjs origin/tranche/T51 HEAD`): plane only (33 of 53 files).
+**Checks:** format 0 failures; architecture 0; coverage 37/37; ownership 0; fixtures plane 0; words findings listed are store-assembly's files only (15), none in plane.
+
+**RED, not mine to change: `r10-lag-figure.test.mjs` "R78 R28b L"** (the 7.9 MB test): the pass that wrote 1058 rows states `max_run_statements` 290, the test (and store-assembly R78's text: "a figure above 1,000 for the pass that wrote a tick's 4,096 units") expects above 1,000. Cause: extraction R111 (b195c78f02, merged today) lands units in batches of `LAND_BATCH_UNITS` = 256 with a turn given back between batches, so the longest stretch is about 256 units, about 290 statements. The measure is right and the requirement wording is stale. I did not weaken the test. BOB: amend store-assembly R78's test sentence (e.g. a figure of at least one batch, `LAND_BATCH_UNITS`, and below 1,000 now that landing yields) and tell me; I then change the assertion at `r10-lag-figure.test.mjs:95` and the 1,000 at `:96`.
+
+**Found in other modules (REPORT)**
+1. store-assembly `pending.mjs` `openInstruments` (about :316): the lag meter's `setInterval` is not `unref`'d. A run abandoned by a killed alarm (the tests' `NEVER`) never reaches `closeInstruments`, so 16 live Timeouts keep the process alive: `store-assembly/r9-jobs.test.mjs` passes 34 and never exits (measured: 240 s terminated; with `setInterval` unref'd by a preload: 34/34, exits in 38 s). Fix `t.timer.unref?.()` (harmless on workerd). B100 (4) is store-assembly's, not a plane handle.
+2. extraction `fixtures` class failures that name plane as a later provider (`job-registrar` stubs in `r99-r107`, `s25-pieces-chain`) and acquisition `fix6-t51.test.mjs:146, :291` are the B6 relocation to store-assembly (J64).
+3. store-assembly R78 test sentence (above).
+
+**Deferred:** none in plane.
+Remaining root for the two walks: `store-assembly/register.mjs`.
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 31, module lines 371
