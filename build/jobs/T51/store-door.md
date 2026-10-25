@@ -168,3 +168,22 @@ Size (session_01QLTzPedPAoRQP9VWrUzxYJ): test runs 5, module lines 706
 ## J11 · COMPLETE
 
 COMPLETE · R19 applied: STREAMED_BODY_OPS gains captureuploadpart (dispatch.mjs). Failing-first test in dispatch.test.mjs; store-door suite 57 of 57; format, architecture, coverage (19 of 19), words, ownership all 0 failures. Impact users: 599 tests, 3 red, identical without my change (control-plane t51-visitor-copy, plane g41-shape, plane release R24). Details in J10 of my record. Drop 'not yet met' from R19.
+
+## STORE-DOOR #18 · fix round 10, Wave A batch 5 (B11)
+
+**Causes done.**
+- Fixture `internalErrorAnswer(overrides)` in `bio-plane/test/m/store-door/fixtures.mjs` (new): the real `dispatch` over a throwing route, the 500 body (`STORE_INTERNAL_ERROR`, row `C-69.4`, a fresh UUID `correlation`, `error: "internal error"` and no thrown text); `overrides` replace fields. Its test (`fixtures.test.mjs`, R6) calls it twice (own id each), checks the 500 status, and a negative control overriding `correlation`/`reason`. Note for control-plane's re-point: the real body carries `error: "internal error"` (not absent), with `code`, `check`, `translation`.
+- Contract `store-replies` (`fixtures.test.mjs`, R1 R6 R19): `badJson`, `unknownOp`, `internalError`, `answered` stated as data and compared with the real `dispatch`. The real answers differ from the parts' hand-built ones, so the real wins and the users change: BAD_JSON is `{ok:false, reason:"BAD_JSON", detail}` (a `detail`, no `error`), status 400; unknown op is **400** (not 404) `{ok:false, error:"unknown op: <op>"}`; STORE_INTERNAL_ERROR always carries a correlation (the door never answers one without) and the full row; the door never answers a bare-stack `{ok:false, error}` 500 (a throw never carries its text), 413 or 503. One `// fixtures-run: <user> store-replies` per user: host-governor, capture, doorbell, extraction, connections, publication, public-read, ratification, monitoring, translations, instance-setup.
+- Own lines: `pull.test.mjs` `promotionStandIn` takes its success answer from promotion's `promoteControlled` (the bundle id is the pull's); `homeOf` stand-ins are `homeOfWorld` (calls counted by `world.calls()`; the third pull of the residue test re-points `deps.provenance` to a world where the capture has a home).
+
+**Markers added (K5060).**
+- `// fixtures-own: input` (a route map handed to the door under test; routes only record or throw): dispatch.test.mjs:328, :353, :563; purge-hold.test.mjs:17, :90; routes.test.mjs:384 (line numbers before the added marker lines: the marker sits on the line above each).
+- `// fixtures-generic: DOORBELL_ANSWERED` (a made-up reason the spied doorbell returns): pull.test.mjs:314 and :322.
+
+**Lines left.** None in `fixtures.mjs --list` (0 failures, accepted 10). The 11 `fixtures-run` lines show `orphan-run` only until each user's `fixtures-contract: store-door store-replies` marker is merged (users' waves); `internalErrorAnswer`'s user is control-plane (Wave A/B).
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/store-door/*.test.mjs`: 59 tests, 59 pass, 0 fail. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178 (tests only; no source changed).
+**Checks.** format 178 modules, 0 failures; architecture 0; coverage 19 of 19, 0; words 0; fixtures 0 failures; ownership 0 failures.
+**Deferred:** none. **Found in another module:** none.
+
+Size (session_01KJQfyLCeG4fReDepjGQhJP): test runs 5, module lines 0 source (tests +120)
