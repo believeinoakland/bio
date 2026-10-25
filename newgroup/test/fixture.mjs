@@ -11,6 +11,7 @@ import { RELEASE_VERSION } from "../src/release.mjs";
 import { word } from "../src/words.mjs";
 import { RELEASE_SOURCE } from "./release-text.mjs";
 /* The member binding names are instance-setup's (installer R30); the installer holds no table of its own. */
+import { instanceGroupAnswer } from "../../bio-plane/test/m/instance-setup/fixtures.mjs";
 import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { fleetStatement, NS_FLEET, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 import { readFileSync } from "node:fs";
@@ -532,7 +533,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       if (enableFail) return cferr("could not enable", 500);
       enabled.add(u.split("/workers/scripts/")[1].split("/")[0]); return cfok({ enabled: true });
     } },
-    { m: (u) => /^https:\/\/[^/]+\.workers\.dev\//.test(u) && !u.startsWith(ORIGIN), f: (u, init = {}) => {
+    { m: (u) => /^https:\/\/[^/]+\.workers\.dev\//.test(u) && !u.startsWith(ORIGIN), f: async (u, init = {}) => {
       const host = new URL(u).host;
       const [name, pre2] = host.split(".");
       /* R63: a copy already held answers what its facts say (`copy.held[slug]`), or nothing. */
@@ -546,7 +547,9 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       if (q.get("op") === "instancegroup") {
         if (group === "silent") throw new Error("ENOTFOUND " + host);
         if (groupFlat) return jres({ ok: true, group: recordedGroup });
-        return jres({ ok: true, result: recordedGroup ? { ok: true, group: recordedGroup } : { ok: true, group: null, detail: "NO_GROUP_RECORDED" }, store: "STORE" });
+        /* instance-setup's published `instancegroup` answers (R3), made by its real code. */
+        const answers = await instanceGroupAnswer({ group: recordedGroup || "none" });
+        return jres({ ok: true, result: recordedGroup ? answers.recorded : answers.none, store: "STORE" });
       }
       if (q.get("op") === "instancegroupseed") {
         seeds.push({ u, init });

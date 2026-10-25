@@ -113,6 +113,7 @@ import worker, { CFG, ARMED_SIGNERS, reportsBuilds } from "../src/index.mjs";
    by name rather than refusing to link the whole suite. */
 import * as NG from "../src/index.mjs";
 /* R30 (N234): the member binding names are instance-setup's; the installer holds no table of its own. */
+import { instanceGroupAnswer } from "../../bio-plane/test/m/instance-setup/fixtures.mjs";
 import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { readFileSync } from "node:fs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
@@ -1112,7 +1113,7 @@ const semverCmp = (a, b) => { const A = a.split(".").map(Number), B = b.split(".
   for (let i = 0; i < 3; i++) if (A[i] !== B[i]) return A[i] - B[i]; return 0; };
 const groupCalls = (calls) => calls.filter((c) => /op=instancegroupseed/.test(c.u)).map((c) => `${c.method} ${c.u}`);
 /* What the copy answers when asked what it records: a group, or none (`group: null`, instance-setup R3). */
-const recordsGroup = (host, group) => ({ m: (u) => u.includes(`${host}/api/?op=instancegroup`), f: () => jres({ ok: true, result: group ? { ok: true, group } : { ok: true, group: null, detail: "NO_GROUP_RECORDED" }, store: "STORE" }) });
+const recordsGroup = (host, group) => ({ m: (u) => u.includes(`${host}/api/?op=instancegroup`), f: async () => { const answers = await instanceGroupAnswer({ group: group || "none" }); return jres({ ok: true, result: group ? answers.recorded : answers.none, store: "STORE" }); } });
 const unauthenticated = (calls) => calls.filter((c) => /op=instancegroup\b/.test(c.u)).every((c) => !c.init?.headers?.authorization);
 t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES the line the arms are about",
   semverCmp(RELEASE_VERSION, "0.71.0") >= 0, true);
