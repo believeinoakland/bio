@@ -626,3 +626,13 @@ Checks: format 0; architecture 0 (interface-shell); ownership 0 (one file set vs
 
 Not done yet: COMPLETE waits for OP-GRADES #30 (I CHANGE) and a green run; and for the answer to the QUESTION.
 Size: record only.
+
+## J35 · QUESTION
+
+R24 (session.test.mjs:207-208, "nothing the shell does records who opened what") expects the frame to read `groupidentity` and keep its answer (R124: the frame's six constants). That answer came only from the FRAME default I was asked to delete (K5202 b). Passing it by hand in the test is a hand-built answer for instance-setup's op (fixtures check: op-table groupidentity, provider instance-setup, earlier), which the rule forbids; and instance-setup publishes no groupidentity fixture (`bio-plane/test/m/instance-setup/fixtures.mjs` has assistantState, instanceGroupAnswer, selftestAnswer, fleetReports, bootstrapFacts).
+
+Options:
+(1) Recommended: instance-setup publishes a `groupIdentityAnswer` fixture (its real `groupidentity` answer, checked by its fixtures.test.mjs); R24 takes it. Placement is yours: a REPORT to instance-setup.
+(2) R24 drops `groupidentity` from its expected frame reads. Smaller, but it weakens R124's check that the frame keeps its six constants.
+
+Until you decide, R24 stays red in my suite. Ringing you after this.
