@@ -367,3 +367,23 @@ I have not edited the requirement. Per the job rules I write only my paths, test
 **Impact:** not run; no product code changed.
 
 Size (session_01HMaPz7pqmixWTqj6Bw5a1N): test runs 3, module lines 3680
+
+## J29 · COMPLETE
+
+**COMPLETE** · fix round 10, the final pass's cause (item 73 (2); K5157). Branch `job/T51/op-grades` at `8ca0fef5ad`, pushed; tranche merged (fast-forward, no conflicts).
+
+**Cause: `ruleservicesstate` ungraded.** (1) Failing first: `bio-plane/test/m/op-grades/k5157.test.mjs` (new, names R13) red on today's tree with `NON_ACTS.ruleservicesstate` undefined, against answers' declared row; affordances `t33.test.mjs:189` red with `unpublished: ["ruleservicesstate"]`. (2) Fix where the cause is: `bio-plane/src/op-grades/t33.mjs` gains one `NON_ACTS` row, `ruleservicesstate: localize("answers.declared.ruleservicesstate", <answers' own sentence>)`, the same key and English answers declares (the `moneyingestread` shape, K4711), so the registration agrees (R50) and changes nothing. (The row in the entry used `R(...)`, which would not match answers' sentence and would be refused at the plane's registration; I followed the owner's sentence, K4168.) (3) Why missed: `owners.test.mjs` R13 takes its declared reads from `ownerReads(T33_NON_ACTS)`, which filters the table's own keys, so a declared read with no hand row is never looked for. The registered-instance tests grade declared rows by registration, so they pass with no hand row. affordances' R12 test is the only check that sees it, and its `register-owners.mjs` registers three owners by hand (see REPORT below).
+
+**Tests run:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/op-grades/*.test.mjs`: 152 tests, 152 pass, 0 fail, exited on its own. `bio-plane/test/m/affordances/t33.test.mjs` and `k5157.test.mjs`: 15 pass, 0 fail. (One of my own assertions in `owners.test.mjs` R13 read `declaredSentence` from the word table, which `rows.mjs` does not yet hold for this key: changed to compare with the owner's declared row description, same sentence; a test-only change.)
+
+**Checks (ABSOLUTE root `/home/user/bio`):** format 0; architecture 0; coverage `op-grades` 53 of 53; words `op-grades` 0 failures (testcopy 0, handlist 0); fixtures `op-grades` 0 failures; ownership `tranche/T51 job/T51/op-grades` 0 failures. `setup-words build.mjs --check`: a refusal names `plane.declared.readtranslate` (two sentences, `bio-plane/src/plane/declared.mjs:13` and `bio-plane/src/store-assembly/declared.mjs:16`), not op-grades; see REPORT. `checks/run.mjs`: 2,152 FAIL lines, all in other modules (screens-inquiry, screens-intake, screens-daily, screens-settings, plane, control-plane and others); none names op-grades' files.
+
+**Met ids:** R13 (named by `k5157.test.mjs` and `owners.test.mjs`). Not marked by me: BOB strikes the mark on `build/requirements/answers.md` R7 and op-grades R13 as it judges.
+
+**Deferred (why):** `ownerReads` still looks only at the table's own keys, so a declared read missing from every table stays unseen by op-grades' own tests. Making it check every owner's declared reads would be a change to the test helper for a class (not only this read); left for BOB to rule on. The affordances test is the place that catches it today.
+
+**REPORT (other module, for BOB):** `bio-plane/test/m/affordances/register-owners.mjs` registers three owners by hand (`case-inputs`, `case-import`, `contradiction`). So affordances' R12 totality does not see any other owner's declared op. Answers' `ruleservicesstate` was the first to show it. The fix belongs in affordances' test (register every owner's `DECLARED_OPS`, found from `build/modules.json`, as op-grades' `collectDeclaredOps` does); no change made in affordances.
+
+**REPORT (setup-words, for BOB):** `plane.declared.readtranslate` has two sentences: `bio-plane/src/plane/declared.mjs:13` ("draft: a machine translation of one passage ... labele...") and `bio-plane/src/store-assembly/declared.mjs:16`. `build.mjs --check` refuses on it, and `checks/run.mjs` reports it as a marker finding in store-assembly.
+
+Size (session_01T9Q1bzf8ZbBrV2wLLGqZoT): test runs 5, module lines 1
