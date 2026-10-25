@@ -1,6 +1,6 @@
 # tasks (T51)
 
-**Status** · session_014SW3dszWfYfXnSrCtVu4CS · depth 2 · COMPLETE · handled B10
+**Status** · session_018khTeR7Ftw2mCC35fSYLYA · depth 2 · COMPLETE · handled B11
 
 ## J1 · COMPLETE
 
@@ -206,3 +206,29 @@ Size (session_014XtwY7rHcgXEW5Z93bYUjK): test runs 14, module lines 1702
 - `checks/ownership.mjs /home/user/bio tasks tranche/T51 job/T51/tasks`: 0 failures (`bio-plane/test/m/tasks/`).
 
 Size (session_014SW3dszWfYfXnSrCtVu4CS): test runs 27, module lines 1702
+
+## J8 · COMPLETE
+
+**TASKS #20, fix round 10, follow-up 44 (K5117): an unstable one-process suite run — fixed.**
+
+**Reproduced** (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/tasks/*.test.mjs`, Node v26.10.0, 4 cores). Before: 33 runs idle and 10 under load (8 busy loops) gave 103, 104, 106, 121 … 134 tests, in about 40% of runs, never a failure or a cancelled test: 134 only when nothing was lost.
+
+**Cause, with evidence.** The tests are not skipped; their *reports* are lost.
+- Probe (temporary, removed): each `grammar.test.mjs` test appended a line to a scratch file as it ran. A run reported 46 tests for grammar+sign (53 expected) while the file held all 45 grammar lines: every test ran, 7 reports were missing.
+- Always `grammar.test.mjs`: across 14 captured runs the missing lines were only its tests (12 to 28 of its N367 per-bound tests and the last R12 ones), none from another file. That file is the only one that registers a burst of ~36 sub-millisecond synchronous tests, and it is not the slowest file (inbox is), so it is not a tail loss at the end.
+- Only with `--test-force-exit`: without it, 8 runs gave 134 each; with `--test-isolation=none` and force-exit, 8 gave 134 each. With force-exit and one concurrency, 1 run in 8 still lost reports; two files (grammar, sign) lost reports in 2 of 16 runs. Other suites sampled (queue, 3 files, 10 runs) did not lose any.
+- So the cause is Node's runner dropping reports of a burst of synchronous tests when `--test-force-exit` ends the process. Not product code, not test-support, not the sqlite shim. I did not find the line inside Node; the evidence above is behavioural.
+
+**Fix (my tests).** `bio-plane/test/m/tasks/grammar.test.mjs`: a root `afterEach(() => new Promise((done) => setImmediate(done)))` (with a comment) gives the reporter a turn of the event loop between tests. No test was added, removed or weakened.
+
+**Proof.** After the fix, the one-process run of `bio-plane/test/m/tasks/*.test.mjs`: 20 runs idle, 134 each; 15 runs under 8 busy loops on 4 cores, 134 each; 0 fail, 0 cancelled. Plus 30 runs of grammar+sign alone, 53 each (before: 2 of 16 lost reports).
+
+**Checks** (absolute root): `fixtures.mjs … tasks --list` 0 failures; format 0; architecture 0; coverage 25 of 25 live ids, 0; words 0; ownership 1 file, 0 failures.
+
+**Other modules:** none to report. Any other module with a large burst of synchronous tests may show the same under `--test-force-exit`; I sampled queue only (clean).
+
+Size (session_018khTeR7Ftw2mCC35fSYLYA): test runs 130, module lines 1702
+
+## J10 · COMPLETE
+
+COMPLETE (TASKS #20, follow-up 44, K5117). Cause: reports of tasks/grammar.test.mjs's burst of sync tests are lost under --test-force-exit (all tests run; probe showed 45 of 45 ran while 46 of 53 reported); one-process run gave 103-134. Fix: root afterEach yielding one event-loop turn in grammar.test.mjs (tests only). Proof: 20 idle + 15 under 8 busy loops, 134 each, 0 fail. Checks fixtures/format/architecture/coverage/words/ownership all 0. Details in build/jobs/T51/tasks.md J8. Nothing for other modules.
