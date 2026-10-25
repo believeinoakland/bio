@@ -22,6 +22,8 @@ import { word } from "../../../src/setup-words/index.mjs";
 
 /* A clock at scale that jumps forward by `by` ms when `jump()` is called. */
 const jumping = () => { const base = scaled(); let extra = 0; const now = () => base() + extra; now.jump = (by) => { extra += by; }; return now; };
+/* A clock that moves 1 ms at every read and jumps when told: the time the driver spends is a count of its reads, whatever the machine does. */
+const stepping = () => { let t = 1_000_000, extra = 0; const now = () => (t += 1) + extra; now.jump = (by) => { extra += by; }; return now; };
 
 const PAGES = {
   "/same": {
@@ -409,6 +411,19 @@ test("R68: a body still outstanding at the cap is body_unavailable with its sent
   assert.ok(none.phases_ms.load >= 900, JSON.stringify(none.phases_ms));
 });
 
+/* The red of one run in three (SUITE #2): the test's clock runs 20 times the wall, so two reads either side of a phase that did no
+   work differed by 20 ms whenever a real millisecond fell between them. A clock that moves 20 ms on every read makes that the
+   certain case: a phase that did no work is stated 0 whatever the clock does; a phase that waited is stated as it was. */
+test("R68: the body phase is stated 0 when nothing was waited for, on a clock that moves at every read, and as waited when a body was", async () => {
+  const everyRead = () => { let t = 1_000_000; return () => (t += 20); };
+  const idle = await render("/quirks", {}, { now: everyRead() });
+  assert.equal(idle.ok, true);
+  assert.equal(idle.phases_ms.bodies, 0);
+  const waited = await render("/slow", { wait: { until: "load", timeout_ms: 3000 } }, { binding: fakeBinding({ "/slow": SLOW(2, { loadAfterMs: 0 }) }) });
+  assert.equal(waited.ok, true);
+  assert.ok(waited.phases_ms.bodies > 0, JSON.stringify(waited.phases_ms));
+});
+
 test("R68 control: a page with no sub-resources states the four phases, a zero body phase, and every other field as before", async () => {
   const a = await render("/quirks");
   assert.equal(a.ok, true);
@@ -465,14 +480,14 @@ test("R69: every failed answer carries elapsed_ms (the close included), failure_
   for (const [url, mode] of [["/same", { nosessionid: true }], ["/same", { noupgrade: true }], ["/same", { throws: true }],
     ["/navfail", {}], ["/noserialise", {}], ["/same", { refuse: ["Network.enable"] }], ["/hostile", { refuse: ["Fetch.enable"] }]])
     assert.equal((await failed(url, fakeBinding({ ...PAGES, ...HOSTILE }, mode), { own_hosts: OWN })).failure_class, "permanent", url + JSON.stringify(mode));
-  /* an address the hold refuses is refused before a browser is spent: nothing to charge */
-  const refused = await renderWithBinding(fakeBinding(PAGES), { url: "https://plane.grp.example/doc", own_hosts: OWN }, { now: scaled() });
+  /* an address the hold refuses is refused before a browser is spent: nothing to charge (a clock that does not move: no time passed) */
+  const refused = await renderWithBinding(fakeBinding(PAGES), { url: "https://plane.grp.example/doc", own_hosts: OWN }, { now: () => 1_000_000 });
   assert.deepEqual([refused.ok, refused.failure_class, refused.elapsed_ms], [false, "permanent", 0]);
   /* the binding is nothing at all */
   const none = await renderWithBinding(null, { url: "https://x.example/" });
   assert.deepEqual([none.ok, none.failure_class, typeof none.elapsed_ms], [false, "permanent", "number"]);
   /* the real time: whole milliseconds from the session's opening to its close, the close included (the close takes 1,500 ms of the test's clock) */
-  const now = jumping();
+  const now = stepping();
   const closing = fakeBinding(PAGES, {}, { "Target.closeTarget": () => now.jump(1500) });
   const nav = await render("/navfail", {}, { binding: closing, now });
   assert.equal(nav.ok, false);
