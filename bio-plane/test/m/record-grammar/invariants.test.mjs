@@ -83,7 +83,7 @@ const MOVED = ["BUNDLE_ID_RE", "ANN_ID_RE", "FILENAME_RE", "ISO_TS_RE", "OBJECT_
    T33's id table (R46–R48); T41's step and guide ids and the one accepting act (R51–R53); T43's C-1.1 judgment (R56);
    T46's success record id (R59). */
 const OWN = ["b64ToBytes", "SHARED_ACT_CHECKS", "EXTENSION_ARMS", "checkBundle", "ID_TABLE", "idPattern", "isHypothesisId",
-  "isStepId", "isGuideId", "ACCEPTANCE_FORMS", "ACCEPT_MUST_REAUTHOR", "acceptanceRecord", "idDisagrees", "isSuccessRecordId"];
+  "isStepId", "isGuideId", "ACCEPTANCE_FORMS", "ACCEPT_MUST_REAUTHOR", "acceptanceRecord", "idDisagrees", "isSuccessRecordId", "createResumableSha256"];
 
 test("one binding per name: the module's entry answers each provided name with the one binding its part holds", () => {
   assert.deepEqual(Object.keys(RG).sort(), [...MOVED, ...OWN].sort());

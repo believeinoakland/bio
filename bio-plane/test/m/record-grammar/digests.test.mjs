@@ -100,3 +100,68 @@ test("R23 b64ToBytes: standard base64, whitespace and = ignored, a Uint8Array; o
   for (const [s, at] of [["ab-c", 2], ["ab_c", 2], ["a b*", 2], ["é", 0], ["AAAA.", 4], ["AA==AA$", 4]])
     assert.throws(() => b64ToBytes(s), { message: `invalid base64 at position ${at}` }, s);
 });
+
+/* R64: the resumable stream (G180; K5007). */
+import { createResumableSha256 } from "../../../src/record-grammar/index.mjs";
+
+const hexOf = async (bytes) => Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+
+test("R64 NIST vectors: createResumableSha256 equals SHA-256, and a snapshot taken and resumed between any two pieces changes nothing", async () => {
+  const vectors = ["", "abc", "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "a".repeat(1000000)];
+  for (const v of vectors) {
+    const bytes = new TextEncoder().encode(v);
+    const one = createResumableSha256().update(bytes);
+    assert.equal(one.length, bytes.length);
+    assert.equal(one.hex(), await hexOf(bytes));
+    for (const cut of [0, 1, 55, 56, 63, 64, 65, Math.floor(bytes.length / 2), bytes.length]) {
+      if (cut > bytes.length) continue;
+      const first = createResumableSha256().update(bytes.subarray(0, cut));
+      const snap = first.snapshot();
+      assert.equal(typeof snap, "string");
+      assert.equal(first.update(bytes.subarray(cut)).hex(), await hexOf(bytes), `cut ${cut}`);
+      const resumed = createResumableSha256(snap);
+      assert.equal(resumed.length, cut);
+      assert.equal(resumed.update(bytes.subarray(cut)).hex(), await hexOf(bytes), `resumed at ${cut}`);
+    }
+  }
+});
+
+test("R64 a 105 MiB stream cut at random points, snapshot and resumed at each, equals createSha256", () => {
+  const total = 105 * 1024 * 1024;
+  const data = new Uint8Array(total);
+  let x = 12345;
+  for (let i = 0; i < total; i++) { x = (Math.imul(x, 1103515245) + 12345) | 0; data[i] = x >>> 24; }
+  const cuts = new Set();
+  while (cuts.size < 40) { x = (Math.imul(x, 1103515245) + 12345) | 0; cuts.add((x >>> 0) % total); }
+  const points = [0, ...[...cuts].sort((a, b) => a - b), total];
+  let stream = createResumableSha256();
+  const plain = createSha256();
+  for (let i = 0; i + 1 < points.length; i++) {
+    stream.update(data.subarray(points[i], points[i + 1]));
+    plain.update(data.subarray(points[i], points[i + 1]));
+    assert.equal(stream.length, points[i + 1]);
+    stream = createResumableSha256(stream.snapshot());
+  }
+  assert.equal(stream.hex(), plain.hex());
+});
+
+test("R64 a snapshot not made by snapshot() throws TypeError; update and hex after hex throw as R20's", () => {
+  const good = JSON.parse(createResumableSha256().update(new Uint8Array(70)).snapshot());
+  const bad = [
+    "", "nope", "null", "[]", 42, {}, [],
+    JSON.stringify({ ...good, h: good.h.slice(1) }),
+    JSON.stringify({ ...good, h: good.h.map((v, i) => (i ? v : -1)) }),
+    JSON.stringify({ ...good, t: -1 }),
+    JSON.stringify({ ...good, t: good.t + 1 }),
+    JSON.stringify({ ...good, b: "zz" + good.b.slice(2) }),
+    JSON.stringify({ ...good, b: good.b + "00" }),
+    JSON.stringify({ ...good, b: undefined }),
+  ];
+  for (const s of bad) assert.throws(() => createResumableSha256(s), TypeError, String(s));
+  assert.doesNotThrow(() => createResumableSha256(JSON.stringify(good)));
+  const s = createResumableSha256().update(new Uint8Array([1]));
+  s.hex();
+  assert.throws(() => s.update(new Uint8Array(1)), /sha256 stream already finalized/);
+  assert.throws(() => s.hex(), /sha256 stream already finalized/);
+  assert.throws(() => createResumableSha256().update("abc"), TypeError);
+});
