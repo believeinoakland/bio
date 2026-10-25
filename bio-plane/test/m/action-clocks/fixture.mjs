@@ -3,8 +3,10 @@
    answering as workerd's does (a cursor, and its LIKE/GLOB cap; K313, K316). Copied from `actions`' fixture for the
    split (K624 (1)), the share the moved tests need: retrieval's projection table is made by retrieval's own `migrate()`
    (its R61, K354) and its clock column written after each promotion from `actions`' registered facts (its R12), as
-   retrieval's step would; conformance is a stand-in answering `determinationRead` (its R9 shape) from `w.determinations`
-   (id → {project, sees: [viewers]}), and content a stand-in presenting no capture; local-facts is the real one (R10, R11),
+   retrieval's step would; its registrars are retrieval's published `actionRegistrar`. Conformance is its published
+   fixtures' real one: `determinations(viewers)` (its `determinationRead`, R9), whose project the given members join,
+   or, where a test names none, a real conformance over an empty store (`noDeterminations`); content is a stand-in
+   presenting no capture; local-facts is the real one (R10, R11),
    and so are promotion (R13's revision) and standards (R7, R13; created on first use). `override` maps a profile id to
    a profile object the instance resolves in its place (both this module and local-facts take `combine`, local-facts
    `get`), so a test can run on a variant of the test profile. T45: steps is the real one (R16), registered with at start. T47: action-records is the real one (`w.records()`; N961).
@@ -19,6 +21,8 @@ import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { Retrieval, PROJECTION_TABLE } from "../../../src/retrieval/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
+import { actionRegistrar } from "../retrieval/fixtures.mjs";
+import { determinationRead, noDeterminations } from "../conformance/fixtures.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { combine, get } from "../../../../jurisdictions/index.mjs";
 import { DatabaseSync } from "node:sqlite";
@@ -89,7 +93,17 @@ export function officeCalendarProfile() {
   return p;
 }
 
-export function world({ profiles = ["test-port-ellery"], override = null } = {}) {
+/** conformance's published `determinationRead` fixture, with `viewers` (member names, as `ALICE`) made participants of its
+ *  project so that they see its determinations (`live`, `superseded`, `supersededBy`, `unclear`); `project` is the one
+ *  its real `determinationRead` answers. Its `viewer` is its own participant (`member:pat`) and `outsider` sees none. */
+export function determinations(viewers = [ALICE]) {
+  const f = determinationRead();
+  const project = f.conformance.determinationRead({ id: f.live, viewer: f.viewer }).project;
+  for (const m of viewers) { f.world.member(m); f.world.join(project, "olive", m); }
+  return { ...f, project };
+}
+
+export function world({ profiles = ["test-port-ellery"], override = null, conformance = null } = {}) {
   const over = override && typeof override === "object" ? override : {};
   const combineOver = (ids) => combine((Array.isArray(ids) ? ids : []).map((id) => (typeof id === "string" && over[id] ? over[id] : id)));
   const getOver = (id) => (typeof id === "string" && over[id] ? over[id] : get(id));
@@ -113,9 +127,12 @@ export function world({ profiles = ["test-port-ellery"], override = null } = {})
      promotion step, which `actions` R55 joins at start through capture's litigation-hold reader (K1086). */
   provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() }).migrate();
   const reg = { facts: [] };
-  const retrievalStub = {
-    registerActionFacts: (m, fn) => { reg.facts.push({ m, fn }); return { ok: true }; },
-    registerProjectionDecoration: () => ({ ok: true }),
+  /* retrieval's registrars are the real ones (its published `actionRegistrar`); each registration is also kept in `reg`,
+     for the projection step below. */
+  const registrar = actionRegistrar();
+  const retrievalSeam = {
+    registerActionFacts: (m, fn) => { reg.facts.push({ m, fn }); return registrar.registerActionFacts(m, fn); },
+    registerProjectionDecoration: (m, fn) => registrar.registerProjectionDecoration(m, fn),
   };
   /* retrieval's projection as far as R1 reads it: the clock column of its row, from actions' R12 facts. */
   promotion.registerStep("retrieval", { project: (c) => {
@@ -125,13 +142,10 @@ export function world({ profiles = ["test-port-ellery"], override = null } = {})
       ON CONFLICT(bundle_id) DO UPDATE SET action_clock_next=excluded.action_clock_next`, c.bundleId, f ? f.clock_next : null);
     return null;
   } });
-  const actions = actionsOf(host, { record, membership, promotion, retrieval: retrievalStub, conformance: {},
+  const actions = actionsOf(host, { record, membership, promotion, retrieval: retrievalSeam, conformance: {},
                                     content: { captureFor: () => null }, now: () => clock.ms });
-  const determinations = new Map();
-  const conformance = { determinationRead: ({ id, viewer }) => {
-    const d = determinations.get(id);
-    return d && d.sees.includes(viewer) ? { ok: true, id, project: d.project } : { ok: false, reason: "NO_SUCH_DETERMINATION" };
-  } };
+  let empty = null;
+  const conformanceSeam = conformance ?? { determinationRead: (a) => (empty ??= noDeterminations()).conformance.determinationRead(a) };
   /* local-facts, the real one (R10, R11): a member's confirmations are recorded through its `factConfirm`. */
   const localFacts = localFactsOf(host, { record, membership, now: () => new Date(clock.ms).toISOString(), combine: combineOver,
                                           get: getOver });
@@ -144,11 +158,11 @@ export function world({ profiles = ["test-port-ellery"], override = null } = {})
   const zoneView = () => { const g = localFacts.governingView(); return g && g.ok ? g.view : null; };
   const steps = stepsOf(host, { record, membership, promotion, observationLog, legEarning: null, view: zoneView,
                                 now: () => new Date(clock.ms).toISOString() });
-  const c = actionClocksOf(host, { record, membership, promotion, actions, conformance, localFacts, steps, combine: combineOver,
+  const c = actionClocksOf(host, { record, membership, promotion, actions, conformance: conformanceSeam, localFacts, steps, combine: combineOver,
                                    now: () => clock.ms });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, actions, localFacts, c, clock, determinations, steps,
+    st, host, record, membership, promotion, actions, localFacts, c, clock, steps,
     /** `action-records` on this host, the one instance `actions` creates and holds (its `records`; action-records R15),
      *  whose `actionReceipt` (its R4) records the receipts and service `actionRead` answers and R2 counts from (N961). */
     records: () => actions.records,

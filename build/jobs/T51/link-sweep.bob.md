@@ -68,3 +68,31 @@ CHANGE (K4230), a new job session (LINK-SWEEP #5, haiku): `DECLARED_OPS.sweepset
 CHANGE (K4247): LINK-SWEEP, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip. **Urgent: the plane's start is refused by your row**, so every plane test fails.
 Entry: your `DECLARED_OPS` row for `sweeps` is `mutating: false, weight: "reversible"`. A read cannot carry a rung: `registerDeclaredOps` refuses it whole (`DECLARED_OP_BAD_WEIGHT`, `rung-on-read`; op-grades R49). Your own description says it writes nothing, so the row is `weight: "read"`. Test with `declaredOpHolds` and a registration of your `DECLARED_OPS` through op-grades' `registerDeclaredOps` meeting no refusal; control: a copy of the row with a rung is refused `rung-on-read`. Then run `node --test bio-plane/test/m/plane/` after merging the tranche and report the count (STORE-DOOR #14 fixes the other refused row at the same time). Requirement line for BOB in your COMPLETE.
 Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model haiku, medium effort; workers haiku low.
+
+## B8 · START
+
+START · LINK-SWEEP #7 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 5: run 3 contracts, re-point 2 own lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #291 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/link-sweep tranche/T51 && git branch -m job/T51/link-sweep stale/link-sweep-local && git checkout -b job/T51/link-sweep origin/job/T51/link-sweep`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module link-sweep`; record `build/jobs/T51/link-sweep.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Contracts to run** (FIX-L: your module is later in the order than the users, who cannot import you). State each value as data in a test of yours and run it against your real code; the users' hand-built values must equal it, and where the real answer differs the real one wins and the user changes. One `// fixtures-run: <user> <id>` per user module named:
+- `sweep-fence` (users now: monitoring 1): link-sweep fence answering SWEEP_NOT_A_MEMBER or null. Lines: `// fixtures-run: monitoring sweep-fence`.
+- `sweep-mutate` (users now: monitoring 3): `mutate` refusal NO_SUCH_SWEEP relayed as given. Lines: `// fixtures-run: monitoring sweep-mutate`.
+- `sweep-scope` (users now: capture-requests 4): the scope check fn({sweep, locators, run, target}) registered by link-sweep: {ok:false, reason: unknown|unratified|held|out-of-scope, detail?} | {ok:true, scope}; the in-scope rule "equal or continues at a /". Lines: `// fixtures-run: capture-requests sweep-scope`.
+
+**Your own fixture lines, done in this job** (2; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- capture-requests/sweepScopeRegistrar (1 judgment): fixture.mjs:74
+- acquisition/acquireRefusals (1 mechanical): fixture.mjs:201
+
+A `fixtures-run` you write shows `orphan-run` in your list until its user module's marker is merged, and a marker you place shows `contract-no-run` until its provider's run is merged: these are the only lines you may leave at done, each named in your record with the module it waits for.
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . link-sweep --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/link-sweep.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.

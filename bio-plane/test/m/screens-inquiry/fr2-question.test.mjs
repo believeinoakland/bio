@@ -120,10 +120,12 @@ test("R35 R50 R117 a BASIS_VERSION_REFUSED answer lists its findings: the first 
   const slot = await go("BASIS_VERSION_REFUSED", [finding]);
   assert.ok(slot.textContent.includes("repair-sentinel-qq"), "the repair");
   assert.ok(!says(slot, "refusal.BASIS_VERSION_REFUSED") || slot.textContent.includes("give every leg"), "the finding is listed");
-  const own = await go("BASIS_VERSION_REFUSED", [{ check: "C-27.1", code: "NO_SUCH_KEY_HELD", detail: "d", translation: "The plane's own words for it." }]);
-  assert.ok(own.textContent.includes("The plane's own words for it."));
+  /* a real finding code, as basis-version-grammar's catalogue gives it with its own words (`translation` is the row of its code): drawn by the word held for the code */
+  const own = await go("BASIS_VERSION_REFUSED", [{ check: "C-27.1", code: "VERSION_PARTITION_INCOMPLETE", detail: "d", translation: word("refusal.VERSION_PARTITION_INCOMPLETE") }]);
+  assert.ok(says(own, "refusal.VERSION_PARTITION_INCOMPLETE"), "the code's own words");
   const bare = await go("BASIS_VERSION_REFUSED", undefined);
   assert.ok(says(bare, "refusal.BASIS_VERSION_REFUSED"), "with no finding, the generic sentence");
+  // fixtures-generic: SOMETHING_ELSE (a finding code made up on purpose: the control that BASIS_REFUSED is drawn by its detail, whatever code it carries)
   const old = await go("BASIS_REFUSED", [{ check: "C-9.9", code: "SOMETHING_ELSE", detail: "the leg names no edition" }]);
   assert.ok(old.textContent.includes("the leg names no edition"), "control: BASIS_REFUSED unchanged");
 });

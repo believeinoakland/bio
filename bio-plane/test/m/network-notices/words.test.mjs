@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { seeded, world, prepare, post, sign, V, NOW } from "./fixture.mjs";
 import * as nn from "../../../src/network-notices/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { noKeyInstanceSign } from "../attestation/fixtures.mjs";
 
 const A = V("alice");
 /* "this/the/your … copy|instance|plane", and "server", as DEC-149's grep reads them (`plan/draft-T34-dec149.md`). */
@@ -45,7 +46,8 @@ test("R1 (DEC-149) NOTICE_NO_GROUP_SLUG and NOTICE_NO_INSTANCE_KEY tell the memb
   /* the post's own key check (R4, R13) answers the same words: the key goes between prepare and post */
   const w = seeded();
   const p = await prepare(w);
-  w.attestation.instanceSign = async () => ({ ok: false, reason: "RECEIPT_NO_KEY" });
+  const keyRefusal = await noKeyInstanceSign();
+  w.attestation.instanceSign = async () => keyRefusal;
   const late = await w.nn.postNotice({ digest: p.digest, signature: sign(p), acknowledged: true, by: A, viewer: A });
   assert.deepEqual([late.reason, late.translation, late.detail], ["NOTICE_NO_INSTANCE_KEY", key.translation, key.detail]);
   /* negative control: with a slug and a key the same call is answered, and says nothing of either */

@@ -1,6 +1,6 @@
 # plan-work (T51)
 
-**Status** · session_01K7dTpWYM64vfv1dGDQstQa · depth 2 · COMPLETE · handled B0
+**Status** · session_018fWmQdUi2CZqXCuLdnhhG4 · depth 2 · COMPLETE · handled B0
 
 ## J1 · COMPLETE
 
@@ -27,3 +27,24 @@ Tests and checks (summary lines):
 - `checks/run.mjs /home/user/bio` (whole tree): format 0 failures, architecture 0; coverage 28 failures and words 1404 failures, all in other modules; none names plan-work.
 
 Size (session_01K7dTpWYM64vfv1dGDQstQa): test runs 1, module lines 1420 (`src/plan-work`: index.mjs, checks.mjs, schema.mjs).
+
+## J2 · COMPLETE (fix round 10, Wave A batch 4; START B2)
+
+Fixture published: `bio-plane/test/m/plan-work/fixtures.mjs` `watchReaderRegistrar` (R9; real `registerWatchReader`: first registration, `LISTENER_DECLARED`, `LISTENER_MALFORMED` for no module and no reader), called and checked by `fixtures.test.mjs`.
+
+Own fixture lines re-pointed (all FIX-E, providers earlier; no `fixtures-own`, `fixtures-generic` or `fixtures-contract` marker added):
+- `fixture.mjs` conformance `curesOf` refusal: now conformance's published `curesOf` fixture, its real `curesOf` over its outsider (`NO_SUCH_DETERMINATION`).
+- `fixture.mjs` actions `actionRead`: now actions' published `actionRead().unseenAnswer`, naming the id asked (R43/R106; the stand-in's `NO_SUCH_BUNDLE` was an answer no provider gives).
+- `matters.test.mjs` escalation: `escalationRead().unknownDeterminationAnswer`; `takeup.test.mjs` escalation: `escalationRead().unknownAnswer`.
+- `takeup.test.mjs:175,221` duties: `transitionsUnknownDuty().read` (`{ok:true, transitions:[], count:0}`, duties R14), per the K5070 note.
+- `fixture.mjs` docket `NO_SUCH_ENTRY`: judgment. Docket's `docketEntryRead` fixture cannot be imported, because `docket` is not in plan-work's `uses` (architecture check refuses; `build/modules.json` is BOB's). No plan-work test reads a docket entry (the stand-in's `docketPressureOf` was never called), so I removed that member; action-holds would treat its absence as a failed read (`DOCKET_UNREADABLE`) if any test did. `docketPressureMarks` stays (`marks: []`, not flagged). If BOB wants the docket fixture used instead, add `docket` to plan-work's `uses`.
+
+Deferred: none. Flaws in other modules: none. No requirement or provided service changed; impact.mjs: 0 affected modules.
+
+Checks: plan-work tests 52 of 52 pass; fixtures `--list` plan-work: answer 0, 0 failures; words (own and joint list): 0 failures, no line names plan-work; format 0; architecture 0; coverage 19 of 19; ownership 0.
+
+Size (session_018fWmQdUi2CZqXCuLdnhhG4): test runs 3, module lines 1427
+
+## J3 · COMPLETE
+
+J2 COMPLETE: watchReaderRegistrar published; 6 fixture lines re-pointed to providers' fixtures; the docket NO_SUCH_ENTRY stand-in member removed (docket is not in plan-work's uses, no test reads it). Details and checks in my record J2. Fixtures 0 failures, tests 52/52, words/format/architecture/coverage/ownership 0 failures.
