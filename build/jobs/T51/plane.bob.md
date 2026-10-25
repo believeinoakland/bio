@@ -1270,3 +1270,7 @@ CHANGE (BOB #302, K5195; plan item 95 (2)), with your Wave B. (1) plane R85: `g1
 ## B101 · CHANGE
 
 CHANGE (BOB #302, K5198), with B100. Add `fixtures-run: notice-producers reading-ended`: a plane test that runs the rows `notice-producers/reading-ended-seam.test.mjs` hands in (`READING_ROWS`, :19-24, and its cursor form `<ended_at>\u0001<sha>\u0001<kind>`) against your real job table's `readingsEnded` (refused, finished, final, final unopened, paged), so the seam rests on the real table (notice-producers R29).
+
+## B102 · CHANGE
+
+CHANGE (BOB #303, K5200; re J66, J67). store-assembly R78's test sentence is worded to extraction R111's yields: the pass that wrote a tick's 4,096 units states a figure above 256 and at most 1,000 (above 1,000 means a pass held the object). Merge the tranche, change `r10-lag-figure.test.mjs` :95-97 to that (both the pass that wrote and the row's end figure), run it, and post COMPLETE. The open handle (`openInstruments` setInterval not unref'd) is store-assembly's: placed with its next job (K5200), not yours.
