@@ -91,3 +91,7 @@ CHANGE B4 applied. Merged tranche/T51 into job/T51/agent-steps (5713f46431). Wor
 **Deferred.** None. **Another module.** Nothing found.
 
 Size (session_014Vtui2SY7G9K1v5s9sb3Cf): test runs 24, module lines 1700
+
+## J5 · COMPLETE
+
+B5 done (fix round 10, batch 6): all 12 fixture lines and the marker line applied on job/T51/agent-steps (5a34662eac and record commit). ai-runs' airunRefusal and provenance's versionChainNoSuchVersion replace the hand-built answers; invented codes replaced by real ones (VERSION_CHAIN_NO_SUCH_VERSION, AI_RUN_NOT_PRINCIPAL, AI_LOG_STATE_UNKNOWN); ask-wire contract markers at interface.test.mjs:229, t49r90.test.mjs:103, world.mjs:17,39,65,76,79; fixtures-own input at readers.test.mjs:130. FOR YOUR modules.json ROW: add 'provenance' to agent-steps' uses (the tests import its fixture; architecture fails without it; checked locally with the row extended, then restored). Checks: fixtures agent-steps 0 failures (row extended), format 0, words 0, coverage 49/49, ownership 0, impact names 0 affected modules. Tests all pass, counts unchanged. Size (session_014Vtui2SY7G9K1v5s9sb3Cf): test runs 24, module lines 1700.
