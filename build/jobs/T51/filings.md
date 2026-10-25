@@ -143,3 +143,21 @@ Size (session_01M2Ck6gqVs5euxSQXMyv6CY): test runs 2, module lines 3822
 ## J12 · COMPLETE · re B12
 
 Fix round 10 batch 6 done on job/T51/filings: six fixture lines re-pointed (events timelineRefusal x2, attestation attestationsOfBadSha, docket pressureMarks x3); no own/generic markers added; fixtures check 0; filings 164/164; format, architecture, coverage, ownership, words 0 failures; impact 0 affected. See record J11.
+
+## J4 · COMPLETE
+
+Fix round 10, item 1 (diag2-11 §2b): R44 met. An absent voice on a public comment is read as `group`.
+
+**Cause.** `#marks` stored `voice: voice ?? null`, and the position reading runs only on `marks.voice === "group"`, so a public comment prepared with no voice was never read for a position, yet recorded as the group's act. Re-read at `filings/index.mjs` (`#marks`, `#outward`, `#secondNeeded`) before changing.
+
+**Fix.** `Filings.#voiceOf(voice, action)` gives `group` to a prepared text of the kind `public_comment` that states no voice; `filingPrepare` and `communicationPrepare` pass it to `#marks`. Every other kind, and a stated `self`, is unchanged. No `testimony` action kind exists in the product (a testimony is a held-as arm of correspondence, not a kind), so the kind is `public_comment` alone.
+
+**Test (failing first).** `t45.test.mjs` R44 (new test, with the Oakland profile that names `public_comment`): no voice reads `marks.voice` `group` with `outward.pointed.position` pointing sentence 0; `self` stays `self`; control: a records request with no voice has `voice` null and no `position`. Red on the old code (`null !== 'group'`), green now. The old `:218-219` assertion stays as the control for a kind that is not a public comment (the default `bylaw_complaint`).
+
+**Why the tests missed it.** The only case of "no voice" ran on the fixture's default kind (`bylaw_complaint`), where no voice is correct, and its message said "not a comment as the group's act"; no test used a `public_comment` action, which the test profile does not name.
+
+**Met:** R44 (BOB strikes its mark).
+
+**Checks** (absolute root): module tests 165 pass, 0 fail (`bio-plane/test/m/filings/`, run as a directory); format 0 failures; architecture 0; coverage 68 of 68 ids, 0; words 0 (unkeyed 2, the J2 wire grammar); ownership 0; `fixtures --list` no failing line, no marker added.
+
+Size (session_01Xe56US2uGqhQLaVtDchwh5): test runs 4, module lines 3100
