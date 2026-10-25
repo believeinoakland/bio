@@ -35,6 +35,7 @@ import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { conformanceOf, conformanceOps } from "../../../src/conformance/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -144,7 +145,7 @@ export function world({ group = "test-group" } = {}) {
   content.provenance.migrate();
   content.migrate();
   const k = inquiryOf(host, { record, membership, promotion, content, now,
-                              retrieval: { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION" }) } });
+                              retrieval: { selectionResolve: noSelection().selectionResolve } });
   k.migrate();
   k.entities.migrate();
   k.connections.migrate();
