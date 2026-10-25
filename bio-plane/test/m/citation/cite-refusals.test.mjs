@@ -32,7 +32,7 @@ test("R1: the selection is asked first, at weight report (retrieval R19): an unk
   const r = w.cit.cite({ project: "PROJ-2026-0000-nothing", handle: "sel-000000000000000000000000", ...ANN, note: "x\"y" });
   assert.equal(r.reason, "NO_SUCH_SELECTION");
   const h = await w.select(["INFO-2026-0001"], { owner: "someone-else" });
-  assert.equal(w.cit.cite({ project: "nope", handle: h, ...ANN }).reason, "NOT_YOURS");
+  assert.equal(w.cit.cite({ project: "nope", handle: h, ...ANN }).reason, "SELECTION_NOT_YOURS");
 });
 
 test("R1, R9: an absent citing object and a project the viewer may not see answer the same NO_SUCH_PROJECT, membership's own answer (its R78) byte for byte; existence-only sight answers membership's C-70.1", async () => {
