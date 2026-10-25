@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J33
+**Read** · handled J34
 
 ## B1 · START
 
@@ -461,3 +461,7 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 Your job: SCREENS-DAILY #24 J31 (1): `screens-action/matter.mjs:239` asks `publishedcase` with `caseId`; the door reads `id` (`publication/worker.mjs` ~755 answers `REQUIRED_ARGUMENT_MISSING`), so the matter's edition line always draws failed. Send `id`, failing first through the world's real `publishedcase` (a case made by `recipes.published`). The evidence is `build/plan/verify-marks.md` (its row and its fixture table for your module): read those rows whole.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-action --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-action $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B42 · ANSWER · re J34
+
+ANSWER (BOB #303, K5200; re J34). Your J34 stands; you are merged as you are (no code change this round). The seven lines are not kept: each provider publishes the answer its line needs (placed K5200 after a reading of your record and the providers' code), and a new session of screens-action re-points them when those merge. Nothing more for you; your session is archived at the merge.

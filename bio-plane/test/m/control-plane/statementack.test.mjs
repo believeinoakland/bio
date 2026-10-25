@@ -30,7 +30,7 @@ function standIn() {
   return { seen, answer };
 }
 
-test("R20 (DEC-88; case-inputs R1, was case-authoring R19): op=statementack carries the acknowledger's `reason` to the store on both doors — a recipient's secret and a member's session — as case-inputs' arm reads it, verbatim; the inner request holds the door's own keys and that, nothing else of the caller's", async () => {
+test("R20 (DEC-88; case-inputs R1, was case-authoring R19): op=statementack carries the acknowledger's `reason` to the store on both doors — a recipient's secret and a member's session — as case-inputs' arm reads it, verbatim; the recipient's inner request holds the door's own keys and that, nothing else of the caller's (a member's is `store-request`'s whole, R138)", async () => {
   const s = standIn();
   const { env, S } = world({ answer: s.answer });
   const reason = "  I read it: the case leaves out the 2019 audit, and says so.  ";
@@ -38,9 +38,9 @@ test("R20 (DEC-88; case-inputs R1, was case-authoring R19): op=statementack carr
     ["secret", { op: "statementack", params: { secret: "sekret", reason, draft: "D1", by: FORGED, viewer: FORGED, extra: "x" } },
      { draft: "D1", bySecret: "1", reason }],
     ["session", { op: "statementack", token: S.ann, params: { draft: "D1", reason, author: FORGED, viewer: FORGED, extra: "x" } },
-     { draft: "D1", viewer: "member:ann", reason }],
+     { draft: "D1", viewer: "member:ann", reason, extra: "x" }],
     ["session, a case document", { op: "statementack", token: S.ann, params: { case: "CASE-1", edition: "2", reason, extra: "x" } },
-     { case: "CASE-1", edition: "2", viewer: "member:ann", reason }],
+     { case: "CASE-1", edition: "2", viewer: "member:ann", reason, extra: "x" }],
     /* a POST body's reason, where the query names none */
     ["session, POST", { op: "statementack", token: S.ann, params: { draft: "D1" }, method: "POST", body: { reason, by: FORGED, extra: "x" } },
      { draft: "D1", viewer: "member:ann", reason }],

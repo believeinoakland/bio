@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J31
+**Read** · handled J33
 
 ## B1 · START
 
@@ -379,3 +379,7 @@ CHANGE (BOB #302, K5197). PEOPLE #16 is merged on the tranche: `personAt` answer
 ## B40 · CHANGE
 
 CHANGE (BOB #302, K5198), with B38, B39. Your J31 (2): the explore page's `exploregraph` read sends no inquiry scope, so a hunch hop is never drawn: send the scope the read takes (read `explore`'s requirements for its fields), failing first; the `mentioned_together` hop over the world comes as a store-request recipe (STORE-REQUEST #6). Merge the tranche for B39 (people merged) and post COMPLETE again.
+
+## B41 · ANSWER · re J33
+
+ANSWER (BOB #303, K5200; re J33). Neither: B40 is withdrawn. Explore, Person and Money show what the record holds; a hunch is walked only inside an inquiry (explore R6), and no screen requirement asks those pages for an inquiry's leads, so they send no scope and draw no hunch hop (today's behaviour is correct). Whether Explore should offer an inquiry's leads is a design question: sent to UX-DESIGN with the round's words (K5200), not built here. Also: JURISDICTIONS #19 (each body's fiscal year, `*` stated) and HYPOTHESES #11 (published `holdAnswer`, `holdRefusals` in `hypotheses/fixtures.mjs`) are merged: merge the tranche, re-point `money.test.mjs:60` and `timeline.test.mjs:79` to `holdAnswer()` with `// fixtures-contract` as the check needs, run your suite and fixtures, and post COMPLETE.
