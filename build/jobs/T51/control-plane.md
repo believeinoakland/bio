@@ -971,3 +971,7 @@ Checks: format 0, architecture 0, coverage 102/102, words 0, ownership 0. Size (
 **Tests and checks.** `node --test bio-plane/test/m/control-plane/*.test.mjs`: 683 tests, 683 pass, 0 fail. words 0 failures; format 0; architecture 0; ownership 0; coverage 94 of 96 (R136, R137: Wave B); fixtures `--list` for control-plane: the lines above (1 orphan-run waiting) and the Wave B findings. `impact.mjs`: control-plane 2/108 files, no other module.
 
 Size (session_019S55YpubfG7GsCPNPQm4VN): test runs 8, module lines 5247
+
+## J57 · COMPLETE · re B85
+
+control-plane fix round 10 wave A batch 1 complete and pushed: ask-wire, unknown-op (fixtures-contracts.test.mjs) and deliver-owed (r124-owed-render.test.mjs) stated as data and run against the real code; no product source changed; module suite 683/683; words, format, architecture, ownership 0 failures; coverage 94/96 (R136, R137 are Wave B). One line left: orphan-run acquisition deliver-owed, waiting on acquisition's marker. Real answers differ from users' hand-built ones (403 body extra keys, 502 STORE_DID_NOT_ANSWER, UNKNOWN_OP is 400 with error 'unknown op'): listed in the record. No fixtures-own/generic markers added.
