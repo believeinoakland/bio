@@ -55,3 +55,7 @@ R23 reading (measured on the tip: draw over 1M keys is one 12 s synchronous stre
 - Ran: `node --test bio-plane/test/m/calc-grammar/` 37 of 37 pass; format 0 failures; architecture 0; coverage 23 of 23 ids, 0; words 0; ownership 0.
 
 **Size (session_01FexeYxPJJZWcYdHzcUMoYo): test runs 4, module lines 1441.**
+
+## J4 · COMPLETE
+
+R23 applied on job/T51/calc-grammar: draw yields on 4,000-key slices through new drawSliced (draw stays sync, same answer); interval by exact term ratio (100,000 frame in 27 ms to 11.5 s worst shape; was 57 s at 10,000). Suite 37/37; format, architecture, coverage, words, ownership 0 failures. Details and Size line in the record. Built on my J3 reading (draw stays sync).
