@@ -3,9 +3,6 @@
  * case gate answers (`gate.mjs` `runCaseGate`: `{check, detail, repairs?}`, the catalogue's `message` as `detail`). Importing the gate
  * is not an edge of this module's `uses`: the same refusal made by the real gate over a held finding, through the real door, is the
  * control-plane seam file's. A sentence is asserted by its key (R24). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, press, word, tick, keptKey, answerSign, ok, refused, PREFLIGHT, P, DR } from "./fixtures.mjs";

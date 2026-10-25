@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_01EL8FdFvDxMz2KBJrjWn936 · depth 2 · COMPLETE · handled B46
+**Status** · session_0135BWD8XZpisnx9i7kU3v1o · depth 2 · COMPLETE · handled B47
 
 ## J1 · BLOCKED
 
@@ -563,3 +563,46 @@ Size (session_01EL8FdFvDxMz2KBJrjWn936): test runs 62, module lines 3376
 ## J31 · COMPLETE
 
 COMPLETE for `interface-shell`, fix round 10 (B44, B45; B46 applied). Met: R129 (boot door), R130 (Enter presses the section's primary act), R131 (44 px refs in rows), R132 (rail double-click), R108's `.cs-wizmark`; ADMIN_ACTS/ADMIN_SCREENS now wizard-scripts'. 52 op-table lines re-pointed to storeWorld; harness 88/89/91/97 stay per B46, 22/23 stay. Found and fixed through the real door: a locked session answered 401 SESSION_LOCKED ended the page instead of locking (R33). R34 not reproduced (characterization test). Markers added: t50 ZZ_STOP, ZZ_REASON. Checks 0 failures (architecture, coverage 127/127, words, format, ownership); module suite 375/375; users' suites equal the tranche tip (screens-settings 1, screens-publish 3 fail there too). Details, reports and Size line in the record.
+
+## J32 · COMPLETE
+
+COMPLETE for `interface-shell`, B47 (K5178: `person`'s second act `linecurrentthrough`; SCREENS-INVESTIGATE #16 J28 (1)).
+
+**Changed.**
+- `bio-plane/src/interface-shell/index.mjs:156-157`: `RE_POINTS` gains `person: Object.freeze(["linecurrentthrough"])`, with its K5178 comment. The registry (`docs/development/ux-substrate/screens/registry.json`) does not list the act for `person`, so it stays a named re-point (R73, R55 as amended). The op itself is served by `lines` (`recordCurrentThrough`, R21), declared in `op-declarations` and graded in `op-grades`.
+- `bio-plane/test/m/interface-shell/k5178.test.mjs` (new): `R73 K5178` — `checkScreens` over a `person` screen naming `linecurrentthrough` passes; control: `stepsourcewithdraw` on `person` and `linecurrentthrough` on `explore` still throw.
+- `bio-plane/test/m/interface-shell/design.test.mjs:81` and `t50.test.mjs:34`: the two `deepEqual(RE_POINTS, …)` assertions now name `person: ["linecurrentthrough"]` beside `explore` and `document`. They are the only other tests that pin the table's contents.
+
+**Failing first.** Before the change, `k5178.test.mjs` fails with `interface-shell: screen person's act linecurrentthrough is not the registry's for it, nor a named re-point` (red). After it, the test passes (green).
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/interface-shell/*.test.mjs` on the job branch at tranche tip `08f661ccb1` (the merge of `origin/tranche/T51` at `cf7aafcb29`): 376 tests, 294 pass, 82 fail. Before the change, the same run on the same tip had 83 failures; the one difference is `R73 K5178`, red without the change and green with it. The 82 are the same tests with and without this change.
+
+The 82 share one cause, which is not in my paths. `storeWorld()` (`bio-plane/test/m/store-request/fixtures.mjs:34`) records the producing team with `instancegroupseed`, and throws `GROUP_ALREADY_RECORDED` when the base world already holds one. Since `38536482fc` (store-assembly, K5149), `store-assembly/world.mjs` binds `INSTANCE_NAME` ("town") in every world's env, so the base world's promote records the team; `storeWorld()` then seeds `world-town` and is refused as already recorded. Every `storeWorld()` call fails that way. The failures land at `world.mjs:13` (`inWorld`), `harness`'s `boot` through `storeWorld`, and the tests named under them: the R60, R75, R76 and R86 tests in `design.test.mjs` and `t50.test.mjs`, R123 (E12) in `e12.test.mjs`, R122 to R124 and R119, R109, R107, R102, R56 and the G81 characterization tests. The R122 to R124 tests are the ones that use `storeWorld` through the frame; I did not find a second cause in `interface-shell`'s code. I did not change `store-request` or `store-assembly`: the fix belongs to whichever of the two owns the duplicate recording (see REPORT 1).
+
+The record's previous COMPLETE (J31, session_01EL8F…) stated 375/375 on an older tip. That suite is the one that now fails on the store-assembly change above.
+
+**Checks** (absolute root `/home/user/bio`, on tip `08f661ccb1`): format 0 failures (178 modules); architecture 0 (48 files, 194 imports); coverage 127 of 127 live requirements named by a test; words 0 failures (1 module, 0 inline, 0 missing keys); ownership 0 failures (5 files changed by `interface-shell` between `3c52f78c34` and HEAD); `fixtures.mjs … --list`: the 6 lines left are the ones BOB named (`harness.mjs` 88, 89, 91, 97, and 22, 23 which stay listed). No new fixture line from this job. `run.mjs`: no finding in `interface-shell` files.
+
+**Markers.** None added in this job (`fixtures-own` / `fixtures-generic`: none).
+
+**Met.** R73 (the re-point set now includes `person`'s `linecurrentthrough`; the table's test is kept in step); R55 unchanged. The screens-investigate R1 line naming the act is met on its side once BOB merges this and its `person` screen draws the act.
+
+**REPORT to BOB (cause outside my paths; for placement).**
+1. `storeWorld()` (store-request `fixtures.mjs:34`) records the producing team a second time after store-assembly's world already records it (K5149, `38536482fc`). Every test that builds a world through `storeWorld()` fails with `GROUP_ALREADY_RECORDED`: 82 `interface-shell` tests on tip `08f661ccb1`. Placement: store-request (its `storeWorld` should skip the seed when the base world records a team) or store-assembly (its world should leave the team unrecorded when a caller records it). Until one of them lands, the interface-shell suite cannot be green.
+2. Not reproduced: I did not find any `interface-shell` source cause for the 82 beyond the storeWorld one. Once REPORT 1 is placed, re-run the suite; any test still red then is mine to look at in a CHANGE.
+
+**Size (session_0135BWD8XZpisnx9i7kU3v1o): test runs 5, module lines 3392**
+
+## J33 · COMPLETE
+
+COMPLETE for interface-shell, B47 (K5178): `person`'s second act `linecurrentthrough` is a named re-point.
+
+Changed: `bio-plane/src/interface-shell/index.mjs:156-157` (RE_POINTS gains `person: ["linecurrentthrough"]`); new `bio-plane/test/m/interface-shell/k5178.test.mjs` (R73 K5178, failing first: red with "person's act linecurrentthrough is not the registry's for it, nor a named re-point"; green after the change; control: `stepsourcewithdraw` on person and `linecurrentthrough` on explore still throw); `design.test.mjs:81` and `t50.test.mjs:34` pin the new RE_POINTS contents.
+
+Met: R73 (the re-point set; R55 unchanged). Markers added: none.
+
+Checks (absolute root /home/user/bio, tip 08f661ccb1): format 0; architecture 0; coverage 127/127; words 0; ownership 0; fixtures --list: only the lines B46 named (harness 22, 23, 88, 89, 91, 97).
+
+Tests: the interface-shell suite is 376 tests, 294 pass, 82 fail. The same 82 fail with the change reverted. The cause is outside my paths: store-assembly's world (K5149, 38536482fc) now binds INSTANCE_NAME, so the base world records the team, and store-request's storeWorld (fixtures.mjs:34) then fails GROUP_ALREADY_RECORDED on every call. Placement needed (REPORT 1 in the record). Until it lands, the interface-shell suite is not green.
+
+Record: build/jobs/T51/interface-shell.md, section J32. Size (session_0135BWD8XZpisnx9i7kU3v1o): test runs 5, module lines 3392.

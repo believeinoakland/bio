@@ -245,7 +245,7 @@ export const group = {
     // sentence). A key absent draws nothing; null (the object states no size) is "not stated", never zero.
     if (admin) {
       const LIMIT = 10_000_000_000;
-      section(S + "storage.head", cs.state(data.stats, (v) => {
+      section("screen.settings.storage.head", cs.state(data.stats, (v) => {
         if (!v || typeof v !== "object" || !("dbBytes" in v)) return "";
         const n = v.dbBytes;
         if (typeof n !== "number" || !Number.isFinite(n) || n < 0) return `<p data-state="storage">${W(S + "storage.unstated")}</p>`;
