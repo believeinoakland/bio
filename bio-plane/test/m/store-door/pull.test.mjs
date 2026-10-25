@@ -9,6 +9,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import "./harness.mjs";
+import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 const { record: fixture } = await import("./record.mjs");
 const P = await import("../../../src/store-door/pull.mjs");
 const { doorbellOf, REASON_MAX, PULL_WITHIN_FAILED_DETAIL } = await import("../../../src/doorbell/index.mjs");
@@ -107,7 +108,7 @@ test("R7 (doorbell R3; DEC-88 (2); N499, K1117): an admitted `pulled` resolve's 
 });
 
 test("R7 (doorbell R13's `within`; DEC-88 (2)): the reasoned `pulled` resolve and its promotion are one act — a promotion that refuses, or throws, leaves neither written: the knock new, no reason on its row, no receipt, no bundle", async () => {
-  for (const fault of [{ ok: false, reason: "PROMOTE_REFUSED_HERE", detail: "raced" }, "throw"]) {
+  for (const fault of [staleBaseRefusal(), "throw"]) {
     const r = await record();
     const k = await r.knock(`one act ${JSON.stringify(fault)}`);
     let asked = 0;
@@ -243,7 +244,7 @@ test("R7 (N364, N380, N386): one pull files the capture and promotes its documen
 });
 
 test("R7 (N380, K559; doorbell R13): the pull and its promotion are one act — a promotion that refuses, or throws, leaves neither written (the knock as it was, no receipt, no actor, no bundle, no id drawn), and the next pull files it; a fault's message is not carried", async () => {
-  for (const [fault, reason, status] of [[{ ok: false, reason: "PROMOTE_REFUSED_HERE", detail: "raced" }, "PROMOTE_REFUSED_HERE", undefined],
+  for (const [fault, reason, status] of [[staleBaseRefusal(), staleBaseRefusal().reason, undefined],
                                          ["throw", "PULL_WITHIN_FAILED", 500]]) {
     const r = await record();
     const k = await r.knock(`one act ${JSON.stringify(fault)}`);

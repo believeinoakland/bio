@@ -7,6 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, call, opCalls, FORGED } from "./harness.mjs";
+import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 const { record: fixture } = await import("./record.mjs");
 const P = await import("../../../src/store-door/pull.mjs");
 const { doorbellOf, REASON_MAX } = await import("../../../src/doorbell/index.mjs");
@@ -94,7 +95,7 @@ test("R36 (doorbell R3; DEC-88 (2); N499, K1117): an admitted `pulled` resolve's
 });
 
 test("R36 (doorbell R13's `within`; DEC-88 (2)): the reasoned `pulled` resolve and its promotion are one act — a promotion that refuses, or throws, leaves neither written: the knock new, no reason on its row, no receipt, no bundle", async () => {
-  for (const fault of [{ ok: false, reason: "PROMOTE_REFUSED_HERE", detail: "raced" }, "throw"]) {
+  for (const fault of [staleBaseRefusal(), "throw"]) {
     const r = await record();
     const k = await r.knock(`one act ${JSON.stringify(fault)}`);
     let asked = 0;
