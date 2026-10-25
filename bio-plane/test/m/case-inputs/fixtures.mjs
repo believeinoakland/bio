@@ -2,9 +2,8 @@
    and of `op=statementack` (R1, R12), made by this module's real code when the function is called, over the test world
    of fixture.mjs, and never stored. A user's test takes the answer from here and does not write it by hand. Each is
    checked by fixtures.test.mjs, which calls it and checks the real answer. */
-import { world, reviewProvider, V, MACHINE, WORDS } from "./fixture.mjs";
+import { world, V, MACHINE, WORDS } from "./fixture.mjs";
 import { caseInputsOps } from "../../../src/case-inputs/index.mjs";
-import { noReviewCopy } from "../../../src/review/index.mjs";
 
 const Q = "INQ-2026-0001-q";
 const CITES = [{ kind: "finding", ref: Q }];
@@ -25,15 +24,12 @@ export function carryOutcome() {
   };
 }
 
-/** `caseInputsOps(...).statementack()` (R1, R12), three answers, each the real one over an unsigned case document that a
- *  joined member `bo` may acknowledge: `noReviewCopy` for a viewer with no door (the review copy's dead answer, which
- *  this fixture takes from review's own `noReviewCopy`, the answer the review provider gives), `noReason` for an act
- *  with no reason (STATEMENT_ACK_NO_REASON), and `ok`, the reasoned acknowledgement. */
+/** `caseInputsOps(...).statementack()` (R1, R12), three answers over an unsigned case document that a joined member `bo`
+ *  may acknowledge: `noReviewCopy` for a viewer with no door (the review copy's dead answer, which the test world's review
+ *  stand-in gives; review's own NO_REVIEW_COPY is checked by review's `fixtures-run`), `noReason` for an act with no
+ *  reason (STATEMENT_ACK_NO_REASON), and `ok`, the reasoned acknowledgement. */
 export function statementAck() {
-  const w = world({ provider: false });
-  /* The review provider `review` fills answers its dead answer from `noReviewCopy()`; the fixture registers the same doors
-     as the test world's stand-in, with that one dead answer, so the answer below is the real NO_REVIEW_COPY. */
-  w.publication.registerReviewProvider("review", { ...reviewProvider(w), deadAnswer: () => noReviewCopy() });
+  const w = world();
   w.member("alice");
   w.member("bo");
   const P = w.project("Team", "alice");
@@ -42,6 +38,7 @@ export function statementAck() {
   const act = (params) => caseInputsOps(w.ci, new URL(`http://do/statementack?${new URLSearchParams({
     case: pub.caseId, edition: "1", ...params })}`), null).statementack();
   return {
+    // fixtures-contract: review no-review-copy
     noReviewCopy: act({ viewer: MACHINE, reason: WORDS }),
     noReason: act({ viewer: V("bo") }),
     ok: act({ viewer: V("bo"), reason: WORDS }),

@@ -4,8 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { carryOutcome, statementAck } from "./fixtures.mjs";
 import { CARRIED_OUTCOME_CHECKS, STATEMENT_ACK_CHECKS, fillWords } from "../../../src/case-inputs/index.mjs";
-import { noReviewCopy } from "../../../src/review/index.mjs";
-import { WORDS } from "./fixture.mjs";
+import { WORDS, DEAD } from "./fixture.mjs";
 
 test("R9: the carryOutcome fixture answers the real NO_SUCH_CASE for a case nothing published holds, BAD_CARRIED_OUTCOME naming the text for a blank one, and {ok: true, outcome} for a joined member's act", () => {
   const f = carryOutcome();
@@ -28,9 +27,9 @@ test("R9: each carryOutcome fixture is made when it is called, over a fresh worl
   assert.match(b.ok.outcome, /^OUTC-2026-\d{4}$/);
 });
 
-test("R1, R12: the statementAck fixture answers the review copy's real NO_REVIEW_COPY for a viewer with no door, STATEMENT_ACK_NO_REASON for an act with no reason, and the reasoned acknowledgement's real answer for a joined participant", () => {
+test("R1, R12: the statementAck fixture answers the test world's dead answer for a viewer with no door, STATEMENT_ACK_NO_REASON for an act with no reason, and the reasoned acknowledgement's real answer for a joined participant", () => {
   const f = statementAck();
-  assert.deepEqual(f.noReviewCopy, noReviewCopy(), "review's own dead answer, whole");
+  assert.deepEqual(f.noReviewCopy, DEAD, "the one dead answer of the test world's review stand-in, whole");
   assert.equal(f.noReason.ok, false);
   assert.equal(f.noReason.reason, "STATEMENT_ACK_NO_REASON");
   assert.equal(f.noReason.check, STATEMENT_ACK_CHECKS.STATEMENT_ACK_NO_REASON.check);
