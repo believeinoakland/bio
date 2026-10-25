@@ -1,6 +1,6 @@
 # ratification (T51)
 
-**Status** · session_016UGXAT7b4bSBYAh8LnmNAf · depth 2 · WORKING · handled B17
+**Status** · session_016UGXAT7b4bSBYAh8LnmNAf · depth 2 · WORKING · handled B19
 
 ## J1 · REPORT
 
