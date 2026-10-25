@@ -980,3 +980,8 @@ session_01UzsMeXPSWSfbJkij7yPiZw,job,acquisition,21457321,260498,206,74205,,30,4
 session_012f28ABxU8SxXmiGjV5KtjB,job,ocr-worker,12291414,178151,146,50077,,19,1117
 session_01FjnskQoMLcMGgXpteLNQ1m,job,promotion,6201291,117922,92,22903,,9,3987
 session_01NT1x92ZN1kdow5LA1zD2mQ,job,case-import,2449670,99849,44,13868,,3,2689
+session_015BgLFhXk6KZEKYCGLb1LEg,job,credentials,6752364,115777,100,20884,,9,2714
+session_01BbdQRceygyZcNQyMeGu19c,job,contradiction,3829958,87344,68,14833,,6,3786
+session_01TKioRc2yRq4EnYqzY6AQst,job,case-checker,3509786,81832,64,21989,,5,0
+session_01CumgoAkykhYoNXaf1mFSbV,job,publish-schedule,4280310,91604,72,21454,,3,672
+session_01JVxfm6Xv26CMbdeCJgfGt4,job,actions,4631751,98351,78,20698,,9,0
