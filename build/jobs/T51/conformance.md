@@ -53,3 +53,7 @@ B3: merged tranche/T51. Re-pointing fixture.mjs:147 to retrieval's noSelection()
 Merged `tranche/T51`; `fixture.mjs:147` now takes retrieval's published `noSelection().selectionResolve` (was a hand-built NO_SUCH_SELECTION). Markers added: none. Lines left in `fixtures.mjs --list conformance`: 3 (basis-versions :174, case-import :264 and t45.test.mjs:402), waiting on their providers. Module tests 123 pass, 0 fail; format, architecture, coverage (42 of 42), words and ownership 0 failures.
 
 Size (session_014bYaS8aw3Ywr8iWF6pbvdN): test runs 6, module lines 0 (source unchanged)
+
+## J5 · COMPLETE
+
+B3/B4 done: fixture.mjs:147 re-pointed to retrieval's noSelection (no markers added). 3 FIX-E lines left (basis-versions, case-import x2). Tests 123/0; format, architecture, coverage, words, ownership 0 failures.
