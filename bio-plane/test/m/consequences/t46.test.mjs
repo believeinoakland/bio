@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { world, V, MACHINE } from "./fixture.mjs";
+import { groupUndetermined } from "../promotion/fixtures.mjs";
 import { CONSEQUENCES_CHECKS, CONSEQUENCES_WORDS, SEQUENCE_NOT_CAUSE, CAUSE_NOT_STATED, consequencesModule }
   from "../../../src/consequences/index.mjs";
 import { canonicalJson, sha256HexSync, checkBundle } from "../../../src/record-grammar/index.mjs";
@@ -249,7 +250,7 @@ test("R24 (T47, N958) a success record, recorded before or after the promotion, 
 
 /* promotion as this module reaches it, refusing every success record's object as the record does with no producing group
    recorded (promotion R13, C-64.1); every other promotion as it is. */
-const REFUSED = { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", detail: "no producing team" };
+const REFUSED = groupUndetermined();
 const refusing = (w) => new Proxy(w.promotion, { get: (t, p) => (p === "promote"
   ? (pkg) => (/^SUC-/.test(String(pkg && pkg.bundleId)) ? REFUSED : t.promote(pkg))
   : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
