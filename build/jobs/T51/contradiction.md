@@ -1,6 +1,6 @@
 # contradiction (T51)
 
-**Status** · session_017TrbRYp1J3suhTf9xgvcAT · depth 2 · WORKING · handled B10
+**Status** · session_017TrbRYp1J3suhTf9xgvcAT · depth 2 · COMPLETE · handled B10
 
 ## J1 · COMPLETE
 
