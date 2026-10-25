@@ -1835,7 +1835,8 @@ export class Publication {
          (the testimony row, the per-ground rows). Read at the PIN and never at the working version:
          the frozen pair is this case's reading of those bytes. A member whose pinned bytes this store
          cannot produce is ABSENT from the map, which leaves those two arms unasked for it rather than
-         asked of a basis nobody pinned — `checkCaseDocument` reads absence as absence. */
+         asked of a basis nobody pinned — `checkCaseDocument` reads absence as absence. Each entry is `{basis, references}`
+         (R79): the member's basis array and the references its pinned bytes state. */
       memberBasis: this.#pinnedMemberBasis(doc.text),
       /* R2, R20 (N364): a /5 document's `captures:` and `sources:` blocks, as its bytes state them; null (with
          `blocks_detail`) for an older format or a block it does not carry. */
@@ -1852,7 +1853,12 @@ export class Publication {
       const text = this.record.textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
       if (text === null) continue;
       const mfm = parseFrontmatter(text).data || {};
-      out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
+      /* R79 (fix round 10): the member's references travel with its basis, as case-catalogue's live-leg filter reads them
+         from the member's own frontmatter; a severed citation the pinned bytes state must reach the case's member arm. */
+      out[r.target] = {
+        basis: Array.isArray(mfm.basis) ? mfm.basis : [],
+        references: Array.isArray(mfm.references) ? mfm.references : [],
+      };
     }
     return out;
   }

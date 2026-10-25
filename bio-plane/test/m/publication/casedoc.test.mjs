@@ -76,6 +76,26 @@ test("R1 a signed document answers anybody, with its signature, deliverer and th
   assert.match(old.citations.stated, /version undetermined/);
 });
 
+test("R79 caseDocumentFacts' memberBasis for a member whose pinned bytes hold references is that member's {basis, references}, the severed row included", () => {
+  const w = world();
+  w.member("olive"); w.member("bo");
+  const proj = w.project("Parks", "olive");
+  w.doc("INFO-2026-0001-minutes"); w.doc("INFO-2026-0002-notes");
+  w.inquiry("INQ-2026-0001", {
+    legs: [{ target: "INFO-2026-0001-minutes" }, { target: "INFO-2026-0002-notes" }],
+    refs: [{ target: "INFO-2026-0001-minutes", rel: "cites", status: "confirmed" },
+           { target: "INFO-2026-0002-notes", rel: "cites", status: "severed" }] });
+  const pin = w.head("INQ-2026-0001");
+  w.prepare("CASE-2026-0001", 1, { project: proj, roles: [{ target: "INQ-2026-0001", version_sha: pin }] });
+  const f = w.p.caseDocumentFacts("CASE-2026-0001", 1, V("olive"));
+  assert.equal(f.ok, true);
+  const member = f.memberBasis["INQ-2026-0001"];
+  assert.deepEqual(member.basis.map((l) => l.target), ["INFO-2026-0001-minutes", "INFO-2026-0002-notes"]);
+  assert.deepEqual(member.references.map((r) => [r.target, r.status]),
+                   [["INFO-2026-0001-minutes", "confirmed"], ["INFO-2026-0002-notes", "severed"]],
+                   "the references are read at the pin, so the severed citation reaches the case document's member arm");
+});
+
 test("R2 caseDocumentFacts is fenced as R1 and answers the document, the previous edition's assertions, each member's basis at its pin, attribution and testimony", () => {
   const { w, proj, roles } = prepared();
   assert.deepEqual(w.p.caseDocumentFacts("CASE-2026-0001", 1, V("bo")), world().p.caseDocumentFacts("CASE-2026-0001", 1, V("bo")));
@@ -86,14 +106,14 @@ test("R2 caseDocumentFacts is fenced as R1 and answers the document, the previou
   assert.equal(f.doc.case_id, "CASE-2026-0001");
   assert.equal(f.priorCase, null, "no earlier ratified edition");
   assert.ok(Array.isArray(f.signers));
-  assert.deepEqual(f.memberBasis["INQ-2026-0001"].map((l) => l.target), ["INFO-2026-0001-minutes"]);
+  assert.deepEqual(f.memberBasis["INQ-2026-0001"].basis.map((l) => l.target), ["INFO-2026-0001-minutes"]);
   assert.deepEqual(f.testimony, { self: [], via: [] });
   assert.deepEqual(Object.keys(f.attribution).sort(), ["current", "legacy", "reached", "stated"]);
   /* ratified and published, then the finding moves on: the basis is still read at the PIN */
   w.signCase("CASE-2026-0001", 1, { project: proj, roster: roster(roles) });
   assert.equal(w.signFinding("INQ-2026-0001").ok, true, "the edition completes when its last member is published");
   w.inquiry("INQ-2026-0001", { question: "Is it answered, revised?", legs: [] });
-  assert.deepEqual(w.p.caseDocumentFacts("CASE-2026-0001", 1, V("bo")).memberBasis["INQ-2026-0001"].map((l) => l.target),
+  assert.deepEqual(w.p.caseDocumentFacts("CASE-2026-0001", 1, V("bo")).memberBasis["INQ-2026-0001"].basis.map((l) => l.target),
                    ["INFO-2026-0001-minutes"], "read at the pin, never at the working version; a ratified document to anybody");
   /* the previous RATIFIED edition's assertions */
   w.prepare("CASE-2026-0001", 2, { project: proj, roles });
