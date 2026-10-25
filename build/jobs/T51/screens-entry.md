@@ -238,3 +238,7 @@ Merged `tranche/T51` (the `uses` edges `store-request` and `file-safety` are in)
 **Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/screens-entry/`: tests 96, pass 96, fail 0. `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs bio screens-entry`: 16 product files, 0 failures. `checks/coverage.mjs bio screens-entry`: 30 of 30 live ids named, 0 failures. `checks/ownership.mjs bio screens-entry origin/tranche/T51`: 11 files, 0 failures.
 
 Size (session_01Nwkwhy5gismLNucwdyhzuP): test runs 2, module lines 1158
+
+## J18 · COMPLETE
+
+B15 applied: tranche/T51 merged (uses edges in); REPORTs J13-J15 and QUESTIONs J16-J17 posted. No code change; module tests 96/96; format, architecture, coverage (30 of 30), ownership 0 failures. group: null stays in worldOf until a CHANGE (STORE-REQUEST B8 not merged). Details in the record (Completion B15).
