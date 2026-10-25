@@ -624,3 +624,7 @@ QUESTION (replaces none). R137 (B67) names words `screen.document.pick.find`, `.
 **Tests and checks.** Module: `ℹ tests 589, pass 589, fail 0`. format: 0 failures. architecture: 75 product files, 0 failures. coverage: 136 of 136 live requirement ids named, 0 failures. words: missingkey 0, 0 failures. ownership: 43 files changed, 0 failures. fixtures `--list`: 156, no line new (every kept line named above).
 
 Size (session_01QUsEEvK8vgtnuUJSafBNe2): test runs 4, module lines 7038
+
+## J45 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #31). Entries B65–B68 applied; R20, R123, R129 and R137 met (R137: r137-document.test.mjs, 7 tests; pick words drawn by key). Module 589 pass, 0 fail; format, architecture, coverage, words, ownership 0. Op tables: --list 447 -> 156, every kept line named with its needed recipe in my record ('Completed at K5198'), which also lists six findings in other modules (retrieval list total ignores type; heldcaptures has no total or name filter; themeread has no page; airunlog rows lack read/found/checked; aiusage has no today; pick rows owed to rows.mjs). Size line in the record.
