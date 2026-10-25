@@ -149,3 +149,9 @@ T51 · standards #20 · K5178 (SCREENS-INVESTIGATE #16 J28 (2)).
 **Checks** (absolute root `/home/user/bio`): format 0 failures; architecture (standards) 0; coverage (standards) 53 of 53, 0; ownership 0; `checks/run.mjs`: no finding in my files, words count unchanged (I added no sentence); `fixtures.mjs standards --list`: one line, `contract law-relations bio-plane/test/m/standards/fixtures.test.mjs:83 orphan-run` (the allowed one, waits for law-relations' marker merge). No `fixtures-own` or `fixtures-generic` marker added.
 
 **Deferred:** nothing.
+
+## Saved at K5183
+
+Done: the whole change of J6 above (index.mjs `known_through`, `known-through.test.mjs`, `inForceKnown` fixture and its test), committed; module tests 122/0; filings, action-plans, affordances green; format, architecture, coverage, ownership 0. J6's COMPLETE is NOT posted.
+Half done: the control-plane and plane test runs were stopped unfinished; no result.
+Next step: run `bio-plane/test/m/control-plane/` and `bio-plane/test/m/plane/` (`node --import ./bio-plane/test/platform-sqlite.mjs --test <dir>`), add their counts to J6's "Suite counts" and a `Size (<session id>): test runs <n>, module lines <n>` line, commit, push, `mail state --set COMPLETE`, `mail post --as job --kind COMPLETE`, ring BOB. Also REPORT to BOB the conformance `t36.test.mjs:58` stale "member:olive" expectation (in J6). No workers to stop.
