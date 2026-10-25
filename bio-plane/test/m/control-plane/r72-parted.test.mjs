@@ -199,3 +199,40 @@ test("R72 (parted upload, the door): an `ai` credential's call reaches the store
   assert.equal(m.status, 200);
   assert.equal(opCalls(w.env).filter((c) => c.route === "captureuploadbegin").slice(-1)[0].params.by, MEMBER);
 });
+
+test("R72 (parted upload, the founder; capture R113 as amended, fix round 10): the founder's session is admitted to all four parted ops, reaches the store stamped `by` = her session's own (`admin`), never the `by` she forged, and the stamp it reaches capture with begins, puts two parts, completes and aborts as a member's does; the receipt names her (control: an `ai` credential and a binding class still reach the fence as the machines they are)", async () => {
+  const ops = ["captureuploadbegin", "captureuploadpart", "captureuploadcomplete", "captureuploadabort"];
+  const w = world({ answer: (c) => (ops.includes(c.route) ? new Response(JSON.stringify({ ok: true, result: { ok: true } })) : null) });
+  const stamped = {};
+  for (const op of ops) {
+    const r = await call(w.env, { op, token: w.S.founder, method: "POST", params: { by: FORGED, upload: "U1", index: "0", sha256: "a".repeat(64) }, body: { upload: "U1", by: FORGED } });
+    assert.equal(r.status, 200, `${op} admits the founder's session`);
+    const [reached] = opCalls(w.env).filter((c) => c.route === op).slice(-1);
+    assert.notEqual(reached.params.by, FORGED, `${op}: the forged by never reaches the store`);
+    /* a part's body is its raw bytes, read by no one at the door; the other three carry a JSON body, whose `by` is deleted */
+    if (op !== "captureuploadpart") assert.equal(JSON.stringify(reached).includes("forged-by-caller"), false, op);
+    stamped[op] = reached.params.by;
+  }
+  assert.deepEqual([...new Set(Object.values(stamped))].length, 1, "one stamp for the four ops");
+  const by = stamped.captureuploadbegin;
+  assert.equal(by, "admin", "the founder's session names her as the session does");
+  const cap = setup();
+  const file = varied(PARTED_PART_BYTES + 1000, 13), whole = sha(file);
+  const b = await arm(cap, "captureuploadbegin", { by }, { sha256: whole, bytes: file.length, statement: STATEMENT, name: "big.bin" });
+  assert.equal(b.ok, true, JSON.stringify(b).slice(0, 300));
+  const ps = [file.subarray(0, PARTED_PART_BYTES), file.subarray(PARTED_PART_BYTES)];
+  for (let i = 0; i < 2; i++) {
+    const r = await arm(cap, "captureuploadpart", { by, upload: b.upload, index: String(i), sha256: sha(ps[i]), declared: String(ps[i].length) }, ps[i]);
+    assert.equal(r.ok, true, `part ${i}: ${JSON.stringify(r).slice(0, 200)}`);
+  }
+  const done = await arm(cap, "captureuploadcomplete", { by }, { upload: b.upload, parts: ps.map(sha) });
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
+  assert.deepEqual(cap.c.captureAccountsOf(whole).actors.map((a) => a.actor), ["admin"], "the receipt names the founder");
+  const second = await arm(cap, "captureuploadbegin", { by }, { sha256: sha(varied(PARTED_PART_BYTES + 5, 14)), bytes: PARTED_PART_BYTES + 5, statement: STATEMENT });
+  const gone = await arm(cap, "captureuploadabort", { by }, { upload: second.upload });
+  assert.deepEqual([gone.ok, gone.aborted], [true, true], "the founder's own upload aborts");
+  for (const machine of ["class:probe", "class:ai/agent-ann"]) {
+    const r = await arm(cap, "captureuploadbegin", { by: machine }, { sha256: whole, bytes: file.length, statement: STATEMENT });
+    assert.deepEqual([r.ok, r.reason], [false, "MEMBER_SESSION_REQUIRED"], machine);
+  }
+});
