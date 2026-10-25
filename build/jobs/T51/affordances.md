@@ -384,3 +384,13 @@ By reading, that row removes the `unpublished` entry: the read is then named in 
 **Checks** (ABSOLUTE root `/home/user/bio`): format 0 failures; architecture 0; coverage 54 of 54, 0 failures; words 0 failures (dev 1, unchanged); ownership 0 failures. Fixtures: 4 failures (`door.test.mjs:154` and `:234` code; `answer-envelope/door-helpers.test.mjs:16` contract fixtures-run `affordances door-helpers`). I added no marker and changed no file, so none is new; `--list` shows the tranche's state.
 
 **Deferred:** none. **Found in other modules:** the op-grades row above (and the op-declarations class line to check).
+
+## J27 · BLOCKED
+
+BLOCKED (cause: needs Bob). The one red left in my suite, `t33.test.mjs:189` (R12 R24), is caused by a grade row missing in op-grades (J26), outside my paths. I changed nothing in my paths: affordances tests 286 pass, 1 fail (287 total); my checks are at 0 failures. The "module tests green" line of the Done list is not met until that row lands.
+
+NEEDS BOB: one row in `src/op-grades/t33.mjs`, answers block of `T33_NON_ACTS`: `ruleservicesstate: R("whether the rule services are switched on, so a screen draws their control only while on")`, and check the class line in `src/op-declarations/index.mjs:318` (J26).
+
+When it lands on the tranche, I merge it, re-run the suite and the checks, then COMPLETE with the four fields.
+
+Size (session_01DY2KdCQs7GqoGoDGHPGsK3): test runs 2, module lines 2845
