@@ -9,6 +9,7 @@ import { TIMELINE_PARTS } from "./timeline-parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
 import { WHY_KEYS } from "./whywords.mjs";
 import { rereading } from "./rereads.mjs";
+import { hasWord } from "../setup-words/index.mjs";
 
 /* R33 (4): the addresses. State a is the project (`/app/timeline/<project>`); state b one matter the project follows,
  * `<project>/matter/<progression>/<entity>`; state c one progression, `<project>/progression/<progression>`. */
@@ -96,16 +97,20 @@ function render(cs, view) {
      here: a kind with a word of the design's is worded by it, any other by the owner's own word as record data; an unread
      vocabulary draws the choice failed, not a guess */
   const vk = view.data.vocab && view.data.vocab.state === "ok" && view.data.vocab.value && view.data.vocab.value.vocabularies ? view.data.vocab.value.vocabularies.event_kinds : null;
-  const kindOptions = vk && Array.isArray(vk.values) ? vk.values.map((k) => (cs.w(S + "evkind." + k) !== cs.esc(S + "evkind." + k) ? [k, S + "evkind." + k]
+  /* the kinds recorded only with their own act (discretion, waiver, assessment: `USE_NEEDS_ITS_ACT`) are not offered by "Record an event" */
+  const kindOptions = vk && Array.isArray(vk.values) ? vk.values.filter((k) => !["discretion", "waiver", "assessment"].includes(k)).map((k) => (cs.w(S + "evkind." + k) !== cs.esc(S + "evkind." + k) ? [k, S + "evkind." + k]
     : { value: k, text: String((vk.words && vk.words[k] && vk.words[k].word) || k) })) : null;
   const kindChoice = kindOptions ? cs.choice("tl-kind", S + "evkind", kindOptions, {}) : cs.state("vocab", view, () => `<p class="cs-state" data-state="failed" role="alert">${cs.w("state.failed", { reason: { html: cs.w("shell.noanswer") } })}</p>`);
   const precisions = ["day", "minute", "second", "edtf"];
   const datedRow = (f) => cs.row("", `<span class="mk-date">${P.when(cs, f.upper_bound ? { precision: "upper_bound", end: f.value } : { value: f.value, precision: f.precision })}</span>`
     + (kinds.includes(f.kind) ? ` <b>${cs.w(S + "datekind." + f.kind)}</b>` : ""), "",
-  cs.w(S + "dated.meta", { precision: precisions.includes(f.precision) ? cs.w("label.timeprecisions." + f.precision) : "", document: titleOf(f.capture_sha) || P.plain(cs, S + "source"), grade: String(f.grade || "") }));
+  cs.w(S + "dated.meta", { precision: precisions.includes(f.precision) ? cs.w("label.timeprecisions." + f.precision) : "", document: titleOf(f.capture_sha) || P.plain(cs, S + "source"), grade: f.grade ? String(f.grade) : { html: cs.mark("gap", "unrated") } }));
   if (!proj || proj.state !== "ok") out.push(cs.state("project", view, () => ""));
   else if (!tl) out.push(`<p>${cs.w(S + "noset")}</p>`);
   else out.push(cs.state(tl, (v) => {
+    /* R60: a team with no active place holds no time zone, so an event dated by a fact is placed in none; the hint is said once above those events */
+    const pq = ((v.world || {}).placed_nowhere || []).length ? P.later(cs, view, "profiles", "profiles", { query: {} }) : null;
+    const nozone = pq && pq.state === "ok" && pq.value && Array.isArray(pq.value.profiles) && !pq.value.profiles.length;
     const dated = v.dated && Array.isArray(v.dated.items) ? v.dated.items : [];
     if (!((v.world || {}).items || []).length && !((v.world || {}).placed_nowhere || []).length && !dated.length
         && !((v.ours || {}).sources || []).some((x) => (x.items || []).length)) return `<p class="cs-state" data-state="empty">${cs.w(S + "empty")}</p>`;
@@ -121,6 +126,7 @@ function render(cs, view) {
       + (ourItems.map((x) => `<div class="mk-ev us"><span class="mk-date">${cs.date(x.at) || cs.esc(String(x.at || ""))}</span> <b>${P.refOf(cs, x.ref, x.label || x.ref, [x.kind || ""], /^ACTN-/.test(String(x.ref)) ? "action" : undefined)}</b></div>`).join(""))
       + ourFails.map((s) => cs.mark("gap", "undetermined", { reason: cs.w(S + "lane.failed", { source: s.source || "" }) })).join("") + "</section></div>";
     return lanes
+      + ((world.placed_nowhere || []).length && nozone ? `<p class="mk-note" data-nozone>${cs.w(S + "nozone")}</p>` : "")
       + ((world.placed_nowhere || []).length ? cs.sec(S + "undated.head", cs.sheet(world.placed_nowhere.map((x) => cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [x.status || "", cs.w(S + "undated.apart")], "event"), `<span class="mk-small">${cs.w(S + "undated.apart")}</span>${x.grade_why ? ` <span class="mk-small">${P.why(cs, x.grade_why)}</span>` : ""}`)).join(""))) : "")
       ;
   }));
@@ -160,17 +166,29 @@ function render(cs, view) {
     + cs.choice("tl-question", S + "question", qChoice, qChoice.length ? { value: qChoice[0].value } : {}) + cs.field("tl-hunch", S + "hunch", { area: true, rec: true })
     + cs.act("hypothesishold", { label: "act.hypothesishold.label.timeline" })
     + cs.act("findin", { label: "act.findin.label.timeline" })));
+  if (view.ui.dateRefusal) out.push(P.said(cs, view.ui.dateRefusal));
   if (view.ui.said) out.push(`<p class="mk-note">${cs.w(view.ui.said)}</p>`);
   return out.join("");
 }
 
 const acts = rereading([
   { op: "createevent", label: "act.createevent.label.timeline",
-    send(view, el, cs) {
+    async send(view, el, cs) {
       const at = view.parts.chosen(cs, "tl-doc", "tl-passage");
       if (!at) return { refuse: "screen.timeline.passage.empty" };
+      const kind = String(cs.value("tl-kind") || "other"), date = String(cs.value("tl-date") || "").trim();
       /* C54: the event is attested by the passage chosen; the timeline finds it again by that capture, so it is tied to no person the page guessed */
-      return { body: { kind: String(cs.value("tl-kind") || "other"), attestations: [at] } };
+      if (!date) return { body: { kind, attestations: [at] } };
+      /* R33 (K5148; WALK-FINAL-07 R60): an event is dated only by an attestation that carries a date, so a date on the form is recorded as the
+         dated fact (`recorddatedfact`, as that act sends it) and that fact is the event's attestation: the event lies on its lane with its date */
+      if (!/^\d{4}-\d{2}(-\d{2})?$/.test(date)) return { refuse: "screen.timeline.date.empty" };
+      view.ui.dateRefusal = null;
+      const made = await cs.call("recorddatedfact", { body: { captureSha: at.captureSha, extent: at.extent, kind: String(cs.value("tl-datekind") || "adopted"),
+        value: date.length === 7 ? { value: date, precision: "edtf" } : date, method: view.parts.plain(cs, "screen.timeline.method.member") } });
+      const r = made && made.result !== undefined ? made.result : made;
+      const id = r && r.ok !== false && r.dated_fact && typeof r.dated_fact.dated_fact_id === "string" ? r.dated_fact.dated_fact_id : "";
+      if (!id) { cs.set("dateRefusal", { code: String((r && (r.code || r.reason)) || ""), translation: r && typeof r.translation === "string" ? r.translation : null }); return null; }
+      return { body: { kind, attestations: [{ datedFactId: id }] } };
     },
     done(view) { view.ui.later = {}; } },
   { op: "addparticipant", label: "act.addparticipant.label.timeline",
@@ -293,7 +311,7 @@ const PROGRESSION_KEYS = [
   "theme.name.label", "theme.name.help", "entity.relation.why", "entity.relation.cite", "entity.relation.cite.help", "connection.node.unnamed", "mark.grade.reading",
 ];
 
-const words = [...new Set(["screen.timeline.name", "screen.timeline.purpose", ...PROGRESSION_KEYS,
+const words = [...new Set(["screen.timeline.name", ...["screen.timeline.nozone"].filter((k) => hasWord(k)), "screen.timeline.purpose", ...PROGRESSION_KEYS,
   ...["instance", "thread", "discharge", "proposedispose", "progression", "progressiondefine"].flatMap((op) => ["act." + op + ".label.timeline", "act." + op + ".does"]),
   ...["createevent", "addparticipant", "relate", "recorddatedfact", "hypothesishold", "findin"].flatMap((op) => ["act." + op + ".label.timeline", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
