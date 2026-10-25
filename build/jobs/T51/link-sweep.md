@@ -145,3 +145,7 @@ B7 (CHANGE, K4247) applied on job/T51/link-sweep at b79e0bbc0a (tranche/T51 merg
 - format: 178 modules; 0 failures. coverage link-sweep: 15 of 15 ids named; 0 failures. words link-sweep: 0 failures. ownership link-sweep tranche/T51: 0 failures. fixtures link-sweep: 0 failures. architecture link-sweep: 1 failure (the `uses` item above).
 
 **Size (session_014LubSgUXQ2457eSNMheo6B):** test runs 8, module lines 1230.
+
+## J6 · COMPLETE
+
+Fix round 10 batch 5 done on job/T51/link-sweep (8a12d4da58). Both own fixture lines done (sweepScopeRegistrar: the real capture-requests, migrated, wrapped only to record; acquireRefusals: acquisition's published fixture). The 3 contracts run in test/m/link-sweep/contracts.test.mjs: sweep-fence, sweep-mutate, sweep-scope; the real values differ from monitoring's hand-built ones (see record: fence adds check/translation/sweeps; mutate adds code/sweep). fixtures link-sweep 0 failures; module tests 44/44; scheduler consumers 13/13; format, coverage, words, ownership green. NEEDS YOU (one item): architecture link-sweep fails because fixture.mjs imports acquisition/fixtures.mjs and link-sweep's uses (build/modules.json:144) lacks acquisition; please add it (R5/R31 already name it). Found elsewhere: setup-words build --check reports rows.mjs stale at basis-version-grammar word 20125 (not mine). No fixtures-own/generic markers added.
