@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { acts, all, day, has, lacks, open, said, textOf } from "./kit.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { env } from "./fixtures.mjs";
-import { team, SEAL, rulesTeam, holdDoc, draftRule, holdKey, vouch, pickerPages, manyDocs, RULES_TEXT } from "./seed-places.mjs";
+import { team, SEAL, rulesTeam, holdDoc, draftRule, holdKey, vouch, pickerPages, RULES_TEXT } from "./seed-places.mjs";
 
 const item = (o, rule) => all(o.tree, (e) => e.tag === "li" && e.attrs["data-rule"] === rule)[0];
 const btn = (n, op) => acts(n).filter((b) => b.attrs["data-act"] === op);
@@ -266,30 +266,36 @@ test("R70 C14: the picker is read once when the screen opens, by the cheap picke
 
 /* ---- T51 fix round 6: G20 (K4571) ---- */
 
+/* WORLD GAP (G20): a real list past a page takes minutes to hold (each document is an upload, an id and a promotion, and each costs more than the last:
+   201 take about a minute), so the owner's paging of a long list is scripted: capture R77's, `limit` rows from the cursor `after`, `truncated` and `next`
+   while more remain. The last row of such a list is a document really held (the owner's own row), so a rule can be drafted from it. */
+const sha = (i) => i.toString(16).padStart(64, "0");
+const heldPaged = (total, real = null) => (q) => {
+  const from = q.after ? Number(q.after) : 0, n = Math.min(Number(q.limit) || 200, 1000), held = [];
+  for (let i = from; i < Math.min(total, from + n); i++)
+    held.push(real && i === total - 1 ? real : { bundle_id: "INFO-2026-" + String(i + 1).padStart(4, "0"), title: "Document " + (i + 1), capture: { sha256: sha(i + 1) } });
+  const more = from + n < total;
+  return env({ ok: true, held, state: q.state, limit: n, truncated: more, next: more ? String(from + n) : null });
+};
+
 test("R70 G20: with 250 documents held the picker reaches the 250th, reading on by the cursor, and a draft names it; control: 150 documents are read once and nothing is said of more", async () => {
   const { w, dev } = await team();
-  const last = await holdDoc(w, dev, "The last document.txt", [RULES_TEXT[0], "The last."]);   // one with a text to draft from
-  await manyDocs(w, dev, 249);
-  const pages = await pickerPages(dev);
-  const owned = pages.flatMap((p) => p.held);
-  assert.equal(owned.length, 250);
-  assert.equal(pages.length, 2, "the owner pages them: 200, then the rest");
-  const a = await open("grouprules", { world: w, as: dev });
+  const last = await holdDoc(w, dev, "The last document.txt", [RULES_TEXT[0], "The last."]);
+  const row = (await pickerPages(dev))[0].held.find((h) => h.capture.sha256 === last.sha);
+  const a = await open("grouprules", { world: w, as: dev, table: { heldcaptures: heldPaged(250, row) } });
   a.redraw();
   const docs = optionsOf(a);
   assert.equal(docs.length, 250, "every document is offered, not the first 200");
-  assert.deepEqual(docs, owned.map((h) => [h.capture.sha256, h.title]));
-  assert.ok(docs.some(([sha]) => sha === last.sha), "the 250th is offered");
+  assert.deepEqual(docs[249], [last.sha, row.title]);
   assert.ok(!a.text.includes(said("screen.people.more", { n: "200" })), "nothing left out, nothing said");
   const asked = a.p.requests.filter((r) => r.op === "heldcaptures");
   assert.equal(asked.length, 2, "the first page and the one the cursor names");
   assert.ok(asked.every((r) => r.query.state === "held_and_vouched" && r.query.fields === "picker"));
-  assert.equal(asked[1].query.after, pages[0].next);
+  assert.equal(asked[1].query.after, "200");
   const r = await a.press("ruledraft", { values: { ...form(last), "gr-doc": last.sha }, choose: PICK });
   assert.equal(r.sent.find((x) => x.op === "ruledraft").body.source.captureSha, last.sha, "the 250th is drafted from");
-  const fewTeam = await team();
-  await manyDocs(fewTeam.w, fewTeam.dev, 150);
-  const few = await open("grouprules", { world: fewTeam.w, as: fewTeam.dev });
+  assert.ok((await rulesOf(dev)).some((x) => x.source.captureSha === last.sha), "the world holds the rule");
+  const few = await open("grouprules", { world: w, as: dev, table: { heldcaptures: heldPaged(150, row) } });
   few.redraw();
   assert.equal(optionsOf(few).length, 150);
   assert.equal(few.p.requests.filter((r) => r.op === "heldcaptures").length, 1, "a list that fits its page is read once");
@@ -297,17 +303,8 @@ test("R70 G20: with 250 documents held the picker reaches the 250th, reading on 
 });
 
 test("R70 G20: past the bound it keeps (the first page and two more) the picker says how many it shows and a search narrows by title; control: the search reads nothing more", async () => {
-  /* WORLD GAP: 2500 real documents take about 90 seconds to hold (each is an upload, an id and a promotion), so the owner's paging of that list is scripted
-     (capture R77's: `limit` rows from the cursor `after`, `truncated` and `next` while more remain); the 250 and 150 above are real. */
-  const total = 2500, sha = (i) => i.toString(16).padStart(64, "0");
-  const paged = (q) => {
-    const from = q.after ? Number(q.after) : 0, n = Math.min(Number(q.limit) || 200, 1000), held = [];
-    for (let i = from; i < Math.min(total, from + n); i++) held.push({ bundle_id: "INFO-2026-" + String(i + 1).padStart(4, "0"), title: "Document " + (i + 1), capture: { sha256: sha(i + 1) } });
-    const more = from + n < total;
-    return env({ ok: true, held, state: q.state, limit: n, truncated: more, next: more ? String(from + n) : null });
-  };
   const { w, dev } = await team();
-  const a = await open("grouprules", { world: w, as: dev, table: { heldcaptures: paged } });
+  const a = await open("grouprules", { world: w, as: dev, table: { heldcaptures: heldPaged(2500) } });
   a.redraw();
   assert.equal(optionsOf(a).length, 2200, "200, then 1000 and 1000 by the cursor");
   has(a, "screen.people.more", { n: "2200" });
@@ -331,10 +328,8 @@ test("R70 G20: past the bound it keeps (the first page and two more) the picker 
 
 test("R70 G20: a page the cursor names that cannot be read leaves the first page offered and says it is the first rows shown, never a picker that looks whole", async () => {
   const { w, dev } = await team();
-  await manyDocs(w, dev, 201);   // one more than the first page
-  const first = (await dev.read("heldcaptures", { query: { state: "held_and_vouched", fields: "picker", limit: "200" } }));
-  assert.ok(first.truncated && first.next, "the owner pages them");
-  const a = await open("grouprules", { world: w, as: dev, table: { heldcaptures: async (q) => (q.after ? "none" : env(await dev.read("heldcaptures", { query: q }))) } });
+  const paged = heldPaged(250);
+  const a = await open("grouprules", { world: w, as: dev, table: { heldcaptures: (q) => (q.after ? "none" : paged(q)) } });
   a.redraw();
   assert.equal(optionsOf(a).length, 200, "what was read stays offered");
   has(a, "screen.people.more", { n: "200" });

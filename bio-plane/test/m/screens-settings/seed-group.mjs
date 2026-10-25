@@ -126,10 +126,10 @@ export async function holdKey(as, w, key = "sk-ant-api03-SENTINELKEY") {
 }
 
 /** WORLD GAP: the door of the world asks no draft after a draft-due act (store-request door, "no draft asked"), so the assistant's draft is
- *  answered at the platform's edge, in the shape the door's own step gives (control-plane draft: `text`, `label`, `withheld`, `note`). */
-export const WRITING_HELP = { ok: true, result: { ok: true, text: "The group's members rent in East Oakland.", label: { kind: "machine", asked_by: "member:admin" }, withheld: [], note: "" } };
-export const DESCRIPTION_DRAFT = { ok: true, result: { ok: true, focus: { text: "Potholes and street repair in East Oakland.", label: { kind: "machine", asked_by: "member:admin" } },
-  purpose: { text: "To hold the city to its repair promises.", label: { kind: "machine", asked_by: "member:admin" } } } };
+ *  answered at the platform's edge, in the shape the door's own step gives (control-plane draft: `text`, `label`, `withheld`, `note`), asked by `as`. */
+export const WRITING_HELP = (as) => ({ ok: true, result: { ok: true, text: "The group's members rent in East Oakland.", label: { kind: "machine", asked_by: "member:" + as.member }, withheld: [], note: "" } });
+export const DESCRIPTION_DRAFT = (as) => ({ ok: true, result: { ok: true, focus: { text: "Potholes and street repair in East Oakland.", label: { kind: "machine", asked_by: "member:" + as.member } },
+  purpose: { text: "To hold the city to its repair promises.", label: { kind: "machine", asked_by: "member:" + as.member } } } });
 
 /** A real answer of `as` for `op` with `keys` left out: a read the owner never gives in this form (a world reaches only the state the acts make,
  *  and this one the owner's answer always carries). Answers the table entry. */

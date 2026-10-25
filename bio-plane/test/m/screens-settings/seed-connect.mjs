@@ -30,15 +30,21 @@ export function agentWorker(opts = {}) {
     signin: (step) => (step === "start" ? { ok: true, address: SIGNIN_ADDRESS }
       : step === "code" ? { ok: true, connected: true, token: SIGNIN_TOKEN, valid_for: "1 year" } : { ok: true }),
     ask: () => ({ event: "answer", ok: true }),
+    /** The runner answers a sign-in's `steps` with the refusal `code` (agent-worker R84's `SIGNIN_CODES`), `extra` its detail, its words and its own trace: an
+     *  answer of the platform's external party. Its state read is answered as before. */
+    refuse(code, extra = {}, steps = ["start", "code", "signout"]) { for (const step of steps) aw.refusals[step] = { code, extra }; },
+    refusals: {},
     /** The model's count of one call it made for `member`, to the store's `askusage` route (ai-use R1), the route the door's draft path posts to too. */
-    count: (member) => aw.world.store.dispatch(new Request(`http://do/askusage?viewer=${encodeURIComponent(member)}`, { method: "POST",
-      headers: { "content-type": "application/json" }, body: JSON.stringify({ mode: "ask", ...aw.usage }) })),
+    count: (member, mode = "ask") => aw.world.store.dispatch(new Request(`http://do/askusage?viewer=${encodeURIComponent(member)}`, { method: "POST",
+      headers: { "content-type": "application/json" }, body: JSON.stringify({ mode, ...aw.usage }) })),
     async fetch(url, init) {
       const path = new URL(url).pathname;
       if (path === "/version") return reply({ name: "agent-worker", version: "a-1", ...(aw.runner === undefined ? {} : { runner: aw.runner }), ...aw.version });
       const body = JSON.parse(init.body);
       aw.sent.push({ path, body });
       if (path === "/signin") {
+        const refused = aw.refusals[body.step];
+        if (refused) return reply({ ok: false, reason: refused.code, code: refused.code, ...refused.extra }, 409);
         const out = await aw.signin(body.step, body);
         if (out instanceof Error) throw out;
         return reply(out, out.ok === false ? out.status || 409 : 200);
@@ -111,9 +117,9 @@ export async function ask(t, as, n = 1) {
 
 /** The model's count of `n` calls it made for `as`, with no ask before them: for a member who has not yet read the team key's notice, whom no ask
  *  reaches the model for (ai-accounts R8), the use being counted all the same to the account `usageOwner` names. */
-export async function counted(t, as, n = 1) {
+export async function counted(t, as, n = 1, mode = "ask") {
   for (let i = 0; i < n; i++) {
-    const r = await t.worker.count("member:" + as.member);
+    const r = await t.worker.count("member:" + as.member, mode);
     if (r.status !== 200) throw new Error("the count was refused: " + (await r.text()));
   }
 }
@@ -150,3 +156,4 @@ export const withUsed = (t, as, used) => async (q) => {
  *  answers. A runner that never answers cannot be a double, for the page's harness waits for the door while it works. */
 export const unanswered = (t, as, ...steps) => async (q, b) => (steps.includes(b.step) ? "pending"
   : (await t.w.door({ url: "/api/?op=subscriptionsignin", init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } }, as)).json);
+

@@ -124,8 +124,3 @@ export async function pickerPages(as, state = "held_and_vouched") {
     q = { state, fields: "picker", limit: "1000", after: r.next };
   }
 }
-
-/** n documents held by `as`, each its own text (the owner's own held list). */
-export async function manyDocs(w, as, n) {
-  for (let i = 0; i < n; i++) await w.recipes.hold(as, "Document " + (i + 1), "Document number " + (i + 1) + ".");
-}

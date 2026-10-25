@@ -211,7 +211,7 @@ const DOOR_CODES = ["AI_KEPT_AWAY", "DISCLOSURE_DUE", "AGENT_WORKER_UNBOUND", "A
  *  silent, the team keeping its material away, the disclosure lost), made after the page is drawn. Answers the team and the step to press. */
 async function meets(code, runner = { detail: "the runner's detail", translation: "untranslated " + code, trace: "abcdef0123456789" }, o = {}) {
   const t = await S.connecting(o);
-  if (!DOOR_CODES.includes(code)) t.worker.signin = (step) => (step === "state" ? { ok: true } : { ok: false, reason: code, code, ...runner });
+  if (!DOOR_CODES.includes(code)) t.worker.refuse(code, runner);
   return t;
 }
 async function pressed(t, code, CODE) {
@@ -251,7 +251,7 @@ test("R24 a refusal's reference is drawn beside its words (interface-shell R39) 
 test("R24 Open Anthropic's sign-in page is disabled while a start is in flight, and pressable again once it answers or is refused", async () => {
   for (const answer of ["ok", "refused"]) {
     const t = await S.connecting();
-    if (answer === "refused") t.worker.signin = (step) => (step === "start" ? { ok: false, reason: "SIGNIN_UNAVAILABLE", code: "SIGNIN_UNAVAILABLE" } : { ok: true });
+    if (answer === "refused") t.worker.refuse("SIGNIN_UNAVAILABLE", {}, ["start"]);
     const a = await page(t);
     const start = () => all(a.tree, (e) => e.tag === "button" && e.attrs["data-act"] === "subscriptionsignin" && e.attrs["data-step"] === "start")[0];
     assert.equal(start().attrs.disabled, undefined);

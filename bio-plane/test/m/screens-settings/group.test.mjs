@@ -191,8 +191,8 @@ test("R40 writinghelp under the field only while the assistant is reachable; its
   // the assistant is reachable once the team holds its own key, switched on (the real acts)
   const t = await eastoak(await team({ env: { ACCOUNT_SEAL_SECRET: SEAL } }));
   await holdKey(t.founder, t.w);
-  const draft = WRITING_HELP.result;
-  const a = await open("group", { world: t.w, as: t.founder, table: { writinghelp: () => WRITING_HELP } });   // WORLD GAP: the door asks no draft (seed-group)
+  const draft = WRITING_HELP(t.founder).result;
+  const a = await open("group", { world: t.w, as: t.founder, table: { writinghelp: () => WRITING_HELP(t.founder) } });   // WORLD GAP: the door asks no draft (seed-group)
   assert.ok(ops(a).includes("writinghelp"));
   const r = await a.press("writinghelp", { data: { field: "stake", id: "gr-stake" }, values: { "gr-stake": "we rent" }, reason: "we rent" });
   assert.deepEqual(r.sent.map((x) => [x.op, x.body]), [["writinghelp", { op: "declaredstakeset", field: "stake", told: "we rent" }]], "nothing is saved: no declaredstakeset");
@@ -287,8 +287,10 @@ test("R45 a correction sends factconfirm with act correct, the zone, how and sou
   assert.ok(noSource.refused && noSource.refused.text.includes(said("refusal.FACT_VALUE_REFUSED")), "FACT_VALUE_REFUSED");
   const noHow = await press(t, { "gr-tz-how0": "", "gr-tz-src0": "s" });
   assert.ok(noHow.refused && noHow.refused.text.includes(said("refusal.FACT_HOW_REFUSED")), "FACT_HOW_REFUSED");
-  const bare = await team();   // no profile is chosen: the zone has no fact to correct
-  const noFact = await press(bare, { "gr-tz-how0": "h", "gr-tz-src0": "s" });
+  // no fact held: the profile is let go after the page drew it (choosing a zone would draw the page again, without the fact)
+  const noFact = await open("group", { world: w, as: founder });
+  await founder.act("profilesset", { body: { profiles: [] } });
+  await noFact.press("factconfirm", { values: { "gr-tz-how0": "h", "gr-tz-src0": "s" }, reason: "r" });
   assert.ok(noFact.refused && noFact.refused.text.includes(said("refusal.NO_SUCH_FACT")), "NO_SUCH_FACT");
 });
 

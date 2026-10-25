@@ -95,18 +95,27 @@ import { memoryBucket, depsWith, json, mirrorTestSet } from "../../../../file-sc
 import { vendorNet } from "../../../../file-scanner/test/vendors.mjs";
 
 const hang = () => new Promise(() => {});
+
+/* The platform's clock, which `file-safety` reads as `Date.now()` (the assembly hands it no clock; credentials read the world's `BIO_NOW_MS`): a test that
+   lets minutes go by without the cron coming (`pass`) moves both, so the two agree. Reset by each `scannerTeam`. */
+const realNow = Date.now.bind(Date);
+const skew = { ms: 0 };
+Date.now = () => realNow() + skew.ms;
 /** freshclam, as the image's updater answers a run: refused with its lines, or never answering (a download that outlasts the invocation).
  *  The image's updater has no egress in a test: the one stand-in, at the platform's edge. */
 export const refusing = (detail) => async (path, init = {}) => ((init.method || "GET") === "POST" ? json({ ok: false, code: "MIRROR_REFUSED", detail }) : json({ ok: true }));
 export const stuck = async (path, init = {}) => ((init.method || "GET") === "POST" ? hang() : json({ ok: true }));
 
-/** A team (founder signed in) whose `FILE_SCANNER` binding is the real file-scanner handler over one bucket (every request its own
+/** `pass(ms)`: time goes by and the platform's cron has not yet come (the clock binding moves, no scheduler consumer runs), as the minutes between
+ *  two crons are; `tick(ms)` is the cron coming too.
+ *  A team (founder signed in) whose `FILE_SCANNER` binding is the real file-scanner handler over one bucket (every request its own
  *  invocation, the asynchronous mirror's cut `cutAfterMs` after its response, as the platform cuts `waitUntil`), the vendors' APIs it
  *  calls answered by `net` (a fetch; the outside world), and the clock the world's, pinned at the real present (the page reads
  *  `Date.now()`, so a period it asks is one the store's clock admits). `state(now)` is the mirror's record as the bucket holds it;
  *  `signatures` the age in ms of the signature set the mirror holds, if any. `scanner`: "bound", "unreachable" (a binding that does not
  *  answer) or "absent" (no binding). The scanner is a platform binding: the real handler is the double (as `file-safety`'s tests give it). */
 export async function scannerTeam({ state = null, cutAfterMs = 20, env = {}, signatures = null, scanner = "bound", net = vendorNet(), now = Date.now() } = {}) {
+  skew.ms = 0;
   let world = null;
   const bucket = memoryBucket();
   const env0 = { updater: stuck };
@@ -132,7 +141,7 @@ export async function scannerTeam({ state = null, cutAfterMs = 20, env = {}, sig
   if (signatures !== null) mirrorTestSet(bucket, { published: new Date(world.now() - signatures).toISOString() });
   const founder = await world.signIn("founder");
   const sigs = async () => (await scannerHandle(new Request("https://file-scanner/version"), deps()).then((r) => r.json())).signatures;
-  return { w: world, founder, bucket, env0, deps, sigs, bound, tick: (ms) => world.tick(ms), settle: (ms = 60) => new Promise((r) => setTimeout(r, ms)) };
+  return { w: world, founder, bucket, env0, deps, sigs, bound, tick: (ms) => world.tick(ms), pass: (ms) => { world.env.BIO_NOW_MS += ms; skew.ms += ms; }, settle: (ms = 60) => new Promise((r) => setTimeout(r, ms)) };
 }
 
 /** Hard tries at signing in: `n` sign-ins with a wrong password, as strangers make them (the real `login` refusing each), counted by
