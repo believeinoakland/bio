@@ -100,3 +100,17 @@ Round 8 G113/G114 applied. R19: interfacewords with no language named answers on
 ## J4 · COMPLETE
 
 B4 applied: every ok answer of interfacewords (both arms and the error answer) carries words_version beside language; test R20 added. translations 42/42, users green; format, architecture, coverage, words, ownership 0 failures. Record: build/jobs/T51/translations.md.
+
+## Fix round 10, Wave A batch 1 (B5)
+
+Entries applied: (1) `interfacewords` declared in `DECLARED_OPS` (`translations/index.mjs`, R21): `classes` admin/member, `machineClasses` [], `mutating` false, `stamps` viewer, `needs` null, `weight` read, `fields` accepts `language`, `v`, requires none, the description keyed `translations.declared.interfacewords` through `localize`, English as control-plane's. (2) Both `store-replies` lines of `fixture.mjs` carry `// fixtures-contract: store-door store-replies`.
+
+Fixture published: `memberLanguageRead` in `bio-plane/test/m/translations/fixtures.mjs`, made by the real `registerMemberLanguageRead` and `wordsVersion` when the test runs; its test `fixtures.test.mjs` (R11 R20) calls it and checks the real answers, with a control that the stamp moves at an adoption. New R21 test in `declared-ops.test.mjs`.
+
+Lines done and left: `fixtures.mjs … translations --list` shows only the two `fixture.mjs` lines, now `contract-no-run`, waiting for `store-door`'s `fixtures-run: translations store-replies`. No `fixtures-own` or `fixtures-generic` marker added.
+
+**For BOB at the merge:** delete from `bio-plane/src/control-plane/owner-ops.mjs` the `interfacewords` row, lines 33–38 on this branch point (the R116 comment, lines 33–35, and the row itself): `interfacewords: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null, weight: "read", description: localize("control-plane.declared.interfacewords", "read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing"), fields: { accepts: ["language", "v"], requires: [] } },` — an op declared by two modules stops the plane's start (`plane/declarations.mjs:182-186`). R-WORDS for UX-DESIGN's HANDOFF: the word `translations.declared.interfacewords` has no row in `setup-words` (the English falls back from `localize`); it needs one, same English.
+
+Tests and checks: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/translations/*.test.mjs`: 44 pass, 0 fail. `checks/format.mjs`: 0 failures. `checks/architecture.mjs … translations`: 0 failures. `checks/coverage.mjs … translations`: 21 of 21 ids named, 0 failures. `checks/ownership.mjs … translations tranche/T51`: 0 failures. `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules (the file set is not yet committed at that run; rerun by BOB at the merge). Words check not run separately beyond the module's own words test (green).
+
+Size (session_0125wgcLMbmJWHkUpq5Duamc): test runs 6, module lines 845
