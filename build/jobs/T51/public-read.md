@@ -508,3 +508,18 @@ Size (session_0117cYK5Yq6yKMxRK124CAvs): test runs 5, module lines 4209 (public-
 **Left as it is:** code, tests and the record's other entries. Chain test in `public-read/chain.test.mjs` still passes at 4 (its scene has 8 objects or fewer).
 
 NEEDS BOB: choose one of options 1–3 above.
+
+## J35 · COMPLETE
+
+**COMPLETE (B36 CHANGE, answered at B37 / K5200: no code change).** Met: **R40** (declared `publishedcase`, J33) and **R44** (case file in groups; `chain.test.mjs` at 4, as worded). BOB strikes the marks.
+
+**What I did.** Merged `origin/tranche/T51` into `job/T51/public-read` (merge commit `feddaa6811`). No code changed, as B37 asks.
+
+**Tests** (`bio-plane/test/m/public-read/`, all `*.test.mjs`, run to exit): 316 pass, 0 fail, on the merged tranche.
+- `public-read/chain.test.mjs` (R6 / R44's chain bar 4): passes.
+
+**One thing for BOB (not my test, not changed here).** `control-plane/r10-caseratify-chain.test.mjs` on the merged tranche fails: the longest chain is **13** against the bar **12** (`admission 1 + ratification 6 + the assembly 4 + its second window of puts 1`). The test's first-test assertion on this same tranche code measured 13 before my change too (J34's trace: `… PUBLISHED.put → do:recordcasefile → r2:PUBLISHED.get → r2:PUBLISHED.put → r2:PUBLISHED.put → do:recordcasemanifest`). The assembly's share in that path is five hops, not four (the `building` write is on the path, since the materials read starts after it ends). So the 12 in the bar does not match the measured path; I did not edit the test (control-plane's). Please check the arithmetic before the bar is relied on.
+
+**Deferred:** none. **Found in other modules:** the r10 bar above (control-plane, `r10-caseratify-chain.test.mjs`). **Markers added:** none.
+
+Size (session_0117cYK5Yq6yKMxRK124CAvs): test runs 4 (this round), module lines 4209 (unchanged)
