@@ -129,8 +129,11 @@ function render(cs, view) {
       const held = (v.lines || []).filter((l) => l && !l.withdrawn && l.kind === "holds");
       return cs.sheet(held.map((l) => {
         const when = l.valid && l.valid.undetermined ? `${cs.mark("gap", "undetermined")} <span class="mk-small">${P.why(cs, l.valid.why)}</span>` : span(l.valid);
+        /* R1 (K5178): a holder whose post states no end is stated current through a day (`linecurrentthrough`, `lines` R21) */
+        const open = l.line_id && l.valid && !l.valid.undetermined && (l.valid.to === null || l.valid.to === undefined);
         return cs.row(gradeOf({ assertion: l.assertion }), `${P.refOf(cs, l.from, nameOf(l.from), [l.title || ""])}${when ? " · " + when : ""}`,
-          cite(l.basis && l.basis.captureSha ? { captureSha: l.basis.captureSha, extent: l.basis.extent } : null));
+          cite(l.basis && l.basis.captureSha ? { captureSha: l.basis.captureSha, extent: l.basis.extent } : null)
+          + (open ? cs.act("linecurrentthrough", { label: "act.linecurrentthrough.label.person", data: { line: l.line_id } }) : ""));
       }).join("")) + (v.truncated ? `<p class="mk-small">${cs.w("screen.people.more", { n: String(held.length) })}</p>` : "");
     })));
     /* R1: "who holds it": a holder, her post's dates (the end optional) and what says so, a document or the member's own word (`recordline`, kind `holds`) */
@@ -141,7 +144,8 @@ function render(cs, view) {
       + cs.choice("ho-src", S + "keeper.source.label", [["doc", S + "keeper.source.doc"], ["own", S + "keeper.source.own"]], { acts: {}, value: "doc" }) + `<p class="mk-small">${cs.w(S + "keeper.source.help.a")} ${cs.w(S + "keeper.source.help.b")}</p>`
       + (srcNow === "doc" ? P.docChoice(cs, view, "ho-doc", { label: S + "keeper.doc.label", passage: false }) : cs.field("ho-statement", S + "claim.note", { area: true, rec: true }))
       + cs.field("ho-from", S + "keeper.from.label", { type: "date" }) + cs.field("ho-to", S + "keeper.to.label", { type: "date" })
-      + cs.act("recordline", { label: "act.recordline.label.office", data: { holds: "1" } })));
+      + cs.act("recordline", { label: "act.recordline.label.office", data: { holds: "1" } })
+      + cs.field("ho-through", "screen.person.holds.through", { type: "date" })));
     const says = [aliasSec(), tiesSec(office ? "screen.person.ties.none.office" : "screen.person.ties.none.ordinance")];
     if (!office) says.push(namingSec());
     o.push(cs.sec("entity.says.title.org", says.join(""), { help: "entity.says.help.org" }));
@@ -372,6 +376,17 @@ const acts = rereading([
       return { body: Object.assign({ kind, from, to, basis }, f || t ? { valid: { from: f || null, to: t || null, precision: "day", zone: "UTC" } } : {}) };
     },
     done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
+  /* R1 (diag2-020305 §5; K5178): "State it current through a day": a holder row's post, stated current through the day, on the holder form's source */
+  { op: "linecurrentthrough", label: "act.linecurrentthrough.label.person",
+    send(view, el, cs) {
+      const lineId = String((el && el.dataset && el.dataset.line) || "").trim();
+      const day = String(cs.value("ho-through") || "").trim();
+      const own = view.ui["choice:ho-src"] === "own", statement = String(cs.value("ho-statement") || "").trim();
+      const basis = own ? (statement ? { statement } : null) : view.parts.chosen(cs, "ho-doc");
+      if (!lineId || !day || !basis) return { refuse: "screen.person.holds.empty" };
+      return { body: { lineId, day, basis } };
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   /* R50, B14: a statement recorded by mistake is withdrawn with a reason (the shell asks it, `lines` R8); the lines are read again */
   { op: "linewithdraw", label: "act.linewithdraw.label.person",
     send(view, el) {
@@ -523,7 +538,7 @@ const PERSON_KEYS = [
 ];
 
 /* K5173: the rows UX-DESIGN adopts (HANDOFF B520); listed once the word table holds them, drawn by key from then on */
-const NEW_KEYS = ["screen.person.expunge.marker", "screen.person.holds.heading", "screen.person.holds.holder", "screen.person.holds.capacity", "screen.person.holds.empty", "act.recordline.label.office"].filter((k) => hasWord(k));
+const NEW_KEYS = ["screen.person.expunge.marker", "screen.person.holds.heading", "screen.person.holds.holder", "screen.person.holds.capacity", "screen.person.holds.empty", "act.recordline.label.office", "screen.person.holds.through", "act.linecurrentthrough.label.person", "act.linecurrentthrough.does"].filter((k) => hasWord(k));
 
 const words = ["screen.person.name", "screen.person.purpose", ...NEW_KEYS,
   ...["explore", "recordpersonfact", "recordline", "linewithdraw", "identityclaim", "withdrawidentityclaim", "followregister", "entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"]

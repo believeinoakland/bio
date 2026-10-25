@@ -7,9 +7,8 @@ import { inWorld, openAs, settled } from "./world.mjs";
 import { fill, press, main, word, hasWord } from "./fixtures.mjs";
 
 const REASON = "The roster says so.";
-const NEW_KEYS = ["screen.person.expunge.marker", "screen.person.holds.heading", "screen.person.holds.holder", "screen.person.holds.capacity", "screen.person.holds.empty", "act.recordline.label.office"];
-/* the second act of R1 (`linecurrentthrough`) is not the registry's for `person` nor a named re-point (`interface-shell` R21): reported to BOB; it is built when it is */
-test.todo("REPORTED: R1 stating a holder current through a day (linecurrentthrough) waits for interface-shell RE_POINTS.person or the registry (K5173)");
+const NEW_KEYS = ["screen.person.expunge.marker", "screen.person.holds.heading", "screen.person.holds.holder", "screen.person.holds.capacity", "screen.person.holds.empty", "act.recordline.label.office",
+  "screen.person.holds.through", "act.linecurrentthrough.label.person", "act.linecurrentthrough.does"];
 for (const key of NEW_KEYS) if (!hasWord(key)) test.todo(`K5173: ${key} is a word the table holds (hasWord)`);
 
 test("R1 R59 Person, an office: 'Record who holds it' sends a `holds` line from the holder to the office with an optional end; the post then reads as held", async () => {
@@ -36,6 +35,31 @@ test("R1 R59 Person, an office: 'Record who holds it' sends a `holds` line from 
   assert.equal(sent[0].body.basis.captureSha, roster.sha);
   const held = (await me.read("linesof", { query: { entity: office, kinds: "holds", direction: "to", limit: "50" } })).lines;
   assert.equal(held.length, 1, "the line is held");
+});
+
+test("R1 Person, an office: a holder whose post states no end is stated current through a day, on the holder form's source (linecurrentthrough, lines R21); a holder with an end offers none", async () => {
+  const { world, me } = await inWorld();
+  const office = (await me.act("entitycreate", { body: { kind: "office", label: "City Clerk", note: "The city's records officer." } })).entity_id;
+  const holder = (await me.act("entitycreate", { body: { kind: "person", label: "Ana Rivera", note: "Named on the roster." } })).entity_id;
+  const former = (await me.act("entitycreate", { body: { kind: "person", label: "Bo Chen", note: "Named on the old roster." } })).entity_id;
+  const roster = await world.recipes.hold(me, "Roster.txt", "The City Clerk is Ana Rivera, appointed March 2025. Bo Chen served until 2024.");
+  const line = (await me.act("recordline", { body: { kind: "holds", from: holder, to: office, capacity: "appointed", basis: { captureSha: roster.sha, extent: { kind: "document" } }, valid: { from: "2025-03-01", to: null, precision: "day", zone: "UTC" } } })).line_id;
+  await me.act("recordline", { body: { kind: "holds", from: former, to: office, capacity: "appointed", basis: { captureSha: roster.sha, extent: { kind: "document" } }, valid: { from: "2020-01-01", to: "2024-12-31", precision: "day", zone: "UTC" } } });
+  const p = await openAs(world, me, "/app/person/" + office);
+  const buttons = main(p).querySelectorAll('button[data-act="linecurrentthrough"]');
+  assert.equal(buttons.length, 1, "one button: the holder with no stated end, not the one whose post ended");
+  assert.equal(buttons[0].getAttribute("data-line"), line);
+  await press(p, "linecurrentthrough", { reason: REASON });
+  assert.equal(p.byOp("linecurrentthrough").length, 0, "no day and no source: nothing sent");
+  fill(p, { "ho-through": "2026-09-30", "ho-doc": roster.sha });
+  await press(p, "linecurrentthrough", { reason: REASON });
+  await settled(p);
+  const sent = p.byOp("linecurrentthrough");
+  assert.equal(sent.length, 1);
+  assert.deepEqual([sent[0].body.lineId, sent[0].body.day, sent[0].body.basis.captureSha], [line, "2026-09-30", roster.sha]);
+  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the store holds the statement");
+  const through = (await me.read("line", { query: { id: line } }));
+  assert.equal(JSON.stringify(through).includes("2026-09-30"), true, "the line reads current through the day");
 });
 
 test("R1 R149 Person: where a fact was removed for good the page draws the marker with the day and the member who removed it by name, and never the value; a withdrawn fact draws none", async () => {
