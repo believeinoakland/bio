@@ -241,3 +241,7 @@ Test: `fixtures.test.mjs`, "R42 fixtures: restingOf …", against the real modul
 **Checks.** publication suite under the preload: `tests 183, pass 182, fail 0, todo 1`; format `0 failures`; architecture `0 failures`; coverage `48 of 48 … 0 failures`; ownership run after commit.
 
 Size (session_016A5pnT8yWBYi5ogyJCNRvX): test runs 3, module lines 2503
+
+## J14 · COMPLETE
+
+Follow-up 27 (B12, K5094): complete. New fixture restingOf(held) in bio-plane/test/m/publication/fixtures.mjs, held = [{finding, projects, digests}]: real published findings (real inquiry, a case per named project, real signature with serve edges) resting on exactly the named capture digests; answers {world, publication, restingCapturesOf(q)}, restingCapturesOf the real R42 over the project ids named. fixture.mjs doc() takes an optional digest. Tested in fixtures.test.mjs against the real module. No marker added; fixtures.mjs --list: 0 failures (1 accepted, door.test.mjs:95, pre-existing). Suite 183 (182 pass, 0 fail, 1 todo); format/architecture/coverage/words/ownership 0 failures. monitoring can re-point stubPublication to restingOf(...).publication. Record: build/jobs/T51/publication.md.
