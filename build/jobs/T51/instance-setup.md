@@ -339,3 +339,34 @@ COMPLETE. Re B19 (fix round 10, the final pass's causes; plan item 71 (3); K5148
 - Two other modules have a pinned-world instant of their own, in their paths, not mine: credentials' claim `consumedAt` (STORE-REQUEST J3 (3)). Not touched.
 
 Size (session_01Krcj2LG7HmHfw9eDsAuwvm): test runs 4, module lines 3860
+
+## J25 · COMPLETE · re B20
+
+COMPLETE (re B20; fix round 10, plan item 71 (3); K5148). Cause 1 was already fixed and merged before this START: `4815d2418f` (J24, re B19), on `tranche/T51` since K5155. I found no defect still open in the code, so this session changes one test file only.
+
+**Cause 1: `instanceGroupSeed`'s `recorded_at` under a pinned clock.**
+
+1. **Root cause, with evidence.** As J24: the seed's instant went through `#iso()`, which read the wall clock and ignored `env.BIO_NOW_MS`. Red on the code before `4815d2418f` (J24's run: `actual: '2026-10-25T16:53:32.949Z', expected: '2031-03-04T05:06:07.000Z'`).
+2. **Why the module tests missed it.** As J24: the R4 test booted with `env: {}`, and tests that pinned a clock passed `now` through `boot({now})`, which bypasses `env`.
+3. **Failing-first test.** J24's "R4 instanceGroupSeed records its instant on the instance clock: pinned by env.BIO_NOW_MS it is that instant; unpinned, the wall clock" (`group.test.mjs`): red before the fix, green after. **This session** adds "R4 instanceGroupSeed takes its instant from the clock handed in before env.BIO_NOW_MS; none handed, env; none at all, the wall clock" (`group.test.mjs`). It is a control: it passes on the code as it stands, because the handed clock was already read first (`#instant()`'s first branch). I did not fabricate a red for it.
+4. **Owning module.** instance-setup (`bio-plane/src/setup.mjs`, `bio-plane/src/livefire.mjs`).
+
+**The reading I kept (technical, recorded here).** The START says "a clock the module is handed (defaulting to the wall clock)". `#instant()` reads, in order: the handed `now`, then `env.BIO_NOW_MS` (store-assembly R5's rule), then `Date.now()`. I did not remove the env step. Reason: store-assembly (`bio-plane/src/store-assembly/assemble.mjs`:596) and plane (`bio-plane/src/plane/store.mjs`:576) build this module with `instanceSetupOf(ctx, env, deps)` and pass no `now`. Removing the env step now would make a pinned world record the wall time again, which is the cause itself, and would break the pinned-world tests of store-assembly and plane until those callers hand a clock. Dropping the env step is a change for BOB to order once they hand `now`.
+
+**For BOB (REPORT, the line the START asks for).** To hand this module its clock, the two construction sites should pass `{ now: () => nowMs(null) }` in the deps object: `assemble.mjs`:596 (`instanceSetupOf(ctx, env, { queueProducers, now: () => nowMs(null) })`) and plane's `store.mjs`:576, the same. Both are outside my paths; store-assembly is later in the order, so I did not touch them.
+
+**Checks and tests (with summary lines).**
+- Module suite, `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/instance-setup/*.test.mjs` from the repository root (run to its own exit, no force-exit): `tests 243, pass 243, fail 0, cancelled 0, skipped 0, todo 0`.
+- `node_modules`: installed in `bio-plane` (`npm ci`; the repository root has no `package.json`).
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio instance-setup`: 34 product files, 0 failures.
+- `checks/coverage.mjs /home/user/bio instance-setup`: 76 of 76 live requirement ids named by a test, 0 failures.
+- `checks/words.mjs /home/user/bio instance-setup`: inline 0, plain 0, testcopy 0, marker 0, 0 failures.
+- `checks/ownership.mjs /home/user/bio instance-setup tranche/T51`: 1 file changed by instance-setup, 0 failures.
+- `checks/fixtures.mjs /home/user/bio instance-setup --list`: answer 0, stub 0, code 0, contract 0, accepted 2 (`fixture.mjs`:190, :201, pre-existing), 0 failures. No marker added.
+
+**Requirement ids met.** R4 (the seed's recorded instant is the instance clock's, as J24 and this session's control). No requirement mark struck: R4's text carries no clock rule, and the clock rule is R-CLOCK (K5132), which other modules own.
+
+Deferred: none of my own. Found in other modules: the two construction sites above (store-assembly and plane), and credentials' and capture's pinned-world instants (STORE-REQUEST J3 (3)), not touched here.
+
+Size (session_011ShJzhwLnZv3XLiooRzh1n): test runs 1, module lines 3860
