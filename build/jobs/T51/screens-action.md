@@ -453,3 +453,25 @@ Size (session_014Xi3cMqxUmon661x8n29a3): test runs 5, module lines 5078
 ## J33 · COMPLETE
 
 COMPLETE (re B40). Merged tranche/T51 @ 195b11dc45; suite 295 pass, 0 fail. format 0, architecture 0, coverage 55 of 55, ownership 0, words screens-action 0. fixtures.mjs: the same 7 kept lines + 2 accepted as in Round 11; the new recipes give the refusals of writinghelp but never `text` (no model), so those 3 lines stay scripted; the other 4 have no recipe. checks/run.mjs: no finding in my module, but 16 words failures in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, declared.mjs:16), and setup-words build --check refuses on plane.declared.readtranslate, which has two sentences (plane/declared.mjs:13 and store-assembly/declared.mjs:16): not mine, REPORT. Other REPORTs are in my record (Round 11 and 12). Met ids: R3, R5, R6, R18, R32, R50.
+
+## Round 13 · fix round 10, J31 (SCREENS-ACTION #21, session_01D1s2YRqyJvit3wMv1LEowG, B41 START)
+
+Read B39 to B41. Merged `origin/tranche/T51` (merge commit; tranche carries store-request #5, B40). `storeWorld()` is called with no `group` argument anywhere in my tests (B40: nothing to drop). Acknowledged B41 with `mail done --through B41`.
+
+**J31 (`matter.mjs`: `publishedcase` asked by `caseId`).** Already in history: `f05726a2a5` (the round 11 op-tables commit) changed `bio-plane/src/screens-action/matter.mjs:254` to `{ id: c, edition: … }`; the door reads `id` (`publication/worker.mjs:752-757`). No code change this round. Verified now:
+- failing first: with `caseId` restored in `matter.mjs:254` the file `matter-t51.test.mjs` is red (26 pass, 1 fail: `R45 (c)`, the determination's sent fields); with `id` it is green (27 pass, 0 fail). The file was restored byte-identical (`git diff --stat` empty).
+- the `publishedcase` read is asserted at `matter-t51.test.mjs:71-72` (`[["CASE-2026-0101", "1"]]`, and the store answers the finding).
+
+**Done-list (roles/JOB.md step 6 and B41):**
+- module suite `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-action/*.test.mjs`: 295 pass, 0 fail, 0 skipped.
+- `checks/format.mjs /home/user/bio`: 0. `checks/architecture.mjs /home/user/bio screens-action`: 0. `checks/coverage.mjs`: 0. `checks/ownership.mjs … $(git merge-base origin/tranche/T51 HEAD) HEAD`: 0.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 modules, 0 test files affected (note: `tranche/T51` is not a local ref in this checkout; I used `origin/tranche/T51`).
+- `checks/run.mjs /home/user/bio`: no finding in screens-action's files; words for screens-action 0. Its 16 failures are in store-assembly (`wiring.mjs:78`, `wizards.mjs:51`, `declared.mjs:16`) and plane/store-assembly (`plane.declared.readtranslate`, the same sentence twice); not mine, reported in Round 11/12.
+- `setup-words/build.mjs --check`: refuses on `plane.declared.readtranslate` (plane `declared.mjs:13` and store-assembly `declared.mjs:16`): not mine, reported.
+- **NOT MET:** `checks/fixtures.mjs /home/user/bio screens-action --list` is at 7, not zero. The 7 are the lines Round 11 and 12 kept, unchanged: `c94-t51.test.mjs:34` (op-table `plans`, no recipe), `dash-action.test.mjs:92` (`taskresolve`, no recipe), `fix4-t51.test.mjs:233` (`templatesforaction`, no recipe), `matter-t51.test.mjs:437` and `:458` and `send-t51.test.mjs:428` (`writinghelp`: the recipe `writingHelp` answers refusals, never `text`, since no model is held), `send-t51.test.mjs:339` (builder `refusedWith`, `templatesave`, no recipe). The 2 accepted lines are `plan.test.mjs:235` and `join-t51.test.mjs:64`. Closing the 4 with no recipe needs provider fixtures (action-plans, tasks, filings, store-request); closing the 3 `writinghelp` lines needs a text fixture the provider does not publish. I did not add a marker or a stand-in to make the list zero.
+
+**Met ids:** no new ones this round (R3, R5, R6, R18, R32, R50 as before; BOB strikes the marks).
+
+**REPORTs (unchanged from Round 11, still open):** `hold` cannot release a reply's hold (`holdsdue` omits placed holds); `taskresolve` is offered on none of Action's queue kinds (R30); the world's clocks disagree (pinned vs wall). The 7 fixture lines above need BOB's ruling on which recipes to add.
+
+Size (session_01D1s2YRqyJvit3wMv1LEowG): test runs 3, module lines 5078
