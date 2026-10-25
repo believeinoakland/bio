@@ -117,3 +117,7 @@ R4 amended: leg extent judged through content's public face (ten kinds, doc-part
 - format `0 failures`; architecture inquiry-grammar `0 failures`; coverage `20 of 20 live requirement ids named by a test; 0 failures`; words `0 failures`; fixtures `0 failures`; ownership `4 files changed; 0 failures`.
 
 Size (session_01P41YDS2bqnyp2PVY6un4MQ): test runs 9, module lines 2037
+
+## J6 · COMPLETE
+
+Cause 30b (grammar half) done: checkGrounds no longer refuses an unlabelled supporting leg beside labelled grounds (R1/R68); ground accounting (declared once, none empty, undeclared label) still refused. Red first seen; module 89/89; format, architecture, coverage 20/20, words, fixtures, ownership 0 failures. Golden: only INQ-2026-0127-grounds and grounds.partial changed. Red tests of other modules holding the old refusal (for their jobs): inquiry 5 (R8 x2, R27/R30, R65, R85 control, plus case-grammar R8), citation R21 x3, screens-inquiry R129 R3. See my record.
