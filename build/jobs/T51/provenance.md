@@ -202,3 +202,28 @@ Size (session_013AJsWwtb6GMtSPg9NTJgff): test runs 4, module lines 3280
 ## J12 · COMPLETE · re B10
 
 B10 done. Published bio-plane/test/m/provenance/fixtures.mjs: heldParts, holdsOf (+holdsWorld), holdsRegister, homeOf, homeOfEmpty, homeOfHomed, homeOfWorld, provenanceOver, registeredHomes (takes the user's own {host,record,membership,promotion,now}; register/many), versionChainNoSuchVersion; each made by the real code and checked by fixtures.test.mjs (10 tests). Marker added (1): testimony-slot.test.mjs:105 fixtures-generic: CONTENT_EXTENT_REFUSED (a stand-in refusal handed to the slot to show it relays any refusal as it came). fixtures --list provenance lines: zero. provenance 189 pass 0 fail; format/architecture/coverage/ownership 0; impact: 0 modules affected. Record: build/jobs/T51/provenance.md. Size (session_013AJsWwtb6GMtSPg9NTJgff): test runs 4, module lines 3280
+
+## J13 · COMPLETE
+
+B11 done (follow-up 30, the project-homing fixture). Test files only, as B11 asked.
+
+**Published** in `bio-plane/test/m/provenance/fixtures.mjs`: `homeOfProject(captures = [], { owner = "ann", title = "Fixture Project" } = {})` → `{ provenance, projectId, homeOf, made }`. It promotes a project with no chosen id (`base: null`, `ownerMemberId: owner`, `meta: {}`, a `bundle.md` with `object_type: project`), so the record mints its `PROJ-` id and writes it into the document. Each capture (a digest, or a string to digest) is registered in that project by the real register act. `projectId` is the minted id the creation returned, `homeOf(sha)` is the real `provenance.homeOf` answer (`{bundleId: projectId, path, encoding, bytes, registered, authored}`), null for any capture not registered there, and `made` is the promotion's answer. With `[]` it is an empty project. Tasks can re-point its `world.mjs` `PROJ-` map to this (follow-up 30's next step).
+
+**Test** in `bio-plane/test/m/provenance/fixtures.test.mjs`: "fixtures homeOfProject: a project created with no chosen id mints its PROJ- id; its captures are homed there" (two captures, minted id matched, owner ann, unnamed capture null, empty project homes nothing). Commit 80862db992.
+
+**Markers**: none added. `checks/fixtures.mjs /home/user/bio provenance --list`: 0 failures; the one `accepted(generic)` line is B10's testimony-slot marker.
+
+**Tests and checks** (from the process repository, absolute root):
+- provenance folder (`bio-plane/test/m/provenance/*.test.mjs`): 189 pass, 0 fail.
+- format 0 failures; architecture 0; coverage 64 of 64 live ids; words 0 failures; ownership 3 files, 0 failures.
+
+**Impact** (`build/plan/impact.mjs origin/tranche/T51 HEAD`): 36 modules, 412 test files import the provenance fixtures. I ran all 412 in one process: 3,263 tests, 3,260 pass, 3 fail. None is in my change's path:
+- `agent-worker/test/requirements.test.mjs` (R45 static check, and byte-identity of a fresh build with the committed `dist/agent-worker.bundled.mjs`): the committed bundle is stale against `agent-worker/src` (run alone, the same two assertions fail). Agent-worker's generated artifact, not mine; REPORT to BOB.
+- `control-plane/r9-seam-reading.mjs` §1: alone it runs out of the default 2 GB heap (OOM, a 40 s scanner test); in the combined run it failed the `alarm_at was null while a firing was in progress` check under load. Control-plane's test, not mine; REPORT to BOB.
+- `control-plane/r9-seam-limits.mjs` §14: red by design until the quoting jobs merge. Its one case is case-carriage's `NATIVE_DIGEST_MIN_BYTES = 1024 * 1024` (follow-up 14, not mine).
+
+**Other modules, for BOB:** the two control-plane and agent-worker failures above. Nothing in provenance's `src` changed (`bio-plane/src/provenance/` untouched).
+
+**Deferred:** none. **Open QUESTION:** none.
+
+Size (session_01NHZHzUiPvoHYG7rYqLUJhb): test runs 6, module lines 3280
