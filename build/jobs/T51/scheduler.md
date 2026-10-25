@@ -266,3 +266,7 @@ Size (session_01D72GnkQD2sSzFN9m6WNunZ): test runs 12, module lines 1048
 ## J13 · COMPLETE
 
 Job 85 done (G159, K4980). Cause: heal re-armed only an absent or spent alarm, so a row registered behind a future daily alarm waited for it. Why missed: no heal test had a live later alarm with a wake already come; the old R28 test pinned the opposite. Red first: spent.test.mjs 'R28 (G159)' red on tranche, green now. Platform check L: seam R8 (A1), (A1 control), (A1b) 3/3 green with this change alone. Scheduler suite 185/185; impact: 11 modules, all green except tasks R25 (K4488) and queue R55, both red on tranche too; format, architecture, coverage, words, ownership 0 failures. Details in my record. Stale: plane and agent-worker bundles. Size (session_01D72GnkQD2sSzFN9m6WNunZ): test runs 12, module lines 1048
+
+## J14 · QUESTION
+
+Batch 6 (J14): my 14 fixture lines are re-pointed and 'checks/fixtures.mjs /home/user/bio scheduler' is at 0, suite 185/185. One check fails and is not mine to change: architecture says consumers.test.mjs imports bio-plane/test/m/acquisition/fixtures.mjs (acquireRefusals, the provider of the SOURCE_REFUSED line at :234) and acquisition is not in scheduler's 'uses' in build/modules.json. Best reading: please add 'acquisition' to scheduler's uses on tranche/T51 (it is the provider the part file names for this line; scheduler already uses link-sweep, whose sweep calls acquisition). I will merge tranche/T51 when you answer and finish; everything else is ready.
