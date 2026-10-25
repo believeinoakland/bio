@@ -353,3 +353,36 @@ Mail with `--module case-authoring`; record `build/jobs/T51/case-authoring.md` (
 **Before COMPLETE:** your module's tests, `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership (civicos-process `checks/`), each read by its failure count. Record completion (mechanics section 6 step 7) with `Size (<session id>): test runs <n>, module lines <n>` and each cause's four fields; state COMPLETE; post COMPLETE.
 
 **G112b · After a reload, a prepared edition's Sign step loses the bias acknowledgement** (re-walk 8 B: STILL MINOR; diagnosis item 1, Certain, reproduced). (1) Round 8's `#tieAttestedInPreparation` (`case-authoring/index.mjs` ~1736) restores only `tieAttested`; the bias acknowledgement is typed in the ceremony's `publish` body and never restored, so the reload's pre-flight `{draft, project}` meets `if (!back)` (~709-711) and answers `NO_BIAS_ACKNOWLEDGEMENT`, no document text exists, `publish_at` is null and the set-time fields vanish. The unsigned document the record holds for the edition DOES carry `bias_acknowledgement` (written ~733). (2) Missed: the round-8 tests put the bias in the draft. (3) Red: the walker's case through the real entry: prepare an edition with tie and bias typed in the ceremony, then the pre-flight a reload sends (`{draft, project}` only): today `NO_BIAS_ACKNOWLEDGEMENT`, `publish_at` null; after the fix the prepared edition's own bias is read back for the pre-flight exactly as `tieAttested` is (only for a call that sends no confirmation, only the call's own signer's prepared edition, never handed to `op=publish`, which asks the acknowledgement fresh in its own act: DEC-46 stands), `publish_at` offered. Also the sibling: a bias typed again after the reload wins over the stored one. (4) **N**; **P** at the next re-walk (BOB's).
+
+## B31 · START
+
+START · CASE-AUTHORING #44 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 4: publish 1 fixture, re-point 8 own lines, 6 marker lines (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #290 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/case-authoring tranche/T51 && git branch -m job/T51/case-authoring stale/case-authoring-local && git checkout -b job/T51/case-authoring origin/job/T51/case-authoring`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module case-authoring`; record `build/jobs/T51/case-authoring.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `bio-plane/test/m/case-authoring/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `preflightAnswer` (users now: case-check 2): real `caseAuthoring.publishPreflight(...)` answers: blockers (BELOW_PROJECT_STRENGTH), first refusals MACHINE_CANNOT_PUBLISH / NOT_THE_PROJECT_OWNER.
+
+**Your own fixture lines, done in this job** (8; FIX-E providers are merged on your branch point, FIX-L providers run their contracts in their own jobs). FIX-E: replace the hand-built answer by the provider's fixture from its `fixtures.mjs` (`bio-plane/test/m/<provider>/`, or the provider's own tests directory); FIX-L: add `// fixtures-contract: <provider> <id>` on the value's line or up to eight above:
+- CODE (PDF_ENCRYPTED: no product file gives it; the real code is ENCRYPTED (doc-clean, file-safety). Use ENCRYPTED, from doc-clean/encryptedRefusal): copy-now.test.mjs:115
+- retrieval/noSelection (1 mechanical): fixture.mjs:209
+- case-import/importedWorld (1 judgment): fixture.mjs:531
+- publication/storeCaseDocumentRefusal (1 mechanical): g47-refusal.test.mjs:43
+- ratification/preflightRefusal (1 judgment): preflight.test.mjs:409
+- CODE (NO_SUCH_IMPORT: use `{flags:[],complete:false}`, from case-import/openFlagsUnread): rests.test.mjs:136
+- standards/standardReadWorld (1 judgment): standards.test.mjs:34
+- events/timelineRefusal (1 judgment): timeline.test.mjs:190
+
+**Markers owed (K5044 (2), K5060; the audit read each line and found it no module's answer):** write on the line or up to eight lines above:
+- `// fixtures-generic: <the made-up word the line carries>`: disclosures.test.mjs:68,69,70,71,72,73
+
+Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . case-authoring --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/case-authoring.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
