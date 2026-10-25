@@ -2,8 +2,8 @@
    refusal table and the real code it comes from. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { carryOutcome, statementAck } from "./fixtures.mjs";
-import { CARRIED_OUTCOME_CHECKS, STATEMENT_ACK_CHECKS, fillWords } from "../../../src/case-inputs/index.mjs";
+import { carryOutcome, statementAck, casedetails, casedetailsset, casedetailspublic } from "./fixtures.mjs";
+import { CARRIED_OUTCOME_CHECKS, STATEMENT_ACK_CHECKS, CASE_DETAILS_FIELDS, CASE_DETAILS_WORDS, fillWords, fillDetails } from "../../../src/case-inputs/index.mjs";
 import { WORDS, DEAD } from "./fixture.mjs";
 
 test("R9: the carryOutcome fixture answers the real NO_SUCH_CASE for a case nothing published holds, BAD_CARRIED_OUTCOME naming the text for a blank one, and {ok: true, outcome} for a joined member's act", () => {
@@ -50,4 +50,50 @@ test("R1: the statementAck fixture's reasoned act is a second reader's: recorded
   assert.equal(f.ok.acknowledgement.by, "bo");
   assert.notEqual(f.ok.acknowledgement.by, "alice", "the statement's author is not a second reader");
   assert.equal(f.noReviewCopy.reason, "NO_REVIEW_COPY");
+});
+
+test("R23: the casedetails fixture answers the real read of a published case with two details recorded: ok, area and contact stated with their values, related and relationships not stated", () => {
+  const { recorded: r } = casedetails();
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.deepEqual(Object.keys(r.details), [...CASE_DETAILS_FIELDS]);
+  assert.equal(r.details.area.stated, true);
+  assert.deepEqual(r.details.area.value, [{ words: "The harbour authority" }]);
+  assert.equal(r.details.contact.stated, true);
+  assert.deepEqual(r.details.contact.value, { kind: "doorbell" });
+  for (const f of ["related", "relationships"]) assert.equal(r.details[f].stated, false, f);
+});
+
+test("R20, R22: the casedetailsset fixture answers the owner's real set (ok, case, field, value, at) and a joined member's refused set as NOT_THE_PROJECT_OWNER with its module sentence", () => {
+  const f = casedetailsset();
+  assert.equal(f.set.ok, true, JSON.stringify(f.set).slice(0, 300));
+  assert.deepEqual(Object.keys(f.set).sort(), ["at", "case", "field", "ok", "value"]);
+  assert.equal(f.set.field, "area");
+  assert.deepEqual(f.set.value, [{ words: "The harbour authority" }]);
+  assert.equal(f.notOwner.ok, false);
+  assert.equal(f.notOwner.reason, "NOT_THE_PROJECT_OWNER");
+  assert.equal(f.notOwner.detail, fillDetails("notOwner"));
+  assert.equal(f.notOwner.detail, CASE_DETAILS_WORDS.notOwner);
+});
+
+test("R24: the casedetailspublic fixture answers the published case's public read (ok, the team's slug, stated for the two set fields, the current-statement sentence) and the unpublished case's NOT_PUBLISHED with nothing of it", () => {
+  const f = casedetailspublic();
+  assert.equal(f.published.ok, true, JSON.stringify(f.published).slice(0, 300));
+  assert.equal(f.published.group, "test-group");
+  assert.equal(f.published.sentence, CASE_DETAILS_WORDS.publicCurrent);
+  assert.equal(f.published.details.area.stated, true);
+  assert.equal(f.published.details.contact.stated, true);
+  assert.equal(f.published.details.related.stated, false);
+  assert.equal(f.unpublished.ok, false);
+  assert.equal(f.unpublished.reason, "NOT_PUBLISHED");
+  assert.equal(f.unpublished.check, "C-98.8");
+  assert.equal(JSON.stringify(f.unpublished).includes("harbour"), false, "the unsigned preparation's area is not in its refusal");
+});
+
+test("R20, R23, R24: each details fixture is made when it is called, over a fresh world: a second call answers the same shape, and the answers stay equal", () => {
+  const a = casedetailspublic(), b = casedetailspublic();
+  assert.deepEqual(Object.keys(a), Object.keys(b));
+  assert.equal(a.published.ok, b.published.ok);
+  assert.equal(b.unpublished.reason, "NOT_PUBLISHED");
+  assert.equal(casedetails().recorded.ok, true);
+  assert.equal(casedetailsset().set.ok, true);
 });
