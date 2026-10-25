@@ -1,9 +1,10 @@
 /* acquisition R113 (T51 fix round 9, G127d; plan 2c item 3): `readRange(store, sha, offset, length)` answers a capture's bytes by its WHOLE digest,
-   held whole or only in parts, the parts hidden. Parts are named by `provenance.partsOf` (stubbed here as the register would answer it). */
+   held whole or only in parts, the parts hidden. Parts are named by `provenance.partsOf`, the real one of provenance's `heldParts` fixture (registered through the real register path). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha } from "./fixture.mjs";
 import { readRange } from "../../../src/acquisition/index.mjs";
+import { heldParts, homeOfEmpty } from "../provenance/fixtures.mjs";
 
 const MIB = 1024 * 1024;
 const PART = 8 * MIB;
@@ -16,15 +17,13 @@ async function inParts() {
   const ev = w.core.evidenceStore();
   const a = data.subarray(0, PART), b = data.subarray(PART);
   await ev.put(sha(a), a); await ev.put(sha(b), b);
-  w.store.provenance = w.prov;
-  w.prov.partsOf = (s) => (s === wholeSha ? [{ sha256: sha(a), bytes: a.length }, { sha256: sha(b), bytes: b.length }] : null);
+  w.store.provenance = heldParts(wholeSha, [{ sha256: sha(a), bytes: a.length }, { sha256: sha(b), bytes: b.length }]);
   return w;
 }
 async function whole() {
   const w = world();
   await w.core.evidenceStore().put(wholeSha, data);
-  w.store.provenance = w.prov;
-  w.prov.partsOf = () => null;
+  w.store.provenance = homeOfEmpty();   /* the real provenance, nothing registered: partsOf answers null */
   return w;
 }
 const eq = (got, from, to) => { assert.ok(got instanceof Uint8Array, JSON.stringify(got)); assert.deepEqual(Buffer.from(got), Buffer.from(data.subarray(from, to))); };
