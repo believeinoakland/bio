@@ -227,3 +227,24 @@ Checks (process repository b5531c09f8; product job/T51/people at a29a99d0cb)
 - checks/ownership.mjs people origin/tranche/T51 job/T51/people: 4 files, 0 failures.
 
 Size (session_014qiZzWUT5rWTceixKQwyba): test runs 4, module lines 2281
+
+## PEOPLE #15 · fix round 10, the final pass's causes (B11)
+
+**Causes met** (ids: R12, R21; BOB strikes the marks)
+1. Removal marker (R12): `personAt` (`op=person`) answers `removed: [{ground, at, by}]`, one per tombstone of a fact removed from any member of the person's cluster, never the value or the order; `truncated.removed` beside. record-core's tombstone keeps the fact id but not the person, so `expunge` writes a link row `person_removals {fact_id, person, tbl}` in its transaction (new table, export `never`, declared in `PEOPLE_TABLES`); ground, instant and administrator are read from `record.tombstones`. A withdrawn fact is not removed. Published as fixture `personRemoved` (`bio-plane/test/m/people/fixtures.mjs`) for screens-investigate; a fixtures.test.mjs test calls it.
+2. `expunge` of an unknown id is refused `PERSON_ITEM_NOT_HELD`, its sentence `localize("people.index.person_item_not_held", …)` in `detail`. Test: facts.test.mjs (code, own sentence differs from `refusal.NO_SUCH_ITEM`); declared-ops.test.mjs follows the new code.
+3. `sourcepersonlinks` reads `source_id`; `sourceLinksOf` naming neither source nor person is refused `NO_LINK_SUBJECT` (`localize("people.index.link_read_names_source_or_person", …)`). Test: sight.test.mjs through `peopleOps` (source_id reads the link to a listed member, none to another; `source=` alone and no argument refused).
+
+**Why the tests missed them:** (1) R12's test proved the value gone and a tombstone left but no requirement asked a read to return it; (2) no test read the refusal of an unknown id beyond its code, and the member sentence is looked up by code alone; (3) tests called `sourceLinksOf({source})` directly; the door's stamp deletion lives above the module.
+
+**Deferred / for BOB (REPORT)**
+- Door cases (K5138), control-plane's to place: `personexpunge` then `person` as Ana and Ben answers `removed`; `GET op=sourcepersonlinks&source_id=…` as listed vs unlisted member.
+- `refusal.PERSON_ITEM_NOT_HELD` and `refusal.NO_LINK_SUBJECT` have no word-table row yet: the door reads a member's sentence by code, so the design stream owes both rows; until then `detail` carries the `localize` sentence.
+- op-declarations: the read `sourcepersonlinks` declares no fields (reads carry none in R42's seven, all mutating); I added none. screens-investigate draws `removed` (marker `screen.person.expunge.marker`, new row).
+- Inherited, not mine: 3 failures in op-declarations (R19/R6, R34, R47) identical on `tranche/T51` without my commit.
+
+**Markers added:** none.
+
+**Ran:** people suite 86/86; screens-investigate 249/249; corpus-export 35/35; entities 164/164; op-declarations 245/248 (3 inherited). Checks (people): format 0, architecture 0, coverage 0 (42 of 42), words 0, fixtures 0, ownership 0 (8 files).
+
+Size (session_019AxS4iGwSHPNGPFzWXjziz): test runs 10, module lines 1895
