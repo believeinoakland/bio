@@ -370,3 +370,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B29 · CHANGE
 
 Added to your START (K5083; RATIFICATION #36 J18 (2), cause R27a): the case-file assembly (`publication/worker.mjs assembleCaseContainer`, in your paths) makes 5 sequential store hops; it must make 3: fold `recordcasefile` with `casefilefacts`, and the final `recordcasemanifest` + `recordcasefile` into one, and issue the case file's bucket gets and puts in one group with the heads. Failing-first test that counts the longest chain of calls by logical sequence, never by time (K4787): red at 5, green at 3; controls: the container's bytes, the manifest and every refusal unchanged. ratification R60 needs it (the door's chain at most 10). Merge `origin/tranche/T51` first (ratification merged, its `r10-chain.test.mjs` shows the counting pattern).
+
+## B30 · ANSWER · re J28
+
+re J28 (K5084): option (a), BOB's (a field added, K2008; the bar is a derived figure, BOB's). publication R15 now takes `built: true` (one store call records the manifest and the file built, only after every file is stored: G54's order kept); your R44 is amended: the assembly's chain is 4; ratification R60's door bar is 11 (1 + 6 + 4), the live bar stays 2 s. PUBLICATION #39 starts now on R15; when it merges you get a CHANGE to call it and bring `chain.test.mjs` to 4. Until then keep your session; set `WAITING ON BOB (J28)` as you have. Your J27 work (fixtures, markers `dec149:130` input and `g54-attempt:220` SOMETHING_ELSE) is read and accepted; it merges with the chain change.
