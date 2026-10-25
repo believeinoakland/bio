@@ -9,12 +9,18 @@ import assert from "node:assert/strict";
 import { fresh, bundle, hold, withEntry, i2, noText, pageUnits, payingAccount } from "./fixture.mjs";
 import { noAccount, keptAwayGroup } from "../ai-accounts/fixtures.mjs";
 import { extractionOps } from "../../../src/extraction/index.mjs";
+import { WORD } from "./words.mjs";
 import { pageTranscribeOp } from "../../../src/extraction/ops.mjs";
 
 const SENTINEL = "sk-ant-SENTINEL-KEY-5050";
 const member1 = { cls: "member", session: true, caps: ["contribute"], viewer: "class:admin", by: "member:m1" };
 /* ai-accounts' real answers (its published fixtures, K5044) for a member with no account and for a group keeping its material away */
 const NO_ACCOUNT = await noAccount();
+/* ai-use is after this module, so its `useCheck` refusal is a contract (ai-use's test runs this shape against its real code) */
+// fixtures-contract: ai-use use-check
+const CEILING = { ok: false, code: "AI_LIMIT_REACHED", check: "C-143.1",
+  translation: WORD("ai.refused.limit").replace("{whose}", WORD("ai.whose.own")).replace("{period}", WORD("ai.period.day")).replace("{use}", WORD("ai.use.transcribe.inline")).replace("{when}", WORD("ai.when.day")),
+  detail: "member:ann's day limit (transcribe, in calls) is reached for the period from 2026-10-09. Nothing was started." };
 const KEPT_GROUP = (await keptAwayGroup({ use: "transcribe" })).aiKeptAway;
 const pdfEntry = (text, pages) => ({ format: "pdf",
   detect: (b) => (b && new TextDecoder().decode(b.slice(0, 5)) === "%PDF-" ? { format: "pdf", confidence: "certain", signals: [] } : null),
@@ -101,7 +107,7 @@ test("R71 (T50; N1066): the paying account's key goes to `transcribe` and nowher
     "pages filled": { opts: {}, text: SCAN, sent: true },
     "none filled (nothing left unread)": { opts: {}, text: ALL_READ, sent: false },
     "the AI filled nothing": { opts: { answer: { ok: true, engine: "claude-test", version: "1", pages: [] } }, text: SCAN, sent: true },
-    "a limit refusing": { opts: { limit: refusalOf("AI_LIMIT_REACHED") }, text: SCAN, sent: false },
+    "a limit refusing": { opts: { limit: CEILING }, text: SCAN, sent: false },
     // fixtures-contract: agent-worker transcribe-declined
     "the AI declining": { opts: { answer: { ok: false, reason: "busy" } }, text: SCAN, sent: true },
     "the worker silent": { opts: { answer: { ok: false, reason: "AGENT_WORKER_SILENT" } }, text: SCAN, sent: true },
