@@ -5,9 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { inWorld, openAs, settled, readHeld, refused, rewrite } from "./world.mjs";
+import { inWorld, openAs, settled, rewrite } from "./world.mjs";
 import { refusedIn } from "../interface-shell/harness.mjs";
-import { main, actsIn, button, fill, press, word, hasWord, drew, notDrew, dayOf } from "./fixtures.mjs";
+import { main, actsIn, button, fill, press, word, drew, dayOf } from "./fixtures.mjs";
 
 const REASON = "The minutes say so.";
 const LATER = "2030-12-31";
@@ -53,14 +53,12 @@ async function holdNamed(world, me, name, text, names) {
 async function scene() {
   const { world, me } = await inWorld();
   await world.recipes.profiles(me, ["oakland-alameda"]);
-  const mai = await world.signIn("mai", { admin: false });
-  const dev = await world.signIn("dev", { admin: false });
   const org = await entity(me, "body", "Public Works Department", "A city department");
   const chen = await entity(me, "person", "L. Chen", "Director of the department");
   const twin = await entity(me, "person", "L. Chen", "A second record under the same name");
   const lease = await holdNamed(world, me, "Lease amendment 1.txt", "Lin Chen, Director of Public Works. Appointed in March 2022.", []);
   const rent = await holdNamed(world, me, "Rent schedule.txt", "Monthly rent is due on the first.", []);
-  return { world, me, mai, dev, org, chen, twin, lease, rent };
+  return { world, me, org, chen, twin, lease, rent, member: (handle, o = {}) => world.signIn(handle, { admin: false, ...o }) };
 }
 
 const opts = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
@@ -99,7 +97,8 @@ test("R1 reads person (as of the page's day, never \"now\") and samepersoncandid
 });
 
 test("R1 same person? the cluster's other records linked as claimed (never merged) and the candidates, which are not claims", async () => {
-  const { world, me, dev, chen, twin } = await scene();
+  const { world, me, chen, twin, member } = await scene();
+  const dev = await member("dev");
   await claim(dev, chen, twin);
   const read = await me.read("person", { query: { id: chen, at: "2026-10-25" } });
   assert.deepEqual(read.cluster.members.sort(), [chen, twin].sort(), "the claim links the two records");
@@ -112,7 +111,9 @@ test("R1 same person? the cluster's other records linked as claimed (never merge
 });
 
 test("R1 the acts as drawn for a member: explore, recordpersonfact, identityclaim, withdrawidentityclaim, followregister, and the entities acts (R32); no Open the person; personexpunge only for an administrator (interface-shell R47)", async () => {
-  const { world, me, mai, dev, org, chen, twin, lease } = await scene();
+  const { world, me, org, chen, twin, lease, member } = await scene();
+  const mai = await member("mai");
+  const dev = await member("dev");
   await post(me, chen, org, lease.sha);
   await fact(me, chen, lease.sha);
   await claim(dev, chen, twin);
@@ -128,7 +129,8 @@ test("R1 the acts as drawn for a member: explore, recordpersonfact, identityclai
 });
 
 test.todo("REPORTED: R1 aliaswithdraw is not offered for a name a member added: the page tells a member's name by a `member:` stamp (person.mjs:71-72) and the store stamps the bare member id", async () => {
-  const { world, me, mai, chen } = await scene();
+  const { world, me, chen, member } = await scene();
+  const mai = await member("mai");
   await mai.act("entityalias", { body: { entityId: chen, alias: "Lin Chen" } });
   const p = await openAs(world, me, "/app/person/" + chen);
   assert.ok(actsIn(main(p)).includes("aliaswithdraw"), "the alias a member added can be withdrawn");
@@ -243,7 +245,9 @@ async function privateProject(world, as, title) {
 }
 
 test("R21 person draws each identity claim as person answers it (kind, grade, why, who and when); \"Withdraw this claim\" names that claim by its claim_id, with a reason; withdrawing one of two leaves the other drawn; control: a claim of a hidden project is not drawn", async () => {
-  const { world, me, mai, dev, chen, twin } = await scene();
+  const { world, me, chen, twin, member } = await scene();
+  const mai = await member("mai");
+  const dev = await member("dev");
   const lead = await world.signIn("lead", { admin: false, capabilities: ["contribute", "create_projects"] });
   const stranger = await entity(me, "person", "K. Osei");
   await claim(dev, chen, twin);
@@ -275,7 +279,9 @@ test("R21 person draws each identity claim as person answers it (kind, grade, wh
 });
 
 test("R32 (1) what the team says about them: other names (a roster name as data), ties a member declared, documents that may name them; each act sends the owner's arguments", async () => {
-  const { world, me, mai, dev, org, chen } = await scene();
+  const { world, me, org, chen, member } = await scene();
+  const mai = await member("mai");
+  const dev = await member("dev");
   await mai.act("entityalias", { body: { entityId: chen, alias: "Lin Chen" } });
   await dev.act("relationdeclare", { body: { fromEntity: chen, toEntity: org, relation: "member_of", justification: "sits on its board", citation: "minutes, page 2" } });
   const named = await holdNamed(world, me, "Council packet.txt", "L. Chen spoke at the council meeting.", ["L. Chen"]);
@@ -315,7 +321,8 @@ test("R32 (1) what the team says about them: other names (a roster name as data)
 });
 
 test.todo("REPORTED: R32 (1) the name a member added is drawn as the city roster's, not with who and when, and cannot be withdrawn (person.mjs:71-72 reads declared_by as `member:<id>`; the store answers the bare member id)", async () => {
-  const { world, me, mai, chen } = await scene();
+  const { world, me, chen, member } = await scene();
+  const mai = await member("mai");
   await mai.act("entityalias", { body: { entityId: chen, alias: "Lin Chen" } });
   const p = await openAs(world, me, "/app/person/" + chen);
   const alias = (await me.read("entity", { query: { id: chen } })).entity.aliases.find((a) => a.alias === "Lin Chen");
@@ -335,7 +342,7 @@ test("R32 (1) control: an organization's page words it for an organization; writ
 });
 
 test("R32 (2) every fact recorded is listed: valid today, then those whose validity is not stated or settled (marked undetermined with the reason and the source), the withdrawn in a fold with who, when and why", async () => {
-  const { world, me, mai, chen, lease, rent } = await scene();
+  const { world, me, chen, lease, rent } = await scene();
   await fact(me, chen, lease.sha);
   await fact(me, chen, lease.sha, { kind: "birth", value: "1971", valid: { from: null, to: null } });
   await fact(me, chen, rent.sha, { kind: "address", value: "9 Elm St", valid: { from: "2020-01-01", to: null }, citation: { captureSha: rent.sha, extent: { kind: "pdf-page", page: 1 } } });
@@ -349,17 +356,14 @@ test("R32 (2) every fact recorded is listed: valid today, then those whose valid
     assert.ok(f.textContent.includes(u.value), "none dropped: " + u.value);
   }
   assert.ok(f.querySelectorAll(".cs-gap").length >= read.undetermined.length, "each marked undetermined");
-  void mai;
 });
 
 test.todo("REPORTED: R32 (2) a fact withdrawn is not listed in the withdrawn fold: person answers only the unwithdrawn facts (people/index.mjs:822 `withdrawn_at IS NULL`), so the fold (person.mjs:176-178) is never drawn from the store", async () => {
   const { world, me, chen, lease } = await scene();
   await fact(me, chen, lease.sha);
   const gone = await fact(me, chen, lease.sha, { kind: "contact", value: "old@example.org", valid: { from: "2020-01-01", to: LATER } });
-  await me.act("personfactwithdraw", { body: { factId: gone.fact_id, reason: "a typo" } });
+  const w = (await me.act("personfactwithdraw", { body: { factId: gone.fact_id, reason: "a typo" } })).withdrawn;
   const p = await openAs(world, me, "/app/person/" + chen);
-  const read = await me.read("person", { query: { id: chen, at: personAt(p) } });
-  const w = read.facts.concat(read.undetermined).find((x) => x.fact_id === gone.fact_id).withdrawn;
   const f = secOf(p, "screen.person.facts");
   drew(f, "screen.person.facts.withdrawn", { n: "1" });
   drew(f, "screen.person.facts.withdrawn.by", { name: me.handle, date: dayOf(w.at.slice(0, 10)), reason: "a typo" });
@@ -393,7 +397,9 @@ test("R34 the fact form chooses a document by title and sends its digest; with n
 });
 
 test("R38 Same person?: a standing claim row (grade, the basis in the row's words, who and when), both acts explained, the form's menu listing the candidates and its basis choice worded by label.claimbases.<id>", async () => {
-  const { world, me, dev, mai, org, chen, twin, lease } = await scene();
+  const { world, me, chen, twin, lease, member } = await scene();
+  const dev = await member("dev");
+  const mai = await member("mai");
   const stranger = await entity(me, "person", "K. Osei");
   const evidence = { a: { captureSha: lease.sha, extent: { kind: "document" } }, b: { captureSha: lease.sha, extent: { kind: "document" } } };
   await claim(dev, chen, twin, { basis: "name", evidence, note: "the same name on the same lease" });
@@ -416,11 +422,11 @@ test("R38 Same person?: a standing claim row (grade, the basis in the row's word
   const fold = secOf(p, "screen.person.same");
   drew(fold, "screen.person.claim.empty.summary");
   drew(fold, "screen.person.claim.empty");
-  void org;
 });
 
 test("R38 with no candidate the menu lists the people the record follows, never an empty menu; a failed candidates read is drawn failed and the menu is not drawn empty; a withdrawn claim is not drawn", async () => {
-  const { world, me, dev, org, chen, twin } = await scene();
+  const { world, me, chen, twin, member } = await scene();
+  const dev = await member("dev");
   /* no other record carries her name: the menu lists the people the record follows */
   const alone = await inWorld();
   const solo = await entity(alone.me, "person", "L. Chen");
@@ -439,11 +445,11 @@ test("R38 with no candidate the menu lists the people the record follows, never 
   await me.act("withdrawidentityclaim", { body: { claimId: made.claim_id, reason: "a mistake" } });
   const wd = await openAs(world, me, "/app/person/" + chen);
   assert.equal(main(wd).querySelectorAll('button[data-act="withdrawidentityclaim"]').length, 0);
-  void org;
 });
 
 test("R38 the withdraw fold asks its reason before it sends; a basis other than testimony chooses a document for each record", async () => {
-  const { world, me, dev, chen, twin } = await scene();
+  const { world, me, chen, twin, member } = await scene();
+  const dev = await member("dev");
   await claim(dev, chen, twin);
   const p = await openAs(world, me, "/app/person/" + chen);
   await press(p, "withdrawidentityclaim", { el: button(p, "withdrawidentityclaim") });
@@ -457,7 +463,8 @@ test("R38 the withdraw fold asks its reason before it sends; a basis other than 
 /* a world with a claim of each basis, made by the members' own acts: the same name, the same post, an identifier both hold, a member's word */
 async function claimsOfEveryBasis() {
   const sc = await scene();
-  const { world, me, dev, org, chen, twin, lease } = sc;
+  const { me, org, chen, twin, lease, member } = sc;
+  const dev = await member("dev");
   const cite = { captureSha: lease.sha, extent: { kind: "document" } };
   const a = { ...cite, date: "2022-01-01" }, b = { ...cite, date: "2024-01-01" };
   const wide = { valid: { from: "2020-01-01", to: LATER, precision: "day", zone: "UTC" } };
@@ -493,7 +500,9 @@ test.todo("REPORTED: R39 person gives no `basis` on its claims (people/index.mjs
 });
 
 test.todo("REPORTED: R38 a standing claim row is drawn as its grade, the basis in the row's words (screen.person.same.because), who and when; person gives no `basis` (people/index.mjs:1071), so the row is the claim's sentence", async () => {
-  const { world, me, dev, mai, chen, twin, lease } = await scene();
+  const { world, me, chen, twin, lease, member } = await scene();
+  const dev = await member("dev");
+  const mai = await member("mai");
   const stranger = await entity(me, "person", "K. Osei");
   const evidence = { a: { captureSha: lease.sha, extent: { kind: "document" } }, b: { captureSha: lease.sha, extent: { kind: "document" } } };
   await claim(dev, chen, twin, { basis: "name", evidence, note: "the same name on the same lease" });
@@ -501,6 +510,7 @@ test.todo("REPORTED: R38 a standing claim row is drawn as its grade, the basis i
   const p = await openAs(world, me, "/app/person/" + chen);
   const read = await me.read("person", { query: { id: chen, at: personAt(p) } });
   const s = secOf(p, "screen.person.same");
+  assert.ok(read.claims.every((c) => c.basis), "person gives each claim its basis");
   for (const c of read.claims) drew(s, "screen.person.same.because", { grade: c.grade, basis: word("screen.person.basis.row." + c.basis) });
 });
 
@@ -508,7 +518,8 @@ test.todo("REPORTED: R38 a standing claim row is drawn as its grade, the basis i
 const OTHER_NOTE = "The city's rule on tenant notices";
 
 test("R41 an ordinance opens its own page: its note, kind and documents, \"Where the record cites it\" with each document's grade, its alias and a document that may name it; no person read, no facts, no career (control: a person's page is unchanged)", async () => {
-  const { world, me, mai, org, chen, lease } = await scene();
+  const { world, me, org, chen, lease, member } = await scene();
+  const mai = await member("mai");
   const ordinance = await entity(me, "ordinance", "Tenant Notice Ordinance", OTHER_NOTE);
   await mai.act("entityalias", { body: { entityId: ordinance, alias: "Chapter 8.22" } });
   const one = await holdNamed(world, me, "Council packet.txt", "The Tenant Notice Ordinance was adopted.", ["Tenant Notice Ordinance"]);
@@ -537,8 +548,7 @@ test("R41 an ordinance opens its own page: its note, kind and documents, \"Where
   drew(secOf(p, "entity.relation.title"), "screen.person.ties.none.ordinance");
   await post(me, chen, org, lease.sha);
   const q = await openAs(world, me, "/app/person/" + chen);
-  assert.ok(q.byOp("person").length >= 1 && secOf(q, "screen.person.positions") && secOf(q, "screen.person.facts") === undefined ? true : secOf(q, "screen.person.facts"), "a person's page is unchanged");
-  assert.ok(q.byOp("person").length >= 1 && secOf(q, "screen.person.positions"), "a person's page is unchanged");
+  assert.ok(q.byOp("person").length >= 1 && secOf(q, "screen.person.positions") && secOf(q, "screen.person.facts"), "a person's page is unchanged");
 });
 
 test("R41 an office draws who has held it (the holders, their dates, source and grade) and not 'Where the record cites it'; a subject no document names draws the empty sentence and no explore", async () => {
@@ -595,6 +605,3 @@ test("R48 a person with no connections draws person.graph.none and no Explore co
   drew(secOf(none, "screen.person.connections"), "person.graph.none");
   assert.equal(button(none, "explore"), null);
 });
-
-/* K5173 (the design rows adopted with HANDOFF B520) are asserted where the table holds them */
-void hasWord; void notDrew; void readHeld; void refused;

@@ -66,11 +66,11 @@ test("R4 C14 money's act that files a document (acquire) reads the documents aga
   const filed = await world.recipes.hold(me, "City budget.txt", "The city budget as published.", project);
   /* the fetch of a site is externally driven (K5044 (1)): the copy it files is a real held document */
   const p = await openAs(world, me, "/app/money/" + trail, { plane: { acquire: ok({ ok: true, sha256: filed.sha }) } });
-  const row = main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${fact}"]`));
-  await p.click(row.querySelector('[data-shell="row"]'));
+  const rowOf = () => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${fact}"]`));
+  await p.click(rowOf().querySelector('[data-shell="row"]'));
   assert.equal(p.byOp("heldcaptures").length, 1, "one list of documents for the screen");
   fill(p, { "mf-address": "https://city.example/budget.pdf" });
-  await press(p, "acquire", { within: row.nextElementSibling, reason: REASON });
+  await press(p, "acquire", { within: rowOf().nextElementSibling, reason: REASON });
   await settled(p);
   assert.equal(p.byOp("acquire").length, 1);
   assert.equal(p.byOp("heldcaptures").length, 2, "the new copy can be chosen");
@@ -226,47 +226,64 @@ test("R5 R7 C94 calculation and due date: who accepted a calculation, who visite
 
 /* ---------------------------------------------------------------- C54 */
 
-const NEW_EVENT = "EVT-2026-0070";
-const noNamedParty = PROJECT_MD.replace(/  - target: ENT-[^\n]*\n    rel: cites\n    status: active\n/, "");
+const MINUTES = "The council met on March 3, 2026 and adopted the budget.";
+const hex = (x) => createHash("sha256").update(x).digest("hex");
 
-/** `events` R53: `timeline` given `captures` answers, in the world lane, the events holding an attestation that cites one of them. */
-const byCaptures = () => {
-  const recorded = [];
-  return { recorded,
-    timeline: (r) => {
-      const caps = String(r.query.captures || "").split(",").filter(Boolean);
-      const mine = recorded.filter((e) => e.shas.some((s) => caps.includes(s)));
-      const base = TIMELINE();
-      return ok({ ...base, world: { ...base.world, items: mine.map((e) => ({ event_id: e.id, kind: e.kind, status: "EventScheduled", when: null, roles: [], concerns: false, of: [], order: { undetermined: false }, participants: [], participants_total: 0, grade: "B" })), placed_nowhere: [] } });
-    },
-    createevent: (r) => { const id = NEW_EVENT; recorded.push({ id, kind: r.body.kind, shas: (r.body.attestations || []).map((a) => a.captureSha), concerns: r.body.concerns }); return ok({ ok: true, event_id: id }); } };
-};
+/** A project started as Home's "Start a project" starts it, its document naming `entity` among its references (`promote` of the project's document). Answers its bundle id. */
+async function projectNaming(world, me, title, entity) {
+  const now = new Date(world.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
+  const text = "---\nobject_type: project\ntitle: " + JSON.stringify(title) + "\nobjective: " + JSON.stringify(title) + "\ncurrent_state: forming\ncreated: \"" + now
+    + "\"\nlast_updated: \"" + now + "\"\nreferences:\n  - target: " + entity + "\n    rel: cites\n    status: active\n---\n\n## Session Log\n\n### Session " + now + " | Formation | interactive\nTrigger: test\nChanges: created.\n";
+  const made = await me.act("promote", { body: { base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(title).slice(0, 8),
+    meta: { object_type: "project", title, current_state: "forming", created: now, last_updated: now }, files: [{ path: "bundle.md", text }], register: [], visibility: "discoverable" } });
+  return made.bundleId;
+}
+
+/** The event the world holds for the capture, found as the timeline finds it (`events` R53: by the captures an attestation cites). */
+const eventsOf = async (me, sha) => { const r = await me.read("timeline", { query: { captures: sha } }); return [...r.world.items, ...r.world.placed_nowhere]; };
 
 test("R3 R33 C54 an event recorded on a project whose document names no person, organization or event survives a reload: the timeline reads the project's own captures, the screen sends no concerns and keeps no list in page memory; control: a project whose documents are others does not show it", async () => {
-  const recorded = byCaptures();
-  const image = (r) => ok({ "bundle.md": r.query.id === P2 ? noNamedParty.replace(P, P2) : noNamedParty });
-  const mine = { ...recorded, image, heldcaptures: (r) => ok({ ok: true, held: [ROW(1, "Council minutes", r.query.project, r.query.project === P2 ? SHA2 : SHA)], truncated: false }) };
-  const p = await open("/app/timeline/" + P, { plane: mine });
-  assert.equal(p.byOp("timeline")[0].query.captures, SHA, "read by the project's captures");
-  fill(p, { "tl-doc": SHA, "tl-kind": "meeting" });
-  await press(p, "createevent", { reason: "the minutes" });
-  assert.equal(recorded.recorded.length, 1);
-  assert.equal(recorded.recorded[0].concerns, undefined, "tied to the document it comes from, not to a person the page guessed");
-  assert.ok(main(p).querySelector(`[data-event="${NEW_EVENT}"]`), "drawn from the record at once");
-  const again = await open("/app/timeline/" + P, { plane: mine });
-  assert.ok(main(again).querySelector(`[data-event="${NEW_EVENT}"]`), "and after a reload, with nothing kept in the page");
-  assert.ok(optsOf(again, "tl-event").map(([v]) => v).includes(NEW_EVENT), "it can be chosen for who took part, a dated fact, a link");
-  const elsewhere = await open("/app/timeline/" + P2, { plane: mine });
-  assert.equal(main(elsewhere).querySelector(`[data-event="${NEW_EVENT}"]`), null, "another project's documents do not find it");
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const project = await world.recipes.project(me, "Pothole repairs");
+  const held = await world.recipes.hold(me, "Council minutes.txt", MINUTES, project);
+  const other = await world.recipes.project(me, "Lease renewals");
+  await world.recipes.hold(me, "Council minutes.txt", MINUTES + " The lease was renewed.", other);
+  const p = await openAs(world, me, "/app/timeline/" + project);
+  assert.equal(p.byOp("timeline")[0].query.captures, held.sha, "read by the project's captures");
+  await choose(p, "tl-doc", held.sha);
+  fill(p, { "tl-kind": "meeting", "tl-date": "2026-03-03" });
+  await press(p, "createevent", { reason: REASON });
+  await settled(p);
+  const sent = p.byOp("createevent");
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].body.concerns, undefined, "tied to the document it comes from, not to a person the page guessed");
+  const found = await eventsOf(me, held.sha);
+  assert.equal(found.length, 1, "the store holds the event, found by the project's capture");
+  const id = found[0].event_id;
+  assert.ok(main(p).querySelector(`[data-event="${id}"]`), "drawn from the record at once");
+  const again = await openAs(world, me, "/app/timeline/" + project);
+  assert.ok(main(again).querySelector(`[data-event="${id}"]`), "and after a reload, with nothing kept in the page");
+  assert.ok(optsOf(again, "tl-event").map(([v]) => v).includes(id), "it can be chosen for who took part, a dated fact, a link");
+  const elsewhere = await openAs(world, me, "/app/timeline/" + other);
+  assert.equal(main(elsewhere).querySelector(`[data-event="${id}"]`), null, "another project's documents do not find it");
 });
 
 test("R3 C54 a project that names an entity records its event the same way: no entity is guessed from the document", async () => {
-  const recorded = byCaptures();
-  const p = await open("/app/timeline/" + P, { plane: recorded });
-  fill(p, { "tl-doc": SHA, "tl-kind": "meeting" });
-  await press(p, "createevent", { reason: "the minutes" });
-  assert.equal(recorded.recorded[0].concerns, undefined);
-  assert.deepEqual(recorded.recorded[0].shas, [SHA]);
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const entity = (await me.act("entitycreate", { body: { kind: "person", label: "Lin Chen", note: "Director of Public Works." } })).entity_id;
+  const project = await projectNaming(world, me, "Pothole repairs", entity);
+  const held = await world.recipes.hold(me, "Council minutes.txt", MINUTES, project);
+  const p = await openAs(world, me, "/app/timeline/" + project);
+  await choose(p, "tl-doc", held.sha);
+  fill(p, { "tl-kind": "meeting", "tl-date": "2026-03-03" });
+  await press(p, "createevent", { reason: REASON });
+  await settled(p);
+  assert.equal(p.byOp("createevent")[0].body.concerns, undefined);
+  const found = await eventsOf(me, held.sha);
+  assert.equal(found.length, 1, "the store holds it, found by the document it comes from");
+  assert.deepEqual((await me.read("event", { query: { id: found[0].event_id } })).event.concerns || [], [], "and it concerns no entity the page guessed");
 });
 
 /* ---------------------------------------------------------------- C8 (the send) */
@@ -280,13 +297,23 @@ test("R4 C8 the figure's proposal to a trail (moneysetpropose) is an op a member
 /* ---------------------------------------------------------------- DEC-396 keys (B21) */
 
 test("R8 C61 the project's list of held standards is headed by its own key and says when it is cut; control: a whole list says nothing of a cut", async () => {
-  const items = [{ id: STD, cite: "Administrative Instruction 9.1, §2", kind: "policy", issuer: "Public Works" }];
-  const cut = await open("/app/standard/" + P, { plane: { standards: ok({ ok: true, items, truncated: true }) } });
+  const { world, me } = await inWorld();
+  const project = await world.recipes.project(me, "Pothole repairs");
+  const doc = await world.recipes.hold(me, "Ordinance.txt", "Section 8.22.050 No landlord shall increase the rent above the limit the board sets.", project);
+  const du = await readHeld(world, me, doc.sha);
+  const declare = (i) => declareStandard(me, { cite: "Ordinance 8." + i, kind: "ordinance", sha: doc.sha, extent: du[0].extent });
+  await declare(0);
+  const whole = await openAs(world, me, "/app/standard/" + project);
+  assert.equal((await me.read("standards", { query: { limit: "200" } })).truncated, false);
+  assert.equal(main(whole).querySelector("[data-held-more]"), null);
+  /* more standards than one read holds (the page asks for 200) */
+  for (let i = 1; i <= 200; i++) await declare(i);
+  const read = await me.read("standards", { query: { limit: "200" } });
+  assert.equal(read.truncated, true, "the store cuts the list");
+  const cut = await openAs(world, me, "/app/standard/" + project);
   const sec = main(cut).querySelector("[data-held-standards]");
   assert.equal(sec.querySelector("h2").textContent, word("screen.standard.held"));
   drew(sec, "screen.standard.held.more");
-  const whole = await open("/app/standard/" + P, { plane: { standards: ok({ ok: true, items, truncated: false }) } });
-  assert.equal(main(whole).querySelector("[data-held-more]"), null);
 });
 
 test("R4 C8 a figure a member proposed to the trail is drawn by the member-proposal key; control: a machine's proposal keeps the other", async () => {

@@ -207,35 +207,65 @@ test("R17 an attachment without its passage or without the member's words sends 
 });
 
 /* R43, R46 (T51-120) */
+/** The world's own answer to `op` with its result changed by `fn(result)`: a node the registry gives no name, a page counted from 0, a document count
+ *  by identifier: records the live copy holds that this build does not make (K5044 (1)). */
+const changing = (world, me, op, fn) => rewrite(world, me, (req, a) => (a && a.json && a.json.result && req.url.includes("op=" + op)
+  ? { ...a, json: { ...a.json, result: fn(a.json.result) } } : a));
+/** A person, an organisation she is employed by (a `holds` line from a held document), and a second person she is declared a proxy of. */
+async function career(world, me) {
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const chen = (await me.act("entitycreate", { body: { kind: "person", label: "L. Chen", note: "Director of the department." } })).entity_id;
+  const alvarez = (await me.act("entitycreate", { body: { kind: "person", label: "R. Alvarez", note: "Named in the minutes." } })).entity_id;
+  const org = (await me.act("entitycreate", { body: { kind: "body", label: "Public Works Department", note: "The department." } })).entity_id;
+  const roster = await world.recipes.hold(me, "Roster.txt", "L. Chen is employed by the Public Works Department.");
+  await me.act("recordline", { body: { kind: "holds", from: chen, to: org, capacity: "employee", valid: { from: "2025-03-01", to: null }, basis: { captureSha: roster.sha, extent: { kind: "document" } }, reason: "The roster says so." } });
+  await me.act("relationdeclare", { body: { fromEntity: chen, toEntity: alvarez, relation: "proxy_for", justification: "She signs for him on the minutes.", citation: "minutes, page 2" } });
+  return { chen, alvarez, org, roster };
+}
+const noLabel = (id) => (r) => ({ ...r, nodes: (r.nodes || []).map((n) => (n.id === id ? { ...n, label: "" } : n)) });
+const documentsOf = (id, n) => (r) => ({ ...r, entities: (r.entities || []).map((e) => (e.entity_id === id ? { ...e, documents: n } : e)) });
+
 test("R43 an unnamed node in the graph says how many documents name it only by an identifier (entityidonly, asked once for the unnamed nodes' ids); a count of 0 or a failed read draws no why line; a named node draws neither", async () => {
-  const p = await open(at, { plane: { entityidonly: ok({ ok: true, count: 1, entities: [{ entity_id: ORG, documents: 3 }] }) } });
+  const { world, me } = await inWorld();
+  const C = await career(world, me);
+  const plane = (idonly) => ({ exploregraph: changing(world, me, "exploregraph", noLabel(C.org)), entityidonly: idonly });
+  const p = await openAs(world, me, "/app/explore/" + C.chen, { plane: plane(changing(world, me, "entityidonly", documentsOf(C.org, 3))) });
   const q = p.byOp("entityidonly");
   assert.equal(q.length, 1);
-  assert.equal(q[0].query.ids, ORG, "the unnamed node's id alone");
-  const why = main(p).querySelector(`[data-why="${ORG}"]`);
+  assert.equal(q[0].query.ids, C.org, "the unnamed node's id alone");
+  const why = main(p).querySelector(`[data-why="${C.org}"]`);
   drew(why, "screen.explore.unnamed.why", { n: "3" });
   assert.equal(main(p).querySelectorAll("[data-why]").length, 1, "the named nodes draw none");
-  for (const variant of [ok({ ok: true, entities: [{ entity_id: ORG, documents: 0 }] }), refusedIn("TOO_MANY_IDS", "x")]) {
-    const z = await open(at, { plane: { entityidonly: variant } });
+  /* the store's own count for a subject no document names by an identifier is 0; a refusal is a fault the real code cannot be made to cause */
+  for (const variant of [undefined, refusedIn("TOO_MANY_IDS", "x")]) {
+    const z = await openAs(world, me, "/app/explore/" + C.chen, { plane: plane(variant ? variant : changing(world, me, "entityidonly", (r) => r)) });
+    if (!variant) assert.equal((await me.read("entityidonly", { query: { ids: C.org } })).entities[0].documents, 0, "the world: no document names it so");
     assert.equal(main(z).querySelectorAll("[data-why]").length, 0, "no why line, never 0 documents");
     drew(main(z), "connection.node.unnamed", undefined, "the node is still drawn unnamed");
   }
 });
 
 test("R43 an explored hop is worded From {from} to {to} with a name of each end, an end with no name an unnamed item, with the vocabulary's kind word; R46 a hop's cited page counts from one, page 0 drawn", async () => {
-  const w = WALK();
-  w.paths[0].hops[0].from = ENT;
-  w.paths[0].hops[0].to = "ENT-2026-0777";
-  w.paths[0].hops[0].evidence = [{ capture_sha: SHA, extent: { kind: "pdf-page", page: 0 } }];
-  const p = await walked({ plane: { explore: ok(w), entityidonly: ok({ ok: true, entities: [{ entity_id: "ENT-2026-0777", documents: 2 }] }) } });
-  const hop = main(p).querySelector('[data-hop="lines:holds:1"]');
+  const { world, me } = await inWorld();
+  const C = await career(world, me);
+  /* the employment hop ends at an id the registry holds no name for, and cites a page counted from 0: records the live copy holds that this build does not make */
+  const GONE = "ENT-2026-0777";
+  const live = changing(world, me, "explore", (r) => ({ ...r, paths: (r.paths || []).map((x) => ({ ...x, hops: (x.hops || []).map((h) => (h.kind === "line:holds:employee" ? { ...h, to: GONE, evidence: [{ capture_sha: C.roster.sha, extent: { kind: "pdf-page", page: 0 } }] } : h)) })) }));
+  const p = await openAs(world, me, "/app/explore/" + C.chen, { plane: { explore: live, entityidonly: changing(world, me, "entityidonly", documentsOf(GONE, 2)) } });
+  fill(p, { "explore-groups-4": true, "explore-at": "2026-09-30" });
+  await press(p, "explore");
+  await settled(p);
+  const words = (await me.read("affordances", {})).vocabularies.connection_kinds.words;
+  const hop = main(p).querySelector('[data-hop^="LIN-"]');
+  assert.ok(hop, "the employment hop is drawn");
   drew(hop, "screen.explore.hop", { from: "L. Chen", to: word("screen.explore.hop.unnamed") });
-  assert.ok(hop.textContent.includes("held the post (employee)"), "the vocabulary's kind word");
+  assert.ok(hop.textContent.includes(words["line:holds:employee"].word), "the vocabulary's kind word");
   drew(hop, "screen.explore.unnamed.why", { n: "2" });
   assert.ok(hop.querySelector(`[data-tip*="${word("screen.explore.page", { page: "1" })}"]`), "page 0 is drawn as page 1");
-  const named = main(p).querySelector('[data-hop="co:5"]');
+  const named = main(p).querySelectorAll("[data-hop]").find((h) => h.textContent.includes(words.proxy_for.word));
+  assert.ok(named, "the declared step is drawn");
   assert.equal(named.querySelectorAll("[data-unnamed]").length, 0, "control: a hop whose ends are named draws no unnamed line");
-  drew(named, "screen.explore.hop", { from: "Public Works Department", to: "R. Alvarez" });
+  drew(named, "screen.explore.hop", { from: "L. Chen", to: "R. Alvarez" });
 });
 
 test("R46 R34 the assertion form's passage is the words chosen: the extent sent is the record's own, a page counted from 0 (its page 1 drawn as one), and a document read as no page is cited whole", async () => {
