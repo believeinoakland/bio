@@ -317,18 +317,27 @@ test("R39 (K3562): after a search with a question chosen, a passage result draws
 });
 
 test("R5, R26, R103 (R17a, fix round 10, G3): a term item says which part of the document it lies in: a footnote's hit names the footnote, a body hit, an item stored without a kind and an unknown kind name none", async () => {
-  const L = await lab();
-  // fixtures-contract: retrieval-browse findin-term-part
+  const L = await lab(true);
   const PART_KIND = "content.part_kind."; // content's own rows (the nearest held words), keyed by the part kind
-  const item = (words, part) => ({ kind: "term", words, capture_sha: SHA, title: "Housing code", extent: { paragraph: 5 }, part, recorded: [] });
-  const term = { kind: "term", items: [item("in the footnote", "footnote"), item("in the main text", "body"), item("before the kind", null), item("in a header", "header"), item("a kind we do not know", "margin_scribble")], count: 5, nothing: false, not_read: [] };
-  const p = await shown({ findin: ok({ ok: true, scope: { form: "project", project: L.project, captures: 14 }, kinds: [term] }) });
+  // A docx held and read by the real acts: the store's own term hits in its body, footnote and header. Its answer is the real one, but for two hits the
+  // store never gives (no act of the door stores a hit without a part, or with a part it does not name): those two are the real body hit, its part taken off or renamed.
+  const made = generate({ kind: "docx", seed: "lease", size: { units: 3 }, parts: ["footnote", "header"] });
+  await L.w.recipes.hold(L.rosa, "Lease file", await made.bytes(), L.project, { type: made.type, read: true });
+  const real = await L.rosa.act("findin", { body: { scope: { project: L.project }, kinds: ["term"], term: "lease" } });
+  const first = (part) => real.kinds[0].items.find((i) => i.part === part);
+  const [footnote, body, header] = ["footnote", "body", "header"].map(first);
+  assert.ok(footnote && body && header, "the store reads the three parts");
+  const items = [footnote, body, { ...body, part: null, words: body.words + " (unkeyed)" }, header, { ...body, part: "margin_scribble", words: body.words + " (unknown)" }];
+  const plane = { findin: async (req) => ok({ ...(await L.rosa.act("findin", { body: req.body })), kinds: [{ ...real.kinds[0], items, count: items.length }] }) };
+  const p = await openRaw("/app/find-in/" + L.project, plane, L.w.boot(L.rosa));
+  await press(p, "findin", { values: { "findin-kind-people": false, "findin-kind-money": false, "findin-kind-dates": false, "findin-kind-requirements": false, "findin-kind-events": false, "findin-term": "lease", "findin-question": L.q }, reason: R });
   const rows = main(p).querySelectorAll(".cs-row");
+  console.log("DBG", JSON.stringify(p.byOp("findin").map((r) => [r.body, r.status, r.response && JSON.stringify(r.response).slice(0,300)])), Object.keys(p.byOp("findin")[0] || {}));
   assert.equal(rows.length, 5);
   const named = rows.map((r) => r.querySelectorAll("[data-part-kind]").map((e) => e.getAttribute("data-part-kind")));
   assert.deepEqual(named, [["footnote"], [], [], ["header"], []], "the footnote and the header say so; a body hit, an unkeyed item and an unknown kind say none");
   assert.ok(text(p, rows[0]).includes(word(PART_KIND + "footnote")) && text(p, rows[3]).includes(word(PART_KIND + "header")));
-  assert.ok(!text(p, rows[1]).includes(word(PART_KIND + "body")), "control: a body hit is not told as a part");
+  assert.ok(!text(p, rows[1]).replace(body.words, "").includes(word(PART_KIND + "body")), "control: a body hit is not told as a part (the hit's own words set aside: they may say \"body\")");
 });
 
 test("R5, R26, R103 (R17a), over a real reading: a docx held and read by the real acts, its footnote's and header's hits say which part they lie in, and its body hits say none", async () => {

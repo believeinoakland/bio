@@ -1,8 +1,10 @@
 /* The queue's findings and buttons (R68, R69, R79) on the real served page: Defer beside Dismiss, a snoozed case held back from the
    list with "Bring back", the helps on an item's buttons, the unkeyed sentence, the snooze day picker, the answered rows and the
    signing key's link to Members. Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
+import "../../sandbox.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { storeWorld } from "../store-request/fixtures.mjs";
 import { open, ok, text, ops, button, press, beside, last, main, word, withScreens, screen, hasWord, dmy } from "./page.mjs";
 
 const PROJ = (id, title) => ({ state: "determined", ungrouped: false, ancestors: [{ id, type: "project", title, depth: 1 }] });
@@ -12,6 +14,27 @@ const FINDING = { id: "FINDING::tension::PROJ-2::x", class: "FINDING", kind: "te
   summary: "Two filings disagree about the date", options: [], disposition: { available: true, op: "proposedispose", scope: "project", finding: "FINDING::tension::PROJ-2::x", projects: ["PROJ-2"] } };
 const TASK = { id: "TSK-1", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), subject: { kind: "bundle", id: "INF-7", title: "Work orders" },
   summary: "Ana asked you to check a calculation", options: [], disposition: { available: false, instead: "taskresolve" } };
+const timeout = { timeout: 300000 };
+const openW = (w, as, path, plane = {}, o = {}) => open(path, plane, { ...w.boot(as), screens: withScreens("document", "action"), ...o });
+/** A team on the REAL store (store-request's `storeWorld()`): rosa (administrator, owner of both projects), mai (a member, joined to both), the projects
+ *  "Pothole repairs" and "The Coliseum lease", and the team's time zone (a day is read where the team is). */
+async function team() {
+  const w = await storeWorld({ group: null });
+  const rosa = await w.signIn("rosa", { admin: true });
+  const mai = await w.signIn("mai");
+  await w.recipes.profiles(rosa, ["oakland-alameda"]);
+  const p1 = await w.recipes.project(rosa, "Pothole repairs"), p2 = await w.recipes.project(rosa, "The Coliseum lease");
+  for (const p of [p1, p2]) { await rosa.act("projectinvite", { query: { projectId: p, handle: "mai" } }); await mai.act("projectjoin", { query: { projectId: p } }); }
+  return { w, rosa, mai, p1, p2 };
+}
+/** A web page "Doc <name>" held in `project` (in the case: a question of the project rests on it), and a check of it asked of `to` by rosa (her To do).
+ *  Answers the document's bundle id. */
+async function todo(w, rosa, to, project, name) {
+  const doc = await w.recipes.page(rosa, "Doc " + name, { project });
+  await w.recipes.question(rosa, project, { title: "About " + name, text: "Is " + name + " so?", legs: [{ target: doc.bundle, role: "supports" }], draw: true });
+  await rosa.act("checkrequest", { body: { target: doc.bundle, member: to.handle, note: "please look at " + name } });
+  return doc.bundle;
+}
 const feed = (items, extra = {}) => ({ queue: ok({ items, item_count: items.length, ...extra }) });
 const rowOf = (p, id) => main(p).querySelectorAll(".cs-row").find((r) => r.querySelectorAll("button[data-act]").some((b) => b.dataset.item === id));
 const tipOf = (el) => el.getAttribute("data-tip") || "";
@@ -38,13 +61,15 @@ test("R68: Defer with no reason sends nothing; the reason is asked in place", as
 
 const SNOOZED = (until) => ({ ...TASK, id: "TSK-3", summary: "Sign the lease amendment", snoozed: { until, cases: [{ case: "PROJ-1", until }] } });
 
-test("R69: an item of a snoozed case leaves the main list and is listed apart by its case and the day it comes back, with Bring back; Bring back sends the clear", async () => {
+test("R69: an item of a snoozed case leaves the main list and is listed apart by its case and the day it comes back, with Bring back; Bring back sends the clear", timeout, async () => {
+  const { w, rosa, mai, p1, p2 } = await team();
   const later = day(5);
-  const other = { ...FINDING, id: "FINDING::tension::PROJ-2::y", summary: "Another finding" };
-  let cleared = false;
-  const p = await open("/app/queue", { queue: () => ok({ items: cleared ? [other, { ...SNOOZED(later), snoozed: undefined }] : [other, SNOOZED(later)], item_count: 2 }), queuesnooze: () => { cleared = true; return ok({ ok: true }); } });
-  assert.ok(!text(p).includes("Sign the lease amendment"), "the snoozed item is not in the list");
-  assert.ok(text(p).includes("Another finding"), "control: an item with no snoozed stays in the list");
+  await todo(w, rosa, mai, p1, "Lease amendment");
+  await todo(w, rosa, mai, p2, "Another finding");
+  await mai.act("queuesnooze", { body: { case: p1, until: later } });   // the real snooze of the case: the real queue marks its items
+  const p = await openW(w, mai, "/app/queue");
+  assert.ok(!text(p).includes("Doc Lease amendment"), "the snoozed item is not in the list");
+  assert.ok(text(p).includes("Doc Another finding"), "control: an item with no snoozed stays in the list");
   const section = main(p).querySelectorAll("section").find((s) => s.querySelector('button[data-clear]'));
   assert.ok(section, "the snoozed section");
   assert.ok(text(p, section).includes("Pothole repairs"), "the case, by its title");
@@ -53,8 +78,8 @@ test("R69: an item of a snoozed case leaves the main list and is listed apart by
   assert.ok((section.querySelector("h2").getAttribute("data-tip") || "").includes(word("screen.queue.snoozed.holds")), "explained by its own help");
   assert.ok(button(p, "queuesnooze").textContent.startsWith(word("screen.queue.bringback")), "Bring back's own words");
   await press(p, "queuesnooze", {});
-  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", clear: "1" });
-  assert.ok(text(p).includes("Sign the lease amendment") && !main(p).querySelector('button[data-clear]'), "brought back: it is in the list again");
+  assert.deepEqual(last(p, "queuesnooze").body, { case: p1, clear: "1" });
+  assert.ok(text(p).includes("Doc Lease amendment") && !main(p).querySelector('button[data-clear]'), "brought back: it is in the list again");
 });
 
 test("R69: with every item snoozed the list holds none and the section remains; a queue with no snoozed item draws no section", async () => {
@@ -111,19 +136,28 @@ test("R79 (c): Snooze to a date is a date input whose earliest day is tomorrow, 
   assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: day(1) }, "control: tomorrow is sent");
 });
 
-const ANSWERED = ok({ ok: true, count: 6, window_days: 30, bound: 200, truncated: false, answered: [
-  { act: "resolved", id: "T9", kind: "check-requested", title: "The lease check", by: "mai", by_you: true, at: "2026-10-14T14:05:00Z" },
-  { act: "dismissed", title: "A tension", reason: "Not ours", at: "2026-10-13T14:05:00Z" },
-  { act: "dismissed", title: "Another tension", reason: "", at: "2026-10-12T14:05:00Z" },
-  { act: "muted", kind: "monitoring-recheck-due", at: "2026-10-11T14:05:00Z" },
-  { act: "reopened", title: "The old claim", at: "2026-10-10T14:05:00Z" },
-  { act: "set_aside", scope: "project", finding: "F1", state: "dismissed", at: "2026-10-09T14:05:00Z" },
-] });
+/** What the member answered, the REAL store's list with the rows of the acts no producer of the store records added (a dismissal in the old shape, a mute of a
+ *  kind, an act the page has no sentence for): the page draws each by its own sentence. */
+const answeredWith = (w, as, extra) => async (req) => {
+  const a = await w.boot(as).door(req);
+  const r = a.json && a.json.result;
+  if (r && Array.isArray(r.answered)) { r.answered = [...r.answered, ...extra]; r.count = r.answered.length; }
+  return a;
+};
 
-test("R79 (d): What you answered draws a done, dismissed (with and without its reason), muted and any other act by its own sentence, never a name and a day alone", async () => {
-  const p = await open("/app/queue/answered", { queue: (req) => (req.query.answered ? ANSWERED : ok({ ok: true, aside: [] })) });
+test("R79 (d): What you answered draws a done, dismissed (with and without its reason), muted and any other act by its own sentence, never a name and a day alone", timeout, async () => {
+  const { w, rosa, mai, p1 } = await team();
+  await todo(w, rosa, mai, p1, "Lease check");
+  const mine = (await mai.read("queue")).items.find((i) => i.kind === "check-requested" && i.subject.title === "Doc Lease check");
+  await mai.act("taskresolve", { body: { id: mine.id } });   // she marks it done
+  const p = await openW(w, mai, "/app/queue/answered", { queue: answeredWith(w, mai, [
+    { act: "dismissed", title: "A tension", reason: "Not ours", at: "2026-10-13T14:05:00Z" },
+    { act: "dismissed", title: "Another tension", reason: "", at: "2026-10-12T14:05:00Z" },
+    { act: "muted", kind: "monitoring-recheck-due", at: "2026-10-11T14:05:00Z" },
+    { act: "reopened", title: "The old claim", at: "2026-10-10T14:05:00Z" },
+  ]) });
   const t = text(p);
-  assert.ok(t.includes(word("queue.answered.done", { item: "The lease check" })));
+  assert.ok(t.includes(word("queue.answered.done", { item: "Doc Lease check" })));
   assert.ok(t.includes(word("queue.answered.dismissed", { item: "A tension", reason: "Not ours" })));
   assert.ok(t.includes(word("queue.answered.dismissed.noreason", { item: "Another tension" })), "no reason kept: its own sentence");
   assert.ok(t.includes(word("queue.answered.muted", { kind: word("queue.kind.monitoring-recheck-due") })));

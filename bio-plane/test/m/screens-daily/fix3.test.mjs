@@ -5,21 +5,73 @@
    align), R91 (C70: the vouch band is counted in the page's number and the shell's badge), R92 (C81: Home and Projects at 390 px),
    R93 (an item standing for several notices closes them all), R94 (an act re-reads only what it changes). The requirement lines
    are proposed in the job record. Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
+import "../../sandbox.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, refused, batched, text, ops, button, press, beside, main, settle, dmy, MEMBER, word, hasWord } from "./page.mjs";
+import { createHash } from "node:crypto";
+import { storeWorld } from "../store-request/fixtures.mjs";
+import { counted } from "../interface-shell/harness.mjs";
+import { open as openRaw, ok, refused, text, ops, button, press, beside, main, settle, dmy, word, hasWord } from "./page.mjs";
 import { measure, FIT } from "./measure.mjs";
 
-const CREATOR = ok({ ...MEMBER, capabilities: ["contribute", "create_projects"] });
-const BASE = {
-  whoami: CREATOR, groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants", description: "Rents and leases on city land." }),
-  queue: ok({ items: [], item_count: 0 }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
-  startfrom: ok({ ok: true, scripts: [], doors: [{ door: "elsewhere", scripts: [], opens: "elsewhere" }] }),
-};
-const PROJ = (id, name, o = {}) => ({ id, name, stage: "investigating", lastChange: "2026-10-12T15:00:00Z", question_count: 0, shared_drafts: null, ...o });
-const THREE = [PROJ("PROJ-1", "The Coliseum lease", { question_count: 3 }), PROJ("PROJ-2", "Pothole repairs", { question_count: 1 }), PROJ("PROJ-3", "Odd", { question_count: 0 })];
-const LIST = (projects) => ok({ ok: true, count: projects.length, limit: 200, truncated: false, projects });
+/* The page over the REAL store (store-request's `storeWorld()`, op-tables §5.3): the team, its members, projects, questions, captures, drafts
+   and to-dos are made by the real acts, and every answer the page reads is the real store's. Where a test's point is an answer the real store
+   never gives (a roster summary that is not known), it wraps only that op over the world's own door (`shaped`). */
+const timeout = { timeout: 300000 };
+const CREATE = ["contribute", "create_projects"];
+const open = (w, as, path, plane = {}, o = {}) => openRaw(path, plane, { ...w.boot(as), ...o });
+/** The real door's answer to `req`, its result handed to `f` to reshape (an answer of a shape the real store never gives). */
+const shaped = (w, as, f) => { const { door } = w.boot(as); return async (req) => { const a = await counted(door)(req); f(a.json.result, req); return a; }; };
 const area = (p, k) => text(p, main(p).querySelector(`[data-area="${k}"]`));
+const hex = (s) => createHash("sha256").update(s).digest("hex");
+const stamp = (w) => new Date(w.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
+const GATE = "https://city.example/gate";
+const LOT = "https://city.example/lot";
+
+/** A document the member holds, collected and not vouched for, by the real acts: from a public address (`acquire`, the address answered by
+ *  the world's network, scripted), then the promotion of its information bundle at `collected`, as the capture screen promotes it.
+ *  Answers the bundle's id. */
+async function held(w, as, { title, address }) {
+  const body = `<html><head><title>${title}</title></head><body><p>${address} ${title}</p></body></html>`;
+  w.script(address, async () => new Response(body, { status: 200, headers: { "content-type": "text/html" } }));
+  const doc = (await as.act("acquire", { body: { locator: address } })).document;
+  const now = stamp(w);
+  const minted = await as.read("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } });
+  const id = minted.id + "-" + (title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "untitled");
+  const sha = doc.capture.sha256;
+  const front = ["---", "id: " + id, "object_type: information", "schema: information@2", "title: " + JSON.stringify(title), "current_state: collected", "prior_state: null",
+    "created: " + now, "last_updated: " + now, "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []", "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "criticality: supporting", "source_status: unchanged", "content_hash: sha256:" + hex(sha),
+    "source:", "  locator: " + JSON.stringify(doc.locator || "upload"), "  authority: member-entered", "  retrieved: " + now, "monitoring:", "  enabled: false", "  frequency: none",
+    "---", "", "## Summary", "", title, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const prov = JSON.stringify({ documents: [doc] }, null, 1), dataset = JSON.stringify({ documents: [{ bytes: doc.capture.bytes, locator: doc.locator || "upload", sha256: sha }] });
+  const len = (s) => new TextEncoder().encode(s).length;
+  const files = [{ path: "bundle.md", text: front, bytes: len(front), sha256: hex(front) }, { path: "data/provenance.json", text: prov, bytes: len(prov), sha256: hex(prov) },
+    { path: "data/dataset.json", text: dataset, bytes: len(dataset), sha256: hex(dataset) }, { path: doc.file, blobSha: sha, sha256: sha, bytes: doc.capture.bytes }];
+  const register = [{ sha256: sha, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }];
+  const made = await as.act("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(id).slice(0, 8),
+    meta: { object_type: "information", title, current_state: "collected", created: now, last_updated: now }, files, register } });
+  return made.bundleId || id;
+}
+
+/** A group with a member `mai` who may start projects and has looked at Home before (her first look is the real `lookedsince`, which records it). */
+async function desk() {
+  const w = await storeWorld({ group: null });
+  const mai = await w.signIn("mai", { capabilities: CREATE });
+  await mai.read("lookedsince");
+  return { w, mai };
+}
+/** `mai`'s three projects: "The Coliseum lease" (three questions), "Pothole repairs" (one) and "Odd" (none), by the real acts. */
+async function three() {
+  const { w, mai } = await desk();
+  const [coliseum, pothole] = [await w.recipes.project(mai, "The Coliseum lease"), await w.recipes.project(mai, "Pothole repairs")];
+  await w.recipes.project(mai, "Odd");
+  await w.recipes.questions(mai, coliseum, 3);
+  await w.recipes.questions(mai, pothole, 1);
+  return { w, mai, coliseum, pothole };
+}
+const rowsOf = (p) => main(p).querySelectorAll(".cs-row");
+const rowOf = (p, name) => rowsOf(p).find((r) => text(p, r).includes(name));
 
 /* ---------- R87 (C14, P2.2): the roster row carries the counts ---------- */
 

@@ -1,12 +1,26 @@
 /* Find's states (R55 to R57) on the real served page (interface-shell's harness): the whole record as one sortable table, a search
    answered by three routes counted apart under a scope with what it covered, and citing the whole held set. Every sentence is
    asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
+import "../../sandbox.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { storeWorld } from "../store-request/fixtures.mjs";
 import { open as openRaw, ok, refused, refusedIn, text, ops, button, press as pressRaw, beside, last, main, word, hasWord, settle, withScreens, dmy, screen } from "./page.mjs";
 
 const R = "looking";
-const open = (path, plane, o = {}) => openRaw(path, plane, { screens: withScreens("document", "question", "person", "action", "plan", "project", "timeline"), ...o });
+/** The team: a member (who may contribute and start projects), her project, four documents held in it and three questions drawn into it, all by the real acts. Shared. */
+let shared = null;
+const lab = () => (shared ||= (async () => {
+  const w = await storeWorld({ group: null, now: Date.now() });
+  const mem = await w.signIn("mem", { capabilities: ["contribute", "create_projects"] });
+  const project = await w.recipes.project(mem, "Pothole repairs");
+  const doc = async (title, body) => (await w.recipes.hold(mem, title, body, project)).bundle;
+  const docs = [await doc("Work orders", "Work orders for each pothole."), await doc("Council report", "The report to council."), await doc("Budget memo", "The public works budget.")];
+  const qs = [];
+  for (const [title, text] of [["Are potholes repaired?", "Are potholes repaired?"], ["Does closed mean repaired?", "Does closed mean repaired?"]]) qs.push((await w.recipes.question(mem, project, { title, text, draw: true })).id);
+  return { w, mem, project, docs, qs };
+})());
+const open = async (path, plane, o = {}) => { const L = await lab(); return openRaw(path, plane, { screens: withScreens("document", "question", "person", "action", "plan", "project", "timeline"), ...L.w.boot(L.mem), ...o }); };
 const press = (p, op, o = {}) => pressRaw(p, op, { reason: R, ...o });
 const choose = async (p, id, value) => { const el = p.doc.getElementById(id); el.value = value; p.fire(el, "change"); await settle(); };
 const ITEM = (id, kind, title, state, at, extra = {}) => ({ kind, id, title, state, last_changed: at, new: false, watched: false, flagged: null, ...extra });
@@ -20,7 +34,7 @@ const REC = [
   ITEM("ENT-1", "person", "Dana Reyes", null, "2026-10-01T10:00:00Z"),
 ];
 const BROWSE = (items = REC, extra = {}) => ok({ ok: true, items, count: items.length, limit: 50, truncated: false, next: null, total: items.length, awaiting_review: items.filter((i) => i.state === "collected").length, ...extra });
-const PLANE = { lookedat: ok({ since: "2026-10-01T00:00:00Z" }), browse: BROWSE(), themeread: ok({ ok: true, themes: [{ theme_id: "TH-1", name: "Street repair" }] }) };
+const PLANE = { lookedat: ok({ since: "2026-10-01T00:00:00Z" }), browse: BROWSE() };
 const titles = (p) => main(p).querySelectorAll("table tbody tr").map((r) => r.querySelector("a.cs-ref, .cs-card").textContent);
 
 test("R55: Show as offers the list or one table; the table is read with no kinds and no only, draws the count line from total and awaiting_review, four columns and a chip per state; sorting sends nothing", async () => {
@@ -121,17 +135,21 @@ test("R56: what the search covered: four rows from the answers, the documents re
 });
 
 test("R57: Cite these together opens the cite state over the held set; a role must be chosen (nothing sent without); the held set is not released; each document is shown cited or left as it was", async () => {
-  const items = [ITEM("INF-1", "document", "Work orders", "verified", "2026-10-12T10:00:00Z"), ITEM("INF-2", "document", "Council report", "verified", "2026-10-11T10:00:00Z")];
-  const qs = ok({ total: 2, hits: [{ bundle_id: "INQ-1", title: "Are potholes repaired?", object_type: "inquiry" }, { bundle_id: "INQ-2", title: "Does closed mean repaired?", object_type: "inquiry" }] });
-  const p = await open("/app/finder", { ...PLANE, browse: BROWSE(items), select: ok({ ok: true, handle: "sel-1", n: 2 }), selection: ok({ ok: true, handle: "sel-1", n: 2, members: ["INF-1", "INF-2"] }),
-    search: qs, cite: ok({ ok: true, cited: ["INF-2"], alreadyCited: ["INF-1"] }) });
-  await press(p, "select", { values: { "finder-pick-INF-1": true, "finder-pick-INF-2": true } });
+  const L = await lab();
+  const [d1, d2] = L.docs, [q1, q2] = L.qs;
+  // The question already cites the first document (a real hold and a real cite), so the second is the one newly cited.
+  const earlier = await L.mem.act("select", { query: { op: "select", kind: "enumerated", q: "" }, body: { ids: [d1] } });
+  await L.mem.act("cite", { query: { handle: earlier.handle, project: q1, role: "supports" } });
+  const items = [ITEM(d1, "document", "Work orders", "verified", "2026-10-12T10:00:00Z"), ITEM(d2, "document", "Council report", "verified", "2026-10-11T10:00:00Z")];
+  const qs = ok({ total: 2, hits: [{ bundle_id: q1, title: "Are potholes repaired?", object_type: "inquiry" }, { bundle_id: q2, title: "Does closed mean repaired?", object_type: "inquiry" }] });
+  const p = await open("/app/finder", { ...PLANE, browse: BROWSE(items), search: qs });
+  await press(p, "select", { values: { ["finder-pick-" + d1]: true, ["finder-pick-" + d2]: true } });
   await press(p, "cite", { nth: 0 });
   const t = text(p);
   assert.equal(p.byOp("cite").length, 0, "opening the state sends nothing");
   for (const k of ["a17.cite_every_document_you_hold_together_in", "a17.each_document_is_cited_whole_as_its_own_", "a17.a_document_the_question_already_cites_is", "a17.if_the_set_changed_after_you_held_it_wha"]) assert.ok(t.includes(word(`screen.finder.${k}`)), k);
   assert.ok(t.includes("Work orders") && t.includes("Council report"), "the held documents, by the titles of the rows picked");
-  assert.equal(main(p).querySelector("#finder-cite-q").value, "INQ-1", "the first question is preselected");
+  assert.equal(main(p).querySelector("#finder-cite-q").value, q1, "the first question is preselected");
   assert.equal(main(p).querySelectorAll('#finder-cite-role input[type="radio"]').filter((r) => r.checked).length, 0, "none preselected");
   const stateAct = () => main(p).querySelectorAll('button[data-act="cite"]').findIndex((b) => b.dataset.cite === "1");
   const none = await press(p, "cite", { nth: stateAct() });
@@ -140,27 +158,31 @@ test("R57: Cite these together opens the cite state over the held set; a role mu
   p.doc.getElementById("finder-cite-role-supports").checked = true;
   await press(p, "cite", { nth: stateAct() });
   assert.equal(p.byOp("cite").length, 1);
-  assert.deepEqual([last(p, "cite").query.handle, last(p, "cite").query.project, last(p, "cite").query.role], ["sel-1", "INQ-1", "supports"]);
+  assert.deepEqual([last(p, "cite").query.project, last(p, "cite").query.role], [q1, "supports"]);
+  assert.equal(last(p, "cite").query.handle, last(p, "selection").query.handle, "over the held set");
   const after = text(p);
   assert.ok(after.includes(word("queue.answered.col.did")) && after.includes(word("screen.finder.a17.newly_cited_supporting_the_question")) && after.includes(word("screen.finder.a17.left_as_it_was")) && after.includes(word("screen.finder.a17.the_question_already_cited_it")));
   assert.ok(ops(p).includes("selectionrelease"), "the held set is not released by citing");
 });
 
 test("R57: the cite state's own words: the legend, Support it and Cut against it, Cited, and the way back; cutting against says so; a set that moved says what was added and dropped", async () => {
-  const items = [ITEM("INF-1", "document", "Work orders", "verified", "2026-10-12T10:00:00Z"), ITEM("INF-2", "document", "Council report", "verified", "2026-10-11T10:00:00Z"),
-    ITEM("INF-3", "document", "Budget memo", "verified", "2026-10-10T10:00:00Z")];
-  const qs = ok({ total: 1, hits: [{ bundle_id: "INQ-1", title: "Are potholes repaired?", object_type: "inquiry" }] });
-  let members = ["INF-1", "INF-2"];
-  const p = await open("/app/finder", { ...PLANE, browse: BROWSE(items), select: ok({ ok: true, handle: "sel-1", n: 2 }), selection: () => ok({ ok: true, handle: "sel-1", n: members.length, members }),
-    search: qs, cite: ok({ ok: true, cited: ["INF-2"], alreadyCited: [] }) });
-  await press(p, "select", { values: { "finder-pick-INF-1": true, "finder-pick-INF-2": true, "finder-pick-INF-3": true } });
+  const L = await lab();
+  const [d1, d2, d3] = L.docs, q2 = L.qs[1];
+  const items = [ITEM(d1, "document", "Work orders", "verified", "2026-10-12T10:00:00Z"), ITEM(d2, "document", "Council report", "verified", "2026-10-11T10:00:00Z"),
+    ITEM(d3, "document", "Budget memo", "verified", "2026-10-10T10:00:00Z")];
+  const qs = ok({ total: 1, hits: [{ bundle_id: q2, title: "Does closed mean repaired?", object_type: "inquiry" }] });
+  // The held set is the store's own; only what it says its members are moves (no act of the door adds a document to an enumerated set).
+  let members = [d1, d2];
+  const selection = async (req) => { const real = await L.mem.read("selection", { query: req.query }); return ok({ ...real, n: members.length, members }); };
+  const p = await open("/app/finder", { ...PLANE, browse: BROWSE(items), selection, search: qs });
+  await press(p, "select", { values: { ["finder-pick-" + d1]: true, ["finder-pick-" + d2]: true, ["finder-pick-" + d3]: true } });
   await press(p, "cite", { nth: 0 });
   const t = text(p);
   for (const k of ["legend", "support", "against", "back", "back.help"]) assert.ok(t.includes(word(`screen.finder.cite.${k}`)), k);
   const back = main(p).querySelectorAll("a[data-nav]").find((a) => a.textContent === word("screen.finder.cite.back"));
   assert.equal(back.getAttribute("href"), "/app/finder", "the way out sends nothing and cites nothing");
   assert.ok(!t.includes(word("screen.finder.cite.set_changed")), "control: a set that has not moved says nothing");
-  members = ["INF-2", "INF-3"];
+  members = [d2, d3];
   p.doc.getElementById("finder-cite-role-against").checked = true;
   const stateAct = () => main(p).querySelectorAll('button[data-act="cite"]').findIndex((b) => b.dataset.cite === "1");
   await press(p, "cite", { nth: stateAct() });

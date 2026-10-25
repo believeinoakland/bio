@@ -1,38 +1,50 @@
 /* screens-daily, T51 fix round 6 (G12c-casedrafts; K4570, K4571): Home asks for the drafts shared for review once, however many projects
    share one, and draws each project's drafts from its own entry of the answer. Entered by the member opening Home; every sentence is
    asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
+import "../../sandbox.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, refused, text, main, settle, dmy, word, MEMBER, batched } from "./page.mjs";
+import { storeWorld } from "../store-request/fixtures.mjs";
+import { resultOf } from "../store-request/door.mjs";
+import { open as openRaw, ok, refused, text, main, settle, dmy, word, batched } from "./page.mjs";
 
-const BASE = {
-  whoami: ok({ ...MEMBER, capabilities: ["contribute", "create_projects"] }),
-  groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants", description: "Rents and leases on city land." }),
-  queue: ok({ items: [], item_count: 0 }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
-  startfrom: ok({ ok: true, scripts: [], doors: [{ door: "elsewhere", scripts: [], opens: "elsewhere" }] }),
-};
+const open = (w, as, path, plane = {}) => openRaw(path, plane, w.boot(as));
 const SHARED = { count: 1, newest: "2026-10-10T10:00:00Z" };
-const PROJ = (id, name, shared) => ({ id, name, stage: "investigating", lastChange: "2026-10-12T15:00:00Z", question_count: 1, shared_drafts: shared });
-const LIST = (projects) => ok({ ok: true, count: projects.length, limit: 200, truncated: false, projects });
+/** The world's own `projectlist` answer, each row's `shared_drafts` set by `shared(id)` (a plain async function, not a held gate). */
+const LIST = (w, as, shared) => async (req) => {
+  const a = await w.door(req, as);
+  const result = a && a.json && a.json.result;
+  if (result) for (const r of result.projects || []) r.shared_drafts = shared(r.id);
+  return a;
+};
 const area = (p, k) => text(p, main(p).querySelector(`[data-area="${k}"]`));
 const PUBLISHED = ok({ bundles: [], cases: Array.from({ length: 5 }, (_, i) => ({ case_id: "CASE-" + (i + 1), edition: 1, published_at: "2026-09-0" + (i + 1) + "T10:00:00Z" })) });
-// The walker's Home: five projects, each sharing a draft for its own case; the grant of each ends on a distinct day.
-const ROWS = ["PROJ-1", "PROJ-2", "PROJ-3", "PROJ-4", "PROJ-5"].map((id, i) => PROJ(id, "Project " + (i + 1), SHARED));
-const DEAD = { ok: false, code: "NO_REVIEW_COPY" };
-const draftsOf = (id) => ({ ok: true, project: id, count: 1, drafts: [{ draft_id: "DRAFT-" + id.slice(-1), case: { case_id: "CASE-" + id.slice(-1), edition: 2, identity: "x" } }] });
-const plane = (casedrafts) => ({
-  ...BASE, projectlist: LIST(ROWS), publishedlist: PUBLISHED,
+// The walker's Home: five projects (made by the real act), each sharing a draft for its own case; the grant of each ends on a distinct day.
+async function walker() {
+  const w = await storeWorld({ group: null });
+  const rosa = await w.signIn("rosa", { admin: true });
+  const ids = [];
+  for (let i = 1; i <= 5; i++) { ids.push(await w.recipes.project(rosa, "Project " + i)); w.tick(1000); }
+  return { w, rosa, ids };
+}
+// The editions of a published case and the drafts of a case shared with a link a recipient holds are made by no act of the door a test can use today
+// (a ratified edition is signed by the member's own key, a draft names an existing published case): `casedrafts`, `reviewcopy`, `publishedlist` and
+// `publishedcase` are the test's own answers (reported); the page, the team, the projects and the roster are the real store's.
+const draftsOf = (ids) => (id) => { const n = ids.indexOf(id) + 1; return { ok: true, project: id, count: 1, drafts: [{ draft_id: "DRAFT-" + n, case: { case_id: "CASE-" + n, edition: 2, identity: "x" } }] }; };
+const plane = (w, rosa, ids, casedrafts, shared = () => SHARED) => ({
+  projectlist: LIST(w, rosa, (id) => shared(ids.indexOf(id) + 1)), publishedlist: PUBLISHED,
   publishedcase: (req) => ok({ ok: true, caseId: req.query.caseId, edition: Number(req.query.edition), scope: "Scope of " + req.query.caseId }),
   casedrafts, reviewcopy: (req) => ok({ ok: true, comments: [], grants: [{ live: true, until: "2026-10-2" + req.query.draft.slice(-1) + "T00:00:00Z" }] }),
 });
 const lineOf = (n) => word("screen.home.area.edition", { n: "1", case: "Scope of CASE-" + n, date: dmy("2026-09-0" + n), until: dmy("2026-10-2" + n) });
 
 test("R99, R87, R64 (G12c): Home with five projects that share a draft sends ONE casedrafts read for all of them, and draws each project's draft line as the five single reads drew it", async () => {
-  const p = await open("/app", plane(batched(draftsOf)));
+  const { w, rosa, ids } = await walker();
+  const p = await open(w, rosa, "/app", plane(w, rosa, ids, batched(draftsOf(ids))));
   await settle();
   const reads = p.byOp("casedrafts");
   assert.equal(reads.length, 1, "one casedrafts read, not one for each project");
-  assert.deepEqual(reads[0].query.projects.split(","), ROWS.map((r) => r.id), "it names every project whose row says a draft is shared");
+  assert.deepEqual(reads[0].query.projects.split(",").sort(), [...ids].sort(), "it names every project whose row says a draft is shared");
   assert.equal(reads[0].query.project, undefined, "and none of them singly");
   const inv = area(p, "investigation");
   for (const n of [1, 2, 3, 4, 5]) assert.ok(inv.includes(lineOf(n)), "the draft line of project " + n);
@@ -40,7 +52,11 @@ test("R99, R87, R64 (G12c): Home with five projects that share a draft sends ONE
 });
 
 test("R99, R87, R64 (G12c): a project the viewer may not see answers as the single read answers it: drawn failed in the Investigation block, the other four drawn as before", async () => {
-  const p = await open("/app", plane(batched((id) => (id === "PROJ-4" ? DEAD : draftsOf(id)))));
+  const { w, rosa, ids } = await walker();
+  // The dead answer is the real one: the store's answer for a project the viewer has no standing in (one that does not exist answers alike, review R19).
+  const DEAD = resultOf(await w.door({ url: "/api/?op=casedrafts&project=PROJ-NO-SUCH-PROJECT" }, rosa));
+  assert.equal(DEAD.ok, false);
+  const p = await open(w, rosa, "/app", plane(w, rosa, ids, batched((id) => (id === ids[3] ? DEAD : draftsOf(ids)(id)))));
   await settle();
   assert.equal(p.byOp("casedrafts").length, 1);
   const block = main(p).querySelector('[data-area="investigation"]');
@@ -51,10 +67,11 @@ test("R99, R87, R64 (G12c): a project the viewer may not see answers as the sing
 });
 
 test("R99, R87, R64 (G12c): controls: no project sharing a draft sends no casedrafts read; the whole read failing is drawn failed once", async () => {
-  const none = await open("/app", { ...plane(batched(draftsOf)), projectlist: LIST(ROWS.map((r) => ({ ...r, shared_drafts: { count: 0, newest: null } }))) });
+  const { w, rosa, ids } = await walker();
+  const none = await open(w, rosa, "/app", plane(w, rosa, ids, batched(draftsOf(ids)), () => ({ count: 0, newest: null })));
   await settle();
   assert.equal(none.byOp("casedrafts").length, 0, "no draft read when no row says one is shared");
-  const down = await open("/app", plane(refused("STORE_DID_NOT_ANSWER", null, 502)));
+  const down = await open(w, rosa, "/app", plane(w, rosa, ids, refused("STORE_DID_NOT_ANSWER", null, 502)));
   await settle();
   assert.equal(down.byOp("casedrafts").length, 1);
   assert.equal(main(down).querySelector('[data-area="investigation"]').querySelectorAll('[data-state="failed"]').length, 1, "one failed row, not one for each project");
