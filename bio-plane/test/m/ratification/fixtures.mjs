@@ -44,7 +44,7 @@ export async function preflightRefusal() {
  *  one for a document that does not exist. `caseId` and `edition` name the document. */
 export async function noCaseDocument({ secretSha = "5".repeat(64) } = {}) {
   const h = await caseHouse();
-  // fixtures-own: synthetic review's live grant (a later module): admits the one digest to this case edition, as `reviewProvider()` is asked
+  /* the one stand-in: review's live grant (review is a later module) admits the one digest to this case edition, as `reviewProvider()` is asked */
   const none = () => null;
   const registered = h.w.realPub.registerReviewProvider("review", { draftForMember: none, draftIdentity: none, caseIdentitySentence: none,
     statedEdition: none, liveGrant: none, deadAnswer: none,
