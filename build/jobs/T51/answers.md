@@ -62,3 +62,7 @@ Size (session_01S1McqV7qoGLx6V9Y9QpaCn): test runs 3, module lines 1906
 - `setup-words/build.mjs --check`: stale-rows note only, no refusal naming answers. The run's words findings are other modules'.
 
 Size (session_01VDycP8MTrbpjvMkmzgTofN): test runs 9, module lines 1919
+
+## J3 · COMPLETE
+
+Fix round 10 batch 3 applied. Published limitsUnreadable and standingQuestions fixtures (answers/fixtures.mjs, tested by fixtures.test.mjs); 8 standing.test.mjs lines now use ai-accounts' fixtures; words.test.mjs:40 uses the real refusal of jurisdictions.combine(["nosuch"]) (combine([]) answers ok, never reaching the no-profile reason). No fixtures-own or fixtures-generic markers. checks/fixtures answers: 0 failures; module tests 69/69; format, architecture, coverage (36 of 36), ownership 0 failures. Record: build/jobs/T51/answers.md.
