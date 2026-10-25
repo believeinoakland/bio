@@ -1473,9 +1473,7 @@ class Provenance {
     /* DEC-49 REGION is-authority-document
        The document (C-103.9): a capture the register holds in this bundle. */
     if (!sha || !this.#one(`SELECT capture_sha FROM register WHERE capture_sha = ? AND bundle_id = ?`, sha, bundleId))
-      return actRefusal("AUTHORITY_NOT_A_DOCUMENT",
-        localize("provenance.index.capture_is_not_a_document", "capture {capture} is not a document this record's register holds in {bundle}",
-                 { capture: String(sha ? `${sha.slice(0, 16)}…` : "(none)"), bundle: String(bundleId) }), { bundleId });
+      return this.#notADocument(sha, bundleId);
     /* END DEC-49 REGION is-authority-document */
     const oneLine = (v) => String(v ?? "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim();
     const why = oneLine(basis), issuer = oneLine(authority);
@@ -1495,6 +1493,33 @@ class Provenance {
     this.#sql.exec(`INSERT INTO authority_decisions (bundle_id, capture_sha, seq, outcome, authority, basis, by, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                    bundleId, sha, seq, outcome, named, why, who, at);
     return { ok: true, bundle: bundleId, capture: sha, outcome, authority: named, basis: why, by: who, at, seq };
+  }
+
+  /* C-103.9: the refusal of a capture that is no document of the bundle, as R65 and R80 raise it. */
+  #notADocument(sha, bundleId) {
+    return actRefusal("AUTHORITY_NOT_A_DOCUMENT",
+      localize("provenance.index.capture_is_not_a_document", "capture {capture} is not a document this record's register holds in {bundle}",
+               { capture: String(sha ? `${sha.slice(0, 16)}…` : "(none)"), bundle: String(bundleId) }), { bundleId });
+  }
+
+  /** R80 (T51; K5148, WALK-FINAL-04B R146; amends R66) — the read a member uses for a document's authority: for each capture
+   *  of the bundle the register holds (the wholes, `capturesOf`'s order), the standing value `authorityOf` answers (state,
+   *  issuer, dated basis, `reviewed`, the history), so that a decision made by `declareAuthority` is stated wherever a
+   *  document's authority is read and never the acquisition-time `undetermined` the bundle's own `data/provenance.json`
+   *  keeps. With `capture` it answers that one, or `AUTHORITY_NOT_A_DOCUMENT` where the bundle does not hold it. Gated by
+   *  sight and refused as R64's are (a bundle absent or unseen alike). Writes nothing. */
+  authoritiesOf({ bundleId = "", capture = null, viewer = null } = {}) {
+    const id = typeof bundleId === "string" ? bundleId.trim() : "";
+    if (!id) return actRefusal("NO_BUNDLE", "pass bundleId=<id>");
+    if (!this.#record.bundleInfo(id) || !this.#membership.inSight(id, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId: id,
+               detail: "no document of that name is in the record, or none this viewer may see; the two answer alike" };
+    const asked = capture === null || capture === undefined || capture === "" ? null : bareSha(capture);
+    const rows = new Map(this.registeredFor(id).map((r) => [r.capture_sha, r]));
+    if (capture !== null && capture !== undefined && capture !== "" && !(asked && rows.has(asked))) return this.#notADocument(asked, id);
+    const shas = asked ? [asked] : this.capturesOf(id).map((c) => c.capture_sha);
+    return { ok: true, bundleId: id,
+             captures: shas.map((s) => ({ capture_sha: s, path: rows.get(s)?.path ?? null, authority: this.authorityOf(id, s) })) };
   }
 
   /** R66 — the document's standing content authority and its whole history, the register's acquisition-time value first
