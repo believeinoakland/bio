@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha } from "./fixture.mjs";
-import { heldParts, holdsOf, holdsWorld, holdsRegister, homeOf, homeOfEmpty, homeOfHomed, homeOfWorld, provenanceOver,
+import { heldParts, holdsOf, holdsWorld, holdsRegister, homeOf, homeOfEmpty, homeOfHomed, homeOfProject, homeOfWorld, provenanceOver,
          registeredHomes, versionChainNoSuchVersion } from "./fixtures.mjs";
 
 const S = sha("a capture"), T = sha("another capture");
@@ -86,6 +86,16 @@ test("fixtures registeredHomes: register promotes a bundle with a register docum
   assert.equal(own.register(T, { bundleId: "INFO-2026-0005-o" }).ok, true);
   assert.equal(own.provenance.homeOf(T).bundleId, "INFO-2026-0005-o");
   assert.equal(w.record.head("INFO-2026-0005-o") !== null, true, "promoted into the user's record");
+});
+
+test("fixtures homeOfProject: a project created with no chosen id mints its PROJ- id; its captures are homed there", () => {
+  const p = homeOfProject([S, T]);
+  assert.equal(p.made.ok, true, JSON.stringify(p.made));
+  assert.match(p.projectId, /^PROJ-\d{4}-\d+-/, "the record minted the id");
+  assert.equal(p.made.owner, "ann");
+  assert.deepEqual([S, T].map((s) => p.homeOf(s)?.bundleId), [p.projectId, p.projectId]);
+  assert.equal(p.homeOf(sha("unnamed")), null);
+  assert.equal(homeOfProject([]).homeOf(S), null, "a project with nothing registered homes no capture");
 });
 
 test("fixtures versionChainNoSuchVersion: VERSION_CHAIN_NO_SUCH_VERSION with its check C-24.2", () => {
