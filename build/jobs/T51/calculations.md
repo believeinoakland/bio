@@ -502,3 +502,7 @@ Size (session_01K7S7EEcP2cBYWQsJc9tjPq): test runs 5, module lines 4243
 ## J28 · REPORT
 
 Door case for control-plane (K5138, R51): tabledeclare with source {capture_sha, extent} taken from a found item (screens-daily/find-in-forms.mjs:136), through the real op door as the walker sends it (diag2-06 §8): answers ok, a content row minted, the same table sha as from the content id after citing. Calculations' own test (declare-found.test.mjs) covers the module interface; I wrote no r8-kit test.
+
+## J29 · COMPLETE
+
+COMPLETE (B35): R51 met; ids named: R51. declareTable accepts a found passage {capture_sha, extent}: capture resolved through provenance, sight and extent checked (NO_SUCH_CONTENT with capture_sha/extent_code when not held, not visible or no such part), content row minted with content.mint (mint-or-find) after every other check, just before the bytes are read. Test declare-found.test.mjs seen red (NO_SOURCE) then green: same table sha as from the content id after citing; refusals mint nothing. Module 159/159; format, architecture, coverage 50/50, ownership, fixtures, words 0 failures in calculations. New words ids: calculations.declare.no_capture_is_held_here, calculations.declare.the_found_passage_names_no. One honest limit, in my record: a found passage whose bytes then cannot be read has been minted its content row though the refusal says nothing was written (the row only cites a passage that exists); it is not a question, a one-function change if you want it moved. Door case REPORTed above.
