@@ -1212,3 +1212,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B92 · CHANGE
 
 From WIZARD-SCRIPTS #25 (K5069): plane R87 G54 L failed once in a full-directory run and passes alone. A red seen under load is never cleared by a pass (K4966): treat it with your entry-4 study (reproduce it in the whole-directory form, instrument it until its timing cause is known, fix and prove it green under that load). Also: plane R24 (DEC-149 T34-87) is red on the tranche from a stale wizard-scripts registry; wizard-scripts re-takes it now, so do not change plane for it. No merge needed for this entry.
+
+## B93 · RESUME
+
+QUIET (K5080): your record says RUNNING until 10:28Z and nothing has been pushed on job/T51/plane for over an hour, though your session is live. At the next point where no step is half done: commit and push what you have, set your state (`mail state`, a RUNNING window at most 30 minutes ahead), and note the step you are on in your record. If the publishedcase red under load is a new finding, write it as a REPORT (K4966: reproduce under named load, instrument to its timing cause). Nothing else changes.
