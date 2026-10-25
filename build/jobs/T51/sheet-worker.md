@@ -79,3 +79,32 @@ Size (session_015vsvGpKy672zBH3KSU5T3u): test runs 3, module lines 1930
 ## J4 · COMPLETE
 
 R14 applied: the three bounds are boundOf('sheet_worker','bytes'|'cells'|'ms') in contract.mjs, no literal left. Red seen then green (38/38). Impact: workbooks 9/9. format, architecture, coverage, ownership 0 failures. Stale for BOB to regenerate: sheet-worker bundle (now inlines bio-plane/src/read-bounds.mjs; check bundler's input list) and the plane bundle. No new files outside paths. Record: build/jobs/T51/sheet-worker.md.
+
+## J5 · COMPLETE
+
+**Entries applied.** B4 (fix round 10, Wave A batch 5): the fixture `recomputeNotEnabled` published in `sheet-worker/test/fixtures.mjs` (new). It makes the real member (`src/member.mjs`, over `makeEngine` on the vendored wasm) answer a well-formed recompute request while `SHEET_RECOMPUTE` is unset, and returns the parsed body `{ok:false, reason:"NOT_ENABLED", not_recomputed, detail}` (R2). No stored answer. Its test `sheet-worker/test/fixtures.test.mjs` names R2 and checks the fixture's real answer (`ok`, `reason`, `detail` = `REFUSALS.NOT_ENABLED`).
+
+**Markers.** None added: `fixtures.mjs` carries no `fixtures-own` or `fixtures-generic` marker. The one user is `workbooks` (`add.test.mjs:78`, FIX-E, judgment), re-pointed in its own job, not here.
+
+**Lines done.** The sheet-worker lines of `node checks/fixtures.mjs /home/user/bio sheet-worker --list`: 0 failures. The other fixture published for sheet-worker, `recomputeEngineFailed`, is not in this batch (Wave A batch 5 names only `recomputeNotEnabled`); its user `workbooks` `recompute.test.mjs:94` stays open for that job.
+
+**Deferred.** Nothing.
+
+**Found in another module.** Nothing new. No source under `sheet-worker/src` changed, so no bundle went stale.
+
+**Environment.** `sheet-worker/node_modules` was missing; `npm ci` in `sheet-worker/` installed it from the lockfile (not committed). Without it `worker.test.mjs` failed on the missing `miniflare` package; with it the whole suite passes.
+
+**Tests and checks** (product `/home/user/bio`, from `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit`):
+- `sheet-worker/test/fixtures.test.mjs`: 1 test, 1 pass.
+- `sheet-worker/test/*.test.mjs`: 39 tests, 39 pass, 0 fail (includes workerd `worker.test.mjs`).
+- `checks/format.mjs`: 178 modules, 0 failures.
+- `checks/architecture.mjs sheet-worker`: 0 failures.
+- `checks/coverage.mjs sheet-worker`: 17 of 17 live requirement ids named by a test, 0 failures.
+- `checks/ownership.mjs sheet-worker tranche/T51`: 0 failures.
+- `checks/words.mjs sheet-worker`: 0 failures.
+- `checks/fixtures.mjs ... sheet-worker --list`: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, so no user tests to run.
+
+**Commit.** `fadd6e4737` on `job/T51/sheet-worker`, pushed. No pull request.
+
+Size (session_0146e1miQoZPGsfEUPCQQNPY): test runs 4, module lines 34 (the two new files: 18 lines of fixture, 16 lines of test).
