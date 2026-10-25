@@ -116,3 +116,24 @@ Size (session_01EzbeHquecfUvWe3Ss9yqdi): test runs 9, module lines 1699
 ## J8 · COMPLETE
 
 COMPLETE (NOTICE-PRODUCERS #17, fix round 9, G135f, R29). Details in my record's 'Fix round 9' section. R29 applied (#readingsEnded, kind reading-ended, facts.reading_ended, failures named 'readings'), coded against plane's merged readingsEnded shape. Failing-first reading-ended.test.mjs red (missing export) then 8/8 green; module 151/151; format/architecture/coverage/words/ownership 0 failures. NEEDS FROM YOU (smallest thing): queue's catalogue (queuestate.mjs, beside fetch-done/ingest-done) must name 'reading-ended' (FINDING, LIVE: notice-producers R29) or queue's catalogue.test.mjs:242 (R1 G61) stays red and the opener's whole Queue is refused NO_SUCH_KIND; queue's job adds it, I cannot. Words owed (localize stand-ins notice-producers.reading.finished/.finished.counted/.partial/.partial.counted/.refused) are in the record. Size (session_01EzbeHquecfUvWe3Ss9yqdi): test runs 9, module lines 1699
+
+## Fix round 10 · NOTICE-PRODUCERS #18 (session_01YTEEz6mMUuYSeNrA5gXVxw) · Wave B batch 6 · 10 fixture lines
+
+Merged `tranche/T51`. No product code changed; test files only (`fixture.mjs`, `investigation.test.mjs`, `policy.test.mjs`, `read.test.mjs`, `security.test.mjs`, `watched.test.mjs`).
+
+**Lines done (10, all FIX-E, each from the provider's published `fixtures.mjs`):**
+- credentials/securityMapRefusal: `fixture.mjs:20` (`NONE.credentials.securityMap` answers `securityRefusals.notAnAdmin`); `security.test.mjs:177` (`refusals.invalidPeriod`).
+- standards/standardReadWorld: `fixture.mjs:27` (`NONE.standards.standardRead` is the real instance's, built on first use); `policy.test.mjs:41` (the refusal branch of `standardsOver` is the real `standardRead`).
+- provenance/homeOfEmpty: `fixture.mjs:31` (`NONE.provenance.homeOf` is the real empty provenance's); provenance/homeOfHomed: `read.test.mjs:50` (the scan finding's capture is really homed in a bundle).
+- steps/stepRead: `investigation.test.mjs:289` (`unknownAnswer`, the real NO_SUCH_STEP). steps' real `laterFound` at `investigation.test.mjs:262`: instead of a hand-built `found: many`, the test lays 201 real looks and arrivals in steps' own world (`laterWorld`), asserts steps answers 201, and the notice read is cut at the bound with `truncated: true`; the control is a world with 3. (`steps/stepsWorld` in `fixtures.mjs` publishes no `laterFound`/`stepsDue`, so the real module of the test's own world is used.)
+- retrieval-browse/browseViewerMissing: `watched.test.mjs:132`; following/watchedByRefusal: `watched.test.mjs:134`.
+
+**Left: none by the fixtures check.** `node checks/fixtures.mjs . notice-producers --list`: 0 failures for the module (was 10). No `fixtures-own` or `fixtures-generic` marker added.
+
+**Needs BOB (edge, `build/modules.json`):** `node checks/architecture.mjs /home/user/bio notice-producers` reads 1 failure: `watched.test.mjs` imports `bio-plane/test/m/retrieval-browse/fixtures.mjs` of `retrieval-browse`, which `notice-producers.uses` does not declare (it declares `retrieval`). The plan's row names `retrieval-browse/browseViewerMissing`; BOB adds `retrieval-browse` to `notice-producers.uses` (or names another provider of the line).
+
+**Tests.** Module: 16 files, 151 tests, 151 pass, 0 fail. Impact (`impact.mjs origin/tranche/T51 HEAD`): workbooks `add.test.mjs`, 4 pass. Checks: format 0 failures; coverage 29 of 29 ids, 0 failures; words 0 failures (no finding in my module); architecture 1 failure (the edge above); ownership run after the commit.
+
+Generated artifacts made stale: none. Census ops owned: none changed.
+
+Size (session_01YTEEz6mMUuYSeNrA5gXVxw): test runs 9, module lines 1699
