@@ -18,6 +18,7 @@ const w = world({ env: { RENDERER: { fetch: async (u, init) => { await gate;
   for (let i = 0; i < 6; i++) requests.push({ url: `https://r.example/asset${i}.bin`, type: "image", outcome: "completed", body_base64: bodyOf(i).toString("base64") });
   return new Response(JSON.stringify({ ok: true, html: HTML("<p>rendered</p>"), elapsed_ms: 9, engine: "Chrome", engine_version: "1", viewport: { width: 1280, height: 800 },
     dpr: 1, locale: "en-US", timezone: "UTC", navigated_to: url, status: 200, requests, scripts: [], wait: { asked: { until: "networkidle", timeout_ms: 15000 }, fired: "networkidle" } })); } } } });
+// fixtures-contract: plane owed-ledger
 w.store.owedLater = async () => ({ ok: true });
 
 const first = await run(w, { [PG]: () => page(HTML("<div id=app></div>")) }, { locator: PG, render: true }, { renderWaitMs: 20 });

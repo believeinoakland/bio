@@ -156,6 +156,7 @@ test("R96, R100 (G79): `keepPast` with `defer` hands the keep to the ledger at o
   const m = await threeParts(w);
   const ev = counted(w.core.evidenceStore());
   const handed = [];
+  // fixtures-contract: plane keep-later
   const k = await keepPast(w.store, ev, { sha: m.wholeSha, parts: m.parts, defer: true, keepLater: async (e) => { handed.push(e); return { ok: true }; } });
   assert.deepEqual([k.started, k.kept, k.keep_pending], [true, false, true]);
   assert.deepEqual(handed, [{ sha: m.wholeSha, parts: m.parts.map((p) => p.sha256) }]);
@@ -177,6 +178,7 @@ test("R96 (G79) control: `keepPast` without `defer` awaits within the bound as b
   const w = world(); multipart(w.b);
   const m = await threeParts(w);
   const handed = [];
+  // fixtures-contract: plane keep-later
   const k = await keepPast(w.store, counted(w.core.evidenceStore()), { sha: m.wholeSha, parts: m.parts, keepLater: async (e) => { handed.push(e); return { ok: true }; } });
   assert.deepEqual([k.started, k.kept, k.keep_pending], [true, true, false]);
   assert.deepEqual(handed, []);

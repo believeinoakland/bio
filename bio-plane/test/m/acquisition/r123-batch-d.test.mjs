@@ -63,6 +63,7 @@ const BIG = "https://www.oaklandca.gov/files/BIG.pdf";
 const big = new Uint8Array(9 * MIB).fill(7);
 const source = () => new Response(big, { headers: { "content-type": "application/pdf", "content-length": String(big.length) } });
 const parked = async (w) => {
+  // fixtures-contract: plane owed-ledger
   w.store.owedLater = async () => ({ ok: true });
   const first = await run(w, { [BIG]: source }, { locator: BIG, project: "P" }, { settle: false });
   return first.body.fetch_pending.session;
@@ -74,6 +75,7 @@ test("R116 (G160): a delivery refused for good ends the entry final with the ref
   const session = await parked(w);
   const net = network({ [BIG]: source });
   try {
+    // fixtures-contract: control-plane deliver-owed
     const out = await owedFetch(w.store, { kind: "fetch", session }, { storeName: "bio", deliver: async () => HELD });
     assert.equal(out.final, true);
     assert.equal(out.reason, "CAPTURE_HELD_BY_ANOTHER_BUNDLE");
@@ -86,10 +88,12 @@ test("R116 (G160): the facts at the refusal's top level (provenance's own shape)
   const session = await parked(w);
   const net = network({ [BIG]: source });
   try {
+    // fixtures-contract: control-plane deliver-owed
     const top = await owedFetch(w.store, { kind: "fetch", session }, { storeName: "bio", deliver: async () => ({ ok: false, reason: "CAPTURE_HELD_BY_ANOTHER_BUNDLE", kind: "whole", capture_sha: "b".repeat(64), holder: "INFO-1" }) });
     assert.deepEqual(top.detail, { kind: "whole", capture_sha: "b".repeat(64), holder: "INFO-1" });
     const w2 = world();
     const s2 = await parked(w2);
+    // fixtures-contract: control-plane deliver-owed
     const bare = await owedFetch(w2.store, { kind: "fetch", session: s2 }, { storeName: "bio", deliver: async () => ({ ok: false, reason: "CAPTURE_HELD_BY_ANOTHER_BUNDLE" }) });
     assert.equal(bare.final, true);
     assert.equal("detail" in bare, false);
@@ -101,9 +105,11 @@ test("R116 (G160, control): a delivery refused for a cause that may pass goes ag
   const session = await parked(w);
   const net = network({ [BIG]: source });
   try {
+    // fixtures-contract: control-plane deliver-owed
     const again = await owedFetch(w.store, { kind: "fetch", session }, { storeName: "bio", deliver: async () => ({ ok: false, reason: "DELIVERY_FAILED" }) });
     assert.equal(again.done, false);
     assert.equal(again.reason, "DELIVERY_FAILED");
+    // fixtures-contract: control-plane deliver-owed
     const done = await owedFetch(w.store, { kind: "fetch", session }, { storeName: "bio", deliver: async () => ({ ok: true }) });
     assert.equal(done.done, true);
     assert.equal(done.final, undefined);

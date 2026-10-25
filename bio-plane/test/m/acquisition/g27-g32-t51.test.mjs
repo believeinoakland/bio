@@ -34,6 +34,7 @@ function gated({ open = false } = {}) {
   const calls = [];
   const w = world({ env: { RENDERER: { fetch: async (u, init) => { const q = JSON.parse(init.body); calls.push(q); await gate;
     return new Response(JSON.stringify(reply(q.url))); } } } });
+  // fixtures-contract: plane owed-ledger
   w.store.owedLater = async () => ({ ok: true });
   return { w, calls, release: release || (() => {}) };
 }
@@ -82,6 +83,7 @@ test("R109 R5 R12 (G27): a render that returns after the request has ended is ke
 test("R109 R5 R12 (G27) control: a render that fails, or answers with no page, is a small answer that is not kept, and \"Finish it\" says so in words and closes the session, as before", async () => {
   let release; const gate = new Promise((r) => (release = r));
   const w = world({ env: { RENDERER: { fetch: async () => { await gate; return new Response(JSON.stringify({ ok: false, error: "navigation timed out" })); } } } });
+  // fixtures-contract: plane owed-ledger
   w.store.owedLater = async () => ({ ok: true });
   const first = await run(w, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 20 });
   const sid = first.body.render.session;
