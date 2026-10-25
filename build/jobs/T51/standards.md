@@ -171,3 +171,7 @@ Merged `tranche/T51` (as of 7efd8cb8c2) into the branch; nothing in my paths con
 **Deferred:** nothing. **REPORT (other modules):** plane `door.test.mjs` R1/R5/R67 thirty-six routes, and plane `fix5-r77`, `fix6-pending`, `r9-jobs` hang, both on the tranche without my change.
 
 Size (session_01AttFwdpMk7hg2XJoF6Y7AX): test runs 12, module lines 3593
+
+## J7 · COMPLETE
+
+COMPLETE (J6, resumed): R7 known_through done (index.mjs, known-through.test.mjs, inForceKnown fixture); met id R7. standards 122/0; control-plane 714/720, plane: see record. Every red I saw fails identically on clean tranche/T51 (control-plane five, plane door.test.mjs R1/R5/R67), plus plane fix5-r77, fix6-pending, r9-jobs hang there too; the full plane directory never finished, so plane is not fully verified. Checks 0: format, architecture, coverage 53/53, ownership. No fixtures marker added. Branch lacks fc578df959; CHANGE me to merge. Size: test runs 12, module lines 3593.
