@@ -1,6 +1,6 @@
 # credentials (T51)
 
-**Status** · session_01MX23PSD31bEtV5CnCLBEte · depth 2 · WAITING ON BOB (J24) · handled B18
+**Status** · session_01MX23PSD31bEtV5CnCLBEte · depth 2 · COMPLETE · handled B18
 
 ## J1 · COMPLETE
 
