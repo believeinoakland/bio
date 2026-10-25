@@ -23,6 +23,7 @@ import { eventsOf } from "../../../src/events/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { standardsEmptyReads } from "../standards/fixtures.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -157,7 +158,7 @@ export function world({ caseMembers = new Set(), group = "test-group", earnedOve
   const retrieval = {
     selectionResolve: ({ handle }) => {
       const s = selections.get(handle);
-      return s ? { ok: true, members: s, drift: null } : { ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" };
+      return s ? { ok: true, members: s, drift: null } : noSelection({ handle }).answer;
     },
   };
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities, retrieval, provenance: prov,

@@ -136,3 +136,9 @@ COMPLETE (G89, R41): see the record's G89 section. Re-grade in raiseNotices, swe
 ## J7 · QUESTION
 
 QUESTION: one line of the batch is not doable under the rules as they stand. fixture.mjs:160 (retrieval/selectionResolve) should take retrieval's noSelection fixture, but reevaluation's uses (build/modules.json) does not include retrieval, so checks/architecture.mjs fails on the import ('which reevaluation does not declare in uses'). reevaluation reaches retrieval only as the stand-in inquiry is built with. My best reading: add retrieval to reevaluation's uses (your file), then I re-point the line in one more step. Alternative: accept the line as a stand-in (fixtures-own) with your ruling. Everything else is done and pushed (noticesRead published, standardsEmptyReads re-pointed, caseparts code fixed and contract marker added; caseparts:31 awaits publication's fixtures-run). Details in my record.
+
+### After B8 (K5088)
+- Merged `tranche/T51`; `fixture.mjs:160` now takes retrieval's published `noSelection` (`.answer`). Done: `fixtures --list` for reevaluation left with `caseparts.test.mjs:31` only (contract-no-run, waits for publication's `fixtures-run`).
+- No `fixtures-own` or `fixtures-generic` marker added; one `fixtures-contract` (caseparts.test.mjs:30, publication case-cited-parts).
+- Tests: module 164/164. Checks: format, architecture, coverage (41/41), ownership, words: 0 failures.
+- Size (session_01Ed3McYsoc4pJynhHKAnecp): test runs 8, module lines 0 changed in src
