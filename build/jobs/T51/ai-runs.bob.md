@@ -87,3 +87,7 @@ Mail with `--module ai-runs`; record `build/jobs/T51/ai-runs.md` (append a new s
 **Follow-up 21 (test files only).** `bio-plane/test/m/ai-runs/plan.test.mjs:95` carries `fixtures-contract: action-plans plan-open-check` with the literal `PLAN_NOT_OPEN`; action-plans (merged) runs the contract and its real refusal of a closed plan is `PLAN_CLOSED` (C-124.10; ACTION-PLANS #17 J4). Make the literal the real code (read action-plans' `fixtures.mjs` and its `fixtures-run: ai-runs plan-open-check` test whole first), so the contract runs clean and action-plans' `orphan-run` clears.
 
 **Done:** `checks/fixtures.mjs <absolute root> ai-runs --list` with your lines at zero (or each remaining one named with why); your module's tests green; format, architecture, coverage, words, ownership 0. List every `fixtures-own`/`fixtures-generic` marker you add, file:line and why (K5060). Record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-haiku-5-5.
+
+## B7 · CHANGE
+
+CHANGE (K5094; AGENT-WORKER #35 J6, merged): agent-worker's run of `ai-runs dispatch-refusal` shows the real POST /run refusal is 400 `{ok: false, reason, code, detail, worker: "agent-worker"}` (BAD_BODY, BAD_CREDENTIAL_SHAPE): your hand-built answer under that marker has `detail: "d"` and no `worker`. Merge `tranche/T51` into your branch, make it match the real shape (read `agent-worker/test/fixtures-contracts.test.mjs` whole; never copy a sentence, K3810), with follow-up 21, and post COMPLETE.
