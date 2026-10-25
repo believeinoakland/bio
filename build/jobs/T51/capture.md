@@ -838,3 +838,7 @@ COMPLETE (CAPTURE #56, job 97, B35/B36; R107 amended, G170). The upload hands pr
 **COMPLETE fields.** Cause: `putUploadPart` kept the running SHA-256 of the parts only in the object's memory (`#parted`), and workerd takes an object out of memory after about 10 s with no event, so a pause of 12 s between two parts answered `UPLOAD_LOST` and the member began again. Why missed: `g127f-plane` and `g127f-t51` sent parts back to back, and the only restart test asserted the loss as the intended behaviour. Red first: seen, above. Platform check: L, passed (Miniflare, real object, real R2 multipart, a real 12 s pause, the object proven replaced).
 
 Size (session_017HhDkwNt6ddjD3dPVU5hd5): test runs 9, module lines 5095
+
+## J36 · COMPLETE
+
+COMPLETE (CAPTURE #57, job 101, B37; R113 amended, G173). An upload sent in parts survives the object being taken out of memory: the digest of the parts so far is kept with the upload's row (hash_state, written with the part) and taken up again by a new instance; UPLOAD_LOST only when the row cannot say it. Red first and platform check L seen (Miniflare, real object replaced by a 12 s pause). Suite 344/344, checks 0 failures, ownership 0. For you, see my record: record-grammar could offer a digest state (capture carries sha256-resume.mjs until then); g127f-plane test 1 is intermittently red with ECONNRESET (diagnosis P2, not this change).
