@@ -4,9 +4,9 @@
  * answers. Scripted: a fault a read is made to answer, a record the live copy holds that this build does not make (`changing`), and the money trail's graph (below). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn, silent, pending } from "../interface-shell/harness.mjs";
+import { refusedIn, silent, pending } from "../interface-shell/harness.mjs";
 import { inWorld, openAs, settled, rewrite, readHeld } from "./world.mjs";
-import { main, press, word, drew, notDrew, dayOf } from "./fixtures.mjs";
+import { main, word, drew, dayOf } from "./fixtures.mjs";
 
 const graphOf = (p) => main(p).querySelector(".mk-graph");
 const GOOD = { valid: { from: "2020-01-01", to: "2030-01-01" } };

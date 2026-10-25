@@ -1,14 +1,14 @@
 /* screens-investigate, T51 fix round 2 (wave 2): C14 (the screens' reads of the documents), C95 (the document picker: this project first, a
  * search, title and date), C94 (a member is named by handle) and C54 (the timeline's events found by the captures they cite), each proved at
- * the module's interface over a scripted plane, with the control that shows the fix is the cause. */
+ * the module's interface over `store-request`'s world (the real store, a real sign-in; each state made by the members' own acts), with the control that shows
+ * the fix is the cause. Scripted: an externally driven answer (the fetch of a site) and a record the live copy holds that a member's session of this build does not make. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn } from "../interface-shell/harness.mjs";
+import { ok } from "../interface-shell/harness.mjs";
 import { createHash } from "node:crypto";
 import { SESSION_OPS } from "../../../src/op-declarations/index.mjs";
 import { WORLD_FOUNDER_HANDLE, inWorld, openAs, settled, readHeld, declareStandard, rewrite } from "./world.mjs";
-import { open, main, fill, press, plane, PATHS, MORE_PATHS, TRAIL, TIMELINE, FACTS, moneyAnswer, MATTER, DEF, PERSON, PERSON_ENTITY, STANDARD, STD_PROPOSALS, WALK, SPOT, CALCULATION,
-  PROJECT_MD, ACTION, PROPOSALS, M1, P, ENT, ORG, SHA, SHA2, SHA3, STD, MSR, word, drew, dayOf } from "./fixtures.mjs";
+import { main, fill, press, word, drew, dayOf } from "./fixtures.mjs";
 
 const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
 const P2 = "PROJ-2026-0009";

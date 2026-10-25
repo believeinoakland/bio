@@ -155,13 +155,13 @@ const framed = async (t) => (frame ||= new Set((await openAs(t.world, t.me, t.PA
 const readsOf = (p) => p.requests.filter((r) => !frame.has(r.op) && r.op !== "memberlist");
 const count = (rs) => rs.reduce((m, r) => { m[r.op] = (m[r.op] || 0) + 1; return m; }, {});
 /* the reads of each screen of the module, as it opens over the world above (a per-item read is one for each item shown: money's `money` per figure, a theme's `image` per
-   document placed in it; `entityidonly` is the one read for the unnamed nodes of a graph; `sequence` is asked for each order of the two meetings no date settles) */
+   document placed in it; `entityidonly` is the one read for the unnamed nodes of a graph; `sequence` is asked for each order of the two meetings no date settles; `timeline` is asked for the set, then again with the project's documents for the events they attest) */
 const OWN = {
   people: { peopledirectory: 1 },
   person: { exploregraph: 1, affordances: 1, peopledirectory: 1, entity: 1, readingname: 1, heldcaptures: 1, reading: 1, entityidonly: 1, person: 1, samepersoncandidates: 1 },
   theme: { themeread: 1 },
   explore: { exploregraph: 1, affordances: 1, peopledirectory: 1, explorepreset: 1, entityidonly: 1, heldcaptures: 1 },
-  timeline: { image: 1, peopledirectory: 1, list: 1, heldcaptures: 1, affordances: 1, reading: 1, timeline: 1, instances: 1, sequence: 2 },
+  timeline: { image: 1, peopledirectory: 1, list: 1, heldcaptures: 1, affordances: 1, reading: 1, timeline: 2, instances: 1, sequence: 2 },
   money: { exploregraph: 1, heldcaptures: 1, list: 1, peopledirectory: 1, moneyset: 1, reading: 1, image: 1, money: 3 },
   calculation: { calculation: 1, heldcaptures: 1, spotcheck: 1 },
   help: {},

@@ -7,7 +7,7 @@ import { refusedIn } from "../interface-shell/harness.mjs";
 import * as shell from "../../../src/interface-shell/index.mjs";
 import { SCREENS } from "../../../src/screens-investigate/index.mjs";
 import { inWorld, openAs, settled, readHeld, declareStandard } from "./world.mjs";
-import { main, button, fill, word, drew, notDrew } from "./fixtures.mjs";
+import { main, button, fill, ENT, CALC, PROC, STD, word, drew, notDrew } from "./fixtures.mjs";
 
 const page = readFileSync(new URL("../../../../docs/development/ux-substrate/screens/page.src.html", import.meta.url), "utf8");
 const css = page.split("<style>")[1].split("</style>")[0] + readFileSync(new URL("../../../../docs/development/ux-substrate/visual-language/civicsmith.css", import.meta.url), "utf8") + (shell.STYLE || "");
@@ -39,7 +39,7 @@ async function scene() {
   const ord = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: doc.sha, extent: du[0].extent });
   const pol = await declareStandard(me, { cite: "Public Works Instruction 9.1", kind: "policy", issuer: "Public Works Department", sha: memo.sha, extent: mu[0].extent, period: { from: "2026-01-01", to: null } });
   await me.act("lawrelate", { body: { type: "implements", from: pol, to: ord, citation: (await me.read("standard", { query: { id: pol } })).texts[0].content_id, reason: "The instruction implements the ordinance." } });
-  await world.recipes.question(me, project, { title: QUESTION, draw: true });
+  await world.recipes.question(me, project, { title: QUESTION, text: QUESTION, draw: true });
   const trail = await world.recipes.trail(me, project, "Stormwater fund transfers");
   const fact = (await me.act("recordfact", { body: { currency: "USD", sign: "+", precision: "exact", period: { from: "2021-07-01", to: "2022-06-30" }, source: { capture_sha: doc.sha, extent: { kind: "document" } },
     amount: "4200000.00", as_read: "4,200,000", kind: "transfer", phase: "adopted", basis: "budgetary", from: { as_written: "Sewer Fund 3100" }, to: { as_written: "General Fund 1010" } } })).fact_id;
@@ -147,38 +147,45 @@ test("R22 control: a read that failed is still drawn as failed on every screen",
 });
 
 test("R23 no field asks for a record id: ties offers named people from the directory (control: no field's label or help names \"record id\")", async () => {
-  const p = await open(PATHS.ties);
+  const { world, me, works, PATHS } = await scene();
+  const p = await openAs(world, me, PATHS.ties);
   const who = p.doc.getElementById("tie-who");
-  assert.deepEqual(who.querySelectorAll("option").map((o) => o.textContent), ["L. Chen", "Public Works Department"]);
-  assert.deepEqual(who.querySelectorAll("option").map((o) => o.getAttribute("value")), [ENT, ORG]);
-  fill(p, { "tie-who": ORG, "tie-note": "my cousin works there" });
+  const directory = (await me.read("peopledirectory", { query: { limit: "200" } })).rows;
+  assert.deepEqual(who.querySelectorAll("option").map((o) => o.textContent), directory.map((r) => r.name || r.entity), "the people the directory names");
+  assert.deepEqual(who.querySelectorAll("option").map((o) => o.getAttribute("value")), directory.map((r) => r.entity));
+  assert.ok(["L. Chen", "Public Works Department"].every((n) => who.querySelectorAll("option").some((o) => o.textContent === n)), "by their names");
+  fill(p, { "tie-who": works, "tie-note": "my cousin works there" });
   await p.click(button(p, "declaretie"));
-  await p.settle();
-  assert.equal(p.byOp("declaretie")[0].body.entity, ORG);
+  await settled(p);
+  assert.equal(p.byOp("declaretie")[0].body.entity, works);
+  assert.ok((await me.read("memberties", {})).ties.some((t) => t.entity === works && t.note === "my cousin works there" && !t.withdrawn), "the store holds the tie");
   assert.doesNotMatch(main(p).textContent, /record id|by its id/i, "no label or help names a record id");
 });
 
 test("R23 the other people fields are choices too: a claim's other record, a timeline participant, a proceeding party, obligor and court, explore's end, a standard's law, a money trail's question", async () => {
-  const names = ["L. Chen", "Public Works Department"];
   const opts = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent).filter((x) => x !== "");
-  const { world, me } = await inWorld();
-  const chen = (await me.act("entitycreate", { body: { kind: "person", label: "L. Chen", note: "Named in the minutes." } })).entity_id;
-  await me.act("entitycreate", { body: { kind: "institution", label: "Public Works Department", note: "The city department." } });
-  const person = await openAs(world, me, "/app/person/" + chen);
+  const { world, me, chen, ord, pol, PATHS } = await scene();
+  const names = (await me.read("peopledirectory", { query: { limit: "200" } })).rows.map((r) => r.name || r.entity);
+  assert.ok(names.includes("L. Chen") && names.includes("Public Works Department"), "the directory names the two");
+  const person = await openAs(world, me, PATHS.person);
   assert.deepEqual((await me.read("samepersoncandidates", { query: { id: chen } })).candidates, [], "no candidate for the same person: the world's answer");
-  assert.deepEqual(opts(person, "person-claim-other"), ["Public Works Department"], "the person herself is not offered");
-  const tl = await open(PATHS.timeline);
+  assert.deepEqual(opts(person, "person-claim-other"), names.filter((n) => n !== "L. Chen"), "the person herself is not offered");
+  const tl = await openAs(world, me, PATHS.timeline);
   assert.deepEqual(opts(tl, "tl-who"), names);
-  const pr = await open(PATHS.proceeding);
+  const pr = await openAs(world, me, PATHS.proceeding);
   for (const id of ["pr-party", "pr-obligor"]) assert.deepEqual(opts(pr, id), names, id);
-  assert.deepEqual(opts(pr, "pr-forum"), ["Alameda Housing Tribunal"], "R36: the court is among the forums");
-  assert.deepEqual(opts(pr, "pr-court"), ["Municipal Code §12.04", "Administrative Instruction 9.1, §2"]);
-  const ex = await open(PATHS.explore);
+  const forums = (await me.read("entitieskind", { query: { kind: "body", forum_kind: "court,commission,grand_jury,auditor,other", limit: "200" } })).entities.map((e) => e.label);
+  assert.deepEqual(forums, ["Alameda Housing Tribunal"]);
+  assert.deepEqual(opts(pr, "pr-forum"), forums, "R36: the court is among the forums");
+  const standards = (await me.read("standards", { query: { limit: "200" } })).items;
+  assert.deepEqual(opts(pr, "pr-court"), standards.map((x) => x.cite || x.id));
+  const ex = await openAs(world, me, PATHS.explore);
   assert.deepEqual(opts(ex, "explore-to"), [word("screen.explore.to.any"), ...names]);
-  const st = await open("/app/standard/" + STD);
-  assert.deepEqual(opts(st, "st-to"), ["Municipal Code §12.04"], "the standard itself is not offered as its own law");
-  const mo = await open(PATHS.money);
-  assert.deepEqual(opts(mo, "mf-question"), ["Is the city repairing reported potholes within seven days?"]);
+  const st = await openAs(world, me, "/app/standard/" + pol);
+  assert.deepEqual(opts(st, "st-to"), standards.filter((x) => x.id !== pol).map((x) => x.cite || x.id), "the standard itself is not offered as its own law");
+  assert.ok(opts(st, "st-to").includes((await me.read("standard", { query: { id: ord } })).cite), "the other law is");
+  const mo = await openAs(world, me, PATHS.money);
+  assert.deepEqual(opts(mo, "mf-question"), [QUESTION]);
 });
 
 test("R26 person, calculation, proceeding and standard mark their subject read subject: true and list NO_ENTITY and NO_CALC in ABSENT_CODES", () => {
@@ -193,9 +200,11 @@ test("R26 person, calculation, proceeding and standard mark their subject read s
 });
 
 test("R26 a bare calculation (refused NO_CALC) draws \"Nothing is here\" and nothing else of the screen (interface-shell R61); control: a calculation that is there is drawn", async () => {
-  const p = await open("/app/calculation/" + CALC, { plane: { calculation: refusedIn("NO_CALC", "No such calculation.") } });
+  const { world, me, calc } = await scene();
+  /* a fault the test injects on purpose: the read answers the refusal of a calculation that is not there */
+  const p = await openAs(world, me, "/app/calculation/" + calc, { plane: { calculation: refusedIn("NO_CALC", "No such calculation.") } });
   drew(main(p), "shell.unavailable.nothing.title");
   assert.equal(main(p).querySelectorAll("section").length, 0, "nothing else of the screen is drawn");
-  const q = await open("/app/calculation/" + CALC);
+  const q = await openAs(world, me, "/app/calculation/" + calc);
   notDrew(main(q), "shell.unavailable.nothing.title");
 });
