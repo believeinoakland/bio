@@ -36,6 +36,17 @@ test("R15 fixtures: caseFileLedger is the real ledger over complete editions: ow
   assert.deepEqual(l.owed({ now: T0 + 1e9 }).map((x) => x.case), [b.case], "a built edition is never owed");
 });
 
+test("R15 fixtures: caseFileLedger's manifest takes built, recording the real manifest and the case file built in one call; without it the ledger is as before; a malformed built is the real MALFORMED", () => {
+  const l = caseFileLedger({ editions: 2 });
+  const [a, b] = l.cases;
+  assert.equal(l.manifest(a.case, 1, { built: true }).ok, true);
+  assert.equal(l.state(a.case).state, "built");
+  assert.equal(l.manifest(b.case).ok, true);
+  assert.equal(l.state(b.case).state, null, "without built the ledger is left alone");
+  const bad = l.manifest(b.case, 1, { built: "true" });
+  assert.deepEqual([bad.ok, bad.reason], [false, "MALFORMED"]);
+});
+
 test("R42 fixtures: publicationWorld's rest makes a published finding rest on its documents by the real acts, and restingCapturesOf answers their captures with the finding and its project", () => {
   const p = publicationWorld();
   const r = p.rest({ finding: "INQ-2026-0001", docs: ["INFO-2026-0001-a", "INFO-2026-0002-b"] });
