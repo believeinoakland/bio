@@ -535,3 +535,7 @@ COMPLETE · K5046 (c): ADMIN_ACTS (45) and ADMIN_SCREENS copied verbatim into wi
 - Also on my head: control-plane 680/680; plane 599/601 (R24, the missing words above; R87 G54 L, which passes alone as in J23's note).
 
 Size (session_019XFUSYv3eS4JuzAcTX5AsX): test runs 22, module lines 3050
+
+## J25 · REPORT
+
+REPORT · other modules. (a) Plane R24 is NOT green after the re-take, and not because of it: the words list lacks screen.objective.purpose and screen.about-knocker.purpose (setup-words / design words.json); same red on the tranche before. (b) op-declarations t50.test.mjs:391 (R73, R21) now fails: registryActGaps reports installregion and installaddress (install screen, owed K4746/K4937). Either its OWED_BY_FIX_ROUND gains them, or they are installer routes like INSTALLER_ROUTES' four (wizard-scripts data.mjs:69; R41 says four): your call, I did not widen R41. (c) screens-settings contract.test.mjs:75 (R39): act.captureuploadabort.does not a word of the list; unrelated to the registry. (d) words check: handlist on my r51.test.mjs:9 (the 45 admin acts; 29 are other modules' ops); R51's test text asks for exactly that list; your call.
