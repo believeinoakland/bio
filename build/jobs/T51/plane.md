@@ -1165,3 +1165,10 @@ Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 31, module lines 371
 `r10-reading-ended.test.mjs` (new; `// fixtures-run: notice-producers reading-ended`, named R1): the REAL job table (`Store` over the plane's fixture, four readings registered and ended by the object's own alarm with extraction's reader answers) answers `readingsEnded` in the contract's shapes (refused with its bound key, finished, final with the reader's reason, final with member null, the ten-key row, `ended_at` epoch ms, order) and by the cursor `<ended_at>\u0001<sha>\u0001<kind>`; a read writes nothing. 2 of 2 green. fixtures plane 0 failures, format/architecture/coverage/ownership 0.
 REPORT (notice-producers): `reading-ended-seam.test.mjs:18` `fixtures-contract: plane reading-ended` is flagged `[idle]` by `checks/fixtures.mjs notice-producers` with and without plane's run: the marker holds nothing the check recognizes (it precedes `const READING_ROWS = Object.freeze([...])`, not a call the check classes as an answer/stub use). Placement of the marker is notice-producers'.
 Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 33, module lines 371
+
+## J67 · COMPLETE
+
+COMPLETE again (PLANE #63; B101 on top of J66). B101: `bio-plane/test/m/plane/r10-reading-ended.test.mjs` carries `fixtures-run: notice-producers reading-ended` and runs the contract on the real job table (`readingsEnded`: refused, finished, final, final with no opener, the paged cursor); 2/2 green; fixtures plane 0 failures; format, architecture, coverage 37/37, ownership 0.
+REPORT: notice-producers `reading-ended-seam.test.mjs:18` `fixtures-contract: plane reading-ended` is still `[idle]` in `checks/fixtures.mjs notice-producers` with or without plane's run: the check recognizes no answer/stub use after the marker (it precedes `const READING_ROWS = Object.freeze([...])`). The marker's placement is notice-producers'.
+Still open from J66: r10-lag-figure's 1,000 (store-assembly R78 text, extraction R111) awaits your amendment; r9-jobs's open handle is store-assembly's `openInstruments` setInterval (unref).
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 33, module lines 371
