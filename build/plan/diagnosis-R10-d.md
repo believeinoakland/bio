@@ -34,13 +34,15 @@ Nothing is missed in the product: `r9-jobs.test.mjs:679` ("R97 NO_HOME: a readin
 
 ### 3. Failing-first test
 
-There is no red case for the product to fix. Recommended: a **control** that is green now and pins the behaviour the walk relied on, plus the verdict for BOB.
+There is no red case for the product to fix. What I did reproduce, on workerd (Miniflare, `r8-headofline-entry.mjs` with a 12,000,000 B text uploaded through the real door and **not** filed; a scratch script, not committed): the row stays `owed`, `last_why NO_HOME`, `attempts 5` at 242 s (the walker's 3, 4, 5 over 391 s), `failed` 0, and it is never read while unfiled. (A 5 MB text filed at once through the same harness read in 3.5 s; the harness's own `/r8/file` cannot file a multipart document, which is why the 12 MB one stayed unfiled here: `PROVENANCE_REGISTER_REFUSED`.)
+
+Recommended: a **control** that is green now and pins what the walk relied on (the row is re-armed by the filing):
 
 - Module and file: plane, `bio-plane/test/m/plane/r10-nohome-filed-later.test.mjs`.
-- Builds: Miniflare/workerd with the existing `r8-headofline-entry.mjs` (`Headline`), a 4 MB text (`TEXT_BYTES = 4_000_060`, the smallest size deferred to the ledger) uploaded through the real door (`POST /api?op=captureupload`) and **not filed**; the stub scanner answering at once. Poll `/r8/rows` until the `reading` row shows `last_why NO_HOME` with `attempts >= 3` (back-off 60 s, so the test's clock is advanced by `setAlarm` to the row's `due_at`, or the row's `due_at` rewritten through the harness: counts, never waiting a real clock, R-CLOCK).
-- Then files it through the **door's `op=promote`** (a promote body built as the screen builds it, as `harness.mjs` does for the feed; not the harness's `/r8/file`, which calls `promotionOf().promote` directly and so does not follow).
-- Asserts: the row's `attempts` is 0 and `due_at <= now` straight after the promote answer, `reading_pending: true` in the answer, and after the next firing `owedwork&sha=` shows `last.outcome finished`. Control for the opposite: the same filing through `/r8/file` (no follow) leaves the row waiting its back-off; that is the hazard named below.
-- Seen red? Not red, by design: it is a green characterisation. I did not run it here (building a faithful promote body is the cost; see section 4).
+- Builds: the same Miniflare world, a 4 MB text (`TEXT_BYTES = 4_000_060`, the smallest size deferred to the ledger) uploaded through the real door and not filed; poll `/r8/rows` until the `reading` row shows `last_why NO_HOME` and `attempts >= 3`.
+- Then files it through the **door's `op=promote`** (a promote body as the screen builds it; not `/r8/file`, which calls `promotionOf().promote` directly and so does not follow).
+- Asserts: straight after the promote answer the row has `attempts` 0 and `due_at <= now` and the answer carries `reading_pending: true`; after the next firing `owedwork&sha=` shows `last.outcome finished`. Opposite control: the same filing through `/r8/file` (no follow) leaves the row at its back-off (the hazard in section 5).
+- Seen red? Not red, by design (a characterisation). Not run: building a faithful `promote` body is the cost.
 
 ### 4. The platform check
 
