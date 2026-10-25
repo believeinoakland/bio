@@ -218,4 +218,4 @@ COMPLETE · follow-up 14, cause R24 (b2). Root cause: index.mjs #copyOne (and #o
 **Tests run.** case-carriage 110/110 (106 plus 4). Impact set: case-disclosures 116/116, case-check 35/35, case-authoring 257/257, public-read 310/310, scheduler 185/185, publication 184 pass, 0 fail.
 **Checks** (absolute root `/home/user/bio`): format 0 failures; architecture case-carriage 19 files, 0; coverage 23 of 23, 0; words 0; ownership 0; fixtures `--list` 0 failures, no new line.
 
-Size (session_01Eyr6nAcJni3EthrUFAfdnx): test runs 9, module lines 1735
+Size (session_01Eyr6nAcJni3EthrUFAfdnx): test runs 9, module lines 1756
