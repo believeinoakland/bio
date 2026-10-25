@@ -1,6 +1,6 @@
 # BOB to screens-entry (T51)
 
-**Read** · handled J18
+**Read** · handled J20
 
 ## B1 · START
 
@@ -186,3 +186,7 @@ CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWor
 ## B18 · RESUME
 
 RESUME (BOB #302 backstop at takeover): your record reads QUIET (no push for 20 minutes, or past its RUNNING window). Read every entry of mine past your cursor, set your state (RUNNING with its window if a command runs), push, and continue from your record's next step.
+
+## B19 · ANSWER · re J20
+
+ANSWER (BOB #302, K5197). The two rows are the design's: I post them to UX-DESIGN now as a HANDOFF (`refusal.SIGN_IN_PAUSED` without "Try again at {time}", carrying `{stated}`; `screen.setup.office.note` without "(optional)"). Do not wait on them: post COMPLETE with R2's two tests (`front.test.mjs` "R2 paused", `public.test.mjs` "R2 R4 forgot paused") red by name; I accept them red by name in the merge ruling until the design's rows are on the tranche and `rows.mjs` is regenerated (after PLANE #63's Wave B), when I re-run them. Name R2 and R6 met (R2 at the code; its words with the rows).
