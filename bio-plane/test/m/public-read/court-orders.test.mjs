@@ -310,3 +310,19 @@ test("R28 a withheld edition's finding rows carry no content of the case documen
   const { court_orders, withheld, ...rest } = c;
   assert.equal(JSON.stringify(rest).includes(exclusion), false, "the signed document's exclusion text is not served");
 });
+
+test("R28 a seal of the case document alone nulls `case_excludes`, `strength`, `grounds` and `required` of every finding row, identity facts kept, and the exclusion sentence is served nowhere outside the orders; control: with no order they are served", async () => {
+  const s = await assembled();
+  const before = s.w.read("publishedcase", { id: CASE });
+  const exclusion = before.findings.find((f) => f.case_excludes).case_excludes;
+  assert.ok(before.findings.every((f) => f.strength), "control: served with no order");
+  s.w.stamps.stamp({ case: CASE, editions: [1], entry: ENTRY, effect: "seal", parts: [s.doc] });
+  const c = s.w.read("publishedcase", { id: CASE });
+  assert.equal(c.withheld.document, true);
+  for (const f of c.findings) {
+    for (const k of ["case_excludes", "strength", "grounds", "required"]) assert.equal(f[k], null, `${f.bundle_id} ${k}`);
+    assert.ok(f.attestor && f.sig_armored && typeof f.bundle_sha === "string", "identity facts stay");
+  }
+  const { court_orders, withheld, ...rest } = c;
+  assert.equal(JSON.stringify(rest).includes(exclusion), false);
+});

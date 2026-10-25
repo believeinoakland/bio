@@ -1,6 +1,6 @@
 # capture-requests (T51)
 
-**Status** · session_016v1BcEsgoXvoBS2PnqgQYs · depth 2 · COMPLETE · handled B8
+**Status** · session_01KmKzc6DsB65KPdNxW7UEBJ · depth 2 · COMPLETE · handled B9
 
 ## Completion (T51-59 · red #27, N1243)
 
@@ -177,3 +177,54 @@ Size (session_016v1BcEsgoXvoBS2PnqgQYs): test runs 10, module lines 2585 (only t
 ## J8 · COMPLETE · re B8
 
 COMPLETE B8 at 69c59e3372 (tranche/T51 merged). t41.test.mjs R55 thrown-tie arm now runs over the real steps (real step via stepOf, recordProduct throwing as a fault). Module tests 130/130; fixtures list 4 failures, all sweep.test.mjs:22-25 contract-no-run waiting on link-sweep's run; format, architecture, coverage 58/58, words, ownership 0 failures. Record: section 'Completion again (B8)'.
+
+## Completion (B9 · fix round 10, the final pass's causes; plan item 71 (1), K5148)
+
+**Cause 1 done: a member can mark a host a login-gated platform (R46).**
+- *Cause:* `captureRequestsOps` routed none of `capturerequestplatformmark`, `capturerequestplatformunmark` or `capturerequestplatformhosts`, though `markPlatform`, `unmarkPlatform` and `platformHosts` exist and op-declarations declares the three (`bio-plane/src/op-declarations/index.mjs:427`, `member` and `read`). No request reached the mark R46 reads.
+- *Where:* the ops map, `bio-plane/src/capture-requests/index.mjs` (`captureRequestsOps`, from line 1909); the methods (`markPlatform` 1625, `unmarkPlatform` 1654, `platformHosts` 1676) and the declaration were re-read and are as the diagnosis says.
+- *Fix:* three routes added beside `capturerequestretry`. Mark and withdrawal take the body as their argument and the actor from the query's `viewer`, as the module's other ops take it; the hosts read takes `viewer` and `limit` from the query, as `capturerequests` does.
+- *(1) Failing first:* `bio-plane/test/m/capture-requests/platform-ops.test.mjs` (new; R46 in its title), calling the three ops through `captureRequestsOps(c, url, body)`. Seen red on the code before the route: `TypeError: captureRequestsOps(...).capturerequestplatformmark is not a function`. Green after it.
+- *Asserts:* a mark answers as `markPlatform` does (the host normalised, `marked_by` the viewer); a second mark answers `already: true` with the same mark id; the hosts op lists the standing mark; a withdrawal answers as `unmarkPlatform` does, the row kept with who withdrew it; a repeated withdrawal answers `already: true`.
+- *Control:* a host nobody marked is not listed (`portal.example.gov` absent); a mark by no member (absent viewer, empty, `class:ai`, `class:member`, `token:x`) is refused `CAPTURE_PLATFORM_MARK_REFUSED` (C-28.22) and writes nothing; an absent viewer sees no marks.
+- *(3) Why the tests missed it:* the R46 tests in `member-only.test.mjs` call the three methods on the module object (`w.cr.markPlatform(...)`), never through the ops map, so an unrouted op was invisible to them. `coverage.mjs` counts the requirement ids a test names, not whether each op a family declares has a route in the map, and no check ties this module's declared ops to its ops map. The declaration said the ops existed; nothing checked that they were reachable.
+
+**Requirement:** R46 met (named by `platform-ops.test.mjs`). No requirement line was added or amended by this job; BOB strikes the *(not yet met: T51)* mark on R46.
+
+**Deferred:** nothing.
+
+**Checks (absolute product root `/home/user/bio`):**
+- module tests: `bio-plane/test/m/capture-requests/*.test.mjs`, 131 of 131 pass, run without `--test-force-exit` (the run exited by itself); `platform-ops.test.mjs` 1 of 1 pass.
+- `checks/format.mjs`: 178 modules, 0 failures.
+- `checks/architecture.mjs capture-requests`: 20 product files, 0 failures.
+- `checks/coverage.mjs capture-requests`: 58 of 58 live requirement ids named by a test, 0 failures.
+- `checks/fixtures.mjs /home/user/bio capture-requests --list`: 0 failures; accepted 6, all already listed; no new failing line; no `fixtures-own` or `fixtures-generic` marker added.
+- `checks/run.mjs /home/user/bio`: 0 findings in any capture-requests file. Repo-wide, it reports findings in other modules (16 word failures and FAIL lines in screens-daily, screens-inquiry, screens-intake, screens-settings, plane, control-plane and others). They are not in this job's files and are not touched here.
+- `checks/ownership.mjs /home/user/bio capture-requests tranche/T51 job/T51/capture-requests`: run after the commit below.
+
+**Found in other modules (reported to BOB in this job's COMPLETE, not changed):** `screens-intake` tests hand-build answers for the capture-request ops this module serves (`capture.test.mjs:274,280,646`, `common.test.mjs:35`, `phone390.test.mjs:37`, `r8-add-reads.test.mjs:18`, `t51-credentials.test.mjs:33,57`, `t51-fix2.test.mjs:101`). Their re-pointing is screens-intake's own job.
+
+**Size (session_01KmKzc6DsB65KPdNxW7UEBJ): test runs 4, module lines 2590.** (Test runs: the new test seen red, the same test after its own fix to the test's helper, the test green, and the module directory run. Module lines: `bio-plane/src/capture-requests/*.mjs`, all files of the module.)
+
+## J9 · COMPLETE
+
+COMPLETE for B9 (fix round 10, the final pass's causes; plan item 71 (1)).
+
+Cause 1 is done: a member can now mark a host a login-gated platform (R46). captureRequestsOps routed none of capturerequestplatformmark, capturerequestplatformunmark or capturerequestplatformhosts; it routes the three now (src/capture-requests/index.mjs, the ops map from line 1909). Mark and withdrawal take the host from the body and the actor from the query's viewer; the hosts read takes viewer and limit from the query.
+
+Commit 82e135a332 is pushed to job/T51/capture-requests (fast-forward; no rebase, no force).
+
+Test: bio-plane/test/m/capture-requests/platform-ops.test.mjs (new, R46 in its title), calling the three ops through captureRequestsOps(c, url, body). Red before the route (TypeError: ... capturerequestplatformmark is not a function), green after. Controls: an unmarked host is not listed; a mark by no member is refused CAPTURE_PLATFORM_MARK_REFUSED with nothing written. The module's 131 tests in bio-plane/test/m/capture-requests pass (131 of 131, run without --test-force-exit; the run exited by itself).
+
+Why the tests missed it: the R46 tests call the methods on the module object, never through the ops map, and coverage.mjs counts named ids, not routed ops. Recorded in my record.
+
+Met ids: R46. No requirement line added or amended; BOB strikes the mark on R46.
+Markers added: none. Deferred: none.
+
+Checks, absolute root /home/user/bio: format 0 failures; architecture (capture-requests) 0; coverage 58 of 58 live ids named, 0; fixtures --list 0 failures, no new failing line; ownership capture-requests tranche/T51 job/T51/capture-requests: 3 files, 0 failures. checks/run.mjs: 0 findings in capture-requests files.
+
+Found in other modules (not changed here, for BOB to place):
+- checks/run.mjs reports repo-wide findings in other modules (16 word failures; FAIL lines in screens-daily, screens-inquiry, screens-intake, screens-settings, plane, control-plane and others). Not in this job's files.
+- screens-intake tests hand-build answers for capture-request ops this module serves: capture.test.mjs:274,280,646; common.test.mjs:35; phone390.test.mjs:37; r8-add-reads.test.mjs:18; t51-credentials.test.mjs:33,57; t51-fix2.test.mjs:101. Their re-pointing is screens-intake's job.
+
+Size (session_01KmKzc6DsB65KPdNxW7UEBJ): test runs 4, module lines 2590.

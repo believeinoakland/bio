@@ -35,7 +35,7 @@ import { validAt, fiscalPeriod, isCalendarDate, localDay, reasonText } from "../
 import { recognise } from "../idspaces.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal, notAnAdmin, MODULE_ORDER, viewerPredicate, Membership } from "../membership/index.mjs";
-import { contentOf, canonicalExtent } from "../content/index.mjs";
+import { contentOf, canonicalExtent, checkContentExtent } from "../content/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { combine as combineProfiles, SPACES } from "../../../jurisdictions/index.mjs";
 import { CALCULATIONS_TABLES, migrateCalculations } from "./schema.mjs";
@@ -667,17 +667,30 @@ export class Calculations {
     } catch (e) { log({ phase: "end", outcome: "thrown", error: String((e && e.name) || "Error").slice(0, 80) }); return { text: null, transient: true }; }
   }
 
-  /** R1–R3: `declareTable({source, schema, header, roles?, vintage?, by})`. `source` is a content id (a CSV
-   *  capture's document, a passage, a workbook range or a portal export). Async: the bytes go to the evidence store. */
+  /** R1–R3, R51: `declareTable({source, schema, header, roles?, vintage?, by})`. `source` is a content id (a CSV
+   *  capture's document, a passage, a workbook range or a portal export), or a found passage `{capture_sha, extent}`
+   *  nobody has cited yet, whose content row is minted as money's source is. Async: the bytes go to the evidence store. */
   async declareTable({ source = null, schema = null, header = null, roles = null, vintage = null, by = null } = {}) {
     if (!stamped(by) || isMachine(by))
       return no("MEMBER_ACT_ONLY", localize("calculations.index.a_table_is_declared_by", "a table is declared by a member; a machine may not declare one (K1468). Nothing was written."));
-    const contentId = typeof source === "string" ? source.trim() : plain(source) ? str(source.content) : "";
-    if (!contentId) return no("NO_SOURCE", "a table names its captured source: the content id of a CSV, a workbook range or a portal export. Nothing was written.");
-    const row = this.content.contentRow(contentId);
-    if (!row || !this.#sees(row.bundle_id, by))
+    let contentId = typeof source === "string" ? source.trim() : plain(source) ? str(source.content) : "";
+    /* R51: a found passage, the shape every other recording act takes (money R2). Its content row is minted once the rest of the act is
+       judged (below), so an act refused before the bytes are read mints nothing; here only its capture and extent are checked. */
+    let found = null;
+    if (!contentId && plain(source) && source.capture_sha !== undefined) {
+      const sha = str(source.capture_sha).toLowerCase();
+      const home = /^[0-9a-f]{64}$/.test(sha) && this.provenance ? this.provenance.homeOf(sha) : null;
+      if (!home || !this.#sees(home.bundleId, by))
+        return no("NO_SUCH_CONTENT", localize("calculations.declare.no_capture_is_held_here", "no capture is addressed by this sha in this record, or it is not one you may see. Nothing was written."), { capture_sha: sha });
+      const extent = source.extent === undefined || source.extent === null ? { kind: "document" } : source.extent;
+      const bad = plain(extent) ? checkContentExtent(extent, this.content.contentContextFor(sha, { searched: false })) : { code: "CONTENT_EXTENT_UNREADABLE" };
+      if (bad) return no("NO_SUCH_CONTENT", localize("calculations.declare.the_found_passage_names_no", "the found passage names no part of that capture. Nothing was written."), { capture_sha: sha, extent_code: bad.code ?? null });
+      found = { bundleId: home.bundleId, captureSha: sha, extent };
+    } else if (!contentId) return no("NO_SOURCE", "a table names its captured source: the content id of a CSV, a workbook range or a portal export. Nothing was written.");
+    const row0 = found ? null : this.content.contentRow(contentId);
+    if (!found && (!row0 || !this.#sees(row0.bundle_id, by)))
       return no("NO_SUCH_CONTENT", "no content row is addressed by this id in this record, or it is not one you may see. Nothing was written.", { content_id: contentId });
-    if (row.stale) return no("CONTENT_STALE", "the passage was cited under an earlier reading of its document; cite it again under the current one. Nothing was written.", { content_id: contentId });
+    if (row0 && row0.stale) return no("CONTENT_STALE", "the passage was cited under an earlier reading of its document; cite it again under the current one. Nothing was written.", { content_id: contentId });
     const names = readHeader(header);
     if (!names) return no("NO_HEADER", "a table declares its header: a list of distinct, non-empty column names. Nothing was written.");
     const sf = schemaFault(schema, names);
@@ -695,6 +708,13 @@ export class Calculations {
       const has = (role, c) => cr.some(([k, v]) => k === c && v.role === role);
       if (!has("crosswalk_from", r.crosswalk.from) || !has("crosswalk_to", r.crosswalk.to))
         return no("BAD_SCHEMA", `the crosswalk "${col}" names is not a declared crosswalk with those two ends. Nothing was written.`, { field: col });
+    }
+    let row = row0;
+    if (found) {
+      const m = this.record.transact(() => this.content.mint({ ...found, mintedBy: by }));
+      if (!m || m.ok === false || !m.content_id) return no("NO_SUCH_CONTENT", localize("calculations.declare.the_found_passage_names_no", "the found passage names no part of that capture. Nothing was written."), { capture_sha: found.captureSha });
+      contentId = m.content_id;
+      row = this.content.contentRow(contentId);
     }
     const src = await this.#sourceRows(row, names);
     if (src.tooLarge) return this.#tooLarge(src.tooLarge);
@@ -716,19 +736,39 @@ export class Calculations {
       const sc = scanCsv(src.text, (r) => { if (r.length > widest) widest = r.length; tb.push(r); }, delimiter);
       src.text = null;
       if (sc.error) return no("SOURCE_NOT_READ", `the source does not read as CSV: ${sc.error}. Nothing was written.`, { content_id: contentId });
-      /* a source that is one cell per line against a wider header does not split into the declared columns under any delimiter found:
-         held as a table of whole lines, every value the whole line, it would be accepted silently; it is refused instead */
+      /* a source no line of which splits into the declared columns under any delimiter found (one cell per line, or every line short) would be
+         held as a table of undetermined cells, accepted silently; it is refused instead. A short row among full ones is R45's, padded. */
+      const delimiterName = tab ? "tab" : sig.name ?? null;
       if (names.length > 1 && widest === 1)
-        return no("SOURCE_NOT_READ", localize("calculations.index.the_source_reads_as_one", "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.", { delimiter: String(sig.name || "none"), columns: String(names.length) }),
-          { content_id: contentId, delimiter: sig.name ?? null, columns_expected: names.length });
+        return no("SOURCE_NOT_READ", localize("calculations.index.the_source_reads_as_one", "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.", { delimiter: String(delimiterName || "none"), columns: String(names.length) }),
+          { content_id: contentId, delimiter: delimiterName, columns_expected: names.length });
+      if (names.length > 1 && widest < names.length)
+        return no("SOURCE_NOT_READ", localize("calculations.index.no_line_splits_into", "no line of the source splits into the {columns} declared columns (delimiter found: {delimiter}; the widest line has {widest}); check the file's separator or the header you declared. Nothing was written.", { delimiter: String(delimiterName || "none"), columns: String(names.length), widest: String(widest) }),
+          { content_id: contentId, delimiter: delimiterName, columns_expected: names.length });
     }
     const built = tb.finish();
     if (built.fault) return no("BAD_SCHEMA", `the source does not fit the declared header: ${built.fault.why}. Nothing was written.`, { field: built.fault.field });
     if (built.tooLarge) return this.#tooLarge(built.tooLarge);
     const bytes = built.bytes;
     const tableSha = built.sha;
-    const held = this.#one(`SELECT sha FROM calc_tables WHERE sha=?`, tableSha);
-    if (held) return { ok: true, already: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
+    const held = this.#one(`SELECT sha, roles_json, schema_json FROM calc_tables WHERE sha=?`, tableSha);
+    if (held) {
+      /* R1 (K5148): the key is the bytes; a declaration of held bytes with other roles or schema replaces the held ones and says so, facts
+         already written staying. Roles left out ask for no change. */
+      const replaced = [];
+      if (roles && canonicalJson(parse(held.roles_json)) !== canonicalJson(roles)) replaced.push("roles");
+      if (canonicalJson(parse(held.schema_json)) !== canonicalJson(schema)) replaced.push("schema");
+      if (!replaced.length) return { ok: true, already: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
+      const out = this.record.transact(() => {
+        this.sql.exec(`UPDATE calc_tables SET roles_json=?, schema_json=?, undetermined_json=?, undetermined_count=? WHERE sha=?`,
+          roles ? json(roles) : held.roles_json, json(schema), json(built.undetermined), built.count, tableSha);
+        if (replaced.includes("schema")) this.#stale(tableSha, "table_replaced");
+        return { ok: true };
+      });
+      if (!out.ok) return out;
+      this.#tableCache.delete(tableSha);   /* its typed rows were read under the schema just replaced */
+      return { ok: true, replaced, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
+    }
     const ev = this.record.evidenceStore();
     if (!ev) return no("NO_EVIDENCE_STORE", localize("calculations.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written."));
     try { await ev.put(tableSha, bytes); } catch (e) { return no("EVIDENCE_WRITE_FAILED", `the table's bytes could not be stored: ${String(e && e.message || e).slice(0, 200)}. Nothing was written.`); }
@@ -1837,6 +1877,18 @@ export class Calculations {
       if (roles[role] === undefined) return no("BINDING_ROLES", `a binding names the role ${role}. Nothing was written.`, { role });
     for (const role of ["amount", "payer", "payee"])
       if (typeof roles[role] !== "string") return no("BINDING_ROLES", `the role ${role} maps to a column. Nothing was written.`, { role });
+    /* R14 (K5148): each constant is asked of money, which reads it when a fact is recorded, so an unreadable one is stated here and not once per row.
+       `money_code` is money's own code for it (`reason` is this refusal's). */
+    const money = this.dep("money");
+    if (money && typeof money.checkConstant === "function")
+      for (const [role, v] of Object.entries(roles)) {
+        if (typeof v === "string") continue;
+        let c = null;
+        try { c = money.checkConstant({ role, value: role === "period" ? moneyPeriod(v.value) : v.value.trim() }); } catch { c = null; }
+        if (c && c.ok === false)
+          return no("BINDING_UNREADABLE", localize("calculations.index.money_cannot_read_the_value", "money cannot read the value given for the role {role} ({why}). Nothing was written.", { role: String(role), why: String(c.detail || c.reason) }),
+            { role, money_code: c.reason ?? c.code ?? null });
+      }
     const key = sha({ table: t.sha, roles });
     if (this.#one(`SELECT 1 AS x FROM calc_bindings WHERE binding_key=?`, key)) return { ok: true, already: true, binding: key, table: t.sha, roles };
     const at = this.now();
@@ -1896,6 +1948,16 @@ export class Calculations {
       return out;
     }
     return { why: localize("calculations.index.an_id_space_normalises", "an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk") };
+  }
+
+  /* R14 (K5148): a row whose live fact money already holds (`factBySource`, an indexed read) is not written again: `{notWritten}` naming the held
+     fact, or null. A withdrawn fact is none, so it never blocks its row. */
+  #alreadyWritten(money, ctx, i) {
+    if (typeof money.factBySource !== "function") return null;
+    const held = money.factBySource({ table: ctx.b.table_sha, row: ctx.firstRow === null ? i : ctx.firstRow + i, binding: ctx.b.binding_key });
+    if (!held || held.found !== true || !held.fact_id) return null;
+    return { notWritten: { row: i, reason: "ROW_ALREADY_WRITTEN", fact_id: held.fact_id,
+      detail: localize("calculations.ingest.row_already_written", "this row's money fact {fact} is already held, so a repeat does not write it again", { fact: String(held.fact_id) }) } };
   }
 
   /* R14: what one row asks of money, or why it is not written: `{notWritten}` or `{fact}` (a fact money has not yet recorded). */
@@ -1993,7 +2055,7 @@ export class Calculations {
     for (const i of picked) {
       const row = rowAt.get(i);
       if (!row) { notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" }); continue; }
-      const j = this.#judgeRow(ctx, i, row);
+      const j = this.#alreadyWritten(money, ctx, i) || this.#judgeRow(ctx, i, row);
       if (j.notWritten) { notWritten.push(j.notWritten); continue; }
       let r;
       try { r = await money.recordFact(j.fact); } catch (e) { r = { ok: false, reason: "MONEY_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
@@ -2112,7 +2174,7 @@ export class Calculations {
           if (written.length >= INGEST_SLICE_FACTS) break;
           const i = at(p), row = rowAt.get(i);
           if (!row) { notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" }); continue; }
-          const j = this.#judgeRow(ctx, i, row, tagged);
+          const j = this.#alreadyWritten(money, ctx, i) || this.#judgeRow(ctx, i, row, tagged);
           if (j.notWritten) { notWritten.push(j.notWritten); continue; }
           const m = money.recordFact(j.fact);   /* a throw leaves the slice: it is not a property of the row */
           if (m && typeof m.then === "function") throw new Error("money answered a fact asynchronously");

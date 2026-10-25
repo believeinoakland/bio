@@ -235,6 +235,8 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
     onFactChanged: (m, fn) => realMoney.onFactChanged(m, fn),
     withdrawFact: (a) => realMoney.withdrawFact(a),
     markIngest: (k, open) => realMoney.markIngest(k, open),
+    checkConstant: (a) => realMoney.checkConstant(a),
+    factBySource: (a) => realMoney.factBySource(a),
   };
   const duties = dutiesOf(host, { record, membership, entities, standards, events, money: realMoney, provenance: prov, content, now: () => clock.now });
   if (typeof duties.migrate === "function") duties.migrate();

@@ -134,7 +134,9 @@ test("R2: a member already cited is reported, not rewritten; with nothing new th
   w.put(q2, w.md(q2).replace("references: []", "references:\n  - rel: cites\n    target: INFO-2026-0003\n    status: confirmed\n    note: \"\""));
   const three = await w.select(["INFO-2026-0003"]);
   assert.deepEqual(w.cit.cite({ project: q2, handle: three, ...ANN, role: "supports" }).cited, ["INFO-2026-0003"]);
-  const nowhere = w.cit.cite({ project: q2, handle: three, ...ANN, role: "supports", extent: { extent_kind: "pdf-page", extent_page: "1" } });
+  const page1 = { extent_kind: "pdf-page", extent_page: "1" };
+  assert.deepEqual(w.cit.cite({ project: q2, handle: three, ...ANN, role: "supports", extent: page1 }).cited, ["INFO-2026-0003"], "another part is a new leg (R22)");
+  const nowhere = w.cit.cite({ project: q2, handle: three, ...ANN, role: "supports", extent: page1 });
   assert.deepEqual([nowhere.ok, nowhere.cited], [true, []]);
   assert.equal(nowhere.detail, everyMember(NOWHERE_TAIL));
 });

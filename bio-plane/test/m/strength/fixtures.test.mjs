@@ -1,7 +1,7 @@
 /* The fixtures strength publishes (fixtures.mjs): each is called here and checked against the real answer. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { gradingFactsUnread, strengthBarSet, strengthOfNoId, testimonyCorroboration } from "./fixtures.mjs";
+import { gradingFactsUnread, strengthBarSet, strengthOfNoId, testimonyCorroboration, projectBarStale } from "./fixtures.mjs";
 import { ADMIN, REASON } from "./fixture.mjs";
 
 test("fixture gradingFactsUnread: an inquiry nobody holds is NO_SUCH_BUNDLE naming the target, never NO_SUCH_INQUIRY", () => {
@@ -31,4 +31,15 @@ test("fixture testimonyCorroboration: a question resting on no testimony answers
   const r = testimonyCorroboration();
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.deepEqual(r.legs, []);
+});
+
+test("R45 fixture projectBarStale: the BAR_STALE refusal carries its row, its sentence and the bar now held as previous", () => {
+  const r = projectBarStale();
+  assert.equal(r.ok, false);
+  assert.equal(r.reason, "BAR_STALE");
+  assert.equal(r.check, "C-107.5");
+  for (const k of ["code", "translation", "detail", "project"]) assert.ok(r[k], k);
+  assert.equal(r.previous.declared, true);
+  assert.equal(r.previous.capture, "B");
+  assert.equal(r.previous.connection, "C");
 });

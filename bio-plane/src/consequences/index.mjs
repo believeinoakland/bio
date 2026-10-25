@@ -53,6 +53,8 @@
  *   entities       `readEntity` (R10: the person entity, its label and aliases); default `entitiesOf(host)`.
  *   people         `sourceLinkSight(person)` (its R34; N600): the source↔person link's sight, null when no link is
  *                  held (R10, R16); default `peopleOf(host)`.
+ *   basisVersions  `conclusionOf` (its R22; R27): whether the project the determination is in has concluded a causation inquiry,
+ *                  which leaves the question's own state `open` (its R18); default `basisVersionsOf(host)`.
  *   caseInputs     `carryOutcome` (its R9; R22): the one instance for the host, `caseInputsOf(host)` (its R16), unless
  *                  given (T47, N908: `case-authoring` R71 before). (T45) conformance's
  *                  `determinationVoided`, `curesOf` (its R33, R37; R1, R22); civil-time's `isCalendarDate`, `parseEdtf`
@@ -74,6 +76,7 @@ import { calculationsOf } from "../calculations/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { peopleOf } from "../people/index.mjs";
 import { caseInputsOf } from "../case-inputs/index.mjs";
+import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { isCalendarDate, parseEdtf } from "../civil-time/index.mjs";
@@ -309,13 +312,13 @@ export class Consequences {
 
   constructor({ storage, record, membership, promotion, host = null, conformance = null, content = null,
                 provenance = null, inquiry = null, strength = null, money = null, calculations = null, entities = null,
-                people = null, caseInputs = null, passageText = null, now = null } = {}) {
+                people = null, caseInputs = null, basisVersions = null, passageText = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, conformance, content, provenance, inquiry, strength, money, calculations, entities, people,
-                   caseInputs, passageText };
+                   caseInputs, basisVersions, passageText };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -329,6 +332,7 @@ export class Consequences {
   get calculations() { return this.#deps.calculations ||= (this.#deps.host ? calculationsOf(this.#deps.host) : null); }
   get entities() { return this.#deps.entities ||= (this.#deps.host ? entitiesOf(this.#deps.host) : null); }
   get people() { return this.#deps.people ||= (this.#deps.host ? peopleOf(this.#deps.host) : null); }
+  get basisVersions() { return this.#deps.basisVersions ||= (this.#deps.host ? basisVersionsOf(this.#deps.host) : null); }
   get caseInputs() { return this.#deps.caseInputs ||= (this.#deps.host ? caseInputsOf(this.#deps.host) : null); }
 
   /* R19 (T45): the one registered reader of the group's own acts (`actions` fills it). */
@@ -397,7 +401,7 @@ export class Consequences {
 
   /* R5: a named inquiry's causation, as it reads now: established when it is an inquiry the reader may see that has
      concluded and is not superseded; unproven otherwise, with why. */
-  #causationNow(inquiryId, viewer) {
+  #causationNow(inquiryId, viewer, project = null) {
     if (!str(inquiryId))
       return { state: "unproven", inquiry: null,
                why: localize("consequences.index.no_inquiry_is_named_whose", "no inquiry is named whose finding is that the harm follows from the act; sequence alone does not establish it (DEC-14), so the causation is unproven until one concludes") };
@@ -412,11 +416,19 @@ export class Consequences {
     if (sup.length)
       return { state: "unproven", inquiry: inquiryId,
                why: word("consequences.why.inquiry_named_superseded") };
-    if (!CONCLUDED.has(st))
+    if (!this.#concluded(inquiryId, st, project, who))
       return { state: "unproven", inquiry: inquiryId,
                why: word("consequences.why.inquiry_named_concluded", { state: String(st ?? word("consequences.why.state")) }) };
     return { state: "established", inquiry: inquiryId,
              why: word("consequences.why.inquiry_named_concluded_finding") };
+  }
+
+  /* R27: an inquiry is concluded when its own state says so, or when `project` has concluded it (basis-versions R18, R22),
+     which leaves the question's state as it was; a project's withdrawal ends it, and a conclusion in another project is none. */
+  #concluded(inquiryId, state, project, viewer) {
+    if (CONCLUDED.has(state)) return true;
+    if (!str(project)) return false;
+    try { return !!this.basisVersions?.conclusionOf(project, inquiryId, viewer); } catch { return false; }
   }
 
   #supersededBy(id) {
@@ -578,7 +590,7 @@ export class Consequences {
   #land({ d, standard, a, p, b, causation, author, byMachine, who, rev }) {
     /* R5: the causation, as it reads when recorded; nothing recomputes it (R8). A zero measure claims no harm, so it
        has no causation to prove (N257). */
-    const cause = isZeroMeasure(b.measure) ? zeroCausation(causation) : this.#causationNow(causation, who);
+    const cause = isZeroMeasure(b.measure) ? zeroCausation(causation) : this.#causationNow(causation, who, d.project);
     const at = this.#when();
     return this.record.transact(() => {
       const id = `${this.record.allocId("CONS", at.slice(0, 4)).id}-${a.affected.kind}`;
@@ -906,8 +918,9 @@ export class Consequences {
       if (sup.length) causes.push({ cause: "causation_superseded", why: word("consequences.why.causation_inquiry_superseded") });
       else if (r.causation_state === "established") {
         const head = this.record.head(r.causation);
-        let reopened = head && !CONCLUDED.has(head.currentState);
-        if (!reopened) {
+        const own = !!head && CONCLUDED.has(head.currentState);
+        let reopened = !!head && !own && !this.#concluded(r.causation, head.currentState, r.project, who);
+        if (!reopened && own) {
           let h = null;
           try { h = this.inquiry.stateHistory(r.causation); } catch { h = null; }
           reopened = !!(h && h.ok && h.transitions.some((t) => t.to === "open" && t.at && instantOrder(t.at, r.at) > 0));
