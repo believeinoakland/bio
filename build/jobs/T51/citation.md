@@ -230,3 +230,22 @@ Suites: citation 132 pass, 0 fail (was 127); affordances 282/282; screens-inquir
 No open QUESTION requires an answer; none held back.
 
 Size (session_01451wdDHycJMRsEDd4jwBN5): test runs 6, module lines 1760
+
+## J15 · COMPLETE
+
+Fix round 10, Wave B batch 6 (B12). Tests only; no product file of citation changed.
+
+**Fixture lines (2, both done):**
+- `cite-refusals.test.mjs` (R1, the write's refusals relayed): four of the five refusals now come from inquiry's published `basisRefusals()` (`basisRefused`, `selfBasis`, `basisCycle`, `machinePassageUnchecked`), each made by inquiry's real promotion. The fifth, `PROPOSAL_NOT_TAKEN_UP`, is run-productions' (a later module) and no published fixture gives it; it stays a literal beside the loop, relayed unchanged. The fixtures check does not flag it, so I added no marker.
+- `draw.test.mjs` (R14): the invented `SOME_STEP_REFUSED` is replaced by inquiry's real `BASIS_REFUSED` (`basisRefusals().basisRefused`).
+- Markers added: no `fixtures-own`, no `fixtures-generic`. `checks/fixtures.mjs . citation --list` is at zero.
+
+**Inherited reds (R21) and K5090:** the three red tests (`cite-repairs.test.mjs`) asserted the old half-labelled refusal. Seen red first (3 failures), then rewritten. After inquiry-grammar R68 no cite onto a grouped basis is refused for its grouping:
+- a second passage cited beside a grouped one is clean and carries no `repairs` (new test);
+- the one C-2.8 grouping finding a cite still reaches is a cutting passage named into a group (`role: cuts_against` with `ground: "part 1"`): `BASIS_REFUSED` with its findings, `repairs: []` (the member named the group; `cite` offers repairs only when none was named), nothing written; the same cite without the group lands (new test);
+- the repairs arm is kept under test by the write refusing a grouped document with the real C-2.8 answer from inquiry's fixture: two repairs (add to the group, take the grouping off), each done lets the cite land (the three amended tests). The control (`repairs: []` for a refusal that is not a grouping; none on success) is unchanged.
+REPORT to BOB (K5090): no cite reaches a grouping refusal whose stated repairs clear it any more, so R21's C-2.8 arm (`#groupingRepairs`: one `cite` repair per group and one `inquiryground`) is unreachable through a real basis. I struck nothing; BOB retires the arm, or has the cutting-with-ground case carry a "cite it without the group" repair.
+
+**Runs:** citation tests 134 of 134 pass (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/citation/*.test.mjs`). Checks: fixtures 0 failures; words 0 failures; format 0 failures; architecture 0 failures; coverage 21 of 21 ids named, 0 failures; ownership 0 failures. `impact.mjs origin/tranche/T51 HEAD`: no affected module (test files only), so no user's tests to run.
+
+Size (session_01KjtAFrtxEtLHsjBFVS3Bgd): test runs 3, module lines 0
