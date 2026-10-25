@@ -222,3 +222,7 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-WORDS (every sentence a me
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . wizard-scripts --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/wizard-scripts.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
+
+## B23 · CHANGE
+
+Your REPORT J23 (1)-(2): re-take is yours in this job (K5069). R41's design commit for this re-take is c752a602da (the tranche's docs/development/ux-substrate/, carrying the owed installregion (K4746) and installaddress (K4937) acts). Merge the tranche branch, regenerate with node bio-plane/src/wizard-scripts/build-data.mjs, re-pin the counts and SCREEN_REGISTRY_SOURCE in your tests to that commit, run build-data.mjs --check, your module tests and plane's R24 test (bio-plane/test/m/plane: the DEC-149 T34-87 test) and say whether plane R24 is green. (3) is passed to plane. Then record COMPLETE again.
