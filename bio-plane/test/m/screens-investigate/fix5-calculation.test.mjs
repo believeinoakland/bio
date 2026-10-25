@@ -7,6 +7,7 @@ import { fill, press, main, word, hasWord } from "./fixtures.mjs";
 
 const REASON = "Counted from the register.";
 const NEW_KEYS = ["screen.calculation.column", "screen.calculation.column.help", "screen.calculation.part", "screen.calculation.part.help"];
+test.todo("K5173: refusal.NO_COLUMN, refusal.NO_PART, refusal.NO_SUCH_COLUMN are words the table holds, and the refusal is drawn in them");
 for (const key of NEW_KEYS) if (!hasWord(key)) test.todo(`K5173: ${key} is a word the table holds (hasWord)`);
 
 /** A project, a payments register the member holds, the table she declares from it (real `tabledeclare`) and a calculation she has made to stand on. */
@@ -59,7 +60,7 @@ test("R5 item 59 Calculation: a share asks the part as well as the column; a cou
   await press(p, "calculationcreate", { reason: REASON });
   await settled(p);
   assert.equal(p.byOp("calculationcreate").length, 1, "sent without its column");
-  assert.ok(main(p).textContent.includes("NO_COLUMN") || main(p).textContent.includes(word("refusal.NO_COLUMN")), "and refused by calculations, drawn beside the act (its words once the design adopts them: reported)");
+  assert.ok(main(p).textContent.includes("NO_COLUMN"), "and refused by calculations, drawn beside the act with its code until the design adopts its words (K5173 todo below)");
   fill(p, { "calc-column": "payer", "calc-part": "City" });
   await press(p, "calculationcreate", { reason: REASON });
   await settled(p);
