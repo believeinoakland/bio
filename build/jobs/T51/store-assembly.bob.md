@@ -66,3 +66,7 @@ CHANGE (K5149; plan item 71 (2); STORE-REQUEST #1 J3 (2), merged). An improvemen
 ## B7 · RESUME
 
 RESUME (BOB #296, §5.4): your session is idle while your record says RUNNING until 16:57Z. Read your mailbox past your cursor (B5, B6: CHANGE, `INSTANCE_NAME` in your world, K5149), finish your run in pieces of at most 30 minutes, each recorded and pushed, and COMPLETE.
+
+## B8 · CHANGE
+
+CHANGE (K5168; CREDENTIALS #28 J20, merged): credentials now takes its clock as `credentialsOf(ctx, { now })`, read on the first construction for a storage only. At store-assembly's first `credentialsOf` call for the store's storage (`assemble.mjs`, whichever of `:203`, `:248`, `:307` runs first, and `ask.mjs:281`, `:361` if one can run first), hand `now: () => nowMs(null)` (the `nowMs` `assemble.mjs:192` makes from `clockOf(env)`). Merge `tranche/T51` first. A test: a pinned world's claim records the pin as `consumedAt` (red first). Instance-setup's same line (71 (3)) follows when INSTANCE-SETUP #34 merges.

@@ -1,6 +1,6 @@
 # retrieval-browse (T51)
 
-**Status** · session_01DZGdo16CETLocZnm2PWpbh · depth 2 · COMPLETE · handled B14
+**Status** · session_01U8jhGJwnvMNeN9MrE5jZt6 · depth 2 · COMPLETE · handled B14
 
 ## Completion (T51-29)
 
@@ -195,3 +195,22 @@ Size (session_01DZGdo16CETLocZnm2PWpbh): test runs 4, module lines 1449
 ## J10 · COMPLETE
 
 B14 done on job/T51/retrieval-browse. R2 (K5148, D5) met: a stop ends a sentence only before whitespace and a capital or at the end, not inside a number/citation/after a known abbreviation; line break always ends one (findin.mjs sentencesOf). Failing-first findin.test.mjs:265 red on old splitter ('050 No landlord...'), green now. One existing R2 fixture changed to the amended text ('; the fee' -> '; The fee'). No other splitter in src/ to report. Tests 68/68 under the shim; format, architecture, coverage (21/21), ownership 0 failures; words findings only in other modules; fixtures: no new line (t36:139, t37:172, words:60 still wait on events/entities); no marker added. Size (session_01DZGdo16CETLocZnm2PWpbh): test runs 4, module lines 1449
+
+## Completion (fix round 10, final pass item 78 (5); B15)
+
+**Met:** none of the ids are new; the cause is a test-only change to the refusal code (retrieval R99, K5157; its R19, R21, R77 name it).
+
+**Cause 1 (test files only, retrieval R99).** Root cause: `findin.test.mjs:115` asserted intent's `NOT_YOURS` for another credential's selection, and the stand-in `selectionRead` in `fixture.mjs` (the `fixtures-contract: retrieval selection-read` line) returned the same code. Retrieval now refuses with `SELECTION_NOT_YOURS` (`retrieval/index.mjs:1418`, `:1439`). Why the tests missed it: the stand-in was hand-built, so it carried the old code and the one assertion read it back; no test compared it with retrieval's answer.
+**Failing-first:** `findin.test.mjs:115` changed to `SELECTION_NOT_YOURS` first, seen red (`actual 'NOT_YOURS'`), then the stand-in changed to `SELECTION_NOT_YOURS` (`fixture.mjs:176`), green.
+**Where the code comes from (a deviation to note).** The job wanted the refusal taken from retrieval's published fixture by its real code. I tried importing `retrieval/fixtures.mjs` into this module's fixture; `checks/architecture.mjs` refuses it (retrieval is later in the order: "imports ... of retrieval, which is not earlier in the order"). So the stand-in keeps its hand-built value under the existing `fixtures-contract` marker, and retrieval's `fixtures-run: retrieval-browse selection-read` (`bio-plane/test/m/retrieval/fixtures.test.mjs:53`) checks `SELECTION_NOT_YOURS` against its real code. The check lists the line as `accepted(selection-read)`. Nothing else was changed.
+**What a member is told.** `find.mjs:97-98` passes retrieval's `reason` and `detail` through unchanged, and the detail is retrieval's own sentence ("a selection is readable only by the credential that made it"). Still right; no sentence in this module changes.
+
+**Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/retrieval-browse/*.test.mjs`: 68 tests, 68 pass, 0 fail (the count equals the file set run alone; it exits by itself under `--test-force-exit`). From the process repository with the absolute root `/home/user/bio`: format 0 failures (178 modules); architecture 0 (20 files); coverage 0 (21 of 21 live ids named); ownership 0 (2 files changed: the two test files). `checks/fixtures.mjs /home/user/bio retrieval-browse --list`: `fixture.mjs:175,176` accepted(selection-read); no new failing line. The three still waiting, as before, on events and entities: `t36.test.mjs:139`, `t37.test.mjs:172`, `words.test.mjs:60`. No `fixtures-own` or `fixtures-generic` marker added.
+
+**Left.** Nothing in this cause. `build/plan/fix-round-10-T51.md` §3 item 78 (5) also names `inquiry` and the stand-ins in other modules; those are theirs, not this job's.
+
+Size (session_01U8jhGJwnvMNeN9MrE5jZt6): test runs 3, module lines 1449
+
+## J11 · COMPLETE
+
+B15 done on job/T51/retrieval-browse (7608542add, then the size correction). Cause 1 (retrieval R99): findin.test.mjs:115 and the find-in stand-in (fixture.mjs:176, under the fixtures-contract selection-read marker) now refuse with SELECTION_NOT_YOURS; red first on the old code, green now. Deviation for BOB: I tried importing retrieval's fixtures.mjs into the stand-in, but checks/architecture.mjs refuses a test importing a later module, so the stand-in keeps the literal value under its marker, and retrieval's fixtures-run (retrieval/fixtures.test.mjs:53) checks it against real code. Tests 68/68. format, architecture, coverage (21/21), ownership 0 failures; fixtures: no new failing line (t36:139, t37:172, words:60 still wait on events and entities). No marker added. Met ids: none new. The product passes retrieval's reason and detail through (find.mjs:97-98), so no member sentence changes. Size (session_01U8jhGJwnvMNeN9MrE5jZt6): test runs 3, module lines 1449

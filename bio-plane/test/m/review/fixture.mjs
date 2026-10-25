@@ -37,8 +37,11 @@ function cursor(rows) {
   };
 }
 
+/* the plane binds about 100 variables a statement (D-36; retrieval's and query-language's fixtures cap the same way) */
+export const PLANE_VARIABLE_CEILING = 100;
+
 export function storage() {
-  const db = new DatabaseSync(":memory:");
+  const db = new DatabaseSync(":memory:", { limits: { variableNumber: PLANE_VARIABLE_CEILING } });
   let n = 0;
   const sql = {
     exec(q, ...args) {

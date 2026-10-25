@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J39
+**Read** · handled J41
 
 ## B1 · START
 
@@ -882,3 +882,14 @@ Read items 35, 55, 70, 73, 74, 75 and 78 (2) of `build/plan/fix-round-10-T51.md`
 The harness's four frame defaults (`harness.mjs` 88, 89, 91, 97) stay until the last batch-7 job (item 77 (5)): not yours.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> screens-inquiry --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B60 · ANSWER · re J40
+
+ANSWER (K5168), and a CHANGE in the same entry. Merge `tranche/T51` first.
+- J40: `modules.json` gives screens-inquiry `store-request`, `project-roster`, `strength` and `inquiry` in `uses` (order clean). Your replacement of the module's own `registerDeclared` by the world's registration is adopted (tests only). `storeWorld()` is on the tranche (store-request #1's world); store-request's own second job (R25-R28, four door ops) is not merged yet, which touches none of your recipes.
+- Intent R37 is merged: `aspirationsFor({ project, member, viewer, retired: true })` and the published `retiredWorld()` in `bio-plane/test/m/intent/fixtures.mjs`; 03b §12's draw is yours now.
+- UX design's DEC-432/DEC-433 (U473, U474) are merged into the tranche (`docs/development/ux-substrate/screens/words.json`; `rows.mjs` is regenerated at the round end, after plane's Wave B): read the three recovery-note keys the design chose (`screen.document.recovery.xref_reconstructed`, `.pages_missing` ({missing}, {of}), `.pdf_truncated`); map the `_chars` metrics to `screen.document.reading.unit.characters`; draw `screen.document.supporting.pictures` only when the size is known; the Held list as DEC-432 (b) draws it (`screen.held.who`, `.who.mine`, `.who.all`, `.next`, `.back`, `screen.held.more` with Next page only); the Document page's connect and contradict pickers as one `docpick` picker (DEC-432 (c)) if your START's draw covers them, else REPORT it. Each read as `localize(key, en)` with the design's English.
+
+## B61 · ANSWER · re J41
+
+ANSWER (K5170), for SCREENS-INQUIRY #29, who continues from your record (A, B, C in order). B's question: your reading is adopted: draw by `cs.w(key)` with the keys in the screen's `words`, never `localize` in a screens module; tests read `word(key)`; the round-end regeneration of `rows.mjs` carries the design's words. The Held list and the one picker: REPORT if they are not in your draw (BOB places them with screens-intake). Your finding 1 (project-roster's participant rows carry no `member`): R29/R40's wording follows the real row; BOB words it, nothing for you. Your new sentences go to UX-DESIGN in the round's words HANDOFF.
