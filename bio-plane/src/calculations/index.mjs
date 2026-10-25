@@ -980,7 +980,7 @@ export class Calculations {
   /* R4, R9: each input bound for `viewer`. `{ok: false}` with NO_SUCH_INPUT or HYPOTHESIS_NOT_A_FACT, or
      `{bound, hashes, canon, refs, inputs, apart}`: `hashes` each input's SHA-256 of its canonical bytes as it was
      computed over (a table's canonical CSV; else the canonical JSON `canon` holds, null where it cannot be rebuilt). */
-  async #bind(inputs, viewer, { threshold = null } = {}) {
+  async #bind(inputs, viewer, { threshold = null, pending = null } = {}) {
     const KINDS = ["table", "money", "figure", "value", "calculation", "set", "draw"];
     const hyps = [];
     for (const inp of inputs) for (const s of stringsIn(inp)) if (isHypothesisId(s)) hyps.push(s);
@@ -1058,7 +1058,7 @@ export class Calculations {
         refs.push({ name: inp.name, kind, ref });
         described.push({ name: inp.name, kind, ref, grade: axis.capture.grade, why: word("calculations.why.capture_axis", { why: String(axis.capture.why) }) });
       } else if (kind === "set") {
-        const s = typeof ref === "string" ? this.#one(`SELECT * FROM calc_sets WHERE set_sha=?`, ref) : null;
+        const s = typeof ref === "string" ? this.#one(`SELECT * FROM calc_sets WHERE set_sha=?`, ref) || (pending && pending.get(ref)) || null : null;
         if (!s || !this.#sees(s.project, viewer)) { missing(inp.name, String(ref)); break; }
         const ids = parse(s.ids_json) || [];
         const seen = ids.filter((id) => this.#sees(id, viewer));
@@ -1376,9 +1376,9 @@ export class Calculations {
 
   /* The whole computation of R4–R7, R12, R15–R18, for `create` and `evaluate`: refusals in R4's order, else what
      `create` stores. */
-  async #compute({ kind = null, recipe = null, inputs = null, threshold = null, period = null, terms = null, column = null, part = null, viewer, requireKind = true }) {
+  async #compute({ kind = null, recipe = null, inputs = null, threshold = null, period = null, terms = null, column = null, part = null, viewer, requireKind = true, pending = null }) {
     if (!Array.isArray(inputs) || !inputs.length) return no("NO_INPUTS", "a calculation names its inputs: declared tables, money facts, cited figures, other calculations or frozen sets. Nothing was written.");
-    const b = await this.#bind(inputs, viewer, { threshold });
+    const b = await this.#bind(inputs, viewer, { threshold, pending });
     if (!b.ok) return b;
     const th = this.#threshold(threshold, period || {}, viewer);
     if (!th.ok) return th;
@@ -1509,7 +1509,10 @@ export class Calculations {
     if (!str(question)) return no("NO_QUESTION", "a calculation states the question it answers. Nothing was written.");
     const p = periodOf(period);
     if (!p) return no("NO_PERIOD", "a calculation states its period: {from, to}, each a date YYYY-MM-DD or null (not both), or a period key. Nothing was written.");
-    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, column, part, viewer: by });
+    const sel = this.#freezeSelections(inputs, by);
+    if (!sel.ok) return sel;
+    inputs = sel.inputs;
+    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, column, part, viewer: by, pending: sel.pending });
     if (!c.ok) return c;
     /* after R4's ordered refusals, the fields it adds: */
     if (project !== null && project !== undefined && (!str(project) || !this.#sees(project, by)))
@@ -1533,6 +1536,10 @@ export class Calculations {
       const id = this.record.allocId("CALC", year);
       if (!id || !id.id) return id && id.ok === false ? id : no("MINT_FAILED", "no calculation id could be drawn. Nothing was written.");
       calcId = id.id;
+      /* R52: a held selection's ids, frozen with the calculation that counts them */
+      for (const f of sel.pending.values())
+        this.sql.exec(`INSERT OR IGNORE INTO calc_sets (set_sha, project, query_json, ids_json, n, frozen_by, frozen_at) VALUES (?,?,?,?,?,?,?)`,
+          f.set_sha, null, f.query_json, f.ids_json, f.n, by, at);
       this.sql.exec(`INSERT INTO calculations (calc_id, project, question, terms_json, period_json, kind, recipe_json, inputs_json,
                        threshold_json, method_version, method_note, evidences_json, result_key, results_json, computed_at,
                        recompute_status, recompute_json, accepted_by, accepted_at, created_by, created_at, input_shas_json)
@@ -1559,7 +1566,9 @@ export class Calculations {
   async evaluate({ recipe = null, inputs = null, viewer = null, kind = null, threshold = null, period = null, terms = null, column = null, part = null } = {}) {
     if (!stamped(viewer)) return no("NO_VIEWER", "an evaluation is asked under the control plane's stamp.");
     const p = period === null || period === undefined ? {} : periodOf(period) || {};
-    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, column, part, viewer, requireKind: false });
+    const sel = this.#freezeSelections(inputs, viewer);
+    if (!sel.ok) return { ...sel, detail: String(sel.detail || "").replace(/ Nothing was written\.$/, "") };
+    const c = await this.#compute({ kind, recipe, inputs: sel.inputs, threshold, period: p, terms, column, part, viewer, requireKind: false, pending: sel.pending });
     if (!c.ok) return { ...c, detail: String(c.detail || "").replace(/ Nothing was written\.$/, "") };
     return { ok: true, writes: "nothing", result_key: c.result_key, results: c.results, method_version: METHOD, recipe: c.recipe };
   }
@@ -2430,6 +2439,31 @@ export class Calculations {
         question: d.question ?? null, items, counts, estimates,
         says: word("calculations.says.drawn_item_stands") };
     } catch { return absent; }
+  }
+
+  /* R52: each input `{name, set}` whose `set` is a selection handle (`sel-…`, `retrieval`) is resolved under the asking
+     member and its ids frozen as a record set with its sha (as `freezeSet` freezes a query's), the input rewritten to
+     name that set. Answers `{ok, inputs, pending}`: `pending` holds the sets not yet held, which `create` writes in its
+     own transaction (`evaluate` writes none, R7). A handle retrieval refuses is refused as it answers, naming the input. */
+  #freezeSelections(inputs, viewer) {
+    const pending = new Map();
+    if (!Array.isArray(inputs)) return { ok: true, inputs, pending };
+    const out = [];
+    for (const inp of inputs) {
+      if (!plain(inp) || typeof inp.set !== "string" || !inp.set.startsWith("sel-")) { out.push(inp); continue; }
+      const retrieval = this.dep("retrieval");
+      if (!retrieval || typeof retrieval.selectionResolve !== "function")
+        return no("RETRIEVAL_NOT_REACHABLE", localize("calculations.index.the_held_selection_cannot_be", "the held selection cannot be read here. Nothing was written."), { input: inp.name });
+      let r;
+      try { r = retrieval.selectionResolve({ handle: inp.set, viewer, owner: viewer, weight: "report" }); } catch (e) { r = { ok: false, reason: "RETRIEVAL_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
+      if (!r || r.ok === false) return { ...(r || no("RETRIEVAL_FAILED", "the selection answered nothing.")), input: inp.name, detail: `the input "${inp.name}" names a selection that was refused: ${(r && r.detail) || "it could not be read"}. Nothing was written.` };
+      const ids = [...new Set((r.members || []).filter((x) => typeof x === "string"))].sort();
+      const setSha = sha(ids);
+      if (!this.#one(`SELECT set_sha FROM calc_sets WHERE set_sha=?`, setSha))
+        pending.set(setSha, { set_sha: setSha, project: null, query_json: json({ selection: inp.set, kind: r.kind ?? null, q: r.q ?? null }), ids_json: json(ids), n: ids.length });
+      out.push({ ...inp, set: setSha });
+    }
+    return { ok: true, inputs: out, pending };
   }
 
   /** R21: `freezeSet({query, by, project?})`: the ids a saved query answers for the asking member (`retrieval`'s
