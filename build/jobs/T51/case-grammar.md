@@ -188,4 +188,4 @@ Size (session_01AWTXz3dDga9C9mXYok9S8p): test runs 33, module lines 3126
 
 **For BOB.** (1) R34 names no field: BOB's wording edit should state `basis_version` and `basis_version_identity` on the `case_roles:` row, `memberBasisVersionLines` and `memberBasisVersionOf` in Provides, and that the identity is the SHA-256 of the version's composition (`basis-version-grammar` R5), which `case-authoring` R87 computes. (2) No reader rejects the new fields: `case-catalogue/checks.mjs` C-41 and `case-checker/check.mjs:355` read `case_roles:` rows by field and flag no unknown field; `case-checker` and `ratification` need no change to accept it. (3) `case-checker`'s standalone `program.mjs` is generated and unchanged by this job; it does not read the new fields.
 
-Size (session_01HFdVc2sq2GVhUrdUT8EUik): test runs 6, module lines 3224
+Size (session_01HFdVc2sq2GVhUrdUT8EUik): test runs 6, module lines 3185
