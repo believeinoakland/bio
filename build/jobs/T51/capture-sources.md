@@ -1,6 +1,6 @@
 # capture-sources (T51)
 
-**Status** · session_01YENRH2Y3YDuYBqxX65xUfX · depth 2 · WORKING · handled B8
+**Status** · session_01YENRH2Y3YDuYBqxX65xUfX · depth 2 · RUNNING until 2026-10-25T09:18:28Z (module tests) · handled B8
 
 ## J1 · REPORT
 
