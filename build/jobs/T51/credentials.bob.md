@@ -185,3 +185,7 @@ Your job: your fixture line `seam.test.mjs:177` (`LISTENER_MALFORMED`): take mem
 ## B16 · CHANGE
 
 CHANGE (BOB #302, K5197), with your START. AI-ACCOUNTS #8 J8 found that `credentialsOf` does not hand its `now` to `aiAccountsOf`, so a clock handed to credentials does not reach ai-accounts (only the environment path does). Hand it (credentials' K5132 rule, the one `#nowMs` follows), with a failing-first test: a `now` handed to `credentialsOf` reaches an instant ai-accounts records through it; control: none handed, the environment's `BIO_NOW_MS`.
+
+## B17 · ANSWER · re J22
+
+ANSWER (BOB #302, K5198). A `uses` edge is BOB's (K2008), never Bob's: route 1 is done, `credentials` uses `member-roster` on the tranche. Merge `origin/tranche/T51` (never a rebase), re-run architecture and fixtures (both 0), apply B16 (`credentialsOf` hands its `now` to `aiAccountsOf`), and post COMPLETE.
