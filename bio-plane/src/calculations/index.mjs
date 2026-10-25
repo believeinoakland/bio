@@ -2456,7 +2456,11 @@ export class Calculations {
         return no("RETRIEVAL_NOT_REACHABLE", localize("calculations.index.the_held_selection_cannot_be", "the held selection cannot be read here. Nothing was written."), { input: inp.name });
       let r;
       try { r = retrieval.selectionResolve({ handle: inp.set, viewer, owner: viewer, weight: "report" }); } catch (e) { r = { ok: false, reason: "RETRIEVAL_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
-      if (!r || r.ok === false) return { ...(r || no("RETRIEVAL_FAILED", "the selection answered nothing.")), input: inp.name, detail: `the input "${inp.name}" names a selection that was refused: ${(r && r.detail) || "it could not be read"}. Nothing was written.` };
+      if (!r || r.ok === false) {
+        const why = r && r.detail ? String(r.detail) : localize("calculations.index.the_selection_could_not_be_read", "it could not be read");
+        return { ...(r || no("RETRIEVAL_FAILED", why)), input: inp.name,
+          detail: localize("calculations.index.the_input_names_a_selection_refused", "the input \"{name}\" names a selection that was refused: {why}. Nothing was written.", { name: String(inp.name), why }) };
+      }
       const ids = [...new Set((r.members || []).filter((x) => typeof x === "string"))].sort();
       const setSha = sha(ids);
       if (!this.#one(`SELECT set_sha FROM calc_sets WHERE set_sha=?`, setSha))
