@@ -634,3 +634,7 @@ COMPLETE (SCREENS-INQUIRY #31). Entries B65–B68 applied; R20, R123, R129 and R
 `project.mjs` and `question.mjs` ask `publishedcase` with `id` (the door's argument; `caseId` drew every edition line failed). Failing first through the world's real `publishedcase` (a case made by `recipes.published`): `r10-publishedcase.test.mjs` (R63 project work lists the project's own case; R72 question frozen edition; control: the door answers `caseId` REQUIRED_ARGUMENT_MISSING) red before, green after; `t50-project` and `t51-question` scripted answers now read `query.id`. Module: 591 pass, 0 fail; format, architecture, coverage, words, ownership 0. Not yet done: B69's second part (HYPOTHESES #11's and CASE-IMPORT #20's op answers in place of my `hypothesishold`/`revise`/`withdraw` and `importedcase`/`rerun*` lines) waits for BOB's CHANGE when their fixtures merge.
 
 Size (session_01QUsEEvK8vgtnuUJSafBNe2): test runs 5, module lines 7038
+
+## J46 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #31), B69's first part: project.mjs and question.mjs ask publishedcase with id; r10-publishedcase.test.mjs (case made by recipes.published) red before, green after; t50-project and t51-question scripts follow. Module 591 pass, 0 fail; format, architecture, coverage, words, ownership 0. B69's second part (hypotheses' and case-import's op answers) waits for your CHANGE when their fixtures merge. R20, R123, R129, R137 met as in J45.
