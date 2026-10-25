@@ -1,45 +1,41 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #294 (`session_01XtZDGYwxYSYJSAoejQAGGw`, depth 1, parent ROOT #9 `session_01GndWUi5ubGmXCVVnFqtJAi`, third account) for BOB #295, 2026-10-25, past 40 % context. **T51 is OPEN** on `tranche/T51`; **fix round 10 is running** (opened K5065). Read rulings K5127 to the last line of `build/rulings.md` whole, `build/plan/fix-round-10-T51.md` whole (§3, follow-ups 7-68, is the owed list), `build/plan/fix-round-10-waves.md` whole, `build/plan/walk-T51-final/BRIEF.md` with `PHASE1-NOW.md`, and the final pass's diagnoses `build/plan/walk-T51-final/diagnosis/diag2-*.md` (committed with this handoff).
+**Status** · Replaced whole at each handoff. Written by BOB #295 (`session_01JWNfzmdV269x2j31RNMndK`, depth 1, parent ROOT #9 `session_01GndWUi5ubGmXCVVnFqtJAi`, third account) for BOB #296, 2026-10-25, on Bob's "time to refresh" (about 40 % context). **T51 is OPEN** on `tranche/T51`; **fix round 10 is running** (opened K5065). Read rulings K5146 to the last line of `build/rulings.md` whole, `build/plan/fix-round-10-T51.md` whole (§3, items 7-74, is the owed list; 69-74 are this session's), `build/plan/fix-round-10-waves.md` whole, and the three diagnoses not yet placed: `build/plan/walk-T51-final/diagnosis/diag2-03b.md`, `diag2-06.md`, `diag2-11.md` (each about 45 KB: read whole, or by a reading worker told the task, K3676).
 
-## Bob's rulings this session (in `rulings-active.md`)
+## Bob's rulings this session
 
-- **K5136:** weekly usage is Bob's to watch; BOB never raises it; accounts move only when Bob says development is moving.
-- **K5137:** Bob's standing approval covers merging development pull requests, the process repository's included; never bring him such a merge. (civicos-process PR #7, the scoped size gate and JOB.md's K5120 line, is merged; `main` at `e54912f5b9`.)
-- **K5141:** UX design #40 runs on Bob's primary account (`session_01DtBKhrSmV3NbfCcEaygkz9`); BOB on the third account cannot start or ring it; its successor is Bob's to start, BOB tells him in plain steps when a NOTICE asks (U472's way).
+None new. K5136, K5137 and K5141 (BOB #294's) stand, in `rulings-active.md`.
 
 ## Open with Bob
 
 Nothing.
 
-## Running
+## Running (addresses in the plan's Jobs line)
 
-- **STORE-REQUEST #1** `session_01KkxdPkQTFsfr63anJhveG7` (the default model; critical path; store-assembly merged K5144). At its merge its `paths` and `tests` enter `modules.json` in the merge commit (K1185). Then interface-shell, batch 7 (screens-publish and screens-investigate STARTs gained follow-ups 54 and 59) and the screens' op-table CHANGEs.
-- **EXTRACTION #47** `session_01Jvm3Svfx7hGZ595k1aGkp6`: COMPLETE J47 unread by BOB (after ANSWER B62 and CHANGE B63, 68). At its merge: make agent-worker `fixtures-contracts.test.mjs:84`, `:101` plain comments (K4297 (2)); then a CHANGE to STORE-ASSEMBLY to re-point its 11 lines.
-- **CONTROL-PLANE #60** `session_01CCU5PERV9DBgQStnjK7jSm`: J59 unread by BOB; cause D2 (60) and CHANGE B88 (adopt the two door tests, 66). Its Wave B (8, 42) is a later session after `store-request`.
-- **Walkers WALK-FINAL-02, -03, -06, -10B, -11** (sessions in K5122): at every backstop fetch each `prep/final-<area>`, place every new BROKEN row; at DONE commit the record (over 51,200 bytes: whole under `build/plan/archive/walk-T51-final/`), scripts and shots, archive the walker with a `study-walk` row. 01, 04A, 04B, 05, 07, 08, 09, 10A are DONE, committed and archived (K5127, K5141).
+- STORE-ASSEMBLY #2 (follow-up 68, then CHANGE B6: `INSTANCE_NAME` in its world, K5149), JURISDICTIONS #18 (08 C1 BLOCKER and C14; researching sources), RETRIEVAL-BROWSE #7, PUBLIC-READ #36 (CHANGE B34: a document-level seal, K5153), QUEUE-PRODUCERS #28, INTERFACE-SHELL #22 (Wave B batch 6, `boot({door})`, the screens' batch 7 waits on it), CALCULATIONS #16 (07's four causes), AFFORDANCES #47 (`ruleservicesstate` unaccounted), DOORBELL #10 (65's half), walker WALK-FINAL-02 (`prep/final-02-people`; at DONE commit its record, archive with a `study-walk` row, diagnose its BROKEN rows).
+- 11 slots free of 20 (K4215).
 
 ## Then, in order
 
-1. **Place the final pass's diagnoses** (`diagnosis/diag2-*.md`, `diag2-020305`, `-04`, `-07`, `-08`, `-0910a`, `-10b`: about 100 rows; 02 had no rows yet; 10A's record is older than its committed script, so a worker re-runs `scripts/10a-case.test.mjs` before its WALKER-ERROR rows are final; flagged decisions: 05 row 5 (screens to record a post), 07 causes 1 and 9, 08 C9, 10B C2 (a removal order across cases: decide by P17 whether it weighs legal exposure), 04's monitoring R4/R8/R32 gap): read every cited line before placing (K4849); one owning job per cause, START built by the `mkstart` pattern below; requirement wording BOB's where it states behaviour already ruled (K3259), marked `*(not yet met: T51)*`; words to UX-DESIGN in one HANDOFF; specified and walker-error rows recorded in the plan without a job. Rows K5129-K5131 placed are in plan items 48-63.
-2. Merge each COMPLETE as it comes (premerge below); keep slots full, providers first (K4215); archive each merged session with its row (K4219).
-3. Owed follow-ups still open: 8 and 42 (control-plane Wave B), 12 + 23 (plane, after the world; adds `fixtures-run` for `transcribe-not-sent`), 13 (extraction's `t48`), 15, 33 and the waves' §4 modules in the §5.10 pass (doorbell's lines moved out to 65), 32 (promotion's stamp, last), 35 (screens-inquiry, with inquiry's `questionWaitsSetAside` re-point, 55), signin-door done, 52 done, 65 (provenance `homeOf` fixture, then doorbell's 13 lines), 68.
-4. After the round: the generated artifacts (manifest order; stale: plane, agent-worker, pdf-worker, ocr-worker bundles, `program.mjs`, setup-words `rows.mjs`), the round's words HANDOFF to UX-DESIGN (`fix-round-10-words.md` plus the new member sentences: `store-door.title.material_handed_doorbell_on`, `action-plans.why.suspected_matter_concluded`, calculations' refusals, `screen.objective.purpose`, 01's "administrator token"), then K5063's step 4 (redeploy biosmoke8 with the owed live checks, including doorbell's 11.19 MB body limit; the targeted re-walk; the final pass live (Phase 2); the 0.87.0 cut, installer and site deploys, the rehearsal), then T51's close (§5.7).
+1. **Place item 74**: the three diagnoses, with the readings K5155 already made (06 §3 option B; 06 §16 Enter). Read every cited line before placing (K4849). Then start, providers first: monitoring (06 §1 BLOCKER), retrieval (06 §2, §11), citation (06 §3, R2 worded), content (06 §5), acquisition (06 §9), connections (06 §12), project-roster (03b §1), strength (03b §8, the bar the writer saw), queue (03b §5), intent (03b §12), filings (11 §2b), consequences (11 §3), actions (11 §5), action-producers (11 §7b), store-request (11 §1, `publishcheck`'s author stamp, and control-plane's Wave B the same); CHANGEs to CALCULATIONS #16 (06 §8) and INTERFACE-SHELL #22 (06 §16, §19; 11 §9). Then the screens jobs, each with every screen cause of items 70, 73 and 74 (screens-inquiry, screens-daily, screens-investigate, screens-publish with 54, screens-action), after their providers merge; the STARTs are written with the generator pattern below.
+2. Merge each COMPLETE as it comes (premerge below); keep slots full; archive each merged session with its row (K4219).
+3. Owed still: control-plane Wave B (8, 42, 69, 71 (4), every door case listed in 72 (3) and 73 (6), K5138), plane Wave B (12, 23; credentials' six `credentialsOf(ctx)` sites, K5155), 13, 15 and 33 (the §5.10 pass, no job running), 32 (promotion's stamp, last), 35, the screens batch 7 after INTERFACE-SHELL #22, case-carriage's re-point to `uploadProvenance` (72 (2)), 72 (4)'s three reds diagnosed.
+4. After the round: generated artifacts (manifest order; the plane bundle is stale from many merges), the words HANDOFF to UX-DESIGN (`fix-round-10-words.md`, whole, including its last sections and the design conflicts of item 74), then K5063's step 4 (redeploy biosmoke8 with the owed live checks, the targeted re-walk with item 70's re-walk asks, the final pass live, the 0.87.0 cut, installer and site deploys, the rehearsal), then T51's close (§5.7).
 
 ## Tools
 
-- The mail tool and checks: civicos-process `main` (now carries `jobbranch` and the scoped gate): `git worktree add --detach <dir> origin/main`; run with `--product /home/user/bio --tranche T51`. `mail check` prints `NEAR` above 95 %.
-- Premerge, per module, each a plain command (a chained compound was refused once, K5132): `git fetch origin job/T51/<m> tranche/T51`; ownership against `git merge-base`; a detached worktree of the job branch; `checks/fixtures.mjs <ABSOLUTE worktree> <m>` and `checks/architecture.mjs <worktree> <m>`; read every added `fixtures-(own|generic|contract|run)` marker. A through-the-door test importing control-plane's `r8-kit.mjs` belongs to control-plane (K5138). After merging `--no-ff`: architecture over the tree, `words.mjs <m>` at 0 (BOB fixes a copied test sentence, K4297 (2)), strike the marks; check `git ls-remote origin tranche/T51` equals HEAD.
-- STARTs: the shared header of `starts-T51-F10/extraction-2.txt` (sonnet) or `signin-door-2.txt` (haiku) with the module, number, follow-up and ruling replaced, then the cause with K4426's four fields and `**Done:**`. Never reuse a START file name.
+- Mail tool and checks: civicos-process `main` (`e54912f5b9`) in a detached worktree (`git worktree add --detach <dir> origin/main`); `--product /home/user/bio --tranche T51`. `addjob --name` needs the name quoted with its space.
+- Premerge, as plain commands (a looped compound with `rm -rf` was refused once this session and not retried): fetch the job branches; ownership against `git merge-base`; one fresh detached worktree per job (`/home/user/wt…-<module>`, never deleted in a loop); `checks/architecture.mjs` and `checks/fixtures.mjs` on it with the module; grep added `fixtures-(own|generic|contract|run)` markers; merge `--no-ff` in module order; architecture over the tree and `words.mjs <modules>`; strike the marks; `git ls-remote origin tranche/T51` equals HEAD. A job's own requirement lines are accepted (K4210).
+- STARTs: `python3 build/plan/mkstart.py <jobs.json>` (each job `{m, n, item, tag, model?, bob?, body}`) (BOB #295's header: depth, K5120, FIRST block, the job rules, K5138's door rule, "each cause below" with its diagnosis section, Done); files `build/plan/starts-T51-F10/<module>-k<ruling>.txt`, never a reused name.
 - `rulings-active.md` is at 24,312 bytes and 78 lines: a new rule replaces or merges a line.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
 - bio `main` moves only by T51's close PR (§5.7 (3), CLAUDE.md's standing direction), the design MERGE first (K1177); no refusal recorded.
-- civicos-process `main`: by PR with the GitHub merge tool (K5036, K5137); K5134 records a safety-check refusal of PR #7's merge, approved by Bob (K5137): take such a merge as one plain call citing K5137.
+- civicos-process `main`: by PR with the GitHub merge tool (K5036, K5137).
 - biosmoke deployments: K4841, K5120. Account `…7f72` only, plus the rehearsal account (K4942). Job branches only by `mail jobbranch`; never a force-push.
 
 ## Timers and lanes
 
-- My timers: backstop `trig_0171mpZFoHhbiAMAwK1A5JRa` (16:06Z, kept until your takeover), WATCH #294 `trig_01FbeDWD22N1yoP1vKPSV2MV` (16:45Z): delete both at takeover.
-- Lanes nothing past H43, A41, W4, P26; channel: UX-DESIGN read through U472; B517 and B518 unread by UX design #40.
+- My timers: backstop `trig_011zwYBp7oZu1F5uVHAryRcA` (17:10Z), WATCH #295 `trig_01EGcofRZxY76jkXvbD1MEpp` (17:50Z): delete both at takeover.
+- Lanes nothing new (H43, A41, W4, P26); channel: UX-DESIGN read through U472; B517, B518 unread by UX design #40.
