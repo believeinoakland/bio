@@ -5,7 +5,7 @@
    control-plane's Wave B job deletes its copies and calls these. */
 import { json, doAnswer, storeSilent, CHECK_FAMILIES } from "../answer-envelope/index.mjs";
 import { tokenRefusedSeen } from "../signin-door/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 
 /** (control-plane R57, R90) The two drafts the object is asked for with no owner before them. */
@@ -25,7 +25,7 @@ async function packOf(res) {
   const fences = machineFences(CHECK_FAMILIES);
   let pack = null, absent = null;
   try { pack = renderPack({ ...body.result, fences }); }
-  catch (e) { absent = String((e && e.message) || "the pack could not be rendered").slice(0, 500); }
+  catch (e) { absent = String((e && e.message) || localize("store-request.door_ops.the_pack_could_not_be_rendered", "the pack could not be rendered")).slice(0, 500); }
   return { fences, pack, ...(pack ? {} : { pack_absent: absent }) };
 }
 
