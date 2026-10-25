@@ -272,3 +272,208 @@ test("R58: Snooze sends queuesnooze once for each distinct case among the chosen
   assert.equal(none.byOp("queuesnooze").length, 0, "control: no day, nothing sent");
   assert.equal(beside(none, b), word("screen.queue.fieldfirst"));
 });
+
+/** Real administrator to-dos for a team: a question in a project and `n` documents each captured, at the request of rosa, from a public address of its own
+ *  (`capturerequest`, drained by the daemon), whose authority nobody has determined: after the scheduler's next round each administrator holds one to-do for each.
+ *  Answers the to-dos (the `tasks` read) in the order the store gives them. */
+async function undetermined(w, rosa, project, n) {
+  const q = await w.recipes.question(rosa, project, { title: "What was decided", text: "What did the council decide?" });
+  for (let i = 1; i <= n; i++) {
+    const address = `https://site${i}.example.org/minutes.html`;
+    w.script(address, async () => new Response(`<html><head><title>Minutes ${i}</title></head><body><p>The council met.</p></body></html>`, { status: 200, headers: { "content-type": "text/html" } }));
+    await rosa.act("capturerequest", { body: { address, target: q.id } });
+  }
+  await w.door({ url: "/api/?op=capturerequestdrain", init: { method: "POST", headers: { "content-type": "application/json" }, body: "{}" } }, { token: w.env.DAEMON_TOKEN });
+  await w.tick(120_000);
+  return (await rosa.read("tasks")).tasks;
+}
+const clockOf = (iso) => { const d = new Date(iso); return word("time.clock", { hour: String(d.getHours() % 12 === 0 ? 12 : d.getHours() % 12), minute: String(d.getMinutes()).padStart(2, "0"), ampm: word(d.getHours() < 12 ? "time.am" : "time.pm") }); };
+const whenOf = (iso) => word("time.at", { date: dmy(iso.slice(0, 10)), time: clockOf(iso) });
+/** The world's `queue` answer for `as`, passed through `edit` for the one kind of read it is about: `which` is "items" (the feed), "answered" or "aside".
+ *  The door call is the real one, only the fields `edit` names are replaced (each use says which and why the store cannot make it). */
+const through = (w, as, which, edit) => async (req) => {
+  const a = await w.boot(as).door(req);
+  const r = a.json && a.json.result;
+  const kind = req.query.answered ? "answered" : req.query.aside ? "aside" : req.query.muted ? "muted" : "items";
+  if (r && kind === which) a.json.result = edit(r, req) || r;
+  return a;
+};
+
+test("R59: the answered page reads queue with answered true and draws each answer newest first with who and when, a forward and a snooze with their days; it sends nothing but the read", timeout, async () => {
+  const { w, rosa, mai, p1 } = await team();
+  await w.recipes.profiles(rosa, ["oakland-alameda"]);
+  const founder = await w.signIn("admin");
+  const tasks = await undetermined(w, rosa, p1, 5);
+  assert.equal(tasks.length, 5, "the real store holds five to-dos for the administrators");
+  const [mine, theirs, said, first, bare] = tasks;
+  // each act is made a minute apart, so the answers have an order of their own: newest first
+  await rosa.act("taskresolve", { body: { id: mine.id } });                                 // resolved by her (by_you)
+  await w.tick(60_000);
+  await founder.act("taskresolve", { body: { id: theirs.id } });                            // resolved by another member
+  await w.tick(60_000);
+  await rosa.act("taskforward", { body: { items: [{ id: said.id }], to: "mai" } });         // a forward that names whom it went to
+  await w.tick(60_000);
+  await rosa.act("taskforward", { body: { items: [{ id: first.id }], to: "mai" } });        // a forward that was passed on again: it names nobody now
+  await mai.act("taskforward", { body: { items: [{ id: first.id }], to: "admin" } });
+  await w.tick(60_000);
+  await rosa.act("taskresolve", { body: { id: bare.id } });                                 // a to-do that has no title to show
+  await w.tick(60_000);
+  await rosa.act("queuesnooze", { body: { case: p1, until: LATER } });
+  const real = (await rosa.read("queue", { query: { answered: "true" } })).answered;
+  const by = (act, id) => real.find((r) => r.act === act && r.id === id);
+  assert.ok(by("resolved", mine.id) && by("resolved", mine.id).by_you === true && by("resolved", theirs.id).by_you === false, "the real answers hold her act and another member's");
+  assert.equal(by("forwarded", first.id).to, null, "the real store names nobody for a forward passed on again");
+  assert.equal(by("forwarded", said.id).to, "mai");
+  assert.ok(real.some((r) => r.act === "snoozed"));
+  // The one field the store does not make: a to-do with no title (the page names it by the untitled word).
+  const p = await open(w, rosa, "/app/queue/answered", { queue: through(w, rosa, "answered", (r) => ({ ...r, answered: r.answered.map((x) => (x.id === bare.id ? { ...x, title: null } : x)) })) });
+  await settle();
+  const reads = p.byOp("queue");
+  assert.ok(reads.some((r) => r.query.answered === "true"));
+  assert.deepEqual(p.requests.filter((r) => r.method !== "GET" && r.op !== "subscriptionsignin").map((r) => r.op), [], "the page sends nothing but the read");
+  const t = text(p);
+  assert.ok(t.includes(word("queue.answered.byyou", { when: whenOf(by("resolved", mine.id).at) })));
+  assert.ok(t.includes(word("queue.answered.bymember", { member: "founder", when: whenOf(by("resolved", theirs.id).at) })), "another member's, by her handle, by_you false");
+  assert.ok(t.includes(word("queue.answered.byother")));
+  assert.ok(t.includes(word("queue.source.untitled", { date: dmy(by("resolved", bare.id).at.slice(0, 10)) })), "a to-do with no title is named by the untitled word");
+  assert.ok(t.includes(word("queue.answered.forwarded", { item: by("forwarded", said.id).title, member: "mai" })));
+  assert.ok(!t.includes(word("queue.answered.forwarded", { item: by("forwarded", first.id).title, member: "null" })), "control: an earlier forward names nobody, never guessed");
+  assert.ok(t.includes(word("queue.answered.forwarded.unnamed", { item: by("forwarded", first.id).title })), "an earlier forward is its own sentence, naming nobody");
+  const snooze = real.find((r) => r.act === "snoozed");
+  assert.ok(t.includes(word("queue.answered.snoozed", { item: snooze.case.title, date: dmy(LATER) })));
+  assert.ok(t.includes(word("queue.answered.snoozed.meta")));
+  const rows = main(p).querySelectorAll(".cs-row").map((r) => text(p, r));
+  const shown = real.filter((r) => r.act !== "set_aside");
+  assert.equal(rows.length, shown.length, "a row for each answer");
+  shown.forEach((r, i) => assert.ok(rows[i].includes(r.act === "snoozed" ? r.case.title : r.id === bare.id ? word("queue.source.untitled", { date: dmy(r.at.slice(0, 10)) }) : r.title), "newest first, as the read answers them: " + i));
+  assert.equal(shown[0].act, "snoozed", "control: the newest act is the first row");
+  const failed = await open(w, rosa, "/app/queue/answered", { queue: refused("STORE_DID_NOT_ANSWER", null, 502) });
+  assert.ok(main(failed).querySelector('[data-state="failed"]'), "a failed read is drawn failed");
+});
+
+/** The feeds' honesty as the world's `queue` answer holds it, with the feeds in `failed` (ids) not answered: the one field a store that answers every feed
+ *  cannot make, a feed that failed. The items, the door call and every other field are the real store's. */
+const feedsFailing = (failed, over = {}) => (r) => ({ ...r, feeds: [...(r.feeds || []), ...failed.map((f) => ({ feed: f, classes: ["FINDING"], answered: false, failed: ["x"] }))],
+  all_answered: !failed.length, classes_answered: { OBLIGATION: true, FINDING: !failed.length, CONDITION: true }, all_clear: { OBLIGATION: true, FINDING: !failed.length, CONDITION: true }, ...over });
+
+test("R60: a feed that did not answer is named at the head of a queue with items, with Try again; with nothing waiting the all-clear is withheld and no class is told none here", timeout, async () => {
+  const { w, rosa, mai, p1 } = await team();
+  await todos(w, rosa, mai, p1, ["T1"]);
+  const real = await mai.read("queue");
+  assert.ok(real.items.length >= 1 && real.all_answered === true, "the real store's queue holds the to-do and every feed answered");
+  const nothing = await w.signIn("noel");   // a member the queue holds nothing for
+  assert.equal((await nothing.read("queue")).items.length, 0);
+  const asMai = (failed, over) => ({ queue: through(w, mai, "items", feedsFailing(failed, over)) });
+  const withItems = await open(w, mai, "/app/queue", asMai(["sources"]));
+  await settle();
+  const t = text(withItems);
+  assert.ok(t.includes(word("queue.allclear.failed")) && t.includes(word("queue.allclear.failed2")));
+  const retry = main(withItems).querySelector(`a[href="/app/queue"]`);
+  assert.ok(retry && [...main(withItems).querySelectorAll("a")].some((a) => a.textContent === word("queue.tryagain")));
+  const named = await open(w, mai, "/app/queue", asMai(["retrieval"]));
+  await settle();
+  assert.ok(text(named).includes(word("queue.allclear.failed.feed", { feed: word("queue.feed.retrieval") })));
+  for (const id of ["tasks", "bias-debts", "proposals", "shared-inquiries", "leads", "exports", "references", "objectives", "machinery", "contradictions", "signing-keys",
+    "action", "attribution", "docket", "cited-cases", "wizards", "schedule", "places", "projects"]) {
+    const one = await open(w, mai, "/app/queue", asMai([id]));
+    await settle();
+    assert.ok(text(one).includes(word("queue.allclear.failed.feed", { feed: word("queue.feed." + id) })), id);
+  }
+  const bare = await open(w, mai, "/app/queue", asMai(["tasks-x"]));
+  await settle();
+  assert.ok(text(bare).includes(word("queue.allclear.withheld")), "a feed the word list does not name is not named, and the class stays withheld");
+  const withheld = await open(w, nothing, "/app/queue", { queue: through(w, nothing, "items", feedsFailing(["sources"])) });
+  await settle();
+  const wh = text(withheld);
+  assert.ok(wh.includes(word("queue.allclear.withheld")) && wh.includes(word("queue.allclear.failed")) && wh.includes(word("queue.tryagain")));
+  assert.ok(!wh.includes(word("screen.queue.empty")) && !wh.includes(word("queue.none.todo")), "no 'nothing is waiting' and no 'none here'");
+  // Control: all feeds answered, nothing waiting (the store's own answer): the sentence, each class, the up-to-date row and the door to Home; no kinds legend or sort controls.
+  const clear = await open(w, nothing, "/app/queue");
+  await settle();
+  const c = text(clear);
+  assert.ok(c.includes(word("screen.queue.empty")) && c.includes(word("screen.queue.uptodate")) && c.includes(word("screen.queue.gohome")));
+  for (const k of ["todo", "noticed", "status"]) assert.ok(c.includes(word(`queue.none.${k}`)) && c.includes(word(`queue.none.${k}2`)), k);
+  assert.ok(!c.includes(word("screen.queue.sort")));
+  // Control: a class whose feeds did not all answer is not told none here, though the rest are (every feed answered, the finding class not clear).
+  const part = await open(w, nothing, "/app/queue", { queue: through(w, nothing, "items", (r) => ({ ...r, all_answered: true, all_clear: { OBLIGATION: true, FINDING: false, CONDITION: true } })) });
+  await settle();
+  assert.ok(!text(part).includes(word("queue.none.noticed")) && text(part).includes(word("queue.none.todo")));
+  // Control: an item held draws no 'none here' for its class (the list is drawn, not the all-clear).
+  assert.ok(!text(withItems).includes(word("queue.none.todo")));
+});
+
+/** The set-aside findings, `aside` list of the world's queue answer for `as`, served in pages of `size` by `after` (the cursor is the index of the next row),
+ *  with `front` rows first: the store pages by its own bound of 200 and its instance-scope rows come of a declared flow, which no act of the world makes. */
+const asidePaged = (w, as, size, front = []) => async (req) => {
+  if (!req.query.aside) return w.boot(as).door(req);
+  const a = await w.boot(as).door({ ...req, query: { ...req.query, after: "" } });
+  const r = a.json && a.json.result;
+  const rows = [...front, ...r.aside];
+  const from = req.query.after ? Number(req.query.after) : 0;
+  a.json.result = { ...r, aside: rows.slice(from, from + size), count: rows.slice(from, from + size).length, truncated: from + size < rows.length, next: from + size < rows.length ? String(from + size) : null };
+  return a;
+};
+
+test("R61: the set-aside findings are listed on the answered page with the decision, its reason and the version judged; a deferred one offers Dismiss with a reason; all pages are walked and each row listed once", timeout, async () => {
+  const { w, rosa, mai, p1, p2 } = await team();
+  const qs = await findings(w, rosa, p1, p2, 4);
+  const items = await itemsOf(mai);
+  const [f1, f2, f3, f4] = qs.map((q) => findingOf(items, q));
+  assert.ok(f1 && f2 && f3 && f4, "the real queue holds four findings");
+  const set = (as, f, to, reason) => as.act("proposedispose", { body: { items: [{ project: p2, finding: f.id }], to, reason } });
+  await set(mai, f1, "deferred", "later");                 // deferred by her: offers Dismiss
+  await w.tick(60_000);
+  await set(mai, f2, "dismissed", "not worth pursuing");   // dismissed by her
+  await w.tick(60_000);
+  await set(rosa, f3, "dismissed", "settled");             // dismissed by another member
+  await set(mai, f4, "dismissed", "enough already");
+  const real = (await mai.read("queue", { query: { aside: "true" } })).aside;
+  assert.equal(real.length, 4, "the real store lists the four set aside");
+  const byFinding = (f) => real.find((r) => r.finding === f.id);
+  assert.deepEqual([byFinding(f1).state, byFinding(f2).state, byFinding(f3).state], ["deferred", "dismissed", "dismissed"]);
+  // A flow's finding (a stage required and absent in a declared flow, set aside at version 3) comes of entities and dated documents threaded through it, which
+  // no act of the world makes: the one row added to the real store's list, first (newest), and the list served in pages of 3 by `after`.
+  const flow = { scope: "instance", finding: "FINDING::prog::stage", project: null, key: "prog::stage", state: "deferred", reason: "r1", decided_by: "you", at: "2099-10-09T10:00:00Z", definition_version: 3, title: "A stage" };
+  const p = await open(w, mai, "/app/queue/answered", { queue: asidePaged(w, mai, 3, [flow]) }, { screens: withScreens("document", "question", "project", "action", "dash-project", "members", "timeline") });
+  await settle(80);
+  const asides = p.byOp("queue").filter((r) => r.query.aside);
+  assert.deepEqual(asides.map((r) => r.query.after || ""), ["", "3"], "walked in pages by after");
+  const sec = main(p).querySelectorAll("section").find((s) => s.querySelector("h2") && s.querySelector("h2").textContent === word("progression.finding.state.dismissed"));
+  assert.ok(sec, "the set-aside section");
+  const rows = sec.querySelectorAll(".cs-row");
+  assert.equal(rows.length, 5, "each listed once");
+  const t0 = text(p, rows[0]);
+  assert.ok(t0.includes(word("queue.aside.deferred", { date: dmy("2099-10-09") })) && t0.includes(word("queue.aside.v2", { n: "3" })) && t0.includes("r1"));
+  assert.ok(rows[0].querySelector('button[data-act="proposedispose"]'), "a deferred row offers Dismiss with a reason");
+  const t1 = text(p, rows[1]);   // the first real row, newest first: the dismissal by another member of f3 or her own of f4 (the same minute): either way dismissed, with its reason, no version
+  assert.ok(!t1.includes(word("queue.aside.v2", { n: "3" })), "control: a project row with no version draws no version line");
+  assert.ok(!rows[1].querySelector('button[data-act="proposedispose"]'));
+  const mineDismissed = real.find((r) => r.finding === f4.id), others = byFinding(f3);
+  assert.ok(text(p, sec).includes(word("queue.aside.dismissed", { date: dmy(mineDismissed.at.slice(0, 10)) })) && text(p, sec).includes("enough already"));
+  assert.ok(text(p, sec).includes(word("queue.aside.dismissed.bymember", { member: "rosa", date: dmy(others.at.slice(0, 10)) })), "another member's decision by her handle");
+  assert.ok(text(p, sec).includes(word("queue.aside.deferred", { date: dmy(byFinding(f1).at.slice(0, 10)) })), "her deferral");
+  await press(p, "proposedispose", { nth: 0, reason: "enough" });
+  assert.deepEqual(last(p, "proposedispose").body, { key: "prog::stage", definitionVersion: 3, to: "dismissed", reason: "enough" });
+  // R70: control: the old spelling fails the guard over the owner's declaration.
+  const declared = collectOwnerRows().proposedispose;
+  assert.deepEqual(fieldMismatches({ query: {}, body: { key: "k", definition_version: 3, to: "dismissed", reason: "r" } }, declared).map((m) => m.field), ["definition_version"]);
+  assert.deepEqual(fieldMismatches({ query: {}, body: { key: "k", definitionVersion: 3, to: "dismissed", reason: "r" } }, declared), []);
+});
+
+test("R61: Dismiss on a deferred finding of a project, as the real store lists it (its row carries a `project::finding` key), sends the project and the finding and the store sets it aside", timeout, async () => {
+  const { w, rosa, mai, p1, p2 } = await team();
+  const [q] = await findings(w, rosa, p1, p2, 1);
+  const f = findingOf(await itemsOf(mai), q);
+  await mai.act("proposedispose", { body: { items: [{ project: p2, finding: f.id }], to: "deferred", reason: "later" } });
+  const p = await open(w, mai, "/app/queue/answered");
+  await settle(80);
+  await press(p, "proposedispose", { nth: 0, reason: "enough" });
+  assert.deepEqual({ ...last(p, "proposedispose").body }, { project: p2, finding: f.id, to: "dismissed", reason: "enough" }, "a project's finding is named by project and finding, not by the row's key");
+  const real = (await mai.read("queue", { query: { aside: "true" } })).aside;
+  assert.equal(real.find((r) => r.finding === f.id).state, "dismissed", "the real store set it aside");
+});
+
+test("R34: every key the queue reads is a word of the list, including the states' words", () => {
+  for (const k of screen("queue").words) assert.ok(hasWord(k), k);
+  for (const k of ["queue.multi.entry", "queue.answered.title", "queue.allclear.withheld", "queue.aside.help", "queue.tryagain"]) assert.ok(screen("queue").words.includes(k), k);
+});
