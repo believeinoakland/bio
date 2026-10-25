@@ -242,3 +242,13 @@ Size (session_01Nwkwhy5gismLNucwdyhzuP): test runs 2, module lines 1158
 ## J18 · COMPLETE
 
 B15 applied: tranche/T51 merged (uses edges in); REPORTs J13-J15 and QUESTIONs J16-J17 posted. No code change; module tests 96/96; format, architecture, coverage (30 of 30), ownership 0 failures. group: null stays in worldOf until a CHANGE (STORE-REQUEST B8 not merged). Details in the record (Completion B15).
+
+## Fix round 10 (B16, K5185)
+
+**R2.** `front.mjs`:115 and `forgot.mjs`:57 draw `refusal.SIGN_IN_PAUSED` with the plane's `stated` as the row's variable `{stated}` and no time. Failing-first tests (red on the old source, run with the source stashed): `front.test.mjs` "R2 paused" (eleven refused logins from one place through `storeWorld()`, then the page), `public.test.mjs` "R2 R4 forgot paused" (the same over `recover`). They assert the drawn text equals `word("refusal.SIGN_IN_PAUSED", {stated})`, holds the plane's `stated`, holds no "try again at" and no unfilled `{…}`. **They stay red** on the design's row, which still reads "…Try again at {time}." (`words.json`, `rows.mjs`:673): the row without `{time}` and with `{stated}` is UX-DESIGN's and outside my paths (asked of BOB in the BLOCKED entry). Green the day the row lands, with no change here.
+
+**R6.** `setup.mjs`:474-476: an office with a name and no note is refused on the page (`refusal.ENTITY_NO_NOTE`, the plane's own held row, read by key, added to the setup list in `words.mjs`) and nothing is sent; with a note it is sent as before. Failing-first test `setup.test.mjs` "R6 an office is never sent without its note" (red on the old source: it sent `note: null`; green now: nothing sent, the plane holds no such office, then the same office with its note is recorded). The label's "(optional)" in `screen.setup.office.note` is UX-DESIGN's to drop (asked of BOB).
+
+**Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/screens-entry/`: 98 tests, 96 pass, 2 fail (the two R2 tests above, on the design's row). `checks/format.mjs`: 0 failures. `architecture`: 16 files, 0. `coverage`: 30 of 30 ids named, 0. `ownership` against `origin/tranche/T51`: 8 files, 0 failures. `checks/run.mjs`: the one line naming screens-entry is the known `front.test.mjs`:18 scripted `publishedlist` (REPORT J13, awaiting STORE-REQUEST), not risen. Users named by `impact.mjs origin/tranche/T51 HEAD` (control-plane, plane, journey-check): `r137-parity`, `pseudo` and `door` fail 9 of 15 identically with this module's source at the tranche's (before) and at my commit (after), so none is from this change; I did not complete the full 157-file run of the users.
+
+Size (session_0143bTM29139UynmAYarEGQM): test runs 9, module lines 1157
