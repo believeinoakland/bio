@@ -125,3 +125,39 @@ Why the published fixtures do not fit: `intentWorld()` and `publicationWorld()` 
 My best reading: re-pointing needs the providers to publish a fixture parameterised by what the user holds, for instance intent `watchSetOf({[projectKey]: [digest, ...]})` (a real intent whose projects' conditions read those digests, made by real acts) and publication `restingOf([{finding, projects, digests}])` over the same project ids. Then my `world()` takes those and the stubs go.
 
 What I will do unless you say otherwise: leave these four lines at `stay` in my COMPLETE, named with this reason, and re-point on a CHANGE once intent and publication publish such fixtures. Alternative if you prefer it now: I re-point R33's objective half only onto `intentWorld()` (its three digests, documents made to hold them); that leaves the stub for the rest, so it does not clear the four findings.
+
+## J8 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10, Wave A batch 5 (START B9), session session_013HZfjoGu9DeeFtdAsv1UPN, on job/T51/monitoring. All 36 own lines are done but four, and the one open QUESTION is J7 (named "J1" inside its own text, a slip).
+
+**Fixtures published** in `bio-plane/test/m/monitoring/fixtures.mjs` (new), each made by the real code at test time and called by a test of mine in `fixtures.test.mjs` (names R48; R1 R8 R9 R10; R16 R19 R20 R32 R47 R48):
+- `flaggedRefusal({limit})`: the real unread `flagged` answer `{ok:false, reason:null, items:[], limit, truncated:false, detail}` (the projection it reads is gone).
+- `monitorAnswer({ticks, kind})`: the real `monitor({bundleId})` answer `{status, body}` per tick of the clock (`answers`, `answer` the last). A `modified` source gives a distinct `capture.sha256` per tick; an `unchanged` one gives `capture: null` (the START's shape `status:"unchanged", capture:{sha256}` is not what the real code answers; real unchanged carries no capture, so following's judgment re-point should use `kind: "modified"` where it needs a digest per tick).
+- `monitoringReads()`: `{empty, seeded}`, each with the real `monitoring`, `archiveEligible`, `flagged`, `configured`, `archiveDue` reads; `seeded` has unscheduled, due, modified, removed, quiet monitors (ticked by the real tick), and two failing addresses (one fallback-eligible, one at the floor and not).
+
+**Own lines re-pointed (FIX-E), tests green:**
+- escalation/escalationsDue (12): `ends.test.mjs`, `understanding.test.mjs` take `escalationsDue().emptyWorld.esc` (real escalation, empty world).
+- acquisition/acquireRefusals (5): `docket`, `invariants`, `understanding` take `acquireRefusals({kind: "source_refused" | "not_eligible"})`. A source refusal now carries status 410 where the hand-built one said 503; no test reads it.
+- promotion/projectActNotParticipant (2) and action-clocks/pendingClocksRefusal (1): re-pointed.
+- case-import/watchedImports (2): `stubCaseImport` and `watchOf` are deleted from `fixture.mjs`; `docket.test.mjs` runs over the real case-import (watches made by the member's own `watchImport` act, reads recorded by the real `recordDocketRead`) seen through a spy (pages of two so the cursor is followed, a `reads` log, `refuse` taking `notWatched.refusal`, `fail`). Expected numbers follow the real answers (a docket entry case-import cannot verify is `new_entries: 1, new_refused: 1`; another group's answer is recorded unreadable by the real module, where the old test forced it). The import order is now the real ids', so expected orders are derived from them.
+- conformance/noDeterminations (1): `fixture.mjs` no longer builds a conformance. The published fixture would need a `conformance` edge in monitoring's `uses` (architecture check: monitoring does not declare it), so the world reaches the real conformance on the same host as production does (actions' own default); no determination is held there, which is what the fixture was. If you want the published fixture used, `modules.json` needs the edge (yours).
+
+**Markers I added (K5060), file:line and why:**
+- `docket.test.mjs:112` `fixtures-own: platform`: the docket host's own HTTP 404 answer served by the scripted network (a fake-network double), as your START named.
+- `fixture.mjs:268` `fixtures-own: synthetic`: the calendar content type registered through docprofile's `registerDoctype` seam, as your START named.
+- `fixture.mjs:310` `fixtures-contract: link-sweep sweep-fence` (the registered share's fence refusal), `named-requests.test.mjs:410` `fixtures-contract: link-sweep sweep-mutate` (covers 411, 416, 417), `relay.test.mjs:35` `fixtures-contract: store-door store-envelope`. These show `contract-no-run` until link-sweep's and store-door's own jobs merge a `// fixtures-run: monitoring <id>`: waiting on link-sweep and store-door.
+No `fixtures-generic` marker.
+
+**Left, named (stay):** 4 findings, `fixture.mjs:207` and `:208` (declaration and use of `stubIntent` and `stubPublication`; R33's and R70's 14 tests). Cause in QUESTION J7: the published `intentWorld()` and `publicationWorld()` are one project in their own database with their own digests, and a test must say per project which of monitoring's own documents' digests it rests on. They are the judgment lines for intent and publication; I re-point on a CHANGE once those providers publish fixtures parameterised by what the user holds, or on your other answer.
+
+**List now** (`checks/fixtures.mjs . monitoring --list`): 11 lines: 2 accepted (own), 5 contract-no-run (waiting, above), 4 the stay lines above.
+
+**Found in another module:** `build/plan/fixtures-T51/part-5.md` says `monitorAnswer` is `status:"unchanged"` with `capture:{sha256}`; the real tick answers `capture: null` when unchanged (R9 captures only a modified source). following's stand-in (`following/fixture.mjs:166`) is that unreal shape; its job re-points to `monitorAnswer({kind: "modified"})` or drops the capture. Not a defect of this module.
+
+**Tests run.** `bio-plane/test/m/monitoring/`: tests 172, pass 172, fail 0 (169 before, plus 3 for the fixtures). Users of the files I changed (they import monitoring's `fixture.mjs`): following `watches.test.mjs`, scheduler `rank.test.mjs`, affordances `backing.test.mjs`: 49/49. `build/plan/impact.mjs origin/tranche/T51 HEAD` names 104 modules, 1814 test files, because the diff against `origin/tranche/T51` includes everything the tranche moved since the branch point; no source file of mine changed (tests only), so I ran the three importers, not the rest.
+
+**Checks.** format 178 modules, 0 failures; architecture monitoring 25 files, 129 imports, 0 failures; coverage 65 of 65, 0 failures; words 0 failures; ownership 10 files changed by monitoring between tranche/T51 and HEAD, 0 failures.
+
+**Deferred:** none in the module. Source unchanged.
+
+Size (session_013HZfjoGu9DeeFtdAsv1UPN): test runs 11, module lines 3300
