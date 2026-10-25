@@ -67,6 +67,7 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 **The warning about a person in no public role, and a request answered that no record exists** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; R32's warning and test are `inquiry` R59's)
 - **R32** (D13) The same warning, by the same test, at a promotion that states or revises a project's `objective` or condition (R1, R2) and at R16's `adopt`; never refused, her choice recorded.
 - **R33** (H30 (1)) An instance short of a required stage meets it when the record holds, for that stage, a records request answered that no such record exists (`actions`' outcome: a later module registers once at start, K31's pattern, through `registerNoneExistsReader(reader)`, `reader({progression, entity, stage, viewer})` answering `[{action, ord, at}]`, `actions` R71; with none registered, or one answering `[]`, no stage is met this way), stated beside it, with the first answer's `action`, as "answered: none exists"; met is still computed from the record (R4), never declared (H28).
+- **R37** *(not yet met: T51)* (K5157; walk-T51-final 03 §12) A retired aspiration stays readable (R11): `aspirationsFor` with `retired: true` lists the project's retired aspirations (and the viewer's own), each with what pursuing it taught and its dead ends; the default read is unchanged (R12).
 
 ## Private
 
