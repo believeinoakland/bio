@@ -205,3 +205,8 @@ Context: passed half of the window at the end of this step; nothing further is o
 ## J12 · BLOCKED
 
 BLOCKED (cause: context). Work is done and pushed on job/T51/screens-entry; the record's "Completion (fix round 10, Wave B)" section holds everything: 96/96 module tests, fixtures list 173 -> 1 (published list, needs a recipe), 2 fixtures-generic markers, two source fixes (reset.mjs expiresAt, setup.mjs site default), uses edges to add (store-request, file-safety), REPORTs (published-case recipe; system hosting recorder; store-assembly world.script is process-global) and two QUESTIONs (SIGN_IN_PAUSED has no time in stated; office note required but worded optional) are written in the record but not yet mailed. Next: mail those as REPORT/QUESTION, then COMPLETE.
+
+## Saved at K5183
+
+Done: everything in "Completion (fix round 10, Wave B)" above (96/96 tests, fixtures 173 -> 1, two source fixes, markers, checks). Nothing half done; no workers.
+Exact next step: (1) mail the three REPORTs (published-case recipe; system hosting recorder; store-assembly `world.script` is process-global) and two QUESTIONs (SIGN_IN_PAUSED has no time in `stated`; office note required but worded optional) written in the completion section; (2) after BOB's CHANGE that fixes `storeWorld()`'s default group, drop `group: null` in `kit.mjs` `worldOf`; (3) `mail state --set COMPLETE`, post COMPLETE, ring BOB.
