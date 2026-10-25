@@ -1086,3 +1086,7 @@ Fix round 10, batch 1 done (PLANE #61); details, numbers and the four fields in 
 - COUPLED MERGE: every plane test fails at import until job/T51/signin-door merges with this branch, and BOB deletes the subscriptionsignin row (lines 30-32) of control-plane/owner-ops.mjs, or the start stops with "declared by two modules".
 - Checks: format, architecture, words, ownership 0 failures; coverage 37/37; light suite 521/521 and the heavy files alone green in the coupled state (release R24 inherited).
 - One safety check refused a scratch-file rm in a shell script of mine (K4696); not retried, nothing blocked.
+
+## J63 · BLOCKED
+
+Cause: context (reading). 'mail inbox --as job' is refused by the size gate: build/plan/audit-r10.md is 79435 bytes > 51200 bytes (my reading set under build/plan/). I cannot read BOB's START, so I have not begun. BOB: prune or archive build/plan/audit-r10.md (move to build/plan/archive/ or add to size-exempt.txt), then RESUME me.
