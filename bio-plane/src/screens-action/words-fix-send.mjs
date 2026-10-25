@@ -15,8 +15,10 @@ const TEMPLATE_REFUSALS = ["TEMPLATE_FROM_UNAPPROVED", "TEMPLATE_NAME_TAKEN", "T
 
 // B16 (a), DEC-387: a sentence the record contradicts, released with a reason carried by the approval
 const RELEASE = ["head", "why", "why.help", "done"].map((k) => "screen.start-send.release." + k);
+// R3 (filings R43, R44; fix round 10): the language the draft is prepared in (the account's own word for it), and on a public comment the voice
+const MARKS = ["screen.account.language.field", "voice.group", "voice.group.means", "voice.self", "voice.self.means"];
 export const WORDS = Object.freeze([...EX, ...CONTACT, ...TEMPLATE, ...RELEASE]);
 export const EXTRA = Object.freeze({
-  "start-send": Object.freeze([...APPROVAL, ...TEMPLATE_REFUSALS, "refusal.FILING_TIER_UNDETERMINED", "risk.title", "refusal.ACTION_BASIS_REFUSED"]),
-  request: Object.freeze([...APPROVAL]),
+  "start-send": Object.freeze([...APPROVAL, ...TEMPLATE_REFUSALS, "refusal.FILING_TIER_UNDETERMINED", "risk.title", "refusal.ACTION_BASIS_REFUSED", ...MARKS]),
+  request: Object.freeze([...APPROVAL, "screen.account.language.field"]),
 });

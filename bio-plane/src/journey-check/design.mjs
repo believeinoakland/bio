@@ -149,9 +149,9 @@ export async function designMock(b, { dir, commit = assetsCommit(), root = ROOT 
         const sc = document.getElementById("vscale"), box = document.getElementById("vdev");
         sc.style.transform = "none";
         Object.assign(box.style, { width: "max-content", height: "auto", overflow: "visible" });
-        return "ok";
+        return "ok:" + o.textContent.trim();
       }, [id, control, option, width <= PHONE ? "phone" : "desktop"]);
-      if (r === "ok") return { png: await page.locator("#vscale").screenshot() };
+      if (r.startsWith("ok:")) return { png: await page.locator("#vscale").screenshot(), label: r.slice(3) };
       return { why: r === "screen" ? localize("journey-check.design.the_mock_draws_no_such_screen", "the mock draws no such screen")
         : r === "control" ? localize("journey-check.design.the_mock_offers_no_control", "the mock offers no control {control}", { control: String(control) })
           : localize("journey-check.design.the_mock_s_offers_no_state", "the mock's {control} offers no state like /{option}/", { control: String(control), option: String(option) }) };

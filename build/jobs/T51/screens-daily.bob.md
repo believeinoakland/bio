@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J29
+**Read** · handled J30
 
 ## B1 · START
 
@@ -454,3 +454,7 @@ Do not start any long command now.
 ## B44 · RESUME
 
 RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183 (SCREENS-DAILY #23, B42 then B43 CHANGE)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
+
+## B45 · CHANGE
+
+CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWorld()`'s default world works (B8: the team is store-assembly's own, no second seeding), and its `group` option is gone. Merge origin/tranche/T51 into your branch, drop every `{group: null}` you pass, and re-run the tests that failed with GROUP_ALREADY_RECORDED. New recipes are on the tranche (store-request R19): published, imported, cited, rerun, conflict, assistant, writingHelp, grantAdmit, world.route(as); re-point any op-table line you kept for want of one. Then carry on with your open steps.

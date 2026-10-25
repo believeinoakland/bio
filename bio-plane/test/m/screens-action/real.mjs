@@ -51,7 +51,7 @@ export function realPlane(x, member = V("olive"), base = DATA_PLANE, { roster = 
         const arm = Object.hasOwn(OP_ALIASES, op) ? OP_ALIASES[op] : op;
         if (Object.hasOwn(ops, arm)) return ok(await ops[arm]());
       }
-      return ok({ ok: false, reason: "NO_OWNER" });
+      throw new Error(`realPlane: no owner serves ${op}`);
     };
   }
   return { ...base, ...plane };
