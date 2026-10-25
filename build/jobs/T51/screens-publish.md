@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01A5xaQuUkCxU8ow5u291G9K · depth 2 · RUNNING until 2026-10-25T19:30:29Z (tests of control-plane and plane named by impact.mjs) · handled B46
+**Status** · session_01A5xaQuUkCxU8ow5u291G9K · depth 2 · RUNNING until 2026-10-25T20:00:35Z (tests of control-plane and plane named by impact.mjs, split in two) · handled B46
 
 ## J1 · QUESTION
 
