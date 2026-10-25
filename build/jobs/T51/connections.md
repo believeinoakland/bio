@@ -117,3 +117,7 @@ B8 done on job/T51/connections. Cause 1 (R72, R20): connections' own code NO_SUC
 Merged `origin/tranche/T51`. `no-such-document.test.mjs` no longer imports answer-envelope: it reads connections' own `NO_SUCH_DOCUMENT_CHECKS` row (the door's decoration is answer-envelope's to test). connections 149 pass; architecture, coverage 72/72, words, format, ownership 0 failures.
 
 Size (session_01KxwDp4ty9H6XwcoGUpKoBx): test runs 8, module lines 2394.
+
+## J7 · COMPLETE
+
+B9 done: tranche merged; no-such-document.test.mjs no longer imports answer-envelope (reads connections' own NO_SUCH_DOCUMENT_CHECKS row). connections 149 pass; architecture, coverage 72/72, words, format, ownership 0.
