@@ -126,3 +126,17 @@ export function recordReuseVerdicts({ bundleId = "INFO-1", host = "x.example", p
   };
   return { ops, capture: w.c, parts: seeded, bundleId, recorded: () => w.c.reuseVerdicts({ bundleId }).verdicts };
 }
+
+/** The bytes `uploadProvenance` brings by default: a 1 x 1 PNG (its signature and header are what the profile reads). */
+export const UPLOAD_PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+
+/** `uploadProvenance`: the provenance document capture's real `uploadCapture` writes for one upload, made when the test runs. A member brings `bytes` under
+ *  `name` with no declared type, so the bytes decide what the file is. Answers the document: `file` (`snapshots/upload-<sha>`), `locator`, `retrieved`,
+ *  `capture` (method uploaded, graded received, no `content_type`), `profile` (acquisition's profile of the bytes, its `format` and `source_content_type` the
+ *  bytes' own, none declared), `source`, `origin`, `origin_statement` and `name_stated`. Defaults: `UPLOAD_PNG` named `street.png`. */
+export async function uploadProvenance({ bytes = UPLOAD_PNG, name = "street.png", statement = "a photo the clerk took at the counter", by = "m1", at = "2026-10-09T12:00:00Z" } = {}) {
+  const w = fresh({ evidence: bucket(), env: ENV });
+  const r = await w.c.uploadCapture({ bytes, statement, name, by, at });
+  if (r.ok !== true) throw new Error(`uploadProvenance: the upload was refused ${r.reason}`);
+  return r.document;
+}

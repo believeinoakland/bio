@@ -43,20 +43,28 @@ test("R70 provenance declares origins: its requires alone raise no refusal namin
     values: { bundleId: B }, same: sameOk });
 });
 
-test("R68, R69, R70: the module declares those three ops and no other, each with the fields its arm reads", () => {
-  assert.deepEqual(Object.keys(DECLARED_OPS).sort(), ["declareorigin", "origins", "testify"]);
+test("R80 provenance declares authority: its requires alone raise no refusal naming a field, the missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "authority", declaration: DECLARED_OPS["authority"], call: mk("authority", { viewer: V("ruth") }),
+    refusedNaming: named({ bundleId: ["NO_BUNDLE"], capture: ["AUTHORITY_NOT_A_DOCUMENT"] }),
+    values: { bundleId: B }, same: sameOk });
+});
+
+test("R68, R69, R70, R80: the module declares those four ops and no other, each with the fields its arm reads", () => {
+  assert.deepEqual(Object.keys(DECLARED_OPS).sort(), ["authority", "declareorigin", "origins", "testify"]);
+  assert.deepEqual(DECLARED_OPS.authority.fields, { accepts: ["bundleId", "capture"], requires: ["bundleId"] });
   assert.deepEqual(DECLARED_OPS.testify.fields, { accepts: ["words", "observedAt", "title"], requires: ["words", "observedAt"] });
   assert.deepEqual(DECLARED_OPS.declareorigin.fields, { accepts: ["bundleId", "system"], requires: ["bundleId", "system"] });
   assert.deepEqual(DECLARED_OPS.origins.fields, { accepts: ["bundleId"], requires: ["bundleId"] });
   for (const [op, d] of Object.entries(DECLARED_OPS)) {
     assert.equal(typeof d.description, "string", op);
     assert.ok(d.description.length > 20, op);
-    assert.equal(d.mutating, op !== "origins", op);
+    assert.equal(d.mutating, op !== "origins" && op !== "authority", op);
     assert.ok(Array.isArray(d.classes) && d.classes.length > 0, op);
   }
   assert.equal(DECLARED_OPS.testify.weight, "reasoned");
   assert.equal(DECLARED_OPS.declareorigin.weight, "reversible");
   assert.equal(DECLARED_OPS.origins.weight, "read");
+  assert.equal(DECLARED_OPS.authority.weight, "read");
 });
 
 test("R69 control: a body naming an author, under any spelling, is no field of testify but a claim it refuses by name", async () => {

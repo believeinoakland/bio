@@ -91,7 +91,7 @@ test("R50 an item placed nowhere answers grade null with grade_why saying no att
     const it = item(t, id);
     assert.ok(t.world.placed_nowhere.includes(it), id);
     assert.equal(it.grade, null);
-    assert.equal(it.grade_why, word("events.why.grade_placed_nowhere"));
+    assert.deepEqual(it.grade_why, { key: "events.why.grade_placed_nowhere", vars: {} });
     assert.equal(it.participants_total, 1);
   }
   /* control: the member who may see the governing attestation is answered its grade */
@@ -100,7 +100,7 @@ test("R50 an item placed nowhere answers grade null with grade_why saying no att
   w.st.sql.exec(`UPDATE event_when_cache SET value='2020-01-01' WHERE event_id=?`, dated);
   const stale = item(w.ev.timeline({ set: [p], viewer: MEMBER }), dated);
   assert.deepEqual([stale.grade, stale.why], [null, { key: "events.why.cache_stale", vars: {} }]);
-  assert.equal(stale.grade_why, word("events.why.grade_time_unread"));
+  assert.deepEqual(stale.grade_why, { key: "events.why.grade_time_unread", vars: {} });
 });
 
 test("R40 a role is answered only through an attestation in sight: a role resting on a hidden capture is not answered beside a visible one (eventsFor, timeline)", () => {
@@ -251,4 +251,17 @@ test("R52 R34's NOT_A_PROCEEDING is entities.notAProceeding's answer (its R53): 
   assert.equal(w.rows(`SELECT * FROM events`).length, 0);
   const proc = w.proceeding("Suit one");
   assert.notEqual(w.ev.proceedingStatusAt({ proceeding: proc, at: "2026-01-01", viewer: MEMBER }).reason, "NOT_A_PROCEEDING");
+});
+
+test("R50 the event view's why for a dated attestation the viewer cannot see is {key, vars}, key events.why.dated_attestation_see; control: a viewer who may see it is given no why", () => {
+  const w = world();
+  const p = w.entity("Una");
+  const hidden = fenced(w, "gov");
+  const hf = w.ev.recordDatedFact({ captureSha: hidden, extent: doc, kind: "meeting", value: "2026-06-01", method: "m", by: MEMBER }).dated_fact.dated_fact_id;
+  const half = w.ev.createEvent({ kind: "meeting", attestations: [{ datedFactId: hf }, { captureSha: w.capture("seen"), extent: doc }], by: MEMBER,
+    participants: [{ entityId: p, role: "present", attestation: 1 }] }).event_id;
+  const seen = w.ev.readEvent({ eventId: half, viewer: OUTSIDER }).event;
+  assert.equal(seen.when, null);
+  assert.deepEqual(seen.why, { key: "events.why.dated_attestation_see", vars: {} });
+  assert.equal(w.ev.readEvent({ eventId: half, viewer: MEMBER }).event.why, undefined);
 });

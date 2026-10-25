@@ -1027,7 +1027,15 @@ export class InstanceSetup {
   #fetch(...a) { return (this.#deps.fetch ?? globalThis.fetch)(...a); }
   #sleep(ms) { return this.#deps.sleep ? this.#deps.sleep(ms) : new Promise((s) => setTimeout(s, ms)); }
   #now() { return this.#deps.now ? this.#deps.now() : Date.now(); }
-  #iso() { return new Date(this.#now()).toISOString(); }
+  /* The instance clock (K5132): an injected clock, then `env.BIO_NOW_MS`, then the wall. Every instant the module records
+     reads it; a measured duration reads `#now()`, which stays on the wall. An absent value falls through, never the epoch. */
+  #instant() {
+    if (this.#deps.now) return this.#deps.now();
+    const raw = this.#env.BIO_NOW_MS;
+    if (raw !== undefined && raw !== null && raw !== "") { const v = Number(raw); if (Number.isFinite(v) && v >= 0) return v; }
+    return Date.now();
+  }
+  #iso() { return new Date(this.#instant()).toISOString(); }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -2862,7 +2870,7 @@ export class InstanceSetup {
     if (a.refused) return a.refused;
     const r = this.#updateReady(version);
     if (r.refused) return r.refused;
-    const now = this.#now();
+    const now = this.#instant();
     let until, zone = null;
     if (r.ready.security === 1) ({ until, zone } = this.#nextLocalDay(now));
     else until = new Date(now + UPDATE_LATER_DAYS * 86_400_000).toISOString();

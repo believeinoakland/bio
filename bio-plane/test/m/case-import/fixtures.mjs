@@ -80,3 +80,16 @@ export async function watchedImports({ publishers = ["https://publisher1.example
   }
   return { w, ci: w.ci, watched, notWatched, watches: w.ci.watchedImports({}), items: w.ci.watchItems({ viewer: V(BY) }) };
 }
+
+/* R4 (K5148; WALK-FINAL-10B R98): the real `importedCases` and `importedCase` of one imported case file whose case document
+   states a `case_scope` and whose first two findings' files state a `title` (the third states none, so it answers `null`,
+   never its id). Answers `{w, ci, scope, titles, import, list, one}`: the list and the case as the module answers them. */
+export async function importedNamed({ scope = "Did the clerk stamp the contract before the vote?",
+                                       titles = { [F1]: "The stamp predates the vote", [F2]: "The contract was signed in March" } } = {}) {
+  const w = seeded();
+  const r = await imp(w, caseFile({ scope, titles }));
+  if (r.ok !== true) throw new Error(`importedNamed: the import was refused: ${JSON.stringify(r).slice(0, 300)}`);
+  const list = w.ci.importedCases({ viewer: V(BY) });
+  const one = w.ci.importedCase({ import: r.import, viewer: V(BY) });
+  return { w, ci: w.ci, scope, titles, import: r.import, list, one };
+}

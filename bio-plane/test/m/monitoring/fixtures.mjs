@@ -66,6 +66,10 @@ export async function monitoringReads() {
   w.net.routes[LOC("modified")] = serve("modified v2");
   w.net.routes[LOC("removed")] = serve("gone", "text/plain", 404);
   w.net.routes[LOC("quiet")] = serve("quiet v1");
+  /* R4: a removal is confirmed by a look 24 hours or more after the first, so the first look is a day and an hour earlier */
+  w.clock.ms = now - 25 * 3600e3;
+  await tick(w, ids.removed);
+  w.clock.ms = now;
   for (const k of ["modified", "removed", "quiet"]) await tick(w, ids[k]);
   w.monitored(ids.due, LOC("due"), "due v1", { freq: "daily" });
   const at = "2026-09-20T00:00:00Z";

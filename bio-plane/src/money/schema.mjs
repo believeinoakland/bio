@@ -32,6 +32,7 @@ CREATE INDEX IF NOT EXISTS money_facts_from_fund ON money_facts (from_fund, peri
 CREATE INDEX IF NOT EXISTS money_facts_to_fund ON money_facts (to_fund, period_start);
 CREATE INDEX IF NOT EXISTS money_facts_adjusts ON money_facts (adjusts);
 CREATE INDEX IF NOT EXISTS money_facts_source_fact ON money_facts (source_fact);
+CREATE INDEX IF NOT EXISTS money_facts_source_row ON money_facts (source_binding, source_table, source_row);
 CREATE UNIQUE INDEX IF NOT EXISTS money_facts_projected ON money_facts (projected_key);
 CREATE TABLE IF NOT EXISTS money_codes (
   fact_id TEXT NOT NULL, scheme TEXT NOT NULL, code TEXT NOT NULL, sight_bundle TEXT,

@@ -74,10 +74,11 @@ export function world(fakes = {}, { bare = false, start = false } = {}) {
     boot() { base.boot(); t.migrate(); },
     run: (s, ...a) => db.prepare(s).run(...a.map(bind)),
     all: (s, ...a) => db.prepare(s).all(...a.map(bind)),
-    bundle(id, type = "information", { title = id, state = null } = {}) {
+    bundle(id, type = "information", { title = id, state = null, project = null } = {}) {
       const st = state || ({ inquiry: "open", project: "active", information: "collected" }[type] || "collected");
       db.prepare(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
                   VALUES (?,?,?,?,?,?,?,?)`).run(id, type, "g", title, st, iso(NOW), iso(NOW), "sha");
+      if (project) db.prepare(`UPDATE bundles SET project=? WHERE bundle_id=?`).run(project, id);   // the project the document's front matter states (record-core R34)
       return id;
     },
     member(id, { role = "member", status = "active", created = iso(NOW) } = {}) {

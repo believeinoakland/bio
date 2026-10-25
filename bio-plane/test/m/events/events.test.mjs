@@ -98,7 +98,7 @@ test("R9 when is derived only from the governing attestation and rebuilt in the 
   const e = w.ev.createEvent({ kind: "meeting", attestations: [{ captureSha: s, extent: doc }], by: MEMBER }).event_id;
   const v0 = w.ev.readEvent({ eventId: e, viewer: MEMBER }).event;
   assert.equal(v0.when, null);
-  assert.equal(v0.why, word("events.why.placed_nowhere_attestation"));
+  assert.deepEqual(v0.why, { key: "events.why.placed_nowhere_attestation", vars: {} });
   assert.equal(w.one(`SELECT value FROM event_when_cache WHERE event_id=?`, e).value, null);
   w.ev.attest({ eventId: e, attestation: { datedFactId: fact(w, s, "2026-05-05T18:30") }, by: MEMBER });
   const row = w.one(`SELECT * FROM event_when_cache WHERE event_id=?`, e);

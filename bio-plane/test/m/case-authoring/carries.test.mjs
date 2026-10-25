@@ -154,7 +154,7 @@ test("R55 (case-disclosures R15): grading_facts: and passages: are written at th
   }
   const p = passagesOf(fm);
   assert.deepEqual(p[Q], [{ finding: Q, ord: 0, content_id: cid, capture_sha: a,
-    extent: canonicalJson({ kind: "doc-para", para: 1 }), chain: null, quoted: `the text of ${DOC}` }]);
+    extent: { kind: "doc-para", para: 1 }, chain: null, quoted: `the text of ${DOC}` }]);
   assert.ok(extractedTextOf(w.extraction.unitsOf(a).units).includes(JSON.stringify(p[Q][0].quoted)),
     "the passage is found in the extracted text");
 });

@@ -1,6 +1,6 @@
 # monitoring (T51)
 
-**Status** · session_01GCDV8BWKs6fq93QzdCr4rY · depth 2 · COMPLETE · handled B12
+**Status** · session_01HedZcxhsZ2J2MxA5Rp8RZy · depth 2 · COMPLETE · handled B13
 
 ## J1 · COMPLETE
 
@@ -208,3 +208,31 @@ COMPLETE for T51 monitoring, the B12 CHANGE (re J9; K5101), session session_01GC
 **Markers added:** none.
 
 Size (session_01GCDV8BWKs6fq93QzdCr4rY): test runs 1, module lines 3080 (unchanged this job).
+
+## J11 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10, B13 item 1 (diag2-04 §4), session session_01HedZcxhsZ2J2MxA5Rp8RZy, on job/T51/monitoring (origin/tranche/T51 merged in, no rebase).
+
+**Met ids (BOB strikes the marks):** R4, R8, R32.
+
+**Built.**
+- R4 (a): a first 404/410 is `unconfirmed_removal`, stated, `status` null, `source_status` untouched, not flagged, look `LOOKED_INDETERMINATE`. A look at least 24 hours after the first of the run still unanswered is `removed`: flagged, `LOOKED_ABSENT`, note says it may be concealment. A look the source answered at the address clears the run (the window then starts again).
+- R4 (b): a 2xx whose final `res.url` (normalised) differs from the address fetched is `moved`, naming that address; the bytes are compared there as before (`unchanged`/`modified` stand, `modified` still flags; `moved` itself never does). A redirect ending at the same address is no move.
+- R4 (c): any other non-success is `refused`, reason = the note (`the source answered 403`).
+- The answer carries `look`: `{outcome: unconfirmed_removal|removed, since}`, `{outcome: moved, address}`, `{outcome: refused, reason}`, or null.
+- R32: new table `monitor_address_look` (schema.mjs; one row per normalised address, `absent_since` is the window's start; declared to purge by a whole-store purge, in `MONITORING_TABLES`). Each list row carries `last_look` ({outcome, at, since?, address?, reason?}); a watch whose last look is `refused` or `unconfirmed_removal` is listed `due` (due_at no later than that look) instead of an interval away.
+- New sentences at use, all `localize`: `monitoring.index.removal_confirmed`, `monitoring.index.removal_unconfirmed`, `monitoring.index.moved_note`.
+
+**Readings I settled (BOB may CHANGE).** (1) `moved` is a second statement beside the bytes' status, not a replacement of it, because the requirement says its bytes are compared there. (2) A fetch that throws leaves a held row as it is (neither confirms a removal nor clears it). (3) "Stays due" is read literally: due at the next tick, so a refusing host is asked again each cadence tick; the host governor paces it. (4) R41 names three tables only; `monitor_address_look` is a fourth, whole-store purge, and R41's text should list it.
+
+**Tests (failing first, seen red, then green):** `bio-plane/test/m/monitoring/outcomes.test.mjs`, 5 tests: unconfirmed then confirmed for 404 and 410 (inside the window stays unconfirmed, keeps `since`; later 404 stays removed); control 200 clears and restarts the window; moved to another address, then other bytes there are `modified`; control redirect to the same address is not moved and a move that stops clears the row; refused with its reason, the list row `due` with `last_look`, and the control that an answered watch is `scheduled` with no `last_look`.
+Existing tests that took one 404 as `removed` were brought to the amended R4 by adding the first look a day earlier (tick.test.mjs R4 and R7, queue-reads, watch R70, understanding R31, `monitoringReads` in fixtures.mjs, whose `removed` monitor is now one the real tick confirms); invariants R41 lists the new table. No assertion was weakened.
+
+**Why the tests missed it:** R4 and R8 said "404 or 410 is removed" and the tests pinned that sentence; the window, the move and the list row were in the architecture document and the coverage map, and no requirement carried them until K5148.
+
+**Deferred:** none. **Found in another module:** none. No `fixtures` marker added; `checks/fixtures.mjs /home/user/bio monitoring --list`: 0 failures, accepted 7 (as J10).
+
+**Tests run** (`node --import ./bio-plane/test/platform-sqlite.mjs --test`): `bio-plane/test/m/monitoring/*.test.mjs` tests 177, pass 177, fail 0. Users of the fixture and of the tick: queue-producers `producers`, following `watches`, scheduler `rank`, affordances `backing` and `catalogue`, link-sweep: 146 of 146.
+**Checks** (absolute root, from `/home/user/civicos-process`): format 178 modules, 0 failures; architecture monitoring 25 files, 132 imports, 0 failures; coverage 65 of 65, 0 failures; words (monitoring following link-sweep scheduler) 0 failures; ownership (tranche/T51 to job/T51/monitoring) 10 files, 0 failures.
+
+Size (session_01HedZcxhsZ2J2MxA5Rp8RZy): test runs 8, module lines 3140

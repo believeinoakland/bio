@@ -164,13 +164,13 @@ function counted(res, clock, route) {
   return new Response(res.body.pipeThrough(counter), { status: res.status, statusText: res.statusText, headers: res.headers });
 }
 
-/* a stub whose `fetch` is clocked; every other property is the stub's own, and a function keeps the stub as its `this` */
+/* a stub whose `fetch` is clocked; every other property is the stub's own, and a function keeps the stub as its `this`, called as `target[key](...)` and never through `.apply` (on a workerd RPC stub `.apply` is itself a remote call, K5131) */
 function clockedStub(stub, clock) {
   if (!stub || (typeof stub !== "object" && typeof stub !== "function")) return stub;
   return new Proxy(stub, {
     get(target, key) {
       const v = target[key];
-      if (key !== "fetch" || typeof v !== "function") return typeof v === "function" ? (...a) => v.apply(target, a) : v;
+      if (key !== "fetch" || typeof v !== "function") return typeof v === "function" ? (...a) => target[key](...a) : v;
       return async (input, init) => {
         const route = routeOf(input);
         const phase = Object.hasOwn(PHASE_OF_ROUTE, route) ? PHASE_OF_ROUTE[route] : null;
@@ -206,8 +206,8 @@ export function clockedEnv(env, clock) {
   const ns = new Proxy(store, {
     get(target, key) {
       const v = target[key];
-      if (key === "get" && typeof v === "function") return (...a) => clockedStub(v.apply(target, a), current.getStore() ?? NO_CLOCK);
-      return typeof v === "function" ? (...a) => v.apply(target, a) : v;
+      if (key === "get" && typeof v === "function") return (...a) => clockedStub(target.get(...a), current.getStore() ?? NO_CLOCK);
+      return typeof v === "function" ? (...a) => target[key](...a) : v;
     },
   });
   const made = new Proxy(env, { get(target, key) { return key === "STORE" ? ns : target[key]; } });

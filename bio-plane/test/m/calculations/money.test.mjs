@@ -115,10 +115,12 @@ test("R14 adoptBinding records a member's adoption of a table's money roles; ing
   assert.deepEqual(fact.to, { entity: v2, as_written: "S-00002" }, "resolved through the captured crosswalk");
   assert.deepEqual(fact.source, { table: t.sha, row: 0, binding: b.binding }, "cites its canonical row");
   /* a fact money refuses is listed not written, with money's reason */
-  const bad = w.c.adoptBinding({ table: t.sha, roles: { ...bindRoles, kind: { value: "nonsense" } }, by: V("bob") });
+  /* (each constant is readable alone, so the binding is adopted; the pair is what money refuses, row by row) */
+  const bad = w.c.adoptBinding({ table: t.sha, roles: { ...bindRoles, phase: { value: "adopted" } }, by: V("bob") });
+  assert.equal(bad.ok, true, JSON.stringify(bad));
   const r2 = await w.c.ingestMoney({ binding: bad.binding, rows: "all", reason: "the whole ledger is the request's subject", by: V("bob") });
   assert.deepEqual(r2.written, []);
-  assert.ok(r2.not_written.some((x) => x.reason === "UNKNOWN_MONEY_KIND"));
+  assert.ok(r2.not_written.some((x) => x.reason !== "PAYEE_NOT_IDENTIFIED" && x.reason !== "PAYER_NOT_IDENTIFIED" && x.reason !== "AMOUNT_NOT_READ" && x.reason !== "NO_SUCH_ROW"), JSON.stringify(r2.not_written));
   assert.equal(w.rows(`SELECT * FROM calc_ingests`).length, 2, "each ingest asked for is recorded");
 });
 
@@ -151,4 +153,26 @@ test("R15 a join from a table to registered entities, persons included, runs onl
   const no = await w.c.create({ ...c, inputs: [...inputs, { name: "cw", table: reg.sha }], recipe: viaCw("cw", "person", "name") });
   assert.equal(code(no), "JOIN_NOT_BY_IDENTIFIER", "a table not declared as a crosswalk joins nothing");
   assert.equal(w.count("calculations"), 2);
+});
+
+test("R14 (K5148) adoptBinding asks money's checkConstant for each constant role: a value money cannot read is refused BINDING_UNREADABLE with the role and money's code as the reason, nothing written; a readable one adopts", async () => {
+  const w = seeded();
+  const fields = [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }];
+  const scheme = { role: "payer", scheme: "ellery_person" };
+  const t = await w.table("payer,payee,amount\nP001,P002,5\n", fields, { roles: { payer: scheme, payee: { ...scheme, role: "payee" }, amount: { role: "amount" } } });
+  const good = { amount: "amount", payer: "payer", payee: "payee", kind: { value: "payment" }, phase: { value: "actual" },
+    stage: { value: "paid" }, basis: { value: "cash" }, currency: { value: "USD" }, period: { value: "2026-01-01/2026-12-31" } };
+  const before = w.count("calc_bindings");
+  const cases = [["period", "2026", "MONEY_BAD_PERIOD"], ["kind", "nonsense", "UNKNOWN_MONEY_KIND"], ["phase", "someday", "UNKNOWN_PHASE"],
+    ["stage", "sideways", "UNKNOWN_STAGE"], ["basis", "vibes", "UNKNOWN_BASIS"]];
+  for (const [role, value, reason] of cases) {
+    const r = w.c.adoptBinding({ table: t.sha, roles: { ...good, [role]: { value } }, by: V("bob") });
+    assert.equal(code(r), "BINDING_UNREADABLE", role);
+    assert.equal(r.role, role);
+    assert.equal(r.money_code, reason, `${role}: money's own code`);
+  }
+  assert.equal(w.count("calc_bindings"), before, "nothing written");
+  const ok = w.c.adoptBinding({ table: t.sha, roles: good, by: V("bob") });
+  assert.equal(ok.ok, true, "control: a period money reads adopts");
+  assert.equal(w.c.adoptBinding({ table: t.sha, roles: { ...good, period: { value: "FY2025-26" } }, by: V("bob") }).ok, true, "control: a fiscal key adopts");
 });

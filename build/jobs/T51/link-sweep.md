@@ -1,6 +1,6 @@
 # link-sweep (T51)
 
-**Status** · session_014LubSgUXQ2457eSNMheo6B · depth 2 · COMPLETE · handled B8
+**Status** · session_01Tt9hcR2PKLtGVvSP3xaaE7 · depth 2 · COMPLETE · handled B8
 
 ## Completion (T51-242, words)
 
@@ -149,3 +149,39 @@ B7 (CHANGE, K4247) applied on job/T51/link-sweep at b79e0bbc0a (tranche/T51 merg
 ## J6 · COMPLETE
 
 Fix round 10 batch 5 done on job/T51/link-sweep (8a12d4da58). Both own fixture lines done (sweepScopeRegistrar: the real capture-requests, migrated, wrapped only to record; acquireRefusals: acquisition's published fixture). The 3 contracts run in test/m/link-sweep/contracts.test.mjs: sweep-fence, sweep-mutate, sweep-scope; the real values differ from monitoring's hand-built ones (see record: fence adds check/translation/sweeps; mutate adds code/sweep). fixtures link-sweep 0 failures; module tests 44/44; scheduler consumers 13/13; format, coverage, words, ownership green. NEEDS YOU (one item): architecture link-sweep fails because fixture.mjs imports acquisition/fixtures.mjs and link-sweep's uses (build/modules.json:144) lacks acquisition; please add it (R5/R31 already name it). Found elsewhere: setup-words build --check reports rows.mjs stale at basis-version-grammar word 20125 (not mine). No fixtures-own/generic markers added.
+
+## Completion (fix round 10, the final pass's causes; LINK-SWEEP #8, B9)
+
+**Causes done.**
+
+1. `sweepset` and `sweepratify` refuse every member as an automated credential (`diag2-04.md` §3; K4426).
+   - **Saw:** a member's define and ratify through the door answer `MACHINE_CANNOT_SET_SWEEP`.
+   - **Cause:** the two rows in `DECLARED_OPS` declared no `stamps`, so the door stamped only `viewer`; the arm reads the actor from `author`, finds it empty, and refuses (`sweep.mjs`, `#door`). Fix: `stamps: ["author", "viewer"]` on both rows (`index.mjs`), as `monitoring`'s `namedrequestset` declares.
+   - **Failing first, seen red on the tip:** the new declaration test (`stamps` undefined); the new admission test (`MACHINE_CANNOT_SET_SWEEP` for a member's define); the contract `sweep-mutate` and the R15 `sweepset`/`sweepratify` tests (refused as a machine). After the row change: green.
+   - **Control:** the same define with no stamps from the door is refused `MACHINE_CANNOT_SET_SWEEP` (in the admission test), so the stamps are the cause.
+   - **Why the tests missed it:** `contracts.test.mjs` and `declared-ops.test.mjs` built `author` and `viewer` by hand, handing the arm the stamp the door would never supply; `declared-ops` checked requires, accepts and needs, never stamps. Fix to the tests: `doorQuery(op, who)` (`fixture.mjs`) builds the query from each row's declared stamps (`viewer` when a row declares none, op-declarations' default); all three hand-built queries now use it.
+
+**Lines changed** (commit `c4ec92ba9e`): `index.mjs` (two rows); `fixture.mjs` (`doorQuery`, the `DECLARED_OPS` import); `declared-ops.test.mjs` (`mk` uses `doorQuery`; two new tests); `contracts.test.mjs` (three hand-built queries to `doorQuery`).
+
+**Requirements met** (BOB strikes the marks): R13 and R14 (a member's doors admit the member through the door's stamps, with the machine refusal as control); R15 (each row declares its stamps).
+
+**Deferred.** None.
+
+**For BOB: the door case (K5138), not placed here.** The through-the-door test is `control-plane`'s, per `diag2-04.md` §3 point 3: `bio-plane/test/m/control-plane/r41-sweepset.test.mjs`, with `r8-kit.mjs`. A member's session (the projectcreate owner) posts `sweepset` with the walker's body and gets `ok: true` and a minted sweep id; `sweeps` lists it with `ratified: false`; the owner's `sweepratify {ratified: true}` answers `ratified: true`. Control: the same call with a machine credential is refused `MACHINE_CANNOT_SET_SWEEP`. Red on the tip before the commit above; expected green after it.
+
+**Found in another module.** None new. Checker question: `checks/fixtures.mjs` (draft) flags two `answer` lines in `contracts.test.mjs` (lines 31 and 34, the `unknown` and `out_of_scope` scope refusals, whose `detail` is `localize`d). I ran the same check on `origin/tranche/T51` in a temporary worktree and it flags the same two lines there, so they are not from this job. They are the provider's own contract values; BOB to say whether the check should count them.
+
+**Tests and checks** (absolute product root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/link-sweep/*.test.mjs`: tests 46, pass 46, fail 0. Before the row change, the 5 tests named above failed (the first run of `declared-ops` and `contracts`).
+- `checks/format.mjs`: 178 modules, 178 requirement files; 0 failures.
+- `checks/architecture.mjs … link-sweep`: 0 failures.
+- `checks/coverage.mjs … link-sweep`: 15 of 15 live ids named; 0 failures.
+- `checks/words.mjs … link-sweep`: 0 failures.
+- `checks/ownership.mjs … link-sweep tranche/T51`: 5 files changed by link-sweep; 0 failures.
+- `checks/fixtures.mjs … link-sweep --list`: 2 failures, both the pre-existing lines above; no new failing line; no `fixtures-own` or `fixtures-generic` marker added.
+
+**Size (session_01Tt9hcR2PKLtGVvSP3xaaE7): test runs 2, module lines 1230.**
+
+## J7 · COMPLETE
+
+B9 done: cause 1 (sweepset and sweepratify refused every member as a machine) fixed in c4ec92ba9e; record in a5743dbaf0. Met: R13, R14, R15. Tests 46 of 46 green; format, architecture, coverage, words, ownership 0 failures. Fixtures: 2 lines flagged by the draft check, same on the tranche tip (not new). Door case for control-plane (r41-sweepset) is REPORTed in the record for BOB to place (K5138).

@@ -1,6 +1,6 @@
 # case-disclosures (T51)
 
-**Status** · session_0137mVoPheg67hT8zpcCsqQL · depth 2 · COMPLETE · handled B11
+**Status** · session_01Jh7vJfztCtrsN747UW4pTj · depth 2 · COMPLETE · handled B12
 
 ## J1 · QUESTION
 
@@ -214,3 +214,25 @@ COMPLETE · B11. Fix round 10, Wave A batch 5. Branch job/T51/case-disclosures @
 Fixture users of gateRefusal still hand-building it: screens-publish ceremony.test:253,254, fix2:53, fix3:33, fix4:14, fr30:225, fr30b:80 (their job).
 
 Size (session_0137mVoPheg67hT8zpcCsqQL): test runs 6, module lines 2447
+
+## Work record · B12 (fix round 10, final pass, item 70; K5148)
+
+**Met:** case-disclosures **R15** (BOB strikes the mark).
+
+**C1 (BLOCKER):** `findingFacts` (`src/case-disclosures/index.mjs:646-651`) now `JSON.parse`s the `content` row's `extent` and its `chain` (null stays null), so each `passages` row carries the canonical extent object and the chain value, and `contentIdFor(capture_sha, extent, chain)` recomputes `content_id`. Re-read the cited lines first: the cause is where the diagnosis says. The `quoted` lookup still compares against the stored text (line 649), unchanged.
+
+**Failing-first test:** `test/m/case-disclosures/carries.test.mjs`, the R15 `findingFacts` test. Its content ids are now real (`contentIdFor`, not `sha("…")`), one row carries a chain (set through the content table); every `passages` row asserts `typeof extent === "object"`, `chain` null or an array, and `contentIdFor(...) === content_id`; the former line-291 expectation takes the object. Seen red on the string (extent `'{"kind":"doc-para","para":1}'`), green after the fix.
+
+**Why the tests missed it:** the test built its content row from a string and pinned the string back in its expectation (the producer's output was never fed to the checker's rule), and the checker's own tests use hand-built object rows. No test of the producer asked whether its rows recompute their own ids.
+
+**REPORT for BOB:**
+1. Door case, yours to place (K5138, K5148): publish, then the served checker recreates the finding, and `caseimport` recreates it (diag2-10b C1 item 3: control-plane `walk10b-recreate.test.mjs`, with the k = 2 form for R182).
+2. Another module's test pins the same string: `bio-plane/test/m/case-authoring/carries.test.mjs:157` (R55, "grading_facts: and passages: are written at the act") expects `extent: canonicalJson({ kind: "doc-para", para: 1 })`; it now fails (1 of 257) on `extent` object vs string, and its content row at line 135 builds the string too. Not my module: `case-authoring` must take the object (and a real content id) in its test.
+3. `case-authoring/index.mjs`, `ratification/finding.mjs`, `ratification/ops.mjs` and `case-import/index.mjs` consume the rows; ratification (335) and case-import (162) suites pass unchanged.
+
+**Tests and checks:** case-disclosures 116 pass / 0 fail; ratification 335 pass; case-import 162 pass; case-authoring 256 pass / 1 fail (item 2). `checks/fixtures.mjs … case-disclosures --list`: no new line (accepted 2 as before; no marker added), 0 failures; coverage 34 of 34, 0 failures; format 0; architecture 0; ownership 0; words: no finding in my module (the run's other failures are store-assembly's, control-plane, interface-shell, store-request and actions').
+Size (session_01Jh7vJfztCtrsN747UW4pTj): test runs 9, module lines 2
+
+## J14 · COMPLETE
+
+COMPLETE · B12. R15 met (passages rows carry the extent object and parsed chain; recompute test red then green; branch pushed). REPORT: (1) door case (publish, served checker recreates, caseimport recreates) is BOB's to place; (2) bio-plane/test/m/case-authoring/carries.test.mjs:157 (R55) pins the string extent and now fails 1 of 257, case-authoring must take the object; details in my record.

@@ -198,3 +198,16 @@ test("R30 every row of this module's table that stays names, in its where, the f
   assert.equal(mine.map(([, r]) => r.check).filter((n) => /^C-64\.(1[1-9]|2\d)$/.test(n)).length, 3, "C-64.27, .28 and .29 stay");
   assert.equal(numbers.includes("C-64.18"), false);
 });
+
+test("R4 instanceGroupSeed records its instant on the instance clock: pinned by env.BIO_NOW_MS it is that instant; unpinned, the wall clock", async () => {
+  const pinned = Date.parse("2031-03-04T05:06:07.000Z");
+  const w = await boot({ env: { BIO_NOW_MS: String(pinned) } });
+  const seeded = w.m.instanceGroupSeed({ slug: "pinned-town", author: "class:admin" });
+  assert.equal(seeded.recorded_at, "2031-03-04T05:06:07.000Z");
+  assert.equal(w.m.instanceGroup().recorded_at, "2031-03-04T05:06:07.000Z");
+  const before = Date.now();
+  const free = await boot({ env: {} });
+  const wall = free.m.instanceGroupSeed({ slug: "wall-town", author: "class:admin" });
+  const at = Date.parse(wall.recorded_at);
+  assert.ok(at >= before - 1000 && at <= Date.now() + 1000, wall.recorded_at);
+});
