@@ -216,3 +216,7 @@ Line done: `sheet-worker/recomputeNotEnabled`, `bio-plane/test/m/workbooks/add.t
 - `sheet-worker` had no `node_modules` (K4113); I ran `npm ci` there because the fixture imports its engine.
 
 Size (session_01E3sALXgG1461qUtoUERfBg): test runs 3, module lines 0
+
+## J10 · COMPLETE
+
+B9 done: add.test.mjs:78 now takes sheet-worker's recomputeNotEnabled fixture; no fixtures-own/generic marker added; 50/50 workbooks tests pass; fixtures, format, architecture, coverage (23/23), ownership 0 failures; impact 0 modules. Record: build/jobs/T51/workbooks.md.
