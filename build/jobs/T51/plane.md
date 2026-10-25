@@ -1160,3 +1160,8 @@ ONE RED, yours to decide: r10-lag-figure R78/R28b expects max_run_statements > 1
 REPORT: (a) B100 (4) is store-assembly's: pending.mjs openInstruments (~:316) lag-meter setInterval not unref'd; abandoned (killed) runs keep 16 timers alive so r9-jobs.test.mjs passes 34 and never exits; with setInterval unref'd it exits in 38 s. Fix: t.timer.unref?.(). (b) extraction/acquisition contract-no-run lines naming plane are the J64 relocation to store-assembly.
 Remaining root: store-assembly/register.mjs.
 Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 31, module lines 371
+
+## B101 (PLANE #63)
+`r10-reading-ended.test.mjs` (new; `// fixtures-run: notice-producers reading-ended`, named R1): the REAL job table (`Store` over the plane's fixture, four readings registered and ended by the object's own alarm with extraction's reader answers) answers `readingsEnded` in the contract's shapes (refused with its bound key, finished, final with the reader's reason, final with member null, the ten-key row, `ended_at` epoch ms, order) and by the cursor `<ended_at>\u0001<sha>\u0001<kind>`; a read writes nothing. 2 of 2 green. fixtures plane 0 failures, format/architecture/coverage/ownership 0.
+REPORT (notice-producers): `reading-ended-seam.test.mjs:18` `fixtures-contract: plane reading-ended` is flagged `[idle]` by `checks/fixtures.mjs notice-producers` with and without plane's run: the marker holds nothing the check recognizes (it precedes `const READING_ROWS = Object.freeze([...])`, not a call the check classes as an answer/stub use). Placement of the marker is notice-producers'.
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 33, module lines 371
