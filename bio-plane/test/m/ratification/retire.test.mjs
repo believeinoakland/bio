@@ -93,7 +93,7 @@ test("R28: the trimmed reason — empty is NO_REASON, over EDGE_REASON_MAX or ho
 
 /* ---- R29, R33 ---- */
 
-test("R29: the selection's refusal is answered as retrieval's refuse-weight resolve gives it: NO_SUCH_SELECTION, NOT_YOURS; nothing moves", async () => {
+test("R29: the selection's refusal is answered as retrieval's refuse-weight resolve gives it: NO_SUCH_SELECTION, SELECTION_NOT_YOURS; nothing moves", async () => {
   const w = setup();
   await w.verified("INFO-2026-0701");
   const h = await w.select(["INFO-2026-0701"]);
@@ -101,7 +101,7 @@ test("R29: the selection's refusal is answered as retrieval's refuse-weight reso
   assert.equal(none.reason, "NO_SUCH_SELECTION");
   assert.deepEqual(none, w.retrieval.selectionResolve({ handle: "sel_nope", viewer: WHO, owner: OWNER, weight: "refuse" }));
   const theirs = w.retire(h, { owner: "someone-else" });
-  assert.equal(theirs.reason, "NOT_YOURS");
+  assert.equal(theirs.reason, "SELECTION_NOT_YOURS");
   assert.deepEqual(theirs, w.retrieval.selectionResolve({ handle: h, viewer: WHO, owner: "someone-else", weight: "refuse" }));
   assert.equal(w.state("INFO-2026-0701"), "verified");
 });
@@ -296,7 +296,7 @@ test("R32: the ops map answers retire beside the other nine, reading the control
   assert.equal(fromBody.ok, false, "stamps in the body are not read");
   assert.equal(w.state("INFO-2026-0760"), "verified");
   const theirs = ratificationOps(w.r, url({ handle: h, reason: WHY, viewer: WHO, owner: "someone-else", author: WHO }), stamps).retire();
-  assert.equal(theirs.reason, "NOT_YOURS", "the owner stamp is the query's");
+  assert.equal(theirs.reason, "SELECTION_NOT_YOURS", "the owner stamp is the query's");
   const ok = ratificationOps(w.r, url({ handle: h, reason: WHY, viewer: WHO, owner: OWNER, author: V("vera") }), stamps).retire();
   assert.deepEqual([ok.ok, ok.retired, ok.reason], [true, ["INFO-2026-0760"], WHY]);
   assert.equal(parseFrontmatter(w.md("INFO-2026-0760")).data.state_history.at(-1).author, V("vera"), "the author stamp is the query's");

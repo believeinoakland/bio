@@ -1721,7 +1721,11 @@ export function ratificationOps(r, url, body) {
   const act = (k) => (typeof b[k] === "string" ? b[k] : q(k));
   return {
     gatefacts: () => r.gateFacts(q("id"), q("viewer") ?? null),
-    ratifygate: () => r.ratifyGate(b),
+    /* R52 / R60 (fix round 10): a sitting's members are gated in one call, `{members: [gate body, ...]}`, each answered as its own
+       body would be, in the sitting's order; a single body is answered as before. */
+    ratifygate: async () => (Array.isArray(b.members)
+      ? { members: await Promise.all(b.members.map((m) => r.ratifyGate(m))) }
+      : r.ratifyGate(b)),
     casegate: () => r.caseGate({ caseId: b.caseId ?? q("case"), edition: Number(b.edition ?? q("edition")),
                                  docSha: b.docSha ?? q("docSha"), viewer: q("viewer") ?? null,
                                  secretSha: typeof b.secretSha === "string" && b.secretSha ? b.secretSha : null }),

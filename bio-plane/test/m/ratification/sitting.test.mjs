@@ -269,7 +269,14 @@ async function recordedSitting() {
   const real = p.stub.fetch.bind(p.stub);
   p.stub.fetch = async (u, init) => {
     const op = new URL(u instanceof Request ? u.url : u).pathname.slice(1);
-    const c = { op, start: performance.now(), end: null }; calls.push(c);
+    const c = { op, start: performance.now(), end: null, members: 1 };
+    /* a `ratifygate` call carries one member's gate body, or a sitting's `{members: [...]}` (R52, R60): count the member gates it asks */
+    if (op === "ratifygate") {
+      const text = u instanceof Request ? await u.clone().text() : String(init?.body ?? "{}");
+      const body = JSON.parse(text);
+      if (Array.isArray(body.members)) c.members = body.members.length;
+    }
+    calls.push(c);
     await nap();
     try { return await real(u, init); } finally { c.end = performance.now(); }
   };
@@ -290,7 +297,11 @@ test("R60, R52 (G120b): a sitting of seven reads the list of known ids once, not
   const { calls, s } = await recordedSitting();
   const count = (op) => calls.filter((c) => c.op === op).length;
   assert.equal(count("list"), 1, `list asked ${count("list")} times (red: 7)`);
-  for (const op of ["gatefacts", "image", "ratifygate"]) assert.equal(count(op), s.ids.length, `${op}: once a member`);
+  for (const op of ["gatefacts", "image"]) assert.equal(count(op), s.ids.length, `${op}: once a member`);
+  /* the gate: each member's gate asked once, carried in the sitting's one `ratifygate` call (R60) */
+  const gates = calls.filter((c) => c.op === "ratifygate");
+  assert.equal(gates.length, 1, `the sitting's gates go in one call, not ${gates.length}`);
+  assert.equal(gates.reduce((n, c) => n + c.members, 0), s.ids.length, "ratifygate: once a member");
 });
 
 test("R60, R52 (G120b): the gate phase of a sitting is at most four object levels deep (casedocfacts, the independent reads, the member's facts and image together, the gate), where it was five", async () => {
