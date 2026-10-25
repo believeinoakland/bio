@@ -274,7 +274,7 @@ test("R39 (K3562): after a search with a question chosen, a passage result draws
   assert.ok(off.doc.getElementById("findin-question").querySelectorAll("option").some((o) => o.getAttribute("value") === "INQ-9"));
 });
 
-test("R5, R26 (R17a, fix round 10, G3): a term item says which part of the document it lies in: a footnote's hit names the footnote, a body hit, an item stored without a kind and an unknown kind name none", async () => {
+test("R5, R26, R103 (R17a, fix round 10, G3): a term item says which part of the document it lies in: a footnote's hit names the footnote, a body hit, an item stored without a kind and an unknown kind name none", async () => {
   // fixtures-contract: retrieval-browse findin-term-part
   const PART_KIND = "content.part_kind."; // content's own rows (the nearest held words), keyed by the part kind
   const item = (words, part) => ({ kind: "term", words, capture_sha: SHA, title: "Housing code", extent: { paragraph: 5 }, part, recorded: [] });
