@@ -1,10 +1,9 @@
 /* R8 R85 (fix round 10, cause 30b; K5056; DEC-32 clause 4): a supporting leg without a ground label is a necessary leg
    beside the grounds, and a saved partition with no ground is held as such. Driven at the interface (`ground`,
-   `partitionOf`) over a real document and the real projection; `strength` reads the projection's labels. */
+   `partitionOf`) over a real document and the real projection; `strength` reads the projection. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
-import { axisResult } from "../../../src/strength/arithmetic.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b", C = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q";
@@ -16,7 +15,7 @@ function twoLegs() {
 }
 const projection = (w) => w.rows(`SELECT ord, role, ground FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, Q);
 
-test("R8 R85 one unlabelled necessary leg beside one labelled ground is stored by ground and strength reads it", () => {
+test("R8 R85 one unlabelled necessary leg beside one labelled ground is stored by ground and the projection holds the label on the grounded leg alone", () => {
   const w = twoLegs();
   const r = ground(w, [{ ground: "the minutes", legs: [0] }]);
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
@@ -24,12 +23,9 @@ test("R8 R85 one unlabelled necessary leg beside one labelled ground is stored b
   const fm = w.fm(Q);
   assert.deepEqual(fm.basis.map((l) => l.ground), ["the minutes", undefined], "the second leg is necessary: it names no ground");
   assert.deepEqual(fm.grounds.map((g) => g.ground), ["the minutes"]);
-  /* what strength reads: the projection's label per leg; the unlabelled leg is the implicit part, the ground the OR part */
-  const members = projection(w).map((p) => ({ bundle_id: Q, ord: p.ord, target_id: p.ord ? B : A, role: p.role,
-                                              grade: p.ord ? "C" : "A", ground: p.ground ?? undefined, via: "direct" }));
-  const axis = axisResult("capture", members, []);
-  assert.equal(axis.state, "graded");
-  assert.equal(axis.grade, "C", "no stronger than the necessary leg beside the ground");
+  /* what strength reads is the projection (inquiry_basis): the label on the grounded leg alone, so the other supporting leg
+     is the implicit necessary part and the ground the other; strength's own tests judge its arithmetic over them */
+  assert.deepEqual(projection(w).map((p) => [p.ord, p.role, p.ground]), [[0, "supports", "the minutes"], [1, "supports", null]]);
 });
 
 test("R8 R85 two supporting legs, one named in a ground and one not, is the same partition whichever leg is left out", () => {
