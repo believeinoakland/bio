@@ -433,3 +433,19 @@ Exact next step: when the tranche carries that fix, `git merge origin/tranche/T5
 ## Round 12 · SCREENS-ACTION #20 (B39 RESUME)
 
 Started (`mail start`), merged `origin/tranche/T51` @ 195b11dc45. The tranche does not yet carry the store-request fix: `storeWorld()` (store-request/fixtures.mjs:26-34) still seeds the team a second time and throws `GROUP_ALREADY_RECORDED`; my suite fails the same way as in J32. Nothing in my module changes. Next step is unchanged from the saved section: when BOB sends a CHANGE that the fix is merged, merge `origin/tranche/T51`, run the suite (expect 295/0), the checks, `checks/run.mjs`, `setup-words/build.mjs --check`, then post COMPLETE.
+
+## Round 12 · COMPLETE (B40 CHANGE; tranche/T51 @ 195b11dc45 and store-request #5 merged)
+
+Merged `origin/tranche/T51`. I passed no `{group: null}`, so nothing to drop. The suite is 295 pass, 0 fail (the 48 GROUP_ALREADY_RECORDED failures are gone).
+
+**Entries applied:** T51-122 in full (R24 to R35, DEC-340, DEC-342) and fix rounds 10 and 11 (causes 1 to 5, the op tables), as recorded above. Met ids named in the saved section: R3, R5, R6, R18, R32, R50.
+
+**Checks (process repository, product /home/user/bio):** format 0 failures; architecture 0; coverage 55 of 55; ownership 0 (41 files); words `screens-action` 0. `fixtures.mjs screens-action`: 7 failures kept and 2 accepted, as in Round 11 (see below). `checks/run.mjs`: no finding in my module; its 16 words failures are all in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, declared.mjs:16); `setup-words/build.mjs --check` refuses on `plane.declared.readtranslate`, which has two sentences in plane/declared.mjs:13 and store-assembly/declared.mjs:16. Neither is mine: REPORT.
+
+**New recipes (store-request R19):** I looked at each for the 7 kept lines. `writingHelp` answers the owner's refusals but never `text`, since the model is not held, so the 3 `writinghelp` lines (matter-t51:437, :458; send-t51:428) stay scripted: they assert the drafted words reach the field. The other 4 (`plans` with an opener without a handle, `taskresolve`, `templatesforaction` refused while `action` reads, `templatesave` refused with TEMPLATE_FROM_UNAPPROVED or TEMPLATE_USE_REFUSED) have no recipe. All 7 are listed with why in Round 11.
+
+**REPORTs (full text in Round 11):** `hold` cannot release a reply's hold (`holdsdue` omits placed holds); `taskresolve` is offered on none of Action's queue kinds (R30); the world's clocks disagree (pinned vs wall); the keys and shapes for UX-DESIGN (J2 gaps); `approved_by` absent in filings.
+
+**Not mine:** store-assembly's 15 words failures and the duplicate `plane.declared.readtranslate` sentence (above).
+
+Size (session_014Xi3cMqxUmon661x8n29a3): test runs 5, module lines 5078
