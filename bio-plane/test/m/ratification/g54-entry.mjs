@@ -37,7 +37,7 @@ casefile.bindPublishedPlane({
   doAnswer: async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
                              return out && out.ok === true ? { answered: true, result: out.result } : { answered: false }; },
   storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502),
-  requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }),
+  requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }), // fixtures-contract: answer-envelope door-helpers
 });
 
 /* The published bucket with one fault made at a time (`state.fault`): a `put` that throws, one only for the manifest's own
@@ -100,6 +100,7 @@ export class G54Held {
       inquiry: { exclusionsNaming: () => [] }, basisVersions: { testimonyReach: () => none },
       reevaluation: { registerCaseParts: () => ({ ok: true }) } });
     const publishSchedule = publishScheduleOf(host, { storage: st, record, membership, publication, now: () => NOW });
+    // fixtures-own: platform this entry is bundled into the Miniflare script and runs on workerd, where provenance's published fixture (it builds node SQLite worlds) cannot load; the stand-in answers "nothing held" only, for a case file this test does not gate
     const stand = { registeredFor: () => [], registerHolds: () => ({ ok: true, parts: null, registered: false, acquired: false }),
                     containerResolver: () => ({ holds: () => false, gradeVia: () => null, archiveOrigin: () => ({ found: false }), authority: () => null }) };
     const ratification = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance: stand,
