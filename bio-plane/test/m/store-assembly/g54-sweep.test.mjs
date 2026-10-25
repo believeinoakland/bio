@@ -10,12 +10,14 @@ import { multipartBucket } from "../record-core/storage.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { seedEdition, completeEdition, stateOf, NOW } from "./g54-seed.mjs";
-import { PUBLISHED_STORE } from "../../../src/control-plane/index.mjs";
 import { json, doAnswer, storeSilent, storeRefusal, requiredArgument, STORE_SILENT_REASON, STORE_SILENT_DETAIL } from "../../../src/answer-envelope/index.mjs";
 import { bindPublishedPlane } from "../../../src/publication/worker.mjs";
 
-/* the Worker's module binds the published plane (`bindPublishedPlane`) as plane's `index.mjs` does when it loads in the isolate that holds the object; store-assembly has no Worker, so the test binds it the same way */
-bindPublishedPlane({ json, doAnswer, storeSilent, storeRefusal, requiredArgument, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE });
+/* the Worker's module binds the published plane (`bindPublishedPlane`) as plane's `index.mjs` does when it loads in the isolate that holds the object;
+   store-assembly has no Worker, so the test binds it the same way, the published store being the record's own room, the namespace the assembled
+   store answers for an object whose name is unknown (R4: `bio`), which is the name plane's index hands */
+const { s: probe } = await store();
+bindPublishedPlane({ json, doAnswer, storeSilent, storeRefusal, requiredArgument, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE: probe.namespace() });
 
 const T0 = Date.parse(NOW);
 const MIN = 60_000;
