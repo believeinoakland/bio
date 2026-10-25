@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_01EL6fyybXDaUbWobs5GqhCa · depth 2 · WORKING · handled B22
+**Status** · session_01EL6fyybXDaUbWobs5GqhCa · depth 2 · COMPLETE · handled B22
 
 ## J1 · REPORT · re B1
 
