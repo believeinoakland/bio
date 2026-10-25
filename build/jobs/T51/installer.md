@@ -456,3 +456,30 @@ COMPLETE (fix round 10, Wave B batch 6: 12 own fixture lines, 5 markers), with O
 - Checks: fixtures installer 0 failures (accepted 5 = the markers); format 0 failures; coverage 75 of 75, 0 failures; words 0 failures; ownership 7 files, 0 failures; architecture 2 failures (the uses edge above).
 - Tests (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit newgroup/test/<file>`): corpus 3/3, t47 5/5, r84 8/8, r85 4/4, g83-begin 3/3; reds identical with and without my change (run on HEAD~1 tests): requirements 4 fail (R8, R11, R20, R44), t48 1 (R55), t51 1 (G54), t50 2 (R61, R71), wizard.test.mjs stops at line 233/553 with the same 55 PASS and same FAIL lines. These are the accepted-list reds of J30; none is touched by this change. Impact run (`impact.mjs`) not run for lack of a change to any published service.
 Size (session_01DCAWkiUVqfwYfbb2mBxLJd): test runs 14, module lines 3270
+
+## J32 · COMPLETE
+
+COMPLETE (B33, K5101, SUITE #2 Cluster A; tranche/T51 merged, no rebase). Test files only, newgroup/test/. Still open from J31: add `credentials` to installer's `uses` (architecture fails 2: requirements.test.mjs and t50.test.mjs import credentials' `bootstrapVersions`).
+
+**Cause (2), both parts, one definition each (fixture.mjs):**
+- `scheduleRules({schedules, crons, refuse})` is exported from fixture.mjs (the schedules GET/PUT the fake account already had, lifted out; `pageWorld` uses it); wizard.test.mjs' `FALLBACK` takes it (`...scheduleRules()`). Its `PLANE_CRONS_STATEMENT` literal is now fixture.mjs' `CRONS_STATEMENT`.
+- `CRONS_STATEMENT` added to the synthetic release sources that stated none: wizard repoSrc, repoSrc2, repoSrc3, repoSrc6; requirements R20's `plane()`; realsize `REAL`. (t50, t51, r84 take CAPABLE_SRC/PRE116_SRC, which already had it.)
+
+**Further stale fakes the first red hid (mine, test side; each seen red, then green):**
+1. wizard.test.mjs: the held-settings answers (10 arms) stated no `bindings` list and no `observability`; R39's held place and R40's logs read-back (installer-steps) refuse that ("this release's description of its program can't be read"). They now state `bindings` and `observability: {enabled: true}`; the oak-watch arm holds `ACCOUNT_SEAL_SECRET` (so the update restates none, as before), cross-town holds `INSTALL_COMPLETE` (a finished copy, so `installer.team.unrecorded.how.finished`, F12); DIST-6's own settings handler answers what the account holds as the last upload left it.
+2. wizard "no card" arm scripted no workers.dev address, so R84 (4) stopped at `room` before the R2 refusal: `GET /workers/subdomain` added.
+3. requirements R44: the plane's watchdog schedule (R39) is in `w.schedules` now: asserts the plane's keys and its cron beside the scanner's; `refuseSchedules` takes script names (true still means all) and the refused-schedule arm refuses the scanner's only, since the plane's refusal stops the act by design (R39).
+4. t51 G54: an unreadable plane settings read also leaves the members' bindings unread, so the page gains two notices; the test names the logs one by its own sentence (`installer.fleet.logsunconfirmed`).
+5. wizard.test.mjs `sourceOf`/`metadataOf` tolerate a missing upload (assertions fail by value, not a TypeError that ends the script and hides every arm after it), and the built-in arm states `an upload happened` as its own assertion.
+
+**Result:** wizard.test.mjs (run as a script): 205 passed, 3 failed (was: 55 passed and a crash at :232/:552). t51 11/11 (was 10/1). requirements 50 pass, 4 fail (the same four tests, each now failing later, on its built-in case). corpus, embed, g83-begin, r84, r85, t47, t51-ascii all green.
+
+**Every red that remains installs from the built-in 0.86.0: waiting on the 0.87.0 cut (G90), with its assertion:**
+- wizard.test.mjs, "release: a copy that fails verification is never installed" (tampered bytes, built-in installs): `the built-in was uploaded (an upload happened)` want true got false; `VERSION stays the built-in` want "0.86.0" got undefined. "release signing: armed, an unsigned copy is refused": `VERSION stays the built-in (or, R20, ...)` want "0.86.0" got true (no upload).
+- requirements R8 :296 `not newer` (the built-in case; `put?.source` undefined vs the built-in source); R11 :391 (`fleet-unreachable`, the built-in's own fleet: `own.acct.has("pdf-worker-fleet-unreachable")` falsy); R20 :786 `the built-in stands in`.
+- t48 R55 :183: the page says "Stopped: Cloudflare refused the upload ... (this release's description of its program can't be read)" at "Putting release 0.86.0 in place".
+- t50 R61 :133 (`builtInFleet`: the finished panel is null, `matchAll` of null); R71 :564 (`builtInFleet, sourceFlaky`: fleet status null, want "ok").
+- realsize.test.mjs, all 6: the built-in scenarios (:71 TypeError on the missing upload, :153 install and :153 update "no stop", :200 `the mismatch is named`, :219 `the signed release, unaltered, is uploaded`, :233 `never the altered release: the built-in installed`). The repository-release part of the first test passes (line :63) now that `REAL` states the cron.
+Found in another module: none new. journey-check clusters B1 and B3 are theirs (diagnosis).
+Checks: fixtures installer 0 failures (accepted 5, the J31 markers); format 0; coverage 75 of 75; words 0; ownership 0 (7 files); architecture 2 (the uses edge above).
+Size (session_01DCAWkiUVqfwYfbb2mBxLJd): test runs 40, module lines 3270
