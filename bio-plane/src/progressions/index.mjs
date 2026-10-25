@@ -713,13 +713,15 @@ export class Progressions {
       if (present && pred && docsByStage.has(pred.stage_key))
         this.#junctions(s, docs, docsByStage.get(pred.stage_key), definitionVersion, carried, findings, undetermined);
     }
-    return { ok: true, progression_key: progressionKey, entity_id: entityId, found: true, defined: true,
-             definition_version: definitionVersion, label: def.label, entity,
-             grade, grade_determined: determined, established: determined && isEstablished(grade),
-             stage_count: stageDefs.length, placed_count: placedInOrder.length,
-             chain, stages, findings, finding_count: findings.length,
-             discharges, discharge_count: discharges.length,
-             undetermined_checks: undetermined, zone: zone.zone, zone_why: zone.zone ? null : zone.why };
+    const assembled = { ok: true, progression_key: progressionKey, entity_id: entityId, found: true, defined: true,
+                        definition_version: definitionVersion, label: def.label, entity,
+                        grade, grade_determined: determined, established: determined && isEstablished(grade),
+                        stage_count: stageDefs.length, placed_count: placedInOrder.length,
+                        chain, stages, findings, finding_count: findings.length,
+                        discharges, discharge_count: discharges.length,
+                        undetermined_checks: undetermined, zone: zone.zone, zone_why: zone.zone ? null : zone.why };
+    this.#missingSays(assembled);
+    return assembled;
   }
 
   /* R38, R32 (K1505 (8)): the amount-free junction checks of one placed stage `s` against the placed stage it is
@@ -1303,6 +1305,15 @@ export class Progressions {
                                    : { interval: c.within_interval, n: c.predecessor_no, date: deadline };
     const key = deadline === null ? "progression.expects.undetermined" : "progression.expects";
     return { key, vars, lead, words: `${word(lead.key)} ${word(key, vars)}` };
+  }
+
+  /* R49 (T51 fix round 10; K5186): a missing_predecessor finding, a step not yet due, says what it expects as R45's
+     overdue_successor does: from its clock (R16), `progression.expects` with the deadline day, or the undetermined form.
+     A step with no clock (no parsable interval, or its predecessor not placed) says nothing: `says` is null. */
+  #missingSays(inst) {
+    const says = new Map(this.#clocks(inst).map((c) => [c.finding, this.#says(c, c.deadline.undetermined ? null : c.deadline.latest.value)]));
+    for (const f of inst.findings)
+      if (f.kind === "missing_predecessor") f.says = says.get(f) || null;
   }
 
   /* R16: the overdue findings of one instance at `nowMs`, each also a missing predecessor, carrying its grade: `overdue:
