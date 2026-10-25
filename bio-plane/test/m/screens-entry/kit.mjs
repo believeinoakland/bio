@@ -6,11 +6,46 @@
    was drawn. The words are the shell's: `WORD_ROWS` (interface-shell R5), this module holding none of its own (R21);
    `word` and `hasWord` are `setup-words`' (its R11, R12), which the tests read keys through, never English.
    The real page's frame (no header, no rail, the fragment taken from the address) is tested over the shell's harness
-   in `page.test.mjs`. */
+   in `page.test.mjs`.
+   The plane behind a screen is `store-request`'s `storeWorld()` (K5054, op-tables §5.3): `open(id, {world, as})` sends every read
+   and act through the world's door (R17), as the signed-in member `as` (R16) or as nobody, and the screen is shown what the real
+   store answers; a test makes the state it needs by real acts (`act`). `table` holds only what the world cannot say: a read that is
+   pending (`"pending"`), unanswered (`"none"`) or refused with no code of its own (`{ ok: false }`), the faults the harness owns. */
 import { WORD_ROWS, word, hasWord } from "../../../src/setup-words/index.mjs";
 import { OPS, SESSION_OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-entry/index.mjs";
+import { storeWorld } from "../store-request/fixtures.mjs";
 export { SCREENS, SCREEN_WORDS, word, hasWord };
+
+/** A fresh world over the real store (store-request R16–R19): claimed by the founder, or unclaimed when a test walks the claim.
+ *  `group: null` because store-assembly's base already records the team (REPORT 1, J11; store-request's default seeds it again). */
+export const worldOf = ({ claimed = true, ...o } = {}) => storeWorld({ group: null, claimed, ...o });
+/** A 1×1 PNG, the logo a team sets. */
+export const LOGO_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAHnOcQAAAAABJRU5ErkJggg==";
+/** The world's team as the founder's real acts make it: a name, a public description, a logo (each only when asked), the founder
+ *  signed in (`admin`). */
+export async function team({ name = "River Town Tenants", description = { focus: "Leases on public land", purpose: "We check the public body's own terms." }, logo = true, visibility = "public", claimed = true } = {}) {
+  const world = await worldOf({ claimed });
+  const admin = claimed ? await world.signIn("admin") : null;
+  if (name) await act(world, admin, "groupnameset", { body: { name } });
+  if (description) await act(world, admin, "groupdescriptionset", { body: { kinds: [], ...description, visibility } });
+  if (logo) await act(world, admin, "grouplogoset", { body: { raw: LOGO_PNG, rawType: "image/png" } });
+  return { world, admin };
+}
+/** The page's request to the world's door, as the shell sends it (interface-shell `send`): the op and query in the address, a
+ *  body as JSON, the bearer token only when the request is not public. */
+export async function viaDoor(world, op, req = {}, token = null) {
+  const qs = new URLSearchParams({ op, ...Object.fromEntries(Object.entries(req.query || {}).filter(([, v]) => v !== undefined && v !== null)) });
+  const init = req.body === undefined ? { method: "GET" } : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req.body) };
+  return world.door({ url: `/api/?${qs}`, init }, token ? { token } : null);
+}
+/** An act or read made by real means, answered as the result it gave: `act(world, as, op, body)` (a refused one throws, naming the op). */
+export async function act(world, as, op, { body, query } = {}) {
+  const a = await viaDoor(world, op, { body, query }, as ? as.token : null);
+  const r = a.json && a.json.result !== undefined ? a.json.result : a.json;
+  if (a.status >= 400 || !a.json || a.json.ok === false || (r && r.ok === false)) throw new Error(`${op} was refused: ${JSON.stringify(a.json).slice(0, 300)}`);
+  return r;
+}
 
 // ---- the words: WORD_ROWS, as the shell carries them to the page (interface-shell R5) ----
 const WORDS = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
@@ -109,12 +144,13 @@ export const AN_ADMIN = Object.freeze({ tokenClass: "member", session: true, mem
  * from the address (`view.fragment`), `me` whoami's answer when a session exists, `table` op → answer or
  * `(body, query) => answer`, `subject` the address's subject.
  */
-export async function open(id, { table = {}, session = { state: "none" }, fragment = {}, me = null, subject = null, signinAs = FOUNDER } = {}) {
+export async function open(id, { table = {}, session = { state: "none" }, fragment = {}, me = null, subject = null, signinAs = FOUNDER, world = null, as = null } = {}) {
   const spec = SCREENS.find((s) => s.id === id);
   if (!spec) throw new Error("no screen " + id);
-  const o = { spec, requests: [], signins: [], gone: [], wizards: [], saves: [], copies: [], timers: [], now: 0, refused: null, token: session.state === "live" || session.state === "locked" ? "tok-locked" : null };
+  const o = { spec, requests: [], signins: [], gone: [], wizards: [], saves: [], copies: [], timers: [], now: 0, refused: null, token: as ? as.token : session.state === "live" || session.state === "locked" ? "tok-locked" : null };
   const ui = {};
   const data = {};
+  if (world && as && !me) me = (await viaDoor(world, "whoami", {}, as.token)).json.result;
   const view = { subject, data, ui, me, session, fragment: { ...fragment }, origin: "https://group.example", parts: {} };
   o.view = view;
   let drawn = [];
@@ -129,13 +165,20 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
     const set = view.me.tokenClass === "admin" ? SESSION_OPS.admin : SESSION_OPS.member;
     return set.has(op) || op === "unlock";
   };
+  let inflight = 0;
   async function request(op, req = {}) {
+    inflight++;
+    try { return await send(op, req); } finally { inflight--; }
+  }
+  async function send(op, req = {}) {
     const header = !!(o.token && !isPublic(op));
-    o.requests.push({ op, query: req.query || {}, body: req.body, header, token: header ? o.token : null });
+    const rec = { op, query: req.query || {}, body: req.body, header, token: header ? o.token : null, answer: null };
+    o.requests.push(rec);
     let a = table[op];
     if (typeof a === "function") a = a(req.body, req.query || {});
+    if (a === undefined && world) { const r = await viaDoor(world, op, req, header ? o.token : null); a = r.json; }
     if (a === undefined) a = { ok: true, result: { ok: true } };
-    return answerOf(a);
+    return (rec.answer = answerOf(a));
   }
   const kitOf = () => {
     const cs = {
@@ -153,7 +196,12 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
       later(ms, fn) { o.timers.push({ at: o.now + ms, fn }); },
       now: () => o.now,
       async call(op, req = {}) { const a = await request(op, req); return a.kind === "ok" ? a.json : a.kind === "refused" ? a.fields : null; },
-      async signin(answer, opts = {}) { o.signins.push({ answer, opts }); if (!(answer && answer.token)) return false; o.token = answer.token; view.me = signinAs; return true; },
+      async signin(answer, opts = {}) {
+        o.signins.push({ answer, opts }); if (!(answer && answer.token)) return false; o.token = answer.token;
+        // the member the shell reads once the session is handed over (whoami, interface-shell R32): the world's own answer
+        if (world) { const r = await viaDoor(world, "whoami", {}, o.token); view.me = r.json && r.json.result ? r.json.result : null; } else view.me = signinAs;
+        return true;
+      },
       wizard(...a) { o.wizards.push(a); },
       // interface-shell R47: each answers its own control, bound by the shell
       save(name, text, opt = {}) { o.saves.push({ name, text }); return `<button type="button" class="cs-btn" data-shell="save" data-name="${esc(name)}">${w(opt.label)}</button>`; },
@@ -255,7 +303,8 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
       if (!due) break;
       o.now = due.at; const fn = due.fn; due.fn = null;
       await fn(kitOf(), view);
-      for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r));
+      // the real plane answers over several turns: wait until every request this timer made has been answered
+      for (let i = 0; i < 5 || inflight > 0; i++) await new Promise((r) => setImmediate(r));
     }
     o.now = end;
     draw();
