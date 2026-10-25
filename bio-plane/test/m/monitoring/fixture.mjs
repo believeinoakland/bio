@@ -5,8 +5,8 @@
    the fixture registers, projecting from the document as retrieval does into retrieval's own table
    (`bundle_projection`, created by retrieval's `PROJECTION_SCHEMA`, the statements its `migrate()` runs; R61, N283); the host governor records every call and
    refuses the hosts a test names; the network is a scripted `fetch` the test controls; the evidence bucket is an
-   in-memory R2 stand-in; credentials is the real module, made after membership as the composition root makes it; intent, action-clocks, escalation and publication are stand-ins in their Provides' shapes unless
-   a test passes the real one; case-import is the real module (no watch in force) unless a test passes one (`docket.test.mjs` passes
+   in-memory R2 stand-in; credentials is the real module, made after membership as the composition root makes it; action-clocks and escalation are stand-ins in their Provides' shapes unless a test passes the real one;
+   intent and publication are absent unless a test passes one (the providers' published fixtures, follow-up 27); case-import is the real module (no watch in force) unless a test passes one (`docket.test.mjs` passes
    the real module holding watches, seen through a spy); `realActions` makes the real actions and action-clocks modules; the tables other modules'
    promotion steps read once a wake has reached them on this host (`refs`, connections'; `inquiry_bundle_facts`,
    inquiry's) are created as the plane creates them (N506's tail, K1164: SCHEDULER #25 found a promotion after a wake
@@ -204,16 +204,15 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
   const clocks = realActions ? actionClocksOf(host, { record, membership, actions: act, env: {}, now: () => clock.ms })
     : undefined;
   const net = network();
-  const intentStub = intent === undefined ? stubIntent() : intent;
-  const publicationStub = publication === undefined ? stubPublication() : publication;
+  /* an absent intent or publication is null: undefined would have monitoring build the real module on this host */
   const m = monitoringOf(host, { record, membership, promotion, provenance: prov, observationLog: obs, capture,
-    governor: gov, env: env || {}, now: () => clock.ms, fetch: net.fetch, intent: intentStub, publication: publicationStub,
+    governor: gov, env: env || {}, now: () => clock.ms, fetch: net.fetch, intent: intent ?? null, publication: publication ?? null,
     ...(actionClocks !== undefined ? { actionClocks } : clocks ? { actionClocks: clocks } : {}), ...(escalation !== undefined ? { escalation } : {}),
     ...(caseImport !== undefined ? { caseImport } : {}) });
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent: intentStub, act, clocks,
-    publication: publicationStub,
+    st, host, record, membership, credentials, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent, act, clocks,
+    publication,
     rows: (q, ...x) => [...st.sql.exec(q, ...x)],
     row: (q, ...x) => [...st.sql.exec(q, ...x)][0] ?? null,
     text: (id) => { const f = record.readFile(id, "bundle.md"); return f ? (typeof f === "string" ? f : f.text ?? null) : null; },
@@ -318,36 +317,3 @@ export function sweepShare() {
   };
 }
 
-/** intent's R7 and R15 as monitoring reaches them. `watch` maps a project to the capture shas its condition reads. */
-export function stubIntent(watch = {}) {
-  const sources = [];
-  return {
-    sources, watch, calls: [],
-    watchSet({ project, after = null, limit = null } = {}) {
-      this.calls.push({ project, after });
-      const all = this.watch[project] || [];
-      const start = after ? all.indexOf(after) + 1 : 0;
-      const page = all.slice(start, start + 2);
-      const more = start + 2 < all.length;
-      return { entities: [], progressions: [], captures: page, limit: 2, truncated: more,
-               cursor: more ? page[page.length - 1] : null };
-    },
-    registerSource(kind, reader) { sources.push({ kind, reader }); return { ok: true }; },
-  };
-}
-
-/** publication's R42 (`restingCapturesOf`) as monitoring reaches it. `resting` is `[{capture_sha, findings: [{bundle_id,
- *  projects}]}]` in capture order; pages of two, with the cursor the last capture answered. */
-export function stubPublication(resting = []) {
-  return {
-    resting, calls: [],
-    restingCapturesOf({ after = null, limit = null } = {}) {
-      this.calls.push({ after, limit });
-      const all = [...this.resting].sort((a, b) => (a.capture_sha < b.capture_sha ? -1 : 1));
-      const rest = all.filter((x) => after == null || x.capture_sha > after);
-      const page = rest.slice(0, 2);
-      const more = rest.length > 2;
-      return { ok: true, captures: page, limit: 2, truncated: more, cursor: more ? page[page.length - 1].capture_sha : null };
-    },
-  };
-}
