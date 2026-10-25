@@ -180,7 +180,7 @@ const CASES = [
   { case_id: "CASE-D", edition: 1, project: P, published_at: "2025-06-01T09:00:00Z", withdrawn: null, pinned: true, strength: null, withheld: { orders: ["ORD-1"] } },
   { case_id: "CASE-E", edition: 1, project: P, published_at: "2025-07-01T09:00:00Z", withdrawn: null, pinned: null, strength: null, strength_detail: "none" }];
 const FROZEN = (cases) => ok({ ok: true, id: Q, cases, detail: "" });
-const publishedcase = (r) => ok({ caseId: r.query.caseId, edition: Number(r.query.edition), project: P, ...(r.query.caseId === "CASE-A" ? { scope: "Street safety" } : {}) });
+const publishedcase = (r) => ok({ caseId: r.query.id, edition: Number(r.query.edition), project: P, ...(r.query.id === "CASE-A" ? { scope: "Street safety" } : {}) });
 const entry = (p, id) => main(p).querySelector(`[data-case-edition="${id}"]`);
 
 test("R72 what each published case froze for the question: one entry for each case edition, its own pair beside today's; the pinned-version check; a withheld edition with no pair; never combined", async () => {

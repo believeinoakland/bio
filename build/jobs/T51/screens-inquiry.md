@@ -628,3 +628,9 @@ Size (session_01QUsEEvK8vgtnuUJSafBNe2): test runs 4, module lines 7038
 ## J45 · COMPLETE
 
 COMPLETE (SCREENS-INQUIRY #31). Entries B65–B68 applied; R20, R123, R129 and R137 met (R137: r137-document.test.mjs, 7 tests; pick words drawn by key). Module 589 pass, 0 fail; format, architecture, coverage, words, ownership 0. Op tables: --list 447 -> 156, every kept line named with its needed recipe in my record ('Completed at K5198'), which also lists six findings in other modules (retrieval list total ignores type; heldcaptures has no total or name filter; themeread has no page; airunlog rows lack read/found/checked; aiusage has no today; pick rows owed to rows.mjs). Size line in the record.
+
+## B69 applied (SCREENS-INQUIRY #31)
+
+`project.mjs` and `question.mjs` ask `publishedcase` with `id` (the door's argument; `caseId` drew every edition line failed). Failing first through the world's real `publishedcase` (a case made by `recipes.published`): `r10-publishedcase.test.mjs` (R63 project work lists the project's own case; R72 question frozen edition; control: the door answers `caseId` REQUIRED_ARGUMENT_MISSING) red before, green after; `t50-project` and `t51-question` scripted answers now read `query.id`. Module: 591 pass, 0 fail; format, architecture, coverage, words, ownership 0. Not yet done: B69's second part (HYPOTHESES #11's and CASE-IMPORT #20's op answers in place of my `hypothesishold`/`revise`/`withdraw` and `importedcase`/`rerun*` lines) waits for BOB's CHANGE when their fixtures merge.
+
+Size (session_01QUsEEvK8vgtnuUJSafBNe2): test runs 5, module lines 7038

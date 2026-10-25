@@ -1004,7 +1004,7 @@ function render(cs, view) {
       const sOf = (x) => (x && typeof x === "object" && x.grade ? { state: "graded", grade: String(x.grade) } : { state: "unrated" });
       const todayS = d.strength && d.strength.state === "ok" && d.strength.value ? d.strength.value : null;
       const entry = (c) => {
-        const pc = later("pc:" + c.case_id + ":" + c.edition, "publishedcase", { caseId: String(c.case_id), edition: String(c.edition) });
+        const pc = later("pc:" + c.case_id + ":" + c.edition, "publishedcase", { id: String(c.case_id), edition: String(c.edition) });
         const named = pc.state === "ok" && pc.value && (pc.value.scope || pc.value.title) ? String(pc.value.scope || pc.value.title) : "";
         const ref = cs.ref("published", String(c.case_id), named || T("state.undetermined", { reason: "" }), []);
         const head = `<b>${ref}</b><span class="mk-small" data-published="${cs.esc(String(c.edition))}">${W("screen.question.frozen.published", { date: { html: c.published_at ? cs.date(String(c.published_at), { year: true }) : T("state.undetermined", { reason: "" }) }, n: String(c.edition) })}</span>`;
