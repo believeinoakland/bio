@@ -6,6 +6,7 @@
    `makeFetch(hooks)`, R45's form (`r45-routes.test.mjs`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { storeWorld } from "../store-request/fixtures.mjs";   /* before the harness: the world registers the ops the harness reads */
 import { M, O, world, call, opCalls, aik, cred, hex64, member, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
 /* (T46; N938) the hold ops are action-holds' since T45 (plane R39): its own map, spread beside actions' */
 const { actionHoldsOps } = await import("../../../src/action-holds/index.mjs");
@@ -13,7 +14,6 @@ const { docketOps } = await import("../../../src/docket/index.mjs");
 const { publicReadDoorOp } = await import("../../../src/public-read/door.mjs");
 const D = await import("../../../src/store-door/dispatch.mjs");
 const { membershipOf } = await import("../../../src/membership/index.mjs");
-const { storeWorld } = await import("../store-request/fixtures.mjs");
 
 const { OPS } = O;
 const U = new URL("http://do/");
