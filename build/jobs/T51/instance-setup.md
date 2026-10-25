@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_01Qqt8fVgM4Tk1A5Lz73WMQG · depth 2 · COMPLETE · handled B17
+**Status** · session_01EuQtSZAq5UjiGxgEKWZHMP · depth 2 · COMPLETE · handled B17
 
 ## J1 · REPORT · re B1
 
@@ -283,3 +283,19 @@ COMPLETE (re B17). Merged origin/tranche/T51 (merge commit, no rebase) and re-po
 Tests: instance-setup 239 pass, 0 fail. format 0 failures; architecture, coverage (76 of 76), words, ownership 0 failures.
 
 Size (session_01Qqt8fVgM4Tk1A5Lz73WMQG): test runs 8, module lines 3846
+
+## J23 · COMPLETE
+
+COMPLETE (re B18; follow-up 36, K5108). Published `bootstrapFacts` in `bio-plane/test/m/instance-setup/fixtures.mjs` (new export, test files only), with two tests in `fixtures.test.mjs`.
+
+Signature: `bootstrapFacts({ team = "River Town", members = 3, projects = 2, documents = 5, published = 1 } = {})`, async, returns the real `m.bootstrapFacts()` answer (R95): the seven keys of `BOOTSTRAP_FACT_KEYS`, each a real read.
+
+Set up by real acts: the team named by `groupNameSet`; the running release first seen at the boot clock (`installed_at` 2026-10-10T08:00:00Z); three held sessions, the newest the last use (`last_used_at` 2026-10-14T17:45:00Z); the counts the caller states. The other modules' counts (members, register, published cases) are stand-ins, as in t51's `copy`; the answer's shape and each count are the module's real read.
+
+Markers: no `fixtures-own` or `fixtures-generic` marker added.
+
+Tests: `fixtures.test.mjs` 7 of 7 pass (2 new); the instance-setup module 241 of 241 pass, 0 fail. Checks, absolute root `/home/user/bio`: format 0 failures; architecture 0; coverage 76 of 76; words 0; ownership 0 (3 files, the record included); `checks/fixtures.mjs … instance-setup --list` 0 failures, accepted 2 (fixture.mjs:190, :201, store-door's `store-replies`, unchanged from B17).
+
+Found in other modules: none. Deferred: none. Installer's t50 (`newgroup/test/t50.test.mjs:272`) is its re-point to make.
+
+Size (session_01EuQtSZAq5UjiGxgEKWZHMP): test runs 2, module lines 3846
