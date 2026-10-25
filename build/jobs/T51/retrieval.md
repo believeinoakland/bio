@@ -1,6 +1,6 @@
 # retrieval (T51)
 
-**Status** · session_019Nb9MktkjHjGw15MBh7yrF · depth 2 · COMPLETE · handled B15
+**Status** · session_016G5oBN4TFJqahHxjitiCAD · depth 2 · COMPLETE · handled B15
 
 ## Work notes (RETRIEVAL #20)
 
@@ -266,3 +266,27 @@ Size (session_019Nb9MktkjHjGw15MBh7yrF): test runs 5, module lines 3097
 ## J15 · COMPLETE
 
 COMPLETE · retrieval T51 fix round 10, Wave A batch 1 (B15). Published in bio-plane/test/m/retrieval/fixtures.mjs: actionRegistrar, meaningRowsUnknownArm, noSelection, selectionResolve; each called and checked against the real answer in fixtures.test.mjs. Ran the selection-read contract (fixtures-run: retrieval-browse selection-read); the real selectionRead has NO viewer key where retrieval-browse's stand-in (fixture.mjs:172-173) echoes it, and its NOT_YOURS detail is a localized sentence: the real answer wins, retrieval-browse changes. Left: fixtures-run orphan-run until retrieval-browse's marker merges; 1 FIX-E line (progressStub, t51-round9.test.mjs:211, extraction's progressOf) waits on extraction (CHANGE). No fixtures-own/fixtures-generic markers added. Retrieval suite 202/202; impact.mjs 0 of 178 affected. format, architecture, coverage 86/86, words, ownership: 0 failures. Record: build/jobs/T51/retrieval.md.
+
+## Fix round 10, the final pass's causes (B16; RETRIEVAL #29)
+
+**Met: R98, R99.**
+
+**1. R98** (`diag2-06.md` §2). `#documentsOf` (`index.mjs:803`) bound 200 ids a statement; it now chunks by `SELECTION_ID_CHUNK` (64), under the plane's 100 (D-36). `fixture.mjs` opens its database with `{ limits: { variableNumber: 100 } }` (`PLANE_VARIABLE_CEILING`), so every retrieval test now runs under the bound: the whole suite (210) passes, so no other statement of mine binds more (`units.mjs` 100, `frontier.mjs` 64, the selections 64). New `search-limit.test.mjs`: 150 documents, limits 100, 101, 150, 500; seen red at 101, 150, 500 ("too many SQL variables"), green after. *Why the tests missed it:* retrieval's fixture had no variable bound and its search tests held a handful of documents, so a page over 100 hits was never built; only query-language's fixture carried the ceiling and its tests never reach `#documentsOf`. Not mine, seen: `membership`'s `hiddenBundles(...).args` is bound inside several of my statements (`index.mjs` counts, `selection_items`); its length is the hidden projects of the viewer, not exercised here.
+
+**2. R99** (`diag2-06.md` §11). Retrieval's own code **`SELECTION_NOT_YOURS`**, catalogue row **C-33.59** in `SELECTION_CHECKS` (`checks.mjs`), translation a `localize('retrieval.checks.selection_not_yours', 'That set of things was made by another member; only that member can use it.')` stand-in. Used at the four sites that answered `NOT_YOURS`: `selectionResolve` (R19; now inside `DEC-49 REGION is-selection-yours`), `selectionRead` (R77) and `selectionRelease` (R21) with its unknown-handle case. **For BOB to word: the code `SELECTION_NOT_YOURS` for R19, R21 and R77.** New `selection-not-yours.test.mjs` (row, resolve, read, release); seen red on the old code (7 red of 8 with R98's), green now. Existing tests `fixtures`, `selections`, `t36` re-pointed to the new code. *Why the tests missed it:* they asserted the module's `reason` only, and nothing asserted it differs from intent's C-111.15 row, which the door's decoration picked by code. The door case (r8-kit) is control-plane's: **REPORT for BOB to place** (a member's `op=selection&handle=` on another's selection should carry a `check` C-33.59 and a translation without "aspiration").
+
+**Found in other modules (REPORT).**
+1. `answers` `test/m/answers/standingfind.test.mjs`:155 and :249 expect `NOT_YOURS` from the real retrieval's `selectionRead`; they must expect `SELECTION_NOT_YOURS` (2 red until re-pointed).
+2. `citation` `test/m/citation/cite-refusals.test.mjs`:35 (the R1 selection-first test) expects `NOT_YOURS`; it must expect `SELECTION_NOT_YOURS` (1 red).
+3. `retrieval-browse`: its stand-in and `findin.test.mjs`:115 keep `NOT_YOURS` for its own refusal; the real answer through `selectionRead` is now `SELECTION_NOT_YOURS` (its `selection-read` contract with my `fixtures-run`). `inquiry` and `intent` fixtures hand-build `NOT_YOURS` for selections likewise (`inquiry/fixtures.test.mjs`:36): re-point to `selectionResolve`'s published fixture.
+4. `review/index.mjs:1052` `CHUNK = 200` (project ids), as the diagnosis names.
+
+**Deferred.** None. **Markers added.** No `fixtures-own` or `fixtures-generic`.
+
+**Tests and checks.** `node --test bio-plane/test/m/retrieval/`: 210 of 210 pass. Others run: retrieval-browse 67 pass; citation 131 pass 1 fail (above); answers 2 fail (above). Checks (absolute root): format 0 failures; architecture 0; coverage retrieval 88 of 88; ownership 0; words 0; fixtures list: 1 line, the FIX-E `progressStub` (`t51-round9.test.mjs:211`), as before, unchanged.
+
+Size (session_016G5oBN4TFJqahHxjitiCAD): test runs 9, module lines 3140
+
+## J16 · COMPLETE
+
+COMPLETE · retrieval T51 fix round 10 final pass (B16). Met: R98 (#documentsOf chunks by 64 under the plane's 100 variables; fixture.mjs now opens with variableNumber 100, whole suite green under it; search-limit.test.mjs at 100/101/150/500 seen red then green), R99 (retrieval's own code SELECTION_NOT_YOURS, row C-33.59 in SELECTION_CHECKS, localize stand-in; used by selectionResolve R19, selectionRead R77, selectionRelease R21 — BOB words that code; selection-not-yours.test.mjs). Retrieval 210/210; format, architecture, coverage 88/88, ownership, words 0 failures; fixtures list unchanged (1 FIX-E line). For BOB: answers standingfind.test.mjs:155,:249 and citation cite-refusals.test.mjs:35 expect the old NOT_YOURS from the real retrieval (3 red until their owners re-point); retrieval-browse/inquiry/intent stand-ins of the selection refusal; the r8-kit door case (check+translation for another member's selection) is control-plane's to place; review CHUNK=200. No markers added. Record: build/jobs/T51/retrieval.md.
