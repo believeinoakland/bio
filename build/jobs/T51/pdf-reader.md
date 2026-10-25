@@ -392,4 +392,4 @@ COMPLETE · PDF-READER #15 · R49 pageSource (fallback on any irregularity; real
 
 **Tests and checks.** `node --test test/m/pdf-reader/ test/pdfstructure.test.mjs`: 193 tests, 193 pass, 0 fail. Users: reading-pipeline `*pdf*` tests, `pdf-worker/test/structure.test.mjs`, format-registry: 69 pass, 0 fail. checks: format 0 failures; architecture 0; coverage 49 of 49 ids named, 0; words 0; ownership 3 files, 0. Not run: the whole impact set (2,691 files; B19 asked for my suite and the named files). `node_modules` missing in agent-runner, journey-check, file-scanner, sheet-worker, site (not needed by these tests; not installed).
 
-Size (session_01XSLiprXchrExEGryjSadfu): test runs 12, module lines 5909
+Size (session_01XSLiprXchrExEGryjSadfu): test runs 12, module lines 5750
