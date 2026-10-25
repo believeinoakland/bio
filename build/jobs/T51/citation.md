@@ -268,3 +268,14 @@ REPORT to BOB (K5090): no cite reaches a grouping refusal whose stated repairs c
 **Runs:** citation tests 134 of 134 pass (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/citation/*.test.mjs`). Checks: fixtures 0 failures; words 0 failures; format 0 failures; architecture 0 failures; coverage 21 of 21 ids named, 0 failures; ownership 0 failures. `impact.mjs origin/tranche/T51 HEAD`: no affected module (test files only), so no user's tests to run.
 
 Size (session_01KjtAFrtxEtLHsjBFVS3Bgd): test runs 3, module lines 0
+
+## J17 · COMPLETE
+
+B13 (K5101) applied: R21's C-2.8 repairs arm is removed. Merged `origin/tranche/T51` (R21 amended) first.
+- `#groupingRepairs` removed from `citation/index.mjs`; every `BASIS_REFUSED` a cite gives from the write states `repairs: []`. `#declaredGrounds` stays (BAD_GROUND uses it). The word ids `citation.index.repair_add_to_group` and `repair_remove_grouping` have no user in citation now (generated rows are BOB's to regenerate).
+- `cite-repairs.test.mjs`: the three tests driving the arm through inquiry's fixture answer are removed, with their helper and imports. Kept, naming R21: the second passage beside a grouped one is clean; the cutting-with-ground cite is `BASIS_REFUSED` with `repairs: []`, nothing written, and lands without the group; the `repairs: []` control; BAD_GROUND.
+- Met ids: R21 (and every other live id, 21 of 21 named).
+- REPORT: other modules read citation's `repairs`: `screens-inquiry/document.mjs:601-603` (`ui.citeRepair`, `x.act === "inquiryground"`) builds its repair control from them. It now gets `[]`; screens-inquiry's job should drop that control. `case-checker/program.mjs` and `setup-words` rows/unreviewed.json carry the removed words (generated).
+- Runs: citation tests 131 of 131 pass; fixtures, words, format, architecture, coverage, ownership 0 failures. No fixtures markers added.
+
+Size (session_01KjtAFrtxEtLHsjBFVS3Bgd): test runs 5, module lines 0 added (17 removed)
