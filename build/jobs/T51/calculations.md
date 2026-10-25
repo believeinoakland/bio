@@ -1,6 +1,6 @@
 # calculations (T51)
 
-**Status** · session_01QjzUX72r6jBzxqxd3JsT9R · depth 2 · WORKING · handled B27
+**Status** · session_01QjzUX72r6jBzxqxd3JsT9R · depth 2 · WAITING ON BOB (J20) · handled B27
 
 ## J1 · REPORT
 
