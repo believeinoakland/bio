@@ -520,3 +520,21 @@ Options:
 (c) Drop the no-team cases from my module and move them to store-request.
 
 My recommendation is (a), owned by store-request, since two modules need the same premise. Please rule before I change either test.
+
+## J39 · REPORT
+
+Re B50 (ANSWER, J37 pinned as asked). Worktrees at 9fd44d0f66^, 9fd44d0f66, 59997c5a81^, 59997c5a81 (disposable; the harness was patched there only to print the door's status and body).
+
+1. R68 `selftest` (updates.test.mjs:284). Cause found, outside my paths.
+- The door answers `selftest` with status 500 and `ok:false`. The body says `r2: "MISCONFIGURED: one bucket bound without the other; the fence requires both or neither"`, set at bio-plane/src/setup.mjs:3384-3387 (the half-fence check), with `bindings.PUBLISHED: true` and `bindings.CAPTURES: "not configured"`.
+- The test world binds `PUBLISHED` without `CAPTURES`: bio-plane/test/m/store-request/fixtures.mjs:28 (`PUBLISHED: memoryBucket()`), added by 5095ad501f ("store-request: world seeds nothing twice ... world.route (B7)").
+- Reproduced identically at 9fd44d0f66^ and 9fd44d0f66, so the cause is 5095ad501f, not the merge commit itself; it arrived on the tranche in the K5193 merge. My pre-merge run passed R68, so this is the regression.
+- Owner: store-request (the fixture binds one bucket) or store-assembly (CAPTURES should be bound with it). Please forward.
+
+2. R5, R76 (connect.test.mjs:296-307).
+- The door answers the first `accountreferenceset` with 200 (`{"ok":true,"result":{"ok":true,"kind":"apikey","set_at":...},"tokenClass":"member"}`) and the following `accountreference` reads it as held: the door is correct at 9fd44d0f66^ and at 9fd44d0f66.
+- The failing step is the test's second press at connect.test.mjs:306 (a blank key, expecting `sent: []`): "no accountreferenceset button drawn". The button is drawn by `cs.act("accountreferenceset")` at bio-plane/src/screens-settings/connect.mjs:203, so the shell draws it only while the act is offered; once the key is held it is no longer offered.
+- I have not pinned which layer withdraws the offer (the act affordance, interface-shell, or ai-accounts' held state). Whether the second press should exist after a key is held is a question for BOB and ai-accounts; the test's expectation is what I have to answer to.
+- The 59997c5a81 worktrees predate BOB's K5193 store-request fix (both fail at storeWorld with GROUP_ALREADY_RECORDED), so they say nothing about R5/R76.
+
+Impact run: the one-process run on the merged tree hung after control-plane's R77 B29 seam test (last result 22:11, no further output). I am re-running the 222 affected files one per process with a 300-second timeout to isolate it; I will report the per-file summary in the COMPLETE.
