@@ -38,7 +38,7 @@ test("R51 every flow is for a kind of the profile, once, with ordered stages rea
 
 test("R51 the first profile's forums include the county's Superior Court and the body a complaint goes to; each once, with a basis", () => {
   const f = get(FIRST), labels = f.forums.map((x) => x.label);
-  assert.ok(labels.includes("Superior Court of California, County of Alameda"));
+  assert.ok(f.forums.some((x) => x.forum_kind === "court" && /Superior/.test(x.label) && /Alameda/.test(x.label)));
   assert.ok(f.forums.some((x) => x.forum_kind === "commission"));
   assert.equal(new Set(labels).size, labels.length);
   for (const x of f.forums) assert.ok(dated(x.basis), x.label);
