@@ -115,3 +115,11 @@ CHANGE (K5182), after B8 (the double seeding first: B8 is still merged alone the
 1. D2: `QUERY_STAMPS` holds `source`, and for `LOCAL_FACTS_ACTIONS` the body is stripped of every stamp key, so `factconfirm`'s required `source` is lost and every correction is refused `FACT_VALUE_REFUSED`. Find the cause at its line, fix it in your paths (or REPORT if the cause is local-facts'), failing-first test through the world's door: a `factconfirm` correction with its `source` is accepted; control: a caller-supplied stamp is still not taken (R3).
 2. The world: (a) a non-founder administrator is refused `NOT_AN_ADMIN` on `adminremovalsopen` and `expertisewithdraw` (the `member:` prefix of `by`): find whose code compares the prefixed id and fix it if yours, else REPORT it with file:line; (b) `signIn` caches the founder's session, stale after `w.tick(1 day)`: a session read after a tick is a fresh one or the world says it lapsed, as the real door would; (c) `grantAdmit` (the ask grant's counting of the model's own call, `askusage`) is absent: add it as a recipe made by the real acts.
 3. Owners that read `Date.now()` instead of the world's pinned clock (K5132's shared clock, `nowMs`): screens-settings names `fileSafetyOf`, ai-use, ai-accounts, hosting `at`, export `at` and the court notice. REPORT each with module and file:line (BOB places one job per module); do not change them.
+
+## B10 · CHANGE
+
+CHANGE (K5183, Bob: the weekly limit is at 99%; the work moves to Bob's primary account). SAVE NOW, before anything else, then stop:
+1. Commit everything you have changed, finished or not, on your job branch (a work-in-progress commit is right; never a reset, rebase or force), merge nothing new, and `git push origin job/T51/<module>`; check it with `git ls-remote`.
+2. Append to your record a section "Saved at K5183": what is done, what is half done (file names), the exact next step, and any worker you stop. Stop your workers.
+3. `mail state --set "WAITING ON BOB (K5183 save)"`, push, and end your turn with the one line `Waiting on BOB (K5183 save). Nothing for Bob to do.` A new session on the primary account continues your job from your record and branch.
+Do not start any long command now.
