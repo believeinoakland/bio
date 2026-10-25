@@ -408,3 +408,11 @@ Size (session_01Qsr6sBAiKXETnXBTaFti8B): test runs 2, module lines 1,734
 ## J28 · COMPLETE
 
 Batch 6 fixtures: 2 of 3 lines done (credentials/bootstrapVersions, verify.test.mjs R28); 1 waiting: instance-setup/selftestAnswer (verify.test.mjs:49) — provider fixtures.mjs is only on job/T51/instance-setup, not on tranche/T51 (abc0c02d68); re-send CHANGE once merged. NEEDS BOB: architecture check fails once, installer-steps' uses in modules.json lacks 'credentials' for the new fixtures import. Tests 121 pass/0 fail, words/format/coverage/ownership green. No fixtures-own/generic markers added. Details in record.
+
+### B28 follow-up (K5103)
+
+Merged `origin/tranche/T51`. `instance-setup/selftestAnswer` (verify.test.mjs R27) now `await selftestAnswer()` of instance-setup's `fixtures.mjs`, served at its real status 500; the test's meaning is "a copy whose store is not bound is not an answer" (`verifyInstall` answers null). All 3 lines done, none left; no `fixtures-own` or `fixtures-generic` marker added.
+
+Checks: steps tests 123, 121 pass, 0 fail; fixtures `--list` 0 failures; words, format, architecture, coverage (45 of 45), ownership all 0 failures. Impact: installer-steps and installer; `newgroup/test/*.test.mjs` shows 15 failures that are identical with my change stashed (inherited from the tranche, installer's, not touched by this job).
+
+Size (session_01Qsr6sBAiKXETnXBTaFti8B): test runs 6, module lines 1,734
