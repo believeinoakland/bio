@@ -181,3 +181,7 @@ Fix round 10 batch 5 done on job/T51/link-sweep (8a12d4da58). Both own fixture l
 - `checks/fixtures.mjs … link-sweep --list`: 2 failures, both the pre-existing lines above; no new failing line; no `fixtures-own` or `fixtures-generic` marker added.
 
 **Size (session_01Tt9hcR2PKLtGVvSP3xaaE7): test runs 2, module lines 1230.**
+
+## J7 · COMPLETE
+
+B9 done: cause 1 (sweepset and sweepratify refused every member as a machine) fixed in c4ec92ba9e; record in a5743dbaf0. Met: R13, R14, R15. Tests 46 of 46 green; format, architecture, coverage, words, ownership 0 failures. Fixtures: 2 lines flagged by the draft check, same on the tranche tip (not new). Door case for control-plane (r41-sweepset) is REPORTed in the record for BOB to place (K5138).
