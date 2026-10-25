@@ -458,7 +458,7 @@ QUESTION (cause 1, the roster's projects column). Two points; I carry on with ev
 
 (b) My best reading, which I build: to a session that administers, `members` reads `projectlist` once (names of the projects the administrator sees in full) and the roster gains a column `screen.projects.name` ("Projects", the design holds no column word for it); each row's cell lists the member's projects from `memberlist`'s `projects` ({project, state, owner}) that `projectlist` names, as the design's member-card words `screen.members.tip.owner` ("owner of {project}") for an owner and `screen.members.tip.workson` ("works on {project}") otherwise; a member with none draws an empty cell; a member's (non-administrator's) table has no column and the screen sends no `projectlist`. An entry `memberlist` marks `existence: true` (a hidden project the administrator sees only at EXISTENCE, owner only) has no name in any read I can make (`projectlist` omits hidden projects; membership R18 gives the row only the id), so it is NOT drawn by id. If R18/Membership v2 §7.8 means the existence-level name is to be drawn, membership must answer it on the row (e.g. `name`), and I draw it then; tell me if you want that as a REPORT to membership.
 
-## J36 · COMPLETE (re B46 / B47: fix round 10, K5148)
+## Fix round 10 work (re B46, B47; K5148)
 
 **Met (BOB strikes the marks):** R80 (the roster's Projects column; B47). R39 (the 70 reads' keys, below).
 
@@ -481,7 +481,7 @@ QUESTION (cause 1, the roster's projects column). Two points; I carry on with ev
 - **Edge: `uses` gains `store-request`** (kit, members.test, seed-members import `../store-request/fixtures.mjs`: architecture 3 failures until added) and the tests import `file-scanner` test helpers (`handler.mjs`, `test/helpers.mjs`, `test/vendors.mjs`, as the seam already did) and `../interface-shell/world.mjs`.
 - **World, for store-request:** a non-founder administrator is refused `NOT_AN_ADMIN` on `adminremovalsopen` and `expertisewithdraw` (the `member:` prefix of `by`, per W1); `signIn` caches the founder session, stale after `w.tick(1 day)`; `fileSafetyOf`, ai-use and ai-accounts, hosting `at`, export `at` and the court notice read `Date.now()`, not the world's pinned clock; `grantAdmit` is absent, so the model cannot count its own call under an ask grant (seed-connect posts to `askusage`).
 - **Door cases for BOB to place (K5138):** none new; the world tests are at this module's interface.
-- `bio.mjs` read set: `bias.mjs` now calls `allocid` through `cs.call` (as intake does); `readset` and `contract` tests are green.
+- Read set: `bias.mjs` now calls `allocid` through `cs.call` (as intake does); `readset` and `contract` tests are green.
 
 **Checks:** format 0; coverage 79 of 79, 0; words 0; ownership 0 (43 files); architecture 3 failures, all the `store-request` edge above.
-Size (session_0113BrTiSXZhcH7hGcpNfDSD): test runs 20, module lines 5663
+Size (session_0113BrTiSXZhcH7hGcpNfDSD): test runs 20, module lines 5476
