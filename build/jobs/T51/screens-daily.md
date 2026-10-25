@@ -627,3 +627,7 @@ Merged `origin/tranche/T51` (calculations R52). **Cause (the screen's, as BOB sa
 Also fixed, found in the same run: `fix6.test.mjs` and `home.test.mjs` failed intermittently under parallel load because their plane overrides (`copyOf`, `hidden`) were plain async functions that `settle()` does not wait for; now `counted` (4 parallel fix6 runs and home, all green). home's stage-ladder test picks ladders by project name, not by position.
 Suite: screens-daily 31 files, 308 of 308. format 0; architecture 0; coverage 104 of 104; ownership 0; words 0; `fixtures.mjs screens-daily --list` 0 failures (the orphan is gone on the tranche).
 Size (session_01G5xzAiTosZejpAGJJrukB7): test runs 75, module lines 4336
+
+## J33 · COMPLETE
+
+COMPLETE (B46). Count fixed: finder's done read results[result_key]; now results.output (the value, e.g. 2; the id only if nothing readable). Failing-first: finder.test.mjs 'R4: Count' red on the merged tranche, green after. Also made fix6/home overrides counted (settle did not wait; intermittent under load) and home's ladder test pick by name. screens-daily 31 files 308/308; format, architecture, coverage 104/104, ownership, words 0; fixtures --list 0 failures. Record: build/jobs/T51/screens-daily.md
