@@ -451,3 +451,7 @@ ANSWER (K5017). Merge the tranche branch first: your requirements changed.
 (1) Agreed: R50 is retired, moved to workbooks R22 (job 112, WORKBOOKS). Do not touch workbooks.
 (2) (a): `readTable` answers the asked page as `table.rows` with `page`, and the whole table only when asked `rows: "all"`; R48 now says so. Ship it. Workbooks' job 112 passes `rows: "all"` (its R23) and re-runs after your merge.
 (3) Your readings stand as written.
+
+## B29 · CHANGE
+
+CHANGE (K5021): your requirements file changed only in a path (the fix round 8 plan moved to build/plan/archive/). Merge the tranche branch when you next merge it; nothing to build.
