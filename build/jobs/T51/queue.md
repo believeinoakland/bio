@@ -315,3 +315,35 @@ Size (session_01YN9TEdL7KJ1syeaAkvZf85): test runs 4, module lines 2956
 ## J17 · COMPLETE
 
 COMPLETE (B19, B20). 7 of 8 fixture lines re-pointed to providers' fixtures (provenance homeOfEmpty, progressions disposeProposalOk/Refusal, monitoring monitoringReads, docket coreDue, people checkResults, money-checks noticed, real WIZARD_STEP_REFUSED/C-131.7). Markers added: none. Left: noticed.test.mjs:292, whose duties, answers and inquiry ops (shape and need) are named in my record's last section for the follow-up fixtures. After merging tranche/T51: queue 229/229; architecture, format, ownership, coverage, words 0 failures; fixtures 1 (the line above); impact set is queue only. Note: dispose.test.mjs R27 now uses definitionVersion 1, the version the provider's real world holds.
+
+## J18 · COMPLETE
+
+**Entries applied** (follow-up 38, test files only; commit `1bd5a7adc5` on `job/T51/queue`):
+- `noticed.test.mjs`, the `notices:` table (the test "R51, R7, R11, R12, R14, R49: the real notice-producers' items …"): the three hand-built answers are replaced by the providers' published fixtures, each made by the real code and carrying the ids the real code minted:
+  - duties: `dutiesForViewer()`. `dutiesOf` returns its `none` (`{ok: true, duties: []}`); `occurrencesOf` returns its `heldOccurrences` if asked.
+  - answers: `standingAnswersHeldBack({member: "alice"})`, the real held-back run (`held_back` is `{condition: "switch_off", switch: "copy"}`). The item id now takes the answer's own question id and run.
+  - inquiry: `datedWaitOf({viewer: "member:alice", date: "2026-08-31"})`, the real `datedWaits` with one due wait. The world's question is the fixture's question id, so the wait's key, its ancestors and its mute check follow that id.
+- The `word` import is removed (no longer used).
+- Assertions follow the real answers; the expected items are unchanged in kind and order (the dated wait, then the held-back standing answer). Nothing was weakened.
+
+**Deferred**: none.
+
+**Found in other modules**: none.
+
+**Markers added**: none (the one red the fixtures check named, `noticed.test.mjs:292` op-table, is gone).
+
+**Edge check**: the fixture modules (duties, answers, inquiry) are already in queue's `uses`, so no QUESTION is needed.
+
+**Repository note**: the local `job/T51/queue` (`0ed35d5937`) differed from origin and was renamed to `stale/queue-local`, not reset, per START. The branch then took the tranche merge (fast-forward to `tranche/T51` `ec81d05f26`), so the job branch is 7 commits ahead of its old origin tip.
+
+**Tests and checks** (absolute root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/queue/noticed.test.mjs`: 7 of 7 pass.
+- Whole queue suite (`bio-plane/test/m/queue/*.test.mjs`): `ℹ tests 229`, `ℹ pass 229`, `ℹ fail 0`, `ℹ skipped 0`.
+- `checks/format.mjs`: 178 modules, 178 requirements files; 0 failures.
+- `checks/architecture.mjs … queue`: 41 product files, 143 relative imports; 0 failures.
+- `checks/coverage.mjs … queue`: 55 of 55 live requirement ids named by a test; 0 failures.
+- `checks/words.mjs … queue`: 8201 string literals read; inline 0, plain 0, testcopy 0, missingkey 0, unkeyed 0; 0 failures.
+- `checks/ownership.mjs … queue tranche/T51`: 1 file changed by queue; 0 failures.
+- `checks/fixtures.mjs /home/user/bio queue --list`: answer 0, stub 0, code 0, op-table 0; 0 failures.
+
+Size (session_01YGp5SXAG8uve2pBSVTbPvh): test runs 2, module lines 0 (test file only; about 20 test lines changed)
