@@ -427,3 +427,13 @@ COMPLETE · screens-investigate · B39 (K5197) applied; B36-B38 were in J31
 PEOPLE #16 merged: the person page reads `withdrawn_facts` for the withdrawn fold (R32 (2): `person.mjs` now takes the withdrawn from `withdrawn_facts` as well as `facts`), and the claim rows' basis was already drawn by `screen.person.basis.row.<basis>` / `.org` (R38, R39, R58). The four todos naming people R43/R44 are now tests over the world's real `person` read (person.test.mjs x3, organization.test.mjs x1); module person+organization suites: 36 pass, 0 fail. Remaining todos are the K5173 words, K5178 `known_through`, and the other modules' REPORTs in J31.
 Checks at HEAD: format 0, architecture 0, coverage 60 of 60, ownership 0, words 0, fixtures 2 (both `acquire`, a fetched site). Met ids as in J31 plus R32 (2), R38, R39, R58.
 Size (session_01Pdj4AeSbnHnToosQruPH5w): test runs 27, module lines 3400
+
+## J33 · QUESTION
+
+QUESTION · explore: which inquiry is the graph's scope (B40; replaces none)
+
+`exploregraph` walks a hunch hop only when `scope` is `{inquiry}` naming the inquiry that holds it and the viewer may see (explore R6, R21). No page of mine knows an inquiry on Explore, Person or Money: the Explore address is `/app/explore/<entity>`, the page has no question context, so there is nothing to send today.
+
+Best reading (the least that works, no new address): on Explore only, a choice "Include the leads of a question" over the questions the member may see (the `list` read, as the Timeline's question choice does), none chosen by default; when one is chosen the graph read is repeated with `scope: {inquiry: <id>}` and the hunch hops of that question are drawn as leads (class `lead`, as R27 already draws declared ones). Person and Money send no scope (they show no leads). It needs two NEW words for UX-DESIGN to adopt, which I code against by key until then (todo per K5173): `screen.explore.scope` ("Include the leads of a question") and `screen.explore.scope.help` ("A lead is a guess a question rests on; no finding rests on it. Choose none to see only what the record shows.").
+
+Alternative: scope comes from the address (`/app/explore/<entity>?question=<id>`, the link a question's page draws to Explore): needs your decision on the address and the question page's link (not mine). Say which; until then I build nothing for this item. J32 (COMPLETE) stands for B36-B39.
