@@ -109,3 +109,29 @@ G83 is done in ai-runs: the job is COMPLETE on job/T51/ai-runs (head ff8923d2), 
 **For BOB:** the five pre-existing failures above (affordances R55; control-plane R123; plane R84, R86, R24) are on the tranche tip now. Each is reported here, not fixed (they are other modules'). The timing tests (plane R77 L, R79 L) need a quiet run to show green; they failed only under parallel load.
 
 **Size (session_01XtbBmQVJFxMDuhJvHpZXHZ): test runs 11, module lines 3812** (`bio-plane/src/ai-runs/*.mjs`).
+
+## J6 · COMPLETE
+
+AI-RUNS #28 · fix round 10, Wave A batch 4 (B5): four fixtures published, nine own lines re-pointed. Tests only; no source and no requirement changed, no new requirement id.
+
+**Published** in `bio-plane/test/m/ai-runs/fixtures.mjs` (new), each made by the real code at test time, each called and checked by `fixtures.test.mjs` (R18, R52 R78, R5 R37, R45):
+- `airunDispatchRefusal(code)`: MEMBER_RUN_MODE_NOT_ADMITTED and AI_RUN_NOT_PRINCIPAL from `dispatchMemberRun`; ACCOUNT_MEMBER_NOT_ACTIVE (ai-accounts' row) and AI_RUN_CREDENTIAL_MALFORMED (credentials' row) from the real `aiRunCredentialMint`, the call the dispatch relays unchanged.
+- `airunOpenRefusal(code)`: AI_RUN_MODE_NOT_DEPLOYED and AI_NO_ACCOUNT from the real `open`; AI_LIMIT_REACHED is ai-use's own published `ceilingRefusal()` (fields whose, period, use) which the open relays.
+- `airunRefusal()`: `notPrincipal` (airunclose) and `tickNotPrincipal` (airuntick) by a caller who is not the principal (AI_RUN_NOT_PRINCIPAL, C-22.12, translation); `unseenRead` / `unseenLog` (op airun / airunlog by a viewer who cannot see the run) and `unknownRead`. A read the viewer may not see answers `{found: false}`, the same as an unknown run: there is no separate "not visible" code in ai-runs (agent-worker's AI_RUN_NOT_VISIBLE, requirements.test.mjs:467, is a code no product file gives; that job replaces it by this answer or by AI_RUN_NOT_PRINCIPAL).
+- `tickStateTooLarge({bytes})`: the real tick's AI_RUN_STATE_TOO_LARGE, C-22.18, with `bytes` and `limit` (262,144).
+
+**Own lines (9), all done or waiting:**
+- inquiry/migratedSurfacing: world.mjs `inquiryStub` removed (the world now leaves `inquiry` to the module's own default, the real inquiry over its storage); plan.test.mjs R27 takes inquiry's fixture (`migratedSurfacing()`: its real inquiry, the migrated and the plain question, the real answer).
+- steps/stepsWorld: world.mjs `stepsStub` removed; t41.test.mjs (B2, both R73, R74) and t46.test.mjs:108 and words.test.mjs (two tests) take steps' fixture (`stepsWorld()`: the real steps with its recorded acts, the real visibility, the real refusals). Judgment points: ids are steps' own now (no `STP-1`); a step the opener cannot see is a step in a hidden project's question (`QH` of steps' `fixture.mjs`, with `CAT`, `QP1`); B2 drives the run holder through steps' real `stepCreate` (the holder is steps' to ask), and a member's own credential `member:ann/tok-ann` is no machine to steps, so steps never asks the holder for it (the old direct `fn(ANN_CRED, "R2")` check had no counterpart at steps' interface and is gone; the machine arms, the system identities, the principal's sight and the ended run are checked there). The real steps accepted `recordProduct` with `{kind: "capture", id}` for a capture the world registers (`world.capture`), so no mismatch between ai-runs and steps' interface was found.
+- CODE: reexam.test.mjs:111 now uses `PLAN_NOT_OPEN` with its real check `C-124.61` (no marker needed; the check accepts it).
+- FIX-L markers, waiting for their providers' `fixtures-run` (shown as `contract-no-run` until merged): plan.test.mjs:94 `// fixtures-contract: action-plans plan-open-check`; scheduler.test.mjs:238 and t46.test.mjs:352 `// fixtures-contract: agent-worker dispatch-refusal` (the invented `{reason: "NO"}` at status 403 replaced by agent-worker's real `BAD_BODY` at 400; the assertions read the dispatch state only, which is unchanged).
+
+**Markers added:** three `fixtures-contract` lines above. No `fixtures-own`, no `fixtures-generic`.
+
+**Left in the live list (named, waiting):** plan.test.mjs:95 (action-plans), scheduler.test.mjs:239 and t46.test.mjs:353 (agent-worker): `contract-no-run` until their providers' `fixtures-run` lines merge. `orphan-run`: none (I wrote no `fixtures-run`; the users of my four fixtures are screens-inquiry (assistant.test.mjs:190, :225), agent-steps (interface.test.mjs:36, :207, :281 per part-5), agent-worker (requirements.test.mjs:467, :516, :1032), who re-point in their own jobs).
+
+**Other modules:** none found. Note for the users of `airunRefusal`: agent-worker's `AI_RUN_NOT_VISIBLE` and agent-steps' `CLOSE_REFUSED`/`AI_LOG_REFUSED` are codes no product file gives (part-2 "Codes to confirm"); the real ones are in this fixture's answers.
+
+**Run:** ai-runs tests, all 25 files: 141 tests, 141 pass, 0 fail. `checks/fixtures.mjs /home/user/bio ai-runs --list`: 3 failures, all contract-no-run (above); stub 0, code 0, answer 3. `checks/format.mjs`: 178 modules, 0 failures. `checks/words.mjs ... ai-runs`: 0 failures. `checks/architecture.mjs`: 0 failures. `checks/coverage.mjs`: 59 of 59 live requirement ids named, 0 failures. `checks/ownership.mjs ... tranche/T51 job/T51/ai-runs`: 0 failures. `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178 (tests only), so no user's tests to run. Generated artifacts made stale: none.
+
+Size (session_013fMeokVqHBqehW2ZZc86MS): test runs 14, module lines 3812
