@@ -66,3 +66,30 @@ Size (session_01VDycP8MTrbpjvMkmzgTofN): test runs 9, module lines 1919
 ## J3 · COMPLETE
 
 Fix round 10 batch 3 applied. Published limitsUnreadable and standingQuestions fixtures (answers/fixtures.mjs, tested by fixtures.test.mjs); 8 standing.test.mjs lines now use ai-accounts' fixtures; words.test.mjs:40 uses the real refusal of jurisdictions.combine(["nosuch"]) (combine([]) answers ok, never reaching the no-profile reason). No fixtures-own or fixtures-generic markers. checks/fixtures answers: 0 failures; module tests 69/69; format, architecture, coverage (36 of 36), ownership 0 failures. Record: build/jobs/T51/answers.md.
+
+## Follow-up 38 (B4, ANSWERS #14, session_01X6LaydCKjbEtyPkjE9aDG2)
+
+Order: the job branch was fast-forwarded to `origin/job/T51/answers` and `mail start` ran before the tranche merge; the merge of `origin/tranche/T51` followed (`deeae59476`, clean). `mail start` changed only the Status line.
+
+**Causes done:**
+- Published `standingAnswersHeldBack({ member = "bob", finds = "Budget held" } = {})` in `bio-plane/test/m/answers/fixtures.mjs` (new export, async). It takes the real acts: a standing question set by `member` (query `title:budget`, daily, ends 2026-12-31), a first run (finds nothing), a captured document holding `finds`, the copy's AI switch turned off by an administrator (`standingAiSwitch`), then the run that finds the document. It returns the real `standingAnswersFor({ member })` answer: `{ ok: true, cursor, entries: [...] }`, one entry per find, with `answer: null`, `withheld: []`, `finds: { ids: ["INFO-2026-…"] }`, `held_back: { condition: "switch_off", switch: "copy" }` and the standing label.
+- `fixtures.test.mjs`: two tests call it and check the real answer (R19 R20: the entry's shape and hold; R20: the member parameter, with carol).
+
+**For queue (`noticed.test.mjs:292`–`298`), a shape correction:** B4's shape gives `held_back: "ai_off"`. No product value is `"ai_off"` (grep of `bio-plane/src`): a held-back run answers an object. With the copy's switch off the object is `{ condition: "switch_off", switch: "copy" }`; the other held-back conditions are `kept_away`, `no_account`, `limit` and `answerer_failed`, each an object too. Queue's re-point should take the fixture's object, not the string. I have not changed queue's test.
+
+**Markers:** none (`fixtures-own` and `fixtures-generic` added: no).
+**Lines left:** none.
+**Product code:** unchanged (test files only; no product defect seen in the real answer).
+
+**Tests and checks:**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/answers/fixtures.test.mjs`: tests 4, pass 4, fail 0.
+- Same runner over `bio-plane/test/m/answers/`: tests 71, pass 71, fail 0 (69 before, plus the two new).
+- `node checks/fixtures.mjs /home/user/bio answers --list` (from the process repository): answer 0 failures for answers; the run's other failures are other modules'.
+- `node checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `node checks/architecture.mjs /home/user/bio answers`: 24 files, 0 failures.
+- `node checks/coverage.mjs /home/user/bio answers`: 36 of 36, 0 failures.
+- `node checks/run.mjs /home/user/bio`: words 0 failures; no finding names answers. Its other failures (fixtures, stubs) are other modules'.
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note for basis-version-grammar only; no refusal naming answers.
+- `node checks/ownership.mjs /home/user/bio answers tranche/T51 job/T51/answers`: run after the commit below (result in COMPLETE).
+
+Size (session_01X6LaydCKjbEtyPkjE9aDG2): test runs 2, module lines 1919
