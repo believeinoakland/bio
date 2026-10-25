@@ -156,3 +156,15 @@ New test files, each red against the old module (windows 16 of 17 red, bounds 2 
 **Census ops owned:** none. **Deferred:** none. **R-PATH:** every path reaches this module through the one entry; the sibling-path doors are control-plane's seam (sections 12, 14).
 
 Size (session_017pSg8G4No9aLcVtFV4dsxE): test runs 40, module lines 1294
+
+## Fix round 10, batch 3 — CSV-READER #6 (session_017Uh2sTFUFdx4GLx1SnmNqp), cause R20
+
+**Root (file:line):** `decideDelimiter`, `bio-plane/src/csv-reader/index.mjs:~395-410`: a delimiter counted as consistent only when one exact per-line count held on over half the lines; a file whose every row is ragged (three widths) has none, so the delimiter was null and the file read as one column.
+**Change:** a delimiter is consistent when it occurs at least once on more than half the lines, whatever its count (R7 as amended); where several are consistent the one whose modal count holds on the most lines wins, still equal is `tied`. The "occurs on N of M lines" signal now reports lines where it occurs. No limit a member meets changes; Platform: N.
+**Why the tests missed it:** `text.test.mjs` and `windows.test.mjs` made a ragged row one in 17 or 50; `sheetgen`'s `ragged` was used in no csv-reader test.
+**Failing-first (red, then green):** `windows.test.mjs` "R7 a 3,000-row five-column CSV with a title block and ragged rows …": `generate({kind:"csv",seed:"rw9-B-5c",size:{rows:3000,cols:5},header:"title",ragged:true})` through `csvEntry.text`. Red before: `delimiter` null (actual null, expected 'comma'). Green after: comma, `usedCols` 5, `usedRows` 3003, the mark `rw9-B-5c-R3003-C1` at A3003 in a five-field row; controls ragged alone and title alone read as before.
+**Existing test updated to the amended R7 (not weakened):** `text.test.mjs` "R7 dialect delimiter": `"a,b\n1,2,3\n"` is now comma (the comma is on every line; it was asserted null under the old exact-count rule), the "half is not a majority" and none-consistent assertions use `"a,b\nplain\n"`, and a new tie-break assertion (`"a,b;c;d\n1,2;3;4\n5;6;7\n"` is semicolon).
+**Tests:** csv-reader 96 pass 0 fail. Users run: format-registry, calculations r7-delimiter, acquisition r12, office-readers (229 pass 0 fail); reading-pipeline and extraction (790 tests, 789 pass, 0 fail, one not counted as pass). `impact.mjs` names 119 modules through the shared table; the modules that call the changed service are those run.
+**Checks:** format 0 failures; architecture 0; coverage 25 of 25; ownership 0.
+**fixtures-own / fixtures-generic markers added:** none. **Deferred:** none. **Found in other modules:** none new. Stale bundles that embed csv-reader source: BOB regenerates (as in the earlier section).
+Size (session_017Uh2sTFUFdx4GLx1SnmNqp): test runs 8, module lines 1304
