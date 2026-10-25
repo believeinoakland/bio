@@ -56,3 +56,44 @@ None needed for the cause: it is a pure function of the bytes (R40) and runs the
 **`pdf-pixels`** (`picturepixels.mjs` is in its paths in `build/modules.json`). Requirement for BOB: `pdf-pixels` R44 (a) states "the darkest half percent of the pixels reads at most 30" and (d) states "(fewer than two lines, or lines over a quarter of the picture's height) ... `text_found` false". (a) is **wrong for a sparse page**: where ink is under half a percent of the picture it cannot hold without turning paper dark; the ink level must come from the picture's ink (for instance the lower tail of the brighter-half-corrected ratio, relative to the paper level), with a floor so a page of pure paper is still not stretched. (d) then does its job unchanged. Silent today: what a page with under 0.5 % ink should read as.
 
 Wording: the sentence the member reads is the generic final-reading sentence (G1/R1); no word-table key is involved in this cause.
+
+---
+
+## R7 · turned and rotated pages are not read upright, and not stated as sideways (A8)
+
+### 1. Root cause with evidence
+
+**Decided in `ocr-worker/src/member.mjs:249`-`:275` (`transcribeOnePage`, R26): the member believes one orientation claim from the engine, tries that one turn, and keeps the as-it-lies reading when the turned one is no better; and on a sparse page the engine's claim is noise.**
+
+- `ocr-worker/src/frame.mjs:67`-`:69` asks `engine.getOrientation()` and passes on only `rotation`. `member.mjs:249` takes it as `claim`; `:254`-`:258` turn by `turnToUpright(claim.rotation)` = `(360 - rotation) % 360` only when the page "as it lies" is unclear; `:264` keeps the turned reading only if `scoreOf(again) >= scoreOf(first)`; `:271` refuses what is still under `LEGIBLE_REFUSE_BELOW` (`PICTURE_NOT_LEGIBLE` / `PAGE_NOT_LEGIBLE`).
+- I read the engine's claim on the **four turnings of one page** (the walker's A8 recipe family, real engine, preparation on; `R0..R270` = the renderer's `turn`; "rated" = words the engine rated 0.6 or over):
+
+  | page turned clockwise | 6 lines: claim at R0 | 6 lines: best renderer turn | 3 lines: claim at R0 | 3 lines: claim at R90 / R180 / R270 | 3 lines: best renderer turn |
+  |---|---|---|---|---|---|
+  | 0 | 0 | R0 (9/17 rated) | **270** | 270 / 270 / 270 | R0 (5/6) |
+  | 90 | 90 | R270 (9/17) | **270** | 270 / 270 / 270 | R270 (5/6) |
+  | 180 | 180 | R180 (9/17) | **270** | 270 / 270 / 270 | R180 (5/6) |
+  | 270 | 270 | R90 (9/17) | **270** | 270 / 270 / 270 | R90 (5/6) |
+
+  On 6 lines the engine's claim is right (its `rotation` is the degrees the frame lies turned clockwise, as `turnToUpright` assumes) and the member reads the page upright. On **3 lines the engine answers 270 for every frame, upright included**: it has too little text to tell. The member turns a 3-line page "by 90" (`360 - 270`), which for a page turned 90 clockwise makes it 180 (I measured the ink box: text at the bottom right, upside down), the engine reads garbage ("FIPNE ST-T4-e8-Y-6r"), rated 0 words, and the page is refused. The upright reading exists at the other turn (R270 for a page turned 90: 5 of 6 rated), but **no code ever tries a turn the claim did not name**.
+- Red, through the real member and engine, the walker's cases at 3 lines: `degrade:{turn:90}` → `PICTURE_NOT_LEGIBLE`; `degrade:{turn:180}` → `PICTURE_NOT_LEGIBLE`; the PDF scan `{pages:2, lines:3, kinds:["scan"], rotate:{every:1, angle:90}}` → page 0 `PAGE_NOT_LEGIBLE` (the A8 "pages 1-4 `PAGE_NOT_LEGIBLE`", all four refused). Controls (all read, turned upright, partly legible notes): the same at 6 and 18 lines, a PDF scan rotated 90 at 6 and 20 lines (`turned_deg` 270 on the second read). So the A8 failures are the **sparse** pages; dense pages are fine.
+- The second half of the walker's row, "not stated as sideways": the member **does** state it: `PAGE_NOT_LEGIBLE` carries "this page is sideways or too faint to read" (`ocr-worker/src/contract.mjs:107`, key `ocr-worker.contract.this_page_is_sideways_or_too_faint_to_read`), and `PICTURE_NOT_LEGIBLE` "the picture is too unclear to read" (`:105`). The Document page does not draw either: it draws the size sentence for any final reading with no size reason (A N3). That is **R1 (G1), DIAG-R10-A's**; merged here by reference, not re-diagnosed. (The word chosen is `PICTURE_NOT_LEGIBLE`'s "too unclear", which does not say "turned": for a refused turned *picture* the member's word is the module's key; whether a picture also deserves the "sideways" sentence is the design's if BOB wants it said.)
+
+### 2. Why the tests missed it
+
+`ocr-worker/test/ocr-worker.test.mjs:895`-`:960` (R26): `turnEngine({claim, side, up})` is a **stub engine whose orientation claim is typed in and always right** (`orientation: w === 4 ? claim : {rotation: 0}`), and the renderer is a stub `turner`. The tests prove the member turns where the claim says; none lets the engine be wrong. `g128i-l26-photo.test.mjs` uses the real engine on dense photographs only. The requirement itself says the claim "is unreliable below a full-resolution page" (R26) and then relies on it for the only retry.
+
+### 3. Failing-first test
+
+- **Module and file:** `ocr-worker`, new `ocr-worker/test/r10-sparse-pages.test.mjs` (real engine, real `renderPictureToPixels`/`renderPageToPixels`, as `g128i-l26-photo.test.mjs`).
+- **Builds:** `imggen` `{kind:"png", seed, size:{pages:1, lines:3}, degrade:{turn: 90|180|270}}`; `pdfgen` `{kind:"pdf", seed, size:{pages:4, lines:3}, kinds:["scan"], rotate:{every:1, angle:90}}`, each through `/transcribe` with `pages:[0]` (and `[0..3]` one at a time for the PDF).
+- **Asserts:** `ok: true`, `image.turned_deg` equal to the turn that makes the page upright (270, 180, 90 for the PNGs; the PDF's page turned 270 or 90 as the reading shows), `legibility.share >= 0.5`, and the page's words (its vocabulary word per line) present; control: an upright 3-line page is not turned (`turned_deg` 0).
+- **Seen red:** yes (above).
+
+### 4. Platform check
+
+None for the cause (engine, deterministic). After the fix, the same two files on the live copy: the reading must be `whole` with `turned_deg` stated, and the time of the extra passes read on the `ocr` row's `own_ms` (each extra pass is a full engine run; the design below bounds it to pages the first pass refused).
+
+### 5. Owner
+
+**`ocr-worker`.** Requirement for BOB: R26 says "a turn it asks for is tried ... and is kept only when the turned page rates at least as many words ... **no page is read four ways**". That sentence forbids the repair. A repair that stays inside R26's reasoning: only a page that is **refused** (under R25's 0.2 after the claimed turn) and whose claim was one the frame itself did not confirm (the claimed frame's own claim is again a turn) may try the quarter turns not yet tried (up to two more, 90/270 then 180), keeping the best-rated one; a legible page is still never read four ways. R26 needs that exception written.
