@@ -4,19 +4,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./world.mjs";
-import { noticesRead } from "../reevaluation/fixtures.mjs";
+import { noticesRead, noticesTwoVersions, noticesHiddenVersion } from "../reevaluation/fixtures.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
 const real = noticesRead({ several: true });
 const NEWER = "newer-capture-affects-reference";
 
-/* the newer-capture items alice reads, the notices of the real answer each holder cites from PRJ-1 */
-const items = () => {
-  const w = world({ reevaluation: { notices: () => ({ ok: true, limit: real.limit, truncated: real.truncated, notices: real.notices }) } });
+/* the newer-capture items alice reads, the notices of a real answer each holder cites from PRJ-1 */
+const itemsOf = (answer) => {
+  const w = world({ reevaluation: { notices: () => ({ ok: true, limit: answer.limit, truncated: answer.truncated, notices: answer.notices }) } });
   w.member("alice"); w.bundle("PRJ-1", "project"); w.join("PRJ-1", "alice");
-  for (const h of new Set(real.notices.map((n) => n.holder))) { w.bundle(h, "inquiry"); w.cite("PRJ-1", h); }
+  for (const h of new Set(answer.notices.map((n) => n.holder))) { w.bundle(h, "inquiry"); w.cite("PRJ-1", h); }
   return w.read("alice").items.filter((i) => i.kind === NEWER);
 };
+const items = () => itemsOf(real);
 /** the notice ids a holder raised, least first */
 const legsOf = (holder) => real.notices.filter((n) => n.holder === holder).map((n) => n.notice).sort();
 const holderQ = real.holder, holderQ2 = "INQ-2026-0002-q", holderQ3 = "INQ-2026-0003-q";
@@ -47,4 +48,24 @@ test("R52 (G65): a newer version graded NOT_FOUND reads its grade through its ro
   const other = items().find((i) => i.basis.notices.includes(legsOf(holderQ3)[0]));
   assert.ok(other.detail.includes(word("queue.fill.grade.notfound")), other.detail);
   assert.ok(!other.detail.includes("read as ."), other.detail);
+});
+
+test("R52: a newer version of the same target is a new item: one holder's leg with two newer captures is two items, each naming its own notice and its own newer capture", () => {
+  const two = noticesTwoVersions();
+  const got = itemsOf(two);
+  assert.equal(got.length, 2, "two notices, two newer versions: two items");
+  assert.deepEqual(got.map((i) => i.id).sort(), two.notices.map((n) => `FINDING::${NEWER}::${n.notice}`).sort());
+  assert.deepEqual(got.map((i) => i.subject.newer_capture).sort(), [...two.newer_captures].sort());
+  for (const i of got) assert.deepEqual(i.basis.notices, [i.subject.id], "each stands for its own notice only");
+});
+
+test("R52: a notice whose newer version the viewer cannot see is its own matter: one item, its detail reading the unseen sentence and no grade", () => {
+  const hidden = noticesHiddenVersion();
+  const got = itemsOf(hidden);
+  assert.equal(got.length, 1, "one notice, one item");
+  const [n] = hidden.notices;
+  assert.equal(got[0].id, `FINDING::${NEWER}::${n.notice}`);
+  assert.deepEqual(got[0].basis.notices, [n.notice]);
+  assert.equal(got[0].subject.newer_capture, null, "the viewer is told no version");
+  assert.equal(got[0].detail_key, `queue.${NEWER}.detail.unseen`);
 });

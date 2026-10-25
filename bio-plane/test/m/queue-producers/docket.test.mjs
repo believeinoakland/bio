@@ -25,16 +25,18 @@ function docketWorld(fakes) {
 
 test("R30 (docket R9; DEC-116 item 2): one OBLIGATION docket-core-due per core item docket.coreDue answers, keyed OBLIGATION::docket-core-due::<case>::<kind>::<ref>, to the case's managers and nobody else, offering placement and, for a submission, the decline", () => {
   /* docket's real core items (its published fixture): alice manages CASE-2026-0101 of project P, dave manages CASE-2026-0202 of
-     project Q. The fake answers both cases whatever the viewer, so this module's own recipient rule is what is measured. */
+     project Q, hank manages CASE-2026-0303 of project R. The fake answers every case whatever the viewer, so this module's own
+     recipient rule is what is measured. */
   const fx = coreDueKinds();
-  const real = [...fx.due.items, ...fx.otherDue.items];
+  const real = [...fx.due.items, ...fx.otherDue.items, ...fx.hankDue.items];
   const asked = [];
   const answer = { ok: true, items: real, count: real.length, wrote: false };
   const w = world({ docket: { coreDue: (a) => { asked.push(a); return answer; } } });
-  w.member("ada", { role: "admin" }); w.member("alice"); w.member("dave"); w.member("olga");
-  w.bundle("PRJ-P", "project"); w.bundle("PRJ-Q", "project");
+  w.member("ada", { role: "admin" }); w.member("alice"); w.member("dave"); w.member("olga"); w.member("hank");
+  w.bundle("PRJ-P", "project"); w.bundle("PRJ-Q", "project"); w.bundle("PRJ-R", "project");
   w.join("PRJ-P", "alice", { owner: true }); w.join("PRJ-P", "olga"); w.join("PRJ-Q", "dave", { owner: true });
-  w.run(`INSERT INTO cases (case_id, project_id) VALUES (?, 'PRJ-P'), (?, 'PRJ-Q')`, fx.case, fx.caseQ);
+  w.join("PRJ-R", "hank", { owner: true });
+  w.run(`INSERT INTO cases (case_id, project_id) VALUES (?, 'PRJ-P'), (?, 'PRJ-Q'), (?, 'PRJ-R')`, fx.case, fx.caseQ, fx.caseR);
   /* the items are three days old at this read (their `since` is 2026-10-01 in the fixture) */
   const LATER = Date.parse("2026-10-04T12:00:00Z");
   const read = (m) => w.read(m, undefined, { now: LATER });
@@ -45,6 +47,7 @@ test("R30 (docket R9; DEC-116 item 2): one OBLIGATION docket-core-due per core i
   assert.deepEqual(asked.at(-1), { viewer: "member:alice" }, "docket's read, under the viewer");
   assert.deepEqual(ids(alice), fx.due.items.map(key).sort(), "the case's manager: one item per core item of the case she manages");
   assert.deepEqual(ids(read("dave")), fx.otherDue.items.map(key).sort(), "the manager of the other project is told of its case only");
+  assert.deepEqual(ids(read("hank")), fx.hankDue.items.map(key).sort(), "to the case's manager and to nobody else: hank is told of his case of project R only");
   assert.deepEqual(ids(read("olga")), [], "a member of the project who is no owner is told nothing of its case");
   assert.deepEqual(ids(read("ada")), [], "nor an administrator who manages no case");
   asked.length = 0;
