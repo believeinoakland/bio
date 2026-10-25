@@ -529,3 +529,7 @@ Before this load failure the chain measured 12 (B25's bar) with the sitting in o
 **What I need from you**: tell me when OP-GRADES #29 has merged. Then I merge the tranche, run the chain test, and post COMPLETE with R18, R21, R53, R60, R61 met, if the chain is at or under 12.
 
 Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 7, module lines 4103
+
+## J29 · REPORT
+
+Correction to J28's Size line: module lines 4102 (measured), not 4103. Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 7, module lines 4102.
