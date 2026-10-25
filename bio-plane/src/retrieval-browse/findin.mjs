@@ -210,7 +210,7 @@ export function matchRequirements(text, set) {
 /** R2: a stop (`.` `!` `?` `;`) ends a sentence only before whitespace and a capital (a closing quote or bracket may
  *  come between) or at the end of the text, and a `.` after a known abbreviation does not; a line break always ends
  *  one. So never inside a number (`8.22.050`, `$4.2`) or a citation. Each piece keeps its stop, as `[{index, text}]`. */
-const ABBREVIATION = /(?:^|[^\p{L}])(?:Mr|Mrs|Ms|Dr|Prof|Hon|Rev|Gov|Jr|Sr|St|Ave|Sec|Secs|No|Nos|Art|Ch|Cl|Subd|Para|Cal|Stat|Ann|Supp|Cir|App|Dept|Rep|Reg|Fed|Op|Inc|Corp|Co|Ltd|vs|v)\.$/u;
+const ABBREVIATION = /(?:^|[^\p{L}])(?:Mr|Mrs|Ms|Dr|Prof|Hon|Rev|Gov|Jr|Sr|St|Ave|Sec|Secs|No|Nos|Art|Ch|Cl|Subd|Para|Cal|Civ|Pen|Proc|Evid|Bus|Lab|Pub|Ord|Res|Stat|Stats|Ann|Supp|Cir|App|Dept|Rep|Reg|Fed|Op|Inc|Corp|Co|Ltd|vs|v)\.$/u;
 const STOPS = ".!?;";
 const AFTER_STOP = /^["'”’)\]]*(?:\s*$|\s+["'“‘(\[]*\p{Lu})/u;
 function sentencesOf(t) {
@@ -221,7 +221,7 @@ function sentencesOf(t) {
     if (t[i] === "\n") { cut(i); start = i + 1; continue; }
     if (!STOPS.includes(t[i])) continue;
     let j = i;
-    while (STOPS.includes(t[j + 1] ?? "")) j++;
+    while (j + 1 < t.length && STOPS.includes(t[j + 1])) j++;
     if (!AFTER_STOP.test(t.slice(j + 1))) { i = j; continue; }
     if (t[j] === "." && j === i && ABBREVIATION.test(t.slice(start, j + 1))) continue;
     cut(j + 1); start = j + 1; i = j;

@@ -272,8 +272,8 @@ test("R2 (K5148, WALK-FINAL-08 D5): a stop ends a sentence only before whitespac
   assert.equal(got[0].index, 0);
   /* Without a heading and on one line: the stop before a capital still ends the first, the dots in the number do not. */
   assert.deepEqual(matchRequirements("The Clerk shall publish it. The budget is $4.2 million.", EN).map((x) => x.sentence), ["The Clerk shall publish it."]);
-  assert.deepEqual(matchRequirements("Under Sec. 8.22.050 a landlord shall give notice. Mr. Lee may appeal (see Cal. Civ. Code 1946.1).", EN).map((x) => x.sentence),
-    ["Under Sec. 8.22.050 a landlord shall give notice.", "Mr. Lee may appeal (see Cal. Civ. Code 1946.1)."]);
+  assert.deepEqual(matchRequirements("Under Sec. 8.22.050 a landlord shall give notice. Mr. Lee must appeal (see Cal. Civ. Code 1946.1).", EN).map((x) => x.sentence),
+    ["Under Sec. 8.22.050 a landlord shall give notice.", "Mr. Lee must appeal (see Cal. Civ. Code 1946.1)."]);
   assert.deepEqual(matchRequirements("Smith v. Jones holds that a tenant shall not be evicted without cause.", EN).map((x) => x.sentence),
     ["Smith v. Jones holds that a tenant shall not be evicted without cause."]);
   assert.deepEqual(matchRequirements("The fee must be paid.", EN).map((x) => x.sentence), ["The fee must be paid."], "a stop at the end of the text ends it");
