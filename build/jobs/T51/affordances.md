@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_015sXYDym4apQ4UugkRYpfcT · depth 2 · WORKING · handled B24
+**Status** · session_015sXYDym4apQ4UugkRYpfcT · depth 2 · COMPLETE · handled B24
 
 ## J1 · QUESTION
 
