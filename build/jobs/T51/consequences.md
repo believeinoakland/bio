@@ -59,3 +59,7 @@ REPORT for BOB: the walker's escalation-end chain through the door (L181) is con
 
 Tests: consequences 73/73; users escalation 102, actions 154, filings 164, action-plans 105, plan-work 52 all pass. Inherited reds, identical on `tranche/T51`: affordances t33 (1 here, 3 on the tranche tip), op-declarations 3 (t33, t36, t42), all op-table/ACT_HELP tests unrelated to this change. Checks: format 0; architecture 0; coverage 27 of 27, 0; words 0 (also the 13-module cross-run); fixtures --list 0, no marker added; ownership 0.
 Size (session_01XRrEmQ1bqDvp3J3ukHSBpw): test runs 12, module lines 2127
+
+## J4 · COMPLETE
+
+COMPLETE final pass item 74. R27 met: a question concluded in the determination's project (basis-versions conclusionOf) establishes the causation and is reopened when withdrawn; failing-first tests in assessed.test.mjs (red, then green). Module tests 73/73; users escalation, actions, filings, action-plans, plan-work green; affordances/op-declarations reds are identical on tranche/T51. format, architecture, coverage, words, fixtures, ownership 0; no fixtures marker added. REPORT: the walker's escalation-end chain through the door (L181) is control-plane's. Details in the record.
