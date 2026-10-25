@@ -62,7 +62,7 @@ test("R11 addParticipant refuses in order NO_SUCH_EVENT, NO_ENTITY/NO_SUCH_ENTIT
   assert.equal(w2.ev.addParticipant({ eventId: e2.event_id, entityId: q, role: "voted", attestation: e2.attestation_ids[0], voteValue: "Abstain", by: MEMBER }).ok, true);
   const v = w2.ev.readEvent({ eventId: e2.event_id, viewer: MEMBER }).event.participants[0];
   assert.deepEqual([v.vote_value, v.vote_value_checked], ["Abstain", false]);
-  assert.equal(v.vote_value_why, word("events.vote_value_why"));
+  assert.deepEqual(v.vote_value_why, { key: "events.vote_value_why", vars: {} });
   assert.equal(w2.ev.addParticipant({ eventId: e2.event_id, entityId: w2.entity("Xo"), role: "voted", attestation: e2.attestation_ids[0], voteValue: " ", by: MEMBER }).reason, "NO_VOTE_VALUE");
 });
 

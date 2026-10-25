@@ -17,6 +17,8 @@ const TEXT = {
   "events.why.grade_placed_nowhere": (v) => word("events.why.grade_placed_nowhere", v),
   "events.why.grade_time_unread": (v) => word("events.why.grade_time_unread", v),
   "events.why.placed_nowhere_attestation": (v) => word("events.why.placed_nowhere_attestation", v),
+  "events.why.dated_attestation_see": (v) => word("events.why.dated_attestation_see", v),
+  "events.vote_value_why": (v) => word("events.vote_value_why", v),
   "events.why.cache_stale": (v) => localize("events.why.cache_stale", "the time held for this event differs from what its attestations give, so it is not answered", v),
 };
 

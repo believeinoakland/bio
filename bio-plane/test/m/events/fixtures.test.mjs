@@ -2,7 +2,7 @@
  * and each test here calls it and checks the real answer. Named with the requirement each answer carries. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { recordedByMalformedExtent, sequenceUndetermined, timelineAnswer, timelineRefusal, timelineUndated, usesOf } from "./fixtures.mjs";
+import { recordedByMalformedExtent, sequenceUndetermined, timelineAnswer, timelineDatedHidden, timelineRefusal, timelineUndated, usesOf } from "./fixtures.mjs";
 
 test("R49 recordedByMalformedExtent: events' own EXTENT_MALFORMED for an extent that is no object of a known kind, with its code and a reason", () => {
   for (const bad of ["page 1", {}, { kind: "nonsense" }, 5]) {
@@ -50,4 +50,11 @@ test("R50 timelineUndated: the real timeline puts an undated event in placed_now
   assert.equal(item.grade, null);
   assert.deepEqual(item.grade_why, { key: "events.why.grade_placed_nowhere", vars: {} });
   assert.deepEqual(view.why, { key: "events.why.placed_nowhere_attestation", vars: {} });
+});
+
+test("R50 timelineDatedHidden: the real event view for a viewer who cannot see the governing dated attestation has when null and why {key, vars}; the member's view has no why", () => {
+  const { outsider, member } = timelineDatedHidden();
+  assert.equal(outsider.when, null);
+  assert.deepEqual(outsider.why, { key: "events.why.dated_attestation_see", vars: {} });
+  assert.equal(member.why, undefined);
 });

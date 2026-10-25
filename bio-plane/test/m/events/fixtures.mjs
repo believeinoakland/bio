@@ -1,6 +1,6 @@
 /* The fixtures events publishes for the modules that use it (K4990, K4993, K4995, K5044). Each is made by events' real
  * code when it is called, over a fresh `world()`, never stored; each is checked by `fixtures.test.mjs`. */
-import { world, MEMBER, MACHINE } from "./fixture.mjs";
+import { world, MEMBER, OUTSIDER, MACHINE } from "./fixture.mjs";
 
 const doc = { kind: "document" };
 
@@ -65,4 +65,18 @@ export function timelineUndated() {
     participants: [{ entityId: p, role: "present", attestation: 0 }] }).event_id;
   const t = w.ev.timeline({ set: [p], viewer: MEMBER });
   return { timeline: t, item: t.world.placed_nowhere.find((i) => i.event_id === e), view: w.ev.readEvent({ eventId: e, viewer: MEMBER }).event };
+}
+
+/** The event view (`readEvent`) for an event whose governing dated attestation the viewer cannot see (R50): `why` is the
+ *  keyed reason `events.why.dated_attestation_see`, `when` null. */
+export function timelineDatedHidden() {
+  const w = world();
+  const p = w.entity("Una");
+  const project = "PROJ-2026-0001-f";
+  w.project(project, "alice");
+  const hidden = w.capture("gov", { bundleId: "INFO-2026-0003-gov", project });
+  const hf = w.ev.recordDatedFact({ captureSha: hidden, extent: doc, kind: "meeting", value: "2026-06-01", method: "m", by: MEMBER }).dated_fact.dated_fact_id;
+  const e = w.ev.createEvent({ kind: "meeting", attestations: [{ datedFactId: hf }, { captureSha: w.capture("seen"), extent: doc }], by: MEMBER,
+    participants: [{ entityId: p, role: "present", attestation: 1 }] }).event_id;
+  return { outsider: w.ev.readEvent({ eventId: e, viewer: OUTSIDER }).event, member: w.ev.readEvent({ eventId: e, viewer: MEMBER }).event };
 }
