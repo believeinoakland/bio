@@ -100,3 +100,7 @@ Deferred: none. Fixtures markers added: none. Stale generated artifacts (bundles
 Tests: subresources + acquisition walk 55 pass, 0 fail; users (acquisition, capture-requests, capture-sources, connections, link-sweep, monitoring, odf-reader, office-readers, pdf-reader) 1433 pass, 0 fail. Checks: format 0 failures; architecture 0; coverage 36 of 36, 0; ownership 3 files, 0 failures. The full `checks/run.mjs` lists "answer" failures in other modules' files only.
 
 Size (session_01XC1xckBh1sjtooJq8nyEsw): test runs 6, module lines 1596
+
+## J9 · COMPLETE
+
+Cause R15 fixed (linear tag/css/element scanners, priority lists); failing-first seen red (502 s old vs 62 ms); module 55 pass, users 1433 pass; format/architecture/coverage/ownership 0 failures. See record J8. No requirement states a time bound (suggest one). Platform check L named for redeploy.
