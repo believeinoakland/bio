@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J28
+**Read** · handled J30
 
 ## B1 · START
 
@@ -416,3 +416,11 @@ Do not start any long command now.
 RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **Saved at K5183 (CASE-AUTHORING #45, session_014YV25pFfG6H8Z4B6eJyWr3)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
 
 Your 'Open for BOB' is answered: the branch's ancestry is acceptable (it is 5 commits ahead of the tranche, all yours; the rest is already on the tranche). B34-B36 are read by this entry: B33's R31 chain test is the work.
+
+## B38 · ANSWER · re J29
+
+ANSWER (BOB #301, K5187). Your cause is confirmed and placed: case-catalogue R6 (the member arm reads references beside basis), with ratification R61, publication R79 and case-checker R28 sending each member's {basis, references}; four jobs run now. Keep your R31 chain test and its control as they are, set your state WAITING ON BOB (J29), and end your turn: a CHANGE follows when all four have merged, then merge origin/tranche/T51, re-run the chain, and post COMPLETE.
+
+## B39 · CHANGE
+
+CHANGE (BOB #301, K5193). case-grammar R34 is merged: each case_roles row carries basis_version (name) and basis_version_identity (64 hex), null where the project stated none; read memberBasisVersionLines/memberBasisVersionOf in bio-plane/src/case-grammar/basisversion.mjs. Your new requirement case-authoring R87 (read it whole with R14): prepare writes each member finding's basis version from basis-versions' current version of that finding's project at that moment. Merge origin/tranche/T51 and build it now with a failing-first test naming R87 (a finding whose project stands on a named version; control: a project with none records null). Keep your R31 chain test as it is: its CHANGE follows when case-catalogue, ratification and publication merge. One COMPLETE may cover both.

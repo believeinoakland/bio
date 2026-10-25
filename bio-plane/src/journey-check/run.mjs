@@ -18,7 +18,7 @@ import { walkAdministrator, walkMemberJourney, walkUnassisted, journey29Live, no
 import { sweepScreens, addressOf, registryScreens } from "./screens.mjs";
 import { dec340Limits, publicPages } from "./checks.mjs";
 import { escapedOnPage, pseudoRoute } from "./pseudo.mjs";
-import { walkPublished } from "./published.mjs";
+import { walkPublished, PUBLISHED_ENV } from "./published.mjs";
 import { walkStates } from "./states.mjs";
 import { PLAN_TITLE, QUESTION, OWN_PROJECT, OWN_QUESTION, OWN_READING, UPLOAD_NAME, UPLOAD_TEXT } from "./investigation.mjs";
 import { GROUP_NAME, SLUG } from "./journeys.mjs";
@@ -98,6 +98,9 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
   const who = credentials();
   for (const p of [who.founder.password, who.member.password, who.newcomer.password]) walk.keepSecret(p);
   let world = null, b = null;
+  /* the design mock, made once for the arm: R22's dashboards and R13's journey 29 are paired with its drawings */
+  let mock = null;
+  const mockOf = async () => (mock ||= await designMock(b, { dir: join(out, "design") }));
   try {
     world = await (makeWorld || localWorld)({ model, segments });
     /* R15: whether the world gave agent-worker its `SEGMENTS`, as the world says it (null: a world that does not say) */
@@ -153,7 +156,7 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     /* R22, R25: the dashboards from Home's doors, and the old signing page gone */
     if (parts.includes("sweep")) {
       walk.journey = "R22 the dashboards";
-      await walkDashboards(walk, founder.page, copy).catch(going);
+      await walkDashboards(walk, founder.page, copy, { mock: await mockOf(), b, out }).catch(going);
       walk.journey = "R25 the old pages";
       await walkSignGone(walk, founder.page, copy).catch(going);
     }
@@ -187,17 +190,16 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     /* R13: design journey 29, step by step, each LIVE step beside the mock's drawing of it */
     if (parts.includes("R13")) {
       walk.journey = "R13 design journey 29";
-      const mock = await designMock(b, { dir: join(out, "design") });
-      try {
-        for (const f of await walkStates(walk, b, mock, { out, page: founder.page, base: copy })) walk.pairs.push(f);
-        walk.journey = "R13 design journey 29";
-        for (const f of await journeyPairs(walk, b, mock, { out, notWalked: !assistant, liveOf: (st) => journey29Live(walk, st) })) walk.pairs.push(relative(out, f));
-      } finally { await mock.close(); }
+      const design = await mockOf();
+      for (const f of await walkStates(walk, b, design, { out, page: founder.page, base: copy })) walk.pairs.push(f);
+      walk.journey = "R13 design journey 29";
+      for (const f of await journeyPairs(walk, b, design, { out, notWalked: !assistant, liveOf: (st) => journey29Live(walk, st) })) walk.pairs.push(relative(out, f));
     }
   } catch (e) {
     failed(walk, e);
   } finally {
     if (world) for (const u of world.unansweredAll()) walk.fail(FAIL.ADDRESS, `unanswered: ${u}`);
+    if (mock) await mock.close().catch(() => {});
     if (b) await b.close().catch(() => {});
     if (world) await world.close().catch((e) => walk.fail(FAIL.STEP, localize("journey-check.run.the_world_did_not_close", "the world did not close: {message}", { message: String(e.message) })));
   }
@@ -357,7 +359,7 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
       /* R28: the named public pages, signed out, at both widths */
       await publicPass(walk, b, base);
       /* R24: the published frame, where the instance holds a published case; R21: the carried states beside the design's */
-      await walkPublished(walk, b, base, mock, { out });
+      await walkPublished(walk, b, base, mock, { out, path: env[PUBLISHED_ENV] });
       for (const f of await walkStates(walk, b, mock, { out })) walk.pairs.push(f);
       /* R12: R9 and R10 on the instance, each through its real subscription sign-in, whose code the person types */
       if (investigate) await investigateLive(walk, b, base, {

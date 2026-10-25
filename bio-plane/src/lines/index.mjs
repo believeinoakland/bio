@@ -842,5 +842,8 @@ export function linesOps(lines, url, body) {
 export const DECLARED_OPS = Object.freeze({
   recordline: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("lines.declared.recordline", "line-directed: keyed by a new LIN- id between two entities; writes lines' rows and moves no bundle"),
     fields: { accepts: ["kind","from","to","role","capacity","title","valid","basis"], requires: ["kind","from","to","basis"] } },
+  /* R26 (T51; K5182; amends R25): the withdrawal, by R25's rules; its row is the op-grades row's (t33 `linewithdraw`) */
+  linewithdraw: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("lines.declared.linewithdraw", "line-directed: keyed by line; keeps it, shown withdrawn, and moves no bundle"),
+    fields: { accepts: ["lineId","reason"], requires: ["lineId","reason"] } },
 });
 

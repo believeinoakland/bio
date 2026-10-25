@@ -4,7 +4,7 @@
    started): prepare what is sent, approve it, give the second approval where the project asks one, and record the
    sending. Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, officeLine, joinFirst, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT, TEMPLATE_SAVE, JOIN, WRITE_HELP } from "./send-steps.mjs";
+import { later, actName, citeOf, languagesOf, marksFields, marksBody, draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, officeLine, joinFirst, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT, TEMPLATE_SAVE, JOIN, WRITE_HELP } from "./send-steps.mjs";
 
 // R21: `actionstake` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -35,6 +35,9 @@ export const startSend = Object.freeze({
       identity: { op: "groupidentity", empty: function () { return false; } },
       vocab: { op: "affordances", query: {}, empty: function () { return false; } },
       projects: { op: "list", query: { type: "project", limit: "500" } },
+      // R3 (filings R43, R44): the language the draft is prepared in is the member's, among the team's
+      mylang: { op: "memberlanguage", empty: function () { return false; } },
+      languages: { op: "grouplanguages", empty: function () { return false; } },
       // E9 (K4557): her own place in the action's project (`participation`): an invited member is told at the start, not refused at the end
       standing: { op: "projectlist", query: {}, empty: function () { return false; } },
     };
@@ -53,6 +56,23 @@ export const startSend = Object.freeze({
 
   parts: {
     draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling,
+    languagesOf: languagesOf, marksFields: marksFields, marksBody: marksBody, later: later, actName: actName, citeOf: citeOf,
+    // R18 (fix round 10; diagnosis 11 §7a): what an option rests on, named as the record names it: a question by its title, a determination by its act
+    // (day and office), a standard by its citation; "" while the record has not answered, never the id
+    subjectName: function (cs, view, sub) {
+      const P = view.parts;
+      const pl = view.data.plan && view.data.plan.state === "ok" ? view.data.plan.value : null;
+      const project = pl && typeof pl.project === "string" ? pl.project : "";
+      if (!project || !sub) return "";
+      const items = function (st) { return st.state === "ok" && st.value && Array.isArray(st.value.items) ? st.value.items : []; };
+      if (sub.kind === "outcome" && sub.determination) {
+        const d = items(P.later(cs, view, "determinations", "determinations", { project: project, live: "true", limit: "200" }, "")).find(function (x) { return x.id === sub.determination; });
+        const c = sub.standard ? P.citeOf(items(P.later(cs, view, "standards", "standards", { limit: "200" }, "")), sub.standard) : "";
+        return [d ? P.actName(cs, d) : "", c].filter(Boolean).join(" \u00b7 ");
+      }
+      const q = sub.inquiry ? items(P.later(cs, view, "questions", "projectquestions", { project: project, limit: "200" }, "")).find(function (x) { return x.inquiry === sub.inquiry; }) : null;
+      return q && typeof q.title === "string" ? q.title : "";
+    },
     stakeLines: stakeLines, stakeAsk: stakeAsk,
     // R48: the approved filing kept as the team's template, from the approval on (the step is second, send or sent). A filing
     // that needs counsel first (a tier of 3, read from the draft, the action or the stake read) is offered only as a brief.
@@ -86,8 +106,8 @@ export const startSend = Object.freeze({
           : cs.esc(view.parts.officeLine(ad)) + " · " + cs.w("screen.start-send.byrole");
       const legs = (Array.isArray(a.legs) ? a.legs : []).flatMap(function (l) { return l.subjects || []; });
       const rests = legs.length ? legs.map(function (s) {
-        const key = s.subject && s.subject.kind === "outcome" ? s.subject.determination : s.subject && s.subject.inquiry;
-        return cs.esc(key || "") + " · " + cs.w("screen.plan.support." + (["hypothetical", "established", "short"].includes(s.support) ? s.support : "undetermined"));
+        const name = view.parts.subjectName(cs, view, s.subject);
+        return (name ? cs.esc(name) + " · " : "") + cs.w("screen.plan.support." + (["hypothetical", "established", "short"].includes(s.support) ? s.support : "undetermined"));
       }).join("<br>") : cs.w("screen.start-send.restsnothing");
       const clock = Array.isArray(a.clock) && a.clock.length ? a.clock.map(function (c) {
         return cs.date(c.date) + " · " + cs.esc(c.basis || "");

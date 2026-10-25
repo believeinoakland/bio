@@ -1,6 +1,6 @@
 # screens-entry (T51)
 
-**Status** · session_01Uwcy7zezKuV2SK7J8enJ5J · depth 2 · COMPLETE · handled B11
+**Status** · session_0143bTM29139UynmAYarEGQM · depth 2 · COMPLETE · handled B19
 
 ## Completion (T51-114)
 
@@ -171,3 +171,104 @@ Size (session_01Uwcy7zezKuV2SK7J8enJ5J): test runs 3, module lines 1158
 ## J10 · COMPLETE
 
 Fix round 10 (B11): the 2 fixture lines done (setup.test.mjs:542 EXISTS, :573 NOT_AN_ADMIN: real member-roster codes, no provider fixture exists for either); module tests 96/96; format, architecture, coverage (30 of 30), words, ownership 0 failures. R34 is NOT fixable in screens-entry and needs interface-shell (for BOB): front.mjs:77 already draws session.ended for state ended; on first load whoami's 401 makes call() run over('ended') (browser.mjs:161) setting ENTRY ended, then browser.mjs:1600 (got === 'none') overwrites ENTRY with {state:null}, so front gets 'none' and draws no sentence. Fix there: keep the ended state set by over(); an unknown token (no record) stays null. Failing-first test belongs in interface-shell (page loaded with stored record whose whoami is 401 draws session.ended; control: unknown token draws none). Also: R34 is not in build/requirements/screens-entry.md (ends at R33); BOB to add it. The two op-table lines at :542/:573 wait for the storeWorld CHANGE. Details in the record.
+
+## J11 · REPORT
+
+REPORT 1 (cause outside my paths, found today). At the tranche tip `storeWorld()` from `bio-plane/test/m/store-request/fixtures.mjs` throws on every default call: "storeWorld: the producing team was not recorded: GROUP_ALREADY_RECORDED". Cause: `bio-plane/test/m/store-request/fixtures.mjs:24-31` seeds the producing team (`WORLD_GROUP = "world-town"`, via `instancegroupseed`) on every world, but store-assembly's base now records its own team ("town", store-assembly commit 38536482fc, "a bare world promotes and names its team", K5149), so the second recording is refused. Reproduced: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/store-request/world.test.mjs` fails its R17 world tests with this error; any screens test calling `storeWorld()` with no options fails the same way. `storeWorld({group: null})` works (the option records none). I use `group: null` in screens-entry's tests meanwhile, so the team the world holds is store-assembly's "town". Owner: store-request (fixtures.mjs: default `group` should be null, or the seed should accept the already-recorded team). Not worked around beyond that option.
+
+## Completion (fix round 10, Wave B; START B12)
+
+**What changed** (all under `bio-plane/test/m/screens-entry/` unless a source path):
+- `kit.mjs`: `open(id, {world, as})` sends every read and act through `store-request`'s `storeWorld()` door (`viaDoor`, :25) as the signed-in member; the table holds faults only (`"pending"`, `"none"`); `team()` (name, description, logo by the founder's acts), `act()`, `enrol()` (a member on a team the page itself claimed), `oldFounder()` (a claim with no handle), `reauth()`, `scannerBinding()` (file-safety's scanner double as the `FILE_SCANNER` binding), `scenes(full)` (every screen in its states over a team with everything set and one with nothing, built once). `FOUNDER`/`OLD_FOUNDER`/`JOINED`/`AN_ADMIN` and the default fake answer are gone: a screen that asks with no world throws.
+- `front`, `join`, `public` (tour, forgot, reset), `setup`, `common`, `design`, `page` tests: every op-table entry (173) is gone; each state is made by real acts: the founder's `groupnameset`/`groupdescriptionset`/`grouplogoset`/`grouplanguagesset`/`profilesset`/`entitycreate`/`courtnoticeset`/`hostingaccessset`/`aikeepaway`/`groupkeyset`/`securitytooladd`/`memberadd`, `claim` (and the re-armed claim for `HANDLE_FIXED`), `recoverycodesissue`/`recover`, `passwordresetlink`, `joinlinkenable` (its daily cap for `JOIN_LINK_DAILY_CAP`), `invitewithdraw`, a locked session by the world's clock (`tick` 31 min), a paused sign-in by ten refused attempts. The expected values are read from the acts' answers.
+- Source fixes the real answers forced (each failing-first, see below): `src/screens-entry/reset.mjs`:33 reads the link's end as `expiresAt` (the plane's field; the page read `until`/`expires`/`expires_at`, none of which the plane gives, so "for whom, until when" drew no date); `src/screens-entry/setup.mjs`:236 the website question opens on "Yes" when the team holds a claim (`domain_claim`), not only a verified `domain`, so a founder coming back to setup sees her file and its steps while the check is still pending (R22, R26).
+- The two CODE lines of the START (`setup.test.mjs` MEMBER_EXISTS, NOT_ALLOWED) went with the tests they sat in: the real refusals (`MEMBER_ID_RESERVED`/taken `enroll` `HANDLE_TAKEN`) are the plane's.
+
+**Failing-first.** Against the tranche's `reset.mjs`/`setup.mjs` the new tests are red: `R5 reset: passwordresetlook ... until when` (no date drawn), `R22 the website ...` (a held claim opens on "No"), and three R26 tests (the fold hidden on a pending claim): 4 red, 92 green; with the fixes 96 green.
+
+**Suite and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-entry/`: tests 96, pass 96, fail 0 (about 78 s; it was 6 s over the scripted tables). `checks/format.mjs`: 0. `checks/coverage.mjs bio screens-entry`: 30 of 30 live ids named, 0. `checks/words.mjs bio screens-entry`: 0. `checks/ownership.mjs bio screens-entry <merge-base> HEAD`: 0. `checks/architecture.mjs bio screens-entry`: 2 failures, the two edges below (BOB adds them). `checks/run.mjs bio`: three lines name screens-entry (the two edges and the published-list line below); the words failures (16) are other modules' and screens-entry adds none. `checks/fixtures.mjs bio screens-entry --list`: 173 lines at the start, 1 now (`front.test.mjs`:18, the published list, waiting for a recipe) plus 2 accepted `fixtures-generic` markers. Users (`impact.mjs`: control-plane, plane, journey-check): the files that import this module (control-plane `t46-app`, plane `t47`, `t50`, interface-shell `r10`, `e12`, `declared`, `t50`, `g30`, `g31`, journey-check `pseudo`) ran: 23 of their failures are `storeWorld: the producing team was not recorded` (REPORT 1, J11) and 7 are `playwright-core` not installed here; none names this module.
+
+**Markers added.** `setup.test.mjs`:115 `fixtures-generic: NO_HANDLE`: the claim's refusal map names it, the plane answers no claim with it (a claim with no handle holds none, credentials R1, K3337), and the page sends none without a handle, so the drawing is checked on one made answer (`table: {claim: {ok: false, code: "NO_HANDLE"}}`). `setup.test.mjs`:810 `fixtures-generic: NOT_AN_ADMIN` on `groupdomainset`: the founder is the root of trust and `adminresign` is refused `ROOT_OF_TRUST`, so no act of hers reaches it. No `fixtures-own`.
+
+**Left, and why (each also mailed to BOB).**
+- `front.test.mjs`:18 the published list stays scripted in the two tests that read it: no recipe signs and commits a case edition in `storeWorld()`. REPORT 2.
+- Hosting recorded by the system (`bootstrap`, `system:seed`, `token:ops`; R30): no act of the door records one; the rows are written to the `hosting_access` table the plane reads (`setup.test.mjs` R30). REPORT 2.
+- R2 (paused sign-in): the plane's `SIGN_IN_PAUSED` carries `stated` as a sentence (the bound, "at most 10 refused attempts ...", credentials R38), never an instant, so the page draws "Try again at at most 10 refused attempts from one place, and 10 for one account, in any 10 minutes." (`front.mjs`:115, `forgot.mjs`:57). The requirement says `{time}` from `stated`; the plane cannot give one. QUESTION J13.
+- R6 (offices): the page sends `note: null` for an office added with no note and the word calls the note "(optional)"; `entities` R1 refuses an office with no note (`ENTITY_NO_NOTE`), which the page draws in the plane's words. QUESTION J13.
+
+**Found in other modules.** `store-request/fixtures.mjs`:24-31 (REPORT 1, J11): the default `storeWorld()` records the team again and is refused; I use `group: null`. `store-assembly/world.mjs`:290 `script()` pushes onto the module's `SCRIPTS` (:178), shared by every world of the process and never emptied, so a network script of one test answers another test's world; my tests name a domain per team. `uses` for BOB to add to `screens-entry` (tests only): `store-request` (kit imports `storeWorld`), `file-safety` (kit imports its `scanner` double for the `FILE_SCANNER` binding; if BOB would rather not, say so and I write the double in the kit).
+
+Size (session_015gSwauMbsH62NN9H8Dt6EX): test runs 45, module lines 1158
+
+Context: passed half of the window at the end of this step; nothing further is owed but the answers to J13.
+
+## J12 · BLOCKED
+
+BLOCKED (cause: context). Work is done and pushed on job/T51/screens-entry; the record's "Completion (fix round 10, Wave B)" section holds everything: 96/96 module tests, fixtures list 173 -> 1 (published list, needs a recipe), 2 fixtures-generic markers, two source fixes (reset.mjs expiresAt, setup.mjs site default), uses edges to add (store-request, file-safety), REPORTs (published-case recipe; system hosting recorder; store-assembly world.script is process-global) and two QUESTIONs (SIGN_IN_PAUSED has no time in stated; office note required but worded optional) are written in the record but not yet mailed. Next: mail those as REPORT/QUESTION, then COMPLETE.
+
+## Saved at K5183
+
+Done: everything in "Completion (fix round 10, Wave B)" above (96/96 tests, fixtures 173 -> 1, two source fixes, markers, checks). Nothing half done; no workers.
+Exact next step: (1) mail the three REPORTs (published-case recipe; system hosting recorder; store-assembly `world.script` is process-global) and two QUESTIONs (SIGN_IN_PAUSED has no time in `stated`; office note required but worded optional) written in the completion section; (2) after BOB's CHANGE that fixes `storeWorld()`'s default group, drop `group: null` in `kit.mjs` `worldOf`; (3) `mail state --set COMPLETE`, post COMPLETE, ring BOB.
+
+## J13 · REPORT
+
+REPORT 2 (published-case recipe; for store-request). `front.test.mjs`:18: the published list stays scripted in the two tests that read it. No recipe in `storeWorld()` signs and commits a case edition, so the `fixtures.mjs --list` line remains (1 of 173). Needed: a store-request recipe that publishes a case edition into the world.
+
+## J14 · REPORT
+
+REPORT 3 (system hosting recorder; for the module that owns hostingaccess). R30: hosting recorded by the system (`bootstrap`, `system:seed`, `token:ops`) has no act of the door that records it; `setup.test.mjs` R30 writes the rows to the `hosting_access` table the plane reads. Needed: a recipe or act in a provider that records hosting as the system, so the test can go through the door.
+
+## J15 · REPORT
+
+REPORT 4 (store-assembly `world.script` is process-global). `store-assembly/world.mjs`:290 `script()` pushes onto the module's `SCRIPTS` (:178), shared by every world of the process and never emptied, so one test's network script answers another test's world. My tests name a domain per team to avoid it. Fix belongs to store-assembly: scope SCRIPTS to the world.
+
+## J16 · QUESTION
+
+QUESTION (R2, paused sign-in; replaces nothing). The plane's `SIGN_IN_PAUSED` carries `stated` as a sentence (the bound: "at most 10 refused attempts from one place, and 10 for one account, in any 10 minutes", credentials R38), never an instant. R2 says the page draws `{time}` from `stated`; the plane cannot give one, so `front.mjs`:115 and `forgot.mjs`:57 draw "Try again at at most 10 refused attempts ...". Best reading: the page draws `stated` as the sentence with no "Try again at" prefix (a word row without `{time}`), or the plane adds an instant (`until`). Which? Needs a ruling and, for the first, a design word row.
+
+## J17 · QUESTION
+
+QUESTION (R6, offices; replaces nothing). The page sends `note: null` for an office added with no note and the word calls the note "(optional)", but `entities` R1 refuses an office with no note (`ENTITY_NO_NOTE`), which the page then draws in the plane's words. Best reading: the word row must drop "(optional)" (design lane) and the page must not send an office without a note, or `entities` R1 should accept none. Which?
+
+## Completion (B15 RESUME, K5184)
+
+Merged `tranche/T51` (the `uses` edges `store-request` and `file-safety` are in). The three REPORTs (J13 published-case recipe, J14 system hosting recorder, J15 store-assembly `world.script` process-global) and two QUESTIONs (J16 SIGN_IN_PAUSED has no instant; J17 office note required but worded optional) are posted. `group: null` stays in `worldOf` until a CHANGE says otherwise (STORE-REQUEST's B8 fix not merged). No code change this round.
+
+**Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/screens-entry/`: tests 96, pass 96, fail 0. `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs bio screens-entry`: 16 product files, 0 failures. `checks/coverage.mjs bio screens-entry`: 30 of 30 live ids named, 0 failures. `checks/ownership.mjs bio screens-entry origin/tranche/T51`: 11 files, 0 failures.
+
+Size (session_01Nwkwhy5gismLNucwdyhzuP): test runs 2, module lines 1158
+
+## J18 · COMPLETE
+
+B15 applied: tranche/T51 merged (uses edges in); REPORTs J13-J15 and QUESTIONs J16-J17 posted. No code change; module tests 96/96; format, architecture, coverage (30 of 30), ownership 0 failures. group: null stays in worldOf until a CHANGE (STORE-REQUEST B8 not merged). Details in the record (Completion B15).
+
+## Fix round 10 (B16, K5185)
+
+**R2.** `front.mjs`:115 and `forgot.mjs`:57 draw `refusal.SIGN_IN_PAUSED` with the plane's `stated` as the row's variable `{stated}` and no time. Failing-first tests (red on the old source, run with the source stashed): `front.test.mjs` "R2 paused" (eleven refused logins from one place through `storeWorld()`, then the page), `public.test.mjs` "R2 R4 forgot paused" (the same over `recover`). They assert the drawn text equals `word("refusal.SIGN_IN_PAUSED", {stated})`, holds the plane's `stated`, holds no "try again at" and no unfilled `{…}`. **They stay red** on the design's row, which still reads "…Try again at {time}." (`words.json`, `rows.mjs`:673): the row without `{time}` and with `{stated}` is UX-DESIGN's and outside my paths (asked of BOB in the BLOCKED entry). Green the day the row lands, with no change here.
+
+**R6.** `setup.mjs`:474-476: an office with a name and no note is refused on the page (`refusal.ENTITY_NO_NOTE`, the plane's own held row, read by key, added to the setup list in `words.mjs`) and nothing is sent; with a note it is sent as before. Failing-first test `setup.test.mjs` "R6 an office is never sent without its note" (red on the old source: it sent `note: null`; green now: nothing sent, the plane holds no such office, then the same office with its note is recorded). The label's "(optional)" in `screen.setup.office.note` is UX-DESIGN's to drop (asked of BOB).
+
+**Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/screens-entry/`: 98 tests, 96 pass, 2 fail (the two R2 tests above, on the design's row). `checks/format.mjs`: 0 failures. `architecture`: 16 files, 0. `coverage`: 30 of 30 ids named, 0. `ownership` against `origin/tranche/T51`: 8 files, 0 failures. `checks/run.mjs`: the one line naming screens-entry is the known `front.test.mjs`:18 scripted `publishedlist` (REPORT J13, awaiting STORE-REQUEST), not risen. Users named by `impact.mjs origin/tranche/T51 HEAD` (control-plane, plane, journey-check): `r137-parity`, `pseudo` and `door` fail 9 of 15 identically with this module's source at the tranche's (before) and at my commit (after), so none is from this change; I did not complete the full 157-file run of the users.
+
+Size (session_0143bTM29139UynmAYarEGQM): test runs 9, module lines 1157
+
+## J19 · BLOCKED
+
+BLOCKED (cause: tests; needs a design word row, not Bob). R6 is done and green (an office with no note is refused on the page by refusal.ENTITY_NO_NOTE, nothing sent; setup.test.mjs). R2 is coded: front.mjs:115 and forgot.mjs:57 draw refusal.SIGN_IN_PAUSED with {stated} (the plane's bound) and no time. Two tests stay red only on the design's row: front.test.mjs 'R2 paused' and public.test.mjs 'R2 R4 forgot paused' (red on the old source, red now on the row). ASK for UX-DESIGN, in the round's words: (1) refusal.SIGN_IN_PAUSED without 'Try again at {time}', carrying {stated}, e.g. 'Sign-in is paused for a while after too many tries from here... The limit is: {stated}.'; (2) screen.setup.office.note without '(optional)'. Both land green with no change on my side. Module 96/98; format, architecture, coverage 30/30, ownership 0 failures; impact users r137-parity, pseudo, door fail 9/15 identically before and after my change. Record: build/jobs/T51/screens-entry.md 'Fix round 10'. Size (session_0143bTM29139UynmAYarEGQM): test runs 9, module lines 1156
+
+## Fix round 10, B17 (CHANGE, K5193)
+
+Merged `origin/tranche/T51` (STORE-REQUEST #5). `kit.mjs` `worldOf` no longer passes `group: null` (no other `{group: null}` was held); the module tests ran green on the default world. `front.test.mjs`: the scripted `publishedlist` is gone; the two tests that read it (R1 what it has published; R1 a part kept from the public) now publish a case by `recipes.published` (`publishedCase()`) and read the plane's list; `checks/run.mjs` names no finding in this module's files (the `front.test.mjs`:18 line is gone, REPORT J13 met). R30's system-recorded hosting rows stay seeded into `hosting_access` (J14, K5192, a UX question; the line is not a stand-in the fixtures check flags, so it carries no `fixtures-own` marker, which `checks/run.mjs` reports as idle).
+
+**Tests and checks.** Module: 98 tests, 96 pass, 2 fail: the two R2 paused-sign-in tests, on the design's `refusal.SIGN_IN_PAUSED` row (J19). format, architecture, coverage (30 of 30), ownership (0 failures), `checks/run.mjs` (no finding in screens-entry).
+
+Size (session_0143bTM29139UynmAYarEGQM): test runs 11, module lines 1156
+
+## J20 · BLOCKED
+
+BLOCKED (cause: tests; needs UX-DESIGN's word row, same as J19). B17 applied: tranche merged, no {group: null} left, front.test.mjs:18's scripted publishedlist replaced by recipes.published (checks/run.mjs: no finding in screens-entry), R30's hosting seed kept (not flagged by the fixtures check, so no marker). Module 96/98: only the two R2 paused-sign-in tests are red, on refusal.SIGN_IN_PAUSED's row still reading 'Try again at {time}' (needs the row without {time}, carrying {stated}; and screen.setup.office.note without '(optional)'). Code draws refusal.SIGN_IN_PAUSED with variable stated. Say when the row lands and I re-run and COMPLETE. Size (session_0143bTM29139UynmAYarEGQM): test runs 11, module lines 1156
+
+## J21 · COMPLETE
+
+COMPLETE (B16, B17, B19). Drew: key refusal.SIGN_IN_PAUSED, variable {stated} (the plane's bound), no time: front.mjs:113-117, forgot.mjs:55-59. R6: setup.mjs:474-478 sends no office without its note, shows refusal.ENTITY_NO_NOTE (held row, listed in words.mjs). B17: no {group: null}; front.test.mjs reads a case published by recipes.published (kit.mjs worldOf). Failing-first, red then green: setup.test.mjs 'R6 an office is never sent without its note' (green); front.test.mjs 'R2 paused' and public.test.mjs 'R2 R4 forgot paused' (red on old source; red by name now on the design's row, accepted per B19). Module 98 tests, 96 pass, 2 fail (those two). format, architecture, coverage 30/30, ownership 0 failures; checks/run.mjs no finding in screens-entry; impact users r137-parity, pseudo, door fail 9/15 identically before and after. Met: R2 (code), R6. Markers added: none (the R30 hosting seed is not flagged, so a marker would be idle). Size (session_0143bTM29139UynmAYarEGQM): test runs 11, module lines 1156

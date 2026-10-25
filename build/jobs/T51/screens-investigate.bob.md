@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J30
+**Read** · handled J31
 
 ## B1 · START
 
@@ -356,3 +356,26 @@ Do not start any long command now.
 RESUME (BOB #301, K5184). The work moved to Bob's primary account (K5183): your predecessor on the third account saved and stopped. You continue it as a new session on the same branch. First run `mail start --session <your session id> --depth 2` (keep the record's cursor); never `reset` or force anything: merge `origin/tranche/T51` into your branch with a merge commit when your steps say so (the tranche now holds the `uses` edges of K5184). Your record's section **J29 (BLOCKED, context) and J30 (Saved at K5183)** names what is done and your exact next step: follow it in order, then complete as roles/JOB.md steps 5-7 say. A refused act on the code, your branch, the tranche or a test deployment is covered by Bob's standing approval (bio K5120): take it again once as one plain command, never relayed to Bob.
 
 Your J29, J30 are read (K5184). The two causes in your own module (proceeding.mjs:195 `declare`; calculation `calc-set`) are yours, as you planned. standards' merge of `known_through` follows STANDARDS' completion (a CHANGE then); `linecurrentthrough` is on the tranche since INTERFACE-SHELL #23 merged (K5182): build it now. The product defects you found in other modules are placed by BOB with their owners; keep their `test.todo`s naming them. Also take standards' REPORT: the test 'R4 C8 (the figure) Money, the real plane: a figure read in with its period's dates' is red on the tranche without any change: diagnose it with K4426's fields (a period names its day in the team's time zone; control-plane found the same cause in its seam: no profile chosen) and fix it if it is your test's, else REPORT its owner.
+
+## B36 · CHANGE
+
+CHANGE (BOB #301, K5186), with your RESUME B35's steps. BOB's reading of your J29's product defects (each cited line read):
+1. **Yours, now (screens-investigate R7):** `due-date.mjs:49` `srcOf` reads `trace.calendar.entries`, which action-clocks never serves: it serves `proposal.calendar = {status, years[], says}` per year, a sibling of `trace`, and each `trace.skipped[].why` already names its source. Draw from those; failing-first test over the world.
+2. **Placed with their owners (jobs started now):** people R43 (claim `basis`), R44 (withdrawn facts) for your R32 (2), R38, R39; progressions R49 (`missing_predecessor` carries `says`, `progression.expects`) for your R33 (2). Keep their `test.todo`s naming K5186; a CHANGE follows each merge for the draws.
+3. **Not defects (no change):** `relate` and `hypothesishold` are graded Reversible by design (`op-grades/t33.mjs`); `recorddatedfact` is graded Reasoned but interface-shell R107 lists which acts ask a reason, and it is not among them; `recordline` and `recordpersonfact` call the same `checkContentExtent`, their refusal wrappers differ as lines R1 / events R1 and people R9 state. Drop the `test.todo`s for these, or turn them into tests of the behaviour as specified.
+
+## B37 · CHANGE
+
+CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWorld()`'s default world works (B8: the team is store-assembly's own, no second seeding), and its `group` option is gone. Merge origin/tranche/T51 into your branch, drop every `{group: null}` you pass, and re-run the tests that failed with GROUP_ALREADY_RECORDED. New recipes are on the tranche (store-request R19): published, imported, cited, rerun, conflict, assistant, writingHelp, grantAdmit, world.route(as); re-point any op-table line you kept for want of one. Then carry on with your open steps.
+
+## B38 · CHANGE
+
+CHANGE (BOB #302, K5195; plan item 95 (2)). Merge `origin/tranche/T51` (never a rebase): PROGRESSIONS #18 is merged (R49: a `missing_predecessor` finding carries `says {key, vars}`, `progression.expects.undetermined` `{interval, n}` when the deadline cannot be placed, `says` null with no clock), so draw it on the timeline (your R33 (2)). PEOPLE #16 (R43 `basis` on claim rows, R44 `withdrawn_facts` apart from `facts`) is COMPLETE and merges once its cursor moves; then `person.mjs:166` reads `p.withdrawn_facts` for R32 (2), R38, R39 (people's REPORT); I will post a CHANGE when it is on the tranche. New line **R60** (DEC-435, B523's rows: `screen.person.holds.capacity`; `refusal.NO_COLUMN`, `NO_PART`, `NO_SUCH_COLUMN` on the calculation form; `screen.timeline.nozone` once above the events placed in no zone when the team has no active place): read it whole, failing first. Also yours (K4787, K4966): `money.test.mjs` "R4 C8 (the figure)" failed once in a 925-test batch of the users (64 s; PROGRESSIONS #18 J10) and passes alone: reproduce it under named load (two suites beside it), find its timing cause, make the test assert work or a same-run control (or REPORT a product slowness with file:line), and prove it green under that load. Name the met ids in your COMPLETE.
+
+## B39 · CHANGE
+
+CHANGE (BOB #302, K5197). PEOPLE #16 is merged on the tranche: `personAt` answers `withdrawn_facts` apart from `facts` (people R44) and claim rows carry `basis` (R43). Merge `origin/tranche/T51` (never a rebase); `person.mjs:166` reads `p.withdrawn_facts` for your R32 (2), R38, R39 draws (PEOPLE #16's REPORT), each through the world's real `person` read, failing first.
+
+## B40 · CHANGE
+
+CHANGE (BOB #302, K5198), with B38, B39. Your J31 (2): the explore page's `exploregraph` read sends no inquiry scope, so a hunch hop is never drawn: send the scope the read takes (read `explore`'s requirements for its fields), failing first; the `mentioned_together` hop over the world comes as a store-request recipe (STORE-REQUEST #6). Merge the tranche for B39 (people merged) and post COMPLETE again.

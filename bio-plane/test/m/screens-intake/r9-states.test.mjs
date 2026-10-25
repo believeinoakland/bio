@@ -8,23 +8,37 @@
  * R135 states (`state`, `written`, `skipped`, `owed`, `failed`, `rate_per_s`, `verdict`), made by the test. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, main, text, fill, press, idle, ok, says, word, DOCUMENT_STUB } from "./page.mjs";
+import { openWorld, members, main, text, fill, press, idle, ok, refused, says, word, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 
-const SHA = "5".repeat(64);
+/* Over the REAL store (fix round 10, K5054): the member is signed in by the real acts, the file is stored by the owner's own `captureupload` and filed by the page's own
+ * `allocid` and `promote`. What the world cannot make is the door's FOLLOW-ON READING of an upload (store-request door.mjs: "no reading followed after a promotion or an
+ * upload") and the job row `op=reading` answers (control-plane registers it): so an upload's `reading` (and `reading_pending`) and the job row are the test's script, laid over the
+ * owner's own answer for the very bytes (the file is really stored first, so the page's promotion is the record's own). */
 const MB = 1048576;
 const mb = (n) => word("size.mb", { n: (n / MB).toFixed(1) });
-const NOT_HELD = { ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined" } };
-const open = (plane = {}) => openPage("/app/capture/file", { plane: { heldat: ok(NOT_HELD), allocid: ok({ ok: true, id: "INFO-2026-0150" }), promote: (r) => ok({ ok: true, bundleId: r.body.bundleId }), ...plane }, screens: [...SCREENS, DOCUMENT_STUB] });
-const DOC = (extra = {}) => ({ file: `snapshots/upload-${SHA}`, locator: `upload:${SHA}`, capture: { method: "uploaded", sha256: SHA, encoding: "binary", bytes: 9 }, source: { kind: "uploader" }, ...extra });
-const upload = (more = {}, doc = {}) => ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 9 }, document: DOC(doc), ...more });
-const FILE = (name = "scan.pdf", type = "application/pdf") => new File(["x"], name, { type });
+const FILE = (name = "scan.pdf", type = "application/pdf", content = "x") => new File([content], name, { type });
 const filled = (file) => ({ "ci-file": file, "ci-how-made": true, "ci-where": "City hall", "ci-what": "The packet." });
-const drawn = async (answer, file = FILE(), plane = {}) => {
-  const p = await open({ captureupload: answer, ...plane });
+/* the owner's own answer to the upload of this file, made by the door as the page's press would make it */
+async function stored(t, file) {
+  const door = t.world.boot(t.mai).door;
+  const r = await door({ url: `/api/?${new URLSearchParams({ op: "captureupload", statement: "The packet.", name: file.name, ...(file.type ? { type: file.type } : {}) })}`,
+    init: { method: "POST", headers: { "content-type": file.type || "application/octet-stream" }, body: new Uint8Array(await file.arrayBuffer()) } });
+  if (!r.json || !r.json.result || r.json.result.ok !== true) throw new Error(`the owner refused the upload: ${JSON.stringify(r.json).slice(0, 300)}`);
+  return r.json.result;
+}
+const open = async (plane = {}) => { const t = await members({ mai: ["contribute"] }); const p = await openWorld("/app/capture/file", { world: t.world, as: t.mai, plane, screens: [...SCREENS, DOCUMENT_STUB] }); return { t, p }; };
+/* `more` is what the door adds to the owner's answer (the reading it followed with); `doc` fields laid on its document */
+const upload = (more = {}, doc = {}) => ({ more, doc });
+const drawn = async (shape, file = FILE(), plane = {}) => {
+  const t = await members({ mai: ["contribute"] });
+  /* no shape: the owner's own answer, unchanged (the page's press stores the file) */
+  const scripted = shape ? { captureupload: await (async () => { const real = await stored(t, file); return ok({ ...real, ...shape.more, document: { ...real.document, ...shape.doc } }); })() } : {};
+  const p = await openWorld("/app/capture/file", { world: t.world, as: t.mai, plane: { ...scripted, ...plane }, screens: [...SCREENS, DOCUMENT_STUB] });
   fill(p, filled(file));
   await press(p, "captureupload");
+  p.world = t;
   return p;
 };
 const none = (p) => says(p, "screen.document.text.none");
@@ -70,14 +84,15 @@ test("R63 `readingOf` marks read only for a reading that holds text, not for any
 });
 
 test("R63 control: a picture with no reading keeps R2's unread line; the picture flag is the record's, not the browser's declared type alone", async () => {
-  const a = await drawn(upload({}, {}), FILE("photo.jpg", "image/jpeg"));
+  const a = await drawn(null, FILE("photo.jpg", "image/jpeg"));
   assert.ok(says(a, "capture.picture.unread"), "control: a picture declared by the browser");
   /* a browser that declares nothing: the profile (the record's format) and the file's name say it is a picture */
-  const b = await drawn(upload({}, { profile: { format: "png" } }), FILE("photo", ""));
+  const PNG = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"));
+  const b = await drawn(null, FILE("photo", "", PNG));
   assert.ok(says(b, "capture.picture.unread"), "the record's profile says a picture");
-  const c = await drawn(upload({}, {}), FILE("page-3.TIFF", ""));
+  const c = await drawn(null, FILE("page-3.TIFF", ""));
   assert.ok(says(c, "capture.picture.unread"), "the file's name says a picture");
-  const d = await drawn(upload({}, {}), FILE("notes.txt", "text/plain"));
+  const d = await drawn(null, FILE("notes.txt", "text/plain", "alpha beta gamma\n"));
   assert.ok(!says(d, "capture.picture.unread") && says(d, "screen.document.text.unread"), "control: a text file that is not a picture says unread");
 });
 
@@ -118,11 +133,12 @@ test("R64 each refusal is its own sentence with its own figures: STRUCTURE_OVER_
 });
 
 test("R64 the door's 413 for an upload carries its figure and is drawn with it; a refusal with no figures keeps its sentence", async () => {
-  const withFigures = await open({ captureupload: { status: 413, json: { ok: false, reason: "TOO_LARGE", code: "TOO_LARGE", size: 300 * MB, bound: 256 * MB } } });
+  /* the owner's 413 for a file over its bound (a 300 MB file is not one the test makes): the refusal, with its figures, is the scripted answer */
+  const { p: withFigures } = await open({ captureupload: refused("TOO_LARGE", undefined, 413, { size: 300 * MB, bound: 256 * MB }) });
   fill(withFigures, filled(FILE()));
   const r = await press(withFigures, "captureupload");
   assert.ok(r.slot().textContent.includes(mb(300 * MB)) && r.slot().textContent.includes(mb(256 * MB)), "size and limit in the sentence beside the act");
-  const bare = await open({ captureupload: { status: 413, json: { ok: false, reason: "TOO_LARGE", code: "TOO_LARGE" } } });
+  const { p: bare } = await open({ captureupload: refused("TOO_LARGE", undefined, 413) });
   fill(bare, filled(FILE()));
   const q = await press(bare, "captureupload");
   assert.ok(q.slot().textContent.includes(word("screen.capture.refusal.upload.TOO_LARGE")), "control: no figures, the old sentence");
@@ -134,13 +150,19 @@ test("R64 the door's 413 for an upload carries its figure and is drawn with it; 
 /* `op=reading` answers the stored reading beside `job`, the job row's state (control-plane R135, `job-state.mjs`: `state`, the counters, `failed_why`, the cursor, `verdict`); a
    test names the row's fields and the stored reading's flat, and they are put where the owner puts them */
 const JOB_FIELDS = ["state", "written", "skipped", "owed", "failed", "failed_why", "cursor", "last_progress_at", "priority", "verdict", "rate_per_s"];
-const row = (more) => ok({ ok: true, found: true, capture_sha: SHA,
+/* the job row of the capture whose digest the owner holds (known once the file is stored): a row is made for it when asked */
+const row = (more) => (sha) => ok({ ok: true, found: true, capture_sha: sha,
   ...Object.fromEntries(Object.entries(more).filter(([k]) => !JOB_FIELDS.includes(k))),
   job: Object.fromEntries(Object.entries(more).filter(([k]) => JOB_FIELDS.includes(k))) });
-const stateOf = (cur) => () => cur.answer;
+const stateOf = (cur) => () => (typeof cur.answer === "function" ? cur.answer(cur.sha) : cur.answer);
 async function pending(cur, more = {}) {
-  const p = await open({ captureupload: upload({ reading_pending: true, ...more }), reading: stateOf(cur) });
-  fill(p, filled(FILE()));
+  const t = await members({ mai: ["contribute"] });
+  const file = FILE();
+  const real = await stored(t, file);
+  cur.sha = real.capture.sha256;
+  const p = await openWorld("/app/capture/file", { world: t.world, as: t.mai, screens: [...SCREENS, DOCUMENT_STUB],
+    plane: { captureupload: ok({ ...real, reading_pending: true, ...more }), reading: stateOf(cur) } });
+  fill(p, filled(file));
   await press(p, "captureupload");
   await p.clock.tick(1);
   await idle(p);
@@ -152,7 +174,7 @@ test("R65 each state of a read is drawn from the job row: queued, being fetched,
   const cur = { answer: row({ state: "queued", written: 0, skipped: 0, owed: 30, failed: 0 }) };
   const p = await pending(cur);
   assert.equal(p.byOp("reading").length, 1, "the row is asked for the capture's digest at once");
-  assert.equal(p.byOp("reading")[0].query.sha256, SHA);
+  assert.equal(p.byOp("reading")[0].query.sha256, cur.sha);
   assert.equal(jobMark(p), "queued");
   assert.ok(says(p, "screen.capture.reading.pending"));
   const step = async (answer) => { cur.answer = answer; await p.clock.tick(20000); await idle(p); };

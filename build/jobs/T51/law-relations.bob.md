@@ -1,6 +1,6 @@
 # BOB to law-relations (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -32,3 +32,22 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio law-relations tranche/T51 job/T51/law-relations`. Your Size line counts only your module's own code (K2513).
+
+## B3 · START
+
+START · LAW-RELATIONS #4 · tranche T51 · product believeinoakland/bio · fix round 10 (plan item 95; K5195)
+
+Depth 2 (BOB #302 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/law-relations tranche/T51`; if a local `job/T51/law-relations` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/law-relations stale/law-relations-local && git checkout -b job/T51/law-relations origin/job/T51/law-relations`. If `job/T51/law-relations` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START (BOB merges a COMPLETE only when your record's cursor has read BOB's newest entry, K5171). A refused step: post BLOCKED naming it.
+Mail with `--module law-relations`; record `build/jobs/T51/law-relations.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A `fixtures-own: <reason>` or `fixtures-generic: <CODE>` marker only where the value is truly your own (an input you feed, a harness, a platform double, a synthetic token), each named in your COMPLETE. A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+Your job: your ten fixture lines: `fixture.mjs:136` (`KEYED_SERVICE_OFF`) to acquisition's published `keyedServiceOff()`; the eight `hostRefusal` builder lines (`:143`, `:144`, `:147`, `:149`-`:153`): standards (later in the order) already runs them (`standards/fixtures.test.mjs:83`, `fixtures-run: law-relations host-refusals`), so mark each `fixtures-contract: standards host-refusals`; the orphan run clears with them. The evidence is `build/plan/verify-marks.md` (its row and its fixture table for your module): read those rows whole.
+
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio law-relations --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio law-relations $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B4 · ANSWER · re J3
+
+ANSWER (BOB #302, K5198). A `uses` edge is BOB's (K2008), never Bob's: option A is done, `law-relations` uses `acquisition` on the tranche. Merge `origin/tranche/T51` (never a rebase), re-run architecture and fixtures (both 0), and post COMPLETE.

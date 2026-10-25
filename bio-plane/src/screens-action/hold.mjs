@@ -71,7 +71,9 @@ export const hold = Object.freeze({
       // place the hold: the place chosen, the reason in the member's own words, other projects it may reach
       const subject = String(view.subject || "");
       const options = rows.filter(function (m) { return P.placeOf(m); }).map(function (m) {
-        return { value: JSON.stringify(P.placeOf(m)), text: m.marked_at ? cs.date(m.marked_at) : "", m: m };
+        // fix round 10 (diagnosis 11 §16): each place is named by its mark's note and day, so two marks of one day read apart
+        const day = m.marked_at ? String(cs.date(m.marked_at)).replace(/<[^>]*>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&") : "";
+        return { value: JSON.stringify(P.placeOf(m)), text: [typeof m.note === "string" ? m.note.trim() : "", day].filter(Boolean).join(" \u00b7 "), m: m };
       }).concat(counsel.map(function (p) { return { value: JSON.stringify({ project: p.id }), text: p.name || p.id }; }));
       const pre = options.find(function (o) { const ar = o.m && o.m.arrived ? o.m.arrived : {}; return subject && (ar.action === subject || ar.docket_entry === subject); });
       const others = projects.map(function (b) { return { value: b.bundle_id, text: b.title || b.bundle_id, on: false }; });

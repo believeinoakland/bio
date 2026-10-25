@@ -1,6 +1,6 @@
 # BOB to retrieval-browse (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
@@ -173,3 +173,22 @@ Mail with `--module retrieval-browse`; record `build/jobs/T51/retrieval-browse.m
 1. **Test files only** (RETRIEVAL #29 J16; retrieval R99 merged): another member's selection is now refused by retrieval `SELECTION_NOT_YOURS` (C-33.59), not `NOT_YOURS`. Your stand-in of that refusal and `findin.test.mjs:115` keep `NOT_YOURS`: take the refusal from retrieval's published fixtures (`bio-plane/test/m/retrieval/fixtures.mjs`, the `selection-read` contract retrieval runs) by its real code. Your own `NOT_YOURS` for your own objects, if any, is unchanged. If the product code of retrieval-browse passes the code through, check what a member is told is still right (a REPORT if a sentence must change).
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> retrieval-browse --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B16 · START
+
+START · RETRIEVAL-BROWSE #9 · tranche T51 · product believeinoakland/bio · fix round 10 (plan item 95; K5195)
+
+Depth 2 (BOB #302 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob.
+
+FIRST, before `mail start`: `git fetch origin job/T51/retrieval-browse tranche/T51`; if a local `job/T51/retrieval-browse` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/retrieval-browse stale/retrieval-browse-local && git checkout -b job/T51/retrieval-browse origin/job/T51/retrieval-browse`. If `job/T51/retrieval-browse` is behind `tranche/T51`, merge `origin/tranche/T51` into it (never a rebase). Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START (BOB merges a COMPLETE only when your record's cursor has read BOB's newest entry, K5171). A refused step: post BLOCKED naming it.
+Mail with `--module retrieval-browse`; record `build/jobs/T51/retrieval-browse.md` (append a new section). Model claude-haiku-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses (other than K5120's) is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root; run without `--test-force-exit` when the run exits by itself, else compare its reported count with the sum of its files run alone, and a shortfall is a defect of your tests (K5124). `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio`, never `.` (K5078). A test never hand-builds another module's answer: it takes the provider's published fixture, or, where the provider is later in the order, a `fixtures-contract` marker whose value the provider's `fixtures-run` checks against its real code (K4990, K4993, K4995). A `fixtures-own: <reason>` or `fixtures-generic: <CODE>` marker only where the value is truly your own (an input you feed, a harness, a platform double, a synthetic token), each named in your COMPLETE. A through-the-door test that imports control-plane's `r8-kit.mjs` belongs to control-plane: never add one; REPORT the door case for BOB to place (K5138). A new sentence people read is written at its use as `localize(id, en, vars)` in a module that may (K3930, K3943); a screens module draws by key only.
+
+Bob's direction for this round (K5175): every bug, failure and broken feature found is fixed in this round; no guessing, no deferrals, no assumptions. A cause you find outside your paths is REPORTed the day you find it, with file:line.
+
+Your job: your three fixture lines: `t36.test.mjs:139` to events' published `recordedByMalformedExtent()`; `t37.test.mjs:172` and `words.test.mjs:60` (`BROKEN`, a deliberately broken `namingIn` you feed): a real refusal if one fits, else `fixtures-own: input`. The evidence is `build/plan/verify-marks.md` (its row and its fixture table for your module): read those rows whole.
+
+**Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio retrieval-browse --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio retrieval-browse $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B17 · CHANGE
+
+CHANGE (BOB #302, K5198). SCREENS-DAILY #24's find-in test now builds its hits from a real docx read, so its `fixtures-contract` marker is gone and your `findin.test.mjs:425` `fixtures-run: screens-daily findin-term-part` is orphaned: delete it (the check refuses an orphan run), re-run fixtures (0), and post COMPLETE.
