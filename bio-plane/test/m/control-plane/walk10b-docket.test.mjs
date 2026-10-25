@@ -40,12 +40,8 @@ test("R17, R29 (docket R1, R4; diag2-10b C4): a reaction filed with a summary is
   assert.ok(entry, "an entry id: " + kit.gateLine(filed));
   const prep = await kit.get(c.e.auth, { op: "docketprepare", case: c.e.prepared.caseId, entry: String(entry), kind: "reaction" });
   assert.notEqual(R(prep).reason ?? R(prep).code, "DOCKET_NO_SUMMARY", JSON.stringify(prep).slice(0, 600));
-  if (R(prep).ok === true) {
-    assert.equal(JSON.parse(R(prep).entry).summary, SUMMARY, "the prepared draft carries the filed summary");
-  } else {
-    /* the upload has no co-archive copy offline: the refusal that remains is the archive's, specified in R4 */
-    assert.equal(R(prep).reason ?? R(prep).code, "DOCKET_NO_ARCHIVE_COPY", JSON.stringify(prep).slice(0, 600));
-  }
+  /* the upload has no co-archive copy offline: the refusal that remains is the archive's, specified in R4 (the prepared draft's own summary is docket's unit case, place.test.mjs) */
+  assert.equal(R(prep).reason ?? R(prep).code, "DOCKET_NO_ARCHIVE_COPY", JSON.stringify(prep).slice(0, 600));
 });
 
 test("R17, R29 (docket R4; diag2-10b C4) control: a reaction filed with its summary absent is refused DOCKET_NO_SUMMARY at the prepare, as before", { timeout: 900000 }, async () => {
