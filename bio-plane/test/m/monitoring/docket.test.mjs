@@ -109,6 +109,7 @@ test("R67 otherwise the read is unreadable with its reason (http_<status>, not_j
   const fill = JSON.stringify(docketBody([{ pad: "y".repeat(DOCKET_READ_MAX_BYTES - Buffer.byteLength(exact)) }]));
   assert.equal(Buffer.byteLength(fill), DOCKET_READ_MAX_BYTES);
   const cases = [
+    // fixtures-own: platform the docket host's own HTTP answer, served by the scripted network (a fake-network double); public-read's answer is not monitoring's to build
     ["a 404", json({ ok: false, reason: "NO_SUCH_CASE" }, 404), "http_404"],
     ["a 500", serve("boom", "text/plain", 500), "http_500"],
     ["a 203", json(docketBody([]), 203), "http_203"],

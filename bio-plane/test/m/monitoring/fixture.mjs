@@ -29,7 +29,6 @@ import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
 import { PROJECTION_SCHEMA, PROJECTION_TABLE } from "../../../src/retrieval/schema.mjs";
 import { registerDoctype, CONTRACT, CONFIDENCE } from "../../../../docprofile/registry.mjs";
-import { noDeterminations } from "../conformance/fixtures.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 /** A Durable Object's storage over an in-memory SQLite database. */
@@ -199,12 +198,10 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
       actionFacts(md && md.text, clock.ms).clock_next, c.bundleId);
     return null;
   } });
-  /* the real actions module (its clock rule, the R33 bound) and action-clocks (`pendingClocks`, its R1), with conformance
-     in its R9 shape */
-  const conformance = realActions ? noDeterminations().conformance : undefined;
-  const act = realActions ? actionsOf(host, { record, membership, promotion, retrieval: null, env: {}, now: () => clock.ms,
-    conformance }) : undefined;
-  const clocks = realActions ? actionClocksOf(host, { record, membership, actions: act, conformance, env: {}, now: () => clock.ms })
+  /* the real actions module (its clock rule, the R33 bound) and action-clocks (`pendingClocks`, its R1); conformance, which
+     they reach on the same host as production does, is the real module with no determination held */
+  const act = realActions ? actionsOf(host, { record, membership, promotion, retrieval: null, env: {}, now: () => clock.ms }) : undefined;
+  const clocks = realActions ? actionClocksOf(host, { record, membership, actions: act, env: {}, now: () => clock.ms })
     : undefined;
   const net = network();
   const intentStub = intent === undefined ? stubIntent() : intent;
@@ -268,6 +265,7 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
  *  contract (R14's daily default) registers this stand-in through docprofile's seam: a meeting calendar, recognised
  *  (CERTAIN) by an ASP.NET calendar page's markers, `__VIEWSTATE` and `MeetingDetail.aspx`. Registration is for the
  *  test file's process; a document it does not recognise stays docprofile's no-type answer (contract `substance`). */
+// fixtures-own: synthetic a content type of the test's own, registered through docprofile's seam (registerDoctype); no module's answer
 export function registerCalendarStub() {
   return registerDoctype({
     key: "stub_meeting_calendar", label: "stub meeting calendar", version: 1, contract: CONTRACT.MEMBERSHIP,
@@ -309,6 +307,7 @@ export function sweepShare() {
         if (t === "/(?=x)/") bad(`terms[${j}]`, `terms[${j}] SWEEP_TERM_REFUSED: a lookahead`, { code: "SWEEP_TERM_REFUSED", refusal: this.row });
       return out;
     },
+    // fixtures-contract: link-sweep sweep-fence
     fence(c, nextText) {
       calls.push(["fence", c.bundleId]);
       return sweepsOf(nextText).some((x) => x && x.title === "fenced")

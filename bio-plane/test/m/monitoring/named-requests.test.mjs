@@ -407,6 +407,7 @@ test("R77 the write relays the sweep fence's and promotion's refusals unchanged,
   const gr = await call((g) => { g.requests = [{ id: "GATH-bad" }]; return g; });
   assert.deepEqual([gr.ok, gr.reason, gr.code, gr.check], [false, "GATHERING_REFUSED", "GATHERING_REFUSED", "C-18.10"]);
   /* a refusal of mutate's own is relayed as it gives it */
+  // fixtures-contract: link-sweep sweep-mutate
   const mine = { ok: false, reason: "NO_SUCH_SWEEP", detail: "no such sweep" };
   assert.deepEqual(await call(() => mine), mine);
   assert.equal(untouched(w), before);
