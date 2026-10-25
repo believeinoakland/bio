@@ -44,8 +44,10 @@ const screenCall = (auth) => ({ now: () => Date.now(), digest: async (s) => crea
     return (await door(`/api/?${u}`, { method: body === undefined ? "GET" : "POST", headers: { ...auth, "content-type": "application/json" },
                                        ...(body === undefined ? {} : { body: JSON.stringify(body) }) })).json();
   } });
-/** The page over a real door answers in real time: settle until `done()` holds or the time is up. */
-const until = async (p, done, ms = 30000) => {
+/** The page over a real door answers in real time: settle until `done()` holds or the time is up. The time is a guard against a hang, not a claim of speed:
+    the real op=readheld takes about 0.1 s, but a loaded machine stretches every wait of this path (the plane's own start alone is 21 s quiet, 40-125 s starved),
+    so a wall of 30 s measured the machine (R9 diagnosis, test 6). */
+const until = async (p, done, ms = 300000) => {
   const end = Date.now() + ms;
   for (;;) { await p.settle(20); if (done()) return true; if (Date.now() > end) return false; await new Promise((r) => setTimeout(r, 100)); }
 };

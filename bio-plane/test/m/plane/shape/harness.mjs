@@ -331,6 +331,11 @@ async function child(spec) {
     if (F.killAt === nth) { faults.killAfterSql = ct.sql + (F.killAfterSql ?? 40); injected.push("kill"); }
     let threw = null;
     try { await x.s.onAlarm(at); } catch (e) { threw = String(e && e.message || e).slice(0, 160); }
+    /* THE TICK ENDS WHEN ITS WORK ENDS, NOT WHEN THE SCHEDULER'S 10 s FIRING BUDGET DOES (scheduler R30, R31). A firing that spends its budget while a row's owner is still running returns and leaves that run going on in the object, un-awaited ("late");
+       on a machine slow enough to take 10 s over what takes 5 s quiet, the loop would then call `onAlarm` a hundred times over a row that is running (each a no-op, each a "tick" with no reading to state) until the run ends. A tick's counts, its
+       `readingFor` and the bars on them are about the work a tick does, so the work a firing left running is awaited (on the condition that the row's run has ended, which the row says itself) and counted in the tick that started it. No wait where
+       a fault was injected (a kill leaves a row started for good, and says so by its restart). */
+    if (!injected.length) { const until = Date.now() + 600_000; while (sql(`SELECT count(*) AS n FROM keeps_pending WHERE started_at IS NOT NULL`)[0].n && Date.now() < until) await new Promise((r) => setTimeout(r, 25)); }
     faults.failWrites = false; if (restoreEntry) restoreEntry();
     if (injected.includes("leak")) global.gc();   /* the leak is garbage now: the next tick starts from what is live, not from what has not been collected yet */
     at += 3_600_000; n++;
