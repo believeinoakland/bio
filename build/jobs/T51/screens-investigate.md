@@ -419,3 +419,11 @@ COMPLETE · screens-investigate · T51-120, fix round 10 causes 1-4 and B35-B38 
 
 **Tests and checks.** Module suite at the final tree: 330 tests, 287 pass, 0 fail, 43 todo. format 0 failures; architecture 0; coverage 60 of 60; ownership 0 (vs origin/tranche/T51); words 0 (alone and over all modules: none names this module); fixtures 2 (the acquire lines above).
 Size (session_01Pdj4AeSbnHnToosQruPH5w): test runs 25, module lines 3400
+
+## J32 · COMPLETE
+
+COMPLETE · screens-investigate · B39 (K5197) applied; B36-B38 were in J31
+
+PEOPLE #16 merged: the person page reads `withdrawn_facts` for the withdrawn fold (R32 (2): `person.mjs` now takes the withdrawn from `withdrawn_facts` as well as `facts`), and the claim rows' basis was already drawn by `screen.person.basis.row.<basis>` / `.org` (R38, R39, R58). The four todos naming people R43/R44 are now tests over the world's real `person` read (person.test.mjs x3, organization.test.mjs x1); module person+organization suites: 36 pass, 0 fail. Remaining todos are the K5173 words, K5178 `known_through`, and the other modules' REPORTs in J31.
+Checks at HEAD: format 0, architecture 0, coverage 60 of 60, ownership 0, words 0, fixtures 2 (both `acquire`, a fetched site). Met ids as in J31 plus R32 (2), R38, R39, R58.
+Size (session_01Pdj4AeSbnHnToosQruPH5w): test runs 27, module lines 3400
