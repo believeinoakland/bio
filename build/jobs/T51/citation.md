@@ -334,3 +334,7 @@ Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 8, module lines 1731
 
 Checks (absolute root): citation tests 132, fail 0; architecture 0 failures; coverage 21 of 21, 0 failures; format 0; ownership 0; fixtures --list 0.
 Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 10, module lines 1731
+
+## J20 · COMPLETE
+
+COMPLETE B15 (K5138): imported-door.test.mjs removed from citation (control-plane #60 adopts it); tranche/T51 merged (R18 worded to author and viewer, rows unchanged). Citation tests 132/132; architecture 0, coverage 21 of 21, format 0, ownership 0, fixtures --list 0. Size (session_01JfJyUVCuHWfqyMFpbcucb8): test runs 10, module lines 1731
