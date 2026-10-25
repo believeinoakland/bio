@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { world, inbox, ev, host, NOW, iso } from "./world.mjs";
+import { world, inbox, ev, host, NOW, iso, projectOf } from "./world.mjs";
 import { homeOfHomed, sha } from "../provenance/fixtures.mjs";
 import { tasksOf, tasksOps, Tasks, TASK_DRAIN_BACKSTOP_MS, TASK_DRAIN_RETRY_LIMIT, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar,
          TASKS_TABLES, tasksOwns } from "../../../src/tasks/index.mjs";
@@ -14,8 +14,10 @@ import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { Connections } from "../../../src/connections/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
-const DOC = "INFO-2026-0001-doc", PRJ = "PROJ-2026-0001-team", DOC2 = "INFO-2026-0002-other", DOC3 = "INFO-2026-0003-third";
-const HOMES = { a1: DOC, a2: PRJ, a3: DOC2 };
+const DOC = "INFO-2026-0001-doc", DOC2 = "INFO-2026-0002-other", DOC3 = "INFO-2026-0003-third";
+const TEAM = projectOf("Team", ["a2"]);   // a2 is registered in the project the record mints, by provenance's real creation
+const PRJ = TEAM.projectId;
+const HOMES = { a1: DOC, a2: TEAM, a3: DOC2 };
 const box = (events = []) => inbox(events, HOMES);
 
 test("R1: drain takes queued events in order; unfiled waits, a live task folds, a new one is routed owner, citing owner, admin, unassigned", () => {
@@ -75,7 +77,7 @@ test("R1 (d280-strengthbar §5): with connections' own edgeSevered over real cit
   /* the real predicate (connections R22), reading each citing project's `bundle.md` through record-core */
   const real = new Connections({ storage: w.host.storage, record: w.record, membership: w.membership });
   w.fakes.connections.edgeSevered = (...a) => real.edgeSevered(...a);
-  const GONE = "PROJ-2026-0001-gone", HERE = "PROJ-2026-0002-here";   // the withdrawn one sorts first by id
+  const [GONE, HERE] = [projectOf("Gone").projectId, projectOf("Here").projectId].sort();   // the withdrawn one sorts first by id
   w.member("carol"); w.member("dave"); w.member("ada", { role: "admin" });
   w.bundle(DOC); w.bundle(GONE, "project"); w.bundle(HERE, "project");
   w.join(GONE, "carol", { owner: true }); w.join(HERE, "dave", { owner: true });

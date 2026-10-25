@@ -2,11 +2,11 @@
    are in, so a decision and a rollback are provenance's own (its R65, R66). The document is a real information bundle whose
    register holds one captured document. */
 import { createHash } from "node:crypto";
-import { world, iso } from "./world.mjs";
+import { world, iso, projectOf } from "./world.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
-export const PRJ = "PROJ-2026-0001-team", DOC = "INFO-2026-0001-doc", HID = "PROJ-2026-0002-hidden";
+export const PRJ = projectOf("Team").projectId, DOC = "INFO-2026-0001-doc", HID = projectOf("Hidden").projectId;
 const BYTES = "the captured letter";
 export const SHA = createHash("sha256").update(Buffer.from(BYTES, "utf8")).digest("hex");
 export const MACHINE = `${MACHINE_CLASS_PREFIX}probe`;
