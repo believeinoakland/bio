@@ -200,3 +200,7 @@ Checks (process repository e8…, product job/T51/people at 0b2c72995a)
 - checks/fixtures.mjs people: 1 failure (the events line above).
 
 Size (session_014qiZzWUT5rWTceixKQwyba): test runs 3, module lines 2281
+
+## J13 · REPORT
+
+Correction to COMPLETE (J12): the process repository commit I cited is not e8…. The checks ran at civicos-process b5531c09f8 (the clone's HEAD, the checkout I read the mechanics and tools from). Nothing else in J12 changes.
