@@ -176,3 +176,7 @@ Plan §3 item 65 (K5153), doorbell's half. Before the work the branch was fast-f
 **Deferred.** None of the module's own. The `r9-t51.test.mjs:15` stand-in above is for BOB's decision.
 
 Size (session_011eQWGNdKbyTzSjrWKDMhqy): test runs 1, module lines 1206
+
+## J9 · COMPLETE
+
+COMPLETE (B10, fix round 10, follow-up 65, doorbell's half; commit bac7eb19f0). Re-pointed held.test.mjs:14 to provenance's homeOfOver; marked the ten hand-built answers (six storeSilent against answer-envelope door-helpers, four BAD_JSON/UNKNOWN_OP against store-door store-replies; UNKNOWN_OP's translation sentence left out, K5099). Both orphan runs now match doorbell's markers: no change needed in their files. fixtures doorbell --list: 0 failures (13 before). Doorbell suite 98/98. format, architecture, coverage (28/28), words, ownership: 0 failures for doorbell. Left for BOB: r9-t51.test.mjs:15 still stands in homeOf (accepted by the checker, not named in follow-up 65). Record: build/jobs/T51/doorbell.md, Completion (fix round 10, follow-up 65). Size (session_011eQWGNdKbyTzSjrWKDMhqy): test runs 1, module lines 1206.
