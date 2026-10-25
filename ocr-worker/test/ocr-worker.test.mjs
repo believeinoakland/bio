@@ -24,6 +24,7 @@
 import "../../bio-plane/test/sandbox.mjs";  /* test-support: owns $TMPDIR, synchronous stdio */
 
 import { Miniflare } from "miniflare";
+import { renderedPage, pixelRefusal } from "../../pdf-worker/test/pdf-pixels-fixtures.mjs";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -201,6 +202,7 @@ const srcEngine = { name: "tesseract-wasm", version: "0.11.0", model: "tessdata_
 
 const REAL_ENGINE_NAMES = { name: "tesseract-wasm", version: "0.11.0", model: "tessdata_fast/eng" };
 
+// fixtures-own: harness the engine seam of this member's own makeMember (src/member.mjs takes the engine as an argument); a scripted engine is how a test reaches a step no real page reaches
 /** A stand-in engine. `regions` is what `transcribeFrame` answers; `calls` records every frame it was given. */
 function stubEngine({ regions = [], check = null, frame = null, boxCount, words, orientation = { rotation: 0 } } = {}) {
   const e = { ...REAL_ENGINE_NAMES, calls: [], checks: 0 };
@@ -215,6 +217,7 @@ function stubEngine({ regions = [], check = null, frame = null, boxCount, words,
   };
   return e;
 }
+// fixtures-own: harness a spy on the renderer seam of this member's own makeMember; the answers it serves are pdf-pixels' published fixture (RENDERED, pixelRefusal)
 /** A stand-in renderer answering `answer` (a function of the page, or a value), recording every call. */
 function stubRender(answer) {
   const r = async (bytes, page, opts) => { r.calls.push({ page, opts, bytes: bytes.length ?? bytes.size });
@@ -222,9 +225,10 @@ function stubRender(answer) {
   r.calls = [];
   return r;
 }
+/* pdf-pixels' real answer for a rendered page (its published fixture), the frame and the digest being the case's own */
+const RENDERED = await renderedPage("pdf");
 const pngPage = (bytes, width, height, extra = {}) => ({
-  ok: true, route: "stub-route", mediaType: "image/png", bytes, width, height, upright: true, rotate_deg: 0,
-  pixels_sha256: "f".repeat(64), page_geometry: { dpi: 300 }, ...extra });
+  ...RENDERED, bytes, width, height, pixels_sha256: "f".repeat(64), ...extra });
 
 /** A bucket that records every property touched on it, and answers `.get` from `objects`. */
 function recordingBucket(objects = new Map()) {
@@ -529,7 +533,7 @@ console.log("\n--- A6 · R8, R9, R10, R17, R18: the successful answer, its regio
   t("R8 measured_by is the one measurement's citation, read through its key", body.measured_by, MEASURED_BY);
   t("R8 grain is line; deferred as R6; notes an array", [body.grain, body.deferred, Array.isArray(body.notes)], ["line", [8], true]);
   t("R8 image carries exactly the rendered frame's facts",
-    body.image, { width: 4, height: 3, frame_bytes: 48, route: "stub-route", upright: true, rotate_deg: 90, dpi: 300,
+    body.image, { width: 4, height: 3, frame_bytes: 48, route: RENDERED.route, upright: true, rotate_deg: 90, dpi: RENDERED.page_geometry.dpi,
                   pixels_sha256: "f".repeat(64), turned_deg: 0 });
   t("R8 pages is exactly one {page, regions}", [body.pages.length, keys(body.pages[0]), body.pages[0].page],
     [1, ["page", "regions"], 6]);
@@ -549,7 +553,7 @@ console.log("\n--- A6 · R8, R9, R10, R17, R18: the successful answer, its regio
     ["confidence,source,text"]);
   t("R9 the source is a pdf-page anchor in image pixels, with the image it indexes",
     got[1].source, { kind: "pdf-page", ref: "p6", page: 6, rect: [10.5, 41, 280.25, 60], space: "image-px",
-                     image: { width: 4, height: 3, route: "stub-route", upright: true, rotate_deg: 90,
+                     image: { width: 4, height: 3, route: RENDERED.route, upright: true, rotate_deg: 90,
                               pixels_sha256: "f".repeat(64) } });
   t("R9 the PLANE's own anchor check accepts every region", got.filter((r) => checkAnchor(r.source) != null).length, 0);
   t("R9 R17 an engine-rated value in 0..1 is carried unchanged, basis engine",
@@ -855,7 +859,7 @@ console.log("\n--- A12 · R25: a picture says how much of it the engine could re
   const junk = await ask([line("fumnery Staft recorwenends thet", 0.3), line("comeanttes soprove", 0.2)]);
   t("R25 a share under LEGIBLE_REFUSE_BELOW is refused PICTURE_NOT_LEGIBLE (200, ok:false), carrying the figures, with no text answered",
     [junk.r.status, junk.r.body.ok, junk.r.body.reason, junk.r.body.refusal.legibility, junk.r.body.pages, junk.w.engine.calls.length],
-    [200, false, "PICTURE_NOT_LEGIBLE", { words: 6, confident_words: 0, share: 0 }, undefined, 1]);
+    [200, false, "PICTURE_NOT_LEGIBLE", { words: 6, confident_words: 0, share: 0 }, undefined, 4]);
   t("R25 the refusal says why in a sentence, and its detail is the declared one",
     [junk.r.body.detail === REFUSALS.PICTURE_NOT_LEGIBLE, junk.r.body.notes.length, junk.r.body.notes[0].trim().length > 0], [true, 1, true]);
   const edge2 = await ask([line("a b", 0.9), line("c d e f g h i j", 0.1)]);
@@ -960,9 +964,9 @@ console.log("\n--- A13 · R26: the engine's orientation is asked of every frame;
     t(`R26 a ${kind} the engine read nothing of and finds turned is asked again, and read upright`,
       [blank.r.body.ok, blank.turns, blank.r.body.image.turned_deg], [true, [0, 180], 180]);
     const both = await run({ kind, claim: { rotation: 90 }, side: garbage, up: garbage });
-    t(`R26 R25 a ${kind} still under the floor after being turned is refused as R25 says, with no text`,
+    t(`R26 R25 a ${kind} still under the floor after being turned is read the other ways too (fix round 10), and refused as R25 says, with no text`,
       [both.r.body.ok, both.r.body.reason, both.turns, both.r.body.pages, both.r.body.refusal.legibility.share],
-      [false, kind === "picture" ? "PICTURE_NOT_LEGIBLE" : "PAGE_NOT_LEGIBLE", [0, 270], undefined, 0]);
+      [false, kind === "picture" ? "PICTURE_NOT_LEGIBLE" : "PAGE_NOT_LEGIBLE", [0, 270, 90, 180], undefined, 0]);
   }
 
   /* an engine that cannot tell is stated, never read as garbage and answered with no mention */
@@ -979,7 +983,7 @@ console.log("\n--- A13 · R26: the engine's orientation is asked of every frame;
     [unread.r.body.reason, unread.r.body.notes.length], ["PAGE_NOT_LEGIBLE", 2]);
 
   /* a turn the renderer refuses leaves the page read as it lies, and says so */
-  const refusing = stubRender((page, opts) => (opts.turn ? { ok: false, reason: "PIXELS_UNDETERMINED" } : pngPage(GREY4x3, 4, 3, { pixels_sha256: SIDE_SHA })));
+  const refusing = stubRender((page, opts) => (opts.turn ? pixelRefusal("PIXELS_UNDETERMINED") : pngPage(GREY4x3, 4, 3, { pixels_sha256: SIDE_SHA })));
   const rf = await run({ kind: "pdf", claim: { rotation: 90 }, side: partial, up: clear, render: refusing });
   t("R26 a turn the renderer refuses leaves the page read as it lies, with the statement that its orientation could not be determined",
     [rf.r.body.ok, rf.turns, rf.r.body.image.turned_deg, rf.r.body.notes.length], [true, [0, 270], 0, 2]);

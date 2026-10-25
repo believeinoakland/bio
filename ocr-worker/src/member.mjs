@@ -183,7 +183,10 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
       const confident = out.words.filter((w) => typeof w.confidence === "number" && w.confidence >= LEGIBLE_CONFIDENCE).length;
       legibility = { words, confident_words: confident, share: Math.round((confident / words) * 100) / 100 };
     }
-    return { regions, unanchored, blank, unrated, boxes, legibility };
+    /* the mean of the engine's own ratings of the words, which tells two readings of one share apart (R26's choice) */
+    const rated = Array.isArray(out.words) ? out.words.filter((w) => typeof w.confidence === "number") : [];
+    const rating = rated.length ? rated.reduce((a, w) => a + w.confidence, 0) / rated.length : 0;
+    return { regions, unanchored, blank, unrated, boxes, legibility, rating };
   }
 
   /** R26: do the lines the engine boxed run up the frame (a page turned a quarter turn)? The median of their widths over
@@ -196,7 +199,10 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
 
   /** R26: how well a reading reads, for choosing between two of the one page: its share of words rated as read; a
    *  reading with text and no ratings scores 0, one with no text -1. */
+  const refusable = (j) => !j.regions.length || (j.legibility != null && j.legibility.share < LEGIBLE_REFUSE_BELOW);
   const scoreOf = (j) => (j.legibility ? j.legibility.share : j.regions.length ? 0 : -1);
+  /** R26: is reading `a` better than reading `b`? A larger share of words rated as read; at an equal share, a higher mean rating. */
+  const readsBetter = (a, b) => scoreOf(a) > scoreOf(b) || (scoreOf(a) === scoreOf(b) && a.rating > b.rating);
 
   /** Transcribe ONE page of one capture: a pure function of the bytes, the page and the options. `bytes` is the capture
    *  whole, or (R27) a source `{size, readRange(offset, length)}` that reads only what the page needs. */
@@ -247,6 +253,7 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
        with its lines across it; and it is kept when reading the turned page rates at least as many of its words as read,
        the engine's claim breaking the tie. */
     const claim = first.out.orientation;
+    const tried = new Set([0]);   /* the turns this call has read the page at */
     if (!claim || !QUARTER_TURNS.includes(claim.rotation)) {
       notes.push(localize("ocr-worker.member.the_orientation_of_this_page_could_not_be_determined", "the engine could not tell which way up this page is, so it was read as it lies; if it is turned, the reading below is of a turned page."));
     } else if (claim.rotation !== 0) {
@@ -255,6 +262,7 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
       const sideways = claim.rotation !== 180 && linesRunUp(j.regions);
       if (unclear || sideways) {
         const turn = turnToUpright(claim.rotation);
+        tried.add(turn);
         at.stage = "orientation";
         const again = await readFrameOf(input, page, picture, turn, { psm, at });
         if (again.refusal || again.meta.turned_deg !== turn) {
@@ -263,6 +271,23 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
           const judgedAgain = judge(again.out);
           if (judgedAgain.regions.length && scoreOf(judgedAgain) >= scoreOf(j)) chosen = { ...again, judged: judgedAgain };
         }
+      }
+    }
+
+    /* R26 (fix round 10, cause 7): A PAGE THAT WOULD OTHERWISE BE REFUSED IS READ A FURTHER WAY. On a sparse page (a few
+       short lines) the engine's claim is the same whatever the page's turning, so the one turn it asked for may be the wrong
+       one and no other was tried. A page with nothing read, or under R25's refusal floor, is read at each quarter turn not yet
+       tried and the best-rated reading is kept; a page that reads is never read four ways, and an upright page whose
+       claim was wrong keeps its reading (a turn is kept only when it rates strictly better). */
+    if (refusable(chosen.judged)) {
+      for (const turn of QUARTER_TURNS) {
+        if (tried.has(turn)) continue;
+        tried.add(turn);
+        at.stage = "orientation_search";
+        const other = await readFrameOf(input, page, picture, turn, { psm, at });
+        if (other.refusal || other.meta.turned_deg !== turn) continue;
+        const judgedOther = judge(other.out);
+        if (judgedOther.regions.length && readsBetter(judgedOther, chosen.judged)) chosen = { ...other, judged: judgedOther };
       }
     }
 
