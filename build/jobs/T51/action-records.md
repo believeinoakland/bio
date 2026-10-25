@@ -67,3 +67,7 @@ Checks:
 - `checks/ownership.mjs`: 1 file changed, 0 failures.
 
 Size (session_01NsKSfvCegNhmvxjABmWB8Z): test runs 2, module lines 1036
+
+## J5 · COMPLETE
+
+B3 done: both own fixture lines (fixture.mjs:175 progressions/definitionRead, :194 standards/standardReadWorld) now take the providers' real fixtures. fixtures check 0 failures; module tests 34 pass 0 fail; format, architecture, coverage (20/20), words, ownership 0 failures; impact: 0 affected modules. No fixtures-own/generic markers added. Details in J4 of my record.
