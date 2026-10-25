@@ -103,7 +103,9 @@ test("R64 each refusal is its own sentence with its own figures: STRUCTURE_OVER_
     const line = main(p).querySelector('[data-reading="refused"]');
     assert.ok(line, c.reason);
     seen.add(line.textContent);
-    for (const k of ["part", "kind", "name"]) if (c[k]) assert.ok(line.textContent.includes(c[k]), `${c.reason} names its ${k}`);
+    for (const k of ["part", "name"]) if (c[k]) assert.ok(line.textContent.includes(c[k]), `${c.reason} names its ${k}`);
+    /* R36 (fix round 10): the kind is named by the sentence the reading's owner holds for it, not beside the stand-in as a raw span */
+    if (c.kind) assert.ok(line.textContent.includes(word(`reading-pipeline.index.unsupported_${c.kind}`)), "UNSUPPORTED_FORMAT: the owner's sentence for the kind");
     if (c.reason === "STRUCTURE_OVER_BOUND") assert.ok(line.textContent.includes(String(c.bound)), "the bound is the count");
   }
   assert.equal(seen.size, cases.length, "five causes, five sentences");
@@ -128,7 +130,13 @@ test("R64 the door's 413 for an upload carries its figure and is drawn with it; 
 
 /* ---- R65 ---- */
 
-const row = (more) => ok({ ok: true, found: true, capture_sha: SHA, ...more });
+/* `op=reading` answers the stored reading beside `job`, the job row's state (control-plane R135, `job-state.mjs`: `state`, the counters, `failed_why`, the cursor, `verdict`); a
+   test names the row's fields and the stored reading's flat, and they are put where the owner puts them */
+// fixtures-contract: control-plane job-state
+const JOB_FIELDS = ["state", "written", "skipped", "owed", "failed", "failed_why", "cursor", "last_progress_at", "priority", "verdict", "rate_per_s"];
+const row = (more) => ok({ ok: true, found: true, capture_sha: SHA,
+  ...Object.fromEntries(Object.entries(more).filter(([k]) => !JOB_FIELDS.includes(k))),
+  job: Object.fromEntries(Object.entries(more).filter(([k]) => JOB_FIELDS.includes(k))) });
 const stateOf = (cur) => () => cur.answer;
 async function pending(cur, more = {}) {
   const p = await open({ captureupload: upload({ reading_pending: true, ...more }), reading: stateOf(cur) });
@@ -181,7 +189,7 @@ test("R65 the row is asked again while it is queued, fetched or read, every twen
 
 test("R65 an 'about' estimate only once the row holds enough units to measure a rate, none before", () => {
   const { estimateOf, jobStateOf } = CAPTURE_SCREEN.parts;
-  const job = (w, rate, owed = 300) => jobStateOf({ state: "reading", written: w, owed, skipped: 0, failed: 0, rate_per_s: rate });
+  const job = (w, rate, owed = 300) => jobStateOf({ job: { state: "reading", written: w, owed, skipped: 0, failed: 0, rate_per_s: rate } });
   assert.equal(estimateOf(job(3, 2)), null, "three units: no rate to measure");
   assert.equal(estimateOf(job(12, 0)), null, "no rate stated");
   assert.equal(estimateOf(job(12, 0.5, 0)), null, "nothing owed");

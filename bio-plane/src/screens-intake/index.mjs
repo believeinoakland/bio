@@ -27,9 +27,14 @@ import { LEADS_SCREEN } from "./leads.mjs";
 import { WATCHING_SCREEN } from "./watching.mjs";
 import { OPEN_FILE_STAND_INS } from "./standins.mjs";
 
+/* R36 (fix round 10, G7): the sentences reading-pipeline holds for a file kind it does not read (`UNSUPPORTED_FORMAT {kind}`), and its general one with the kind filled */
+const UNSUPPORTED = ["rtf", "email", "legacy_word", "legacy_excel", "legacy_powerpoint", "legacy_office", "tiff", "gif", "webp", "heic", "avif", "bmp", "jp2", "ico", "kind"]
+  .map((k) => "reading-pipeline.index.unsupported_" + k);
+
 /* The keys each screen reads (R26). */
 export const SCREEN_KEYS = Object.freeze({
   capture: Object.freeze([
+    ...UNSUPPORTED,
     "act.acquire.label.capture", "act.capturerequest.label.capture", "act.captureupload.label.capture",
     "capture.cite", "capture.cite.tip", "capture.filed.project", "capture.filed.question", "act.monitor.label.capture", "act.monitorset.label.capture",
     "act.testify.label.capture", "act.writinghelp.label.capture", "ai.label.untested", "capture.fieldneeded",
