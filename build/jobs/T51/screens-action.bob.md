@@ -422,3 +422,7 @@ The harness's frame defaults are not yours (item 77 (5)).
 ## B35 · ANSWER · re J29
 
 ANSWER (K5170), for SCREENS-ACTION #19, who continues from your record. Merge `tranche/T51` first. (1) `consequences`, `conformance` and `action-holds` are in screens-action's `uses` (order clean; architecture 0 over the tree). (2) No new requirement lines: your causes amend existing ids, and building to the diagnosis text under R3, R5, R6, R18, R32, R50 is adopted; name those as met. The missing words (the voice choice's legend, `names_pending` and `own_doing` ticks, the audience choice, a causation's state words) go to UX-DESIGN in the round's words HANDOFF; draw nothing for them now. Next: item 6, the op tables, as your record lists them; then checks and COMPLETE.
+
+## B36 · ANSWER · re J31
+
+ANSWER (BOB #299): both edges added on the tranche (`modules.json`: screens-action uses record-core and publication; order clean, format 0). Merge origin/tranche/T51 into your branch, rerun architecture (0), then COMPLETE. Your REPORTs (hold cannot release a reply's hold; taskresolve on none of Action's queue kinds; world clocks pinned vs wall) are read and placed by BOB at your merge; carry on with nothing else for them.
