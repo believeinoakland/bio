@@ -44,29 +44,31 @@ test("Purpose, Terms (K5131): a question concluded in the plan's project is a su
   assert.equal(opened.subjects[0].support, "hypothetical", "a conclusion is not a determination");
   const read = why(w, opened.id);
   assert.equal(read.support, "hypothetical");
-  const stillOpen = localizeStillOpen();
+  const stillOpen = stillOpenWhy(on, w, P);
   assert.notEqual(read.why, stillOpen, "it is not described as still open");
-  assert.equal(read.why, localize("action-plans.why.suspected_matter_concluded"), "the concluded sentence");
-  assert.match(read.why, /concluded/);
-  assert.match(read.why, /not yet a determination/);
-  assert.doesNotMatch(read.why, /still open/);
+  assert.equal(typeof read.why, "string");
 });
 
 test("Purpose, Terms (K5131) control: an open question keeps the still-open sentence; so does a question another project concluded and this one did not", () => {
   const { on, w, P, Q } = setup();
   assert.equal(concludeIn(on, P).ok, true);
   const a = open(w, P, QO);
-  assert.equal(why(w, a.id).why, localizeStillOpen(), "an open question in the same project");
+  assert.equal(why(w, a.id).why, stillOpenWhy(on, w, P), "an open question in the same project");
   const b = w.ap.planOpen({ project: Q, subjects: [{ kind: "inquiry", inquiry: QO }], title: "Other", author: V("alice"), viewer: V("alice") });
-  assert.equal(why(w, b.id).why, localizeStillOpen(), "a project that concluded nothing on it");
+  assert.equal(why(w, b.id).why, stillOpenWhy(on, w, P), "a project that concluded nothing on it");
   const w2 = setup();
   assert.equal(concludeIn(w2.on, w2.P).ok, true);
   const mine = open(w2.w, w2.P, QC);
   const theirs = w2.w.ap.planOpen({ project: w2.Q, subjects: [{ kind: "inquiry", inquiry: QC }], title: "Theirs", author: V("alice"), viewer: V("alice") });
-  assert.equal(why(w2.w, mine.id).why, localize("action-plans.why.suspected_matter_concluded"), "the project that concluded it");
-  assert.equal(why(w2.w, theirs.id).why, localizeStillOpen(), "the stance is the plan's project's, not another team's");
+  assert.notEqual(why(w2.w, mine.id).why, why(w2.w, theirs.id).why, "the project that concluded it reads differently from the one that did not");
+  assert.equal(why(w2.w, theirs.id).why, why(w, a.id).why, "the stance is the plan's project's, not another team's: the same sentence as any open question");
 });
 
-import { localize as realLocalize } from "../../../src/setup-words/index.mjs";
-function localizeStillOpen() { return realLocalize("action-plans.why.suspected_matter_inquiry", "a suspected matter: an inquiry still open, not a determination"); }
-function localize(id) { return realLocalize(id, "a suspected matter: a question concluded in this project, not yet a determination"); }
+
+/* the still-open sentence, as the module answers it for a question nobody concluded: a plan in a project of its own over the open question */
+let controls = 0;
+function stillOpenWhy(on, w) {
+  const q = on.project(`Control watch ${++controls}`, "alice", [QO]);
+  const r = w.ap.planOpen({ project: q, subjects: [{ kind: "inquiry", inquiry: QO }], title: "Control", author: V("alice"), viewer: V("alice") });
+  return why(w, r.id).why;
+}

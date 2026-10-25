@@ -127,3 +127,9 @@ B6 needs a uses edge. Reading the project's stance on a question (the row in the
 **Checks** (`civicos-process/checks`, absolute root `/home/user/bio`): module suite 105 of 105 pass (after merging tranche/T51); users plan-work 52/52, following 128/128, action-producers 54/54, answer-envelope 52/52; `format` 0; `coverage` 53 of 53; `words` 0; `fixtures --list` 0 failures (1 accepted, the existing generic marker); `architecture` 2 failures awaiting the `uses` edge; `ownership` run at COMPLETE.
 
 Size (session_01QNmwftmFAVAy2K1WHsTW8M): test runs 9, module lines 3366
+
+## Change B7/B8 (K5135): the `uses` edge
+
+Merged `tranche/T51` (basis-versions is in action-plans' `uses`). `concluded.test.mjs` no longer holds the two sentences (words `testcopy` flagged them): the still-open `why` is read from the module's own answer for a question nobody concluded, and the concluded one is asserted different from it. Checks (absolute root `/home/user/bio`): module suite 105 of 105; `format` 0; `architecture` 0; `coverage` 53 of 53; `words` 0; `fixtures --list` 0 failures; `ownership` 0. No `fixtures-own` or `fixtures-generic` marker added.
+
+Size (session_01QNmwftmFAVAy2K1WHsTW8M): test runs 14, module lines 3364
