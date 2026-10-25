@@ -72,3 +72,7 @@ B3/B4 done on job/T51/actions: tranche/T51 merged; region is-minutes drawn; MINU
 **Checks:** module tests 151/151; fixtures `--list` 4 failures left (above); words 0 failures; format 0; architecture 0; coverage 76/76; ownership 0. `impact.mjs` lists no source change of mine (tests only).
 
 Size (session_01JVxfm6Xv26CMbdeCJgfGt4): test runs 9, module lines 0
+
+## J5 · COMPLETE
+
+COMPLETE (B5). Published fixtures actionRead, actionsForRefusal (fixtures.mjs, tested). Own lines: fixture.mjs:111, t12:16, t18:16, write:153 re-pointed to retrieval/conformance fixtures. Left: t45:40 and t50:27 need conformance fixture variants (finding bases, void, compliant, live-superseded): product cause for BOB; t12:55 one arm (superseded_by null) unreachable by conformance's fixture, kept as own test; t45:45 is consequences'. Note: real actionRead answers NO_SUCH_ACTION (R106), not NO_SUCH_BUNDLE/NOT_AN_ACTION as the plan says; escalation fixture.mjs:162-165 and draft.test.mjs:143 copy a stale shape. No fixtures-own/generic markers added. Tests 151/151; words, format, architecture, coverage, ownership 0 failures. Details in record.
