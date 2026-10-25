@@ -51,3 +51,7 @@ EVENTS #10 B3 complete on job/T51/events: C54, C6 met, events R53 as amended by 
 **Tests and checks.** events: 98 pass, 0 fail (93 before, 5 new). format 0 failures; fixtures 0 failures; words: no events finding; coverage: no events failure (other modules' ids listed unnamed are not mine); ownership 0 failures; `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules (test files only).
 
 Size (session_01DAv9PSDWrsm3wEZhdCb73f): test runs 4, module lines 2807
+
+## J4 · COMPLETE
+
+EVENTS #12 B4 complete on job/T51/events: five fixtures published in bio-plane/test/m/events/fixtures.mjs (recordedByMalformedExtent, sequenceUndetermined, timelineAnswer, timelineRefusal, usesOf), each with a test naming its requirement; own line fixture.mjs:48 re-pointed to promotion's promotionOver. fixtures check for events at 0; events 98/98; format, words, ownership 0 failures; no fixtures-own/generic/contract markers added. NEEDS BOB: architecture fails 1 file (events/fixture.mjs imports promotion's fixtures; add "promotion" to events' uses in build/modules.json, your file). Record: build/jobs/T51/events.md.
