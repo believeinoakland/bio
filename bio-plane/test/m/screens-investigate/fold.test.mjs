@@ -6,6 +6,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import * as shell from "../../../src/interface-shell/index.mjs";
 import { SCREENS } from "../../../src/screens-investigate/index.mjs";
+import { inWorld, openAs, settled, readHeld, declareStandard } from "./world.mjs";
 import { open, main, button, fill, PATHS, ENT, ORG, MSR, CALC, PROC, STD, P, ACT, PERSON, TRAIL, word, drew, notDrew } from "./fixtures.mjs";
 
 const page = readFileSync(new URL("../../../../docs/development/ux-substrate/screens/page.src.html", import.meta.url), "utf8");
@@ -47,20 +48,31 @@ test("R22 every labelled field is drawn with cs.field: no screen draws cs-form o
   }
 });
 
-test("R22 a section, list or reading that holds nothing is not drawn, and no count is drawn at zero; a screen over an empty fixture shows neither", async () => {
-  const none = ok({ ok: true, rows: [], following: 0, in_your_projects: 0, truncated: false });
+test("R22 a section, list or reading that holds nothing is not drawn, and no count is drawn at zero; a screen over an empty world shows neither", async () => {
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  /* each state is made by the member's own acts: a person named, a proceeding registered, a standard declared, a project, an action, a money trail, none of them related, followed or dated */
+  const person = (await me.act("entitycreate", { body: { kind: "person", label: "L. Chen", note: "Named in the minutes." } })).entity_id;
+  const court = (await me.act("entitycreate", { body: { kind: "body", label: "Alameda Housing Tribunal", forum_kind: "court", note: "A court." } })).entity_id;
+  const proc = (await me.act("entitycreate", { body: { kind: "proceeding", label: "Lease rent case", note: "From the caption.", proceeding: { forum: court, kind: "civil", number: "24CV123456" } } })).entity_id;
+  const project = await world.recipes.project(me, "Empty project");
+  const held = await world.recipes.hold(me, "Ordinance.txt", "Section 8.22.050 No landlord shall increase the rent above the limit the board sets.", project);
+  const units = await readHeld(world, me, held.sha);
+  const std = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: held.sha, extent: units[0].extent });
+  const trail = await world.recipes.trail(me, project);
+  const action = (await me.act("actioncreate", { body: { document: ["---", "object_type: action", "title: Records request", "current_state: planned", 'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "counterparty:", "  state: named", "  role: Town Clerk", "  body: Town of Port Ellery", "action_kind: records_request", "---", "", "An action.", ""].join("\n") } })).id;
   const empty = {
-    person: [PATHS.person, { person: ok(PERSON({ posts: [], facts: [], claims: [], cluster: { state: "single", members: [ENT] } })), samepersoncandidates: ok({ ok: true, candidates: [] }) }],
-    proceeding: [PATHS.proceeding, { partiesof: ok({ ok: true, parties: [] }), follows: ok({ ok: true, items: [] }), dutiesof: ok({ ok: true, duties: [] }) }],
-    standard: ["/app/standard/" + STD, { lawrelations: ok({ ok: true, temporal: [], referential: [] }) }],
-    "standard-project": ["/app/standard/" + P, { standardproposals: ok({ ok: true, items: [], truncated: false }) }],
-    "due-date": [PATHS["due-date"], { action: ok({ ok: true, id: ACT, kind: "records_request", clock: [] }), clockproposals: ok({ ok: true, proposals: [] }), clocksics: ok({ ok: true, events: 0 }) }],
-    timeline: [PATHS.timeline, { timeline: ok({ ok: true, world: { items: [], placed_nowhere: [] }, ours: { sources: [{ source: "actions", items: [] }] } }) }],
-    money: [PATHS.money, { moneyset: ok({ ...TRAIL(), inclusions: [], exclusions: [] }) }],
-    ties: [PATHS.ties, { memberties: ok({ ok: true, ties: [] }) }],
+    person: "/app/person/" + person, proceeding: "/app/proceeding/" + proc, standard: "/app/standard/" + std, "standard-project": "/app/standard/" + project,
+    "due-date": "/app/due-date/" + action, timeline: "/app/timeline/" + project, money: "/app/money/" + trail, ties: "/app/ties",
   };
-  for (const [id, [path, plane]] of Object.entries(empty)) {
-    const p = await open(path, { plane });
+  /* the world's own answers hold nothing for them */
+  assert.deepEqual((await me.read("partiesof", { query: { proceeding: proc } })).parties, [], "no party");
+  assert.deepEqual((await me.read("lawrelations", { query: { id: std } })).referential, [], "no relation");
+  assert.deepEqual((await me.read("clockproposals", { query: { action } })).proposals, [], "no proposed clock");
+  assert.deepEqual((await me.read("memberties")).ties, [], "no tie");
+  for (const [id, path] of Object.entries(empty)) {
+    const p = await openAs(world, me, path);
+    assert.equal(main(p).querySelector('[data-state="failed"]'), null, `${id}: every read answered`);
     for (const s of main(p).querySelectorAll("section")) {
       const h = s.querySelector("h2");
       const body = s.textContent.replace(h ? h.textContent : "", "").trim();
@@ -69,12 +81,14 @@ test("R22 a section, list or reading that holds nothing is not drawn, and no cou
     assert.doesNotMatch(main(p).textContent, /: 0\b|· 0\b/, `${id}: a zero count is drawn`);
     for (const k of ["screen.people.count.documents", "screen.people.count.questions", "screen.people.count.projects", "screen.explore.chains"]) notDrew(main(p), k, { n: "0" }, `${id}: ${k} at zero`);
   }
-  const q = await open(PATHS.explore);
-  fill(q, { "explore-at": "2025-06-30" });
-  const zero = await open(PATHS.explore, { plane: { explore: ok({ ok: true, paths: [], complete: true }) } });
+  const zero = await openAs(world, me, "/app/explore/" + person);
   fill(zero, { "explore-at": "2025-06-30" });
   await zero.click(button(zero, "explore"));
   await zero.settle();
+  await settled(zero);
+  const asked = zero.byOp("explore")[0];
+  console.log("DBG", JSON.stringify(asked), JSON.stringify(await me.read("explore", { query: asked.query })).slice(0,400));
+  assert.deepEqual((await me.read("explore", { query: asked.query })).paths, [], "the world's search holds no chain");
   notDrew(main(zero), "screen.explore.chains", { n: "0" });
   drew(main(zero), "screen.explore.nochains", undefined, "the member's search answered");
 });
@@ -102,7 +116,11 @@ test("R23 no field asks for a record id: ties offers named people from the direc
 test("R23 the other people fields are choices too: a claim's other record, a timeline participant, a proceeding party, obligor and court, explore's end, a standard's law, a money trail's question", async () => {
   const names = ["L. Chen", "Public Works Department"];
   const opts = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent).filter((x) => x !== "");
-  const person = await open(PATHS.person, { plane: { samepersoncandidates: ok({ ok: true, entity_id: "ENT-2026-0012", count: 0, candidates: [], truncated: false }) } });
+  const { world, me } = await inWorld();
+  const chen = (await me.act("entitycreate", { body: { kind: "person", label: "L. Chen", note: "Named in the minutes." } })).entity_id;
+  await me.act("entitycreate", { body: { kind: "institution", label: "Public Works Department", note: "The city department." } });
+  const person = await openAs(world, me, "/app/person/" + chen);
+  console.log("DBG2", JSON.stringify(person.byOp("samepersoncandidates")));
   assert.deepEqual(opts(person, "person-claim-other"), ["Public Works Department"], "the person herself is not offered");
   const tl = await open(PATHS.timeline);
   assert.deepEqual(opts(tl, "tl-who"), names);

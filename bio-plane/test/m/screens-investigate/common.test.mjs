@@ -10,6 +10,7 @@ import { interfacePage } from "../../../src/interface-shell/index.mjs";
 import { WORD_ROWS, word, hasWord } from "../../../src/setup-words/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { refusedIn, silent, pending, ok } from "../interface-shell/harness.mjs";
+import { inWorld, openAs, refused, settled } from "./world.mjs";
 import { open, main, rawKeys, plane, DIRECTORY, press, fill, SCREENS, PATHS, P, ENT, MSR, CALC, PROC, ACT, STD, SHA } from "./fixtures.mjs";
 
 const REGISTRY = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
@@ -50,10 +51,13 @@ for (const id of Object.keys(PATHS).filter((x) => x !== "help")) {
 }
 
 test("R10 a read that answers nothing is drawn empty, never failed (control: a refusal is failed, never empty); R22: ties with none draws its designed empty state, not \"You have listed no tie\"", async () => {
-  const p = await open(PATHS.ties, { plane: { memberties: ok({ ok: true, member: "mai", count: 0, ties: [] }) } });
+  const { world, me } = await inWorld();
+  const p = await openAs(world, me, PATHS.ties);
+  assert.deepEqual((await me.read("memberties")).ties, [], "the member has declared no tie: the world's own answer");
   assert.ok(main(p).textContent.includes(word("screen.ties.first")), "the designed empty state, naming the first step");
   assert.equal(main(p).querySelector('[data-state="failed"]'), null);
-  const q = await open(PATHS.ties, { plane: { memberties: refusedIn("SOME_REFUSAL") } });
+  /* a refused read is a fault the real code cannot be made to cause: scripted */
+  const q = await openAs(world, me, PATHS.ties, { plane: { memberties: refusedIn("SOME_REFUSAL") } });
   assert.equal(main(q).querySelector('[data-state="empty"]'), null);
 });
 
@@ -85,19 +89,29 @@ test("R10 every record item a screen names is a reference with its card (DEC-160
 });
 
 test("R10 after an act the screen reads again what it changed and draws it (control: a refused act reads nothing again)", async () => {
-  let n = 0;
-  const p = await open(PATHS.ties, { plane: { memberties: () => { n += 1; return ok({ ok: true, member: "mai", count: 0, ties: n > 1 ? [{ tie_id: "MTI-9", entity: "ENT-1", kind: "employer", note: "East Bay Transit", attribution: "group" }] : [] }); },
-    declaretie: ok({ ok: true, tie_id: "MTI-9" }) } });
-  fill(p, { "tie-who": "ENT-1", "tie-note": "East Bay Transit" });
+  const { world, me } = await inWorld();
+  const transit = (await me.act("entitycreate", { body: { kind: "institution", label: "East Bay Transit", note: "The transit agency." } })).entity_id;
+  const p = await openAs(world, me, PATHS.ties);
+  assert.equal(p.byOp("memberties").length, 1);
+  fill(p, { "tie-who": transit, "tie-note": "East Bay Transit" });
   await press(p, "declaretie");
-  assert.equal(n, 2);
-  assert.ok(main(p).textContent.includes("East Bay Transit"), "the tie she added, read again");
-  const q = await open(PATHS.ties, { plane: { declaretie: refusedIn("ODD_TIE_REFUSAL", "No such entity.") } });
+  await settled(p);
+  assert.equal(p.byOp("memberties").length, 2, "read again after the act");
+  const held = (await me.read("memberties")).ties;
+  assert.equal(held.length, 1, "the tie is held");
+  assert.deepEqual([held[0].entity, held[0].note], [transit, "East Bay Transit"]);
+  assert.ok(main(p).textContent.includes(held[0].note), "the tie she added, read again");
+  /* the real store refuses a tie to a record it does not hold */
+  const q = await openAs(world, me, PATHS.ties);
   const before = q.byOp("memberties").length;
-  fill(q, { "tie-who": "ENT-1", "tie-note": "x" });
+  const gone = "ENT-2026-9999";
+  const why = await refused(world, me, "declaretie", { entity: gone, note: "x" });
+  assert.equal(why.ok, false, "the store refuses a tie to an entity it does not hold");
+  fill(q, { "tie-who": gone, "tie-note": "x" });
   await press(q, "declaretie");
+  await settled(q);
   assert.equal(q.byOp("memberties").length, before);
-  assert.ok(main(q).textContent.includes("No such entity."), "the refusal by its words");
+  assert.ok(main(q).textContent.includes(why.translation || why.why || why.code), "the refusal by its words");
   assert.equal(q.doc.getElementById("tie-note").value, "x", "the form keeps what was typed (interface-shell R13)");
 });
 

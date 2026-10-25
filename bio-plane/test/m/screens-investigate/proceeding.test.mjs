@@ -3,6 +3,19 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, button, fill, press, PROC, SHA, ACT, DATES, word, drew, notDrew, dayOf, COURT } from "./fixtures.mjs";
+import { inWorld, openAs, settled, readHeld, declareStandard, refused } from "./world.mjs";
+
+const REASON = "The order says so.";
+/** The member's own acts that make a proceeding to work on: the team's profile, a court she adds, a proceeding in it, a person and a document held. */
+async function matter(world, me) {
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const project = await world.recipes.project(me, "Rent case");
+  const court = (await me.act("entitycreate", { body: { kind: "body", label: "Alameda Housing Tribunal", forum_kind: "court", note: "A court." } })).entity_id;
+  const proc = (await me.act("entitycreate", { body: { kind: "proceeding", label: "the lease rent case", note: "From the court's caption", proceeding: { forum: court, kind: "civil", number: "24CV123456" } } })).entity_id;
+  const party = (await me.act("entitycreate", { body: { kind: "person", label: "Ana Rivera", note: "A tenant named in the filing." } })).entity_id;
+  const other = (await me.act("entitycreate", { body: { kind: "body", label: "City Clerk", note: "The clerk." } })).entity_id;
+  return { project, court, proc, party, other };
+}
 
 const at = "/app/proceeding/" + PROC;
 const sec = (p, key) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word(key));
@@ -29,30 +42,79 @@ test("R6 reads the proceeding (entity: its caption, court and neutral label), it
 });
 
 test("R6 entitycreate \"Register the proceeding\" from its caption: court, number, a neutral label, the member's note; then it opens", async () => {
-  const p = await open("/app/proceeding", { plane: { entitycreate: ok({ ok: true, entity_id: "ENT-2026-0200", kind: "proceeding" }) } });
-  assert.deepEqual(actsIn(main(p)), ["entitycreate"]);
-  fill(p, { "pr-forum": COURT, "pr-number": "RG26-114502", "pr-kind": "civil", "pr-label": "the lease rent case", "pr-note": "From the court's caption, captured 1 October" });
-  await press(p, "entitycreate", { el: p.root().querySelectorAll('button[data-act="entitycreate"]').pop() });
-  assert.deepEqual(p.byOp("entitycreate")[0].body, { kind: "proceeding", note: "From the court's caption, captured 1 October", proceeding: { forum: "ENT-2026-0101", kind: "civil", number: "RG26-114502" }, label: "the lease rent case", aliases: ["the lease rent case"] });
-  assert.equal(p.location.pathname, "/app/proceeding/ENT-2026-0200");
+  const { world, me } = await inWorld();
+  const M = await matter(world, me);
+  const p = await openAs(world, me, "/app/proceeding");
+  assert.deepEqual(actsIn(main(p)).filter((a) => a === "entitycreate"), ["entitycreate"]);
+  fill(p, { "pr-forum": M.court, "pr-number": "24CV777001", "pr-kind": "civil", "pr-label": "the lease rent case", "pr-note": "From the court's caption, captured 1 October" });
+  await press(p, "entitycreate", { el: p.root().querySelectorAll('button[data-act="entitycreate"]').pop(), reason: REASON });
+  await settled(p);
+  const sent = p.byOp("entitycreate").pop();
+  assert.deepEqual(sent.body, { kind: "proceeding", note: "From the court's caption, captured 1 October", proceeding: { forum: M.court, kind: "civil", number: "24CV777001" }, label: "the lease rent case", aliases: ["the lease rent case"] });
+  assert.match(p.location.pathname, /^\/app\/proceeding\/ENT-/);
+  const made = p.location.pathname.split("/").pop();
+  assert.notEqual(made, M.proc, "a new proceeding");
+  const held = (await me.read("entity", { query: { id: made } })).entity;
+  assert.deepEqual([held.kind, held.proceeding.forum, held.proceeding.number, held.proceeding.kind], ["proceeding", M.court, "24CV777001", "civil"], "the world holds it");
+  assert.ok(held.label.includes("24CV777001"), "the store's neutral label names the number, the member's own label is kept as an alias");
+  assert.ok((held.aliases || []).some((a) => (a.alias || a) === "the lease rent case"));
 });
 
 test("R6 recordline \"Add a party by role\"; followregister (a register needing a login says filings come only by capture); declare \"Hold an order as obligations\"; courtlink", async () => {
-  const p = await open(at, { plane: { recordline: ok({ ok: true }), followregister: ok({ ok: true }), declare: ok({ ok: true }), courtlink: ok({ ok: true }) } });
-  fill(p, { "pr-party": "ENT-2026-0104", "pr-role": "intervenor", "pr-doc": SHA });
-  await press(p, "recordline");
-  assert.deepEqual(p.byOp("recordline")[0].body, { kind: "party_to", from: "ENT-2026-0104", to: PROC, role: "intervenor", basis: { captureSha: SHA, extent: { kind: "document" } } });
+  const { world, me } = await inWorld();
+  const M = await matter(world, me);
+  const order = await world.recipes.hold(me, "Order.txt", "The respondent shall produce the 2024 rent schedules.", M.project);
+  const law = await world.recipes.hold(me, "Ordinance.txt", "Section 8.22.050 No landlord shall increase the rent above the limit.", M.project);
+  const ou = await readHeld(world, me, order.sha), lu = await readHeld(world, me, law.sha);
+  const court = await declareStandard(me, { cite: "Tribunal order 24CV123456", kind: "court", issuer: "Alameda Housing Tribunal", sha: order.sha, extent: ou[0].extent });
+  const ord = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: law.sha, extent: lu[0].extent });
+  const p = await openAs(world, me, "/app/proceeding/" + M.proc);
+  fill(p, { "pr-party": M.party, "pr-role": "intervenor", "pr-doc": order.sha });
+  await press(p, "recordline", { reason: REASON });
+  await settled(p);
+  const line = p.byOp("recordline")[0];
+  assert.deepEqual([line.body.kind, line.body.from, line.body.to, line.body.role, line.body.basis.captureSha], ["party_to", M.party, M.proc, "intervenor", order.sha]);
+  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the party is recorded");
+  const parties = (await me.read("partiesof", { query: { proceeding: M.proc } })).parties;
+  assert.deepEqual(parties.map((x) => [x.party, x.role]), [[M.party, "intervenor"]], "the world holds the party by role");
   drew(sec(p, "screen.proceeding.register.head"), "screen.proceeding.login.note");
   fill(p, { "pr-register": "https://court.example/register/RG26", "pr-login-0": true });
-  await press(p, "followregister");
-  assert.deepEqual(p.byOp("followregister")[0].body, { address: "https://court.example/register/RG26", proceeding: PROC, gated: { kind: "account" } }, "R16: the screen's own entity id");
-  fill(p, { "pr-obligor": "ENT-2026-0103", "pr-act": "produce the 2024 rent schedules", "pr-clause": "Order ¶3", "pr-due": "2026-10-30" });
-  await press(p, "declare");
-  assert.deepEqual(p.byOp("declare")[0].body, { modality: "duty", obligor: "ENT-2026-0103", performance: { act: "produce the 2024 rent schedules" }, source: { kind: "court" }, clause: "Order ¶3", arising_in: PROC,
+  await press(p, "followregister", { reason: REASON });
+  await settled(p);
+  assert.deepEqual(p.byOp("followregister")[0].body, { address: "https://court.example/register/RG26", proceeding: M.proc, gated: { kind: "account" } }, "R16: the screen's own entity id");
+  const followed = (await me.read("follows", {})).items.filter((f) => f.subject.proceeding === M.proc);
+  assert.deepEqual(followed.map((f) => [f.subject.address, f.gated && f.gated.kind]), [["https://court.example/register/RG26", "account"]], "the world holds the follow, gated");
+  fill(p, { "pr-obligor": M.other, "pr-act": "produce the 2024 rent schedules", "pr-clause": "Order ¶3", "pr-due": "2026-10-30" });
+  await press(p, "declare", { reason: REASON });
+  await settled(p);
+  assert.deepEqual(p.byOp("declare")[0].body, { modality: "duty", obligor: M.other, performance: { act: "produce the 2024 rent schedules" }, source: { kind: "court" }, clause: "Order ¶3", arising_in: M.proc,
     trigger: { kind: "date", date: "2026-10-30" }, time: { basis: "window", date: "2026-10-30" } });
-  fill(p, { "pr-court": "STD-2026-0010-court", "pr-law": "STD-2026-0001-ordinance", "pr-citation": "CNT-2026-0020", "pr-type": "interprets" });
+  fill(p, { "pr-court": court, "pr-law": ord, "pr-type": "interprets" });
+  p.fire(p.doc.getElementById("pr-court"), "change");
+  await settled(p);
+  const passage = p.doc.getElementById("pr-citation").querySelectorAll("option").filter((o) => o.getAttribute("value") !== "")[0].getAttribute("value");
+  fill(p, { "pr-citation": passage });
   await press(p, "courtlink", { reason: "the order reads the ordinance's §4" });
-  assert.deepEqual(p.byOp("courtlink")[0].body, { type: "interprets", from: "STD-2026-0010-court", to: "STD-2026-0001-ordinance", citation: "CNT-2026-0020", reason: "the order reads the ordinance's §4" });
+  await settled(p);
+  const link = p.byOp("courtlink")[0];
+  assert.deepEqual([link.body.type, link.body.from, link.body.to, link.body.citation, link.body.reason], ["interprets", court, ord, passage, "the order reads the ordinance's §4"]);
+  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the link is held");
+  const rel = await me.read("lawrelations", { query: { id: court } });
+  assert.ok([...(rel.referential || []), ...(rel.temporal || [])].some((r) => r.type === "interprets" && (r.to.standard === ord || r.from.standard === ord)), "the world holds the link");
+});
+
+/* REPORTED: the page's `declare` sends `source: { kind: "court" }` with no `standard`; the real store refuses it (NO_SUCH_STANDARD, duties/index.mjs:427-429),
+   so "Hold an order as obligations" holds nothing in the real world (proceeding.mjs:195). The assertion stays, as a todo, until the page names the court standard. */
+test.todo("REPORTED: declare \"Hold an order as obligations\" is refused by the real store, no standard named in its source (screens-investigate/proceeding.mjs:195, duties/index.mjs:427)", async () => {
+  const { world, me } = await inWorld();
+  const M = await matter(world, me);
+  const p = await openAs(world, me, "/app/proceeding/" + M.proc);
+  fill(p, { "pr-obligor": M.other, "pr-act": "produce the 2024 rent schedules", "pr-clause": "Order ¶3", "pr-due": "2026-10-30" });
+  await press(p, "declare", { reason: REASON });
+  await settled(p);
+  assert.equal(main(p).querySelector('[data-gap="refused"]'), null, "the order is held");
+  const duties = (await me.read("dutiesof", { query: { entity: M.other, as: "obligor" } })).duties;
+  assert.deepEqual(duties.map((d) => [d.performance.act, d.arising_in, d.time.date]), [["produce the 2024 rent schedules", M.proc, "2026-10-30"]]);
 });
 
 test("R6 each act names what it needs (control: nothing sent), and a refusal is drawn beside the act", async () => {
