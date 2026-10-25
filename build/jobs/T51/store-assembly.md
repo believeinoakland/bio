@@ -163,3 +163,7 @@ Size (session_01PFCJP5a6GVyjzzsxKD2a53): test runs 52, module lines 3735
 **Found in other modules:** extraction's gap above (item 1); `next_page` in `pending.mjs` is the ledger's own (my copy; plane keeps its copy until Wave B).
 
 Size (session_01HPMiWGM9dDovp7swY1STgF): test runs 9, module lines 3740
+
+## J7 · COMPLETE
+
+COMPLETE (J6 in my record, pushed): B5, B6 and B8 applied; suite 379 tests, 1 fail (R23, accepted), 2 todo; format, architecture, coverage, ownership 0; words 15 (accepted). One fixtures finding is left red for you: r9-jobs.test.mjs:356 (R76 G129c, the 300-page OCR scan scripting next_page): no provider publishes it, extraction's real OCR path never emits next_page. See J6.
