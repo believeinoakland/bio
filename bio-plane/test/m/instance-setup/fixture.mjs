@@ -10,6 +10,7 @@ import { InstanceSetup, instanceSetupOps } from "../../../src/setup.mjs";
 import { AI_ACCOUNT_CHECKS } from "../../../src/ai-accounts/index.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
 import { registrars } from "../promotion/fixtures.mjs";
+import { groupIdentityRegistrar } from "../public-read/fixtures.mjs";
 import { linesWorld } from "../lines/fixtures.mjs";
 
 export const WORKERD_PATTERN_CAP = 50;
@@ -63,6 +64,9 @@ export const applyRecordSchema = (st) => {
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
 };
 
+/* public-read's own answers to a registration (its published fixture). */
+const registration = groupIdentityRegistrar();
+
 /* The providers this module uses, as stand-ins that record what they were asked. */
 export function providers({ admins = ["admin", "member:ada"] } = {}) {
   const consumers = [];
@@ -110,9 +114,9 @@ export function providers({ admins = ["admin", "member:ada"] } = {}) {
     identities: [],
     publicRead: {
       registerGroupIdentity({ identity } = {}) {
-        if (typeof identity !== "function") return { ok: false, reason: "PROVIDER_MALFORMED" };
-        if (p.identities.length) return { ok: false, reason: "PROVIDER_DECLARED" };
-        p.identities.push(identity); return { ok: true };
+        if (typeof identity !== "function") return registration.malformed;
+        if (p.identities.length) return registration.declared;
+        p.identities.push(identity); return registration.first;
       },
     },
     /* The domain's answer: a function of the URL, or a thrown error. */
