@@ -149,7 +149,7 @@ test("R3 boundary.fences is published.fences unchanged, member_only_acts is memb
   assert.deepEqual(boundary.fences, machineFences(owners));
   assert.ok(boundary.fences.length > 0);
   /* Whatever the plane publishes is what is carried: a fence from a module's own family arrives as published. */
-  const moved = [...pub.fences, { code: "MACHINE_CANNOT_MOVED", family: "MODULE_CHECKS", check: "C-9.9", says: "moved words" }];
+  const moved = [...pub.fences, { code: "MACHINE_CANNOT_MOVED", family: "MODULE_CHECKS", check: "C-9.9", says: "moved words" }]; // fixtures-own: input a fence the test makes up to prove the pack carries what the plane publishes; no source holds its code
   assert.equal(renderPack(published({ fences: moved })).resident.boundary.fences, moved);
   assert.deepEqual(boundary.member_only_acts, memberOnlyActs(pub.catalog));
   assert.equal(boundary.fences_sourcing, "driven");

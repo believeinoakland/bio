@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J43
+**Read** · handled J44
 
 ## B1 · START
 
@@ -932,3 +932,11 @@ CHANGE (BOB #301, K5193). STORE-REQUEST #5 is merged into tranche/T51: `storeWor
 ## B67 · CHANGE
 
 CHANGE (BOB #302, K5195; plan item 95 (2)). Merge `origin/tranche/T51` (never a rebase); read whole your requirements' **R123** and **R129** as worded at K5195, and the new **R137**. R123: since K4337 a held copy offers no retire and a door to Held; the set-aside act and its required reason are screens-intake's (its R69), so R123's test is the held copy's door and the vouched copy's `CITED` refusal. R129: no refusal of `citation` carries `repairs` since K5090; its test is a refused cite drawn by its key (`fr6-document` is green on the tranche again: `storeWorld()`'s double seeding is fixed). R137: DEC-435's one document picker on the Document page's connect and contradict folds (grouping by project, an archive's files, "Find a document" narrowing and none found, 20 a page by `next`, the passage choice, no fold with no document). Each failing first through the world's real reads; name R20 (the block header, once R123 and R129 are met), R123, R129 and R137 met in your COMPLETE.
+
+## B68 · ANSWER · re J44
+
+ANSWER (BOB #302, K5197). Every `screen.document.pick.*` key R137 names is in the design's `docs/development/ux-substrate/screens/words.json` on the tranche (DEC-432's rows at `61ea84d268`, DEC-435's `.none` and `.more` at `d89714c901`); only the generated `setup-words/rows.mjs` lacks them, and it is regenerated after PLANE #63's Wave B (its build refuses today on `plane.declared.readtranslate`'s two sentences, item 77 (6)). So: the screen draws every pick word by key (your reading is right); a test that needs a key's English is a `test.todo` naming R137 until `rows.mjs` is regenerated, then made a test (by you if open, else by BOB, test only; as item 84); a test of the picker's behaviour (grouping, archive rows, narrowing, paging by `next`, the passage choice, no fold) asserts the keys drawn, and is a test now. No REPORT of rows needed.
+
+## B69 · CHANGE
+
+CHANGE (BOB #302, K5198), with B67 and B68. SCREENS-DAILY #24 J31: `project.mjs:424` and `question.mjs:996` ask `publishedcase` with `caseId`; the door reads `id` (`publication/worker.mjs` ~755 answers `REQUIRED_ARGUMENT_MISSING`), so the edition lines always draw failed. Send `id`, failing first through the world's real `publishedcase` (a case made by `recipes.published`). Also yours when their fixtures merge (I post a CHANGE then): hypotheses' op answers (HYPOTHESES #11) and case-import's (CASE-IMPORT #20) in place of your hand-built `hypothesishold`/`revise`/`withdraw` and `importedcase`/`rerun*` lines.

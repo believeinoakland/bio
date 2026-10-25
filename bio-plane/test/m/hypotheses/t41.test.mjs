@@ -244,11 +244,16 @@ test("R19 noteShare's refusals in order, each writing nothing: MACHINE_CANNOT_NO
   assert.equal(w.h.noteShare({ note, project: PROJ, by: ANN }).ok, true, "the negative control");
 });
 
+/** inquiry R59's own `personWarning` (K2479) over one person in no public role: the stand-in a test gives `noteShare`. */
+const ROLELESS = { entity_id: E3, kind: "person", label: "Jane Roe", public_role: false };
+
 test("R19 a note naming a person in no public role carries inquiry R59's warning at the act, recorded with the share, never a refusal; one naming none carries no warning", () => {
-  const WARN = { code: "PERSON_NO_PUBLIC_ROLE", persons: ["ENT-2026-0003"] };
+  const WORDS = `I think ${E3} is behind it.`;
+  const WARN = inquiryModule.personWarning({ text: WORDS, entities: [ROLELESS], viewer: ANN });
+  assert.ok(WARN, "the real test names the person");
   const asked = [];
-  const w = setup({ personWarning: ({ text, viewer }) => { asked.push(viewer); return text.includes("ENT-2026-0003") ? WARN : null; } });
-  const named = w.h.noteWrite({ text: `I think ${E3} is behind it.`, by: ANN }).note;
+  const w = setup({ personWarning: ({ text, viewer }) => { asked.push(viewer); return inquiryModule.personWarning({ text, entities: [ROLELESS], viewer }); } });
+  const named = w.h.noteWrite({ text: WORDS, by: ANN }).note;
   const plain = w.h.noteWrite({ text: "The minutes were late.", by: ANN }).note;
   const r = w.h.noteShare({ note: named, project: PROJ, by: ANN });
   assert.deepEqual([r.ok, r.warning], [true, WARN], "warned, never refused");
@@ -290,9 +295,12 @@ test("R19 with no stand-in test, noteShare asks inquiry R59's own personWarning 
 /* ---- R20 ---------------------------------------------------------------------------------------------------------- */
 
 test("R20 noteUnshare by its author withdraws it: its words leave every answer and every row; the project's record keeps that a note was shared by her on that date and withdrawn on that date; refusals MACHINE_CANNOT_NOTE, NO_SUCH_SHARE (absent, withdrawn or another's, one answer), each writing nothing", () => {
-  const w = setup({ personWarning: () => ({ code: "PERSON_NO_PUBLIC_ROLE", persons: ["ENT-2026-0003"] }) });
+  const NAMED = [{ ...ROLELESS, named: true }];
+  const w = setup({ personWarning: ({ text, viewer }) => inquiryModule.personWarning({ text, entities: NAMED, viewer }) });
   const { note } = w.h.noteWrite({ text: "A secret about the treasurer.", by: ANN });
   const sh = w.h.noteShare({ note, project: PROJ, by: ANN });
+  const CODE = inquiryModule.personWarning({ text: "A secret about the treasurer.", entities: NAMED, viewer: ANN }).code;
+  assert.equal(sh.warning?.code, CODE, "the share carried the warning, the negative control");
   const keep = w.h.noteShare({ note: w.h.noteWrite({ text: "vera's narrative", by: VERA }).note, project: PROJ, by: VERA });
   const expect = (args, code) => {
     const before = everything(w);
@@ -313,7 +321,7 @@ test("R20 noteUnshare by its author withdraws it: its words leave every answer a
   assert.deepEqual(read.shares.map((s) => s.share), [keep.share], "the negative control stands");
   assert.deepEqual(read.withdrawn, [{ share: sh.share, by: "ann", shared: sh.at, withdrawn: r.withdrawn }]);
   assert.ok(!everything(w).replace(/^member_notes:.*$/m, "").includes("secret about the treasurer"), "its words are in no row but her own note");
-  assert.ok(!JSON.stringify(w.rows(`SELECT * FROM ${SHARES_TABLE} WHERE share_id = ?`, sh.share)).includes("PERSON_NO_PUBLIC_ROLE"));
+  assert.ok(!JSON.stringify(w.rows(`SELECT * FROM ${SHARES_TABLE} WHERE share_id = ?`, sh.share)).includes(CODE));
   /* the marker is the share's, never the note's: her note is unchanged and holds no sign of the share */
   assert.deepEqual(w.h.notesOf({ viewer: ANN }).notes.map((n) => [n.note, n.text, n.turned]), [[note, "A secret about the treasurer.", []]]);
   assert.equal(hypothesesOps(w.h, url("noteunshare"), { share: keep.share, by: VERA }).noteunshare().ok, true);
