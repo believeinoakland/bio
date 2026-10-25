@@ -100,3 +100,17 @@ The two lines still hand-built on `coreDue` are queue-producers' `docket.test.mj
 - `bio-plane/src/setup-words/build.mjs --check`: stale `rows.mjs` note only, as expected; no refusal names docket.
 
 Size (session_01XN4PpTaXJFq2tHmnnK6J94): test runs 5, module lines 0
+
+## J4 · COMPLETE
+
+COMPLETE, follow-up 37 (fix round 10). Test files only; no product code changed.
+
+Published `coreDueKinds()` (new export, `bio-plane/test/m/docket/fixtures.mjs`): returns `{world, case, caseQ, manager, other, response, statementP, statementQ, due, otherDue}`. Real acts in two cases of two projects (P managed by alice, Q by dave): a subject's response and statement, edition 2 with "What changed", and a load-bearing tension on P; a subject's statement, edition 2 with "What changed", and a load-bearing tension on Q. `due` (alice, 4 items: response, statement, edition 2, tension CAND-1), `otherDue` (dave, 3 items: statement, edition 2, tension CAND-3). Test in `fixtures.test.mjs`, "R9 fixtures: coreDueKinds ...".
+
+Markers added: none.
+
+Note for BOB (K4426): every real `statement` item carries its edition (`docket_record.edition` NOT NULL; `docketFile` refuses no edition, `DOCKET_NO_EDITION`). queue-producers' `words.test.mjs:217` ("a statement stated with no edition") has no real producer; the decision is yours. queue-producers `docket.test.mjs:36` and `words.test.mjs:217` still hand-build the answer and re-point to `coreDueKinds` in that module's job.
+
+Checks: docket suite 91 pass / 0 fail; fixtures.test 4 / 0; users named by impact (58 files) 388 / 0; checks fixtures (docket) 0, format 0, architecture 0, coverage 31 of 31, words 0, ownership 0; run.mjs: product-wide fixture failures in other modules only (none in docket's files); setup-words stale-rows note only.
+
+Size (session_01XN4PpTaXJFq2tHmnnK6J94): test runs 5, module lines 0
