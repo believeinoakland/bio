@@ -42,3 +42,7 @@ Causes done: actions/actionsForRefusal, 3 lines (open.test.mjs:97, 98, 107), now
 Lines left: none (no waiting, stay or Wave B lines).
 Tests: action-replies 31 pass, 0 fail. Checks: format 0 failures; architecture 0; coverage 11 of 11 ids; ownership 0; fixtures 0 failures (accepted 1). `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules, so no user tests to run.
 Size (session_014bgUSo7CFss8G3KkUwUuZE): test runs 4, module lines 0
+
+## J3 · COMPLETE
+
+COMPLETE. Fix round 10 batch 6: the 3 actions/actionsForRefusal lines (open.test.mjs:97,98,107) are at zero. :97 and :107 take actions' real unknownRead refusal; :98's actionRead case keeps a made-up BROKEN code, marked 'fixtures-generic: BROKEN' at open.test.mjs:100, because this module skips NO_SUCH_ACTION by design and actions gives no other actionRead refusal (your K5060 read; no fixtures-own markers). Module tests 31 pass, 0 fail; format, architecture, coverage, ownership, fixtures all 0 failures; impact: 0 affected modules. Record: build/jobs/T51/action-replies.md.
