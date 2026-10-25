@@ -358,7 +358,7 @@ test("R32 (2) every fact recorded is listed: valid today, then those whose valid
   assert.ok(f.querySelectorAll(".cs-gap").length >= read.undetermined.length, "each marked undetermined");
 });
 
-test.todo("REPORTED: R32 (2) a fact withdrawn is not listed in the withdrawn fold: person answers only the unwithdrawn facts (people/index.mjs:822 `withdrawn_at IS NULL`), so the fold (person.mjs:176-178) is never drawn from the store", async () => {
+test.todo("REPORTED (people R44, K5186): R32 (2) a fact withdrawn is not listed in the withdrawn fold: person answers only the unwithdrawn facts (people/index.mjs:822 `withdrawn_at IS NULL`), so the fold (person.mjs:176-178) is never drawn from the store", async () => {
   const { world, me, chen, lease } = await scene();
   await fact(me, chen, lease.sha);
   const gone = await fact(me, chen, lease.sha, { kind: "contact", value: "old@example.org", valid: { from: "2020-01-01", to: LATER } });
@@ -490,7 +490,7 @@ test("R39 the form's basis words are label.claimbases.<id>, and screen.person.ba
   for (const b of ["identifier", "corroborated_name", "name", "testimony"]) assert.ok(!s.textContent.includes(word("screen.person.basis." + b)));
 });
 
-test.todo("REPORTED: R39 person gives no `basis` on its claims (people/index.mjs:1071 `#claimsOn` omits it), so a claim of each basis is drawn by its sentence, never by screen.person.basis.row.<basis> (person.mjs:277)", async () => {
+test.todo("REPORTED (people R43, K5186): R39 person gives no `basis` on its claims (people/index.mjs:1071 `#claimsOn` omits it), so a claim of each basis is drawn by its sentence, never by screen.person.basis.row.<basis> (person.mjs:277)", async () => {
   const { world, me, chen } = await claimsOfEveryBasis();
   const p = await openAs(world, me, "/app/person/" + chen);
   const read = await me.read("person", { query: { id: chen, at: personAt(p) } });
@@ -499,7 +499,7 @@ test.todo("REPORTED: R39 person gives no `basis` on its claims (people/index.mjs
   for (const c of read.claims) drew(s, "screen.person.same.because", { grade: c.grade, basis: word("screen.person.basis.row." + c.basis) });
 });
 
-test.todo("REPORTED: R38 a standing claim row is drawn as its grade, the basis in the row's words (screen.person.same.because), who and when; person gives no `basis` (people/index.mjs:1071), so the row is the claim's sentence", async () => {
+test.todo("REPORTED (people R43, K5186): R38 a standing claim row is drawn as its grade, the basis in the row's words (screen.person.same.because), who and when; person gives no `basis` (people/index.mjs:1071), so the row is the claim's sentence", async () => {
   const { world, me, chen, twin, lease, member } = await scene();
   const dev = await member("dev");
   const mai = await member("mai");

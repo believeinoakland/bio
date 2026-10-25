@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { createHash } from "node:crypto";
 import { SESSION_OPS } from "../../../src/op-declarations/index.mjs";
-import { inWorld, openAs, settled, readHeld, declareStandard, rewrite } from "./world.mjs";
+import { WORLD_FOUNDER_HANDLE, inWorld, openAs, settled, readHeld, declareStandard, rewrite } from "./world.mjs";
 import { open, main, fill, press, plane, PATHS, MORE_PATHS, TRAIL, TIMELINE, FACTS, moneyAnswer, MATTER, DEF, PERSON, PERSON_ENTITY, STANDARD, STD_PROPOSALS, WALK, SPOT, CALCULATION,
   PROJECT_MD, ACTION, PROPOSALS, M1, P, ENT, ORG, SHA, SHA2, SHA3, STD, MSR, word, drew, dayOf } from "./fixtures.mjs";
 
@@ -37,6 +37,9 @@ async function screensOf(world, me) {
   for (const t of TITLES) docs.push(await world.recipes.hold(me, t + ".txt", t === "Rent schedule" ? ORDINANCE : t === "Vouched minutes" ? POLICY : "The lease is amended: " + t + ".", project));
   const person = (await me.act("entitycreate", { body: { kind: "person", label: "Lin Chen", note: "Director of Public Works." } })).entity_id;
   const trail = await world.recipes.trail(me, project, "Records office budget, FY2026");
+  const fact = (await me.act("recordfact", { body: { amount: "1250000.00", as_read: "$1,250,000", currency: "USD", sign: "+", precision: "exact", kind: "expenditure", phase: "adopted", basis: "budgetary",
+    period: { from: "2025-07-01", to: "2026-06-30" }, source: { capture_sha: docs[0].sha, extent: { kind: "document" } } } })).fact_id;
+  await me.act("include", { body: { setId: trail, factId: fact, reason: REASON } });
   const ou = await readHeld(world, me, docs[1].sha), pu = await readHeld(world, me, docs[2].sha);
   const ord = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: docs[1].sha, extent: ou[0].extent });
   const pol = await declareStandard(me, { cite: "Instruction 9.1", kind: "policy", issuer: "Public Works Department", sha: docs[2].sha, extent: pu[0].extent });
@@ -46,17 +49,21 @@ async function screensOf(world, me) {
   const table = (await me.act("tabledeclare", { body: { source: { capture_sha: csv.sha, extent: { kind: "document" } }, header: ["payer", "payee", "amount"],
     schema: { fields: [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }] } } })).sha;
   const calc = (await me.act("calculationcreate", { body: { question: "How many payments?", period: { from: "2025-07-01", to: "2026-06-30" }, kind: "count", project, inputs: [{ name: "input", table }] } })).calc_id;
-  return { project, docs, person, trail, ord, pol, proc, calc };
+  return { project, docs, person, trail, fact, ord, pol, proc, calc };
 }
 
 /* one act per screen, one that re-reads by default (no `rereads`) and sends something; each with the read it must still re-read */
 const SCREENS = [
   ["person", (W) => "/app/person/" + W.person, "person-fact-doc", async (p) => { fill(p, { "person-alias": "Lin C." }); await press(p, "entityalias"); }, "entityalias", "entity"],
   ["timeline", (W) => "/app/timeline/" + W.project, "tl-doc", async (p, W) => { fill(p, { "tl-doc": W.docs[0].sha, "tl-date": "2024-05-01" }); await press(p, "recorddatedfact"); }, "recorddatedfact", "image"],
-  ["money", (W) => "/app/money/" + W.trail, "mf-doc", async (p) => { fill(p, { "mf-expertise": "budgets" }); await press(p, "checkrequest", { reason: "the budget figures" }); }, "checkrequest", "moneyset"],
+  ["money", (W) => "/app/money/" + W.trail, "mf-doc", async (p, W) => {
+    const rowOf = () => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${W.fact}"]`));
+    await p.click(rowOf().querySelector('[data-shell="row"]'));
+    fill(p, { "mf-expertise": "budgets" }); await press(p, "checkrequest", { within: rowOf().nextElementSibling, reason: "the budget figures" });
+  }, "checkrequest", "moneyset"],
   ["standard", (W) => "/app/standard/" + W.pol, "st-doc", async (p, W) => { fill(p, { "st-type": "implements", "st-to": W.ord, "st-citation": W.cite }); await press(p, "lawrelate", { reason: "it implements the ordinance" }); }, "lawrelate", "standard"],
   ["proceeding", (W) => "/app/proceeding/" + W.proc, "pr-doc", async (p) => { fill(p, { "pr-register": "https://court.example/register/RG26" }); await press(p, "followregister"); }, "followregister", "entity"],
-  ["calculation", (W) => "/app/calculation/" + W.calc, "calc-set", async (p) => { await press(p, "calculationaccept", { reason: "checked twice" }); }, "calculationaccept", "calculation"],
+  ["calculation", (W) => "/app/calculation/" + W.calc, "calc-wb", async (p) => { await press(p, "calculationaccept", { reason: "checked twice" }); }, "calculationaccept", "calculation"],
 ];
 
 for (const [name, pathOf, field, act, op, reread] of SCREENS) {
@@ -108,26 +115,28 @@ test("R4 C14 money's act that files a document (acquire) reads the documents aga
 const type = async (p, id, text) => { const el = p.doc.getElementById(id); el.value = text; p.fire(el, "input"); await p.clock.tick(1000); await p.settle(); };
 const DAY = 86400000;
 
-/** Two projects: "Council minutes" held in the other one (first), then in this one 40 days later, and a "Budget memo" held in this one. A trail of this project.
+/** Two projects: "Council minutes" held in the other one (first), then in this one 2 days later, and a "Budget memo" held in this one. A trail of this project.
  *  `pickerRows` are the picker's rows as the store answers them, `here` the documents of this project in the owner's order, `others` the rest. */
-async function alike(world, me) {
+async function alike(world, sitting) {
+  let me = sitting;
   await world.recipes.profiles(me, ["oakland-alameda"]);
   const other = await world.recipes.project(me, "Lease renewals");
   const project = await world.recipes.project(me, "Records office budget");
-  const away = await world.recipes.hold(me, "Council minutes", "The council met in August.", other);
-  await world.tick(40 * DAY);
-  const minutes = await world.recipes.hold(me, "Council minutes", "The council met in October.", project);
-  const memo = await world.recipes.hold(me, "Budget memo", "The budget memo for the records office.", project);
+  const away = await world.recipes.hold(me, "Council minutes.txt", "The council met in August.", other);
+  await world.tick(2 * DAY);
+  me = await world.signIn(WORLD_FOUNDER_HANDLE, { admin: true }); /* the first sitting has ended */
+  const minutes = await world.recipes.hold(me, "Council minutes.txt", "The council met on October 6, 2026 and adopted the budget for the records office.", project);
+  const memo = await world.recipes.hold(me, "Budget memo.txt", ORDINANCE, project);
   const trail = await world.recipes.trail(me, project, "Records office budget, FY2026");
   const rows = (await me.read("heldcaptures", { query: { limit: "200", state: "held_and_vouched", fields: "picker" } })).held;
   const shaOf = (r) => r.capture.sha256;
-  const first = rows.filter((r) => r.project === project).map(shaOf), rest = rows.filter((r) => r.project !== project).map(shaOf);
-  return { other, project, away, minutes, memo, trail, rows, here: first, others: rest, ordered: [...first, ...rest] };
+  const here = rows.filter((r) => r.project === project).map(shaOf), rest = rows.filter((r) => r.project !== project).map(shaOf);
+  return { other, project, away, minutes, memo, trail, rows, me, here, others: rest, ordered: [...here, ...rest] };
 }
 
 test("R34 C95 the document picker lists this project's documents first, each by title and date, so documents titled alike can be told apart; control: with no project to put first, the owner's order stands", async () => {
-  const { world, me } = await inWorld();
-  const A = await alike(world, me);
+  const { world, me: sitting } = await inWorld();
+  const A = await alike(world, sitting), me = A.me;
   assert.deepEqual([...A.here].sort(), [A.minutes.sha, A.memo.sha].sort(), "the store tells which documents are this project's");
   const p = await openAs(world, me, "/app/money/" + A.trail);
   const opts = optsOf(p, "mf-doc");
@@ -139,14 +148,16 @@ test("R34 C95 the document picker lists this project's documents first, each by 
   assert.notEqual(text(A.minutes.sha), text(A.away.sha), "the two alike titles are drawn differently");
   const bare = await openAs(world, me, "/app/person/" + (await me.act("entitycreate", { body: { kind: "person", label: "Lin Chen", note: "A person." } })).entity_id);
   assert.deepEqual(optsOf(bare, "person-fact-doc").map(([v]) => v), A.rows.map((r) => r.capture.sha256), "a screen with no project keeps the owner's order");
-  const std = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: A.minutes.sha, extent: (await readHeld(world, me, A.minutes.sha))[0].extent });
+  const units = await readHeld(world, me, A.memo.sha);
+  assert.ok(units.length, "the memo is read");
+  const std = await declareStandard(me, { cite: "Ordinance 8.22", kind: "ordinance", sha: A.memo.sha, extent: units[0].extent });
   const here = await openAs(world, me, "/app/standard/" + std + "/" + A.project);
   assert.deepEqual(optsOf(here, "st-doc").map(([v]) => v), A.ordered, "the standard opened from its project puts that project's first");
 });
 
 test("R34 C95 a search box narrows the picker by title, without reading the documents again; control: emptying it offers them all, and a search that finds none says so and offers none", async () => {
-  const { world, me } = await inWorld();
-  const A = await alike(world, me);
+  const { world, me: sitting } = await inWorld();
+  const A = await alike(world, sitting), me = A.me;
   const p = await openAs(world, me, "/app/money/" + A.trail);
   assert.ok(p.doc.getElementById("mf-doc-q"), "the search box is drawn beside the picker");
   await type(p, "mf-doc-q", "budget");
@@ -163,20 +174,21 @@ test("R34 C95 a search box narrows the picker by title, without reading the docu
 });
 
 test("R34 C95 the search belongs to its own picker; control: a single document needs no search", async () => {
-  const { world, me } = await inWorld();
-  const A = await alike(world, me);
+  const { world, me: sitting } = await inWorld();
+  const A = await alike(world, sitting), me = A.me;
   const csv = await world.recipes.hold(me, "Payments.csv", "payer,payee,amount\nCity,Acme,5\nCity,Beta,7\n", A.project);
   const table = (await me.act("tabledeclare", { body: { source: { capture_sha: csv.sha, extent: { kind: "document" } }, header: ["payer", "payee", "amount"],
     schema: { fields: [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }] } } })).sha;
   const calc = (await me.act("calculationcreate", { body: { question: "How many payments?", period: { from: "2025-07-01", to: "2026-06-30" }, kind: "count", project: A.project, inputs: [{ name: "input", table }] } })).calc_id;
   const p = await openAs(world, me, "/app/calculation/" + calc);
-  const all = optsOf(p, "calc-set").length;
-  await type(p, "calc-set-q", "memo");
-  assert.deepEqual(optsOf(p, "calc-set").map(([v]) => v), [A.memo.sha]);
-  assert.equal(optsOf(p, "calc-wb").length, all, "another picker of the screen is not narrowed by it");
+  const tables = optsOf(p, "calc-set").map(([v]) => v);
+  assert.ok(tables.length > 1, "the screen's other choice (the tables it draws from) is drawn");
+  await type(p, "calc-wb-q", "memo");
+  assert.deepEqual(optsOf(p, "calc-wb").map(([v]) => v), [A.memo.sha]);
+  assert.deepEqual(optsOf(p, "calc-set").map(([v]) => v), tables, "another choice of the screen is not narrowed by it");
   const solo = await inWorld();
   const project = await solo.world.recipes.project(solo.me, "Records office budget");
-  const only = await solo.world.recipes.hold(solo.me, "Budget memo", "The budget memo for the records office.", project);
+  const only = await solo.world.recipes.hold(solo.me, "Budget memo.txt", ORDINANCE, project);
   const trail = await solo.world.recipes.trail(solo.me, project, "Records office budget, FY2026");
   const one = await openAs(solo.world, solo.me, "/app/money/" + trail);
   assert.equal(one.doc.getElementById("mf-doc-q"), null);
@@ -189,24 +201,56 @@ const NOBODY = () => word("shell.card.member");
 const noIds = (el, ids = ["admin", "u-2", "u-3"]) => { for (const id of ids) assert.ok(!new RegExp("(^|[^\\w-])" + id + "([^\\w-]|$)").test(el.textContent), "an id is drawn: " + id); };
 
 test("R1 R32 C94 person: the names of who added a name, declared a tie, made a claim and withdrew a fact are handles, the founder's included; a member with no handle is the kit's word, never the id", async () => {
-  const entity = { ...PERSON_ENTITY, entity: { ...PERSON_ENTITY.entity, aliases: [
-    { alias: "L. Chen", canonical: true, declared_by: "machine:roster", at: "2026-09-01T09:00:00Z", withdrawn: null },
-    { alias: "Lin Chen", canonical: false, declared_by: "member:admin", at: "2026-10-01T09:00:00Z", withdrawn: null },
-    { alias: "Lin C.", canonical: false, declared_by: "member:u-3", at: "2026-10-01T09:00:00Z", withdrawn: null }],
-  relations: [{ ...PERSON_ENTITY.entity.relations[0], declared_by: "member:u-2" }] } };
-  const person = PERSON({ claims: [{ claim_id: "IDC-2026-0001", a: ENT, b: "ENT-2026-0019", kind: "same_as", basis: "name", grade: "B", why: "both hold the post", by: "member:admin", at: "2026-10-03T09:00:00Z" }],
-    facts: [{ ...PERSON().facts[0], fact_id: "PFA-2026-0008", withdrawn: { by: "member:admin", at: "2026-10-05T09:00:00Z", reason: "a typo" } }] });
-  const p = await open(PATHS.person, { plane: { entity: ok(entity), person: ok(person) } });
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const mai = await world.signIn("mai", { admin: false }), dev = await world.signIn("dev", { admin: false });
+  const org = (await me.act("entitycreate", { body: { kind: "body", label: "Public Works Department", note: "A city department" } })).entity_id;
+  const chen = (await me.act("entitycreate", { body: { kind: "person", label: "L. Chen", note: "Director of the department" } })).entity_id;
+  const twin = (await me.act("entitycreate", { body: { kind: "person", label: "Lin Chen", note: "A second record" } })).entity_id;
+  const project = await world.recipes.project(me, "Pothole repairs");
+  const lease = await world.recipes.hold(me, "Lease amendment 1.txt", "Lin Chen, Director of Public Works. Appointed in March 2022.", project);
+  await me.act("entityalias", { body: { entityId: chen, alias: "Lin Chen" } });
+  await mai.act("entityalias", { body: { entityId: chen, alias: "Lin C." } });
+  await dev.act("relationdeclare", { body: { fromEntity: chen, toEntity: org, relation: "member_of", justification: "sits on its board", citation: "minutes, page 2" } });
+  const claimed = await me.act("identityclaim", { body: { a: chen, b: twin, kind: "same_as", basis: "testimony", note: "I met both at the same meeting" } });
+  const cite = { captureSha: lease.sha, extent: { kind: "document" } };
+  const kept = await me.act("recordpersonfact", { body: { person: chen, kind: "locality", value: "Oakview district", valid: { from: "2022-03-01", to: "2030-12-31" }, citation: cite } });
+  const gone = await me.act("recordpersonfact", { body: { person: chen, kind: "contact", value: "old@example.org", valid: { from: "2020-01-01", to: "2030-12-31" }, citation: cite } });
+  const w = (await me.act("personfactwithdraw", { body: { factId: gone.fact_id, reason: "a typo" } })).withdrawn;
+  const path = "/app/person/" + chen;
+  /* person answers no withdrawn fact (REPORTED in person.test.mjs, R32 (2)): the record the live copy holds is the withdrawn fact beside the store's own answer */
+  const withWithdrawn = (extra = {}) => rewrite(world, me, (req, a) => {
+    if (!(a && a.json && a.json.result && req.url.includes("op=person") && Array.isArray(a.json.result.facts) && a.json.result.facts.length)) return a;
+    const f = a.json.result.facts.find((x) => x.fact_id === kept.fact_id) || a.json.result.facts[0];
+    return { ...a, json: { ...a.json, result: { ...a.json.result, facts: a.json.result.facts.concat([{ ...f, fact_id: gone.fact_id, withdrawn: { ...w, ...extra } }]) } } };
+  });
+  const p = await openAs(world, me, path, { plane: { person: withWithdrawn() } });
   const m = main(p);
-  drew(m, "entity.alias.by", { who: "sparky", date: dayOf("2026-10-01") });
-  drew(m, "entity.alias.by", { who: NOBODY(), date: dayOf("2026-10-01") });
-  drew(m, "entity.relation.declared", { who: "rosa", date: dayOf("2026-10-02"), where: "minutes, page 2" });
-  drew(m, "screen.person.claim.by", { by: "sparky", date: dayOf("2026-10-03") });
-  drew(m, "screen.person.facts.withdrawn.by", { name: "sparky", date: dayOf("2026-10-05"), reason: "a typo" });
-  noIds(m);
+  const ent = (await me.read("entity", { query: { id: chen } })).entity;
+  const at = (who) => dayOf(ent.aliases.find((x) => x.alias === who).at.slice(0, 10));
+  drew(m, "entity.alias.by", { who: mai.handle, date: at("Lin C.") });
+  drew(m, "entity.alias.by", { who: me.handle, date: at("Lin Chen") });
+  drew(m, "entity.relation.declared", { who: dev.handle, date: dayOf(ent.relations[0].at.slice(0, 10)), where: "minutes, page 2" });
+  const read = await me.read("person", { query: { id: chen, at: p.byOp("person")[0].query.at } });
+  const mine = read.claims.find((c) => c.claim_id === claimed.claim_id);
+  drew(m, "screen.person.claim.by", { by: me.handle, date: dayOf(mine.at.slice(0, 10)) });
+  drew(m, "screen.person.facts.withdrawn.by", { name: me.handle, date: dayOf(w.at.slice(0, 10)), reason: "a typo" });
+  noIds(m, [me.member]); /* a member who signed in by her handle has no other id; the founder has */
+  /* a member the roster does not know: an alias, a tie, a claim and a fact declared by an id with no handle */
+  const unknown = rewrite(world, me, (req, a) => {
+    if (!(a && a.json && a.json.result)) return a;
+    const r = JSON.parse(JSON.stringify(a.json.result));
+    if (req.url.includes("op=entity") && r.entity) { r.entity.aliases.forEach((x) => { if (x.alias === "Lin C.") x.declared_by = "member:u-3"; }); r.entity.relations.forEach((x) => { x.declared_by = "member:u-2"; }); }
+    else return a;
+    return { ...a, json: { ...a.json, result: r } };
+  });
+  const bare = await openAs(world, me, path, { plane: { entity: unknown } });
+  drew(main(bare), "entity.alias.by", { who: NOBODY(), date: at("Lin C.") });
+  drew(main(bare), "entity.relation.declared", { who: NOBODY(), date: dayOf(ent.relations[0].at.slice(0, 10)), where: "minutes, page 2" });
+  noIds(main(bare), ["u-2", "u-3"]);
   /* control: a handle the owner answers is drawn as itself */
-  const given = await open(PATHS.person, { plane: { person: ok(PERSON({ facts: [{ ...PERSON().facts[0], withdrawn: { handle: "mai", by: "member:admin", at: "2026-10-05T09:00:00Z", reason: "a typo" } }] })) } });
-  drew(main(given), "screen.person.facts.withdrawn.by", { name: "mai", date: dayOf("2026-10-05"), reason: "a typo" });
+  const given = await openAs(world, me, path, { plane: { person: withWithdrawn({ handle: mai.handle }) } });
+  drew(main(given), "screen.person.facts.withdrawn.by", { name: mai.handle, date: dayOf(w.at.slice(0, 10)), reason: "a typo" });
 });
 
 test("R8 C94 standard: who proposed a standard and who adopted it are handles; an assistant's class is not a member and keeps its name", async () => {
@@ -238,51 +282,143 @@ test("R8 C94 standard: who proposed a standard and who adopted it are handles; a
   noIds(main(bare), ["u-3"]);
 });
 
+const iso = (world) => new Date(world.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
+const OFFICE_REF = [{ kind: "office", key: "public-works", label: "Public Works Director" }];
+
+/** A file the member holds, as `recipes.hold` holds it, with the reading the document carries: the references (`entities`) its reading names, so the record can
+ *  resolve it to an entity (`resolve`), as a recognised document is. Answers `{sha, bundle}`. */
+async function holdRead(world, me, name, text, project, entities = []) {
+  const up = await world.door({ url: `/api/?${new URLSearchParams({ op: "captureupload", statement: name, name })}`,
+    init: { method: "POST", headers: { "content-type": "text/plain" }, body: new TextEncoder().encode(text) } }, me);
+  const doc = up.json.result.document;
+  const now = iso(world);
+  const id = (await me.read("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } })).id + "-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const sha = doc.capture.sha256;
+  const front = ["---", "id: " + id, "object_type: information", "schema: information@2", "title: " + JSON.stringify(name), "current_state: collected", "prior_state: null",
+    "created: " + now, "last_updated: " + now, "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []", "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "criticality: supporting", "source_status: unchanged", "content_hash: sha256:" + hex(sha),
+    "source:", "  locator: " + JSON.stringify(doc.locator || "upload"), "  authority: member-entered", "  retrieved: " + now, "monitoring:", "  enabled: false", "  frequency: none",
+    ...(project ? ["project: " + project] : []), "---", "", "## Summary", "", name, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const prov = JSON.stringify({ documents: [{ ...doc, reading: { content_type: "text/plain", found: entities.length > 0, entities, at: now } }] }, null, 1);
+  const dataset = JSON.stringify({ documents: [{ bytes: doc.capture.bytes, locator: doc.locator || "upload", sha256: sha }] });
+  const len = (x) => new TextEncoder().encode(x).length;
+  const files = [{ path: "bundle.md", text: front, bytes: len(front), sha256: hex(front) }, { path: "data/provenance.json", text: prov, bytes: len(prov), sha256: hex(prov) },
+    { path: "data/dataset.json", text: dataset, bytes: len(dataset), sha256: hex(dataset) }, { path: doc.file, blobSha: sha, sha256: sha, bytes: doc.capture.bytes }];
+  const register = [{ sha256: sha, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }];
+  const made = await me.act("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + hex(id).slice(0, 8),
+    meta: { object_type: "information", title: name, current_state: "collected", created: now, last_updated: now }, files, register } });
+  return { sha, bundle: made.bundleId || id };
+}
+
+const STAGES = (loose) => [{ key: "sent", label: "Request sent", after: null, within: null, required: "always", cardinality: "1" },
+  { key: "determination", label: "Determination", after: "sent", within: "10 days", required: "unless_exception", cardinality: loose ? "0..n" : "0..1" }];
+
 test("R3 R33 C94 timeline: who threaded a document to a step and who declared a flow are handles; control: a member with no handle is the kit's word", async () => {
-  const matter = MATTER({ threads: [{ ...MATTER().threads[0], threaded_by: "member:admin" }] });
-  const p = await open(MORE_PATHS.matter, { plane: { instance: ok(matter) } });
-  drew(main(p), "progression.threadedby", { date: dayOf("2026-09-22"), who: "sparky", when: dayOf("2026-09-22") });
-  noIds(main(p));
-  const def = await open(MORE_PATHS.progression, { plane: { progression: ok(DEF({ declared_by: "member:admin", versions: [{ version: 1, declared_by: "member:u-2", at: "2026-09-24T09:00:00Z", basis: { statement: "first", citation: null } }] })) } });
-  drew(main(def), "screen.timeline.progression.sub", { what: "A public records request", n: "2", name: "sparky", date: dayOf("2026-09-30") });
-  drew(main(def), "screen.timeline.progression.sub", { what: "A public records request", n: "1", name: "rosa", date: dayOf("2026-09-24") });
-  noIds(main(def));
-  const bare = await open(MORE_PATHS.matter, { plane: { instance: ok(MATTER({ threads: [{ ...MATTER().threads[0], threaded_by: "member:u-3" }] })) } });
-  drew(main(bare), "progression.threadedby", { date: dayOf("2026-09-22"), who: NOBODY(), when: dayOf("2026-09-22") });
-  noIds(main(bare));
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const dev = await world.signIn("dev", { admin: false });
+  const org = (await me.act("entitycreate", { body: { kind: "office", label: "Public Works Director", note: "The city's office for repairs." } })).entity_id;
+  const project = await world.recipes.project(me, "Pothole repairs");
+  const held = await holdRead(world, me, "Lease amendment 1", "The amendment was adopted by the council.", project, OFFICE_REF);
+  const df = (await me.act("recorddatedfact", { body: { captureSha: held.sha, extent: { kind: "document" }, kind: "received", value: "2026-09-01", method: "stated in the document" } })).dated_fact.dated_fact_id;
+  await me.act("resolve", { body: { captureSha: held.sha } });
+  await dev.act("progressiondefine", { body: { progressionKey: "pra", label: "A public records request", basis: "first", citation: "Gov. Code 7922.535", stages: STAGES(true) } });
+  await me.act("progressiondefine", { body: { progressionKey: "pra", label: "A public records request", basis: "the agency determines within 10 days", citation: "Gov. Code 7922.535", stages: STAGES(false) } });
+  await dev.act("thread", { body: { progressionKey: "pra", entityId: org, placements: [{ stage: "sent", captureSha: held.sha, datedFact: df }] } });
+  const matterAt = "/app/timeline/" + project + "/matter/pra/" + org;
+  const matter = await me.read("instance", { query: { key: "pra", id: org } });
+  const th = matter.threads.at(-1);
+  const p = await openAs(world, me, matterAt);
+  drew(main(p), "progression.threadedby", { date: dayOf("2026-09-01"), who: dev.handle, when: dayOf(th.at.slice(0, 10)) });
+  noIds(main(p), [me.member]);
+  const def = await me.read("progression", { query: { key: "pra" } });
+  const d = await openAs(world, me, "/app/timeline/" + project + "/progression/pra");
+  const ver = (n) => def.versions.find((v) => v.version === n);
+  drew(main(d), "screen.timeline.progression.sub", { what: def.label, n: "2", name: me.handle, date: dayOf(def.at.slice(0, 10)) });
+  drew(main(d), "screen.timeline.progression.sub", { what: def.label, n: "1", name: dev.handle, date: dayOf(ver(1).at.slice(0, 10)) });
+  noIds(main(d), [me.member]);
+  /* control: a member the roster does not know (a thread the live copy holds that no member's session of this build makes) */
+  const unknown = rewrite(world, me, (req, a) => {
+    if (!(a && a.json && a.json.result && Array.isArray(a.json.result.threads) && req.url.includes("op=instance"))) return a;
+    return { ...a, json: { ...a.json, result: { ...a.json.result, threads: a.json.result.threads.map((t) => ({ ...t, threaded_by: "member:u-3" })) } } };
+  });
+  const bare = await openAs(world, me, matterAt, { plane: { instance: unknown } });
+  drew(main(bare), "progression.threadedby", { date: dayOf("2026-09-01"), who: NOBODY(), when: dayOf(th.at.slice(0, 10)) });
+  noIds(main(bare), ["u-3"]);
 });
 
 test("R4 R23 C94 money: who started the trail and who read a figure are handles", async () => {
-  const trail = TRAIL({ set: { ...TRAIL().set, by: "member:admin" } });
-  const p = await open(PATHS.money, { plane: { moneyset: ok(trail), money: (r) => ok(moneyAnswer(r.query.id === M1 ? { ...FACTS[M1], by: "member:admin" } : FACTS[r.query.id])) } });
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const project = await world.recipes.project(me, "Records office budget");
+  const held = await world.recipes.hold(me, "Adopted budget.txt", "The adopted budget for the records office in fiscal year 2026 is 4,200,000.00 dollars.", project);
+  const trail = await world.recipes.trail(me, project, "Records office budget, FY2026");
+  const fact = (await me.act("recordfact", { body: { amount: "4200000.00", as_read: "4,200,000", currency: "USD", sign: "+", precision: "exact", kind: "expenditure", phase: "adopted", basis: "budgetary",
+    period: { from: "2025-07-01", to: "2026-06-30" }, source: { capture_sha: held.sha, extent: { kind: "document" } } } })).fact_id;
+  await me.act("include", { body: { setId: trail, factId: fact, reason: REASON } });
+  const p = await openAs(world, me, "/app/money/" + trail);
   const card = (key, vars) => main(p).querySelectorAll("[data-tip]").some((e) => e.getAttribute("data-tip").includes(word(key, vars)));
-  assert.ok(card("screen.money.startedby", { by: "sparky" }), "the trail's card says who started it, by handle");
-  const row = main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${M1}"]`));
+  assert.ok(card("screen.money.startedby", { by: me.handle }), "the trail's card says who started it, by handle");
+  const row = main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${fact}"]`));
   await p.click(row.querySelector('[data-shell="row"]'));
-  drew(row.nextElementSibling, "screen.money.asread", { as_read: "4,200,000", by: "sparky" });
-  noIds(main(p));
-  assert.ok(!main(p).querySelectorAll("[data-tip]").some((e) => /(^|[^\w-])admin([^\w-]|$)/.test(e.getAttribute("data-tip"))), "and no card names an id");
+  drew(row.nextElementSibling, "screen.money.asread", { as_read: "4,200,000", by: me.handle });
+  noIds(main(p), [me.member]);
+  assert.ok(!main(p).querySelectorAll("[data-tip]").some((e) => e.getAttribute("data-tip").includes(me.member)), "and no card names an id");
 });
 
 test("R2 R18 R35 C94 explore: who attached a source to a step is a handle, on the page and in the graph", async () => {
-  const gr = { ...(await import("./fixtures.mjs")).GRAPH() };
-  gr.steps = gr.steps.concat([{ id: "REL-9", from: ENT, to: "ENT-2026-0200", kind: "step_source", word: "step sourced", class: "evidentiary", attached_by: "member:admin", at: "2026-10-05T09:00:00Z", grade: { assertion: "B", ends: ["B", "B"] }, evidence: [{ capture_sha: SHA }], valid: {} }]);
-  const p = await open(PATHS.person, { plane: { exploregraph: ok(gr) } });
-  drew(main(p).querySelector("[data-attached]"), "screen.explore.attached", { by: "sparky", date: dayOf("2026-10-05") });
-  noIds(main(p));
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const a = (await me.act("entitycreate", { body: { kind: "person", label: "Ana Rivera", note: "Deputy clerk, named in the minutes." } })).entity_id;
+  const b = (await me.act("entitycreate", { body: { kind: "person", label: "Ben Okafor", note: "Contractor, named in the minutes." } })).entity_id;
+  await me.act("relationdeclare", { body: { fromEntity: a, toEntity: b, relation: "proxy_for", justification: "He signs for her on the minutes.", citation: "minutes, page 2" } });
+  const memo = await world.recipes.hold(me, "Memo.txt", "Ben Okafor signs for Ana Rivera when she is away.");
+  const first = await openAs(world, me, "/app/person/" + a);
+  const walk = async (p) => (await world.door({ url: "/api/?op=exploregraph", init: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(p.byOp("exploregraph")[0].body) } }, me)).json.result;
+  const relation = (await walk(first)).steps.find((x) => x.kind === "proxy_for").id;
+  await me.act("stepsource", { body: { relation, captureSha: memo.sha, extent: { kind: "document" }, basis: "The memo says he signs for her." } });
+  const step = (await walk(first)).steps.find((x) => x.kind === "step_source");
+  assert.ok(step, "the world holds the attached source as a step");
+  const p = await openAs(world, me, "/app/person/" + a);
+  drew(main(p).querySelector("[data-attached]"), "screen.explore.attached", { by: me.handle, date: dayOf(step.at.slice(0, 10)) });
+  noIds(main(p), [me.member]);
 });
 
 test("R5 R7 C94 calculation and due date: who accepted a calculation, who visited a drawn item and who proposed a due date are handles", async () => {
-  const calc = CALCULATION({ accepted_by: "member:admin", accepted_at: "2026-10-07T09:00:00Z" });
-  const spot = SPOT({ items: SPOT().items.map((it, i) => (i === 0 ? { ...it, visits: it.visits.map((v) => ({ ...v, visitor: "member:admin" })) } : it)) });
-  const p = await open(PATHS.calculation, { plane: { calculation: ok(calc), spotcheck: ok(spot) } });
-  drew(main(p), "screen.calculation.accepted", { by: "sparky", date: dayOf("2026-10-07") });
-  drew(main(p), "screen.calculation.visit", { finding: word("screen.calculation.finding.yes"), by: "sparky", date: dayOf("2026-10-06") });
-  noIds(main(p));
-  const prop = { ...PROPOSALS, proposals: PROPOSALS.proposals.map((x) => ({ ...x, proposed_by: "member:admin", label: { ...x.label, by: "member:admin" } })) };
-  const d = await open(PATHS["due-date"], { plane: { clockproposals: ok(prop) } });
-  drew(main(d), "screen.due-date.proposal", { by: "sparky" });
-  noIds(main(d));
+  const { world, me } = await inWorld();
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const project = await world.recipes.project(me, "Repairs");
+  const csv = await world.recipes.hold(me, "Reports.csv", "id,closed\n1,y\n2,y\n3,n\n", project);
+  const table = (await me.act("tabledeclare", { body: { source: { capture_sha: csv.sha, extent: { kind: "document" } }, header: ["id", "closed"],
+    schema: { fields: [{ name: "id", type: "string" }, { name: "closed", type: "string" }] } } })).sha;
+  const period = { from: "2025-07-01", to: "2026-06-30" };
+  const draw = (await me.act("calculationdraw", { body: { set: table, n: 3, seed: "2026-10-05-7f31", question: "Was the pothole repaired?", project, reason: "a sample to visit" } })).draw;
+  const item = (await me.read("spotcheck", { query: { draw } })).items[0].item;
+  const t = await me.act("testify", { body: { words: "What I saw at report " + item + ".", observedAt: "2026-10-06" } });
+  await me.act("spotcheckvisit", { body: { draw, item, finding: "yes", testimony: t.capture_sha, reason: "I visited it" } });
+  const estimate = (await me.act("calculationcreate", { body: { question: "Share of drawn reports repaired", period, kind: "estimate", project, inputs: [{ name: "sample", draw }] } })).calc_id;
+  const calc = (await me.act("calculationcreate", { body: { question: "Reports closed within seven days", period, kind: "count", project, inputs: [{ name: "orders", table }] } })).calc_id;
+  const spot = await openAs(world, me, "/app/calculation/" + estimate);
+  const visit = (await me.read("spotcheck", { query: { draw } })).items.find((x) => x.item === item).visits[0];
+  drew(main(spot), "screen.calculation.visit", { finding: word("screen.calculation.finding.yes"), by: me.handle, date: dayOf(visit.observed_at.slice(0, 10)) });
+  noIds(main(spot), [me.member]);
+  const p = await openAs(world, me, "/app/calculation/" + calc);
+  await press(p, "calculationaccept", { reason: "checked twice" });
+  await settled(p);
+  const accepted = await me.read("calculation", { query: { id: calc } });
+  assert.equal(accepted.accepted_by, me.member, "accepted by the member who pressed it");
+  const q = await openAs(world, me, "/app/calculation/" + calc);
+  drew(main(q), "screen.calculation.accepted", { by: me.handle, date: dayOf(accepted.accepted_at.slice(0, 10)) });
+  noIds(main(q), [me.member]);
+  /* the due date: a rule's date proposed from the day the team sent the request */
+  const action = (await me.act("actioncreate", { body: { document: ["---", "id: PENDING", "object_type: action", 'title: "The rent schedules"', "current_state: planned",
+    'created: "2026-10-01T12:00:00Z"', 'last_updated: "2026-10-01T12:00:00Z"', "project: " + project, 'action_kind: "records_request"', "counterparty:", '  state: "named"', '  role: "City Clerk"', '  body: "City Council"',
+    "---", "", "The rent schedules.", ""].join("\n") } })).id;
+  await me.act("actioncorrespond", { query: { target: action, direction: "sent", at: "2026-11-23", account: "We asked for the rent schedules." } });
+  await me.act("clockpropose", { body: { target: action, rule: "records_response" } });
+  const d = await openAs(world, me, "/app/due-date/" + action);
+  drew(main(d), "screen.due-date.proposal", { by: me.handle });
+  noIds(main(d), [me.member]);
 });
 
 /* ---------------------------------------------------------------- C54 */

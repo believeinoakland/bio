@@ -2,8 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, PROC, SHA, ACT, DATES, word, drew, notDrew, dayOf, COURT } from "./fixtures.mjs";
-import { inWorld, openAs, settled, readHeld, declareStandard, refused } from "./world.mjs";
+import { main, actsIn, fill, press, word, drew, dayOf } from "./fixtures.mjs";
+import { inWorld, openAs, settled, readHeld, declareStandard, refused, rewrite } from "./world.mjs";
 
 const REASON = "The order says so.";
 /** The member's own acts that make a proceeding to work on: the team's profile, a court she adds, a proceeding in it, a person and a document held. */
@@ -17,27 +17,48 @@ async function matter(world, me) {
   return { project, court, proc, party, other };
 }
 
-const at = "/app/proceeding/" + PROC;
 const sec = (p, key) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word(key));
+const READ = "2026-10-01T06:00:00Z";
+/** The world's `follows` answer with each register read on a day: a register read is made by the network, which the world does not have (`refreshregister` answers NOT_READ), the one part of the answer this build does not make. */
+const read = (world, me) => rewrite(world, me, (req, a) => {
+  if (!/op=follows(&|$)/.test(String(req.url))) return a;
+  const j = JSON.parse(JSON.stringify(a.json));
+  for (const f of j.result.items) f.last_read = READ;
+  return { ...a, json: j };
+});
 
 test("R6 reads the proceeding (entity: its caption, court and neutral label), its parties by role (partiesof), its register as followed (follows, the newest new), and the orders held as obligations (dutiesof), each with its due date", async () => {
-  const p = await open(at);
-  assert.equal(p.byOp("entity")[0].query.id, PROC);
-  assert.equal(p.byOp("partiesof")[0].query.proceeding, PROC);
+  const { world, me } = await inWorld();
+  const M = await matter(world, me);
+  const order = await world.recipes.hold(me, "Order.txt", "The respondent shall produce the 2024 rent schedules.", M.project);
+  const ou = await readHeld(world, me, order.sha);
+  const std = await declareStandard(me, { cite: "Tribunal order 24CV123456", kind: "court", issuer: "Alameda Housing Tribunal", sha: order.sha, extent: ou[0].extent });
+  const basis = { captureSha: order.sha, extent: ou[0].extent };
+  await me.act("recordline", { body: { kind: "party_to", from: M.party, to: M.proc, role: "petitioner", basis } });
+  await me.act("recordline", { body: { kind: "party_to", from: M.other, to: M.proc, role: "respondent", basis } });
+  const register = "https://court.example/register/RG26";
+  await me.act("followregister", { body: { address: register, proceeding: M.proc, gated: { kind: "account" } } });
+  const DUE = "2026-10-30", ACTION = "produce the 2024 rent schedules";
+  await me.act("declare", { body: { modality: "duty", obligor: M.other, performance: { act: ACTION }, source: { kind: "court", standard: std }, clause: "Order ¶3", arising_in: M.proc,
+    trigger: { kind: "date", date: DUE }, time: { basis: "window", date: DUE } } });
+  const p = await openAs(world, me, "/app/proceeding/" + M.proc, { plane: { follows: read(world, me) } });
+  assert.equal(p.byOp("entity")[0].query.id, M.proc);
+  assert.equal(p.byOp("partiesof")[0].query.proceeding, M.proc);
   assert.ok(p.byOp("follows").length === 1);
-  assert.deepEqual(p.byOp("dutiesof").map((r) => [r.query.entity, r.query.as]).sort(), [["ENT-2026-0102", "obligor"], ["ENT-2026-0103", "obligor"]]);
+  assert.deepEqual(p.byOp("dutiesof").map((r) => [r.query.entity, r.query.as]).sort(), [[M.party, "obligor"], [M.other, "obligor"]].sort());
+  const held = (await me.read("entity", { query: { id: M.proc } })).entity;
   const m = main(p);
-  assert.equal(m.querySelector("h1").textContent, "the lease rent case");
-  drew(m, "screen.proceeding.caption", { number: "RG26-114502", label: "the lease rent case" });
+  assert.equal(m.querySelector("h1").textContent, held.label);
+  drew(m, "screen.proceeding.caption", { number: held.proceeding.number, label: held.label });
   const parties = sec(p, "screen.proceeding.parties");
-  for (const [role, who] of [["petitioner", "ENT-2026-0102"], ["respondent", "ENT-2026-0103"]]) { drew(parties, "screen.proceeding.role", { role: word("screen.proceeding.roles." + role) }); assert.ok(parties.textContent.includes(who)); }
+  for (const [role, who] of [["petitioner", M.party], ["respondent", M.other]]) { drew(parties, "screen.proceeding.role", { role: word("screen.proceeding.roles." + role) }); assert.ok(parties.textContent.includes(who)); }
   const reg = sec(p, "screen.proceeding.register.head");
   drew(reg, "screen.proceeding.new");
-  assert.ok(reg.textContent.includes("https://court.example/register/RG26"));
+  assert.ok(reg.textContent.includes(register));
   drew(reg, "screen.proceeding.gated");
   const orders = sec(p, "screen.proceeding.orders");
-  assert.ok(orders.textContent.includes("produce the 2024 rent schedules"));
-  assert.ok(orders.querySelector(".cs-due").textContent.includes(dayOf("2026-10-30")));
+  assert.ok(orders.textContent.includes(ACTION));
+  assert.ok(orders.querySelector(".cs-due").textContent.includes(dayOf(DUE)));
   drew(orders, "screen.proceeding.facts");
 });
 
@@ -115,9 +136,13 @@ test("R6 declare names its order: with the other fields filled and no court orde
 });
 
 test("R6 each act names what it needs (control: nothing sent), and a refusal is drawn beside the act", async () => {
-  const p = await open(at, { plane: { recordline: refusedIn("PROCEEDING_ENDS", "A party is joined to a proceeding.") } });
+  const { world, me } = await inWorld();
+  const M = await matter(world, me);
+  const order = await world.recipes.hold(me, "Order.txt", "The respondent shall produce the 2024 rent schedules.", M.project);
+  /* the store's refusal is a fault the test injects on purpose: a proceeding that has ended */
+  const p = await openAs(world, me, "/app/proceeding/" + M.proc, { plane: { recordline: refusedIn("PROCEEDING_ENDS", "A party is joined to a proceeding.") } });
   for (const op of ["recordline", "followregister", "declare"]) { await press(p, op); assert.equal(p.byOp(op).length, 0, op); }
-  fill(p, { "pr-party": "ENT-2026-0104", "pr-role": "intervenor", "pr-doc": SHA });
+  fill(p, { "pr-party": M.party, "pr-role": "intervenor", "pr-doc": order.sha });
   await press(p, "recordline");
   assert.ok(sec(p, "screen.proceeding.parties").textContent.includes(word("refusal.PROCEEDING_ENDS")), "the refusal by its words");
 });
@@ -146,47 +171,89 @@ test("R16 Follow its register sends proceeding, the screen's own entity id, and 
 
 const lanes = (p) => Object.fromEntries(main(p).querySelectorAll("section[data-lane]").map((l) => [l.getAttribute("data-lane"), l]));
 
+/** The matter with its dates, made by the member's own acts: two events on the proceeding (a hearing, and a filing the body made), and two records requests the team sent on it, each
+ *  with its deadline adopted, one the team owes and one the body owes. */
+async function dated(world, me) {
+  const M = await matter(world, me);
+  const event = async (kind, where, day) => (await me.act("createevent", { body: { kind, where, concerns: [M.proc], attestations: [{ testimony: "The court's notice states it.", value: day, project: M.project }] } })).event_id;
+  const hearing = await event("hearing", "Hearing on the motion", "2026-11-04");
+  const answer = await event("filing", "The body's own answer due", "2026-10-20");
+  const request = async (title, description, owedBy) => {
+    const id = (await me.act("actioncreate", { body: { document: ["---", "id: PENDING", "object_type: action", "title: " + JSON.stringify(title), "current_state: planned", 'created: "2026-10-01T12:00:00Z"', 'last_updated: "2026-10-01T12:00:00Z"',
+      "project: " + M.project, "proceeding: " + M.proc, 'action_kind: "records_request"', "counterparty:", '  state: "named"', '  role: "City Clerk"', '  body: "City Council"', "---", "", title, ""].join("\n") } })).id;
+    await me.act("actioncorrespond", { query: { target: id, direction: "sent", at: "2026-10-20", account: "We asked for the rent schedules." } });
+    await me.act("clockpropose", { body: { target: id, rule: "records_response" } });
+    const proposal = (await me.read("clockproposals", { query: { action: id } })).proposals.find((x) => x.rule === "records_response");
+    await me.act("clockadopt", { body: { target: id, proposal: proposal.key, why: "the clerk received it", description, owed_by: owedBy } });
+    return id;
+  };
+  const ours = await request("The rent schedules", "The City Clerk's reply", "group");
+  const theirs = await request("The tenancy file", "The body's own reply", "body");
+  return { ...M, hearing, answer, ours, theirs };
+}
+
 test("R28 Dates reads proceedingdates and draws today's stage and two lanes, the proceeding's own and our deadlines on it, never interleaved, each date by cs.date; nothing is drawn as late", async () => {
-  const p = await open(at);
-  assert.equal(p.byOp("proceedingdates")[0].query.proceeding, PROC);
+  const { world, me } = await inWorld();
+  const S = await dated(world, me);
+  const p = await openAs(world, me, "/app/proceeding/" + S.proc);
+  assert.equal(p.byOp("proceedingdates")[0].query.proceeding, S.proc);
+  const held = (await me.read("proceedingdates", { query: { proceeding: S.proc } })).lanes;
+  assert.notEqual(held.proceeding.status.stage, "undetermined", "the world reads a stage from the filing");
   const dates = sec(p, "proceeding.dates.title");
-  drew(dates, "proceeding.dates.stage", { stage: "Motions pending" });
+  drew(dates, "proceeding.dates.stage", { stage: held.proceeding.status.label });
   const l = lanes(p);
   assert.deepEqual(Object.keys(l).sort(), ["group", "proceeding"]);
   assert.equal(l.proceeding.querySelector("h2").textContent, word("proceeding.dates.lane.proceeding"));
   assert.equal(l.group.querySelector("h2").textContent, word("proceeding.dates.lane.group"));
-  assert.ok(l.proceeding.textContent.includes(dayOf("2026-11-04")) && l.proceeding.textContent.includes("Hearing on the motion"));
-  assert.ok(l.group.textContent.includes(dayOf("2026-10-14")) && l.group.textContent.includes("The City Clerk's reply"));
-  assert.ok(!l.proceeding.textContent.includes("The City Clerk's reply") && !l.group.textContent.includes("Hearing on the motion"), "never interleaved");
-  assert.ok(l.group.querySelector(`a.cs-ref[href*="${ACT}"]`) || l.group.querySelector(".cs-card"), "the action a reference");
+  const hearing = held.proceeding.items.find((x) => x.event === S.hearing), mine = held.group.items.find((x) => x.action === S.ours);
+  assert.ok(hearing && mine, "the world answers the hearing in the proceeding's lane and our deadline in the group's");
+  assert.ok(l.proceeding.textContent.includes(dayOf(hearing.when.value)) && l.proceeding.textContent.includes(hearing.label));
+  assert.ok(l.group.textContent.includes(dayOf(mine.date)) && l.group.textContent.includes(mine.text));
+  assert.ok(!l.proceeding.textContent.includes(mine.text) && !l.group.textContent.includes(hearing.label), "never interleaved");
+  assert.ok(l.group.querySelector(`a.cs-ref[href*="${S.ours}"]`) || l.group.querySelector(".cs-card"), "the action a reference");
   assert.equal(dates.querySelectorAll('[data-due="overdue"], [data-state="overdue"]').length, 0, "nothing is drawn as late");
   assert.ok(dates.querySelector("h2").getAttribute("data-tip").includes(word("proceeding.dates.help").split("'")[0]), "explained by its help");
 });
 
 test("R28 control: a body's own deadline is never in the group's lane; with no dates, proceeding.dates.none", async () => {
-  const p = await open(at);
+  const { world, me } = await inWorld();
+  const S = await dated(world, me);
+  const p = await openAs(world, me, "/app/proceeding/" + S.proc);
+  const held = (await me.read("proceedingdates", { query: { proceeding: S.proc } })).lanes;
+  const answer = held.proceeding.items.find((x) => x.event === S.answer);
+  const theirs = (await me.read("action", { query: { id: S.theirs } })).clock[0];
+  assert.equal(theirs.owed_by, "body", "the world holds the body's own deadline on its action");
+  assert.ok(!held.group.items.some((x) => x.action === S.theirs), "and does not answer it in the group's lane");
   const l = lanes(p);
-  assert.ok(l.proceeding.textContent.includes("The body's own answer due"), "the body's own deadline is in the proceeding's lane");
-  assert.ok(!l.group.textContent.includes("The body's own answer due"), "and never in the group's");
-  const q = await open(at, { plane: { proceedingdates: ok(DATES({ lanes: { proceeding: { items: [], truncated: false, status: { stage: "undetermined", why: "no event" } }, group: { items: [], truncated: false } } })) } });
+  assert.ok(l.proceeding.textContent.includes(answer.label), "the body's own filing is in the proceeding's lane");
+  assert.ok(!l.group.textContent.includes(theirs.description) && !l.group.textContent.includes(answer.label), "and never in the group's");
+  const lone = (await me.act("entitycreate", { body: { kind: "proceeding", label: "another case", note: "From the caption.", proceeding: { forum: S.court, kind: "civil", number: "24CV555555" } } })).entity_id;
+  const q = await openAs(world, me, "/app/proceeding/" + lone);
   drew(sec(q, "proceeding.dates.title"), "proceeding.dates.none");
   assert.equal(main(q).querySelectorAll("section[data-lane]").length, 0, "no lane is drawn over nothing");
-  const r = await open(at, { plane: { proceedingdates: refusedIn("NOT_A_PROCEEDING", "That is not a proceeding.") } });
+  /* the store's own refusal (NOT_A_PROCEEDING): the page is asked for the dates of a person */
+  const r = await openAs(world, me, "/app/proceeding/" + S.party);
+  assert.equal(r.byOp("proceedingdates")[0].query.proceeding, S.party, "asked for a person, the store answers that it is no proceeding");
   assert.ok(sec(r, "proceeding.dates.title").querySelector('[data-state="failed"]'), "a failed read is drawn failed");
 });
 
 const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]).filter(([v]) => v !== "");
 
 test("R36 the court is chosen among the registered forums (entitieskind with forum_kind, as record data), never among the people; the kind among the forum's, worded by proceeding.kind.<kind>", async () => {
-  const p = await open("/app/proceeding");
-  assert.deepEqual(optsOf(p, "pr-forum"), [[COURT, "Alameda Housing Tribunal"]]);
+  const { world, me } = await inWorld();
+  const M = await matter(world, me);
+  const p = await openAs(world, me, "/app/proceeding");
+  assert.deepEqual(optsOf(p, "pr-forum"), [[M.court, "Alameda Housing Tribunal"]]);
   assert.ok(p.byOp("entitieskind").some((r) => r.query.kind === "body" && /court/.test(r.query.forum_kind)), "forum kinds asked");
-  assert.equal(p.byOp("peopledirectory").length === 0 || !p.doc.getElementById("pr-forum").querySelectorAll("option").some((o) => o.textContent === "L. Chen"), true, "no person is offered as a court");
-  assert.deepEqual(optsOf(p, "pr-kind").map((o) => o[0]), ["civil", "writ", "appeal"]);
-  assert.deepEqual(optsOf(p, "pr-kind").map((o) => o[1]), ["civil", "writ", "appeal"].map((k) => word("proceeding.kind." + k)));
+  assert.equal(p.doc.getElementById("pr-forum").querySelectorAll("option").some((o) => o.textContent === "Ana Rivera"), false, "no person is offered as a court");
+  const courts = (await me.read("affordances", {})).vocabularies.proceeding_kinds.filter((k) => k.forum_kind === "court").map((k) => k.kind);
+  assert.ok(courts.length > 0);
+  assert.deepEqual(optsOf(p, "pr-kind").map((o) => o[0]), courts);
+  assert.deepEqual(optsOf(p, "pr-kind").map((o) => o[1]), courts.map((k) => word("proceeding.kind." + k)));
   drew(main(p), "proceeding.kind.help");
   drew(main(p), "screen.proceeding.court.help");
-  const prof = await open("/app/proceeding", { plane: { affordances: ok({ vocabularies: { proceeding_kinds: [{ kind: "civil", label: "Civil", forum_kind: "court" }, { kind: "tribunal_hearing", label: "A tribunal hearing", forum_kind: "commission" }] } }) } });
+  /* the profile's answer is altered: kinds of two forums, a fault the real profile cannot make */
+  const prof = await openAs(world, me, "/app/proceeding", { plane: { affordances: ok({ vocabularies: { proceeding_kinds: [{ kind: "civil", label: "Civil", forum_kind: "court" }, { kind: "tribunal_hearing", label: "A tribunal hearing", forum_kind: "commission" }] } }) } });
   assert.deepEqual(optsOf(prof, "pr-kind"), [["civil", word("proceeding.kind.civil")]], "only the forum's kinds");
 });
 

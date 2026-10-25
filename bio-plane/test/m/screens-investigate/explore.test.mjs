@@ -1,28 +1,99 @@
 /* screens-investigate R2: exploring connections, on interface-shell's served page over a scripted plane. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, WALK, GRAPH, ENT, ORG, SHA, word, hasWord, drew, notDrew, dayOf } from "./fixtures.mjs";
+import { main, actsIn, button, fill, press, word, hasWord, drew, notDrew, dayOf } from "./fixtures.mjs";
 import { inWorld, openAs, settled, readHeld, rewrite } from "./world.mjs";
 
 /** Two people the record follows and a tie one declared to the other (a `proxy_for`, a declared step with no source), by the members' own acts. */
 async function declaredTie(me) {
   const a = (await me.act("entitycreate", { body: { kind: "person", label: "Ana Rivera", note: "Deputy clerk, named in the minutes." } })).entity_id;
   const b = (await me.act("entitycreate", { body: { kind: "person", label: "Ben Okafor", note: "Contractor, named in the minutes." } })).entity_id;
-  await me.act("relationdeclare", { body: { fromEntity: a, toEntity: b, relation: "proxy_for", justification: "He signs for her on the minutes.", citation: "minutes, page 2" } });
-  return { a, b };
+  const tie = await me.act("relationdeclare", { body: { fromEntity: a, toEntity: b, relation: "proxy_for", justification: "He signs for her on the minutes.", citation: "minutes, page 2" } });
+  return { a, b, relation: tie.relation_id };
 }
 
-const at = "/app/explore/" + ENT;
-const walked = async (o = {}) => {
-  const p = await open(at, o);
-  fill(p, { "explore-at": "2025-06-30" });
+/** A held document read as three pages (a reading the document's own promotion keeps, `extraction` R20), by the member's own upload: the generated PDF of
+ *  `recipes.pdf` has no decodable text, so its pages offer no words to choose. Answers `{sha, bundle}`. */
+async function holdPaged(world, me, name, text) {
+  const up = await world.door({ url: `/api/?${new URLSearchParams({ op: "captureupload", statement: name, name })}`, init: { method: "POST", headers: { "content-type": "text/plain" }, body: new TextEncoder().encode(text) } }, me);
+  const doc = up.json.result.document;
+  const now = new Date(world.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
+  const id = (await me.read("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } })).id + "-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const sha = doc.capture.sha256;
+  const front = ["---", "id: " + id, "object_type: information", "schema: information@2", "title: " + JSON.stringify(name), "current_state: collected", "prior_state: null",
+    "created: " + now, "last_updated: " + now, "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []", "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "criticality: supporting", "source_status: unchanged", "content_hash: sha256:" + sha,
+    "source:", "  locator: " + JSON.stringify(doc.locator || "upload"), "  authority: member-entered", "  retrieved: " + now, "monitoring:", "  enabled: false", "  frequency: none",
+    "---", "", "## Summary", "", name, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const reading = { content_type: "generic", reader_version: 1, found: true, at: now, facts: {}, page_count: 3, text_container: "pdf",
+    text_source: [{ step: "layer", tier: 1, container: "pdf", extent: { kind: "pages", pages: [0, 1, 2] }, cap: null, measured_by: "unmeasured: a text layer is itself an unverified transcription", calibration: null }], entities: [] };
+  const units = [0, 1, 2].map((page) => ({ extent: { kind: "pdf-page", page }, reference: "p" + (page + 1), text: `${text} (page ${page + 1})`, truncated: false }));
+  const prov = JSON.stringify({ documents: [{ ...doc, reading, text_units: units }] }, null, 1);
+  const dataset = JSON.stringify({ documents: [{ bytes: doc.capture.bytes, locator: doc.locator || "upload", sha256: sha }] });
+  const sum = (s) => createHash("sha256").update(s).digest("hex"), len = (s) => new TextEncoder().encode(s).length;
+  const files = [{ path: "bundle.md", text: front, bytes: len(front), sha256: sum(front) }, { path: "data/provenance.json", text: prov, bytes: len(prov), sha256: sum(prov) },
+    { path: "data/dataset.json", text: dataset, bytes: len(dataset), sha256: sum(dataset) }, { path: doc.file, blobSha: sha, sha256: sha, bytes: doc.capture.bytes }];
+  const register = [{ sha256: sha, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }];
+  const made = await me.act("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + sum(id).slice(0, 8),
+    meta: { object_type: "information", title: name, current_state: "collected", created: now, last_updated: now }, files, register } });
+  return { sha, bundle: made.bundleId || id };
+}
+
+const START = "2026-09-30";
+const explorePath = (id) => "/app/explore/" + id;
+/** The connection kinds the vocabulary puts in the groups `groups`, in its order: what ticking those groups must send. */
+const kindsOf = async (me, groups) => {
+  const v = (await me.read("affordances", {})).vocabularies.connection_kinds;
+  return v.values.filter((k) => groups.includes(v.words[k].group));
+};
+/** The walk the record gives for a request the page sent. */
+const walkOf = async (me, p) => me.act("explore", { body: p.byOp("explore").at(-1).body });
+const weakest = (hops) => hops.map((h) => h.grade.assertion).sort().at(-1);
+
+/** A person with an employment (a roster's rule, grade C), the department she works in being part of the city (a page of a held PDF, grade D), and `leads`
+ *  people she is declared a proxy of (a declared step with no source): three kinds of chain, the longest's grade its weakest hop's. */
+async function network(world, me, { leads = 1 } = {}) {
+  await world.recipes.profiles(me, ["oakland-alameda"]);
+  const entity = async (kind, label) => (await me.act("entitycreate", { body: { kind, label, note: "Named in the minutes." } })).entity_id;
+  const chen = await entity("person", "L. Chen");
+  const org = await entity("body", "Public Works Department");
+  const city = await entity("body", "City of Oakland");
+  const charter = await world.recipes.pdf(me, "Charter.pdf");
+  await me.act("recordline", { body: { kind: "holds", from: chen, to: org, capacity: "employee", valid: { from: "2025-03-01", to: "2030-01-01" }, basis: { rule: "roster", source: { profile: "oakland-alameda", entry: "public-works" } }, reason: "The roster says so." } });
+  await me.act("recordline", { body: { kind: "part_of", from: org, to: city, valid: { from: "2000-01-01", to: "2030-01-01" }, basis: { captureSha: charter.sha, extent: { kind: "pdf-page", page: 1 } }, reason: "The charter says so." } });
+  const proxies = [];
+  for (let i = 0; i < leads; i++) {
+    const other = await entity("person", "R. Alvarez " + (i + 1));
+    proxies.push({ other, relation: (await me.act("relationdeclare", { body: { fromEntity: chen, toEntity: other, relation: "proxy_for", justification: "She signs for him on the minutes.", citation: "minutes, page 2" } })).relation_id });
+  }
+  return { chen, org, city, charter, proxies };
+}
+/** The explore page at the person, walked as of a day. */
+const walked = async (world, me, C, o = {}) => {
+  const p = await openAs(world, me, explorePath(C.chen), o);
+  fill(p, { "explore-at": START });
   await press(p, "explore");
+  await settled(p);
   return p;
 };
+const chainsOf = (p) => main(p).querySelectorAll("div.mk-msg[data-chain]");
+const leadsOf = (p) => chainsOf(p).filter((c) => c.querySelector('button[data-act="stepsource"]'));
+const longest = (p) => chainsOf(p).find((c) => c.querySelectorAll("[data-hop]").length === 2);
+
+/** A person the record follows and an organisation, for the screens that need only a centre and an end. */
+async function pair(world, me) {
+  const chen = (await me.act("entitycreate", { body: { kind: "person", label: "L. Chen", note: "Director of the department." } })).entity_id;
+  const org = (await me.act("entitycreate", { body: { kind: "body", label: "Public Works Department", note: "The department." } })).entity_id;
+  return { chen, org };
+}
 
 test("R24 R27 explore's Follow offers the design's six groups, the first three ticked; ticking Money sends exactly the money kinds; ticking Stated in a source sends exactly its kinds; control: Mentioned together sends no step_source kind, no checkbox per kind", async () => {
-  const p = await open(at);
+  const { world, me } = await inWorld();
+  const { chen, org } = await pair(world, me);
+  const at = explorePath(chen);
+  const p = await openAs(world, me, at);
   const box = p.doc.getElementById("explore-groups");
   const boxes = box.querySelectorAll("input");
   assert.deepEqual(boxes.map((b) => b.parentElement.textContent.trim()), ["pos", "money", "part", "ment", "same", "step_source"].map((g) => word("connection.kind." + g + ".name")));
@@ -30,48 +101,63 @@ test("R24 R27 explore's Follow offers the design's six groups, the first three t
   assert.equal(p.doc.getElementById("explore-kinds"), null, "no raw kind checkbox is drawn");
   assert.equal(p.root().querySelectorAll('input[type="checkbox"]').filter((i) => /explore-kinds/.test(i.getAttribute("name") || "")).length, 0);
   boxes[0].checked = false; boxes[2].checked = false;
-  fill(p, { "explore-to": ORG, "explore-at": "2025-06-30" });
+  fill(p, { "explore-to": org, "explore-at": "2025-06-30" });
   await press(p, "explore");
-  assert.deepEqual(p.byOp("explore")[0].body, { from: ENT, to: ORG, at: { value: "2025-06-30", precision: "day", zone: "UTC" }, kinds: ["money_flow"] }, "only Money ticked: exactly the money kinds");
-  const q = await open(at);
+  const money = await kindsOf(me, ["money"]);
+  assert.ok(money.length > 0, "the vocabulary has money kinds");
+  assert.deepEqual(p.byOp("explore")[0].body, { from: chen, to: org, at: { value: "2025-06-30", precision: "day", zone: "UTC" }, kinds: money }, "only Money ticked: exactly the money kinds");
+  const q = await openAs(world, me, at);
   q.doc.getElementById("explore-groups").querySelectorAll("input").forEach((b, i) => { b.checked = i === 3 || i === 4; });
   fill(q, { "explore-at": "2025-06-30" });
   await press(q, "explore");
-  assert.deepEqual(q.byOp("explore")[0].body.kinds, ["mentioned_together", "proxy_for"], "each group sends its kinds by the vocabulary's group; Mentioned together sends no step_source kind");
-  const r = await open(at);
+  const same = await kindsOf(me, ["ment", "same"]);
+  assert.ok(same.includes("mentioned_together") && same.length > 1);
+  assert.deepEqual(q.byOp("explore")[0].body.kinds, same, "each group sends its kinds by the vocabulary's group");
+  assert.ok(!q.byOp("explore")[0].body.kinds.includes("step_source"), "Mentioned together sends no step_source kind");
+  const r = await openAs(world, me, at);
   r.doc.getElementById("explore-groups").querySelectorAll("input").forEach((b, i) => { b.checked = i === 5; });
   fill(r, { "explore-at": "2025-06-30" });
   await press(r, "explore");
-  assert.deepEqual(r.byOp("explore")[0].body.kinds, ["step_source"], "Stated in a source sends exactly its kinds (affordances R60's group)");
+  assert.deepEqual(r.byOp("explore")[0].body.kinds, await kindsOf(me, ["step_source"]), "Stated in a source sends exactly its kinds (affordances R60's group)");
+  assert.ok(r.byOp("explore")[0].body.kinds.includes("step_source"));
 });
 
 test("R27 a step_source step is drawn in its own class (e-step_source), named by connection.kind.step_source.name and explained by its means; control: a mentioned-together step is not", async () => {
-  const g = GRAPH();
-  g.steps[0] = { ...g.steps[0], kind: "step_source", word: "step sourced", class: "evidentiary", grade: { assertion: "B", ends: ["D", "D"] }, evidence: [{ capture_sha: SHA }] };
-  const p = await open(at, { plane: { exploregraph: ok(g) } });
+  const { world, me } = await inWorld();
+  const { a, relation } = await declaredTie(me);
+  const memo = await world.recipes.hold(me, "Memo.txt", "Ben Okafor signs for Ana Rivera when she is away.\n\nThe clerk confirms it.");
+  const mu = await readHeld(world, me, memo.sha);
+  /* control: before any source is attached, the declared step is no step_source step */
+  const q = await openAs(world, me, explorePath(a));
+  assert.equal(main(q).querySelector(".mk-graph").querySelectorAll(".gwrap .e-step_source").length, 0);
+  const done = await me.act("stepsource", { body: { relation, captureSha: memo.sha, extent: mu[1].extent, basis: "The memo says he signs for her." } });
+  assert.notEqual(done.ok, false, "the source is attached by the member's own act");
+  const p = await openAs(world, me, explorePath(a));
   const gr = main(p).querySelector(".mk-graph");
   assert.equal(gr.querySelectorAll(".gwrap .e-step_source").length, 1, "its own class");
   assert.equal(gr.querySelectorAll(".gwrap .e-ment").length, 0, "not drawn as mentioned together");
   assert.ok(gr.querySelector(".mk-glegend").textContent.includes(word("connection.kind.step_source.name")), "the legend names it");
   assert.ok(gr.querySelector(`.mk-glegend [data-tip="${word("connection.kind.step_source.means")}"]`), "and explains it");
   for (const k of ["connection.kind.step_source.name", "connection.kind.step_source.means"]) assert.ok(hasWord(k), k);
-  const q = await open(at);
-  assert.equal(main(q).querySelector(".mk-graph").querySelectorAll(".gwrap .e-step_source").length, 0);
 });
 
 test("R29 explore opened with no centre draws its sentence by key and asks the plane for no graph, never \"no centre is named\"; control: with a centre, the graph", async () => {
-  const p = await open("/app/explore");
+  const { world, me } = await inWorld();
+  const { chen } = await pair(world, me);
+  const p = await openAs(world, me, "/app/explore");
   drew(main(p), "screen.explore.nocentre");
   assert.equal(p.byOp("exploregraph").length, 0, "no graph is read");
   assert.equal(main(p).querySelector(".mk-graph"), null);
   assert.ok(hasWord("screen.explore.nocentre"));
-  const q = await open(at);
+  const q = await openAs(world, me, explorePath(chen));
   assert.ok(main(q).querySelector(".mk-graph"));
   notDrew(main(q), "screen.explore.nocentre");
 });
 
 test("R24 a walk with no group ticked sends nothing (control)", async () => {
-  const p = await open(at);
+  const { world, me } = await inWorld();
+  const { chen } = await pair(world, me);
+  const p = await openAs(world, me, explorePath(chen));
   p.doc.getElementById("explore-groups").querySelectorAll("input").forEach((b) => { b.checked = false; });
   fill(p, { "explore-at": "2025-06-30" });
   await press(p, "explore");
@@ -79,7 +165,9 @@ test("R24 a walk with no group ticked sends nothing (control)", async () => {
 });
 
 test("R2 the day is never \"now\": no day sends nothing (control)", async () => {
-  const p = await open(at);
+  const { world, me } = await inWorld();
+  const { chen } = await pair(world, me);
+  const p = await openAs(world, me, explorePath(chen));
   fill(p, { "explore-at": "" });
   await press(p, "explore");
   assert.equal(p.byOp("explore").length, 0);
@@ -87,32 +175,47 @@ test("R2 the day is never \"now\": no day sends nothing (control)", async () => 
 });
 
 test("R2 each chain drawn hop by hop, each hop a reference and its cited source; the chain's grade its weakest hop's; a declared step a lead, never a finding; no score", async () => {
-  const p = await walked();
-  const chains = main(p).querySelectorAll("div.mk-msg[data-chain]");
-  assert.equal(chains.length, 2);
-  const [a, b] = chains;
-  assert.equal(a.querySelector(".cs-grade").textContent, "ConnectionC", "the weakest hop's grade");
+  const { world, me } = await inWorld();
+  const C = await network(world, me);
+  const p = await walked(world, me, C);
+  const walk = await walkOf(me, p);
+  assert.equal(chainsOf(p).length, walk.paths.length, "every chain the record walked is drawn");
+  const a = longest(p);
+  const path = walk.paths[Number(a.getAttribute("data-chain"))];
+  assert.equal(path.hops.length, 2);
+  assert.ok(new Set(path.hops.map((h) => h.grade.assertion)).size > 1, "the world: the hops are graded apart");
+  assert.equal(a.querySelector(".cs-grade").textContent, word("mark.scale.connection.name") + weakest(path.hops), "the weakest hop's grade");
+  const words = (await me.read("affordances", {})).vocabularies.connection_kinds.words;
   const hops = a.querySelectorAll("[data-hop]");
   assert.equal(hops.length, 2);
-  assert.ok(hops[0].querySelector(`a.cs-ref[href="/app/person/${ENT}"]`) || hops[0].querySelector(".cs-card"));
-  assert.ok(hops[0].textContent.includes("held the post (employee)"), "the hop's kind, as the vocabulary words it");
-  assert.ok(hops[0].querySelector(`[data-tip*="page 2"]`), "the hop's cited passage");
-  drew(b, "screen.explore.lead");
-  drew(b.querySelector("[data-hop]"), "screen.explore.declared");
+  assert.ok(hops[0].querySelector(`a.cs-ref[href="/app/person/${C.chen}"]`) || hops[0].querySelector(".cs-card"));
+  assert.ok(hops[0].textContent.includes(words[path.hops[0].kind].word), "the hop's kind, as the vocabulary words it");
+  assert.ok(hops[1].querySelector(`[data-tip*="${word("screen.explore.page", { page: String(path.hops[1].evidence[0].extent.page + 1) })}"]`), "the hop's cited passage");
+  const lead = chainsOf(p).find((c) => c.querySelector('button[data-act="stepsource"]'));
+  assert.ok(lead, "the declared step is a chain of its own");
+  drew(lead, "screen.explore.lead");
+  drew(lead.querySelector("[data-hop]"), "screen.explore.declared");
+  notDrew(a, "screen.explore.lead");
   drew(main(p), "screen.explore.noscore");
   assert.doesNotMatch(main(p).textContent, /most connected|score:/i);
 });
 
 test("R2 a walk stopped at a bound says so, undetermined (control: a complete walk says nothing of it)", async () => {
-  const p = await walked({ plane: { explore: ok(WALK({ truncated: true, undetermined: true, why: "the walk reached its limit of 5000 nodes", complete: false })) } });
-  assert.ok(main(p).textContent.includes("the walk reached its limit of 5000 nodes"), "the plane's own reason");
-  const q = await walked();
-  assert.ok(!main(q).textContent.includes("the walk reached its limit of 5000 nodes"));
+  const { world, me } = await inWorld();
+  const C = await network(world, me);
+  const why = "the walk reached its limit of 5000 nodes";
+  /* a walk that reaches its bound: this world's few records never do */
+  const p = await walked(world, me, C, { plane: { explore: changing(world, me, "explore", (r) => ({ ...r, truncated: true, undetermined: true, why, complete: false })) } });
+  assert.ok(main(p).textContent.includes(why), "the plane's own reason");
+  const q = await walked(world, me, C);
+  assert.ok(!main(q).textContent.includes(why));
   assert.ok(!main(q).textContent.includes(word("screen.explore.stopped", { depth: "8" })));
 });
 
 test("R2 explore's own refusal ({refused, why}) is drawn, never as no chains (control)", async () => {
-  const p = await walked({ plane: { explore: ok({ refused: "UNKNOWN_KIND", why: "no such kind of connection" }) } });
+  const { world, me } = await inWorld();
+  const C = await network(world, me);
+  const p = await walked(world, me, C, { plane: { explore: ok({ refused: "UNKNOWN_KIND", why: "no such kind of connection" }) } });
   assert.ok(main(p).textContent.includes("no such kind of connection"), "the plane's own words");
   notDrew(main(p), "screen.explore.nochains");
 });
@@ -142,23 +245,37 @@ test("R2 explorepreset by its name; promote opens a question naming the chain", 
 });
 
 test("R2 exploreverify \"Check this chain\" sends the drawn path as chain (explore R23) and draws matches, lead and each hop's answer; control: a tampered hop is drawn \"does not match\"", async () => {
-  const answer = { ok: true, matches: true, lead: false, hops: [{ id: "lines:holds:1", rederived: false, class: "evidentiary" }, { id: "co:5", matches: true }] };
-  const p = await walked({ plane: { exploreverify: ok(answer) } });
-  const [a, b] = main(p).querySelectorAll("div.mk-msg[data-chain]");
+  const { world, me } = await inWorld();
+  const C = await network(world, me);
+  const p = await walked(world, me, C);
+  const walk = await walkOf(me, p);
+  const a = longest(p), lead = leadsOf(p)[0];
+  const chain = (c) => walk.paths[Number(c.getAttribute("data-chain"))].hops;
+  const [ai, li] = [a, lead].map((c) => c.getAttribute("data-chain"));
   await press(p, "exploreverify", { within: a });
   const body = p.byOp("exploreverify")[0].body;
-  assert.deepEqual(body.chain.map((h) => h.id), ["lines:holds:1", "co:5"]);
-  assert.deepEqual(body.chain[1], { kind: "mentioned_together", from: ORG, to: "ENT-2026-0200", as_of: "2026-10-14", method: "co-mention@1", id: "co:5" });
-  assert.deepEqual(body.chain[0], { id: "lines:holds:1", kind: "line:holds:employee", owner: "lines" });
-  for (const k of ["screen.explore.verify.matches", "screen.explore.verify.cited", "screen.explore.verify.hop.holds"]) drew(main(p).querySelector('[data-verified="0"]'), k, { why: "" });
-  const t = await walked({ plane: { exploreverify: ok({ ok: true, matches: false, lead: false, hops: [{ id: "co:5", matches: false }] }) } });
-  await press(t, "exploreverify", { within: main(t).querySelectorAll("div.mk-msg[data-chain]")[0] });
-  drew(main(t).querySelector('[data-verified="0"]'), "screen.explore.verify.differs", { why: "" });
-  drew(main(t).querySelector('[data-verified="0"]'), "screen.explore.verify.hop.differs");
-  const l = await walked({ plane: { exploreverify: ok({ ok: true, matches: false, lead: true, hops: [] }) } });
-  await press(l, "exploreverify", { within: main(l).querySelectorAll("div.mk-msg[data-chain]")[1] });
-  drew(main(l).querySelector('[data-verified="1"]'), "screen.explore.verify.lead");
-  assert.ok(b);
+  assert.equal(body.chain.length, 2);
+  assert.deepEqual(body.chain, chain(a).map((h) => ({ id: h.id, kind: h.kind, owner: h.owner })), "the drawn path, hop by hop");
+  const shown = main(p).querySelector(`[data-verified="${ai}"]`);
+  drew(shown, "screen.explore.verify.matches", { why: "" });
+  assert.equal(shown.querySelectorAll("li").length, 2, "each hop's answer");
+  drew(shown, "screen.explore.verify.cited", undefined, "a hop the record cites is not re-derived");
+  /* a hop the record derives (a co-mention) is re-derived on the check: the world makes none here, so its answer is changed for one hop */
+  const rederived = await openAs(world, me, explorePath(C.chen), { plane: { exploreverify: changing(world, me, "exploreverify", (r) => ({ ...r, hops: r.hops.map((h, i) => (i ? { id: h.id, matches: true } : h)) })) } });
+  fill(rederived, { "explore-at": START });
+  await press(rederived, "explore");
+  await press(rederived, "exploreverify", { within: longest(rederived) });
+  drew(main(rederived).querySelector(`[data-verified="${ai}"]`), "screen.explore.verify.hop.holds");
+  /* a tampered hop: a fault the check is made to answer */
+  const t = await walked(world, me, C, { plane: { exploreverify: ok({ ok: true, matches: false, lead: false, hops: [{ id: chain(a)[1].id, matches: false }] }) } });
+  await press(t, "exploreverify", { within: longest(t) });
+  const bad = main(t).querySelector(`[data-verified="${ai}"]`);
+  drew(bad, "screen.explore.verify.differs", { why: "" });
+  drew(bad, "screen.explore.verify.hop.differs");
+  /* the declared step is a lead, said so by the check itself */
+  await press(p, "exploreverify", { within: leadsOf(p)[0] });
+  drew(main(p).querySelector(`[data-verified="${li}"]`), "screen.explore.verify.lead");
+  assert.deepEqual(p.byOp("exploreverify")[1].body.chain.map((h) => h.id), chain(lead).map((h) => h.id));
 });
 
 test("R17 Attach a source to a declared step sends stepsource with the hop's relation, the chosen passage and the member's words; the walk is read again and the hop is drawn evidenced; B14: the design draws no withdrawal of the attached source on explore, so none is drawn", async () => {
@@ -197,12 +314,17 @@ test("R17 Attach a source to a declared step sends stepsource with the hop's rel
 });
 
 test("R17 an attachment without its passage or without the member's words sends nothing (control); a refusal is drawn by its words", async () => {
-  const p = await walked({ plane: { stepsource: refusedIn("EXTENT_MALFORMED", "That passage cannot be read.") } });
-  const lead = () => main(p).querySelectorAll("div.mk-msg[data-chain]")[1];
+  const { world, me } = await inWorld();
+  const C = await network(world, me);
+  const memo = await world.recipes.hold(me, "Memo.txt", "Ben Okafor signs for Ana Rivera when she is away.");
+  /* the refusal is a fault the real act is not made to cause */
+  const p = await walked(world, me, C, { plane: { stepsource: refusedIn("EXTENT_MALFORMED", "That passage cannot be read.") } });
+  const lead = () => leadsOf(p)[0];
   await press(p, "stepsource", { within: lead() });
   assert.equal(p.byOp("stepsource").length, 0);
-  fill(p, { "explore-assert-doc": SHA, "explore-assert-basis": "The minutes name him." });
+  fill(p, { "explore-assert-doc": memo.sha, "explore-assert-basis": "The minutes name him." });
   await press(p, "stepsource", { within: lead() });
+  assert.equal(p.byOp("stepsource").length, 1);
   assert.ok(main(p).textContent.includes(word("refusal.EXTENT_MALFORMED")), "the refusal by its words");
 });
 
@@ -269,14 +391,27 @@ test("R43 an explored hop is worded From {from} to {to} with a name of each end,
 });
 
 test("R46 R34 the assertion form's passage is the words chosen: the extent sent is the record's own, a page counted from 0 (its page 1 drawn as one), and a document read as no page is cited whole", async () => {
-  const p = await walked();
-  const lead = () => main(p).querySelectorAll("div.mk-msg[data-chain]")[1];
-  fill(p, { "explore-assert-doc": SHA, "explore-assert-basis": "The minutes name him." });
-  p.fire(p.doc.getElementById("explore-assert-doc"), "change");
-  await p.settle();
-  await press(p, "stepsource", { within: lead() });
+  const { world, me } = await inWorld();
+  /* two declared steps: the first source attached makes its step evidenced, and only a declared step offers the attachment */
+  const C = await network(world, me, { leads: 2 });
+  const doc = await holdPaged(world, me, "Minutes.txt", "The minutes name him");
+  const units = (await me.read("reading", { query: { sha256: doc.sha } })).text_units;
+  assert.ok(units.length > 1 && units[0].extent.page === 0, "the world: the reading's first page is counted from 0");
+  const p = await walked(world, me, C);
+  assert.equal(leadsOf(p).length, 2);
+  const choose = async (basis) => {
+    fill(p, { "explore-assert-doc": doc.sha, "explore-assert-basis": basis });
+    p.fire(p.doc.getElementById("explore-assert-doc"), "change");
+    await settled(p);
+  };
+  await choose("The minutes name him.");
+  await press(p, "stepsource", { within: leadsOf(p)[0] });
   assert.deepEqual(p.byOp("stepsource")[0].body.extent, { kind: "document" }, "no words chosen: the whole document");
+  await settled(p);
+  assert.equal(leadsOf(p).length, 1, "the first step is evidenced by the source attached");
+  await choose("The minutes name her.");
   await p.click(main(p).querySelectorAll("[data-words]").find((e) => e.getAttribute("data-words").startsWith("explore-assert-passage-")).querySelectorAll('[data-shell="word"]')[0]);
-  await press(p, "stepsource", { within: lead() });
-  assert.deepEqual(p.byOp("stepsource")[1].body.extent, { kind: "pdf-page", page: 0 }, "the first page, as the record counts it");
+  await press(p, "stepsource", { within: leadsOf(p)[0] });
+  assert.deepEqual(p.byOp("stepsource")[1].body.extent, units[0].extent, "the first page, as the record counts it");
+  assert.deepEqual([p.byOp("stepsource")[1].body.extent.kind, p.byOp("stepsource")[1].body.extent.page], ["pdf-page", 0]);
 });

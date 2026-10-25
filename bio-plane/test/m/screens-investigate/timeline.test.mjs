@@ -360,7 +360,7 @@ test("R33 (2) state b: one matter's steps in order with each document, its own d
   const aside = await pageOf(s, matterAt(s));
   assert.ok(secOf(aside, "progression.findings").textContent.includes("the clerk called"), "a finding set aside stays listed");
 });
-test.todo("REPORTED: the world's `instance` read carries no `says` on any finding (only `proposals` and `captureprogressions` carry the overdue finding and its sentence, progressions/index.mjs:1326, 1341; readInstance, 976, assembles none), so state b never draws progression.expects of a real matter (timeline-parts.mjs:36-39 reads `says` from the instance); the test above draws it from the proposals feed's own sentence spliced into the instance answer (R33 (2), progressions R45)");
+test.todo("REPORTED (progressions R49, K5186): the world's `instance` read carries no `says` on any finding (only `proposals` and `captureprogressions` carry the overdue finding and its sentence, progressions/index.mjs:1326, 1341; readInstance, 976, assembles none), so state b never draws progression.expects of a real matter (timeline-parts.mjs:36-39 reads `says` from the instance); the test above draws it from the proposals feed's own sentence spliced into the instance answer (R33 (2), progressions R45)");
 
 test("R33 (2) the matter's acts: thread keeps the placements it holds and adds the chosen document at the chosen step; a lawful skip with its reason and citation; set a finding aside with a reason", async () => {
   const s = await scene({ matter: true });

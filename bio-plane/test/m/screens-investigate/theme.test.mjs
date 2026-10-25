@@ -1,15 +1,21 @@
 /* screens-investigate R31: the team's themes, on interface-shell's served page over a scripted plane. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok, refusedIn, ADMIN } from "../interface-shell/harness.mjs";
-import { open, main, button, fill, press, plane, PATHS, MORE_PATHS, THEME, word, drew, notDrew, dayOf, rawKeys } from "./fixtures.mjs";
+import { refusedIn, pending, boot, counted } from "../interface-shell/harness.mjs";
+import { main, button, fill, press, PATHS, MORE_PATHS, SCREENS, word, drew, notDrew, dayOf, rawKeys } from "./fixtures.mjs";
 import { inWorld, openAs, settled } from "./world.mjs";
 
 const REASON = "It is so.";
 const dayIn = (iso) => dayOf(iso.slice(0, 10));
 
-const many = (n) => Array.from({ length: n }, (_, i) => ({ theme_id: "THEME-2026-000" + (i + 1), name: "Theme " + (i + 1), test: "test " + (i + 1), at: "2026-10-0" + (i + 1) + "T09:00:00Z", declared_by_handle: "mai" }));
-const admin = (o = {}) => ({ boot: { plane: { ...plane({ plane: o }), whoami: ok(ADMIN) } } });
+/** The page at `path` over the world's door, one read answering never; not settled on (a read that never answers is "loading" for good). */
+const bootAs = async (world, me, path, plane) => {
+  const { door, session } = world.boot(me);
+  const p = await boot({ screens: SCREENS, path, plane, door: counted(door), session });
+  await p.settle();
+  await p.settle();
+  return p;
+};
 
 test("R31 state a: Themes over three themes, each a reference with Belongs when and who declared it and when; no count the read does not answer; the declare form", async () => {
   const { world, me } = await inWorld();
@@ -54,9 +60,9 @@ test("R31 state b: a placement with who and when and its note, a hunch kept apar
   const dev = await world.signIn("dev", { admin: true });
   const mai = await world.signIn("mai", { admin: true });
   const ana = await world.signIn("ana", { admin: false });
-  const project = await world.recipes.project(me, "Roof repairs");
+  /* filed under no project, so a member who shares none of the founder's may read them */
   const docs = [];
-  for (const n of ["Roof report", "Gutter report", "Attic report"]) docs.push((await world.recipes.hold(me, n + ".txt", n + " shows repairs put off.", project)).bundle);
+  for (const n of ["Roof report", "Gutter report", "Attic report"]) docs.push((await world.recipes.hold(me, n + ".txt", n + " shows repairs put off.")).bundle);
   const theme = (await me.act("themedeclare", { body: { name: "Deferred maintenance", test: "repairs put off" } })).theme_id;
   await dev.act("themeplace", { body: { theme, target: docs[0], note: "the roof repair" } });
   await dev.act("themepropose", { body: { theme, target: docs[1], note: "maybe" } });
@@ -110,17 +116,25 @@ test("R31 state b: Take it out (the placer or an administrator, with a reason), 
 });
 
 test("R31 a theme that answers as absent draws Nothing is here; names are handles only; a document the member may not see is left out by the owner, so none is drawn", async () => {
-  const p = await open(MORE_PATHS.themeOne, { plane: { themeread: refusedIn("THEME_NOT_FOUND", "No such theme.") } });
+  const { world, me } = await inWorld();
+  const p = await openAs(world, me, "/app/theme/THEME-2026-0001-no-such");
   drew(main(p), "shell.unavailable.nothing.title");
-  const q = await open(MORE_PATHS.themeOne, { plane: { themeread: ok(THEME({ members: [], hunches: [], withdrawn: [] })) } });
+  const theme = (await me.act("themedeclare", { body: { name: "Deferred maintenance", test: "repairs put off" } })).theme_id;
+  const held = await me.read("themeread", { query: { id: theme } });
+  assert.deepEqual([held.members, held.hunches, held.withdrawn], [[], [], []], "the world: nothing placed, nothing hunched, nothing out");
+  const q = await openAs(world, me, "/app/theme/" + theme);
   assert.equal(main(q).querySelectorAll("section").length, 0, "nothing placed, nothing hunched, nothing out: no empty section");
   assert.doesNotMatch(main(q).textContent, /member:|ENT-\d/);
 });
 
 test("R10 theme, a matter and a progression: each read pending, refused and unanswered is drawn in its own state, with no key drawn bare", async () => {
-  for (const [path, ops] of [[PATHS.theme, ["themeread"]], [MORE_PATHS.themeOne, ["themeread"]], [MORE_PATHS.matter, ["instance"]], [MORE_PATHS.progression, ["progression"]]]) {
-    for (const variant of [refusedIn("SOME_REFUSAL", "The plane refused this read."), () => new Promise(() => {})]) {
-      const p = await open(path, { plane: Object.fromEntries(ops.map((o) => [o, variant])) });
+  const { world, me } = await inWorld();
+  const theme = (await me.act("themedeclare", { body: { name: "Deferred maintenance", test: "repairs put off" } })).theme_id;
+  for (const [path, ops] of [[PATHS.theme, ["themeread"]], ["/app/theme/" + theme, ["themeread"]], [MORE_PATHS.matter, ["instance"]], [MORE_PATHS.progression, ["progression"]]]) {
+    for (const variant of [refusedIn("SOME_REFUSAL", "The plane refused this read."), pending]) {
+      const plane = Object.fromEntries(ops.map((o) => [o, variant]));
+      /* a read that never answers is not waited on: the page is drawn as it stands */
+      const p = variant === pending ? await bootAs(world, me, path, plane) : await openAs(world, me, path, { plane });
       assert.ok(main(p).textContent.length > 0, path);
       assert.deepEqual(rawKeys(p.root()), [], path);
     }

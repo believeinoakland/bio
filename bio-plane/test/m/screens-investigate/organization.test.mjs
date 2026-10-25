@@ -98,7 +98,7 @@ test("R58 an organization's page draws the .org keys: Same organization?, its he
   assert.ok(!t.textContent.includes(word("screen.person.kind.help.org")));
 });
 
-test.todo("REPORTED: R58 a claim row of an organization is drawn by screen.person.same.because.org (the grade and the basis in the row's words); person gives no `basis` on its claims (people/index.mjs:1071), so the row is the claim's sentence (person.mjs:277)", async () => {
+test.todo("REPORTED (people R43, K5186): R58 a claim row of an organization is drawn by screen.person.same.because.org (the grade and the basis in the row's words); person gives no `basis` on its claims (people/index.mjs:1071), so the row is the claim's sentence (person.mjs:277)", async () => {
   const { world, me, org } = await claimed();
   const p = await openAs(world, me, "/app/person/" + org);
   const read = await me.read("person", { query: { id: org, at: p.byOp("person")[0].query.at } });

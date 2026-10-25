@@ -1,11 +1,10 @@
-/* screens-investigate R4: a money trail, on interface-shell's served page over a scripted plane. */
+/* screens-investigate R4: a money trail, on interface-shell's served page over `store-request`'s world. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { inWorld, openAs, settled, refused } from "./world.mjs";
-import { open, main, actsIn, button, fill, press, TRAIL, P, MSR, M1, M2, M3, SHA, SHA2, word, drew, notDrew, dayOf } from "./fixtures.mjs";
+import { inWorld, openAs, settled, refused, rewrite } from "./world.mjs";
+import { main, actsIn, button, fill, press, word, drew, notDrew, dayOf } from "./fixtures.mjs";
 
-const at = "/app/money/" + MSR;
 const rowOf = (p, key) => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${key}"]`));
 const panelOf = (p, key) => { const r = rowOf(p, key); return r && r.nextElementSibling; };
 const openPanel = async (p, key) => { await p.click(rowOf(p, key).querySelector('[data-shell="row"]')); return panelOf(p, key); };
@@ -26,16 +25,20 @@ async function moneyWorld() {
   const trail = await world.recipes.trail(me, project, "Stormwater fund transfers, FY2023");
   const source = { capture_sha: lease.sha, extent: { kind: "document" } };
   const read = async (o) => (await me.act("recordfact", { body: { currency: "USD", sign: "+", precision: "exact", period: { from: "2021-07-01", to: "2022-06-30" }, source, ...o } })).fact_id;
+  /* the day the payment was made: a dated fact the ledger states, the event it dates, and the paid figure concerns that event */
+  const day = (await me.act("recorddatedfact", { body: { captureSha: lease.sha, extent: { kind: "document" }, kind: "entered", value: "2022-06-30", method: "stated in the document" } })).dated_fact.dated_fact_id;
+  const payment = (await me.act("createevent", { body: { kind: "other", attestations: [{ datedFactId: day }] } })).event_id;
   const F = {
     adopted: await read({ amount: "4200000.00", as_read: "4,200,000", kind: "transfer", phase: "adopted", basis: "budgetary", from: { as_written: "Sewer Fund 3100" }, to: { as_written: "General Fund 1010" } }),
-    paid: await read({ amount: "4750000.00", as_read: "4,750,000", kind: "transfer", phase: "actual", stage: "paid", basis: "cash", from: { as_written: "Sewer Fund 3100" }, to: { as_written: "General Fund 1010" } }),
+    paid: await read({ concerns: [payment], amount: "4750000.00", as_read: "4,750,000", kind: "transfer", phase: "actual", stage: "paid", basis: "cash", from: { as_written: "Sewer Fund 3100" }, to: { as_written: "General Fund 1010" } }),
     other: await read({ amount: "310000.00", as_read: "310,000", kind: "allocation", phase: "actual", stage: "paid", basis: "undetermined", from: { as_written: "Sewer Fund 3100" } }),
   };
-  for (const id of Object.values(F)) await me.act("moneysetpropose", { body: { setId: trail, factId: id, method: "member:recordfact" } });
+  /* the left-out figure is excluded without being proposed first: the store keeps an excluded proposal open (the todo below) */
+  for (const id of [F.adopted, F.paid]) await me.act("moneysetpropose", { body: { setId: trail, factId: id, method: "member:recordfact" } });
   await me.act("include", { body: { setId: trail, factId: F.adopted, reason: "the transfer we ask about" } });
   await me.act("include", { body: { setId: trail, factId: F.paid, reason: "paid" } });
   await me.act("exclude", { body: { setId: trail, factId: F.other, reason: "a different transfer" } });
-  return { world, me, project, lease, rent, trail, F };
+  return { world, me, project, lease, rent, trail, F, payment };
 }
 /** A question the project asks: an inquiry bundle promoted as the Explore screen promotes one. Answers its id. */
 async function ask(world, me, title) {
@@ -49,51 +52,82 @@ async function ask(world, me, title) {
     files: [{ path: "bundle.md", text: lines.join("\n") }] } });
   return id;
 }
+/** An answer of the world's with its result changed by `fn(result)`: a part of the world's own answer this build does not make (K5044 (1)). */
+const changing = (world, me, op, fn) => rewrite(world, me, (req, a) => (a && a.json && a.json.result && req.url.includes("op=" + op)
+  ? { ...a, json: { ...a.json, result: fn(a.json.result, req) } } : a));
 const trailOf = (me, id) => me.read("moneyset", { query: { id } });
 
 test("R4 reads the trail (moneyset) and each of its figures (moneyof's fact, by id): each a row with kind, from, to, when it moved, stage, period, amount, source grade and whether it is included, with its reason", async () => {
-  const p = await open(at);
-  assert.equal(p.byOp("moneyset")[0].query.id, MSR);
-  assert.deepEqual(p.byOp("money").map((r) => r.query.id).sort(), [M1, M2, M3]);
+  const { world, me, trail, F, payment } = await moneyWorld();
+  const p = await openAs(world, me, "/app/money/" + trail);
+  assert.equal(p.byOp("moneyset")[0].query.id, trail);
+  assert.deepEqual(p.byOp("money").map((r) => r.query.id).sort(), Object.values(F).sort());
   const heads = main(p).querySelectorAll("table.cs-rows thead th").map((h) => h.textContent).filter(Boolean);
   assert.deepEqual(heads, ["figure", "from", "to-where-it-went", "when-it-moved", "stage", "period", "amount", "source", "in-this-trail"].map((c) => word("column.money." + c + ".name")));
-  const r1 = rowOf(p, M1).querySelectorAll("td").map((d) => d.textContent);
+  const held = async (id) => (await me.read("money", { query: { id } })).fact;
+  const a = await held(F.adopted), b = await held(F.paid);
+  const r1 = rowOf(p, F.adopted).querySelectorAll("td").map((d) => d.textContent);
   const adopted = word("screen.money.phase.adopted");
-  assert.ok(r1[1].startsWith(word("screen.money.kind.transfer")), "its kind");
-  assert.deepEqual(r1.slice(2, 4), ["Sewer Fund 3100", "General Fund 1010"], "from and to, as the source writes them");
+  assert.ok(r1[1].startsWith(word("screen.money.kind." + a.kind)), "its kind");
+  assert.deepEqual(r1.slice(2, 4), [a.from.as_written, a.to.as_written], "from and to, as the source writes them");
   assert.equal(r1[4], word("screen.money.didnotmove", { phase: adopted }));
   assert.equal(r1[5].trim(), word("screen.money.stage", { phase: adopted, stage: "" }).trim());
-  assert.equal(r1[6], "FY2021-22");
-  assert.equal(r1[7], word("screen.money.amount", { sign: "", amount: "4200000.00", currency: "USD" }));
-  assert.ok(r1[8].endsWith(word("mark.scale.capture.name") + "B"), "the source and its grade");
+  assert.equal(r1[6], word("screen.money.period", { from: dayOf(a.period.from.slice(0, 10)), to: dayOf(a.period.to.slice(0, 10)) }));
+  assert.equal(r1[7], word("screen.money.amount", { sign: "", amount: a.amount, currency: a.currency }));
+  assert.ok(r1[8].startsWith("Lease amendment 1"), "the source, by its title");
+  assert.ok(rowOf(p, F.adopted).querySelector('.cs-gap[data-gap="unrated"]'), "the store grades no upload: drawn unrated, never a grade the store did not give");
   assert.equal(r1[9], word("screen.money.included", { reason: "the transfer we ask about" }));
-  const r2 = rowOf(p, M2).querySelectorAll("td").map((d) => d.textContent);
-  assert.ok(r2[4].startsWith(dayOf("2022-06-30")), "when it moved: the event it is tied to, never its period");
-  assert.ok(r2[5].includes(word("screen.money.stage", { phase: word("screen.money.phase.actual"), stage: word("screen.money.stage.paid") })));
-  drew(rowOf(p, M3), "screen.money.excluded", { reason: "a different transfer" });
+  const r2 = rowOf(p, F.paid).querySelectorAll("td").map((d) => d.textContent);
+  const when = (await me.read("moneyset", { query: { id: trail } })).inclusions.find((x) => x.fact_id === F.paid).trail.moved;
+  assert.equal(when.event, payment, "the figure is tied to the payment event");
+  assert.ok(r2[4].startsWith(dayOf(when.when.value)), "when it moved: the event it is tied to, never its period");
+  assert.ok(r2[5].includes(word("screen.money.stage", { phase: word("screen.money.phase.actual"), stage: word("screen.money.stage." + b.stage) })));
+  drew(rowOf(p, F.other), "screen.money.excluded", { reason: "a different transfer" });
   assert.match(p.root().querySelector(".cs-crumbs").textContent, /Pothole repairs/);
+  /* a grade and a fiscal year the live copy holds on a figure (a measured capture, a profile that names its fiscal year): this build makes neither, so the
+     world's own answer is changed there and the rest is the world's */
+  const graded = changing(world, me, "money", (r) => (r.fact && r.fact.fact_id === F.adopted
+    ? { ...r, fact: { ...r.fact, grade: { ...r.fact.grade, reading: "B" }, period: { ...r.fact.period, fiscal: "FY2021-22" } } } : r));
+  const q = await openAs(world, me, "/app/money/" + trail, { plane: { money: graded } });
+  const g = rowOf(q, F.adopted).querySelectorAll("td").map((d) => d.textContent);
+  assert.ok(g[8].endsWith(word("mark.scale.capture.name") + "B"), "the source and its grade");
+  assert.equal(g[6], "FY2021-22", "the fiscal year, as the store names it");
 });
 
 test("R4 a value its source does not state is drawn undetermined and opens the row's panel at that item, with the evidence that would help", async () => {
-  const p = await open(at);
-  const gap = rowOf(p, M3).querySelector('td [data-shell="row"] .cs-gap[data-gap="undetermined"]');
-  assert.ok(gap, "M3 states no payee");
+  const { world, me, trail, F } = await moneyWorld();
+  const p = await openAs(world, me, "/app/money/" + trail);
+  const gap = rowOf(p, F.other).querySelector('td [data-shell="row"] .cs-gap[data-gap="undetermined"]');
+  assert.ok(gap, "the allocation states no payee");
   await p.click(gap.closest("button"));
-  const panel = panelOf(p, M3);
+  const panel = panelOf(p, F.other);
   assert.equal(panel.hasAttribute("hidden"), false);
   drew(panel.querySelector('[data-gap-item="to"]'), "screen.money.evidence.to");
   assert.deepEqual(actsIn(panel).sort(), ["acquire", "actioncreate", "authoritychain", "checkrequest", "createevent", "findin", "gradenote", "hypothesishold", "include", "recordfact"].sort());
-  assert.equal(rowOf(p, M1).querySelector('.cs-gap[data-gap="undetermined"]'), null, "a figure stating everything carries no such mark (control)");
+  assert.equal(rowOf(p, F.adopted).querySelector('.cs-gap[data-gap="undetermined"]'), null, "a figure stating everything carries no such mark (control)");
 });
 
 test("R4 a filter keeps only the rows with something undetermined (its address), and back", async () => {
-  const p = await open(at);
-  const f = main(p).querySelector('a[href="/app/money/' + MSR + '/undetermined"]');
+  const { world, me, trail, F } = await moneyWorld();
+  const p = await openAs(world, me, "/app/money/" + trail);
+  const f = main(p).querySelector('a[href="/app/money/' + trail + '/undetermined"]');
+  const rows = () => main(p).querySelectorAll("tr.cs-r").map((r) => r.querySelector("[data-id]").getAttribute("data-id"));
   assert.equal(f.textContent, word("screen.money.filter.gaps", { n: "1" }));
   await p.click(f);
   await p.settle();
-  assert.deepEqual(main(p).querySelectorAll("tr.cs-r").map((r) => r.querySelector("[data-id]").getAttribute("data-id")), [M3]);
-  assert.ok(main(p).querySelector(`a[href="/app/money/${MSR}"]`));
+  assert.deepEqual(rows(), [F.other]);
+  assert.ok(main(p).querySelector(`a[href="/app/money/${trail}"]`));
+});
+
+/* REPORTED to the money module (moneyset): `exclude` does not close the figure's open proposal as `include` does (src/money/index.mjs, the `act === "include"` test), so a
+   figure proposed to the trail and then left out is listed by `moneyset` in both `proposals` and `exclusions`, and the page draws it as two rows. */
+test.todo("REPORTED: a figure proposed and then excluded is one row of the trail, not two", async () => {
+  const { world, me, trail, F } = await moneyWorld();
+  await me.act("moneysetpropose", { body: { setId: trail, factId: F.other, method: "member:recordfact" } });
+  const held = await trailOf(me, trail);
+  assert.equal(held.proposals.filter((x) => x.fact_id === F.other).length, 0, "the excluded figure is no longer an open proposal");
+  const p = await openAs(world, me, "/app/money/" + trail);
+  assert.equal(main(p).querySelectorAll("tr.cs-r").filter((r) => r.querySelector(`[data-id="${F.other}"]`)).length, 1);
 });
 
 test("R4 each row's panel by its kind: reconcile (a budgeted figure beside a paid one), authoritychain, include/exclude with a reason, gradenote, acquire, findin, recordfact, actioncreate, createevent, checkrequest, hypothesishold", async () => {
@@ -145,10 +179,11 @@ test("R4 each row's panel by its kind: reconcile (a budgeted figure beside a pai
 });
 
 test("R4 \"Ask the city for the record\" opens request for the project", async () => {
-  const p = await open(at);
-  const panel = await openPanel(p, M3);
+  const { world, me, project, trail, F } = await moneyWorld();
+  const p = await openAs(world, me, "/app/money/" + trail);
+  const panel = await openPanel(p, F.other);
   await press(p, "actioncreate", { within: panel, reason: "we need the cost-allocation plan" });
-  assert.equal(p.location.pathname, "/app/request/" + P);
+  assert.equal(p.location.pathname, "/app/request/" + project);
 });
 
 test("R4 the screen's own acts: Read a figure (recordfact), Start a money trail (createset, its name its words), committedagainstpaid", async () => {
@@ -186,7 +221,8 @@ test("R4 the screen's own acts: Read a figure (recordfact), Start a money trail 
 });
 
 test("R4 Read a figure names its passage and amount (control: none sends nothing, the form kept)", async () => {
-  const p = await open(at);
+  const { world, me, trail } = await moneyWorld();
+  const p = await openAs(world, me, "/app/money/" + trail);
   fill(p, { "mf-asread": "something" });
   await press(p, "recordfact", { el: main(p).querySelectorAll('button[data-act="recordfact"]')[0] });
   assert.equal(p.byOp("recordfact").length, 0);
@@ -213,19 +249,23 @@ test("R4 picked rows bring the hold strip with include, exclude (one reason for 
 });
 
 test("R4 two sources that disagree are both drawn, in tension, never one picked; a project with no trail offers only Start a money trail", async () => {
-  const p = await open(at);
-  assert.ok(rowOf(p, M1) && rowOf(p, M2), "the adopted and the paid figure, both drawn");
+  const { world, me, trail, F } = await moneyWorld();
+  const p = await openAs(world, me, "/app/money/" + trail);
+  assert.ok(rowOf(p, F.adopted) && rowOf(p, F.paid), "the adopted and the paid figure, both drawn");
   drew(main(p), "screen.money.tension");
-  const q = await open("/app/money/" + P);
+  const bare = await world.recipes.project(me, "Nothing started");
+  const q = await openAs(world, me, "/app/money/" + bare);
   assert.equal(q.byOp("moneyset").length, 0);
   assert.deepEqual(actsIn(main(q)), ["createset"]);
 });
 
 test("R4 a refused act is drawn beside it, nothing else changed (control)", async () => {
-  const p = await open(at, { plane: { exclude: refusedIn("NO_SUCH_SET", "There is no such trail.") } });
-  const panel = await openPanel(p, M1);
+  const { world, me, trail, F } = await moneyWorld();
+  /* a fault the test injects on purpose: the act answers a refusal */
+  const p = await openAs(world, me, "/app/money/" + trail, { plane: { exclude: refusedIn("NO_SUCH_SET", "There is no such trail.") } });
+  const panel = await openPanel(p, F.adopted);
   await press(p, "exclude", { within: panel, reason: "x" });
-  assert.ok(panelOf(p, M1).textContent.includes(word("refusal.NO_SUCH_SET")), "the refusal by its words");
+  assert.ok(panelOf(p, F.adopted).textContent.includes(word("refusal.NO_SUCH_SET")), "the refusal by its words");
 });
 
 test("R34 the money trail's figure form chooses the document by title and sends its digest; no field asks for a fingerprint or a page number by itself", async () => {
