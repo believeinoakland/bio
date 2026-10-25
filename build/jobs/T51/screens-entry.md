@@ -214,3 +214,7 @@ Exact next step: (1) mail the three REPORTs (published-case recipe; system hosti
 ## J13 · REPORT
 
 REPORT 2 (published-case recipe; for store-request). `front.test.mjs`:18: the published list stays scripted in the two tests that read it. No recipe in `storeWorld()` signs and commits a case edition, so the `fixtures.mjs --list` line remains (1 of 173). Needed: a store-request recipe that publishes a case edition into the world.
+
+## J14 · REPORT
+
+REPORT 3 (system hosting recorder; for the module that owns hostingaccess). R30: hosting recorded by the system (`bootstrap`, `system:seed`, `token:ops`) has no act of the door that records it; `setup.test.mjs` R30 writes the rows to the `hosting_access` table the plane reads. Needed: a recipe or act in a provider that records hosting as the system, so the test can go through the door.
