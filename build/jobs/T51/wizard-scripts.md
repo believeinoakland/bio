@@ -563,3 +563,13 @@ COMPLETE · B24 (fix round 10, follow-up 10; K5078). Commit 59d0c64d7b on job/T5
 - ownership vs origin/tranche/T51: 0 failures
 
 Size (session_01CnwJQiXshRasgJ9ErXumcK): test runs 3, module lines 2730
+
+## J28 · REPORT
+
+Other modules, found this round (none changed by this job):
+
+(a) Pre-existing reds, reproduced identically on the pre-change commit (f0f365e4ea, the job branch before R52) in a clean worktree: `control-plane` `r10-caseratify-chain.test.mjs` R60 (ratification; fix round 10): the longest chain is 13 of 46 calls, bar 11 (admission 1 + ratification 6 + assembly 4); its first two are reauthdue and session. `control-plane` `r137-parity.test.mjs` R137 (R136; store-request R15): the store request differs from the world's door's. Owners: control-plane / ratification / store-request.
+
+(b) A full run of the modules that consume wizardsat (30 modules, 820 test files) in one process was cut by the 1700 s limit with 488 tests cancelled and 195 failures, spread over plane, store-assembly, screens-inquiry, screens-intake, queue, screens-daily, screens-action, screens-publish, screens-settings, journey-check and others (for example G81 R124 in a screens file, journey-check group.test.mjs). The files that reference wizardsat or wizardsAt all pass when run alone: screens-wizards, store-assembly/wizards.test.mjs and plane/wizards.test.mjs, 85 of 85. I have not verified the other failures against the pre-change commit; they look like load or timeout effects of one long process, but that is unproven. Owners should confirm.
+
+(c) Fixtures: `answer wizard-scripts writing-help.test.mjs:217` [refusal] LIMITS_UNREADABLE, still open as in FIX-E. Its provider sits in `answers` or `store-door`, not in this module, so this module cannot add the marker without an edit it may not make. Needs BOB's placement.
