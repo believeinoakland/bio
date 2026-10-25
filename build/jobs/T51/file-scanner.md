@@ -211,3 +211,16 @@ RED LINES (R-FOUR (3)): none, and not by my choice: the permission check refused
 
 COMPLETE for B19 (CHANGE K4862). Merged tranche/T51 (runtime-limits' `scan.*` rows are the ones I asked for, same figures); my local copy of `read-bounds.mjs` dropped, no fallback of mine remains; every figure is read by `boundOf`. Re-ran: file-scanner 104 tests, 93 pass, 0 fail, 11 skipped (real clamscan absent); checks: format 0 failures, architecture 0, coverage 35 of 35, ownership 20 files 0 failures, words 0 findings in file-scanner. Nothing else changed from J18, whose entries, stale-artifact list and words owed stand. Rows 20-22 are not used by this module.
 - Size (session_01TDA3atpeF5SKeYhvA5nna4): test runs 18, module lines 5932
+
+## J20 · COMPLETE
+
+COMPLETE for B20 (START, fix round 10, Wave A batch 1: R11c, `reputationRefresh`). Merged tranche/T51; started from a branch already at origin.
+
+**Causes done**
+- R11c (G3, walks A12/C7). Root cause: `file-scanner/src/render.mjs` (the `message` choice at the non-200 branch) kept the container's message only for `RENDER_FAILED`, so the `NOT_RENDERABLE` message the container sends (`container/renderer.mjs`:216-229) was dropped. Fixed: a `NOT_RENDERABLE` message reaches the answer, at most 300 characters; none sent, none stated. Why tests missed it: `render.test.mjs` tested a text file as office only and asserted the answer without a message. Failing-first test `R7 R11c a NOT_RENDERABLE refusal of the renderer reaches the answer…` seen red (message absent) before the fix, green after; the old assertion on a text file as pdf now checks the message is a string. Platform check owed at the redeploy (K4428): why LibreOffice made no PDF is UNKNOWN; capture the converter's stderr and peak memory on the renderer image (`convert()` or `/render?route=office`) for the walker's document. 11 renderer/ClamAV tests skip here (not installed). No log line added (R-LOG n/a).
+
+**Fixtures published** (`file-scanner/test/fixtures.mjs`, new): `reputationRefresh(failure, {prior})`, `'checksum'` gives `LIST_CHECKSUM_MISMATCH:<threat>` (real threat name, e.g. MALWARE, not the made-up THREAT), `'unreadable'` gives `LIST_UNREADABLE`; made by the real `/provider/refresh` over the vendor stub, after one good refresh unless `prior:false`. Test: `fixtures.test.mjs` (R26). Users: file-safety `tools.test.mjs`:412, `wakes.test.mjs`:163 re-point in their own job; file-safety is a later module, so they import it directly (no `fixtures-run` marker needed). Supporting change in my test stub `vendors.mjs`: `state.unreadable`. `fixtures-own` / `fixtures-generic` markers added: none.
+
+**Checks** (civicos-process): file-scanner tests 106, pass 95, fail 0, skipped 11; `fixtures.mjs . file-scanner --list` 0 failures; format 0; architecture 0; coverage file-scanner 35 of 35 ids named; ownership 0; `checks/run.mjs`: words 0 failures (file-scanner none), format/architecture/channels 0; impact set: screens-settings `security-seam.test.mjs` 2 of 2 pass. Whole-tree fixtures/coverage failures belong to other modules (file-safety `wakes.test.mjs`:163 is the user above).
+**Deferred:** none. **Found in other modules:** none.
+- Size (session_01NwJ1dye2ForcwCFpMuZJ1q): test runs 9, module lines 5970
