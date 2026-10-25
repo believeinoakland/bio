@@ -52,6 +52,26 @@ test("R13 a machine's proposal is held apart, labelled with its method, and incl
   assert.equal(s.m.readSet({ setId: "MSR-2026-9999", viewer: ANN }).found, false);
 });
 
+test("R12 R13 exclude closes a figure's open proposal as include does: a proposal then excluded is listed under exclusions, never under proposals; control: include still closes one", () => {
+  const s = seeded();
+  const set = s.m.createSet({ purpose: "trail", label: "t", by: ANN }).set_id;
+  const f = s.rec();
+  const p = s.m.proposeInclusion({ setId: set, factId: f, method: "same fund code and period", by: MACHINE });
+  const ex = s.m.exclude({ setId: set, factId: f, reason: "a different project", by: ANN });
+  assert.equal(ex.ok, true);
+  assert.equal(ex.adopted_proposal, p.proposal_id);
+  let r = s.m.readSet({ setId: set, viewer: ANN });
+  assert.deepEqual([r.inclusions.length, r.proposals.length, r.exclusions.length], [0, 0, 1]);
+  assert.deepEqual([r.exclusions[0].by, r.exclusions[0].reason], [ANN, "a different project"]);
+  /* control: include closes an open proposal as before */
+  const g = s.rec();
+  const q = s.m.proposeInclusion({ setId: set, factId: g, method: "same fund code and period", by: MACHINE });
+  const inc = s.m.include({ setId: set, factId: g, reason: "checked the fund code", by: ANN });
+  assert.equal(inc.adopted_proposal, q.proposal_id);
+  r = s.m.readSet({ setId: set, viewer: ANN });
+  assert.deepEqual([r.inclusions.length, r.proposals.length], [1, 0]);
+});
+
 test("R13 readSet answers only the facts the viewer may see", () => {
   const s = seeded();
   s.project("PROJ-1", "bob");
