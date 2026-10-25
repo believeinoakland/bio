@@ -12,6 +12,7 @@ import { PARTS } from "./parts.mjs";
 import { GRAPH_SHARED, FORM_SHARED } from "./graphwords.mjs";
 import { WHY_KEYS } from "./whywords.mjs";
 import { rereading } from "./rereads.mjs";
+import { hasWord } from "../setup-words/index.mjs";
 
 /* R41: the subject read is `entity` (`found: false` the absence); `person` and `samepersoncandidates` are read (by `PARTS.later`,
    once the entity says its kind) only for a person or an organization, and again after each act (`view.ui.pn`). */
@@ -132,6 +133,15 @@ function render(cs, view) {
           cite(l.basis && l.basis.captureSha ? { captureSha: l.basis.captureSha, extent: l.basis.extent } : null));
       }).join("")) + (v.truncated ? `<p class="mk-small">${cs.w("screen.people.more", { n: String(held.length) })}</p>` : "");
     })));
+    /* R1: "who holds it": a holder, her post's dates (the end optional) and what says so, a document or the member's own word (`recordline`, kind `holds`) */
+    const srcNow = view.ui["choice:ho-src"] === "own" ? "own" : "doc";
+    const CAPACITIES = ["employee", "elected", "appointed", "acting", "interim", "ex_officio", "board_member", "officer_or_director", "partner", "military_service", "volunteer", "contractor", "other"];
+    o.push(cs.sec("screen.person.holds.heading", cs.choice("ho-who", "screen.person.holds.holder", [{ value: "", text: "" }].concat(who.filter((x) => x.value !== id)), {})
+      + cs.choice("ho-cap", "screen.person.holds.capacity", [{ value: "", text: "" }].concat(CAPACITIES.map((k) => [k, "label.linecapacities." + k])), {})
+      + cs.choice("ho-src", S + "keeper.source.label", [["doc", S + "keeper.source.doc"], ["own", S + "keeper.source.own"]], { acts: {}, value: "doc" }) + `<p class="mk-small">${cs.w(S + "keeper.source.help.a")} ${cs.w(S + "keeper.source.help.b")}</p>`
+      + (srcNow === "doc" ? P.docChoice(cs, view, "ho-doc", { label: S + "keeper.doc.label", passage: false }) : cs.field("ho-statement", S + "claim.note", { area: true, rec: true }))
+      + cs.field("ho-from", S + "keeper.from.label", { type: "date" }) + cs.field("ho-to", S + "keeper.to.label", { type: "date" })
+      + cs.act("recordline", { label: "act.recordline.label.office", data: { holds: "1" } })));
     const says = [aliasSec(), tiesSec(office ? "screen.person.ties.none.office" : "screen.person.ties.none.ordinance")];
     if (!office) says.push(namingSec());
     o.push(cs.sec("entity.says.title.org", says.join(""), { help: "entity.says.help.org" }));
@@ -181,7 +191,10 @@ function render(cs, view) {
       `<span class="mk-small">${cs.w(S + "facts.withdrawn.by", { name: cs.esc(String(w.handle || w.by_handle || P.who(cs, w.by))), date: cs.date(w.at || "", { year: true }), reason: cs.esc(String(w.reason || "")) })}</span>`);
   };
   const removable = standing.filter((f) => f.fact_id);
-  const factsInner = cs.state(d, () => (standing.length ? cs.sheet(standing.map(factRow).join("")) : "")
+  /* R1 (K5148; WALK-FINAL-05 R149): where a fact was removed for good, the marker the dialog promises: when, and by whom by name (never the value) */
+  const removedRows = p && Array.isArray(p.removed) ? p.removed.filter((x) => x && typeof x === "object") : [];
+  const removedMarks = removedRows.map((x) => `<p class="mk-small" data-removed="${cs.esc(String(x.ground || ""))}">${cs.w(S + "expunge.marker", { date: { html: cs.date(x.at || "", { year: true }) }, member: P.who(cs, x.by) })}</p>`).join("");
+  const factsInner = cs.state(d, () => (standing.length ? cs.sheet(standing.map(factRow).join("")) : "") + removedMarks
     + (undetRows.length ? cs.sheet(undetRows.map(undetLine).join("")) : "")
     + (gone.length ? `<details class="mk-details"><summary>${cs.w(S + "facts.withdrawn", { n: String(gone.length) })}</summary>${cs.sheet(gone.map(goneLine).join(""))}</details>` : ""))
     + cs.choice("person-fact-kind", S + "fact.kind", (orgPage ? ["name", "address", "contact"] : kinds).map((k) => [k, S + "kind." + k]), {})
@@ -338,6 +351,16 @@ const acts = rereading([
       BOUNDS_REVERSED: function (r, cs) { return cs ? cs.w("screen.person.keeper.refused.dates.a") + " " + cs.w("screen.person.keeper.refused.dates.b") : ""; },
     },
     send(view, el, cs) {
+      /* "Record who holds it" on an office's page: a `holds` line from the holder to this office (`lines` R1) */
+      if (el && el.dataset && el.dataset.holds) {
+        const holder = String(cs.value("ho-who") || "").trim();
+        const own = view.ui["choice:ho-src"] === "own", statement = String(cs.value("ho-statement") || "").trim();
+        const basis = own ? (statement ? { statement } : null) : view.parts.chosen(cs, "ho-doc");
+        const capacity = String(cs.value("ho-cap") || "").trim();
+        if (!holder || !capacity || !basis) return { refuse: "screen.person.holds.empty" };
+        const f = String(cs.value("ho-from") || "").trim(), t = String(cs.value("ho-to") || "").trim();
+        return { body: Object.assign({ kind: "holds", from: holder, to: String(view.subject || ""), capacity, basis }, f || t ? { valid: { from: f || null, to: t || null, precision: "day", zone: "UTC" } } : {}) };
+      }
       const from = String(cs.value("kp-office") || "").trim(), to = String(cs.value("kp-subject") || "").trim();
       if (!from || !to) return { refuse: "screen.person.keeper.subject.help.a" };
       const own = view.ui["choice:kp-src"] === "own";
@@ -483,7 +506,7 @@ const PERSON_KEYS = [
   "screen.person.ground.lawful_demand", "screen.person.expunge.order", "screen.person.expunge.order.help", "screen.person.expunge.reason",
   "screen.person.expunge.empty", "screen.person.expunge.noorder",
   /* R41: the pages of the other kinds */
-  "screen.person.cited", "screen.person.holders", "screen.person.ties.none.ordinance", "screen.person.ties.none.office",
+  "screen.person.cited", "screen.person.holders", ...["employee", "elected", "appointed", "acting", "interim", "ex_officio", "board_member", "officer_or_director", "partner", "military_service", "volunteer", "contractor", "other"].map((k) => "label.linecapacities." + k), "screen.person.ties.none.ordinance", "screen.person.ties.none.office",
   "screen.people.counts", "screen.people.counts.none", "screen.people.count.document", "screen.people.count.documents", "screen.people.more",
   "screen.people.today.kind.office", "screen.people.today.kind.body", "screen.people.today.kind.institution", "screen.people.today.kind.movement",
   "screen.people.today.kind.fund", "screen.people.today.kind.program",
@@ -499,7 +522,10 @@ const PERSON_KEYS = [
   "screen.person.claim.same_as.org", "screen.person.claim.not_same_as.org", "screen.person.claim.kind.same_as.org", "screen.person.claim.kind.not_same_as.org", "screen.person.claim.kind.unsure.org",
 ];
 
-const words = ["screen.person.name", "screen.person.purpose",
+/* K5173: the rows UX-DESIGN adopts (HANDOFF B520); listed once the word table holds them, drawn by key from then on */
+const NEW_KEYS = ["screen.person.expunge.marker", "screen.person.holds.heading", "screen.person.holds.holder", "screen.person.holds.capacity", "screen.person.holds.empty", "act.recordline.label.office"].filter((k) => hasWord(k));
+
+const words = ["screen.person.name", "screen.person.purpose", ...NEW_KEYS,
   ...["explore", "recordpersonfact", "recordline", "linewithdraw", "identityclaim", "withdrawidentityclaim", "followregister", "entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"]
     .flatMap((op) => ["act." + op + ".label.person", "act." + op + ".does"]),
   "act.owed_aliaswithdraw.label.person", "act.owed_aliaswithdraw.does",

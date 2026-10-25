@@ -17,7 +17,8 @@ test("R8 reads the standard (its words as written, its source passage, its issue
   drew(m, "screen.standard.inforce.since", { from: dayOf("2023-01-01") });
   assert.match(m.querySelector("blockquote").textContent, /within seven calendar days of the report/);
   drew(m, "screen.standard.rel.implements");
-  assert.ok(m.textContent.includes("STD-2026-0001-ordinance"));
+  assert.ok(m.textContent.includes("Municipal Code §12.04"), "the related law by its citation (D8)");
+  assert.ok(!m.textContent.includes("STD-2026-0001-ordinance"), "never by its id");
 });
 
 const proj = "/app/standard/" + P;

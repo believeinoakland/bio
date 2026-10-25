@@ -101,7 +101,7 @@ test("R23 no field asks for a record id: ties offers named people from the direc
 
 test("R23 the other people fields are choices too: a claim's other record, a timeline participant, a proceeding party, obligor and court, explore's end, a standard's law, a money trail's question", async () => {
   const names = ["L. Chen", "Public Works Department"];
-  const opts = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent);
+  const opts = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent).filter((x) => x !== "");
   const person = await open(PATHS.person, { plane: { samepersoncandidates: ok({ ok: true, entity_id: "ENT-2026-0012", count: 0, candidates: [], truncated: false }) } });
   assert.deepEqual(opts(person, "person-claim-other"), ["Public Works Department"], "the person herself is not offered");
   const tl = await open(PATHS.timeline);

@@ -58,7 +58,7 @@ test("R6 recordline \"Add a party by role\"; followregister (a register needing 
 test("R6 each act names what it needs (control: nothing sent), and a refusal is drawn beside the act", async () => {
   const p = await open(at, { plane: { recordline: refusedIn("PROCEEDING_ENDS", "A party is joined to a proceeding.") } });
   for (const op of ["recordline", "followregister", "declare"]) { await press(p, op); assert.equal(p.byOp(op).length, 0, op); }
-  fill(p, { "pr-party": "ENT-2026-0104", "pr-doc": SHA });
+  fill(p, { "pr-party": "ENT-2026-0104", "pr-role": "intervenor", "pr-doc": SHA });
   await press(p, "recordline");
   assert.ok(sec(p, "screen.proceeding.parties").textContent.includes(word("refusal.PROCEEDING_ENDS")), "the refusal by its words");
 });
@@ -107,7 +107,7 @@ test("R28 control: a body's own deadline is never in the group's lane; with no d
   assert.ok(sec(r, "proceeding.dates.title").querySelector('[data-state="failed"]'), "a failed read is drawn failed");
 });
 
-const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
+const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]).filter(([v]) => v !== "");
 
 test("R36 the court is chosen among the registered forums (entitieskind with forum_kind, as record data), never among the people; the kind among the forum's, worded by proceeding.kind.<kind>", async () => {
   const p = await open("/app/proceeding");

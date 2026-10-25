@@ -163,9 +163,13 @@ test("R17 Attach a source to a declared step sends stepsource with the hop's rel
   const lead = () => main(p).querySelectorAll("div.mk-msg[data-chain]")[1];
   drew(lead(), "screen.explore.lead");
   assert.equal(button(p, "connectionassert"), null, "connectionassert is not drawn for this act");
-  fill(p, { "explore-assert-sha": SHA, "explore-assert-page": "4", "explore-assert-basis": "The minutes name him as the company's agent." });
+  /* R34 (K5148): the document is chosen by title and the passage by its words, never typed */
+  fill(p, { "explore-assert-doc": SHA, "explore-assert-basis": "The minutes name him as the company's agent." });
+  p.fire(p.doc.getElementById("explore-assert-doc"), "change");
+  await p.settle();
+  await p.click(main(p).querySelectorAll("[data-words]").find((e) => e.getAttribute("data-words").startsWith("explore-assert-passage-")).querySelectorAll('[data-shell="word"]')[1]);
   await press(p, "stepsource", { within: lead() });
-  assert.deepEqual(p.byOp("stepsource")[0].body, { relation: "REL-2026-0002", captureSha: SHA, extent: { kind: "pdf-page", page: 3 }, basis: "The minutes name him as the company's agent." });
+  assert.deepEqual(p.byOp("stepsource")[0].body, { relation: "REL-2026-0002", captureSha: SHA, extent: { kind: "pdf-page", page: 1 }, basis: "The minutes name him as the company's agent." });
   const done = lead();
   drew(done, "screen.explore.evidenced", undefined, "evidenced, no longer a lead");
   notDrew(done, "screen.explore.declared");
@@ -180,7 +184,7 @@ test("R17 an attachment without its passage or without the member's words sends 
   const lead = () => main(p).querySelectorAll("div.mk-msg[data-chain]")[1];
   await press(p, "stepsource", { within: lead() });
   assert.equal(p.byOp("stepsource").length, 0);
-  fill(p, { "explore-assert-sha": SHA, "explore-assert-basis": "The minutes name him." });
+  fill(p, { "explore-assert-doc": SHA, "explore-assert-basis": "The minutes name him." });
   await press(p, "stepsource", { within: lead() });
   assert.ok(main(p).textContent.includes(word("refusal.EXTENT_MALFORMED")), "the refusal by its words");
 });
@@ -217,9 +221,15 @@ test("R43 an explored hop is worded From {from} to {to} with a name of each end,
   drew(named, "screen.explore.hop", { from: "Public Works Department", to: "R. Alvarez" });
 });
 
-test("R46 the assertion form's page counts from 1: a typed 1 sends page 0; a page the record states is the record's own in the request", async () => {
+test("R46 R34 the assertion form's passage is the words chosen: the extent sent is the record's own, a page counted from 0 (its page 1 drawn as one), and a document read as no page is cited whole", async () => {
   const p = await walked();
-  fill(p, { "explore-assert-sha": SHA, "explore-assert-page": "1", "explore-assert-basis": "The minutes name him." });
-  await press(p, "stepsource", { within: main(p).querySelectorAll("div.mk-msg[data-chain]")[1] });
-  assert.deepEqual(p.byOp("stepsource")[0].body.extent, { kind: "pdf-page", page: 0 });
+  const lead = () => main(p).querySelectorAll("div.mk-msg[data-chain]")[1];
+  fill(p, { "explore-assert-doc": SHA, "explore-assert-basis": "The minutes name him." });
+  p.fire(p.doc.getElementById("explore-assert-doc"), "change");
+  await p.settle();
+  await press(p, "stepsource", { within: lead() });
+  assert.deepEqual(p.byOp("stepsource")[0].body.extent, { kind: "document" }, "no words chosen: the whole document");
+  await p.click(main(p).querySelectorAll("[data-words]").find((e) => e.getAttribute("data-words").startsWith("explore-assert-passage-")).querySelectorAll('[data-shell="word"]')[0]);
+  await press(p, "stepsource", { within: lead() });
+  assert.deepEqual(p.byOp("stepsource")[1].body.extent, { kind: "pdf-page", page: 0 }, "the first page, as the record counts it");
 });

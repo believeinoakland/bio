@@ -32,7 +32,7 @@ test("R33 R3 (cause 1) Timeline: 'Record an event' with a date on the form recor
   assert.equal(read.world.placed_nowhere.length, 0, "and is placed nowhere in no list");
   const lane = main(p).querySelector('[data-lane="world"]');
   assert.ok(lane && lane.querySelector(`[data-event="${read.world.items[0].event_id}"]`), "the page draws it in the lane");
-  assert.ok(lane.textContent.includes(dayOf("2026-03-03")) || lane.textContent.includes(word("date.monthday", { day: "3", month: word("date.month.march") })) || /3/.test(lane.textContent), "with its date");
+  assert.ok(lane.textContent.includes(word("date.month.march")) && lane.textContent.includes("3"), "with its date");
   /* control: no date typed sends the passage alone and nothing is recorded as a dated fact */
   fill(p, { "tl-date": "" });
   await press(p, "createevent", { reason: REASON });

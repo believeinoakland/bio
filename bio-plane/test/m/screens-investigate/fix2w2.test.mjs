@@ -21,7 +21,7 @@ const SCREENS = [
   ["person", PATHS.person, "person-fact-doc", async (p) => { fill(p, { "person-alias": "Lin C." }); await press(p, "entityalias"); }, "entityalias", "entity"],
   ["timeline", PATHS.timeline, "tl-doc", async (p) => { fill(p, { "tl-doc": SHA, "tl-date": "2024-05-01" }); await press(p, "recorddatedfact"); }, "recorddatedfact", "image"],
   ["money", PATHS.money, "mf-doc", async (p) => { fill(p, { "mf-expertise": "budgets" }); await press(p, "checkrequest", { reason: "the budget figures" }); }, "checkrequest", "moneyset"],
-  ["standard", "/app/standard/" + STD, "st-doc", async (p) => { fill(p, { "st-to": "STD-2026-0001-ordinance", "st-citation": "Municipal Code §12.04" }); await press(p, "lawrelate", { reason: "it implements the ordinance" }); }, "lawrelate", "standard"],
+  ["standard", "/app/standard/" + STD, "st-doc", async (p) => { fill(p, { "st-type": "implements", "st-to": "STD-2026-0001-ordinance", "st-citation": "CNT-2026-0001" }); await press(p, "lawrelate", { reason: "it implements the ordinance" }); }, "lawrelate", "standard"],
   ["proceeding", PATHS.proceeding, "pr-doc", async (p) => { fill(p, { "pr-register": "https://court.example/register/RG26" }); await press(p, "followregister"); }, "followregister", "entity"],
   ["calculation", PATHS.calculation, "calc-set", async (p) => { await press(p, "calculationaccept", { reason: "checked twice" }); }, "calculationaccept", "calculation"],
 ];

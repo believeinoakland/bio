@@ -8,6 +8,7 @@
 import { PARTS } from "./parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
 import { rereading } from "./rereads.mjs";
+import { hasWord } from "../setup-words/index.mjs";
 
 function reads(view) {
   const id = String(view.subject || "");
@@ -82,9 +83,18 @@ function render(cs, view) {
     + P.docChoice(cs, view, "calc-photo", { label: S + "photo", help: S + "photo.help", passage: false, project: c && c.project })
     + cs.act("spotcheckvisit", { label: "act.spotcheckvisit.label.calculation" }), { help: S + "spot.help" }));
   /* working it out, and a member's own spreadsheet */
+  /* item 59 (K5131; calculations R4): a built-in kind other than a count is worked out over a column of the one table it reads (and a share, a ratio and
+     a difference over the rows whose column is one value, its part): the form asks the column from the held table's own columns, and the part, and sends them */
+  const kindNow = String(ui["choice:calc-kind"] || "count"), inputNow = String(cs.value("calc-input") || "").trim().toLowerCase();
+  const needsColumn = ["total", "share", "ratio", "difference"].includes(kindNow), needsPart = ["share", "ratio", "difference"].includes(kindNow);
+  const tq = needsColumn && /^[0-9a-f]{64}$/.test(inputNow) ? P.later(cs, view, "table:" + inputNow, "table", { query: { sha: inputNow } }) : null;
+  const columns = tq && tq.state === "ok" && tq.value && tq.value.table && Array.isArray(tq.value.table.fields) ? tq.value.table.fields.filter((f) => f && f.name).map((f) => ({ value: f.name, text: f.name })) : [];
+  const columnChoice = columns.length ? cs.choice("calc-column", "screen.calculation.column", [{ value: "", text: "" }].concat(columns), {}) + `<p class="mk-small">${cs.w("screen.calculation.column.help")}</p>`
+    + (needsPart ? cs.field("calc-part", "screen.calculation.part", { help: "screen.calculation.part.help" }) : "") : "";
   out.push(cs.sec(S + "work", cs.field("calc-q", S + "q", { rec: true }) + cs.field("calc-from", S + "from", { type: "date" }) + cs.field("calc-to", S + "to", { type: "date" })
-    + cs.choice("calc-kind", S + "kind", ["count", "total", "share", "ratio", "difference", "estimate"].map((k) => [k, S + "kind." + k]), {})
-    + cs.field("calc-input", S + "input", { help: S + "input.help" })
+    + cs.choice("calc-kind", S + "kind", ["count", "total", "share", "ratio", "difference", "estimate"].map((k) => [k, S + "kind." + k]), { acts: {} })
+    + cs.field("calc-input", S + "input", { help: S + "input.help", typing: (cs2) => { cs2.set("calcin", String(cs2.value("calc-input") || "").trim()); } })
+    + columnChoice
     + cs.act("calculationcreate", { label: "act.calculationcreate.label.calculation", tone: "primary" })
     + P.docChoice(cs, view, "calc-content", { label: S + "content", help: S + "content.help", passage: false, project: c && c.project }) + cs.field("calc-header", S + "header", { help: S + "header.help" })
     + cs.act("tabledeclare", { label: "act.tabledeclare.label.calculation" })));
@@ -106,15 +116,21 @@ const acts = rereading([
       const kind = String(cs.value("calc-kind") || "count");
       const ref = /^MNY-/.test(input) ? { money: input } : /^CALC-/.test(input) ? { calculation: input } : /^[0-9a-f]{64}$/.test(input) ? (kind === "estimate" ? { draw: input } : { table: input }) : { figure: input };
       const c = view.data.calc && view.data.calc.state === "ok" ? view.data.calc.value : null;
-      return { body: Object.assign({ question, period: { from: from || null, to: to || null }, kind, inputs: [Object.assign({ name: "input" }, ref)] }, c && c.project ? { project: c.project } : {}) };
+      /* item 59: the column the kind needs (and, for a share, a ratio and a difference, the part), as the form asked them; a kind sent without them is
+         refused by `calculations` in its words (NO_COLUMN, NO_PART) and drawn beside the act */
+      const column = String(cs.value("calc-column") || "").trim(), part = String(cs.value("calc-part") || "").trim();
+      return { body: Object.assign({ question, period: { from: from || null, to: to || null }, kind, inputs: [Object.assign({ name: "input" }, ref)] },
+        column ? { column } : {}, part ? { part } : {}, c && c.project ? { project: c.project } : {}) };
     },
     done(view, answer, cs) { const r = answer && answer.result !== undefined ? answer.result : answer; if (r && r.calc_id) cs.go("calculation", r.calc_id); } },
   { op: "tabledeclare", label: "act.tabledeclare.label.calculation",
     send(view, el, cs) {
-      const source = String(cs.value("calc-content") || "").trim();
+      /* the source is the passage the member chose, `{capture_sha, extent}` as `calculations` R1 takes a passage nobody has cited yet (a bare capture
+         digest is no content id: the plane refused it NO_SUCH_CONTENT) */
+      const at = view.parts.chosen(cs, "calc-content");
       const header = String(cs.value("calc-header") || "").split(",").map((x) => x.trim()).filter(Boolean);
-      if (!source || !header.length) return { refuse: "screen.calculation.table.empty" };
-      return { body: { source, header, schema: { fields: header.map((name) => ({ name, type: "string" })) } } };
+      if (!at || !header.length) return { refuse: "screen.calculation.table.empty" };
+      return { body: { source: { capture_sha: at.captureSha, extent: at.extent }, header, schema: { fields: header.map((name) => ({ name, type: "string" })) } } };
     } },
   { op: "calculationdraw", label: "act.calculationdraw.label.calculation",
     send(view, el, cs) {
@@ -212,7 +228,10 @@ function renderHelp(cs) {
     + ["does", "random", "says", "notsays", "evidence"].map((k) => cs.sec(H + k, `<p>${cs.w(H + k + ".p")}</p>`)).join("");
 }
 
-const words = ["screen.calculation.name", "screen.calculation.purpose",
+/* K5173: the rows UX-DESIGN adopts (HANDOFF B520), listed once the word table holds them */
+const NEW_KEYS = ["screen.calculation.column", "screen.calculation.column.help", "screen.calculation.part", "screen.calculation.part.help"].filter((k) => hasWord(k));
+
+const words = ["screen.calculation.name", "screen.calculation.purpose", ...NEW_KEYS,
   ...["calculationcreate", "tabledeclare", "calculationdraw", "addworkbook", "bind", "recordcheck", "calculationaccept", "testify", "spotcheckvisit"]
     .flatMap((op) => ["act." + op + ".label.calculation", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
