@@ -188,12 +188,33 @@ export function listenerRefusal(held, module, fn, extra) {
 
 
 export class Members {
-  constructor({ sql } = {}) {
+  constructor({ sql, now = null } = {}) {
     this.sql = sql;
+    this.now = typeof now === "function" ? now : null;   /* R82: the clock handed in, else the store's environment, else the wall clock */
+    this.env = null;   /* R82: the store's environment, set by `membersOps` (`#nowMs`) */
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
+
+  /* R82 (T51 fix round 10; STORE-REQUEST #5 J14; K5132's rule, `credentials`' `#nowMs`): the instance clock. A clock handed
+     in (`now`, a function of milliseconds) answers first; else the store's environment (`env.BIO_NOW_MS`, handed in by
+     `membersOps`); else the wall clock. Every instant this module records, and every judgement of one, reads it. */
+  #nowMs() {
+    if (this.now) {
+      const handed = Number(this.now());
+      if (Number.isFinite(handed) && handed >= 0) return handed;
+    }
+    const raw = this.env ? this.env.BIO_NOW_MS : undefined;
+    if (raw !== undefined && raw !== null && raw !== "") {
+      const v = Number(raw);
+      if (Number.isFinite(v) && v >= 0) return v;
+    }
+    return Date.now();
+  }
+
+  /* The instant, as an ISO string, of the instance clock (or of `ms`). */
+  #instant(ms = this.#nowMs()) { return new Date(ms).toISOString(); }
 
   /* This module's tables, at every boot (R21, R66, R74), idempotent: `members.name` renamed to `cover` (2026-07-24);
      every table and index created if absent; the additive columns an older store lacks added; the vestigial
@@ -365,7 +386,7 @@ export class Members {
       return Members.#rowRefusal("LAST_ADMIN",
         localize("membership.index.the_team_would_be_left", "the team would be left with no administrator, so its last one does not step down (DEC-134 (4)). Add another administrator first. Nothing was written."), { administrators: admins.length });
     /* END DEC-49 REGION is-admin-resign-last */
-    const now = new Date().toISOString();
+    const now = this.#instant();
     this.sql.exec(`UPDATE members SET role='member', status_by=?, updated=? WHERE member_id=?`, by, now, by);
     return { ok: true, memberId: by, role: "member", administrators: admins.length - 1,
              detail: localize("membership.index.resigned_an_ordinary_member_now", "resigned: an ordinary member now, holding the capabilities an administrator last set for them.") };
@@ -383,7 +404,7 @@ export class Members {
       return refusal("NO_HOLDERS",
         localize("membership.index.name_who_holds_hosting_access", "name who holds hosting access: the record keeps the team's answer as it was given, and an empty answer records nobody. Nothing was written."));
     /* END DEC-49 REGION is-hosting-access-holders */
-    const at = new Date().toISOString();
+    const at = this.#instant();
     const n = note === null || note === undefined || String(note).trim() === "" ? null : String(note).slice(0, 280);
     this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at);
     return { ok: true, holders: h, note: n, recorded_by: by, at };
@@ -420,7 +441,7 @@ export class Members {
     /* END DEC-49 REGION is-pairing-yours */
     const want = published === true || published === 1 || published === "1" || published === "true";
     this.sql.exec(`UPDATE members SET pairing_published=?, updated=? WHERE member_id=?`,
-      want ? 1 : 0, new Date().toISOString(), memberId);
+      want ? 1 : 0, this.#instant(), memberId);
     return { ok: true, memberId, published: want, by };
   }
 
@@ -577,7 +598,7 @@ export class Members {
       return { ok: false, reason: "ALREADY_DECLARED", label: lab, state: cur };
     this.sql.exec(
       `INSERT INTO member_expertise (member_id,label,event,actor,created) VALUES (?,?,'declared',?,?)`,
-      memberId, lab, memberId, new Date().toISOString());
+      memberId, lab, memberId, this.#instant());
     return { ok: true, memberId, label: lab, state: "declared", confirmed: false,
              detail: localize("member-roster.index.declared_and_unconfirmed_which_costs_nothing", "declared and unconfirmed, which costs nothing: an unconfirmed entry carries the same capabilities, visibility and access as a confirmed one") };
   }
@@ -605,7 +626,7 @@ export class Members {
     /* Supersede, never overwrite: the earlier confirmation stays readable. */
     this.sql.exec(
       `INSERT INTO member_expertise (member_id,label,event,actor,created) VALUES (?,?,?,?,?)`,
-      memberId, lab, withdraw ? "withdrawn" : "confirmed", by, new Date().toISOString());
+      memberId, lab, withdraw ? "withdrawn" : "confirmed", by, this.#instant());
     return { ok: true, memberId, label: lab, state: withdraw ? "withdrawn" : "confirmed",
              confirmed: !withdraw, by };
   }
@@ -629,7 +650,7 @@ export class Members {
     if (cur !== "confirmed") return { ok: false, reason: "NOT_CONFIRMED", label: lab, state: cur };
     this.sql.exec(
       `INSERT INTO member_expertise (member_id,label,event,actor,created,reason) VALUES (?,?,'withdrawn',?,?,?)`,
-      memberId, lab, by, new Date().toISOString(), why);
+      memberId, lab, by, this.#instant(), why);
     return { ok: true, memberId, label: lab, state: "withdrawn", confirmed: false, by, reason: why };
   }
 
@@ -780,7 +801,7 @@ export class Members {
     const bad = want.filter((c) => !Members.CAPABILITIES.includes(c));
     if (bad.length) return { ok: false, reason: "BAD_CAPABILITY", got: bad, known: Members.CAPABILITIES };
     this.sql.exec(`UPDATE members SET capabilities=?, updated=? WHERE member_id=?`,
-      JSON.stringify(want), new Date().toISOString(), memberId);
+      JSON.stringify(want), this.#instant(), memberId);
     /* `by` travels back in the answer for `adminRemove`'s reason — an act the
        record attributes to a person should say whom it attributed it to, at the
        moment it is performed, so a caller can see the server's answer rather
@@ -807,7 +828,7 @@ export class Members {
                detail: localize("membership.index.only_a_member_whose_status", "only a member whose status is 'proposed' is endorsed as an administrator (4.7), and this member's is not. Nothing was written.") };
     }
     /* END DEC-49 REGION is-endorse-proposed */
-    const now = new Date().toISOString();
+    const now = this.#instant();
     this.sql.exec(`INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,?,?)`,
       memberId, by, null, now);
     const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId)
@@ -869,7 +890,7 @@ export class Members {
 
     if (this.#one(`SELECT voter FROM admin_votes WHERE kind='remove' AND target=? AND voter=?`, memberId, by))
       return { ok: false, reason: "ALREADY_VOTED", by };
-    const now = new Date().toISOString();
+    const now = this.#instant();
     this.sql.exec(`INSERT INTO admin_votes (kind,target,voter,reason,created) VALUES ('remove',?,?,?,?)`,
       memberId, by, why, now);
 
@@ -951,7 +972,7 @@ export class Members {
 
     const caps = Array.isArray(capabilities) ? capabilities.filter((c) => Members.CAPABILITIES.includes(c))
                                              : ["contribute"];
-    const now = new Date().toISOString();
+    const now = this.#instant();
 
     /* 4.7 addition. The first administrator may add a second unilaterally,
        because a group of one has nobody to consult. Every subsequent addition
@@ -1023,7 +1044,7 @@ export class Members {
        FROM members WHERE invite_hash=? AND status='invited'`, hash);
     /* R97: an expired invitation answers as a spent one, byte for byte, and nothing revives it (no act moves an
        expiry). One made before invitations expired (NULL) stays as it was made. */
-    return m && !Members.#expired(m.invite_expires) ? m : null;
+    return m && !Members.#expired(m.invite_expires, this.#nowMs()) ? m : null;
   }
 
   /** What a burner URL resolves to. Unauthenticated by necessity: the invitee
@@ -1067,7 +1088,7 @@ export class Members {
     /* D-610 (BOB #35, 2026-09-25): enrolment is the MEMBER'S own act, so `status_by` names them and no
        longer carries the inviter's stamp onto a status the inviter did not set. */
     this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, status_at=?, updated=? WHERE member_id=?`,
-      h, m.member_id, new Date().toISOString(), new Date().toISOString(), m.member_id);
+      h, m.member_id, this.#instant(), this.#instant(), m.member_id);
     /* R108 (DEC-136 (1)): while the group chose to tell its members, the joining statement, given here once (an
        enrolment succeeds once per member); otherwise the key is absent. */
     return { ok: true, memberId: m.member_id, handle: h,
@@ -1162,7 +1183,7 @@ export class Members {
                        /* R105: how each came in and their invitation, for an administrator's roster only. */
                        door: door ?? "administrator", approvedBy: approved_by ?? null,
                        expires: r.status === "proposed" ? null : invite_expires ?? null,
-                       invitation: Members.#invitationState(r, invite_expires, invite_withdrawn) } : {}) }));
+                       invitation: Members.#invitationState(r, invite_expires, invite_withdrawn, this.#nowMs()) } : {}) }));
     /* R147 (T50; N1119, K3369; amends R17, R86): once the instance is claimed (R94) the founder is listed, first, as R86
        orders her. She has no members row, so the row is built here: her id `admin` is `member_id` only, her `handle` the
        one she holds (R144) or null, `founder: true` on her row alone; never a cover, a door or an invitation. */
@@ -1274,7 +1295,7 @@ export class Members {
         if (row && row.status === "active") key = `member:${row.member_id}`;
       }
       if (!key) return { ...Members.#INVITE_MISS };
-      const now = Date.now();
+      const now = this.#nowMs();
       const est = this.#handleCheckEstimate(key, now);
       /* DEC-49 REGION is-handle-check-window */
       if (est.prev * (1 - est.f) + est.cur >= Members.HANDLE_CHECK_WINDOW.perKey)
@@ -1356,7 +1377,7 @@ export class Members {
     const refused = this.#handleRefusal(h, null);
     if (refused) return refused;
     /* a write that fails throws into the caller's transaction (the claim's act), which then writes nothing */
-    this.sql.exec(`INSERT INTO founder_handle (id, handle, at) VALUES (1,?,?)`, h, new Date().toISOString());
+    this.sql.exec(`INSERT INTO founder_handle (id, handle, at) VALUES (1,?,?)`, h, this.#instant());
     return { ok: true, handle: h };
   }
 
@@ -1392,7 +1413,7 @@ export class Members {
      * single administrator's call; restoring the office goes through the 4.7
      * addition process like any other appointment. */
     const demoted = status === "active" && m.role === "admin" && m.status !== "active";
-    const now = new Date().toISOString();
+    const now = this.#instant();
     const actor = by || null;   /* REC-159: `status_by`, NULL (read `not recorded`) when nothing was stamped */
     /* R152: the instant is moved only by a write that changes the status */
     const at = m.status !== status ? now : null;
@@ -1469,13 +1490,13 @@ export class Members {
 
   static #expiresAt(nowIso, days) { return new Date(Date.parse(nowIso) + days * 86_400_000).toISOString(); }
 
-  static #expired(expires) { return typeof expires === "string" && Date.parse(expires) <= Date.now(); }
+  static #expired(expires, nowMs) { return typeof expires === "string" && Date.parse(expires) <= nowMs; }   /* R82 */
 
   /* R105: an invitation's state on an administrator's roster. A proposed administrator has none yet. */
-  static #invitationState(r, expires, withdrawn) {
+  static #invitationState(r, expires, withdrawn, nowMs) {   /* R82: judged at `nowMs` */
     if (r.status === "proposed") return null;
     if (withdrawn) return "withdrawn";
-    if (r.status === "invited") return r.invite_pending ? (Members.#expired(expires) ? "expired" : "live") : "expired";
+    if (r.status === "invited") return r.invite_pending ? (Members.#expired(expires, nowMs) ? "expired" : "live") : "expired";
     if (r.status === "revoked" && !r.handle) return "withdrawn";   /* revoked (R20) before it was used */
     return "spent";
   }
@@ -1491,7 +1512,7 @@ export class Members {
       return Members.#rowRefusal("NO_UNUSED_INVITATION",
         localize("membership.index.only_an_invitation_that_has", "only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they have joined, theirs was withdrawn, or none was made yet. Nothing was written."), { memberId, status: m.status });
     /* END DEC-49 REGION is-invitation-unused */
-    const now = new Date().toISOString();
+    const now = this.#instant();
     /* Dead at once (the hash goes, so R15 answers NO_SUCH_INVITATION), and the member is revoked, told as R20 tells. */
     this.sql.exec(`UPDATE members SET status='revoked', invite_hash=NULL, invite_withdrawn=?, status_by=?, status_at=?, updated=?
                     WHERE member_id=?`, now, by, now, now, memberId);
@@ -1574,7 +1595,7 @@ export class Members {
     /* END DEC-49 REGION is-website-key-one */
     const s = Members.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
     if (!s.ok) return s;
-    const key = Members.#secret(), keyId = Members.#doorIdOf(), at = new Date().toISOString();
+    const key = Members.#secret(), keyId = Members.#doorIdOf(), at = this.#instant();
     this.#doorAppend("website", keyId, "create", sha256HexSync(key), s, by, at);
     return { ok: true, keyId, key, capabilities: s.capabilities, dailyCap: s.dailyCap, expiresInDays: s.expiresInDays,
              warning: Members.DOOR_WARNING };
@@ -1587,7 +1608,7 @@ export class Members {
     if (live.ok === false) return live;
     const s = Members.#doorSettings({ capabilities, dailyCap, expiresInDays }, live);
     if (!s.ok) return s;
-    const at = new Date().toISOString();
+    const at = this.#instant();
     this.#doorAppend("website", live.id, "set", live.hash, s, by, at);
     return { ok: true, keyId: live.id, capabilities: s.capabilities, dailyCap: s.dailyCap, expiresInDays: s.expiresInDays,
              by, at };
@@ -1598,7 +1619,7 @@ export class Members {
     if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.switching_off_the_teams_website_key", "switching off the team's website key"));   /* R84 */
     const live = this.#liveWebsiteKey(localize("member-roster.index.switching_off_the_website_key", "switching off the website key"));
     if (live.ok === false) return live;
-    const at = new Date().toISOString();
+    const at = this.#instant();
     this.#doorAppend("website", live.id, "revoke", null, live, by, at);
     return { ok: true, keyId: live.id, revoked: true, by, at };
   }
@@ -1616,7 +1637,7 @@ export class Members {
 
   /* How many invitations this door's actor made in the 24 hours before now. */
   #doorToday(actor) {
-    const since = new Date(Date.now() - 86_400_000).toISOString();
+    const since = this.#instant(this.#nowMs() - 86_400_000);
     return this.#one(`SELECT COUNT(*) AS n FROM members WHERE invited_by=? AND created>?`, actor, since).n;
   }
 
@@ -1630,7 +1651,7 @@ export class Members {
     do memberId = `m-${Members.#rand(10)}`;
     while (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId));
     const invite = Members.#rand(16);
-    const now = new Date().toISOString();
+    const now = this.#instant();
     const expires = Members.#expiresAt(now, live.expiresInDays);
     this.sql.exec(
       `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by,
@@ -1672,7 +1693,7 @@ export class Members {
     /* END DEC-49 REGION is-join-link-one */
     const s = Members.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
     if (!s.ok) return s;
-    const link = Members.#secret(), linkId = Members.#doorIdOf(), at = new Date().toISOString();
+    const link = Members.#secret(), linkId = Members.#doorIdOf(), at = this.#instant();
     this.#doorAppend("link", linkId, "enable", sha256HexSync(link), s, by, at);
     return { ok: true, linkId, link, capabilities: s.capabilities, dailyCap: s.dailyCap, expiresInDays: s.expiresInDays,
              warning: Members.DOOR_WARNING };
@@ -1685,7 +1706,7 @@ export class Members {
     if (live.ok === false) return live;
     const s = Members.#doorSettings({ capabilities, dailyCap, expiresInDays }, live);
     if (!s.ok) return s;
-    const at = new Date().toISOString();
+    const at = this.#instant();
     this.#doorAppend("link", live.id, "set", live.hash, s, by, at);
     return { ok: true, linkId: live.id, capabilities: s.capabilities, dailyCap: s.dailyCap, expiresInDays: s.expiresInDays,
              by, at };
@@ -1696,7 +1717,7 @@ export class Members {
     if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.replacing_the_teams_join_link", "replacing the team's join link"));   /* R84 */
     const live = this.#liveJoinLink(localize("member-roster.index.replacing_the_join_link", "replacing the join link"));
     if (live.ok === false) return live;
-    const link = Members.#secret(), linkId = Members.#doorIdOf(), at = new Date().toISOString();
+    const link = Members.#secret(), linkId = Members.#doorIdOf(), at = this.#instant();
     this.#doorAppend("link", linkId, "replace", sha256HexSync(link), live, by, at);
     return { ok: true, linkId, link, replaced: live.id, capabilities: live.capabilities, dailyCap: live.dailyCap,
              expiresInDays: live.expiresInDays, by, at };
@@ -1707,7 +1728,7 @@ export class Members {
     if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.switching_off_the_teams_join_link", "switching off the team's join link"));   /* R84 */
     const live = this.#liveJoinLink(localize("member-roster.index.switching_off_the_join_link", "switching off the join link"));
     if (live.ok === false) return live;
-    const at = new Date().toISOString();
+    const at = this.#instant();
     this.#doorAppend("link", live.id, "off", null, live, by, at);
     return { ok: true, linkId: live.id, off: true, by, at };
   }
@@ -1901,7 +1922,7 @@ export class Members {
       return Members.#rowRefusal("COURT_NOTICE_UNKNOWN_CHOICE",
         localize("membership.index.the_choice_is_tell_or", "the choice is `tell` or `dont`, and nothing else. Nothing was written."), { choice: Members.#echo(choice ?? null) });
     /* END DEC-49 REGION is-court-notice-choice */
-    const at = new Date().toISOString();
+    const at = this.#instant();
     this.sql.exec(`INSERT INTO court_notice (choice, set_by, at) VALUES (?,?,?)`, choice, by, at);
     return { ok: true, choice, by, at };
   }
@@ -1936,7 +1957,7 @@ export class Members {
       const id = this.#markHolder(isObj(args) ? args.by : null);
       if (id === null) return { since: null };
       const prev = this.#one(`SELECT at FROM home_looks WHERE member_id=?`, id);
-      const now = new Date().toISOString();
+      const now = this.#instant();
       this.sql.exec(`INSERT INTO home_looks (member_id, at) VALUES (?,?) ON CONFLICT(member_id) DO UPDATE SET at=excluded.at`,
         id, now);
       return { since: prev ? prev.at : null };
@@ -1985,7 +2006,7 @@ export class Members {
     if (vis !== "members" && vis !== "public")
       return refuse("GROUP_VISIBILITY_UNKNOWN", localize("membership.index.the_description_is_seen_by", "the description is seen by `members` or by the `public` too."));
     /* END DEC-49 REGION is-group-description */
-    const at = new Date().toISOString();
+    const at = this.#instant();
     this.sql.exec(`INSERT INTO group_description (kinds, other_kind, focus, purpose, visibility, set_by, at)
                    VALUES (?,?,?,?,?,?,?)`, JSON.stringify(ks), other, f, p, vis, by, at);
     return { ok: true, kinds: ks, otherKind: other, focus: f, purpose: p, visibility: vis, by, at };
@@ -2041,6 +2062,8 @@ export function membersOf(ctx) {
    host's environment. Each stamp is read from the query AFTER the body is spread, so a caller's own copy never wins
    (D-136). `memberlist` is given no `projectsOf` here (R71): `membership`'s own `memberlist` replaces it with its own. */
 export function membersOps(m, url, body, env) {
+  /* R82: the store's environment is the instance clock's source (`BIO_NOW_MS`), so every op this map answers reads it */
+  if (env && typeof env === "object") m.env = env;
   return {
         /* REC-156 — `memberadd`'s `by` COMES FROM THE QUERY TOO: spread the body, THEN set `by`; `memberAdd` writes the
            proposer's `admin_votes` ('add') row from it, and a voter a caller can name is not a voter. A call with no
