@@ -1,7 +1,7 @@
 /* docket's published fixtures (fixtures.mjs): each is called and its answer is the real module's, at its interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { coreDue, docketEntryRead, pressureMarks } from "./fixtures.mjs";
+import { coreDue, coreDueKinds, docketEntryRead, pressureMarks } from "./fixtures.mjs";
 import { V, CASE } from "./fixture.mjs";
 
 test("R9 fixtures: coreDue is the real answer: the manager's owed response, and for a viewer shown no case an empty read that wrote nothing", () => {
@@ -31,4 +31,29 @@ test("R27 fixtures: pressureMarks is the real read of the marks: empty with mark
   assert.equal("marks" in f.refused, false);
   assert.deepEqual([f.unreadable.ok, f.unreadable.reason], [false, "DOCKET_UNREADABLE"]);
   assert.equal("marks" in f.unreadable, false);
+});
+
+test("R9 fixtures: coreDueKinds is the real answer over two cases of two projects: a response, statements, editions above 1 with what changed, and tensions, each to its case's manager alone", () => {
+  const f = coreDueKinds();
+  assert.equal(f.due.ok, true);
+  assert.equal(f.due.wrote, false);
+  assert.deepEqual(f.due.items.map((i) => `${i.kind}:${i.ref}`).sort(),
+    [`edition:2`, `response:${f.response}`, `statement:${f.statementP}`, `tension:CAND-1`].sort());
+  assert.deepEqual(f.otherDue.items.map((i) => `${i.kind}:${i.ref}`).sort(), [`edition:2`, `statement:${f.statementQ}`, `tension:CAND-3`].sort());
+  assert.equal(f.due.count, 4);
+  assert.equal(f.otherDue.count, 3);
+  assert.ok(f.due.items.every((i) => i.case === f.case), "alice is told of her case alone");
+  assert.ok(f.otherDue.items.every((i) => i.case === f.caseQ), "dave is told of his case alone");
+  for (const i of [...f.due.items, ...f.otherDue.items]) assert.ok(i.since, `${i.kind} carries its since`);
+  const stmt = (r, ref) => r.items.find((i) => i.kind === "statement" && i.ref === ref);
+  assert.equal(stmt(f.due, f.statementP).edition, 1);
+  assert.equal(stmt(f.otherDue, f.statementQ).edition, 1);
+  const ed = (r, c) => r.items.find((i) => i.kind === "edition" && i.case === c);
+  assert.deepEqual([ed(f.due, f.case).edition, ed(f.due, f.case).what_changed], [2, "Corrected the totals."]);
+  assert.deepEqual([ed(f.otherDue, f.caseQ).edition, ed(f.otherDue, f.caseQ).what_changed], [2, "Added a permit."]);
+  const tension = (r, c) => r.items.find((i) => i.kind === "tension" && i.case === c);
+  assert.deepEqual([tension(f.due, f.case).member, tension(f.due, f.case).state], [f.world.F1, "open"]);
+  assert.deepEqual([tension(f.otherDue, f.caseQ).ref, tension(f.otherDue, f.caseQ).member, tension(f.otherDue, f.caseQ).state], ["CAND-3", "INQ-2026-0003-permits", "open"]);
+  assert.deepEqual(f.world.docket.coreDue({ case: f.caseQ, viewer: V("alice") }).items, [], "a manager of the other project is told of neither");
+  assert.deepEqual(f.world.docket.coreDue({ case: f.caseQ, viewer: f.other }), f.otherDue, "one case when named");
 });
