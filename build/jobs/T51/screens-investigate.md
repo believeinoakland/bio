@@ -396,3 +396,26 @@ REPORT · screens-investigate · Saved at K5183
 Done and pushed (job/T51/screens-investigate, tranche/T51 merged at 12c0b90f4f): causes 1-4 built with failing-first tests over storeWorld; op tables 164 -> 12 listed lines; checks format/architecture/coverage/words/ownership 0. Full detail in J29 (BLOCKED, context), which is the exact list of what remains.
 Half done: nothing uncommitted. Workers: all six finished; none running.
 Exact next step: (1) re-point the ~15 test files that still call the scripted `open()` (calculation, common, explore, fix2w2, fix3, fold, graph, money, pickers/picker-more, proceeding, standard, theme, ties) to `openAs(world, me, ...)`, then delete `plane()` and unused constants from fixtures.mjs (clears its 10 listed lines); (2) fix proceeding.mjs:195 `declare` (needs a court-kind standard chosen) and calculation `calc-set` (offer declared tables); (3) known_through source draw as the document title (K5178), linecurrentthrough after INTERFACE-SHELL #23; (4) COMPLETE with scratchpad/complete-draft.md contents and Size line.
+
+## J31 · COMPLETE
+
+COMPLETE · screens-investigate · T51-120, fix round 10 causes 1-4 and B35-B38 (K5184-K5195)
+
+**Entries applied (met ids: R1, R5, R7, R32 (1), R33 (2), R34, R51, R60; all 60 live ids named by a test).**
+- Own-module defects fixed, failing first over the world: `declare` (proceeding) now names the court order chosen in `pr-court` as `source.standard` (the store refused NO_SUCH_STANDARD); the calculation's "set to draw from" is a choice of the tables the calculation reads, by their documents' titles (the store takes a table's digest); the estimate's exact range is drawn from the owner's figures (`low_share`/`high_share` are `{value,...}`, it drew NaN%); due-date skipped days name their source from the calculation's calendar entry of the day's year (weekends: the counting rule's basis), not the calendar's status (B36 (1)); a money-trail node and a payment carry their kind as the card's fact (DEC-160).
+- B35 (1): `linecurrentthrough` on an office's holder rows (button per open-ended holder, day field `ho-through`, the holder form's source); the Standard draws `known_through.source` as the held document's title (K5178; the world's own answer lands with STANDARDS: `test.todo` names it).
+- R60: `screen.timeline.nozone` once above the events placed in no zone when the team has no active place (read `profiles`, only when events are placed nowhere), control with a place. `screen.person.holds.capacity` and the calculation refusals are keyed already.
+- R33 (2): state b over the world draws a `missing_predecessor` finding's `progression.expects` sentence (progressions R49), test with a three-step progression.
+- Op tables: 164 -> 2 listed lines. Both are `acquire` (fix2w2.test.mjs:102, money.test.mjs:137): a fetched site, externally driven (K5044 (1)). `fixtures.mjs` is now only helpers (no scripted plane); 6 workers converted every other scripted test to `openAs(world, me, ...)`; the `{group: null}` is dropped (B37).
+- K4787/K4966: "R4 C8 (the figure)" could not be made to fail (12 copies in parallel plus three suites, original and fixed, all green). Probable cause: `settled` stops after a quiet window or its 1500-loop bound while the act's answer is still in flight under load (the failing batch took 64 s). The test now waits for the act's result (`settledUntil`: the row drawn), and is green 12 of 12 in parallel. The standards REPORT (red "real plane" version) is gone with the Miniflare test; its world version passes.
+
+**Deferred / todos kept (43 `test.todo`).** K5173 words not yet in the table (screen.person.expunge.marker, holds.*, act.recordline.label.office, act.linecurrentthrough.*, screen.calculation.column/part, screen.standard.rel.in.*, screen.timeline.nozone, refusal.NO_COLUMN/NO_PART/NO_SUCH_COLUMN); K5178 `known_through` over the world (STANDARDS); people R43/R44 draws (person.test, organization.test; waits for your CHANGE).
+
+**Found in other modules (REPORT).**
+1. money (`moneyset`, src/money/index.mjs ~965): `exclude` does not close a figure's open proposal as `include` does, so a figure proposed then excluded is listed under `proposals` and `exclusions`; the page draws two rows (todo in money.test.mjs).
+2. explore: the page's `exploregraph` read sends no inquiry scope, so a hunch hop can never be drawn; `mentioned_together` hops are not made by any real act of the world (graph/explore tests rewrite one answer).
+3. interface-shell/store-request helpers wished: a shared `holdNamed`/`holdPaged` (two local copies), `WORLD_TOKENS` re-exported by world.mjs; no act sets a register's `last_read` (the `follows` answer is rewritten in proceeding.test.mjs); no fiscal year for body "*" in the oakland-alameda profile (money period.fiscal refused MONEY_BAD_PERIOD, the grade and fiscal cell are rewritten).
+4. A fault-only path stays scripted: `heldcaptures` beyond three pages (5000 documents) in picker-more.test.mjs.
+
+**Tests and checks.** Module suite at the final tree: 330 tests, 287 pass, 0 fail, 43 todo. format 0 failures; architecture 0; coverage 60 of 60; ownership 0 (vs origin/tranche/T51); words 0 (alone and over all modules: none names this module); fixtures 2 (the acquire lines above).
+Size (session_01Pdj4AeSbnHnToosQruPH5w): test runs 25, module lines 3400
