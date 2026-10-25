@@ -240,3 +240,7 @@ REPORT (B24, K5024): readers of the access points xlsxEntry.text() leaves. Grep 
 - **Ran:** office-readers 164 pass 0 fail; odf-reader 127, format-registry 59, doc-clean 5, reading-pipeline 404, extraction 379: all pass 0 fail. Checks: format 0, architecture 0, coverage 43 of 43 0, ownership 0, words 0. `impact.mjs`: 117 of 178 modules affected.
 - **Deferred:** none. Found elsewhere: only the reading-pipeline `hidden` copy above.
 - Size (session_0125Uavk4SCgaTBsu5Z16S9v): test runs 30, module lines 4750
+
+## J18 · COMPLETE
+
+COMPLETE (B25): R49 wide sheets refused whole (count+limit); R16 hidden pptx slide held once (reading-pipeline must copy hidden from slide); R44 object count before the part is held, docx and pptx, body kept as bytes; C7 refused with 0 held, A12 whole at 62.3 MB vs 66.3 margin (capFor(128) read as 78 MB above idle). office-readers 164 pass; users 0 fail; checks 0. NOT RUN: plane g41-shape/L runs (owed). Words row owed: office-readers.formats-xlsx.sheet_columns_over_bound. ODS twin of R49 is odf-reader's. See record.
