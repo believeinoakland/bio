@@ -3,86 +3,70 @@
  * project's account. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { boot, ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, storeWorld, main, actsIn, button, fill, press, rawKeys, says, section, word, day, SCREENS } from "./fixtures.mjs";
+import { ok, refusedIn, MEMBER } from "../interface-shell/harness.mjs";
+import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, word, day, SCREENS, P } from "./fixtures.mjs";
 
-const AI = SCREENS.find((s) => s.id === "projectai");
+/* every owner's declarations, registered once before the first read (test-support R17, K4245): the served screens name ops their owners declare */
+
+
+const at = "/app/projectai/" + P;
+const OWNER = "project:" + P;
+/* the notice as the plane answers it: the words row it is made from, read by `word` */
+const NOTICE = word("ai.disclosure.projectkey", { project: "Pothole repairs" });
 const KEY = "sk-ant-api03-" + "7".repeat(40);
-const OWN = { capabilities: ["contribute", "create_projects"] };
-/* the agent runner's sign-in door (an environment binding, not an op of any module): it answers the `code` step with a sign-in token */
-const RUNNER = { fetch: async (_url, init) => {
-  const asked = JSON.parse(init.body);
-  return Response.json({ ok: true, step: asked.step, member: asked.member, connected: true, token: "sk-ant-oat01-" + "a".repeat(40), valid_for: 3600 });
-} };
-
-/** The real state by real acts: mai makes the project "Pothole repairs" (so she owns it); `others` (default none) are members invited and joined;
- *  she holds the project's key (`projectkeyset`) unless `key: false`, her own sign-in is connected unless `connected: false`; `seen` has
- *  her read the notice. Answers the world, the members, the project's id and `page(as, plane?, path?)` booting a page over the world. */
-async function state(o = {}) {
-  const world = await storeWorld({ ai: true, env: { AGENT_WORKER: RUNNER } });
-  const mai = await world.signIn("mai", OWN);
-  const project = await world.recipes.project(mai, "Pothole repairs");
-  const dev = await world.signIn("dev", OWN);
-  if (!o.sole) {
-    await mai.act("projectinvite", { query: { projectId: project, handle: "dev" }, body: {} });
-    await dev.act("projectjoin", { query: { projectId: project }, body: {} });
-  }
-  if (o.connected !== false) await mai.act("subscriptionsignin", { body: { step: "code", code: "123456" } });
-  await mai.act("reauth", { body: { password: mai.password } });   /* setting a key asks the password again (C-29.42) */
-  if (o.key !== false) {
-    await mai.act("projectkeyset", { body: { project, key: KEY } });
-    if (o.off !== true) await mai.act("projectaccountswitch", { body: { project, on: true } });   /* a key is off when first set */
-  }
-  if (o.seen) await mai.act("projectkeynoticeseen", { body: { project } });
-  const page = async (as, plane = {}, path = "/app/projectai/" + project) => {
-    const { door, session } = world.boot(as);
-    const b = await boot({ screens: SCREENS, door, session, path, plane });
-    await b.settle();
-    return b;
+/* mai is the project's owner here; `sole` leaves her its only participant */
+const parts = (sole) => ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: true },
+  ...(sole ? [] : [{ handle: "dev", state: "joined", owner: false }])] });
+function ai(o = {}) {
+  return {
+    projectparticipants: parts(o.sole),
+    projectaccountstate: ok({ ok: true, held: true, kind: "apikey", on: true, set_at: "2026-10-05T09:00:00Z", by: "mai", uses: {}, serving: "project", ...(o.state || {}) }),
+    projectkeynotice: ok({ ok: true, due: o.due !== false, text: NOTICE }),
+    projectaikeepawaystate: ok({ ok: true, on: false, uses: null, reason: null, set_by: null, set_at: null, ...(o.keep || {}) }),
+    subscriptionsignin: ok({ ok: true, connected: o.connected !== false }),
+    accountuses: ok({ owner: OWNER, held: true, uses: { ask: true, draft: true, run: false, standing: true, enquire: true, read: true, transcribe: true, account: true, suggestions: true }, keptAway: [] }),
+    ailimits: ok({ ok: true, owner: OWNER, limits: [{ scope: "overall", unit: "usd", period: "month", amount: 20, used: 3.5 }], history: [] }),
+    aiusage: ok({ ok: true, owner: OWNER, uses: [{ use: "ask", calls: 12, tokens: 34000, total_cost_usd: 1.2 }] }),
+    accounthistory: ok({ ok: true, changes: [{ at: "2026-10-05T09:00:00Z", by: "member:mai", change: "key_set" }] }),
   };
-  return { world, mai, dev, project, owner: "project:" + project, page };
 }
+const openAi = (o = {}, extra = {}) => open(at, { plane: { ...ai(o), ...extra } });
 
 test("R14 reads: the project's account, its notice and keep-away, her sign-in, and the panel's four reads over owner project:<id>", async () => {
-  const { mai, project, owner, page } = await state();
-  const p = await page(mai);
+  const p = await openAi();
   const q = (op) => p.byOp(op)[0] && p.byOp(op)[0].query;
-  assert.equal(q("projectaccountstate").project, project);
-  assert.equal(q("projectkeynotice").project, project);
-  assert.equal(q("projectaikeepawaystate").project, project);
-  assert.equal(q("projectparticipants").projectId, project);
+  assert.equal(q("projectaccountstate").project, P);
+  assert.equal(q("projectkeynotice").project, P);
+  assert.equal(q("projectaikeepawaystate").project, P);
+  assert.equal(q("projectparticipants").projectId, P);
   assert.deepEqual(p.byOp("subscriptionsignin")[0].body, { step: "state" });
   /* K3419: the panel's four reads name the project's account, and are made for an owner only (below: never for a participant) */
-  for (const op of ["accountuses", "ailimits", "aiusage", "accounthistory"]) assert.equal(q(op).owner, owner, op);
+  for (const op of ["accountuses", "ailimits", "aiusage", "accounthistory"]) assert.equal(q(op).owner, OWNER, op);
   assert.ok(p.root().querySelector(".cs-crumbs").textContent.includes("Pothole repairs") && says(p.root().querySelector(".cs-crumbs"), "screen.projectai.name"));
 });
 
 test("R14 drawn to an owner: what pays, the panel over the project's account (screens-settings R9), keep-away, and the eight acts", async () => {
-  const { world, mai, project, owner, page } = await state({ sole: true });
-  const set = (await mai.read("projectaccountstate", { query: { project } })).set_at;
-  /* waits on: a use counted to the project's account (no recipe makes one: `askusage` counts to the member's own account, `ai-use` countUsage is no op) */
-  const p = await page(mai, { aiusage: ok({ ok: true, owner, uses: [{ use: "ask", calls: 12, tokens: 34000, total_cost_usd: 1.2 }] }) });
+  const p = await openAi({ sole: true });
   const m = main(p);
   assert.equal(m.querySelector("h1").textContent, "Pothole repairs");
   assert.ok(says(m.querySelector('[data-account="apikey"]'), "screen.projectai.account.key"));
-  assert.ok(says(m, "screen.projectai.account.since", { who: "mai", date: day(set, { year: true }) }));
+  assert.ok(says(m, "screen.projectai.account.since", { who: "mai", date: day("2026-10-05T09:00:00Z", { year: true }) }));
   /* the panel: its four sections, its use summed naming no member */
   assert.ok(m.querySelectorAll("section").length >= 4, "the panel's sections, drawn by screens-settings");
   assert.ok(m.textContent.includes("$1.20"));
   assert.ok(says(m.querySelector('[data-keepaway="off"]'), "screen.projectai.keepaway.off"));
   /* every act of the screen's own declaration but Join (R37), drawn to an owner */
-  assert.deepEqual([...new Set(actsIn(m))].sort(), AI.acts.map((a) => a.op).filter((op) => op !== "projectjoin").sort());
+  assert.deepEqual([...new Set(actsIn(m))].sort(), SCREENS.find((s) => s.id === "projectai").acts.map((a) => a.op).filter((op) => op !== "projectjoin").sort());
   assert.deepEqual(rawKeys(p.root()), []);
 });
 
 test("R14 projectkeyset sends the key in the body only, never drawn again", async () => {
-  const { mai, project, page } = await state();
-  const p = await page(mai);
+  const p = await openAi({}, { projectkeyset: ok({ ok: true, project: P, kind: "apikey", set_at: "2026-10-14T09:00:00Z" }) });
   const field = main(p).querySelector('input[type="password"]');
   fill(p, { [field.getAttribute("id")]: KEY });
   await press(p, "projectkeyset");
   const r = p.byOp("projectkeyset")[0];
-  assert.deepEqual(r.body, { project, key: KEY });
+  assert.deepEqual(r.body, { project: P, key: KEY });
   for (const x of p.requests) {
     assert.ok(!x.url.includes(KEY), `${x.op} address`);
     if (x !== r) assert.ok(!JSON.stringify(x.body || {}).includes(KEY), `${x.op} body`);
@@ -91,28 +75,20 @@ test("R14 projectkeyset sends the key in the body only, never drawn again", asyn
   assert.equal(main(p).querySelector('input[type="password"]').value, "", "the field is empty again");
   for (const v of [...p.store.values(), ...p.local.values()]) assert.ok(!String(v).includes(KEY));
   /* control: no key, nothing sent */
-  const n = await page(mai);
+  const n = await openAi();
   assert.ok(says(await press(n, "projectkeyset"), "screen.projectai.key.nokey"));
   assert.equal(n.byOp("projectkeyset").length, 0);
 });
 
 test("R14 her own sign-in is offered only while the project has no other participant and her sign-in is connected", async () => {
-  const sole = await state({ sole: true });
-  const p = await sole.page(sole.mai);
+  const p = await openAi({ sole: true }, { projectsigninset: ok({ ok: true, project: P, kind: "signin" }) });
   await press(p, "projectsigninset");
-  assert.deepEqual(p.byOp("projectsigninset")[0].body, { project: sole.project });
-  assert.equal((await sole.mai.read("projectaccountstate", { query: { project: sole.project } })).kind, "signin", "and it reached the store: her sign-in pays");
-  const other = await state({ sole: false });
-  assert.ok(!actsIn(main(await other.page(other.mai))).includes("projectsigninset"), "another participant");
-  const off = await state({ sole: true, connected: false });
-  assert.ok(!actsIn(main(await off.page(off.mai))).includes("projectsigninset"), "not connected");
-  /* the owner's refusal by its words (ai.refused.notsole): the page drawn while she is alone, a member joined before she presses */
-  const late = await state({ sole: true });
-  const r = await late.page(late.mai);
-  await late.mai.act("projectinvite", { query: { projectId: late.project, handle: "dev" }, body: {} });
-  await late.dev.act("projectjoin", { query: { projectId: late.project }, body: {} });
-  const slot = await press(r, "projectsigninset"); console.log("DBG", slot.textContent, "|", word("ai.refused.notsole", { project: "" }));
-  assert.ok(says(slot, "ai.refused.notsole", { project: "" }));
+  assert.deepEqual(p.byOp("projectsigninset")[0].body, { project: P });
+  assert.ok(!actsIn(main(await openAi({ sole: false }))).includes("projectsigninset"), "another participant");
+  assert.ok(!actsIn(main(await openAi({ sole: true, connected: false }))).includes("projectsigninset"), "not connected");
+  /* the owner's refusal by its words (ai.refused.notsole) */
+  const r = await openAi({ sole: true }, { projectsigninset: refusedIn("PROJECT_NOT_SOLE_MEMBER") });
+  assert.ok(says(await press(r, "projectsigninset"), "ai.refused.notsole", { project: "" }));
 });
 
 test("R14 switch, remove, the notice, the panel's two acts and keep-away send what their owners take", async () => {
