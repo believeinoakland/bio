@@ -25,6 +25,12 @@ const sha256 = async (s) => {
   const b = await crypto.subtle.digest("SHA-256", typeof s === "string" ? new TextEncoder().encode(s) : s);
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 };
+/* The instance clock (K5132): `env.BIO_NOW_MS` when pinned, else the wall. Recorded instants read it; durations stay on Date.now(). */
+const instantOf = (env) => {
+  const raw = env.BIO_NOW_MS;
+  if (raw !== undefined && raw !== null && raw !== "") { const v = Number(raw); if (Number.isFinite(v) && v >= 0) return new Date(v).toISOString(); }
+  return new Date().toISOString();
+};
 
 export async function livefire(env, storeName, { capacity = false, viewer = null } = {}) {
   const t0 = Date.now();
@@ -59,7 +65,7 @@ export async function livefire(env, storeName, { capacity = false, viewer = null
       /* D-436: no `group`, which was a literal. The canary is a CREATION, so the store it lands in stamps its own
          recorded producing group into the bytes — and a store recording none refuses it by name (C-64.1), which
          this battery then reports as the first assertion failing: a true finding about that store. */
-      meta: { object_type: "information", title: "livefire", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: new Date().toISOString() },
+      meta: { object_type: "information", title: "livefire", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: instantOf(env) },
       files: [{ path: "bundle.md", text: body, bytes: new TextEncoder().encode(body).length, sha256: await sha256(body) }, ...extra],
       register: [],
     };
@@ -241,7 +247,7 @@ export async function livefire(env, storeName, { capacity = false, viewer = null
     ok: true,
     verdict,
     failing,
-    ranAt: new Date().toISOString(),
+    ranAt: instantOf(env),
     store: storeName, nonce: NONCE, totalMs: Date.now() - t0,
     summary: `${passed}/${A.length} assertions passed`,
     assertions: A,
