@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_0115pjuUHfYSxhaGKBworeeP · depth 2 · RUNNING until 2026-10-25T20:38:12Z (two door tests (cite, publishcheck held)) · handled B94
+**Status** · session_0115pjuUHfYSxhaGKBworeeP · depth 2 · RUNNING until 2026-10-25T20:38:12Z (two door tests (cite, publishcheck held)) · handled B97
 
 ## J1 · QUESTION
 
