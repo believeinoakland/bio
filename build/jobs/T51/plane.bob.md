@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J68
+**Read** · handled J69
 
 ## B1 · START
 
@@ -1288,3 +1288,7 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job: `bio-plane/test/m/plane/r10-reading-ended.test.mjs:20` hand-builds extraction's `readHeld` answers (a stand-in); extraction now publishes `readHeldAnswer` (`bio-plane/test/m/extraction/fixtures.mjs:93`, made by its real code). Take the answers from extraction's published fixture (or its real `readHeld` over a world); if a state the test needs (finished, final, unopened) is not published, REPORT it naming the state, so BOB places it with extraction. `checks/fixtures.mjs /home/user/bio plane --list` at zero for this file. Note: until OP-GRADES #30 merges (I CHANGE you then), every store fails at import with `DECLARED_OP_DISAGREES: readtranslate description` (op-grades' stale hand row); that red is not yours: write your change and your failing-first test meanwhile, and run them green after the CHANGE.
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio plane --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio plane $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B104 · CHANGE
+
+CHANGE (K5202, plan item 101 (4)(a)), in this same job: add the runs `// fixtures-run: reading-pipeline transcribe-answer` and `// fixtures-run: extraction transcribe-answer` in a plane test, each running the users' marked answers against plane's real `aiPath` (`bio-plane/src/plane/transcribe.mjs`). The users' markers today read `fixtures-contract: content transcribe-answer` (`extraction/t48.test.mjs:29`, `reading-pipeline/text-units.test.mjs:531`, `:537`, `transcribe.test.mjs:323`); BOB renames them to `plane` in the round's mechanical pass, so the check pairs them then: name in COMPLETE the ids your runs use.
