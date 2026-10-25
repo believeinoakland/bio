@@ -498,3 +498,7 @@ Branch job/T51/calculations (tranche/T51 merged first, no rebase). One cause, R5
 
 **Tests and checks.** Module tests: 159 tests, 159 pass, 0 fail (157 before plus 2 new). format 0; architecture calculations 0; coverage calculations 50 of 50 (R51 named); ownership 0; fixtures calculations --list 0 failures; words no finding in calculations.
 Size (session_01K7S7EEcP2cBYWQsJc9tjPq): test runs 5, module lines 4243
+
+## J28 · REPORT
+
+Door case for control-plane (K5138, R51): tabledeclare with source {capture_sha, extent} taken from a found item (screens-daily/find-in-forms.mjs:136), through the real op door as the walker sends it (diag2-06 §8): answers ok, a content row minted, the same table sha as from the content id after citing. Calculations' own test (declare-found.test.mjs) covers the module interface; I wrote no r8-kit test.
