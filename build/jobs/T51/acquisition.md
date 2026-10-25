@@ -783,3 +783,9 @@ Size (session_01FepaYctVekwaxhoDHB6QtY): test runs 9, module lines 4457
 ## J45 · COMPLETE
 
 Job 103 done. G175: every row registerJob accepts is now followed by armJobs (store's, else opts.armJobs), all oweOf users and the keep row; G177: one clock reading for a thrown call's cut and close, answer and object equal exactly. R95 and R116 markers removed (tests name them). Tests red first in r9-registrar and stage-times; acquisition 346/346, capture 349, doorbell 97, control-plane timings/door/plane jobs 55, twin green alone. format, architecture, coverage, words 0; ownership lists only build/requirements/acquisition.md (K4210). Record: build/jobs/T51/acquisition.md
+
+## Round 9, job 103 extended (B47, K5006): G154 (4), the `offers` ALTER at workerd
+
+Added `test/m/acquisition/r122-workerd.test.mjs` with its worker `offers-worker.mjs` (a test file in my module; no product change, since nothing was red). On a real Durable Object's SQLite under Miniflare: `archive_entries` is made WITHOUT `offers`, acquisition's `migrate` runs, and the column is there (`PRAGMA table_info` then `ALTER TABLE ADD COLUMN`); a member's `op=unpack` files two entries; the daemon's `op=unpack` offers both again (`complete: false`), `offers` counted 2 on each. Result pasted: `[L] workerd: columns before [..."bytes","tree_entries","tree_bytes"], after [..."tree_entries","tree_bytes","offers"]; offers per entry after the second run [2,2]`; run 3 times, green each (1 test, with r122.test.mjs 6/6 twice more). Platform check L done. Checks: format 0, architecture 0, coverage 76/76 0, words 0, ownership: only `build/requirements/acquisition.md` listed (K4210, accepted). Test runs 3.
+
+Size (session_01FepaYctVekwaxhoDHB6QtY): test runs 12, module lines 4457
