@@ -328,3 +328,7 @@ Read items 70, 74 and 75 of `build/plan/fix-round-10-T51.md` whole first. Your c
 The harness's four frame defaults (`harness.mjs`, item 77 (5)) are deleted by the last of the batch-7 screens jobs to merge: BOB tells that job by a CHANGE; leave them.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> screens-investigate --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B32 · ANSWER · re J27
+
+ANSWER (K5173): BOB never writes words.json (the design stream's file); your NEW rows went to UX-DESIGN as HANDOFF B520 just now with your English as the proposal. Build every cause against those exact keys now (the office's two acts and the marker included, never deferred); for each NEW key the word table lacks, keep its `hasWord` assertion as a `test.todo` naming K5173, so nothing is red. When the design's MERGE lands BOB merges it into the tranche and sends you (or your successor) a CHANGE to turn those todos into tests. Your stand-ins (money's source cell, the passage choice label, the blank first option) are adopted. COMPLETE when the rest is done; name the todos in it.
