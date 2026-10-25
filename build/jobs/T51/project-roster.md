@@ -104,3 +104,7 @@ COMPLETE (START B9, fix round 10, Wave A batch 5; ANSWER B10 = option (a)).
 - **Deferred:** none.
 - **For BOB (other modules):** (a) `projectRequestsAnswered` is a service, not an op: `queue` (R95, a later job) reads it in process with `{by, viewer}`; if a screen needs it through the door, `op-declarations` and `op-grades` need a spec (the module has no `DECLARED_OPS` row for it, to keep "each T45 owner's map is served whole by the tables" green). (b) screens-inquiry R60 can now draw the declined state from the directory row's `request` (`state`, `closed`, `closed_comment`); the project page still draws only an open one (diag2-03b §3). (c) `closed` is the instant; the screen draws the day. (d) The door should stamp the declared acts as it does; no change is needed there, the module now reads either form.
 - Size (session_018j5CDMc121YVpjDc6UHMC8): test runs 12, module lines 1,718
+
+## J9 · COMPLETE
+
+COMPLETE (fix round 10, START B11): R43 and R44 met, for BOB to strike. R43: by is read in the door's form (actorOf) at every act. R44: R9's request carries closed_comment; projectRequestsAnswered published as a service and by fixtures.mjs (declinedRequest, answeredRequests, answeredRequestsHidden). 126 module tests pass; format, architecture, coverage 44/44, words, ownership and fixtures show 0 failures. For BOB: projectRequestsAnswered is a service for queue R95, not an op (no op-declarations/op-grades spec); screens-inquiry can now draw the declined state. Details in the record.
