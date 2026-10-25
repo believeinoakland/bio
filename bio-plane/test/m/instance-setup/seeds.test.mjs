@@ -18,19 +18,30 @@ const PID = "t-seeding";
 const clone = (x) => JSON.parse(JSON.stringify(x));
 const base = clone(heldProfile("test-port-ellery"));
 const SCHEMES = [
-  { scheme: "ellery_office", label: "office number", entity_kinds: ["office"], space: "office", systems: ["ellery.profile"], basis: "TEST" },
-  { scheme: "ellery_body", label: "body number", entity_kinds: ["body"], space: "body", systems: ["ellery.profile"], basis: "TEST" },
-  { scheme: "ellery_org", label: "organisation number", entity_kinds: ["institution"], space: "org", systems: ["ellery.profile"], basis: "TEST" },
-  { scheme: LEGISTAR_SCHEMES.body, label: "Legistar BodyId", entity_kinds: ["body"], space: "lb", systems: ["portellery.legistar"], basis: "TEST" },
-  { scheme: LEGISTAR_SCHEMES.person, label: "Legistar PersonId", entity_kinds: ["person"], space: "lp", systems: ["portellery.legistar"], basis: "TEST" },
-  { scheme: LEGISTAR_SCHEMES.seat, label: "Legistar OfficeRecordId", entity_kinds: ["office"], space: "lo", systems: ["portellery.legistar"], basis: "TEST" },
+  { scheme: "ellery_office", label: "office number", entity_kinds: ["office"], space: "office", form: "t-office", systems: ["ellery.profile"], basis: "TEST" },
+  { scheme: "ellery_body", label: "body number", entity_kinds: ["body"], space: "body", form: "t-body", systems: ["ellery.profile"], basis: "TEST" },
+  { scheme: "ellery_org", label: "organisation number", entity_kinds: ["institution"], space: "institution", form: "t-org", systems: ["ellery.profile"], basis: "TEST" },
+  { scheme: LEGISTAR_SCHEMES.body, label: "Legistar BodyId", entity_kinds: ["body"], space: "body", form: "t-legistar", systems: ["portellery.legistar"], basis: "TEST" },
+  { scheme: LEGISTAR_SCHEMES.person, label: "Legistar PersonId", entity_kinds: ["person"], space: "person", form: "t-legistar", systems: ["portellery.legistar"], basis: "TEST" },
+  { scheme: LEGISTAR_SCHEMES.seat, label: "Legistar OfficeRecordId", entity_kinds: ["office"], space: "office", form: "t-legistar", systems: ["portellery.legistar"], basis: "TEST" },
 ];
+/* The spaces are the real closed list (idspaces); each test scheme names a form of its own, shaped by what its ids look
+   like, so a value is recognised in exactly its scheme's form. */
+const form = (name, re) => ({ form: name, pattern: { re }, normal: [{ group: 1 }], basis: "TEST" });
+const TEST_SPACES = {
+  office: { forms: [form("t-office", "^(O-\\d+)$"), form("t-legistar", "^(\\d+)$")] },
+  body: { forms: [form("t-body", "^(B-\\d+)$"), form("t-legistar", "^(\\d+)$"), form("t-court", "^(MC-\\d+)$"), form("t-docket", "^(DK-\\d+)$")] },
+  institution: { forms: [form("t-org", "^(T-\\d+)$")] },
+  person: { forms: [form("t-legistar", "^(\\d+)$")] },
+};
+/* What the active test profiles add to the registry's view. */
+const viewOf = (profiles) => ({ identifier_schemes: profiles.flatMap((p) => p.identifier_schemes || []), spaces: TEST_SPACES });
 /* The test profile with T33's seeding data as K1682 reads it: counterparty `ids`, `within` and `organisation`, the
    schemes, and a MemberType map under the Legistar vocabulary. */
 function profileView({ drop = [] } = {}) {
   const p = clone(base);
   p.id = PID; p.test = false;
-  p.identifier_schemes = [...(p.identifier_schemes || []), ...SCHEMES];
+  p.identifier_schemes = [...(p.identifier_schemes || []).filter((x) => !SCHEMES.some((t) => t.scheme === x.scheme)), ...SCHEMES];
   p.vocabulary = { ...(p.vocabulary || {}),
     member_types: [{ member_type: "Member", capacity: "elected", basis: "TEST" }, { member_type: "Chair", capacity: "elected", basis: "TEST" }] };
   p.counterparties = [
@@ -91,7 +102,7 @@ const SHAS = { bodies: "b".repeat(64), persons: "c".repeat(64), officerecords: [
 
 async function world({ view = profileView(), env = {} } = {}) {
   let views = { [PID]: view };
-  const reg = await registryOver(() => Object.values(views).flatMap((p) => p.identifier_schemes || []));
+  const reg = await registryOver(() => viewOf(Object.values(views)), Object.keys(CAPS));
   const prov = providers({ admins: ["admin"] });
   const w = await boot({ env, prov, now: () => Date.parse("2026-10-06T12:00:00Z"),
     more: { jurisdictions: jurisOver(() => views), entities: reg.entities, lines: reg.lines,
@@ -123,7 +134,8 @@ test("R50 officesSeed seeds each profile office as an office and its body as a b
   const office = E.ents.get(sel.entity_id);
   assert.deepEqual([office.kind, office.label, office.declared_by], ["office", "Selectboard, Port Ellery Selectboard", SEED_MACHINE]);
   assert.equal(office.note, word("setup.note.office_action_addressed", { cite: localize("instance-setup.setup.cite_office_basis", "jurisdiction profile {profile}, {entry} (basis: {basis})", { profile: PID, entry: "counterparties[1]", basis: "TEST" }) }));
-  const body = E.ents.get(r.seeded.find((x) => x.what === "body" && x.role === "Selectboard").entity_id);
+  const bodyId = r.seeded.find((x) => x.what === "body" && x.role === "Selectboard").entity_id;
+  const body = E.ents.get(bodyId);
   assert.deepEqual([body.kind, body.label, body.sector], ["body", "Port Ellery Selectboard", "government"]);
   const orgId = r.seeded.find((x) => x.what === "organisation").entity_id;
   assert.deepEqual([E.ents.get(orgId).kind, E.ents.get(orgId).label], ["institution", "Town of Port Ellery"]);
@@ -136,7 +148,7 @@ test("R50 officesSeed seeds each profile office as an office and its body as a b
   assert.deepEqual(L.map((x) => x.kind), ["post_in", "post_in", "part_of", "post_in", "post_in"]);
   const postIn = L.find((x) => x.from === sel.entity_id);
   assert.deepEqual([postIn.kind, postIn.to, postIn.by, postIn.basis.rule, postIn.basis.source],
-    ["post_in", body === E.ents.get(postIn.to) ? postIn.to : null, SEED_MACHINE, "a jurisdiction profile's office entry, seeded at setup", { profile: PID, entry: "counterparties[1]" }]);
+    ["post_in", bodyId, SEED_MACHINE, "a jurisdiction profile's office entry, seeded at setup", { profile: PID, entry: "counterparties[1]" }]);
   assert.deepEqual(postIn.basis.ids, { from: { scheme: "ellery_office", id: "O-2" }, to: { scheme: "ellery_body", id: "B-2" } });
   assert.equal(postIn.valid.zone, "America/Halifax");
   const partOf = L.find((x) => x.kind === "part_of");
@@ -367,8 +379,8 @@ function heldCaptures() {
 test("R50 R51 R52 on the first profile as held (N613), measured: each body the profile identifies is seeded under its Legistar BodyId and every office it gives no identifier is not; 3 of its 5 bodies match a Legistar body after normalisation, the Council by its organisation with its cancellation form; the Council's 46 office records seed 46 seats and 46 elected holders by the Council's own MemberType map", async () => {
   const real = heldList().find((p) => p.test !== true);
   const held = heldProfile(real.id);
-  const reg = await registryOver(() => held.identifier_schemes);
   const { caps, shas } = heldCaptures();
+  const reg = await registryOver(() => ({ identifier_schemes: held.identifier_schemes || [], spaces: held.spaces || {} }), Object.keys(caps));
   const w = await boot({ prov: providers({ admins: ["admin"] }), now: () => Date.parse("2026-10-06T12:00:00Z"),
     more: { entities: reg.entities, lines: reg.lines, readCapture: async (sha) => caps[sha] || null } });
   w.record.setSetting("jurisdiction_profiles", [real.id], "test");
@@ -444,7 +456,7 @@ test("R51 R52 (N756) a held capture is read with its earliest receipt asked of p
     const record = new Proxy(real, { get: (t, k) => (k === "evidenceStore" ? () => bucket
       : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
     let views = { [PID]: profileView() };
-    const reg = await registryOver(() => Object.values(views).flatMap((p2) => p2.identifier_schemes || []));
+    const reg = await registryOver(() => viewOf(Object.values(views)), Object.keys(CAPS));
     const prov = providers({ admins: ["admin"] });
     const m = new InstanceSetup(ctx, {}, { record, membership: prov.membership, credentials: prov.credentials,
       promotion: prov.promotion, scheduler: prov.scheduler, capture: prov.capture, governor: prov.governor,
@@ -461,7 +473,9 @@ test("R51 R52 (N756) a held capture is read with its earliest receipt asked of p
   assert.ok(quiet.r.seeded.length > 0);
   assert.deepEqual(quiet.asked.sort(), [SHAS.bodies, SHAS.persons, ...SHAS.officerecords].sort(), "one read per capture, each for that capture");
   assert.deepEqual(noisy.asked.sort(), quiet.asked);
-  assert.deepEqual(noisy.r, quiet.r, "receipts at other captures change nothing");
+  /* the real `lines` allocates each line_id at random, so it is left out of the comparison */
+  const noIds = (r) => JSON.parse(JSON.stringify(r, (k, v) => (k === "line_id" ? undefined : v)));
+  assert.deepEqual(noIds(noisy.r), noIds(quiet.r), "receipts at other captures change nothing");
   /* the earliest receipt is the capture's instant: the holds lines are dated by it */
   assert.ok(quiet.r.seeded.some((x) => x.what === "holds" && /on 2026-10-06T11:00:00Z$/.test(x.dated)), JSON.stringify(quiet.r.seeded.filter((x) => x.what === "holds")).slice(0, 300));
 });
@@ -469,8 +483,8 @@ test("R51 R52 (N756) a held capture is read with its earliest receipt asked of p
 /* ---- R93 (T50; N1190; jurisdictions R94; entities R54): the forums of the combined view ---- */
 
 const FORUM_SCHEMES = [
-  { scheme: "ellery_court", label: "court number", entity_kinds: ["body"], space: "court", systems: ["ellery.profile"], basis: "TEST" },
-  { scheme: "ellery_docket", label: "docket book", entity_kinds: ["body"], space: "docket", systems: ["ellery.profile"], basis: "TEST" },
+  { scheme: "ellery_court", label: "court number", entity_kinds: ["body"], space: "body", form: "t-court", systems: ["ellery.profile"], basis: "TEST" },
+  { scheme: "ellery_docket", label: "docket book", entity_kinds: ["body"], space: "body", form: "t-docket", systems: ["ellery.profile"], basis: "TEST" },
 ];
 const FORUMS = [
   { label: "Marlow County Bench (test)", forum_kind: "court", basis: "TEST",
@@ -481,7 +495,7 @@ async function forumWorld(forums) {
   const view = profileView();
   view.identifier_schemes = [...view.identifier_schemes, ...FORUM_SCHEMES];
   const views = { [PID]: view };
-  const reg = await registryOver(() => view.identifier_schemes);
+  const reg = await registryOver(() => viewOf([view]));
   const juris = { ...jurisOver(() => views), combine: () => ({ ok: true, conflicts: [], view: forums === undefined ? {} : { forums } }) };
   const w = await boot({ prov: providers({ admins: ["admin"] }), now: () => Date.parse("2026-10-06T12:00:00Z"),
     more: { jurisdictions: juris, entities: reg.entities, lines: reg.lines } });

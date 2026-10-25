@@ -1,6 +1,6 @@
 # BOB to citation (T51)
 
-**Read** · handled J14
+**Read** · handled J16
 
 ## B1 · START
 
@@ -144,3 +144,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 **Inherited reds (K5068, from inquiry-grammar's merge of cause 30b):** three citation R21 tests assert the old refusal of a half-labelled basis and are red on the tranche; bring them in line with inquiry-grammar R68 as amended (an unlabelled supporting leg beside labelled grounds is a necessary leg, no finding).
 
 **Added by BOB #291 (K5090; SCREENS-INQUIRY #27 J39):** R21's test is amended: since inquiry-grammar R68's amendment (DEC-32 clause 4) a second passage cited beside a grouped one is clean, so that case no longer reaches `BASIS_REFUSED`. Find a basis-grammar refusal the real grammar still raises with `repairs`, write R21's test on it (seen red first if your code needs a change), and strike nothing yourself. If no grouping finding is reachable any more, REPORT it: BOB retires R21's C-2.8 arm.
+
+## B13 · CHANGE
+
+CHANGE (re J15, J16; K5101). Your REPORT is taken: the C-2.8 repairs arm is retired. `citation` R21 is amended on `tranche/T51` (read it whole after merging `origin/tranche/T51` into your branch, never a rebase): naming a group is the member's choice, so the cutting-with-ground refusal carries `repairs: []`, and every `BASIS_REFUSED` a cite gives states `repairs: []` until a finding with a repair is specified. Remove `#groupingRepairs` and every path that builds a C-2.8 repair from the module's code, and the tests that drive the arm through inquiry's fixture answer (the three amended `cite-repairs.test.mjs` tests); keep your two new tests (the second passage clean; the cutting-with-ground cite refused with `repairs: []`, and landing without the group) and the control, naming R21. If a `repairs` key, word or helper is left with no user, remove it too; if any other module reads citation's `repairs`, REPORT it. Then COMPLETE again with the met ids named.

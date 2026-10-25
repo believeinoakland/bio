@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, M, BOB, INQ, INQ2, INQ3, INFO, RFC, RFC2, REQ, PROJ2, leg, WINDOW } from "./fixture.mjs";
 import { ActionReplies, actionRepliesOf } from "../../../src/action-replies/index.mjs";
 import { caseInputsOf } from "../../../src/case-inputs/index.mjs";
+import { actionsForRefusal } from "../actions/fixtures.mjs";
 
 const RFC3 = "ACTN-2026-0004-rfc", RFC4 = "ACTN-2026-0005-rfc", RFC5 = "ACTN-2026-0006-rfc", RFC6 = "ACTN-2026-0007-rfc";
 const members = (...ids) => ids.map((bundle_id) => ({ bundle_id, version_sha: "a".repeat(64) }));
@@ -94,8 +95,11 @@ test("R3 R4 a request the viewer may not see is not answered; when the requests 
   assert.equal(w.r.openRequestsOn({ members: members(INQ), viewer: M }).length, 1);
   assert.deepEqual(w.r.openRequestsOn({ members: members(INQ), viewer: BOB }), [], "withheld as absent");
   /* an actions module that cannot read */
-  for (const actions of [{ actionsFor: () => ({ ok: false, reason: "BROKEN" }) }, { actionsFor: () => { throw new Error("down"); } },
-                         { actionsFor: () => ({ ok: true, items: [{ id: RFC, state: "active" }] }), actionRead: () => ({ ok: false, reason: "BROKEN" }) }]) {
+  const refused = actionsForRefusal().unknownRead;
+  /* a read refusing with a code other than NO_SUCH_ACTION, which this module skips by design (R4); actions gives no other for actionRead */
+  const broken = { ok: false, reason: "BROKEN" }; // fixtures-generic: BROKEN
+  for (const actions of [{ actionsFor: () => refused }, { actionsFor: () => { throw new Error("down"); } },
+                         { actionsFor: () => ({ ok: true, items: [{ id: RFC, state: "active" }] }), actionRead: () => broken }]) {
     const r = new ActionReplies({ storage: w.st, record: w.record, membership: w.membership, actions });
     assert.throws(() => r.openRequestsOn({ members: members(INQ), viewer: M }), /could not be read|down/);
   }
@@ -104,7 +108,7 @@ test("R3 R4 a request the viewer may not see is not answered; when the requests 
 test("R3 through the seam, this source when it cannot read is undetermined, never []", () => {
   const w = world();
   const broken = new ActionReplies({ storage: w.st, record: w.record, membership: w.membership,
-                                     actions: { actionsFor: () => ({ ok: false, reason: "BROKEN" }) } });
+                                     actions: { actionsFor: () => actionsForRefusal().unknownRead } });
   const ci = caseInputsOf(w.host);
   assert.equal(ci.registerOpenRequests("action-replies", { openRequestsOn: (a) => broken.openRequestsOn(a) }).ok, true);
   const r = ci.openRequestsOn({ case: "c", members: members(INQ), viewer: M });

@@ -1,6 +1,6 @@
 # BOB to scheduler (T51)
 
-**Read** · handled J13
+**Read** · handled J14
 
 ## B1 · START
 
@@ -356,3 +356,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 **Done:** your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . scheduler --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/scheduler.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
 
 **From file-safety's merge (K5070):** the real `forwardSecurityCounts({})` answers a record `{period, counts}`, never `null`; re-point to file-safety's published fixtures accordingly.
+
+## B14 · ANSWER · re J14
+
+ANSWER (re J14; K5101). Your reading stands: `acquisition` (48) precedes `scheduler` (141) and `consumers.test.mjs` imports its published `acquireRefusals`, so the edge is added on `tranche/T51` (`build/modules.json`, `order.mjs --check` clean). Merge `origin/tranche/T51` into your branch (never a rebase), run the architecture check again, then COMPLETE.

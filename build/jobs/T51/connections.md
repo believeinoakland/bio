@@ -1,6 +1,6 @@
 # connections (T51)
 
-**Status** · session_01Ftd8r8DmURcdkXQn83Gtzb · depth 2 · COMPLETE · handled B4
+**Status** · session_01KkQy33QFAKvdUAn9HUSQ1C · depth 2 · COMPLETE · handled B7
 
 ## J1 · REPORT
 
@@ -69,3 +69,23 @@ NEEDS BOB, two things in build/ that are not mine:
 (1) add test-support to connections' uses in build/modules.json (architecture shows its one finding: declared-ops.test.mjs imports test-support);
 (2) fold requirement lines R70 and R71, whose text is in my record (the ownership check refuses my writing the requirements file; with them, coverage is 71 of 71).
 Also in the record: the hand rows that can go; assertedBy left out of connect's accepts (the door overwrites it with system); screens-inquiry's connectionchoose sends ref only when present while ref is required.
+
+## Fix round 10, Wave B batch 6 (CONNECTIONS #18, session_01KkQy33QFAKvdUAn9HUSQ1C)
+
+**Causes and lines done (6 of 6; `fixtures.mjs . connections --list`: 0 failures, 5 accepted).**
+- FIX-L answer-envelope/door-helpers: `converts-links.test.mjs:47` (now :48): marker `fixtures-contract: answer-envelope door-helpers` above `storeSilent`.
+- FIX-L store-door/store-replies: `:69` (now :71), `:132` (now :135), `:142` (now :146): marker `fixtures-contract: store-door store-replies` above each value.
+- CODE: `:146` (now :150): `OVERLOADED` 503 replaced by `STORE_INTERNAL_ERROR` 500 (no correlation, so the silence has none); the product has no overload refusal. No 503 asked for; nothing to REPORT.
+- FIX-E extraction/unheldStructure: `fixture.mjs:95`: the stub's 404 for an unseeded digest is `await unheldStructure({ sha })` from `extraction/fixtures.mjs` (the real EVIDENCE_NOT_HELD answer); no connections test read the old NOT_FOUND body.
+
+**Markers added.** `fixtures-own`: none. `fixtures-generic`: none. `fixtures-contract` (4, each waiting on nothing: the providers' `fixtures-run: connections ...` lines already exist, so `orphan-run` clears on this merge): converts-links.test.mjs:47, :70, :134, :145 (before shifting; they sit one line above each value).
+
+**Found in other modules.** None.
+
+**Run.** connections tests 146 pass, 0 fail; users named by impact (explore real-connections, affordances t48-backing, corpus-export) 39 pass, 0 fail; format 178 modules 0 failures; words (connections) 0 failures; architecture 0; coverage 71 of 71; ownership 0.
+
+**Size (session_01KkQy33QFAKvdUAn9HUSQ1C): test runs 4, module lines 2379.**
+
+## J4 · COMPLETE
+
+Batch 6 done on job/T51/connections: 6 of 6 own fixture lines (4 contract markers: answer-envelope door-helpers, store-door store-replies x3; OVERLOADED 503 -> STORE_INTERNAL_ERROR 500; unheldStructure replaces the 404 hand-build). fixtures --list 0 failures. No fixtures-own/generic markers. 146 connections tests, users 39 pass; format, words, architecture, coverage, ownership 0. Requirement lines: none new. Record has Size line.

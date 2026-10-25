@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, V, F, CASE, WHY, sha } from "./fixture.mjs";
 import { CHRONOLOGY_MAX, LANE_WORDS, counselMarking, Filings } from "../../../src/filings/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
+import { timelineRefusal } from "../events/fixtures.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const OFFICE_ARM = { state: "named", role: "Selectboard", body: "Port Ellery Selectboard", level: "city" };
@@ -118,8 +119,9 @@ test("R33 a truncated lane says so; a set the record cannot name, a timeline no 
   assert.deepEqual([t.world.truncated, t.world.says], [true, word("filings.says.events_lane_lists", { chronology_max: String(CHRONOLOGY_MAX) })]);
   assert.ok(t.ours.sources.length && t.ours.sources.every((s) => s.truncated && s.says === word("filings.says.acts_source_lists", { chronology_max: String(CHRONOLOGY_MAX) })));
   /* no module answering the timeline, and one refusing */
+  const { badDate } = timelineRefusal();
   for (const [events, says] of [[{}, word("filings.module_answers_timeline")],
-                                [{ timeline: () => ({ ok: false, reason: "BAD_DATE" }) }, word("filings.timeline_read_chronology", { dated: " (BAD_DATE)" })],
+                                [{ timeline: () => badDate }, word("filings.timeline_read_chronology", { dated: " (BAD_DATE)" })],
                                 [{ timeline: () => { throw new Error("down"); } }, word("filings.timeline_read_chronology", { dated: "" })]]) {
     const c = pack(x.filingsWith({ events }), A).sections.chronology;
     assert.deepEqual([c.unread, c.lanes.world.items, c.lanes.ours.sources], [true, [], []]);
