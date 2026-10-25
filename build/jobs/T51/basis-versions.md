@@ -97,3 +97,14 @@ COMPLETE (T51 fix round 10, Wave A batch 4 · basis-versions), answering B8.
 - format 0 failures (178 modules); architecture 0 (38 product files); coverage 47 of 47 ids, 0; words 0 (inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, unkeyed 0); fixtures 0 failures; ownership 7 files changed, 0 failures.
 
 Size (session_01SrdYb2t95osCMqx6hdxR2r): test runs 16, module lines 2,855
+
+## J8 · COMPLETE
+
+COMPLETE (T51 fix round 10, Wave A batch 4 · basis-versions), answering B8. Full account in the record, J7.
+- Cause 23 / R58: done. Root: EXTENT_FIELDS (shared.mjs:12) lacked extent_range, extent_table, extent_part, extent_cited_as that citation's EXTENT_PARAMS carries, so conclude's R51 copy (conclude.mjs:322) and narrow's copy dropped them and C-25.10 refused ("names 'undefined'"). Added the four fields (also extentLegFields for narrowing candidates). Failing-first tests in own-reading.test.mjs (sheet-range, doc-table, doc-part, cited_as through conclude; the same legs through appendVersion and narrow; control doc-para), seen red on the walker's refusal, green now. Platform check: N.
+- Reading of R58 for BOB: the answer's legs name their part by content_id (R38 has no extent columns); the test checks the content row has every cited field. If you want extent_* on the answer's legs themselves, that is a new requirement line.
+- K5077/K5090: versions.test.mjs C-25.5 leaves the reached list; new test of the mixed partition through conclude({reading}) on the real world(), seen red on the pre-K5077 grammar (VERSION_PARTITION_INCOMPLETE), green now.
+- Fixture published: bio-plane/test/m/basis-versions/fixtures.mjs concludeAct({kind: concluded|no_conclusion|bad_reading, target}) with fixtures.test.mjs. fixtures-own / fixtures-generic markers added: none. My fixtures lines: none named at START or now (0 failures).
+- Tests: basis-versions 194 pass / 0 fail; 18 users 0 fail; control-plane 2 and plane 3 failures are inherited (also fail with the tranche's module). format, architecture, coverage (47 of 47), words, fixtures, ownership: 0 failures.
+- Deferred: none. Found in other modules: none.
+Size (session_01SrdYb2t95osCMqx6hdxR2r): test runs 16, module lines 2,855
