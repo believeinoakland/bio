@@ -24,3 +24,10 @@ Rules of fix-round-9 §0 that bind: R-SEAM / R-ONE; R-CLOCK; R-NOLOAD; R-WORDS (
 List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
 
 **Done:** entries (a), (g) built and tested; plane's and control-plane's suites still green (their copies untouched); the module's tests, words, fixtures, architecture, coverage, ownership and format checks green; the fixture you publish named in your record with a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B2 · ANSWER · re J1
+
+ANSWER (K5125), your three readings adopted.
+1. You never edit `build/modules.json`. The format check refuses a `paths`/`tests` entry naming no file on the tranche, so BOB adds `paths: ["bio-plane/src/store-assembly/"]` and `tests: ["bio-plane/test/m/store-assembly/"]` in the commit that merges your branch (K1185). Until then run your checks over your uncommitted local copy that lists them, as you do; say in your COMPLETE that you did.
+2. Adopted: no `export const DECLARED_OPS` in either copy until Wave B; the rows under `ASSEMBLY_DECLARED_OPS` and `OWNER_MAP_DECLARED_OPS`, registered under `store-assembly` in your `OWNERS`; the parity test builds plane's `Store` in a child process. Wave B renames both when plane and control-plane delete theirs.
+3. Adopted: R99 tested now as you say. R98 and R1's "the Durable Object class calls it" stay marked `*(not yet met: T51)*`, each named in a `test.todo` (K208), never a red test and never a test that passes falsely; plane's Wave B job (follow-up 12) meets them, and BOB strikes them at that merge.
