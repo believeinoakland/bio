@@ -226,7 +226,7 @@ test("R113 (order): a part past the next is refused with the next one named and 
   assert.deepEqual([done.ok, done.capture.sha256, j.rows().length], [true, sha(file), 1]);
 });
 
-test("R113 and R111 (the ceilings): the declared size is judged before any part: over `CAPTURE_MAX` is refused 413 with size and bound and no upload is begun; at the ceiling it is begun; a part of another size is refused before one byte is read", async () => {
+test("R113 and R111 (the ceilings): the declared size is judged before any part: over `CAPTURE_MAX` is refused 413 with size and bound and no upload is begun; at the ceiling it is begun; a part of another size is refused with nothing kept, its body read and discarded (G176)", async () => {
   const w = setup();
   const sum = sha("x");
   const over = await w.c.beginPartedUpload({ sha256: sum, bytes: CAPTURE_MAX + 1, statement: STATEMENT, by: "m1" });
@@ -248,9 +248,16 @@ test("R113 and R111 (the ceilings): the declared size is judged before any part:
   assert.deepEqual([short.reason, short.status, short.size, short.bound], ["PART_SIZE", 400, 999, 1000]);
   const decl = streamOf(ps[0], 300);
   const d = await w.c.putUploadPart({ upload: b.upload, index: 0, bytes: decl.stream, sha256: sha(ps[0]), by: "m1", declared: 1001 });
-  assert.deepEqual([d.reason, decl.pulled, decl.cancelled], ["PART_SIZE", 0, true], "judged before one byte is read");
+  assert.deepEqual([d.reason, decl.pulled, decl.cancelled], ["PART_SIZE", 4, false], "judged before the bytes are kept, then the body is read whole and discarded (G176)");
   const last = await w.c.putUploadPart({ upload: b.upload, index: 2, bytes: ps[2], sha256: sha(ps[2]), by: "m1" });
   assert.equal(last.reason, "PART_OUT_OF_ORDER");
+  /* G176: a refusal before the bytes are read still reads and discards the body, and a body past the part size is cut there */
+  const ooo = streamOf(ps[0], 300);
+  assert.equal((await w.c.putUploadPart({ upload: b.upload, index: 2, bytes: ooo.stream, sha256: sha(ps[0]), by: "m1" })).reason, "PART_OUT_OF_ORDER");
+  assert.deepEqual([ooo.pulled, ooo.cancelled], [4, false], "the out-of-order part's body was read whole");
+  const huge = streamOf(varied(5000, 3), 300);
+  assert.equal((await w.c.putUploadPart({ upload: b.upload, index: 2, bytes: huge.stream, sha256: sum, by: "m1" })).reason, "PART_OUT_OF_ORDER");
+  assert.deepEqual([huge.cancelled, huge.pulled < 17], [true, true], "a body larger than the part size is cut at the part size");
   assert.equal(w.b.mp.parts.length, 0, "nothing stored by any of them");
   /* control: the last part is the remainder, 500 bytes, and is accepted as such */
   assert.equal((await put(w.c, b.upload, 0, ps[0])).ok, true);

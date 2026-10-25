@@ -98,3 +98,46 @@ test("R113 (L, G173): an upload survives the object being taken out of memory be
   const post = await call("state", { sha256: whole });
   assert.deepEqual([post.size, post.rows], [file.length, 0]);
 });
+
+/* G176 (K5005): an answer given without keeping the part is given after the part's body is read and discarded, so a client still sending reads the JSON answer
+   and never a closed connection (`fetch failed / write ECONNRESET`). Each case sends the FULL 16 MiB part, twenty times. */
+const REPEAT = 20;
+
+test("R113 (L, G176): the re-put of a held 16 MiB part, sent whole twenty times, reads its JSON answer `existed` every time", { timeout: 600000 }, async () => {
+  const file = varied(20 * MiB, 11), whole = sha(file);
+  const b = await call("begin", {}, { sha256: whole, bytes: file.length, statement: STATEMENT });
+  const ps = partsOf(file, b.part_bytes);
+  assert.equal(ps[0].length, 16 * MiB);
+  assert.equal((await call("part", { upload: b.upload, index: "0", sha256: sha(ps[0]) }, ps[0])).ok, true);
+  for (let i = 0; i < REPEAT; i++) {
+    const again = await call("part", { upload: b.upload, index: "0", sha256: sha(ps[0]) }, ps[0]);
+    assert.deepEqual([again.ok, again.existed, again.next], [true, true, 1], `re-put ${i}: ${JSON.stringify(again).slice(0, 200)}`);
+  }
+  /* control: a part put again with other bytes is still refused, whole body read */
+  const other = await call("part", { upload: b.upload, index: "0", sha256: sha(varied(16 * MiB, 99)) }, varied(16 * MiB, 99));
+  assert.deepEqual([other.ok, other.reason], [false, "PART_CONFLICT"]);
+  assert.deepEqual(await call("abort", { upload: b.upload }), { ok: true, aborted: true });
+});
+
+test("R113 (L, G176): a 16 MiB part sent late, after the upload was aborted, sent whole twenty times, reads its JSON answer `UPLOAD_UNKNOWN` every time", { timeout: 600000 }, async () => {
+  const file = varied(20 * MiB, 13), whole = sha(file);
+  const b = await call("begin", {}, { sha256: whole, bytes: file.length, statement: STATEMENT });
+  const ps = partsOf(file, b.part_bytes);
+  assert.deepEqual(await call("abort", { upload: b.upload }), { ok: true, aborted: true });
+  for (let i = 0; i < REPEAT; i++) {
+    const late = await call("part", { upload: b.upload, index: "0", sha256: sha(ps[0]) }, ps[0]);
+    assert.deepEqual([late.ok, late.reason], [false, "UPLOAD_UNKNOWN"], `late part ${i}: ${JSON.stringify(late).slice(0, 200)}`);
+  }
+});
+
+test("R113 (L, G176): a body larger than the part size is still cut at the part size: a 17 MiB body to a 16 MiB part is refused PART_SIZE (413) or its connection closed, nothing stored", { timeout: 300000 }, async () => {
+  const file = varied(20 * MiB, 15), whole = sha(file);
+  const b = await call("begin", {}, { sha256: whole, bytes: file.length, statement: STATEMENT });
+  const big = varied(17 * MiB, 15);
+  let r = null;
+  try { r = await call("part", { upload: b.upload, index: "0", sha256: sha(big) }, big); } catch { r = null; }
+  if (r) assert.deepEqual([r.ok, r.reason, r.status], [false, "PART_SIZE", 413]);
+  const st = await call("state", { sha256: whole });
+  assert.equal(st.size, null);
+  assert.deepEqual(await call("abort", { upload: b.upload }), { ok: true, aborted: true });
+});

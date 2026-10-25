@@ -1169,7 +1169,23 @@ export class Capture {
   async putUploadPart({ upload = null, index = null, bytes, sha256 = null, by, declared = null, ledger = null, key = null } = {}) {
     const tally = Capture.#tally(ledger);
     const reader = uploadReader(bytes);
-    const stop = async (answer) => { if (reader) await reader.cancel(); return answer; };
+    /* G176 (K5005): an answer given without keeping the part is given after the body is read and discarded, never more than the part size, so a client still
+       sending reads the answer and not a closed connection; a body past the part size is cut there (cancelled), as before. The part size is the row's once the
+       row is read, the platform's upper figure before. */
+    let drainTo = PARTED_PART_BYTES, drained = 0;
+    const stop = async (answer) => {
+      if (!reader) return answer;
+      try {
+        for (;;) {
+          if (drained > drainTo) break;
+          const { done, value } = await reader.read();
+          if (done) return answer;
+          drained += value ? value.length : 0;
+        }
+      } catch { /* a body that cannot be read further is answered all the same */ }
+      await reader.cancel();
+      return answer;
+    };
     try {
       const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureuploadpart" });
       if (fenced) return await stop(fenced);
@@ -1182,6 +1198,7 @@ export class Capture {
       const got = await this.#partedRow(upload, by, bucket, keyOf);
       if (got.refusal) return await stop(got.refusal);
       const row = got.row, count = Math.ceil(row.bytes / row.part_bytes);
+      drainTo = row.part_bytes;
       if (row.state !== "open")
         return await stop({ ok: false, reason: "UPLOAD_NOT_OPEN", status: 409,
                             detail: localize("capture.index.upload_not_open", "this upload has no part left to put; complete it") });
@@ -1220,6 +1237,7 @@ export class Capture {
             const { done, value } = await reader.read();
             if (done) break;
             if (!value) throw new Error("not bytes");
+            drained += value.length;
             if (filled + value.length > expected) return await stop(wrongSize(filled + value.length));
             buf.set(value, filled); filled += value.length;
           }
