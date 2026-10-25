@@ -298,6 +298,7 @@ test("R36: transcription({member, project, at}) answers the object's own ai-acco
   assert.equal(tx.useCheck({ ...q, owner: "nobody" }).ok, false, "ai-use's own refusal, relayed");
   const d = await hold(x.evidence, SCAN);
   const r = await tx.transcribe({ account: { ok: true, kind: "apikey", level: "member", key: SENTINEL }, capture_sha: d, store: "bio", pages: [0], use: "transcribe" });
+  // fixtures-run: extraction transcribe-not-sent
   assert.deepEqual(r, { ok: false, reason: "AGENT_WORKER_UNBOUND" });
   assert.equal(x.evidence.calls.length, 0, "nothing read");
   assert.equal(tx.act, "transcribe::2026-10-11T06:00:00Z", "unbound, it does nothing else: no capture reached the act");
@@ -398,6 +399,7 @@ test("R36 (K2611): the pages are rendered one at a time in ascending order, at m
   const d = await hold(x.evidence, SCAN);
   const r = await transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", at: "2026-10-11T06:00:00Z" })
     .transcribe({ account: { ok: true, kind: "apikey", level: "member", key: SENTINEL }, capture_sha: d, pages: [5, 6] });
+  // fixtures-run: extraction transcribe-not-sent
   assert.deepEqual(r, { ok: false, reason: "NO_PAGE_RENDERED", refused: [{ page: 5, reason: "NO_SUCH_PAGE" },
                                                                      { page: 6, reason: "NO_SUCH_PAGE" }],
                         asked: [5, 6], sent: [], owed: [] }, "K2684 (2); T44's `refused`; R106: the pages asked and sent are stated");
@@ -405,6 +407,7 @@ test("R36 (K2611): the pages are rendered one at a time in ascending order, at m
   /* K2684 (2): the capture's bytes absent from the evidence store: EVIDENCE_ABSENT, nothing posted */
   const gone = await transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", at: "2026-10-11T06:00:00Z" })
     .transcribe({ account: { ok: true, kind: "apikey", level: "member", key: SENTINEL }, capture_sha: "e".repeat(64), pages: [0] });
+  // fixtures-run: extraction transcribe-not-sent
   assert.deepEqual(gone, { ok: false, reason: "EVIDENCE_ABSENT" });
   assert.equal(worker.seen.length, 0);
   /* negative control: the same act on the held capture's page 0 is posted */
