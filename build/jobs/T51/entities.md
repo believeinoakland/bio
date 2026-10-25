@@ -195,3 +195,7 @@ COMPLETE (ENTITIES #20): G55 tier 1 met. view() is held while the jurisdiction_p
 
 **Tests and checks.** Entities' module tests (`bio-plane/test/m/entities/*.test.mjs`): 164 tests, 164 pass, 0 fail. format: 0 failures. fixtures (entities): 0 failures. coverage: 65 of 65 ids named, 0 failures. ownership: 0 failures. architecture: 1 failure (above). `impact.mjs origin/tranche/T51 HEAD` names 107 modules; my change is test files only (no source line), so no user's behaviour moved, and I ran only my own module's tests.
 Size (session_01UFnpNcKqgfLJ5Ee7BwZ3WN): test runs 4, module lines 0 (source); test lines +118
+
+## J12 · COMPLETE · re B12
+
+Fix round 10 batch 4 done: fixtures entitiesWorld, namingInRefused, unreadable published (fixtures.mjs + fixtures.test.mjs); fixture.mjs:62 now takes promotion's makePromotion; fixtures --list entities at 0. Module tests 164/164. One check fails and needs you: architecture says entities' fixture.mjs imports promotion/fixtures.mjs but modules.json entities.uses lacks "promotion" — please add it. Setup-words --check is stale on a control-plane row (not mine). Details in build/jobs/T51/entities.md.
