@@ -1,8 +1,7 @@
 /* R25 (K4488; B8, K4491): the seam test. The real chain, composed as the plane composes it: record, membership, promotion
    and provenance over one storage (provenance-routes' fixture), capture's real queue for the authority event, tasks' real
-   drain. A 20 MB capture held in three parts is promoted as the screen promotes it (the register names its parts, not
-   its whole), its `authority-undetermined` event is queued under the whole digest, and one drain must make its task.
-   Red by name until provenance R72 (a `whole` register row at promotion) merges; the control, a one-part capture, passes. */
+   drain. A 20 MB capture held in three parts is promoted as the screen promotes it (the register is one whole row carrying its parts), its `authority-undetermined` event is queued under the whole digest, and one drain must make its task.
+   The register is the list of wholes (provenance R75); the control, a one-part capture, passes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha } from "../provenance-routes/fixture.mjs";
@@ -12,7 +11,7 @@ import { tasksOf } from "../../../src/tasks/index.mjs";
 const RETRIEVED = "2026-09-27T00:00:00Z";
 const LOCATOR = "https://example.org/big.pdf";
 
-/** A capture of `parts` (text), promoted as screen promotes a multipart one: the register and the files name the parts,
+/** A capture of `parts` (text), promoted as screen promotes a multipart one: the files name the parts, the register is one whole row carrying them,
     and the register document names the whole digest with its parts (provenance D-533). */
 function promoteCapture(w, bundleId, parts) {
   const whole = Buffer.concat(parts.map((p) => Buffer.from(p.text, "utf8")));
@@ -27,7 +26,11 @@ function promoteCapture(w, bundleId, parts) {
               "criticality: supporting", "---", "", "## Summary", "", "A document.", ""].join("\n");
   const files = [{ path: "bundle.md", text: md }, { path: "data/provenance.json", text: JSON.stringify({ documents: [doc] }) },
                  ...parts.map((p) => ({ path: p.path, text: p.text }))];
-  const register = parts.map((p) => ({ sha256: sha(p.text), path: p.path, encoding: "utf8", bytes: Buffer.byteLength(p.text) }));
+  /* provenance R75, screens-intake R21 (G127): the register is WHOLES. A multipart capture is one row, the whole digest W with its total bytes and path, carrying
+     `parts: [{sha256, path, bytes}]` in order; a one-part capture is one row with no `parts`. This is the row shape `promoteDocument` (screens-intake/capture.mjs)
+     builds inline; that builder is not exported, so the shape is written here the same way. */
+  const register = [{ sha256: W, path: doc.file, encoding: "binary", bytes: whole.length,
+                      ...(parts.length > 1 ? { parts: parts.map((p) => ({ sha256: sha(p.text), path: p.path, bytes: Buffer.byteLength(p.text) })) } : {}) }];
   const made = w.promotion.promote({ bundleId, base: null, snapKey: `k${bundleId}`, author: "member:alice", files,
                                      meta: { object_type: "information" }, register });
   assert.equal(made.ok, true, JSON.stringify(made));

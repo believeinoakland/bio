@@ -23,7 +23,11 @@ for (const [kind, mb] of [["synthetic", 21], ["pdf22", 22]]) {
       let r;
       try { r = await run(kind, "alarm", cap); } catch (e) { assert.fail(`run ${i} of ${RUNS} died at the cap of ${cap} MB (idle ${idle} MB + ${HEADROOM_MB}): ${String(e.stderr || e.message).split("\n").find((l) => /FATAL|heap/.test(l)) || e.message}`); }
       console.log(`# L77 ${kind} run ${i}/${RUNS}: idle ${idle} MB, cap ${cap} MB, ${r.ms} ms, peak above idle ${r.peakAboveIdleMb} MB, ${r.units} units`);
-      assert.deepEqual(r.left, [], `run ${i}: the ledger holds nothing`);
+      /* R97/R101: the reading is done in pieces, one heavy piece for each tick; it completes inside the cap, each tick moves the cursor, and the ticks are bounded by the file's pages */
+      assert.equal(r.stalled, 0, `run ${i}: every tick moved the cursor (${r.moves} moves, read through ${r.lastReadThrough} of ${r.total})`);
+      assert.ok(r.ticks <= r.maxTicks, `run ${i}: ${r.ticks} ticks, within the ${r.maxTicks} the ${r.pages} pages allow`);
+      if (r.total != null) assert.ok(r.moves >= 1 && r.lastReadThrough >= r.total - 1 || r.left.length === 0, `run ${i}: the cursor reached the end`);
+      assert.deepEqual(r.left, [], `run ${i}: the ledger holds nothing after ${r.ticks} ticks (read through ${r.lastReadThrough} of ${r.total})`);
       assert.equal(r.found, true, `run ${i}: ${r.basis}`);
       assert.ok(r.units > 0 && r.words, `run ${i}: words in text_units (${r.units} units; ${r.basis})`);
     }
