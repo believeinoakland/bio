@@ -5,9 +5,10 @@
 
    `html(s)` reads an HTML string into a small tree (elements, attributes, text), so the tests can find what a screen
    drew: its text nodes, its acts (`[data-act]`), its fields and its links. `w`/`said` give a word's expected text. */
-import "./register.mjs";
+import { storeWorld } from "../store-request/fixtures.mjs";   // the world registers every owner's declarations once, as the plane does at start-up (store-assembly R83)
+export { storeWorld };
 import { wordsOf } from "../../../src/interface-shell/index.mjs";
-import { boot, ok, pending, silent } from "../interface-shell/harness.mjs";
+import { boot, ok, pending, silent, counted } from "../interface-shell/harness.mjs";
 import { decode } from "../interface-shell/dom.mjs";
 import { SCREENS } from "../../../src/screens-settings/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -102,16 +103,21 @@ export const screen = (id) => SCREENS.find((s) => s.id === id);
 /** Boots the page at `/app/<id>[/<subject>]` as `me`, over `table` (op → answer or `(query, body) => answer`).
  *  `reachable` answers the frame's reads so the assistant is reachable (interface-shell R20). `words` answers
  *  `interfacewords` (the member's shown words). */
-export async function open(id, { me, table, subject = null, reachable = false, words = null, screens = SCREENS } = {}) {
+export async function open(id, { me, table = {}, subject = null, reachable = false, words = null, screens = SCREENS, world = null, as = null } = {}) {
   const plane = {};
   for (const [op, a] of Object.entries(table)) plane[op] = async (req) => { const q = { ...req.query }; delete q.op; return toResponse(typeof a === "function" ? await a(q, req.body) : a); };
-  if (reachable) {
-    if (!table.assistantstate) plane.assistantstate = ok({ ok: true, on: true });
-    if (!table.groupkeystate) plane.groupkeystate = ok({ ok: true, on: true });
+  /* over a world (store-request R18): the real store answers every op the table does not hold, `as` is the session that asks, and the frame's
+     reads (`whoami`, `groupidentity`, the queue, the words, the assistant's state) are the world's own */
+  const door = world ? world.boot(as) : null;
+  if (!world) {
+    if (reachable) {
+      if (!table.assistantstate) plane.assistantstate = ok({ ok: true, on: true });
+      if (!table.groupkeystate) plane.groupkeystate = ok({ ok: true, on: true });
+    }
+    plane.whoami = ok({ ...me, session: true });
+    if (words) plane.interfacewords = ok({ ok: true, language: "en", words });
   }
-  plane.whoami = ok({ ...me, session: true });
-  if (words) plane.interfacewords = ok({ ok: true, language: "en", words });
-  const b = await boot({ screens, plane, path: "/app/" + id + (subject !== null ? "/" + encodeURIComponent(subject) : "") });
+  const b = await boot({ screens, plane, ...(door ? { door: counted(door.door), session: door.session } : {}), path: "/app/" + id + (subject !== null ? "/" + encodeURIComponent(subject) : "") });
   await b.settle(80);
   const main = () => b.doc.getElementById("cs-main");
   // the shell's own reads, `bootstrap` among them (sent once, public, for the test-instance band; interface-shell R36). The shell exports

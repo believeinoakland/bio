@@ -7,7 +7,7 @@
    `html(s)` reads an HTML string into a small tree, so the tests can find what a screen drew. `w`/`said` give a word's
    expected text. */
 import { wordsOf, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
-import { boot, ok, pending, silent } from "../interface-shell/harness.mjs";
+import { boot, pending, silent } from "../interface-shell/harness.mjs";
 import { decode } from "../interface-shell/dom.mjs";
 import { SCREENS, GUIDE } from "../../../src/screens-wizards/index.mjs";
 export { SCREENS, GUIDE };
@@ -86,7 +86,7 @@ export const day = (iso) => { const [y, m, d] = String(iso).slice(0, 10).split("
 
 // ---- the served page, over the shell's harness ----
 
-/** An answer as the fake plane gives it (`fixtures.mjs`), turned into the harness's response. */
+/** A fault the world cannot be asked to make (`"pending"`, `"none"`: a read that never answers, a failed one), as the harness answers it. */
 function toResponse(a) {
   if (a === "pending") return pending;
   if (a === "none" || a === null) return silent;
@@ -96,19 +96,13 @@ function toResponse(a) {
 
 export const screen = (id) => SCREENS.find((s) => s.id === id);
 
-/** Boots the page at `/app/<id>[/<subject>]` as `me`, over `table` (op → answer or `(query, body) => answer`).
- *  `reachable` answers the frame's reads so the assistant is reachable (interface-shell R20). `words` answers
- *  `interfacewords` (the member's shown words). */
-export async function open(id, { me, table, subject = null, reachable = false, words = null, screens = SCREENS } = {}) {
+/** Boots the page at `/app/<id>[/<subject>]` as `as`, a member of `team` (`world.mjs`), over the world's door and the session its
+ *  sign-in made: every op is answered by the real store. `faults` (op → answer or `(query, body) => answer`) is the one thing it cannot
+ *  make: a read that stays pending, fails or is refused in a shape the real code does not give. */
+export async function open(id, { team, as, faults = {}, subject = null, screens = SCREENS } = {}) {
   const plane = {};
-  for (const [op, a] of Object.entries(table)) plane[op] = (req) => { const q = { ...req.query }; delete q.op; return toResponse(typeof a === "function" ? a(q, req.body) : a); };
-  if (reachable) {
-    if (!table.assistantstate) plane.assistantstate = ok({ ok: true, on: true });
-    if (!table.groupkeystate) plane.groupkeystate = ok({ ok: true, on: true });
-  }
-  plane.whoami = ok({ ...me, session: true });
-  if (words) plane.interfacewords = ok({ ok: true, language: "en", words });
-  const b = await boot({ screens, plane, path: "/app/" + id + (subject !== null ? "/" + encodeURIComponent(subject) : "") });
+  for (const [op, a] of Object.entries(faults)) plane[op] = (req) => { const q = { ...req.query }; delete q.op; return toResponse(typeof a === "function" ? a(q, req.body) : a); };
+  const b = await boot({ screens, plane, ...team.world.boot(as), path: "/app/" + id + (subject !== null ? "/" + encodeURIComponent(subject) : "") });
   await b.settle(80);
   const main = () => b.doc.getElementById("cs-main");
   const SHELL = new Set(SHELL_OPS);

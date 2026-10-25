@@ -1,6 +1,6 @@
 # content (T51)
 
-**Status** · session_01A4tqU9hfEXXpe4ZKB2tfpB · depth 2 · COMPLETE · handled B19
+**Status** · session_01KBuAtGyfg3udLiCAwMXwrG · depth 2 · COMPLETE · handled B22
 
 ## J1 · COMPLETE
 
@@ -256,3 +256,18 @@ COMPLETE (re B20, fix round 10, Wave A batch 5). Merged `origin/tranche/T51`.
 
 **Checks.** `test/m/content/`: tests 180, pass 180, fail 0 (with the new R22 case and the fixtures tests). Users of the text reads, run: calculations 146/146, consequences 71/71, reevaluation 163/163, workbooks 50/50, run-productions 68/68, question-explorer 46/46, basis-versions 182/182, retrieval 202/202, answers 69/69. `impact.mjs origin/tranche/T51 HEAD` names 104 of 178 modules (every user of content); I ran the nine that read passage text. format "178 modules, 178 requirements files; 0 failures"; architecture "33 product files, 111 relative imports; 0 failures"; coverage "61 of 61 live requirement ids named by a test; 0 failures"; words "inline 0, plain 0, testcopy 0, missingkey 0, handlist 0; 0 failures"; fixtures 0 failures; ownership "7 files changed by content between tranche/T51 and job/T51/content; 0 failures". **Words owed:** none (no new sentence). **Deferred:** none. **Stale generated artifact:** none made. **Found in other modules:** only the contract's owner above.
 Size (session_01A4tqU9hfEXXpe4ZKB2tfpB): test runs 14, module lines 3949
+
+## J19 · COMPLETE
+
+COMPLETE (re B21 cause 1 and B22; fix round 10). Merged `origin/tranche/T51`.
+
+**Met: R62** (BOB strikes the mark). Cause: `checkContentExtent` judged each kind only against its own figure; a kind the capture's format cannot hold (a `pdf-page` over a docx, a `slide-shape` over a text) read "not held" as "unbounded". Fix (`extent-core.mjs`, `kindFormatMisfit`, before the chain arm): over `container.format` in {pdf, docx, odt, xlsx, ods, csv, pptx, odp, text}, a kind of {pdf-page, sheet-cell, sheet-range, doc-para, doc-table, slide-shape} the format does not hold is refused `CONTENT_EXTENT_OUT_OF_RANGE` (C-45.1), the detail (`localize content.extent-core.format_cannot_hold_kind`) naming kind, format and what it holds. `format: null`, a format outside the table, the document-only pass, `image`, `doc-part`, `envelope` and `document` are not judged (R8). Shape arms stay first, so an unreadable address stays C-45.3.
+Tests (`converts-extent.test.mjs`, both red on the old code, then green): the 9 x 6 matrix (40 refusals, 14 admissions) with the controls format null / html / no format / document-only; and mint over docx/pdf/text captures (refused, nothing written; the held kind mints). Why missed: no row crossed a kind with a format that cannot hold it, and several fixtures paired a `docx` capture with `pdf-page` or `slide-shape` rows. Fixtures changed for that, not weakened: `converts-extent` "each level bounds only itself" now asserts the three format refusals and checks the "levels bound only themselves" claim with the pure check on a bare container; `reads.test.mjs` R21 and R22 drop `captureFormat: "docx"` (a container extent with levels still makes an office container).
+Door twin for BOB to place (K5138): `citation` `cite` with `extent_kind=pdf-page` over a docx selection answers `BASIS_REFUSED` with this finding (diag2-06 §5).
+
+**B22 (K5161):** the case is in `converts-extent.test.mjs`: the real `reading-pipeline.read` (via `realread.mjs`) of a three-paragraph text states `paragraphs: 3`; paragraph 99 and paragraph 3 are C-45.1, paragraphs 0 and 2 mint, and a citation of 99 is refused. Content already refused it once the reading states the count, so there was no defect of mine to fix and no red-first on today's code (red only before reading-pipeline R63).
+
+**Checks:** `test/m/content/` tests 183, pass 183, fail 0. format 0, architecture 0, coverage "62 of 62 live requirement ids named by a test; 0 failures", ownership 0, `fixtures.mjs content --list` 0 failures; repo-wide words/fixtures failures are other modules' (none names content).
+**Users run** (all that finished): entities, events, lines, local-facts, connections, observation-log, law-relations, standards, progressions, money, money-checks, duties, people, query-language, retrieval-browse, retrieval, calculations, workbooks, inquiry-grammar, leg-earning, inquiry, steps, citation, basis-version-grammar, basis-versions, contradiction, run-productions, question-explorer, answers, intent, investigation, reevaluation, publication, case-disclosures, case-account, case-authoring, consequences, actions, filings, queue-producers, store-door, store-assembly: 0 failures. Inherited, identical with R62 reverted: case-checker 2, conformance 1, following 1, affordances 1, answer-envelope 16. control-plane 625 tests, 6 failures (R105 money ingest x2, R112 subscriptionsignin, R83 unlock/reauth, R83 recover: none touches extents; baseline with R62 reverted did not finish). `plane` hit my 900 s cap with no result and was not run to the end: BOB's run covers it.
+**Deferred:** none. **Words owed:** `content.extent-core.format_cannot_hold_kind` (new, unreviewed list).
+Size (session_01KBuAtGyfg3udLiCAwMXwrG): test runs 12, module lines 3980

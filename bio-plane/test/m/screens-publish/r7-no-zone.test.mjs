@@ -2,9 +2,6 @@
  * no zone held, the signing check not reached (or not answering), and an offer that names no zone — and draws the date and time
  * fields only for an offer with a zone. The sentences are the case-authoring op's own (`PUBLISH_AT_NOT_REACHED_SENTENCE`,
  * `PUBLISH_AT_UNANSWERED_SENTENCE`), read by key (R24). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { PUBLISH_AT_NOT_REACHED_SENTENCE, PUBLISH_AT_UNANSWERED_SENTENCE } from "../../../src/case-authoring/index.mjs";

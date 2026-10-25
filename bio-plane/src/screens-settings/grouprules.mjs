@@ -40,6 +40,8 @@ export const grouprules = {
       const m = roster.find((r) => r.member_id === x || (x === "admin" && r.founder === true));
       return (m && m.handle) || cs.memberName(x);
     };
+    // the owner names a drafter and a confirmer as `member:<id>` (local-facts R10, R11): the viewer's own is told by the id behind the prefix
+    const mine = (id) => String(id == null ? "" : id).replace(/^member:/, "") === me.member;
     const out = [cs.title(), `<p class="mk-small">${W(S + "sub1")} ${W(S + "sub2")}</p>`, `<p class="mk-note">${W(S + "note")} ${W(S + "note2")}</p>`];
 
     out.push(cs.state(data.rules, (v) => {
@@ -67,12 +69,12 @@ export const grouprules = {
         ].filter(Boolean).map((x) => `<span class="mk-small">${x}</span>`).join("");
       };
       const src = (r) => (r.source && r.source.captureSha ? cs.ref("document", r.source.captureSha, String(r.source.captureSha).slice(0, 8)) : "");
-      const drafted = (r) => (r.drafter === me.member ? W(S + "drafted.you", { date: D(r.drafted_at) }) : W(S + "drafted", { member: who(r.drafter), date: D(r.drafted_at) }));
+      const drafted = (r) => (mine(r.drafter) ? W(S + "drafted.you", { date: D(r.drafted_at) }) : W(S + "drafted", { member: who(r.drafter), date: D(r.drafted_at) }));
       let h = "";
 
       if (waiting.length) {
         const rows = waiting.map((r) => {
-          const own = r.drafter === me.member;
+          const own = mine(r.drafter);
           // tier 1 asks no statement; 2, 3 and a kind with none ask the confirmer's own (local-facts R11)
           const needs = r.tier !== 1;
           const act = own ? `<p class="mk-msg" data-note="self">${W(S + "self")}</p>`
@@ -81,7 +83,7 @@ export const grouprules = {
         }).join("");
         h += cs.sec(S + "waiting", `<ul class="mk-list" data-list="waiting">${rows}</ul><p class="mk-note">${W(S + "inprofile")} ${W(S + "inprofile2")}</p>`, { help: S + "waiting.tip1" });
         // what confirming asks, said once for the page (the drawing's own section)
-        if (waiting.some((r) => r.drafter !== me.member)) h += cs.sec(S + "confirm.heading", `<p class="mk-note">${W(S + "confirm.says")}${waiting.some((r) => r.drafter !== me.member && r.tier !== 1) ? " " + W(S + "confirm.qual") : ""}</p>`);
+        if (waiting.some((r) => !mine(r.drafter))) h += cs.sec(S + "confirm.heading", `<p class="mk-note">${W(S + "confirm.says")}${waiting.some((r) => !mine(r.drafter) && r.tier !== 1) ? " " + W(S + "confirm.qual") : ""}</p>`);
       }
 
       if (inForce.length) {

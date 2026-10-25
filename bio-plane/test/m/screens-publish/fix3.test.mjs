@@ -4,13 +4,11 @@
  * device key and progress line, a member named by handle, an act re-reading only what it changes, and the controls at 390 px.
  * A word the design has not written yet is drawn as its key (interface-shell R5) and asserted by that key; no test holds a sentence's
  * English (R24, K3810). Every request is compared with its owner's declaration by the harness (interface-shell R104). */
-import { registerDeclared } from "../../declared-ops.mjs";
-import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
-await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, drew, day, ops, press, last, fill, tick, norm, until, keptKey, answerSign, ok, refusedIn, pending, word, hasWord, COPY, DOCUMENT, PREFLIGHT, FINDING, F1, B1, P, C, DR, SHA, publishedPlane, findingPath, signDialog } from "./fixtures.mjs";
 import { measure } from "./phone.mjs";
+import { gateRefusal } from "../case-disclosures/fixtures.mjs";
 
 const PUBLIC = { session: null };
 const CER = `/app/ceremony/${P}/${DR}`;
@@ -30,7 +28,7 @@ const count = (p, op) => p.byOp(op).length;
 
 const ROW = (o = {}) => ({ capture: B64, by: "dev", findings: [F1], timestamp_at: null, co_archive: null, missing: ["timestamp", "co_archive"], late: false, timestamp_late: false, late_words: null, ...o });
 const LATE = "It proves the bytes existed by then, not at capture.";
-const HELD_BACK = { ok: false, code: "CO_ATTESTATION_UNACKNOWLEDGED", reason: "CO_ATTESTATION_UNACKNOWLEDGED" };
+const HELD_BACK = gateRefusal().CO_ATTESTATION_UNACKNOWLEDGED;
 
 test("R74 R51 C40 after reattest the pre-flight is read again and the document's row says the timestamp was made late and that the outside copy is still missing", async () => {
   let again = false;

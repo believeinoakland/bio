@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { word, hasWord } from "../../bio-plane/src/setup-words/index.mjs";
 import { ASSET_FILES, ASSETS_COMMIT } from "../../bio-plane/src/interface-assets/index.mjs";
-import worker, { CSP, FAVICON } from "../src/index.mjs";
+import worker, { CSP, FAVICON, config } from "../src/index.mjs";
 import { SITE_COMMIT as SERVED_COMMIT } from "../src/pages.mjs";
 import { KEYS, STATES, SITE_COMMIT, designMain, parse, find, generate, render, placesReady, joinPlaces, esc } from "../build.mjs";
 
@@ -283,6 +283,24 @@ test("R7 control: the link carries no query or fragment; one set with either is 
   for (const bad of [`${INSTALLER}?from=site`, `${INSTALLER}#x`, `${INSTALLER}?`, "http://install.example/", "https://u:p@install.example/", "javascript:alert(1)"]) {
     assert.equal((await get("/start", { ...ENV, INSTALLER_ADDRESS: bad })).status, 500, bad);
   }
+});
+
+/* wrangler.jsonc as the deploy reads it: its comments stripped, its strings kept whole (a `//` inside a URL is no comment). */
+const deployConfig = () => JSON.parse(readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8").replace(/("(?:\\.|[^"\\])*")|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, (m, str) => str ?? ""));
+
+test("R7: the deploy config carries INSTALLER_ADDRESS, and the /start it serves draws Create your team to that address", async () => {
+  const vars = deployConfig().vars;
+  assert.match(vars.INSTALLER_ADDRESS, /^https:\/\/[^?#]+$/);
+  /* the address as the site reads it: a URL, so a bare origin takes its own trailing slash */
+  const want = new URL(vars.INSTALLER_ADDRESS).href;
+  assert.equal(config(vars).installer, want);
+  const { t } = await html("/start", vars);
+  const a = find(mainOf(t), (e) => e.tag === "a" && norm(textOf(e)) === word("screen.site.create"));
+  assert.equal(a.length, 1);
+  assert.equal(a[0].attrs.href, want);
+  /* R6: STEWARDS_ADDRESS stays unset, so the site stays marked not yet public */
+  assert.equal(vars.STEWARDS_ADDRESS, undefined);
+  assert.equal((await get("/start", vars)).headers.get("x-robots-tag"), "noindex");
 });
 
 test("R8: every page loads only the site's own files, runs no script, and every response carries the policy", async () => {
