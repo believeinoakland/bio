@@ -173,7 +173,7 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
   const selectionRead = ({ handle = null, viewer = null, owner = null } = {}) => {
     const sel = w.selections.get(handle);
     if (!sel) return { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" };
-    if (!owner || sel.owner !== owner) return { ok: false, reason: "NOT_YOURS", detail: "stand-in: not yours" };
+    if (!owner || sel.owner !== owner) return { ok: false, reason: "SELECTION_NOT_YOURS", detail: "stand-in: not yours" };
     return { ok: true, members: sel.ids, viewer };
   };
   w.host_reads = { sight, planOf, runQuery, localeOf: () => w.locale, selectionRead };
