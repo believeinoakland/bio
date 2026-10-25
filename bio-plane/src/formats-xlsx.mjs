@@ -105,7 +105,7 @@ import { withMetadata, activeContent, withActive, detectByContentType } from "./
 import { localize } from "./setup-words/index.mjs";
 import { boundOf } from "./read-bounds.mjs";
 import {
-  Scanner, scanPart, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, collectElements, memberIdentities, addressParts,
+  Scanner, scanPart, scanWhole, scanSync, parseAttrs, unescape, readText, scanNotes, collectElements, memberIdentities, addressParts, textSink,
 } from "./office-xml.mjs";
 
 /* R44: what the walk may retain, cells and links together (the table's figure, never a literal here). */
@@ -702,9 +702,26 @@ function offsetAccess() {
   };
 }
 
+/* G178 (R46): the text is encoded once and written once; only the compressed chunks are collected (no Blob of the text, no
+   Response collecting a second whole). */
+const TEXT_ENC = new TextEncoder();
 async function deflateText(s) {
-  const out = new Blob([s]).stream().pipeThrough(new CompressionStream("deflate-raw"));
-  return new Uint8Array(await new Response(out).arrayBuffer());
+  const cs = new CompressionStream("deflate-raw");
+  const writing = (async () => { const w = cs.writable.getWriter(); await w.write(TEXT_ENC.encode(s)); await w.close(); })();
+  const chunks = [];
+  let size = 0;
+  const reader = cs.readable.getReader();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value); size += value.length;
+  }
+  await writing;
+  if (chunks.length === 1) return chunks[0];
+  const out = new Uint8Array(size);
+  let at = 0;
+  for (const c of chunks) { out.set(c, at); at += c.length; }
+  return out;
 }
 async function inflateText(u8) {
   const out = new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
@@ -718,13 +735,18 @@ function pieceAccess() {
   let cur = null;
   const begin = () => { cur = rows.open(0, { data: null, length: 0 }); };
   begin();
+  /* G178 (R46): a piece is deflated while the next is walked, never more than one deflate ahead: the piece before the
+     last is awaited when the last is given, so the pieces waiting to be compressed are not all of the sheet. */
+  let before = null;
   return {
     row(_at, r) { rows.take(cur, r); },
     piece(text) {
       const blk = cur;
       blk.length = text.length;
-      if (blk.min !== Infinity) { blocks.push(blk); blk.data = deflateText(text); }
+      let wait;
+      if (blk.min !== Infinity) { blocks.push(blk); blk.data = deflateText(text); wait = blk.data; }
       begin();
+      return wait;
     },
     async finish() {
       for (const b of blocks) b.data = await b.data;
@@ -1217,6 +1239,8 @@ async function xlsxText(parts, opts) {
   const cap = inlineCellsCap(opts);
   let held = false, listedBytes = 0;
   const walkedOut = [];
+  const sink = textSink((parts.declared?.total ?? 0) / 4);
+  const spans = [];
   /* R44: the typed cells a read holds at once are bounded by the table's retained-objects figure: a read that would
      hold more is refused, by name and with its figure. */
   const ctl = { stopped: false, exceeded: null };
@@ -1240,7 +1264,10 @@ async function xlsxText(parts, opts) {
   for (const sheet of sheets) {
     if (sheet.xml == null && !sheet.pieces) { unreadable(sheet, sheet.why ?? "sheet_unreadable"); continue; }
     const undetermined = [];
-    const lines = [];
+    /* G178 (R46): the sheet's lines go into the workbook's `sink` as they are made, never held as one string per row
+       beside a joined whole; if the sheet cannot be read to its end they are taken back. */
+    const sinkAt = sink.mark();
+    let from = -1;
     /* G15: the 1-based row of each line, beside `lines` (empty rows give no
        line, so the line index is not the row). A row with no readable `r`
        follows the row before it, as the format defines. */
@@ -1292,7 +1319,11 @@ async function xlsxText(parts, opts) {
         sheetCells++;
         vals.push(r.value);
       }
-      if (vals.length) { lines.push(vals.join("\t")); lineRows.push(rowNo); }
+      if (vals.length) {
+        if (sink.chars > 0) sink.newline();
+        if (from < 0) from = sink.chars;
+        sink.add(vals.join("\t")); lineRows.push(rowNo);
+      }
     }, { yieldNow, ctl, access });
     if (ctl.exceeded) {
       return {
@@ -1303,6 +1334,7 @@ async function xlsxText(parts, opts) {
       };
     }
     if (walked.failed) {
+      sink.reset(sinkAt);
       const { why, ...rest } = walked.failed;
       unreadable(sheet, why, rest);
       continue;
@@ -1312,7 +1344,6 @@ async function xlsxText(parts, opts) {
     cellCount += sheetCells;
     formulaCount += sheetFormulas;
     if (typed) listedBytes += sheetBytes;
-    const text = lines.join("\n");
     /* COFF-11 / IC-100 — the sheet's own extent, in TWO figures that are two
        different facts: `rows`/`cols` is the BOUND (the grid this format makes
        addressable, which is what C-45.1's inner bound compares against), and
@@ -1323,7 +1354,8 @@ async function xlsxText(parts, opts) {
       usedRows: walked.usedRows, usedCols: walked.usedCols,
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
-      text, lineRows, cells: typed ? rowColumnOrder(typed).map((x) => x.cell) : null, undetermined });
+      text: "", lineRows, cells: typed ? rowColumnOrder(typed).map((x) => x.cell) : null, undetermined });
+    if (from >= 0) spans.push({ o: outSheets[outSheets.length - 1], from, to: sink.chars });
     walkedOut.push(outSheets[outSheets.length - 1]);
     for (const u of undetermined) allUndetermined.push(u);
   }
@@ -1357,7 +1389,10 @@ async function xlsxText(parts, opts) {
     if (UNREAD_TEXT_PART_RE.test(part)) allUndetermined.push({ part, why: "part_unread" });
   }
 
-  const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
+  /* G178 (R46): the document is the one whole copy of the text, made once from the sink; each sheet's `text` is the slice of
+     it that is the sheet's own (a slice shares the document's characters), so the text is never held twice. */
+  const document = sink.text();
+  for (const { o, from, to } of spans) o.text = document.slice(from, to);
   return {
     ok: true,
     container: "xlsx",

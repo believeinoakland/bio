@@ -335,13 +335,15 @@ export async function scanPart(bytes, container, name, handler, { mode = "whole"
   let partial = null;
   if (mode === "pieces") {
     const read = await OOXML.readPartPieces(bytes, container, name, cut, (piece) => {
-      scanner.push(piece, false);
-      if (onPiece) onPiece(piece);
+      /* G178 (R46): a piece is fed in windows, so what a window carries over is joined to a window and never to the whole piece (a copy of it) */
+      for (let at = 0; at < piece.length && !scanner.stopped; at += WINDOW) scanner.push(piece.slice(at, at + WINDOW), false);
+      /* `onPiece` may answer a promise (work it started on the piece): the next piece is not read before it settles */
+      const held = onPiece ? onPiece(piece) : undefined;
       if (typeof yieldNow === "function" && scanner.tokens - scanner.yielded >= YIELD_TOKENS) {
         scanner.yielded = scanner.tokens;
-        return letPass(yieldNow);
+        return held ? Promise.all([held, letPass(yieldNow)]) : letPass(yieldNow);
       }
-      return undefined;
+      return held;
     });
     if (!read.ok) return { ok: false, ...OOXML.pieceWhy(read) };
     scanner.push("", true);
@@ -353,6 +355,33 @@ export async function scanPart(bytes, container, name, handler, { mode = "whole"
   }
   if (scanner.badRef) return { ok: false, why: "char_ref_invalid", final: true };
   return { ok: true, scanner, ...(partial ? { partial } : {}) };
+}
+
+/** G178 (R46): text made a piece at a time and kept as UTF-8 bytes (a growing buffer, not one string per row), made one
+ *  string once, at the end. `chars` counts the UTF-16 units added, so the string's offsets are known as it is made; `mark`
+ *  and `reset` take back what a sheet that could not be read to its end added. The pieces added hold no lone surrogate
+ *  (every text is decoded from bytes or made of whole references), so the bytes are the text. */
+const SINK_ENC = new TextEncoder();
+const SINK_DEC = new TextDecoder("utf-8", { ignoreBOM: true });
+export function textSink(expected = 0) {
+  /* `expected`: about how many bytes the text will take; a buffer that starts near it is grown once, not many times */
+  let buf = new Uint8Array(Math.min(Math.max(Math.floor(expected) || 0, 1 << 16), 8 << 20)), n = 0, chars = 0;
+  const room = (need) => {
+    if (n + need <= buf.length) return;
+    let size = buf.length;
+    while (size < n + need) size *= 2;
+    const next = new Uint8Array(size);
+    next.set(buf.subarray(0, n));
+    buf = next;
+  };
+  return {
+    get chars() { return chars; },
+    add(s) { if (!s.length) return; room(s.length * 3); n += SINK_ENC.encodeInto(s, buf.subarray(n)).written; chars += s.length; },
+    newline() { room(1); buf[n++] = 10; chars++; },
+    mark() { return { n, chars }; },
+    reset(m) { n = m.n; chars = m.chars; },
+    text() { const t = SINK_DEC.decode(buf.subarray(0, n)); buf = null; return t; },
+  };
 }
 
 /** The UTF-8 bytes of a value's JSON. */
