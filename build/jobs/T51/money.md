@@ -199,3 +199,7 @@ COMPLETE, fix round 10 Wave A batch 3 (B11). tranche/T51 merged; pushed.
 **Ran.** Money 106 of 106 pass (all files in one run). `checks/fixtures.mjs . money --list`: 0 failures (was 1). format 0; architecture 0; coverage 31 of 31; ownership 0 failures. Impact set: tests only (no src change), users of money's src are unaffected; impact.mjs run after commit below.
 
 Size (session_01EsE9gtefQQBM7aApNuuTJS): test runs 8, module lines 1566
+
+## J13 · COMPLETE
+
+Fix round 10 Wave A batch 3 done (record J12). Published readFactNotFound and readFactOf in bio-plane/test/m/money/fixtures.mjs, each tested (R8); re-pointed my line ops.test.mjs:48 to promotion's real fixtures. Fixtures check for money: 0 failures. Money 106/106 pass; format, architecture, coverage 31/31, ownership 0. No fixtures-own/generic markers added. Impact set names only money's own tests (run).
