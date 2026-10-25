@@ -153,3 +153,29 @@ When done: tests (module, then impact set `node build/plan/impact.mjs tranche/T5
 ## B3 · ANSWER · re J2
 
 ANSWER J2 (K4858, BOB's, P17). Your reading stands: `/structure` decodes no JPX, so G125b has no code or test of yours; say so in your record. BOB rebuilds `dist/` after batch B, and the bundle then carries image-codecs' fix.
+
+## B4 · START
+
+START · PDF-WORKER #7 · tranche T51 · product believeinoakland/bio · fix round 10, Wave A batch 1: causes R8, publish 1 fixture, 1 marker line (plan build/plan/fix-round-10-T51.md; waves build/plan/fix-round-10-waves.md)
+
+Depth 2 (BOB #289 is depth 1).
+
+FIRST, if `mail start` cannot push (your branch copy is behind origin): reset and force nothing; `git fetch origin job/T51/pdf-worker tranche/T51 && git branch -m job/T51/pdf-worker stale/pdf-worker-local && git checkout -b job/T51/pdf-worker origin/job/T51/pdf-worker`, then re-run `mail start`. A refused step: post BLOCKED naming it.
+Mail with `--module pdf-worker`; record `build/jobs/T51/pdf-worker.md` (append a new section). Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for reading, never above your own model (K3518); an act a safety or permission check refuses is NEVER worked around, split or retried: post BLOCKED naming it (K4696). `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <files>` from the repository root. `RUNNING until` at most 30 minutes ahead. You write only your `paths`, `tests` and your record; never contact a live deployment.
+
+**Causes (fix-round-10-T51.md §1; each with K4426's four: root cause, why the tests missed it, a failing-first test on the walker's exact case seen red first, the platform check). The requirement amendments quoted are already on the tranche.**
+**R8** (G2; walk A5b: a truncated PDF stores nothing of its readable pages). Root: pdf.js throws on a file cut before its trailer, tier 2 answers `tier2_extraction_error` for the whole file, tier 1 cannot decode a no-ToUnicode font, so nothing is stored (`pdf-worker/src/index.mjs:131`, `:217-239`; `pdfstructure.mjs:2277`, `:2770-2780`). Fix: tier 2 retries on a repaired view. BOB amended pdf-worker R10 (not yet met: T51): a file cut before its trailer is not a tier-2 failure of the whole file; tier 2 reads it on a repaired view and answers the pages it can read, `.tier` 2, the unreadable pages named. Tests missed: `generators.test.mjs:107-115` returns green when pdf.js throws (the line is `:114`); no `truncate` file in any pdf-worker or reading-pipeline test. Failing-first: `pdf-worker/test/structure.test.mjs` under Miniflare (the reading-pipeline `read()` test of the same file is that job's: REPORT it to BOB): `{kind:"pdf",seed:"rw9-A-5b",size:{pages:30,lines:6},truncate:0.7}` (16,746 B); assert tier 2, pages 0-21 with the truth's text, `partial`; fix `generators.test.mjs` to assert no error. Platform P (pdf.js in workerd must throw at the same point and read 22 pages). Not yours: decoding WinAnsi in tier 1 (pdf-reader says no character is guessed; only that choice would be Bob's).
+
+**Fixture rule (K4990, K4993, K4995, K5044).** A test never hand-builds another module's answer: it takes the provider's published fixture (`fixtures.mjs` in the provider's tests, made by the provider's real code when the test runs, never stored). Where the provider is later in `build/modules.json`, the user marks its value `// fixtures-contract: <provider> <id>` (on its line or up to eight above) and the provider's test carries `// fixtures-run: <user> <id>` and runs it against the real code. A code made up on purpose carries `// fixtures-generic: <CODE>`; a code no provider gives is replaced by the real one (K5044 (5)); a real path giving none is a product cause for BOB (K4426). Parts in `build/plan/fixtures-T51/`.
+
+**Fixtures to publish** in `pdf-worker/test/fixtures.mjs` (new file), one named export each, made by your real code at test time, never stored; each with a test of yours that calls it and checks the real answer. Their users re-point in their own jobs (a later Wave A batch or Wave B); users now = findings in the live list:
+- `tier2Answer` (users now: reading-pipeline 1): the worker's real tier-2 answer `{ok:true, tier:2, text:{document,pages,undetermined,counts}, ...}` for the committed mixed legistar PDF, produced when the test runs (replaces `tier2-recorded.json`, a stored copy).
+
+**Markers owed (K5044 (2), K5060; the audit read each line and found it no module's answer):** write on the line or up to eight lines above:
+- `// fixtures-own: input <why>` (a literal handed to your own export, a route map handed to your own dispatch, an input the module reads opaquely): structure.test.mjs:303
+
+Rules of fix-round-9 §0 that bind: R-FOUR (root cause with file:line, why the tests missed it, a failing-first test on the walker's exact case through the real entry path seen red first, the platform check); R-SEAM / R-ONE; R-LAYER; R-PROXY.
+
+List every `fixtures-own` and `fixtures-generic` marker you add, file:line and why, in your COMPLETE; BOB reads each at the merge (K5060).
+
+**Done:** each cause above fixed with its failing-first test green (seen red first) and its platform check done or named for the redeploy; your lines named above in `node /home/user/civicos-process/checks/fixtures.mjs . pdf-worker --list` (from the repository root) at zero (waiting, `stay` and Wave B lines excepted, each named in your record); module tests, words, fixtures and format checks green by failure count; `node build/plan/impact.mjs origin/tranche/T51 HEAD` and the tests of the users it names run. Record in `build/jobs/T51/pdf-worker.md`: causes done, lines done and left, a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE. Model: claude-sonnet-5-5, medium effort.
