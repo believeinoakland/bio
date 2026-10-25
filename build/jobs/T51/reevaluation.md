@@ -146,3 +146,19 @@ QUESTION: one line of the batch is not doable under the rules as they stand. fix
 ## J8 · COMPLETE
 
 COMPLETE (fix round 10, Wave A batch 5): noticesRead published with its test; standardsEmptyReads and noSelection fixtures taken (fixture.mjs:100, :160); caseparts code now NO_SUCH_CASE_EDITION with fixtures-contract publication case-cited-parts (caseparts:31 stays listed until publication's fixtures-run). No fixtures-own or fixtures-generic markers added. Module 164/164; format, architecture, coverage 41/41, ownership, words 0 failures. See record.
+
+## J9 · COMPLETE
+
+COMPLETE (fix round 10, follow-up 37, test files only): `noticesRead` takes `{ viewer, several }`. The default call is unchanged; `several: true` returns `{ world, viewer, holder, raised, ok, limit, truncated, notices, count, cursor, state }` over four notices raised by real acts: two legs of `INQ-2026-0001-q` on `INFO-2026-0001-old` waiting on one newer capture, one leg of `INQ-2026-0002-q` on that target, and one leg of `INQ-2026-0003-q` on `INFO-2026-0004-old2` (NOT_FOUND, affected). Test `fixtures.test.mjs` "noticesRead (R14), several" checks the real answer and calls the real read again.
+
+Deferred, for queue-producers (its `noticed.test.mjs`): its `grade: null` has no reevaluation counterpart. The real grades are `UNDETERMINED` (affects `undetermined`) and `NOT_FOUND` (affects `affected`); reevaluation's notice carries a null grade only where a viewer may not see the newer capture, and then `newer_capture` is null too. So the several scene holds no null grade. Queue-producers should decide whether its null case means UNDETERMINED.
+
+Markers added: none (no fixtures-own, fixtures-generic or fixtures-contract).
+
+Still listed by `fixtures --list`: `caseparts.test.mjs:31` (contract-no-run, publication case-cited-parts), waiting on publication's `fixtures-run`; unchanged from J8, not mine to clear.
+
+Checks (absolute root /home/user/bio): format 0 failures; architecture 0 failures; coverage 41 of 41 ids, 0 failures; words 0 failures; ownership 0 failures; fixtures --list: 1 failure (caseparts:31, above).
+Tests: reevaluation module `bio-plane/test/m/reevaluation/*.test.mjs` 165 pass, 0 fail.
+Commit f27aaa0792 pushed to job/T51/reevaluation.
+
+Size (session_014QYiuArevRHEaH98AGpvCi): test runs 4, module lines 0 in src, 44 added in tests
