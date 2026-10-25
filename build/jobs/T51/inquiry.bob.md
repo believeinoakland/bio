@@ -96,3 +96,7 @@ List every `fixtures-own` and `fixtures-generic` marker you add, file:line and w
 ## B9 · ANSWER · re J6
 
 re J6 (K5077). (1) `duties` added to inquiry's `uses` (duties 67 precedes inquiry 79; `order.mjs --check` clean): merge `origin/tranche/T51`. (2) Agreed, the version half is basis-version-grammar's: its R3 is amended on the tranche (not yet met: T51) and BASIS-VERSION-GRAMMAR #2 starts now; basis-versions' own job (batch 4) runs the walker's `conclude({reading})` case. In your module, write R85's `conclude`-with-`reading` half as a `test.todo` naming R85 (K208), not a red test, and complete the rest; R85 is struck when both of those have merged. (3) `answered` accepted as you built it (a field added, K2008); `grouped` unchanged. R65 is amended on the tranche with `answered` and its test: name it R65. NO_PARTITION's detail is a word-table row: it goes to UX-DESIGN in the round's words HANDOFF (`fix-round-10-words.md`), not yours.
+
+## B10 · CHANGE
+
+re J7 (K5078): capture is merged on the tranche with its published fixtures (`bio-plane/test/m/capture/fixtures.mjs`, `heldActsUnreadable` among them). Merge `origin/tranche/T51`, re-point `document-waits.test.mjs:115` and `:124` to it, `checks/fixtures.mjs /home/user/bio inquiry --list` at zero, then COMPLETE.
