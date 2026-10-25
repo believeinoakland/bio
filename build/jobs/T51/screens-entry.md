@@ -264,3 +264,7 @@ Merged `origin/tranche/T51` (STORE-REQUEST #5). `kit.mjs` `worldOf` no longer pa
 **Tests and checks.** Module: 98 tests, 96 pass, 2 fail: the two R2 paused-sign-in tests, on the design's `refusal.SIGN_IN_PAUSED` row (J19). format, architecture, coverage (30 of 30), ownership (0 failures), `checks/run.mjs` (no finding in screens-entry).
 
 Size (session_0143bTM29139UynmAYarEGQM): test runs 11, module lines 1156
+
+## J20 · BLOCKED
+
+BLOCKED (cause: tests; needs UX-DESIGN's word row, same as J19). B17 applied: tranche merged, no {group: null} left, front.test.mjs:18's scripted publishedlist replaced by recipes.published (checks/run.mjs: no finding in screens-entry), R30's hosting seed kept (not flagged by the fixtures check, so no marker). Module 96/98: only the two R2 paused-sign-in tests are red, on refusal.SIGN_IN_PAUSED's row still reading 'Try again at {time}' (needs the row without {time}, carrying {stated}; and screen.setup.office.note without '(optional)'). Code draws refusal.SIGN_IN_PAUSED with variable stated. Say when the row lands and I re-run and COMPLETE. Size (session_0143bTM29139UynmAYarEGQM): test runs 11, module lines 1156
