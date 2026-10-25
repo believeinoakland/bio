@@ -30,3 +30,15 @@ Checks run:
 - setup-words build --check: stale-rows note for consequences.checks.a_reason_is_at_most_500 only (expected, REPORT item 5)
 
 Size (session_013XaWAMAcRE4wEJB1HAAKYv): test runs 1, module lines 2114
+
+## Fix round 10, Wave A batch 4 (CONSEQUENCES #15, session_013DS3NRGfi1kF5LfgamSg1s)
+
+Merged `tranche/T51` (case-inputs' fixtures.mjs). Published `bio-plane/test/m/consequences/fixtures.mjs`: `consequencesOfRefusal` (R13, real `consequencesOf` NO_SUCH_DETERMINATION) and `successRecordRead` (R20, real NO_SUCH_SUCCESS_RECORD and a stored record), each called and checked by `fixtures.test.mjs`. Re-pointed my five lines: `fixture.mjs` takes retrieval `noSelection`, sources `rungOf` (held and unheld answers), case-inputs `carryOutcome` (noSuchCase, badCarriedOutcome; the stand-in's `OUT-` id counter stays, it records calls); `t46.test.mjs` takes promotion `groupUndetermined`. No `fixtures-own` or `fixtures-generic` marker added.
+
+Lines done: 5 of 5 (`checks/fixtures.mjs . consequences --list`: 0 failures). Left: none.
+
+Needs BOB: architecture reports 2 failures, `fixture.mjs` imports `retrieval/fixtures.mjs` and `sources/fixtures.mjs`, and `retrieval` and `sources` are not in consequences' `uses` in `build/modules.json` (not mine to edit). Adding both clears them; no other way is open to me.
+
+Checks: module tests 71 of 71 pass; format 0; coverage 26 of 26, 0; words 0; fixtures 0; ownership 0; architecture 2 (above). `impact.mjs` run below.
+Impact (`node build/plan/impact.mjs origin/tranche/T51 HEAD`): see the line below.
+Size (session_013DS3NRGfi1kF5LfgamSg1s): test runs 3, module lines 2114
