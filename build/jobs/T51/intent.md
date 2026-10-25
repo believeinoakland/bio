@@ -1,6 +1,6 @@
 # intent (T51)
 
-**Status** · session_01GUj8GfroqrbB9njoTNg55o · depth 2 · COMPLETE · handled B3
+**Status** · session_014ohJQ9SaciKc4N4cLVwEjU · depth 2 · RUNNING until 2026-10-25T18:00:02Z (users' tests (11 modules)) · handled B3
 
 ## J1 · COMPLETE
 
@@ -112,3 +112,25 @@ Size (session_01GUj8GfroqrbB9njoTNg55o): test runs 4, module lines 0
 ## J5 · COMPLETE
 
 COMPLETE follow-up 27 (B4): see record J4. Fixture: watchSetOf(held, { throwsFor, page }) in bio-plane/test/m/intent/fixtures.mjs; answers { world, intent, projects, viewer, calls, sources }; projects[name] is the real project id. Tests 98/98; format, architecture, coverage, ownership 0.
+
+## J6 · COMPLETE · re B5
+
+Fix round 10, the final pass's cause 1 (B5; walk-T51-final 03 §12; R37) done. Commit on `job/T51/intent`; only intent's `paths` and `tests` touched.
+
+**Met (BOB strikes the mark):** R37.
+
+**Cause 1: a retired aspiration, its dead ends and its lesson can be read.**
+- Diagnosis re-read: `aspirationsFor` answered only those in force (R12, `#heldAspirations` kept the held ones and dropped the retired), `pursuitOf` needs the id; no read listed a retired one. As the diagnosis says.
+- Fix (`bio-plane/src/intent/index.mjs`): `#heldAspirations` now also gathers the retired ones among the same bounded read (the first 1,000 the viewer may see, R12), each with `taught` and `dead_ends`; `aspirationsFor({ project, member, viewer, retired: true })` answers `{ ok, project, member, retired: true, aspirations, limit, truncated }`: the project's retired aspirations and the named member's own, in id order. A project the viewer may not see is the same refusal; a project aspiration of an unseen project is skipped. The default read is byte-for-byte unchanged. The `aspirations` op takes `retired=true` in the URL (a read op, so no `DECLARED_OPS` row changes).
+- Test first, seen red on today's code (`retired` was ignored, so `r.retired` was undefined): `pursuits.test.mjs` "R37 …": a project with a held and a retired aspiration (a dead end before retirement, one after), a member's own retired, another member's retired, a retired group aspiration and a retired aspiration of another project; asserts the retired read lists exactly the project's and the member's own, with `taught` and dead ends equal to `pursuitOf`'s; controls: the default read is unchanged (and `retired: false` equals it), a project alone, a member alone, none named; the refusal for an unseen project equals the default read's; the door (`intentOps` with `retired=true`) answers the same.
+- Fixture published for screens-inquiry (`bio-plane/test/m/intent/fixtures.mjs`): `retiredWorld()` (sync) answers `{ world, intent, project, viewer, held, retired, mine, taught, deadEnds }`: the real intent after real acts (declared, dead end, retired with a lesson, dead end after); ask `intent.aspirationsFor({ project, member: "bob", viewer, retired: true })`. Tested in `fixtures.test.mjs` (R11 R12 R37).
+- Why the tests missed it: R11 said only "stay readable" and `pursuits.test.mjs`:153 proved it through `pursuitOf({aspiration})`, which needs the id; R12's test asserted retired ones are absent from the default read. No requirement or test asked for a way to find one.
+
+**Judgment for BOB (requirement text):** R37 names the project's retired aspirations and the viewer's own, so a retired group aspiration (R9) is listed by no read, though `pursuitOf` reads one by id. I built to the text. If the page should show them, R37 is amended to say so and it is one more filter clause (`a.scope === "group"`).
+
+**Markers added:** none (`fixtures-own` 0, `fixtures-generic` 0, `fixtures-contract` 0). My lines in `checks/fixtures.mjs /home/user/bio intent --list`: answer 0, stub 0, code 0, contract 0, accepted 0; 0 failures.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/intent/*.test.mjs`: tests 100, pass 100, fail 0 (98 + 2 new).
+- `checks/format.mjs`: `0 failures`. `checks/architecture.mjs intent`: `0 failures`. `checks/coverage.mjs intent`: `37 of 37 live requirement ids named by a test; 0 failures`. `checks/ownership.mjs /home/user/bio intent tranche/T51 job/T51/intent`: `1 files changed by intent ... 0 failures` (the count is as the tool reports it).
+- `checks/words.mjs`: 16 failures, all in store-assembly (not mine); none in intent. No new sentence.

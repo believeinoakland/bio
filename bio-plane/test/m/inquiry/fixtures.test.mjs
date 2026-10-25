@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { basisForUnread, basisRefusals, datedWaitOf, disposeAct, migratedSurfacing, questionWaitsSetAside, readRefusals } from "./fixtures.mjs";
+import { selectionResolve } from "../retrieval/fixtures.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
 test("R16: basisForUnread answers the real basis read for no question (NO_ID) and for one the record does not hold (resting on nothing)", () => {
@@ -29,11 +30,14 @@ test("R11 R62: basisRefusals answers each refusal of a real promote of a bad bas
   assert.equal(f.machineWorld.record.head(f.question), null);
 });
 
-test("R20 R21 R22: disposeAct answers the real dispose over a real selection: done, an unknown selection, another owner's", () => {
+test("R20 R21 R22: disposeAct answers the real dispose over a real selection: done, an unknown selection, another owner's", async () => {
   const f = disposeAct();
   assert.deepEqual([f.done.ok, f.done.to, f.done.reason, f.done.handle, f.done.disposed], [true, "deferred", "later", "pair", f.ids]);
   assert.deepEqual(f.unknownSelection.reason, "NO_SUCH_SELECTION");
-  assert.deepEqual(f.notYours.reason, "NOT_YOURS");
+  /* retrieval publishes the refusal another owner's selection gets (R99): its real answer to a viewer other than the owner */
+  const retrieval = selectionResolve();
+  const handle = await retrieval.selection(["INFO-001"], "o");
+  assert.equal(f.notYours.reason, retrieval.resolve({ handle, owner: "someone-else" }).reason);
   for (const id of f.ids) assert.equal(f.world.fm(id).current_state, "deferred", `${id} moved through the promotion`);
   /* control: the act asked again over the set it moved is the real refusal, the set having moved */
   assert.equal(f.dispose().ok, false);

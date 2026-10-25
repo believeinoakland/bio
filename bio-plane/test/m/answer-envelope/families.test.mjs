@@ -17,13 +17,15 @@ const MODULES = JSON.parse(readFileSync(join(REPO, "build/modules.json"), "utf8"
 const isFamily = (k, v) => /_CHECKS$/.test(k) && !!v && typeof v === "object" && !Array.isArray(v);
 
 /* Every plane file of a module, with the module that owns it. */
+/* store-assembly is the plane's second composition root (K5164): its register.mjs registers every owner's declarations again,
+   which R81 refuses in one process, and it exports no family; skipped until plane's Wave B leaves one root (plan item 80). */
 function planeFiles() {
   const out = [];
   const walk = (p, id) => {
     const abs = join(REPO, p);
     if (!existsSync(abs)) return;
     if (statSync(abs).isDirectory()) { for (const f of readdirSync(abs)) if (!["node_modules", "dist", "test"].includes(f)) walk(join(p, f), id); }
-    else if (p.endsWith(".mjs")) out.push([p, id]);
+    else if (p.endsWith(".mjs") && !p.startsWith("bio-plane/src/store-assembly/")) out.push([p, id]);
   };
   for (const m of MODULES) for (const p of m.paths || []) if (/^bio-plane\/(src|checks)(\/|$)/.test(p)) walk(p, m.id);
   return out;

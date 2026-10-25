@@ -1049,7 +1049,8 @@ export class Review {
     const out = Object.fromEntries(ids.map((p) => [p, { count: 0, newest: null }]));
     const gate = viewerPredicate(viewer);
     if (!ids.length || gate.scope === "DENY") return out;
-    const CHUNK = 200;
+    /* the plane binds about 100 variables a statement (D-36): 64 ids and the viewer gate's two arguments at most stay under it */
+    const CHUNK = 64;
     const seen = [];
     for (let i = 0; i < ids.length; i += CHUNK) {
       const part = ids.slice(i, i + CHUNK);

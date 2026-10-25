@@ -1,32 +1,35 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #296 (`session_01C6CGKwoVah4A1ddbXnJGou`, depth 1, parent ROOT #9 `session_01GndWUi5ubGmXCVVnFqtJAi`, third account) for BOB #297, 2026-10-25, at 38 % measured (`python3 build/plan/context.py`, K5158: never estimate; refresh unasked at 40 %). **T51 is OPEN** on `tranche/T51`; **fix round 10 is running** (opened K5065). Read rulings K5157 to the last line of `build/rulings.md` whole, and `build/plan/fix-round-10-T51.md` whole (§3 items 7-77 are the owed list; 75-77 are this session's) and `build/plan/fix-round-10-waves.md` whole.
+**Status** · Replaced whole at each handoff. Written by BOB #297 (`session_01JQbsLg3X7i3h2LpiDNEBK1`, depth 1, parent ROOT #9 `session_01GndWUi5ubGmXCVVnFqtJAi`, third account) for BOB #298, 2026-10-25, at 37 % measured (`python3 build/plan/context.py`, K5158; refresh unasked at 40 %). **T51 is OPEN** on `tranche/T51`; **fix round 10 is running** (opened K5065). Read rulings K5161 to the last line of `build/rulings.md` whole, `build/plan/fix-round-10-T51.md` whole (§3 items 7-80 are the owed list; 78-80 are this session's) and `build/plan/fix-round-10-waves.md` whole.
 
 ## Bob's rulings this session
 
-None new. Bob (2026-10-25) asked why BOBs did not refresh unasked: the measure was wrong (K5158, the rulings-active line); he also said refreshing is due only at 40 % or more.
+None. Nothing was asked of him.
 
 ## Open with Bob
 
 Nothing.
 
-## Running (addresses in the plan's Jobs line; 20 of 20 slots)
+## Running (addresses in the plan's Jobs line; 15 of 20 slots)
 
-STORE-ASSEMBLY #2 (RESUME B7 sent; idle while RUNNING: restart if still quiet, §5.4), INTERFACE-SHELL #22 (CHANGE B45: R130-R132; ANSWER B46), QUEUE-PRODUCERS #29 (CHANGE B18, R54: its COMPLETE J21 crossed it), the 14 of K5157 (CSV-READER #8, PROJECT-ROSTER #16, ACQUISITION #41, READING-PIPELINE #38, CONTENT #23, CONNECTIONS #19, RETRIEVAL #29, CALCULATIONS #17, CITATION #21 (ANSWER B17), STRENGTH #23, INTENT #19, CONSEQUENCES #16, ACTIONS #25, MONITORING #29: 06 §1 BLOCKER), and FILINGS #29, ESCALATION #20, OP-GRADES #28 (K5159). Sitting 02's diagnosis is FINAL on the tranche (`build/plan/walk-T51-final/diagnosis/diag2-02.md`, `5ebc8d7dc1`; record `archive/walk-T51-final/02-people.md`): 22 causes, 6 defects (interface-shell R04.q: INTERFACE-SHELL #22 already fixed the `SESSION_LOCKED` 401, its J30 item 6, so check it covers the walker's case; screens-entry R06.a and R06.c; member-roster R10.d; control-plane R11.e, `adminremovalsopen` stamped `member:<id>`, the class of 03b §1 and 11 §1, for control-plane's Wave B; screens-settings R15.a); one cause already placed (item 60); two UNKNOWN, each with its reproduction (R11.d2, overlay 17). Place it (K4849: read every cited line), the six defects in this round.
+CONTENT #23 (CHANGE B22: content's side of reading-pipeline R63), ACQUISITION #41, INTENT #19 (CHANGE B6: `SELECTION_NOT_YOURS` stand-ins), STORE-ASSEMBLY #3 (restart, K5162; reads B5-B7 past its cursor B4), ACTION-PRODUCERS #6 (R26), STORE-REQUEST #2 (R25, 77 (3), and CHANGE B4: the four door ops `agentpack`, `airundispatch`, `textcheck`, `readtranslate` copied in), AFFORDANCES #48 (77 (2), and CHANGE B25: `ACT_HELP` for `authority`, `ruleservicesstate`), CREDENTIALS #28 and INSTANCE-SETUP #34 (71 (3): each takes a handed clock and REPORTs the line store-assembly adds to hand it `nowMs`: a CHANGE to store-assembly then), QUEUE #38 (R95, `project-leave`), CONTROL-PLANE #61 (Wave B: 8, 42, 69, 71 (4), 72 (3), 73 (6), 75, 78 (6); every door case a job REPORTs goes to it as a CHANGE), SCREENS-INQUIRY #28, SCREENS-ACTION #18 (item 75's screen causes and their op tables), OP-DECLARATIONS #37 (80 (2)).
+
+**Held:** `job/T51/queue-producers` (QUEUE-PRODUCERS #29 J22, R54, archived) merges together with QUEUE #38, queue-producers first, then strike queue-producers R54 (78 (1)).
 
 ## Then, in order
 
 1. Merge each COMPLETE as it comes (premerge below); archive each merged session with its row (K4219); keep 20 slots full, providers first.
-2. As slots free, in this order (plan items 75, 77): action-producers (11 §7b, R26), store-request (11 §1 R25 with item 77 (3)), affordances (77 (2), test only), queue (03b §5, R95) after project-roster merges. Then the screens jobs, after their providers merge, each with every screen cause of items 70, 73, 74 (as item 75 lists): screens-inquiry, screens-daily, screens-action, screens-investigate, screens-publish, screens-settings (batch 7, with 03b §18); the last of them to merge deletes `harness.mjs`'s four frame defaults (77 (5)).
-3. Owed still: control-plane Wave B (8, 42, 69, 71 (4), 72 (3), 73 (6), 11 §1's `publishcheck` stamp, and every door case the item-75 jobs REPORT; K5138), plane Wave B (12, 23, credentials' six `credentialsOf(ctx)` sites, 77 (4)), 13, 15 and 33 (the §5.10 pass, no job running), 32 (promotion's stamp, last), 35, case-carriage's re-point to `uploadProvenance` (72 (2)), 72 (4)'s reds diagnosed, item 76 (the context figure in `mail check`, civicos-process PR after a dry run).
-4. After the round: generated artifacts (manifest order), the words HANDOFF to UX-DESIGN (`fix-round-10-words.md` whole, its last section K5157's), then K5063's step 4 (redeploy biosmoke8 with the owed live checks, the targeted re-walk with items 70 and 75's asks, the final pass live, the 0.87.0 cut, installer and site deploys, the rehearsal), then T51's close (§5.7).
+2. Fill the five free slots now, each START from its plan items and diagnosis sections (K4849: read the cited lines): screens-investigate and screens-publish (item 70's lists: `diag2-07.md` §1, §3, §8, §9; `diag2-08.md` C2-C4, C6-C9, C11, R70.12's draw; 05 §5, §6's draw; 59; screens-publish 10A §2, 10B C5, C10, C6's draw, follow-up 54, and 72 (4)'s R24/R22 reds), screens-settings (batch 7's 03b §18, item 34's reds); each re-points its op tables to `storeWorld()` (K5054) if its last batch-7 START did not. After QUEUE #38 merges: screens-daily (03b §4, §17, 06 §19 (d), the `project-leave` words and draw, R95's draw). After STORE-ASSEMBLY #3 merges: plane's Wave B (12, 23, credentials' six `credentialsOf(ctx)` sites, 77 (4), monitoring's run line kept, and 80 (1): the walks re-pointed at the one root left). The last batch-7 screens job deletes `harness.mjs`'s four frame defaults (77 (5)).
+3. Owed still: 13, 15 and 33 (the §5.10 pass, no job running), 32 (promotion's stamp, last), 72 (4)'s remaining reds diagnosed, item 76 (the context figure in `mail check`, civicos-process PR after a dry run).
+4. After the round: generated artifacts (manifest order; the plane bundle is stale), the words HANDOFF to UX-DESIGN (`fix-round-10-words.md` whole, its last section K5157's), then K5063's step 4 (redeploy biosmoke8 with the owed live checks, the targeted re-walk with items 70 and 75's asks, the final pass live, the 0.87.0 cut, installer and site deploys, the rehearsal), then T51's close (§5.7).
 
 ## Tools
 
-- Mail tool and checks: civicos-process `main` (`e54912f5b9`) in a detached worktree (`git worktree add --detach <dir> origin/main`); `--product /home/user/bio --tranche T51`. `addjob --name` needs the name quoted; a `while read` loop splits it unless `IFS='|'`.
-- Premerge: fetch the job branch; ownership against `git merge-base`; a fresh detached worktree per job; `checks/architecture.mjs` and `checks/fixtures.mjs` on it with the module; grep added `fixtures-(own|generic|contract|run)` markers; merge `--no-ff` in module order; architecture over the tree and `words.mjs <modules>`; strike the marks; `git ls-remote origin tranche/T51` equals HEAD.
-- STARTs: `python3 build/plan/mkstart.py <jobs.json>` (each `{m, n, item, tag, model?, body}`); files `build/plan/starts-T51-F10/<module>-k<ruling>.txt`, never a reused name. New requirement lines: append before `## Private` with the next free id, marked `*(not yet met: T51)*` (K5157).
-- `rulings-active.md` is at 24,541 bytes and 78 lines: a new rule replaces or merges a line.
+- Mail tool and checks: civicos-process `main` (`e54912f`), `--product /home/user/bio --tranche T51`. `addjob --name` needs the name quoted; a `while read` loop needs `IFS='|'`.
+- Premerge (one script): fetch the job branch; base = `git merge-base origin/tranche/T51 origin/job/T51/<m>`; a fresh detached worktree; `ownership.mjs <wt> <m> <base> origin/job/T51/<m>`, `architecture.mjs <wt> <m>`, `fixtures.mjs <wt> <m>` (compare its FAIL lines with the tranche's, line numbers stripped); grep added `fixtures-(own|generic|contract|run)` markers; merge `--no-ff` in `modules.json` order; `architecture.mjs` over the tree and `words.mjs <modules>`; strike the marks (`sed` on `- **R<n>** *(not yet met: T51)* `); push; `git ls-remote origin tranche/T51` equals HEAD.
+- `modules.json` is edited by a one-line `sed`, never re-serialised (the file's layout is one module per line); then `order-build.mjs --check` and `format.mjs`.
+- STARTs: `python3 build/plan/mkstart.py <jobs.json>` (each `{m, n, item, tag, bob, model?, body}`); a new file name each time. Prepared and posted: `*-k5161`, `*-k5162`, `*-k5163`, `*-k5164`.
+- `rulings-active.md` is at 24,541 bytes and 78 lines: a new rule replaces or merges a line. The round's plan is at about 42 KB of 51,200.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
@@ -36,5 +39,5 @@ STORE-ASSEMBLY #2 (RESUME B7 sent; idle while RUNNING: restart if still quiet, �
 
 ## Timers and lanes
 
-- My timers: backstop `trig_01MQdUDtUWSMR85KAmTEMdZW`, WATCH #296 `trig_01WVVe3Mf2tUvWcc5a6CS7Ev` (re-armed while I wait for you): delete both at takeover.
+- My timers: backstop `trig_01XfezpKVYG6yMAp79NbKQZL`, WATCH #297 `trig_01UsA48a8zkjfEhLjbYpmnzZ`: delete both at takeover.
 - Lanes nothing new (H43, A41, W4, P26); channel: UX-DESIGN read through U472; B517, B518 unread by UX design #40.

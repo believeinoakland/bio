@@ -1,6 +1,6 @@
 # BOB to affordances (T51)
 
-**Read** · handled J27
+**Read** · handled J29
 
 ## B1 · START
 
@@ -232,3 +232,7 @@ Mail with `--module affordances`; record `build/jobs/T51/affordances.md` (append
 1. **Test files only** (OP-GRADES #27, K5159): `register-owners.mjs` (affordances' tests) registers three owners by hand, so a declared op of any other owner goes unseen. Make it register every owner's `DECLARED_OPS` by reading `build/modules.json` (every module whose source exports `DECLARED_OPS`), never a hand list (K3268). Run affordances' suite (`t33.test.mjs` among it) green; a red that appears is an ungraded or unregistered op of another module: REPORT it by name, never patch it here.
 
 **Done:** module tests green; `checks/fixtures.mjs <absolute root> affordances --list` with no new failing line (list any marker you add, file:line and why); format, architecture, coverage, words, ownership 0. Record a `Size (<session id>): test runs <n>, module lines <n>` line; COMPLETE.
+
+## B25 · CHANGE
+
+CHANGE (K5164, plan item 80 (2)): op-declarations t36.test.mjs:306 (R34) finds two member ops with no explanation in your ACT_HELP and not named in ACT_HELP_ABSENT: `authority` (provenance s new read, R80) and `ruleservicesstate` (answers). Give each its place by your own rule (ACT_HELP text as a `localize` stand-in, or ACT_HELP_ABSENT under the ground that fits a read), with a test; name both in your COMPLETE.
